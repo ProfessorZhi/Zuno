@@ -290,6 +290,40 @@ def build_seed_cases() -> list[dict[str, Any]]:
     ]
 
 
+def _clone_case(template: dict[str, Any], *, case_id: str, question: str) -> dict[str, Any]:
+    payload = {k: v for k, v in template.items() if k not in {"input_hash", "case_hash"}}
+    payload["case_id"] = case_id
+    payload["question"] = question
+    return _case(payload)
+
+
+def build_full_candidate_cases() -> list[dict[str, Any]]:
+    seed_by_type = {case["question_type"]: case for case in build_seed_cases()}
+    specs = [
+        ("single_doc_fact", 20, "seed_single_001", "Which release fact is supported by Axis-9 release note variant {n}?"),
+        ("multi_hop", 20, "seed_multi_001", "Which CEO-sponsored project deliverable is supported by the Northwind charter and SDK overview variant {n}?"),
+        ("graph_reasoning", 15, "seed_graph_001", "Which directed project-to-product relation is supported for Northwind variant {n}?"),
+        ("temporal_version", 10, "seed_temporal_001", "Which security policy version is effective after 2026-01-01 variant {n}?"),
+        ("abstain_no_answer", 5, "seed_abstain_001", "Which unavailable Auroralis fiscal revenue fact should be abstained from variant {n}?"),
+        ("security_scope", 5, "seed_security_001", "Should a non-privileged caller read detailed legal audit findings variant {n}?"),
+        ("fault_recovery", 5, "seed_fault_001", "What controlled behavior applies when vector retrieval fails for Forge-X1 variant {n}?"),
+    ]
+    cases: list[dict[str, Any]] = []
+    sequence = 1
+    for question_type, count, template_id, question_template in specs:
+        template = next(case for case in seed_by_type.values() if case["case_id"] == template_id)
+        for n in range(1, count + 1):
+            cases.append(
+                _clone_case(
+                    template,
+                    case_id=f"syn_{sequence:03d}_{question_type}",
+                    question=question_template.format(n=n),
+                )
+            )
+            sequence += 1
+    return cases
+
+
 def write_seed_dataset(out_root: Path) -> dict[str, Any]:
     corpus_root = out_root / "corpus"
     corpus_root.mkdir(parents=True, exist_ok=True)
@@ -333,13 +367,70 @@ def write_seed_dataset(out_root: Path) -> dict[str, Any]:
     return manifest
 
 
+def write_full_candidate_dataset(out_root: Path) -> dict[str, Any]:
+    corpus_root = out_root / "corpus"
+    corpus_root.mkdir(parents=True, exist_ok=True)
+    for doc_id, body in CORPUS_DOCS.items():
+        (corpus_root / f"{doc_id}.md").write_text(body, encoding="utf-8", newline="\n")
+
+    cases = build_full_candidate_cases()
+    cases_path = out_root / "synthetic_cases.jsonl"
+    cases_path.write_text(
+        "\n".join(json.dumps(case, ensure_ascii=False, sort_keys=True) for case in cases) + "\n",
+        encoding="utf-8",
+        newline="\n",
+    )
+
+    result = validate_cases(cases, CORPUS_DOCS, require_full_80=True)
+    corpus_hash = sha256_json(CORPUS_DOCS)
+    manifest = {
+        "schema_version": "1.0.0",
+        "dataset_id": "phase22_synthetic_candidate_dataset_v1",
+        "track_id": "machine_attested_synthetic_regression",
+        "status": "FULL_80_CANDIDATE_VALIDATED" if result.passed else "FULL_80_CANDIDATE_INVALID",
+        "generation_seed": SEED,
+        "case_count": result.case_count,
+        "distribution": result.distribution,
+        "dataset_hash": result.dataset_hash,
+        "corpus_hash": corpus_hash,
+        "runtime_eligible": False,
+        "synthetic_regression_eligible": False,
+        "blocked_reason": "canonical_ingestion_and_runtime_not_executed",
+        "validation_scope": [
+            "schema",
+            "source_document_refs",
+            "source_span_refs",
+            "input_hash",
+            "case_hash",
+            "duplicate_question",
+            "runtime_forbidden_gold_fields",
+        ],
+    }
+    (out_root / "candidate_dataset_manifest.json").write_text(
+        json.dumps(manifest, ensure_ascii=False, indent=2, sort_keys=True),
+        encoding="utf-8",
+        newline="\n",
+    )
+    (out_root / "candidate_validation_report.json").write_text(
+        json.dumps(result.__dict__, ensure_ascii=False, indent=2, sort_keys=True),
+        encoding="utf-8",
+        newline="\n",
+    )
+    return manifest
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--out-root", required=True, type=Path)
+    parser.add_argument("--full-80", action="store_true")
     args = parser.parse_args()
-    manifest = write_seed_dataset(args.out_root)
+    manifest = (
+        write_full_candidate_dataset(args.out_root)
+        if args.full_80
+        else write_seed_dataset(args.out_root)
+    )
     print(json.dumps(manifest, ensure_ascii=False, indent=2, sort_keys=True))
-    return 0 if manifest["status"] == "PARTIAL_SEED_VALIDATED" else 1
+    return 0 if manifest["status"] in {"PARTIAL_SEED_VALIDATED", "FULL_80_CANDIDATE_VALIDATED"} else 1
 
 
 if __name__ == "__main__":

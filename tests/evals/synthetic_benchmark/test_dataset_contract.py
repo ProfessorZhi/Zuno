@@ -7,7 +7,9 @@ from tools.evals.zuno.synthetic_benchmark.dataset_contract import (
 )
 from tools.evals.zuno.synthetic_benchmark.build_seed_dataset import (
     build_seed_cases,
+    build_full_candidate_cases,
     write_seed_dataset,
+    write_full_candidate_dataset,
     CORPUS_DOCS,
 )
 
@@ -107,3 +109,27 @@ def test_seed_dataset_writer_emits_partial_not_runtime_eligible_manifest(tmp_pat
     assert manifest["synthetic_regression_eligible"] is False
     assert (tmp_path / "seed_cases.jsonl").exists()
     assert (tmp_path / "seed_validation_report.json").exists()
+
+
+def test_full_candidate_dataset_has_required_80_case_distribution_without_runtime_eligibility(tmp_path) -> None:
+    cases = build_full_candidate_cases()
+    result = validate_cases(cases, CORPUS_DOCS, require_full_80=True)
+
+    assert result.passed
+    assert result.case_count == 80
+    assert result.distribution == {
+        "single_doc_fact": 20,
+        "multi_hop": 20,
+        "graph_reasoning": 15,
+        "temporal_version": 10,
+        "abstain_no_answer": 5,
+        "security_scope": 5,
+        "fault_recovery": 5,
+    }
+
+    manifest = write_full_candidate_dataset(tmp_path)
+    assert manifest["status"] == "FULL_80_CANDIDATE_VALIDATED"
+    assert manifest["runtime_eligible"] is False
+    assert manifest["synthetic_regression_eligible"] is False
+    assert (tmp_path / "synthetic_cases.jsonl").exists()
+    assert (tmp_path / "candidate_validation_report.json").exists()

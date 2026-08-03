@@ -26,6 +26,7 @@ def _copy_fixture(tmp_path: Path) -> Path:
         "docs/evidence/goal05-phase22-machine-attested-synthetic-regression/readiness-report.md",
         "docs/evidence/goal05-phase22-machine-attested-synthetic-regression/pr100-file-classification.json",
         "docs/evidence/goal05-phase22-machine-attested-synthetic-regression/seed-dataset/seed_dataset_manifest.json",
+        "docs/evidence/goal05-phase22-machine-attested-synthetic-regression/candidate-dataset/candidate_dataset_manifest.json",
         "docs/evidence/goal05-phase22-public-benchmark-review-pack/approval_summary.json",
         "docs/evidence/goal05-phase22-public-benchmark-review-pack/integrity_report.json",
         "docs/evidence/goal05-phase22-synthetic-benchmark/INVALIDATION_NOTICE.md",
@@ -107,3 +108,20 @@ def test_seed_dataset_cannot_be_marked_runtime_eligible(tmp_path: Path) -> None:
     errors = verifier.verify_phase22_synthetic_regression_track()
 
     assert any("seed dataset must not be runtime eligible" in error for error in errors)
+
+
+def test_candidate_dataset_cannot_be_marked_synthetic_regression_eligible_before_runtime(tmp_path: Path) -> None:
+    verifier = _load_verifier()
+    fixture = _copy_fixture(tmp_path)
+    candidate_path = (
+        fixture
+        / "docs/evidence/goal05-phase22-machine-attested-synthetic-regression/candidate-dataset/candidate_dataset_manifest.json"
+    )
+    candidate = json.loads(candidate_path.read_text(encoding="utf-8"))
+    candidate["synthetic_regression_eligible"] = True
+    candidate_path.write_text(json.dumps(candidate), encoding="utf-8")
+
+    verifier.REPO_ROOT = fixture
+    errors = verifier.verify_phase22_synthetic_regression_track()
+
+    assert any("candidate dataset must not be synthetic regression eligible" in error for error in errors)

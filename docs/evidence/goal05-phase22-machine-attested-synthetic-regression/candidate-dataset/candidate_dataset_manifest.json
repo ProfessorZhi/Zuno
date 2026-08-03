@@ -1,0 +1,31 @@
+{
+  "blocked_reason": "canonical_ingestion_and_runtime_not_executed",
+  "case_count": 80,
+  "corpus_hash": "749b932786416ea0c4fd35effa0e0bc6722ab5acc300fe1dde3cb7549d5b50e4",
+  "dataset_hash": "b7832e537dbaab14a7d664f334676120f10b86aa8b7efddfc7220bc7bc915f0c",
+  "dataset_id": "phase22_synthetic_candidate_dataset_v1",
+  "distribution": {
+    "abstain_no_answer": 5,
+    "fault_recovery": 5,
+    "graph_reasoning": 15,
+    "multi_hop": 20,
+    "security_scope": 5,
+    "single_doc_fact": 20,
+    "temporal_version": 10
+  },
+  "generation_seed": "phase22-synthetic-regression-seed-v1",
+  "runtime_eligible": false,
+  "schema_version": "1.0.0",
+  "status": "FULL_80_CANDIDATE_VALIDATED",
+  "synthetic_regression_eligible": false,
+  "track_id": "machine_attested_synthetic_regression",
+  "validation_scope": [
+    "schema",
+    "source_document_refs",
+    "source_span_refs",
+    "input_hash",
+    "case_hash",
+    "duplicate_question",
+    "runtime_forbidden_gold_fields"
+  ]
+}

@@ -22,7 +22,7 @@ Synthetic Track 当前仍为 `BLOCKED_WITH_EXACT_GAPS`，原因是完整 80 case
 
 ## CC-A 当前进度
 
-已建立当前 schema 的 seed dataset scaffold，用于证明字段、hash、source span、gold 隔离和 validator 机制可执行，但不代表完整 80 case dataset 完成。
+已建立当前 schema 的 seed dataset scaffold，用于证明字段、hash、source span、gold 隔离和 validator 机制可执行。
 
 - seed case count：7
 - seed case distribution：每个目标 bucket 各 1 个
@@ -32,6 +32,20 @@ Synthetic Track 当前仍为 `BLOCKED_WITH_EXACT_GAPS`，原因是完整 80 case
 - synthetic regression eligible：false
 
 完整 80/80 derivation validator、完整 corpus、真实 canonical ingestion 和 runtime profile 仍未完成。
+
+## CC-A Candidate 80 当前进度
+
+已生成当前 schema 的 80-case candidate dataset，分布满足目标 bucket，并通过当前机器校验范围：
+
+- case count：80
+- distribution：20 single_doc_fact / 20 multi_hop / 15 graph_reasoning / 10 temporal_version / 5 abstain_no_answer / 5 security_scope / 5 fault_recovery
+- dataset hash：`b7832e537dbaab14a7d664f334676120f10b86aa8b7efddfc7220bc7bc915f0c`
+- corpus hash：`749b932786416ea0c4fd35effa0e0bc6722ab5acc300fe1dde3cb7549d5b50e4`
+- validation scope：schema、source_document_refs、source_span_refs、input_hash、case_hash、duplicate_question、runtime_forbidden_gold_fields
+- runtime eligible：false
+- synthetic regression eligible：false
+
+当前 80-case candidate 还没有证明“独立从 World Model 和 Corpus 语义推导答案”，也没有经过完整 Canonical Ingestion、三索引、Snapshot Activation 或四 Profile Runtime，因此不能声明 `SYNTHETIC_REGRESSION_TRACK_READY`。
 
 ## 历史 PR 分类
 

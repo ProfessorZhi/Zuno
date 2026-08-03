@@ -14,6 +14,7 @@ TRACK_MANIFEST = TRACK_DIR / "track_manifest.json"
 READINESS_REPORT = TRACK_DIR / "readiness-report.md"
 PR100_FILE_CLASSIFICATION = TRACK_DIR / "pr100-file-classification.json"
 SEED_DATASET_MANIFEST = TRACK_DIR / "seed-dataset" / "seed_dataset_manifest.json"
+CANDIDATE_DATASET_MANIFEST = TRACK_DIR / "candidate-dataset" / "candidate_dataset_manifest.json"
 PUBLIC_APPROVAL_SUMMARY = Path(
     "docs/evidence/goal05-phase22-public-benchmark-review-pack/approval_summary.json"
 )
@@ -46,6 +47,7 @@ def verify_phase22_synthetic_regression_track() -> list[str]:
         READINESS_REPORT,
         PR100_FILE_CLASSIFICATION,
         SEED_DATASET_MANIFEST,
+        CANDIDATE_DATASET_MANIFEST,
         PUBLIC_APPROVAL_SUMMARY,
         PUBLIC_INTEGRITY_REPORT,
         INVALIDATION_NOTICE,
@@ -60,6 +62,7 @@ def verify_phase22_synthetic_regression_track() -> list[str]:
     manifest = _read_json(TRACK_MANIFEST)
     pr100_classification = _read_json(PR100_FILE_CLASSIFICATION)
     seed_manifest = _read_json(SEED_DATASET_MANIFEST)
+    candidate_manifest = _read_json(CANDIDATE_DATASET_MANIFEST)
     approval = _read_json(PUBLIC_APPROVAL_SUMMARY)
     integrity = _read_json(PUBLIC_INTEGRITY_REPORT)
     report = _read_text(READINESS_REPORT)
@@ -82,8 +85,8 @@ def verify_phase22_synthetic_regression_track() -> list[str]:
     for field in ["machine_attested_count", "synthetic_regression_eligible_count"]:
         if field not in boundary:
             errors.append(f"synthetic boundary missing independent field: {field}")
-    if boundary.get("machine_attested_count") != seed_manifest.get("case_count"):
-        errors.append("machine_attested_count must match seed dataset case_count until full 80 exists")
+    if boundary.get("machine_attested_count") != candidate_manifest.get("case_count"):
+        errors.append("machine_attested_count must match candidate dataset case_count")
     if boundary.get("synthetic_regression_eligible_count") != 0:
         errors.append("synthetic_regression_eligible_count must remain 0 until full 80 is valid")
     if seed_manifest.get("status") != "PARTIAL_SEED_VALIDATED":
@@ -92,6 +95,14 @@ def verify_phase22_synthetic_regression_track() -> list[str]:
         errors.append("seed dataset must not be runtime eligible")
     if seed_manifest.get("synthetic_regression_eligible") is not False:
         errors.append("seed dataset must not be synthetic regression eligible")
+    if candidate_manifest.get("status") != "FULL_80_CANDIDATE_VALIDATED":
+        errors.append("candidate dataset manifest must be FULL_80_CANDIDATE_VALIDATED")
+    if candidate_manifest.get("case_count") != 80:
+        errors.append("candidate dataset case_count must be 80")
+    if candidate_manifest.get("runtime_eligible") is not False:
+        errors.append("candidate dataset must not be runtime eligible before ingestion")
+    if candidate_manifest.get("synthetic_regression_eligible") is not False:
+        errors.append("candidate dataset must not be synthetic regression eligible before runtime")
 
     required_report_phrases = [
         "status: BLOCKED_WITH_EXACT_GAPS",
