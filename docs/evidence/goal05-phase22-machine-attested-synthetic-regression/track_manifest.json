@@ -56,6 +56,10 @@
     "candidate_hash_valid_count": 80,
     "synthetic_threshold_hash": "e301259d8b9fdfe854b750e0c1d18c068241df7f8799cfcfdceb06fc54a08b76",
     "synthetic_blocked_release_decision_hash": "5e800cb28da3bb1cd6c216b1001754366117645c37a0808d44702ed2c7b90223",
+    "runtime_request_hash": "1f8f3bf936d4e48412f1738e6f653ec702e6a0a21c4dd37253490a96db6c788d",
+    "runtime_request_case_count": 80,
+    "runtime_request_profile_count": 4,
+    "runtime_gold_forbidden_field_count": 0,
     "knowledge_version_id": null,
     "snapshot_id": null,
     "embedding_provider": null,
@@ -77,7 +81,6 @@
     "local_graphrag_same_snapshot",
     "deep_graphrag_same_snapshot",
     "agentic_graphrag_same_snapshot",
-    "gold_runtime_isolation",
     "runtime_metrics_release_decision",
     "fault_security_resume_matrix"
   ]

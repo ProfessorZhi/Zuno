@@ -13,6 +13,11 @@ from tools.evals.zuno.synthetic_benchmark.release_contract import (
     validate_release_contract,
     write_release_contract,
 )
+from tools.evals.zuno.synthetic_benchmark.runtime_request_contract import (
+    build_runtime_requests,
+    validate_runtime_isolation,
+    write_runtime_isolation_report,
+)
 from tools.evals.zuno.synthetic_benchmark.build_seed_dataset import (
     build_seed_cases,
     build_full_candidate_cases,
@@ -246,3 +251,60 @@ def test_synthetic_release_contract_writer_emits_blocked_evidence(tmp_path) -> N
     assert (tmp_path / "synthetic_threshold_set.json").exists()
     assert (tmp_path / "synthetic_release_decision.json").exists()
     assert (tmp_path / "synthetic_release_contract_report.json").exists()
+
+
+def test_runtime_requests_strip_gold_fields_for_all_four_profiles() -> None:
+    cases = build_full_candidate_cases()
+    requests = build_runtime_requests(
+        cases,
+        dataset_hash="dataset-hash",
+        corpus_hash="corpus-hash",
+    )
+
+    result = validate_runtime_isolation(requests)
+
+    assert result.passed
+    assert result.case_count == 80
+    assert result.request_count == 320
+    assert result.forbidden_field_count == 0
+    assert all("expected_answer" not in request for request in requests)
+    assert all("source_span_refs" not in request for request in requests)
+    assert {request["profile_id"] for request in requests} == {
+        "standard_rag",
+        "local_graphrag",
+        "deep_graphrag",
+        "agentic_graphrag",
+    }
+
+
+def test_runtime_isolation_rejects_expected_answer_leak() -> None:
+    requests = build_runtime_requests(
+        build_full_candidate_cases()[:1],
+        dataset_hash="dataset-hash",
+        corpus_hash="corpus-hash",
+    )
+    requests[0]["expected_answer"] = "leaked gold"
+
+    result = validate_runtime_isolation(requests)
+
+    assert not result.passed
+    assert result.forbidden_field_count == 1
+    assert any("forbidden gold fields" in error for error in result.errors)
+
+
+def test_runtime_isolation_writer_emits_manifest_and_report(tmp_path) -> None:
+    dataset_root = tmp_path / "dataset"
+    write_full_candidate_dataset(dataset_root)
+
+    result = write_runtime_isolation_report(
+        tmp_path,
+        cases_path=dataset_root / "synthetic_cases.jsonl",
+        dataset_hash="dataset-hash",
+        corpus_hash="corpus-hash",
+    )
+
+    assert result["passed"]
+    assert result["case_count"] == 80
+    assert result["request_count"] == 320
+    assert (tmp_path / "runtime_request_manifest.json").exists()
+    assert (tmp_path / "runtime_gold_isolation_report.json").exists()

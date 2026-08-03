@@ -1,0 +1,21 @@
+{
+  "case_count": 80,
+  "corpus_hash": "749b932786416ea0c4fd35effa0e0bc6722ab5acc300fe1dde3cb7549d5b50e4",
+  "dataset_hash": "b7832e537dbaab14a7d664f334676120f10b86aa8b7efddfc7220bc7bc915f0c",
+  "knowledge_version_id": null,
+  "profiles": [
+    "standard_rag",
+    "local_graphrag",
+    "deep_graphrag",
+    "agentic_graphrag"
+  ],
+  "request_count": 320,
+  "runtime_may_read_case_file": false,
+  "runtime_may_read_gold": false,
+  "runtime_may_read_world_model": false,
+  "runtime_request_hash": "1f8f3bf936d4e48412f1738e6f653ec702e6a0a21c4dd37253490a96db6c788d",
+  "schema_version": "1.0.0",
+  "snapshot_id": null,
+  "status": "RUNTIME_INPUT_GOLD_ISOLATED",
+  "track_id": "machine_attested_synthetic_regression"
+}

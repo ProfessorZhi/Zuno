@@ -18,7 +18,7 @@ date: 2026-08-03
 - Production Readiness：not established
 - Public Benchmark：`reviewer_approved_count=0`，`benchmark_eligible_count=0`
 
-Synthetic Track 当前仍为 `BLOCKED_WITH_EXACT_GAPS`，原因是完整 Corpus 真实 Canonical Ingestion、三索引 Visibility Receipt、Snapshot Activation、同 Snapshot 四 Profile Runtime、Gold 隔离、真实 runtime metrics、Fault/Security/Resume/Idempotency 矩阵均未执行完成。
+Synthetic Track 当前仍为 `BLOCKED_WITH_EXACT_GAPS`，原因是完整 Corpus 真实 Canonical Ingestion、三索引 Visibility Receipt、Snapshot Activation、同 Snapshot 四 Profile Runtime、Profile Trace Gold 隔离、真实 runtime metrics、Fault/Security/Resume/Idempotency 矩阵均未执行完成。
 
 ## CC-A 当前进度
 
@@ -61,6 +61,19 @@ seed dataset 只是 7-case scaffold，不是完整 Track 证据；完整 Track �
 - public benchmark claim：false
 - production release claim：false
 
+## Gold / Runtime 隔离当前进度
+
+已生成 80 case x 4 profile 的 runtime request manifest，用于证明运行入口不会携带 `expected_answer`、gold span、derivation spec 或 World Model。该 evidence 只证明 request 输入隔离，不证明四 Profile 已真实运行。
+
+- runtime request count：320
+- runtime request hash：`1f8f3bf936d4e48412f1738e6f653ec702e6a0a21c4dd37253490a96db6c788d`
+- forbidden field count：0
+- runtime may read case file：false
+- runtime may read gold：false
+- runtime may read world model：false
+- knowledge version id：null
+- snapshot id：null
+
 ## 历史 PR 分类
 
 本轮历史审查范围：PR #100、PR #104、PR #105。
@@ -79,7 +92,7 @@ seed dataset 只是 7-case scaffold，不是完整 Track 证据；完整 Track �
 - Embedding：没有 formal Embedding Gateway provider/model/dimension/config hash。
 - Graph：缺最小 Neo4j Path Visibility Receipt Contract 的实现与 owner runtime 产出。
 - Profiles：四 Profile 仍没有同 Snapshot、不同正式路径的 run ids。
-- Evaluation：已有非零阈值集合和当前 `BLOCKED` synthetic release decision；仍缺 Gold 与 Runtime 隔离证明、四 Profile runtime metrics 和真实阈值评估结果。
+- Evaluation：已有非零阈值集合、当前 `BLOCKED` synthetic release decision 和 request-level Gold 隔离证明；仍缺四 Profile Trace Gold 隔离证明、runtime metrics 和真实阈值评估结果。
 - Fault：Fault/Security/Resume/Idempotency matrix 未执行。
 
 ## 人工分工入口

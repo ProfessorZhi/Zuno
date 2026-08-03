@@ -33,6 +33,8 @@ def _copy_fixture(tmp_path: Path) -> Path:
         "docs/evidence/goal05-phase22-machine-attested-synthetic-regression/synthetic_threshold_set.json",
         "docs/evidence/goal05-phase22-machine-attested-synthetic-regression/synthetic_release_decision.json",
         "docs/evidence/goal05-phase22-machine-attested-synthetic-regression/synthetic_release_contract_report.json",
+        "docs/evidence/goal05-phase22-machine-attested-synthetic-regression/runtime_request_manifest.json",
+        "docs/evidence/goal05-phase22-machine-attested-synthetic-regression/runtime_gold_isolation_report.json",
         "docs/evidence/goal05-phase22-public-benchmark-review-pack/approval_summary.json",
         "docs/evidence/goal05-phase22-public-benchmark-review-pack/integrity_report.json",
         "docs/evidence/goal05-phase22-synthetic-benchmark/INVALIDATION_NOTICE.md",
@@ -217,3 +219,20 @@ def test_synthetic_thresholds_must_not_all_be_zero(tmp_path: Path) -> None:
     errors = verifier.verify_phase22_synthetic_regression_track()
 
     assert any("threshold set must not be all zero" in error for error in errors)
+
+
+def test_runtime_request_manifest_must_not_allow_gold_access(tmp_path: Path) -> None:
+    verifier = _load_verifier()
+    fixture = _copy_fixture(tmp_path)
+    manifest_path = (
+        fixture
+        / "docs/evidence/goal05-phase22-machine-attested-synthetic-regression/runtime_request_manifest.json"
+    )
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    manifest["runtime_may_read_gold"] = True
+    manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
+
+    verifier.REPO_ROOT = fixture
+    errors = verifier.verify_phase22_synthetic_regression_track()
+
+    assert any("runtime_may_read_gold must be false" in error for error in errors)

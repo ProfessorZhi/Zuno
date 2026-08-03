@@ -21,6 +21,8 @@ CANDIDATE_WORLD_MODEL = TRACK_DIR / "candidate-dataset" / "world_model.json"
 SYNTHETIC_THRESHOLD_SET = TRACK_DIR / "synthetic_threshold_set.json"
 SYNTHETIC_RELEASE_DECISION = TRACK_DIR / "synthetic_release_decision.json"
 SYNTHETIC_RELEASE_CONTRACT_REPORT = TRACK_DIR / "synthetic_release_contract_report.json"
+RUNTIME_REQUEST_MANIFEST = TRACK_DIR / "runtime_request_manifest.json"
+RUNTIME_GOLD_ISOLATION_REPORT = TRACK_DIR / "runtime_gold_isolation_report.json"
 PUBLIC_APPROVAL_SUMMARY = Path(
     "docs/evidence/goal05-phase22-public-benchmark-review-pack/approval_summary.json"
 )
@@ -60,6 +62,8 @@ def verify_phase22_synthetic_regression_track() -> list[str]:
         SYNTHETIC_THRESHOLD_SET,
         SYNTHETIC_RELEASE_DECISION,
         SYNTHETIC_RELEASE_CONTRACT_REPORT,
+        RUNTIME_REQUEST_MANIFEST,
+        RUNTIME_GOLD_ISOLATION_REPORT,
         PUBLIC_APPROVAL_SUMMARY,
         PUBLIC_INTEGRITY_REPORT,
         INVALIDATION_NOTICE,
@@ -81,6 +85,8 @@ def verify_phase22_synthetic_regression_track() -> list[str]:
     threshold_set = _read_json(SYNTHETIC_THRESHOLD_SET)
     release_decision = _read_json(SYNTHETIC_RELEASE_DECISION)
     release_contract_report = _read_json(SYNTHETIC_RELEASE_CONTRACT_REPORT)
+    runtime_request_manifest = _read_json(RUNTIME_REQUEST_MANIFEST)
+    runtime_gold_isolation = _read_json(RUNTIME_GOLD_ISOLATION_REPORT)
     approval = _read_json(PUBLIC_APPROVAL_SUMMARY)
     integrity = _read_json(PUBLIC_INTEGRITY_REPORT)
     report = _read_text(READINESS_REPORT)
@@ -206,6 +212,35 @@ def verify_phase22_synthetic_regression_track() -> list[str]:
         errors.append("track_manifest current_evidence synthetic_threshold_hash mismatch")
     if current_evidence.get("synthetic_blocked_release_decision_hash") != release_decision.get("decision_hash"):
         errors.append("track_manifest current_evidence synthetic_blocked_release_decision_hash mismatch")
+    if runtime_request_manifest.get("status") != "RUNTIME_INPUT_GOLD_ISOLATED":
+        errors.append("runtime request manifest must be RUNTIME_INPUT_GOLD_ISOLATED")
+    if runtime_request_manifest.get("case_count") != 80:
+        errors.append("runtime request manifest case_count must be 80")
+    if runtime_request_manifest.get("request_count") != 320:
+        errors.append("runtime request manifest request_count must be 320")
+    if runtime_request_manifest.get("dataset_hash") != candidate_manifest.get("dataset_hash"):
+        errors.append("runtime request manifest dataset_hash mismatch")
+    if runtime_request_manifest.get("corpus_hash") != candidate_manifest.get("corpus_hash"):
+        errors.append("runtime request manifest corpus_hash mismatch")
+    for field in ["runtime_may_read_case_file", "runtime_may_read_gold", "runtime_may_read_world_model"]:
+        if runtime_request_manifest.get(field) is not False:
+            errors.append(f"runtime request manifest {field} must be false")
+    if runtime_gold_isolation.get("passed") is not True:
+        errors.append("runtime gold isolation report must pass")
+    if runtime_gold_isolation.get("case_count") != 80:
+        errors.append("runtime gold isolation report case_count must be 80")
+    if runtime_gold_isolation.get("request_count") != 320:
+        errors.append("runtime gold isolation report request_count must be 320")
+    if runtime_gold_isolation.get("forbidden_field_count") != 0:
+        errors.append("runtime gold isolation report forbidden_field_count must be 0")
+    if runtime_gold_isolation.get("runtime_request_hash") != runtime_request_manifest.get("runtime_request_hash"):
+        errors.append("runtime gold isolation report runtime_request_hash mismatch")
+    if current_evidence.get("runtime_request_hash") != runtime_request_manifest.get("runtime_request_hash"):
+        errors.append("track_manifest current_evidence runtime_request_hash mismatch")
+    if current_evidence.get("runtime_request_case_count") != runtime_request_manifest.get("case_count"):
+        errors.append("track_manifest current_evidence runtime_request_case_count mismatch")
+    if current_evidence.get("runtime_gold_forbidden_field_count") != runtime_gold_isolation.get("forbidden_field_count"):
+        errors.append("track_manifest current_evidence runtime_gold_forbidden_field_count mismatch")
     report_field_pairs = {
         "candidate_derivation_valid_count": "derivation_valid_count",
         "candidate_source_evidence_valid_count": "source_evidence_valid_count",
