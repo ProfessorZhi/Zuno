@@ -15,7 +15,9 @@
   "synthetic_release_decision": {
     "status": "BLOCKED",
     "scope": "machine_attested_synthetic_regression",
-    "reason": "real_canonical_ingestion_and_four_profile_runtime_not_executed"
+    "reason": "real_canonical_ingestion_and_four_profile_runtime_not_executed",
+    "threshold_hash": "e301259d8b9fdfe854b750e0c1d18c068241df7f8799cfcfdceb06fc54a08b76",
+    "decision_hash": "5e800cb28da3bb1cd6c216b1001754366117645c37a0808d44702ed2c7b90223"
   },
   "required_completion_evidence": {
     "case_count": 80,
@@ -52,6 +54,8 @@
     "candidate_gold_leakage_count": 0,
     "candidate_hard_negative_valid_count": 5,
     "candidate_hash_valid_count": 80,
+    "synthetic_threshold_hash": "e301259d8b9fdfe854b750e0c1d18c068241df7f8799cfcfdceb06fc54a08b76",
+    "synthetic_blocked_release_decision_hash": "5e800cb28da3bb1cd6c216b1001754366117645c37a0808d44702ed2c7b90223",
     "knowledge_version_id": null,
     "snapshot_id": null,
     "embedding_provider": null,
@@ -74,7 +78,7 @@
     "deep_graphrag_same_snapshot",
     "agentic_graphrag_same_snapshot",
     "gold_runtime_isolation",
-    "synthetic_release_decision",
+    "runtime_metrics_release_decision",
     "fault_security_resume_matrix"
   ]
 }

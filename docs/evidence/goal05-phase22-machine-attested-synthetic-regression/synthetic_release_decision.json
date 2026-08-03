@@ -1,0 +1,17 @@
+{
+  "decision_hash": "5e800cb28da3bb1cd6c216b1001754366117645c37a0808d44702ed2c7b90223",
+  "production_release_claim": false,
+  "profile_run_ids": [],
+  "public_benchmark_claim": false,
+  "reason_codes": [
+    "runtime_metrics_missing",
+    "four_profile_runs_missing",
+    "snapshot_activation_missing"
+  ],
+  "runtime_metrics_ref": null,
+  "schema_version": "1.0.0",
+  "scope": "machine_attested_synthetic_regression",
+  "status": "BLOCKED",
+  "threshold_hash": "e301259d8b9fdfe854b750e0c1d18c068241df7f8799cfcfdceb06fc54a08b76",
+  "track_id": "machine_attested_synthetic_regression"
+}

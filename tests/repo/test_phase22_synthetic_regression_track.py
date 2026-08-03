@@ -30,6 +30,9 @@ def _copy_fixture(tmp_path: Path) -> Path:
         "docs/evidence/goal05-phase22-machine-attested-synthetic-regression/candidate-dataset/candidate_dataset_manifest.json",
         "docs/evidence/goal05-phase22-machine-attested-synthetic-regression/candidate-dataset/candidate_derivation_report.json",
         "docs/evidence/goal05-phase22-machine-attested-synthetic-regression/candidate-dataset/world_model.json",
+        "docs/evidence/goal05-phase22-machine-attested-synthetic-regression/synthetic_threshold_set.json",
+        "docs/evidence/goal05-phase22-machine-attested-synthetic-regression/synthetic_release_decision.json",
+        "docs/evidence/goal05-phase22-machine-attested-synthetic-regression/synthetic_release_contract_report.json",
         "docs/evidence/goal05-phase22-public-benchmark-review-pack/approval_summary.json",
         "docs/evidence/goal05-phase22-public-benchmark-review-pack/integrity_report.json",
         "docs/evidence/goal05-phase22-synthetic-benchmark/INVALIDATION_NOTICE.md",
@@ -179,3 +182,38 @@ def test_candidate_derivation_report_must_keep_world_model_answer_derivation(tmp
     errors = verifier.verify_phase22_synthetic_regression_track()
 
     assert any("answer_derivation_valid_count must be 80" in error for error in errors)
+
+
+def test_synthetic_release_decision_must_remain_blocked_before_runtime_metrics(tmp_path: Path) -> None:
+    verifier = _load_verifier()
+    fixture = _copy_fixture(tmp_path)
+    decision_path = (
+        fixture
+        / "docs/evidence/goal05-phase22-machine-attested-synthetic-regression/synthetic_release_decision.json"
+    )
+    decision = json.loads(decision_path.read_text(encoding="utf-8"))
+    decision["status"] = "PASSED"
+    decision_path.write_text(json.dumps(decision), encoding="utf-8")
+
+    verifier.REPO_ROOT = fixture
+    errors = verifier.verify_phase22_synthetic_regression_track()
+
+    assert any("release decision must remain BLOCKED" in error for error in errors)
+
+
+def test_synthetic_thresholds_must_not_all_be_zero(tmp_path: Path) -> None:
+    verifier = _load_verifier()
+    fixture = _copy_fixture(tmp_path)
+    thresholds_path = (
+        fixture
+        / "docs/evidence/goal05-phase22-machine-attested-synthetic-regression/synthetic_threshold_set.json"
+    )
+    thresholds = json.loads(thresholds_path.read_text(encoding="utf-8"))
+    for spec in thresholds["metrics"].values():
+        spec["threshold"] = 0
+    thresholds_path.write_text(json.dumps(thresholds), encoding="utf-8")
+
+    verifier.REPO_ROOT = fixture
+    errors = verifier.verify_phase22_synthetic_regression_track()
+
+    assert any("threshold set must not be all zero" in error for error in errors)

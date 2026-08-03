@@ -6,6 +6,13 @@ from tools.evals.zuno.synthetic_benchmark.dataset_contract import (
     validate_cases,
 )
 from tools.evals.zuno.synthetic_benchmark.derivation_validator import validate_derivations
+from tools.evals.zuno.synthetic_benchmark.release_contract import (
+    REQUIRED_SYNTHETIC_METRICS,
+    build_blocked_release_decision,
+    build_threshold_set,
+    validate_release_contract,
+    write_release_contract,
+)
 from tools.evals.zuno.synthetic_benchmark.build_seed_dataset import (
     build_seed_cases,
     build_full_candidate_cases,
@@ -203,3 +210,39 @@ def test_derivation_validator_rejects_expected_answer_drift_after_world_model_de
 
     assert not result.passed
     assert any("derived answer does not match expected_answer" in error for error in result.errors)
+
+
+def test_synthetic_release_contract_freezes_non_zero_thresholds_before_runtime() -> None:
+    thresholds = build_threshold_set()
+    decision = build_blocked_release_decision(thresholds)
+
+    result = validate_release_contract(thresholds, decision)
+
+    assert result.passed
+    assert set(thresholds["metrics"]) == set(REQUIRED_SYNTHETIC_METRICS)
+    assert any(spec["threshold"] > 0 for spec in thresholds["metrics"].values())
+    assert decision["status"] == "BLOCKED"
+    assert decision["runtime_metrics_ref"] is None
+    assert decision["public_benchmark_claim"] is False
+    assert decision["production_release_claim"] is False
+
+
+def test_synthetic_release_contract_rejects_all_zero_thresholds() -> None:
+    thresholds = build_threshold_set()
+    for spec in thresholds["metrics"].values():
+        spec["threshold"] = 0
+    decision = build_blocked_release_decision(thresholds)
+
+    result = validate_release_contract(thresholds, decision)
+
+    assert not result.passed
+    assert any("must not be all zero" in error for error in result.errors)
+
+
+def test_synthetic_release_contract_writer_emits_blocked_evidence(tmp_path) -> None:
+    result = write_release_contract(tmp_path)
+
+    assert result["passed"]
+    assert (tmp_path / "synthetic_threshold_set.json").exists()
+    assert (tmp_path / "synthetic_release_decision.json").exists()
+    assert (tmp_path / "synthetic_release_contract_report.json").exists()

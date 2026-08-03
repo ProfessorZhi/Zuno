@@ -1,0 +1,95 @@
+{
+  "metrics": {
+    "abstention_accuracy": {
+      "operator": ">=",
+      "threshold": 0.8
+    },
+    "answer_exact_match": {
+      "operator": ">=",
+      "threshold": 0.6
+    },
+    "answer_semantic_score": {
+      "operator": ">=",
+      "threshold": 0.75
+    },
+    "budget_overrun_rate": {
+      "operator": "==",
+      "threshold": 0.0
+    },
+    "citation_accuracy": {
+      "operator": ">=",
+      "threshold": 0.85
+    },
+    "citation_completeness": {
+      "operator": ">=",
+      "threshold": 0.8
+    },
+    "context_precision_at_5": {
+      "operator": ">=",
+      "threshold": 0.35
+    },
+    "cost_per_case": {
+      "operator": "<=",
+      "threshold": 0.25
+    },
+    "hit_at_5": {
+      "operator": ">=",
+      "threshold": 0.7
+    },
+    "p50_latency": {
+      "operator": "<=",
+      "threshold": 30000
+    },
+    "p95_latency": {
+      "operator": "<=",
+      "threshold": 120000
+    },
+    "profile_failure_rate": {
+      "operator": "<=",
+      "threshold": 0.05
+    },
+    "recall_at_5": {
+      "operator": ">=",
+      "threshold": 0.7
+    },
+    "resume_success_rate": {
+      "operator": ">=",
+      "threshold": 0.95
+    },
+    "security_violation_rate": {
+      "operator": "==",
+      "threshold": 0.0
+    },
+    "unsupported_claim_rate": {
+      "operator": "<=",
+      "threshold": 0.1
+    }
+  },
+  "notes": [
+    "Thresholds are frozen before runtime metrics exist.",
+    "Zero thresholds are permitted only for must-be-zero safety/failure rates."
+  ],
+  "required_metric_names": [
+    "answer_exact_match",
+    "answer_semantic_score",
+    "recall_at_5",
+    "context_precision_at_5",
+    "hit_at_5",
+    "citation_accuracy",
+    "citation_completeness",
+    "abstention_accuracy",
+    "security_violation_rate",
+    "unsupported_claim_rate",
+    "profile_failure_rate",
+    "resume_success_rate",
+    "p50_latency",
+    "p95_latency",
+    "cost_per_case",
+    "budget_overrun_rate"
+  ],
+  "runtime_results_bound": false,
+  "schema_version": "1.0.0",
+  "status": "FROZEN_BEFORE_RUNTIME",
+  "threshold_hash": "e301259d8b9fdfe854b750e0c1d18c068241df7f8799cfcfdceb06fc54a08b76",
+  "track_id": "machine_attested_synthetic_regression"
+}

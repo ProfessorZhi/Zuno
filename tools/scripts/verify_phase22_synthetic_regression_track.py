@@ -18,6 +18,9 @@ SEED_WORLD_MODEL = TRACK_DIR / "seed-dataset" / "world_model.json"
 CANDIDATE_DATASET_MANIFEST = TRACK_DIR / "candidate-dataset" / "candidate_dataset_manifest.json"
 CANDIDATE_DERIVATION_REPORT = TRACK_DIR / "candidate-dataset" / "candidate_derivation_report.json"
 CANDIDATE_WORLD_MODEL = TRACK_DIR / "candidate-dataset" / "world_model.json"
+SYNTHETIC_THRESHOLD_SET = TRACK_DIR / "synthetic_threshold_set.json"
+SYNTHETIC_RELEASE_DECISION = TRACK_DIR / "synthetic_release_decision.json"
+SYNTHETIC_RELEASE_CONTRACT_REPORT = TRACK_DIR / "synthetic_release_contract_report.json"
 PUBLIC_APPROVAL_SUMMARY = Path(
     "docs/evidence/goal05-phase22-public-benchmark-review-pack/approval_summary.json"
 )
@@ -54,6 +57,9 @@ def verify_phase22_synthetic_regression_track() -> list[str]:
         CANDIDATE_DATASET_MANIFEST,
         CANDIDATE_DERIVATION_REPORT,
         CANDIDATE_WORLD_MODEL,
+        SYNTHETIC_THRESHOLD_SET,
+        SYNTHETIC_RELEASE_DECISION,
+        SYNTHETIC_RELEASE_CONTRACT_REPORT,
         PUBLIC_APPROVAL_SUMMARY,
         PUBLIC_INTEGRITY_REPORT,
         INVALIDATION_NOTICE,
@@ -72,6 +78,9 @@ def verify_phase22_synthetic_regression_track() -> list[str]:
     derivation_report = _read_json(CANDIDATE_DERIVATION_REPORT)
     seed_world_model = _read_json(SEED_WORLD_MODEL)
     candidate_world_model = _read_json(CANDIDATE_WORLD_MODEL)
+    threshold_set = _read_json(SYNTHETIC_THRESHOLD_SET)
+    release_decision = _read_json(SYNTHETIC_RELEASE_DECISION)
+    release_contract_report = _read_json(SYNTHETIC_RELEASE_CONTRACT_REPORT)
     approval = _read_json(PUBLIC_APPROVAL_SUMMARY)
     integrity = _read_json(PUBLIC_INTEGRITY_REPORT)
     report = _read_text(READINESS_REPORT)
@@ -82,6 +91,7 @@ def verify_phase22_synthetic_regression_track() -> list[str]:
     if manifest.get("status") != "BLOCKED_WITH_EXACT_GAPS":
         errors.append("track_manifest must remain BLOCKED_WITH_EXACT_GAPS until full runtime evidence exists")
     decision = manifest.get("synthetic_release_decision", {})
+    current_evidence = manifest.get("current_evidence", {})
     if decision.get("scope") != "machine_attested_synthetic_regression":
         errors.append("synthetic release decision must be scoped to machine_attested_synthetic_regression")
     if decision.get("status") != "BLOCKED":
@@ -138,7 +148,64 @@ def verify_phase22_synthetic_regression_track() -> list[str]:
         errors.append("candidate derivation report world_model_hash must match dataset manifest")
     if seed_world_model != candidate_world_model:
         errors.append("seed and candidate world_model.json must match")
-    current_evidence = manifest.get("current_evidence", {})
+    if threshold_set.get("track_id") != "machine_attested_synthetic_regression":
+        errors.append("synthetic threshold set track_id mismatch")
+    if threshold_set.get("status") != "FROZEN_BEFORE_RUNTIME":
+        errors.append("synthetic threshold set must be FROZEN_BEFORE_RUNTIME")
+    threshold_metrics = threshold_set.get("metrics", {})
+    required_threshold_metrics = {
+        "answer_exact_match",
+        "answer_semantic_score",
+        "recall_at_5",
+        "context_precision_at_5",
+        "hit_at_5",
+        "citation_accuracy",
+        "citation_completeness",
+        "abstention_accuracy",
+        "security_violation_rate",
+        "unsupported_claim_rate",
+        "profile_failure_rate",
+        "resume_success_rate",
+        "p50_latency",
+        "p95_latency",
+        "cost_per_case",
+        "budget_overrun_rate",
+    }
+    if set(threshold_metrics) != required_threshold_metrics:
+        errors.append("synthetic threshold set must contain the required metric set")
+    numeric_thresholds = [
+        spec.get("threshold")
+        for spec in threshold_metrics.values()
+        if isinstance(spec, dict) and isinstance(spec.get("threshold"), (int, float))
+    ]
+    if not numeric_thresholds or all(value == 0 for value in numeric_thresholds):
+        errors.append("synthetic threshold set must not be all zero")
+    if release_decision.get("status") != "BLOCKED":
+        errors.append("synthetic release decision must remain BLOCKED before runtime metrics")
+    if release_decision.get("scope") != "machine_attested_synthetic_regression":
+        errors.append("synthetic release decision scope mismatch")
+    if release_decision.get("threshold_hash") != threshold_set.get("threshold_hash"):
+        errors.append("synthetic release decision threshold_hash mismatch")
+    if release_decision.get("runtime_metrics_ref") is not None:
+        errors.append("synthetic release decision must not reference runtime metrics before execution")
+    if release_decision.get("public_benchmark_claim") is not False:
+        errors.append("synthetic release decision must not claim public benchmark")
+    if release_decision.get("production_release_claim") is not False:
+        errors.append("synthetic release decision must not claim production release")
+    if release_contract_report.get("passed") is not True:
+        errors.append("synthetic release contract report must pass")
+    if release_contract_report.get("threshold_hash") != threshold_set.get("threshold_hash"):
+        errors.append("synthetic release contract report threshold_hash mismatch")
+    if release_contract_report.get("decision_hash") != release_decision.get("decision_hash"):
+        errors.append("synthetic release contract report decision_hash mismatch")
+    if decision.get("threshold_hash") != threshold_set.get("threshold_hash"):
+        errors.append("track_manifest synthetic_release_decision threshold_hash mismatch")
+    if decision.get("decision_hash") != release_decision.get("decision_hash"):
+        errors.append("track_manifest synthetic_release_decision decision_hash mismatch")
+    if current_evidence.get("synthetic_threshold_hash") != threshold_set.get("threshold_hash"):
+        errors.append("track_manifest current_evidence synthetic_threshold_hash mismatch")
+    if current_evidence.get("synthetic_blocked_release_decision_hash") != release_decision.get("decision_hash"):
+        errors.append("track_manifest current_evidence synthetic_blocked_release_decision_hash mismatch")
     report_field_pairs = {
         "candidate_derivation_valid_count": "derivation_valid_count",
         "candidate_source_evidence_valid_count": "source_evidence_valid_count",

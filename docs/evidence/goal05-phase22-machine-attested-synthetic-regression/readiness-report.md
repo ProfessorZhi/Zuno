@@ -18,7 +18,7 @@ date: 2026-08-03
 - Production Readiness：not established
 - Public Benchmark：`reviewer_approved_count=0`，`benchmark_eligible_count=0`
 
-Synthetic Track 当前仍为 `BLOCKED_WITH_EXACT_GAPS`，原因是完整 80 case 独立推导、完整 Corpus 真实 Canonical Ingestion、三索引 Visibility Receipt、Snapshot Activation、同 Snapshot 四 Profile Runtime、Gold 隔离、非零阈值 Release Decision、Fault/Security/Resume/Idempotency 矩阵均未执行完成。
+Synthetic Track 当前仍为 `BLOCKED_WITH_EXACT_GAPS`，原因是完整 Corpus 真实 Canonical Ingestion、三索引 Visibility Receipt、Snapshot Activation、同 Snapshot 四 Profile Runtime、Gold 隔离、真实 runtime metrics、Fault/Security/Resume/Idempotency 矩阵均未执行完成。
 
 ## CC-A 当前进度
 
@@ -50,6 +50,17 @@ seed dataset 只是 7-case scaffold，不是完整 Track 证据；完整 Track �
 
 当前 80-case candidate 已具备当前 schema、World Model answer derivation、source span、hash、duplicate、gold-field 隔离、hard negative scan 和 derivation validator v1 证据。它仍没有经过完整 Canonical Ingestion、三索引、Snapshot Activation 或四 Profile Runtime，因此不能声明 `SYNTHETIC_REGRESSION_TRACK_READY`。
 
+## WP5 Release Gate 当前进度
+
+已冻结 machine-attested synthetic regression 专属非零阈值集合，并生成当前 `BLOCKED` release decision evidence。该 decision 只表示缺 runtime metrics / 四 Profile / Snapshot activation，不能写成 `PASSED`。
+
+- threshold hash：`e301259d8b9fdfe854b750e0c1d18c068241df7f8799cfcfdceb06fc54a08b76`
+- blocked decision hash：`5e800cb28da3bb1cd6c216b1001754366117645c37a0808d44702ed2c7b90223`
+- required metrics：answer_exact_match、answer_semantic_score、recall_at_5、context_precision_at_5、hit_at_5、citation_accuracy、citation_completeness、abstention_accuracy、security_violation_rate、unsupported_claim_rate、profile_failure_rate、resume_success_rate、p50_latency、p95_latency、cost_per_case、budget_overrun_rate
+- runtime metrics ref：null
+- public benchmark claim：false
+- production release claim：false
+
 ## 历史 PR 分类
 
 本轮历史审查范围：PR #100、PR #104、PR #105。
@@ -68,7 +79,7 @@ seed dataset 只是 7-case scaffold，不是完整 Track 证据；完整 Track �
 - Embedding：没有 formal Embedding Gateway provider/model/dimension/config hash。
 - Graph：缺最小 Neo4j Path Visibility Receipt Contract 的实现与 owner runtime 产出。
 - Profiles：四 Profile 仍没有同 Snapshot、不同正式路径的 run ids。
-- Evaluation：没有 Gold 与 Runtime 隔离证明，没有非零阈值下的 synthetic release decision。
+- Evaluation：已有非零阈值集合和当前 `BLOCKED` synthetic release decision；仍缺 Gold 与 Runtime 隔离证明、四 Profile runtime metrics 和真实阈值评估结果。
 - Fault：Fault/Security/Resume/Idempotency matrix 未执行。
 
 ## 人工分工入口
