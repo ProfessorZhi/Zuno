@@ -149,3 +149,22 @@ GitHub Actions will be recorded on the draft PR after push.
 3. Codex implements the formal ingestion bridge only after DS gap evidence is reviewed.
 4. CC-MM-2 follow-up may run write/read-back probes only with explicit non-destructive namespaces and cleanup.
 5. Four profile measurement remains blocked until real ingestion, index activation, runtime evidence binding, formal credentials and reviewer approvals exist.
+
+## Worker Wave 2 / Workflow V2 Hardening
+
+Wave 2 is recorded in
+`docs/evidence/goal05-phase22-workflow-v2-hardening-report.md`.
+
+Accepted worker commits:
+
+| worker | model | session_id | commit | score | decision |
+| --- | --- | --- | --- | ---: | --- |
+| CC-MM-1 | claude-minimax | `be9c0934-546c-452a-9231-a650fe5997a0` | `410d439e224d13d8d5e10765fe389894bf98649a5` | 90 | `WORKER_ACCEPTED_FOR_INTEGRATION` |
+| CC-DS-1 | claude-deepseek | `b2624440-d104-4b55-aa64-b92712d844cf` | `4e01675311194eb2ac10a155442f560026450533` | 92 | `WORKER_ACCEPTED_FOR_INTEGRATION` |
+
+Codex selectively absorbed exact paths only and added the controller-owned
+`phase22_execution_candidate_gate.py`. The dependency result on the real tree is
+`DEPENDENCY_REWORKED_BY_CODEX` and fail-closed because canonical ingestion
+preflight reports non-unique object-store ownership. PHASE22 remains
+`in_progress`, fixed benchmark remains `blocked_not_measured`, and production
+readiness remains `not_established`.
