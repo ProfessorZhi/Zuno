@@ -21,6 +21,9 @@ REVIEW_INTEGRITY_REPORT = Path(
     "docs/evidence/goal05-phase22-public-benchmark-review-pack/integrity_report.json"
 )
 REMOVAL_CANDIDATES = Path(".agent/programs/work-products/phase22-removal-candidates.yaml")
+SYNTHETIC_INVALIDATION_NOTICE = Path(
+    "docs/evidence/goal05-phase22-synthetic-benchmark/INVALIDATION_NOTICE.md"
+)
 
 
 def _read_text(repo_root: Path, relative_path: Path) -> str:
@@ -134,6 +137,29 @@ def _verify_blocked_benchmark_artifacts(
             )
 
 
+def _verify_synthetic_invalidation_notice(repo_root: Path, errors: list[str]) -> None:
+    if not _require_file(repo_root, SYNTHETIC_INVALIDATION_NOTICE, errors):
+        return
+
+    text = _read_text(repo_root, SYNTHETIC_INVALIDATION_NOTICE)
+    required_phrases = [
+        "d7566624",
+        "INVALIDATED",
+        "non-canonical simulation",
+        "in-process deterministic\nsubstring matching",
+        "Port reachable",
+        "Index Ready",
+        "canonical_runtime_not_executed",
+        "SUCCESS_REAL_INGESTION",
+    ]
+    for phrase in required_phrases:
+        if phrase not in text:
+            errors.append(
+                "synthetic benchmark invalidation notice missing required truth phrase: "
+                f"{phrase!r}"
+            )
+
+
 def verify_phase22_completion_blockers(repo_root: Path = REPO_ROOT) -> list[str]:
     errors: list[str] = []
     required_files = [
@@ -144,6 +170,7 @@ def verify_phase22_completion_blockers(repo_root: Path = REPO_ROOT) -> list[str]
         BENCHMARK_MANIFEST,
         REVIEW_INTEGRITY_REPORT,
         REMOVAL_CANDIDATES,
+        SYNTHETIC_INVALIDATION_NOTICE,
     ]
     for relative_path in required_files:
         _require_file(repo_root, relative_path, errors)
@@ -196,6 +223,7 @@ def verify_phase22_completion_blockers(repo_root: Path = REPO_ROOT) -> list[str]
             f"blocked benchmark actual_case_count must remain 0, got {benchmark.get('actual_case_count')!r}"
         )
     _verify_blocked_benchmark_artifacts(repo_root, benchmark, errors)
+    _verify_synthetic_invalidation_notice(repo_root, errors)
     if review.get("overall_status") != "REVIEW_REQUIRED":
         errors.append(
             f"public benchmark review pack must remain REVIEW_REQUIRED until human review, got {review.get('overall_status')!r}"
