@@ -18,5 +18,6 @@
   "schema_version": "1.0.0",
   "status": "PARTIAL_SEED_VALIDATED",
   "synthetic_regression_eligible": false,
-  "track_id": "machine_attested_synthetic_regression"
+  "track_id": "machine_attested_synthetic_regression",
+  "world_model_hash": "f3078e20b11feb468285fcca07fa09a920a5be4f280841957dc447938dc76242"
 }

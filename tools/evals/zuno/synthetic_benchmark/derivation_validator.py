@@ -28,6 +28,9 @@ class DerivationValidationResult:
     gold_leakage_count: int = 0
     hard_negative_valid_count: int = 0
     hash_valid_count: int = 0
+    answer_derivation_valid_count: int = 0
+    world_model_valid_count: int = 0
+    world_model_hash: str | None = None
     errors: list[str] = field(default_factory=list)
     warnings: list[str] = field(default_factory=list)
     method_counts: dict[str, int] = field(default_factory=dict)
@@ -74,6 +77,51 @@ def _gold_leakage_errors(case: dict[str, Any]) -> list[str]:
         if expected_answer.lower() in question.lower():
             errors.append("expected_answer leaks into question")
     return errors
+
+
+def _multi_hop_key(steps: list[dict[str, Any]]) -> str:
+    return "+".join(f"{step.get('source')}|{step.get('fact')}" for step in steps)
+
+
+def _derive_answer(derivation: dict[str, Any], world_model: dict[str, Any]) -> str | None:
+    method = derivation.get("method")
+    if method == "single_doc_fact":
+        fact = world_model.get("facts", {}).get(derivation.get("fact"), {})
+        if fact.get("source") == derivation.get("source"):
+            return fact.get("answer")
+    if method == "multi_hop":
+        steps = derivation.get("steps", [])
+        if isinstance(steps, list):
+            return world_model.get("multi_hop_answers", {}).get(_multi_hop_key(steps))
+    if method == "graph_relation":
+        expected_relations = derivation.get("relations", [])
+        for relation in world_model.get("relations", []):
+            projection = {
+                "kind": relation.get("kind"),
+                "from": relation.get("from"),
+                "to": relation.get("to"),
+                "direction": relation.get("direction"),
+            }
+            if projection in expected_relations:
+                return relation.get("answer")
+    if method == "temporal_version":
+        key = f"{derivation.get('effective_at')}|{derivation.get('supersedes')}"
+        return world_model.get("temporal_versions", {}).get(key)
+    if method == "abstain_scan":
+        missing = world_model.get("absent_facts", {}).get(derivation.get("missing_fact"), {})
+        if missing.get("authorized_corpus_scope") == derivation.get("authorized_corpus_scope"):
+            return missing.get("answer")
+    if method == "security_scope":
+        key = f"{derivation.get('required_scope')}|{derivation.get('caller_scope')}"
+        return world_model.get("security_rules", {}).get(key)
+    if method == "fault_recovery":
+        key = f"{derivation.get('trigger')}|{derivation.get('required_state')}"
+        return world_model.get("fault_rules", {}).get(key)
+    return None
+
+
+def _same_answer(left: str, right: str) -> bool:
+    return " ".join(left.lower().split()).rstrip(".") == " ".join(right.lower().split()).rstrip(".")
 
 
 def _validate_case(case: dict[str, Any], corpus_docs: dict[str, str]) -> tuple[bool, bool, list[str]]:
@@ -168,6 +216,7 @@ def _validate_case(case: dict[str, Any], corpus_docs: dict[str, str]) -> tuple[b
 def validate_derivations(
     cases: list[dict[str, Any]],
     corpus_docs: dict[str, str],
+    world_model: dict[str, Any] | None = None,
 ) -> DerivationValidationResult:
     errors: list[str] = []
     derivation_valid = 0
@@ -178,7 +227,11 @@ def validate_derivations(
     gold_leakage_count = 0
     hard_negative_valid_count = 0
     hash_valid_count = 0
+    answer_derivation_valid_count = 0
+    world_model_valid_count = 0
     questions: set[str] = set()
+    model = world_model or {}
+    world_model_hash = sha256_json(model) if model else None
 
     for case in cases:
         case_id = case.get("case_id", "<unknown>")
@@ -205,6 +258,19 @@ def validate_derivations(
                 errors.append(f"{case_id}: input_hash or case_hash mismatch")
 
         passed, source_evidence_valid, case_errors = _validate_case(case, corpus_docs)
+        derived_answer = _derive_answer(case.get("derivation_spec") or {}, model) if model else None
+        if derived_answer is not None:
+            world_model_valid_count += 1
+            expected_answer = case.get("expected_answer")
+            if expected_answer is None or (
+                isinstance(expected_answer, str) and _same_answer(derived_answer, expected_answer)
+            ):
+                answer_derivation_valid_count += 1
+            else:
+                errors.append(f"{case_id}: derived answer does not match expected_answer")
+        elif model:
+            errors.append(f"{case_id}: world model could not derive answer")
+
         if passed:
             derivation_valid += 1
         if source_evidence_valid:
@@ -224,6 +290,9 @@ def validate_derivations(
         "gold_leakage_count": gold_leakage_count,
         "hard_negative_valid_count": hard_negative_valid_count,
         "hash_valid_count": hash_valid_count,
+        "answer_derivation_valid_count": answer_derivation_valid_count,
+        "world_model_valid_count": world_model_valid_count,
+        "world_model_hash": world_model_hash,
         "method_counts": dict(method_counts),
         "errors": errors,
     }
@@ -237,6 +306,9 @@ def validate_derivations(
         gold_leakage_count=gold_leakage_count,
         hard_negative_valid_count=hard_negative_valid_count,
         hash_valid_count=hash_valid_count,
+        answer_derivation_valid_count=answer_derivation_valid_count,
+        world_model_valid_count=world_model_valid_count,
+        world_model_hash=world_model_hash,
         errors=errors,
         method_counts=dict(method_counts),
         report_hash=sha256_json(payload),
@@ -247,10 +319,12 @@ def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--cases", required=True, type=Path)
     parser.add_argument("--corpus-root", required=True, type=Path)
+    parser.add_argument("--world-model", required=True, type=Path)
     parser.add_argument("--report", required=True, type=Path)
     args = parser.parse_args()
 
-    result = validate_derivations(load_jsonl(args.cases), load_corpus(args.corpus_root))
+    world_model = json.loads(args.world_model.read_text(encoding="utf-8"))
+    result = validate_derivations(load_jsonl(args.cases), load_corpus(args.corpus_root), world_model)
     args.report.parent.mkdir(parents=True, exist_ok=True)
     args.report.write_text(
         json.dumps(result.__dict__, ensure_ascii=False, indent=2, sort_keys=True),

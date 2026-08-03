@@ -10,7 +10,10 @@
     "single_doc_fact": 1,
     "temporal_version": 1
   },
+  "duplicate_case_id_count": 0,
+  "duplicate_question_count": 0,
   "errors": [],
+  "gold_leakage_count": 0,
   "passed": true,
   "warnings": []
 }

@@ -28,6 +28,7 @@ Synthetic Track 当前仍为 `BLOCKED_WITH_EXACT_GAPS`，原因是完整 80 case
 - seed case distribution：每个目标 bucket 各 1 个
 - seed dataset hash：`00064456daf21942b2739a9151d6bb86c84ffda7e946cece4b4b548c9f7c9e6a`
 - seed corpus hash：`749b932786416ea0c4fd35effa0e0bc6722ab5acc300fe1dde3cb7549d5b50e4`
+- world model hash：`f3078e20b11feb468285fcca07fa09a920a5be4f280841957dc447938dc76242`
 - runtime eligible：false
 - synthetic regression eligible：false
 
@@ -41,12 +42,13 @@ seed dataset 只是 7-case scaffold，不是完整 Track 证据；完整 Track �
 - distribution：20 single_doc_fact / 20 multi_hop / 15 graph_reasoning / 10 temporal_version / 5 abstain_no_answer / 5 security_scope / 5 fault_recovery
 - dataset hash：`b7832e537dbaab14a7d664f334676120f10b86aa8b7efddfc7220bc7bc915f0c`
 - corpus hash：`749b932786416ea0c4fd35effa0e0bc6722ab5acc300fe1dde3cb7549d5b50e4`
+- world model hash：`f3078e20b11feb468285fcca07fa09a920a5be4f280841957dc447938dc76242`
 - validation scope：schema、source_document_refs、source_span_refs、input_hash、case_hash、duplicate_question、duplicate_case_id、runtime_forbidden_gold_fields、gold_leakage、hard_negative_no_answer_scan、seed_hash_stability
-- derivation validator v1：80/80 derivation valid；80/80 source evidence valid；0 unsupported answer；0 duplicate question；0 gold leakage；5/5 hard negative valid；80/80 hash valid；report hash `74cf4cb4d24ae062ff5b0dc78cba36c8a9ec7dbb68acff3bc278b2f2b4728e36`
+- derivation validator v1：80/80 derivation valid；80/80 answer derivation valid from World Model；80/80 source evidence valid；0 unsupported answer；0 duplicate question；0 gold leakage；5/5 hard negative valid；80/80 hash valid；report hash `7c0a118e77b6d2c49a9b4086b853d3eaf4ddf5a56236bda64cd8644e07e5d834`
 - runtime eligible：false
 - synthetic regression eligible：false
 
-当前 80-case candidate 已具备当前 schema、source span、hash、duplicate、gold-field 隔离、hard negative scan 和 derivation validator v1 证据；但 derivation validator v1 仍是结构化闭合校验，不等于完整 formal World Model proof。它也没有经过完整 Canonical Ingestion、三索引、Snapshot Activation 或四 Profile Runtime，因此不能声明 `SYNTHETIC_REGRESSION_TRACK_READY`。
+当前 80-case candidate 已具备当前 schema、World Model answer derivation、source span、hash、duplicate、gold-field 隔离、hard negative scan 和 derivation validator v1 证据。它仍没有经过完整 Canonical Ingestion、三索引、Snapshot Activation 或四 Profile Runtime，因此不能声明 `SYNTHETIC_REGRESSION_TRACK_READY`。
 
 ## 历史 PR 分类
 
@@ -60,7 +62,7 @@ seed dataset 只是 7-case scaffold，不是完整 Track 证据；完整 Track �
 
 ## 当前 Blocker
 
-- Dataset：当前分支已有 80/80 schema、structured derivation、source evidence、duplicate/gold leakage/hard-negative/hash 机器校验证据；仍缺完整 formal World Model proof 和人工 reviewer approval。
+- Dataset：当前分支已有 80/80 schema、World Model answer derivation、source evidence、duplicate/gold leakage/hard-negative/hash 机器校验证据；仍缺人工 reviewer approval，且不得把该机器证据冒充 Public Benchmark。
 - Ingestion：没有完整 Corpus 走 Source Upload 到 Snapshot Activation 的真实 ID 链。
 - Index：没有 ES/Milvus/Neo4j 三索引全量 visibility receipt。
 - Embedding：没有 formal Embedding Gateway provider/model/dimension/config hash。

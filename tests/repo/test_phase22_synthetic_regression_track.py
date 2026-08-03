@@ -26,8 +26,10 @@ def _copy_fixture(tmp_path: Path) -> Path:
         "docs/evidence/goal05-phase22-machine-attested-synthetic-regression/readiness-report.md",
         "docs/evidence/goal05-phase22-machine-attested-synthetic-regression/pr100-file-classification.json",
         "docs/evidence/goal05-phase22-machine-attested-synthetic-regression/seed-dataset/seed_dataset_manifest.json",
+        "docs/evidence/goal05-phase22-machine-attested-synthetic-regression/seed-dataset/world_model.json",
         "docs/evidence/goal05-phase22-machine-attested-synthetic-regression/candidate-dataset/candidate_dataset_manifest.json",
         "docs/evidence/goal05-phase22-machine-attested-synthetic-regression/candidate-dataset/candidate_derivation_report.json",
+        "docs/evidence/goal05-phase22-machine-attested-synthetic-regression/candidate-dataset/world_model.json",
         "docs/evidence/goal05-phase22-public-benchmark-review-pack/approval_summary.json",
         "docs/evidence/goal05-phase22-public-benchmark-review-pack/integrity_report.json",
         "docs/evidence/goal05-phase22-synthetic-benchmark/INVALIDATION_NOTICE.md",
@@ -160,3 +162,20 @@ def test_candidate_derivation_report_must_keep_no_gold_leakage(tmp_path: Path) -
     errors = verifier.verify_phase22_synthetic_regression_track()
 
     assert any("gold_leakage_count must be 0" in error for error in errors)
+
+
+def test_candidate_derivation_report_must_keep_world_model_answer_derivation(tmp_path: Path) -> None:
+    verifier = _load_verifier()
+    fixture = _copy_fixture(tmp_path)
+    report_path = (
+        fixture
+        / "docs/evidence/goal05-phase22-machine-attested-synthetic-regression/candidate-dataset/candidate_derivation_report.json"
+    )
+    report = json.loads(report_path.read_text(encoding="utf-8"))
+    report["answer_derivation_valid_count"] = 79
+    report_path.write_text(json.dumps(report), encoding="utf-8")
+
+    verifier.REPO_ROOT = fixture
+    errors = verifier.verify_phase22_synthetic_regression_track()
+
+    assert any("answer_derivation_valid_count must be 80" in error for error in errors)

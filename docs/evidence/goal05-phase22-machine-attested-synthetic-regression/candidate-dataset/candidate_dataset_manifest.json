@@ -31,5 +31,6 @@
     "gold_leakage",
     "hard_negative_no_answer_scan",
     "seed_hash_stability"
-  ]
+  ],
+  "world_model_hash": "f3078e20b11feb468285fcca07fa09a920a5be4f280841957dc447938dc76242"
 }

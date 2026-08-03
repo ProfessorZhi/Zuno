@@ -14,8 +14,10 @@ TRACK_MANIFEST = TRACK_DIR / "track_manifest.json"
 READINESS_REPORT = TRACK_DIR / "readiness-report.md"
 PR100_FILE_CLASSIFICATION = TRACK_DIR / "pr100-file-classification.json"
 SEED_DATASET_MANIFEST = TRACK_DIR / "seed-dataset" / "seed_dataset_manifest.json"
+SEED_WORLD_MODEL = TRACK_DIR / "seed-dataset" / "world_model.json"
 CANDIDATE_DATASET_MANIFEST = TRACK_DIR / "candidate-dataset" / "candidate_dataset_manifest.json"
 CANDIDATE_DERIVATION_REPORT = TRACK_DIR / "candidate-dataset" / "candidate_derivation_report.json"
+CANDIDATE_WORLD_MODEL = TRACK_DIR / "candidate-dataset" / "world_model.json"
 PUBLIC_APPROVAL_SUMMARY = Path(
     "docs/evidence/goal05-phase22-public-benchmark-review-pack/approval_summary.json"
 )
@@ -48,8 +50,10 @@ def verify_phase22_synthetic_regression_track() -> list[str]:
         READINESS_REPORT,
         PR100_FILE_CLASSIFICATION,
         SEED_DATASET_MANIFEST,
+        SEED_WORLD_MODEL,
         CANDIDATE_DATASET_MANIFEST,
         CANDIDATE_DERIVATION_REPORT,
+        CANDIDATE_WORLD_MODEL,
         PUBLIC_APPROVAL_SUMMARY,
         PUBLIC_INTEGRITY_REPORT,
         INVALIDATION_NOTICE,
@@ -66,6 +70,8 @@ def verify_phase22_synthetic_regression_track() -> list[str]:
     seed_manifest = _read_json(SEED_DATASET_MANIFEST)
     candidate_manifest = _read_json(CANDIDATE_DATASET_MANIFEST)
     derivation_report = _read_json(CANDIDATE_DERIVATION_REPORT)
+    seed_world_model = _read_json(SEED_WORLD_MODEL)
+    candidate_world_model = _read_json(CANDIDATE_WORLD_MODEL)
     approval = _read_json(PUBLIC_APPROVAL_SUMMARY)
     integrity = _read_json(PUBLIC_INTEGRITY_REPORT)
     report = _read_text(READINESS_REPORT)
@@ -98,6 +104,8 @@ def verify_phase22_synthetic_regression_track() -> list[str]:
         errors.append("seed dataset must not be runtime eligible")
     if seed_manifest.get("synthetic_regression_eligible") is not False:
         errors.append("seed dataset must not be synthetic regression eligible")
+    if seed_manifest.get("world_model_hash") != candidate_manifest.get("world_model_hash"):
+        errors.append("seed and candidate world_model_hash must match")
     if candidate_manifest.get("status") != "FULL_80_CANDIDATE_VALIDATED":
         errors.append("candidate dataset manifest must be FULL_80_CANDIDATE_VALIDATED")
     if candidate_manifest.get("case_count") != 80:
@@ -122,6 +130,14 @@ def verify_phase22_synthetic_regression_track() -> list[str]:
         errors.append("candidate derivation report hard_negative_valid_count must be 5")
     if derivation_report.get("hash_valid_count") != 80:
         errors.append("candidate derivation report hash_valid_count must be 80")
+    if derivation_report.get("answer_derivation_valid_count") != 80:
+        errors.append("candidate derivation report answer_derivation_valid_count must be 80")
+    if derivation_report.get("world_model_valid_count") != 80:
+        errors.append("candidate derivation report world_model_valid_count must be 80")
+    if derivation_report.get("world_model_hash") != candidate_manifest.get("world_model_hash"):
+        errors.append("candidate derivation report world_model_hash must match dataset manifest")
+    if seed_world_model != candidate_world_model:
+        errors.append("seed and candidate world_model.json must match")
     current_evidence = manifest.get("current_evidence", {})
     report_field_pairs = {
         "candidate_derivation_valid_count": "derivation_valid_count",
@@ -131,6 +147,8 @@ def verify_phase22_synthetic_regression_track() -> list[str]:
         "candidate_gold_leakage_count": "gold_leakage_count",
         "candidate_hard_negative_valid_count": "hard_negative_valid_count",
         "candidate_hash_valid_count": "hash_valid_count",
+        "candidate_answer_derivation_valid_count": "answer_derivation_valid_count",
+        "candidate_world_model_valid_count": "world_model_valid_count",
     }
     for manifest_field, report_field in report_field_pairs.items():
         if current_evidence.get(manifest_field) != derivation_report.get(report_field):

@@ -1,0 +1,42 @@
+{
+  "absent_facts": {
+    "fy2025_revenue": {
+      "answer": "(no answer)",
+      "authorized_corpus_scope": [
+        "global/open"
+      ]
+    }
+  },
+  "facts": {
+    "release_version": {
+      "answer": "Axis-9 Industrial Controller v9.4.0.",
+      "source": "doc_axis9_release_notes"
+    }
+  },
+  "fault_rules": {
+    "milvus_write_or_query_failed|index_partially_failed": "The runtime must not fabricate; it may use BM25/graph evidence if available or return a controlled retrieval failure."
+  },
+  "multi_hop_answers": {
+    "doc_northwind_charter|sponsor+doc_northwind_sdk_overview|deliverable": "Project Northwind."
+  },
+  "relations": [
+    {
+      "answer": "Project Northwind delivers Northwind SDK v3.0.0.",
+      "direction": "outbound",
+      "from": "project:Northwind",
+      "kind": "project_delivers_product",
+      "to": "product:Northwind SDK v3.0.0"
+    }
+  ],
+  "schema_version": "1.0.0",
+  "security_epoch_ref": "sec_epoch_synthetic_v1",
+  "security_rules": {
+    "legal/privileged|global/open": "No. The detailed findings are legal privileged and must not be disclosed."
+  },
+  "temporal_versions": {
+    "2026-01-01|doc_security_policy_2024": "Information Security Policy v4.2."
+  },
+  "tenant_id": "tenant_auroralis",
+  "track_id": "machine_attested_synthetic_regression",
+  "workspace_id": "workspace_regression"
+}

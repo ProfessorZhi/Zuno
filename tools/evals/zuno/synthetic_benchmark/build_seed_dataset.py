@@ -105,6 +105,47 @@ On 2026-04-22, Nadya Soroka issued a voluntary firmware corrective action for th
 """,
 }
 
+WORLD_MODEL = {
+    "schema_version": "1.0.0",
+    "track_id": "machine_attested_synthetic_regression",
+    "tenant_id": TENANT_ID,
+    "workspace_id": WORKSPACE_ID,
+    "security_epoch_ref": SECURITY_EPOCH,
+    "facts": {
+        "release_version": {
+            "source": "doc_axis9_release_notes",
+            "answer": "Axis-9 Industrial Controller v9.4.0.",
+        }
+    },
+    "multi_hop_answers": {
+        "doc_northwind_charter|sponsor+doc_northwind_sdk_overview|deliverable": "Project Northwind."
+    },
+    "relations": [
+        {
+            "kind": "project_delivers_product",
+            "from": "project:Northwind",
+            "to": "product:Northwind SDK v3.0.0",
+            "direction": "outbound",
+            "answer": "Project Northwind delivers Northwind SDK v3.0.0.",
+        }
+    ],
+    "temporal_versions": {
+        "2026-01-01|doc_security_policy_2024": "Information Security Policy v4.2."
+    },
+    "absent_facts": {
+        "fy2025_revenue": {
+            "authorized_corpus_scope": ["global/open"],
+            "answer": "(no answer)",
+        }
+    },
+    "security_rules": {
+        "legal/privileged|global/open": "No. The detailed findings are legal privileged and must not be disclosed."
+    },
+    "fault_rules": {
+        "milvus_write_or_query_failed|index_partially_failed": "The runtime must not fabricate; it may use BM25/graph evidence if available or return a controlled retrieval failure."
+    },
+}
+
 
 def _principal(principal_id: str, roles: list[str], scopes: list[str]) -> dict[str, Any]:
     return {"principal_id": principal_id, "roles": roles, "scopes": scopes}
@@ -329,6 +370,11 @@ def write_seed_dataset(out_root: Path) -> dict[str, Any]:
     corpus_root.mkdir(parents=True, exist_ok=True)
     for doc_id, body in CORPUS_DOCS.items():
         (corpus_root / f"{doc_id}.md").write_text(body, encoding="utf-8", newline="\n")
+    (out_root / "world_model.json").write_text(
+        json.dumps(WORLD_MODEL, ensure_ascii=False, indent=2, sort_keys=True),
+        encoding="utf-8",
+        newline="\n",
+    )
 
     cases = build_seed_cases()
     cases_path = out_root / "seed_cases.jsonl"
@@ -340,6 +386,7 @@ def write_seed_dataset(out_root: Path) -> dict[str, Any]:
 
     result = validate_cases(cases, CORPUS_DOCS, require_full_80=False)
     corpus_hash = sha256_json(CORPUS_DOCS)
+    world_model_hash = sha256_json(WORLD_MODEL)
     manifest = {
         "schema_version": "1.0.0",
         "dataset_id": "phase22_synthetic_seed_dataset_v1",
@@ -350,6 +397,7 @@ def write_seed_dataset(out_root: Path) -> dict[str, Any]:
         "distribution": result.distribution,
         "dataset_hash": result.dataset_hash,
         "corpus_hash": corpus_hash,
+        "world_model_hash": world_model_hash,
         "runtime_eligible": False,
         "synthetic_regression_eligible": False,
         "blocked_reason": "seed_dataset_only_full_80_not_built",
@@ -372,6 +420,11 @@ def write_full_candidate_dataset(out_root: Path) -> dict[str, Any]:
     corpus_root.mkdir(parents=True, exist_ok=True)
     for doc_id, body in CORPUS_DOCS.items():
         (corpus_root / f"{doc_id}.md").write_text(body, encoding="utf-8", newline="\n")
+    (out_root / "world_model.json").write_text(
+        json.dumps(WORLD_MODEL, ensure_ascii=False, indent=2, sort_keys=True),
+        encoding="utf-8",
+        newline="\n",
+    )
 
     cases = build_full_candidate_cases()
     cases_path = out_root / "synthetic_cases.jsonl"
@@ -383,6 +436,7 @@ def write_full_candidate_dataset(out_root: Path) -> dict[str, Any]:
 
     result = validate_cases(cases, CORPUS_DOCS, require_full_80=True)
     corpus_hash = sha256_json(CORPUS_DOCS)
+    world_model_hash = sha256_json(WORLD_MODEL)
     manifest = {
         "schema_version": "1.0.0",
         "dataset_id": "phase22_synthetic_candidate_dataset_v1",
@@ -393,6 +447,7 @@ def write_full_candidate_dataset(out_root: Path) -> dict[str, Any]:
         "distribution": result.distribution,
         "dataset_hash": result.dataset_hash,
         "corpus_hash": corpus_hash,
+        "world_model_hash": world_model_hash,
         "runtime_eligible": False,
         "synthetic_regression_eligible": False,
         "blocked_reason": "canonical_ingestion_and_runtime_not_executed",

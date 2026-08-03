@@ -12,6 +12,7 @@ from tools.evals.zuno.synthetic_benchmark.build_seed_dataset import (
     write_seed_dataset,
     write_full_candidate_dataset,
     CORPUS_DOCS,
+    WORLD_MODEL,
 )
 
 
@@ -143,32 +144,36 @@ def test_derivation_validator_validates_candidate_without_expected_answer() -> N
     cases = build_full_candidate_cases()
     stripped = [{k: v for k, v in case.items() if k != "expected_answer"} for case in cases]
 
-    result = validate_derivations(stripped, CORPUS_DOCS)
+    result = validate_derivations(stripped, CORPUS_DOCS, WORLD_MODEL)
 
     assert result.passed
     assert result.case_count == 80
     assert result.derivation_valid_count == 80
     assert result.source_evidence_valid_count == 80
+    assert result.answer_derivation_valid_count == 80
+    assert result.world_model_valid_count == 80
     assert result.unsupported_answer_count == 0
 
 
 def test_derivation_validator_reports_wp1_quality_counts() -> None:
     cases = build_full_candidate_cases()
 
-    result = validate_derivations(cases, CORPUS_DOCS)
+    result = validate_derivations(cases, CORPUS_DOCS, WORLD_MODEL)
 
     assert result.passed
     assert result.duplicate_question_count == 0
     assert result.gold_leakage_count == 0
     assert result.hard_negative_valid_count == 5
     assert result.hash_valid_count == 80
+    assert result.answer_derivation_valid_count == 80
+    assert result.world_model_valid_count == 80
 
 
 def test_derivation_validator_rejects_unclosed_graph_relation() -> None:
     case = build_full_candidate_cases()[40]
     case["derivation_spec"] = {"method": "graph_relation", "relations": []}
 
-    result = validate_derivations([case], CORPUS_DOCS)
+    result = validate_derivations([case], CORPUS_DOCS, WORLD_MODEL)
 
     assert not result.passed
     assert any("graph_relation requires relations" in error for error in result.errors)
@@ -183,7 +188,18 @@ def test_derivation_validator_rejects_hard_negative_present_in_authorized_corpus
         "fy2025 revenue is intentionally present for a negative test.\n"
     )
 
-    result = validate_derivations([case], corpus)
+    result = validate_derivations([case], corpus, WORLD_MODEL)
 
     assert not result.passed
     assert any("missing_fact is present in authorized corpus" in error for error in result.errors)
+
+
+def test_derivation_validator_rejects_expected_answer_drift_after_world_model_derivation() -> None:
+    case = build_full_candidate_cases()[0]
+    case["expected_answer"] = "A made-up answer."
+    case["case_hash"] = compute_case_hash(case)
+
+    result = validate_derivations([case], CORPUS_DOCS, WORLD_MODEL)
+
+    assert not result.passed
+    assert any("derived answer does not match expected_answer" in error for error in result.errors)
