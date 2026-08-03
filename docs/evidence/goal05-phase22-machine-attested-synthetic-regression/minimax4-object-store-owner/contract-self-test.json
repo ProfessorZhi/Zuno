@@ -1,0 +1,78 @@
+{
+  "mode": "contract",
+  "overall_status": "UNIQUE_PRODUCTION_BINDING_CONFIRMED",
+  "results": [
+    {
+      "fixture": "unique_production_binding",
+      "expected_status": "UNIQUE_PRODUCTION_BINDING_CONFIRMED",
+      "actual_status": "UNIQUE_PRODUCTION_BINDING_CONFIRMED",
+      "exit_code": 0,
+      "reasons": [
+        "production composition root binds exactly one MinIO adapter, wraps it in a single durable wrapper, the local adapter is restricted to the Local/Test profile, and the composition root fails closed when production storage is unconfigured"
+      ]
+    },
+    {
+      "fixture": "multiple_production_bindings",
+      "expected_status": "MULTIPLE_PRODUCTION_BINDINGS",
+      "actual_status": "MULTIPLE_PRODUCTION_BINDINGS",
+      "exit_code": 2,
+      "reasons": [
+        "composition root body mentions 'MinioObjectStore' 2 times; exactly one production binding allowed"
+      ]
+    },
+    {
+      "fixture": "no_production_binding",
+      "expected_status": "NO_PRODUCTION_BINDING",
+      "actual_status": "NO_PRODUCTION_BINDING",
+      "exit_code": 3,
+      "reasons": [
+        "composition root has no call sites; nothing is bound"
+      ]
+    },
+    {
+      "fixture": "missing_binding",
+      "expected_status": "BINDING_UNRESOLVED",
+      "actual_status": "BINDING_UNRESOLVED",
+      "exit_code": 4,
+      "reasons": [
+        "composition root body is missing a production adapter or durable wrapper instantiation"
+      ]
+    },
+    {
+      "fixture": "wrapper_wraps_production_adapter",
+      "expected_status": "UNIQUE_PRODUCTION_BINDING_CONFIRMED",
+      "actual_status": "UNIQUE_PRODUCTION_BINDING_CONFIRMED",
+      "exit_code": 0,
+      "reasons": [
+        "production composition root binds exactly one MinIO adapter, wraps it in a single durable wrapper, the local adapter is restricted to the Local/Test profile, and the composition root fails closed when production storage is unconfigured"
+      ]
+    },
+    {
+      "fixture": "test_double_excluded",
+      "expected_status": "UNIQUE_PRODUCTION_BINDING_CONFIRMED",
+      "actual_status": "UNIQUE_PRODUCTION_BINDING_CONFIRMED",
+      "exit_code": 0,
+      "reasons": [
+        "production composition root binds exactly one MinIO adapter, wraps it in a single durable wrapper, the local adapter is restricted to the Local/Test profile, and the composition root fails closed when production storage is unconfigured"
+      ]
+    },
+    {
+      "fixture": "name_count_algorithm_rejected",
+      "expected_status": "BINDING_UNRESOLVED",
+      "actual_status": "BINDING_UNRESOLVED",
+      "exit_code": 4,
+      "reasons": [
+        "class-name suffix counting is not a binding proof"
+      ]
+    },
+    {
+      "fixture": "real_repository_attested",
+      "expected_status": "UNIQUE_PRODUCTION_BINDING_CONFIRMED",
+      "actual_status": "UNIQUE_PRODUCTION_BINDING_CONFIRMED",
+      "exit_code": 0,
+      "reasons": [
+        "production composition root binds exactly one MinIO adapter, wraps it in a single durable wrapper, the local adapter is restricted to the Local/Test profile, and the composition root fails closed when production storage is unconfigured"
+      ]
+    }
+  ]
+}

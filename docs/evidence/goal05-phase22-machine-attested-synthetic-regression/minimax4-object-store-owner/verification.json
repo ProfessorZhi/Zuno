@@ -1,0 +1,134 @@
+{
+  "mode": "repository",
+  "status": "UNIQUE_PRODUCTION_BINDING_CONFIRMED",
+  "reasons": [
+    "production composition root binds exactly one MinIO adapter, wraps it in a single durable wrapper, the local adapter is restricted to the Local/Test profile, and the composition root fails closed when production storage is unconfigured"
+  ],
+  "report": {
+    "observations": [
+      {
+        "role": "protocol_port",
+        "qualified_name": "DurableObjectStore",
+        "file_path": "src/backend/zuno/knowledge/ingestion/source_object_upload.py",
+        "line_number": 23,
+        "notes": [
+          "structural Protocol defining the port"
+        ]
+      },
+      {
+        "role": "local_development_adapter",
+        "qualified_name": "LocalObjectStore",
+        "file_path": "src/backend/zuno/knowledge/storage/local_object_store.py",
+        "line_number": 14,
+        "notes": [
+          "local filesystem adapter; not bound by production composition root"
+        ]
+      },
+      {
+        "role": "production_minio_adapter",
+        "qualified_name": "MinioObjectStore",
+        "file_path": "src/backend/zuno/platform/storage/object_store.py",
+        "line_number": 80,
+        "notes": [
+          "MinIO client; production adapter"
+        ]
+      },
+      {
+        "role": "durable_wrapper",
+        "qualified_name": "DurableMinioObjectStore",
+        "file_path": "src/backend/zuno/platform/storage/durable.py",
+        "line_number": 73,
+        "notes": [
+          "durable wrapper around the production adapter"
+        ]
+      },
+      {
+        "role": "runtime_owner",
+        "qualified_name": "PackageAProductionIngestionRuntime",
+        "file_path": "src/backend/zuno/knowledge/ingestion/production_runtime.py",
+        "line_number": 116,
+        "notes": [
+          "depends on DurableMinioObjectStore"
+        ]
+      },
+      {
+        "role": "composition_root_binding",
+        "qualified_name": "build_package_a_production_ingestion_runtime",
+        "file_path": "src/backend/zuno/api/services/workspace_task_runtime.py",
+        "line_number": 116,
+        "notes": [
+          "returns PackageAProductionIngestionRuntime or None"
+        ]
+      }
+    ],
+    "runtime_owner_dependencies": [
+      {
+        "field": "object_store",
+        "type": "DurableMinioObjectStore"
+      }
+    ],
+    "composition_root_signature": {
+      "worker_id": "\"workspace-file-upload\"",
+      "object_store_factory": "MinioObjectStore",
+      "durable_object_store_factory": "DurableMinioObjectStore",
+      "runtime_factory": "PackageAProductionIngestionRuntime"
+    },
+    "composition_root_body_references": {
+      "MinioObjectStore": 1,
+      "DurableMinioObjectStore": 1,
+      "LocalObjectStore": 0,
+      "LazyStorageClient": 0,
+      "OSSClient": 0
+    },
+    "composition_root_call_sites": [
+      {
+        "file_path": "src/backend/zuno/main.py",
+        "line_number": 73,
+        "arguments": "engine=engine,             settings=app_settings,"
+      },
+      {
+        "file_path": "src/backend/zuno/platform/services/queue/runner.py",
+        "line_number": 56,
+        "arguments": "engine=engine,         settings=app_settings,         worker_id=str(rabbitmq.get(\"ingestion_worker_id\""
+      }
+    ],
+    "production_storage_mode_seen": [],
+    "local_binding_sites_seen": [
+      "configure_durable_ingestion"
+    ],
+    "fail_closed_branches": [
+      "endpoint.*?access_key.*?secret_key at line 134",
+      "return\\s+None at line 127",
+      "return\\s+None at line 130",
+      "return\\s+None at line 135",
+      "return\\s+None at line 798",
+      "return\\s+None at line 803",
+      "return\\s+None at line 867",
+      "return\\s+None at line 955",
+      "return\\s+None at line 1862",
+      "return\\s+None at line 1866",
+      "return\\s+None at line 2028",
+      "return\\s+None at line 2034",
+      "return\\s+None at line 2039",
+      "return\\s+None at line 2079",
+      "return\\s+None at line 2381",
+      "return\\s+None at line 2440",
+      "return\\s+None at line 2464",
+      "return\\s+None at line 2466",
+      "return\\s+None at line 3047",
+      "return\\s+None at line 3314",
+      "return\\s+None at line 3335"
+    ],
+    "receipts_observed": [
+      "s3:// scheme at line 164"
+    ],
+    "tenant_workspace_bindings": [
+      "tenant/workspace prefix bound at line 147"
+    ],
+    "wrapper_binding_chain": [
+      "store=object_store,         engine=engine,         owner=\"workspace.file_upload\",",
+      "object_store_factory bound: endpoint=endpoint,\n        access_key=access_key,\n        secret_key=secret_key,\n        secure=False,"
+    ],
+    "errors": []
+  }
+}
