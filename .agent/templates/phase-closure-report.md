@@ -15,6 +15,13 @@
 - Verification Agent：
 - Integration Reviewer Agent：
 
+## Worker 身份与成本
+
+| agent | model | worker | session_id | branch | commit | duration_ms | api_cost_usd_estimated | provider_quota_basis | validation | risk |
+| --- | --- | --- | --- | --- | --- | ---: | ---: | --- | --- | --- |
+
+API 成本账来自 Claude Code `stream-json --verbose` 的 `total_cost_usd` / `modelUsage.*.costUSD` 和 token 字段。平台额度账必须单独记录；无法从 provider 后台核实时写 `provider_quota_basis=unknown`，不能把 API 估算成本当作真实平台扣费。
+
 ## 验收闸门结果
 
 ## 自维护审查
@@ -38,6 +45,9 @@
 - PR URL：
 - PR 类型：base / stacked
 - PR 风险说明：
+- PR 身份标签：`agent=<agent> model=<model> worker=<worker>`
+- Coordinator 审查结论：
+- Coordinator 合并状态：
 
 ## Git 同步
 

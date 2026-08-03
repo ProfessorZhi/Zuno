@@ -48,6 +48,81 @@ git push
 
 Avoid force push, force-with-lease, amend, and reset unless explicitly requested.
 
+## 多 Agent / Claude Code 调度
+
+Preferred worktree layout:
+
+```powershell
+git -C "F:\internship-work\resume project\Zuno" fetch origin main --prune
+git -C "F:\internship-work\resume project\Zuno" worktree add -b codex/<task>-<agent>-<model>-<worker> "F:\internship-work\resume project\worktrees\<agent>-<model>-<worker>" origin/main
+git -C "F:\internship-work\resume project\worktrees\<agent>-<model>-<worker>" status --short --branch
+```
+
+Preferred Claude Code metrics capture:
+
+```powershell
+$Log = Join-Path $env:TEMP "zuno-claude-<agent>-<model>-<worker>.jsonl"
+$PromptPath = Join-Path $env:TEMP "zuno-claude-<agent>-<model>-<worker>.prompt.md"
+Set-Content -LiteralPath $PromptPath -Encoding UTF8 -Value @'
+agent=<agent>
+model=<model>
+worker=<worker>
+worktree=<absolute worktree path>
+branch=codex/<task>-<agent>-<model>-<worker>
+allowed_paths=<paths>
+forbidden_paths=<paths>
+commit_message=<type>(<area>): <task> [agent=<agent> model=<model> worker=<worker>]
+pr_title=<task> [agent=<agent> model=<model> worker=<worker>]
+handoff_fields=identity,session_id,branch,commit,changed_files,validation,risk,duration,api_cost_usd_estimated,provider_quota_basis
+'@
+$Lines = & claude-<provider> -p (Get-Content -LiteralPath $PromptPath -Raw) --output-format stream-json --verbose --max-turns <n> --max-budget-usd <amount>
+$Lines | Set-Content -LiteralPath $Log -Encoding UTF8
+```
+
+Metrics fields to extract from the final `type=result` event:
+
+```text
+session_id
+duration_ms
+duration_api_ms
+total_cost_usd
+usage.input_tokens
+usage.cache_read_input_tokens
+usage.cache_creation_input_tokens
+usage.output_tokens
+modelUsage.*.costUSD
+```
+
+Provider quota fields are separate:
+
+```text
+provider_quota_basis=token | request | percent | credit | unknown
+provider_quota_before=<manual or unavailable>
+provider_quota_after=<manual or unavailable>
+provider_quota_delta=<manual or unavailable>
+```
+
+PR handoff must include:
+
+```text
+agent=<agent>
+model=<model>
+worker=<worker>
+session_id=<session id>
+branch=<branch>
+commit=<sha>
+api_cost_usd_estimated=<total_cost_usd>
+provider_quota_basis=<basis>
+duration_ms=<duration_ms>
+validation=<commands and results>
+```
+
+Avoid:
+
+- 在 prompt 内嵌套会被 PowerShell 二次解析的双引号 commit message。
+- 用 `--output-format text` 统计成本；它不会稳定返回 `usage` 和 `total_cost_usd`。
+- 让 worker 直接合并自己的 PR。
+
 ## 工作树与命令行安全
 
 Preferred:
