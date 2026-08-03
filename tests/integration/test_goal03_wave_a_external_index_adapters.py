@@ -87,7 +87,9 @@ def test_phase12_elasticsearch_bm25_adapter_requires_real_service_readback() -> 
             index_prefix=f"goal03_{uuid4().hex[:8]}",
         )
     )
-    runtime.create_knowledge_space("ks_es_external", "workspace_external_index")
+    runtime.create_knowledge_space(
+        "ks_es_external", "workspace_external_index", tenant_id="tenant_external_index", knowledge_version_id="knowledge-version::external-index"
+    )
 
     manifest = runtime.index_document(
         "ks_es_external",
@@ -119,7 +121,9 @@ def test_phase12_milvus_vector_adapter_requires_real_service_readback() -> None:
             index_prefix=f"goal03_{uuid4().hex[:8]}",
         )
     )
-    runtime.create_knowledge_space("ks_milvus_external", "workspace_external_index")
+    runtime.create_knowledge_space(
+        "ks_milvus_external", "workspace_external_index", tenant_id="tenant_external_index", knowledge_version_id="knowledge-version::external-index"
+    )
 
     manifest = runtime.index_document(
         "ks_milvus_external",
@@ -161,7 +165,9 @@ def test_phase12_neo4j_graph_adapter_requires_real_service_readback() -> None:
             index_prefix=f"goal03_{uuid4().hex[:8]}",
         )
     )
-    runtime.create_knowledge_space("ks_neo4j_external", "workspace_external_index")
+    runtime.create_knowledge_space(
+        "ks_neo4j_external", "workspace_external_index", tenant_id="tenant_external_index", knowledge_version_id="knowledge-version::external-index"
+    )
 
     manifest = runtime.index_document(
         "ks_neo4j_external",

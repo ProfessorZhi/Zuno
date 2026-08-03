@@ -16,6 +16,36 @@ from .contracts import (
 )
 
 
+class ScopeValidationError(ValueError):
+    """Raised when a scoped index query is invoked without the mandatory
+    tenant / workspace / knowledge_version scope.
+
+    Missing, None or empty scope values fail closed: no unscoped query is
+    ever executed against the live indexes."""
+
+
+def require_query_scope(
+    *,
+    tenant_id: str | None,
+    workspace_id: str | None,
+    knowledge_version_id: str | None,
+    snapshot_id: str | None = None,
+) -> None:
+    missing = [
+        name
+        for name, value in [
+            ("tenant_id", tenant_id),
+            ("workspace_id", workspace_id),
+            ("knowledge_version_id", knowledge_version_id),
+        ]
+        if not str(value or "").strip()
+    ]
+    if snapshot_id is not None and not str(snapshot_id).strip():
+        missing.append("snapshot_id")
+    if missing:
+        raise ScopeValidationError(f"scope_required:{','.join(missing)}")
+
+
 INDEX_ADAPTER_CONTRACTS = {
     "local_bm25": IndexAdapterContract(
         adapter_id="local_bm25",
@@ -101,6 +131,7 @@ class ExternalServiceIndexAdapterBinding:
         lineage: dict[str, Any],
         graph_project_id: str | None,
         tenant_id: str = "",
+        knowledge_version_id: str = "",
         recreate: bool = True,
     ) -> list[dict]:
         indexed_documents = self._canonical_documents(
@@ -110,6 +141,7 @@ class ExternalServiceIndexAdapterBinding:
             lineage=lineage,
             graph_project_id=graph_project_id,
             tenant_id=tenant_id,
+            knowledge_version_id=knowledge_version_id,
         )
         _call_client(
             self.client,
@@ -126,12 +158,18 @@ class ExternalServiceIndexAdapterBinding:
         document: Any,
         sample_query: str,
         indexed_documents: list[dict],
+        tenant_id: str = "",
+        workspace_id: str = "",
+        knowledge_version_id: str = "",
     ) -> dict[str, Any]:
         results = _call_client(
             self.client,
             ("search_documents", "search", "query"),
             sample_query,
             self.index_name,
+            tenant_id=tenant_id,
+            workspace_id=workspace_id,
+            knowledge_version_id=knowledge_version_id,
         )
         result_documents = _normalize_result_documents(results)
         return _sample_result_verification(
@@ -149,14 +187,22 @@ class ExternalServiceIndexAdapterBinding:
         lineage: dict[str, Any],
         graph_project_id: str | None,
         tenant_id: str = "",
+        knowledge_version_id: str = "",
     ) -> list[dict]:
         if self.target == "bm25":
-            return runtime._bm25_documents(handoff.bm25_documents, document, lineage, tenant_id=tenant_id)
+            return runtime._bm25_documents(
+                handoff.bm25_documents, document, lineage,
+                tenant_id=tenant_id, knowledge_version_id=knowledge_version_id,
+            )
         if self.target == "vector":
-            return runtime._vector_documents(handoff.vector_documents, document, lineage, tenant_id=tenant_id)
+            return runtime._vector_documents(
+                handoff.vector_documents, document, lineage,
+                tenant_id=tenant_id, knowledge_version_id=knowledge_version_id,
+            )
         if self.target == "graph":
             return runtime._graph_documents(
-                handoff.graphrag_documents, document, graph_project_id, lineage, tenant_id=tenant_id
+                handoff.graphrag_documents, document, graph_project_id, lineage,
+                tenant_id=tenant_id, knowledge_version_id=knowledge_version_id,
             )
         raise ValueError(f"unsupported external index target: {self.target}")
 
@@ -382,6 +428,11 @@ class Neo4jGraphIndexClient:
         separate, canonical-owner step that additionally requires a real
         knowledge_version_id / snapshot_id scope.
         """
+        require_query_scope(
+            tenant_id=tenant_id,
+            workspace_id=workspace_id,
+            knowledge_version_id=knowledge_version_id,
+        )
         driver = self._driver()
         try:
             with driver.session(database=self.database) as session:
@@ -537,6 +588,11 @@ class ElasticsearchBm25IndexClient:
         workspace_id: str | None = None,
         knowledge_version_id: str | None = None,
     ) -> list[dict]:
+        require_query_scope(
+            tenant_id=tenant_id,
+            workspace_id=workspace_id,
+            knowledge_version_id=knowledge_version_id,
+        )
         body: dict[str, Any] = {"query": {"match": {"content": query}}, "size": 25}
         filters = _scope_filters(
             tenant_id=tenant_id,
@@ -569,6 +625,11 @@ class ElasticsearchBm25IndexClient:
         workspace_id: str | None = None,
         knowledge_version_id: str | None = None,
     ) -> int:
+        require_query_scope(
+            tenant_id=tenant_id,
+            workspace_id=workspace_id,
+            knowledge_version_id=knowledge_version_id,
+        )
         filters = _scope_filters(
             tenant_id=tenant_id,
             workspace_id=workspace_id,
@@ -646,6 +707,11 @@ class MilvusVectorIndexClient:
         workspace_id: str | None = None,
         knowledge_version_id: str | None = None,
     ) -> list[dict]:
+        require_query_scope(
+            tenant_id=tenant_id,
+            workspace_id=workspace_id,
+            knowledge_version_id=knowledge_version_id,
+        )
         collection = self._load_collection(index_name)
         collection.load()
         search_params: dict[str, Any] = {
@@ -674,7 +740,7 @@ class MilvusVectorIndexClient:
                 "content",
             ],
         }
-        if expr:
+        if expr and _method_accepts_kwarg(collection.search, "expr"):
             search_kwargs["expr"] = expr
         results = collection.search(**search_kwargs)
         documents: list[dict] = []
@@ -720,6 +786,11 @@ class MilvusVectorIndexClient:
         workspace_id: str | None = None,
         knowledge_version_id: str | None = None,
     ) -> int:
+        require_query_scope(
+            tenant_id=tenant_id,
+            workspace_id=workspace_id,
+            knowledge_version_id=knowledge_version_id,
+        )
         collection = self._load_collection(index_name)
         collection.load()
         expr = _scope_expr(

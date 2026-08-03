@@ -395,7 +395,11 @@ def test_milvus_vector_client_uses_formal_embedding_gateway_for_index_and_query(
             }
         ],
     )
-    results = client.search_documents("supplier renewal", "phase22_vector")
+    results = client.search_documents(
+        "supplier renewal", "phase22_vector",
+        tenant_id="tenant_finance", workspace_id="workspace_finance",
+        knowledge_version_id="knowledge-version::formal-gateway",
+    )
 
     assert gateway.document_calls == [["Supplier renewal risk is high."]]
     assert gateway.query_calls == ["supplier renewal"]

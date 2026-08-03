@@ -1,47 +1,35 @@
 {
   "adapter_smoke": {
     "neo4j_paths": {
-      "canonical_path_receipt_builder_blocked": [
-        "one_hop_person_released_product:knowledge_version_id is required; snapshot_id is required",
-        "two_hop_sponsor_delivers:knowledge_version_id is required; snapshot_id is required",
-        "multi_hop_sponsor_delivers:knowledge_version_id is required; snapshot_id is required"
-      ],
+      "canonical_path_receipt_builder_blocked": [],
       "canonical_path_receipt_count": 0,
+      "cross_tenant_path": {
+        "query_executed": true,
+        "rejected": false,
+        "result": null
+      },
       "cross_tenant_path_visible": false,
       "path_readbacks": {
         "multi_hop_sponsor_delivers": {
-          "matched_node_refs": [
-            "person:Kjartan Eliasson",
-            "project:Northwind",
-            "product:Northwind SDK v3.0.0"
-          ],
-          "matched_relation_refs": [
-            "relation::person_sponsors_project::person:Kjartan Eliasson::project:Northwind",
-            "relation::project_delivers_product::project:Northwind::product:Northwind SDK v3.0.0"
-          ],
-          "store_visible": true
+          "matched_node_refs": [],
+          "matched_relation_refs": [],
+          "query_executed": false,
+          "rejected": true,
+          "store_visible": false
         },
         "one_hop_person_released_product": {
-          "matched_node_refs": [
-            "person:Haruto Soma",
-            "product:Axis-9 Industrial Controller v9.4.0"
-          ],
-          "matched_relation_refs": [
-            "relation::person_released_product::person:Haruto Soma::product:Axis-9 Industrial Controller v9.4.0"
-          ],
-          "store_visible": true
+          "matched_node_refs": [],
+          "matched_relation_refs": [],
+          "query_executed": false,
+          "rejected": true,
+          "store_visible": false
         },
         "two_hop_sponsor_delivers": {
-          "matched_node_refs": [
-            "person:Kjartan Eliasson",
-            "project:Northwind",
-            "product:Northwind SDK v3.0.0"
-          ],
-          "matched_relation_refs": [
-            "relation::person_sponsors_project::person:Kjartan Eliasson::project:Northwind",
-            "relation::project_delivers_product::project:Northwind::product:Northwind SDK v3.0.0"
-          ],
-          "store_visible": true
+          "matched_node_refs": [],
+          "matched_relation_refs": [],
+          "query_executed": false,
+          "rejected": true,
+          "store_visible": false
         }
       }
     },
@@ -350,36 +338,110 @@
     },
     "scope_matrix": {
       "elasticsearch": {
-        "foreign_tenant_search_hit_count": 0,
+        "foreign_tenant_search": {
+          "query_executed": true,
+          "rejected": false,
+          "result": []
+        },
         "isolation_passed": true,
         "matrix": {
-          "empty_scope": 24,
-          "foreign_snapshot_scope": 0,
-          "missing_scope": 24,
-          "same_tenant_different_workspace": 0,
-          "same_tenant_workspace_different_kv": 0,
-          "same_tenant_workspace_kv": 24,
-          "same_workspace_different_tenant": 0
+          "empty_scope": {
+            "query_executed": false,
+            "reason": "scope_required:tenant_id,workspace_id,knowledge_version_id",
+            "rejected": true
+          },
+          "foreign_snapshot_scope": {
+            "query_executed": true,
+            "rejected": false,
+            "result": 0
+          },
+          "missing_scope": {
+            "query_executed": false,
+            "reason": "scope_required:tenant_id,workspace_id,knowledge_version_id",
+            "rejected": true
+          },
+          "same_tenant_different_workspace": {
+            "query_executed": true,
+            "rejected": false,
+            "result": 0
+          },
+          "same_tenant_workspace_different_kv": {
+            "query_executed": true,
+            "rejected": false,
+            "result": 0
+          },
+          "same_tenant_workspace_kv": {
+            "query_executed": false,
+            "reason": "scope_required:knowledge_version_id",
+            "rejected": true
+          },
+          "same_workspace_different_tenant": {
+            "query_executed": true,
+            "rejected": false,
+            "result": 0
+          }
         },
-        "scoped_search_hit_count": 4
+        "scoped_search": {
+          "query_executed": false,
+          "reason": "scope_required:knowledge_version_id",
+          "rejected": true
+        }
       },
       "milvus": {
-        "foreign_tenant_search_hit_count": 0,
+        "foreign_tenant_search": {
+          "query_executed": true,
+          "rejected": false,
+          "result": []
+        },
         "injection_attempt": {
-          "count": 0
+          "query_executed": true,
+          "rejected": false,
+          "result": 0
         },
         "injection_contained": true,
         "isolation_passed": true,
         "matrix": {
-          "empty_scope": 24,
-          "foreign_snapshot_scope": 0,
-          "missing_scope": 24,
-          "same_tenant_different_workspace": 0,
-          "same_tenant_workspace_different_kv": 0,
-          "same_tenant_workspace_kv": 24,
-          "same_workspace_different_tenant": 0
+          "empty_scope": {
+            "query_executed": false,
+            "reason": "scope_required:tenant_id,workspace_id,knowledge_version_id",
+            "rejected": true
+          },
+          "foreign_snapshot_scope": {
+            "query_executed": true,
+            "rejected": false,
+            "result": 0
+          },
+          "missing_scope": {
+            "query_executed": false,
+            "reason": "scope_required:tenant_id,workspace_id,knowledge_version_id",
+            "rejected": true
+          },
+          "same_tenant_different_workspace": {
+            "query_executed": true,
+            "rejected": false,
+            "result": 0
+          },
+          "same_tenant_workspace_different_kv": {
+            "query_executed": true,
+            "rejected": false,
+            "result": 0
+          },
+          "same_tenant_workspace_kv": {
+            "query_executed": false,
+            "reason": "scope_required:knowledge_version_id",
+            "rejected": true
+          },
+          "same_workspace_different_tenant": {
+            "query_executed": true,
+            "rejected": false,
+            "result": 0
+          }
         },
-        "scoped_search_hit_count": 24
+        "scoped_search": {
+          "query_executed": false,
+          "reason": "scope_required:knowledge_version_id",
+          "rejected": true
+        }
       }
     },
     "writes": {
@@ -400,7 +462,7 @@
   },
   "cleanup": {
     "elasticsearch": "index_deleted",
-    "index_prefix": "deepseek2_phase22_d385bcd2",
+    "index_prefix": "deepseek2_phase22_26a32783",
     "milvus": "collection_dropped",
     "neo4j": "nodes_deleted"
   },
@@ -411,23 +473,23 @@
   },
   "corpus_index_build_receipts": {
     "elasticsearch_bm25": {
-      "adapter_execution_ref": "adapter-live-smoke:deepseek2_phase22_d385bcd2:elasticsearch_bm25",
+      "adapter_execution_ref": "adapter-live-smoke:deepseek2_phase22_26a32783:elasticsearch_bm25",
       "block_reason": "knowledge_version_dependency_missing",
       "config_hash": "sha256:d4d77f48b3dcc15f5abdb0a8e1d610c0cccd38f3c5bf7d5a7464c84b7863961d",
       "content_set_hash": "77f1d7dbd30d2ed26d94c788dc0447a082807f9ac623092762e326a611955be9",
       "expected_chunk_count": 24,
       "expected_document_count": 8,
-      "index_build_run_id": "index-build-run::deepseek2_phase22_d385bcd2",
+      "index_build_run_id": "index-build-run::deepseek2_phase22_26a32783",
       "index_kind": "elasticsearch_bm25",
       "input_kind": "frozen_candidate_manifest",
       "knowledge_version_id": "",
       "not_owner_produced": true,
       "observed_chunk_count": 24,
       "observed_document_count": 8,
-      "payload_hash": "6a9cfca3e377307b53dc2f1e2c7e8a119cbfdeadfb04558d0d77e9a64cc87462",
+      "payload_hash": "a532125746a7da2fc886ea28502440ab05d988b7dc6de3f17c6c6eea18419a11",
       "readback_hash": "01943d54020dab84831bac07d52747d9d15e101b20e0b2bbc2c1041605f9f55a",
       "receipt_kind": "corpus_index_build_receipt",
-      "receipt_ref": "corpus-index-build:elasticsearch_bm25:6a9cfca3e377307b",
+      "receipt_ref": "corpus-index-build:elasticsearch_bm25:a532125746a7da2f",
       "receipt_scope": "adapter_live_smoke",
       "snapshot_eligible": false,
       "tenant_id": "tenant_auroralis",
@@ -435,23 +497,23 @@
       "workspace_id": "workspace_regression"
     },
     "milvus_vector": {
-      "adapter_execution_ref": "adapter-live-smoke:deepseek2_phase22_d385bcd2:milvus_vector",
+      "adapter_execution_ref": "adapter-live-smoke:deepseek2_phase22_26a32783:milvus_vector",
       "block_reason": "knowledge_version_dependency_missing",
       "config_hash": "sha256:d4d77f48b3dcc15f5abdb0a8e1d610c0cccd38f3c5bf7d5a7464c84b7863961d",
       "content_set_hash": "77f1d7dbd30d2ed26d94c788dc0447a082807f9ac623092762e326a611955be9",
       "expected_chunk_count": 24,
       "expected_document_count": 8,
-      "index_build_run_id": "index-build-run::deepseek2_phase22_d385bcd2",
+      "index_build_run_id": "index-build-run::deepseek2_phase22_26a32783",
       "index_kind": "milvus_vector",
       "input_kind": "frozen_candidate_manifest",
       "knowledge_version_id": "",
       "not_owner_produced": true,
       "observed_chunk_count": 24,
       "observed_document_count": 8,
-      "payload_hash": "e78f7d3ab34bad5cbe64ba76153864a32d7bf25cf19b5b4257be61c9a8a30181",
+      "payload_hash": "6b0ff107f7fde2e5d448a393f1924885f9bac7de6185ed64e26c804d95d3ca54",
       "readback_hash": "01943d54020dab84831bac07d52747d9d15e101b20e0b2bbc2c1041605f9f55a",
       "receipt_kind": "corpus_index_build_receipt",
-      "receipt_ref": "corpus-index-build:milvus_vector:e78f7d3ab34bad5c",
+      "receipt_ref": "corpus-index-build:milvus_vector:6b0ff107f7fde2e5",
       "receipt_scope": "adapter_live_smoke",
       "snapshot_eligible": false,
       "tenant_id": "tenant_auroralis",
@@ -459,23 +521,23 @@
       "workspace_id": "workspace_regression"
     },
     "neo4j_graph": {
-      "adapter_execution_ref": "adapter-live-smoke:deepseek2_phase22_d385bcd2:neo4j_graph",
+      "adapter_execution_ref": "adapter-live-smoke:deepseek2_phase22_26a32783:neo4j_graph",
       "block_reason": "knowledge_version_dependency_missing",
       "config_hash": "sha256:d4d77f48b3dcc15f5abdb0a8e1d610c0cccd38f3c5bf7d5a7464c84b7863961d",
       "content_set_hash": "77f1d7dbd30d2ed26d94c788dc0447a082807f9ac623092762e326a611955be9",
       "expected_chunk_count": 24,
       "expected_document_count": 8,
-      "index_build_run_id": "index-build-run::deepseek2_phase22_d385bcd2",
+      "index_build_run_id": "index-build-run::deepseek2_phase22_26a32783",
       "index_kind": "neo4j_graph",
       "input_kind": "frozen_candidate_manifest",
       "knowledge_version_id": "",
       "not_owner_produced": true,
       "observed_chunk_count": 24,
       "observed_document_count": 8,
-      "payload_hash": "f1fbf7ac223e0317da7e1b94826b3dbe577ae2a421ec0fe03bf394546bf0e73f",
+      "payload_hash": "80b7a00d15d8c9afca724ba220514556a23fa4c0bcb46353d8126da28325bc1e",
       "readback_hash": "01943d54020dab84831bac07d52747d9d15e101b20e0b2bbc2c1041605f9f55a",
       "receipt_kind": "corpus_index_build_receipt",
-      "receipt_ref": "corpus-index-build:neo4j_graph:f1fbf7ac223e0317",
+      "receipt_ref": "corpus-index-build:neo4j_graph:80b7a00d15d8c9af",
       "receipt_scope": "adapter_live_smoke",
       "snapshot_eligible": false,
       "tenant_id": "tenant_auroralis",
@@ -492,7 +554,7 @@
       "username": "[REDACTED]"
     }
   },
-  "elapsed_seconds": 57.453,
+  "elapsed_seconds": 31.187,
   "embedding": {
     "config_hash": "sha256:d4d77f48b3dcc15f5abdb0a8e1d610c0cccd38f3c5bf7d5a7464c84b7863961d",
     "dimension": 1024,
@@ -501,19 +563,33 @@
     "provider": "dashscope",
     "vector_source": "formal_embedding_gateway"
   },
-  "evidence_hash": "13ef02d85331e7a3ce7a94724b9166afaf17d3a8e15715cfb4eca62959cdb2b3",
+  "evidence_hash": "995817e90a889bcd4a67f1ab4372d755f2f2beceeedcbc8e9475d1096edc0f7e",
   "evidence_kind": "three_index_adapter_live_smoke",
   "input": {
     "canonical_ir_hash": "43d4842d41ea528cec6bfdfd7540a0c58c8c6653f8fa752b9eee31c7a0f079a6",
     "content_set_hash": "77f1d7dbd30d2ed26d94c788dc0447a082807f9ac623092762e326a611955be9",
+    "dataset_corpus_hash": "749b932786416ea0c4fd35effa0e0bc6722ab5acc300fe1dde3cb7549d5b50e4",
+    "embedding_config_hash": "sha256:d4d77f48b3dcc15f5abdb0a8e1d610c0cccd38f3c5bf7d5a7464c84b7863961d",
     "expected_chunk_count": 24,
     "expected_document_count": 8,
     "identity_checks": {
+      "canonical_ir_binds_source_manifest": true,
       "chunk_count_equal": true,
+      "chunk_documents_exist": true,
       "chunk_hash_mismatch_count": 0,
       "chunk_hashes_all_equal": true,
       "chunk_id_set_equal": true,
-      "document_count_equal": true
+      "corpus_files_exact": true,
+      "document_count_equal": true,
+      "document_ids_present": true,
+      "documents_one_to_one": true,
+      "source_count_8": true,
+      "source_count_consistent": true,
+      "source_hashes_match": true,
+      "source_manifest_hash_valid": true,
+      "source_paths_exist": true,
+      "source_tenant_consistent": true,
+      "source_workspace_consistent": true
     },
     "input_kind": "frozen_candidate_manifest",
     "not_owner_produced": true,
@@ -521,8 +597,8 @@
   },
   "schema_version": "1.0.0",
   "scope": {
-    "index_build_run_id": "index-build-run::deepseek2_phase22_d385bcd2",
-    "index_prefix": "deepseek2_phase22_d385bcd2",
+    "index_build_run_id": "index-build-run::deepseek2_phase22_26a32783",
+    "index_prefix": "deepseek2_phase22_26a32783",
     "knowledge_version_id": "",
     "snapshot_eligible": false,
     "tenant_id": "tenant_auroralis",
@@ -541,7 +617,7 @@
       "driver_version": "5.28.1"
     }
   },
-  "started_at": "2026-08-03T14:46:09.441057+00:00",
+  "started_at": "2026-08-03T16:52:51.913100+00:00",
   "track_id": "machine_attested_synthetic_regression",
   "truth_boundary": {
     "CORPUS_LEVEL_VISIBILITY_RECEIPTS_BLOCKED": true,

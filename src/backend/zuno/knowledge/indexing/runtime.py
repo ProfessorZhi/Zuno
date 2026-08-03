@@ -33,15 +33,23 @@ class LocalIndexAdapterBinding:
         lineage: dict[str, Any],
         graph_project_id: str | None,
         tenant_id: str = "",
+        knowledge_version_id: str = "",
         recreate: bool = True,
     ) -> list[dict]:
         if self.target == "bm25":
-            return runtime._bm25_documents(handoff.bm25_documents, document, lineage, tenant_id=tenant_id)
+            return runtime._bm25_documents(
+                handoff.bm25_documents, document, lineage, tenant_id=tenant_id,
+                knowledge_version_id=knowledge_version_id,
+            )
         if self.target == "vector":
-            return runtime._vector_documents(handoff.vector_documents, document, lineage, tenant_id=tenant_id)
+            return runtime._vector_documents(
+                handoff.vector_documents, document, lineage, tenant_id=tenant_id,
+                knowledge_version_id=knowledge_version_id,
+            )
         if self.target == "graph":
             return runtime._graph_documents(
-                handoff.graphrag_documents, document, graph_project_id, lineage, tenant_id=tenant_id
+                handoff.graphrag_documents, document, graph_project_id, lineage,
+                tenant_id=tenant_id, knowledge_version_id=knowledge_version_id,
             )
         raise ValueError(f"unsupported index target: {self.target}")
 
@@ -62,12 +70,14 @@ class KnowledgeIndexRuntime:
         workspace_id: str,
         *,
         tenant_id: str = "",
+        knowledge_version_id: str = "",
         graph_project_id: str | None = None,
     ) -> KnowledgeSpaceManifest:
         space = KnowledgeSpaceManifest(
             knowledge_space_id=knowledge_space_id,
             workspace_id=workspace_id,
             tenant_id=tenant_id,
+            knowledge_version_id=knowledge_version_id,
             graph_project_id=graph_project_id,
             index_version=f"idx_{uuid4().hex[:12]}",
             status="created",
@@ -129,6 +139,8 @@ class KnowledgeIndexRuntime:
             index_kwargs = {}
             if _adapter_accepts_kwarg(adapter.index, "tenant_id"):
                 index_kwargs["tenant_id"] = space.tenant_id
+            if _adapter_accepts_kwarg(adapter.index, "knowledge_version_id"):
+                index_kwargs["knowledge_version_id"] = space.knowledge_version_id
             if _adapter_accepts_kwarg(adapter.index, "recreate"):
                 index_kwargs["recreate"] = recreate_indexes
             indexed_documents = adapter.index(
@@ -178,6 +190,9 @@ class KnowledgeIndexRuntime:
                 target_status=target_status,
                 adapter_dispatch_receipts=adapter_dispatch_receipts,
                 indexed_documents_by_target=indexed_documents_by_target,
+                tenant_id=space.tenant_id,
+                workspace_id=space.workspace_id,
+                knowledge_version_id=space.knowledge_version_id,
             ),
             **_manifest_lineage_fields(lineage),
         )
@@ -286,6 +301,9 @@ class KnowledgeIndexRuntime:
         target_status: dict[str, str],
         adapter_dispatch_receipts: dict[str, dict],
         indexed_documents_by_target: dict[str, list[dict]],
+        tenant_id: str = "",
+        workspace_id: str = "",
+        knowledge_version_id: str = "",
     ) -> dict[str, dict]:
         receipts: dict[str, dict] = {}
         for target in ["bm25", "vector", "graph"]:
@@ -296,6 +314,9 @@ class KnowledgeIndexRuntime:
                 adapter=adapter_bindings[target],
                 document=document,
                 indexed_documents=indexed_documents_by_target.get(target, []),
+                tenant_id=tenant_id,
+                workspace_id=workspace_id,
+                knowledge_version_id=knowledge_version_id,
             )
             receipt = build_index_visibility_receipt(
                 adapter_target=target,
@@ -341,6 +362,7 @@ class KnowledgeIndexRuntime:
         lineage: dict,
         *,
         tenant_id: str = "",
+        knowledge_version_id: str = "",
     ) -> list[dict]:
         return [
             _document_payload(
@@ -351,6 +373,7 @@ class KnowledgeIndexRuntime:
                 source,
                 lineage,
                 tenant_id=tenant_id,
+                knowledge_version_id=knowledge_version_id,
             )
             for document in documents
         ]
@@ -362,6 +385,7 @@ class KnowledgeIndexRuntime:
         lineage: dict,
         *,
         tenant_id: str = "",
+        knowledge_version_id: str = "",
     ) -> list[dict]:
         return [
             _document_payload(
@@ -372,6 +396,7 @@ class KnowledgeIndexRuntime:
                 source,
                 lineage,
                 tenant_id=tenant_id,
+                knowledge_version_id=knowledge_version_id,
             )
             for document in documents
         ]
@@ -384,6 +409,7 @@ class KnowledgeIndexRuntime:
         lineage: dict,
         *,
         tenant_id: str = "",
+        knowledge_version_id: str = "",
     ) -> list[dict]:
         graph_documents = []
         for document in documents:
@@ -397,6 +423,7 @@ class KnowledgeIndexRuntime:
                         source,
                         lineage,
                         tenant_id=tenant_id,
+                        knowledge_version_id=knowledge_version_id,
                     ),
                     "graph_project_id": graph_project_id,
                     "entities": _entities(document["content"]),
@@ -444,6 +471,7 @@ def _document_payload(
     lineage: dict,
     *,
     tenant_id: str = "",
+    knowledge_version_id: str = "",
 ) -> dict:
     block_id = str(metadata.get("block_id") or chunk_id.split("::", 1)[-1])
     source_span = dict(metadata.get("source_span") or {})
@@ -475,6 +503,7 @@ def _document_payload(
         "document_id": source.metadata.document_id,
         "tenant_id": tenant_id,
         "workspace_id": source.metadata.workspace_id,
+        "knowledge_version_id": knowledge_version_id,
         "content": content,
         "source_type": source_type,
         "metadata": enriched_metadata,
@@ -527,6 +556,9 @@ def _adapter_sample_visibility_verification(
     adapter: Any,
     document: CanonicalDocumentIR,
     indexed_documents: list[dict],
+    tenant_id: str = "",
+    workspace_id: str = "",
+    knowledge_version_id: str = "",
 ) -> dict[str, Any]:
     source_text = " ".join(block.text for block in document.blocks)
     sample_tokens = tuple(_tokens(source_text)[:8])
@@ -541,6 +573,9 @@ def _adapter_sample_visibility_verification(
         document=document,
         sample_query=sample_query,
         indexed_documents=indexed_documents,
+        tenant_id=tenant_id,
+        workspace_id=workspace_id,
+        knowledge_version_id=knowledge_version_id,
     )
     return {
         "passed": bool(result.get("passed")),

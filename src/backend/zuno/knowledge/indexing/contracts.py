@@ -27,6 +27,7 @@ class KnowledgeSpaceManifest(BaseModel):
     knowledge_space_id: str
     workspace_id: str
     tenant_id: str = ""
+    knowledge_version_id: str = ""
     graph_project_id: str | None = None
     index_version: str
     status: Literal["created", "ready", "failed"] = "created"

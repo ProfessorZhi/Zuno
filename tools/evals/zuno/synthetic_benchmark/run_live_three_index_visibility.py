@@ -52,6 +52,7 @@ from zuno.knowledge.indexing import (  # noqa: E402
     ElasticsearchBm25IndexClient,
     MilvusVectorIndexClient,
     Neo4jGraphIndexClient,
+    ScopeValidationError,
     build_corpus_index_build_receipt,
     compute_embedding_config_hash,
     validate_canonical_corpus_identity,
@@ -185,6 +186,19 @@ def _readback_hash(chunk_readbacks: list[dict[str, Any]]) -> str:
     )
 
 
+def _scoped_call(fn: Any, *args: Any, **kwargs: Any) -> dict[str, Any]:
+    """Execute a scoped query fail-closed.
+
+    Missing/None/empty scope raises ScopeValidationError and is recorded as
+    rejected=true, query_executed=false — no unscoped query ever runs.
+    """
+    try:
+        result = fn(*args, **kwargs)
+    except ScopeValidationError as exc:
+        return {"rejected": True, "query_executed": False, "reason": str(exc)}
+    return {"rejected": False, "query_executed": True, "result": result}
+
+
 def _scope_matrix(
     *,
     label: str,
@@ -198,49 +212,58 @@ def _scope_matrix(
     foreign_workspace = "workspace_other_phase22"
     foreign_kv = "knowledge-version::foreign"
     matrix = {
-        "same_tenant_workspace_kv": count_fn(
-            tenant_id=tenant_id, workspace_id=workspace_id, knowledge_version_id=knowledge_version_id
+        # knowledge_version_id is empty while the dependency is blocked:
+        # the same-scope query must be REJECTED (fail closed), never unscoped.
+        "same_tenant_workspace_kv": _scoped_call(
+            count_fn, tenant_id=tenant_id, workspace_id=workspace_id, knowledge_version_id=knowledge_version_id
         ),
-        "same_workspace_different_tenant": count_fn(
-            tenant_id=foreign_tenant, workspace_id=workspace_id, knowledge_version_id=knowledge_version_id
+        "same_workspace_different_tenant": _scoped_call(
+            count_fn, tenant_id=foreign_tenant, workspace_id=workspace_id, knowledge_version_id=foreign_kv
         ),
-        "same_tenant_different_workspace": count_fn(
-            tenant_id=tenant_id, workspace_id=foreign_workspace, knowledge_version_id=knowledge_version_id
+        "same_tenant_different_workspace": _scoped_call(
+            count_fn, tenant_id=tenant_id, workspace_id=foreign_workspace, knowledge_version_id=foreign_kv
         ),
-        "same_tenant_workspace_different_kv": count_fn(
-            tenant_id=tenant_id, workspace_id=workspace_id, knowledge_version_id=foreign_kv
+        "same_tenant_workspace_different_kv": _scoped_call(
+            count_fn, tenant_id=tenant_id, workspace_id=workspace_id, knowledge_version_id=foreign_kv
         ),
-        "foreign_snapshot_scope": count_fn(
+        "foreign_snapshot_scope": _scoped_call(
+            count_fn,
             tenant_id=tenant_id,
             workspace_id=workspace_id,
             knowledge_version_id=f"snap_scope::{foreign_kv}",
         ),
-        "missing_scope": count_fn(),
-        "empty_scope": count_fn(tenant_id="", workspace_id="", knowledge_version_id=""),
+        "missing_scope": _scoped_call(count_fn),
+        "empty_scope": _scoped_call(count_fn, tenant_id="", workspace_id="", knowledge_version_id=""),
     }
-    search_scoped = search_fn(
+    search_foreign_tenant = _scoped_call(
+        search_fn,
+        "renewal policy",
+        tenant_id=foreign_tenant,
+        workspace_id=workspace_id,
+        knowledge_version_id=foreign_kv,
+    )
+    search_scoped = _scoped_call(
+        search_fn,
         "renewal policy",
         tenant_id=tenant_id,
         workspace_id=workspace_id,
         knowledge_version_id=knowledge_version_id,
     )
-    search_foreign_tenant = search_fn(
-        "renewal policy",
-        tenant_id=foreign_tenant,
-        workspace_id=workspace_id,
-        knowledge_version_id=knowledge_version_id,
-    )
     return {
         "matrix": matrix,
-        "scoped_search_hit_count": len(search_scoped),
-        "foreign_tenant_search_hit_count": len(search_foreign_tenant),
+        "scoped_search": search_scoped,
+        "foreign_tenant_search": search_foreign_tenant,
         "isolation_passed": (
-            matrix["same_tenant_workspace_kv"] > 0
-            and matrix["same_workspace_different_tenant"] == 0
-            and matrix["same_tenant_different_workspace"] == 0
-            and matrix["same_tenant_workspace_different_kv"] == 0
-            and matrix["foreign_snapshot_scope"] == 0
-            and len(search_foreign_tenant) == 0
+            matrix["same_tenant_workspace_kv"]["rejected"] is True
+            and matrix["same_tenant_workspace_kv"]["query_executed"] is False
+            and matrix["same_workspace_different_tenant"]["result"] == 0
+            and matrix["same_tenant_different_workspace"]["result"] == 0
+            and matrix["same_tenant_workspace_different_kv"]["result"] == 0
+            and matrix["foreign_snapshot_scope"]["result"] == 0
+            and matrix["missing_scope"]["rejected"] is True
+            and matrix["empty_scope"]["rejected"] is True
+            and search_scoped["rejected"] is True
+            and not search_foreign_tenant["result"]
         ),
     }
 
@@ -320,8 +343,12 @@ def main() -> int:
 
     source_manifest = json.loads(SOURCE_UPLOAD_MANIFEST.read_text(encoding="utf-8"))
     canonical_ir = json.loads(CANONICAL_IR_MANIFEST.read_text(encoding="utf-8"))
+    candidate_manifest = json.loads(
+        (TRACK_DIR / "candidate-dataset" / "candidate_dataset_manifest.json").read_text(encoding="utf-8")
+    )
+    dataset_corpus_hash = str(candidate_manifest.get("corpus_hash") or "")
 
-    # ── Task A: exact canonical input identity (fail closed) ─────────────
+    # ── Task A/F: exact canonical input identity (fail closed) ───────────
     try:
         manifest_texts = _manifest_chunk_texts(canonical_ir)
         payload = validate_canonical_corpus_identity(
@@ -329,6 +356,7 @@ def main() -> int:
             canonical_ir_manifest=canonical_ir,
             corpus_root=CORPUS_DIR,
             manifest_chunk_texts=manifest_texts,
+            dataset_corpus_hash=dataset_corpus_hash,
         )
     except Exception as exc:  # noqa: BLE001
         print(f"ERROR: canonical corpus identity failed: {exc}")
@@ -337,6 +365,7 @@ def main() -> int:
     tenant_id = payload.chunks[0]["tenant_id"]
     workspace_id = payload.chunks[0]["workspace_id"]
     knowledge_version_id = ""  # DeepSeek1 dependency not accepted
+    foreign_kv = "knowledge-version::foreign"
     index_prefix = f"deepseek2_phase22_{uuid4().hex[:8]}"
     index_build_run_id = f"index-build-run::{index_prefix}"
 
@@ -468,21 +497,18 @@ def main() -> int:
     # Milvus expr injection attempt: a hostile scope value must not alter
     # the filter expression (a parse error counts as contained — the query
     # must never return rows from outside the intended scope).
-    try:
-        injection = milvus_client.count_documents(
-            f"{index_prefix}_vector",
-            tenant_id='tenant" OR 1==1 --',
-            workspace_id=workspace_id,
-        )
-        injection_result: Any = {"count": injection}
-        injection_contained = injection == 0
-    except Exception as exc:  # noqa: BLE001
-        injection_result = {"error": str(exc)[:120]}
-        injection_contained = True
-    milvus_scope["injection_attempt"] = injection_result
-    milvus_scope["injection_contained"] = injection_contained
+    injection = _scoped_call(
+        lambda **kw: milvus_client.count_documents(f"{index_prefix}_vector", **kw),
+        tenant_id='tenant" OR 1==1 --',
+        workspace_id=workspace_id,
+        knowledge_version_id=foreign_kv,
+    )
+    milvus_scope["injection_attempt"] = injection
+    milvus_scope["injection_contained"] = (
+        injection["query_executed"] is True and injection["result"] == 0
+    )
 
-    # ── Neo4j path readbacks (store level) ────────────────────────────────
+    # ── Neo4j path readbacks (fail closed while kv is blocked) ────────────
     paths: dict[str, Any] = {}
     path_defs = {
         "one_hop_person_released_product": (
@@ -503,8 +529,8 @@ def main() -> int:
     }
     path_receipt_builder_blocked: list[str] = []
     for label, (start, end, kinds) in path_defs.items():
-        row = neo4j_client.query_path(
-            f"{index_prefix}_graph",
+        row_call = _scoped_call(
+            lambda **kw: neo4j_client.query_path(f"{index_prefix}_graph", **kw),
             tenant_id=tenant_id,
             workspace_id=workspace_id,
             knowledge_version_id=knowledge_version_id,
@@ -513,7 +539,10 @@ def main() -> int:
             end_entity_ref=end,
             relation_kinds=kinds,
         )
+        row = row_call["result"] if row_call["query_executed"] else None
         paths[label] = {
+            "rejected": row_call["rejected"],
+            "query_executed": row_call["query_executed"],
             "store_visible": row is not None,
             "matched_node_refs": list(row.get("matched_node_refs") or []) if row else [],
             "matched_relation_refs": list(row.get("matched_relation_refs") or []) if row else [],
@@ -534,11 +563,11 @@ def main() -> int:
                 )
             except ValueError as exc:
                 path_receipt_builder_blocked.append(f"{label}:{exc}")
-    cross_tenant_path = neo4j_client.query_path(
-        f"{index_prefix}_graph",
+    cross_tenant_path = _scoped_call(
+        lambda **kw: neo4j_client.query_path(f"{index_prefix}_graph", **kw),
         tenant_id="tenant_other_phase22",
         workspace_id=workspace_id,
-        knowledge_version_id=knowledge_version_id,
+        knowledge_version_id=foreign_kv,
         snapshot_id="",
         start_entity_ref="person:Haruto Soma",
         end_entity_ref="product:Axis-9 Industrial Controller v9.4.0",
@@ -588,13 +617,25 @@ def main() -> int:
             workspace_id=workspace_id,
             knowledge_version_id=knowledge_version_id,
         )
-        # A deleted index must read back as zero documents.
+        # A deleted index must read back as zero documents.  The readback is
+        # scoped (tenant/workspace/foreign-kv); a deleted index surfaces as
+        # 404 / collection-missing, which is the verified zero-document state.
         try:
-            es_after = es_client.count_documents(f"{index_prefix}_bm25")
+            es_after = es_client.count_documents(
+                f"{index_prefix}_bm25",
+                tenant_id=tenant_id,
+                workspace_id=workspace_id,
+                knowledge_version_id=foreign_kv,
+            )
         except Exception as exc:  # noqa: BLE001
             es_after = f"deleted:{str(exc)[:60]}"
         try:
-            milvus_after = milvus_client.count_documents(f"{index_prefix}_vector")
+            milvus_after = milvus_client.count_documents(
+                f"{index_prefix}_vector",
+                tenant_id=tenant_id,
+                workspace_id=workspace_id,
+                knowledge_version_id=foreign_kv,
+            )
         except Exception as exc:  # noqa: BLE001
             milvus_after = f"deleted:{str(exc)[:60]}"
         cleanup_readback = {
@@ -628,9 +669,13 @@ def main() -> int:
                 "expected_document_count": payload.document_count,
                 "expected_chunk_count": payload.chunk_count,
                 "identity_checks": payload.identity_checks,
+                # Task G: the five hash identities are recorded separately —
+                # never conflated into a single corpus_hash.
+                "dataset_corpus_hash": payload.dataset_corpus_hash,
+                "source_manifest_hash": payload.source_manifest_hash,
+                "canonical_ir_hash": payload.canonical_ir_hash,
                 "content_set_hash": payload.content_set_hash,
-                "canonical_ir_hash": canonical_ir["canonical_ir_hash"],
-                "source_manifest_hash": source_manifest["source_manifest_hash"],
+                "embedding_config_hash": embedding_config_hash,
             },
             "scope": {
                 "tenant_id": tenant_id,
@@ -678,7 +723,10 @@ def main() -> int:
                 },
                 "neo4j_paths": {
                     "path_readbacks": paths,
-                    "cross_tenant_path_visible": cross_tenant_path is not None,
+                    "cross_tenant_path": cross_tenant_path,
+                    "cross_tenant_path_visible": (
+                        cross_tenant_path["query_executed"] and cross_tenant_path["result"] is not None
+                    ),
                     "canonical_path_receipt_builder_blocked": path_receipt_builder_blocked,
                     "canonical_path_receipt_count": 0,
                 },
@@ -710,7 +758,7 @@ def main() -> int:
                 "milvus": milvus_scope["isolation_passed"],
                 "milvus_injection_contained": milvus_scope["injection_contained"],
             },
-            "neo4j_paths_store_visible": all(item["store_visible"] for item in paths.values()),
+            "neo4j_paths_blocked_while_kv_empty": all(item["rejected"] for item in paths.values()),
             "corpus_level_visibility_status": evidence["corpus_level_visibility_status"],
             "cleanup": cleanup,
             "cleanup_readback": cleanup_readback,
