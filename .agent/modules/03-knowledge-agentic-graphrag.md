@@ -1,1150 +1,1035 @@
 # 03 Knowledge / Agentic GraphRAG
 
-updated: 2026-07-14
+updated: 2026-08-04
 status: normative-target-module-architecture
+architecture_generation: v2
 module_number: 03
 formal_path: `docs/modules/03-knowledge-agentic-graphrag.md`
 
 > 本文是 Zuno 第 03 个逻辑模块——Knowledge / Agentic GraphRAG——的唯一正式 Target 架构主设计。
 >
-> 本文只描述目标架构、规范性 Contract、状态、故障语义、目标代码与数据库规格，不把任何设计描述当作 Current 实现证据。Current、Gap、Measurement 与生产就绪状态由 `docs/status/production-readiness.md` 和 `docs/evidence/` 维护。
+> Architecture v2 将本模块升级为 **Evidence-Driven Agentic GraphRAG**：证据驱动、先广后精、动态补证、可审计的知识获取与证据审议系统。
 >
-> Agentic GraphRAG 不是“所有问题固定执行更多 Retriever”，也不是产品级 Multi-Agent Runtime。它是 Agent Core 外层任务控制与 Knowledge 内层证据获取控制共同组成的受治理闭环。
-
-## 0. 文档边界与规范层级
-
-本文统一承载：
-
-```text
-问题、目标与非目标
-Agentic GraphRAG 概念架构
-索引、检索、证据与版本的完整运行流程
-KnowledgeRetrievalGraph、状态机和并发语义
-Agent Core、Memory & Context、Security、Observability 的边界
-Typed Contract、错误、Retry、Corrective Retrieval 与 Replan
-KnowledgeVersion、KnowledgeSnapshot、配置、持久化与事务
-目标代码目录、数据库、Migration、测试与完成证据
-```
-
-文档边界：
-
-```text
-docs/modules/03-knowledge-agentic-graphrag.md
-    Knowledge / Agentic GraphRAG 唯一 Target 架构事实源。
-
-.agent/programs/
-    Current → Target 的实现、迁移、切流、回滚和收口 Program。
-
-docs/status/
-    Current、Gap、Measurement Blocked、Quality Proven 与 Production Readiness。
-
-docs/evidence/
-    可复现的代码、测试、Trace、Eval、Release Gate 和运行证据索引。
-```
-
-规范优先级：
-
-```text
-全局不可变原则与已接受 ADR / 共享 Contract Registry
-→ 本模块 Target 架构
-→ 总架构的跨模块集成视图
-→ 已确认 Program
-→ 代码、Migration 与部署配置
-```
-
-Part I–IV 是概念、流程和控制语义；Part V–VII 是 Contract、持久化和实现规格；Part VIII 定义 Requirement、测试与完成证据。说明性示例不得覆盖规范性字段、状态机和不变量。
+> 本文描述 Target，不把设计写成 Current。现有 Program 与 PHASE01–PHASE22 不因本次文档升级而改变；它们继续以原基线和各自冻结 Contract 执行。新的实现 Program 必须在 PHASE22 收口后另行设计。
 
 ---
 
-# Part I：问题、定义与模块边界
+# 0. 文档边界、版本与规范层级
 
-## 1. 为什么需要 Agentic GraphRAG
+## 0.1 本文回答什么
 
-固定 RAG 或固定 GraphRAG Pipeline 对简单问题可以稳定工作，但面对企业知识场景会出现：
+本文统一回答：
 
 ```text
-不需要检索的任务仍然检索，增加噪声与成本
-简单事实和复杂多跳问题使用同一条路径
-首轮命中相关文档，但缺少回答所需的具体 SourceSpan
-图谱给出关系，却无法回到可引用原文
-新旧制度、草稿与正式版本冲突时只按相似度排序
-首轮检索失败后仅扩大 Top-K，无法识别真正缺失的证据
-多个知识库并行检索时混用不同版本、权限和安全 Epoch
-检索结果已经充分，系统仍继续执行昂贵 Graph 或模型调用
-检索证据不足，生成模型却继续形成确定性结论
-最终回答质量变化无法归因于 Graph、Agentic、模型或更大预算
+Knowledge 模块解决什么企业知识问题
+Agentic 决策发生在哪一层
+为什么目标从 Retriever 选择升级为 Evidence Deliberation
+如何先广后精地采集多类证据
+如何区分原始证据、派生证据和独立来源
+如何把 Evidence 绑定到 Claim
+如何识别冲突、适用范围、新旧版本与引用缺口
+如何根据关键缺口规划 Evidence Probe
+何时继续、停止、询问用户、提议 Replan 或安全拒答
+Knowledge 与 Agent Core、Memory、Model Gateway、Security、Observability、Infrastructure 的 Ownership
+状态、错误、Retry、Probe、Replan、Recovery、Idempotency
+Target Contract、持久化和测试完成证据
 ```
 
-一句话定义：
-
-> Agentic GraphRAG 是由 Agent Core 决定“是否、何时、为什么检索”，由 Knowledge 在固定安全、版本、预算和 Profile 边界内，根据问题与 Evidence Ledger 动态决定“查什么、走哪些路径、是否补检以及何时停止”的证据获取控制系统。
-
-## 2. 普通 GraphRAG 与 Agentic GraphRAG
+## 0.2 规范优先级
 
 ```text
-普通 GraphRAG
-    预先定义 Graph Local / Global / Community 等路径，
-    按固定 Pipeline 或固定规则路由查询图谱和文本。
-
-Agentic GraphRAG
-    先建立 Evidence Requirement，
-    再按当前证据状态动态选择 Text / Vector / Graph / Corrective Action，
-    每轮观察结果、更新缺口、判断边际收益并受治理停止。
+已接受 ADR 与共享安全 / Ownership 原则
+→ 本模块 Target 架构
+→ 总架构跨模块集成视图
+→ 已确认 Program / Phase 的冻结范围
+→ 代码、Migration、配置与运行证据
 ```
 
-关键区别：
+当本 Architecture v2 与正在执行的旧 Program 描述不一致时：
 
-| 维度 | 普通 GraphRAG | Agentic GraphRAG |
-| --- | --- | --- |
-| 是否检索 | 通常进入 Pipeline 即检索 | Agent Core 明确产生 RetrievalNeedDecision |
-| Graph 地位 | 默认或主要检索路径 | 可选能力，不保证每次启用 |
-| 路径 | 固定 Pipeline / 固定规则 | 动态 RetrievalPlan + RetrievalRound |
-| 首轮失败 | 空结果、扩大 Top-K 或直接回答 | Quality Gate 后选择具体纠正动作 |
-| 多轮状态 | 通常无跨轮事实 | EvidenceLedger、EvidenceFrontier、缺口和无进展计数 |
-| 停止 | Pipeline 结束 | 充分、无增益、预算、澄清、安全或不可回答 |
-| 控制边界 | Pipeline 内部 | Agent Core 外层控制 + Knowledge 内层控制 |
-| 评测 | 最终答案或检索分数 | 路由、每轮增益、停止、证据与最终答案联合评测 |
+- 旧 Program 继续按其冻结基线完成，不被本文静默改写；
+- 本文是后续 Program 的设计输入；
+- 任何 Target 变为 Current，都必须新增代码、Migration、测试、Trace、Eval 和运行证据。
 
-固定多路检索不等于 Agentic：
+## 0.3 Current、Target、Future、History
+
+| 层级 | 含义 |
+| --- | --- |
+| Current | 由当前代码、Migration、测试、Trace 或运行证据证明的事实；以状态文档为准 |
+| Target v1 | 当前 Program / PHASE01–PHASE22 执行时采用的既有目标基线，可通过 Git 历史基线读取 |
+| Target v2 | 本文定义的 Evidence-Driven Agentic GraphRAG 目标 |
+| Future | 更长期、未决定的可选能力，不进入近期 Program |
+| History | 被替换设计、旧草稿与回顾材料，不参与当前决策 |
+
+本次不修改 `.agent/programs/`、PHASE01–PHASE22、业务代码、数据库模型和 Migration。
+
+---
+
+# Part I：问题、目标与模块边界
+
+## 1. 为什么需要 Evidence-Driven Agentic GraphRAG
+
+传统 RAG 常把目标简化为“召回与问题相似的若干 Chunk”。固定 GraphRAG 又容易把目标简化为“增加图检索路径”。企业知识任务真正困难的是：**相关内容是否足以证明候选结论**。
+
+常见失败包括：
 
 ```text
-BM25 + Vector + Graph 每次全部运行
-    = 静态 Hybrid GraphRAG
-
-根据问题与首轮证据选择 BM25 / Vector / Graph，
-结果不足后改变下一轮动作，
-证据充分后提前停止
-    = Agentic Retrieval
+召回内容相关，但不支持答案中的关键 Claim
+Local、Community Summary 和原文来自同一文档，却被重复计为三个独立来源
+旧制度和新制度冲突，只按相似度排序
+图路径存在，但没有 SourceSpan，无法严格引用
+Evidence 来自正确文档，但适用主体、地区或时间不匹配
+首轮缺证后只扩大 Top-K，继续得到相同内容
+模型将部分支持写成确定事实
+冲突证据被低分过滤，最终答案隐藏真实争议
+知识库没有答案、检索漏召回、解析失败、索引故障和权限过滤被混为一种“没找到”
+为了低延迟走最短路径，复杂任务在证据未充分时提前结束
+为了显得深入又无条件运行全部 Retriever，导致噪声、成本与延迟失控
 ```
 
-## 3. 产品 Profile、索引能力、控制 Policy 与内部方法
+因此，Module 03 的 Target 控制中心不再是：
 
-四个层次必须分开：
+> 选择哪个 Retriever。
+
+而是：
+
+> 当前候选答案的关键 Claim 是否拥有充分、独立、权威、有效且可引用的证据；如果没有，下一步什么动作最可能改变这个判断。
+
+## 2. 一句话定义
+
+> Evidence-Driven Agentic GraphRAG 是在 Agent Core 给定任务目标、安全范围、KnowledgeSnapshot、AnswerPolicy、预算与截止时间内，由固定 KnowledgeRetrievalGraph 治理动态 Evidence Collection、Evidence Assessment、Claim–Evidence Reasoning、Targeted Probe 与停止决策的知识运行时。
+
+它不是：
+
+- 每个 Retriever 一个自治 Agent；
+- 固定 `BM25 → Vector → Graph → Rerank` 流水线；
+- 模型自由改写运行图；
+- 一个总分决定 Evidence 去留；
+- 知识模块直接生成并发布最终答案；
+- 无预算的“尽可能多检索”。
+
+## 3. 目标与非目标
+
+### 3.1 目标
+
+1. **质量优先、预算受控**：先满足 Evidence Requirement，再优化延迟；但任何检索都受预算、权限、截止时间和边际收益约束。
+2. **先广后精**：首轮构建有多样性的 Initial Evidence Pool，后续围绕关键 Claim 缺口执行 Targeted Probe。
+3. **证据可审计**：所有候选、拒绝、冲突、派生、版本和 lineage 事实可追踪。
+4. **Claim 级充分性**：不是只判断“文档相关”，而是判断每个关键 Claim 是否被支持、限定、反驳或阻断。
+5. **动态补证**：根据 Missing Evidence Map、Conflict Map、Answer Risk 和 Expected Information Gain 选择下一步动作。
+6. **安全停止**：证据不足、冲突未解、权限受限或知识质量可疑时，返回明确 Outcome，而不是继续幻觉生成。
+7. **可恢复与幂等**：Retriever 重复、延迟、取消、服务重启和 Checkpoint 偏差不会制造重复领域事实。
+8. **可测量**：能够区分 Agentic Routing、Graph、Rerank、更多预算和模型升级各自带来的真实增益。
+
+### 3.2 非目标
+
+- 不建设产品级自治 Multi-Agent Retrieval Runtime。
+- 不让 Knowledge 修改或激活 PlanVersion。
+- 不让 Knowledge 批准外部搜索、扩大权限或执行副作用。
+- 不让模型 Critic 成为 Evidence 最终事实 Owner。
+- 不保证 GraphRAG 对所有问题都优于 Hybrid RAG。
+- 不将 Community Summary 作为唯一严格证据。
+- 不把知识健康诊断 Proposal 直接升级为基础设施故障事实。
+
+## 4. 模块 Ownership
+
+### 4.1 Knowledge 负责
 
 ```text
-Product Retrieval Profile
-    STANDARD | DEEP
-    用户和 Workspace 可见的产品选择。
-
-Knowledge Capability
-    TEXT | VECTOR | GRAPH | STRUCTURED | MULTIMODAL
-    KnowledgeVersion 实际具备的索引能力。
-
-Retrieval Control Policy
-    可用动作、预算、并发、停止和降级边界。
-    由配置和 Agent Core Request 共同确定。
-
-Internal Query Method
-    DIRECT、REWRITE、MULTI_QUERY、STEP_BACK、HYDE、
-    GRAPH_LOCAL、GRAPH_GLOBAL、GRAPH_DRIFT 等内部动作。
+KnowledgeSpace、KnowledgeVersion、KnowledgeSnapshot
+IndexSpec、Knowledge Acceptance 与 Cutover 语义
+EvidenceGoal 的知识侧解释
+InitialEvidenceCollectionPlan
+RetrievalRound、RetrievalAction、RetrieverAttempt
+候选归一化、Provenance 与 Lineage 绑定
+确定性 Eligibility Gate
+模型 Evidence Assessment Proposal 的请求与验证
+EvidenceLedger、EvidenceFrontier、EvidenceReasoningGraph
+ClaimHypothesis、ClaimEvidenceState、EvidenceSetVerdict
+ProvisionalAnswerCandidate 的知识侧草案与 AnswerRiskReview
+EvidenceProbeCandidate、EvidenceProbeDecision
+KnowledgeRetrievalOutcome、KnowledgeControlProposal
+InsufficientEvidenceOutcome、KnowledgeHealthSignal
+文档删除、版本替换、索引不可召回与 Citation 回链收口
+Knowledge 领域事件、Outbox 与 Trace 关联
 ```
 
-强制原则：
-
-1. `DEEP` 允许使用 Graph，但不强制使用 Graph。
-2. `STANDARD` 仍可由 Agent Core 判断是否检索，但 Knowledge 的动作、轮次和成本上限更严格。
-3. 用户显式选择 `STANDARD` 时不得静默升级为 `DEEP`。
-4. KnowledgeVersion 没有 Graph capability 时，Agent 不得伪造 GraphRAG；必须记录 capability unavailable 与 fallback。
-5. 前端不得把 Local / Global / Drift、Top-K、RRF、Graph hop 作为普通用户必须理解的模式。
-
-## 4. 模块职责
-
-Knowledge 负责：
+### 4.2 Knowledge 不负责
 
 ```text
-KnowledgeSpace、KnowledgeVersion、KnowledgeSnapshot 领域事实
-Chunk、ParentChunk、CitationChunk、Entity、Relation、Community 的逻辑规格
-IndexSpec、Knowledge Acceptance、Cutover 决策与服务版本
-EvidenceRequirement 的检索解释
-QueryStrategyDecision 与 RetrievalPlan
-Retriever Adapter、RetrieverAttempt 与结果归一化
-BM25 / Vector / Graph / Structured 检索编排
-Fusion、Rerank、Parent / Adjacent Expansion
-EvidenceLedger、EvidenceFrontier、CitationLineage
-Authority、Temporal Validity、Supersedes 与 Conflict 判定
-RetrievalQualityVerdict、CorrectiveRetrievalDecision
-KnowledgeRetrievalOutcome 与 KnowledgeControlProposal
-文档删除、版本替换与索引可召回性收口
-Knowledge 领域事件、Outbox 与运行 Trace 关联
-```
-
-Knowledge 不负责：
-
-```text
-原始文件上传、OCR、解析和 CanonicalDocumentIR
-决定 Agent 整体任务是否完成
-创建或激活 Agent PlanVersion
-直接调用模型 Provider SDK
-执行互联网搜索、Shell、Browser 或第三方 API
-批准权限、外部副作用或扩大 ACL
+原始文件上传、OCR、解析与 CanonicalDocumentIR
+决定整个 AgentRun 是否完成
+创建、修改或激活 PlanVersion
+直接访问底层模型 Provider SDK
+执行互联网、Shell、Browser 或第三方 Tool
+批准权限、审批副作用或扩大 ACL
 组装最终 ContextPack
-生成或发布最终答案
-拥有 Trace / Eval Projection
-拥有物理存储健康、Queue、Lease 或 ServingWatermark primitive
+发布最终答案和 RunOutcome
+拥有最终 Trace / Eval Projection
+拥有物理 Store、Queue、Lease、ServingWatermark 健康事实
 保存隐藏思维链
 ```
 
-## 5. Cross-module Ownership
+### 4.3 跨模块边界
 
 | 模块 | Owns | 与 Knowledge 的边界 |
 | --- | --- | --- |
-| 01 Product Surface | 用户选择、Knowledge Scope 意图、STANDARD/DEEP 偏好 | 不直接提交内部 Retriever 参数 |
-| 02 Input / Ingestion | DocumentVersion、CanonicalDocumentIR、SourceSpan | 通过不可变 IndexableDocumentSnapshot 交付 |
-| 03 Knowledge | KnowledgeVersion、Snapshot、RetrievalRound、Evidence、CitationLineage | 本文 |
-| 04 Model Gateway | ModelInvocation、Routing、Usage、Provider Failure | Knowledge 只按 model role / slot 请求 |
-| 05 Memory & Context | ContextPack、Context Budget、Memory Candidate | 只消费 SelectedEvidenceBundle，不重做检索事实 |
-| 06 Agent Core | Run、Goal、Plan、Step、Budget、Replan、Outcome | 决定 why/when；Knowledge 决定 how |
-| 07 Capability / Skill | CapabilityDefinition、SkillDefinition | Knowledge capability 可被 Skill 引用，不归其拥有 |
-| 08 Tool Runtime | External Tool execution 与外部副作用 | External search 只能由 Knowledge 提议 |
-| 09 Security | Authorization、ACL、Security Epoch、Disclosure、Approval | Knowledge 强制执行授权结果，不扩大权限 |
-| 10 Observability & Eval | Trace/Eval/Metric Projection、Benchmark、Release Gate | Knowledge 产生 typed events，不拥有评测结论 |
-| 11 Infrastructure | Store、Index writer、Queue、Lease、Visibility、ServingWatermark primitive | 不拥有 KnowledgeVersion acceptance/cutover 语义 |
-
-核心边界：
-
-```text
-Agent Core owns:
-    Why / When / Evidence Goal / Step / Task Budget /
-    Continue Task / Replan / Ask User / Abstain / Finalize
-
-Knowledge owns:
-    Query Interpretation / Retriever Path / Graph Route /
-    Fusion / Evidence Quality / Corrective Retrieval /
-    Stop Proposal inside the Knowledge Step
-
-Memory & Context owns:
-    Selected Evidence → ContextPack
-
-Observability & Eval owns:
-    Trace/Eval projection and quality claim
-```
+| 01 Product Surface | 用户命令、产品 Profile、展示 Projection | 不提交内部 Retriever 参数 |
+| 02 Input / Ingestion | DocumentVersion、CanonicalDocumentIR、SourceSpan | 交付不可变 IndexableDocumentSnapshot |
+| 03 Knowledge | Evidence Discovery、Deliberation、Probe、Verdict | 本文 |
+| 04 Model Gateway | ModelInvocation、Routing、PromptVersion、Usage、Provider Failure | Knowledge 只请求已注册任务；模型只返回 Proposal |
+| 05 Memory & Context | Memory 事实、ContextPack、Context Budget | 只消费 SelectedEvidenceBundle，不重新打分 Evidence |
+| 06 Agent Core | Goal、Plan、Step、Task Budget、Replan、Final Gate、RunOutcome | 决定 why/when；Knowledge 决定知识步骤内 how |
+| 08 Tool Runtime | 外部 Tool 与副作用 | 外部证据只能由 Knowledge 提议、Agent Core 决定、Tool Runtime 执行 |
+| 09 Security | Principal、ACL、Security Epoch、Disclosure、Approval | 未授权 Evidence 在进入模型前即被拒绝 |
+| 10 Observability & Eval | Trace、Metric、Eval、Benchmark、Release Gate | Knowledge 产出 typed events，不拥有质量结论 |
+| 11 Infrastructure | Store、Index、Queue、Lease、Receipt、Checkpointer primitive | 不拥有 Evidence Sufficiency、Claim Verdict 或 Cutover 业务语义 |
 
 ---
 
-# Part II：总体架构与完整运行流程
+# Part II：总体架构与两阶段闭环
 
-## 6. 概念架构
+## 5. 两阶段架构
+
+### 5.1 阶段一：Broad Evidence Discovery
+
+目标是以**有边界的多路径采集**建立初始证据面，而不是立即写最终答案。
+
+输入：
+
+- KnowledgeQueryRequest；
+- EvidenceGoal；
+- AuthorizedKnowledgeScope；
+- KnowledgeSnapshot；
+- STANDARD / DEEP Profile；
+- AnswerPolicy；
+- Budget 与 deadline。
+
+输出：
+
+```text
+Initial Evidence Pool
+Initial Claim Hypotheses
+Uncertainty Map
+Conflict Map
+Missing Evidence Map
+```
+
+### 5.2 阶段二：Evidence Deliberation
+
+目标是判断：
+
+- 哪些 Evidence 真正支持 Claim；
+- 哪些只是背景、派生或重复；
+- 哪些构成反证或限定条件；
+- 哪些关键 Claim 仍无证据；
+- 下一轮 Probe 是否可能显著改变答案。
+
+输出：
+
+- SelectedEvidenceBundle；或
+- Targeted Probe；或
+- Ask User / External Evidence Proposal；或
+- Replan Required；或
+- Partial / No Suitable Evidence Outcome。
+
+## 6. 两个闭环
 
 ```mermaid
-flowchart TB
-  AC[06 Agent Core] -->|KnowledgeQueryRequest| KG[Fixed KnowledgeRetrievalGraph]
-  SEC[09 Security] -->|AuthorizedKnowledgeScope| KG
-  SNAP[(KnowledgeSnapshot)] --> KG
-  KG --> STRAT[Strategy and Route]
-  STRAT --> BATCH[Parallel Retriever Batch]
-  BATCH --> BM25[BM25]
-  BATCH --> VEC[Vector]
-  BATCH --> GRAPH[Graph Local Global Drift]
-  BATCH --> STRUCT[Structured]
-  BM25 --> FUSE[Fusion and Rerank]
-  VEC --> FUSE
-  GRAPH --> FUSE
-  STRUCT --> FUSE
-  FUSE --> LEDGER[EvidenceLedger and Frontier]
-  LEDGER --> GATE[Evidence Quality Gates]
-  GATE -->|Correct| STRAT
-  GATE -->|Sufficient| OUT[SelectedEvidenceBundle]
-  GATE -->|Need task change| PROP[KnowledgeControlProposal]
-  OUT --> MC[05 Memory and Context]
-  PROP --> AC
-  KG --> EVT[10 Observability Events]
+flowchart TD
+    A[KnowledgeQueryRequest] --> B[Interpret Evidence Goal]
+    B --> C[Initial Evidence Collection Plan]
+    C --> D[Bounded Multi-route Retrieval]
+    D --> E[Normalize and Bind Provenance]
+    E --> F[Deterministic Eligibility Gate]
+    F --> G[Semantic Evidence Assessment]
+    G --> H[Evidence Reasoning Graph]
+    H --> I[Claim Hypothesis and Provisional Answer]
+    I --> J[Claim-level Sufficiency and Conflict Evaluation]
+
+    J -->|Sufficient and stable| K[Selected Evidence Bundle]
+    J -->|Critical gap is probeable| L[Evidence Probe Planning]
+    J -->|Need user information| M[Ask User Proposal]
+    J -->|Task assumption failed| N[Replan Required Proposal]
+    J -->|No suitable evidence| O[Insufficient Evidence Outcome]
+
+    L --> P[Targeted Retrieval Round]
+    P --> E
+    K --> Q[Memory and Context]
+    Q --> R[Agent Core Final Synthesis and Final Gate]
 ```
 
-总体运行由两层闭环组成：
+两个闭环分别是：
 
 ```text
-外层 Agent Core Loop
-    Task → Plan → Knowledge Step → Observation → Continue / Replan / Finalize
+Evidence Discovery Loop
+Retrieve → Normalize → Eligibility → Assess → Merge
 
-内层 Knowledge Retrieval Loop
-    Strategy → Retrieve → Fuse → Evaluate → Correct / Stop
+Claim / Answer Deliberation Loop
+Claim → Evidence Support → Risk → Probe → Revised Claim
 ```
 
-Knowledge 内层循环不得自行创建新的任务目标或工具 Step。
+## 7. 固定 KnowledgeRetrievalGraph
 
-## 7. 索引构建与 KnowledgeVersion 生命周期
-
-```text
-02 IndexableDocumentSnapshot
-→ Validate SourceSpan / document version / security metadata
-→ Create immutable IndexSpec
-→ Create KnowledgeVersion BUILDING
-→ Dispatch physical build requests to Infrastructure adapters
-→ receive write / visibility / verification receipts
-→ Knowledge validation
-→ Knowledge Acceptance
-→ Cutover active version
-→ issue KnowledgeSnapshot references
-```
-
-### 7.1 输入 Contract
-
-每个可索引文档必须固定：
-
-```yaml
-IndexableDocumentSnapshot:
-  tenant_id: string
-  workspace_id: string
-  knowledge_space_id: string
-  document_id: string
-  document_version_id: string
-  canonical_document_ir_ref: string
-  source_span_manifest_ref: string
-  content_hash: string
-  metadata_hash: string
-  security_epoch_ref: string
-  data_classification: string
-  ingestion_completion_ref: string
-```
-
-缺少 SourceSpan Manifest、Content Hash、DocumentVersion 或 Security metadata 时，KnowledgeVersion 不得进入 `ACCEPTED`。
-
-### 7.2 三种检索粒度
-
-```text
-CitationChunk
-    检索和严格引用的最小稳定单元。
-
-ParentChunk
-    Context 扩展单元，不替代 CitationChunk 的 SourceSpan。
-
-SourceSpan
-    原始文档定位、Citation 和审计单元。
-```
-
-Graph 节点和边必须带 Evidence Backlink：
-
-```text
-Entity / Relation / Community Claim
-→ EvidenceEdge
-→ CitationChunk
-→ SourceSpan
-→ DocumentVersion
-```
-
-没有 SourceSpan 的图结果只能标记为 `AUXILIARY_ONLY`。
-
-### 7.3 KnowledgeVersion 状态机
-
-```text
-DRAFT
-→ VALIDATING_INPUT
-→ BUILDING
-→ VERIFYING
-→ ACCEPTANCE_PENDING
-→ ACCEPTED
-→ ACTIVE
-→ SUPERSEDED
-→ RETIRING
-→ RETIRED
-```
-
-失败状态：
-
-```text
-VALIDATION_FAILED
-BUILD_FAILED
-VERIFICATION_FAILED
-ACCEPTANCE_REJECTED
-CUTOVER_FAILED
-RETIREMENT_BLOCKED
-```
-
-不变量：
-
-1. `ACTIVE` 版本必须已 `ACCEPTED`。
-2. 同一 KnowledgeSpace 的服务流量只能解析到明确 Active Version 或固定 Snapshot。
-3. `PlanVersion` / `AgentRun` 已固定的 KnowledgeSnapshot 不因新 Cutover 静默变化。
-4. 新版本构建时旧 Active Version 继续服务。
-5. 回滚是新的 Cutover 决策，不修改历史版本状态。
-6. Infrastructure receipt 证明物理动作发生，不等于 Knowledge Acceptance。
-
-## 8. Agent Core 发起检索
-
-Agent Core 在创建 Knowledge Step 前完成：
-
-```text
-Task Analysis
-→ RetrievalNeedDecision
-→ EvidenceRequirement[]
-→ Knowledge Scope intent
-→ Security authorization
-→ Retrieval Profile ceiling
-→ Retrieval Budget reservation
-→ KnowledgeQueryRequest
-```
-
-Knowledge 不根据一个裸字符串自行推断全部任务目标。
-
-```yaml
-KnowledgeQueryRequest:
-  request_id: string
-  run_id: string
-  plan_version_id: string
-  step_run_id: string
-  goal_version_id: string
-  user_query: string
-  task_summary: string
-  evidence_requirements: [EvidenceRequirement]
-  requested_knowledge_space_ids: [string]
-  requested_profile: STANDARD | DEEP
-  answer_policy_ref: string
-  authorization_context_ref: string
-  authorized_scope_ref: string
-  execution_context_snapshot_ref: string
-  retrieval_budget_ref: string
-  deadline_at: datetime
-  idempotency_key: string
-  trace_context: object
-```
-
-## 9. 固定 KnowledgeRetrievalGraph
-
-Knowledge 使用固定控制图，动态内容只存在于 `RetrievalPlan` 和 `RetrievalRound`：
+Target 固定图：
 
 ```text
 START
 → validate_request
 → resolve_snapshot
 → validate_authorized_scope
-→ interpret_evidence_requirements
-→ select_effective_profile
-→ plan_retrieval_round
-→ admit_retriever_actions
-→ dispatch_retriever_batch
-→ normalize_results
-→ fuse_and_rerank
-→ expand_context_candidates
+→ interpret_evidence_goal
+→ classify_query_and_risk
+→ build_initial_collection_plan
+→ admit_initial_actions
+→ dispatch_initial_batch
+→ normalize_candidates
+→ bind_provenance_and_lineage
+→ deterministic_eligibility_gate
+→ semantic_evidence_assessment
+→ classify_evidence
 → update_evidence_ledger
-→ evaluate_evidence
-→ decide_corrective_action
-   ├── next_round
-   ├── stop_sufficient
+→ update_evidence_reasoning_graph
+→ build_claim_hypotheses
+→ build_provisional_answer
+→ evaluate_claim_support
+→ evaluate_evidence_set
+→ review_answer_risk
+→ decide_next_control
+
+   ├── accept_evidence
+   ├── plan_targeted_probe
    ├── ask_user_proposal
-   ├── external_search_proposal
+   ├── external_evidence_proposal
    ├── replan_required
-   └── abstain_proposal
+   ├── partial_answer_proposal
+   └── no_suitable_evidence
+
+plan_targeted_probe
+→ admit_probe
+→ dispatch_probe_batch
+→ normalize_candidates
+
+terminal branch
 → build_outcome
 → persist_and_emit
 → END
 ```
 
-固定图负责治理；动态 RetrievalPlan 负责适应问题。
+固定图负责治理；动态内容只存在于：
 
-### 9.1 KnowledgeGraphState
+- CollectionPlan；
+- RetrievalRound；
+- RetrievalAction；
+- EvidenceAssessment；
+- ClaimEvidenceState；
+- EvidenceProbe；
+- Verdict。
 
-只保存图控制所需小状态和引用：
+模型不得动态重写节点、边或跳过安全门。
+
+---
+
+# Part III：首轮证据采集与检索模式
+
+## 8. InitialEvidenceCollectionPlan
 
 ```yaml
-KnowledgeGraphState:
+InitialEvidenceCollectionPlan:
+  plan_id: string
+  knowledge_query_run_id: string
+  evidence_goal_ref: string
+  profile: STANDARD | DEEP
+  selected_routes:
+    - route_type: BM25 | VECTOR | GRAPH_LOCAL | GRAPH_GLOBAL | GRAPH_DRIFT | STRUCTURED | SOURCE_SCOPED
+      purpose: string
+      candidate_limit: int
+      query_spec_ref: string
+  diversity_policy_ref: string
+  join_policy: ALL_REQUIRED | QUORUM | BEST_EFFORT | DEADLINE_BOUNDED
+  max_parallel_actions: int
+  candidate_budget: int
+  token_budget: int
+  cost_budget: number
+  deadline_at: datetime
+  policy_version_ref: string
+  idempotency_key: string
+```
+
+不变量：
+
+1. Route 必须与 EvidenceGoal、Capability、Authorized Scope 和 Profile 相容。
+2. `DEEP` 不等于全部 Retriever 全开。
+3. 计划必须说明每条 Route 的目的，不能只给名称。
+4. 候选上限、并发、预算和 deadline 在 Dispatch 前确定。
+5. 同一 Plan 的重复提交按 idempotency key 返回已有 Receipt。
+
+## 9. STANDARD 与 DEEP
+
+### 9.1 STANDARD
+
+默认目标是低延迟、稳定证据与严格引用：
+
+```text
+BM25 + Vector
+→ Fusion / Rerank
+→ Evidence Assessment
+→ 最多一次 Focused Citation Repair
+```
+
+默认：
+
+- 主检索轮次 1；
+- Citation Repair 最多 1 次；
+- Graph 只在明确实体关系需求且 Policy 允许时启用；
+- 证据不足时宁可 Partial / Ask User / Abstain，不静默升级 DEEP。
+
+### 9.2 DEEP
+
+允许有限的多样化首轮：
+
+- BM25；
+- Vector；
+- Graph Local；
+- 必要时 Graph Global / Community；
+- 必要时 DRIFT；
+- Structured；
+- Source-scoped；
+- Temporal / Authority focused。
+
+启用条件：
+
+- 路径与问题类型匹配；
+- KnowledgeVersion 具备 Capability；
+- 预计增益高于成本；
+- 不与其他路径完全重复；
+- 预算、deadline 与 Security 允许。
+
+DEEP 的目标不是“检索更多”，而是尽快建立能够暴露关键 Claim、冲突和缺口的 Evidence Pool。
+
+## 10. GraphRAG 检索模式
+
+### 10.1 Graph Local
+
+用途：围绕已链接 Entity 获取关系、邻域、路径和支持文本。
+
+适合：
+
+- “某人负责哪些项目”；
+- “制度条款与适用部门是什么关系”；
+- “两个实体通过什么链路关联”。
+
+必要门禁：
+
+- Entity Linking 置信度；
+- hop / fan-out 限制；
+- 每个节点、边和 GraphPath 的 SourceSpan 回链；
+- ACL 逐节点、逐边执行。
+
+### 10.2 Graph Global / Community
+
+用途：基于 Community Report 或全局主题聚合回答跨数据集、宏观主题问题。
+
+适合：
+
+- “公司今年主要风险主题是什么”；
+- “多个项目共同出现了哪些问题”。
+
+限制：
+
+- 成本高；
+- Community Summary 是派生证据；
+- 必须回查 Text Unit / SourceSpan；
+- 不得把同源 Community、Local 和原文计算成多个独立来源。
+
+### 10.3 Graph DRIFT
+
+用途：以 Community / Broad 起点形成探索假设，再围绕关键实体和 Follow-up 递归深入。
+
+适合：
+
+- 初始问题宽泛，但答案依赖若干局部事实；
+- 首轮出现新的高影响实体；
+- 当前 Claim 需要递归查证。
+
+DRIFT 不是无限递归。每轮必须满足：
+
+- 新增独立 Evidence；
+- Claim Verdict 或 Answer Risk 可能变化；
+- 预计信息增益高于阈值；
+- 未触发轮次、成本、deadline 或无进展停止。
+
+### 10.4 Graph 不是默认更优
+
+简单 FAQ、精确编号、已知条款定位通常由 BM25 / Vector 更快更稳。Graph 只有在关系、多跳、全局主题或递归探索能补足 Evidence Gap 时才启用。
+
+## 11. 质量优先但不无界
+
+“质量优先”定义为：
+
+> 在 AnswerPolicy、预算、deadline、安全和边际收益边界内，优先满足关键 Claim 的 Evidence Sufficiency，而不是优先选择最短执行路径。
+
+它不等于：
+
+- 每次全路径；
+- 无限轮次；
+- 总是使用强模型；
+- 总是要求多个来源；
+- 为低影响 Claim 支付高成本。
+
+质量控制依赖：
+
+- Evidence Requirement；
+- Multi-route Diversity；
+- Claim Coverage；
+- Independent Source Family；
+- Authority / Temporal / Applicability；
+- Conflict Disclosure；
+- Expected Information Gain；
+- Answer Stability；
+- Final Gate。
+
+---
+
+# Part IV：Evidence 生命周期与双图
+
+## 12. EvidenceCandidate 状态机
+
+```text
+DISCOVERED
+→ NORMALIZED
+→ ELIGIBILITY_CHECKED
+→ SEMANTIC_ASSESSED
+→ CLASSIFIED
+```
+
+分类：
+
+| 分类 | 含义 | 是否可进入最终严格 Context |
+| --- | --- | --- |
+| STRICT_ACCEPTED | 直接支持 Claim 且具备有效 SourceSpan | 是 |
+| SUPPORTING_AUXILIARY | 有助于解释，但不能独立严格证明 | 仅辅助 |
+| CONFLICTING | 与候选结论冲突 | 必须保留并披露/解决 |
+| QUALIFYING | 增加前提、例外或适用范围 | 是，需修改 Claim |
+| DUPLICATE | 与已有 Evidence 基本重复 | 不重复计票 |
+| DERIVED | Community / Graph Summary / 模型派生 | 只能辅助，需回链 |
+| REJECTED_LOW_QUALITY | 相关性、权威或适用性不足 | 不进入 Active Set |
+| EXCLUDED | ACL、版本、Snapshot、完整性硬门失败 | 不得暴露给模型和回答 |
+| SUPERSEDED | 被有效新版本替代 | 不支持当前 Claim，但保留历史 |
+
+关键原则：
+
+> “不进入最终答案”不等于删除领域事实。冲突、低质量、重复和派生 Evidence 必须保留在 Ledger 中用于审计、去重、诊断和 Eval。
+
+## 13. Knowledge Graph 与 Evidence Reasoning Graph
+
+### 13.1 Knowledge Graph
+
+表达企业知识空间：
+
+```text
+Entity
+Relation
+Community
+Document
+TextUnit
+```
+
+用于发现实体入口、多跳关系、社区主题与潜在文档。
+
+### 13.2 Evidence Reasoning Graph
+
+表达一次 KnowledgeQueryRun 中“为什么候选答案可信或不可信”。
+
+节点：
+
+```text
+Claim
+Evidence
+Source
+DocumentVersion
+GraphPath
+CommunitySummary
+```
+
+关系：
+
+```text
+SUPPORTS
+PARTIAL_SUPPORT
+CONTRADICTS
+QUALIFIES
+SUPERSEDES
+DUPLICATES
+DERIVED_FROM
+SUMMARIZES
+EXPLAINS
+APPLIES_TO
+DOES_NOT_APPLY_TO
+INSUFFICIENT_FOR
+```
+
+示例：
+
+```mermaid
+flowchart LR
+    C[Claim: 员工通常需提前三十天通知]
+    E1[2026 正式制度原文]
+    E2[Local Graph 结果]
+    E3[Community Summary]
+    E4[试用期规定]
+    E5[2024 旧制度]
+
+    E1 -->|SUPPORTS| C
+    E2 -->|DERIVED_FROM| E1
+    E3 -->|SUMMARIZES| E1
+    E4 -->|QUALIFIES| C
+    E5 -->|CONTRADICTS| C
+    E1 -->|SUPERSEDES| E5
+```
+
+E1、E2、E3 若同源，只能算一个 Source Family。
+
+## 14. EvidenceDerivationEdge
+
+```yaml
+EvidenceDerivationEdge:
+  edge_id: string
+  knowledge_query_run_id: string
+  from_evidence_ref: string
+  relation_type: SUPPORTS | PARTIAL_SUPPORT | CONTRADICTS | QUALIFIES | SUPERSEDES | DUPLICATES | DERIVED_FROM | SUMMARIZES | APPLIES_TO | DOES_NOT_APPLY_TO | INSUFFICIENT_FOR
+  to_claim_or_evidence_ref: string
+  source_family_ref: string
+  derivation_depth: int
+  created_by: DETERMINISTIC | MODEL_PROPOSAL_VALIDATED
+  model_invocation_ref: string | null
+  validator_receipt_ref: string
+  version: int
+```
+
+不变量：
+
+- 模型不得引用不存在的 Evidence ID；
+- 所有 DERIVED_FROM 必须能回溯到原始 SourceSpan 或标记无法严格引用；
+- 关系更新采用新 Graph Version，不原地删除历史；
+- Source Family 由确定性 lineage 规则拥有。
+
+---
+
+# Part V：四层证据评价与 Claim 推理
+
+## 15. 第一层：Deterministic Eligibility Gate
+
+由代码执行，模型不可覆盖：
+
+- ACL 与 Disclosure 是否允许；
+- Security Epoch 是否有效；
+- KnowledgeSnapshot / DocumentVersion 是否匹配；
+- SourceSpan 是否存在；
+- Payload Hash 是否正确；
+- Evidence 是否过期、撤销或被 Superseded；
+- RetrieverAttempt 是否属于当前 Round；
+- late / duplicate / cancelled result 是否允许提交；
+- 数据分类是否允许进入选定 Model Provider。
+
+硬门失败进入 `EXCLUDED`，不得先交给模型再过滤。
+
+## 16. 第二层：单条 Evidence Semantic Assessment
+
+模型 CRITIC 只产生 Proposal，确定性代码验证引用、枚举、lineage、权限与版本。
+
+```yaml
+EvidenceAssessment:
+  assessment_id: string
+  evidence_id: string
+  claim_ref: string | null
+  assessment_generation: int
+  eligibility_status: PASS | FAIL
+  semantic_relation: SUPPORTS | PARTIAL_SUPPORT | CONTRADICTS | QUALIFIES | IRRELEVANT | UNCERTAIN
+  relevance_score: number | null
+  entailment_score: number | null
+  contradiction_score: number | null
+  directness: DIRECT_SOURCE_TEXT | STRUCTURED_FACT | GRAPH_PATH | COMMUNITY_SUMMARY | MODEL_DERIVED
+  authority_status: HIGH | MEDIUM | LOW | UNKNOWN
+  temporal_status: CURRENT | HISTORICAL | EXPIRED | UNKNOWN
+  applicability_status: MATCH | PARTIAL | MISMATCH | UNKNOWN
+  citation_status: EXACT | PARTIAL | ABSENT
+  source_family_ref: string
+  derivation_depth: int
+  independent_support_eligible: boolean
+  reason_codes: [string]
+  model_invocation_ref: string | null
+  deterministic_validation_ref: string
+  assessment_policy_version_ref: string
+  idempotency_key: string
+```
+
+不得以一个 `quality_score` 覆盖硬门和多维 Verdict。可以为排序计算分数，但最终状态由明确维度和 Policy 决定。
+
+## 17. 第三层：ClaimEvidenceState
+
+```yaml
+ClaimEvidenceState:
+  claim_id: string
+  claim_text: string
+  claim_generation: int
+  direct_support_refs: [string]
+  indirect_support_refs: [string]
+  contradiction_refs: [string]
+  qualification_refs: [string]
+  independent_source_family_refs: [string]
+  supporting_authority_refs: [string]
+  verdict: SUPPORTED | CONDITIONALLY_SUPPORTED | CONTESTED | CONTRADICTED | INSUFFICIENT | BLOCKED
+  confidence_band: HIGH | MEDIUM | LOW | UNKNOWN
+  unresolved_gap_codes: [string]
+  answer_impact: CRITICAL | MAJOR | MINOR
+  recommended_probe_refs: [string]
+  version: int
+```
+
+Claim 不是模型可直接发布的事实。它是一次 QueryRun 的候选陈述，其状态随 Evidence Generation 版本化变化。
+
+## 18. 第四层：EvidenceSetVerdict
+
+```yaml
+EvidenceSetVerdict:
+  verdict_id: string
+  knowledge_query_run_id: string
+  assessment_generation: int
+  status: SUFFICIENT | PARTIAL | CONTESTED | CONTRADICTED | NO_SUITABLE_EVIDENCE | BLOCKED
+  satisfied_claim_refs: [string]
+  conditional_claim_refs: [string]
+  contested_claim_refs: [string]
+  unsupported_claim_refs: [string]
+  claim_coverage: number
+  strict_citation_coverage: number
+  independent_source_coverage: number
+  authority_coverage: number
+  temporal_validity_coverage: number
+  unresolved_conflict_count: int
+  duplicate_evidence_ratio: number
+  derived_evidence_ratio: number
+  novelty_since_previous_round: number
+  answer_stability: number | null
+  expected_next_probe_gain: number | null
+  recommended_control: ACCEPT | TARGETED_PROBE | ASK_USER | REPLAN | PARTIAL_ANSWER | ABSTAIN
+  reason_codes: [string]
+  policy_version_ref: string
+```
+
+## 19. ProvisionalAnswerCandidate 与 AnswerRiskReview
+
+第一轮评估后不得直接发布最终答案。Knowledge 可生成结构化候选，用于检查 Claim 与 Evidence 绑定：
+
+```yaml
+ProvisionalAnswerCandidate:
+  candidate_id: string
+  generation: int
+  claim_refs: [string]
+  evidence_binding_refs: [string]
+  unresolved_claim_refs: [string]
+  conditional_claim_refs: [string]
+  answer_risk_level: LOW | MEDIUM | HIGH
+  synthesis_model_invocation_ref: string | null
+```
+
+```yaml
+AnswerRiskReview:
+  review_id: string
+  candidate_ref: string
+  unsupported_claim_refs: [string]
+  ignored_conflict_refs: [string]
+  stale_source_refs: [string]
+  missing_condition_refs: [string]
+  derived_only_claim_refs: [string]
+  citation_gap_refs: [string]
+  verdict: PASS | REQUIRES_PROBE | REQUIRES_REVISION | BLOCKED
+  reason_codes: [string]
+```
+
+检查：
+
+- 是否包含无证据 Claim；
+- 是否把 Partial 写成确定事实；
+- 是否忽略反证；
+- 是否把 Community Summary 当作原始证据；
+- 是否使用过期或不适用来源；
+- 是否缺少关键适用条件；
+- 是否存在高影响争议 Claim。
+
+---
+
+# Part VI：动态补证与停止
+
+## 20. EvidenceProbeCandidate
+
+```yaml
+EvidenceProbeCandidate:
+  probe_id: string
+  target_claim_refs: [string]
+  target_gap_codes: [string]
+  current_verdict: SUPPORTED | CONDITIONALLY_SUPPORTED | CONTESTED | CONTRADICTED | INSUFFICIENT
+  possible_outcomes: [string]
+  probe_type: QUERY_REWRITE | MULTI_QUERY | SOURCE_SCOPED_RETRIEVAL | PARENT_EXPANSION | ADJACENT_EXPANSION | FOCUSED_CITATION | GRAPH_LOCAL | GRAPH_PATH | GRAPH_GLOBAL | GRAPH_DRIFT | TEMPORAL_RETRIEVAL | AUTHORITY_RETRIEVAL | SUPERSEDES_RETRIEVAL | STRUCTURED_LOOKUP
+  query_spec_ref: string
+  expected_information_gain: HIGH | MEDIUM | LOW
+  expected_answer_impact: CRITICAL | MAJOR | MINOR
+  estimated_cost: number
+  estimated_latency_ms: int
+  required_capabilities: [string]
+  reason_codes: [string]
+  idempotency_key: string
+```
+
+## 21. Probe 决策
+
+Probe 不是 Retriever 分数最大者。选择依据：
+
+```text
+改变最终答案的可能性
+× 当前不确定度
+× 预计 Evidence 质量
+× 对关键 Claim 的影响
+- 成本
+- 延迟
+- 重复度
+- 安全风险
+```
+
+硬门、Capability 和 Security 不能被 Utility Score 覆盖。
+
+常见映射：
+
+| 当前缺口 | Probe |
+| --- | --- |
+| 完全无 Evidence | Query Rewrite / Multi-query / Scope 检查 |
+| 命中文档但缺正文 | Parent / Adjacent / 条款级检索 |
+| 只有 Community Summary | Text Unit / SourceSpan Backfill |
+| 实体关系缺失 | Entity Resolve / Graph Local / Path |
+| 全局模式不足 | Global / Community |
+| 新旧版本矛盾 | Temporal / Supersedes Retrieval |
+| 正反 Evidence 权威不明 | Authority-focused Retrieval |
+| 主体或适用范围不同 | Scope / Applicability Retrieval |
+| 引用位置缺失 | Focused Citation |
+| 连续重复结果 | Stop，不再执行同类 Probe |
+| 需要新附件或外部 Tool | KnowledgeControlProposal，由 Agent Core 决定 |
+
+## 22. Retry、Probe、Corrective Retrieval 与 Replan
+
+| 机制 | 触发 | 是否改变任务计划 | Owner |
+| --- | --- | --- | --- |
+| Retry | 执行临时失败，原动作仍正确 | 否 | Knowledge / Infrastructure 按 Error Policy |
+| Repair | 参数、结构化输出或局部输入可修复 | 否 | 当前执行模块 |
+| Targeted Probe | Evidence Gap 可通过新的知识动作补足 | 否 | Knowledge |
+| Corrective Retrieval | 对检索结果执行 Query / Route / Citation 修正 | 否 | Knowledge，是 Probe 子集 |
+| Replan | 任务假设、依赖或 Step 结构失效 | 是，新建 PlanVersion | Agent Core |
+
+Knowledge 只能返回 `REPLAN_REQUIRED` Proposal，不能创建 PlanVersion。
+
+## 23. 停止条件
+
+### 23.1 成功停止
+
+- 关键 Claim 为 `SUPPORTED` 或允许的 `CONDITIONALLY_SUPPORTED`；
+- 严格引用覆盖满足 AnswerPolicy；
+- 无未解决 Critical Conflict；
+- 权威性、时效性、适用性满足 Policy；
+- Provisional Answer 连续 Generation 稳定。
+
+### 23.2 无收益停止
+
+- 连续 Probe 没有新增独立来源；
+- 新 Evidence 全部重复或派生；
+- Claim Verdict 未变化；
+- 预计下一轮信息增益低于阈值。
+
+### 23.3 不可解决停止
+
+- 知识不存在；
+- 权限阻止；
+- 来源本身冲突；
+- 版本治理缺失；
+- 索引、解析或 Graph Grounding 疑似异常；
+- 需要用户补充输入或外部 Tool。
+
+硬上限始终存在：`max_rounds`、`max_attempts`、`max_tokens`、`max_cost`、`deadline_at`。
+
+## 24. Outcome
+
+```text
+SUFFICIENT_EVIDENCE
+PARTIAL_EVIDENCE
+CONFLICTING_EVIDENCE
+NO_SUITABLE_EVIDENCE
+AUTHORIZED_EVIDENCE_UNAVAILABLE
+KNOWLEDGE_QUALITY_SUSPECTED
+FAILED
+CANCELLED
+```
+
+```yaml
+InsufficientEvidenceOutcome:
+  outcome_id: string
+  status: PARTIAL_EVIDENCE | CONFLICTING_EVIDENCE | NO_SUITABLE_EVIDENCE | AUTHORIZED_EVIDENCE_UNAVAILABLE | KNOWLEDGE_QUALITY_SUSPECTED
+  attempted_route_types: [string]
+  attempted_probe_types: [string]
+  retrieval_round_count: int
+  candidate_evidence_count: int
+  strict_accepted_count: int
+  auxiliary_count: int
+  rejected_count: int
+  duplicate_count: int
+  conflicting_count: int
+  excluded_count: int
+  unresolved_claim_refs: [string]
+  unresolved_gap_codes: [string]
+  stop_reason: LOW_MARGINAL_GAIN | ROUND_LIMIT | BUDGET_EXHAUSTED | DEADLINE_REACHED | SECURITY_BLOCKED | KNOWLEDGE_ABSENT | INDEX_UNAVAILABLE | SOURCE_CONFLICT_UNRESOLVED | USER_CLARIFICATION_REQUIRED
+  diagnosis_primary: KNOWLEDGE_ABSENT | RETRIEVAL_MISS_SUSPECTED | PARSING_QUALITY_SUSPECTED | INDEX_QUALITY_SUSPECTED | GRAPH_GROUNDING_SUSPECTED | VERSION_GOVERNANCE_SUSPECTED | SOURCE_CONFLICT_UNRESOLVED | AUTHORIZATION_LIMITED | UNKNOWN
+  diagnosis_confidence: HIGH | MEDIUM | LOW
+  supporting_signal_refs: [string]
+  safe_user_message_ref: string
+```
+
+“知识库有问题”只能先形成 `KnowledgeHealthSignal`。Infrastructure、Ingestion、KnowledgeVersion 验证与 Observability 共同确认后，才可升级为健康事件或运维告警。
+
+---
+
+# Part VII：状态、并发、故障与恢复
+
+## 25. KnowledgeQueryRun 状态
+
+```text
+CREATED
+→ VALIDATING
+→ PLANNING_INITIAL_COLLECTION
+→ COLLECTING
+→ ASSESSING
+→ DELIBERATING
+→ PROBING
+→ BUILDING_OUTCOME
+→ SUCCEEDED | PARTIAL | BLOCKED | FAILED | CANCELLED
+```
+
+每个 RetrievalRound：
+
+```text
+PLANNED
+→ ADMITTED
+→ DISPATCHING
+→ RUNNING
+→ NORMALIZING
+→ ASSESSING
+→ MERGED
+→ CLOSED
+```
+
+失败分支：
+
+```text
+REJECTED_BY_POLICY
+BUDGET_DENIED
+SECURITY_BLOCKED
+TIMED_OUT
+CANCELLED
+RECONCILIATION_REQUIRED
+```
+
+## 26. 并行与 Join
+
+首轮 Route 可并行，但必须先持久化：
+
+- RetrievalRound；
+- RetrievalAction；
+- DispatchItem；
+- Budget Reservation；
+- Authorized Scope；
+- idempotency key。
+
+JoinPolicy：
+
+- `ALL_REQUIRED`：关键 Route 全部完成；
+- `QUORUM`：满足最小多样性和覆盖；
+- `BEST_EFFORT`：允许部分失败；
+- `DEADLINE_BOUNDED`：到期后合并已验证结果。
+
+Reducer 合并规则：
+
+- 按 Evidence ID、SourceSpan、content hash 和 source family 去重；
+- late result 先检查 Round generation；
+- 旧 Assessment Generation 不覆盖新 Verdict；
+- 冲突不因分数低被覆盖；
+- 派生结果不提升独立来源计数。
+
+## 27. 错误分类
+
+| 错误 | 默认语义 |
+| --- | --- |
+| Validation / Schema | Repair 或 Fail，不盲目 Retry |
+| Provider 429 / temporary unavailable | 有界 Retry / Fallback，受 deadline 与 budget 约束 |
+| Retriever timeout | Read-only 可 Retry；先检查 attempt receipt |
+| Invalid model structured output | Schema Repair → Upgrade chain → Fail/Partial |
+| Snapshot drift | Reject current result，重新 resolve 或返回 Replan Proposal |
+| Security Epoch change | 未提交结果重新授权；撤权 Evidence taint/exclude |
+| Index unavailable | Fallback 或 `KNOWLEDGE_QUALITY_SUSPECTED`，不伪造空答案 |
+| Critic disagreement | 再校验、升级强模型或标记 UNCERTAIN；不得多数投票替代规则 |
+| Cancellation | 传播到 batch；late result 丢弃或审计，不作为 Retry |
+
+## 28. Recovery 与 Reconciliation
+
+恢复：
+
+```text
+读取 KnowledgeQueryRun 终态
+→ 读取当前 Round / Action / Attempt
+→ 对比 LangGraph Checkpoint
+→ Reconcile Retriever Receipt
+→ 跳过已提交 Evidence
+→ 重建 Evidence Reasoning Graph Projection
+→ 从首个未提交确定性节点恢复
+```
+
+不变量：
+
+1. 已提交 EvidenceRecord 不重复创建。
+2. 已完成 Attempt 不重复执行，除非 Policy 创建新 attempt。
+3. Checkpoint 只保存控制位置和引用，PostgreSQL 保存领域事实。
+4. Checkpoint 存在但领域 Run 不存在时隔离，不伪造事实。
+5. 领域 Run 已终态而图未结束时，以领域终态为准。
+6. Lease 接管使用 fencing token，旧 Worker 不能提交。
+7. 模型 Proposal 重放必须使用同 PromptVersion、输入 Hash 与 idempotency key。
+
+## 29. LangGraph State
+
+```yaml
+KnowledgeDecisionGraphState:
   knowledge_query_run_id: string
   request_ref: string
+  evidence_goal_ref: string
   snapshot_refs: [string]
-  effective_profile_ref: string
   current_round_no: int
-  active_retriever_attempt_refs: [string]
+  current_assessment_generation: int
+  active_action_refs: [string]
+  active_attempt_refs: [string]
   evidence_ledger_ref: string
-  evidence_frontier_ref: string
-  latest_quality_verdict_ref: string | null
-  latest_control_decision_ref: string | null
+  evidence_reasoning_graph_ref: string
+  claim_state_set_ref: string
+  provisional_answer_ref: string | null
+  latest_evidence_set_verdict_ref: string | null
+  latest_probe_decision_ref: string | null
   remaining_budget_ref: string
   deadline_at: datetime
   status: string
 ```
 
-完整 Evidence、Retriever payload 和结果对象保存在 PostgreSQL / Object Store，不写入 LangGraph Checkpointer。
-
-## 10. STANDARD 完整流程
-
-STANDARD 是受限 Agentic Profile，不是完全无控制的静态调用：
-
-```text
-Validate request and scope
-→ pin KnowledgeSnapshot
-→ DIRECT query by default
-→ BM25 + Vector in parallel
-→ normalize + RRF
-→ optional deterministic or configured rerank
-→ deduplicate SourceSpan
-→ Evidence Quality Gate
-→ optional one focused citation repair
-→ sufficient / insufficient / abstain proposal
-```
-
-默认约束：
-
-```text
-max_retrieval_rounds: 1
-optional focused citation repair: 1
-Graph: disabled unless explicit policy exception is confirmed
-Query rewrite: deterministic only or disabled
-External search: proposal only
-```
-
-STANDARD 的目标是：
-
-```text
-简单事实不退化
-延迟和成本可预测
-严格引用可验证
-没有足够证据时不编造
-```
-
-## 11. DEEP / Agentic GraphRAG 完整流程
-
-```text
-Evidence Requirement interpretation
-→ complexity and query strategy proposal
-→ first-round breadth retrieval
-→ EvidenceLedger / EvidenceFrontier
-→ requirement-level quality evaluation
-→ targeted corrective action
-→ optional Graph route or graph expansion
-→ conflict / temporal / citation repair
-→ marginal-utility stop decision
-→ SelectedEvidenceBundle or control proposal
-```
-
-DEEP 允许但不强制：
-
-```text
-REWRITE
-MULTI_QUERY
-STEP_BACK
-HYDE
-ENTITY_DECOMPOSITION
-RELATION_QUERY
-PARENT_EXPAND
-ADJACENT_SPAN_EXPAND
-GRAPH_LOCAL
-GRAPH_GLOBAL
-GRAPH_DRIFT
-FOCUSED_CITATION
-CONFLICT_RETRIEVE
-```
-
-DEEP 必须先做预期收益判断。Graph、HyDE 或模型 Critic 的预期收益低于额外成本时应跳过。
-
-## 12. Graph 路由
-
-### 12.1 Graph Local
-
-适用于明确实体、关系和多跳问题：
-
-```text
-Grounded text / entity anchors
-→ entity resolution
-→ bounded neighborhood / path traversal
-→ path scoring
-→ supporting CitationChunk backfill
-→ SourceSpan validation
-→ graph evidence records
-```
-
-强制要求：
-
-1. 入口优先来自已授权文本命中或高置信实体。
-2. 最大 hop、path、fanout 受 Policy 与 Budget 双重限制。
-3. 每条可选 Path 必须记录 entry、edges、score、version 和 evidence refs。
-4. Graph Path 不能代替原始 SourceSpan。
-5. 循环、超大 hub、低置信归一化必须被抑制。
-
-### 12.2 Graph Global / Community
-
-适用于 corpus-level 主题、模式、风险和整体总结：
-
-```text
-Question intent
-→ eligible community version
-→ community report retrieval
-→ partial evidence selection
-→ underlying source backfill
-→ diversity and coverage evaluation
-→ SelectedEvidence
-```
-
-Community Summary 不能作为唯一严格引用。最终 Claim 必须绑定到基础 SourceSpan 或明确声明为非严格辅助总结。
-
-### 12.3 Graph Drift
-
-适用于从高置信局部入口逐步扩展、但不能预先确定完整路径的问题：
-
-```text
-grounded seed
-→ local graph observation
-→ unresolved hop
-→ bounded drift proposal
-→ retrieve supporting text
-→ update frontier
-→ stop on closure or low gain
-```
-
-DRIFT 不是无限游走；每次扩展必须绑定未解决 Evidence Requirement、预算和 novelty。
-
-## 13. 多知识库选择与并行
-
-Agent Core 提交允许候选范围；Knowledge 可以在该范围内选择实际 KnowledgeSpace：
-
-```text
-Authorized Candidate Scope
-∩ User task selection
-∩ Workspace policy
-∩ Snapshot availability
-= Eligible KnowledgeSpace Set
-```
-
-多库运行：
-
-```text
-resolve per-space KnowledgeSnapshot
-→ create per-space RetrieverAction
-→ parallel dispatch where safe
-→ normalize authority and scores
-→ merge by Evidence Requirement
-→ preserve space and version lineage
-```
-
-不得：
-
-```text
-把不同知识库的原始相似度直接比较
-把一个库的 ACL 结果复用到另一个库
-在同一 EvidenceRecord 中丢失 knowledge_space_id
-因某个库失败而静默扩大到未授权库
-```
-
-## 14. Evidence Requirement 与 Evidence Frontier
-
-```yaml
-EvidenceRequirement:
-  requirement_id: string
-  claim_intent: string
-  requirement_type: FACT | RELATION | PROCEDURE | TEMPORAL | GLOBAL | CONFLICT | CITATION
-  required_source_types: [string]
-  minimum_authority: string | null
-  temporal_requirement: CURRENT | AS_OF | HISTORICAL | ANY
-  as_of_time: datetime | null
-  minimum_independent_sources: int
-  strict_citation_required: boolean
-  completion_criteria: object
-```
-
-多跳任务使用 Evidence Frontier，避免首轮错误路径锁死：
-
-```yaml
-EvidenceFrontier:
-  frontier_id: string
-  anchor_evidence_refs: [string]
-  unresolved_requirement_refs: [string]
-  unresolved_hops: [EvidenceHop]
-  candidate_entity_refs: [string]
-  explored_path_refs: [string]
-  rejected_path_refs: [string]
-  frontier_status: OPEN | SUFFICIENT | EXHAUSTED
-  version: int
-```
-
-每个新动作必须指向至少一个未解决 Requirement 或 Citation 修复目标。
-
-## 15. Fusion、Rerank 与 Selection
-
-```text
-BM25 ---------\
-Vector --------\
-Graph ----------> normalize → fusion → rerank → dedup → evidence selection
-Structured -----/
-```
-
-规范：
-
-1. 不同 Retriever 的原始分数不可直接比较。
-2. Fusion 默认使用版本化 RRF / rank fusion Policy。
-3. Rerank 只处理有界 Candidate Pool。
-4. Model reranker 通过 Model Gateway role 调用。
-5. Parent Expansion 发生在基础 CitationChunk 选中后。
-6. 相同 SourceSpan、重复 Chunk、Parent/Child 重叠必须去重。
-7. Selection 记录 rank_before、rank_after、reason、budget cost。
-8. Context Budget 不是无限扩展理由；最终进入 Context 的是 SelectedEvidence，不是全部 Candidate。
-
-## 16. Evidence Quality Gates
-
-质量评价分层：
-
-```text
-Retriever Result Validation
-→ Evidence Relevance
-→ Requirement Coverage
-→ Authority and Temporal Validity
-→ Conflict Detection
-→ Citation Eligibility
-→ Novelty / Marginal Utility
-→ Retrieval Stop Decision
-```
-
-```yaml
-RetrievalQualityVerdict:
-  verdict_id: string
-  knowledge_query_run_id: string
-  round_id: string
-  status: SUFFICIENT | PARTIAL | AMBIGUOUS | IRRELEVANT | CONFLICTING | UNAVAILABLE
-  satisfied_requirement_refs: [string]
-  unresolved_requirement_refs: [string]
-  relevance_score: number | null
-  requirement_coverage: number
-  source_span_coverage: number
-  authority_status: PASS | FAIL | UNKNOWN
-  temporal_status: PASS | FAIL | UNKNOWN
-  conflict_status: NONE | RESOLVED | UNRESOLVED
-  novelty_since_previous_round: number
-  expected_next_round_gain: number | null
-  citation_eligible_evidence_refs: [string]
-  auxiliary_evidence_refs: [string]
-  reason_codes: [string]
-```
-
-模型 Critic 可以产生 Proposal，但确定性字段、SourceSpan、版本、ACL、Citation Eligibility 和预算由代码验证。
-
-## 17. Corrective Retrieval
-
-Corrective Retrieval 表示“原 Knowledge Step 和 Evidence Requirement 仍然正确，只调整获取证据的方法”。
-
-| Failure / Gap | 默认动作 |
-| --- | --- |
-| `doc_miss` | REWRITE、MULTI_QUERY、STEP_BACK、HYDE（若允许） |
-| `doc_hit_text_miss` | Parent、Adjacent、Graph Local、Structured lookup |
-| `text_hit_citation_miss` | FOCUSED_CITATION、SourceSpan backfill |
-| `relation_gap` | ENTITY_DECOMPOSITION、GRAPH_LOCAL、DRIFT |
-| `global_coverage_gap` | GRAPH_GLOBAL、community + source backfill |
-| `temporal_gap` | version / effective-time focused retrieval |
-| `conflicting_evidence` | retrieve both sides、authority / supersedes resolution |
-| `permission_filtered` | 不扩大权限；返回受限缺口 |
-| `capability_unavailable` | fallback to available route or control proposal |
-| `no_progress` | stop / ask user / abstain proposal |
-
-```yaml
-CorrectiveRetrievalDecision:
-  decision_id: string
-  round_id: string
-  action: string
-  target_requirement_refs: [string]
-  reason_codes: [string]
-  expected_gain: number | null
-  reserved_budget_ref: string | null
-  next_round_query_specs: [object]
-  requires_agent_core_decision: boolean
-```
-
-## 18. Retry、Corrective Retrieval 与 Replan
-
-三者必须分开：
-
-```text
-Retry
-    相同动作、相同语义、执行因瞬时故障失败。
-    例如 Retriever timeout、临时连接错误。
-
-Corrective Retrieval
-    Evidence Goal 不变，但查询、路径或检索器需要调整。
-    例如 Rewrite、Parent expansion、Graph expansion。
-
-Replan
-    任务结构、依赖、数据源或能力假设失效。
-    例如需要先解析附件、调用日志工具、获得用户授权。
-```
-
-Knowledge 可以提交 `REPLAN_REQUIRED` Proposal，但只有 Agent Core 可以创建新 PlanVersion。
-
-## 19. 停止与控制输出
-
-内层停止原因：
-
-```text
-REQUIREMENTS_SATISFIED
-NO_PROGRESS
-ROUND_LIMIT
-BUDGET_EXHAUSTED
-DEADLINE_REACHED
-SECURITY_BLOCKED
-CAPABILITY_UNAVAILABLE
-USER_CLARIFICATION_REQUIRED
-EXTERNAL_EVIDENCE_REQUIRED
-UNRESOLVED_CONFLICT
-NO_SAFE_PATH
-CANCELLED
-```
-
-Knowledge 的输出只允许：
-
-```text
-SUFFICIENT_EVIDENCE
-PARTIAL_EVIDENCE
-ASK_USER_PROPOSAL
-EXTERNAL_SEARCH_PROPOSAL
-REPLAN_REQUIRED
-ABSTAIN_PROPOSAL
-FAILED
-CANCELLED
-```
-
-最终 Ask User、External Tool Step、Replan、Abstain 和 Answer Finalization 由 Agent Core 决定。
+State 不保存大段正文、完整 Evidence Payload 或最终领域状态。
 
 ---
 
-# Part III：状态、并发、有效性与恢复
+# Part VIII：安全、模型、上下文与观测
 
-## 20. 领域状态与 Checkpointer 边界
+## 30. Security
 
-PostgreSQL 保存领域事实：
-
-```text
-KnowledgeQueryRun
-RetrievalRound
-RetrieverAttempt
-EvidenceRecord
-EvidenceLedger
-EvidenceFrontier
-QualityVerdict
-CorrectiveDecision
-KnowledgeVersion
-KnowledgeSnapshot
-KnowledgeControlProposal
-```
-
-LangGraph Checkpointer 保存：
-
-```text
-当前节点
-待执行边
-小型控制状态引用
-Interrupt / Resume token
-当前轮次和 active attempt refs
-```
-
-不变量：
-
-```text
-Domain Store 是证据、轮次和终态事实源
-Checkpointer 是图控制位置事实源
-恢复时先读取 Domain Store，再恢复/重放图控制
-不得仅凭 checkpoint 推断 Retriever effect 未发生
-```
-
-## 21. KnowledgeQueryRun 状态机
-
-```text
-CREATED
-→ VALIDATING
-→ SNAPSHOT_PINNED
-→ PLANNING
-→ RETRIEVING
-→ EVALUATING
-→ CORRECTING
-→ OUTCOME_PENDING
-→ COMPLETED
-```
-
-可选终态：
-
-```text
-PARTIAL
-CONTROL_PROPOSAL_EMITTED
-FAILED
-CANCELLED
-EXPIRED
-```
-
-状态规则：
-
-1. `COMPLETED` 必须有不可变 Outcome。
-2. `CONTROL_PROPOSAL_EMITTED` 不代表 Agent Core 已接受 Proposal。
-3. `FAILED` 必须有 FailureRecord 与可重试分类。
-4. 终态不可原地回到活动状态；新尝试创建新的 attempt / run generation。
-5. 超时晚到结果不得改变已终结 Outcome。
-
-## 22. RetrievalRound 状态机
-
-```text
-PLANNED
-→ ADMITTED
-→ DISPATCHED
-→ COLLECTING
-→ FUSED
-→ EVALUATED
-→ COMPLETED
-```
-
-异常终态：
-
-```text
-PARTIAL
-FAILED
-CANCELLED
-EXPIRED
-SUPERSEDED
-```
-
-Round 是 append-only attempt。Corrective Retrieval 创建下一 Round，不修改上一 Round 的 Query 和结果。
-
-## 23. RetrieverAttempt 状态机
-
-```text
-CREATED
-→ ADMITTED
-→ DISPATCHED
-→ RUNNING
-→ RESULT_RECEIVED
-→ VALIDATED
-→ COMMITTED
-```
-
-异常终态：
-
-```text
-REJECTED
-RETRYABLE_FAILED
-PERMANENT_FAILED
-TIMED_OUT
-CANCELLED
-LATE_IGNORED
-```
-
-`RESULT_RECEIVED` 不等于 `COMMITTED`；必须通过 schema、scope、snapshot、security epoch、payload hash 和 deadline 验证。
-
-## 24. 并行与 Join
-
-BM25、Vector、Graph 和 Structured Retriever 可以并行，前提是：
-
-```text
-相互无数据依赖
-共享 Snapshot 已固定
-不会写同一外部可变资源
-预算 Reservation 已成功
-安全门和配额允许
-JoinPolicy 已确定
-```
-
-```yaml
-RetrieverBatch:
-  batch_id: string
-  round_id: string
-  action_refs: [string]
-  join_policy: ALL_REQUIRED | QUORUM | BEST_EFFORT | DEADLINE_BOUNDED
-  minimum_success_count: int
-  deadline_at: datetime
-  reducer_policy_ref: string
-```
-
-Join 规则：
-
-1. RetrieverResult 使用 `attempt_id + result_hash` 幂等提交。
-2. 同一 attempt 相同 hash 重复到达可 ACK。
-3. 同一 attempt 不同 hash 必须 quarantine。
-4. 部分失败是否继续由 JoinPolicy 和 Requirement Coverage 决定。
-5. Join 完成后晚到结果标记 `LATE_IGNORED`，不能污染当前 Outcome。
-6. Graph 与文本结果在 Evidence 层融合，不直接合并原始 payload。
-
-## 25. 结果有效性与 Taint
-
-结果有效需要同时满足：
-
-```text
-attempt belongs to active round
-round belongs to active run generation
-snapshot id/hash matches
-security epoch remains valid or has passed revalidation
-deadline not exceeded
-payload schema/hash valid
-producer capability/version compatible
-result not revoked or superseded
-```
-
-Taint 来源：
-
-```text
-security revocation
-document deletion
-snapshot retirement
-index corruption
-provider result integrity failure
-conflicting duplicate
-late result after cancellation
-```
-
-Tainted Evidence 不得进入新的 ContextPack；已发布回答是否需要后续处置由产品与治理流程决定。
-
-## 26. Budget
-
-Agent Core 拥有任务 Budget；Knowledge 使用受委托 Retrieval Budget：
-
-```yaml
-RetrievalBudget:
-  budget_ref: string
-  max_rounds: int
-  max_retriever_attempts: int
-  max_parallel_actions: int
-  max_candidate_count: int
-  max_graph_hops: int
-  max_graph_paths: int
-  max_model_calls: int
-  max_tokens: int
-  max_cost: number
-  deadline_at: datetime
-```
-
-动作前必须 Reservation，动作完成后 Settlement：
-
-```text
-estimate
-→ reserve
-→ execute
-→ settle actual
-→ release unused
-```
-
-Knowledge 不得自行提高 Budget。预算不足时返回有证据的 Partial / Proposal，而不是无界继续。
-
-## 27. Cancellation、Deadline 与 Signal
-
-Agent Core 的 Cancel / Deadline Signal 必须传播到：
-
-```text
-KnowledgeQueryRun
-RetrievalRound
-RetrieverBatch
-RetrieverAttempt
-Model Gateway request
-Infrastructure query adapter
-```
-
-无法取消的底层请求返回后执行 late-result guard。取消不是失败重试理由。
-
-可恢复 Interrupt 只用于：
-
-```text
-等待 Agent Core 对 external search / ask user / replan Proposal 的决定
-等待必须的 Security re-authorization
-等待运维批准的 Knowledge maintenance action
-```
-
-普通 Retriever timeout 不创建人工 Interrupt。
-
-## 28. Recovery 与 Reconciliation
-
-恢复流程：
-
-```text
-load KnowledgeQueryRun and terminal facts
-→ inspect active rounds and attempts
-→ compare checkpointer node
-→ reconcile adapter receipts / result commits
-→ mark orphan or late attempts
-→ resume from first uncommitted deterministic node
-```
-
-规则：
-
-1. 已提交 EvidenceRecord 不重复创建。
-2. 已完成 RetrieverAttempt 不重复执行，除非 Policy 创建新 attempt。
-3. 不确定外部 Query 是否执行时先 Reconcile receipt，再决定 retry。
-4. Checkpoint 存在而领域 Run 不存在时 quarantine，不伪造领域事实。
-5. 领域 Run 已终态而图未结束时以领域终态为准，清理控制状态。
-6. Worker Lease 过期后使用 fencing token 防止旧 worker 提交。
-
----
-
-# Part IV：配置、安全、模型与可观测性
-
-## 29. KnowledgeSpace 配置模型
-
-用户配置、不可变构建规格和只读运行事实必须拆开。
-
-### 29.1 KnowledgeSpaceIntent
-
-```yaml
-KnowledgeSpaceIntent:
-  knowledge_space_id: string
-  name: string
-  purpose: string
-  owner_ref: string
-  default_profile: STANDARD | DEEP
-  allowed_profiles: [STANDARD, DEEP]
-  agent_auto_select_allowed: boolean
-  strict_citation_policy: AUTO | REQUIRED
-  external_evidence_policy: DENY | REQUIRE_APPROVAL | ALLOW_IF_INSUFFICIENT
-  requested_capabilities: [TEXT, VECTOR, GRAPH, STRUCTURED, MULTIMODAL]
-  retrieval_policy_ref: string
-  chunk_profile_ref: string
-  graph_profile_ref: string | null
-  model_slot_binding_ref: string
-  security_policy_ref: string
-  version: int
-```
-
-### 29.2 IndexSpec
-
-```yaml
-IndexSpec:
-  index_spec_id: string
-  knowledge_version_id: string
-  document_set_version: string
-  chunk_policy_version: string
-  parser_contract_version: string
-  embedding_slot_ref: string
-  bm25_schema_version: string
-  vector_schema_version: string
-  graph_schema_version: string | null
-  graph_extractor_profile_ref: string | null
-  source_span_required: boolean
-  content_hash: string
-  spec_hash: string
-```
-
-IndexSpec 激活后不可变。
-
-### 29.3 ServingProjection
-
-```yaml
-KnowledgeServingProjection:
-  knowledge_space_id: string
-  active_knowledge_version_id: string | null
-  building_knowledge_version_ids: [string]
-  capability_status: map<string,string>
-  verification_status: string
-  acceptance_status: string
-  serving_watermark_ref: string | null
-  last_successful_cutover_at: datetime | null
-  projection_freshness: datetime
-```
-
-前端不得提交 `health_status=ready` 等运行事实。
-
-## 30. RetrievalProfileDefinition
-
-```yaml
-RetrievalProfileDefinition:
-  profile_id: string
-  profile_type: STANDARD | DEEP
-  allowed_actions: [string]
-  max_rounds: int
-  max_parallel_queries: int
-  max_retriever_attempts_per_round: int
-  candidate_pool_default: int
-  candidate_pool_max: int
-  evidence_limit_default: int
-  evidence_limit_max: int
-  graph_policy_ref: string | null
-  corrective_policy_ref: string
-  evidence_policy_ref: string
-  latency_slo_ms: int
-  cost_ceiling: number
-  version: int
-```
-
-管理员配置边界；Agent 选择本次实际动作和值。
-
-## 31. Security
-
-Security 在检索前产生授权事实：
+检索前由 Module 09 提供：
 
 ```yaml
 AuthorizedKnowledgeScope:
@@ -1161,928 +1046,292 @@ AuthorizedKnowledgeScope:
   expires_at: datetime
 ```
 
-强制不变量：
+强制规则：
 
-1. ACL filter 必须进入 Retriever Query，不先召回敏感内容再在 Python 后过滤。
-2. Agent 自动选库只能从 Authorized Scope 中缩小，不能扩大。
-3. Graph traversal 的每个节点、边和支持文本都必须满足授权范围。
-4. Fusion/Rerank 不得看到被拒绝文档内容。
-5. Security Epoch 变化时，未提交结果必须重验；被撤销结果 taint。
-6. External search Proposal 不得携带受保护原文，除非 Security 明确允许。
-7. Trace/Event 只保存经 Redaction 的摘要、引用和 hash。
+- ACL 进入 BM25、Vector、Graph 和 Structured Query；
+- Graph traversal 的节点、边和支持文本逐项授权；
+- 未授权内容不得先交给 Critic 再过滤；
+- Trace 仅保存脱敏摘要、引用和 Hash；
+- Security Epoch 变化时未提交结果重新验证；
+- External Evidence Proposal 不携带受保护原文，除非明确允许。
 
-## 32. Model Roles
+## 31. Model Gateway 使用
 
-Knowledge 可能使用：
+Knowledge 可请求：
 
 ```text
+QUERY_UNDERSTANDING
 QUERY_REWRITER
-EXTRACTOR
-CRITIC
-EXECUTOR_FAST
-EXECUTOR_REASONING
+EVIDENCE_RELATION_ASSESSMENT
+CLAIM_HYPOTHESIS_EXTRACTION
+CONFLICT_CLASSIFICATION
+APPLICABILITY_ASSESSMENT
+PROBE_PROPOSAL
+PROVISIONAL_SYNTHESIS
 ```
 
-调用必须通过 Model Gateway。
+优先映射现有角色：`TASK_ANALYZER`、`EXTRACTOR`、`QUERY_REWRITER`、`CRITIC`、`SYNTHESIZER`、`FINAL_CRITIC`。
 
-模型只能产生 Proposal：
+每次模型调用必须有：
 
-```text
-Query rewrite proposal
-Entity decomposition proposal
-Graph route proposal
-Evidence relevance proposal
-Corrective action proposal
-```
+- ModelInvocation；
+- PromptVersion；
+- Structured Output Schema；
+- 输入 Evidence ID 列表和授权 Receipt；
+- Schema Validation；
+- Retry / Upgrade chain；
+- Usage / Budget；
+- model invocation ref。
 
-模型不能：
+模型只产生 Proposal，不能提交 Evidence 最终状态、修改 SourceSpan、扩大权限或决定 RunOutcome。
 
-```text
-扩大 ACL
-创建最终 EvidenceRecord
-伪造 SourceSpan
-激活 KnowledgeVersion
-批准 external search
-提高 Budget
-提交最终任务 Outcome
-```
+## 32. Memory & Context 边界
 
-弱模型失败升级链：
-
-```text
-QUERY_REWRITER / EXECUTOR_FAST
-→ 参数修正与 bounded retry
-→ EXECUTOR_REASONING
-→ CRITIC 判断 retry / alternative route / stop proposal
-```
-
-## 33. Domain Events 与 Observability
-
-Knowledge 产生版本化事件：
-
-```text
-KnowledgeQueryRequested
-KnowledgeSnapshotPinned
-RetrievalProfileResolved
-RetrievalRoundPlanned
-RetrieverAttemptStarted
-RetrieverAttemptCompleted
-RetrieverAttemptFailed
-GraphRouteDecided
-EvidenceCommitted
-EvidenceQualityEvaluated
-CorrectiveRetrievalDecided
-RetrievalStopped
-KnowledgeControlProposalEmitted
-KnowledgeRetrievalOutcomeCommitted
-KnowledgeVersionStateChanged
-KnowledgeVersionCutover
-KnowledgeEvidenceRevoked
-```
-
-事件最小字段：
-
-```yaml
-KnowledgeRuntimeEvent:
-  event_id: string
-  event_type: string
-  event_version: string
-  tenant_id: string
-  workspace_id: string
-  run_id: string | null
-  step_run_id: string | null
-  knowledge_query_run_id: string
-  round_id: string | null
-  attempt_id: string | null
-  knowledge_space_id: string | null
-  knowledge_snapshot_ref: string | null
-  requested_profile: string | null
-  effective_profile: string | null
-  reason_codes: [string]
-  budget_delta_ref: string | null
-  authorization_decision_ref: string
-  security_epoch_ref: string
-  trace_id: string
-  payload_ref: string | null
-  payload_hash: string
-  occurred_at: datetime
-```
-
-禁止在普通事件中记录完整文档文本、Prompt、隐藏思维链、凭证或未脱敏用户数据。
-
-## 34. Agentic GraphRAG Eval
-
-至少比较：
-
-```text
-standard_rag
-fixed_graphrag
-agentic_text_rag
-agentic_graphrag
-```
-
-可选第五组：
-
-```text
-agentic_graphrag_external_evidence
-```
-
-控制变量：
-
-```text
-相同 Dataset Version / Case Set Hash
-相同 Corpus Manifest / KnowledgeSnapshot
-相同 Security Scope
-相同生成模型和 Model Routing Policy
-相同 Judge Policy 和 Metric Definition
-相同 Answer / Citation Policy
-```
-
-题型至少包括：
-
-```text
-simple_fact
-exact_clause
-single_document
-multi_document
-multi_hop_relation
-global_theme
-temporal_version
-conflicting_evidence
-no_answer
-permission_filtered
-stale_index
-citation_repair
-```
-
-检索过程指标：
-
-```text
-Retrieval Need Precision / Recall
-Profile Routing Accuracy
-Retriever Selection Gain
-Graph Routing Precision / Recall
-Evidence Requirement Coverage
-Evidence Recall / Precision
-Citation Eligibility Accuracy
-Corrective Action Success Rate
-Novel Evidence Gain per Round
-No-progress Round Rate
-Premature Stop Rate
-Over-retrieval Rate
-```
-
-最终回答指标：
-
-```text
-Answer Correctness
-Answer Completeness
-Groundedness
-Citation Correctness
-Citation Completeness
-Unsupported Claim Rate
-Conflict Disclosure Accuracy
-Temporal Validity
-Abstention Accuracy
-```
-
-效率指标：
-
-```text
-P50 / P95 latency
-Retriever calls per grounded answer
-Model calls and tokens
-Graph queries and path expansion
-Cost per correct answer
-Cost per grounded answer
-Timeout / failure / fallback rate
-```
-
-质量声明要求：
-
-```text
-复杂任务显著改善
-简单事实不得明显退化
-Citation 和 Unsupported Claim 不得恶化
-P95 latency / cost 满足 Profile SLO
-Graph 增量收益可从 Agentic 控制收益中分离
-```
-
-没有固定可比 Benchmark、Trace completeness 和 Release Gate，不得声明回答质量提高。
-
----
-
-# Part V：Typed Contract
-
-## 35. QueryStrategyDecision
-
-```yaml
-QueryStrategyDecision:
-  decision_id: string
-  round_id: string
-  strategy: DIRECT | REWRITE | MULTI_QUERY | STEP_BACK | HYDE | ENTITY_DECOMPOSITION | RELATION_QUERY
-  generated_query_specs: [QuerySpec]
-  target_requirement_refs: [string]
-  rationale_summary: string
-  reason_codes: [string]
-  expected_failure_to_fix: string | null
-  estimated_budget: object
-  model_proposal_ref: string | null
-  deterministic_validation_ref: string
-```
-
-## 36. RetrieverAction
-
-```yaml
-RetrieverAction:
-  action_id: string
-  round_id: string
-  retriever_type: BM25 | VECTOR | GRAPH_LOCAL | GRAPH_GLOBAL | GRAPH_DRIFT | STRUCTURED
-  knowledge_snapshot_ref: string
-  query_spec_ref: string
-  target_requirement_refs: [string]
-  metadata_filters: object
-  acl_filter_ref: string
-  candidate_limit: int
-  timeout_ms: int
-  graph_constraints: object | null
-  budget_reservation_ref: string
-  idempotency_key: string
-```
-
-External search 不属于 RetrieverAction；它是 Agent Core / Tool Runtime 的外部 Step。
-
-## 37. RetrieverResult
-
-```yaml
-RetrieverResult:
-  attempt_id: string
-  action_id: string
-  producer_capability_ref: string
-  snapshot_ref: string
-  result_items_ref: string
-  result_count: int
-  raw_score_semantics: string
-  visibility_receipt_ref: string | null
-  execution_receipt_ref: string
-  payload_hash: string
-  completed_at: datetime
-```
-
-## 38. EvidenceRecord
-
-```yaml
-EvidenceRecord:
-  evidence_id: string
-  knowledge_query_run_id: string
-  retrieval_round_id: string
-  knowledge_space_id: string
-  knowledge_snapshot_ref: string
-  source_document_id: string
-  document_version_id: string
-  citation_chunk_id: string | null
-  parent_chunk_id: string | null
-  source_span_ref: string | null
-  citation_label: string | null
-  retriever_type: string
-  query_spec_ref: string
-  raw_score: number | null
-  normalized_score: number | null
-  fusion_rank: int | null
-  rerank_score: number | null
-  graph_path_ref: string | null
-  claim_requirement_refs: [string]
-  authority_level: string
-  effective_time: object | null
-  supersedes_refs: [string]
-  contradiction_group_ref: string | null
-  citation_eligibility: STRICT | SUPPORTING | AUXILIARY_ONLY | REJECTED
-  selection_status: CANDIDATE | SELECTED | REJECTED | TAINTED
-  selection_reason_codes: [string]
-  trace_span_id: string
-  evidence_hash: string
-```
-
-## 39. EvidenceVerdict
-
-```yaml
-EvidenceVerdict:
-  verdict_id: string
-  knowledge_query_run_id: string
-  sufficient: boolean
-  authoritative: boolean
-  temporally_valid: boolean
-  conflicting: boolean
-  citation_complete: boolean
-  selected_evidence_refs: [string]
-  superseded_evidence_refs: [string]
-  conflict_refs: [string]
-  unresolved_requirement_refs: [string]
-  reason_codes: [string]
-```
-
-Agent Core 消费 Verdict，但不重定义 Knowledge 的 Authority 与 Citation 规则。
-
-## 40. SelectedEvidenceBundle
+Module 03 输出 `SelectedEvidenceBundle`：
 
 ```yaml
 SelectedEvidenceBundle:
   bundle_id: string
   knowledge_query_run_id: string
-  knowledge_snapshot_refs: [string]
-  selected_evidence_refs: [string]
-  evidence_verdict_ref: string
-  citation_lineage_ref: string
-  requirement_coverage: map<string,string>
-  conflict_summary_ref: string | null
-  budget_usage_ref: string
-  security_context_ref: string
-  bundle_hash: string
-```
-
-05 Memory & Context 只消费该 Bundle 并组装 ContextPack；不得把未选 Candidate 静默加入上下文。
-
-## 41. KnowledgeRetrievalOutcome
-
-```yaml
-KnowledgeRetrievalOutcome:
-  outcome_id: string
-  knowledge_query_run_id: string
-  status: SUFFICIENT_EVIDENCE | PARTIAL_EVIDENCE | CONTROL_PROPOSAL | FAILED | CANCELLED
-  selected_evidence_bundle_ref: string | null
-  latest_quality_verdict_ref: string
-  control_proposal_ref: string | null
-  round_count: int
-  stop_reason: string
-  requested_profile: STANDARD | DEEP
-  effective_profile: STANDARD | DEEP
-  actual_route_summary: object
-  budget_usage_ref: string
-  outcome_hash: string
-  committed_at: datetime
-```
-
-## 42. KnowledgeControlProposal
-
-```yaml
-KnowledgeControlProposal:
-  proposal_id: string
-  knowledge_query_run_id: string
-  proposal_type: ASK_USER | EXTERNAL_SEARCH | REPLAN | ABSTAIN
-  unresolved_requirement_refs: [string]
-  reason_codes: [string]
-  suggested_question: string | null
-  suggested_external_query_summary: string | null
-  required_capability_refs: [string]
-  security_constraints_ref: string
-  budget_implication: object
   evidence_refs: [string]
-  proposal_hash: string
+  claim_evidence_binding_refs: [string]
+  conflict_disclosure_refs: [string]
+  citation_lineage_refs: [string]
+  evidence_set_verdict_ref: string
+  security_epoch_ref: string
+  snapshot_refs: [string]
 ```
 
-Proposal 不修改 AgentRun / PlanVersion。
+Module 05 负责构建 ContextPack。它不得：
 
-## 43. Contract Envelope
+- 重新给 Evidence 打分；
+- 覆盖 Claim Verdict；
+- 把 EXCLUDED / REJECTED Evidence 放回 Context；
+- 将派生摘要伪装成原始引用。
 
-跨模块 Contract 必须使用当前冻结的 Canonical Envelope，并至少携带：
+## 33. Trace 与指标
+
+必须发出 typed events：
 
 ```text
-tenant_id / workspace_id
-run_id / step_run_id
-correlation_id / causation_id
-idempotency_key
-aggregate_id / aggregate_version
-expected_generation
-security epoch / authorization refs
-deadline
-trace_id
-classification / redaction / audit refs
-payload hash / schema hash
+initial_collection_plan_created
+retrieval_action_admitted
+retriever_attempt_started/completed
+candidate_evidence_normalized
+eligibility_decision_recorded
+semantic_assessment_recorded
+evidence_classified
+evidence_lineage_bound
+claim_hypothesis_created
+claim_evidence_state_updated
+provisional_answer_created
+answer_risk_reviewed
+probe_candidate_created
+probe_decision_recorded
+evidence_set_verdict_recorded
+insufficient_evidence_outcome_created
+knowledge_health_signal_created
 ```
+
+Module 10 拥有 Projection、Metric 和质量结论。
 
 ---
 
-# Part VI：Failure、持久化与事务
+# Part IX：Target Contract 与持久化
 
-## 44. Failure Taxonomy
+## 34. 核心领域对象
 
-```text
-KNOWLEDGE_REQUEST_INVALID
-KNOWLEDGE_SCOPE_EMPTY
-KNOWLEDGE_SNAPSHOT_UNAVAILABLE
-KNOWLEDGE_SNAPSHOT_STALE
-KNOWLEDGE_VERSION_INCOMPATIBLE
-KNOWLEDGE_PERMISSION_FILTERED
-KNOWLEDGE_SECURITY_EPOCH_CHANGED
-RETRIEVER_TIMEOUT
-RETRIEVER_UNAVAILABLE
-RETRIEVER_RESULT_INVALID
-RETRIEVER_DUPLICATE_CONFLICT
-GRAPH_CAPABILITY_UNAVAILABLE
-GRAPH_ENTRY_UNGROUNDED
-GRAPH_PATH_LIMIT_EXCEEDED
-EVIDENCE_INSUFFICIENT
-EVIDENCE_CONFLICT
-SOURCE_SPAN_MISSING
-CITATION_INELIGIBLE
-RETRIEVAL_NO_PROGRESS
-RETRIEVAL_BUDGET_EXHAUSTED
-KNOWLEDGE_OUTCOME_COMMIT_FAILED
-KNOWLEDGE_CANCELLED
-```
-
-## 45. Failure Decision Matrix
-
-| Failure | Owner | Retry | Corrective | Agent Core decision |
-| --- | --- | --- | --- | --- |
-| Retriever timeout | Knowledge / adapter | bounded retry | alternate retriever if allowed | only if step cannot progress |
-| Empty result | Knowledge | no same-action blind retry | rewrite / multi-query | ask/replan/abstain if exhausted |
-| Graph unavailable | Infrastructure capability + Knowledge route | retry transient only | text fallback | replan only if Graph mandatory |
-| Permission filtered | Security | no | no scope expansion | ask authorization / partial / abstain |
-| SourceSpan missing | Input/Knowledge lineage | no fake citation | focused backfill | partial / abstain |
-| Conflict | Knowledge authority policy | no blind retry | retrieve both sides / resolve | disclose / ask / abstain |
-| Budget exhausted | Agent Core budget | no | cheaper route if reserved | extend budget only by policy/user |
-| Snapshot stale | Knowledge | resolve compatible snapshot only before pin | no mid-run swap | replan/new step if required |
-| Commit failure | Knowledge store | idempotent retry | no | fail if durable commit unavailable |
-| Security epoch change | Security | re-authorize | discard tainted results | continue only with new decision |
-
-## 46. Target Persistence
-
-| Domain object | Target table | Key constraints |
-| --- | --- | --- |
-| KnowledgeSpace | `knowledge_spaces` | tenant/workspace/name policy；version |
-| KnowledgeSpaceIntent | `knowledge_space_intent_versions` | immutable version/hash |
-| RetrievalProfile | `knowledge_retrieval_profile_versions` | profile/version unique |
-| KnowledgeVersion | `knowledge_versions` | space/version unique；state guard |
-| IndexSpec | `knowledge_index_specs` | spec hash unique；immutable |
-| KnowledgeSnapshot | `knowledge_snapshots` | snapshot hash；pinned version refs |
-| Snapshot Space Binding | `knowledge_snapshot_spaces` | snapshot+space unique |
-| KnowledgeQueryRun | `knowledge_query_runs` | request/idempotency unique |
-| RetrievalRound | `knowledge_retrieval_rounds` | run+round_no+generation unique |
-| RetrieverAttempt | `knowledge_retriever_attempts` | action+attempt_no unique |
-| Retriever Result Receipt | `knowledge_retriever_result_receipts` | attempt+payload hash |
-| EvidenceRecord | `knowledge_evidence_records` | evidence hash；lineage indexes |
-| Evidence Requirement | `knowledge_evidence_requirements` | request+requirement unique |
-| Evidence Frontier | `knowledge_evidence_frontiers` | run+version unique |
-| Quality Verdict | `knowledge_quality_verdicts` | run+round unique |
-| Corrective Decision | `knowledge_corrective_decisions` | round+decision unique |
-| Control Proposal | `knowledge_control_proposals` | proposal hash unique |
-| Retrieval Outcome | `knowledge_retrieval_outcomes` | one committed outcome per generation |
-| Citation Lineage | `knowledge_citation_lineage` | evidence/source span unique |
-| Version Cutover | `knowledge_version_cutovers` | append-only decision |
-| Domain Event / Outbox | `knowledge_domain_events/outbox` | event/message unique |
-
-大对象、Retriever raw payload、Graph path detail 和大规模 evidence artifact 放 Object Store，数据库保存引用、hash 和关键可查询字段。
-
-## 47. 关键数据库约束
+PostgreSQL Target 事实：
 
 ```text
-ACTIVE KnowledgeVersion must reference ACCEPTED version
-one active serving version per KnowledgeSpace generation
-one committed Outcome per KnowledgeQueryRun generation
-round_no monotonic within run generation
-terminal Round / Attempt / Outcome immutable
-Evidence STRICT requires non-null SourceSpan and DocumentVersion
-attempt result snapshot must equal action snapshot
-authorization and security epoch refs are mandatory
-idempotency key unique within tenant/workspace/operation scope
-same message id + different payload hash is conflict
-```
-
-## 48. 事务边界
-
-### 48.1 创建 Query Run
-
-一个事务提交：
-
-```text
+EvidenceGoal
+InitialEvidenceCollectionPlan
 KnowledgeQueryRun
-EvidenceRequirement[]
-initial domain event
-Outbox message
+RetrievalRound
+RetrievalAction
+RetrieverAttempt
+EvidenceCandidate
+EvidenceRecord
+EvidenceAssessment
+EvidenceDerivationEdge
+EvidenceReasoningGraphVersion
+ClaimHypothesis
+ClaimEvidenceState
+ProvisionalAnswerCandidate
+AnswerRiskReview
+EvidenceSetVerdict
+EvidenceProbeCandidate
+EvidenceProbeDecision
+InsufficientEvidenceOutcome
+KnowledgeHealthSignal
+SelectedEvidenceBundle
 ```
 
-### 48.2 提交 Retriever Result
+搜索、向量和图存储是 Projection；PostgreSQL 保存版本、Receipt、状态与 Ownership。
 
-一个事务提交：
+## 35. 事务边界
 
-```text
-RetrieverAttempt transition
-ResultReceipt
-normalized result reference
-DomainEvent + Outbox
-```
+- 创建 Round、Action、Budget Reservation 和 Outbox 在同一 PostgreSQL 事务；
+- Retriever 物理查询不在数据库长事务中；
+- Evidence 提交使用唯一键：`run_id + round_no + action_id + normalized_evidence_hash`；
+- Assessment 使用：`evidence_id + claim_id + assessment_generation + policy_version`；
+- Probe 使用：`run_id + target_gap_hash + probe_type + generation`；
+- 领域提交后再 ACK；重复消息返回已有 Receipt；
+- Search/Graph/Vector 结果不能直接宣布领域成功。
 
-不在同一事务中执行外部 Retriever 调用。
+## 36. 关键不变量
 
-### 48.3 提交 Evidence 与 Verdict
-
-一个事务提交：
-
-```text
-EvidenceRecord append / dedup
-EvidenceLedger version
-EvidenceFrontier version
-QualityVerdict
-Round state
-DomainEvent + Outbox
-```
-
-### 48.4 提交 Outcome
-
-一个事务提交：
-
-```text
-SelectedEvidenceBundle metadata
-KnowledgeRetrievalOutcome
-KnowledgeQueryRun terminal state
-Budget settlement request
-DomainEvent + Outbox
-```
-
-### 48.5 Version Cutover
-
-Knowledge Acceptance 与 Cutover 使用独立事务和 expected generation：
-
-```text
-verify accepted version
-compare active generation
-append CutoverDecision
-update active pointer
-emit event/outbox
-```
-
-物理索引构建和可见性确认不在此事务内。
-
-## 49. 删除、替换与召回撤销
-
-删除流程：
-
-```text
-Security / Product authorized deletion request
-→ mark DocumentVersion unavailable for new snapshots
-→ create Knowledge invalidation record
-→ remove from active logical retrieval scope
-→ dispatch physical deletion
-→ receive deletion receipts
-→ reconcile BM25 / Vector / Graph / Cache
-→ verify no new retrieval
-→ retain permitted audit lineage
-```
-
-不变量：
-
-1. 逻辑不可召回先于或与物理删除协调，不等待所有物理清理才停止服务。
-2. 已固定 Snapshot 的行为由删除 Policy 明确：立即撤销或允许到期，不得隐含。
-3. Graph 节点、社区摘要和派生 Evidence 必须传播 taint / invalidation。
-4. 删除后 E2E 必须证明所有可服务路径不可召回。
-5. 历史审计引用保留不等于内容仍可披露。
+1. `STRICT_ACCEPTED` 必须有有效 SourceSpan 和授权范围。
+2. 派生 Evidence 不得独立计票。
+3. Claim `SUPPORTED` 必须满足 AnswerPolicy 的 Evidence Coverage。
+4. `CONFLICTING` Evidence 不得因低相关分被删除。
+5. Knowledge 不创建 PlanVersion。
+6. Knowledge 不发布最终答案。
+7. 模型不拥有 Evidence 最终状态。
+8. 新 Assessment Generation 不被旧结果覆盖。
+9. 同一 Snapshot 内所有 Evidence 的版本和 Security Epoch 可验证。
+10. `KNOWLEDGE_QUALITY_SUSPECTED` 只是诊断，不是故障事实。
 
 ---
 
-# Part VII：目标实现表面
+# Part X：评测、完成证据与演进
 
-## 50. Target Code Layout
+## 37. 评测矩阵
 
-```text
-src/backend/zuno/knowledge/
-  domain/
-    knowledge_space.py
-    knowledge_version.py
-    knowledge_snapshot.py
-    query_run.py
-    retrieval_round.py
-    retriever_attempt.py
-    evidence.py
-    evidence_frontier.py
-    authority.py
-    quality.py
-    corrective.py
-    outcome.py
-    policies.py
-    events.py
+### 37.1 Baseline
 
-  application/
-    knowledge_query_service.py
-    retrieval_planner_service.py
-    retrieval_execution_service.py
-    evidence_service.py
-    corrective_retrieval_service.py
-    knowledge_version_service.py
-    snapshot_service.py
-    cutover_service.py
-    deletion_reconciliation_service.py
-    recovery_service.py
-
-  graph/
-    knowledge_retrieval_graph.py
-    nodes/
-      validate_request.py
-      resolve_snapshot.py
-      plan_round.py
-      dispatch_retrievers.py
-      fuse_rerank.py
-      update_evidence.py
-      evaluate_quality.py
-      decide_correction.py
-      build_outcome.py
-    reducers/
-      retriever_result_reducer.py
-      evidence_ledger_reducer.py
-
-  contracts/
-    agent_core.py
-    ingestion.py
-    memory_context.py
-    security.py
-    observability.py
-    infrastructure.py
-    model_gateway.py
-
-  ports/
-    bm25_retriever.py
-    vector_retriever.py
-    graph_retriever.py
-    structured_retriever.py
-    model_gateway.py
-    authorization.py
-    infrastructure_index.py
-    event_outbox.py
-    object_store.py
-
-  adapters/
-    elasticsearch_bm25.py
-    milvus_vector.py
-    neo4j_graph.py
-    postgres_domain_store.py
-    object_artifact_store.py
-    langgraph_checkpointer.py
-
-  api/
-    knowledge_spaces.py
-    knowledge_query.py
-    knowledge_versions.py
-    knowledge_config.py
-    knowledge_eval_projection.py
-```
-
-Domain 层不得 import Milvus、Neo4j、Elasticsearch、OpenTelemetry、LangSmith 或 Provider SDK。
-
-## 51. Target API
-
-产品 API 不直接暴露内部检索器开关。
+必须至少比较：
 
 ```text
-POST /knowledge-spaces
-GET  /knowledge-spaces/{id}
-PATCH /knowledge-spaces/{id}/intent
-GET  /knowledge-spaces/{id}/serving-projection
-POST /knowledge-spaces/{id}/config-impact
-POST /knowledge-spaces/{id}/versions
-GET  /knowledge-spaces/{id}/versions/{version}
-POST /knowledge-spaces/{id}/versions/{version}/build
-POST /knowledge-spaces/{id}/versions/{version}/accept
-POST /knowledge-spaces/{id}/versions/{version}/cutover
-POST /knowledge-spaces/{id}/versions/{version}/rollback
-POST /knowledge-query-runs
-GET  /knowledge-query-runs/{id}
-GET  /knowledge-query-runs/{id}/evidence
+B0 Vector-only RAG
+B1 BM25 + Vector Hybrid
+B2 Fixed GraphRAG
+B3 Agentic Routing
+B4 Quality-first Evidence-Driven Agentic GraphRAG
 ```
 
-内部 Agent Core 调用使用 typed service / internal API，不复用面向用户的可变配置 DTO。
+结果必须按问题类型分层：
 
-## 52. 前端 Projection 边界
+- 精确事实；
+- 语义 FAQ；
+- 实体关系；
+- 多跳；
+- 全局主题；
+- 新旧版本；
+- 冲突来源；
+- 无答案；
+- 权限受限。
 
-普通用户配置：
+不能只用总平均声明“Agentic 更好”。
+
+### 37.2 检索层指标
+
+- Initial Evidence Diversity；
+- Retriever Candidate Yield；
+- Strict Evidence Yield；
+- Gold Evidence Recall；
+- Fusion Gold Drop Rate；
+- Reranker Gold Demotion Rate。
+
+### 37.3 Evidence 层指标
+
+- Evidence Relevance Precision；
+- Entailment Classification Accuracy；
+- Contradiction Classification Accuracy；
+- Applicability Classification Accuracy；
+- Independent Source Counting Accuracy；
+- Citation Eligibility Accuracy；
+- Supersedes Resolution Accuracy。
+
+### 37.4 动态决策指标
+
+- Probe Selection Accuracy；
+- Probe Information Gain；
+- No-progress Probe Rate；
+- Average Rounds to Stable Answer；
+- Unnecessary Graph Invocation Rate；
+- Unnecessary Global Search Rate。
+
+### 37.5 回答与诊断指标
+
+- Claim Coverage；
+- Strict Citation Coverage；
+- Unsupported Claim Rate；
+- Conditional Claim Precision；
+- Conflict Disclosure Accuracy；
+- Answer Stability；
+- Abstention Precision / Recall；
+- Knowledge Diagnosis Precision。
+
+## 38. 测试要求
+
+必须覆盖：
+
+- 单一事实正常路径；
+- STANDARD Hybrid 正常路径；
+- DEEP 多路径并行；
+- Community 与 Local 同源去重；
+- GraphPath 无 SourceSpan；
+- 新旧版本冲突；
+- 适用主体不同；
+- 正反 Evidence 权威不同；
+- Critic invalid JSON；
+- Critic timeout / fallback；
+- Probe 无新增信息；
+- late result；
+- duplicate message；
+- Security Epoch 变化；
+- Snapshot drift；
+- Worker crash / resume；
+- No Suitable Evidence；
+- Knowledge Health Diagnosis；
+- 删除后不可召回；
+- Claim Citation 绑定。
+
+## 39. Target 变为 Current 的完成证据
+
+至少需要：
 
 ```text
-知识库范围
-STANDARD / DEEP
-严格引用
-Agent 自动选择允许范围
-外部证据策略
-速度 / 平衡 / 质量偏好
+领域对象与 Migration
+固定 KnowledgeRetrievalGraph 代码
+Retriever Adapter 与幂等 Receipt
+Evidence Ledger 与 Reasoning Graph Projection
+Claim / Probe / Verdict Contract
+单元测试
+真实依赖 Integration Test
+Fault Injection
+E2E
+Trace
+固定 Benchmark
+Eval 数据集与 Release Gate
+文档与 .agent 镜像同步
 ```
 
-Knowledge Admin 配置：
-
-```text
-允许的 Agentic actions
-最大轮次、候选、Graph hop/path
-Chunk / Graph / Evidence Profile
-Model Gateway slot binding
-版本构建、Acceptance、Cutover
-```
-
-Platform Admin 配置：
-
-```text
-Elasticsearch / Milvus / Neo4j
-连接、容量、Secret、Provider、租户配额
-```
-
-只读状态：
-
-```text
-Active KnowledgeVersion
-Build / Verification / Acceptance
-Index capability health
-ServingWatermark
-Eval / Release Gate
-```
-
-## 53. Migration 要求
-
-实现 Program 必须：
-
-1. 明确现有 `knowledge_config` 字段到 Intent / Profile / IndexSpec / ServingProjection 的映射。
-2. 先双读验证，再切换权威读取路径。
-3. 不把旧 `health_status=ready` 导入为真实运行事实。
-4. 对旧 `rag/rag_graph` 和 `standard/deep` 做显式兼容映射并记录来源。
-5. 所有新表使用 Alembic Migration，提供 downgrade 策略或明确不可逆原因。
-6. 大对象迁移必须可断点、可重试、可审计。
-7. 旧路径移除前运行引用搜索和 Contract 测试。
-8. 迁移完成不自动声明质量提高。
-
----
-
-# Part VIII：Requirement、测试与完成证据
-
-## 54. Requirement Enforcement Matrix
-
-| Requirement | Runtime Control | Required Tests | Evidence |
-| --- | --- | --- | --- |
-| ARCH-KNOW-001 Ownership | typed ports；domain import guard | UT/IT/repo guard | EV-KNOW-001 |
-| ARCH-KNOW-002 Retrieval Need boundary | request requires Agent Core decision ref | Contract/IT/E2E | EV-KNOW-002 |
-| ARCH-KNOW-003 Evidence Requirement | schema + completion validator | UT/IT | EV-KNOW-003 |
-| ARCH-KNOW-004 Snapshot pinning | snapshot hash/version guard | IT/FT/E2E | EV-KNOW-004 |
-| ARCH-KNOW-005 ACL prefilter | retriever query requires auth filter | IT/security/E2E | EV-KNOW-005 |
-| ARCH-KNOW-006 Fixed graph | graph topology contract test | UT/repo/E2E | EV-KNOW-006 |
-| ARCH-KNOW-007 Dynamic round plan | versioned RetrievalPlan | UT/IT | EV-KNOW-007 |
-| ARCH-KNOW-008 Parallel retrievers | admission + idempotent reducer | IT/FT/E2E | EV-KNOW-008 |
-| ARCH-KNOW-009 Result validation | snapshot/security/hash/deadline gate | UT/FT | EV-KNOW-009 |
-| ARCH-KNOW-010 Fusion normalization | score semantics + RRF version | UT/benchmark | EV-KNOW-010 |
-| ARCH-KNOW-011 Rerank boundary | bounded candidates + model slot | UT/IT | EV-KNOW-011 |
-| ARCH-KNOW-012 Graph routing | reason code + capability + budget | UT/IT/eval | EV-KNOW-012 |
-| ARCH-KNOW-013 Graph SourceSpan | backlink eligibility guard | IT/E2E/eval | EV-KNOW-013 |
-| ARCH-KNOW-014 Evidence Ledger | append/dedup/version reducer | UT/IT/FT | EV-KNOW-014 |
-| ARCH-KNOW-015 Evidence Frontier | unresolved-hop state | UT/IT/eval | EV-KNOW-015 |
-| ARCH-KNOW-016 Authority/Temporal | deterministic policy version | UT/IT/eval | EV-KNOW-016 |
-| ARCH-KNOW-017 Conflict | preserve both sides + disclosure ref | IT/E2E/eval | EV-KNOW-017 |
-| ARCH-KNOW-018 Citation eligibility | SourceSpan/DocumentVersion guard | UT/IT/eval | EV-KNOW-018 |
-| ARCH-KNOW-019 Corrective retrieval | gap → changed next action | UT/IT/E2E | EV-KNOW-019 |
-| ARCH-KNOW-020 Retry separation | retry/correct/replan classifier | UT/FT/E2E | EV-KNOW-020 |
-| ARCH-KNOW-021 Stop decision | sufficient/no-progress/budget guard | UT/IT/eval | EV-KNOW-021 |
-| ARCH-KNOW-022 Budget | reserve/settle/no overrun | IT/FT | EV-KNOW-022 |
-| ARCH-KNOW-023 Cancellation | signal propagation + late guard | FT/E2E | EV-KNOW-023 |
-| ARCH-KNOW-024 Recovery | domain/checkpoint reconciliation | FT/E2E | EV-KNOW-024 |
-| ARCH-KNOW-025 Version lifecycle | build/verify/accept/cutover guard | IT/FT/E2E | EV-KNOW-025 |
-| ARCH-KNOW-026 Deletion propagation | all paths no longer retrieve | IT/FT/E2E | EV-KNOW-026 |
-| ARCH-KNOW-027 Typed events | schema/version/redaction | Contract/IT | EV-KNOW-027 |
-| ARCH-KNOW-028 Eval comparability | pinned profiles and case set | Eval/Release Gate | EV-KNOW-028 |
-| ARCH-KNOW-029 Quality claim | measured+comparable+gate | Eval/Evidence | EV-KNOW-029 |
-| ARCH-KNOW-030 Config separation | intent/spec/projection API guard | Contract/UI/E2E | EV-KNOW-030 |
-
-## 55. Test Matrix
-
-### 55.1 Unit
-
-```text
-Query strategy and graph routing policies
-Evidence Requirement coverage
-RRF / normalization / dedup
-Authority / temporal / supersedes
-Citation eligibility
-Failure classifier
-Corrective action selection
-Stop and marginal utility
-State transition guards
-Budget reservation math
-```
-
-### 55.2 Integration
-
-```text
-BM25 + Vector independent recall and fusion
-Graph path → CitationChunk → SourceSpan
-Model Gateway rewrite / critic structured output
-ACL filters at adapter query
-Knowledge domain store + outbox
-Version build receipts + Knowledge Acceptance
-SelectedEvidenceBundle → Memory & Context
-Agent Core request / outcome / proposal Contract
-```
-
-### 55.3 Fault Injection
-
-```text
-Retriever timeout and duplicate result
-same attempt different payload hash
-Graph backend unavailable
-Security Epoch changes mid-round
-worker crash after result before commit
-commit succeeds but event delivery fails
-checkpoint ahead/behind domain state
-late result after cancellation
-partial parallel batch
-index visibility receipt missing
-cutover compare-and-swap conflict
-```
-
-### 55.4 E2E
-
-```text
-simple fact uses bounded Standard path
-multi-hop task enables Graph only when useful
-global question uses community and source backfill
-citation miss triggers focused retrieval
-conflict preserves both sources
-permission-filtered case does not leak
-no-answer case abstains
-new KnowledgeVersion builds while old serves
-cutover and rollback
-document deletion removes BM25/Vector/Graph retrieval
-crash and resume produces one Outcome
-```
-
-### 55.5 Eval
-
-```text
-standard_rag vs fixed_graphrag
-standard_rag vs agentic_text_rag
-fixed_graphrag vs agentic_graphrag
-agentic_text_rag vs agentic_graphrag
-simple-task non-regression
-multi-hop/global/conflict/temporal improvement
-quality/cost/latency trade-off
-route and stop calibration
-```
-
-## 56. 完成证据
-
-Target 转为 Current 至少需要：
-
-```text
-领域对象和状态机实现
-Alembic Migration
-真实 BM25 / Vector / Graph Adapter
-KnowledgeSnapshot 与版本 Cutover
-ACL 前置过滤
-SourceSpan Graph Backlink
-EvidenceLedger / Frontier 持久化
-Corrective Retrieval 真实改变下一轮动作
-Retry / Corrective / Replan 边界测试
-Crash / duplicate / late / security epoch fault tests
-Agent Core 与 Memory & Context Contract E2E
-Typed Observability events
-固定可比 Benchmark
-Release Gate artifact
-Evidence Registry records
-文档与入口同步
-```
-
-状态表达必须保持：
+在固定 Benchmark、故障恢复、安全和运行证据未完成前，只能表述：
 
 ```text
 design available
-implementation available
-measurement blocked
+implementation available（若已有代码）
+measurement blocked / in progress
 quality not yet proven
-production ready
+production readiness not established
 ```
 
-只有对应证据存在时才提升状态。`quality proven` 仍不等于 `production ready`。
+## 40. 后续 Program 边界
 
-## 57. Codex Program 生成约束
-
-Codex 根据本文生成 Program 时必须明确：
+本 Architecture v2 不修改当前 Program 与 PHASE01–PHASE22。PHASE22 收口后，Architecture Owner 应按以下顺序另建 Program：
 
 ```text
-任务目标和 Current Gap
-允许修改与禁止修改的目录
-目标 Requirement ID
-相关 Contract 和状态转换
-Retry / Corrective / Replan 语义
-安全、预算和可观测性要求
-Migration 与数据回填
-Unit / Integration / Fault / E2E / Eval
-验收命令和完成证据
-切流、回滚和旧路径移除条件
-不得改变的架构不变量
+确认 Current Baseline
+→ 冻结 v2 Contract
+→ 数据模型与 Migration 计划
+→ Graph / Ledger / Claim Projection
+→ KnowledgeRetrievalGraph 增量实现
+→ Model Gateway 结构化任务
+→ Agent Core 边界接入
+→ Observability / Eval
+→ 灰度、回滚与 Release Gate
 ```
 
-禁止生成“实现 Agentic GraphRAG”“完善 Knowledge 模块”之类没有 Requirement、Contract、故障和验收条件的任务。
-
-## 58. 设计参考
-
-以下原始研究用于验证设计方向，不直接成为 Zuno 领域事实或实现证明：
-
-- Self-RAG：按需检索与自我评价，<https://arxiv.org/abs/2310.11511>
-- CRAG：检索质量评价与纠正动作，<https://arxiv.org/abs/2401.15884>
-- Adaptive-RAG：按问题复杂度选择检索策略，<https://arxiv.org/abs/2403.14403>
-- IRCoT：多步任务中交替检索与推理，<https://arxiv.org/abs/2212.10509>
-- GraphRAG：实体图、社区与全局总结，<https://arxiv.org/abs/2404.16130>
-- RAG-Gym：Agentic Retrieval 的过程级监督，<https://arxiv.org/abs/2502.13957>
-- HippoRAG 2：图增强方法仍需保护基础事实检索能力，<https://arxiv.org/abs/2502.14802>
-
-Zuno 的 Single Controller、领域 Ownership、Security、Budget、Snapshot、Evidence 和 Release Gate 仍以仓库正式架构为准。
+在新 Program 被确认前，不允许 Codex 或 Worker 自行把本文拆成业务实现任务。
