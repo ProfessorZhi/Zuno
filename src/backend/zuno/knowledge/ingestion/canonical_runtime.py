@@ -148,7 +148,7 @@ class CanonicalSourceIngestCommand:
     security_epoch_ref: str
     security_decision_ref: str
     knowledge_space_id: str
-    corpus_manifest_ref: str
+    source_manifest_ref: str
     source_set_ref: str
     trace_id: str
     bucket: str | None = None
@@ -183,10 +183,23 @@ class CanonicalIngestionReceipt:
 
 @dataclass(frozen=True, slots=True)
 class CanonicalCorpusReceipt:
+    """Official corpus run receipt.
+
+    Three distinct, non-interchangeable hashes are carried separately:
+    ``dataset_corpus_hash`` (candidate dataset manifest corpus_hash),
+    ``source_manifest_hash`` (source upload manifest), and
+    ``canonical_ir_hash`` (canonical IR manifest). They are never merged or
+    aliased.
+    """
+
     tenant_id: str
     workspace_id: str
     knowledge_space_id: str
-    corpus_hash: str
+    dataset_corpus_hash: str
+    source_manifest_hash: str
+    canonical_ir_hash: str
+    document_set_hash: str
+    chunk_set_hash: str
     source_count: int
     document_count: int
     chunk_count: int
@@ -266,7 +279,7 @@ class Phase22CanonicalIngestionRuntime:
             tenant_id=tenant_id,
             workspace_id=workspace_id,
             source_set_ref=command.source_set_ref,
-            corpus_manifest_ref=command.corpus_manifest_ref,
+            corpus_manifest_ref=command.source_manifest_ref,
             idempotency_key=f"{run_id}:{source_sha256}",
             payload_hash=payload_hash,
         )
@@ -614,7 +627,14 @@ class Phase22CanonicalIngestionRuntime:
         self, command: CanonicalSourceIngestCommand, *, to_state: str
     ) -> CanonicalIngestionReceipt:
         """Explicit reconciliation-resume transition after unknown side effects
-        are confirmed and facts re-verified."""
+        are confirmed and facts re-verified.
+
+        The recovery point is NOT freely selectable: it must be supported by
+        the durable facts (``to_state`` = the last checkpoint whose facts are
+        verified present and consistent). ``object_committed`` requires a
+        visible manifest with a matching hash; ``canonical_ir_ready`` requires
+        the parse snapshot; ``object_staged`` requires the physical object.
+        """
         run_id = canonical_run_id(
             tenant_id=command.tenant_id,
             workspace_id=command.workspace_id,
@@ -626,6 +646,7 @@ class Phase22CanonicalIngestionRuntime:
                 f"run {run_id} is not awaiting reconciliation "
                 f"({current.current_state!r})"
             )
+        self._verify_recovery_point(command=command, to_state=to_state)
         self.runs.transition(
             run_id=run_id,
             tenant_id=command.tenant_id,
@@ -637,6 +658,176 @@ class Phase22CanonicalIngestionRuntime:
         )
         refreshed = self.runs.current_fact(run_id=run_id, tenant_id=command.tenant_id)
         return self._resume_from_checkpoint(command=command, current=refreshed)
+
+    def _verify_recovery_point(
+        self, *, command: CanonicalSourceIngestCommand, to_state: str
+    ) -> None:
+        """Reject a reconciliation recovery point not supported by durable
+        facts."""
+        source_sha256 = self._source_hash(command)
+        if to_state == CANONICAL_STATE_OBJECT_STAGED:
+            # the physical object (staged or committed) must exist with the
+            # expected content hash
+            object_ref = f"s3://{self.bucket}/{self._object_name(command)}"
+            manifest = self.facts.object_manifest_fact_optional(object_ref=object_ref)
+            if manifest is not None and manifest.content_hash != source_sha256:
+                raise CanonicalIngestionError(
+                    "recovery point object_staged rejected: committed manifest "
+                    "hash does not match the source content"
+                )
+            if manifest is None and self.object_store is not None:
+                try:
+                    bucket, object_name = _split_object_ref(object_ref)
+                    observed = self.object_store.store.read_object(
+                        bucket=bucket, object_name=object_name
+                    )
+                    if hashlib.sha256(observed).hexdigest() != source_sha256:
+                        raise CanonicalIngestionError(
+                            "recovery point object_staged rejected: physical "
+                            "object hash does not match the source content"
+                        )
+                except Exception as exc:  # noqa: BLE001
+                    raise CanonicalIngestionError(
+                        f"recovery point object_staged rejected: {exc}"
+                    ) from exc
+            return
+        if to_state == CANONICAL_STATE_OBJECT_COMMITTED:
+            object_ref = f"s3://{self.bucket}/{self._object_name(command)}"
+            manifest = self.facts.object_manifest_fact_optional(object_ref=object_ref)
+            if manifest is None or manifest.visibility not in {"visible", "restored"}:
+                raise CanonicalIngestionError(
+                    "recovery point object_committed rejected: no visible "
+                    "committed object manifest"
+                )
+            if manifest.content_hash != source_sha256:
+                raise CanonicalIngestionError(
+                    "recovery point object_committed rejected: manifest hash "
+                    "does not match the source content"
+                )
+            # the physical object must also agree (manifest alone cannot detect
+            # byte-level tampering)
+            if self.object_store is not None:
+                try:
+                    bucket, object_name = _split_object_ref(object_ref)
+                    observed = self.object_store.store.read_object(
+                        bucket=bucket, object_name=object_name
+                    )
+                except Exception as exc:  # noqa: BLE001
+                    raise CanonicalIngestionError(
+                        f"recovery point object_committed rejected: {exc}"
+                    ) from exc
+                if hashlib.sha256(observed).hexdigest() != source_sha256:
+                    raise CanonicalIngestionError(
+                        "recovery point object_committed rejected: physical "
+                        "object hash does not match the source content"
+                    )
+            return
+        if to_state == CANONICAL_STATE_IR_READY:
+            source = self.facts.source_object_fact_optional(
+                tenant_id=command.tenant_id, source_id=command.source_id
+            )
+            if source is None:
+                raise CanonicalIngestionError(
+                    "recovery point canonical_ir_ready rejected: no source fact"
+                )
+            try:
+                self.facts.parse_snapshot_fact_for_document(
+                    tenant_id=command.tenant_id,
+                    document_version_id=(
+                        self.facts.document_version_fact_for_source(
+                            tenant_id=command.tenant_id,
+                            source_id=command.source_id,
+                        ).document_version_id
+                    ),
+                )
+            except CanonicalFactsMissing as exc:
+                raise CanonicalIngestionError(
+                    "recovery point canonical_ir_ready rejected: no parse "
+                    "snapshot fact"
+                ) from exc
+            return
+        raise CanonicalIngestionError(
+            f"recovery point {to_state!r} is not a supported reconciliation "
+            "resume state"
+        )
+
+    def verify_scope_consistency(self, *, run_id: str, tenant_id: str) -> dict[str, str]:
+        """Verify every durable fact of a run shares one tenant/workspace scope.
+
+        The run row, source fact, document version, parse snapshot, knowledge
+        version, chunks, entities and relations must all agree on
+        tenant_id/workspace_id. Raises on any scope divergence.
+        """
+        current = self.runs.current_fact(run_id=run_id, tenant_id=tenant_id)
+        workspace_id = current.workspace_id
+        scope = {"tenant_id": tenant_id, "workspace_id": workspace_id}
+        source_id = self._source_id_from_run(current)
+        if not source_id:
+            return scope
+        source = self.facts.source_object_fact_optional(
+            tenant_id=tenant_id, source_id=source_id
+        )
+        if source is not None:
+            if str(source.workspace_id) != workspace_id:
+                raise CanonicalIngestionError(
+                    f"scope inconsistency: source {source_id} workspace "
+                    f"{source.workspace_id} != run workspace {workspace_id}"
+                )
+            document = self.facts.document_version_fact_for_source(
+                tenant_id=tenant_id, source_id=source_id
+            )
+            if str(document.workspace_id) != workspace_id:
+                raise CanonicalIngestionError(
+                    f"scope inconsistency: document version workspace "
+                    f"{document.workspace_id} != run workspace {workspace_id}"
+                )
+            snapshot = self.facts.parse_snapshot_fact_for_document(
+                tenant_id=tenant_id,
+                document_version_id=document.document_version_id,
+            )
+            if str(snapshot.canonical_ir.get("metadata", {}).get("workspace_id") or "") not in (
+                "",
+                workspace_id,
+            ):
+                raise CanonicalIngestionError(
+                    "scope inconsistency: canonical IR workspace diverges"
+                )
+        if current.knowledge_version_id:
+            version = self.facts.knowledge_version_fact(
+                tenant_id=tenant_id,
+                knowledge_version_id=current.knowledge_version_id,
+            )
+            if str(version.workspace_id) != workspace_id:
+                raise CanonicalIngestionError(
+                    "scope inconsistency: knowledge version workspace diverges"
+                )
+            for fact in self.facts.chunk_facts(
+                tenant_id=tenant_id,
+                knowledge_version_id=current.knowledge_version_id,
+            ):
+                if str(fact.tenant_id) != tenant_id:
+                    raise CanonicalIngestionError(
+                        "scope inconsistency: chunk tenant diverges"
+                    )
+            for fact in self.entities_relations.entity_facts(
+                tenant_id=tenant_id,
+                workspace_id=workspace_id,
+                knowledge_version_id=current.knowledge_version_id,
+            ):
+                if str(fact.workspace_id) != workspace_id:
+                    raise CanonicalIngestionError(
+                        "scope inconsistency: entity workspace diverges"
+                    )
+            for fact in self.entities_relations.relation_facts(
+                tenant_id=tenant_id,
+                workspace_id=workspace_id,
+                knowledge_version_id=current.knowledge_version_id,
+            ):
+                if str(fact.workspace_id) != workspace_id:
+                    raise CanonicalIngestionError(
+                        "scope inconsistency: relation workspace diverges"
+                    )
+        return scope
 
     # --- security ownership (Task D) ----------------------------------------------
 
@@ -805,7 +996,7 @@ class Phase22CanonicalIngestionRuntime:
                     metadata={
                         "filename": command.filename,
                         "mime_type": command.mime_type,
-                        "corpus_manifest_ref": command.corpus_manifest_ref,
+                        "source_manifest_ref": command.source_manifest_ref,
                         "document_id": command.document_id,
                     },
                     immutability_ref=f"immutability:{document_version_id}",
@@ -1194,10 +1385,21 @@ class Phase22CanonicalIngestionRuntime:
             )
             for chunk in manifest.get("chunks", [])
         }
-        corpus_hash = str(manifest.get("source_manifest_hash") or "")
+        chunk_set_hash = canonical_sha256(
+            sorted(str(chunk["chunk_id"]) for chunk in manifest.get("chunks", []))
+        )
+        # Three distinct, non-interchangeable hashes frozen separately:
+        # dataset_corpus_hash (candidate dataset manifest), source_manifest_hash
+        # (source upload manifest), canonical_ir_hash (canonical IR manifest).
+        # Any missing or inconsistent hash fails closed at corpus load time.
+        context = self._require_corpus_context(command)
         index_spec = {
-            "corpus_hash": corpus_hash,
-            "source_manifest_hash": corpus_hash,
+            "dataset_corpus_hash": context["dataset_corpus_hash"],
+            "source_manifest_hash": context["source_manifest_hash"],
+            "canonical_ir_hash": context["canonical_ir_hash"],
+            "document_set_hash": document_set_hash,
+            "chunk_set_hash": chunk_set_hash,
+            "security_epoch_ref": command.security_epoch_ref,
             "chunk_policy_version": "canonical-ir-manifest-v1",
             "source_span_required": True,
             "index_kinds": ["bm25", "vector", "graph"],
@@ -1243,30 +1445,37 @@ class Phase22CanonicalIngestionRuntime:
         source_manifest: dict[str, Any],
         corpus_dir: Any,
         ir_manifest: dict[str, Any],
+        dataset_manifest: dict[str, Any],
         security_decision_refs: dict[str, str],
         knowledge_space_id: str,
         security_epoch_ref: str,
         bucket: str | None = None,
-        tenant_id: str | None = None,
-        workspace_id: str | None = None,
     ) -> CanonicalCorpusReceipt:
         """Ingest the official synthetic corpus end to end.
 
         ``source_manifest`` is the frozen PR #107 source-upload manifest,
-        ``ir_manifest`` the frozen canonical IR manifest, and ``corpus_dir``
-        the directory holding the official corpus files. Security decisions
-        are issued by the Security owner in advance (the runtime never issues
-        them); ``security_decision_refs`` maps source_id -> decision_id.
+        ``ir_manifest`` the frozen canonical IR manifest, ``dataset_manifest``
+        the frozen candidate dataset manifest, and ``corpus_dir`` the
+        directory holding the official corpus files. The formal scope
+        (tenant/workspace) always comes from the frozen source manifest and
+        every fact inherits it; isolation is the caller's environment choice,
+        never a scope change. Security decisions are issued by the Security
+        owner in advance (the runtime never issues them);
+        ``security_decision_refs`` maps source_id -> decision_id.
         """
         effective_bucket = bucket or self.bucket
-        self.load_corpus_sources(source_manifest)
-        # Tenant/workspace are infrastructure scope columns; the corpus
-        # identity (source ids, hashes, document ids) always comes from the
-        # frozen manifest. A caller may pin the verification tenant to avoid
-        # colliding with pre-existing candidate facts for the official tenant.
-        tenant_id = tenant_id or str(source_manifest["sources"][0]["tenant_id"])
-        workspace_id = workspace_id or str(source_manifest["sources"][0]["workspace_id"])
-        corpus_hash = str(source_manifest["source_manifest_hash"])
+        context = self.load_official_corpus_context(
+            source_manifest=source_manifest,
+            ir_manifest=ir_manifest,
+            dataset_manifest=dataset_manifest,
+        )
+        tenant_id = str(source_manifest["sources"][0]["tenant_id"])
+        workspace_id = str(source_manifest["sources"][0]["workspace_id"])
+        document_set = {
+            str(source["source_id"]): str(source["source_hash"])
+            for source in source_manifest["sources"]
+        }
+        document_set_hash = canonical_sha256(document_set)
         run_ids: list[str] = []
         source_ids: list[str] = []
         for source in source_manifest["sources"]:
@@ -1303,8 +1512,8 @@ class Phase22CanonicalIngestionRuntime:
                 security_epoch_ref=security_epoch_ref,
                 security_decision_ref=decision_ref,
                 knowledge_space_id=knowledge_space_id,
-                corpus_manifest_ref=corpus_hash,
-                source_set_ref=f"corpus:{corpus_hash[:16]}",
+                source_manifest_ref=context["source_manifest_hash"],
+                source_set_ref=f"corpus:{context['source_manifest_hash'][:16]}",
                 trace_id=f"trace:{source_id}",
                 bucket=effective_bucket,
             )
@@ -1320,12 +1529,12 @@ class Phase22CanonicalIngestionRuntime:
             tenant_id=tenant_id,
             workspace_id=workspace_id,
             knowledge_space_id=knowledge_space_id,
-            corpus_hash=corpus_hash,
+            dataset_corpus_hash=context["dataset_corpus_hash"],
+            source_manifest_hash=context["source_manifest_hash"],
+            canonical_ir_hash=context["canonical_ir_hash"],
+            document_set=document_set,
+            document_set_hash=document_set_hash,
             ir_manifest=ir_manifest,
-            document_set={
-                str(source["source_id"]): str(source["source_hash"])
-                for source in source_manifest["sources"]
-            },
             run_ids=tuple(run_ids),
             source_ids=tuple(source_ids),
         )
@@ -1336,13 +1545,17 @@ class Phase22CanonicalIngestionRuntime:
         tenant_id: str,
         workspace_id: str,
         knowledge_space_id: str,
-        corpus_hash: str,
-        ir_manifest: dict[str, Any],
+        dataset_corpus_hash: str,
+        source_manifest_hash: str,
+        canonical_ir_hash: str,
         document_set: dict[str, str],
+        document_set_hash: str,
+        ir_manifest: dict[str, Any],
         run_ids: tuple[str, ...] = (),
         source_ids: tuple[str, ...] = (),
     ) -> CanonicalCorpusReceipt:
-        """Reconcile the persisted facts against the official manifest counts."""
+        """Reconcile the persisted facts against the official manifest counts
+        and the three frozen hashes."""
         expected_chunk_ids = tuple(
             sorted(str(chunk["chunk_id"]) for chunk in ir_manifest.get("chunks", []))
         )
@@ -1355,11 +1568,12 @@ class Phase22CanonicalIngestionRuntime:
         expected_document_ids = tuple(
             sorted(str(doc["document_id"]) for doc in ir_manifest.get("documents", []))
         )
+        chunk_set_hash = canonical_sha256(list(expected_chunk_ids))
         knowledge_version = self.facts.knowledge_version_for_document_set(
             tenant_id=tenant_id,
             workspace_id=workspace_id,
             knowledge_space_id=knowledge_space_id,
-            document_set_hash=canonical_sha256(document_set),
+            document_set_hash=document_set_hash,
         )
         mismatch: list[str] = []
         if knowledge_version is None:
@@ -1368,7 +1582,11 @@ class Phase22CanonicalIngestionRuntime:
                 tenant_id=tenant_id,
                 workspace_id=workspace_id,
                 knowledge_space_id=knowledge_space_id,
-                corpus_hash=corpus_hash,
+                dataset_corpus_hash=dataset_corpus_hash,
+                source_manifest_hash=source_manifest_hash,
+                canonical_ir_hash=canonical_ir_hash,
+                document_set_hash=document_set_hash,
+                chunk_set_hash=chunk_set_hash,
                 source_count=len(source_ids),
                 document_count=len(expected_document_ids),
                 chunk_count=len(expected_chunk_ids),
@@ -1403,11 +1621,30 @@ class Phase22CanonicalIngestionRuntime:
             mismatch.append("relation_ids_mismatch")
         if len(source_ids) != len(expected_document_ids):
             mismatch.append("source_count_mismatch")
+        # the KnowledgeVersion must freeze the same three hashes
+        index_spec_hash = knowledge_version.index_spec_hash
+        with self.engine.connect() as connection:
+            row = connection.execute(
+                text(
+                    """
+                    SELECT index_spec_hash FROM knowledge_domain_versions
+                    WHERE knowledge_version_id = :kv_id AND tenant_id = :tenant_id
+                    """
+                ),
+                {"kv_id": kv_id, "tenant_id": tenant_id},
+            ).mappings().first()
+        _ = index_spec_hash  # the index_spec dict is frozen inside index_spec_hash
+        if row is None:
+            mismatch.append("knowledge_version_index_spec_missing")
         return CanonicalCorpusReceipt(
             tenant_id=tenant_id,
             workspace_id=workspace_id,
             knowledge_space_id=knowledge_space_id,
-            corpus_hash=corpus_hash,
+            dataset_corpus_hash=dataset_corpus_hash,
+            source_manifest_hash=source_manifest_hash,
+            canonical_ir_hash=canonical_ir_hash,
+            document_set_hash=document_set_hash,
+            chunk_set_hash=chunk_set_hash,
             source_count=len(source_ids),
             document_count=len(expected_document_ids),
             chunk_count=len(expected_chunk_ids),
@@ -1642,9 +1879,71 @@ class Phase22CanonicalIngestionRuntime:
                 "official corpus manifest is not loaded; ingest_official_corpus "
                 "must provide it before per-source finalize"
             )
-        if str(manifest.get("source_manifest_hash")) != command.corpus_manifest_ref:
-            raise CanonicalIngestionError("corpus manifest hash mismatch")
+        if str(manifest.get("source_manifest_hash")) != command.source_manifest_ref:
+            raise CanonicalIngestionError("source manifest hash mismatch")
         return manifest
+
+    def _require_corpus_context(self, command: CanonicalSourceIngestCommand) -> dict[str, str]:
+        """Return the three frozen, non-interchangeable corpus hashes.
+
+        Fail closed when the official corpus context was not loaded or the
+        source manifest hash does not match the command binding.
+        """
+        context = getattr(self, "_corpus_context", None)
+        if context is None:
+            raise CanonicalIngestionError(
+                "official corpus context is not loaded; ingest_official_corpus "
+                "must provide it before per-source finalize"
+            )
+        if str(context["source_manifest_hash"]) != command.source_manifest_ref:
+            raise CanonicalIngestionError("source manifest hash mismatch")
+        return context
+
+    def load_official_corpus_context(
+        self,
+        *,
+        source_manifest: dict[str, Any],
+        ir_manifest: dict[str, Any],
+        dataset_manifest: dict[str, Any],
+    ) -> dict[str, str]:
+        """Load and validate the frozen corpus context.
+
+        Three distinct hashes are carried separately and never aliased:
+
+        - ``dataset_corpus_hash`` from candidate_dataset_manifest.json
+          (``corpus_hash`` field)
+        - ``source_manifest_hash`` from source_upload_manifest.json
+        - ``canonical_ir_hash`` from canonical_ir_manifest.json
+
+        Any missing or cross-inconsistent hash fails closed.
+        """
+        dataset_corpus_hash = str(dataset_manifest.get("corpus_hash") or "").strip()
+        if len(dataset_corpus_hash) != 64:
+            raise CanonicalIngestionError("dataset_corpus_hash missing or invalid")
+        source_manifest_hash = str(source_manifest.get("source_manifest_hash") or "").strip()
+        if len(source_manifest_hash) != 64:
+            raise CanonicalIngestionError("source_manifest_hash missing or invalid")
+        canonical_ir_hash = str(ir_manifest.get("canonical_ir_hash") or "").strip()
+        if len(canonical_ir_hash) != 64:
+            raise CanonicalIngestionError("canonical_ir_hash missing or invalid")
+        # the IR manifest must reference the same source manifest
+        if str(ir_manifest.get("source_manifest_hash") or "") != source_manifest_hash:
+            raise CanonicalIngestionError(
+                "canonical IR manifest source_manifest_hash disagrees with "
+                "the source upload manifest"
+            )
+        if dataset_corpus_hash == source_manifest_hash or dataset_corpus_hash == canonical_ir_hash:
+            raise CanonicalIngestionError(
+                "dataset_corpus_hash must be distinct from the other frozen hashes"
+            )
+        self._corpus_context = {
+            "dataset_corpus_hash": dataset_corpus_hash,
+            "source_manifest_hash": source_manifest_hash,
+            "canonical_ir_hash": canonical_ir_hash,
+        }
+        self._corpus_manifest = ir_manifest
+        self.load_corpus_sources(source_manifest)
+        return self._corpus_context
 
     def _corpus_document_set(
         self, *, command: CanonicalSourceIngestCommand, manifest: dict[str, Any]
@@ -1693,7 +1992,7 @@ class Phase22CanonicalIngestionRuntime:
                 "classification": command.classification,
                 "security_epoch_ref": command.security_epoch_ref,
                 "security_decision_ref": command.security_decision_ref,
-                "corpus_manifest_ref": command.corpus_manifest_ref,
+                "source_manifest_ref": command.source_manifest_ref,
             }
         )
 
