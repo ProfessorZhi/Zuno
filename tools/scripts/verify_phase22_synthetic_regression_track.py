@@ -12,6 +12,7 @@ TRACK_DIR = Path(
 )
 TRACK_MANIFEST = TRACK_DIR / "track_manifest.json"
 READINESS_REPORT = TRACK_DIR / "readiness-report.md"
+PR100_FILE_CLASSIFICATION = TRACK_DIR / "pr100-file-classification.json"
 PUBLIC_APPROVAL_SUMMARY = Path(
     "docs/evidence/goal05-phase22-public-benchmark-review-pack/approval_summary.json"
 )
@@ -42,6 +43,7 @@ def verify_phase22_synthetic_regression_track() -> list[str]:
     required_files = [
         TRACK_MANIFEST,
         READINESS_REPORT,
+        PR100_FILE_CLASSIFICATION,
         PUBLIC_APPROVAL_SUMMARY,
         PUBLIC_INTEGRITY_REPORT,
         INVALIDATION_NOTICE,
@@ -54,6 +56,7 @@ def verify_phase22_synthetic_regression_track() -> list[str]:
         return errors
 
     manifest = _read_json(TRACK_MANIFEST)
+    pr100_classification = _read_json(PR100_FILE_CLASSIFICATION)
     approval = _read_json(PUBLIC_APPROVAL_SUMMARY)
     integrity = _read_json(PUBLIC_INTEGRITY_REPORT)
     report = _read_text(READINESS_REPORT)
@@ -93,6 +96,26 @@ def verify_phase22_synthetic_regression_track() -> list[str]:
     for phrase in ["INVALIDATED", "canonical_runtime_not_executed", "SUCCESS_REAL_INGESTION"]:
         if phrase not in invalidation:
             errors.append(f"synthetic invalidation notice missing phrase: {phrase}")
+
+    files_by_path = {
+        item.get("path"): item.get("classification")
+        for item in pr100_classification.get("files", [])
+        if isinstance(item, dict)
+    }
+    required_classifications = {
+        "docs/evidence/goal05-phase22-synthetic-benchmark/build_world_model.py": "ACCEPT_AFTER_REWORK",
+        "docs/evidence/goal05-phase22-synthetic-benchmark/build_cases.py": "ACCEPT_AFTER_REWORK",
+        "docs/evidence/goal05-phase22-synthetic-benchmark/synthetic_cases.jsonl": "ACCEPT_AFTER_REWORK",
+        "docs/evidence/goal05-phase22-synthetic-benchmark/ingest_and_run.py": "DROP",
+        "docs/evidence/goal05-phase22-synthetic-benchmark/profile_results/*.json": "DROP",
+        "docs/evidence/goal05-phase22-synthetic-benchmark/release_decision.json": "DROP",
+        "docs/evidence/goal05-phase22-synthetic-benchmark/runtime_ingestion.json": "DROP",
+    }
+    for path, expected in required_classifications.items():
+        if files_by_path.get(path) != expected:
+            errors.append(
+                f"PR100 file classification for {path} must be {expected}, got {files_by_path.get(path)!r}"
+            )
 
     required_card_fields = [
         "WORKER_TASK_ID",

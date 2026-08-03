@@ -1,0 +1,94 @@
+{
+  "schema_version": "1.0.0",
+  "reviewed_pr": 100,
+  "reviewed_head": "d7566624b702b74ebf6a89db2f916b9ea19b310c",
+  "classification_date": "2026-08-03",
+  "classification_summary": {
+    "ACCEPT_AS_IS": 0,
+    "ACCEPT_AFTER_REWORK": 7,
+    "DROP": 8,
+    "SUPERSEDED_BY_MAIN": 1
+  },
+  "files": [
+    {
+      "path": "docs/evidence/goal05-phase22-synthetic-benchmark/build_world_model.py",
+      "classification": "ACCEPT_AFTER_REWORK",
+      "reason": "Deterministic fictional Auroralis world model and corpus renderer are useful candidate inputs, but must move out of historical evidence and bind to the current synthetic regression schema."
+    },
+    {
+      "path": "docs/evidence/goal05-phase22-synthetic-benchmark/world_model.json",
+      "classification": "ACCEPT_AFTER_REWORK",
+      "reason": "Candidate structured facts can seed CC-A, but require current hash binding and source-span verification."
+    },
+    {
+      "path": "docs/evidence/goal05-phase22-synthetic-benchmark/corpus/**",
+      "classification": "ACCEPT_AFTER_REWORK",
+      "reason": "Fictional corpus documents are candidate raw assets; every document must be regenerated or copied with current corpus hash, tenant/workspace/security metadata and canonical ingestion evidence."
+    },
+    {
+      "path": "docs/evidence/goal05-phase22-synthetic-benchmark/corpus_manifest.json",
+      "classification": "ACCEPT_AFTER_REWORK",
+      "reason": "Candidate manifest is useful but not a current ingestion manifest."
+    },
+    {
+      "path": "docs/evidence/goal05-phase22-synthetic-benchmark/graph_manifest.json",
+      "classification": "ACCEPT_AFTER_REWORK",
+      "reason": "Candidate relation graph can seed CC-A/CC-B, but Neo4j path receipt contract and runtime readback are missing."
+    },
+    {
+      "path": "docs/evidence/goal05-phase22-synthetic-benchmark/build_cases.py",
+      "classification": "ACCEPT_AFTER_REWORK",
+      "reason": "80-case generation logic has useful distribution, but schema uses gold_* fields and lacks current runtime-isolated case fields such as source_document_refs, security_principal, tenant_id, workspace_id, input_hash and case_hash."
+    },
+    {
+      "path": "docs/evidence/goal05-phase22-synthetic-benchmark/synthetic_cases.jsonl",
+      "classification": "ACCEPT_AFTER_REWORK",
+      "reason": "Raw case candidates only. They must be normalized and independently revalidated before machine_attested_count can be non-zero."
+    },
+    {
+      "path": "docs/evidence/goal05-phase22-synthetic-benchmark/validate_cases.py",
+      "classification": "SUPERSEDED_BY_MAIN",
+      "reason": "Superseded by current track contract validator, because the historical validator accepts the old gold_* case schema."
+    },
+    {
+      "path": "docs/evidence/goal05-phase22-synthetic-benchmark/ingest_and_run.py",
+      "classification": "DROP",
+      "reason": "Invalidated non-canonical in-memory substring runner; it does not submit corpus through canonical ingestion or production index adapters."
+    },
+    {
+      "path": "docs/evidence/goal05-phase22-synthetic-benchmark/profile_results/*.json",
+      "classification": "DROP",
+      "reason": "Invalidated profile outputs were produced by the non-canonical runner and must not become runtime evidence."
+    },
+    {
+      "path": "docs/evidence/goal05-phase22-synthetic-benchmark/core_five_metrics.json",
+      "classification": "DROP",
+      "reason": "Invalidated metrics were computed from fake runtime outputs."
+    },
+    {
+      "path": "docs/evidence/goal05-phase22-synthetic-benchmark/failure_buckets.json",
+      "classification": "DROP",
+      "reason": "Failure buckets did not derive from canonical traces or real profile executions."
+    },
+    {
+      "path": "docs/evidence/goal05-phase22-synthetic-benchmark/release_decision.json",
+      "classification": "DROP",
+      "reason": "Invalidated PASSED decision; synthetic regression decision must be recomputed from machine-attested runtime evidence."
+    },
+    {
+      "path": "docs/evidence/goal05-phase22-synthetic-benchmark/runtime_ingestion.json",
+      "classification": "DROP",
+      "reason": "TCP service reachability and synthetic in-memory ingestion do not prove Source/Object/Postgres/Index/Snapshot runtime facts."
+    },
+    {
+      "path": "docs/evidence/goal05-phase22-synthetic-benchmark/canonical_ir.json",
+      "classification": "DROP",
+      "reason": "Historical file was not produced by the formal parser pipeline in current main."
+    },
+    {
+      "path": "tools/evals/zuno/rag_eval/metrics.py",
+      "classification": "DROP",
+      "reason": "Metric changes in PR #100 are coupled to the invalidated run and must be reintroduced only through current tests if still needed."
+    }
+  ]
+}

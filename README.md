@@ -25,6 +25,29 @@ Zuno 是一个本地优先、短小精悍但工程完整的 **Lean Complete Agen
 -> Restart Recovery
 ```
 
+## 当前仓库形态
+
+Zuno 当前是**前后端分离的 monorepo**，不是传统单体前端直连数据库，也不是默认拆成大量微服务的分布式平台。
+
+```text
+apps/web/        Vue 3 + Vite 前端，消费服务端 Product API、Projection、SSE 和 AvailableAction
+apps/desktop/    Electron 桌面壳，承载桌面桥接和本地产品入口
+src/backend/zuno FastAPI / Python 后端，拥有 Product API、Agent、Knowledge、Memory、Capability、Tool、Security、Observability 和 Platform 运行逻辑
+infra/db/        Alembic 迁移和 PostgreSQL schema 管理
+infra/docker/    本地开发依赖：PostgreSQL、RabbitMQ、MinIO、Redis、Elasticsearch、Milvus、Neo4j 等
+tools/           Eval、Benchmark、Verifier、脚本和 CLI 辅助工具
+docs/            正式架构、模块、状态、决策和 evidence
+.agent/          本地 Agent 工作流、Program、Reference 和任务卡
+```
+
+运行边界：
+
+- 前端只消费后端 Product API / Projection / SSE，不拥有 AgentRun、KnowledgeVersion、Approval、Tool Effect、Evidence、Memory、Eval 或 Artifact 的领域事实。
+- 桌面端通过 Desktop bridge 和后端 API 进入产品能力，不直接写数据库、Queue、Object Store、索引、模型 Provider 或 Secret Store。
+- 后端当前可以用一个镜像承担 `backend-api`、controller、worker 等多个角色；角色边界由 Owner、Contract、状态机和测试证明，不靠微服务数量证明成熟度。
+- PostgreSQL 是领域事实主存；MinIO/Object Store、RabbitMQ、LangGraph Checkpointer、Elasticsearch、Milvus、Neo4j、Redis 等属于可替换基础设施或可重建读模型。
+- `docs/status/production-readiness.md` 和 `docs/evidence/` 才能证明 Current / Gap / Measurement / Production Readiness；模块文档描述 Target，不自动证明 Current。
+
 ## 文档入口
 
 - [总架构](./docs/architecture/architecture.md)
@@ -67,7 +90,7 @@ architecture.html
 Zuno 主仓库目录保持为最终集成仓库；临时 worker worktree 放在：
 
 ```text
-F:\internship-work\resume project\worktrees\
+F:\agent_project\Zuno-worktrees\
 ```
 
 每个 worker 使用独立 worktree 和 `codex/` branch。Claude Code worker 优先处理简单、大量、重复、下载、环境探测、日志整理和低风险候选补丁；Codex coordinator 负责复杂架构判断、根因定位、安全 / 并发 / 恢复 / 幂等语义、review、合并、最终验证和 push。
@@ -84,7 +107,33 @@ python tools/scripts/verify_repo_structure.py
 python .agent/scripts/verify_agent_system.py
 python .agent/scripts/verify_doc_boundaries.py
 pytest -q tests/repo/test_docs_entrypoints.py tests/repo/test_repo_structure_consistency.py
+```
+
+后端本地入口：
+
+```powershell
 uvicorn --app-dir src/backend zuno.main:app --host 0.0.0.0 --port 7860
+```
+
+前端本地入口：
+
+```powershell
+npm run frontend:dev
+npm run frontend:lint
+npm run frontend:build
+```
+
+桌面本地入口：
+
+```powershell
+npm run desktop:dev
+```
+
+基础设施和迁移入口：
+
+```powershell
+docker compose -f infra/docker/docker-compose.yml up -d
+python -m alembic -c infra/db/alembic.ini upgrade head
 ```
 
 ## 六个运行域

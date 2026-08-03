@@ -24,6 +24,7 @@ def _copy_fixture(tmp_path: Path) -> Path:
     paths = [
         "docs/evidence/goal05-phase22-machine-attested-synthetic-regression/track_manifest.json",
         "docs/evidence/goal05-phase22-machine-attested-synthetic-regression/readiness-report.md",
+        "docs/evidence/goal05-phase22-machine-attested-synthetic-regression/pr100-file-classification.json",
         "docs/evidence/goal05-phase22-public-benchmark-review-pack/approval_summary.json",
         "docs/evidence/goal05-phase22-public-benchmark-review-pack/integrity_report.json",
         "docs/evidence/goal05-phase22-synthetic-benchmark/INVALIDATION_NOTICE.md",
@@ -69,3 +70,22 @@ def test_task_cards_must_keep_handoff_contract(tmp_path: Path) -> None:
     errors = verifier.verify_phase22_synthetic_regression_track()
 
     assert any("missing task-card field" in error for error in errors)
+
+
+def test_pr100_invalidated_runtime_outputs_must_remain_drop(tmp_path: Path) -> None:
+    verifier = _load_verifier()
+    fixture = _copy_fixture(tmp_path)
+    classification_path = (
+        fixture
+        / "docs/evidence/goal05-phase22-machine-attested-synthetic-regression/pr100-file-classification.json"
+    )
+    classification = json.loads(classification_path.read_text(encoding="utf-8"))
+    for item in classification["files"]:
+        if item["path"] == "docs/evidence/goal05-phase22-synthetic-benchmark/ingest_and_run.py":
+            item["classification"] = "ACCEPT_AS_IS"
+    classification_path.write_text(json.dumps(classification), encoding="utf-8")
+
+    verifier.REPO_ROOT = fixture
+    errors = verifier.verify_phase22_synthetic_regression_track()
+
+    assert any("ingest_and_run.py must be DROP" in error for error in errors)
