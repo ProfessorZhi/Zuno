@@ -3,131 +3,364 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Zuno Target Architecture</title>
+  <title>Zuno Architecture v2 Visual Atlas</title>
   <style>
-    :root { color-scheme: light; --bg:#f4f6f8; --paper:#fff; --ink:#16202a; --muted:#5b6976; --line:#d2d9e0; --accent:#2563a6; --soft:#eaf3ff; }
-    * { box-sizing:border-box; }
-    body { margin:0; background:var(--bg); color:var(--ink); font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif; line-height:1.55; }
-    a { color:var(--accent); }
-    .layout { display:grid; grid-template-columns:300px minmax(0,1fr); min-height:100vh; }
-    aside { position:sticky; top:0; height:100vh; overflow:auto; padding:22px 18px; border-right:1px solid var(--line); background:#fafbfc; }
-    aside h1 { margin:0 0 6px; font-size:20px; }
-    aside p { margin:0 0 14px; color:var(--muted); font-size:13px; }
-    .links { display:grid; gap:7px; margin:14px 0; }
-    .links a, nav a { display:block; padding:8px 10px; border-radius:8px; text-decoration:none; }
-    .links a { border:1px solid var(--line); background:var(--paper); font-size:13px; }
-    nav .group { margin-top:14px; color:var(--muted); font-size:12px; font-weight:700; }
-    nav a { color:var(--ink); font-size:13px; }
-    nav a:hover { background:var(--soft); color:var(--accent); }
-    main { min-width:0; padding:32px 38px 70px; }
-    .hero, .diagram-card { background:var(--paper); border:1px solid var(--line); border-radius:14px; box-shadow:0 8px 24px rgba(20,35,50,.07); }
-    .hero { padding:24px 26px; }
-    .hero h1 { margin:0 0 8px; font-size:clamp(28px,4vw,42px); }
-    .hero p { color:var(--muted); max-width:980px; }
-    .facts { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:10px; margin-top:16px; }
-    .facts div { padding:11px; background:var(--soft); border-radius:9px; font-size:13px; }
-    .view { margin-top:42px; scroll-margin-top:16px; }
-    .view h2 { border-bottom:2px solid var(--line); padding-bottom:9px; }
-    .grid { display:grid; gap:20px; }
-    .diagram-card { overflow:hidden; }
-    .diagram-head { display:flex; justify-content:space-between; gap:12px; align-items:center; padding:13px 16px; border-bottom:1px solid var(--line); background:#fbfcfd; }
-    .diagram-head h3 { margin:0; font-size:16px; }
-    button { border:1px solid var(--line); border-radius:8px; background:white; padding:6px 9px; cursor:pointer; }
-    .stage { overflow:auto; min-height:210px; padding:22px; }
-    .mermaid { min-width:max-content; text-align:center; }
-    details { border-top:1px solid var(--line); padding:10px 15px 13px; background:#fafbfc; }
-    pre { white-space:pre-wrap; word-break:break-word; background:#111827; color:#e5e7eb; padding:13px; border-radius:8px; font-size:12px; }
-    dialog { width:min(96vw,1700px); height:94vh; border:0; border-radius:14px; padding:0; }
-    dialog::backdrop { background:rgba(10,20,30,.7); }
-    .dialog-shell { display:grid; grid-template-rows:auto 1fr; height:100%; }
-    .dialog-head { display:flex; justify-content:space-between; padding:12px 16px; border-bottom:1px solid var(--line); }
-    .dialog-body { overflow:auto; padding:28px; background:white; }
-    @media (max-width:900px) { .layout{display:block}.facts{grid-template-columns:1fr}aside{position:static;height:auto;border-right:0;border-bottom:1px solid var(--line)}main{padding:20px 13px 55px} }
+    :root {
+      color-scheme: light dark;
+      --bg: #f5f7fb;
+      --panel: #ffffff;
+      --text: #172033;
+      --muted: #5e6b82;
+      --line: #d8deea;
+      --accent: #315efb;
+      --target: #8a4fff;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #101521;
+        --panel: #171e2d;
+        --text: #edf2ff;
+        --muted: #aab5cc;
+        --line: #303a50;
+        --accent: #7ea1ff;
+        --target: #ba91ff;
+      }
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.65;
+    }
+    header {
+      padding: 44px 24px 30px;
+      background: linear-gradient(135deg, #172554, #3730a3 55%, #6d28d9);
+      color: #fff;
+    }
+    header .inner, main { max-width: 1180px; margin: 0 auto; }
+    h1 { margin: 0 0 10px; font-size: clamp(30px, 5vw, 52px); }
+    header p { margin: 6px 0; max-width: 900px; opacity: .92; }
+    .badges { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 18px; }
+    .badge {
+      border: 1px solid rgba(255,255,255,.35);
+      border-radius: 999px;
+      padding: 4px 10px;
+      font-size: 13px;
+      background: rgba(255,255,255,.12);
+    }
+    main { padding: 28px 18px 80px; }
+    .notice {
+      border-left: 5px solid var(--target);
+      background: var(--panel);
+      padding: 16px 18px;
+      border-radius: 10px;
+      box-shadow: 0 8px 24px rgba(25, 34, 60, .08);
+      margin-bottom: 24px;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 18px;
+    }
+    section {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 20px;
+      margin: 18px 0;
+      box-shadow: 0 8px 24px rgba(25, 34, 60, .05);
+    }
+    section.full { grid-column: 1 / -1; }
+    h2 { margin: 0 0 8px; font-size: 22px; }
+    h3 { margin: 20px 0 8px; }
+    p, li { color: var(--muted); }
+    code {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      background: rgba(120,130,160,.14);
+      border-radius: 5px;
+      padding: 2px 5px;
+    }
+    .mermaid { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { border: 1px solid var(--line); padding: 9px 10px; text-align: left; vertical-align: top; }
+    th { background: rgba(120,130,160,.09); }
+    footer { max-width: 1180px; margin: 0 auto; padding: 0 18px 40px; color: var(--muted); }
   </style>
 </head>
 <body>
-<div class="layout">
-  <aside>
-    <h1>Zuno Architecture</h1>
-    <p>十一模块优先、总体集成其次、Mermaid 说明性最低优先级的可视化入口。</p>
-    <div class="links">
-      <a href="./architecture.md">阅读文字总架构</a>
-      <a href="../modules/README.md">阅读十一模块架构</a>
-      <a href="../status/production-readiness.md">查看 Current / Readiness</a>
-      <a href="./architecture-views.md">查看 Mermaid 图源</a>
+<header>
+  <div class="inner">
+    <h1>Zuno Architecture v2</h1>
+    <p>Evidence-Driven Agentic GraphRAG · Single Controller · Dynamic Plan DAG · Governed Tool Runtime · Traceable Eval</p>
+    <p>本页面是 <code>architecture.md</code> 与 <code>architecture-views.md</code> 的可视化入口，不独立拥有 Contract。</p>
+    <div class="badges">
+      <span class="badge">status: Target</span>
+      <span class="badge">updated: 2026-08-04</span>
+      <span class="badge">PHASE01–PHASE22 unchanged</span>
+      <span class="badge">quality not yet proven</span>
     </div>
-    <nav id="nav"></nav>
-  </aside>
-  <main>
-    <section class="hero">
-      <h1>Zuno Target Architecture</h1>
-      <p>本页展示跨模块集成视图。模块 Owner 文档是领域规范源，architecture.md 负责跨模块组合，本页和 Mermaid 只作说明，不得覆盖模块 Contract。</p>
-      <div class="facts">
-        <div><strong>规范优先：</strong>已接受 ADR / Registry → 11 份模块文档 → architecture.md → Mermaid / HTML。</div>
-        <div><strong>渲染支撑：</strong>architecture-views.md 只提供 Mermaid 图源。</div>
-        <div><strong>状态边界：</strong>Target 不等于 Current，也不等于 production ready。</div>
+  </div>
+</header>
+
+<main>
+  <div class="notice">
+    <strong>Current / Target 边界：</strong>
+    Architecture v2 是新的设计目标。现有 Program 与 PHASE01–PHASE22 继续以其冻结基线执行；本文不证明 Evidence Reasoning Graph、ClaimEvidenceState 或动态 Probe 已经完成实现。
+  </div>
+
+  <section class="full">
+    <h2>1. 十一模块逻辑架构</h2>
+    <div class="mermaid">
+flowchart TB
+    PS[01 Product Surface]
+    ING[02 Input and Ingestion]
+    K[03 Knowledge / Evidence-Driven Agentic GraphRAG]
+    MG[04 Model Gateway]
+    MC[05 Memory and Context]
+    AC[06 Agent Core]
+    CS[07 Capability and Skill]
+    TR[08 Tool Runtime]
+    SEC[09 Security]
+    OE[10 Observability and Eval]
+    INF[11 Infrastructure]
+
+    PS --> AC
+    ING --> K
+    AC --> K
+    AC --> MC
+    AC --> CS
+    AC --> TR
+    AC --> MG
+    K --> MG
+    MC --> MG
+    TR --> MG
+    SEC --> PS
+    SEC --> AC
+    SEC --> K
+    SEC --> TR
+    INF --> ING
+    INF --> K
+    INF --> MG
+    INF --> MC
+    INF --> AC
+    INF --> TR
+    OE -. typed events .-> PS
+    OE -. typed events .-> AC
+    OE -. typed events .-> K
+    OE -. typed events .-> MG
+    OE -. typed events .-> TR
+    </div>
+  </section>
+
+  <div class="grid">
+    <section>
+      <h2>2. Agent Core</h2>
+      <div class="mermaid">
+flowchart TB
+    RG[Fixed AgentRunGraph] --> PD[Dynamic Plan DAG]
+    PD --> R1[Ready Step A]
+    PD --> R2[Ready Step B]
+    R1 --> SG1[Fixed StepExecutionGraph]
+    R2 --> SG2[Fixed StepExecutionGraph]
+    SG1 --> BR[BranchResultRef]
+    SG2 --> BR
+    BR --> J[Join Evaluation]
+    J -->|continue| PD
+    J -->|replan| RB[Replan Barrier]
+    RB --> NP[New PlanVersion]
+    NP --> PD
+    J -->|finalize| FG[Final Gate]
       </div>
     </section>
-    <div id="content"></div>
-  </main>
-</div>
-<dialog id="diagram-dialog">
-  <div class="dialog-shell">
-    <div class="dialog-head"><strong id="dialog-title">Diagram</strong><button id="dialog-close">关闭</button></div>
-    <div id="dialog-body" class="dialog-body"></div>
+
+    <section>
+      <h2>3. Retry / Probe / Replan</h2>
+      <div class="mermaid">
+flowchart TD
+    F[Failure or Evidence Gap] --> D{What changed?}
+    D -->|temporary execution failure| R[Retry]
+    D -->|local schema or args| RP[Repair]
+    D -->|same capability alternate| FB[Fallback]
+    D -->|knowledge gap is probeable| P[Evidence Probe]
+    D -->|task assumptions failed| RE[Replan]
+    RE --> B[Replan Barrier]
+    B --> N[New immutable PlanVersion]
+      </div>
+    </section>
   </div>
-</dialog>
+
+  <section class="full">
+    <h2>4. Evidence-Driven Agentic GraphRAG</h2>
+    <div class="mermaid">
+flowchart TD
+    A[KnowledgeQueryRequest] --> B[Evidence Goal Interpretation]
+    B --> C[Initial Evidence Collection Plan]
+    C --> D[Bounded Multi-route Retrieval]
+    D --> E[Normalize and Provenance Binding]
+    E --> F[Deterministic Eligibility Gate]
+    F --> G[Semantic Evidence Assessment]
+    G --> H[Evidence Reasoning Graph]
+    H --> I[Claim Hypothesis and Provisional Answer]
+    I --> J[Claim-level Sufficiency and Conflict Evaluation]
+    J -->|sufficient and stable| K[Selected Evidence Bundle]
+    J -->|critical gap is probeable| L[Evidence Probe Planning]
+    J -->|need user input| M[Ask User Proposal]
+    J -->|task assumption failed| N[Replan Required Proposal]
+    J -->|no suitable evidence| O[Insufficient Evidence Outcome]
+    L --> P[Targeted Retrieval Round]
+    P --> E
+    K --> Q[05 Memory and Context]
+    M --> R[06 Agent Core]
+    N --> R
+    O --> R
+    </div>
+  </section>
+
+  <div class="grid">
+    <section>
+      <h2>5. Route 选择</h2>
+      <div class="mermaid">
+flowchart LR
+    G[Evidence Goal] --> D{Question and Gap Features}
+    D -->|exact clause| B[BM25]
+    D -->|semantic| V[Vector]
+    D -->|entity relation| L[Graph Local]
+    D -->|global themes| GL[Graph Global]
+    D -->|broad recursive| DR[DRIFT]
+    D -->|known source/time| S[Scoped Retrieval]
+    D -->|business facts| T[Structured]
+      </div>
+      <p><code>DEEP</code> 不等于所有路径全开。每条 Route 必须通过 Capability、Security、Budget、deadline、预计信息增益和重复度检查。</p>
+    </section>
+
+    <section>
+      <h2>6. 四层 Evidence 评价</h2>
+      <div class="mermaid">
+flowchart TD
+    E[Evidence Candidate] --> L1[1 Deterministic Eligibility]
+    L1 -->|fail| X[EXCLUDED]
+    L1 -->|pass| L2[2 Semantic Assessment]
+    L2 --> L3[3 ClaimEvidenceState]
+    L3 --> L4[4 EvidenceSetVerdict]
+    L4 -->|sufficient| A[Accept]
+    L4 -->|gap| P[Targeted Probe]
+    L4 -->|conflict| C[Disclose / Resolve]
+    L4 -->|none| N[Partial / Abstain]
+      </div>
+    </section>
+  </div>
+
+  <section class="full">
+    <h2>7. Knowledge Graph + Evidence Reasoning Graph</h2>
+    <div class="mermaid">
+flowchart LR
+    subgraph KG[Knowledge Graph]
+      EN[Entity]
+      RE[Relation]
+      CO[Community]
+      DO[Document]
+      TU[Text Unit]
+      EN --> RE
+      RE --> EN
+      EN --> CO
+      DO --> TU
+      RE --> TU
+    end
+
+    subgraph ERG[Evidence Reasoning Graph]
+      CL[Claim]
+      EV[Evidence]
+      SO[Source]
+      DV[DocumentVersion]
+      GP[GraphPath]
+      CS[CommunitySummary]
+      EV -->|SUPPORTS / CONTRADICTS / QUALIFIES| CL
+      EV -->|DERIVED_FROM| SO
+      SO --> DV
+      GP -->|DERIVED_FROM| EV
+      CS -->|SUMMARIZES| EV
+    end
+
+    KG -->|discovery candidates| ERG
+    </div>
+    <p>Local、Community Summary 与原文若来自同一 SourceSpan，只算一个 Source Family；派生证据不能重复提升独立支持度。</p>
+  </section>
+
+  <div class="grid">
+    <section>
+      <h2>8. Tool 副作用</h2>
+      <div class="mermaid">
+flowchart TD
+    A[ActionProposal] --> C[Canonical Args]
+    C --> S[Security Gate]
+    S --> AP[Approval]
+    AP --> I[Idempotency]
+    I --> E[Execute]
+    E -->|success| SU[SUCCESS]
+    E -->|known failure| FA[FAILURE]
+    E -->|timeout / unknown| UN[UNKNOWN]
+    UN --> R[Reconciliation]
+      </div>
+    </section>
+
+    <section>
+      <h2>9. PostgreSQL / Checkpointer</h2>
+      <div class="mermaid">
+flowchart TB
+    N[Graph Node] -->|cursor / pending writes / interrupt refs| LG[LangGraph Checkpointer]
+    N -->|Run / Plan / Evidence / Effect / Outcome| PG[PostgreSQL Domain Facts]
+    LG --> R[Recovery]
+    PG --> R
+    R -->|domain facts win| N
+      </div>
+    </section>
+  </div>
+
+  <section class="full">
+    <h2>10. 评测与 Release Gate</h2>
+    <div class="mermaid">
+flowchart LR
+    EV[Typed Events] --> TP[Trace Projection]
+    TP --> MET[Metrics]
+    TP --> ER[Eval Run]
+    DS[Fixed Dataset] --> ER
+    CFG[Commit / Model / Prompt / Snapshot / Budget] --> ER
+    ER --> FB[Failure Buckets]
+    ER --> CMP[Experiment Comparison]
+    CMP --> RG[Release Gate]
+    RG -->|PASS| REL[Promote]
+    RG -->|FAIL / BLOCKED / INCONCLUSIVE| STOP[Do not promote]
+    </div>
+  </section>
+
+  <section>
+    <h2>11. Architecture v2 实施边界</h2>
+    <table>
+      <thead><tr><th>范围</th><th>本次状态</th></tr></thead>
+      <tbody>
+        <tr><td>总架构、Module 03 / 04 / 06 / 10、ADR、视图</td><td>Target 文档升级</td></tr>
+        <tr><td>现有 Program 与 PHASE01–PHASE22</td><td>保持不变</td></tr>
+        <tr><td>代码、Migration、Runtime、CI</td><td>未实施</td></tr>
+        <tr><td>固定 Benchmark、质量证明、Production Readiness</td><td>尚未建立，不能声明通过</td></tr>
+      </tbody>
+    </table>
+  </section>
+</main>
+
+<footer>
+  <p>Canonical text: <code>docs/architecture/architecture.md</code> and <code>docs/modules/*.md</code>. Visual source: <code>docs/architecture/architecture-views.md</code>.</p>
+</footer>
+
 <script type="module">
-  import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
-  const EXPECTED_VIEWS = ["Logical View (4+1)", "Development View (4+1)", "Process View (4+1)", "Physical View (4+1)", "Scenarios View (4+1)", "Module View (Views & Beyond)", "Component-and-Connector View (Views & Beyond)", "Data View (Views & Beyond)", "Quality View (Views & Beyond)", "Agentic GraphRAG Evidence and Agent Loop (Zuno)"];
-  mermaid.initialize({ startOnLoad:false, securityLevel:"strict", theme:"base", flowchart:{curve:"basis",useMaxWidth:false}, sequence:{useMaxWidth:false} });
-  const slug = value => value.toLowerCase().replace(/[^a-z0-9\u4e00-\u9fff]+/g,"-").replace(/^-|-$/g,"");
-  function parse(markdown) {
-    const groups=[]; let group=null, view=null, diagram=null, inCode=false, source=[];
-    for (const line of markdown.split(/\r?\n/)) {
-      if (!inCode && line.startsWith("## ")) { group={title:line.slice(3).trim(),views:[]}; groups.push(group); view=null; continue; }
-      if (!inCode && line.startsWith("### ")) { if (!group) continue; view={title:line.slice(4).trim(),diagrams:[]}; group.views.push(view); continue; }
-      if (!inCode && line.startsWith("#### ")) { if (!view) continue; diagram={subtitle:line.slice(5).trim(),source:""}; view.diagrams.push(diagram); continue; }
-      if (!inCode && line.trim()==="```mermaid") { inCode=true; source=[]; continue; }
-      if (inCode && line.trim()==="```") { inCode=false; if (diagram) diagram.source=source.join("\n"); continue; }
-      if (inCode) source.push(line);
-    }
-    return groups;
-  }
-  function build(groups) {
-    const nav=document.querySelector("#nav"), content=document.querySelector("#content");
-    for (const group of groups) {
-      const label=document.createElement("div"); label.className="group"; label.textContent=group.title; nav.appendChild(label);
-      for (const view of group.views) {
-        if (!EXPECTED_VIEWS.includes(view.title)) continue;
-        const id=slug(view.title), link=document.createElement("a"); link.href=`#${id}`; link.textContent=view.title; nav.appendChild(link);
-        const section=document.createElement("section"); section.className="view"; section.id=id;
-        section.innerHTML=`<h2>${view.title}</h2><div class="grid"></div>`;
-        const grid=section.querySelector(".grid");
-        for (const diagram of view.diagrams) {
-          const card=document.createElement("article"); card.className="diagram-card";
-          card.innerHTML=`<div class="diagram-head"><h3>${diagram.subtitle}</h3><button type="button">放大</button></div><div class="stage"><div class="mermaid">${diagram.source}</div></div><details><summary>Mermaid source</summary><pre></pre></details>`;
-          card.querySelector("pre").textContent=diagram.source;
-          card.querySelector("button").addEventListener("click",()=>openDialog(view.title,diagram));
-          grid.appendChild(card);
-        }
-        content.appendChild(section);
-      }
-    }
-  }
-  function openDialog(viewTitle,diagram) {
-    const dialog=document.querySelector("#diagram-dialog"), body=document.querySelector("#dialog-body");
-    document.querySelector("#dialog-title").textContent=`${viewTitle} — ${diagram.subtitle}`;
-    body.innerHTML=`<div class="mermaid">${diagram.source}</div>`;
-    mermaid.run({nodes:body.querySelectorAll(".mermaid")});
-    dialog.showModal();
-  }
-  document.querySelector("#dialog-close").addEventListener("click",()=>document.querySelector("#diagram-dialog").close());
-  const response=await fetch("./architecture-views.md");
-  if (!response.ok) throw new Error(`Cannot load architecture views: ${response.status}`);
-  const groups=parse(await response.text());
-  build(groups);
-  await mermaid.run({querySelector:".mermaid"});
+  import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
+  mermaid.initialize({
+    startOnLoad: true,
+    securityLevel: 'strict',
+    theme: window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'default',
+    flowchart: { curve: 'basis', htmlLabels: true }
+  });
 </script>
 </body>
 </html>
