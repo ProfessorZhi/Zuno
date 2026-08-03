@@ -1,0 +1,129 @@
+{
+  "block_reason": "knowledge_version_dependency_missing",
+  "blocked_at": "2026-08-03T13:58:08.191350+00:00",
+  "corpus_hash": "749b932786416ea0c4fd35effa0e0bc6722ab5acc300fe1dde3cb7549d5b50e4",
+  "dataset_hash": "b7832e537dbaab14a7d664f334676120f10b86aa8b7efddfc7220bc7bc915f0c",
+  "dependency": {
+    "dependency_head_sha": null,
+    "dependency_pr": null,
+    "knowledge_version_id": null
+  },
+  "elapsed_seconds": 0.016,
+  "evidence_hash": "0f31ab1acfc9ea614258e6c376b793b3999d7101d0a08509f30642382f1843a0",
+  "evidence_kind": "four_profile_runtime",
+  "gold_isolation": {
+    "forbidden_field_count": 0,
+    "request_forbidden_field_count": 0,
+    "request_forbidden_fields": [],
+    "request_scan_count": 320,
+    "scan_passed": true,
+    "trace_forbidden_field_count": 0,
+    "trace_forbidden_fields": [],
+    "trace_scan_file_count": 0,
+    "trace_scan_files": [],
+    "traces_available": false
+  },
+  "knowledge_version_id": null,
+  "metrics_computed": false,
+  "per_profile": {
+    "agentic_graphrag": {
+      "citation_evidence_ref": null,
+      "is_test_double": false,
+      "latency_ms": null,
+      "measurement_reason": "knowledge_version_dependency_missing:snapshot_activation_dependency_blocked,knowledge_version_dependency_missing",
+      "measurement_status": "BLOCKED",
+      "profile_id": "agentic_graphrag",
+      "profile_run_id": null,
+      "retrieval_evidence_ref": null,
+      "run_outcome": null,
+      "trace_ref": null,
+      "usage": null
+    },
+    "deep_graphrag": {
+      "citation_evidence_ref": null,
+      "is_test_double": false,
+      "latency_ms": null,
+      "measurement_reason": "knowledge_version_dependency_missing:snapshot_activation_dependency_blocked,knowledge_version_dependency_missing",
+      "measurement_status": "BLOCKED",
+      "profile_id": "deep_graphrag",
+      "profile_run_id": null,
+      "retrieval_evidence_ref": null,
+      "run_outcome": null,
+      "trace_ref": null,
+      "usage": null
+    },
+    "local_graphrag": {
+      "citation_evidence_ref": null,
+      "is_test_double": false,
+      "latency_ms": null,
+      "measurement_reason": "knowledge_version_dependency_missing:snapshot_activation_dependency_blocked,knowledge_version_dependency_missing",
+      "measurement_status": "BLOCKED",
+      "profile_id": "local_graphrag",
+      "profile_run_id": null,
+      "retrieval_evidence_ref": null,
+      "run_outcome": null,
+      "trace_ref": null,
+      "usage": null
+    },
+    "standard_rag": {
+      "citation_evidence_ref": null,
+      "is_test_double": false,
+      "latency_ms": null,
+      "measurement_reason": "knowledge_version_dependency_missing:snapshot_activation_dependency_blocked,knowledge_version_dependency_missing",
+      "measurement_status": "BLOCKED",
+      "profile_id": "standard_rag",
+      "profile_run_id": null,
+      "retrieval_evidence_ref": null,
+      "run_outcome": null,
+      "trace_ref": null,
+      "usage": null
+    }
+  },
+  "profile_count": 4,
+  "profile_run_ids": [],
+  "profiles": [
+    "standard_rag",
+    "local_graphrag",
+    "deep_graphrag",
+    "agentic_graphrag"
+  ],
+  "release_decision": {
+    "canonical_input_hash": "b857f23cbcb2a63bc25b89e7d1ba195f8cecbbdcedf8d849fcaff87fcbfe84db",
+    "closed_set_version": "closed-set-v3",
+    "comparability_fingerprint_hash": "7bc3d250280cf7f5821f7ce3778f6c2e7fe2ed27832d3416d6c5bc17ea16c59a",
+    "decision_engine_version": "phase22-release-decision-v3",
+    "decision_hash": "aebc93bb2d65236740a7b11b6a55390e0f15216546fcff7c60d790467067345d",
+    "evidence_refs": [],
+    "exit_code": 2,
+    "gate_results": [
+      {
+        "detail_kind": "not_measured_profiles",
+        "gate": "profile_measurement",
+        "metric": null,
+        "profile_id": "standard_rag",
+        "reason": "profile_not_measured"
+      }
+    ],
+    "profile_hashes": {},
+    "reason_codes": [
+      "profile_not_measured"
+    ],
+    "reproduce_command_template": "python -m tools.evals.zuno.rag_eval.run_phase22_release_decision --input-json <INPUT_JSON_PATH> --output-json <OUTPUT_JSON_PATH>",
+    "status": "BLOCKED"
+  },
+  "request_count": 320,
+  "runtime_isolation_validation": {
+    "case_count": 80,
+    "errors": [],
+    "forbidden_field_count": 0,
+    "passed": true,
+    "request_count": 320
+  },
+  "runtime_metrics_ref": null,
+  "schema_version": "1.0.0",
+  "snapshot_id": null,
+  "started_at": "2026-08-03T13:58:08.191350+00:00",
+  "status": "FOUR_PROFILE_RUNTIME_BLOCKED",
+  "track_id": "machine_attested_synthetic_regression",
+  "worker": "deepseek2-cc-b34c"
+}
