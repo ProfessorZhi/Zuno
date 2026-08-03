@@ -32,6 +32,7 @@ def _copy_fixture(tmp_path: Path) -> Path:
         "docs/evidence/goal05-phase22-blocked-benchmark/benchmark_manifest.json",
         "docs/evidence/goal05-phase22-blocked-benchmark/metrics.json",
         "docs/evidence/goal05-phase22-public-benchmark-review-pack/integrity_report.json",
+        "docs/evidence/goal05-phase22-synthetic-benchmark/INVALIDATION_NOTICE.md",
     ]
     for relative in paths:
         source = REPO_ROOT / relative
@@ -138,3 +139,28 @@ def test_blocked_benchmark_missing_artifact_fails(tmp_path: Path) -> None:
     errors = verifier.verify_phase22_completion_blockers(fixture)
 
     assert any("missing blocked benchmark artifact" in error for error in errors)
+
+
+def test_missing_synthetic_invalidation_notice_fails(tmp_path: Path) -> None:
+    verifier = _load_verifier()
+    fixture = _copy_fixture(tmp_path)
+    notice_path = fixture / "docs/evidence/goal05-phase22-synthetic-benchmark/INVALIDATION_NOTICE.md"
+    notice_path.unlink()
+
+    errors = verifier.verify_phase22_completion_blockers(fixture)
+
+    assert any("missing required PHASE22 closure evidence" in error for error in errors)
+
+
+def test_synthetic_invalidation_notice_must_preserve_runtime_boundary(tmp_path: Path) -> None:
+    verifier = _load_verifier()
+    fixture = _copy_fixture(tmp_path)
+    notice_path = fixture / "docs/evidence/goal05-phase22-synthetic-benchmark/INVALIDATION_NOTICE.md"
+    notice_path.write_text(
+        "# INVALIDATION NOTICE\n\nThis benchmark is fine.\n",
+        encoding="utf-8",
+    )
+
+    errors = verifier.verify_phase22_completion_blockers(fixture)
+
+    assert any("synthetic benchmark invalidation notice missing" in error for error in errors)
