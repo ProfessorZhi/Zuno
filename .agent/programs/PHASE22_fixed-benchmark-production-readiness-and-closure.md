@@ -114,6 +114,7 @@ docs/evidence/**
 git diff --check
 python tools/scripts/verify_current_program.py
 python tools/scripts/verify_phase22_completion_blockers.py
+python tools/scripts/verify_phase22_synthetic_truth_boundary.py
 python tools/scripts/verify_phase22_cleanup_boundary.py
 python tools/scripts/verify_repo_structure.py
 python .agent/scripts/verify_agent_system.py
