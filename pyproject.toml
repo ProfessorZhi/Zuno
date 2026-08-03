@@ -1,7 +1,7 @@
 [tool.poetry]
 name = "zuno"
 version = "2.2.0"
-description = "A personal agent workspace platform for MCP, skills, knowledge and desktop execution"
+description = "A governed enterprise Agent and Agentic GraphRAG platform with separated clients and a LangGraph Single Controller backend"
 authors = ["ProfessorZhi"]
 readme = "README.md"
 packages = [
@@ -63,4 +63,3 @@ pyarrow = "^18.1.0"
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
-
