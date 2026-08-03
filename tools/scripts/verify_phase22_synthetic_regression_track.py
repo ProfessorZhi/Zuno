@@ -403,6 +403,8 @@ def verify_phase22_synthetic_regression_track() -> list[str]:
         errors.append("snapshot activation manifest report hash mismatch")
     if current_evidence.get("snapshot_activation_manifest_hash") != snapshot_activation_manifest.get("snapshot_activation_manifest_hash"):
         errors.append("track_manifest current_evidence snapshot_activation_manifest_hash mismatch")
+    if current_evidence.get("neo4j_path_visibility_receipt_contract") != "CONTRACT_DEFINED_RUNTIME_NOT_EXECUTED":
+        errors.append("track_manifest current_evidence neo4j path receipt contract status mismatch")
     report_field_pairs = {
         "candidate_derivation_valid_count": "derivation_valid_count",
         "candidate_source_evidence_valid_count": "source_evidence_valid_count",
@@ -428,6 +430,8 @@ def verify_phase22_synthetic_regression_track() -> list[str]:
         "PR #100",
         "PR #104",
         "PR #105",
+        "CONTRACT_DEFINED_RUNTIME_NOT_EXECUTED",
+        "two-hop runtime read-back：NOT_RUN",
     ]
     for phrase in required_report_phrases:
         if phrase not in report:

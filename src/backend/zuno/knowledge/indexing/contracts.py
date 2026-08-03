@@ -1,11 +1,15 @@
 from __future__ import annotations
 
+import hashlib
+import json
+from datetime import datetime
 from typing import Any, Literal
 
 from pydantic import BaseModel, Field
 
 
 IndexTarget = Literal["bm25", "vector", "graph"]
+Neo4jPathVisibilityStatus = Literal["visible", "hidden", "inconsistent"]
 
 
 class IndexAdapterContract(BaseModel):
@@ -68,10 +72,146 @@ class IndexQueryResult(BaseModel):
     manifest: IndexJobManifest
 
 
+class Neo4jPathVisibilityReceipt(BaseModel):
+    receipt_id: str
+    tenant_id: str
+    workspace_id: str
+    knowledge_version_id: str
+    snapshot_id: str
+    query_kind: str
+    start_entity_ref: str
+    end_entity_ref: str
+    relation_kinds: list[str] = Field(default_factory=list)
+    path_length: int
+    matched_node_refs: list[str] = Field(default_factory=list)
+    matched_relation_refs: list[str] = Field(default_factory=list)
+    adapter_execution_ref: str
+    visibility_status: Neo4jPathVisibilityStatus
+    observed_at: datetime
+    config_hash: str
+    payload_hash: str
+
+
+def build_neo4j_path_visibility_receipt(
+    *,
+    tenant_id: str,
+    workspace_id: str,
+    knowledge_version_id: str,
+    snapshot_id: str,
+    query_kind: str,
+    start_entity_ref: str,
+    end_entity_ref: str,
+    relation_kinds: list[str],
+    matched_node_refs: list[str],
+    matched_relation_refs: list[str],
+    adapter_execution_ref: str,
+    visibility_status: Neo4jPathVisibilityStatus,
+    observed_at: datetime,
+    config_hash: str,
+) -> Neo4jPathVisibilityReceipt:
+    path_length = len(matched_relation_refs)
+    payload = {
+        "tenant_id": tenant_id,
+        "workspace_id": workspace_id,
+        "knowledge_version_id": knowledge_version_id,
+        "snapshot_id": snapshot_id,
+        "query_kind": query_kind,
+        "start_entity_ref": start_entity_ref,
+        "end_entity_ref": end_entity_ref,
+        "relation_kinds": list(relation_kinds),
+        "path_length": path_length,
+        "matched_node_refs": list(matched_node_refs),
+        "matched_relation_refs": list(matched_relation_refs),
+        "adapter_execution_ref": adapter_execution_ref,
+        "visibility_status": visibility_status,
+        "observed_at": observed_at.isoformat(),
+        "config_hash": config_hash,
+    }
+    payload_hash = _stable_contract_hash(payload)
+    receipt = Neo4jPathVisibilityReceipt(
+        receipt_id=f"neo4j-path-visibility:{payload_hash[:16]}",
+        payload_hash=payload_hash,
+        **payload,
+    )
+    errors = validate_neo4j_path_visibility_receipt(receipt)
+    if errors:
+        raise ValueError("; ".join(errors))
+    return receipt
+
+
+def validate_neo4j_path_visibility_receipt(receipt: Neo4jPathVisibilityReceipt | dict[str, Any]) -> list[str]:
+    model = receipt if isinstance(receipt, Neo4jPathVisibilityReceipt) else Neo4jPathVisibilityReceipt(**receipt)
+    errors: list[str] = []
+    required_text_fields = [
+        "receipt_id",
+        "tenant_id",
+        "workspace_id",
+        "knowledge_version_id",
+        "snapshot_id",
+        "query_kind",
+        "start_entity_ref",
+        "end_entity_ref",
+        "adapter_execution_ref",
+        "config_hash",
+        "payload_hash",
+    ]
+    for field_name in required_text_fields:
+        if not str(getattr(model, field_name) or "").strip():
+            errors.append(f"{field_name} is required")
+    if model.visibility_status == "visible":
+        if model.path_length < 1:
+            errors.append("visible path receipt requires path_length >= 1")
+        if len(model.matched_relation_refs) != model.path_length:
+            errors.append("matched_relation_refs must match path_length")
+        if len(model.relation_kinds) != model.path_length:
+            errors.append("relation_kinds must match path_length")
+        if len(model.matched_node_refs) != model.path_length + 1:
+            errors.append("matched_node_refs must contain path_length + 1 nodes")
+        if model.matched_node_refs and model.matched_node_refs[0] != model.start_entity_ref:
+            errors.append("matched_node_refs must start with start_entity_ref")
+        if model.matched_node_refs and model.matched_node_refs[-1] != model.end_entity_ref:
+            errors.append("matched_node_refs must end with end_entity_ref")
+    if model.visibility_status in {"hidden", "inconsistent"} and model.receipt_id.startswith("neo4j-path-visibility:"):
+        errors.append("hidden or inconsistent path readback must not emit a valid visibility receipt_id")
+    expected_hash = _stable_contract_hash(
+        {
+            "tenant_id": model.tenant_id,
+            "workspace_id": model.workspace_id,
+            "knowledge_version_id": model.knowledge_version_id,
+            "snapshot_id": model.snapshot_id,
+            "query_kind": model.query_kind,
+            "start_entity_ref": model.start_entity_ref,
+            "end_entity_ref": model.end_entity_ref,
+            "relation_kinds": model.relation_kinds,
+            "path_length": model.path_length,
+            "matched_node_refs": model.matched_node_refs,
+            "matched_relation_refs": model.matched_relation_refs,
+            "adapter_execution_ref": model.adapter_execution_ref,
+            "visibility_status": model.visibility_status,
+            "observed_at": model.observed_at.isoformat(),
+            "config_hash": model.config_hash,
+        }
+    )
+    if model.payload_hash != expected_hash:
+        errors.append("payload_hash mismatch")
+    if model.receipt_id != f"neo4j-path-visibility:{expected_hash[:16]}":
+        errors.append("receipt_id must be derived from payload_hash")
+    return errors
+
+
+def _stable_contract_hash(payload: dict[str, Any]) -> str:
+    encoded = json.dumps(payload, sort_keys=True, separators=(",", ":"), default=str)
+    return hashlib.sha256(encoded.encode("utf-8")).hexdigest()
+
+
 __all__ = [
     "IndexAdapterContract",
     "IndexJobManifest",
     "IndexQueryResult",
     "IndexTarget",
     "KnowledgeSpaceManifest",
+    "Neo4jPathVisibilityReceipt",
+    "Neo4jPathVisibilityStatus",
+    "build_neo4j_path_visibility_receipt",
+    "validate_neo4j_path_visibility_receipt",
 ]

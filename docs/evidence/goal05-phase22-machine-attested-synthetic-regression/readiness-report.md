@@ -126,6 +126,16 @@ seed dataset 只是 7-case scaffold，不是完整 Track 证据；完整 Track �
 - activation receipt ref：null
 - snapshot activation manifest hash：`8fcc6e3c2d5756f700ccab0168716926760f336e7497531ab634e5c324493c6b`
 
+## Neo4j Path Visibility Receipt Contract 当前进度
+
+已在 Knowledge Indexing owner 边界定义最小 Neo4j Path Visibility Receipt Contract，并用 focused unit test 固定两跳 path read-back receipt 的字段、hash、路径长度、relation kind、start/end entity 和 fail-closed 校验。该 evidence 只证明 contract 已存在，不证明 Neo4j adapter 已真实产生该 receipt。
+
+- contract status：`CONTRACT_DEFINED_RUNTIME_NOT_EXECUTED`
+- owner：Knowledge / Neo4j Graph Index Adapter 或正式 Graph Read-back Runtime
+- required fields：receipt_id、tenant_id、workspace_id、knowledge_version_id、snapshot_id、query_kind、start_entity_ref、end_entity_ref、relation_kinds、path_length、matched_node_refs、matched_relation_refs、adapter_execution_ref、visibility_status、observed_at、config_hash
+- runtime receipt count：0
+- two-hop runtime read-back：NOT_RUN
+
 ## 历史 PR 分类
 
 本轮历史审查范围：PR #100、PR #104、PR #105。
@@ -142,7 +152,7 @@ seed dataset 只是 7-case scaffold，不是完整 Track 证据；完整 Track �
 - Ingestion：已有完整 Corpus 的 Source Upload input manifest 和 Canonical IR manifest candidate；仍没有 Source Upload 到 Snapshot Activation 的真实 runtime ID 链。
 - Index：已有三索引 Index Job manifest candidate 和缺 receipt 时禁止 Snapshot Activation 的 blocked manifest；仍没有 ES/Milvus/Neo4j 真实写入、回读或 visibility receipt。
 - Embedding：没有 formal Embedding Gateway provider/model/dimension/config hash。
-- Graph：缺最小 Neo4j Path Visibility Receipt Contract 的实现与 owner runtime 产出。
+- Graph：最小 Neo4j Path Visibility Receipt Contract 已定义并有 focused unit 证据；仍缺 owner runtime 真实两跳 read-back 产出。
 - Profiles：四 Profile 仍没有同 Snapshot、不同正式路径的 run ids。
 - Evaluation：已有非零阈值集合、当前 `BLOCKED` synthetic release decision 和 request-level Gold 隔离证明；仍缺四 Profile Trace Gold 隔离证明、runtime metrics 和真实阈值评估结果。
 - Fault：Fault/Security/Resume/Idempotency matrix 未执行。

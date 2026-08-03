@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+from datetime import datetime, timezone
 
 
 def _sample_document():
@@ -685,3 +686,72 @@ def test_index_runtime_normalized_phrase_handles_punctuation_and_newlines() -> N
 
     assert first_document["retriever_source"] == "normalized_phrase"
     assert first_document["candidate_reason"] == "normalized_phrase_match"
+
+
+def test_neo4j_path_visibility_receipt_contract_accepts_two_hop_readback() -> None:
+    from zuno.knowledge.indexing import (
+        build_neo4j_path_visibility_receipt,
+        validate_neo4j_path_visibility_receipt,
+    )
+
+    receipt = build_neo4j_path_visibility_receipt(
+        tenant_id="tenant_auroralis",
+        workspace_id="workspace_finance",
+        knowledge_version_id="kv_2026_04",
+        snapshot_id="snapshot_2026_04",
+        query_kind="two_hop_path",
+        start_entity_ref="entity:auroralis:console",
+        end_entity_ref="entity:auroralis:audit",
+        relation_kinds=["OWNED_BY", "REVIEWED_BY"],
+        matched_node_refs=[
+            "entity:auroralis:console",
+            "entity:auroralis:platform",
+            "entity:auroralis:audit",
+        ],
+        matched_relation_refs=[
+            "relation:console-owned-by-platform",
+            "relation:platform-reviewed-by-audit",
+        ],
+        adapter_execution_ref="neo4j-exec:readback:001",
+        visibility_status="visible",
+        observed_at=datetime(2026, 8, 3, 9, 30, tzinfo=timezone.utc),
+        config_hash="sha256:neo4j-config-v1",
+    )
+
+    assert receipt.receipt_id.startswith("neo4j-path-visibility:")
+    assert receipt.path_length == 2
+    assert receipt.visibility_status == "visible"
+    assert validate_neo4j_path_visibility_receipt(receipt) == []
+
+
+def test_neo4j_path_visibility_receipt_rejects_missing_snapshot_and_wrong_path_shape() -> None:
+    from zuno.knowledge.indexing import Neo4jPathVisibilityReceipt, validate_neo4j_path_visibility_receipt
+
+    receipt = Neo4jPathVisibilityReceipt(
+        receipt_id="neo4j-path-visibility:forged",
+        tenant_id="tenant_auroralis",
+        workspace_id="workspace_finance",
+        knowledge_version_id="kv_2026_04",
+        snapshot_id="",
+        query_kind="two_hop_path",
+        start_entity_ref="entity:auroralis:console",
+        end_entity_ref="entity:auroralis:audit",
+        relation_kinds=["OWNED_BY"],
+        path_length=2,
+        matched_node_refs=["entity:auroralis:wrong", "entity:auroralis:audit"],
+        matched_relation_refs=["relation:console-owned-by-platform"],
+        adapter_execution_ref="neo4j-exec:readback:001",
+        visibility_status="visible",
+        observed_at=datetime(2026, 8, 3, 9, 30, tzinfo=timezone.utc),
+        config_hash="sha256:neo4j-config-v1",
+        payload_hash="forged",
+    )
+
+    errors = validate_neo4j_path_visibility_receipt(receipt)
+
+    assert "snapshot_id is required" in errors
+    assert "matched_relation_refs must match path_length" in errors
+    assert "relation_kinds must match path_length" in errors
+    assert "matched_node_refs must contain path_length + 1 nodes" in errors
+    assert "matched_node_refs must start with start_entity_ref" in errors
+    assert "payload_hash mismatch" in errors

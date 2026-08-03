@@ -9,7 +9,17 @@ from .adapters import (
     adapter_status_for_targets,
     external_adapter_bindings,
 )
-from .contracts import IndexAdapterContract, IndexJobManifest, IndexQueryResult, IndexTarget, KnowledgeSpaceManifest
+from .contracts import (
+    IndexAdapterContract,
+    IndexJobManifest,
+    IndexQueryResult,
+    IndexTarget,
+    KnowledgeSpaceManifest,
+    Neo4jPathVisibilityReceipt,
+    Neo4jPathVisibilityStatus,
+    build_neo4j_path_visibility_receipt,
+    validate_neo4j_path_visibility_receipt,
+)
 from .runtime import KnowledgeIndexRuntime
 
 __all__ = [
@@ -25,7 +35,11 @@ __all__ = [
     "IndexTarget",
     "KnowledgeIndexRuntime",
     "KnowledgeSpaceManifest",
+    "Neo4jPathVisibilityReceipt",
+    "Neo4jPathVisibilityStatus",
     "adapter_status_for_bindings",
     "adapter_status_for_targets",
+    "build_neo4j_path_visibility_receipt",
     "external_adapter_bindings",
+    "validate_neo4j_path_visibility_receipt",
 ]
