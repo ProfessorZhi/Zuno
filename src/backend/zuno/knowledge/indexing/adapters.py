@@ -1,7 +1,9 @@
 from __future__ import annotations
 
 import asyncio
+import hashlib
 import inspect
+import json
 from datetime import datetime, timezone
 from typing import Any
 from uuid import uuid4
@@ -98,6 +100,8 @@ class ExternalServiceIndexAdapterBinding:
         document: Any,
         lineage: dict[str, Any],
         graph_project_id: str | None,
+        tenant_id: str = "",
+        recreate: bool = True,
     ) -> list[dict]:
         indexed_documents = self._canonical_documents(
             runtime=runtime,
@@ -105,12 +109,14 @@ class ExternalServiceIndexAdapterBinding:
             document=document,
             lineage=lineage,
             graph_project_id=graph_project_id,
+            tenant_id=tenant_id,
         )
         _call_client(
             self.client,
             ("index_documents", "insert_documents", "index"),
             self.index_name,
             indexed_documents,
+            recreate=recreate,
         )
         return indexed_documents
 
@@ -142,13 +148,16 @@ class ExternalServiceIndexAdapterBinding:
         document: Any,
         lineage: dict[str, Any],
         graph_project_id: str | None,
+        tenant_id: str = "",
     ) -> list[dict]:
         if self.target == "bm25":
-            return runtime._bm25_documents(handoff.bm25_documents, document, lineage)
+            return runtime._bm25_documents(handoff.bm25_documents, document, lineage, tenant_id=tenant_id)
         if self.target == "vector":
-            return runtime._vector_documents(handoff.vector_documents, document, lineage)
+            return runtime._vector_documents(handoff.vector_documents, document, lineage, tenant_id=tenant_id)
         if self.target == "graph":
-            return runtime._graph_documents(handoff.graphrag_documents, document, graph_project_id, lineage)
+            return runtime._graph_documents(
+                handoff.graphrag_documents, document, graph_project_id, lineage, tenant_id=tenant_id
+            )
         raise ValueError(f"unsupported external index target: {self.target}")
 
 
@@ -200,14 +209,22 @@ class Neo4jGraphIndexClient:
         self.database = database
         self._driver_factory = driver_factory
 
-    def index_documents(self, index_name: str, documents: list[dict]) -> None:
+    def index_documents(
+        self,
+        index_name: str,
+        documents: list[dict],
+        *,
+        tenant_id: str | None = None,
+        recreate: bool = True,
+    ) -> None:
         driver = self._driver()
         try:
             with driver.session(database=self.database) as session:
-                session.run(
-                    "MATCH (c:ZunoIndexChunk {index_name: $index_name}) DETACH DELETE c",
-                    {"index_name": index_name},
-                )
+                if recreate:
+                    session.run(
+                        "MATCH (c:ZunoIndexChunk {index_name: $index_name}) DETACH DELETE c",
+                        {"index_name": index_name},
+                    )
                 for document in documents:
                     metadata = dict(document.get("metadata") or {})
                     chunk_id = str(document.get("chunk_id") or metadata.get("chunk_id") or uuid4().hex)
@@ -215,6 +232,7 @@ class Neo4jGraphIndexClient:
                         """
                         MERGE (c:ZunoIndexChunk {index_name: $index_name, chunk_id: $chunk_id})
                         SET c.document_id = $document_id,
+                            c.tenant_id = $tenant_id,
                             c.workspace_id = $workspace_id,
                             c.content = $content,
                             c.source_type = $source_type,
@@ -224,6 +242,7 @@ class Neo4jGraphIndexClient:
                             "index_name": index_name,
                             "chunk_id": chunk_id,
                             "document_id": str(document.get("document_id") or metadata.get("document_id") or ""),
+                            "tenant_id": str(tenant_id or document.get("tenant_id") or metadata.get("tenant_id") or ""),
                             "workspace_id": str(document.get("workspace_id") or metadata.get("workspace_id") or ""),
                             "content": str(document.get("content") or ""),
                             "source_type": str(document.get("source_type") or "graph"),
@@ -336,7 +355,7 @@ class Neo4jGraphIndexClient:
         finally:
             driver.close()
 
-    def verify_path_visibility_receipt(
+    def query_path(
         self,
         index_name: str,
         *,
@@ -347,10 +366,14 @@ class Neo4jGraphIndexClient:
         start_entity_ref: str,
         end_entity_ref: str,
         relation_kinds: list[str],
-        query_kind: str = "directed_path",
-        config_hash: str,
-        observed_at: datetime | None = None,
-    ) -> Neo4jPathVisibilityReceipt | None:
+    ) -> dict[str, Any] | None:
+        """Raw directed-path readback (store level), without receipt emission.
+
+        Returns the matched node/relation refs for the first matching path or
+        None when the scoped path is not visible. Receipt building is a
+        separate, canonical-owner step that additionally requires a real
+        knowledge_version_id / snapshot_id scope.
+        """
         driver = self._driver()
         try:
             with driver.session(database=self.database) as session:
@@ -390,7 +413,35 @@ class Neo4jGraphIndexClient:
             driver.close()
         if not rows:
             return None
-        row = rows[0]
+        return dict(rows[0])
+
+    def verify_path_visibility_receipt(
+        self,
+        index_name: str,
+        *,
+        tenant_id: str,
+        workspace_id: str,
+        knowledge_version_id: str,
+        snapshot_id: str,
+        start_entity_ref: str,
+        end_entity_ref: str,
+        relation_kinds: list[str],
+        query_kind: str = "directed_path",
+        config_hash: str,
+        observed_at: datetime | None = None,
+    ) -> Neo4jPathVisibilityReceipt | None:
+        row = self.query_path(
+            index_name,
+            tenant_id=tenant_id,
+            workspace_id=workspace_id,
+            knowledge_version_id=knowledge_version_id,
+            snapshot_id=snapshot_id,
+            start_entity_ref=start_entity_ref,
+            end_entity_ref=end_entity_ref,
+            relation_kinds=relation_kinds,
+        )
+        if row is None:
+            return None
         return build_neo4j_path_visibility_receipt(
             tenant_id=tenant_id,
             workspace_id=workspace_id,
@@ -420,29 +471,37 @@ class ElasticsearchBm25IndexClient:
     def __init__(self, *, base_url: str = "http://localhost:9200") -> None:
         self.base_url = base_url.rstrip("/")
 
-    def index_documents(self, index_name: str, documents: list[dict]) -> None:
+    def index_documents(
+        self,
+        index_name: str,
+        documents: list[dict],
+        *,
+        recreate: bool = True,
+    ) -> None:
         import urllib.error
 
-        try:
-            _http_json("DELETE", f"{self.base_url}/{index_name}")
-        except urllib.error.HTTPError as exc:
-            if exc.code != 404:
-                raise
-        _http_json(
-            "PUT",
-            f"{self.base_url}/{index_name}",
-            {
-                "mappings": {
-                    "properties": {
-                        "chunk_id": {"type": "keyword"},
-                        "document_id": {"type": "keyword"},
-                        "workspace_id": {"type": "keyword"},
-                        "content": {"type": "text"},
-                        "source_type": {"type": "keyword"},
+        if recreate:
+            try:
+                _http_json("DELETE", f"{self.base_url}/{index_name}")
+            except urllib.error.HTTPError as exc:
+                if exc.code != 404:
+                    raise
+            _http_json(
+                "PUT",
+                f"{self.base_url}/{index_name}",
+                {
+                    "mappings": {
+                        "properties": {
+                            "chunk_id": {"type": "keyword"},
+                            "document_id": {"type": "keyword"},
+                            "tenant_id": {"type": "keyword"},
+                            "workspace_id": {"type": "keyword"},
+                            "content": {"type": "text"},
+                            "source_type": {"type": "keyword"},
+                        }
                     }
-                }
-            },
-        )
+                },
+            )
         for document in documents:
             chunk_id = str(document.get("chunk_id") or uuid4().hex)
             _http_json(
@@ -451,6 +510,7 @@ class ElasticsearchBm25IndexClient:
                 {
                     "chunk_id": chunk_id,
                     "document_id": str(document.get("document_id") or ""),
+                    "tenant_id": str(document.get("tenant_id") or ""),
                     "workspace_id": str(document.get("workspace_id") or ""),
                     "content": str(document.get("content") or ""),
                     "source_type": str(document.get("source_type") or "bm25"),
@@ -458,17 +518,47 @@ class ElasticsearchBm25IndexClient:
             )
         _http_json("POST", f"{self.base_url}/{index_name}/_refresh")
 
-    def search_documents(self, query: str, index_name: str) -> list[dict]:
-        response = _http_json(
-            "POST",
-            f"{self.base_url}/{index_name}/_search",
-            {
-                "query": {"match": {"content": query}},
-                "size": 25,
-            },
-        )
+    def search_documents(
+        self,
+        query: str,
+        index_name: str,
+        *,
+        tenant_id: str | None = None,
+        workspace_id: str | None = None,
+    ) -> list[dict]:
+        body: dict[str, Any] = {"query": {"match": {"content": query}}, "size": 25}
+        filters = _scope_filters(tenant_id=tenant_id, workspace_id=workspace_id)
+        if filters:
+            body["query"] = {"bool": {"must": body["query"], "filter": filters}}
+        response = _http_json("POST", f"{self.base_url}/{index_name}/_search", body)
         hits = response.get("hits", {}).get("hits", [])
         return [dict(hit.get("_source") or {}) for hit in hits]
+
+    def fetch_document(self, index_name: str, chunk_id: str) -> dict | None:
+        """Read a single document back by its chunk_id (document_id readback)."""
+        import urllib.error
+
+        try:
+            response = _http_json("GET", f"{self.base_url}/{index_name}/_doc/{chunk_id}")
+        except urllib.error.HTTPError as exc:
+            if exc.code == 404:
+                return None
+            raise
+        return dict(response.get("_source") or {})
+
+    def count_documents(
+        self,
+        index_name: str,
+        *,
+        tenant_id: str | None = None,
+        workspace_id: str | None = None,
+    ) -> int:
+        filters = _scope_filters(tenant_id=tenant_id, workspace_id=workspace_id)
+        body: dict[str, Any] = {}
+        if filters:
+            body = {"query": {"bool": {"filter": filters}}}
+        response = _http_json("POST", f"{self.base_url}/{index_name}/_count", body)
+        return int(response.get("count") or 0)
 
 
 class MilvusVectorIndexClient:
@@ -501,13 +591,20 @@ class MilvusVectorIndexClient:
         self._collection_factory = collection_factory
         self._collection_loader = collection_loader
 
-    def index_documents(self, index_name: str, documents: list[dict]) -> None:
-        collection = self._recreate_collection(index_name)
+    def index_documents(
+        self,
+        index_name: str,
+        documents: list[dict],
+        *,
+        recreate: bool = True,
+    ) -> None:
+        collection = self._recreate_collection(index_name) if recreate else self._load_collection(index_name)
         embeddings = self._embed_documents([str(document.get("content") or "") for document in documents])
         rows = [
             {
                 "chunk_id": str(document.get("chunk_id") or uuid4().hex),
                 "document_id": str(document.get("document_id") or ""),
+                "tenant_id": str(document.get("tenant_id") or ""),
                 "workspace_id": str(document.get("workspace_id") or ""),
                 "content": str(document.get("content") or ""),
                 "embedding": embeddings[index],
@@ -519,15 +616,29 @@ class MilvusVectorIndexClient:
             collection.flush()
         collection.load()
 
-    def search_documents(self, query: str, index_name: str) -> list[dict]:
+    def search_documents(
+        self,
+        query: str,
+        index_name: str,
+        *,
+        tenant_id: str | None = None,
+        workspace_id: str | None = None,
+    ) -> list[dict]:
         collection = self._load_collection(index_name)
         collection.load()
+        search_params: dict[str, Any] = {
+            "metric_type": "L2",
+            "params": {"nprobe": 8},
+        }
+        expr = _scope_expr(tenant_id=tenant_id, workspace_id=workspace_id)
+        if expr:
+            search_params["expr"] = expr
         results = collection.search(
             data=[self._embed_query(query)],
             anns_field="embedding",
-            param={"metric_type": "L2", "params": {"nprobe": 8}},
+            param=search_params,
             limit=25,
-            output_fields=["chunk_id", "document_id", "workspace_id", "content"],
+            output_fields=["chunk_id", "document_id", "tenant_id", "workspace_id", "content"],
         )
         documents: list[dict] = []
         for hit in results[0]:
@@ -536,12 +647,43 @@ class MilvusVectorIndexClient:
                 {
                     "chunk_id": entity.get("chunk_id"),
                     "document_id": entity.get("document_id"),
+                    "tenant_id": entity.get("tenant_id"),
                     "workspace_id": entity.get("workspace_id"),
                     "content": entity.get("content"),
                     "source_type": "vector",
                 }
             )
         return documents
+
+    def fetch_document(self, index_name: str, chunk_id: str) -> dict | None:
+        """Read a single row back by chunk_id (primary-key-adjacent readback)."""
+        collection = self._load_collection(index_name)
+        collection.load()
+        rows = collection.query(
+            expr=f'chunk_id == "{chunk_id}"',
+            output_fields=["chunk_id", "document_id", "tenant_id", "workspace_id", "content"],
+        )
+        if not rows:
+            return None
+        return dict(rows[0])
+
+    def count_documents(
+        self,
+        index_name: str,
+        *,
+        tenant_id: str | None = None,
+        workspace_id: str | None = None,
+    ) -> int:
+        collection = self._load_collection(index_name)
+        collection.load()
+        expr = _scope_expr(tenant_id=tenant_id, workspace_id=workspace_id)
+        if expr:
+            rows = collection.query(
+                expr=expr,
+                output_fields=["count(*)"],
+            )
+            return int(rows[0]["count(*)"] if rows else 0)
+        return int(collection.num_entities)
 
     def embedding_attestation(self) -> dict[str, Any]:
         if self.embedding_gateway is None:
@@ -598,6 +740,7 @@ class MilvusVectorIndexClient:
             FieldSchema(name="id", dtype=DataType.INT64, is_primary=True, auto_id=True),
             FieldSchema(name="chunk_id", dtype=DataType.VARCHAR, max_length=256),
             FieldSchema(name="document_id", dtype=DataType.VARCHAR, max_length=128),
+            FieldSchema(name="tenant_id", dtype=DataType.VARCHAR, max_length=128),
             FieldSchema(name="workspace_id", dtype=DataType.VARCHAR, max_length=128),
             FieldSchema(name="content", dtype=DataType.VARCHAR, max_length=4096),
             FieldSchema(name="embedding", dtype=DataType.FLOAT_VECTOR, dim=self.dim),
@@ -612,6 +755,56 @@ class MilvusVectorIndexClient:
         from pymilvus import Collection
 
         return Collection(index_name)
+
+
+def compute_embedding_config_hash(
+    *,
+    provider: str,
+    model: str,
+    dimension: int,
+    base_url: str | None = None,
+) -> str:
+    """Freeze the formal embedding config into a stable config hash.
+
+    The frozen tuple (provider / model / dimension / base_url) is the
+    canonical identity of the embedding capability for a KnowledgeVersion.
+    A config change produces a different hash and therefore a different
+    knowledge version scope; the hash never contains credentials.
+    """
+    payload = {
+        "provider": str(provider),
+        "model": str(model),
+        "dimension": int(dimension),
+        "base_url": str(base_url or ""),
+    }
+    encoded = json.dumps(payload, sort_keys=True, separators=(",", ":"))
+    return f"sha256:{hashlib.sha256(encoded.encode('utf-8')).hexdigest()}"
+
+
+def _scope_filters(
+    *,
+    tenant_id: str | None = None,
+    workspace_id: str | None = None,
+) -> list[dict[str, Any]]:
+    filters: list[dict[str, Any]] = []
+    if tenant_id:
+        filters.append({"term": {"tenant_id": tenant_id}})
+    if workspace_id:
+        filters.append({"term": {"workspace_id": workspace_id}})
+    return filters
+
+
+def _scope_expr(
+    *,
+    tenant_id: str | None = None,
+    workspace_id: str | None = None,
+) -> str:
+    clauses: list[str] = []
+    if tenant_id:
+        clauses.append(f'tenant_id == "{tenant_id}"')
+    if workspace_id:
+        clauses.append(f'workspace_id == "{workspace_id}"')
+    return " and ".join(clauses)
 
 
 def adapter_status_for_targets(targets: list[IndexTarget]) -> dict[str, str]:
@@ -633,13 +826,31 @@ def adapter_status_for_bindings(targets: list[IndexTarget], bindings: dict[Index
     return status
 
 
-def _call_client(client: Any, method_names: tuple[str, ...], *args: Any) -> Any:
+def _call_client(client: Any, method_names: tuple[str, ...], *args: Any, **kwargs: Any) -> Any:
     for method_name in method_names:
         method = getattr(client, method_name, None)
         if method is None:
             continue
-        return _resolve_maybe_awaitable(method(*args))
+        accepted = {
+            key: value
+            for key, value in kwargs.items()
+            if _method_accepts_kwarg(method, key)
+        }
+        return _resolve_maybe_awaitable(method(*args, **accepted))
     raise RuntimeError(f"external index client does not implement any of: {', '.join(method_names)}")
+
+
+def _method_accepts_kwarg(method: Any, name: str) -> bool:
+    import inspect
+
+    try:
+        parameters = inspect.signature(method).parameters
+    except (TypeError, ValueError):
+        return False
+    return name in parameters or any(
+        parameter.kind == inspect.Parameter.VAR_KEYWORD
+        for parameter in parameters.values()
+    )
 
 
 def _resolve_maybe_awaitable(value: Any) -> Any:
@@ -755,5 +966,6 @@ __all__ = [
     "Neo4jGraphIndexClient",
     "adapter_status_for_bindings",
     "adapter_status_for_targets",
+    "compute_embedding_config_hash",
     "external_adapter_bindings",
 ]

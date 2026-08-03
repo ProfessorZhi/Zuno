@@ -32,13 +32,17 @@ class LocalIndexAdapterBinding:
         document: CanonicalDocumentIR,
         lineage: dict[str, Any],
         graph_project_id: str | None,
+        tenant_id: str = "",
+        recreate: bool = True,
     ) -> list[dict]:
         if self.target == "bm25":
-            return runtime._bm25_documents(handoff.bm25_documents, document, lineage)
+            return runtime._bm25_documents(handoff.bm25_documents, document, lineage, tenant_id=tenant_id)
         if self.target == "vector":
-            return runtime._vector_documents(handoff.vector_documents, document, lineage)
+            return runtime._vector_documents(handoff.vector_documents, document, lineage, tenant_id=tenant_id)
         if self.target == "graph":
-            return runtime._graph_documents(handoff.graphrag_documents, document, graph_project_id, lineage)
+            return runtime._graph_documents(
+                handoff.graphrag_documents, document, graph_project_id, lineage, tenant_id=tenant_id
+            )
         raise ValueError(f"unsupported index target: {self.target}")
 
 
@@ -57,11 +61,13 @@ class KnowledgeIndexRuntime:
         knowledge_space_id: str,
         workspace_id: str,
         *,
+        tenant_id: str = "",
         graph_project_id: str | None = None,
     ) -> KnowledgeSpaceManifest:
         space = KnowledgeSpaceManifest(
             knowledge_space_id=knowledge_space_id,
             workspace_id=workspace_id,
+            tenant_id=tenant_id,
             graph_project_id=graph_project_id,
             index_version=f"idx_{uuid4().hex[:12]}",
             status="created",
@@ -79,6 +85,7 @@ class KnowledgeIndexRuntime:
         retry_count: int = 0,
         previous_job_id: str | None = None,
         parse_job_snapshot: ParseJobSnapshot | None = None,
+        recreate_indexes: bool = True,
     ) -> IndexJobManifest:
         space = self._require_space(knowledge_space_id)
         job_id = f"index_{uuid4().hex[:12]}"
@@ -119,12 +126,18 @@ class KnowledgeIndexRuntime:
         indexed_documents_by_target = {}
         for target in targets:
             adapter = self._adapter_for_target(target)
+            index_kwargs = {}
+            if _adapter_accepts_kwarg(adapter.index, "tenant_id"):
+                index_kwargs["tenant_id"] = space.tenant_id
+            if _adapter_accepts_kwarg(adapter.index, "recreate"):
+                index_kwargs["recreate"] = recreate_indexes
             indexed_documents = adapter.index(
                 runtime=self,
                 handoff=handoff,
                 document=document,
                 lineage=lineage,
                 graph_project_id=space.graph_project_id,
+                **index_kwargs,
             )
             self._indexes[knowledge_space_id][target] = indexed_documents
             indexed_documents_by_target[target] = indexed_documents
@@ -181,6 +194,11 @@ class KnowledgeIndexRuntime:
             return self._jobs[job_id]
         except KeyError as exc:
             raise KeyError(f"index job not found: {job_id}") from exc
+
+    def indexed_documents(self, knowledge_space_id: str, target: IndexTarget) -> list[dict]:
+        """Return the dispatch payloads written for a target (verification use)."""
+        self._require_space(knowledge_space_id)
+        return list(self._indexes.get(knowledge_space_id, {}).get(target, []))
 
     def retry_job(self, job_id: str, document: CanonicalDocumentIR) -> IndexJobManifest:
         previous = self.get_job_manifest(job_id)
@@ -321,6 +339,8 @@ class KnowledgeIndexRuntime:
         documents: list[dict],
         source: CanonicalDocumentIR,
         lineage: dict,
+        *,
+        tenant_id: str = "",
     ) -> list[dict]:
         return [
             _document_payload(
@@ -330,6 +350,7 @@ class KnowledgeIndexRuntime:
                 "bm25",
                 source,
                 lineage,
+                tenant_id=tenant_id,
             )
             for document in documents
         ]
@@ -339,6 +360,8 @@ class KnowledgeIndexRuntime:
         documents: list[dict],
         source: CanonicalDocumentIR,
         lineage: dict,
+        *,
+        tenant_id: str = "",
     ) -> list[dict]:
         return [
             _document_payload(
@@ -348,6 +371,7 @@ class KnowledgeIndexRuntime:
                 "vector",
                 source,
                 lineage,
+                tenant_id=tenant_id,
             )
             for document in documents
         ]
@@ -358,6 +382,8 @@ class KnowledgeIndexRuntime:
         source: CanonicalDocumentIR,
         graph_project_id: str | None,
         lineage: dict,
+        *,
+        tenant_id: str = "",
     ) -> list[dict]:
         graph_documents = []
         for document in documents:
@@ -370,6 +396,7 @@ class KnowledgeIndexRuntime:
                         "graph",
                         source,
                         lineage,
+                        tenant_id=tenant_id,
                     ),
                     "graph_project_id": graph_project_id,
                     "entities": _entities(document["content"]),
@@ -415,6 +442,8 @@ def _document_payload(
     source_type: str,
     source: CanonicalDocumentIR,
     lineage: dict,
+    *,
+    tenant_id: str = "",
 ) -> dict:
     block_id = str(metadata.get("block_id") or chunk_id.split("::", 1)[-1])
     source_span = dict(metadata.get("source_span") or {})
@@ -444,6 +473,7 @@ def _document_payload(
     return {
         "chunk_id": chunk_id,
         "document_id": source.metadata.document_id,
+        "tenant_id": tenant_id,
         "workspace_id": source.metadata.workspace_id,
         "content": content,
         "source_type": source_type,
@@ -522,6 +552,24 @@ def _adapter_sample_visibility_verification(
 
 def _adapter_contract_is_current(adapter_status: str) -> bool:
     return adapter_status.endswith(":current")
+
+
+def _adapter_accepts_kwarg(method: Any, name: str) -> bool:
+    """Return True when the adapter method declares the given keyword.
+
+    Keeps the runtime compatible with adapter doubles that predate the
+    tenant/recreate extensions while canonical bindings receive them.
+    """
+    import inspect
+
+    try:
+        parameters = inspect.signature(method).parameters
+    except (TypeError, ValueError):
+        return False
+    return name in parameters or any(
+        parameter.kind == inspect.Parameter.VAR_KEYWORD
+        for parameter in parameters.values()
+    )
 
 
 def _sample_visibility_verification(

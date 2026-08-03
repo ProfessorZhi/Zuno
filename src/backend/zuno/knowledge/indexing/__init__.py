@@ -7,6 +7,7 @@ from .adapters import (
     Neo4jGraphIndexClient,
     adapter_status_for_bindings,
     adapter_status_for_targets,
+    compute_embedding_config_hash,
     external_adapter_bindings,
 )
 from .contracts import (
@@ -25,6 +26,15 @@ from .contracts import (
     validate_neo4j_path_visibility_receipt,
 )
 from .runtime import KnowledgeIndexRuntime
+from .snapshot_activation import (
+    REQUIRED_VISIBILITY_RECEIPT_KINDS,
+    SnapshotActivationAdapter,
+    SnapshotActivationReceipt,
+    SnapshotActivationResult,
+    SnapshotActivationStatus,
+    build_snapshot_activation_receipt,
+    validate_snapshot_activation_receipt,
+)
 
 __all__ = [
     "INDEX_ADAPTER_CONTRACTS",
@@ -40,6 +50,13 @@ __all__ = [
     "IndexVisibilityReceipt",
     "IndexVisibilityStatus",
     "KnowledgeIndexRuntime",
+    "REQUIRED_VISIBILITY_RECEIPT_KINDS",
+    "SnapshotActivationAdapter",
+    "SnapshotActivationReceipt",
+    "SnapshotActivationResult",
+    "SnapshotActivationStatus",
+    "build_snapshot_activation_receipt",
+    "validate_snapshot_activation_receipt",
     "KnowledgeSpaceManifest",
     "Neo4jPathVisibilityReceipt",
     "Neo4jPathVisibilityStatus",
@@ -47,6 +64,7 @@ __all__ = [
     "adapter_status_for_targets",
     "build_index_visibility_receipt",
     "build_neo4j_path_visibility_receipt",
+    "compute_embedding_config_hash",
     "external_adapter_bindings",
     "validate_index_visibility_receipt",
     "validate_neo4j_path_visibility_receipt",
