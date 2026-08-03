@@ -23,6 +23,7 @@ from zuno.knowledge.ingestion.canonical_runtime import (
     CANONICAL_FAILURE_RECONCILIATION_REQUIRED,
     CANONICAL_STATE_KV_READY,
     CANONICAL_STATE_OBJECT_COMMITTED,
+    CANONICAL_STATE_OBJECT_STAGED,
     CanonicalSourceIngestCommand,
     Phase22CanonicalIngestionRuntime,
     canonical_security_resource_ref,
@@ -169,7 +170,7 @@ def build_command(env: dict, decision_id: str) -> CanonicalSourceIngestCommand:
         security_epoch_ref=env["epoch_ref"],
         security_decision_ref=decision_id,
         knowledge_space_id=env["knowledge_space_id"],
-        corpus_manifest_ref="corpus:fault-matrix",
+        source_manifest_ref="2" * 64,
         source_set_ref="corpus:fault-matrix",
         trace_id=f"trace-{uuid4().hex[:8]}",
         bucket=env["bucket"],
@@ -178,7 +179,8 @@ def build_command(env: dict, decision_id: str) -> CanonicalSourceIngestCommand:
 
 def minimal_manifest(env: dict) -> dict:
     return {
-        "source_manifest_hash": "corpus:fault-matrix",
+        "source_manifest_hash": "2" * 64,
+        "canonical_ir_hash": "4" * 64,
         "documents": [
             {
                 "document_id": env["document_id"],
@@ -243,7 +245,11 @@ class TestPhase22ResumeFaultMatrix:
         command = build_command(env, decision_id)
 
         crashed = crash_runtime(live_env, crash_at)
-        crashed.load_corpus_manifest(minimal_manifest(env))
+        crashed.load_official_corpus_context(
+            source_manifest={"source_manifest_hash": "2" * 64, "sources": []},
+            ir_manifest=minimal_manifest(env),
+            dataset_manifest={"corpus_hash": "3" * 64},
+        )
         with pytest.raises(CrashSimulation):
             crashed.ingest(command)
 
@@ -274,7 +280,11 @@ class TestPhase22ResumeFaultMatrix:
             bucket=live_env["bucket"],
             worker_id=f"phase22-fault-{crash_at}",
         )
-        resumed.load_corpus_manifest(minimal_manifest(env))
+        resumed.load_official_corpus_context(
+            source_manifest={"source_manifest_hash": "2" * 64, "sources": []},
+            ir_manifest=minimal_manifest(env),
+            dataset_manifest={"corpus_hash": "3" * 64},
+        )
         receipt = resumed.ingest(command)
         assert receipt.state == CANONICAL_STATE_KV_READY
         assert receipt.transitions[-1]["to_state"] == CANONICAL_STATE_KV_READY
@@ -356,7 +366,11 @@ class TestPhase22ResumeFaultMatrix:
             bucket=live_env["bucket"],
             worker_id="phase22-reconcile-worker",
         )
-        runtime.load_corpus_manifest(minimal_manifest(env))
+        runtime.load_official_corpus_context(
+            source_manifest={"source_manifest_hash": "2" * 64, "sources": []},
+            ir_manifest=minimal_manifest(env),
+            dataset_manifest={"corpus_hash": "3" * 64},
+        )
         receipt = runtime.ingest(command)
         assert receipt.state == CANONICAL_STATE_KV_READY
 
@@ -373,10 +387,17 @@ class TestPhase22ResumeFaultMatrix:
         assert reconciled.state == CANONICAL_FAILURE_RECONCILIATION_REQUIRED
         assert reconciled.failure_code == "object_manifest_missing"
 
-        # restore through the explicit reconciliation edge: commit recreates
-        # the manifest from the committed object and the run completes
+        # restore through the explicit reconciliation edge. The correct
+        # recovery point is object_staged: the manifest is missing, so
+        # object_committed would be rejected by the recovery-point verifier;
+        # resuming at object_staged re-commits idempotently and recreates the
+        # manifest from the physical object.
+        with pytest.raises(Exception):
+            runtime.resume_after_reconcile(
+                command, to_state=CANONICAL_STATE_OBJECT_COMMITTED
+            )
         resumed = runtime.resume_after_reconcile(
-            command, to_state=CANONICAL_STATE_OBJECT_COMMITTED
+            command, to_state=CANONICAL_STATE_OBJECT_STAGED
         )
         assert resumed.state == CANONICAL_STATE_KV_READY
 
@@ -393,7 +414,11 @@ class TestPhase22ResumeFaultMatrix:
             bucket=live_env["bucket"],
             worker_id="phase22-stale-state-worker",
         )
-        runtime.load_corpus_manifest(minimal_manifest(env))
+        runtime.load_official_corpus_context(
+            source_manifest={"source_manifest_hash": "2" * 64, "sources": []},
+            ir_manifest=minimal_manifest(env),
+            dataset_manifest={"corpus_hash": "3" * 64},
+        )
         receipt = runtime.ingest(command)
         assert receipt.state == CANONICAL_STATE_KV_READY
 
@@ -449,8 +474,12 @@ class TestPhase22ResumeFaultMatrix:
             worker_id="phase22-worker-b",
         )
         manifest = minimal_manifest(env)
-        worker_a.load_corpus_manifest(manifest)
-        worker_b.load_corpus_manifest(manifest)
+        for worker in (worker_a, worker_b):
+            worker.load_official_corpus_context(
+                source_manifest={"source_manifest_hash": "2" * 64, "sources": []},
+                ir_manifest=manifest,
+                dataset_manifest={"corpus_hash": "3" * 64},
+            )
         first = worker_a.ingest(command)
         assert first.state == CANONICAL_STATE_KV_READY
         # second worker's claim reads the durable checkpoint and returns the

@@ -19,6 +19,7 @@ injection doubles are limited to failure paths and are explicitly labeled.
 """
 
 import hashlib
+import json
 import os
 from typing import Any
 from uuid import uuid4
@@ -334,7 +335,7 @@ def build_command(env: dict, **overrides) -> CanonicalSourceIngestCommand:
         security_epoch_ref=env["epoch_ref"],
         security_decision_ref=decision_id,
         knowledge_space_id=env["knowledge_space_id"],
-        corpus_manifest_ref="corpus:unit-test",
+        source_manifest_ref="1" * 64,
         source_set_ref="corpus:unit-test",
         trace_id=f"trace-{uuid4().hex[:8]}",
         bucket=env["bucket"],
@@ -345,7 +346,8 @@ def build_command(env: dict, **overrides) -> CanonicalSourceIngestCommand:
 def minimal_ir_manifest(env: dict) -> dict:
     suffix = env["source_id"].split("-")[-1]
     return {
-        "source_manifest_hash": "corpus:unit-test",
+        "source_manifest_hash": "1" * 64,
+        "canonical_ir_hash": "4" * 64,
         "documents": [
             {
                 "document_id": env["document_id"],
@@ -374,13 +376,29 @@ def minimal_ir_manifest(env: dict) -> dict:
     }
 
 
+def _event_state(event: dict) -> str:
+    """The outbox event id encodes run:version:attempt:state; the effective
+    payload may be a custom delivery payload (Task F), so the state is read
+    from the id."""
+    return str(event["outbox_event_id"]).rsplit(":", 1)[-1]
+
+
+def _load_test_corpus_context(runtime, env: dict) -> None:
+    """Load a minimal frozen corpus context (three distinct hashes)."""
+    runtime.load_official_corpus_context(
+        source_manifest={"source_manifest_hash": "1" * 64, "sources": []},
+        ir_manifest=minimal_ir_manifest(env),
+        dataset_manifest={"corpus_hash": "3" * 64},
+    )
+
+
 class TestLiveCanonicalIngestion:
     def test_full_pipeline_produces_real_ids(self, live_environment) -> None:
         env = new_environment(live_environment["bucket"])
         engine = live_environment["engine"]
         runtime = live_environment["runtime"]
         command = build_command(env, _engine=engine)
-        runtime.load_corpus_manifest(minimal_ir_manifest(env))
+        _load_test_corpus_context(runtime, env)
         receipt = runtime.ingest(command)
 
         assert receipt.state == CANONICAL_STATE_KV_READY
@@ -395,6 +413,7 @@ class TestLiveCanonicalIngestion:
         assert receipt.transitions[-1]["to_state"] == CANONICAL_STATE_KV_READY
         states = [t["to_state"] for t in receipt.transitions]
         assert states == [
+            CANONICAL_STATE_ACCEPTED,
             CANONICAL_STATE_OBJECT_STAGED,
             CANONICAL_STATE_OBJECT_COMMITTED,
             CANONICAL_STATE_IR_READY,
@@ -418,7 +437,7 @@ class TestLiveCanonicalIngestion:
             security_epoch_ref=env["epoch_ref"],
             security_decision_ref="decision:missing",
             knowledge_space_id=env["knowledge_space_id"],
-            corpus_manifest_ref="corpus:unit-test",
+            source_manifest_ref="1" * 64,
             source_set_ref="corpus:unit-test",
             trace_id=f"trace-{uuid4().hex[:8]}",
             bucket=env["bucket"],
@@ -466,7 +485,7 @@ class TestLiveCanonicalIngestion:
         runtime = live_environment["runtime"]
         minio = live_environment["minio"]
         command = build_command(env, _engine=engine)
-        runtime.load_corpus_manifest(minimal_ir_manifest(env))
+        _load_test_corpus_context(runtime, env)
         receipt = runtime.ingest(command)
 
         bucket, object_name = receipt.object_ref[len("s3://"):].split("/", 1)
@@ -480,7 +499,7 @@ class TestLiveCanonicalIngestion:
         runtime = live_environment["runtime"]
         facts = live_environment["facts"]
         command = build_command(env, _engine=engine)
-        runtime.load_corpus_manifest(minimal_ir_manifest(env))
+        _load_test_corpus_context(runtime, env)
         receipt = runtime.ingest(command)
 
         source = facts.source_object_fact(
@@ -518,7 +537,7 @@ class TestLiveCanonicalIngestion:
         engine = live_environment["engine"]
         runtime = live_environment["runtime"]
         command = build_command(env, _engine=engine)
-        runtime.load_corpus_manifest(minimal_ir_manifest(env))
+        _load_test_corpus_context(runtime, env)
         receipt = runtime.ingest(command)
 
         entities = runtime.entities_relations.entity_facts(
@@ -536,7 +555,7 @@ class TestLiveCanonicalIngestion:
         runtime = live_environment["runtime"]
         facts = live_environment["facts"]
         command = build_command(env, _engine=engine)
-        runtime.load_corpus_manifest(minimal_ir_manifest(env))
+        _load_test_corpus_context(runtime, env)
         first = runtime.ingest(command)
         second = runtime.ingest(command)
 
@@ -562,7 +581,7 @@ class TestLiveCanonicalIngestion:
         engine = live_environment["engine"]
         runtime = live_environment["runtime"]
         command = build_command(env, _engine=engine)
-        runtime.load_corpus_manifest(minimal_ir_manifest(env))
+        _load_test_corpus_context(runtime, env)
         runtime.ingest(command)
         altered_content = b"different content that changes the hash"
         altered_hash = hashlib.sha256(altered_content).hexdigest()
@@ -599,7 +618,7 @@ class TestLiveCanonicalIngestion:
         runtime = live_environment["runtime"]
         facts = live_environment["facts"]
         command = build_command(env, _engine=engine)
-        runtime.load_corpus_manifest(minimal_ir_manifest(env))
+        _load_test_corpus_context(runtime, env)
         receipt = runtime.ingest(command)
 
         facts.source_object_fact(
@@ -626,7 +645,7 @@ class TestLiveCanonicalIngestion:
         engine = live_environment["engine"]
         runtime = live_environment["runtime"]
         command = build_command(env, _engine=engine)
-        runtime.load_corpus_manifest(minimal_ir_manifest(env))
+        _load_test_corpus_context(runtime, env)
         receipt = runtime.ingest(command)
 
         with engine.connect() as connection:
@@ -665,7 +684,7 @@ class TestLiveCanonicalIngestion:
         runtime = live_environment["runtime"]
         facts = live_environment["facts"]
         command = build_command(env, _engine=engine)
-        runtime.load_corpus_manifest(minimal_ir_manifest(env))
+        _load_test_corpus_context(runtime, env)
         receipt = runtime.ingest(command)
 
         reread = runtime.get_run(run_id=receipt.run_id, tenant_id=env["tenant_id"])
@@ -707,7 +726,7 @@ class TestLiveCanonicalIngestion:
             staticmethod(_failing_parse),
         )
         command = build_command(env, _engine=engine)
-        runtime.load_corpus_manifest(minimal_ir_manifest(env))
+        _load_test_corpus_context(runtime, env)
         receipt = runtime.ingest(command)
         assert receipt.state == CANONICAL_FAILURE_CANONICALIZATION_FAILED
         assert receipt.knowledge_version_id is None
@@ -756,7 +775,7 @@ class TestLiveCanonicalIngestion:
             worker_id="phase22-fault-test",
         )
         command = build_command(env, _engine=engine)
-        failing_runtime.load_corpus_manifest(minimal_ir_manifest(env))
+        _load_test_corpus_context(failing_runtime, env)
         receipt = failing_runtime.ingest(command)
         # stage failure is recorded as object_stage_failed, never
         # accepted -> object_commit_failed
@@ -775,7 +794,7 @@ class TestLiveCanonicalIngestion:
         runtime = live_environment["runtime"]
         minio = live_environment["minio"]
         command = build_command(env, _engine=engine)
-        runtime.load_corpus_manifest(minimal_ir_manifest(env))
+        _load_test_corpus_context(runtime, env)
         receipt = runtime.ingest(command)
         assert receipt.state == CANONICAL_STATE_KV_READY
 
@@ -806,7 +825,7 @@ class TestLiveCanonicalIngestion:
         engine = live_environment["engine"]
         runtime = live_environment["runtime"]
         command = build_command(env, _engine=engine)
-        runtime.load_corpus_manifest(minimal_ir_manifest(env))
+        _load_test_corpus_context(runtime, env)
         receipt = runtime.ingest(command)
         assert receipt.state == CANONICAL_STATE_KV_READY
         # an ordinary overwrite of the success terminal is rejected by the
@@ -824,3 +843,277 @@ class TestLiveCanonicalIngestion:
         )
         assert run_fact.current_state == CANONICAL_STATE_KV_READY
         assert run_fact.state_version == 5
+
+
+class TestStateAuditTruth:
+    """Tasks C/D/E/F/G: transition edges, accepted atomicity, outbox event
+    identity, payload hash truth, and reconciliation recovery points."""
+
+    def test_commit_failure_records_object_commit_failed(self, live_environment) -> None:
+        env = new_environment(live_environment["bucket"])
+        engine = live_environment["engine"]
+
+        class _FailingCommitOnceStore(DurableMinioObjectStore):
+            def __init__(self, *args: Any, **kwargs: Any) -> None:
+                super().__init__(*args, **kwargs)
+                self.fail_next = True
+
+            def commit(self, ticket):  # type: ignore[override]
+                if self.fail_next:
+                    self.fail_next = False
+                    raise ObjectHashMismatchError("injected commit failure")
+                return super().commit(ticket)
+
+        failing_runtime = Phase22CanonicalIngestionRuntime(
+            engine=engine,
+            object_store=_FailingCommitOnceStore(
+                store=live_environment["minio"],
+                engine=engine,
+                owner="phase22.fault_injection",
+            ),
+            bucket=env["bucket"],
+            worker_id="phase22-fault-test",
+        )
+        command = build_command(env, _engine=engine)
+        _load_test_corpus_context(failing_runtime, env)
+        receipt = failing_runtime.ingest(command)
+        # commit failure from object_staged is a legal, persisted transition
+        assert receipt.state == CANONICAL_FAILURE_OBJECT_COMMIT_FAILED
+        assert receipt.failure_code == "object_hash_mismatch"
+        # the failure state was persisted without an illegal-transition error
+        run_fact = failing_runtime.runs.current_fact(
+            run_id=receipt.run_id, tenant_id=env["tenant_id"]
+        )
+        assert run_fact.current_state == CANONICAL_FAILURE_OBJECT_COMMIT_FAILED
+        # explicit retry: object_commit_failed -> object_committed -> resume
+        retried = failing_runtime.retry(command)
+        assert retried.state == CANONICAL_STATE_KV_READY
+        assert retried.attempt_number == 2
+
+    def test_accepted_initial_facts_atomic(self, live_environment) -> None:
+        env = new_environment(live_environment["bucket"])
+        engine = live_environment["engine"]
+        runtime = live_environment["runtime"]
+        command = build_command(env, _engine=engine)
+        run_id = canonical_run_id(
+            tenant_id=env["tenant_id"],
+            workspace_id=env["workspace_id"],
+            source_id=env["source_id"],
+        )
+        receipt = runtime.runs.ensure_run(
+            run_id=run_id,
+            tenant_id=env["tenant_id"],
+            workspace_id=env["workspace_id"],
+            source_set_ref="corpus:unit-test",
+            corpus_manifest_ref="corpus:unit-test",
+            idempotency_key=f"{run_id}:{hashlib.sha256(command.content).hexdigest()}",
+            payload_hash=hashlib.sha256(command.content).hexdigest(),
+        )
+        assert receipt is not None
+        assert receipt.to_state == CANONICAL_STATE_ACCEPTED
+        assert receipt.state_version == 1
+        # the returned outbox event id is actually persisted
+        history = runtime.runs.history(run_id=run_id, tenant_id=env["tenant_id"])
+        outbox = runtime.runs.outbox_events(run_id=run_id, tenant_id=env["tenant_id"])
+        assert len(history) == 1
+        assert history[0]["to_state"] == CANONICAL_STATE_ACCEPTED
+        assert history[0]["outbox_event_id"] == receipt.outbox_event_id
+        assert len(outbox) == 1
+        assert outbox[0]["outbox_event_id"] == receipt.outbox_event_id
+        assert outbox[0]["payload"]["state"] == CANONICAL_STATE_ACCEPTED
+        # duplicate ensure_run creates nothing new
+        again = runtime.runs.ensure_run(
+            run_id=run_id,
+            tenant_id=env["tenant_id"],
+            workspace_id=env["workspace_id"],
+            source_set_ref="corpus:unit-test",
+            corpus_manifest_ref="corpus:unit-test",
+            idempotency_key=f"{run_id}:x",
+            payload_hash="a" * 64,
+        )
+        assert again is None
+        assert len(runtime.runs.history(run_id=run_id, tenant_id=env["tenant_id"])) == 1
+        assert len(runtime.runs.outbox_events(run_id=run_id, tenant_id=env["tenant_id"])) == 1
+
+    def test_accepted_initial_facts_rollback_on_failure(self, live_environment) -> None:
+        env = new_environment(live_environment["bucket"])
+        engine = live_environment["engine"]
+        runtime = live_environment["runtime"]
+        run_id = canonical_run_id(
+            tenant_id=env["tenant_id"],
+            workspace_id=env["workspace_id"],
+            source_id=env["source_id"],
+        )
+        # invalid payload_hash violates the run-table CHECK constraint -> the
+        # whole accepted transaction must roll back (no row, no history, no
+        # outbox event)
+        with pytest.raises(Exception):
+            runtime.runs.ensure_run(
+                run_id=run_id,
+                tenant_id=env["tenant_id"],
+                workspace_id=env["workspace_id"],
+                source_set_ref="corpus:unit-test",
+                corpus_manifest_ref="corpus:unit-test",
+                idempotency_key=f"{run_id}:bad",
+                payload_hash="short",
+            )
+        with pytest.raises(CanonicalRunStateError):
+            runtime.runs.current_fact(run_id=run_id, tenant_id=env["tenant_id"])
+        assert runtime.runs.history(run_id=run_id, tenant_id=env["tenant_id"]) == ()
+        assert runtime.runs.outbox_events(run_id=run_id, tenant_id=env["tenant_id"]) == ()
+
+    def test_outbox_event_identity_versioned(self, live_environment) -> None:
+        env = new_environment(live_environment["bucket"])
+        engine = live_environment["engine"]
+        runtime = live_environment["runtime"]
+
+        class _FailingStageOnceStore(DurableMinioObjectStore):
+            def __init__(self, *args: Any, **kwargs: Any) -> None:
+                super().__init__(*args, **kwargs)
+                self.fail_next = True
+
+            def stage(self, **kwargs: Any):  # type: ignore[override]
+                if self.fail_next:
+                    self.fail_next = False
+                    raise ConnectionError("injected stage failure")
+                return super().stage(**kwargs)
+
+        failing_runtime = Phase22CanonicalIngestionRuntime(
+            engine=engine,
+            object_store=_FailingStageOnceStore(
+                store=live_environment["minio"],
+                engine=engine,
+                owner="phase22.fault_injection",
+            ),
+            bucket=env["bucket"],
+            worker_id="phase22-fault-test",
+        )
+        command = build_command(env, _engine=engine)
+        _load_test_corpus_context(failing_runtime, env)
+        receipt = failing_runtime.ingest(command)
+        assert receipt.state == CANONICAL_FAILURE_OBJECT_STAGE_FAILED
+        first_events = failing_runtime.runs.outbox_events(
+            run_id=receipt.run_id, tenant_id=env["tenant_id"]
+        )
+        assert [_event_state(e) for e in first_events] == [
+            CANONICAL_STATE_ACCEPTED,
+            CANONICAL_FAILURE_OBJECT_STAGE_FAILED,
+        ]
+        # explicit retry re-enters object_staged -> versioned event ids keep
+        # every real transition unique (state is encoded in the event id)
+        retried = failing_runtime.retry(command)
+        assert retried.state == CANONICAL_STATE_KV_READY
+        assert retried.attempt_number == 2
+        all_events = failing_runtime.runs.outbox_events(
+            run_id=receipt.run_id, tenant_id=env["tenant_id"]
+        )
+        assert [_event_state(e) for e in all_events] == [
+            CANONICAL_STATE_ACCEPTED,
+            CANONICAL_FAILURE_OBJECT_STAGE_FAILED,
+            CANONICAL_STATE_OBJECT_STAGED,
+            CANONICAL_STATE_OBJECT_COMMITTED,
+            CANONICAL_STATE_IR_READY,
+            CANONICAL_STATE_KV_READY,
+        ]
+        event_ids = [e["outbox_event_id"] for e in all_events]
+        assert len(event_ids) == len(set(event_ids))
+        # history and outbox are one-to-one (same event ids, same count)
+        history = failing_runtime.runs.history(
+            run_id=receipt.run_id, tenant_id=env["tenant_id"]
+        )
+        assert len(history) == len(all_events)
+        history_event_ids = {item["outbox_event_id"] for item in history}
+        outbox_event_ids = {item["outbox_event_id"] for item in all_events}
+        assert history_event_ids == outbox_event_ids
+
+    def test_outbox_payload_hash_truth(self, live_environment) -> None:
+        env = new_environment(live_environment["bucket"])
+        engine = live_environment["engine"]
+        runtime = live_environment["runtime"]
+        command = build_command(env, _engine=engine)
+        _load_test_corpus_context(runtime, env)
+        receipt = runtime.ingest(command)
+        assert receipt.state == CANONICAL_STATE_KV_READY
+        events = runtime.runs.outbox_events(
+            run_id=receipt.run_id, tenant_id=env["tenant_id"]
+        )
+        from zuno.platform.contracts import canonical_sha256
+
+        for event in events:
+            # the stored payload hash must equal the hash of the stored payload
+            assert event["payload_hash"] == canonical_sha256(event["payload"])
+        # tamper a payload -> the stored hash no longer matches
+        with live_environment["engine"].begin() as connection:
+            connection.execute(
+                text(
+                    """
+                    UPDATE ingestion_outbox_events
+                    SET payload = CAST(:payload AS jsonb)
+                    WHERE outbox_event_id = :event_id
+                    """
+                ),
+                {
+                    "payload": json.dumps({"tampered": True}),
+                    "event_id": events[-1]["outbox_event_id"],
+                },
+            )
+        tampered_events = runtime.runs.outbox_events(
+            run_id=receipt.run_id, tenant_id=env["tenant_id"]
+        )
+        tampered = [e for e in tampered_events if e["payload"] == {"tampered": True}]
+        assert tampered
+        assert tampered[0]["payload_hash"] != canonical_sha256(tampered[0]["payload"])
+
+    def test_reconciliation_recovery_point_verified(self, live_environment) -> None:
+        from io import BytesIO
+
+        env = new_environment(live_environment["bucket"])
+        engine = live_environment["engine"]
+        runtime = live_environment["runtime"]
+        command = build_command(env, _engine=engine)
+        _load_test_corpus_context(runtime, env)
+        receipt = runtime.ingest(command)
+        assert receipt.state == CANONICAL_STATE_KV_READY
+
+        # reach reconciliation_required through the explicit reconcile() path
+        bucket, object_name = receipt.object_ref[len("s3://"):].split("/", 1)
+        tampered = b"tampered bytes"
+        live_environment["minio"].client.put_object(
+            bucket, object_name, BytesIO(tampered), length=len(tampered)
+        )
+        reconciled = runtime.reconcile(
+            run_id=receipt.run_id, tenant_id=env["tenant_id"]
+        )
+        assert reconciled.state == CANONICAL_FAILURE_RECONCILIATION_REQUIRED
+        assert reconciled.failure_code == "object_bytes_mismatch"
+
+        # a recovery point not supported by durable facts must be rejected:
+        # object_committed requires a manifest hash matching the source
+        # content, which the tamper broke
+        with pytest.raises(Exception):
+            runtime.resume_after_reconcile(
+                command, to_state=CANONICAL_STATE_OBJECT_COMMITTED
+            )
+        # after restoring the object bytes, object_committed is verified again
+        live_environment["minio"].client.put_object(
+            bucket,
+            object_name,
+            BytesIO(command.content),
+            length=len(command.content),
+        )
+        resumed = runtime.resume_after_reconcile(
+            command, to_state=CANONICAL_STATE_OBJECT_COMMITTED
+        )
+        assert resumed.state == CANONICAL_STATE_KV_READY
+        # the reconciliation resume produced a NEW audit event for
+        # object_committed (versioned identity)
+        events = runtime.runs.outbox_events(
+            run_id=receipt.run_id, tenant_id=env["tenant_id"]
+        )
+        committed_events = [
+            e for e in events if _event_state(e) == CANONICAL_STATE_OBJECT_COMMITTED
+        ]
+        assert len(committed_events) == 2
+        assert committed_events[0]["outbox_event_id"] != committed_events[1][
+            "outbox_event_id"
+        ]
