@@ -215,6 +215,7 @@ class Neo4jGraphIndexClient:
         documents: list[dict],
         *,
         tenant_id: str | None = None,
+        knowledge_version_id: str | None = None,
         recreate: bool = True,
     ) -> None:
         driver = self._driver()
@@ -234,6 +235,7 @@ class Neo4jGraphIndexClient:
                         SET c.document_id = $document_id,
                             c.tenant_id = $tenant_id,
                             c.workspace_id = $workspace_id,
+                            c.knowledge_version_id = $knowledge_version_id,
                             c.content = $content,
                             c.source_type = $source_type,
                             c.metadata_json = $metadata_json
@@ -243,6 +245,12 @@ class Neo4jGraphIndexClient:
                             "chunk_id": chunk_id,
                             "document_id": str(document.get("document_id") or metadata.get("document_id") or ""),
                             "tenant_id": str(tenant_id or document.get("tenant_id") or metadata.get("tenant_id") or ""),
+                            "knowledge_version_id": str(
+                                knowledge_version_id
+                                or document.get("knowledge_version_id")
+                                or metadata.get("knowledge_version_id")
+                                or ""
+                            ),
                             "workspace_id": str(document.get("workspace_id") or metadata.get("workspace_id") or ""),
                             "content": str(document.get("content") or ""),
                             "source_type": str(document.get("source_type") or "graph"),
@@ -496,6 +504,7 @@ class ElasticsearchBm25IndexClient:
                             "document_id": {"type": "keyword"},
                             "tenant_id": {"type": "keyword"},
                             "workspace_id": {"type": "keyword"},
+                            "knowledge_version_id": {"type": "keyword"},
                             "content": {"type": "text"},
                             "source_type": {"type": "keyword"},
                         }
@@ -512,6 +521,7 @@ class ElasticsearchBm25IndexClient:
                     "document_id": str(document.get("document_id") or ""),
                     "tenant_id": str(document.get("tenant_id") or ""),
                     "workspace_id": str(document.get("workspace_id") or ""),
+                    "knowledge_version_id": str(document.get("knowledge_version_id") or ""),
                     "content": str(document.get("content") or ""),
                     "source_type": str(document.get("source_type") or "bm25"),
                 },
@@ -525,9 +535,14 @@ class ElasticsearchBm25IndexClient:
         *,
         tenant_id: str | None = None,
         workspace_id: str | None = None,
+        knowledge_version_id: str | None = None,
     ) -> list[dict]:
         body: dict[str, Any] = {"query": {"match": {"content": query}}, "size": 25}
-        filters = _scope_filters(tenant_id=tenant_id, workspace_id=workspace_id)
+        filters = _scope_filters(
+            tenant_id=tenant_id,
+            workspace_id=workspace_id,
+            knowledge_version_id=knowledge_version_id,
+        )
         if filters:
             body["query"] = {"bool": {"must": body["query"], "filter": filters}}
         response = _http_json("POST", f"{self.base_url}/{index_name}/_search", body)
@@ -552,8 +567,13 @@ class ElasticsearchBm25IndexClient:
         *,
         tenant_id: str | None = None,
         workspace_id: str | None = None,
+        knowledge_version_id: str | None = None,
     ) -> int:
-        filters = _scope_filters(tenant_id=tenant_id, workspace_id=workspace_id)
+        filters = _scope_filters(
+            tenant_id=tenant_id,
+            workspace_id=workspace_id,
+            knowledge_version_id=knowledge_version_id,
+        )
         body: dict[str, Any] = {}
         if filters:
             body = {"query": {"bool": {"filter": filters}}}
@@ -606,6 +626,7 @@ class MilvusVectorIndexClient:
                 "document_id": str(document.get("document_id") or ""),
                 "tenant_id": str(document.get("tenant_id") or ""),
                 "workspace_id": str(document.get("workspace_id") or ""),
+                "knowledge_version_id": str(document.get("knowledge_version_id") or ""),
                 "content": str(document.get("content") or ""),
                 "embedding": embeddings[index],
             }
@@ -623,6 +644,7 @@ class MilvusVectorIndexClient:
         *,
         tenant_id: str | None = None,
         workspace_id: str | None = None,
+        knowledge_version_id: str | None = None,
     ) -> list[dict]:
         collection = self._load_collection(index_name)
         collection.load()
@@ -630,16 +652,31 @@ class MilvusVectorIndexClient:
             "metric_type": "L2",
             "params": {"nprobe": 8},
         }
-        expr = _scope_expr(tenant_id=tenant_id, workspace_id=workspace_id)
-        if expr:
-            search_params["expr"] = expr
-        results = collection.search(
-            data=[self._embed_query(query)],
-            anns_field="embedding",
-            param=search_params,
-            limit=25,
-            output_fields=["chunk_id", "document_id", "tenant_id", "workspace_id", "content"],
+        expr = _scope_expr(
+            tenant_id=tenant_id,
+            workspace_id=workspace_id,
+            knowledge_version_id=knowledge_version_id,
         )
+        # PyMilvus >= 2.4 takes the filter expression as a TOP-LEVEL search
+        # argument.  Putting ``expr`` inside ``param`` is silently ignored
+        # by newer clients, which would leak rows across scopes.
+        search_kwargs: dict[str, Any] = {
+            "data": [self._embed_query(query)],
+            "anns_field": "embedding",
+            "param": search_params,
+            "limit": 25,
+            "output_fields": [
+                "chunk_id",
+                "document_id",
+                "tenant_id",
+                "workspace_id",
+                "knowledge_version_id",
+                "content",
+            ],
+        }
+        if expr:
+            search_kwargs["expr"] = expr
+        results = collection.search(**search_kwargs)
         documents: list[dict] = []
         for hit in results[0]:
             entity = hit.entity
@@ -649,6 +686,7 @@ class MilvusVectorIndexClient:
                     "document_id": entity.get("document_id"),
                     "tenant_id": entity.get("tenant_id"),
                     "workspace_id": entity.get("workspace_id"),
+                    "knowledge_version_id": entity.get("knowledge_version_id"),
                     "content": entity.get("content"),
                     "source_type": "vector",
                 }
@@ -660,8 +698,15 @@ class MilvusVectorIndexClient:
         collection = self._load_collection(index_name)
         collection.load()
         rows = collection.query(
-            expr=f'chunk_id == "{chunk_id}"',
-            output_fields=["chunk_id", "document_id", "tenant_id", "workspace_id", "content"],
+            expr=f'chunk_id == "{_milvus_literal(chunk_id)}"',
+            output_fields=[
+                "chunk_id",
+                "document_id",
+                "tenant_id",
+                "workspace_id",
+                "knowledge_version_id",
+                "content",
+            ],
         )
         if not rows:
             return None
@@ -673,10 +718,15 @@ class MilvusVectorIndexClient:
         *,
         tenant_id: str | None = None,
         workspace_id: str | None = None,
+        knowledge_version_id: str | None = None,
     ) -> int:
         collection = self._load_collection(index_name)
         collection.load()
-        expr = _scope_expr(tenant_id=tenant_id, workspace_id=workspace_id)
+        expr = _scope_expr(
+            tenant_id=tenant_id,
+            workspace_id=workspace_id,
+            knowledge_version_id=knowledge_version_id,
+        )
         if expr:
             rows = collection.query(
                 expr=expr,
@@ -742,6 +792,7 @@ class MilvusVectorIndexClient:
             FieldSchema(name="document_id", dtype=DataType.VARCHAR, max_length=128),
             FieldSchema(name="tenant_id", dtype=DataType.VARCHAR, max_length=128),
             FieldSchema(name="workspace_id", dtype=DataType.VARCHAR, max_length=128),
+            FieldSchema(name="knowledge_version_id", dtype=DataType.VARCHAR, max_length=128),
             FieldSchema(name="content", dtype=DataType.VARCHAR, max_length=4096),
             FieldSchema(name="embedding", dtype=DataType.FLOAT_VECTOR, dim=self.dim),
         ]
@@ -785,25 +836,41 @@ def _scope_filters(
     *,
     tenant_id: str | None = None,
     workspace_id: str | None = None,
+    knowledge_version_id: str | None = None,
 ) -> list[dict[str, Any]]:
     filters: list[dict[str, Any]] = []
     if tenant_id:
         filters.append({"term": {"tenant_id": tenant_id}})
     if workspace_id:
         filters.append({"term": {"workspace_id": workspace_id}})
+    if knowledge_version_id:
+        filters.append({"term": {"knowledge_version_id": knowledge_version_id}})
     return filters
+
+
+def _milvus_literal(value: str) -> str:
+    """Escape a string literal for Milvus boolean expression filters.
+
+    Milvus expr strings treat ``\\`` and ``"`` specially inside quoted
+    literals; every scope value must pass through this encoder so that
+    malicious or malformed scope identifiers cannot alter the expression.
+    """
+    return str(value).replace("\\", "\\\\").replace('"', '\\"')
 
 
 def _scope_expr(
     *,
     tenant_id: str | None = None,
     workspace_id: str | None = None,
+    knowledge_version_id: str | None = None,
 ) -> str:
     clauses: list[str] = []
     if tenant_id:
-        clauses.append(f'tenant_id == "{tenant_id}"')
+        clauses.append(f'tenant_id == "{_milvus_literal(tenant_id)}"')
     if workspace_id:
-        clauses.append(f'workspace_id == "{workspace_id}"')
+        clauses.append(f'workspace_id == "{_milvus_literal(workspace_id)}"')
+    if knowledge_version_id:
+        clauses.append(f'knowledge_version_id == "{_milvus_literal(knowledge_version_id)}"')
     return " and ".join(clauses)
 
 

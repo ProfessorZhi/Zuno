@@ -1,14 +1,499 @@
 {
-  "all_visibility_passed": true,
+  "adapter_smoke": {
+    "neo4j_paths": {
+      "canonical_path_receipt_builder_blocked": [
+        "one_hop_person_released_product:knowledge_version_id is required; snapshot_id is required",
+        "two_hop_sponsor_delivers:knowledge_version_id is required; snapshot_id is required",
+        "multi_hop_sponsor_delivers:knowledge_version_id is required; snapshot_id is required"
+      ],
+      "canonical_path_receipt_count": 0,
+      "cross_tenant_path_visible": false,
+      "path_readbacks": {
+        "multi_hop_sponsor_delivers": {
+          "matched_node_refs": [
+            "person:Kjartan Eliasson",
+            "project:Northwind",
+            "product:Northwind SDK v3.0.0"
+          ],
+          "matched_relation_refs": [
+            "relation::person_sponsors_project::person:Kjartan Eliasson::project:Northwind",
+            "relation::project_delivers_product::project:Northwind::product:Northwind SDK v3.0.0"
+          ],
+          "store_visible": true
+        },
+        "one_hop_person_released_product": {
+          "matched_node_refs": [
+            "person:Haruto Soma",
+            "product:Axis-9 Industrial Controller v9.4.0"
+          ],
+          "matched_relation_refs": [
+            "relation::person_released_product::person:Haruto Soma::product:Axis-9 Industrial Controller v9.4.0"
+          ],
+          "store_visible": true
+        },
+        "two_hop_sponsor_delivers": {
+          "matched_node_refs": [
+            "person:Kjartan Eliasson",
+            "project:Northwind",
+            "product:Northwind SDK v3.0.0"
+          ],
+          "matched_relation_refs": [
+            "relation::person_sponsors_project::person:Kjartan Eliasson::project:Northwind",
+            "relation::project_delivers_product::project:Northwind::product:Northwind SDK v3.0.0"
+          ],
+          "store_visible": true
+        }
+      }
+    },
+    "readbacks": {
+      "elasticsearch": {
+        "attempted": 24,
+        "details": [
+          {
+            "chunk_id": "chunk::doc_axis9_release_notes::001",
+            "content_hash": "ddbcb64d78c4ba0cd0a08e5f7b239d57238ffeaded924648ee16726a0d28e4c9",
+            "document_id": "doc_axis9_release_notes",
+            "readback_ok": true
+          },
+          {
+            "chunk_id": "chunk::doc_axis9_release_notes::002",
+            "content_hash": "f45e6c9b280b83160256aaf1eebeb6480c63198166dc83b7a9c9ec668ca66221",
+            "document_id": "doc_axis9_release_notes",
+            "readback_ok": true
+          },
+          {
+            "chunk_id": "chunk::doc_axis9_release_notes::003",
+            "content_hash": "4b0285c68522d0621f9d55bb774f86ea1d8809f02ce8e2479cde0b781d931984",
+            "document_id": "doc_axis9_release_notes",
+            "readback_ok": true
+          },
+          {
+            "chunk_id": "chunk::doc_forge_recall::001",
+            "content_hash": "73f2adeb6c75c2b91e4de95bc05d70f7625c5469f35a3b71b16e01240d7699d3",
+            "document_id": "doc_forge_recall",
+            "readback_ok": true
+          },
+          {
+            "chunk_id": "chunk::doc_forge_recall::002",
+            "content_hash": "651b023fd7e15f342687baa3e990644c4520badf2421fb8aa3f680aed3320d40",
+            "document_id": "doc_forge_recall",
+            "readback_ok": true
+          },
+          {
+            "chunk_id": "chunk::doc_forge_recall::003",
+            "content_hash": "9e36aac3dc954cfaa9d1f4f1eaddf95d239cd3c91bd724b767b37f1efa8d2c3c",
+            "document_id": "doc_forge_recall",
+            "readback_ok": true
+          },
+          {
+            "chunk_id": "chunk::doc_legal_audit_2026_q1::001",
+            "content_hash": "69c5859e7bebab4155a5ac2c76b1acdbb715d827ed982c868f478a8fcf671f1b",
+            "document_id": "doc_legal_audit_2026_q1",
+            "readback_ok": true
+          },
+          {
+            "chunk_id": "chunk::doc_legal_audit_2026_q1::002",
+            "content_hash": "431bdbb338f1282a216a9e7bda1fd195429d4daa5ed4416d43874c6d49f50c9a",
+            "document_id": "doc_legal_audit_2026_q1",
+            "readback_ok": true
+          },
+          {
+            "chunk_id": "chunk::doc_legal_audit_2026_q1::003",
+            "content_hash": "dd2e5f7417a0faa5791089c034939a9dffbc1fc199203e1fff35aa4ed35eaf17",
+            "document_id": "doc_legal_audit_2026_q1",
+            "readback_ok": true
+          },
+          {
+            "chunk_id": "chunk::doc_northwind_charter::001",
+            "content_hash": "6ca6a871e6a303ccc10062382d3f568e1f7264ab4080a41351cd40501a1020a7",
+            "document_id": "doc_northwind_charter",
+            "readback_ok": true
+          },
+          {
+            "chunk_id": "chunk::doc_northwind_charter::002",
+            "content_hash": "c4701c33395f423151a54d0d5259201f4b0a72eda5fa83efa6d9841bdd8256ab",
+            "document_id": "doc_northwind_charter",
+            "readback_ok": true
+          },
+          {
+            "chunk_id": "chunk::doc_northwind_charter::003",
+            "content_hash": "f90b3f178d506a3b59b4dd6b0e0e9fafc0eeccc8ea3be2dccec2976164f523ec",
+            "document_id": "doc_northwind_charter",
+            "readback_ok": true
+          },
+          {
+            "chunk_id": "chunk::doc_northwind_sdk_overview::001",
+            "content_hash": "aadd1215c2da862d58519c11ca0511a213b57bbd379943da59b847cfc6b52a73",
+            "document_id": "doc_northwind_sdk_overview",
+            "readback_ok": true
+          },
+          {
+            "chunk_id": "chunk::doc_northwind_sdk_overview::002",
+            "content_hash": "9c4afdeb9fdecc38159524e4ac9aee77e119ed8ee718fc2b8087bef8a0304f92",
+            "document_id": "doc_northwind_sdk_overview",
+            "readback_ok": true
+          },
+          {
+            "chunk_id": "chunk::doc_northwind_sdk_overview::003",
+            "content_hash": "8490af8986263c2d1ebe74385073cf0a3cc4718f9484bc6c99d3afd1dcfa1b67",
+            "document_id": "doc_northwind_sdk_overview",
+            "readback_ok": true
+          },
+          {
+            "chunk_id": "chunk::doc_org_chart_2026::001",
+            "content_hash": "fdff4f8b2181dfd38c015cb56c8f9f437f89021b7527f5dd8e4dd416d392f656",
+            "document_id": "doc_org_chart_2026",
+            "readback_ok": true
+          },
+          {
+            "chunk_id": "chunk::doc_org_chart_2026::002",
+            "content_hash": "dfe6e933b7705dfb900dd6a33f774eaefaaed545e648bd671efdbfe7611493cf",
+            "document_id": "doc_org_chart_2026",
+            "readback_ok": true
+          },
+          {
+            "chunk_id": "chunk::doc_org_chart_2026::003",
+            "content_hash": "6f1bc11ce153b472cc6a5b379e70274e1b8d78e858c545970245a351c4124bc6",
+            "document_id": "doc_org_chart_2026",
+            "readback_ok": true
+          },
+          {
+            "chunk_id": "chunk::doc_security_policy_2024::001",
+            "content_hash": "637f08e2f95bd87b30c0ea60e7356b183c4000b0755cf5d952d8def57a331af4",
+            "document_id": "doc_security_policy_2024",
+            "readback_ok": true
+          },
+          {
+            "chunk_id": "chunk::doc_security_policy_2024::002",
+            "content_hash": "4a3d5d3a084196c33405f6b0604b624c57d109acf3781520fd6ed158d321d54b",
+            "document_id": "doc_security_policy_2024",
+            "readback_ok": true
+          },
+          {
+            "chunk_id": "chunk::doc_security_policy_2024::003",
+            "content_hash": "a16b3ec281b0f2eacefec1e4d9f692644c92eb7931ce35026f22c2c6f50b8567",
+            "document_id": "doc_security_policy_2024",
+            "readback_ok": true
+          },
+          {
+            "chunk_id": "chunk::doc_security_policy_2026::001",
+            "content_hash": "056c9c9968b73f1c9ac57b3d96004d68bca4b2b0da956626020f799d0d51c618",
+            "document_id": "doc_security_policy_2026",
+            "readback_ok": true
+          },
+          {
+            "chunk_id": "chunk::doc_security_policy_2026::002",
+            "content_hash": "1962d1094dbbe3a0f3bcc260bd3e1a81cf1e086c666fde3664b079d8d8998c18",
+            "document_id": "doc_security_policy_2026",
+            "readback_ok": true
+          },
+          {
+            "chunk_id": "chunk::doc_security_policy_2026::003",
+            "content_hash": "0b5da1385af336d4266d29b5bd94b5343502fe90770a8a581496b70f9bc2cfb7",
+            "document_id": "doc_security_policy_2026",
+            "readback_ok": true
+          }
+        ],
+        "ok_count": 24,
+        "readback_hash": "01943d54020dab84831bac07d52747d9d15e101b20e0b2bbc2c1041605f9f55a"
+      },
+      "milvus": {
+        "attempted": 24,
+        "details": [
+          {
+            "chunk_id": "chunk::doc_axis9_release_notes::001",
+            "content_hash": "ddbcb64d78c4ba0cd0a08e5f7b239d57238ffeaded924648ee16726a0d28e4c9",
+            "document_id": "doc_axis9_release_notes",
+            "readback_ok": true
+          },
+          {
+            "chunk_id": "chunk::doc_axis9_release_notes::002",
+            "content_hash": "f45e6c9b280b83160256aaf1eebeb6480c63198166dc83b7a9c9ec668ca66221",
+            "document_id": "doc_axis9_release_notes",
+            "readback_ok": true
+          },
+          {
+            "chunk_id": "chunk::doc_axis9_release_notes::003",
+            "content_hash": "4b0285c68522d0621f9d55bb774f86ea1d8809f02ce8e2479cde0b781d931984",
+            "document_id": "doc_axis9_release_notes",
+            "readback_ok": true
+          },
+          {
+            "chunk_id": "chunk::doc_forge_recall::001",
+            "content_hash": "73f2adeb6c75c2b91e4de95bc05d70f7625c5469f35a3b71b16e01240d7699d3",
+            "document_id": "doc_forge_recall",
+            "readback_ok": true
+          },
+          {
+            "chunk_id": "chunk::doc_forge_recall::002",
+            "content_hash": "651b023fd7e15f342687baa3e990644c4520badf2421fb8aa3f680aed3320d40",
+            "document_id": "doc_forge_recall",
+            "readback_ok": true
+          },
+          {
+            "chunk_id": "chunk::doc_forge_recall::003",
+            "content_hash": "9e36aac3dc954cfaa9d1f4f1eaddf95d239cd3c91bd724b767b37f1efa8d2c3c",
+            "document_id": "doc_forge_recall",
+            "readback_ok": true
+          },
+          {
+            "chunk_id": "chunk::doc_legal_audit_2026_q1::001",
+            "content_hash": "69c5859e7bebab4155a5ac2c76b1acdbb715d827ed982c868f478a8fcf671f1b",
+            "document_id": "doc_legal_audit_2026_q1",
+            "readback_ok": true
+          },
+          {
+            "chunk_id": "chunk::doc_legal_audit_2026_q1::002",
+            "content_hash": "431bdbb338f1282a216a9e7bda1fd195429d4daa5ed4416d43874c6d49f50c9a",
+            "document_id": "doc_legal_audit_2026_q1",
+            "readback_ok": true
+          },
+          {
+            "chunk_id": "chunk::doc_legal_audit_2026_q1::003",
+            "content_hash": "dd2e5f7417a0faa5791089c034939a9dffbc1fc199203e1fff35aa4ed35eaf17",
+            "document_id": "doc_legal_audit_2026_q1",
+            "readback_ok": true
+          },
+          {
+            "chunk_id": "chunk::doc_northwind_charter::001",
+            "content_hash": "6ca6a871e6a303ccc10062382d3f568e1f7264ab4080a41351cd40501a1020a7",
+            "document_id": "doc_northwind_charter",
+            "readback_ok": true
+          },
+          {
+            "chunk_id": "chunk::doc_northwind_charter::002",
+            "content_hash": "c4701c33395f423151a54d0d5259201f4b0a72eda5fa83efa6d9841bdd8256ab",
+            "document_id": "doc_northwind_charter",
+            "readback_ok": true
+          },
+          {
+            "chunk_id": "chunk::doc_northwind_charter::003",
+            "content_hash": "f90b3f178d506a3b59b4dd6b0e0e9fafc0eeccc8ea3be2dccec2976164f523ec",
+            "document_id": "doc_northwind_charter",
+            "readback_ok": true
+          },
+          {
+            "chunk_id": "chunk::doc_northwind_sdk_overview::001",
+            "content_hash": "aadd1215c2da862d58519c11ca0511a213b57bbd379943da59b847cfc6b52a73",
+            "document_id": "doc_northwind_sdk_overview",
+            "readback_ok": true
+          },
+          {
+            "chunk_id": "chunk::doc_northwind_sdk_overview::002",
+            "content_hash": "9c4afdeb9fdecc38159524e4ac9aee77e119ed8ee718fc2b8087bef8a0304f92",
+            "document_id": "doc_northwind_sdk_overview",
+            "readback_ok": true
+          },
+          {
+            "chunk_id": "chunk::doc_northwind_sdk_overview::003",
+            "content_hash": "8490af8986263c2d1ebe74385073cf0a3cc4718f9484bc6c99d3afd1dcfa1b67",
+            "document_id": "doc_northwind_sdk_overview",
+            "readback_ok": true
+          },
+          {
+            "chunk_id": "chunk::doc_org_chart_2026::001",
+            "content_hash": "fdff4f8b2181dfd38c015cb56c8f9f437f89021b7527f5dd8e4dd416d392f656",
+            "document_id": "doc_org_chart_2026",
+            "readback_ok": true
+          },
+          {
+            "chunk_id": "chunk::doc_org_chart_2026::002",
+            "content_hash": "dfe6e933b7705dfb900dd6a33f774eaefaaed545e648bd671efdbfe7611493cf",
+            "document_id": "doc_org_chart_2026",
+            "readback_ok": true
+          },
+          {
+            "chunk_id": "chunk::doc_org_chart_2026::003",
+            "content_hash": "6f1bc11ce153b472cc6a5b379e70274e1b8d78e858c545970245a351c4124bc6",
+            "document_id": "doc_org_chart_2026",
+            "readback_ok": true
+          },
+          {
+            "chunk_id": "chunk::doc_security_policy_2024::001",
+            "content_hash": "637f08e2f95bd87b30c0ea60e7356b183c4000b0755cf5d952d8def57a331af4",
+            "document_id": "doc_security_policy_2024",
+            "readback_ok": true
+          },
+          {
+            "chunk_id": "chunk::doc_security_policy_2024::002",
+            "content_hash": "4a3d5d3a084196c33405f6b0604b624c57d109acf3781520fd6ed158d321d54b",
+            "document_id": "doc_security_policy_2024",
+            "readback_ok": true
+          },
+          {
+            "chunk_id": "chunk::doc_security_policy_2024::003",
+            "content_hash": "a16b3ec281b0f2eacefec1e4d9f692644c92eb7931ce35026f22c2c6f50b8567",
+            "document_id": "doc_security_policy_2024",
+            "readback_ok": true
+          },
+          {
+            "chunk_id": "chunk::doc_security_policy_2026::001",
+            "content_hash": "056c9c9968b73f1c9ac57b3d96004d68bca4b2b0da956626020f799d0d51c618",
+            "document_id": "doc_security_policy_2026",
+            "readback_ok": true
+          },
+          {
+            "chunk_id": "chunk::doc_security_policy_2026::002",
+            "content_hash": "1962d1094dbbe3a0f3bcc260bd3e1a81cf1e086c666fde3664b079d8d8998c18",
+            "document_id": "doc_security_policy_2026",
+            "readback_ok": true
+          },
+          {
+            "chunk_id": "chunk::doc_security_policy_2026::003",
+            "content_hash": "0b5da1385af336d4266d29b5bd94b5343502fe90770a8a581496b70f9bc2cfb7",
+            "document_id": "doc_security_policy_2026",
+            "readback_ok": true
+          }
+        ],
+        "ok_count": 24
+      }
+    },
+    "scope_matrix": {
+      "elasticsearch": {
+        "foreign_tenant_search_hit_count": 0,
+        "isolation_passed": true,
+        "matrix": {
+          "empty_scope": 24,
+          "foreign_snapshot_scope": 0,
+          "missing_scope": 24,
+          "same_tenant_different_workspace": 0,
+          "same_tenant_workspace_different_kv": 0,
+          "same_tenant_workspace_kv": 24,
+          "same_workspace_different_tenant": 0
+        },
+        "scoped_search_hit_count": 4
+      },
+      "milvus": {
+        "foreign_tenant_search_hit_count": 0,
+        "injection_attempt": {
+          "count": 0
+        },
+        "injection_contained": true,
+        "isolation_passed": true,
+        "matrix": {
+          "empty_scope": 24,
+          "foreign_snapshot_scope": 0,
+          "missing_scope": 24,
+          "same_tenant_different_workspace": 0,
+          "same_tenant_workspace_different_kv": 0,
+          "same_tenant_workspace_kv": 24,
+          "same_workspace_different_tenant": 0
+        },
+        "scoped_search_hit_count": 24
+      }
+    },
+    "writes": {
+      "elasticsearch": {
+        "chunk_count": 24,
+        "recreate": true
+      },
+      "milvus": {
+        "chunk_count": 24,
+        "recreate": true
+      },
+      "neo4j": {
+        "chunk_count": 24,
+        "entity_count": 15,
+        "relation_count": 5
+      }
+    }
+  },
   "cleanup": {
     "elasticsearch": "index_deleted",
-    "index_prefix": "deepseek2_phase22_9a9735f3",
+    "index_prefix": "deepseek2_phase22_d385bcd2",
     "milvus": "collection_dropped",
     "neo4j": "nodes_deleted"
   },
-  "elapsed_seconds": 168.672,
+  "cleanup_readback": {
+    "cleanup_verified": true,
+    "elasticsearch": "deleted:HTTP Error 404: Not Found",
+    "milvus": "deleted:<SchemaNotReadyException: (code=1, message=Collection 'deeps"
+  },
+  "corpus_index_build_receipts": {
+    "elasticsearch_bm25": {
+      "adapter_execution_ref": "adapter-live-smoke:deepseek2_phase22_d385bcd2:elasticsearch_bm25",
+      "block_reason": "knowledge_version_dependency_missing",
+      "config_hash": "sha256:d4d77f48b3dcc15f5abdb0a8e1d610c0cccd38f3c5bf7d5a7464c84b7863961d",
+      "content_set_hash": "77f1d7dbd30d2ed26d94c788dc0447a082807f9ac623092762e326a611955be9",
+      "expected_chunk_count": 24,
+      "expected_document_count": 8,
+      "index_build_run_id": "index-build-run::deepseek2_phase22_d385bcd2",
+      "index_kind": "elasticsearch_bm25",
+      "input_kind": "frozen_candidate_manifest",
+      "knowledge_version_id": "",
+      "not_owner_produced": true,
+      "observed_chunk_count": 24,
+      "observed_document_count": 8,
+      "payload_hash": "6a9cfca3e377307b53dc2f1e2c7e8a119cbfdeadfb04558d0d77e9a64cc87462",
+      "readback_hash": "01943d54020dab84831bac07d52747d9d15e101b20e0b2bbc2c1041605f9f55a",
+      "receipt_kind": "corpus_index_build_receipt",
+      "receipt_ref": "corpus-index-build:elasticsearch_bm25:6a9cfca3e377307b",
+      "receipt_scope": "adapter_live_smoke",
+      "snapshot_eligible": false,
+      "tenant_id": "tenant_auroralis",
+      "visibility_status": "blocked",
+      "workspace_id": "workspace_regression"
+    },
+    "milvus_vector": {
+      "adapter_execution_ref": "adapter-live-smoke:deepseek2_phase22_d385bcd2:milvus_vector",
+      "block_reason": "knowledge_version_dependency_missing",
+      "config_hash": "sha256:d4d77f48b3dcc15f5abdb0a8e1d610c0cccd38f3c5bf7d5a7464c84b7863961d",
+      "content_set_hash": "77f1d7dbd30d2ed26d94c788dc0447a082807f9ac623092762e326a611955be9",
+      "expected_chunk_count": 24,
+      "expected_document_count": 8,
+      "index_build_run_id": "index-build-run::deepseek2_phase22_d385bcd2",
+      "index_kind": "milvus_vector",
+      "input_kind": "frozen_candidate_manifest",
+      "knowledge_version_id": "",
+      "not_owner_produced": true,
+      "observed_chunk_count": 24,
+      "observed_document_count": 8,
+      "payload_hash": "e78f7d3ab34bad5cbe64ba76153864a32d7bf25cf19b5b4257be61c9a8a30181",
+      "readback_hash": "01943d54020dab84831bac07d52747d9d15e101b20e0b2bbc2c1041605f9f55a",
+      "receipt_kind": "corpus_index_build_receipt",
+      "receipt_ref": "corpus-index-build:milvus_vector:e78f7d3ab34bad5c",
+      "receipt_scope": "adapter_live_smoke",
+      "snapshot_eligible": false,
+      "tenant_id": "tenant_auroralis",
+      "visibility_status": "blocked",
+      "workspace_id": "workspace_regression"
+    },
+    "neo4j_graph": {
+      "adapter_execution_ref": "adapter-live-smoke:deepseek2_phase22_d385bcd2:neo4j_graph",
+      "block_reason": "knowledge_version_dependency_missing",
+      "config_hash": "sha256:d4d77f48b3dcc15f5abdb0a8e1d610c0cccd38f3c5bf7d5a7464c84b7863961d",
+      "content_set_hash": "77f1d7dbd30d2ed26d94c788dc0447a082807f9ac623092762e326a611955be9",
+      "expected_chunk_count": 24,
+      "expected_document_count": 8,
+      "index_build_run_id": "index-build-run::deepseek2_phase22_d385bcd2",
+      "index_kind": "neo4j_graph",
+      "input_kind": "frozen_candidate_manifest",
+      "knowledge_version_id": "",
+      "not_owner_produced": true,
+      "observed_chunk_count": 24,
+      "observed_document_count": 8,
+      "payload_hash": "f1fbf7ac223e0317da7e1b94826b3dbe577ae2a421ec0fe03bf394546bf0e73f",
+      "readback_hash": "01943d54020dab84831bac07d52747d9d15e101b20e0b2bbc2c1041605f9f55a",
+      "receipt_kind": "corpus_index_build_receipt",
+      "receipt_ref": "corpus-index-build:neo4j_graph:f1fbf7ac223e0317",
+      "receipt_scope": "adapter_live_smoke",
+      "snapshot_eligible": false,
+      "tenant_id": "tenant_auroralis",
+      "visibility_status": "blocked",
+      "workspace_id": "workspace_regression"
+    }
+  },
+  "corpus_level_visibility_status": "NOT_RUN_DEPENDENCY_BLOCKED",
+  "credentials": {
+    "neo4j_source": "environment:ZUNO_TEST_NEO4J_*",
+    "neo4j_values": {
+      "password": "[REDACTED]",
+      "uri": "[REDACTED]",
+      "username": "[REDACTED]"
+    }
+  },
+  "elapsed_seconds": 57.453,
   "embedding": {
-    "base_url": "https://dashscope.aliyuncs.com/compatible-mode/v1",
     "config_hash": "sha256:d4d77f48b3dcc15f5abdb0a8e1d610c0cccd38f3c5bf7d5a7464c84b7863961d",
     "dimension": 1024,
     "gateway_kind": "openai_compatible_embedding_gateway",
@@ -16,270 +501,30 @@
     "provider": "dashscope",
     "vector_source": "formal_embedding_gateway"
   },
-  "evidence_hash": "9156e193d5019445bb381d57d6f4d79e25b9f95c2e7f668098eee8c1022ed2d4",
-  "evidence_kind": "live_three_index_visibility",
-  "index_runtime": {
-    "adapter_dispatch_receipts": {
-      "bm25": {
-        "dispatch_ref": "index-dispatch:bm25:e18aa374fc8f357e",
-        "indexed_document_count": 4,
-        "payload_hash": "e18aa374fc8f357e042b1fd3aed3dfadba552ab093ed4d322c7fe4a281736c55"
-      },
-      "graph": {
-        "dispatch_ref": "index-dispatch:graph:2a5f56bd8d2567fd",
-        "indexed_document_count": 4,
-        "payload_hash": "2a5f56bd8d2567fd9dafc7ebc26bcc1c7aafbee6a287493c9f5d9524107931fc"
-      },
-      "vector": {
-        "dispatch_ref": "index-dispatch:vector:eb85877245e63310",
-        "indexed_document_count": 4,
-        "payload_hash": "eb85877245e633107279804074bd45feff75de58220285e36751ae2cab042aad"
-      }
-    },
-    "adapter_status": {
-      "bm25": "elasticsearch:current",
-      "graph": "neo4j:current",
-      "vector": "milvus:current"
-    },
-    "adapter_visibility_receipts": {
-      "bm25": {
-        "adapter_dispatch_ref": "index-dispatch:bm25:e18aa374fc8f357e",
-        "adapter_id": "elasticsearch",
-        "adapter_status": "current",
-        "adapter_target": "bm25",
-        "document_id": "doc_security_policy_2026",
-        "document_version_id": "document-version::doc_security_policy_2026::5f77b8d31a06efba",
-        "index_version": "idx_b43a867e526c",
-        "knowledge_space_id": "ks_deepseek2_phase22_9a9735f3",
-        "payload_hash": "6f6db812517fceb3b67ee412dc530efb40dcd591c9fb0a9ef23e4c1a271c7c08",
-        "receipt_kind": "elasticsearch_bm25_visibility",
-        "receipt_ref": "index-visibility:bm25:6f6db812517fceb3",
-        "sample_match_count": 4,
-        "sample_query": "information security policy 2026 edition document_id doc_security_policy_2026 tenant_id",
-        "source_block_count": 3,
-        "visibility": "visible",
-        "visibility_failure_reason": null
-      },
-      "graph": {
-        "adapter_dispatch_ref": "index-dispatch:graph:2a5f56bd8d2567fd",
-        "adapter_id": "neo4j",
-        "adapter_status": "current",
-        "adapter_target": "graph",
-        "document_id": "doc_security_policy_2026",
-        "document_version_id": "document-version::doc_security_policy_2026::5f77b8d31a06efba",
-        "index_version": "idx_b43a867e526c",
-        "knowledge_space_id": "ks_deepseek2_phase22_9a9735f3",
-        "payload_hash": "bd6fc455372e672222a8d2f14b1a2a4c9bf4023789f337a1e18f9ef02c0a37cb",
-        "receipt_kind": "neo4j_graph_visibility",
-        "receipt_ref": "index-visibility:graph:bd6fc455372e6722",
-        "sample_match_count": 4,
-        "sample_query": "information security policy 2026 edition document_id doc_security_policy_2026 tenant_id",
-        "source_block_count": 3,
-        "visibility": "visible",
-        "visibility_failure_reason": null
-      },
-      "vector": {
-        "adapter_dispatch_ref": "index-dispatch:vector:eb85877245e63310",
-        "adapter_id": "milvus",
-        "adapter_status": "current",
-        "adapter_target": "vector",
-        "document_id": "doc_security_policy_2026",
-        "document_version_id": "document-version::doc_security_policy_2026::5f77b8d31a06efba",
-        "index_version": "idx_b43a867e526c",
-        "knowledge_space_id": "ks_deepseek2_phase22_9a9735f3",
-        "payload_hash": "71672246b8621a574621c3b5c198cc6dde1629d275b0973baa82a254f17a576a",
-        "receipt_kind": "milvus_vector_visibility",
-        "receipt_ref": "index-visibility:vector:71672246b8621a57",
-        "sample_match_count": 4,
-        "sample_query": "information security policy 2026 edition document_id doc_security_policy_2026 tenant_id",
-        "source_block_count": 3,
-        "visibility": "visible",
-        "visibility_failure_reason": null
-      }
-    }
-  },
-  "input_authenticity": {
+  "evidence_hash": "13ef02d85331e7a3ce7a94724b9166afaf17d3a8e15715cfb4eca62959cdb2b3",
+  "evidence_kind": "three_index_adapter_live_smoke",
+  "input": {
     "canonical_ir_hash": "43d4842d41ea528cec6bfdfd7540a0c58c8c6653f8fa752b9eee31c7a0f079a6",
-    "corpus_chunk_text_hashes_verified": true,
-    "hash_checks": [
-      {
-        "actual_hash": "ddbcb64d78c4ba0c",
-        "chunk_id": "chunk::doc_axis9_release_notes::001",
-        "expected_hash": "ddbcb64d78c4ba0c",
-        "ordinal": 1,
-        "text_hash_matches_manifest": true
-      },
-      {
-        "actual_hash": "f45e6c9b280b8316",
-        "chunk_id": "chunk::doc_axis9_release_notes::002",
-        "expected_hash": "f45e6c9b280b8316",
-        "ordinal": 2,
-        "text_hash_matches_manifest": true
-      },
-      {
-        "actual_hash": "4b0285c68522d062",
-        "chunk_id": "chunk::doc_axis9_release_notes::003",
-        "expected_hash": "4b0285c68522d062",
-        "ordinal": 3,
-        "text_hash_matches_manifest": true
-      },
-      {
-        "actual_hash": "73f2adeb6c75c2b9",
-        "chunk_id": "chunk::doc_forge_recall::001",
-        "expected_hash": "73f2adeb6c75c2b9",
-        "ordinal": 1,
-        "text_hash_matches_manifest": true
-      },
-      {
-        "actual_hash": "651b023fd7e15f34",
-        "chunk_id": "chunk::doc_forge_recall::002",
-        "expected_hash": "651b023fd7e15f34",
-        "ordinal": 2,
-        "text_hash_matches_manifest": true
-      },
-      {
-        "actual_hash": "9e36aac3dc954cfa",
-        "chunk_id": "chunk::doc_forge_recall::003",
-        "expected_hash": "9e36aac3dc954cfa",
-        "ordinal": 3,
-        "text_hash_matches_manifest": true
-      },
-      {
-        "actual_hash": "69c5859e7bebab41",
-        "chunk_id": "chunk::doc_legal_audit_2026_q1::001",
-        "expected_hash": "69c5859e7bebab41",
-        "ordinal": 1,
-        "text_hash_matches_manifest": true
-      },
-      {
-        "actual_hash": "431bdbb338f1282a",
-        "chunk_id": "chunk::doc_legal_audit_2026_q1::002",
-        "expected_hash": "431bdbb338f1282a",
-        "ordinal": 2,
-        "text_hash_matches_manifest": true
-      },
-      {
-        "actual_hash": "dd2e5f7417a0faa5",
-        "chunk_id": "chunk::doc_legal_audit_2026_q1::003",
-        "expected_hash": "dd2e5f7417a0faa5",
-        "ordinal": 3,
-        "text_hash_matches_manifest": true
-      },
-      {
-        "actual_hash": "6ca6a871e6a303cc",
-        "chunk_id": "chunk::doc_northwind_charter::001",
-        "expected_hash": "6ca6a871e6a303cc",
-        "ordinal": 1,
-        "text_hash_matches_manifest": true
-      },
-      {
-        "actual_hash": "c4701c33395f4231",
-        "chunk_id": "chunk::doc_northwind_charter::002",
-        "expected_hash": "c4701c33395f4231",
-        "ordinal": 2,
-        "text_hash_matches_manifest": true
-      },
-      {
-        "actual_hash": "f90b3f178d506a3b",
-        "chunk_id": "chunk::doc_northwind_charter::003",
-        "expected_hash": "f90b3f178d506a3b",
-        "ordinal": 3,
-        "text_hash_matches_manifest": true
-      },
-      {
-        "actual_hash": "aadd1215c2da862d",
-        "chunk_id": "chunk::doc_northwind_sdk_overview::001",
-        "expected_hash": "aadd1215c2da862d",
-        "ordinal": 1,
-        "text_hash_matches_manifest": true
-      },
-      {
-        "actual_hash": "9c4afdeb9fdecc38",
-        "chunk_id": "chunk::doc_northwind_sdk_overview::002",
-        "expected_hash": "9c4afdeb9fdecc38",
-        "ordinal": 2,
-        "text_hash_matches_manifest": true
-      },
-      {
-        "actual_hash": "8490af8986263c2d",
-        "chunk_id": "chunk::doc_northwind_sdk_overview::003",
-        "expected_hash": "8490af8986263c2d",
-        "ordinal": 3,
-        "text_hash_matches_manifest": true
-      },
-      {
-        "actual_hash": "fdff4f8b2181dfd3",
-        "chunk_id": "chunk::doc_org_chart_2026::001",
-        "expected_hash": "fdff4f8b2181dfd3",
-        "ordinal": 1,
-        "text_hash_matches_manifest": true
-      },
-      {
-        "actual_hash": "dfe6e933b7705dfb",
-        "chunk_id": "chunk::doc_org_chart_2026::002",
-        "expected_hash": "dfe6e933b7705dfb",
-        "ordinal": 2,
-        "text_hash_matches_manifest": true
-      },
-      {
-        "actual_hash": "6f1bc11ce153b472",
-        "chunk_id": "chunk::doc_org_chart_2026::003",
-        "expected_hash": "6f1bc11ce153b472",
-        "ordinal": 3,
-        "text_hash_matches_manifest": true
-      },
-      {
-        "actual_hash": "637f08e2f95bd87b",
-        "chunk_id": "chunk::doc_security_policy_2024::001",
-        "expected_hash": "637f08e2f95bd87b",
-        "ordinal": 1,
-        "text_hash_matches_manifest": true
-      },
-      {
-        "actual_hash": "4a3d5d3a084196c3",
-        "chunk_id": "chunk::doc_security_policy_2024::002",
-        "expected_hash": "4a3d5d3a084196c3",
-        "ordinal": 2,
-        "text_hash_matches_manifest": true
-      },
-      {
-        "actual_hash": "a16b3ec281b0f2ea",
-        "chunk_id": "chunk::doc_security_policy_2024::003",
-        "expected_hash": "a16b3ec281b0f2ea",
-        "ordinal": 3,
-        "text_hash_matches_manifest": true
-      },
-      {
-        "actual_hash": "056c9c9968b73f1c",
-        "chunk_id": "chunk::doc_security_policy_2026::001",
-        "expected_hash": "056c9c9968b73f1c",
-        "ordinal": 1,
-        "text_hash_matches_manifest": true
-      },
-      {
-        "actual_hash": "1962d1094dbbe3a0",
-        "chunk_id": "chunk::doc_security_policy_2026::002",
-        "expected_hash": "1962d1094dbbe3a0",
-        "ordinal": 2,
-        "text_hash_matches_manifest": true
-      },
-      {
-        "actual_hash": "0b5da1385af336d4",
-        "chunk_id": "chunk::doc_security_policy_2026::003",
-        "expected_hash": "0b5da1385af336d4",
-        "ordinal": 3,
-        "text_hash_matches_manifest": true
-      }
-    ],
+    "content_set_hash": "77f1d7dbd30d2ed26d94c788dc0447a082807f9ac623092762e326a611955be9",
+    "expected_chunk_count": 24,
+    "expected_document_count": 8,
+    "identity_checks": {
+      "chunk_count_equal": true,
+      "chunk_hash_mismatch_count": 0,
+      "chunk_hashes_all_equal": true,
+      "chunk_id_set_equal": true,
+      "document_count_equal": true
+    },
+    "input_kind": "frozen_candidate_manifest",
+    "not_owner_produced": true,
     "source_manifest_hash": "0a6ee33cae62e5c3370217f5ec028a4efd1a52855557a71b57f2dc8bdce0c26a"
   },
   "schema_version": "1.0.0",
   "scope": {
-    "chunk_count": 35,
-    "document_count": 8,
-    "index_prefix": "deepseek2_phase22_9a9735f3",
-    "index_version": "idx_b43a867e526c",
+    "index_build_run_id": "index-build-run::deepseek2_phase22_d385bcd2",
+    "index_prefix": "deepseek2_phase22_d385bcd2",
     "knowledge_version_id": "",
+    "snapshot_eligible": false,
     "tenant_id": "tenant_auroralis",
     "workspace_id": "workspace_regression"
   },
@@ -296,528 +541,13 @@
       "driver_version": "5.28.1"
     }
   },
-  "started_at": "2026-08-03T13:55:12.897313+00:00",
+  "started_at": "2026-08-03T14:46:09.441057+00:00",
   "track_id": "machine_attested_synthetic_regression",
-  "verifications": {
-    "elasticsearch_bm25": {
-      "bm25_query": {
-        "query": "renewal policy",
-        "scoped_hit_count": 4
-      },
-      "chunk_readback": [
-        {
-          "chunk_id": "doc_axis9_release_notes::block::doc_axis9_release_notes::001::cite1",
-          "document_id": "doc_axis9_release_notes",
-          "readback_ok": true
-        },
-        {
-          "chunk_id": "doc_axis9_release_notes::block::doc_axis9_release_notes::002::cite1",
-          "document_id": "doc_axis9_release_notes",
-          "readback_ok": true
-        },
-        {
-          "chunk_id": "doc_axis9_release_notes::block::doc_axis9_release_notes::003::cite1",
-          "document_id": "doc_axis9_release_notes",
-          "readback_ok": true
-        },
-        {
-          "chunk_id": "doc_axis9_release_notes::block::doc_axis9_release_notes::003::cite2",
-          "document_id": "doc_axis9_release_notes",
-          "readback_ok": true
-        },
-        {
-          "chunk_id": "doc_forge_recall::block::doc_forge_recall::001::cite1",
-          "document_id": "doc_forge_recall",
-          "readback_ok": true
-        },
-        {
-          "chunk_id": "doc_forge_recall::block::doc_forge_recall::002::cite1",
-          "document_id": "doc_forge_recall",
-          "readback_ok": true
-        },
-        {
-          "chunk_id": "doc_forge_recall::block::doc_forge_recall::003::cite1",
-          "document_id": "doc_forge_recall",
-          "readback_ok": true
-        },
-        {
-          "chunk_id": "doc_legal_audit_2026_q1::block::doc_legal_audit_2026_q1::001::cite1",
-          "document_id": "doc_legal_audit_2026_q1",
-          "readback_ok": true
-        },
-        {
-          "chunk_id": "doc_legal_audit_2026_q1::block::doc_legal_audit_2026_q1::002::cite1",
-          "document_id": "doc_legal_audit_2026_q1",
-          "readback_ok": true
-        },
-        {
-          "chunk_id": "doc_legal_audit_2026_q1::block::doc_legal_audit_2026_q1::003::cite1",
-          "document_id": "doc_legal_audit_2026_q1",
-          "readback_ok": true
-        },
-        {
-          "chunk_id": "doc_legal_audit_2026_q1::block::doc_legal_audit_2026_q1::003::cite2",
-          "document_id": "doc_legal_audit_2026_q1",
-          "readback_ok": true
-        },
-        {
-          "chunk_id": "doc_legal_audit_2026_q1::block::doc_legal_audit_2026_q1::003::cite3",
-          "document_id": "doc_legal_audit_2026_q1",
-          "readback_ok": true
-        },
-        {
-          "chunk_id": "doc_northwind_charter::block::doc_northwind_charter::001::cite1",
-          "document_id": "doc_northwind_charter",
-          "readback_ok": true
-        },
-        {
-          "chunk_id": "doc_northwind_charter::block::doc_northwind_charter::002::cite1",
-          "document_id": "doc_northwind_charter",
-          "readback_ok": true
-        },
-        {
-          "chunk_id": "doc_northwind_charter::block::doc_northwind_charter::003::cite1",
-          "document_id": "doc_northwind_charter",
-          "readback_ok": true
-        },
-        {
-          "chunk_id": "doc_northwind_charter::block::doc_northwind_charter::003::cite2",
-          "document_id": "doc_northwind_charter",
-          "readback_ok": true
-        },
-        {
-          "chunk_id": "doc_northwind_charter::block::doc_northwind_charter::003::cite3",
-          "document_id": "doc_northwind_charter",
-          "readback_ok": true
-        },
-        {
-          "chunk_id": "doc_northwind_charter::block::doc_northwind_charter::003::cite4",
-          "document_id": "doc_northwind_charter",
-          "readback_ok": true
-        },
-        {
-          "chunk_id": "doc_northwind_sdk_overview::block::doc_northwind_sdk_overview::001::cite1",
-          "document_id": "doc_northwind_sdk_overview",
-          "readback_ok": true
-        },
-        {
-          "chunk_id": "doc_northwind_sdk_overview::block::doc_northwind_sdk_overview::002::cite1",
-          "document_id": "doc_northwind_sdk_overview",
-          "readback_ok": true
-        },
-        {
-          "chunk_id": "doc_northwind_sdk_overview::block::doc_northwind_sdk_overview::003::cite1",
-          "document_id": "doc_northwind_sdk_overview",
-          "readback_ok": true
-        },
-        {
-          "chunk_id": "doc_northwind_sdk_overview::block::doc_northwind_sdk_overview::003::cite2",
-          "document_id": "doc_northwind_sdk_overview",
-          "readback_ok": true
-        },
-        {
-          "chunk_id": "doc_org_chart_2026::block::doc_org_chart_2026::001::cite1",
-          "document_id": "doc_org_chart_2026",
-          "readback_ok": true
-        },
-        {
-          "chunk_id": "doc_org_chart_2026::block::doc_org_chart_2026::002::cite1",
-          "document_id": "doc_org_chart_2026",
-          "readback_ok": true
-        },
-        {
-          "chunk_id": "doc_org_chart_2026::block::doc_org_chart_2026::003::cite1",
-          "document_id": "doc_org_chart_2026",
-          "readback_ok": true
-        },
-        {
-          "chunk_id": "doc_org_chart_2026::block::doc_org_chart_2026::003::cite2",
-          "document_id": "doc_org_chart_2026",
-          "readback_ok": true
-        },
-        {
-          "chunk_id": "doc_org_chart_2026::block::doc_org_chart_2026::003::cite3",
-          "document_id": "doc_org_chart_2026",
-          "readback_ok": true
-        },
-        {
-          "chunk_id": "doc_security_policy_2024::block::doc_security_policy_2024::001::cite1",
-          "document_id": "doc_security_policy_2024",
-          "readback_ok": true
-        },
-        {
-          "chunk_id": "doc_security_policy_2024::block::doc_security_policy_2024::002::cite1",
-          "document_id": "doc_security_policy_2024",
-          "readback_ok": true
-        },
-        {
-          "chunk_id": "doc_security_policy_2024::block::doc_security_policy_2024::003::cite1",
-          "document_id": "doc_security_policy_2024",
-          "readback_ok": true
-        },
-        {
-          "chunk_id": "doc_security_policy_2024::block::doc_security_policy_2024::003::cite2",
-          "document_id": "doc_security_policy_2024",
-          "readback_ok": true
-        },
-        {
-          "chunk_id": "doc_security_policy_2026::block::doc_security_policy_2026::001::cite1",
-          "document_id": "doc_security_policy_2026",
-          "readback_ok": true
-        },
-        {
-          "chunk_id": "doc_security_policy_2026::block::doc_security_policy_2026::002::cite1",
-          "document_id": "doc_security_policy_2026",
-          "readback_ok": true
-        },
-        {
-          "chunk_id": "doc_security_policy_2026::block::doc_security_policy_2026::003::cite1",
-          "document_id": "doc_security_policy_2026",
-          "readback_ok": true
-        },
-        {
-          "chunk_id": "doc_security_policy_2026::block::doc_security_policy_2026::003::cite2",
-          "document_id": "doc_security_policy_2026",
-          "readback_ok": true
-        }
-      ],
-      "chunk_readback_count": 35,
-      "chunk_readback_ok_count": 35,
-      "document_counts": {
-        "all": 35,
-        "scoped": 35,
-        "wrong_tenant": 0,
-        "wrong_workspace": 0
-      },
-      "index_name": "deepseek2_phase22_9a9735f3_bm25",
-      "tenant_filter": {
-        "scoped_hit_count": 4,
-        "wrong_tenant_hit_count": 0,
-        "wrong_workspace_hit_count": 0
-      },
-      "tenant_isolation_passed": true
-    },
-    "milvus_vector": {
-      "ann_query": {
-        "query": "renewal policy",
-        "scoped_hit_count": 25
-      },
-      "chunk_readback": [
-        {
-          "chunk_id": "doc_axis9_release_notes::block::doc_axis9_release_notes::001::cite1",
-          "document_id": "doc_axis9_release_notes",
-          "readback_ok": true
-        },
-        {
-          "chunk_id": "doc_axis9_release_notes::block::doc_axis9_release_notes::002::cite1",
-          "document_id": "doc_axis9_release_notes",
-          "readback_ok": true
-        },
-        {
-          "chunk_id": "doc_axis9_release_notes::block::doc_axis9_release_notes::003::cite1",
-          "document_id": "doc_axis9_release_notes",
-          "readback_ok": true
-        },
-        {
-          "chunk_id": "doc_axis9_release_notes::block::doc_axis9_release_notes::003::cite2",
-          "document_id": "doc_axis9_release_notes",
-          "readback_ok": true
-        },
-        {
-          "chunk_id": "doc_forge_recall::block::doc_forge_recall::001::cite1",
-          "document_id": "doc_forge_recall",
-          "readback_ok": true
-        },
-        {
-          "chunk_id": "doc_forge_recall::block::doc_forge_recall::002::cite1",
-          "document_id": "doc_forge_recall",
-          "readback_ok": true
-        },
-        {
-          "chunk_id": "doc_forge_recall::block::doc_forge_recall::003::cite1",
-          "document_id": "doc_forge_recall",
-          "readback_ok": true
-        },
-        {
-          "chunk_id": "doc_legal_audit_2026_q1::block::doc_legal_audit_2026_q1::001::cite1",
-          "document_id": "doc_legal_audit_2026_q1",
-          "readback_ok": true
-        },
-        {
-          "chunk_id": "doc_legal_audit_2026_q1::block::doc_legal_audit_2026_q1::002::cite1",
-          "document_id": "doc_legal_audit_2026_q1",
-          "readback_ok": true
-        },
-        {
-          "chunk_id": "doc_legal_audit_2026_q1::block::doc_legal_audit_2026_q1::003::cite1",
-          "document_id": "doc_legal_audit_2026_q1",
-          "readback_ok": true
-        },
-        {
-          "chunk_id": "doc_legal_audit_2026_q1::block::doc_legal_audit_2026_q1::003::cite2",
-          "document_id": "doc_legal_audit_2026_q1",
-          "readback_ok": true
-        },
-        {
-          "chunk_id": "doc_legal_audit_2026_q1::block::doc_legal_audit_2026_q1::003::cite3",
-          "document_id": "doc_legal_audit_2026_q1",
-          "readback_ok": true
-        },
-        {
-          "chunk_id": "doc_northwind_charter::block::doc_northwind_charter::001::cite1",
-          "document_id": "doc_northwind_charter",
-          "readback_ok": true
-        },
-        {
-          "chunk_id": "doc_northwind_charter::block::doc_northwind_charter::002::cite1",
-          "document_id": "doc_northwind_charter",
-          "readback_ok": true
-        },
-        {
-          "chunk_id": "doc_northwind_charter::block::doc_northwind_charter::003::cite1",
-          "document_id": "doc_northwind_charter",
-          "readback_ok": true
-        },
-        {
-          "chunk_id": "doc_northwind_charter::block::doc_northwind_charter::003::cite2",
-          "document_id": "doc_northwind_charter",
-          "readback_ok": true
-        },
-        {
-          "chunk_id": "doc_northwind_charter::block::doc_northwind_charter::003::cite3",
-          "document_id": "doc_northwind_charter",
-          "readback_ok": true
-        },
-        {
-          "chunk_id": "doc_northwind_charter::block::doc_northwind_charter::003::cite4",
-          "document_id": "doc_northwind_charter",
-          "readback_ok": true
-        },
-        {
-          "chunk_id": "doc_northwind_sdk_overview::block::doc_northwind_sdk_overview::001::cite1",
-          "document_id": "doc_northwind_sdk_overview",
-          "readback_ok": true
-        },
-        {
-          "chunk_id": "doc_northwind_sdk_overview::block::doc_northwind_sdk_overview::002::cite1",
-          "document_id": "doc_northwind_sdk_overview",
-          "readback_ok": true
-        },
-        {
-          "chunk_id": "doc_northwind_sdk_overview::block::doc_northwind_sdk_overview::003::cite1",
-          "document_id": "doc_northwind_sdk_overview",
-          "readback_ok": true
-        },
-        {
-          "chunk_id": "doc_northwind_sdk_overview::block::doc_northwind_sdk_overview::003::cite2",
-          "document_id": "doc_northwind_sdk_overview",
-          "readback_ok": true
-        },
-        {
-          "chunk_id": "doc_org_chart_2026::block::doc_org_chart_2026::001::cite1",
-          "document_id": "doc_org_chart_2026",
-          "readback_ok": true
-        },
-        {
-          "chunk_id": "doc_org_chart_2026::block::doc_org_chart_2026::002::cite1",
-          "document_id": "doc_org_chart_2026",
-          "readback_ok": true
-        },
-        {
-          "chunk_id": "doc_org_chart_2026::block::doc_org_chart_2026::003::cite1",
-          "document_id": "doc_org_chart_2026",
-          "readback_ok": true
-        },
-        {
-          "chunk_id": "doc_org_chart_2026::block::doc_org_chart_2026::003::cite2",
-          "document_id": "doc_org_chart_2026",
-          "readback_ok": true
-        },
-        {
-          "chunk_id": "doc_org_chart_2026::block::doc_org_chart_2026::003::cite3",
-          "document_id": "doc_org_chart_2026",
-          "readback_ok": true
-        },
-        {
-          "chunk_id": "doc_security_policy_2024::block::doc_security_policy_2024::001::cite1",
-          "document_id": "doc_security_policy_2024",
-          "readback_ok": true
-        },
-        {
-          "chunk_id": "doc_security_policy_2024::block::doc_security_policy_2024::002::cite1",
-          "document_id": "doc_security_policy_2024",
-          "readback_ok": true
-        },
-        {
-          "chunk_id": "doc_security_policy_2024::block::doc_security_policy_2024::003::cite1",
-          "document_id": "doc_security_policy_2024",
-          "readback_ok": true
-        },
-        {
-          "chunk_id": "doc_security_policy_2024::block::doc_security_policy_2024::003::cite2",
-          "document_id": "doc_security_policy_2024",
-          "readback_ok": true
-        },
-        {
-          "chunk_id": "doc_security_policy_2026::block::doc_security_policy_2026::001::cite1",
-          "document_id": "doc_security_policy_2026",
-          "readback_ok": true
-        },
-        {
-          "chunk_id": "doc_security_policy_2026::block::doc_security_policy_2026::002::cite1",
-          "document_id": "doc_security_policy_2026",
-          "readback_ok": true
-        },
-        {
-          "chunk_id": "doc_security_policy_2026::block::doc_security_policy_2026::003::cite1",
-          "document_id": "doc_security_policy_2026",
-          "readback_ok": true
-        },
-        {
-          "chunk_id": "doc_security_policy_2026::block::doc_security_policy_2026::003::cite2",
-          "document_id": "doc_security_policy_2026",
-          "readback_ok": true
-        }
-      ],
-      "chunk_readback_count": 35,
-      "chunk_readback_ok_count": 35,
-      "document_counts": {
-        "all": 35,
-        "scoped": 35,
-        "wrong_workspace": 0
-      },
-      "embedding_attestation": {
-        "config_hash": "sha256:d4d77f48b3dcc15f5abdb0a8e1d610c0cccd38f3c5bf7d5a7464c84b7863961d",
-        "dimension": 1024,
-        "model": "text-embedding-v4",
-        "provider": "dashscope",
-        "status": "FORMAL_EMBEDDING_GATEWAY_CONFIGURED"
-      },
-      "index_name": "deepseek2_phase22_9a9735f3_vector",
-      "workspace_filter": {
-        "scoped_hit_count": 25,
-        "wrong_workspace_hit_count": 25
-      },
-      "workspace_isolation_passed": true
-    },
-    "neo4j_graph": {
-      "all_paths_store_visible": true,
-      "cross_tenant_path_visible": false,
-      "index_name": "deepseek2_phase22_9a9735f3_graph",
-      "path_readbacks": {
-        "multi_hop_sponsor_delivers": {
-          "canonical_receipt_builder_blocked": [
-            "knowledge_version_id is required; snapshot_id is required"
-          ],
-          "canonical_receipt_emitted": false,
-          "end": "product:Northwind SDK v3.0.0",
-          "kinds": [
-            "person_sponsors_project",
-            "project_delivers_product"
-          ],
-          "path_length": 2,
-          "start": "person:Kjartan Eliasson",
-          "store_matched_node_refs": [
-            "person:Kjartan Eliasson",
-            "project:Northwind",
-            "product:Northwind SDK v3.0.0"
-          ],
-          "store_matched_relation_refs": [
-            "relation::person_sponsors_project::person:Kjartan Eliasson::project:Northwind",
-            "relation::project_delivers_product::project:Northwind::product:Northwind SDK v3.0.0"
-          ],
-          "store_visible": true
-        },
-        "one_hop_person_released_product": {
-          "canonical_receipt_builder_blocked": [
-            "knowledge_version_id is required; snapshot_id is required"
-          ],
-          "canonical_receipt_emitted": false,
-          "end": "product:Axis-9 Industrial Controller v9.4.0",
-          "kinds": [
-            "person_released_product"
-          ],
-          "path_length": 1,
-          "start": "person:Haruto Soma",
-          "store_matched_node_refs": [
-            "person:Haruto Soma",
-            "product:Axis-9 Industrial Controller v9.4.0"
-          ],
-          "store_matched_relation_refs": [
-            "relation::person_released_product::person:Haruto Soma::product:Axis-9 Industrial Controller v9.4.0"
-          ],
-          "store_visible": true
-        },
-        "two_hop_sponsor_delivers": {
-          "canonical_receipt_builder_blocked": [
-            "knowledge_version_id is required; snapshot_id is required"
-          ],
-          "canonical_receipt_emitted": false,
-          "end": "product:Northwind SDK v3.0.0",
-          "kinds": [
-            "person_sponsors_project",
-            "project_delivers_product"
-          ],
-          "path_length": 2,
-          "start": "person:Kjartan Eliasson",
-          "store_matched_node_refs": [
-            "person:Kjartan Eliasson",
-            "project:Northwind",
-            "product:Northwind SDK v3.0.0"
-          ],
-          "store_matched_relation_refs": [
-            "relation::person_sponsors_project::person:Kjartan Eliasson::project:Northwind",
-            "relation::project_delivers_product::project:Northwind::product:Northwind SDK v3.0.0"
-          ],
-          "store_visible": true
-        }
-      },
-      "path_receipt_count": 0,
-      "path_receipts": [],
-      "rebuild_idempotency": {
-        "path_length_after_rebuild": 2,
-        "path_readback_stable_after_rebuild": true
-      },
-      "tenant_isolation_passed": true
-    },
-    "rebuild_idempotency": {
-      "after": {
-        "es": 35,
-        "milvus": 35
-      },
-      "before": {
-        "es": 35,
-        "milvus": 35
-      },
-      "counts_stable": true,
-      "receipt_payload_hashes_stable": true
-    }
-  },
-  "visibility_receipt_refs": {
-    "bm25": {
-      "adapter_id": "elasticsearch",
-      "payload_hash": "6f6db812517fceb3b67ee412dc530efb40dcd591c9fb0a9ef23e4c1a271c7c08",
-      "receipt_kind": "elasticsearch_bm25_visibility",
-      "receipt_ref": "index-visibility:bm25:6f6db812517fceb3",
-      "sample_match_count": 4,
-      "visibility": "visible"
-    },
-    "graph": {
-      "adapter_id": "neo4j",
-      "payload_hash": "bd6fc455372e672222a8d2f14b1a2a4c9bf4023789f337a1e18f9ef02c0a37cb",
-      "receipt_kind": "neo4j_graph_visibility",
-      "receipt_ref": "index-visibility:graph:bd6fc455372e6722",
-      "sample_match_count": 4,
-      "visibility": "visible"
-    },
-    "vector": {
-      "adapter_id": "milvus",
-      "payload_hash": "71672246b8621a574621c3b5c198cc6dde1629d275b0973baa82a254f17a576a",
-      "receipt_kind": "milvus_vector_visibility",
-      "receipt_ref": "index-visibility:vector:71672246b8621a57",
-      "sample_match_count": 4,
-      "visibility": "visible"
-    }
+  "truth_boundary": {
+    "CORPUS_LEVEL_VISIBILITY_RECEIPTS_BLOCKED": true,
+    "FOUR_PROFILE_RUNTIME_NOT_RUN_DEPENDENCY_BLOCKED": true,
+    "SNAPSHOT_ACTIVATION_NOT_RUN_DEPENDENCY_BLOCKED": true,
+    "THREE_INDEX_ADAPTER_LIVE_SMOKE_AVAILABLE": true
   },
   "worker": "deepseek2-cc-b34c"
 }

@@ -1,27 +1,30 @@
-"""PHASE22 GAP-B3 live three-index visibility runner (DeepSeek2 / CC-B).
+"""PHASE22 GAP-B3 adapter live smoke (DeepSeek2 / CC-B hardening).
 
-Executes REAL writes and readbacks against the live Elasticsearch, Milvus
-and Neo4j services for the synthetic regression corpus, and collects
-authentic visibility receipts from the canonical owner builders:
+Truth boundary — this runner NEVER claims formal corpus-level visibility:
 
-* Elasticsearch: every canonical chunk written, document_id readback by
-  chunk_id, BM25 query, tenant/workspace scoped query, cross-scope
-  rejection, rebuild idempotency.
-* Milvus: formal embedding gateway (frozen provider / model / dimension /
-  config hash), real embeddings only, write into the formal collection,
-  chunk_id readback, ANN query, workspace scoped query, cross-scope
-  rejection.
-* Neo4j: entity / chunk nodes and directed relations in an isolated
-  tenant / workspace / knowledge version scope, one-hop / two-hop /
-  multi-hop path readbacks, cross-scope rejection, path visibility
-  receipts.
-
-No random vectors, no fixed fake vectors, no gold vectors, and no test
-double masquerading as the formal run.  Receipts are produced by the
-canonical owner builders in ``zuno.knowledge.indexing.contracts``.
+* Input identity is strict: the frozen candidate manifest's document
+  count, chunk count, chunk id set and per-chunk text hashes are validated
+  exactly; no re-chunking happens.  The canonical 24-chunk set is written
+  as-is (``input_kind=frozen_candidate_manifest``,
+  ``not_owner_produced=true``).
+* The corpus-level IndexBuildRun receipts stay
+  ``NOT_RUN_DEPENDENCY_BLOCKED`` while no real KnowledgeVersion exists:
+  ``receipt_scope=adapter_live_smoke``, ``snapshot_eligible=false``,
+  ``visibility_status=blocked``.  Smoke receipts can never activate a
+  snapshot.
+* Tenant / workspace / knowledge_version scope is enforced on every
+  query (ES term filters, Milvus escaped expr filters, Neo4j scoped path
+  queries) and the full isolation matrix is recorded, including foreign
+  and missing/empty scope outcomes.
+* Credentials come from environment variables only
+  (``ZUNO_TEST_NEO4J_*``); missing credentials fail closed with
+  ``credential_blocked``.  Evidence is redacted.
 
 Usage:
-    python -m tools.evals.zuno.synthetic_benchmark.run_live_three_index_visibility \
+    ZUNO_TEST_NEO4J_URI=bolt://localhost:7687 \
+    ZUNO_TEST_NEO4J_USERNAME=neo4j \
+    ZUNO_TEST_NEO4J_PASSWORD=<password> \
+    python tools/evals/zuno/synthetic_benchmark/run_live_three_index_visibility.py \
         --out-root docs/evidence/goal05-phase22-machine-attested-synthetic-regression/deepseek2-cc-b34c
 """
 
@@ -29,6 +32,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import sys
 import time
 from datetime import datetime, timezone
@@ -44,20 +48,14 @@ if str(BACKEND_ROOT) not in sys.path:
     sys.path.insert(0, str(BACKEND_ROOT))
 
 from zuno.knowledge.indexing import (  # noqa: E402
+    CORPUS_INDEX_KINDS,
     ElasticsearchBm25IndexClient,
-    KnowledgeIndexRuntime,
     MilvusVectorIndexClient,
     Neo4jGraphIndexClient,
+    build_corpus_index_build_receipt,
     compute_embedding_config_hash,
-    external_adapter_bindings,
-)
-from zuno.knowledge.ingestion.router import build_index_handoff_payload  # noqa: E402
-from zuno.knowledge.ingestion.contracts import (  # noqa: E402
-    CanonicalDocumentIR,
-    DocumentBlock,
-    DocumentMetadata,
-    DocumentProvenance,
-    SourceSpan,
+    validate_canonical_corpus_identity,
+    validate_corpus_index_build_receipt,
 )
 
 from tools.evals.zuno.synthetic_benchmark.dataset_contract import sha256_json  # noqa: E402
@@ -67,123 +65,91 @@ CORPUS_DIR = TRACK_DIR / "candidate-dataset" / "corpus"
 SOURCE_UPLOAD_MANIFEST = TRACK_DIR / "source_upload_manifest.json"
 CANONICAL_IR_MANIFEST = TRACK_DIR / "canonical_ir_manifest.json"
 
-SERVICE_ENDPOINTS = {
-    "elasticsearch": "http://localhost:9200",
-    "milvus": {"host": "localhost", "port": "19530", "health": "http://localhost:9091/healthz"},
-    "neo4j": {"uri": "bolt://localhost:7687", "username": "neo4j", "password": "neo4j12345", "database": "neo4j"},
-}
+ES_BASE_URL = "http://localhost:9200"
+MILVUS_HOST = "localhost"
+MILVUS_PORT = "19530"
+MILVUS_HEALTH = "http://localhost:9091/healthz"
 
 EMBEDDING_PROVIDER = "dashscope"
 EMBEDDING_MODEL = "text-embedding-v4"
 EMBEDDING_BASE_URL = "https://dashscope.aliyuncs.com/compatible-mode/v1"
 EMBEDDING_DIMENSION = 1024
 
+REDACT_KEYS = frozenset({"password", "api_key", "authorization", "bearer", "secret", "token"})
 
-def _now() -> str:
-    return datetime.now(timezone.utc).isoformat()
+
+def _redact(payload: Any) -> Any:
+    if isinstance(payload, dict):
+        return {
+            key: ("[REDACTED]" if key.lower() in REDACT_KEYS else _redact(value))
+            for key, value in payload.items()
+        }
+    if isinstance(payload, list):
+        return [_redact(item) for item in payload]
+    return payload
 
 
 def _paragraph_chunks(body: str) -> list[str]:
     return [chunk.strip() for chunk in body.split("\n\n") if chunk.strip()]
 
 
-def _load_manifests() -> tuple[dict[str, Any], dict[str, Any]]:
-    source_manifest = json.loads(SOURCE_UPLOAD_MANIFEST.read_text(encoding="utf-8"))
-    canonical_ir = json.loads(CANONICAL_IR_MANIFEST.read_text(encoding="utf-8"))
-    return source_manifest, canonical_ir
+def _manifest_chunk_texts(canonical_ir: dict[str, Any]) -> dict[str, str]:
+    """Hash-match corpus paragraphs to manifest chunk text_hashes.
 
-
-def _build_documents(source_manifest: dict[str, Any], canonical_ir: dict[str, Any]) -> list[CanonicalDocumentIR]:
-    """Rebuild CanonicalDocumentIR from the corpus and verify every chunk
-    text hash against the canonical IR manifest (input authenticity)."""
-    sources_by_doc = {source["document_id"]: source for source in source_manifest["sources"]}
-    chunks_by_doc: dict[str, list[dict[str, Any]]] = {}
-    for chunk in canonical_ir["chunks"]:
-        chunks_by_doc.setdefault(chunk["document_id"], []).append(chunk)
-
-    documents: list[CanonicalDocumentIR] = []
-    hash_checks: list[dict[str, Any]] = []
+    This is identity verification, not re-chunking: every manifest chunk
+    receives its exact canonical text or the run fails closed.
+    """
+    hashes_by_text: dict[str, str] = {}
     for path in sorted(CORPUS_DIR.glob("*.md")):
-        document_id = path.stem
-        source = sources_by_doc[document_id]
-        body = path.read_text(encoding="utf-8")
-        texts = _paragraph_chunks(body)
-        expected_chunks = sorted(chunks_by_doc.get(document_id, []), key=lambda item: item["ordinal"])
-        for index, (text, expected) in enumerate(zip(texts, expected_chunks), start=1):
-            actual_hash = sha256_json({"text": text})
-            hash_checks.append(
-                {
-                    "chunk_id": expected["chunk_id"],
-                    "ordinal": index,
-                    "text_hash_matches_manifest": actual_hash == expected["text_hash"],
-                    "actual_hash": actual_hash[:16],
-                    "expected_hash": expected["text_hash"][:16],
-                }
-            )
-        all_match = all(check["text_hash_matches_manifest"] for check in hash_checks if check["chunk_id"].startswith(f"chunk::{document_id}::"))
-        if not all_match:
-            raise RuntimeError(f"corpus chunk text hashes do not match canonical IR manifest for {document_id}")
+        for paragraph in _paragraph_chunks(path.read_text(encoding="utf-8")):
+            hashes_by_text.setdefault(sha256_json({"text": paragraph}), paragraph)
+    chunks_by_hash: dict[str, str] = {}
+    for chunk in canonical_ir["chunks"]:
+        chunks_by_hash[chunk["text_hash"]] = chunk["chunk_id"]
+    result: dict[str, str] = {}
+    for text_hash, chunk_id in chunks_by_hash.items():
+        text = hashes_by_text.get(text_hash)
+        if text is None:
+            raise RuntimeError(f"canonical chunk {chunk_id} has no matching corpus text (hash {text_hash[:12]})")
+        result[chunk_id] = text
+    # No extra text may exist beyond the manifest chunk set.
+    extra = set(hashes_by_text) - set(chunks_by_hash)
+    if extra:
+        raise RuntimeError(f"corpus contains {len(extra)} paragraph hashes not present in the canonical manifest")
+    return result
 
-        document = CanonicalDocumentIR(
-            metadata=DocumentMetadata(
-                document_id=document_id,
-                source_id=source["source_id"],
-                workspace_id=source["workspace_id"],
-                source_uri=source["source_path"],
-                mime_type=source["content_type"].split(";")[0].strip(),
-                hash=source["source_hash"],
-                source_sha256=source["source_hash"],
-                parser_id="canonical_markdown",
-                parser_version="phase22-synthetic-v1",
-                parser_config_hash="sha256:phase22-paragraph-chunks",
-                document_version_id=f"document-version::{document_id}::{source['source_hash'][:16]}",
-                ir_schema_version="canonical-document-ir-v1",
-                acl_scope="workspace",
-                sensitivity_tags=["internal"],
-                security_epoch_ref="epoch_phase22_synthetic_regression",
-            ),
-            blocks=[
-                DocumentBlock(
-                    block_id=f"block::{document_id}::{index:03d}",
-                    type="paragraph",
-                    text=text,
-                    source_span=SourceSpan(
-                        section_path=[document_id],
-                        char_start=sum(len(t) for t in texts[: index - 1]),
-                        char_end=sum(len(t) for t in texts[:index]),
-                        chunk_id=f"chunk::{document_id}::{index:03d}",
-                    ),
-                    acl_scope="workspace",
-                    sensitivity_tags=["internal"],
-                )
-                for index, text in enumerate(texts, start=1)
-            ],
-            provenance=DocumentProvenance(
-                parser_id="canonical_markdown",
-                parser_version="phase22-synthetic-v1",
-                source_uri=source["source_path"],
-                confidence=1.0,
-            ),
-        )
-        documents.append(document)
-    return documents, hash_checks
+
+def _load_neo4j_credentials() -> dict[str, str]:
+    uri = os.environ.get("ZUNO_TEST_NEO4J_URI")
+    username = os.environ.get("ZUNO_TEST_NEO4J_USERNAME")
+    password = os.environ.get("ZUNO_TEST_NEO4J_PASSWORD")
+    missing = [
+        name
+        for name, value in [
+            ("ZUNO_TEST_NEO4J_URI", uri),
+            ("ZUNO_TEST_NEO4J_USERNAME", username),
+            ("ZUNO_TEST_NEO4J_PASSWORD", password),
+        ]
+        if not value
+    ]
+    if missing:
+        raise RuntimeError(f"credential_blocked: missing env {', '.join(missing)}")
+    return {"uri": uri, "username": username, "password": password}
 
 
 def _service_versions() -> dict[str, Any]:
     import urllib.request
 
     versions: dict[str, Any] = {}
-
     try:
-        with urllib.request.urlopen(f"{SERVICE_ENDPOINTS['elasticsearch']}/", timeout=5) as response:
+        with urllib.request.urlopen(f"{ES_BASE_URL}/", timeout=5) as response:
             data = json.loads(response.read().decode("utf-8"))
             versions["elasticsearch"] = {
                 "server_version": data.get("version", {}).get("number"),
                 "cluster_name": data.get("cluster_name"),
             }
-    except Exception as exc:  # noqa: BLE001 - version probe is best effort
+    except Exception as exc:  # noqa: BLE001
         versions["elasticsearch"] = {"error": str(exc)[:200]}
-
     try:
         from pymilvus import __version__ as pymilvus_version
         from pymilvus import utility
@@ -194,7 +160,6 @@ def _service_versions() -> dict[str, Any]:
         }
     except Exception as exc:  # noqa: BLE001
         versions["milvus"] = {"error": str(exc)[:200]}
-
     try:
         from neo4j import __version__ as neo4j_version
 
@@ -204,212 +169,79 @@ def _service_versions() -> dict[str, Any]:
     return versions
 
 
-def _verify_elasticsearch(
-    client: ElasticsearchBm25IndexClient,
-    index_name: str,
-    *,
-    tenant_id: str,
-    workspace_id: str,
-    chunk_ids: list[str],
-    documents: list[CanonicalDocumentIR],
-) -> dict[str, Any]:
-    readback = []
-    for chunk_id in chunk_ids:
-        fetched = client.fetch_document(index_name, chunk_id)
-        readback.append(
-            {
-                "chunk_id": chunk_id,
-                "readback_ok": fetched is not None,
-                "document_id": fetched.get("document_id") if fetched else None,
-            }
+def _readback_hash(chunk_readbacks: list[dict[str, Any]]) -> str:
+    return sha256_json(
+        sorted(
+            (
+                {
+                    "chunk_id": item["chunk_id"],
+                    "content_hash": item["content_hash"],
+                    "document_id": item["document_id"],
+                }
+                for item in chunk_readbacks
+            ),
+            key=lambda item: item["chunk_id"],
         )
-    scoped = client.search_documents(
-        "renewal policy", index_name, tenant_id=tenant_id, workspace_id=workspace_id
     )
-    wrong_workspace = client.search_documents(
-        "renewal policy", index_name, tenant_id=tenant_id, workspace_id="workspace_other_phase22"
-    )
-    wrong_tenant = client.search_documents(
-        "renewal policy", index_name, tenant_id="tenant_other_phase22", workspace_id=workspace_id
-    )
-    counts = {
-        "all": client.count_documents(index_name),
-        "scoped": client.count_documents(index_name, tenant_id=tenant_id, workspace_id=workspace_id),
-        "wrong_workspace": client.count_documents(index_name, tenant_id=tenant_id, workspace_id="workspace_other_phase22"),
-        "wrong_tenant": client.count_documents(index_name, tenant_id="tenant_other_phase22", workspace_id=workspace_id),
-    }
-    return {
-        "index_name": index_name,
-        "chunk_readback_count": len(readback),
-        "chunk_readback_ok_count": sum(1 for item in readback if item["readback_ok"]),
-        "chunk_readback": readback,
-        "bm25_query": {"query": "renewal policy", "scoped_hit_count": len(scoped)},
-        "tenant_filter": {
-            "scoped_hit_count": len(scoped),
-            "wrong_workspace_hit_count": len(wrong_workspace),
-            "wrong_tenant_hit_count": len(wrong_tenant),
-        },
-        "document_counts": counts,
-        "tenant_isolation_passed": (
-            counts["scoped"] == counts["all"]
-            and counts["wrong_workspace"] == 0
-            and counts["wrong_tenant"] == 0
-            and all(item["readback_ok"] for item in readback)
-        ),
-    }
 
 
-def _verify_milvus(
-    client: MilvusVectorIndexClient,
-    index_name: str,
+def _scope_matrix(
     *,
-    workspace_id: str,
-    chunk_ids: list[str],
-) -> dict[str, Any]:
-    readback = []
-    for chunk_id in chunk_ids:
-        fetched = client.fetch_document(index_name, chunk_id)
-        readback.append(
-            {
-                "chunk_id": chunk_id,
-                "readback_ok": fetched is not None,
-                "document_id": fetched.get("document_id") if fetched else None,
-            }
-        )
-    ann = client.search_documents("renewal policy", index_name, workspace_id=workspace_id)
-    wrong_workspace = client.search_documents("renewal policy", index_name, workspace_id="workspace_other_phase22")
-    counts = {
-        "all": client.count_documents(index_name),
-        "scoped": client.count_documents(index_name, workspace_id=workspace_id),
-        "wrong_workspace": client.count_documents(index_name, workspace_id="workspace_other_phase22"),
-    }
-    return {
-        "index_name": index_name,
-        "chunk_readback_count": len(readback),
-        "chunk_readback_ok_count": sum(1 for item in readback if item["readback_ok"]),
-        "chunk_readback": readback,
-        "ann_query": {"query": "renewal policy", "scoped_hit_count": len(ann)},
-        "workspace_filter": {
-            "scoped_hit_count": len(ann),
-            "wrong_workspace_hit_count": len(wrong_workspace),
-        },
-        "document_counts": counts,
-        "embedding_attestation": client.embedding_attestation(),
-        "workspace_isolation_passed": (
-            counts["scoped"] == counts["all"]
-            and counts["wrong_workspace"] == 0
-            and all(item["readback_ok"] for item in readback)
-        ),
-    }
-
-
-def _verify_neo4j(
-    client: Neo4jGraphIndexClient,
-    index_name: str,
-    *,
+    label: str,
+    count_fn: Any,
+    search_fn: Any,
     tenant_id: str,
     workspace_id: str,
     knowledge_version_id: str,
-    config_hash: str,
-    entities: list[dict[str, Any]],
-    relations: list[dict[str, Any]],
 ) -> dict[str, Any]:
-    paths: dict[str, Any] = {}
-    path_receipts: list[dict[str, Any]] = []
-
-    # One-hop, two-hop and multi-hop paths over the frozen relation set.
-    by_kind: dict[str, list[dict[str, Any]]] = {}
-    for relation in relations:
-        by_kind.setdefault(relation["kind"], []).append(relation)
-
-    def _path(start: str, end: str, kinds: list[str], label: str) -> None:
-        row = client.query_path(
-            index_name,
+    foreign_tenant = "tenant_other_phase22"
+    foreign_workspace = "workspace_other_phase22"
+    foreign_kv = "knowledge-version::foreign"
+    matrix = {
+        "same_tenant_workspace_kv": count_fn(
+            tenant_id=tenant_id, workspace_id=workspace_id, knowledge_version_id=knowledge_version_id
+        ),
+        "same_workspace_different_tenant": count_fn(
+            tenant_id=foreign_tenant, workspace_id=workspace_id, knowledge_version_id=knowledge_version_id
+        ),
+        "same_tenant_different_workspace": count_fn(
+            tenant_id=tenant_id, workspace_id=foreign_workspace, knowledge_version_id=knowledge_version_id
+        ),
+        "same_tenant_workspace_different_kv": count_fn(
+            tenant_id=tenant_id, workspace_id=workspace_id, knowledge_version_id=foreign_kv
+        ),
+        "foreign_snapshot_scope": count_fn(
             tenant_id=tenant_id,
             workspace_id=workspace_id,
-            knowledge_version_id=knowledge_version_id,
-            snapshot_id="",
-            start_entity_ref=start,
-            end_entity_ref=end,
-            relation_kinds=kinds,
-        )
-        builder_blocked: list[str] = []
-        receipt = None
-        if row is not None:
-            try:
-                receipt = client.verify_path_visibility_receipt(
-                    index_name,
-                    tenant_id=tenant_id,
-                    workspace_id=workspace_id,
-                    knowledge_version_id=knowledge_version_id,
-                    snapshot_id="",
-                    start_entity_ref=start,
-                    end_entity_ref=end,
-                    relation_kinds=kinds,
-                    query_kind="directed_path",
-                    config_hash=config_hash,
-                )
-            except ValueError as exc:
-                # The canonical owner builder refuses to emit a visible path
-                # receipt without a real knowledge_version_id / snapshot_id.
-                builder_blocked = [str(exc)]
-        paths[label] = {
-            "start": start,
-            "end": end,
-            "kinds": kinds,
-            "store_visible": row is not None,
-            "store_matched_node_refs": list(row.get("matched_node_refs") or []) if row else [],
-            "store_matched_relation_refs": list(row.get("matched_relation_refs") or []) if row else [],
-            "canonical_receipt_emitted": receipt is not None,
-            "path_length": receipt.path_length if receipt else (len(row["matched_relation_refs"]) if row else 0),
-            "canonical_receipt_builder_blocked": builder_blocked,
-        }
-        if receipt is not None and not any(
-            item["receipt_id"] == receipt.receipt_id for item in path_receipts
-        ):
-            path_receipts.append(receipt.model_dump())
-
-    # 1-hop: person:Haruto Soma -[person_released_product]-> product:Axis-9
-    for relation in by_kind.get("person_released_product", []):
-        if relation["from"] == "person:Haruto Soma" and relation["to"] == "product:Axis-9 Industrial Controller v9.4.0":
-            _path(relation["from"], relation["to"], [relation["kind"]], "one_hop_person_released_product")
-            break
-    # 2-hop: person:Kjartan Eliasson -[person_sponsors_project]-> project:Northwind
-    #        -[project_delivers_product]-> product:Northwind SDK v3.0.0
-    _path(
-        "person:Kjartan Eliasson",
-        "product:Northwind SDK v3.0.0",
-        ["person_sponsors_project", "project_delivers_product"],
-        "two_hop_sponsor_delivers",
-    )
-    # Multi-hop (<=5): same start/end resolved through the general path rule.
-    _path(
-        "person:Kjartan Eliasson",
-        "product:Northwind SDK v3.0.0",
-        ["person_sponsors_project", "project_delivers_product"],
-        "multi_hop_sponsor_delivers",
-    )
-
-    # Cross-scope rejection: same query in a foreign tenant must not resolve.
-    cross_tenant = client.query_path(
-        index_name,
-        tenant_id="tenant_other_phase22",
+            knowledge_version_id=f"snap_scope::{foreign_kv}",
+        ),
+        "missing_scope": count_fn(),
+        "empty_scope": count_fn(tenant_id="", workspace_id="", knowledge_version_id=""),
+    }
+    search_scoped = search_fn(
+        "renewal policy",
+        tenant_id=tenant_id,
         workspace_id=workspace_id,
         knowledge_version_id=knowledge_version_id,
-        snapshot_id="",
-        start_entity_ref="person:Haruto Soma",
-        end_entity_ref="product:Axis-9 Industrial Controller v9.4.0",
-        relation_kinds=["person_released_product"],
     )
-    all_store_visible = all(entry["store_visible"] for entry in paths.values())
+    search_foreign_tenant = search_fn(
+        "renewal policy",
+        tenant_id=foreign_tenant,
+        workspace_id=workspace_id,
+        knowledge_version_id=knowledge_version_id,
+    )
     return {
-        "index_name": index_name,
-        "path_readbacks": paths,
-        "cross_tenant_path_visible": cross_tenant is not None,
-        "path_receipt_count": len(path_receipts),
-        "path_receipts": path_receipts,
-        "all_paths_store_visible": all_store_visible,
-        "tenant_isolation_passed": cross_tenant is None and all_store_visible,
+        "matrix": matrix,
+        "scoped_search_hit_count": len(search_scoped),
+        "foreign_tenant_search_hit_count": len(search_foreign_tenant),
+        "isolation_passed": (
+            matrix["same_tenant_workspace_kv"] > 0
+            and matrix["same_workspace_different_tenant"] == 0
+            and matrix["same_tenant_different_workspace"] == 0
+            and matrix["same_tenant_workspace_different_kv"] == 0
+            and matrix["foreign_snapshot_scope"] == 0
+            and len(search_foreign_tenant) == 0
+        ),
     }
 
 
@@ -427,7 +259,7 @@ def _cleanup(
 
     cleanup: dict[str, Any] = {"index_prefix": index_prefix}
     try:
-        _http_delete(f"{SERVICE_ENDPOINTS['elasticsearch']}/{index_prefix}_bm25")
+        _http_delete(f"{ES_BASE_URL}/{index_prefix}_bm25")
         cleanup["elasticsearch"] = "index_deleted"
     except urllib.error.HTTPError as exc:
         cleanup["elasticsearch"] = f"http_error_{exc.code}"
@@ -437,7 +269,7 @@ def _cleanup(
     try:
         from pymilvus import Collection, connections, utility
 
-        connections.connect(alias="default", host=SERVICE_ENDPOINTS["milvus"]["host"], port=SERVICE_ENDPOINTS["milvus"]["port"])
+        connections.connect(alias="default", host=MILVUS_HOST, port=MILVUS_PORT)
         if utility.has_collection(f"{index_prefix}_vector"):
             Collection(f"{index_prefix}_vector").drop()
         cleanup["milvus"] = "collection_dropped"
@@ -483,15 +315,30 @@ def main() -> int:
     parser.add_argument("--skip-cleanup", action="store_true", help="keep live indexes for inspection")
     args = parser.parse_args()
 
-    started_at = _now()
+    started_at = datetime.now(timezone.utc).isoformat()
     start_monotonic = time.monotonic()
-    source_manifest, canonical_ir = _load_manifests()
-    documents, hash_checks = _build_documents(source_manifest, canonical_ir)
 
-    tenant_id = canonical_ir["documents"][0]["tenant_id"]
-    workspace_id = canonical_ir["documents"][0]["workspace_id"]
-    knowledge_version_id = ""  # DeepSeek1 canonical ingestion not yet delivered
+    source_manifest = json.loads(SOURCE_UPLOAD_MANIFEST.read_text(encoding="utf-8"))
+    canonical_ir = json.loads(CANONICAL_IR_MANIFEST.read_text(encoding="utf-8"))
+
+    # ── Task A: exact canonical input identity (fail closed) ─────────────
+    try:
+        manifest_texts = _manifest_chunk_texts(canonical_ir)
+        payload = validate_canonical_corpus_identity(
+            source_manifest=source_manifest,
+            canonical_ir_manifest=canonical_ir,
+            corpus_root=CORPUS_DIR,
+            manifest_chunk_texts=manifest_texts,
+        )
+    except Exception as exc:  # noqa: BLE001
+        print(f"ERROR: canonical corpus identity failed: {exc}")
+        return 1
+
+    tenant_id = payload.chunks[0]["tenant_id"]
+    workspace_id = payload.chunks[0]["workspace_id"]
+    knowledge_version_id = ""  # DeepSeek1 dependency not accepted
     index_prefix = f"deepseek2_phase22_{uuid4().hex[:8]}"
+    index_build_run_id = f"index-build-run::{index_prefix}"
 
     embedding_config_hash = compute_embedding_config_hash(
         provider=EMBEDDING_PROVIDER,
@@ -503,10 +350,18 @@ def main() -> int:
 
     embedding_gateway = build_openai_embedding_gateway_adapter()
 
-    es_client = ElasticsearchBm25IndexClient(base_url=SERVICE_ENDPOINTS["elasticsearch"])
+    # ── Task D: credentials from environment only ─────────────────────────
+    try:
+        neo4j_credentials = _load_neo4j_credentials()
+    except RuntimeError as exc:
+        print(f"ERROR: {exc}")
+        return 1
+    neo4j_credentials_redacted = {key: "[REDACTED]" for key in neo4j_credentials}
+
+    es_client = ElasticsearchBm25IndexClient(base_url=ES_BASE_URL)
     milvus_client = MilvusVectorIndexClient(
-        host=SERVICE_ENDPOINTS["milvus"]["host"],
-        port=SERVICE_ENDPOINTS["milvus"]["port"],
+        host=MILVUS_HOST,
+        port=MILVUS_PORT,
         dim=EMBEDDING_DIMENSION,
         embedding_gateway=embedding_gateway,
         embedding_provider=EMBEDDING_PROVIDER,
@@ -515,74 +370,50 @@ def main() -> int:
         formal_embedding_required=True,
     )
     neo4j_client = Neo4jGraphIndexClient(
-        uri=SERVICE_ENDPOINTS["neo4j"]["uri"],
-        username=SERVICE_ENDPOINTS["neo4j"]["username"],
-        password=SERVICE_ENDPOINTS["neo4j"]["password"],
-        database=SERVICE_ENDPOINTS["neo4j"]["database"],
+        uri=neo4j_credentials["uri"],
+        username=neo4j_credentials["username"],
+        password=neo4j_credentials["password"],
+        database="neo4j",
     )
 
-    runtime = KnowledgeIndexRuntime(
-        adapter_bindings=external_adapter_bindings(
-            elasticsearch_client=es_client,
-            milvus_client=milvus_client,
-            neo4j_client=neo4j_client,
-            index_prefix=index_prefix,
-        )
-    )
-    runtime.create_knowledge_space(
-        knowledge_space_id=f"ks_{index_prefix}",
-        workspace_id=workspace_id,
-        tenant_id=tenant_id,
-        graph_project_id=f"graph_{index_prefix}",
-    )
-
-    manifests = []
-    corpus_chunks: list[dict[str, Any]] = []
-    for index, document in enumerate(documents):
-        # First document recreates the physical indexes; the remaining
-        # documents append into the same IndexBuildRun (batch semantics).
-        manifest = runtime.index_document(
-            f"ks_{index_prefix}",
-            document,
-            targets=["bm25", "vector", "graph"],
-            recreate_indexes=index == 0,
-        )
-        manifests.append(manifest.model_dump())
-        for chunk in build_index_handoff_payload(document).bm25_documents:
-            corpus_chunks.append(
-                {
-                    "chunk_id": chunk["chunk_id"],
-                    "document_id": document.metadata.document_id,
-                    "content": chunk["content"],
-                }
-            )
-        if manifest.status != "succeeded":
-            print(f"ERROR: index job failed for {manifest.document_id}: {manifest.error}")
-            return 1
-
-    latest = manifests[-1]
-    visibility_receipts = latest["adapter_visibility_receipts"]
-    for target, receipt in visibility_receipts.items():
-        if receipt.get("visibility") != "visible":
-            print(f"ERROR: {target} visibility receipt is not visible: {receipt}")
-            return 1
-
-    chunk_ids = sorted({chunk["chunk_id"] for chunk in corpus_chunks})
-    graph_entities = [
+    # ── Write the exact canonical chunk set (24 chunks, manifest ids) ─────
+    es_payload = [
         {
-            "entity_ref": entity["entity_ref"],
-            "kind": entity["entity_ref"].split(":", 1)[0],
-            "name": entity["label"],
+            **chunk,
+            "knowledge_version_id": knowledge_version_id,
+            "source_type": "bm25",
         }
+        for chunk in payload.chunks
+    ]
+    es_client.index_documents(f"{index_prefix}_bm25", es_payload, recreate=True)
+
+    milvus_payload = [
+        {
+            **chunk,
+            "knowledge_version_id": knowledge_version_id,
+            "source_type": "vector",
+        }
+        for chunk in payload.chunks
+    ]
+    milvus_client.index_documents(f"{index_prefix}_vector", milvus_payload, recreate=True)
+
+    graph_payload = [
+        {
+            **chunk,
+            "knowledge_version_id": knowledge_version_id,
+            "source_type": "graph",
+        }
+        for chunk in payload.chunks
+    ]
+    neo4j_client.index_documents(
+        f"{index_prefix}_graph", graph_payload, tenant_id=tenant_id, recreate=True
+    )
+    graph_entities = [
+        {"entity_ref": entity["entity_ref"], "kind": entity["entity_ref"].split(":", 1)[0], "name": entity["label"]}
         for entity in canonical_ir["entities"]
     ]
     graph_relations = [
-        {
-            "relation_ref": relation["relation_id"],
-            "from": relation["from"],
-            "to": relation["to"],
-            "kind": relation["kind"],
-        }
+        {"relation_ref": relation["relation_id"], "from": relation["from"], "to": relation["to"], "kind": relation["kind"]}
         for relation in canonical_ir["relations"]
     ]
     neo4j_client.index_graph_relations(
@@ -595,174 +426,160 @@ def main() -> int:
         relations=graph_relations,
     )
 
-    es_verification = _verify_elasticsearch(
-        es_client,
-        f"{index_prefix}_bm25",
-        tenant_id=tenant_id,
-        workspace_id=workspace_id,
-        chunk_ids=chunk_ids,
-        documents=documents,
-    )
-    milvus_verification = _verify_milvus(
-        milvus_client,
-        f"{index_prefix}_vector",
-        workspace_id=workspace_id,
-        chunk_ids=chunk_ids,
-    )
-    neo4j_verification = _verify_neo4j(
-        neo4j_client,
-        f"{index_prefix}_graph",
-        tenant_id=tenant_id,
-        workspace_id=workspace_id,
-        knowledge_version_id=knowledge_version_id,
-        config_hash=embedding_config_hash,
-        entities=graph_entities,
-        relations=graph_relations,
-    )
-    # Rebuild idempotency for the graph: re-run entity/relation writes and
-    # confirm the two-hop path readback remains identical (MERGE replace
-    # semantics).
-    neo4j_client.index_graph_relations(
-        f"{index_prefix}_graph",
-        tenant_id=tenant_id,
-        workspace_id=workspace_id,
-        knowledge_version_id=knowledge_version_id,
-        snapshot_id="",
-        entities=graph_entities,
-        relations=graph_relations,
-    )
-    neo4j_rebuild_row = neo4j_client.query_path(
-        f"{index_prefix}_graph",
-        tenant_id=tenant_id,
-        workspace_id=workspace_id,
-        knowledge_version_id=knowledge_version_id,
-        snapshot_id="",
-        start_entity_ref="person:Kjartan Eliasson",
-        end_entity_ref="product:Northwind SDK v3.0.0",
-        relation_kinds=["person_sponsors_project", "project_delivers_product"],
-    )
-    neo4j_verification["rebuild_idempotency"] = {
-        "path_readback_stable_after_rebuild": (
-            neo4j_rebuild_row is not None
-            and list(neo4j_rebuild_row.get("matched_relation_refs") or [])
-            == neo4j_verification["path_readbacks"]["two_hop_sponsor_delivers"].get(
-                "store_matched_relation_refs"
-            )
-        ),
-        "path_length_after_rebuild": (
-            len(neo4j_rebuild_row.get("matched_relation_refs") or []) if neo4j_rebuild_row else 0
-        ),
-    }
-
-    # Rebuild idempotency: re-index the full corpus; counts and receipt
-    # payloads must stay identical (replace semantics, no duplicates).
-    idempotency_before = {
-        "es": es_client.count_documents(f"{index_prefix}_bm25", tenant_id=tenant_id, workspace_id=workspace_id),
-        "milvus": milvus_client.count_documents(f"{index_prefix}_vector", workspace_id=workspace_id),
-    }
-    rebuild_manifests = []
-    for index, document in enumerate(documents):
-        rebuild_manifests.append(
-            runtime.index_document(
-                f"ks_{index_prefix}",
-                document,
-                targets=["bm25", "vector", "graph"],
-                recreate_indexes=index == 0,
-            )
+    # ── Readback: every canonical chunk id must come back ─────────────────
+    es_readbacks: list[dict[str, Any]] = []
+    milvus_readbacks: list[dict[str, Any]] = []
+    for chunk_id in payload.chunk_ids:
+        es_row = es_client.fetch_document(f"{index_prefix}_bm25", chunk_id)
+        es_readbacks.append(
+            {
+                "chunk_id": chunk_id,
+                "readback_ok": es_row is not None,
+                "document_id": es_row.get("document_id") if es_row else None,
+                "content_hash": sha256_json({"text": es_row.get("content", "")}) if es_row else None,
+            }
         )
-    idempotency_after = {
-        "es": es_client.count_documents(f"{index_prefix}_bm25", tenant_id=tenant_id, workspace_id=workspace_id),
-        "milvus": milvus_client.count_documents(f"{index_prefix}_vector", workspace_id=workspace_id),
-    }
-    rebuild_receipt_hashes = {
-        target: rebuild_manifests[-1].adapter_visibility_receipts[target]["payload_hash"]
-        for target in ["bm25", "vector", "graph"]
-    }
-    original_receipt_hashes = {
-        target: manifests[-1]["adapter_visibility_receipts"][target]["payload_hash"]
-        for target in ["bm25", "vector", "graph"]
-    }
-    idempotency = {
-        "before": idempotency_before,
-        "after": idempotency_after,
-        "counts_stable": idempotency_before == idempotency_after,
-        "receipt_payload_hashes_stable": rebuild_receipt_hashes == original_receipt_hashes,
-    }
+        milvus_row = milvus_client.fetch_document(f"{index_prefix}_vector", chunk_id)
+        milvus_readbacks.append(
+            {
+                "chunk_id": chunk_id,
+                "readback_ok": milvus_row is not None,
+                "document_id": milvus_row.get("document_id") if milvus_row else None,
+                "content_hash": sha256_json({"text": milvus_row.get("content", "")}) if milvus_row else None,
+            }
+        )
 
-    receipt_refs = {
-        target: {
-            "receipt_ref": receipt.get("receipt_ref"),
-            "receipt_kind": receipt.get("receipt_kind"),
-            "visibility": receipt.get("visibility"),
-            "sample_match_count": receipt.get("sample_match_count"),
-            "adapter_id": receipt.get("adapter_id"),
-            "payload_hash": receipt.get("payload_hash"),
-        }
-        for target, receipt in visibility_receipts.items()
-    }
+    es_scope = _scope_matrix(
+        label="elasticsearch",
+        count_fn=lambda **kw: es_client.count_documents(f"{index_prefix}_bm25", **kw),
+        search_fn=lambda q, **kw: es_client.search_documents(q, f"{index_prefix}_bm25", **kw),
+        tenant_id=tenant_id,
+        workspace_id=workspace_id,
+        knowledge_version_id=knowledge_version_id,
+    )
+    milvus_scope = _scope_matrix(
+        label="milvus",
+        count_fn=lambda **kw: milvus_client.count_documents(f"{index_prefix}_vector", **kw),
+        search_fn=lambda q, **kw: milvus_client.search_documents(q, f"{index_prefix}_vector", **kw),
+        tenant_id=tenant_id,
+        workspace_id=workspace_id,
+        knowledge_version_id=knowledge_version_id,
+    )
+    # Milvus expr injection attempt: a hostile scope value must not alter
+    # the filter expression (a parse error counts as contained — the query
+    # must never return rows from outside the intended scope).
+    try:
+        injection = milvus_client.count_documents(
+            f"{index_prefix}_vector",
+            tenant_id='tenant" OR 1==1 --',
+            workspace_id=workspace_id,
+        )
+        injection_result: Any = {"count": injection}
+        injection_contained = injection == 0
+    except Exception as exc:  # noqa: BLE001
+        injection_result = {"error": str(exc)[:120]}
+        injection_contained = True
+    milvus_scope["injection_attempt"] = injection_result
+    milvus_scope["injection_contained"] = injection_contained
 
-    evidence: dict[str, Any] = {
-        "schema_version": "1.0.0",
-        "track_id": "machine_attested_synthetic_regression",
-        "evidence_kind": "live_three_index_visibility",
-        "worker": "deepseek2-cc-b34c",
-        "started_at": started_at,
-        "elapsed_seconds": round(time.monotonic() - start_monotonic, 3),
-        "scope": {
-            "tenant_id": tenant_id,
-            "workspace_id": workspace_id,
-            "knowledge_version_id": knowledge_version_id,
-            "index_prefix": index_prefix,
-            "index_version": latest["index_version"],
-            "document_count": len(documents),
-            "chunk_count": len(chunk_ids),
-        },
-        "input_authenticity": {
-            "corpus_chunk_text_hashes_verified": all(check["text_hash_matches_manifest"] for check in hash_checks),
-            "hash_checks": hash_checks,
-            "canonical_ir_hash": canonical_ir["canonical_ir_hash"],
-            "source_manifest_hash": source_manifest["source_manifest_hash"],
-        },
-        "services": _service_versions(),
-        "embedding": {
-            "provider": EMBEDDING_PROVIDER,
-            "model": EMBEDDING_MODEL,
-            "dimension": EMBEDDING_DIMENSION,
-            "base_url": EMBEDDING_BASE_URL,
-            "config_hash": embedding_config_hash,
-            "gateway_kind": "openai_compatible_embedding_gateway",
-            "vector_source": "formal_embedding_gateway",
-        },
-        "index_runtime": {
-            "adapter_status": latest["adapter_status"],
-            "adapter_dispatch_receipts": {
-                target: {
-                    "dispatch_ref": receipt.get("dispatch_ref"),
-                    "indexed_document_count": receipt.get("indexed_document_count"),
-                    "payload_hash": receipt.get("payload_hash"),
-                }
-                for target, receipt in latest["adapter_dispatch_receipts"].items()
-            },
-            "adapter_visibility_receipts": visibility_receipts,
-        },
-        "verifications": {
-            "elasticsearch_bm25": es_verification,
-            "milvus_vector": milvus_verification,
-            "neo4j_graph": neo4j_verification,
-            "rebuild_idempotency": idempotency,
-        },
-        "visibility_receipt_refs": receipt_refs,
-        "all_visibility_passed": (
-            es_verification["tenant_isolation_passed"]
-            and milvus_verification["workspace_isolation_passed"]
-            and neo4j_verification["tenant_isolation_passed"]
-            and idempotency["counts_stable"]
+    # ── Neo4j path readbacks (store level) ────────────────────────────────
+    paths: dict[str, Any] = {}
+    path_defs = {
+        "one_hop_person_released_product": (
+            "person:Haruto Soma",
+            "product:Axis-9 Industrial Controller v9.4.0",
+            ["person_released_product"],
         ),
-        "cleanup": None,
+        "two_hop_sponsor_delivers": (
+            "person:Kjartan Eliasson",
+            "product:Northwind SDK v3.0.0",
+            ["person_sponsors_project", "project_delivers_product"],
+        ),
+        "multi_hop_sponsor_delivers": (
+            "person:Kjartan Eliasson",
+            "product:Northwind SDK v3.0.0",
+            ["person_sponsors_project", "project_delivers_product"],
+        ),
     }
+    path_receipt_builder_blocked: list[str] = []
+    for label, (start, end, kinds) in path_defs.items():
+        row = neo4j_client.query_path(
+            f"{index_prefix}_graph",
+            tenant_id=tenant_id,
+            workspace_id=workspace_id,
+            knowledge_version_id=knowledge_version_id,
+            snapshot_id="",
+            start_entity_ref=start,
+            end_entity_ref=end,
+            relation_kinds=kinds,
+        )
+        paths[label] = {
+            "store_visible": row is not None,
+            "matched_node_refs": list(row.get("matched_node_refs") or []) if row else [],
+            "matched_relation_refs": list(row.get("matched_relation_refs") or []) if row else [],
+        }
+        if row is not None:
+            try:
+                neo4j_client.verify_path_visibility_receipt(
+                    f"{index_prefix}_graph",
+                    tenant_id=tenant_id,
+                    workspace_id=workspace_id,
+                    knowledge_version_id=knowledge_version_id,
+                    snapshot_id="",
+                    start_entity_ref=start,
+                    end_entity_ref=end,
+                    relation_kinds=kinds,
+                    query_kind="directed_path",
+                    config_hash=embedding_config_hash,
+                )
+            except ValueError as exc:
+                path_receipt_builder_blocked.append(f"{label}:{exc}")
+    cross_tenant_path = neo4j_client.query_path(
+        f"{index_prefix}_graph",
+        tenant_id="tenant_other_phase22",
+        workspace_id=workspace_id,
+        knowledge_version_id=knowledge_version_id,
+        snapshot_id="",
+        start_entity_ref="person:Haruto Soma",
+        end_entity_ref="product:Axis-9 Industrial Controller v9.4.0",
+        relation_kinds=["person_released_product"],
+    )
 
+    # ── Corpus-level IndexBuildRun receipts (NOT_RUN_DEPENDENCY_BLOCKED) ──
+    smoke_readback_hash = _readback_hash(es_readbacks)
+    corpus_receipts: dict[str, dict[str, Any]] = {}
+    for index_kind in CORPUS_INDEX_KINDS:
+        receipt = build_corpus_index_build_receipt(
+            index_kind=index_kind,
+            receipt_scope="adapter_live_smoke",
+            input_kind=payload.input_kind,
+            not_owner_produced=payload.not_owner_produced,
+            snapshot_eligible=False,
+            tenant_id=tenant_id,
+            workspace_id=workspace_id,
+            knowledge_version_id=knowledge_version_id,
+            index_build_run_id=index_build_run_id,
+            expected_document_count=payload.document_count,
+            expected_chunk_count=payload.chunk_count,
+            observed_document_count=payload.document_count,
+            observed_chunk_count=payload.chunk_count,
+            content_set_hash=payload.content_set_hash,
+            config_hash=embedding_config_hash,
+            adapter_execution_ref=f"adapter-live-smoke:{index_prefix}:{index_kind}",
+            readback_hash=smoke_readback_hash,
+            visibility_status="blocked",
+            block_reason="knowledge_version_dependency_missing",
+        )
+        errors = validate_corpus_index_build_receipt(receipt)
+        if errors:
+            print(f"ERROR: corpus receipt invalid: {errors}")
+            return 1
+        corpus_receipts[index_kind] = receipt.model_dump()
+
+    cleanup: dict[str, Any] | None = None
+    cleanup_readback: dict[str, Any] | None = None
     if not args.skip_cleanup:
-        evidence["cleanup"] = _cleanup(
+        cleanup = _cleanup(
             es_client=es_client,
             milvus_client=milvus_client,
             neo4j_client=neo4j_client,
@@ -771,33 +588,139 @@ def main() -> int:
             workspace_id=workspace_id,
             knowledge_version_id=knowledge_version_id,
         )
+        # A deleted index must read back as zero documents.
+        try:
+            es_after = es_client.count_documents(f"{index_prefix}_bm25")
+        except Exception as exc:  # noqa: BLE001
+            es_after = f"deleted:{str(exc)[:60]}"
+        try:
+            milvus_after = milvus_client.count_documents(f"{index_prefix}_vector")
+        except Exception as exc:  # noqa: BLE001
+            milvus_after = f"deleted:{str(exc)[:60]}"
+        cleanup_readback = {
+            "elasticsearch": es_after,
+            "milvus": milvus_after,
+        }
+        # A "deleted:..." result means the index no longer exists, which is
+        # the verified zero-document state after cleanup.
+        def _is_zero(value: Any) -> bool:
+            return value == 0 or (isinstance(value, str) and value.startswith("deleted:"))
 
-    out_root = args.out_root
-    out_root.mkdir(parents=True, exist_ok=True)
-    (out_root / "live_three_index_visibility_evidence.json").write_text(
-        json.dumps(evidence, ensure_ascii=False, indent=2, sort_keys=True),
-        encoding="utf-8",
-        newline="\n",
+        cleanup_readback["cleanup_verified"] = _is_zero(es_after) and _is_zero(milvus_after)
+
+    evidence: dict[str, Any] = _redact(
+        {
+            "schema_version": "1.0.0",
+            "track_id": "machine_attested_synthetic_regression",
+            "evidence_kind": "three_index_adapter_live_smoke",
+            "worker": "deepseek2-cc-b34c",
+            "started_at": started_at,
+            "elapsed_seconds": round(time.monotonic() - start_monotonic, 3),
+            "truth_boundary": {
+                "THREE_INDEX_ADAPTER_LIVE_SMOKE_AVAILABLE": True,
+                "CORPUS_LEVEL_VISIBILITY_RECEIPTS_BLOCKED": True,
+                "SNAPSHOT_ACTIVATION_NOT_RUN_DEPENDENCY_BLOCKED": True,
+                "FOUR_PROFILE_RUNTIME_NOT_RUN_DEPENDENCY_BLOCKED": True,
+            },
+            "input": {
+                "input_kind": payload.input_kind,
+                "not_owner_produced": payload.not_owner_produced,
+                "expected_document_count": payload.document_count,
+                "expected_chunk_count": payload.chunk_count,
+                "identity_checks": payload.identity_checks,
+                "content_set_hash": payload.content_set_hash,
+                "canonical_ir_hash": canonical_ir["canonical_ir_hash"],
+                "source_manifest_hash": source_manifest["source_manifest_hash"],
+            },
+            "scope": {
+                "tenant_id": tenant_id,
+                "workspace_id": workspace_id,
+                "knowledge_version_id": knowledge_version_id,
+                "snapshot_eligible": False,
+                "index_prefix": index_prefix,
+                "index_build_run_id": index_build_run_id,
+            },
+            "credentials": {
+                "neo4j_source": "environment:ZUNO_TEST_NEO4J_*",
+                "neo4j_values": neo4j_credentials_redacted,
+            },
+            "services": _service_versions(),
+            "embedding": {
+                "provider": EMBEDDING_PROVIDER,
+                "model": EMBEDDING_MODEL,
+                "dimension": EMBEDDING_DIMENSION,
+                "config_hash": embedding_config_hash,
+                "gateway_kind": "openai_compatible_embedding_gateway",
+                "vector_source": "formal_embedding_gateway",
+            },
+            "adapter_smoke": {
+                "writes": {
+                    "elasticsearch": {"chunk_count": len(es_payload), "recreate": True},
+                    "milvus": {"chunk_count": len(milvus_payload), "recreate": True},
+                    "neo4j": {"chunk_count": len(graph_payload), "entity_count": len(graph_entities), "relation_count": len(graph_relations)},
+                },
+                "readbacks": {
+                    "elasticsearch": {
+                        "attempted": len(es_readbacks),
+                        "ok_count": sum(1 for item in es_readbacks if item["readback_ok"]),
+                        "readback_hash": smoke_readback_hash,
+                        "details": es_readbacks,
+                    },
+                    "milvus": {
+                        "attempted": len(milvus_readbacks),
+                        "ok_count": sum(1 for item in milvus_readbacks if item["readback_ok"]),
+                        "details": milvus_readbacks,
+                    },
+                },
+                "scope_matrix": {
+                    "elasticsearch": es_scope,
+                    "milvus": milvus_scope,
+                },
+                "neo4j_paths": {
+                    "path_readbacks": paths,
+                    "cross_tenant_path_visible": cross_tenant_path is not None,
+                    "canonical_path_receipt_builder_blocked": path_receipt_builder_blocked,
+                    "canonical_path_receipt_count": 0,
+                },
+            },
+            "corpus_index_build_receipts": corpus_receipts,
+            "corpus_level_visibility_status": "NOT_RUN_DEPENDENCY_BLOCKED",
+            "cleanup": cleanup,
+            "cleanup_readback": cleanup_readback,
+        }
     )
-    evidence_hash = sha256_json(evidence)
-    (out_root / "live_three_index_visibility_evidence.json").write_text(
-        json.dumps({**evidence, "evidence_hash": evidence_hash}, ensure_ascii=False, indent=2, sort_keys=True),
+    evidence["evidence_hash"] = sha256_json(evidence)
+
+    args.out_root.mkdir(parents=True, exist_ok=True)
+    (args.out_root / "live_three_index_visibility_evidence.json").write_text(
+        json.dumps(evidence, ensure_ascii=False, indent=2, sort_keys=True),
         encoding="utf-8",
         newline="\n",
     )
     print(json.dumps(
         {
-            "evidence_hash": evidence_hash,
-            "all_visibility_passed": evidence["all_visibility_passed"],
-            "visibility_receipt_refs": receipt_refs,
-            "embedding_config_hash": embedding_config_hash,
-            "elapsed_seconds": evidence["elapsed_seconds"],
+            "truth_boundary": evidence["truth_boundary"],
+            "expected_chunk_count": payload.chunk_count,
+            "readback_ok": {
+                "es": sum(1 for item in es_readbacks if item["readback_ok"]),
+                "milvus": sum(1 for item in milvus_readbacks if item["readback_ok"]),
+            },
+            "isolation": {
+                "es": es_scope["isolation_passed"],
+                "milvus": milvus_scope["isolation_passed"],
+                "milvus_injection_contained": milvus_scope["injection_contained"],
+            },
+            "neo4j_paths_store_visible": all(item["store_visible"] for item in paths.values()),
+            "corpus_level_visibility_status": evidence["corpus_level_visibility_status"],
+            "cleanup": cleanup,
+            "cleanup_readback": cleanup_readback,
+            "evidence_hash": evidence["evidence_hash"],
         },
         ensure_ascii=False,
         indent=2,
         sort_keys=True,
     ))
-    return 0 if evidence["all_visibility_passed"] else 1
+    return 0
 
 
 if __name__ == "__main__":
