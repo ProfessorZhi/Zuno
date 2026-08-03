@@ -308,14 +308,14 @@ PromptVersion:
 路由输入：
 
 - role / task_type；
--复杂度；
--风险等级；
--数据分类和地域；
--租户 Policy；
--预算与 deadline；
--上下文长度；
--Provider 健康；
--所需 Structured Output 能力。
+- 复杂度；
+- 风险等级；
+- 数据分类和地域；
+- 租户 Policy；
+- 预算与 deadline；
+- 上下文长度；
+- Provider 健康；
+- 所需 Structured Output 能力。
 
 ```yaml
 RoutingDecision:
