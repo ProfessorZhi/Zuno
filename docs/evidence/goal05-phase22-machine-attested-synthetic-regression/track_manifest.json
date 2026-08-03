@@ -74,6 +74,7 @@
     "snapshot_activation_manifest_hash": "8fcc6e3c2d5756f700ccab0168716926760f336e7497531ab634e5c324493c6b",
     "snapshot_activation_missing_receipt_count": 3,
     "neo4j_path_visibility_receipt_contract": "OWNER_RUNTIME_IMPLEMENTED_LIVE_SERVICE_NOT_EXECUTED",
+    "milvus_formal_embedding_boundary": "GATEWAY_INJECTION_IMPLEMENTED_LIVE_SERVICE_NOT_EXECUTED",
     "knowledge_version_id": null,
     "snapshot_id": null,
     "embedding_provider": null,

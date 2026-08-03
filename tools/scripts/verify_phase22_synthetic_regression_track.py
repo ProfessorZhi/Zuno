@@ -405,6 +405,8 @@ def verify_phase22_synthetic_regression_track() -> list[str]:
         errors.append("track_manifest current_evidence snapshot_activation_manifest_hash mismatch")
     if current_evidence.get("neo4j_path_visibility_receipt_contract") != "OWNER_RUNTIME_IMPLEMENTED_LIVE_SERVICE_NOT_EXECUTED":
         errors.append("track_manifest current_evidence neo4j path receipt contract status mismatch")
+    if current_evidence.get("milvus_formal_embedding_boundary") != "GATEWAY_INJECTION_IMPLEMENTED_LIVE_SERVICE_NOT_EXECUTED":
+        errors.append("track_manifest current_evidence milvus formal embedding boundary status mismatch")
     report_field_pairs = {
         "candidate_derivation_valid_count": "derivation_valid_count",
         "candidate_source_evidence_valid_count": "source_evidence_valid_count",
@@ -432,6 +434,8 @@ def verify_phase22_synthetic_regression_track() -> list[str]:
         "PR #105",
         "OWNER_RUNTIME_IMPLEMENTED_LIVE_SERVICE_NOT_EXECUTED",
         "live Neo4j two-hop read-back：NOT_RUN",
+        "GATEWAY_INJECTION_IMPLEMENTED_LIVE_SERVICE_NOT_EXECUTED",
+        "live Embedding Gateway call：NOT_RUN",
     ]
     for phrase in required_report_phrases:
         if phrase not in report:

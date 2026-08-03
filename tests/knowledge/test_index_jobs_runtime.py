@@ -320,6 +320,116 @@ def test_index_runtime_milvus_vector_adapter_serves_after_readback() -> None:
     assert payload["documents_by_source"]["vector"]
 
 
+def test_milvus_vector_client_blocks_formal_path_without_embedding_gateway() -> None:
+    import pytest
+
+    from zuno.knowledge.indexing import MilvusVectorIndexClient
+
+    with pytest.raises(RuntimeError, match="credential_blocked"):
+        MilvusVectorIndexClient(formal_embedding_required=True)
+
+
+def test_milvus_vector_client_uses_formal_embedding_gateway_for_index_and_query() -> None:
+    from zuno.knowledge.indexing import MilvusVectorIndexClient
+
+    class FormalEmbeddingGateway:
+        def __init__(self) -> None:
+            self.document_calls: list[list[str]] = []
+            self.query_calls: list[str] = []
+
+        def embed_documents(self, texts: list[str]) -> list[list[float]]:
+            self.document_calls.append(list(texts))
+            return [[float(index), float(index + 1), float(index + 2)] for index, _ in enumerate(texts, start=1)]
+
+        def embed_query(self, text: str) -> list[float]:
+            self.query_calls.append(text)
+            return [9.0, 10.0, 11.0]
+
+    class FakeHit:
+        def __init__(self, entity: dict) -> None:
+            self.entity = entity
+
+    class FakeCollection:
+        def __init__(self) -> None:
+            self.rows: list[dict] = []
+            self.search_vectors: list[list[float]] = []
+
+        def insert(self, rows: list[dict]) -> None:
+            self.rows.extend(rows)
+
+        def flush(self) -> None:
+            self.flushed = True
+
+        def load(self) -> None:
+            self.loaded = True
+
+        def search(self, *, data, anns_field, param, limit, output_fields):
+            self.search_vectors.extend(data)
+            return [[FakeHit(self.rows[0])]]
+
+    gateway = FormalEmbeddingGateway()
+    collection = FakeCollection()
+    client = MilvusVectorIndexClient(
+        dim=3,
+        embedding_gateway=gateway,
+        embedding_provider="openai-compatible-local",
+        embedding_model="zuno-local-embedding-dev",
+        embedding_config_hash="sha256:formal-embedding-config",
+        formal_embedding_required=True,
+        collection_factory=lambda index_name, dim: collection,
+        collection_loader=lambda index_name: collection,
+    )
+
+    client.index_documents(
+        "phase22_vector",
+        [
+            {
+                "chunk_id": "chunk_001",
+                "document_id": "doc_001",
+                "workspace_id": "workspace_finance",
+                "content": "Supplier renewal risk is high.",
+            }
+        ],
+    )
+    results = client.search_documents("supplier renewal", "phase22_vector")
+
+    assert gateway.document_calls == [["Supplier renewal risk is high."]]
+    assert gateway.query_calls == ["supplier renewal"]
+    assert collection.rows[0]["embedding"] == [1.0, 2.0, 3.0]
+    assert collection.search_vectors == [[9.0, 10.0, 11.0]]
+    assert results[0]["chunk_id"] == "chunk_001"
+    assert client.embedding_attestation() == {
+        "status": "FORMAL_EMBEDDING_GATEWAY_CONFIGURED",
+        "provider": "openai-compatible-local",
+        "model": "zuno-local-embedding-dev",
+        "config_hash": "sha256:formal-embedding-config",
+        "dimension": 3,
+    }
+
+
+def test_milvus_vector_client_rejects_formal_embedding_dimension_mismatch() -> None:
+    import pytest
+
+    from zuno.knowledge.indexing import MilvusVectorIndexClient
+
+    class WrongDimensionGateway:
+        def embed_documents(self, texts: list[str]) -> list[list[float]]:
+            return [[1.0, 2.0]]
+
+    client = MilvusVectorIndexClient(
+        dim=3,
+        embedding_gateway=WrongDimensionGateway(),
+        embedding_provider="openai-compatible-local",
+        embedding_model="zuno-local-embedding-dev",
+        embedding_config_hash="sha256:formal-embedding-config",
+        formal_embedding_required=True,
+        collection_factory=lambda index_name, dim: None,
+    )
+
+    with pytest.raises(RuntimeError, match="mismatched vector dimension"):
+        client.index_documents("phase22_vector", [{"content": "bad dimension"}])
+
+
 def test_index_runtime_visibility_requires_sample_retrieval_before_serving() -> None:
     from zuno.knowledge.indexing import KnowledgeIndexRuntime
 

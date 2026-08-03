@@ -472,22 +472,47 @@ class ElasticsearchBm25IndexClient:
 
 
 class MilvusVectorIndexClient:
-    def __init__(self, *, host: str = "localhost", port: str = "19530", dim: int = 16) -> None:
+    def __init__(
+        self,
+        *,
+        host: str = "localhost",
+        port: str = "19530",
+        dim: int = 16,
+        embedding_gateway: Any | None = None,
+        embedding_provider: str | None = None,
+        embedding_model: str | None = None,
+        embedding_config_hash: str | None = None,
+        formal_embedding_required: bool = False,
+        collection_factory: Any | None = None,
+        collection_loader: Any | None = None,
+    ) -> None:
+        if formal_embedding_required and embedding_gateway is None:
+            raise RuntimeError("credential_blocked: formal embedding gateway required")
+        if embedding_gateway is not None and not (embedding_provider and embedding_model and embedding_config_hash):
+            raise ValueError("formal embedding gateway requires provider, model, and config hash")
         self.host = host
         self.port = port
         self.dim = dim
+        self.embedding_gateway = embedding_gateway
+        self.embedding_provider = embedding_provider
+        self.embedding_model = embedding_model
+        self.embedding_config_hash = embedding_config_hash
+        self.formal_embedding_required = formal_embedding_required
+        self._collection_factory = collection_factory
+        self._collection_loader = collection_loader
 
     def index_documents(self, index_name: str, documents: list[dict]) -> None:
         collection = self._recreate_collection(index_name)
+        embeddings = self._embed_documents([str(document.get("content") or "") for document in documents])
         rows = [
             {
                 "chunk_id": str(document.get("chunk_id") or uuid4().hex),
                 "document_id": str(document.get("document_id") or ""),
                 "workspace_id": str(document.get("workspace_id") or ""),
                 "content": str(document.get("content") or ""),
-                "embedding": _deterministic_vector(str(document.get("content") or ""), self.dim),
+                "embedding": embeddings[index],
             }
-            for document in documents
+            for index, document in enumerate(documents)
         ]
         if rows:
             collection.insert(rows)
@@ -495,12 +520,10 @@ class MilvusVectorIndexClient:
         collection.load()
 
     def search_documents(self, query: str, index_name: str) -> list[dict]:
-        from pymilvus import Collection
-
-        collection = Collection(index_name)
+        collection = self._load_collection(index_name)
         collection.load()
         results = collection.search(
-            data=[_deterministic_vector(query, self.dim)],
+            data=[self._embed_query(query)],
             anns_field="embedding",
             param={"metric_type": "L2", "params": {"nprobe": 8}},
             limit=25,
@@ -520,7 +543,52 @@ class MilvusVectorIndexClient:
             )
         return documents
 
+    def embedding_attestation(self) -> dict[str, Any]:
+        if self.embedding_gateway is None:
+            return {
+                "status": "ADAPTER_SMOKE_ONLY",
+                "provider": None,
+                "model": None,
+                "config_hash": None,
+                "dimension": self.dim,
+            }
+        return {
+            "status": "FORMAL_EMBEDDING_GATEWAY_CONFIGURED",
+            "provider": self.embedding_provider,
+            "model": self.embedding_model,
+            "config_hash": self.embedding_config_hash,
+            "dimension": self.dim,
+        }
+
+    def _embed_documents(self, texts: list[str]) -> list[list[float]]:
+        if self.embedding_gateway is None:
+            return [_deterministic_vector(text, self.dim) for text in texts]
+        method = getattr(self.embedding_gateway, "embed_documents", None)
+        if method is not None:
+            vectors = _resolve_maybe_awaitable(method(texts))
+        else:
+            method = getattr(self.embedding_gateway, "embed_async", None)
+            if method is None:
+                raise RuntimeError("formal embedding gateway does not implement embed_documents or embed_async")
+            vectors = _resolve_maybe_awaitable(method(texts))
+        return _normalize_embedding_vectors(vectors, expected_count=len(texts), expected_dim=self.dim)
+
+    def _embed_query(self, query: str) -> list[float]:
+        if self.embedding_gateway is None:
+            return _deterministic_vector(query, self.dim)
+        method = getattr(self.embedding_gateway, "embed_query", None)
+        if method is not None:
+            vector = _resolve_maybe_awaitable(method(query))
+        else:
+            method = getattr(self.embedding_gateway, "embed_async", None)
+            if method is None:
+                raise RuntimeError("formal embedding gateway does not implement embed_query or embed_async")
+            vector = _resolve_maybe_awaitable(method(query))
+        return _normalize_embedding_vector(vector, expected_dim=self.dim)
+
     def _recreate_collection(self, index_name: str) -> Any:
+        if self._collection_factory is not None:
+            return self._collection_factory(index_name, self.dim)
         from pymilvus import Collection, CollectionSchema, DataType, FieldSchema, connections, utility
 
         connections.connect(alias="default", host=self.host, port=self.port)
@@ -537,6 +605,13 @@ class MilvusVectorIndexClient:
         collection = Collection(index_name, CollectionSchema(fields, description=f"Zuno PHASE12 vector index {index_name}"))
         collection.create_index("embedding", {"index_type": "IVF_FLAT", "metric_type": "L2", "params": {"nlist": 16}})
         return collection
+
+    def _load_collection(self, index_name: str) -> Any:
+        if self._collection_loader is not None:
+            return self._collection_loader(index_name)
+        from pymilvus import Collection
+
+        return Collection(index_name)
 
 
 def adapter_status_for_targets(targets: list[IndexTarget]) -> dict[str, str]:
@@ -657,6 +732,18 @@ def _deterministic_vector(text: str, dim: int) -> list[float]:
 
     digest = hashlib.sha256(text.encode("utf-8")).digest()
     return [float(digest[index % len(digest)]) / 255.0 for index in range(dim)]
+
+
+def _normalize_embedding_vectors(vectors: Any, *, expected_count: int, expected_dim: int) -> list[list[float]]:
+    if not isinstance(vectors, list) or len(vectors) != expected_count:
+        raise RuntimeError("formal embedding gateway returned mismatched vector count")
+    return [_normalize_embedding_vector(vector, expected_dim=expected_dim) for vector in vectors]
+
+
+def _normalize_embedding_vector(vector: Any, *, expected_dim: int) -> list[float]:
+    if not isinstance(vector, list) or len(vector) != expected_dim:
+        raise RuntimeError("formal embedding gateway returned mismatched vector dimension")
+    return [float(value) for value in vector]
 
 
 __all__ = [

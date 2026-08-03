@@ -137,6 +137,19 @@ seed dataset 只是 7-case scaffold，不是完整 Track 证据；完整 Track �
 - fake-driver two-hop owner read-back：PASSED
 - live Neo4j two-hop read-back：NOT_RUN
 
+## Milvus Formal Embedding Boundary 当前进度
+
+已在 `MilvusVectorIndexClient` 增加 formal Embedding Gateway 注入边界。Focused unit test 证明 formal path 必须提供 gateway、provider、model 和 config hash；缺 gateway 时进入 `credential_blocked`，维度不匹配时 fail-closed；提供 gateway 时 index 和 query 都使用 gateway 产出的向量。旧 `_deterministic_vector` 仍只属于 adapter smoke，不是 formal embedding evidence。
+
+- boundary status：`GATEWAY_INJECTION_IMPLEMENTED_LIVE_SERVICE_NOT_EXECUTED`
+- formal provider：null
+- formal model：null
+- formal config hash：null
+- formal vector dimension：null
+- fake-gateway focused test：PASSED
+- live Embedding Gateway call：NOT_RUN
+- live Milvus ANN read-back：NOT_RUN
+
 ## 历史 PR 分类
 
 本轮历史审查范围：PR #100、PR #104、PR #105。
@@ -152,7 +165,7 @@ seed dataset 只是 7-case scaffold，不是完整 Track 证据；完整 Track �
 - Dataset：当前分支已有 80/80 schema、World Model answer derivation、source evidence、duplicate/gold leakage/hard-negative/hash 机器校验证据；仍缺人工 reviewer approval，且不得把该机器证据冒充 Public Benchmark。
 - Ingestion：已有完整 Corpus 的 Source Upload input manifest 和 Canonical IR manifest candidate；仍没有 Source Upload 到 Snapshot Activation 的真实 runtime ID 链。
 - Index：已有三索引 Index Job manifest candidate 和缺 receipt 时禁止 Snapshot Activation 的 blocked manifest；仍没有 ES/Milvus/Neo4j 真实写入、回读或 visibility receipt。
-- Embedding：没有 formal Embedding Gateway provider/model/dimension/config hash。
+- Embedding：Milvus client 已有 formal Embedding Gateway 注入和 credential-blocked guard；仍没有 live provider/model/dimension/config hash 和 Milvus ANN read-back evidence。
 - Graph：最小 Neo4j Path Visibility Receipt Contract 已定义并接入 `Neo4jGraphIndexClient` owner 方法；仍缺真实 Neo4j 服务两跳 read-back 和 receipt evidence。
 - Profiles：四 Profile 仍没有同 Snapshot、不同正式路径的 run ids。
 - Evaluation：已有非零阈值集合、当前 `BLOCKED` synthetic release decision 和 request-level Gold 隔离证明；仍缺四 Profile Trace Gold 隔离证明、runtime metrics 和真实阈值评估结果。
