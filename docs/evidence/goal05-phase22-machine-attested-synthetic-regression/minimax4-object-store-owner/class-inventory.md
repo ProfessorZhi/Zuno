@@ -1,6 +1,6 @@
-# PHASE22-OBJECT-STORE-OWNER-GATE — Class Inventory (MiniMax4)
+# PHASE22-OBJECT-STORE-AST-GATE-FINAL — Class Inventory (MiniMax4)
 
-The gate classifies every object-store-related class by role.  The
+The AST gate classifies every object-store-related class by role.  The
 inventory below mirrors what `tools/scripts/verify_phase22_object_store_owner_binding.py --mode repository --json`
 returns, with the canonical source paths.
 
@@ -58,7 +58,7 @@ canonical runtime declares it as the `object_store` parameter type.
 |---------|------|------|
 | `build_package_a_production_ingestion_runtime` | `src/backend/zuno/api/services/workspace_task_runtime.py` | 116 |
 
-Signature defaults:
+AST signature defaults:
 
 | Parameter | Default |
 |-----------|---------|
@@ -66,7 +66,20 @@ Signature defaults:
 | `durable_object_store_factory` | `DurableMinioObjectStore` |
 | `runtime_factory` | `PackageAProductionIngestionRuntime` |
 
-Composition root call sites:
+AST data-flow facts (verified by the gate):
+
+| Fact | Value |
+|------|-------|
+| Adapter variable | `object_store` |
+| Wrapper variable | `durable_object_store` |
+| Wrapper wraps adapter | True (`durable_object_store_factory(store=object_store, ...)`) |
+| Runtime uses wrapper | True (`runtime_factory(object_store=durable_object_store, ...)`) |
+| Multi-adapter | False |
+| Multi-wrapper | False |
+| Fail-closed branches | 3 (`storage is None / mode != minio`, `minio is None`, missing creds) |
+| Auto-fallback to LocalObjectStore | False |
+
+Composition root call sites (resolved via AST):
 
 | File | Line | Arguments |
 |------|------|-----------|

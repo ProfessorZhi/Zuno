@@ -1,76 +1,56 @@
-# PHASE22-OBJECT-STORE-OWNER-GATE — Binding Summary (MiniMax4)
+# PHASE22-OBJECT-STORE-AST-GATE-FINAL — Binding Summary (MiniMax4)
 
-## Why the old preflight was wrong
+## AST + Data-flow Proof
 
-The old DeepSeek preflight counted classes whose name ends with
-`ObjectStore`:
+The gate proves the unique production binding by inspecting the actual
+Python AST of the composition root file
+`src/backend/zuno/api/services/workspace_task_runtime.py`:
 
 ```
-DurableObjectStore       (Protocol / Port)
-LocalObjectStore         (local development adapter)
-DurableMinioObjectStore  (durable wrapper around the production adapter)
-MinioObjectStore         (production MinIO adapter)
+function build_package_a_production_ingestion_runtime(
+    *,
+    engine: Any,
+    settings: Any,
+    worker_id: str = "workspace-file-upload",
+    object_store_factory: Callable[..., Any] = MinioObjectStore,         # canonical
+    durable_object_store_factory: Callable[..., Any] = DurableMinioObjectStore,  # canonical
+    runtime_factory: Callable[..., PackageAProductionIngestionRuntime] = PackageAProductionIngestionRuntime,
+):
+    # fail-closed branches
+    if storage is None or getattr(storage, "mode", None) != "minio": return None
+    if minio is None: return None
+    if not endpoint or not access_key or not secret_key: return None
+
+    # single adapter binding
+    object_store = object_store_factory(endpoint=..., access_key=..., secret_key=..., secure=False)
+
+    # single wrapper binding that wraps the adapter
+    durable_object_store = durable_object_store_factory(store=object_store, engine=engine, owner="workspace.file_upload")
+
+    # runtime receives the wrapper
+    return runtime_factory(engine=engine, object_store=durable_object_store, worker_id=worker_id)
 ```
 
-Four classes do **not** imply four runtime owners.  A port, a local
-adapter, a durable wrapper and a single production adapter can coexist
-without producing multiple runtime owners.  The correct question is: which
-object store does the production composition root actually bind for the
-canonical ingestion runtime?
+The AST analysis confirms:
 
-## What the Fail-closed Gate Proves
+1. **One adapter assignment**: `object_store = object_store_factory(...)`
+2. **One wrapper assignment**: `durable_object_store = durable_object_store_factory(...)`
+3. **`wrapper.store == adapter`**: the wrapper wraps the adapter.
+4. **`runtime.object_store == wrapper`**: the runtime depends on the wrapper.
+5. **Two fail-closed branches**: storage.mode != "minio" and missing credentials.
+6. **No auto-fallback to LocalObjectStore**.
 
-The verifier inspects:
+## Call Sites
 
-1. **Canonical Ingestion Application Service dependency** — the runtime
-   constructor signature.  In this repository
-   `PackageAProductionIngestionRuntime.__init__` declares
-   `object_store: DurableMinioObjectStore`, so the runtime depends on the
-   durable wrapper, not on a raw adapter.
-
-2. **Production Composition Root binding** — the factory
-   `build_package_a_production_ingestion_runtime` in
-   `src/backend/zuno/api/services/workspace_task_runtime.py` has signature
-   defaults that bind exactly one production adapter
-   (`MinioObjectStore`) and exactly one durable wrapper
-   (`DurableMinioObjectStore`).  The factory body instantiates each of them
-   once and wraps the adapter output inside the wrapper.
-
-3. **Multiple simultaneous production bindings** — none.  There is a
-   single call site in `main.py` (`WorkspaceTaskRuntimeService.configure_package_a_production_ingestion`)
-   and a single call site in `platform/services/queue/runner.py`
-   (`run_package_a_ingestion_worker_forever`).  Both use the default
-   factories, so the production binding is unique.
-
-4. **Local Adapter scope** — `LocalObjectStore` is referenced from
-   `WorkspaceTaskRuntimeService.configure_durable_ingestion`, the
-   Local/Test profile binding site.  The production composition root body
-   never mentions it.
-
-5. **Durable Wrapper chains** — `durable_object_store_factory(store=object_store, engine=engine, owner="workspace.file_upload")`
-   wraps the output of the production `object_store_factory` call.  There
-   is exactly one durable wrapper instantiation in the production factory
-   body.
-
-6. **Receipt and tenant/workspace namespace** — the canonical runtime
-   emits `s3://<bucket>/<tenant>/<workspace>/source/<source_id>/<filename>`
-   receipts (see `_object_name()` in `production_runtime.py`).  Receipts
-   are tenant/workspace scoped.
-
-7. **Fail-Closed branches** — `build_package_a_production_ingestion_runtime`
-   returns `None` when `settings.storage.mode != "minio"` or when the
-   MinIO credentials are missing.  The runtime is not bound until the
-   production storage mode is configured.  `main.py` and the queue runner
-   both check the returned runtime and refuse to start the worker when it
-   is `None`.
+| Site | Line | Override |
+|------|------|----------|
+| `src/backend/zuno/main.py` | 73 | none (uses defaults) |
+| `src/backend/zuno/platform/services/queue/runner.py` | 56 | none (uses defaults) |
 
 ## Verdict
 
 | State | Value |
 |-------|-------|
-| Status | `UNIQUE_PRODUCTION_BINDING_CONFIRMED` |
+| Status | `UNIQUE_PRODUCTION_BINDING_STATICALLY_CONFIRMED` |
 | Exit code | 0 |
-| Production adapter | `MinioObjectStore` |
-| Durable wrapper | `DurableMinioObjectStore` |
-| Runtime | `PackageAProductionIngestionRuntime` |
-| Composition root | `build_package_a_production_ingestion_runtime` |
+| Not proven | live MinIO write/read; receipt authenticity; PostgreSQL manifest durability; runtime startup success; production readiness |

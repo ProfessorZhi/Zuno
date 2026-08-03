@@ -1,23 +1,23 @@
 {
   "mode": "contract",
-  "overall_status": "UNIQUE_PRODUCTION_BINDING_CONFIRMED",
+  "overall_status": "UNIQUE_PRODUCTION_BINDING_STATICALLY_CONFIRMED",
   "results": [
     {
-      "fixture": "unique_production_binding",
-      "expected_status": "UNIQUE_PRODUCTION_BINDING_CONFIRMED",
-      "actual_status": "UNIQUE_PRODUCTION_BINDING_CONFIRMED",
+      "fixture": "single_canonical_adapter_and_wrapper",
+      "expected_status": "UNIQUE_PRODUCTION_BINDING_STATICALLY_CONFIRMED",
+      "actual_status": "UNIQUE_PRODUCTION_BINDING_STATICALLY_CONFIRMED",
       "exit_code": 0,
       "reasons": [
-        "production composition root binds exactly one MinIO adapter, wraps it in a single durable wrapper, the local adapter is restricted to the Local/Test profile, and the composition root fails closed when production storage is unconfigured"
+        "AST + data-flow prove a single production adapter bound, a single durable wrapper that wraps it, the canonical runtime that depends on the wrapper, two fail-closed branches, no auto-fallback to the local adapter, and explicit None handling at every call site. Live MinIO write/read is not proven by this gate."
       ]
     },
     {
-      "fixture": "multiple_production_bindings",
+      "fixture": "two_production_bindings",
       "expected_status": "MULTIPLE_PRODUCTION_BINDINGS",
       "actual_status": "MULTIPLE_PRODUCTION_BINDINGS",
       "exit_code": 2,
       "reasons": [
-        "composition root body mentions 'MinioObjectStore' 2 times; exactly one production binding allowed"
+        "composition root assigns multiple adapter variables: ('object_store', 'secondary_adapter')"
       ]
     },
     {
@@ -26,52 +26,88 @@
       "actual_status": "NO_PRODUCTION_BINDING",
       "exit_code": 3,
       "reasons": [
-        "composition root has no call sites; nothing is bound"
+        "composition root has no statically-resolvable call sites"
       ]
     },
     {
-      "fixture": "missing_binding",
+      "fixture": "local_only_adapter",
+      "expected_status": "MULTIPLE_PRODUCTION_BINDINGS",
+      "actual_status": "MULTIPLE_PRODUCTION_BINDINGS",
+      "exit_code": 2,
+      "reasons": [
+        "composition root signature default for object_store_factory='LocalObjectStore' is a forbidden adapter"
+      ]
+    },
+    {
+      "fixture": "wrapper_does_not_wrap_adapter",
       "expected_status": "BINDING_UNRESOLVED",
       "actual_status": "BINDING_UNRESOLVED",
       "exit_code": 4,
       "reasons": [
-        "composition root body is missing a production adapter or durable wrapper instantiation"
+        "wrapper.store='some_other_object' does not match adapter variable 'object_store'"
       ]
     },
     {
-      "fixture": "wrapper_wraps_production_adapter",
-      "expected_status": "UNIQUE_PRODUCTION_BINDING_CONFIRMED",
-      "actual_status": "UNIQUE_PRODUCTION_BINDING_CONFIRMED",
+      "fixture": "runtime_does_not_receive_wrapper",
+      "expected_status": "BINDING_UNRESOLVED",
+      "actual_status": "BINDING_UNRESOLVED",
+      "exit_code": 4,
+      "reasons": [
+        "runtime.object_store='object_store' points at the raw adapter, not the durable wrapper"
+      ]
+    },
+    {
+      "fixture": "explicit_local_override_at_call_site",
+      "expected_status": "MULTIPLE_PRODUCTION_BINDINGS",
+      "actual_status": "MULTIPLE_PRODUCTION_BINDINGS",
+      "exit_code": 2,
+      "reasons": [
+        "src/backend/zuno/main.py:4 overrides object_store_factory with forbidden adapter 'LocalObjectStore'"
+      ]
+    },
+    {
+      "fixture": "dynamic_override_lambda",
+      "expected_status": "BINDING_UNRESOLVED",
+      "actual_status": "BINDING_UNRESOLVED",
+      "exit_code": 4,
+      "reasons": [
+        "src/backend/zuno/main.py:4 dynamic"
+      ]
+    },
+    {
+      "fixture": "kwargs_unresolved",
+      "expected_status": "BINDING_UNRESOLVED",
+      "actual_status": "BINDING_UNRESOLVED",
+      "exit_code": 4,
+      "reasons": [
+        "src/backend/zuno/main.py:4 dynamic"
+      ]
+    },
+    {
+      "fixture": "many_classes_unique_production_binding",
+      "expected_status": "UNIQUE_PRODUCTION_BINDING_STATICALLY_CONFIRMED",
+      "actual_status": "UNIQUE_PRODUCTION_BINDING_STATICALLY_CONFIRMED",
       "exit_code": 0,
       "reasons": [
-        "production composition root binds exactly one MinIO adapter, wraps it in a single durable wrapper, the local adapter is restricted to the Local/Test profile, and the composition root fails closed when production storage is unconfigured"
+        "AST + data-flow prove a single production adapter bound, a single durable wrapper that wraps it, the canonical runtime that depends on the wrapper, two fail-closed branches, no auto-fallback to the local adapter, and explicit None handling at every call site. Live MinIO write/read is not proven by this gate."
       ]
     },
     {
       "fixture": "test_double_excluded",
-      "expected_status": "UNIQUE_PRODUCTION_BINDING_CONFIRMED",
-      "actual_status": "UNIQUE_PRODUCTION_BINDING_CONFIRMED",
+      "expected_status": "UNIQUE_PRODUCTION_BINDING_STATICALLY_CONFIRMED",
+      "actual_status": "UNIQUE_PRODUCTION_BINDING_STATICALLY_CONFIRMED",
       "exit_code": 0,
       "reasons": [
-        "production composition root binds exactly one MinIO adapter, wraps it in a single durable wrapper, the local adapter is restricted to the Local/Test profile, and the composition root fails closed when production storage is unconfigured"
+        "AST + data-flow prove a single production adapter bound, a single durable wrapper that wraps it, the canonical runtime that depends on the wrapper, two fail-closed branches, no auto-fallback to the local adapter, and explicit None handling at every call site. Live MinIO write/read is not proven by this gate."
       ]
     },
     {
-      "fixture": "name_count_algorithm_rejected",
+      "fixture": "caller_does_not_handle_none",
       "expected_status": "BINDING_UNRESOLVED",
       "actual_status": "BINDING_UNRESOLVED",
       "exit_code": 4,
       "reasons": [
-        "class-name suffix counting is not a binding proof"
-      ]
-    },
-    {
-      "fixture": "real_repository_attested",
-      "expected_status": "UNIQUE_PRODUCTION_BINDING_CONFIRMED",
-      "actual_status": "UNIQUE_PRODUCTION_BINDING_CONFIRMED",
-      "exit_code": 0,
-      "reasons": [
-        "production composition root binds exactly one MinIO adapter, wraps it in a single durable wrapper, the local adapter is restricted to the Local/Test profile, and the composition root fails closed when production storage is unconfigured"
+        "src/backend/zuno/main.py:4 does not explicitly handle None return: no explicit None handling detected"
       ]
     }
   ]

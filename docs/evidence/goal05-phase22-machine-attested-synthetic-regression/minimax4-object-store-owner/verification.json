@@ -1,8 +1,15 @@
 {
   "mode": "repository",
-  "status": "UNIQUE_PRODUCTION_BINDING_CONFIRMED",
+  "status": "UNIQUE_PRODUCTION_BINDING_STATICALLY_CONFIRMED",
   "reasons": [
-    "production composition root binds exactly one MinIO adapter, wraps it in a single durable wrapper, the local adapter is restricted to the Local/Test profile, and the composition root fails closed when production storage is unconfigured"
+    "AST + data-flow prove a single production adapter bound, a single durable wrapper that wraps it, the canonical runtime that depends on the wrapper, two fail-closed branches, no auto-fallback to the local adapter, and explicit None handling at every call site. Live MinIO write/read is not proven by this gate."
+  ],
+  "not_proven": [
+    "live MinIO write/read",
+    "receipt authenticity",
+    "PostgreSQL manifest durability",
+    "runtime startup success",
+    "production readiness"
   ],
   "report": {
     "observations": [
@@ -68,56 +75,87 @@
       }
     ],
     "composition_root_signature": {
-      "worker_id": "\"workspace-file-upload\"",
+      "worker_id": "'workspace-file-upload'",
       "object_store_factory": "MinioObjectStore",
       "durable_object_store_factory": "DurableMinioObjectStore",
       "runtime_factory": "PackageAProductionIngestionRuntime"
     },
-    "composition_root_body_references": {
-      "MinioObjectStore": 1,
-      "DurableMinioObjectStore": 1,
-      "LocalObjectStore": 0,
-      "LazyStorageClient": 0,
-      "OSSClient": 0
+    "composition_root_data_flow": {
+      "adapter_variable": "object_store",
+      "wrapper_variable": "durable_object_store",
+      "runtime_variable": "<return>",
+      "adapter_factory_target": "MinioObjectStore",
+      "wrapper_factory_target": "DurableMinioObjectStore",
+      "runtime_factory_target": "PackageAProductionIngestionRuntime",
+      "wrapper_wraps_adapter": true,
+      "runtime_uses_wrapper": true,
+      "multi_adapter": false,
+      "multi_wrapper": false,
+      "adapter_assignments": [],
+      "wrapper_assignments": [],
+      "notes": []
     },
-    "composition_root_call_sites": [
+    "composition_root_fail_closed": {
+      "present": true,
+      "branches": [
+        {
+          "condition": "storage is None or getattr(storage, 'mode', None) != 'minio'",
+          "returns_none": true
+        },
+        {
+          "condition": "minio is None",
+          "returns_none": true
+        },
+        {
+          "condition": "not endpoint or not access_key or (not secret_key)",
+          "returns_none": true
+        }
+      ],
+      "auto_fallback_to_local": false,
+      "notes": []
+    },
+    "call_sites": [
       {
         "file_path": "src/backend/zuno/main.py",
         "line_number": 73,
-        "arguments": "engine=engine,             settings=app_settings,"
+        "qualified_target": "zuno.api.services.workspace_task_runtime.build_package_a_production_ingestion_runtime",
+        "keyword_arguments": [
+          {
+            "keyword": "engine",
+            "value": "engine"
+          },
+          {
+            "keyword": "settings",
+            "value": "app_settings"
+          }
+        ],
+        "resolution_status": "resolved",
+        "extra": []
       },
       {
         "file_path": "src/backend/zuno/platform/services/queue/runner.py",
         "line_number": 56,
-        "arguments": "engine=engine,         settings=app_settings,         worker_id=str(rabbitmq.get(\"ingestion_worker_id\""
+        "qualified_target": "zuno.api.services.workspace_task_runtime.build_package_a_production_ingestion_runtime",
+        "keyword_arguments": [
+          {
+            "keyword": "engine",
+            "value": "engine"
+          },
+          {
+            "keyword": "settings",
+            "value": "app_settings"
+          },
+          {
+            "keyword": "worker_id",
+            "value": "str(rabbitmq.get('ingestion_worker_id') or 'phase11-package-a-parser-worker')"
+          }
+        ],
+        "resolution_status": "resolved",
+        "extra": []
       }
     ],
-    "production_storage_mode_seen": [],
     "local_binding_sites_seen": [
       "configure_durable_ingestion"
-    ],
-    "fail_closed_branches": [
-      "endpoint.*?access_key.*?secret_key at line 134",
-      "return\\s+None at line 127",
-      "return\\s+None at line 130",
-      "return\\s+None at line 135",
-      "return\\s+None at line 798",
-      "return\\s+None at line 803",
-      "return\\s+None at line 867",
-      "return\\s+None at line 955",
-      "return\\s+None at line 1862",
-      "return\\s+None at line 1866",
-      "return\\s+None at line 2028",
-      "return\\s+None at line 2034",
-      "return\\s+None at line 2039",
-      "return\\s+None at line 2079",
-      "return\\s+None at line 2381",
-      "return\\s+None at line 2440",
-      "return\\s+None at line 2464",
-      "return\\s+None at line 2466",
-      "return\\s+None at line 3047",
-      "return\\s+None at line 3314",
-      "return\\s+None at line 3335"
     ],
     "receipts_observed": [
       "s3:// scheme at line 164"
@@ -125,9 +163,12 @@
     "tenant_workspace_bindings": [
       "tenant/workspace prefix bound at line 147"
     ],
-    "wrapper_binding_chain": [
-      "store=object_store,         engine=engine,         owner=\"workspace.file_upload\",",
-      "object_store_factory bound: endpoint=endpoint,\n        access_key=access_key,\n        secret_key=secret_key,\n        secure=False,"
+    "not_proven": [
+      "live MinIO write/read",
+      "receipt authenticity",
+      "PostgreSQL manifest durability",
+      "runtime startup success",
+      "production readiness"
     ],
     "errors": []
   }
