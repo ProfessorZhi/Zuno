@@ -34,12 +34,12 @@
   "corpus_receipt_refs": {},
   "dependency": {
     "dependency_accepted": false,
-    "dependency_head_sha": "bf4b2cb11b53e78b3a7242df5996e4aed2cc1a4b",
+    "dependency_head_sha": "ce495af2a39c01379878a9e2c1bb58d876456b1e",
     "dependency_pr": "112",
     "knowledge_version_id": null
   },
   "embedding_config_hash": "sha256:d4d77f48b3dcc15f5abdb0a8e1d610c0cccd38f3c5bf7d5a7464c84b7863961d",
-  "evidence_hash": "582e546319b702226e7f4d479ba1e91bb38d539594f1b8b3e4897458e64677e3",
+  "evidence_hash": "78ce8451ec3ca8969d7772a4f0c5c52e595092882e35b3c1335bfae5e0a73edb",
   "evidence_kind": "snapshot_activation",
   "provided_corpus_receipt_kinds": [],
   "receipt_validation_passed": true,

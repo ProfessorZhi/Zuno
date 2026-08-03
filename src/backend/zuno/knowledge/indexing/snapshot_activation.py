@@ -57,7 +57,14 @@ REQUIRED_CORPUS_RECEIPT_KINDS: tuple[str, ...] = CORPUS_INDEX_KINDS
 
 
 class SnapshotPersistencePort(Protocol):
-    """Formal persistence of the immutable snapshot fact."""
+    """Formal persistence of the immutable snapshot fact.
+
+    ``read`` MUST be tenant / workspace / knowledge_version scoped: a
+    cross-tenant, cross-workspace or cross-version lookup must return None
+    (fail closed), never a row from another scope.  Workspace is validated
+    through the KnowledgeVersion owner because the snapshot table itself
+    does not carry workspace.
+    """
 
     def persist(
         self,
@@ -69,7 +76,14 @@ class SnapshotPersistencePort(Protocol):
         serving_watermark_ref: str,
     ) -> dict[str, Any]: ...
 
-    def read(self, snapshot_id: str) -> dict[str, Any] | None: ...
+    def read(
+        self,
+        *,
+        tenant_id: str,
+        workspace_id: str,
+        knowledge_version_id: str,
+        snapshot_id: str,
+    ) -> dict[str, Any] | None: ...
 
 
 class SnapshotActivationReceipt(BaseModel):
@@ -399,7 +413,9 @@ class SnapshotActivationAdapter:
                 len(receipt_config_hashes) == 1 and request_config_hash in receipt_config_hashes
             )
 
-        failed = [name for name, ok in checks.items() if ok is False]
+        # Task D: every activation check must be strictly True — truthy,
+        # defaulted or missing values never count as success.
+        failed = [name for name, ok in checks.items() if ok is not True]
         if failed:
             return self._blocked(
                 tenant_id=tenant_id,
@@ -438,7 +454,98 @@ class SnapshotActivationAdapter:
         }
         snapshot_content_hash = _stable_contract_hash(content_payload)
         snapshot_id = f"snap_{snapshot_content_hash[:16]}"
+        serving_watermark_ref = f"serving-watermark::{snapshot_id}"
 
+        # ── Task A: persistence is a HARD gate.  No ACTIVATED receipt is
+        # ever built before the snapshot fact is durably persisted in a
+        # committed UoW and re-read through the tenant-scoped port. ───────
+        if self._snapshot_persistence is None:
+            return self._blocked(
+                tenant_id=tenant_id,
+                workspace_id=workspace_id,
+                knowledge_version_id=knowledge_version_id,
+                index_job_manifest_hash=index_job_manifest_hash,
+                receipt_visibility=receipt_visibility,
+                consistency_checks=checks,
+                block_reason="snapshot_persistence_port_missing",
+                observed_at=observed_at,
+                dependency_pr=dependency_pr,
+                dependency_head_sha=dependency_head_sha,
+            )
+
+        try:
+            persist_result = self._snapshot_persistence.persist(
+                snapshot_id=snapshot_id,
+                tenant_id=tenant_id,
+                knowledge_version_id=knowledge_version_id,
+                snapshot_payload=content_payload,
+                serving_watermark_ref=serving_watermark_ref,
+            )
+        except Exception as exc:  # noqa: BLE001
+            return self._blocked(
+                tenant_id=tenant_id,
+                workspace_id=workspace_id,
+                knowledge_version_id=knowledge_version_id,
+                index_job_manifest_hash=index_job_manifest_hash,
+                receipt_visibility=receipt_visibility,
+                consistency_checks=checks,
+                block_reason=f"snapshot_persistence_failed:{str(exc)[:160]}",
+                observed_at=observed_at,
+                dependency_pr=dependency_pr,
+                dependency_head_sha=dependency_head_sha,
+            )
+
+        try:
+            re_read = self._snapshot_persistence.read(
+                tenant_id=tenant_id,
+                workspace_id=workspace_id,
+                knowledge_version_id=knowledge_version_id,
+                snapshot_id=snapshot_id,
+            )
+        except Exception as exc:  # noqa: BLE001
+            return self._blocked(
+                tenant_id=tenant_id,
+                workspace_id=workspace_id,
+                knowledge_version_id=knowledge_version_id,
+                index_job_manifest_hash=index_job_manifest_hash,
+                receipt_visibility=receipt_visibility,
+                consistency_checks=checks,
+                block_reason=f"snapshot_readback_failed:{str(exc)[:160]}",
+                observed_at=observed_at,
+                dependency_pr=dependency_pr,
+                dependency_head_sha=dependency_head_sha,
+            )
+
+        # ── Task B/C: verified, tenant-scoped readback ────────────────────
+        readback_gaps: list[str] = []
+        if re_read is None:
+            readback_gaps.append("snapshot_readback_missing")
+        else:
+            if str(re_read.get("snapshot_id") or "") != snapshot_id:
+                readback_gaps.append("readback_snapshot_id_mismatch")
+            if str(re_read.get("tenant_id") or "") != tenant_id:
+                readback_gaps.append("readback_tenant_id_mismatch")
+            if str(re_read.get("knowledge_version_id") or "") != knowledge_version_id:
+                readback_gaps.append("readback_knowledge_version_id_mismatch")
+            if str(re_read.get("snapshot_hash") or "") != snapshot_content_hash:
+                readback_gaps.append("readback_snapshot_hash_mismatch")
+            if str(re_read.get("serving_watermark_ref") or "") != serving_watermark_ref:
+                readback_gaps.append("readback_serving_watermark_mismatch")
+        if readback_gaps:
+            return self._blocked(
+                tenant_id=tenant_id,
+                workspace_id=workspace_id,
+                knowledge_version_id=knowledge_version_id,
+                index_job_manifest_hash=index_job_manifest_hash,
+                receipt_visibility=receipt_visibility,
+                consistency_checks=checks,
+                block_reason=f"snapshot_readback_inconsistent:{','.join(readback_gaps)}",
+                observed_at=observed_at,
+                dependency_pr=dependency_pr,
+                dependency_head_sha=dependency_head_sha,
+            )
+
+        # ── Receipt built ONLY after the persisted fact is verified ───────
         receipt = build_snapshot_activation_receipt(
             tenant_id=tenant_id,
             workspace_id=workspace_id,
@@ -457,31 +564,12 @@ class SnapshotActivationAdapter:
             activated_at=observed_at,
         )
 
-        # ── Persistence through the formal snapshot repository ────────────
-        persistence_evidence: dict[str, Any] = {}
-        if self._snapshot_persistence is not None:
-            try:
-                persist_result = self._snapshot_persistence.persist(
-                    snapshot_id=snapshot_id,
-                    tenant_id=tenant_id,
-                    knowledge_version_id=knowledge_version_id,
-                    snapshot_payload=content_payload,
-                    serving_watermark_ref=f"serving-watermark::{snapshot_id}",
-                )
-                re_read = self._snapshot_persistence.read(snapshot_id)
-                persistence_evidence = {
-                    "persisted": True,
-                    "persist_result": persist_result,
-                    "snapshot_re_readable": re_read is not None,
-                    "readback": re_read,
-                }
-            except Exception as exc:  # noqa: BLE001
-                persistence_evidence = {
-                    "persisted": False,
-                    "error": str(exc)[:200],
-                    "snapshot_re_readable": False,
-                }
-
+        persistence_evidence = {
+            "persisted": True,
+            "persist_result": persist_result,
+            "snapshot_re_readable": True,
+            "readback": re_read,
+        }
         return SnapshotActivationResult(
             status="ACTIVATED",
             snapshot_id=snapshot_id,
@@ -587,17 +675,43 @@ class PostgresKnowledgeSnapshotPersistence:
             "serving_watermark_ref": serving_watermark_ref,
         }
 
-    def read(self, snapshot_id: str) -> dict[str, Any] | None:
+    def read(
+        self,
+        *,
+        tenant_id: str,
+        workspace_id: str,
+        knowledge_version_id: str,
+        snapshot_id: str,
+    ) -> dict[str, Any] | None:
+        """Tenant / workspace / knowledge-version scoped snapshot readback.
+
+        The workspace is validated through the KnowledgeVersion owner
+        (``knowledge_domain_versions``) because the snapshot table itself
+        does not carry workspace.  A cross-tenant, cross-workspace or
+        cross-version lookup returns no row (fail closed).
+        """
         from sqlalchemy import text
 
         engine = self._engine_factory()
         with engine.connect() as connection:
             row = connection.execute(
                 text(
-                    "SELECT snapshot_id, tenant_id, knowledge_version_id, snapshot_hash, serving_watermark_ref "
-                    "FROM knowledge_snapshots WHERE snapshot_id = :snapshot_id"
+                    "SELECT s.snapshot_id, s.tenant_id, s.knowledge_version_id, "
+                    "       s.snapshot_hash, s.serving_watermark_ref "
+                    "FROM knowledge_snapshots s "
+                    "JOIN knowledge_domain_versions v "
+                    "  ON v.knowledge_version_id = s.knowledge_version_id "
+                    "WHERE s.snapshot_id = :snapshot_id "
+                    "  AND s.tenant_id = :tenant_id "
+                    "  AND s.knowledge_version_id = :knowledge_version_id "
+                    "  AND v.workspace_id = :workspace_id"
                 ),
-                {"snapshot_id": snapshot_id},
+                {
+                    "snapshot_id": snapshot_id,
+                    "tenant_id": tenant_id,
+                    "knowledge_version_id": knowledge_version_id,
+                    "workspace_id": workspace_id,
+                },
             ).fetchone()
         if row is None:
             return None

@@ -119,21 +119,64 @@ def _activate(**overrides):
 
 
 class _FakePersistence:
+    """Tenant-scoped fake: read() requires tenant/workspace/kv/snapshot id
+    and returns no row for a foreign scope (fail closed)."""
+
     def __init__(self) -> None:
         self.stored: dict[str, dict] = {}
+        self.persist_calls: list[dict] = []
+        self.fail_persist: Exception | None = None
+        self.skip_write: bool = False
+        self.read_override: dict[str, Any] | None = None
+        self.workspace_by_kv: dict[str, str] = {KNOWLEDGE_VERSION: WORKSPACE}
 
     def persist(self, *, snapshot_id, tenant_id, knowledge_version_id, snapshot_payload, serving_watermark_ref):
-        self.stored[snapshot_id] = {
-            "snapshot_id": snapshot_id,
-            "tenant_id": tenant_id,
-            "knowledge_version_id": knowledge_version_id,
-            "snapshot_hash": snapshot_payload,
-            "serving_watermark_ref": serving_watermark_ref,
-        }
+        if self.fail_persist is not None:
+            raise self.fail_persist
+        self.persist_calls.append(
+            {
+                "snapshot_id": snapshot_id,
+                "tenant_id": tenant_id,
+                "knowledge_version_id": knowledge_version_id,
+                "snapshot_hash": snapshot_payload,
+                "serving_watermark_ref": serving_watermark_ref,
+            }
+        )
+        # Immutable snapshot semantics (ON CONFLICT DO NOTHING): an existing
+        # fact under the same snapshot id is never overwritten.
+        if not self.skip_write and snapshot_id not in self.stored:
+            self.stored[snapshot_id] = {
+                "snapshot_id": snapshot_id,
+                "tenant_id": tenant_id,
+                "knowledge_version_id": knowledge_version_id,
+                "snapshot_hash": _expected_hash(snapshot_payload),
+                "serving_watermark_ref": serving_watermark_ref,
+            }
         return {"persisted_snapshot_id": snapshot_id}
 
-    def read(self, snapshot_id):
-        return self.stored.get(snapshot_id)
+    def read(self, *, tenant_id, workspace_id, knowledge_version_id, snapshot_id):
+        if self.read_override is not None:
+            return dict(self.read_override)
+        row = self.stored.get(snapshot_id)
+        if row is None:
+            return None
+        # Tenant / workspace / knowledge-version scoped: foreign scope -> None.
+        if row["tenant_id"] != tenant_id:
+            return None
+        if row["knowledge_version_id"] != knowledge_version_id:
+            return None
+        if self.workspace_by_kv.get(knowledge_version_id) != workspace_id:
+            return None
+        return dict(row)
+
+
+def _expected_hash(payload: dict[str, Any]) -> str:
+    import hashlib
+    import json
+
+    return hashlib.sha256(
+        json.dumps(payload, sort_keys=True, separators=(",", ":"), default=str).encode("utf-8")
+    ).hexdigest()
 
 
 def test_corpus_receipt_validator_requires_kv_for_visible() -> None:
@@ -319,12 +362,21 @@ def test_activation_succeeds_persists_and_is_deterministic() -> None:
     )
     assert changed.snapshot_id != first.snapshot_id
 
-    # The persisted snapshot fact is re-readable.
-    assert persistence.read(first.snapshot_id) is not None
+    # The persisted snapshot fact is re-readable through the scoped port.
+    assert (
+        persistence.read(
+            tenant_id=TENANT,
+            workspace_id=WORKSPACE,
+            knowledge_version_id=KNOWLEDGE_VERSION,
+            snapshot_id=first.snapshot_id,
+        )
+        is not None
+    )
 
 
 def test_activation_receipt_validator_rejects_malformed_states() -> None:
-    result = _activate()
+    result = _activate_with_persistence(_FakePersistence())
+    assert result.status == "ACTIVATED"
     receipt = result.receipt.model_dump()
     receipt["snapshot_id"] = ""
     errors = validate_snapshot_activation_receipt(receipt)
@@ -335,3 +387,170 @@ def test_activation_receipt_validator_rejects_malformed_states() -> None:
     blocked["block_reason"] = None
     errors = validate_snapshot_activation_receipt(blocked)
     assert any("block_reason" in error for error in errors)
+
+
+# ---------------------------------------------------------------------------
+# Persistence hard gate (Task A/B): no ACTIVATED without durable persistence
+# ---------------------------------------------------------------------------
+
+
+def _activate_with_persistence(persistence: Any) -> SnapshotActivationResult:
+    return SnapshotActivationAdapter(snapshot_persistence=persistence).activate(
+        tenant_id=TENANT,
+        workspace_id=WORKSPACE,
+        knowledge_version_id=KNOWLEDGE_VERSION,
+        index_job_manifest_hash=MANIFEST_HASH,
+        corpus_receipts=_receipts(),
+        neo4j_path_receipt=_path_receipt(),
+        embedding_config=_embedding_config(),
+    )
+
+
+def test_activation_blocks_without_persistence_port() -> None:
+    result = _activate_with_persistence(None)
+    assert result.status == "BLOCKED"
+    assert result.block_reason == "snapshot_persistence_port_missing"
+    assert result.snapshot_id is None
+    assert result.receipt.activation_status == "BLOCKED"
+
+
+def test_activation_blocks_when_persist_raises() -> None:
+    persistence = _FakePersistence()
+    persistence.fail_persist = RuntimeError("database commit failure")
+    result = _activate_with_persistence(persistence)
+    assert result.status == "BLOCKED"
+    assert result.block_reason.startswith("snapshot_persistence_failed:")
+    assert result.snapshot_id is None
+
+
+def test_activation_blocks_when_persist_returns_but_nothing_written() -> None:
+    persistence = _FakePersistence()
+    persistence.skip_write = True
+    result = _activate_with_persistence(persistence)
+    assert result.status == "BLOCKED"
+    assert result.block_reason == "snapshot_readback_inconsistent:snapshot_readback_missing"
+    assert result.snapshot_id is None
+
+
+def test_activation_blocks_when_readback_returns_wrong_tenant() -> None:
+    persistence = _FakePersistence()
+    persistence.read_override = {
+        "snapshot_id": "snap_x",
+        "tenant_id": "tenant_other",
+        "knowledge_version_id": KNOWLEDGE_VERSION,
+        "snapshot_hash": "h",
+        "serving_watermark_ref": "w",
+    }
+    result = _activate_with_persistence(persistence)
+    assert result.status == "BLOCKED"
+    assert "readback_tenant_id_mismatch" in result.block_reason
+    assert result.snapshot_id is None
+
+
+def test_activation_blocks_when_readback_returns_wrong_knowledge_version() -> None:
+    persistence = _FakePersistence()
+    persistence.read_override = {
+        "snapshot_id": "snap_x",
+        "tenant_id": TENANT,
+        "knowledge_version_id": "knowledge-version::other",
+        "snapshot_hash": "h",
+        "serving_watermark_ref": "w",
+    }
+    result = _activate_with_persistence(persistence)
+    assert result.status == "BLOCKED"
+    assert "readback_knowledge_version_id_mismatch" in result.block_reason
+
+
+def test_activation_blocks_when_readback_hash_mismatches() -> None:
+    persistence = _FakePersistence()
+    result = _activate_with_persistence(persistence)
+    assert result.status == "ACTIVATED"
+    # Tamper the stored hash and retry -> same snapshot id, different hash
+    # conflict must BLOCK (immutable snapshot, payload conflict).
+    persistence.stored[result.snapshot_id]["snapshot_hash"] = "conflicting-hash"
+    retry = _activate_with_persistence(persistence)
+    assert retry.status == "BLOCKED"
+    assert "readback_snapshot_hash_mismatch" in retry.block_reason
+
+
+def test_activation_blocks_on_serving_watermark_mismatch() -> None:
+    persistence = _FakePersistence()
+    persistence.read_override = {
+        "snapshot_id": "snap_x",
+        "tenant_id": TENANT,
+        "knowledge_version_id": KNOWLEDGE_VERSION,
+        "snapshot_hash": "h",
+        "serving_watermark_ref": "wrong-watermark",
+    }
+    result = _activate_with_persistence(persistence)
+    assert result.status == "BLOCKED"
+    assert "readback_serving_watermark_mismatch" in result.block_reason
+
+
+def test_activation_idempotent_retry_after_persist_returns_same_snapshot() -> None:
+    persistence = _FakePersistence()
+    first = _activate_with_persistence(persistence)
+    # Retry with the same inputs (as after a crash before the receipt was
+    # returned) must yield the identical snapshot and receipt.
+    retry = _activate_with_persistence(persistence)
+    assert first.status == "ACTIVATED"
+    assert retry.status == "ACTIVATED"
+    assert retry.snapshot_id == first.snapshot_id
+    assert retry.snapshot_content_hash == first.snapshot_content_hash
+    assert retry.receipt.receipt_ref == first.receipt.receipt_ref
+    assert len(persistence.persist_calls) == 2
+
+
+def test_activation_payload_conflict_blocks_immutable_snapshot() -> None:
+    persistence = _FakePersistence()
+    first = _activate_with_persistence(persistence)
+    assert first.status == "ACTIVATED"
+    # A conflicting pre-existing fact under the same snapshot id (different
+    # payload hash) must BLOCK — immutable snapshots are never overwritten.
+    persistence.stored[first.snapshot_id]["snapshot_hash"] = "other-payload-hash"
+    retry = _activate_with_persistence(persistence)
+    assert retry.status == "BLOCKED"
+    assert "readback_snapshot_hash_mismatch" in retry.block_reason
+
+
+def test_activation_blocks_on_any_check_not_strictly_true() -> None:
+    # Every activation check must be strictly True; the ACTIVATED evidence
+    # always carries the full non-empty check set (Task D).
+    result = _activate_with_persistence(_FakePersistence())
+    assert result.status == "ACTIVATED"
+    checks = result.activation_evidence["consistency_checks"]
+    assert checks
+    assert all(value is True for value in checks.values())
+    assert result.receipt.consistency_checks == checks
+
+
+def test_tenant_scoped_readback_rejects_foreign_scope() -> None:
+    persistence = _FakePersistence()
+    result = _activate_with_persistence(persistence)
+    assert result.status == "ACTIVATED"
+    # Foreign tenant / workspace / knowledge-version must not resolve.
+    assert persistence.read(
+        tenant_id="tenant_other",
+        workspace_id=WORKSPACE,
+        knowledge_version_id=KNOWLEDGE_VERSION,
+        snapshot_id=result.snapshot_id,
+    ) is None
+    assert persistence.read(
+        tenant_id=TENANT,
+        workspace_id="workspace_other",
+        knowledge_version_id=KNOWLEDGE_VERSION,
+        snapshot_id=result.snapshot_id,
+    ) is None
+    assert persistence.read(
+        tenant_id=TENANT,
+        workspace_id=WORKSPACE,
+        knowledge_version_id="knowledge-version::other",
+        snapshot_id=result.snapshot_id,
+    ) is None
+    # The correct scope resolves.
+    assert persistence.read(
+        tenant_id=TENANT,
+        workspace_id=WORKSPACE,
+        knowledge_version_id=KNOWLEDGE_VERSION,
+        snapshot_id=result.snapshot_id,
+    ) is not None
