@@ -1,0 +1,144 @@
+{
+  "mode": "repository",
+  "status": "INDEX_SCOPE_VIOLATION",
+  "reasons": [
+    "required scope parameter 'tenant_id' has default None (silent bypass)",
+    "required scope parameter 'workspace_id' has default None (silent bypass)",
+    "required scope parameter 'knowledge_version_id' has default None (silent bypass)",
+    "missing required scope parameter: tenant_id",
+    "missing required scope parameter: workspace_id",
+    "missing required scope parameter: knowledge_version_id",
+    "method body does not propagate tenant/workspace/knowledge_version scope",
+    "method uses dynamic f-string without explicit scope filter",
+    "required scope parameter 'tenant_id' has default None (silent bypass)",
+    "required scope parameter 'workspace_id' has default None (silent bypass)",
+    "required scope parameter 'knowledge_version_id' has default None (silent bypass)",
+    "required scope parameter 'tenant_id' has default None (silent bypass)",
+    "required scope parameter 'workspace_id' has default None (silent bypass)",
+    "required scope parameter 'knowledge_version_id' has default None (silent bypass)",
+    "missing required scope parameter: tenant_id",
+    "missing required scope parameter: workspace_id",
+    "missing required scope parameter: knowledge_version_id",
+    "required scope parameter 'tenant_id' has default None (silent bypass)",
+    "required scope parameter 'workspace_id' has default None (silent bypass)",
+    "required scope parameter 'knowledge_version_id' has default None (silent bypass)",
+    "missing required scope parameter: tenant_id",
+    "missing required scope parameter: workspace_id",
+    "missing required scope parameter: knowledge_version_id",
+    "method uses dynamic f-string without explicit scope filter"
+  ],
+  "not_proven": [
+    "live PostgreSQL write/read",
+    "real Snapshot activation",
+    "real three-index corpus visibility",
+    "four-profile measurement",
+    "production readiness"
+  ],
+  "report": {
+    "snapshot_activation_observed": true,
+    "persistence_port_observed": true,
+    "persistence_methods": [
+      "persist",
+      "read"
+    ],
+    "activate_method_present": true,
+    "receipt_after_readback": false,
+    "persistence_evidence_check": true,
+    "consistency_checks_require_all_true": true,
+    "consistency_checks_present": true,
+    "immutable_payload_conflict_guard": false,
+    "persistence_blocked_path_present": true,
+    "readback_scope_enforced": true,
+    "readback_tenant_check": true,
+    "readback_knowledge_version_check": true,
+    "readback_snapshot_hash_check": true,
+    "index_client_findings": [
+      {
+        "client_class": "ElasticsearchBm25IndexClient",
+        "method_name": "search_documents",
+        "line_number": 531,
+        "issues": [
+          "required scope parameter 'tenant_id' has default None (silent bypass)",
+          "required scope parameter 'workspace_id' has default None (silent bypass)",
+          "required scope parameter 'knowledge_version_id' has default None (silent bypass)"
+        ]
+      },
+      {
+        "client_class": "ElasticsearchBm25IndexClient",
+        "method_name": "fetch_document",
+        "line_number": 552,
+        "issues": [
+          "missing required scope parameter: tenant_id",
+          "missing required scope parameter: workspace_id",
+          "missing required scope parameter: knowledge_version_id",
+          "method body does not propagate tenant/workspace/knowledge_version scope",
+          "method uses dynamic f-string without explicit scope filter"
+        ]
+      },
+      {
+        "client_class": "ElasticsearchBm25IndexClient",
+        "method_name": "count_documents",
+        "line_number": 564,
+        "issues": [
+          "required scope parameter 'tenant_id' has default None (silent bypass)",
+          "required scope parameter 'workspace_id' has default None (silent bypass)",
+          "required scope parameter 'knowledge_version_id' has default None (silent bypass)"
+        ]
+      },
+      {
+        "client_class": "MilvusVectorIndexClient",
+        "method_name": "search_documents",
+        "line_number": 640,
+        "issues": [
+          "required scope parameter 'tenant_id' has default None (silent bypass)",
+          "required scope parameter 'workspace_id' has default None (silent bypass)",
+          "required scope parameter 'knowledge_version_id' has default None (silent bypass)"
+        ]
+      },
+      {
+        "client_class": "MilvusVectorIndexClient",
+        "method_name": "fetch_document",
+        "line_number": 696,
+        "issues": [
+          "missing required scope parameter: tenant_id",
+          "missing required scope parameter: workspace_id",
+          "missing required scope parameter: knowledge_version_id"
+        ]
+      },
+      {
+        "client_class": "MilvusVectorIndexClient",
+        "method_name": "count_documents",
+        "line_number": 715,
+        "issues": [
+          "required scope parameter 'tenant_id' has default None (silent bypass)",
+          "required scope parameter 'workspace_id' has default None (silent bypass)",
+          "required scope parameter 'knowledge_version_id' has default None (silent bypass)"
+        ]
+      },
+      {
+        "client_class": "Neo4jGraphIndexClient",
+        "method_name": "search_documents",
+        "line_number": 263,
+        "issues": [
+          "missing required scope parameter: tenant_id",
+          "missing required scope parameter: workspace_id",
+          "missing required scope parameter: knowledge_version_id"
+        ]
+      },
+      {
+        "client_class": "Neo4jGraphIndexClient",
+        "method_name": "verify_path_visibility_receipt",
+        "line_number": 426,
+        "issues": [
+          "method uses dynamic f-string without explicit scope filter"
+        ]
+      }
+    ],
+    "activation_call_sites": [],
+    "activation_paths": [
+      "src/backend/zuno/knowledge/indexing/snapshot_activation.py"
+    ],
+    "notes": [],
+    "errors": []
+  }
+}

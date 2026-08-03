@@ -1,0 +1,219 @@
+{
+  "mode": "contract",
+  "overall_status": "SNAPSHOT_FAIL_CLOSED_CONFIRMED",
+  "results": [
+    {
+      "fixture": "correct_fail_closed_implementation",
+      "expected_status": "SNAPSHOT_FAIL_CLOSED_CONFIRMED",
+      "actual_status": "SNAPSHOT_FAIL_CLOSED_CONFIRMED",
+      "exit_code": 0,
+      "reasons": [
+        "Snapshot activation is fail-closed: the persistence port is present and exposes both persist() and read(); activate() requires consistency_checks all True, asserts persistence_evidence.persisted, and marks persisted=False on failure; the readback enforces tenant / knowledge_version / snapshot_hash scope; the three index clients require tenant / workspace / knowledge_version (and snapshot_id for graph paths); and the snapshot activation receipt is built only after a successful readback."
+      ]
+    },
+    {
+      "fixture": "persistence_port_missing",
+      "expected_status": "PERSISTENCE_GATE_VIOLATION",
+      "actual_status": "PERSISTENCE_GATE_VIOLATION",
+      "exit_code": 2,
+      "reasons": [
+        "SnapshotPersistencePort is not declared; snapshot activation cannot fail closed on persistence"
+      ]
+    },
+    {
+      "fixture": "persist_throws",
+      "expected_status": "PERSISTENCE_GATE_VIOLATION",
+      "actual_status": "PERSISTENCE_GATE_VIOLATION",
+      "exit_code": 2,
+      "reasons": [
+        "activate() does not assert persistence_evidence.persisted == True"
+      ]
+    },
+    {
+      "fixture": "persist_returns_readback_none",
+      "expected_status": "READBACK_SCOPE_VIOLATION",
+      "actual_status": "READBACK_SCOPE_VIOLATION",
+      "exit_code": 3,
+      "reasons": [
+        "readback does not enforce tenant/knowledge_version/snapshot_hash scope"
+      ]
+    },
+    {
+      "fixture": "readback_tenant_wrong",
+      "expected_status": "READBACK_SCOPE_VIOLATION",
+      "actual_status": "READBACK_SCOPE_VIOLATION",
+      "exit_code": 3,
+      "reasons": [
+        "readback does not enforce tenant/knowledge_version/snapshot_hash scope"
+      ]
+    },
+    {
+      "fixture": "readback_knowledge_version_wrong",
+      "expected_status": "READBACK_SCOPE_VIOLATION",
+      "actual_status": "READBACK_SCOPE_VIOLATION",
+      "exit_code": 3,
+      "reasons": [
+        "readback does not enforce tenant/knowledge_version/snapshot_hash scope"
+      ]
+    },
+    {
+      "fixture": "readback_snapshot_hash_wrong",
+      "expected_status": "READBACK_SCOPE_VIOLATION",
+      "actual_status": "READBACK_SCOPE_VIOLATION",
+      "exit_code": 3,
+      "reasons": [
+        "readback does not enforce tenant/knowledge_version/snapshot_hash scope"
+      ]
+    },
+    {
+      "fixture": "consistency_check_false_but_activated",
+      "expected_status": "PERSISTENCE_GATE_VIOLATION",
+      "actual_status": "PERSISTENCE_GATE_VIOLATION",
+      "exit_code": 2,
+      "reasons": [
+        "activate() does not require all consistency_checks to be True"
+      ]
+    },
+    {
+      "fixture": "consistency_checks_missing",
+      "expected_status": "PERSISTENCE_GATE_VIOLATION",
+      "actual_status": "PERSISTENCE_GATE_VIOLATION",
+      "exit_code": 2,
+      "reasons": [
+        "activate() does not require all consistency_checks to be True"
+      ]
+    },
+    {
+      "fixture": "receipt_before_persist",
+      "expected_status": "ACTIVATION_RECEIPT_VIOLATION",
+      "actual_status": "ACTIVATION_RECEIPT_VIOLATION",
+      "exit_code": 5,
+      "reasons": [
+        "snapshot activation receipt is built before the readback completes"
+      ]
+    },
+    {
+      "fixture": "es_missing_scope",
+      "expected_status": "INDEX_SCOPE_VIOLATION",
+      "actual_status": "INDEX_SCOPE_VIOLATION",
+      "exit_code": 4,
+      "reasons": [
+        "required scope parameter 'tenant_id' has default None (silent bypass)",
+        "required scope parameter 'workspace_id' has default None (silent bypass)",
+        "required scope parameter 'knowledge_version_id' has default None (silent bypass)",
+        "missing required scope parameter: tenant_id",
+        "missing required scope parameter: workspace_id",
+        "missing required scope parameter: knowledge_version_id",
+        "method body does not propagate tenant/workspace/knowledge_version scope",
+        "missing required scope parameter: tenant_id",
+        "missing required scope parameter: workspace_id",
+        "missing required scope parameter: knowledge_version_id",
+        "method body does not propagate tenant/workspace/knowledge_version scope",
+        "missing required scope parameter: tenant_id",
+        "missing required scope parameter: workspace_id",
+        "missing required scope parameter: knowledge_version_id",
+        "method body does not propagate tenant/workspace/knowledge_version scope",
+        "missing required scope parameter: tenant_id",
+        "missing required scope parameter: workspace_id",
+        "missing required scope parameter: knowledge_version_id",
+        "method body does not propagate tenant/workspace/knowledge_version scope",
+        "method body does not propagate tenant/workspace/knowledge_version scope",
+        "method body does not propagate tenant/workspace/knowledge_version scope"
+      ]
+    },
+    {
+      "fixture": "milvus_missing_scope",
+      "expected_status": "INDEX_SCOPE_VIOLATION",
+      "actual_status": "INDEX_SCOPE_VIOLATION",
+      "exit_code": 4,
+      "reasons": [
+        "missing required scope parameter: tenant_id",
+        "missing required scope parameter: workspace_id",
+        "missing required scope parameter: knowledge_version_id",
+        "method body does not propagate tenant/workspace/knowledge_version scope",
+        "missing required scope parameter: tenant_id",
+        "missing required scope parameter: workspace_id",
+        "missing required scope parameter: knowledge_version_id",
+        "method body does not propagate tenant/workspace/knowledge_version scope",
+        "required scope parameter 'tenant_id' has default None (silent bypass)",
+        "required scope parameter 'workspace_id' has default None (silent bypass)",
+        "required scope parameter 'knowledge_version_id' has default None (silent bypass)",
+        "missing required scope parameter: tenant_id",
+        "missing required scope parameter: workspace_id",
+        "missing required scope parameter: knowledge_version_id",
+        "method body does not propagate tenant/workspace/knowledge_version scope",
+        "missing required scope parameter: tenant_id",
+        "missing required scope parameter: workspace_id",
+        "missing required scope parameter: knowledge_version_id",
+        "method body does not propagate tenant/workspace/knowledge_version scope",
+        "method body does not propagate tenant/workspace/knowledge_version scope",
+        "method body does not propagate tenant/workspace/knowledge_version scope"
+      ]
+    },
+    {
+      "fixture": "neo4j_missing_scope",
+      "expected_status": "INDEX_SCOPE_VIOLATION",
+      "actual_status": "INDEX_SCOPE_VIOLATION",
+      "exit_code": 4,
+      "reasons": [
+        "missing required scope parameter: tenant_id",
+        "missing required scope parameter: workspace_id",
+        "missing required scope parameter: knowledge_version_id",
+        "method body does not propagate tenant/workspace/knowledge_version scope",
+        "missing required scope parameter: tenant_id",
+        "missing required scope parameter: workspace_id",
+        "missing required scope parameter: knowledge_version_id",
+        "method body does not propagate tenant/workspace/knowledge_version scope",
+        "missing required scope parameter: tenant_id",
+        "missing required scope parameter: workspace_id",
+        "missing required scope parameter: knowledge_version_id",
+        "method body does not propagate tenant/workspace/knowledge_version scope",
+        "missing required scope parameter: tenant_id",
+        "missing required scope parameter: workspace_id",
+        "missing required scope parameter: knowledge_version_id",
+        "method body does not propagate tenant/workspace/knowledge_version scope",
+        "required scope parameter 'tenant_id' has default None (silent bypass)",
+        "required scope parameter 'workspace_id' has default None (silent bypass)",
+        "required scope parameter 'knowledge_version_id' has default None (silent bypass)",
+        "required scope parameter 'snapshot_id' has default None (silent bypass)",
+        "method body does not propagate tenant/workspace/knowledge_version scope",
+        "method body does not propagate tenant/workspace/knowledge_version scope"
+      ]
+    },
+    {
+      "fixture": "foreign_snapshot_dynamic_port",
+      "expected_status": "BINDING_UNRESOLVED",
+      "actual_status": "BINDING_UNRESOLVED",
+      "exit_code": 6,
+      "reasons": [
+        "snapshot activation parse error: expected 'except' or 'finally' block (snapshot_activation.py, line 24)"
+      ]
+    },
+    {
+      "fixture": "adapter_smoke_no_scope_filter",
+      "expected_status": "INDEX_SCOPE_VIOLATION",
+      "actual_status": "INDEX_SCOPE_VIOLATION",
+      "exit_code": 4,
+      "reasons": [
+        "method body does not propagate tenant/workspace/knowledge_version scope",
+        "method body does not propagate tenant/workspace/knowledge_version scope",
+        "method body does not propagate tenant/workspace/knowledge_version scope",
+        "method body does not propagate tenant/workspace/knowledge_version scope",
+        "method body does not propagate tenant/workspace/knowledge_version scope",
+        "method body does not propagate tenant/workspace/knowledge_version scope",
+        "method body does not propagate tenant/workspace/knowledge_version scope",
+        "method body does not propagate tenant/workspace/knowledge_version scope",
+        "method body does not propagate tenant/workspace/knowledge_version scope"
+      ]
+    },
+    {
+      "fixture": "immutable_payload_conflict",
+      "expected_status": "ACTIVATION_RECEIPT_VIOLATION",
+      "actual_status": "ACTIVATION_RECEIPT_VIOLATION",
+      "exit_code": 5,
+      "reasons": [
+        "snapshot activation receipt is built before the readback completes"
+      ]
+    }
+  ]
+}
