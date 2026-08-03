@@ -254,7 +254,11 @@ def main(argv: list[str] | None = None) -> int:
             or (args.expect == "unreachable" and not actual_reachable)
         )
         if expectation_matched:
-            print(f"wrote environment probe report: {args.output.as_posix()}")
+            try:
+                relative_output = args.output.resolve().relative_to(REPO_ROOT).as_posix()
+            except (ValueError, OSError):
+                relative_output = args.output.name
+            print(f"wrote environment probe report: {relative_output}")
             return 0
         # Expectation mismatch is a hard failure (exit 1). Port reachable
         # != write/read verified, so we still always set
@@ -270,7 +274,11 @@ def main(argv: list[str] | None = None) -> int:
         )
         return 1
     write_report(report, args.output)
-    print(f"wrote environment probe report: {args.output.as_posix()}")
+    try:
+        relative_output = args.output.resolve().relative_to(REPO_ROOT).as_posix()
+    except (ValueError, OSError):
+        relative_output = args.output.name
+    print(f"wrote environment probe report: {relative_output}")
     return 0
 
 

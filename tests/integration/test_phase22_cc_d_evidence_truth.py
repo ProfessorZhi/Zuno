@@ -580,3 +580,315 @@ def test_canonical_verifier_pass() -> None:
     assert result.returncode == 0, (
         f"canonical verifier failed: stdout={result.stdout!r} stderr={result.stderr!r}"
     )
+
+
+# ---------------------------------------------------------------------------
+# 10. Host-path rejection — drive letters / Linux home / macOS home
+# ---------------------------------------------------------------------------
+
+
+def _bundle_with_command(command_record: dict[str, Any]) -> dict[str, Any]:
+    return {
+        "schema_version": "1.0.0",
+        "matrix_status": "NOT_RUN_DEPENDENCY_BLOCKED",
+        "snapshot_id": None,
+        "profile_run_ids": [],
+        "case_count": 1,
+        "case_runs": [
+            {
+                "case_id": "D-MINIO-UNREACHABLE",
+                "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+                "execution": {"launched": False, "exit_code": None},
+            }
+        ],
+        "commands": [command_record],
+    }
+
+
+def _truthful_command_record(command: str = "python tools/scripts/foo.py") -> dict[str, Any]:
+    return {
+        "executable": "python",
+        "script": "tools/scripts/foo.py",
+        "args": [],
+        "command": command,
+        "started_at": "2026-08-03T00:00:00Z",
+        "ended_at": "2026-08-03T00:00:00Z",
+        "elapsed_seconds": 0.0,
+        "launched": False,
+        "exit_code": None,
+        "stdout": "",
+        "stderr": "",
+        "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+        "not_run_reason": "synthetic",
+    }
+
+
+def test_windows_absolute_path_in_command_is_rejected(tmp_path: Path) -> None:
+    """A Windows drive-letter path in any command field must be rejected."""
+
+    sys.path.insert(0, str(REPO_ROOT))
+    from tools.scripts import verify_phase22_cc_d_evidence as verifier
+
+    bundle = _bundle_with_command(_truthful_command_record())
+    bundle["commands"][0]["executable"] = "E:\\develop\\Python312\\python.exe"
+    bundle["commands"][0]["command"] = (
+        "E:\\develop\\Python312\\python.exe F:\\agent_project\\Zuno\\tools\\scripts\\foo.py"
+    )
+    tmp = tmp_path / "win.json"
+    tmp.write_text(json.dumps(bundle), encoding="utf-8")
+    original = verifier.BUNDLE_PATH
+    verifier.BUNDLE_PATH = tmp  # type: ignore[attr-defined]
+    try:
+        errors = verifier.verify()
+    finally:
+        verifier.BUNDLE_PATH = original  # type: ignore[attr-defined]
+    assert any("host-specific" in e or "executable must be" in e for e in errors), (
+        f"verifier must reject Windows drive-letter paths, got: {errors}"
+    )
+
+
+def test_linux_home_absolute_path_in_command_is_rejected(tmp_path: Path) -> None:
+    """A Linux /home/<user>/... path in command must be rejected."""
+
+    sys.path.insert(0, str(REPO_ROOT))
+    from tools.scripts import verify_phase22_cc_d_evidence as verifier
+
+    bundle = _bundle_with_command(_truthful_command_record())
+    bundle["commands"][0]["executable"] = "/home/devuser/.pyenv/shims/python"
+    bundle["commands"][0]["command"] = (
+        "/home/devuser/.pyenv/shims/python tools/scripts/foo.py"
+    )
+    tmp = tmp_path / "linux.json"
+    tmp.write_text(json.dumps(bundle), encoding="utf-8")
+    original = verifier.BUNDLE_PATH
+    verifier.BUNDLE_PATH = tmp  # type: ignore[attr-defined]
+    try:
+        errors = verifier.verify()
+    finally:
+        verifier.BUNDLE_PATH = original  # type: ignore[attr-defined]
+    assert any("host-specific" in e or "executable must be" in e for e in errors), (
+        f"verifier must reject Linux home paths, got: {errors}"
+    )
+
+
+def test_macos_home_absolute_path_in_command_is_rejected(tmp_path: Path) -> None:
+    """A macOS /Users/<user>/... path in command must be rejected."""
+
+    sys.path.insert(0, str(REPO_ROOT))
+    from tools.scripts import verify_phase22_cc_d_evidence as verifier
+
+    bundle = _bundle_with_command(_truthful_command_record())
+    bundle["commands"][0]["executable"] = "/Users/devuser/.pyenv/shims/python"
+    bundle["commands"][0]["command"] = (
+        "/Users/devuser/.pyenv/shims/python tools/scripts/foo.py"
+    )
+    tmp = tmp_path / "macos.json"
+    tmp.write_text(json.dumps(bundle), encoding="utf-8")
+    original = verifier.BUNDLE_PATH
+    verifier.BUNDLE_PATH = tmp  # type: ignore[attr-defined]
+    try:
+        errors = verifier.verify()
+    finally:
+        verifier.BUNDLE_PATH = original  # type: ignore[attr-defined]
+    assert any("host-specific" in e or "executable must be" in e for e in errors), (
+        f"verifier must reject macOS home paths, got: {errors}"
+    )
+
+
+def test_repo_relative_command_is_accepted(tmp_path: Path) -> None:
+    """A repo-relative ``python tools/scripts/<script>.py`` form must pass."""
+
+    sys.path.insert(0, str(REPO_ROOT))
+    from tools.scripts import verify_phase22_cc_d_evidence as verifier
+
+    # Use a 22-case case_runs block so the case_count check passes for
+    # the bundle-wide truth checks.
+    import yaml  # type: ignore[import-untyped]
+
+    from tools.evals.zuno.synthetic_benchmark.phase22_cc_d_fault_matrix import (
+        load_matrix,
+    )
+
+    matrix = load_matrix(
+        REPO_ROOT
+        / "tools"
+        / "evals"
+        / "zuno"
+        / "synthetic_benchmark"
+        / "phase22_cc_d_fault_matrix.yaml"
+    )
+    case_runs = [
+        {
+            "case_id": c.get("case_id"),
+            "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+            "execution": {"launched": False, "exit_code": None},
+        }
+        for c in matrix.get("cases", [])
+    ]
+
+    bundle = _bundle_with_command(_truthful_command_record())
+    bundle["case_count"] = len(case_runs)
+    bundle["case_runs"] = case_runs
+    # Add the verifier-as-NOT_RUN_IN_BUILDER record so the verifier passes
+    # that contract.
+    bundle["commands"].append(
+        {
+            "executable": "python",
+            "script": "tools/scripts/verify_phase22_cc_d_evidence.py",
+            "args": [],
+            "command": "python tools/scripts/verify_phase22_cc_d_evidence.py",
+            "started_at": "2026-08-03T00:00:00Z",
+            "ended_at": "2026-08-03T00:00:00Z",
+            "elapsed_seconds": 0.0,
+            "launched": False,
+            "exit_code": None,
+            "stdout": "",
+            "stderr": "",
+            "status": "NOT_RUN_IN_BUILDER",
+            "not_run_reason": "detached post-write verification required",
+        }
+    )
+
+    tmp = tmp_path / "ok.json"
+    tmp.write_text(json.dumps(bundle), encoding="utf-8")
+    original = verifier.BUNDLE_PATH
+    verifier.BUNDLE_PATH = tmp  # type: ignore[attr-defined]
+    try:
+        errors = verifier.verify()
+    finally:
+        verifier.BUNDLE_PATH = original  # type: ignore[attr-defined]
+    assert not errors, f"repo-relative command must verify, got: {errors}"
+
+
+# ---------------------------------------------------------------------------
+# 11. Builder refuses to write a bundle containing host paths
+# ---------------------------------------------------------------------------
+
+
+def test_builder_refuses_host_path_in_command(tmp_path: Path) -> None:
+    """The builder must refuse to write if any command field leaks host paths.
+
+    The forge uses a non-Python executable so the canonicalizer cannot
+    silently rewrite it back to ``python``.
+    """
+
+    sys.path.insert(0, str(REPO_ROOT))
+    from tools.scripts import phase22_evidence_builder as builder
+
+    bundle = builder.build_bundle(run_probe=False, run_tracks=False)
+    # Forge a host path into the bundle to confirm the writer rejects it.
+    bundle["commands"].append(
+        {
+            "executable": "F:\\agent_project\\Zuno\\tools\\scripts\\foo.exe",
+            "script": "",
+            "args": ["--flag"],
+            "command": (
+                "F:\\agent_project\\Zuno\\tools\\scripts\\foo.exe --flag"
+            ),
+            "started_at": "2026-08-03T00:00:00Z",
+            "ended_at": "2026-08-03T00:00:00Z",
+            "elapsed_seconds": 0.0,
+            "launched": False,
+            "exit_code": None,
+            "stdout": "",
+            "stderr": "",
+            "status": "NOT_RUN_DEPENDENCY_BLOCKED",
+            "not_run_reason": "synthetic host path",
+        }
+    )
+    out = tmp_path / "forged.json"
+    with pytest.raises(RuntimeError, match="host-specific"):
+        builder.write_bundle(bundle, out)
+
+
+# ---------------------------------------------------------------------------
+# 12. Builder no longer self-verifies — verifier is NOT_RUN_IN_BUILDER
+# ---------------------------------------------------------------------------
+
+
+def test_builder_does_not_run_verifier_in_process() -> None:
+    """The bundle's verifier command must be NOT_RUN_IN_BUILDER with no exit_code."""
+
+    sys.path.insert(0, str(REPO_ROOT))
+    from tools.scripts.phase22_evidence_builder import build_bundle
+
+    bundle = build_bundle(run_probe=False, run_tracks=True)
+    verifier_records = [
+        r
+        for r in bundle["commands"]
+        if isinstance(r.get("script"), str)
+        and r["script"].endswith("verify_phase22_cc_d_evidence.py")
+    ]
+    assert verifier_records, "bundle must include the verifier command record"
+    for record in verifier_records:
+        assert record["status"] == "NOT_RUN_IN_BUILDER", (
+            f"verifier command must be NOT_RUN_IN_BUILDER, got {record['status']!r}"
+        )
+        assert record["launched"] is False
+        assert record["exit_code"] is None
+        assert record["not_run_reason"], "verifier must carry not_run_reason"
+
+
+# ---------------------------------------------------------------------------
+# 13. Detached verifier writes a report referencing the bundle hash
+# ---------------------------------------------------------------------------
+
+
+def test_detached_verifier_writes_report_with_artifact_hash(tmp_path: Path) -> None:
+    """The detached verifier must hash the bundle before launching the subprocess."""
+
+    sys.path.insert(0, str(REPO_ROOT))
+    from tools.scripts.phase22_detached_verifier import run_detached_verification
+    from tools.scripts.phase22_evidence_builder import build_bundle, write_bundle, EVIDENCE_DIR
+
+    bundle = build_bundle(run_probe=False, run_tracks=True)
+    # Use a path inside REPO_ROOT so the report's artifact_path field
+    # can be expressed repo-relative.
+    workdir = REPO_ROOT / "docs" / "evidence" / "goal05-phase22-machine-attested-synthetic-regression" / "minimax2-cc-d"
+    workdir.mkdir(parents=True, exist_ok=True)
+    bundle_path = workdir / "evidence_bundle_test.json"
+    write_bundle(bundle, bundle_path)
+    report_path = workdir / "detached_verification_report_test.json"
+    # Clean up the test artifacts after the test.
+    try:
+        import hashlib
+
+        expected_hash = hashlib.sha256(bundle_path.read_bytes()).hexdigest()
+
+        report = run_detached_verification(
+            bundle_path=bundle_path, report_path=report_path, timeout=60.0
+        )
+        assert report["artifact_hash_sha256"] == expected_hash
+        assert report["command"]["executable"] == "python"
+        assert report["command"]["script"] == "tools/scripts/verify_phase22_cc_d_evidence.py"
+        assert report_path.exists(), "detached verifier must write its report file"
+        on_disk = json.loads(report_path.read_text(encoding="utf-8"))
+        assert on_disk["artifact_hash_sha256"] == expected_hash
+        # artifact_path must be repo-relative.
+        assert not on_disk["artifact_path"].startswith(("/", "\\"))
+        assert not re.match(r"^[A-Za-z]:", on_disk["artifact_path"])
+    finally:
+        if bundle_path.exists():
+            bundle_path.unlink()
+        if report_path.exists():
+            report_path.unlink()
+
+
+# ---------------------------------------------------------------------------
+# 14. Regenerated canonical evidence must not contain host paths
+# ---------------------------------------------------------------------------
+
+
+def test_canonical_bundle_contains_no_host_paths() -> None:
+    """After regeneration, the canonical bundle must contain no host paths."""
+
+    canonical_bundle = EVIDENCE_DIR / "evidence_bundle.json"
+    if not canonical_bundle.exists():
+        pytest.skip("canonical bundle not yet regenerated")
+
+    sys.path.insert(0, str(REPO_ROOT))
+    from tools.scripts import verify_phase22_cc_d_evidence as verifier
+
+    text = canonical_bundle.read_text(encoding="utf-8")
+    host_hits = verifier._scan_text_for_host_paths(text)
+    assert not host_hits, f"canonical bundle leaks host paths: {host_hits}"

@@ -1,0 +1,22 @@
+{
+  "schema_version": "1.0.0",
+  "report_kind": "phase22_cc_d_detached_verification",
+  "verified_at": "2026-08-03T14:30:20Z",
+  "artifact_path": "docs\\evidence\\goal05-phase22-machine-attested-synthetic-regression\\minimax2-cc-d\\evidence_bundle.json",
+  "artifact_hash_sha256": "98ba45f47d14b0fe964274df948107a622027e6106c45ccb637ae624207a6258",
+  "artifact_size_bytes": 51224,
+  "command": {
+    "executable": "python",
+    "script": "tools/scripts/verify_phase22_cc_d_evidence.py",
+    "args": [],
+    "command": "python tools/scripts/verify_phase22_cc_d_evidence.py"
+  },
+  "started_at": "2026-08-03T14:30:20Z",
+  "ended_at": "2026-08-03T14:30:20Z",
+  "elapsed_seconds": 0.328,
+  "launched": true,
+  "exit_code": 0,
+  "stdout": "PHASE22 CC-D evidence verification passed\n",
+  "stderr": "",
+  "status": "PASSED"
+}

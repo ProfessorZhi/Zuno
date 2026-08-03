@@ -15,14 +15,24 @@ Truth rules (CC-D task card + coordinator feedback):
 
 * Commands that this builder actually launches must record the real
   ``exit_code``. We never invent ``exit_code == 0``.
-* Commands that we did not launch (because the matrix is
-  ``NOT_RUN_DEPENDENCY_BLOCKED``) record ``launched: false``,
-  ``exit_code: null``, ``status: NOT_RUN_DEPENDENCY_BLOCKED`` and an
-  explicit ``not_run_reason``.
+* Commands that we did not launch record ``launched: false``,
+  ``exit_code: null``, ``status: NOT_RUN_DEPENDENCY_BLOCKED`` /
+  ``NOT_RUN_IN_BUILDER`` and an explicit ``not_run_reason``.
 * ``stdout`` / ``stderr`` are length-capped and run through the same
   secret-redaction sweep that gates the bundle write.
 * The bundle never flips any matrix row to ``PASSED`` while
   ``snapshot_id`` / ``profile_run_ids`` are placeholders.
+* Commands are recorded in the **repository-relative / canonical** form
+  ``python tools/scripts/<script>.py ...`` — never with the host's
+  ``sys.executable`` absolute path or the worktree absolute path. The
+  bundled command record is structured as ``{executable, script, args}``
+  plus a derived ``command`` string that always starts with
+  ``python tools/``.
+* The builder NEVER invokes its own verifier. Verifier execution is
+  detached: the verifier reads the bundle from disk after the bundle is
+  written, and writes a separate ``detached_verification_report.json``
+  artifact. The builder records the verifier as
+  ``NOT_RUN_IN_BUILDER`` so the bundle cannot self-validate.
 """
 
 from __future__ import annotations
@@ -32,7 +42,6 @@ import hashlib
 import json
 import re
 import subprocess
-import sys
 import time
 from datetime import datetime, timezone
 from pathlib import Path
@@ -58,11 +67,20 @@ EVIDENCE_DIR = (
     / "minimax2-cc-d"
 )
 
-ENV_PROBE_SCRIPT = REPO_ROOT / "tools" / "scripts" / "phase22_environment_probe.py"
-FAULT_RUNNER_SCRIPT = REPO_ROOT / "tools" / "scripts" / "phase22_fault_matrix_runner.py"
-VERIFY_TRACK_SCRIPT = REPO_ROOT / "tools" / "scripts" / "verify_phase22_synthetic_regression_track.py"
-VERIFY_BLOCKERS_SCRIPT = REPO_ROOT / "tools" / "scripts" / "verify_phase22_completion_blockers.py"
-VERIFY_CC_D_SCRIPT = REPO_ROOT / "tools" / "scripts" / "verify_phase22_cc_d_evidence.py"
+# Repository-relative script paths. These are the only paths we ever emit
+# into evidence; absolute / worktree-relative paths are redacted before
+# write so that the committed bundle contains no host-specific data.
+ENV_PROBE_REL = "tools/scripts/phase22_environment_probe.py"
+FAULT_RUNNER_REL = "tools/scripts/phase22_fault_matrix_runner.py"
+VERIFY_TRACK_REL = "tools/scripts/verify_phase22_synthetic_regression_track.py"
+VERIFY_BLOCKERS_REL = "tools/scripts/verify_phase22_completion_blockers.py"
+VERIFY_CC_D_REL = "tools/scripts/verify_phase22_cc_d_evidence.py"
+
+ENV_PROBE_SCRIPT = REPO_ROOT / ENV_PROBE_REL
+FAULT_RUNNER_SCRIPT = REPO_ROOT / FAULT_RUNNER_REL
+VERIFY_TRACK_SCRIPT = REPO_ROOT / VERIFY_TRACK_REL
+VERIFY_BLOCKERS_SCRIPT = REPO_ROOT / VERIFY_BLOCKERS_REL
+VERIFY_CC_D_SCRIPT = REPO_ROOT / VERIFY_CC_D_REL
 
 # Per-stream cap for captured stdout / stderr. Keeps the bundle small while
 # still preserving the tail that downstream tools and humans need.
@@ -78,6 +96,30 @@ SECRET_PATTERNS: tuple[re.Pattern[str], ...] = (
     re.compile(r"-----BEGIN [A-Z ]*PRIVATE KEY-----"),
     re.compile(r"(?i)api[_-]?key\s*[:=]\s*[A-Za-z0-9_\-]{16,}"),
     re.compile(r"(?i)bearer\s+[A-Za-z0-9_\-\.]{16,}"),
+)
+
+# Patterns that must NEVER appear inside committed evidence because they
+# leak the host machine. We refuse to write the bundle if any of these
+# match. The patterns require an actual path separator AFTER the drive
+# letter or user directory so they do not match English prose like
+# "drive-letter" or "file://" used as a literal mention. Patterns are
+# applied to the JSON-encoded payload, so drive-letter paths show up
+# with doubled backslashes (``F:\\agent_project``); the pattern accepts
+# either form.
+HOST_PATH_PATTERNS: tuple[re.Pattern[str], ...] = (
+    # Windows drive-letter path: ``E:\...`` or ``F:/...``. The drive
+    # letter must be preceded by a non-letter (start of string or
+    # whitespace / quote) and the path must contain at least one
+    # non-separator character after the colon.
+    re.compile(r"(?<![A-Za-z])[A-Za-z]:[\\/]+[^/\\<>:\"\s]"),
+    # Linux-style /home/<user>/... path: require a non-empty user
+    # directory followed by a slash so the literal text "/home/,"
+    # does not match.
+    re.compile(r"(?<![A-Za-z])/home/[^/\s\"<>|?*]+/"),
+    # macOS-style /Users/<user>/... path: same rule.
+    re.compile(r"(?<![A-Za-z])/Users/[^/\s\"<>|?*]+/"),
+    # file:// URLs pointing at the host filesystem.
+    re.compile(r"(?i)\bfile://[A-Za-z0-9_./%-]+/"),
 )
 
 
@@ -107,8 +149,16 @@ def _scan_for_secrets(payload: str) -> list[str]:
     return hits
 
 
+def _scan_for_host_paths(payload: str) -> list[str]:
+    hits: list[str] = []
+    for pattern in HOST_PATH_PATTERNS:
+        for match in pattern.finditer(payload):
+            hits.append(f"{pattern.pattern}: {match.group(0)[:16]}***")
+    return hits
+
+
 def _redact_text(text: str) -> str:
-    """Replace every secret-pattern match with ``***REDACTED***``.
+    """Replace every secret / host-path pattern match with ``***REDACTED***``.
 
     Operates on the literal text; the bundle write gate runs the same
     sweep again to refuse any leak that slipped past capture-time
@@ -130,8 +180,72 @@ def _truncate(text: str, limit: int = MAX_OUTPUT_BYTES) -> str:
     return text[:limit] + f"...<truncated {len(text) - limit} bytes>"
 
 
+def _is_python_executable(value: str) -> bool:
+    """Return True when ``value`` looks like a Python executable path."""
+
+    if not value:
+        return False
+    lowered = value.lower()
+    if lowered.endswith("python") or lowered.endswith("python.exe") or lowered.endswith("python3"):
+        return True
+    basename = Path(value).name.lower()
+    return basename in {"python", "python3", "python.exe", "python3.exe"}
+
+
+def _canonicalize_argv(argv: list[str]) -> dict[str, Any]:
+    """Turn a host-executable argv into the canonical repository form.
+
+    The first element is replaced with the literal ``python`` whenever it
+    looks like a Python interpreter. Non-Python commands (``git`` etc.)
+    keep their original first element. Subsequent absolute paths that
+    fall inside the repo are rewritten to repo-relative form. Anything
+    outside the repo is left as-is (and will be re-checked by the
+    host-path scan).
+    """
+
+    if not argv:
+        return {"executable": "", "script": "", "args": []}
+
+    exe = argv[0]
+    rest = list(argv[1:])
+    canonical_exe = "python" if _is_python_executable(exe) else exe
+
+    canonical_script = ""
+    canonical_args: list[str] = []
+    if rest and _is_python_executable(canonical_exe):
+        first = Path(rest[0])
+        try:
+            relative = first.resolve().relative_to(REPO_ROOT)
+            canonical_script = relative.as_posix()
+            canonical_args = list(rest[1:])
+        except (ValueError, OSError):
+            canonical_script = ""
+            canonical_args = list(rest)
+    else:
+        canonical_script = ""
+        canonical_args = list(rest)
+    return {
+        "executable": canonical_exe,
+        "script": canonical_script,
+        "args": canonical_args,
+    }
+
+
+def _command_string_from_argv(argv: list[str]) -> str:
+    """Return the canonical ``python tools/scripts/...`` string."""
+
+    if not argv:
+        return ""
+    canonical = _canonicalize_argv(argv)
+    if canonical["script"]:
+        return " ".join(
+            [canonical["executable"], canonical["script"], *canonical["args"]]
+        )
+    return " ".join([canonical["executable"], *canonical["args"]])
+
+
 def _command_record(
-    cmd: list[str],
+    argv: list[str],
     *,
     started_at: str,
     elapsed: float,
@@ -143,8 +257,12 @@ def _command_record(
     not_run_reason: str | None = None,
     error: str | None = None,
 ) -> dict[str, Any]:
+    canonical = _canonicalize_argv(argv)
     record: dict[str, Any] = {
-        "command": " ".join(str(part) for part in cmd),
+        "executable": canonical["executable"],
+        "script": canonical["script"],
+        "args": canonical["args"],
+        "command": _command_string_from_argv(argv),
         "started_at": started_at,
         "ended_at": _utc_now_iso(),
         "elapsed_seconds": round(elapsed, 3),
@@ -161,8 +279,8 @@ def _command_record(
     return record
 
 
-def _execute_command(cmd: list[str], *, timeout: float | None = None) -> dict[str, Any]:
-    """Run ``cmd`` and return a truthful command record.
+def _execute_command(argv: list[str], *, timeout: float | None = None) -> dict[str, Any]:
+    """Run ``argv`` and return a truthful command record.
 
     The returned record always carries the real ``exit_code`` (or ``None``
     on timeout / launch failure), the real (redacted + truncated)
@@ -174,7 +292,7 @@ def _execute_command(cmd: list[str], *, timeout: float | None = None) -> dict[st
     start = time.monotonic()
     try:
         proc = subprocess.run(
-            cmd,
+            argv,
             cwd=REPO_ROOT,
             text=True,
             capture_output=True,
@@ -184,7 +302,7 @@ def _execute_command(cmd: list[str], *, timeout: float | None = None) -> dict[st
     except subprocess.TimeoutExpired as exc:
         elapsed = time.monotonic() - start
         return _command_record(
-            cmd,
+            argv,
             started_at=started_at,
             elapsed=elapsed,
             launched=True,
@@ -197,7 +315,7 @@ def _execute_command(cmd: list[str], *, timeout: float | None = None) -> dict[st
     except FileNotFoundError as exc:
         elapsed = time.monotonic() - start
         return _command_record(
-            cmd,
+            argv,
             started_at=started_at,
             elapsed=elapsed,
             launched=False,
@@ -210,7 +328,7 @@ def _execute_command(cmd: list[str], *, timeout: float | None = None) -> dict[st
     elapsed = time.monotonic() - start
     status = "PASSED" if proc.returncode == 0 else "FAILED"
     return _command_record(
-        cmd,
+        argv,
         started_at=started_at,
         elapsed=elapsed,
         launched=True,
@@ -221,16 +339,16 @@ def _execute_command(cmd: list[str], *, timeout: float | None = None) -> dict[st
     )
 
 
-def _not_run_record(cmd: list[str], not_run_reason: str) -> dict[str, Any]:
+def _not_run_record(argv: list[str], not_run_reason: str, status: str = "NOT_RUN_DEPENDENCY_BLOCKED") -> dict[str, Any]:
     return _command_record(
-        cmd,
+        argv,
         started_at=_utc_now_iso(),
         elapsed=0.0,
         launched=False,
         exit_code=None,
         stdout="",
         stderr="",
-        status="NOT_RUN_DEPENDENCY_BLOCKED",
+        status=status,
         not_run_reason=not_run_reason,
     )
 
@@ -245,28 +363,46 @@ def _run_env_probe(
 
     The probe writes its JSON report to ``output_path``. We do NOT
     fabricate an exit code; whatever the probe returns is what we
-    record. If the caller passes ``records`` we also append the command
-    record there for the bundle's command log.
+    record. The recorded command is canonicalized to
+    ``python tools/scripts/phase22_environment_probe.py`` and the
+    ``--output`` argument is passed as a repo-relative path so the
+    committed evidence contains no host-specific absolute paths.
     """
 
-    cmd = [
-        sys.executable,
-        str(ENV_PROBE_SCRIPT),
+    try:
+        relative_output = output_path.resolve().relative_to(REPO_ROOT).as_posix()
+    except (ValueError, OSError):
+        relative_output = output_path.name
+    launch_argv = [
+        _resolve_host_python(),
+        ENV_PROBE_REL,
         "--output",
-        str(output_path),
+        relative_output,
         "--timeout",
         str(timeout),
     ]
-    record = _execute_command(cmd, timeout=timeout + 30.0)
+    record = _execute_command(launch_argv, timeout=timeout + 30.0)
     if records is not None:
         records.append(record)
     return record
 
 
+def _resolve_host_python() -> str:
+    """Return the host Python interpreter to actually launch subprocesses.
+
+    This value is used only for invocation; it never appears in the
+    emitted evidence.
+    """
+
+    import sys as _sys
+
+    return _sys.executable
+
+
 def _record_matrix_case(
     case: dict[str, Any],
     *,
-    fault_runner_script: Path = FAULT_RUNNER_SCRIPT,
+    fault_runner_rel: str = FAULT_RUNNER_REL,
 ) -> dict[str, Any]:
     """Record a per-case run without launching subprocesses.
 
@@ -279,9 +415,23 @@ def _record_matrix_case(
     crystal clear we did not execute it.
     """
 
+    test_command = str(case.get("test_command", ""))
+    would_run_argv: list[str] | None = None
+    if test_command.startswith("python "):
+        parts = test_command.split()
+        if len(parts) >= 2:
+            would_run_argv = ["python", *parts[1:]]
+            # Rewrite the script to the repo-relative form if we can
+            # resolve it.
+            try:
+                resolved = (REPO_ROOT / parts[1]).resolve()
+                if resolved.is_relative_to(REPO_ROOT):
+                    would_run_argv[1] = resolved.relative_to(REPO_ROOT).as_posix()
+            except (OSError, ValueError):
+                pass
     return {
         "case_id": case.get("case_id"),
-        "test_command": case.get("test_command"),
+        "test_command": test_command,
         "expected_exit_code": case.get("exit_code"),
         "status": case.get("status"),
         "not_run_reason": case.get("not_run_reason"),
@@ -299,12 +449,8 @@ def _record_matrix_case(
                 "NOT_RUN_DEPENDENCY_BLOCKED; live execution waits for DeepSeek "
                 "CC-B snapshot_id and CC-C profile_run_ids"
             ),
-            "would_run": case.get("test_command"),
-            "would_run_argv": (
-                [sys.executable, str(fault_runner_script), "--case", str(case.get("case_id"))]
-                if str(case.get("test_command", "")).startswith("python ")
-                else None
-            ),
+            "would_run": test_command,
+            "would_run_argv": would_run_argv,
         },
     }
 
@@ -342,17 +488,29 @@ def build_bundle(
         )
         commands.append(
             _execute_command(
-                [sys.executable, str(VERIFY_TRACK_SCRIPT)], timeout=120.0
+                [_resolve_host_python(), VERIFY_TRACK_REL], timeout=120.0
             )
         )
         commands.append(
             _execute_command(
-                [sys.executable, str(VERIFY_BLOCKERS_SCRIPT)], timeout=120.0
+                [_resolve_host_python(), VERIFY_BLOCKERS_REL], timeout=120.0
             )
         )
+        # The CC-D verifier is intentionally NOT executed inside the
+        # builder — it would be a self-verification loop because the
+        # verifier reads the bundle from disk while we are still building
+        # it. We record the verifier as NOT_RUN_IN_BUILDER and rely on
+        # the detached post-write verifier instead.
         commands.append(
-            _execute_command(
-                [sys.executable, str(VERIFY_CC_D_SCRIPT)], timeout=120.0
+            _not_run_record(
+                ["python", VERIFY_CC_D_REL],
+                (
+                    "verify_phase22_cc_d_evidence.py is intentionally not "
+                    "executed inside the builder; detached post-write "
+                    "verification writes "
+                    "docs/evidence/.../detached_verification_report.json."
+                ),
+                status="NOT_RUN_IN_BUILDER",
             )
         )
     else:
@@ -362,21 +520,16 @@ def build_bundle(
         )
         commands.append(_not_run_record(["git", "diff", "--check"], skip_reason))
         commands.append(
-            _not_run_record(
-                [sys.executable, str(VERIFY_TRACK_SCRIPT)],
-                skip_reason,
-            )
+            _not_run_record(["python", VERIFY_TRACK_REL], skip_reason)
+        )
+        commands.append(
+            _not_run_record(["python", VERIFY_BLOCKERS_REL], skip_reason)
         )
         commands.append(
             _not_run_record(
-                [sys.executable, str(VERIFY_BLOCKERS_SCRIPT)],
-                skip_reason,
-            )
-        )
-        commands.append(
-            _not_run_record(
-                [sys.executable, str(VERIFY_CC_D_SCRIPT)],
-                skip_reason,
+                ["python", VERIFY_CC_D_REL],
+                "verify_phase22_cc_d_evidence.py is intentionally not executed inside the builder; detached post-write verification writes docs/evidence/.../detached_verification_report.json.",
+                status="NOT_RUN_IN_BUILDER",
             )
         )
 
@@ -390,12 +543,7 @@ def build_bundle(
     for case_id in [c.get("case_id") for c in matrix.get("cases", []) if isinstance(c, dict)]:
         commands.append(
             _not_run_record(
-                [
-                    sys.executable,
-                    str(FAULT_RUNNER_SCRIPT),
-                    "--case",
-                    str(case_id),
-                ],
+                ["python", FAULT_RUNNER_REL, "--case", str(case_id)],
                 case_runner_reason,
             )
         )
@@ -430,13 +578,14 @@ def build_bundle(
         "commands": commands,
         "exit_codes": exit_code_map,
         "command_status": status_map,
+        "candidate_dependency_prs": [112, 113],
         "cleanup": [
             "drop probe buckets and queues if any probe created them",
             "remove temp evidence files in repo root (none created)",
             "leave docker stack as discovered (no start/stop from this worker)",
         ],
         "service_versions": {
-            "python": sys.version.split()[0],
+            "python": "interpreter version is not captured here to avoid host-specific data",
             "docker_compose_file": "infra/docker/docker-compose.yml",
         },
         "forbidden_actions_respected": [
@@ -445,11 +594,13 @@ def build_bundle(
             "no handwritten trace",
             "no deleted failure assertions",
             "no secret in evidence",
+            "no host absolute path in evidence (drive-letter, /home, /Users, file:// all rejected at write time)",
             "no UNKNOWN side effect blind retry",
             "no snapshot activation without receipt",
             "no BLOCKED rewritten as PASSED",
             "no fabricated exit_code (real subprocess exit codes only)",
             "no recorded-as-run commands without real launch",
+            "no self-verification loop: builder does not run the CC-D verifier",
         ],
         "remaining_gaps": [
             "DeepSeek CC-B must produce snapshot_id + three visibility receipts",
@@ -466,6 +617,12 @@ def write_bundle(bundle: dict[str, Any], path: Path) -> list[str]:
     if leaks:
         raise RuntimeError(
             f"refusing to write evidence bundle: secret-like patterns detected: {leaks}"
+        )
+    host_leaks = _scan_for_host_paths(payload)
+    if host_leaks:
+        raise RuntimeError(
+            "refusing to write evidence bundle: host-specific absolute path detected: "
+            + ", ".join(host_leaks)
         )
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(payload, encoding="utf-8")
@@ -484,7 +641,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument(
         "--skip-tracks",
         action="store_true",
-        help="Skip running the dependency-free track / blockers / cc_d verifiers.",
+        help="Skip running the dependency-free track / blockers verifiers.",
     )
     args = parser.parse_args(argv)
     bundle = build_bundle(
@@ -494,9 +651,9 @@ def main(argv: list[str] | None = None) -> int:
     )
     leaks = write_bundle(bundle, args.output)
     if leaks:
-        print("ERROR: secret leakage detected; not written", file=sys.stderr)
+        print("ERROR: secret leakage detected; not written", file=__import__("sys").stderr)
         for leak in leaks:
-            print(f"  {leak}", file=sys.stderr)
+            print(f"  {leak}", file=__import__("sys").stderr)
         return 2
     print(f"wrote evidence bundle: {args.output.as_posix()}")
     return 0

@@ -11,7 +11,11 @@ Validates that the CC-D evidence bundle and matrix loader stay honest:
 * The ``commands`` log records real ``exit_code`` / ``stdout`` / ``stderr``;
   unrun commands have ``exit_code == None`` and
   ``status == NOT_RUN_DEPENDENCY_BLOCKED`` (never a manufactured ``0``).
-* Required counters line up.
+* Every recorded command uses the canonical ``python tools/scripts/...``
+  form — never a host-specific ``sys.executable`` absolute path, drive
+  letter, ``/home/<user>/``, ``/Users/<user>/``, or ``file://`` URL.
+* The bundle does not self-verify: the verifier command must be
+  ``NOT_RUN_IN_BUILDER``.
 """
 
 from __future__ import annotations
@@ -46,6 +50,19 @@ SECRET_PATTERNS: tuple[re.Pattern[str], ...] = (
     re.compile(r"(?i)bearer\s+[A-Za-z0-9_\-\.]{16,}"),
 )
 
+# Patterns that must NEVER appear in committed evidence because they leak
+# the host machine. The patterns require an actual path separator AFTER
+# the drive letter or user directory so they do not match English prose
+# like "drive-letter" or "file://" used as a literal mention. Patterns
+# accept either single or doubled backslashes so the scan works on the
+# JSON-encoded payload.
+HOST_PATH_PATTERNS: tuple[re.Pattern[str], ...] = (
+    re.compile(r"(?<![A-Za-z])[A-Za-z]:[\\/]+[^/\\<>:\"\s]"),
+    re.compile(r"(?<![A-Za-z])/home/[^/\s\"<>|?*]+/"),
+    re.compile(r"(?<![A-Za-z])/Users/[^/\s\"<>|?*]+/"),
+    re.compile(r"(?i)\bfile://[A-Za-z0-9_./%-]+/"),
+)
+
 
 def _read_text(path: Path) -> str:
     if not path.exists():
@@ -64,6 +81,10 @@ def _read_json(path: Path) -> dict[str, Any] | None:
 
 def _scan_text_for_secrets(text: str) -> list[str]:
     return [p.pattern for p in SECRET_PATTERNS if p.search(text)]
+
+
+def _scan_text_for_host_paths(text: str) -> list[str]:
+    return [p.pattern for p in HOST_PATH_PATTERNS if p.search(text)]
 
 
 def _verify_command_truth(record: dict[str, Any]) -> list[str]:
@@ -89,7 +110,7 @@ def _verify_command_truth(record: dict[str, Any]) -> list[str]:
             errors.append(
                 f"command {label!r}: launched=False but exit_code={exit_code!r} (must be null)"
             )
-        if status not in {"NOT_RUN_DEPENDENCY_BLOCKED", "NOT_RUN"}:
+        if status not in {"NOT_RUN_DEPENDENCY_BLOCKED", "NOT_RUN_IN_BUILDER", "NOT_RUN"}:
             errors.append(
                 f"command {label!r}: launched=False but status={status!r}"
             )
@@ -120,6 +141,24 @@ def _verify_command_truth(record: dict[str, Any]) -> list[str]:
         errors.append(f"command {label!r}: missing ended_at")
     if record.get("elapsed_seconds") is None:
         errors.append(f"command {label!r}: missing elapsed_seconds")
+
+    # Canonical command form: every record must use ``executable`` from a
+    # known whitelist (``python``, ``git``, or empty for non-script
+    # invocations). Anything else is treated as a host-specific absolute
+    # path that escaped canonicalization.
+    executable = record.get("executable")
+    allowed_executables = {"python", "git", ""}
+    if executable not in allowed_executables:
+        errors.append(
+            f"command {label!r}: executable must be one of "
+            f"{sorted(allowed_executables)}, got {executable!r}"
+        )
+    script = record.get("script", "")
+    if script:
+        if script.startswith(("/", "\\")) or re.match(r"^[A-Za-z]:", script):
+            errors.append(
+                f"command {label!r}: script must be repo-relative, got {script!r}"
+            )
 
     return errors
 
@@ -217,6 +256,32 @@ def verify() -> list[str]:
                     continue
                 errors.extend(_verify_command_truth(record))
 
+            # Self-verification loop check: the CC-D verifier command must
+            # be recorded as NOT_RUN_IN_BUILDER.
+            verifier_records = [
+                r
+                for r in commands
+                if isinstance(r.get("script"), str)
+                and r["script"].endswith("verify_phase22_cc_d_evidence.py")
+            ]
+            if not verifier_records:
+                errors.append(
+                    "evidence bundle must record the CC-D verifier command "
+                    "(even if it was not run inside the builder)"
+                )
+            else:
+                for record in verifier_records:
+                    if record.get("status") != "NOT_RUN_IN_BUILDER":
+                        errors.append(
+                            f"verifier command {record.get('command')!r} must be "
+                            "NOT_RUN_IN_BUILDER; builder must not run its own verifier"
+                        )
+                    if record.get("launched") is not False:
+                        errors.append(
+                            f"verifier command {record.get('command')!r} must have "
+                            "launched=False inside the bundle"
+                        )
+
         # Per-case runs: status must never be PASSED while matrix is blocked.
         for run in bundle.get("case_runs", []) or []:
             if run.get("status") == "PASSED":
@@ -232,6 +297,24 @@ def verify() -> list[str]:
                 errors.append(
                     f"evidence bundle run for {run.get('case_id')} execution.exit_code must be null while matrix is blocked"
                 )
+            # would_run_argv must be repo-relative.
+            argv = execution.get("would_run_argv")
+            if argv is not None:
+                argv_str = " ".join(str(p) for p in argv)
+                host_hits = _scan_text_for_host_paths(argv_str)
+                if host_hits:
+                    errors.append(
+                        f"evidence bundle run for {run.get('case_id')} "
+                        f"would_run_argv leaks host path: {host_hits}"
+                    )
+
+        # Bundle-wide host-path scan.
+        host_hits = _scan_text_for_host_paths(json.dumps(bundle, ensure_ascii=False))
+        if host_hits:
+            errors.append(
+                "evidence bundle leaks host-specific absolute paths: "
+                + ", ".join(host_hits)
+            )
 
         secret_hits = _scan_text_for_secrets(json.dumps(bundle, ensure_ascii=False))
         if secret_hits:
@@ -251,6 +334,12 @@ def verify() -> list[str]:
             errors.append(
                 "environment probe leaks secret-like patterns: " + ", ".join(secret_hits)
             )
+        host_hits = _scan_text_for_host_paths(json.dumps(probe, ensure_ascii=False))
+        if host_hits:
+            errors.append(
+                "environment probe leaks host-specific absolute paths: "
+                + ", ".join(host_hits)
+            )
 
     fault_run = _read_json(FAULT_RUN_PATH) or {}
     if fault_run:
@@ -258,6 +347,12 @@ def verify() -> list[str]:
         if secret_hits:
             errors.append(
                 "fault matrix run leaks secret-like patterns: " + ", ".join(secret_hits)
+            )
+        host_hits = _scan_text_for_host_paths(json.dumps(fault_run, ensure_ascii=False))
+        if host_hits:
+            errors.append(
+                "fault matrix run leaks host-specific absolute paths: "
+                + ", ".join(host_hits)
             )
 
     return errors
