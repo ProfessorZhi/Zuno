@@ -2,7 +2,7 @@
   "name": "zuno",
   "private": true,
   "version": "1.0.0",
-  "description": "Local-first agent workspace with LangGraph, RAG, GraphRAG, MCP, knowledge bases, and desktop runtime.",
+  "description": "Governed enterprise Agent and Agentic GraphRAG platform with separated web/desktop clients and a LangGraph Single Controller backend.",
   "workspaces": [
     "apps/web",
     "apps/desktop"
