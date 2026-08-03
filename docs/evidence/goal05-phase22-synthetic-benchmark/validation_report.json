@@ -1,0 +1,5879 @@
+{
+  "answer_leak_count": 0,
+  "answer_leak_pairs": [],
+  "case_count": 80,
+  "case_set_sha256": "f8594ff9877c64386cd9b17049ff7c3e8eb424e2cd75251c3d8321077cd938fd",
+  "corpus_manifest_sha256": "074604ee157d86ef471c80684b6d821c319c6b6dd902697401953800ffcd1766",
+  "duplicate_pair_count": 0,
+  "duplicate_pairs_above_85pct": [],
+  "failed_case_ids": [],
+  "graph_manifest_sha256": "53c63738a718c4cf6f923ab3187fc436869f7ca2121ed394c6be0523c0c61e4a",
+  "hard_negative_leak_count": 0,
+  "machine_failed_count": 0,
+  "machine_validated_count": 80,
+  "per_case": [
+    {
+      "case_id": "syn_001",
+      "checks": [
+        {
+          "detail": "missing=[]",
+          "name": "field_completeness",
+          "passed": true
+        },
+        {
+          "detail": "seed=phase22-synthetic-2026-08-03-auroralis-v1",
+          "name": "seed_present",
+          "passed": true
+        },
+        {
+          "detail": "world=f9b6876bd4182343b6f5d90836322c7fe4477743792264602f3b34bf9235766e, corpus=074604ee157d86ef471c80684b6d821c319c6b6dd902697401953800ffcd1766",
+          "name": "hash_binding",
+          "passed": true
+        },
+        {
+          "detail": "issues=[]",
+          "name": "gold_documents_exist_and_hash",
+          "passed": true
+        },
+        {
+          "detail": "missing_spans=[]",
+          "name": "gold_source_spans_present",
+          "passed": true
+        },
+        {
+          "detail": "difficulty=easy",
+          "name": "difficulty_in_set",
+          "passed": true
+        },
+        {
+          "detail": "qt=single_doc_fact",
+          "name": "question_type_in_stratification",
+          "passed": true
+        },
+        {
+          "detail": "leaks=[]",
+          "name": "hard_negative_no_answer",
+          "passed": true
+        },
+        {
+          "detail": "cgt=['doc_axis9_release_notes'] gold=['doc_axis9_release_notes']",
+          "name": "citation_ground_truth_aligment",
+          "passed": true
+        },
+        {
+          "detail": "got=wm_auroralis_v1",
+          "name": "provenance_world_model_id",
+          "passed": true
+        },
+        {
+          "detail": "got=corpus_auroralis_v1",
+          "name": "provenance_corpus_id",
+          "passed": true
+        }
+      ],
+      "difficulty": "easy",
+      "errors": [],
+      "fatal": false,
+      "passed": true,
+      "question_type": "single_doc_fact",
+      "warnings": []
+    },
+    {
+      "case_id": "syn_002",
+      "checks": [
+        {
+          "detail": "missing=[]",
+          "name": "field_completeness",
+          "passed": true
+        },
+        {
+          "detail": "seed=phase22-synthetic-2026-08-03-auroralis-v1",
+          "name": "seed_present",
+          "passed": true
+        },
+        {
+          "detail": "world=f9b6876bd4182343b6f5d90836322c7fe4477743792264602f3b34bf9235766e, corpus=074604ee157d86ef471c80684b6d821c319c6b6dd902697401953800ffcd1766",
+          "name": "hash_binding",
+          "passed": true
+        },
+        {
+          "detail": "issues=[]",
+          "name": "gold_documents_exist_and_hash",
+          "passed": true
+        },
+        {
+          "detail": "missing_spans=[]",
+          "name": "gold_source_spans_present",
+          "passed": true
+        },
+        {
+          "detail": "difficulty=easy",
+          "name": "difficulty_in_set",
+          "passed": true
+        },
+        {
+          "detail": "qt=single_doc_fact",
+          "name": "question_type_in_stratification",
+          "passed": true
+        },
+        {
+          "detail": "leaks=[]",
+          "name": "hard_negative_no_answer",
+          "passed": true
+        },
+        {
+          "detail": "cgt=['doc_iris_bio', 'doc_org_chart_2026'] gold=['doc_iris_bio', 'doc_org_chart_2026']",
+          "name": "citation_ground_truth_aligment",
+          "passed": true
+        },
+        {
+          "detail": "got=wm_auroralis_v1",
+          "name": "provenance_world_model_id",
+          "passed": true
+        },
+        {
+          "detail": "got=corpus_auroralis_v1",
+          "name": "provenance_corpus_id",
+          "passed": true
+        }
+      ],
+      "difficulty": "easy",
+      "errors": [],
+      "fatal": false,
+      "passed": true,
+      "question_type": "single_doc_fact",
+      "warnings": []
+    },
+    {
+      "case_id": "syn_003",
+      "checks": [
+        {
+          "detail": "missing=[]",
+          "name": "field_completeness",
+          "passed": true
+        },
+        {
+          "detail": "seed=phase22-synthetic-2026-08-03-auroralis-v1",
+          "name": "seed_present",
+          "passed": true
+        },
+        {
+          "detail": "world=f9b6876bd4182343b6f5d90836322c7fe4477743792264602f3b34bf9235766e, corpus=074604ee157d86ef471c80684b6d821c319c6b6dd902697401953800ffcd1766",
+          "name": "hash_binding",
+          "passed": true
+        },
+        {
+          "detail": "issues=[]",
+          "name": "gold_documents_exist_and_hash",
+          "passed": true
+        },
+        {
+          "detail": "missing_spans=[]",
+          "name": "gold_source_spans_present",
+          "passed": true
+        },
+        {
+          "detail": "difficulty=easy",
+          "name": "difficulty_in_set",
+          "passed": true
+        },
+        {
+          "detail": "qt=single_doc_fact",
+          "name": "question_type_in_stratification",
+          "passed": true
+        },
+        {
+          "detail": "leaks=[]",
+          "name": "hard_negative_no_answer",
+          "passed": true
+        },
+        {
+          "detail": "cgt=['doc_lukas_bio', 'doc_org_chart_2026'] gold=['doc_lukas_bio', 'doc_org_chart_2026']",
+          "name": "citation_ground_truth_aligment",
+          "passed": true
+        },
+        {
+          "detail": "got=wm_auroralis_v1",
+          "name": "provenance_world_model_id",
+          "passed": true
+        },
+        {
+          "detail": "got=corpus_auroralis_v1",
+          "name": "provenance_corpus_id",
+          "passed": true
+        }
+      ],
+      "difficulty": "easy",
+      "errors": [],
+      "fatal": false,
+      "passed": true,
+      "question_type": "single_doc_fact",
+      "warnings": []
+    },
+    {
+      "case_id": "syn_004",
+      "checks": [
+        {
+          "detail": "missing=[]",
+          "name": "field_completeness",
+          "passed": true
+        },
+        {
+          "detail": "seed=phase22-synthetic-2026-08-03-auroralis-v1",
+          "name": "seed_present",
+          "passed": true
+        },
+        {
+          "detail": "world=f9b6876bd4182343b6f5d90836322c7fe4477743792264602f3b34bf9235766e, corpus=074604ee157d86ef471c80684b6d821c319c6b6dd902697401953800ffcd1766",
+          "name": "hash_binding",
+          "passed": true
+        },
+        {
+          "detail": "issues=[]",
+          "name": "gold_documents_exist_and_hash",
+          "passed": true
+        },
+        {
+          "detail": "missing_spans=[]",
+          "name": "gold_source_spans_present",
+          "passed": true
+        },
+        {
+          "detail": "difficulty=medium",
+          "name": "difficulty_in_set",
+          "passed": true
+        },
+        {
+          "detail": "qt=single_doc_fact",
+          "name": "question_type_in_stratification",
+          "passed": true
+        },
+        {
+          "detail": "leaks=[]",
+          "name": "hard_negative_no_answer",
+          "passed": true
+        },
+        {
+          "detail": "cgt=['doc_axis9_release_notes'] gold=['doc_axis9_release_notes']",
+          "name": "citation_ground_truth_aligment",
+          "passed": true
+        },
+        {
+          "detail": "got=wm_auroralis_v1",
+          "name": "provenance_world_model_id",
+          "passed": true
+        },
+        {
+          "detail": "got=corpus_auroralis_v1",
+          "name": "provenance_corpus_id",
+          "passed": true
+        }
+      ],
+      "difficulty": "medium",
+      "errors": [],
+      "fatal": false,
+      "passed": true,
+      "question_type": "single_doc_fact",
+      "warnings": []
+    },
+    {
+      "case_id": "syn_005",
+      "checks": [
+        {
+          "detail": "missing=[]",
+          "name": "field_completeness",
+          "passed": true
+        },
+        {
+          "detail": "seed=phase22-synthetic-2026-08-03-auroralis-v1",
+          "name": "seed_present",
+          "passed": true
+        },
+        {
+          "detail": "world=f9b6876bd4182343b6f5d90836322c7fe4477743792264602f3b34bf9235766e, corpus=074604ee157d86ef471c80684b6d821c319c6b6dd902697401953800ffcd1766",
+          "name": "hash_binding",
+          "passed": true
+        },
+        {
+          "detail": "issues=[]",
+          "name": "gold_documents_exist_and_hash",
+          "passed": true
+        },
+        {
+          "detail": "missing_spans=[]",
+          "name": "gold_source_spans_present",
+          "passed": true
+        },
+        {
+          "detail": "difficulty=easy",
+          "name": "difficulty_in_set",
+          "passed": true
+        },
+        {
+          "detail": "qt=single_doc_fact",
+          "name": "question_type_in_stratification",
+          "passed": true
+        },
+        {
+          "detail": "leaks=[]",
+          "name": "hard_negative_no_answer",
+          "passed": true
+        },
+        {
+          "detail": "cgt=['doc_axis8_eol_memo'] gold=['doc_axis8_eol_memo']",
+          "name": "citation_ground_truth_aligment",
+          "passed": true
+        },
+        {
+          "detail": "got=wm_auroralis_v1",
+          "name": "provenance_world_model_id",
+          "passed": true
+        },
+        {
+          "detail": "got=corpus_auroralis_v1",
+          "name": "provenance_corpus_id",
+          "passed": true
+        }
+      ],
+      "difficulty": "easy",
+      "errors": [],
+      "fatal": false,
+      "passed": true,
+      "question_type": "single_doc_fact",
+      "warnings": []
+    },
+    {
+      "case_id": "syn_006",
+      "checks": [
+        {
+          "detail": "missing=[]",
+          "name": "field_completeness",
+          "passed": true
+        },
+        {
+          "detail": "seed=phase22-synthetic-2026-08-03-auroralis-v1",
+          "name": "seed_present",
+          "passed": true
+        },
+        {
+          "detail": "world=f9b6876bd4182343b6f5d90836322c7fe4477743792264602f3b34bf9235766e, corpus=074604ee157d86ef471c80684b6d821c319c6b6dd902697401953800ffcd1766",
+          "name": "hash_binding",
+          "passed": true
+        },
+        {
+          "detail": "issues=[]",
+          "name": "gold_documents_exist_and_hash",
+          "passed": true
+        },
+        {
+          "detail": "missing_spans=[]",
+          "name": "gold_source_spans_present",
+          "passed": true
+        },
+        {
+          "detail": "difficulty=easy",
+          "name": "difficulty_in_set",
+          "passed": true
+        },
+        {
+          "detail": "qt=single_doc_fact",
+          "name": "question_type_in_stratification",
+          "passed": true
+        },
+        {
+          "detail": "leaks=[]",
+          "name": "hard_negative_no_answer",
+          "passed": true
+        },
+        {
+          "detail": "cgt=['doc_org_chart_2026'] gold=['doc_org_chart_2026']",
+          "name": "citation_ground_truth_aligment",
+          "passed": true
+        },
+        {
+          "detail": "got=wm_auroralis_v1",
+          "name": "provenance_world_model_id",
+          "passed": true
+        },
+        {
+          "detail": "got=corpus_auroralis_v1",
+          "name": "provenance_corpus_id",
+          "passed": true
+        }
+      ],
+      "difficulty": "easy",
+      "errors": [],
+      "fatal": false,
+      "passed": true,
+      "question_type": "single_doc_fact",
+      "warnings": []
+    },
+    {
+      "case_id": "syn_007",
+      "checks": [
+        {
+          "detail": "missing=[]",
+          "name": "field_completeness",
+          "passed": true
+        },
+        {
+          "detail": "seed=phase22-synthetic-2026-08-03-auroralis-v1",
+          "name": "seed_present",
+          "passed": true
+        },
+        {
+          "detail": "world=f9b6876bd4182343b6f5d90836322c7fe4477743792264602f3b34bf9235766e, corpus=074604ee157d86ef471c80684b6d821c319c6b6dd902697401953800ffcd1766",
+          "name": "hash_binding",
+          "passed": true
+        },
+        {
+          "detail": "issues=[]",
+          "name": "gold_documents_exist_and_hash",
+          "passed": true
+        },
+        {
+          "detail": "missing_spans=[]",
+          "name": "gold_source_spans_present",
+          "passed": true
+        },
+        {
+          "detail": "difficulty=medium",
+          "name": "difficulty_in_set",
+          "passed": true
+        },
+        {
+          "detail": "qt=single_doc_fact",
+          "name": "question_type_in_stratification",
+          "passed": true
+        },
+        {
+          "detail": "leaks=[]",
+          "name": "hard_negative_no_answer",
+          "passed": true
+        },
+        {
+          "detail": "cgt=['doc_helion_contract'] gold=['doc_helion_contract']",
+          "name": "citation_ground_truth_aligment",
+          "passed": true
+        },
+        {
+          "detail": "got=wm_auroralis_v1",
+          "name": "provenance_world_model_id",
+          "passed": true
+        },
+        {
+          "detail": "got=corpus_auroralis_v1",
+          "name": "provenance_corpus_id",
+          "passed": true
+        }
+      ],
+      "difficulty": "medium",
+      "errors": [],
+      "fatal": false,
+      "passed": true,
+      "question_type": "single_doc_fact",
+      "warnings": []
+    },
+    {
+      "case_id": "syn_008",
+      "checks": [
+        {
+          "detail": "missing=[]",
+          "name": "field_completeness",
+          "passed": true
+        },
+        {
+          "detail": "seed=phase22-synthetic-2026-08-03-auroralis-v1",
+          "name": "seed_present",
+          "passed": true
+        },
+        {
+          "detail": "world=f9b6876bd4182343b6f5d90836322c7fe4477743792264602f3b34bf9235766e, corpus=074604ee157d86ef471c80684b6d821c319c6b6dd902697401953800ffcd1766",
+          "name": "hash_binding",
+          "passed": true
+        },
+        {
+          "detail": "issues=[]",
+          "name": "gold_documents_exist_and_hash",
+          "passed": true
+        },
+        {
+          "detail": "missing_spans=[]",
+          "name": "gold_source_spans_present",
+          "passed": true
+        },
+        {
+          "detail": "difficulty=medium",
+          "name": "difficulty_in_set",
+          "passed": true
+        },
+        {
+          "detail": "qt=single_doc_fact",
+          "name": "question_type_in_stratification",
+          "passed": true
+        },
+        {
+          "detail": "leaks=[]",
+          "name": "hard_negative_no_answer",
+          "passed": true
+        },
+        {
+          "detail": "cgt=['doc_security_policy_2026'] gold=['doc_security_policy_2026']",
+          "name": "citation_ground_truth_aligment",
+          "passed": true
+        },
+        {
+          "detail": "got=wm_auroralis_v1",
+          "name": "provenance_world_model_id",
+          "passed": true
+        },
+        {
+          "detail": "got=corpus_auroralis_v1",
+          "name": "provenance_corpus_id",
+          "passed": true
+        }
+      ],
+      "difficulty": "medium",
+      "errors": [],
+      "fatal": false,
+      "passed": true,
+      "question_type": "single_doc_fact",
+      "warnings": []
+    },
+    {
+      "case_id": "syn_009",
+      "checks": [
+        {
+          "detail": "missing=[]",
+          "name": "field_completeness",
+          "passed": true
+        },
+        {
+          "detail": "seed=phase22-synthetic-2026-08-03-auroralis-v1",
+          "name": "seed_present",
+          "passed": true
+        },
+        {
+          "detail": "world=f9b6876bd4182343b6f5d90836322c7fe4477743792264602f3b34bf9235766e, corpus=074604ee157d86ef471c80684b6d821c319c6b6dd902697401953800ffcd1766",
+          "name": "hash_binding",
+          "passed": true
+        },
+        {
+          "detail": "issues=[]",
+          "name": "gold_documents_exist_and_hash",
+          "passed": true
+        },
+        {
+          "detail": "missing_spans=[]",
+          "name": "gold_source_spans_present",
+          "passed": true
+        },
+        {
+          "detail": "difficulty=easy",
+          "name": "difficulty_in_set",
+          "passed": true
+        },
+        {
+          "detail": "qt=single_doc_fact",
+          "name": "question_type_in_stratification",
+          "passed": true
+        },
+        {
+          "detail": "leaks=[]",
+          "name": "hard_negative_no_answer",
+          "passed": true
+        },
+        {
+          "detail": "cgt=['doc_export_policy'] gold=['doc_export_policy']",
+          "name": "citation_ground_truth_aligment",
+          "passed": true
+        },
+        {
+          "detail": "got=wm_auroralis_v1",
+          "name": "provenance_world_model_id",
+          "passed": true
+        },
+        {
+          "detail": "got=corpus_auroralis_v1",
+          "name": "provenance_corpus_id",
+          "passed": true
+        }
+      ],
+      "difficulty": "easy",
+      "errors": [],
+      "fatal": false,
+      "passed": true,
+      "question_type": "single_doc_fact",
+      "warnings": []
+    },
+    {
+      "case_id": "syn_010",
+      "checks": [
+        {
+          "detail": "missing=[]",
+          "name": "field_completeness",
+          "passed": true
+        },
+        {
+          "detail": "seed=phase22-synthetic-2026-08-03-auroralis-v1",
+          "name": "seed_present",
+          "passed": true
+        },
+        {
+          "detail": "world=f9b6876bd4182343b6f5d90836322c7fe4477743792264602f3b34bf9235766e, corpus=074604ee157d86ef471c80684b6d821c319c6b6dd902697401953800ffcd1766",
+          "name": "hash_binding",
+          "passed": true
+        },
+        {
+          "detail": "issues=[]",
+          "name": "gold_documents_exist_and_hash",
+          "passed": true
+        },
+        {
+          "detail": "missing_spans=[]",
+          "name": "gold_source_spans_present",
+          "passed": true
+        },
+        {
+          "detail": "difficulty=medium",
+          "name": "difficulty_in_set",
+          "passed": true
+        },
+        {
+          "detail": "qt=single_doc_fact",
+          "name": "question_type_in_stratification",
+          "passed": true
+        },
+        {
+          "detail": "leaks=[]",
+          "name": "hard_negative_no_answer",
+          "passed": true
+        },
+        {
+          "detail": "cgt=['doc_northwind_charter'] gold=['doc_northwind_charter']",
+          "name": "citation_ground_truth_aligment",
+          "passed": true
+        },
+        {
+          "detail": "got=wm_auroralis_v1",
+          "name": "provenance_world_model_id",
+          "passed": true
+        },
+        {
+          "detail": "got=corpus_auroralis_v1",
+          "name": "provenance_corpus_id",
+          "passed": true
+        }
+      ],
+      "difficulty": "medium",
+      "errors": [],
+      "fatal": false,
+      "passed": true,
+      "question_type": "single_doc_fact",
+      "warnings": []
+    },
+    {
+      "case_id": "syn_011",
+      "checks": [
+        {
+          "detail": "missing=[]",
+          "name": "field_completeness",
+          "passed": true
+        },
+        {
+          "detail": "seed=phase22-synthetic-2026-08-03-auroralis-v1",
+          "name": "seed_present",
+          "passed": true
+        },
+        {
+          "detail": "world=f9b6876bd4182343b6f5d90836322c7fe4477743792264602f3b34bf9235766e, corpus=074604ee157d86ef471c80684b6d821c319c6b6dd902697401953800ffcd1766",
+          "name": "hash_binding",
+          "passed": true
+        },
+        {
+          "detail": "issues=[]",
+          "name": "gold_documents_exist_and_hash",
+          "passed": true
+        },
+        {
+          "detail": "missing_spans=[]",
+          "name": "gold_source_spans_present",
+          "passed": true
+        },
+        {
+          "detail": "difficulty=easy",
+          "name": "difficulty_in_set",
+          "passed": true
+        },
+        {
+          "detail": "qt=single_doc_fact",
+          "name": "question_type_in_stratification",
+          "passed": true
+        },
+        {
+          "detail": "leaks=[]",
+          "name": "hard_negative_no_answer",
+          "passed": true
+        },
+        {
+          "detail": "cgt=['doc_polaris_contract_v2'] gold=['doc_polaris_contract_v2']",
+          "name": "citation_ground_truth_aligment",
+          "passed": true
+        },
+        {
+          "detail": "got=wm_auroralis_v1",
+          "name": "provenance_world_model_id",
+          "passed": true
+        },
+        {
+          "detail": "got=corpus_auroralis_v1",
+          "name": "provenance_corpus_id",
+          "passed": true
+        }
+      ],
+      "difficulty": "easy",
+      "errors": [],
+      "fatal": false,
+      "passed": true,
+      "question_type": "single_doc_fact",
+      "warnings": []
+    },
+    {
+      "case_id": "syn_012",
+      "checks": [
+        {
+          "detail": "missing=[]",
+          "name": "field_completeness",
+          "passed": true
+        },
+        {
+          "detail": "seed=phase22-synthetic-2026-08-03-auroralis-v1",
+          "name": "seed_present",
+          "passed": true
+        },
+        {
+          "detail": "world=f9b6876bd4182343b6f5d90836322c7fe4477743792264602f3b34bf9235766e, corpus=074604ee157d86ef471c80684b6d821c319c6b6dd902697401953800ffcd1766",
+          "name": "hash_binding",
+          "passed": true
+        },
+        {
+          "detail": "issues=[]",
+          "name": "gold_documents_exist_and_hash",
+          "passed": true
+        },
+        {
+          "detail": "missing_spans=[]",
+          "name": "gold_source_spans_present",
+          "passed": true
+        },
+        {
+          "detail": "difficulty=medium",
+          "name": "difficulty_in_set",
+          "passed": true
+        },
+        {
+          "detail": "qt=single_doc_fact",
+          "name": "question_type_in_stratification",
+          "passed": true
+        },
+        {
+          "detail": "leaks=[]",
+          "name": "hard_negative_no_answer",
+          "passed": true
+        },
+        {
+          "detail": "cgt=['doc_axis9_release_notes', 'doc_northwind_sdk_overview'] gold=['doc_axis9_release_notes', 'doc_northwind_sdk_overview']",
+          "name": "citation_ground_truth_aligment",
+          "passed": true
+        },
+        {
+          "detail": "got=wm_auroralis_v1",
+          "name": "provenance_world_model_id",
+          "passed": true
+        },
+        {
+          "detail": "got=corpus_auroralis_v1",
+          "name": "provenance_corpus_id",
+          "passed": true
+        }
+      ],
+      "difficulty": "medium",
+      "errors": [],
+      "fatal": false,
+      "passed": true,
+      "question_type": "single_doc_fact",
+      "warnings": []
+    },
+    {
+      "case_id": "syn_013",
+      "checks": [
+        {
+          "detail": "missing=[]",
+          "name": "field_completeness",
+          "passed": true
+        },
+        {
+          "detail": "seed=phase22-synthetic-2026-08-03-auroralis-v1",
+          "name": "seed_present",
+          "passed": true
+        },
+        {
+          "detail": "world=f9b6876bd4182343b6f5d90836322c7fe4477743792264602f3b34bf9235766e, corpus=074604ee157d86ef471c80684b6d821c319c6b6dd902697401953800ffcd1766",
+          "name": "hash_binding",
+          "passed": true
+        },
+        {
+          "detail": "issues=[]",
+          "name": "gold_documents_exist_and_hash",
+          "passed": true
+        },
+        {
+          "detail": "missing_spans=[]",
+          "name": "gold_source_spans_present",
+          "passed": true
+        },
+        {
+          "detail": "difficulty=medium",
+          "name": "difficulty_in_set",
+          "passed": true
+        },
+        {
+          "detail": "qt=single_doc_fact",
+          "name": "question_type_in_stratification",
+          "passed": true
+        },
+        {
+          "detail": "leaks=[]",
+          "name": "hard_negative_no_answer",
+          "passed": true
+        },
+        {
+          "detail": "cgt=['doc_forge_x1_recall_bulletin'] gold=['doc_forge_x1_recall_bulletin']",
+          "name": "citation_ground_truth_aligment",
+          "passed": true
+        },
+        {
+          "detail": "got=wm_auroralis_v1",
+          "name": "provenance_world_model_id",
+          "passed": true
+        },
+        {
+          "detail": "got=corpus_auroralis_v1",
+          "name": "provenance_corpus_id",
+          "passed": true
+        }
+      ],
+      "difficulty": "medium",
+      "errors": [],
+      "fatal": false,
+      "passed": true,
+      "question_type": "single_doc_fact",
+      "warnings": []
+    },
+    {
+      "case_id": "syn_014",
+      "checks": [
+        {
+          "detail": "missing=[]",
+          "name": "field_completeness",
+          "passed": true
+        },
+        {
+          "detail": "seed=phase22-synthetic-2026-08-03-auroralis-v1",
+          "name": "seed_present",
+          "passed": true
+        },
+        {
+          "detail": "world=f9b6876bd4182343b6f5d90836322c7fe4477743792264602f3b34bf9235766e, corpus=074604ee157d86ef471c80684b6d821c319c6b6dd902697401953800ffcd1766",
+          "name": "hash_binding",
+          "passed": true
+        },
+        {
+          "detail": "issues=[]",
+          "name": "gold_documents_exist_and_hash",
+          "passed": true
+        },
+        {
+          "detail": "missing_spans=[]",
+          "name": "gold_source_spans_present",
+          "passed": true
+        },
+        {
+          "detail": "difficulty=easy",
+          "name": "difficulty_in_set",
+          "passed": true
+        },
+        {
+          "detail": "qt=single_doc_fact",
+          "name": "question_type_in_stratification",
+          "passed": true
+        },
+        {
+          "detail": "leaks=[]",
+          "name": "hard_negative_no_answer",
+          "passed": true
+        },
+        {
+          "detail": "cgt=['doc_ceo_bio'] gold=['doc_ceo_bio']",
+          "name": "citation_ground_truth_aligment",
+          "passed": true
+        },
+        {
+          "detail": "got=wm_auroralis_v1",
+          "name": "provenance_world_model_id",
+          "passed": true
+        },
+        {
+          "detail": "got=corpus_auroralis_v1",
+          "name": "provenance_corpus_id",
+          "passed": true
+        }
+      ],
+      "difficulty": "easy",
+      "errors": [],
+      "fatal": false,
+      "passed": true,
+      "question_type": "single_doc_fact",
+      "warnings": []
+    },
+    {
+      "case_id": "syn_015",
+      "checks": [
+        {
+          "detail": "missing=[]",
+          "name": "field_completeness",
+          "passed": true
+        },
+        {
+          "detail": "seed=phase22-synthetic-2026-08-03-auroralis-v1",
+          "name": "seed_present",
+          "passed": true
+        },
+        {
+          "detail": "world=f9b6876bd4182343b6f5d90836322c7fe4477743792264602f3b34bf9235766e, corpus=074604ee157d86ef471c80684b6d821c319c6b6dd902697401953800ffcd1766",
+          "name": "hash_binding",
+          "passed": true
+        },
+        {
+          "detail": "issues=[]",
+          "name": "gold_documents_exist_and_hash",
+          "passed": true
+        },
+        {
+          "detail": "missing_spans=[]",
+          "name": "gold_source_spans_present",
+          "passed": true
+        },
+        {
+          "detail": "difficulty=medium",
+          "name": "difficulty_in_set",
+          "passed": true
+        },
+        {
+          "detail": "qt=single_doc_fact",
+          "name": "question_type_in_stratification",
+          "passed": true
+        },
+        {
+          "detail": "leaks=[]",
+          "name": "hard_negative_no_answer",
+          "passed": true
+        },
+        {
+          "detail": "cgt=['doc_supplier_brief_sup_ozone_chem'] gold=['doc_supplier_brief_sup_ozone_chem']",
+          "name": "citation_ground_truth_aligment",
+          "passed": true
+        },
+        {
+          "detail": "got=wm_auroralis_v1",
+          "name": "provenance_world_model_id",
+          "passed": true
+        },
+        {
+          "detail": "got=corpus_auroralis_v1",
+          "name": "provenance_corpus_id",
+          "passed": true
+        }
+      ],
+      "difficulty": "medium",
+      "errors": [],
+      "fatal": false,
+      "passed": true,
+      "question_type": "single_doc_fact",
+      "warnings": []
+    },
+    {
+      "case_id": "syn_016",
+      "checks": [
+        {
+          "detail": "missing=[]",
+          "name": "field_completeness",
+          "passed": true
+        },
+        {
+          "detail": "seed=phase22-synthetic-2026-08-03-auroralis-v1",
+          "name": "seed_present",
+          "passed": true
+        },
+        {
+          "detail": "world=f9b6876bd4182343b6f5d90836322c7fe4477743792264602f3b34bf9235766e, corpus=074604ee157d86ef471c80684b6d821c319c6b6dd902697401953800ffcd1766",
+          "name": "hash_binding",
+          "passed": true
+        },
+        {
+          "detail": "issues=[]",
+          "name": "gold_documents_exist_and_hash",
+          "passed": true
+        },
+        {
+          "detail": "missing_spans=[]",
+          "name": "gold_source_spans_present",
+          "passed": true
+        },
+        {
+          "detail": "difficulty=medium",
+          "name": "difficulty_in_set",
+          "passed": true
+        },
+        {
+          "detail": "qt=single_doc_fact",
+          "name": "question_type_in_stratification",
+          "passed": true
+        },
+        {
+          "detail": "leaks=[]",
+          "name": "hard_negative_no_answer",
+          "passed": true
+        },
+        {
+          "detail": "cgt=['doc_forge_x1_field_log'] gold=['doc_forge_x1_field_log']",
+          "name": "citation_ground_truth_aligment",
+          "passed": true
+        },
+        {
+          "detail": "got=wm_auroralis_v1",
+          "name": "provenance_world_model_id",
+          "passed": true
+        },
+        {
+          "detail": "got=corpus_auroralis_v1",
+          "name": "provenance_corpus_id",
+          "passed": true
+        }
+      ],
+      "difficulty": "medium",
+      "errors": [],
+      "fatal": false,
+      "passed": true,
+      "question_type": "single_doc_fact",
+      "warnings": []
+    },
+    {
+      "case_id": "syn_017",
+      "checks": [
+        {
+          "detail": "missing=[]",
+          "name": "field_completeness",
+          "passed": true
+        },
+        {
+          "detail": "seed=phase22-synthetic-2026-08-03-auroralis-v1",
+          "name": "seed_present",
+          "passed": true
+        },
+        {
+          "detail": "world=f9b6876bd4182343b6f5d90836322c7fe4477743792264602f3b34bf9235766e, corpus=074604ee157d86ef471c80684b6d821c319c6b6dd902697401953800ffcd1766",
+          "name": "hash_binding",
+          "passed": true
+        },
+        {
+          "detail": "issues=[]",
+          "name": "gold_documents_exist_and_hash",
+          "passed": true
+        },
+        {
+          "detail": "missing_spans=[]",
+          "name": "gold_source_spans_present",
+          "passed": true
+        },
+        {
+          "detail": "difficulty=easy",
+          "name": "difficulty_in_set",
+          "passed": true
+        },
+        {
+          "detail": "qt=single_doc_fact",
+          "name": "question_type_in_stratification",
+          "passed": true
+        },
+        {
+          "detail": "leaks=[]",
+          "name": "hard_negative_no_answer",
+          "passed": true
+        },
+        {
+          "detail": "cgt=['doc_org_chart_2026'] gold=['doc_org_chart_2026']",
+          "name": "citation_ground_truth_aligment",
+          "passed": true
+        },
+        {
+          "detail": "got=wm_auroralis_v1",
+          "name": "provenance_world_model_id",
+          "passed": true
+        },
+        {
+          "detail": "got=corpus_auroralis_v1",
+          "name": "provenance_corpus_id",
+          "passed": true
+        }
+      ],
+      "difficulty": "easy",
+      "errors": [],
+      "fatal": false,
+      "passed": true,
+      "question_type": "single_doc_fact",
+      "warnings": []
+    },
+    {
+      "case_id": "syn_018",
+      "checks": [
+        {
+          "detail": "missing=[]",
+          "name": "field_completeness",
+          "passed": true
+        },
+        {
+          "detail": "seed=phase22-synthetic-2026-08-03-auroralis-v1",
+          "name": "seed_present",
+          "passed": true
+        },
+        {
+          "detail": "world=f9b6876bd4182343b6f5d90836322c7fe4477743792264602f3b34bf9235766e, corpus=074604ee157d86ef471c80684b6d821c319c6b6dd902697401953800ffcd1766",
+          "name": "hash_binding",
+          "passed": true
+        },
+        {
+          "detail": "issues=[]",
+          "name": "gold_documents_exist_and_hash",
+          "passed": true
+        },
+        {
+          "detail": "missing_spans=[]",
+          "name": "gold_source_spans_present",
+          "passed": true
+        },
+        {
+          "detail": "difficulty=medium",
+          "name": "difficulty_in_set",
+          "passed": true
+        },
+        {
+          "detail": "qt=single_doc_fact",
+          "name": "question_type_in_stratification",
+          "passed": true
+        },
+        {
+          "detail": "leaks=[]",
+          "name": "hard_negative_no_answer",
+          "passed": true
+        },
+        {
+          "detail": "cgt=['doc_lumenx_status_2026_q2'] gold=['doc_lumenx_status_2026_q2']",
+          "name": "citation_ground_truth_aligment",
+          "passed": true
+        },
+        {
+          "detail": "got=wm_auroralis_v1",
+          "name": "provenance_world_model_id",
+          "passed": true
+        },
+        {
+          "detail": "got=corpus_auroralis_v1",
+          "name": "provenance_corpus_id",
+          "passed": true
+        }
+      ],
+      "difficulty": "medium",
+      "errors": [],
+      "fatal": false,
+      "passed": true,
+      "question_type": "single_doc_fact",
+      "warnings": []
+    },
+    {
+      "case_id": "syn_019",
+      "checks": [
+        {
+          "detail": "missing=[]",
+          "name": "field_completeness",
+          "passed": true
+        },
+        {
+          "detail": "seed=phase22-synthetic-2026-08-03-auroralis-v1",
+          "name": "seed_present",
+          "passed": true
+        },
+        {
+          "detail": "world=f9b6876bd4182343b6f5d90836322c7fe4477743792264602f3b34bf9235766e, corpus=074604ee157d86ef471c80684b6d821c319c6b6dd902697401953800ffcd1766",
+          "name": "hash_binding",
+          "passed": true
+        },
+        {
+          "detail": "issues=[]",
+          "name": "gold_documents_exist_and_hash",
+          "passed": true
+        },
+        {
+          "detail": "missing_spans=[]",
+          "name": "gold_source_spans_present",
+          "passed": true
+        },
+        {
+          "detail": "difficulty=easy",
+          "name": "difficulty_in_set",
+          "passed": true
+        },
+        {
+          "detail": "qt=single_doc_fact",
+          "name": "question_type_in_stratification",
+          "passed": true
+        },
+        {
+          "detail": "leaks=[]",
+          "name": "hard_negative_no_answer",
+          "passed": true
+        },
+        {
+          "detail": "cgt=['doc_security_policy_2026'] gold=['doc_security_policy_2026']",
+          "name": "citation_ground_truth_aligment",
+          "passed": true
+        },
+        {
+          "detail": "got=wm_auroralis_v1",
+          "name": "provenance_world_model_id",
+          "passed": true
+        },
+        {
+          "detail": "got=corpus_auroralis_v1",
+          "name": "provenance_corpus_id",
+          "passed": true
+        }
+      ],
+      "difficulty": "easy",
+      "errors": [],
+      "fatal": false,
+      "passed": true,
+      "question_type": "single_doc_fact",
+      "warnings": []
+    },
+    {
+      "case_id": "syn_020",
+      "checks": [
+        {
+          "detail": "missing=[]",
+          "name": "field_completeness",
+          "passed": true
+        },
+        {
+          "detail": "seed=phase22-synthetic-2026-08-03-auroralis-v1",
+          "name": "seed_present",
+          "passed": true
+        },
+        {
+          "detail": "world=f9b6876bd4182343b6f5d90836322c7fe4477743792264602f3b34bf9235766e, corpus=074604ee157d86ef471c80684b6d821c319c6b6dd902697401953800ffcd1766",
+          "name": "hash_binding",
+          "passed": true
+        },
+        {
+          "detail": "issues=[]",
+          "name": "gold_documents_exist_and_hash",
+          "passed": true
+        },
+        {
+          "detail": "missing_spans=[]",
+          "name": "gold_source_spans_present",
+          "passed": true
+        },
+        {
+          "detail": "difficulty=medium",
+          "name": "difficulty_in_set",
+          "passed": true
+        },
+        {
+          "detail": "qt=single_doc_fact",
+          "name": "question_type_in_stratification",
+          "passed": true
+        },
+        {
+          "detail": "leaks=[]",
+          "name": "hard_negative_no_answer",
+          "passed": true
+        },
+        {
+          "detail": "cgt=['doc_iris_field_visit'] gold=['doc_iris_field_visit']",
+          "name": "citation_ground_truth_aligment",
+          "passed": true
+        },
+        {
+          "detail": "got=wm_auroralis_v1",
+          "name": "provenance_world_model_id",
+          "passed": true
+        },
+        {
+          "detail": "got=corpus_auroralis_v1",
+          "name": "provenance_corpus_id",
+          "passed": true
+        }
+      ],
+      "difficulty": "medium",
+      "errors": [],
+      "fatal": false,
+      "passed": true,
+      "question_type": "single_doc_fact",
+      "warnings": []
+    },
+    {
+      "case_id": "syn_021",
+      "checks": [
+        {
+          "detail": "missing=[]",
+          "name": "field_completeness",
+          "passed": true
+        },
+        {
+          "detail": "seed=phase22-synthetic-2026-08-03-auroralis-v1",
+          "name": "seed_present",
+          "passed": true
+        },
+        {
+          "detail": "world=f9b6876bd4182343b6f5d90836322c7fe4477743792264602f3b34bf9235766e, corpus=074604ee157d86ef471c80684b6d821c319c6b6dd902697401953800ffcd1766",
+          "name": "hash_binding",
+          "passed": true
+        },
+        {
+          "detail": "issues=[]",
+          "name": "gold_documents_exist_and_hash",
+          "passed": true
+        },
+        {
+          "detail": "missing_spans=[]",
+          "name": "gold_source_spans_present",
+          "passed": true
+        },
+        {
+          "detail": "difficulty=hard",
+          "name": "difficulty_in_set",
+          "passed": true
+        },
+        {
+          "detail": "qt=multi_hop",
+          "name": "question_type_in_stratification",
+          "passed": true
+        },
+        {
+          "detail": "doc_count=2",
+          "name": "multi_hop_doc_count",
+          "passed": true
+        },
+        {
+          "detail": "leaks=[]",
+          "name": "hard_negative_no_answer",
+          "passed": true
+        },
+        {
+          "detail": "cgt=['doc_kobal_contract', 'doc_kobal_quality_incident'] gold=['doc_kobal_contract', 'doc_kobal_quality_incident']",
+          "name": "citation_ground_truth_aligment",
+          "passed": true
+        },
+        {
+          "detail": "got=wm_auroralis_v1",
+          "name": "provenance_world_model_id",
+          "passed": true
+        },
+        {
+          "detail": "got=corpus_auroralis_v1",
+          "name": "provenance_corpus_id",
+          "passed": true
+        }
+      ],
+      "difficulty": "hard",
+      "errors": [],
+      "fatal": false,
+      "passed": true,
+      "question_type": "multi_hop",
+      "warnings": []
+    },
+    {
+      "case_id": "syn_022",
+      "checks": [
+        {
+          "detail": "missing=[]",
+          "name": "field_completeness",
+          "passed": true
+        },
+        {
+          "detail": "seed=phase22-synthetic-2026-08-03-auroralis-v1",
+          "name": "seed_present",
+          "passed": true
+        },
+        {
+          "detail": "world=f9b6876bd4182343b6f5d90836322c7fe4477743792264602f3b34bf9235766e, corpus=074604ee157d86ef471c80684b6d821c319c6b6dd902697401953800ffcd1766",
+          "name": "hash_binding",
+          "passed": true
+        },
+        {
+          "detail": "issues=[]",
+          "name": "gold_documents_exist_and_hash",
+          "passed": true
+        },
+        {
+          "detail": "missing_spans=[]",
+          "name": "gold_source_spans_present",
+          "passed": true
+        },
+        {
+          "detail": "difficulty=hard",
+          "name": "difficulty_in_set",
+          "passed": true
+        },
+        {
+          "detail": "qt=multi_hop",
+          "name": "question_type_in_stratification",
+          "passed": true
+        },
+        {
+          "detail": "doc_count=3",
+          "name": "multi_hop_doc_count",
+          "passed": true
+        },
+        {
+          "detail": "leaks=[]",
+          "name": "hard_negative_no_answer",
+          "passed": true
+        },
+        {
+          "detail": "cgt=['doc_forge_x1_field_log', 'doc_forge_x1_recall_bulletin', 'doc_quality_audit_2026_q1'] gold=['doc_forge_x1_field_log', 'doc_forge_x1_recall_bulletin', 'doc_quality_audit_2026_q1']",
+          "name": "citation_ground_truth_aligment",
+          "passed": true
+        },
+        {
+          "detail": "got=wm_auroralis_v1",
+          "name": "provenance_world_model_id",
+          "passed": true
+        },
+        {
+          "detail": "got=corpus_auroralis_v1",
+          "name": "provenance_corpus_id",
+          "passed": true
+        }
+      ],
+      "difficulty": "hard",
+      "errors": [],
+      "fatal": false,
+      "passed": true,
+      "question_type": "multi_hop",
+      "warnings": []
+    },
+    {
+      "case_id": "syn_023",
+      "checks": [
+        {
+          "detail": "missing=[]",
+          "name": "field_completeness",
+          "passed": true
+        },
+        {
+          "detail": "seed=phase22-synthetic-2026-08-03-auroralis-v1",
+          "name": "seed_present",
+          "passed": true
+        },
+        {
+          "detail": "world=f9b6876bd4182343b6f5d90836322c7fe4477743792264602f3b34bf9235766e, corpus=074604ee157d86ef471c80684b6d821c319c6b6dd902697401953800ffcd1766",
+          "name": "hash_binding",
+          "passed": true
+        },
+        {
+          "detail": "issues=[]",
+          "name": "gold_documents_exist_and_hash",
+          "passed": true
+        },
+        {
+          "detail": "missing_spans=[]",
+          "name": "gold_source_spans_present",
+          "passed": true
+        },
+        {
+          "detail": "difficulty=hard",
+          "name": "difficulty_in_set",
+          "passed": true
+        },
+        {
+          "detail": "qt=multi_hop",
+          "name": "question_type_in_stratification",
+          "passed": true
+        },
+        {
+          "detail": "doc_count=3",
+          "name": "multi_hop_doc_count",
+          "passed": true
+        },
+        {
+          "detail": "leaks=[]",
+          "name": "hard_negative_no_answer",
+          "passed": true
+        },
+        {
+          "detail": "cgt=['doc_polaris_contract_v1', 'doc_polaris_contract_v2', 'doc_yui_bio'] gold=['doc_polaris_contract_v1', 'doc_polaris_contract_v2', 'doc_yui_bio']",
+          "name": "citation_ground_truth_aligment",
+          "passed": true
+        },
+        {
+          "detail": "got=wm_auroralis_v1",
+          "name": "provenance_world_model_id",
+          "passed": true
+        },
+        {
+          "detail": "got=corpus_auroralis_v1",
+          "name": "provenance_corpus_id",
+          "passed": true
+        }
+      ],
+      "difficulty": "hard",
+      "errors": [],
+      "fatal": false,
+      "passed": true,
+      "question_type": "multi_hop",
+      "warnings": []
+    },
+    {
+      "case_id": "syn_024",
+      "checks": [
+        {
+          "detail": "missing=[]",
+          "name": "field_completeness",
+          "passed": true
+        },
+        {
+          "detail": "seed=phase22-synthetic-2026-08-03-auroralis-v1",
+          "name": "seed_present",
+          "passed": true
+        },
+        {
+          "detail": "world=f9b6876bd4182343b6f5d90836322c7fe4477743792264602f3b34bf9235766e, corpus=074604ee157d86ef471c80684b6d821c319c6b6dd902697401953800ffcd1766",
+          "name": "hash_binding",
+          "passed": true
+        },
+        {
+          "detail": "issues=[]",
+          "name": "gold_documents_exist_and_hash",
+          "passed": true
+        },
+        {
+          "detail": "missing_spans=[]",
+          "name": "gold_source_spans_present",
+          "passed": true
+        },
+        {
+          "detail": "difficulty=hard",
+          "name": "difficulty_in_set",
+          "passed": true
+        },
+        {
+          "detail": "qt=multi_hop",
+          "name": "question_type_in_stratification",
+          "passed": true
+        },
+        {
+          "detail": "doc_count=2",
+          "name": "multi_hop_doc_count",
+          "passed": true
+        },
+        {
+          "detail": "leaks=[]",
+          "name": "hard_negative_no_answer",
+          "passed": true
+        },
+        {
+          "detail": "cgt=['doc_northwind_charter', 'doc_northwind_sdk_overview'] gold=['doc_northwind_charter', 'doc_northwind_sdk_overview']",
+          "name": "citation_ground_truth_aligment",
+          "passed": true
+        },
+        {
+          "detail": "got=wm_auroralis_v1",
+          "name": "provenance_world_model_id",
+          "passed": true
+        },
+        {
+          "detail": "got=corpus_auroralis_v1",
+          "name": "provenance_corpus_id",
+          "passed": true
+        }
+      ],
+      "difficulty": "hard",
+      "errors": [],
+      "fatal": false,
+      "passed": true,
+      "question_type": "multi_hop",
+      "warnings": []
+    },
+    {
+      "case_id": "syn_025",
+      "checks": [
+        {
+          "detail": "missing=[]",
+          "name": "field_completeness",
+          "passed": true
+        },
+        {
+          "detail": "seed=phase22-synthetic-2026-08-03-auroralis-v1",
+          "name": "seed_present",
+          "passed": true
+        },
+        {
+          "detail": "world=f9b6876bd4182343b6f5d90836322c7fe4477743792264602f3b34bf9235766e, corpus=074604ee157d86ef471c80684b6d821c319c6b6dd902697401953800ffcd1766",
+          "name": "hash_binding",
+          "passed": true
+        },
+        {
+          "detail": "issues=[]",
+          "name": "gold_documents_exist_and_hash",
+          "passed": true
+        },
+        {
+          "detail": "missing_spans=[]",
+          "name": "gold_source_spans_present",
+          "passed": true
+        },
+        {
+          "detail": "difficulty=hard",
+          "name": "difficulty_in_set",
+          "passed": true
+        },
+        {
+          "detail": "qt=multi_hop",
+          "name": "question_type_in_stratification",
+          "passed": true
+        },
+        {
+          "detail": "doc_count=2",
+          "name": "multi_hop_doc_count",
+          "passed": true
+        },
+        {
+          "detail": "leaks=[]",
+          "name": "hard_negative_no_answer",
+          "passed": true
+        },
+        {
+          "detail": "cgt=['doc_helion_contract', 'doc_iris_field_visit'] gold=['doc_helion_contract', 'doc_iris_field_visit']",
+          "name": "citation_ground_truth_aligment",
+          "passed": true
+        },
+        {
+          "detail": "got=wm_auroralis_v1",
+          "name": "provenance_world_model_id",
+          "passed": true
+        },
+        {
+          "detail": "got=corpus_auroralis_v1",
+          "name": "provenance_corpus_id",
+          "passed": true
+        }
+      ],
+      "difficulty": "hard",
+      "errors": [],
+      "fatal": false,
+      "passed": true,
+      "question_type": "multi_hop",
+      "warnings": []
+    },
+    {
+      "case_id": "syn_026",
+      "checks": [
+        {
+          "detail": "missing=[]",
+          "name": "field_completeness",
+          "passed": true
+        },
+        {
+          "detail": "seed=phase22-synthetic-2026-08-03-auroralis-v1",
+          "name": "seed_present",
+          "passed": true
+        },
+        {
+          "detail": "world=f9b6876bd4182343b6f5d90836322c7fe4477743792264602f3b34bf9235766e, corpus=074604ee157d86ef471c80684b6d821c319c6b6dd902697401953800ffcd1766",
+          "name": "hash_binding",
+          "passed": true
+        },
+        {
+          "detail": "issues=[]",
+          "name": "gold_documents_exist_and_hash",
+          "passed": true
+        },
+        {
+          "detail": "missing_spans=[]",
+          "name": "gold_source_spans_present",
+          "passed": true
+        },
+        {
+          "detail": "difficulty=hard",
+          "name": "difficulty_in_set",
+          "passed": true
+        },
+        {
+          "detail": "qt=multi_hop",
+          "name": "question_type_in_stratification",
+          "passed": true
+        },
+        {
+          "detail": "doc_count=2",
+          "name": "multi_hop_doc_count",
+          "passed": true
+        },
+        {
+          "detail": "leaks=[]",
+          "name": "hard_negative_no_answer",
+          "passed": true
+        },
+        {
+          "detail": "cgt=['doc_audit_findings_2025_q4', 'doc_dmitri_bio'] gold=['doc_audit_findings_2025_q4', 'doc_dmitri_bio']",
+          "name": "citation_ground_truth_aligment",
+          "passed": true
+        },
+        {
+          "detail": "got=wm_auroralis_v1",
+          "name": "provenance_world_model_id",
+          "passed": true
+        },
+        {
+          "detail": "got=corpus_auroralis_v1",
+          "name": "provenance_corpus_id",
+          "passed": true
+        }
+      ],
+      "difficulty": "hard",
+      "errors": [],
+      "fatal": false,
+      "passed": true,
+      "question_type": "multi_hop",
+      "warnings": []
+    },
+    {
+      "case_id": "syn_027",
+      "checks": [
+        {
+          "detail": "missing=[]",
+          "name": "field_completeness",
+          "passed": true
+        },
+        {
+          "detail": "seed=phase22-synthetic-2026-08-03-auroralis-v1",
+          "name": "seed_present",
+          "passed": true
+        },
+        {
+          "detail": "world=f9b6876bd4182343b6f5d90836322c7fe4477743792264602f3b34bf9235766e, corpus=074604ee157d86ef471c80684b6d821c319c6b6dd902697401953800ffcd1766",
+          "name": "hash_binding",
+          "passed": true
+        },
+        {
+          "detail": "issues=[]",
+          "name": "gold_documents_exist_and_hash",
+          "passed": true
+        },
+        {
+          "detail": "missing_spans=[]",
+          "name": "gold_source_spans_present",
+          "passed": true
+        },
+        {
+          "detail": "difficulty=medium",
+          "name": "difficulty_in_set",
+          "passed": true
+        },
+        {
+          "detail": "qt=multi_hop",
+          "name": "question_type_in_stratification",
+          "passed": true
+        },
+        {
+          "detail": "doc_count=2",
+          "name": "multi_hop_doc_count",
+          "passed": true
+        },
+        {
+          "detail": "leaks=[]",
+          "name": "hard_negative_no_answer",
+          "passed": true
+        },
+        {
+          "detail": "cgt=['doc_polaris_contract_v1', 'doc_polaris_contract_v2'] gold=['doc_polaris_contract_v1', 'doc_polaris_contract_v2']",
+          "name": "citation_ground_truth_aligment",
+          "passed": true
+        },
+        {
+          "detail": "got=wm_auroralis_v1",
+          "name": "provenance_world_model_id",
+          "passed": true
+        },
+        {
+          "detail": "got=corpus_auroralis_v1",
+          "name": "provenance_corpus_id",
+          "passed": true
+        }
+      ],
+      "difficulty": "medium",
+      "errors": [],
+      "fatal": false,
+      "passed": true,
+      "question_type": "multi_hop",
+      "warnings": []
+    },
+    {
+      "case_id": "syn_028",
+      "checks": [
+        {
+          "detail": "missing=[]",
+          "name": "field_completeness",
+          "passed": true
+        },
+        {
+          "detail": "seed=phase22-synthetic-2026-08-03-auroralis-v1",
+          "name": "seed_present",
+          "passed": true
+        },
+        {
+          "detail": "world=f9b6876bd4182343b6f5d90836322c7fe4477743792264602f3b34bf9235766e, corpus=074604ee157d86ef471c80684b6d821c319c6b6dd902697401953800ffcd1766",
+          "name": "hash_binding",
+          "passed": true
+        },
+        {
+          "detail": "issues=[]",
+          "name": "gold_documents_exist_and_hash",
+          "passed": true
+        },
+        {
+          "detail": "missing_spans=[]",
+          "name": "gold_source_spans_present",
+          "passed": true
+        },
+        {
+          "detail": "difficulty=medium",
+          "name": "difficulty_in_set",
+          "passed": true
+        },
+        {
+          "detail": "qt=multi_hop",
+          "name": "question_type_in_stratification",
+          "passed": true
+        },
+        {
+          "detail": "doc_count=2",
+          "name": "multi_hop_doc_count",
+          "passed": true
+        },
+        {
+          "detail": "leaks=[]",
+          "name": "hard_negative_no_answer",
+          "passed": true
+        },
+        {
+          "detail": "cgt=['doc_eli_bio', 'doc_lumen_e2_release_notes'] gold=['doc_eli_bio', 'doc_lumen_e2_release_notes']",
+          "name": "citation_ground_truth_aligment",
+          "passed": true
+        },
+        {
+          "detail": "got=wm_auroralis_v1",
+          "name": "provenance_world_model_id",
+          "passed": true
+        },
+        {
+          "detail": "got=corpus_auroralis_v1",
+          "name": "provenance_corpus_id",
+          "passed": true
+        }
+      ],
+      "difficulty": "medium",
+      "errors": [],
+      "fatal": false,
+      "passed": true,
+      "question_type": "multi_hop",
+      "warnings": []
+    },
+    {
+      "case_id": "syn_029",
+      "checks": [
+        {
+          "detail": "missing=[]",
+          "name": "field_completeness",
+          "passed": true
+        },
+        {
+          "detail": "seed=phase22-synthetic-2026-08-03-auroralis-v1",
+          "name": "seed_present",
+          "passed": true
+        },
+        {
+          "detail": "world=f9b6876bd4182343b6f5d90836322c7fe4477743792264602f3b34bf9235766e, corpus=074604ee157d86ef471c80684b6d821c319c6b6dd902697401953800ffcd1766",
+          "name": "hash_binding",
+          "passed": true
+        },
+        {
+          "detail": "issues=[]",
+          "name": "gold_documents_exist_and_hash",
+          "passed": true
+        },
+        {
+          "detail": "missing_spans=[]",
+          "name": "gold_source_spans_present",
+          "passed": true
+        },
+        {
+          "detail": "difficulty=hard",
+          "name": "difficulty_in_set",
+          "passed": true
+        },
+        {
+          "detail": "qt=multi_hop",
+          "name": "question_type_in_stratification",
+          "passed": true
+        },
+        {
+          "detail": "doc_count=2",
+          "name": "multi_hop_doc_count",
+          "passed": true
+        },
+        {
+          "detail": "leaks=[]",
+          "name": "hard_negative_no_answer",
+          "passed": true
+        },
+        {
+          "detail": "cgt=['doc_polaris_contract_v2', 'doc_quality_audit_2026_q1'] gold=['doc_polaris_contract_v2', 'doc_quality_audit_2026_q1']",
+          "name": "citation_ground_truth_aligment",
+          "passed": true
+        },
+        {
+          "detail": "got=wm_auroralis_v1",
+          "name": "provenance_world_model_id",
+          "passed": true
+        },
+        {
+          "detail": "got=corpus_auroralis_v1",
+          "name": "provenance_corpus_id",
+          "passed": true
+        }
+      ],
+      "difficulty": "hard",
+      "errors": [],
+      "fatal": false,
+      "passed": true,
+      "question_type": "multi_hop",
+      "warnings": []
+    },
+    {
+      "case_id": "syn_030",
+      "checks": [
+        {
+          "detail": "missing=[]",
+          "name": "field_completeness",
+          "passed": true
+        },
+        {
+          "detail": "seed=phase22-synthetic-2026-08-03-auroralis-v1",
+          "name": "seed_present",
+          "passed": true
+        },
+        {
+          "detail": "world=f9b6876bd4182343b6f5d90836322c7fe4477743792264602f3b34bf9235766e, corpus=074604ee157d86ef471c80684b6d821c319c6b6dd902697401953800ffcd1766",
+          "name": "hash_binding",
+          "passed": true
+        },
+        {
+          "detail": "issues=[]",
+          "name": "gold_documents_exist_and_hash",
+          "passed": true
+        },
+        {
+          "detail": "missing_spans=[]",
+          "name": "gold_source_spans_present",
+          "passed": true
+        },
+        {
+          "detail": "difficulty=medium",
+          "name": "difficulty_in_set",
+          "passed": true
+        },
+        {
+          "detail": "qt=multi_hop",
+          "name": "question_type_in_stratification",
+          "passed": true
+        },
+        {
+          "detail": "doc_count=2",
+          "name": "multi_hop_doc_count",
+          "passed": true
+        },
+        {
+          "detail": "leaks=[]",
+          "name": "hard_negative_no_answer",
+          "passed": true
+        },
+        {
+          "detail": "cgt=['doc_amani_bio', 'doc_audit_findings_2026_q1'] gold=['doc_amani_bio', 'doc_audit_findings_2026_q1']",
+          "name": "citation_ground_truth_aligment",
+          "passed": true
+        },
+        {
+          "detail": "got=wm_auroralis_v1",
+          "name": "provenance_world_model_id",
+          "passed": true
+        },
+        {
+          "detail": "got=corpus_auroralis_v1",
+          "name": "provenance_corpus_id",
+          "passed": true
+        }
+      ],
+      "difficulty": "medium",
+      "errors": [],
+      "fatal": false,
+      "passed": true,
+      "question_type": "multi_hop",
+      "warnings": []
+    },
+    {
+      "case_id": "syn_031",
+      "checks": [
+        {
+          "detail": "missing=[]",
+          "name": "field_completeness",
+          "passed": true
+        },
+        {
+          "detail": "seed=phase22-synthetic-2026-08-03-auroralis-v1",
+          "name": "seed_present",
+          "passed": true
+        },
+        {
+          "detail": "world=f9b6876bd4182343b6f5d90836322c7fe4477743792264602f3b34bf9235766e, corpus=074604ee157d86ef471c80684b6d821c319c6b6dd902697401953800ffcd1766",
+          "name": "hash_binding",
+          "passed": true
+        },
+        {
+          "detail": "issues=[]",
+          "name": "gold_documents_exist_and_hash",
+          "passed": true
+        },
+        {
+          "detail": "missing_spans=[]",
+          "name": "gold_source_spans_present",
+          "passed": true
+        },
+        {
+          "detail": "difficulty=medium",
+          "name": "difficulty_in_set",
+          "passed": true
+        },
+        {
+          "detail": "qt=multi_hop",
+          "name": "question_type_in_stratification",
+          "passed": true
+        },
+        {
+          "detail": "doc_count=4",
+          "name": "multi_hop_doc_count",
+          "passed": true
+        },
+        {
+          "detail": "leaks=[]",
+          "name": "hard_negative_no_answer",
+          "passed": true
+        },
+        {
+          "detail": "cgt=['doc_haruto_bio', 'doc_iris_bio', 'doc_org_chart_2026', 'doc_ren_bio'] gold=['doc_haruto_bio', 'doc_iris_bio', 'doc_org_chart_2026', 'doc_ren_bio']",
+          "name": "citation_ground_truth_aligment",
+          "passed": true
+        },
+        {
+          "detail": "got=wm_auroralis_v1",
+          "name": "provenance_world_model_id",
+          "passed": true
+        },
+        {
+          "detail": "got=corpus_auroralis_v1",
+          "name": "provenance_corpus_id",
+          "passed": true
+        }
+      ],
+      "difficulty": "medium",
+      "errors": [],
+      "fatal": false,
+      "passed": true,
+      "question_type": "multi_hop",
+      "warnings": []
+    },
+    {
+      "case_id": "syn_032",
+      "checks": [
+        {
+          "detail": "missing=[]",
+          "name": "field_completeness",
+          "passed": true
+        },
+        {
+          "detail": "seed=phase22-synthetic-2026-08-03-auroralis-v1",
+          "name": "seed_present",
+          "passed": true
+        },
+        {
+          "detail": "world=f9b6876bd4182343b6f5d90836322c7fe4477743792264602f3b34bf9235766e, corpus=074604ee157d86ef471c80684b6d821c319c6b6dd902697401953800ffcd1766",
+          "name": "hash_binding",
+          "passed": true
+        },
+        {
+          "detail": "issues=[]",
+          "name": "gold_documents_exist_and_hash",
+          "passed": true
+        },
+        {
+          "detail": "missing_spans=[]",
+          "name": "gold_source_spans_present",
+          "passed": true
+        },
+        {
+          "detail": "difficulty=medium",
+          "name": "difficulty_in_set",
+          "passed": true
+        },
+        {
+          "detail": "qt=multi_hop",
+          "name": "question_type_in_stratification",
+          "passed": true
+        },
+        {
+          "detail": "doc_count=2",
+          "name": "multi_hop_doc_count",
+          "passed": true
+        },
+        {
+          "detail": "leaks=[]",
+          "name": "hard_negative_no_answer",
+          "passed": true
+        },
+        {
+          "detail": "cgt=['doc_eli_bio', 'doc_lumen_e2_release_notes'] gold=['doc_eli_bio', 'doc_lumen_e2_release_notes']",
+          "name": "citation_ground_truth_aligment",
+          "passed": true
+        },
+        {
+          "detail": "got=wm_auroralis_v1",
+          "name": "provenance_world_model_id",
+          "passed": true
+        },
+        {
+          "detail": "got=corpus_auroralis_v1",
+          "name": "provenance_corpus_id",
+          "passed": true
+        }
+      ],
+      "difficulty": "medium",
+      "errors": [],
+      "fatal": false,
+      "passed": true,
+      "question_type": "multi_hop",
+      "warnings": []
+    },
+    {
+      "case_id": "syn_033",
+      "checks": [
+        {
+          "detail": "missing=[]",
+          "name": "field_completeness",
+          "passed": true
+        },
+        {
+          "detail": "seed=phase22-synthetic-2026-08-03-auroralis-v1",
+          "name": "seed_present",
+          "passed": true
+        },
+        {
+          "detail": "world=f9b6876bd4182343b6f5d90836322c7fe4477743792264602f3b34bf9235766e, corpus=074604ee157d86ef471c80684b6d821c319c6b6dd902697401953800ffcd1766",
+          "name": "hash_binding",
+          "passed": true
+        },
+        {
+          "detail": "issues=[]",
+          "name": "gold_documents_exist_and_hash",
+          "passed": true
+        },
+        {
+          "detail": "missing_spans=[]",
+          "name": "gold_source_spans_present",
+          "passed": true
+        },
+        {
+          "detail": "difficulty=hard",
+          "name": "difficulty_in_set",
+          "passed": true
+        },
+        {
+          "detail": "qt=multi_hop",
+          "name": "question_type_in_stratification",
+          "passed": true
+        },
+        {
+          "detail": "doc_count=2",
+          "name": "multi_hop_doc_count",
+          "passed": true
+        },
+        {
+          "detail": "leaks=[]",
+          "name": "hard_negative_no_answer",
+          "passed": true
+        },
+        {
+          "detail": "cgt=['doc_polaris_contract_v1', 'doc_polaris_contract_v2'] gold=['doc_polaris_contract_v1', 'doc_polaris_contract_v2']",
+          "name": "citation_ground_truth_aligment",
+          "passed": true
+        },
+        {
+          "detail": "got=wm_auroralis_v1",
+          "name": "provenance_world_model_id",
+          "passed": true
+        },
+        {
+          "detail": "got=corpus_auroralis_v1",
+          "name": "provenance_corpus_id",
+          "passed": true
+        }
+      ],
+      "difficulty": "hard",
+      "errors": [],
+      "fatal": false,
+      "passed": true,
+      "question_type": "multi_hop",
+      "warnings": []
+    },
+    {
+      "case_id": "syn_034",
+      "checks": [
+        {
+          "detail": "missing=[]",
+          "name": "field_completeness",
+          "passed": true
+        },
+        {
+          "detail": "seed=phase22-synthetic-2026-08-03-auroralis-v1",
+          "name": "seed_present",
+          "passed": true
+        },
+        {
+          "detail": "world=f9b6876bd4182343b6f5d90836322c7fe4477743792264602f3b34bf9235766e, corpus=074604ee157d86ef471c80684b6d821c319c6b6dd902697401953800ffcd1766",
+          "name": "hash_binding",
+          "passed": true
+        },
+        {
+          "detail": "issues=[]",
+          "name": "gold_documents_exist_and_hash",
+          "passed": true
+        },
+        {
+          "detail": "missing_spans=[]",
+          "name": "gold_source_spans_present",
+          "passed": true
+        },
+        {
+          "detail": "difficulty=medium",
+          "name": "difficulty_in_set",
+          "passed": true
+        },
+        {
+          "detail": "qt=multi_hop",
+          "name": "question_type_in_stratification",
+          "passed": true
+        },
+        {
+          "detail": "doc_count=2",
+          "name": "multi_hop_doc_count",
+          "passed": true
+        },
+        {
+          "detail": "leaks=[]",
+          "name": "hard_negative_no_answer",
+          "passed": true
+        },
+        {
+          "detail": "cgt=['doc_ceo_bio', 'doc_org_chart_2026'] gold=['doc_ceo_bio', 'doc_org_chart_2026']",
+          "name": "citation_ground_truth_aligment",
+          "passed": true
+        },
+        {
+          "detail": "got=wm_auroralis_v1",
+          "name": "provenance_world_model_id",
+          "passed": true
+        },
+        {
+          "detail": "got=corpus_auroralis_v1",
+          "name": "provenance_corpus_id",
+          "passed": true
+        }
+      ],
+      "difficulty": "medium",
+      "errors": [],
+      "fatal": false,
+      "passed": true,
+      "question_type": "multi_hop",
+      "warnings": []
+    },
+    {
+      "case_id": "syn_035",
+      "checks": [
+        {
+          "detail": "missing=[]",
+          "name": "field_completeness",
+          "passed": true
+        },
+        {
+          "detail": "seed=phase22-synthetic-2026-08-03-auroralis-v1",
+          "name": "seed_present",
+          "passed": true
+        },
+        {
+          "detail": "world=f9b6876bd4182343b6f5d90836322c7fe4477743792264602f3b34bf9235766e, corpus=074604ee157d86ef471c80684b6d821c319c6b6dd902697401953800ffcd1766",
+          "name": "hash_binding",
+          "passed": true
+        },
+        {
+          "detail": "issues=[]",
+          "name": "gold_documents_exist_and_hash",
+          "passed": true
+        },
+        {
+          "detail": "missing_spans=[]",
+          "name": "gold_source_spans_present",
+          "passed": true
+        },
+        {
+          "detail": "difficulty=medium",
+          "name": "difficulty_in_set",
+          "passed": true
+        },
+        {
+          "detail": "qt=multi_hop",
+          "name": "question_type_in_stratification",
+          "passed": true
+        },
+        {
+          "detail": "doc_count=2",
+          "name": "multi_hop_doc_count",
+          "passed": true
+        },
+        {
+          "detail": "leaks=[]",
+          "name": "hard_negative_no_answer",
+          "passed": true
+        },
+        {
+          "detail": "cgt=['doc_audit_findings_2025_q4', 'doc_polaris_contract_v2'] gold=['doc_audit_findings_2025_q4', 'doc_polaris_contract_v2']",
+          "name": "citation_ground_truth_aligment",
+          "passed": true
+        },
+        {
+          "detail": "got=wm_auroralis_v1",
+          "name": "provenance_world_model_id",
+          "passed": true
+        },
+        {
+          "detail": "got=corpus_auroralis_v1",
+          "name": "provenance_corpus_id",
+          "passed": true
+        }
+      ],
+      "difficulty": "medium",
+      "errors": [],
+      "fatal": false,
+      "passed": true,
+      "question_type": "multi_hop",
+      "warnings": []
+    },
+    {
+      "case_id": "syn_036",
+      "checks": [
+        {
+          "detail": "missing=[]",
+          "name": "field_completeness",
+          "passed": true
+        },
+        {
+          "detail": "seed=phase22-synthetic-2026-08-03-auroralis-v1",
+          "name": "seed_present",
+          "passed": true
+        },
+        {
+          "detail": "world=f9b6876bd4182343b6f5d90836322c7fe4477743792264602f3b34bf9235766e, corpus=074604ee157d86ef471c80684b6d821c319c6b6dd902697401953800ffcd1766",
+          "name": "hash_binding",
+          "passed": true
+        },
+        {
+          "detail": "issues=[]",
+          "name": "gold_documents_exist_and_hash",
+          "passed": true
+        },
+        {
+          "detail": "missing_spans=[]",
+          "name": "gold_source_spans_present",
+          "passed": true
+        },
+        {
+          "detail": "difficulty=hard",
+          "name": "difficulty_in_set",
+          "passed": true
+        },
+        {
+          "detail": "qt=multi_hop",
+          "name": "question_type_in_stratification",
+          "passed": true
+        },
+        {
+          "detail": "doc_count=2",
+          "name": "multi_hop_doc_count",
+          "passed": true
+        },
+        {
+          "detail": "leaks=[]",
+          "name": "hard_negative_no_answer",
+          "passed": true
+        },
+        {
+          "detail": "cgt=['doc_forge2_charter', 'doc_forge2_status_2026_q2'] gold=['doc_forge2_charter', 'doc_forge2_status_2026_q2']",
+          "name": "citation_ground_truth_aligment",
+          "passed": true
+        },
+        {
+          "detail": "got=wm_auroralis_v1",
+          "name": "provenance_world_model_id",
+          "passed": true
+        },
+        {
+          "detail": "got=corpus_auroralis_v1",
+          "name": "provenance_corpus_id",
+          "passed": true
+        }
+      ],
+      "difficulty": "hard",
+      "errors": [],
+      "fatal": false,
+      "passed": true,
+      "question_type": "multi_hop",
+      "warnings": []
+    },
+    {
+      "case_id": "syn_037",
+      "checks": [
+        {
+          "detail": "missing=[]",
+          "name": "field_completeness",
+          "passed": true
+        },
+        {
+          "detail": "seed=phase22-synthetic-2026-08-03-auroralis-v1",
+          "name": "seed_present",
+          "passed": true
+        },
+        {
+          "detail": "world=f9b6876bd4182343b6f5d90836322c7fe4477743792264602f3b34bf9235766e, corpus=074604ee157d86ef471c80684b6d821c319c6b6dd902697401953800ffcd1766",
+          "name": "hash_binding",
+          "passed": true
+        },
+        {
+          "detail": "issues=[]",
+          "name": "gold_documents_exist_and_hash",
+          "passed": true
+        },
+        {
+          "detail": "missing_spans=[]",
+          "name": "gold_source_spans_present",
+          "passed": true
+        },
+        {
+          "detail": "difficulty=hard",
+          "name": "difficulty_in_set",
+          "passed": true
+        },
+        {
+          "detail": "qt=multi_hop",
+          "name": "question_type_in_stratification",
+          "passed": true
+        },
+        {
+          "detail": "doc_count=2",
+          "name": "multi_hop_doc_count",
+          "passed": true
+        },
+        {
+          "detail": "leaks=[]",
+          "name": "hard_negative_no_answer",
+          "passed": true
+        },
+        {
+          "detail": "cgt=['doc_audit_findings_2026_q1', 'doc_export_policy'] gold=['doc_audit_findings_2026_q1', 'doc_export_policy']",
+          "name": "citation_ground_truth_aligment",
+          "passed": true
+        },
+        {
+          "detail": "got=wm_auroralis_v1",
+          "name": "provenance_world_model_id",
+          "passed": true
+        },
+        {
+          "detail": "got=corpus_auroralis_v1",
+          "name": "provenance_corpus_id",
+          "passed": true
+        }
+      ],
+      "difficulty": "hard",
+      "errors": [],
+      "fatal": false,
+      "passed": true,
+      "question_type": "multi_hop",
+      "warnings": []
+    },
+    {
+      "case_id": "syn_038",
+      "checks": [
+        {
+          "detail": "missing=[]",
+          "name": "field_completeness",
+          "passed": true
+        },
+        {
+          "detail": "seed=phase22-synthetic-2026-08-03-auroralis-v1",
+          "name": "seed_present",
+          "passed": true
+        },
+        {
+          "detail": "world=f9b6876bd4182343b6f5d90836322c7fe4477743792264602f3b34bf9235766e, corpus=074604ee157d86ef471c80684b6d821c319c6b6dd902697401953800ffcd1766",
+          "name": "hash_binding",
+          "passed": true
+        },
+        {
+          "detail": "issues=[]",
+          "name": "gold_documents_exist_and_hash",
+          "passed": true
+        },
+        {
+          "detail": "missing_spans=[]",
+          "name": "gold_source_spans_present",
+          "passed": true
+        },
+        {
+          "detail": "difficulty=hard",
+          "name": "difficulty_in_set",
+          "passed": true
+        },
+        {
+          "detail": "qt=multi_hop",
+          "name": "question_type_in_stratification",
+          "passed": true
+        },
+        {
+          "detail": "doc_count=2",
+          "name": "multi_hop_doc_count",
+          "passed": true
+        },
+        {
+          "detail": "leaks=[]",
+          "name": "hard_negative_no_answer",
+          "passed": true
+        },
+        {
+          "detail": "cgt=['doc_forge_x1_recall_bulletin', 'doc_kobal_quality_incident'] gold=['doc_forge_x1_recall_bulletin', 'doc_kobal_quality_incident']",
+          "name": "citation_ground_truth_aligment",
+          "passed": true
+        },
+        {
+          "detail": "got=wm_auroralis_v1",
+          "name": "provenance_world_model_id",
+          "passed": true
+        },
+        {
+          "detail": "got=corpus_auroralis_v1",
+          "name": "provenance_corpus_id",
+          "passed": true
+        }
+      ],
+      "difficulty": "hard",
+      "errors": [],
+      "fatal": false,
+      "passed": true,
+      "question_type": "multi_hop",
+      "warnings": []
+    },
+    {
+      "case_id": "syn_039",
+      "checks": [
+        {
+          "detail": "missing=[]",
+          "name": "field_completeness",
+          "passed": true
+        },
+        {
+          "detail": "seed=phase22-synthetic-2026-08-03-auroralis-v1",
+          "name": "seed_present",
+          "passed": true
+        },
+        {
+          "detail": "world=f9b6876bd4182343b6f5d90836322c7fe4477743792264602f3b34bf9235766e, corpus=074604ee157d86ef471c80684b6d821c319c6b6dd902697401953800ffcd1766",
+          "name": "hash_binding",
+          "passed": true
+        },
+        {
+          "detail": "issues=[]",
+          "name": "gold_documents_exist_and_hash",
+          "passed": true
+        },
+        {
+          "detail": "missing_spans=[]",
+          "name": "gold_source_spans_present",
+          "passed": true
+        },
+        {
+          "detail": "difficulty=medium",
+          "name": "difficulty_in_set",
+          "passed": true
+        },
+        {
+          "detail": "qt=multi_hop",
+          "name": "question_type_in_stratification",
+          "passed": true
+        },
+        {
+          "detail": "doc_count=2",
+          "name": "multi_hop_doc_count",
+          "passed": true
+        },
+        {
+          "detail": "leaks=[]",
+          "name": "hard_negative_no_answer",
+          "passed": true
+        },
+        {
+          "detail": "cgt=['doc_ceo_bio', 'doc_northwind_meeting_minutes'] gold=['doc_ceo_bio', 'doc_northwind_meeting_minutes']",
+          "name": "citation_ground_truth_aligment",
+          "passed": true
+        },
+        {
+          "detail": "got=wm_auroralis_v1",
+          "name": "provenance_world_model_id",
+          "passed": true
+        },
+        {
+          "detail": "got=corpus_auroralis_v1",
+          "name": "provenance_corpus_id",
+          "passed": true
+        }
+      ],
+      "difficulty": "medium",
+      "errors": [],
+      "fatal": false,
+      "passed": true,
+      "question_type": "multi_hop",
+      "warnings": []
+    },
+    {
+      "case_id": "syn_040",
+      "checks": [
+        {
+          "detail": "missing=[]",
+          "name": "field_completeness",
+          "passed": true
+        },
+        {
+          "detail": "seed=phase22-synthetic-2026-08-03-auroralis-v1",
+          "name": "seed_present",
+          "passed": true
+        },
+        {
+          "detail": "world=f9b6876bd4182343b6f5d90836322c7fe4477743792264602f3b34bf9235766e, corpus=074604ee157d86ef471c80684b6d821c319c6b6dd902697401953800ffcd1766",
+          "name": "hash_binding",
+          "passed": true
+        },
+        {
+          "detail": "issues=[]",
+          "name": "gold_documents_exist_and_hash",
+          "passed": true
+        },
+        {
+          "detail": "missing_spans=[]",
+          "name": "gold_source_spans_present",
+          "passed": true
+        },
+        {
+          "detail": "difficulty=medium",
+          "name": "difficulty_in_set",
+          "passed": true
+        },
+        {
+          "detail": "qt=multi_hop",
+          "name": "question_type_in_stratification",
+          "passed": true
+        },
+        {
+          "detail": "doc_count=4",
+          "name": "multi_hop_doc_count",
+          "passed": true
+        },
+        {
+          "detail": "leaks=[]",
+          "name": "hard_negative_no_answer",
+          "passed": true
+        },
+        {
+          "detail": "cgt=['doc_axis9_release_notes', 'doc_corp_calendar_2026', 'doc_lumen_e2_release_notes', 'doc_northwind_sdk_overview'] gold=['doc_axis9_release_notes', 'doc_corp_calendar_2026', 'doc_lumen_e2_release_notes', 'doc_northwind_sdk_overview']",
+          "name": "citation_ground_truth_aligment",
+          "passed": true
+        },
+        {
+          "detail": "got=wm_auroralis_v1",
+          "name": "provenance_world_model_id",
+          "passed": true
+        },
+        {
+          "detail": "got=corpus_auroralis_v1",
+          "name": "provenance_corpus_id",
+          "passed": true
+        }
+      ],
+      "difficulty": "medium",
+      "errors": [],
+      "fatal": false,
+      "passed": true,
+      "question_type": "multi_hop",
+      "warnings": []
+    },
+    {
+      "case_id": "syn_041",
+      "checks": [
+        {
+          "detail": "missing=[]",
+          "name": "field_completeness",
+          "passed": true
+        },
+        {
+          "detail": "seed=phase22-synthetic-2026-08-03-auroralis-v1",
+          "name": "seed_present",
+          "passed": true
+        },
+        {
+          "detail": "world=f9b6876bd4182343b6f5d90836322c7fe4477743792264602f3b34bf9235766e, corpus=074604ee157d86ef471c80684b6d821c319c6b6dd902697401953800ffcd1766",
+          "name": "hash_binding",
+          "passed": true
+        },
+        {
+          "detail": "issues=[]",
+          "name": "gold_documents_exist_and_hash",
+          "passed": true
+        },
+        {
+          "detail": "missing_spans=[]",
+          "name": "gold_source_spans_present",
+          "passed": true
+        },
+        {
+          "detail": "difficulty=medium",
+          "name": "difficulty_in_set",
+          "passed": true
+        },
+        {
+          "detail": "qt=graph_path",
+          "name": "question_type_in_stratification",
+          "passed": true
+        },
+        {
+          "detail": "rel_count=3",
+          "name": "graph_relation_count",
+          "passed": true
+        },
+        {
+          "detail": "path=ct_polaris_2025->...->emp_yui_nakajima",
+          "name": "graph_path_exists",
+          "passed": true
+        },
+        {
+          "detail": "leaks=[]",
+          "name": "hard_negative_no_answer",
+          "passed": true
+        },
+        {
+          "detail": "cgt=['doc_polaris_contract_v2', 'doc_yui_bio'] gold=['doc_polaris_contract_v2', 'doc_yui_bio']",
+          "name": "citation_ground_truth_aligment",
+          "passed": true
+        },
+        {
+          "detail": "got=wm_auroralis_v1",
+          "name": "provenance_world_model_id",
+          "passed": true
+        },
+        {
+          "detail": "got=corpus_auroralis_v1",
+          "name": "provenance_corpus_id",
+          "passed": true
+        }
+      ],
+      "difficulty": "medium",
+      "errors": [],
+      "fatal": false,
+      "passed": true,
+      "question_type": "graph_path",
+      "warnings": []
+    },
+    {
+      "case_id": "syn_042",
+      "checks": [
+        {
+          "detail": "missing=[]",
+          "name": "field_completeness",
+          "passed": true
+        },
+        {
+          "detail": "seed=phase22-synthetic-2026-08-03-auroralis-v1",
+          "name": "seed_present",
+          "passed": true
+        },
+        {
+          "detail": "world=f9b6876bd4182343b6f5d90836322c7fe4477743792264602f3b34bf9235766e, corpus=074604ee157d86ef471c80684b6d821c319c6b6dd902697401953800ffcd1766",
+          "name": "hash_binding",
+          "passed": true
+        },
+        {
+          "detail": "issues=[]",
+          "name": "gold_documents_exist_and_hash",
+          "passed": true
+        },
+        {
+          "detail": "missing_spans=[]",
+          "name": "gold_source_spans_present",
+          "passed": true
+        },
+        {
+          "detail": "difficulty=hard",
+          "name": "difficulty_in_set",
+          "passed": true
+        },
+        {
+          "detail": "qt=graph_path",
+          "name": "question_type_in_stratification",
+          "passed": true
+        },
+        {
+          "detail": "rel_count=4",
+          "name": "graph_relation_count",
+          "passed": true
+        },
+        {
+          "detail": "path=prod_axis_9->...->ceo_kjartan_eli",
+          "name": "graph_path_exists",
+          "passed": true
+        },
+        {
+          "detail": "leaks=[]",
+          "name": "hard_negative_no_answer",
+          "passed": true
+        },
+        {
+          "detail": "cgt=['doc_iris_bio', 'doc_northwind_charter', 'doc_org_chart_2026'] gold=['doc_iris_bio', 'doc_northwind_charter', 'doc_org_chart_2026']",
+          "name": "citation_ground_truth_aligment",
+          "passed": true
+        },
+        {
+          "detail": "got=wm_auroralis_v1",
+          "name": "provenance_world_model_id",
+          "passed": true
+        },
+        {
+          "detail": "got=corpus_auroralis_v1",
+          "name": "provenance_corpus_id",
+          "passed": true
+        }
+      ],
+      "difficulty": "hard",
+      "errors": [],
+      "fatal": false,
+      "passed": true,
+      "question_type": "graph_path",
+      "warnings": []
+    },
+    {
+      "case_id": "syn_043",
+      "checks": [
+        {
+          "detail": "missing=[]",
+          "name": "field_completeness",
+          "passed": true
+        },
+        {
+          "detail": "seed=phase22-synthetic-2026-08-03-auroralis-v1",
+          "name": "seed_present",
+          "passed": true
+        },
+        {
+          "detail": "world=f9b6876bd4182343b6f5d90836322c7fe4477743792264602f3b34bf9235766e, corpus=074604ee157d86ef471c80684b6d821c319c6b6dd902697401953800ffcd1766",
+          "name": "hash_binding",
+          "passed": true
+        },
+        {
+          "detail": "issues=[]",
+          "name": "gold_documents_exist_and_hash",
+          "passed": true
+        },
+        {
+          "detail": "missing_spans=[]",
+          "name": "gold_source_spans_present",
+          "passed": true
+        },
+        {
+          "detail": "difficulty=medium",
+          "name": "difficulty_in_set",
+          "passed": true
+        },
+        {
+          "detail": "qt=graph_relation",
+          "name": "question_type_in_stratification",
+          "passed": true
+        },
+        {
+          "detail": "rel_count=2",
+          "name": "graph_relation_count",
+          "passed": true
+        },
+        {
+          "detail": "path=pol_sec_2026->...->perm_finance_audit",
+          "name": "graph_path_exists",
+          "passed": true
+        },
+        {
+          "detail": "leaks=[]",
+          "name": "hard_negative_no_answer",
+          "passed": true
+        },
+        {
+          "detail": "cgt=['doc_priya_bio', 'doc_security_policy_2026'] gold=['doc_priya_bio', 'doc_security_policy_2026']",
+          "name": "citation_ground_truth_aligment",
+          "passed": true
+        },
+        {
+          "detail": "got=wm_auroralis_v1",
+          "name": "provenance_world_model_id",
+          "passed": true
+        },
+        {
+          "detail": "got=corpus_auroralis_v1",
+          "name": "provenance_corpus_id",
+          "passed": true
+        }
+      ],
+      "difficulty": "medium",
+      "errors": [],
+      "fatal": false,
+      "passed": true,
+      "question_type": "graph_relation",
+      "warnings": []
+    },
+    {
+      "case_id": "syn_044",
+      "checks": [
+        {
+          "detail": "missing=[]",
+          "name": "field_completeness",
+          "passed": true
+        },
+        {
+          "detail": "seed=phase22-synthetic-2026-08-03-auroralis-v1",
+          "name": "seed_present",
+          "passed": true
+        },
+        {
+          "detail": "world=f9b6876bd4182343b6f5d90836322c7fe4477743792264602f3b34bf9235766e, corpus=074604ee157d86ef471c80684b6d821c319c6b6dd902697401953800ffcd1766",
+          "name": "hash_binding",
+          "passed": true
+        },
+        {
+          "detail": "issues=[]",
+          "name": "gold_documents_exist_and_hash",
+          "passed": true
+        },
+        {
+          "detail": "missing_spans=[]",
+          "name": "gold_source_spans_present",
+          "passed": true
+        },
+        {
+          "detail": "difficulty=medium",
+          "name": "difficulty_in_set",
+          "passed": true
+        },
+        {
+          "detail": "qt=graph_path",
+          "name": "question_type_in_stratification",
+          "passed": true
+        },
+        {
+          "detail": "rel_count=3",
+          "name": "graph_relation_count",
+          "passed": true
+        },
+        {
+          "detail": "path=evt_forge_x1_recall->...->emp_yui_nakajima",
+          "name": "graph_path_exists",
+          "passed": true
+        },
+        {
+          "detail": "leaks=[]",
+          "name": "hard_negative_no_answer",
+          "passed": true
+        },
+        {
+          "detail": "cgt=['doc_forge_x1_recall_bulletin', 'doc_yui_bio'] gold=['doc_forge_x1_recall_bulletin', 'doc_yui_bio']",
+          "name": "citation_ground_truth_aligment",
+          "passed": true
+        },
+        {
+          "detail": "got=wm_auroralis_v1",
+          "name": "provenance_world_model_id",
+          "passed": true
+        },
+        {
+          "detail": "got=corpus_auroralis_v1",
+          "name": "provenance_corpus_id",
+          "passed": true
+        }
+      ],
+      "difficulty": "medium",
+      "errors": [],
+      "fatal": false,
+      "passed": true,
+      "question_type": "graph_path",
+      "warnings": []
+    },
+    {
+      "case_id": "syn_045",
+      "checks": [
+        {
+          "detail": "missing=[]",
+          "name": "field_completeness",
+          "passed": true
+        },
+        {
+          "detail": "seed=phase22-synthetic-2026-08-03-auroralis-v1",
+          "name": "seed_present",
+          "passed": true
+        },
+        {
+          "detail": "world=f9b6876bd4182343b6f5d90836322c7fe4477743792264602f3b34bf9235766e, corpus=074604ee157d86ef471c80684b6d821c319c6b6dd902697401953800ffcd1766",
+          "name": "hash_binding",
+          "passed": true
+        },
+        {
+          "detail": "issues=[]",
+          "name": "gold_documents_exist_and_hash",
+          "passed": true
+        },
+        {
+          "detail": "missing_spans=[]",
+          "name": "gold_source_spans_present",
+          "passed": true
+        },
+        {
+          "detail": "difficulty=medium",
+          "name": "difficulty_in_set",
+          "passed": true
+        },
+        {
+          "detail": "qt=graph_relation",
+          "name": "question_type_in_stratification",
+          "passed": true
+        },
+        {
+          "detail": "rel_count=2",
+          "name": "graph_relation_count",
+          "passed": true
+        },
+        {
+          "detail": "path=ct_polaris_2025->...->sup_polaris_steel",
+          "name": "graph_path_exists",
+          "passed": true
+        },
+        {
+          "detail": "leaks=[]",
+          "name": "hard_negative_no_answer",
+          "passed": true
+        },
+        {
+          "detail": "cgt=['doc_polaris_contract_v1', 'doc_polaris_contract_v2'] gold=['doc_polaris_contract_v1', 'doc_polaris_contract_v2']",
+          "name": "citation_ground_truth_aligment",
+          "passed": true
+        },
+        {
+          "detail": "got=wm_auroralis_v1",
+          "name": "provenance_world_model_id",
+          "passed": true
+        },
+        {
+          "detail": "got=corpus_auroralis_v1",
+          "name": "provenance_corpus_id",
+          "passed": true
+        }
+      ],
+      "difficulty": "medium",
+      "errors": [],
+      "fatal": false,
+      "passed": true,
+      "question_type": "graph_relation",
+      "warnings": []
+    },
+    {
+      "case_id": "syn_046",
+      "checks": [
+        {
+          "detail": "missing=[]",
+          "name": "field_completeness",
+          "passed": true
+        },
+        {
+          "detail": "seed=phase22-synthetic-2026-08-03-auroralis-v1",
+          "name": "seed_present",
+          "passed": true
+        },
+        {
+          "detail": "world=f9b6876bd4182343b6f5d90836322c7fe4477743792264602f3b34bf9235766e, corpus=074604ee157d86ef471c80684b6d821c319c6b6dd902697401953800ffcd1766",
+          "name": "hash_binding",
+          "passed": true
+        },
+        {
+          "detail": "issues=[]",
+          "name": "gold_documents_exist_and_hash",
+          "passed": true
+        },
+        {
+          "detail": "missing_spans=[]",
+          "name": "gold_source_spans_present",
+          "passed": true
+        },
+        {
+          "detail": "difficulty=hard",
+          "name": "difficulty_in_set",
+          "passed": true
+        },
+        {
+          "detail": "qt=graph_community",
+          "name": "question_type_in_stratification",
+          "passed": true
+        },
+        {
+          "detail": "rel_count=2",
+          "name": "graph_relation_count",
+          "passed": true
+        },
+        {
+          "detail": "path=ct_polaris_2025->...->div_addmfg",
+          "name": "graph_path_exists",
+          "passed": true
+        },
+        {
+          "detail": "leaks=[]",
+          "name": "hard_negative_no_answer",
+          "passed": true
+        },
+        {
+          "detail": "cgt=['doc_helion_contract', 'doc_kobal_contract', 'doc_meridian_contract', 'doc_polaris_contract_v1', 'doc_polaris_contract_v2'] gold=['doc_helion_contract', 'doc_kobal_contract', 'doc_meridian_contract', 'doc_polaris_contract_v1', 'doc_polaris_contract_v2']",
+          "name": "citation_ground_truth_aligment",
+          "passed": true
+        },
+        {
+          "detail": "got=wm_auroralis_v1",
+          "name": "provenance_world_model_id",
+          "passed": true
+        },
+        {
+          "detail": "got=corpus_auroralis_v1",
+          "name": "provenance_corpus_id",
+          "passed": true
+        }
+      ],
+      "difficulty": "hard",
+      "errors": [],
+      "fatal": false,
+      "passed": true,
+      "question_type": "graph_community",
+      "warnings": []
+    },
+    {
+      "case_id": "syn_047",
+      "checks": [
+        {
+          "detail": "missing=[]",
+          "name": "field_completeness",
+          "passed": true
+        },
+        {
+          "detail": "seed=phase22-synthetic-2026-08-03-auroralis-v1",
+          "name": "seed_present",
+          "passed": true
+        },
+        {
+          "detail": "world=f9b6876bd4182343b6f5d90836322c7fe4477743792264602f3b34bf9235766e, corpus=074604ee157d86ef471c80684b6d821c319c6b6dd902697401953800ffcd1766",
+          "name": "hash_binding",
+          "passed": true
+        },
+        {
+          "detail": "issues=[]",
+          "name": "gold_documents_exist_and_hash",
+          "passed": true
+        },
+        {
+          "detail": "missing_spans=[]",
+          "name": "gold_source_spans_present",
+          "passed": true
+        },
+        {
+          "detail": "difficulty=hard",
+          "name": "difficulty_in_set",
+          "passed": true
+        },
+        {
+          "detail": "qt=graph_path",
+          "name": "question_type_in_stratification",
+          "passed": true
+        },
+        {
+          "detail": "rel_count=3",
+          "name": "graph_relation_count",
+          "passed": true
+        },
+        {
+          "detail": "path=emp_iris_vange->...->div_auto",
+          "name": "graph_path_exists",
+          "passed": true
+        },
+        {
+          "detail": "leaks=[]",
+          "name": "hard_negative_no_answer",
+          "passed": true
+        },
+        {
+          "detail": "cgt=['doc_axis9_release_notes', 'doc_iris_bio'] gold=['doc_axis9_release_notes', 'doc_iris_bio']",
+          "name": "citation_ground_truth_aligment",
+          "passed": true
+        },
+        {
+          "detail": "got=wm_auroralis_v1",
+          "name": "provenance_world_model_id",
+          "passed": true
+        },
+        {
+          "detail": "got=corpus_auroralis_v1",
+          "name": "provenance_corpus_id",
+          "passed": true
+        }
+      ],
+      "difficulty": "hard",
+      "errors": [],
+      "fatal": false,
+      "passed": true,
+      "question_type": "graph_path",
+      "warnings": []
+    },
+    {
+      "case_id": "syn_048",
+      "checks": [
+        {
+          "detail": "missing=[]",
+          "name": "field_completeness",
+          "passed": true
+        },
+        {
+          "detail": "seed=phase22-synthetic-2026-08-03-auroralis-v1",
+          "name": "seed_present",
+          "passed": true
+        },
+        {
+          "detail": "world=f9b6876bd4182343b6f5d90836322c7fe4477743792264602f3b34bf9235766e, corpus=074604ee157d86ef471c80684b6d821c319c6b6dd902697401953800ffcd1766",
+          "name": "hash_binding",
+          "passed": true
+        },
+        {
+          "detail": "issues=[]",
+          "name": "gold_documents_exist_and_hash",
+          "passed": true
+        },
+        {
+          "detail": "missing_spans=[]",
+          "name": "gold_source_spans_present",
+          "passed": true
+        },
+        {
+          "detail": "difficulty=hard",
+          "name": "difficulty_in_set",
+          "passed": true
+        },
+        {
+          "detail": "qt=graph_relation",
+          "name": "question_type_in_stratification",
+          "passed": true
+        },
+        {
+          "detail": "rel_count=2",
+          "name": "graph_relation_count",
+          "passed": true
+        },
+        {
+          "detail": "path=evt_axis_8_eol->...->emp_iris_vange",
+          "name": "graph_path_exists",
+          "passed": true
+        },
+        {
+          "detail": "leaks=[]",
+          "name": "hard_negative_no_answer",
+          "passed": true
+        },
+        {
+          "detail": "cgt=['doc_axis8_eol_memo', 'doc_iris_bio'] gold=['doc_axis8_eol_memo', 'doc_iris_bio']",
+          "name": "citation_ground_truth_aligment",
+          "passed": true
+        },
+        {
+          "detail": "got=wm_auroralis_v1",
+          "name": "provenance_world_model_id",
+          "passed": true
+        },
+        {
+          "detail": "got=corpus_auroralis_v1",
+          "name": "provenance_corpus_id",
+          "passed": true
+        }
+      ],
+      "difficulty": "hard",
+      "errors": [],
+      "fatal": false,
+      "passed": true,
+      "question_type": "graph_relation",
+      "warnings": []
+    },
+    {
+      "case_id": "syn_049",
+      "checks": [
+        {
+          "detail": "missing=[]",
+          "name": "field_completeness",
+          "passed": true
+        },
+        {
+          "detail": "seed=phase22-synthetic-2026-08-03-auroralis-v1",
+          "name": "seed_present",
+          "passed": true
+        },
+        {
+          "detail": "world=f9b6876bd4182343b6f5d90836322c7fe4477743792264602f3b34bf9235766e, corpus=074604ee157d86ef471c80684b6d821c319c6b6dd902697401953800ffcd1766",
+          "name": "hash_binding",
+          "passed": true
+        },
+        {
+          "detail": "issues=[]",
+          "name": "gold_documents_exist_and_hash",
+          "passed": true
+        },
+        {
+          "detail": "missing_spans=[]",
+          "name": "gold_source_spans_present",
+          "passed": true
+        },
+        {
+          "detail": "difficulty=easy",
+          "name": "difficulty_in_set",
+          "passed": true
+        },
+        {
+          "detail": "qt=graph_relation",
+          "name": "question_type_in_stratification",
+          "passed": true
+        },
+        {
+          "detail": "rel_count=2",
+          "name": "graph_relation_count",
+          "passed": true
+        },
+        {
+          "detail": "path=pol_sec_2026->...->emp_priya_kaur",
+          "name": "graph_path_exists",
+          "passed": true
+        },
+        {
+          "detail": "leaks=[]",
+          "name": "hard_negative_no_answer",
+          "passed": true
+        },
+        {
+          "detail": "cgt=['doc_security_policy_2024', 'doc_security_policy_2026'] gold=['doc_security_policy_2024', 'doc_security_policy_2026']",
+          "name": "citation_ground_truth_aligment",
+          "passed": true
+        },
+        {
+          "detail": "got=wm_auroralis_v1",
+          "name": "provenance_world_model_id",
+          "passed": true
+        },
+        {
+          "detail": "got=corpus_auroralis_v1",
+          "name": "provenance_corpus_id",
+          "passed": true
+        }
+      ],
+      "difficulty": "easy",
+      "errors": [],
+      "fatal": false,
+      "passed": true,
+      "question_type": "graph_relation",
+      "warnings": []
+    },
+    {
+      "case_id": "syn_050",
+      "checks": [
+        {
+          "detail": "missing=[]",
+          "name": "field_completeness",
+          "passed": true
+        },
+        {
+          "detail": "seed=phase22-synthetic-2026-08-03-auroralis-v1",
+          "name": "seed_present",
+          "passed": true
+        },
+        {
+          "detail": "world=f9b6876bd4182343b6f5d90836322c7fe4477743792264602f3b34bf9235766e, corpus=074604ee157d86ef471c80684b6d821c319c6b6dd902697401953800ffcd1766",
+          "name": "hash_binding",
+          "passed": true
+        },
+        {
+          "detail": "issues=[]",
+          "name": "gold_documents_exist_and_hash",
+          "passed": true
+        },
+        {
+          "detail": "missing_spans=[]",
+          "name": "gold_source_spans_present",
+          "passed": true
+        },
+        {
+          "detail": "difficulty=medium",
+          "name": "difficulty_in_set",
+          "passed": true
+        },
+        {
+          "detail": "qt=graph_path",
+          "name": "question_type_in_stratification",
+          "passed": true
+        },
+        {
+          "detail": "rel_count=3",
+          "name": "graph_relation_count",
+          "passed": true
+        },
+        {
+          "detail": "path=proj_lumenx->...->ceo_kjartan_eli",
+          "name": "graph_path_exists",
+          "passed": true
+        },
+        {
+          "detail": "leaks=[]",
+          "name": "hard_negative_no_answer",
+          "passed": true
+        },
+        {
+          "detail": "cgt=['doc_ceo_bio', 'doc_lumenx_charter', 'doc_marcus_bio', 'doc_org_chart_2026'] gold=['doc_ceo_bio', 'doc_lumenx_charter', 'doc_marcus_bio', 'doc_org_chart_2026']",
+          "name": "citation_ground_truth_aligment",
+          "passed": true
+        },
+        {
+          "detail": "got=wm_auroralis_v1",
+          "name": "provenance_world_model_id",
+          "passed": true
+        },
+        {
+          "detail": "got=corpus_auroralis_v1",
+          "name": "provenance_corpus_id",
+          "passed": true
+        }
+      ],
+      "difficulty": "medium",
+      "errors": [],
+      "fatal": false,
+      "passed": true,
+      "question_type": "graph_path",
+      "warnings": []
+    },
+    {
+      "case_id": "syn_051",
+      "checks": [
+        {
+          "detail": "missing=[]",
+          "name": "field_completeness",
+          "passed": true
+        },
+        {
+          "detail": "seed=phase22-synthetic-2026-08-03-auroralis-v1",
+          "name": "seed_present",
+          "passed": true
+        },
+        {
+          "detail": "world=f9b6876bd4182343b6f5d90836322c7fe4477743792264602f3b34bf9235766e, corpus=074604ee157d86ef471c80684b6d821c319c6b6dd902697401953800ffcd1766",
+          "name": "hash_binding",
+          "passed": true
+        },
+        {
+          "detail": "issues=[]",
+          "name": "gold_documents_exist_and_hash",
+          "passed": true
+        },
+        {
+          "detail": "missing_spans=[]",
+          "name": "gold_source_spans_present",
+          "passed": true
+        },
+        {
+          "detail": "difficulty=medium",
+          "name": "difficulty_in_set",
+          "passed": true
+        },
+        {
+          "detail": "qt=graph_community",
+          "name": "question_type_in_stratification",
+          "passed": true
+        },
+        {
+          "detail": "rel_count=2",
+          "name": "graph_relation_count",
+          "passed": true
+        },
+        {
+          "detail": "path=emp_lukas_wenger->...->emp_solveig_hagen",
+          "name": "graph_path_exists",
+          "passed": true
+        },
+        {
+          "detail": "leaks=[]",
+          "name": "hard_negative_no_answer",
+          "passed": true
+        },
+        {
+          "detail": "cgt=['doc_org_chart_2026'] gold=['doc_org_chart_2026']",
+          "name": "citation_ground_truth_aligment",
+          "passed": true
+        },
+        {
+          "detail": "got=wm_auroralis_v1",
+          "name": "provenance_world_model_id",
+          "passed": true
+        },
+        {
+          "detail": "got=corpus_auroralis_v1",
+          "name": "provenance_corpus_id",
+          "passed": true
+        }
+      ],
+      "difficulty": "medium",
+      "errors": [],
+      "fatal": false,
+      "passed": true,
+      "question_type": "graph_community",
+      "warnings": []
+    },
+    {
+      "case_id": "syn_052",
+      "checks": [
+        {
+          "detail": "missing=[]",
+          "name": "field_completeness",
+          "passed": true
+        },
+        {
+          "detail": "seed=phase22-synthetic-2026-08-03-auroralis-v1",
+          "name": "seed_present",
+          "passed": true
+        },
+        {
+          "detail": "world=f9b6876bd4182343b6f5d90836322c7fe4477743792264602f3b34bf9235766e, corpus=074604ee157d86ef471c80684b6d821c319c6b6dd902697401953800ffcd1766",
+          "name": "hash_binding",
+          "passed": true
+        },
+        {
+          "detail": "issues=[]",
+          "name": "gold_documents_exist_and_hash",
+          "passed": true
+        },
+        {
+          "detail": "missing_spans=[]",
+          "name": "gold_source_spans_present",
+          "passed": true
+        },
+        {
+          "detail": "difficulty=medium",
+          "name": "difficulty_in_set",
+          "passed": true
+        },
+        {
+          "detail": "qt=graph_relation",
+          "name": "question_type_in_stratification",
+          "passed": true
+        },
+        {
+          "detail": "rel_count=2",
+          "name": "graph_relation_count",
+          "passed": true
+        },
+        {
+          "detail": "path=evt_policy_2026->...->pol_sec_2024",
+          "name": "graph_path_exists",
+          "passed": true
+        },
+        {
+          "detail": "leaks=[]",
+          "name": "hard_negative_no_answer",
+          "passed": true
+        },
+        {
+          "detail": "cgt=['doc_security_policy_2024', 'doc_security_policy_2026'] gold=['doc_security_policy_2024', 'doc_security_policy_2026']",
+          "name": "citation_ground_truth_aligment",
+          "passed": true
+        },
+        {
+          "detail": "got=wm_auroralis_v1",
+          "name": "provenance_world_model_id",
+          "passed": true
+        },
+        {
+          "detail": "got=corpus_auroralis_v1",
+          "name": "provenance_corpus_id",
+          "passed": true
+        }
+      ],
+      "difficulty": "medium",
+      "errors": [],
+      "fatal": false,
+      "passed": true,
+      "question_type": "graph_relation",
+      "warnings": []
+    },
+    {
+      "case_id": "syn_053",
+      "checks": [
+        {
+          "detail": "missing=[]",
+          "name": "field_completeness",
+          "passed": true
+        },
+        {
+          "detail": "seed=phase22-synthetic-2026-08-03-auroralis-v1",
+          "name": "seed_present",
+          "passed": true
+        },
+        {
+          "detail": "world=f9b6876bd4182343b6f5d90836322c7fe4477743792264602f3b34bf9235766e, corpus=074604ee157d86ef471c80684b6d821c319c6b6dd902697401953800ffcd1766",
+          "name": "hash_binding",
+          "passed": true
+        },
+        {
+          "detail": "issues=[]",
+          "name": "gold_documents_exist_and_hash",
+          "passed": true
+        },
+        {
+          "detail": "missing_spans=[]",
+          "name": "gold_source_spans_present",
+          "passed": true
+        },
+        {
+          "detail": "difficulty=easy",
+          "name": "difficulty_in_set",
+          "passed": true
+        },
+        {
+          "detail": "qt=graph_path",
+          "name": "question_type_in_stratification",
+          "passed": true
+        },
+        {
+          "detail": "rel_count=2",
+          "name": "graph_relation_count",
+          "passed": true
+        },
+        {
+          "detail": "path=proj_northwind->...->ceo_kjartan_eli",
+          "name": "graph_path_exists",
+          "passed": true
+        },
+        {
+          "detail": "leaks=[]",
+          "name": "hard_negative_no_answer",
+          "passed": true
+        },
+        {
+          "detail": "cgt=['doc_northwind_charter', 'doc_northwind_sdk_overview'] gold=['doc_northwind_charter', 'doc_northwind_sdk_overview']",
+          "name": "citation_ground_truth_aligment",
+          "passed": true
+        },
+        {
+          "detail": "got=wm_auroralis_v1",
+          "name": "provenance_world_model_id",
+          "passed": true
+        },
+        {
+          "detail": "got=corpus_auroralis_v1",
+          "name": "provenance_corpus_id",
+          "passed": true
+        }
+      ],
+      "difficulty": "easy",
+      "errors": [],
+      "fatal": false,
+      "passed": true,
+      "question_type": "graph_path",
+      "warnings": []
+    },
+    {
+      "case_id": "syn_054",
+      "checks": [
+        {
+          "detail": "missing=[]",
+          "name": "field_completeness",
+          "passed": true
+        },
+        {
+          "detail": "seed=phase22-synthetic-2026-08-03-auroralis-v1",
+          "name": "seed_present",
+          "passed": true
+        },
+        {
+          "detail": "world=f9b6876bd4182343b6f5d90836322c7fe4477743792264602f3b34bf9235766e, corpus=074604ee157d86ef471c80684b6d821c319c6b6dd902697401953800ffcd1766",
+          "name": "hash_binding",
+          "passed": true
+        },
+        {
+          "detail": "issues=[]",
+          "name": "gold_documents_exist_and_hash",
+          "passed": true
+        },
+        {
+          "detail": "missing_spans=[]",
+          "name": "gold_source_spans_present",
+          "passed": true
+        },
+        {
+          "detail": "difficulty=medium",
+          "name": "difficulty_in_set",
+          "passed": true
+        },
+        {
+          "detail": "qt=graph_relation",
+          "name": "question_type_in_stratification",
+          "passed": true
+        },
+        {
+          "detail": "rel_count=2",
+          "name": "graph_relation_count",
+          "passed": true
+        },
+        {
+          "detail": "path=prod_axis_9->...->emp_haruto_soma",
+          "name": "graph_path_exists",
+          "passed": true
+        },
+        {
+          "detail": "leaks=[]",
+          "name": "hard_negative_no_answer",
+          "passed": true
+        },
+        {
+          "detail": "cgt=['doc_axis9_release_notes', 'doc_haruto_bio', 'doc_northwind_sdk_overview', 'doc_org_chart_2026'] gold=['doc_axis9_release_notes', 'doc_haruto_bio', 'doc_northwind_sdk_overview', 'doc_org_chart_2026']",
+          "name": "citation_ground_truth_aligment",
+          "passed": true
+        },
+        {
+          "detail": "got=wm_auroralis_v1",
+          "name": "provenance_world_model_id",
+          "passed": true
+        },
+        {
+          "detail": "got=corpus_auroralis_v1",
+          "name": "provenance_corpus_id",
+          "passed": true
+        }
+      ],
+      "difficulty": "medium",
+      "errors": [],
+      "fatal": false,
+      "passed": true,
+      "question_type": "graph_relation",
+      "warnings": []
+    },
+    {
+      "case_id": "syn_055",
+      "checks": [
+        {
+          "detail": "missing=[]",
+          "name": "field_completeness",
+          "passed": true
+        },
+        {
+          "detail": "seed=phase22-synthetic-2026-08-03-auroralis-v1",
+          "name": "seed_present",
+          "passed": true
+        },
+        {
+          "detail": "world=f9b6876bd4182343b6f5d90836322c7fe4477743792264602f3b34bf9235766e, corpus=074604ee157d86ef471c80684b6d821c319c6b6dd902697401953800ffcd1766",
+          "name": "hash_binding",
+          "passed": true
+        },
+        {
+          "detail": "issues=[]",
+          "name": "gold_documents_exist_and_hash",
+          "passed": true
+        },
+        {
+          "detail": "missing_spans=[]",
+          "name": "gold_source_spans_present",
+          "passed": true
+        },
+        {
+          "detail": "difficulty=easy",
+          "name": "difficulty_in_set",
+          "passed": true
+        },
+        {
+          "detail": "qt=graph_community",
+          "name": "question_type_in_stratification",
+          "passed": true
+        },
+        {
+          "detail": "rel_count=5",
+          "name": "graph_relation_count",
+          "passed": true
+        },
+        {
+          "detail": "path=ct_helion_2024->...->emp_lukas_wenger",
+          "name": "graph_path_exists",
+          "passed": true
+        },
+        {
+          "detail": "leaks=[]",
+          "name": "hard_negative_no_answer",
+          "passed": true
+        },
+        {
+          "detail": "cgt=['doc_helion_contract', 'doc_kobal_contract', 'doc_lukas_bio', 'doc_meridian_contract', 'doc_polaris_contract_v1', 'doc_polaris_contract_v2'] gold=['doc_helion_contract', 'doc_kobal_contract', 'doc_lukas_bio', 'doc_meridian_contract', 'doc_polaris_contract_v1', 'doc_polaris_contract_v2']",
+          "name": "citation_ground_truth_aligment",
+          "passed": true
+        },
+        {
+          "detail": "got=wm_auroralis_v1",
+          "name": "provenance_world_model_id",
+          "passed": true
+        },
+        {
+          "detail": "got=corpus_auroralis_v1",
+          "name": "provenance_corpus_id",
+          "passed": true
+        }
+      ],
+      "difficulty": "easy",
+      "errors": [],
+      "fatal": false,
+      "passed": true,
+      "question_type": "graph_community",
+      "warnings": []
+    },
+    {
+      "case_id": "syn_056",
+      "checks": [
+        {
+          "detail": "missing=[]",
+          "name": "field_completeness",
+          "passed": true
+        },
+        {
+          "detail": "seed=phase22-synthetic-2026-08-03-auroralis-v1",
+          "name": "seed_present",
+          "passed": true
+        },
+        {
+          "detail": "world=f9b6876bd4182343b6f5d90836322c7fe4477743792264602f3b34bf9235766e, corpus=074604ee157d86ef471c80684b6d821c319c6b6dd902697401953800ffcd1766",
+          "name": "hash_binding",
+          "passed": true
+        },
+        {
+          "detail": "issues=[]",
+          "name": "gold_documents_exist_and_hash",
+          "passed": true
+        },
+        {
+          "detail": "missing_spans=[]",
+          "name": "gold_source_spans_present",
+          "passed": true
+        },
+        {
+          "detail": "difficulty=medium",
+          "name": "difficulty_in_set",
+          "passed": true
+        },
+        {
+          "detail": "qt=temporal_version",
+          "name": "question_type_in_stratification",
+          "passed": true
+        },
+        {
+          "detail": "versions=[('doc_security_policy_2024', 'v4.1', '2024-01-01'), ('doc_security_policy_2026', 'v4.2', '2026-01-01')]",
+          "name": "temporal_version_bound",
+          "passed": true
+        },
+        {
+          "detail": "effective_time=2024-06-15",
+          "name": "temporal_effective_time_present",
+          "passed": true
+        },
+        {
+          "detail": "leaks=[]",
+          "name": "hard_negative_no_answer",
+          "passed": true
+        },
+        {
+          "detail": "cgt=['doc_security_policy_2024', 'doc_security_policy_2026'] gold=['doc_security_policy_2024', 'doc_security_policy_2026']",
+          "name": "citation_ground_truth_aligment",
+          "passed": true
+        },
+        {
+          "detail": "got=wm_auroralis_v1",
+          "name": "provenance_world_model_id",
+          "passed": true
+        },
+        {
+          "detail": "got=corpus_auroralis_v1",
+          "name": "provenance_corpus_id",
+          "passed": true
+        }
+      ],
+      "difficulty": "medium",
+      "errors": [],
+      "fatal": false,
+      "passed": true,
+      "question_type": "temporal_version",
+      "warnings": []
+    },
+    {
+      "case_id": "syn_057",
+      "checks": [
+        {
+          "detail": "missing=[]",
+          "name": "field_completeness",
+          "passed": true
+        },
+        {
+          "detail": "seed=phase22-synthetic-2026-08-03-auroralis-v1",
+          "name": "seed_present",
+          "passed": true
+        },
+        {
+          "detail": "world=f9b6876bd4182343b6f5d90836322c7fe4477743792264602f3b34bf9235766e, corpus=074604ee157d86ef471c80684b6d821c319c6b6dd902697401953800ffcd1766",
+          "name": "hash_binding",
+          "passed": true
+        },
+        {
+          "detail": "issues=[]",
+          "name": "gold_documents_exist_and_hash",
+          "passed": true
+        },
+        {
+          "detail": "missing_spans=[]",
+          "name": "gold_source_spans_present",
+          "passed": true
+        },
+        {
+          "detail": "difficulty=medium",
+          "name": "difficulty_in_set",
+          "passed": true
+        },
+        {
+          "detail": "qt=temporal_conflict",
+          "name": "question_type_in_stratification",
+          "passed": true
+        },
+        {
+          "detail": "versions=[('doc_polaris_contract_v1', 'v1', '2024-09-01'), ('doc_polaris_contract_v2', 'v2', '2025-09-01')]",
+          "name": "temporal_version_bound",
+          "passed": true
+        },
+        {
+          "detail": "effective_time=2025-09-01",
+          "name": "temporal_effective_time_present",
+          "passed": true
+        },
+        {
+          "detail": "leaks=[]",
+          "name": "hard_negative_no_answer",
+          "passed": true
+        },
+        {
+          "detail": "cgt=['doc_polaris_contract_v1', 'doc_polaris_contract_v2'] gold=['doc_polaris_contract_v1', 'doc_polaris_contract_v2']",
+          "name": "citation_ground_truth_aligment",
+          "passed": true
+        },
+        {
+          "detail": "got=wm_auroralis_v1",
+          "name": "provenance_world_model_id",
+          "passed": true
+        },
+        {
+          "detail": "got=corpus_auroralis_v1",
+          "name": "provenance_corpus_id",
+          "passed": true
+        }
+      ],
+      "difficulty": "medium",
+      "errors": [],
+      "fatal": false,
+      "passed": true,
+      "question_type": "temporal_conflict",
+      "warnings": []
+    },
+    {
+      "case_id": "syn_058",
+      "checks": [
+        {
+          "detail": "missing=[]",
+          "name": "field_completeness",
+          "passed": true
+        },
+        {
+          "detail": "seed=phase22-synthetic-2026-08-03-auroralis-v1",
+          "name": "seed_present",
+          "passed": true
+        },
+        {
+          "detail": "world=f9b6876bd4182343b6f5d90836322c7fe4477743792264602f3b34bf9235766e, corpus=074604ee157d86ef471c80684b6d821c319c6b6dd902697401953800ffcd1766",
+          "name": "hash_binding",
+          "passed": true
+        },
+        {
+          "detail": "issues=[]",
+          "name": "gold_documents_exist_and_hash",
+          "passed": true
+        },
+        {
+          "detail": "missing_spans=[]",
+          "name": "gold_source_spans_present",
+          "passed": true
+        },
+        {
+          "detail": "difficulty=easy",
+          "name": "difficulty_in_set",
+          "passed": true
+        },
+        {
+          "detail": "qt=temporal_version",
+          "name": "question_type_in_stratification",
+          "passed": true
+        },
+        {
+          "detail": "versions=[('doc_northwind_sdk_overview', 'v3.0.0', '2026-01-15')]",
+          "name": "temporal_version_bound",
+          "passed": true
+        },
+        {
+          "detail": "effective_time=2026-01-15",
+          "name": "temporal_effective_time_present",
+          "passed": true
+        },
+        {
+          "detail": "leaks=[]",
+          "name": "hard_negative_no_answer",
+          "passed": true
+        },
+        {
+          "detail": "cgt=['doc_northwind_sdk_overview'] gold=['doc_northwind_sdk_overview']",
+          "name": "citation_ground_truth_aligment",
+          "passed": true
+        },
+        {
+          "detail": "got=wm_auroralis_v1",
+          "name": "provenance_world_model_id",
+          "passed": true
+        },
+        {
+          "detail": "got=corpus_auroralis_v1",
+          "name": "provenance_corpus_id",
+          "passed": true
+        }
+      ],
+      "difficulty": "easy",
+      "errors": [],
+      "fatal": false,
+      "passed": true,
+      "question_type": "temporal_version",
+      "warnings": []
+    },
+    {
+      "case_id": "syn_059",
+      "checks": [
+        {
+          "detail": "missing=[]",
+          "name": "field_completeness",
+          "passed": true
+        },
+        {
+          "detail": "seed=phase22-synthetic-2026-08-03-auroralis-v1",
+          "name": "seed_present",
+          "passed": true
+        },
+        {
+          "detail": "world=f9b6876bd4182343b6f5d90836322c7fe4477743792264602f3b34bf9235766e, corpus=074604ee157d86ef471c80684b6d821c319c6b6dd902697401953800ffcd1766",
+          "name": "hash_binding",
+          "passed": true
+        },
+        {
+          "detail": "issues=[]",
+          "name": "gold_documents_exist_and_hash",
+          "passed": true
+        },
+        {
+          "detail": "missing_spans=[]",
+          "name": "gold_source_spans_present",
+          "passed": true
+        },
+        {
+          "detail": "difficulty=easy",
+          "name": "difficulty_in_set",
+          "passed": true
+        },
+        {
+          "detail": "qt=temporal_conflict",
+          "name": "question_type_in_stratification",
+          "passed": true
+        },
+        {
+          "detail": "versions=[('doc_lumen_e2_release_notes', 'v2.1.0', '2026-02-04')]",
+          "name": "temporal_version_bound",
+          "passed": true
+        },
+        {
+          "detail": "effective_time=2026-01-15",
+          "name": "temporal_effective_time_present",
+          "passed": true
+        },
+        {
+          "detail": "leaks=[]",
+          "name": "hard_negative_no_answer",
+          "passed": true
+        },
+        {
+          "detail": "cgt=['doc_lumen_e2_release_notes'] gold=['doc_lumen_e2_release_notes']",
+          "name": "citation_ground_truth_aligment",
+          "passed": true
+        },
+        {
+          "detail": "got=wm_auroralis_v1",
+          "name": "provenance_world_model_id",
+          "passed": true
+        },
+        {
+          "detail": "got=corpus_auroralis_v1",
+          "name": "provenance_corpus_id",
+          "passed": true
+        }
+      ],
+      "difficulty": "easy",
+      "errors": [],
+      "fatal": false,
+      "passed": true,
+      "question_type": "temporal_conflict",
+      "warnings": []
+    },
+    {
+      "case_id": "syn_060",
+      "checks": [
+        {
+          "detail": "missing=[]",
+          "name": "field_completeness",
+          "passed": true
+        },
+        {
+          "detail": "seed=phase22-synthetic-2026-08-03-auroralis-v1",
+          "name": "seed_present",
+          "passed": true
+        },
+        {
+          "detail": "world=f9b6876bd4182343b6f5d90836322c7fe4477743792264602f3b34bf9235766e, corpus=074604ee157d86ef471c80684b6d821c319c6b6dd902697401953800ffcd1766",
+          "name": "hash_binding",
+          "passed": true
+        },
+        {
+          "detail": "issues=[]",
+          "name": "gold_documents_exist_and_hash",
+          "passed": true
+        },
+        {
+          "detail": "missing_spans=[]",
+          "name": "gold_source_spans_present",
+          "passed": true
+        },
+        {
+          "detail": "difficulty=hard",
+          "name": "difficulty_in_set",
+          "passed": true
+        },
+        {
+          "detail": "qt=temporal_version",
+          "name": "question_type_in_stratification",
+          "passed": true
+        },
+        {
+          "detail": "versions=[('doc_polaris_contract_v1', 'v1', '2024-09-01'), ('doc_polaris_contract_v2', 'v2', '2025-09-01')]",
+          "name": "temporal_version_bound",
+          "passed": true
+        },
+        {
+          "detail": "effective_time=2024-12-15",
+          "name": "temporal_effective_time_present",
+          "passed": true
+        },
+        {
+          "detail": "leaks=[]",
+          "name": "hard_negative_no_answer",
+          "passed": true
+        },
+        {
+          "detail": "cgt=['doc_polaris_contract_v1', 'doc_polaris_contract_v2'] gold=['doc_polaris_contract_v1', 'doc_polaris_contract_v2']",
+          "name": "citation_ground_truth_aligment",
+          "passed": true
+        },
+        {
+          "detail": "got=wm_auroralis_v1",
+          "name": "provenance_world_model_id",
+          "passed": true
+        },
+        {
+          "detail": "got=corpus_auroralis_v1",
+          "name": "provenance_corpus_id",
+          "passed": true
+        }
+      ],
+      "difficulty": "hard",
+      "errors": [],
+      "fatal": false,
+      "passed": true,
+      "question_type": "temporal_version",
+      "warnings": []
+    },
+    {
+      "case_id": "syn_061",
+      "checks": [
+        {
+          "detail": "missing=[]",
+          "name": "field_completeness",
+          "passed": true
+        },
+        {
+          "detail": "seed=phase22-synthetic-2026-08-03-auroralis-v1",
+          "name": "seed_present",
+          "passed": true
+        },
+        {
+          "detail": "world=f9b6876bd4182343b6f5d90836322c7fe4477743792264602f3b34bf9235766e, corpus=074604ee157d86ef471c80684b6d821c319c6b6dd902697401953800ffcd1766",
+          "name": "hash_binding",
+          "passed": true
+        },
+        {
+          "detail": "issues=[]",
+          "name": "gold_documents_exist_and_hash",
+          "passed": true
+        },
+        {
+          "detail": "missing_spans=[]",
+          "name": "gold_source_spans_present",
+          "passed": true
+        },
+        {
+          "detail": "difficulty=easy",
+          "name": "difficulty_in_set",
+          "passed": true
+        },
+        {
+          "detail": "qt=temporal_conflict",
+          "name": "question_type_in_stratification",
+          "passed": true
+        },
+        {
+          "detail": "versions=[('doc_axis9_release_notes', 'v9.4.0', '2025-11-12')]",
+          "name": "temporal_version_bound",
+          "passed": true
+        },
+        {
+          "detail": "effective_time=2026-08-03",
+          "name": "temporal_effective_time_present",
+          "passed": true
+        },
+        {
+          "detail": "leaks=[]",
+          "name": "hard_negative_no_answer",
+          "passed": true
+        },
+        {
+          "detail": "cgt=['doc_axis9_release_notes'] gold=['doc_axis9_release_notes']",
+          "name": "citation_ground_truth_aligment",
+          "passed": true
+        },
+        {
+          "detail": "got=wm_auroralis_v1",
+          "name": "provenance_world_model_id",
+          "passed": true
+        },
+        {
+          "detail": "got=corpus_auroralis_v1",
+          "name": "provenance_corpus_id",
+          "passed": true
+        }
+      ],
+      "difficulty": "easy",
+      "errors": [],
+      "fatal": false,
+      "passed": true,
+      "question_type": "temporal_conflict",
+      "warnings": []
+    },
+    {
+      "case_id": "syn_062",
+      "checks": [
+        {
+          "detail": "missing=[]",
+          "name": "field_completeness",
+          "passed": true
+        },
+        {
+          "detail": "seed=phase22-synthetic-2026-08-03-auroralis-v1",
+          "name": "seed_present",
+          "passed": true
+        },
+        {
+          "detail": "world=f9b6876bd4182343b6f5d90836322c7fe4477743792264602f3b34bf9235766e, corpus=074604ee157d86ef471c80684b6d821c319c6b6dd902697401953800ffcd1766",
+          "name": "hash_binding",
+          "passed": true
+        },
+        {
+          "detail": "issues=[]",
+          "name": "gold_documents_exist_and_hash",
+          "passed": true
+        },
+        {
+          "detail": "missing_spans=[]",
+          "name": "gold_source_spans_present",
+          "passed": true
+        },
+        {
+          "detail": "difficulty=medium",
+          "name": "difficulty_in_set",
+          "passed": true
+        },
+        {
+          "detail": "qt=temporal_version",
+          "name": "question_type_in_stratification",
+          "passed": true
+        },
+        {
+          "detail": "versions=[('doc_corp_calendar_2026', 'v1.0', '2026-01-01')]",
+          "name": "temporal_version_bound",
+          "passed": true
+        },
+        {
+          "detail": "effective_time=2026-08-03",
+          "name": "temporal_effective_time_present",
+          "passed": true
+        },
+        {
+          "detail": "leaks=[]",
+          "name": "hard_negative_no_answer",
+          "passed": true
+        },
+        {
+          "detail": "cgt=['doc_corp_calendar_2026'] gold=['doc_corp_calendar_2026']",
+          "name": "citation_ground_truth_aligment",
+          "passed": true
+        },
+        {
+          "detail": "got=wm_auroralis_v1",
+          "name": "provenance_world_model_id",
+          "passed": true
+        },
+        {
+          "detail": "got=corpus_auroralis_v1",
+          "name": "provenance_corpus_id",
+          "passed": true
+        }
+      ],
+      "difficulty": "medium",
+      "errors": [],
+      "fatal": false,
+      "passed": true,
+      "question_type": "temporal_version",
+      "warnings": []
+    },
+    {
+      "case_id": "syn_063",
+      "checks": [
+        {
+          "detail": "missing=[]",
+          "name": "field_completeness",
+          "passed": true
+        },
+        {
+          "detail": "seed=phase22-synthetic-2026-08-03-auroralis-v1",
+          "name": "seed_present",
+          "passed": true
+        },
+        {
+          "detail": "world=f9b6876bd4182343b6f5d90836322c7fe4477743792264602f3b34bf9235766e, corpus=074604ee157d86ef471c80684b6d821c319c6b6dd902697401953800ffcd1766",
+          "name": "hash_binding",
+          "passed": true
+        },
+        {
+          "detail": "issues=[]",
+          "name": "gold_documents_exist_and_hash",
+          "passed": true
+        },
+        {
+          "detail": "missing_spans=[]",
+          "name": "gold_source_spans_present",
+          "passed": true
+        },
+        {
+          "detail": "difficulty=easy",
+          "name": "difficulty_in_set",
+          "passed": true
+        },
+        {
+          "detail": "qt=temporal_conflict",
+          "name": "question_type_in_stratification",
+          "passed": true
+        },
+        {
+          "detail": "versions=[('doc_security_policy_2024', 'v4.1', '2024-01-01'), ('doc_security_policy_2026', 'v4.2', '2026-01-01')]",
+          "name": "temporal_version_bound",
+          "passed": true
+        },
+        {
+          "detail": "effective_time=2026-02-01",
+          "name": "temporal_effective_time_present",
+          "passed": true
+        },
+        {
+          "detail": "leaks=[]",
+          "name": "hard_negative_no_answer",
+          "passed": true
+        },
+        {
+          "detail": "cgt=['doc_security_policy_2024', 'doc_security_policy_2026'] gold=['doc_security_policy_2024', 'doc_security_policy_2026']",
+          "name": "citation_ground_truth_aligment",
+          "passed": true
+        },
+        {
+          "detail": "got=wm_auroralis_v1",
+          "name": "provenance_world_model_id",
+          "passed": true
+        },
+        {
+          "detail": "got=corpus_auroralis_v1",
+          "name": "provenance_corpus_id",
+          "passed": true
+        }
+      ],
+      "difficulty": "easy",
+      "errors": [],
+      "fatal": false,
+      "passed": true,
+      "question_type": "temporal_conflict",
+      "warnings": []
+    },
+    {
+      "case_id": "syn_064",
+      "checks": [
+        {
+          "detail": "missing=[]",
+          "name": "field_completeness",
+          "passed": true
+        },
+        {
+          "detail": "seed=phase22-synthetic-2026-08-03-auroralis-v1",
+          "name": "seed_present",
+          "passed": true
+        },
+        {
+          "detail": "world=f9b6876bd4182343b6f5d90836322c7fe4477743792264602f3b34bf9235766e, corpus=074604ee157d86ef471c80684b6d821c319c6b6dd902697401953800ffcd1766",
+          "name": "hash_binding",
+          "passed": true
+        },
+        {
+          "detail": "issues=[]",
+          "name": "gold_documents_exist_and_hash",
+          "passed": true
+        },
+        {
+          "detail": "missing_spans=[]",
+          "name": "gold_source_spans_present",
+          "passed": true
+        },
+        {
+          "detail": "difficulty=easy",
+          "name": "difficulty_in_set",
+          "passed": true
+        },
+        {
+          "detail": "qt=temporal_version",
+          "name": "question_type_in_stratification",
+          "passed": true
+        },
+        {
+          "detail": "versions=[('doc_polaris_contract_v2', 'v2', '2025-09-01')]",
+          "name": "temporal_version_bound",
+          "passed": true
+        },
+        {
+          "detail": "effective_time=2026-08-03",
+          "name": "temporal_effective_time_present",
+          "passed": true
+        },
+        {
+          "detail": "leaks=[]",
+          "name": "hard_negative_no_answer",
+          "passed": true
+        },
+        {
+          "detail": "cgt=['doc_polaris_contract_v2'] gold=['doc_polaris_contract_v2']",
+          "name": "citation_ground_truth_aligment",
+          "passed": true
+        },
+        {
+          "detail": "got=wm_auroralis_v1",
+          "name": "provenance_world_model_id",
+          "passed": true
+        },
+        {
+          "detail": "got=corpus_auroralis_v1",
+          "name": "provenance_corpus_id",
+          "passed": true
+        }
+      ],
+      "difficulty": "easy",
+      "errors": [],
+      "fatal": false,
+      "passed": true,
+      "question_type": "temporal_version",
+      "warnings": []
+    },
+    {
+      "case_id": "syn_065",
+      "checks": [
+        {
+          "detail": "missing=[]",
+          "name": "field_completeness",
+          "passed": true
+        },
+        {
+          "detail": "seed=phase22-synthetic-2026-08-03-auroralis-v1",
+          "name": "seed_present",
+          "passed": true
+        },
+        {
+          "detail": "world=f9b6876bd4182343b6f5d90836322c7fe4477743792264602f3b34bf9235766e, corpus=074604ee157d86ef471c80684b6d821c319c6b6dd902697401953800ffcd1766",
+          "name": "hash_binding",
+          "passed": true
+        },
+        {
+          "detail": "issues=[]",
+          "name": "gold_documents_exist_and_hash",
+          "passed": true
+        },
+        {
+          "detail": "missing_spans=[]",
+          "name": "gold_source_spans_present",
+          "passed": true
+        },
+        {
+          "detail": "difficulty=easy",
+          "name": "difficulty_in_set",
+          "passed": true
+        },
+        {
+          "detail": "qt=temporal_version",
+          "name": "question_type_in_stratification",
+          "passed": true
+        },
+        {
+          "detail": "versions=[('doc_axis9_release_notes', 'v9.4.0', '2025-11-12')]",
+          "name": "temporal_version_bound",
+          "passed": true
+        },
+        {
+          "detail": "effective_time=2026-08-03",
+          "name": "temporal_effective_time_present",
+          "passed": true
+        },
+        {
+          "detail": "leaks=[]",
+          "name": "hard_negative_no_answer",
+          "passed": true
+        },
+        {
+          "detail": "cgt=['doc_axis9_release_notes'] gold=['doc_axis9_release_notes']",
+          "name": "citation_ground_truth_aligment",
+          "passed": true
+        },
+        {
+          "detail": "got=wm_auroralis_v1",
+          "name": "provenance_world_model_id",
+          "passed": true
+        },
+        {
+          "detail": "got=corpus_auroralis_v1",
+          "name": "provenance_corpus_id",
+          "passed": true
+        }
+      ],
+      "difficulty": "easy",
+      "errors": [],
+      "fatal": false,
+      "passed": true,
+      "question_type": "temporal_version",
+      "warnings": []
+    },
+    {
+      "case_id": "syn_066",
+      "checks": [
+        {
+          "detail": "missing=[]",
+          "name": "field_completeness",
+          "passed": true
+        },
+        {
+          "detail": "seed=phase22-synthetic-2026-08-03-auroralis-v1",
+          "name": "seed_present",
+          "passed": true
+        },
+        {
+          "detail": "world=f9b6876bd4182343b6f5d90836322c7fe4477743792264602f3b34bf9235766e, corpus=074604ee157d86ef471c80684b6d821c319c6b6dd902697401953800ffcd1766",
+          "name": "hash_binding",
+          "passed": true
+        },
+        {
+          "detail": "issues=[]",
+          "name": "gold_documents_exist_and_hash",
+          "passed": true
+        },
+        {
+          "detail": "missing_spans=[]",
+          "name": "gold_source_spans_present",
+          "passed": true
+        },
+        {
+          "detail": "difficulty=easy",
+          "name": "difficulty_in_set",
+          "passed": true
+        },
+        {
+          "detail": "qt=no_answer",
+          "name": "question_type_in_stratification",
+          "passed": true
+        },
+        {
+          "detail": "unexpected_support=[]",
+          "name": "no_answer_no_support",
+          "passed": true
+        },
+        {
+          "detail": "outcome=abstain",
+          "name": "no_answer_outcome_abstain",
+          "passed": true
+        },
+        {
+          "detail": "policy=must_abstain",
+          "name": "no_answer_policy_abstain",
+          "passed": true
+        },
+        {
+          "detail": "leaks=[]",
+          "name": "hard_negative_no_answer",
+          "passed": true
+        },
+        {
+          "detail": "cgt=[] gold=[]",
+          "name": "citation_ground_truth_aligment",
+          "passed": true
+        },
+        {
+          "detail": "got=wm_auroralis_v1",
+          "name": "provenance_world_model_id",
+          "passed": true
+        },
+        {
+          "detail": "got=corpus_auroralis_v1",
+          "name": "provenance_corpus_id",
+          "passed": true
+        }
+      ],
+      "difficulty": "easy",
+      "errors": [],
+      "fatal": false,
+      "passed": true,
+      "question_type": "no_answer",
+      "warnings": []
+    },
+    {
+      "case_id": "syn_067",
+      "checks": [
+        {
+          "detail": "missing=[]",
+          "name": "field_completeness",
+          "passed": true
+        },
+        {
+          "detail": "seed=phase22-synthetic-2026-08-03-auroralis-v1",
+          "name": "seed_present",
+          "passed": true
+        },
+        {
+          "detail": "world=f9b6876bd4182343b6f5d90836322c7fe4477743792264602f3b34bf9235766e, corpus=074604ee157d86ef471c80684b6d821c319c6b6dd902697401953800ffcd1766",
+          "name": "hash_binding",
+          "passed": true
+        },
+        {
+          "detail": "issues=[]",
+          "name": "gold_documents_exist_and_hash",
+          "passed": true
+        },
+        {
+          "detail": "missing_spans=[]",
+          "name": "gold_source_spans_present",
+          "passed": true
+        },
+        {
+          "detail": "difficulty=easy",
+          "name": "difficulty_in_set",
+          "passed": true
+        },
+        {
+          "detail": "qt=no_answer",
+          "name": "question_type_in_stratification",
+          "passed": true
+        },
+        {
+          "detail": "unexpected_support=[]",
+          "name": "no_answer_no_support",
+          "passed": true
+        },
+        {
+          "detail": "outcome=abstain",
+          "name": "no_answer_outcome_abstain",
+          "passed": true
+        },
+        {
+          "detail": "policy=must_abstain",
+          "name": "no_answer_policy_abstain",
+          "passed": true
+        },
+        {
+          "detail": "leaks=[]",
+          "name": "hard_negative_no_answer",
+          "passed": true
+        },
+        {
+          "detail": "cgt=[] gold=[]",
+          "name": "citation_ground_truth_aligment",
+          "passed": true
+        },
+        {
+          "detail": "got=wm_auroralis_v1",
+          "name": "provenance_world_model_id",
+          "passed": true
+        },
+        {
+          "detail": "got=corpus_auroralis_v1",
+          "name": "provenance_corpus_id",
+          "passed": true
+        }
+      ],
+      "difficulty": "easy",
+      "errors": [],
+      "fatal": false,
+      "passed": true,
+      "question_type": "no_answer",
+      "warnings": []
+    },
+    {
+      "case_id": "syn_068",
+      "checks": [
+        {
+          "detail": "missing=[]",
+          "name": "field_completeness",
+          "passed": true
+        },
+        {
+          "detail": "seed=phase22-synthetic-2026-08-03-auroralis-v1",
+          "name": "seed_present",
+          "passed": true
+        },
+        {
+          "detail": "world=f9b6876bd4182343b6f5d90836322c7fe4477743792264602f3b34bf9235766e, corpus=074604ee157d86ef471c80684b6d821c319c6b6dd902697401953800ffcd1766",
+          "name": "hash_binding",
+          "passed": true
+        },
+        {
+          "detail": "issues=[]",
+          "name": "gold_documents_exist_and_hash",
+          "passed": true
+        },
+        {
+          "detail": "missing_spans=[]",
+          "name": "gold_source_spans_present",
+          "passed": true
+        },
+        {
+          "detail": "difficulty=medium",
+          "name": "difficulty_in_set",
+          "passed": true
+        },
+        {
+          "detail": "qt=no_answer",
+          "name": "question_type_in_stratification",
+          "passed": true
+        },
+        {
+          "detail": "unexpected_support=[]",
+          "name": "no_answer_no_support",
+          "passed": true
+        },
+        {
+          "detail": "outcome=abstain",
+          "name": "no_answer_outcome_abstain",
+          "passed": true
+        },
+        {
+          "detail": "policy=must_abstain",
+          "name": "no_answer_policy_abstain",
+          "passed": true
+        },
+        {
+          "detail": "leaks=[]",
+          "name": "hard_negative_no_answer",
+          "passed": true
+        },
+        {
+          "detail": "cgt=[] gold=[]",
+          "name": "citation_ground_truth_aligment",
+          "passed": true
+        },
+        {
+          "detail": "got=wm_auroralis_v1",
+          "name": "provenance_world_model_id",
+          "passed": true
+        },
+        {
+          "detail": "got=corpus_auroralis_v1",
+          "name": "provenance_corpus_id",
+          "passed": true
+        }
+      ],
+      "difficulty": "medium",
+      "errors": [],
+      "fatal": false,
+      "passed": true,
+      "question_type": "no_answer",
+      "warnings": []
+    },
+    {
+      "case_id": "syn_069",
+      "checks": [
+        {
+          "detail": "missing=[]",
+          "name": "field_completeness",
+          "passed": true
+        },
+        {
+          "detail": "seed=phase22-synthetic-2026-08-03-auroralis-v1",
+          "name": "seed_present",
+          "passed": true
+        },
+        {
+          "detail": "world=f9b6876bd4182343b6f5d90836322c7fe4477743792264602f3b34bf9235766e, corpus=074604ee157d86ef471c80684b6d821c319c6b6dd902697401953800ffcd1766",
+          "name": "hash_binding",
+          "passed": true
+        },
+        {
+          "detail": "issues=[]",
+          "name": "gold_documents_exist_and_hash",
+          "passed": true
+        },
+        {
+          "detail": "missing_spans=[]",
+          "name": "gold_source_spans_present",
+          "passed": true
+        },
+        {
+          "detail": "difficulty=medium",
+          "name": "difficulty_in_set",
+          "passed": true
+        },
+        {
+          "detail": "qt=no_answer",
+          "name": "question_type_in_stratification",
+          "passed": true
+        },
+        {
+          "detail": "unexpected_support=[]",
+          "name": "no_answer_no_support",
+          "passed": true
+        },
+        {
+          "detail": "outcome=abstain",
+          "name": "no_answer_outcome_abstain",
+          "passed": true
+        },
+        {
+          "detail": "policy=must_abstain",
+          "name": "no_answer_policy_abstain",
+          "passed": true
+        },
+        {
+          "detail": "leaks=[]",
+          "name": "hard_negative_no_answer",
+          "passed": true
+        },
+        {
+          "detail": "cgt=[] gold=[]",
+          "name": "citation_ground_truth_aligment",
+          "passed": true
+        },
+        {
+          "detail": "got=wm_auroralis_v1",
+          "name": "provenance_world_model_id",
+          "passed": true
+        },
+        {
+          "detail": "got=corpus_auroralis_v1",
+          "name": "provenance_corpus_id",
+          "passed": true
+        }
+      ],
+      "difficulty": "medium",
+      "errors": [],
+      "fatal": false,
+      "passed": true,
+      "question_type": "no_answer",
+      "warnings": []
+    },
+    {
+      "case_id": "syn_070",
+      "checks": [
+        {
+          "detail": "missing=[]",
+          "name": "field_completeness",
+          "passed": true
+        },
+        {
+          "detail": "seed=phase22-synthetic-2026-08-03-auroralis-v1",
+          "name": "seed_present",
+          "passed": true
+        },
+        {
+          "detail": "world=f9b6876bd4182343b6f5d90836322c7fe4477743792264602f3b34bf9235766e, corpus=074604ee157d86ef471c80684b6d821c319c6b6dd902697401953800ffcd1766",
+          "name": "hash_binding",
+          "passed": true
+        },
+        {
+          "detail": "issues=[]",
+          "name": "gold_documents_exist_and_hash",
+          "passed": true
+        },
+        {
+          "detail": "missing_spans=[]",
+          "name": "gold_source_spans_present",
+          "passed": true
+        },
+        {
+          "detail": "difficulty=easy",
+          "name": "difficulty_in_set",
+          "passed": true
+        },
+        {
+          "detail": "qt=no_answer",
+          "name": "question_type_in_stratification",
+          "passed": true
+        },
+        {
+          "detail": "unexpected_support=[]",
+          "name": "no_answer_no_support",
+          "passed": true
+        },
+        {
+          "detail": "outcome=abstain",
+          "name": "no_answer_outcome_abstain",
+          "passed": true
+        },
+        {
+          "detail": "policy=must_abstain",
+          "name": "no_answer_policy_abstain",
+          "passed": true
+        },
+        {
+          "detail": "leaks=[]",
+          "name": "hard_negative_no_answer",
+          "passed": true
+        },
+        {
+          "detail": "cgt=[] gold=[]",
+          "name": "citation_ground_truth_aligment",
+          "passed": true
+        },
+        {
+          "detail": "got=wm_auroralis_v1",
+          "name": "provenance_world_model_id",
+          "passed": true
+        },
+        {
+          "detail": "got=corpus_auroralis_v1",
+          "name": "provenance_corpus_id",
+          "passed": true
+        }
+      ],
+      "difficulty": "easy",
+      "errors": [],
+      "fatal": false,
+      "passed": true,
+      "question_type": "no_answer",
+      "warnings": []
+    },
+    {
+      "case_id": "syn_071",
+      "checks": [
+        {
+          "detail": "missing=[]",
+          "name": "field_completeness",
+          "passed": true
+        },
+        {
+          "detail": "seed=phase22-synthetic-2026-08-03-auroralis-v1",
+          "name": "seed_present",
+          "passed": true
+        },
+        {
+          "detail": "world=f9b6876bd4182343b6f5d90836322c7fe4477743792264602f3b34bf9235766e, corpus=074604ee157d86ef471c80684b6d821c319c6b6dd902697401953800ffcd1766",
+          "name": "hash_binding",
+          "passed": true
+        },
+        {
+          "detail": "issues=[]",
+          "name": "gold_documents_exist_and_hash",
+          "passed": true
+        },
+        {
+          "detail": "missing_spans=[]",
+          "name": "gold_source_spans_present",
+          "passed": true
+        },
+        {
+          "detail": "difficulty=medium",
+          "name": "difficulty_in_set",
+          "passed": true
+        },
+        {
+          "detail": "qt=permission_restricted",
+          "name": "question_type_in_stratification",
+          "passed": true
+        },
+        {
+          "detail": "out_of_scope=[]",
+          "name": "security_scope_consistent",
+          "passed": true
+        },
+        {
+          "detail": "outcome=restricted_answer",
+          "name": "permission_restricted_outcome",
+          "passed": true
+        },
+        {
+          "detail": "policy=restricted_or_deny",
+          "name": "permission_restricted_policy",
+          "passed": true
+        },
+        {
+          "detail": "leaks=[]",
+          "name": "hard_negative_no_answer",
+          "passed": true
+        },
+        {
+          "detail": "cgt=['doc_audit_findings_2026_q1'] gold=['doc_audit_findings_2026_q1']",
+          "name": "citation_ground_truth_aligment",
+          "passed": true
+        },
+        {
+          "detail": "got=wm_auroralis_v1",
+          "name": "provenance_world_model_id",
+          "passed": true
+        },
+        {
+          "detail": "got=corpus_auroralis_v1",
+          "name": "provenance_corpus_id",
+          "passed": true
+        }
+      ],
+      "difficulty": "medium",
+      "errors": [],
+      "fatal": false,
+      "passed": true,
+      "question_type": "permission_restricted",
+      "warnings": []
+    },
+    {
+      "case_id": "syn_072",
+      "checks": [
+        {
+          "detail": "missing=[]",
+          "name": "field_completeness",
+          "passed": true
+        },
+        {
+          "detail": "seed=phase22-synthetic-2026-08-03-auroralis-v1",
+          "name": "seed_present",
+          "passed": true
+        },
+        {
+          "detail": "world=f9b6876bd4182343b6f5d90836322c7fe4477743792264602f3b34bf9235766e, corpus=074604ee157d86ef471c80684b6d821c319c6b6dd902697401953800ffcd1766",
+          "name": "hash_binding",
+          "passed": true
+        },
+        {
+          "detail": "issues=[]",
+          "name": "gold_documents_exist_and_hash",
+          "passed": true
+        },
+        {
+          "detail": "missing_spans=[]",
+          "name": "gold_source_spans_present",
+          "passed": true
+        },
+        {
+          "detail": "difficulty=medium",
+          "name": "difficulty_in_set",
+          "passed": true
+        },
+        {
+          "detail": "qt=permission_restricted",
+          "name": "question_type_in_stratification",
+          "passed": true
+        },
+        {
+          "detail": "out_of_scope=[]",
+          "name": "security_scope_consistent",
+          "passed": true
+        },
+        {
+          "detail": "outcome=restricted_answer",
+          "name": "permission_restricted_outcome",
+          "passed": true
+        },
+        {
+          "detail": "policy=restricted_or_deny",
+          "name": "permission_restricted_policy",
+          "passed": true
+        },
+        {
+          "detail": "leaks=[]",
+          "name": "hard_negative_no_answer",
+          "passed": true
+        },
+        {
+          "detail": "cgt=['doc_audit_findings_2025_q4'] gold=['doc_audit_findings_2025_q4']",
+          "name": "citation_ground_truth_aligment",
+          "passed": true
+        },
+        {
+          "detail": "got=wm_auroralis_v1",
+          "name": "provenance_world_model_id",
+          "passed": true
+        },
+        {
+          "detail": "got=corpus_auroralis_v1",
+          "name": "provenance_corpus_id",
+          "passed": true
+        }
+      ],
+      "difficulty": "medium",
+      "errors": [],
+      "fatal": false,
+      "passed": true,
+      "question_type": "permission_restricted",
+      "warnings": []
+    },
+    {
+      "case_id": "syn_073",
+      "checks": [
+        {
+          "detail": "missing=[]",
+          "name": "field_completeness",
+          "passed": true
+        },
+        {
+          "detail": "seed=phase22-synthetic-2026-08-03-auroralis-v1",
+          "name": "seed_present",
+          "passed": true
+        },
+        {
+          "detail": "world=f9b6876bd4182343b6f5d90836322c7fe4477743792264602f3b34bf9235766e, corpus=074604ee157d86ef471c80684b6d821c319c6b6dd902697401953800ffcd1766",
+          "name": "hash_binding",
+          "passed": true
+        },
+        {
+          "detail": "issues=[]",
+          "name": "gold_documents_exist_and_hash",
+          "passed": true
+        },
+        {
+          "detail": "missing_spans=[]",
+          "name": "gold_source_spans_present",
+          "passed": true
+        },
+        {
+          "detail": "difficulty=medium",
+          "name": "difficulty_in_set",
+          "passed": true
+        },
+        {
+          "detail": "qt=permission_restricted",
+          "name": "question_type_in_stratification",
+          "passed": true
+        },
+        {
+          "detail": "out_of_scope=[]",
+          "name": "security_scope_consistent",
+          "passed": true
+        },
+        {
+          "detail": "outcome=restricted_answer",
+          "name": "permission_restricted_outcome",
+          "passed": true
+        },
+        {
+          "detail": "policy=restricted_or_deny",
+          "name": "permission_restricted_policy",
+          "passed": true
+        },
+        {
+          "detail": "leaks=[]",
+          "name": "hard_negative_no_answer",
+          "passed": true
+        },
+        {
+          "detail": "cgt=['doc_helion_contract'] gold=['doc_helion_contract']",
+          "name": "citation_ground_truth_aligment",
+          "passed": true
+        },
+        {
+          "detail": "got=wm_auroralis_v1",
+          "name": "provenance_world_model_id",
+          "passed": true
+        },
+        {
+          "detail": "got=corpus_auroralis_v1",
+          "name": "provenance_corpus_id",
+          "passed": true
+        }
+      ],
+      "difficulty": "medium",
+      "errors": [],
+      "fatal": false,
+      "passed": true,
+      "question_type": "permission_restricted",
+      "warnings": []
+    },
+    {
+      "case_id": "syn_074",
+      "checks": [
+        {
+          "detail": "missing=[]",
+          "name": "field_completeness",
+          "passed": true
+        },
+        {
+          "detail": "seed=phase22-synthetic-2026-08-03-auroralis-v1",
+          "name": "seed_present",
+          "passed": true
+        },
+        {
+          "detail": "world=f9b6876bd4182343b6f5d90836322c7fe4477743792264602f3b34bf9235766e, corpus=074604ee157d86ef471c80684b6d821c319c6b6dd902697401953800ffcd1766",
+          "name": "hash_binding",
+          "passed": true
+        },
+        {
+          "detail": "issues=[]",
+          "name": "gold_documents_exist_and_hash",
+          "passed": true
+        },
+        {
+          "detail": "missing_spans=[]",
+          "name": "gold_source_spans_present",
+          "passed": true
+        },
+        {
+          "detail": "difficulty=medium",
+          "name": "difficulty_in_set",
+          "passed": true
+        },
+        {
+          "detail": "qt=permission_restricted",
+          "name": "question_type_in_stratification",
+          "passed": true
+        },
+        {
+          "detail": "out_of_scope=[]",
+          "name": "security_scope_consistent",
+          "passed": true
+        },
+        {
+          "detail": "outcome=restricted_answer",
+          "name": "permission_restricted_outcome",
+          "passed": true
+        },
+        {
+          "detail": "policy=restricted_or_deny",
+          "name": "permission_restricted_policy",
+          "passed": true
+        },
+        {
+          "detail": "leaks=[]",
+          "name": "hard_negative_no_answer",
+          "passed": true
+        },
+        {
+          "detail": "cgt=['doc_forge_x1_field_log'] gold=['doc_forge_x1_field_log']",
+          "name": "citation_ground_truth_aligment",
+          "passed": true
+        },
+        {
+          "detail": "got=wm_auroralis_v1",
+          "name": "provenance_world_model_id",
+          "passed": true
+        },
+        {
+          "detail": "got=corpus_auroralis_v1",
+          "name": "provenance_corpus_id",
+          "passed": true
+        }
+      ],
+      "difficulty": "medium",
+      "errors": [],
+      "fatal": false,
+      "passed": true,
+      "question_type": "permission_restricted",
+      "warnings": []
+    },
+    {
+      "case_id": "syn_075",
+      "checks": [
+        {
+          "detail": "missing=[]",
+          "name": "field_completeness",
+          "passed": true
+        },
+        {
+          "detail": "seed=phase22-synthetic-2026-08-03-auroralis-v1",
+          "name": "seed_present",
+          "passed": true
+        },
+        {
+          "detail": "world=f9b6876bd4182343b6f5d90836322c7fe4477743792264602f3b34bf9235766e, corpus=074604ee157d86ef471c80684b6d821c319c6b6dd902697401953800ffcd1766",
+          "name": "hash_binding",
+          "passed": true
+        },
+        {
+          "detail": "issues=[]",
+          "name": "gold_documents_exist_and_hash",
+          "passed": true
+        },
+        {
+          "detail": "missing_spans=[]",
+          "name": "gold_source_spans_present",
+          "passed": true
+        },
+        {
+          "detail": "difficulty=medium",
+          "name": "difficulty_in_set",
+          "passed": true
+        },
+        {
+          "detail": "qt=permission_deny",
+          "name": "question_type_in_stratification",
+          "passed": true
+        },
+        {
+          "detail": "out_of_scope=[]",
+          "name": "security_scope_consistent",
+          "passed": true
+        },
+        {
+          "detail": "outcome=deny",
+          "name": "permission_deny_outcome",
+          "passed": true
+        },
+        {
+          "detail": "policy=must_deny",
+          "name": "permission_deny_policy",
+          "passed": true
+        },
+        {
+          "detail": "leaks=[]",
+          "name": "hard_negative_no_answer",
+          "passed": true
+        },
+        {
+          "detail": "cgt=['doc_audit_findings_2026_q1'] gold=['doc_audit_findings_2026_q1']",
+          "name": "citation_ground_truth_aligment",
+          "passed": true
+        },
+        {
+          "detail": "got=wm_auroralis_v1",
+          "name": "provenance_world_model_id",
+          "passed": true
+        },
+        {
+          "detail": "got=corpus_auroralis_v1",
+          "name": "provenance_corpus_id",
+          "passed": true
+        }
+      ],
+      "difficulty": "medium",
+      "errors": [],
+      "fatal": false,
+      "passed": true,
+      "question_type": "permission_deny",
+      "warnings": []
+    },
+    {
+      "case_id": "syn_076",
+      "checks": [
+        {
+          "detail": "missing=[]",
+          "name": "field_completeness",
+          "passed": true
+        },
+        {
+          "detail": "seed=phase22-synthetic-2026-08-03-auroralis-v1",
+          "name": "seed_present",
+          "passed": true
+        },
+        {
+          "detail": "world=f9b6876bd4182343b6f5d90836322c7fe4477743792264602f3b34bf9235766e, corpus=074604ee157d86ef471c80684b6d821c319c6b6dd902697401953800ffcd1766",
+          "name": "hash_binding",
+          "passed": true
+        },
+        {
+          "detail": "issues=[]",
+          "name": "gold_documents_exist_and_hash",
+          "passed": true
+        },
+        {
+          "detail": "missing_spans=[]",
+          "name": "gold_source_spans_present",
+          "passed": true
+        },
+        {
+          "detail": "difficulty=hard",
+          "name": "difficulty_in_set",
+          "passed": true
+        },
+        {
+          "detail": "qt=fault_partial_index",
+          "name": "question_type_in_stratification",
+          "passed": true
+        },
+        {
+          "detail": "outcome=controlled_behavior",
+          "name": "fault_outcome_controlled",
+          "passed": true
+        },
+        {
+          "detail": "policy=controlled_no_fabrication",
+          "name": "fault_policy_in_set",
+          "passed": true
+        },
+        {
+          "detail": "leaks=[]",
+          "name": "hard_negative_no_answer",
+          "passed": true
+        },
+        {
+          "detail": "cgt=['doc_axis9_release_notes'] gold=['doc_axis9_release_notes']",
+          "name": "citation_ground_truth_aligment",
+          "passed": true
+        },
+        {
+          "detail": "got=wm_auroralis_v1",
+          "name": "provenance_world_model_id",
+          "passed": true
+        },
+        {
+          "detail": "got=corpus_auroralis_v1",
+          "name": "provenance_corpus_id",
+          "passed": true
+        }
+      ],
+      "difficulty": "hard",
+      "errors": [],
+      "fatal": false,
+      "passed": true,
+      "question_type": "fault_partial_index",
+      "warnings": []
+    },
+    {
+      "case_id": "syn_077",
+      "checks": [
+        {
+          "detail": "missing=[]",
+          "name": "field_completeness",
+          "passed": true
+        },
+        {
+          "detail": "seed=phase22-synthetic-2026-08-03-auroralis-v1",
+          "name": "seed_present",
+          "passed": true
+        },
+        {
+          "detail": "world=f9b6876bd4182343b6f5d90836322c7fe4477743792264602f3b34bf9235766e, corpus=074604ee157d86ef471c80684b6d821c319c6b6dd902697401953800ffcd1766",
+          "name": "hash_binding",
+          "passed": true
+        },
+        {
+          "detail": "issues=[]",
+          "name": "gold_documents_exist_and_hash",
+          "passed": true
+        },
+        {
+          "detail": "missing_spans=[]",
+          "name": "gold_source_spans_present",
+          "passed": true
+        },
+        {
+          "detail": "difficulty=hard",
+          "name": "difficulty_in_set",
+          "passed": true
+        },
+        {
+          "detail": "qt=fault_partial_index",
+          "name": "question_type_in_stratification",
+          "passed": true
+        },
+        {
+          "detail": "outcome=controlled_behavior",
+          "name": "fault_outcome_controlled",
+          "passed": true
+        },
+        {
+          "detail": "policy=controlled_partial_fallback",
+          "name": "fault_policy_in_set",
+          "passed": true
+        },
+        {
+          "detail": "leaks=[]",
+          "name": "hard_negative_no_answer",
+          "passed": true
+        },
+        {
+          "detail": "cgt=['doc_polaris_contract_v1'] gold=['doc_polaris_contract_v1']",
+          "name": "citation_ground_truth_aligment",
+          "passed": true
+        },
+        {
+          "detail": "got=wm_auroralis_v1",
+          "name": "provenance_world_model_id",
+          "passed": true
+        },
+        {
+          "detail": "got=corpus_auroralis_v1",
+          "name": "provenance_corpus_id",
+          "passed": true
+        }
+      ],
+      "difficulty": "hard",
+      "errors": [],
+      "fatal": false,
+      "passed": true,
+      "question_type": "fault_partial_index",
+      "warnings": []
+    },
+    {
+      "case_id": "syn_078",
+      "checks": [
+        {
+          "detail": "missing=[]",
+          "name": "field_completeness",
+          "passed": true
+        },
+        {
+          "detail": "seed=phase22-synthetic-2026-08-03-auroralis-v1",
+          "name": "seed_present",
+          "passed": true
+        },
+        {
+          "detail": "world=f9b6876bd4182343b6f5d90836322c7fe4477743792264602f3b34bf9235766e, corpus=074604ee157d86ef471c80684b6d821c319c6b6dd902697401953800ffcd1766",
+          "name": "hash_binding",
+          "passed": true
+        },
+        {
+          "detail": "issues=[]",
+          "name": "gold_documents_exist_and_hash",
+          "passed": true
+        },
+        {
+          "detail": "missing_spans=[]",
+          "name": "gold_source_spans_present",
+          "passed": true
+        },
+        {
+          "detail": "difficulty=hard",
+          "name": "difficulty_in_set",
+          "passed": true
+        },
+        {
+          "detail": "qt=fault_partial_index",
+          "name": "question_type_in_stratification",
+          "passed": true
+        },
+        {
+          "detail": "outcome=controlled_behavior",
+          "name": "fault_outcome_controlled",
+          "passed": true
+        },
+        {
+          "detail": "policy=controlled_no_fabrication",
+          "name": "fault_policy_in_set",
+          "passed": true
+        },
+        {
+          "detail": "leaks=[]",
+          "name": "hard_negative_no_answer",
+          "passed": true
+        },
+        {
+          "detail": "cgt=['doc_forge_x1_recall_bulletin'] gold=['doc_forge_x1_recall_bulletin']",
+          "name": "citation_ground_truth_aligment",
+          "passed": true
+        },
+        {
+          "detail": "got=wm_auroralis_v1",
+          "name": "provenance_world_model_id",
+          "passed": true
+        },
+        {
+          "detail": "got=corpus_auroralis_v1",
+          "name": "provenance_corpus_id",
+          "passed": true
+        }
+      ],
+      "difficulty": "hard",
+      "errors": [],
+      "fatal": false,
+      "passed": true,
+      "question_type": "fault_partial_index",
+      "warnings": []
+    },
+    {
+      "case_id": "syn_079",
+      "checks": [
+        {
+          "detail": "missing=[]",
+          "name": "field_completeness",
+          "passed": true
+        },
+        {
+          "detail": "seed=phase22-synthetic-2026-08-03-auroralis-v1",
+          "name": "seed_present",
+          "passed": true
+        },
+        {
+          "detail": "world=f9b6876bd4182343b6f5d90836322c7fe4477743792264602f3b34bf9235766e, corpus=074604ee157d86ef471c80684b6d821c319c6b6dd902697401953800ffcd1766",
+          "name": "hash_binding",
+          "passed": true
+        },
+        {
+          "detail": "issues=[]",
+          "name": "gold_documents_exist_and_hash",
+          "passed": true
+        },
+        {
+          "detail": "missing_spans=[]",
+          "name": "gold_source_spans_present",
+          "passed": true
+        },
+        {
+          "detail": "difficulty=hard",
+          "name": "difficulty_in_set",
+          "passed": true
+        },
+        {
+          "detail": "qt=fault_partial_index",
+          "name": "question_type_in_stratification",
+          "passed": true
+        },
+        {
+          "detail": "outcome=controlled_behavior",
+          "name": "fault_outcome_controlled",
+          "passed": true
+        },
+        {
+          "detail": "policy=controlled_partial_fallback",
+          "name": "fault_policy_in_set",
+          "passed": true
+        },
+        {
+          "detail": "leaks=[]",
+          "name": "hard_negative_no_answer",
+          "passed": true
+        },
+        {
+          "detail": "cgt=['doc_lumen_e2_release_notes'] gold=['doc_lumen_e2_release_notes']",
+          "name": "citation_ground_truth_aligment",
+          "passed": true
+        },
+        {
+          "detail": "got=wm_auroralis_v1",
+          "name": "provenance_world_model_id",
+          "passed": true
+        },
+        {
+          "detail": "got=corpus_auroralis_v1",
+          "name": "provenance_corpus_id",
+          "passed": true
+        }
+      ],
+      "difficulty": "hard",
+      "errors": [],
+      "fatal": false,
+      "passed": true,
+      "question_type": "fault_partial_index",
+      "warnings": []
+    },
+    {
+      "case_id": "syn_080",
+      "checks": [
+        {
+          "detail": "missing=[]",
+          "name": "field_completeness",
+          "passed": true
+        },
+        {
+          "detail": "seed=phase22-synthetic-2026-08-03-auroralis-v1",
+          "name": "seed_present",
+          "passed": true
+        },
+        {
+          "detail": "world=f9b6876bd4182343b6f5d90836322c7fe4477743792264602f3b34bf9235766e, corpus=074604ee157d86ef471c80684b6d821c319c6b6dd902697401953800ffcd1766",
+          "name": "hash_binding",
+          "passed": true
+        },
+        {
+          "detail": "issues=[]",
+          "name": "gold_documents_exist_and_hash",
+          "passed": true
+        },
+        {
+          "detail": "missing_spans=[]",
+          "name": "gold_source_spans_present",
+          "passed": true
+        },
+        {
+          "detail": "difficulty=medium",
+          "name": "difficulty_in_set",
+          "passed": true
+        },
+        {
+          "detail": "qt=fault_partial_index",
+          "name": "question_type_in_stratification",
+          "passed": true
+        },
+        {
+          "detail": "outcome=controlled_behavior",
+          "name": "fault_outcome_controlled",
+          "passed": true
+        },
+        {
+          "detail": "policy=controlled_no_fabrication",
+          "name": "fault_policy_in_set",
+          "passed": true
+        },
+        {
+          "detail": "leaks=[]",
+          "name": "hard_negative_no_answer",
+          "passed": true
+        },
+        {
+          "detail": "cgt=[] gold=[]",
+          "name": "citation_ground_truth_aligment",
+          "passed": true
+        },
+        {
+          "detail": "got=wm_auroralis_v1",
+          "name": "provenance_world_model_id",
+          "passed": true
+        },
+        {
+          "detail": "got=corpus_auroralis_v1",
+          "name": "provenance_corpus_id",
+          "passed": true
+        }
+      ],
+      "difficulty": "medium",
+      "errors": [],
+      "fatal": false,
+      "passed": true,
+      "question_type": "fault_partial_index",
+      "warnings": []
+    }
+  ],
+  "schema_version": "1.0.0",
+  "stratification_actual": {
+    "fault_partial_index": 5,
+    "graph_community": 3,
+    "graph_path": 6,
+    "graph_relation": 6,
+    "multi_hop": 20,
+    "no_answer": 5,
+    "permission_deny": 1,
+    "permission_restricted": 4,
+    "single_doc_fact": 20,
+    "temporal_conflict": 4,
+    "temporal_version": 6
+  },
+  "stratification_expected": {
+    "fault_partial_index": 5,
+    "graph_community": 3,
+    "graph_path": 6,
+    "graph_relation": 6,
+    "multi_hop": 20,
+    "no_answer": 5,
+    "permission_deny": 1,
+    "permission_restricted": 4,
+    "single_doc_fact": 20,
+    "temporal_conflict": 4,
+    "temporal_version": 6
+  },
+  "stratification_match": true,
+  "validated_at_utc": "2026-08-03T01:40:00Z",
+  "validator_id": "syn_validator_v1",
+  "validator_seed": "phase22-synthetic-2026-08-03-auroralis-v1",
+  "verdict": "PASSED",
+  "world_model_sha256": "f9b6876bd4182343b6f5d90836322c7fe4477743792264602f3b34bf9235766e"
+}

@@ -1,0 +1,630 @@
+{
+  "corpus_id": "corpus_auroralis_v1",
+  "document_count": 62,
+  "documents": [
+    {
+      "document_id": "doc_org_chart_2026",
+      "effective_at": "2026-04-01",
+      "file_name": "doc_org_chart_2026.md",
+      "kind": "org_chart",
+      "security_scope": "perm_global_open",
+      "sha256": "80c6c595d2dc80c96aec946a43614a2b0fa3cb53c53d149846df5bf60dbc17fb",
+      "title": "Auroralis Organizational Chart - 2026 Q2",
+      "version": "v2026.Q2"
+    },
+    {
+      "document_id": "doc_bio_emp_iris_vange",
+      "effective_at": "2025-12-15",
+      "file_name": "doc_bio_emp_iris_vange.md",
+      "kind": "biography",
+      "security_scope": "perm_global_open",
+      "sha256": "4111473c3dfa917752b3b24916891afcc9a20e834798f9553c830db1f6466d9a",
+      "title": "Iris Vange - Biography",
+      "version": "v1.0"
+    },
+    {
+      "document_id": "doc_iris_bio",
+      "effective_at": "2025-12-15",
+      "file_name": "doc_iris_bio.md",
+      "kind": "biography",
+      "security_scope": "perm_global_open",
+      "sha256": "0b4292701a056b484c571d033277770cfd5caee12991363d4eb0cbb0a1e45443",
+      "title": "Iris Vange - Biography (Alias)",
+      "version": "v1.0"
+    },
+    {
+      "document_id": "doc_bio_emp_marcus_tien",
+      "effective_at": "2025-12-15",
+      "file_name": "doc_bio_emp_marcus_tien.md",
+      "kind": "biography",
+      "security_scope": "perm_global_open",
+      "sha256": "4779bceecbfe2cd6e43342e9bcde8b3a6e15181d2b632c82274a24d509082d9e",
+      "title": "Marcus Tien - Biography",
+      "version": "v1.0"
+    },
+    {
+      "document_id": "doc_marcus_bio",
+      "effective_at": "2025-12-15",
+      "file_name": "doc_marcus_bio.md",
+      "kind": "biography",
+      "security_scope": "perm_global_open",
+      "sha256": "ff0dfa89df93ad4b1fe6891d4ea95d3e5a656fcf4f79b0109c1be66f134def64",
+      "title": "Marcus Tien - Biography (Alias)",
+      "version": "v1.0"
+    },
+    {
+      "document_id": "doc_bio_emp_yui_nakajima",
+      "effective_at": "2025-12-15",
+      "file_name": "doc_bio_emp_yui_nakajima.md",
+      "kind": "biography",
+      "security_scope": "perm_global_open",
+      "sha256": "1f5edc6d42a2621f399220595bbe6bd60b5ab22bb3c9fcd1fbc113357a8029bf",
+      "title": "Yui Nakajima - Biography",
+      "version": "v1.0"
+    },
+    {
+      "document_id": "doc_yui_bio",
+      "effective_at": "2025-12-15",
+      "file_name": "doc_yui_bio.md",
+      "kind": "biography",
+      "security_scope": "perm_global_open",
+      "sha256": "9a3757532da8ec0c3f18a819ec727ffa42e8177dd7c17aee099950509ae63bd1",
+      "title": "Yui Nakajima - Biography (Alias)",
+      "version": "v1.0"
+    },
+    {
+      "document_id": "doc_bio_emp_solveig_hagen",
+      "effective_at": "2025-12-15",
+      "file_name": "doc_bio_emp_solveig_hagen.md",
+      "kind": "biography",
+      "security_scope": "perm_global_open",
+      "sha256": "75e298697aa3db7358f2f4a2eb83d726483e902fd5b0159a423f56d7fc11e192",
+      "title": "Solveig Hagen - Biography",
+      "version": "v1.0"
+    },
+    {
+      "document_id": "doc_solveig_bio",
+      "effective_at": "2025-12-15",
+      "file_name": "doc_solveig_bio.md",
+      "kind": "biography",
+      "security_scope": "perm_global_open",
+      "sha256": "3738c827a8882d0fe083209fac3fac7ae89c3c836a8319e5788461f9923d9be5",
+      "title": "Solveig Hagen - Biography (Alias)",
+      "version": "v1.0"
+    },
+    {
+      "document_id": "doc_bio_emp_dmitri_orel",
+      "effective_at": "2025-12-15",
+      "file_name": "doc_bio_emp_dmitri_orel.md",
+      "kind": "biography",
+      "security_scope": "perm_global_open",
+      "sha256": "7f5e6bd816474e8bf5a9ff68bef8cd77e7e8b707a87c34e683f51b394abe5f37",
+      "title": "Dmitri Orel - Biography",
+      "version": "v1.0"
+    },
+    {
+      "document_id": "doc_dmitri_bio",
+      "effective_at": "2025-12-15",
+      "file_name": "doc_dmitri_bio.md",
+      "kind": "biography",
+      "security_scope": "perm_global_open",
+      "sha256": "5adad8fdf5068cb2d1ab3d34ee2faa536b354bed849e0060611720791144325c",
+      "title": "Dmitri Orel - Biography (Alias)",
+      "version": "v1.0"
+    },
+    {
+      "document_id": "doc_bio_emp_priya_kaur",
+      "effective_at": "2025-12-15",
+      "file_name": "doc_bio_emp_priya_kaur.md",
+      "kind": "biography",
+      "security_scope": "perm_global_open",
+      "sha256": "9dee237b96491853540c4deb8daa43f7e9f1bf19c760cbf929f1821e27a8dcc9",
+      "title": "Priya Kaur - Biography",
+      "version": "v1.0"
+    },
+    {
+      "document_id": "doc_priya_bio",
+      "effective_at": "2025-12-15",
+      "file_name": "doc_priya_bio.md",
+      "kind": "biography",
+      "security_scope": "perm_global_open",
+      "sha256": "783abdc1d45904df32f7ff0fe88b68fdd983bcfc312673d5655c535cf7582065",
+      "title": "Priya Kaur - Biography (Alias)",
+      "version": "v1.0"
+    },
+    {
+      "document_id": "doc_bio_emp_lukas_wenger",
+      "effective_at": "2025-12-15",
+      "file_name": "doc_bio_emp_lukas_wenger.md",
+      "kind": "biography",
+      "security_scope": "perm_global_open",
+      "sha256": "13d41a6a30bde62dedc958418123d5f98b83a2ad95630ad719b0e59df97b0849",
+      "title": "Lukas Wenger - Biography",
+      "version": "v1.0"
+    },
+    {
+      "document_id": "doc_lukas_bio",
+      "effective_at": "2025-12-15",
+      "file_name": "doc_lukas_bio.md",
+      "kind": "biography",
+      "security_scope": "perm_global_open",
+      "sha256": "9bce52521574fb9d708fbc04af267696825559aea8b700c9bee19970f41ea470",
+      "title": "Lukas Wenger - Biography (Alias)",
+      "version": "v1.0"
+    },
+    {
+      "document_id": "doc_bio_emp_amani_bello",
+      "effective_at": "2025-12-15",
+      "file_name": "doc_bio_emp_amani_bello.md",
+      "kind": "biography",
+      "security_scope": "perm_global_open",
+      "sha256": "016d96fa690ccaf5836895ee849191dfb7bfa6f6a27ff232fa035f15fe3ce39a",
+      "title": "Amani Bello - Biography",
+      "version": "v1.0"
+    },
+    {
+      "document_id": "doc_amani_bio",
+      "effective_at": "2025-12-15",
+      "file_name": "doc_amani_bio.md",
+      "kind": "biography",
+      "security_scope": "perm_global_open",
+      "sha256": "cdda3701e13db5008c16574aa3cd5807ace3a288da7e62d5428647cbea08d9cd",
+      "title": "Amani Bello - Biography (Alias)",
+      "version": "v1.0"
+    },
+    {
+      "document_id": "doc_bio_emp_haruto_soma",
+      "effective_at": "2025-12-15",
+      "file_name": "doc_bio_emp_haruto_soma.md",
+      "kind": "biography",
+      "security_scope": "perm_global_open",
+      "sha256": "38849f75de64162af107b0cd70528dc20ca7ed328d6779389d77d102b3590a0a",
+      "title": "Haruto Soma - Biography",
+      "version": "v1.0"
+    },
+    {
+      "document_id": "doc_haruto_bio",
+      "effective_at": "2025-12-15",
+      "file_name": "doc_haruto_bio.md",
+      "kind": "biography",
+      "security_scope": "perm_global_open",
+      "sha256": "57cd640f897f87242aace8a755822ccfc84fc56514f2abc383980784937a352f",
+      "title": "Haruto Soma - Biography (Alias)",
+      "version": "v1.0"
+    },
+    {
+      "document_id": "doc_bio_emp_eli_persson",
+      "effective_at": "2025-12-15",
+      "file_name": "doc_bio_emp_eli_persson.md",
+      "kind": "biography",
+      "security_scope": "perm_global_open",
+      "sha256": "527e56c7b52cca3fbefcfdf6ae366dfa3370a242e47b1dad62ff0ed80a8461b2",
+      "title": "Eli Persson - Biography",
+      "version": "v1.0"
+    },
+    {
+      "document_id": "doc_eli_bio",
+      "effective_at": "2025-12-15",
+      "file_name": "doc_eli_bio.md",
+      "kind": "biography",
+      "security_scope": "perm_global_open",
+      "sha256": "190fee4e953a5859adebf5a5e00a48c15f21d582f80e0fdc2d225516d4b74283",
+      "title": "Eli Persson - Biography (Alias)",
+      "version": "v1.0"
+    },
+    {
+      "document_id": "doc_bio_emp_nadya_soroka",
+      "effective_at": "2025-12-15",
+      "file_name": "doc_bio_emp_nadya_soroka.md",
+      "kind": "biography",
+      "security_scope": "perm_global_open",
+      "sha256": "f37b5ed3bb10ea6327298add7735546b507b033ed10d120be64dcce311973935",
+      "title": "Nadya Soroka - Biography",
+      "version": "v1.0"
+    },
+    {
+      "document_id": "doc_nadya_bio",
+      "effective_at": "2025-12-15",
+      "file_name": "doc_nadya_bio.md",
+      "kind": "biography",
+      "security_scope": "perm_global_open",
+      "sha256": "523ee60a79354081284ef97b6423b2086b080cd94a34881a6d19f50f1d5c3427",
+      "title": "Nadya Soroka - Biography (Alias)",
+      "version": "v1.0"
+    },
+    {
+      "document_id": "doc_bio_emp_ren_kovac",
+      "effective_at": "2025-12-15",
+      "file_name": "doc_bio_emp_ren_kovac.md",
+      "kind": "biography",
+      "security_scope": "perm_global_open",
+      "sha256": "d9e45632b562f9267b31ebd52ca5b9b3508e41ae391013539fc6a13c68aabcd4",
+      "title": "Ren Kovac - Biography",
+      "version": "v1.0"
+    },
+    {
+      "document_id": "doc_ren_bio",
+      "effective_at": "2025-12-15",
+      "file_name": "doc_ren_bio.md",
+      "kind": "biography",
+      "security_scope": "perm_global_open",
+      "sha256": "8c4d6d84883ae59ee0a97198c76958e18c78820b6a9666effe6737778756c38f",
+      "title": "Ren Kovac - Biography (Alias)",
+      "version": "v1.0"
+    },
+    {
+      "document_id": "doc_ceo_bio",
+      "effective_at": "2025-12-15",
+      "file_name": "doc_ceo_bio.md",
+      "kind": "biography",
+      "security_scope": "perm_global_open",
+      "sha256": "17432f3e6a5f194c2ef9405593757befb39db5c7a0d7e71bc0767a0f166826dc",
+      "title": "Kjartan Eliasson - CEO Biography",
+      "version": "v1.0"
+    },
+    {
+      "document_id": "doc_axis9_release_notes",
+      "effective_at": "2025-11-12",
+      "file_name": "doc_axis9_release_notes.md",
+      "kind": "release_notes",
+      "security_scope": "perm_global_open",
+      "sha256": "ae1706cb2cfd8d85a01ab22baf96ebd71e0ee159b122823df1c96b91fbf90e21",
+      "title": "Axis-9 Controller v9.4.0 - Release Notes",
+      "version": "v9.4.0"
+    },
+    {
+      "document_id": "doc_axis8_eol_memo",
+      "effective_at": "2026-03-01",
+      "file_name": "doc_axis8_eol_memo.md",
+      "kind": "memo",
+      "security_scope": "perm_global_open",
+      "sha256": "c9c90bf4d86631f2d060c37f6ee04bc44588c6b60d442c7789bcc217bb213e1f",
+      "title": "Axis-8 End-of-Life Transition Memo",
+      "version": "v1.0"
+    },
+    {
+      "document_id": "doc_lumen_e2_release_notes",
+      "effective_at": "2026-02-04",
+      "file_name": "doc_lumen_e2_release_notes.md",
+      "kind": "release_notes",
+      "security_scope": "perm_global_open",
+      "sha256": "390b8e650885a592aad592c177897854b6157823cc1f6774a069cd154373b780",
+      "title": "Lumen-E2 Appliance v2.1.0 - Release Notes",
+      "version": "v2.1.0"
+    },
+    {
+      "document_id": "doc_lumen_e1_eol_memo",
+      "effective_at": "2024-05-22",
+      "file_name": "doc_lumen_e1_eol_memo.md",
+      "kind": "memo",
+      "security_scope": "perm_global_open",
+      "sha256": "436580aa85c09468d7dc1cf335d533c6be3bb6ddd65824699f9aeaf1f360ea3e",
+      "title": "Lumen-E1 End-of-Sale Memo",
+      "version": "v1.0"
+    },
+    {
+      "document_id": "doc_forge_x1_release_notes",
+      "effective_at": "2025-08-19",
+      "file_name": "doc_forge_x1_release_notes.md",
+      "kind": "release_notes",
+      "security_scope": "perm_global_open",
+      "sha256": "d344ce3a3bd5e9f5d021569e347980a18b455a9d56ecbbefcc994db7c99fa217",
+      "title": "Forge-X1 Cell v1.3.1 - Release Notes",
+      "version": "v1.3.1"
+    },
+    {
+      "document_id": "doc_forge_x1_recall_bulletin",
+      "effective_at": "2026-04-22",
+      "file_name": "doc_forge_x1_recall_bulletin.md",
+      "kind": "field_bulletin",
+      "security_scope": "perm_global_open",
+      "sha256": "63b94eed62e155a8ccf6ac1c22faea0556d69aacb7d972988162fefdeca8a384",
+      "title": "Forge-X1 Powder Feed Corrective Action Bulletin",
+      "version": "v1.0"
+    },
+    {
+      "document_id": "doc_northwind_sdk_overview",
+      "effective_at": "2026-01-15",
+      "file_name": "doc_northwind_sdk_overview.md",
+      "kind": "architecture",
+      "security_scope": "perm_global_open",
+      "sha256": "cdfc6cbb30d7739db22bad9ce6b0d58fae86f704ce2769be249ff03cb84bb56e",
+      "title": "Northwind Industrial SDK v3.0 - Architecture Overview",
+      "version": "v3.0.0"
+    },
+    {
+      "document_id": "doc_helion_contract",
+      "effective_at": "2024-01-15",
+      "file_name": "doc_helion_contract.md",
+      "kind": "contract_summary",
+      "security_scope": "perm_div_auto_confidential",
+      "sha256": "c7a437905e00acef31f5b22b08ec1daabca97740914a6a83a0ef6c84ce7670cf",
+      "title": "Helion Motors Master Supply Agreement (2024 Edition)",
+      "version": "v3"
+    },
+    {
+      "document_id": "doc_kobal_contract",
+      "effective_at": "2025-03-01",
+      "file_name": "doc_kobal_contract.md",
+      "kind": "contract_summary",
+      "security_scope": "perm_div_auto_confidential",
+      "sha256": "1f267bba81a08dbb076fea5496e8dc6bd86929bf9d6ec7c2f9c0ad7a2c46af4f",
+      "title": "Kobal Silicon Master Supply Agreement (2025 Edition)",
+      "version": "v2"
+    },
+    {
+      "document_id": "doc_meridian_contract",
+      "effective_at": "2025-06-01",
+      "file_name": "doc_meridian_contract.md",
+      "kind": "contract_summary",
+      "security_scope": "perm_global_open",
+      "sha256": "d653adcc7121754d1e32894f5ea839bd1ce2f9e3dcde2c0089e31f5b058a656a",
+      "title": "Meridian Logistics MSA - Service Description",
+      "version": "v1"
+    },
+    {
+      "document_id": "doc_polaris_contract_v1",
+      "effective_at": "2024-09-01",
+      "file_name": "doc_polaris_contract_v1.md",
+      "kind": "contract_summary",
+      "security_scope": "perm_global_open",
+      "sha256": "68381783c7dec689faab148a2c3c2c5fba8bec07b5b2fa69f0f8d508626cf472",
+      "title": "Polaris Steel MSA (2024 Edition) - Archived Summary",
+      "version": "v1"
+    },
+    {
+      "document_id": "doc_polaris_contract_v2",
+      "effective_at": "2025-09-01",
+      "file_name": "doc_polaris_contract_v2.md",
+      "kind": "contract_summary",
+      "security_scope": "perm_global_open",
+      "sha256": "034cb868a9ff1f710096ffccd77c935b316f56e6cffa954d5af7b912e127ba6b",
+      "title": "Polaris Steel MSA (2025 Edition) - Summary",
+      "version": "v2"
+    },
+    {
+      "document_id": "doc_supplier_brief_sup_helion_motors",
+      "effective_at": "2025-12-01",
+      "file_name": "doc_supplier_brief_sup_helion_motors.md",
+      "kind": "supplier_brief",
+      "security_scope": "perm_global_open",
+      "sha256": "0497a756562be59027597c87b85613aea0e8107667f50a7c6b18459c9b213091",
+      "title": "Helion Motors GmbH - Supplier Brief",
+      "version": "v1.0"
+    },
+    {
+      "document_id": "doc_supplier_brief_sup_kobal_silicon",
+      "effective_at": "2025-12-01",
+      "file_name": "doc_supplier_brief_sup_kobal_silicon.md",
+      "kind": "supplier_brief",
+      "security_scope": "perm_global_open",
+      "sha256": "dd35c9b360d004c452c427abdb8ed9a99ea312c76afb7140dbbb0ba6152c3fe0",
+      "title": "Kobal Silicon S.A. - Supplier Brief",
+      "version": "v1.0"
+    },
+    {
+      "document_id": "doc_supplier_brief_sup_meridian_logistics",
+      "effective_at": "2025-12-01",
+      "file_name": "doc_supplier_brief_sup_meridian_logistics.md",
+      "kind": "supplier_brief",
+      "security_scope": "perm_global_open",
+      "sha256": "967f491f3de0ea2f167e82b7d43fe377a847957115c4b96227dd9883f4638ff0",
+      "title": "Meridian Logistics Co. - Supplier Brief",
+      "version": "v1.0"
+    },
+    {
+      "document_id": "doc_supplier_brief_sup_polaris_steel",
+      "effective_at": "2025-12-01",
+      "file_name": "doc_supplier_brief_sup_polaris_steel.md",
+      "kind": "supplier_brief",
+      "security_scope": "perm_global_open",
+      "sha256": "f8bebe54471e55194713812b0e9ead92d18c06b47bbc66059241b111941a4927",
+      "title": "Polaris Steel Industries - Supplier Brief",
+      "version": "v1.0"
+    },
+    {
+      "document_id": "doc_supplier_brief_sup_ozone_chem",
+      "effective_at": "2025-12-01",
+      "file_name": "doc_supplier_brief_sup_ozone_chem.md",
+      "kind": "supplier_brief",
+      "security_scope": "perm_global_open",
+      "sha256": "62bcf80b7d8f0bc6830c559f7a73ba75ff2578968d8689699acabe64a3b0944c",
+      "title": "Ozone Chemicals Ltd. - Supplier Brief",
+      "version": "v1.0"
+    },
+    {
+      "document_id": "doc_security_policy_2024",
+      "effective_at": "2024-01-01",
+      "file_name": "doc_security_policy_2024.md",
+      "kind": "policy",
+      "security_scope": "perm_global_open",
+      "sha256": "5e865585cee6d04d5772303a8485df7b717a06da2eeae20ad12dcc79c4b9d588",
+      "title": "Information Security Policy (2024 Edition)",
+      "version": "v4.1"
+    },
+    {
+      "document_id": "doc_security_policy_2026",
+      "effective_at": "2026-01-01",
+      "file_name": "doc_security_policy_2026.md",
+      "kind": "policy",
+      "security_scope": "perm_global_open",
+      "sha256": "3005220f70926f3162b6d2d061f1bc017d443a7be8329311ce2dbd9eb2f075ab",
+      "title": "Information Security Policy (2026 Edition)",
+      "version": "v4.2"
+    },
+    {
+      "document_id": "doc_procurement_policy",
+      "effective_at": "2025-04-01",
+      "file_name": "doc_procurement_policy.md",
+      "kind": "policy",
+      "security_scope": "perm_global_open",
+      "sha256": "1e179581831185a1af7c487043ab194af6ed165d358b066d3326eb463e4f4f79",
+      "title": "Procurement and Supplier Onboarding Policy",
+      "version": "v2.0"
+    },
+    {
+      "document_id": "doc_quality_policy",
+      "effective_at": "2025-07-15",
+      "file_name": "doc_quality_policy.md",
+      "kind": "policy",
+      "security_scope": "perm_global_open",
+      "sha256": "4db93e7314041a591983fa88cf2dd22a25eff2d55054e9db3210bade9622a9c4",
+      "title": "Quality Management System Policy",
+      "version": "v3.1"
+    },
+    {
+      "document_id": "doc_export_policy",
+      "effective_at": "2025-02-01",
+      "file_name": "doc_export_policy.md",
+      "kind": "policy",
+      "security_scope": "perm_legal_privileged",
+      "sha256": "f85a8e3711a7d549e6142e58a650c3bdb2e4c10b7fe8a98a5bc4e9124c507a52",
+      "title": "Export Control and Trade Compliance Policy",
+      "version": "v1.5"
+    },
+    {
+      "document_id": "doc_northwind_charter",
+      "effective_at": "2025-09-01",
+      "file_name": "doc_northwind_charter.md",
+      "kind": "project_charter",
+      "security_scope": "perm_div_auto_confidential",
+      "sha256": "add9d0b994ded32c75845792c52ca01f3344c439091024562f6df61b43eada4a",
+      "title": "Project Northwind - Charter and Milestones",
+      "version": "v1.2"
+    },
+    {
+      "document_id": "doc_lumenx_charter",
+      "effective_at": "2026-01-15",
+      "file_name": "doc_lumenx_charter.md",
+      "kind": "project_charter",
+      "security_scope": "perm_div_auto_confidential",
+      "sha256": "62c889885eced271dc355a84ea52d4d029d05f3e527eb9ccbd79a9fda2babbd8",
+      "title": "Project Lumen-X - Charter and Risk Register",
+      "version": "v1.0"
+    },
+    {
+      "document_id": "doc_forge2_charter",
+      "effective_at": "2025-11-01",
+      "file_name": "doc_forge2_charter.md",
+      "kind": "project_charter",
+      "security_scope": "perm_global_open",
+      "sha256": "812d08c25373707d7493be0f10cd2187cc58646b4745e378e9b8b02d878f15ff",
+      "title": "Project Forge-II - Charter and BOM",
+      "version": "v1.1"
+    },
+    {
+      "document_id": "doc_northwind_status_2026_q2",
+      "effective_at": "2026-07-05",
+      "file_name": "doc_northwind_status_2026_q2.md",
+      "kind": "status_report",
+      "security_scope": "perm_div_auto_confidential",
+      "sha256": "edfd7fa3411de29c1bedafb11193babb04e58cacf07bd5f14d6e2474b1e93f03",
+      "title": "Project Northwind - Status Report 2026 Q2",
+      "version": "v1.0"
+    },
+    {
+      "document_id": "doc_lumenx_status_2026_q2",
+      "effective_at": "2026-07-12",
+      "file_name": "doc_lumenx_status_2026_q2.md",
+      "kind": "status_report",
+      "security_scope": "perm_div_auto_confidential",
+      "sha256": "b43039241b1dcf104f273870f666b1853ed0d383a0a95f38f6fc50ec9f4eaa13",
+      "title": "Project Lumen-X - Status Report 2026 Q2",
+      "version": "v1.0"
+    },
+    {
+      "document_id": "doc_forge2_status_2026_q2",
+      "effective_at": "2026-07-10",
+      "file_name": "doc_forge2_status_2026_q2.md",
+      "kind": "status_report",
+      "security_scope": "perm_global_open",
+      "sha256": "7617407963cca898c3ec6a5705f45e8ba46fb4447d01fcbfc867b5440235a0b7",
+      "title": "Project Forge-II - Status Report 2026 Q2",
+      "version": "v1.0"
+    },
+    {
+      "document_id": "doc_northwind_meeting_minutes",
+      "effective_at": "2026-06-16",
+      "file_name": "doc_northwind_meeting_minutes.md",
+      "kind": "minutes",
+      "security_scope": "perm_div_auto_confidential",
+      "sha256": "48c5e725936237678878d2645d77b2d39d866018b60f7214846d428f57eb15d7",
+      "title": "Northwind Steering Committee - Minutes 2026-06-15",
+      "version": "v1.0"
+    },
+    {
+      "document_id": "doc_forge_x1_field_log",
+      "effective_at": "2026-06-30",
+      "file_name": "doc_forge_x1_field_log.md",
+      "kind": "field_log",
+      "security_scope": "perm_div_auto_confidential",
+      "sha256": "59eeabeb7a0509807b785f1cdd5d9ce9316ab3f6f852d9947fc0187efde7c6b3",
+      "title": "Forge-X1 Field Service Log Excerpt (2026 Q2)",
+      "version": "v1.0"
+    },
+    {
+      "document_id": "doc_iris_field_visit",
+      "effective_at": "2026-05-05",
+      "file_name": "doc_iris_field_visit.md",
+      "kind": "field_notes",
+      "security_scope": "perm_div_auto_confidential",
+      "sha256": "5917660e25b4ebe0e4c5c17f2a85325f08b2d6ee1e23f1a9892398af8d8b7752",
+      "title": "Iris Vange Field Visit Notes - Hannover 2026-05-04",
+      "version": "v1.0"
+    },
+    {
+      "document_id": "doc_quality_audit_2026_q1",
+      "effective_at": "2026-04-30",
+      "file_name": "doc_quality_audit_2026_q1.md",
+      "kind": "audit_report",
+      "security_scope": "perm_global_open",
+      "sha256": "3c263b02e618a761fe6357420046d5869e7e72f82d1f97660cbe5157c4a8d38c",
+      "title": "Quality System Audit - 2026 Q1",
+      "version": "v1.0"
+    },
+    {
+      "document_id": "doc_kobal_quality_incident",
+      "effective_at": "2026-03-22",
+      "file_name": "doc_kobal_quality_incident.md",
+      "kind": "incident_report",
+      "security_scope": "perm_div_auto_confidential",
+      "sha256": "7cd8b9bc86a89f69c0004b51590b7b63ac9a8e49ff49878be657a1b19f3be14b",
+      "title": "Kobal Silicon Quality Incident Report - 2026-03-19",
+      "version": "v1.0"
+    },
+    {
+      "document_id": "doc_audit_findings_2026_q1",
+      "effective_at": "2026-05-10",
+      "file_name": "doc_audit_findings_2026_q1.md",
+      "kind": "audit_report",
+      "security_scope": "perm_legal_privileged",
+      "sha256": "9f1ded81e30396305f157cbabee7248573c5bef7e888e72688525a3c8d62a597",
+      "title": "Internal Audit Findings - 2026 Q1 (Legal Privileged)",
+      "version": "v1.0"
+    },
+    {
+      "document_id": "doc_audit_findings_2025_q4",
+      "effective_at": "2026-02-15",
+      "file_name": "doc_audit_findings_2025_q4.md",
+      "kind": "audit_report",
+      "security_scope": "perm_finance_audit",
+      "sha256": "589d383288fb96cefe36dae86b5cb67dfe84a686f19c90465561743d3dd8842d",
+      "title": "Internal Audit Findings - 2025 Q4 (Finance Restricted)",
+      "version": "v1.0"
+    },
+    {
+      "document_id": "doc_corp_calendar_2026",
+      "effective_at": "2026-01-01",
+      "file_name": "doc_corp_calendar_2026.md",
+      "kind": "calendar",
+      "security_scope": "perm_global_open",
+      "sha256": "8d0b6907555559c249062530ea34037d7fc77284c64c34906643350dad20e8ce",
+      "title": "Auroralis Corporate Calendar - 2026",
+      "version": "v1.0"
+    }
+  ],
+  "generated_at_utc": "2026-08-03T01:37:00Z",
+  "generation_seed": "phase22-synthetic-2026-08-03-auroralis-v1",
+  "schema_version": "1.0.0",
+  "world_model_id": "wm_auroralis_v1"
+}

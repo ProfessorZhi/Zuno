@@ -1,0 +1,54 @@
+{
+  "index_construction_evidence": {
+    "elasticsearch_bm25": {
+      "endpoint": "http://127.0.0.1:9200",
+      "index_name": "zuno_syn_auroralis_v1",
+      "ingestion_status": "blocked_service_unreachable",
+      "reachable": false,
+      "service": "elasticsearch"
+    },
+    "milvus_vector": {
+      "collection": "zuno_syn_auroralis_v1",
+      "endpoint": "127.0.0.1:19530",
+      "ingestion_status": "blocked_service_unreachable",
+      "reachable": false,
+      "service": "milvus"
+    },
+    "neo4j_graph": {
+      "endpoint": "bolt://127.0.0.1:7687",
+      "graph_name": "zuno.syn.auroralis.v1",
+      "ingestion_status": "blocked_service_unreachable",
+      "reachable": false,
+      "service": "neo4j"
+    }
+  },
+  "ingested_via_canonical_ir": true,
+  "ingestion_id": "ingest_auroralis_v1",
+  "is_test_double": false,
+  "knowledge_version": {
+    "canonical_ir_hash": "764378c721971bad4349259b566116bfe42a9b658a6c18cd376f8ab4374fe1ee",
+    "corpus_id": "corpus_auroralis_v1",
+    "effective_at": "2026-08-03",
+    "ir_id": "ir_auroralis_v1",
+    "knowledge_snapshot_id": "snapshot_phase22-synthetic-2026-08-03-auroralis-v1_0f7a8a8e-3a70-551f-880f-cc0c5fbbde16",
+    "knowledge_version_id": "kv_auroralis_v1",
+    "schema_version": "1.0.0",
+    "status": "draft",
+    "world_model_hash": "764378c721971bad4349259b566116bfe42a9b658a6c18cd376f8ab4374fe1ee"
+  },
+  "ran_at_utc": "2026-08-03T01:46:00Z",
+  "runtime_dependencies": {
+    "elasticsearch": false,
+    "milvus": false,
+    "minio": false,
+    "neo4j": false,
+    "postgres": false,
+    "rabbitmq": false
+  },
+  "schema_version": "1.0.0",
+  "snapshot": {
+    "document_count": 62,
+    "snapshot_id": "snapshot_phase22-synthetic-2026-08-03-auroralis-v1_0f7a8a8e-3a70-551f-880f-cc0c5fbbde16",
+    "world_model_id": "wm_auroralis_v1"
+  }
+}

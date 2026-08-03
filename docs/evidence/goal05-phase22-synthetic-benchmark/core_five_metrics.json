@@ -1,0 +1,18 @@
+{
+  "agentic_graphrag": {
+    "blocked_reason": "canonical_elasticsearch_unavailable,canonical_milvus_unavailable,canonical_neo4j_unavailable,canonical_agent_runtime_unavailable",
+    "measurement_state": "BLOCKED"
+  },
+  "deep_graphrag": {
+    "blocked_reason": "canonical_elasticsearch_unavailable,canonical_milvus_unavailable,canonical_neo4j_unavailable",
+    "measurement_state": "BLOCKED"
+  },
+  "local_graphrag": {
+    "blocked_reason": "canonical_elasticsearch_unavailable,canonical_milvus_unavailable,canonical_neo4j_unavailable",
+    "measurement_state": "BLOCKED"
+  },
+  "standard_rag": {
+    "blocked_reason": "canonical_elasticsearch_unavailable,canonical_milvus_unavailable",
+    "measurement_state": "BLOCKED"
+  }
+}

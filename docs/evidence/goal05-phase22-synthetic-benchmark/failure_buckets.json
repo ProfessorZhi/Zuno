@@ -1,0 +1,14 @@
+{
+  "agentic_graphrag": {
+    "canonical_elasticsearch_unavailable": 80
+  },
+  "deep_graphrag": {
+    "canonical_elasticsearch_unavailable": 80
+  },
+  "local_graphrag": {
+    "canonical_elasticsearch_unavailable": 80
+  },
+  "standard_rag": {
+    "canonical_elasticsearch_unavailable": 80
+  }
+}

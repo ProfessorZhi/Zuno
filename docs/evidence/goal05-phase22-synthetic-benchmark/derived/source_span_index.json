@@ -1,0 +1,835 @@
+{
+  "doc_amani_bio": {
+    "effective_at": "2025-12-15",
+    "security_scope": "perm_global_open",
+    "source_spans": [
+      {
+        "expected_text_substring": "emp_amani_bello",
+        "is_authoritative": true,
+        "topic_ref": "emp_amani_bello"
+      }
+    ],
+    "version": "v1.0"
+  },
+  "doc_audit_findings_2025_q4": {
+    "effective_at": "2026-02-15",
+    "security_scope": "perm_finance_audit",
+    "source_spans": [
+      {
+        "expected_text_substring": "ct_polaris_2025",
+        "is_authoritative": true,
+        "topic_ref": "ct_polaris_2025"
+      }
+    ],
+    "version": "v1.0"
+  },
+  "doc_audit_findings_2026_q1": {
+    "effective_at": "2026-05-10",
+    "security_scope": "perm_legal_privileged",
+    "source_spans": [
+      {
+        "expected_text_substring": "pol_legal_2025",
+        "is_authoritative": true,
+        "topic_ref": "pol_legal_2025"
+      }
+    ],
+    "version": "v1.0"
+  },
+  "doc_axis8_eol_memo": {
+    "effective_at": "2026-03-01",
+    "security_scope": "perm_global_open",
+    "source_spans": [
+      {
+        "expected_text_substring": "prod_axis_8",
+        "is_authoritative": true,
+        "topic_ref": "prod_axis_8"
+      },
+      {
+        "expected_text_substring": "evt_axis_8_eol",
+        "is_authoritative": true,
+        "topic_ref": "evt_axis_8_eol"
+      }
+    ],
+    "version": "v1.0"
+  },
+  "doc_axis9_release_notes": {
+    "effective_at": "2025-11-12",
+    "security_scope": "perm_global_open",
+    "source_spans": [
+      {
+        "expected_text_substring": "prod_axis_9",
+        "is_authoritative": true,
+        "topic_ref": "prod_axis_9"
+      },
+      {
+        "expected_text_substring": "evt_axis_9_release",
+        "is_authoritative": true,
+        "topic_ref": "evt_axis_9_release"
+      }
+    ],
+    "version": "v9.4.0"
+  },
+  "doc_bio_emp_amani_bello": {
+    "effective_at": "2025-12-15",
+    "security_scope": "perm_global_open",
+    "source_spans": [
+      {
+        "expected_text_substring": "emp_amani_bello",
+        "is_authoritative": true,
+        "topic_ref": "emp_amani_bello"
+      }
+    ],
+    "version": "v1.0"
+  },
+  "doc_bio_emp_dmitri_orel": {
+    "effective_at": "2025-12-15",
+    "security_scope": "perm_global_open",
+    "source_spans": [
+      {
+        "expected_text_substring": "emp_dmitri_orel",
+        "is_authoritative": true,
+        "topic_ref": "emp_dmitri_orel"
+      }
+    ],
+    "version": "v1.0"
+  },
+  "doc_bio_emp_eli_persson": {
+    "effective_at": "2025-12-15",
+    "security_scope": "perm_global_open",
+    "source_spans": [
+      {
+        "expected_text_substring": "emp_eli_persson",
+        "is_authoritative": true,
+        "topic_ref": "emp_eli_persson"
+      }
+    ],
+    "version": "v1.0"
+  },
+  "doc_bio_emp_haruto_soma": {
+    "effective_at": "2025-12-15",
+    "security_scope": "perm_global_open",
+    "source_spans": [
+      {
+        "expected_text_substring": "emp_haruto_soma",
+        "is_authoritative": true,
+        "topic_ref": "emp_haruto_soma"
+      }
+    ],
+    "version": "v1.0"
+  },
+  "doc_bio_emp_iris_vange": {
+    "effective_at": "2025-12-15",
+    "security_scope": "perm_global_open",
+    "source_spans": [
+      {
+        "expected_text_substring": "emp_iris_vange",
+        "is_authoritative": true,
+        "topic_ref": "emp_iris_vange"
+      }
+    ],
+    "version": "v1.0"
+  },
+  "doc_bio_emp_lukas_wenger": {
+    "effective_at": "2025-12-15",
+    "security_scope": "perm_global_open",
+    "source_spans": [
+      {
+        "expected_text_substring": "emp_lukas_wenger",
+        "is_authoritative": true,
+        "topic_ref": "emp_lukas_wenger"
+      }
+    ],
+    "version": "v1.0"
+  },
+  "doc_bio_emp_marcus_tien": {
+    "effective_at": "2025-12-15",
+    "security_scope": "perm_global_open",
+    "source_spans": [
+      {
+        "expected_text_substring": "emp_marcus_tien",
+        "is_authoritative": true,
+        "topic_ref": "emp_marcus_tien"
+      }
+    ],
+    "version": "v1.0"
+  },
+  "doc_bio_emp_nadya_soroka": {
+    "effective_at": "2025-12-15",
+    "security_scope": "perm_global_open",
+    "source_spans": [
+      {
+        "expected_text_substring": "emp_nadya_soroka",
+        "is_authoritative": true,
+        "topic_ref": "emp_nadya_soroka"
+      }
+    ],
+    "version": "v1.0"
+  },
+  "doc_bio_emp_priya_kaur": {
+    "effective_at": "2025-12-15",
+    "security_scope": "perm_global_open",
+    "source_spans": [
+      {
+        "expected_text_substring": "emp_priya_kaur",
+        "is_authoritative": true,
+        "topic_ref": "emp_priya_kaur"
+      }
+    ],
+    "version": "v1.0"
+  },
+  "doc_bio_emp_ren_kovac": {
+    "effective_at": "2025-12-15",
+    "security_scope": "perm_global_open",
+    "source_spans": [
+      {
+        "expected_text_substring": "emp_ren_kovac",
+        "is_authoritative": true,
+        "topic_ref": "emp_ren_kovac"
+      }
+    ],
+    "version": "v1.0"
+  },
+  "doc_bio_emp_solveig_hagen": {
+    "effective_at": "2025-12-15",
+    "security_scope": "perm_global_open",
+    "source_spans": [
+      {
+        "expected_text_substring": "emp_solveig_hagen",
+        "is_authoritative": true,
+        "topic_ref": "emp_solveig_hagen"
+      }
+    ],
+    "version": "v1.0"
+  },
+  "doc_bio_emp_yui_nakajima": {
+    "effective_at": "2025-12-15",
+    "security_scope": "perm_global_open",
+    "source_spans": [
+      {
+        "expected_text_substring": "emp_yui_nakajima",
+        "is_authoritative": true,
+        "topic_ref": "emp_yui_nakajima"
+      }
+    ],
+    "version": "v1.0"
+  },
+  "doc_ceo_bio": {
+    "effective_at": "2025-12-15",
+    "security_scope": "perm_global_open",
+    "source_spans": [
+      {
+        "expected_text_substring": "ceo_kjartan_eli",
+        "is_authoritative": true,
+        "topic_ref": "ceo_kjartan_eli"
+      }
+    ],
+    "version": "v1.0"
+  },
+  "doc_corp_calendar_2026": {
+    "effective_at": "2026-01-01",
+    "security_scope": "perm_global_open",
+    "source_spans": [],
+    "version": "v1.0"
+  },
+  "doc_dmitri_bio": {
+    "effective_at": "2025-12-15",
+    "security_scope": "perm_global_open",
+    "source_spans": [
+      {
+        "expected_text_substring": "emp_dmitri_orel",
+        "is_authoritative": true,
+        "topic_ref": "emp_dmitri_orel"
+      }
+    ],
+    "version": "v1.0"
+  },
+  "doc_eli_bio": {
+    "effective_at": "2025-12-15",
+    "security_scope": "perm_global_open",
+    "source_spans": [
+      {
+        "expected_text_substring": "emp_eli_persson",
+        "is_authoritative": true,
+        "topic_ref": "emp_eli_persson"
+      }
+    ],
+    "version": "v1.0"
+  },
+  "doc_export_policy": {
+    "effective_at": "2025-02-01",
+    "security_scope": "perm_legal_privileged",
+    "source_spans": [
+      {
+        "expected_text_substring": "pol_legal_2025",
+        "is_authoritative": true,
+        "topic_ref": "pol_legal_2025"
+      }
+    ],
+    "version": "v1.5"
+  },
+  "doc_forge2_charter": {
+    "effective_at": "2025-11-01",
+    "security_scope": "perm_global_open",
+    "source_spans": [
+      {
+        "expected_text_substring": "proj_forge2",
+        "is_authoritative": true,
+        "topic_ref": "proj_forge2"
+      }
+    ],
+    "version": "v1.1"
+  },
+  "doc_forge2_status_2026_q2": {
+    "effective_at": "2026-07-10",
+    "security_scope": "perm_global_open",
+    "source_spans": [
+      {
+        "expected_text_substring": "proj_forge2",
+        "is_authoritative": true,
+        "topic_ref": "proj_forge2"
+      },
+      {
+        "expected_text_substring": "prod_forge_x1",
+        "is_authoritative": true,
+        "topic_ref": "prod_forge_x1"
+      }
+    ],
+    "version": "v1.0"
+  },
+  "doc_forge_x1_field_log": {
+    "effective_at": "2026-06-30",
+    "security_scope": "perm_div_auto_confidential",
+    "source_spans": [
+      {
+        "expected_text_substring": "prod_forge_x1",
+        "is_authoritative": true,
+        "topic_ref": "prod_forge_x1"
+      },
+      {
+        "expected_text_substring": "evt_forge_x1_recall",
+        "is_authoritative": true,
+        "topic_ref": "evt_forge_x1_recall"
+      }
+    ],
+    "version": "v1.0"
+  },
+  "doc_forge_x1_recall_bulletin": {
+    "effective_at": "2026-04-22",
+    "security_scope": "perm_global_open",
+    "source_spans": [
+      {
+        "expected_text_substring": "prod_forge_x1",
+        "is_authoritative": true,
+        "topic_ref": "prod_forge_x1"
+      },
+      {
+        "expected_text_substring": "evt_forge_x1_recall",
+        "is_authoritative": true,
+        "topic_ref": "evt_forge_x1_recall"
+      }
+    ],
+    "version": "v1.0"
+  },
+  "doc_forge_x1_release_notes": {
+    "effective_at": "2025-08-19",
+    "security_scope": "perm_global_open",
+    "source_spans": [
+      {
+        "expected_text_substring": "prod_forge_x1",
+        "is_authoritative": true,
+        "topic_ref": "prod_forge_x1"
+      }
+    ],
+    "version": "v1.3.1"
+  },
+  "doc_haruto_bio": {
+    "effective_at": "2025-12-15",
+    "security_scope": "perm_global_open",
+    "source_spans": [
+      {
+        "expected_text_substring": "emp_haruto_soma",
+        "is_authoritative": true,
+        "topic_ref": "emp_haruto_soma"
+      }
+    ],
+    "version": "v1.0"
+  },
+  "doc_helion_contract": {
+    "effective_at": "2024-01-15",
+    "security_scope": "perm_div_auto_confidential",
+    "source_spans": [
+      {
+        "expected_text_substring": "sup_helion_motors",
+        "is_authoritative": true,
+        "topic_ref": "sup_helion_motors"
+      },
+      {
+        "expected_text_substring": "ct_helion_2024",
+        "is_authoritative": true,
+        "topic_ref": "ct_helion_2024"
+      }
+    ],
+    "version": "v3"
+  },
+  "doc_iris_bio": {
+    "effective_at": "2025-12-15",
+    "security_scope": "perm_global_open",
+    "source_spans": [
+      {
+        "expected_text_substring": "emp_iris_vange",
+        "is_authoritative": true,
+        "topic_ref": "emp_iris_vange"
+      }
+    ],
+    "version": "v1.0"
+  },
+  "doc_iris_field_visit": {
+    "effective_at": "2026-05-05",
+    "security_scope": "perm_div_auto_confidential",
+    "source_spans": [
+      {
+        "expected_text_substring": "sup_helion_motors",
+        "is_authoritative": true,
+        "topic_ref": "sup_helion_motors"
+      },
+      {
+        "expected_text_substring": "ct_helion_2024",
+        "is_authoritative": true,
+        "topic_ref": "ct_helion_2024"
+      }
+    ],
+    "version": "v1.0"
+  },
+  "doc_kobal_contract": {
+    "effective_at": "2025-03-01",
+    "security_scope": "perm_div_auto_confidential",
+    "source_spans": [
+      {
+        "expected_text_substring": "sup_kobal_silicon",
+        "is_authoritative": true,
+        "topic_ref": "sup_kobal_silicon"
+      },
+      {
+        "expected_text_substring": "ct_kobal_2025",
+        "is_authoritative": true,
+        "topic_ref": "ct_kobal_2025"
+      }
+    ],
+    "version": "v2"
+  },
+  "doc_kobal_quality_incident": {
+    "effective_at": "2026-03-22",
+    "security_scope": "perm_div_auto_confidential",
+    "source_spans": [
+      {
+        "expected_text_substring": "sup_kobal_silicon",
+        "is_authoritative": true,
+        "topic_ref": "sup_kobal_silicon"
+      },
+      {
+        "expected_text_substring": "ct_kobal_2025",
+        "is_authoritative": true,
+        "topic_ref": "ct_kobal_2025"
+      }
+    ],
+    "version": "v1.0"
+  },
+  "doc_lukas_bio": {
+    "effective_at": "2025-12-15",
+    "security_scope": "perm_global_open",
+    "source_spans": [
+      {
+        "expected_text_substring": "emp_lukas_wenger",
+        "is_authoritative": true,
+        "topic_ref": "emp_lukas_wenger"
+      }
+    ],
+    "version": "v1.0"
+  },
+  "doc_lumen_e1_eol_memo": {
+    "effective_at": "2024-05-22",
+    "security_scope": "perm_global_open",
+    "source_spans": [
+      {
+        "expected_text_substring": "prod_lumen_e1",
+        "is_authoritative": true,
+        "topic_ref": "prod_lumen_e1"
+      }
+    ],
+    "version": "v1.0"
+  },
+  "doc_lumen_e2_release_notes": {
+    "effective_at": "2026-02-04",
+    "security_scope": "perm_global_open",
+    "source_spans": [
+      {
+        "expected_text_substring": "prod_lumen_e2",
+        "is_authoritative": true,
+        "topic_ref": "prod_lumen_e2"
+      },
+      {
+        "expected_text_substring": "evt_lumen_e2_release",
+        "is_authoritative": true,
+        "topic_ref": "evt_lumen_e2_release"
+      }
+    ],
+    "version": "v2.1.0"
+  },
+  "doc_lumenx_charter": {
+    "effective_at": "2026-01-15",
+    "security_scope": "perm_div_auto_confidential",
+    "source_spans": [
+      {
+        "expected_text_substring": "proj_lumenx",
+        "is_authoritative": true,
+        "topic_ref": "proj_lumenx"
+      }
+    ],
+    "version": "v1.0"
+  },
+  "doc_lumenx_status_2026_q2": {
+    "effective_at": "2026-07-12",
+    "security_scope": "perm_div_auto_confidential",
+    "source_spans": [
+      {
+        "expected_text_substring": "proj_lumenx",
+        "is_authoritative": true,
+        "topic_ref": "proj_lumenx"
+      },
+      {
+        "expected_text_substring": "prod_lumen_e2",
+        "is_authoritative": true,
+        "topic_ref": "prod_lumen_e2"
+      }
+    ],
+    "version": "v1.0"
+  },
+  "doc_marcus_bio": {
+    "effective_at": "2025-12-15",
+    "security_scope": "perm_global_open",
+    "source_spans": [
+      {
+        "expected_text_substring": "emp_marcus_tien",
+        "is_authoritative": true,
+        "topic_ref": "emp_marcus_tien"
+      }
+    ],
+    "version": "v1.0"
+  },
+  "doc_meridian_contract": {
+    "effective_at": "2025-06-01",
+    "security_scope": "perm_global_open",
+    "source_spans": [
+      {
+        "expected_text_substring": "sup_meridian_logistics",
+        "is_authoritative": true,
+        "topic_ref": "sup_meridian_logistics"
+      },
+      {
+        "expected_text_substring": "ct_meridian_2025",
+        "is_authoritative": true,
+        "topic_ref": "ct_meridian_2025"
+      }
+    ],
+    "version": "v1"
+  },
+  "doc_nadya_bio": {
+    "effective_at": "2025-12-15",
+    "security_scope": "perm_global_open",
+    "source_spans": [
+      {
+        "expected_text_substring": "emp_nadya_soroka",
+        "is_authoritative": true,
+        "topic_ref": "emp_nadya_soroka"
+      }
+    ],
+    "version": "v1.0"
+  },
+  "doc_northwind_charter": {
+    "effective_at": "2025-09-01",
+    "security_scope": "perm_div_auto_confidential",
+    "source_spans": [
+      {
+        "expected_text_substring": "proj_northwind",
+        "is_authoritative": true,
+        "topic_ref": "proj_northwind"
+      }
+    ],
+    "version": "v1.2"
+  },
+  "doc_northwind_meeting_minutes": {
+    "effective_at": "2026-06-16",
+    "security_scope": "perm_div_auto_confidential",
+    "source_spans": [
+      {
+        "expected_text_substring": "proj_northwind",
+        "is_authoritative": true,
+        "topic_ref": "proj_northwind"
+      },
+      {
+        "expected_text_substring": "emp_haruto_soma",
+        "is_authoritative": true,
+        "topic_ref": "emp_haruto_soma"
+      }
+    ],
+    "version": "v1.0"
+  },
+  "doc_northwind_sdk_overview": {
+    "effective_at": "2026-01-15",
+    "security_scope": "perm_global_open",
+    "source_spans": [
+      {
+        "expected_text_substring": "prod_northwind_sdk",
+        "is_authoritative": true,
+        "topic_ref": "prod_northwind_sdk"
+      },
+      {
+        "expected_text_substring": "proj_northwind",
+        "is_authoritative": true,
+        "topic_ref": "proj_northwind"
+      }
+    ],
+    "version": "v3.0.0"
+  },
+  "doc_northwind_status_2026_q2": {
+    "effective_at": "2026-07-05",
+    "security_scope": "perm_div_auto_confidential",
+    "source_spans": [
+      {
+        "expected_text_substring": "proj_northwind",
+        "is_authoritative": true,
+        "topic_ref": "proj_northwind"
+      },
+      {
+        "expected_text_substring": "prod_northwind_sdk",
+        "is_authoritative": true,
+        "topic_ref": "prod_northwind_sdk"
+      }
+    ],
+    "version": "v1.0"
+  },
+  "doc_org_chart_2026": {
+    "effective_at": "2026-04-01",
+    "security_scope": "perm_global_open",
+    "source_spans": [
+      {
+        "expected_text_substring": "employees",
+        "is_authoritative": true,
+        "topic_ref": "employees"
+      },
+      {
+        "expected_text_substring": "divisions",
+        "is_authoritative": true,
+        "topic_ref": "divisions"
+      }
+    ],
+    "version": "v2026.Q2"
+  },
+  "doc_polaris_contract_v1": {
+    "effective_at": "2024-09-01",
+    "security_scope": "perm_global_open",
+    "source_spans": [
+      {
+        "expected_text_substring": "sup_polaris_steel",
+        "is_authoritative": true,
+        "topic_ref": "sup_polaris_steel"
+      },
+      {
+        "expected_text_substring": "ct_polaris_2024",
+        "is_authoritative": true,
+        "topic_ref": "ct_polaris_2024"
+      }
+    ],
+    "version": "v1"
+  },
+  "doc_polaris_contract_v2": {
+    "effective_at": "2025-09-01",
+    "security_scope": "perm_global_open",
+    "source_spans": [
+      {
+        "expected_text_substring": "sup_polaris_steel",
+        "is_authoritative": true,
+        "topic_ref": "sup_polaris_steel"
+      },
+      {
+        "expected_text_substring": "ct_polaris_2025",
+        "is_authoritative": true,
+        "topic_ref": "ct_polaris_2025"
+      }
+    ],
+    "version": "v2"
+  },
+  "doc_priya_bio": {
+    "effective_at": "2025-12-15",
+    "security_scope": "perm_global_open",
+    "source_spans": [
+      {
+        "expected_text_substring": "emp_priya_kaur",
+        "is_authoritative": true,
+        "topic_ref": "emp_priya_kaur"
+      }
+    ],
+    "version": "v1.0"
+  },
+  "doc_procurement_policy": {
+    "effective_at": "2025-04-01",
+    "security_scope": "perm_global_open",
+    "source_spans": [
+      {
+        "expected_text_substring": "pol_procure_2025",
+        "is_authoritative": true,
+        "topic_ref": "pol_procure_2025"
+      }
+    ],
+    "version": "v2.0"
+  },
+  "doc_quality_audit_2026_q1": {
+    "effective_at": "2026-04-30",
+    "security_scope": "perm_global_open",
+    "source_spans": [
+      {
+        "expected_text_substring": "pol_quality_2025",
+        "is_authoritative": true,
+        "topic_ref": "pol_quality_2025"
+      },
+      {
+        "expected_text_substring": "sup_polaris_steel",
+        "is_authoritative": true,
+        "topic_ref": "sup_polaris_steel"
+      }
+    ],
+    "version": "v1.0"
+  },
+  "doc_quality_policy": {
+    "effective_at": "2025-07-15",
+    "security_scope": "perm_global_open",
+    "source_spans": [
+      {
+        "expected_text_substring": "pol_quality_2025",
+        "is_authoritative": true,
+        "topic_ref": "pol_quality_2025"
+      }
+    ],
+    "version": "v3.1"
+  },
+  "doc_ren_bio": {
+    "effective_at": "2025-12-15",
+    "security_scope": "perm_global_open",
+    "source_spans": [
+      {
+        "expected_text_substring": "emp_ren_kovac",
+        "is_authoritative": true,
+        "topic_ref": "emp_ren_kovac"
+      }
+    ],
+    "version": "v1.0"
+  },
+  "doc_security_policy_2024": {
+    "effective_at": "2024-01-01",
+    "security_scope": "perm_global_open",
+    "source_spans": [
+      {
+        "expected_text_substring": "pol_sec_2024",
+        "is_authoritative": true,
+        "topic_ref": "pol_sec_2024"
+      }
+    ],
+    "version": "v4.1"
+  },
+  "doc_security_policy_2026": {
+    "effective_at": "2026-01-01",
+    "security_scope": "perm_global_open",
+    "source_spans": [
+      {
+        "expected_text_substring": "pol_sec_2026",
+        "is_authoritative": true,
+        "topic_ref": "pol_sec_2026"
+      }
+    ],
+    "version": "v4.2"
+  },
+  "doc_solveig_bio": {
+    "effective_at": "2025-12-15",
+    "security_scope": "perm_global_open",
+    "source_spans": [
+      {
+        "expected_text_substring": "emp_solveig_hagen",
+        "is_authoritative": true,
+        "topic_ref": "emp_solveig_hagen"
+      }
+    ],
+    "version": "v1.0"
+  },
+  "doc_supplier_brief_sup_helion_motors": {
+    "effective_at": "2025-12-01",
+    "security_scope": "perm_global_open",
+    "source_spans": [
+      {
+        "expected_text_substring": "sup_helion_motors",
+        "is_authoritative": true,
+        "topic_ref": "sup_helion_motors"
+      }
+    ],
+    "version": "v1.0"
+  },
+  "doc_supplier_brief_sup_kobal_silicon": {
+    "effective_at": "2025-12-01",
+    "security_scope": "perm_global_open",
+    "source_spans": [
+      {
+        "expected_text_substring": "sup_kobal_silicon",
+        "is_authoritative": true,
+        "topic_ref": "sup_kobal_silicon"
+      }
+    ],
+    "version": "v1.0"
+  },
+  "doc_supplier_brief_sup_meridian_logistics": {
+    "effective_at": "2025-12-01",
+    "security_scope": "perm_global_open",
+    "source_spans": [
+      {
+        "expected_text_substring": "sup_meridian_logistics",
+        "is_authoritative": true,
+        "topic_ref": "sup_meridian_logistics"
+      }
+    ],
+    "version": "v1.0"
+  },
+  "doc_supplier_brief_sup_ozone_chem": {
+    "effective_at": "2025-12-01",
+    "security_scope": "perm_global_open",
+    "source_spans": [
+      {
+        "expected_text_substring": "sup_ozone_chem",
+        "is_authoritative": true,
+        "topic_ref": "sup_ozone_chem"
+      }
+    ],
+    "version": "v1.0"
+  },
+  "doc_supplier_brief_sup_polaris_steel": {
+    "effective_at": "2025-12-01",
+    "security_scope": "perm_global_open",
+    "source_spans": [
+      {
+        "expected_text_substring": "sup_polaris_steel",
+        "is_authoritative": true,
+        "topic_ref": "sup_polaris_steel"
+      }
+    ],
+    "version": "v1.0"
+  },
+  "doc_yui_bio": {
+    "effective_at": "2025-12-15",
+    "security_scope": "perm_global_open",
+    "source_spans": [
+      {
+        "expected_text_substring": "emp_yui_nakajima",
+        "is_authoritative": true,
+        "topic_ref": "emp_yui_nakajima"
+      }
+    ],
+    "version": "v1.0"
+  }
+}

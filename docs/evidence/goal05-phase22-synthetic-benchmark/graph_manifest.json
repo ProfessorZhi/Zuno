@@ -1,0 +1,769 @@
+{
+  "edge_count": 92,
+  "generated_at_utc": "2026-08-03T01:37:00Z",
+  "generation_seed": "phase22-synthetic-2026-08-03-auroralis-v1",
+  "graph_id": "graph_auroralis_v1",
+  "node_count": 52,
+  "relation_kinds": [
+    "contract_owned_by",
+    "contract_serves_division",
+    "contract_supersedes",
+    "contract_with_supplier",
+    "division_lead_employee",
+    "employee_in_division",
+    "employee_owns_permission",
+    "event_about_policy",
+    "event_about_product",
+    "event_about_supplier",
+    "event_actor",
+    "policy_owned_by",
+    "policy_supersedes",
+    "product_in_division",
+    "product_owner",
+    "project_delivers_product",
+    "project_owned_by_division",
+    "project_sponsored_by",
+    "reports_to",
+    "supplier_serves_company"
+  ],
+  "relations": [
+    {
+      "from_id": "emp_iris_vange",
+      "from_type": "employee",
+      "kind": "employee_in_division",
+      "relation_id": "rel_employee_in_division_emp_iris_vange_div_auto",
+      "to_id": "div_auto",
+      "to_type": "division"
+    },
+    {
+      "from_id": "emp_iris_vange",
+      "from_type": "employee",
+      "kind": "reports_to",
+      "relation_id": "rel_reports_to_emp_iris_vange_ceo_kjartan_eli",
+      "to_id": "ceo_kjartan_eli",
+      "to_type": "employee"
+    },
+    {
+      "from_id": "emp_marcus_tien",
+      "from_type": "employee",
+      "kind": "employee_in_division",
+      "relation_id": "rel_employee_in_division_emp_marcus_tien_div_edge",
+      "to_id": "div_edge",
+      "to_type": "division"
+    },
+    {
+      "from_id": "emp_marcus_tien",
+      "from_type": "employee",
+      "kind": "reports_to",
+      "relation_id": "rel_reports_to_emp_marcus_tien_ceo_kjartan_eli",
+      "to_id": "ceo_kjartan_eli",
+      "to_type": "employee"
+    },
+    {
+      "from_id": "emp_yui_nakajima",
+      "from_type": "employee",
+      "kind": "employee_in_division",
+      "relation_id": "rel_employee_in_division_emp_yui_nakajima_div_addmfg",
+      "to_id": "div_addmfg",
+      "to_type": "division"
+    },
+    {
+      "from_id": "emp_yui_nakajima",
+      "from_type": "employee",
+      "kind": "reports_to",
+      "relation_id": "rel_reports_to_emp_yui_nakajima_ceo_kjartan_eli",
+      "to_id": "ceo_kjartan_eli",
+      "to_type": "employee"
+    },
+    {
+      "from_id": "emp_solveig_hagen",
+      "from_type": "employee",
+      "kind": "employee_in_division",
+      "relation_id": "rel_employee_in_division_emp_solveig_hagen_div_corp",
+      "to_id": "div_corp",
+      "to_type": "division"
+    },
+    {
+      "from_id": "emp_solveig_hagen",
+      "from_type": "employee",
+      "kind": "reports_to",
+      "relation_id": "rel_reports_to_emp_solveig_hagen_ceo_kjartan_eli",
+      "to_id": "ceo_kjartan_eli",
+      "to_type": "employee"
+    },
+    {
+      "from_id": "emp_dmitri_orel",
+      "from_type": "employee",
+      "kind": "employee_in_division",
+      "relation_id": "rel_employee_in_division_emp_dmitri_orel_div_corp",
+      "to_id": "div_corp",
+      "to_type": "division"
+    },
+    {
+      "from_id": "emp_dmitri_orel",
+      "from_type": "employee",
+      "kind": "reports_to",
+      "relation_id": "rel_reports_to_emp_dmitri_orel_ceo_kjartan_eli",
+      "to_id": "ceo_kjartan_eli",
+      "to_type": "employee"
+    },
+    {
+      "from_id": "emp_priya_kaur",
+      "from_type": "employee",
+      "kind": "employee_in_division",
+      "relation_id": "rel_employee_in_division_emp_priya_kaur_div_corp",
+      "to_id": "div_corp",
+      "to_type": "division"
+    },
+    {
+      "from_id": "emp_priya_kaur",
+      "from_type": "employee",
+      "kind": "reports_to",
+      "relation_id": "rel_reports_to_emp_priya_kaur_ceo_kjartan_eli",
+      "to_id": "ceo_kjartan_eli",
+      "to_type": "employee"
+    },
+    {
+      "from_id": "emp_lukas_wenger",
+      "from_type": "employee",
+      "kind": "employee_in_division",
+      "relation_id": "rel_employee_in_division_emp_lukas_wenger_div_corp",
+      "to_id": "div_corp",
+      "to_type": "division"
+    },
+    {
+      "from_id": "emp_lukas_wenger",
+      "from_type": "employee",
+      "kind": "reports_to",
+      "relation_id": "rel_reports_to_emp_lukas_wenger_emp_solveig_hagen",
+      "to_id": "emp_solveig_hagen",
+      "to_type": "employee"
+    },
+    {
+      "from_id": "emp_amani_bello",
+      "from_type": "employee",
+      "kind": "employee_in_division",
+      "relation_id": "rel_employee_in_division_emp_amani_bello_div_corp",
+      "to_id": "div_corp",
+      "to_type": "division"
+    },
+    {
+      "from_id": "emp_amani_bello",
+      "from_type": "employee",
+      "kind": "reports_to",
+      "relation_id": "rel_reports_to_emp_amani_bello_ceo_kjartan_eli",
+      "to_id": "ceo_kjartan_eli",
+      "to_type": "employee"
+    },
+    {
+      "from_id": "emp_haruto_soma",
+      "from_type": "employee",
+      "kind": "employee_in_division",
+      "relation_id": "rel_employee_in_division_emp_haruto_soma_div_auto",
+      "to_id": "div_auto",
+      "to_type": "division"
+    },
+    {
+      "from_id": "emp_haruto_soma",
+      "from_type": "employee",
+      "kind": "reports_to",
+      "relation_id": "rel_reports_to_emp_haruto_soma_emp_iris_vange",
+      "to_id": "emp_iris_vange",
+      "to_type": "employee"
+    },
+    {
+      "from_id": "emp_eli_persson",
+      "from_type": "employee",
+      "kind": "employee_in_division",
+      "relation_id": "rel_employee_in_division_emp_eli_persson_div_edge",
+      "to_id": "div_edge",
+      "to_type": "division"
+    },
+    {
+      "from_id": "emp_eli_persson",
+      "from_type": "employee",
+      "kind": "reports_to",
+      "relation_id": "rel_reports_to_emp_eli_persson_emp_marcus_tien",
+      "to_id": "emp_marcus_tien",
+      "to_type": "employee"
+    },
+    {
+      "from_id": "emp_nadya_soroka",
+      "from_type": "employee",
+      "kind": "employee_in_division",
+      "relation_id": "rel_employee_in_division_emp_nadya_soroka_div_corp",
+      "to_id": "div_corp",
+      "to_type": "division"
+    },
+    {
+      "from_id": "emp_nadya_soroka",
+      "from_type": "employee",
+      "kind": "reports_to",
+      "relation_id": "rel_reports_to_emp_nadya_soroka_emp_solveig_hagen",
+      "to_id": "emp_solveig_hagen",
+      "to_type": "employee"
+    },
+    {
+      "from_id": "emp_ren_kovac",
+      "from_type": "employee",
+      "kind": "employee_in_division",
+      "relation_id": "rel_employee_in_division_emp_ren_kovac_div_auto",
+      "to_id": "div_auto",
+      "to_type": "division"
+    },
+    {
+      "from_id": "emp_ren_kovac",
+      "from_type": "employee",
+      "kind": "reports_to",
+      "relation_id": "rel_reports_to_emp_ren_kovac_emp_iris_vange",
+      "to_id": "emp_iris_vange",
+      "to_type": "employee"
+    },
+    {
+      "from_id": "prod_axis_9",
+      "from_type": "product",
+      "kind": "product_in_division",
+      "relation_id": "rel_product_in_division_prod_axis_9_div_auto",
+      "to_id": "div_auto",
+      "to_type": "division"
+    },
+    {
+      "from_id": "prod_axis_8",
+      "from_type": "product",
+      "kind": "product_in_division",
+      "relation_id": "rel_product_in_division_prod_axis_8_div_auto",
+      "to_id": "div_auto",
+      "to_type": "division"
+    },
+    {
+      "from_id": "prod_lumen_e2",
+      "from_type": "product",
+      "kind": "product_in_division",
+      "relation_id": "rel_product_in_division_prod_lumen_e2_div_edge",
+      "to_id": "div_edge",
+      "to_type": "division"
+    },
+    {
+      "from_id": "prod_lumen_e1",
+      "from_type": "product",
+      "kind": "product_in_division",
+      "relation_id": "rel_product_in_division_prod_lumen_e1_div_edge",
+      "to_id": "div_edge",
+      "to_type": "division"
+    },
+    {
+      "from_id": "prod_forge_x1",
+      "from_type": "product",
+      "kind": "product_in_division",
+      "relation_id": "rel_product_in_division_prod_forge_x1_div_addmfg",
+      "to_id": "div_addmfg",
+      "to_type": "division"
+    },
+    {
+      "from_id": "prod_northwind_sdk",
+      "from_type": "product",
+      "kind": "product_in_division",
+      "relation_id": "rel_product_in_division_prod_northwind_sdk_div_auto",
+      "to_id": "div_auto",
+      "to_type": "division"
+    },
+    {
+      "from_id": "sup_helion_motors",
+      "from_type": "supplier",
+      "kind": "supplier_serves_company",
+      "relation_id": "rel_supplier_serves_company_sup_helion_motors_company_auroralis",
+      "to_id": "company_auroralis",
+      "to_type": "company"
+    },
+    {
+      "from_id": "sup_kobal_silicon",
+      "from_type": "supplier",
+      "kind": "supplier_serves_company",
+      "relation_id": "rel_supplier_serves_company_sup_kobal_silicon_company_auroralis",
+      "to_id": "company_auroralis",
+      "to_type": "company"
+    },
+    {
+      "from_id": "sup_meridian_logistics",
+      "from_type": "supplier",
+      "kind": "supplier_serves_company",
+      "relation_id": "rel_supplier_serves_company_sup_meridian_logistics_company_auroralis",
+      "to_id": "company_auroralis",
+      "to_type": "company"
+    },
+    {
+      "from_id": "sup_polaris_steel",
+      "from_type": "supplier",
+      "kind": "supplier_serves_company",
+      "relation_id": "rel_supplier_serves_company_sup_polaris_steel_company_auroralis",
+      "to_id": "company_auroralis",
+      "to_type": "company"
+    },
+    {
+      "from_id": "sup_ozone_chem",
+      "from_type": "supplier",
+      "kind": "supplier_serves_company",
+      "relation_id": "rel_supplier_serves_company_sup_ozone_chem_company_auroralis",
+      "to_id": "company_auroralis",
+      "to_type": "company"
+    },
+    {
+      "from_id": "ct_helion_2024",
+      "from_type": "contract",
+      "kind": "contract_with_supplier",
+      "relation_id": "rel_contract_with_supplier_ct_helion_2024_sup_helion_motors",
+      "to_id": "sup_helion_motors",
+      "to_type": "supplier"
+    },
+    {
+      "from_id": "ct_helion_2024",
+      "from_type": "contract",
+      "kind": "contract_owned_by",
+      "relation_id": "rel_contract_owned_by_ct_helion_2024_emp_lukas_wenger",
+      "to_id": "emp_lukas_wenger",
+      "to_type": "employee"
+    },
+    {
+      "from_id": "ct_helion_2024",
+      "from_type": "contract",
+      "kind": "contract_serves_division",
+      "relation_id": "rel_contract_serves_division_ct_helion_2024_div_auto",
+      "to_id": "div_auto",
+      "to_type": "division"
+    },
+    {
+      "from_id": "ct_kobal_2025",
+      "from_type": "contract",
+      "kind": "contract_with_supplier",
+      "relation_id": "rel_contract_with_supplier_ct_kobal_2025_sup_kobal_silicon",
+      "to_id": "sup_kobal_silicon",
+      "to_type": "supplier"
+    },
+    {
+      "from_id": "ct_kobal_2025",
+      "from_type": "contract",
+      "kind": "contract_owned_by",
+      "relation_id": "rel_contract_owned_by_ct_kobal_2025_emp_lukas_wenger",
+      "to_id": "emp_lukas_wenger",
+      "to_type": "employee"
+    },
+    {
+      "from_id": "ct_kobal_2025",
+      "from_type": "contract",
+      "kind": "contract_serves_division",
+      "relation_id": "rel_contract_serves_division_ct_kobal_2025_div_edge",
+      "to_id": "div_edge",
+      "to_type": "division"
+    },
+    {
+      "from_id": "ct_meridian_2025",
+      "from_type": "contract",
+      "kind": "contract_with_supplier",
+      "relation_id": "rel_contract_with_supplier_ct_meridian_2025_sup_meridian_logistics",
+      "to_id": "sup_meridian_logistics",
+      "to_type": "supplier"
+    },
+    {
+      "from_id": "ct_meridian_2025",
+      "from_type": "contract",
+      "kind": "contract_owned_by",
+      "relation_id": "rel_contract_owned_by_ct_meridian_2025_emp_lukas_wenger",
+      "to_id": "emp_lukas_wenger",
+      "to_type": "employee"
+    },
+    {
+      "from_id": "ct_meridian_2025",
+      "from_type": "contract",
+      "kind": "contract_serves_division",
+      "relation_id": "rel_contract_serves_division_ct_meridian_2025_div_corp",
+      "to_id": "div_corp",
+      "to_type": "division"
+    },
+    {
+      "from_id": "ct_polaris_2024",
+      "from_type": "contract",
+      "kind": "contract_with_supplier",
+      "relation_id": "rel_contract_with_supplier_ct_polaris_2024_sup_polaris_steel",
+      "to_id": "sup_polaris_steel",
+      "to_type": "supplier"
+    },
+    {
+      "from_id": "ct_polaris_2024",
+      "from_type": "contract",
+      "kind": "contract_owned_by",
+      "relation_id": "rel_contract_owned_by_ct_polaris_2024_emp_lukas_wenger",
+      "to_id": "emp_lukas_wenger",
+      "to_type": "employee"
+    },
+    {
+      "from_id": "ct_polaris_2024",
+      "from_type": "contract",
+      "kind": "contract_serves_division",
+      "relation_id": "rel_contract_serves_division_ct_polaris_2024_div_addmfg",
+      "to_id": "div_addmfg",
+      "to_type": "division"
+    },
+    {
+      "from_id": "ct_polaris_2025",
+      "from_type": "contract",
+      "kind": "contract_with_supplier",
+      "relation_id": "rel_contract_with_supplier_ct_polaris_2025_sup_polaris_steel",
+      "to_id": "sup_polaris_steel",
+      "to_type": "supplier"
+    },
+    {
+      "from_id": "ct_polaris_2025",
+      "from_type": "contract",
+      "kind": "contract_owned_by",
+      "relation_id": "rel_contract_owned_by_ct_polaris_2025_emp_lukas_wenger",
+      "to_id": "emp_lukas_wenger",
+      "to_type": "employee"
+    },
+    {
+      "from_id": "ct_polaris_2025",
+      "from_type": "contract",
+      "kind": "contract_serves_division",
+      "relation_id": "rel_contract_serves_division_ct_polaris_2025_div_addmfg",
+      "to_id": "div_addmfg",
+      "to_type": "division"
+    },
+    {
+      "from_id": "pol_sec_2026",
+      "from_type": "policy",
+      "kind": "policy_owned_by",
+      "relation_id": "rel_policy_owned_by_pol_sec_2026_emp_priya_kaur",
+      "to_id": "emp_priya_kaur",
+      "to_type": "employee"
+    },
+    {
+      "from_id": "pol_sec_2024",
+      "from_type": "policy",
+      "kind": "policy_owned_by",
+      "relation_id": "rel_policy_owned_by_pol_sec_2024_emp_priya_kaur",
+      "to_id": "emp_priya_kaur",
+      "to_type": "employee"
+    },
+    {
+      "from_id": "pol_procure_2025",
+      "from_type": "policy",
+      "kind": "policy_owned_by",
+      "relation_id": "rel_policy_owned_by_pol_procure_2025_emp_lukas_wenger",
+      "to_id": "emp_lukas_wenger",
+      "to_type": "employee"
+    },
+    {
+      "from_id": "pol_quality_2025",
+      "from_type": "policy",
+      "kind": "policy_owned_by",
+      "relation_id": "rel_policy_owned_by_pol_quality_2025_emp_nadya_soroka",
+      "to_id": "emp_nadya_soroka",
+      "to_type": "employee"
+    },
+    {
+      "from_id": "pol_legal_2025",
+      "from_type": "policy",
+      "kind": "policy_owned_by",
+      "relation_id": "rel_policy_owned_by_pol_legal_2025_emp_amani_bello",
+      "to_id": "emp_amani_bello",
+      "to_type": "employee"
+    },
+    {
+      "from_id": "proj_northwind",
+      "from_type": "project",
+      "kind": "project_owned_by_division",
+      "relation_id": "rel_project_owned_by_division_proj_northwind_div_auto",
+      "to_id": "div_auto",
+      "to_type": "division"
+    },
+    {
+      "from_id": "proj_northwind",
+      "from_type": "project",
+      "kind": "project_sponsored_by",
+      "relation_id": "rel_project_sponsored_by_proj_northwind_ceo_kjartan_eli",
+      "to_id": "ceo_kjartan_eli",
+      "to_type": "employee"
+    },
+    {
+      "from_id": "proj_lumenx",
+      "from_type": "project",
+      "kind": "project_owned_by_division",
+      "relation_id": "rel_project_owned_by_division_proj_lumenx_div_edge",
+      "to_id": "div_edge",
+      "to_type": "division"
+    },
+    {
+      "from_id": "proj_lumenx",
+      "from_type": "project",
+      "kind": "project_sponsored_by",
+      "relation_id": "rel_project_sponsored_by_proj_lumenx_emp_marcus_tien",
+      "to_id": "emp_marcus_tien",
+      "to_type": "employee"
+    },
+    {
+      "from_id": "proj_forge2",
+      "from_type": "project",
+      "kind": "project_owned_by_division",
+      "relation_id": "rel_project_owned_by_division_proj_forge2_div_addmfg",
+      "to_id": "div_addmfg",
+      "to_type": "division"
+    },
+    {
+      "from_id": "proj_forge2",
+      "from_type": "project",
+      "kind": "project_sponsored_by",
+      "relation_id": "rel_project_sponsored_by_proj_forge2_emp_yui_nakajima",
+      "to_id": "emp_yui_nakajima",
+      "to_type": "employee"
+    },
+    {
+      "from_id": "evt_axis_9_release",
+      "from_type": "event",
+      "kind": "event_about_product",
+      "relation_id": "rel_event_about_product_evt_axis_9_release_prod_axis_9",
+      "to_id": "prod_axis_9",
+      "to_type": "product"
+    },
+    {
+      "from_id": "evt_axis_9_release",
+      "from_type": "event",
+      "kind": "event_actor",
+      "relation_id": "rel_event_actor_evt_axis_9_release_emp_haruto_soma",
+      "to_id": "emp_haruto_soma",
+      "to_type": "employee"
+    },
+    {
+      "from_id": "evt_axis_8_eol",
+      "from_type": "event",
+      "kind": "event_about_product",
+      "relation_id": "rel_event_about_product_evt_axis_8_eol_prod_axis_8",
+      "to_id": "prod_axis_8",
+      "to_type": "product"
+    },
+    {
+      "from_id": "evt_axis_8_eol",
+      "from_type": "event",
+      "kind": "event_actor",
+      "relation_id": "rel_event_actor_evt_axis_8_eol_emp_iris_vange",
+      "to_id": "emp_iris_vange",
+      "to_type": "employee"
+    },
+    {
+      "from_id": "evt_lumen_e2_release",
+      "from_type": "event",
+      "kind": "event_about_product",
+      "relation_id": "rel_event_about_product_evt_lumen_e2_release_prod_lumen_e2",
+      "to_id": "prod_lumen_e2",
+      "to_type": "product"
+    },
+    {
+      "from_id": "evt_lumen_e2_release",
+      "from_type": "event",
+      "kind": "event_actor",
+      "relation_id": "rel_event_actor_evt_lumen_e2_release_emp_eli_persson",
+      "to_id": "emp_eli_persson",
+      "to_type": "employee"
+    },
+    {
+      "from_id": "evt_forge_x1_recall",
+      "from_type": "event",
+      "kind": "event_about_product",
+      "relation_id": "rel_event_about_product_evt_forge_x1_recall_prod_forge_x1",
+      "to_id": "prod_forge_x1",
+      "to_type": "product"
+    },
+    {
+      "from_id": "evt_forge_x1_recall",
+      "from_type": "event",
+      "kind": "event_actor",
+      "relation_id": "rel_event_actor_evt_forge_x1_recall_emp_nadya_soroka",
+      "to_id": "emp_nadya_soroka",
+      "to_type": "employee"
+    },
+    {
+      "from_id": "evt_polaris_renewal",
+      "from_type": "event",
+      "kind": "event_about_supplier",
+      "relation_id": "rel_event_about_supplier_evt_polaris_renewal_sup_polaris_steel",
+      "to_id": "sup_polaris_steel",
+      "to_type": "supplier"
+    },
+    {
+      "from_id": "evt_polaris_renewal",
+      "from_type": "event",
+      "kind": "event_actor",
+      "relation_id": "rel_event_actor_evt_polaris_renewal_emp_lukas_wenger",
+      "to_id": "emp_lukas_wenger",
+      "to_type": "employee"
+    },
+    {
+      "from_id": "evt_policy_2026",
+      "from_type": "event",
+      "kind": "event_about_policy",
+      "relation_id": "rel_event_about_policy_evt_policy_2026_pol_sec_2026",
+      "to_id": "pol_sec_2026",
+      "to_type": "policy"
+    },
+    {
+      "from_id": "evt_policy_2026",
+      "from_type": "event",
+      "kind": "event_actor",
+      "relation_id": "rel_event_actor_evt_policy_2026_emp_priya_kaur",
+      "to_id": "emp_priya_kaur",
+      "to_type": "employee"
+    },
+    {
+      "from_id": "proj_northwind",
+      "from_type": "project",
+      "kind": "project_delivers_product",
+      "relation_id": "rel_project_delivers_product_proj_northwind_prod_northwind_sdk",
+      "to_id": "prod_northwind_sdk",
+      "to_type": "product"
+    },
+    {
+      "from_id": "proj_lumenx",
+      "from_type": "project",
+      "kind": "project_delivers_product",
+      "relation_id": "rel_project_delivers_product_proj_lumenx_prod_lumen_e2",
+      "to_id": "prod_lumen_e2",
+      "to_type": "product"
+    },
+    {
+      "from_id": "proj_forge2",
+      "from_type": "project",
+      "kind": "project_delivers_product",
+      "relation_id": "rel_project_delivers_product_proj_forge2_prod_forge_x1",
+      "to_id": "prod_forge_x1",
+      "to_type": "product"
+    },
+    {
+      "from_id": "div_auto",
+      "from_type": "division",
+      "kind": "division_lead_employee",
+      "relation_id": "rel_division_lead_employee_div_auto_emp_iris_vange",
+      "to_id": "emp_iris_vange",
+      "to_type": "employee"
+    },
+    {
+      "from_id": "div_edge",
+      "from_type": "division",
+      "kind": "division_lead_employee",
+      "relation_id": "rel_division_lead_employee_div_edge_emp_marcus_tien",
+      "to_id": "emp_marcus_tien",
+      "to_type": "employee"
+    },
+    {
+      "from_id": "div_addmfg",
+      "from_type": "division",
+      "kind": "division_lead_employee",
+      "relation_id": "rel_division_lead_employee_div_addmfg_emp_yui_nakajima",
+      "to_id": "emp_yui_nakajima",
+      "to_type": "employee"
+    },
+    {
+      "from_id": "div_corp",
+      "from_type": "division",
+      "kind": "division_lead_employee",
+      "relation_id": "rel_division_lead_employee_div_corp_emp_solveig_hagen",
+      "to_id": "emp_solveig_hagen",
+      "to_type": "employee"
+    },
+    {
+      "from_id": "emp_iris_vange",
+      "from_type": "employee",
+      "kind": "employee_owns_permission",
+      "relation_id": "rel_employee_owns_permission_emp_iris_vange_perm_div_auto_confidential",
+      "to_id": "perm_div_auto_confidential",
+      "to_type": "permission"
+    },
+    {
+      "from_id": "emp_amani_bello",
+      "from_type": "employee",
+      "kind": "employee_owns_permission",
+      "relation_id": "rel_employee_owns_permission_emp_amani_bello_perm_legal_privileged",
+      "to_id": "perm_legal_privileged",
+      "to_type": "permission"
+    },
+    {
+      "from_id": "emp_dmitri_orel",
+      "from_type": "employee",
+      "kind": "employee_owns_permission",
+      "relation_id": "rel_employee_owns_permission_emp_dmitri_orel_perm_finance_audit",
+      "to_id": "perm_finance_audit",
+      "to_type": "permission"
+    },
+    {
+      "from_id": "emp_solveig_hagen",
+      "from_type": "employee",
+      "kind": "employee_owns_permission",
+      "relation_id": "rel_employee_owns_permission_emp_solveig_hagen_perm_global_open",
+      "to_id": "perm_global_open",
+      "to_type": "permission"
+    },
+    {
+      "from_id": "prod_axis_9",
+      "from_type": "product",
+      "kind": "product_owner",
+      "relation_id": "rel_product_owner_prod_axis_9_emp_haruto_soma",
+      "to_id": "emp_haruto_soma",
+      "to_type": "employee"
+    },
+    {
+      "from_id": "prod_axis_8",
+      "from_type": "product",
+      "kind": "product_owner",
+      "relation_id": "rel_product_owner_prod_axis_8_emp_iris_vange",
+      "to_id": "emp_iris_vange",
+      "to_type": "employee"
+    },
+    {
+      "from_id": "prod_lumen_e2",
+      "from_type": "product",
+      "kind": "product_owner",
+      "relation_id": "rel_product_owner_prod_lumen_e2_emp_eli_persson",
+      "to_id": "emp_eli_persson",
+      "to_type": "employee"
+    },
+    {
+      "from_id": "prod_lumen_e1",
+      "from_type": "product",
+      "kind": "product_owner",
+      "relation_id": "rel_product_owner_prod_lumen_e1_emp_marcus_tien",
+      "to_id": "emp_marcus_tien",
+      "to_type": "employee"
+    },
+    {
+      "from_id": "prod_forge_x1",
+      "from_type": "product",
+      "kind": "product_owner",
+      "relation_id": "rel_product_owner_prod_forge_x1_emp_yui_nakajima",
+      "to_id": "emp_yui_nakajima",
+      "to_type": "employee"
+    },
+    {
+      "from_id": "prod_northwind_sdk",
+      "from_type": "product",
+      "kind": "product_owner",
+      "relation_id": "rel_product_owner_prod_northwind_sdk_emp_haruto_soma",
+      "to_id": "emp_haruto_soma",
+      "to_type": "employee"
+    },
+    {
+      "from_id": "ct_polaris_2025",
+      "from_type": "contract",
+      "kind": "contract_supersedes",
+      "relation_id": "rel_contract_supersedes_ct_polaris_2025_ct_polaris_2024",
+      "to_id": "ct_polaris_2024",
+      "to_type": "contract"
+    },
+    {
+      "from_id": "pol_sec_2026",
+      "from_type": "policy",
+      "kind": "policy_supersedes",
+      "relation_id": "rel_policy_supersedes_pol_sec_2026_pol_sec_2024",
+      "to_id": "pol_sec_2024",
+      "to_type": "policy"
+    }
+  ],
+  "schema_version": "1.0.0",
+  "world_model_id": "wm_auroralis_v1"
+}

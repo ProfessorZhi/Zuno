@@ -1,0 +1,1155 @@
+{
+  "corpus_id": "corpus_auroralis_v1",
+  "document_count": 62,
+  "documents": [
+    {
+      "document_id": "doc_org_chart_2026",
+      "effective_at": "2026-04-01",
+      "kind": "org_chart",
+      "security_scope": "perm_global_open",
+      "sha256": "80c6c595d2dc80c96aec946a43614a2b0fa3cb53c53d149846df5bf60dbc17fb",
+      "source_spans": [
+        {
+          "expected_text_substring": "employees",
+          "is_authoritative": true,
+          "topic_ref": "employees"
+        },
+        {
+          "expected_text_substring": "divisions",
+          "is_authoritative": true,
+          "topic_ref": "divisions"
+        }
+      ],
+      "text": "# Auroralis Organizational Chart - 2026 Q2\n\n- document_id: doc_org_chart_2026\n- version: v2026.Q2\n- effective_at: 2026-04-01\n- division_id: div_corp\n- owner_employee_id: emp_solveig_hagen\n- security_scope: perm_global_open\n- kind: org_chart\n- world_model_id: wm_auroralis_v1\n- generation_seed: phase22-synthetic-2026-08-03-auroralis-v1\n\n## Source topic refs\n- employees\n- divisions\n\n## Body\nAuroralis is led by CEO Kjartan Eliasson (tenure start 2015-01-05). Four divisions report directly to the CEO: Automation Systems (President Iris Vange, EMEA), Edge Compute (President Marcus Tien, AMER), Additive Manufacturing (President Yui Nakajima, APAC), and Corporate Services (Chief Corporate Officer Solveig Hagen, EMEA). Direct corporate reports include CFO Dmitri Orel, CISO Priya Kaur, and General Counsel Amani Bello. Procurement head Lukas Wenger reports to Solveig Hagen; Quality director Nadya Soroka reports to Solveig Hagen; Robotics R&D director Haruto Soma reports to Iris Vange; Embedded Firmware director Eli Persson reports to Marcus Tien; Field Service director Ren Kovac reports to Iris Vange.\n",
+      "title": "Auroralis Organizational Chart - 2026 Q2",
+      "version": "v2026.Q2"
+    },
+    {
+      "document_id": "doc_bio_emp_iris_vange",
+      "effective_at": "2025-12-15",
+      "kind": "biography",
+      "security_scope": "perm_global_open",
+      "sha256": "4111473c3dfa917752b3b24916891afcc9a20e834798f9553c830db1f6466d9a",
+      "source_spans": [
+        {
+          "expected_text_substring": "emp_iris_vange",
+          "is_authoritative": true,
+          "topic_ref": "emp_iris_vange"
+        }
+      ],
+      "text": "# Iris Vange - Biography\n\n- document_id: doc_bio_emp_iris_vange\n- version: v1.0\n- effective_at: 2025-12-15\n- division_id: div_corp\n- owner_employee_id: emp_solveig_hagen\n- security_scope: perm_global_open\n- kind: biography\n- world_model_id: wm_auroralis_v1\n- generation_seed: phase22-synthetic-2026-08-03-auroralis-v1\n\n## Source topic refs\n- emp_iris_vange\n\n## Body\nIris Vange serves as President, Automation Systems in the div_auto division, tenure start 2017-04-03. Reports to ceo_kjartan_eli.\n",
+      "title": "Iris Vange - Biography",
+      "version": "v1.0"
+    },
+    {
+      "document_id": "doc_iris_bio",
+      "effective_at": "2025-12-15",
+      "kind": "biography",
+      "security_scope": "perm_global_open",
+      "sha256": "0b4292701a056b484c571d033277770cfd5caee12991363d4eb0cbb0a1e45443",
+      "source_spans": [
+        {
+          "expected_text_substring": "emp_iris_vange",
+          "is_authoritative": true,
+          "topic_ref": "emp_iris_vange"
+        }
+      ],
+      "text": "# Iris Vange - Biography (Alias)\n\n- document_id: doc_iris_bio\n- version: v1.0\n- effective_at: 2025-12-15\n- division_id: div_corp\n- owner_employee_id: emp_solveig_hagen\n- security_scope: perm_global_open\n- kind: biography\n- world_model_id: wm_auroralis_v1\n- generation_seed: phase22-synthetic-2026-08-03-auroralis-v1\n\n## Source topic refs\n- emp_iris_vange\n\n## Body\nIris Vange serves as President, Automation Systems in the div_auto division, tenure start 2017-04-03. Reports to ceo_kjartan_eli.\n",
+      "title": "Iris Vange - Biography (Alias)",
+      "version": "v1.0"
+    },
+    {
+      "document_id": "doc_bio_emp_marcus_tien",
+      "effective_at": "2025-12-15",
+      "kind": "biography",
+      "security_scope": "perm_global_open",
+      "sha256": "4779bceecbfe2cd6e43342e9bcde8b3a6e15181d2b632c82274a24d509082d9e",
+      "source_spans": [
+        {
+          "expected_text_substring": "emp_marcus_tien",
+          "is_authoritative": true,
+          "topic_ref": "emp_marcus_tien"
+        }
+      ],
+      "text": "# Marcus Tien - Biography\n\n- document_id: doc_bio_emp_marcus_tien\n- version: v1.0\n- effective_at: 2025-12-15\n- division_id: div_corp\n- owner_employee_id: emp_solveig_hagen\n- security_scope: perm_global_open\n- kind: biography\n- world_model_id: wm_auroralis_v1\n- generation_seed: phase22-synthetic-2026-08-03-auroralis-v1\n\n## Source topic refs\n- emp_marcus_tien\n\n## Body\nMarcus Tien serves as President, Edge Compute in the div_edge division, tenure start 2019-09-12. Reports to ceo_kjartan_eli.\n",
+      "title": "Marcus Tien - Biography",
+      "version": "v1.0"
+    },
+    {
+      "document_id": "doc_marcus_bio",
+      "effective_at": "2025-12-15",
+      "kind": "biography",
+      "security_scope": "perm_global_open",
+      "sha256": "ff0dfa89df93ad4b1fe6891d4ea95d3e5a656fcf4f79b0109c1be66f134def64",
+      "source_spans": [
+        {
+          "expected_text_substring": "emp_marcus_tien",
+          "is_authoritative": true,
+          "topic_ref": "emp_marcus_tien"
+        }
+      ],
+      "text": "# Marcus Tien - Biography (Alias)\n\n- document_id: doc_marcus_bio\n- version: v1.0\n- effective_at: 2025-12-15\n- division_id: div_corp\n- owner_employee_id: emp_solveig_hagen\n- security_scope: perm_global_open\n- kind: biography\n- world_model_id: wm_auroralis_v1\n- generation_seed: phase22-synthetic-2026-08-03-auroralis-v1\n\n## Source topic refs\n- emp_marcus_tien\n\n## Body\nMarcus Tien serves as President, Edge Compute in the div_edge division, tenure start 2019-09-12. Reports to ceo_kjartan_eli.\n",
+      "title": "Marcus Tien - Biography (Alias)",
+      "version": "v1.0"
+    },
+    {
+      "document_id": "doc_bio_emp_yui_nakajima",
+      "effective_at": "2025-12-15",
+      "kind": "biography",
+      "security_scope": "perm_global_open",
+      "sha256": "1f5edc6d42a2621f399220595bbe6bd60b5ab22bb3c9fcd1fbc113357a8029bf",
+      "source_spans": [
+        {
+          "expected_text_substring": "emp_yui_nakajima",
+          "is_authoritative": true,
+          "topic_ref": "emp_yui_nakajima"
+        }
+      ],
+      "text": "# Yui Nakajima - Biography\n\n- document_id: doc_bio_emp_yui_nakajima\n- version: v1.0\n- effective_at: 2025-12-15\n- division_id: div_corp\n- owner_employee_id: emp_solveig_hagen\n- security_scope: perm_global_open\n- kind: biography\n- world_model_id: wm_auroralis_v1\n- generation_seed: phase22-synthetic-2026-08-03-auroralis-v1\n\n## Source topic refs\n- emp_yui_nakajima\n\n## Body\nYui Nakajima serves as President, Additive Manufacturing in the div_addmfg division, tenure start 2020-02-18. Reports to ceo_kjartan_eli.\n",
+      "title": "Yui Nakajima - Biography",
+      "version": "v1.0"
+    },
+    {
+      "document_id": "doc_yui_bio",
+      "effective_at": "2025-12-15",
+      "kind": "biography",
+      "security_scope": "perm_global_open",
+      "sha256": "9a3757532da8ec0c3f18a819ec727ffa42e8177dd7c17aee099950509ae63bd1",
+      "source_spans": [
+        {
+          "expected_text_substring": "emp_yui_nakajima",
+          "is_authoritative": true,
+          "topic_ref": "emp_yui_nakajima"
+        }
+      ],
+      "text": "# Yui Nakajima - Biography (Alias)\n\n- document_id: doc_yui_bio\n- version: v1.0\n- effective_at: 2025-12-15\n- division_id: div_corp\n- owner_employee_id: emp_solveig_hagen\n- security_scope: perm_global_open\n- kind: biography\n- world_model_id: wm_auroralis_v1\n- generation_seed: phase22-synthetic-2026-08-03-auroralis-v1\n\n## Source topic refs\n- emp_yui_nakajima\n\n## Body\nYui Nakajima serves as President, Additive Manufacturing in the div_addmfg division, tenure start 2020-02-18. Reports to ceo_kjartan_eli.\n",
+      "title": "Yui Nakajima - Biography (Alias)",
+      "version": "v1.0"
+    },
+    {
+      "document_id": "doc_bio_emp_solveig_hagen",
+      "effective_at": "2025-12-15",
+      "kind": "biography",
+      "security_scope": "perm_global_open",
+      "sha256": "75e298697aa3db7358f2f4a2eb83d726483e902fd5b0159a423f56d7fc11e192",
+      "source_spans": [
+        {
+          "expected_text_substring": "emp_solveig_hagen",
+          "is_authoritative": true,
+          "topic_ref": "emp_solveig_hagen"
+        }
+      ],
+      "text": "# Solveig Hagen - Biography\n\n- document_id: doc_bio_emp_solveig_hagen\n- version: v1.0\n- effective_at: 2025-12-15\n- division_id: div_corp\n- owner_employee_id: emp_solveig_hagen\n- security_scope: perm_global_open\n- kind: biography\n- world_model_id: wm_auroralis_v1\n- generation_seed: phase22-synthetic-2026-08-03-auroralis-v1\n\n## Source topic refs\n- emp_solveig_hagen\n\n## Body\nSolveig Hagen serves as Chief Corporate Officer in the div_corp division, tenure start 2014-06-01. Reports to ceo_kjartan_eli.\n",
+      "title": "Solveig Hagen - Biography",
+      "version": "v1.0"
+    },
+    {
+      "document_id": "doc_solveig_bio",
+      "effective_at": "2025-12-15",
+      "kind": "biography",
+      "security_scope": "perm_global_open",
+      "sha256": "3738c827a8882d0fe083209fac3fac7ae89c3c836a8319e5788461f9923d9be5",
+      "source_spans": [
+        {
+          "expected_text_substring": "emp_solveig_hagen",
+          "is_authoritative": true,
+          "topic_ref": "emp_solveig_hagen"
+        }
+      ],
+      "text": "# Solveig Hagen - Biography (Alias)\n\n- document_id: doc_solveig_bio\n- version: v1.0\n- effective_at: 2025-12-15\n- division_id: div_corp\n- owner_employee_id: emp_solveig_hagen\n- security_scope: perm_global_open\n- kind: biography\n- world_model_id: wm_auroralis_v1\n- generation_seed: phase22-synthetic-2026-08-03-auroralis-v1\n\n## Source topic refs\n- emp_solveig_hagen\n\n## Body\nSolveig Hagen serves as Chief Corporate Officer in the div_corp division, tenure start 2014-06-01. Reports to ceo_kjartan_eli.\n",
+      "title": "Solveig Hagen - Biography (Alias)",
+      "version": "v1.0"
+    },
+    {
+      "document_id": "doc_bio_emp_dmitri_orel",
+      "effective_at": "2025-12-15",
+      "kind": "biography",
+      "security_scope": "perm_global_open",
+      "sha256": "7f5e6bd816474e8bf5a9ff68bef8cd77e7e8b707a87c34e683f51b394abe5f37",
+      "source_spans": [
+        {
+          "expected_text_substring": "emp_dmitri_orel",
+          "is_authoritative": true,
+          "topic_ref": "emp_dmitri_orel"
+        }
+      ],
+      "text": "# Dmitri Orel - Biography\n\n- document_id: doc_bio_emp_dmitri_orel\n- version: v1.0\n- effective_at: 2025-12-15\n- division_id: div_corp\n- owner_employee_id: emp_solveig_hagen\n- security_scope: perm_global_open\n- kind: biography\n- world_model_id: wm_auroralis_v1\n- generation_seed: phase22-synthetic-2026-08-03-auroralis-v1\n\n## Source topic refs\n- emp_dmitri_orel\n\n## Body\nDmitri Orel serves as Chief Financial Officer in the div_corp division, tenure start 2022-01-10. Reports to ceo_kjartan_eli.\n",
+      "title": "Dmitri Orel - Biography",
+      "version": "v1.0"
+    },
+    {
+      "document_id": "doc_dmitri_bio",
+      "effective_at": "2025-12-15",
+      "kind": "biography",
+      "security_scope": "perm_global_open",
+      "sha256": "5adad8fdf5068cb2d1ab3d34ee2faa536b354bed849e0060611720791144325c",
+      "source_spans": [
+        {
+          "expected_text_substring": "emp_dmitri_orel",
+          "is_authoritative": true,
+          "topic_ref": "emp_dmitri_orel"
+        }
+      ],
+      "text": "# Dmitri Orel - Biography (Alias)\n\n- document_id: doc_dmitri_bio\n- version: v1.0\n- effective_at: 2025-12-15\n- division_id: div_corp\n- owner_employee_id: emp_solveig_hagen\n- security_scope: perm_global_open\n- kind: biography\n- world_model_id: wm_auroralis_v1\n- generation_seed: phase22-synthetic-2026-08-03-auroralis-v1\n\n## Source topic refs\n- emp_dmitri_orel\n\n## Body\nDmitri Orel serves as Chief Financial Officer in the div_corp division, tenure start 2022-01-10. Reports to ceo_kjartan_eli.\n",
+      "title": "Dmitri Orel - Biography (Alias)",
+      "version": "v1.0"
+    },
+    {
+      "document_id": "doc_bio_emp_priya_kaur",
+      "effective_at": "2025-12-15",
+      "kind": "biography",
+      "security_scope": "perm_global_open",
+      "sha256": "9dee237b96491853540c4deb8daa43f7e9f1bf19c760cbf929f1821e27a8dcc9",
+      "source_spans": [
+        {
+          "expected_text_substring": "emp_priya_kaur",
+          "is_authoritative": true,
+          "topic_ref": "emp_priya_kaur"
+        }
+      ],
+      "text": "# Priya Kaur - Biography\n\n- document_id: doc_bio_emp_priya_kaur\n- version: v1.0\n- effective_at: 2025-12-15\n- division_id: div_corp\n- owner_employee_id: emp_solveig_hagen\n- security_scope: perm_global_open\n- kind: biography\n- world_model_id: wm_auroralis_v1\n- generation_seed: phase22-synthetic-2026-08-03-auroralis-v1\n\n## Source topic refs\n- emp_priya_kaur\n\n## Body\nPriya Kaur serves as Chief Information Security Officer in the div_corp division, tenure start 2021-11-22. Reports to ceo_kjartan_eli.\n",
+      "title": "Priya Kaur - Biography",
+      "version": "v1.0"
+    },
+    {
+      "document_id": "doc_priya_bio",
+      "effective_at": "2025-12-15",
+      "kind": "biography",
+      "security_scope": "perm_global_open",
+      "sha256": "783abdc1d45904df32f7ff0fe88b68fdd983bcfc312673d5655c535cf7582065",
+      "source_spans": [
+        {
+          "expected_text_substring": "emp_priya_kaur",
+          "is_authoritative": true,
+          "topic_ref": "emp_priya_kaur"
+        }
+      ],
+      "text": "# Priya Kaur - Biography (Alias)\n\n- document_id: doc_priya_bio\n- version: v1.0\n- effective_at: 2025-12-15\n- division_id: div_corp\n- owner_employee_id: emp_solveig_hagen\n- security_scope: perm_global_open\n- kind: biography\n- world_model_id: wm_auroralis_v1\n- generation_seed: phase22-synthetic-2026-08-03-auroralis-v1\n\n## Source topic refs\n- emp_priya_kaur\n\n## Body\nPriya Kaur serves as Chief Information Security Officer in the div_corp division, tenure start 2021-11-22. Reports to ceo_kjartan_eli.\n",
+      "title": "Priya Kaur - Biography (Alias)",
+      "version": "v1.0"
+    },
+    {
+      "document_id": "doc_bio_emp_lukas_wenger",
+      "effective_at": "2025-12-15",
+      "kind": "biography",
+      "security_scope": "perm_global_open",
+      "sha256": "13d41a6a30bde62dedc958418123d5f98b83a2ad95630ad719b0e59df97b0849",
+      "source_spans": [
+        {
+          "expected_text_substring": "emp_lukas_wenger",
+          "is_authoritative": true,
+          "topic_ref": "emp_lukas_wenger"
+        }
+      ],
+      "text": "# Lukas Wenger - Biography\n\n- document_id: doc_bio_emp_lukas_wenger\n- version: v1.0\n- effective_at: 2025-12-15\n- division_id: div_corp\n- owner_employee_id: emp_solveig_hagen\n- security_scope: perm_global_open\n- kind: biography\n- world_model_id: wm_auroralis_v1\n- generation_seed: phase22-synthetic-2026-08-03-auroralis-v1\n\n## Source topic refs\n- emp_lukas_wenger\n\n## Body\nLukas Wenger serves as Head of Procurement in the div_corp division, tenure start 2018-08-14. Reports to emp_solveig_hagen.\n",
+      "title": "Lukas Wenger - Biography",
+      "version": "v1.0"
+    },
+    {
+      "document_id": "doc_lukas_bio",
+      "effective_at": "2025-12-15",
+      "kind": "biography",
+      "security_scope": "perm_global_open",
+      "sha256": "9bce52521574fb9d708fbc04af267696825559aea8b700c9bee19970f41ea470",
+      "source_spans": [
+        {
+          "expected_text_substring": "emp_lukas_wenger",
+          "is_authoritative": true,
+          "topic_ref": "emp_lukas_wenger"
+        }
+      ],
+      "text": "# Lukas Wenger - Biography (Alias)\n\n- document_id: doc_lukas_bio\n- version: v1.0\n- effective_at: 2025-12-15\n- division_id: div_corp\n- owner_employee_id: emp_solveig_hagen\n- security_scope: perm_global_open\n- kind: biography\n- world_model_id: wm_auroralis_v1\n- generation_seed: phase22-synthetic-2026-08-03-auroralis-v1\n\n## Source topic refs\n- emp_lukas_wenger\n\n## Body\nLukas Wenger serves as Head of Procurement in the div_corp division, tenure start 2018-08-14. Reports to emp_solveig_hagen.\n",
+      "title": "Lukas Wenger - Biography (Alias)",
+      "version": "v1.0"
+    },
+    {
+      "document_id": "doc_bio_emp_amani_bello",
+      "effective_at": "2025-12-15",
+      "kind": "biography",
+      "security_scope": "perm_global_open",
+      "sha256": "016d96fa690ccaf5836895ee849191dfb7bfa6f6a27ff232fa035f15fe3ce39a",
+      "source_spans": [
+        {
+          "expected_text_substring": "emp_amani_bello",
+          "is_authoritative": true,
+          "topic_ref": "emp_amani_bello"
+        }
+      ],
+      "text": "# Amani Bello - Biography\n\n- document_id: doc_bio_emp_amani_bello\n- version: v1.0\n- effective_at: 2025-12-15\n- division_id: div_corp\n- owner_employee_id: emp_solveig_hagen\n- security_scope: perm_global_open\n- kind: biography\n- world_model_id: wm_auroralis_v1\n- generation_seed: phase22-synthetic-2026-08-03-auroralis-v1\n\n## Source topic refs\n- emp_amani_bello\n\n## Body\nAmani Bello serves as General Counsel in the div_corp division, tenure start 2016-03-07. Reports to ceo_kjartan_eli.\n",
+      "title": "Amani Bello - Biography",
+      "version": "v1.0"
+    },
+    {
+      "document_id": "doc_amani_bio",
+      "effective_at": "2025-12-15",
+      "kind": "biography",
+      "security_scope": "perm_global_open",
+      "sha256": "cdda3701e13db5008c16574aa3cd5807ace3a288da7e62d5428647cbea08d9cd",
+      "source_spans": [
+        {
+          "expected_text_substring": "emp_amani_bello",
+          "is_authoritative": true,
+          "topic_ref": "emp_amani_bello"
+        }
+      ],
+      "text": "# Amani Bello - Biography (Alias)\n\n- document_id: doc_amani_bio\n- version: v1.0\n- effective_at: 2025-12-15\n- division_id: div_corp\n- owner_employee_id: emp_solveig_hagen\n- security_scope: perm_global_open\n- kind: biography\n- world_model_id: wm_auroralis_v1\n- generation_seed: phase22-synthetic-2026-08-03-auroralis-v1\n\n## Source topic refs\n- emp_amani_bello\n\n## Body\nAmani Bello serves as General Counsel in the div_corp division, tenure start 2016-03-07. Reports to ceo_kjartan_eli.\n",
+      "title": "Amani Bello - Biography (Alias)",
+      "version": "v1.0"
+    },
+    {
+      "document_id": "doc_bio_emp_haruto_soma",
+      "effective_at": "2025-12-15",
+      "kind": "biography",
+      "security_scope": "perm_global_open",
+      "sha256": "38849f75de64162af107b0cd70528dc20ca7ed328d6779389d77d102b3590a0a",
+      "source_spans": [
+        {
+          "expected_text_substring": "emp_haruto_soma",
+          "is_authoritative": true,
+          "topic_ref": "emp_haruto_soma"
+        }
+      ],
+      "text": "# Haruto Soma - Biography\n\n- document_id: doc_bio_emp_haruto_soma\n- version: v1.0\n- effective_at: 2025-12-15\n- division_id: div_corp\n- owner_employee_id: emp_solveig_hagen\n- security_scope: perm_global_open\n- kind: biography\n- world_model_id: wm_auroralis_v1\n- generation_seed: phase22-synthetic-2026-08-03-auroralis-v1\n\n## Source topic refs\n- emp_haruto_soma\n\n## Body\nHaruto Soma serves as Director, Robotics R&D in the div_auto division, tenure start 2018-05-09. Reports to emp_iris_vange.\n",
+      "title": "Haruto Soma - Biography",
+      "version": "v1.0"
+    },
+    {
+      "document_id": "doc_haruto_bio",
+      "effective_at": "2025-12-15",
+      "kind": "biography",
+      "security_scope": "perm_global_open",
+      "sha256": "57cd640f897f87242aace8a755822ccfc84fc56514f2abc383980784937a352f",
+      "source_spans": [
+        {
+          "expected_text_substring": "emp_haruto_soma",
+          "is_authoritative": true,
+          "topic_ref": "emp_haruto_soma"
+        }
+      ],
+      "text": "# Haruto Soma - Biography (Alias)\n\n- document_id: doc_haruto_bio\n- version: v1.0\n- effective_at: 2025-12-15\n- division_id: div_corp\n- owner_employee_id: emp_solveig_hagen\n- security_scope: perm_global_open\n- kind: biography\n- world_model_id: wm_auroralis_v1\n- generation_seed: phase22-synthetic-2026-08-03-auroralis-v1\n\n## Source topic refs\n- emp_haruto_soma\n\n## Body\nHaruto Soma serves as Director, Robotics R&D in the div_auto division, tenure start 2018-05-09. Reports to emp_iris_vange.\n",
+      "title": "Haruto Soma - Biography (Alias)",
+      "version": "v1.0"
+    },
+    {
+      "document_id": "doc_bio_emp_eli_persson",
+      "effective_at": "2025-12-15",
+      "kind": "biography",
+      "security_scope": "perm_global_open",
+      "sha256": "527e56c7b52cca3fbefcfdf6ae366dfa3370a242e47b1dad62ff0ed80a8461b2",
+      "source_spans": [
+        {
+          "expected_text_substring": "emp_eli_persson",
+          "is_authoritative": true,
+          "topic_ref": "emp_eli_persson"
+        }
+      ],
+      "text": "# Eli Persson - Biography\n\n- document_id: doc_bio_emp_eli_persson\n- version: v1.0\n- effective_at: 2025-12-15\n- division_id: div_corp\n- owner_employee_id: emp_solveig_hagen\n- security_scope: perm_global_open\n- kind: biography\n- world_model_id: wm_auroralis_v1\n- generation_seed: phase22-synthetic-2026-08-03-auroralis-v1\n\n## Source topic refs\n- emp_eli_persson\n\n## Body\nEli Persson serves as Director, Embedded Firmware in the div_edge division, tenure start 2020-07-21. Reports to emp_marcus_tien.\n",
+      "title": "Eli Persson - Biography",
+      "version": "v1.0"
+    },
+    {
+      "document_id": "doc_eli_bio",
+      "effective_at": "2025-12-15",
+      "kind": "biography",
+      "security_scope": "perm_global_open",
+      "sha256": "190fee4e953a5859adebf5a5e00a48c15f21d582f80e0fdc2d225516d4b74283",
+      "source_spans": [
+        {
+          "expected_text_substring": "emp_eli_persson",
+          "is_authoritative": true,
+          "topic_ref": "emp_eli_persson"
+        }
+      ],
+      "text": "# Eli Persson - Biography (Alias)\n\n- document_id: doc_eli_bio\n- version: v1.0\n- effective_at: 2025-12-15\n- division_id: div_corp\n- owner_employee_id: emp_solveig_hagen\n- security_scope: perm_global_open\n- kind: biography\n- world_model_id: wm_auroralis_v1\n- generation_seed: phase22-synthetic-2026-08-03-auroralis-v1\n\n## Source topic refs\n- emp_eli_persson\n\n## Body\nEli Persson serves as Director, Embedded Firmware in the div_edge division, tenure start 2020-07-21. Reports to emp_marcus_tien.\n",
+      "title": "Eli Persson - Biography (Alias)",
+      "version": "v1.0"
+    },
+    {
+      "document_id": "doc_bio_emp_nadya_soroka",
+      "effective_at": "2025-12-15",
+      "kind": "biography",
+      "security_scope": "perm_global_open",
+      "sha256": "f37b5ed3bb10ea6327298add7735546b507b033ed10d120be64dcce311973935",
+      "source_spans": [
+        {
+          "expected_text_substring": "emp_nadya_soroka",
+          "is_authoritative": true,
+          "topic_ref": "emp_nadya_soroka"
+        }
+      ],
+      "text": "# Nadya Soroka - Biography\n\n- document_id: doc_bio_emp_nadya_soroka\n- version: v1.0\n- effective_at: 2025-12-15\n- division_id: div_corp\n- owner_employee_id: emp_solveig_hagen\n- security_scope: perm_global_open\n- kind: biography\n- world_model_id: wm_auroralis_v1\n- generation_seed: phase22-synthetic-2026-08-03-auroralis-v1\n\n## Source topic refs\n- emp_nadya_soroka\n\n## Body\nNadya Soroka serves as Director, Quality & Compliance in the div_corp division, tenure start 2019-02-04. Reports to emp_solveig_hagen.\n",
+      "title": "Nadya Soroka - Biography",
+      "version": "v1.0"
+    },
+    {
+      "document_id": "doc_nadya_bio",
+      "effective_at": "2025-12-15",
+      "kind": "biography",
+      "security_scope": "perm_global_open",
+      "sha256": "523ee60a79354081284ef97b6423b2086b080cd94a34881a6d19f50f1d5c3427",
+      "source_spans": [
+        {
+          "expected_text_substring": "emp_nadya_soroka",
+          "is_authoritative": true,
+          "topic_ref": "emp_nadya_soroka"
+        }
+      ],
+      "text": "# Nadya Soroka - Biography (Alias)\n\n- document_id: doc_nadya_bio\n- version: v1.0\n- effective_at: 2025-12-15\n- division_id: div_corp\n- owner_employee_id: emp_solveig_hagen\n- security_scope: perm_global_open\n- kind: biography\n- world_model_id: wm_auroralis_v1\n- generation_seed: phase22-synthetic-2026-08-03-auroralis-v1\n\n## Source topic refs\n- emp_nadya_soroka\n\n## Body\nNadya Soroka serves as Director, Quality & Compliance in the div_corp division, tenure start 2019-02-04. Reports to emp_solveig_hagen.\n",
+      "title": "Nadya Soroka - Biography (Alias)",
+      "version": "v1.0"
+    },
+    {
+      "document_id": "doc_bio_emp_ren_kovac",
+      "effective_at": "2025-12-15",
+      "kind": "biography",
+      "security_scope": "perm_global_open",
+      "sha256": "d9e45632b562f9267b31ebd52ca5b9b3508e41ae391013539fc6a13c68aabcd4",
+      "source_spans": [
+        {
+          "expected_text_substring": "emp_ren_kovac",
+          "is_authoritative": true,
+          "topic_ref": "emp_ren_kovac"
+        }
+      ],
+      "text": "# Ren Kovac - Biography\n\n- document_id: doc_bio_emp_ren_kovac\n- version: v1.0\n- effective_at: 2025-12-15\n- division_id: div_corp\n- owner_employee_id: emp_solveig_hagen\n- security_scope: perm_global_open\n- kind: biography\n- world_model_id: wm_auroralis_v1\n- generation_seed: phase22-synthetic-2026-08-03-auroralis-v1\n\n## Source topic refs\n- emp_ren_kovac\n\n## Body\nRen Kovac serves as Director, Field Service Operations in the div_auto division, tenure start 2017-09-19. Reports to emp_iris_vange.\n",
+      "title": "Ren Kovac - Biography",
+      "version": "v1.0"
+    },
+    {
+      "document_id": "doc_ren_bio",
+      "effective_at": "2025-12-15",
+      "kind": "biography",
+      "security_scope": "perm_global_open",
+      "sha256": "8c4d6d84883ae59ee0a97198c76958e18c78820b6a9666effe6737778756c38f",
+      "source_spans": [
+        {
+          "expected_text_substring": "emp_ren_kovac",
+          "is_authoritative": true,
+          "topic_ref": "emp_ren_kovac"
+        }
+      ],
+      "text": "# Ren Kovac - Biography (Alias)\n\n- document_id: doc_ren_bio\n- version: v1.0\n- effective_at: 2025-12-15\n- division_id: div_corp\n- owner_employee_id: emp_solveig_hagen\n- security_scope: perm_global_open\n- kind: biography\n- world_model_id: wm_auroralis_v1\n- generation_seed: phase22-synthetic-2026-08-03-auroralis-v1\n\n## Source topic refs\n- emp_ren_kovac\n\n## Body\nRen Kovac serves as Director, Field Service Operations in the div_auto division, tenure start 2017-09-19. Reports to emp_iris_vange.\n",
+      "title": "Ren Kovac - Biography (Alias)",
+      "version": "v1.0"
+    },
+    {
+      "document_id": "doc_ceo_bio",
+      "effective_at": "2025-12-15",
+      "kind": "biography",
+      "security_scope": "perm_global_open",
+      "sha256": "17432f3e6a5f194c2ef9405593757befb39db5c7a0d7e71bc0767a0f166826dc",
+      "source_spans": [
+        {
+          "expected_text_substring": "ceo_kjartan_eli",
+          "is_authoritative": true,
+          "topic_ref": "ceo_kjartan_eli"
+        }
+      ],
+      "text": "# Kjartan Eliasson - CEO Biography\n\n- document_id: doc_ceo_bio\n- version: v1.0\n- effective_at: 2025-12-15\n- division_id: div_corp\n- owner_employee_id: emp_solveig_hagen\n- security_scope: perm_global_open\n- kind: biography\n- world_model_id: wm_auroralis_v1\n- generation_seed: phase22-synthetic-2026-08-03-auroralis-v1\n\n## Source topic refs\n- ceo_kjartan_eli\n\n## Body\nKjartan Eliasson is Group Chief Executive Officer, tenure start 2015-01-05. All four division presidents report directly to the CEO. CFO, CISO, and General Counsel are direct reports.\n",
+      "title": "Kjartan Eliasson - CEO Biography",
+      "version": "v1.0"
+    },
+    {
+      "document_id": "doc_axis9_release_notes",
+      "effective_at": "2025-11-12",
+      "kind": "release_notes",
+      "security_scope": "perm_global_open",
+      "sha256": "ae1706cb2cfd8d85a01ab22baf96ebd71e0ee159b122823df1c96b91fbf90e21",
+      "source_spans": [
+        {
+          "expected_text_substring": "prod_axis_9",
+          "is_authoritative": true,
+          "topic_ref": "prod_axis_9"
+        },
+        {
+          "expected_text_substring": "evt_axis_9_release",
+          "is_authoritative": true,
+          "topic_ref": "evt_axis_9_release"
+        }
+      ],
+      "text": "# Axis-9 Controller v9.4.0 - Release Notes\n\n- document_id: doc_axis9_release_notes\n- version: v9.4.0\n- effective_at: 2025-11-12\n- division_id: div_auto\n- owner_employee_id: emp_haruto_soma\n- security_scope: perm_global_open\n- kind: release_notes\n- world_model_id: wm_auroralis_v1\n- generation_seed: phase22-synthetic-2026-08-03-auroralis-v1\n\n## Source topic refs\n- prod_axis_9\n- evt_axis_9_release\n\n## Body\nAxis-9 Industrial Controller v9.4.0 was released on 2025-11-12 by Haruto Soma (Director, Robotics R&D). The release introduces deterministic motion-control scheduling and a hardened CIP safety stack. The Axis-9 is in active status in the Automation Systems division. v9.4.0 supersedes v9.3.x for general availability.\n",
+      "title": "Axis-9 Controller v9.4.0 - Release Notes",
+      "version": "v9.4.0"
+    },
+    {
+      "document_id": "doc_axis8_eol_memo",
+      "effective_at": "2026-03-01",
+      "kind": "memo",
+      "security_scope": "perm_global_open",
+      "sha256": "c9c90bf4d86631f2d060c37f6ee04bc44588c6b60d442c7789bcc217bb213e1f",
+      "source_spans": [
+        {
+          "expected_text_substring": "prod_axis_8",
+          "is_authoritative": true,
+          "topic_ref": "prod_axis_8"
+        },
+        {
+          "expected_text_substring": "evt_axis_8_eol",
+          "is_authoritative": true,
+          "topic_ref": "evt_axis_8_eol"
+        }
+      ],
+      "text": "# Axis-8 End-of-Life Transition Memo\n\n- document_id: doc_axis8_eol_memo\n- version: v1.0\n- effective_at: 2026-03-01\n- division_id: div_auto\n- owner_employee_id: emp_iris_vange\n- security_scope: perm_global_open\n- kind: memo\n- world_model_id: wm_auroralis_v1\n- generation_seed: phase22-synthetic-2026-08-03-auroralis-v1\n\n## Source topic refs\n- prod_axis_8\n- evt_axis_8_eol\n\n## Body\nOn 2026-03-01, Iris Vange (President, Automation Systems) announced that Axis-8 Industrial Controller has entered maintenance-only mode. End-of-life is planned for 2027-06-30. Customers are advised to migrate to Axis-9 v9.4.x.\n",
+      "title": "Axis-8 End-of-Life Transition Memo",
+      "version": "v1.0"
+    },
+    {
+      "document_id": "doc_lumen_e2_release_notes",
+      "effective_at": "2026-02-04",
+      "kind": "release_notes",
+      "security_scope": "perm_global_open",
+      "sha256": "390b8e650885a592aad592c177897854b6157823cc1f6774a069cd154373b780",
+      "source_spans": [
+        {
+          "expected_text_substring": "prod_lumen_e2",
+          "is_authoritative": true,
+          "topic_ref": "prod_lumen_e2"
+        },
+        {
+          "expected_text_substring": "evt_lumen_e2_release",
+          "is_authoritative": true,
+          "topic_ref": "evt_lumen_e2_release"
+        }
+      ],
+      "text": "# Lumen-E2 Appliance v2.1.0 - Release Notes\n\n- document_id: doc_lumen_e2_release_notes\n- version: v2.1.0\n- effective_at: 2026-02-04\n- division_id: div_edge\n- owner_employee_id: emp_eli_persson\n- security_scope: perm_global_open\n- kind: release_notes\n- world_model_id: wm_auroralis_v1\n- generation_seed: phase22-synthetic-2026-08-03-auroralis-v1\n\n## Source topic refs\n- prod_lumen_e2\n- evt_lumen_e2_release\n\n## Body\nLumen-E2 Edge Compute Appliance v2.1.0 was released on 2026-02-04 by Eli Persson (Director, Embedded Firmware). The release includes a hardened boot chain and signed firmware envelope.\n",
+      "title": "Lumen-E2 Appliance v2.1.0 - Release Notes",
+      "version": "v2.1.0"
+    },
+    {
+      "document_id": "doc_lumen_e1_eol_memo",
+      "effective_at": "2024-05-22",
+      "kind": "memo",
+      "security_scope": "perm_global_open",
+      "sha256": "436580aa85c09468d7dc1cf335d533c6be3bb6ddd65824699f9aeaf1f360ea3e",
+      "source_spans": [
+        {
+          "expected_text_substring": "prod_lumen_e1",
+          "is_authoritative": true,
+          "topic_ref": "prod_lumen_e1"
+        }
+      ],
+      "text": "# Lumen-E1 End-of-Sale Memo\n\n- document_id: doc_lumen_e1_eol_memo\n- version: v1.0\n- effective_at: 2024-05-22\n- division_id: div_edge\n- owner_employee_id: emp_marcus_tien\n- security_scope: perm_global_open\n- kind: memo\n- world_model_id: wm_auroralis_v1\n- generation_seed: phase22-synthetic-2026-08-03-auroralis-v1\n\n## Source topic refs\n- prod_lumen_e1\n\n## Body\nEffective 2024-05-22, the Lumen-E1 Edge Compute Appliance is end-of-sale and enters maintenance-only support. Marcus Tien (President, Edge Compute) signed the memo. Customers should evaluate Lumen-E2 v2.1.x as the successor.\n",
+      "title": "Lumen-E1 End-of-Sale Memo",
+      "version": "v1.0"
+    },
+    {
+      "document_id": "doc_forge_x1_release_notes",
+      "effective_at": "2025-08-19",
+      "kind": "release_notes",
+      "security_scope": "perm_global_open",
+      "sha256": "d344ce3a3bd5e9f5d021569e347980a18b455a9d56ecbbefcc994db7c99fa217",
+      "source_spans": [
+        {
+          "expected_text_substring": "prod_forge_x1",
+          "is_authoritative": true,
+          "topic_ref": "prod_forge_x1"
+        }
+      ],
+      "text": "# Forge-X1 Cell v1.3.1 - Release Notes\n\n- document_id: doc_forge_x1_release_notes\n- version: v1.3.1\n- effective_at: 2025-08-19\n- division_id: div_addmfg\n- owner_employee_id: emp_yui_nakajima\n- security_scope: perm_global_open\n- kind: release_notes\n- world_model_id: wm_auroralis_v1\n- generation_seed: phase22-synthetic-2026-08-03-auroralis-v1\n\n## Source topic refs\n- prod_forge_x1\n\n## Body\nForge-X1 Additive Manufacturing Cell v1.3.1 was released on 2025-08-19 by Yui Nakajima (President, Additive Manufacturing). The release introduces a closed-loop powder feed sensor.\n",
+      "title": "Forge-X1 Cell v1.3.1 - Release Notes",
+      "version": "v1.3.1"
+    },
+    {
+      "document_id": "doc_forge_x1_recall_bulletin",
+      "effective_at": "2026-04-22",
+      "kind": "field_bulletin",
+      "security_scope": "perm_global_open",
+      "sha256": "63b94eed62e155a8ccf6ac1c22faea0556d69aacb7d972988162fefdeca8a384",
+      "source_spans": [
+        {
+          "expected_text_substring": "prod_forge_x1",
+          "is_authoritative": true,
+          "topic_ref": "prod_forge_x1"
+        },
+        {
+          "expected_text_substring": "evt_forge_x1_recall",
+          "is_authoritative": true,
+          "topic_ref": "evt_forge_x1_recall"
+        }
+      ],
+      "text": "# Forge-X1 Powder Feed Corrective Action Bulletin\n\n- document_id: doc_forge_x1_recall_bulletin\n- version: v1.0\n- effective_at: 2026-04-22\n- division_id: div_addmfg\n- owner_employee_id: emp_nadya_soroka\n- security_scope: perm_global_open\n- kind: field_bulletin\n- world_model_id: wm_auroralis_v1\n- generation_seed: phase22-synthetic-2026-08-03-auroralis-v1\n\n## Source topic refs\n- prod_forge_x1\n- evt_forge_x1_recall\n\n## Body\nOn 2026-04-22, Nadya Soroka (Director, Quality & Compliance) issued a voluntary firmware corrective action for Forge-X1 v1.3.x powder feed subsystem. Customers must apply the patch within 30 days.\n",
+      "title": "Forge-X1 Powder Feed Corrective Action Bulletin",
+      "version": "v1.0"
+    },
+    {
+      "document_id": "doc_northwind_sdk_overview",
+      "effective_at": "2026-01-15",
+      "kind": "architecture",
+      "security_scope": "perm_global_open",
+      "sha256": "cdfc6cbb30d7739db22bad9ce6b0d58fae86f704ce2769be249ff03cb84bb56e",
+      "source_spans": [
+        {
+          "expected_text_substring": "prod_northwind_sdk",
+          "is_authoritative": true,
+          "topic_ref": "prod_northwind_sdk"
+        },
+        {
+          "expected_text_substring": "proj_northwind",
+          "is_authoritative": true,
+          "topic_ref": "proj_northwind"
+        }
+      ],
+      "text": "# Northwind Industrial SDK v3.0 - Architecture Overview\n\n- document_id: doc_northwind_sdk_overview\n- version: v3.0.0\n- effective_at: 2026-01-15\n- division_id: div_auto\n- owner_employee_id: emp_haruto_soma\n- security_scope: perm_global_open\n- kind: architecture\n- world_model_id: wm_auroralis_v1\n- generation_seed: phase22-synthetic-2026-08-03-auroralis-v1\n\n## Source topic refs\n- prod_northwind_sdk\n- proj_northwind\n\n## Body\nThe Northwind Industrial SDK v3.0.0 was released on 2026-01-15 by Haruto Soma. Northwind is the canonical SDK for the Axis-9 controller family and is the primary deliverable of Project Northwind (sponsor: CEO Kjartan Eliasson).\n",
+      "title": "Northwind Industrial SDK v3.0 - Architecture Overview",
+      "version": "v3.0.0"
+    },
+    {
+      "document_id": "doc_helion_contract",
+      "effective_at": "2024-01-15",
+      "kind": "contract_summary",
+      "security_scope": "perm_div_auto_confidential",
+      "sha256": "c7a437905e00acef31f5b22b08ec1daabca97740914a6a83a0ef6c84ce7670cf",
+      "source_spans": [
+        {
+          "expected_text_substring": "sup_helion_motors",
+          "is_authoritative": true,
+          "topic_ref": "sup_helion_motors"
+        },
+        {
+          "expected_text_substring": "ct_helion_2024",
+          "is_authoritative": true,
+          "topic_ref": "ct_helion_2024"
+        }
+      ],
+      "text": "# Helion Motors Master Supply Agreement (2024 Edition)\n\n- document_id: doc_helion_contract\n- version: v3\n- effective_at: 2024-01-15\n- division_id: div_auto\n- owner_employee_id: emp_lukas_wenger\n- security_scope: perm_div_auto_confidential\n- kind: contract_summary\n- world_model_id: wm_auroralis_v1\n- generation_seed: phase22-synthetic-2026-08-03-auroralis-v1\n\n## Source topic refs\n- sup_helion_motors\n- ct_helion_2024\n\n## Body\nHelion Motors master supply agreement v3, effective 2024-01-15 through 2027-01-14, total value EUR 12,500,000. Owner: Lukas Wenger (Head of Procurement). Serves the Automation Systems division (Iris Vange).\n",
+      "title": "Helion Motors Master Supply Agreement (2024 Edition)",
+      "version": "v3"
+    },
+    {
+      "document_id": "doc_kobal_contract",
+      "effective_at": "2025-03-01",
+      "kind": "contract_summary",
+      "security_scope": "perm_div_auto_confidential",
+      "sha256": "1f267bba81a08dbb076fea5496e8dc6bd86929bf9d6ec7c2f9c0ad7a2c46af4f",
+      "source_spans": [
+        {
+          "expected_text_substring": "sup_kobal_silicon",
+          "is_authoritative": true,
+          "topic_ref": "sup_kobal_silicon"
+        },
+        {
+          "expected_text_substring": "ct_kobal_2025",
+          "is_authoritative": true,
+          "topic_ref": "ct_kobal_2025"
+        }
+      ],
+      "text": "# Kobal Silicon Master Supply Agreement (2025 Edition)\n\n- document_id: doc_kobal_contract\n- version: v2\n- effective_at: 2025-03-01\n- division_id: div_edge\n- owner_employee_id: emp_lukas_wenger\n- security_scope: perm_div_auto_confidential\n- kind: contract_summary\n- world_model_id: wm_auroralis_v1\n- generation_seed: phase22-synthetic-2026-08-03-auroralis-v1\n\n## Source topic refs\n- sup_kobal_silicon\n- ct_kobal_2025\n\n## Body\nKobal Silicon master supply agreement v2, effective 2025-03-01 through 2028-02-29, total value EUR 7,400,000. Owner: Lukas Wenger. Serves the Edge Compute division (Marcus Tien).\n",
+      "title": "Kobal Silicon Master Supply Agreement (2025 Edition)",
+      "version": "v2"
+    },
+    {
+      "document_id": "doc_meridian_contract",
+      "effective_at": "2025-06-01",
+      "kind": "contract_summary",
+      "security_scope": "perm_global_open",
+      "sha256": "d653adcc7121754d1e32894f5ea839bd1ce2f9e3dcde2c0089e31f5b058a656a",
+      "source_spans": [
+        {
+          "expected_text_substring": "sup_meridian_logistics",
+          "is_authoritative": true,
+          "topic_ref": "sup_meridian_logistics"
+        },
+        {
+          "expected_text_substring": "ct_meridian_2025",
+          "is_authoritative": true,
+          "topic_ref": "ct_meridian_2025"
+        }
+      ],
+      "text": "# Meridian Logistics MSA - Service Description\n\n- document_id: doc_meridian_contract\n- version: v1\n- effective_at: 2025-06-01\n- division_id: div_corp\n- owner_employee_id: emp_lukas_wenger\n- security_scope: perm_global_open\n- kind: contract_summary\n- world_model_id: wm_auroralis_v1\n- generation_seed: phase22-synthetic-2026-08-03-auroralis-v1\n\n## Source topic refs\n- sup_meridian_logistics\n- ct_meridian_2025\n\n## Body\nMeridian Logistics master service agreement v1, effective 2025-06-01 through 2026-12-31, total value EUR 3,200,000. Owner: Lukas Wenger. Serves Corporate Services.\n",
+      "title": "Meridian Logistics MSA - Service Description",
+      "version": "v1"
+    },
+    {
+      "document_id": "doc_polaris_contract_v1",
+      "effective_at": "2024-09-01",
+      "kind": "contract_summary",
+      "security_scope": "perm_global_open",
+      "sha256": "68381783c7dec689faab148a2c3c2c5fba8bec07b5b2fa69f0f8d508626cf472",
+      "source_spans": [
+        {
+          "expected_text_substring": "sup_polaris_steel",
+          "is_authoritative": true,
+          "topic_ref": "sup_polaris_steel"
+        },
+        {
+          "expected_text_substring": "ct_polaris_2024",
+          "is_authoritative": true,
+          "topic_ref": "ct_polaris_2024"
+        }
+      ],
+      "text": "# Polaris Steel MSA (2024 Edition) - Archived Summary\n\n- document_id: doc_polaris_contract_v1\n- version: v1\n- effective_at: 2024-09-01\n- division_id: div_addmfg\n- owner_employee_id: emp_lukas_wenger\n- security_scope: perm_global_open\n- kind: contract_summary\n- world_model_id: wm_auroralis_v1\n- generation_seed: phase22-synthetic-2026-08-03-auroralis-v1\n\n## Source topic refs\n- sup_polaris_steel\n- ct_polaris_2024\n\n## Body\nPolaris Steel master supply agreement v1, effective 2024-09-01 through 2025-08-31, total value EUR 5,100,000. Owner: Lukas Wenger. Superseded by v2 (ct_polaris_2025) on 2025-09-01.\n",
+      "title": "Polaris Steel MSA (2024 Edition) - Archived Summary",
+      "version": "v1"
+    },
+    {
+      "document_id": "doc_polaris_contract_v2",
+      "effective_at": "2025-09-01",
+      "kind": "contract_summary",
+      "security_scope": "perm_global_open",
+      "sha256": "034cb868a9ff1f710096ffccd77c935b316f56e6cffa954d5af7b912e127ba6b",
+      "source_spans": [
+        {
+          "expected_text_substring": "sup_polaris_steel",
+          "is_authoritative": true,
+          "topic_ref": "sup_polaris_steel"
+        },
+        {
+          "expected_text_substring": "ct_polaris_2025",
+          "is_authoritative": true,
+          "topic_ref": "ct_polaris_2025"
+        }
+      ],
+      "text": "# Polaris Steel MSA (2025 Edition) - Summary\n\n- document_id: doc_polaris_contract_v2\n- version: v2\n- effective_at: 2025-09-01\n- division_id: div_addmfg\n- owner_employee_id: emp_lukas_wenger\n- security_scope: perm_global_open\n- kind: contract_summary\n- world_model_id: wm_auroralis_v1\n- generation_seed: phase22-synthetic-2026-08-03-auroralis-v1\n\n## Source topic refs\n- sup_polaris_steel\n- ct_polaris_2025\n\n## Body\nPolaris Steel master supply agreement v2, effective 2025-09-01 through 2027-08-31, total value EUR 5,750,000. Owner: Lukas Wenger. Serves Additive Manufacturing (Yui Nakajima). Supersedes the 2024 v1 edition.\n",
+      "title": "Polaris Steel MSA (2025 Edition) - Summary",
+      "version": "v2"
+    },
+    {
+      "document_id": "doc_supplier_brief_sup_helion_motors",
+      "effective_at": "2025-12-01",
+      "kind": "supplier_brief",
+      "security_scope": "perm_global_open",
+      "sha256": "0497a756562be59027597c87b85613aea0e8107667f50a7c6b18459c9b213091",
+      "source_spans": [
+        {
+          "expected_text_substring": "sup_helion_motors",
+          "is_authoritative": true,
+          "topic_ref": "sup_helion_motors"
+        }
+      ],
+      "text": "# Helion Motors GmbH - Supplier Brief\n\n- document_id: doc_supplier_brief_sup_helion_motors\n- version: v1.0\n- effective_at: 2025-12-01\n- division_id: div_corp\n- owner_employee_id: emp_lukas_wenger\n- security_scope: perm_global_open\n- kind: supplier_brief\n- world_model_id: wm_auroralis_v1\n- generation_seed: phase22-synthetic-2026-08-03-auroralis-v1\n\n## Source topic refs\n- sup_helion_motors\n\n## Body\nHelion Motors GmbH (fictional) (Germany) is a servo_motors supplier in approved status. Owner: Lukas Wenger.\n",
+      "title": "Helion Motors GmbH - Supplier Brief",
+      "version": "v1.0"
+    },
+    {
+      "document_id": "doc_supplier_brief_sup_kobal_silicon",
+      "effective_at": "2025-12-01",
+      "kind": "supplier_brief",
+      "security_scope": "perm_global_open",
+      "sha256": "dd35c9b360d004c452c427abdb8ed9a99ea312c76afb7140dbbb0ba6152c3fe0",
+      "source_spans": [
+        {
+          "expected_text_substring": "sup_kobal_silicon",
+          "is_authoritative": true,
+          "topic_ref": "sup_kobal_silicon"
+        }
+      ],
+      "text": "# Kobal Silicon S.A. - Supplier Brief\n\n- document_id: doc_supplier_brief_sup_kobal_silicon\n- version: v1.0\n- effective_at: 2025-12-01\n- division_id: div_corp\n- owner_employee_id: emp_lukas_wenger\n- security_scope: perm_global_open\n- kind: supplier_brief\n- world_model_id: wm_auroralis_v1\n- generation_seed: phase22-synthetic-2026-08-03-auroralis-v1\n\n## Source topic refs\n- sup_kobal_silicon\n\n## Body\nKobal Silicon S.A. (fictional) (France) is a industrial_sensors supplier in approved status. Owner: Lukas Wenger.\n",
+      "title": "Kobal Silicon S.A. - Supplier Brief",
+      "version": "v1.0"
+    },
+    {
+      "document_id": "doc_supplier_brief_sup_meridian_logistics",
+      "effective_at": "2025-12-01",
+      "kind": "supplier_brief",
+      "security_scope": "perm_global_open",
+      "sha256": "967f491f3de0ea2f167e82b7d43fe377a847957115c4b96227dd9883f4638ff0",
+      "source_spans": [
+        {
+          "expected_text_substring": "sup_meridian_logistics",
+          "is_authoritative": true,
+          "topic_ref": "sup_meridian_logistics"
+        }
+      ],
+      "text": "# Meridian Logistics Co. - Supplier Brief\n\n- document_id: doc_supplier_brief_sup_meridian_logistics\n- version: v1.0\n- effective_at: 2025-12-01\n- division_id: div_corp\n- owner_employee_id: emp_lukas_wenger\n- security_scope: perm_global_open\n- kind: supplier_brief\n- world_model_id: wm_auroralis_v1\n- generation_seed: phase22-synthetic-2026-08-03-auroralis-v1\n\n## Source topic refs\n- sup_meridian_logistics\n\n## Body\nMeridian Logistics Co. (fictional) (Singapore) is a freight_forwarding supplier in approved status. Owner: Lukas Wenger.\n",
+      "title": "Meridian Logistics Co. - Supplier Brief",
+      "version": "v1.0"
+    },
+    {
+      "document_id": "doc_supplier_brief_sup_polaris_steel",
+      "effective_at": "2025-12-01",
+      "kind": "supplier_brief",
+      "security_scope": "perm_global_open",
+      "sha256": "f8bebe54471e55194713812b0e9ead92d18c06b47bbc66059241b111941a4927",
+      "source_spans": [
+        {
+          "expected_text_substring": "sup_polaris_steel",
+          "is_authoritative": true,
+          "topic_ref": "sup_polaris_steel"
+        }
+      ],
+      "text": "# Polaris Steel Industries - Supplier Brief\n\n- document_id: doc_supplier_brief_sup_polaris_steel\n- version: v1.0\n- effective_at: 2025-12-01\n- division_id: div_corp\n- owner_employee_id: emp_lukas_wenger\n- security_scope: perm_global_open\n- kind: supplier_brief\n- world_model_id: wm_auroralis_v1\n- generation_seed: phase22-synthetic-2026-08-03-auroralis-v1\n\n## Source topic refs\n- sup_polaris_steel\n\n## Body\nPolaris Steel Industries (fictional) (Sweden) is a raw_materials supplier in conditional status. Owner: Lukas Wenger.\n",
+      "title": "Polaris Steel Industries - Supplier Brief",
+      "version": "v1.0"
+    },
+    {
+      "document_id": "doc_supplier_brief_sup_ozone_chem",
+      "effective_at": "2025-12-01",
+      "kind": "supplier_brief",
+      "security_scope": "perm_global_open",
+      "sha256": "62bcf80b7d8f0bc6830c559f7a73ba75ff2578968d8689699acabe64a3b0944c",
+      "source_spans": [
+        {
+          "expected_text_substring": "sup_ozone_chem",
+          "is_authoritative": true,
+          "topic_ref": "sup_ozone_chem"
+        }
+      ],
+      "text": "# Ozone Chemicals Ltd. - Supplier Brief\n\n- document_id: doc_supplier_brief_sup_ozone_chem\n- version: v1.0\n- effective_at: 2025-12-01\n- division_id: div_corp\n- owner_employee_id: emp_lukas_wenger\n- security_scope: perm_global_open\n- kind: supplier_brief\n- world_model_id: wm_auroralis_v1\n- generation_seed: phase22-synthetic-2026-08-03-auroralis-v1\n\n## Source topic refs\n- sup_ozone_chem\n\n## Body\nOzone Chemicals Ltd. (fictional) (India) is a specialty_chemicals supplier in probation status. Owner: Lukas Wenger.\n",
+      "title": "Ozone Chemicals Ltd. - Supplier Brief",
+      "version": "v1.0"
+    },
+    {
+      "document_id": "doc_security_policy_2024",
+      "effective_at": "2024-01-01",
+      "kind": "policy",
+      "security_scope": "perm_global_open",
+      "sha256": "5e865585cee6d04d5772303a8485df7b717a06da2eeae20ad12dcc79c4b9d588",
+      "source_spans": [
+        {
+          "expected_text_substring": "pol_sec_2024",
+          "is_authoritative": true,
+          "topic_ref": "pol_sec_2024"
+        }
+      ],
+      "text": "# Information Security Policy (2024 Edition)\n\n- document_id: doc_security_policy_2024\n- version: v4.1\n- effective_at: 2024-01-01\n- division_id: div_corp\n- owner_employee_id: emp_priya_kaur\n- security_scope: perm_global_open\n- kind: policy\n- world_model_id: wm_auroralis_v1\n- generation_seed: phase22-synthetic-2026-08-03-auroralis-v1\n\n## Source topic refs\n- pol_sec_2024\n\n## Body\nInformation Security Policy v4.1, effective 2024-01-01, owner Priya Kaur (CISO). Superseded on 2026-01-01 by the 2026 edition.\n",
+      "title": "Information Security Policy (2024 Edition)",
+      "version": "v4.1"
+    },
+    {
+      "document_id": "doc_security_policy_2026",
+      "effective_at": "2026-01-01",
+      "kind": "policy",
+      "security_scope": "perm_global_open",
+      "sha256": "3005220f70926f3162b6d2d061f1bc017d443a7be8329311ce2dbd9eb2f075ab",
+      "source_spans": [
+        {
+          "expected_text_substring": "pol_sec_2026",
+          "is_authoritative": true,
+          "topic_ref": "pol_sec_2026"
+        }
+      ],
+      "text": "# Information Security Policy (2026 Edition)\n\n- document_id: doc_security_policy_2026\n- version: v4.2\n- effective_at: 2026-01-01\n- division_id: div_corp\n- owner_employee_id: emp_priya_kaur\n- security_scope: perm_global_open\n- kind: policy\n- world_model_id: wm_auroralis_v1\n- generation_seed: phase22-synthetic-2026-08-03-auroralis-v1\n\n## Source topic refs\n- pol_sec_2026\n\n## Body\nInformation Security Policy v4.2, effective 2026-01-01, owner Priya Kaur. Supersedes the 2024 edition. Adds explicit guidance on retrieval-augmented system citation and provenance.\n",
+      "title": "Information Security Policy (2026 Edition)",
+      "version": "v4.2"
+    },
+    {
+      "document_id": "doc_procurement_policy",
+      "effective_at": "2025-04-01",
+      "kind": "policy",
+      "security_scope": "perm_global_open",
+      "sha256": "1e179581831185a1af7c487043ab194af6ed165d358b066d3326eb463e4f4f79",
+      "source_spans": [
+        {
+          "expected_text_substring": "pol_procure_2025",
+          "is_authoritative": true,
+          "topic_ref": "pol_procure_2025"
+        }
+      ],
+      "text": "# Procurement and Supplier Onboarding Policy\n\n- document_id: doc_procurement_policy\n- version: v2.0\n- effective_at: 2025-04-01\n- division_id: div_corp\n- owner_employee_id: emp_lukas_wenger\n- security_scope: perm_global_open\n- kind: policy\n- world_model_id: wm_auroralis_v1\n- generation_seed: phase22-synthetic-2026-08-03-auroralis-v1\n\n## Source topic refs\n- pol_procure_2025\n\n## Body\nProcurement and Supplier Onboarding Policy v2.0, effective 2025-04-01, owner Lukas Wenger. Defines approved / conditional / probation supplier tiers.\n",
+      "title": "Procurement and Supplier Onboarding Policy",
+      "version": "v2.0"
+    },
+    {
+      "document_id": "doc_quality_policy",
+      "effective_at": "2025-07-15",
+      "kind": "policy",
+      "security_scope": "perm_global_open",
+      "sha256": "4db93e7314041a591983fa88cf2dd22a25eff2d55054e9db3210bade9622a9c4",
+      "source_spans": [
+        {
+          "expected_text_substring": "pol_quality_2025",
+          "is_authoritative": true,
+          "topic_ref": "pol_quality_2025"
+        }
+      ],
+      "text": "# Quality Management System Policy\n\n- document_id: doc_quality_policy\n- version: v3.1\n- effective_at: 2025-07-15\n- division_id: div_corp\n- owner_employee_id: emp_nadya_soroka\n- security_scope: perm_global_open\n- kind: policy\n- world_model_id: wm_auroralis_v1\n- generation_seed: phase22-synthetic-2026-08-03-auroralis-v1\n\n## Source topic refs\n- pol_quality_2025\n\n## Body\nQuality Management System Policy v3.1, effective 2025-07-15, owner Nadya Soroka. Defines field-action and corrective-action procedures.\n",
+      "title": "Quality Management System Policy",
+      "version": "v3.1"
+    },
+    {
+      "document_id": "doc_export_policy",
+      "effective_at": "2025-02-01",
+      "kind": "policy",
+      "security_scope": "perm_legal_privileged",
+      "sha256": "f85a8e3711a7d549e6142e58a650c3bdb2e4c10b7fe8a98a5bc4e9124c507a52",
+      "source_spans": [
+        {
+          "expected_text_substring": "pol_legal_2025",
+          "is_authoritative": true,
+          "topic_ref": "pol_legal_2025"
+        }
+      ],
+      "text": "# Export Control and Trade Compliance Policy\n\n- document_id: doc_export_policy\n- version: v1.5\n- effective_at: 2025-02-01\n- division_id: div_corp\n- owner_employee_id: emp_amani_bello\n- security_scope: perm_legal_privileged\n- kind: policy\n- world_model_id: wm_auroralis_v1\n- generation_seed: phase22-synthetic-2026-08-03-auroralis-v1\n\n## Source topic refs\n- pol_legal_2025\n\n## Body\nExport Control and Trade Compliance Policy v1.5, effective 2025-02-01, owner Amani Bello (General Counsel). Legal privileged; restricted to members of the legal privilege list (Amani Bello, Kjartan Eliasson).\n",
+      "title": "Export Control and Trade Compliance Policy",
+      "version": "v1.5"
+    },
+    {
+      "document_id": "doc_northwind_charter",
+      "effective_at": "2025-09-01",
+      "kind": "project_charter",
+      "security_scope": "perm_div_auto_confidential",
+      "sha256": "add9d0b994ded32c75845792c52ca01f3344c439091024562f6df61b43eada4a",
+      "source_spans": [
+        {
+          "expected_text_substring": "proj_northwind",
+          "is_authoritative": true,
+          "topic_ref": "proj_northwind"
+        }
+      ],
+      "text": "# Project Northwind - Charter and Milestones\n\n- document_id: doc_northwind_charter\n- version: v1.2\n- effective_at: 2025-09-01\n- division_id: div_auto\n- owner_employee_id: ceo_kjartan_eli\n- security_scope: perm_div_auto_confidential\n- kind: project_charter\n- world_model_id: wm_auroralis_v1\n- generation_seed: phase22-synthetic-2026-08-03-auroralis-v1\n\n## Source topic refs\n- proj_northwind\n\n## Body\nProject Northwind is the modernization of the Northwind Industrial SDK. Sponsor: CEO Kjartan Eliasson. Division: Automation Systems. Budget EUR 22,000,000. Start 2025-09-01, target close 2026-12-31. Status: on_track. Primary deliverable: Northwind SDK v3.0.0 (released 2026-01-15).\n",
+      "title": "Project Northwind - Charter and Milestones",
+      "version": "v1.2"
+    },
+    {
+      "document_id": "doc_lumenx_charter",
+      "effective_at": "2026-01-15",
+      "kind": "project_charter",
+      "security_scope": "perm_div_auto_confidential",
+      "sha256": "62c889885eced271dc355a84ea52d4d029d05f3e527eb9ccbd79a9fda2babbd8",
+      "source_spans": [
+        {
+          "expected_text_substring": "proj_lumenx",
+          "is_authoritative": true,
+          "topic_ref": "proj_lumenx"
+        }
+      ],
+      "text": "# Project Lumen-X - Charter and Risk Register\n\n- document_id: doc_lumenx_charter\n- version: v1.0\n- effective_at: 2026-01-15\n- division_id: div_edge\n- owner_employee_id: emp_marcus_tien\n- security_scope: perm_div_auto_confidential\n- kind: project_charter\n- world_model_id: wm_auroralis_v1\n- generation_seed: phase22-synthetic-2026-08-03-auroralis-v1\n\n## Source topic refs\n- proj_lumenx\n\n## Body\nProject Lumen-X expands edge inference capacity. Sponsor: Marcus Tien. Budget EUR 14,500,000. Start 2026-01-15, target close 2027-06-30. Status: at_risk. Primary deliverable: Lumen-E2 v2.1.x line.\n",
+      "title": "Project Lumen-X - Charter and Risk Register",
+      "version": "v1.0"
+    },
+    {
+      "document_id": "doc_forge2_charter",
+      "effective_at": "2025-11-01",
+      "kind": "project_charter",
+      "security_scope": "perm_global_open",
+      "sha256": "812d08c25373707d7493be0f10cd2187cc58646b4745e378e9b8b02d878f15ff",
+      "source_spans": [
+        {
+          "expected_text_substring": "proj_forge2",
+          "is_authoritative": true,
+          "topic_ref": "proj_forge2"
+        }
+      ],
+      "text": "# Project Forge-II - Charter and BOM\n\n- document_id: doc_forge2_charter\n- version: v1.1\n- effective_at: 2025-11-01\n- division_id: div_addmfg\n- owner_employee_id: emp_yui_nakajima\n- security_scope: perm_global_open\n- kind: project_charter\n- world_model_id: wm_auroralis_v1\n- generation_seed: phase22-synthetic-2026-08-03-auroralis-v1\n\n## Source topic refs\n- proj_forge2\n\n## Body\nProject Forge-II develops the second-generation Forge cell. Sponsor: Yui Nakajima. Budget EUR 9,800,000. Start 2025-11-01, target close 2027-02-28. Status: on_track.\n",
+      "title": "Project Forge-II - Charter and BOM",
+      "version": "v1.1"
+    },
+    {
+      "document_id": "doc_northwind_status_2026_q2",
+      "effective_at": "2026-07-05",
+      "kind": "status_report",
+      "security_scope": "perm_div_auto_confidential",
+      "sha256": "edfd7fa3411de29c1bedafb11193babb04e58cacf07bd5f14d6e2474b1e93f03",
+      "source_spans": [
+        {
+          "expected_text_substring": "proj_northwind",
+          "is_authoritative": true,
+          "topic_ref": "proj_northwind"
+        },
+        {
+          "expected_text_substring": "prod_northwind_sdk",
+          "is_authoritative": true,
+          "topic_ref": "prod_northwind_sdk"
+        }
+      ],
+      "text": "# Project Northwind - Status Report 2026 Q2\n\n- document_id: doc_northwind_status_2026_q2\n- version: v1.0\n- effective_at: 2026-07-05\n- division_id: div_auto\n- owner_employee_id: emp_haruto_soma\n- security_scope: perm_div_auto_confidential\n- kind: status_report\n- world_model_id: wm_auroralis_v1\n- generation_seed: phase22-synthetic-2026-08-03-auroralis-v1\n\n## Source topic refs\n- proj_northwind\n- prod_northwind_sdk\n\n## Body\nNorthwind Q2 2026 status: SDK v3.0.0 GA shipped 2026-01-15. Axis-9 controller integration completed. Risk: external model gateway latency remains within tolerance.\n",
+      "title": "Project Northwind - Status Report 2026 Q2",
+      "version": "v1.0"
+    },
+    {
+      "document_id": "doc_lumenx_status_2026_q2",
+      "effective_at": "2026-07-12",
+      "kind": "status_report",
+      "security_scope": "perm_div_auto_confidential",
+      "sha256": "b43039241b1dcf104f273870f666b1853ed0d383a0a95f38f6fc50ec9f4eaa13",
+      "source_spans": [
+        {
+          "expected_text_substring": "proj_lumenx",
+          "is_authoritative": true,
+          "topic_ref": "proj_lumenx"
+        },
+        {
+          "expected_text_substring": "prod_lumen_e2",
+          "is_authoritative": true,
+          "topic_ref": "prod_lumen_e2"
+        }
+      ],
+      "text": "# Project Lumen-X - Status Report 2026 Q2\n\n- document_id: doc_lumenx_status_2026_q2\n- version: v1.0\n- effective_at: 2026-07-12\n- division_id: div_edge\n- owner_employee_id: emp_eli_persson\n- security_scope: perm_div_auto_confidential\n- kind: status_report\n- world_model_id: wm_auroralis_v1\n- generation_seed: phase22-synthetic-2026-08-03-auroralis-v1\n\n## Source topic refs\n- proj_lumenx\n- prod_lumen_e2\n\n## Body\nLumen-X Q2 2026 status: Lumen-E2 v2.1.0 GA shipped 2026-02-04. Risk register highlights supplier qualification gap for Kobal Silicon incident (2026-03-19).\n",
+      "title": "Project Lumen-X - Status Report 2026 Q2",
+      "version": "v1.0"
+    },
+    {
+      "document_id": "doc_forge2_status_2026_q2",
+      "effective_at": "2026-07-10",
+      "kind": "status_report",
+      "security_scope": "perm_global_open",
+      "sha256": "7617407963cca898c3ec6a5705f45e8ba46fb4447d01fcbfc867b5440235a0b7",
+      "source_spans": [
+        {
+          "expected_text_substring": "proj_forge2",
+          "is_authoritative": true,
+          "topic_ref": "proj_forge2"
+        },
+        {
+          "expected_text_substring": "prod_forge_x1",
+          "is_authoritative": true,
+          "topic_ref": "prod_forge_x1"
+        }
+      ],
+      "text": "# Project Forge-II - Status Report 2026 Q2\n\n- document_id: doc_forge2_status_2026_q2\n- version: v1.0\n- effective_at: 2026-07-10\n- division_id: div_addmfg\n- owner_employee_id: emp_yui_nakajima\n- security_scope: perm_global_open\n- kind: status_report\n- world_model_id: wm_auroralis_v1\n- generation_seed: phase22-synthetic-2026-08-03-auroralis-v1\n\n## Source topic refs\n- proj_forge2\n- prod_forge_x1\n\n## Body\nForge-II Q2 2026 status: BOM freeze in progress. Powder feed corrective action (2026-04-22) closed.\n",
+      "title": "Project Forge-II - Status Report 2026 Q2",
+      "version": "v1.0"
+    },
+    {
+      "document_id": "doc_northwind_meeting_minutes",
+      "effective_at": "2026-06-16",
+      "kind": "minutes",
+      "security_scope": "perm_div_auto_confidential",
+      "sha256": "48c5e725936237678878d2645d77b2d39d866018b60f7214846d428f57eb15d7",
+      "source_spans": [
+        {
+          "expected_text_substring": "proj_northwind",
+          "is_authoritative": true,
+          "topic_ref": "proj_northwind"
+        },
+        {
+          "expected_text_substring": "emp_haruto_soma",
+          "is_authoritative": true,
+          "topic_ref": "emp_haruto_soma"
+        }
+      ],
+      "text": "# Northwind Steering Committee - Minutes 2026-06-15\n\n- document_id: doc_northwind_meeting_minutes\n- version: v1.0\n- effective_at: 2026-06-16\n- division_id: div_auto\n- owner_employee_id: ceo_kjartan_eli\n- security_scope: perm_div_auto_confidential\n- kind: minutes\n- world_model_id: wm_auroralis_v1\n- generation_seed: phase22-synthetic-2026-08-03-auroralis-v1\n\n## Source topic refs\n- proj_northwind\n- emp_haruto_soma\n\n## Body\nNorthwind steering committee met 2026-06-15 chaired by Kjartan Eliasson. Haruto Soma reported SDK v3.0.0 GA on 2026-01-15; Axis-9 integration milestones on schedule.\n",
+      "title": "Northwind Steering Committee - Minutes 2026-06-15",
+      "version": "v1.0"
+    },
+    {
+      "document_id": "doc_forge_x1_field_log",
+      "effective_at": "2026-06-30",
+      "kind": "field_log",
+      "security_scope": "perm_div_auto_confidential",
+      "sha256": "59eeabeb7a0509807b785f1cdd5d9ce9316ab3f6f852d9947fc0187efde7c6b3",
+      "source_spans": [
+        {
+          "expected_text_substring": "prod_forge_x1",
+          "is_authoritative": true,
+          "topic_ref": "prod_forge_x1"
+        },
+        {
+          "expected_text_substring": "evt_forge_x1_recall",
+          "is_authoritative": true,
+          "topic_ref": "evt_forge_x1_recall"
+        }
+      ],
+      "text": "# Forge-X1 Field Service Log Excerpt (2026 Q2)\n\n- document_id: doc_forge_x1_field_log\n- version: v1.0\n- effective_at: 2026-06-30\n- division_id: div_addmfg\n- owner_employee_id: emp_ren_kovac\n- security_scope: perm_div_auto_confidential\n- kind: field_log\n- world_model_id: wm_auroralis_v1\n- generation_seed: phase22-synthetic-2026-08-03-auroralis-v1\n\n## Source topic refs\n- prod_forge_x1\n- evt_forge_x1_recall\n\n## Body\nForge-X1 Q2 2026 field service log: 12 corrective-action dispatches executed by Ren Kovac's team. Patch adoption: 87% by 2026-06-30.\n",
+      "title": "Forge-X1 Field Service Log Excerpt (2026 Q2)",
+      "version": "v1.0"
+    },
+    {
+      "document_id": "doc_iris_field_visit",
+      "effective_at": "2026-05-05",
+      "kind": "field_notes",
+      "security_scope": "perm_div_auto_confidential",
+      "sha256": "5917660e25b4ebe0e4c5c17f2a85325f08b2d6ee1e23f1a9892398af8d8b7752",
+      "source_spans": [
+        {
+          "expected_text_substring": "sup_helion_motors",
+          "is_authoritative": true,
+          "topic_ref": "sup_helion_motors"
+        },
+        {
+          "expected_text_substring": "ct_helion_2024",
+          "is_authoritative": true,
+          "topic_ref": "ct_helion_2024"
+        }
+      ],
+      "text": "# Iris Vange Field Visit Notes - Hannover 2026-05-04\n\n- document_id: doc_iris_field_visit\n- version: v1.0\n- effective_at: 2026-05-05\n- division_id: div_auto\n- owner_employee_id: emp_iris_vange\n- security_scope: perm_div_auto_confidential\n- kind: field_notes\n- world_model_id: wm_auroralis_v1\n- generation_seed: phase22-synthetic-2026-08-03-auroralis-v1\n\n## Source topic refs\n- sup_helion_motors\n- ct_helion_2024\n\n## Body\nIris Vange visited Helion Motors (Hannover) on 2026-05-04 to review the v3 supply agreement (effective 2024-01-15) and Axis-9 servo delivery schedule.\n",
+      "title": "Iris Vange Field Visit Notes - Hannover 2026-05-04",
+      "version": "v1.0"
+    },
+    {
+      "document_id": "doc_quality_audit_2026_q1",
+      "effective_at": "2026-04-30",
+      "kind": "audit_report",
+      "security_scope": "perm_global_open",
+      "sha256": "3c263b02e618a761fe6357420046d5869e7e72f82d1f97660cbe5157c4a8d38c",
+      "source_spans": [
+        {
+          "expected_text_substring": "pol_quality_2025",
+          "is_authoritative": true,
+          "topic_ref": "pol_quality_2025"
+        },
+        {
+          "expected_text_substring": "sup_polaris_steel",
+          "is_authoritative": true,
+          "topic_ref": "sup_polaris_steel"
+        }
+      ],
+      "text": "# Quality System Audit - 2026 Q1\n\n- document_id: doc_quality_audit_2026_q1\n- version: v1.0\n- effective_at: 2026-04-30\n- division_id: div_corp\n- owner_employee_id: emp_nadya_soroka\n- security_scope: perm_global_open\n- kind: audit_report\n- world_model_id: wm_auroralis_v1\n- generation_seed: phase22-synthetic-2026-08-03-auroralis-v1\n\n## Source topic refs\n- pol_quality_2025\n- sup_polaris_steel\n\n## Body\nQ1 2026 quality audit findings: Polaris Steel remains in 'conditional' tier pending powder-metallurgy certification. Forge-X1 corrective action tracking on plan.\n",
+      "title": "Quality System Audit - 2026 Q1",
+      "version": "v1.0"
+    },
+    {
+      "document_id": "doc_kobal_quality_incident",
+      "effective_at": "2026-03-22",
+      "kind": "incident_report",
+      "security_scope": "perm_div_auto_confidential",
+      "sha256": "7cd8b9bc86a89f69c0004b51590b7b63ac9a8e49ff49878be657a1b19f3be14b",
+      "source_spans": [
+        {
+          "expected_text_substring": "sup_kobal_silicon",
+          "is_authoritative": true,
+          "topic_ref": "sup_kobal_silicon"
+        },
+        {
+          "expected_text_substring": "ct_kobal_2025",
+          "is_authoritative": true,
+          "topic_ref": "ct_kobal_2025"
+        }
+      ],
+      "text": "# Kobal Silicon Quality Incident Report - 2026-03-19\n\n- document_id: doc_kobal_quality_incident\n- version: v1.0\n- effective_at: 2026-03-22\n- division_id: div_edge\n- owner_employee_id: emp_nadya_soroka\n- security_scope: perm_div_auto_confidential\n- kind: incident_report\n- world_model_id: wm_auroralis_v1\n- generation_seed: phase22-synthetic-2026-08-03-auroralis-v1\n\n## Source topic refs\n- sup_kobal_silicon\n- ct_kobal_2025\n\n## Body\nOn 2026-03-19 Nadya Soroka recorded a non-conformance at Kobal Silicon involving a sensor calibration drift. Root cause traced to environmental chamber calibration. Supplier response accepted; corrective action closed 2026-04-08.\n",
+      "title": "Kobal Silicon Quality Incident Report - 2026-03-19",
+      "version": "v1.0"
+    },
+    {
+      "document_id": "doc_audit_findings_2026_q1",
+      "effective_at": "2026-05-10",
+      "kind": "audit_report",
+      "security_scope": "perm_legal_privileged",
+      "sha256": "9f1ded81e30396305f157cbabee7248573c5bef7e888e72688525a3c8d62a597",
+      "source_spans": [
+        {
+          "expected_text_substring": "pol_legal_2025",
+          "is_authoritative": true,
+          "topic_ref": "pol_legal_2025"
+        }
+      ],
+      "text": "# Internal Audit Findings - 2026 Q1 (Legal Privileged)\n\n- document_id: doc_audit_findings_2026_q1\n- version: v1.0\n- effective_at: 2026-05-10\n- division_id: div_corp\n- owner_employee_id: emp_amani_bello\n- security_scope: perm_legal_privileged\n- kind: audit_report\n- world_model_id: wm_auroralis_v1\n- generation_seed: phase22-synthetic-2026-08-03-auroralis-v1\n\n## Source topic refs\n- pol_legal_2025\n\n## Body\nPrivileged and confidential. Prepared by Amani Bello (General Counsel). Restricted to the legal privilege list: Amani Bello, Kjartan Eliasson. Contains attorney work product on export-control screening for the Lumen-E2 line.\n",
+      "title": "Internal Audit Findings - 2026 Q1 (Legal Privileged)",
+      "version": "v1.0"
+    },
+    {
+      "document_id": "doc_audit_findings_2025_q4",
+      "effective_at": "2026-02-15",
+      "kind": "audit_report",
+      "security_scope": "perm_finance_audit",
+      "sha256": "589d383288fb96cefe36dae86b5cb67dfe84a686f19c90465561743d3dd8842d",
+      "source_spans": [
+        {
+          "expected_text_substring": "ct_polaris_2025",
+          "is_authoritative": true,
+          "topic_ref": "ct_polaris_2025"
+        }
+      ],
+      "text": "# Internal Audit Findings - 2025 Q4 (Finance Restricted)\n\n- document_id: doc_audit_findings_2025_q4\n- version: v1.0\n- effective_at: 2026-02-15\n- division_id: div_corp\n- owner_employee_id: emp_dmitri_orel\n- security_scope: perm_finance_audit\n- kind: audit_report\n- world_model_id: wm_auroralis_v1\n- generation_seed: phase22-synthetic-2026-08-03-auroralis-v1\n\n## Source topic refs\n- ct_polaris_2025\n\n## Body\nFinance restricted. Prepared by Dmitri Orel (CFO). Restricted to the finance/audit role group: Dmitri Orel, Priya Kaur. Reviews Polaris Steel v2 contract variance vs forecast.\n",
+      "title": "Internal Audit Findings - 2025 Q4 (Finance Restricted)",
+      "version": "v1.0"
+    },
+    {
+      "document_id": "doc_corp_calendar_2026",
+      "effective_at": "2026-01-01",
+      "kind": "calendar",
+      "security_scope": "perm_global_open",
+      "sha256": "8d0b6907555559c249062530ea34037d7fc77284c64c34906643350dad20e8ce",
+      "source_spans": [],
+      "text": "# Auroralis Corporate Calendar - 2026\n\n- document_id: doc_corp_calendar_2026\n- version: v1.0\n- effective_at: 2026-01-01\n- division_id: div_corp\n- owner_employee_id: emp_solveig_hagen\n- security_scope: perm_global_open\n- kind: calendar\n- world_model_id: wm_auroralis_v1\n- generation_seed: phase22-synthetic-2026-08-03-auroralis-v1\n\n## Source topic refs\n\n\n## Body\nAuroralis 2026 corporate calendar (fictional). Lists fiscal-year milestones, board meeting dates, and major product release windows: Axis-9 v9.4.0 (2025-11-12), Lumen-E2 v2.1.0 (2026-02-04), Northwind SDK v3.0.0 (2026-01-15).\n",
+      "title": "Auroralis Corporate Calendar - 2026",
+      "version": "v1.0"
+    }
+  ],
+  "generated_at_utc": "2026-08-03T01:45:00Z",
+  "generation_seed": "phase22-synthetic-2026-08-03-auroralis-v1",
+  "ir_id": "ir_auroralis_v1",
+  "schema_version": "1.0.0",
+  "snapshot_id": "snapshot_phase22-synthetic-2026-08-03-auroralis-v1_0f7a8a8e-3a70-551f-880f-cc0c5fbbde16",
+  "world_model_id": "wm_auroralis_v1"
+}

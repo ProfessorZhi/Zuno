@@ -1,0 +1,26 @@
+{
+  "blocked_profiles": [
+    "standard_rag",
+    "local_graphrag",
+    "deep_graphrag",
+    "agentic_graphrag"
+  ],
+  "comparable": false,
+  "dependencies": {
+    "elasticsearch": false,
+    "milvus": false,
+    "minio": false,
+    "neo4j": false,
+    "postgres": false,
+    "rabbitmq": false
+  },
+  "measured_profiles": [],
+  "reason": "infrastructure_unavailable: Elasticsearch/Milvus/Neo4j not reachable; canonical profile runners refused to mark MEASURED.",
+  "schema_version": "1.0.0",
+  "thresholds": {
+    "citation_accuracy": 0.0,
+    "context_precision_at_k": 0.0,
+    "retrieval_recall_at_k": 0.0
+  },
+  "verdict": "BLOCKED"
+}
