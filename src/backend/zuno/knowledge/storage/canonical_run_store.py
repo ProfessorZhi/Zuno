@@ -12,22 +12,29 @@ Every transition follows the contract:
     read current state (SELECT ... FOR UPDATE)
     -> validate transition (declarative state machine)
     -> update current fact (optimistic state_version guard)
-    -> append history + outbox event
-    -> commit one UoW
+    -> append history + outbox event (one UoW)
+    -> commit
 
-Terminal states reject ordinary overwrites; only explicitly designed retry /
-reconciliation transitions may leave a failure state, and nothing may leave
-``knowledge_version_ready``.
+Initial ``accepted`` facts (current row, history event, outbox event) are
+written atomically by ``ensure_run``.
+
+Outbox event identity binds ``run_id + state_version + attempt_number +
+to_state`` so retries and reconciliation resumes always produce a new audit
+event; replaying the identical transition stays idempotent. The outbox
+payload hash is computed over the effective payload actually written
+(``outbox_payload or default_state_payload``) with the canonical SHA-256
+contract. Terminal states reject ordinary overwrites; only the designed
+reconciliation edge may leave ``knowledge_version_ready``.
 """
-
 
 from dataclasses import dataclass
 from datetime import datetime, timezone
 import hashlib
-import json
 from typing import Any
 
 from sqlalchemy import Engine, text
+
+from zuno.platform.contracts import canonical_sha256
 
 # --- Canonical ingestion state machine (declarative, single fact source) -------
 
@@ -77,9 +84,15 @@ CANONICAL_INGESTION_FAILURE_STATES = (
     CANONICAL_FAILURE_RECONCILIATION_REQUIRED,
 )
 
-# Declared transitions. Failure states only leave through explicitly designed
-# retry transitions; ``reconciliation_required`` only resumes through the
-# explicit reconciliation transitions; ``knowledge_version_ready`` is final.
+# Declared transitions — every edge has execution semantics:
+# - stage runs from accepted (stage failure -> object_stage_failed)
+# - object commit runs from object_staged (commit failure ->
+#   object_commit_failed); reconciliation may be reached from any active state
+# - canonicalization runs from object_committed
+# Failure states only leave through explicitly designed retry transitions;
+# ``reconciliation_required`` only resumes through the explicit
+# reconciliation transitions; ``knowledge_version_ready`` is final except for
+# the designed reconciliation edge.
 CANONICAL_STATE_TRANSITIONS: dict[str, tuple[str, ...]] = {
     CANONICAL_STATE_ACCEPTED: (
         CANONICAL_STATE_OBJECT_STAGED,
@@ -89,18 +102,16 @@ CANONICAL_STATE_TRANSITIONS: dict[str, tuple[str, ...]] = {
     ),
     CANONICAL_STATE_OBJECT_STAGED: (
         CANONICAL_STATE_OBJECT_COMMITTED,
-        CANONICAL_FAILURE_OBJECT_STAGE_FAILED,
+        CANONICAL_FAILURE_OBJECT_COMMIT_FAILED,
         CANONICAL_FAILURE_RECONCILIATION_REQUIRED,
     ),
     CANONICAL_STATE_OBJECT_COMMITTED: (
         CANONICAL_STATE_IR_READY,
-        CANONICAL_FAILURE_OBJECT_COMMIT_FAILED,
         CANONICAL_FAILURE_CANONICALIZATION_FAILED,
         CANONICAL_FAILURE_RECONCILIATION_REQUIRED,
     ),
     CANONICAL_STATE_IR_READY: (
         CANONICAL_STATE_KV_READY,
-        CANONICAL_FAILURE_CANONICALIZATION_FAILED,
         CANONICAL_FAILURE_RECONCILIATION_REQUIRED,
     ),
     # the only designed edge out of the success terminal is reconciliation
@@ -209,12 +220,47 @@ def _bounded_id(prefix: str, value: str, budget: int) -> str:
     return digest[:budget]
 
 
-def canonical_state_event_id(*, run_id: str, state: str) -> str:
+def canonical_state_event_id(
+    *,
+    run_id: str,
+    state_version: int,
+    attempt_number: int,
+    to_state: str,
+) -> str:
+    """Deterministic outbox event identity.
+
+    Binds ``run_id + state_version + attempt_number + to_state`` so every
+    real transition has a unique audit event: retries and reconciliation
+    resumes advance state_version/attempt_number and therefore produce new
+    events, while replaying the identical transition keeps the same id
+    (idempotent). Ordering is recoverable from state_version (history table).
+    """
     return _bounded_id(
-        f"outbox:{run_id}:{canonical_state_sequence(state):02d}:",
-        state,
+        f"outbox:{run_id}:{int(state_version):04d}:{int(attempt_number):02d}:",
+        to_state,
         budget=150,
     )
+
+
+def _default_state_payload(
+    *,
+    run_id: str,
+    state: str,
+    tenant_id: str,
+    source_id: str | None,
+    source_hash: str | None,
+    knowledge_version_id: str | None,
+    last_error_code: str | None,
+) -> dict[str, Any]:
+    return {
+        "run_id": run_id,
+        "state": state,
+        "tenant_id": tenant_id,
+        "source_id": source_id or "",
+        "source_hash": source_hash or "",
+        "knowledge_version_id": knowledge_version_id or "",
+        "last_error_code": last_error_code or "",
+    }
 
 
 class CanonicalIngestionRunStore:
@@ -223,7 +269,7 @@ class CanonicalIngestionRunStore:
     def __init__(self, engine: Engine) -> None:
         self.engine = engine
 
-    # --- transitions -----------------------------------------------------------
+    # --- initial accepted facts (atomic) ----------------------------------------
 
     def ensure_run(
         self,
@@ -236,8 +282,14 @@ class CanonicalIngestionRunStore:
         idempotency_key: str,
         payload_hash: str,
     ) -> CanonicalRunTransitionReceipt | None:
-        """Create the run row in ``accepted`` if absent; return None when it
-        already exists (resume path: the durable checkpoint decides)."""
+        """Atomically create the run in ``accepted``.
+
+        One transaction writes the current fact, the ``accepted`` history
+        event and the ``accepted`` outbox event; any failure rolls back all
+        three. Returns None when the run already exists (resume path) — no
+        duplicate accepted history or outbox event is ever created. The
+        returned outbox_event_id is the one actually persisted.
+        """
         with self.engine.begin() as connection:
             existing = connection.execute(
                 text(
@@ -250,6 +302,24 @@ class CanonicalIngestionRunStore:
             ).first()
             if existing is not None:
                 return None
+            state_version = 1
+            attempt_number = 1
+            event_id = canonical_state_event_id(
+                run_id=run_id,
+                state_version=state_version,
+                attempt_number=attempt_number,
+                to_state=CANONICAL_STATE_ACCEPTED,
+            )
+            accepted_payload = _default_state_payload(
+                run_id=run_id,
+                state=CANONICAL_STATE_ACCEPTED,
+                tenant_id=tenant_id,
+                source_id=None,
+                source_hash=None,
+                knowledge_version_id=None,
+                last_error_code=None,
+            )
+            accepted_payload_hash = canonical_sha256(accepted_payload)
             connection.execute(
                 text(
                     """
@@ -275,17 +345,69 @@ class CanonicalIngestionRunStore:
                     "payload_hash": payload_hash,
                 },
             )
+            connection.execute(
+                text(
+                    """
+                    INSERT INTO canonical_ingestion_run_history(
+                        history_id, run_id, tenant_id, from_state, to_state,
+                        state_version, attempt_number, outbox_event_id,
+                        payload_hash
+                    ) VALUES (
+                        :history_id, :run_id, :tenant_id, NULL, 'accepted',
+                        :state_version, :attempt_number, :outbox_event_id,
+                        :payload_hash
+                    )
+                    ON CONFLICT DO NOTHING
+                    """
+                ),
+                {
+                    "history_id": f"history:{run_id}:{state_version}",
+                    "run_id": run_id,
+                    "tenant_id": tenant_id,
+                    "state_version": state_version,
+                    "attempt_number": attempt_number,
+                    "outbox_event_id": event_id,
+                    "payload_hash": accepted_payload_hash,
+                },
+            )
+            connection.execute(
+                text(
+                    """
+                    INSERT INTO ingestion_outbox_events(
+                        outbox_event_id, tenant_id, aggregate_ref, event_type,
+                        payload_hash, payload, idempotency_key, publish_status
+                    ) VALUES (
+                        :outbox_event_id, :tenant_id, :run_id, :event_type,
+                        :payload_hash, CAST(:payload AS jsonb),
+                        :idempotency_key, 'pending'
+                    )
+                    ON CONFLICT DO NOTHING
+                    """
+                ),
+                {
+                    "outbox_event_id": event_id,
+                    "tenant_id": tenant_id,
+                    "run_id": run_id,
+                    "event_type": CANONICAL_INGESTION_STATE_EVENT_TYPE,
+                    "payload_hash": accepted_payload_hash,
+                    "payload": _json_dumps(accepted_payload),
+                    "idempotency_key": _bounded_id(
+                        f"{run_id}:", f"{state_version}:{CANONICAL_STATE_ACCEPTED}",
+                        budget=120,
+                    ),
+                },
+            )
             return CanonicalRunTransitionReceipt(
                 run_id=run_id,
                 tenant_id=tenant_id,
                 from_state=None,
-                to_state="accepted",
-                state_version=1,
-                attempt_number=1,
-                outbox_event_id=canonical_state_event_id(
-                    run_id=run_id, state="accepted"
-                ),
+                to_state=CANONICAL_STATE_ACCEPTED,
+                state_version=state_version,
+                attempt_number=attempt_number,
+                outbox_event_id=event_id,
             )
+
+    # --- transitions -----------------------------------------------------------
 
     def transition(
         self,
@@ -308,6 +430,10 @@ class CanonicalIngestionRunStore:
         ``expected_from_state``; the transition must be declared legal; the
         current state must not be terminal for an ordinary overwrite; the
         state_version must match the locked row (optimistic version).
+
+        The outbox payload hash is computed over the effective payload that is
+        actually written (``outbox_payload`` when provided, otherwise the
+        default state payload) using the canonical SHA-256 contract.
         """
         validate_canonical_state_transition(expected_from_state, to_state)
         with self.engine.begin() as connection:
@@ -353,18 +479,27 @@ class CanonicalIngestionRunStore:
             completed_at = None
             if to_state == TERMINAL_SUCCESS_STATE:
                 completed_at = datetime.now(timezone.utc)
-            payload = {
-                "run_id": run_id,
-                "state": to_state,
-                "tenant_id": tenant_id,
-                "source_id": source_id or "",
-                "source_hash": source_hash or "",
-                "knowledge_version_id": knowledge_version_id or "",
-                "last_error_code": last_error_code or "",
-            }
-            payload_hash = _payload_hash(payload)
+            # default state payload (the transition fact) and the effective
+            # outbox payload (what the outbox actually carries)
+            payload = _default_state_payload(
+                run_id=run_id,
+                state=to_state,
+                tenant_id=tenant_id,
+                source_id=source_id,
+                source_hash=source_hash,
+                knowledge_version_id=knowledge_version_id,
+                last_error_code=last_error_code,
+            )
+            effective_payload = (
+                outbox_payload if outbox_payload is not None else payload
+            )
+            history_payload_hash = canonical_sha256(payload)
+            outbox_payload_hash = canonical_sha256(effective_payload)
             outbox_event_id = canonical_state_event_id(
-                run_id=run_id, state=to_state
+                run_id=run_id,
+                state_version=next_version,
+                attempt_number=next_attempt,
+                to_state=to_state,
             )
             updated = connection.execute(
                 text(
@@ -401,6 +536,9 @@ class CanonicalIngestionRunStore:
                 raise CanonicalRunStateConflict(
                     f"canonical ingestion run {run_id} state_version conflict"
                 )
+            # history payload hash owns the transition-fact payload; the
+            # outbox event owns the effective delivery payload (they are the
+            # same unless an explicit outbox_payload was supplied)
             connection.execute(
                 text(
                     """
@@ -427,10 +565,11 @@ class CanonicalIngestionRunStore:
                     "source_id": source_id,
                     "source_hash": source_hash,
                     "outbox_event_id": outbox_event_id,
-                    "payload_hash": payload_hash,
+                    "payload_hash": history_payload_hash,
                 },
             )
-            # Domain state and outbox delivery event commit in one UoW.
+            # Domain state and outbox delivery event commit in one UoW. The
+            # payload and payload_hash written here are the effective payload.
             connection.execute(
                 text(
                     """
@@ -450,10 +589,12 @@ class CanonicalIngestionRunStore:
                     "tenant_id": tenant_id,
                     "run_id": run_id,
                     "event_type": CANONICAL_INGESTION_STATE_EVENT_TYPE,
-                    "payload_hash": payload_hash,
-                    "payload": _json_dumps(outbox_payload or payload),
+                    "payload_hash": outbox_payload_hash,
+                    "payload": _json_dumps(effective_payload),
                     "idempotency_key": _bounded_id(
-                        f"{run_id}:", to_state, budget=120
+                        f"{run_id}:",
+                        f"{next_version}:{next_attempt}:{to_state}",
+                        budget=120,
                     ),
                 },
             )
@@ -527,6 +668,26 @@ class CanonicalIngestionRunStore:
         )
         return tuple(dict(row) for row in rows)
 
+    def outbox_events(self, *, run_id: str, tenant_id: str) -> tuple[dict[str, Any], ...]:
+        """Read the run's outbox audit events (delivery facts, not state)."""
+        rows = self._all(
+            """
+            SELECT outbox_event_id, tenant_id, aggregate_ref, event_type,
+                   payload_hash, payload, idempotency_key, publish_status
+            FROM ingestion_outbox_events
+            WHERE tenant_id = :tenant_id
+              AND aggregate_ref = :run_id
+              AND event_type = :event_type
+            ORDER BY outbox_event_id
+            """,
+            {
+                "tenant_id": tenant_id,
+                "run_id": run_id,
+                "event_type": CANONICAL_INGESTION_STATE_EVENT_TYPE,
+            },
+        )
+        return tuple(dict(row) for row in rows)
+
     def current_fact_cross_tenant(
         self, *, owner_tenant_id: str, other_tenant_id: str, run_id: str
     ) -> None:
@@ -563,17 +724,11 @@ class CanonicalIngestionRunStore:
         return [dict(row) for row in rows]
 
 
-def _payload_hash(payload: dict[str, Any]) -> str:
-    return hashlib.sha256(
-        _json_dumps(payload).encode("utf-8")
-    ).hexdigest()
-
-
 def _json_dumps(payload: dict[str, Any]) -> str:
     import json
 
     return json.dumps(
-        payload, sort_keys=True, separators=(",", ":"), ensure_ascii=True
+        payload, sort_keys=True, separators=(",", ":"), ensure_ascii=False
     )
 
 
