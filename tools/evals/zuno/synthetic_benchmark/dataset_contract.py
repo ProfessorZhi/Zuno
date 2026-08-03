@@ -61,6 +61,9 @@ class DatasetValidationResult:
     case_count: int = 0
     distribution: dict[str, int] = field(default_factory=dict)
     dataset_hash: str | None = None
+    duplicate_case_id_count: int = 0
+    duplicate_question_count: int = 0
+    gold_leakage_count: int = 0
 
 
 def _canonical_json(value: Any) -> bytes:
@@ -117,6 +120,9 @@ def validate_cases(
     warnings: list[str] = []
     questions: set[str] = set()
     case_ids: set[str] = set()
+    duplicate_case_id_count = 0
+    duplicate_question_count = 0
+    gold_leakage_count = 0
     distribution = Counter(case.get("question_type", "<missing>") for case in cases)
 
     if require_full_80 and len(cases) != 80:
@@ -135,14 +141,17 @@ def validate_cases(
 
         forbidden = sorted(GOLD_RUNTIME_FORBIDDEN_FIELDS & set(case))
         if forbidden:
+            gold_leakage_count += 1
             errors.append(f"{label}: contains runtime-forbidden gold fields {forbidden}")
 
         if case["case_id"] in case_ids:
+            duplicate_case_id_count += 1
             errors.append(f"{label}: duplicate case_id")
         case_ids.add(case["case_id"])
 
         normalized_question = " ".join(str(case["question"]).lower().split())
         if normalized_question in questions:
+            duplicate_question_count += 1
             errors.append(f"{label}: duplicate question")
         questions.add(normalized_question)
 
@@ -206,6 +215,7 @@ def validate_cases(
                 errors.append(f"{label}: abstain_no_answer must not include source documents")
 
         if case["expected_answer"] and case["expected_answer"] in case["question"]:
+            gold_leakage_count += 1
             errors.append(f"{label}: expected_answer leaks into question")
 
     dataset_hash = sha256_json(cases)
@@ -216,6 +226,9 @@ def validate_cases(
         case_count=len(cases),
         distribution=dict(distribution),
         dataset_hash=dataset_hash,
+        duplicate_case_id_count=duplicate_case_id_count,
+        duplicate_question_count=duplicate_question_count,
+        gold_leakage_count=gold_leakage_count,
     )
 
 

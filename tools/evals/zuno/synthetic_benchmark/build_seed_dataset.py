@@ -403,7 +403,11 @@ def write_full_candidate_dataset(out_root: Path) -> dict[str, Any]:
             "input_hash",
             "case_hash",
             "duplicate_question",
+            "duplicate_case_id",
             "runtime_forbidden_gold_fields",
+            "gold_leakage",
+            "hard_negative_no_answer_scan",
+            "seed_hash_stability",
         ],
     }
     (out_root / "candidate_dataset_manifest.json").write_text(

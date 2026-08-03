@@ -114,6 +114,29 @@ def verify_phase22_synthetic_regression_track() -> list[str]:
         errors.append("candidate derivation report source_evidence_valid_count must be 80")
     if derivation_report.get("unsupported_answer_count") != 0:
         errors.append("candidate derivation report unsupported_answer_count must be 0")
+    if derivation_report.get("duplicate_question_count") != 0:
+        errors.append("candidate derivation report duplicate_question_count must be 0")
+    if derivation_report.get("gold_leakage_count") != 0:
+        errors.append("candidate derivation report gold_leakage_count must be 0")
+    if derivation_report.get("hard_negative_valid_count") != 5:
+        errors.append("candidate derivation report hard_negative_valid_count must be 5")
+    if derivation_report.get("hash_valid_count") != 80:
+        errors.append("candidate derivation report hash_valid_count must be 80")
+    current_evidence = manifest.get("current_evidence", {})
+    report_field_pairs = {
+        "candidate_derivation_valid_count": "derivation_valid_count",
+        "candidate_source_evidence_valid_count": "source_evidence_valid_count",
+        "candidate_unsupported_answer_count": "unsupported_answer_count",
+        "candidate_duplicate_question_count": "duplicate_question_count",
+        "candidate_gold_leakage_count": "gold_leakage_count",
+        "candidate_hard_negative_valid_count": "hard_negative_valid_count",
+        "candidate_hash_valid_count": "hash_valid_count",
+    }
+    for manifest_field, report_field in report_field_pairs.items():
+        if current_evidence.get(manifest_field) != derivation_report.get(report_field):
+            errors.append(f"track_manifest {manifest_field} must match derivation report {report_field}")
+    if current_evidence.get("candidate_derivation_report_hash") != derivation_report.get("report_hash"):
+        errors.append("track_manifest candidate_derivation_report_hash must match derivation report")
 
     required_report_phrases = [
         "status: BLOCKED_WITH_EXACT_GAPS",

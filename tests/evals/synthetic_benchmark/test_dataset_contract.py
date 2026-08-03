@@ -54,6 +54,9 @@ def test_dataset_contract_accepts_runtime_isolated_case_schema() -> None:
     assert result.passed
     assert result.case_count == 1
     assert result.distribution == {"single_doc_fact": 1}
+    assert result.duplicate_case_id_count == 0
+    assert result.duplicate_question_count == 0
+    assert result.gold_leakage_count == 0
 
 
 def test_dataset_contract_rejects_pr100_gold_runtime_fields() -> None:
@@ -149,6 +152,18 @@ def test_derivation_validator_validates_candidate_without_expected_answer() -> N
     assert result.unsupported_answer_count == 0
 
 
+def test_derivation_validator_reports_wp1_quality_counts() -> None:
+    cases = build_full_candidate_cases()
+
+    result = validate_derivations(cases, CORPUS_DOCS)
+
+    assert result.passed
+    assert result.duplicate_question_count == 0
+    assert result.gold_leakage_count == 0
+    assert result.hard_negative_valid_count == 5
+    assert result.hash_valid_count == 80
+
+
 def test_derivation_validator_rejects_unclosed_graph_relation() -> None:
     case = build_full_candidate_cases()[40]
     case["derivation_spec"] = {"method": "graph_relation", "relations": []}
@@ -157,3 +172,18 @@ def test_derivation_validator_rejects_unclosed_graph_relation() -> None:
 
     assert not result.passed
     assert any("graph_relation requires relations" in error for error in result.errors)
+
+
+def test_derivation_validator_rejects_hard_negative_present_in_authorized_corpus() -> None:
+    case = build_full_candidate_cases()[65]
+    corpus = dict(CORPUS_DOCS)
+    corpus["doc_fake_revenue"] = (
+        "document_id: doc_fake_revenue\n"
+        "security_scope: global/open\n"
+        "fy2025 revenue is intentionally present for a negative test.\n"
+    )
+
+    result = validate_derivations([case], corpus)
+
+    assert not result.passed
+    assert any("missing_fact is present in authorized corpus" in error for error in result.errors)

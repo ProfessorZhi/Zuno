@@ -26,6 +26,10 @@
     "input_hash",
     "case_hash",
     "duplicate_question",
-    "runtime_forbidden_gold_fields"
+    "duplicate_case_id",
+    "runtime_forbidden_gold_fields",
+    "gold_leakage",
+    "hard_negative_no_answer_scan",
+    "seed_hash_stability"
   ]
 }

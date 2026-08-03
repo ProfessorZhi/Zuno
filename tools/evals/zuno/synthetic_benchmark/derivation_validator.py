@@ -8,6 +8,9 @@ from pathlib import Path
 from typing import Any
 
 from tools.evals.zuno.synthetic_benchmark.dataset_contract import (
+    GOLD_RUNTIME_FORBIDDEN_FIELDS,
+    compute_case_hash,
+    compute_input_hash,
     load_corpus,
     load_jsonl,
     sha256_json,
@@ -21,6 +24,10 @@ class DerivationValidationResult:
     derivation_valid_count: int
     source_evidence_valid_count: int
     unsupported_answer_count: int
+    duplicate_question_count: int = 0
+    gold_leakage_count: int = 0
+    hard_negative_valid_count: int = 0
+    hash_valid_count: int = 0
     errors: list[str] = field(default_factory=list)
     warnings: list[str] = field(default_factory=list)
     method_counts: dict[str, int] = field(default_factory=dict)
@@ -37,6 +44,36 @@ def _span_texts(case: dict[str, Any], corpus_docs: dict[str, str]) -> list[str]:
         if doc_id in corpus_docs and isinstance(text, str) and text in corpus_docs[doc_id]:
             texts.append(text)
     return texts
+
+
+def _doc_security_scope(body: str) -> str | None:
+    for line in body.splitlines():
+        if line.startswith("security_scope:"):
+            return line.split(":", 1)[1].strip()
+    return None
+
+
+def _authorized_corpus_text(corpus_docs: dict[str, str], scopes: list[str]) -> str:
+    allowed = set(scopes)
+    bodies = [
+        body
+        for body in corpus_docs.values()
+        if (scope := _doc_security_scope(body)) is not None and scope in allowed
+    ]
+    return "\n".join(bodies).lower()
+
+
+def _gold_leakage_errors(case: dict[str, Any]) -> list[str]:
+    errors: list[str] = []
+    forbidden = sorted(GOLD_RUNTIME_FORBIDDEN_FIELDS & set(case))
+    if forbidden:
+        errors.append(f"contains runtime-forbidden gold fields {forbidden}")
+    expected_answer = case.get("expected_answer")
+    question = case.get("question")
+    if isinstance(expected_answer, str) and expected_answer and isinstance(question, str):
+        if expected_answer.lower() in question.lower():
+            errors.append("expected_answer leaks into question")
+    return errors
 
 
 def _validate_case(case: dict[str, Any], corpus_docs: dict[str, str]) -> tuple[bool, bool, list[str]]:
@@ -94,10 +131,16 @@ def _validate_case(case: dict[str, Any], corpus_docs: dict[str, str]) -> tuple[b
     elif method == "abstain_scan":
         if source_docs or source_spans:
             errors.append("abstain_scan must not include positive source evidence")
-        if not derivation.get("missing_fact"):
+        missing_fact = derivation.get("missing_fact")
+        if not missing_fact:
             errors.append("abstain_scan requires missing_fact")
-        if not derivation.get("authorized_corpus_scope"):
+        authorized_scope = derivation.get("authorized_corpus_scope")
+        if not authorized_scope:
             errors.append("abstain_scan requires authorized_corpus_scope")
+        elif isinstance(authorized_scope, list) and isinstance(missing_fact, str):
+            authorized_text = _authorized_corpus_text(corpus_docs, authorized_scope)
+            if missing_fact.replace("_", " ").lower() in authorized_text:
+                errors.append("abstain_scan missing_fact is present in authorized corpus")
     elif method == "security_scope":
         required_scope = derivation.get("required_scope")
         caller_scope = derivation.get("caller_scope")
@@ -131,16 +174,43 @@ def validate_derivations(
     source_valid = 0
     method_counts = Counter()
     unsupported_answer_count = 0
+    duplicate_question_count = 0
+    gold_leakage_count = 0
+    hard_negative_valid_count = 0
+    hash_valid_count = 0
+    questions: set[str] = set()
 
     for case in cases:
         case_id = case.get("case_id", "<unknown>")
         method = (case.get("derivation_spec") or {}).get("method", "<missing>")
         method_counts[method] += 1
+        normalized_question = " ".join(str(case.get("question", "")).lower().split())
+        if normalized_question in questions:
+            duplicate_question_count += 1
+            errors.append(f"{case_id}: duplicate question")
+        questions.add(normalized_question)
+
+        leakage_errors = _gold_leakage_errors(case)
+        if leakage_errors:
+            gold_leakage_count += 1
+            errors.extend(f"{case_id}: {error}" for error in leakage_errors)
+
+        if "input_hash" in case and "case_hash" in case and "expected_answer" in case:
+            if (
+                case.get("input_hash") == compute_input_hash(case)
+                and case.get("case_hash") == compute_case_hash(case)
+            ):
+                hash_valid_count += 1
+            else:
+                errors.append(f"{case_id}: input_hash or case_hash mismatch")
+
         passed, source_evidence_valid, case_errors = _validate_case(case, corpus_docs)
         if passed:
             derivation_valid += 1
         if source_evidence_valid:
             source_valid += 1
+        if passed and method == "abstain_scan":
+            hard_negative_valid_count += 1
         if case_errors:
             unsupported_answer_count += 1
             errors.extend(f"{case_id}: {error}" for error in case_errors)
@@ -150,6 +220,10 @@ def validate_derivations(
         "derivation_valid_count": derivation_valid,
         "source_evidence_valid_count": source_valid,
         "unsupported_answer_count": unsupported_answer_count,
+        "duplicate_question_count": duplicate_question_count,
+        "gold_leakage_count": gold_leakage_count,
+        "hard_negative_valid_count": hard_negative_valid_count,
+        "hash_valid_count": hash_valid_count,
         "method_counts": dict(method_counts),
         "errors": errors,
     }
@@ -159,6 +233,10 @@ def validate_derivations(
         derivation_valid_count=derivation_valid,
         source_evidence_valid_count=source_valid,
         unsupported_answer_count=unsupported_answer_count,
+        duplicate_question_count=duplicate_question_count,
+        gold_leakage_count=gold_leakage_count,
+        hard_negative_valid_count=hard_negative_valid_count,
+        hash_valid_count=hash_valid_count,
         errors=errors,
         method_counts=dict(method_counts),
         report_hash=sha256_json(payload),

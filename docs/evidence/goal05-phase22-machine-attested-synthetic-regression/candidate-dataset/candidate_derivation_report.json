@@ -1,7 +1,11 @@
 {
   "case_count": 80,
   "derivation_valid_count": 80,
+  "duplicate_question_count": 0,
   "errors": [],
+  "gold_leakage_count": 0,
+  "hard_negative_valid_count": 5,
+  "hash_valid_count": 80,
   "method_counts": {
     "abstain_scan": 5,
     "fault_recovery": 5,
@@ -12,7 +16,7 @@
     "temporal_version": 10
   },
   "passed": true,
-  "report_hash": "ccf16f9f684af4a69a09995ba1320f05fe388f5c01410c79c013bd6d530f16a9",
+  "report_hash": "74cf4cb4d24ae062ff5b0dc78cba36c8a9ec7dbb68acff3bc278b2f2b4728e36",
   "source_evidence_valid_count": 80,
   "unsupported_answer_count": 0,
   "warnings": []

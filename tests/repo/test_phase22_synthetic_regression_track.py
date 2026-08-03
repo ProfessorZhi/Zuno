@@ -143,3 +143,20 @@ def test_candidate_derivation_report_must_keep_80_valid_cases(tmp_path: Path) ->
     errors = verifier.verify_phase22_synthetic_regression_track()
 
     assert any("derivation_valid_count must be 80" in error for error in errors)
+
+
+def test_candidate_derivation_report_must_keep_no_gold_leakage(tmp_path: Path) -> None:
+    verifier = _load_verifier()
+    fixture = _copy_fixture(tmp_path)
+    report_path = (
+        fixture
+        / "docs/evidence/goal05-phase22-machine-attested-synthetic-regression/candidate-dataset/candidate_derivation_report.json"
+    )
+    report = json.loads(report_path.read_text(encoding="utf-8"))
+    report["gold_leakage_count"] = 1
+    report_path.write_text(json.dumps(report), encoding="utf-8")
+
+    verifier.REPO_ROOT = fixture
+    errors = verifier.verify_phase22_synthetic_regression_track()
+
+    assert any("gold_leakage_count must be 0" in error for error in errors)
