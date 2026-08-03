@@ -19,9 +19,9 @@ date
 
 ### 2026-08-03: Claude Code worker identity, cost, and coordinator merge workflow
 
-Summary: 明确多 agent / Claude Code worker 必须使用独立 worktree、`codex/` branch 和 `agent + model + worker` 身份标签，并把身份写入 branch、commit、evidence、PR 标题和 PR 描述；同时建立 API token 成本账与 provider 平台额度账的双账统计口径。
+Summary: 明确多 agent / Claude Code worker 必须使用独立 worktree、`codex/` branch 和 `agent + model + worker` 身份标签，并把身份写入 branch、commit、evidence、PR 标题和 PR 描述；同时建立 API token 成本账与 provider 平台额度账的双账统计口径，并规定成本和时间按单个 agent 的一次 PR / handoff 统计。
 
-Reason: 本轮并发验证了 `claude-minimax` 与 `claude-deepseek` 可以各开多个 session 在独立 worktree 中完成本地提交，但也暴露出两个长期风险：一是 worker 提交如果没有身份标签，后续审查、归因和成本统计会断裂；二是 `stream-json --verbose` 返回的 `total_cost_usd` 只是按 API token 价格估算，不等同于 MiniMax / DeepSeek 等 provider 后台的真实扣费、次数或百分比额度。
+Reason: 本轮并发验证了 `claude-minimax` 与 `claude-deepseek` 可以各开多个 session 在独立 worktree 中完成本地提交，但也暴露出三个长期风险：一是 worker 提交如果没有身份标签，后续审查、归因和成本统计会断裂；二是 `stream-json --verbose` 返回的 `total_cost_usd` 只是按 API token 价格估算，不等同于 MiniMax / DeepSeek 等 provider 后台的真实扣费、次数或百分比额度；三是如果把一轮对话成本当成一个 PR 的成本，就无法判断哪个 worker、哪个 PR 和哪类任务真正消耗额度。为了平衡开发速度和成本，简单、大量、重复、下载/环境/格式类任务优先派给 Claude Code worker，复杂架构判断、高风险修复、review、合并和最终验证保留给 coordinator。
 
 Affected files:
 

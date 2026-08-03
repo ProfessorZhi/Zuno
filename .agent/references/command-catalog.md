@@ -67,13 +67,14 @@ Set-Content -LiteralPath $PromptPath -Encoding UTF8 -Value @'
 agent=<agent>
 model=<model>
 worker=<worker>
+cost_scope=single-agent-pr-handoff
 worktree=<absolute worktree path>
 branch=codex/<task>-<agent>-<model>-<worker>
 allowed_paths=<paths>
 forbidden_paths=<paths>
 commit_message=<type>(<area>): <task> [agent=<agent> model=<model> worker=<worker>]
 pr_title=<task> [agent=<agent> model=<model> worker=<worker>]
-handoff_fields=identity,session_id,branch,commit,changed_files,validation,risk,duration,api_cost_usd_estimated,provider_quota_basis
+handoff_fields=identity,session_id,branch,commit,changed_files,validation,risk,duration,api_cost_usd_estimated,provider_quota_basis,cost_scope
 '@
 $Lines = & claude-<provider> -p (Get-Content -LiteralPath $PromptPath -Raw) --output-format stream-json --verbose --max-turns <n> --max-budget-usd <amount>
 $Lines | Set-Content -LiteralPath $Log -Encoding UTF8
@@ -108,6 +109,7 @@ PR handoff must include:
 agent=<agent>
 model=<model>
 worker=<worker>
+cost_scope=single-agent-pr-handoff
 session_id=<session id>
 branch=<branch>
 commit=<sha>
@@ -117,11 +119,29 @@ duration_ms=<duration_ms>
 validation=<commands and results>
 ```
 
+Cost scope rule:
+
+```text
+One worker PR / handoff = one cost ledger row.
+Multiple resumes for the same worker PR = append rows and summarize that PR.
+Multiple workers in one coordinator conversation = separate PR rows plus coordinator total.
+Do not use one chat turn as the accounting unit.
+```
+
+Dispatch preference:
+
+```text
+Claude Code worker: repetitive docs, evidence, download, environment probing, log extraction, low-risk isolated patches.
+Codex coordinator: architecture decisions, root-cause analysis, security/recovery/concurrency/idempotency, review, merge, final verification.
+```
+
 Avoid:
 
 - 在 prompt 内嵌套会被 PowerShell 二次解析的双引号 commit message。
 - 用 `--output-format text` 统计成本；它不会稳定返回 `usage` 和 `total_cost_usd`。
 - 让 worker 直接合并自己的 PR。
+- 把一轮对话成本当成单个 PR / agent 成本。
+- 为了省 token 把高风险架构判断直接丢给低成本 worker。
 
 ## 工作树与命令行安全
 

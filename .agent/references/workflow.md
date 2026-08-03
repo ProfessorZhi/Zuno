@@ -66,6 +66,15 @@ worker 完成后只能提交自己的 branch，并返回身份、session、commi
 - API 成本账：记录 `stream-json --verbose` 返回的 `total_cost_usd`、`modelUsage.*.costUSD`、`input_tokens`、`cache_read_input_tokens`、`cache_creation_input_tokens`、`output_tokens`、`duration_ms`、`duration_api_ms` 和 `session_id`。这是按当时 API token 价格估算的成本。
 - 平台额度账：记录 provider 后台实际扣减口径，例如 `token`、`request`、`percent`、`credit` 或 `unknown`。当无法从平台后台读到实际扣减时，不能把 API 成本账说成真实平台扣费；只标为 `provider_quota_basis=unknown` 或人工核对。
 
+成本和耗时默认按“单个 agent 的一次 PR / handoff”统计，不按一轮聊天统计。一个 PR 里如果有多次 Claude Code resume、补丁、验证或重跑，必须汇总到该 PR 的 worker cost ledger；一轮对话内多个 worker / 多个 PR 要分别列账，再给 coordinator 总计。
+
+调度策略以开发速度和额度成本平衡为目标：
+
+- Claude Code `claude-minimax` / `claude-deepseek` 优先处理简单、大量、重复、低架构判断的工作，例如批量文档同步、证据表格整理、脚本输出归档、下载依赖、环境探测、格式修复、重复测试运行、低风险搬运和候选 diff 初稿。
+- Codex / coordinator 优先处理复杂架构判断、跨模块设计、失败根因定位、高风险 runtime 改动、安全边界、并发/幂等/恢复语义、最终 review、合并顺序、冲突解决和集成验证。
+- Claude Code worker 解决不了时，先返回 blocker、命令、日志和已尝试路径；coordinator 再决定是指导 worker 继续、换模型、拆小任务，还是自己接手。
+- 下载、Docker、依赖安装、镜像拉取、长耗时重复命令可以先派给 Claude Code worker 试跑；涉及凭据、宿主机破坏性清理、生产 secret、强制覆盖和无法回滚的操作必须由 coordinator 审查后执行。
+
 ## Target Direction
 
 PHASE03 后，长期自动化目标位置是 `tools/agent` 与 `tools/verify`，防回归测试目标位置是 `tests/agent_system`。当前 `.agent/scripts` 是过渡期保留。
@@ -88,6 +97,8 @@ PHASE03 后，长期自动化目标位置是 `tools/agent` 与 `tools/verify`，
 - 复用或新建线程后必须改线程标题；子线程目标模式提示词默认要求线程内开启多 agent 模式。
 - 每个 Claude Code worker / Codex 子线程都必须有唯一 `agent + model + worker` 身份，并把身份写入 branch、commit、evidence、PR 标题和 PR 描述。
 - 每个 worker 必须返回时间和成本回执；API token 成本账与平台额度账分开记录。
+- 成本和时间统计以每个 agent 的一次 PR / handoff 为基本单位，不以一轮对话为基本单位。
+- 简单、大量、重复、下载/环境/格式类任务优先交给 Claude Code worker；Codex coordinator 保留给复杂判断、规划、review、合并和高风险修复。
 - 主线程 coordinator 负责最终审查、合并、集成验证和 push；worker 不得把自己的完成总结当作合并依据。
 - 多线程模式中，每个子线程都必须是真正的 Codex UI 目标模式；工具不能直接切换 UI 目标模式时，主线程只能输出 `.agent/templates/target-mode-prompt.md` 风格的提示词，并等待用户在 UI 里手动创建目标模式线程。
 - 过时材料移动到 `docs/history/`；旧 audit、旧 spec、旧 runbook、旧 UI 原型和旧 phase/program 不留在前台路径。
@@ -104,6 +115,7 @@ PHASE03 后，长期自动化目标位置是 `tools/agent` 与 `tools/verify`，
 8. 确认任务允许范围和 forbidden paths。
 9. 判断使用挂机模式还是多线程模式；如果任务可以拆成粗粒度独立范围，先规划多线程：每个常驻线程绑定或切换一个本轮 worktree / `codex/` 分支、一个目标模式提示词、一个验收闸门，并由用户在 UI 里手动创建或确认真正的目标模式线程。
 10. 如果使用 Claude Code worker，先写明 `agent`、`model`、`worker`、`session_id` 获取方式、worktree、branch、PR 标题格式、验证命令、成本预算和回执字段。
+11. 分配任务时先区分“重复执行型”和“复杂判断型”：重复执行型默认派 Claude Code worker，复杂判断型默认由 coordinator 亲自做或先拆解后派发。
 
 ## Allowed Changes
 
@@ -113,6 +125,7 @@ PHASE03 后，长期自动化目标位置是 `tools/agent` 与 `tools/verify`，
 - 在多线程模式下，为多个独立线程准备粗粒度目标模式提示词、分支和验收闸门。
 - 在线程内部使用多 agent 模式处理独立子任务。
 - 为 Claude Code worker 追加身份、成本、时间和 PR handoff 回执字段。
+- 把简单重复任务拆给 Claude Code worker，把复杂判断、最终集成和合并留给 coordinator。
 
 ## Forbidden Changes
 
@@ -137,6 +150,8 @@ PHASE03 后，长期自动化目标位置是 `tools/agent` 与 `tools/verify`，
 - Claude Code worker prompt 里嵌套引号，导致 `git commit -m` 被截断成无信息标题。
 - 只记录 `total_cost_usd`，却没有说明它是 API 估算账，不等于平台后台实际扣费或百分比额度。
 - worker 提交了 commit 或 PR，但没有在标题、描述、evidence 中写清 `agent + model + worker`，导致后续审查和成本归因断裂。
+- 把一轮对话的总 token / cost 当成单个 agent PR 成本，导致无法判断哪个 worker、哪个 PR、哪类任务消耗最高。
+- 为了省 coordinator token 把复杂架构判断直接外包给低成本 worker，最后产生返工和更高总成本。
 - 测试时没隔离 PATH，真实 launcher 冒出来，假 runner 结果失真。
 
 ## Debug Playbooks
@@ -174,11 +189,34 @@ PHASE03 后，长期自动化目标位置是 `tools/agent` 与 `tools/verify`，
 3. 每个 worker 名称必须唯一，并写成 `agent + model + worker`，例如 `claude-minimax-a`、`claude-deepseek-b`、`codex-gpt5-dispatch-docs-001`。
 4. worker prompt 必须声明允许范围、禁止范围、验证命令、提交格式、PR 标题格式、成本预算和回执字段。
 5. 使用 `claude-<provider> --output-format stream-json --verbose` 获取 `session_id`、token、cost 和 duration；不要用只返回文本的格式做成本审计。
-6. 成本回执必须同时写 API 成本账和平台额度账；平台额度不可见时写 `provider_quota_basis=unknown`。
-7. worker 完成后必须返回：identity、session_id、branch、commit SHA、changed files、validation、risk、duration、api_cost_usd_estimated、provider_quota_basis。
-8. coordinator 审查 `git diff origin/main..HEAD`、验证结果和 evidence 后，才允许 push/开 PR/合并。
-9. PR 标题和描述必须包含 `agent=<agent> model=<model> worker=<worker>`；没有身份标签的 PR 视为不合格 handoff。
-10. 合并、集成验证和 push 只由 coordinator 收口；临时 worktree 在合并完成后可删除。
+6. 成本回执以单个 agent PR / handoff 为单位；同一 worker 为同一 PR 多次 resume 或重跑验证时，追加到该 PR ledger 并汇总。
+7. 成本回执必须同时写 API 成本账和平台额度账；平台额度不可见时写 `provider_quota_basis=unknown`。
+8. worker 完成后必须返回：identity、session_id、branch、commit SHA、changed files、validation、risk、duration、api_cost_usd_estimated、provider_quota_basis。
+9. coordinator 审查 `git diff origin/main..HEAD`、验证结果和 evidence 后，才允许 push/开 PR/合并。
+10. PR 标题和描述必须包含 `agent=<agent> model=<model> worker=<worker>`；没有身份标签的 PR 视为不合格 handoff。
+11. 合并、集成验证和 push 只由 coordinator 收口；临时 worktree 在合并完成后可删除。
+
+### Dispatch triage
+
+优先派给 Claude Code worker：
+
+1. 批量搜索、批量替换、格式统一、表格整理、证据文件生成。
+2. 下载公开依赖、拉镜像、跑安装探测、收集环境错误。
+3. 重复测试运行、日志摘录、失败样本分类、PR 描述草稿。
+4. 低冲突、单目录、可明确验证的小代码补丁。
+
+优先留给 Codex coordinator：
+
+1. 模块 Owner、phase 状态、Target / Current / Future / History 判定。
+2. 需要跨模块一致性的架构或 runtime 改动。
+3. 安全、审批、secret、idempotency、recovery、并发和持久化语义。
+4. 合并顺序、冲突解决、最终 verification gate、production readiness 判定。
+
+升级路径：
+
+1. worker 一次失败时，返回 blocker 和日志，coordinator 指导下一步。
+2. 同一 blocker 连续出现两次时，coordinator 重新切分任务或换模型。
+3. 同一 blocker 仍无法解除，coordinator 接手根因定位或停止等待外部状态变化。
 
 ### 架构重构
 
@@ -218,6 +256,8 @@ PHASE03 后，长期自动化目标位置是 `tools/agent` 与 `tools/verify`，
 18. 每个写入线程 / Claude Code worker 的 commit、PR 和 evidence 都必须带 `agent + model + worker` 身份标签。
 19. worker handoff 必须包含时间与成本回执；API 成本估算和平台额度扣减不得混写。
 20. 主线程 coordinator 是唯一合并 owner；worker PR 只表示候选贡献，不表示可自动合并。
+21. 成本和时间按每个 agent PR / handoff 统计；一轮聊天里的多个 worker 不合并成单账。
+22. 多线程任务分配优先把简单重复工作交给 Claude Code worker，把复杂判断和最终收口留给 coordinator。
 
 ### Program Closure 自维护审查
 

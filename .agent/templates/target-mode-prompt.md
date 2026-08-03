@@ -18,3 +18,5 @@
 10. worker 完成后必须返回 identity、session_id、branch、commit、changed files、validation、risk、duration、API 成本估算和 provider quota basis。
 11. API 成本账来自 `stream-json --verbose` 的 token / cost / duration 字段；平台额度账单独记录，无法核实时写 `provider_quota_basis=unknown`。
 12. worker 只提交候选结果；最终审查、合并、集成验证和 push 由 coordinator 完成。
+13. 成本和时间统计以单个 agent 的一次 PR / handoff 为单位，不以一轮对话为单位。
+14. 简单、大量、重复、下载/环境/格式类任务优先交给 Claude Code worker；复杂判断、根因定位、安全边界、合并和最终验证由 coordinator 收口。
