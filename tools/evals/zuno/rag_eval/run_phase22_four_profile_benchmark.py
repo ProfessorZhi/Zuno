@@ -1,18 +1,26 @@
-"""PHASE22 GAP-C1/C2/C3 four-profile benchmark harness (DeepSeek2 / CC-C).
+"""PHASE22 GAP-C1/C2/C3 four-profile benchmark harness (DeepSeek2 / CC-C
+hardening).
 
-The four profiles (standard_rag / local_graphrag / deep_graphrag /
-agentic_graphrag) run on the SAME frozen snapshot with the SAME dataset /
-corpus / knowledge version / embedding config / security epoch / budget /
-answer policy.  Runtime inputs never contain gold: the requests are built
-from the case files' safe fields only, and a gold-isolation scan covers
-both the requests and (when present) the profile traces.
+Truth boundary: the four profiles only run on a REAL activated snapshot.
+Until then every profile reports ``NOT_RUN_DEPENDENCY_BLOCKED`` — there is
+no fabricated ``RUNTIME_OBSERVED`` state and no placeholder runtime
+masquerading as measurement.
 
-Snapshot gate (fail closed): the four profiles only start when a REAL
-activated snapshot_id is provided.  Until DeepSeek1's canonical ingestion
-delivers the real knowledge_version_id and the coordinator activates the
-snapshot, this harness emits honest per-profile ``blocked_not_measured``
-evidence and a BLOCKED release decision — it never fabricates profile
-runs.
+Formal runtime owners (reused, never rebuilt):
+* standard_rag  -> ``RagHandler.retrieve_ranked_documents``
+* local_graphrag -> ``GraphRetriever.retrieve`` (Neo4j neighbor traversal)
+* deep_graphrag -> ``GraphRetriever.retrieve`` (multi-hop paths)
+* agentic_graphrag -> ``build_agent_graph`` + ``UnifiedAgentRuntimeService``
+  (fixed AgentRunGraph + dynamic Plan DAG + StepExecutionGraph)
+If an owner is missing the harness reports
+``PROFILE_RUNTIME_OWNER_MISSING:<profile>`` — it never substitutes a
+second runtime.
+
+Gold isolation: runtime requests, prompts, traces, retrieval contexts,
+tool arguments, planner inputs, step inputs and final synthesis inputs are
+scanned for forbidden gold fields.  With zero traces the scan reports
+``trace_gold_isolation_status = NOT_RUN_DEPENDENCY_BLOCKED`` — scanning
+zero traces is never reported as a pass.
 
 Usage:
     python tools/evals/zuno/rag_eval/run_phase22_four_profile_benchmark.py \
@@ -38,20 +46,14 @@ if str(REPO_ROOT) not in sys.path:
 if str(BACKEND_ROOT) not in sys.path:
     sys.path.insert(0, str(BACKEND_ROOT))
 
-from tools.evals.zuno.rag_eval.measurement_gate import MeasurementState, MeasurementTruthGate  # noqa: E402
+from tools.evals.zuno.rag_eval.measurement_gate import MeasurementState  # noqa: E402
 from tools.evals.zuno.rag_eval.release_decision import (  # noqa: E402
     FINGERPRINT_DIMENSIONS,
-    MEASUREMENT_ATTESTATION_VERSION,
     REQUIRED_PROFILE_IDS,
     ReleaseDecisionStatus,
-    compute_measurement_attestation_hash,
     evaluate_release_decision,
 )
-from tools.evals.zuno.synthetic_benchmark.dataset_contract import (  # noqa: E402
-    GOLD_RUNTIME_FORBIDDEN_FIELDS,
-    load_jsonl,
-    sha256_json,
-)
+from tools.evals.zuno.synthetic_benchmark.dataset_contract import load_jsonl, sha256_json  # noqa: E402
 from tools.evals.zuno.synthetic_benchmark.runtime_request_contract import (  # noqa: E402
     GOLD_RUNTIME_FORBIDDEN_FIELDS_EXTENDED,
     REQUIRED_PROFILES,
@@ -67,15 +69,97 @@ DEFAULT_OUT_ROOT = TRACK_DIR / "deepseek2-cc-b34c"
 SNAPSHOT_DEPENDENCY_BLOCK_REASON = "snapshot_activation_dependency_blocked"
 KNOWLEDGE_VERSION_DEPENDENCY_BLOCK_REASON = "knowledge_version_dependency_missing"
 
+# Scanned gold-isolation surfaces (Task H).
+GOLD_SCAN_SURFACES = (
+    "runtime_request",
+    "prompt",
+    "trace",
+    "retrieval_context",
+    "tool_arguments",
+    "planner_input",
+    "step_input",
+    "final_synthesis_input",
+)
+
+FORMAL_RUNTIME_OWNERS: dict[str, dict[str, Any]] = {
+    "standard_rag": {
+        "owners": [("zuno.platform.services.rag.handler", "RagHandler", "retrieve_ranked_documents")],
+        "entry_api": "retrieve_ranked_documents",
+    },
+    "local_graphrag": {
+        "owners": [("zuno.platform.services.graphrag.retriever", "GraphRetriever", "retrieve")],
+        "entry_api": "retrieve (entity resolution + neighbor traversal)",
+    },
+    "deep_graphrag": {
+        "owners": [("zuno.platform.services.graphrag.retriever", "GraphRetriever", "retrieve")],
+        "entry_api": "retrieve (multi-hop path traversal)",
+    },
+    "agentic_graphrag": {
+        "owners": [
+            ("zuno.agent.runtime.graph", "build_agent_graph", None),
+            ("zuno.agent.runtime.service", "UnifiedAgentRuntimeService", "start"),
+        ],
+        "entry_api": "start (fixed AgentRunGraph + dynamic Plan DAG + StepExecutionGraph)",
+    },
+}
+
 
 # ---------------------------------------------------------------------------
-# Gold isolation scan
+# Formal runtime owner resolution (Task G)
 # ---------------------------------------------------------------------------
 
 
-def scan_gold_isolation(requests: list[dict[str, Any]], trace_files: list[Path] | None = None) -> dict[str, Any]:
-    """Scan runtime requests and (when available) profile traces for any
-    forbidden gold field. Evaluator-side gold is never part of runtime I/O."""
+def resolve_profile_runtime_owners() -> dict[str, dict[str, Any]]:
+    """Resolve the formal owner of every profile without executing it.
+
+    Returns per-profile availability; a missing owner is reported as
+    ``PROFILE_RUNTIME_OWNER_MISSING`` and blocks that profile — a second
+    product runtime is never built here.
+    """
+    resolution: dict[str, dict[str, Any]] = {}
+    for profile_id in REQUIRED_PROFILES:
+        spec = FORMAL_RUNTIME_OWNERS[profile_id]
+        owner_labels: list[str] = []
+        missing_detail: list[str] = []
+        try:
+            for module_name, class_name, method_name in spec["owners"]:
+                owner_labels.append(f"{module_name}.{class_name}")
+                module = __import__(module_name, fromlist=[class_name])
+                owner = getattr(module, class_name)
+                if method_name is not None:
+                    method = getattr(owner, method_name, None)
+                    if method is None:
+                        raise AttributeError(f"{module_name}.{class_name}.{method_name} missing")
+            resolution[profile_id] = {
+                "owner": " + ".join(owner_labels),
+                "entry_api": spec["entry_api"],
+                "status": "OWNER_AVAILABLE",
+            }
+        except Exception as exc:  # noqa: BLE001
+            resolution[profile_id] = {
+                "owner": " + ".join(owner_labels) or spec["entry_api"],
+                "entry_api": spec["entry_api"],
+                "status": f"PROFILE_RUNTIME_OWNER_MISSING:{profile_id}",
+                "detail": str(exc)[:200],
+            }
+    return resolution
+
+
+# ---------------------------------------------------------------------------
+# Gold isolation scan (Task H)
+# ---------------------------------------------------------------------------
+
+
+def scan_gold_isolation(
+    requests: list[dict[str, Any]],
+    trace_files: list[Path] | None = None,
+) -> dict[str, Any]:
+    """Scan every available gold-isolation surface.
+
+    With no trace files the trace-level status is
+    ``NOT_RUN_DEPENDENCY_BLOCKED`` — zero scanned traces never reads as a
+    pass.
+    """
     request_forbidden: list[str] = []
     for request in requests:
         for field in GOLD_RUNTIME_FORBIDDEN_FIELDS_EXTENDED:
@@ -103,6 +187,7 @@ def scan_gold_isolation(requests: list[dict[str, Any]], trace_files: list[Path] 
                 continue
             _scan_mapping(data, f"{trace_file.name}::", trace_forbidden)
     return {
+        "surfaces": list(GOLD_SCAN_SURFACES),
         "request_scan_count": len(requests),
         "request_forbidden_field_count": len(request_forbidden),
         "request_forbidden_fields": sorted(set(request_forbidden))[:20],
@@ -110,8 +195,13 @@ def scan_gold_isolation(requests: list[dict[str, Any]], trace_files: list[Path] 
         "trace_scan_files": scanned_files,
         "trace_forbidden_field_count": len(trace_forbidden),
         "trace_forbidden_fields": sorted(set(trace_forbidden))[:20],
+        "trace_gold_isolation_status": (
+            "NOT_RUN_DEPENDENCY_BLOCKED" if not scanned_files else "SCANNED"
+        ),
         "forbidden_field_count": len(request_forbidden) + len(trace_forbidden),
-        "scan_passed": not request_forbidden and not trace_forbidden,
+        # A full pass requires every surface to have been scanned; zero
+        # trace files can never read as a complete gold-isolation pass.
+        "scan_passed": not request_forbidden and not trace_forbidden and bool(scanned_files),
         "traces_available": bool(scanned_files),
     }
 
@@ -129,7 +219,7 @@ def _scan_mapping(mapping: dict[str, Any], prefix: str, findings: list[str]) -> 
 
 
 # ---------------------------------------------------------------------------
-# Blocked evidence (snapshot not activated)
+# Blocked evidence (snapshot not activated) — Task F
 # ---------------------------------------------------------------------------
 
 
@@ -141,21 +231,32 @@ def build_blocked_profile_evidence(
     knowledge_version_id: str | None,
     snapshot_id: str | None,
     block_reason: str,
+    owner_resolution: dict[str, dict[str, Any]],
     blocked_at: str,
 ) -> dict[str, Any]:
     per_profile: dict[str, dict[str, Any]] = {}
     for profile_id in REQUIRED_PROFILES:
+        owner = owner_resolution.get(profile_id, {})
+        reason_codes = [block_reason]
+        if owner.get("status", "").startswith("PROFILE_RUNTIME_OWNER_MISSING"):
+            reason_codes.append(owner["status"])
         per_profile[profile_id] = {
             "profile_id": profile_id,
             "profile_run_id": None,
+            "case_id": None,
+            "snapshot_id": None,
+            "knowledge_version_id": None,
             "trace_ref": None,
             "retrieval_evidence_ref": None,
             "citation_evidence_ref": None,
-            "usage": None,
-            "latency_ms": None,
-            "run_outcome": None,
+            "usage_ref": None,
+            "latency": None,
+            "run_outcome_ref": None,
+            "runtime_fingerprint": None,
+            "artifact_hash": None,
             "measurement_status": MeasurementState.BLOCKED.value,
-            "measurement_reason": f"{block_reason}:{_profile_block_codes(profile_id)}",
+            "measurement_reason": ",".join(reason_codes),
+            "runtime_owner": owner.get("status", "OWNER_UNAVAILABLE"),
             "is_test_double": False,
         }
     return {
@@ -163,7 +264,7 @@ def build_blocked_profile_evidence(
         "track_id": "machine_attested_synthetic_regression",
         "evidence_kind": "four_profile_runtime",
         "worker": "deepseek2-cc-b34c",
-        "status": "FOUR_PROFILE_RUNTIME_BLOCKED",
+        "status": "FOUR_PROFILE_RUNTIME_NOT_RUN_DEPENDENCY_BLOCKED",
         "block_reason": block_reason,
         "blocked_at": blocked_at,
         "dataset_hash": dataset_hash,
@@ -172,21 +273,13 @@ def build_blocked_profile_evidence(
         "snapshot_id": snapshot_id,
         "request_count": len(requests),
         "profile_count": len(REQUIRED_PROFILES),
-        "profiles": REQUIRED_PROFILES,
+        "profiles": list(REQUIRED_PROFILES),
         "per_profile": per_profile,
         "profile_run_ids": [],
         "runtime_metrics_ref": None,
         "metrics_computed": False,
+        "runtime_owner_resolution": owner_resolution,
     }
-
-
-def _profile_block_codes(profile_id: str) -> str:
-    return ",".join([SNAPSHOT_DEPENDENCY_BLOCK_REASON, KNOWLEDGE_VERSION_DEPENDENCY_BLOCK_REASON])
-
-
-# ---------------------------------------------------------------------------
-# Release decision payload (blocked profiles -> engine returns BLOCKED)
-# ---------------------------------------------------------------------------
 
 
 def build_release_decision_input(
@@ -255,8 +348,8 @@ def main() -> int:
     parser.add_argument("--corpus-hash", default="")
     parser.add_argument("--knowledge-version-id", default="")
     parser.add_argument("--snapshot-id", default="")
-    parser.add_argument("--dependency-pr", default="")
-    parser.add_argument("--dependency-head-sha", default="")
+    parser.add_argument("--dependency-pr", default="112")
+    parser.add_argument("--dependency-head-sha", default="bf4b2cb11b53e78b3a7242df5996e4aed2cc1a4b")
     args = parser.parse_args()
 
     started_at = datetime.now(timezone.utc).isoformat()
@@ -278,13 +371,24 @@ def main() -> int:
     )
     isolation = validate_runtime_isolation(requests)
     gold_scan = scan_gold_isolation(requests)
+    owner_resolution = resolve_profile_runtime_owners()
 
-    if knowledge_version_id is None or snapshot_id is None:
-        block_reason = (
-            KNOWLEDGE_VERSION_DEPENDENCY_BLOCK_REASON
-            if knowledge_version_id is None
-            else SNAPSHOT_DEPENDENCY_BLOCK_REASON
-        )
+    missing_owners = [
+        profile_id
+        for profile_id, info in owner_resolution.items()
+        if info.get("status", "").startswith("PROFILE_RUNTIME_OWNER_MISSING")
+    ]
+
+    if knowledge_version_id is None or snapshot_id is None or missing_owners:
+        block_reasons: list[str] = []
+        if knowledge_version_id is None:
+            block_reasons.append(KNOWLEDGE_VERSION_DEPENDENCY_BLOCK_REASON)
+        elif snapshot_id is None:
+            block_reasons.append(SNAPSHOT_DEPENDENCY_BLOCK_REASON)
+        for profile_id in missing_owners:
+            block_reasons.append(f"PROFILE_RUNTIME_OWNER_MISSING:{profile_id}")
+        block_reason = ",".join(block_reasons)
+
         blocked_evidence = build_blocked_profile_evidence(
             requests=requests,
             dataset_hash=dataset_hash,
@@ -292,6 +396,7 @@ def main() -> int:
             knowledge_version_id=knowledge_version_id,
             snapshot_id=snapshot_id,
             block_reason=block_reason,
+            owner_resolution=owner_resolution,
             blocked_at=started_at,
         )
         decision_input = build_release_decision_input(
@@ -305,45 +410,34 @@ def main() -> int:
         assert decision.status == ReleaseDecisionStatus.BLOCKED
         evidence = blocked_evidence
     else:
-        # Real snapshot present: execute the four profiles through the
-        # canonical runtime. Wired but measurement-gated on activation.
-        from tools.evals.zuno.rag_eval.phase22_profile_runtime import (
-            Phase22ProfileRuntimeEngine,
-            Phase22Scope,
-        )
-
-        engine = _live_engine(scope=Phase22Scope(
-            tenant_id="tenant_auroralis",
-            workspace_id="workspace_regression",
-            security_epoch_ref="epoch_phase22_synthetic_regression",
-            snapshot_id=snapshot_id,
-            knowledge_version_id=knowledge_version_id,
-            embedding_config_hash="sha256:embedding-config-frozen",
-        ))
-        per_profile = {}
-        for profile_id in REQUIRED_PROFILES:
-            per_profile[profile_id] = {
-                "profile_id": profile_id,
-                "profile_run_id": None,
-                "measurement_status": MeasurementState.RUNTIME_OBSERVED.value,
-                "measurement_reason": "runtime_observed_pending_measurement_gates",
-            }
+        # A real activated snapshot is present and every formal runtime
+        # owner resolves. Execution is the coordinator's next step: this
+        # harness would dispatch the 320 requests through the formal owners
+        # (RagHandler / GraphRetriever / UnifiedAgentRuntimeService) and
+        # the measurement gate. No placeholder runtime is used.
         evidence = {
             "schema_version": "1.0.0",
             "track_id": "machine_attested_synthetic_regression",
             "evidence_kind": "four_profile_runtime",
             "worker": "deepseek2-cc-b34c",
-            "status": "FOUR_PROFILE_RUNTIME_PENDING_MEASUREMENT",
+            "status": "FOUR_PROFILE_RUNTIME_READY_FOR_MEASUREMENT",
             "dataset_hash": dataset_hash,
             "corpus_hash": corpus_hash,
             "knowledge_version_id": knowledge_version_id,
             "snapshot_id": snapshot_id,
             "request_count": len(requests),
-            "per_profile": per_profile,
+            "per_profile": {
+                profile_id: {
+                    "profile_id": profile_id,
+                    "profile_run_id": None,
+                    "measurement_status": MeasurementState.PREPARED.value,
+                    "measurement_reason": "awaiting_measurement_dispatch",
+                }
+                for profile_id in REQUIRED_PROFILES
+            },
             "profile_run_ids": [],
             "runtime_metrics_ref": None,
             "metrics_computed": False,
-            "note": "execution path wired; formal measurement requires the measurement gate",
         }
         decision = None
 
@@ -362,6 +456,7 @@ def main() -> int:
             "dependency": {
                 "dependency_pr": args.dependency_pr.strip() or None,
                 "dependency_head_sha": args.dependency_head_sha.strip() or None,
+                "dependency_accepted": False,
                 "knowledge_version_id": knowledge_version_id,
             },
         }
@@ -389,6 +484,8 @@ def main() -> int:
             "knowledge_version_id": knowledge_version_id,
             "request_count": len(requests),
             "gold_forbidden_field_count": gold_scan["forbidden_field_count"],
+            "trace_gold_isolation_status": gold_scan["trace_gold_isolation_status"],
+            "runtime_owner_resolution": owner_resolution,
             "profile_run_ids": evidence["profile_run_ids"],
             "release_decision": decision.status.value if decision else None,
             "decision_hash": decision.decision_hash if decision else None,
@@ -399,64 +496,6 @@ def main() -> int:
         sort_keys=True,
     ))
     return 0
-
-
-def _live_engine(scope: Any) -> Phase22ProfileRuntimeEngine:
-    """Composition root for the live execution path (three real indexes +
-    deterministic citation-grounded answer synthesis)."""
-    from tools.evals.zuno.rag_eval.phase22_profile_runtime import Phase22ProfileRuntimeEngine
-
-    from zuno.knowledge.indexing import (
-        ElasticsearchBm25IndexClient,
-        MilvusVectorIndexClient,
-        Neo4jGraphIndexClient,
-    )
-
-    es = ElasticsearchBm25IndexClient(base_url="http://localhost:9200")
-    milvus = MilvusVectorIndexClient(host="localhost", port="19530", dim=1024)
-
-    def bm25_query(query: str, *, workspace_id: str, limit: int = 8) -> list[dict]:
-        return es.search_documents(query, "phase22_live_bm25", workspace_id=workspace_id)[:limit]
-
-    def vector_query(query: str, *, workspace_id: str, limit: int = 8) -> list[dict]:
-        return milvus.search_documents(query, "phase22_live_vector", workspace_id=workspace_id)[:limit]
-
-    def graph_entity_anchor(text: str, *, limit: int = 5) -> list[str]:
-        from tools.evals.zuno.rag_eval.phase22_profile_runtime import _stable_hash
-
-        return [_stable_hash(text)[:8]]
-
-    def graph_neighbor(entity_ref: str, *, relation_kinds=None, limit: int = 8) -> list[dict]:
-        return []
-
-    def graph_path(start_entity_ref: str, *, hops: int, relation_kinds=None, limit: int = 8) -> list[dict]:
-        return []
-
-    def answer_synthesis(question: str, evidence: list[dict]) -> str:
-        if not evidence:
-            return "Evidence unavailable; no answer can be grounded."
-        return "Based on the retrieved evidence: " + " ".join(
-            f"[{item['chunk_id']}]" for item in evidence[:3]
-        )
-
-    def usage_recorder(usage: dict) -> None:
-        return None
-
-    class SecurityGate:
-        def authorize(self, *, tenant_id: str, workspace_id: str, security_epoch_ref: str) -> bool:
-            return bool(tenant_id and workspace_id and security_epoch_ref)
-
-    return Phase22ProfileRuntimeEngine(
-        bm25=bm25_query,
-        vector=vector_query,
-        graph_entity_anchor=graph_entity_anchor,
-        graph_path=graph_path,
-        graph_neighbor=graph_neighbor,
-        answer_synthesis=answer_synthesis,
-        usage_recorder=usage_recorder,
-        security_gate=SecurityGate(),
-        scope=scope,
-    )
 
 
 if __name__ == "__main__":

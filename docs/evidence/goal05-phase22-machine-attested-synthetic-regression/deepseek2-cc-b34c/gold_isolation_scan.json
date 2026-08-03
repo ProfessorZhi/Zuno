@@ -3,9 +3,20 @@
   "request_forbidden_field_count": 0,
   "request_forbidden_fields": [],
   "request_scan_count": 320,
-  "scan_passed": true,
+  "scan_passed": false,
+  "surfaces": [
+    "runtime_request",
+    "prompt",
+    "trace",
+    "retrieval_context",
+    "tool_arguments",
+    "planner_input",
+    "step_input",
+    "final_synthesis_input"
+  ],
   "trace_forbidden_field_count": 0,
   "trace_forbidden_fields": [],
+  "trace_gold_isolation_status": "NOT_RUN_DEPENDENCY_BLOCKED",
   "trace_scan_file_count": 0,
   "trace_scan_files": [],
   "traces_available": false

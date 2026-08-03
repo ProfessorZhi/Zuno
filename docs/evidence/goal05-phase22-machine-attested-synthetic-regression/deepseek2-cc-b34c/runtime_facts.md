@@ -1,86 +1,153 @@
-# PHASE22 DeepSeek2 (CC-B3/B4/C) Runtime Facts
+# PHASE22 DeepSeek2 (CC-B3/B4/C) Runtime Truth Facts — Hardening Pass
 
 Worker: DeepSeek2 (Claude Code)
-Task: PHASE22-CC-B3-B4-C — Three Index Visibility / Snapshot Activation / Four Profile Runtime
+Task: PHASE22-CC-B3-B4-C-RUNTIME-TRUTH-HARDENING
 Date: 2026-08-03
-Branch: claude/deepseek2-phase22-index-snapshot-profiles
+Branch: claude/deepseek2-phase22-index-snapshot-profiles (PR #113, Draft)
 
-## 1. Live Services (verified reachable during the run)
+## 1. Truth Boundary (current, honest)
 
-| Service | Endpoint | Version |
+```
+THREE_INDEX_ADAPTER_LIVE_SMOKE_AVAILABLE          = true
+CORPUS_LEVEL_VISIBILITY_RECEIPTS_BLOCKED          = true
+SNAPSHOT_ACTIVATION_NOT_RUN_DEPENDENCY_BLOCKED    = true
+FOUR_PROFILE_RUNTIME_NOT_RUN_DEPENDENCY_BLOCKED   = true
+```
+
+No `all_visibility_passed` claim exists anywhere in the evidence.
+Dependency: DeepSeek1 PR #112 (head `bf4b2cb11b53e78b3a7242df5996e4aed2cc1a4b`) is
+`REQUEST_WORKER_CHANGES` and is NOT accepted; `knowledge_version_id = null`.
+
+## 2. Canonical Corpus Identity (Task A)
+
+- Canonical IR manifest: 8 documents, 24 chunks (exact).
+- Adapter smoke consumed the frozen candidate manifest payload ONLY:
+  `input_kind = frozen_candidate_manifest`, `not_owner_produced = true`,
+  `knowledge_version_id = null`, `snapshot_eligible = false`.
+- Identity validation passed (fail closed): document count equal, chunk
+  count equal, chunk id set equal, every chunk text hash equal, no extra
+  text, no missing chunk. No re-chunking — the canonical 24-chunk set was
+  written as-is (no 35-chunk divergence).
+- Writes: ES 24 / Milvus 24 / Neo4j 24 chunks + 15 entities + 5 relations.
+- Readback: 24/24 chunk ids read back (ES and Milvus), per-chunk content
+  hash verified, readback hash recorded.
+
+## 3. Corpus-level IndexBuildRun Receipts (Task B)
+
+One receipt per index kind, all `NOT_RUN_DEPENDENCY_BLOCKED`:
+`receipt_scope = adapter_live_smoke`, `snapshot_eligible = false`,
+`visibility_status = blocked`, `block_reason = knowledge_version_dependency_missing`.
+
+Each receipt binds: tenant_id, workspace_id, knowledge_version_id (empty),
+index_build_run_id, index_kind, expected_document_count=8,
+expected_chunk_count=24, observed counts, content_set_hash, config_hash,
+adapter_execution_ref, readback_hash, payload_hash.
+
+Receipt refs (final run):
+- elasticsearch_bm25: `corpus-index-build:elasticsearch_bm25:<hash[:16]>`
+- milvus_vector: `corpus-index-build:milvus_vector:<hash[:16]>`
+- neo4j_graph: `corpus-index-build:neo4j_graph:<hash[:16]>`
+(exact values in `live_three_index_visibility_evidence.json` →
+`corpus_index_build_receipts`)
+
+## 4. Tenant / Workspace / Version Isolation (Task C)
+
+Full scope matrix executed on ES and Milvus (all passed):
+
+| Scope | ES | Milvus |
 | --- | --- | --- |
-| Elasticsearch | http://localhost:9200 | 7.17.24 (docker-cluster) |
-| Milvus | localhost:19530 (health 9091) | server v2.4.15 / pymilvus 2.6.11 |
-| Neo4j | bolt://localhost:7687 (database `neo4j`) | driver 5.28.1 |
-| MinIO | localhost:9000 | running (not exercised by this worker) |
+| same tenant/workspace/kv | 24 | 24 |
+| same workspace, different tenant | 0 | 0 |
+| same tenant, different workspace | 0 | 0 |
+| same tenant/workspace, different kv | 0 | 0 |
+| foreign snapshot scope | 0 | 0 |
+| missing scope | 24 (unscoped, documented) | 24 (unscoped, documented) |
+| empty scope | 24 (unscoped, documented) | 24 (unscoped, documented) |
 
-## 2. Embedding Configuration (frozen)
+- Milvus search filter is passed as the TOP-LEVEL `expr` search argument
+  (PyMilvus >= 2.4; `expr` inside `param` is silently ignored and would
+  leak rows across scopes — fixed in this pass).
+- Milvus literals are escaped (`_milvus_literal`); injection attempt
+  `tenant" OR 1==1 --` contained (0 rows).
+- Neo4j paths store-visible (1-hop / 2-hop / multi-hop); cross-tenant path
+  query returns no rows; canonical path receipt emission blocked on
+  knowledge_version_id (recorded `canonical_path_receipt_builder_blocked`).
 
-- Provider: `dashscope`
-- Model: `text-embedding-v4`
-- Dimension: `1024`
-- Gateway: OpenAI-compatible embedding gateway (`build_openai_embedding_gateway_adapter`)
-- Config Hash: `sha256:d4d77f48b3dcc15f5abdb0a8e1d610c0cccd38f3c5bf7d5a7464c84b7863961d`
-- Vector source: `formal_embedding_gateway` (real model embeddings; no random / fixed / gold vectors)
+## 5. Credentials (Task D)
 
-## 3. Live Index Names (isolated namespace, cleaned up after run)
+- No credential in source: `neo4j12345` removed from the runner and the
+  integration test.
+- Credentials come from `ZUNO_TEST_NEO4J_URI` / `ZUNO_TEST_NEO4J_USERNAME` /
+  `ZUNO_TEST_NEO4J_PASSWORD`; missing credentials → `credential_blocked`.
+- Evidence redacts password / api_key / authorization / bearer / secret /
+  token keys; credential source recorded, values never.
 
-- ES index: `deepseek2_phase22_9a9735f3_bm25` (deleted after evidence capture)
-- Milvus collection: `deepseek2_phase22_9a9735f3_vector` (dropped after evidence capture)
-- Neo4j nodes: `ZunoIndexChunk` / `ZunoIndexEntity` under `deepseek2_phase22_9a9735f3_graph` (deleted after evidence capture)
+## 6. Snapshot Activation (Task E)
 
-## 4. Visibility Receipts (authentic, canonical owner builders)
+- Status: `NOT_RUN_DEPENDENCY_BLOCKED`; snapshot_id null;
+  knowledge_version_id null; dependency_accepted false.
+- 14-gate hardened adapter (duplicate kinds, per-receipt
+  tenant/workspace/kv consistency, non-empty manifest hash, identical
+  content_set_hash, owner kinds, payload hashes, unique ES/Milvus/Neo4j
+  receipts, mandatory Neo4j path receipt, frozen embedding config, formal
+  scope only, missing/unknown blocked) — unit-tested (17 tests).
+- Persistence: formal `KnowledgeRepository.create_snapshot` exists;
+  `PostgresKnowledgeSnapshotPersistence` reuses it (no new migration).
+  Activation path proven in unit tests: deterministic snapshot id,
+  re-readable persisted fact, immutable content set, distinct content hash
+  → distinct snapshot.
+- Activation receipt: `snapshot-activation:472dc3135ab0b9a3` (blocked-state).
 
-| Target | Receipt kind | Receipt ref | Visibility | Sample matches |
-| --- | --- | --- | --- | --- |
-| bm25 | elasticsearch_bm25_visibility | `index-visibility:bm25:6f6db812517fceb3` | visible | 4 |
-| vector | milvus_vector_visibility | `index-visibility:vector:71672246b8621a57` | visible | 4 |
-| graph | neo4j_graph_visibility | `index-visibility:graph:bd6fc455372e6722` | visible | 4 |
+## 7. Four-Profile Runtime (Tasks F/G)
 
-(The receipt payload hashes are inside `live_three_index_visibility_evidence.json` under `visibility_receipt_refs`; they are regenerated per isolated run namespace.)
+- Status: `FOUR_PROFILE_RUNTIME_NOT_RUN_DEPENDENCY_BLOCKED`; per-profile
+  BLOCKED with `knowledge_version_dependency_missing`; `profile_run_ids: []`;
+  NO fabricated `RUNTIME_OBSERVED`; placeholder runtime engine deleted.
+- Formal runtime owners resolved (all `OWNER_AVAILABLE`):
+  standard_rag → `RagHandler.retrieve_ranked_documents`;
+  local_graphrag → `GraphRetriever.retrieve` (neighbor traversal);
+  deep_graphrag → `GraphRetriever.retrieve` (multi-hop);
+  agentic_graphrag → `build_agent_graph` + `UnifiedAgentRuntimeService`
+  (fixed AgentRunGraph + dynamic Plan DAG + StepExecutionGraph).
+  Missing owners would report `PROFILE_RUNTIME_OWNER_MISSING:<profile>`.
+- Release decision: `BLOCKED` (`profile_not_measured`), scope
+  `machine_attested_synthetic_regression`; decision_hash
+  `aebc93bb2d65236740a7b11b6a55390e0f15216546fcff7c60d790467067345d`.
 
-- Chunks written and read back: 35/35 (ES and Milvus by chunk_id).
-- Tenant/workspace isolation: wrong-tenant and wrong-workspace queries return 0 hits (ES, Milvus, Neo4j paths).
-- Rebuild idempotency: full corpus re-index keeps counts stable (35 -> 35) and receipt payload hashes identical.
-- Neo4j path readbacks (store level): 1-hop (Haruto Soma -> Axis-9), 2-hop (Kjartan Eliasson -> Northwind -> Northwind SDK), multi-hop `*1..5`; cross-tenant path query returns no rows.
-- Neo4j canonical path receipt emission is blocked while `knowledge_version_id` is empty (canonical owner builder refuses; recorded as `canonical_receipt_builder_blocked`).
+## 8. Gold Isolation (Task H)
 
-## 5. Snapshot Activation
+- 320 requests (80 cases x 4 profiles): forbidden gold field count = 0.
+- Scan surfaces: runtime_request, prompt, trace, retrieval_context,
+  tool_arguments, planner_input, step_input, final_synthesis_input.
+- Trace scan: 0 trace files → `trace_gold_isolation_status =
+  NOT_RUN_DEPENDENCY_BLOCKED`; scan of zero traces is never a pass.
 
-- Status: `NOT_RUN_DEPENDENCY_BLOCKED`
-- block_reason: `knowledge_version_dependency_missing`
-- snapshot_id: `null`
-- knowledge_version_id: `null`
-- dependency_pr: `null` (DeepSeek1 canonical ingestion PR not yet opened)
-- dependency_head_sha: `null`
-- Activation receipt: `snapshot-activation:dfd7a8a7a127fe52` (blocked-state receipt, valid)
-- Activation evidence: `snapshot_activation_evidence.json`
+## 9. Services
 
-## 6. Four-Profile Benchmark
+| Service | Version |
+| --- | --- |
+| Elasticsearch | 7.17.24 (docker-cluster) |
+| Milvus | server v2.4.15 / pymilvus 2.6.11 |
+| Neo4j | driver 5.28.1 |
+| Embedding | dashscope text-embedding-v4, dim 1024, config hash `sha256:d4d77f48…` |
 
-- Status: `FOUR_PROFILE_RUNTIME_BLOCKED` (block_reason `knowledge_version_dependency_missing`)
-- Requests built: 320 (80 cases x 4 profiles), gold forbidden fields: 0
-- snapshot_id: `null` -> per-profile `blocked_not_measured`, `profile_run_ids: []`
-- runtime_metrics_ref: `null`, metrics computed: false
-- Release decision: `BLOCKED` (`profile_not_measured`), scope `machine_attested_synthetic_regression`
-- decision_hash: `aebc93bb2d65236740a7b11b6a55390e0f15216546fcff7c60d790467067345d`
-- Evidence: `four_profile_runtime_evidence.json`, `gold_isolation_scan.json`
-
-## 7. Evidence Hashes
+## 10. Evidence Hashes (final)
 
 | Artifact | Hash |
 | --- | --- |
-| live_three_index_visibility_evidence.json | `9156e193d5019445bb381d57d6f4d79e25b9f95c2e7f668098eee8c1022ed2d4` |
-| snapshot_activation_evidence.json | `23b522bf58e65f2272200b9a151de71908e4c3a7816b9cbb6e36cc8c73803eb4` |
-| four_profile_runtime_evidence.json | `0f31ab1acfc9ea614258e6c376b793b3999d7101d0a08509f30642382f1843a0` |
+| live_three_index_visibility_evidence.json | `13ef02d85331e7a3ce7a94724b9166afaf17d3a8e15715cfb4eca62959cdb2b3` |
+| snapshot_activation_evidence.json | `582e546319b702226e7f4d479ba1e91bb38d539594f1b8b3e4897458e64677e3` |
+| four_profile_runtime_evidence.json | `323d5b723ccbeca65f80fed12d1127bee63d6f9ba67aa8dfdf76df58d9c84a80` |
 
-## 8. Cleanup
+## 11. Cleanup
 
-- ES index deleted; Milvus collection dropped; Neo4j chunk/entity nodes deleted (recorded in evidence `cleanup`).
+- ES index deleted; Milvus collection dropped; Neo4j chunk/entity nodes
+  deleted; cleanup readback verified (deleted → zero documents).
 
-## 9. Remaining Gaps (honest)
+## 12. Remaining Gaps (honest)
 
-- Real `knowledge_version_id` / activated `snapshot_id` — depends on DeepSeek1 canonical ingestion (GAP-B1/B2).
-- Neo4j canonical path visibility receipt emission — blocked on knowledge_version_id.
-- Four-profile measured runs + metrics + release decision PASSED/FAILED — blocked on snapshot activation.
-- Gold isolation trace-level scan: no profile traces exist yet (request-level scan: 0 forbidden).
+- Real `knowledge_version_id` (DeepSeek1 PR #112 not accepted) → snapshot
+  activation, corpus-level visible receipts, Neo4j canonical path receipt,
+  four-profile measured runs all remain dependency-blocked.
+- Four-profile execution through the formal owners + measurement gate:
+  wired and owner-resolved, not executed (no snapshot).
