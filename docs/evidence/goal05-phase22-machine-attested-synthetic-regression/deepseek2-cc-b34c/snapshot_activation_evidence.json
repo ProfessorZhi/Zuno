@@ -6,18 +6,19 @@
     "consistency_checks": {
       "knowledge_version_present": false
     },
-    "embedding_config_hash": "sha256:d4d77f48b3dcc15f5abdb0a8e1d610c0cccd38f3c5bf7d5a7464c84b7863961d",
+    "corpus_receipt_refs": {},
+    "embedding_config_hash": null,
     "index_job_manifest_hash": "bdc2401a5c58a94fa330c4d4048d08e3320107516a9d3d981599d4207e80d5d3",
     "knowledge_version_id": "",
-    "payload_hash": "dfd7a8a7a127fe52f08f7041fc5079bf6e491ba63c947fb0516a965934f1b5e7",
-    "provided_receipt_kinds": [],
+    "payload_hash": "472dc3135ab0b9a31bf03d281944c51b24bd5267285e5634334cb0698d88d7ba",
+    "provided_corpus_receipt_kinds": [],
     "receipt_kind": "snapshot_activation_receipt",
-    "receipt_ref": "snapshot-activation:dfd7a8a7a127fe52",
+    "receipt_ref": "snapshot-activation:472dc3135ab0b9a3",
     "receipt_visibility": {},
-    "required_receipt_kinds": [
-      "elasticsearch_bm25_visibility",
-      "milvus_vector_visibility",
-      "neo4j_graph_visibility"
+    "required_corpus_receipt_kinds": [
+      "elasticsearch_bm25",
+      "milvus_vector",
+      "neo4j_graph"
     ],
     "snapshot_content_hash": "",
     "snapshot_id": "",
@@ -30,30 +31,23 @@
     "knowledge_version_present": false
   },
   "content_set_immutable": false,
+  "corpus_receipt_refs": {},
   "dependency": {
-    "dependency_head_sha": null,
-    "dependency_pr": null,
+    "dependency_accepted": false,
+    "dependency_head_sha": "bf4b2cb11b53e78b3a7242df5996e4aed2cc1a4b",
+    "dependency_pr": "112",
     "knowledge_version_id": null
   },
-  "embedding_attestation": {
-    "base_url": "https://dashscope.aliyuncs.com/compatible-mode/v1",
-    "config_hash": "sha256:d4d77f48b3dcc15f5abdb0a8e1d610c0cccd38f3c5bf7d5a7464c84b7863961d",
-    "dimension": 1024,
-    "gateway_kind": "openai_compatible_embedding_gateway",
-    "model": "text-embedding-v4",
-    "provider": "dashscope",
-    "vector_source": "formal_embedding_gateway"
-  },
   "embedding_config_hash": "sha256:d4d77f48b3dcc15f5abdb0a8e1d610c0cccd38f3c5bf7d5a7464c84b7863961d",
-  "evidence_hash": "23b522bf58e65f2272200b9a151de71908e4c3a7816b9cbb6e36cc8c73803eb4",
+  "evidence_hash": "582e546319b702226e7f4d479ba1e91bb38d539594f1b8b3e4897458e64677e3",
   "evidence_kind": "snapshot_activation",
-  "provided_receipt_kinds": [],
+  "provided_corpus_receipt_kinds": [],
   "receipt_validation_passed": true,
   "receipt_visibility": {},
-  "required_receipt_kinds": [
-    "elasticsearch_bm25_visibility",
-    "milvus_vector_visibility",
-    "neo4j_graph_visibility"
+  "required_corpus_receipt_kinds": [
+    "elasticsearch_bm25",
+    "milvus_vector",
+    "neo4j_graph"
   ],
   "schema_version": "1.0.0",
   "scope": {
@@ -63,6 +57,7 @@
   },
   "snapshot_content_hash": null,
   "snapshot_id": null,
+  "snapshot_persistence": null,
   "status": "NOT_RUN_DEPENDENCY_BLOCKED",
   "track_id": "machine_attested_synthetic_regression",
   "worker": "deepseek2-cc-b34c"

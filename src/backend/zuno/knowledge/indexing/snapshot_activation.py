@@ -1,25 +1,33 @@
-"""Knowledge Snapshot Activation (PHASE22 canonical owner adapter).
+"""Knowledge Snapshot Activation (PHASE22 canonical owner adapter, hardened).
 
-Snapshot activation is the Knowledge-owned gate between "indexes are
-visible" and "a frozen KnowledgeSnapshot can be served".  It only fires
-when all three index visibility receipts are authentic, scoped to the same
-tenant / workspace / knowledge version, and re-readable.
+Snapshot activation is the Knowledge-owned gate between "corpus-level
+index build receipts are authentic" and "a frozen KnowledgeSnapshot can be
+served".  It only fires when all gates pass:
 
-Failure semantics (fail closed):
+1. duplicate receipt_kind -> reject (never override);
+2. every corpus receipt tenant_id == activation request tenant;
+3. every corpus receipt workspace_id == activation request workspace;
+4. every corpus receipt knowledge_version_id == request (non-empty);
+5. index_job_manifest_hash non-empty;
+6. content_set_hash identical across the three corpus receipts;
+7. receipt owner kind correct (``corpus_index_build_receipt`` + the three
+   index kinds);
+8. every receipt payload hash valid;
+9. ES / Milvus / Neo4j corpus receipts unique (one per index kind);
+10. Neo4j path visibility receipt present, valid, visible, scope-consistent;
+11. embedding provider/model/dimension/config hash consistent;
+12. adapter-live-smoke receipts can never activate (formal scope,
+    owner-produced input, snapshot_eligible required);
+13. missing receipt -> BLOCKED with the exact missing kind;
+14. dynamic/unknown receipt -> BLOCKED.
 
-* Missing real ``knowledge_version_id``  -> ``NOT_RUN_DEPENDENCY_BLOCKED``
-  (DeepSeek1 canonical ingestion must deliver the KnowledgeVersion first;
-  the adapter never invents one).
-* Missing / invalid / non-visible receipt -> ``BLOCKED`` with the exact
-  missing or failed kind.
-* Inconsistent tenant / workspace / knowledge_version / index_version
-  scope across receipts -> ``BLOCKED`` (``receipt_scope_inconsistent``).
-* Missing frozen embedding config hash -> ``BLOCKED``
-  (``embedding_config_not_frozen``).
+Without a real ``knowledge_version_id`` the adapter stays
+``NOT_RUN_DEPENDENCY_BLOCKED`` and never invents a KnowledgeVersion.
 
-An activated snapshot is deterministic: the same inputs always produce the
-same snapshot id, content hash and receipt ref (idempotent, append-only
-semantics for the content set — the content set is immutable once frozen).
+Activated snapshots are deterministic (same inputs -> same snapshot id,
+content hash, receipt ref) and immutable; the snapshot fact is persisted
+through the formal KnowledgeSnapshot repository
+(``KnowledgeRepository.create_snapshot``) and proven re-readable.
 """
 
 from __future__ import annotations
@@ -28,15 +36,15 @@ import hashlib
 import json
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
-from typing import Any, Literal
+from typing import Any, Literal, Protocol
 
 from pydantic import BaseModel, Field
 
-from .contracts import (
-    IndexVisibilityReceipt,
-    Neo4jPathVisibilityReceipt,
-    validate_index_visibility_receipt,
-    validate_neo4j_path_visibility_receipt,
+from .contracts import Neo4jPathVisibilityReceipt, validate_neo4j_path_visibility_receipt
+from .corpus_index_build import (
+    CORPUS_INDEX_KINDS,
+    CorpusIndexBuildReceipt,
+    validate_corpus_index_build_receipt,
 )
 
 SnapshotActivationStatus = Literal[
@@ -45,11 +53,23 @@ SnapshotActivationStatus = Literal[
     "BLOCKED",
 ]
 
-REQUIRED_VISIBILITY_RECEIPT_KINDS = (
-    "elasticsearch_bm25_visibility",
-    "milvus_vector_visibility",
-    "neo4j_graph_visibility",
-)
+REQUIRED_CORPUS_RECEIPT_KINDS: tuple[str, ...] = CORPUS_INDEX_KINDS
+
+
+class SnapshotPersistencePort(Protocol):
+    """Formal persistence of the immutable snapshot fact."""
+
+    def persist(
+        self,
+        *,
+        snapshot_id: str,
+        tenant_id: str,
+        knowledge_version_id: str,
+        snapshot_payload: dict[str, Any],
+        serving_watermark_ref: str,
+    ) -> dict[str, Any]: ...
+
+    def read(self, snapshot_id: str) -> dict[str, Any] | None: ...
 
 
 class SnapshotActivationReceipt(BaseModel):
@@ -61,8 +81,9 @@ class SnapshotActivationReceipt(BaseModel):
     snapshot_id: str
     snapshot_content_hash: str
     index_job_manifest_hash: str
-    required_receipt_kinds: list[str] = Field(default_factory=list)
-    provided_receipt_kinds: list[str] = Field(default_factory=list)
+    required_corpus_receipt_kinds: list[str] = Field(default_factory=list)
+    provided_corpus_receipt_kinds: list[str] = Field(default_factory=list)
+    corpus_receipt_refs: dict[str, str] = Field(default_factory=dict)
     receipt_visibility: dict[str, str] = Field(default_factory=dict)
     consistency_checks: dict[str, bool] = Field(default_factory=dict)
     embedding_config_hash: str | None = None
@@ -80,8 +101,9 @@ def build_snapshot_activation_receipt(
     snapshot_id: str,
     snapshot_content_hash: str,
     index_job_manifest_hash: str,
-    required_receipt_kinds: list[str],
-    provided_receipt_kinds: list[str],
+    required_corpus_receipt_kinds: list[str],
+    provided_corpus_receipt_kinds: list[str],
+    corpus_receipt_refs: dict[str, str],
     receipt_visibility: dict[str, str],
     consistency_checks: dict[str, bool],
     embedding_config_hash: str | None,
@@ -97,8 +119,9 @@ def build_snapshot_activation_receipt(
         "snapshot_id": snapshot_id,
         "snapshot_content_hash": snapshot_content_hash,
         "index_job_manifest_hash": index_job_manifest_hash,
-        "required_receipt_kinds": list(required_receipt_kinds),
-        "provided_receipt_kinds": list(provided_receipt_kinds),
+        "required_corpus_receipt_kinds": list(required_corpus_receipt_kinds),
+        "provided_corpus_receipt_kinds": list(provided_corpus_receipt_kinds),
+        "corpus_receipt_refs": dict(corpus_receipt_refs),
         "receipt_visibility": dict(receipt_visibility),
         "consistency_checks": dict(consistency_checks),
         "embedding_config_hash": embedding_config_hash,
@@ -164,8 +187,9 @@ def validate_snapshot_activation_receipt(
             "snapshot_id": model.snapshot_id,
             "snapshot_content_hash": model.snapshot_content_hash,
             "index_job_manifest_hash": model.index_job_manifest_hash,
-            "required_receipt_kinds": list(model.required_receipt_kinds),
-            "provided_receipt_kinds": list(model.provided_receipt_kinds),
+            "required_corpus_receipt_kinds": list(model.required_corpus_receipt_kinds),
+            "provided_corpus_receipt_kinds": list(model.provided_corpus_receipt_kinds),
+            "corpus_receipt_refs": dict(model.corpus_receipt_refs),
             "receipt_visibility": dict(model.receipt_visibility),
             "consistency_checks": dict(model.consistency_checks),
             "embedding_config_hash": model.embedding_config_hash,
@@ -193,8 +217,12 @@ class SnapshotActivationResult:
 
 
 class SnapshotActivationAdapter:
-    """Canonical owner adapter: consumes index visibility receipts and
-    activates a frozen KnowledgeSnapshot only when every gate passes."""
+    """Canonical owner adapter: activates a frozen KnowledgeSnapshot only
+    when every corpus-level receipt gate passes, then persists the
+    immutable snapshot fact through the formal repository."""
+
+    def __init__(self, *, snapshot_persistence: SnapshotPersistencePort | None = None) -> None:
+        self._snapshot_persistence = snapshot_persistence
 
     def activate(
         self,
@@ -203,16 +231,16 @@ class SnapshotActivationAdapter:
         workspace_id: str,
         knowledge_version_id: str | None,
         index_job_manifest_hash: str | None,
-        visibility_receipts: list[IndexVisibilityReceipt | dict[str, Any]],
-        neo4j_path_receipt: Neo4jPathVisibilityReceipt | dict[str, Any] | None = None,
-        embedding_config_hash: str | None = None,
+        corpus_receipts: list[CorpusIndexBuildReceipt | dict[str, Any]],
+        neo4j_path_receipt: Neo4jPathVisibilityReceipt | dict[str, Any] | None,
+        embedding_config: dict[str, Any] | None = None,
         dependency_pr: str | None = None,
         dependency_head_sha: str | None = None,
         observed_at: datetime | None = None,
     ) -> SnapshotActivationResult:
         observed_at = observed_at or datetime.now(timezone.utc)
 
-        # ── Gate 1: real KnowledgeVersion dependency ──────────────────────
+        # ── Gate 0: real KnowledgeVersion dependency ──────────────────────
         if not str(knowledge_version_id or "").strip():
             receipt = build_snapshot_activation_receipt(
                 tenant_id=tenant_id,
@@ -221,11 +249,12 @@ class SnapshotActivationAdapter:
                 snapshot_id="",
                 snapshot_content_hash="",
                 index_job_manifest_hash=str(index_job_manifest_hash or ""),
-                required_receipt_kinds=list(REQUIRED_VISIBILITY_RECEIPT_KINDS),
-                provided_receipt_kinds=[],
+                required_corpus_receipt_kinds=list(REQUIRED_CORPUS_RECEIPT_KINDS),
+                provided_corpus_receipt_kinds=[],
+                corpus_receipt_refs={},
                 receipt_visibility={},
                 consistency_checks={"knowledge_version_present": False},
-                embedding_config_hash=embedding_config_hash,
+                embedding_config_hash=None,
                 activation_status="NOT_RUN_DEPENDENCY_BLOCKED",
                 block_reason="knowledge_version_dependency_missing",
                 activated_at=None,
@@ -240,74 +269,99 @@ class SnapshotActivationAdapter:
                 receipt=receipt,
             )
 
-        # ── Gate 2: receipt kinds complete and authentic ───────────────────
-        normalized: dict[str, IndexVisibilityReceipt] = {}
-        for raw in visibility_receipts:
-            model = raw if isinstance(raw, IndexVisibilityReceipt) else IndexVisibilityReceipt(**raw)
-            errors = validate_index_visibility_receipt(model)
-            if errors:
-                return self._blocked(
-                    tenant_id=tenant_id,
-                    workspace_id=workspace_id,
-                    knowledge_version_id=knowledge_version_id,
-                    index_job_manifest_hash=index_job_manifest_hash,
-                    embedding_config_hash=embedding_config_hash,
-                    receipt_visibility={},
-                    consistency_checks={"receipt_authenticity": False},
-                    block_reason=f"index_visibility_receipt_invalid:{','.join(errors)}",
-                    observed_at=observed_at,
-                    dependency_pr=dependency_pr,
-                    dependency_head_sha=dependency_head_sha,
-                )
-            normalized[model.receipt_kind] = model
+        # ── Gate 1 + 9 + 14: unique, known corpus receipt kinds ───────────
+        normalized: dict[str, CorpusIndexBuildReceipt] = {}
+        kind_errors: list[str] = []
+        for raw in corpus_receipts:
+            if not isinstance(raw, CorpusIndexBuildReceipt):
+                if not isinstance(raw, dict):
+                    kind_errors.append("dynamic_receipt_payload:not_an_object")
+                    continue
+                try:
+                    candidate = CorpusIndexBuildReceipt(**raw)
+                except (ValueError, TypeError) as exc:
+                    kind_errors.append(f"dynamic_receipt_kind:{str(exc)[:120]}")
+                    continue
+            else:
+                candidate = raw
+            if candidate.receipt_kind != "corpus_index_build_receipt":
+                kind_errors.append(f"unknown_receipt_kind:{candidate.receipt_kind}")
+                continue
+            if candidate.index_kind not in CORPUS_INDEX_KINDS:
+                kind_errors.append(f"dynamic_receipt_kind:{candidate.index_kind}")
+                continue
+            if candidate.index_kind in normalized:
+                kind_errors.append(f"duplicate_receipt_kind:{candidate.index_kind}")
+                continue
+            receipt_errors = validate_corpus_index_build_receipt(candidate)
+            if receipt_errors:
+                kind_errors.append(f"receipt_payload_invalid:{candidate.index_kind}:{','.join(receipt_errors)}")
+                continue
+            normalized[candidate.index_kind] = candidate
+        if kind_errors:
+            return self._blocked(
+                tenant_id=tenant_id,
+                workspace_id=workspace_id,
+                knowledge_version_id=knowledge_version_id,
+                index_job_manifest_hash=index_job_manifest_hash,
+                receipt_visibility={},
+                consistency_checks={"receipt_kinds_unique_and_known": False},
+                block_reason=f"corpus_receipt_rejected:{','.join(kind_errors)}",
+                observed_at=observed_at,
+                dependency_pr=dependency_pr,
+                dependency_head_sha=dependency_head_sha,
+            )
 
-        provided_kinds = sorted(normalized)
-        missing = [kind for kind in REQUIRED_VISIBILITY_RECEIPT_KINDS if kind not in normalized]
+        # ── Gate 13: missing receipt kinds ────────────────────────────────
+        missing = [kind for kind in REQUIRED_CORPUS_RECEIPT_KINDS if kind not in normalized]
         if missing:
             return self._blocked(
                 tenant_id=tenant_id,
                 workspace_id=workspace_id,
                 knowledge_version_id=knowledge_version_id,
                 index_job_manifest_hash=index_job_manifest_hash,
-                embedding_config_hash=embedding_config_hash,
-                receipt_visibility={kind: normalized[kind].visibility for kind in provided_kinds},
-                consistency_checks={"receipt_kinds_complete": False},
-                block_reason=f"index_visibility_receipts_missing:{','.join(missing)}",
+                receipt_visibility={kind: "missing" for kind in missing},
+                consistency_checks={"corpus_receipts_complete": False},
+                block_reason=f"corpus_index_build_receipts_missing:{','.join(missing)}",
                 observed_at=observed_at,
                 dependency_pr=dependency_pr,
                 dependency_head_sha=dependency_head_sha,
             )
 
-        receipt_visibility = {
-            kind: normalized[kind].visibility for kind in REQUIRED_VISIBILITY_RECEIPT_KINDS
+        # ── Gate 8 + 12: formal, visible, owner-produced receipts only ─────
+        checks: dict[str, bool] = {
+            "corpus_receipts_complete": True,
+            "receipt_kinds_unique_and_known": True,
         }
-        non_visible = [
-            kind for kind, visibility in receipt_visibility.items() if visibility != "visible"
-        ]
-        if non_visible:
-            return self._blocked(
-                tenant_id=tenant_id,
-                workspace_id=workspace_id,
-                knowledge_version_id=knowledge_version_id,
-                index_job_manifest_hash=index_job_manifest_hash,
-                embedding_config_hash=embedding_config_hash,
-                receipt_visibility=receipt_visibility,
-                consistency_checks={"all_receipts_visible": False},
-                block_reason=f"index_visibility_not_visible:{','.join(non_visible)}",
-                observed_at=observed_at,
-                dependency_pr=dependency_pr,
-                dependency_head_sha=dependency_head_sha,
+        receipt_visibility: dict[str, str] = {}
+        corpus_receipt_refs: dict[str, str] = {}
+        for kind in REQUIRED_CORPUS_RECEIPT_KINDS:
+            receipt = normalized[kind]
+            receipt_visibility[kind] = receipt.visibility_status
+            corpus_receipt_refs[kind] = receipt.receipt_ref
+            checks[f"{kind}_visible"] = receipt.visibility_status == "visible"
+            checks[f"{kind}_formal_scope"] = receipt.receipt_scope == "formal"
+            checks[f"{kind}_owner_produced"] = receipt.not_owner_produced is False
+            checks[f"{kind}_snapshot_eligible"] = receipt.snapshot_eligible is True
+
+        # ── Gates 2/3/4: per-receipt scope consistency ────────────────────
+        for kind in REQUIRED_CORPUS_RECEIPT_KINDS:
+            receipt = normalized[kind]
+            checks[f"{kind}_tenant_consistent"] = receipt.tenant_id == tenant_id
+            checks[f"{kind}_workspace_consistent"] = receipt.workspace_id == workspace_id
+            checks[f"{kind}_knowledge_version_consistent"] = (
+                receipt.knowledge_version_id == knowledge_version_id
             )
 
-        # ── Gate 3: scope consistency (tenant/workspace/version/index) ─────
-        knowledge_space_ids = {r.knowledge_space_id for r in normalized.values()}
-        index_versions = {r.index_version for r in normalized.values()}
-        consistency_checks = {
-            "receipt_kinds_complete": True,
-            "all_receipts_visible": True,
-            "knowledge_space_consistent": len(knowledge_space_ids) == 1,
-            "index_version_consistent": len(index_versions) == 1,
-        }
+        # ── Gate 5: non-empty index manifest hash ─────────────────────────
+        checks["index_job_manifest_hash_present"] = bool(str(index_job_manifest_hash or "").strip())
+
+        # ── Gate 6: identical content set hash across the three receipts ──
+        content_hashes = {normalized[kind].content_set_hash for kind in REQUIRED_CORPUS_RECEIPT_KINDS}
+        checks["content_set_hash_consistent"] = len(content_hashes) == 1
+
+        # ── Gate 10: Neo4j path visibility receipt present & consistent ───
+        path_model: Neo4jPathVisibilityReceipt | None = None
         if neo4j_path_receipt is not None:
             path_model = (
                 neo4j_path_receipt
@@ -315,84 +369,69 @@ class SnapshotActivationAdapter:
                 else Neo4jPathVisibilityReceipt(**neo4j_path_receipt)
             )
             path_errors = validate_neo4j_path_visibility_receipt(path_model)
-            if path_errors:
-                return self._blocked(
-                    tenant_id=tenant_id,
-                    workspace_id=workspace_id,
-                    knowledge_version_id=knowledge_version_id,
-                    index_job_manifest_hash=index_job_manifest_hash,
-                    embedding_config_hash=embedding_config_hash,
-                    receipt_visibility=receipt_visibility,
-                    consistency_checks=consistency_checks,
-                    block_reason=f"neo4j_path_receipt_invalid:{','.join(path_errors)}",
-                    observed_at=observed_at,
-                    dependency_pr=dependency_pr,
-                    dependency_head_sha=dependency_head_sha,
-                )
-            consistency_checks["path_tenant_consistent"] = path_model.tenant_id == tenant_id
-            consistency_checks["path_workspace_consistent"] = path_model.workspace_id == workspace_id
-            consistency_checks["path_knowledge_version_consistent"] = (
+            checks["path_receipt_valid"] = not path_errors
+            checks["path_receipt_visible"] = path_model.visibility_status == "visible"
+            checks["path_tenant_consistent"] = path_model.tenant_id == tenant_id
+            checks["path_workspace_consistent"] = path_model.workspace_id == workspace_id
+            checks["path_knowledge_version_consistent"] = (
                 path_model.knowledge_version_id == knowledge_version_id
             )
-            if path_model.visibility_status != "visible":
-                consistency_checks["path_visibility_visible"] = False
-                return self._blocked(
-                    tenant_id=tenant_id,
-                    workspace_id=workspace_id,
-                    knowledge_version_id=knowledge_version_id,
-                    index_job_manifest_hash=index_job_manifest_hash,
-                    embedding_config_hash=embedding_config_hash,
-                    receipt_visibility=receipt_visibility,
-                    consistency_checks=consistency_checks,
-                    block_reason="neo4j_path_visibility_not_visible",
-                    observed_at=observed_at,
-                    dependency_pr=dependency_pr,
-                    dependency_head_sha=dependency_head_sha,
-                )
-            consistency_checks["path_visibility_visible"] = True
+        else:
+            checks["path_receipt_present"] = False
+        if "path_receipt_present" not in checks:
+            checks["path_receipt_present"] = True
 
-        scope_inconsistent = [
-            name for name, ok in consistency_checks.items() if ok is False
-        ]
-        if scope_inconsistent:
+        # ── Gate 11: frozen embedding config hash ─────────────────────────
+        request_config_hash = None
+        if embedding_config:
+            request_config_hash = str(embedding_config.get("config_hash") or "")
+            checks["embedding_config_frozen"] = bool(request_config_hash)
+            checks["embedding_provider_frozen"] = bool(embedding_config.get("provider"))
+            checks["embedding_model_frozen"] = bool(embedding_config.get("model"))
+            checks["embedding_dimension_frozen"] = bool(embedding_config.get("dimension"))
+        else:
+            checks["embedding_config_frozen"] = False
+        if request_config_hash:
+            receipt_config_hashes = {
+                normalized[kind].config_hash for kind in REQUIRED_CORPUS_RECEIPT_KINDS
+            }
+            checks["embedding_config_consistent"] = (
+                len(receipt_config_hashes) == 1 and request_config_hash in receipt_config_hashes
+            )
+
+        failed = [name for name, ok in checks.items() if ok is False]
+        if failed:
             return self._blocked(
                 tenant_id=tenant_id,
                 workspace_id=workspace_id,
                 knowledge_version_id=knowledge_version_id,
                 index_job_manifest_hash=index_job_manifest_hash,
-                embedding_config_hash=embedding_config_hash,
                 receipt_visibility=receipt_visibility,
-                consistency_checks=consistency_checks,
-                block_reason=f"receipt_scope_inconsistent:{','.join(scope_inconsistent)}",
+                consistency_checks=checks,
+                block_reason=f"snapshot_activation_gate_failed:{','.join(sorted(failed))}",
                 observed_at=observed_at,
                 dependency_pr=dependency_pr,
                 dependency_head_sha=dependency_head_sha,
             )
 
-        # ── Gate 4: frozen embedding config hash ───────────────────────────
-        if not str(embedding_config_hash or "").strip():
-            return self._blocked(
-                tenant_id=tenant_id,
-                workspace_id=workspace_id,
-                knowledge_version_id=knowledge_version_id,
-                index_job_manifest_hash=index_job_manifest_hash,
-                embedding_config_hash=None,
-                receipt_visibility=receipt_visibility,
-                consistency_checks=consistency_checks,
-                block_reason="embedding_config_not_frozen",
-                observed_at=observed_at,
-                dependency_pr=dependency_pr,
-                dependency_head_sha=dependency_head_sha,
-            )
-        consistency_checks["embedding_config_frozen"] = True
-
-        # ── Activation: deterministic content set, immutable after freeze ──
+        # ── Activation: deterministic immutable content set ───────────────
+        # The path fingerprint is derived from the deterministic path facts
+        # (start/end/kinds/matched refs), never from the timestamped receipt
+        # id, so identical graph state yields the identical snapshot.
         content_payload = {
-            "index_job_manifest_hash": str(index_job_manifest_hash or ""),
-            "receipt_payload_hashes": sorted(
-                r.payload_hash for r in normalized.values()
+            "index_job_manifest_hash": str(index_job_manifest_hash),
+            "corpus_receipt_payload_hashes": sorted(
+                normalized[kind].payload_hash for kind in REQUIRED_CORPUS_RECEIPT_KINDS
             ),
-            "embedding_config_hash": embedding_config_hash,
+            "corpus_receipt_content_set_hash": normalized["elasticsearch_bm25"].content_set_hash,
+            "neo4j_path_fingerprint": {
+                "start_entity_ref": path_model.start_entity_ref,
+                "end_entity_ref": path_model.end_entity_ref,
+                "relation_kinds": list(path_model.relation_kinds),
+                "matched_node_refs": list(path_model.matched_node_refs),
+                "matched_relation_refs": list(path_model.matched_relation_refs),
+            },
+            "embedding_config_hash": request_config_hash,
             "knowledge_version_id": knowledge_version_id,
             "tenant_id": tenant_id,
             "workspace_id": workspace_id,
@@ -406,16 +445,43 @@ class SnapshotActivationAdapter:
             knowledge_version_id=knowledge_version_id,
             snapshot_id=snapshot_id,
             snapshot_content_hash=snapshot_content_hash,
-            index_job_manifest_hash=str(index_job_manifest_hash or ""),
-            required_receipt_kinds=list(REQUIRED_VISIBILITY_RECEIPT_KINDS),
-            provided_receipt_kinds=provided_kinds,
+            index_job_manifest_hash=str(index_job_manifest_hash),
+            required_corpus_receipt_kinds=list(REQUIRED_CORPUS_RECEIPT_KINDS),
+            provided_corpus_receipt_kinds=list(REQUIRED_CORPUS_RECEIPT_KINDS),
+            corpus_receipt_refs=corpus_receipt_refs,
             receipt_visibility=receipt_visibility,
-            consistency_checks=consistency_checks,
-            embedding_config_hash=embedding_config_hash,
+            consistency_checks=checks,
+            embedding_config_hash=request_config_hash,
             activation_status="ACTIVATED",
             block_reason=None,
             activated_at=observed_at,
         )
+
+        # ── Persistence through the formal snapshot repository ────────────
+        persistence_evidence: dict[str, Any] = {}
+        if self._snapshot_persistence is not None:
+            try:
+                persist_result = self._snapshot_persistence.persist(
+                    snapshot_id=snapshot_id,
+                    tenant_id=tenant_id,
+                    knowledge_version_id=knowledge_version_id,
+                    snapshot_payload=content_payload,
+                    serving_watermark_ref=f"serving-watermark::{snapshot_id}",
+                )
+                re_read = self._snapshot_persistence.read(snapshot_id)
+                persistence_evidence = {
+                    "persisted": True,
+                    "persist_result": persist_result,
+                    "snapshot_re_readable": re_read is not None,
+                    "readback": re_read,
+                }
+            except Exception as exc:  # noqa: BLE001
+                persistence_evidence = {
+                    "persisted": False,
+                    "error": str(exc)[:200],
+                    "snapshot_re_readable": False,
+                }
+
         return SnapshotActivationResult(
             status="ACTIVATED",
             snapshot_id=snapshot_id,
@@ -428,11 +494,14 @@ class SnapshotActivationAdapter:
                 "snapshot_id": snapshot_id,
                 "snapshot_content_hash": snapshot_content_hash,
                 "activation_receipt_ref": receipt.receipt_ref,
-                "required_receipt_kinds": list(REQUIRED_VISIBILITY_RECEIPT_KINDS),
-                "provided_receipt_kinds": provided_kinds,
+                "required_corpus_receipt_kinds": list(REQUIRED_CORPUS_RECEIPT_KINDS),
+                "provided_corpus_receipt_kinds": list(REQUIRED_CORPUS_RECEIPT_KINDS),
+                "corpus_receipt_refs": corpus_receipt_refs,
                 "receipt_visibility": receipt_visibility,
-                "consistency_checks": consistency_checks,
+                "consistency_checks": checks,
                 "content_set_immutable": True,
+                "content_set_hash": normalized["elasticsearch_bm25"].content_set_hash,
+                "persistence": persistence_evidence,
                 "activated_at": observed_at.isoformat(),
             },
         )
@@ -444,7 +513,6 @@ class SnapshotActivationAdapter:
         workspace_id: str,
         knowledge_version_id: str,
         index_job_manifest_hash: str | None,
-        embedding_config_hash: str | None,
         receipt_visibility: dict[str, str],
         consistency_checks: dict[str, bool],
         block_reason: str,
@@ -459,11 +527,12 @@ class SnapshotActivationAdapter:
             snapshot_id="",
             snapshot_content_hash="",
             index_job_manifest_hash=str(index_job_manifest_hash or ""),
-            required_receipt_kinds=list(REQUIRED_VISIBILITY_RECEIPT_KINDS),
-            provided_receipt_kinds=sorted(receipt_visibility),
+            required_corpus_receipt_kinds=list(REQUIRED_CORPUS_RECEIPT_KINDS),
+            provided_corpus_receipt_kinds=sorted(receipt_visibility),
+            corpus_receipt_refs={},
             receipt_visibility=receipt_visibility,
             consistency_checks=consistency_checks,
-            embedding_config_hash=embedding_config_hash,
+            embedding_config_hash=None,
             activation_status="BLOCKED",
             block_reason=block_reason,
             activated_at=None,
@@ -479,17 +548,91 @@ class SnapshotActivationAdapter:
         )
 
 
+class PostgresKnowledgeSnapshotPersistence:
+    """Formal snapshot persistence through KnowledgeRepository.create_snapshot.
+
+    Reuses the existing KnowledgeSnapshot domain owner (PostgreSQL
+    ``knowledge_snapshots`` table, alembic-managed).  No migration is
+    created here.  The engine is injected so tests can substitute an
+    in-memory or throwaway engine.
+    """
+
+    def __init__(self, engine_factory: Any | None = None) -> None:
+        self._engine_factory = engine_factory or _default_engine_factory
+
+    def persist(
+        self,
+        *,
+        snapshot_id: str,
+        tenant_id: str,
+        knowledge_version_id: str,
+        snapshot_payload: dict[str, Any],
+        serving_watermark_ref: str,
+    ) -> dict[str, Any]:
+        from zuno.platform.database.knowledge.domain import KnowledgeUnitOfWork
+
+        engine = self._engine_factory()
+        with KnowledgeUnitOfWork(engine) as repo:
+            repo.create_snapshot(
+                snapshot_id=snapshot_id,
+                tenant_id=tenant_id,
+                knowledge_version_id=knowledge_version_id,
+                snapshot_payload=snapshot_payload,
+                serving_watermark_ref=serving_watermark_ref,
+            )
+        return {
+            "persisted_snapshot_id": snapshot_id,
+            "knowledge_version_id": knowledge_version_id,
+            "tenant_id": tenant_id,
+            "serving_watermark_ref": serving_watermark_ref,
+        }
+
+    def read(self, snapshot_id: str) -> dict[str, Any] | None:
+        from sqlalchemy import text
+
+        engine = self._engine_factory()
+        with engine.connect() as connection:
+            row = connection.execute(
+                text(
+                    "SELECT snapshot_id, tenant_id, knowledge_version_id, snapshot_hash, serving_watermark_ref "
+                    "FROM knowledge_snapshots WHERE snapshot_id = :snapshot_id"
+                ),
+                {"snapshot_id": snapshot_id},
+            ).fetchone()
+        if row is None:
+            return None
+        return {
+            "snapshot_id": row[0],
+            "tenant_id": row[1],
+            "knowledge_version_id": row[2],
+            "snapshot_hash": row[3],
+            "serving_watermark_ref": row[4],
+        }
+
+
+def _default_engine_factory() -> Any:
+    from sqlalchemy import create_engine
+
+    from zuno.platform.database.runtime import PostgresRuntimeConfig
+    from zuno.platform.settings import app_settings
+
+    config = PostgresRuntimeConfig(**app_settings.database)
+    return create_engine(config.sync_url, future=True)
+
+
 def _stable_contract_hash(payload: dict[str, Any]) -> str:
     encoded = json.dumps(payload, sort_keys=True, separators=(",", ":"), default=str)
     return hashlib.sha256(encoded.encode("utf-8")).hexdigest()
 
 
 __all__ = [
-    "REQUIRED_VISIBILITY_RECEIPT_KINDS",
+    "PostgresKnowledgeSnapshotPersistence",
+    "REQUIRED_CORPUS_RECEIPT_KINDS",
     "SnapshotActivationAdapter",
     "SnapshotActivationReceipt",
     "SnapshotActivationResult",
     "SnapshotActivationStatus",
+    "SnapshotPersistencePort",
     "build_snapshot_activation_receipt",
     "validate_snapshot_activation_receipt",
 ]

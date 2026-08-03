@@ -1,24 +1,20 @@
-"""PHASE22 GAP-B4 snapshot activation runner (DeepSeek2 / CC-B).
+"""PHASE22 GAP-B4 snapshot activation runner (DeepSeek2 / CC-B hardening).
 
-Runs the canonical ``SnapshotActivationAdapter`` against the live
-three-index visibility evidence collected by
-``run_live_three_index_visibility.py``.
+Runs the hardened ``SnapshotActivationAdapter`` against the corpus-level
+index build receipts collected by ``run_live_three_index_visibility.py``.
 
-Snapshot activation is a Knowledge-owned gate and stays fail closed:
-
-* The real ``knowledge_version_id`` must come from DeepSeek1's canonical
-  ingestion runtime.  Until that dependency lands, this runner emits an
-  authentic ``NOT_RUN_DEPENDENCY_BLOCKED`` activation receipt and keeps
-  ``snapshot_id = null`` — it never invents a KnowledgeVersion.
-* When the dependency is present, activation additionally requires all
-  three index visibility receipts (authentic, visible, same
-  tenant/workspace/knowledge_version/index_version scope) plus a frozen
-  embedding config hash.
+Truth boundary: while DeepSeek1's canonical ingestion has not delivered a
+real ``knowledge_version_id`` (PR #112 REQUEST_WORKER_CHANGES), this
+runner emits an authentic ``NOT_RUN_DEPENDENCY_BLOCKED`` activation receipt
+and keeps ``snapshot_id = null``.  Adapter-live-smoke corpus receipts can
+never activate a snapshot (they are not ``formal``, not owner-produced and
+not snapshot-eligible).  No KnowledgeVersion or Snapshot is ever invented.
 
 Usage:
     python tools/evals/zuno/synthetic_benchmark/run_snapshot_activation.py \
         --out-root docs/evidence/goal05-phase22-machine-attested-synthetic-regression/deepseek2-cc-b34c \
-        --visibility-evidence <live_three_index_visibility_evidence.json>
+        --visibility-evidence <live_three_index_visibility_evidence.json> \
+        [--knowledge-version-id <kv> --dependency-pr 112 --dependency-head-sha <sha>]
 """
 
 from __future__ import annotations
@@ -38,7 +34,7 @@ if str(BACKEND_ROOT) not in sys.path:
     sys.path.insert(0, str(BACKEND_ROOT))
 
 from zuno.knowledge.indexing import (  # noqa: E402
-    REQUIRED_VISIBILITY_RECEIPT_KINDS,
+    REQUIRED_CORPUS_RECEIPT_KINDS,
     SnapshotActivationAdapter,
     validate_snapshot_activation_receipt,
 )
@@ -63,10 +59,8 @@ INDEX_JOB_MANIFEST_PATH = (
 
 def _load_visibility_evidence(path: Path) -> dict[str, Any]:
     data = json.loads(path.read_text(encoding="utf-8"))
-    if data.get("evidence_kind") != "live_three_index_visibility":
-        raise ValueError(f"not a live three-index visibility evidence file: {path}")
-    if data.get("all_visibility_passed") is not True:
-        raise ValueError("live visibility evidence reports failure; cannot activate")
+    if data.get("evidence_kind") != "three_index_adapter_live_smoke":
+        raise ValueError(f"not a three-index adapter live smoke evidence file: {path}")
     return data
 
 
@@ -74,9 +68,9 @@ def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--out-root", type=Path, default=DEFAULT_EVIDENCE_DIR)
     parser.add_argument("--visibility-evidence", type=Path, default=DEFAULT_EVIDENCE_DIR / "live_three_index_visibility_evidence.json")
-    parser.add_argument("--knowledge-version-id", default="", help="real KnowledgeVersion id from DeepSeek1 canonical ingestion")
-    parser.add_argument("--dependency-pr", default="", help="DeepSeek1 PR number once it exists")
-    parser.add_argument("--dependency-head-sha", default="", help="DeepSeek1 PR head sha once it exists")
+    parser.add_argument("--knowledge-version-id", default="")
+    parser.add_argument("--dependency-pr", default="112")
+    parser.add_argument("--dependency-head-sha", default="bf4b2cb11b53e78b3a7242df5996e4aed2cc1a4b")
     args = parser.parse_args()
 
     evidence = _load_visibility_evidence(args.visibility_evidence)
@@ -86,10 +80,8 @@ def main() -> int:
     index_job_manifest = json.loads(INDEX_JOB_MANIFEST_PATH.read_text(encoding="utf-8"))
     index_job_manifest_hash = index_job_manifest["index_job_manifest_hash"]
 
-    visibility_receipts = list(evidence["index_runtime"]["adapter_visibility_receipts"].values())
-    embedding_attestation = evidence["embedding"]
-    embedding_config_hash = embedding_attestation["config_hash"]
-
+    corpus_receipts = list(evidence["corpus_index_build_receipts"].values())
+    embedding_config = evidence["embedding"]
     knowledge_version_id = args.knowledge_version_id.strip()
     dependency_pr = args.dependency_pr.strip() or None
     dependency_head_sha = args.dependency_head_sha.strip() or None
@@ -100,8 +92,9 @@ def main() -> int:
         workspace_id=workspace_id,
         knowledge_version_id=knowledge_version_id or None,
         index_job_manifest_hash=index_job_manifest_hash,
-        visibility_receipts=visibility_receipts,
-        embedding_config_hash=embedding_config_hash,
+        corpus_receipts=corpus_receipts,
+        neo4j_path_receipt=None,
+        embedding_config=embedding_config,
         dependency_pr=dependency_pr,
         dependency_head_sha=dependency_head_sha,
         observed_at=datetime.now(timezone.utc),
@@ -127,6 +120,7 @@ def main() -> int:
         "dependency": {
             "dependency_pr": result.dependency_pr,
             "dependency_head_sha": result.dependency_head_sha,
+            "dependency_accepted": False,
             "knowledge_version_id": knowledge_version_id or None,
         },
         "scope": {
@@ -134,15 +128,16 @@ def main() -> int:
             "workspace_id": workspace_id,
             "index_job_manifest_hash": index_job_manifest_hash,
         },
-        "required_receipt_kinds": list(REQUIRED_VISIBILITY_RECEIPT_KINDS),
-        "provided_receipt_kinds": list(receipt.provided_receipt_kinds),
+        "required_corpus_receipt_kinds": list(REQUIRED_CORPUS_RECEIPT_KINDS),
+        "provided_corpus_receipt_kinds": list(receipt.provided_corpus_receipt_kinds),
+        "corpus_receipt_refs": receipt.corpus_receipt_refs,
         "receipt_visibility": receipt.receipt_visibility,
         "consistency_checks": receipt.consistency_checks,
-        "embedding_config_hash": embedding_config_hash,
-        "embedding_attestation": embedding_attestation,
+        "embedding_config_hash": embedding_config["config_hash"],
         "activation_receipt": receipt.model_dump(),
         "receipt_validation_passed": not validation_errors,
         "content_set_immutable": result.status == "ACTIVATED",
+        "snapshot_persistence": result.activation_evidence.get("persistence"),
     }
     report["evidence_hash"] = sha256_json(report)
 
@@ -158,6 +153,7 @@ def main() -> int:
             "snapshot_id": result.snapshot_id,
             "block_reason": result.block_reason,
             "knowledge_version_id": knowledge_version_id or None,
+            "dependency_accepted": False,
             "activation_receipt_ref": receipt.receipt_ref,
             "evidence_hash": report["evidence_hash"],
         },
