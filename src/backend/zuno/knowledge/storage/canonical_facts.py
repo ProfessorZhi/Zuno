@@ -3,23 +3,22 @@ from __future__ import annotations
 """PHASE22 canonical ingestion PostgreSQL facts — readback verification.
 
 Every query is tenant-scoped. Cross-tenant access must return no rows or raise
-:class:`CanonicalFactsTenantMismatch` — the ingestion runtime never reads
-another tenant's facts, and tests prove the isolation boundary.
+:class:`CanonicalFactsTenantMismatch`.
 
-The canonical ingestion run ledger is persisted through the existing
-``ingestion_outbox_events`` table as domain state events
-(``event_type = 'ingestion.canonical_ingestion.state_changed'``) with
-idempotency keys — real PostgreSQL facts that survive restart, with no schema
-migration required.
+Receipts are reconstructed only from persisted owner rows: the canonical run
+row (``canonical_ingestion_runs``), source/document/parse facts
+(``ingestion_source_objects``, ``ingestion_document_versions``,
+``ingestion_parse_snapshots``), knowledge facts (``knowledge_domain_versions``,
+``knowledge_chunks``, ``knowledge_entities``, ``knowledge_relations``) and the
+physical object manifest (``infra_object_manifests``). IDs are read, never
+reconstructed from naming conventions.
 """
+
 
 from dataclasses import dataclass
 from typing import Any
 
 from sqlalchemy import Engine, text
-
-CANONICAL_INGESTION_STATE_EVENT_TYPE = "ingestion.canonical_ingestion.state_changed"
-CANONICAL_INGESTION_FACTS_EVENT_TYPE = "ingestion.canonical_ingestion.facts_recorded"
 
 
 class CanonicalFactsTenantMismatch(RuntimeError):
@@ -107,14 +106,12 @@ class KnowledgeVersionFact:
 
 
 @dataclass(frozen=True, slots=True)
-class CanonicalRunStateFact:
-    run_id: str
-    tenant_id: str
-    state: str
-    outbox_event_id: str
-    idempotency_key: str
-    payload_hash: str
-    payload: dict[str, Any]
+class ObjectManifestFact:
+    object_ref: str
+    owner: str
+    content_hash: str
+    size_bytes: int
+    visibility: str
 
 
 class CanonicalIngestionFactsStore:
@@ -206,7 +203,68 @@ class CanonicalIngestionFactsStore:
             created_at=row["created_at"],
         )
 
-    # --- canonical IR ---------------------------------------------------------
+    def document_version_fact_for_source(
+        self, *, tenant_id: str, source_id: str
+    ) -> DocumentVersionFact:
+        """Read the document version from the owner table by its source binding."""
+        row = self._one(
+            """
+            SELECT document_version_id, tenant_id, workspace_id, source_object_id,
+                   version_no, content_hash, metadata_hash, immutability_ref,
+                   status, created_at
+            FROM ingestion_document_versions
+            WHERE source_object_id = :source_id AND tenant_id = :tenant_id
+            ORDER BY version_no
+            LIMIT 1
+            """,
+            {"source_id": source_id, "tenant_id": tenant_id},
+        )
+        return DocumentVersionFact(
+            document_version_id=str(row["document_version_id"]),
+            tenant_id=str(row["tenant_id"]),
+            workspace_id=str(row["workspace_id"]),
+            source_object_id=str(row["source_object_id"]),
+            version_no=int(row["version_no"]),
+            content_hash=str(row["content_hash"]),
+            metadata_hash=str(row["metadata_hash"]),
+            immutability_ref=str(row["immutability_ref"]),
+            status=str(row["status"]),
+            created_at=row["created_at"],
+        )
+
+    def parse_snapshot_fact_for_document(
+        self, *, tenant_id: str, document_version_id: str
+    ) -> ParseSnapshotFact:
+        """Read the canonical IR snapshot from the owner table by document."""
+        row = self._one(
+            """
+            SELECT parse_snapshot_id, tenant_id, parse_job_id, parse_attempt_id,
+                   document_version_id, snapshot_hash, canonical_ir_json,
+                   canonical_ir_ref, canonical_ir_schema_ref, parser_id,
+                   parser_version, status, created_at
+            FROM ingestion_parse_snapshots
+            WHERE document_version_id = :document_version_id
+              AND tenant_id = :tenant_id
+            ORDER BY created_at
+            LIMIT 1
+            """,
+            {"document_version_id": document_version_id, "tenant_id": tenant_id},
+        )
+        return ParseSnapshotFact(
+            parse_snapshot_id=str(row["parse_snapshot_id"]),
+            tenant_id=str(row["tenant_id"]),
+            parse_job_id=str(row["parse_job_id"]),
+            parse_attempt_id=str(row["parse_attempt_id"]),
+            document_version_id=str(row["document_version_id"]),
+            snapshot_hash=str(row["snapshot_hash"]),
+            canonical_ir_ref=str(row["canonical_ir_ref"]),
+            canonical_ir_schema_ref=str(row["canonical_ir_schema_ref"]),
+            parser_id=str(row["parser_id"]),
+            parser_version=str(row["parser_version"]),
+            status=str(row["status"]),
+            canonical_ir=dict(row["canonical_ir_json"] or {}),
+            created_at=row["created_at"],
+        )
 
     def parse_snapshot_fact(
         self, *, tenant_id: str, parse_snapshot_id: str
@@ -297,83 +355,70 @@ class CanonicalIngestionFactsStore:
             for row in rows
         )
 
-    # --- canonical run ledger --------------------------------------------------
-
-    def run_state_facts(self, *, tenant_id: str, run_id: str) -> tuple[CanonicalRunStateFact, ...]:
-        rows = self._all(
-            """
-            SELECT outbox_event_id, tenant_id, aggregate_ref, event_type,
-                   payload_hash, payload, idempotency_key, publish_status
-            FROM ingestion_outbox_events
-            WHERE tenant_id = :tenant_id
-              AND aggregate_ref = :run_id
-              AND event_type = :event_type
-            ORDER BY outbox_event_id
-            """,
-            {
-                "tenant_id": tenant_id,
-                "run_id": run_id,
-                "event_type": CANONICAL_INGESTION_STATE_EVENT_TYPE,
-            },
-        )
-        return tuple(
-            CanonicalRunStateFact(
-                run_id=str(row["aggregate_ref"]),
-                tenant_id=str(row["tenant_id"]),
-                state=str(row["payload"].get("state") or ""),
-                outbox_event_id=str(row["outbox_event_id"]),
-                idempotency_key=str(row["idempotency_key"]),
-                payload_hash=str(row["payload_hash"]),
-                payload=dict(row["payload"] or {}),
-            )
-            for row in rows
-        )
-
-    def run_facts_event(
-        self, *, tenant_id: str, run_id: str
-    ) -> dict[str, Any] | None:
+    def knowledge_version_for_document_set(
+        self, *, tenant_id: str, workspace_id: str, knowledge_space_id: str, document_set_hash: str
+    ) -> KnowledgeVersionFact | None:
+        """Find an existing knowledge version bound to the same document set."""
         row = self._one_optional(
             """
-            SELECT outbox_event_id, tenant_id, aggregate_ref, payload_hash,
-                   payload, idempotency_key
-            FROM ingestion_outbox_events
+            SELECT knowledge_version_id, tenant_id, workspace_id, knowledge_space_id,
+                   version_no, document_set_hash, source_span_manifest_hash,
+                   index_spec_hash, security_epoch_ref, status, generation
+            FROM knowledge_domain_versions
             WHERE tenant_id = :tenant_id
-              AND aggregate_ref = :run_id
-              AND event_type = :event_type
-            ORDER BY outbox_event_id
+              AND workspace_id = :workspace_id
+              AND knowledge_space_id = :knowledge_space_id
+              AND document_set_hash = :document_set_hash
+            ORDER BY version_no
             LIMIT 1
             """,
             {
                 "tenant_id": tenant_id,
-                "run_id": run_id,
-                "event_type": CANONICAL_INGESTION_FACTS_EVENT_TYPE,
+                "workspace_id": workspace_id,
+                "knowledge_space_id": knowledge_space_id,
+                "document_set_hash": document_set_hash,
             },
         )
         if row is None:
             return None
-        return {
-            "outbox_event_id": str(row["outbox_event_id"]),
-            "tenant_id": str(row["tenant_id"]),
-            "aggregate_ref": str(row["aggregate_ref"]),
-            "payload_hash": str(row["payload_hash"]),
-            "payload": dict(row["payload"] or {}),
-            "idempotency_key": str(row["idempotency_key"]),
-        }
-
-    def run_ledger_cross_tenant(self, *, owner_tenant_id: str, other_tenant_id: str, run_id: str) -> None:
-        rows = self._all(
-            """
-            SELECT outbox_event_id
-            FROM ingestion_outbox_events
-            WHERE tenant_id = :tenant_id AND aggregate_ref = :run_id
-            """,
-            {"tenant_id": other_tenant_id, "run_id": run_id},
+        return KnowledgeVersionFact(
+            knowledge_version_id=str(row["knowledge_version_id"]),
+            tenant_id=str(row["tenant_id"]),
+            workspace_id=str(row["workspace_id"]),
+            knowledge_space_id=str(row["knowledge_space_id"]),
+            version_no=int(row["version_no"]),
+            document_set_hash=str(row["document_set_hash"]),
+            source_span_manifest_hash=str(row["source_span_manifest_hash"]),
+            index_spec_hash=str(row["index_spec_hash"]),
+            security_epoch_ref=str(row["security_epoch_ref"]),
+            status=str(row["status"]),
+            generation=int(row["generation"]),
         )
-        if rows:
-            raise CanonicalFactsTenantMismatch(
-                f"run ledger {run_id} of tenant {owner_tenant_id} is visible to "
-                f"tenant {other_tenant_id}"
-            )
+
+    # --- object manifest --------------------------------------------------------
+
+    def object_manifest_fact(self, *, object_ref: str) -> ObjectManifestFact:
+        row = self._one(
+            """
+            SELECT object_ref, owner, content_hash, size_bytes, visibility
+            FROM infra_object_manifests
+            WHERE object_ref = :object_ref
+            """,
+            {"object_ref": object_ref},
+        )
+        return ObjectManifestFact(
+            object_ref=str(row["object_ref"]),
+            owner=str(row["owner"]),
+            content_hash=str(row["content_hash"]),
+            size_bytes=int(row["size_bytes"]),
+            visibility=str(row["visibility"]),
+        )
+
+    def object_manifest_fact_optional(self, *, object_ref: str) -> ObjectManifestFact | None:
+        try:
+            return self.object_manifest_fact(object_ref=object_ref)
+        except CanonicalFactsMissing:
+            return None
 
     # --- helpers ---------------------------------------------------------------
 
@@ -396,15 +441,13 @@ class CanonicalIngestionFactsStore:
 
 
 __all__ = [
-    "CANONICAL_INGESTION_FACTS_EVENT_TYPE",
-    "CANONICAL_INGESTION_STATE_EVENT_TYPE",
     "CanonicalFactsMissing",
     "CanonicalFactsTenantMismatch",
     "CanonicalIngestionFactsStore",
-    "CanonicalRunStateFact",
     "DocumentVersionFact",
     "KnowledgeChunkFact",
     "KnowledgeVersionFact",
+    "ObjectManifestFact",
     "ParseSnapshotFact",
     "SourceObjectFact",
 ]
