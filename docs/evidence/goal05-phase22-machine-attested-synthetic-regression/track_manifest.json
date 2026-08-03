@@ -60,6 +60,8 @@
     "runtime_request_case_count": 80,
     "runtime_request_profile_count": 4,
     "runtime_gold_forbidden_field_count": 0,
+    "source_upload_manifest_hash": "0a6ee33cae62e5c3370217f5ec028a4efd1a52855557a71b57f2dc8bdce0c26a",
+    "source_upload_source_count": 8,
     "knowledge_version_id": null,
     "snapshot_id": null,
     "embedding_provider": null,

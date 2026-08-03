@@ -1,0 +1,108 @@
+{
+  "object_store_verified": false,
+  "postgres_facts_verified": false,
+  "runtime_ingested": false,
+  "schema_version": "1.0.0",
+  "source_count": 8,
+  "source_manifest_hash": "0a6ee33cae62e5c3370217f5ec028a4efd1a52855557a71b57f2dc8bdce0c26a",
+  "sources": [
+    {
+      "content_type": "text/markdown; charset=utf-8",
+      "document_id": "doc_axis9_release_notes",
+      "idempotency_key": "phase22-source-upload::tenant_auroralis::workspace_regression::84949fd00028b5079ddb6452cb987d15d618e075fbf31f7094726826fea0be4e",
+      "initial_state": "accepted",
+      "security_scope": "global/open",
+      "source_hash": "84949fd00028b5079ddb6452cb987d15d618e075fbf31f7094726826fea0be4e",
+      "source_id": "source::tenant_auroralis::workspace_regression::doc_axis9_release_notes",
+      "source_path": "corpus/doc_axis9_release_notes.md",
+      "tenant_id": "tenant_auroralis",
+      "workspace_id": "workspace_regression"
+    },
+    {
+      "content_type": "text/markdown; charset=utf-8",
+      "document_id": "doc_forge_recall",
+      "idempotency_key": "phase22-source-upload::tenant_auroralis::workspace_regression::273b2f3596ba078e6da032e7790cf2dee62a475427e34ecc76682a8ec669f26b",
+      "initial_state": "accepted",
+      "security_scope": "global/open",
+      "source_hash": "273b2f3596ba078e6da032e7790cf2dee62a475427e34ecc76682a8ec669f26b",
+      "source_id": "source::tenant_auroralis::workspace_regression::doc_forge_recall",
+      "source_path": "corpus/doc_forge_recall.md",
+      "tenant_id": "tenant_auroralis",
+      "workspace_id": "workspace_regression"
+    },
+    {
+      "content_type": "text/markdown; charset=utf-8",
+      "document_id": "doc_legal_audit_2026_q1",
+      "idempotency_key": "phase22-source-upload::tenant_auroralis::workspace_regression::d922d366903f3933778909801ea23fadc859c819a497818f9cefb8c0e30883d4",
+      "initial_state": "accepted",
+      "security_scope": "legal/privileged",
+      "source_hash": "d922d366903f3933778909801ea23fadc859c819a497818f9cefb8c0e30883d4",
+      "source_id": "source::tenant_auroralis::workspace_regression::doc_legal_audit_2026_q1",
+      "source_path": "corpus/doc_legal_audit_2026_q1.md",
+      "tenant_id": "tenant_auroralis",
+      "workspace_id": "workspace_regression"
+    },
+    {
+      "content_type": "text/markdown; charset=utf-8",
+      "document_id": "doc_northwind_charter",
+      "idempotency_key": "phase22-source-upload::tenant_auroralis::workspace_regression::7ac618d8cd58563ddc8c6b2badfa8d7bc01c1b6fb0ebc4d3388755a974720b85",
+      "initial_state": "accepted",
+      "security_scope": "division/automation/confidential",
+      "source_hash": "7ac618d8cd58563ddc8c6b2badfa8d7bc01c1b6fb0ebc4d3388755a974720b85",
+      "source_id": "source::tenant_auroralis::workspace_regression::doc_northwind_charter",
+      "source_path": "corpus/doc_northwind_charter.md",
+      "tenant_id": "tenant_auroralis",
+      "workspace_id": "workspace_regression"
+    },
+    {
+      "content_type": "text/markdown; charset=utf-8",
+      "document_id": "doc_northwind_sdk_overview",
+      "idempotency_key": "phase22-source-upload::tenant_auroralis::workspace_regression::61cc1f5e82e2f7e6f9dc70690ec6634c55e7e67ec4d30622c8bba1d807cb2cc4",
+      "initial_state": "accepted",
+      "security_scope": "global/open",
+      "source_hash": "61cc1f5e82e2f7e6f9dc70690ec6634c55e7e67ec4d30622c8bba1d807cb2cc4",
+      "source_id": "source::tenant_auroralis::workspace_regression::doc_northwind_sdk_overview",
+      "source_path": "corpus/doc_northwind_sdk_overview.md",
+      "tenant_id": "tenant_auroralis",
+      "workspace_id": "workspace_regression"
+    },
+    {
+      "content_type": "text/markdown; charset=utf-8",
+      "document_id": "doc_org_chart_2026",
+      "idempotency_key": "phase22-source-upload::tenant_auroralis::workspace_regression::34caeaa67ca088e5d4e4a53008146635114f6689634b680e8ba902a8104fb07b",
+      "initial_state": "accepted",
+      "security_scope": "global/open",
+      "source_hash": "34caeaa67ca088e5d4e4a53008146635114f6689634b680e8ba902a8104fb07b",
+      "source_id": "source::tenant_auroralis::workspace_regression::doc_org_chart_2026",
+      "source_path": "corpus/doc_org_chart_2026.md",
+      "tenant_id": "tenant_auroralis",
+      "workspace_id": "workspace_regression"
+    },
+    {
+      "content_type": "text/markdown; charset=utf-8",
+      "document_id": "doc_security_policy_2024",
+      "idempotency_key": "phase22-source-upload::tenant_auroralis::workspace_regression::0eed3f7735830b259976fb93c9e4bb38fe83b2b89ced64671491ff71b59e024e",
+      "initial_state": "accepted",
+      "security_scope": "global/open",
+      "source_hash": "0eed3f7735830b259976fb93c9e4bb38fe83b2b89ced64671491ff71b59e024e",
+      "source_id": "source::tenant_auroralis::workspace_regression::doc_security_policy_2024",
+      "source_path": "corpus/doc_security_policy_2024.md",
+      "tenant_id": "tenant_auroralis",
+      "workspace_id": "workspace_regression"
+    },
+    {
+      "content_type": "text/markdown; charset=utf-8",
+      "document_id": "doc_security_policy_2026",
+      "idempotency_key": "phase22-source-upload::tenant_auroralis::workspace_regression::5f77b8d31a06efba957b9c35b1ef543ed3a5ab8ed4a5516401886649c47904ec",
+      "initial_state": "accepted",
+      "security_scope": "global/open",
+      "source_hash": "5f77b8d31a06efba957b9c35b1ef543ed3a5ab8ed4a5516401886649c47904ec",
+      "source_id": "source::tenant_auroralis::workspace_regression::doc_security_policy_2026",
+      "source_path": "corpus/doc_security_policy_2026.md",
+      "tenant_id": "tenant_auroralis",
+      "workspace_id": "workspace_regression"
+    }
+  ],
+  "status": "SOURCE_UPLOAD_INPUTS_PREPARED",
+  "track_id": "machine_attested_synthetic_regression"
+}

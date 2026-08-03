@@ -74,6 +74,18 @@ seed dataset 只是 7-case scaffold，不是完整 Track 证据；完整 Track �
 - knowledge version id：null
 - snapshot id：null
 
+## WP2 Source Upload 当前进度
+
+已将完整 candidate corpus 转成 Source Upload manifest，包含每个 corpus document 的 `source_id`、`document_id`、tenant/workspace、security scope、source hash、content type、corpus-relative path 和幂等 key。该 evidence 只证明上传输入已准备，不证明 MinIO、PostgreSQL 或 Canonical Ingestion 已执行。
+
+- source count：8
+- source manifest hash：`0a6ee33cae62e5c3370217f5ec028a4efd1a52855557a71b57f2dc8bdce0c26a`
+- duplicate source count：0
+- initial state：accepted
+- runtime ingested：false
+- object store verified：false
+- postgres facts verified：false
+
 ## 历史 PR 分类
 
 本轮历史审查范围：PR #100、PR #104、PR #105。
@@ -87,7 +99,7 @@ seed dataset 只是 7-case scaffold，不是完整 Track 证据；完整 Track �
 ## 当前 Blocker
 
 - Dataset：当前分支已有 80/80 schema、World Model answer derivation、source evidence、duplicate/gold leakage/hard-negative/hash 机器校验证据；仍缺人工 reviewer approval，且不得把该机器证据冒充 Public Benchmark。
-- Ingestion：没有完整 Corpus 走 Source Upload 到 Snapshot Activation 的真实 ID 链。
+- Ingestion：已有完整 Corpus 的 Source Upload input manifest；仍没有 Source Upload 到 Snapshot Activation 的真实 ID 链。
 - Index：没有 ES/Milvus/Neo4j 三索引全量 visibility receipt。
 - Embedding：没有 formal Embedding Gateway provider/model/dimension/config hash。
 - Graph：缺最小 Neo4j Path Visibility Receipt Contract 的实现与 owner runtime 产出。

@@ -23,6 +23,8 @@ SYNTHETIC_RELEASE_DECISION = TRACK_DIR / "synthetic_release_decision.json"
 SYNTHETIC_RELEASE_CONTRACT_REPORT = TRACK_DIR / "synthetic_release_contract_report.json"
 RUNTIME_REQUEST_MANIFEST = TRACK_DIR / "runtime_request_manifest.json"
 RUNTIME_GOLD_ISOLATION_REPORT = TRACK_DIR / "runtime_gold_isolation_report.json"
+SOURCE_UPLOAD_MANIFEST = TRACK_DIR / "source_upload_manifest.json"
+SOURCE_UPLOAD_MANIFEST_REPORT = TRACK_DIR / "source_upload_manifest_report.json"
 PUBLIC_APPROVAL_SUMMARY = Path(
     "docs/evidence/goal05-phase22-public-benchmark-review-pack/approval_summary.json"
 )
@@ -64,6 +66,8 @@ def verify_phase22_synthetic_regression_track() -> list[str]:
         SYNTHETIC_RELEASE_CONTRACT_REPORT,
         RUNTIME_REQUEST_MANIFEST,
         RUNTIME_GOLD_ISOLATION_REPORT,
+        SOURCE_UPLOAD_MANIFEST,
+        SOURCE_UPLOAD_MANIFEST_REPORT,
         PUBLIC_APPROVAL_SUMMARY,
         PUBLIC_INTEGRITY_REPORT,
         INVALIDATION_NOTICE,
@@ -87,6 +91,8 @@ def verify_phase22_synthetic_regression_track() -> list[str]:
     release_contract_report = _read_json(SYNTHETIC_RELEASE_CONTRACT_REPORT)
     runtime_request_manifest = _read_json(RUNTIME_REQUEST_MANIFEST)
     runtime_gold_isolation = _read_json(RUNTIME_GOLD_ISOLATION_REPORT)
+    source_upload_manifest = _read_json(SOURCE_UPLOAD_MANIFEST)
+    source_upload_report = _read_json(SOURCE_UPLOAD_MANIFEST_REPORT)
     approval = _read_json(PUBLIC_APPROVAL_SUMMARY)
     integrity = _read_json(PUBLIC_INTEGRITY_REPORT)
     report = _read_text(READINESS_REPORT)
@@ -241,6 +247,36 @@ def verify_phase22_synthetic_regression_track() -> list[str]:
         errors.append("track_manifest current_evidence runtime_request_case_count mismatch")
     if current_evidence.get("runtime_gold_forbidden_field_count") != runtime_gold_isolation.get("forbidden_field_count"):
         errors.append("track_manifest current_evidence runtime_gold_forbidden_field_count mismatch")
+    if source_upload_manifest.get("status") != "SOURCE_UPLOAD_INPUTS_PREPARED":
+        errors.append("source upload manifest must be SOURCE_UPLOAD_INPUTS_PREPARED")
+    if source_upload_manifest.get("source_count") != 8:
+        errors.append("source upload manifest source_count must be 8")
+    for field in ["runtime_ingested", "object_store_verified", "postgres_facts_verified"]:
+        if source_upload_manifest.get(field) is not False:
+            errors.append(f"source upload manifest {field} must be false")
+    sources = source_upload_manifest.get("sources", [])
+    if not isinstance(sources, list):
+        errors.append("source upload manifest sources must be a list")
+        sources = []
+    for source in sources:
+        if not isinstance(source, dict):
+            errors.append("source upload manifest source entry must be an object")
+            continue
+        for field in ["source_id", "document_id", "tenant_id", "workspace_id", "security_scope", "source_hash", "idempotency_key"]:
+            if not source.get(field):
+                errors.append(f"source upload manifest source missing {field}")
+        if source.get("initial_state") != "accepted":
+            errors.append("source upload manifest source initial_state must be accepted")
+    if source_upload_report.get("passed") is not True:
+        errors.append("source upload manifest report must pass")
+    if source_upload_report.get("source_count") != source_upload_manifest.get("source_count"):
+        errors.append("source upload manifest report source_count mismatch")
+    if source_upload_report.get("duplicate_source_count") != 0:
+        errors.append("source upload manifest duplicate_source_count must be 0")
+    if source_upload_report.get("source_manifest_hash") != source_upload_manifest.get("source_manifest_hash"):
+        errors.append("source upload manifest report source_manifest_hash mismatch")
+    if current_evidence.get("source_upload_manifest_hash") != source_upload_manifest.get("source_manifest_hash"):
+        errors.append("track_manifest current_evidence source_upload_manifest_hash mismatch")
     report_field_pairs = {
         "candidate_derivation_valid_count": "derivation_valid_count",
         "candidate_source_evidence_valid_count": "source_evidence_valid_count",
