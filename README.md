@@ -1,33 +1,63 @@
 # Zuno
 
-Zuno 是一个本地优先、短小精悍但工程完整的 **Lean Complete Agentic GraphRAG Product**。
+Zuno 是一个面向企业内部资料和业务系统、**前后端分离**、基于 LangGraph Single Controller 的可治理自定义 Agent / Agentic GraphRAG 平台。
 
-用户可以配置模型、创建 Workspace、上传资料、解析和索引文档，通过 AgentChat 使用标准检索或深度检索，由 Single Controller Agent 完成规划、混合检索、GraphRAG、证据整理、claim-level citation、回答生成、trace、成本统计和反馈。
+它不是单一 RAG 聊天机器人、Prompt 管理器、MCP 工具箱或模型 SDK 包装层。Zuno 把企业资料摄取、证据检索、任务规划、上下文与记忆、模型路由、能力选择、工具执行、安全审批、可观测性、评测和恢复统一到一套可版本化、可审计的运行架构中。
 
-## 当前定位
-
-近期目标不是大规模分布式企业平台，而是一条真实可运行、可演示、可评测、可恢复的企业知识库 Agent 产品链路：
+## 产品与部署形态
 
 ```text
-配置模型
--> 创建 Workspace
--> 上传文档
--> Parse / Index
--> AgentChat 提问
--> ContextPack
--> RetrievalPlan
--> BM25 + Vector + optional Graph
--> EvidenceBundle
--> Claim-level Citation
--> Grounded Answer / Artifact
--> Trace / Cost / Eval
--> Feedback
--> Restart Recovery
+Web Client（Vue 3 + Vite）
+Desktop Client（Electron）
+External API Client
+        |
+        | HTTP Command / Query + SSE Projection Stream
+        v
+FastAPI Product Surface
+        |
+        v
+LangGraph Single Controller Agent Runtime
+        |
+        +--> Knowledge / Agentic GraphRAG
+        +--> Memory & Context
+        +--> Model Gateway
+        +--> Capability / Skill
+        +--> Tool Runtime
+        |
+        v
+Security + Observability & Eval + Infrastructure
 ```
+
+主要代码入口：
+
+```text
+apps/web/               Web 工作台
+apps/desktop/           Desktop 宿主与受控桥接
+src/backend/zuno/       后端 API、Agent Runtime 与领域模块
+```
+
+前端只消费后端提供的版本化 Contract、Authorized Projection、AvailableAction、HTTP Query/Command 和 SSE 事件，不拥有 Plan、Evidence、Approval、Tool Effect、Memory、Eval 或 RunOutcome 等领域事实。
+
+Zuno 支持本机开发和轻量部署，但“本地优先”不再是产品定位。Target 允许一个后端镜像承担多个角色，也允许按压力逐步拆分；十一个逻辑模块不是十一微服务的强制部署方案。
+
+## Current、Target 与 Future
+
+README 同时展示 Current 和 Target，但二者不能混为一谈。
+
+| 范围 | 当前状态 |
+| --- | --- |
+| Web / Backend | 前后端分离实现已存在；Web、Desktop、Product API client、HTTP/SSE Contract 与浏览器 E2E 已有工程证据 |
+| Agent Core | Single Controller、固定 AgentRunGraph、动态 Plan DAG、固定 StepExecutionGraph、并行控制、Final Gate 与 Publication 已有实现基线 |
+| Memory & Context | Candidate、Governance、MemoryVersion、ContextPack、CompressionTrace 和 MemoryUseTrace 已有实现基线 |
+| Agentic GraphRAG | 现有 KnowledgeRetrievalGraph、RetrievalPlan/Round、EvidenceLedger/Frontier、Corrective Retrieval 和 KnowledgeControlProposal 已有实现基线 |
+| Evidence-Driven Agentic GraphRAG v2 | `accepted-target`，设计可用；Claim-level Evidence Deliberation、Evidence Reasoning Graph 和 Targeted Probe 尚不能声明为 Current |
+| Eval 与发布质量 | PHASE22 仍在 Fixed Benchmark / Closure；measurement 尚未完成，quality not yet proven，production readiness not established |
+
+正式状态事实以 [`docs/status/production-readiness.md`](./docs/status/production-readiness.md)、最新代码、Migration、测试、Trace、Eval 和 Evidence 为准。README、类名、表名、Phase 名称或架构图本身都不能证明 Target 已实现。
 
 ## 四组架构总览
 
-Zuno 的十一逻辑模块按照领域 Ownership 独立维护。为了理解整个系统，可以把它们归纳为四组：
+Zuno 的十一逻辑模块按照领域 Ownership 独立维护。为了理解整个系统，可以归纳为四组：
 
 ```text
 01 Product Surface
@@ -52,46 +82,51 @@ Zuno 的十一逻辑模块按照领域 Ownership 独立维护。为了理解整�
     横向贯穿全部模块的治理与运行底座
 ```
 
-这四组是便于理解的逻辑视图，不是新的事实 Owner，也不是物理部署层级。正式 Target 仍以十一份模块文档为准；Current、Gap、Measurement 和 Production Readiness 以状态文档、代码、Migration、测试、Trace 与 Eval 证据为准。
+这四组只是便于理解的逻辑视图，不是新的事实 Owner，也不是物理部署层级。正式 Target 仍以十一份模块文档、已接受 ADR 和共享 Contract Registry 为准。
 
 ### 1. 01 + 02：产品入口与知识供给
 
-这一组解决两个入口问题：
-
 ```text
 01 Product Surface
-    人和任务怎样进入系统。
+    人和任务怎样进入系统，用户怎样看到状态和结果。
 
 02 Input / Document Ingestion
     企业资料怎样变成可索引、可引用、可追踪的知识输入。
 ```
 
-**01 Product Surface** 拥有 Workspace、Agent 配置、Conversation、用户消息、附件交互、运行状态展示、AvailableAction、审批和 Interrupt 交互。它把用户目标、输出要求、会话和 Workspace 上下文提交给 Agent Core，但不拥有 Plan、Evidence、Tool Effect 或最终 RunOutcome。
+#### 01 Product Surface
 
-**02 Input / Document Ingestion** 负责：
+Product Surface 是统一北向产品边界，负责：
+
+```text
+Web / Desktop / External API
+Tenant / Workspace / Agent Studio / Agent Catalog
+Conversation / Submission / RuntimeRequest
+HTTP Command / Query
+SSE Snapshot / Delta / Resume / Resync
+AvailableAction / Interrupt / Approval / Cancel
+Citation / Artifact / Quality / Blocked / Partial 展示
+```
+
+它拥有用户交互、Conversation、Submission、ProductCommand、Projection 和 ChannelDelivery，但不创建或激活 Plan，不直接调用模型、Retriever 或 Tool，也不把 HTTP 2xx、SSE Close 或客户端渲染当成 AgentRun 成功。
+
+#### 02 Input / Document Ingestion
+
+Ingestion 把原始文件转换为可靠知识输入：
 
 ```text
 SourceObject
 -> DocumentVersion
--> ParsePlan / ParseAttempt
+-> ParsePlan / ParseJob / ParseAttempt
 -> CanonicalDocumentIR
 -> SourceSpan
 -> Quality Gate / Human Review
 -> IndexableDocumentSnapshot
 ```
 
-它保证文件版本、内容 Hash、解析状态和原文定位可靠，再把不可变的索引输入快照交给 Knowledge。没有 DocumentVersion 与 SourceSpan，后续检索、GraphRAG 和 Citation 就无法形成可靠证据链。
-
-这一组的共同作用是：
-
-```text
-01 把用户目标可靠地送进系统。
-02 把企业知识可靠地送进系统。
-```
+它拥有文件版本、内容 Hash、解析状态、Canonical IR、原始 SourceSpan 和索引交接。没有 DocumentVersion 与 SourceSpan，后续检索、GraphRAG 和 Citation 就无法形成可信证据链。
 
 ### 2. 03 + 05 + 06：智能核心
-
-这三个模块共同形成 Zuno 的任务、证据、上下文和经验闭环：
 
 ```text
 06 Agent Core
@@ -106,7 +141,7 @@ SourceObject
 
 #### 06 Agent Core：任务控制中枢
 
-Agent Core 是一次 AgentRun 的 Single Controller，拥有 TaskContract、GoalVersion、PlanVersion、StepRun、并行调度、Interrupt、Final Gate、Publication 和 RunOutcome。
+一次 AgentRun 只有一个 Single Controller：
 
 ```text
 固定 AgentRunGraph
@@ -116,7 +151,9 @@ Agent Core 是一次 AgentRun 的 Single Controller，拥有 TaskContract、Goal
 固定 StepExecutionGraph
 ```
 
-五种机制各有明确作用域：
+所有任务都有 Plan：简单任务使用 Deterministic Single-Step Plan，复杂任务使用 Dynamic DAG Plan。正式回答不能绕过 TaskContract、GoalVersion、Plan、Trace、Budget、AnswerPolicy、Final Gate、Publication 和 RunOutcome。
+
+五种机制有不同作用域：
 
 ```text
 Plan-and-Execute
@@ -129,49 +166,58 @@ Reflection
     判断 Action、Step、Join 或最终结果是否合格。
 
 Replan
-    原计划结构、依赖或核心假设失效时创建新的 PlanVersion。
+    原计划结构、依赖或核心假设失效时创建新的不可变 PlanVersion。
 
 Reflexion
     Run 结束后生成受治理的跨任务经验候选，不直接写长期 Memory。
 ```
 
-简单任务也必须有 Deterministic Single-Step Plan；复杂任务使用 Dynamic DAG Plan。Retry、Parameter Repair、Capability Fallback、Reflection 和 Replan 必须分开，不能把所有失败都变成重新规划。
+Retry、Parameter Repair、Executor Escalation、Capability Fallback、Step Repair、Reflection 和 Replan 必须区分。Replan 经过 Replan Barrier；不可逆副作用必须先完成或 Reconcile，不能靠重写计划掩盖 UNKNOWN Outcome。
 
 #### 03 Knowledge / Agentic GraphRAG：证据决策中枢
 
-Knowledge 不发布最终答案，而是管理：
+Knowledge 不发布最终答案，而是拥有：
 
 ```text
 KnowledgeVersion / KnowledgeSnapshot
+IndexSpec / IndexManifest 接受语义
 EvidenceRequirement
 RetrievalPlan / RetrievalRound
 BM25 / Vector / Graph / Structured Retrieval
 EvidenceLedger / EvidenceFrontier
 Fusion / Rerank / CitationLineage
-Corrective Retrieval
-Evidence Verdict / KnowledgeControlProposal
+CorrectiveRetrievalDecision
+SelectedEvidenceBundle
+KnowledgeControlProposal
 ```
 
-现有架构以固定 `KnowledgeRetrievalGraph` 管治理，以动态 RetrievalPlan 和 RetrievalRound 适应问题。新的 Evidence-Driven Agentic GraphRAG Target 进一步围绕 Claim 进行 Evidence Deliberation、冲突判断、同源去重和 Targeted Evidence Probe。
+现有 Current 已具备固定 KnowledgeRetrievalGraph 和动态 RetrievalPlan/Round 的内层 Agentic GraphRAG 基线。
+
+下一版 Target 由 [`ADR 0006`](./docs/decisions/0006-evidence-driven-agentic-graphrag.md) 定义，进一步引入：
 
 ```text
-相关 Chunk
-    不自动等于
-能够支持关键 Claim 的 Evidence
+Broad Evidence Discovery
+Evidence Deliberation
+Claim-level Evidence State
+Evidence Reasoning Graph
+Targeted Evidence Probe
+Safe Stop and Diagnosis
 ```
 
-Knowledge 可以返回充分、部分、冲突、无适合证据、授权范围内证据不可用或知识质量可疑等结果；Ask User、External Evidence、Replan、Partial、Abstain 和 Finalize 仍由 Agent Core 决定。
+它把质量中心从“检索到相关 Chunk”提升到“Evidence 是否足以支持关键 Claim”。原文、Graph Local 和 Community Summary 若同源，不能被重复计票；冲突、过期、适用范围和授权边界必须显式处理。
+
+ADR 0006 目前只证明 `design available`，不证明上述 v2 Runtime、Migration、Benchmark 或质量提升已经实现。
 
 #### 05 Memory & Context：上下文与经验中枢
 
-Memory & Context 同时回答两个问题：
+Memory & Context 同时回答：
 
 ```text
 过去什么值得记住？
 当前这次模型调用应该看到什么？
 ```
 
-它使用三个正交维度：
+三个正交维度：
 
 ```text
 生命周期：Working -> Session -> Long-term
@@ -179,9 +225,11 @@ Memory & Context 同时回答两个问题：
 压缩强度：C0 / C1 / C2 / C3
 ```
 
-长期 Memory 必须经过 Candidate、Evidence、Scope、Security、Dedup、Conflict 和 Governance；模型不能直接提交 Active Memory。`ContextPackVersion` 是一次模型调用的不可变预算化读取视图，不是新的 Memory 层，也不替代 Knowledge、Conversation 或 LangGraph Checkpoint。
+长期 Memory 必须经过 Candidate、Evidence、Scope、Security、Dedup、Conflict、Governance、Version、Projection Verification 和 Activation。模型不能直接写 Active Memory。
 
-三个核心模块的协作关系：
+`ContextPackVersion` 是一次模型调用的不可变预算化读取视图，可以组合 Goal、Plan、Session Summary、Memory、Knowledge Evidence、Tool Observation 和 Policy，但不替代这些 Source Owner，也不替代 LangGraph Checkpoint。
+
+三个核心模块形成闭环：
 
 ```text
 06 Agent Core 创建 Goal、Plan 和 Step
@@ -208,33 +256,35 @@ Memory & Context 同时回答两个问题：
 
 ### 3. 04 + 07 + 08：能力执行层
 
-智能核心决定“下一步应该做什么”，能力执行层把这个决定映射为模型调用、可用能力和受治理的真实动作。
+智能核心决定“下一步应该做什么”，能力执行层把这个决定映射为模型调用、能力候选和受治理的真实动作。
 
 ```text
 04 Model Gateway
     提供统一模型调用、Role、Routing、Usage 和 Provider Failure 语义。
 
 07 Capability / Skill
-    描述系统能做什么、任务应如何做、哪些实现可作为规划候选。
+    描述系统能做什么、任务应如何做、哪些实现可以成为规划候选。
 
 08 Tool Runtime
     执行一次具体 Tool 动作，并确认执行与外部效果事实。
 ```
 
-#### 04 Model Gateway：模型执行入口
+#### 04 Model Gateway
 
-Planner、Executor、Query Rewriter、Extractor、Critic、Synthesizer、Embedding、Rerank、Vision 和 Judge 等模型调用统一进入 Model Gateway。Gateway 管理 Model Role、Operation、Prompt Artifact、Provider、Routing、Quota、Usage、Fallback、Streaming 和 Structured Output。
+Planner、Executor、Query Rewriter、Extractor、Critic、Synthesizer、Embedding、Rerank、Vision 和 Judge 等模型调用统一进入 Model Gateway。
 
-模型只产生 Proposal、Candidate、Score 或 Model Result，不拥有 Plan、Evidence、Authorization、MemoryVersion 或 RunOutcome。模型 Provider 调用归 04，不因为底层使用 HTTP 或 SDK 就进入 Tool Runtime。
+Gateway 管理 Model Role、Operation、Prompt Artifact、Provider、Routing、Quota、Usage、Fallback、Streaming 和 Structured Output。模型只产生 Proposal、Candidate、Score 或 Model Result，不拥有 Plan、Evidence、Authorization、MemoryVersion 或 RunOutcome。
 
-#### 07 Capability / Skill：能力语义控制面和方法包目录
+模型 Provider 调用归 04；底层即使使用 HTTP 或 SDK，也不会因此进入 Tool Runtime。
+
+#### 07 Capability / Skill：能力语义控制面
 
 Capability / Skill 回答：
 
 ```text
 系统能做什么？
 完成这类任务通常应该怎样做？
-当前哪些实现满足所需语义、版本和环境约束？
+当前哪些实现满足语义、版本和环境约束？
 为什么选择或拒绝某个候选？
 ```
 
@@ -252,7 +302,17 @@ CapabilityAvailabilitySnapshot
 CapabilitySelectionResult
 ```
 
-Capability 使用稳定业务语义身份，例如 `collaboration.message.send`；Skill 是使用若干 Capability 完成任务的方法包、SOP、约束和验收方式。07 可以发现、过滤和选择候选能力，但不执行 Tool、不持有 Secret、不批准权限、不提交外部效果，也不激活 Plan。
+Capability 使用稳定业务语义身份；Skill 是使用若干 Capability 完成任务的方法包、SOP、约束和验收方式。
+
+07 可以发现、过滤和选择候选能力，但：
+
+```text
+不执行 Tool
+不持有 Secret
+不批准权限
+不提交外部效果
+不激活 Plan
+```
 
 #### 08 Tool Runtime：受治理工具效果执行平面
 
@@ -289,27 +349,25 @@ ActionProposal
 -> ToolAttempt / ToolObservation
 -> ToolExecutionReceipt
 -> EffectReceipt or EffectReconciliation
--> Agent Core Acceptance
+-> Agent Core Step Acceptance
 ```
 
 Timeout、响应丢失或进程崩溃后，Tool Runtime 必须先确认外部效果是否已经发生；副作用 Outcome 为 UNKNOWN 时，禁止跨 Provider 盲目 Retry。
 
 #### Capability / Skill 与 Tool Runtime 的边界
 
-这是两个不同的控制面，不能合并成一个“工具模块”。
-
 | 维度 | 07 Capability / Skill | 08 Tool Runtime |
 | --- | --- | --- |
 | 核心问题 | 能做什么、应该怎样做、哪个候选满足要求 | 这一次具体动作怎样安全执行并确认效果 |
 | 主要对象 | Capability、Skill、Requirement、Binding、Availability、Selection | ToolDefinition、PreparedToolAction、Attempt、Observation、Execution/Effect Receipt |
-| 输出给 Agent Core | 可用于规划的版本化能力候选和选择理由 | 实际执行、观察、效果与对账事实 |
+| 输出给 Agent Core | 版本化能力候选、选择结果和拒绝理由 | 实际执行、观察、效果与对账事实 |
 | 是否真实执行 | 否 | 是 |
-| 是否持有 Secret | 否 | 只消费 Security/Infrastructure 提供的受限 Secret Lease |
+| 是否持有 Secret | 否 | 只消费受限 Secret Lease |
 | 是否批准权限 | 否 | 否，只消费 Security Decision |
 | 是否拥有 Plan | 否 | 否，Agent Core 拥有 |
 | 是否拥有外部效果 | 否 | 是，拥有 EffectReceipt / EffectReconciliation |
 
-完整交接链路是：
+完整交接链路：
 
 ```text
 PlanStep
@@ -324,7 +382,7 @@ PlanStep
 -> Agent Core Step Acceptance
 ```
 
-必须保持以下不等价关系：
+必须保持：
 
 ```text
 Skill != Capability
@@ -338,11 +396,11 @@ HTTP 2xx != EffectReceipt
 ToolExecutionReceipt != Agent Step Accepted
 ```
 
-Tool Runtime 也不是万能 Integration Bus。Knowledge 检索归 03，模型调用归 04，Memory/Context 归 05，计划和控制归 06；模块内部普通函数、Repository 或专业领域 Runtime 不会因为使用 HTTP、SDK 或 Queue 就自动变成 Tool。
+Tool Runtime 不是万能 Integration Bus。Knowledge Retrieval 归 03，模型调用归 04，Memory / Context 归 05，Plan / Control 归 06；模块内部普通函数、Repository 或专业领域 Runtime 不会因为使用 HTTP、SDK 或 Queue 就自动变成 Tool。
 
 ### 4. 09 + 10 + 11：治理与运行底座
 
-这一组不是只放在系统最下面，而是横向贯穿请求、检索、模型、记忆、工具和最终发布的整个生命周期。
+这三个模块横向贯穿请求、检索、模型、记忆、工具和最终发布的完整生命周期。
 
 ```text
 09 Security
@@ -352,37 +410,36 @@ Tool Runtime 也不是万能 Integration Bus。Knowledge 检索归 03，模型�
     记录发生了什么，并证明系统是否真的更好。
 
 11 Infrastructure
-    提供可靠持久化、消息、对象、Checkpoint、Lease、恢复和部署 Primitive。
+    提供持久化、消息、对象、Checkpoint、Lease、恢复和部署 Primitive。
 ```
 
 #### 09 Security
 
-Security 拥有 Identity、Authorization、ACL、Security Epoch、Approval Policy、Credential/Secret Binding、Data Classification、Disclosure、Revocation 和 Audit Requirement。
+Security 拥有 Identity、Authorization、ACL、Security Epoch、Approval Policy、Credential / Secret Binding、Data Classification、Disclosure、Revocation 和 Audit Requirement。
 
 安全门禁发生在检索、Context 构造、模型调用、工具准备与执行、Memory 提交和最终发布之前。模型、Capability、Tool Runtime 和 Product Surface 都不能自行扩大权限或伪造 Approval。
 
 #### 10 Observability & Eval
 
-Observability 记录 PlanVersion、Step、Model Invocation、KnowledgeSnapshot、Retrieval Round、Reflection、Replan、Tool Effect、Budget、Publication 和 Failure 等结构化 Trace。Eval 使用固定 Dataset、Case、Profile、Metric 和 Release Gate 比较不同 RAG/Agent 策略。
+Observability 记录 PlanVersion、Step、Model Invocation、KnowledgeSnapshot、RetrievalRound、Reflection、Replan、Tool Effect、Budget、Publication 和 Failure 等结构化 Trace。
 
-文档、Demo 或单次成功不能证明质量提升。Answer Correctness、Groundedness、Citation、Unsupported Claim、Conflict Disclosure、Agent Efficiency、Cost 和 Latency 必须通过可复现 Eval 证明。
+Eval 使用固定 Dataset、Case、Profile、Metric 和 Release Gate 比较 Vector-only RAG、Hybrid RAG、Fixed GraphRAG、Agentic Routing 和 Evidence-Driven Agentic GraphRAG。文档、Demo 或单次成功不能证明质量提升。
 
 #### 11 Infrastructure
 
-Infrastructure 提供 PostgreSQL、Object Store、Queue、LangGraph Checkpointer、Transaction/UoW、Outbox/Inbox、Lease、Fencing、Idempotency Claim、Backup/Restore 和 Deployment 等 Primitive。
+Infrastructure 提供：
 
 ```text
 PostgreSQL
-    保存可审计的领域事实。
-
-LangGraph Checkpointer
-    保存图控制位置、Pending Send、Interrupt Cursor 和小型状态引用。
-
-Object Store
-    保存大型不可变文件、Payload、Artifact 和 Eval 证据。
-
-Queue / Lease / Fencing
-    支撑异步执行、并发控制和旧 Worker 隔离。
+RabbitMQ / Queue
+MinIO / S3-compatible Object Store
+LangGraph PostgreSQL Checkpointer
+Transaction / UoW
+Outbox / Inbox
+Lease / Fencing
+Idempotency Claim
+Backup / Restore
+Deployment / Health / Capacity
 ```
 
 基础设施 Receipt 不等于上层业务成功：
@@ -394,11 +451,11 @@ Checkpoint commit != AgentRun domain commit
 Object upload success != Artifact published
 ```
 
-### 端到端关系
+## 端到端关系
 
 ```text
 用户通过 01 提交任务
--> 02 提供可靠文档和 SourceSpan
+-> 02 提供可靠文档、Canonical IR 和 SourceSpan
 -> 06 创建 Goal、Plan 和 Step
 -> 05 构造 ContextPack、召回约束和经验
 -> 03 获取并审议 Evidence
@@ -417,18 +474,21 @@ Object upload success != Artifact published
 11 保证领域事实可靠持久化、可恢复、可幂等重放。
 ```
 
-一句话概括：
-
-> 01 + 02 把人和知识可靠地送进系统；03 + 05 + 06 决定目标、证据、上下文和行动；04 + 07 + 08 把决策变成模型能力、能力选择和现实动作；09 + 10 + 11 保证所有事情被允许、看得见、跑得稳、能恢复。
-
-后端主路径位于 `src/backend/zuno`，按各领域 Owner 分层维护。模块之间只通过版本化 Contract、不可变引用、领域事件和受控 Port 协作，不共享数据库 Session、Provider SDK 或内部 Repository。
-
 ## 文档入口
 
-- [总架构](./docs/architecture/architecture.md)
-- [架构十类图 HTML 展示](./docs/architecture/architecture.html)
+- [总体 Target 架构](./docs/architecture/architecture.md)
+- [架构视图 HTML](./docs/architecture/architecture.html)
 - [十一逻辑模块设计](./docs/modules/README.md)
 - [Production Readiness 状态](./docs/status/production-readiness.md)
+- [Evidence-Driven Agentic GraphRAG ADR](./docs/decisions/0006-evidence-driven-agentic-graphrag.md)
+- [架构决策](./docs/decisions/README.md)
+- [Repository Ownership Matrix](./docs/governance/repo-ownership-matrix.md)
+- [文档总入口](./docs/README.md)
+- [公开证据入口](./docs/evidence/public-demo.md)
+- [历史归档入口](./docs/history/README.md)
+
+十一模块：
+
 - [01 Product Surface](./docs/modules/01-product-surface.md)
 - [02 Input / Document Ingestion](./docs/modules/02-input-document-ingestion.md)
 - [03 Knowledge / Agentic GraphRAG](./docs/modules/03-knowledge-agentic-graphrag.md)
@@ -440,67 +500,78 @@ Object upload success != Artifact published
 - [09 Security](./docs/modules/09-security.md)
 - [10 Observability & Eval](./docs/modules/10-observability-eval.md)
 - [11 Infrastructure](./docs/modules/11-infrastructure.md)
-- [Evidence-Driven Agentic GraphRAG ADR](./docs/decisions/0006-evidence-driven-agentic-graphrag.md)
-- [架构决策](./docs/decisions/README.md)
-- [Repository Ownership Matrix](./docs/governance/repo-ownership-matrix.md)
-- [文档总入口](./docs/README.md)
-- [公开证据入口](./docs/evidence/public-demo.md)
-- [历史归档入口](./docs/history/programs/README.md)
 
-`docs/architecture/` 只保留：
+## Program 状态
 
-```text
-README.md
-architecture.md
-architecture-views.md
-architecture.html
-```
-
-## Program 入口
-
-- 当前 program 前台：`.agent/programs/`
 - 当前 active program：`zuno-canonical-architecture-runtime-realization-v1`
-- 当前 phase：`PHASE22`
-- 最近完成归档：`docs/history/programs/zuno-real-unified-runtime-cutover-v1/`
-- 历史生产完成归档：`docs/history/programs/zuno-production-architecture-and-deliverables-completion-v1/`
-- 历史 runtime-first 归档：`docs/history/programs/zuno-target-architecture-runtime-full-implementation-v1/`
-- 历史 master architecture 归档：`docs/history/programs/zuno-master-architecture-implementation-v1/`
+- 当前 phase：`PHASE22_fixed-benchmark-production-readiness-and-closure`
+- Program 入口：[`.agent/programs/current.md`](./.agent/programs/current.md)
 
-## Agent 协作入口
+Current Program 仍使用其冻结的 Architecture v1 基线。ADR 0006 是下一版 accepted-target overlay；PHASE22 收口后，需读取最新 Current，把 ADR 0006 与 Module 03、04、06、10 和总体架构正式协调，再创建新的实现 Program。
 
-Zuno 主仓库目录保持为最终集成仓库；临时 worker worktree 放在：
+## 开发与验证入口
 
-```text
-F:\internship-work\resume project\worktrees\
+### 后端
+
+```bash
+poetry install
+poetry run uvicorn --app-dir src/backend zuno.main:app --host 0.0.0.0 --port 7860
 ```
 
-每个 worker 使用独立 worktree 和 `codex/` branch。Claude Code worker 优先处理简单、大量、重复、下载、环境探测、日志整理和低风险候选补丁；Codex coordinator 负责复杂架构判断、根因定位、安全 / 并发 / 恢复 / 幂等语义、review、合并、最终验证和 push。
+### Web 前端
 
-worker 的 worktree、branch、commit、evidence、PR 标题和 PR 描述必须带 `agent + model + worker` 身份标签。Claude Code session 用 `stream-json --verbose` 创建并记录真实 `session_id`；同一 PR / handoff 的后续修复优先用 `--resume <session_id>` 复用。时间和成本按单个 agent 的一次 PR / handoff 统计，不按一轮对话统计；API token 估算成本和 provider 平台额度扣减分开记录。
+在仓库根目录：
 
-Codex coordinator 必须审查 worker diff、evidence、验证结果、风险和成本账，并按 100 分 scorecard 打分后决定 accept、request changes、reject 或 block。worker PR 只是候选贡献；最终合并、集成验证和 push 只由 coordinator 收口。详细规则见 `.agent/references/workflow.md`、`.agent/references/command-catalog.md` 和 `.agent/templates/phase-closure-report.md`。
+```bash
+npm install
+npm run frontend:dev
+```
 
-## 本地验证入口
+或在 `apps/web/`：
 
-```powershell
+```bash
+npm install
+npm run dev
+```
+
+Web 默认连接 `http://127.0.0.1:7860` 的后端 HTTP / SSE 接口。
+
+### Desktop
+
+```bash
+npm install
+npm run desktop:dev
+```
+
+### 文档与仓库验证
+
+```bash
 python tools/scripts/verify_docs_entrypoints.py
 python tools/scripts/verify_repo_structure.py
 python .agent/scripts/verify_agent_system.py
 python .agent/scripts/verify_doc_boundaries.py
 pytest -q tests/repo/test_docs_entrypoints.py tests/repo/test_repo_structure_consistency.py
-uvicorn --app-dir src/backend zuno.main:app --host 0.0.0.0 --port 7860
 ```
+
+完整依赖、容器、Migration、Fault、E2E 和 PHASE22 验证以当前 Program 和 CI Workflow 为准。
+
+## Agent 协作
+
+仓库治理与 Agent 协作规则见：
+
+- [`AGENTS.md`](./AGENTS.md)
+- [`.agent/references/workflow.md`](./.agent/references/workflow.md)
+- [`.agent/references/command-catalog.md`](./.agent/references/command-catalog.md)
+
+Worker 贡献只是候选；架构 Owner 与 Coordinator 必须审查 Diff、Contract、状态机、错误语义、安全、恢复、测试和 Evidence 后再合并。README 不记录机器专属 worktree 绝对路径、个人环境或临时 Session。
 
 ## 当前质量声明
 
-Evidence-span Agentic GraphRAG 的本地实现基线已经存在，但 fixed EnterpriseRAG measured pass 仍未完成。
-
-最近完成的 `zuno-unified-agent-runtime-closure-v1` 已把 unified runtime implementation baseline 归档为 `implementation_complete_measurement_blocked`。PHASE13 sample-8 运行产出 `blocked_not_measured`，原因是本地 embedding profile runner 未配置；sample-80 仍因仓库没有 tracked fixed 80-case set 而 blocked。
-
 ```text
 implementation available
-measurement blocked
+measurement in progress / blocked by formal benchmark prerequisites
 quality not yet proven
+production readiness not established
 ```
 
-不得把 doc-level recall、prepared benchmark 或 incomplete run 写成 strict citation / answer correctness 已完成。Agentic GraphRAG 是否真正完成，仍以 fixed benchmark 和 release gate 为准。
+现有 Agentic GraphRAG Inner Loop 已有实现与 focused verification；Evidence-Driven Agentic GraphRAG v2 仍是 accepted-target。固定 Benchmark、正式四 Profile measured runtime、Reviewer / Credential / Budget attestation、完整 Closure 和 Release Gate 尚未完成前，不得声明 Agentic GraphRAG 稳定优于 Baseline，也不得声明 production ready。
