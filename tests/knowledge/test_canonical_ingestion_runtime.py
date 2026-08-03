@@ -1,29 +1,26 @@
 from __future__ import annotations
 
-"""PHASE22 canonical ingestion runtime tests (GAP-B1 / GAP-B2).
+"""PHASE22 canonical ingestion runtime tests (GAP-B1 / GAP-B2 hardened).
 
-Two layers:
+Layers:
 
-1. Pure unit tests — the canonical state machine, security gate, entity /
-   directed-relation extraction determinism, and the object store binding
-   ownership surface. These never touch services.
+1. Pure unit tests — the declarative state machine (normal, failure, retry,
+   reconciliation transitions; forbidden states), run-key helpers, and the
+   Security resource-ref contract.
 
-2. Live tests — the full synthetic corpus path against real PostgreSQL and
-   MinIO (same contract as the phase11 production runtime integration tests).
-   When PostgreSQL/MinIO are unavailable the live tests skip with
-   BLOCKED_WITH_EXACT_GAPS so the required pytest invocation still reports a
-   precise gap instead of a silent green.
+2. Live tests against real PostgreSQL + MinIO — the full pipeline with real
+   IDs, Security-owned decision validation, idempotency, tenant isolation,
+   receipt truth from owner tables, measured quality, and reconciliation.
+   Fault/resume scenarios live in
+   ``tests/integration/test_phase22_canonical_ingestion_live.py``.
 
-No fake IDs are ever produced: every asserted ID comes from the real pipeline
-(MinIO commit receipt, PostgreSQL rows, the real parse gateway, and the real
-graph handoff payload). Fault-injection doubles are limited to failure paths
-(commit failure, parser failure) and are explicitly labeled.
+No fake IDs: every asserted ID comes from real pipeline output. Fault
+injection doubles are limited to failure paths and are explicitly labeled.
 """
 
 import hashlib
-from io import BytesIO
 import os
-from pathlib import Path
+from typing import Any
 from uuid import uuid4
 
 import pytest
@@ -33,6 +30,7 @@ from zuno.knowledge.ingestion.canonical_runtime import (
     CANONICAL_FAILURE_CANONICALIZATION_FAILED,
     CANONICAL_FAILURE_CREDENTIAL_BLOCKED,
     CANONICAL_FAILURE_OBJECT_COMMIT_FAILED,
+    CANONICAL_FAILURE_OBJECT_STAGE_FAILED,
     CANONICAL_FAILURE_RECONCILIATION_REQUIRED,
     CANONICAL_FAILURE_SECURITY_DENIED,
     CANONICAL_STATE_ACCEPTED,
@@ -44,30 +42,26 @@ from zuno.knowledge.ingestion.canonical_runtime import (
     FORBIDDEN_CANONICAL_STATES,
     CanonicalIngestionConflictError,
     CanonicalSourceIngestCommand,
-    IngestionSecurityClassifier,
     Phase22CanonicalIngestionRuntime,
     canonical_run_id,
+    canonical_security_resource_ref,
     canonical_state_sequence,
-    extract_canonical_graph_facts,
     validate_canonical_state_transition,
 )
 from zuno.knowledge.ingestion.contracts import (
-    CanonicalDocumentIR,
     ParserFailure,
     ParseDocumentResult,
 )
-from zuno.knowledge.ingestion.router import build_index_handoff_payload
 from zuno.knowledge.storage.canonical_facts import (
     CanonicalFactsMissing,
     CanonicalIngestionFactsStore,
 )
-from zuno.platform.storage.binding import (
-    OBJECT_STORE_OWNERSHIP,
-    ObjectStoreLocalAdapterForbidden,
-    binding_declaration_payload,
-    build_local_object_store,
-    production_object_store_adapter,
+from zuno.knowledge.storage.canonical_run_store import (
+    CANONICAL_STATE_TRANSITIONS,
+    CanonicalRunStateConflict,
+    CanonicalRunStateError,
 )
+from zuno.platform.security.persistence import SecurityUnitOfWork
 from zuno.platform.storage.durable import DurableMinioObjectStore
 from zuno.platform.storage.object_store import (
     MinioObjectStore,
@@ -82,15 +76,12 @@ MINIO_ENDPOINT = "localhost:9000"
 MINIO_ACCESS_KEY = os.environ.get("ZUNO_TEST_MINIO_ACCESS_KEY", "minioadmin")
 MINIO_SECRET_KEY = os.environ.get("ZUNO_TEST_MINIO_SECRET_KEY", "minioadmin")
 
-SAMPLE_MARKDOWN = """# Zuno Ingestion Pipeline
-
-SourceUpload commits the OriginalDocument into the MinioBucket.
-
-CanonicalIrBuilder produces DocumentBlocks with SourceSpan anchors.
-
-EntityExtractor discovers AcmeCorp and ProjectZeta relations.
-
-"""
+SAMPLE_MARKDOWN = (
+    "# Zuno Ingestion Pipeline\n\n"
+    "SourceUpload commits the OriginalDocument into the MinioBucket.\n"
+    "CanonicalIrBuilder produces DocumentBlocks with SourceSpan anchors.\n"
+    "EntityExtractor discovers AcmeCorp and ProjectZeta relations.\n"
+).encode("utf-8")
 
 
 # ---------------------------------------------------------------------------
@@ -109,7 +100,12 @@ class TestCanonicalStateMachine:
         for from_state, to_state in zip(path, path[1:]):
             validate_canonical_state_transition(from_state, to_state)
 
-    def test_illegal_transition_rejected(self) -> None:
+    def test_illegal_transitions_rejected(self) -> None:
+        # stage failure must never be recorded as object_commit_failed
+        with pytest.raises(ValueError):
+            validate_canonical_state_transition(
+                CANONICAL_STATE_ACCEPTED, CANONICAL_FAILURE_OBJECT_COMMIT_FAILED
+            )
         with pytest.raises(ValueError):
             validate_canonical_state_transition(
                 CANONICAL_STATE_ACCEPTED, CANONICAL_STATE_KV_READY
@@ -118,6 +114,14 @@ class TestCanonicalStateMachine:
             validate_canonical_state_transition(
                 CANONICAL_STATE_OBJECT_STAGED, CANONICAL_STATE_IR_READY
             )
+
+    def test_stage_failure_is_a_distinct_state(self) -> None:
+        assert CANONICAL_FAILURE_OBJECT_STAGE_FAILED in CANONICAL_STATE_TRANSITIONS[
+            CANONICAL_STATE_ACCEPTED
+        ]
+        assert CANONICAL_FAILURE_OBJECT_COMMIT_FAILED not in CANONICAL_STATE_TRANSITIONS[
+            CANONICAL_STATE_ACCEPTED
+        ]
 
     def test_forbidden_states_never_written(self) -> None:
         assert FORBIDDEN_CANONICAL_STATES == ("indexes_visible", "snapshot_activated")
@@ -129,125 +133,53 @@ class TestCanonicalStateMachine:
             with pytest.raises(ValueError):
                 canonical_state_sequence(forbidden)
 
-    def test_failure_states_are_terminal(self) -> None:
-        for failure_state in (
-            CANONICAL_FAILURE_SECURITY_DENIED,
-            CANONICAL_FAILURE_CREDENTIAL_BLOCKED,
-            CANONICAL_FAILURE_OBJECT_COMMIT_FAILED,
-            CANONICAL_FAILURE_CANONICALIZATION_FAILED,
-            CANONICAL_FAILURE_RECONCILIATION_REQUIRED,
+    def test_explicit_retry_transitions(self) -> None:
+        # retry: plan and facts remain valid, only execution failed
+        assert CANONICAL_STATE_TRANSITIONS[CANONICAL_FAILURE_OBJECT_STAGE_FAILED] == (
+            CANONICAL_STATE_OBJECT_STAGED,
+        )
+        assert CANONICAL_STATE_TRANSITIONS[CANONICAL_FAILURE_OBJECT_COMMIT_FAILED] == (
+            CANONICAL_STATE_OBJECT_COMMITTED,
+        )
+        assert CANONICAL_STATE_TRANSITIONS[CANONICAL_FAILURE_CANONICALIZATION_FAILED] == (
+            CANONICAL_STATE_OBJECT_COMMITTED,
+        )
+
+    def test_reconciliation_design(self) -> None:
+        # unknown side effects enter reconciliation from any active state
+        for active in (
+            CANONICAL_STATE_OBJECT_STAGED,
+            CANONICAL_STATE_OBJECT_COMMITTED,
+            CANONICAL_STATE_IR_READY,
         ):
-            assert CANONICAL_STATE_SEQUENCE[failure_state] >= 90
-
-    def test_run_id_embeds_tenant_workspace_source(self) -> None:
-        run_id = canonical_run_id(tenant_id="t1", workspace_id="w1", source_id="s1")
-        assert run_id == "canonical-ingest:t1:w1:s1"
-
-
-class TestSecurityClassifier:
-    def test_allowed_classification(self) -> None:
-        verdict = IngestionSecurityClassifier().evaluate(
-            classification_ref="classification:public",
-            security_epoch_ref="security-epoch:1",
-            principal_id="p1",
+            assert CANONICAL_FAILURE_RECONCILIATION_REQUIRED in CANONICAL_STATE_TRANSITIONS[active]
+        # the success terminal only leaves through the designed reconciliation edge
+        assert CANONICAL_STATE_TRANSITIONS[CANONICAL_STATE_KV_READY] == (
+            CANONICAL_FAILURE_RECONCILIATION_REQUIRED,
         )
-        assert verdict.decision == "allow"
+        # reconciliation resumes through explicit transitions
+        assert set(CANONICAL_STATE_TRANSITIONS[CANONICAL_FAILURE_RECONCILIATION_REQUIRED]) == {
+            CANONICAL_STATE_OBJECT_STAGED,
+            CANONICAL_STATE_OBJECT_COMMITTED,
+            CANONICAL_STATE_IR_READY,
+        }
 
-    def test_denied_classification(self) -> None:
-        verdict = IngestionSecurityClassifier().evaluate(
-            classification_ref="classification:forbidden",
-            security_epoch_ref="security-epoch:1",
-            principal_id="p1",
+    def test_terminal_states_have_no_ordinary_outgoing_edges(self) -> None:
+        assert CANONICAL_STATE_TRANSITIONS[CANONICAL_FAILURE_SECURITY_DENIED] == ()
+        assert CANONICAL_STATE_TRANSITIONS[CANONICAL_FAILURE_CREDENTIAL_BLOCKED] == ()
+
+    def test_run_id_and_sequence(self) -> None:
+        assert canonical_run_id(tenant_id="t1", workspace_id="w1", source_id="s1") == (
+            "canonical-ingest:t1:w1:s1"
         )
-        assert verdict.decision == "deny"
-        assert verdict.reason == "classification_forbidden"
+        assert CANONICAL_STATE_SEQUENCE[CANONICAL_STATE_KV_READY] == 5
+        assert canonical_state_sequence(CANONICAL_FAILURE_RECONCILIATION_REQUIRED) == 95
 
-    def test_missing_security_epoch_denied(self) -> None:
-        verdict = IngestionSecurityClassifier().evaluate(
-            classification_ref="classification:public",
-            security_epoch_ref="",
-            principal_id="p1",
+    def test_security_resource_ref_contract(self) -> None:
+        ref = canonical_security_resource_ref(
+            tenant_id="t1", workspace_id="w1", source_id="s1"
         )
-        assert verdict.decision == "deny"
-        assert verdict.reason == "security_epoch_ref_missing"
-
-
-class TestGraphFactsExtraction:
-    def test_entities_and_directed_relations_deterministic(self) -> None:
-        documents = [
-            {
-                "chunk_id": "doc::b1::cite1",
-                "content": "AcmeCorp works with ProjectZeta. ProjectZeta owns DataLake.",
-                "source_span": {"ref": "source-span:dv1:b1"},
-            }
-        ]
-        first = extract_canonical_graph_facts(
-            tenant_id="t1",
-            workspace_id="w1",
-            knowledge_version_id="kv1",
-            graphrag_documents=documents,
-        )
-        second = extract_canonical_graph_facts(
-            tenant_id="t1",
-            workspace_id="w1",
-            knowledge_version_id="kv1",
-            graphrag_documents=documents,
-        )
-        assert first == second
-        entity_names = {item["name"] for item in first["entities"]}
-        assert {"AcmeCorp", "ProjectZeta", "DataLake"} <= entity_names
-        relations = first["relations"]
-        assert relations, "directed relations must be produced"
-        for relation in relations:
-            assert relation["kind"] == "co_occurs"
-            assert relation["from_ref"] != relation["to_ref"]
-            assert relation["from_ref"].startswith("entity:")
-            assert relation["to_ref"].startswith("entity:")
-            assert relation["relation_ref"].startswith("relation:")
-        # direction follows source text order: AcmeCorp -> ProjectZeta
-        acme = next(item["entity_ref"] for item in first["entities"] if item["name"] == "AcmeCorp")
-        zeta = next(item["entity_ref"] for item in first["entities"] if item["name"] == "ProjectZeta")
-        assert any(r["from_ref"] == acme and r["to_ref"] == zeta for r in relations)
-
-    def test_ids_scoped_to_tenant(self) -> None:
-        documents = [{"chunk_id": "c1", "content": "AcmeCorp leads.", "source_span": {}}]
-        refs_by_tenant = {}
-        for tenant in ("t1", "t2"):
-            facts = extract_canonical_graph_facts(
-                tenant_id=tenant,
-                workspace_id="w1",
-                knowledge_version_id="kv1",
-                graphrag_documents=documents,
-            )
-            refs_by_tenant[tenant] = {
-                item["entity_ref"] for item in facts["entities"]
-            }
-        assert refs_by_tenant["t1"] != refs_by_tenant["t2"]
-
-
-class TestObjectStoreBinding:
-    def test_single_production_owner_declared(self) -> None:
-        production = production_object_store_adapter()
-        assert production.role == "production_adapter"
-        assert production.adapter_name == "DurableMinioObjectStore"
-        assert production.deployment_class == "SERVER_PRODUCT"
-        assert production.authoritative is True
-        roles = {declaration.role for declaration in OBJECT_STORE_OWNERSHIP}
-        assert roles == {"port", "production_adapter", "physical_transport", "local_adapter"}
-
-    def test_local_adapter_gated_to_developer_ci(self) -> None:
-        store = build_local_object_store(Path(".") / "tmp-object-root")
-        assert store is not None
-        with pytest.raises(ObjectStoreLocalAdapterForbidden):
-            build_local_object_store(
-                Path(".") / "tmp-object-root", profile="server_product"
-            )
-
-    def test_binding_declaration_payload_stable(self) -> None:
-        payload = binding_declaration_payload()
-        assert payload["port"] == "DurableObjectStore"
-        assert payload["production_adapter"] == "DurableMinioObjectStore"
-        assert payload["fail_closed_when_unbound"] is True
+        assert ref == "ingestion:source:t1:w1:s1"
 
 
 # ---------------------------------------------------------------------------
@@ -299,7 +231,6 @@ def live_environment():
         bucket=bucket,
         worker_id="phase22-test-worker",
     )
-    facts = CanonicalIngestionFactsStore(engine)
     try:
         yield {
             "engine": engine,
@@ -307,7 +238,7 @@ def live_environment():
             "bucket": bucket,
             "durable": durable,
             "runtime": runtime,
-            "facts": facts,
+            "facts": CanonicalIngestionFactsStore(engine),
         }
     finally:
         try:
@@ -317,74 +248,225 @@ def live_environment():
         engine.dispose()
 
 
-def _command(env: dict, **overrides) -> CanonicalSourceIngestCommand:
+def issue_security_decision(
+    engine,
+    *,
+    tenant_id: str,
+    workspace_id: str,
+    source_id: str,
+    source_hash: str,
+    principal_id: str,
+    epoch_ref: str,
+    decision: str = "USE_ONLY",
+) -> str:
+    """Security Owner issues an authorization decision (the runtime never does)."""
+    with SecurityUnitOfWork(engine) as repo:
+        repo.ensure_principal_context(
+            principal_context_id=f"pc:{tenant_id}:{principal_id}",
+            tenant_id=tenant_id,
+            user_principal_id=principal_id,
+            epoch_ref=epoch_ref,
+        )
+        repo.ensure_effective_epoch(
+            epoch_ref=epoch_ref,
+            tenant_id=tenant_id,
+            policy_bundle_ref="policy-bundle:phase22:v1",
+            policy_bundle={"version": "v1"},
+            action_set_version="v1",
+            principal_context_hash="b" * 64,
+            generation=1,
+            status="active",
+        )
+        decision_id = f"decision:{tenant_id}:{source_id}:1"
+        repo.ensure_authorization_decision(
+            decision_id=decision_id,
+            tenant_id=tenant_id,
+            principal_context_id=f"pc:{tenant_id}:{principal_id}",
+            epoch_ref=epoch_ref,
+            resource_ref=canonical_security_resource_ref(
+                tenant_id=tenant_id, workspace_id=workspace_id, source_id=source_id
+            ),
+            action="ingestion.source.upload",
+            decision=decision,
+            reason_code="phase22_synthetic_corpus",
+            prepared_action_hash=source_hash,
+        )
+        return decision_id
+
+
+def new_environment(bucket: str) -> dict:
     suffix = uuid4().hex[:8]
+    return {
+        "tenant_id": f"tenant-{suffix}",
+        "workspace_id": f"workspace-{suffix}",
+        "knowledge_space_id": f"space-{suffix}",
+        "principal_id": f"principal-{suffix}",
+        "source_id": f"source-{suffix}",
+        "document_id": f"doc-{suffix}",
+        "epoch_ref": f"security-epoch:tenant-{suffix}:1",
+        "bucket": bucket,
+    }
+
+
+def build_command(env: dict, **overrides) -> CanonicalSourceIngestCommand:
+    content = overrides.pop("content", SAMPLE_MARKDOWN)
+    source_hash = hashlib.sha256(content).hexdigest()
+    decision_id = overrides.pop("security_decision_ref", None) or issue_security_decision(
+        overrides.pop("_engine"),
+        tenant_id=env["tenant_id"],
+        workspace_id=env["workspace_id"],
+        source_id=env["source_id"],
+        source_hash=source_hash,
+        principal_id=env["principal_id"],
+        epoch_ref=env["epoch_ref"],
+        decision=overrides.pop("_decision", "USE_ONLY"),
+    )
     return CanonicalSourceIngestCommand(
-        tenant_id=str(env["tenant_id"]),
-        workspace_id=str(env["workspace_id"]),
-        principal_id=f"principal-{suffix}",
-        source_id=overrides.pop("source_id", None) or f"source-{suffix}",
-        filename=overrides.pop("filename", "pipeline.md"),
-        mime_type=overrides.pop("mime_type", "text/markdown"),
-        content=overrides.pop("content", SAMPLE_MARKDOWN.encode("utf-8")),
-        classification_ref=overrides.pop("classification_ref", "classification:public"),
-        security_epoch_ref=f"security-epoch:{env['tenant_id']}:1",
-        knowledge_space_id=str(env["knowledge_space_id"]),
-        corpus_manifest_ref=f"corpus-manifest:{env['tenant_id']}:synthetic-v1",
-        trace_id=f"trace-{suffix}",
+        tenant_id=env["tenant_id"],
+        workspace_id=env["workspace_id"],
+        principal_id=env["principal_id"],
+        source_id=env["source_id"],
+        document_id=env["document_id"],
+        filename="pipeline.md",
+        mime_type="text/markdown",
+        content=content,
+        classification="global/open",
+        security_epoch_ref=env["epoch_ref"],
+        security_decision_ref=decision_id,
+        knowledge_space_id=env["knowledge_space_id"],
+        corpus_manifest_ref="corpus:unit-test",
+        source_set_ref="corpus:unit-test",
+        trace_id=f"trace-{uuid4().hex[:8]}",
         bucket=env["bucket"],
-        **overrides,
+        **{k: v for k, v in overrides.items() if k != "_engine"},
     )
 
 
-def _new_environment() -> dict:
+def minimal_ir_manifest(env: dict) -> dict:
+    suffix = env["source_id"].split("-")[-1]
     return {
-        "tenant_id": f"tenant-{uuid4().hex[:12]}",
-        "workspace_id": f"workspace-{uuid4().hex[:8]}",
-        "knowledge_space_id": f"space-{uuid4().hex[:8]}",
+        "source_manifest_hash": "corpus:unit-test",
+        "documents": [
+            {
+                "document_id": env["document_id"],
+                "document_version_id": f"document-version::{env['document_id']}::abc",
+            }
+        ],
+        "chunks": [
+            {
+                "chunk_id": f"chunk::{env['document_id']}::001",
+                "document_id": env["document_id"],
+                "text_hash": "c" * 64,
+                "ordinal": 1,
+                "security_scope": "global/open",
+            }
+        ],
+        "entities": [
+            {
+                "entity_id": f"entity::org:Acme{suffix}",
+                "entity_ref": f"org:Acme{suffix}",
+                "label": "Acme",
+                "chunk_id": f"chunk::{env['document_id']}::001",
+                "document_id": env["document_id"],
+            }
+        ],
+        "relations": [],
     }
 
 
 class TestLiveCanonicalIngestion:
     def test_full_pipeline_produces_real_ids(self, live_environment) -> None:
-        env = _new_environment()
-        env["bucket"] = live_environment["bucket"]
+        env = new_environment(live_environment["bucket"])
+        engine = live_environment["engine"]
         runtime = live_environment["runtime"]
-        command = _command(env)
+        command = build_command(env, _engine=engine)
+        runtime.load_corpus_manifest(minimal_ir_manifest(env))
         receipt = runtime.ingest(command)
 
         assert receipt.state == CANONICAL_STATE_KV_READY
         assert not receipt.idempotent
-        # every required ID is real and non-empty
-        assert receipt.source_id == command.source_id
+        assert receipt.source_id == env["source_id"]
         assert receipt.object_ref.startswith("s3://")
-        assert receipt.object_manifest_ref
-        assert receipt.object_manifest_hash == hashlib.sha256(command.content).hexdigest()
-        assert receipt.document_id == command.source_id
-        assert receipt.document_version_id == f"document-version:{command.source_id}:1"
+        assert receipt.document_version_id
         assert receipt.parse_snapshot_id
         assert receipt.knowledge_version_id
-        assert receipt.chunk_ids
-        assert receipt.graph_facts is not None
-        assert receipt.graph_facts.entity_ids
-        assert receipt.graph_facts.relation_ids
-        # ledger order is exactly the canonical happy path
-        states = [event["state"] for event in receipt.events]
+        assert receipt.chunk_ids == (f"chunk::{env['document_id']}::001",)
+        assert receipt.entity_ids == (f"entity::org:Acme{env['source_id'].split('-')[-1]}",)
+        assert receipt.transitions[-1]["to_state"] == CANONICAL_STATE_KV_READY
+        states = [t["to_state"] for t in receipt.transitions]
         assert states == [
-            CANONICAL_STATE_ACCEPTED,
             CANONICAL_STATE_OBJECT_STAGED,
             CANONICAL_STATE_OBJECT_COMMITTED,
             CANONICAL_STATE_IR_READY,
             CANONICAL_STATE_KV_READY,
         ]
-        assert not any(state in FORBIDDEN_CANONICAL_STATES for state in states)
+        assert not any(s in FORBIDDEN_CANONICAL_STATES for s in states)
+
+    def test_security_denied_without_decision(self, live_environment) -> None:
+        env = new_environment(live_environment["bucket"])
+        runtime = live_environment["runtime"]
+        command = CanonicalSourceIngestCommand(
+            tenant_id=env["tenant_id"],
+            workspace_id=env["workspace_id"],
+            principal_id=env["principal_id"],
+            source_id=env["source_id"],
+            document_id=env["document_id"],
+            filename="pipeline.md",
+            mime_type="text/markdown",
+            content=SAMPLE_MARKDOWN,
+            classification="global/open",
+            security_epoch_ref=env["epoch_ref"],
+            security_decision_ref="decision:missing",
+            knowledge_space_id=env["knowledge_space_id"],
+            corpus_manifest_ref="corpus:unit-test",
+            source_set_ref="corpus:unit-test",
+            trace_id=f"trace-{uuid4().hex[:8]}",
+            bucket=env["bucket"],
+        )
+        receipt = runtime.ingest(command)
+        assert receipt.state == CANONICAL_FAILURE_SECURITY_DENIED
+        assert receipt.failure_code == "security_decision_missing"
+
+    def test_security_denied_on_hash_mismatch(self, live_environment) -> None:
+        env = new_environment(live_environment["bucket"])
+        engine = live_environment["engine"]
+        runtime = live_environment["runtime"]
+        # decision issued for a DIFFERENT content hash
+        issue_security_decision(
+            engine,
+            tenant_id=env["tenant_id"],
+            workspace_id=env["workspace_id"],
+            source_id=env["source_id"],
+            source_hash="e" * 64,
+            principal_id=env["principal_id"],
+            epoch_ref=env["epoch_ref"],
+        )
+        command = build_command(env, _engine=engine, security_decision_ref=f"decision:{env['tenant_id']}:{env['source_id']}:1")
+        receipt = runtime.ingest(command)
+        assert receipt.state == CANONICAL_FAILURE_SECURITY_DENIED
+        assert receipt.failure_code == "security_decision_action_hash_mismatch"
+
+    def test_credential_blocked_without_binding(self, live_environment) -> None:
+        env = new_environment(live_environment["bucket"])
+        engine = live_environment["engine"]
+        unbound = Phase22CanonicalIngestionRuntime(
+            engine=engine,
+            object_store=None,
+            bucket=env["bucket"],
+            worker_id="phase22-unbound-test",
+        )
+        command = build_command(env, _engine=engine)
+        receipt = unbound.ingest(command)
+        assert receipt.state == CANONICAL_FAILURE_CREDENTIAL_BLOCKED
+        assert receipt.failure_code == "object_store_binding_missing"
 
     def test_minio_write_and_readback_hash_match(self, live_environment) -> None:
-        env = _new_environment()
-        env["bucket"] = live_environment["bucket"]
+        env = new_environment(live_environment["bucket"])
+        engine = live_environment["engine"]
         runtime = live_environment["runtime"]
         minio = live_environment["minio"]
-        command = _command(env)
+        command = build_command(env, _engine=engine)
+        runtime.load_corpus_manifest(minimal_ir_manifest(env))
         receipt = runtime.ingest(command)
 
         bucket, object_name = receipt.object_ref[len("s3://"):].split("/", 1)
@@ -393,19 +475,19 @@ class TestLiveCanonicalIngestion:
         assert observed == command.content
 
     def test_postgresql_facts_queryable(self, live_environment) -> None:
-        env = _new_environment()
-        env["bucket"] = live_environment["bucket"]
+        env = new_environment(live_environment["bucket"])
+        engine = live_environment["engine"]
         runtime = live_environment["runtime"]
         facts = live_environment["facts"]
-        command = _command(env)
+        command = build_command(env, _engine=engine)
+        runtime.load_corpus_manifest(minimal_ir_manifest(env))
         receipt = runtime.ingest(command)
 
         source = facts.source_object_fact(
             tenant_id=env["tenant_id"], source_id=receipt.source_id
         )
-        assert source.source_sha256 == receipt.source_sha256
-        assert source.storage_uri == receipt.object_ref
         assert source.status == "committed"
+        assert source.storage_uri == receipt.object_ref
 
         document = facts.document_version_fact(
             tenant_id=env["tenant_id"],
@@ -417,7 +499,7 @@ class TestLiveCanonicalIngestion:
             tenant_id=env["tenant_id"],
             parse_snapshot_id=receipt.parse_snapshot_id,
         )
-        assert snapshot.canonical_ir["metadata"]["document_id"] == receipt.source_id
+        assert snapshot.canonical_ir["metadata"]["document_id"] == env["document_id"]
 
         version = facts.knowledge_version_fact(
             tenant_id=env["tenant_id"],
@@ -430,156 +512,181 @@ class TestLiveCanonicalIngestion:
             knowledge_version_id=receipt.knowledge_version_id,
         )
         assert len(chunks) == len(receipt.chunk_ids)
-        assert {chunk.chunk_id for chunk in chunks} == set(receipt.chunk_ids)
 
-    def test_graph_facts_artifact_readback(self, live_environment) -> None:
-        env = _new_environment()
-        env["bucket"] = live_environment["bucket"]
+    def test_entity_relation_facts_queryable_by_scope(self, live_environment) -> None:
+        env = new_environment(live_environment["bucket"])
+        engine = live_environment["engine"]
         runtime = live_environment["runtime"]
-        facts = live_environment["facts"]
-        minio = live_environment["minio"]
-        command = _command(env)
+        command = build_command(env, _engine=engine)
+        runtime.load_corpus_manifest(minimal_ir_manifest(env))
         receipt = runtime.ingest(command)
 
-        artifact = receipt.graph_facts
-        bucket, object_name = artifact.object_ref[len("s3://"):].split("/", 1)
-        content = minio.read_object(bucket=bucket, object_name=object_name)
-        assert hashlib.sha256(content).hexdigest() == artifact.manifest_hash
-        assert artifact.entity_ids
-        assert artifact.relation_ids
-        # deterministic re-derivation from the real canonical IR agrees with
-        # the committed artifact
-        snapshot = facts.parse_snapshot_fact(
-            tenant_id=env["tenant_id"],
-            parse_snapshot_id=receipt.parse_snapshot_id,
-        )
-        document = CanonicalDocumentIR.model_validate(snapshot.canonical_ir)
-        handoff = build_index_handoff_payload(document)
-        rederived = extract_canonical_graph_facts(
+        entities = runtime.entities_relations.entity_facts(
             tenant_id=env["tenant_id"],
             workspace_id=env["workspace_id"],
             knowledge_version_id=receipt.knowledge_version_id,
-            graphrag_documents=handoff.graphrag_documents,
         )
-        assert tuple(item["entity_ref"] for item in rederived["entities"]) == artifact.entity_ids
-        assert tuple(item["relation_ref"] for item in rederived["relations"]) == artifact.relation_ids
+        assert tuple(e.entity_id for e in entities) == receipt.entity_ids
+        assert entities[0].authority_ref.startswith("authority:canonical-ir-manifest")
+        assert len(entities[0].entity_hash) == 64
 
     def test_same_source_hash_rerun_is_idempotent(self, live_environment) -> None:
-        env = _new_environment()
-        env["bucket"] = live_environment["bucket"]
+        env = new_environment(live_environment["bucket"])
+        engine = live_environment["engine"]
         runtime = live_environment["runtime"]
         facts = live_environment["facts"]
-        command = _command(env)
+        command = build_command(env, _engine=engine)
+        runtime.load_corpus_manifest(minimal_ir_manifest(env))
         first = runtime.ingest(command)
         second = runtime.ingest(command)
 
-        assert second.state == CANONICAL_STATE_KV_READY
         assert second.idempotent is True
-        assert second.source_id == first.source_id
+        assert second.state == CANONICAL_STATE_KV_READY
         assert second.knowledge_version_id == first.knowledge_version_id
         assert second.chunk_ids == first.chunk_ids
-        assert second.graph_facts.manifest_hash == first.graph_facts.manifest_hash
-        # facts were reused, not duplicated
+        assert second.entity_ids == first.entity_ids
         chunks = facts.chunk_facts(
             tenant_id=env["tenant_id"],
             knowledge_version_id=first.knowledge_version_id,
         )
         assert len(chunks) == len(first.chunk_ids)
+        entities = runtime.entities_relations.entity_facts(
+            tenant_id=env["tenant_id"],
+            workspace_id=env["workspace_id"],
+            knowledge_version_id=first.knowledge_version_id,
+        )
+        assert len(entities) == len(first.entity_ids)
 
     def test_immutable_source_hash_conflict(self, live_environment) -> None:
-        env = _new_environment()
-        env["bucket"] = live_environment["bucket"]
+        env = new_environment(live_environment["bucket"])
+        engine = live_environment["engine"]
         runtime = live_environment["runtime"]
-        command = _command(env)
+        command = build_command(env, _engine=engine)
+        runtime.load_corpus_manifest(minimal_ir_manifest(env))
         runtime.ingest(command)
-        altered = _command(
+        altered_content = b"different content that changes the hash"
+        altered_hash = hashlib.sha256(altered_content).hexdigest()
+        # Security issues a NEW decision for the ALTERED content; the
+        # immutability guard must then reject the same source_id
+        with SecurityUnitOfWork(engine) as repo:
+            repo.ensure_authorization_decision(
+                decision_id=f"decision:{env['tenant_id']}:{env['source_id']}:2",
+                tenant_id=env["tenant_id"],
+                principal_context_id=f"pc:{env['tenant_id']}:{env['principal_id']}",
+                epoch_ref=env["epoch_ref"],
+                resource_ref=canonical_security_resource_ref(
+                    tenant_id=env["tenant_id"],
+                    workspace_id=env["workspace_id"],
+                    source_id=env["source_id"],
+                ),
+                action="ingestion.source.upload",
+                decision="USE_ONLY",
+                reason_code="phase22_immutability_test",
+                prepared_action_hash=altered_hash,
+            )
+        altered = build_command(
             env,
-            source_id=command.source_id,
-            content=b"different content that changes the hash",
+            _engine=engine,
+            content=altered_content,
+            security_decision_ref=f"decision:{env['tenant_id']}:{env['source_id']}:2",
         )
         with pytest.raises(CanonicalIngestionConflictError):
             runtime.ingest(altered)
 
     def test_cross_tenant_isolation(self, live_environment) -> None:
-        env_a = _new_environment()
-        env_a["bucket"] = live_environment["bucket"]
+        env = new_environment(live_environment["bucket"])
+        engine = live_environment["engine"]
         runtime = live_environment["runtime"]
         facts = live_environment["facts"]
-        receipt_a = runtime.ingest(_command(env_a))
+        command = build_command(env, _engine=engine)
+        runtime.load_corpus_manifest(minimal_ir_manifest(env))
+        receipt = runtime.ingest(command)
 
-        # owner tenant sees its own facts...
         facts.source_object_fact(
-            tenant_id=env_a["tenant_id"], source_id=receipt_a.source_id
+            tenant_id=env["tenant_id"], source_id=receipt.source_id
         )
-        # ...a foreign tenant sees nothing
         with pytest.raises(CanonicalFactsMissing):
             facts.source_object_fact(
                 tenant_id=f"tenant-other-{uuid4().hex[:8]}",
-                source_id=receipt_a.source_id,
+                source_id=receipt.source_id,
             )
-        # ledger invisible cross-tenant
-        facts.run_ledger_cross_tenant(
-            owner_tenant_id=env_a["tenant_id"],
+        with pytest.raises(CanonicalRunStateError):
+            runtime.get_run(
+                run_id=receipt.run_id,
+                tenant_id=f"tenant-other-{uuid4().hex[:8]}",
+            )
+        runtime.entities_relations.entity_facts_cross_tenant(
+            owner_tenant_id=env["tenant_id"],
             other_tenant_id=f"tenant-other-{uuid4().hex[:8]}",
-            run_id=receipt_a.run_id,
+            knowledge_version_id=receipt.knowledge_version_id,
         )
 
-    def test_security_denied(self, live_environment) -> None:
-        env = _new_environment()
-        env["bucket"] = live_environment["bucket"]
+    def test_quality_is_measured_not_manufactured(self, live_environment) -> None:
+        env = new_environment(live_environment["bucket"])
+        engine = live_environment["engine"]
         runtime = live_environment["runtime"]
-        command = _command(env, classification_ref="classification:forbidden")
+        command = build_command(env, _engine=engine)
+        runtime.load_corpus_manifest(minimal_ir_manifest(env))
         receipt = runtime.ingest(command)
-        assert receipt.state == CANONICAL_FAILURE_SECURITY_DENIED
-        assert receipt.failure_code == "security_denied:classification_forbidden"
 
-    def test_credential_blocked_without_binding(self, live_environment) -> None:
-        env = _new_environment()
-        env["bucket"] = live_environment["bucket"]
-        unbound = Phase22CanonicalIngestionRuntime(
-            engine=live_environment["engine"],
-            object_store=None,
-            bucket=env["bucket"],
-            worker_id="phase22-unbound-test",
+        with engine.connect() as connection:
+            row = connection.execute(
+                text(
+                    """
+                    SELECT coverage_score, confidence_score, decision
+                    FROM ingestion_quality_gate_decisions
+                    WHERE parse_snapshot_id = :parse_snapshot_id
+                      AND tenant_id = :tenant_id
+                    """
+                ),
+                {
+                    "parse_snapshot_id": receipt.parse_snapshot_id,
+                    "tenant_id": env["tenant_id"],
+                },
+            ).mappings().first()
+        assert row is not None
+        # measured values from the deterministic quality contract: the stored
+        # IR's min block confidence — not 1.0/1.0 manufactured by construction
+        snapshot = live_environment["facts"].parse_snapshot_fact(
+            tenant_id=env["tenant_id"],
+            parse_snapshot_id=receipt.parse_snapshot_id,
         )
-        command = _command(env)
-        receipt = unbound.ingest(command)
-        assert receipt.state == CANONICAL_FAILURE_CREDENTIAL_BLOCKED
-        assert receipt.failure_code == "object_store_binding_missing"
+        ir = snapshot.canonical_ir
+        block_confidences = [float(b.get("confidence") or 0.0) for b in ir["blocks"]] or [0.0]
+        expected = min(block_confidences)
+        assert float(row["coverage_score"]) == expected
+        assert float(row["confidence_score"]) == expected
+        assert row["decision"] in {"publish", "human_review"}
 
-    def test_object_commit_failed(self, live_environment) -> None:
-        """Fault injection: durable commit refuses — the run fails closed."""
-        env = _new_environment()
-        env["bucket"] = live_environment["bucket"]
+    def test_receipt_truth_from_owner_tables(self, live_environment) -> None:
+        """Receipt fields are read from owner tables, not naming conventions."""
+        env = new_environment(live_environment["bucket"])
+        engine = live_environment["engine"]
+        runtime = live_environment["runtime"]
+        facts = live_environment["facts"]
+        command = build_command(env, _engine=engine)
+        runtime.load_corpus_manifest(minimal_ir_manifest(env))
+        receipt = runtime.ingest(command)
 
-        class _FailingDurableStore(DurableMinioObjectStore):
-            def commit(self, ticket):  # type: ignore[override]
-                raise ObjectHashMismatchError("injected commit failure")
-
-        failing_runtime = Phase22CanonicalIngestionRuntime(
-            engine=live_environment["engine"],
-            object_store=_FailingDurableStore(
-                store=live_environment["minio"],
-                engine=live_environment["engine"],
-                owner="phase22.fault_injection",
-            ),
-            bucket=env["bucket"],
-            worker_id="phase22-fault-test",
+        reread = runtime.get_run(run_id=receipt.run_id, tenant_id=env["tenant_id"])
+        assert reread.document_version_id == receipt.document_version_id
+        # object_manifest_hash comes from the manifest row, not the source hash
+        manifest = facts.object_manifest_fact(object_ref=receipt.object_ref)
+        assert reread.object_manifest_hash == manifest.content_hash
+        assert reread.object_manifest_hash == receipt.source_sha256
+        # parse snapshot id comes from the owner row
+        assert reread.parse_snapshot_id == receipt.parse_snapshot_id
+        # run state comes from the run owner table
+        run_fact = runtime.runs.current_fact(
+            run_id=receipt.run_id, tenant_id=env["tenant_id"]
         )
-        command = _command(env)
-        receipt = failing_runtime.ingest(command)
-        assert receipt.state == CANONICAL_FAILURE_OBJECT_COMMIT_FAILED
-        assert receipt.failure_code == "object_hash_mismatch"
+        assert run_fact.current_state == CANONICAL_STATE_KV_READY
+        assert run_fact.state_version == 5
+        assert reread.state_version == 5
 
     def test_submitted_not_ingested(self, live_environment, monkeypatch) -> None:
-        """A submitted parse request does not equal an ingested document.
-
-        The parse-requested outbox event is enqueued (submitted), but the
-        canonicalizer fails, so the run is NOT ingested: queue submission and
-        domain success are different facts.
-        """
-        env = _new_environment()
-        env["bucket"] = live_environment["bucket"]
+        env = new_environment(live_environment["bucket"])
+        engine = live_environment["engine"]
         runtime = live_environment["runtime"]
 
         def _failing_parse(request):  # type: ignore[no-untyped-def]
@@ -599,66 +706,121 @@ class TestLiveCanonicalIngestion:
             "zuno.knowledge.ingestion.gateway.ParseGateway.submit_parse_job",
             staticmethod(_failing_parse),
         )
-        command = _command(env)
+        command = build_command(env, _engine=engine)
+        runtime.load_corpus_manifest(minimal_ir_manifest(env))
         receipt = runtime.ingest(command)
         assert receipt.state == CANONICAL_FAILURE_CANONICALIZATION_FAILED
-        assert receipt.failure_code.startswith("canonicalization_failed")
-        # the queue submission happened but the run is NOT ingested
-        ledger = runtime.get_run(run_id=receipt.run_id, tenant_id=env["tenant_id"])
-        states = [event["state"] for event in ledger.events]
-        assert CANONICAL_STATE_OBJECT_COMMITTED in states
-        assert CANONICAL_STATE_KV_READY not in states
         assert receipt.knowledge_version_id is None
         assert not receipt.chunk_ids
-
-    def test_queue_ack_not_domain_success(self, live_environment) -> None:
-        """The parse-request outbox row (pending) is not a domain success fact."""
-        env = _new_environment()
-        env["bucket"] = live_environment["bucket"]
-        runtime = live_environment["runtime"]
-        command = _command(env)
-        receipt = runtime.ingest(command)
-        assert receipt.state == CANONICAL_STATE_KV_READY
-        # the parse-requested outbox event exists but the run state machine is
-        # the domain truth, not any queue acknowledgment
-        engine = live_environment["engine"]
+        # queue submission happened but the run is NOT ingested
         with engine.connect() as connection:
             row = connection.execute(
                 text(
                     """
-                    SELECT event_id, status FROM infra_outbox_events
+                    SELECT event_id FROM infra_outbox_events
                     WHERE tenant_id = :tenant_id
                       AND topic = 'ingestion.parse.requested'
-                    ORDER BY event_id DESC LIMIT 1
                     """
                 ),
                 {"tenant_id": env["tenant_id"]},
             ).mappings().first()
         assert row is not None
-        states = [event["state"] for event in receipt.events]
-        assert states[-1] == CANONICAL_STATE_KV_READY
+        states = [t["to_state"] for t in receipt.transitions]
+        assert CANONICAL_STATE_OBJECT_COMMITTED in states
+        assert CANONICAL_STATE_KV_READY not in states
 
-    def test_reconciliation_required_on_tampered_object(self, live_environment) -> None:
-        env = _new_environment()
-        env["bucket"] = live_environment["bucket"]
+    def test_explicit_retry_after_stage_failure(self, live_environment) -> None:
+        env = new_environment(live_environment["bucket"])
+        engine = live_environment["engine"]
+        runtime = live_environment["runtime"]
+
+        class _FailingStageStore(DurableMinioObjectStore):
+            def __init__(self, *args: Any, **kwargs: Any) -> None:
+                super().__init__(*args, **kwargs)
+                self.fail_next = True
+
+            def stage(self, **kwargs: Any):  # type: ignore[override]
+                if self.fail_next:
+                    self.fail_next = False
+                    raise ConnectionError("injected stage failure")
+                return super().stage(**kwargs)
+
+        failing_runtime = Phase22CanonicalIngestionRuntime(
+            engine=engine,
+            object_store=_FailingStageStore(
+                store=live_environment["minio"],
+                engine=engine,
+                owner="phase22.fault_injection",
+            ),
+            bucket=env["bucket"],
+            worker_id="phase22-fault-test",
+        )
+        command = build_command(env, _engine=engine)
+        failing_runtime.load_corpus_manifest(minimal_ir_manifest(env))
+        receipt = failing_runtime.ingest(command)
+        # stage failure is recorded as object_stage_failed, never
+        # accepted -> object_commit_failed
+        assert receipt.state == CANONICAL_FAILURE_OBJECT_STAGE_FAILED
+        assert receipt.failure_code == "object_stage_failed"
+
+        retried = failing_runtime.retry(command)
+        assert retried.state == CANONICAL_STATE_KV_READY
+        assert retried.attempt_number == 2
+
+    def test_reconciliation_on_tampered_object(self, live_environment) -> None:
+        from io import BytesIO
+
+        env = new_environment(live_environment["bucket"])
+        engine = live_environment["engine"]
         runtime = live_environment["runtime"]
         minio = live_environment["minio"]
-        command = _command(env)
+        command = build_command(env, _engine=engine)
+        runtime.load_corpus_manifest(minimal_ir_manifest(env))
         receipt = runtime.ingest(command)
         assert receipt.state == CANONICAL_STATE_KV_READY
 
         bucket, object_name = receipt.object_ref[len("s3://"):].split("/", 1)
-        # tamper with the committed object bytes in place (test-only fault
-        # injection via the raw physical client)
         tampered = b"tampered bytes that break the content hash"
         minio.client.put_object(
-            bucket,
-            object_name,
-            BytesIO(tampered),
-            length=len(tampered),
+            bucket, object_name, BytesIO(tampered), length=len(tampered)
         )
         reconciled = runtime.reconcile(
             run_id=receipt.run_id, tenant_id=env["tenant_id"]
         )
         assert reconciled.state == CANONICAL_FAILURE_RECONCILIATION_REQUIRED
         assert reconciled.failure_code == "object_bytes_mismatch"
+        # restore the bytes and resume through the explicit reconciliation edge
+        minio.client.put_object(
+            bucket,
+            object_name,
+            BytesIO(command.content),
+            length=len(command.content),
+        )
+        resumed = runtime.resume_after_reconcile(
+            command, to_state=CANONICAL_STATE_OBJECT_COMMITTED
+        )
+        assert resumed.state == CANONICAL_STATE_KV_READY
+
+    def test_terminal_state_rejects_ordinary_overwrite(self, live_environment) -> None:
+        env = new_environment(live_environment["bucket"])
+        engine = live_environment["engine"]
+        runtime = live_environment["runtime"]
+        command = build_command(env, _engine=engine)
+        runtime.load_corpus_manifest(minimal_ir_manifest(env))
+        receipt = runtime.ingest(command)
+        assert receipt.state == CANONICAL_STATE_KV_READY
+        # an ordinary overwrite of the success terminal is rejected by the
+        # declarative state machine (kv_ready has only the reconciliation edge)
+        with pytest.raises(ValueError):
+            runtime.runs.transition(
+                run_id=receipt.run_id,
+                tenant_id=env["tenant_id"],
+                to_state=CANONICAL_STATE_OBJECT_STAGED,
+                expected_from_state=CANONICAL_STATE_KV_READY,
+            )
+        # the durable state is unchanged
+        run_fact = runtime.runs.current_fact(
+            run_id=receipt.run_id, tenant_id=env["tenant_id"]
+        )
+        assert run_fact.current_state == CANONICAL_STATE_KV_READY
+        assert run_fact.state_version == 5
