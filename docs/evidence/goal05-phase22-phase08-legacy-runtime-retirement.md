@@ -7,16 +7,51 @@ agent_name: DeepSeek-Legacy-Runtime
 execution_client: Claude Code
 provider: DeepSeek
 base_sha: 83c1bbd0689d1b2b3b4ffd7f3983de813da11ebb
-status: worker_delivered
+head_sha: a83f0c53c6c6e9058138736965a218e006e6ff95
+truth_boundary: PHASE08_EXECUTION_DUAL_PATH_RETIRED
 production_ready: false
 pr: https://github.com/ProfessorZhi/Zuno/pull/124
 pr_v1_record: https://github.com/ProfessorZhi/Zuno/pull/122 (closed; trailer gate)  # noqa: E501
+ci_run: "30876963807" (PHASE22 Contract Verification; conclusion success)
+ci_jobs:
+  - "Repository Gates & Static Checks: success"
+  - "PHASE22 Focused Test Suite: success"
+  - "Generate Verification Evidence & Summary: success"
 
 ## Summary
 
 退休了 `Phase08CutoverController` 中仍然活跃的 Legacy Runtime、rollback/shadow/canary
 双路径和异常自动 fallback。Rollback Window 结束后,生产路径只有 Single Controller
 Product Runtime → 固定 `AgentRunGraph` / `StepExecutionGraph` → `RunOutcome`。
+
+## Truth Boundary (narrowed)
+
+This work package retires ONLY the Phase08 *execution* dual-path
+surfaces the spec mandates. It does NOT declare the whole repository
+CLEAN or PHASE22 Completed.
+
+Retired here:
+- Phase08CutoverController execution dual-path
+- LegacyRunner type alias
+- _run_legacy, _fallback_to_legacy methods
+- rollback / shadow / canary mode dispatch in Phase08 Runtime handle()
+- WorkspaceTaskRuntimeService.configure_phase08_cutover,
+  _run_phase08_cutover_for_task, and the _phase08_cutover_* task
+  lifecycle state
+
+Kept (not retired here; other work packages own these):
+- CutoverMode type / product-layer command-kind Contract
+- completion.py and product command service fail-closed input
+  validation
+- Historical audit ledger (agent_cutover_audit_events)
+- SideEffectLedger / PostgresPhase08CutoverLedger (canonical
+  persistence)
+- Product protocol compatibility surfaces that do not route
+  through the Phase08 Runtime execution dual-path
+
+Status string (this PR): PHASE08_EXECUTION_DUAL_PATH_RETIRED.
+Forbidden status strings: ALL_CUTOVER_CONTRACTS_REMOVED,
+PHASE22_COMPLETED, PRODUCTION_READY.
 
 ## Before Call Chain
 
