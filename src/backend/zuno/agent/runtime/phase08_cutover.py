@@ -3,12 +3,15 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 import hashlib
 import json
-from typing import Any, Callable, Literal, Protocol
+from typing import Any, Literal, Protocol
 
 from zuno.agent.domain import AgentDomainConflict
 from zuno.agent.runtime.phase08 import Phase08RunService
 
 
+# Kept only as a product-surface typing annotation (completion routing). The
+# phase08 cutover execution surface that dispatched on these modes was removed
+# in PHASE22; no runtime dispatches on this literal anymore.
 CutoverMode = Literal["shadow", "canary", "new_default", "rollback"]
 
 
@@ -173,163 +176,58 @@ class PostgresPhase08CutoverLedger:
         return receipt.ref
 
 
-LegacyRunner = Callable[[Phase08RuntimeRequest, bool], Phase08RuntimeResponse]
+class Phase08RetiredController:
+    """PHASE22 fail-closed retired adapter for the removed cutover controller.
 
+    The PHASE08 dual-path controller (rollback / shadow / canary dispatch and
+    automatic fallback to the old runtime after new-runtime exceptions) was
+    removed when the rollback window closed. This adapter is the only surviving
+    controller symbol and it is inert:
 
-@dataclass
-class Phase08CutoverController:
-    mode: CutoverMode
-    legacy_runner: LegacyRunner
-    new_runtime: Phase08RunService | None = None
-    side_effect_ledger: Phase08SideEffectLedger = field(default_factory=SideEffectLedger)
-    audit: Phase08CutoverAudit | None = None
+    - it accepts no mode and no runner; passing either raises ``TypeError``;
+    - ``handle`` always raises :class:`Phase08CutoverError`;
+    - it holds no runtime reference and can never execute one.
+
+    Production reaches the canonical runtime directly
+    (``Phase08RunService`` / ``UnifiedAgentRuntimeService``); see
+    :func:`classify_phase08_final_state` for the post-retirement failure
+    semantics.
+    """
 
     def handle(self, request: Phase08RuntimeRequest) -> Phase08RuntimeResponse:
-        if self.mode == "rollback":
-            response = self._run_legacy(request, allow_side_effect=True)
-            self._record_audit(request, response, primary_runtime="legacy", effect_committed=True, fallback_allowed=False)
-            return response
-
-        if self.mode == "shadow":
-            legacy = self._run_legacy(request, allow_side_effect=True)
-            try:
-                shadow = self._run_new(request, allow_side_effect=False)
-            except Exception as exc:
-                response = Phase08RuntimeResponse(
-                    runtime=legacy.runtime,
-                    request_hash=request.request_hash,
-                    output_ref=legacy.output_ref,
-                    trace_ref=legacy.trace_ref,
-                    side_effect_ref=legacy.side_effect_ref,
-                    shadow_match=False,
-                    rollback_reason=f"shadow_unavailable:{type(exc).__name__}",
-                )
-                self._record_audit(
-                    request,
-                    response,
-                    primary_runtime="legacy",
-                    effect_committed=True,
-                    fallback_allowed=False,
-                )
-                return response
-            response = Phase08RuntimeResponse(
-                runtime=legacy.runtime,
-                request_hash=request.request_hash,
-                output_ref=legacy.output_ref,
-                trace_ref=legacy.trace_ref,
-                side_effect_ref=legacy.side_effect_ref,
-                shadow_output_ref=shadow.output_ref,
-                shadow_trace_ref=shadow.trace_ref,
-                shadow_match=legacy.output_ref == shadow.output_ref,
-            )
-            self._record_audit(request, response, primary_runtime="legacy", effect_committed=True, fallback_allowed=False)
-            return response
-
-        try:
-            primary = self._run_new(request, allow_side_effect=True)
-        except Phase08SideEffectClaimError:
-            raise
-        except Phase08CutoverError as exc:
-            return self._fallback_to_legacy(request, exc)
-        except Exception as exc:
-            return self._fallback_to_legacy(request, exc)
-        if self.mode == "canary":
-            legacy_shadow = self._run_legacy(request, allow_side_effect=False)
-            response = Phase08RuntimeResponse(
-                runtime=primary.runtime,
-                request_hash=request.request_hash,
-                output_ref=primary.output_ref,
-                trace_ref=primary.trace_ref,
-                side_effect_ref=primary.side_effect_ref,
-                shadow_output_ref=legacy_shadow.output_ref,
-                shadow_trace_ref=legacy_shadow.trace_ref,
-                shadow_match=primary.output_ref == legacy_shadow.output_ref,
-            )
-            self._record_audit(request, response, primary_runtime="phase08", effect_committed=True, fallback_allowed=False)
-            return response
-        self._record_audit(request, primary, primary_runtime="phase08", effect_committed=True, fallback_allowed=False)
-        return primary
-
-    def _run_legacy(self, request: Phase08RuntimeRequest, *, allow_side_effect: bool) -> Phase08RuntimeResponse:
-        return self.legacy_runner(request, allow_side_effect)
-
-    def _run_new(self, request: Phase08RuntimeRequest, *, allow_side_effect: bool) -> Phase08RuntimeResponse:
-        if self.new_runtime is None:
-            raise Phase08CutoverError("phase08 durable runtime is not configured")
-        state = self.new_runtime.start(
-            {
-                "run_id": f"run:{request.task_id}:phase08",
-                "thread_id": f"thread:{request.task_id}:phase08",
-                "trace_id": request.trace_id,
-                "task_contract_id": f"task-contract:{request.task_id}",
-                "active_goal_version_id": f"goal:{request.task_id}",
-                "security_epoch_ref": request.security_epoch_ref,
-                "current_security_epoch_ref": request.security_epoch_ref,
-                "budget_requested_units": request.budget_requested_units,
-                "budget_available_units": request.budget_available_units,
-                "shadow_domain_commit_suppressed": not allow_side_effect,
-            }
-        )
-        if state.get("finalization_status") != "finalized":
-            raise Phase08CutoverError(f"new runtime did not finalize: {state.get('finalization_status')}")
-        side_effect_ref = self.side_effect_ledger.claim(request, runtime="phase08") if allow_side_effect else None
-        return Phase08RuntimeResponse(
-            runtime="phase08",
-            request_hash=request.request_hash,
-            output_ref=f"answer:{request.request_hash[:16]}",
-            trace_ref=str(state["trace_id"]),
-            side_effect_ref=side_effect_ref,
+        del request
+        raise Phase08CutoverError(
+            "phase08 cutover controller is retired: production runs the canonical phase08 runtime directly"
         )
 
-    def _fallback_to_legacy(self, request: Phase08RuntimeRequest, exc: Exception) -> Phase08RuntimeResponse:
-        if self.side_effect_ledger.has_claim(request):
-            response = Phase08RuntimeResponse(
-                runtime="phase08",
-                request_hash=request.request_hash,
-                output_ref=f"answer:{request.request_hash[:16]}",
-                trace_ref=request.trace_id,
-                side_effect_ref=f"side-effect:{request.idempotency_key}",
-                rollback_reason=f"fallback_blocked_after_effect:{type(exc).__name__}",
-            )
-            self._record_audit(
-                request,
-                response,
-                primary_runtime="phase08",
-                effect_committed=True,
-                fallback_allowed=False,
-            )
-            raise Phase08CutoverError(response.rollback_reason) from exc
-        legacy = self._run_legacy(request, allow_side_effect=True)
-        response = Phase08RuntimeResponse(
-            runtime=legacy.runtime,
-            request_hash=request.request_hash,
-            output_ref=legacy.output_ref,
-            trace_ref=legacy.trace_ref,
-            side_effect_ref=legacy.side_effect_ref,
-            rollback_reason=f"new_runtime_unavailable:{type(exc).__name__}",
-        )
-        self._record_audit(request, response, primary_runtime="legacy", effect_committed=True, fallback_allowed=True)
-        return response
 
-    def _record_audit(
-        self,
-        request: Phase08RuntimeRequest,
-        response: Phase08RuntimeResponse,
-        *,
-        primary_runtime: str,
-        effect_committed: bool,
-        fallback_allowed: bool,
-    ) -> None:
-        if self.audit is None:
-            return
-        self.audit.record(
-            request,
-            mode=self.mode,
-            primary_runtime=primary_runtime,
-            effect_committed=effect_committed,
-            fallback_allowed=fallback_allowed,
-            trace_ref=response.trace_ref,
-        )
+def classify_phase08_final_state(state: dict[str, Any]) -> str:
+    """Classify a canonical ``Phase08RunService.start`` result under PHASE22 semantics.
+
+    The retired cutover controller never falls back to another runtime, so the
+    classification of a new-runtime result is the whole failure contract:
+
+    - ``EFFECT_COMMITTED`` — a side-effect claim was recorded; no second runtime
+      may ever execute for this request; return the committed facts or enter
+      reconciliation.
+    - ``COMPLETED`` — finalized with an outcome; the original facts are returned.
+    - ``FAILED/BLOCKED`` — the run failed or was blocked before any side effect
+      claim; a retry may reuse the original plan, and there is no old runtime
+      to switch to.
+    - ``RECONCILIATION_REQUIRED`` — the effect state is unknown: no recognized
+      terminal shape (e.g. the run did not finalize). The caller must consult
+      the effect ledger / generation reconciliation
+      (:func:`~zuno.agent.runtime.reconcile_generations`) and get operator
+      confirmation before any retry.
+    """
+    finalization_status = str(state.get("finalization_status") or "")
+    if state.get("effect_claim_ref") is not None:
+        return "EFFECT_COMMITTED"
+    if state.get("outcome_ref") is not None and finalization_status == "finalized":
+        return "COMPLETED"
+    if finalization_status in {"failed", "blocked", "cancelled", "abstained", "interrupted"}:
+        return "FAILED/BLOCKED"
+    return "RECONCILIATION_REQUIRED"
 
 
 def _hash(payload: dict[str, object]) -> str:
@@ -339,13 +237,14 @@ def _hash(payload: dict[str, object]) -> str:
 
 __all__ = [
     "CutoverMode",
-    "Phase08CutoverController",
-    "Phase08CutoverError",
     "Phase08CutoverAudit",
+    "Phase08CutoverError",
+    "Phase08RetiredController",
     "Phase08RuntimeRequest",
     "Phase08RuntimeResponse",
     "Phase08SideEffectClaimError",
     "Phase08SideEffectLedger",
     "PostgresPhase08CutoverLedger",
     "SideEffectLedger",
+    "classify_phase08_final_state",
 ]
