@@ -4,9 +4,15 @@ from dataclasses import dataclass, replace
 from typing import Iterable
 
 from zuno.agent.durable_runtime import DurableRuntimeTaskSnapshot
-from zuno.agent.contracts import ContextPack
+from zuno.agent.contracts import CapabilityPlan, ContextPack, PlanState, PlanStep
 from zuno.agent.runtime.checkpointer import RuntimeGraphCheckpointer
-from zuno.agent.runtime.contracts import FinalizationStatus, ReflectionDecision, StrategyDecision, StrategyMode
+from zuno.agent.runtime.contracts import (
+    FinalizationStatus,
+    ReflectionDecision,
+    RuntimeLimits,
+    StrategyDecision,
+    StrategyMode,
+)
 from zuno.agent.runtime.dependencies import RuntimeDependencies
 from zuno.agent.runtime.factory import RuntimeDependencyFactory
 from zuno.agent.runtime.graph import build_agent_graph
@@ -32,6 +38,17 @@ class RuntimeStartRequest:
     knowledge_space_ids: tuple[str, ...] = ()
     strategy_mode: StrategyMode | str | None = None
     reflection_decision: ReflectionDecision | str | None = None
+    # Single-controller product cutover: product adapters seed the capability
+    # plan, planning-admission gates and a deterministic plan so product
+    # traffic runs through the fixed graph's plan / security / approval /
+    # budget / run-outcome pipeline (never a direct tool or model handler).
+    capability_ids: tuple[str, ...] = ()
+    allowed_tools: tuple[str, ...] = ()
+    approval_required_tools: tuple[str, ...] = ()
+    budget_limits: dict[str, Any] | None = None
+    security_summary: dict[str, Any] | None = None
+    budget_verdict: dict[str, Any] | None = None
+    plan_steps: tuple[dict[str, Any], ...] = ()
 
 
 @dataclass(frozen=True, slots=True)
@@ -73,6 +90,11 @@ class UnifiedAgentRuntimeService:
             task_id=request.task_id,
             trace_id=request.trace_id,
             goal=request.goal,
+            capability_plan=_capability_plan_from_request(request),
+            plan_state=_plan_state_from_request(request),
+            limits=_limits_from_request(request),
+            security_summary=dict(request.security_summary or {}),
+            budget_verdict=dict(request.budget_verdict) if request.budget_verdict else None,
             context_pack=(
                 ContextPack(
                     context_pack_id=f"context:{request.run_id}",
@@ -180,6 +202,59 @@ class UnifiedAgentRuntimeService:
         if not self.store.has_task(task_id):
             return None
         return _runtime_state_from_task_snapshot(self.store.snapshot(task_id)).to_snapshot()
+
+
+def _capability_plan_from_request(request: RuntimeStartRequest) -> CapabilityPlan | None:
+    """Seed the pinned capability plan from the product surface.
+
+    The product adapter declares the session's tool set; the fixed graph's
+    strategy/plan nodes then route tool requests through the formal
+    capability plan instead of an ad-hoc product runtime.
+    """
+    if not request.capability_ids and not request.allowed_tools:
+        return CapabilityPlan()
+    return CapabilityPlan(
+        availability_snapshot_ref=f"capability_snapshot:{request.task_id}",
+        selection_result_ref=f"capability_selection:{request.task_id}",
+        selection_validity="fixed_planning_snapshot",
+        allowed_capabilities=list(request.capability_ids),
+        allowed_tools=list(request.allowed_tools),
+        approval_required_tools=list(request.approval_required_tools),
+        blocked_capability_reasons={},
+        executed_tools=[],
+        risk_summary={"blocked_count": 0, "approval_required_count": len(request.approval_required_tools)},
+    )
+
+
+def _plan_state_from_request(request: RuntimeStartRequest) -> PlanState | None:
+    """Seed a deterministic plan from the product surface.
+
+    Simple requests leave the plan to the fixed graph's strategy selector
+    (single-step direct-answer). Requests that need governed tool execution
+    carry an explicit plan whose tool steps bind real tool ids + arguments;
+    the graph still runs every step through security / approval / budget /
+    gateway gates.
+    """
+    if not request.plan_steps:
+        return None
+    steps = [PlanStep(**step) for step in request.plan_steps]
+    return PlanState(
+        plan_id=f"plan:{request.run_id}",
+        status="planned",
+        steps=steps,
+        current_step_id=steps[0].step_id if steps else None,
+    )
+
+
+def _limits_from_request(request: RuntimeStartRequest) -> RuntimeLimits:
+    """Apply product budget limits (max steps / tokens / cost / timeout)."""
+    if not request.budget_limits:
+        return RuntimeLimits()
+    allowed = {
+        name
+        for name in RuntimeLimits.model_fields
+    }
+    return RuntimeLimits(**{key: value for key, value in request.budget_limits.items() if key in allowed})
 
 
 def _runtime_state_from_task_snapshot(snapshot: DurableRuntimeTaskSnapshot) -> AgentRuntimeState:

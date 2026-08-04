@@ -370,6 +370,11 @@ class PlanStep(BaseModel):
     attempt: int = 0
     status: str = "pending"
     observation_refs: list[str] = Field(default_factory=list)
+    # Single-controller product cutover: tool_call steps carry the resolved
+    # tool id and arguments so execution goes through the formal capability /
+    # security / approval / budget gates (never a direct tool handler).
+    tool_id: str | None = None
+    tool_arguments: dict[str, Any] | None = None
 
 
 class PlanState(BaseModel):

@@ -111,6 +111,10 @@ class ToolStepExecutor:
 
 
 def _tool_id_for_step(state: AgentRuntimeState, step: PlanStep) -> str:
+    # Single-controller product cutover: tool steps bind the real tool id in
+    # the plan; execution still flows through the control plane gates.
+    if step.tool_id:
+        return step.tool_id
     if step.action_type == "observe_tool_result":
         return "filesystem.read"
     if step.allowed_capabilities:
@@ -130,6 +134,8 @@ def _tool_id_for_step(state: AgentRuntimeState, step: PlanStep) -> str:
 
 
 def _arguments_for_step(state: AgentRuntimeState, step: PlanStep, tool_id: str) -> dict:
+    if step.tool_arguments is not None:
+        return dict(step.tool_arguments)
     goal = f"{state.goal} {step.goal}"
     if tool_id == "filesystem.read":
         return {"path": "docs/contract.md"}

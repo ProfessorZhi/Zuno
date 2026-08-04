@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 import asyncio
+import logging
 from copy import deepcopy
 from dataclasses import dataclass, field, replace
 import hashlib
@@ -16,6 +17,7 @@ from zuno.capability.control_plane import (
     ExecutorAdapterContract,
     ExecutorRegistry,
     NormalizedToolResult,
+    ToolApprovalDecision,
     ToolApprovalPolicy,
     ToolCardManifest,
     ToolExecutionMode,
@@ -584,7 +586,24 @@ class ToolControlPlaneRuntime:
                     tool_result_id=result_id,
                 )
         else:
-            raw_result = self._executors[adapter.adapter_id](request.arguments, execution_context)
+            try:
+                raw_result = self._executors[adapter.adapter_id](request.arguments, execution_context)
+            except Exception as exc:
+                # A tool implementation failure must become a failed run
+                # observation (retryable by plan), never a crash of the run
+                # graph or a fallback to another runtime.
+                logging.getLogger(__name__).warning(
+                    f"tool executor failed for {manifest.tool_id}: {type(exc).__name__}: {exc}"
+                )
+                return self._build_failed_execution_result(
+                    request=request,
+                    manifest=manifest,
+                    adapter=adapter,
+                    audit_event=audit_event,
+                    sandbox_context=sandbox_context,
+                    approval_decision=approval_decision,
+                    error=exc,
+                )
         normalized = ToolResultNormalizer.normalize(
             tool_id=manifest.tool_id,
             raw_result=raw_result,
@@ -980,6 +999,98 @@ class ToolControlPlaneRuntime:
                     "security_decision": SecurityDecision.ALLOW.value,
                 },
             },
+        )
+
+    def _build_failed_execution_result(
+        self,
+        *,
+        request: ToolRuntimeRequest,
+        manifest: ToolCardManifest,
+        adapter: ExecutorAdapterContract,
+        audit_event: SandboxAuditEvent,
+        sandbox_context: ToolSandboxContext,
+        approval_decision: ToolApprovalDecision,
+        error: Exception,
+    ) -> ToolRuntimeExecutionResult:
+        """Convert a tool implementation exception into a failed observation.
+
+        PHASE22 workspace-agent cutover: a failing tool marks the step failed
+        (retryable by plan); it never crashes the run graph and never triggers
+        a fallback to another runtime.
+        """
+        execution_id = f"exec_{request.trace_id}_{uuid4().hex[:8]}"
+        result_id = f"tool_result_{execution_id}"
+        failure_reason = f"{type(error).__name__}: {error}"
+        events = (
+            self._tool_call_event(
+                request=request,
+                manifest=manifest,
+                sandbox_context=sandbox_context,
+                status="failed",
+            ),
+            self._sandbox_audit_event(
+                audit_event=audit_event,
+                sandbox_context=sandbox_context,
+                status="failed",
+            ),
+            {
+                "type": "tool_result",
+                "status": "failed",
+                "payload": {
+                    "status": "failed",
+                    "tool_request_id": request.tool_request_id,
+                    "approval_id": request.approval_id,
+                    "tool_execution_id": execution_id,
+                    "tool_result_id": result_id,
+                    "tool_id": manifest.tool_id,
+                    "failure_reason": failure_reason,
+                    "audit_ref": audit_event.audit_id,
+                    "credential_refs": list(sandbox_context.credential_refs),
+                    "security_decision": SecurityDecision.ALLOW.value,
+                },
+            },
+        )
+        try:
+            self._record_tool_runtime_facts(
+                request=request,
+                manifest=manifest,
+                adapter=adapter,
+                result=ToolRuntimeExecutionResult(
+                    tool_id=manifest.tool_id,
+                    status="failed",
+                    approval_required=False,
+                    security_decision=SecurityDecision.ALLOW.value,
+                    approval_decision=approval_decision.to_dict(),
+                    audit_event=audit_event,
+                    sandbox_context=sandbox_context,
+                    task_events=events,
+                    tool_request_id=request.tool_request_id,
+                    approval_id=request.approval_id,
+                    tool_execution_id=execution_id,
+                    tool_result_id=result_id,
+                ),
+                attempt_status="FAILED",
+                dispatch_certainty="DISPATCHED",
+                effect_certainty="NO_EFFECT",
+                observation_payload={"failure_reason": failure_reason},
+            )
+        except Exception as facts_exc:  # telemetry write must not mask the failure
+            logging.getLogger(__name__).warning(
+                f"tool failure facts recording skipped for {manifest.tool_id}: {type(facts_exc).__name__}"
+            )
+        return ToolRuntimeExecutionResult(
+            tool_id=manifest.tool_id,
+            status="failed",
+            approval_required=False,
+            security_decision=SecurityDecision.ALLOW.value,
+            approval_decision=approval_decision.to_dict(),
+            audit_event=audit_event,
+            sandbox_context=sandbox_context,
+            task_events=events,
+            tool_request_id=request.tool_request_id,
+            approval_id=request.approval_id,
+            tool_execution_id=execution_id,
+            tool_result_id=result_id,
         )
 
     def _events_for_blocked(

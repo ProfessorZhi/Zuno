@@ -20,6 +20,8 @@ class RuntimeStrategySelector:
                 pinned_capability_plan=_capability_plan(state=state, deps=deps),
                 available_capability_ids=tuple(state.capability_plan.allowed_capabilities),
                 user_roles=("analyst",),
+                security_summary=dict(state.security_summary or {}),
+                budget_verdict=state.budget_verdict,
             )
         )
         mode = StrategyMode(output.strategy.strategy)

@@ -1,31 +1,40 @@
-import copy
-import time
 import asyncio
-from loguru import logger
+import hashlib
+import tempfile
+from pathlib import Path
 from typing import List, Any
+
+from loguru import logger
 from pydantic import BaseModel
-from langgraph.types import Command
-from langgraph.prebuilt.tool_node import ToolCallRequest
-from langchain.agents import create_agent
-from langchain.agents.middleware import wrap_tool_call, ToolCallLimitMiddleware
-from langchain_core.messages import BaseMessage, AIMessage, ToolMessage, AIMessageChunk
+from langchain_core.messages import AIMessage, BaseMessage, ToolMessage
 
 from zuno.api.services.knowledge import KnowledgeService
-from zuno.agent.core.callbacks import usage_metadata_callback
+from zuno.api.services.mcp_user_config import MCPUserConfigService
+from zuno.api.services.usage_stats import UsageStatsService
+from zuno.api.services.workspace_session import WorkSpaceSessionService
+from zuno.api.services.user import UserService
 from zuno.platform.services.rag.handler import RagHandler
+from zuno.capability.control_plane import ToolExecutionMode, ToolSideEffectLevel
 from zuno.capability.tools import WeChatTools
 from zuno.api.dto.usage_stats import UsageStatsAgentType
 from zuno.api.dto.workspace import WorkSpaceAgents
-from zuno.api.services.user import UserService
 from zuno.platform.services.mcp.manager import MCPManager
 from zuno.platform.resources.prompts.completion import GenerateTitlePrompt
 from zuno.platform.common.convert import convert_mcp_config
 from zuno.agent.core.models.manager import ModelManager
-from zuno.api.services.mcp_user_config import MCPUserConfigService
-from zuno.api.services.usage_stats import UsageStatsService
-from zuno.api.services.workspace_session import WorkSpaceSessionService
 from zuno.platform.database.models.workspace_session import WorkSpaceSessionCreate, WorkSpaceSessionContext
-from zuno.platform.common.model_output import extract_visible_text_from_stream, is_minimax_model, normalize_messages_for_model, strip_model_wrapper_from_user_input, strip_think_tags
+from zuno.platform.common.model_output import (
+    extract_visible_text_from_stream,
+    is_minimax_model,
+    normalize_messages_for_model,
+    strip_model_wrapper_from_user_input,
+    strip_think_tags,
+)
+from zuno.platform.services.workspace.single_controller_runtime import (
+    WorkspaceAgentRuntime,
+    WorkspaceRunRequest,
+    WorkspaceToolBinding,
+)
 
 
 class MCPConfig(BaseModel):
@@ -43,23 +52,14 @@ class MCPConfig(BaseModel):
 
 
 class WeChatAgent:
-    """
+    """WeChat product adapter over the canonical Single Controller Runtime.
 
-    Sub-agent that can invoke **both user-provided plugin functions and MCP tools**.  It analyses the
-    current conversation, decides which tool(s) should be run, performs the calls asynchronously and
-    pushes progress/result events back to the main :class:`mars_agent.agent.MarsAgent`.
-
-    Responsibilities
-    ---------------
-    1. Select appropriate plugin or MCP tool according to conversation context.
-    2. Execute the tool in an asynchronous, non-blocking way.
-    3. Report every progress, success or error through the shared ``EventManager``.
-    4. **Does not generate any LLM response** – that task belongs to the main agent.
-
-    Usage
-    -----
-    ``WeChatAgent`` instances are automatically created by.
-    End-users rarely need to touch this class directly.
+    PHASE22 cutover: the previous independent langchain prebuilt-agent ReAct
+    runtime and direct model answer generation are removed. Every request is
+    planned and executed by the canonical runtime (security / approval /
+    budget gates, tool control plane, run outcome); the adapter only converts
+    the channel request to ``WorkspaceRunRequest`` and maps the run back to
+    the WeChat message contract.
     """
 
     def __init__(self,
@@ -69,7 +69,8 @@ class WeChatAgent:
                  plugins: List[str] = [],
                  mcp_configs: List[MCPConfig] = []):
 
-        # WeChat-agent only needs tool calling model, not conversation model
+        # The chat model is used by the canonical runtime's model steps via
+        # the workspace model gateway; the adapter never answers directly.
         self.model = ModelManager.get_conversation_model()
         self.plugin_tools = []
         self.mcp_tools = []
@@ -80,63 +81,97 @@ class WeChatAgent:
         self.session_id = session_id
         self.wechat_account_user = wechat_account_user
         self.user_id = user_id
-
-        # Find user config by server name
         self.server_dict: dict[str, Any] = {}
-
-        # Initialize state management
+        self.bindings: list[WorkspaceToolBinding] = []
+        self._runtime: WorkspaceAgentRuntime | None = None
         self._initialized = False
 
-
     async def init_wechat_agent(self):
-        """Initialize sub-agent - with resource management"""
+        """Initialize the canonical composition root for this session."""
         try:
             if self._initialized:
                 logger.info("WeChat Agent already initialized")
                 return
             await self.setup_mcp_tools()
             await self.setup_plugin_tools()
-
-            self.middlewares = await self.setup_middlewares()
-
             self.tools = self.plugin_tools + self.mcp_tools
+            self.bindings = self._build_bindings()
+            self._runtime = WorkspaceAgentRuntime(
+                model=self.model,
+                bindings=self.bindings,
+                store_path=Path(tempfile.gettempdir())
+                / f"zuno_wechat_agent_{self.user_id}_{self.session_id}.db",
+            )
             self._initialized = True
-            self.react_agent = self.setup_react_agent()
-
-            logger.info("WeChat Agent initialized successfully")
+            logger.info("WeChat Agent initialized with canonical runtime")
         except Exception as err:
             logger.error(f"Failed to initialize WeChat Agent: {err}")
             raise
 
-    def setup_react_agent(self):
-        return create_agent(
-            model=self.model,
-            tools=self.tools,
-            middleware=self.middlewares
+    # -- governed bindings --------------------------------------------------
+
+    def _build_bindings(self) -> List[WorkspaceToolBinding]:
+        bindings: List[WorkspaceToolBinding] = []
+        for tool in self.tools:
+            bindings.append(
+                WorkspaceToolBinding(
+                    tool_id=f"tool.{tool.name}",
+                    display_name=tool.name,
+                    description=str(getattr(tool, "description", "") or ""),
+                    input_schema=self._tool_input_schema(tool),
+                    side_effect_level=self._classify_tool_effect(tool.name),
+                    executor=lambda args, t=tool: self._execute_binding_tool(t, args),
+                    execution_mode=self._tool_execution_mode(tool.name),
+                    network_policy="allow" if self._tool_has_network(tool.name) else "deny",
+                )
+            )
+        return bindings
+
+    @staticmethod
+    def _tool_input_schema(tool: Any) -> dict[str, Any]:
+        args_schema = getattr(tool, "args_schema", None)
+        if args_schema is not None:
+            schema = getattr(args_schema, "model_json_schema", None)
+            if schema is not None:
+                try:
+                    return dict(schema())
+                except Exception:
+                    pass
+        return {"type": "object"}
+
+    @staticmethod
+    def _classify_tool_effect(tool_name: str) -> ToolSideEffectLevel:
+        name = (tool_name or "").lower()
+        if any(token in name for token in ("send_", "email", "text_to_image", "post_", "submit_")):
+            return ToolSideEffectLevel.WRITE_EXTERNAL
+        if name.startswith(("create_", "update_", "delete_", "write_", "convert_", "add_", "save_")):
+            return ToolSideEffectLevel.WRITE_LOCAL
+        return ToolSideEffectLevel.READ
+
+    @staticmethod
+    def _tool_execution_mode(tool_name: str) -> ToolExecutionMode:
+        name = (tool_name or "").lower()
+        if "mcp" in name:
+            return ToolExecutionMode.MCP_LOCAL
+        return ToolExecutionMode.LOCAL_FUNCTION
+
+    @staticmethod
+    def _tool_has_network(tool_name: str) -> bool:
+        name = (tool_name or "").lower()
+        return any(
+            token in name
+            for token in ("search", "weather", "web", "api", "remote", "send_", "text_to_image", "email")
         )
 
-    async def setup_middlewares(self):
-        tool_call_limiter = ToolCallLimitMiddleware(
-            thread_limit=1,
-        )
-
-        @wrap_tool_call
-        async def handler_call_mcp_tool(
-            request: ToolCallRequest,
-            handler
-        ) -> ToolMessage | Command:
-            if self.is_mcp_tool(request.tool_call["name"]):
-                # 针对鉴权的MCP Server需要用户的单独配置，例如飞书、邮箱
-                mcp_config = await MCPUserConfigService.get_mcp_user_config(self.user_id, self.get_mcp_id_by_tool(request.tool_call["name"]))
-                request.tool_call["args"].update(mcp_config)
-                tool_result = await handler(request)
-                print(tool_result)
-            else:
-                tool_result = await handler(request)
-
-            return tool_result
-
-        return [tool_call_limiter, handler_call_mcp_tool]
+    async def _execute_binding_tool(self, tool: Any, args: dict[str, Any]) -> Any:
+        call_args = dict(args)
+        if self.is_mcp_tool(tool.name):
+            mcp_config = await MCPUserConfigService.get_mcp_user_config(
+                self.user_id,
+                self.get_mcp_id_by_tool(tool.name),
+            )
+            call_args.update(mcp_config)
+        return await tool.ainvoke(call_args)
 
     async def setup_mcp_tools(self):
         """Initialize MCP tools - with error handling"""
@@ -175,7 +210,7 @@ class WeChatAgent:
         knowledges = await KnowledgeService.select_knowledge(wechat_account_user_id)
         if not knowledges:
             return None
-        collection_name = knowledges[0]["id"] # 时间有限，只检索一个知识库
+        collection_name = knowledges[0]["id"]  # 时间有限，只检索一个知识库
         document = await RagHandler.retrieve_ranked_documents(
             top_k=3,
             min_score=0.01,
@@ -187,79 +222,81 @@ class WeChatAgent:
 
         return document
 
-    async def ainvoke(self, messages: List[BaseMessage]):
-        """Sub-agent tool execution - only return tool execution results, no model reply"""
+    # -- canonical run helpers ----------------------------------------------
 
+    async def _run_request(self, goal: str) -> Any:
+        if self._runtime is None:
+            raise RuntimeError("wechat agent runtime not initialized")
+        task_id = f"wechat:{hashlib.sha256(goal.encode('utf-8')).hexdigest()[:16]}"
+        request = WorkspaceRunRequest(
+            task_id=task_id,
+            thread_id=self.session_id or task_id,
+            workspace_id=f"workspace:{self.user_id}",
+            user_id=self.user_id,
+            trace_id=f"trace:{task_id}",
+            goal=goal,
+            plan_kind="simple",
+        )
+        return self._runtime.start(request)
+
+    def _final_answer(self, snapshot: Any) -> str:
+        response_content = ""
+        for obs in snapshot.observations:
+            if obs.kind == "model":
+                if obs.metadata.get("grounded_synthesis"):
+                    grounded = str(obs.metadata.get("final_answer") or "")
+                    if grounded:
+                        response_content = grounded
+                    continue
+                model_output = str(obs.metadata.get("model_output") or "")
+                if model_output:
+                    response_content = model_output
+        return response_content
+
+    async def ainvoke(self, messages: List[BaseMessage]):
+        """Sub-agent tool execution through the canonical runtime.
+
+        Returns the model answer (AIMessage) produced by the runtime; no
+        tool executes outside the runtime and no answer bypasses the plan.
+        """
         if not self._initialized:
             await self.init_wechat_agent()
         original_query = strip_model_wrapper_from_user_input(getattr(messages[-1], "content", ""))
-        user_messages = copy.deepcopy(normalize_messages_for_model(messages, model=self.model))
-        tool_messages: List[BaseMessage] = []
+        user_messages = list(messages)
         try:
-            react_agent_task = None
-            if self.tools and len(self.tools) != 0:
-                react_start = time.perf_counter()
-                react_agent_task = asyncio.create_task(
-                    self.react_agent.ainvoke(
-                        input={"messages": user_messages},
-                        config={"callbacks": [usage_metadata_callback]}
-                    )
-                )
-
-            retrival_start = time.perf_counter()
-            retrival_task = asyncio.create_task(self.retrival_knowledge_documents(query=user_messages[-1].content))
-
-            # 检索知识库补充信息
-            retrival_result = await retrival_task
-            retrival_elapsed = time.perf_counter() - retrival_start
-            logger.info(f"Retrieval task completed in {retrival_elapsed:.2f}s")
-
+            retrival_result = await self.retrival_knowledge_documents(query=original_query)
             if retrival_result:
-                user_messages[0].content = user_messages[0].content + f"\n\n ## 补充信息 \n {retrival_result}"
-
-            # Wait for tool execution to complete
-            react_agent_result = None
-            if react_agent_task:
-                try:
-                    react_agent_result = await asyncio.wait_for(react_agent_task, timeout=1.0)
-                    react_elapsed = time.perf_counter() - react_start
-                    logger.info(f"React agent task completed in {react_elapsed:.2f}s")
-                except asyncio.TimeoutError:
-                    logger.warning("React agent task timeout after 1s, cancelling...")
-                    react_agent_task.cancel()
-                    try:
-                        await react_agent_task
-                    except asyncio.CancelledError:
-                        logger.info("React agent task cancelled due to timeout")
-                except Exception as e:
-                    logger.error(f"React agent task failed: {e}")
-
-            if react_agent_result:
-                tool_messages = react_agent_result["messages"][:-1]  # Remove messages that didn't hit tools
-                tool_messages = [msg for msg in tool_messages if
-                                 isinstance(msg, ToolMessage) or (isinstance(msg, AIMessage) and msg.tool_calls)]
-
+                goal = f"{original_query}\n\n## 补充信息\n{retrival_result}"
+            else:
+                goal = original_query
+            snapshot = await asyncio.to_thread(self._run_request, goal)
+            if snapshot.finalization_status == "interrupted":
+                raise ValueError(
+                    "WeChat tool execution requires approval; no side effect was executed. "
+                    "Please approve the pending run before continuing."
+                )
+            if snapshot.finalization_status in {"failed", "blocked", "abstained", "cancelled"}:
+                raise ValueError(
+                    f"WeChat run did not complete ({snapshot.finalization_status}); no side effect was executed."
+                )
         except Exception as err:
             raise ValueError from err
 
-        messages = user_messages + tool_messages
-        response = await self.model.ainvoke(messages)
-        response.content = strip_think_tags(response.content).strip() or response.content
-
+        answer = self._final_answer(snapshot).strip() or "这次请求已经执行完成，但模型没有返回可见正文。"
         await self._add_workspace_session(
             title="微信对话",
             contexts=WorkSpaceSessionContext(
                 query=original_query,
-                answer=response.content
+                answer=answer
             ))
-        return response
+        return AIMessage(content=answer)
 
     async def _generate_title(self, query):
         session = await WorkSpaceSessionService.get_workspace_session_from_id(self.session_id, self.wechat_account_user)
         if session:
             return session.get("title")
         title_prompt = GenerateTitlePrompt.format(query=query)
-        response = await self.model.ainvoke(input=title_prompt, config={"callbacks": [usage_metadata_callback]})
+        response = await self.model.ainvoke(input=title_prompt)
         return WorkSpaceSessionService.normalize_session_title(response.content, fallback_query=query)
 
     async def _add_workspace_session(self, title, contexts: WorkSpaceSessionContext):
@@ -285,55 +322,37 @@ class WeChatAgent:
         if not self._initialized:
             await self.init_wechat_agent()
         original_query = strip_model_wrapper_from_user_input(getattr(messages[-1], "content", ""))
-        user_messages = copy.deepcopy(normalize_messages_for_model(messages, model=self.model))
-        tool_messages: List[BaseMessage] = []
-
         try:
-            react_agent_task = None
-            if self.tools and len(self.tools) != 0:
-                react_agent_task = asyncio.create_task(
-                    self.react_agent.ainvoke(
-                        input={"messages": user_messages},
-                        config={"callbacks": [usage_metadata_callback]}
-                    )
-                )
-
-            retrival_task = asyncio.create_task(self.retrival_knowledge_documents(query=user_messages[-1].content))
-
-            # Wait for tool execution to complete
-            if react_agent_task:
-                results = await react_agent_task
-                tool_messages = results["messages"][:-1]  # Remove messages that didn't hit tools
-
-                tool_messages = [msg for msg in tool_messages if
-                                 isinstance(msg, ToolMessage) or (isinstance(msg, AIMessage) and msg.tool_calls)]
-
-            # 检索知识库补充信息
-            retrival_result = await retrival_task
-            if retrival_result:
-                user_messages[0].content = user_messages[0].content.format(retrival_result=retrival_result)
+            retrival_result = await self.retrival_knowledge_documents(query=original_query)
+            goal = f"{original_query}\n\n## 补充信息\n{retrival_result}" if retrival_result else original_query
+            snapshot = await asyncio.to_thread(self._run_request, goal)
         except Exception as err:
             raise ValueError from err
 
-        messages = user_messages + tool_messages
-
-        final_answer = ""
-        inside_think = False
-        async for chunk in self.model.astream(messages):
-            visible_chunk = chunk.content
-            if is_minimax_model(model=self.model):
-                visible_chunk, inside_think = extract_visible_text_from_stream(chunk.content, inside_think)
-
-            if not visible_chunk:
-                continue
-
+        if snapshot.finalization_status == "interrupted":
             yield {
                 "event": "task_result",
-                "data":{
-                    "message": visible_chunk
-                }
+                "data": {
+                    "message": "该操作需要批准后才能执行。未批准前不会执行任何副作用。"
+                },
             }
-            final_answer += visible_chunk
+            return
+        if snapshot.finalization_status in {"failed", "blocked", "abstained", "cancelled"}:
+            yield {
+                "event": "task_result",
+                "data": {
+                    "message": f"这次执行未完成（{snapshot.finalization_status}）。未产生副作用，可按原计划重试。"
+                },
+            }
+            return
+
+        final_answer = self._final_answer(snapshot).strip() or "这次请求已经执行完成，但模型没有返回可见正文。"
+        yield {
+            "event": "task_result",
+            "data": {
+                "message": final_answer
+            },
+        }
 
         await self._add_workspace_session(
             title="微信对话",
@@ -342,8 +361,7 @@ class WeChatAgent:
                 answer=final_answer
             ))
 
-
-    async def _record_agent_token_usage(self, response: AIMessage | AIMessageChunk | BaseMessage, model):
+    async def _record_agent_token_usage(self, response: AIMessage | BaseMessage, model):
         if response.usage_metadata:
             await UsageStatsService.create_usage_stats(
                 model=model,

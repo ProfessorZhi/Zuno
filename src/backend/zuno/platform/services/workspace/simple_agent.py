@@ -3,28 +3,23 @@ from __future__ import annotations
 import ast
 import asyncio
 import copy
+import hashlib
 import json
 import re
+import tempfile
 import time
 import uuid
 from datetime import date
+from pathlib import Path
 from types import SimpleNamespace
-from typing import Any, AsyncGenerator, Dict, List, NotRequired
+from typing import Any, AsyncGenerator, Dict, List
 
-from langchain.agents import AgentState, create_agent
-from langchain.agents.middleware import (
-    AgentMiddleware,
-    ModelRequest,
-    ModelResponse,
-    ToolCallLimitMiddleware,
-)
 from langchain_core.messages import AIMessage, AIMessageChunk, BaseMessage, HumanMessage, ToolMessage
 from langchain_core.tools import BaseTool, tool as lc_tool
-from langgraph.config import get_stream_writer
-from langgraph.prebuilt.tool_node import ToolCallRequest
-from langgraph.types import Command
 from loguru import logger
 from pydantic import BaseModel
+
+from zuno.capability.control_plane import ToolExecutionMode, ToolSideEffectLevel
 
 from zuno.api.services.mcp_user_config import MCPUserConfigService
 from zuno.api.services.agent_skill import AgentSkillService
@@ -71,6 +66,11 @@ from zuno.platform.services.workspace.desktop_bridge_runtime import (
     DesktopBridgeConfig,
     build_terminal_langchain_tools,
 )
+from zuno.platform.services.workspace.single_controller_runtime import (
+    WorkspaceAgentRuntime,
+    WorkspaceRunRequest,
+    WorkspaceToolBinding,
+)
 from zuno.capability.tools import WorkSpacePlugins
 from zuno.capability.tools.text2image.action import _text_to_image
 from zuno.platform.common.convert import convert_mcp_config
@@ -105,12 +105,6 @@ class MCPConfig(BaseModel):
     env: dict[str, str] | None = None
     env_passthrough: List[str] | None = None
     cwd: str | None = None
-
-
-class StreamAgentState(AgentState):
-    tool_call_count: NotRequired[int]
-    model_call_count: NotRequired[int]
-    user_id: NotRequired[str]
 
 
 class RouteHint(BaseModel):
@@ -182,6 +176,12 @@ class WorkSpaceSimpleAgent:
         self.route_hint = self._detect_route_hint(self.original_query)
         self.knowledge_query_service = KnowledgeQueryService()
         self._initialized = False
+        # PHASE22 single-controller cutover: the agent is a thin product
+        # adapter over the canonical runtime. No top-level ReAct runtime and
+        # no direct tool handlers are created; session tools become governed
+        # bindings resolved by the formal Tool Control Plane.
+        self.bindings: list[WorkspaceToolBinding] = []
+        self._runtime: WorkspaceAgentRuntime | None = None
 
     def _wrap_event(self, event: str, data: Dict[str, Any]) -> WorkspaceAgentStreamEvent:
         return {
@@ -1004,244 +1004,102 @@ class WorkSpaceSimpleAgent:
             f"skill_tools={[tool.name for tool in self.skill_tools]} "
             f"route_hint={self.route_hint.model_dump()}"
         )
-        self.middlewares = await self.setup_middlewares()
         if self.execution_mode == "terminal":
             self.tools = self.terminal_tools
         else:
             self.tools = self.plugin_tools + self.mcp_tools + self.knowledge_tools + self.skill_tools
-        self.react_agent = self.setup_react_agent()
+        self.bindings = self._build_bindings()
+        self._runtime = WorkspaceAgentRuntime(
+            model=self.model,
+            bindings=self.bindings,
+            store_path=Path(tempfile.gettempdir())
+            / f"zuno_workspace_agent_{self.user_id}_{self.session_id}.db",
+        )
         self._initialized = True
 
-    def _build_runtime_system_prompt(self) -> str:
-        if self.execution_mode == "terminal":
-            rules = [
-                "You are working in Zuno Desktop terminal mode.",
-                "When local files, folders, search, writing, or command execution are involved, use tools instead of pretending the work is done.",
-                "Prefer safer tools first: search and read before write; execute commands only when needed.",
-                "In the final answer, clearly state what you actually did, which tools you used, and which paths were affected.",
-            ]
-            if self.access_scope == "workspace":
-                rules.append("Access is restricted to the workspace. Do not try to access paths outside it.")
-            else:
-                rules.append("Access scope is unrestricted, but still avoid unnecessary high-risk commands.")
-            capability_text = self._build_enabled_capabilities_text()
-            if capability_text:
-                rules.append(capability_text)
-            return "\n".join(rules)
+    # -- PHASE22 single-controller tool binding classification --------------
 
-        explicit_command = (self.original_query or "").strip().startswith("/")
-        rules = [
-            "You are working in Zuno Workspace Agent mode.",
-            "Use enabled tools or MCP when external capability is needed. Never fake tool results.",
-            "When the user asks for a capability that may exist but is not obviously enabled, call search_available_capabilities before saying it is unavailable.",
-            "If the user explicitly asks to use a Skill, a knowledge base, MCP, terminal, or a specific tool, prefer the matching capability instead of a generic answer.",
-            "If the user asks to search project materials, a knowledge base, a document library, or RAG content, prefer search_knowledge_base when available.",
-            "Before sending email, if sender_slot is not specified, call list_email_accounts first.",
-            "If a configuration cannot be found, say it cannot be found. Do not invent slot names or settings.",
-            "If the user explicitly says to use Feishu, Lark, Amap, Gaode, Bing, or Bing MCP, prefer the matching enabled MCP tool instead of generic web search.",
-            "When the user asks to generate an image, make a poster, cover, logo, visual mockup, or redraw a design, prefer calling text_to_image.",
-            "When the user uploads an image and asks to understand it, use the attachment extraction result directly. Do not deny image understanding ability.",
-            "When the user uploads an image and asks to recolor it, change background, restyle it, or regenerate a version of it, prefer calling text_to_image with reference_image_url.",
-            "Do not answer with generic capability disclaimers when the required tool is available.",
-            "Final answers must be grounded in actual tool results, not speculation.",
-        ]
-        if not explicit_command:
-            rules.insert(2, "When the user asks what tools, MCPs, email slots, configurations, or accounts are available, call the relevant read-only tool first, then answer.")
-            rules.insert(3, "Before claiming that a capability is unavailable, first call list_enabled_capabilities to verify the actual enabled tools and MCPs in this session.")
-        route_tools = self._tools_for_route() or []
-        if self.route_hint.kind:
-            route_tool_names = ", ".join(tool.name for tool in route_tools) or "none"
-            route_target = self.route_hint.target or self.route_hint.kind
-            rules.extend(
-                [
-                    f"The user has explicitly routed this request to {self.route_hint.kind}: {route_target}.",
-                    f"Allowed priority tools for this request: {route_tool_names}.",
-                    "For this request, do not stop at describing available capabilities.",
-                    "You must call a matching routed capability first when one is available, then answer from the real result.",
-                ]
+    def _build_bindings(self) -> List[WorkspaceToolBinding]:
+        """Convert the session tool set into governed control-plane bindings.
+
+        Classification follows the PHASE22 effect taxonomy:
+
+        - READ (security gate + budget + trace, auto-executed);
+        - WRITE_LOCAL (reversible write, approval policy);
+        - WRITE_EXTERNAL / DESTRUCTIVE (irreversible effect, explicit
+          approval + side-effect claim).
+        """
+        bindings: List[WorkspaceToolBinding] = []
+        for tool in self.tools:
+            bindings.append(
+                WorkspaceToolBinding(
+                    tool_id=f"tool.{tool.name}",
+                    display_name=tool.name,
+                    description=str(getattr(tool, "description", "") or ""),
+                    input_schema=self._tool_input_schema(tool),
+                    side_effect_level=self._classify_tool_effect(tool.name),
+                    executor=lambda args, t=tool: self._execute_binding_tool(t, args),
+                    execution_mode=self._tool_execution_mode(tool.name),
+                    network_policy="allow" if self._tool_has_network(tool.name) else "deny",
+                )
             )
-        capability_text = self._build_enabled_capabilities_text()
-        if capability_text:
-            rules.append(capability_text)
-        return "\n".join(rules)
+        return bindings
 
-    def setup_react_agent(self):
-        return create_agent(
-            model=self.model,
-            tools=self.tools,
-            system_prompt=self._build_runtime_system_prompt(),
-            middleware=self.middlewares,
-            state_schema=StreamAgentState,
-        )
+    async def _execute_binding_tool(self, tool: BaseTool, args: dict[str, Any]) -> Any:
+        """Execute one governed binding.
 
-    async def setup_middlewares(self):
-        agent = self
+        MCP user configuration (per-server credentials) is injected here as
+        product context; the execution itself still flows through the control
+        plane gates.
+        """
+        call_args = dict(args)
+        if self.is_mcp_tool(tool.name) and self.mcp_requires_user_config(tool.name):
+            mcp_config = await MCPUserConfigService.get_mcp_user_config(
+                self.user_id,
+                self.get_mcp_id_by_tool(tool.name),
+            )
+            call_args.update(mcp_config)
+        return await tool.ainvoke(call_args)
 
-        class WorkspaceReactMiddleware(AgentMiddleware):
-            async def awrap_model_call(
-                self,
-                request: ModelRequest,
-                handler: Any,
-            ) -> ModelResponse:
-                writer = get_stream_writer()
-                model_call_count = request.state.get("model_call_count", 0) + 1
-                route_tools = agent._tools_for_route()
-                explicit_slash_skill = (
-                    (agent.original_query or "").strip().startswith("/")
-                    and agent.route_hint.kind == "skill"
-                )
-                if route_tools and not explicit_slash_skill:
-                    allowed_names = {tool.name for tool in route_tools}
-                    include_support_tool = not (agent.original_query or "").strip().startswith("/")
-                    support_tools = [tool for tool in agent.tools if include_support_tool and tool.name in {"list_enabled_capabilities"}]
-                    request.tools = support_tools + [tool for tool in request.tools if tool.name in allowed_names]
-                    writer(
-                        agent._wrap_event(
-                            "status",
-                            {
-                                "phase": "route",
-                                "status": "START",
-                                "message": f"已按用户意图优先使用 {agent.route_hint.kind} 能力",
-                                "route": agent.route_hint.model_dump(),
-                                "tool_names": [tool.name for tool in request.tools],
-                            },
-                        )
-                    )
-                writer(
-                    agent._wrap_event(
-                        "status",
-                        {
-                            "phase": "model_call",
-                            "status": "START",
-                            "message": f"正在进行第 {model_call_count} 轮 ReAct 推理",
-                        },
-                    )
-                )
-
-                response = await handler(request)
-
-                tool_call_names: list[str] = []
-                if getattr(response, "tool_calls", None):
-                    tool_call_names = sorted({tool_call["name"] for tool_call in response.tool_calls})
-                    message = f"模型决定调用工具: {', '.join(tool_call_names)}"
-                else:
-                    message = "模型准备输出最终答案"
-
-                writer(
-                    agent._wrap_event(
-                        "status",
-                        {
-                            "phase": "model_call",
-                            "status": "END",
-                            "message": message,
-                            "tool_names": tool_call_names,
-                        },
-                    )
-                )
-                request.state["model_call_count"] = model_call_count
-                return response
-
-            async def awrap_tool_call(
-                self,
-                request: ToolCallRequest,
-                handler,
-            ) -> ToolMessage | Command:
-                writer = get_stream_writer()
-                tool_name = request.tool_call["name"]
-                tool_type, display_name = agent._tool_display_info(tool_name)
-                tool_call_id = request.tool_call["id"]
-                tool_args = dict(request.tool_call.get("args") or {})
-
-                writer(
-                    agent._wrap_event(
-                        "tool_call",
-                        {
-                            "tool_name": tool_name,
-                            "tool_type": tool_type,
-                            "tool_call_id": tool_call_id,
-                            "arguments": tool_args,
-                            "message": f"正在调用 {tool_type}: {display_name}",
-                        },
-                    )
-                )
-
-                if agent.is_mcp_tool(tool_name) and agent.mcp_requires_user_config(tool_name):
-                    try:
-                        mcp_config = await MCPUserConfigService.get_mcp_user_config(
-                            agent.user_id,
-                            agent.get_mcp_id_by_tool(tool_name),
-                        )
-                        request.tool_call["args"].update(mcp_config)
-                    except Exception as err:
-                        error_text = str(err)
-                        writer(
-                            agent._wrap_event(
-                                "tool_result",
-                                {
-                                    "tool_name": tool_name,
-                                    "tool_type": tool_type,
-                                    "tool_call_id": tool_call_id,
-                                    "ok": False,
-                                    "error": error_text,
-                                    "result": error_text,
-                                    "message": f"{display_name} 配置读取失败",
-                                },
-                            )
-                        )
-                        return ToolMessage(
-                            content=error_text,
-                            name=tool_name,
-                            tool_call_id=tool_call_id,
-                        )
-
+    @staticmethod
+    def _tool_input_schema(tool: BaseTool) -> dict[str, Any]:
+        args_schema = getattr(tool, "args_schema", None)
+        if args_schema is not None:
+            schema = getattr(args_schema, "model_json_schema", None)
+            if schema is not None:
                 try:
-                    tool_result = await handler(request)
-                    raw_result = getattr(tool_result, "content", tool_result)
-                    result_text = agent._format_tool_result_for_model(raw_result)
-                    if isinstance(tool_result, ToolMessage) and result_text != tool_result.content:
-                        tool_result = tool_result.model_copy(update={"content": result_text})
-                    writer(
-                        agent._wrap_event(
-                            "tool_result",
-                            {
-                                "tool_name": tool_name,
-                                "tool_type": tool_type,
-                                "tool_call_id": tool_call_id,
-                                "ok": True,
-                                "result": result_text,
-                                "message": f"{display_name} 执行完成",
-                            },
-                        )
-                    )
-                    request.state["tool_call_count"] = request.state.get("tool_call_count", 0) + 1
-                    return tool_result
-                except Exception as err:
-                    error_text = str(err)
-                    writer(
-                        agent._wrap_event(
-                            "tool_result",
-                            {
-                                "tool_name": tool_name,
-                                "tool_type": tool_type,
-                                "tool_call_id": tool_call_id,
-                                "ok": False,
-                                "error": error_text,
-                                "result": error_text,
-                                "message": f"{display_name} 执行失败",
-                            },
-                        )
-                    )
-                    request.state["tool_call_count"] = request.state.get("tool_call_count", 0) + 1
-                    return ToolMessage(
-                        content=error_text,
-                        name=tool_name,
-                        tool_call_id=tool_call_id,
-                    )
+                    return dict(schema())
+                except Exception:
+                    pass
+        return {"type": "object"}
 
-        return [
-            ToolCallLimitMiddleware(thread_limit=8),
-            WorkspaceReactMiddleware(),
-        ]
+    @staticmethod
+    def _classify_tool_effect(tool_name: str) -> ToolSideEffectLevel:
+        name = (tool_name or "").lower()
+        if any(token in name for token in ("send_", "text_to_image", "email", "post_", "submit_")):
+            return ToolSideEffectLevel.WRITE_EXTERNAL
+        if name.startswith(("create_", "update_", "delete_", "write_", "convert_", "add_", "save_")):
+            return ToolSideEffectLevel.WRITE_LOCAL
+        if name.startswith(("terminal", "cli_", "exec_", "shell", "desktop_")):
+            return ToolSideEffectLevel.DESTRUCTIVE
+        return ToolSideEffectLevel.READ
+
+    @staticmethod
+    def _tool_execution_mode(tool_name: str) -> ToolExecutionMode:
+        name = (tool_name or "").lower()
+        if name.startswith(("terminal", "cli_", "exec_", "shell")):
+            return ToolExecutionMode.CLI
+        if "mcp" in name or name.startswith("maps_") or name.startswith("bing_"):
+            return ToolExecutionMode.MCP_LOCAL
+        return ToolExecutionMode.LOCAL_FUNCTION
+
+    @staticmethod
+    def _tool_has_network(tool_name: str) -> bool:
+        name = (tool_name or "").lower()
+        return any(
+            token in name
+            for token in ("search", "maps_", "bing_", "weather", "web", "api", "remote", "send_", "text_to_image")
+        )
 
     async def setup_terminal_tools(self):
         if self.execution_mode != "terminal":
@@ -1660,11 +1518,6 @@ class WorkSpaceSimpleAgent:
                     self.knowledge_ids,
                     retrieval_mode=self.retrieval_mode,
                 )
-            try:
-                writer = get_stream_writer()
-                writer(self._wrap_event("status", self._build_retrieval_event_payload(result)))
-            except Exception:
-                logger.debug("knowledge retrieval trace writer unavailable in current execution context")
             return result["content"]
 
         self.knowledge_tools = [search_knowledge_base]
@@ -1729,80 +1582,6 @@ class WorkSpaceSimpleAgent:
         ]
         return any(keyword in normalized_query for keyword in keywords)
 
-    async def _run_direct_image_generation(
-        self,
-        query: str,
-        reference_image_url: str,
-    ) -> AsyncGenerator[WorkspaceAgentStreamEvent, None]:
-        yield self._wrap_event(
-            "status",
-            {
-                "phase": "start",
-                "status": "START",
-                "message": "Agent 已识别为带参考图的生成任务，直接调用生图能力。",
-                "execution_mode": self.execution_mode,
-                "access_scope": self.access_scope,
-            },
-        )
-        yield self._wrap_event(
-            "tool_call",
-            {
-                "tool_name": "text_to_image",
-                "tool_type": "默认能力",
-                "tool_call_id": "direct-image-generation",
-                "arguments": {
-                    "user_prompt": query,
-                    "reference_image_url": reference_image_url,
-                },
-                "message": "正在根据上传图片生成新图。",
-            },
-        )
-        try:
-            result = await asyncio.to_thread(_text_to_image, query, reference_image_url)
-            yield self._wrap_event(
-                "tool_result",
-                {
-                    "tool_name": "text_to_image",
-                    "tool_type": "默认能力",
-                    "tool_call_id": "direct-image-generation",
-                    "ok": True,
-                    "result": result,
-                    "message": "图片已生成",
-                },
-            )
-            yield self._wrap_event(
-                "final",
-                {
-                    "chunk": result,
-                    "message": result,
-                    "accumulated": result,
-                    "done": True,
-                },
-            )
-        except Exception as err:
-            error_text = f"图片生成失败：{err}"
-            yield self._wrap_event(
-                "tool_result",
-                {
-                    "tool_name": "text_to_image",
-                    "tool_type": "默认能力",
-                    "tool_call_id": "direct-image-generation",
-                    "ok": False,
-                    "error": str(err),
-                    "result": error_text,
-                    "message": "图片生成失败",
-                },
-            )
-            yield self._wrap_event(
-                "final",
-                {
-                    "chunk": error_text,
-                    "message": error_text,
-                    "accumulated": error_text,
-                    "done": True,
-                },
-            )
-
     @staticmethod
     def _looks_like_image_regeneration_request_v2(query: str, reference_image_url: str) -> bool:
         if not reference_image_url:
@@ -1833,33 +1612,153 @@ class WorkSpaceSimpleAgent:
         return any(keyword in normalized_query for keyword in keywords)
 
     async def ainvoke(self, messages: List[BaseMessage]):
+        """Run the request through the canonical Single Controller Runtime.
+
+        Returns the governed tool observations as tool messages (product
+        surface contract); no tool is executed outside the runtime.
+        """
         if not self._initialized:
             await self.init_simple_agent()
-
-        normalized_messages = normalize_messages_for_model(
-            messages,
-            model_name=self.model_name,
-            base_url=self.base_url,
+        original_query = self.original_query or strip_model_wrapper_from_user_input(
+            getattr(messages[-1], "content", "")
         )
-        try:
-            if not self.tools:
-                return []
+        snapshot = await self._run_request(original_query)
+        tool_messages = []
+        for obs in snapshot.observations:
+            if obs.kind == "tool":
+                tool_messages.append(
+                    ToolMessage(
+                        content=str(obs.metadata.get("result") or obs.summary or ""),
+                        tool_call_id=f"tool:{obs.tool_id}",
+                        name=obs.tool_id,
+                    )
+                )
+        return tool_messages
 
-            results = await self.react_agent.ainvoke(
-                {"messages": normalized_messages},
-                config=self._build_run_config(
-                    run_name="workspace_simple_agent_invoke",
-                    metadata={"message_count": len(normalized_messages)},
-                ),
-            )
-            result_messages = results["messages"][:-1]
-            return [
-                msg
-                for msg in result_messages
-                if isinstance(msg, ToolMessage) or (isinstance(msg, AIMessage) and msg.tool_calls)
-            ]
-        except Exception:
-            return []
+    # -- PHASE22 canonical run helpers --------------------------------------
+
+    def _run_request(self, original_query: str) -> Any:
+        """Convert the product request into a governed runtime run.
+
+        Resolution only selects the tool + arguments; execution always flows
+        through the canonical runtime's plan / gates / gateway.
+        """
+        if self._runtime is None:
+            raise RuntimeError("workspace agent runtime not initialized")
+        resolved_tool_id, resolved_args = self._resolve_governed_tool(original_query)
+        plan_kind = "tool" if resolved_tool_id else self._plan_kind_for(original_query)
+        task_id = self._task_id_for(original_query, plan_kind, resolved_tool_id)
+        request = WorkspaceRunRequest(
+            task_id=task_id,
+            thread_id=self.session_id or task_id,
+            workspace_id=f"workspace:{self.user_id}",
+            user_id=self.user_id,
+            trace_id=f"trace:{task_id}",
+            goal=original_query,
+            tool_id=resolved_tool_id,
+            tool_arguments=resolved_args,
+            plan_kind=plan_kind,
+        )
+        # Idempotent product entry: same request -> same facts, no duplicate
+        # execution or events; explicit retry uses retry_run().
+        return self._runtime.start_with_replay(request)
+
+    def _run_idempotent(self, original_query: str) -> Any:
+        """Start the run with idempotent replay semantics.
+
+        A request that already produced a terminal snapshot returns the same
+        facts (no second execution, no duplicated events). A run still waiting
+        for approval returns the same waiting state. A failed run is replayed
+        as failed; explicit ``retry_run`` re-runs it with the original plan.
+        """
+        snapshot = self._run_request(original_query)
+        return snapshot
+
+    def retry_run(self, original_query: str) -> Any:
+        """Retry a FAILED/BLOCKED run with the original plan.
+
+        Refuses to re-run when a side effect was already committed.
+        """
+        if self._runtime is None:
+            raise RuntimeError("workspace agent runtime not initialized")
+        resolved_tool_id, resolved_args = self._resolve_governed_tool(original_query)
+        plan_kind = "tool" if resolved_tool_id else self._plan_kind_for(original_query)
+        task_id = self._task_id_for(original_query, plan_kind, resolved_tool_id)
+        existing = self._runtime.snapshot(task_id)
+        if existing is not None and self._runtime.classify_final_state(existing) == "EFFECT_COMMITTED":
+            return existing
+        request = WorkspaceRunRequest(
+            task_id=task_id,
+            thread_id=self.session_id or task_id,
+            workspace_id=f"workspace:{self.user_id}",
+            user_id=self.user_id,
+            trace_id=f"trace:{task_id}",
+            goal=original_query,
+            tool_id=resolved_tool_id,
+            tool_arguments=resolved_args,
+            plan_kind=plan_kind,
+        )
+        return self._runtime.start(request)
+
+    def resume(self, task_id: str, approval_decision: str = "approved") -> Any:
+        if self._runtime is None:
+            raise RuntimeError("workspace agent runtime not initialized")
+        return self._runtime.resume(task_id=task_id, approval_decision=approval_decision)
+
+    @staticmethod
+    def _task_id_for(original_query: str, plan_kind: str, tool_id: str | None) -> str:
+        source = f"{plan_kind}|{tool_id or ''}|{original_query}"
+        return f"workspace:{hashlib.sha256(source.encode('utf-8')).hexdigest()[:16]}"
+
+    @staticmethod
+    def _plan_kind_for(original_query: str) -> str:
+        lowered = (original_query or "").lower()
+        if any(
+            token in lowered
+            for token in ("compare", "across", "conflict", "multi-hop", "multihop", "analyze", "synthesize", "报告")
+        ):
+            return "complex"
+        return "simple"
+
+    def _resolve_governed_tool(self, original_query: str) -> tuple[str | None, dict[str, Any] | None]:
+        """Deterministically resolve the request to a governed tool step.
+
+        Reuses the product's route-hint / named-tool / MCP parsing; the
+        resolved tool is executed by the canonical runtime only.
+        """
+        if not self.tools:
+            return None, None
+        direct_named_tool, direct_named_args = self._parse_direct_named_tool_invocation(original_query)
+        if direct_named_tool is not None and direct_named_args is not None:
+            return f"tool.{direct_named_tool.name}", direct_named_args
+        if self.route_hint.kind == "mcp":
+            direct_tool, direct_args = self._guess_direct_mcp_call(original_query)
+            if direct_tool is not None:
+                return f"tool.{direct_tool.name}", direct_args
+        if self.route_hint.kind == "knowledge":
+            return None, None  # knowledge prefetch stays product-side context
+        if self.route_hint.kind == "skill" and (original_query or "").strip().startswith("/"):
+            skill_tool = self._skill_tool_for_route()
+            if skill_tool is not None:
+                cleaned = self._strip_route_command(original_query).strip() or original_query
+                return f"tool.{skill_tool.name}", {"query": cleaned}
+        if self._looks_like_image_regeneration_request_v2(
+            original_query,
+            self._extract_reference_image_url(original_query),
+        ):
+            tool = self._find_route_tool("text_to_image")
+            if tool is not None:
+                return f"tool.{tool.name}", {"prompt": original_query}
+        return None, None
+
+    def _skill_tool_for_route(self) -> BaseTool | None:
+        active_skill = self._get_active_skill_for_route()
+        if active_skill is None:
+            return None
+        tool_name = str(getattr(active_skill, "as_tool_name", "") or "")
+        if not tool_name:
+            return None
+        return self._find_route_tool(tool_name)
 
     async def _generate_title(self, query: str, answer: str | None = None):
         session = await WorkSpaceSessionService.get_workspace_session_from_id(
@@ -2061,86 +1960,6 @@ class WorkSpaceSimpleAgent:
             text,
         )
 
-    async def _run_direct_routed_tool(
-        self,
-        tool: BaseTool,
-        args: dict[str, Any],
-        original_query: str,
-        session_metadata: dict[str, Any] | None = None,
-    ) -> AsyncGenerator[WorkspaceAgentStreamEvent, None]:
-        tool_type, display_name = self._tool_display_info(tool.name)
-        tool_call_id = f"direct-{tool.name}-{uuid.uuid4().hex[:8]}"
-        route_kind = self.route_hint.kind or "tool_creation"
-        yield self._wrap_event(
-            "status",
-            {
-                "phase": "route",
-                "status": "START",
-                "message": f"已按显式意图直达 {route_kind} 能力",
-                "route": {**self.route_hint.model_dump(), "kind": route_kind},
-                "tool_names": [tool.name],
-            },
-        )
-        yield self._wrap_event(
-            "tool_call",
-            {
-                "tool_name": tool.name,
-                "tool_type": tool_type,
-                "tool_call_id": tool_call_id,
-                "arguments": args,
-                "message": f"正在调用 {tool_type}: {display_name}",
-            },
-        )
-        call_args = dict(args)
-        if self.is_mcp_tool(tool.name) and self.mcp_requires_user_config(tool.name):
-            mcp_config = await MCPUserConfigService.get_mcp_user_config(
-                self.user_id,
-                self.get_mcp_id_by_tool(tool.name),
-            )
-            call_args.update(mcp_config)
-        result = await tool.ainvoke(
-            call_args,
-            config=self._build_run_config(
-                run_name="workspace_direct_tool_call",
-                tags=["workspace", "tool"],
-                metadata={
-                    "tool_name": tool.name,
-                    "tool_type": tool_type,
-                },
-            ),
-        )
-        raw_result_text = result if isinstance(result, str) else str(result)
-        final_answer = self._format_direct_tool_final_answer(tool.name, result, raw_result_text)
-        yield self._wrap_event(
-            "tool_result",
-            {
-                "tool_name": tool.name,
-                "tool_type": tool_type,
-                "tool_call_id": tool_call_id,
-                "ok": True,
-                "result": raw_result_text,
-                                    "message": f"{display_name} 已返回结果",
-            },
-        )
-        title = await self._generate_title(original_query)
-        await self._add_workspace_session(
-            title,
-            WorkSpaceSessionContext(
-                query=original_query,
-                answer=final_answer,
-                metadata=session_metadata or {},
-            ),
-        )
-        yield self._wrap_event(
-            "final",
-            {
-                "chunk": final_answer,
-                "message": final_answer,
-                "accumulated": final_answer,
-                "done": True,
-            },
-        )
-
     def _get_active_skill_for_route(self) -> Any | None:
         if self.route_hint.kind != "skill":
             return None
@@ -2290,27 +2109,34 @@ class WorkSpaceSimpleAgent:
         self,
         messages: List[BaseMessage],
     ) -> AsyncGenerator[WorkspaceAgentStreamEvent, None]:
+        """Product SSE stream over the canonical Single Controller Runtime.
+
+        The adapter maps the canonical run (plan -> gates -> tool execution ->
+        final gate -> RunOutcome) to the product's stream event contract. No
+        tool executes outside the runtime and no answer bypasses the plan.
+        """
         if not self._initialized:
             await self.init_simple_agent()
 
         original_query = self.original_query or strip_model_wrapper_from_user_input(
             getattr(messages[-1], "content", "")
         )
-        reference_image_url = self._extract_reference_image_url(getattr(messages[-1], "content", ""))
-        user_messages = copy.deepcopy(
-            normalize_messages_for_model(
-                messages,
-                model_name=self.model_name,
-                base_url=self.base_url,
-            )
+
+        yield self._wrap_event(
+            "status",
+            {
+                "phase": "start",
+                "status": "START",
+                "message": "Preparing the workspace request.",
+                "retrieval_mode": self.retrieval_mode,
+                "selected_knowledge_ids": self.knowledge_ids or [],
+            },
         )
 
-        if self.execution_mode == "tool" and self._looks_like_image_regeneration_request_v2(
-            original_query,
-            reference_image_url,
-        ):
-            async for event in self._run_direct_image_generation(original_query, reference_image_url):
-                yield event
+        if self._runtime is None:
+            error_text = "Workspace agent runtime is not initialized."
+            yield self._wrap_event("status", {"phase": "error", "status": "ERROR", "message": error_text, "error": error_text})
+            yield self._wrap_event("final", {"chunk": error_text, "message": error_text, "accumulated": error_text, "done": True})
             return
 
         if self.execution_mode == "terminal" and not self.desktop_bridge_config:
@@ -2319,369 +2145,111 @@ class WorkSpaceSimpleAgent:
                 "所以我还不能真正访问你的 Windows 本机文件系统或执行本地命令。"
                 "请从桌面客户端发起终端模式对话，再让我执行本地文件或命令操作。"
             )
-            yield self._wrap_event(
-                "status",
-                {
-                    "phase": "unsupported",
-                    "status": "ERROR",
-                    "message": "当前终端模式缺少桌面 bridge，无法执行本机操作",
-                    "error": terminal_notice,
-                },
-            )
-            yield self._wrap_event(
-                "final",
-                {
-                    "chunk": terminal_notice,
-                    "message": terminal_notice,
-                    "accumulated": terminal_notice,
-                    "done": True,
-                },
-            )
+            yield self._wrap_event("status", {"phase": "unsupported", "status": "ERROR", "message": "当前终端模式缺少桌面 bridge，无法执行本机操作", "error": terminal_notice})
+            yield self._wrap_event("final", {"chunk": terminal_notice, "message": terminal_notice, "accumulated": terminal_notice, "done": True})
             return
 
-        explicit_command = original_query.strip().startswith("/")
-        cleaned_route_query = self._strip_route_command(original_query)
-        if explicit_command and self.route_hint.kind == "skill":
-            user_messages = self._prepare_explicit_skill_messages(user_messages, cleaned_route_query)
-        prefetched_knowledge_context = ""
-        runtime_tools = self.tools
-        runtime_system_prompt = self._build_runtime_system_prompt()
-        if (
-            self.execution_mode == "tool"
-            and self.knowledge_ids
-            and self.route_hint.kind not in {"mcp"}
-        ):
-            prefetched_query = cleaned_route_query.strip() or original_query
-            prefetched_payload = await self._prefetch_knowledge_context(prefetched_query)
-            if prefetched_payload:
-                prefetched_knowledge_context = prefetched_payload["content"]
-                user_messages = self._inject_prefetched_knowledge_context(
-                    user_messages,
-                    prefetched_knowledge_context,
-                    prefetched_query,
-                )
-                runtime_tools = self._build_runtime_tools(
-                    prefetched_query,
-                    prefetched_knowledge_context,
-                )
-                runtime_system_prompt = (
-                    f"{runtime_system_prompt}\n"
-                    "Retrieved knowledge base context has already been injected for this turn. "
-                    "Treat it as the primary source unless the user explicitly needs external real-time information."
-                )
-                yield self._wrap_event("status", self._build_retrieval_event_payload(prefetched_payload["result"]))
-        route_tools = self._tools_for_route() or []
-        direct_tool = None
-        direct_args: dict[str, Any] = {}
-        direct_creation_plan = await self._plan_tool_creation_flow(original_query)
-        direct_named_tool, direct_named_args = self._parse_direct_named_tool_invocation(original_query)
-        logger.info(
-            f"workspace direct route check: query={original_query!r} explicit={explicit_command} "
-            f"route_hint={self.route_hint.model_dump()} "
-            f"route_tools={[tool.name for tool in route_tools]} "
-            f"cleaned={cleaned_route_query!r}"
-        )
-        if direct_named_tool and direct_named_args:
-            async for event in self._run_direct_routed_tool(
-                direct_named_tool,
-                direct_named_args,
-                original_query,
-            ):
-                yield event
+        try:
+            snapshot = await asyncio.to_thread(self._run_request, original_query)
+        except Exception as err:
+            logger.error(f"Workspace Simple Agent run failed: {err}")
+            error_text = f"这次执行没有成功完成。后端返回的错误是：{err}。我已经停止当前任务，请稍后重试。"
+            yield self._wrap_event("status", {"phase": "error", "status": "ERROR", "message": str(err), "error": str(err)})
+            yield self._wrap_event("final", {"chunk": error_text, "message": error_text, "accumulated": error_text, "done": True})
             return
-        if direct_creation_plan and direct_creation_plan.get("mode") == "cancel":
-            reply = direct_creation_plan["reply"]
-            title = await self._generate_title(original_query)
-            await self._add_workspace_session(
-                title,
-                WorkSpaceSessionContext(
-                    query=original_query,
-                    answer=reply,
-                    metadata={"tool_creation_state": None},
-                ),
+
+        # PHASE22 failure contract routing (classify_final_state):
+        #   interrupted            -> WAITING_APPROVAL (never auto-fallback)
+        #   FAILED/BLOCKED         -> error, retryable with the original plan
+        #   RECONCILIATION_REQUIRED -> operator confirmation required
+        final_state = self._runtime.classify_final_state(snapshot)
+        if snapshot.finalization_status == "interrupted":
+            pending = self._runtime.store().pending_interrupt(snapshot.task_id)
+            approval_message = (
+                f"该操作需要批准后才能执行（{pending.required_approval if pending else 'tool'}）。"
+                "未批准前不会执行任何副作用。"
             )
             yield self._wrap_event(
                 "status",
                 {
-                    "phase": "tool_creation",
-                    "status": "END",
-                    "message": "已取消本轮工具创建",
+                    "phase": "approval",
+                    "status": "WAITING_APPROVAL",
+                    "message": approval_message,
+                    "required_approval": pending.required_approval if pending else "",
+                    "task_id": snapshot.task_id,
                 },
             )
-            yield self._wrap_event(
-                "final",
-                {
-                    "chunk": reply,
-                    "message": reply,
-                    "accumulated": reply,
-                    "done": True,
-                },
-            )
+            yield self._wrap_event("final", {"chunk": approval_message, "message": approval_message, "accumulated": approval_message, "done": True})
             return
-        if direct_creation_plan and direct_creation_plan.get("mode") == "ask":
-            reply = direct_creation_plan["reply"]
-            title = await self._generate_title(original_query)
-            await self._add_workspace_session(
-                title,
-                WorkSpaceSessionContext(
-                    query=original_query,
-                    answer=reply,
-                    metadata={
-                        "tool_creation_state": {
-                            "kind": direct_creation_plan.get("kind"),
-                            "payload": direct_creation_plan.get("payload") or {},
-                        }
-                    },
-                ),
+
+        if final_state == "RECONCILIATION_REQUIRED":
+            reconcile_text = (
+                "这次执行结束时的副作用状态未知，已进入 Reconciliation。"
+                "需要 Operator/Coordinator 确认后才能继续，不会盲目重试。"
             )
             yield self._wrap_event(
                 "status",
-                {
-                    "phase": "tool_creation",
-                    "status": "WAITING",
-                    "message": "工具创建信息还不完整，已进入补参状态",
-                },
+                {"phase": "reconciliation", "status": "RECONCILIATION_REQUIRED", "message": reconcile_text},
             )
-            yield self._wrap_event(
-                "final",
-                {
-                    "chunk": reply,
-                    "message": reply,
-                    "accumulated": reply,
-                    "done": True,
-                },
-            )
+            yield self._wrap_event("final", {"chunk": reconcile_text, "message": reconcile_text, "accumulated": reconcile_text, "done": True})
             return
-        if direct_creation_plan and direct_creation_plan.get("mode") == "create":
-            async for event in self._run_direct_routed_tool(
-                direct_creation_plan["tool"],
-                direct_creation_plan["payload"],
-                original_query,
-                session_metadata={"tool_creation_state": None},
-            ):
-                yield event
-            return
-        if explicit_command and self.route_hint.kind == "knowledge" and route_tools:
-            async for event in self._run_direct_routed_tool(
-                route_tools[0],
-                {"query": cleaned_route_query or original_query},
-                original_query,
-            ):
-                yield event
-            return
-        if self.route_hint.kind == "mcp":
-            direct_tool, direct_args = self._guess_direct_mcp_call(original_query)
-        if explicit_command and self.route_hint.kind == "mcp":
-            if not direct_tool and route_tools:
-                route_tool_names = {tool.name for tool in route_tools}
-                route_query = cleaned_route_query or original_query
-                gaode_route_match = re.search(
-                    r"从(?P<origin>.+?)到(?P<destination>.+?)(?:怎么走|如何走|怎么去|路线|导航|开车|驾车|步行|骑行|公交|地铁|$)",
-                    route_query,
-                )
-                if gaode_route_match and any(name.startswith("maps_") for name in route_tool_names):
-                    origin = gaode_route_match.group("origin").strip(" ，。")
-                    destination = gaode_route_match.group("destination").strip(" ，。")
-                    if any(word in route_query for word in ["公交", "地铁"]):
-                        direct_tool = self._find_route_tool("maps_direction_transit_integrated")
-                        direct_args = {
-                            "origin": origin,
-                            "destination": destination,
-                            "city": "杭州" if "杭州" in route_query else "杭州",
-                            "cityd": "杭州" if "杭州" in route_query else "杭州",
-                        }
-                    elif "步行" in route_query:
-                        direct_tool = self._find_route_tool("maps_direction_walking")
-                        direct_args = {"origin": origin, "destination": destination}
-                    elif "骑行" in route_query:
-                        direct_tool = self._find_route_tool("maps_bicycling")
-                        direct_args = {"origin": origin, "destination": destination}
-                    else:
-                        direct_tool = self._find_route_tool("maps_direction_driving")
-                        direct_args = {"origin": origin, "destination": destination}
-                elif "天气" in route_query and any(name.startswith("maps_") for name in route_tool_names):
-                    city = route_query.replace("天气", "").strip(" ，。") or "杭州"
-                    direct_tool = self._find_route_tool("maps_weather")
-                    direct_args = {"city": city}
-                elif "bing_search" in route_tool_names:
-                    direct_tool = self._find_route_tool("bing_search")
-                    direct_args = {"query": route_query}
-            if direct_tool and direct_tool.name in {
-                "maps_direction_driving",
-                "maps_direction_walking",
-                "maps_direction_transit_integrated",
-                "maps_bicycling",
-            }:
-                origin = str(direct_args.get("origin", "")).strip()
-                destination = str(direct_args.get("destination", "")).strip()
-                coordinate_pattern = r"-?\d+(?:\.\d+)?\s*,\s*-?\d+(?:\.\d+)?"
-                if not (
-                    re.fullmatch(coordinate_pattern, origin)
-                    and re.fullmatch(coordinate_pattern, destination)
-                ):
-                    logger.info(
-                        "workspace explicit mcp route falls back to ReAct for multi-step gaode query: "
-                        f"tool={direct_tool.name} origin={origin!r} destination={destination!r}"
-                    )
-                    direct_tool = None
-                    direct_args = {}
-        if direct_tool:
-            async for event in self._run_direct_routed_tool(direct_tool, direct_args, original_query):
-                yield event
+
+        if final_state == "FAILED/BLOCKED":
+            failure_text = f"这次执行未完成（{final_state}）。未产生副作用，可按原计划重试。"
+            yield self._wrap_event("status", {"phase": "error", "status": "ERROR", "message": failure_text, "error": failure_text})
+            yield self._wrap_event("final", {"chunk": failure_text, "message": failure_text, "accumulated": failure_text, "done": True})
             return
 
         response_content = ""
-        has_activity = False
-        has_visible_output = False
-        inside_think = False
-        runtime_agent = self.react_agent
-        if runtime_tools != self.tools or prefetched_knowledge_context:
-            runtime_agent = create_agent(
-                model=self.model,
-                tools=runtime_tools,
-                system_prompt=runtime_system_prompt,
-                middleware=self.middlewares,
-                state_schema=StreamAgentState,
-            )
-
-        yield self._wrap_event(
-            "status",
-            {
-                "phase": "start",
-                "status": "START",
-                "message": "ReAct Agent 已启动",
-                "execution_mode": self.execution_mode,
-                "access_scope": self.access_scope,
-            },
-        )
-
-        try:
-            async for mode, payload in runtime_agent.astream(
-                input={
-                    "messages": user_messages,
-                    "tool_call_count": 0,
-                    "model_call_count": 0,
-                    "user_id": self.user_id,
-                },
-                config=self._build_run_config(
-                    run_name="workspace_simple_agent_stream",
-                    metadata={
-                        "query": original_query,
-                        "knowledge_ids": self.knowledge_ids,
-                    },
-                ),
-                stream_mode=["messages", "custom"],
-            ):
-                if mode == "custom":
-                    has_activity = True
-                    if isinstance(payload, dict):
-                        yield payload
-                    else:
-                        yield self._wrap_event(
-                            "status",
-                            {
-                                "phase": "custom",
-                                "status": "END",
-                                "message": str(payload),
-                            },
-                        )
-                    continue
-
-                if mode != "messages" or not isinstance(payload, tuple) or not payload:
-                    continue
-
-                chunk = payload[0]
-                if not isinstance(chunk, (AIMessageChunk, AIMessage)):
-                    continue
-
-                visible_chunk = chunk.content or ""
-                if is_minimax_model(model_name=self.model_name, base_url=self.base_url):
-                    visible_chunk, inside_think = extract_visible_text_from_stream(
-                        str(chunk.content or ""),
-                        inside_think,
-                    )
-
-                if not visible_chunk:
-                    continue
-                if isinstance(visible_chunk, str) and not has_visible_output and not visible_chunk.strip():
-                    continue
-
-                has_activity = True
-                has_visible_output = True
-                response_content += visible_chunk
+        for obs in snapshot.observations:
+            if obs.kind == "tool":
+                tool_type, display_name = self._tool_display_info(obs.tool_id)
                 yield self._wrap_event(
-                    "final",
+                    "tool_call",
                     {
-                        "chunk": visible_chunk,
-                        "message": visible_chunk,
-                        "accumulated": response_content,
-                        "done": False,
+                        "tool_name": obs.tool_id,
+                        "tool_type": tool_type,
+                        "tool_call_id": f"tool:{obs.tool_id}",
+                        "arguments": obs.metadata.get("arguments") or {},
+                        "message": f"正在调用 {tool_type}: {display_name}",
                     },
                 )
-        except Exception as err:
-            logger.error(f"Workspace Simple Agent streaming failed: {err}")
-            error_text = (
-                "这次执行没有成功完成。"
-                f"后端返回的错误是：{err}。"
-                "我已经停止当前任务，请稍后重试，或调整模式后继续。"
-            )
-            yield self._wrap_event(
-                "status",
-                {
-                    "phase": "error",
-                    "status": "ERROR",
-                    "message": str(err),
-                    "error": str(err),
-                },
-            )
-            yield self._wrap_event(
-                "final",
-                {
-                    "chunk": error_text,
-                    "message": error_text,
-                    "accumulated": error_text,
-                    "done": True,
-                },
-            )
-            return
+                result_text = str(obs.metadata.get("result") or obs.summary or "")
+                yield self._wrap_event(
+                    "tool_result",
+                    {
+                        "tool_name": obs.tool_id,
+                        "tool_type": tool_type,
+                        "tool_call_id": f"tool:{obs.tool_id}",
+                        "ok": obs.status == "completed",
+                        "result": result_text,
+                        "message": f"{display_name} 已返回结果",
+                    },
+                )
+            elif obs.kind == "model":
+                if obs.metadata.get("grounded_synthesis"):
+                    grounded = str(obs.metadata.get("final_answer") or "")
+                    if grounded:
+                        response_content = grounded
+                    continue
+                model_output = str(obs.metadata.get("model_output") or "")
+                if model_output:
+                    response_content = model_output
 
-        if not has_visible_output and not response_content:
-            empty_text = (
-                "这次请求已经执行完成，但模型没有返回可见正文。"
-                "如果你是让它识别图片或分析附件，请直接重试一次；"
-                "如果仍然没有正文，我会继续按这次的实际事件日志排查。"
-            )
-            yield self._wrap_event(
-                "status",
-                {
-                    "phase": "empty",
-                    "status": "END",
-                    "message": "Agent 没有返回可见内容",
-                },
-            )
-            yield self._wrap_event(
-                "final",
-                {
-                    "chunk": empty_text,
-                    "message": empty_text,
-                    "accumulated": empty_text,
-                    "done": True,
-                },
-            )
-            response_content = empty_text
+        if not response_content:
+            response_content = "这次请求已经执行完成，但模型没有返回可见正文。"
+            yield self._wrap_event("status", {"phase": "empty", "status": "END", "message": "Agent 没有返回可见内容"})
 
-        normalized_response_content = self._normalize_weekday_labels(response_content)
-        if normalized_response_content != response_content:
-            response_content = normalized_response_content
-            yield self._wrap_event(
-                "final",
-                {
-                    "chunk": "",
-                    "message": response_content,
-                    "accumulated": response_content,
-                    "done": True,
-                },
-            )
+        response_content = self._normalize_weekday_labels(response_content)
+        yield self._wrap_event(
+            "final",
+            {
+                "chunk": response_content,
+                "message": response_content,
+                "accumulated": response_content,
+                "done": True,
+            },
+        )
 
         try:
             title = await self._generate_title(original_query, response_content)
@@ -2701,11 +2269,11 @@ class WorkSpaceSimpleAgent:
             {
                 "phase": "complete",
                 "status": "END",
-                "message": "ReAct Agent 已完成",
-                "answer_length": len(response_content),
+                "message": "Workspace request completed.",
+                "runtime_topology": "unified_agent_runtime",
+                "run_outcome_ref": snapshot.run_outcome_ref,
             },
         )
-
     def _canonical_mcp_target(self, text: str | None) -> str:
         normalized = self._norm(text)
         aliases = {
