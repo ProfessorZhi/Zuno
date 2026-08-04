@@ -1,0 +1,137 @@
+{
+  "work_package": "PHASE22-BACKEND-SEMANTIC-LEGACY-CLEANUP",
+  "worker": "deepseek-legacy-backend",
+  "method": "semantic import reachability from formal production entry points",
+  "entry_points": {
+    "fastapi_main": "src/backend/zuno/main.py",
+    "product_api": "src/backend/zuno/api/v1/ (completion.py and routes)",
+    "completion_api": "src/backend/zuno/api/v1/completion.py -> api/services/completion.py",
+    "workspace_task_api": "src/backend/zuno/api/v1/ -> api/services/workspace_task_runtime.py",
+    "queue_worker": "src/backend/zuno/platform/services/queue/workers.py",
+    "cli": "src/backend/zuno/platform/services/cli_tool_discovery.py + simple_api_tool.py",
+    "tool_script": "tools/scripts/start.py",
+    "test_only_factory": "tests/ (fixtures only; no production caller)"
+  },
+  "canonical_runtime": {
+    "single_controller": "zuno.agent.harness.SingleControllerRuntimeHarness",
+    "fixed_agent_run_graph": "zuno.agent.runtime.graph.build_agent_graph",
+    "dynamic_plan_dag": "zuno.agent.runtime.planning (RuntimePlanner / PlanExecutor)",
+    "fixed_step_execution_graph": "zuno.agent.runtime.phase08.build_phase08_step_graph",
+    "service": "zuno.agent.runtime.service.UnifiedAgentRuntimeService",
+    "factory": "zuno.agent.runtime.factory.RuntimeDependencyFactory",
+    "stores": [
+      "zuno.agent.runtime.sqlite_store.SQLiteAgentRunStore",
+      "zuno.agent.durable_runtime.InMemoryDurableRuntimeStore"
+    ]
+  },
+  "legacy_symbols": {
+    "GeneralAgent": {
+      "module": "zuno.agent.core.agents.general_agent (deleted)",
+      "production_callers": [],
+      "export_surfaces_before": [
+        "zuno.agent.__init__ (lazy export)",
+        "zuno.agent.runtime.py (dead shadowed shim module)",
+        "zuno.agent.core.__init__ (lazy export)",
+        "zuno.agent.core.agents.__init__ (lazy export)"
+      ],
+      "test_references_before": [
+        "tests/agent/test_generalagent_context_memory_runtime.py (deleted)",
+        "tests/agent/test_general_agent_project_query_runtime.py (deleted)",
+        "tests/agent/runtime/test_runtime_model_roles.py (converted)",
+        "tests/agent/test_hooks_evidence_trace_artifacts.py (converted)",
+        "tests/agent/test_agent_layer_surfaces.py (updated)",
+        "tests/repo/test_phase11b_single_generalagent_cutover.py (converted to gate)",
+        "tests/repo/test_phase5_domain_runtime_paths.py (converted)",
+        "tests/repo/test_phase5_general_agent_real_runtime_flow.py (converted to gate)",
+        "tests/repo/test_phase6_agent_graphrag_pluginization.py (converted to gate)",
+        "tests/repo/test_backend_facade_layers.py (updated)"
+      ],
+      "classification": "PRODUCT_LEGACY_RUNTIME",
+      "action": "deleted production file and all exports; gates added"
+    },
+    "AgentConfig": {
+      "module": "zuno.agent.core.agents.general_agent (deleted)",
+      "production_callers": [],
+      "classification": "PRODUCT_LEGACY_RUNTIME",
+      "action": "deleted with GeneralAgent"
+    },
+    "StreamAgentState": {
+      "module": "zuno.agent.core.agents.general_agent (deleted)",
+      "shim_modules": ["zuno.agent.state (deleted)", "zuno.agent.streaming (deleted)"],
+      "production_callers": [],
+      "classification": "PRODUCT_LEGACY_RUNTIME",
+      "action": "deleted with GeneralAgent"
+    },
+    "EmitEventAgentMiddleware": {
+      "module": "zuno.agent.core.agents.general_agent (deleted)",
+      "shim_module": "zuno.agent.streaming (deleted)",
+      "production_callers": [],
+      "classification": "PRODUCT_LEGACY_RUNTIME",
+      "action": "deleted with GeneralAgent"
+    },
+    "ReactAgent": {
+      "module": "zuno.agent.core.agents.react_agent (deleted)",
+      "production_callers": [],
+      "mechanism_preserved": "zuno.agent.runtime.execution.react_runner.ReActStepRunner (single-step Action/Observation)",
+      "classification": "PRODUCT_LEGACY_RUNTIME",
+      "action": "deleted production file"
+    },
+    "PlanExecuteAgent": {
+      "module": "zuno.agent.core.agents.plan_execute_agent (deleted)",
+      "production_callers": [],
+      "mechanism_preserved": "zuno.agent.runtime.planning (Dynamic Plan DAG planner)",
+      "classification": "PRODUCT_LEGACY_RUNTIME",
+      "action": "deleted production file"
+    },
+    "CodeActAgent": {
+      "module": "zuno.agent.core.agents.codeact_agent (deleted)",
+      "production_callers": [],
+      "mechanism_preserved": "zuno.platform.services.sandbox (controlled code execution capability)",
+      "classification": "TEST_OR_HISTORY_ONLY",
+      "action": "deleted production file"
+    },
+    "Text2SQLAgent": {
+      "module": "zuno.agent.core.agents.text2sql_agent (deleted)",
+      "production_callers": [],
+      "classification": "TEST_OR_HISTORY_ONLY",
+      "action": "deleted production file (was already NotImplementedError)"
+    },
+    "StructuredResponseAgent": {
+      "module": "zuno.agent.core.agents.structured_response_agent (retained)",
+      "production_callers": [
+        "zuno.api.services.agent_skill (StructuredResponseAgent(AgentSkillResponseFormat))",
+        "zuno.api.services.mcp_server (StructuredResponseAgent(MCPResponseFormat))"
+      ],
+      "classification": "INTERNAL_STEP_CAPABILITY",
+      "action": "retained as deterministic structured-output capability; no top-level task lifecycle"
+    },
+    "zuno.agent.runtime (shim file)": {
+      "module": "src/backend/zuno/agent/runtime.py (deleted)",
+      "note": "shadowed by the zuno.agent.runtime package; unimportable dead re-export of GeneralAgent/AgentConfig",
+      "classification": "TEST_OR_HISTORY_ONLY",
+      "action": "deleted"
+    },
+    "zuno.agent.state": {
+      "module": "src/backend/zuno/agent/state.py (deleted)",
+      "production_callers": [],
+      "classification": "TEST_OR_HISTORY_ONLY",
+      "action": "deleted export shim"
+    },
+    "zuno.agent.streaming": {
+      "module": "src/backend/zuno/agent/streaming.py (deleted)",
+      "production_callers": [],
+      "classification": "TEST_OR_HISTORY_ONLY",
+      "action": "deleted export shim"
+    }
+  },
+  "hidden_dual_path_audit": {
+    "ZUNO_AGENT_RUNTIME_env_selector": "absent from production source",
+    "_create_chat_agent": "absent from production source",
+    "legacy_general_agent_rollback": "absent from completion service; ZUNO_COMPLETION_CUTOVER_MODE=rollback rejected fail-closed",
+    "try_except_ModuleNotFoundError_runtime_fallback": "none in agent entry points (only mineru optional document parsing, out of scope)",
+    "direct_answer": "canonical planner strategy only (zuno.agent.planning / runtime.planning / contracts)",
+    "sqlite_inmemory_product_fallback": "SQLiteAgentRunStore and InMemoryDurableRuntimeStore are canonical run stores, not fallbacks",
+    "old_completion_helper": "none (completion route/service are canonical UnifiedAgentRuntimeService)",
+    "old_stream_generator": "zuno.agent.streaming shim deleted"
+  }
+}

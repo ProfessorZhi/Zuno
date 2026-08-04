@@ -1,0 +1,124 @@
+{
+  "work_package": "PHASE22-BACKEND-SEMANTIC-LEGACY-CLEANUP",
+  "classification_schema": {
+    "PRODUCT_LEGACY_RUNTIME": "was a complete product runtime; retired",
+    "INTERNAL_STEP_CAPABILITY": "retained as a capability inside the fixed StepExecutionGraph / services; no top-level task lifecycle",
+    "TEST_OR_HISTORY_ONLY": "not reachable from production; deleted or fixture-only",
+    "UNRESOLVED": "ownership cannot be proven within this work package; modifications stopped and findings reported"
+  },
+  "classifications": [
+    {
+      "symbol": "GeneralAgent",
+      "module": "zuno.agent.core.agents.general_agent",
+      "classification": "PRODUCT_LEGACY_RUNTIME",
+      "evidence": "zero production callers; only lazy export shims and tests referenced it",
+      "disposition": "production file deleted; exports removed from zuno.agent, zuno.agent.core, zuno.agent.core.agents; re-import gate added; behavior tests removed or converted to local fixtures"
+    },
+    {
+      "symbol": "AgentConfig",
+      "module": "zuno.agent.core.agents.general_agent",
+      "classification": "PRODUCT_LEGACY_RUNTIME",
+      "evidence": "zero production callers; completion route rollback markers already removed in PHASE22-T03",
+      "disposition": "deleted with GeneralAgent"
+    },
+    {
+      "symbol": "StreamAgentState",
+      "module": "zuno.agent.core.agents.general_agent",
+      "classification": "PRODUCT_LEGACY_RUNTIME",
+      "evidence": "only shims zuno.agent.state / zuno.agent.streaming and tests",
+      "disposition": "deleted with GeneralAgent; both shims deleted"
+    },
+    {
+      "symbol": "EmitEventAgentMiddleware",
+      "module": "zuno.agent.core.agents.general_agent",
+      "classification": "PRODUCT_LEGACY_RUNTIME",
+      "evidence": "only shim zuno.agent.streaming and tests; canonical runtime emits events via runtime/events.py",
+      "disposition": "deleted with GeneralAgent; trace-event format contract pinned with a local fixture"
+    },
+    {
+      "symbol": "ReactAgent",
+      "module": "zuno.agent.core.agents.react_agent",
+      "classification": "PRODUCT_LEGACY_RUNTIME",
+      "evidence": "zero production callers; ReAct mechanism retained as ReActStepRunner inside the fixed StepExecutionGraph",
+      "disposition": "production file deleted"
+    },
+    {
+      "symbol": "PlanExecuteAgent",
+      "module": "zuno.agent.core.agents.plan_execute_agent",
+      "classification": "PRODUCT_LEGACY_RUNTIME",
+      "evidence": "zero production callers; planner mechanism retained as the Dynamic Plan DAG (runtime/planning)",
+      "disposition": "production file deleted"
+    },
+    {
+      "symbol": "CodeActAgent",
+      "module": "zuno.agent.core.agents.codeact_agent",
+      "classification": "TEST_OR_HISTORY_ONLY",
+      "evidence": "zero production callers; controlled code execution capability retained in zuno.platform.services.sandbox",
+      "disposition": "production file deleted"
+    },
+    {
+      "symbol": "Text2SQLAgent",
+      "module": "zuno.agent.core.agents.text2sql_agent",
+      "classification": "TEST_OR_HISTORY_ONLY",
+      "evidence": "zero production callers; class already raised NotImplementedError",
+      "disposition": "production file deleted"
+    },
+    {
+      "symbol": "StructuredResponseAgent",
+      "module": "zuno.agent.core.agents.structured_response_agent",
+      "classification": "INTERNAL_STEP_CAPABILITY",
+      "evidence": "production callers: agent_skill.py (AgentSkillResponseFormat), mcp_server.py (MCPResponseFormat); deterministic schema-validated model capability",
+      "disposition": "retained; still exported; no top-level task lifecycle"
+    },
+    {
+      "symbol": "zuno.agent.runtime (shim file)",
+      "module": "src/backend/zuno/agent/runtime.py",
+      "classification": "TEST_OR_HISTORY_ONLY",
+      "evidence": "module shadowed by the zuno.agent.runtime package; could never be imported; re-exported GeneralAgent/AgentConfig",
+      "disposition": "deleted"
+    },
+    {
+      "symbol": "zuno.agent.state",
+      "module": "src/backend/zuno/agent/state.py",
+      "classification": "TEST_OR_HISTORY_ONLY",
+      "evidence": "lazy export shim for StreamAgentState; zero production callers",
+      "disposition": "deleted"
+    },
+    {
+      "symbol": "zuno.agent.streaming",
+      "module": "src/backend/zuno/agent/streaming.py",
+      "classification": "TEST_OR_HISTORY_ONLY",
+      "evidence": "lazy export shim for EmitEventAgentMiddleware/StreamAgentState; zero production callers",
+      "disposition": "deleted"
+    },
+    {
+      "symbol": "WorkSpaceSimpleAgent",
+      "module": "zuno.platform.services.workspace.simple_agent",
+      "classification": "UNRESOLVED (out of work-package scope)",
+      "evidence": "production surface for workspace agent chat (api/services/workspace.py). Runs a ReAct agent outside the Single Controller and executes tools via direct handler(request) without ToolInvocationGateway. The phase22-removal-candidates work product lists platform/services/workspace as an ACTIVE canonical surface with active tests; migration is owned by the workspace cutover wave (parallel session constraint: avoid conflicting modifications).",
+      "disposition": "NOT MODIFIED. Recorded as a verified finding and remaining gap; the verifier pins the known surface so it cannot grow. Tool side-effect test asserts the bypass phrase is confined to exactly the two workspace agent files."
+    },
+    {
+      "symbol": "WechatAgent",
+      "module": "zuno.platform.services.workspace.wechat_agent",
+      "classification": "UNRESOLVED (out of work-package scope)",
+      "evidence": "same direct tool execution pattern as WorkSpaceSimpleAgent (wechat agent product surface)",
+      "disposition": "NOT MODIFIED. Recorded as a verified finding and remaining gap."
+    },
+    {
+      "symbol": "AgentControlRuntime",
+      "module": "zuno.agent.control_runtime",
+      "classification": "TEST_OR_HISTORY_ONLY (retained)",
+      "evidence": "used only by zuno.agent.product_baseline (baseline generator, no production caller), the zuno.agent facade export and tests; superseded by the Single Controller runtime",
+      "disposition": "retained because it is outside the allowed modification scope (not under core/agents); facade export kept; noted as future retirement candidate"
+    }
+  ],
+  "phase08_dependencies": {
+    "note": "workspace_task_runtime.py Phase08 cutover configuration block was read but NOT modified",
+    "references": [
+      "zuno.agent.runtime.phase08_cutover.Phase08CutoverController (read-only)",
+      "zuno.agent.runtime.phase08.Phase08RunService (read-only)"
+    ],
+    "dependency_record": "DEPENDENCY_ON_DEEPSEEK_LEGACY_RUNTIME: Phase08 cutover behavior is owned by the parallel DeepSeek-Legacy-Runtime session; no conflicting modifications produced"
+  }
+}
