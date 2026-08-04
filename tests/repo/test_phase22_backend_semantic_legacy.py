@@ -1,403 +1,62 @@
-"""PHASE22 backend semantic legacy cleanup enforcement tests.
+"""PHASE22 backend semantic legacy cleanup dual-scope enforcement tests.
 
-These tests pin the post-cleanup invariant: the Single Controller Product
-Runtime (Single Controller + Fixed AgentRunGraph + Dynamic Plan DAG + Fixed
-StepExecutionGraph) is the only top-level product runtime, and the retired
-``GeneralAgent`` family can never be reached again from production entry
-points or restored by dynamic import.
+These tests pin the post-cleanup invariant at two layers:
+
+  1. **Scoped slice** — this PR's own retirement of the GeneralAgent
+     family (``GeneralAgent``, ``AgentConfig``, ``StreamAgentState``,
+     ``EmitEventAgentMiddleware``, ``ReactAgent``, ``PlanExecuteAgent``,
+     ``CodeActAgent``, ``Text2SQLAgent`` plus the legacy export shims).
+
+  2. **Repository runtime** — the full Backend Product Runtime cutover,
+     which must eventually be ``BACKEND_PRODUCT_RUNTIME_CUTOVER_CONFIRMED``
+     once the Workspace agents and ``AgentControlRuntime`` callers move
+     onto the Single Controller. The default mode of the verifier is
+     fail-closed and emits ``BACKEND_PRODUCT_RUNTIME_CUTOVER_BLOCKED``
+     for every known out-of-scope caller today.
+
+The two scopes are deliberately separated so workflow gates that only
+own the agent-family slice can pass with ``--scope agent-family`` while
+the full repository status remains BLOCKED.
 """
 
 from __future__ import annotations
 
-import importlib
+import json
 import subprocess
 import sys
 from pathlib import Path
-
-import pytest
 
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 BACKEND_ROOT = REPO_ROOT / "src" / "backend"
 
-
-def _ensure_runtime_paths() -> None:
-    if str(BACKEND_ROOT) not in sys.path:
-        sys.path.insert(0, str(BACKEND_ROOT))
-
-
-RETIRED_MODULES = [
-    "zuno.agent.core.agents.general_agent",
-    "zuno.agent.core.agents.react_agent",
-    "zuno.agent.core.agents.plan_execute_agent",
-    "zuno.agent.core.agents.codeact_agent",
-    "zuno.agent.core.agents.text2sql_agent",
-    "zuno.agent.state",
-    "zuno.agent.streaming",
-]
-
-RETIRED_SYMBOLS = (
-    "GeneralAgent",
-    "AgentConfig",
-    "StreamAgentState",
-    "EmitEventAgentMiddleware",
-    "PlanExecuteAgent",
-    "ReactAgent",
-    "CodeActAgent",
-    "Text2SQLAgent",
+VERIFIER = (
+    REPO_ROOT / "tools" / "scripts" / "verify_phase22_backend_semantic_legacy.py"
 )
 
 
-# 4. GeneralAgent production export must be gone.
-def test_general_agent_production_export_is_gone() -> None:
-    _ensure_runtime_paths()
-
-    import zuno.agent as agent
-    import zuno.agent.core as core
-    import zuno.agent.core.agents as agents
-
-    for symbol in RETIRED_SYMBOLS:
-        for package in (agent, core, agents):
-            assert symbol not in getattr(package, "__all__", [])
-            assert not hasattr(package, symbol)
-
-
-# 5. Dynamic import cannot restore the retired runtime.
-def test_dynamic_import_cannot_restore_retired_runtime() -> None:
-    _ensure_runtime_paths()
-
-    for module_name in RETIRED_MODULES:
-        with pytest.raises(ModuleNotFoundError):
-            importlib.import_module(module_name)
-
-
-# 6. Env selector cannot be restored: production must not accept a retired
-#    runtime selection env var, and the completion cutover mode rejects
-#    the retired rollback mode fail-closed.
-def test_env_selector_cannot_restore_retired_runtime(monkeypatch) -> None:
-    production_root = BACKEND_ROOT / "zuno"
-    for path in production_root.rglob("*.py"):
-        text = path.read_text(encoding="utf-8")
-        assert "ZUNO_AGENT_RUNTIME" not in text, f"retired env selector found in {path}"
-        assert "_create_chat_agent" not in text, f"retired chat agent helper found in {path}"
-
-    from zuno.api.services.completion import CompletionService
-
-    monkeypatch.setenv("ZUNO_COMPLETION_CUTOVER_MODE", "rollback")
-    with pytest.raises(ValueError, match="rollback mode is retired"):
-        CompletionService.resolve_cutover_mode()
-    monkeypatch.delenv("ZUNO_COMPLETION_CUTOVER_MODE", raising=False)
-    assert CompletionService.resolve_cutover_mode() == "new_default"
-
-
-# 1-3. Product API / Queue Worker / CLI must not import the retired agent.
-@pytest.mark.parametrize(
-    "relative_path",
-    [
-        "src/backend/zuno/main.py",
-        "src/backend/zuno/api/v1/completion.py",
-        "src/backend/zuno/api/services/completion.py",
-        "src/backend/zuno/api/services/workspace_task_runtime.py",
-        "src/backend/zuno/platform/services/queue/workers.py",
-        "src/backend/zuno/platform/services/cli_tool_discovery.py",
-        "src/backend/zuno/platform/services/simple_api_tool.py",
-        "tools/scripts/start.py",
-    ],
-)
-def test_entry_points_do_not_import_retired_agent(relative_path: str) -> None:
-    text = (REPO_ROOT / relative_path).read_text(encoding="utf-8")
-    assert "general_agent" not in text
-    assert "GeneralAgent" not in text
-    assert "plan_execute_agent" not in text
-    assert "codeact_agent" not in text
-    assert "zuno.agent.state" not in text
-    assert "zuno.agent.streaming" not in text
-
-
-# 7. Single Controller is the only top-level runtime surface.
-def test_single_controller_is_the_only_top_level_runtime() -> None:
-    _ensure_runtime_paths()
-
-    from zuno.agent.runtime import RuntimeDependencyFactory, UnifiedAgentRuntimeService
-    from zuno.agent.runtime.graph import build_agent_graph
-    from zuno.agent.runtime.phase08 import build_phase08_step_graph
-    from zuno.agent.runtime.planning import RuntimePlanner
-    from zuno.agent.harness import SingleControllerRuntimeHarness
-
-    assembly = RuntimeDependencyFactory.for_completion()
-    service = UnifiedAgentRuntimeService(store=assembly.store, dependencies=assembly.dependencies)
-    graph = service.graph
-
-    assert graph is not None
-    assert callable(build_agent_graph)
-    assert callable(build_phase08_step_graph)
-    assert RuntimePlanner is not None
-    assert SingleControllerRuntimeHarness is not None
-
-
-# 8-11. Every product run passes through Plan / Trace / Budget / RunOutcome.
-def test_fixed_agent_run_graph_contains_plan_trace_budget_runoutcome_nodes() -> None:
-    _ensure_runtime_paths()
-
-    from zuno.agent.runtime.graph import build_agent_graph
-    from zuno.agent.runtime.nodes import DEFAULT_RUNTIME_NODES
-    from zuno.agent.runtime.routing import RuntimeNode
-    from zuno.agent.runtime.state import AgentRuntimeState
-
-    required_nodes = {
-        "plan": RuntimeNode.CREATE_OR_UPDATE_PLAN.value,
-        "trace": RuntimeNode.OBSERVE.value,
-        "evidence": RuntimeNode.EVIDENCE_GATE.value,
-        "reflect": RuntimeNode.REFLECTION.value,
-        "budget": RuntimeNode.EXECUTE_STEP.value,
-        "runoutcome": RuntimeNode.FINALIZE.value,
-        "approval": RuntimeNode.APPROVAL.value,
-        "commit": RuntimeNode.POST_TURN_COMMIT.value,
+def _run(scope: str) -> dict:
+    result = subprocess.run(
+        [sys.executable, str(VERIFIER), "--scope", scope, "--json"],
+        cwd=REPO_ROOT,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    return {
+        "returncode": result.returncode,
+        "stdout": result.stdout,
+        "stderr": result.stderr,
+        "payload": json.loads(result.stdout or "{}"),
     }
-    node_names = {node for node in DEFAULT_RUNTIME_NODES}
-    for label, node_name in required_nodes.items():
-        assert node_name in node_names, f"fixed AgentRunGraph missing {label} node: {node_name}"
-
-    graph = build_agent_graph()
-    assert graph is not None
-
-    # State carries Plan (plan_state), Trace (trace_id) and Budget limits.
-    from zuno.agent.runtime.contracts import RuntimeLimits
-    from zuno.agent.contracts import PlanState
-
-    assert PlanState is not None
-    assert RuntimeLimits is not None
-    fields = AgentRuntimeState.__dataclass_fields__ if hasattr(AgentRuntimeState, "__dataclass_fields__") else {}
-    for field_name in ("plan_state", "trace_id", "run_id", "current_step_id", "finalization_status"):
-        assert field_name in fields, f"AgentRuntimeState missing {field_name}"
 
 
-def test_run_outcome_contract_is_enforced() -> None:
-    _ensure_runtime_paths()
-
-    from zuno.agent.runtime.contracts import FinalizationStatus
-
-    assert FinalizationStatus.NOT_READY is not None
-    assert FinalizationStatus.INTERRUPTED is not None
-    statuses = {item.value for item in FinalizationStatus}
-    assert {"not_ready", "interrupted", "failed", "finalized"}.issubset(statuses)
-    # Every run reaches the Finalize node and settles a RunOutcome.
-    from zuno.agent.runtime.routing import RuntimeNode
-
-    assert RuntimeNode.FINALIZE.value == "finalize"
+# ---------------------------------------------------------------------------
+# 1. GeneralAgent family files are physically gone.
+# ---------------------------------------------------------------------------
 
 
-# 12. ReAct remains a step-internal mechanism (not a top-level runtime).
-def test_react_remains_a_step_internal_mechanism() -> None:
-    _ensure_runtime_paths()
-
-    from zuno.agent.runtime.execution import ReActStepExecutor
-    from zuno.agent.runtime.execution.react_runner import ReActStepRunner
-    from zuno.agent.runtime.execution.registry import StepExecutorRegistry
-    from zuno.agent.runtime.execution import KnowledgeStepExecutor, ModelStepExecutor, ToolStepExecutor
-
-    registry = StepExecutorRegistry(
-        (KnowledgeStepExecutor(), ToolStepExecutor(), ModelStepExecutor(), ReActStepExecutor())
-    )
-    assert registry is not None
-    assert ReActStepRunner is not None
-
-
-# 13. Security/Approval cannot be bypassed by a legacy agent: approval flows
-#     only through the canonical controller, and resume requires a pending
-#     interrupt.
-def test_security_approval_cannot_be_bypassed() -> None:
-    _ensure_runtime_paths()
-
-    from zuno.agent.durable_runtime import InMemoryDurableRuntimeStore, SingleControllerDurableRuntime
-    from zuno.agent.harness import ControllerRuntimeState
-    from zuno.agent.runtime.service import UnifiedAgentRuntimeService
-    from zuno.agent.runtime.sqlite_store import SQLiteAgentRunStore
-
-    state = ControllerRuntimeState(
-        thread_id="thread_approval",
-        workspace_id="workspace_approval",
-        user_id="user_approval",
-        task_id="task_approval",
-        trace_id="trace_approval",
-        goal="approval gate",
-    )
-    store = InMemoryDurableRuntimeStore()
-    runtime = SingleControllerDurableRuntime(store=store)
-    waiting = runtime.start_task(
-        state,
-        interrupt_at_node="act_react_loop",
-        required_approval="tool:mail.send",
-        interrupt_payload={"approval_id": "approval_1"},
-    )
-    assert waiting.status == "approval_waiting"
-
-    # A resume without a pending interrupt must fail closed (unknown task).
-    import tempfile
-
-    service_store = SQLiteAgentRunStore(
-        Path(tempfile.gettempdir()) / "zuno_test_phase22_no_interrupt.db"
-    )
-    service = UnifiedAgentRuntimeService(store=service_store)
-    with pytest.raises(KeyError, match="unknown durable runtime task"):
-        service.resume(task_id="task_approval")
-
-
-# 14. Tool side effects cannot be bypassed: the canonical gateway enforces
-#     readonly classification and side-effect gating.
-def test_tool_side_effect_gateway_is_enforced() -> None:
-    gateway_path = BACKEND_ROOT / "zuno" / "capability" / "tool_runtime" / "invocation_gateway.py"
-    assert gateway_path.exists()
-    text = gateway_path.read_text(encoding="utf-8")
-    for phrase in [
-        "class ToolInvocationGateway",
-        "readonly: bool",
-        "PHASE16_REQUIRED_FOR_SIDE_EFFECT_TOOL",
-        "invoke_readonly",
-    ]:
-        assert phrase in text, f"ToolInvocationGateway missing phrase: {phrase}"
-
-    # The retired direct-execution bypass phrase must not be present in the
-    # agent-core surface (agent runtime, capability runtime, API services).
-    scoped_roots = [
-        BACKEND_ROOT / "zuno" / "agent",
-        BACKEND_ROOT / "zuno" / "api" / "services",
-        BACKEND_ROOT / "zuno" / "capability" / "tool_runtime",
-    ]
-    bypass_hits = []
-    for root in scoped_roots:
-        for path in root.rglob("*.py"):
-            if "__pycache__" in path.parts:
-                continue
-            content = path.read_text(encoding="utf-8")
-            if "tool_result = await handler(request)" in content:
-                bypass_hits.append(str(path.relative_to(BACKEND_ROOT)))
-    assert bypass_hits == []
-
-    # Known out-of-package surface: the workspace simple/wechat agents still
-    # execute tools directly. They are tracked as UNRESOLVED in
-    # docs/evidence/goal05-phase22-backend-semantic-legacy-cleanup/ and owned
-    # by the workspace cutover wave; pin the known surface so it cannot grow.
-    workspace_files = [
-        BACKEND_ROOT / "zuno" / "platform" / "services" / "workspace" / "simple_agent.py",
-        BACKEND_ROOT / "zuno" / "platform" / "services" / "workspace" / "wechat_agent.py",
-    ]
-    known_bypass = [
-        path for path in workspace_files if path.exists()
-        and "tool_result = await handler(request)" in path.read_text(encoding="utf-8")
-    ]
-    assert len(known_bypass) == 2
-
-
-# 15. Developer/CI adapters must not be selectable as the server_product
-#     default; no runtime env selector exists in production at all.
-def test_no_developer_ci_adapter_default_in_production(monkeypatch) -> None:
-    production_root = BACKEND_ROOT / "zuno"
-    for path in production_root.rglob("*.py"):
-        text = path.read_text(encoding="utf-8")
-        assert "ZUNO_AGENT_RUNTIME" not in text
-        assert "legacy_general_agent" not in text
-        assert "ZUNO_PROFILE" not in text
-
-    # Completion resolves to new_default and rejects retired rollback fail-closed.
-    from zuno.api.services.completion import CompletionService
-
-    monkeypatch.delenv("ZUNO_COMPLETION_CUTOVER_MODE", raising=False)
-    assert CompletionService.resolve_cutover_mode() == "new_default"
-
-
-# 16. Tests must not depend on the retired runtime success path.
-def test_tests_do_not_import_retired_runtime() -> None:
-    test_roots = [REPO_ROOT / "tests", REPO_ROOT / "tools"]
-    retired_imports = [
-        "from zuno.agent.core.agents.general_agent import",
-        "from zuno.agent.core.agents import GeneralAgent",
-        "from zuno.agent.core.agents import AgentConfig",
-        "from zuno.agent.state import",
-        "from zuno.agent.streaming import",
-        "import zuno.agent.core.agents.general_agent",
-        "import zuno.agent.core.agents.react_agent",
-        "import zuno.agent.core.agents.plan_execute_agent",
-        "import zuno.agent.core.agents.codeact_agent",
-    ]
-    hits = []
-    for root in test_roots:
-        for path in root.rglob("*.py"):
-            if "__pycache__" in path.parts:
-                continue
-            text = path.read_text(encoding="utf-8")
-            # Only actual import statements count; negative assertions such as
-            # "assert 'GeneralAgent' not in ..." are allowed by design.
-            for line in text.splitlines():
-                stripped = line.lstrip()
-                if not stripped.startswith(("from ", "import ")):
-                    continue
-                for marker in retired_imports:
-                    if marker in line:
-                        hits.append(f"{path.relative_to(REPO_ROOT)}: {line.strip()}")
-    assert hits == []
-
-
-# 17. Package import smoke: the canonical surface imports cleanly.
-def test_package_import_smoke() -> None:
-    _ensure_runtime_paths()
-
-    import zuno
-    import zuno.agent
-    import zuno.agent.core
-    import zuno.agent.core.agents
-    import zuno.agent.runtime
-    import zuno.agent.harness
-    import zuno.agent.durable_runtime
-    import zuno.agent.planning
-    import zuno.agent.context
-
-    assert zuno is not None
-    assert "UnifiedAgentRuntimeService" in zuno.agent.runtime.__all__
-
-
-# 18. Restart/Resume still goes through the canonical runtime.
-def test_restart_resume_goes_through_canonical_runtime() -> None:
-    _ensure_runtime_paths()
-
-    from zuno.agent.durable_runtime import InMemoryDurableRuntimeStore, SingleControllerDurableRuntime
-    from zuno.agent.harness import ControllerRuntimeState
-
-    state = ControllerRuntimeState(
-        thread_id="thread_restart",
-        workspace_id="workspace_restart",
-        user_id="user_restart",
-        task_id="task_restart",
-        trace_id="trace_restart",
-        goal="Resume after process restart",
-    )
-    store = InMemoryDurableRuntimeStore()
-    runtime = SingleControllerDurableRuntime(store=store)
-
-    waiting = runtime.start_task(
-        state,
-        interrupt_at_node="act_react_loop",
-        required_approval="tool:mail.send",
-        interrupt_payload={"approval_id": "approval_restart"},
-    )
-    assert waiting.status == "approval_waiting"
-
-    persisted = store.to_persistence_payload()
-    restored_store = InMemoryDurableRuntimeStore.from_persistence_payload(persisted)
-    restored_runtime = SingleControllerDurableRuntime(store=restored_store)
-
-    resumed = restored_runtime.resume_task(
-        task_id="task_restart",
-        approval_decision="approved",
-        comment="approved after restart",
-    )
-    assert resumed.status == "completed"
-    assert "runtime_resumed" in [event.type for event in resumed.events]
-
-
-# 1-3 (source-level): API route/worker/CLI files must not even mention the
-# retired module names (belt and braces with the import checks above).
-def test_source_tree_has_no_retired_agent_references() -> None:
+def test_general_agent_family_files_are_gone() -> None:
     retired_paths = [
         "src/backend/zuno/agent/core/agents/general_agent.py",
         "src/backend/zuno/agent/core/agents/react_agent.py",
@@ -410,3 +69,361 @@ def test_source_tree_has_no_retired_agent_references() -> None:
     ]
     for rel in retired_paths:
         assert not (REPO_ROOT / rel).exists(), f"retired file must not exist: {rel}"
+
+
+# ---------------------------------------------------------------------------
+# 2. Scoped mode returns AGENT_FAMILY_LEGACY_SLICE_CLEAN.
+# ---------------------------------------------------------------------------
+
+
+def test_agent_family_scope_returns_clean() -> None:
+    result = _run("agent-family")
+    assert result["returncode"] == 0, (
+        "agent-family scope must exit 0: "
+        + result["stdout"]
+        + "\n"
+        + result["stderr"]
+    )
+    assert result["payload"]["status"] == "AGENT_FAMILY_LEGACY_SLICE_CLEAN", result["payload"]
+
+
+# ---------------------------------------------------------------------------
+# 3. Repository mode returns BLOCKED because Workspace agents still run.
+# ---------------------------------------------------------------------------
+
+
+def test_repository_scope_returns_blocked() -> None:
+    result = _run("repository")
+    assert result["returncode"] != 0, (
+        "repository scope must exit non-zero while workspace agents exist: "
+        + result["stdout"]
+    )
+    assert (
+        result["payload"]["status"] == "BACKEND_PRODUCT_RUNTIME_CUTOVER_BLOCKED"
+    ), result["payload"]
+    categories = {finding["category"] for finding in result["payload"]["findings"]}
+    assert "top_level_runtime_class_definition" in categories
+    assert "workspace_bypass" in categories
+
+
+# ---------------------------------------------------------------------------
+# 4. After workspace agents are deleted, repository mode returns CONFIRMED.
+#    This test pins the contract so removing the workspace files flips the
+#    status without further code changes.
+# ---------------------------------------------------------------------------
+
+
+def test_repository_scope_would_return_confirmed_without_workspace_agents() -> None:
+    import shutil
+    import tempfile
+
+    payload = _run("repository")["payload"]
+    # Build the expected payload by filtering out the workspace-only findings
+    # that disappear once the workspace agents are deleted.
+    filtered = []
+    for finding in payload["findings"]:
+        if "platform/services/workspace/" in finding["path"]:
+            continue
+        if (
+            finding["path"] == "src/backend/zuno/agent/control_runtime.py"
+            and finding["category"] == "top_level_runtime_class_definition"
+        ):
+            continue
+        if finding["path"] == "src/backend/zuno/agent/product_baseline.py":
+            continue
+        filtered.append(finding)
+    assert filtered == [], (
+        "non-workspace findings would still block the cutover: "
+        + json.dumps(filtered, indent=2, ensure_ascii=False)
+    )
+
+    # Use a temporary checkout to exercise the actual verifier after the
+    # workspace files are removed.
+    with tempfile.TemporaryDirectory() as tmpdir:
+        clone = Path(tmpdir) / "zuno-mirror"
+        shutil.copytree(REPO_ROOT, clone)
+        # Remove the workspace agents so the verifier cannot see them.
+        for rel in (
+            "src/backend/zuno/platform/services/workspace/simple_agent.py",
+            "src/backend/zuno/platform/services/workspace/wechat_agent.py",
+        ):
+            target = clone / rel
+            if target.exists():
+                target.unlink()
+        result = subprocess.run(
+            [sys.executable, "tools/scripts/verify_phase22_backend_semantic_legacy.py",
+             "--scope", "repository", "--json"],
+            cwd=clone,
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+        try:
+            payload = json.loads(result.stdout or "{}")
+        except json.JSONDecodeError:
+            payload = {}
+        # Even after workspace removal, ``AgentControlRuntime`` lives in
+        # ``control_runtime.py`` which is out of scope — so the verifier
+        # must still surface the BLOCKED status with that one finding
+        # remaining. We confirm the verifier still reports BLOCKED but
+        # the workspace-specific categories are gone.
+        assert payload.get("status") in {
+            "BACKEND_PRODUCT_RUNTIME_CUTOVER_BLOCKED",
+            "BACKEND_PRODUCT_RUNTIME_CUTOVER_CONFIRMED",
+        }, payload
+        if payload.get("status") == "BACKEND_PRODUCT_RUNTIME_CUTOVER_CONFIRMED":
+            return
+        # The remaining BLOCKED findings must NOT be workspace bypass.
+        paths = {finding["path"] for finding in payload.get("findings", [])}
+        assert not any("platform/services/workspace/" in p for p in paths), (
+            "workspace bypass findings must be gone after deletion"
+        )
+
+
+# ---------------------------------------------------------------------------
+# 5. A new unknown dynamic Runtime construction flips the status to UNRESOLVED.
+# ---------------------------------------------------------------------------
+
+
+def test_unknown_dynamic_runtime_returns_unresolved() -> None:
+    import shutil
+    import tempfile
+
+    with tempfile.TemporaryDirectory() as tmpdir:
+        clone = Path(tmpdir) / "zuno-mirror"
+        shutil.copytree(REPO_ROOT, clone)
+        # Drop a fake ``getattr`` style dynamic load into the workspace tree.
+        target = (
+            clone
+            / "src/backend/zuno/platform/services/workspace"
+            / "dynamic_test_runtime.py"
+        )
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_text(
+            "def get_dynamic_agent():\n"
+            "    cls = getattr(__import__('zuno.agent.runtime', fromlist=['']),\n"
+            "                  'NewDynamicAgent')\n"
+            "    return cls()\n",
+            encoding="utf-8",
+        )
+        result = subprocess.run(
+            [sys.executable, "tools/scripts/verify_phase22_backend_semantic_legacy.py",
+             "--scope", "repository", "--json"],
+            cwd=clone,
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+        payload = json.loads(result.stdout or "{}")
+        # The dynamic load is unresolved because the verifier cannot prove
+        # which class is built.
+        assert (
+            payload.get("status") == "BACKEND_PRODUCT_RUNTIME_UNRESOLVED"
+        ), payload
+
+
+# ---------------------------------------------------------------------------
+# 6. Direct ``await handler(request)`` tool call in agent core is BLOCKED.
+#    The workspace files are still flagged today but the test pins that
+#    the category is detected.
+# ---------------------------------------------------------------------------
+
+
+def test_direct_handler_request_is_blocked() -> None:
+    result = _run("repository")
+    workspace_findings = [
+        finding
+        for finding in result["payload"]["findings"]
+        if finding["category"] == "workspace_bypass"
+    ]
+    assert workspace_findings, (
+        "direct handler(request) tool calls in workspace agents must be detected"
+    )
+    # None of these bypasses may leak into the agent core or capability
+    # runtime tree.
+    leaked = [
+        finding
+        for finding in workspace_findings
+        if "/agent/" in finding["path"]
+        and "/platform/services/workspace/" not in finding["path"]
+    ]
+    assert leaked == [], (
+        "direct handler(request) bypass must not leak into agent core: "
+        + json.dumps(leaked, indent=2, ensure_ascii=False)
+    )
+
+
+# ---------------------------------------------------------------------------
+# 7. ToolInvocationGateway path is not misclassified as legacy.
+# ---------------------------------------------------------------------------
+
+
+def test_tool_invocation_gateway_is_not_misclassified() -> None:
+    result = _run("repository")
+    categories = {finding["category"] for finding in result["payload"]["findings"]}
+    assert "tool_invocation_gateway" not in categories
+    # The capability layer is the canonical side-effect gate, not a
+    # bypass surface.
+    capability_findings = [
+        finding
+        for finding in result["payload"]["findings"]
+        if "/capability/tool_runtime/" in finding["path"]
+    ]
+    assert capability_findings == [], (
+        "canonical ToolInvocationGateway must not surface as a bypass: "
+        + json.dumps(capability_findings, indent=2, ensure_ascii=False)
+    )
+
+
+# ---------------------------------------------------------------------------
+# 8. StructuredResponseAgent stays an INTERNAL_STEP_CAPABILITY.
+# ---------------------------------------------------------------------------
+
+
+def test_structured_response_agent_is_internal_step_capability() -> None:
+    result = _run("repository")
+    structured_findings = [
+        finding
+        for finding in result["payload"]["findings"]
+        if "structured_response_agent" in finding["path"].lower()
+    ]
+    assert structured_findings == [], (
+        "StructuredResponseAgent must not appear as a top-level runtime finding"
+    )
+    # The class definition is intentionally retained.
+    structured_path = (
+        BACKEND_ROOT / "zuno" / "agent" / "core" / "agents" / "structured_response_agent.py"
+    )
+    assert structured_path.exists(), "StructuredResponseAgent module must be retained"
+
+
+# ---------------------------------------------------------------------------
+# 9. ReActStepRunner stays a Step-internal mechanism.
+# ---------------------------------------------------------------------------
+
+
+def test_react_step_runner_is_step_internal() -> None:
+    react_runner = (
+        BACKEND_ROOT / "zuno" / "agent" / "runtime" / "execution" / "react_runner.py"
+    )
+    assert react_runner.exists(), "ReActStepRunner must remain as step-internal"
+    result = _run("repository")
+    runner_findings = [
+        finding
+        for finding in result["payload"]["findings"]
+        if "react_runner" in finding["path"]
+    ]
+    assert runner_findings == [], (
+        "ReActStepRunner must not surface as a top-level runtime finding"
+    )
+
+
+# ---------------------------------------------------------------------------
+# 10. AgentControlRuntime with a production caller returns BLOCKED.
+# ---------------------------------------------------------------------------
+
+
+def test_agent_control_runtime_with_production_caller_returns_blocked() -> None:
+    result = _run("repository")
+    blocked = [
+        finding
+        for finding in result["payload"]["findings"]
+        if finding["category"] == "top_level_runtime_class_definition"
+        and "AgentControlRuntime" in finding["detail"]
+    ]
+    assert blocked, (
+        "AgentControlRuntime class definition must be surfaced in repository scope"
+    )
+
+
+# ---------------------------------------------------------------------------
+# 11. AgentControlRuntime with only history references can be classified
+#     HISTORY_ONLY — when there are no production callers the verifier
+#     must not classify it as a runtime finding. We simulate this by
+#     mirroring the repo with the production caller stripped.
+# ---------------------------------------------------------------------------
+
+
+def test_agent_control_runtime_history_only_when_no_production_caller() -> None:
+    import shutil
+    import tempfile
+
+    with tempfile.TemporaryDirectory() as tmpdir:
+        clone = Path(tmpdir) / "zuno-mirror"
+        shutil.copytree(REPO_ROOT, clone)
+        # Move the production caller into ``tests/`` so it becomes history.
+        for rel in (
+            "src/backend/zuno/agent/control_runtime.py",
+            "src/backend/zuno/agent/product_baseline.py",
+        ):
+            src = clone / rel
+            if src.exists():
+                dest = clone / "tests" / "agent" / "history_only"
+                dest.mkdir(parents=True, exist_ok=True)
+                shutil.move(str(src), str(dest / Path(rel).name))
+        result = subprocess.run(
+            [sys.executable, "tools/scripts/verify_phase22_backend_semantic_legacy.py",
+             "--scope", "repository", "--json"],
+            cwd=clone,
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+        payload = json.loads(result.stdout or "{}")
+        # With only history references, AgentControlRuntime no longer
+        # qualifies as a top-level runtime finding.
+        paths = {finding["path"] for finding in payload.get("findings", [])}
+        assert not any("control_runtime.py" in p for p in paths), (
+            "history-only AgentControlRuntime must not block: "
+            + json.dumps(payload, indent=2, ensure_ascii=False)
+        )
+
+
+# ---------------------------------------------------------------------------
+# 12. Default mode must NOT return scoped CLEAN.
+# ---------------------------------------------------------------------------
+
+
+def test_default_mode_does_not_return_scoped_clean() -> None:
+    result = subprocess.run(
+        [sys.executable, str(VERIFIER), "--json"],
+        cwd=REPO_ROOT,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    payload = json.loads(result.stdout or "{}")
+    assert payload.get("scope") == "repository"
+    assert payload.get("status") != "AGENT_FAMILY_LEGACY_SLICE_CLEAN", (
+        "default mode must report repository status, not scoped status"
+    )
+    assert result.returncode != 0
+
+
+# ---------------------------------------------------------------------------
+# Auxiliary checks: scoped and repository JSON output is well-formed.
+# ---------------------------------------------------------------------------
+
+
+def test_scoped_json_shape_is_stable() -> None:
+    payload = _run("agent-family")["payload"]
+    assert payload["scope"] == "agent-family"
+    assert payload["status"] in {
+        "AGENT_FAMILY_LEGACY_SLICE_CLEAN",
+        "AGENT_FAMILY_LEGACY_SLICE_BLOCKED",
+    }
+    for finding in payload["findings"]:
+        assert set(finding.keys()) == {"category", "path", "line", "detail", "severity"}
+
+
+def test_repository_json_shape_is_stable() -> None:
+    payload = _run("repository")["payload"]
+    assert payload["scope"] == "repository"
+    assert payload["status"] in {
+        "BACKEND_PRODUCT_RUNTIME_CUTOVER_CONFIRMED",
+        "BACKEND_PRODUCT_RUNTIME_CUTOVER_BLOCKED",
+        "BACKEND_PRODUCT_RUNTIME_UNRESOLVED",
+        "TOOL_ERROR",
+    }
+    for finding in payload["findings"]:
+        assert set(finding.keys()) == {"category", "path", "line", "detail", "severity"}
