@@ -1,0 +1,10 @@
+# Contract fixture 21: fully retired feature flag with no runtime reader.
+flag: "retired_no_runtime_reader"
+owner: "Repository Governance"
+scope: "completion route"
+default: "RETIRED"
+metric: ["reader_count"]
+rollback_command: "retired and fail-closed; no runtime reader"
+expires_at_phase: "PHASE10"
+retire_task: "P22-T03"
+domain_fact_owner: "unchanged"

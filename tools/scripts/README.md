@@ -45,3 +45,32 @@ python tools/scripts/clean_workspace.py
 ```powershell
 powershell -ExecutionPolicy Bypass -File .\tools\scripts\run-full-e2e-smoke.ps1
 ```
+
+## PHASE22 Final Legacy/Cutover Audit Gate
+
+```powershell
+python tools/scripts/verify_phase22_final_legacy_cutover.py
+python tools/scripts/verify_phase22_final_legacy_cutover.py --json
+python tools/scripts/verify_phase22_final_legacy_cutover.py `
+  --evidence-dir docs/evidence/goal05-phase22-legacy-cutover-final-audit-v2
+```
+
+`verify_phase22_final_legacy_cutover.py` is the PHASE22 fail-closed
+audit gate. It walks every production file with the `ast` module,
+detects Phase08 `_fallback_to_legacy` runtime blockers, dual-path
+markers, alias/bypass constructors and public-adapter ownership
+violations, enforces feature-flag expiry against the current
+`PHASE22`, and tracks unresolved architectural escalations. Status
+priority (highest first):
+
+1. `LEGACY_RUNTIME_BLOCKERS_FOUND`
+2. `DUAL_PATH_BLOCKERS_FOUND`
+3. `ALIAS_BYPASS_BLOCKERS_FOUND`
+4. `PUBLIC_ADAPTER_OWNERSHIP_VIOLATION`
+5. `AUDIT_UNRESOLVED`
+6. `LEGACY_CUTOVER_AUDIT_CLEAN`
+7. `TOOL_ERROR`
+
+The companion test suite is
+`tests/repo/test_phase22_final_legacy_cutover.py` (34 boundary tests
+plus contract fixtures under `tests/fixtures/phase22_legacy_cutover/`).
