@@ -1,0 +1,110 @@
+{
+  "phase_id": "PHASE22",
+  "audit_id": "goal05-phase22-legacy-cutover-final-audit",
+  "branch": "claude/minimax-phase22-legacy-cutover-audit",
+  "head_sha_at_run": "83c1bbd0689d1b2b3b4ffd7f3983de813da11ebb",
+  "expected_main_sha": "83c1bbd0689d1b2b3b4ffd7f3983de813da11ebb",
+  "agent_name": "MiniMax-Legacy1",
+  "execution_client": "Claude Code",
+  "provider": "MiniMax",
+  "model": "NOT_AVAILABLE",
+  "worker_task": "PHASE22-LEGACY-CUTOVER-FINAL-AUDIT-AND-LOW-RISK-CLEANUP",
+  "scan_results": {
+    "production_root_legacy_imports": 0,
+    "production_root_legacy_segments": 0,
+    "production_root_legacy_files": 0,
+    "alias_bypass_in_production": 0,
+    "dual_path_in_production": 0,
+    "runtime_blockers": 0,
+    "feature_flags_with_owner_expiry": 5,
+    "feature_flags_total": 5,
+    "expired_feature_flags": 0,
+    "feature_flags_missing_owner": 0
+  },
+  "production_legacy_files": [],
+  "production_legacy_directories": [],
+  "production_old_root_imports": [],
+  "production_alias_bypass_blockers": [],
+  "production_dual_path_blockers": [],
+  "production_runtime_blockers": [],
+  "test_fixture_legacy_strings": [
+    "tests/repo/test_phase22_cleanup_boundary_allowlist.py",
+    "tests/repo/test_repo_hygiene.py",
+    "tests/repo/test_static_target_layer_imports.py",
+    "tests/api/test_layered_api_boundaries.py"
+  ],
+  "history_evidence_paths_containing_legacy_keyword": [
+    "docs/evidence/goal05-phase22-*.md",
+    ".agent/programs/work-products/phase22-removal-candidates.yaml",
+    ".agent/programs/work-products/legacy-bypass-inventory.yaml",
+    ".agent/programs/work-products/feature-flag-registry.yaml"
+  ],
+  "allowed_versioned_public_adapters": [
+    "src/backend/zuno/api/v1",
+    "src/backend/zuno/api/v2 (reserved for future versioning)"
+  ],
+  "feature_flag_summary": [
+    {
+      "flag": "product_api_v1_adapter",
+      "owner": "01 Product Surface",
+      "default": "DECLARED",
+      "expires_at_phase": "PHASE10",
+      "retire_task": "P22-T03"
+    },
+    {
+      "flag": "workspace_projection_stream_v1",
+      "owner": "01 Product Surface",
+      "default": "DECLARED",
+      "expires_at_phase": "PHASE10",
+      "retire_task": "P22-T03"
+    },
+    {
+      "flag": "legacy_general_agent_completion_rollback",
+      "owner": "06 Agent Core",
+      "default": "RETIRED",
+      "expires_at_phase": "PHASE08",
+      "retire_task": "P22-T03"
+    },
+    {
+      "flag": "tool_runtime_readonly_gateway",
+      "owner": "08 Tool Runtime",
+      "default": "DECLARED",
+      "expires_at_phase": "PHASE15",
+      "retire_task": "P22-T03"
+    },
+    {
+      "flag": "postgres_domain_uow_shadow",
+      "owner": "11 Infrastructure",
+      "default": "DECLARED",
+      "expires_at_phase": "PHASE04",
+      "retire_task": "P22-T03"
+    }
+  ],
+  "tests_run": [
+    "tests/repo/test_phase22_final_legacy_cutover.py::test_clean_canonical_fixture_audits_clean",
+    "tests/repo/test_phase22_final_legacy_cutover.py::test_production_legacy_file_is_rejected",
+    "tests/repo/test_phase22_final_legacy_cutover.py::test_history_legacy_reference_is_allowed",
+    "tests/repo/test_phase22_final_legacy_cutover.py::test_old_zuno_services_import_is_rejected",
+    "tests/repo/test_phase22_final_legacy_cutover.py::test_dynamic_import_legacy_module_is_rejected",
+    "tests/repo/test_phase22_final_legacy_cutover.py::test_sys_meta_path_aliasing_is_rejected",
+    "tests/repo/test_phase22_final_legacy_cutover.py::test_try_canonical_except_legacy_import",
+    "tests/repo/test_phase22_final_legacy_cutover.py::test_general_agent_in_completion_route_is_rejected",
+    "tests/repo/test_phase22_final_legacy_cutover.py::test_general_agent_in_history_is_admitted",
+    "tests/repo/test_phase22_final_legacy_cutover.py::test_rollback_env_selector_is_rejected",
+    "tests/repo/test_phase22_final_legacy_cutover.py::test_legacy_rollback_flag_must_be_retired",
+    "tests/repo/test_phase22_final_legacy_cutover.py::test_permanent_dual_read_marker_is_rejected",
+    "tests/repo/test_phase22_final_legacy_cutover.py::test_permanent_dual_write_marker_is_rejected",
+    "tests/repo/test_phase22_final_legacy_cutover.py::test_expired_feature_flag_without_owner_is_unresolved",
+    "tests/repo/test_phase22_final_legacy_cutover.py::test_short_lived_flag_with_owner_and_expiry_is_admitted",
+    "tests/repo/test_phase22_final_legacy_cutover.py::test_tests_legacy_guards_directory_cannot_reappear",
+    "tests/repo/test_phase22_final_legacy_cutover.py::test_versioned_public_adapter_is_admitted_when_owned",
+    "tests/repo/test_phase22_final_legacy_cutover.py::test_public_adapter_write_into_domain_db",
+    "tests/repo/test_phase22_final_legacy_cutover.py::test_unresolved_dynamic_callout_is_marked_unresolved",
+    "tests/repo/test_phase22_final_legacy_cutover.py::test_history_evidence_legacy_references_are_not_false_positives",
+    "tests/repo/test_phase22_final_legacy_cutover.py::test_verifier_exit_codes_match_status",
+    "tests/repo/test_phase22_final_legacy_cutover.py::test_main_reports_clean_for_invocation_with_no_arguments"
+  ],
+  "tests_not_run": [],
+  "verifier_exit_code": 0,
+  "audit_status": "LEGACY_CUTOVER_AUDIT_CLEAN"
+}

@@ -1,0 +1,15 @@
+{
+  "alias_bypass_blockers": [],
+  "category": "LEGACY_CUTOVER_AUDIT_CLEAN",
+  "counts": {
+    "alias_bypass_blockers": 0,
+    "dual_path_blockers": 0,
+    "runtime_blockers": 0,
+    "unresolved": 0
+  },
+  "dual_path_blockers": [],
+  "notes": [],
+  "runtime_blockers": [],
+  "unresolved": [],
+  "verifier_version": "1.0.0"
+}
