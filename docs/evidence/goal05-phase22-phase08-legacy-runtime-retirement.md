@@ -9,6 +9,8 @@ provider: DeepSeek
 base_sha: 83c1bbd0689d1b2b3b4ffd7f3983de813da11ebb
 status: worker_delivered
 production_ready: false
+pr: https://github.com/ProfessorZhi/Zuno/pull/124
+pr_v1_record: https://github.com/ProfessorZhi/Zuno/pull/122 (closed; trailer gate)  # noqa: E501
 
 ## Summary
 
@@ -112,6 +114,18 @@ runner、不持有 runtime,`handle()` 恒抛 `Phase08CutoverError`)。
   直接图能力测试;repo 级持久化/幂等测试保留。
 - `tests/api/test_workspace_task_runtime.py` — 3 个 cutover 测试转换为 canonical-only /
   retired 断言。
+
+## Commit Attribution Note (v1 → v2)
+
+- v1 分支 `claude/deepseek-phase22-retire-phase08-legacy-cutover`(commit 6bc05707,
+  ab11e7d2)的 Trailer 使用 `Agent-Mode: worker`;仓库 commit-attribution gate
+  (`verify_agent_commit_attribution.py`)仅允许
+  `{Standard, Codex, Expert-Team, Goal, Human, Docs-Maintenance, Standard-Conversation}`。
+- 按 Coordinator 对 PR #119 的 v2 先例,保留 v1 分支/PR #122(closed)作审计记录,
+  从最新 `origin/main` 重建 `claude/deepseek-phase22-retire-phase08-legacy-cutover-v2`
+  分支,内容一致,Trailer 改为 `Agent-Mode: Standard`。未使用 amend/rebase/force-push/
+  cherry-pick;文件经 `git restore --source` 从 v1 commit 取回。
+- `verify_agent_commit_attribution.py --base origin/main --head HEAD` 本地与 CI 均通过。
 
 ## Commands
 
