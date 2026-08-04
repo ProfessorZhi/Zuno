@@ -65,6 +65,10 @@ EXPECTED_EXPORTS = {
         "CapabilitySelectionRequest",
         "DynamicCapabilitySelector",
     ],
+    # PHASE22-FEATURE-FLAG-AND-RESIDUAL-RUNTIME-CUTOVER: AgentControlRuntime
+    # remains importable as an INTERNAL_TEST_HARNESS module (used by
+    # test_react_reflection_replan_runtime and product_baseline eval
+    # generation) but is no longer part of the zuno.agent production facade.
     "zuno.agent.control_runtime": [
         "AgentControlRuntime",
         "AgentRuntimeResult",
@@ -125,7 +129,6 @@ def test_agent_layer_modules_reuse_canonical_runtime_objects() -> None:
 
 def test_agent_package_facade_points_at_layer_modules() -> None:
     import zuno.agent as agent
-    from zuno.agent.control_runtime import AgentControlRuntime
     from zuno.agent.context import ContextOrchestrator
     from zuno.agent.durable_runtime import SingleControllerDurableRuntime
     from zuno.agent.harness import ControllerRuntimeState
@@ -139,7 +142,21 @@ def test_agent_package_facade_points_at_layer_modules() -> None:
     assert agent.ControllerRuntimeState is ControllerRuntimeState
     assert agent.SingleControllerDurableRuntime is SingleControllerDurableRuntime
     assert agent.StrategySelector is StrategySelector
-    assert agent.AgentControlRuntime is AgentControlRuntime
+
+
+def test_agent_package_facade_does_not_expose_residual_control_runtime() -> None:
+    """AgentControlRuntime is INTERNAL_TEST_HARNESS only (PHASE22 cutover).
+
+    The superseded controller stays importable for the eval/test harness
+    (product_baseline, test_react_reflection_replan_runtime) but must not be
+    reachable through the production facade ``zuno.agent``.
+    """
+    import zuno.agent as agent
+    from zuno.agent.control_runtime import AgentControlRuntime
+
+    assert "AgentControlRuntime" not in agent.__all__
+    assert not hasattr(agent, "AgentControlRuntime")
+    assert AgentControlRuntime is not None  # harness module still importable
 
 
 def test_durable_runtime_store_persists_approval_wait_and_resumes_after_restart() -> None:

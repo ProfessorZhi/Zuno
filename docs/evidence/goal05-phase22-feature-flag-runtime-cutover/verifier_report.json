@@ -1,0 +1,22 @@
+{
+  "finding_count": 0,
+  "findings": {
+    "adapter_ownership_violation": [],
+    "dual_path_found": [],
+    "dynamic_selector_found": [],
+    "flag_not_retired": [],
+    "flag_reader_found": [],
+    "residual_runtime_found": [],
+    "unresolved": []
+  },
+  "phase": "PHASE22-FEATURE-FLAG-AND-RESIDUAL-RUNTIME-CUTOVER",
+  "repo_root": "F:\\agent_project\\Zuno\\.claude\\worktrees\\deepseek-phase22-feature-flag-cutover",
+  "retired_flags": [
+    "product_api_v1_adapter",
+    "workspace_projection_stream_v1",
+    "tool_runtime_readonly_gateway",
+    "postgres_domain_uow_shadow"
+  ],
+  "status": "FEATURE_FLAG_RUNTIME_CUTOVER_CONFIRMED",
+  "verifier": "verify_phase22_feature_flag_runtime_cutover.py"
+}
