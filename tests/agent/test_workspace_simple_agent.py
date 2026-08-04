@@ -1052,5 +1052,3 @@ def test_direct_maps_weather_root_forecasts_are_humanized(monkeypatch):
     )
     assert "南京市2026-04-18晴" in humanized
     assert "预计气温 12-23°C" in humanized
-
-
