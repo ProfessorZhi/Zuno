@@ -1,0 +1,10 @@
+# Contract fixture 20: expired feature flag with no retirement record.
+flag: "expired_unretired_flag"
+owner: "Repository Governance"
+scope: "completion route"
+default: "DECLARED"
+metric: ["rollback_call_count"]
+rollback_command: "set expired_unretired_flag=ROLLBACK_WINDOW"
+expires_at_phase: "PHASE10"
+retire_task: "P22-T03"
+domain_fact_owner: "unchanged"

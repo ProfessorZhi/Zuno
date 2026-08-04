@@ -1,0 +1,14 @@
+name: Legacy Workflow
+on: [push]
+
+jobs:
+  legacy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Legacy runtime smoke
+        run: |
+          echo "Running legacy command"
+          ./scripts/run_legacy.sh
+        env:
+          ZUNO_AGENT_RUNTIME: legacy_general_agent
+          ZUNO_COMPLETION_CUTOVER_MODE: rollback
