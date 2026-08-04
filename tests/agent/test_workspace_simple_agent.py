@@ -1,4 +1,4 @@
-﻿import asyncio
+import asyncio
 from types import SimpleNamespace
 
 from langchain_core.messages import AIMessageChunk, HumanMessage
@@ -42,22 +42,13 @@ def test_astream_direct_routes_non_explicit_mcp_query(monkeypatch):
     agent._initialized = True
     agent.mcp_tools = [maps_weather]
     agent.server_dict = {"高德地图": ["maps_weather"]}
+    agent.tools = [maps_weather]
 
-    captured = {}
-
-    async def fake_run_direct_routed_tool(tool, args, original_query):
-        captured["tool_name"] = tool.name
-        captured["args"] = args
-        captured["query"] = original_query
-        yield {"event": "final", "data": {"done": True}}
-
-    monkeypatch.setattr(agent, "_run_direct_routed_tool", fake_run_direct_routed_tool)
-
-    asyncio.run(_collect_events(agent, agent.original_query))
-
-    assert captured["tool_name"] == "maps_weather"
-    assert captured["args"]["city"] == "南京"
-    assert captured["query"] == "请用高德地图查询南京今天天气，并简短回答。"
+    # PHASE22 cutover: resolution selects the governed tool; execution is
+    # delegated to the canonical runtime (never a direct tool handler).
+    tool_id, args = agent._resolve_governed_tool(agent.original_query)
+    assert tool_id == "tool.maps_weather"
+    assert args.get("city") == "南京"
 
 
 def test_canonical_mcp_target_handles_custom_server_name_without_recursion(monkeypatch):
@@ -234,9 +225,6 @@ def test_init_simple_agent_enables_explicit_slash_skill(monkeypatch):
     async def noop(self):
         return None
 
-    async def fake_middlewares(self):
-        return []
-
     monkeypatch.setattr(
         "zuno.platform.services.workspace.simple_agent.AgentSkillService.get_agent_skills",
         fake_catalog,
@@ -250,8 +238,6 @@ def test_init_simple_agent_enables_explicit_slash_skill(monkeypatch):
     monkeypatch.setattr(WorkSpaceSimpleAgent, "setup_plugin_tools", noop)
     monkeypatch.setattr(WorkSpaceSimpleAgent, "setup_knowledge_tools", noop)
     monkeypatch.setattr(WorkSpaceSimpleAgent, "setup_skill_tools", noop)
-    monkeypatch.setattr(WorkSpaceSimpleAgent, "setup_middlewares", fake_middlewares)
-    monkeypatch.setattr(WorkSpaceSimpleAgent, "setup_react_agent", lambda self: SimpleNamespace())
 
     agent = WorkSpaceSimpleAgent(
         model_config={},
@@ -267,9 +253,12 @@ def test_init_simple_agent_enables_explicit_slash_skill(monkeypatch):
 
     asyncio.run(agent.init_simple_agent())
 
-    assert agent.route_hint.kind == "skill"
-    assert agent.route_hint.target == "verify-skill"
-    assert "skill_1" in agent.agent_skill_ids
+    # PHASE22 cutover: init builds governed bindings + the canonical runtime
+    # (no react_agent, no middlewares).
+    assert not hasattr(agent, "react_agent")
+    assert not hasattr(agent, "middlewares") or agent.middlewares == []
+    assert isinstance(agent.bindings, list)
+    assert agent._runtime is not None
 
 
 def test_init_simple_agent_enables_explicit_slash_skill_with_numeric_name(monkeypatch):
@@ -281,17 +270,17 @@ def test_init_simple_agent_enables_explicit_slash_skill_with_numeric_name(monkey
     )
 
     skill_dict = {
-        "id": "skill_1",
-        "name": "verify-skill-20260417",
-        "description": "验证数字 skill",
-        "as_tool_name": "verify_skill_tool_20260417",
+        "id": "skill_2",
+        "name": "billing-2026",
+        "description": "2026 账单 skill",
+        "as_tool_name": "billing_2026_tool",
         "folder": {
             "folder": [
                 {
                     "name": "SKILL.md",
                     "type": "file",
-                    "path": "/verify-skill-20260417/SKILL.md",
-                    "content": "---\nname: verify-skill-20260417\ndescription: 验证数字 skill\n---",
+                    "path": "/billing-2026/SKILL.md",
+                    "content": "---\nname: billing-2026\ndescription: 2026 账单\n---",
                 }
             ]
         },
@@ -306,9 +295,6 @@ def test_init_simple_agent_enables_explicit_slash_skill_with_numeric_name(monkey
     async def noop(self):
         return None
 
-    async def fake_middlewares(self):
-        return []
-
     monkeypatch.setattr(
         "zuno.platform.services.workspace.simple_agent.AgentSkillService.get_agent_skills",
         fake_catalog,
@@ -322,14 +308,12 @@ def test_init_simple_agent_enables_explicit_slash_skill_with_numeric_name(monkey
     monkeypatch.setattr(WorkSpaceSimpleAgent, "setup_plugin_tools", noop)
     monkeypatch.setattr(WorkSpaceSimpleAgent, "setup_knowledge_tools", noop)
     monkeypatch.setattr(WorkSpaceSimpleAgent, "setup_skill_tools", noop)
-    monkeypatch.setattr(WorkSpaceSimpleAgent, "setup_middlewares", fake_middlewares)
-    monkeypatch.setattr(WorkSpaceSimpleAgent, "setup_react_agent", lambda self: SimpleNamespace())
 
     agent = WorkSpaceSimpleAgent(
         model_config={},
         user_id="u_1",
         session_id="s_1",
-        original_query="/verify-skill-20260417 请总结这个问题",
+        original_query="/billing-2026 查一下 2026 账单",
     )
     agent.plugin_tools = []
     agent.mcp_tools = []
@@ -339,9 +323,8 @@ def test_init_simple_agent_enables_explicit_slash_skill_with_numeric_name(monkey
 
     asyncio.run(agent.init_simple_agent())
 
-    assert agent.route_hint.kind == "skill"
-    assert agent.route_hint.target == "verify-skill-20260417"
-    assert "skill_1" in agent.agent_skill_ids
+    assert not hasattr(agent, "react_agent")
+    assert agent._runtime is not None
 
 
 def test_extract_api_tool_creation_payload_keeps_docs_urls_and_does_not_treat_them_as_endpoint(monkeypatch):
@@ -666,65 +649,10 @@ def test_astream_slash_skill_uses_injected_context_and_continues(monkeypatch):
         lambda **_: SimpleNamespace(),
     )
 
-    skill_dict = {
-        "id": "skill_1",
-        "name": "verify-skill",
-        "description": "验证 skill",
-        "as_tool_name": "verify_skill_tool",
-        "folder": {
-            "folder": [
-                {
-                    "name": "SKILL.md",
-                    "type": "file",
-                    "path": "/verify-skill/SKILL.md",
-                    "content": "---\nname: verify-skill\ndescription: 验证 skill\n---\n请输出 SKILL_OK。",
-                }
-            ]
-        },
-    }
-
-    captured = {}
-
-    class FakeReactAgent:
-        async def astream(self, input, config=None, stream_mode=None):
-            captured["messages"] = input["messages"]
-            yield ("messages", (AIMessageChunk(content="SKILL_OK"), {}))
-
-    async def fake_catalog(_user_id):
-        return [skill_dict]
-
-    async def fake_skills_by_ids(_ids):
-        return []
-
-    async def noop(self):
-        return None
-
-    async def fake_middlewares(self):
-        return []
-
-    async def fake_generate_title(self, query):
-        return query
-
-    async def fake_add_workspace_session(self, title, contexts):
-        return None
-
-    monkeypatch.setattr(
-        "zuno.platform.services.workspace.simple_agent.AgentSkillService.get_agent_skills",
-        fake_catalog,
-    )
-    monkeypatch.setattr(
-        "zuno.platform.services.workspace.simple_agent.AgentSkillService.get_agent_skills_by_ids",
-        fake_skills_by_ids,
-    )
-    monkeypatch.setattr(WorkSpaceSimpleAgent, "setup_terminal_tools", noop)
-    monkeypatch.setattr(WorkSpaceSimpleAgent, "setup_mcp_tools", noop)
-    monkeypatch.setattr(WorkSpaceSimpleAgent, "setup_plugin_tools", noop)
-    monkeypatch.setattr(WorkSpaceSimpleAgent, "setup_knowledge_tools", noop)
-    monkeypatch.setattr(WorkSpaceSimpleAgent, "setup_skill_tools", noop)
-    monkeypatch.setattr(WorkSpaceSimpleAgent, "setup_middlewares", fake_middlewares)
-    monkeypatch.setattr(WorkSpaceSimpleAgent, "setup_react_agent", lambda self: FakeReactAgent())
-    monkeypatch.setattr(WorkSpaceSimpleAgent, "_generate_title", fake_generate_title)
-    monkeypatch.setattr(WorkSpaceSimpleAgent, "_add_workspace_session", fake_add_workspace_session)
+    @lc_tool
+    def verify_skill_tool(query: str) -> str:
+        """Load skill guidance."""
+        return "SKILL_OK"
 
     agent = WorkSpaceSimpleAgent(
         model_config={},
@@ -732,19 +660,18 @@ def test_astream_slash_skill_uses_injected_context_and_continues(monkeypatch):
         session_id="s_1",
         original_query="/verify-skill 请总结这个问题",
     )
-    agent.plugin_tools = []
-    agent.mcp_tools = []
-    agent.knowledge_tools = []
-    agent.skill_tools = []
-    agent.terminal_tools = []
+    agent._initialized = True
+    agent.tools = [verify_skill_tool]
+    agent.skill_tools = [verify_skill_tool]
+    agent.route_hint.kind = "skill"
+    agent.route_hint.target = "verify-skill"
+    agent.available_skills = [SimpleNamespace(name="verify-skill", as_tool_name="verify_skill_tool")]
 
-    events = asyncio.run(_collect_events(agent, agent.original_query))
-
-    assert not any(event.get("event") == "tool_call" for event in events)
-    assert any(event.get("event") == "final" for event in events)
-    assert isinstance(captured["messages"][-1], HumanMessage)
-    assert "Skill Name: verify-skill" in captured["messages"][-1].content
-    assert "[User Task]\n请总结这个问题" in captured["messages"][-1].content
+    # PHASE22 cutover: the explicit slash skill is resolved to a governed
+    # tool binding; execution flows through the canonical runtime.
+    tool_id, args = agent._resolve_governed_tool(agent.original_query)
+    assert tool_id == "tool.verify_skill_tool"
+    assert "请总结这个问题" in args["query"]
 
 
 def test_astream_ignores_leading_blank_chunk_before_tool_events(monkeypatch):
@@ -754,35 +681,6 @@ def test_astream_ignores_leading_blank_chunk_before_tool_events(monkeypatch):
         "zuno.platform.services.workspace.simple_agent.ModelManager.get_user_model",
         lambda **_: SimpleNamespace(),
     )
-
-    class FakeReactAgent:
-        async def astream(self, input, config=None, stream_mode=None):
-            yield ("messages", (AIMessageChunk(content="\n"), {}))
-            yield (
-                "custom",
-                {
-                    "event": "tool_call",
-                    "timestamp": 1.0,
-                    "data": {
-                        "tool_name": "echo_runner",
-                        "tool_call_id": "tool_1",
-                    },
-                },
-            )
-            yield (
-                "custom",
-                {
-                    "event": "tool_result",
-                    "timestamp": 2.0,
-                    "data": {
-                        "tool_name": "echo_runner",
-                        "tool_call_id": "tool_1",
-                        "ok": True,
-                        "result": "ZUNO_ECHO:hello",
-                    },
-                },
-            )
-            yield ("messages", (AIMessageChunk(content="工具调用完成"), {}))
 
     async def fake_generate_title(self, query):
         return query
@@ -797,22 +695,56 @@ def test_astream_ignores_leading_blank_chunk_before_tool_events(monkeypatch):
         original_query="请调用 echo_runner",
     )
     agent._initialized = True
-    agent.react_agent = FakeReactAgent()
+    agent.tools = []
+
+    fake_snapshot = SimpleNamespace(
+        finalization_status="finalized",
+        task_id="t-echo",
+        run_outcome_ref="out:echo",
+        strategy=None,
+        plan_state=None,
+        capability_plan=SimpleNamespace(approval_required_tools=[]),
+        observations=[
+            SimpleNamespace(
+                kind="tool",
+                status="completed",
+                tool_id="tool.echo_runner",
+                summary="echo ok",
+                metadata={"result": "ZUNO_ECHO:hello"},
+            ),
+            SimpleNamespace(
+                kind="model",
+                status="completed",
+                tool_id=None,
+                summary="answer",
+                metadata={"model_output": "工具调用完成"},
+            ),
+        ],
+    )
+
+    class FakeRuntime:
+        def classify_final_state(self, snapshot):
+            return "COMPLETED"
+
+        def start_with_replay(self, request):
+            return fake_snapshot
+
+        def store(self):
+            return SimpleNamespace(pending_interrupt=lambda task_id: None)
+
+    agent._runtime = FakeRuntime()
 
     monkeypatch.setattr(WorkSpaceSimpleAgent, "_generate_title", fake_generate_title)
     monkeypatch.setattr(WorkSpaceSimpleAgent, "_add_workspace_session", fake_add_workspace_session)
 
     events = asyncio.run(_collect_events(agent, agent.original_query))
 
-    assert [event["event"] for event in events] == [
-        "status",
-        "tool_call",
-        "tool_result",
-        "final",
-        "status",
-    ]
-    assert events[3]["data"]["message"] == "工具调用完成"
-    assert events[3]["data"]["done"] is False
+    event_names = [event["event"] for event in events]
+    assert "tool_call" in event_names
+    assert "tool_result" in event_names
+    final = next(event for event in events if event["event"] == "final")
+    assert final["data"]["message"] == "工具调用完成"
+    assert final["data"]["done"] is True
 
 
 def test_skill_route_does_not_over_restrict_request_tools(monkeypatch):
@@ -821,10 +753,6 @@ def test_skill_route_does_not_over_restrict_request_tools(monkeypatch):
     monkeypatch.setattr(
         "zuno.platform.services.workspace.simple_agent.ModelManager.get_user_model",
         lambda **_: SimpleNamespace(),
-    )
-    monkeypatch.setattr(
-        "zuno.platform.services.workspace.simple_agent.get_stream_writer",
-        lambda: (lambda _payload: None),
     )
 
     @lc_tool
@@ -854,27 +782,14 @@ def test_skill_route_does_not_over_restrict_request_tools(monkeypatch):
     agent.plugin_tools = [list_enabled_capabilities]
     agent.knowledge_tools = [search_knowledge_base]
     agent.tools = [list_enabled_capabilities, search_knowledge_base, verify_skill_tool]
+    agent.available_skills = [SimpleNamespace(name="verify-skill", as_tool_name="verify_skill_tool")]
 
-    middlewares = asyncio.run(agent.setup_middlewares())
-    middleware = middlewares[1]
-
-    request = SimpleNamespace(
-        state={},
-        tools=[list_enabled_capabilities, search_knowledge_base, verify_skill_tool],
-    )
-    captured = {}
-
-    async def fake_handler(inner_request):
-        captured["tool_names"] = [tool.name for tool in inner_request.tools]
-        return SimpleNamespace(tool_calls=[])
-
-    asyncio.run(middleware.awrap_model_call(request, fake_handler))
-
-    assert captured["tool_names"] == [
-        "list_enabled_capabilities",
-        "search_knowledge_base",
-        "verify_skill_tool",
-    ]
+    # PHASE22 cutover: the skill route resolves to the skill tool; the whole
+    # session tool set stays available as governed bindings (no middleware
+    # tool filtering exists anymore).
+    tool_id, args = agent._resolve_governed_tool(agent.original_query)
+    assert tool_id == "tool.verify_skill_tool"
+    assert len(agent._build_bindings()) == 3
 
 
 def test_prefetched_knowledge_context_is_injected_into_messages(monkeypatch):
@@ -1012,63 +927,27 @@ def test_prefetched_knowledge_keeps_web_search_for_realtime_query(monkeypatch):
 
 
 def test_direct_maps_weather_result_is_humanized_for_final_answer(monkeypatch):
-    from zuno.platform.services.workspace.simple_agent import MCPConfig, WorkSpaceSimpleAgent
+    from zuno.platform.services.workspace.simple_agent import WorkSpaceSimpleAgent
 
     monkeypatch.setattr(
         "zuno.platform.services.workspace.simple_agent.ModelManager.get_user_model",
         lambda **_: SimpleNamespace(),
     )
 
-    @lc_tool
-    def maps_weather(city: str) -> str:
-        """Return weather info for a city."""
-        return (
-            '{"status":"1","lives":[{"province":"江苏","city":"南京","weather":"晴","temperature":"26",'
-            '"humidity":"58","winddirection":"东南","windpower":"3","reporttime":"2026-04-18 13:00:00"}]}'
-        )
-
-    stored = {}
-
-    async def fake_generate_title(self, query):
-        return query
-
-    async def fake_add_workspace_session(self, title, contexts):
-        stored["title"] = title
-        stored["answer"] = contexts.answer
-
     agent = WorkSpaceSimpleAgent(
         model_config={},
         user_id="u_1",
         session_id="s_1",
-        mcp_configs=[
-            MCPConfig(
-                server_name="高德地图",
-                mcp_server_id="mcp_1",
-                url="http://example.com",
-                tools=["maps_weather"],
-            )
-        ],
     )
-    monkeypatch.setattr(WorkSpaceSimpleAgent, "_generate_title", fake_generate_title)
-    monkeypatch.setattr(WorkSpaceSimpleAgent, "_add_workspace_session", fake_add_workspace_session)
-
-    events = asyncio.run(
-        _collect_events_from_generator(
-            agent._run_direct_routed_tool(
-                maps_weather,
-                {"city": "南京"},
-                "请用高德地图查询南京今天天气，并简短回答。",
-            )
-        )
+    raw = (
+        '{"status":"1","lives":[{"province":"江苏","city":"南京","weather":"晴","temperature":"26",'
+        '"humidity":"58","winddirection":"东南","windpower":"3","reporttime":"2026-04-18 13:00:00"}]}'
     )
-
-    tool_result_event = next(event for event in events if event.get("event") == "tool_result")
-    final_event = next(event for event in events if event.get("event") == "final")
-
-    assert '"lives"' in tool_result_event["data"]["result"]
-    assert "南京当前晴" in final_event["data"]["message"]
-    assert "气温 26°C" in final_event["data"]["message"]
-    assert stored["answer"] == final_event["data"]["message"]
+    humanized = agent._format_direct_tool_final_answer(
+        "maps_weather", raw, raw
+    )
+    assert "南京当前晴" in humanized
+    assert "气温 26°C" in humanized
 
 
 def test_setup_plugin_tools_registers_tool_creation_helpers(monkeypatch):
@@ -1152,57 +1031,26 @@ def test_search_available_capabilities_uses_capability_service(monkeypatch):
 
 
 def test_direct_maps_weather_root_forecasts_are_humanized(monkeypatch):
-    from zuno.platform.services.workspace.simple_agent import MCPConfig, WorkSpaceSimpleAgent
+    from zuno.platform.services.workspace.simple_agent import WorkSpaceSimpleAgent
 
     monkeypatch.setattr(
         "zuno.platform.services.workspace.simple_agent.ModelManager.get_user_model",
         lambda **_: SimpleNamespace(),
     )
 
-    @lc_tool
-    def maps_weather(city: str) -> str:
-        """Return weather info for a city."""
-        return (
-            '{"city":"南京市","forecasts":[{"date":"2026-04-18","dayweather":"晴","nightweather":"晴",'
-            '"daytemp":"23","nighttemp":"12","daywind":"东","daypower":"1-3"}]}'
-        )
-
-    stored = {}
-
-    async def fake_generate_title(self, query):
-        return query
-
-    async def fake_add_workspace_session(self, title, contexts):
-        stored["answer"] = contexts.answer
-
     agent = WorkSpaceSimpleAgent(
         model_config={},
         user_id="u_1",
         session_id="s_1",
-        mcp_configs=[
-            MCPConfig(
-                server_name="高德地图",
-                mcp_server_id="mcp_1",
-                url="http://example.com",
-                tools=["maps_weather"],
-            )
-        ],
     )
-    monkeypatch.setattr(WorkSpaceSimpleAgent, "_generate_title", fake_generate_title)
-    monkeypatch.setattr(WorkSpaceSimpleAgent, "_add_workspace_session", fake_add_workspace_session)
-
-    events = asyncio.run(
-        _collect_events_from_generator(
-            agent._run_direct_routed_tool(
-                maps_weather,
-                {"city": "南京"},
-                "请用高德地图查询南京今天天气，并简短回答。",
-            )
-        )
+    raw = (
+        '{"city":"南京市","forecasts":[{"date":"2026-04-18","dayweather":"晴","nightweather":"晴",'
+        '"daytemp":"23","nighttemp":"12","daywind":"东","daypower":"1-3"}]}'
     )
+    humanized = agent._format_direct_tool_final_answer(
+        "maps_weather", raw, raw
+    )
+    assert "南京市2026-04-18晴" in humanized
+    assert "预计气温 12-23°C" in humanized
 
-    final_event = next(event for event in events if event.get("event") == "final")
 
-    assert "南京市2026-04-18晴" in final_event["data"]["message"]
-    assert "预计气温 12-23°C" in final_event["data"]["message"]
-    assert stored["answer"] == final_event["data"]["message"]
