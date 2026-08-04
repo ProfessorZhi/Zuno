@@ -1,0 +1,18 @@
+PHASE22 Nonbackend Legacy Surface Evidence Manifest
+==================================================
+
+Branch:  claude/minimax-phase22-nonbackend-legacy-cleanup
+Base:    origin/main @ 83c1bbd0689d1b2b3b4ffd7f3983de813da11ebb
+Phase:   PHASE22
+Worker:  minimax-legacy-surface
+
+Format: <sha256>  <repo-relative-path>
+
+49edf1fcbfd85975b775672d12916ee2df4158b049cda29ea8bf823ae3624b77  docs/evidence/goal05-phase22-nonbackend-legacy-cleanup/README.md
+6b4c3df1900acd3d4fcd0d02200cd6358eeeb22a28c45a746568f46c6c1496c1  docs/evidence/goal05-phase22-nonbackend-legacy-cleanup/web_findings.md
+1df9eacf64e68a4b272752ee2417b3e67aa22e5857ec3f787eaf6038310f1023  docs/evidence/goal05-phase22-nonbackend-legacy-cleanup/desktop_findings.md
+64848db208a1b330ba1318e1b1fc68ce02cb8f91be3a764be35a611d696f9960  docs/evidence/goal05-phase22-nonbackend-legacy-cleanup/tools_infra_findings.md
+8d16f87a7e493fedfa4c99d96fbb0f1836bd5045262bc1a27ada6c34a21fbefa  docs/evidence/goal05-phase22-nonbackend-legacy-cleanup/feature_flag_classification.md
+3d7f4c72db28ae189e33ea6b264206a111042f9d5f364bb93d4dd3969dd5ed6d  docs/evidence/goal05-phase22-nonbackend-legacy-cleanup/allowlist_classification.md
+28949f16d3a8564ff105fa63df3b009bb26de2642b52f410bd67e5f729325492  docs/evidence/goal05-phase22-nonbackend-legacy-cleanup/escalations.md
+b3670fb8ee71fcbb0de689b356d4a883a651b80bd9c9db9f558c945f1a8fdfb6  docs/evidence/goal05-phase22-nonbackend-legacy-cleanup/lockfile.txt

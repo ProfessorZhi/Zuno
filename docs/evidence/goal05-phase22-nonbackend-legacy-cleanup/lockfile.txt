@@ -1,0 +1,34 @@
+PHASE22 Nonbackend Legacy Surface Lockfile
+========================================
+
+Branch:  claude/minimax-phase22-nonbackend-legacy-cleanup
+Base:    origin/main @ 83c1bbd0689d1b2b3b4ffd7f3983de813da11ebb
+Phase:   PHASE22
+Worker:  minimax-legacy-surface
+
+This file pins (SHA-256) the canonical inputs the worker consulted.
+It is intentionally a plain text file so that it can be diffed in PR
+review without external tooling.
+
+Format: <sha256>  <repo-relative-path>
+
+c8bcf03812abf51bc9753db645d662a441e6e685ce2baeda19e8136f3b499abd  apps/web/src/router/index.ts
+346109862e116b5ca90e67de91792b8c70e12178454fd1ae41c4bdcdbcb50242  apps/web/src/apis/knowledge.ts
+458b3722cfff1b62525e039b152a097ea0ceca60479d0562895e4fe917b8b876  apps/web/src/apis/workspace.ts
+3684f9049e8b96009076081445e728fc1153a4b7cbec66164a3ff110aa5e3dc7  apps/web/src/utils/retrieval.ts
+a30e5e65d7cb1f648a8cb257acfb41f30d2b620dbc7e6f342ab0c96889d4596a  apps/web/src/utils/knowledge-config.ts
+db1d1625fdb3f426b57ca288f18cf155817666205cef560221bded1d41baff8e  apps/web/src/utils/user-avatars.ts
+f73907528427ce59f63ba5913d58c0bda27cadddd85db68fcd7fbf9ec050eb66  apps/web/src/product/runtime.ts
+db451c708ecc4a7657573fecdba71558ee9f2f323ed0791cfeef44ccb29fe0c2  apps/desktop/main.cjs
+512723e57f2e501eedbbd6f5564350a9edf971f6ea53223f72eba140d8fbf699  apps/desktop/preload.cjs
+266c8f5dcb2bf334cae8845d7c916cba4a42c493c8db30b0a122a6b8caa65d0f  apps/desktop/bridge.cjs
+7a90622d0182e02ced61eb21b4330d191f7266453ffd5bb5fa55b90f3102aa08  tools/scripts/start.py
+9102df46d44a890029e6043c2853cc4fcc0ac6d294a7e3f7d919742f1c853618  tools/scripts/zuno-start.bat
+70715de58e58b56af336a7c3e592cdad77e1bc6a06b13e6094f3fff732b99324  infra/docker/docker-compose.yml
+f53e323d6b12185bb8f50099b779905fcdb6c40f1fd668a5940d6d21a924ac14  infra/docker/docker-compose.dev.yml
+f52c134b9f5c5837514079f5dcda38b9f4a689f3a4be55d157e7d645fa688b5a  .agent/programs/work-products/feature-flag-registry.yaml
+c22ffc92b11eb69570a005d97efbfd4b12ebe82716b9acccf803cdd7b73185ed  .agent/programs/work-products/temporary-allowlist.yaml
+976bd53d46e432bd01aa0bfaf2c062c463dad6eae8670eff4ce61c3c1d6dc855  .agent/programs/work-products/legacy-bypass-inventory.yaml
+3a811cb5499baad10eb2ed7c18e68d1add98462a6ee43812d448f26c2f8008d2  .agent/programs/work-products/phase22-removal-candidates.yaml
+c856134e38d1c25f3872f9090c3d0680384a65a8e652f519a88c6b8a643b81f1  tools/scripts/verify_phase22_cleanup_boundary.py
+1074cde30bd03b4cf6bb255fc224daeb92556b07a26f9f5ddc103775f583f431  tools/scripts/phase02_compatibility_runtime.py
