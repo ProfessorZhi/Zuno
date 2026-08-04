@@ -1,0 +1,2592 @@
+# PHASE22 Non-Backend Legacy Surface Classification
+
+Current phase: PHASE22
+
+| Classification | Count |
+| --- | --- |
+| ACTIVE_NONBACKEND_BLOCKER | 0 |
+| EXPIRED_CONFIG_RESIDUE | 0 |
+| ALLOWED_HISTORY_REFERENCE | 56 |
+| ALLOWED_FAIL_CLOSED_TEST | 428 |
+| ALLOWED_VERSIONED_PUBLIC_API | 2084 |
+| UNRESOLVED | 0 |
+
+Hits are listed below grouped by classification. Each row links
+the file, line and keyword that triggered the hit.
+
+## ALLOWED_HISTORY_REFERENCE
+
+- `tools/scripts/phase02_compatibility_runtime.py`:158 — keyword `dual_write` — audit/observability dual-write comment
+- `tools/scripts/phase02_compatibility_runtime.py`:201 — keyword `rollback` — history reference in launcher README
+- `tools/scripts/verify_phase01_complete_baseline.py`:322 — keyword `old_` — allowlist category label
+- `tools/scripts/verify_phase02_compatibility_boundaries.py`:15 — keyword `rollback` — history reference in launcher README
+- `tools/scripts/verify_phase02_compatibility_boundaries.py`:112 — keyword `dual_write` — audit/observability dual-write comment
+- `tools/scripts/verify_phase02_compatibility_boundaries.py`:134 — keyword `rollback` — history reference in launcher README
+- `tools/scripts/verify_phase22_cleanup_boundary.py`:647 — keyword `ZUNO_AGENT_RUNTIME` — historical env-var reference
+- `tools/scripts/verify_phase22_cleanup_boundary.py`:754 — keyword `dual_write` — audit/observability dual-write comment
+- `tools/scripts/verify_phase22_cleanup_boundary.py`:763 — keyword `dual_write` — audit/observability dual-write comment
+- `tools/scripts/verify_phase22_final_legacy_cutover.py`:88 — keyword `dual_read` — audit/observability dual-write comment
+- `tools/scripts/verify_phase22_final_legacy_cutover.py`:89 — keyword `dual_write` — audit/observability dual-write comment
+- `tools/scripts/verify_phase22_final_legacy_cutover.py`:90 — keyword `shadow_write` — audit/observability shadow-write comment
+- `tools/scripts/verify_phase22_nonbackend_legacy_surface.py`:123 — keyword `dual_read` — audit/observability dual-write comment
+- `tools/scripts/verify_phase22_nonbackend_legacy_surface.py`:124 — keyword `dual_write` — audit/observability dual-write comment
+- `tools/scripts/verify_phase22_nonbackend_legacy_surface.py`:125 — keyword `shadow_write` — audit/observability shadow-write comment
+- `tools/scripts/verify_phase22_nonbackend_legacy_surface.py`:127 — keyword `ZUNO_AGENT_RUNTIME` — historical env-var reference
+- `tools/scripts/verify_phase22_nonbackend_legacy_surface.py`:128 — keyword `ZUNO_COMPLETION_CUTOVER_MODE` — historical env-var reference
+- `tools/scripts/verify_phase22_nonbackend_legacy_surface.py`:226 — keyword `legacy` — documentation comment about --remove-orphans
+- `tools/scripts/verify_phase22_nonbackend_legacy_surface.py`:248 — keyword `old_` — allowlist category label
+- `tools/scripts/verify_phase22_nonbackend_legacy_surface.py`:265 — keyword `rollback` — history reference in launcher README
+- `tools/scripts/verify_phase22_nonbackend_legacy_surface.py`:284 — keyword `deprecated` — documentation note about deprecated field
+- `tools/scripts/verify_phase22_nonbackend_legacy_surface.py`:292 — keyword `deprecated` — third-party package deprecation notice
+- `tools/scripts/verify_phase22_nonbackend_legacy_surface.py`:296 — keyword `dual_read` — audit/observability dual-write comment
+- `tools/scripts/verify_phase22_nonbackend_legacy_surface.py`:299 — keyword `shadow_write` — audit/observability shadow-write comment
+- `tools/scripts/verify_phase22_nonbackend_legacy_surface.py`:336 — keyword `ZUNO_AGENT_RUNTIME` — historical env-var reference
+- `tools/evals/zuno/rag_eval/run_dry_run_benchmark.py`:131 — keyword `legacy` — comment-only historical reference
+- `tools/launchers/windows/README.md`:27 — keyword `legacy` — documentation comment about --remove-orphans
+- `tests/repo/test_phase11b_single_generalagent_cutover.py`:26 — keyword `GeneralAgent` — history reference import
+- `tests/repo/test_phase11b_single_generalagent_cutover.py`:91 — keyword `GeneralAgent` — history reference import
+- `tests/repo/test_phase22_final_legacy_cutover.py`:321 — keyword `GeneralAgent` — history reference import
+- `tests/repo/test_phase22_final_legacy_cutover.py`:431 — keyword `GeneralAgent` — history reference import
+- `tests/repo/test_phase22_final_legacy_cutover.py`:433 — keyword `GeneralAgent` — history reference import
+- `tests/repo/test_phase22_final_legacy_cutover.py`:507 — keyword `dual_read` — audit/observability dual-write comment
+- `tests/repo/test_phase22_final_legacy_cutover.py`:511 — keyword `dual_read` — audit/observability dual-write comment
+- `tests/repo/test_phase22_final_legacy_cutover.py`:519 — keyword `dual_write` — audit/observability dual-write comment
+- `tests/repo/test_phase22_final_legacy_cutover.py`:522 — keyword `dual_write` — audit/observability dual-write comment
+- `tests/repo/test_phase22_final_legacy_cutover.py`:523 — keyword `dual_write` — audit/observability dual-write comment
+- `tests/repo/test_phase22_nonbackend_legacy_surface.py`:158 — keyword `ZUNO_AGENT_RUNTIME` — historical env-var reference
+- `tests/repo/test_phase22_nonbackend_legacy_surface.py`:159 — keyword `ZUNO_COMPLETION_CUTOVER_MODE` — historical env-var reference
+- `tests/repo/test_phase22_nonbackend_legacy_surface.py`:219 — keyword `ZUNO_AGENT_RUNTIME` — historical env-var reference
+- `tests/repo/test_phase22_nonbackend_legacy_surface.py`:220 — keyword `ZUNO_COMPLETION_CUTOVER_MODE` — historical env-var reference
+- `tests/repo/test_phase5_domain_runtime_paths.py`:50 — keyword `GeneralAgent` — history reference import
+- `tests/repo/test_phase5_domain_runtime_paths.py`:117 — keyword `GeneralAgent` — history reference import
+- `tests/repo/test_phase5_general_agent_real_runtime_flow.py`:41 — keyword `GeneralAgent` — history reference import
+- `tests/repo/test_phase5_general_agent_real_runtime_flow.py`:96 — keyword `GeneralAgent` — history reference import
+- `.agent/programs/work-products/current-runtime-inventory.md`:208 — keyword `GeneralAgent` — history reference import
+- `.agent/programs/work-products/data-cutover-matrix.yaml`:8 — keyword `dual_write` — audit/observability dual-write comment
+- `.agent/programs/work-products/legacy-bypass-inventory.yaml`:297 — keyword `old_` — allowlist category label
+- `.agent/programs/work-products/legacy-bypass-inventory.yaml`:323 — keyword `old_` — allowlist category label
+- `.agent/programs/work-products/phase02-readiness.yaml`:28 — keyword `rollback` — history reference in launcher README
+- `.agent/programs/work-products/phase22-removal-candidates.yaml`:405 — keyword `GeneralAgent` — history reference import
+- `.agent/programs/work-products/phase22-removal-candidates.yaml`:413 — keyword `GeneralAgent` — history reference import
+- `.agent/programs/work-products/phase22-removal-candidates.yaml`:414 — keyword `GeneralAgent` — history reference import
+- `.agent/programs/work-products/temporary-allowlist.yaml`:179 — keyword `old_` — allowlist category label
+- `.agent/programs/work-products/temporary-allowlist.yaml`:195 — keyword `old_` — allowlist category label
+- `.agent/scripts/verify_module_boundaries.py`:134 — keyword `GeneralAgent` — history reference import
+
+## ALLOWED_FAIL_CLOSED_TEST
+
+- `apps/web/dist/assets/index-DLLd9jR_.js`:10 — keyword `rollback` — intentional rollback-mode payload for fail-closed smoke
+- `apps/web/src/product/runtime.ts`:160 — keyword `rollback` — intentional rollback-mode payload for fail-closed smoke
+- `tools/scripts/verify_phase22_nonbackend_legacy_surface.py`:229 — keyword `rollback` — intentional rollback-mode payload for fail-closed smoke
+- `tools/qa/full-e2e/full_e2e.py`:165 — keyword `rollback` — intentional rollback-mode payload for fail-closed smoke
+- `tests/frontend/test_frontend_workspace_features.py`:118 — keyword `legacy`
+- `tests/frontend/test_phase10_product_contracts.py`:341 — keyword `rollback`
+- `tests/frontend/test_phase10_product_contracts.py`:346 — keyword `rollback`
+- `tests/frontend/test_phase10_product_contracts.py`:354 — keyword `rollback`
+- `tests/frontend/test_phase10_product_contracts.py`:357 — keyword `rollback` — intentional rollback-mode payload for fail-closed smoke
+- `tests/frontend/test_phase10_product_contracts.py`:362 — keyword `rollback`
+- `tests/frontend/test_phase10_product_contracts.py`:363 — keyword `rollback`
+- `tests/frontend/test_phase10_product_contracts.py`:366 — keyword `legacy`
+- `tests/frontend/test_workspace_product_loop_types.py`:35 — keyword `legacy`
+- `tests/frontend/test_workspace_product_loop_types.py`:62 — keyword `legacy`
+- `tests/frontend/test_workspace_product_loop_types.py`:98 — keyword `legacy`
+- `tests/repo/test_agent_core_target_protocols.py`:176 — keyword `compat`
+- `tests/repo/test_agent_system.py`:222 — keyword `GeneralAgent`
+- `tests/repo/test_backend_facade_layers.py`:27 — keyword `GeneralAgent`
+- `tests/repo/test_backend_facade_layers.py`:223 — keyword `zuno.services`
+- `tests/repo/test_backend_facade_layers.py`:224 — keyword `zuno.services`
+- `tests/repo/test_backend_facade_layers.py`:225 — keyword `zuno.services`
+- `tests/repo/test_backend_facade_layers.py`:226 — keyword `zuno.services`
+- `tests/repo/test_backend_facade_layers.py`:227 — keyword `zuno.services`
+- `tests/repo/test_backend_facade_layers.py`:230 — keyword `zuno.services`
+- `tests/repo/test_backend_facade_layers.py`:231 — keyword `zuno.services`
+- `tests/repo/test_backend_facade_layers.py`:232 — keyword `zuno.services`
+- `tests/repo/test_backend_facade_layers.py`:233 — keyword `zuno.services`
+- `tests/repo/test_backend_facade_layers.py`:236 — keyword `zuno.services`
+- `tests/repo/test_backend_facade_layers.py`:237 — keyword `zuno.services`
+- `tests/repo/test_backend_facade_layers.py`:240 — keyword `zuno.services`
+- `tests/repo/test_backend_facade_layers.py`:246 — keyword `zuno.core`
+- `tests/repo/test_backend_facade_layers.py`:247 — keyword `zuno.services`
+- `tests/repo/test_backend_facade_layers.py`:248 — keyword `zuno.services`
+- `tests/repo/test_backend_facade_layers.py`:249 — keyword `zuno.services`
+- `tests/repo/test_backend_facade_layers.py`:250 — keyword `zuno.services`
+- `tests/repo/test_backend_facade_layers.py`:254 — keyword `zuno.database`
+- `tests/repo/test_backend_facade_layers.py`:256 — keyword `zuno.services`
+- `tests/repo/test_backend_facade_layers.py`:272 — keyword `legacy`
+- `tests/repo/test_backend_facade_layers.py`:276 — keyword `legacy`
+- `tests/repo/test_backend_facade_layers.py`:277 — keyword `legacy`
+- `tests/repo/test_backend_facade_layers.py`:279 — keyword `legacy`
+- `tests/repo/test_backend_facade_layers.py`:282 — keyword `old_`
+- `tests/repo/test_backend_facade_layers.py`:307 — keyword `zuno.database`
+- `tests/repo/test_backend_facade_layers.py`:309 — keyword `zuno.services`
+- `tests/repo/test_goal03_wave_b_migration_contract.py`:191 — keyword `rollback`
+- `tests/repo/test_goal03_wave_b_migration_contract.py`:198 — keyword `rollback`
+- `tests/repo/test_goal03_wave_b_migration_contract.py`:252 — keyword `old_`
+- `tests/repo/test_history_overview_and_branding.py`:19 — keyword `legacy`
+- `tests/repo/test_history_overview_and_branding.py`:48 — keyword `legacy`
+- `tests/repo/test_history_overview_and_branding.py`:50 — keyword `legacy`
+- `tests/repo/test_infrastructure_target_protocols.py`:186 — keyword `compat`
+- `tests/repo/test_infrastructure_target_protocols.py`:188 — keyword `compat`
+- `tests/repo/test_llm_system_sync.py`:49 — keyword `compat`
+- `tests/repo/test_llm_system_sync.py`:55 — keyword `compat`
+- `tests/repo/test_llm_system_sync.py`:85 — keyword `legacy`
+- `tests/repo/test_llm_system_sync.py`:189 — keyword `fallback`
+- `tests/repo/test_llm_system_sync.py`:190 — keyword `fallback`
+- `tests/repo/test_llm_system_sync.py`:191 — keyword `fallback`
+- `tests/repo/test_model_gateway_bypass.py`:60 — keyword `legacy`
+- `tests/repo/test_model_gateway_bypass.py`:64 — keyword `legacy`
+- `tests/repo/test_model_gateway_target_protocols.py`:224 — keyword `fallback`
+- `tests/repo/test_observability_eval_target_protocols.py`:197 — keyword `old_`
+- `tests/repo/test_observability_eval_target_protocols.py`:198 — keyword `old_`
+- `tests/repo/test_phase01_complete_baseline.py`:45 — keyword `legacy`
+- `tests/repo/test_phase01_complete_baseline.py`:48 — keyword `legacy`
+- `tests/repo/test_phase01_complete_baseline.py`:50 — keyword `legacy`
+- `tests/repo/test_phase01_complete_baseline.py`:51 — keyword `legacy`
+- `tests/repo/test_phase02_compatibility_boundaries.py`:24 — keyword `legacy`
+- `tests/repo/test_phase02_compatibility_runtime.py`:39 — keyword `legacy`
+- `tests/repo/test_phase02_compatibility_runtime.py`:40 — keyword `legacy`
+- `tests/repo/test_phase02_compatibility_runtime.py`:42 — keyword `legacy`
+- `tests/repo/test_phase04_release_provenance_manifest.py`:31 — keyword `rollback`
+- `tests/repo/test_phase04_release_provenance_manifest.py`:35 — keyword `rollback`
+- `tests/repo/test_phase04_upgrade_compatibility_profiles.py`:42 — keyword `compat`
+- `tests/repo/test_phase0_runtime_recovery.py`:68 — keyword `legacy`
+- `tests/repo/test_phase11a_knowledge_query_service.py`:28 — keyword `fallback`
+- `tests/repo/test_phase11b_single_generalagent_cutover.py`:73 — keyword `GeneralAgent`
+- `tests/repo/test_phase11b_single_generalagent_cutover.py`:97 — keyword `GeneralAgent`
+- `tests/repo/test_phase11c_agent_runtime_retirement.py`:15 — keyword `zuno.core`
+- `tests/repo/test_phase11c_agent_runtime_retirement.py`:16 — keyword `zuno.core`
+- `tests/repo/test_phase11c_agent_runtime_retirement.py`:30 — keyword `legacy`
+- `tests/repo/test_phase11c_agent_runtime_retirement.py`:38 — keyword `zuno.core`
+- `tests/repo/test_phase11c_agent_runtime_retirement.py`:39 — keyword `zuno.core`
+- `tests/repo/test_phase11c_agent_runtime_retirement.py`:40 — keyword `zuno.core`
+- `tests/repo/test_phase11c_agent_runtime_retirement.py`:41 — keyword `zuno.core`
+- `tests/repo/test_phase11c_agent_runtime_retirement.py`:42 — keyword `zuno.services`
+- `tests/repo/test_phase11c_agent_runtime_retirement.py`:43 — keyword `zuno.services`
+- `tests/repo/test_phase11c_graph_public_export_retirement.py`:6 — keyword `legacy`
+- `tests/repo/test_phase11c_graph_public_export_retirement.py`:7 — keyword `zuno.core`
+- `tests/repo/test_phase11c_graph_public_export_retirement.py`:8 — keyword `zuno.core`
+- `tests/repo/test_phase11c_graph_public_export_retirement.py`:20 — keyword `legacy`
+- `tests/repo/test_phase11c_graph_public_export_retirement.py`:22 — keyword `zuno.core`
+- `tests/repo/test_phase11c_graph_public_export_retirement.py`:24 — keyword `zuno.core`
+- `tests/repo/test_phase11c_workspace_project_query_cutover.py`:12 — keyword `legacy`
+- `tests/repo/test_phase11_legacy_upload_parser_cutover.py`:8 — keyword `legacy`
+- `tests/repo/test_phase11_legacy_upload_parser_cutover.py`:9 — keyword `legacy`
+- `tests/repo/test_phase11_legacy_upload_parser_cutover.py`:13 — keyword `legacy`
+- `tests/repo/test_phase11_legacy_upload_parser_cutover.py`:21 — keyword `legacy`
+- `tests/repo/test_phase11_legacy_upload_parser_cutover.py`:23 — keyword `legacy`
+- `tests/repo/test_phase11_legacy_upload_parser_cutover.py`:26 — keyword `legacy`
+- `tests/repo/test_phase16_tool_bypass_zero.py`:14 — keyword `legacy`
+- `tests/repo/test_phase16_tool_bypass_zero.py`:17 — keyword `legacy`
+- `tests/repo/test_phase22_cleanup_boundary_allowlist.py`:21 — keyword `legacy`
+- `tests/repo/test_phase22_cleanup_boundary_allowlist.py`:40 — keyword `legacy`
+- `tests/repo/test_phase22_cleanup_boundary_allowlist.py`:43 — keyword `legacy`
+- `tests/repo/test_phase22_cleanup_boundary_allowlist.py`:54 — keyword `legacy`
+- `tests/repo/test_phase22_cleanup_boundary_allowlist.py`:56 — keyword `legacy`
+- `tests/repo/test_phase22_cleanup_boundary_allowlist.py`:61 — keyword `legacy`
+- `tests/repo/test_phase22_cleanup_boundary_allowlist.py`:62 — keyword `legacy`
+- `tests/repo/test_phase22_cleanup_boundary_allowlist.py`:72 — keyword `legacy`
+- `tests/repo/test_phase22_cleanup_boundary_allowlist.py`:77 — keyword `legacy`
+- `tests/repo/test_phase22_cleanup_boundary_allowlist.py`:90 — keyword `legacy`
+- `tests/repo/test_phase22_cleanup_boundary_allowlist.py`:93 — keyword `legacy`
+- `tests/repo/test_phase22_cleanup_boundary_allowlist.py`:97 — keyword `legacy`
+- `tests/repo/test_phase22_cleanup_boundary_allowlist.py`:118 — keyword `legacy`
+- `tests/repo/test_phase22_cleanup_boundary_allowlist.py`:125 — keyword `legacy`
+- `tests/repo/test_phase22_cleanup_boundary_allowlist.py`:139 — keyword `legacy`
+- `tests/repo/test_phase22_cleanup_boundary_allowlist.py`:142 — keyword `legacy`
+- `tests/repo/test_phase22_cleanup_boundary_allowlist.py`:143 — keyword `legacy`
+- `tests/repo/test_phase22_cleanup_boundary_allowlist.py`:144 — keyword `legacy`
+- `tests/repo/test_phase22_cleanup_boundary_allowlist.py`:145 — keyword `legacy`
+- `tests/repo/test_phase22_cleanup_boundary_allowlist.py`:146 — keyword `legacy`
+- `tests/repo/test_phase22_eval_package_contract.py`:60 — keyword `legacy`
+- `tests/repo/test_phase22_eval_package_contract.py`:61 — keyword `legacy`
+- `tests/repo/test_phase22_final_legacy_cutover.py`:1 — keyword `legacy`
+- `tests/repo/test_phase22_final_legacy_cutover.py`:18 — keyword `legacy`
+- `tests/repo/test_phase22_final_legacy_cutover.py`:19 — keyword `legacy`
+- `tests/repo/test_phase22_final_legacy_cutover.py`:24 — keyword `legacy`
+- `tests/repo/test_phase22_final_legacy_cutover.py`:67 — keyword `rollback`
+- `tests/repo/test_phase22_final_legacy_cutover.py`:71 — keyword `legacy`
+- `tests/repo/test_phase22_final_legacy_cutover.py`:73 — keyword `rollback`
+- `tests/repo/test_phase22_final_legacy_cutover.py`:75 — keyword `legacy`
+- `tests/repo/test_phase22_final_legacy_cutover.py`:76 — keyword `rollback`
+- `tests/repo/test_phase22_final_legacy_cutover.py`:99 — keyword `legacy`
+- `tests/repo/test_phase22_final_legacy_cutover.py`:102 — keyword `legacy`
+- `tests/repo/test_phase22_final_legacy_cutover.py`:125 — keyword `legacy`
+- `tests/repo/test_phase22_final_legacy_cutover.py`:132 — keyword `legacy`
+- `tests/repo/test_phase22_final_legacy_cutover.py`:133 — keyword `legacy`
+- `tests/repo/test_phase22_final_legacy_cutover.py`:143 — keyword `rollback`
+- `tests/repo/test_phase22_final_legacy_cutover.py`:163 — keyword `legacy`
+- `tests/repo/test_phase22_final_legacy_cutover.py`:169 — keyword `legacy`
+- `tests/repo/test_phase22_final_legacy_cutover.py`:172 — keyword `legacy`
+- `tests/repo/test_phase22_final_legacy_cutover.py`:179 — keyword `legacy`
+- `tests/repo/test_phase22_final_legacy_cutover.py`:181 — keyword `rollback`
+- `tests/repo/test_phase22_final_legacy_cutover.py`:182 — keyword `legacy`
+- `tests/repo/test_phase22_final_legacy_cutover.py`:184 — keyword `legacy`
+- `tests/repo/test_phase22_final_legacy_cutover.py`:186 — keyword `legacy`
+- `tests/repo/test_phase22_final_legacy_cutover.py`:190 — keyword `legacy`
+- `tests/repo/test_phase22_final_legacy_cutover.py`:191 — keyword `legacy`
+- `tests/repo/test_phase22_final_legacy_cutover.py`:192 — keyword `legacy`
+- `tests/repo/test_phase22_final_legacy_cutover.py`:193 — keyword `legacy`
+- `tests/repo/test_phase22_final_legacy_cutover.py`:194 — keyword `legacy`
+- `tests/repo/test_phase22_final_legacy_cutover.py`:198 — keyword `legacy`
+- `tests/repo/test_phase22_final_legacy_cutover.py`:199 — keyword `legacy`
+- `tests/repo/test_phase22_final_legacy_cutover.py`:200 — keyword `legacy`
+- `tests/repo/test_phase22_final_legacy_cutover.py`:201 — keyword `legacy`
+- `tests/repo/test_phase22_final_legacy_cutover.py`:202 — keyword `rollback`
+- `tests/repo/test_phase22_final_legacy_cutover.py`:207 — keyword `legacy`
+- `tests/repo/test_phase22_final_legacy_cutover.py`:211 — keyword `legacy`
+- `tests/repo/test_phase22_final_legacy_cutover.py`:215 — keyword `legacy`
+- `tests/repo/test_phase22_final_legacy_cutover.py`:217 — keyword `rollback`
+- `tests/repo/test_phase22_final_legacy_cutover.py`:218 — keyword `legacy`
+- `tests/repo/test_phase22_final_legacy_cutover.py`:223 — keyword `legacy`
+- `tests/repo/test_phase22_final_legacy_cutover.py`:224 — keyword `legacy`
+- `tests/repo/test_phase22_final_legacy_cutover.py`:228 — keyword `rollback`
+- `tests/repo/test_phase22_final_legacy_cutover.py`:234 — keyword `rollback`
+- `tests/repo/test_phase22_final_legacy_cutover.py`:235 — keyword `legacy`
+- `tests/repo/test_phase22_final_legacy_cutover.py`:237 — keyword `rollback`
+- `tests/repo/test_phase22_final_legacy_cutover.py`:238 — keyword `legacy`
+- `tests/repo/test_phase22_final_legacy_cutover.py`:240 — keyword `legacy`
+- `tests/repo/test_phase22_final_legacy_cutover.py`:242 — keyword `legacy`
+- `tests/repo/test_phase22_final_legacy_cutover.py`:247 — keyword `legacy`
+- `tests/repo/test_phase22_final_legacy_cutover.py`:248 — keyword `rollback`
+- `tests/repo/test_phase22_final_legacy_cutover.py`:251 — keyword `legacy`
+- `tests/repo/test_phase22_final_legacy_cutover.py`:258 — keyword `legacy`
+- `tests/repo/test_phase22_final_legacy_cutover.py`:261 — keyword `legacy`
+- `tests/repo/test_phase22_final_legacy_cutover.py`:263 — keyword `legacy`
+- `tests/repo/test_phase22_final_legacy_cutover.py`:268 — keyword `legacy`
+- `tests/repo/test_phase22_final_legacy_cutover.py`:272 — keyword `legacy`
+- `tests/repo/test_phase22_final_legacy_cutover.py`:279 — keyword `legacy`
+- `tests/repo/test_phase22_final_legacy_cutover.py`:282 — keyword `legacy`
+- `tests/repo/test_phase22_final_legacy_cutover.py`:284 — keyword `legacy`
+- `tests/repo/test_phase22_final_legacy_cutover.py`:289 — keyword `legacy`
+- `tests/repo/test_phase22_final_legacy_cutover.py`:293 — keyword `legacy`
+- `tests/repo/test_phase22_final_legacy_cutover.py`:300 — keyword `legacy`
+- `tests/repo/test_phase22_final_legacy_cutover.py`:305 — keyword `legacy`
+- `tests/repo/test_phase22_final_legacy_cutover.py`:306 — keyword `legacy`
+- `tests/repo/test_phase22_final_legacy_cutover.py`:308 — keyword `legacy`
+- `tests/repo/test_phase22_final_legacy_cutover.py`:309 — keyword `legacy`
+- `tests/repo/test_phase22_final_legacy_cutover.py`:313 — keyword `legacy`
+- `tests/repo/test_phase22_final_legacy_cutover.py`:314 — keyword `legacy`
+- `tests/repo/test_phase22_final_legacy_cutover.py`:323 — keyword `GeneralAgent`
+- `tests/repo/test_phase22_final_legacy_cutover.py`:333 — keyword `legacy`
+- `tests/repo/test_phase22_final_legacy_cutover.py`:334 — keyword `GeneralAgent`
+- `tests/repo/test_phase22_final_legacy_cutover.py`:348 — keyword `legacy`
+- `tests/repo/test_phase22_final_legacy_cutover.py`:363 — keyword `legacy`
+- `tests/repo/test_phase22_final_legacy_cutover.py`:367 — keyword `old_`
+- `tests/repo/test_phase22_final_legacy_cutover.py`:371 — keyword `zuno.services`
+- `tests/repo/test_phase22_final_legacy_cutover.py`:372 — keyword `zuno.core`
+- `tests/repo/test_phase22_final_legacy_cutover.py`:376 — keyword `legacy`
+- `tests/repo/test_phase22_final_legacy_cutover.py`:377 — keyword `zuno.services`
+- `tests/repo/test_phase22_final_legacy_cutover.py`:378 — keyword `zuno.core`
+- `tests/repo/test_phase22_final_legacy_cutover.py`:381 — keyword `legacy`
+- `tests/repo/test_phase22_final_legacy_cutover.py`:386 — keyword `zuno.services`
+- `tests/repo/test_phase22_final_legacy_cutover.py`:387 — keyword `zuno.tools`
+- `tests/repo/test_phase22_final_legacy_cutover.py`:391 — keyword `legacy`
+- `tests/repo/test_phase22_final_legacy_cutover.py`:408 — keyword `legacy`
+- `tests/repo/test_phase22_final_legacy_cutover.py`:417 — keyword `zuno.services`
+- `tests/repo/test_phase22_final_legacy_cutover.py`:418 — keyword `zuno.services`
+- `tests/repo/test_phase22_final_legacy_cutover.py`:422 — keyword `legacy`
+- `tests/repo/test_phase22_final_legacy_cutover.py`:426 — keyword `legacy`
+- `tests/repo/test_phase22_final_legacy_cutover.py`:437 — keyword `legacy`
+- `tests/repo/test_phase22_final_legacy_cutover.py`:438 — keyword `zuno.core`
+- `tests/repo/test_phase22_final_legacy_cutover.py`:441 — keyword `legacy`
+- `tests/repo/test_phase22_final_legacy_cutover.py`:445 — keyword `legacy`
+- `tests/repo/test_phase22_final_legacy_cutover.py`:449 — keyword `legacy`
+- `tests/repo/test_phase22_final_legacy_cutover.py`:450 — keyword `legacy`
+- `tests/repo/test_phase22_final_legacy_cutover.py`:453 — keyword `legacy`
+- `tests/repo/test_phase22_final_legacy_cutover.py`:472 — keyword `legacy`
+- `tests/repo/test_phase22_final_legacy_cutover.py`:476 — keyword `legacy`
+- `tests/repo/test_phase22_final_legacy_cutover.py`:477 — keyword `legacy`
+- `tests/repo/test_phase22_final_legacy_cutover.py`:480 — keyword `legacy`
+- `tests/repo/test_phase22_final_legacy_cutover.py`:499 — keyword `legacy`
+- `tests/repo/test_phase22_final_legacy_cutover.py`:503 — keyword `legacy`
+- `tests/repo/test_phase22_final_legacy_cutover.py`:504 — keyword `legacy`
+- `tests/repo/test_phase22_final_legacy_cutover.py`:515 — keyword `legacy`
+- `tests/repo/test_phase22_final_legacy_cutover.py`:527 — keyword `legacy`
+- `tests/repo/test_phase22_final_legacy_cutover.py`:535 — keyword `rollback`
+- `tests/repo/test_phase22_final_legacy_cutover.py`:539 — keyword `legacy`
+- `tests/repo/test_phase22_final_legacy_cutover.py`:548 — keyword `rollback`
+- `tests/repo/test_phase22_final_legacy_cutover.py`:552 — keyword `legacy`
+- `tests/repo/test_phase22_final_legacy_cutover.py`:559 — keyword `legacy`
+- `tests/repo/test_phase22_final_legacy_cutover.py`:563 — keyword `legacy`
+- `tests/repo/test_phase22_final_legacy_cutover.py`:571 — keyword `legacy`
+- `tests/repo/test_phase22_final_legacy_cutover.py`:575 — keyword `legacy`
+- `tests/repo/test_phase22_final_legacy_cutover.py`:576 — keyword `legacy`
+- `tests/repo/test_phase22_final_legacy_cutover.py`:587 — keyword `legacy`
+- `tests/repo/test_phase22_final_legacy_cutover.py`:591 — keyword `legacy`
+- `tests/repo/test_phase22_final_legacy_cutover.py`:592 — keyword `legacy`
+- `tests/repo/test_phase22_final_legacy_cutover.py`:593 — keyword `legacy`
+- `tests/repo/test_phase22_final_legacy_cutover.py`:594 — keyword `legacy`
+- `tests/repo/test_phase22_final_legacy_cutover.py`:596 — keyword `legacy`
+- `tests/repo/test_phase22_final_legacy_cutover.py`:600 — keyword `legacy`
+- `tests/repo/test_phase22_final_legacy_cutover.py`:602 — keyword `compat`
+- `tests/repo/test_phase22_final_legacy_cutover.py`:603 — keyword `legacy`
+- `tests/repo/test_phase22_final_legacy_cutover.py`:608 — keyword `legacy`
+- `tests/repo/test_phase22_final_legacy_cutover.py`:609 — keyword `legacy`
+- `tests/repo/test_phase22_final_legacy_cutover.py`:614 — keyword `legacy`
+- `tests/repo/test_phase22_final_legacy_cutover.py`:626 — keyword `legacy`
+- `tests/repo/test_phase22_final_legacy_cutover.py`:631 — keyword `legacy`
+- `tests/repo/test_phase22_final_legacy_cutover.py`:638 — keyword `rollback`
+- `tests/repo/test_phase22_final_legacy_cutover.py`:647 — keyword `legacy`
+- `tests/repo/test_phase22_nonbackend_legacy_surface.py`:1 — keyword `legacy`
+- `tests/repo/test_phase22_nonbackend_legacy_surface.py`:4 — keyword `legacy`
+- `tests/repo/test_phase22_nonbackend_legacy_surface.py`:18 — keyword `legacy`
+- `tests/repo/test_phase22_nonbackend_legacy_surface.py`:73 — keyword `rollback`
+- `tests/repo/test_phase22_nonbackend_legacy_surface.py`:102 — keyword `legacy`
+- `tests/repo/test_phase22_nonbackend_legacy_surface.py`:103 — keyword `legacy`
+- `tests/repo/test_phase22_nonbackend_legacy_surface.py`:104 — keyword `legacy`
+- `tests/repo/test_phase22_nonbackend_legacy_surface.py`:107 — keyword `legacy`
+- `tests/repo/test_phase22_nonbackend_legacy_surface.py`:111 — keyword `legacy`
+- `tests/repo/test_phase22_nonbackend_legacy_surface.py`:113 — keyword `legacy`
+- `tests/repo/test_phase22_nonbackend_legacy_surface.py`:114 — keyword `legacy`
+- `tests/repo/test_phase22_nonbackend_legacy_surface.py`:118 — keyword `legacy`
+- `tests/repo/test_phase22_nonbackend_legacy_surface.py`:124 — keyword `legacy`
+- `tests/repo/test_phase22_nonbackend_legacy_surface.py`:133 — keyword `legacy`
+- `tests/repo/test_phase22_nonbackend_legacy_surface.py`:139 — keyword `legacy`
+- `tests/repo/test_phase22_nonbackend_legacy_surface.py`:145 — keyword `legacy`
+- `tests/repo/test_phase22_nonbackend_legacy_surface.py`:147 — keyword `legacy`
+- `tests/repo/test_phase22_nonbackend_legacy_surface.py`:153 — keyword `legacy`
+- `tests/repo/test_phase22_nonbackend_legacy_surface.py`:154 — keyword `rollback`
+- `tests/repo/test_phase22_nonbackend_legacy_surface.py`:155 — keyword `old_`
+- `tests/repo/test_phase22_nonbackend_legacy_surface.py`:156 — keyword `deprecated`
+- `tests/repo/test_phase22_nonbackend_legacy_surface.py`:157 — keyword `GeneralAgent`
+- `tests/repo/test_phase22_nonbackend_legacy_surface.py`:160 — keyword `zuno.core`
+- `tests/repo/test_phase22_nonbackend_legacy_surface.py`:161 — keyword `zuno.services`
+- `tests/repo/test_phase22_nonbackend_legacy_surface.py`:162 — keyword `zuno.schema`
+- `tests/repo/test_phase22_nonbackend_legacy_surface.py`:163 — keyword `zuno.database`
+- `tests/repo/test_phase22_nonbackend_legacy_surface.py`:164 — keyword `zuno.tools`
+- `tests/repo/test_phase22_nonbackend_legacy_surface.py`:165 — keyword `zuno.resources`
+- `tests/repo/test_phase22_nonbackend_legacy_surface.py`:166 — keyword `zuno.utils`
+- `tests/repo/test_phase22_nonbackend_legacy_surface.py`:169 — keyword `fallback`
+- `tests/repo/test_phase22_nonbackend_legacy_surface.py`:170 — keyword `legacy`
+- `tests/repo/test_phase22_nonbackend_legacy_surface.py`:171 — keyword `legacy`
+- `tests/repo/test_phase22_nonbackend_legacy_surface.py`:172 — keyword `legacy`
+- `tests/repo/test_phase22_nonbackend_legacy_surface.py`:173 — keyword `legacy`
+- `tests/repo/test_phase22_nonbackend_legacy_surface.py`:177 — keyword `legacy`
+- `tests/repo/test_phase22_nonbackend_legacy_surface.py`:179 — keyword `legacy`
+- `tests/repo/test_phase22_nonbackend_legacy_surface.py`:183 — keyword `legacy`
+- `tests/repo/test_phase22_nonbackend_legacy_surface.py`:186 — keyword `legacy`
+- `tests/repo/test_phase22_nonbackend_legacy_surface.py`:187 — keyword `legacy`
+- `tests/repo/test_phase22_nonbackend_legacy_surface.py`:188 — keyword `legacy`
+- `tests/repo/test_phase22_nonbackend_legacy_surface.py`:198 — keyword `zuno.core`
+- `tests/repo/test_phase22_nonbackend_legacy_surface.py`:215 — keyword `legacy`
+- `tests/repo/test_phase22_nonbackend_legacy_surface.py`:216 — keyword `rollback`
+- `tests/repo/test_phase22_nonbackend_legacy_surface.py`:217 — keyword `old_`
+- `tests/repo/test_phase22_nonbackend_legacy_surface.py`:218 — keyword `deprecated`
+- `tests/repo/test_phase22_nonbackend_legacy_surface.py`:224 — keyword `legacy`
+- `tests/repo/test_phase22_nonbackend_legacy_surface.py`:280 — keyword `legacy`
+- `tests/repo/test_phase22_nonbackend_legacy_surface.py`:281 — keyword `compat`
+- `tests/repo/test_phase22_nonbackend_legacy_surface.py`:289 — keyword `zuno.core`
+- `tests/repo/test_phase22_nonbackend_legacy_surface.py`:290 — keyword `zuno.services`
+- `tests/repo/test_phase22_nonbackend_legacy_surface.py`:291 — keyword `zuno.schema`
+- `tests/repo/test_phase22_nonbackend_legacy_surface.py`:292 — keyword `zuno.database`
+- `tests/repo/test_phase22_nonbackend_legacy_surface.py`:293 — keyword `zuno.tools`
+- `tests/repo/test_phase22_nonbackend_legacy_surface.py`:294 — keyword `zuno.resources`
+- `tests/repo/test_phase22_nonbackend_legacy_surface.py`:295 — keyword `zuno.utils`
+- `tests/repo/test_phase22_nonbackend_legacy_surface.py`:328 — keyword `fallback`
+- `tests/repo/test_phase22_nonbackend_legacy_surface.py`:358 — keyword `legacy`
+- `tests/repo/test_phase22_verification_truth.py`:98 — keyword `fallback`
+- `tests/repo/test_phase22_verification_truth.py`:102 — keyword `fallback`
+- `tests/repo/test_phase22_verification_truth.py`:106 — keyword `fallback`
+- `tests/repo/test_phase22_verification_truth.py`:111 — keyword `fallback`
+- `tests/repo/test_phase22_verification_truth.py`:115 — keyword `fallback`
+- `tests/repo/test_phase22_verification_truth.py`:119 — keyword `fallback`
+- `tests/repo/test_phase22_verification_truth.py`:158 — keyword `fallback`
+- `tests/repo/test_phase25_legacy_boundary_hardening.py`:11 — keyword `compat`
+- `tests/repo/test_phase25_legacy_boundary_hardening.py`:12 — keyword `compat`
+- `tests/repo/test_phase25_legacy_boundary_hardening.py`:13 — keyword `legacy`
+- `tests/repo/test_phase25_legacy_boundary_hardening.py`:28 — keyword `compat`
+- `tests/repo/test_phase25_legacy_boundary_hardening.py`:34 — keyword `compat`
+- `tests/repo/test_phase25_legacy_boundary_hardening.py`:38 — keyword `compat`
+- `tests/repo/test_phase25_legacy_boundary_hardening.py`:43 — keyword `compat`
+- `tests/repo/test_phase25_legacy_boundary_hardening.py`:53 — keyword `compat`
+- `tests/repo/test_phase25_legacy_boundary_hardening.py`:58 — keyword `compat`
+- `tests/repo/test_phase25_legacy_boundary_hardening.py`:64 — keyword `compat`
+- `tests/repo/test_phase25_legacy_boundary_hardening.py`:73 — keyword `compat`
+- `tests/repo/test_phase25_legacy_boundary_hardening.py`:79 — keyword `compat`
+- `tests/repo/test_phase25_legacy_boundary_hardening.py`:83 — keyword `compat`
+- `tests/repo/test_phase25_legacy_boundary_hardening.py`:89 — keyword `legacy`
+- `tests/repo/test_phase25_legacy_boundary_hardening.py`:91 — keyword `compat`
+- `tests/repo/test_phase25_legacy_boundary_hardening.py`:92 — keyword `legacy`
+- `tests/repo/test_phase25_legacy_boundary_hardening.py`:93 — keyword `legacy`
+- `tests/repo/test_phase25_legacy_boundary_hardening.py`:94 — keyword `compat`
+- `tests/repo/test_phase25_legacy_boundary_hardening.py`:117 — keyword `compat`
+- `tests/repo/test_phase25_legacy_boundary_hardening.py`:119 — keyword `legacy`
+- `tests/repo/test_phase25_legacy_boundary_hardening.py`:128 — keyword `compat`
+- `tests/repo/test_phase25_legacy_boundary_hardening.py`:129 — keyword `compat`
+- `tests/repo/test_phase25_legacy_boundary_hardening.py`:130 — keyword `legacy`
+- `tests/repo/test_phase2_graphrag_mainline_deepening.py`:58 — keyword `fallback`
+- `tests/repo/test_phase2_retrieval_strategy_program.py`:116 — keyword `fallback`
+- `tests/repo/test_phase2_retrieval_strategy_program.py`:136 — keyword `fallback`
+- `tests/repo/test_phase2_retrieval_strategy_program.py`:139 — keyword `fallback`
+- `tests/repo/test_phase2_retrieval_strategy_program.py`:151 — keyword `fallback`
+- `tests/repo/test_phase4_knowledge_config_v2_and_local_eval.py`:52 — keyword `zuno.services`
+- `tests/repo/test_phase5_domain_runtime_paths.py`:97 — keyword `GeneralAgent`
+- `tests/repo/test_phase5_domain_runtime_paths.py`:123 — keyword `GeneralAgent`
+- `tests/repo/test_phase5_general_agent_real_runtime_flow.py`:81 — keyword `GeneralAgent`
+- `tests/repo/test_phase5_general_agent_real_runtime_flow.py`:102 — keyword `GeneralAgent`
+- `tests/repo/test_phase5_graphrag_index_filters.py`:142 — keyword `legacy`
+- `tests/repo/test_phase5_graphrag_index_filters.py`:252 — keyword `old_`
+- `tests/repo/test_phase5_langgraph_runtime_imports.py`:33 — keyword `legacy`
+- `tests/repo/test_phase5_langgraph_runtime_imports.py`:35 — keyword `compat`
+- `tests/repo/test_phase5_retrieval_modes.py`:111 — keyword `fallback`
+- `tests/repo/test_phase6_agent_graphrag_pluginization.py`:23 — keyword `GeneralAgent`
+- `tests/repo/test_project_query_compatibility_boundaries.py`:5 — keyword `fallback`
+- `tests/repo/test_project_query_compatibility_boundaries.py`:109 — keyword `fallback`
+- `tests/repo/test_publish_boundary.py`:54 — keyword `compat`
+- `tests/repo/test_publish_boundary.py`:113 — keyword `legacy`
+- `tests/repo/test_publish_boundary.py`:114 — keyword `legacy`
+- `tests/repo/test_repo_hygiene.py`:103 — keyword `legacy`
+- `tests/repo/test_repo_hygiene.py`:104 — keyword `compat`
+- `tests/repo/test_repo_hygiene.py`:121 — keyword `compat`
+- `tests/repo/test_repo_hygiene.py`:162 — keyword `legacy`
+- `tests/repo/test_repo_hygiene.py`:168 — keyword `legacy`
+- `tests/repo/test_repo_hygiene.py`:214 — keyword `zuno.services`
+- `tests/repo/test_repo_hygiene.py`:227 — keyword `zuno.services`
+- `tests/repo/test_repo_hygiene.py`:240 — keyword `zuno.services`
+- `tests/repo/test_repo_hygiene.py`:243 — keyword `zuno.core`
+- `tests/repo/test_repo_hygiene.py`:253 — keyword `legacy`
+- `tests/repo/test_repo_hygiene.py`:257 — keyword `legacy`
+- `tests/repo/test_repo_hygiene.py`:258 — keyword `zuno.services`
+- `tests/repo/test_repo_hygiene.py`:356 — keyword `legacy`
+- `tests/repo/test_repo_hygiene.py`:357 — keyword `legacy`
+- `tests/repo/test_repo_hygiene.py`:358 — keyword `legacy`
+- `tests/repo/test_repo_hygiene.py`:359 — keyword `legacy`
+- `tests/repo/test_repo_hygiene.py`:360 — keyword `legacy`
+- `tests/repo/test_repo_hygiene.py`:423 — keyword `legacy`
+- `tests/repo/test_repo_hygiene.py`:445 — keyword `legacy`
+- `tests/repo/test_repo_hygiene.py`:449 — keyword `zuno.core`
+- `tests/repo/test_repo_hygiene.py`:478 — keyword `legacy`
+- `tests/repo/test_repo_hygiene.py`:486 — keyword `legacy`
+- `tests/repo/test_repo_hygiene.py`:487 — keyword `legacy`
+- `tests/repo/test_repo_hygiene.py`:488 — keyword `legacy`
+- `tests/repo/test_repo_hygiene.py`:493 — keyword `legacy`
+- `tests/repo/test_static_target_layer_imports.py`:52 — keyword `legacy`
+- `tests/repo/test_static_target_layer_imports.py`:53 — keyword `zuno.services`
+- `tests/repo/test_static_target_layer_imports.py`:54 — keyword `zuno.services`
+- `tests/repo/test_static_target_layer_imports.py`:55 — keyword `zuno.core`
+- `tests/repo/test_static_target_layer_imports.py`:56 — keyword `zuno.core`
+- `tests/repo/test_static_target_layer_imports.py`:57 — keyword `zuno.database`
+- `tests/repo/test_static_target_layer_imports.py`:58 — keyword `zuno.database`
+- `tests/repo/test_static_target_layer_imports.py`:59 — keyword `zuno.schema`
+- `tests/repo/test_static_target_layer_imports.py`:60 — keyword `zuno.schema`
+- `tests/repo/test_static_target_layer_imports.py`:61 — keyword `zuno.tools`
+- `tests/repo/test_static_target_layer_imports.py`:62 — keyword `zuno.tools`
+- `tests/repo/test_static_target_layer_imports.py`:63 — keyword `zuno.utils`
+- `tests/repo/test_static_target_layer_imports.py`:64 — keyword `zuno.utils`
+- `tests/repo/test_static_target_layer_imports.py`:75 — keyword `legacy`
+- `tests/repo/test_tool_runtime_target_protocols.py`:136 — keyword `legacy`
+- `tests/repo/test_tool_runtime_target_protocols.py`:137 — keyword `legacy`
+- `tests/repo/test_zuno_canonical_import_surfaces.py`:39 — keyword `legacy`
+- `tests/repo/test_zuno_public_entrypoints.py`:29 — keyword `compat`
+- `tests/repo/test_zuno_public_entrypoints.py`:44 — keyword `legacy`
+- `tests/repo/test_zuno_runtime_chain_guard.py`:94 — keyword `legacy`
+- `tests/repo/test_zuno_runtime_chain_guard.py`:95 — keyword `legacy`
+- `tests/repo/test_zuno_runtime_chain_guard.py`:96 — keyword `legacy`
+- `tests/repo/test_zuno_runtime_chain_guard.py`:97 — keyword `legacy`
+- `tests/repo/test_zuno_runtime_chain_guard.py`:98 — keyword `legacy`
+- `tests/repo/test_zuno_runtime_chain_guard.py`:100 — keyword `legacy`
+- `tests/repo/test_zuno_runtime_chain_guard.py`:103 — keyword `compat`
+- `tests/repo/test_zuno_runtime_chain_guard.py`:131 — keyword `legacy`
+- `tests/repo/test_zuno_runtime_chain_guard.py`:132 — keyword `legacy`
+- `tests/repo/test_zuno_runtime_chain_guard.py`:133 — keyword `legacy`
+- `tests/repo/test_zuno_runtime_chain_guard.py`:134 — keyword `legacy`
+- `tests/repo/test_zuno_runtime_chain_guard.py`:136 — keyword `legacy`
+- `tests/repo/test_zuno_runtime_chain_guard.py`:139 — keyword `compat`
+- `tests/tools/test_launcher_scripts.py`:44 — keyword `zuno.services`
+- `tests/tools/test_launcher_scripts.py`:87 — keyword `rollback`
+- `tests/tools/test_launcher_scripts.py`:88 — keyword `rollback`
+- `tests/tools/test_launcher_scripts.py`:269 — keyword `legacy`
+- `tests/tools/test_simple_api_tool.py`:124 — keyword `fallback`
+- `tests/tools/test_simple_api_tool.py`:145 — keyword `fallback`
+- `tests/tools/test_simple_api_tool.py`:336 — keyword `fallback`
+- `tests/tools/test_simple_api_tool.py`:367 — keyword `fallback`
+- `.agent/programs/work-products/api-contract-compatibility-matrix.yaml`:15 — keyword `rollback` — documented rejection rule
+- `.agent/programs/work-products/feature-flag-registry.yaml`:40 — keyword `rollback` — documented rejection rule
+- `.agent/programs/work-products/phase22-removal-candidates.yaml`:70 — keyword `rollback` — documented rejection rule
+
+## ALLOWED_VERSIONED_PUBLIC_API
+
+- `apps/web/src/style.css`:1668 — keyword `legacy`
+- `apps/web/dist/assets/element-Cw4wAoD2.js`:1 — keyword `deprecated`
+- `apps/web/dist/assets/element-Cw4wAoD2.js`:3 — keyword `fallback`
+- `apps/web/dist/assets/element-Cw4wAoD2.js`:8 — keyword `fallback`
+- `apps/web/dist/assets/element-Cw4wAoD2.js`:19 — keyword `fallback`
+- `apps/web/dist/assets/element-Cw4wAoD2.js`:32 — keyword `fallback`
+- `apps/web/dist/assets/element-Cw4wAoD2.js`:57 — keyword `fallback`
+- `apps/web/dist/assets/element-Cw4wAoD2.js`:62 — keyword `fallback`
+- `apps/web/dist/assets/element-Cw4wAoD2.js`:63 — keyword `fallback`
+- `apps/web/dist/assets/index-DLLd9jR_.js`:3 — keyword `legacy`
+- `apps/web/dist/assets/index-DLLd9jR_.js`:5 — keyword `deprecated`
+- `apps/web/dist/assets/index-DLLd9jR_.js`:9 — keyword `legacy`
+- `apps/web/dist/assets/index-DLLd9jR_.js`:13 — keyword `fallback`
+- `apps/web/dist/assets/index-DLLd9jR_.js`:35 — keyword `fallback`
+- `apps/web/dist/assets/markdown-Ci-IYEBi.js`:5 — keyword `legacy`
+- `apps/web/dist/assets/vue-2WfWkxwF.js`:13 — keyword `fallback`
+- `apps/web/dist/assets/vue-2WfWkxwF.js`:25 — keyword `compat`
+- `apps/web/src/apis/knowledge.ts`:171 — keyword `fallback`
+- `apps/web/src/apis/knowledge.ts`:172 — keyword `fallback` — documented fallback contract
+- `apps/web/src/apis/knowledge.ts`:178 — keyword `fallback`
+- `apps/web/src/apis/knowledge.ts`:179 — keyword `fallback` — documented fallback contract
+- `apps/web/src/apis/knowledge.ts`:187 — keyword `fallback` — documented fallback contract
+- `apps/web/src/apis/knowledge.ts`:201 — keyword `fallback` — documented fallback contract
+- `apps/web/src/apis/workspace.ts`:346 — keyword `fallback` — documented fallback contract
+- `apps/web/src/pages/index.vue`:23 — keyword `legacy`
+- `apps/web/src/pages/index.vue`:59 — keyword `legacy`
+- `apps/web/src/product/runtime.ts`:24 — keyword `rollback`
+- `apps/web/src/product/runtime.ts`:43 — keyword `rollback`
+- `apps/web/src/product/runtime.ts`:56 — keyword `rollback`
+- `apps/web/src/product/runtime.ts`:74 — keyword `rollback`
+- `apps/web/src/utils/display-text.ts`:16 — keyword `fallback` — standard env-var fallback helper
+- `apps/web/src/utils/display-text.ts`:19 — keyword `fallback`
+- `apps/web/src/utils/knowledge-config.ts`:18 — keyword `legacy`
+- `apps/web/src/utils/knowledge-config.ts`:20 — keyword `legacy`
+- `apps/web/src/utils/knowledge-config.ts`:194 — keyword `legacy`
+- `apps/web/src/utils/knowledge-config.ts`:201 — keyword `legacy`
+- `apps/web/src/utils/knowledge-config.ts`:219 — keyword `legacy`
+- `apps/web/src/utils/knowledge-config.ts`:263 — keyword `legacy`
+- `apps/web/src/utils/knowledge-config.ts`:285 — keyword `legacy`
+- `apps/web/src/utils/retrieval.ts`:16 — keyword `legacy`
+- `apps/web/src/utils/retrieval.ts`:27 — keyword `fallback` — documented fallback contract
+- `apps/web/src/utils/retrieval.ts`:36 — keyword `legacy`
+- `apps/web/src/utils/retrieval.ts`:44 — keyword `fallback`
+- `apps/web/src/utils/retrieval.ts`:46 — keyword `fallback` — documented fallback contract
+- `apps/web/src/utils/user-avatars.ts`:25 — keyword `legacy`
+- `apps/web/src/pages/dashboard/dashboard.vue`:183 — keyword `fallback`
+- `apps/web/src/pages/dashboard/dashboard.vue`:198 — keyword `fallback`
+- `apps/web/src/pages/profile/profile.vue`:8 — keyword `legacy`
+- `apps/web/src/pages/profile/profile.vue`:32 — keyword `legacy`
+- `apps/web/src/pages/tool/tool.vue`:445 — keyword `fallback`
+- `apps/web/src/pages/tool/tool.vue`:446 — keyword `fallback`
+- `apps/web/src/pages/tool/tool.vue`:473 — keyword `fallback` — standard env-var fallback helper
+- `apps/web/src/pages/workspace/workspace.vue`:13 — keyword `legacy`
+- `apps/web/src/pages/workspace/workspace.vue`:103 — keyword `legacy`
+- `apps/web/src/pages/workspace/defaultPage/defaultPage.constants.ts`:7 — keyword `fallback`
+- `apps/web/src/pages/workspace/defaultPage/defaultPage.constants.ts`:8 — keyword `fallback`
+- `apps/web/src/pages/workspace/defaultPage/defaultPage.types.ts`:68 — keyword `fallback`
+- `apps/web/src/pages/workspace/defaultPage/defaultPage.vue`:54 — keyword `legacy`
+- `apps/web/src/pages/workspace/defaultPage/defaultPage.vue`:83 — keyword `fallback`
+- `apps/web/src/pages/workspace/defaultPage/defaultPage.vue`:84 — keyword `fallback`
+- `apps/web/src/pages/workspace/defaultPage/defaultPage.vue`:284 — keyword `legacy`
+- `apps/web/src/pages/workspace/defaultPage/defaultPage.vue`:482 — keyword `fallback` — standard env-var fallback helper
+- `apps/web/src/pages/workspace/defaultPage/defaultPage.vue`:1010 — keyword `fallback`
+- `apps/web/src/pages/workspace/defaultPage/defaultPage.vue`:1015 — keyword `fallback`
+- `apps/web/src/pages/workspace/defaultPage/defaultPage.vue`:1327 — keyword `fallback`
+- `apps/web/src/pages/workspace/defaultPage/defaultPage.vue`:1330 — keyword `fallback`
+- `apps/web/src/pages/workspace/defaultPage/defaultPage.vue`:1462 — keyword `fallback`
+- `apps/web/src/pages/workspace/defaultPage/defaultPage.vue`:1994 — keyword `fallback`
+- `apps/web/src/pages/workspace/defaultPage/defaultPage.vue`:2131 — keyword `fallback`
+- `apps/web/src/pages/workspace/defaultPage/defaultPage.vue`:2157 — keyword `fallback`
+- `apps/web/src/pages/workspace/defaultPage/defaultPage.vue`:2169 — keyword `fallback`
+- `apps/web/src/pages/workspace/defaultPage/defaultPage.vue`:2749 — keyword `fallback`
+- `apps/web/src/pages/workspace/defaultPage/defaultPage.vue`:2750 — keyword `fallback`
+- `apps/desktop/main.cjs`:28 — keyword `fallback` — standard env-var fallback helper name
+- `apps/desktop/main.cjs`:30 — keyword `fallback`
+- `apps/desktop/preload.cjs`:5 — keyword `fallback` — standard env-var fallback helper name
+- `apps/desktop/preload.cjs`:7 — keyword `fallback`
+- `tools/migrations/migrate_domain_pack_id_to_graphrag_project_id.py`:105 — keyword `legacy`
+- `tools/scripts/phase02_compatibility_runtime.py`:58 — keyword `rollback`
+- `tools/scripts/phase02_compatibility_runtime.py`:62 — keyword `rollback`
+- `tools/scripts/phase02_compatibility_runtime.py`:82 — keyword `rollback`
+- `tools/scripts/phase02_compatibility_runtime.py`:98 — keyword `rollback`
+- `tools/scripts/phase02_compatibility_runtime.py`:114 — keyword `rollback`
+- `tools/scripts/phase02_compatibility_runtime.py`:122 — keyword `rollback`
+- `tools/scripts/phase02_compatibility_runtime.py`:127 — keyword `legacy`
+- `tools/scripts/phase02_compatibility_runtime.py`:129 — keyword `legacy`
+- `tools/scripts/phase02_compatibility_runtime.py`:131 — keyword `legacy`
+- `tools/scripts/phase02_compatibility_runtime.py`:135 — keyword `legacy`
+- `tools/scripts/phase02_compatibility_runtime.py`:137 — keyword `legacy`
+- `tools/scripts/phase02_compatibility_runtime.py`:161 — keyword `rollback`
+- `tools/scripts/phase02_compatibility_runtime.py`:187 — keyword `rollback`
+- `tools/scripts/phase02_compatibility_runtime.py`:189 — keyword `rollback`
+- `tools/scripts/phase02_compatibility_runtime.py`:198 — keyword `legacy`
+- `tools/scripts/phase02_compatibility_runtime.py`:206 — keyword `rollback`
+- `tools/scripts/phase02_compatibility_runtime.py`:211 — keyword `legacy`
+- `tools/scripts/phase02_compatibility_runtime.py`:220 — keyword `rollback`
+- `tools/scripts/phase02_compatibility_runtime.py`:221 — keyword `rollback`
+- `tools/scripts/phase02_compatibility_runtime.py`:224 — keyword `legacy`
+- `tools/scripts/phase02_compatibility_runtime.py`:227 — keyword `legacy`
+- `tools/scripts/phase02_compatibility_runtime.py`:228 — keyword `legacy`
+- `tools/scripts/phase02_compatibility_runtime.py`:229 — keyword `legacy`
+- `tools/scripts/phase02_compatibility_runtime.py`:230 — keyword `legacy`
+- `tools/scripts/phase02_compatibility_runtime.py`:231 — keyword `legacy`
+- `tools/scripts/phase02_compatibility_runtime.py`:232 — keyword `legacy`
+- `tools/scripts/phase02_compatibility_runtime.py`:240 — keyword `compat` — documented compatibility contract
+- `tools/scripts/phase02_compatibility_runtime.py`:249 — keyword `compat` — documented compatibility contract
+- `tools/scripts/phase02_compatibility_runtime.py`:251 — keyword `compat` — documented compatibility contract
+- `tools/scripts/print_public_release_commit_order.py`:18 — keyword `rollback`
+- `tools/scripts/README.md`:10 — keyword `legacy`
+- `tools/scripts/run-desktop-smoke.ps1`:44 — keyword `compat` — documented compatibility contract
+- `tools/scripts/verify_capability_runtime_batch.py`:119 — keyword `compat` — documented compatibility contract
+- `tools/scripts/verify_capability_runtime_batch.py`:160 — keyword `compat` — documented compatibility contract
+- `tools/scripts/verify_capability_runtime_batch.py`:161 — keyword `compat` — documented compatibility contract
+- `tools/scripts/verify_capability_runtime_batch.py`:185 — keyword `fallback`
+- `tools/scripts/verify_capability_runtime_batch.py`:187 — keyword `fallback` — standard env-var fallback helper
+- `tools/scripts/verify_capability_runtime_batch.py`:200 — keyword `fallback`
+- `tools/scripts/verify_capability_runtime_batch.py`:201 — keyword `fallback`
+- `tools/scripts/verify_capability_runtime_batch.py`:204 — keyword `fallback`
+- `tools/scripts/verify_capability_runtime_batch.py`:205 — keyword `fallback`
+- `tools/scripts/verify_capability_skill_target_protocols.py`:59 — keyword `fallback`
+- `tools/scripts/verify_complete_contract_adoption.py`:81 — keyword `compat` — documented compatibility contract
+- `tools/scripts/verify_complete_contract_adoption.py`:82 — keyword `compat` — documented compatibility contract
+- `tools/scripts/verify_current_program.py`:18 — keyword `legacy`
+- `tools/scripts/verify_current_program.py`:47 — keyword `legacy`
+- `tools/scripts/verify_current_program.py`:59 — keyword `legacy`
+- `tools/scripts/verify_current_program.py`:392 — keyword `legacy`
+- `tools/scripts/verify_current_program.py`:529 — keyword `legacy`
+- `tools/scripts/verify_current_program.py`:849 — keyword `legacy`
+- `tools/scripts/verify_current_program.py`:850 — keyword `legacy`
+- `tools/scripts/verify_current_program.py`:851 — keyword `legacy`
+- `tools/scripts/verify_current_program.py`:879 — keyword `GeneralAgent`
+- `tools/scripts/verify_current_program.py`:886 — keyword `legacy`
+- `tools/scripts/verify_current_program.py`:887 — keyword `legacy`
+- `tools/scripts/verify_current_program.py`:888 — keyword `legacy`
+- `tools/scripts/verify_current_program.py`:896 — keyword `legacy`
+- `tools/scripts/verify_current_program.py`:897 — keyword `legacy`
+- `tools/scripts/verify_current_program.py`:898 — keyword `legacy`
+- `tools/scripts/verify_current_program.py`:909 — keyword `compat` — documented compatibility contract
+- `tools/scripts/verify_current_program.py`:910 — keyword `compat` — documented compatibility contract
+- `tools/scripts/verify_current_program.py`:911 — keyword `compat` — documented compatibility contract
+- `tools/scripts/verify_docs_and_readme_ready.py`:17 — keyword `compat`
+- `tools/scripts/verify_infrastructure_target_protocols.py`:78 — keyword `compat` — documented compatibility contract
+- `tools/scripts/verify_infrastructure_target_protocols.py`:116 — keyword `compat` — documented compatibility contract
+- `tools/scripts/verify_infrastructure_target_protocols.py`:165 — keyword `compat`
+- `tools/scripts/verify_infrastructure_target_protocols.py`:167 — keyword `compat`
+- `tools/scripts/verify_memory_runtime_batch.py`:94 — keyword `old_` — versioned public adapter field
+- `tools/scripts/verify_model_gateway_boundaries.py`:16 — keyword `legacy`
+- `tools/scripts/verify_model_gateway_boundaries.py`:56 — keyword `legacy`
+- `tools/scripts/verify_model_gateway_boundaries.py`:70 — keyword `GeneralAgent` — agent runtime owns the canonical general agent
+- `tools/scripts/verify_model_gateway_boundaries.py`:72 — keyword `GeneralAgent` — agent runtime owns the canonical general agent
+- `tools/scripts/verify_model_gateway_bypass.py`:27 — keyword `compat` — documented compatibility contract
+- `tools/scripts/verify_model_gateway_runtime_batch.py`:168 — keyword `fallback` — standard env-var fallback helper
+- `tools/scripts/verify_model_gateway_runtime_batch.py`:169 — keyword `fallback`
+- `tools/scripts/verify_model_gateway_runtime_batch.py`:172 — keyword `fallback`
+- `tools/scripts/verify_model_gateway_runtime_batch.py`:174 — keyword `fallback`
+- `tools/scripts/verify_model_gateway_runtime_batch.py`:177 — keyword `fallback`
+- `tools/scripts/verify_model_gateway_runtime_batch.py`:181 — keyword `fallback`
+- `tools/scripts/verify_model_gateway_runtime_batch.py`:182 — keyword `fallback`
+- `tools/scripts/verify_model_gateway_runtime_batch.py`:190 — keyword `fallback`
+- `tools/scripts/verify_model_gateway_runtime_batch.py`:203 — keyword `fallback`
+- `tools/scripts/verify_model_gateway_runtime_batch.py`:306 — keyword `fallback`
+- `tools/scripts/verify_model_gateway_runtime_batch.py`:312 — keyword `fallback`
+- `tools/scripts/verify_model_gateway_runtime_batch.py`:314 — keyword `fallback`
+- `tools/scripts/verify_model_gateway_runtime_batch.py`:323 — keyword `fallback`
+- `tools/scripts/verify_model_gateway_runtime_batch.py`:355 — keyword `fallback`
+- `tools/scripts/verify_model_gateway_runtime_batch.py`:356 — keyword `fallback`
+- `tools/scripts/verify_model_gateway_runtime_batch.py`:367 — keyword `fallback`
+- `tools/scripts/verify_model_gateway_runtime_batch.py`:368 — keyword `fallback`
+- `tools/scripts/verify_model_gateway_runtime_batch.py`:379 — keyword `fallback`
+- `tools/scripts/verify_model_gateway_runtime_batch.py`:380 — keyword `fallback`
+- `tools/scripts/verify_model_gateway_runtime_batch.py`:408 — keyword `fallback`
+- `tools/scripts/verify_model_gateway_runtime_batch.py`:409 — keyword `fallback`
+- `tools/scripts/verify_model_gateway_runtime_batch.py`:502 — keyword `fallback`
+- `tools/scripts/verify_model_gateway_runtime_batch.py`:516 — keyword `rollback`
+- `tools/scripts/verify_model_gateway_runtime_batch.py`:525 — keyword `rollback`
+- `tools/scripts/verify_model_gateway_runtime_batch.py`:538 — keyword `rollback`
+- `tools/scripts/verify_model_gateway_runtime_batch.py`:550 — keyword `fallback`
+- `tools/scripts/verify_model_gateway_runtime_batch.py`:551 — keyword `fallback`
+- `tools/scripts/verify_model_gateway_runtime_batch.py`:562 — keyword `deprecated`
+- `tools/scripts/verify_model_gateway_runtime_batch.py`:563 — keyword `deprecated`
+- `tools/scripts/verify_model_gateway_runtime_batch.py`:574 — keyword `fallback`
+- `tools/scripts/verify_model_gateway_runtime_batch.py`:575 — keyword `fallback`
+- `tools/scripts/verify_model_gateway_runtime_batch.py`:586 — keyword `fallback`
+- `tools/scripts/verify_model_gateway_runtime_batch.py`:587 — keyword `fallback` — standard env-var fallback helper
+- `tools/scripts/verify_model_gateway_runtime_batch.py`:594 — keyword `fallback`
+- `tools/scripts/verify_model_gateway_runtime_batch.py`:595 — keyword `fallback`
+- `tools/scripts/verify_model_gateway_runtime_batch.py`:603 — keyword `old_` — versioned public adapter field
+- `tools/scripts/verify_model_gateway_runtime_batch.py`:608 — keyword `fallback`
+- `tools/scripts/verify_model_gateway_runtime_batch.py`:609 — keyword `fallback`
+- `tools/scripts/verify_model_gateway_runtime_batch.py`:617 — keyword `old_` — versioned public adapter field
+- `tools/scripts/verify_model_gateway_runtime_batch.py`:622 — keyword `fallback`
+- `tools/scripts/verify_model_gateway_runtime_batch.py`:623 — keyword `fallback`
+- `tools/scripts/verify_model_gateway_runtime_batch.py`:631 — keyword `old_` — versioned public adapter field
+- `tools/scripts/verify_model_gateway_runtime_batch.py`:636 — keyword `fallback`
+- `tools/scripts/verify_model_gateway_runtime_batch.py`:637 — keyword `fallback`
+- `tools/scripts/verify_model_gateway_runtime_batch.py`:645 — keyword `old_` — versioned public adapter field
+- `tools/scripts/verify_model_gateway_runtime_batch.py`:809 — keyword `fallback`
+- `tools/scripts/verify_model_gateway_runtime_batch.py`:820 — keyword `fallback`
+- `tools/scripts/verify_model_gateway_runtime_batch.py`:886 — keyword `old_` — versioned public adapter field
+- `tools/scripts/verify_model_gateway_runtime_batch.py`:894 — keyword `old_`
+- `tools/scripts/verify_model_gateway_runtime_batch.py`:896 — keyword `old_`
+- `tools/scripts/verify_model_gateway_runtime_batch.py`:898 — keyword `old_`
+- `tools/scripts/verify_model_gateway_runtime_batch.py`:910 — keyword `fallback`
+- `tools/scripts/verify_model_gateway_runtime_batch.py`:920 — keyword `fallback`
+- `tools/scripts/verify_model_gateway_runtime_batch.py`:971 — keyword `rollback`
+- `tools/scripts/verify_model_gateway_runtime_batch.py`:979 — keyword `rollback`
+- `tools/scripts/verify_model_gateway_runtime_batch.py`:980 — keyword `rollback`
+- `tools/scripts/verify_model_gateway_runtime_batch.py`:981 — keyword `rollback`
+- `tools/scripts/verify_model_gateway_runtime_batch.py`:984 — keyword `fallback`
+- `tools/scripts/verify_model_gateway_runtime_batch.py`:988 — keyword `rollback`
+- `tools/scripts/verify_model_gateway_runtime_batch.py`:989 — keyword `compat` — documented compatibility contract
+- `tools/scripts/verify_model_gateway_runtime_batch.py`:991 — keyword `rollback`
+- `tools/scripts/verify_model_gateway_runtime_batch.py`:992 — keyword `rollback`
+- `tools/scripts/verify_model_gateway_runtime_batch.py`:1055 — keyword `fallback`
+- `tools/scripts/verify_model_gateway_runtime_batch.py`:1117 — keyword `compat` — documented compatibility contract
+- `tools/scripts/verify_model_gateway_runtime_batch.py`:1118 — keyword `legacy`
+- `tools/scripts/verify_model_gateway_runtime_batch.py`:1123 — keyword `compat` — documented compatibility contract
+- `tools/scripts/verify_model_gateway_runtime_batch.py`:1166 — keyword `fallback`
+- `tools/scripts/verify_model_gateway_runtime_batch.py`:1171 — keyword `fallback`
+- `tools/scripts/verify_model_gateway_runtime_batch.py`:1173 — keyword `fallback`
+- `tools/scripts/verify_model_gateway_runtime_batch.py`:1180 — keyword `fallback`
+- `tools/scripts/verify_model_gateway_runtime_batch.py`:1183 — keyword `fallback`
+- `tools/scripts/verify_model_gateway_target_protocols.py`:98 — keyword `compat` — documented compatibility contract
+- `tools/scripts/verify_model_gateway_target_protocols.py`:150 — keyword `fallback`
+- `tools/scripts/verify_observability_eval_target_protocols.py`:142 — keyword `old_`
+- `tools/scripts/verify_observability_eval_target_protocols.py`:143 — keyword `old_`
+- `tools/scripts/verify_observability_runtime_batch.py`:241 — keyword `old_`
+- `tools/scripts/verify_phase01_complete_baseline.py`:19 — keyword `legacy`
+- `tools/scripts/verify_phase01_complete_baseline.py`:22 — keyword `legacy`
+- `tools/scripts/verify_phase01_complete_baseline.py`:40 — keyword `legacy`
+- `tools/scripts/verify_phase01_complete_baseline.py`:47 — keyword `compat` — documented compatibility contract
+- `tools/scripts/verify_phase01_complete_baseline.py`:48 — keyword `GeneralAgent`
+- `tools/scripts/verify_phase01_complete_baseline.py`:285 — keyword `legacy`
+- `tools/scripts/verify_phase01_complete_baseline.py`:301 — keyword `legacy`
+- `tools/scripts/verify_phase01_complete_baseline.py`:303 — keyword `legacy`
+- `tools/scripts/verify_phase01_complete_baseline.py`:305 — keyword `legacy`
+- `tools/scripts/verify_phase01_complete_baseline.py`:306 — keyword `legacy`
+- `tools/scripts/verify_phase01_complete_baseline.py`:312 — keyword `legacy`
+- `tools/scripts/verify_phase01_complete_baseline.py`:319 — keyword `deprecated`
+- `tools/scripts/verify_phase01_complete_baseline.py`:320 — keyword `old_`
+- `tools/scripts/verify_phase01_complete_baseline.py`:321 — keyword `old_`
+- `tools/scripts/verify_phase01_complete_baseline.py`:325 — keyword `legacy`
+- `tools/scripts/verify_phase01_complete_baseline.py`:328 — keyword `legacy`
+- `tools/scripts/verify_phase01_complete_baseline.py`:330 — keyword `legacy`
+- `tools/scripts/verify_phase01_complete_baseline.py`:338 — keyword `legacy`
+- `tools/scripts/verify_phase01_complete_baseline.py`:340 — keyword `legacy`
+- `tools/scripts/verify_phase01_complete_baseline.py`:457 — keyword `compat`
+- `tools/scripts/verify_phase01_complete_baseline.py`:489 — keyword `legacy`
+- `tools/scripts/verify_phase02_compatibility_boundaries.py`:11 — keyword `compat` — documented compatibility contract
+- `tools/scripts/verify_phase02_compatibility_boundaries.py`:17 — keyword `legacy`
+- `tools/scripts/verify_phase02_compatibility_boundaries.py`:19 — keyword `compat` — documented compatibility contract
+- `tools/scripts/verify_phase02_compatibility_boundaries.py`:47 — keyword `compat` — documented compatibility contract
+- `tools/scripts/verify_phase02_compatibility_boundaries.py`:48 — keyword `compat` — documented compatibility contract
+- `tools/scripts/verify_phase02_compatibility_boundaries.py`:56 — keyword `compat` — documented compatibility contract
+- `tools/scripts/verify_phase02_compatibility_boundaries.py`:68 — keyword `rollback`
+- `tools/scripts/verify_phase02_compatibility_boundaries.py`:70 — keyword `legacy`
+- `tools/scripts/verify_phase02_compatibility_boundaries.py`:77 — keyword `compat` — documented compatibility contract
+- `tools/scripts/verify_phase02_compatibility_boundaries.py`:80 — keyword `compat` — documented compatibility contract
+- `tools/scripts/verify_phase02_compatibility_boundaries.py`:88 — keyword `rollback`
+- `tools/scripts/verify_phase02_compatibility_boundaries.py`:96 — keyword `legacy`
+- `tools/scripts/verify_phase02_compatibility_boundaries.py`:100 — keyword `legacy`
+- `tools/scripts/verify_phase02_compatibility_boundaries.py`:122 — keyword `rollback`
+- `tools/scripts/verify_phase02_compatibility_boundaries.py`:133 — keyword `rollback`
+- `tools/scripts/verify_phase02_compatibility_boundaries.py`:152 — keyword `compat` — documented compatibility contract
+- `tools/scripts/verify_phase02_compatibility_boundaries.py`:156 — keyword `compat` — documented compatibility contract
+- `tools/scripts/verify_phase02_compatibility_boundaries.py`:158 — keyword `compat` — documented compatibility contract
+- `tools/scripts/verify_phase04_alembic_migration.py`:551 — keyword `legacy`
+- `tools/scripts/verify_phase04_backup_restore_replay.py`:573 — keyword `rollback`
+- `tools/scripts/verify_phase04_checkpoint_boundary_version.py`:30 — keyword `compat` — documented compatibility contract
+- `tools/scripts/verify_phase04_checkpoint_boundary_version.py`:36 — keyword `compat` — documented compatibility contract
+- `tools/scripts/verify_phase04_checkpoint_boundary_version.py`:85 — keyword `compat` — documented compatibility contract
+- `tools/scripts/verify_phase04_checkpoint_boundary_version.py`:94 — keyword `compat` — documented compatibility contract
+- `tools/scripts/verify_phase04_checkpoint_boundary_version.py`:119 — keyword `compat`
+- `tools/scripts/verify_phase04_checkpoint_boundary_version.py`:125 — keyword `compat`
+- `tools/scripts/verify_phase04_checkpoint_boundary_version.py`:126 — keyword `compat`
+- `tools/scripts/verify_phase04_checkpoint_boundary_version.py`:132 — keyword `compat`
+- `tools/scripts/verify_phase04_checkpoint_boundary_version.py`:177 — keyword `compat` — documented compatibility contract
+- `tools/scripts/verify_phase04_complete_infrastructure.py`:226 — keyword `compat` — documented compatibility contract
+- `tools/scripts/verify_phase04_complete_infrastructure.py`:227 — keyword `compat` — documented compatibility contract
+- `tools/scripts/verify_phase04_complete_infrastructure.py`:229 — keyword `compat` — documented compatibility contract
+- `tools/scripts/verify_phase04_complete_infrastructure.py`:230 — keyword `compat` — documented compatibility contract
+- `tools/scripts/verify_phase04_complete_infrastructure.py`:590 — keyword `rollback`
+- `tools/scripts/verify_phase04_complete_infrastructure.py`:604 — keyword `rollback`
+- `tools/scripts/verify_phase04_complete_infrastructure.py`:797 — keyword `old_`
+- `tools/scripts/verify_phase04_complete_infrastructure.py`:919 — keyword `rollback`
+- `tools/scripts/verify_phase04_complete_infrastructure.py`:922 — keyword `rollback`
+- `tools/scripts/verify_phase04_complete_infrastructure.py`:1503 — keyword `rollback`
+- `tools/scripts/verify_phase04_complete_infrastructure.py`:1722 — keyword `rollback`
+- `tools/scripts/verify_phase04_complete_infrastructure.py`:1828 — keyword `compat` — documented compatibility contract
+- `tools/scripts/verify_phase04_complete_infrastructure.py`:1829 — keyword `compat` — documented compatibility contract
+- `tools/scripts/verify_phase04_complete_infrastructure.py`:1832 — keyword `compat` — documented compatibility contract
+- `tools/scripts/verify_phase04_complete_infrastructure.py`:1833 — keyword `compat` — documented compatibility contract
+- `tools/scripts/verify_phase04_complete_infrastructure.py`:1834 — keyword `compat` — documented compatibility contract
+- `tools/scripts/verify_phase04_complete_infrastructure.py`:1838 — keyword `compat` — documented compatibility contract
+- `tools/scripts/verify_phase04_complete_infrastructure.py`:1842 — keyword `compat` — documented compatibility contract
+- `tools/scripts/verify_phase04_complete_infrastructure.py`:1843 — keyword `compat` — documented compatibility contract
+- `tools/scripts/verify_phase04_complete_infrastructure.py`:1845 — keyword `compat` — documented compatibility contract
+- `tools/scripts/verify_phase04_complete_infrastructure.py`:1847 — keyword `compat` — documented compatibility contract
+- `tools/scripts/verify_phase04_complete_infrastructure.py`:1850 — keyword `rollback`
+- `tools/scripts/verify_phase04_complete_infrastructure.py`:1857 — keyword `compat` — documented compatibility contract
+- `tools/scripts/verify_phase04_complete_infrastructure.py`:1916 — keyword `compat` — documented compatibility contract
+- `tools/scripts/verify_phase04_complete_infrastructure.py`:1917 — keyword `rollback`
+- `tools/scripts/verify_phase04_domain_event_adoption.py`:45 — keyword `rollback`
+- `tools/scripts/verify_phase04_domain_event_adoption.py`:70 — keyword `rollback`
+- `tools/scripts/verify_phase04_domain_event_adoption.py`:71 — keyword `rollback`
+- `tools/scripts/verify_phase04_domain_event_adoption.py`:82 — keyword `rollback`
+- `tools/scripts/verify_phase04_domain_event_adoption.py`:98 — keyword `rollback`
+- `tools/scripts/verify_phase04_domain_event_adoption.py`:113 — keyword `rollback`
+- `tools/scripts/verify_phase04_domain_event_adoption.py`:328 — keyword `rollback`
+- `tools/scripts/verify_phase04_domain_uow_adoption.py`:27 — keyword `zuno.database`
+- `tools/scripts/verify_phase04_domain_uow_adoption.py`:28 — keyword `legacy`
+- `tools/scripts/verify_phase04_domain_uow_adoption.py`:29 — keyword `rollback`
+- `tools/scripts/verify_phase04_domain_uow_adoption.py`:30 — keyword `rollback`
+- `tools/scripts/verify_phase04_domain_uow_adoption.py`:52 — keyword `legacy`
+- `tools/scripts/verify_phase04_domain_uow_adoption.py`:55 — keyword `rollback`
+- `tools/scripts/verify_phase04_domain_uow_adoption.py`:78 — keyword `rollback`
+- `tools/scripts/verify_phase04_domain_uow_adoption.py`:79 — keyword `rollback`
+- `tools/scripts/verify_phase04_domain_uow_adoption.py`:80 — keyword `rollback`
+- `tools/scripts/verify_phase04_domain_uow_adoption.py`:82 — keyword `rollback`
+- `tools/scripts/verify_phase04_domain_uow_adoption.py`:110 — keyword `rollback`
+- `tools/scripts/verify_phase04_domain_uow_adoption.py`:170 — keyword `rollback`
+- `tools/scripts/verify_phase04_domain_uow_adoption.py`:172 — keyword `rollback`
+- `tools/scripts/verify_phase04_domain_uow_adoption.py`:194 — keyword `rollback`
+- `tools/scripts/verify_phase04_existing_database_upgrade.py`:136 — keyword `legacy`
+- `tools/scripts/verify_phase04_existing_database_upgrade.py`:162 — keyword `legacy`
+- `tools/scripts/verify_phase04_existing_database_upgrade.py`:167 — keyword `legacy`
+- `tools/scripts/verify_phase04_lease_worker_coordination.py`:419 — keyword `old_` — versioned public adapter field
+- `tools/scripts/verify_phase04_lease_worker_coordination.py`:423 — keyword `old_` — versioned public adapter field
+- `tools/scripts/verify_phase04_lease_worker_coordination.py`:427 — keyword `old_`
+- `tools/scripts/verify_phase04_lease_worker_coordination.py`:460 — keyword `old_`
+- `tools/scripts/verify_phase04_official_checkpointer_schema_upgrade.py`:70 — keyword `old_`
+- `tools/scripts/verify_phase04_official_checkpointer_schema_upgrade.py`:154 — keyword `old_` — versioned public adapter field
+- `tools/scripts/verify_phase04_official_checkpointer_schema_upgrade.py`:162 — keyword `old_`
+- `tools/scripts/verify_phase04_official_checkpointer_schema_upgrade.py`:190 — keyword `old_` — versioned public adapter field
+- `tools/scripts/verify_phase04_official_checkpointer_schema_upgrade.py`:197 — keyword `old_`
+- `tools/scripts/verify_phase04_official_checkpointer_schema_upgrade.py`:201 — keyword `old_` — versioned public adapter field
+- `tools/scripts/verify_phase04_official_checkpointer_schema_upgrade.py`:203 — keyword `old_`
+- `tools/scripts/verify_phase04_official_checkpointer_schema_upgrade.py`:206 — keyword `old_`
+- `tools/scripts/verify_phase04_official_checkpointer_schema_upgrade.py`:211 — keyword `old_`
+- `tools/scripts/verify_phase04_official_checkpointer_schema_upgrade.py`:232 — keyword `old_`
+- `tools/scripts/verify_phase04_official_checkpointer_schema_upgrade.py`:263 — keyword `old_`
+- `tools/scripts/verify_phase04_postgres_foundation.py`:35 — keyword `legacy`
+- `tools/scripts/verify_phase04_postgres_foundation.py`:36 — keyword `legacy`
+- `tools/scripts/verify_phase04_postgres_runtime.py`:60 — keyword `rollback`
+- `tools/scripts/verify_phase04_postgres_session_runtime.py`:70 — keyword `rollback`
+- `tools/scripts/verify_phase04_postgres_session_runtime.py`:136 — keyword `rollback`
+- `tools/scripts/verify_phase04_postgres_session_runtime.py`:138 — keyword `rollback`
+- `tools/scripts/verify_phase04_pre_closure_gate.py`:52 — keyword `old_`
+- `tools/scripts/verify_phase04_release_provenance_manifest.py`:19 — keyword `compat` — documented compatibility contract
+- `tools/scripts/verify_phase04_release_provenance_manifest.py`:143 — keyword `compat` — documented compatibility contract
+- `tools/scripts/verify_phase04_release_provenance_manifest.py`:144 — keyword `compat` — documented compatibility contract
+- `tools/scripts/verify_phase04_release_provenance_manifest.py`:146 — keyword `rollback`
+- `tools/scripts/verify_phase04_release_provenance_manifest.py`:150 — keyword `compat` — documented compatibility contract
+- `tools/scripts/verify_phase04_release_provenance_manifest.py`:192 — keyword `compat` — documented compatibility contract
+- `tools/scripts/verify_phase04_release_provenance_manifest.py`:195 — keyword `compat` — documented compatibility contract
+- `tools/scripts/verify_phase04_release_provenance_manifest.py`:218 — keyword `rollback`
+- `tools/scripts/verify_phase04_release_provenance_manifest.py`:221 — keyword `rollback`
+- `tools/scripts/verify_phase04_secret_rotation_tenant_hit.py`:148 — keyword `rollback`
+- `tools/scripts/verify_phase04_secret_rotation_tenant_hit.py`:156 — keyword `rollback`
+- `tools/scripts/verify_phase04_secret_rotation_tenant_hit.py`:164 — keyword `rollback`
+- `tools/scripts/verify_phase04_secret_rotation_tenant_hit.py`:168 — keyword `rollback`
+- `tools/scripts/verify_phase04_secret_rotation_tenant_hit.py`:175 — keyword `rollback`
+- `tools/scripts/verify_phase04_secret_rotation_tenant_hit.py`:224 — keyword `rollback`
+- `tools/scripts/verify_phase04_tenant_isolation_profiles.py`:23 — keyword `compat`
+- `tools/scripts/verify_phase04_upgrade_compatibility_profiles.py`:11 — keyword `compat` — documented compatibility contract
+- `tools/scripts/verify_phase04_upgrade_compatibility_profiles.py`:108 — keyword `compat` — documented compatibility contract
+- `tools/scripts/verify_phase04_upgrade_compatibility_profiles.py`:112 — keyword `compat` — documented compatibility contract
+- `tools/scripts/verify_phase04_upgrade_compatibility_profiles.py`:118 — keyword `compat`
+- `tools/scripts/verify_phase04_upgrade_compatibility_profiles.py`:119 — keyword `compat`
+- `tools/scripts/verify_phase04_upgrade_compatibility_profiles.py`:120 — keyword `rollback`
+- `tools/scripts/verify_phase04_upgrade_compatibility_profiles.py`:121 — keyword `compat`
+- `tools/scripts/verify_phase04_upgrade_compatibility_profiles.py`:124 — keyword `compat`
+- `tools/scripts/verify_phase04_upgrade_compatibility_profiles.py`:127 — keyword `rollback`
+- `tools/scripts/verify_phase04_upgrade_compatibility_profiles.py`:136 — keyword `compat` — documented compatibility contract
+- `tools/scripts/verify_phase04_upgrade_compatibility_profiles.py`:142 — keyword `compat`
+- `tools/scripts/verify_phase04_upgrade_compatibility_profiles.py`:143 — keyword `compat` — documented compatibility contract
+- `tools/scripts/verify_phase04_upgrade_compatibility_profiles.py`:149 — keyword `compat`
+- `tools/scripts/verify_phase04_upgrade_compatibility_profiles.py`:150 — keyword `compat`
+- `tools/scripts/verify_phase04_upgrade_compatibility_profiles.py`:157 — keyword `compat` — documented compatibility contract
+- `tools/scripts/verify_phase04_upgrade_compatibility_profiles.py`:164 — keyword `compat` — documented compatibility contract
+- `tools/scripts/verify_phase04_upgrade_compatibility_profiles.py`:171 — keyword `compat` — documented compatibility contract
+- `tools/scripts/verify_phase04_upgrade_compatibility_profiles.py`:181 — keyword `rollback`
+- `tools/scripts/verify_phase04_upgrade_compatibility_profiles.py`:182 — keyword `compat`
+- `tools/scripts/verify_phase04_upgrade_compatibility_profiles.py`:188 — keyword `compat` — documented compatibility contract
+- `tools/scripts/verify_phase04_upgrade_compatibility_profiles.py`:189 — keyword `compat`
+- `tools/scripts/verify_phase04_upgrade_compatibility_profiles.py`:196 — keyword `compat`
+- `tools/scripts/verify_phase04_upgrade_compatibility_profiles.py`:215 — keyword `compat` — documented compatibility contract
+- `tools/scripts/verify_phase04_upgrade_compatibility_profiles.py`:216 — keyword `compat` — documented compatibility contract
+- `tools/scripts/verify_phase04_upgrade_compatibility_profiles.py`:221 — keyword `compat` — documented compatibility contract
+- `tools/scripts/verify_phase04_upgrade_compatibility_profiles.py`:225 — keyword `compat`
+- `tools/scripts/verify_phase04_upgrade_compatibility_profiles.py`:229 — keyword `compat` — documented compatibility contract
+- `tools/scripts/verify_phase04_upgrade_compatibility_profiles.py`:237 — keyword `compat` — documented compatibility contract
+- `tools/scripts/verify_phase04_upgrade_compatibility_profiles.py`:241 — keyword `compat` — documented compatibility contract
+- `tools/scripts/verify_phase04_upgrade_compatibility_profiles.py`:243 — keyword `compat` — documented compatibility contract
+- `tools/scripts/verify_phase05_pre_closure_gate.py`:60 — keyword `legacy`
+- `tools/scripts/verify_phase05_pre_closure_gate.py`:87 — keyword `legacy`
+- `tools/scripts/verify_phase05_security_persistence.py`:328 — keyword `legacy`
+- `tools/scripts/verify_phase05_security_persistence.py`:329 — keyword `legacy`
+- `tools/scripts/verify_phase05_security_persistence.py`:343 — keyword `legacy`
+- `tools/scripts/verify_phase05_security_persistence.py`:350 — keyword `legacy`
+- `tools/scripts/verify_phase05_security_persistence.py`:351 — keyword `legacy`
+- `tools/scripts/verify_phase05_security_persistence.py`:353 — keyword `legacy`
+- `tools/scripts/verify_phase05_security_persistence.py`:354 — keyword `legacy`
+- `tools/scripts/verify_phase06_observability_persistence.py`:372 — keyword `rollback`
+- `tools/scripts/verify_phase10_product_cutover_evidence.py`:67 — keyword `rollback`
+- `tools/scripts/verify_phase10_product_cutover_evidence.py`:90 — keyword `rollback`
+- `tools/scripts/verify_phase10_product_cutover_evidence.py`:115 — keyword `rollback`
+- `tools/scripts/verify_phase10_product_cutover_evidence.py`:169 — keyword `legacy`
+- `tools/scripts/verify_phase10_product_cutover_evidence.py`:208 — keyword `rollback`
+- `tools/scripts/verify_phase10_product_cutover_evidence.py`:209 — keyword `rollback`
+- `tools/scripts/verify_phase10_product_cutover_evidence.py`:230 — keyword `rollback`
+- `tools/scripts/verify_phase10_product_cutover_evidence.py`:232 — keyword `rollback`
+- `tools/scripts/verify_phase10_product_cutover_evidence.py`:251 — keyword `legacy`
+- `tools/scripts/verify_phase10_product_cutover_evidence.py`:252 — keyword `legacy`
+- `tools/scripts/verify_phase10_product_cutover_evidence.py`:253 — keyword `legacy`
+- `tools/scripts/verify_phase10_product_cutover_evidence.py`:257 — keyword `rollback`
+- `tools/scripts/verify_phase11_legacy_upload_parser_cutover.py`:7 — keyword `legacy`
+- `tools/scripts/verify_phase11_legacy_upload_parser_cutover.py`:81 — keyword `legacy`
+- `tools/scripts/verify_phase11_legacy_upload_parser_cutover.py`:83 — keyword `legacy`
+- `tools/scripts/verify_phase11_legacy_upload_parser_cutover.py`:88 — keyword `legacy`
+- `tools/scripts/verify_phase11_legacy_upload_parser_cutover.py`:130 — keyword `legacy`
+- `tools/scripts/verify_phase11_legacy_upload_parser_cutover.py`:132 — keyword `legacy`
+- `tools/scripts/verify_phase11_legacy_upload_parser_cutover.py`:135 — keyword `legacy`
+- `tools/scripts/verify_phase11_legacy_upload_parser_cutover.py`:137 — keyword `legacy`
+- `tools/scripts/verify_phase11_legacy_upload_parser_cutover.py`:143 — keyword `legacy`
+- `tools/scripts/verify_phase11_legacy_upload_parser_cutover.py`:147 — keyword `legacy`
+- `tools/scripts/verify_phase11_legacy_upload_parser_cutover.py`:149 — keyword `legacy`
+- `tools/scripts/verify_phase11_pre_closure_gate.py`:65 — keyword `legacy`
+- `tools/scripts/verify_phase22_cleanup_boundary.py`:72 — keyword `compat` — documented compatibility contract
+- `tools/scripts/verify_phase22_cleanup_boundary.py`:140 — keyword `compat` — documented compatibility contract
+- `tools/scripts/verify_phase22_cleanup_boundary.py`:144 — keyword `legacy`
+- `tools/scripts/verify_phase22_cleanup_boundary.py`:187 — keyword `fallback`
+- `tools/scripts/verify_phase22_cleanup_boundary.py`:337 — keyword `legacy`
+- `tools/scripts/verify_phase22_cleanup_boundary.py`:417 — keyword `legacy`
+- `tools/scripts/verify_phase22_cleanup_boundary.py`:425 — keyword `legacy`
+- `tools/scripts/verify_phase22_cleanup_boundary.py`:426 — keyword `legacy`
+- `tools/scripts/verify_phase22_cleanup_boundary.py`:427 — keyword `legacy`
+- `tools/scripts/verify_phase22_cleanup_boundary.py`:478 — keyword `legacy`
+- `tools/scripts/verify_phase22_cleanup_boundary.py`:510 — keyword `compat` — documented compatibility contract
+- `tools/scripts/verify_phase22_cleanup_boundary.py`:585 — keyword `compat` — documented compatibility contract
+- `tools/scripts/verify_phase22_cleanup_boundary.py`:589 — keyword `legacy`
+- `tools/scripts/verify_phase22_cleanup_boundary.py`:605 — keyword `fallback`
+- `tools/scripts/verify_phase22_cleanup_boundary.py`:648 — keyword `rollback`
+- `tools/scripts/verify_phase22_cleanup_boundary.py`:649 — keyword `legacy`
+- `tools/scripts/verify_phase22_cleanup_boundary.py`:650 — keyword `legacy`
+- `tools/scripts/verify_phase22_cleanup_boundary.py`:651 — keyword `rollback`
+- `tools/scripts/verify_phase22_cleanup_boundary.py`:652 — keyword `rollback`
+- `tools/scripts/verify_phase22_cleanup_boundary.py`:654 — keyword `GeneralAgent`
+- `tools/scripts/verify_phase22_cleanup_boundary.py`:656 — keyword `rollback`
+- `tools/scripts/verify_phase22_cleanup_boundary.py`:660 — keyword `legacy`
+- `tools/scripts/verify_phase22_cleanup_boundary.py`:661 — keyword `legacy`
+- `tools/scripts/verify_phase22_cleanup_boundary.py`:662 — keyword `legacy`
+- `tools/scripts/verify_phase22_cleanup_boundary.py`:663 — keyword `legacy`
+- `tools/scripts/verify_phase22_cleanup_boundary.py`:664 — keyword `legacy`
+- `tools/scripts/verify_phase22_cleanup_boundary.py`:665 — keyword `legacy`
+- `tools/scripts/verify_phase22_cleanup_boundary.py`:667 — keyword `legacy`
+- `tools/scripts/verify_phase22_cleanup_boundary.py`:668 — keyword `compat` — documented compatibility contract
+- `tools/scripts/verify_phase22_cleanup_boundary.py`:674 — keyword `legacy`
+- `tools/scripts/verify_phase22_cleanup_boundary.py`:675 — keyword `legacy`
+- `tools/scripts/verify_phase22_cleanup_boundary.py`:677 — keyword `compat` — documented compatibility contract
+- `tools/scripts/verify_phase22_cleanup_boundary.py`:678 — keyword `legacy`
+- `tools/scripts/verify_phase22_cleanup_boundary.py`:681 — keyword `legacy`
+- `tools/scripts/verify_phase22_cleanup_boundary.py`:689 — keyword `legacy`
+- `tools/scripts/verify_phase22_cleanup_boundary.py`:690 — keyword `legacy`
+- `tools/scripts/verify_phase22_cleanup_boundary.py`:692 — keyword `legacy`
+- `tools/scripts/verify_phase22_cleanup_boundary.py`:723 — keyword `legacy`
+- `tools/scripts/verify_phase22_cleanup_boundary.py`:729 — keyword `legacy`
+- `tools/scripts/verify_phase22_cleanup_boundary.py`:732 — keyword `compat` — documented compatibility contract
+- `tools/scripts/verify_phase22_cleanup_boundary.py`:733 — keyword `compat` — documented compatibility contract
+- `tools/scripts/verify_phase22_cleanup_boundary.py`:735 — keyword `compat` — documented compatibility contract
+- `tools/scripts/verify_phase22_cleanup_boundary.py`:736 — keyword `compat` — documented compatibility contract
+- `tools/scripts/verify_phase22_cleanup_boundary.py`:737 — keyword `compat` — documented compatibility contract
+- `tools/scripts/verify_phase22_cleanup_boundary.py`:744 — keyword `compat` — documented compatibility contract
+- `tools/scripts/verify_phase22_cleanup_boundary.py`:748 — keyword `compat` — documented compatibility contract
+- `tools/scripts/verify_phase22_cleanup_boundary.py`:752 — keyword `legacy`
+- `tools/scripts/verify_phase22_cleanup_boundary.py`:755 — keyword `compat` — documented compatibility contract
+- `tools/scripts/verify_phase22_cleanup_boundary.py`:756 — keyword `legacy`
+- `tools/scripts/verify_phase22_cleanup_boundary.py`:767 — keyword `compat` — documented compatibility contract
+- `tools/scripts/verify_phase22_cleanup_boundary.py`:771 — keyword `compat` — documented compatibility contract
+- `tools/scripts/verify_phase22_cleanup_boundary.py`:773 — keyword `compat` — documented compatibility contract
+- `tools/scripts/verify_phase22_cleanup_boundary.py`:777 — keyword `compat` — documented compatibility contract
+- `tools/scripts/verify_phase22_cleanup_boundary.py`:780 — keyword `legacy`
+- `tools/scripts/verify_phase22_cleanup_boundary.py`:781 — keyword `legacy`
+- `tools/scripts/verify_phase22_cleanup_boundary.py`:783 — keyword `legacy`
+- `tools/scripts/verify_phase22_cleanup_boundary.py`:784 — keyword `legacy`
+- `tools/scripts/verify_phase22_cleanup_boundary.py`:785 — keyword `legacy`
+- `tools/scripts/verify_phase22_cleanup_boundary.py`:786 — keyword `legacy`
+- `tools/scripts/verify_phase22_cleanup_boundary.py`:787 — keyword `legacy`
+- `tools/scripts/verify_phase22_cleanup_boundary.py`:788 — keyword `legacy`
+- `tools/scripts/verify_phase22_cleanup_boundary.py`:790 — keyword `compat` — documented compatibility contract
+- `tools/scripts/verify_phase22_cleanup_boundary.py`:791 — keyword `legacy`
+- `tools/scripts/verify_phase22_cleanup_boundary.py`:792 — keyword `rollback`
+- `tools/scripts/verify_phase22_cleanup_boundary.py`:793 — keyword `legacy`
+- `tools/scripts/verify_phase22_cleanup_boundary.py`:794 — keyword `legacy`
+- `tools/scripts/verify_phase22_cleanup_boundary.py`:795 — keyword `legacy`
+- `tools/scripts/verify_phase22_cleanup_boundary.py`:796 — keyword `legacy`
+- `tools/scripts/verify_phase22_cleanup_boundary.py`:799 — keyword `zuno.schema`
+- `tools/scripts/verify_phase22_cleanup_boundary.py`:800 — keyword `zuno.schema`
+- `tools/scripts/verify_phase22_cleanup_boundary.py`:805 — keyword `zuno.database`
+- `tools/scripts/verify_phase22_cleanup_boundary.py`:806 — keyword `zuno.database`
+- `tools/scripts/verify_phase22_cleanup_boundary.py`:811 — keyword `zuno.schema`
+- `tools/scripts/verify_phase22_cleanup_boundary.py`:812 — keyword `zuno.schema`
+- `tools/scripts/verify_phase22_cleanup_boundary.py`:813 — keyword `zuno.core`
+- `tools/scripts/verify_phase22_cleanup_boundary.py`:814 — keyword `zuno.core`
+- `tools/scripts/verify_phase22_cleanup_boundary.py`:815 — keyword `zuno.services`
+- `tools/scripts/verify_phase22_cleanup_boundary.py`:816 — keyword `zuno.services`
+- `tools/scripts/verify_phase22_cleanup_boundary.py`:817 — keyword `zuno.database`
+- `tools/scripts/verify_phase22_cleanup_boundary.py`:818 — keyword `zuno.database`
+- `tools/scripts/verify_phase22_cleanup_boundary.py`:819 — keyword `zuno.database`
+- `tools/scripts/verify_phase22_cleanup_boundary.py`:820 — keyword `zuno.tools`
+- `tools/scripts/verify_phase22_cleanup_boundary.py`:821 — keyword `zuno.tools`
+- `tools/scripts/verify_phase22_cleanup_boundary.py`:822 — keyword `zuno.utils`
+- `tools/scripts/verify_phase22_cleanup_boundary.py`:823 — keyword `zuno.utils`
+- `tools/scripts/verify_phase22_cleanup_boundary.py`:824 — keyword `zuno.resources`
+- `tools/scripts/verify_phase22_cleanup_boundary.py`:825 — keyword `zuno.resources`
+- `tools/scripts/verify_phase22_cleanup_boundary.py`:1040 — keyword `legacy`
+- `tools/scripts/verify_phase22_cleanup_boundary.py`:1043 — keyword `zuno.tools`
+- `tools/scripts/verify_phase22_cleanup_boundary.py`:1044 — keyword `legacy`
+- `tools/scripts/verify_phase22_final_legacy_cutover.py`:1 — keyword `legacy`
+- `tools/scripts/verify_phase22_final_legacy_cutover.py`:3 — keyword `legacy`
+- `tools/scripts/verify_phase22_final_legacy_cutover.py`:21 — keyword `legacy`
+- `tools/scripts/verify_phase22_final_legacy_cutover.py`:26 — keyword `legacy`
+- `tools/scripts/verify_phase22_final_legacy_cutover.py`:70 — keyword `legacy`
+- `tools/scripts/verify_phase22_final_legacy_cutover.py`:71 — keyword `zuno.core`
+- `tools/scripts/verify_phase22_final_legacy_cutover.py`:72 — keyword `zuno.tools`
+- `tools/scripts/verify_phase22_final_legacy_cutover.py`:73 — keyword `zuno.utils`
+- `tools/scripts/verify_phase22_final_legacy_cutover.py`:76 — keyword `legacy`
+- `tools/scripts/verify_phase22_final_legacy_cutover.py`:77 — keyword `legacy`
+- `tools/scripts/verify_phase22_final_legacy_cutover.py`:80 — keyword `compat` — documented compatibility contract
+- `tools/scripts/verify_phase22_final_legacy_cutover.py`:81 — keyword `legacy`
+- `tools/scripts/verify_phase22_final_legacy_cutover.py`:82 — keyword `legacy`
+- `tools/scripts/verify_phase22_final_legacy_cutover.py`:86 — keyword `legacy`
+- `tools/scripts/verify_phase22_final_legacy_cutover.py`:87 — keyword `rollback`
+- `tools/scripts/verify_phase22_final_legacy_cutover.py`:92 — keyword `fallback`
+- `tools/scripts/verify_phase22_final_legacy_cutover.py`:93 — keyword `legacy`
+- `tools/scripts/verify_phase22_final_legacy_cutover.py`:94 — keyword `compat`
+- `tools/scripts/verify_phase22_final_legacy_cutover.py`:106 — keyword `legacy`
+- `tools/scripts/verify_phase22_final_legacy_cutover.py`:151 — keyword `legacy`
+- `tools/scripts/verify_phase22_final_legacy_cutover.py`:160 — keyword `legacy`
+- `tools/scripts/verify_phase22_final_legacy_cutover.py`:317 — keyword `legacy`
+- `tools/scripts/verify_phase22_final_legacy_cutover.py`:318 — keyword `legacy`
+- `tools/scripts/verify_phase22_final_legacy_cutover.py`:319 — keyword `legacy`
+- `tools/scripts/verify_phase22_final_legacy_cutover.py`:355 — keyword `legacy`
+- `tools/scripts/verify_phase22_final_legacy_cutover.py`:358 — keyword `legacy`
+- `tools/scripts/verify_phase22_final_legacy_cutover.py`:367 — keyword `legacy`
+- `tools/scripts/verify_phase22_final_legacy_cutover.py`:373 — keyword `legacy`
+- `tools/scripts/verify_phase22_final_legacy_cutover.py`:377 — keyword `legacy`
+- `tools/scripts/verify_phase22_final_legacy_cutover.py`:386 — keyword `legacy`
+- `tools/scripts/verify_phase22_final_legacy_cutover.py`:397 — keyword `legacy`
+- `tools/scripts/verify_phase22_final_legacy_cutover.py`:400 — keyword `legacy`
+- `tools/scripts/verify_phase22_final_legacy_cutover.py`:408 — keyword `legacy`
+- `tools/scripts/verify_phase22_final_legacy_cutover.py`:410 — keyword `legacy`
+- `tools/scripts/verify_phase22_final_legacy_cutover.py`:416 — keyword `legacy`
+- `tools/scripts/verify_phase22_final_legacy_cutover.py`:419 — keyword `legacy`
+- `tools/scripts/verify_phase22_final_legacy_cutover.py`:427 — keyword `legacy`
+- `tools/scripts/verify_phase22_final_legacy_cutover.py`:429 — keyword `legacy`
+- `tools/scripts/verify_phase22_final_legacy_cutover.py`:445 — keyword `legacy`
+- `tools/scripts/verify_phase22_final_legacy_cutover.py`:448 — keyword `legacy`
+- `tools/scripts/verify_phase22_final_legacy_cutover.py`:456 — keyword `legacy`
+- `tools/scripts/verify_phase22_final_legacy_cutover.py`:458 — keyword `legacy`
+- `tools/scripts/verify_phase22_final_legacy_cutover.py`:478 — keyword `legacy`
+- `tools/scripts/verify_phase22_final_legacy_cutover.py`:483 — keyword `legacy`
+- `tools/scripts/verify_phase22_final_legacy_cutover.py`:497 — keyword `legacy`
+- `tools/scripts/verify_phase22_final_legacy_cutover.py`:499 — keyword `legacy`
+- `tools/scripts/verify_phase22_final_legacy_cutover.py`:504 — keyword `legacy`
+- `tools/scripts/verify_phase22_final_legacy_cutover.py`:507 — keyword `fallback`
+- `tools/scripts/verify_phase22_final_legacy_cutover.py`:508 — keyword `fallback`
+- `tools/scripts/verify_phase22_final_legacy_cutover.py`:509 — keyword `legacy`
+- `tools/scripts/verify_phase22_final_legacy_cutover.py`:513 — keyword `legacy`
+- `tools/scripts/verify_phase22_final_legacy_cutover.py`:516 — keyword `legacy`
+- `tools/scripts/verify_phase22_final_legacy_cutover.py`:521 — keyword `legacy`
+- `tools/scripts/verify_phase22_final_legacy_cutover.py`:524 — keyword `fallback`
+- `tools/scripts/verify_phase22_final_legacy_cutover.py`:525 — keyword `fallback`
+- `tools/scripts/verify_phase22_final_legacy_cutover.py`:526 — keyword `legacy`
+- `tools/scripts/verify_phase22_final_legacy_cutover.py`:531 — keyword `legacy`
+- `tools/scripts/verify_phase22_final_legacy_cutover.py`:536 — keyword `legacy`
+- `tools/scripts/verify_phase22_final_legacy_cutover.py`:545 — keyword `legacy`
+- `tools/scripts/verify_phase22_final_legacy_cutover.py`:549 — keyword `legacy`
+- `tools/scripts/verify_phase22_final_legacy_cutover.py`:552 — keyword `legacy`
+- `tools/scripts/verify_phase22_final_legacy_cutover.py`:553 — keyword `legacy`
+- `tools/scripts/verify_phase22_final_legacy_cutover.py`:554 — keyword `legacy`
+- `tools/scripts/verify_phase22_final_legacy_cutover.py`:557 — keyword `legacy`
+- `tools/scripts/verify_phase22_final_legacy_cutover.py`:560 — keyword `legacy`
+- `tools/scripts/verify_phase22_final_legacy_cutover.py`:564 — keyword `legacy`
+- `tools/scripts/verify_phase22_final_legacy_cutover.py`:567 — keyword `legacy`
+- `tools/scripts/verify_phase22_final_legacy_cutover.py`:568 — keyword `legacy`
+- `tools/scripts/verify_phase22_final_legacy_cutover.py`:569 — keyword `legacy`
+- `tools/scripts/verify_phase22_final_legacy_cutover.py`:583 — keyword `legacy`
+- `tools/scripts/verify_phase22_final_legacy_cutover.py`:589 — keyword `legacy`
+- `tools/scripts/verify_phase22_final_legacy_cutover.py`:600 — keyword `legacy`
+- `tools/scripts/verify_phase22_final_legacy_cutover.py`:606 — keyword `legacy`
+- `tools/scripts/verify_phase22_final_legacy_cutover.py`:616 — keyword `rollback`
+- `tools/scripts/verify_phase22_final_legacy_cutover.py`:619 — keyword `legacy`
+- `tools/scripts/verify_phase22_final_legacy_cutover.py`:620 — keyword `legacy`
+- `tools/scripts/verify_phase22_final_legacy_cutover.py`:621 — keyword `legacy`
+- `tools/scripts/verify_phase22_final_legacy_cutover.py`:622 — keyword `legacy`
+- `tools/scripts/verify_phase22_final_legacy_cutover.py`:664 — keyword `legacy`
+- `tools/scripts/verify_phase22_final_legacy_cutover.py`:672 — keyword `legacy`
+- `tools/scripts/verify_phase22_final_legacy_cutover.py`:674 — keyword `legacy`
+- `tools/scripts/verify_phase22_final_legacy_cutover.py`:678 — keyword `legacy`
+- `tools/scripts/verify_phase22_final_legacy_cutover.py`:679 — keyword `legacy`
+- `tools/scripts/verify_phase22_final_legacy_cutover.py`:680 — keyword `legacy`
+- `tools/scripts/verify_phase22_final_legacy_cutover.py`:681 — keyword `legacy`
+- `tools/scripts/verify_phase22_final_legacy_cutover.py`:682 — keyword `legacy`
+- `tools/scripts/verify_phase22_final_legacy_cutover.py`:683 — keyword `legacy`
+- `tools/scripts/verify_phase22_final_legacy_cutover.py`:703 — keyword `legacy`
+- `tools/scripts/verify_phase22_final_legacy_cutover.py`:712 — keyword `legacy`
+- `tools/scripts/verify_phase22_final_legacy_cutover.py`:714 — keyword `legacy`
+- `tools/scripts/verify_phase22_final_legacy_cutover.py`:718 — keyword `legacy`
+- `tools/scripts/verify_phase22_final_legacy_cutover.py`:721 — keyword `legacy`
+- `tools/scripts/verify_phase22_final_legacy_cutover.py`:722 — keyword `legacy`
+- `tools/scripts/verify_phase22_final_legacy_cutover.py`:723 — keyword `legacy`
+- `tools/scripts/verify_phase22_final_legacy_cutover.py`:797 — keyword `legacy`
+- `tools/scripts/verify_phase22_final_legacy_cutover.py`:813 — keyword `rollback`
+- `tools/scripts/verify_phase22_final_legacy_cutover.py`:846 — keyword `rollback`
+- `tools/scripts/verify_phase22_final_legacy_cutover.py`:860 — keyword `legacy`
+- `tools/scripts/verify_phase22_final_legacy_cutover.py`:863 — keyword `rollback`
+- `tools/scripts/verify_phase22_final_legacy_cutover.py`:865 — keyword `rollback`
+- `tools/scripts/verify_phase22_final_legacy_cutover.py`:871 — keyword `rollback`
+- `tools/scripts/verify_phase22_final_legacy_cutover.py`:874 — keyword `rollback`
+- `tools/scripts/verify_phase22_final_legacy_cutover.py`:875 — keyword `rollback`
+- `tools/scripts/verify_phase22_final_legacy_cutover.py`:876 — keyword `legacy`
+- `tools/scripts/verify_phase22_final_legacy_cutover.py`:934 — keyword `legacy`
+- `tools/scripts/verify_phase22_final_legacy_cutover.py`:939 — keyword `legacy`
+- `tools/scripts/verify_phase22_final_legacy_cutover.py`:940 — keyword `legacy`
+- `tools/scripts/verify_phase22_final_legacy_cutover.py`:941 — keyword `legacy`
+- `tools/scripts/verify_phase22_final_legacy_cutover.py`:943 — keyword `legacy`
+- `tools/scripts/verify_phase22_final_legacy_cutover.py`:945 — keyword `legacy`
+- `tools/scripts/verify_phase22_final_legacy_cutover.py`:949 — keyword `legacy`
+- `tools/scripts/verify_phase22_final_legacy_cutover.py`:1002 — keyword `compat`
+- `tools/scripts/verify_phase22_final_legacy_cutover.py`:1015 — keyword `rollback`
+- `tools/scripts/verify_phase22_final_legacy_cutover.py`:1016 — keyword `legacy`
+- `tools/scripts/verify_phase22_final_legacy_cutover.py`:1021 — keyword `legacy`
+- `tools/scripts/verify_phase22_final_legacy_cutover.py`:1023 — keyword `legacy`
+- `tools/scripts/verify_phase22_final_legacy_cutover.py`:1026 — keyword `legacy`
+- `tools/scripts/verify_phase22_final_legacy_cutover.py`:1027 — keyword `legacy`
+- `tools/scripts/verify_phase22_final_legacy_cutover.py`:1030 — keyword `legacy`
+- `tools/scripts/verify_phase22_final_legacy_cutover.py`:1031 — keyword `legacy`
+- `tools/scripts/verify_phase22_final_legacy_cutover.py`:1032 — keyword `legacy`
+- `tools/scripts/verify_phase22_final_legacy_cutover.py`:1037 — keyword `legacy`
+- `tools/scripts/verify_phase22_final_legacy_cutover.py`:1039 — keyword `legacy`
+- `tools/scripts/verify_phase22_final_legacy_cutover.py`:1042 — keyword `legacy`
+- `tools/scripts/verify_phase22_final_legacy_cutover.py`:1043 — keyword `legacy`
+- `tools/scripts/verify_phase22_final_legacy_cutover.py`:1046 — keyword `legacy`
+- `tools/scripts/verify_phase22_final_legacy_cutover.py`:1047 — keyword `legacy`
+- `tools/scripts/verify_phase22_final_legacy_cutover.py`:1048 — keyword `legacy`
+- `tools/scripts/verify_phase22_final_legacy_cutover.py`:1053 — keyword `legacy`
+- `tools/scripts/verify_phase22_final_legacy_cutover.py`:1055 — keyword `legacy`
+- `tools/scripts/verify_phase22_final_legacy_cutover.py`:1058 — keyword `legacy`
+- `tools/scripts/verify_phase22_final_legacy_cutover.py`:1059 — keyword `legacy`
+- `tools/scripts/verify_phase22_final_legacy_cutover.py`:1062 — keyword `legacy`
+- `tools/scripts/verify_phase22_final_legacy_cutover.py`:1063 — keyword `legacy`
+- `tools/scripts/verify_phase22_final_legacy_cutover.py`:1064 — keyword `legacy`
+- `tools/scripts/verify_phase22_final_legacy_cutover.py`:1113 — keyword `legacy`
+- `tools/scripts/verify_phase22_final_legacy_cutover.py`:1123 — keyword `legacy`
+- `tools/scripts/verify_phase22_final_legacy_cutover.py`:1129 — keyword `legacy`
+- `tools/scripts/verify_phase22_final_legacy_cutover.py`:1132 — keyword `legacy`
+- `tools/scripts/verify_phase22_final_legacy_cutover.py`:1136 — keyword `legacy`
+- `tools/scripts/verify_phase22_final_legacy_cutover.py`:1147 — keyword `legacy`
+- `tools/scripts/verify_phase22_final_legacy_cutover.py`:1185 — keyword `legacy`
+- `tools/scripts/verify_phase22_final_legacy_cutover.py`:1197 — keyword `legacy`
+- `tools/scripts/verify_phase22_final_legacy_cutover.py`:1216 — keyword `legacy`
+- `tools/scripts/verify_phase22_final_legacy_cutover.py`:1218 — keyword `legacy`
+- `tools/scripts/verify_phase22_nonbackend_legacy_surface.py`:2 — keyword `legacy`
+- `tools/scripts/verify_phase22_nonbackend_legacy_surface.py`:6 — keyword `legacy`
+- `tools/scripts/verify_phase22_nonbackend_legacy_surface.py`:20 — keyword `compat`
+- `tools/scripts/verify_phase22_nonbackend_legacy_surface.py`:105 — keyword `legacy`
+- `tools/scripts/verify_phase22_nonbackend_legacy_surface.py`:117 — keyword `legacy`
+- `tools/scripts/verify_phase22_nonbackend_legacy_surface.py`:118 — keyword `rollback`
+- `tools/scripts/verify_phase22_nonbackend_legacy_surface.py`:119 — keyword `fallback`
+- `tools/scripts/verify_phase22_nonbackend_legacy_surface.py`:120 — keyword `compat`
+- `tools/scripts/verify_phase22_nonbackend_legacy_surface.py`:121 — keyword `deprecated`
+- `tools/scripts/verify_phase22_nonbackend_legacy_surface.py`:122 — keyword `old_`
+- `tools/scripts/verify_phase22_nonbackend_legacy_surface.py`:126 — keyword `GeneralAgent`
+- `tools/scripts/verify_phase22_nonbackend_legacy_surface.py`:129 — keyword `legacy`
+- `tools/scripts/verify_phase22_nonbackend_legacy_surface.py`:130 — keyword `zuno.core`
+- `tools/scripts/verify_phase22_nonbackend_legacy_surface.py`:131 — keyword `zuno.services`
+- `tools/scripts/verify_phase22_nonbackend_legacy_surface.py`:132 — keyword `zuno.schema`
+- `tools/scripts/verify_phase22_nonbackend_legacy_surface.py`:133 — keyword `zuno.database`
+- `tools/scripts/verify_phase22_nonbackend_legacy_surface.py`:134 — keyword `zuno.tools`
+- `tools/scripts/verify_phase22_nonbackend_legacy_surface.py`:135 — keyword `zuno.resources`
+- `tools/scripts/verify_phase22_nonbackend_legacy_surface.py`:136 — keyword `zuno.utils`
+- `tools/scripts/verify_phase22_nonbackend_legacy_surface.py`:185 — keyword `legacy`
+- `tools/scripts/verify_phase22_nonbackend_legacy_surface.py`:186 — keyword `legacy`
+- `tools/scripts/verify_phase22_nonbackend_legacy_surface.py`:188 — keyword `legacy`
+- `tools/scripts/verify_phase22_nonbackend_legacy_surface.py`:214 — keyword `fallback` — standard env-var fallback helper name
+- `tools/scripts/verify_phase22_nonbackend_legacy_surface.py`:216 — keyword `fallback`
+- `tools/scripts/verify_phase22_nonbackend_legacy_surface.py`:217 — keyword `fallback`
+- `tools/scripts/verify_phase22_nonbackend_legacy_surface.py`:223 — keyword `legacy` — third-party codemirror language pack
+- `tools/scripts/verify_phase22_nonbackend_legacy_surface.py`:231 — keyword `rollback`
+- `tools/scripts/verify_phase22_nonbackend_legacy_surface.py`:232 — keyword `rollback`
+- `tools/scripts/verify_phase22_nonbackend_legacy_surface.py`:235 — keyword `rollback`
+- `tools/scripts/verify_phase22_nonbackend_legacy_surface.py`:236 — keyword `rollback`
+- `tools/scripts/verify_phase22_nonbackend_legacy_surface.py`:241 — keyword `legacy`
+- `tools/scripts/verify_phase22_nonbackend_legacy_surface.py`:242 — keyword `legacy`
+- `tools/scripts/verify_phase22_nonbackend_legacy_surface.py`:251 — keyword `fallback`
+- `tools/scripts/verify_phase22_nonbackend_legacy_surface.py`:252 — keyword `fallback` — standard env-var fallback helper name
+- `tools/scripts/verify_phase22_nonbackend_legacy_surface.py`:253 — keyword `fallback` — standard env-var fallback helper
+- `tools/scripts/verify_phase22_nonbackend_legacy_surface.py`:256 — keyword `fallback`
+- `tools/scripts/verify_phase22_nonbackend_legacy_surface.py`:257 — keyword `fallback`
+- `tools/scripts/verify_phase22_nonbackend_legacy_surface.py`:258 — keyword `fallback` — documented fallback contract
+- `tools/scripts/verify_phase22_nonbackend_legacy_surface.py`:259 — keyword `fallback` — documented fallback contract
+- `tools/scripts/verify_phase22_nonbackend_legacy_surface.py`:260 — keyword `fallback` — documented fallback contract
+- `tools/scripts/verify_phase22_nonbackend_legacy_surface.py`:263 — keyword `fallback`
+- `tools/scripts/verify_phase22_nonbackend_legacy_surface.py`:264 — keyword `rollback`
+- `tools/scripts/verify_phase22_nonbackend_legacy_surface.py`:270 — keyword `compat`
+- `tools/scripts/verify_phase22_nonbackend_legacy_surface.py`:271 — keyword `compat` — documented compatibility contract
+- `tools/scripts/verify_phase22_nonbackend_legacy_surface.py`:272 — keyword `compat` — documented compatibility contract
+- `tools/scripts/verify_phase22_nonbackend_legacy_surface.py`:273 — keyword `compat` — documented compatibility contract
+- `tools/scripts/verify_phase22_nonbackend_legacy_surface.py`:276 — keyword `compat` — documented compatibility contract
+- `tools/scripts/verify_phase22_nonbackend_legacy_surface.py`:277 — keyword `old_`
+- `tools/scripts/verify_phase22_nonbackend_legacy_surface.py`:278 — keyword `old_`
+- `tools/scripts/verify_phase22_nonbackend_legacy_surface.py`:283 — keyword `deprecated`
+- `tools/scripts/verify_phase22_nonbackend_legacy_surface.py`:289 — keyword `deprecated`
+- `tools/scripts/verify_phase22_nonbackend_legacy_surface.py`:290 — keyword `deprecated`
+- `tools/scripts/verify_phase22_nonbackend_legacy_surface.py`:303 — keyword `zuno.core`
+- `tools/scripts/verify_phase22_nonbackend_legacy_surface.py`:304 — keyword `zuno.services`
+- `tools/scripts/verify_phase22_nonbackend_legacy_surface.py`:305 — keyword `zuno.schema`
+- `tools/scripts/verify_phase22_nonbackend_legacy_surface.py`:306 — keyword `zuno.database`
+- `tools/scripts/verify_phase22_nonbackend_legacy_surface.py`:307 — keyword `zuno.tools`
+- `tools/scripts/verify_phase22_nonbackend_legacy_surface.py`:308 — keyword `zuno.resources`
+- `tools/scripts/verify_phase22_nonbackend_legacy_surface.py`:309 — keyword `zuno.utils`
+- `tools/scripts/verify_phase22_nonbackend_legacy_surface.py`:310 — keyword `legacy`
+- `tools/scripts/verify_phase22_nonbackend_legacy_surface.py`:314 — keyword `zuno.core`
+- `tools/scripts/verify_phase22_nonbackend_legacy_surface.py`:315 — keyword `zuno.services`
+- `tools/scripts/verify_phase22_nonbackend_legacy_surface.py`:316 — keyword `zuno.schema`
+- `tools/scripts/verify_phase22_nonbackend_legacy_surface.py`:317 — keyword `zuno.database`
+- `tools/scripts/verify_phase22_nonbackend_legacy_surface.py`:318 — keyword `zuno.tools`
+- `tools/scripts/verify_phase22_nonbackend_legacy_surface.py`:319 — keyword `zuno.resources`
+- `tools/scripts/verify_phase22_nonbackend_legacy_surface.py`:320 — keyword `zuno.utils`
+- `tools/scripts/verify_phase22_nonbackend_legacy_surface.py`:323 — keyword `legacy`
+- `tools/scripts/verify_phase22_nonbackend_legacy_surface.py`:324 — keyword `GeneralAgent`
+- `tools/scripts/verify_phase22_nonbackend_legacy_surface.py`:329 — keyword `GeneralAgent`
+- `tools/scripts/verify_phase22_nonbackend_legacy_surface.py`:330 — keyword `GeneralAgent` — agent runtime owns the canonical general agent
+- `tools/scripts/verify_phase22_nonbackend_legacy_surface.py`:331 — keyword `GeneralAgent` — agent runtime owns the canonical general agent
+- `tools/scripts/verify_phase22_nonbackend_legacy_surface.py`:332 — keyword `GeneralAgent` — agent runtime owns the canonical general agent
+- `tools/scripts/verify_phase22_nonbackend_legacy_surface.py`:365 — keyword `rollback`
+- `tools/scripts/verify_phase22_nonbackend_legacy_surface.py`:381 — keyword `rollback`
+- `tools/scripts/verify_phase22_nonbackend_legacy_surface.py`:384 — keyword `rollback`
+- `tools/scripts/verify_phase22_nonbackend_legacy_surface.py`:393 — keyword `compat` — documented compatibility contract
+- `tools/scripts/verify_phase22_nonbackend_legacy_surface.py`:403 — keyword `rollback`
+- `tools/scripts/verify_phase22_nonbackend_legacy_surface.py`:408 — keyword `rollback`
+- `tools/scripts/verify_phase22_nonbackend_legacy_surface.py`:409 — keyword `rollback`
+- `tools/scripts/verify_phase22_nonbackend_legacy_surface.py`:413 — keyword `rollback`
+- `tools/scripts/verify_phase22_nonbackend_legacy_surface.py`:510 — keyword `legacy`
+- `tools/scripts/verify_phase22_nonbackend_legacy_surface.py`:587 — keyword `legacy`
+- `tools/scripts/verify_real_runtime_cutover.py`:56 — keyword `rollback`
+- `tools/scripts/verify_real_runtime_cutover.py`:132 — keyword `legacy`
+- `tools/scripts/verify_real_runtime_cutover.py`:133 — keyword `legacy`
+- `tools/scripts/verify_real_runtime_cutover.py`:135 — keyword `rollback`
+- `tools/scripts/verify_real_runtime_cutover.py`:136 — keyword `GeneralAgent`
+- `tools/scripts/verify_real_runtime_cutover.py`:137 — keyword `rollback`
+- `tools/scripts/verify_tool_execution_bypass.py`:10 — keyword `GeneralAgent`
+- `tools/scripts/verify_tool_execution_bypass.py`:17 — keyword `GeneralAgent`
+- `tools/scripts/verify_tool_execution_bypass.py`:41 — keyword `GeneralAgent`
+- `tools/scripts/verify_tool_runtime_batch.py`:173 — keyword `rollback`
+- `tools/scripts/verify_tool_runtime_batch.py`:208 — keyword `old_`
+- `tools/scripts/verify_tool_runtime_batch.py`:222 — keyword `legacy`
+- `tools/scripts/verify_tool_runtime_batch.py`:239 — keyword `old_` — versioned public adapter field
+- `tools/scripts/verify_tool_runtime_target_protocols.py`:57 — keyword `legacy`
+- `tools/scripts/verify_wave1_contract_freeze.py`:181 — keyword `legacy`
+- `tools/evals/zuno/contract_review_eval/contract_eval.jsonl`:1 — keyword `old_`
+- `tools/evals/zuno/contract_review_eval/README.md`:4 — keyword `compat` — documented compatibility contract
+- `tools/evals/zuno/contract_review_eval/run_contract_eval.py`:243 — keyword `old_` — versioned public adapter field
+- `tools/evals/zuno/contract_review_eval/run_contract_eval.py`:247 — keyword `old_`
+- `tools/evals/zuno/contract_review_eval/run_contract_eval.py`:294 — keyword `fallback` — documented fallback contract
+- `tools/evals/zuno/contract_review_eval/run_contract_eval.py`:429 — keyword `old_` — versioned public adapter field
+- `tools/evals/zuno/contract_review_eval/run_contract_eval.py`:520 — keyword `old_`
+- `tools/evals/zuno/contract_review_eval/run_contract_eval.py`:568 — keyword `legacy`
+- `tools/evals/zuno/multihop_eval/download_datasets.py`:39 — keyword `fallback`
+- `tools/evals/zuno/multihop_eval/download_datasets.py`:54 — keyword `fallback`
+- `tools/evals/zuno/multihop_eval/download_datasets.py`:79 — keyword `fallback`
+- `tools/evals/zuno/multihop_eval/download_datasets.py`:104 — keyword `fallback`
+- `tools/evals/zuno/multihop_eval/download_datasets.py`:106 — keyword `fallback`
+- `tools/evals/zuno/multihop_eval/download_datasets.py`:119 — keyword `fallback`
+- `tools/evals/zuno/multihop_eval/download_datasets.py`:123 — keyword `fallback`
+- `tools/evals/zuno/multihop_eval/download_datasets.py`:225 — keyword `fallback`
+- `tools/evals/zuno/multihop_eval/metrics.py`:18 — keyword `old_` — versioned public adapter field
+- `tools/evals/zuno/multihop_eval/metrics.py`:19 — keyword `old_`
+- `tools/evals/zuno/multihop_eval/metrics.py`:22 — keyword `old_` — versioned public adapter field
+- `tools/evals/zuno/multihop_eval/metrics.py`:23 — keyword `old_`
+- `tools/evals/zuno/multihop_eval/metrics.py`:25 — keyword `old_`
+- `tools/evals/zuno/multihop_eval/metrics.py`:34 — keyword `old_` — versioned public adapter field
+- `tools/evals/zuno/multihop_eval/metrics.py`:35 — keyword `old_` — versioned public adapter field
+- `tools/evals/zuno/multihop_eval/metrics.py`:38 — keyword `old_` — versioned public adapter field
+- `tools/evals/zuno/multihop_eval/metrics.py`:43 — keyword `old_` — versioned public adapter field
+- `tools/evals/zuno/multihop_eval/metrics.py`:44 — keyword `old_`
+- `tools/evals/zuno/multihop_eval/metrics.py`:46 — keyword `old_`
+- `tools/evals/zuno/multihop_eval/metrics.py`:69 — keyword `old_` — versioned public adapter field
+- `tools/evals/zuno/multihop_eval/metrics.py`:70 — keyword `old_`
+- `tools/evals/zuno/multihop_eval/metrics.py`:79 — keyword `old_` — versioned public adapter field
+- `tools/evals/zuno/multihop_eval/metrics.py`:82 — keyword `fallback` — standard env-var fallback helper
+- `tools/evals/zuno/multihop_eval/metrics.py`:85 — keyword `old_`
+- `tools/evals/zuno/multihop_eval/metrics.py`:87 — keyword `old_` — versioned public adapter field
+- `tools/evals/zuno/multihop_eval/metrics.py`:88 — keyword `old_` — versioned public adapter field
+- `tools/evals/zuno/multihop_eval/metrics.py`:96 — keyword `old_`
+- `tools/evals/zuno/multihop_eval/metrics.py`:101 — keyword `old_` — versioned public adapter field
+- `tools/evals/zuno/multihop_eval/metrics.py`:102 — keyword `old_` — versioned public adapter field
+- `tools/evals/zuno/multihop_eval/metrics.py`:103 — keyword `old_` — versioned public adapter field
+- `tools/evals/zuno/multihop_eval/metrics.py`:107 — keyword `old_` — versioned public adapter field
+- `tools/evals/zuno/multihop_eval/metrics.py`:108 — keyword `old_` — versioned public adapter field
+- `tools/evals/zuno/multihop_eval/metrics.py`:109 — keyword `old_` — versioned public adapter field
+- `tools/evals/zuno/multihop_eval/metrics.py`:110 — keyword `old_` — versioned public adapter field
+- `tools/evals/zuno/multihop_eval/metrics.py`:112 — keyword `fallback`
+- `tools/evals/zuno/multihop_eval/metrics.py`:123 — keyword `fallback`
+- `tools/evals/zuno/multihop_eval/metrics.py`:145 — keyword `fallback`
+- `tools/evals/zuno/multihop_eval/metrics.py`:146 — keyword `fallback`
+- `tools/evals/zuno/multihop_eval/README.md`:104 — keyword `old_`
+- `tools/evals/zuno/multihop_eval/README.md`:111 — keyword `old_`
+- `tools/evals/zuno/multihop_eval/README.md`:112 — keyword `old_`
+- `tools/evals/zuno/multihop_eval/README.md`:193 — keyword `old_`
+- `tools/evals/zuno/multihop_eval/README.md`:211 — keyword `fallback`
+- `tools/evals/zuno/multihop_eval/README.md`:216 — keyword `fallback`
+- `tools/evals/zuno/multihop_eval/README.md`:224 — keyword `legacy`
+- `tools/evals/zuno/multihop_eval/README.md`:232 — keyword `legacy`
+- `tools/evals/zuno/multihop_eval/README.md`:247 — keyword `deprecated`
+- `tools/evals/zuno/multihop_eval/README.md`:260 — keyword `deprecated`
+- `tools/evals/zuno/multihop_eval/README.md`:321 — keyword `fallback`
+- `tools/evals/zuno/multihop_eval/README.md`:354 — keyword `fallback`
+- `tools/evals/zuno/multihop_eval/README.md`:371 — keyword `fallback` — documented fallback contract
+- `tools/evals/zuno/multihop_eval/README.md`:373 — keyword `fallback`
+- `tools/evals/zuno/multihop_eval/run_multihop_eval.py`:99 — keyword `old_`
+- `tools/evals/zuno/multihop_eval/run_multihop_eval.py`:220 — keyword `old_`
+- `tools/evals/zuno/multihop_eval/run_multihop_eval.py`:221 — keyword `old_`
+- `tools/evals/zuno/multihop_eval/run_multihop_eval.py`:222 — keyword `old_`
+- `tools/evals/zuno/multihop_eval/run_multihop_eval.py`:223 — keyword `old_`
+- `tools/evals/zuno/multihop_eval/run_real_runtime_eval.py`:55 — keyword `legacy`
+- `tools/evals/zuno/multihop_eval/run_real_runtime_eval.py`:59 — keyword `deprecated`
+- `tools/evals/zuno/multihop_eval/run_real_runtime_eval.py`:68 — keyword `legacy`
+- `tools/evals/zuno/multihop_eval/run_real_runtime_eval.py`:72 — keyword `deprecated`
+- `tools/evals/zuno/multihop_eval/run_real_runtime_eval.py`:81 — keyword `legacy`
+- `tools/evals/zuno/multihop_eval/run_real_runtime_eval.py`:85 — keyword `deprecated`
+- `tools/evals/zuno/multihop_eval/run_real_runtime_eval.py`:94 — keyword `legacy`
+- `tools/evals/zuno/multihop_eval/run_real_runtime_eval.py`:98 — keyword `deprecated`
+- `tools/evals/zuno/multihop_eval/run_real_runtime_eval.py`:107 — keyword `legacy`
+- `tools/evals/zuno/multihop_eval/run_real_runtime_eval.py`:111 — keyword `deprecated`
+- `tools/evals/zuno/multihop_eval/run_real_runtime_eval.py`:120 — keyword `legacy`
+- `tools/evals/zuno/multihop_eval/run_real_runtime_eval.py`:124 — keyword `deprecated`
+- `tools/evals/zuno/multihop_eval/run_real_runtime_eval.py`:126 — keyword `deprecated`
+- `tools/evals/zuno/multihop_eval/run_real_runtime_eval.py`:133 — keyword `legacy`
+- `tools/evals/zuno/multihop_eval/run_real_runtime_eval.py`:137 — keyword `deprecated`
+- `tools/evals/zuno/multihop_eval/run_real_runtime_eval.py`:146 — keyword `legacy`
+- `tools/evals/zuno/multihop_eval/run_real_runtime_eval.py`:150 — keyword `deprecated`
+- `tools/evals/zuno/multihop_eval/run_real_runtime_eval.py`:324 — keyword `old_`
+- `tools/evals/zuno/multihop_eval/run_real_runtime_eval.py`:329 — keyword `old_` — versioned public adapter field
+- `tools/evals/zuno/multihop_eval/run_real_runtime_eval.py`:330 — keyword `old_`
+- `tools/evals/zuno/multihop_eval/run_real_runtime_eval.py`:333 — keyword `old_` — versioned public adapter field
+- `tools/evals/zuno/multihop_eval/run_real_runtime_eval.py`:334 — keyword `old_`
+- `tools/evals/zuno/multihop_eval/run_real_runtime_eval.py`:335 — keyword `old_`
+- `tools/evals/zuno/multihop_eval/run_real_runtime_eval.py`:380 — keyword `fallback` — standard env-var fallback helper
+- `tools/evals/zuno/multihop_eval/run_real_runtime_eval.py`:381 — keyword `fallback` — documented fallback contract
+- `tools/evals/zuno/multihop_eval/run_real_runtime_eval.py`:417 — keyword `fallback`
+- `tools/evals/zuno/multihop_eval/run_real_runtime_eval.py`:418 — keyword `fallback` — documented fallback contract
+- `tools/evals/zuno/multihop_eval/run_real_runtime_eval.py`:428 — keyword `fallback` — documented fallback contract
+- `tools/evals/zuno/multihop_eval/run_real_runtime_eval.py`:514 — keyword `old_` — versioned public adapter field
+- `tools/evals/zuno/multihop_eval/run_real_runtime_eval.py`:516 — keyword `fallback` — documented fallback contract
+- `tools/evals/zuno/multihop_eval/run_real_runtime_eval.py`:535 — keyword `fallback` — documented fallback contract
+- `tools/evals/zuno/multihop_eval/run_real_runtime_eval.py`:536 — keyword `fallback` — documented fallback contract
+- `tools/evals/zuno/multihop_eval/run_real_runtime_eval.py`:542 — keyword `fallback` — documented fallback contract
+- `tools/evals/zuno/multihop_eval/run_real_runtime_eval.py`:562 — keyword `fallback` — standard env-var fallback helper
+- `tools/evals/zuno/multihop_eval/run_real_runtime_eval.py`:565 — keyword `fallback`
+- `tools/evals/zuno/multihop_eval/run_real_runtime_eval.py`:566 — keyword `fallback` — documented fallback contract
+- `tools/evals/zuno/multihop_eval/run_real_runtime_eval.py`:573 — keyword `old_` — versioned public adapter field
+- `tools/evals/zuno/multihop_eval/run_real_runtime_eval.py`:576 — keyword `fallback`
+- `tools/evals/zuno/multihop_eval/run_real_runtime_eval.py`:583 — keyword `old_`
+- `tools/evals/zuno/multihop_eval/run_real_runtime_eval.py`:590 — keyword `fallback`
+- `tools/evals/zuno/multihop_eval/run_real_runtime_eval.py`:591 — keyword `fallback` — documented fallback contract
+- `tools/evals/zuno/multihop_eval/run_real_runtime_eval.py`:608 — keyword `deprecated`
+- `tools/evals/zuno/multihop_eval/run_real_runtime_eval.py`:620 — keyword `fallback`
+- `tools/evals/zuno/multihop_eval/run_real_runtime_eval.py`:674 — keyword `fallback`
+- `tools/evals/zuno/rag_eval/benchmark_preflight.py`:143 — keyword `old_`
+- `tools/evals/zuno/rag_eval/benchmark_preflight.py`:283 — keyword `old_`
+- `tools/evals/zuno/rag_eval/benchmark_preflight.py`:346 — keyword `old_` — versioned public adapter field
+- `tools/evals/zuno/rag_eval/benchmark_preflight.py`:980 — keyword `old_`
+- `tools/evals/zuno/rag_eval/benchmark_preflight.py`:1018 — keyword `old_` — versioned public adapter field
+- `tools/evals/zuno/rag_eval/benchmark_preflight.py`:1019 — keyword `old_`
+- `tools/evals/zuno/rag_eval/benchmark_preflight.py`:1250 — keyword `old_`
+- `tools/evals/zuno/rag_eval/benchmark_preflight.py`:1253 — keyword `old_`
+- `tools/evals/zuno/rag_eval/benchmark_preflight.py`:1254 — keyword `old_`
+- `tools/evals/zuno/rag_eval/build_mixed_tuning_manifest.py`:23 — keyword `old_`
+- `tools/evals/zuno/rag_eval/canonical_profile_runners.py`:11 — keyword `fallback`
+- `tools/evals/zuno/rag_eval/canonical_profile_runners.py`:112 — keyword `old_` — versioned public adapter field
+- `tools/evals/zuno/rag_eval/canonical_profile_runners.py`:113 — keyword `old_` — versioned public adapter field
+- `tools/evals/zuno/rag_eval/canonical_profile_runners.py`:157 — keyword `old_` — versioned public adapter field
+- `tools/evals/zuno/rag_eval/canonical_profile_runners.py`:158 — keyword `old_` — versioned public adapter field
+- `tools/evals/zuno/rag_eval/local_embedding_server.py`:192 — keyword `compat`
+- `tools/evals/zuno/rag_eval/metrics.py`:72 — keyword `old_` — versioned public adapter field
+- `tools/evals/zuno/rag_eval/metrics.py`:82 — keyword `old_`
+- `tools/evals/zuno/rag_eval/metrics.py`:87 — keyword `old_`
+- `tools/evals/zuno/rag_eval/metrics.py`:129 — keyword `old_` — versioned public adapter field
+- `tools/evals/zuno/rag_eval/metrics.py`:131 — keyword `old_`
+- `tools/evals/zuno/rag_eval/metrics.py`:134 — keyword `old_` — versioned public adapter field
+- `tools/evals/zuno/rag_eval/metrics.py`:139 — keyword `old_`
+- `tools/evals/zuno/rag_eval/metrics.py`:149 — keyword `old_`
+- `tools/evals/zuno/rag_eval/metrics.py`:158 — keyword `old_`
+- `tools/evals/zuno/rag_eval/metrics.py`:169 — keyword `old_`
+- `tools/evals/zuno/rag_eval/metrics.py`:199 — keyword `old_`
+- `tools/evals/zuno/rag_eval/profile_runners.py`:30 — keyword `old_` — versioned public adapter field
+- `tools/evals/zuno/rag_eval/profile_runners.py`:31 — keyword `old_` — versioned public adapter field
+- `tools/evals/zuno/rag_eval/profile_runners.py`:50 — keyword `old_` — versioned public adapter field
+- `tools/evals/zuno/rag_eval/profile_runners.py`:51 — keyword `old_` — versioned public adapter field
+- `tools/evals/zuno/rag_eval/profile_runners.py`:84 — keyword `old_`
+- `tools/evals/zuno/rag_eval/profile_runners.py`:85 — keyword `old_`
+- `tools/evals/zuno/rag_eval/profile_runners.py`:95 — keyword `old_`
+- `tools/evals/zuno/rag_eval/profile_runners.py`:113 — keyword `old_`
+- `tools/evals/zuno/rag_eval/profile_runners.py`:124 — keyword `old_`
+- `tools/evals/zuno/rag_eval/profile_runners.py`:144 — keyword `old_`
+- `tools/evals/zuno/rag_eval/profile_runners.py`:153 — keyword `old_`
+- `tools/evals/zuno/rag_eval/profile_runners.py`:172 — keyword `old_`
+- `tools/evals/zuno/rag_eval/profile_runners.py`:183 — keyword `old_`
+- `tools/evals/zuno/rag_eval/profile_runners.py`:197 — keyword `old_`
+- `tools/evals/zuno/rag_eval/profile_runners.py`:204 — keyword `old_` — versioned public adapter field
+- `tools/evals/zuno/rag_eval/profile_runners.py`:205 — keyword `old_` — versioned public adapter field
+- `tools/evals/zuno/rag_eval/profile_runtime_factory.py`:10 — keyword `fallback`
+- `tools/evals/zuno/rag_eval/profile_runtime_factory.py`:90 — keyword `fallback`
+- `tools/evals/zuno/rag_eval/public_enterprise_datasets.py`:153 — keyword `fallback` — standard env-var fallback helper
+- `tools/evals/zuno/rag_eval/public_enterprise_datasets.py`:155 — keyword `fallback`
+- `tools/evals/zuno/rag_eval/public_enterprise_datasets.py`:310 — keyword `old_` — versioned public adapter field
+- `tools/evals/zuno/rag_eval/public_enterprise_datasets.py`:320 — keyword `old_`
+- `tools/evals/zuno/rag_eval/public_enterprise_datasets.py`:344 — keyword `old_`
+- `tools/evals/zuno/rag_eval/public_enterprise_datasets.py`:345 — keyword `old_`
+- `tools/evals/zuno/rag_eval/public_enterprise_datasets.py`:422 — keyword `old_`
+- `tools/evals/zuno/rag_eval/public_enterprise_datasets.py`:649 — keyword `old_` — versioned public adapter field
+- `tools/evals/zuno/rag_eval/public_enterprise_datasets.py`:655 — keyword `old_`
+- `tools/evals/zuno/rag_eval/public_enterprise_datasets.py`:669 — keyword `old_`
+- `tools/evals/zuno/rag_eval/public_enterprise_datasets.py`:670 — keyword `old_`
+- `tools/evals/zuno/rag_eval/public_enterprise_datasets.py`:671 — keyword `old_`
+- `tools/evals/zuno/rag_eval/public_enterprise_datasets.py`:672 — keyword `old_`
+- `tools/evals/zuno/rag_eval/public_enterprise_datasets.py`:673 — keyword `old_`
+- `tools/evals/zuno/rag_eval/python_notes_eval.jsonl`:1 — keyword `old_`
+- `tools/evals/zuno/rag_eval/python_notes_eval.jsonl`:2 — keyword `old_`
+- `tools/evals/zuno/rag_eval/python_notes_eval.jsonl`:3 — keyword `old_`
+- `tools/evals/zuno/rag_eval/python_notes_eval.jsonl`:4 — keyword `old_`
+- `tools/evals/zuno/rag_eval/python_notes_eval.jsonl`:5 — keyword `old_`
+- `tools/evals/zuno/rag_eval/python_notes_eval.jsonl`:6 — keyword `old_`
+- `tools/evals/zuno/rag_eval/python_notes_eval.jsonl`:7 — keyword `old_`
+- `tools/evals/zuno/rag_eval/python_notes_eval.jsonl`:8 — keyword `old_`
+- `tools/evals/zuno/rag_eval/README.md`:44 — keyword `old_`
+- `tools/evals/zuno/rag_eval/README.md`:97 — keyword `fallback`
+- `tools/evals/zuno/rag_eval/README.md`:106 — keyword `old_`
+- `tools/evals/zuno/rag_eval/README.md`:255 — keyword `compat`
+- `tools/evals/zuno/rag_eval/README.md`:272 — keyword `compat`
+- `tools/evals/zuno/rag_eval/README.md`:316 — keyword `fallback`
+- `tools/evals/zuno/rag_eval/README.md`:399 — keyword `fallback`
+- `tools/evals/zuno/rag_eval/release_decision.py`:115 — keyword `fallback`
+- `tools/evals/zuno/rag_eval/release_decision.py`:127 — keyword `old_`
+- `tools/evals/zuno/rag_eval/release_decision.py`:128 — keyword `old_`
+- `tools/evals/zuno/rag_eval/release_decision.py`:153 — keyword `old_`
+- `tools/evals/zuno/rag_eval/release_decision.py`:154 — keyword `old_`
+- `tools/evals/zuno/rag_eval/release_decision.py`:483 — keyword `fallback`
+- `tools/evals/zuno/rag_eval/run_dry_run_benchmark.py`:21 — keyword `legacy`
+- `tools/evals/zuno/rag_eval/run_dry_run_benchmark.py`:42 — keyword `legacy`
+- `tools/evals/zuno/rag_eval/run_dry_run_benchmark.py`:62 — keyword `old_` — versioned public adapter field
+- `tools/evals/zuno/rag_eval/run_dry_run_benchmark.py`:63 — keyword `old_` — versioned public adapter field
+- `tools/evals/zuno/rag_eval/run_dry_run_benchmark.py`:122 — keyword `legacy`
+- `tools/evals/zuno/rag_eval/run_dry_run_benchmark.py`:123 — keyword `legacy`
+- `tools/evals/zuno/rag_eval/run_dry_run_benchmark.py`:129 — keyword `legacy`
+- `tools/evals/zuno/rag_eval/run_dry_run_benchmark.py`:130 — keyword `legacy`
+- `tools/evals/zuno/rag_eval/run_enterprise_rag_paired_benchmark.py`:99 — keyword `old_`
+- `tools/evals/zuno/rag_eval/run_enterprise_rag_paired_benchmark.py`:100 — keyword `old_`
+- `tools/evals/zuno/rag_eval/run_enterprise_rag_paired_benchmark.py`:202 — keyword `old_`
+- `tools/evals/zuno/rag_eval/run_enterprise_rag_paired_benchmark.py`:203 — keyword `old_`
+- `tools/evals/zuno/rag_eval/run_enterprise_rag_paired_benchmark.py`:283 — keyword `old_`
+- `tools/evals/zuno/rag_eval/run_enterprise_rag_paired_benchmark.py`:288 — keyword `old_`
+- `tools/evals/zuno/rag_eval/run_enterprise_rag_paired_benchmark.py`:403 — keyword `old_` — versioned public adapter field
+- `tools/evals/zuno/rag_eval/run_enterprise_rag_paired_benchmark.py`:404 — keyword `old_` — versioned public adapter field
+- `tools/evals/zuno/rag_eval/run_enterprise_rag_paired_benchmark.py`:449 — keyword `old_`
+- `tools/evals/zuno/rag_eval/run_enterprise_rag_paired_benchmark.py`:476 — keyword `old_`
+- `tools/evals/zuno/rag_eval/run_enterprise_rag_paired_benchmark.py`:477 — keyword `old_`
+- `tools/evals/zuno/rag_eval/run_enterprise_rag_paired_benchmark.py`:478 — keyword `old_`
+- `tools/evals/zuno/rag_eval/run_enterprise_rag_paired_benchmark.py`:519 — keyword `old_`
+- `tools/evals/zuno/rag_eval/run_enterprise_rag_paired_benchmark.py`:520 — keyword `old_`
+- `tools/evals/zuno/rag_eval/run_enterprise_rag_paired_benchmark.py`:873 — keyword `fallback` — documented fallback contract
+- `tools/evals/zuno/rag_eval/run_enterprise_rag_paired_benchmark.py`:985 — keyword `old_`
+- `tools/evals/zuno/rag_eval/run_enterprise_rag_paired_benchmark.py`:988 — keyword `old_`
+- `tools/evals/zuno/rag_eval/run_enterprise_rag_paired_benchmark.py`:995 — keyword `old_`
+- `tools/evals/zuno/rag_eval/run_enterprise_rag_paired_benchmark.py`:1133 — keyword `old_`
+- `tools/evals/zuno/rag_eval/run_enterprise_rag_paired_benchmark.py`:1135 — keyword `old_`
+- `tools/evals/zuno/rag_eval/run_enterprise_rag_paired_benchmark.py`:1136 — keyword `old_`
+- `tools/evals/zuno/rag_eval/run_enterprise_rag_paired_benchmark.py`:1138 — keyword `old_`
+- `tools/evals/zuno/rag_eval/run_enterprise_rag_paired_benchmark.py`:1140 — keyword `old_`
+- `tools/evals/zuno/rag_eval/run_enterprise_rag_paired_benchmark.py`:1150 — keyword `old_`
+- `tools/evals/zuno/rag_eval/run_enterprise_rag_paired_benchmark.py`:1161 — keyword `old_`
+- `tools/evals/zuno/rag_eval/run_enterprise_rag_paired_benchmark.py`:1166 — keyword `old_` — versioned public adapter field
+- `tools/evals/zuno/rag_eval/run_enterprise_rag_paired_benchmark.py`:1167 — keyword `old_` — versioned public adapter field
+- `tools/evals/zuno/rag_eval/run_enterprise_rag_paired_benchmark.py`:1168 — keyword `old_` — versioned public adapter field
+- `tools/evals/zuno/rag_eval/run_enterprise_rag_paired_benchmark.py`:1169 — keyword `old_`
+- `tools/evals/zuno/rag_eval/run_enterprise_rag_paired_benchmark.py`:1170 — keyword `old_` — versioned public adapter field
+- `tools/evals/zuno/rag_eval/run_enterprise_rag_paired_benchmark.py`:1171 — keyword `old_`
+- `tools/evals/zuno/rag_eval/run_enterprise_rag_paired_benchmark.py`:1320 — keyword `old_`
+- `tools/evals/zuno/rag_eval/run_enterprise_rag_paired_benchmark.py`:1326 — keyword `old_`
+- `tools/evals/zuno/rag_eval/run_enterprise_rag_paired_benchmark.py`:1332 — keyword `old_`
+- `tools/evals/zuno/rag_eval/run_enterprise_rag_paired_benchmark.py`:1338 — keyword `old_`
+- `tools/evals/zuno/rag_eval/run_enterprise_rag_paired_benchmark.py`:1364 — keyword `old_`
+- `tools/evals/zuno/rag_eval/run_enterprise_rag_paired_benchmark.py`:1398 — keyword `old_`
+- `tools/evals/zuno/rag_eval/run_enterprise_rag_paired_benchmark.py`:1412 — keyword `old_`
+- `tools/evals/zuno/rag_eval/run_enterprise_rag_paired_benchmark.py`:1802 — keyword `old_`
+- `tools/evals/zuno/rag_eval/run_enterprise_rag_paired_benchmark.py`:1825 — keyword `old_` — versioned public adapter field
+- `tools/evals/zuno/rag_eval/run_enterprise_rag_paired_benchmark.py`:1849 — keyword `old_` — versioned public adapter field
+- `tools/evals/zuno/rag_eval/run_enterprise_rag_paired_benchmark.py`:1850 — keyword `old_` — versioned public adapter field
+- `tools/evals/zuno/rag_eval/run_enterprise_rag_paired_benchmark.py`:1923 — keyword `old_`
+- `tools/evals/zuno/rag_eval/run_enterprise_rag_paired_benchmark.py`:1989 — keyword `old_` — versioned public adapter field
+- `tools/evals/zuno/rag_eval/run_enterprise_rag_paired_benchmark.py`:2031 — keyword `old_`
+- `tools/evals/zuno/rag_eval/run_enterprise_rag_paired_benchmark.py`:2185 — keyword `old_` — versioned public adapter field
+- `tools/evals/zuno/rag_eval/run_enterprise_rag_paired_benchmark.py`:2226 — keyword `old_` — versioned public adapter field
+- `tools/evals/zuno/rag_eval/run_enterprise_rag_paired_benchmark.py`:2246 — keyword `old_`
+- `tools/evals/zuno/rag_eval/run_enterprise_rag_paired_benchmark.py`:2352 — keyword `old_`
+- `tools/evals/zuno/rag_eval/run_enterprise_rag_paired_benchmark.py`:2498 — keyword `old_` — versioned public adapter field
+- `tools/evals/zuno/rag_eval/run_eval.py`:197 — keyword `fallback`
+- `tools/evals/zuno/rag_eval/run_eval.py`:1111 — keyword `fallback` — standard env-var fallback helper
+- `tools/evals/zuno/rag_eval/run_eval.py`:1112 — keyword `fallback`
+- `tools/evals/zuno/rag_eval/run_eval.py`:1113 — keyword `fallback`
+- `tools/evals/zuno/rag_eval/run_eval.py`:1114 — keyword `fallback`
+- `tools/evals/zuno/rag_eval/run_eval.py`:1235 — keyword `fallback` — standard env-var fallback helper
+- `tools/evals/zuno/rag_eval/run_eval.py`:1236 — keyword `fallback`
+- `tools/evals/zuno/rag_eval/run_eval.py`:1237 — keyword `fallback`
+- `tools/evals/zuno/rag_eval/run_eval.py`:1238 — keyword `fallback`
+- `tools/evals/zuno/rag_eval/run_eval.py`:1431 — keyword `fallback` — documented fallback contract
+- `tools/evals/zuno/rag_eval/run_local_embedding_eval.py`:81 — keyword `compat`
+- `tools/evals/zuno/rag_eval/run_local_embedding_eval.py`:304 — keyword `fallback`
+- `tools/evals/zuno/rag_eval/run_local_embedding_eval.py`:324 — keyword `fallback`
+- `tools/evals/zuno/rag_eval/run_local_embedding_eval.py`:338 — keyword `fallback`
+- `tools/evals/zuno/rag_eval/run_local_embedding_eval.py`:371 — keyword `fallback`
+- `tools/evals/zuno/rag_eval/run_local_embedding_eval.py`:382 — keyword `fallback`
+- `tools/evals/zuno/rag_eval/run_local_embedding_eval.py`:383 — keyword `fallback` — documented fallback contract
+- `tools/evals/zuno/rag_eval/run_local_embedding_eval.py`:462 — keyword `fallback` — documented fallback contract
+- `tools/evals/zuno/rag_eval/run_local_embedding_eval.py`:465 — keyword `fallback`
+- `tools/evals/zuno/rag_eval/run_local_embedding_eval.py`:471 — keyword `fallback`
+- `tools/evals/zuno/rag_eval/run_local_embedding_eval.py`:554 — keyword `fallback` — documented fallback contract
+- `tools/evals/zuno/rag_eval/run_phase22_preflight.py`:36 — keyword `fallback`
+- `tools/evals/zuno/rag_eval/run_stackless_compare_matrix.py`:44 — keyword `old_`
+- `tools/evals/zuno/rag_eval/run_stackless_compare_matrix.py`:179 — keyword `old_` — versioned public adapter field
+- `tools/evals/zuno/rag_eval/run_stackless_compare_matrix.py`:180 — keyword `old_` — versioned public adapter field
+- `tools/evals/zuno/rag_eval/run_stackless_compare_matrix.py`:199 — keyword `old_` — versioned public adapter field
+- `tools/evals/zuno/rag_eval/run_stackless_compare_matrix.py`:215 — keyword `old_` — versioned public adapter field
+- `tools/evals/zuno/rag_eval/run_stackless_compare_matrix.py`:237 — keyword `old_`
+- `tools/evals/zuno/rag_eval/run_stackless_compare_matrix.py`:280 — keyword `old_`
+- `tools/evals/zuno/rag_eval/run_stackless_compare_matrix.py`:354 — keyword `old_` — versioned public adapter field
+- `tools/evals/zuno/rag_eval/run_stackless_compare_matrix.py`:355 — keyword `old_` — versioned public adapter field
+- `tools/evals/zuno/rag_eval/run_stackless_local_eval.py`:60 — keyword `old_`
+- `tools/evals/zuno/rag_eval/run_stackless_local_eval.py`:289 — keyword `fallback`
+- `tools/evals/zuno/rag_eval/run_stackless_local_eval.py`:299 — keyword `compat`
+- `tools/evals/zuno/rag_eval/run_stackless_local_eval.py`:307 — keyword `old_` — versioned public adapter field
+- `tools/evals/zuno/rag_eval/run_stackless_local_eval.py`:310 — keyword `old_`
+- `tools/evals/zuno/rag_eval/run_stackless_local_eval.py`:322 — keyword `old_`
+- `tools/evals/zuno/rag_eval/run_stackless_local_eval.py`:342 — keyword `old_` — versioned public adapter field
+- `tools/evals/zuno/rag_eval/run_stackless_local_eval.py`:471 — keyword `old_` — versioned public adapter field
+- `tools/evals/zuno/rag_eval/run_stackless_local_eval.py`:494 — keyword `old_`
+- `tools/evals/zuno/rag_eval/run_stackless_local_eval.py`:546 — keyword `old_` — versioned public adapter field
+- `tools/evals/zuno/multihop_eval/adapters/common.py`:67 — keyword `old_`
+- `tools/evals/zuno/multihop_eval/adapters/common.py`:68 — keyword `old_`
+- `tools/evals/zuno/multihop_eval/adapters/common.py`:69 — keyword `old_`
+- `tools/evals/zuno/multihop_eval/adapters/musique.py`:41 — keyword `old_`
+- `tools/evals/zuno/multihop_eval/adapters/musique.py`:42 — keyword `old_`
+- `tools/evals/zuno/multihop_eval/adapters/musique.py`:43 — keyword `old_`
+- `tools/evals/zuno/multihop_eval/adapters/twowiki.py`:39 — keyword `old_`
+- `tools/evals/zuno/multihop_eval/adapters/twowiki.py`:40 — keyword `old_`
+- `tools/evals/zuno/multihop_eval/ingestion/build_corpus.py`:24 — keyword `old_`
+- `tools/evals/zuno/multihop_eval/ingestion/build_corpus.py`:26 — keyword `old_`
+- `tools/evals/zuno/multihop_eval/ingestion/build_corpus.py`:49 — keyword `old_` — versioned public adapter field
+- `tools/evals/zuno/multihop_eval/ingestion/build_corpus.py`:52 — keyword `old_` — versioned public adapter field
+- `tools/evals/zuno/multihop_eval/ingestion/build_corpus.py`:61 — keyword `old_`
+- `tools/evals/zuno/multihop_eval/ingestion/build_corpus.py`:62 — keyword `old_`
+- `tools/evals/zuno/multihop_eval/ingestion/build_corpus.py`:75 — keyword `old_` — versioned public adapter field
+- `tools/evals/zuno/multihop_eval/ingestion/build_corpus.py`:79 — keyword `old_`
+- `tools/evals/zuno/multihop_eval/ingestion/stackless_index.py`:46 — keyword `old_` — versioned public adapter field
+- `tools/evals/zuno/multihop_eval/ingestion/stackless_index.py`:47 — keyword `old_` — versioned public adapter field
+- `tools/evals/zuno/multihop_eval/ingestion/stackless_index.py`:50 — keyword `old_`
+- `tools/evals/zuno/multihop_eval/ingestion/stackless_index.py`:62 — keyword `old_` — versioned public adapter field
+- `tools/evals/zuno/multihop_eval/ingestion/stackless_index.py`:65 — keyword `old_` — versioned public adapter field
+- `tools/evals/zuno/multihop_eval/ingestion/stackless_index.py`:73 — keyword `old_`
+- `tools/evals/zuno/multihop_eval/sample_data/hotpotqa_sample.jsonl`:1 — keyword `old_`
+- `tools/evals/zuno/multihop_eval/sample_data/musique_sample.jsonl`:1 — keyword `old_`
+- `tools/evals/zuno/multihop_eval/sample_data/twowiki_sample.jsonl`:1 — keyword `old_`
+- `tools/evals/zuno/rag_eval/adapters/deep_agentic.py`:9 — keyword `fallback`
+- `tools/evals/zuno/rag_eval/configs/langsmith_experiment_config.yaml`:14 — keyword `old_`
+- `tools/evals/zuno/rag_eval/datasets/contract_review_graph_relation_small.jsonl`:1 — keyword `old_`
+- `tools/evals/zuno/rag_eval/datasets/contract_review_graph_relation_small.jsonl`:2 — keyword `old_`
+- `tools/evals/zuno/rag_eval/datasets/contract_review_graph_relation_small.jsonl`:3 — keyword `old_`
+- `tools/evals/zuno/rag_eval/datasets/contract_review_graph_relation_small.jsonl`:4 — keyword `old_`
+- `tools/evals/zuno/rag_eval/datasets/contract_review_graph_relation_small.jsonl`:5 — keyword `old_`
+- `tools/evals/zuno/rag_eval/datasets/contract_review_graph_relation_small.jsonl`:6 — keyword `old_`
+- `tools/evals/zuno/rag_eval/datasets/contract_review_graph_relation_small.jsonl`:7 — keyword `old_`
+- `tools/evals/zuno/rag_eval/datasets/contract_review_graph_relation_small.jsonl`:8 — keyword `old_`
+- `tools/evals/zuno/rag_eval/datasets/contract_review_graph_relation_small.jsonl`:9 — keyword `old_`
+- `tools/evals/zuno/rag_eval/datasets/contract_review_graph_relation_small.jsonl`:10 — keyword `old_`
+- `tools/evals/zuno/rag_eval/datasets/contract_review_graph_relation_small.jsonl`:11 — keyword `old_`
+- `tools/evals/zuno/rag_eval/datasets/contract_review_graph_relation_small.jsonl`:12 — keyword `old_`
+- `tools/evals/zuno/rag_eval/datasets/generate_candidate_pack.py`:36 — keyword `old_` — versioned public adapter field
+- `tools/evals/zuno/rag_eval/datasets/generate_candidate_pack.py`:37 — keyword `old_` — versioned public adapter field
+- `tools/evals/zuno/rag_eval/datasets/generate_candidate_pack.py`:39 — keyword `old_`
+- `tools/evals/zuno/rag_eval/datasets/generate_candidate_pack.py`:51 — keyword `old_`
+- `tools/evals/zuno/rag_eval/datasets/generate_candidate_pack.py`:52 — keyword `old_`
+- `tools/evals/zuno/rag_eval/datasets/generate_candidate_pack.py`:53 — keyword `old_`
+- `tools/evals/zuno/rag_eval/datasets/generate_candidate_pack.py`:54 — keyword `old_`
+- `tools/evals/zuno/rag_eval/datasets/generate_candidate_pack.py`:61 — keyword `old_`
+- `tools/evals/zuno/rag_eval/datasets/generate_candidate_pack.py`:83 — keyword `old_` — versioned public adapter field
+- `tools/evals/zuno/rag_eval/datasets/generate_candidate_pack.py`:84 — keyword `old_` — versioned public adapter field
+- `tools/evals/zuno/rag_eval/datasets/generate_candidate_pack.py`:87 — keyword `old_`
+- `tools/evals/zuno/rag_eval/datasets/generate_candidate_pack.py`:99 — keyword `old_`
+- `tools/evals/zuno/rag_eval/datasets/generate_candidate_pack.py`:100 — keyword `old_`
+- `tools/evals/zuno/rag_eval/datasets/generate_candidate_pack.py`:101 — keyword `old_`
+- `tools/evals/zuno/rag_eval/datasets/generate_candidate_pack.py`:102 — keyword `old_`
+- `tools/evals/zuno/rag_eval/datasets/generate_candidate_pack.py`:109 — keyword `old_`
+- `tools/evals/zuno/rag_eval/datasets/generate_candidate_pack.py`:145 — keyword `old_`
+- `tools/evals/zuno/rag_eval/datasets/generate_candidate_pack.py`:146 — keyword `old_`
+- `tools/evals/zuno/rag_eval/datasets/generate_candidate_pack.py`:155 — keyword `old_`
+- `tools/evals/zuno/rag_eval/datasets/graphrag_focus_eval.jsonl`:1 — keyword `old_`
+- `tools/evals/zuno/rag_eval/datasets/graphrag_focus_eval.jsonl`:2 — keyword `old_`
+- `tools/evals/zuno/rag_eval/datasets/graphrag_focus_eval.jsonl`:3 — keyword `old_`
+- `tools/evals/zuno/rag_eval/datasets/graphrag_focus_eval.jsonl`:4 — keyword `old_`
+- `tools/evals/zuno/rag_eval/datasets/mixed_realistic_v1_eval.jsonl`:1 — keyword `old_`
+- `tools/evals/zuno/rag_eval/datasets/mixed_realistic_v1_eval.jsonl`:2 — keyword `old_`
+- `tools/evals/zuno/rag_eval/datasets/mixed_realistic_v1_eval.jsonl`:3 — keyword `old_`
+- `tools/evals/zuno/rag_eval/datasets/mixed_realistic_v1_eval.jsonl`:4 — keyword `old_`
+- `tools/evals/zuno/rag_eval/datasets/mixed_realistic_v1_eval.jsonl`:5 — keyword `old_`
+- `tools/evals/zuno/rag_eval/datasets/mixed_realistic_v1_eval.jsonl`:6 — keyword `old_`
+- `tools/evals/zuno/rag_eval/datasets/mixed_realistic_v1_eval.jsonl`:7 — keyword `old_`
+- `tools/evals/zuno/rag_eval/datasets/mixed_realistic_v1_eval.jsonl`:8 — keyword `old_`
+- `tools/evals/zuno/rag_eval/datasets/mixed_realistic_v1_eval.jsonl`:9 — keyword `old_`
+- `tools/evals/zuno/rag_eval/datasets/mixed_realistic_v1_eval.jsonl`:10 — keyword `old_`
+- `tools/evals/zuno/rag_eval/datasets/mixed_realistic_v1_eval.jsonl`:11 — keyword `old_`
+- `tools/evals/zuno/rag_eval/datasets/mixed_realistic_v1_eval.jsonl`:12 — keyword `old_`
+- `tools/evals/zuno/rag_eval/datasets/mixed_realistic_v1_eval.jsonl`:13 — keyword `old_`
+- `tools/evals/zuno/rag_eval/datasets/mixed_realistic_v1_eval.jsonl`:14 — keyword `old_`
+- `tools/evals/zuno/rag_eval/datasets/mixed_realistic_v1_eval.jsonl`:15 — keyword `old_`
+- `tools/evals/zuno/rag_eval/datasets/mixed_realistic_v1_eval.jsonl`:16 — keyword `old_`
+- `tools/evals/zuno/rag_eval/datasets/mixed_tuning_v2_eval_draft.jsonl`:1 — keyword `old_`
+- `tools/evals/zuno/rag_eval/datasets/mixed_tuning_v2_eval_draft.jsonl`:2 — keyword `old_`
+- `tools/evals/zuno/rag_eval/datasets/mixed_tuning_v2_eval_draft.jsonl`:3 — keyword `old_`
+- `tools/evals/zuno/rag_eval/datasets/mixed_tuning_v2_eval_draft.jsonl`:4 — keyword `old_`
+- `tools/evals/zuno/rag_eval/datasets/mixed_tuning_v2_eval_draft.jsonl`:5 — keyword `old_`
+- `tools/evals/zuno/rag_eval/datasets/mixed_tuning_v2_eval_draft.jsonl`:6 — keyword `old_`
+- `tools/evals/zuno/rag_eval/datasets/mixed_tuning_v2_eval_draft.jsonl`:7 — keyword `old_`
+- `tools/evals/zuno/rag_eval/datasets/mixed_tuning_v2_eval_draft.jsonl`:8 — keyword `old_`
+- `tools/evals/zuno/rag_eval/datasets/mixed_tuning_v2_eval_draft.jsonl`:9 — keyword `old_`
+- `tools/evals/zuno/rag_eval/datasets/mixed_tuning_v2_eval_draft.jsonl`:10 — keyword `old_`
+- `tools/evals/zuno/rag_eval/datasets/mixed_tuning_v2_eval_draft.jsonl`:11 — keyword `old_`
+- `tools/evals/zuno/rag_eval/datasets/mixed_tuning_v2_eval_draft.jsonl`:12 — keyword `old_`
+- `tools/evals/zuno/rag_eval/datasets/mixed_tuning_v2_eval_draft.jsonl`:13 — keyword `old_`
+- `tools/evals/zuno/rag_eval/datasets/mixed_tuning_v2_eval_draft.jsonl`:14 — keyword `old_`
+- `tools/evals/zuno/rag_eval/datasets/mixed_tuning_v2_eval_draft.jsonl`:15 — keyword `old_`
+- `tools/evals/zuno/rag_eval/datasets/mixed_tuning_v2_eval_draft.jsonl`:16 — keyword `old_`
+- `tools/evals/zuno/rag_eval/datasets/mixed_tuning_v2_eval_draft.jsonl`:17 — keyword `old_`
+- `tools/evals/zuno/rag_eval/datasets/mixed_tuning_v2_eval_draft.jsonl`:18 — keyword `old_`
+- `tools/evals/zuno/rag_eval/datasets/mixed_tuning_v2_eval_draft.jsonl`:19 — keyword `old_`
+- `tools/evals/zuno/rag_eval/datasets/mixed_tuning_v2_eval_draft.jsonl`:20 — keyword `old_`
+- `tools/evals/zuno/rag_eval/datasets/mixed_tuning_v2_eval_draft.jsonl`:21 — keyword `old_`
+- `tools/evals/zuno/rag_eval/datasets/mixed_tuning_v2_eval_draft.jsonl`:22 — keyword `old_`
+- `tools/evals/zuno/rag_eval/datasets/mixed_tuning_v2_eval_draft.jsonl`:23 — keyword `old_`
+- `tools/evals/zuno/rag_eval/datasets/mixed_tuning_v2_eval_draft.jsonl`:24 — keyword `old_`
+- `tools/evals/zuno/rag_eval/datasets/mixed_tuning_v2_eval_draft.jsonl`:25 — keyword `old_`
+- `tools/evals/zuno/rag_eval/datasets/mixed_tuning_v2_eval_draft.jsonl`:26 — keyword `old_`
+- `tools/evals/zuno/rag_eval/datasets/mixed_tuning_v2_eval_draft.jsonl`:27 — keyword `old_`
+- `tools/evals/zuno/rag_eval/datasets/mixed_tuning_v2_eval_draft.jsonl`:28 — keyword `old_`
+- `tools/evals/zuno/rag_eval/datasets/mixed_tuning_v2_eval_draft.jsonl`:29 — keyword `old_`
+- `tools/evals/zuno/rag_eval/datasets/mixed_tuning_v2_eval_draft.jsonl`:30 — keyword `old_`
+- `tools/evals/zuno/rag_eval/datasets/mixed_tuning_v2_eval_draft.jsonl`:31 — keyword `old_`
+- `tools/evals/zuno/rag_eval/datasets/mixed_tuning_v2_eval_draft.jsonl`:32 — keyword `old_`
+- `tools/evals/zuno/rag_eval/datasets/mixed_tuning_v2_eval_draft.jsonl`:33 — keyword `old_`
+- `tools/evals/zuno/rag_eval/datasets/mixed_tuning_v2_eval_draft.jsonl`:34 — keyword `old_`
+- `tools/evals/zuno/rag_eval/datasets/mixed_tuning_v2_eval_draft.jsonl`:35 — keyword `old_`
+- `tools/evals/zuno/rag_eval/datasets/mixed_tuning_v2_eval_draft.jsonl`:36 — keyword `old_`
+- `tools/evals/zuno/rag_eval/datasets/mixed_tuning_v2_eval_draft.jsonl`:37 — keyword `old_`
+- `tools/evals/zuno/rag_eval/datasets/mixed_tuning_v2_eval_draft.jsonl`:38 — keyword `old_`
+- `tools/evals/zuno/rag_eval/datasets/mixed_tuning_v2_eval_draft.jsonl`:39 — keyword `old_`
+- `tools/evals/zuno/rag_eval/datasets/mixed_tuning_v2_eval_draft.jsonl`:40 — keyword `old_`
+- `tools/evals/zuno/rag_eval/datasets/mixed_tuning_v2_eval_draft.jsonl`:41 — keyword `old_`
+- `tools/evals/zuno/rag_eval/datasets/mixed_tuning_v2_eval_draft.jsonl`:42 — keyword `old_`
+- `tools/evals/zuno/rag_eval/datasets/mixed_tuning_v2_eval_draft.jsonl`:43 — keyword `old_`
+- `tools/evals/zuno/rag_eval/datasets/mixed_tuning_v2_eval_draft.jsonl`:44 — keyword `old_`
+- `tools/evals/zuno/rag_eval/datasets/mixed_tuning_v2_eval_draft.jsonl`:45 — keyword `old_`
+- `tools/evals/zuno/rag_eval/datasets/mixed_tuning_v2_eval_draft.jsonl`:46 — keyword `old_`
+- `tools/evals/zuno/rag_eval/datasets/mixed_tuning_v2_eval_draft.jsonl`:47 — keyword `deprecated`
+- `tools/evals/zuno/rag_eval/datasets/mixed_tuning_v2_eval_draft.jsonl`:48 — keyword `old_`
+- `tools/evals/zuno/rag_eval/datasets/mixed_tuning_v2_graph_relation_small.jsonl`:1 — keyword `old_`
+- `tools/evals/zuno/rag_eval/datasets/mixed_tuning_v2_graph_relation_small.jsonl`:2 — keyword `old_`
+- `tools/evals/zuno/rag_eval/datasets/mixed_tuning_v2_graph_relation_small.jsonl`:3 — keyword `old_`
+- `tools/evals/zuno/rag_eval/datasets/mixed_tuning_v2_graph_relation_small.jsonl`:4 — keyword `old_`
+- `tools/evals/zuno/rag_eval/datasets/mixed_tuning_v2_graph_relation_small.jsonl`:5 — keyword `old_`
+- `tools/evals/zuno/rag_eval/datasets/mixed_tuning_v2_graph_relation_small.jsonl`:6 — keyword `old_`
+- `tools/evals/zuno/rag_eval/datasets/mixed_tuning_v2_graph_relation_small.jsonl`:7 — keyword `old_`
+- `tools/evals/zuno/rag_eval/datasets/mixed_tuning_v2_graph_relation_small.jsonl`:8 — keyword `old_`
+- `tools/evals/zuno/rag_eval/datasets/mixed_tuning_v2_graph_relation_small.jsonl`:9 — keyword `old_`
+- `tools/evals/zuno/rag_eval/datasets/mixed_tuning_v2_graph_relation_small.jsonl`:10 — keyword `old_`
+- `tools/evals/zuno/rag_eval/datasets/verify_candidate_pack_integrity.py`:275 — keyword `old_`
+- `tools/evals/zuno/rag_eval/datasets/verify_candidate_pack_integrity.py`:276 — keyword `old_` — versioned public adapter field
+- `tools/evals/zuno/rag_eval/datasets/verify_candidate_pack_integrity.py`:277 — keyword `old_` — versioned public adapter field
+- `tools/evals/zuno/rag_eval/datasets/verify_candidate_pack_integrity.py`:278 — keyword `old_`
+- `tools/evals/zuno/rag_eval/datasets/verify_candidate_pack_integrity.py`:281 — keyword `old_` — versioned public adapter field
+- `tools/evals/zuno/rag_eval/datasets/verify_candidate_pack_integrity.py`:284 — keyword `old_`
+- `tools/evals/zuno/rag_eval/datasets/verify_candidate_pack_integrity.py`:287 — keyword `old_`
+- `tools/evals/zuno/rag_eval/datasets/verify_candidate_pack_integrity.py`:288 — keyword `old_` — versioned public adapter field
+- `tools/evals/zuno/rag_eval/datasets/verify_candidate_pack_integrity.py`:289 — keyword `old_` — versioned public adapter field
+- `tools/evals/zuno/rag_eval/datasets/verify_candidate_pack_integrity.py`:290 — keyword `old_`
+- `tools/evals/zuno/rag_eval/datasets/verify_candidate_pack_integrity.py`:293 — keyword `old_` — versioned public adapter field
+- `tools/evals/zuno/rag_eval/datasets/verify_candidate_pack_integrity.py`:296 — keyword `old_`
+- `tools/evals/zuno/rag_eval/datasets/verify_candidate_pack_integrity.py`:623 — keyword `old_`
+- `tools/evals/zuno/rag_eval/profiles/mixed_realistic_v1.md`:76 — keyword `fallback` — documented fallback contract
+- `tools/qa/full-e2e/full_e2e.py`:257 — keyword `rollback`
+- `tools/qa/full-e2e/full_e2e.py`:259 — keyword `rollback`
+- `tools/qa/full-e2e/full_e2e.py`:280 — keyword `rollback`
+- `tools/qa/full-e2e/full_e2e.py`:281 — keyword `rollback`
+- `tools/qa/full-e2e/full_e2e.py`:282 — keyword `rollback`
+- `tools/qa/full-e2e/full_e2e.py`:283 — keyword `rollback`
+- `tools/qa/full-e2e/full_e2e.py`:284 — keyword `rollback`
+- `tools/qa/full-e2e/full_e2e.py`:285 — keyword `rollback`
+- `tools/qa/full-e2e/full_e2e.py`:286 — keyword `rollback`
+- `infra/db/README.md`:18 — keyword `zuno.database`
+- `infra/docker/docker_config.local.yaml`:45 — keyword `compat`
+- `infra/docker/docker_config.local.yaml`:49 — keyword `compat`
+- `infra/docker/docker_config.local.yaml`:53 — keyword `compat`
+- `infra/db/alembic/env.py`:104 — keyword `rollback`
+- `infra/db/alembic/versions/20260417_01_init_postgresql.py`:779 — keyword `old_`
+- `infra/db/alembic/versions/20260719_18_ingestion_source_lineage.py`:173 — keyword `fallback`
+- `infra/db/alembic/versions/20260724_25_ingestion_delete_lifecycle.py`:37 — keyword `old_`
+- `infra/db/alembic/versions/20260724_25_ingestion_delete_lifecycle.py`:73 — keyword `old_`
+- `infra/db/alembic/versions/20260724_25_ingestion_delete_lifecycle.py`:74 — keyword `old_`
+- `infra/db/alembic/versions/20260724_26_agent_core_runtime_closure.py`:163 — keyword `fallback`
+- `infra/db/alembic/versions/20260724_26_agent_core_runtime_closure.py`:168 — keyword `rollback`
+- `infra/db/alembic/versions/20260725_35_wave_a_product_knowledge_capability.py`:250 — keyword `rollback`
+- `infra/db/alembic/versions/20260725_35_wave_a_product_knowledge_capability.py`:329 — keyword `deprecated`
+- `infra/db/alembic/versions/20260725_36_wave_b_memory_tool_runtime.py`:170 — keyword `deprecated`
+- `infra/db/alembic/versions/20260725_36_wave_b_memory_tool_runtime.py`:189 — keyword `deprecated`
+- `infra/db/alembic/versions/20260727_45_phase16_tool_compensation_manual_assessment.py`:60 — keyword `rollback`
+- `infra/db/alembic/versions/20260727_45_phase16_tool_compensation_manual_assessment.py`:73 — keyword `rollback`
+- `infra/db/alembic/versions/20260729_53_phase20_observability_eval_runtime.py`:46 — keyword `old_`
+- `.github/workflows/phase22-contract-verification.yml`:197 — keyword `compat`
+- `tests/repo/test_agent_system.py`:51 — keyword `compat` — documented compatibility contract
+- `tests/repo/test_infrastructure_target_protocols.py`:151 — keyword `compat` — documented compatibility contract
+- `tests/repo/test_infrastructure_target_protocols.py`:175 — keyword `compat` — documented compatibility contract
+- `tests/repo/test_model_gateway_target_protocols.py`:155 — keyword `compat` — documented compatibility contract
+- `tests/repo/test_phase02_compatibility_boundaries.py`:5 — keyword `compat` — documented compatibility contract
+- `tests/repo/test_phase02_compatibility_boundaries.py`:9 — keyword `compat` — documented compatibility contract
+- `tests/repo/test_phase02_compatibility_boundaries.py`:17 — keyword `compat` — documented compatibility contract
+- `tests/repo/test_phase02_compatibility_boundaries.py`:19 — keyword `compat` — documented compatibility contract
+- `tests/repo/test_phase02_compatibility_runtime.py`:7 — keyword `compat` — documented compatibility contract
+- `tests/repo/test_phase02_compatibility_runtime.py`:11 — keyword `compat` — documented compatibility contract
+- `tests/repo/test_phase04_upgrade_compatibility_profiles.py`:9 — keyword `compat` — documented compatibility contract
+- `tests/repo/test_phase04_upgrade_compatibility_profiles.py`:13 — keyword `compat` — documented compatibility contract
+- `tests/repo/test_phase04_upgrade_compatibility_profiles.py`:25 — keyword `compat` — documented compatibility contract
+- `tests/repo/test_phase04_upgrade_compatibility_profiles.py`:28 — keyword `compat` — documented compatibility contract
+- `tests/repo/test_phase04_upgrade_compatibility_profiles.py`:31 — keyword `compat` — documented compatibility contract
+- `tests/repo/test_phase04_upgrade_compatibility_profiles.py`:39 — keyword `compat` — documented compatibility contract
+- `tests/repo/test_phase11a_knowledge_query_service.py`:26 — keyword `fallback` — documented fallback contract
+- `tests/repo/test_phase11b_single_generalagent_cutover.py`:57 — keyword `fallback` — documented fallback contract
+- `tests/repo/test_phase11c_workspace_project_query_cutover.py`:47 — keyword `fallback` — documented fallback contract
+- `tests/repo/test_phase22_cleanup_boundary_allowlist.py`:151 — keyword `compat` — documented compatibility contract
+- `tests/repo/test_phase22_cleanup_boundary_allowlist.py`:164 — keyword `compat` — documented compatibility contract
+- `tests/repo/test_phase22_final_legacy_cutover.py`:131 — keyword `compat` — documented compatibility contract
+- `tests/repo/test_phase22_final_legacy_cutover.py`:601 — keyword `compat` — documented compatibility contract
+- `tests/repo/test_phase5_domain_runtime_paths.py`:81 — keyword `fallback` — documented fallback contract
+- `tests/repo/test_phase5_general_agent_real_runtime_flow.py`:65 — keyword `fallback` — documented fallback contract
+- `tests/repo/test_phase5_workspace_real_runtime_flow.py`:37 — keyword `fallback` — documented fallback contract
+- `tests/repo/test_phase5_workspace_real_runtime_flow.py`:105 — keyword `fallback` — documented fallback contract
+- `tests/repo/test_phase6_agent_graphrag_pluginization.py`:20 — keyword `GeneralAgent` — agent runtime owns the canonical general agent
+- `tests/repo/test_publish_boundary.py`:189 — keyword `compat` — documented compatibility contract
+- `tests/repo/test_repo_hygiene.py`:363 — keyword `compat` — documented compatibility contract
+- `tests/repo/test_repo_hygiene.py`:365 — keyword `compat` — documented compatibility contract
+- `tests/repo/test_tool_runtime_target_protocols.py`:134 — keyword `GeneralAgent` — agent runtime owns the canonical general agent
+- `tests/repo/test_zuno_runtime_chain_guard.py`:117 — keyword `compat` — documented compatibility contract
+- `tests/repo/test_zuno_runtime_chain_guard.py`:156 — keyword `compat` — documented compatibility contract
+- `.agent/programs/work-products/api-contract-compatibility-matrix.yaml`:1 — keyword `compat` — documented compatibility contract
+- `.agent/programs/work-products/api-contract-compatibility-matrix.yaml`:8 — keyword `compat` — documented compatibility contract
+- `.agent/programs/work-products/api-contract-compatibility-matrix.yaml`:18 — keyword `compat` — documented compatibility contract
+- `.agent/programs/work-products/api-contract-compatibility-matrix.yaml`:20 — keyword `GeneralAgent` — agent runtime owns the canonical general agent
+- `.agent/programs/work-products/api-contract-compatibility-matrix.yaml`:21 — keyword `legacy`
+- `.agent/programs/work-products/api-contract-compatibility-matrix.yaml`:29 — keyword `compat` — documented compatibility contract
+- `.agent/programs/work-products/api-contract-compatibility-matrix.yaml`:32 — keyword `rollback`
+- `.agent/programs/work-products/api-contract-compatibility-matrix.yaml`:40 — keyword `compat` — documented compatibility contract
+- `.agent/programs/work-products/api-contract-compatibility-matrix.yaml`:43 — keyword `rollback`
+- `.agent/programs/work-products/api-contract-compatibility-matrix.yaml`:51 — keyword `compat` — documented compatibility contract
+- `.agent/programs/work-products/api-contract-compatibility-matrix.yaml`:54 — keyword `rollback`
+- `.agent/programs/work-products/api-contract-compatibility-matrix.yaml`:62 — keyword `compat` — documented compatibility contract
+- `.agent/programs/work-products/api-contract-compatibility-matrix.yaml`:65 — keyword `rollback`
+- `.agent/programs/work-products/api-contract-compatibility-matrix.yaml`:73 — keyword `compat` — documented compatibility contract
+- `.agent/programs/work-products/api-contract-compatibility-matrix.yaml`:76 — keyword `rollback`
+- `.agent/programs/work-products/api-contract-compatibility-matrix.yaml`:80 — keyword `old_` — versioned public adapter field
+- `.agent/programs/work-products/api-contract-compatibility-matrix.yaml`:94 — keyword `rollback`
+- `.agent/programs/work-products/api-contract-compatibility-matrix.yaml`:95 — keyword `compat` — documented compatibility contract
+- `.agent/programs/work-products/current-persistence-inventory.md`:69 — keyword `compat` — documented compatibility contract
+- `.agent/programs/work-products/current-persistence-inventory.md`:70 — keyword `compat`
+- `.agent/programs/work-products/current-persistence-inventory.md`:71 — keyword `legacy`
+- `.agent/programs/work-products/current-persistence-inventory.md`:90 — keyword `legacy`
+- `.agent/programs/work-products/current-persistence-inventory.md`:100 — keyword `compat`
+- `.agent/programs/work-products/current-runtime-inventory.md`:14 — keyword `GeneralAgent`
+- `.agent/programs/work-products/current-runtime-inventory.md`:16 — keyword `GeneralAgent`
+- `.agent/programs/work-products/current-runtime-inventory.md`:28 — keyword `legacy`
+- `.agent/programs/work-products/current-runtime-inventory.md`:55 — keyword `legacy`
+- `.agent/programs/work-products/current-runtime-inventory.md`:66 — keyword `rollback`
+- `.agent/programs/work-products/current-runtime-inventory.md`:76 — keyword `legacy`
+- `.agent/programs/work-products/current-runtime-inventory.md`:84 — keyword `legacy`
+- `.agent/programs/work-products/current-runtime-inventory.md`:94 — keyword `legacy`
+- `.agent/programs/work-products/current-runtime-inventory.md`:112 — keyword `legacy`
+- `.agent/programs/work-products/current-runtime-inventory.md`:130 — keyword `legacy`
+- `.agent/programs/work-products/current-runtime-inventory.md`:148 — keyword `legacy`
+- `.agent/programs/work-products/current-runtime-inventory.md`:158 — keyword `fallback`
+- `.agent/programs/work-products/current-runtime-inventory.md`:166 — keyword `legacy`
+- `.agent/programs/work-products/current-runtime-inventory.md`:184 — keyword `legacy`
+- `.agent/programs/work-products/current-runtime-inventory.md`:202 — keyword `legacy`
+- `.agent/programs/work-products/current-runtime-inventory.md`:204 — keyword `GeneralAgent` — agent runtime owns the canonical general agent
+- `.agent/programs/work-products/current-runtime-inventory.md`:209 — keyword `rollback`
+- `.agent/programs/work-products/current-runtime-inventory.md`:220 — keyword `legacy`
+- `.agent/programs/work-products/current-runtime-inventory.md`:227 — keyword `GeneralAgent`
+- `.agent/programs/work-products/current-runtime-inventory.md`:229 — keyword `compat` — documented compatibility contract
+- `.agent/programs/work-products/current-runtime-inventory.md`:238 — keyword `legacy`
+- `.agent/programs/work-products/current-runtime-inventory.md`:245 — keyword `GeneralAgent`
+- `.agent/programs/work-products/current-runtime-inventory.md`:256 — keyword `legacy`
+- `.agent/programs/work-products/current-runtime-inventory.md`:263 — keyword `GeneralAgent` — agent runtime owns the canonical general agent
+- `.agent/programs/work-products/current-runtime-inventory.md`:274 — keyword `legacy`
+- `.agent/programs/work-products/current-runtime-inventory.md`:292 — keyword `legacy`
+- `.agent/programs/work-products/current-runtime-inventory.md`:308 — keyword `compat`
+- `.agent/programs/work-products/current-runtime-inventory.md`:310 — keyword `legacy`
+- `.agent/programs/work-products/current-runtime-inventory.md`:317 — keyword `GeneralAgent` — agent runtime owns the canonical general agent
+- `.agent/programs/work-products/current-runtime-inventory.md`:328 — keyword `legacy`
+- `.agent/programs/work-products/current-runtime-inventory.md`:346 — keyword `legacy`
+- `.agent/programs/work-products/current-runtime-inventory.md`:364 — keyword `legacy`
+- `.agent/programs/work-products/current-runtime-inventory.md`:382 — keyword `legacy`
+- `.agent/programs/work-products/current-runtime-inventory.md`:384 — keyword `legacy`
+- `.agent/programs/work-products/current-runtime-inventory.md`:388 — keyword `legacy`
+- `.agent/programs/work-products/current-runtime-inventory.md`:389 — keyword `legacy`
+- `.agent/programs/work-products/current-runtime-inventory.md`:391 — keyword `legacy`
+- `.agent/programs/work-products/current-runtime-inventory.md`:392 — keyword `compat` — documented compatibility contract
+- `.agent/programs/work-products/current-runtime-inventory.md`:394 — keyword `compat` — documented compatibility contract
+- `.agent/programs/work-products/current-runtime-inventory.md`:400 — keyword `legacy`
+- `.agent/programs/work-products/data-cutover-matrix.yaml`:7 — keyword `legacy`
+- `.agent/programs/work-products/data-cutover-matrix.yaml`:17 — keyword `rollback`
+- `.agent/programs/work-products/data-cutover-matrix.yaml`:28 — keyword `rollback`
+- `.agent/programs/work-products/data-cutover-matrix.yaml`:34 — keyword `compat`
+- `.agent/programs/work-products/data-cutover-matrix.yaml`:39 — keyword `rollback`
+- `.agent/programs/work-products/data-cutover-matrix.yaml`:50 — keyword `rollback`
+- `.agent/programs/work-products/data-cutover-matrix.yaml`:61 — keyword `rollback`
+- `.agent/programs/work-products/data-cutover-matrix.yaml`:72 — keyword `rollback`
+- `.agent/programs/work-products/feature-flag-registry.yaml`:15 — keyword `rollback`
+- `.agent/programs/work-products/feature-flag-registry.yaml`:22 — keyword `rollback`
+- `.agent/programs/work-products/feature-flag-registry.yaml`:31 — keyword `rollback`
+- `.agent/programs/work-products/feature-flag-registry.yaml`:35 — keyword `legacy`
+- `.agent/programs/work-products/feature-flag-registry.yaml`:37 — keyword `rollback`
+- `.agent/programs/work-products/feature-flag-registry.yaml`:39 — keyword `legacy`
+- `.agent/programs/work-products/feature-flag-registry.yaml`:49 — keyword `rollback`
+- `.agent/programs/work-products/feature-flag-registry.yaml`:57 — keyword `rollback`
+- `.agent/programs/work-products/feature-flag-registry.yaml`:58 — keyword `rollback`
+- `.agent/programs/work-products/feature-flag-registry.yaml`:63 — keyword `rollback`
+- `.agent/programs/work-products/frontend-current-inventory.md`:18 — keyword `legacy`
+- `.agent/programs/work-products/frontend-current-inventory.md`:19 — keyword `legacy`
+- `.agent/programs/work-products/frontend-current-inventory.md`:21 — keyword `legacy`
+- `.agent/programs/work-products/frontend-current-inventory.md`:27 — keyword `legacy`
+- `.agent/programs/work-products/frontend-current-inventory.md`:29 — keyword `legacy`
+- `.agent/programs/work-products/frontend-current-inventory.md`:30 — keyword `legacy`
+- `.agent/programs/work-products/frontend-current-inventory.md`:61 — keyword `legacy`
+- `.agent/programs/work-products/frontend-current-inventory.md`:88 — keyword `legacy`
+- `.agent/programs/work-products/goal01-closure-matrix.md`:24 — keyword `legacy`
+- `.agent/programs/work-products/goal01-closure-matrix.md`:51 — keyword `fallback`
+- `.agent/programs/work-products/goal01-closure-matrix.md`:62 — keyword `rollback`
+- `.agent/programs/work-products/goal01-closure-matrix.md`:66 — keyword `fallback`
+- `.agent/programs/work-products/goal01-closure-matrix.md`:69 — keyword `fallback`
+- `.agent/programs/work-products/goal01-closure-matrix.md`:72 — keyword `legacy`
+- `.agent/programs/work-products/goal01-closure-matrix.md`:294 — keyword `rollback`
+- `.agent/programs/work-products/goal01-closure-matrix.md`:742 — keyword `fallback`
+- `.agent/programs/work-products/goal01-closure-matrix.md`:749 — keyword `fallback`
+- `.agent/programs/work-products/goal01-coordinator-audit.md`:158 — keyword `legacy`
+- `.agent/programs/work-products/goal01-coordinator-audit.md`:161 — keyword `legacy`
+- `.agent/programs/work-products/goal01-coordinator-audit.md`:214 — keyword `legacy`
+- `.agent/programs/work-products/goal01-coordinator-audit.md`:240 — keyword `legacy`
+- `.agent/programs/work-products/goal01-coordinator-audit.md`:269 — keyword `legacy`
+- `.agent/programs/work-products/goal01-coordinator-audit.md`:545 — keyword `legacy`
+- `.agent/programs/work-products/goal01-coordinator-audit.md`:663 — keyword `compat`
+- `.agent/programs/work-products/goal01-coordinator-audit.md`:822 — keyword `legacy`
+- `.agent/programs/work-products/goal01-coordinator-audit.md`:824 — keyword `legacy`
+- `.agent/programs/work-products/goal01-coordinator-audit.md`:1290 — keyword `legacy`
+- `.agent/programs/work-products/goal01-coordinator-audit.md`:1293 — keyword `legacy`
+- `.agent/programs/work-products/goal01-coordinator-audit.md`:1295 — keyword `legacy`
+- `.agent/programs/work-products/goal01-coordinator-audit.md`:1328 — keyword `legacy`
+- `.agent/programs/work-products/goal01-coordinator-audit.md`:1685 — keyword `legacy`
+- `.agent/programs/work-products/goal02-current-gap-audit.md`:109 — keyword `legacy`
+- `.agent/programs/work-products/goal02-current-gap-audit.md`:111 — keyword `legacy`
+- `.agent/programs/work-products/goal02-current-gap-audit.md`:112 — keyword `rollback`
+- `.agent/programs/work-products/goal02-current-gap-audit.md`:113 — keyword `rollback`
+- `.agent/programs/work-products/goal02-current-gap-audit.md`:114 — keyword `fallback`
+- `.agent/programs/work-products/goal02-current-gap-audit.md`:116 — keyword `rollback`
+- `.agent/programs/work-products/goal02-current-gap-audit.md`:149 — keyword `fallback`
+- `.agent/programs/work-products/goal02-current-gap-audit.md`:181 — keyword `legacy`
+- `.agent/programs/work-products/goal02-current-gap-audit.md`:183 — keyword `legacy`
+- `.agent/programs/work-products/goal02-final-closure-repair-gap-audit.md`:26 — keyword `rollback`
+- `.agent/programs/work-products/goal02-final-closure-repair-gap-audit.md`:36 — keyword `legacy`
+- `.agent/programs/work-products/goal05-target-gap-ledger.yaml`:30 — keyword `legacy`
+- `.agent/programs/work-products/goal05-target-gap-ledger.yaml`:38 — keyword `legacy`
+- `.agent/programs/work-products/goal05-target-gap-ledger.yaml`:53 — keyword `legacy`
+- `.agent/programs/work-products/goal05-target-gap-ledger.yaml`:68 — keyword `legacy`
+- `.agent/programs/work-products/goal05-target-gap-ledger.yaml`:83 — keyword `legacy`
+- `.agent/programs/work-products/goal05-target-gap-ledger.yaml`:98 — keyword `legacy`
+- `.agent/programs/work-products/goal05-target-gap-ledger.yaml`:113 — keyword `legacy`
+- `.agent/programs/work-products/goal05-target-gap-ledger.yaml`:128 — keyword `legacy`
+- `.agent/programs/work-products/goal05-target-gap-ledger.yaml`:143 — keyword `legacy`
+- `.agent/programs/work-products/goal05-target-gap-ledger.yaml`:158 — keyword `legacy`
+- `.agent/programs/work-products/goal05-target-gap-ledger.yaml`:173 — keyword `legacy`
+- `.agent/programs/work-products/goal05-target-gap-ledger.yaml`:188 — keyword `legacy`
+- `.agent/programs/work-products/legacy-bypass-inventory.yaml`:1 — keyword `legacy`
+- `.agent/programs/work-products/legacy-bypass-inventory.yaml`:5 — keyword `legacy`
+- `.agent/programs/work-products/legacy-bypass-inventory.yaml`:7 — keyword `legacy`
+- `.agent/programs/work-products/legacy-bypass-inventory.yaml`:8 — keyword `legacy`
+- `.agent/programs/work-products/legacy-bypass-inventory.yaml`:16 — keyword `legacy`
+- `.agent/programs/work-products/legacy-bypass-inventory.yaml`:19 — keyword `legacy`
+- `.agent/programs/work-products/legacy-bypass-inventory.yaml`:21 — keyword `legacy`
+- `.agent/programs/work-products/legacy-bypass-inventory.yaml`:22 — keyword `legacy`
+- `.agent/programs/work-products/legacy-bypass-inventory.yaml`:25 — keyword `legacy`
+- `.agent/programs/work-products/legacy-bypass-inventory.yaml`:29 — keyword `legacy`
+- `.agent/programs/work-products/legacy-bypass-inventory.yaml`:30 — keyword `legacy`
+- `.agent/programs/work-products/legacy-bypass-inventory.yaml`:32 — keyword `legacy`
+- `.agent/programs/work-products/legacy-bypass-inventory.yaml`:33 — keyword `legacy`
+- `.agent/programs/work-products/legacy-bypass-inventory.yaml`:35 — keyword `legacy`
+- `.agent/programs/work-products/legacy-bypass-inventory.yaml`:38 — keyword `legacy`
+- `.agent/programs/work-products/legacy-bypass-inventory.yaml`:39 — keyword `legacy`
+- `.agent/programs/work-products/legacy-bypass-inventory.yaml`:42 — keyword `legacy`
+- `.agent/programs/work-products/legacy-bypass-inventory.yaml`:45 — keyword `legacy`
+- `.agent/programs/work-products/legacy-bypass-inventory.yaml`:53 — keyword `legacy`
+- `.agent/programs/work-products/legacy-bypass-inventory.yaml`:58 — keyword `legacy`
+- `.agent/programs/work-products/legacy-bypass-inventory.yaml`:66 — keyword `legacy`
+- `.agent/programs/work-products/legacy-bypass-inventory.yaml`:71 — keyword `legacy`
+- `.agent/programs/work-products/legacy-bypass-inventory.yaml`:84 — keyword `legacy`
+- `.agent/programs/work-products/legacy-bypass-inventory.yaml`:97 — keyword `legacy`
+- `.agent/programs/work-products/legacy-bypass-inventory.yaml`:105 — keyword `legacy`
+- `.agent/programs/work-products/legacy-bypass-inventory.yaml`:110 — keyword `legacy`
+- `.agent/programs/work-products/legacy-bypass-inventory.yaml`:118 — keyword `legacy`
+- `.agent/programs/work-products/legacy-bypass-inventory.yaml`:123 — keyword `legacy`
+- `.agent/programs/work-products/legacy-bypass-inventory.yaml`:136 — keyword `legacy`
+- `.agent/programs/work-products/legacy-bypass-inventory.yaml`:149 — keyword `legacy`
+- `.agent/programs/work-products/legacy-bypass-inventory.yaml`:162 — keyword `legacy`
+- `.agent/programs/work-products/legacy-bypass-inventory.yaml`:170 — keyword `legacy`
+- `.agent/programs/work-products/legacy-bypass-inventory.yaml`:175 — keyword `legacy`
+- `.agent/programs/work-products/legacy-bypass-inventory.yaml`:183 — keyword `legacy`
+- `.agent/programs/work-products/legacy-bypass-inventory.yaml`:188 — keyword `legacy`
+- `.agent/programs/work-products/legacy-bypass-inventory.yaml`:201 — keyword `legacy`
+- `.agent/programs/work-products/legacy-bypass-inventory.yaml`:214 — keyword `legacy`
+- `.agent/programs/work-products/legacy-bypass-inventory.yaml`:227 — keyword `legacy`
+- `.agent/programs/work-products/legacy-bypass-inventory.yaml`:235 — keyword `legacy`
+- `.agent/programs/work-products/legacy-bypass-inventory.yaml`:240 — keyword `legacy`
+- `.agent/programs/work-products/legacy-bypass-inventory.yaml`:253 — keyword `legacy`
+- `.agent/programs/work-products/legacy-bypass-inventory.yaml`:261 — keyword `legacy`
+- `.agent/programs/work-products/legacy-bypass-inventory.yaml`:266 — keyword `legacy`
+- `.agent/programs/work-products/legacy-bypass-inventory.yaml`:272 — keyword `legacy`
+- `.agent/programs/work-products/legacy-bypass-inventory.yaml`:279 — keyword `legacy`
+- `.agent/programs/work-products/legacy-bypass-inventory.yaml`:292 — keyword `legacy`
+- `.agent/programs/work-products/legacy-bypass-inventory.yaml`:295 — keyword `GeneralAgent` — agent runtime owns the canonical general agent
+- `.agent/programs/work-products/legacy-bypass-inventory.yaml`:298 — keyword `GeneralAgent` — agent runtime owns the canonical general agent
+- `.agent/programs/work-products/legacy-bypass-inventory.yaml`:300 — keyword `legacy`
+- `.agent/programs/work-products/legacy-bypass-inventory.yaml`:305 — keyword `legacy`
+- `.agent/programs/work-products/legacy-bypass-inventory.yaml`:313 — keyword `legacy`
+- `.agent/programs/work-products/legacy-bypass-inventory.yaml`:318 — keyword `legacy`
+- `.agent/programs/work-products/legacy-bypass-inventory.yaml`:326 — keyword `legacy`
+- `.agent/programs/work-products/legacy-bypass-inventory.yaml`:331 — keyword `legacy`
+- `.agent/programs/work-products/legacy-bypass-inventory.yaml`:344 — keyword `legacy`
+- `.agent/programs/work-products/legacy-bypass-inventory.yaml`:357 — keyword `legacy`
+- `.agent/programs/work-products/legacy-bypass-inventory.yaml`:370 — keyword `legacy`
+- `.agent/programs/work-products/legacy-bypass-inventory.yaml`:383 — keyword `legacy`
+- `.agent/programs/work-products/legacy-bypass-inventory.yaml`:396 — keyword `legacy`
+- `.agent/programs/work-products/legacy-bypass-inventory.yaml`:409 — keyword `legacy`
+- `.agent/programs/work-products/legacy-bypass-inventory.yaml`:415 — keyword `legacy`
+- `.agent/programs/work-products/legacy-bypass-inventory.yaml`:417 — keyword `legacy`
+- `.agent/programs/work-products/legacy-bypass-inventory.yaml`:422 — keyword `legacy`
+- `.agent/programs/work-products/legacy-bypass-inventory.yaml`:435 — keyword `legacy`
+- `.agent/programs/work-products/legacy-bypass-inventory.yaml`:448 — keyword `legacy`
+- `.agent/programs/work-products/legacy-bypass-inventory.yaml`:456 — keyword `legacy`
+- `.agent/programs/work-products/legacy-bypass-inventory.yaml`:461 — keyword `legacy`
+- `.agent/programs/work-products/legacy-bypass-inventory.yaml`:467 — keyword `legacy`
+- `.agent/programs/work-products/legacy-bypass-inventory.yaml`:469 — keyword `legacy`
+- `.agent/programs/work-products/legacy-bypass-inventory.yaml`:474 — keyword `legacy`
+- `.agent/programs/work-products/legacy-bypass-inventory.yaml`:480 — keyword `legacy`
+- `.agent/programs/work-products/legacy-bypass-inventory.yaml`:482 — keyword `legacy`
+- `.agent/programs/work-products/legacy-bypass-inventory.yaml`:487 — keyword `legacy`
+- `.agent/programs/work-products/legacy-bypass-inventory.yaml`:493 — keyword `legacy`
+- `.agent/programs/work-products/legacy-bypass-inventory.yaml`:495 — keyword `legacy`
+- `.agent/programs/work-products/legacy-bypass-inventory.yaml`:500 — keyword `legacy`
+- `.agent/programs/work-products/legacy-bypass-inventory.yaml`:513 — keyword `legacy`
+- `.agent/programs/work-products/legacy-bypass-inventory.yaml`:516 — keyword `legacy`
+- `.agent/programs/work-products/legacy-bypass-inventory.yaml`:519 — keyword `legacy`
+- `.agent/programs/work-products/legacy-bypass-inventory.yaml`:521 — keyword `legacy`
+- `.agent/programs/work-products/legacy-bypass-inventory.yaml`:526 — keyword `legacy`
+- `.agent/programs/work-products/legacy-bypass-inventory.yaml`:531 — keyword `old_`
+- `.agent/programs/work-products/legacy-bypass-inventory.yaml`:539 — keyword `legacy`
+- `.agent/programs/work-products/legacy-bypass-inventory.yaml`:544 — keyword `deprecated`
+- `.agent/programs/work-products/legacy-bypass-inventory.yaml`:552 — keyword `legacy`
+- `.agent/programs/work-products/legacy-bypass-inventory.yaml`:557 — keyword `deprecated`
+- `.agent/programs/work-products/legacy-bypass-inventory.yaml`:558 — keyword `legacy`
+- `.agent/programs/work-products/legacy-bypass-inventory.yaml`:565 — keyword `legacy`
+- `.agent/programs/work-products/legacy-bypass-inventory.yaml`:570 — keyword `deprecated`
+- `.agent/programs/work-products/legacy-bypass-inventory.yaml`:578 — keyword `legacy`
+- `.agent/programs/work-products/legacy-bypass-inventory.yaml`:581 — keyword `compat` — documented compatibility contract
+- `.agent/programs/work-products/legacy-bypass-inventory.yaml`:583 — keyword `old_`
+- `.agent/programs/work-products/legacy-bypass-inventory.yaml`:584 — keyword `legacy`
+- `.agent/programs/work-products/legacy-bypass-inventory.yaml`:586 — keyword `legacy`
+- `.agent/programs/work-products/legacy-bypass-inventory.yaml`:591 — keyword `legacy`
+- `.agent/programs/work-products/legacy-bypass-inventory.yaml`:594 — keyword `legacy`
+- `.agent/programs/work-products/legacy-bypass-inventory.yaml`:596 — keyword `old_`
+- `.agent/programs/work-products/legacy-bypass-inventory.yaml`:597 — keyword `legacy`
+- `.agent/programs/work-products/legacy-bypass-inventory.yaml`:604 — keyword `legacy`
+- `.agent/programs/work-products/legacy-bypass-inventory.yaml`:607 — keyword `legacy`
+- `.agent/programs/work-products/legacy-bypass-inventory.yaml`:609 — keyword `old_`
+- `.agent/programs/work-products/legacy-bypass-inventory.yaml`:610 — keyword `legacy`
+- `.agent/programs/work-products/legacy-bypass-inventory.yaml`:617 — keyword `legacy`
+- `.agent/programs/work-products/legacy-bypass-inventory.yaml`:620 — keyword `legacy`
+- `.agent/programs/work-products/legacy-bypass-inventory.yaml`:622 — keyword `old_`
+- `.agent/programs/work-products/legacy-bypass-inventory.yaml`:623 — keyword `legacy`
+- `.agent/programs/work-products/legacy-bypass-inventory.yaml`:630 — keyword `legacy`
+- `.agent/programs/work-products/legacy-bypass-inventory.yaml`:633 — keyword `legacy`
+- `.agent/programs/work-products/legacy-bypass-inventory.yaml`:635 — keyword `old_`
+- `.agent/programs/work-products/legacy-bypass-inventory.yaml`:636 — keyword `legacy`
+- `.agent/programs/work-products/legacy-bypass-inventory.yaml`:643 — keyword `legacy`
+- `.agent/programs/work-products/legacy-bypass-inventory.yaml`:656 — keyword `legacy`
+- `.agent/programs/work-products/legacy-bypass-inventory.yaml`:669 — keyword `legacy`
+- `.agent/programs/work-products/legacy-bypass-inventory.yaml`:672 — keyword `compat` — documented compatibility contract
+- `.agent/programs/work-products/legacy-bypass-inventory.yaml`:675 — keyword `legacy`
+- `.agent/programs/work-products/legacy-bypass-inventory.yaml`:677 — keyword `zuno.services`
+- `.agent/programs/work-products/phase-readiness.yaml`:35 — keyword `legacy`
+- `.agent/programs/work-products/phase-readiness.yaml`:36 — keyword `legacy`
+- `.agent/programs/work-products/phase-readiness.yaml`:37 — keyword `legacy`
+- `.agent/programs/work-products/phase-readiness.yaml`:56 — keyword `legacy`
+- `.agent/programs/work-products/phase02-readiness.yaml`:8 — keyword `rollback`
+- `.agent/programs/work-products/phase02-readiness.yaml`:12 — keyword `compat` — documented compatibility contract
+- `.agent/programs/work-products/phase02-readiness.yaml`:13 — keyword `compat` — documented compatibility contract
+- `.agent/programs/work-products/phase02-readiness.yaml`:29 — keyword `rollback`
+- `.agent/programs/work-products/phase02-readiness.yaml`:33 — keyword `compat` — documented compatibility contract
+- `.agent/programs/work-products/phase02-readiness.yaml`:34 — keyword `compat` — documented compatibility contract
+- `.agent/programs/work-products/phase02-readiness.yaml`:35 — keyword `legacy`
+- `.agent/programs/work-products/phase02-readiness.yaml`:45 — keyword `rollback`
+- `.agent/programs/work-products/phase02-readiness.yaml`:53 — keyword `compat` — documented compatibility contract
+- `.agent/programs/work-products/phase02-readiness.yaml`:54 — keyword `rollback`
+- `.agent/programs/work-products/phase03-readiness.yaml`:42 — keyword `compat` — documented compatibility contract
+- `.agent/programs/work-products/phase03-readiness.yaml`:63 — keyword `compat` — documented compatibility contract
+- `.agent/programs/work-products/phase04-readiness.yaml`:8 — keyword `compat`
+- `.agent/programs/work-products/phase04-readiness.yaml`:121 — keyword `compat` — documented compatibility contract
+- `.agent/programs/work-products/phase04-readiness.yaml`:146 — keyword `compat` — documented compatibility contract
+- `.agent/programs/work-products/phase04-readiness.yaml`:173 — keyword `compat` — documented compatibility contract
+- `.agent/programs/work-products/phase04-readiness.yaml`:228 — keyword `compat` — documented compatibility contract
+- `.agent/programs/work-products/phase04-readiness.yaml`:231 — keyword `compat` — documented compatibility contract
+- `.agent/programs/work-products/phase04-readiness.yaml`:323 — keyword `compat`
+- `.agent/programs/work-products/phase11-legacy-upload-parser-cutover-inventory.md`:1 — keyword `legacy`
+- `.agent/programs/work-products/phase11-legacy-upload-parser-cutover-inventory.md`:14 — keyword `legacy`
+- `.agent/programs/work-products/phase11-legacy-upload-parser-cutover-inventory.md`:26 — keyword `legacy`
+- `.agent/programs/work-products/phase11-legacy-upload-parser-cutover-inventory.md`:28 — keyword `fallback`
+- `.agent/programs/work-products/phase11-package-a-evidence-review.md`:25 — keyword `legacy`
+- `.agent/programs/work-products/phase11-readiness.yaml`:23 — keyword `legacy`
+- `.agent/programs/work-products/phase11-readiness.yaml`:25 — keyword `legacy`
+- `.agent/programs/work-products/phase22-removal-candidates.yaml`:8 — keyword `legacy`
+- `.agent/programs/work-products/phase22-removal-candidates.yaml`:14 — keyword `legacy`
+- `.agent/programs/work-products/phase22-removal-candidates.yaml`:15 — keyword `legacy`
+- `.agent/programs/work-products/phase22-removal-candidates.yaml`:17 — keyword `legacy`
+- `.agent/programs/work-products/phase22-removal-candidates.yaml`:19 — keyword `legacy`
+- `.agent/programs/work-products/phase22-removal-candidates.yaml`:25 — keyword `legacy`
+- `.agent/programs/work-products/phase22-removal-candidates.yaml`:29 — keyword `legacy`
+- `.agent/programs/work-products/phase22-removal-candidates.yaml`:31 — keyword `legacy`
+- `.agent/programs/work-products/phase22-removal-candidates.yaml`:32 — keyword `legacy`
+- `.agent/programs/work-products/phase22-removal-candidates.yaml`:35 — keyword `legacy`
+- `.agent/programs/work-products/phase22-removal-candidates.yaml`:37 — keyword `legacy`
+- `.agent/programs/work-products/phase22-removal-candidates.yaml`:41 — keyword `legacy`
+- `.agent/programs/work-products/phase22-removal-candidates.yaml`:43 — keyword `rollback`
+- `.agent/programs/work-products/phase22-removal-candidates.yaml`:49 — keyword `rollback`
+- `.agent/programs/work-products/phase22-removal-candidates.yaml`:53 — keyword `legacy`
+- `.agent/programs/work-products/phase22-removal-candidates.yaml`:55 — keyword `legacy`
+- `.agent/programs/work-products/phase22-removal-candidates.yaml`:60 — keyword `legacy`
+- `.agent/programs/work-products/phase22-removal-candidates.yaml`:61 — keyword `legacy`
+- `.agent/programs/work-products/phase22-removal-candidates.yaml`:62 — keyword `legacy`
+- `.agent/programs/work-products/phase22-removal-candidates.yaml`:63 — keyword `compat` — documented compatibility contract
+- `.agent/programs/work-products/phase22-removal-candidates.yaml`:64 — keyword `legacy`
+- `.agent/programs/work-products/phase22-removal-candidates.yaml`:65 — keyword `legacy`
+- `.agent/programs/work-products/phase22-removal-candidates.yaml`:66 — keyword `legacy`
+- `.agent/programs/work-products/phase22-removal-candidates.yaml`:67 — keyword `compat` — documented compatibility contract
+- `.agent/programs/work-products/phase22-removal-candidates.yaml`:68 — keyword `legacy`
+- `.agent/programs/work-products/phase22-removal-candidates.yaml`:69 — keyword `legacy`
+- `.agent/programs/work-products/phase22-removal-candidates.yaml`:73 — keyword `legacy`
+- `.agent/programs/work-products/phase22-removal-candidates.yaml`:74 — keyword `legacy`
+- `.agent/programs/work-products/phase22-removal-candidates.yaml`:77 — keyword `zuno.schema`
+- `.agent/programs/work-products/phase22-removal-candidates.yaml`:81 — keyword `zuno.database`
+- `.agent/programs/work-products/phase22-removal-candidates.yaml`:85 — keyword `zuno.services`
+- `.agent/programs/work-products/phase22-removal-candidates.yaml`:89 — keyword `zuno.services`
+- `.agent/programs/work-products/phase22-removal-candidates.yaml`:93 — keyword `zuno.core`
+- `.agent/programs/work-products/phase22-removal-candidates.yaml`:97 — keyword `zuno.services`
+- `.agent/programs/work-products/phase22-removal-candidates.yaml`:101 — keyword `zuno.services`
+- `.agent/programs/work-products/phase22-removal-candidates.yaml`:105 — keyword `zuno.services`
+- `.agent/programs/work-products/phase22-removal-candidates.yaml`:109 — keyword `zuno.services`
+- `.agent/programs/work-products/phase22-removal-candidates.yaml`:113 — keyword `zuno.resources`
+- `.agent/programs/work-products/phase22-removal-candidates.yaml`:117 — keyword `zuno.resources`
+- `.agent/programs/work-products/phase22-removal-candidates.yaml`:121 — keyword `zuno.services`
+- `.agent/programs/work-products/phase22-removal-candidates.yaml`:125 — keyword `zuno.services`
+- `.agent/programs/work-products/phase22-removal-candidates.yaml`:129 — keyword `zuno.database`
+- `.agent/programs/work-products/phase22-removal-candidates.yaml`:133 — keyword `zuno.services`
+- `.agent/programs/work-products/phase22-removal-candidates.yaml`:137 — keyword `zuno.services`
+- `.agent/programs/work-products/phase22-removal-candidates.yaml`:141 — keyword `zuno.services`
+- `.agent/programs/work-products/phase22-removal-candidates.yaml`:145 — keyword `zuno.schema`
+- `.agent/programs/work-products/phase22-removal-candidates.yaml`:149 — keyword `zuno.services`
+- `.agent/programs/work-products/phase22-removal-candidates.yaml`:153 — keyword `zuno.database`
+- `.agent/programs/work-products/phase22-removal-candidates.yaml`:157 — keyword `zuno.core`
+- `.agent/programs/work-products/phase22-removal-candidates.yaml`:161 — keyword `zuno.schema`
+- `.agent/programs/work-products/phase22-removal-candidates.yaml`:165 — keyword `zuno.core`
+- `.agent/programs/work-products/phase22-removal-candidates.yaml`:169 — keyword `zuno.services`
+- `.agent/programs/work-products/phase22-removal-candidates.yaml`:173 — keyword `zuno.services`
+- `.agent/programs/work-products/phase22-removal-candidates.yaml`:177 — keyword `zuno.services`
+- `.agent/programs/work-products/phase22-removal-candidates.yaml`:181 — keyword `zuno.services`
+- `.agent/programs/work-products/phase22-removal-candidates.yaml`:185 — keyword `zuno.services`
+- `.agent/programs/work-products/phase22-removal-candidates.yaml`:189 — keyword `zuno.services`
+- `.agent/programs/work-products/phase22-removal-candidates.yaml`:193 — keyword `zuno.services`
+- `.agent/programs/work-products/phase22-removal-candidates.yaml`:197 — keyword `zuno.services`
+- `.agent/programs/work-products/phase22-removal-candidates.yaml`:201 — keyword `zuno.services`
+- `.agent/programs/work-products/phase22-removal-candidates.yaml`:205 — keyword `zuno.core`
+- `.agent/programs/work-products/phase22-removal-candidates.yaml`:209 — keyword `zuno.core`
+- `.agent/programs/work-products/phase22-removal-candidates.yaml`:213 — keyword `zuno.core`
+- `.agent/programs/work-products/phase22-removal-candidates.yaml`:217 — keyword `zuno.core`
+- `.agent/programs/work-products/phase22-removal-candidates.yaml`:221 — keyword `zuno.core`
+- `.agent/programs/work-products/phase22-removal-candidates.yaml`:225 — keyword `zuno.database`
+- `.agent/programs/work-products/phase22-removal-candidates.yaml`:229 — keyword `zuno.core`
+- `.agent/programs/work-products/phase22-removal-candidates.yaml`:233 — keyword `zuno.utils`
+- `.agent/programs/work-products/phase22-removal-candidates.yaml`:237 — keyword `zuno.schema`
+- `.agent/programs/work-products/phase22-removal-candidates.yaml`:241 — keyword `zuno.schema`
+- `.agent/programs/work-products/phase22-removal-candidates.yaml`:245 — keyword `zuno.database`
+- `.agent/programs/work-products/phase22-removal-candidates.yaml`:249 — keyword `zuno.database`
+- `.agent/programs/work-products/phase22-removal-candidates.yaml`:253 — keyword `zuno.database`
+- `.agent/programs/work-products/phase22-removal-candidates.yaml`:257 — keyword `zuno.database`
+- `.agent/programs/work-products/phase22-removal-candidates.yaml`:261 — keyword `zuno.database`
+- `.agent/programs/work-products/phase22-removal-candidates.yaml`:265 — keyword `zuno.database`
+- `.agent/programs/work-products/phase22-removal-candidates.yaml`:269 — keyword `zuno.services`
+- `.agent/programs/work-products/phase22-removal-candidates.yaml`:273 — keyword `zuno.schema`
+- `.agent/programs/work-products/phase22-removal-candidates.yaml`:277 — keyword `zuno.schema`
+- `.agent/programs/work-products/phase22-removal-candidates.yaml`:281 — keyword `zuno.services`
+- `.agent/programs/work-products/phase22-removal-candidates.yaml`:285 — keyword `zuno.core`
+- `.agent/programs/work-products/phase22-removal-candidates.yaml`:289 — keyword `zuno.database`
+- `.agent/programs/work-products/phase22-removal-candidates.yaml`:293 — keyword `zuno.database`
+- `.agent/programs/work-products/phase22-removal-candidates.yaml`:297 — keyword `zuno.schema`
+- `.agent/programs/work-products/phase22-removal-candidates.yaml`:301 — keyword `zuno.schema`
+- `.agent/programs/work-products/phase22-removal-candidates.yaml`:305 — keyword `zuno.services`
+- `.agent/programs/work-products/phase22-removal-candidates.yaml`:309 — keyword `zuno.core`
+- `.agent/programs/work-products/phase22-removal-candidates.yaml`:313 — keyword `zuno.services`
+- `.agent/programs/work-products/phase22-removal-candidates.yaml`:317 — keyword `zuno.core`
+- `.agent/programs/work-products/phase22-removal-candidates.yaml`:321 — keyword `zuno.services`
+- `.agent/programs/work-products/phase22-removal-candidates.yaml`:325 — keyword `zuno.core`
+- `.agent/programs/work-products/phase22-removal-candidates.yaml`:329 — keyword `zuno.services`
+- `.agent/programs/work-products/phase22-removal-candidates.yaml`:333 — keyword `zuno.services`
+- `.agent/programs/work-products/phase22-removal-candidates.yaml`:337 — keyword `zuno.services`
+- `.agent/programs/work-products/phase22-removal-candidates.yaml`:341 — keyword `zuno.core`
+- `.agent/programs/work-products/phase22-removal-candidates.yaml`:345 — keyword `zuno.core`
+- `.agent/programs/work-products/phase22-removal-candidates.yaml`:349 — keyword `zuno.database`
+- `.agent/programs/work-products/phase22-removal-candidates.yaml`:353 — keyword `zuno.services`
+- `.agent/programs/work-products/phase22-removal-candidates.yaml`:357 — keyword `zuno.services`
+- `.agent/programs/work-products/phase22-removal-candidates.yaml`:361 — keyword `zuno.utils`
+- `.agent/programs/work-products/phase22-removal-candidates.yaml`:365 — keyword `zuno.core`
+- `.agent/programs/work-products/phase22-removal-candidates.yaml`:369 — keyword `zuno.core`
+- `.agent/programs/work-products/phase22-removal-candidates.yaml`:373 — keyword `zuno.core`
+- `.agent/programs/work-products/phase22-removal-candidates.yaml`:377 — keyword `zuno.services`
+- `.agent/programs/work-products/phase22-removal-candidates.yaml`:381 — keyword `zuno.services`
+- `.agent/programs/work-products/phase22-removal-candidates.yaml`:385 — keyword `legacy`
+- `.agent/programs/work-products/phase22-removal-candidates.yaml`:386 — keyword `legacy`
+- `.agent/programs/work-products/phase22-removal-candidates.yaml`:389 — keyword `legacy`
+- `.agent/programs/work-products/phase22-removal-candidates.yaml`:390 — keyword `GeneralAgent` — agent runtime owns the canonical general agent
+- `.agent/programs/work-products/phase22-removal-candidates.yaml`:393 — keyword `zuno.services`
+- `.agent/programs/work-products/phase22-removal-candidates.yaml`:397 — keyword `legacy`
+- `.agent/programs/work-products/phase22-removal-candidates.yaml`:401 — keyword `zuno.services`
+- `.agent/programs/work-products/phase22-removal-candidates.yaml`:409 — keyword `legacy`
+- `.agent/programs/work-products/phase22-removal-candidates.yaml`:417 — keyword `zuno.services`
+- `.agent/programs/work-products/phase22-removal-candidates.yaml`:421 — keyword `zuno.services`
+- `.agent/programs/work-products/phase22-removal-candidates.yaml`:425 — keyword `zuno.schema`
+- `.agent/programs/work-products/phase22-removal-candidates.yaml`:428 — keyword `compat` — documented compatibility contract
+- `.agent/programs/work-products/phase22-removal-candidates.yaml`:429 — keyword `rollback`
+- `.agent/programs/work-products/phase22-removal-candidates.yaml`:430 — keyword `rollback`
+- `.agent/programs/work-products/phase22-removal-candidates.yaml`:433 — keyword `zuno.database`
+- `.agent/programs/work-products/phase22-removal-candidates.yaml`:437 — keyword `zuno.database`
+- `.agent/programs/work-products/phase22-removal-candidates.yaml`:441 — keyword `zuno.schema`
+- `.agent/programs/work-products/phase22-removal-candidates.yaml`:445 — keyword `zuno.schema`
+- `.agent/programs/work-products/phase22-removal-candidates.yaml`:449 — keyword `zuno.utils`
+- `.agent/programs/work-products/phase22-removal-candidates.yaml`:453 — keyword `zuno.database`
+- `.agent/programs/work-products/phase22-removal-candidates.yaml`:457 — keyword `zuno.services`
+- `.agent/programs/work-products/phase22-removal-candidates.yaml`:461 — keyword `zuno.services`
+- `.agent/programs/work-products/phase22-removal-candidates.yaml`:465 — keyword `zuno.services`
+- `.agent/programs/work-products/phase22-removal-candidates.yaml`:469 — keyword `zuno.database`
+- `.agent/programs/work-products/phase22-removal-candidates.yaml`:473 — keyword `zuno.schema`
+- `.agent/programs/work-products/phase22-removal-candidates.yaml`:477 — keyword `zuno.services`
+- `.agent/programs/work-products/phase22-removal-candidates.yaml`:481 — keyword `zuno.services`
+- `.agent/programs/work-products/phase22-removal-candidates.yaml`:485 — keyword `legacy`
+- `.agent/programs/work-products/phase22-removal-candidates.yaml`:486 — keyword `legacy`
+- `.agent/programs/work-products/phase22-removal-candidates.yaml`:489 — keyword `fallback`
+- `.agent/programs/work-products/phase22-removal-candidates.yaml`:490 — keyword `zuno.services`
+- `.agent/programs/work-products/phase22-removal-candidates.yaml`:494 — keyword `zuno.services`
+- `.agent/programs/work-products/phase22-removal-candidates.yaml`:498 — keyword `zuno.services`
+- `.agent/programs/work-products/phase22-removal-candidates.yaml`:502 — keyword `zuno.services`
+- `.agent/programs/work-products/phase22-removal-candidates.yaml`:506 — keyword `zuno.services`
+- `.agent/programs/work-products/phase22-removal-candidates.yaml`:510 — keyword `zuno.services`
+- `.agent/programs/work-products/phase22-removal-candidates.yaml`:514 — keyword `zuno.services`
+- `.agent/programs/work-products/phase22-removal-candidates.yaml`:518 — keyword `zuno.services`
+- `.agent/programs/work-products/phase22-removal-candidates.yaml`:522 — keyword `zuno.services`
+- `.agent/programs/work-products/phase22-removal-candidates.yaml`:526 — keyword `zuno.services`
+- `.agent/programs/work-products/phase22-removal-candidates.yaml`:530 — keyword `zuno.tools`
+- `.agent/programs/work-products/phase22-removal-candidates.yaml`:534 — keyword `zuno.services`
+- `.agent/programs/work-products/phase22-removal-candidates.yaml`:538 — keyword `zuno.services`
+- `.agent/programs/work-products/phase22-removal-candidates.yaml`:542 — keyword `zuno.services`
+- `.agent/programs/work-products/phase22-removal-candidates.yaml`:546 — keyword `zuno.services`
+- `.agent/programs/work-products/phase22-removal-candidates.yaml`:550 — keyword `zuno.services`
+- `.agent/programs/work-products/phase22-removal-candidates.yaml`:554 — keyword `zuno.services`
+- `.agent/programs/work-products/phase22-removal-candidates.yaml`:558 — keyword `zuno.services`
+- `.agent/programs/work-products/phase22-removal-candidates.yaml`:562 — keyword `zuno.services`
+- `.agent/programs/work-products/phase22-removal-candidates.yaml`:566 — keyword `zuno.services`
+- `.agent/programs/work-products/phase22-removal-candidates.yaml`:570 — keyword `zuno.services`
+- `.agent/programs/work-products/phase22-removal-candidates.yaml`:574 — keyword `zuno.services`
+- `.agent/programs/work-products/phase22-removal-candidates.yaml`:578 — keyword `zuno.services`
+- `.agent/programs/work-products/phase22-removal-candidates.yaml`:582 — keyword `zuno.services`
+- `.agent/programs/work-products/phase22-removal-candidates.yaml`:586 — keyword `zuno.services`
+- `.agent/programs/work-products/phase22-removal-candidates.yaml`:590 — keyword `zuno.core`
+- `.agent/programs/work-products/phase22-removal-candidates.yaml`:598 — keyword `zuno.core`
+- `.agent/programs/work-products/phase22-removal-candidates.yaml`:602 — keyword `fallback`
+- `.agent/programs/work-products/phase22-removal-candidates.yaml`:603 — keyword `fallback`
+- `.agent/programs/work-products/phase22-removal-candidates.yaml`:606 — keyword `zuno.services`
+- `.agent/programs/work-products/phase22-removal-candidates.yaml`:610 — keyword `zuno.services`
+- `.agent/programs/work-products/phase22-removal-candidates.yaml`:613 — keyword `legacy`
+- `.agent/programs/work-products/phase22-removal-candidates.yaml`:614 — keyword `zuno.schema`
+- `.agent/programs/work-products/phase22-removal-candidates.yaml`:618 — keyword `legacy`
+- `.agent/programs/work-products/phase22-removal-candidates.yaml`:622 — keyword `rollback`
+- `.agent/programs/work-products/phase22-removal-candidates.yaml`:623 — keyword `rollback`
+- `.agent/programs/work-products/phase22-removal-candidates.yaml`:624 — keyword `compat` — documented compatibility contract
+- `.agent/programs/work-products/phase22-removal-candidates.yaml`:626 — keyword `zuno.services`
+- `.agent/programs/work-products/phase22-removal-candidates.yaml`:630 — keyword `zuno.tools`
+- `.agent/programs/work-products/phase22-removal-candidates.yaml`:634 — keyword `zuno.tools`
+- `.agent/programs/work-products/phase22-removal-candidates.yaml`:638 — keyword `zuno.tools`
+- `.agent/programs/work-products/phase22-removal-candidates.yaml`:642 — keyword `legacy`
+- `.agent/programs/work-products/phase22-removal-candidates.yaml`:646 — keyword `zuno.core`
+- `.agent/programs/work-products/phase22-removal-candidates.yaml`:650 — keyword `zuno.core`
+- `.agent/programs/work-products/phase22-removal-candidates.yaml`:654 — keyword `zuno.core`
+- `.agent/programs/work-products/phase22-removal-candidates.yaml`:662 — keyword `zuno.database`
+- `.agent/programs/work-products/phase22-removal-candidates.yaml`:666 — keyword `zuno.services`
+- `.agent/programs/work-products/phase22-removal-candidates.yaml`:669 — keyword `legacy`
+- `.agent/programs/work-products/phase22-removal-candidates.yaml`:670 — keyword `legacy`
+- `.agent/programs/work-products/phase22-removal-candidates.yaml`:673 — keyword `legacy`
+- `.agent/programs/work-products/phase22-removal-candidates.yaml`:674 — keyword `legacy`
+- `.agent/programs/work-products/phase22-removal-candidates.yaml`:677 — keyword `legacy`
+- `.agent/programs/work-products/phase22-removal-candidates.yaml`:678 — keyword `legacy`
+- `.agent/programs/work-products/phase22-removal-candidates.yaml`:681 — keyword `legacy`
+- `.agent/programs/work-products/phase22-removal-candidates.yaml`:682 — keyword `legacy`
+- `.agent/programs/work-products/phase22-removal-candidates.yaml`:683 — keyword `legacy`
+- `.agent/programs/work-products/phase22-removal-candidates.yaml`:685 — keyword `legacy`
+- `.agent/programs/work-products/phase22-removal-candidates.yaml`:686 — keyword `legacy`
+- `.agent/programs/work-products/phase22-removal-candidates.yaml`:689 — keyword `legacy`
+- `.agent/programs/work-products/phase22-removal-candidates.yaml`:690 — keyword `legacy`
+- `.agent/programs/work-products/phase22-removal-candidates.yaml`:693 — keyword `legacy`
+- `.agent/programs/work-products/phase22-removal-candidates.yaml`:694 — keyword `legacy`
+- `.agent/programs/work-products/phase22-removal-candidates.yaml`:697 — keyword `legacy`
+- `.agent/programs/work-products/phase22-removal-candidates.yaml`:698 — keyword `legacy`
+- `.agent/programs/work-products/phase22-removal-candidates.yaml`:701 — keyword `legacy`
+- `.agent/programs/work-products/phase22-removal-candidates.yaml`:702 — keyword `legacy`
+- `.agent/programs/work-products/phase22-removal-candidates.yaml`:705 — keyword `legacy`
+- `.agent/programs/work-products/phase22-removal-candidates.yaml`:706 — keyword `legacy`
+- `.agent/programs/work-products/phase22-removal-candidates.yaml`:709 — keyword `legacy`
+- `.agent/programs/work-products/phase22-removal-candidates.yaml`:710 — keyword `legacy`
+- `.agent/programs/work-products/phase22-removal-candidates.yaml`:713 — keyword `legacy`
+- `.agent/programs/work-products/phase22-removal-candidates.yaml`:714 — keyword `legacy`
+- `.agent/programs/work-products/phase22-removal-candidates.yaml`:717 — keyword `legacy`
+- `.agent/programs/work-products/phase22-removal-candidates.yaml`:718 — keyword `legacy`
+- `.agent/programs/work-products/phase22-removal-candidates.yaml`:721 — keyword `legacy`
+- `.agent/programs/work-products/phase22-removal-candidates.yaml`:722 — keyword `legacy`
+- `.agent/programs/work-products/phase22-removal-candidates.yaml`:725 — keyword `legacy`
+- `.agent/programs/work-products/phase22-removal-candidates.yaml`:726 — keyword `legacy`
+- `.agent/programs/work-products/phase22-removal-candidates.yaml`:729 — keyword `legacy`
+- `.agent/programs/work-products/phase22-removal-candidates.yaml`:730 — keyword `legacy`
+- `.agent/programs/work-products/phase22-removal-candidates.yaml`:733 — keyword `legacy`
+- `.agent/programs/work-products/phase22-removal-candidates.yaml`:734 — keyword `legacy`
+- `.agent/programs/work-products/phase22-removal-candidates.yaml`:737 — keyword `legacy`
+- `.agent/programs/work-products/phase22-removal-candidates.yaml`:738 — keyword `legacy`
+- `.agent/programs/work-products/phase22-removal-candidates.yaml`:741 — keyword `legacy`
+- `.agent/programs/work-products/phase22-removal-candidates.yaml`:742 — keyword `legacy`
+- `.agent/programs/work-products/phase22-removal-candidates.yaml`:743 — keyword `compat` — documented compatibility contract
+- `.agent/programs/work-products/phase22-removal-candidates.yaml`:745 — keyword `legacy`
+- `.agent/programs/work-products/phase22-removal-candidates.yaml`:746 — keyword `legacy`
+- `.agent/programs/work-products/phase22-removal-candidates.yaml`:749 — keyword `legacy`
+- `.agent/programs/work-products/phase22-removal-candidates.yaml`:750 — keyword `legacy`
+- `.agent/programs/work-products/phase22-removal-candidates.yaml`:753 — keyword `legacy`
+- `.agent/programs/work-products/phase22-removal-candidates.yaml`:754 — keyword `legacy`
+- `.agent/programs/work-products/phase22-removal-candidates.yaml`:757 — keyword `legacy`
+- `.agent/programs/work-products/phase22-removal-candidates.yaml`:758 — keyword `legacy`
+- `.agent/programs/work-products/phase22-removal-candidates.yaml`:761 — keyword `legacy`
+- `.agent/programs/work-products/phase22-removal-candidates.yaml`:762 — keyword `legacy`
+- `.agent/programs/work-products/phase22-removal-candidates.yaml`:765 — keyword `legacy`
+- `.agent/programs/work-products/phase22-removal-candidates.yaml`:766 — keyword `legacy`
+- `.agent/programs/work-products/phase22-removal-candidates.yaml`:770 — keyword `compat` — documented compatibility contract
+- `.agent/programs/work-products/phase22-removal-candidates.yaml`:771 — keyword `compat` — documented compatibility contract
+- `.agent/programs/work-products/phase22-removal-candidates.yaml`:772 — keyword `compat` — documented compatibility contract
+- `.agent/programs/work-products/phase22-removal-candidates.yaml`:773 — keyword `compat`
+- `.agent/programs/work-products/phase22-removal-candidates.yaml`:775 — keyword `compat` — documented compatibility contract
+- `.agent/programs/work-products/phase22-removal-candidates.yaml`:779 — keyword `compat` — documented compatibility contract
+- `.agent/programs/work-products/phase22-removal-candidates.yaml`:783 — keyword `compat` — documented compatibility contract
+- `.agent/programs/work-products/phase22-removal-candidates.yaml`:787 — keyword `compat` — documented compatibility contract
+- `.agent/programs/work-products/phase22-removal-candidates.yaml`:790 — keyword `compat`
+- `.agent/programs/work-products/phase22-removal-candidates.yaml`:791 — keyword `compat` — documented compatibility contract
+- `.agent/programs/work-products/phase22-removal-candidates.yaml`:794 — keyword `compat` — documented compatibility contract
+- `.agent/programs/work-products/phase22-removal-candidates.yaml`:795 — keyword `legacy`
+- `.agent/programs/work-products/phase22-removal-candidates.yaml`:796 — keyword `compat` — documented compatibility contract
+- `.agent/programs/work-products/phase22-removal-candidates.yaml`:804 — keyword `legacy`
+- `.agent/programs/work-products/phase22-removal-candidates.yaml`:805 — keyword `rollback`
+- `.agent/programs/work-products/phase22-removal-candidates.yaml`:807 — keyword `zuno.core`
+- `.agent/programs/work-products/phase22-removal-candidates.yaml`:808 — keyword `compat` — documented compatibility contract
+- `.agent/programs/work-products/program-risk-register.md`:14 — keyword `legacy`
+- `.agent/programs/work-products/program-risk-register.md`:15 — keyword `legacy`
+- `.agent/programs/work-products/program-risk-register.md`:16 — keyword `legacy`
+- `.agent/programs/work-products/program-risk-register.md`:26 — keyword `rollback`
+- `.agent/programs/work-products/program-risk-register.md`:27 — keyword `compat` — documented compatibility contract
+- `.agent/programs/work-products/requirement-ledger.yaml`:3932 — keyword `compat`
+- `.agent/programs/work-products/requirement-ledger.yaml`:4060 — keyword `fallback`
+- `.agent/programs/work-products/requirement-ledger.yaml`:4156 — keyword `fallback`
+- `.agent/programs/work-products/requirement-ledger.yaml`:4348 — keyword `deprecated`
+- `.agent/programs/work-products/requirement-ledger.yaml`:5340 — keyword `fallback`
+- `.agent/programs/work-products/requirement-ledger.yaml`:5579 — keyword `rollback`
+- `.agent/programs/work-products/requirement-ledger.yaml`:5638 — keyword `rollback`
+- `.agent/programs/work-products/requirement-ledger.yaml`:5661 — keyword `legacy`
+- `.agent/programs/work-products/requirement-ledger.yaml`:6113 — keyword `compat` — documented compatibility contract
+- `.agent/programs/work-products/requirement-ledger.yaml`:6115 — keyword `compat` — documented compatibility contract
+- `.agent/programs/work-products/requirement-ledger.yaml`:6118 — keyword `compat` — documented compatibility contract
+- `.agent/programs/work-products/requirement-ledger.yaml`:6124 — keyword `compat`
+- `.agent/programs/work-products/requirement-ledger.yaml`:6134 — keyword `compat` — documented compatibility contract
+- `.agent/programs/work-products/requirement-ledger.yaml`:6491 — keyword `rollback`
+- `.agent/programs/work-products/requirement-ledger.yaml`:7202 — keyword `compat` — documented compatibility contract
+- `.agent/programs/work-products/requirement-ledger.yaml`:7206 — keyword `compat` — documented compatibility contract
+- `.agent/programs/work-products/requirement-ledger.yaml`:7207 — keyword `compat` — documented compatibility contract
+- `.agent/programs/work-products/requirement-ledger.yaml`:7208 — keyword `compat` — documented compatibility contract
+- `.agent/programs/work-products/requirement-ledger.yaml`:7211 — keyword `compat` — documented compatibility contract
+- `.agent/programs/work-products/requirement-ledger.yaml`:7214 — keyword `rollback`
+- `.agent/programs/work-products/requirement-ledger.yaml`:7216 — keyword `compat` — documented compatibility contract
+- `.agent/programs/work-products/requirement-ledger.yaml`:7218 — keyword `compat` — documented compatibility contract
+- `.agent/programs/work-products/requirement-ledger.yaml`:7222 — keyword `compat` — documented compatibility contract
+- `.agent/programs/work-products/requirement-ledger.yaml`:7223 — keyword `compat` — documented compatibility contract
+- `.agent/programs/work-products/requirement-ledger.yaml`:7224 — keyword `compat` — documented compatibility contract
+- `.agent/programs/work-products/requirement-ledger.yaml`:7295 — keyword `rollback`
+- `.agent/programs/work-products/requirement-ledger.yaml`:7344 — keyword `legacy`
+- `.agent/programs/work-products/requirement-ledger.yaml`:7359 — keyword `legacy`
+- `.agent/programs/work-products/requirement-ledger.yaml`:7397 — keyword `legacy`
+- `.agent/programs/work-products/requirement-ledger.yaml`:7412 — keyword `legacy`
+- `.agent/programs/work-products/requirement-ledger.yaml`:7450 — keyword `legacy`
+- `.agent/programs/work-products/requirement-ledger.yaml`:7465 — keyword `legacy`
+- `.agent/programs/work-products/requirement-ledger.yaml`:7503 — keyword `legacy`
+- `.agent/programs/work-products/requirement-ledger.yaml`:7518 — keyword `legacy`
+- `.agent/programs/work-products/requirement-ledger.yaml`:7556 — keyword `legacy`
+- `.agent/programs/work-products/requirement-ledger.yaml`:7571 — keyword `legacy`
+- `.agent/programs/work-products/requirement-ledger.yaml`:7609 — keyword `legacy`
+- `.agent/programs/work-products/requirement-ledger.yaml`:7624 — keyword `legacy`
+- `.agent/programs/work-products/requirement-ledger.yaml`:7662 — keyword `legacy`
+- `.agent/programs/work-products/requirement-ledger.yaml`:7677 — keyword `legacy`
+- `.agent/programs/work-products/requirement-ledger.yaml`:7715 — keyword `legacy`
+- `.agent/programs/work-products/requirement-ledger.yaml`:7730 — keyword `legacy`
+- `.agent/programs/work-products/requirement-ledger.yaml`:7768 — keyword `legacy`
+- `.agent/programs/work-products/requirement-ledger.yaml`:7783 — keyword `legacy`
+- `.agent/programs/work-products/requirement-ledger.yaml`:7821 — keyword `legacy`
+- `.agent/programs/work-products/requirement-ledger.yaml`:7836 — keyword `legacy`
+- `.agent/programs/work-products/requirement-ledger.yaml`:7874 — keyword `legacy`
+- `.agent/programs/work-products/requirement-ledger.yaml`:7889 — keyword `legacy`
+- `.agent/programs/work-products/requirement-ledger.yaml`:7927 — keyword `legacy`
+- `.agent/programs/work-products/requirement-ledger.yaml`:7942 — keyword `legacy`
+- `.agent/programs/work-products/requirement-ledger.yaml`:7980 — keyword `legacy`
+- `.agent/programs/work-products/requirement-ledger.yaml`:7995 — keyword `legacy`
+- `.agent/programs/work-products/requirement-ledger.yaml`:8033 — keyword `legacy`
+- `.agent/programs/work-products/requirement-ledger.yaml`:8048 — keyword `legacy`
+- `.agent/programs/work-products/requirement-ledger.yaml`:8086 — keyword `legacy`
+- `.agent/programs/work-products/requirement-ledger.yaml`:8101 — keyword `legacy`
+- `.agent/programs/work-products/requirement-ledger.yaml`:8139 — keyword `legacy`
+- `.agent/programs/work-products/requirement-ledger.yaml`:8154 — keyword `legacy`
+- `.agent/programs/work-products/requirement-ledger.yaml`:8192 — keyword `legacy`
+- `.agent/programs/work-products/requirement-ledger.yaml`:8207 — keyword `legacy`
+- `.agent/programs/work-products/requirement-ledger.yaml`:8245 — keyword `legacy`
+- `.agent/programs/work-products/requirement-ledger.yaml`:8260 — keyword `legacy`
+- `.agent/programs/work-products/requirement-ledger.yaml`:8298 — keyword `legacy`
+- `.agent/programs/work-products/requirement-ledger.yaml`:8313 — keyword `legacy`
+- `.agent/programs/work-products/requirement-ledger.yaml`:8351 — keyword `legacy`
+- `.agent/programs/work-products/requirement-ledger.yaml`:8366 — keyword `legacy`
+- `.agent/programs/work-products/requirement-ledger.yaml`:8404 — keyword `legacy`
+- `.agent/programs/work-products/requirement-ledger.yaml`:8419 — keyword `legacy`
+- `.agent/programs/work-products/requirement-ledger.yaml`:8457 — keyword `legacy`
+- `.agent/programs/work-products/requirement-ledger.yaml`:8472 — keyword `legacy`
+- `.agent/programs/work-products/requirement-ledger.yaml`:8510 — keyword `legacy`
+- `.agent/programs/work-products/requirement-ledger.yaml`:8525 — keyword `legacy`
+- `.agent/programs/work-products/requirement-ledger.yaml`:8563 — keyword `legacy`
+- `.agent/programs/work-products/requirement-ledger.yaml`:8578 — keyword `legacy`
+- `.agent/programs/work-products/requirement-ledger.yaml`:8616 — keyword `legacy`
+- `.agent/programs/work-products/requirement-ledger.yaml`:8631 — keyword `legacy`
+- `.agent/programs/work-products/requirement-ledger.yaml`:8669 — keyword `legacy`
+- `.agent/programs/work-products/requirement-ledger.yaml`:8684 — keyword `legacy`
+- `.agent/programs/work-products/requirement-ledger.yaml`:8722 — keyword `legacy`
+- `.agent/programs/work-products/requirement-ledger.yaml`:8737 — keyword `legacy`
+- `.agent/programs/work-products/requirement-ledger.yaml`:8775 — keyword `legacy`
+- `.agent/programs/work-products/requirement-ledger.yaml`:8790 — keyword `legacy`
+- `.agent/programs/work-products/requirement-ledger.yaml`:8828 — keyword `legacy`
+- `.agent/programs/work-products/requirement-ledger.yaml`:8843 — keyword `legacy`
+- `.agent/programs/work-products/requirement-ledger.yaml`:8881 — keyword `legacy`
+- `.agent/programs/work-products/requirement-ledger.yaml`:8896 — keyword `legacy`
+- `.agent/programs/work-products/requirement-ledger.yaml`:8934 — keyword `legacy`
+- `.agent/programs/work-products/requirement-ledger.yaml`:8949 — keyword `legacy`
+- `.agent/programs/work-products/requirement-ledger.yaml`:8987 — keyword `legacy`
+- `.agent/programs/work-products/requirement-ledger.yaml`:9002 — keyword `legacy`
+- `.agent/programs/work-products/requirement-ledger.yaml`:9040 — keyword `legacy`
+- `.agent/programs/work-products/requirement-ledger.yaml`:9055 — keyword `legacy`
+- `.agent/programs/work-products/requirement-ledger.yaml`:9093 — keyword `legacy`
+- `.agent/programs/work-products/requirement-ledger.yaml`:9108 — keyword `legacy`
+- `.agent/programs/work-products/requirement-ledger.yaml`:9146 — keyword `legacy`
+- `.agent/programs/work-products/requirement-ledger.yaml`:9161 — keyword `legacy`
+- `.agent/programs/work-products/requirement-ledger.yaml`:9199 — keyword `legacy`
+- `.agent/programs/work-products/requirement-ledger.yaml`:9214 — keyword `legacy`
+- `.agent/programs/work-products/requirement-ledger.yaml`:9252 — keyword `legacy`
+- `.agent/programs/work-products/requirement-ledger.yaml`:9267 — keyword `legacy`
+- `.agent/programs/work-products/requirement-ledger.yaml`:9305 — keyword `legacy`
+- `.agent/programs/work-products/requirement-ledger.yaml`:9320 — keyword `legacy`
+- `.agent/programs/work-products/requirement-ledger.yaml`:9358 — keyword `legacy`
+- `.agent/programs/work-products/requirement-ledger.yaml`:9373 — keyword `legacy`
+- `.agent/programs/work-products/requirement-ledger.yaml`:9411 — keyword `legacy`
+- `.agent/programs/work-products/requirement-ledger.yaml`:9426 — keyword `legacy`
+- `.agent/programs/work-products/requirement-ledger.yaml`:9464 — keyword `legacy`
+- `.agent/programs/work-products/requirement-ledger.yaml`:9479 — keyword `legacy`
+- `.agent/programs/work-products/requirement-ledger.yaml`:9517 — keyword `legacy`
+- `.agent/programs/work-products/requirement-ledger.yaml`:9532 — keyword `legacy`
+- `.agent/programs/work-products/requirement-ledger.yaml`:9570 — keyword `legacy`
+- `.agent/programs/work-products/requirement-ledger.yaml`:9585 — keyword `legacy`
+- `.agent/programs/work-products/requirement-ledger.yaml`:9623 — keyword `legacy`
+- `.agent/programs/work-products/requirement-ledger.yaml`:9638 — keyword `legacy`
+- `.agent/programs/work-products/requirement-ledger.yaml`:9676 — keyword `legacy`
+- `.agent/programs/work-products/requirement-ledger.yaml`:9691 — keyword `legacy`
+- `.agent/programs/work-products/requirement-ledger.yaml`:9729 — keyword `legacy`
+- `.agent/programs/work-products/requirement-ledger.yaml`:9744 — keyword `legacy`
+- `.agent/programs/work-products/requirement-ledger.yaml`:9782 — keyword `legacy`
+- `.agent/programs/work-products/requirement-ledger.yaml`:9797 — keyword `legacy`
+- `.agent/programs/work-products/requirement-ledger.yaml`:9835 — keyword `legacy`
+- `.agent/programs/work-products/requirement-ledger.yaml`:9850 — keyword `legacy`
+- `.agent/programs/work-products/requirement-ledger.yaml`:9888 — keyword `legacy`
+- `.agent/programs/work-products/requirement-ledger.yaml`:9903 — keyword `legacy`
+- `.agent/programs/work-products/requirement-ledger.yaml`:9941 — keyword `legacy`
+- `.agent/programs/work-products/requirement-ledger.yaml`:9956 — keyword `legacy`
+- `.agent/programs/work-products/requirement-ledger.yaml`:9994 — keyword `legacy`
+- `.agent/programs/work-products/requirement-ledger.yaml`:10009 — keyword `legacy`
+- `.agent/programs/work-products/requirement-ledger.yaml`:10047 — keyword `legacy`
+- `.agent/programs/work-products/requirement-ledger.yaml`:10062 — keyword `legacy`
+- `.agent/programs/work-products/requirement-ledger.yaml`:10100 — keyword `legacy`
+- `.agent/programs/work-products/requirement-ledger.yaml`:10115 — keyword `legacy`
+- `.agent/programs/work-products/requirement-ledger.yaml`:10153 — keyword `legacy`
+- `.agent/programs/work-products/requirement-ledger.yaml`:10168 — keyword `legacy`
+- `.agent/programs/work-products/requirement-ledger.yaml`:10206 — keyword `legacy`
+- `.agent/programs/work-products/requirement-ledger.yaml`:10221 — keyword `legacy`
+- `.agent/programs/work-products/requirement-ledger.yaml`:10259 — keyword `legacy`
+- `.agent/programs/work-products/requirement-ledger.yaml`:10274 — keyword `legacy`
+- `.agent/programs/work-products/requirement-ledger.yaml`:10312 — keyword `legacy`
+- `.agent/programs/work-products/requirement-ledger.yaml`:10327 — keyword `legacy`
+- `.agent/programs/work-products/requirement-ledger.yaml`:10365 — keyword `legacy`
+- `.agent/programs/work-products/requirement-ledger.yaml`:10380 — keyword `legacy`
+- `.agent/programs/work-products/requirement-ledger.yaml`:10418 — keyword `legacy`
+- `.agent/programs/work-products/requirement-ledger.yaml`:10433 — keyword `legacy`
+- `.agent/programs/work-products/requirement-ledger.yaml`:10471 — keyword `legacy`
+- `.agent/programs/work-products/requirement-ledger.yaml`:10486 — keyword `legacy`
+- `.agent/programs/work-products/requirement-ledger.yaml`:10524 — keyword `legacy`
+- `.agent/programs/work-products/requirement-ledger.yaml`:10539 — keyword `legacy`
+- `.agent/programs/work-products/requirement-ledger.yaml`:10577 — keyword `legacy`
+- `.agent/programs/work-products/requirement-ledger.yaml`:10592 — keyword `legacy`
+- `.agent/programs/work-products/requirement-ledger.yaml`:10630 — keyword `legacy`
+- `.agent/programs/work-products/requirement-ledger.yaml`:10645 — keyword `legacy`
+- `.agent/programs/work-products/requirement-ledger.yaml`:10683 — keyword `legacy`
+- `.agent/programs/work-products/requirement-ledger.yaml`:10698 — keyword `legacy`
+- `.agent/programs/work-products/requirement-ledger.yaml`:10736 — keyword `legacy`
+- `.agent/programs/work-products/requirement-ledger.yaml`:10751 — keyword `legacy`
+- `.agent/programs/work-products/requirement-ledger.yaml`:10789 — keyword `legacy`
+- `.agent/programs/work-products/requirement-ledger.yaml`:10804 — keyword `legacy`
+- `.agent/programs/work-products/requirement-ledger.yaml`:10842 — keyword `legacy`
+- `.agent/programs/work-products/requirement-ledger.yaml`:10857 — keyword `legacy`
+- `.agent/programs/work-products/requirement-ledger.yaml`:10895 — keyword `legacy`
+- `.agent/programs/work-products/requirement-ledger.yaml`:10910 — keyword `legacy`
+- `.agent/programs/work-products/requirement-ledger.yaml`:10948 — keyword `legacy`
+- `.agent/programs/work-products/requirement-ledger.yaml`:10963 — keyword `legacy`
+- `.agent/programs/work-products/requirement-ledger.yaml`:11001 — keyword `legacy`
+- `.agent/programs/work-products/requirement-ledger.yaml`:11016 — keyword `legacy`
+- `.agent/programs/work-products/requirement-ledger.yaml`:11054 — keyword `legacy`
+- `.agent/programs/work-products/requirement-ledger.yaml`:11069 — keyword `legacy`
+- `.agent/programs/work-products/requirement-ledger.yaml`:11107 — keyword `legacy`
+- `.agent/programs/work-products/requirement-ledger.yaml`:11122 — keyword `legacy`
+- `.agent/programs/work-products/requirement-ledger.yaml`:11160 — keyword `legacy`
+- `.agent/programs/work-products/requirement-ledger.yaml`:11175 — keyword `legacy`
+- `.agent/programs/work-products/requirement-ledger.yaml`:11213 — keyword `legacy`
+- `.agent/programs/work-products/requirement-ledger.yaml`:11228 — keyword `legacy`
+- `.agent/programs/work-products/requirement-ledger.yaml`:11266 — keyword `legacy`
+- `.agent/programs/work-products/requirement-ledger.yaml`:11281 — keyword `legacy`
+- `.agent/programs/work-products/requirement-ledger.yaml`:11319 — keyword `legacy`
+- `.agent/programs/work-products/requirement-ledger.yaml`:11334 — keyword `legacy`
+- `.agent/programs/work-products/requirement-ledger.yaml`:11372 — keyword `legacy`
+- `.agent/programs/work-products/requirement-ledger.yaml`:11387 — keyword `legacy`
+- `.agent/programs/work-products/requirement-ledger.yaml`:11425 — keyword `legacy`
+- `.agent/programs/work-products/requirement-ledger.yaml`:11440 — keyword `legacy`
+- `.agent/programs/work-products/requirement-ledger.yaml`:11478 — keyword `legacy`
+- `.agent/programs/work-products/requirement-ledger.yaml`:11493 — keyword `legacy`
+- `.agent/programs/work-products/requirement-ledger.yaml`:11531 — keyword `legacy`
+- `.agent/programs/work-products/requirement-ledger.yaml`:11546 — keyword `legacy`
+- `.agent/programs/work-products/requirement-ledger.yaml`:21334 — keyword `legacy`
+- `.agent/programs/work-products/requirement-ledger.yaml`:26080 — keyword `compat` — documented compatibility contract
+- `.agent/programs/work-products/requirement-ledger.yaml`:26086 — keyword `compat`
+- `.agent/programs/work-products/rollback-recovery-playbook.md`:11 — keyword `legacy`
+- `.agent/programs/work-products/rollback-recovery-playbook.md`:13 — keyword `rollback`
+- `.agent/programs/work-products/rollback-recovery-playbook.md`:16 — keyword `fallback`
+- `.agent/programs/work-products/rollback-recovery-playbook.md`:18 — keyword `rollback`
+- `.agent/programs/work-products/rollback-recovery-playbook.md`:24 — keyword `rollback`
+- `.agent/programs/work-products/rollback-recovery-playbook.md`:26 — keyword `rollback`
+- `.agent/programs/work-products/temporary-allowlist.yaml`:5 — keyword `legacy`
+- `.agent/programs/work-products/temporary-allowlist.yaml`:9 — keyword `legacy`
+- `.agent/programs/work-products/temporary-allowlist.yaml`:10 — keyword `legacy`
+- `.agent/programs/work-products/temporary-allowlist.yaml`:12 — keyword `legacy`
+- `.agent/programs/work-products/temporary-allowlist.yaml`:14 — keyword `legacy`
+- `.agent/programs/work-products/temporary-allowlist.yaml`:18 — keyword `legacy`
+- `.agent/programs/work-products/temporary-allowlist.yaml`:20 — keyword `legacy`
+- `.agent/programs/work-products/temporary-allowlist.yaml`:164 — keyword `legacy`
+- `.agent/programs/work-products/temporary-allowlist.yaml`:178 — keyword `GeneralAgent` — agent runtime owns the canonical general agent
+- `.agent/programs/work-products/temporary-allowlist.yaml`:180 — keyword `GeneralAgent` — agent runtime owns the canonical general agent
+- `.agent/programs/work-products/temporary-allowlist.yaml`:252 — keyword `legacy`
+- `.agent/programs/work-products/temporary-allowlist.yaml`:284 — keyword `legacy`
+- `.agent/programs/work-products/temporary-allowlist.yaml`:292 — keyword `legacy`
+- `.agent/programs/work-products/temporary-allowlist.yaml`:300 — keyword `legacy`
+- `.agent/programs/work-products/temporary-allowlist.yaml`:314 — keyword `legacy`
+- `.agent/programs/work-products/temporary-allowlist.yaml`:316 — keyword `legacy`
+- `.agent/programs/work-products/temporary-allowlist.yaml`:323 — keyword `old_`
+- `.agent/programs/work-products/temporary-allowlist.yaml`:331 — keyword `deprecated`
+- `.agent/programs/work-products/temporary-allowlist.yaml`:339 — keyword `deprecated`
+- `.agent/programs/work-products/temporary-allowlist.yaml`:340 — keyword `legacy`
+- `.agent/programs/work-products/temporary-allowlist.yaml`:347 — keyword `deprecated`
+- `.agent/programs/work-products/temporary-allowlist.yaml`:354 — keyword `compat` — documented compatibility contract
+- `.agent/programs/work-products/temporary-allowlist.yaml`:355 — keyword `old_`
+- `.agent/programs/work-products/temporary-allowlist.yaml`:356 — keyword `legacy`
+- `.agent/programs/work-products/temporary-allowlist.yaml`:362 — keyword `legacy`
+- `.agent/programs/work-products/temporary-allowlist.yaml`:363 — keyword `old_`
+- `.agent/programs/work-products/temporary-allowlist.yaml`:364 — keyword `legacy`
+- `.agent/programs/work-products/temporary-allowlist.yaml`:370 — keyword `legacy`
+- `.agent/programs/work-products/temporary-allowlist.yaml`:371 — keyword `old_`
+- `.agent/programs/work-products/temporary-allowlist.yaml`:372 — keyword `legacy`
+- `.agent/programs/work-products/temporary-allowlist.yaml`:378 — keyword `legacy`
+- `.agent/programs/work-products/temporary-allowlist.yaml`:379 — keyword `old_`
+- `.agent/programs/work-products/temporary-allowlist.yaml`:380 — keyword `legacy`
+- `.agent/programs/work-products/temporary-allowlist.yaml`:386 — keyword `legacy`
+- `.agent/programs/work-products/temporary-allowlist.yaml`:387 — keyword `old_`
+- `.agent/programs/work-products/temporary-allowlist.yaml`:388 — keyword `legacy`
+- `.agent/programs/work-products/temporary-allowlist.yaml`:410 — keyword `compat` — documented compatibility contract
+- `.agent/programs/work-products/temporary-allowlist.yaml`:412 — keyword `legacy`
+- `.agent/scripts/dispatch_claude_worker.ps1`:46 — keyword `legacy`
+- `.agent/scripts/dispatch_claude_worker.ps1`:156 — keyword `compat`
+- `.agent/scripts/grep-legacy.ps1`:8 — keyword `legacy`
+- `.agent/scripts/verify-workflow.ps1`:22 — keyword `legacy`
+- `.agent/scripts/verify-workflow.ps1`:23 — keyword `legacy`
+- `.agent/scripts/verify-workflow.ps1`:163 — keyword `compat` — documented compatibility contract
+- `.agent/scripts/verify-workflow.ps1`:258 — keyword `compat` — documented compatibility contract
+- `.agent/scripts/verify-workflow.ps1`:266 — keyword `compat`
+- `.agent/scripts/verify-workflow.ps1`:268 — keyword `compat`
+- `.agent/scripts/verify-workflow.ps1`:270 — keyword `compat`
+- `.agent/scripts/verify-workflow.ps1`:299 — keyword `legacy`
+- `.agent/scripts/verify-workflow.ps1`:311 — keyword `compat`
+- `.agent/scripts/verify-workflow.ps1`:313 — keyword `compat`
+- `.agent/scripts/verify-workflow.ps1`:315 — keyword `compat`
+- `.agent/scripts/verify_module_boundaries.py`:17 — keyword `zuno.services`
+- `.agent/scripts/verify_module_boundaries.py`:18 — keyword `zuno.services`
+- `.agent/scripts/verify_module_boundaries.py`:19 — keyword `zuno.services`
+- `.agent/scripts/verify_module_boundaries.py`:20 — keyword `zuno.services`
+- `.agent/scripts/verify_module_boundaries.py`:21 — keyword `zuno.services`
+- `.agent/scripts/verify_module_boundaries.py`:25 — keyword `zuno.services`
+- `.agent/scripts/verify_module_boundaries.py`:26 — keyword `zuno.services`
+- `.agent/scripts/verify_module_boundaries.py`:27 — keyword `zuno.services`
+- `.agent/scripts/verify_module_boundaries.py`:28 — keyword `zuno.services`
+- `.agent/scripts/verify_module_boundaries.py`:29 — keyword `zuno.services`
+- `.agent/scripts/verify_module_boundaries.py`:116 — keyword `compat` — documented compatibility contract
+- `.agent/scripts/verify_module_boundaries.py`:118 — keyword `old_` — versioned public adapter field
+- `.agent/scripts/verify_module_boundaries.py`:119 — keyword `old_`
+- `.agent/scripts/verify_repo_hygiene.py`:95 — keyword `legacy`
+- `.agent/scripts/verify_repo_hygiene.py`:113 — keyword `compat`
+- `.agent/scripts/verify_repo_hygiene.py`:228 — keyword `legacy`
+- `.agent/scripts/verify_repo_hygiene.py`:230 — keyword `legacy`
+- `.agent/scripts/verify_repo_hygiene.py`:309 — keyword `zuno.core`
+- `.agent/scripts/verify_repo_hygiene.py`:319 — keyword `zuno.services`
+- `.agent/scripts/verify_repo_hygiene.py`:325 — keyword `zuno.services`
+- `.agent/scripts/verify_repo_hygiene.py`:331 — keyword `zuno.services`
+- `.agent/scripts/verify_repo_hygiene.py`:337 — keyword `zuno.core`
+- `.agent/scripts/verify_repo_hygiene.py`:348 — keyword `legacy`
+- `.agent/scripts/verify_repo_hygiene.py`:350 — keyword `zuno.services`
+- `.agent/scripts/verify_repo_hygiene.py`:393 — keyword `legacy`
+- `.agent/scripts/verify_repo_hygiene.py`:394 — keyword `legacy`
+- `.agent/scripts/verify_repo_hygiene.py`:395 — keyword `legacy`
+- `.agent/scripts/verify_repo_hygiene.py`:396 — keyword `legacy`
+- `.agent/scripts/verify_repo_hygiene.py`:397 — keyword `legacy`
+- `.agent/scripts/verify_repo_hygiene.py`:400 — keyword `compat` — documented compatibility contract
+- `.agent/scripts/verify_repo_hygiene.py`:402 — keyword `compat` — documented compatibility contract
+- `.agent/scripts/verify_repo_hygiene.py`:451 — keyword `legacy`
+- `.agent/scripts/verify_repo_hygiene.py`:500 — keyword `legacy`
+- `.agent/scripts/verify_repo_hygiene.py`:501 — keyword `legacy`
+- `.agent/scripts/verify_repo_hygiene.py`:502 — keyword `legacy`
+- `.agent/scripts/verify_repo_hygiene.py`:509 — keyword `legacy`
+- `.agent/scripts/verify_repo_hygiene.py`:510 — keyword `legacy`
+- `.agent/scripts/verify_repo_hygiene.py`:511 — keyword `legacy`
