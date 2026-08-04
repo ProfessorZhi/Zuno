@@ -2,12 +2,14 @@ from __future__ import annotations
 
 import pytest
 
+import zuno.agent.runtime as runtime_package
 from zuno.agent.runtime import (
-    Phase08CutoverController,
     Phase08CutoverError,
+    Phase08RetiredController,
     Phase08RuntimeRequest,
     Phase08RuntimeResponse,
     Phase08RunService,
+    Phase08SideEffectClaimError,
     SideEffectLedger,
     build_phase08_run_graph,
     build_phase08_test_checkpointer,
@@ -27,18 +29,8 @@ def _request() -> Phase08RuntimeRequest:
     )
 
 
-def _legacy_runner(calls: list[tuple[str, bool]]):
-    def _run(request: Phase08RuntimeRequest, allow_side_effect: bool) -> Phase08RuntimeResponse:
-        calls.append((request.idempotency_key, allow_side_effect))
-        return Phase08RuntimeResponse(
-            runtime="legacy",
-            request_hash=request.request_hash,
-            output_ref=f"answer:{request.request_hash[:16]}",
-            trace_ref=f"legacy-trace:{request.trace_id}",
-            side_effect_ref=f"legacy-side-effect:{request.idempotency_key}" if allow_side_effect else None,
-        )
-
-    return _run
+def _retired() -> Phase08RetiredController:
+    return Phase08RetiredController()
 
 
 def _new_runtime() -> Phase08RunService:
@@ -51,116 +43,101 @@ class _UnavailableRuntime:
         raise RuntimeError("runtime unavailable")
 
 
-def test_shadow_mode_compares_same_request_hash_without_double_side_effect() -> None:
-    calls: list[tuple[str, bool]] = []
-    controller = Phase08CutoverController(mode="shadow", legacy_runner=_legacy_runner(calls), new_runtime=_new_runtime())
-    request = _request()
-
-    response = controller.handle(request)
-
-    assert response.runtime == "legacy"
-    assert response.request_hash == request.request_hash
-    assert response.shadow_match is True
-    assert calls == [(request.idempotency_key, True)]
-    assert controller.side_effect_ledger.claimed_keys == set()
+def test_shadow_mode_is_rejected_by_retired_surface() -> None:
+    with pytest.raises(TypeError, match="takes no arguments"):
+        Phase08RetiredController(mode="shadow")
+    with pytest.raises(Phase08CutoverError, match="retired"):
+        _retired().handle(_request())
 
 
-def test_shadow_mode_keeps_legacy_primary_when_new_runtime_is_unavailable() -> None:
-    calls: list[tuple[str, bool]] = []
-    controller = Phase08CutoverController(
-        mode="shadow",
-        legacy_runner=_legacy_runner(calls),
-        new_runtime=_UnavailableRuntime(),  # type: ignore[arg-type]
+def test_shadow_mode_cannot_fallback_when_runtime_unavailable() -> None:
+    # The retired surface holds no runtime and no runner, so an unavailable
+    # runtime cannot be routed around: the request is refused outright.
+    _ = _UnavailableRuntime()
+    with pytest.raises(Phase08CutoverError, match="retired"):
+        _retired().handle(_request())
+
+
+def test_canary_mode_is_rejected_by_retired_surface() -> None:
+    with pytest.raises(TypeError, match="takes no arguments"):
+        Phase08RetiredController(mode="canary")
+    with pytest.raises(Phase08CutoverError, match="retired"):
+        _retired().handle(_request())
+
+
+def test_new_runtime_exception_never_invokes_legacy_runtime() -> None:
+    class _ExplodingOwnerPort:
+        def execute(self, state):
+            del state
+            raise RuntimeError("owner port failed")
+
+    service = Phase08RunService(
+        graph=build_phase08_run_graph(
+            checkpointer=build_phase08_test_checkpointer(),
+            owner_port=_ExplodingOwnerPort(),  # type: ignore[arg-type]
+        )
     )
-    request = _request()
-
-    response = controller.handle(request)
-
-    assert response.runtime == "legacy"
-    assert response.rollback_reason == "shadow_unavailable:RuntimeError"
-    assert response.side_effect_ref == f"legacy-side-effect:{request.idempotency_key}"
-    assert response.shadow_match is False
-    assert controller.side_effect_ledger.claimed_keys == set()
-    assert calls == [(request.idempotency_key, True)]
-
-
-def test_canary_uses_new_runtime_once_and_keeps_legacy_shadow_dry() -> None:
-    calls: list[tuple[str, bool]] = []
-    controller = Phase08CutoverController(mode="canary", legacy_runner=_legacy_runner(calls), new_runtime=_new_runtime())
-    request = _request()
-
-    response = controller.handle(request)
-
-    assert response.runtime == "phase08"
-    assert response.side_effect_ref == f"side-effect:{request.idempotency_key}"
-    assert response.shadow_match is True
-    assert calls == [(request.idempotency_key, False)]
-    assert controller.side_effect_ledger.claimed_keys == {request.idempotency_key}
+    with pytest.raises(RuntimeError, match="owner port failed"):
+        service.start(
+            {
+                "run_id": "run:p08:t08:1",
+                "thread_id": "thread:p08:t08:1",
+                "trace_id": "trace:p08:t08:1",
+                "tenant_id": "tenant-a",
+                "security_epoch_ref": "security-epoch:phase08",
+                "current_security_epoch_ref": "security-epoch:phase08",
+                "budget_requested_units": 1,
+                "budget_available_units": 10,
+                "step_run_id": "step-run:p08:t08:1",
+            }
+        )
+    # There is no cutover controller left to fall back to: the exception is the
+    # terminal behavior and the package exposes no dual-path symbols.
+    assert not hasattr(runtime_package, "Phase08CutoverController")
+    assert not hasattr(runtime_package, "LegacyRunner")
 
 
-def test_new_runtime_unavailable_falls_back_to_legacy_without_duplicate_claim() -> None:
-    calls: list[tuple[str, bool]] = []
-    controller = Phase08CutoverController(
-        mode="new_default",
-        legacy_runner=_legacy_runner(calls),
-        new_runtime=_UnavailableRuntime(),  # type: ignore[arg-type]
-    )
-    request = _request()
-
-    response = controller.handle(request)
-
-    assert response.runtime == "legacy"
-    assert response.rollback_reason == "new_runtime_unavailable:RuntimeError"
-    assert response.side_effect_ref == f"legacy-side-effect:{request.idempotency_key}"
-    assert controller.side_effect_ledger.claimed_keys == set()
-    assert calls == [(request.idempotency_key, True)]
+def test_rollback_mode_is_rejected_by_retired_surface() -> None:
+    with pytest.raises(TypeError, match="takes no arguments"):
+        Phase08RetiredController(mode="rollback")
+    with pytest.raises(Phase08CutoverError, match="retired"):
+        _retired().handle(_request())
 
 
-def test_rollback_mode_never_invokes_new_runtime() -> None:
-    calls: list[tuple[str, bool]] = []
-    controller = Phase08CutoverController(
-        mode="rollback",
-        legacy_runner=_legacy_runner(calls),
-        new_runtime=_UnavailableRuntime(),  # type: ignore[arg-type]
-    )
-    request = _request()
-
-    response = controller.handle(request)
-
-    assert response.runtime == "legacy"
-    assert response.shadow_trace_ref is None
-    assert calls == [(request.idempotency_key, True)]
-
-
-def test_new_default_rejects_duplicate_side_effect_claim() -> None:
-    controller = Phase08CutoverController(mode="new_default", legacy_runner=_legacy_runner([]), new_runtime=_new_runtime())
-    request = _request()
-
-    controller.handle(request)
-    with pytest.raises(Exception, match="duplicate side effect claim"):
-        controller.handle(request)
-
-
-def test_fallback_is_blocked_after_phase08_side_effect_claim() -> None:
-    calls: list[tuple[str, bool]] = []
+def test_retry_rejects_duplicate_side_effect_claim() -> None:
     ledger = SideEffectLedger()
-    canary = Phase08CutoverController(
-        mode="canary",
-        legacy_runner=_legacy_runner(calls),
-        new_runtime=_new_runtime(),
-        side_effect_ledger=ledger,
-    )
     request = _request()
 
-    canary.handle(request)
-    unavailable = Phase08CutoverController(
-        mode="new_default",
-        legacy_runner=_legacy_runner(calls),
-        new_runtime=_UnavailableRuntime(),  # type: ignore[arg-type]
-        side_effect_ledger=ledger,
+    ledger.claim(request, runtime="phase08")
+    with pytest.raises(Phase08SideEffectClaimError, match="duplicate side effect claim"):
+        ledger.claim(request, runtime="phase08")
+    assert ledger.claimed_keys == {request.idempotency_key}
+
+
+def test_effect_committed_blocks_any_second_runtime() -> None:
+    ledger = SideEffectLedger()
+    request = _request()
+    ledger.claim(request, runtime="phase08")
+
+    # Once the effect is committed no second runtime may execute: the retired
+    # controller refuses and a duplicate claim is rejected.
+    assert ledger.has_claim(request) is True
+    with pytest.raises(Phase08CutoverError, match="retired"):
+        _retired().handle(request)
+    with pytest.raises(Phase08SideEffectClaimError, match="duplicate side effect claim"):
+        ledger.claim(request, runtime="phase08")
+    assert ledger.claimed_keys == {request.idempotency_key}
+
+
+def test_cutover_response_dto_still_round_trips_for_ledger_fixtures() -> None:
+    # The response DTO remains part of the persistent ledger fixture surface;
+    # it is not used by any runtime dispatch anymore.
+    response = Phase08RuntimeResponse(
+        runtime="phase08",
+        request_hash=_request().request_hash,
+        output_ref="answer:fixture",
+        trace_ref="trace:fixture",
+        side_effect_ref="side-effect:fixture",
     )
-
-    with pytest.raises(Phase08CutoverError, match="fallback_blocked_after_effect"):
-        unavailable.handle(request)
-
-    assert calls == [(request.idempotency_key, False)]
+    assert response.runtime == "phase08"
+    assert response.rollback_reason is None
