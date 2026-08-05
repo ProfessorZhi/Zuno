@@ -244,6 +244,7 @@ def test_init_simple_agent_enables_explicit_slash_skill(monkeypatch):
         user_id="u_1",
         session_id="s_1",
         original_query="/verify-skill 请总结这个问题",
+        runtime_profile="developer_test_profile",
     )
     agent.plugin_tools = []
     agent.mcp_tools = []
@@ -314,6 +315,7 @@ def test_init_simple_agent_enables_explicit_slash_skill_with_numeric_name(monkey
         user_id="u_1",
         session_id="s_1",
         original_query="/billing-2026 查一下 2026 账单",
+        runtime_profile="developer_test_profile",
     )
     agent.plugin_tools = []
     agent.mcp_tools = []
