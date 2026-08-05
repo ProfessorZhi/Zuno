@@ -195,6 +195,11 @@ class WorkspaceService:
             tenant_id=tenant_id,
             workspace_id=workspace_id,
             client_request_id=client_request_id,
+            budget_limits=(
+                simple_task.budget.model_dump(exclude_none=True)
+                if simple_task.budget is not None
+                else None
+            ),
         )
 
     @staticmethod

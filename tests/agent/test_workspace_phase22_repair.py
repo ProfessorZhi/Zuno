@@ -414,8 +414,8 @@ def test_server_composition_root_wires_workspace_agents(monkeypatch, tmp_path) -
     """The server composition root (workspace task runtime service) binds the
     workspace agent composition explicitly — never at module import time:
     shared durable store, no temp SQLite, approval flow not bound (fail
-    closed), owner resolvers unbound (product runs fail closed until the
-    Security / Budget owner facts are wired)."""
+    closed), and the formal Security / Budget owner resolvers bound from the
+    server security layer (product runs resolve owner facts through them)."""
     from zuno.platform.services.workspace.single_controller_runtime import (
         get_workspace_product_composition,
     )
@@ -433,8 +433,20 @@ def test_server_composition_root_wires_workspace_agents(monkeypatch, tmp_path) -
         assert composition is not None
         assert composition.store is not None
         assert composition.approval_flow == "none"
-        assert composition.security_decision_resolver is None
-        assert composition.budget_decision_resolver is None
+        # PHASE22 product wiring: the formal Security / Budget owner
+        # resolvers are bound at the composition root (owner facts are
+        # resolved through them; adapters never self-attest).
+        from zuno.platform.security.decision_resolvers import (
+            PostgresBudgetDecisionResolver,
+            PostgresSecurityDecisionResolver,
+        )
+
+        assert isinstance(
+            composition.security_decision_resolver, PostgresSecurityDecisionResolver
+        )
+        assert isinstance(
+            composition.budget_decision_resolver, PostgresBudgetDecisionResolver
+        )
 
         monkeypatch.setattr(
             "zuno.platform.services.workspace.simple_agent.ModelManager.get_user_model",

@@ -375,6 +375,10 @@ class WorkspaceTaskRuntimeService:
         from zuno.platform.database.foundation import InfrastructureUnitOfWork
         from zuno.platform.database.tool_runtime import ToolUnitOfWork
         from zuno.platform.security import PostgresSecurityApprovalFactSink, SecurityUnitOfWork
+        from zuno.platform.security.decision_resolvers import (
+            PostgresBudgetDecisionResolver,
+            PostgresSecurityDecisionResolver,
+        )
 
         configure_workspace_product_composition(
             WorkspaceRuntimeComposition(
@@ -387,8 +391,17 @@ class WorkspaceTaskRuntimeService:
                 security_approval_sink=PostgresSecurityApprovalFactSink(engine),
                 security_epoch_ref="",
                 approval_flow="none",
-                security_decision_resolver=None,
-                budget_decision_resolver=None,
+                # PHASE22 product wiring: the formal Security / Budget owner
+                # resolvers are bound here at the server composition root.
+                # Product adapters carry only opaque decision ids; Agent Core
+                # resolves and re-verifies the owner facts. The bound security
+                # epoch is the epoch the server security layer currently
+                # certifies (empty -> owner facts fail closed as stale until
+                # the epoch binding is supplied).
+                security_decision_resolver=PostgresSecurityDecisionResolver(
+                    engine, security_epoch_ref=""
+                ),
+                budget_decision_resolver=PostgresBudgetDecisionResolver(),
                 dynamic_dag_planner=None,
             )
         )

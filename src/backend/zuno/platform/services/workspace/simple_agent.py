@@ -144,6 +144,7 @@ class WorkSpaceSimpleAgent:
         client_request_id: str | None = None,
         tenant_id: str = "",
         workspace_id: str = "",
+        budget_limits: dict[str, Any] | None = None,
     ):
         self.model_name = model_config.get("model", "")
         self.base_url = model_config.get("base_url", "")
@@ -189,6 +190,9 @@ class WorkSpaceSimpleAgent:
         # with BLOCKED_CONFIGURATION at canonical runtime composition.
         self._tenant_id = str(tenant_id or "").strip()
         self._workspace_id = str(workspace_id or "").strip()
+        # PHASE22 product wiring: request-declared runtime limits flow into
+        # the formal Budget Admission resolver (never self-attested).
+        self._budget_limits = dict(budget_limits or {})
         self.desktop_bridge_config = (
             DesktopBridgeConfig(url=desktop_bridge_url, token=desktop_bridge_token)
             if desktop_bridge_url and desktop_bridge_token
@@ -1814,6 +1818,7 @@ class WorkSpaceSimpleAgent:
             tool_id=resolved_tool_id,
             tool_arguments=resolved_args,
             plan_kind=plan_kind,
+            budget_limits=self._budget_limits or None,
         )
         # Idempotent product entry: same client_request_id -> same facts, no
         # duplicate execution or events; explicit retry uses retry_run().
@@ -1864,6 +1869,7 @@ class WorkSpaceSimpleAgent:
             tool_id=resolved_tool_id,
             tool_arguments=resolved_args,
             plan_kind=plan_kind,
+            budget_limits=self._budget_limits or None,
         )
         return self._runtime.start(request)
 

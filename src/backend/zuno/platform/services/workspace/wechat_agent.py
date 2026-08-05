@@ -74,7 +74,8 @@ class WeChatAgent:
                  mcp_configs: List[MCPConfig] = [],
                  runtime_profile: str = PROFILE_PRODUCT,
                  tenant_id: str = "",
-                 workspace_id: str = ""):
+                 workspace_id: str = "",
+                 budget_limits: dict[str, Any] | None = None):
 
         # The chat model is used by the canonical runtime's model steps via
         # the workspace model gateway; the adapter never answers directly.
@@ -100,6 +101,9 @@ class WeChatAgent:
         # user_id. Missing identity fails closed with BLOCKED_CONFIGURATION.
         self._tenant_id = str(tenant_id or "").strip()
         self._workspace_id = str(workspace_id or "").strip()
+        # PHASE22 product wiring: request-declared runtime limits flow into
+        # the formal Budget Admission resolver (never self-attested).
+        self._budget_limits = dict(budget_limits or {})
 
     async def init_wechat_agent(self):
         """Initialize the canonical composition root for this session."""
@@ -301,6 +305,7 @@ class WeChatAgent:
             agent_version="wechat-adapter-v1",
             content_fingerprint=f"content:{hashlib.sha256(goal.encode('utf-8')).hexdigest()[:16]}",
             plan_kind="simple",
+            budget_limits=self._budget_limits or None,
         )
         return self._runtime.start(request)
 
