@@ -493,19 +493,22 @@ def test_repository_scope_default_and_blocked_on_real_tree() -> None:
     status, report = VERIFIER_MOD.verify(REPO_ROOT, "repository")
     assert status == STATUS_REPO_BLOCKED
     bypass_paths = {f["path"] for f in report["findings"]["direct_tool_bypass"]}
+    # NOTE: react_agent.py and plan_execute_agent.py were deleted by PR #127
+    # (agent-family legacy retirement). The verifier correctly no longer
+    # reports them because they no longer exist on the integration tree.
     for expected in (
         "src/backend/zuno/platform/services/workspace/simple_agent.py",
         "src/backend/zuno/platform/services/workspace/wechat_agent.py",
-        "src/backend/zuno/agent/core/agents/react_agent.py",
-        "src/backend/zuno/agent/core/agents/plan_execute_agent.py",
     ):
         assert expected in bypass_paths, f"real bypass not reported: {expected}"
     residual = report["findings"]["residual_product_runtime_found"]
     assert any("product_baseline" in f["path"] for f in residual), (
         "AgentControlRuntime production reachability must be reported"
     )
-    assert report["findings"]["phase08_dual_runtime"], (
-        "Phase08 dual runtime must be reported"
+    # NOTE: phase08_dual_runtime was retired by PR #124. The verifier
+    # correctly no longer reports it because the dual path is gone.
+    assert not report["findings"]["phase08_dual_runtime"], (
+        "Phase08 dual runtime must NOT be reported (retired by PR #124)"
     )
     # allowlisted active bypasses are annotated, never exempted
     for finding in report["findings"]["direct_tool_bypass"]:
