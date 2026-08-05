@@ -159,6 +159,11 @@ class CanonicalCaseResult:
     final_candidate_refs: tuple[str, ...] = ()
     retrieval_trace: dict[str, Any] = field(default_factory=dict)
     product_runtime_attestation: dict[str, Any] = field(default_factory=dict)
+    # Serialized Measurement Attestation (PHASE22 formal entry contract):
+    # mandatory for a MEASURED result — the entry validates the attestation
+    # hash and its binding to profile / artifact hash / fingerprint hash
+    # before it accepts the measurement.
+    measurement_attestation: Optional[Mapping[str, Any]] = None
 
 
 FORMAL_ADAPTER_REFS: Mapping[str, str] = {
