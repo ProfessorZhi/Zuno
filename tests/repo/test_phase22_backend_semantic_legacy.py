@@ -177,7 +177,11 @@ def test_repository_scope_returns_blocked() -> None:
     ), result["payload"]
     categories = {finding["category"] for finding in result["payload"]["findings"]}
     assert "legacy_runtime_owner" in categories
-    assert "direct_handler_bypass" in categories
+    # PHASE22 workspace cutover (PR #129): the workspace adapters no longer
+    # dispatch `handler(request)` directly — the direct handler bypass is
+    # gone. The repository stays BLOCKED on the remaining runtime-ownership
+    # evidence only.
+    assert "direct_handler_bypass" not in categories
     classifications = {
         c["name"]: c["classification"]
         for c in result["payload"]["classifications"]
@@ -597,20 +601,13 @@ def test_direct_handler_request_in_workspace_is_blocked() -> None:
         for finding in result["payload"]["findings"]
         if finding["category"] == "direct_handler_bypass"
     ]
-    assert handler_findings, (
-        "direct handler(request) tool calls must be detected"
-    )
-    # None of these bypasses may leak into the agent core or capability
-    # runtime tree.
-    leaked = [
-        finding
-        for finding in handler_findings
-        if "/agent/" in finding["path"]
-        and "/platform/services/workspace/" not in finding["path"]
-    ]
-    assert leaked == [], (
-        "direct handler(request) bypass must not leak into agent core: "
-        + json.dumps(leaked, indent=2, ensure_ascii=False)
+    # PHASE22 workspace cutover (PR #129): the workspace adapters no longer
+    # dispatch `handler(request)` directly, so no direct handler bypass may
+    # exist anywhere — neither in workspace adapters nor leaked into agent
+    # core / capability runtime.
+    assert handler_findings == [], (
+        "direct handler(request) bypass must not exist after the workspace "
+        "single-controller cutover: " + json.dumps(handler_findings, indent=2, ensure_ascii=False)
     )
 
 

@@ -84,14 +84,33 @@ def _model_role(step: PlanStep) -> ModelRole:
 
 
 def _prompt_for_step(*, state: AgentRuntimeState, step: PlanStep) -> str:
+    tool_context = _tool_observation_context(state)
+    context_block = f"\n\nRecent governed tool observations:\n{tool_context}" if tool_context else ""
     return (
         f"Task goal: {state.goal}\n"
         f"Current PlanStep: {step.goal}\n"
         f"Action type: {step.action_type}\n"
         f"Expected output: {step.expected_output}\n"
         f"Acceptance criteria: {', '.join(step.acceptance_criteria)}\n"
+        f"Answer only from the actual tool observations below.{context_block}\n"
         "Return only the observation needed by this PlanStep."
     )
+
+
+def _tool_observation_context(state: AgentRuntimeState) -> str:
+    """Feed governed tool observations back into the answer step.
+
+    PHASE22 workspace-agent cutover: the final answer is grounded in real
+    tool results (Observation -> Acceptance), never invented by the model.
+    """
+    lines = []
+    for obs in state.observations[-5:]:
+        if obs.kind != "tool":
+            continue
+        result = str(obs.metadata.get("result") or obs.summary or "")
+        status = "completed" if obs.status == "completed" else str(obs.status)
+        lines.append(f"- {obs.tool_id} [{status}]: {result}")
+    return "\n".join(lines)
 
 
 def _status(status: str) -> ObservationStatus:

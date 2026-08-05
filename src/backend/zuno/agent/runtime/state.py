@@ -34,6 +34,17 @@ class AgentRuntimeSnapshot(BaseModel):
     task_id: str
     trace_id: str
     goal: str
+    # Product submission identity + tenant scope (PHASE22 repair; optional
+    # with defaults so the state schema stays backward compatible). There is
+    # no synthetic tenant default: real tenant context is supplied explicitly
+    # by the product request.
+    tenant_id: str = ""
+    principal_id: str = ""
+    submission_id: str = ""
+    client_request_id: str = ""
+    conversation_id: str = ""
+    agent_version: str = ""
+    content_fingerprint: str = ""
     current_node: str = ""
     current_step_id: str | None = None
     context_pack: ContextPack | None = None
@@ -57,6 +68,8 @@ class AgentRuntimeSnapshot(BaseModel):
     interrupt_refs: list[str] = Field(default_factory=list)
     checkpoint_refs: list[str] = Field(default_factory=list)
     trace_event_ids: list[str] = Field(default_factory=list)
+    security_summary: dict[str, Any] = Field(default_factory=dict)
+    budget_verdict: dict[str, Any] | None = None
 
     @model_validator(mode="before")
     @classmethod
@@ -84,6 +97,13 @@ class AgentRuntimeState:
     task_id: str
     trace_id: str
     goal: str
+    tenant_id: str = ""
+    principal_id: str = ""
+    submission_id: str = ""
+    client_request_id: str = ""
+    conversation_id: str = ""
+    agent_version: str = ""
+    content_fingerprint: str = ""
     current_node: str = ""
     current_step_id: str | None = None
     context_pack: ContextPack | None = None
@@ -107,6 +127,11 @@ class AgentRuntimeState:
     interrupt_refs: list[str] = field(default_factory=list)
     checkpoint_refs: list[str] = field(default_factory=list)
     trace_event_ids: list[str] = field(default_factory=list)
+    # Planning-admission gates: seeded by the product surface (single-controller
+    # cutover) so security/budget denials block the plan before any tool
+    # execution; consumed by RuntimeStrategySelector.
+    security_summary: dict[str, Any] = field(default_factory=dict)
+    budget_verdict: dict[str, Any] | None = None
 
     def to_snapshot(self) -> AgentRuntimeSnapshot:
         return AgentRuntimeSnapshot(
@@ -117,6 +142,13 @@ class AgentRuntimeState:
             task_id=self.task_id,
             trace_id=self.trace_id,
             goal=self.goal,
+            tenant_id=self.tenant_id,
+            principal_id=self.principal_id,
+            submission_id=self.submission_id,
+            client_request_id=self.client_request_id,
+            conversation_id=self.conversation_id,
+            agent_version=self.agent_version,
+            content_fingerprint=self.content_fingerprint,
             current_node=self.current_node,
             current_step_id=self.current_step_id,
             context_pack=self.context_pack,
@@ -140,6 +172,8 @@ class AgentRuntimeState:
             interrupt_refs=list(self.interrupt_refs),
             checkpoint_refs=list(self.checkpoint_refs),
             trace_event_ids=list(self.trace_event_ids),
+            security_summary=dict(self.security_summary),
+            budget_verdict=dict(self.budget_verdict) if self.budget_verdict else None,
         )
 
     @classmethod
@@ -152,6 +186,13 @@ class AgentRuntimeState:
             task_id=snapshot.task_id,
             trace_id=snapshot.trace_id,
             goal=snapshot.goal,
+            tenant_id=snapshot.tenant_id,
+            principal_id=snapshot.principal_id,
+            submission_id=snapshot.submission_id,
+            client_request_id=snapshot.client_request_id,
+            conversation_id=snapshot.conversation_id,
+            agent_version=snapshot.agent_version,
+            content_fingerprint=snapshot.content_fingerprint,
             current_node=snapshot.current_node,
             current_step_id=snapshot.current_step_id,
             context_pack=snapshot.context_pack,
@@ -179,6 +220,8 @@ class AgentRuntimeState:
             interrupt_refs=list(snapshot.interrupt_refs),
             checkpoint_refs=list(snapshot.checkpoint_refs),
             trace_event_ids=list(snapshot.trace_event_ids),
+            security_summary=dict(snapshot.security_summary),
+            budget_verdict=dict(snapshot.budget_verdict) if snapshot.budget_verdict else None,
         )
 
 

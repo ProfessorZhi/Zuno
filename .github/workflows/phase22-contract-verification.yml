@@ -131,7 +131,8 @@ jobs:
             poetry run python tools/scripts/verify_agent_commit_attribution.py --base ${{ github.event.pull_request.base.sha || 'origin/codex/goal05-phase15-sandbox-repair' }} --allow-human-only && \
             poetry run python -m compileall -q src/backend && \
             poetry run python -m compileall -q tools/evals/zuno && \
-            poetry run python -m compileall -q tools/scripts
+            poetry run python -m compileall -q tools/scripts && \
+            poetry run python -c "import zuno.api.services.workspace_task_runtime"
           } 2>&1 | tee artifacts/phase22-verification/repository-gates.log
 
       - name: Upload repository gates logs
@@ -198,6 +199,10 @@ jobs:
             tests/repo/test_agent_commit_attribution.py \
             tests/repo/test_agent_pr_body.py \
             tests/repo/test_phase22_verification_truth.py \
+            tests/agent/test_workspace_task_runtime_import_smoke.py \
+            tests/agent/test_workspace_phase22_repair.py \
+            tests/agent/test_workspace_single_controller_cutover.py \
+            tests/agent/test_workspace_simple_agent.py \
             --junitxml=artifacts/phase22-verification/pytest-results.xml \
             -p no:cacheprovider 2>&1 | tee artifacts/phase22-verification/pytest.log
 

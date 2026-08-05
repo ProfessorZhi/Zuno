@@ -52,6 +52,7 @@ class ToolStepExecutor:
             approved=approved,
             runtime_state=state,
             execution_id=idempotency_key,
+            tenant_id=state.tenant_id,
         )
         result = tool_runtime.execute(request)
         if result.status == "approval_required":
@@ -72,6 +73,9 @@ class ToolStepExecutor:
                     "idempotency_key": idempotency_key,
                     "task_events": [event["type"] for event in result.task_events],
                     "credential_refs": [],
+                    "effect_certainty": result.effect_certainty,
+                    "effect_receipt_ref": result.effect_receipt_ref,
+                    "blocked_reason": result.blocked_reason,
                 },
             )
             return StepExecutionResult(
@@ -105,12 +109,19 @@ class ToolStepExecutor:
                 "task_events": [event["type"] for event in result.task_events],
                 "credential_refs": list(result.sandbox_context.credential_refs),
                 "result": normalized.to_dict() if normalized else None,
+                "effect_certainty": result.effect_certainty,
+                "effect_receipt_ref": result.effect_receipt_ref,
+                "blocked_reason": result.blocked_reason,
             },
         )
         return StepExecutionResult(step_id=step.step_id, status=status, observation=observation)
 
 
 def _tool_id_for_step(state: AgentRuntimeState, step: PlanStep) -> str:
+    # Single-controller product cutover: tool steps bind the real tool id in
+    # the plan; execution still flows through the control plane gates.
+    if step.tool_id:
+        return step.tool_id
     if step.action_type == "observe_tool_result":
         return "filesystem.read"
     if step.allowed_capabilities:
@@ -130,6 +141,8 @@ def _tool_id_for_step(state: AgentRuntimeState, step: PlanStep) -> str:
 
 
 def _arguments_for_step(state: AgentRuntimeState, step: PlanStep, tool_id: str) -> dict:
+    if step.tool_arguments is not None:
+        return dict(step.tool_arguments)
     goal = f"{state.goal} {step.goal}"
     if tool_id == "filesystem.read":
         return {"path": "docs/contract.md"}

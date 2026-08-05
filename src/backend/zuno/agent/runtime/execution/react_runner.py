@@ -68,14 +68,28 @@ class ReActStepRunner:
 
 
 def _react_prompt(*, state: AgentRuntimeState, step: PlanStep) -> str:
+    tool_context = _tool_observation_context(state)
+    context_block = f"\n\nRecent governed tool observations:\n{tool_context}" if tool_context else ""
     return (
         "Run exactly one ReAct step for the current plan step.\n"
         f"Task goal: {state.goal}\n"
         f"Step goal: {step.goal}\n"
         f"Action type: {step.action_type}\n"
         f"Acceptance criteria: {', '.join(step.acceptance_criteria)}\n"
+        f"Base your observation on the actual tool results below.{context_block}\n"
         "Return a concise observation, not the final answer."
     )
+
+
+def _tool_observation_context(state: AgentRuntimeState) -> str:
+    lines = []
+    for obs in state.observations[-5:]:
+        if obs.kind != "tool":
+            continue
+        result = str(obs.metadata.get("result") or obs.summary or "")
+        status = "completed" if obs.status == "completed" else str(obs.status)
+        lines.append(f"- {obs.tool_id} [{status}]: {result}")
+    return "\n".join(lines)
 
 
 def _status(status: str) -> ObservationStatus:

@@ -508,6 +508,41 @@ class SecurityRepository:
             decision_hash=decision_hash,
         )
 
+    def read_authorization_decision_fact(
+        self,
+        *,
+        decision_id: str,
+        tenant_id: str,
+    ) -> dict[str, Any] | None:
+        """Read the Security-owner authorization fact for the workspace
+        Security decision resolver (PHASE22 product wiring).
+
+        Returns the owner-recorded fact fields (or ``None`` when the owner
+        has no such fact). The resolver maps the fact to the runtime
+        ``SecurityDecisionRef``; Agent Core re-verifies hash / epoch / scope
+        before any tool step. The caller never mints its own allow decision.
+        """
+        row = self.connection.execute(
+            text(
+                """
+                SELECT d.decision_id, d.tenant_id, d.principal_context_id,
+                       d.epoch_ref, d.resource_ref, d.action, d.decision,
+                       d.decision_hash, e.status AS epoch_status,
+                       p.user_principal_id
+                FROM security_authorization_decisions d
+                JOIN security_effective_epochs e
+                     ON e.epoch_ref = d.epoch_ref AND e.tenant_id = d.tenant_id
+                LEFT JOIN security_principal_contexts p
+                     ON p.principal_context_id = d.principal_context_id
+                WHERE d.decision_id = :decision_id AND d.tenant_id = :tenant_id
+                """
+            ),
+            {"decision_id": decision_id, "tenant_id": tenant_id},
+        ).mappings().first()
+        if row is None:
+            return None
+        return dict(row)
+
     def request_approval(
         self,
         *,

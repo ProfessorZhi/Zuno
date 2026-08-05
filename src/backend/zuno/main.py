@@ -76,6 +76,12 @@ async def init_config():
         ),
         upload_bucket=resolve_package_a_upload_bucket(app_settings),
     )
+    # PHASE22 repair (B1): the workspace agent product composition is wired
+    # explicitly here at the application startup composition root — never at
+    # module import time. Idempotent; the workspace / wechat product agents
+    # fail closed (BLOCKED_CONFIGURATION) until this binding is present and
+    # the product surface supplies real tenant / workspace identity.
+    WorkspaceTaskRuntimeService.configure_workspace_agent_product_composition()
     MCPService.configure_security_product_action_guard(product_action_guard)
     MCPServerService.configure_security_product_action_guard(product_action_guard)
     configure_security_admin_action_guard(product_action_guard)
