@@ -12,6 +12,11 @@ packages = [
 
 [tool.poetry.dependencies]
 python = "^3.12"
+# PHASE22 repair: zuno.api.services.user imports rsa directly (production
+# code) — the workspace composition import chain reaches it, so `rsa` must be
+# a declared dependency for `import zuno.api.services.workspace_task_runtime`
+# to work in CI (compileall does not execute imports).
+rsa = "^4.9"
 langchain = "^1.0.3"
 langgraph = "1.0.10"
 langgraph-prebuilt = "1.0.8"
