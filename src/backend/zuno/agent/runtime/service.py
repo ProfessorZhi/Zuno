@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, replace
-from typing import Iterable
+from typing import Any, Iterable
 
 from zuno.agent.durable_runtime import DurableRuntimeTaskSnapshot
 from zuno.agent.contracts import CapabilityPlan, ContextPack, PlanState, PlanStep
@@ -16,6 +16,13 @@ from zuno.agent.runtime.contracts import (
 from zuno.agent.runtime.dependencies import RuntimeDependencies
 from zuno.agent.runtime.factory import RuntimeDependencyFactory
 from zuno.agent.runtime.graph import build_agent_graph
+from zuno.agent.runtime.owner_refs import (
+    OwnerRefVerification,
+    resolve_budget_ref,
+    resolve_security_ref,
+    validate_budget_decision_ref,
+    validate_security_decision_ref,
+)
 from zuno.agent.runtime.routing import (
     RuntimeNode,
     hard_limit_route,
@@ -24,6 +31,12 @@ from zuno.agent.runtime.routing import (
 )
 from zuno.agent.runtime.state import AgentRuntimeSnapshot, AgentRuntimeState
 from zuno.agent.runtime.store import AgentRunStore
+
+# Runtime composition profile: the product (server) composition must inject
+# durable stores and owner bindings; only the explicit developer test profile
+# may fall back to SQLite stores.
+PROFILE_PRODUCT = "server_product"
+PROFILE_DEVELOPER_TEST = "developer_test_profile"
 
 
 @dataclass(frozen=True, slots=True)
@@ -35,6 +48,16 @@ class RuntimeStartRequest:
     task_id: str
     trace_id: str
     goal: str
+    # Product submission identity (PHASE22 repair): the task id must be bound
+    # to the product submission, never to a content hash.
+    tenant_id: str = "tenant:default"
+    principal_id: str = ""
+    submission_id: str = ""
+    client_request_id: str = ""
+    conversation_id: str = ""
+    agent_version: str = ""
+    content_fingerprint: str = ""
+    profile: str = PROFILE_PRODUCT
     knowledge_space_ids: tuple[str, ...] = ()
     strategy_mode: StrategyMode | str | None = None
     reflection_decision: ReflectionDecision | str | None = None
@@ -46,6 +69,11 @@ class RuntimeStartRequest:
     allowed_tools: tuple[str, ...] = ()
     approval_required_tools: tuple[str, ...] = ()
     budget_limits: dict[str, Any] | None = None
+    # Owner decision refs only: raw caller dicts are never trusted as owner
+    # decisions (PHASE22 repair).
+    security_decision_ref: dict[str, Any] | None = None
+    budget_decision_ref: dict[str, Any] | None = None
+    security_epoch_ref: str = ""
     security_summary: dict[str, Any] | None = None
     budget_verdict: dict[str, Any] | None = None
     plan_steps: tuple[dict[str, Any], ...] = ()
@@ -82,19 +110,50 @@ class UnifiedAgentRuntimeService:
         self.graph = graph or build_agent_graph(dependencies=self.dependencies, checkpointer=self.checkpointer)
 
     def start(self, request: RuntimeStartRequest) -> AgentRuntimeSnapshot:
+        # PHASE22 repair: Security / Budget facts come from owner decision
+        # refs verified by Agent Core; a caller raw dict is never an owner
+        # decision, and an invalid / missing / stale ref fails closed.
+        security_verdict = _verify_security_owner_ref(request)
+        budget_verdict = _verify_budget_owner_ref(request)
+        admission_blocked = not security_verdict.allowed or not budget_verdict.allowed
         state = AgentRuntimeState(
             run_id=request.run_id,
             thread_id=request.thread_id,
             workspace_id=request.workspace_id,
             user_id=request.user_id,
+            tenant_id=request.tenant_id,
             task_id=request.task_id,
             trace_id=request.trace_id,
             goal=request.goal,
+            submission_id=request.submission_id,
+            client_request_id=request.client_request_id,
+            conversation_id=request.conversation_id,
+            agent_version=request.agent_version,
+            content_fingerprint=request.content_fingerprint,
             capability_plan=_capability_plan_from_request(request),
-            plan_state=_plan_state_from_request(request),
+            plan_state=_plan_state_from_request(request, blocked=admission_blocked),
             limits=_limits_from_request(request),
-            security_summary=dict(request.security_summary or {}),
-            budget_verdict=dict(request.budget_verdict) if request.budget_verdict else None,
+            security_summary=dict(request.security_summary or {})
+            if not admission_blocked
+            else {
+                **dict(request.security_summary or {}),
+                "decision": "block",
+                "recommended_action": "refuse",
+                "reason": (
+                    security_verdict.reason
+                    if not security_verdict.allowed
+                    else budget_verdict.reason
+                ),
+            },
+            budget_verdict=(
+                dict(request.budget_verdict)
+                if request.budget_verdict and not admission_blocked
+                else {"allowed": False, "reason": budget_verdict.reason}
+                if not budget_verdict.allowed
+                else dict(request.budget_verdict)
+                if request.budget_verdict
+                else None
+            ),
             context_pack=(
                 ContextPack(
                     context_pack_id=f"context:{request.run_id}",
@@ -102,6 +161,9 @@ class UnifiedAgentRuntimeService:
                     task_state={
                         "thread_id": request.thread_id,
                         "task_id": request.task_id,
+                        "tenant_id": request.tenant_id,
+                        "client_request_id": request.client_request_id,
+                        "submission_id": request.submission_id,
                         "knowledge_space_ids": list(request.knowledge_space_ids),
                     },
                     output_contract={"runtime": "unified_graph_request_context"},
@@ -141,7 +203,15 @@ class UnifiedAgentRuntimeService:
         if snapshot.finalization_status == FinalizationStatus.INTERRUPTED:
             return
 
-    def resume(self, *, task_id: str, approval_decision: str = "approved") -> AgentRuntimeSnapshot:
+    def resume(
+        self,
+        *,
+        task_id: str,
+        approval_decision: str = "approved",
+        tenant_id: str = "",
+        workspace_id: str = "",
+    ) -> AgentRuntimeSnapshot:
+        _assert_scope(task_id, self.store, tenant_id=tenant_id, workspace_id=workspace_id)
         interrupt = self.store.pending_interrupt(task_id)
         if interrupt is None:
             raise ValueError(f"runtime task is not waiting for interrupt resume: {task_id}")
@@ -149,7 +219,9 @@ class UnifiedAgentRuntimeService:
             snapshot = self.store.snapshot(task_id)
             self.store.clear_interrupt(task_id)
             self.store.update_status(task_id, "failed")
-            return _runtime_state_from_task_snapshot(snapshot).to_snapshot()
+            rejected_state = _runtime_state_from_task_snapshot(snapshot)
+            rejected_state.finalization_status = FinalizationStatus.FAILED
+            return rejected_state.to_snapshot()
         latest = self.store.latest_checkpoint(task_id)
         if latest is None:
             raise ValueError(f"runtime task has no checkpoint to resume: {task_id}")
@@ -198,10 +270,21 @@ class UnifiedAgentRuntimeService:
         self.checkpointer.cancel(task_id, reason=reason)
         return self.store.snapshot(task_id)
 
-    def get_snapshot(self, task_id: str) -> AgentRuntimeSnapshot | None:
+    def get_snapshot(
+        self,
+        task_id: str,
+        *,
+        tenant_id: str = "",
+        workspace_id: str = "",
+    ) -> AgentRuntimeSnapshot | None:
         if not self.store.has_task(task_id):
             return None
-        return _runtime_state_from_task_snapshot(self.store.snapshot(task_id)).to_snapshot()
+        snapshot = _runtime_state_from_task_snapshot(self.store.snapshot(task_id)).to_snapshot()
+        if tenant_id and snapshot.tenant_id != tenant_id:
+            return None
+        if workspace_id and snapshot.workspace_id != workspace_id:
+            return None
+        return snapshot
 
 
 def _capability_plan_from_request(request: RuntimeStartRequest) -> CapabilityPlan | None:
@@ -226,23 +309,79 @@ def _capability_plan_from_request(request: RuntimeStartRequest) -> CapabilityPla
     )
 
 
-def _plan_state_from_request(request: RuntimeStartRequest) -> PlanState | None:
-    """Seed a deterministic plan from the product surface.
+def _plan_state_from_request(request: RuntimeStartRequest, *, blocked: bool = False) -> PlanState | None:
+    """Activate the deterministic plan carried by the product surface.
 
-    Simple requests leave the plan to the fixed graph's strategy selector
-    (single-step direct-answer). Requests that need governed tool execution
-    carry an explicit plan whose tool steps bind real tool ids + arguments;
-    the graph still runs every step through security / approval / budget /
-    gateway gates.
+    PHASE22 repair: every task must have a formal plan (INV-AGENT-001). The
+    adapter supplies step definitions only; activation status / plan version
+    are owned by Agent Core here. A request without any plan steps and without
+    an explicit blocked admission produces a blocked plan instead of a
+    direct-answer bypass.
     """
+    if blocked:
+        return PlanState(
+            plan_id=f"plan:{request.run_id}",
+            status="blocked",
+            steps=[],
+            current_step_id=None,
+            plan_version=0,
+        )
     if not request.plan_steps:
-        return None
+        return PlanState(
+            plan_id=f"plan:{request.run_id}",
+            status="blocked",
+            steps=[],
+            current_step_id=None,
+            plan_version=0,
+        )
     steps = [PlanStep(**step) for step in request.plan_steps]
     return PlanState(
         plan_id=f"plan:{request.run_id}",
         status="planned",
         steps=steps,
         current_step_id=steps[0].step_id if steps else None,
+        plan_version=1,
+        activation_status="activated",
+        activated_by="agent_core",
+    )
+
+
+def _verify_security_owner_ref(request: RuntimeStartRequest) -> OwnerRefVerification:
+    """Agent Core verifies the Security-owner decision ref (PHASE22 repair).
+
+    In the product profile the ref is required for any governed tool plan
+    (fail closed); the explicit developer test profile may omit it.
+    """
+    ref = resolve_security_ref(request.security_decision_ref)
+    required = (
+        request.profile == PROFILE_PRODUCT
+        and bool(request.allowed_tools or request.capability_ids or request.plan_steps)
+    )
+    return validate_security_decision_ref(
+        ref,
+        tenant_id=request.tenant_id,
+        workspace_id=request.workspace_id,
+        principal_id=request.principal_id or request.user_id,
+        action="tool.execute",
+        resource=",".join(request.allowed_tools),
+        bound_security_epoch_ref=request.security_epoch_ref,
+        required=required,
+    )
+
+
+def _verify_budget_owner_ref(request: RuntimeStartRequest) -> OwnerRefVerification:
+    """Agent Core verifies the Budget-owner decision ref (PHASE22 repair)."""
+    ref = resolve_budget_ref(request.budget_decision_ref)
+    required = (
+        request.profile == PROFILE_PRODUCT
+        and bool(request.allowed_tools or request.capability_ids or request.plan_steps)
+    )
+    return validate_budget_decision_ref(
+        ref,
+        tenant_id=request.tenant_id,
+        workspace_id=request.workspace_id,
+        run_id=request.run_id,
+        required=required,
     )
 
 
@@ -255,6 +394,30 @@ def _limits_from_request(request: RuntimeStartRequest) -> RuntimeLimits:
         for name in RuntimeLimits.model_fields
     }
     return RuntimeLimits(**{key: value for key, value in request.budget_limits.items() if key in allowed})
+
+
+def _assert_scope(
+    task_id: str,
+    store: AgentRunStore,
+    *,
+    tenant_id: str,
+    workspace_id: str,
+) -> None:
+    """PHASE22 repair: tenant / workspace isolation for read and resume paths.
+
+    The store may be shared across tenants (e.g. the server's durable store);
+    a run recovered from the store whose owner scope does not match the
+    caller's scope fails closed instead of leaking the run.
+    """
+    if not tenant_id and not workspace_id:
+        return
+    if not store.has_task(task_id):
+        return
+    snapshot = _runtime_state_from_task_snapshot(store.snapshot(task_id)).to_snapshot()
+    if tenant_id and snapshot.tenant_id != tenant_id:
+        raise PermissionError(f"runtime task outside tenant scope: {task_id}")
+    if workspace_id and snapshot.workspace_id != workspace_id:
+        raise PermissionError(f"runtime task outside workspace scope: {task_id}")
 
 
 def _runtime_state_from_task_snapshot(snapshot: DurableRuntimeTaskSnapshot) -> AgentRuntimeState:
@@ -272,11 +435,14 @@ def _runtime_state_from_task_snapshot(snapshot: DurableRuntimeTaskSnapshot) -> A
         task_id=snapshot.task_id,
         trace_id=snapshot.trace_id,
         goal=snapshot.state.goal,
+        tenant_id=str(context_pack.get("tenant_id") or ""),
         current_node=snapshot.state.current_step,
     )
 
 
 __all__ = [
+    "PROFILE_DEVELOPER_TEST",
+    "PROFILE_PRODUCT",
     "RuntimeStartRequest",
     "RuntimeStreamEvent",
     "UnifiedAgentRuntimeService",

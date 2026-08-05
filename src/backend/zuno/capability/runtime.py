@@ -26,14 +26,76 @@ from zuno.capability.control_plane import (
     ToolTrustTier,
 )
 from zuno.capability.tool_runtime.effect_policy import classify_tool_effect
+from zuno.platform.contracts import canonical_sha256
 from zuno.platform.security.governance import (
     SandboxAuditEvent,
+    SandboxProfile,
     SecurityDecision,
+    SecurityGate,
     ToolSecurityGate,
     ToolSecurityProfile,
     redact_sensitive_payload,
     redact_sensitive_text,
 )
+
+
+def _verify_manifest_policy(*, manifest: ToolCardManifest, request: ToolRuntimeRequest) -> str | None:
+    """PHASE22 repair (B2): authoritative manifest policy, never name guessing.
+
+    Returns a fail-closed reason when the manifest is unresolved, out of scope
+    or its policy hash is forged; ``None`` means the policy is authoritative.
+    """
+    if manifest.policy_resolution != "resolved":
+        return "UNRESOLVED_TOOL_POLICY"
+    if manifest.tenant_id and request.tenant_id and manifest.tenant_id != request.tenant_id:
+        return "MANIFEST_TENANT_SCOPE_MISMATCH"
+    if manifest.workspace_id and manifest.workspace_id != request.workspace_id:
+        return "MANIFEST_WORKSPACE_SCOPE_MISMATCH"
+    if manifest.policy_hash:
+        expected = manifest_policy_hash(manifest)
+        if manifest.policy_hash != expected:
+            return "MANIFEST_POLICY_HASH_MISMATCH"
+    return None
+
+
+def manifest_policy_hash(manifest: ToolCardManifest) -> str:
+    """Deterministic hash over the policy-relevant manifest fields."""
+    return canonical_sha256(
+        {
+            "tool_id": manifest.tool_id,
+            "owner": manifest.owner,
+            "capability_domain": manifest.capability_domain,
+            "execution_mode": manifest.execution_mode.value,
+            "side_effect_level": manifest.side_effect_level.value,
+            "approval_policy": manifest.approval_policy.value,
+            "sandbox_profile": manifest.sandbox_profile,
+            "credential_policy": manifest.credential_policy,
+            "network_policy": manifest.network_policy,
+            "audit_policy": manifest.audit_policy,
+            "budget": manifest.budget,
+            "tenant_id": manifest.tenant_id,
+            "workspace_id": manifest.workspace_id,
+            "manifest_version": manifest.manifest_version,
+        }
+    )
+
+
+def _blocked_audit_event(*, request: ToolRuntimeRequest, audit_id: str, reason: str) -> SandboxAuditEvent:
+    return SandboxAuditEvent(
+        audit_id=audit_id,
+        gate=SecurityGate.TOOL,
+        workspace_id=request.workspace_id,
+        task_id=request.task_id,
+        trace_id=request.trace_id,
+        model_intent=request.model_intent,
+        policy_decision=SecurityDecision.BLOCK,
+        final_decision="blocked",
+        actor="tool-runtime",
+        target=request.tool_id,
+        sandbox_profile=SandboxProfile.NONE,
+        risk_reasons=[reason],
+        proposed_args_redacted=redact_sensitive_payload(request.arguments),
+    )
 
 
 ToolExecutor = Callable[["ToolExecutionContext"], Any]
@@ -68,6 +130,8 @@ class ToolRuntimeRequest:
     tool_request_id: str = field(default_factory=lambda: f"toolreq_{uuid4().hex[:12]}")
     approval_id: str = field(default_factory=lambda: f"approval_{uuid4().hex[:12]}")
     execution_id: str = ""
+    # PHASE22 repair: tenant scope for manifest ownership checks.
+    tenant_id: str = ""
 
 
 @dataclass(frozen=True, slots=True)
@@ -263,6 +327,11 @@ class ToolRuntimeExecutionResult:
     approval_id: str = ""
     tool_execution_id: str = ""
     tool_result_id: str = ""
+    # PHASE22 repair: formal effect certainty derived from durable effect
+    # receipts, never from observation heuristics.
+    effect_certainty: str = "NO_EFFECT"
+    effect_receipt_ref: str = ""
+    blocked_reason: str = ""
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -281,6 +350,9 @@ class ToolRuntimeExecutionResult:
             if self.normalized_result is not None
             else None,
             "task_events": [dict(event) for event in self.task_events],
+            "effect_certainty": self.effect_certainty,
+            "effect_receipt_ref": self.effect_receipt_ref,
+            "blocked_reason": self.blocked_reason,
         }
 
 
@@ -331,7 +403,91 @@ class ToolControlPlaneRuntime:
         self._executors[adapter.adapter_id] = _normalize_executor(executor)
 
     def execute(self, request: ToolRuntimeRequest) -> ToolRuntimeExecutionResult:
-        manifest = self._require_manifest(request.tool_id)
+        manifest = self._manifests.get(request.tool_id)
+        if manifest is None:
+            # PHASE22 repair (B2): an unknown tool has no authoritative policy
+            # manifest; it must fail closed instead of defaulting to READ.
+            return ToolRuntimeExecutionResult(
+                tool_id=request.tool_id,
+                status="blocked",
+                approval_required=False,
+                security_decision=SecurityDecision.BLOCK.value,
+                approval_decision={},
+                audit_event=_blocked_audit_event(
+                    request=request,
+                    audit_id=f"audit_unresolved_{request.tool_request_id}",
+                    reason="UNRESOLVED_TOOL_POLICY:missing_manifest",
+                ),
+                sandbox_context=ToolSandboxContext(
+                    tool_id=request.tool_id,
+                    adapter_id="",
+                    sandbox_profile="unknown",
+                    network_policy="deny",
+                    credential_policy="none",
+                ),
+                task_events=(
+                    {
+                        "type": "tool_call",
+                        "status": "blocked",
+                        "payload": {
+                            "status": "blocked",
+                            "tool_request_id": request.tool_request_id,
+                            "approval_id": request.approval_id,
+                            "tool_id": request.tool_id,
+                            "error": "UNRESOLVED_TOOL_POLICY:missing_manifest",
+                            "security_decision": SecurityDecision.BLOCK.value,
+                        },
+                    },
+                ),
+                tool_request_id=request.tool_request_id,
+                approval_id=request.approval_id,
+                effect_certainty="NO_EFFECT",
+                blocked_reason="UNRESOLVED_TOOL_POLICY:missing_manifest",
+            )
+        policy_block = _verify_manifest_policy(manifest=manifest, request=request)
+        if policy_block is not None:
+            audit_event = _blocked_audit_event(
+                request=request,
+                audit_id=f"audit_policy_{request.tool_request_id}",
+                reason=policy_block,
+            )
+            blocked_sandbox_context = ToolSandboxContext(
+                tool_id=manifest.tool_id,
+                adapter_id=manifest.executor_adapter,
+                sandbox_profile=manifest.sandbox_profile,
+                network_policy=manifest.network_policy,
+                credential_policy=manifest.credential_policy,
+            )
+            events = self._events_for_blocked(
+                request=request,
+                manifest=manifest,
+                audit_event=audit_event,
+                sandbox_context=blocked_sandbox_context,
+                reason=policy_block,
+            )
+            self._record_security_approval_fact(
+                status="failed_closed_before_effect",
+                request=request,
+                manifest=manifest,
+                audit_event=audit_event,
+                sandbox_context=blocked_sandbox_context,
+                security_decision=SecurityDecision.BLOCK.value,
+                approval_decision={},
+            )
+            return ToolRuntimeExecutionResult(
+                tool_id=manifest.tool_id,
+                status="blocked",
+                approval_required=False,
+                security_decision=SecurityDecision.BLOCK.value,
+                approval_decision={},
+                audit_event=audit_event,
+                sandbox_context=blocked_sandbox_context,
+                task_events=events,
+                tool_request_id=request.tool_request_id,
+                approval_id=request.approval_id,
+                effect_certainty="NO_EFFECT",
+                blocked_reason=policy_block,
+            )
         adapter = self._executor_registry.select_executor(manifest)
         profile = ToolSecurityProfile.from_tool_card(
             tool_id=manifest.tool_id,
@@ -485,6 +641,51 @@ class ToolControlPlaneRuntime:
             )
             return result
 
+        # PHASE22 repair (B3): a side-effect tool without the formal
+        # ToolInvocationGateway binding fails closed BEFORE any approval wait
+        # or dispatch. There is no "missing gateway -> direct executor" path.
+        if (
+            manifest.side_effect_level not in {ToolSideEffectLevel.NONE, ToolSideEffectLevel.READ}
+            and not self._side_effect_gateway_bound()
+        ):
+            audit_event = _blocked_audit_event(
+                request=request,
+                audit_id=f"audit_gateway_{request.tool_request_id}",
+                reason="SIDE_EFFECT_GATEWAY_NOT_BOUND",
+            )
+            events = self._events_for_blocked(
+                request=request,
+                manifest=manifest,
+                audit_event=audit_event,
+                sandbox_context=sandbox_context,
+                reason="SIDE_EFFECT_GATEWAY_NOT_BOUND",
+            )
+            self._record_security_approval_fact(
+                status="failed_closed_before_effect",
+                request=request,
+                manifest=manifest,
+                audit_event=audit_event,
+                sandbox_context=sandbox_context,
+                security_decision=SecurityDecision.BLOCK.value,
+                approval_decision=approval_decision.to_dict(),
+            )
+            return ToolRuntimeExecutionResult(
+                tool_id=manifest.tool_id,
+                status="blocked",
+                approval_required=False,
+                security_decision=SecurityDecision.BLOCK.value,
+                approval_decision=approval_decision.to_dict(),
+                audit_event=audit_event,
+                sandbox_context=sandbox_context,
+                task_events=events,
+                tool_request_id=request.tool_request_id,
+                approval_id=request.approval_id,
+                tool_execution_id="",
+                tool_result_id="",
+                effect_certainty="NO_EFFECT",
+                blocked_reason="SIDE_EFFECT_GATEWAY_NOT_BOUND",
+            )
+
         requires_approval = (
             gate_result.decision is SecurityDecision.REQUIRE_APPROVAL
             or approval_decision.approval_required
@@ -553,9 +754,15 @@ class ToolControlPlaneRuntime:
             credential_policy=sandbox_context.credential_policy,
             credential_refs=sandbox_context.credential_refs,
         )
+        is_side_effect = manifest.side_effect_level not in {
+            ToolSideEffectLevel.NONE,
+            ToolSideEffectLevel.READ,
+        }
         used_gateway = False
-        if self._should_use_side_effect_gateway(manifest):
-            raw_result, gateway_status, gateway_blocked_reason = self._invoke_side_effect_gateway(
+        gateway_effect_certainty = ""
+        gateway_receipt_ref = ""
+        if is_side_effect:
+            raw_result, gateway_status, gateway_blocked_reason, receipt_ref = self._invoke_side_effect_gateway(
                 request=request,
                 manifest=manifest,
                 adapter=adapter,
@@ -563,7 +770,20 @@ class ToolControlPlaneRuntime:
                 sandbox_context=sandbox_context,
             )
             used_gateway = True
-            if gateway_status not in {"completed", "replayed"}:
+            gateway_receipt_ref = receipt_ref
+            if gateway_status == "replayed":
+                # An idempotent replay of an already committed effect: the
+                # effect receipt was already confirmed durably.
+                gateway_effect_certainty = "CONFIRMED_EFFECT"
+            elif gateway_status == "completed":
+                gateway_effect_certainty = "CONFIRMED_EFFECT"
+            else:
+                # blocked / reconcile_required / async_waiting: either the
+                # effect is unknown (post-dispatch) or dispatch never happened.
+                if gateway_status in {"reconcile_required", "async_waiting"}:
+                    gateway_effect_certainty = "UNKNOWN_EFFECT"
+                else:
+                    gateway_effect_certainty = "NO_EFFECT"
                 events = self._events_for_blocked(
                     request=request,
                     manifest=manifest,
@@ -584,8 +804,13 @@ class ToolControlPlaneRuntime:
                     approval_id=request.approval_id,
                     tool_execution_id=execution_id,
                     tool_result_id=result_id,
+                    effect_certainty=gateway_effect_certainty,
+                    effect_receipt_ref=gateway_receipt_ref,
+                    blocked_reason=gateway_blocked_reason or gateway_status,
                 )
         else:
+            # Read-only tools only (NONE / READ): never a side-effect tool on
+            # this path. A read failure has no lasting external effect.
             try:
                 raw_result = self._executors[adapter.adapter_id](request.arguments, execution_context)
             except Exception as exc:
@@ -641,6 +866,10 @@ class ToolControlPlaneRuntime:
             approval_id=request.approval_id,
             tool_execution_id=execution_id,
             tool_result_id=result_id,
+            effect_certainty=(
+                gateway_effect_certainty or "NO_EFFECT"
+            ),
+            effect_receipt_ref=gateway_receipt_ref,
         )
         if not used_gateway:
             self._record_tool_runtime_facts(
@@ -650,19 +879,14 @@ class ToolControlPlaneRuntime:
                 result=result,
                 attempt_status="SUCCEEDED",
                 dispatch_certainty="DISPATCHED",
-                effect_certainty=(
-                    "NO_EFFECT"
-                    if manifest.side_effect_level in {ToolSideEffectLevel.NONE, ToolSideEffectLevel.READ}
-                    else "CONFIRMED_EFFECT"
-                ),
+                effect_certainty="NO_EFFECT",
                 observation_payload=normalized.to_dict(),
             )
         return result
 
-    def _should_use_side_effect_gateway(self, manifest: ToolCardManifest) -> bool:
+    def _side_effect_gateway_bound(self) -> bool:
         return (
-            manifest.side_effect_level not in {ToolSideEffectLevel.NONE, ToolSideEffectLevel.READ}
-            and self._tool_unit_of_work_factory is not None
+            self._tool_unit_of_work_factory is not None
             and self._security_unit_of_work_factory is not None
             and self._infrastructure_unit_of_work_factory is not None
         )
@@ -675,7 +899,7 @@ class ToolControlPlaneRuntime:
         adapter: ExecutorAdapterContract,
         execution_context: ToolExecutionContext,
         sandbox_context: ToolSandboxContext,
-    ) -> tuple[Any | None, str, str]:
+    ) -> tuple[Any | None, str, str, str]:
         from zuno.capability.tool_runtime import ToolInvocationGateway
 
         gateway_args = dict(request.arguments)
@@ -707,7 +931,7 @@ class ToolControlPlaneRuntime:
             gateway.invoke_readonly(
                 tool_name=manifest.tool_id,
                 args=gateway_args,
-                tenant_id=request.user_id,
+                tenant_id=request.tenant_id or request.user_id,
                 workspace_id=request.workspace_id,
                 trace_id=request.trace_id,
                 call_id=request.execution_id or request.tool_request_id,
@@ -717,7 +941,7 @@ class ToolControlPlaneRuntime:
                 approved=request.approved,
             )
         )
-        return result, receipt.status, receipt.blocked_reason
+        return result, receipt.status, receipt.blocked_reason, receipt.receipt_id
 
     def _record_tool_runtime_facts(
         self,

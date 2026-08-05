@@ -48,7 +48,15 @@ class RuntimeStrategySelector:
             ],
         )
         state.strategy = strategy
-        state.plan_state = output.plan_state
+        # PHASE22 repair (B5): every task has a formal plan. The product
+        # adapter supplies explicit step definitions which Agent Core keeps
+        # as the active plan (already activated by the service); the
+        # selector-generated plan only applies when no explicit plan exists.
+        existing_plan = state.plan_state
+        if existing_plan is not None and existing_plan.steps and existing_plan.status not in {"blocked"}:
+            state.plan_state = existing_plan
+        else:
+            state.plan_state = output.plan_state
         state.retrieval_plan = output.retrieval_plan
         state.capability_plan = output.capability_plan
         if state.context_pack is not None:

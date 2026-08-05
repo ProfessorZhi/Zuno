@@ -34,6 +34,15 @@ class AgentRuntimeSnapshot(BaseModel):
     task_id: str
     trace_id: str
     goal: str
+    # Product submission identity + tenant scope (PHASE22 repair; optional
+    # with defaults so the state schema stays backward compatible).
+    tenant_id: str = "tenant:default"
+    principal_id: str = ""
+    submission_id: str = ""
+    client_request_id: str = ""
+    conversation_id: str = ""
+    agent_version: str = ""
+    content_fingerprint: str = ""
     current_node: str = ""
     current_step_id: str | None = None
     context_pack: ContextPack | None = None
@@ -86,6 +95,13 @@ class AgentRuntimeState:
     task_id: str
     trace_id: str
     goal: str
+    tenant_id: str = "tenant:default"
+    principal_id: str = ""
+    submission_id: str = ""
+    client_request_id: str = ""
+    conversation_id: str = ""
+    agent_version: str = ""
+    content_fingerprint: str = ""
     current_node: str = ""
     current_step_id: str | None = None
     context_pack: ContextPack | None = None
@@ -124,6 +140,13 @@ class AgentRuntimeState:
             task_id=self.task_id,
             trace_id=self.trace_id,
             goal=self.goal,
+            tenant_id=self.tenant_id,
+            principal_id=self.principal_id,
+            submission_id=self.submission_id,
+            client_request_id=self.client_request_id,
+            conversation_id=self.conversation_id,
+            agent_version=self.agent_version,
+            content_fingerprint=self.content_fingerprint,
             current_node=self.current_node,
             current_step_id=self.current_step_id,
             context_pack=self.context_pack,
@@ -161,6 +184,13 @@ class AgentRuntimeState:
             task_id=snapshot.task_id,
             trace_id=snapshot.trace_id,
             goal=snapshot.goal,
+            tenant_id=snapshot.tenant_id,
+            principal_id=snapshot.principal_id,
+            submission_id=snapshot.submission_id,
+            client_request_id=snapshot.client_request_id,
+            conversation_id=snapshot.conversation_id,
+            agent_version=snapshot.agent_version,
+            content_fingerprint=snapshot.content_fingerprint,
             current_node=snapshot.current_node,
             current_step_id=snapshot.current_step_id,
             context_pack=snapshot.context_pack,
