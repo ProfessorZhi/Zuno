@@ -13,10 +13,6 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 
 EXPECTED_EXPORTS = {
     "zuno.agent.core.agents": [
-        "AgentConfig",
-        "EmitEventAgentMiddleware",
-        "GeneralAgent",
-        "StreamAgentState",
         "StructuredResponseAgent",
     ],
     "zuno.agent.context": [
@@ -52,13 +48,6 @@ EXPECTED_EXPORTS = {
         "RuntimeTurnLedger",
         "TaskMemorySummary",
     ],
-    "zuno.agent.state": [
-        "StreamAgentState",
-    ],
-    "zuno.agent.streaming": [
-        "EmitEventAgentMiddleware",
-        "StreamAgentState",
-    ],
     "zuno.agent.tool_bridge": [
         "CapabilityRecord",
         "CapabilityRegistry",
@@ -88,39 +77,32 @@ def test_agent_layer_modules_expose_runtime_boundaries() -> None:
         assert module.__all__ == expected_exports
 
 
-def test_general_agent_core_uses_target_layer_contract_imports() -> None:
-    content = (
-        REPO_ROOT / "src" / "backend" / "zuno" / "agent" / "core" / "agents" / "general_agent.py"
-    ).read_text(encoding="utf-8")
-    legacy_root = "zuno." + "services"
-    forbidden_imports = [
-        f"from {legacy_root}.application.capabilities import",
-        f"from {legacy_root}.application.context import",
-        f"from {legacy_root}.application.knowledge import",
-        f"from {legacy_root}.memory import",
-        f"from {legacy_root}.retrieval.trace_artifacts import",
+def test_retired_general_agent_module_is_gone() -> None:
+    retired_modules = [
+        REPO_ROOT / "src" / "backend" / "zuno" / "agent" / "core" / "agents" / "general_agent.py",
+        REPO_ROOT / "src" / "backend" / "zuno" / "agent" / "core" / "agents" / "react_agent.py",
+        REPO_ROOT / "src" / "backend" / "zuno" / "agent" / "core" / "agents" / "plan_execute_agent.py",
+        REPO_ROOT / "src" / "backend" / "zuno" / "agent" / "core" / "agents" / "codeact_agent.py",
+        REPO_ROOT / "src" / "backend" / "zuno" / "agent" / "core" / "agents" / "text2sql_agent.py",
+        REPO_ROOT / "src" / "backend" / "zuno" / "agent" / "runtime.py",
+        REPO_ROOT / "src" / "backend" / "zuno" / "agent" / "state.py",
+        REPO_ROOT / "src" / "backend" / "zuno" / "agent" / "streaming.py",
     ]
-
-    assert [snippet for snippet in forbidden_imports if snippet in content] == []
+    for path in retired_modules:
+        assert not path.exists(), f"retired legacy runtime file must not exist: {path.relative_to(REPO_ROOT)}"
 
 
 def test_agent_layer_modules_reuse_canonical_runtime_objects() -> None:
     from zuno.agent.context import ContextOrchestrator
     from zuno.agent.post_turn import RawMemoryEvent
     from zuno.agent.post_turn import RuntimeTurnLedger
-    from zuno.agent.core.agents import GeneralAgent
-    from zuno.agent.state import StreamAgentState
     from zuno.agent.tool_bridge import DynamicCapabilitySelector
-    from zuno.agent.core.agents import GeneralAgent as CanonicalGeneralAgent
-    from zuno.agent.core.agents import StreamAgentState as CanonicalStreamAgentState
     from zuno.platform.services.application.capabilities import (
         DynamicCapabilitySelector as CanonicalDynamicCapabilitySelector,
     )
     from zuno.platform.services.application.context import ContextOrchestrator as CanonicalContextOrchestrator
     from zuno.platform.services.memory.layers import RawMemoryEvent as CanonicalRawMemoryEvent
 
-    assert GeneralAgent is CanonicalGeneralAgent
-    assert StreamAgentState is CanonicalStreamAgentState
     assert ContextOrchestrator is CanonicalContextOrchestrator
     assert RawMemoryEvent is CanonicalRawMemoryEvent
     assert RuntimeTurnLedger(trace_id="t").to_dict()["trace_id"] == "t"
@@ -133,12 +115,8 @@ def test_agent_package_facade_points_at_layer_modules() -> None:
     from zuno.agent.durable_runtime import SingleControllerDurableRuntime
     from zuno.agent.harness import ControllerRuntimeState
     from zuno.agent.planning import StrategySelector
-    from zuno.agent.core.agents import GeneralAgent
-    from zuno.agent.state import StreamAgentState
 
-    assert agent.GeneralAgent is GeneralAgent
     assert agent.ContextOrchestrator is ContextOrchestrator
-    assert agent.StreamAgentState is StreamAgentState
     assert agent.ControllerRuntimeState is ControllerRuntimeState
     assert agent.SingleControllerDurableRuntime is SingleControllerDurableRuntime
     assert agent.StrategySelector is StrategySelector
