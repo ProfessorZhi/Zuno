@@ -247,6 +247,14 @@ class WorkspaceService:
 
     @classmethod
     def build_direct_image_response(cls, simple_task: WorkSpaceSimpleTask) -> StreamingResponse:
+        """Developer-test-profile-only image generation entry point.
+
+        PHASE22 product wiring: the product surface never calls this — image
+        regeneration in the product profile fails closed with
+        IMAGE_TOOL_RUNTIME_NOT_BOUND (no formal Tool Policy / Owner binding
+        for text_to_image). Kept only so developer tests can exercise the
+        image capability in isolation; never wired into the product API.
+        """
         reference_image_url = cls.pick_reference_image_url(simple_task)
 
         async def direct_generate():
@@ -394,7 +402,17 @@ class WorkspaceService:
         set_agent_name_context(usage_agent_name)
 
         if cls.should_run_direct_image_generation(simple_task):
-            return cls.build_direct_image_response(simple_task)
+            # PHASE22 product wiring: text_to_image has no formal Tool
+            # Policy / Owner binding in the product profile, so the product
+            # API fails closed with IMAGE_TOOL_RUNTIME_NOT_BOUND — it never
+            # executes _text_to_image directly. (build_direct_image_response
+            # remains only as a developer-test-profile entry point.)
+            return cls._blocked_configuration_response(
+                "IMAGE_TOOL_RUNTIME_NOT_BOUND: text_to_image has no formal "
+                "Tool Policy / Owner binding in the product profile; the "
+                "product API never executes _text_to_image directly. "
+                "零工具执行。"
+            )
 
         servers_config, missing_mcp_ids = await cls.build_mcp_configs(simple_task)
         if missing_mcp_ids:
