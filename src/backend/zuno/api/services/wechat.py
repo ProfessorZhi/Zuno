@@ -53,13 +53,23 @@ class WeChatService:
         to_user: str,
         content: str,
         history_messages: str,
+        tenant_id: str = "",
+        workspace_id: str = "",
     ):
         from zuno.platform.services.workspace.wechat_agent import WeChatAgent
 
+        # PHASE22 product wiring: the WeChat product entry may only carry
+        # real tenant / workspace identity supplied explicitly from the
+        # authenticated product context. The WeChat message callback itself
+        # has no auth context, so it does not guess: missing identity makes
+        # the adapter fail closed with BLOCKED_CONFIGURATION (zero tool
+        # execution) in product profile.
         wechat_agent = WeChatAgent(
             user_id=from_user,
             session_id=from_user,
             wechat_account_user=to_user,
+            tenant_id=tenant_id,
+            workspace_id=workspace_id,
         )
         return await wechat_agent.ainvoke(
             [

@@ -104,6 +104,12 @@ class WorkSpaceSimpleTask(BaseModel):
     query: str
     model_id: str
     session_id: str
+    # PHASE22 product wiring: real tenant / workspace identity comes from the
+    # product request context (same source as the authenticated session).
+    # There is no tenant:default and no workspace derived from user_id;
+    # missing identity fails closed with BLOCKED_CONFIGURATION before any
+    # tool execution.
+    tenant_id: str | None = None
     workspace_id: str | None = None
     user_id: str | None = None
     task_id: str | None = None

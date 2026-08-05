@@ -154,6 +154,9 @@ class WorkspaceService:
         model_config: dict[str, Any],
         usage_agent_name: str,
         servers_config,
+        tenant_id: str,
+        workspace_id: str,
+        client_request_id: str = "",
     ):
         from zuno.platform.services.workspace.simple_agent import WorkSpaceSimpleAgent
 
@@ -184,6 +187,57 @@ class WorkspaceService:
             original_query=simple_task.query,
             usage_agent_name=usage_agent_name,
             multi_agent_enabled=simple_task.multi_agent_enabled,
+            # PHASE22 product wiring: real tenant / workspace / principal
+            # identity from the authenticated product request. Missing
+            # identity is rejected earlier by the product surface
+            # (BLOCKED_CONFIGURATION, zero tool execution) and the canonical
+            # runtime also fails closed at composition.
+            tenant_id=tenant_id,
+            workspace_id=workspace_id,
+            client_request_id=client_request_id,
+        )
+
+    @staticmethod
+    def _blocked_configuration_response(message: str) -> StreamingResponse:
+        """Fail-closed SSE response: no model call, no tool execution.
+
+        PHASE22 product wiring: configuration / identity failures surface as
+        a terminal SSE error event instead of falling back to any synthetic
+        identity or bypass path.
+        """
+
+        async def blocked_generate():
+            status_event = {
+                "event": "status",
+                "timestamp": time.time(),
+                "data": {
+                    "phase": "blocked",
+                    "status": "BLOCKED_CONFIGURATION",
+                    "message": message,
+                    "error": message,
+                },
+            }
+            yield f"data: {json.dumps(status_event, ensure_ascii=False)}\n\n"
+            final_event = {
+                "event": "final",
+                "timestamp": time.time(),
+                "data": {
+                    "chunk": message,
+                    "message": message,
+                    "accumulated": message,
+                    "done": True,
+                },
+            }
+            yield f"data: {json.dumps(final_event, ensure_ascii=False)}\n\n"
+
+        return StreamingResponse(
+            blocked_generate(),
+            media_type="text/event-stream",
+            headers={
+                "Cache-Control": "no-cache",
+                "Connection": "keep-alive",
+                "X-Accel-Buffering": "no",
+            },
         )
 
     @classmethod
@@ -291,6 +345,32 @@ class WorkspaceService:
     ) -> StreamingResponse:
         set_user_id_context(login_user.user_id)
 
+        # PHASE22 product wiring: real tenant / workspace identity comes from
+        # the product request context. Missing identity fails closed with
+        # BLOCKED_CONFIGURATION before any model call or tool execution —
+        # never tenant:default, never workspace guessed from user_id, and
+        # principal_id is the authenticated user only.
+        tenant_id = (simple_task.tenant_id or "").strip()
+        workspace_id = (simple_task.workspace_id or "").strip()
+        principal_id = str(login_user.user_id or "").strip()
+        if not tenant_id:
+            return cls._blocked_configuration_response(
+                "BLOCKED_CONFIGURATION: missing_product_tenant_context — "
+                "the workspace product request carries no real tenant_id; "
+                "refusing to run with a synthetic tenant."
+            )
+        if not workspace_id:
+            return cls._blocked_configuration_response(
+                "BLOCKED_CONFIGURATION: missing_product_workspace_context — "
+                "the workspace product request carries no real workspace_id; "
+                "refusing to run without a real workspace."
+            )
+        if not principal_id:
+            return cls._blocked_configuration_response(
+                "BLOCKED_CONFIGURATION: missing_product_principal_context — "
+                "the workspace product request has no authenticated user."
+            )
+
         execution_mode = normalize_execution_mode(simple_task.execution_mode)
         access_scope = normalize_access_scope(simple_task.access_scope)
         model_config = await LLMService.get_llm_by_id(simple_task.model_id)
@@ -326,6 +406,9 @@ class WorkspaceService:
             model_config=model_config,
             usage_agent_name=usage_agent_name,
             servers_config=servers_config,
+            tenant_id=tenant_id,
+            workspace_id=workspace_id,
+            client_request_id=simple_task.task_id or "",
         )
 
         if workspace_session:
