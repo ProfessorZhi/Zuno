@@ -27,7 +27,8 @@ and reachability**, not by class name alone:
       A thin facade that delegates to the canonical Product Runtime
       (``UnifiedAgentRuntimeService`` / ``SingleControllerRuntimeHarness``
       or a known composition root), does not construct an independent
-      graph, and does not directly execute models or tools.
+      graph, and does not directly execute models or tools. Requires
+      ``canonical_delegate`` evidence inside the class methods.
 
   INTERNAL_TEST_HARNESS
       Class definition exists but is only reached from ``tests/``,
@@ -40,8 +41,11 @@ and reachability**, not by class name alone:
       Not a top-level runtime.
 
   UNRESOLVED
-      Dynamic construction (``globals``, ``getattr``, ``eval``, ``__import__``)
-      whose target cannot be statically proven.
+      Production Reachability exists but canonical delegation cannot be
+      statically proven (no ``canonical_delegate`` evidence, no legacy
+      evidence). Also emitted when dynamic construction
+      (``globals``, ``getattr``, ``eval``, ``__import__``, ``import_module``)
+      can target a Runtime class whose identity cannot be resolved.
 
 Default invocation is equivalent to ``--scope repository`` so the verifier
 is fail-closed in CI. ``--scope agent-family`` is provided for workflows
@@ -222,6 +226,37 @@ CANONICAL_RUNTIME_SYMBOLS = (
     "build_single_controller_runtime_harness",
     "WorkspaceAgentRuntime",
     "WorkspaceTaskRuntimeService",
+)
+
+# Method names that, when invoked as ``self.<attr>.<method>(...)`` on a
+# non-model / non-tool attribute, indicate the class is delegating to a
+# runtime dependency (a thin Product Adapter pattern). This is the
+# heuristic that recognizes a thin adapter that does not embed the
+# canonical runtime class name as a literal symbol.
+DELEGATE_METHOD_NAMES = (
+    "start",
+    "stream",
+    "astream",
+    "astream_events",
+    "run",
+    "run_step",
+    "execute",
+    "drive",
+)
+
+# Attributes that prove the call target is a model / tool / llm client,
+# NOT a runtime dependency. When ``self.<attr>.<method>`` matches one of
+# these names, the call is direct model/tool invocation, not delegation.
+DIRECT_EXEC_ATTR_NAMES = (
+    "model",
+    "tool",
+    "tools",
+    "llm",
+    "client",
+    "chat",
+    "chat_model",
+    "tools_client",
+    "tool_client",
 )
 
 # Attributes / locals that show the candidate owns Plan / Trace / Budget /
@@ -475,6 +510,26 @@ def _evidence_for_class(class_node: ast.ClassDef) -> list[str]:
                         f"canonical_delegate:{call_text}@{method.name}:{line}"
                     )
                     break
+            # Detect the thin-adapter delegation pattern
+            # ``self.<attr>.<method>(...)`` where the attribute is NOT a
+            # direct model / tool locator and the method is a known
+            # runtime entry point. This is the heuristic that recognizes
+            # adapters that don't reference the canonical runtime class
+            # name as a literal symbol.
+            already_delegate = any(
+                entry.startswith("canonical_delegate:") for entry in evidence
+            )
+            if not already_delegate:
+                parts = call_text.split(".")
+                if (
+                    len(parts) >= 3
+                    and parts[0] == "self"
+                    and parts[-1] in DELEGATE_METHOD_NAMES
+                    and parts[1] not in DIRECT_EXEC_ATTR_NAMES
+                ):
+                    evidence.append(
+                        f"canonical_delegate:{call_text}@{method.name}:{line}"
+                    )
         for line, snippet in _direct_handler_await_sites(method):
             evidence.append(f"direct_handler_await:{snippet}@{method.name}:{line}")
         attrs = _collect_attribute_names(method)
@@ -512,6 +567,53 @@ def _is_production_path(path: str) -> bool:
     return True
 
 
+def _candidate_local_names(tree: ast.AST, class_name: str) -> set[str]:
+    """Return the set of local names that *could* refer to ``class_name``
+    in this module's scope.
+
+    Resolves:
+      - ``from x import ClassName``                  → local ``ClassName``
+      - ``from x import ClassName as Alias``         → local ``Alias``
+      - ``import x.y.ClassName``                     → local ``ClassName``
+      - ``import x.y.ClassName as Alias``            → local ``Alias``
+      - ``LocalName = ClassName`` (module-level)     → local ``LocalName``
+
+    The result is a name *set* — membership is sufficient to claim
+    reachability. ``mod.ClassName(...)`` works without resolution because
+    the verifier checks the trailing segment separately.
+    """
+    names: set[str] = {class_name}
+    for node in ast.walk(tree):
+        if isinstance(node, ast.ImportFrom):
+            for alias in node.names:
+                local = alias.asname or alias.name
+                if alias.name == class_name:
+                    names.add(local)
+        elif isinstance(node, ast.Import):
+            for alias in node.names:
+                parts = alias.name.split(".")
+                tail = parts[-1]
+                local = alias.asname or tail
+                if tail == class_name:
+                    names.add(local)
+        elif isinstance(node, ast.Assign):
+            # Only module-level assignments are emitted by ast.walk()
+            # only when the parent is Module; here we filter explicitly
+            # by treating the value text. We accept any RHS that
+            # matches the class name as a literal Name.
+            if not all(isinstance(t, ast.Name) for t in node.targets):
+                continue
+            try:
+                rhs_text = ast.unparse(node.value)
+            except Exception:  # pragma: no cover - defensive
+                continue
+            if rhs_text == class_name:
+                for t in node.targets:
+                    if isinstance(t, ast.Name):
+                        names.add(t.id)
+    return names
+
+
 def _production_callers_for(
     class_name: str,
     files_index: dict[str, ast.AST],
@@ -520,15 +622,116 @@ def _production_callers_for(
     """Find every (path, line) where ``class_name`` is **constructed** in
     production code. Bare imports and facade ``__init__.py`` re-exports
     are not counted.
+
+    The matcher recognises:
+      - direct ``ClassName(...)`` calls
+      - module-qualified ``module.ClassName(...)`` calls
+      - module-alias-qualified ``alias.ClassName(...)`` calls
+      - aliased ``from x import ClassName as Alias`` followed by ``Alias(...)``
+      - module-level ``LocalName = ClassName`` then ``LocalName(...)``
     """
     sites: list[tuple[str, int]] = []
     for rel, tree in files_index.items():
         if rel not in production_paths:
             continue
+        local_names = _candidate_local_names(tree, class_name)
         for call_text, call_line in _call_target_strings(tree):
             head = call_text.split("(", 1)[0]
-            if head == class_name:
+            # Qualified construction: take the trailing attribute name.
+            if "." in head:
+                bare = head.rsplit(".", 1)[-1]
+            else:
+                bare = head
+            if bare in local_names:
                 sites.append((rel, call_line))
+    return sites
+
+
+def _dynamic_constructor_sites(tree: ast.AST) -> list[tuple[int, str]]:
+    """Return (line, snippet) for every Call that uses a dynamic loader
+    and *could* target a Runtime class.
+
+    The verifier cannot statically prove the type returned by ``globals``,
+    ``getattr``, ``eval``, ``__import__``, ``import_module``, ``locals`` or
+    ``vars``. The token heuristic below is intentionally conservative:
+    we only flag calls whose textual representation contains a token
+    commonly used in Runtime / Agent / Service / Harness / Controller names.
+    """
+    tokens = ("Agent", "Runtime", "Controller", "Service", "Harness", "Factory")
+    sites: list[tuple[int, str]] = []
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.Call):
+            continue
+        func_name: str | None = None
+        if isinstance(node.func, ast.Name):
+            func_name = node.func.id
+        elif isinstance(node.func, ast.Attribute):
+            func_name = node.func.attr
+        if func_name not in (
+            "globals",
+            "getattr",
+            "eval",
+            "__import__",
+            "import_module",
+            "locals",
+            "vars",
+        ):
+            continue
+        try:
+            text = ast.unparse(node)
+        except Exception:  # pragma: no cover - defensive
+            continue
+        if not any(token in text for token in tokens):
+            continue
+        sites.append((node.lineno, text))
+    return sites
+
+
+def _unresolved_alias_or_factory_sites(
+    tree: ast.AST,
+    class_name: str,
+) -> list[tuple[int, str]]:
+    """Return (line, snippet) for every Call whose callee is a local
+    name that *could* be a factory producing ``class_name`` but whose
+    return type cannot be proven statically.
+
+    Examples that trigger this:
+      - ``globals()["Runtime"]()`` returns a class we cannot introspect.
+      - ``make_agent()`` returns an opaque object.
+      - ``AgentClass()`` where ``AgentClass`` is assigned in a way we
+        cannot resolve (e.g. inside a function).
+
+    The verifier reports these as UNRESOLVED on the candidate class to
+    fail closed rather than silently allow.
+    """
+    # Build the set of names we *can* resolve to the candidate class.
+    local_names = _candidate_local_names(tree, class_name)
+    sites: list[tuple[int, str]] = []
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.Call):
+            continue
+        callee_name: str | None = None
+        if isinstance(node.func, ast.Name):
+            callee_name = node.func.id
+        elif isinstance(node.func, ast.Attribute):
+            callee_name = node.func.attr
+        if callee_name is None:
+            continue
+        # Callee is already a known local for the candidate class → safe.
+        if callee_name in local_names:
+            continue
+        # Callee is a known dynamic loader → reported elsewhere.
+        if callee_name in ("globals", "getattr", "eval", "__import__", "import_module"):
+            continue
+        # Callee is "ClassName(...)" but we can't resolve it via the
+        # import map. This catches ``factory_class()`` shapes that
+        # *might* produce a Runtime class.
+        if isinstance(node.func, ast.Name) and callee_name.endswith("Runtime"):
+            try:
+                text = ast.unparse(node)
+            except Exception:  # pragma: no cover - defensive
+                continue
+            sites.append((node.lineno, text))
     return sites
 
 
@@ -547,7 +750,7 @@ def classify_class(
 ) -> Classification:
     """Classify a single candidate class.
 
-    The decision tree is:
+    The decision tree is fail-closed:
 
       1. ``class_name`` is in ``SINGLE_CONTROLLER_CLASS`` →
          ``PRODUCT_CANONICAL`` (informational, never blocking).
@@ -556,15 +759,21 @@ def classify_class(
       3. ``class_name`` has no production callers →
          ``INTERNAL_TEST_HARNESS`` (a non-production class definition
          cannot block on its own).
-      4. ``class_name`` has production callers AND has any of:
+      4. ``class_name`` has production callers AND any of:
          ``independent_graph``, ``direct_model_call``, ``direct_tool_call``,
          ``direct_handler_await`` or ``product_lifecycle_attr`` →
          ``PRODUCT_LEGACY_RUNTIME`` (BLOCKED).
-      5. ``class_name`` has production callers AND only ``canonical_delegate``
-         evidence → ``PRODUCT_ADAPTER`` (allowed).
-      6. ``class_name`` has production callers and no execution /
-         lifecycle / graph evidence → ``PRODUCT_ADAPTER`` (allowed
-         because no bypass was found).
+      5. ``class_name`` has production callers AND has
+         ``canonical_delegate`` evidence AND no legacy evidence →
+         ``PRODUCT_ADAPTER`` (allowed).
+      6. ``class_name`` has production callers AND has no
+         ``canonical_delegate`` evidence AND no legacy evidence →
+         ``UNRESOLVED`` (BLOCKED via non-zero exit).
+
+    Step 6 is the fail-closed contract: a class that *can* be reached
+    from production code but for which the verifier cannot prove
+    canonical delegation is treated as ``UNRESOLVED``. The repository
+    scope exits non-zero whenever any candidate class is ``UNRESOLVED``.
     """
     ev = list(evidence or [])
     if class_name == SINGLE_CONTROLLER_CLASS:
@@ -613,9 +822,24 @@ def classify_class(
                     evidence=ev,
                     production_callers=production_callers,
                 )
+    # No legacy evidence. Look for canonical delegation evidence.
+    has_canonical_delegate = any(
+        entry.startswith("canonical_delegate:") for entry in ev
+    )
+    if has_canonical_delegate:
+        return Classification(
+            name=class_name,
+            classification="PRODUCT_ADAPTER",
+            module=module_path,
+            line=getattr(class_node, "lineno", 0),
+            evidence=ev,
+            production_callers=production_callers,
+        )
+    # Production caller + no legacy evidence + no canonical_delegate
+    # evidence → UNRESOLVED (fail-closed).
     return Classification(
         name=class_name,
-        classification="PRODUCT_ADAPTER",
+        classification="UNRESOLVED",
         module=module_path,
         line=getattr(class_node, "lineno", 0),
         evidence=ev,
@@ -776,11 +1000,16 @@ def _classify_repository(file_index: dict[str, ast.AST]) -> tuple[
     """Walk the backend tree, classify every candidate class, and emit
     findings for PRODUCT_LEGACY_RUNTIME classes plus the dynamic-load
     unresolved cases.
+
+    Returns a triple ``(classifications, legacy_findings, unresolved_findings)``
+    where ``unresolved_findings`` includes both dynamic-loader sites and
+    any UNRESOLVED per-class verdicts.
     """
     classifications: list[Classification] = []
     production_paths = _production_path_set(file_index)
     dynamic_findings: list[Finding] = []
     legacy_findings: list[Finding] = []
+    unresolved_findings: list[Finding] = []
 
     for rel, tree in file_index.items():
         for class_node in _classdef_nodes(tree):
@@ -811,34 +1040,30 @@ def _classify_repository(file_index: dict[str, ast.AST]) -> tuple[
                         ),
                     )
                 )
+            elif verdict.classification == "UNRESOLVED":
+                unresolved_findings.append(
+                    Finding(
+                        category="unresolved_runtime_ownership",
+                        path=rel,
+                        line=class_node.lineno,
+                        detail=(
+                            f"UNRESOLVED '{class_node.name}' has a Production "
+                            f"Entry Point caller but no canonical_delegate "
+                            f"evidence and no legacy markers: "
+                            f"{'; '.join(evidence) or 'no_classification_evidence'}"
+                        ),
+                    )
+                )
 
         # Detect dynamic Runtime constructions in production paths.
         if rel in production_paths:
-            for node in ast.walk(tree):
-                if not isinstance(node, ast.Call):
-                    continue
-                callee_name = None
-                if isinstance(node.func, ast.Name):
-                    callee_name = node.func.id
-                elif isinstance(node.func, ast.Attribute):
-                    callee_name = node.func.attr
-                if callee_name not in {"globals", "getattr", "eval", "__import__"}:
-                    continue
-                try:
-                    full_text = ast.unparse(node)
-                except Exception:  # pragma: no cover - defensive
-                    continue
-                if not any(
-                    token in full_text
-                    for token in ("Agent", "Runtime", "Controller", "Service")
-                ):
-                    continue
-                dynamic_findings.append(
+            for line, snippet in _dynamic_constructor_sites(tree):
+                unresolved_findings.append(
                     Finding(
                         category="dynamic_runtime_load",
                         path=rel,
-                        line=node.lineno,
-                        detail=f"unresolved dynamic Runtime construction: {full_text}",
+                        line=line,
+                        detail=f"unresolved dynamic Runtime construction: {snippet}",
                     )
                 )
         # Always flag ``await handler(...)`` invocations in production
@@ -854,21 +1079,22 @@ def _classify_repository(file_index: dict[str, ast.AST]) -> tuple[
                     )
                 )
 
-    return classifications, legacy_findings, dynamic_findings
+    return classifications, legacy_findings, unresolved_findings
 
 
 def verify_repository_scope() -> ScopeResult:
     result = ScopeResult()
     file_index = _build_file_index()
-    classifications, legacy_findings, dynamic_findings = _classify_repository(
+    classifications, legacy_findings, unresolved_findings = _classify_repository(
         file_index
     )
     result.classifications = classifications
-    for finding in dynamic_findings:
+    # UNRESOLVED status dominates: any unresolved finding exits non-zero.
+    for finding in unresolved_findings:
         result.unresolved.append(finding)
-    if dynamic_findings:
-        # Unresolved construction dominates: cannot prove cutover.
-        result.findings.extend(dynamic_findings)
+    if unresolved_findings:
+        for finding in unresolved_findings:
+            result.findings.append(finding)
         result.status = STATUS_REPO_UNRESOLVED
         return result
     for finding in legacy_findings:

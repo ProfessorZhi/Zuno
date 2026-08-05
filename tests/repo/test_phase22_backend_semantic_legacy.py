@@ -782,3 +782,710 @@ def test_agent_control_runtime_production_caller_fixture_is_blocked() -> None:
             "AgentControlRuntime with production caller must classify as PRODUCT_LEGACY_RUNTIME"
         )
         assert payload.get("status") == "BACKEND_PRODUCT_RUNTIME_CUTOVER_BLOCKED"
+
+
+# ---------------------------------------------------------------------------
+# 25. Thin canonical-adapter fixture with delegate evidence is classified
+#     PRODUCT_ADAPTER (classifier API).
+# ---------------------------------------------------------------------------
+
+
+def test_thin_canonical_adapter_classifies_as_product_adapter() -> None:
+    src = (RUNTIME_DEFS / "candidate_constructor.py").read_text(encoding="utf-8")
+    verdict = _fixture_classification(
+        src,
+        "WorkSpaceSimpleAgent",
+        production_callers=[("api/services/workspace.py", 160)],
+    )
+    assert verdict == "PRODUCT_ADAPTER", (
+        f"thin canonical adapter should classify as PRODUCT_ADAPTER, got {verdict}"
+    )
+
+
+# ---------------------------------------------------------------------------
+# 26. Production class WITHOUT canonical_delegate evidence is UNRESOLVED.
+#     This is the central fail-closed guarantee.
+# ---------------------------------------------------------------------------
+
+
+def test_production_class_without_canonical_delegate_is_unresolved() -> None:
+    """A class with a Production Entry Point caller but no canonical
+    delegation and no legacy markers must be UNRESOLVED — not silently
+    PRODUCT_ADAPTER. This is the fail-closed contract.
+    """
+    from tools.scripts.verify_phase22_backend_semantic_legacy import (
+        _classdef_nodes,
+        _evidence_for_class,
+        _safe_parse,
+        classify_class,
+    )
+
+    tree = _safe_parse(RUNTIME_DEFS / "candidate_constructor_unknown.py")
+    class_node = next(_classdef_nodes(tree))
+    evidence = _evidence_for_class(class_node)
+    verdict = classify_class(
+        class_name="WorkSpaceSimpleAgent",
+        class_node=class_node,
+        module_path=str(RUNTIME_DEFS / "candidate_constructor_unknown.py"),
+        production_callers=[("api/services/some_production.py", 42)],
+        evidence=evidence,
+    )
+    assert verdict.classification == "UNRESOLVED", (
+        f"production caller + no canonical_delegate + no legacy markers "
+        f"must classify as UNRESOLVED, got {verdict.classification}"
+    )
+
+
+# ---------------------------------------------------------------------------
+# 27. Import alias constructor is recognised as a WorkSpaceSimpleAgent
+#     production caller.
+# ---------------------------------------------------------------------------
+
+
+def test_import_alias_constructor_is_recognised() -> None:
+    """``from module import WorkSpaceSimpleAgent as Agent`` then ``Agent(...)``
+    must be resolved to ``WorkSpaceSimpleAgent`` and treated as a
+    production caller.
+    """
+    with tempfile.TemporaryDirectory() as tmpdir:
+        clone = Path(tmpdir) / "zuno-mirror"
+        shutil.copytree(REPO_ROOT, clone)
+        # Remove the legacy workspace runtime classes so the test
+        # isolates the import-alias caller.
+        for rel in (
+            "src/backend/zuno/platform/services/workspace/simple_agent.py",
+            "src/backend/zuno/platform/services/workspace/wechat_agent.py",
+        ):
+            target = clone / rel
+            if target.exists():
+                target.unlink()
+        src = PROD_CALLERS / "caller_with_import_alias.py"
+        target = clone / "src/backend/zuno/api/services/_test_caller_import_alias.py"
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_text(src.read_text(encoding="utf-8"), encoding="utf-8")
+        # Also place the candidate class fixture into the backend tree so
+        # the verifier can find it.
+        cand_target = (
+            clone
+            / "src/backend/zuno/platform/services/workspace/_test_candidate_constructor.py"
+        )
+        cand_target.parent.mkdir(parents=True, exist_ok=True)
+        cand_target.write_text(
+            (RUNTIME_DEFS / "candidate_constructor.py").read_text(encoding="utf-8"),
+            encoding="utf-8",
+        )
+        result = subprocess.run(
+            [
+                sys.executable,
+                "tools/scripts/verify_phase22_backend_semantic_legacy.py",
+                "--scope",
+                "repository",
+                "--json",
+            ],
+            cwd=clone,
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+        payload = json.loads(result.stdout or "{}")
+        classifications = {
+            c["name"]: c["classification"]
+            for c in payload.get("classifications", [])
+        }
+        assert classifications.get("WorkSpaceSimpleAgent") == "PRODUCT_ADAPTER", (
+            "import alias constructor must classify as PRODUCT_ADAPTER, "
+            f"got {classifications.get('WorkSpaceSimpleAgent')}: "
+            + json.dumps(payload, indent=2)
+        )
+
+
+# ---------------------------------------------------------------------------
+# 28. Module-qualified constructor is recognised.
+# ---------------------------------------------------------------------------
+
+
+def test_module_qualified_constructor_is_recognised() -> None:
+    """``import module`` then ``module.WorkSpaceSimpleAgent(...)`` must be
+    resolved as a production caller for WorkSpaceSimpleAgent.
+    """
+    with tempfile.TemporaryDirectory() as tmpdir:
+        clone = Path(tmpdir) / "zuno-mirror"
+        shutil.copytree(REPO_ROOT, clone)
+        # Remove the legacy workspace runtime classes so the test
+        # isolates the qualified-constructor candidate.
+        for rel in (
+            "src/backend/zuno/platform/services/workspace/simple_agent.py",
+            "src/backend/zuno/platform/services/workspace/wechat_agent.py",
+        ):
+            target = clone / rel
+            if target.exists():
+                target.unlink()
+        src = PROD_CALLERS / "caller_with_qualified_constructor.py"
+        target = clone / "src/backend/zuno/api/services/_test_caller_qualified.py"
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_text(src.read_text(encoding="utf-8"), encoding="utf-8")
+        # Rewrite the import inside the cloned caller to use the local
+        # backend path so the verifier can resolve to the candidate.
+        target_text = (
+            "from zuno.platform.services.workspace import _test_candidate_constructor\n"
+            + "def build_with_qualified_constructor(unified_runtime, model_config, user_id, session_id):\n"
+            + "    return _test_candidate_constructor.WorkSpaceSimpleAgent(\n"
+            + "        unified_runtime=unified_runtime,\n"
+            + "        model_config=model_config,\n"
+            + "        user_id=user_id,\n"
+            + "        session_id=session_id,\n"
+            + "    )\n"
+        )
+        target.write_text(target_text, encoding="utf-8")
+        cand_target = (
+            clone
+            / "src/backend/zuno/platform/services/workspace/_test_candidate_constructor.py"
+        )
+        cand_target.parent.mkdir(parents=True, exist_ok=True)
+        cand_target.write_text(
+            (RUNTIME_DEFS / "candidate_constructor.py").read_text(encoding="utf-8"),
+            encoding="utf-8",
+        )
+        result = subprocess.run(
+            [
+                sys.executable,
+                "tools/scripts/verify_phase22_backend_semantic_legacy.py",
+                "--scope",
+                "repository",
+                "--json",
+            ],
+            cwd=clone,
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+        payload = json.loads(result.stdout or "{}")
+        classifications = {
+            c["name"]: c["classification"]
+            for c in payload.get("classifications", [])
+        }
+        assert classifications.get("WorkSpaceSimpleAgent") == "PRODUCT_ADAPTER", (
+            "module-qualified constructor must classify as PRODUCT_ADAPTER, "
+            f"got {classifications.get('WorkSpaceSimpleAgent')}"
+        )
+
+
+# ---------------------------------------------------------------------------
+# 29. Module alias constructor is recognised.
+# ---------------------------------------------------------------------------
+
+
+def test_module_alias_constructor_is_recognised() -> None:
+    """``import module as runtime_module`` then
+    ``runtime_module.WorkSpaceSimpleAgent(...)`` must be resolved as a
+    production caller for WorkSpaceSimpleAgent.
+    """
+    with tempfile.TemporaryDirectory() as tmpdir:
+        clone = Path(tmpdir) / "zuno-mirror"
+        shutil.copytree(REPO_ROOT, clone)
+        # Remove the legacy workspace runtime classes so the test
+        # isolates the module-alias candidate.
+        for rel in (
+            "src/backend/zuno/platform/services/workspace/simple_agent.py",
+            "src/backend/zuno/platform/services/workspace/wechat_agent.py",
+        ):
+            target = clone / rel
+            if target.exists():
+                target.unlink()
+        target = clone / "src/backend/zuno/api/services/_test_caller_module_alias.py"
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target_text = (
+            "from zuno.platform.services.workspace import _test_candidate_constructor as runtime_module\n"
+            + "def build_with_module_alias(unified_runtime, model_config, user_id, session_id):\n"
+            + "    return runtime_module.WorkSpaceSimpleAgent(\n"
+            + "        unified_runtime=unified_runtime,\n"
+            + "        model_config=model_config,\n"
+            + "        user_id=user_id,\n"
+            + "        session_id=session_id,\n"
+            + "    )\n"
+        )
+        target.write_text(target_text, encoding="utf-8")
+        cand_target = (
+            clone
+            / "src/backend/zuno/platform/services/workspace/_test_candidate_constructor.py"
+        )
+        cand_target.parent.mkdir(parents=True, exist_ok=True)
+        cand_target.write_text(
+            (RUNTIME_DEFS / "candidate_constructor.py").read_text(encoding="utf-8"),
+            encoding="utf-8",
+        )
+        result = subprocess.run(
+            [
+                sys.executable,
+                "tools/scripts/verify_phase22_backend_semantic_legacy.py",
+                "--scope",
+                "repository",
+                "--json",
+            ],
+            cwd=clone,
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+        payload = json.loads(result.stdout or "{}")
+        classifications = {
+            c["name"]: c["classification"]
+            for c in payload.get("classifications", [])
+        }
+        assert classifications.get("WorkSpaceSimpleAgent") == "PRODUCT_ADAPTER", (
+            "module-alias constructor must classify as PRODUCT_ADAPTER, "
+            f"got {classifications.get('WorkSpaceSimpleAgent')}"
+        )
+
+
+# ---------------------------------------------------------------------------
+# 30. Assignment alias is resolved to the candidate class.
+# ---------------------------------------------------------------------------
+
+
+def test_assignment_alias_resolves_to_candidate() -> None:
+    """``Runtime = WorkSpaceSimpleAgent`` then ``Runtime(...)`` must be
+    resolved to ``WorkSpaceSimpleAgent`` and classified by the candidate
+    class evidence.
+    """
+    from tools.scripts.verify_phase22_backend_semantic_legacy import (
+        _candidate_local_names,
+        _safe_parse,
+    )
+
+    tree = _safe_parse(PROD_CALLERS / "caller_with_assignment_alias.py")
+    names = _candidate_local_names(tree, "WorkSpaceSimpleAgent")
+    assert "Runtime" in names, (
+        f"assignment alias must resolve to WorkSpaceSimpleAgent, got {names}"
+    )
+    assert "WorkSpaceSimpleAgent" in names
+
+
+# ---------------------------------------------------------------------------
+# 31. Assignment alias to a non-delegate candidate is UNRESOLVED.
+# ---------------------------------------------------------------------------
+
+
+def test_assignment_alias_to_non_delegate_is_unresolved() -> None:
+    """``Runtime = WorkSpaceSimpleAgent`` (no-delegate shape) then
+    ``Runtime(...)`` must classify as UNRESOLVED.
+    """
+    with tempfile.TemporaryDirectory() as tmpdir:
+        clone = Path(tmpdir) / "zuno-mirror"
+        shutil.copytree(REPO_ROOT, clone)
+        # Remove the legacy workspace runtime classes so the test
+        # isolates the no-delegate candidate.
+        for rel in (
+            "src/backend/zuno/platform/services/workspace/simple_agent.py",
+            "src/backend/zuno/platform/services/workspace/wechat_agent.py",
+        ):
+            target = clone / rel
+            if target.exists():
+                target.unlink()
+        target = clone / "src/backend/zuno/api/services/_test_caller_assignment_unknown.py"
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target_text = (
+            "from zuno.platform.services.workspace import _test_candidate_unknown\n"
+            + "Runtime = _test_candidate_unknown.WorkSpaceSimpleAgent\n"
+            + "def build_with_assignment_alias_unknown(model_config, user_id, session_id):\n"
+            + "    return Runtime(\n"
+            + "        model_config=model_config,\n"
+            + "        user_id=user_id,\n"
+            + "        session_id=session_id,\n"
+            + "    )\n"
+        )
+        target.write_text(target_text, encoding="utf-8")
+        cand_target = (
+            clone
+            / "src/backend/zuno/platform/services/workspace/_test_candidate_unknown.py"
+        )
+        cand_target.parent.mkdir(parents=True, exist_ok=True)
+        cand_target.write_text(
+            (RUNTIME_DEFS / "candidate_constructor_unknown.py").read_text(encoding="utf-8"),
+            encoding="utf-8",
+        )
+        result = subprocess.run(
+            [
+                sys.executable,
+                "tools/scripts/verify_phase22_backend_semantic_legacy.py",
+                "--scope",
+                "repository",
+                "--json",
+            ],
+            cwd=clone,
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+        payload = json.loads(result.stdout or "{}")
+        assert (
+            payload.get("status") == "BACKEND_PRODUCT_RUNTIME_UNRESOLVED"
+        ), (
+            "production caller with assignment alias to non-delegate class "
+            "must classify as UNRESOLVED, got "
+            + json.dumps(payload.get("status"))
+        )
+        categories = {
+            f["category"] for f in payload.get("unresolved", [])
+        }
+        assert "unresolved_runtime_ownership" in categories, (
+            "UNRESOLVED verdict must surface as unresolved finding"
+        )
+
+
+# ---------------------------------------------------------------------------
+# 32. Factory constructor without resolvable type is UNRESOLVED.
+# ---------------------------------------------------------------------------
+
+
+def test_factory_constructor_is_unresolved() -> None:
+    """A factory function that returns a Runtime class cannot be
+    statically resolved. The verifier must classify the candidate as
+    UNRESOLVED.
+    """
+    with tempfile.TemporaryDirectory() as tmpdir:
+        clone = Path(tmpdir) / "zuno-mirror"
+        shutil.copytree(REPO_ROOT, clone)
+        # Remove the legacy workspace runtime classes so the test
+        # isolates the factory candidate.
+        for rel in (
+            "src/backend/zuno/platform/services/workspace/simple_agent.py",
+            "src/backend/zuno/platform/services/workspace/wechat_agent.py",
+        ):
+            target = clone / rel
+            if target.exists():
+                target.unlink()
+        target = clone / "src/backend/zuno/api/services/_test_factory.py"
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_text(
+            (RUNTIME_DEFS / "factory_constructor.py").read_text(encoding="utf-8"),
+            encoding="utf-8",
+        )
+        result = subprocess.run(
+            [
+                sys.executable,
+                "tools/scripts/verify_phase22_backend_semantic_legacy.py",
+                "--scope",
+                "repository",
+                "--json",
+            ],
+            cwd=clone,
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+        payload = json.loads(result.stdout or "{}")
+        # The factory file contains a WorkSpaceSimpleAgent class that
+        # has no canonical_delegate evidence and no legacy markers, but
+        # is reached by a Production Entry Point (the factory function
+        # ``make_agent``). The verifier must classify it as UNRESOLVED.
+        status = payload.get("status")
+        assert (
+            status == "BACKEND_PRODUCT_RUNTIME_UNRESOLVED"
+        ), (
+            f"factory constructor must yield UNRESOLVED, got {status}: "
+            + json.dumps(payload, indent=2)
+        )
+        classifications = {
+            c["name"]: c["classification"]
+            for c in payload.get("classifications", [])
+        }
+        assert classifications.get("WorkSpaceSimpleAgent") == "UNRESOLVED", (
+            "factory constructor candidate must classify as UNRESOLVED, "
+            f"got {classifications.get('WorkSpaceSimpleAgent')}"
+        )
+
+
+# ---------------------------------------------------------------------------
+# 33. Getattr-based dynamic runtime is UNRESOLVED.
+# ---------------------------------------------------------------------------
+
+
+def test_getattr_dynamic_runtime_is_unresolved() -> None:
+    """``getattr(module, 'SomeRuntime')`` cannot be statically resolved.
+    The verifier must classify the candidate as UNRESOLVED.
+    """
+    with tempfile.TemporaryDirectory() as tmpdir:
+        clone = Path(tmpdir) / "zuno-mirror"
+        shutil.copytree(REPO_ROOT, clone)
+        # Remove the legacy workspace runtime classes so the test
+        # isolates the dynamic-load signal.
+        for rel in (
+            "src/backend/zuno/platform/services/workspace/simple_agent.py",
+            "src/backend/zuno/platform/services/workspace/wechat_agent.py",
+        ):
+            target = clone / rel
+            if target.exists():
+                target.unlink()
+        target = clone / "src/backend/zuno/api/services/_test_dynamic_runtime.py"
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_text(
+            (RUNTIME_DEFS / "getattr_runtime.py").read_text(encoding="utf-8"),
+            encoding="utf-8",
+        )
+        result = subprocess.run(
+            [
+                sys.executable,
+                "tools/scripts/verify_phase22_backend_semantic_legacy.py",
+                "--scope",
+                "repository",
+                "--json",
+            ],
+            cwd=clone,
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+        payload = json.loads(result.stdout or "{}")
+        assert (
+            payload.get("status") == "BACKEND_PRODUCT_RUNTIME_UNRESOLVED"
+        ), (
+            "getattr-based dynamic runtime must yield UNRESOLVED, got "
+            + json.dumps(payload.get("status"))
+        )
+        unresolved_categories = {
+            f["category"] for f in payload.get("unresolved", [])
+        }
+        assert "dynamic_runtime_load" in unresolved_categories, (
+            "getattr-based dynamic runtime must surface as dynamic_runtime_load"
+        )
+
+
+# ---------------------------------------------------------------------------
+# 34. Direct model call fixture is PRODUCT_LEGACY_RUNTIME (re-pinned).
+# ---------------------------------------------------------------------------
+
+
+def test_direct_model_call_classification() -> None:
+    src = (RUNTIME_DEFS / "direct_model_final_answer.py").read_text(encoding="utf-8")
+    verdict = _fixture_classification(
+        src,
+        "DirectModelFinalAnswerAgent",
+        production_callers=[("api/services/workspace.py", 160)],
+    )
+    assert verdict == "PRODUCT_LEGACY_RUNTIME", (
+        f"direct model call must classify as PRODUCT_LEGACY_RUNTIME, got {verdict}"
+    )
+
+
+# ---------------------------------------------------------------------------
+# 35. Direct tool call fixture is PRODUCT_LEGACY_RUNTIME (re-pinned).
+# ---------------------------------------------------------------------------
+
+
+def test_direct_tool_call_classification() -> None:
+    src = (RUNTIME_DEFS / "direct_tool_ainvoke.py").read_text(encoding="utf-8")
+    verdict = _fixture_classification(
+        src,
+        "DirectToolAgent",
+        production_callers=[("api/services/workspace.py", 160)],
+    )
+    assert verdict == "PRODUCT_LEGACY_RUNTIME", (
+        f"direct tool call must classify as PRODUCT_LEGACY_RUNTIME, got {verdict}"
+    )
+
+
+# ---------------------------------------------------------------------------
+# 36. Independent graph fixture is PRODUCT_LEGACY_RUNTIME (re-pinned).
+# ---------------------------------------------------------------------------
+
+
+def test_independent_graph_classification() -> None:
+    src = (RUNTIME_DEFS / "invalid_adapter_with_create_agent.py").read_text(encoding="utf-8")
+    verdict = _fixture_classification(
+        src,
+        "WorkSpaceSimpleAgent",
+        production_callers=[("api/services/workspace.py", 160)],
+    )
+    assert verdict == "PRODUCT_LEGACY_RUNTIME", (
+        f"independent graph must classify as PRODUCT_LEGACY_RUNTIME, got {verdict}"
+    )
+
+
+# ---------------------------------------------------------------------------
+# 37. Test-only AgentControlRuntime fixture is INTERNAL_TEST_HARNESS
+#     (re-pinned).
+# ---------------------------------------------------------------------------
+
+
+def test_only_test_callers_yields_internal_test_harness() -> None:
+    src = (RUNTIME_DEFS / "agent_control_runtime_no_prod_caller.py").read_text(encoding="utf-8")
+    verdict = _fixture_classification(
+        src,
+        "AgentControlRuntime",
+        production_callers=[],
+    )
+    assert verdict == "INTERNAL_TEST_HARNESS", (
+        f"test-only AgentControlRuntime must classify as INTERNAL_TEST_HARNESS, "
+        f"got {verdict}"
+    )
+
+
+# ---------------------------------------------------------------------------
+# 38. Production caller AgentControlRuntime is PRODUCT_LEGACY_RUNTIME
+#     (re-pinned).
+# ---------------------------------------------------------------------------
+
+
+def test_production_caller_agent_control_runtime_is_legacy() -> None:
+    from tools.scripts.verify_phase22_backend_semantic_legacy import (
+        _classdef_nodes,
+        _evidence_for_class,
+        _safe_parse,
+        classify_class,
+    )
+
+    tree = _safe_parse(RUNTIME_DEFS / "agent_control_runtime_with_prod_caller.py")
+    class_node = next(_classdef_nodes(tree))
+    evidence = _evidence_for_class(class_node)
+    verdict = classify_class(
+        class_name="AgentControlRuntime",
+        class_node=class_node,
+        module_path=str(RUNTIME_DEFS / "agent_control_runtime_with_prod_caller.py"),
+        production_callers=[("production_callers/caller_of_agent_control.py", 7)],
+        evidence=evidence,
+    )
+    assert verdict.classification == "PRODUCT_LEGACY_RUNTIME", (
+        f"production caller AgentControlRuntime must classify as "
+        f"PRODUCT_LEGACY_RUNTIME, got {verdict.classification}"
+    )
+
+
+# ---------------------------------------------------------------------------
+# 39. Repository UNRESOLVED in production tree exits with code 1.
+# ---------------------------------------------------------------------------
+
+
+def test_repository_unresolved_exits_one() -> None:
+    with tempfile.TemporaryDirectory() as tmpdir:
+        clone = Path(tmpdir) / "zuno-mirror"
+        shutil.copytree(REPO_ROOT, clone)
+        # Remove the legacy workspace runtime classes so the test
+        # isolates the no-delegate candidate.
+        for rel in (
+            "src/backend/zuno/platform/services/workspace/simple_agent.py",
+            "src/backend/zuno/platform/services/workspace/wechat_agent.py",
+        ):
+            target = clone / rel
+            if target.exists():
+                target.unlink()
+        target = clone / "src/backend/zuno/api/services/_test_unresolved_branch.py"
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target_text = (
+            "from zuno.platform.services.workspace import _test_candidate_unknown\n"
+            + "def build_assignment_unknown(model_config, user_id, session_id):\n"
+            + "    return _test_candidate_unknown.WorkSpaceSimpleAgent(\n"
+            + "        model_config=model_config,\n"
+            + "        user_id=user_id,\n"
+            + "        session_id=session_id,\n"
+            + "    )\n"
+        )
+        target.write_text(target_text, encoding="utf-8")
+        cand_target = (
+            clone
+            / "src/backend/zuno/platform/services/workspace/_test_candidate_unknown.py"
+        )
+        cand_target.parent.mkdir(parents=True, exist_ok=True)
+        cand_target.write_text(
+            (RUNTIME_DEFS / "candidate_constructor_unknown.py").read_text(encoding="utf-8"),
+            encoding="utf-8",
+        )
+        result = subprocess.run(
+            [
+                sys.executable,
+                "tools/scripts/verify_phase22_backend_semantic_legacy.py",
+                "--scope",
+                "repository",
+                "--json",
+            ],
+            cwd=clone,
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+        assert result.returncode == 1, (
+            f"repository UNRESOLVED must exit 1, got {result.returncode}: "
+            + result.stdout
+        )
+        payload = json.loads(result.stdout or "{}")
+        assert (
+            payload.get("status") == "BACKEND_PRODUCT_RUNTIME_UNRESOLVED"
+        ), payload
+
+
+# ---------------------------------------------------------------------------
+# 40. Repository BLOCKED in production tree exits with code 1.
+# ---------------------------------------------------------------------------
+
+
+def test_repository_blocked_exits_one() -> None:
+    """The current live branch has WorkSpaceSimpleAgent / WeChatAgent as
+    legacy runtimes, so the repository status is BLOCKED and the exit
+    code must be 1.
+    """
+    result = subprocess.run(
+        [
+            sys.executable,
+            "tools/scripts/verify_phase22_backend_semantic_legacy.py",
+            "--scope",
+            "repository",
+        ],
+        cwd=REPO_ROOT,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    assert result.returncode == 1, (
+        f"repository BLOCKED must exit 1, got {result.returncode}"
+    )
+
+
+# ---------------------------------------------------------------------------
+# 41. Repository CONFIRMED in production tree exits with code 0.
+# ---------------------------------------------------------------------------
+
+
+def test_repository_confirmed_exits_zero() -> None:
+    """When the production tree is replaced by a thin canonical adapter
+    and the workspace legacy classes are removed, the repository status
+    must be CONFIRMED and the exit code must be 0.
+    """
+    with tempfile.TemporaryDirectory() as tmpdir:
+        clone = Path(tmpdir) / "zuno-mirror"
+        shutil.copytree(REPO_ROOT, clone)
+        # Remove the legacy workspace runtime classes.
+        for rel in (
+            "src/backend/zuno/platform/services/workspace/simple_agent.py",
+            "src/backend/zuno/platform/services/workspace/wechat_agent.py",
+        ):
+            target = clone / rel
+            if target.exists():
+                target.unlink()
+        # Replace the candidate with the thin canonical adapter.
+        target = clone / "src/backend/zuno/platform/services/workspace/simple_agent.py"
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_text(
+            (RUNTIME_DEFS / "candidate_constructor.py").read_text(encoding="utf-8"),
+            encoding="utf-8",
+        )
+        result = subprocess.run(
+            [
+                sys.executable,
+                "tools/scripts/verify_phase22_backend_semantic_legacy.py",
+                "--scope",
+                "repository",
+                "--json",
+            ],
+            cwd=clone,
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+        payload = json.loads(result.stdout or "{}")
+        assert result.returncode == 0, (
+            f"repository CONFIRMED must exit 0, got {result.returncode}: "
+            + result.stdout
+        )
+        assert (
+            payload.get("status") == "BACKEND_PRODUCT_RUNTIME_CUTOVER_CONFIRMED"
+        ), payload
