@@ -965,8 +965,11 @@ class ToolControlPlaneRuntime:
             ToolVersionInput,
         )
 
-        tenant_id = request.user_id or "tenant:default"
-        workspace_id = request.workspace_id or "workspace:default"
+        # PHASE22 repair (B7): Tool Gateway facts carry the real request
+        # tenant / workspace identity — never a synthetic tenant:default or
+        # a workspace derived from the user id.
+        tenant_id = request.tenant_id or ""
+        workspace_id = request.workspace_id or ""
         tool_version_id = f"tool-version:{manifest.tool_id}:v1"
         tool_operation_id = f"{tool_version_id}:operation:default"
         prepared_id = f"prepared-tool-action:{request.execution_id or request.tool_request_id}"

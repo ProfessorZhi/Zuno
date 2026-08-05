@@ -68,6 +68,7 @@ def _security_ref(
     action: str = "tool.execute",
     resource: str = "tool.read_doc,tool.write_doc",
     forged: bool = False,
+    expires_at: str | None = None,
 ) -> dict:
     decision_id = f"security-decision:{principal}:{resource}"
     base = {
@@ -82,7 +83,7 @@ def _security_ref(
     }
     payload = dict(base)
     payload["decision_hash"] = security_ref_hash(**base) if not forged else "forged-hash"
-    payload["expires_at"] = None
+    payload["expires_at"] = expires_at
     return payload
 
 
@@ -113,6 +114,92 @@ def _admission_reason(snapshot) -> str:
     return str((snapshot.security_summary or {}).get("reason") or "")
 
 
+class _FakeSecurityResolver:
+    """Owner-port fake: returns Security-owner facts by opaque decision_id.
+
+    The fake behaves like the owner: it computes the decision hash itself and
+    never accepts a caller-computed hash as proof.
+    """
+
+    def __init__(self, facts: dict[str, dict] | None = None) -> None:
+        self._facts = dict(facts or {})
+        self.resolved: list[str] = []
+
+    def resolve(self, decision_id: str, context: dict) -> dict | None:
+        self.resolved.append(decision_id)
+        fact = self._facts.get(decision_id)
+        if fact is None:
+            return None
+        return dict(fact)
+
+
+class _FakeBudgetResolver:
+    """Owner-port fake: returns a Budget-owner admission fact."""
+
+    def __init__(self, fact: dict | None = None) -> None:
+        self._fact = fact
+        self.resolved: list[tuple[str, dict]] = []
+
+    def resolve(self, decision_id: str, context: dict) -> dict | None:
+        self.resolved.append((decision_id, context))
+        if self._fact is None:
+            return None
+        return dict(self._fact)
+
+
+def _security_owner_fact(
+    *,
+    decision_id: str = "security-decision:user-a:tool.read_doc",
+    decision: str = "allow",
+    tenant: str = "tenant-a",
+    workspace: str = "workspace-a",
+    principal: str = "user-a",
+    action: str = "tool.execute",
+    resource: str = "tool.read_doc",
+    epoch: str = TEST_EPOCH,
+    expires_at: str | None = None,
+) -> dict:
+    base = {
+        "decision_id": decision_id,
+        "tenant_id": tenant,
+        "workspace_id": workspace,
+        "principal_id": principal,
+        "action": action,
+        "resource": resource,
+        "decision": decision,
+        "security_epoch_ref": epoch,
+    }
+    return {
+        **base,
+        "decision_hash": security_ref_hash(**base),
+        "expires_at": expires_at,
+    }
+
+
+def _budget_owner_fact(
+    *,
+    budget_decision_id: str = "budget-decision:run:task-1",
+    allowed: bool = True,
+    tenant: str = "tenant-a",
+    workspace: str = "workspace-a",
+    run_id: str = "run:task-1",
+    owner: str = "budget-owner:workspace-a",
+) -> dict:
+    from zuno.agent.contracts import BudgetDecisionRef
+
+    ref = BudgetDecisionRef(
+        budget_decision_id=budget_decision_id,
+        tenant_id=tenant,
+        workspace_id=workspace,
+        run_id=run_id,
+        allowed=allowed,
+        limits={},
+        decision_hash="",
+        owner=owner,
+    )
+    return {**ref.model_dump(mode="json"), "decision_hash": budget_ref_hash(ref=ref)}
+
+
 
 
 def _runtime(
@@ -129,6 +216,8 @@ def _runtime(
     approval_flow: str = "runtime_interrupt_resume",
     extra_bindings: list[WorkspaceToolBinding] | None = None,
     store=None,
+    security_resolver: _FakeSecurityResolver | None = None,
+    budget_resolver: _FakeBudgetResolver | None = None,
 ) -> WorkspaceAgentRuntime:
     bindings = [
         WorkspaceToolBinding(
@@ -169,6 +258,8 @@ def _runtime(
         tool_unit_of_work_factory=gateway.tool_factory if gateway else None,
         security_unit_of_work_factory=gateway.security_factory if gateway else None,
         infrastructure_unit_of_work_factory=gateway.infrastructure_factory if gateway else None,
+        security_decision_resolver=security_resolver,
+        budget_decision_resolver=budget_resolver,
     )
 
 
@@ -658,10 +749,17 @@ def test_product_mode_side_effect_without_approval_flow_fails_closed(tmp_path) -
         tool_unit_of_work_factory=gateway.tool_factory,
         security_unit_of_work_factory=gateway.security_factory,
         infrastructure_unit_of_work_factory=gateway.infrastructure_factory,
-        security_decision_issuer=lambda req: _security_ref(
-            resource=f"tool.{req.tool_id}" if req.tool_id else ""
+        security_decision_resolver=_FakeSecurityResolver(
+            {
+                "security-decision:user-a:tool.write_doc": _security_owner_fact(
+                    decision_id="security-decision:user-a:tool.write_doc",
+                    resource="tool.write_doc",
+                )
+            }
         ),
-        budget_decision_issuer=lambda req: _budget_ref(run_id=f"run:{req.task_id}"),
+        budget_decision_resolver=_FakeBudgetResolver(
+            _budget_owner_fact(run_id="run:task-flow")
+        ),
     )
     snapshot = runtime.start(
         _request(
@@ -670,12 +768,16 @@ def test_product_mode_side_effect_without_approval_flow_fails_closed(tmp_path) -
             plan_kind="tool",
             tool_id="tool.write_doc",
             tool_arguments={"path": "out.md"},
+            security_decision_id="security-decision:user-a:tool.write_doc",
+            budget_decision_id="budget-decision:run:task-flow",
         )
     )
 
-    # No approval-waiting interrupt with an unreachable product resume path:
-    # the side effect fails closed before dispatch.
+    # Owner facts resolve (security + budget), then the side effect fails
+    # closed on the unbound product approval flow — never a WAITING_APPROVAL
+    # interrupt with an unreachable product resume path.
     assert runtime.store().pending_interrupt("task-flow") is None
+    assert "PRODUCT_APPROVAL_FLOW_NOT_BOUND" in _admission_reason(snapshot)
     assert not [obs for obs in snapshot.observations if obs.kind == "tool" and obs.status == "completed"]
     assert runtime.classify_final_state(snapshot) == "FAILED/BLOCKED"
 
@@ -1215,3 +1317,381 @@ def test_no_name_based_side_effect_classification_anywhere() -> None:
         assert "_tool_execution_mode" not in source
         assert "_tool_has_network" not in source
         assert "declared_policy_from_metadata" in source
+
+
+# ---------------------------------------------------------------------------
+# PHASE22 repair round 2 (Coordinator P1-P4): owner facts, real identity,
+# simple read-only product path
+# ---------------------------------------------------------------------------
+
+
+def test_product_simple_qa_requires_budget_admission_but_no_tool_security_decision(tmp_path) -> None:
+    """A simple no-tool product run must NOT require a tool.execute Security
+    decision, but MUST pass formal Budget Admission (owner resolver)."""
+    store = _sqlite_store(tmp_path)
+    budget_resolver = _FakeBudgetResolver(
+        _budget_owner_fact(
+            budget_decision_id="budget-decision:run:task-simple",
+            run_id="run:task-simple",
+        )
+    )
+    runtime = WorkspaceAgentRuntime(
+        model=_FakeChatModel(),
+        bindings=[],
+        tenant_id="tenant-a",
+        workspace_id="workspace-a",
+        principal_id="user-a",
+        profile=PROFILE_PRODUCT,
+        store=store,
+        security_epoch_ref=TEST_EPOCH,
+        budget_decision_resolver=budget_resolver,
+    )
+    snapshot = runtime.start(
+        _request(
+            task_id="task-simple",
+            goal="hello",
+            plan_kind="simple",
+            budget_decision_id="budget-decision:run:task-simple",
+        )
+    )
+
+    assert snapshot.finalization_status == "finalized"
+    # Not blocked (no fail-closed reason; security decision is "allow" even
+    # though no tool.execute Security decision was required).
+    assert "block" not in str((snapshot.security_summary or {}).get("decision"))
+    assert len(snapshot.plan_state.steps) == 1
+    assert snapshot.plan_state.steps[0].action_type == "answer_from_context"
+    assert snapshot.run_outcome_ref
+    # Formal Budget Admission happened through the owner resolver.
+    assert budget_resolver.resolved
+    assert (snapshot.budget_verdict or {}).get("trace_ref") == "budget-decision:budget-decision:run:task-simple"
+    assert not [obs for obs in snapshot.observations if obs.kind == "tool"]
+
+
+def test_product_simple_qa_without_budget_owner_resolver_fails_closed(tmp_path) -> None:
+    """Budget Admission is mandatory for every planned product run; an
+    unbound Budget owner resolver fails closed (BLOCKED_CONFIGURATION)."""
+    store = _sqlite_store(tmp_path)
+    runtime = WorkspaceAgentRuntime(
+        model=_FakeChatModel(),
+        bindings=[],
+        tenant_id="tenant-a",
+        workspace_id="workspace-a",
+        principal_id="user-a",
+        profile=PROFILE_PRODUCT,
+        store=store,
+        security_epoch_ref=TEST_EPOCH,
+    )
+    snapshot = runtime.start(
+        _request(
+            task_id="task-simple-nobudget",
+            goal="hello",
+            plan_kind="simple",
+        )
+    )
+
+    assert runtime.classify_final_state(snapshot) == "FAILED/BLOCKED"
+    assert "budget_owner_resolver_unbound" in _admission_reason(snapshot)
+    assert not [obs for obs in snapshot.observations if obs.kind == "tool"]
+
+
+def test_product_read_only_tool_requires_owner_decisions_and_executes_through_control_plane(tmp_path) -> None:
+    """Read-only tool in product mode: Security Owner Decision + Budget Owner
+    Decision + Tool Control Plane; no human approval; audit/trace refs."""
+    store = _sqlite_store(tmp_path)
+    security_resolver = _FakeSecurityResolver(
+        {
+            "security-decision:user-a:tool.read_doc": _security_owner_fact(
+                decision_id="security-decision:user-a:tool.read_doc",
+                resource="tool.read_doc",
+            )
+        }
+    )
+    runtime = WorkspaceAgentRuntime(
+        model=_FakeChatModel(),
+        bindings=[
+            WorkspaceToolBinding(
+                tool_id="tool.read_doc",
+                display_name="read_doc",
+                description="Read a workspace document.",
+                input_schema={"type": "object"},
+                side_effect_level=ToolSideEffectLevel.READ,
+                executor=_read_binding,
+            )
+        ],
+        tenant_id="tenant-a",
+        workspace_id="workspace-a",
+        principal_id="user-a",
+        profile=PROFILE_PRODUCT,
+        store=store,
+        security_epoch_ref=TEST_EPOCH,
+        approval_flow="runtime_interrupt_resume",
+        security_decision_resolver=security_resolver,
+        budget_decision_resolver=_FakeBudgetResolver(
+            _budget_owner_fact(
+                budget_decision_id="budget-decision:run:task-readonly",
+                run_id="run:task-readonly",
+            )
+        ),
+    )
+    snapshot = runtime.start(
+        _request(
+            task_id="task-readonly",
+            goal="read the doc",
+            plan_kind="tool",
+            tool_id="tool.read_doc",
+            tool_arguments={"path": "docs/contract.md"},
+            security_decision_id="security-decision:user-a:tool.read_doc",
+            budget_decision_id="budget-decision:run:task-readonly",
+        )
+    )
+
+    # Owner fact was resolved through the injected resolver (not caller-proof).
+    assert security_resolver.resolved == ["security-decision:user-a:tool.read_doc"]
+    tool_obs = [obs for obs in snapshot.observations if obs.kind == "tool"]
+    assert tool_obs and tool_obs[0].status == "completed"
+    assert runtime.store().pending_interrupt("task-readonly") is None  # no human approval
+    assert runtime.classify_final_state(snapshot) == "COMPLETED"
+    assert (snapshot.security_summary or {}).get("trace_ref") == "security-decision:security-decision:user-a:tool.read_doc"
+    assert (snapshot.budget_verdict or {}).get("trace_ref") == "budget-decision:budget-decision:run:task-readonly"
+
+
+def test_product_profile_never_trusts_caller_supplied_refs(tmp_path) -> None:
+    """A caller-computed ref must never be accepted as an owner fact when no
+    owner resolver is bound (product profile)."""
+    store = _sqlite_store(tmp_path)
+    runtime = WorkspaceAgentRuntime(
+        model=_FakeChatModel(),
+        bindings=[
+            WorkspaceToolBinding(
+                tool_id="tool.read_doc",
+                display_name="read_doc",
+                description="Read a workspace document.",
+                input_schema={"type": "object"},
+                side_effect_level=ToolSideEffectLevel.READ,
+                executor=_read_binding,
+            )
+        ],
+        tenant_id="tenant-a",
+        workspace_id="workspace-a",
+        principal_id="user-a",
+        profile=PROFILE_PRODUCT,
+        store=store,
+        security_epoch_ref=TEST_EPOCH,
+    )
+    snapshot = runtime.start(
+        _request(
+            task_id="task-ntrust",
+            goal="read the doc",
+            plan_kind="tool",
+            tool_id="tool.read_doc",
+            tool_arguments={"path": "docs/contract.md"},
+            security_ref=_security_ref(resource="tool.read_doc"),
+            budget_ref=_budget_ref(run_id="run:task-ntrust"),
+        )
+    )
+
+    assert runtime.classify_final_state(snapshot) == "FAILED/BLOCKED"
+    reason = _admission_reason(snapshot)
+    assert "security_owner_resolver_unbound" in reason or "budget_owner_resolver_unbound" in reason
+    assert not [obs for obs in snapshot.observations if obs.kind == "tool"]
+
+
+def test_expired_security_ref_fails_closed(tmp_path) -> None:
+    """expires_at must really be validated: an expired owner ref blocks."""
+    runtime = _runtime(tmp_path)
+    snapshot = runtime.start(
+        _request(
+            task_id="task-expired",
+            goal="read the doc",
+            plan_kind="tool",
+            tool_id="tool.read_doc",
+            tool_arguments={"path": "docs/contract.md"},
+            security_ref=_security_ref(
+                resource="tool.read_doc",
+                expires_at="2000-01-01T00:00:00+00:00",
+            ),
+            budget_ref=_budget_ref(run_id="run:task-expired"),
+        )
+    )
+
+    assert runtime.classify_final_state(snapshot) == "FAILED/BLOCKED"
+    assert "expired" in _admission_reason(snapshot)
+    assert not [obs for obs in snapshot.observations if obs.kind == "tool"]
+
+
+def test_expired_security_owner_fact_via_resolver_fails_closed(tmp_path) -> None:
+    """Product profile: an expired owner fact from the resolver is rejected."""
+    store = _sqlite_store(tmp_path)
+    runtime = WorkspaceAgentRuntime(
+        model=_FakeChatModel(),
+        bindings=[
+            WorkspaceToolBinding(
+                tool_id="tool.read_doc",
+                display_name="read_doc",
+                description="Read a workspace document.",
+                input_schema={"type": "object"},
+                side_effect_level=ToolSideEffectLevel.READ,
+                executor=_read_binding,
+            )
+        ],
+        tenant_id="tenant-a",
+        workspace_id="workspace-a",
+        principal_id="user-a",
+        profile=PROFILE_PRODUCT,
+        store=store,
+        security_epoch_ref=TEST_EPOCH,
+        security_decision_resolver=_FakeSecurityResolver(
+            {
+                "security-decision:user-a:tool.read_doc": _security_owner_fact(
+                    decision_id="security-decision:user-a:tool.read_doc",
+                    resource="tool.read_doc",
+                    expires_at="2000-01-01T00:00:00+00:00",
+                )
+            }
+        ),
+        budget_decision_resolver=_FakeBudgetResolver(
+            _budget_owner_fact(
+                budget_decision_id="budget-decision:run:task-exp-resolver",
+                run_id="run:task-exp-resolver",
+            )
+        ),
+    )
+    snapshot = runtime.start(
+        _request(
+            task_id="task-exp-resolver",
+            goal="read the doc",
+            plan_kind="tool",
+            tool_id="tool.read_doc",
+            tool_arguments={"path": "docs/contract.md"},
+            security_decision_id="security-decision:user-a:tool.read_doc",
+            budget_decision_id="budget-decision:run:task-exp-resolver",
+        )
+    )
+
+    assert runtime.classify_final_state(snapshot) == "FAILED/BLOCKED"
+    assert "expired" in _admission_reason(snapshot)
+    assert not [obs for obs in snapshot.observations if obs.kind == "tool"]
+
+
+def test_security_owner_fact_missing_fails_closed(tmp_path) -> None:
+    """Product profile: a decision_id the owner has no fact for blocks."""
+    store = _sqlite_store(tmp_path)
+    runtime = WorkspaceAgentRuntime(
+        model=_FakeChatModel(),
+        bindings=[
+            WorkspaceToolBinding(
+                tool_id="tool.read_doc",
+                display_name="read_doc",
+                description="Read a workspace document.",
+                input_schema={"type": "object"},
+                side_effect_level=ToolSideEffectLevel.READ,
+                executor=_read_binding,
+            )
+        ],
+        tenant_id="tenant-a",
+        workspace_id="workspace-a",
+        principal_id="user-a",
+        profile=PROFILE_PRODUCT,
+        store=store,
+        security_epoch_ref=TEST_EPOCH,
+        security_decision_resolver=_FakeSecurityResolver(facts={}),
+        budget_decision_resolver=_FakeBudgetResolver(
+            _budget_owner_fact(
+                budget_decision_id="budget-decision:run:task-nofact",
+                run_id="run:task-nofact",
+            )
+        ),
+    )
+    snapshot = runtime.start(
+        _request(
+            task_id="task-nofact",
+            goal="read the doc",
+            plan_kind="tool",
+            tool_id="tool.read_doc",
+            tool_arguments={"path": "docs/contract.md"},
+            security_decision_id="security-decision:user-a:tool.read_doc",
+            budget_decision_id="budget-decision:run:task-nofact",
+        )
+    )
+
+    assert runtime.classify_final_state(snapshot) == "FAILED/BLOCKED"
+    assert "security_owner_fact_not_found" in _admission_reason(snapshot)
+
+
+def test_missing_product_tenant_context_fails_closed() -> None:
+    """Missing tenant / workspace product context -> BLOCKED_CONFIGURATION
+    (never a tenant:default fallback, never a workspace guessed from user)."""
+    from zuno.agent.runtime import SQLiteAgentRunStore
+
+    with pytest.raises(BlockedConfiguration) as exc_info:
+        WorkspaceAgentRuntime(
+            model=_FakeChatModel(),
+            bindings=[],
+            tenant_id="",
+            workspace_id="workspace-a",
+            principal_id="user-a",
+            profile=PROFILE_PRODUCT,
+            store=SQLiteAgentRunStore(Path("runtime-tenant.db")),
+        )
+    assert "BLOCKED_CONFIGURATION" in str(exc_info.value)
+    assert "tenant_id" in str(exc_info.value)
+
+    with pytest.raises(BlockedConfiguration) as exc_info:
+        WorkspaceAgentRuntime(
+            model=_FakeChatModel(),
+            bindings=[],
+            tenant_id="tenant-a",
+            workspace_id="",
+            principal_id="user-a",
+            profile=PROFILE_PRODUCT,
+            store=SQLiteAgentRunStore(Path("runtime-workspace.db")),
+        )
+    assert "BLOCKED_CONFIGURATION" in str(exc_info.value)
+    assert "workspace_id" in str(exc_info.value)
+
+
+def test_tool_manifest_tenant_mismatch_blocks_execution(tmp_path) -> None:
+    """A request whose tenant does not match the session tool manifest's
+    tenant fails closed at the Tool Control Plane (MANIFEST scope)."""
+    runtime = _runtime(tmp_path, write=False)  # tenant-a manifests
+    snapshot = runtime.start(
+        _request(
+            task_id="task-manifest-tenant",
+            goal="read the doc",
+            plan_kind="tool",
+            tool_id="tool.read_doc",
+            tool_arguments={"path": "docs/contract.md"},
+            tenant="tenant-b",
+            security_ref=_security_ref(resource="tool.read_doc", tenant="tenant-b"),
+            budget_ref=_budget_ref(run_id="run:task-manifest-tenant", tenant="tenant-b"),
+        )
+    )
+
+    tool_obs = [obs for obs in snapshot.observations if obs.kind == "tool"]
+    assert runtime.classify_final_state(snapshot) == "FAILED/BLOCKED"
+    assert tool_obs and tool_obs[0].status == "blocked"
+    assert "MANIFEST_TENANT_SCOPE_MISMATCH" in str(tool_obs[0].metadata.get("blocked_reason") or "")
+
+
+def test_tool_manifest_workspace_mismatch_blocks_execution(tmp_path) -> None:
+    """A request whose workspace does not match the session tool manifest's
+    workspace fails closed at the Tool Control Plane (MANIFEST scope)."""
+    runtime = _runtime(tmp_path, write=False)  # workspace-a manifests
+    snapshot = runtime.start(
+        _request(
+            task_id="task-manifest-workspace",
+            goal="read the doc",
+            plan_kind="tool",
+            tool_id="tool.read_doc",
+            tool_arguments={"path": "docs/contract.md"},
+            workspace="workspace-b",
+            security_ref=_security_ref(resource="tool.read_doc", workspace="workspace-b"),
+            budget_ref=_budget_ref(run_id="run:task-manifest-workspace", workspace="workspace-b"),
+        )
+    )
+
+    tool_obs = [obs for obs in snapshot.observations if obs.kind == "tool"]
+    assert runtime.classify_final_state(snapshot) == "FAILED/BLOCKED"
+    assert tool_obs and tool_obs[0].status == "blocked"
+    assert "MANIFEST_WORKSPACE_SCOPE_MISMATCH" in str(tool_obs[0].metadata.get("blocked_reason") or "")

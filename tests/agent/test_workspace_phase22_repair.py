@@ -24,6 +24,7 @@ from pathlib import Path
 import pytest
 
 from zuno.agent.runtime import PROFILE_DEVELOPER_TEST, PROFILE_PRODUCT
+from zuno.api.services.workspace_task_runtime import WorkspaceTaskRuntimeService
 from zuno.capability.control_plane import ToolSideEffectLevel
 from zuno.platform.services.workspace.single_controller_runtime import (
     BlockedConfiguration,
@@ -66,8 +67,9 @@ def _request(
     tenant: str = "tenant-a",
     workspace: str = "workspace-a",
     principal: str = "user-a",
+    **overrides: object,
 ) -> WorkspaceRunRequest:
-    return WorkspaceRunRequest(
+    base = dict(
         task_id=task_id,
         thread_id="thread-1",
         tenant_id=tenant,
@@ -86,6 +88,37 @@ def _request(
         tool_arguments=tool_arguments,
         plan_kind=plan_kind,
     )
+    base.update(overrides)
+    return WorkspaceRunRequest(**base)
+
+
+def _admission_reason(snapshot) -> str:
+    return str((snapshot.security_summary or {}).get("reason") or "")
+
+
+class _FakeSecurityResolver:
+    """Owner-port fake: returns Security-owner facts by opaque decision_id."""
+
+    def __init__(self, facts: dict[str, dict] | None = None) -> None:
+        self._facts = dict(facts or {})
+        self.resolved: list[str] = []
+
+    def resolve(self, decision_id: str, context: dict) -> dict | None:
+        self.resolved.append(decision_id)
+        fact = self._facts.get(decision_id)
+        return dict(fact) if fact is not None else None
+
+
+class _FakeBudgetResolver:
+    """Owner-port fake: returns a Budget-owner admission fact."""
+
+    def __init__(self, fact: dict | None = None) -> None:
+        self._fact = fact
+        self.resolved: list[tuple[str, dict]] = []
+
+    def resolve(self, decision_id: str, context: dict) -> dict | None:
+        self.resolved.append((decision_id, context))
+        return dict(self._fact) if self._fact is not None else None
 
 
 def _write_runtime(tmp_path: Path, *, gateway: FakeGatewayBinding, executor) -> WorkspaceAgentRuntime:
@@ -329,6 +362,8 @@ def test_simple_agent_test_profile_uses_explicit_sqlite(monkeypatch, tmp_path) -
             session_id="s-1",
             original_query="hello",
             runtime_profile=PROFILE_DEVELOPER_TEST,
+            tenant_id="tenant-a",
+            workspace_id="workspace-a",
         )
         agent.tools = []
         runtime = agent._build_canonical_runtime([])
@@ -363,6 +398,8 @@ def test_simple_agent_product_mode_uses_injected_composition_store(monkeypatch, 
             session_id="s-1",
             original_query="hello",
             runtime_profile=PROFILE_PRODUCT,
+            tenant_id="tenant-a",
+            workspace_id="workspace-a",
         )
         agent.tools = []
         runtime = agent._build_canonical_runtime([])
@@ -375,37 +412,50 @@ def test_simple_agent_product_mode_uses_injected_composition_store(monkeypatch, 
 
 def test_server_composition_root_wires_workspace_agents(monkeypatch, tmp_path) -> None:
     """The server composition root (workspace task runtime service) binds the
-    workspace agent composition at import: shared durable store, no temp
-    SQLite, approval flow not bound (fail closed)."""
-    import zuno.api.services.workspace_task_runtime as task_runtime_module  # noqa: F401
-
+    workspace agent composition explicitly — never at module import time:
+    shared durable store, no temp SQLite, approval flow not bound (fail
+    closed), owner resolvers unbound (product runs fail closed until the
+    Security / Budget owner facts are wired)."""
     from zuno.platform.services.workspace.single_controller_runtime import (
         get_workspace_product_composition,
     )
     from zuno.platform.services.workspace.simple_agent import WorkSpaceSimpleAgent
 
-    composition = get_workspace_product_composition()
-    assert composition is not None
-    assert composition.store is not None
-    assert composition.approval_flow == "none"
-    assert composition.security_decision_issuer is None
+    # Importing the module must NOT configure the composition (explicit
+    # initialization at application startup only).
+    import zuno.api.services.workspace_task_runtime as task_runtime_module  # noqa: F401
 
-    monkeypatch.setattr(
-        "zuno.platform.services.workspace.simple_agent.ModelManager.get_user_model",
-        lambda **_: _FakeChatModel(),
-    )
-    agent = WorkSpaceSimpleAgent(
-        model_config={},
-        user_id="u-1",
-        session_id="s-1",
-        original_query="hello",
-        runtime_profile=PROFILE_PRODUCT,
-    )
-    agent.tools = []
-    runtime = agent._build_canonical_runtime([])
-    # Product mode uses the server composition's shared store — never a
-    # per-session temp SQLite file.
-    assert runtime.store() is composition.store
+    assert get_workspace_product_composition() is None
+
+    WorkspaceTaskRuntimeService.configure_workspace_agent_product_composition()
+    try:
+        composition = get_workspace_product_composition()
+        assert composition is not None
+        assert composition.store is not None
+        assert composition.approval_flow == "none"
+        assert composition.security_decision_resolver is None
+        assert composition.budget_decision_resolver is None
+
+        monkeypatch.setattr(
+            "zuno.platform.services.workspace.simple_agent.ModelManager.get_user_model",
+            lambda **_: _FakeChatModel(),
+        )
+        agent = WorkSpaceSimpleAgent(
+            model_config={},
+            user_id="u-1",
+            session_id="s-1",
+            original_query="hello",
+            runtime_profile=PROFILE_PRODUCT,
+            tenant_id="tenant-a",
+            workspace_id="workspace-a",
+        )
+        agent.tools = []
+        runtime = agent._build_canonical_runtime([])
+        # Product mode uses the server composition's shared store — never a
+        # per-session temp SQLite file.
+        assert runtime.store() is composition.store
+    finally:
+        WorkspaceTaskRuntimeService.reset_runtime_state_for_tests()
 
 
 def test_restart_recovers_run_from_injected_store(tmp_path) -> None:
@@ -564,14 +614,27 @@ def test_product_side_effect_requires_approval_flow_binding(tmp_path) -> None:
         tool_unit_of_work_factory=gateway.tool_factory,
         security_unit_of_work_factory=gateway.security_factory,
         infrastructure_unit_of_work_factory=gateway.infrastructure_factory,
-        security_decision_issuer=lambda req: _security_ref_payload(),
-        budget_decision_issuer=lambda req: _budget_ref_payload(run_id=f"run:{req.task_id}"),
+        security_decision_resolver=_FakeSecurityResolver(
+            {"security-decision:user-a:tool.write_doc": _security_ref_payload()}
+        ),
+        budget_decision_resolver=_FakeBudgetResolver(
+            _budget_ref_payload(run_id="run:task-flow-none")
+        ),
     )
     snapshot = runtime.start(
-        _request("task-flow-none", "write the doc", "tool", tool_id="tool.write_doc", tool_arguments={"path": "x"})
+        _request(
+            "task-flow-none",
+            "write the doc",
+            "tool",
+            tool_id="tool.write_doc",
+            tool_arguments={"path": "x"},
+            security_decision_id="security-decision:user-a:tool.write_doc",
+            budget_decision_id="budget-decision:run:task-flow-none",
+        )
     )
 
     assert runtime.store().pending_interrupt("task-flow-none") is None
+    assert "PRODUCT_APPROVAL_FLOW_NOT_BOUND" in _admission_reason(snapshot)
     assert not [obs for obs in snapshot.observations if obs.kind == "tool" and obs.status == "completed"]
     assert runtime.classify_final_state(snapshot) == "FAILED/BLOCKED"
 

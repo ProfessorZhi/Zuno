@@ -72,7 +72,9 @@ class WeChatAgent:
                  wechat_account_user: str = None,
                  plugins: List[str] = [],
                  mcp_configs: List[MCPConfig] = [],
-                 runtime_profile: str = PROFILE_PRODUCT):
+                 runtime_profile: str = PROFILE_PRODUCT,
+                 tenant_id: str = "",
+                 workspace_id: str = ""):
 
         # The chat model is used by the canonical runtime's model steps via
         # the workspace model gateway; the adapter never answers directly.
@@ -93,7 +95,11 @@ class WeChatAgent:
         # PHASE22 repair: composition profile + product submission identity.
         self.runtime_profile = runtime_profile
         self._submission_counter = 0
-        self._tenant_id = "tenant:default"
+        # Real tenant / workspace identity from the product request / auth
+        # context; no synthetic tenant:default and no workspace derived from
+        # user_id. Missing identity fails closed with BLOCKED_CONFIGURATION.
+        self._tenant_id = str(tenant_id or "").strip()
+        self._workspace_id = str(workspace_id or "").strip()
 
     async def init_wechat_agent(self):
         """Initialize the canonical composition root for this session."""
@@ -121,12 +127,17 @@ class WeChatAgent:
                 raise BlockedConfiguration(
                     "BLOCKED_CONFIGURATION: product composition has no durable AgentRunStore binding"
                 )
-            self._tenant_id = composition.tenant_id or "tenant:default"
+            if not self._tenant_id or not self._workspace_id:
+                raise BlockedConfiguration(
+                    "BLOCKED_CONFIGURATION: product runtime requires a real tenant_id and "
+                    "workspace_id from the product request/auth context; missing product "
+                    "context must not fall back to a synthetic identity"
+                )
             self._runtime = WorkspaceAgentRuntime(
                 model=self.model,
                 bindings=self.bindings,
                 tenant_id=self._tenant_id,
-                workspace_id=f"workspace:{self.user_id}",
+                workspace_id=self._workspace_id,
                 principal_id=self.user_id,
                 profile=(
                     PROFILE_DEVELOPER_TEST
@@ -146,8 +157,8 @@ class WeChatAgent:
                 infrastructure_unit_of_work_factory=composition.infrastructure_unit_of_work_factory,
                 security_epoch_ref=composition.security_epoch_ref,
                 approval_flow=composition.approval_flow,
-                security_decision_issuer=composition.security_decision_issuer,
-                budget_decision_issuer=composition.budget_decision_issuer,
+                security_decision_resolver=composition.security_decision_resolver,
+                budget_decision_resolver=composition.budget_decision_resolver,
                 dynamic_dag_planner=composition.dynamic_dag_planner,
             )
             self._initialized = True
@@ -274,12 +285,12 @@ class WeChatAgent:
         self._submission_counter += 1
         client_request_id = f"req:{self.session_id or self.user_id}:{self._submission_counter}"
         submission_id = f"sub:{self.session_id or self.user_id}:{self._submission_counter}"
-        task_id = f"wechat:{hashlib.sha256(f'{self._tenant_id}|{self.user_id}|{client_request_id}'.encode('utf-8')).hexdigest()[:16]}"
+        task_id = f"wechat:{hashlib.sha256(f'{self._tenant_id}|{self._workspace_id}|{client_request_id}'.encode('utf-8')).hexdigest()[:16]}"
         request = WorkspaceRunRequest(
             task_id=task_id,
             thread_id=self.session_id or task_id,
             tenant_id=self._tenant_id,
-            workspace_id=f"workspace:{self.user_id}",
+            workspace_id=self._workspace_id,
             principal_id=self.user_id,
             submission_id=submission_id,
             client_request_id=client_request_id,

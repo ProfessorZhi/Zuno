@@ -142,6 +142,8 @@ class WorkSpaceSimpleAgent:
         multi_agent_enabled: bool = False,
         runtime_profile: str = PROFILE_PRODUCT,
         client_request_id: str | None = None,
+        tenant_id: str = "",
+        workspace_id: str = "",
     ):
         self.model_name = model_config.get("model", "")
         self.base_url = model_config.get("base_url", "")
@@ -181,7 +183,12 @@ class WorkSpaceSimpleAgent:
         self._submission_counter = 0
         self._last_client_request_id = ""
         self._last_submission_id = ""
-        self._tenant_id = "tenant:default"
+        # PHASE22 repair (B7): real tenant / workspace identity comes from the
+        # product request / auth context. There is no synthetic tenant:default
+        # and no workspace derived from user_id; missing identity fails closed
+        # with BLOCKED_CONFIGURATION at canonical runtime composition.
+        self._tenant_id = str(tenant_id or "").strip()
+        self._workspace_id = str(workspace_id or "").strip()
         self.desktop_bridge_config = (
             DesktopBridgeConfig(url=desktop_bridge_url, token=desktop_bridge_token)
             if desktop_bridge_url and desktop_bridge_token
@@ -1106,12 +1113,17 @@ class WorkSpaceSimpleAgent:
             raise BlockedConfiguration(
                 "BLOCKED_CONFIGURATION: product composition has no durable AgentRunStore binding"
             )
-        self._tenant_id = composition.tenant_id or "tenant:default"
+        if not self._tenant_id or not self._workspace_id:
+            raise BlockedConfiguration(
+                "BLOCKED_CONFIGURATION: product runtime requires a real tenant_id and "
+                "workspace_id from the product request/auth context; missing product "
+                "context must not fall back to a synthetic identity"
+            )
         return WorkspaceAgentRuntime(
             model=self.model,
             bindings=bindings,
             tenant_id=self._tenant_id,
-            workspace_id=f"workspace:{self.user_id}",
+            workspace_id=self._workspace_id,
             principal_id=self.user_id,
             profile=(
                 "developer_test_profile"
@@ -1131,8 +1143,8 @@ class WorkSpaceSimpleAgent:
             infrastructure_unit_of_work_factory=composition.infrastructure_unit_of_work_factory,
             security_epoch_ref=composition.security_epoch_ref,
             approval_flow=composition.approval_flow,
-            security_decision_issuer=composition.security_decision_issuer,
-            budget_decision_issuer=composition.budget_decision_issuer,
+            security_decision_resolver=composition.security_decision_resolver,
+            budget_decision_resolver=composition.budget_decision_resolver,
             dynamic_dag_planner=composition.dynamic_dag_planner,
         )
 
@@ -1789,7 +1801,7 @@ class WorkSpaceSimpleAgent:
             task_id=task_id,
             thread_id=self.session_id or task_id,
             tenant_id=self._tenant_id,
-            workspace_id=f"workspace:{self.user_id}",
+            workspace_id=self._workspace_id,
             principal_id=self.user_id,
             submission_id=submission_id,
             client_request_id=client_request_id,
@@ -1839,7 +1851,7 @@ class WorkSpaceSimpleAgent:
             task_id=task_id,
             thread_id=self.session_id or task_id,
             tenant_id=self._tenant_id,
-            workspace_id=f"workspace:{self.user_id}",
+            workspace_id=self._workspace_id,
             principal_id=self.user_id,
             submission_id=submission_id,
             client_request_id=client_request_id,
@@ -1889,9 +1901,11 @@ class WorkSpaceSimpleAgent:
         """Run identity: tenant + workspace + client_request_id.
 
         Same text with a different client_request_id is a different request
-        and therefore a different run (PHASE22 repair, B6).
+        and therefore a different run (PHASE22 repair, B6). The same
+        client_request_id in a different tenant / workspace produces a
+        different task id (no cross-tenant collision).
         """
-        source = f"{self._tenant_id}|workspace:{self.user_id}|{client_request_id}"
+        source = f"{self._tenant_id}|{self._workspace_id}|{client_request_id}"
         return f"workspace:{hashlib.sha256(source.encode('utf-8')).hexdigest()[:16]}"
 
     @staticmethod

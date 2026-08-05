@@ -19,7 +19,8 @@ treated as an owner decision by the runtime.
 """
 
 from dataclasses import dataclass
-from typing import Any
+from datetime import datetime, timezone
+from typing import Any, Protocol
 
 from zuno.agent.contracts import BudgetDecisionRef, SecurityDecisionRef
 from zuno.platform.contracts import canonical_sha256
@@ -29,6 +30,33 @@ from zuno.platform.contracts import canonical_sha256
 class OwnerRefVerification:
     allowed: bool
     reason: str = ""
+
+
+class SecurityDecisionResolver(Protocol):
+    """Security-owner fact resolver (PHASE22 repair, owner fact contract).
+
+    The Product Adapter carries only an opaque ``decision_id``; Agent Core /
+    Composition resolves the formal owner fact through this injected port and
+    verifies tenant / workspace / principal / action / resource / epoch /
+    expiry / status before any tool step. The resolver returns the owner-issued
+    fact fields (or ``None`` when the owner has no such fact); the caller may
+    never mint its own allow decision.
+    """
+
+    def resolve(self, decision_id: str, context: dict[str, Any]) -> dict[str, Any] | None:
+        ...
+
+
+class BudgetDecisionResolver(Protocol):
+    """Budget-owner fact resolver (PHASE22 repair, owner fact contract).
+
+    Same contract as :class:`SecurityDecisionResolver`; returns the
+    Budget-owner fact (or ``None``). ``decision_id`` may be empty when the
+    resolver admits from the request context (formal Budget Admission).
+    """
+
+    def resolve(self, decision_id: str, context: dict[str, Any]) -> dict[str, Any] | None:
+        ...
 
 
 def security_ref_hash(
@@ -84,6 +112,9 @@ def validate_security_decision_ref(
         return OwnerRefVerification(False, "security_ref_action_mismatch")
     if ref.security_epoch_ref != bound_security_epoch_ref:
         return OwnerRefVerification(False, "stale_security_epoch")
+    expiry_check = _check_expiry(ref.expires_at)
+    if expiry_check is not None:
+        return expiry_check
     expected_hash = security_ref_hash(
         decision_id=ref.decision_id,
         tenant_id=ref.tenant_id,
@@ -150,6 +181,22 @@ def validate_budget_decision_ref(
     return OwnerRefVerification(True, "budget_decision_allowed")
 
 
+def _check_expiry(expires_at: str | None) -> OwnerRefVerification | None:
+    """PHASE22 repair: ``expires_at`` must really be validated, never just
+    defined. A malformed or already-passed expiry fails closed."""
+    if not expires_at:
+        return None
+    try:
+        expires = datetime.fromisoformat(str(expires_at).replace("Z", "+00:00"))
+    except ValueError:
+        return OwnerRefVerification(False, "security_ref_expiry_invalid")
+    if expires.tzinfo is None:
+        expires = expires.replace(tzinfo=timezone.utc)
+    if datetime.now(timezone.utc) >= expires:
+        return OwnerRefVerification(False, "security_ref_expired")
+    return None
+
+
 def resolve_security_ref(raw: dict[str, Any] | None) -> SecurityDecisionRef | None:
     if not raw:
         return None
@@ -164,8 +211,10 @@ def resolve_budget_ref(raw: dict[str, Any] | None) -> BudgetDecisionRef | None:
 
 __all__ = [
     "BudgetDecisionRef",
+    "BudgetDecisionResolver",
     "OwnerRefVerification",
     "SecurityDecisionRef",
+    "SecurityDecisionResolver",
     "budget_ref_hash",
     "resolve_budget_ref",
     "resolve_security_ref",

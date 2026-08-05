@@ -49,8 +49,11 @@ class RuntimeStartRequest:
     trace_id: str
     goal: str
     # Product submission identity (PHASE22 repair): the task id must be bound
-    # to the product submission, never to a content hash.
-    tenant_id: str = "tenant:default"
+    # to the product submission, never to a content hash. There is no
+    # synthetic default tenant: real tenant context comes from the product
+    # request / auth context and must be supplied explicitly (missing product
+    # context fails closed at the composition adapter).
+    tenant_id: str = ""
     principal_id: str = ""
     submission_id: str = ""
     client_request_id: str = ""
@@ -349,13 +352,16 @@ def _plan_state_from_request(request: RuntimeStartRequest, *, blocked: bool = Fa
 def _verify_security_owner_ref(request: RuntimeStartRequest) -> OwnerRefVerification:
     """Agent Core verifies the Security-owner decision ref (PHASE22 repair).
 
-    In the product profile the ref is required for any governed tool plan
-    (fail closed); the explicit developer test profile may omit it.
+    In the product profile the ref is required only for a plan that actually
+    executes a tool (``tool.execute`` security decision). A simple no-tool
+    plan never requires a tool-execution security decision, so simple
+    read-only questions are not blocked by a missing security ref. The
+    explicit developer test profile may omit refs entirely.
     """
     ref = resolve_security_ref(request.security_decision_ref)
     required = (
         request.profile == PROFILE_PRODUCT
-        and bool(request.allowed_tools or request.capability_ids or request.plan_steps)
+        and bool(request.allowed_tools or request.capability_ids)
     )
     return validate_security_decision_ref(
         ref,
@@ -370,11 +376,16 @@ def _verify_security_owner_ref(request: RuntimeStartRequest) -> OwnerRefVerifica
 
 
 def _verify_budget_owner_ref(request: RuntimeStartRequest) -> OwnerRefVerification:
-    """Agent Core verifies the Budget-owner decision ref (PHASE22 repair)."""
+    """Agent Core verifies the Budget-owner decision ref (PHASE22 repair).
+
+    Every product run with a formal plan must pass Budget Admission: the
+    budget ref is required for any planned product run (simple no-tool runs
+    included). No plan -> no budget decision required.
+    """
     ref = resolve_budget_ref(request.budget_decision_ref)
     required = (
         request.profile == PROFILE_PRODUCT
-        and bool(request.allowed_tools or request.capability_ids or request.plan_steps)
+        and bool(request.plan_steps)
     )
     return validate_budget_decision_ref(
         ref,

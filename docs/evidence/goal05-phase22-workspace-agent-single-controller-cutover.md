@@ -2,12 +2,12 @@
 
 phase_id: PHASE22
 work_package: PHASE22-WORKSPACE-SINGLE-CONTROLLER-CUTOVER-ARCHITECTURE-REPAIR
-worker: deepseek-workspace-cutover-repair
-agent_name: DeepSeek-Workspace-Cutover-Repair
+worker: deepseek2
+agent_name: DeepSeek-PR129-Product-Repair
 execution_client: Claude Code
 provider: DeepSeek
-base_sha: 7ebf1b5694a6cdf53493732768924186f4407256
-status: workspace_readonly_single_controller_cutover_available
+base_sha: 5dd6f2f8264ec8f662a7407e7a5b23f8cfc0e155
+status: workspace_single_controller_structure_available
 production_ready: false
 
 ## Summary
@@ -128,21 +128,84 @@ workspace.py / wechat.py (API service, unchanged product API / SSE contract)
 - `direct_answer` 不再绕过：简单任务也有显式 plan；无 plan 的请求产生
   blocked plan。
 
-## Security / Approval / Budget Contract
+## Security / Approval / Budget Contract（Owner Fact）
 
-- Security：`SecurityDecisionRef`（decision_id / tenant / workspace /
-  principal / action / resource / decision / epoch / hash）由 Owner 签发，
-  Product Adapter 只携带；Agent Core 启动时验证（`owner_refs.py`）。
-  缺失 ref（product mode 工具任务）、tenant/workspace/principal 不匹配、
-  stale epoch、hash 不匹配、decision denied → 全部 fail-closed。
-  硬编码 `security-epoch:workspace-v1` 已删除。
-- Budget：`BudgetDecisionRef`（budget_decision_id / tenant / workspace /
-  run / allowed / limits / hash / owner）；owner 缺失或伪造 hash → fail-closed。
+- Security：Product Adapter 只携带 **opaque `security_decision_id`**（或
+  untrusted envelope 中的 `decision_id`）；Agent Core / Composition 通过注入的
+  `SecurityDecisionResolver.resolve(decision_id, context)` Port 从 Owner 取得
+  正式事实（`SecurityDecisionRef`：decision_id / tenant / workspace /
+  principal / action / resource / decision / epoch / hash / expires_at）。
+  Product Profile **绝不信任 caller 提交的完整 ref 或自行计算的 hash**；
+  Owner Resolver 未绑定 → `security_owner_resolver_unbound`；Owner 事实缺失 →
+  `security_owner_fact_not_found`；tenant/workspace/principal/action/resource
+  不匹配、stale epoch、hash 不匹配、decision denied、**expires_at 过期或
+  非法**（`_check_expiry`，真实校验，非只定义字段）→ 全部 fail-closed。
+- Budget：同样经 `BudgetDecisionResolver` Port（`BudgetDecisionRef`；
+  budget_decision_id / tenant / workspace / run / allowed / limits / hash /
+  owner）；owner 缺失或伪造 hash → fail-closed。Product Profile 每次计划运行
+  都必须经过 **正式 Budget Admission**（简单无工具任务也要求；resolver
+  未绑定 → `budget_owner_resolver_unbound` fail-closed）。
+- Developer Test Profile：可注入 Fake Resolver（显式 test profile，不作为
+  Product Evidence）。
 - Approval：`ToolControlPlaneRuntime` approval gate → `approval_required` →
   runtime interrupt → `WAITING_APPROVAL`（test profile 内验证 resume 语义）。
   Product mode：approval_flow="none" → side-effect 直接
-  `PRODUCT_APPROVAL_FLOW_NOT_BOUND`，绝不进入无 Resume 路径的等待。
+  `PRODUCT_APPROVAL_FLOW_NOT_BOUND`（零执行、无 WAITING_APPROVAL）。
 - 无 fallback：任何 gate 拒绝直接传播为 FAILED/BLOCKED，不切换到旧 Runtime。
+
+## Read-only 产品链（阻塞四）
+
+- 简单无工具任务（product profile + budget resolver）：仍走 Deterministic
+  Single-Step Plan（`answer_from_context`）+ Trace + Budget Admission +
+  AnswerPolicy + Final Gate + RunOutcome；**不要求 tool.execute Security
+  Decision**（`_verify_security_owner_ref` 仅在计划含工具执行时 required）。
+- Read-only Tool：Security Owner Decision + Budget Owner Decision + Tool
+  Control Plane（manifest 权威 policy），无需人工 Approval，有
+  Audit/Trace（security_summary / budget_verdict 携带 decision_ref +
+  trace_ref）。
+- Side-effect Tool：approval_flow 未绑定 → `PRODUCT_APPROVAL_FLOW_NOT_BOUND`
+  （零执行，不进入无人可 Resume 的 WAITING_APPROVAL）。
+- Complex Task：Dynamic DAG Planner 未绑定 →
+  `DYNAMIC_PLAN_RUNTIME_NOT_BOUND`（不恢复固定三步伪 DAG）。
+- Server 默认组合（`WorkspaceTaskRuntimeService.configure_workspace_agent_product_composition`）
+  的 resolver 均为 None，且 Product Surface 尚无 tenant 上下文 →
+  server 路径对计划请求 fail-closed（BLOCKED_CONFIGURATION /
+  `budget_owner_resolver_unbound`）。Read-only 路径的可用性由 test profile
+  以与生产相同契约形状（真实 Port + fake Owner 事实 + 真实 tenant/workspace
+  身份）验证，故只声明 `workspace_single_controller_structure_available`，
+  不声明 `workspace_readonly_single_controller_cutover_available`。
+
+## Composition Root / Import-time（阻塞一）
+
+- 双 `@classmethod` 已修复（单一 decorator）。
+- 模块 import 不再执行全局 Composition Mutation（文件底部调用已删除）；
+  初始化显式接入 Application Startup Composition Root
+  （`zuno.main.init_config` → `configure_workspace_agent_product_composition`），
+  幂等、可测试；import 不需要 PostgreSQL 连接。
+- `reset_runtime_state_for_tests` 补上 `@classmethod`，且**不再创建** Product
+  Composition（只清除）；import 本身也绝不创建 Composition。
+- Import Smoke Test：`tests/agent/test_workspace_task_runtime_import_smoke.py`
+  （6 项）验证模块可导入、方法 callable、初始化不抛 TypeError、重复初始化
+  幂等、fresh-interpreter import 无副作用。
+
+## Tenant / Workspace Ownership（阻塞二）
+
+- `WorkspaceRuntimeComposition` **不拥有租户身份**（`tenant_id` 字段已删除，
+  只注入基础设施依赖）；`RuntimeStartRequest` / `AgentRuntimeState` /
+  `AgentRuntimeSnapshot` 的 `tenant:default` 默认值全部移除。
+- Tenant / Workspace / Principal 来自真实 Product Request/Auth Context，
+  贯穿 Product API → Product Adapter → `WorkspaceRunRequest` →
+  `RuntimeStartRequest` → State/Snapshot → Tool Manifest →
+  Security/Budget Owner Lookup → Tool Gateway 事实 → Event/Snapshot/Resume。
+- 禁止 `workspace:{user_id}`；`_task_id_for` 使用真实 tenant + workspace +
+  client_request_id（跨租户同 client_request_id 不冲突）。
+- Product Surface 无法提供 tenant_id/workspace_id → **fail-closed
+  BLOCKED_CONFIGURATION**（`WorkspaceAgentRuntime.__init__` 与
+  `WorkSpaceSimpleAgent`/`WeChatAgent._build_canonical_runtime` 双重校验），
+  不回退 tenant:default、不根据 user_id 猜 workspace_id。
+- Tool Gateway 事实（`ToolControlPlaneRuntime._record_tool_runtime_facts`）
+  使用 request.tenant_id / workspace_id，不再用 user_id 或
+  tenant:default/workspace:default。
 
 ## Failure Semantics（classify_final_state）
 
@@ -156,18 +219,45 @@ workspace.py / wechat.py (API service, unchanged product API / SSE contract)
 
 ## Tests
 
-- `tests/agent/test_workspace_single_controller_cutover.py`（42 项）：
+- `tests/agent/test_workspace_single_controller_cutover.py`（52 项）：
   normal / security / approval / budget / persistence / identity / tenant
-  isolation / failure / static gates。
-- `tests/agent/test_workspace_phase22_repair.py`（15 项）：B1 组合绑定、
-  B3 缺 Gateway 零执行、B8 pre/post-dispatch 语义、telemetry 失败、
-  UNKNOWN_EFFECT 不重试、B6 身份、B7 共享 store 隔离、B9 审批流 fail-closed。
-- `tests/agent/test_workspace_simple_agent.py`（26 项）：adapter 契约。
+  isolation / failure / static gates；新增 Owner Fact 组：
+  product simple QA 只需 Budget Admission 不需 tool Security Decision、
+  product read-only tool 经 Owner Resolver + Control Plane 完成、product
+  不信任 caller-provided refs、expires_at 过期拒绝（直接 ref 与 resolver
+  事实两条路径）、owner fact 缺失拒绝、缺 tenant/workspace →
+  BLOCKED_CONFIGURATION、Tool Manifest tenant/workspace 不匹配 → blocked。
+- `tests/agent/test_workspace_phase22_repair.py`（15 项）：B1 组合绑定
+  （显式初始化、import 无副作用）、B3 缺 Gateway 零执行、B8
+  pre/post-dispatch 语义、telemetry 失败、UNKNOWN_EFFECT 不重试、B6 身份、
+  B7 共享 store 隔离、B9 审批流 fail-closed（Owner Resolver 路径）。
+- `tests/agent/test_workspace_simple_agent.py`（27 项）：adapter 契约 +
+  跨租户同 client_request_id 不冲突。
+- `tests/agent/test_workspace_task_runtime_import_smoke.py`（6 项）：
+  Import Smoke Test（双 @classmethod / import-time 初始化 / 幂等 / 无 PG）。
 - `tests/agent/_phase22_gateway_fakes.py`：ToolInvocationGateway 三个 UoW
   的 in-memory test double（仅测试；product 路径要求正式 PostgreSQL UoW）。
-- 相关批次：workspace 批 98 passed；capability 批 45 passed（2 skipped）；
-  phase08/runtime graph 34 passed；API/repo 批 66 passed；runtime 批 65
-  passed。
+- 相关批次：workspace+smoke 批 100 passed；capability 批 34 passed（2
+  skipped）；workspace API 批 29 passed；agent 批 426 passed（5 项
+  pre-existing 失败，base 同样失败）；repo 批 516 passed（29 项
+  pre-existing 文档/发布边界失败，base 同样失败）。
+
+## CI（阻塞四）
+
+`.github/workflows/phase22-contract-verification.yml`：
+
+- `repository-gates`：新增 `poetry run python -c "import
+  zuno.api.services.workspace_task_runtime"`（compileall 不执行 import，
+  该检查直接捕获 Import-time 初始化失败）。
+- `phase22-focused-tests`：新增 4 个文件 —
+  `tests/agent/test_workspace_task_runtime_import_smoke.py`、
+  `tests/agent/test_workspace_phase22_repair.py`、
+  `tests/agent/test_workspace_single_controller_cutover.py`、
+  `tests/agent/test_workspace_simple_agent.py`。
+  CI 能捕获：双 @classmethod；import-time 初始化失败；tenant:default
+  回退（identity 缺失 → BLOCKED_CONFIGURATION）；product 信任 caller
+  refs；expires_at 未检查；simple read-only 被错误阻塞（product + resolver
+  可运行）；side-effect 被错误执行（PRODUCT_APPROVAL_FLOW_NOT_BOUND）。
 
 ## Commands / Exit Codes
 
@@ -203,10 +293,22 @@ SQLite test 不作为 Product Persistence Evidence；Recovery 只声明
 
 ## Remaining Gaps
 
+- Server 默认组合（`configure_workspace_agent_product_composition`）的
+  Security/Budget Owner Resolver 仍为 None，且 Product Surface（
+  `WorkSpaceSimpleTask` / WeChat 入口）尚无 tenant 上下文 →
+  server 计划请求 fail-closed（BLOCKED_CONFIGURATION /
+  `budget_owner_resolver_unbound` / `security_owner_resolver_unbound`）。
+  接真实 tenant 上下文 + Owner Resolver（可复用
+  `SecurityUnitOfWork`/`validate_pre_effect_authorization`）后才能声明
+  `workspace_readonly_single_controller_cutover_available`。
 - Product Approval Command / Resume API 未接入（Path B：side-effect 全部
-  fail-closed）；Server Security/Budget Owner issuer 未接入（tool 任务在
-  product mode 因缺 Security Decision Ref 而 fail-closed）。
+  fail-closed）。
 - Dynamic DAG planner 未绑定（复杂任务 fail-closed）。
 - Postgres 依赖测试本环境 NOT_RUN_ENVIRONMENT_BLOCKED。
 - WorkSpacePlugins / MCP 等外部工具注册表无 Tool Owner Policy 声明 →
   UNRESOLVED_TOOL_POLICY → 执行时 blocked（不猜测）。
+
+不声明 `PHASE22_COMPLETED` / `PRODUCTION_READY` /
+`FULL_REPOSITORY_SINGLE_RUNTIME_CONFIRMED` /
+`WORKSPACE_FULL_TOOL_CUTOVER_CONFIRMED` /
+`workspace_readonly_single_controller_cutover_available`。

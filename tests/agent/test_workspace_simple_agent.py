@@ -245,6 +245,8 @@ def test_init_simple_agent_enables_explicit_slash_skill(monkeypatch):
         session_id="s_1",
         original_query="/verify-skill 请总结这个问题",
         runtime_profile="developer_test_profile",
+        tenant_id="test-tenant",
+        workspace_id="test-workspace",
     )
     agent.plugin_tools = []
     agent.mcp_tools = []
@@ -316,6 +318,8 @@ def test_init_simple_agent_enables_explicit_slash_skill_with_numeric_name(monkey
         session_id="s_1",
         original_query="/billing-2026 查一下 2026 账单",
         runtime_profile="developer_test_profile",
+        tenant_id="test-tenant",
+        workspace_id="test-workspace",
     )
     agent.plugin_tools = []
     agent.mcp_tools = []
@@ -1054,3 +1058,37 @@ def test_direct_maps_weather_root_forecasts_are_humanized(monkeypatch):
     )
     assert "南京市2026-04-18晴" in humanized
     assert "预计气温 12-23°C" in humanized
+
+
+def test_same_client_request_id_across_tenants_has_distinct_task_ids(monkeypatch):
+    """PHASE22 repair (B7): the same client_request_id in different
+    tenant/workspace scopes must never collide — run identity is
+    tenant + workspace + client_request_id (never guessed from user_id)."""
+    from zuno.platform.services.workspace.simple_agent import WorkSpaceSimpleAgent
+
+    monkeypatch.setattr(
+        "zuno.platform.services.workspace.simple_agent.ModelManager.get_user_model",
+        lambda **_: SimpleNamespace(),
+    )
+
+    agent_a = WorkSpaceSimpleAgent(
+        model_config={},
+        user_id="u_1",
+        session_id="s_1",
+        tenant_id="tenant-a",
+        workspace_id="workspace-a",
+        client_request_id="req-shared",
+    )
+    agent_b = WorkSpaceSimpleAgent(
+        model_config={},
+        user_id="u_1",
+        session_id="s_1",
+        tenant_id="tenant-b",
+        workspace_id="workspace-b",
+        client_request_id="req-shared",
+    )
+
+    task_a = agent_a._task_id_for("req-shared")
+    task_b = agent_b._task_id_for("req-shared")
+    assert task_a != task_b
+    assert task_a.startswith("workspace:")

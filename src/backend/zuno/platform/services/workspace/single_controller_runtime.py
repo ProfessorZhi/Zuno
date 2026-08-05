@@ -65,6 +65,8 @@ from zuno.agent.runtime import (
 from zuno.agent.runtime.contracts import FinalizationStatus, StrategyMode
 from zuno.agent.runtime.dependencies import RuntimeDependencies
 from zuno.agent.runtime.owner_refs import (
+    BudgetDecisionResolver,
+    SecurityDecisionResolver,
     budget_ref_hash,
     security_ref_hash,
     validate_budget_decision_ref,
@@ -354,12 +356,14 @@ class WorkspaceRuntimeComposition:
     flow: every one of these is injected from the server composition root.
     Missing product bindings fail closed — the adapter never degrades to a
     per-session temp SQLite runtime.
+
+    The composition binds infrastructure only. It does NOT own a tenant /
+    workspace identity: tenant, workspace and principal come from the real
+    product request / auth context and flow through every runtime ref (never
+    a synthetic ``tenant:default``).
     """
 
     store: AgentRunStore | None = None
-    # Platform tenant identity for the product composition; every domain fact
-    # and runtime ref carries this tenant (PHASE22 repair, B7).
-    tenant_id: str = "tenant:default"
     tool_unit_of_work_factory: Callable[[], Any] | None = None
     security_unit_of_work_factory: Callable[[], Any] | None = None
     infrastructure_unit_of_work_factory: Callable[[str], Any] | None = None
@@ -370,9 +374,12 @@ class WorkspaceRuntimeComposition:
     # Product approval flow binding: "none" -> side-effect tools fail closed
     # with PRODUCT_APPROVAL_FLOW_NOT_BOUND (read-only cutover only).
     approval_flow: str = "none"
-    # Security / Budget owner decision issuers (server security layer).
-    security_decision_issuer: Callable[[Any], dict[str, Any] | None] | None = None
-    budget_decision_issuer: Callable[[Any], dict[str, Any] | None] | None = None
+    # Security / Budget owner fact resolvers (owner ports). Product adapters
+    # carry only opaque decision ids; Agent Core / Composition resolves the
+    # formal owner fact through these injected ports. Unbound resolvers make
+    # the corresponding admission fail closed (never caller self-attestation).
+    security_decision_resolver: "SecurityDecisionResolver | None" = None
+    budget_decision_resolver: "BudgetDecisionResolver | None" = None
     # Formal Dynamic DAG planner binding; unbound -> complex tasks fail
     # closed with DYNAMIC_PLAN_RUNTIME_NOT_BOUND.
     dynamic_dag_planner: Callable[[Any], list[PlanStep]] | None = None
@@ -438,6 +445,14 @@ class WorkspaceRunRequest:
     plan_kind: str = "auto"
     budget_limits: dict[str, Any] | None = None
     security_epoch_ref: str = ""
+    # Opaque owner fact references (PHASE22 repair): the Product Adapter
+    # carries only opaque decision ids; the formal facts are resolved through
+    # the injected Security / Budget owner resolvers. Caller-supplied full
+    # refs are never trusted in the product profile.
+    security_decision_id: str = ""
+    budget_decision_id: str = ""
+    # Untrusted envelopes in the product profile: only ``decision_id`` is
+    # used to locate the owner fact; the caller may not mint its own allow.
     security_decision_ref: dict[str, Any] | None = None
     budget_decision_ref: dict[str, Any] | None = None
     idempotency_key: str = ""
@@ -469,18 +484,32 @@ class WorkspaceAgentRuntime:
         infrastructure_unit_of_work_factory: Callable[[str], Any] | None = None,
         security_epoch_ref: str = "",
         approval_flow: str = "none",
-        security_decision_issuer: Callable[[Any], dict[str, Any] | None] | None = None,
-        budget_decision_issuer: Callable[[Any], dict[str, Any] | None] | None = None,
+        security_decision_resolver: "SecurityDecisionResolver | None" = None,
+        budget_decision_resolver: "BudgetDecisionResolver | None" = None,
         dynamic_dag_planner: Callable[[Any], list[PlanStep]] | None = None,
     ) -> None:
+        # PHASE22 repair (B7): real tenant / workspace / principal identity
+        # must be supplied from the product request / auth context. Missing
+        # identity fails closed — never a synthetic tenant:default and never
+        # a workspace guessed from user_id.
+        if not str(tenant_id or "").strip():
+            raise BlockedConfiguration(
+                "BLOCKED_CONFIGURATION: product runtime requires a real tenant_id "
+                "from the product request/auth context"
+            )
+        if not str(workspace_id or "").strip():
+            raise BlockedConfiguration(
+                "BLOCKED_CONFIGURATION: product runtime requires a real workspace_id "
+                "from the product request/auth context"
+            )
         self._tenant_id = tenant_id
         self._workspace_id = workspace_id
         self._principal_id = principal_id
         self._profile = profile
         self._security_epoch_ref = security_epoch_ref
         self._approval_flow = approval_flow
-        self._security_decision_issuer = security_decision_issuer
-        self._budget_decision_issuer = budget_decision_issuer
+        self._security_decision_resolver = security_decision_resolver
+        self._budget_decision_resolver = budget_decision_resolver
         self._dynamic_dag_planner = dynamic_dag_planner
         self.bindings = tuple(bindings)
         self._side_effect_tool_ids = tuple(
@@ -656,10 +685,26 @@ class WorkspaceAgentRuntime:
             request.plan_kind == "complex" and self._dynamic_dag_planner is None
         )
 
-        # PHASE22 repair (B4): Security / Budget owner decision refs. The
-        # adapter carries refs only; Agent Core verifies them at start.
-        security_ref = self._resolve_security_ref(request)
-        budget_ref = self._resolve_budget_ref(request)
+        # PHASE22 repair (B7): real tenant / workspace identity from the
+        # product request. Missing identity fails closed at admission (the
+        # adapter also fails closed at composition); never tenant:default.
+        if not str(request.tenant_id or "").strip():
+            return self._blocked_request(
+                request=request,
+                reason="BLOCKED_CONFIGURATION:missing_product_tenant_context",
+            )
+        if not str(request.workspace_id or "").strip():
+            return self._blocked_request(
+                request=request,
+                reason="BLOCKED_CONFIGURATION:missing_product_workspace_context",
+            )
+
+        # PHASE22 repair (B4): Security / Budget owner facts. The adapter
+        # carries only opaque decision ids; the owner resolvers produce the
+        # formal facts. Caller-supplied full refs are never trusted in the
+        # product profile (a resolver must produce the fact).
+        security_ref, security_error = self._resolve_security_ref(request)
+        budget_ref, budget_error = self._resolve_budget_ref(request)
         security_verdict = validate_security_decision_ref(
             security_ref,
             tenant_id=request.tenant_id,
@@ -681,8 +726,7 @@ class WorkspaceAgentRuntime:
             run_id=f"run:{request.task_id}",
             required=(
                 self._profile == PROFILE_PRODUCT
-                and bool(request.plan_kind == "tool")
-                and bool(request.tool_id)
+                and bool(request.plan_kind in {"simple", "tool", "complex"})
             ),
         )
 
@@ -695,8 +739,12 @@ class WorkspaceAgentRuntime:
             # Security epoch fail-closed: a stale caller-supplied epoch blocks
             # the plan at planning admission, before any tool execution.
             admission_reason = "stale_security_epoch"
+        elif security_error:
+            admission_reason = security_error
         elif not security_verdict.allowed:
             admission_reason = security_verdict.reason
+        elif budget_error:
+            admission_reason = budget_error
         elif not budget_verdict.allowed:
             admission_reason = budget_verdict.reason
         elif foreign_tool:
@@ -720,37 +768,11 @@ class WorkspaceAgentRuntime:
             plan_steps = self._plan_steps(request)
 
         if admission_reason:
-            return RuntimeStartRequest(
-                run_id=f"run:{request.task_id}",
-                thread_id=request.thread_id,
-                tenant_id=request.tenant_id,
-                workspace_id=request.workspace_id,
-                principal_id=request.principal_id,
-                user_id=request.user_id,
-                task_id=request.task_id,
-                trace_id=request.trace_id,
-                goal=request.goal,
-                submission_id=request.submission_id,
-                client_request_id=request.client_request_id,
-                conversation_id=request.conversation_id,
-                agent_version=request.agent_version,
-                content_fingerprint=request.content_fingerprint,
-                capability_ids=(),
-                allowed_tools=(),
-                approval_required_tools=(),
-                budget_limits=request.budget_limits,
-                security_decision_ref=security_ref.to_dict() if security_ref else None,
-                budget_decision_ref=budget_ref.to_dict() if budget_ref else None,
-                security_epoch_ref=self._security_epoch_ref,
-                profile=self._profile,
-                strategy_mode=None,
-                plan_steps=(),
-                security_summary={
-                    "decision": "block",
-                    "recommended_action": "refuse",
-                    "reason": admission_reason,
-                },
-                budget_verdict={"allowed": False, "reason": admission_reason},
+            return self._blocked_request(
+                request=request,
+                reason=admission_reason,
+                security_ref=security_ref,
+                budget_ref=budget_ref,
             )
 
         capability_ids = tool_ids if (plan_steps and request.plan_kind == "tool") else ()
@@ -779,25 +801,211 @@ class WorkspaceAgentRuntime:
             profile=self._profile,
             strategy_mode=_strategy_mode_for(request),
             plan_steps=tuple(step.model_dump(mode="json") for step in plan_steps) if plan_steps else (),
+            security_summary=self._security_summary(request, security_ref),
+            budget_verdict=self._budget_verdict_payload(request, budget_ref),
         )
 
-    def _resolve_security_ref(self, request: WorkspaceRunRequest) -> SecurityDecisionRef | None:
-        if request.security_decision_ref:
-            return SecurityDecisionRef(**request.security_decision_ref)
-        if self._security_decision_issuer is not None:
-            raw = self._security_decision_issuer(request)
-            if raw:
-                return SecurityDecisionRef(**raw)
-        return None
+    def _blocked_request(
+        self,
+        *,
+        request: WorkspaceRunRequest,
+        reason: str,
+        security_ref: SecurityDecisionRef | None = None,
+        budget_ref: BudgetDecisionRef | None = None,
+    ) -> RuntimeStartRequest:
+        """Fail-closed RuntimeStartRequest: no plan, no tools, reason visible."""
+        return RuntimeStartRequest(
+            run_id=f"run:{request.task_id}",
+            thread_id=request.thread_id,
+            tenant_id=request.tenant_id,
+            workspace_id=request.workspace_id,
+            principal_id=request.principal_id,
+            user_id=request.user_id,
+            task_id=request.task_id,
+            trace_id=request.trace_id,
+            goal=request.goal,
+            submission_id=request.submission_id,
+            client_request_id=request.client_request_id,
+            conversation_id=request.conversation_id,
+            agent_version=request.agent_version,
+            content_fingerprint=request.content_fingerprint,
+            capability_ids=(),
+            allowed_tools=(),
+            approval_required_tools=(),
+            budget_limits=request.budget_limits,
+            security_decision_ref=security_ref.to_dict() if security_ref else None,
+            budget_decision_ref=budget_ref.to_dict() if budget_ref else None,
+            security_epoch_ref=self._security_epoch_ref,
+            profile=self._profile,
+            strategy_mode=None,
+            plan_steps=(),
+            security_summary={
+                "decision": "block",
+                "recommended_action": "refuse",
+                "reason": reason,
+            },
+            budget_verdict={"allowed": False, "reason": reason},
+        )
 
-    def _resolve_budget_ref(self, request: WorkspaceRunRequest) -> BudgetDecisionRef | None:
+    def _security_summary(
+        self,
+        request: WorkspaceRunRequest,
+        ref: SecurityDecisionRef | None,
+    ) -> dict[str, Any]:
+        """Owner fact trace refs for the resolved Security decision."""
+        summary: dict[str, Any] = {
+            "decision": "allow",
+            "recommended_action": "proceed",
+            "reason": "security_owner_fact_resolved",
+        }
+        if ref is not None:
+            summary["decision_ref"] = ref.decision_id
+            summary["trace_ref"] = f"security-decision:{ref.decision_id}"
+        return summary
+
+    def _budget_verdict_payload(
+        self,
+        request: WorkspaceRunRequest,
+        ref: BudgetDecisionRef | None,
+    ) -> dict[str, Any] | None:
+        """Owner fact trace refs for the resolved Budget admission."""
+        if ref is None:
+            return {"allowed": True, "reason": "no_budget_decision_required"}
+        payload: dict[str, Any] = {
+            "allowed": bool(ref.allowed),
+            "reason": "budget_owner_fact_resolved",
+            "owner": ref.owner,
+        }
+        if ref.budget_decision_id:
+            payload["decision_ref"] = ref.budget_decision_id
+            payload["trace_ref"] = f"budget-decision:{ref.budget_decision_id}"
+        return payload
+
+    def _resolve_security_ref(
+        self,
+        request: WorkspaceRunRequest,
+    ) -> tuple[SecurityDecisionRef | None, str | None]:
+        """Resolve the Security-owner fact from an opaque decision id.
+
+        Product profile: the caller-supplied full ref is never trusted — only
+        ``decision_id`` locates the owner fact through the injected resolver;
+        an unbound resolver or a missing owner fact fails closed. Developer
+        test profile: caller-supplied refs are explicitly accepted (test-only,
+        still hash / scope / expiry-validated by Agent Core).
+        """
+        decision_id = str(request.security_decision_id or "").strip()
+        envelope = dict(request.security_decision_ref or {})
+        if not decision_id and envelope.get("decision_id"):
+            decision_id = str(envelope["decision_id"]).strip()
+        resolver = self._security_decision_resolver
+        if self._profile == PROFILE_PRODUCT:
+            if not decision_id:
+                # No owner fact requested; whether one is *required* is
+                # decided by validation (tool plans in the product profile).
+                return None, None
+            if resolver is None:
+                return None, "security_owner_resolver_unbound"
+            fact = resolver.resolve(
+                decision_id,
+                self._security_owner_context(request),
+            )
+            if not fact:
+                return None, "security_owner_fact_not_found"
+            return SecurityDecisionRef(**fact), None
+        # Developer test profile: caller-supplied refs are trusted (test
+        # profile only — never product evidence).
+        if request.security_decision_ref:
+            try:
+                return SecurityDecisionRef(**request.security_decision_ref), None
+            except Exception:
+                return None, "security_ref_invalid"
+        if decision_id and resolver is not None:
+            fact = resolver.resolve(
+                decision_id,
+                self._security_owner_context(request),
+            )
+            if fact:
+                return SecurityDecisionRef(**fact), None
+        return None, None
+
+    def _security_owner_context(self, request: WorkspaceRunRequest) -> dict[str, Any]:
+        return {
+            "tenant_id": request.tenant_id,
+            "workspace_id": request.workspace_id,
+            "principal_id": request.principal_id or request.user_id,
+            "action": "tool.execute",
+            "resource": ",".join(
+                binding.tool_id
+                for binding in self.bindings
+                if binding.tool_id == request.tool_id
+            )
+            or request.tool_id
+            or "",
+            "security_epoch_ref": request.security_epoch_ref or self._security_epoch_ref,
+            "run_id": f"run:{request.task_id}",
+            "task_id": request.task_id,
+            "trace_id": request.trace_id,
+        }
+
+    def _resolve_budget_ref(
+        self,
+        request: WorkspaceRunRequest,
+    ) -> tuple[BudgetDecisionRef | None, str | None]:
+        """Resolve the Budget-owner admission fact from an opaque decision id.
+
+        Product profile: the Budget owner resolver is mandatory for planned
+        runs (formal Budget Admission); an unbound resolver fails closed.
+        ``decision_id`` may be empty when the resolver admits from the request
+        context. Developer test profile: caller-supplied refs are accepted
+        (test profile only).
+        """
+        decision_id = str(request.budget_decision_id or "").strip()
+        envelope = dict(request.budget_decision_ref or {})
+        if not decision_id and envelope.get("budget_decision_id"):
+            decision_id = str(envelope["budget_decision_id"]).strip()
+        resolver = self._budget_decision_resolver
+        if self._profile == PROFILE_PRODUCT:
+            if resolver is None:
+                return None, "budget_owner_resolver_unbound"
+            fact = resolver.resolve(
+                decision_id,
+                {
+                    "tenant_id": request.tenant_id,
+                    "workspace_id": request.workspace_id,
+                    "principal_id": request.principal_id or request.user_id,
+                    "run_id": f"run:{request.task_id}",
+                    "task_id": request.task_id,
+                    "trace_id": request.trace_id,
+                    "budget_limits": dict(request.budget_limits or {}),
+                },
+            )
+            if not fact:
+                if decision_id:
+                    return None, "budget_owner_fact_not_found"
+                return None, None
+            return BudgetDecisionRef(**fact), None
+        # Developer test profile.
         if request.budget_decision_ref:
-            return BudgetDecisionRef(**request.budget_decision_ref)
-        if self._budget_decision_issuer is not None:
-            raw = self._budget_decision_issuer(request)
-            if raw:
-                return BudgetDecisionRef(**raw)
-        return None
+            try:
+                return BudgetDecisionRef(**request.budget_decision_ref), None
+            except Exception:
+                return None, "budget_ref_invalid"
+        if resolver is not None:
+            fact = resolver.resolve(
+                decision_id,
+                {
+                    "tenant_id": request.tenant_id,
+                    "workspace_id": request.workspace_id,
+                    "principal_id": request.principal_id or request.user_id,
+                    "run_id": f"run:{request.task_id}",
+                    "task_id": request.task_id,
+                    "trace_id": request.trace_id,
+                    "budget_limits": dict(request.budget_limits or {}),
+                },
+            )
+            if fact:
+                return BudgetDecisionRef(**fact), None
+        return None, None
 
     def _plan_steps(self, request: WorkspaceRunRequest) -> list[PlanStep] | None:
         # PHASE22 repair (B5): every task has a formal plan. Simple tasks get

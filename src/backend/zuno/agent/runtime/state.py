@@ -35,8 +35,10 @@ class AgentRuntimeSnapshot(BaseModel):
     trace_id: str
     goal: str
     # Product submission identity + tenant scope (PHASE22 repair; optional
-    # with defaults so the state schema stays backward compatible).
-    tenant_id: str = "tenant:default"
+    # with defaults so the state schema stays backward compatible). There is
+    # no synthetic tenant default: real tenant context is supplied explicitly
+    # by the product request.
+    tenant_id: str = ""
     principal_id: str = ""
     submission_id: str = ""
     client_request_id: str = ""
@@ -95,7 +97,7 @@ class AgentRuntimeState:
     task_id: str
     trace_id: str
     goal: str
-    tenant_id: str = "tenant:default"
+    tenant_id: str = ""
     principal_id: str = ""
     submission_id: str = ""
     client_request_id: str = ""

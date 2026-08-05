@@ -353,7 +353,6 @@ class WorkspaceTaskRuntimeService:
         cls._security_product_action_guard = guard
 
     @classmethod
-    @classmethod
     def configure_workspace_agent_product_composition(cls) -> None:
         """Bind the server composition root for workspace product agents.
 
@@ -364,7 +363,13 @@ class WorkspaceTaskRuntimeService:
         store. The product approval command flow is not connected yet:
         side-effect tools fail closed with PRODUCT_APPROVAL_FLOW_NOT_BOUND
         (read-only cutover) and tool plans fail closed until the Security /
-        Budget owner issuers are wired.
+        Budget owner resolvers are wired.
+
+        This is an explicit, idempotent initialization point — it is wired
+        from the application startup composition root (``zuno.main.init_config``)
+        and never executed at module import time. The composition binds
+        infrastructure only; tenant / workspace identity is per-request and
+        never owned by this composition.
         """
         from zuno.platform.database import engine
         from zuno.platform.database.foundation import InfrastructureUnitOfWork
@@ -374,7 +379,6 @@ class WorkspaceTaskRuntimeService:
         configure_workspace_product_composition(
             WorkspaceRuntimeComposition(
                 store=cls._unified_runtime_store,
-                tenant_id="tenant:default",
                 tool_unit_of_work_factory=lambda: ToolUnitOfWork(engine),
                 security_unit_of_work_factory=lambda: SecurityUnitOfWork(engine),
                 infrastructure_unit_of_work_factory=lambda tenant: InfrastructureUnitOfWork(
@@ -383,12 +387,13 @@ class WorkspaceTaskRuntimeService:
                 security_approval_sink=PostgresSecurityApprovalFactSink(engine),
                 security_epoch_ref="",
                 approval_flow="none",
-                security_decision_issuer=None,
-                budget_decision_issuer=None,
+                security_decision_resolver=None,
+                budget_decision_resolver=None,
                 dynamic_dag_planner=None,
             )
         )
 
+    @classmethod
     def reset_runtime_state_for_tests(cls) -> None:
         cls._tasks = {}
         cls._task_inputs = {}
@@ -425,7 +430,10 @@ class WorkspaceTaskRuntimeService:
         cls._phase08_cutover_ledger = None
         cls._phase08_cutover_audit = None
         cls._security_product_action_guard = None
-        cls.configure_workspace_agent_product_composition()
+        # PHASE22 repair: test reset must never create a Product Composition
+        # (the composition is wired explicitly at application startup). It
+        # clears any previously configured composition so tests stay isolated.
+        configure_workspace_product_composition(None)
 
     @classmethod
     def _rehydrate_from_durable_store(cls) -> None:
@@ -1536,10 +1544,18 @@ class WorkspaceTaskRuntimeService:
         simple_task: WorkSpaceSimpleTask,
         login_user: UserPayload,
         goal: str,
+        tenant_id: str = "",
     ) -> None:
+        # PHASE22 repair (B7): RuntimeStartRequest never falls back to a
+        # synthetic tenant:default. The workspace-task surface carries a real
+        # workspace_id but no tenant context today; the caller must supply the
+        # real tenant explicitly. Empty tenant stays empty (no fabricated
+        # identity) and the single-controller composition path fails closed
+        # until the product surface wires real tenant context.
         request = RuntimeStartRequest(
             run_id=f"run:{task.task_id}",
             thread_id=simple_task.session_id or task.task_id,
+            tenant_id=tenant_id,
             workspace_id=task.workspace_id,
             user_id=login_user.user_id,
             task_id=task.task_id,
@@ -3455,10 +3471,13 @@ class WorkspaceTaskRuntimeService:
         }
 
 
-# PHASE22 repair (B1): the server composition root binds the workspace agent
-# composition at import time. Product agents never fall back to a per-session
-# temp SQLite store; missing security / approval bindings fail closed.
-WorkspaceTaskRuntimeService.configure_workspace_agent_product_composition()
+# PHASE22 repair (B1): the server composition root for workspace product
+# agents is wired explicitly from the application startup composition root
+# (``zuno.main.init_config`` -> configure_workspace_agent_product_composition),
+# never at module import time. Importing this module must not mutate global
+# composition state or require a live PostgreSQL connection.
+# Product agents never fall back to a per-session temp SQLite store; missing
+# security / budget / approval bindings fail closed.
 
 
 def _product_mode_for_retrieval(product_mode: str) -> ProductMode:
