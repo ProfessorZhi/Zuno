@@ -41,15 +41,16 @@ from zuno.agent.runtime.phase08 import (
 )
 from zuno.agent.runtime.phase08_cutover import (
     CutoverMode,
-    Phase08CutoverController,
-    Phase08CutoverError,
     Phase08CutoverAudit,
+    Phase08CutoverError,
+    Phase08RetiredController,
     Phase08RuntimeRequest,
     Phase08RuntimeResponse,
     Phase08SideEffectClaimError,
     Phase08SideEffectLedger,
     PostgresPhase08CutoverLedger,
     SideEffectLedger,
+    classify_phase08_final_state,
 )
 from zuno.agent.runtime.factory import RuntimeAssembly, RuntimeDependencyFactory
 from zuno.agent.runtime.planning import (
@@ -96,11 +97,11 @@ __all__ = [
     "PHASE08_STEP_SCHEMA",
     "ReflectionDecision",
     "Phase08Conflict",
-    "Phase08CutoverController",
     "Phase08CutoverError",
     "Phase08CutoverAudit",
     "Phase08FinalGatePort",
     "Phase08OwnerPort",
+    "Phase08RetiredController",
     "Phase08RuntimeError",
     "Phase08RuntimeRequest",
     "Phase08RuntimeResponse",
@@ -134,6 +135,7 @@ __all__ = [
     "phase08_postgres_checkpointer",
     "phase08_postgres_run_service",
     "append_signal",
+    "classify_phase08_final_state",
     "reconcile_generations",
     "normalized_observation_from_controller_payload",
     "normalized_observation_from_runtime_observation",

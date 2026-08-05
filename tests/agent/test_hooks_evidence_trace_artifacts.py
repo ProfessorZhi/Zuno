@@ -160,38 +160,44 @@ def test_enhanced_query_result_adds_hook_trace_verdict_and_manifest() -> None:
     assert trace["pipeline_trace"]["steps"][-1]["name"] == "artifact_manifest"
 
 
-def test_tool_middleware_emits_pre_and_post_tool_trace_events(monkeypatch) -> None:
-    from langchain_core.messages import ToolMessage
+def test_tool_trace_event_format_is_emitted_pre_and_post_tool() -> None:
+    """The pre/post tool trace event format is a local fixture contract now.
 
-    from zuno.agent.core.agents.general_agent import EmitEventAgentMiddleware
+    The retired ``EmitEventAgentMiddleware`` (GeneralAgent runtime) is gone;
+    the canonical runtime emits tool trace events through
+    ``zuno.knowledge.trace.RuntimeTraceEvent``. This test keeps a local fake
+    emitter so the event format contract (event_id sequencing, kind, refs)
+    stays pinned without resurrecting the retired middleware.
+    """
+    from zuno.knowledge.trace import HookPoint, RuntimeTraceEvent
 
-    emitted = []
-    monkeypatch.setattr(
-        "zuno.agent.core.agents.general_agent.get_stream_writer",
-        lambda: emitted.append,
+    emitted: list[dict] = []
+
+    def emit(event: RuntimeTraceEvent) -> None:
+        emitted.append({"runtime_trace_event": event.to_dict()})
+
+    trace_id = "tool-call_1"
+    pre = RuntimeTraceEvent(
+        event_id=f"{trace_id}:0001:pre_tool",
+        trace_id=trace_id,
+        sequence=1,
+        kind=HookPoint.PRE_TOOL,
+        status="started",
+        refs={"tool": ("search_knowledge_base",)},
+        metadata={"tool_type": "Tool"},
     )
-    middleware = EmitEventAgentMiddleware(
-        name_resolver_func=lambda _name: ("Tool", "Search Knowledge"),
-        mcp_checker=lambda _name: False,
-        mcp_id_resolver=lambda _name: None,
-        user_id="u_1",
+    post = RuntimeTraceEvent(
+        event_id=f"{trace_id}:0002:post_tool",
+        trace_id=trace_id,
+        sequence=2,
+        kind=HookPoint.POST_TOOL,
+        status="completed",
+        refs={"tool": ("search_knowledge_base",)},
+        metadata={"tool_type": "Tool"},
     )
-    request = SimpleNamespace(
-        tool_call={"id": "call_1", "name": "search_knowledge_base", "args": {}},
-        runtime=SimpleNamespace(context={"workspace_id": "workspace_trace"}),
-    )
+    emit(pre)
+    emit(post)
 
-    async def handler(_request):
-        return ToolMessage(
-            content="tool result",
-            name="search_knowledge_base",
-            tool_call_id="call_1",
-        )
-
-    result = asyncio.run(middleware.awrap_tool_call(request, handler))
-
-    assert result.content == "tool result"
-    assert [event["status"] for event in emitted] == ["START", "END"]
     assert [event["runtime_trace_event"]["kind"] for event in emitted] == [
         "pre_tool",
         "post_tool",
