@@ -16,30 +16,17 @@ def _ensure_runtime_paths() -> None:
 def test_phase6_agent_runtime_no_longer_binds_domain_pack_graph_runtime() -> None:
     _ensure_runtime_paths()
 
-    general_agent = importlib.import_module("zuno.agent.core.agents.general_agent")
-    GeneralAgent = general_agent.GeneralAgent
-    AgentConfig = general_agent.AgentConfig
+    # The retired GeneralAgent module (which used to bind the domain pack
+    # graph runtime) is gone; the runtime must not be importable.
+    try:
+        importlib.import_module("zuno.agent.core.agents.general_agent")
+    except ModuleNotFoundError:
+        pass
+    else:
+        raise AssertionError("retired GeneralAgent module is importable")
 
-    agent = GeneralAgent(
-        AgentConfig(
-            user_id="u_1",
-            llm_id="",
-            mcp_ids=[],
-            knowledge_ids=["kb_contract"],
-            domain_pack_id="contract_review",
-            retrieval_profile="agent_relation_override",
-            eval_profile_id="agent_eval_override",
-            graph_capability="rag_graph",
-            tool_ids=[],
-            agent_skill_ids=[],
-            system_prompt="review contract",
-            name="contract-agent",
-        )
-    )
-
-    assert not hasattr(agent, "domain_qa_runtime")
-    assert "AgentRuntime" not in vars(general_agent)
-    assert "RagHandler" not in vars(general_agent)
+    core_module = importlib.import_module("zuno.agent.core")
+    assert "AgentRuntime" not in getattr(core_module, "__all__", [])
 
 
 def test_phase6_domain_pack_defaults_are_retired_surface_evidence() -> None:

@@ -745,10 +745,6 @@ def test_platform_tool_runtime_services_use_canonical_imports() -> None:
 
 def test_agent_core_uses_canonical_imports() -> None:
     files = [
-        "src/backend/zuno/agent/core/agents/codeact_agent.py",
-        "src/backend/zuno/agent/core/agents/general_agent.py",
-        "src/backend/zuno/agent/core/agents/plan_execute_agent.py",
-        "src/backend/zuno/agent/core/agents/react_agent.py",
         "src/backend/zuno/agent/core/agents/structured_response_agent.py",
         "src/backend/zuno/agent/core/callbacks/__init__.py",
         "src/backend/zuno/agent/core/callbacks/usage_metadata.py",
@@ -758,20 +754,13 @@ def test_agent_core_uses_canonical_imports() -> None:
     ]
     contents = {path: _read(path) for path in files}
 
-    assert "from zuno.agent.core.models.manager import ModelManager" in contents["src/backend/zuno/agent/core/agents/codeact_agent.py"]
-    assert "from zuno.platform.services.sandbox import PyodideSandbox" in contents["src/backend/zuno/agent/core/agents/codeact_agent.py"]
-    assert "from zuno.agent.core.callbacks import usage_metadata_callback" in contents["src/backend/zuno/agent/core/agents/general_agent.py"]
-    assert "from zuno.capability.tools import AgentToolsWithName" in contents["src/backend/zuno/agent/core/agents/general_agent.py"]
-    assert "from zuno.platform.services.mcp.manager import MCPManager" in contents["src/backend/zuno/agent/core/agents/general_agent.py"]
-    assert "from zuno.platform.services.user_defined_tool_runtime import build_user_defined_langchain_tools" in contents["src/backend/zuno/agent/core/agents/general_agent.py"]
-    assert "from zuno.api.dto.completion import PlanToolFlow" in contents["src/backend/zuno/agent/core/agents/plan_execute_agent.py"]
-    assert "from zuno.platform.resources.prompts.completion import DEFAULT_CALL_PROMPT" in contents["src/backend/zuno/agent/core/agents/react_agent.py"]
     assert "from zuno.agent.core.callbacks.usage_metadata import UsageMetadataCallbackHandler" in contents["src/backend/zuno/agent/core/callbacks/__init__.py"]
     assert "from zuno.platform.database import SystemUser" in contents["src/backend/zuno/agent/core/callbacks/usage_metadata.py"]
     assert "from zuno.agent.core.models.embedding import EmbeddingModel" in contents["src/backend/zuno/agent/core/models/__init__.py"]
     assert "from zuno.api.dto.common import ModelConfig" in contents["src/backend/zuno/agent/core/models/manager.py"]
     assert "from zuno.platform.database.dao.llm import LLMDao" in contents["src/backend/zuno/agent/core/models/manager.py"]
     assert "from zuno.platform.common.convert import convert_langchain_tool_calls" in contents["src/backend/zuno/agent/core/models/usage_model.py"]
+    assert "from zuno.agent.core.models.manager import ModelManager" in contents["src/backend/zuno/agent/core/agents/structured_response_agent.py"]
 
     for content in contents.values():
         assert "from zuno.core." not in content
@@ -781,6 +770,20 @@ def test_agent_core_uses_canonical_imports() -> None:
         assert "from zuno.resources." not in content
         assert "from zuno.utils." not in content
         assert "from zuno.tools" not in content
+
+
+def test_retired_agent_core_runtimes_are_removed() -> None:
+    for path in [
+        "src/backend/zuno/agent/core/agents/general_agent.py",
+        "src/backend/zuno/agent/core/agents/react_agent.py",
+        "src/backend/zuno/agent/core/agents/plan_execute_agent.py",
+        "src/backend/zuno/agent/core/agents/codeact_agent.py",
+        "src/backend/zuno/agent/core/agents/text2sql_agent.py",
+        "src/backend/zuno/agent/runtime.py",
+        "src/backend/zuno/agent/state.py",
+        "src/backend/zuno/agent/streaming.py",
+    ]:
+        assert not (REPO_ROOT / path).exists(), f"retired runtime file must not exist: {path}"
 
 
 def test_agent_runtime_factory_uses_canonical_imports() -> None:

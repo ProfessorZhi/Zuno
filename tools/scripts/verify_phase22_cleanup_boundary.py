@@ -72,8 +72,6 @@ TESTS_AGENT_CANONICAL_FILES = [
     REPO_ROOT / "tests" / "agent" / "test_completion_agent_config_compatibility.py",
     REPO_ROOT / "tests" / "agent" / "test_context_contracts.py",
     REPO_ROOT / "tests" / "agent" / "test_context_orchestrator.py",
-    REPO_ROOT / "tests" / "agent" / "test_general_agent_project_query_runtime.py",
-    REPO_ROOT / "tests" / "agent" / "test_generalagent_context_memory_runtime.py",
     REPO_ROOT / "tests" / "agent" / "test_hooks_evidence_trace_artifacts.py",
     REPO_ROOT / "tests" / "agent" / "test_knowledge_graphrag_runtime_contracts.py",
     REPO_ROOT / "tests" / "agent" / "test_knowledge_layer_surfaces.py",
@@ -294,16 +292,27 @@ MCP_OPENAI_MANAGER = REPO_ROOT / "src" / "backend" / "zuno" / "platform" / "serv
 MCP_OPENAI_UTIL = REPO_ROOT / "src" / "backend" / "zuno" / "platform" / "services" / "mcp_openai" / "mcp_util.py"
 AGENT_CORE_FILES = [
     REPO_ROOT / "src" / "backend" / "zuno" / "agent" / "__init__.py",
-    REPO_ROOT / "src" / "backend" / "zuno" / "agent" / "core" / "agents" / "codeact_agent.py",
-    REPO_ROOT / "src" / "backend" / "zuno" / "agent" / "core" / "agents" / "general_agent.py",
-    REPO_ROOT / "src" / "backend" / "zuno" / "agent" / "core" / "agents" / "plan_execute_agent.py",
-    REPO_ROOT / "src" / "backend" / "zuno" / "agent" / "core" / "agents" / "react_agent.py",
     REPO_ROOT / "src" / "backend" / "zuno" / "agent" / "core" / "agents" / "structured_response_agent.py",
     REPO_ROOT / "src" / "backend" / "zuno" / "agent" / "core" / "callbacks" / "__init__.py",
     REPO_ROOT / "src" / "backend" / "zuno" / "agent" / "core" / "callbacks" / "usage_metadata.py",
     REPO_ROOT / "src" / "backend" / "zuno" / "agent" / "core" / "models" / "__init__.py",
     REPO_ROOT / "src" / "backend" / "zuno" / "agent" / "core" / "models" / "manager.py",
     REPO_ROOT / "src" / "backend" / "zuno" / "agent" / "core" / "models" / "usage_model.py",
+]
+
+# Retired in the PHASE22 backend semantic legacy cleanup: GeneralAgent and the
+# other top-level legacy agent runtimes (ReactAgent, PlanExecuteAgent,
+# CodeActAgent, Text2SQLAgent) and their export shims (agent/runtime.py,
+# agent/state.py, agent/streaming.py) no longer exist in production source.
+RETIRED_AGENT_CORE_FILES = [
+    REPO_ROOT / "src" / "backend" / "zuno" / "agent" / "core" / "agents" / "codeact_agent.py",
+    REPO_ROOT / "src" / "backend" / "zuno" / "agent" / "core" / "agents" / "general_agent.py",
+    REPO_ROOT / "src" / "backend" / "zuno" / "agent" / "core" / "agents" / "plan_execute_agent.py",
+    REPO_ROOT / "src" / "backend" / "zuno" / "agent" / "core" / "agents" / "react_agent.py",
+    REPO_ROOT / "src" / "backend" / "zuno" / "agent" / "core" / "agents" / "text2sql_agent.py",
+    REPO_ROOT / "src" / "backend" / "zuno" / "agent" / "runtime.py",
+    REPO_ROOT / "src" / "backend" / "zuno" / "agent" / "state.py",
+    REPO_ROOT / "src" / "backend" / "zuno" / "agent" / "streaming.py",
 ]
 CURRENT_PROGRAM = REPO_ROOT / ".agent" / "programs" / "current.md"
 MANIFEST = REPO_ROOT / ".agent" / "programs" / "program-manifest.yaml"
@@ -642,6 +651,12 @@ def verify_phase22_cleanup_boundary() -> list[str]:
         ]:
             if phrase not in candidates:
                 errors.append(f"phase22 removal candidates missing phrase: {phrase}")
+
+    for retired_path in RETIRED_AGENT_CORE_FILES:
+        if retired_path.exists():
+            errors.append(
+                f"retired legacy agent runtime file still exists: {retired_path.relative_to(REPO_ROOT)}"
+            )
 
     completion_service = _read(REPO_ROOT / "src" / "backend" / "zuno" / "api" / "services" / "completion.py")
     if "ZUNO_AGENT_RUNTIME" in completion_service:

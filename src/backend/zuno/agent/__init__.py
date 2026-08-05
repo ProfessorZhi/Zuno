@@ -9,7 +9,6 @@ if TYPE_CHECKING:
         AgentRuntimeBatchReport,
         validate_agent_runtime_batch,
     )
-    from zuno.agent.control_runtime import AgentControlRuntime, AgentRuntimeResult, RuntimeObservation
     from zuno.agent.context import (
         AgentExecutionContext,
         ContextOrchestrator,
@@ -33,16 +32,11 @@ if TYPE_CHECKING:
     )
     from zuno.agent.post_turn import RuntimeTurnLedger
     from zuno.agent.planning import PlanningRequest, StrategySelector, build_default_strategy_selector
-    from zuno.agent.core.agents import AgentConfig, GeneralAgent
-    from zuno.agent.state import StreamAgentState
 
 
 _EXPORT_TO_MODULE = {
-    "AgentConfig": "zuno.agent.core.agents",
-    "AgentControlRuntime": "zuno.agent.control_runtime",
     "AgentRuntimeBatchError": "zuno.agent.runtime_batch",
     "AgentRuntimeBatchReport": "zuno.agent.runtime_batch",
-    "AgentRuntimeResult": "zuno.agent.control_runtime",
     "AgentExecutionContext": "zuno.agent.context",
     "ContextOrchestrator": "zuno.agent.context",
     "ContextPackPolicy": "zuno.agent.context",
@@ -50,30 +44,24 @@ _EXPORT_TO_MODULE = {
     "ControllerRuntimeState": "zuno.agent.harness",
     "DurableRuntimeEvent": "zuno.agent.durable_runtime",
     "DurableRuntimeTaskSnapshot": "zuno.agent.durable_runtime",
-    "GeneralAgent": "zuno.agent.core.agents",
     "InMemoryDurableRuntimeStore": "zuno.agent.durable_runtime",
     "ModelContextPacket": "zuno.agent.context",
     "PlanningRequest": "zuno.agent.planning",
     "RuntimeCheckpoint": "zuno.agent.harness",
     "RuntimeInterrupt": "zuno.agent.harness",
     "RuntimeNodeContract": "zuno.agent.harness",
-    "RuntimeObservation": "zuno.agent.control_runtime",
     "RuntimeTurnLedger": "zuno.agent.post_turn",
     "SingleControllerRuntimeHarness": "zuno.agent.harness",
     "SingleControllerDurableRuntime": "zuno.agent.durable_runtime",
     "StrategySelector": "zuno.agent.planning",
-    "StreamAgentState": "zuno.agent.state",
     "build_default_strategy_selector": "zuno.agent.planning",
     "build_single_controller_runtime_harness": "zuno.agent.harness",
     "validate_agent_runtime_batch": "zuno.agent.runtime_batch",
 }
 
 __all__ = [
-    "AgentConfig",
-    "AgentControlRuntime",
     "AgentRuntimeBatchError",
     "AgentRuntimeBatchReport",
-    "AgentRuntimeResult",
     "AgentExecutionContext",
     "ContextOrchestrator",
     "ContextPackPolicy",
@@ -81,19 +69,16 @@ __all__ = [
     "ControllerRuntimeState",
     "DurableRuntimeEvent",
     "DurableRuntimeTaskSnapshot",
-    "GeneralAgent",
     "InMemoryDurableRuntimeStore",
     "ModelContextPacket",
     "PlanningRequest",
     "RuntimeCheckpoint",
     "RuntimeInterrupt",
     "RuntimeNodeContract",
-    "RuntimeObservation",
     "RuntimeTurnLedger",
     "SingleControllerRuntimeHarness",
     "SingleControllerDurableRuntime",
     "StrategySelector",
-    "StreamAgentState",
     "build_default_strategy_selector",
     "build_single_controller_runtime_harness",
     "validate_agent_runtime_batch",

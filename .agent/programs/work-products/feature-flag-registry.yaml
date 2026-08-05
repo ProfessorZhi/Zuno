@@ -17,18 +17,29 @@ flags:
   - flag: "product_api_v1_adapter"
     owner: "01 Product Surface"
     scope: "server route"
-    default: "DECLARED"
+    # PHASE22-FEATURE-FLAG-AND-RESIDUAL-RUNTIME-CUTOVER: retired fail-closed.
+    # Zero production readers (verified 2026-08-04): the v1 routes are the
+    # stable Public API and always bind ProductService through ProductUnitOfWork/
+    # ProductRepository (application service boundary, no direct DAO write).
+    # The dynamic adapter switch it once governed is gone; the Public v1
+    # Contract is NOT deleted - only the rollout switch is retired.
+    default: "RETIRED"
     metric: ["command_acceptance_rate", "projection_gap_count", "run_outcome_mismatch"]
-    rollback_command: "set product_api_v1_adapter=ROLLBACK_WINDOW"
+    rollback_command: "retired and fail-closed; no runtime adapter switch exists, no rollback command is executable"
     expires_at_phase: "PHASE10"
     retire_task: "P22-T03"
     domain_fact_owner: "unchanged"
   - flag: "workspace_projection_stream_v1"
     owner: "01 Product Surface"
     scope: "SSE stream"
-    default: "DECLARED"
+    # PHASE22-FEATURE-FLAG-AND-RESIDUAL-RUNTIME-CUTOVER: retired fail-closed.
+    # Zero production readers: a single projection stream owner exists
+    # (WorkspaceTaskRuntimeService.stream_task_events / v1 SSE endpoint); v1
+    # remains a versioned SSE protocol contract, not a dual runtime. Old/new
+    # stream switching was removed; restart/resume is event-list based.
+    default: "RETIRED"
     metric: ["sse_resume_success_rate", "cursor_expiry_count", "reauthorization_denied_count"]
-    rollback_command: "disable stream adapter and use query/polling projection"
+    rollback_command: "retired and fail-closed; dual stream switch removed, polling fallback is not re-enablable"
     expires_at_phase: "PHASE10"
     retire_task: "P22-T03"
     domain_fact_owner: "unchanged"
@@ -44,18 +55,28 @@ flags:
   - flag: "tool_runtime_readonly_gateway"
     owner: "08 Tool Runtime"
     scope: "tool invocation"
-    default: "DECLARED"
+    # PHASE22-FEATURE-FLAG-AND-RESIDUAL-RUNTIME-CUTOVER: retired fail-closed.
+    # Zero production readers: ToolInvocationGateway is the only tool
+    # execution entry in the canonical surface. READ_ONLY tools are exempt
+    # from human approval but NOT from Security prepare / Audit / Trace;
+    # unknown side-effect level fails closed (approval_required=True).
+    default: "RETIRED"
     metric: ["tool_bypass_count", "prepared_action_count", "approval_binding_failure_count"]
-    rollback_command: "disable new read-only gateway only before side-effect cutover"
+    rollback_command: "retired and fail-closed; no read-only direct execution path exists, dynamic gateway switch removed"
     expires_at_phase: "PHASE15"
     retire_task: "P22-T03"
     domain_fact_owner: "unchanged"
   - flag: "postgres_domain_uow_shadow"
     owner: "11 Infrastructure"
     scope: "persistence"
-    default: "DECLARED"
+    # PHASE22-FEATURE-FLAG-AND-RESIDUAL-RUNTIME-CUTOVER: retired fail-closed.
+    # Zero production readers: PostgreSQL ProductUnitOfWork is the single
+    # persistence path - current state and outbox are written in one
+    # transaction on one connection. No shadow write, no dual write, no
+    # second fact owner; rollback cannot return to the pre-UoW adapter.
+    default: "RETIRED"
     metric: ["uow_conflict_count", "migration_failure_count", "rollback_rehearsal_result"]
-    rollback_command: "stop writes before WRITE_CUTOVER; keep SQLite/local adapter as previous safe read path"
+    rollback_command: "retired and fail-closed; shadow write removed, SQLite/local adapter is not re-enablable for product writes"
     expires_at_phase: "PHASE04"
     retire_task: "P22-T03"
     domain_fact_owner: "canonical owner tables after cutover"

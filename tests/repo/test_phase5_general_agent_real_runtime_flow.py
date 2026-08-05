@@ -1,10 +1,15 @@
-import asyncio
+"""PHASE5 GeneralAgent real-runtime flow — retired in PHASE22.
+
+The PHASE5 GeneralAgent real runtime flow (knowledge tool wiring and single
+ReAct streaming loop) is no longer a product runtime. The PHASE22 backend
+semantic legacy cleanup removed the class and its module; this test enforces
+the retirement gate and pins the canonical replacement surface (knowledge
+retrieval through the canonical runtime path).
+"""
+
 import importlib
 import sys
 from pathlib import Path
-from types import SimpleNamespace
-
-from langchain_core.messages import AIMessageChunk, HumanMessage
 
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
@@ -17,101 +22,29 @@ def _ensure_runtime_paths() -> None:
         sys.path.insert(0, runtime_root)
 
 
-def _agent_config():
-    AgentConfig = importlib.import_module("zuno.agent.core.agents").AgentConfig
-    return AgentConfig(
-        user_id="u_1",
-        llm_id="",
-        mcp_ids=[],
-        knowledge_ids=["kb_contract"],
-        domain_pack_id="contract_review",
-        dialog_id="dialog_1",
-        tool_ids=[],
-        agent_skill_ids=[],
-        system_prompt="review contract",
-        name="contract-agent",
-        multi_agent_enabled=True,
-    )
-
-
-def test_zuno_general_agent_knowledge_tool_uses_project_query_service(monkeypatch):
+def test_retired_general_agent_runtime_is_not_importable() -> None:
     _ensure_runtime_paths()
 
-    ga = importlib.import_module("zuno.agent.core.agents")
-    GeneralAgent = importlib.import_module("zuno.agent.core.agents").GeneralAgent
-    KnowledgeQueryResult = importlib.import_module(
-        "zuno.platform.services.graphrag.query_service"
-    ).KnowledgeQueryResult
-    KnowledgeQueryService = importlib.import_module("zuno.knowledge.query_service").KnowledgeQueryService
-
-    captured = {}
-
-    async def fake_query(self, *, user_id, knowledge_ids, query, product_mode="auto", query_method=None, top_k=None):
-        captured.update(
-            {
-                "user_id": user_id,
-                "knowledge_ids": knowledge_ids,
-                "query": query,
-                "product_mode": product_mode,
-                "query_method": query_method,
-                "top_k": top_k,
-            }
-        )
-        return KnowledgeQueryResult(
-            graphrag_project_id="contract_review",
-            answer="第八条 违约责任：借款人未按约定期限还款的，应承担违约责任。",
-            requested_query_method="auto",
-            resolved_query_method="local",
-            fallback_reason=None,
-            documents=[{"chunk_id": "contract_chunk_1", "file_name": "loan_contract_001.md"}],
-            evidence={"document_count": 1, "citation_coverage": 1.0},
-            citations=["contract_chunk_1"],
-            retrievers_used=["vector", "graph"],
-            graph_paths=["第八条 违约责任 -> 违约责任"],
-            communities=[],
-            prompt_version="extract-v2",
-            query_prompt_version="query-v3",
-            index_version={"vector": "vector_v2", "graph": "graph_v2"},
-            community_version="community-v0",
-            trace_metadata={"resolved_query_method": "local"},
-        )
-
-    monkeypatch.setattr(KnowledgeQueryService, "query", fake_query)
-
-    agent = GeneralAgent(_agent_config())
-    asyncio.run(agent.setup_knowledge_tool())
-    result = asyncio.run(agent.tools[0].ainvoke({"query": "这份合同是否约定了违约责任？"}))
-
-    assert agent.tools[0].name == "search_knowledge_base"
-    assert captured["knowledge_ids"] == ["kb_contract"]
-    assert captured["product_mode"] == "auto"
-    assert "第八条 违约责任" in result
-    assert "citations: contract_chunk_1" in result
-    assert "resolved_query_method: local" in result
+    for module_name in [
+        "zuno.agent.core.agents.general_agent",
+        "zuno.agent.core.agents.react_agent",
+        "zuno.agent.core.agents.plan_execute_agent",
+    ]:
+        try:
+            importlib.import_module(module_name)
+        except ModuleNotFoundError:
+            continue
+        raise AssertionError(f"retired real runtime module is importable: {module_name}")
 
 
-def test_zuno_general_agent_astream_keeps_single_react_runtime_with_project_bound():
+def test_canonical_runtime_factory_replaces_general_agent_wiring() -> None:
     _ensure_runtime_paths()
 
-    GeneralAgent = importlib.import_module("zuno.agent.core.agents").GeneralAgent
+    from zuno.agent.runtime import RuntimeDependencyFactory, UnifiedAgentRuntimeService
 
-    class FakeReactAgent:
-        async def astream(self, *args, **kwargs):
-            yield "messages", [AIMessageChunk(content="single agent answer")]
+    assembly = RuntimeDependencyFactory.for_completion()
+    service = UnifiedAgentRuntimeService(store=assembly.store, dependencies=assembly.dependencies)
 
-    agent = GeneralAgent(_agent_config())
-    assert not hasattr(agent, "domain_qa_runtime")
-    agent.react_agent = FakeReactAgent()
-    agent.conversation_model = SimpleNamespace()
-
-    async def collect():
-        return [
-            event
-            async for event in agent.astream([HumanMessage(content="请审查这份合同是否约定了违约责任？")])
-        ]
-
-    events = asyncio.run(collect())
-
-    assert len(events) == 1
-    assert events[0]["type"] == "response_chunk"
-    assert events[0]["data"]["accumulated"] == "single agent answer"
+    assert assembly.dependencies is not None
+    assert assembly.store is not None
+    assert service.graph is not None
