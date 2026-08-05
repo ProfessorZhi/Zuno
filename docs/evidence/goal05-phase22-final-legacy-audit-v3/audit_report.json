@@ -1,0 +1,187 @@
+{
+  "candidate_pr": "PHASE22-FINAL-LEGACY-AUDIT-V3",
+  "exclusions": [
+    {
+      "path": "tests/",
+      "reason": "non-production surface (tests/docs/evals/agent scripts)"
+    },
+    {
+      "path": "docs/",
+      "reason": "non-production surface (tests/docs/evals/agent scripts)"
+    },
+    {
+      "path": ".agent/",
+      "reason": "non-production surface (tests/docs/evals/agent scripts)"
+    },
+    {
+      "path": "tools/evals/",
+      "reason": "non-production surface (tests/docs/evals/agent scripts)"
+    },
+    {
+      "path": "tools/scripts/_archive/",
+      "reason": "non-production surface (tests/docs/evals/agent scripts)"
+    },
+    {
+      "path": "node_modules/",
+      "reason": "non-production surface (tests/docs/evals/agent scripts)"
+    }
+  ],
+  "finding_count": 20,
+  "findings": [
+    {
+      "category": "legacy_runtime_class_def",
+      "detail": "legacy GeneralAgent family class definition 'CodeActAgent' is present in production tree",
+      "line": 0,
+      "path": "src/backend/zuno/agent/core/agents/codeact_agent.py",
+      "severity": "error"
+    },
+    {
+      "category": "legacy_runtime_class_def",
+      "detail": "legacy GeneralAgent family class definition 'GeneralAgent' is present in production tree",
+      "line": 0,
+      "path": "src/backend/zuno/agent/core/agents/general_agent.py",
+      "severity": "error"
+    },
+    {
+      "category": "legacy_runtime_class_def",
+      "detail": "legacy GeneralAgent family class definition 'PlanExecuteAgent' is present in production tree",
+      "line": 0,
+      "path": "src/backend/zuno/agent/core/agents/plan_execute_agent.py",
+      "severity": "error"
+    },
+    {
+      "category": "legacy_runtime_class_def",
+      "detail": "legacy GeneralAgent family class definition 'ReactAgent' is present in production tree",
+      "line": 0,
+      "path": "src/backend/zuno/agent/core/agents/react_agent.py",
+      "severity": "error"
+    },
+    {
+      "category": "legacy_runtime_class_def",
+      "detail": "legacy GeneralAgent family class definition 'Text2SQLAgent' is present in production tree",
+      "line": 0,
+      "path": "src/backend/zuno/agent/core/agents/text2sql_agent.py",
+      "severity": "error"
+    },
+    {
+      "category": "legacy_workspace_runtime",
+      "detail": "workspace runtime 'WorkSpaceSimpleAgent' constructs independent graph via create_agent",
+      "line": 1069,
+      "path": "src/backend/zuno/platform/services/workspace/simple_agent.py",
+      "severity": "error"
+    },
+    {
+      "category": "legacy_workspace_runtime",
+      "detail": "workspace runtime 'WorkSpaceSimpleAgent' bypasses ToolInvocationGateway via handler(request)",
+      "line": 1121,
+      "path": "src/backend/zuno/platform/services/workspace/simple_agent.py",
+      "severity": "error"
+    },
+    {
+      "category": "legacy_workspace_runtime",
+      "detail": "workspace runtime 'WorkSpaceSimpleAgent' bypasses ToolInvocationGateway via handler(request)",
+      "line": 1198,
+      "path": "src/backend/zuno/platform/services/workspace/simple_agent.py",
+      "severity": "error"
+    },
+    {
+      "category": "legacy_workspace_runtime",
+      "detail": "workspace runtime 'WorkSpaceSimpleAgent' directly invokes model: self.model.ainvoke",
+      "line": 1876,
+      "path": "src/backend/zuno/platform/services/workspace/simple_agent.py",
+      "severity": "error"
+    },
+    {
+      "category": "legacy_workspace_runtime",
+      "detail": "workspace runtime 'WorkSpaceSimpleAgent' constructs independent graph via create_agent",
+      "line": 2539,
+      "path": "src/backend/zuno/platform/services/workspace/simple_agent.py",
+      "severity": "error"
+    },
+    {
+      "category": "legacy_workspace_runtime",
+      "detail": "workspace runtime 'WeChatAgent' constructs independent graph via create_agent",
+      "line": 112,
+      "path": "src/backend/zuno/platform/services/workspace/wechat_agent.py",
+      "severity": "error"
+    },
+    {
+      "category": "legacy_workspace_runtime",
+      "detail": "workspace runtime 'WeChatAgent' bypasses ToolInvocationGateway via handler(request)",
+      "line": 132,
+      "path": "src/backend/zuno/platform/services/workspace/wechat_agent.py",
+      "severity": "error"
+    },
+    {
+      "category": "legacy_workspace_runtime",
+      "detail": "workspace runtime 'WeChatAgent' bypasses ToolInvocationGateway via handler(request)",
+      "line": 135,
+      "path": "src/backend/zuno/platform/services/workspace/wechat_agent.py",
+      "severity": "error"
+    },
+    {
+      "category": "legacy_workspace_runtime",
+      "detail": "workspace runtime 'WeChatAgent' directly invokes model: self.model.ainvoke",
+      "line": 246,
+      "path": "src/backend/zuno/platform/services/workspace/wechat_agent.py",
+      "severity": "error"
+    },
+    {
+      "category": "legacy_workspace_runtime",
+      "detail": "workspace runtime 'WeChatAgent' directly invokes model: self.model.ainvoke",
+      "line": 262,
+      "path": "src/backend/zuno/platform/services/workspace/wechat_agent.py",
+      "severity": "error"
+    },
+    {
+      "category": "tool_bypass_mcp_direct",
+      "detail": "MCP direct execution: self._guess_direct_mcp_call",
+      "line": 2473,
+      "path": "src/backend/zuno/platform/services/workspace/simple_agent.py",
+      "severity": "error"
+    },
+    {
+      "category": "tool_bypass_handler",
+      "detail": "direct handler(request) bypass: handler(request)",
+      "line": 1121,
+      "path": "src/backend/zuno/platform/services/workspace/simple_agent.py",
+      "severity": "error"
+    },
+    {
+      "category": "tool_bypass_handler",
+      "detail": "direct handler(request) bypass: handler(request)",
+      "line": 1198,
+      "path": "src/backend/zuno/platform/services/workspace/simple_agent.py",
+      "severity": "error"
+    },
+    {
+      "category": "tool_bypass_handler",
+      "detail": "direct handler(request) bypass: handler(request)",
+      "line": 132,
+      "path": "src/backend/zuno/platform/services/workspace/wechat_agent.py",
+      "severity": "error"
+    },
+    {
+      "category": "tool_bypass_handler",
+      "detail": "direct handler(request) bypass: handler(request)",
+      "line": 135,
+      "path": "src/backend/zuno/platform/services/workspace/wechat_agent.py",
+      "severity": "error"
+    }
+  ],
+  "integration_base_sha": "10501e0382d863014513f993822abd6bcf758cf6",
+  "not_proven_boundary": [
+    "history-only caller like /agent/product_baseline.py is excluded by construction; reachability is not proven for runtime selectors that resolve via attribute-chain / class-name-only dispatch."
+  ],
+  "owner_work_package": "PHASE22-FINAL-LEGACY-AUDIT-V3",
+  "scanned_roots": [
+    "src\\backend\\zuno",
+    "src\\backend\\zuno\\platform\\services\\workspace",
+    "src\\backend\\zuno\\agent\\runtime",
+    "src\\backend\\zuno\\api\\v1"
+  ],
+  "status": "TOOL_BYPASS_BLOCKERS_FOUND",
+  "unresolved": [],
+  "unresolved_count": 0,
+  "verifier_commit_sha": "10501e0382d863014513f993822abd6bcf758cf6"
+}
