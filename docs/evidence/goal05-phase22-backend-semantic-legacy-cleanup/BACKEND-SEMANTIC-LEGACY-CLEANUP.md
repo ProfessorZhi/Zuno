@@ -1,29 +1,72 @@
 # PHASE22 Backend Semantic Legacy Cleanup — Evidence (Dual Scope)
 
-Work package: `PHASE22-BACKEND-LEGACY-SCOPED-TRUTH-FINAL`
-Worker: `minimax-legacy-truth` (Execution-Client: Claude Code, Provider: MiniMax)
+Work package: `PHASE22-BACKEND-RUNTIME-OWNERSHIP-REACHABILITY-GATE`
+Worker: `minimax-legacy-ownership-gate` (Execution-Client: Claude Code, Provider: MiniMax)
 Base: `origin/main` @ `83c1bbd0` — Branch: `claude/deepseek-phase22-backend-semantic-legacy-cleanup`
-Head (start): `b57c1566c711c8c66943f97d231fbc57779042a3`
+Head (start): `a878f6baff2fc53594507703b45010257c85b5ae`
+Head (this slice): the new commit on top of `a878f6ba`.
 
-## Two-Layer Truth
+## What this slice changes
 
-This slice separates the PR's own retirement of the GeneralAgent family
-from the full Backend Product Runtime cutover. The previous verifier
-collapsed both layers into a single "BACKEND_SEMANTIC_LEGACY_CLEAN" status
-even while Workspace agents and `AgentControlRuntime` were still live.
-That collapsed truth was masking known bypasses.
+The previous verifier classified every candidate runtime class (`WorkSpaceSimpleAgent`,
+`WeChatAgent`, `AgentControlRuntime`) by **class name alone**. As soon as
+the `ClassDef` existed anywhere in `src/backend/zuno/`, the verifier
+emitted a top-level runtime finding. That made it impossible for the
+verifier to ever reach `BACKEND_PRODUCT_RUNTIME_CUTOVER_CONFIRMED` once
+the Workspace cutover wave turns the legacy classes into thin Product
+Adapters that delegate to `UnifiedAgentRuntimeService`.
+
+This slice replaces the name-based heuristic with an **ownership +
+reachability** classifier. Every candidate class is classified by:
+
+  1. Whether the class appears in `INTERNAL_STEP_CAPABILITY_CLASSES`
+     (e.g. `ReActStepRunner`, `StructuredResponseAgent`) → always
+     `INTERNAL_STEP_CAPABILITY`.
+  2. Whether any **Production Entry Point** constructs the class.
+     Production callers are detected by AST: a `ClassName(...)`
+     construction in any production module (excluding `tests/`,
+     `docs/`, `.agent/`, `__init__.py` facade re-exports, and the
+     `product_baseline.py` baseline generator).
+  3. The class's own method bodies, walked for behaviour evidence:
+     - `independent_graph` — `create_agent`, `create_react_agent`,
+       `StateGraph`, `ToolNode`.
+     - `direct_model_call` — `self.model.ainvoke`, `model.invoke`, etc.
+     - `direct_tool_call` — `self.tool.ainvoke`, `tool.invoke`, etc.
+     - `direct_handler_await` — `response = await handler(request)`
+       inside an `AgentMiddleware` shape.
+     - `product_lifecycle_attr` — references to `trace_events`,
+       `final_answer`, `capability_plan`, `RunOutcome`, etc.
+     - `canonical_delegate` — references to
+       `UnifiedAgentRuntimeService`,
+       `SingleControllerRuntimeHarness`,
+       `SingleControllerDurableRuntime`,
+       `WorkspaceAgentRuntime`, `WorkspaceTaskRuntimeService`.
+
+The decision tree is:
+
+| Step | Classified as |
+|---|---|
+| `INTERNAL_STEP_CAPABILITY_CLASSES` membership | `INTERNAL_STEP_CAPABILITY` (allowed) |
+| Class name is `SingleControllerRuntimeHarness` | `PRODUCT_CANONICAL` (allowed) |
+| No production caller | `INTERNAL_TEST_HARNESS` (allowed) |
+| Production caller + any legacy evidence | `PRODUCT_LEGACY_RUNTIME` (BLOCKED) |
+| Production caller + only canonical delegation evidence | `PRODUCT_ADAPTER` (allowed) |
+| Production caller + no execution / graph / lifecycle evidence | `PRODUCT_ADAPTER` (allowed) |
+| Dynamic construction (`globals`, `getattr`, `eval`, `__import__`) with an `Agent`/`Runtime`/`Controller`/`Service` token | repository scope → `BACKEND_PRODUCT_RUNTIME_UNRESOLVED` (non-zero exit) |
+
+## Two-Layer Truth (current state of this branch)
 
 ### Scoped Result (this PR's own retirement)
 
 **Status:** `AGENT_FAMILY_LEGACY_SLICE_CLEAN`
 
 The PR successfully retired the entire GeneralAgent family
-(`GeneralAgent`, `AgentConfig`, `StreamAgentState`, `EmitEventAgentMiddleware`,
-`ReactAgent`, `PlanExecuteAgent`, `CodeActAgent`, `Text2SQLAgent`) and the
-three legacy export shims (`agent/runtime.py`, `agent/state.py`,
-`agent/streaming.py`). No production entry point can import a retired
-module, and the agent package `__all__` no longer re-exports any retired
-symbol.
+(`GeneralAgent`, `AgentConfig`, `StreamAgentState`,
+`EmitEventAgentMiddleware`, `ReactAgent`, `PlanExecuteAgent`,
+`CodeActAgent`, `Text2SQLAgent`) and the three legacy export shims
+(`agent/runtime.py`, `agent/state.py`, `agent/streaming.py`). No
+production entry point can import a retired module, and the agent
+package `__all__` no longer re-exports any retired symbol.
 
 See `scoped_report.json` for the machine-readable record.
 
@@ -31,48 +74,97 @@ See `scoped_report.json` for the machine-readable record.
 
 **Status:** `BACKEND_PRODUCT_RUNTIME_CUTOVER_BLOCKED`
 
-The Single Controller is **not yet** the only top-level Product Runtime
-in the repository. The following live surfaces continue to host a
-top-level runtime class or a direct tool-call bypass:
+The classifier surfaces the following per-class ownership verdicts:
 
-| Surface | Category | Detail |
-|---|---|---|
-| `src/backend/zuno/agent/control_runtime.py:50` | top_level_runtime_class_definition | `AgentControlRuntime` class still present |
-| `src/backend/zuno/platform/services/workspace/simple_agent.py:122` | top_level_runtime_class_definition | `WorkSpaceSimpleAgent` class still present |
-| `src/backend/zuno/platform/services/workspace/simple_agent.py:1121` | workspace_bypass | `await handler(request)` direct tool call |
-| `src/backend/zuno/platform/services/workspace/simple_agent.py:1198` | workspace_bypass | `await handler(request)` direct tool call |
-| `src/backend/zuno/platform/services/workspace/wechat_agent.py:132` | workspace_bypass | `await handler(request)` direct tool call |
-| `src/backend/zuno/platform/services/workspace/wechat_agent.py:135` | workspace_bypass | `await handler(request)` direct tool call |
+| Class | Module | Classification | Reason |
+|---|---|---|---|
+| `SingleControllerRuntimeHarness` | `src/backend/zuno/agent/harness.py:184` | `PRODUCT_CANONICAL` | Canonical runtime |
+| `AgentControlRuntime` | `src/backend/zuno/agent/control_runtime.py:50` | `INTERNAL_TEST_HARNESS` | No production caller (only facade export + tests + baseline) |
+| `WorkSpaceSimpleAgent` | `src/backend/zuno/platform/services/workspace/simple_agent.py:122` | `PRODUCT_LEGACY_RUNTIME` | Production caller (`api/services/workspace.py:160`) + `create_agent` + `handler(request)` + `self.model.ainvoke` + `tool.ainvoke` + `final_answer` |
+| `WeChatAgent` | `src/backend/zuno/platform/services/workspace/wechat_agent.py:45` | `PRODUCT_LEGACY_RUNTIME` | Production caller (`api/services/wechat.py:59`) + `create_agent` + `handler(request)` + `self.model.ainvoke` + `final_answer` |
 
-These findings are pinned by the repository mode of
-`verify_phase22_backend_semantic_legacy.py` so the cutover wave cannot
-silently regress. The owner of these surfaces is the workspace cutover
-wave (out of scope for this PR).
+The repository mode also reports four `direct_handler_bypass` findings
+inside the workspace tree (the workspace agents call `await handler(request)`
+directly, bypassing `ToolInvocationGateway`).
+
+`AgentControlRuntime`'s class definition still carries
+`product_lifecycle_attr` evidence (`trace_events`, `final_answer`,
+`PlannerOutput`, etc.), but the verifier does **not** classify a
+class-definition-only as blocking any more. As soon as a Production
+Entry Point starts importing or constructing `AgentControlRuntime`, the
+classification flips to `PRODUCT_LEGACY_RUNTIME` and the repository
+status flips to BLOCKED. This is proven by the
+`test_agent_control_runtime_production_caller_fixture_is_blocked` test.
+
+`AgentControlRuntime`'s callers today:
+
+- `src/backend/zuno/agent/product_baseline.py` (baseline generator, not
+  a Production Entry Point — the verifier excludes it).
+- `src/backend/zuno/agent/__init__.py` (facade re-export / TYPE_CHECKING
+  import, not a construction).
+- `src/backend/zuno/agent/runtime/adapters.py:28` (string literal in a
+  `source=` keyword, not a code reference).
+- `tests/agent/test_agent_layer_surfaces.py`,
+  `tests/agent/test_react_reflection_replan_runtime.py`,
+  `tests/repo/test_phase22_backend_semantic_legacy.py` (tests).
 
 See `repository_report.json` for the machine-readable record.
 
-## Why the previous truth was wrong
+## What thin Product Adapters look like under the new verifier
 
-The previous verifier reported `BACKEND_SEMANTIC_LEGACY_CLEAN` whenever
-no symbol from the retired family was found, regardless of whether other
-top-level runtime classes still existed. It also relied on string
-matching for `direct_answer` and `ZUNO_AGENT_RUNTIME`, which made the gate
-susceptible to refactors that hide the keyword inside a constant or a
-docstring.
+`tests/fixtures/phase22_backend_semantic_legacy/runtime_definitions/thin_workspace_adapter.py`
+defines a `WorkSpaceSimpleAgent` whose `ainvoke` / `astream` methods
+delegate to `UnifiedAgentRuntimeService`. It does **not** call
+`create_agent`, `model.ainvoke`, `tool.ainvoke`, or
+`await handler(request)`. The verifier classifies it as
+`PRODUCT_ADAPTER` (allowed) when reached by a production caller.
 
-The new verifier:
+The mirror-based test
+`test_thin_workspace_adapter_in_production_tree_is_not_blocked` replaces
+the live `simple_agent.py` with the thin adapter fixture and asserts:
 
-- Uses the Python `ast` module exclusively for production-code checks.
-- Inspects every `ClassDef` for the top-level Product Runtime shapes
-  (`SingleControllerRuntimeHarness`, `WorkSpaceSimpleAgent`, `WechatAgent`,
-  `AgentControlRuntime`).
-- Inspects every `Call` node for the direct `await handler(request)`
-  pattern by AST shape, not by string.
-- Reports `BACKEND_PRODUCT_RUNTIME_UNRESOLVED` when a dynamic
-  construction (`globals()[...]`, `getattr(..., 'AgentName')`,
-  `eval(...)`, `__import__(...)`) is found, because the verifier cannot
-  prove which class is built.
-- Defaults to `--scope repository` so the CI gate is fail-closed.
+- `WorkSpaceSimpleAgent.classification == "PRODUCT_ADAPTER"`.
+- The repository mode emits no finding on `simple_agent.py`.
+
+This pins the verifier contract: once the Workspace cutover wave
+replaces `simple_agent.py` with the thin adapter shape, the verifier
+will flip to `BACKEND_PRODUCT_RUNTIME_CUTOVER_CONFIRMED` without
+further verifier changes.
+
+The opposite mirror test
+`test_invalid_adapter_in_production_tree_is_blocked` shows that an
+adapter that **keeps** a `create_agent(...)` call inside its methods
+still classifies as `PRODUCT_LEGACY_RUNTIME`.
+
+## Fixture catalogue
+
+`tests/fixtures/phase22_backend_semantic_legacy/`:
+
+- `runtime_definitions/thin_workspace_adapter.py` — `PRODUCT_ADAPTER`
+  shape; delegates to `UnifiedAgentRuntimeService`.
+- `runtime_definitions/invalid_adapter_with_create_agent.py` —
+  `PRODUCT_LEGACY_RUNTIME`; keeps `create_agent`.
+- `runtime_definitions/agent_control_runtime_no_prod_caller.py` —
+  `INTERNAL_TEST_HARNESS`; tests-only caller.
+- `runtime_definitions/agent_control_runtime_with_prod_caller.py` —
+  used together with `production_callers/caller_of_agent_control.py`
+  to prove a production caller flips it to `PRODUCT_LEGACY_RUNTIME`.
+- `runtime_definitions/react_step_runner.py` — `INTERNAL_STEP_CAPABILITY`.
+- `runtime_definitions/structured_response_agent.py` —
+  `INTERNAL_STEP_CAPABILITY`.
+- `runtime_definitions/direct_model_final_answer.py` —
+  `PRODUCT_LEGACY_RUNTIME`; `self.model.ainvoke`.
+- `runtime_definitions/direct_tool_ainvoke.py` —
+  `PRODUCT_LEGACY_RUNTIME`; `self.tool.ainvoke`.
+- `runtime_definitions/direct_handler_await.py` —
+  `PRODUCT_LEGACY_RUNTIME`; `await handler(request)`.
+- `runtime_definitions/dynamic_runtime_load.py` — drives
+  `BACKEND_PRODUCT_RUNTIME_UNRESOLVED`.
+- `production_callers/caller_of_agent_control.py` — synthetic
+  Production Entry Point that constructs `AgentControlRuntime`.
+- `test_callers/test_agent_control_harness.py` — synthetic test caller
+  that proves the `tests/` prefix is excluded from production
+  reachability.
 
 ## Verifier Usage
 
@@ -94,53 +186,78 @@ python tools/scripts/verify_phase22_backend_semantic_legacy.py --scope repositor
 ```
 
 Workflows that only own the agent-family slice should use
-`--scope agent-family`. Default invocation is the repository scope and is
-expected to return non-zero (exit 1) until the workspace cutover wave
-finishes its slice.
+`--scope agent-family`. Default invocation is the repository scope and
+is expected to return non-zero (exit 1) until the Workspace cutover
+wave finishes its slice.
 
 ## Test Coverage
 
-`tests/repo/test_phase22_backend_semantic_legacy.py` — 14 tests covering:
+`tests/repo/test_phase22_backend_semantic_legacy.py` — 25 tests:
 
 1. `test_general_agent_family_files_are_gone` — physical file removal.
 2. `test_agent_family_scope_returns_clean` — scoped mode emits CLEAN.
-3. `test_repository_scope_returns_blocked` — repository mode emits BLOCKED.
-4. `test_repository_scope_would_return_confirmed_without_workspace_agents` — mirror-based confirmation that removing the workspace agents drops the workspace findings (and only the `AgentControlRuntime` finding remains).
-5. `test_unknown_dynamic_runtime_returns_unresolved` — fake `getattr(__import__(...))` flips status to UNRESOLVED.
-6. `test_direct_handler_request_is_blocked` — workspace bypass category is detected and is confined to the workspace tree.
-7. `test_tool_invocation_gateway_is_not_misclassified` — canonical gateway is not flagged.
-8. `test_structured_response_agent_is_internal_step_capability` — retained internal step capability is not classified as a top-level runtime finding.
-9. `test_react_step_runner_is_step_internal` — ReAct remains a step-internal mechanism.
-10. `test_agent_control_runtime_with_production_caller_returns_blocked` — `AgentControlRuntime` definition is surfaced.
-11. `test_agent_control_runtime_history_only_when_no_production_caller` — moving the production caller under `tests/agent/history_only/` drops the AgentControlRuntime finding.
-12. `test_default_mode_does_not_return_scoped_clean` — default mode is repository, not scoped.
-13. `test_scoped_json_shape_is_stable` — JSON output schema is stable.
-14. `test_repository_json_shape_is_stable` — JSON output schema is stable.
-
-## PR Body Truth
-
-The PR #127 body has been updated to reflect the two-layer result:
-
-- **Scoped Result:** `AGENT_FAMILY_LEGACY_SLICE_CLEAN`
-- **Repository Result:** `BACKEND_PRODUCT_RUNTIME_CUTOVER_BLOCKED`
-
-The PR body no longer claims:
-
-- `BACKEND_SEMANTIC_LEGACY_CLEAN`
-- "Single Controller is the only top-level product runtime"
-- "All clean" for the workspace cutover
-
-The PR body's `Agent-Mode` is `Standard`, matching the real commit
-trailers; `Worker` identity is preserved via the `Agent-Name` / `Worker`
-trailers.
+3. `test_repository_scope_returns_blocked` — repository mode emits
+   BLOCKED with both `legacy_runtime_owner` and `direct_handler_bypass`
+   categories, and the workspace agents classified as
+   `PRODUCT_LEGACY_RUNTIME`, `AgentControlRuntime` classified as
+   `INTERNAL_TEST_HARNESS`.
+4. `test_default_mode_does_not_return_scoped_clean` — default mode is
+   repository, not scoped.
+5. `test_scoped_json_shape_is_stable` — JSON output schema is stable.
+6. `test_repository_json_shape_is_stable` — JSON output schema is
+   stable and includes `classifications` and `unresolved` keys.
+7. `test_scoped_and_repository_status_are_independent` — scoped and
+   repository status do not overwrite each other.
+8. `test_retired_import_restoration_is_detected` — re-introducing a
+   retired import in `main.py` flips scoped status to BLOCKED.
+9. `test_thin_workspace_adapter_is_product_adapter` — thin adapter
+   classifies as `PRODUCT_ADAPTER`.
+10. `test_invalid_adapter_with_create_agent_is_legacy_runtime` —
+    invalid adapter classifies as `PRODUCT_LEGACY_RUNTIME`.
+11. `test_independent_create_agent_graph_is_blocked` —
+    `create_agent(...)` triggers `PRODUCT_LEGACY_RUNTIME`.
+12. `test_direct_model_final_answer_is_blocked` —
+    `self.model.ainvoke` triggers `PRODUCT_LEGACY_RUNTIME`.
+13. `test_direct_tool_ainvoke_is_blocked` — `self.tool.ainvoke`
+    triggers `PRODUCT_LEGACY_RUNTIME`.
+14. `test_await_handler_request_is_blocked` —
+    `response = await handler(request)` triggers
+    `PRODUCT_LEGACY_RUNTIME`.
+15. `test_agent_control_runtime_with_only_test_callers_is_internal_test_harness`
+    — `AgentControlRuntime` with only `tests/` callers classifies as
+    `INTERNAL_TEST_HARNESS`.
+16. `test_agent_control_runtime_with_production_caller_is_blocked` —
+    synthetic production caller flips classification to
+    `PRODUCT_LEGACY_RUNTIME`.
+17. `test_react_step_runner_is_internal_step_capability` —
+    `ReActStepRunner` is step-internal.
+18. `test_structured_response_agent_is_internal_step_capability` —
+    `StructuredResponseAgent` is step-internal.
+19. `test_dynamic_runtime_load_is_unresolved` — `getattr` /
+    `__import__` in production code forces
+    `BACKEND_PRODUCT_RUNTIME_UNRESOLVED`.
+20. `test_tool_invocation_gateway_is_not_misclassified` — canonical
+    gateway path is not flagged.
+21. `test_direct_handler_request_in_workspace_is_blocked` —
+    `direct_handler_bypass` category is detected and confined to the
+    workspace tree.
+22. `test_repository_scope_without_workspace_agents_keeps_blocked` —
+    removing the workspace files flips `AgentControlRuntime`
+    classification back to `INTERNAL_TEST_HARNESS`.
+23. `test_thin_workspace_adapter_in_production_tree_is_not_blocked` —
+    replacing `simple_agent.py` with the thin adapter fixture drops
+    the WorkSpaceSimpleAgent finding.
+24. `test_invalid_adapter_in_production_tree_is_blocked` —
+    replacing `simple_agent.py` with the invalid adapter fixture
+    keeps the BLOCKED status.
+25. `test_agent_control_runtime_production_caller_fixture_is_blocked`
+    — replacing the live repo with the production-caller fixture flips
+    `AgentControlRuntime` classification to `PRODUCT_LEGACY_RUNTIME`.
 
 ## Test Run Results (this slice)
 
 `pytest -q tests/repo/test_phase22_backend_semantic_legacy.py`
-→ **14 passed in 144.05s**.
-
-The wider repository pytest run is left as-is (10 pre-existing failures
-proved against `origin/main` in the prior slice).
+→ **25 passed in 129.54s**.
 
 ## Out of Scope (read-only)
 
@@ -150,5 +267,14 @@ proved against `origin/main` in the prior slice).
 - `zuno.agent.control_runtime` and `zuno.agent.product_baseline`
 - Backend code under `src/backend/zuno/`
 
-These surfaces are pinned by the repository mode of the verifier and are
-owned by parallel cutover waves.
+These surfaces are pinned by the repository mode of the verifier and
+are owned by parallel cutover waves.
+
+## What this slice did NOT consume
+
+- PR #129 (workspace-agent-cutover) — not merged, not cherry-picked.
+  The thin-adapter behaviour is proven only by mirror tests against
+  fixtures; the live Workspace cutover is owned by the parallel worker.
+- PR #124/#128 — not consumed.
+- The production code paths under `src/backend/zuno/`. No production
+  source file was modified by this slice.

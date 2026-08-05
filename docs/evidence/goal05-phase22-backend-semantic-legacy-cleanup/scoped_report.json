@@ -1,6 +1,8 @@
 {
+  "classifications": [],
   "finding_count": 0,
   "findings": [],
   "scope": "agent-family",
-  "status": "AGENT_FAMILY_LEGACY_SLICE_CLEAN"
+  "status": "AGENT_FAMILY_LEGACY_SLICE_CLEAN",
+  "unresolved": []
 }

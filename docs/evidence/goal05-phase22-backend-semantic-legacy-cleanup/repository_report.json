@@ -1,49 +1,133 @@
 {
+  "classifications": [
+    {
+      "classification": "INTERNAL_TEST_HARNESS",
+      "evidence": [
+        "product_lifecycle_attr:planner_output@run",
+        "product_lifecycle_attr:final_answer@run",
+        "product_lifecycle_attr:PlannerOutput@run",
+        "product_lifecycle_attr:trace_events@run",
+        "product_lifecycle_attr:planner_output.trace_events@run",
+        "product_lifecycle_attr:planner_output.capability_plan@run",
+        "product_lifecycle_attr:capability_plan@run",
+        "product_lifecycle_attr:planner_output@_handle_failed_observation",
+        "product_lifecycle_attr:PlannerOutput@_handle_failed_observation",
+        "product_lifecycle_attr:CapabilityPlan@_handle_failed_observation",
+        "product_lifecycle_attr:trace_events@_handle_failed_observation",
+        "product_lifecycle_attr:capability_plan@_handle_failed_observation",
+        "product_lifecycle_attr:planner_output@_create_reflexion_result",
+        "product_lifecycle_attr:PlannerOutput@_create_reflexion_result",
+        "product_lifecycle_attr:CapabilityPlan@_create_reflexion_result",
+        "product_lifecycle_attr:trace_events@_create_reflexion_result",
+        "product_lifecycle_attr:capability_plan@_create_reflexion_result"
+      ],
+      "line": 50,
+      "module": "src/backend/zuno/agent/control_runtime.py",
+      "name": "AgentControlRuntime",
+      "production_callers": []
+    },
+    {
+      "classification": "PRODUCT_CANONICAL",
+      "evidence": [],
+      "line": 184,
+      "module": "src/backend/zuno/agent/harness.py",
+      "name": "SingleControllerRuntimeHarness",
+      "production_callers": [
+        {
+          "line": 266,
+          "path": "src/backend/zuno/agent/harness.py"
+        }
+      ]
+    },
+    {
+      "classification": "PRODUCT_LEGACY_RUNTIME",
+      "evidence": [
+        "independent_graph:create_agent@setup_react_agent:1069",
+        "direct_handler_await:handler(request)@setup_middlewares:1121",
+        "direct_handler_await:handler(request)@setup_middlewares:1198",
+        "direct_model_call:self.model.ainvoke@_generate_title:1876",
+        "direct_tool_call:tool.ainvoke@_run_direct_routed_tool:2101",
+        "product_lifecycle_attr:final_answer@_run_direct_routed_tool",
+        "independent_graph:create_agent@astream:2539"
+      ],
+      "line": 122,
+      "module": "src/backend/zuno/platform/services/workspace/simple_agent.py",
+      "name": "WorkSpaceSimpleAgent",
+      "production_callers": [
+        {
+          "line": 160,
+          "path": "src/backend/zuno/api/services/workspace.py"
+        }
+      ]
+    },
+    {
+      "classification": "PRODUCT_LEGACY_RUNTIME",
+      "evidence": [
+        "independent_graph:create_agent@setup_react_agent:112",
+        "direct_handler_await:handler(request)@setup_middlewares:132",
+        "direct_handler_await:handler(request)@setup_middlewares:135",
+        "direct_model_call:self.model.ainvoke@ainvoke:246",
+        "direct_model_call:self.model.ainvoke@_generate_title:262",
+        "direct_model_call:self.model.astream@astream:322",
+        "product_lifecycle_attr:final_answer@astream"
+      ],
+      "line": 45,
+      "module": "src/backend/zuno/platform/services/workspace/wechat_agent.py",
+      "name": "WeChatAgent",
+      "production_callers": [
+        {
+          "line": 59,
+          "path": "src/backend/zuno/api/services/wechat.py"
+        }
+      ]
+    }
+  ],
   "finding_count": 6,
   "findings": [
     {
-      "category": "top_level_runtime_class_definition",
-      "detail": "top-level Product Runtime class defined: AgentControlRuntime",
-      "line": 50,
-      "path": "src/backend/zuno/agent/control_runtime.py",
-      "severity": "error"
-    },
-    {
-      "category": "top_level_runtime_class_definition",
-      "detail": "top-level Product Runtime class defined: WorkSpaceSimpleAgent",
+      "category": "legacy_runtime_owner",
+      "detail": "PRODUCT_LEGACY_RUNTIME 'WorkSpaceSimpleAgent' owns the Product Run or executes tools/models directly: independent_graph:create_agent@setup_react_agent:1069; direct_handler_await:handler(request)@setup_middlewares:1121; direct_handler_await:handler(request)@setup_middlewares:1198; direct_model_call:self.model.ainvoke@_generate_title:1876; direct_tool_call:tool.ainvoke@_run_direct_routed_tool:2101; product_lifecycle_attr:final_answer@_run_direct_routed_tool; independent_graph:create_agent@astream:2539",
       "line": 122,
       "path": "src/backend/zuno/platform/services/workspace/simple_agent.py",
       "severity": "error"
     },
     {
-      "category": "workspace_bypass",
-      "detail": "direct handler(request) tool call at src/backend/zuno/platform/services/workspace/simple_agent.py:1121",
+      "category": "direct_handler_bypass",
+      "detail": "direct handler(request) tool call: handler(request)",
       "line": 1121,
       "path": "src/backend/zuno/platform/services/workspace/simple_agent.py",
       "severity": "error"
     },
     {
-      "category": "workspace_bypass",
-      "detail": "direct handler(request) tool call at src/backend/zuno/platform/services/workspace/simple_agent.py:1198",
+      "category": "direct_handler_bypass",
+      "detail": "direct handler(request) tool call: handler(request)",
       "line": 1198,
       "path": "src/backend/zuno/platform/services/workspace/simple_agent.py",
       "severity": "error"
     },
     {
-      "category": "workspace_bypass",
-      "detail": "direct handler(request) tool call at src/backend/zuno/platform/services/workspace/wechat_agent.py:132",
+      "category": "legacy_runtime_owner",
+      "detail": "PRODUCT_LEGACY_RUNTIME 'WeChatAgent' owns the Product Run or executes tools/models directly: independent_graph:create_agent@setup_react_agent:112; direct_handler_await:handler(request)@setup_middlewares:132; direct_handler_await:handler(request)@setup_middlewares:135; direct_model_call:self.model.ainvoke@ainvoke:246; direct_model_call:self.model.ainvoke@_generate_title:262; direct_model_call:self.model.astream@astream:322; product_lifecycle_attr:final_answer@astream",
+      "line": 45,
+      "path": "src/backend/zuno/platform/services/workspace/wechat_agent.py",
+      "severity": "error"
+    },
+    {
+      "category": "direct_handler_bypass",
+      "detail": "direct handler(request) tool call: handler(request)",
       "line": 132,
       "path": "src/backend/zuno/platform/services/workspace/wechat_agent.py",
       "severity": "error"
     },
     {
-      "category": "workspace_bypass",
-      "detail": "direct handler(request) tool call at src/backend/zuno/platform/services/workspace/wechat_agent.py:135",
+      "category": "direct_handler_bypass",
+      "detail": "direct handler(request) tool call: handler(request)",
       "line": 135,
       "path": "src/backend/zuno/platform/services/workspace/wechat_agent.py",
       "severity": "error"
     }
   ],
   "scope": "repository",
-  "status": "BACKEND_PRODUCT_RUNTIME_CUTOVER_BLOCKED"
+  "status": "BACKEND_PRODUCT_RUNTIME_CUTOVER_BLOCKED",
+  "unresolved": []
 }

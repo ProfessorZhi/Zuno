@@ -1,4 +1,4 @@
-"""PHASE22 Backend Semantic Legacy Cleanup Verifier — dual scope.
+"""PHASE22 Backend Semantic Legacy Cleanup Verifier — ownership + reachability.
 
 This verifier is a fail-closed audit gate for the retirement of the semantic
 legacy agent runtimes. It produces a two-layer result so the PR truth can be
@@ -14,22 +14,40 @@ separated from the broader repository cutover truth:
     - BACKEND_PRODUCT_RUNTIME_UNRESOLVED
     - TOOL_ERROR
 
-Default invocation is equivalent to ``--scope repository`` so the verifier is
-fail-closed in CI. ``--scope agent-family`` is provided for workflows that
-want to gate only the slice owned by this work package.
+The repository scope classifies every candidate runtime class by **ownership
+and reachability**, not by class name alone:
+
+  PRODUCT_LEGACY_RUNTIME
+      Was or still is a complete Product Runtime: constructs an independent
+      LangGraph/LangChain agent graph, owns Product Run lifecycle, executes
+      tools/models directly, bypasses ToolInvocationGateway, or owns
+      Plan / Final Gate / RunOutcome / Trace.
+
+  PRODUCT_ADAPTER
+      A thin facade that delegates to the canonical Product Runtime
+      (``UnifiedAgentRuntimeService`` / ``SingleControllerRuntimeHarness``
+      or a known composition root), does not construct an independent
+      graph, and does not directly execute models or tools.
+
+  INTERNAL_TEST_HARNESS
+      Class definition exists but is only reached from ``tests/``,
+      ``evals/``, ``docs/`` or the agent ``__init__`` facade export.
+      No production entry point can construct or invoke it.
+
+  INTERNAL_STEP_CAPABILITY
+      Step-internal mechanism (e.g. ``ReActStepRunner``,
+      ``StructuredResponseAgent``) only used inside the StepExecutionGraph.
+      Not a top-level runtime.
+
+  UNRESOLVED
+      Dynamic construction (``globals``, ``getattr``, ``eval``, ``__import__``)
+      whose target cannot be statically proven.
+
+Default invocation is equivalent to ``--scope repository`` so the verifier
+is fail-closed in CI. ``--scope agent-family`` is provided for workflows
+that want to gate only the slice owned by this work package.
 
 Detection is AST-based (Python ``ast`` module) — no string counting.
-The scanner inspects:
-
-  - ClassDef nodes — defines the legacy runtime class shapes.
-  - Import / ImportFrom nodes — every actual import statement.
-  - Call nodes — instantiations (``SomeAgent(...)``) and function calls.
-  - Attribute access — chained attribute lookups on imported names.
-  - Await / async function bodies — reachable ``await handler(request)``
-    patterns.
-  - Reachability — every production entry point must reach a Single
-    Controller class only; alternative top-level runtime classes are
-    findings.
 
 Usage:
     python tools/scripts/verify_phase22_backend_semantic_legacy.py
@@ -120,6 +138,8 @@ ENTRY_POINT_FILES = (
     "src/backend/zuno/api/services/workspace_task_runtime.py",
     "src/backend/zuno/api/services/agent_skill.py",
     "src/backend/zuno/api/services/mcp_server.py",
+    "src/backend/zuno/api/services/workspace.py",
+    "src/backend/zuno/api/services/wechat.py",
     "src/backend/zuno/api/v1/completion.py",
     "src/backend/zuno/platform/services/queue/workers.py",
     "src/backend/zuno/platform/services/cli_tool_discovery.py",
@@ -127,42 +147,108 @@ ENTRY_POINT_FILES = (
     "tools/scripts/start.py",
 )
 
-# Top-level Product Runtime classes that this verifier looks for in the
-# repository scope. ``SINGLE_CONTROLLER`` is the only allowed entry —
-# every other class is a finding.
+
+# Candidate runtime classes the verifier classifies by ownership +
+# reachability in repository scope. ``SINGLE_CONTROLLER_CLASS`` is the
+# canonical Product Runtime and is always allowed.
 SINGLE_CONTROLLER_CLASS = "SingleControllerRuntimeHarness"
 
-TOP_LEVEL_PRODUCT_RUNTIME_CLASSES = (
+CANDIDATE_RUNTIME_CLASSES = (
     SINGLE_CONTROLLER_CLASS,
     "WorkSpaceSimpleAgent",
+    "WeChatAgent",
     "WechatAgent",
     "AgentControlRuntime",
 )
 
-# Modules that are explicitly out of the work-package scope. They are
-# pinned as ``out_of_scope`` rather than reported as live callers so the
-# repository status remains truthful about the current state.
-OUT_OF_SCOPE_FILES = (
-    "src/backend/zuno/agent/control_runtime.py",
-    "src/backend/zuno/agent/product_baseline.py",
+INTERNAL_STEP_CAPABILITY_CLASSES = (
+    "ReActStepRunner",
+    "ReActStepExecutor",
+    "ReActStepNode",
+    "StructuredResponseAgent",
 )
 
-OUT_OF_SCOPE_PATHS_FOR_HISTORY = (
+
+# Surfaces that do not constitute a Production Entry Point: they are
+# baseline generators, fixture scripts, or doc-only references.
+NON_PRODUCTION_ENTRY_POINT_FILES = (
+    "src/backend/zuno/agent/product_baseline.py",
+    "src/backend/zuno/agent/control_runtime.py",
+)
+
+NON_PRODUCTION_PATH_PREFIXES = (
+    "tests/",
     "docs/",
     ".agent/",
-    "tests/agent/runtime/",
+)
+
+
+# Symbols that, when called inside a candidate runtime's methods, prove
+# it owns the Product Run lifecycle or executes tools/models directly.
+DIRECT_MODEL_CALL_NAMES = (
+    "model.invoke",
+    "model.ainvoke",
+    "model.stream",
+    "model.astream",
+)
+
+DIRECT_TOOL_CALL_NAMES = (
+    "tool.invoke",
+    "tool.ainvoke",
+    "tool.run",
+    "tool.arun",
 )
 
 # Direct ``handler(request)`` tool-call surface. AST-detected because
 # string matching is too noisy on docstrings and tests.
-DIRECT_HANDLER_AWAIT_PATTERN = "tool_result = await handler(request)"
+DIRECT_HANDLER_AWAIT_PATTERN = "handler"
 
-# Retained internal mechanisms that the repository scope must NOT
-# classify as a top-level runtime finding.
-RETAINED_STEP_CAPABILITIES = (
-    "StructuredResponseAgent",
-    "ReActStepRunner",
+# Symbols that prove the candidate constructs an independent graph.
+INDEPENDENT_GRAPH_BUILDERS = (
+    "create_agent",
+    "create_react_agent",
+    "create_structured_chat_agent",
+    "StateGraph",
+    "MessageGraph",
+    "ToolNode",
 )
+
+# Canonical runtime / composition-root symbols a thin Product Adapter
+# must delegate to.
+CANONICAL_RUNTIME_SYMBOLS = (
+    "UnifiedAgentRuntimeService",
+    "SingleControllerRuntimeHarness",
+    "SingleControllerDurableRuntime",
+    "build_single_controller_runtime_harness",
+    "WorkspaceAgentRuntime",
+    "WorkspaceTaskRuntimeService",
+)
+
+# Attributes / locals that show the candidate owns Plan / Trace / Budget /
+# Final Gate / RunOutcome directly.
+PRODUCT_LIFECYCLE_ATTRIBUTES = (
+    "trace_events",
+    "trace_event",
+    "final_answer",
+    "final_response",
+    "run_outcome",
+    "RunOutcome",
+    "capability_plan",
+    "CapabilityPlan",
+    "budget",
+    "Budget",
+    "publication",
+    "Publication",
+    "final_gate",
+    "FinalGate",
+    "planner_output",
+    "PlannerOutput",
+)
+
+
+# ---------------------------------------------------------------------------
+# Data classes
+# ---------------------------------------------------------------------------
 
 
 @dataclass
@@ -175,9 +261,36 @@ class Finding:
 
 
 @dataclass
+class Classification:
+    """Per-class ownership + reachability verdict."""
+
+    name: str
+    classification: str
+    module: str
+    line: int = 0
+    evidence: list[str] = field(default_factory=list)
+    production_callers: list[tuple[str, int]] = field(default_factory=list)
+
+    def to_dict(self) -> dict:
+        return {
+            "name": self.name,
+            "classification": self.classification,
+            "module": self.module,
+            "line": self.line,
+            "evidence": list(self.evidence),
+            "production_callers": [
+                {"path": path, "line": line}
+                for path, line in self.production_callers
+            ],
+        }
+
+
+@dataclass
 class ScopeResult:
     status: str = ""
     findings: list[Finding] = field(default_factory=list)
+    classifications: list[Classification] = field(default_factory=list)
+    unresolved: list[Finding] = field(default_factory=list)
 
     def add(self, finding: Finding) -> None:
         self.findings.append(finding)
@@ -197,6 +310,12 @@ def _classdef_names(tree: ast.AST) -> set[str]:
 
 
 def _imports_in(tree: ast.AST) -> list[tuple[str, int]]:
+    """Return ``(module_or_full_name, lineno)`` for every import.
+
+    For ``from x.y import z`` we return ``"x.y"`` (the bare module) so
+    prefix-based matchers work correctly. For ``import x.y`` we return
+    ``"x.y"``.
+    """
     imports: list[tuple[str, int]] = []
     for node in ast.walk(tree):
         if isinstance(node, ast.Import):
@@ -205,9 +324,29 @@ def _imports_in(tree: ast.AST) -> list[tuple[str, int]]:
         elif isinstance(node, ast.ImportFrom):
             module = node.module or ""
             for alias in node.names:
-                full = f"{module}.{alias.name}" if module else alias.name
-                imports.append((full, node.lineno))
+                imports.append((module, node.lineno))
     return imports
+
+
+def _imported_symbols(tree: ast.AST) -> list[tuple[str, str, int]]:
+    """Return ``(module, symbol, lineno)`` for every ``from ... import sym``.
+
+    Used by callers that need the imported *symbol* (e.g. for class-name
+    reachability checks) in addition to the bare module path.
+    """
+    imports: list[tuple[str, str, int]] = []
+    for node in ast.walk(tree):
+        if isinstance(node, ast.ImportFrom):
+            module = node.module or ""
+            for alias in node.names:
+                imports.append((module, alias.name, node.lineno))
+    return imports
+
+
+def _classdef_nodes(tree: ast.AST) -> Iterable[ast.ClassDef]:
+    for node in ast.walk(tree):
+        if isinstance(node, ast.ClassDef):
+            yield node
 
 
 def _call_target_strings(tree: ast.AST) -> list[tuple[str, int]]:
@@ -234,9 +373,18 @@ def _attribute_chains(tree: ast.AST) -> list[tuple[str, int]]:
     return results
 
 
-def _direct_handler_await_sites(tree: ast.AST) -> list[int]:
-    """Return line numbers for ``await handler(request)`` assignments."""
-    sites: list[int] = []
+def _direct_handler_await_sites(tree: ast.AST) -> list[tuple[int, str]]:
+    """Return (line, snippet) for ``<assign> = await handler(...)`` assignments.
+
+    Only assignments are matched — the workspace bypass pattern is the
+    well-known shape ``response = await handler(request)`` / ``tool_result
+    = await handler(request)`` inside an ``AgentMiddleware`` body. A bare
+    ``await handler(payload)`` in a worker runner is NOT a tool bypass
+    because ``handler`` is a Callable parameter, not the middleware
+    context. Detecting that distinction purely from AST requires the
+    Assign form.
+    """
+    sites: list[tuple[int, str]] = []
     for node in ast.walk(tree):
         if not isinstance(node, ast.Assign):
             continue
@@ -250,8 +398,8 @@ def _direct_handler_await_sites(tree: ast.AST) -> list[int]:
             text = ast.unparse(call.func)
         except Exception:  # pragma: no cover - defensive
             continue
-        if text == "handler":
-            sites.append(node.lineno)
+        if text == DIRECT_HANDLER_AWAIT_PATTERN:
+            sites.append((node.lineno, ast.unparse(call)))
     return sites
 
 
@@ -263,7 +411,220 @@ def _safe_parse(path: Path) -> ast.AST | None:
 
 
 # ---------------------------------------------------------------------------
-# Scope: agent-family
+# Per-class classification primitives
+# ---------------------------------------------------------------------------
+
+
+def _class_method_bodies(class_node: ast.ClassDef) -> list[ast.AST]:
+    """Return a list of AST subtrees for every method body in the class."""
+    return [node for node in class_node.body if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef))]
+
+
+def _collect_attribute_names(tree: ast.AST) -> set[str]:
+    names: set[str] = set()
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Attribute):
+            try:
+                names.add(ast.unparse(node))
+            except Exception:  # pragma: no cover - defensive
+                continue
+        elif isinstance(node, ast.Name):
+            names.add(node.id)
+    return names
+
+
+def _evidence_for_class(class_node: ast.ClassDef) -> list[str]:
+    """Walk every method body of a candidate class and collect behaviour
+    evidence strings.
+    """
+    evidence: list[str] = []
+    bodies = _class_method_bodies(class_node)
+
+    def _matches(call_text: str, target: str) -> bool:
+        """Match ``call_text`` against ``target``. ``call_text`` is the
+        unparsed Call.func which may be ``self.model.ainvoke`` etc. We
+        match either by full equality or by the trailing suffix
+        ``.target`` so ``self.<attr>.target`` also triggers.
+        """
+        if call_text == target:
+            return True
+        if call_text.endswith("." + target):
+            return True
+        return False
+
+    for method in bodies:
+        for call_text, line in _call_target_strings(method):
+            head = call_text.split("(", 1)[0].split(".", 1)[-1]
+            for builder in INDEPENDENT_GRAPH_BUILDERS:
+                if head == builder or call_text == builder:
+                    evidence.append(
+                        f"independent_graph:{call_text}@{method.name}:{line}"
+                    )
+                    break
+            for sym in DIRECT_MODEL_CALL_NAMES:
+                if _matches(call_text, sym):
+                    evidence.append(f"direct_model_call:{call_text}@{method.name}:{line}")
+                    break
+            for sym in DIRECT_TOOL_CALL_NAMES:
+                if _matches(call_text, sym):
+                    evidence.append(f"direct_tool_call:{call_text}@{method.name}:{line}")
+                    break
+            for sym in CANONICAL_RUNTIME_SYMBOLS:
+                if _matches(call_text, sym):
+                    evidence.append(
+                        f"canonical_delegate:{call_text}@{method.name}:{line}"
+                    )
+                    break
+        for line, snippet in _direct_handler_await_sites(method):
+            evidence.append(f"direct_handler_await:{snippet}@{method.name}:{line}")
+        attrs = _collect_attribute_names(method)
+        for attr in attrs:
+            for marker in PRODUCT_LIFECYCLE_ATTRIBUTES:
+                if attr == marker or attr.endswith("." + marker):
+                    evidence.append(
+                        f"product_lifecycle_attr:{attr}@{method.name}"
+                    )
+                    break
+    # De-duplicate while preserving order.
+    seen: set[str] = set()
+    deduped: list[str] = []
+    for item in evidence:
+        if item in seen:
+            continue
+        seen.add(item)
+        deduped.append(item)
+    return deduped
+
+
+def _is_production_path(path: str) -> bool:
+    rel = path.replace("\\", "/")
+    for prefix in NON_PRODUCTION_PATH_PREFIXES:
+        if rel.startswith(prefix):
+            return False
+    if rel in NON_PRODUCTION_ENTRY_POINT_FILES:
+        return False
+    # ``__init__.py`` files in the backend tree are facade re-export
+    # surfaces — TYPE_CHECKING imports, ``__all__`` lists, and ``_EXPORT_TO_MODULE``
+    # dictionaries — not real Product Runtime callers. They do not count
+    # as production reachability on their own.
+    if rel.endswith("__init__.py"):
+        return False
+    return True
+
+
+def _production_callers_for(
+    class_name: str,
+    files_index: dict[str, ast.AST],
+    production_paths: set[str],
+) -> list[tuple[str, int]]:
+    """Find every (path, line) where ``class_name`` is **constructed** in
+    production code. Bare imports and facade ``__init__.py`` re-exports
+    are not counted.
+    """
+    sites: list[tuple[str, int]] = []
+    for rel, tree in files_index.items():
+        if rel not in production_paths:
+            continue
+        for call_text, call_line in _call_target_strings(tree):
+            head = call_text.split("(", 1)[0]
+            if head == class_name:
+                sites.append((rel, call_line))
+    return sites
+
+
+# ---------------------------------------------------------------------------
+# Classifier
+# ---------------------------------------------------------------------------
+
+
+def classify_class(
+    *,
+    class_name: str,
+    class_node: ast.ClassDef | None,
+    module_path: str,
+    production_callers: list[tuple[str, int]],
+    evidence: list[str] | None = None,
+) -> Classification:
+    """Classify a single candidate class.
+
+    The decision tree is:
+
+      1. ``class_name`` is in ``SINGLE_CONTROLLER_CLASS`` →
+         ``PRODUCT_CANONICAL`` (informational, never blocking).
+      2. ``class_name`` is in ``INTERNAL_STEP_CAPABILITY_CLASSES`` →
+         ``INTERNAL_STEP_CAPABILITY``.
+      3. ``class_name`` has no production callers →
+         ``INTERNAL_TEST_HARNESS`` (a non-production class definition
+         cannot block on its own).
+      4. ``class_name`` has production callers AND has any of:
+         ``independent_graph``, ``direct_model_call``, ``direct_tool_call``,
+         ``direct_handler_await`` or ``product_lifecycle_attr`` →
+         ``PRODUCT_LEGACY_RUNTIME`` (BLOCKED).
+      5. ``class_name`` has production callers AND only ``canonical_delegate``
+         evidence → ``PRODUCT_ADAPTER`` (allowed).
+      6. ``class_name`` has production callers and no execution /
+         lifecycle / graph evidence → ``PRODUCT_ADAPTER`` (allowed
+         because no bypass was found).
+    """
+    ev = list(evidence or [])
+    if class_name == SINGLE_CONTROLLER_CLASS:
+        return Classification(
+            name=class_name,
+            classification="PRODUCT_CANONICAL",
+            module=module_path,
+            line=getattr(class_node, "lineno", 0),
+            evidence=ev,
+            production_callers=production_callers,
+        )
+    if class_name in INTERNAL_STEP_CAPABILITY_CLASSES:
+        return Classification(
+            name=class_name,
+            classification="INTERNAL_STEP_CAPABILITY",
+            module=module_path,
+            line=getattr(class_node, "lineno", 0),
+            evidence=ev,
+            production_callers=production_callers,
+        )
+    if not production_callers:
+        return Classification(
+            name=class_name,
+            classification="INTERNAL_TEST_HARNESS",
+            module=module_path,
+            line=getattr(class_node, "lineno", 0),
+            evidence=ev,
+            production_callers=[],
+        )
+    # Has production callers. Look for legacy behaviour evidence.
+    legacy_kinds = (
+        "independent_graph",
+        "direct_model_call",
+        "direct_tool_call",
+        "direct_handler_await",
+        "product_lifecycle_attr",
+    )
+    for entry in ev:
+        for kind in legacy_kinds:
+            if entry.startswith(kind + ":"):
+                return Classification(
+                    name=class_name,
+                    classification="PRODUCT_LEGACY_RUNTIME",
+                    module=module_path,
+                    line=getattr(class_node, "lineno", 0),
+                    evidence=ev,
+                    production_callers=production_callers,
+                )
+    return Classification(
+        name=class_name,
+        classification="PRODUCT_ADAPTER",
+        module=module_path,
+        line=getattr(class_node, "lineno", 0),
+        evidence=ev,
+        production_callers=production_callers,
+    )
+
+
+# ---------------------------------------------------------------------------
+# Scope: agent-family (this PR's own retirement)
 # ---------------------------------------------------------------------------
 
 
@@ -377,7 +738,7 @@ def verify_agent_family_scope() -> ScopeResult:
 
 
 # ---------------------------------------------------------------------------
-# Scope: repository
+# Scope: repository (whole Backend Product Runtime cutover)
 # ---------------------------------------------------------------------------
 
 
@@ -388,185 +749,130 @@ def _iter_python_files() -> Iterable[Path]:
         yield path
 
 
-def _find_top_level_runtime_class_definitions() -> list[Finding]:
-    """AST-detect class definitions for any known Product Runtime class."""
-    findings: list[Finding] = []
+def _build_file_index() -> dict[str, ast.AST]:
+    index: dict[str, ast.AST] = {}
     for path in _iter_python_files():
         rel = path.relative_to(REPO_ROOT).as_posix()
         tree = _safe_parse(path)
         if tree is None:
             continue
-        for node in ast.walk(tree):
-            if not isinstance(node, ast.ClassDef):
-                continue
-            if node.name not in TOP_LEVEL_PRODUCT_RUNTIME_CLASSES:
-                continue
-            if node.name == SINGLE_CONTROLLER_CLASS:
-                continue  # canonical
-            # Skip retained step capabilities that are nested inside other
-            # classes (they are Step-internal mechanisms, not top-level
-            # runtimes).
-            if node.name in RETAINED_STEP_CAPABILITIES:
-                continue
-            findings.append(
-                Finding(
-                    category="top_level_runtime_class_definition",
-                    path=rel,
-                    line=node.lineno,
-                    detail=f"top-level Product Runtime class defined: {node.name}",
-                )
-            )
-    return findings
+        index[rel] = tree
+    return index
 
 
-def _find_direct_handler_await_in_agent_core() -> list[Finding]:
-    """AST-detect ``await handler(request)`` in non-workspace agent paths.
+def _production_path_set(file_index: dict[str, ast.AST]) -> set[str]:
+    paths = {rel for rel in file_index if _is_production_path(rel)}
+    # The entry-point files are always production even if they import
+    # only fixtures.
+    for rel in ENTRY_POINT_FILES:
+        if rel in file_index:
+            paths.add(rel)
+    return paths
 
-    Workspace simple/wechat agents are explicitly out of scope for this
-    work package but are reported as ``out_of_scope_bypass`` so the
-    repository status remains truthful.
+
+def _classify_repository(file_index: dict[str, ast.AST]) -> tuple[
+    list[Classification], list[Finding], list[Finding]
+]:
+    """Walk the backend tree, classify every candidate class, and emit
+    findings for PRODUCT_LEGACY_RUNTIME classes plus the dynamic-load
+    unresolved cases.
     """
-    findings: list[Finding] = []
-    for path in _iter_python_files():
-        rel = path.relative_to(REPO_ROOT).as_posix()
-        tree = _safe_parse(path)
-        if tree is None:
-            continue
-        sites = _direct_handler_await_sites(tree)
-        if not sites:
-            continue
-        is_workspace_agent = rel in (
-            "src/backend/zuno/platform/services/workspace/simple_agent.py",
-            "src/backend/zuno/platform/services/workspace/wechat_agent.py",
-        )
-        category = "workspace_bypass" if is_workspace_agent else "direct_handler_bypass"
-        for lineno in sites:
-            findings.append(
-                Finding(
-                    category=category,
-                    path=rel,
-                    line=lineno,
-                    detail=f"direct handler(request) tool call at {rel}:{lineno}",
-                )
+    classifications: list[Classification] = []
+    production_paths = _production_path_set(file_index)
+    dynamic_findings: list[Finding] = []
+    legacy_findings: list[Finding] = []
+
+    for rel, tree in file_index.items():
+        for class_node in _classdef_nodes(tree):
+            if class_node.name not in CANDIDATE_RUNTIME_CLASSES:
+                continue
+            evidence = _evidence_for_class(class_node)
+            production_callers = _production_callers_for(
+                class_node.name, file_index, production_paths
             )
-    return findings
-
-
-def _find_agent_control_runtime_production_callers() -> list[Finding]:
-    """AST-detect ``AgentControlRuntime()`` instantiations in production code.
-
-    ``AgentControlRuntime`` is retained in ``zuno.agent.control_runtime`` but
-    is superseded by the Single Controller. Any production caller other
-    than ``product_baseline.py`` and the test/docs surfaces is a finding.
-    """
-    findings: list[Finding] = []
-    for path in _iter_python_files():
-        rel = path.relative_to(REPO_ROOT).as_posix()
-        if rel in OUT_OF_SCOPE_FILES:
-            continue
-        if rel.startswith("tests/") or rel.startswith("docs/") or rel.startswith(".agent/"):
-            continue
-        tree = _safe_parse(path)
-        if tree is None:
-            continue
-        for node in ast.walk(tree):
-            if not isinstance(node, ast.Call):
-                continue
-            try:
-                text = ast.unparse(node.func)
-            except Exception:  # pragma: no cover - defensive
-                continue
-            if text in ("AgentControlRuntime", "AgentControlRuntime()"):
-                findings.append(
+            verdict = classify_class(
+                class_name=class_node.name,
+                class_node=class_node,
+                module_path=rel,
+                production_callers=production_callers,
+                evidence=evidence,
+            )
+            classifications.append(verdict)
+            if verdict.classification == "PRODUCT_LEGACY_RUNTIME":
+                legacy_findings.append(
                     Finding(
-                        category="agent_control_runtime_caller",
+                        category="legacy_runtime_owner",
                         path=rel,
-                        line=node.lineno,
-                        detail=f"AgentControlRuntime() instantiated in production: {rel}:{node.lineno}",
+                        line=class_node.lineno,
+                        detail=(
+                            f"PRODUCT_LEGACY_RUNTIME '{class_node.name}' owns "
+                            f"the Product Run or executes tools/models directly: "
+                            f"{'; '.join(evidence) or 'legacy_runtime_signature'}"
+                        ),
                     )
                 )
-    return findings
 
-
-def _detect_dynamic_runtime_loads() -> list[Finding]:
-    """AST-detect dynamic / unresolved Runtime constructions.
-
-    A construction like ``globals()['SomeAgent']()`` or
-    ``getattr(module, 'SomeAgent')()`` is unresolved because the verifier
-    cannot prove which class is built. Such sites force the repository
-    scope to UNRESOLVED.
-
-    The detector inspects every ``Call`` node and matches when the callee
-    is one of ``globals``, ``getattr``, ``eval`` or ``__import__`` and one
-    of the arguments references an agent/runtime-shaped name.
-    """
-    findings: list[Finding] = []
-    agent_tokens = (
-        "agent",
-        "Agent",
-        "Runtime",
-        "Controller",
-        "Executor",
-        "Service",
-        "zuno.agent",
-    )
-    dynamic_callees = {"globals", "getattr", "eval", "__import__"}
-    for path in _iter_python_files():
-        rel = path.relative_to(REPO_ROOT).as_posix()
-        if rel in OUT_OF_SCOPE_FILES:
-            continue
-        if rel.startswith("tests/") or rel.startswith("docs/") or rel.startswith(".agent/"):
-            continue
-        tree = _safe_parse(path)
-        if tree is None:
-            continue
-        for node in ast.walk(tree):
-            if not isinstance(node, ast.Call):
-                continue
-            callee_name = None
-            if isinstance(node.func, ast.Name):
-                callee_name = node.func.id
-            elif isinstance(node.func, ast.Attribute):
-                callee_name = node.func.attr
-            if callee_name not in dynamic_callees:
-                continue
-            try:
-                full_text = ast.unparse(node)
-            except Exception:  # pragma: no cover - defensive
-                continue
-            if not any(token in full_text for token in agent_tokens):
-                continue
-            findings.append(
-                Finding(
-                    category="dynamic_runtime_load",
-                    path=rel,
-                    line=node.lineno,
-                    detail=f"unresolved dynamic Runtime construction: {full_text}",
+        # Detect dynamic Runtime constructions in production paths.
+        if rel in production_paths:
+            for node in ast.walk(tree):
+                if not isinstance(node, ast.Call):
+                    continue
+                callee_name = None
+                if isinstance(node.func, ast.Name):
+                    callee_name = node.func.id
+                elif isinstance(node.func, ast.Attribute):
+                    callee_name = node.func.attr
+                if callee_name not in {"globals", "getattr", "eval", "__import__"}:
+                    continue
+                try:
+                    full_text = ast.unparse(node)
+                except Exception:  # pragma: no cover - defensive
+                    continue
+                if not any(
+                    token in full_text
+                    for token in ("Agent", "Runtime", "Controller", "Service")
+                ):
+                    continue
+                dynamic_findings.append(
+                    Finding(
+                        category="dynamic_runtime_load",
+                        path=rel,
+                        line=node.lineno,
+                        detail=f"unresolved dynamic Runtime construction: {full_text}",
+                    )
                 )
-            )
-    return findings
+        # Always flag ``await handler(...)`` invocations in production
+        # paths because they bypass ToolInvocationGateway.
+        if rel in production_paths:
+            for line, snippet in _direct_handler_await_sites(tree):
+                legacy_findings.append(
+                    Finding(
+                        category="direct_handler_bypass",
+                        path=rel,
+                        line=line,
+                        detail=f"direct handler(request) tool call: {snippet}",
+                    )
+                )
+
+    return classifications, legacy_findings, dynamic_findings
 
 
 def verify_repository_scope() -> ScopeResult:
     result = ScopeResult()
-    dynamic = _detect_dynamic_runtime_loads()
-    if dynamic:
+    file_index = _build_file_index()
+    classifications, legacy_findings, dynamic_findings = _classify_repository(
+        file_index
+    )
+    result.classifications = classifications
+    for finding in dynamic_findings:
+        result.unresolved.append(finding)
+    if dynamic_findings:
         # Unresolved construction dominates: cannot prove cutover.
-        for finding in dynamic:
-            result.add(finding)
+        result.findings.extend(dynamic_findings)
         result.status = STATUS_REPO_UNRESOLVED
         return result
-
-    top_level = _find_top_level_runtime_class_definitions()
-    for finding in top_level:
+    for finding in legacy_findings:
         result.add(finding)
-    direct_handler = _find_direct_handler_await_in_agent_core()
-    for finding in direct_handler:
-        result.add(finding)
-    agent_control = _find_agent_control_runtime_production_callers()
-    for finding in agent_control:
-        result.add(finding)
-
     if result.findings:
         result.status = STATUS_REPO_BLOCKED
     else:
@@ -595,6 +901,8 @@ def _serialise_scope(scope: str, result: ScopeResult) -> dict:
         "status": result.status,
         "finding_count": len(result.findings),
         "findings": [_serialise_finding(f) for f in result.findings],
+        "classifications": [c.to_dict() for c in result.classifications],
+        "unresolved": [_serialise_finding(f) for f in result.unresolved],
     }
 
 
@@ -638,6 +946,8 @@ def main(argv: list[str] | None = None) -> int:
                         "status": STATUS_TOOL_ERROR,
                         "finding_count": 0,
                         "findings": [],
+                        "classifications": [],
+                        "unresolved": [],
                         "error": str(exc),
                     },
                     indent=2,
@@ -649,8 +959,6 @@ def main(argv: list[str] | None = None) -> int:
 
     payload = _serialise_scope(scope, result)
     if args.json:
-        # JSON is the only thing on stdout when --json is set so downstream
-        # tooling (and pytest tests) can parse it directly.
         print(json.dumps(payload, indent=2, sort_keys=True))
 
     if args.report:
@@ -663,6 +971,11 @@ def main(argv: list[str] | None = None) -> int:
         print(f"PHASE22 backend semantic legacy verifier scope={scope} status={result.status}")
         for finding in result.findings:
             print(f"FINDING [{finding.category}] {finding.path}:{finding.line} {finding.detail}")
+        for cls in result.classifications:
+            print(
+                f"CLASSIFICATION [{cls.classification}] {cls.module}:{cls.line} "
+                f"{cls.name}"
+            )
 
     if scope == SCOPE_AGENT_FAMILY:
         return 0 if result.status == STATUS_SCOPED_CLEAN else 1
