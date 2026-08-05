@@ -82,13 +82,29 @@ def test_composition_initialization_is_idempotent() -> None:
     )
     assert composition_after_first.security_epoch_ref == composition_after_second.security_epoch_ref
     assert composition_after_first.approval_flow == composition_after_second.approval_flow
-    assert (
-        composition_after_first.security_decision_resolver
-        is composition_after_second.security_decision_resolver
+    # The formal Security / Budget owner resolvers are bound per composition
+    # wiring (fresh instances, like the UoW factories); equivalence is
+    # asserted on their type, not object identity.
+    from zuno.platform.security.decision_resolvers import (
+        PostgresBudgetDecisionResolver,
+        PostgresSecurityDecisionResolver,
     )
-    assert (
-        composition_after_first.budget_decision_resolver
-        is composition_after_second.budget_decision_resolver
+
+    assert isinstance(
+        composition_after_first.security_decision_resolver,
+        PostgresSecurityDecisionResolver,
+    )
+    assert isinstance(
+        composition_after_second.security_decision_resolver,
+        PostgresSecurityDecisionResolver,
+    )
+    assert isinstance(
+        composition_after_first.budget_decision_resolver,
+        PostgresBudgetDecisionResolver,
+    )
+    assert isinstance(
+        composition_after_second.budget_decision_resolver,
+        PostgresBudgetDecisionResolver,
     )
     assert composition_after_first.dynamic_dag_planner is composition_after_second.dynamic_dag_planner
 
