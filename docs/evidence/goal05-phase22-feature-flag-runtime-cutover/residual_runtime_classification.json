@@ -1,6 +1,6 @@
 {
-  "work_package": "PHASE22-FEATURE-FLAG-AND-RESIDUAL-RUNTIME-CUTOVER",
-  "worker": "deepseek-flag-runtime-cutover",
+  "work_package": "PHASE22-FEATURE-FLAG-SCOPED-AND-REPOSITORY-TRUTH",
+  "worker": "deepseek-flag-cutover-truth",
   "classification_schema": [
     "CANONICAL_PRODUCT_RUNTIME",
     "INTERNAL_TEST_HARNESS",
@@ -8,13 +8,15 @@
     "PRODUCT_LEGACY_RUNTIME",
     "UNRESOLVED"
   ],
-  "reachability_basis": "semantic import trace from FastAPI main, Product API, Completion API, Workspace Task API, Queue Worker, CLI, tool scripts, test-only factories",
+  "reachability_basis": "repository-wide AST import/call/dynamic-load audit over src/backend/zuno/**, tests/**, evals/** (governance tooling excluded). Classification: references confined to tests/evals -> INTERNAL_TEST_HARNESS; production-tree reference -> RESIDUAL_PRODUCT_RUNTIME_FOUND; dynamic load that cannot be proven -> UNRESOLVED (fail-closed). No fixed entry-point list.",
   "entries": [
     {
       "symbol": "AgentControlRuntime",
       "module": "src/backend/zuno/agent/control_runtime.py",
-      "classification": "INTERNAL_TEST_HARNESS",
-      "production_callers": [],
+      "classification": "RESIDUAL_PRODUCT_RUNTIME_FOUND",
+      "production_callers": [
+        "src/backend/zuno/agent/product_baseline.py (constructs AgentControlRuntime in the production tree; eval harness generator, removed with PR #127)"
+      ],
       "callers": [
         "src/backend/zuno/agent/product_baseline.py (eval scenario generator, test-only)",
         "tests/agent/test_react_reflection_replan_runtime.py (direct module import)",
@@ -22,27 +24,31 @@
         "zuno.agent facade export (REMOVED in this work package)"
       ],
       "superseded_by": "zuno.agent.runtime (Single Controller + Fixed AgentRunGraph + Dynamic Plan DAG + Fixed StepExecutionGraph)",
-      "disposition": "production facade export removed; module retained for the eval/test harness; re-import gate added (facade rejects attribute access; verifier fails if any production entry point imports it)",
+      "disposition": "production facade export removed; module retained for the eval/test harness; repository reachability audit classifies RESIDUAL_PRODUCT_RUNTIME_FOUND while a production-tree module (product_baseline.py) imports/constructs it; verifier fails closed on dynamic loads",
       "evidence": "string label 'AgentControlRuntime.RuntimeObservation' in agent/runtime/adapters.py is a source tag, not an import"
     },
     {
       "symbol": "AgentRuntimeResult",
       "module": "src/backend/zuno/agent/control_runtime.py",
-      "classification": "INTERNAL_TEST_HARNESS",
-      "production_callers": [],
+      "classification": "RESIDUAL_PRODUCT_RUNTIME_FOUND",
+      "production_callers": [
+        "src/backend/zuno/agent/product_baseline.py (same import chain as AgentControlRuntime)"
+      ],
       "disposition": "facade export removed with AgentControlRuntime"
     },
     {
       "symbol": "RuntimeObservation",
       "module": "src/backend/zuno/agent/control_runtime.py",
-      "classification": "INTERNAL_TEST_HARNESS",
-      "production_callers": [],
+      "classification": "RESIDUAL_PRODUCT_RUNTIME_FOUND",
+      "production_callers": [
+        "src/backend/zuno/agent/product_baseline.py (same import chain as AgentControlRuntime)"
+      ],
       "disposition": "facade export removed with AgentControlRuntime"
     },
     {
       "symbol": "run_workspace_product_e2e_scenario (product_baseline)",
       "module": "src/backend/zuno/agent/product_baseline.py",
-      "classification": "INTERNAL_TEST_HARNESS",
+      "classification": "INTERNAL_TEST_HARNESS (own callers tests/evals only; recorded, non-blocking)",
       "production_callers": [],
       "callers": [
         "tests/evals/test_agentic_graphrag_product_baseline.py",
@@ -55,7 +61,10 @@
       "symbol": "ProductService family (v1 adapter)",
       "module": "src/backend/zuno/api/services/product/*",
       "classification": "CANONICAL_PRODUCT_RUNTIME (adapter)",
-      "production_callers": ["src/backend/zuno/api/v1/product.py", "src/backend/zuno/api/v1/workspace.py"],
+      "production_callers": [
+        "src/backend/zuno/api/v1/product.py",
+        "src/backend/zuno/api/v1/workspace.py"
+      ],
       "disposition": "kept as the stable Public v1 adapter; persistence only through ProductUnitOfWork/ProductRepository; no direct DAO write",
       "ownership": "does NOT own domain facts - PostgreSQL owner tables via UoW/Repository; domain facts owned by canonical owner tables"
     },
@@ -63,13 +72,15 @@
       "symbol": "WorkspaceTaskRuntimeService.stream_task_events",
       "module": "src/backend/zuno/api/services/workspace_task_runtime.py",
       "classification": "CANONICAL_PRODUCT_RUNTIME (single stream owner)",
-      "production_callers": ["src/backend/zuno/api/v1/workspace.py (GET .../events/stream)"],
+      "production_callers": [
+        "src/backend/zuno/api/v1/workspace.py (GET .../events/stream)"
+      ],
       "disposition": "single projection stream owner; v1 SSE contract preserved"
     },
     {
       "symbol": "ToolInvocationGateway",
       "module": "src/backend/zuno/capability/tool_runtime/invocation_gateway.py",
-      "classification": "CANONICAL_PRODUCT_RUNTIME (only tool execution entry)",
+      "classification": "CANONICAL_PRODUCT_RUNTIME (canonical tool execution entry; other direct dispatch surfaces are reported as repository findings)",
       "disposition": "all tools including READ_ONLY go through invoke_readonly; READ_ONLY exempt from human approval, never from Security/Audit/Budget/Trace; unknown side-effect level fails closed",
       "known_bypass_pinned": [
         "platform/services/workspace/simple_agent.py",
@@ -90,10 +101,12 @@
     },
     {
       "symbol": "GeneralAgent family",
-      "classification": "PRODUCT_LEGACY_RUNTIME (owned by PR #127, candidate dependency)",
+      "classification": "PRODUCT_LEGACY_RUNTIME (candidate PR #127; reported as direct_tool_bypass findings, not excluded)",
       "disposition": "NOT modified in this work package; pinned by the feature-flag verifier so the direct-dispatch surface cannot grow"
     }
   ],
-  "unresolved": [],
+  "unresolved": [
+    "dynamic importlib loads that could resolve into zuno.agent with non-literal names: none on this branch (fail-closed UNRESOLVED if they appear)"
+  ],
   "phase08_dependency_record": "DEPENDENCY_ON_DEEPSEEK_LEGACY_RUNTIME: Phase08CutoverController and workspace_task_runtime Phase08 config block read-only, not modified"
 }

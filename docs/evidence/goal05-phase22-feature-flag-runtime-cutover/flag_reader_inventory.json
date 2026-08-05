@@ -1,8 +1,8 @@
 {
-  "work_package": "PHASE22-FEATURE-FLAG-AND-RESIDUAL-RUNTIME-CUTOVER",
-  "worker": "deepseek-flag-runtime-cutover",
-  "method": "full-source reader inventory (rg across src/backend/zuno, tests, tools) plus semantic-area verification for each flag",
-  "base_sha": "83c1bbd0689d1b2b3b4ffd7f3983de813da11ebb",
+  "work_package": "PHASE22-FEATURE-FLAG-SCOPED-AND-REPOSITORY-TRUTH",
+  "worker": "deepseek-flag-cutover-truth",
+  "method": "yaml.safe_load parse of feature-flag-registry.yaml plus AST reference audit over src/backend/zuno/** (identifiers, string constants, attribute wrappers, import aliases, registry-file reads, env/config lookups); concatenated/f-string keys resolve to UNRESOLVED (fail-closed)",
+  "base_sha": "908321e66f64d75b18b0f23e30f2986609f11209",
   "flags": {
     "product_api_v1_adapter": {
       "migration_problem": "PHASE02-PHASE10 rollout of the Product v1 adapter binding Product Commands to the Single Controller runtime; command_acceptance / projection_gap / run_outcome parity",
@@ -17,7 +17,9 @@
       "fact_owner": "ProductUnitOfWork/ProductRepository (PostgreSQL) via ProductService application service; no direct DAO write in api/services/product/*",
       "rollback_command_executable": "no - RETIRED has no transitions; rollback_command documents fail-closed semantics",
       "retirement_form": "RETIRE_FLAG_FAIL_CLOSED",
-      "reason": "no production reader; registry history must be preserved for audit; v1 Public API contract stays"
+      "reason": "no production reader; registry history must be preserved for audit; v1 Public API contract stays",
+      "reader_audit": "AST reference audit over src/backend/zuno/**: no identifier, constant, wrapper, alias, registry-file read or env lookup",
+      "repository_truth": "registry slice only; repository-wide runtime truth is tracked separately (verifier_report.json)"
     },
     "workspace_projection_stream_v1": {
       "migration_problem": "PHASE02-PHASE10 rollout of the workspace task event projection stream (SSE) with cursor/resume semantics",
@@ -32,7 +34,9 @@
       "fact_owner": "WorkspaceTaskRuntimeService in-memory event list (single owner); ProductProjectionEventRef/ProductStreamCursorRef are the durable projection contract",
       "rollback_command_executable": "no - RETIRED",
       "retirement_form": "RETIRE_FLAG_FAIL_CLOSED",
-      "reason": "no production reader; single stream owner verified; v1 SSE contract stays"
+      "reason": "no production reader; single stream owner verified; v1 SSE contract stays",
+      "reader_audit": "AST reference audit over src/backend/zuno/**: no identifier, constant, wrapper, alias, registry-file read or env lookup",
+      "repository_truth": "registry slice only; repository-wide runtime truth is tracked separately (verifier_report.json)"
     },
     "tool_runtime_readonly_gateway": {
       "migration_problem": "PHASE15 rollout of the read-only ToolInvocationGateway before the side-effect cutover",
@@ -47,7 +51,9 @@
       "fact_owner": "ToolInvocationGateway -> PreparedToolAction/Attempt/Effect (Tool Runtime owns facts); Security owns Approval/Epoch",
       "rollback_command_executable": "no - RETIRED",
       "retirement_form": "RETIRE_FLAG_FAIL_CLOSED",
-      "reason": "no production reader; READ_ONLY exempt from human approval but never from Security/Audit; unknown side-effect level fails closed"
+      "reason": "no production reader; READ_ONLY exempt from human approval but never from Security/Audit; unknown side-effect level fails closed",
+      "reader_audit": "AST reference audit over src/backend/zuno/**: no identifier, constant, wrapper, alias, registry-file read or env lookup",
+      "repository_truth": "registry slice only; repository-wide runtime truth is tracked separately (verifier_report.json)"
     },
     "postgres_domain_uow_shadow": {
       "migration_problem": "PHASE04 migration of domain persistence from SQLite/local adapters to PostgreSQL owner tables with outbox",
@@ -62,22 +68,28 @@
       "fact_owner": "canonical owner tables (product_*, infrastructure outbox) after cutover",
       "rollback_command_executable": "no - RETIRED; rollback cannot return to the pre-UoW adapter",
       "retirement_form": "RETIRE_FLAG_FAIL_CLOSED",
-      "reason": "no production reader; single-transaction UoW verified; unknown commit state is reconciliation-bound (outbox replay)"
+      "reason": "no production reader; single-transaction UoW verified; unknown commit state is reconciliation-bound (outbox replay)",
+      "reader_audit": "AST reference audit over src/backend/zuno/**: no identifier, constant, wrapper, alias, registry-file read or env lookup",
+      "repository_truth": "registry slice only; repository-wide runtime truth is tracked separately (verifier_report.json)"
     }
   },
   "dynamic_selectors_absent": [
     "ZUNO_PRODUCT_ADAPTER",
     "ZUNO_PROJECTION_STREAM",
     "ZUNO_TOOL_GATEWAY",
-    "ZUNO_UOW",
-    "ZUNO_AGENT_RUNTIME (already retired in a previous wave)"
+    "ZUNO_UOW"
   ],
   "known_out_of_scope_surface": {
-    "workspace_simple_wechat_agents": "platform/services/workspace/* - workspace cutover wave (another worker); pinned by tool side-effect gates",
-    "legacy_agent_modules": "agent/core/agents/react_agent.py + plan_execute_agent.py direct tool dispatch - retirement is PR #127 (candidate dependency, not assumed accepted)"
+    "policy": "No surface is excluded from the repository result. Every real bypass is reported as a finding with an annotation (owner_work_package / candidate_pr / external_dependency); the temporary allowlist can annotate, never exempt. Repository status is FEATURE_FLAG_RUNTIME_CUTOVER_BLOCKED while any active bypass exists.",
+    "workspace_simple_wechat_agents": "platform/services/workspace/simple_agent.py + wechat_agent.py - owner PHASE22-WORKSPACE-AGENT-CUTOVER; reported as direct_tool_bypass findings",
+    "legacy_agent_modules": "agent/core/agents/react_agent.py + plan_execute_agent.py direct tool dispatch - candidate PR #127; reported as direct_tool_bypass findings",
+    "phase08_dual_runtime": "api/services/workspace_task_runtime.py imports Phase08CutoverController/Phase08RunService - external dependency PHASE08 cutover; reported as phase08_dual_runtime finding",
+    "agent_control_runtime": "zuno/agent/control_runtime.py reachable from product_baseline.py (production tree) - reported as residual_product_runtime_found until PR #127 removal lands"
   },
   "candidate_dependencies": {
     "pr_124": "NOT assumed accepted; referenced as candidate dependency only",
-    "pr_127": "NOT assumed accepted; the legacy GeneralAgent-family retirement remains on origin/main and is pinned, not fixed, here"
+    "pr_127": "NOT assumed accepted; the legacy GeneralAgent-family retirement remains on origin/main and is reported here as annotated findings, not fixed, not cherry-picked",
+    "workspace_cutover_wave": "owner_work_package PHASE22-WORKSPACE-AGENT-CUTOVER; keeps repository BLOCKED",
+    "phase08_cutover": "external_dependency DeepSeek-Legacy-Runtime; keeps repository BLOCKED"
   }
 }
