@@ -10,9 +10,9 @@ STATIC_TARGET_SURFACES = [
     "src/backend/zuno/agent/context.py",
     "src/backend/zuno/agent/durable_runtime.py",
     "src/backend/zuno/agent/post_turn.py",
-    "src/backend/zuno/agent/runtime.py",
-    "src/backend/zuno/agent/state.py",
-    "src/backend/zuno/agent/streaming.py",
+    # PHASE22: the shadowed dead shims agent/runtime.py, agent/state.py and
+    # agent/streaming.py (GeneralAgent-family lazy re-exports) were deleted;
+    # the canonical runtime surface is the zuno/agent/runtime/ package.
     "src/backend/zuno/agent/tool_bridge.py",
     "src/backend/zuno/capability/__init__.py",
     "src/backend/zuno/capability/contracts.py",

@@ -14,8 +14,6 @@ PATTERNS = [
 ]
 
 ALLOWED_LEGACY_PATHS = {
-    "src/backend/zuno/agent/core/agents/codeact_agent.py",
-    "src/backend/zuno/agent/core/agents/plan_execute_agent.py",
     "src/backend/zuno/agent/core/agents/structured_response_agent.py",
     "src/backend/zuno/api/services/mcp_chat.py",
     "src/backend/zuno/platform/common/helpers.py",
@@ -34,7 +32,6 @@ ALLOWED_LEGACY_PATHS = {
 }
 
 DISALLOWED_ACTIVE_PATHS = {
-    "src/backend/zuno/agent/core/agents/general_agent.py",
     "src/backend/zuno/agent/runtime",
 }
 
@@ -60,16 +57,12 @@ def verify_model_gateway_boundaries() -> list[str]:
             continue
         errors.append(f"unclassified direct model call path: {relative}: {', '.join(hits)}")
 
-    general_agent = (REPO_ROOT / "src/backend/zuno/agent/core/agents/general_agent.py").read_text(encoding="utf-8")
-    for phrase in [
-        "from zuno.platform.model_gateway import ModelGateway, build_default_model_gateway",
-        "self.model_gateway.get_chat_model",
-        "role=ModelRole.EXECUTOR",
-    ]:
-        if phrase not in general_agent:
-            errors.append(f"GeneralAgent missing gateway phrase: {phrase}")
-    if "ModelManager.get_" in general_agent:
-        errors.append("GeneralAgent must not call ModelManager.get_* directly after PHASE03")
+    # GeneralAgent was retired in the PHASE22 backend semantic legacy cleanup;
+    # its model-gateway compliance is no longer checked because the module no
+    # longer exists. The canonical runtime routes every model call through the
+    # Model Gateway (see zuno.agent.runtime.execution.model_step.ModelStepExecutor).
+    if (REPO_ROOT / "src/backend/zuno/agent/core/agents/general_agent.py").exists():
+        errors.append("retired GeneralAgent module must not exist")
     return errors
 
 

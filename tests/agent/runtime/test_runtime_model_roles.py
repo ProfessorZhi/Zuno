@@ -1,76 +1,92 @@
 from __future__ import annotations
 
-from zuno.agent.core.agents.general_agent import AgentConfig, GeneralAgent
-from zuno.platform.model_gateway import ModelGateway, MockModelProvider
+from zuno.agent.contracts import PlanStep
+from zuno.agent.runtime.dependencies import RuntimeDependencies
+from zuno.agent.runtime.execution.model_step import ModelStepExecutor
+from zuno.agent.runtime.state import AgentRuntimeState
+from zuno.platform.model_gateway import (
+    MockModelProvider,
+    ModelCategory,
+    ModelGateway,
+    ModelGatewayRequest,
+)
 from zuno.platform.model_roles import ModelRole, ROLE_DEFAULT_SLOT
 
 
 class RecordingGateway(ModelGateway):
     def __init__(self) -> None:
         super().__init__(providers=[MockModelProvider()])
-        self.calls: list[tuple[dict, ModelRole]] = []
+        self.calls: list[ModelGatewayRequest] = []
 
-    def get_chat_model(self, binding=None, *, role=ModelRole.EXECUTOR):
-        normalized_role = ModelRole(role)
-        self.calls.append((dict(binding or {}), normalized_role))
-        return object()
+    def invoke(self, request: ModelGatewayRequest):
+        self.calls.append(request)
+        return super().invoke(request)
 
 
-def _agent_config(*, llm_id: str = "") -> AgentConfig:
-    return AgentConfig(
+def _state() -> AgentRuntimeState:
+    return AgentRuntimeState(
+        run_id="run:model-roles",
+        thread_id="thread-1",
+        workspace_id="workspace-1",
         user_id="user-1",
-        llm_id=llm_id,
-        mcp_ids=[],
-        knowledge_ids=[],
-        tool_ids=[],
-        agent_skill_ids=[],
-        system_prompt="You are Zuno.",
+        task_id="task-1",
+        trace_id="trace-1",
+        goal="answer the question",
     )
 
 
-def test_general_agent_uses_model_gateway_for_default_conversation_model() -> None:
+def _step(*, action_type: str, model_role: str | None = None) -> PlanStep:
+    return PlanStep(
+        step_id="step-1",
+        goal="answer the question",
+        action_type=action_type,
+        expected_output="text",
+        acceptance_criteria=("complete",),
+        model_role=model_role,
+    )
+
+
+def test_canonical_model_step_routes_through_model_gateway_with_executor_role() -> None:
     gateway = RecordingGateway()
-    agent = GeneralAgent(_agent_config(), model_gateway=gateway)
+    deps = RuntimeDependencies(model_gateway=gateway)
+    result = ModelStepExecutor().execute(state=_state(), step=_step(action_type="model_transform"), deps=deps)
 
-    import asyncio
+    assert result.status.value == "completed"
+    assert len(gateway.calls) == 1
+    request = gateway.calls[0]
+    assert request.category is ModelCategory.CHAT
+    assert request.role is ModelRole.EXECUTOR
+    assert request.run_id == "run:model-roles"
+    assert request.trace_id == "trace-1"
+    assert "model_gateway_call" in result.observation.metadata
 
-    asyncio.run(agent.setup_language_model())
 
-    assert gateway.calls == [({"model_slot": "conversation_model"}, ModelRole.EXECUTOR)]
-    assert agent.conversation_model is not None
-
-
-def test_general_agent_uses_model_gateway_for_user_model(monkeypatch) -> None:
+def test_canonical_model_step_uses_critic_role_for_reflection() -> None:
     gateway = RecordingGateway()
+    deps = RuntimeDependencies(model_gateway=gateway)
+    ModelStepExecutor().execute(state=_state(), step=_step(action_type="reflect_before_final"), deps=deps)
 
-    async def fake_get_llm_by_id(llm_id: str):
-        return {
-            "llm_id": llm_id,
-            "model": "deepseek-chat",
-            "provider": "DeepSeek",
-            "api_key": "secret-key",
-            "base_url": "https://api.deepseek.com",
-        }
+    assert gateway.calls[0].role is ModelRole.CRITIC
 
-    monkeypatch.setattr("zuno.api.services.llm.LLMService.get_llm_by_id", fake_get_llm_by_id)
-    agent = GeneralAgent(_agent_config(llm_id="llm-1"), model_gateway=gateway)
 
-    import asyncio
+def test_canonical_model_step_uses_synthesis_role_for_answer() -> None:
+    gateway = RecordingGateway()
+    deps = RuntimeDependencies(model_gateway=gateway)
+    ModelStepExecutor().execute(state=_state(), step=_step(action_type="answer_with_evidence"), deps=deps)
 
-    asyncio.run(agent.setup_language_model())
+    assert gateway.calls[0].role is ModelRole.SYNTHESIS
 
-    assert gateway.calls == [
-        (
-            {
-                "llm_id": "llm-1",
-                "model": "deepseek-chat",
-                "provider": "DeepSeek",
-                "api_key": "secret-key",
-                "base_url": "https://api.deepseek.com",
-            },
-            ModelRole.EXECUTOR,
-        )
-    ]
+
+def test_canonical_model_step_respects_explicit_step_model_role() -> None:
+    gateway = RecordingGateway()
+    deps = RuntimeDependencies(model_gateway=gateway)
+    ModelStepExecutor().execute(
+        state=_state(),
+        step=_step(action_type="model_transform", model_role="tool_call"),
+        deps=deps,
+    )
+
+    assert gateway.calls[0].role is ModelRole.TOOL_CALL
 
 
 def test_model_roles_have_default_slots() -> None:

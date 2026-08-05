@@ -7,18 +7,19 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parents[2]
 
 DEFAULT_ENTRYPOINTS = {
-    "GeneralAgent": REPO_ROOT / "src/backend/zuno/agent/core/agents/general_agent.py",
     "UserDefinedToolRuntime": REPO_ROOT / "src/backend/zuno/platform/services/user_defined_tool_runtime.py",
     "RuntimeFactory": REPO_ROOT / "src/backend/zuno/agent/runtime/factory.py",
     "CapabilityRuntime": REPO_ROOT / "src/backend/zuno/capability/runtime.py",
 }
 
+# The GeneralAgent entry point was retired in the PHASE22 backend semantic
+# legacy cleanup. Its gateway wiring checks are obsolete; the file must stay
+# absent.
+RETIRED_DEFAULT_ENTRYPOINTS = {
+    "GeneralAgent": REPO_ROOT / "src/backend/zuno/agent/core/agents/general_agent.py",
+}
+
 REQUIRED_PHRASES = {
-    "GeneralAgent": [
-        "ToolInvocationGateway",
-        "gateway.invoke_readonly",
-        "readonly=self._is_readonly_tool",
-    ],
     "UserDefinedToolRuntime": [
         "ToolInvocationGateway",
         "gateway.invoke_readonly",
@@ -38,11 +39,6 @@ REQUIRED_PHRASES = {
 }
 
 FORBIDDEN_DEFAULT_PHRASES = {
-    "GeneralAgent": [
-        "tool_result = await handler(request)",
-        "tool_result, _ = await use_tool.coroutine",
-        "await current_tool.ainvoke(tool_args)",
-    ],
     "UserDefinedToolRuntime": [
         "coroutine=cli_adapter.execute",
         "return [cli_adapter.tool_schema], {cli_adapter.tool_name: cli_adapter.execute}",
@@ -72,6 +68,9 @@ def verify() -> list[str]:
         for phrase in FORBIDDEN_DEFAULT_PHRASES.get(name, []):
             if phrase in text:
                 errors.append(f"{name} retains direct execution bypass phrase: {phrase}")
+    for name, path in RETIRED_DEFAULT_ENTRYPOINTS.items():
+        if path.exists():
+            errors.append(f"retired default tool runtime entrypoint still exists: {path.relative_to(REPO_ROOT)}")
 
     for rel_path, phrase in ADAPTER_ALLOWED_PHRASES.items():
         text = (REPO_ROOT / rel_path).read_text(encoding="utf-8")
