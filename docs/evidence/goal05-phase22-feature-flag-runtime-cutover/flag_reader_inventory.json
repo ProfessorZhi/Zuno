@@ -1,0 +1,95 @@
+{
+  "work_package": "PHASE22-FEATURE-FLAG-SCOPED-AND-REPOSITORY-TRUTH",
+  "worker": "deepseek-flag-cutover-truth",
+  "method": "yaml.safe_load parse of feature-flag-registry.yaml plus AST reference audit over src/backend/zuno/** (identifiers, string constants, attribute wrappers, import aliases, registry-file reads, env/config lookups); concatenated/f-string keys resolve to UNRESOLVED (fail-closed)",
+  "base_sha": "908321e66f64d75b18b0f23e30f2986609f11209",
+  "flags": {
+    "product_api_v1_adapter": {
+      "migration_problem": "PHASE02-PHASE10 rollout of the Product v1 adapter binding Product Commands to the Single Controller runtime; command_acceptance / projection_gap / run_outcome parity",
+      "expires_at_phase": "PHASE10",
+      "default_before": "DECLARED",
+      "default_after": "RETIRED",
+      "production_readers": [],
+      "runtime_behavior_changed_by_reader": "no reader exists; runtime never branches on the flag",
+      "dual_read_dual_write_shadow_fallback": "none",
+      "versioned_public_api_name_only": "the flag name is historical; the Public v1 API (api/v1/product.py, api/v1/workspace.py) is a stable contract, not the flag",
+      "deleting_flag_deletes_public_api": "no - v1 routes and DTOs are untouched",
+      "fact_owner": "ProductUnitOfWork/ProductRepository (PostgreSQL) via ProductService application service; no direct DAO write in api/services/product/*",
+      "rollback_command_executable": "no - RETIRED has no transitions; rollback_command documents fail-closed semantics",
+      "retirement_form": "RETIRE_FLAG_FAIL_CLOSED",
+      "reason": "no production reader; registry history must be preserved for audit; v1 Public API contract stays",
+      "reader_audit": "AST reference audit over src/backend/zuno/**: no identifier, constant, wrapper, alias, registry-file read or env lookup",
+      "repository_truth": "registry slice only; repository-wide runtime truth is tracked separately (verifier_report.json)"
+    },
+    "workspace_projection_stream_v1": {
+      "migration_problem": "PHASE02-PHASE10 rollout of the workspace task event projection stream (SSE) with cursor/resume semantics",
+      "expires_at_phase": "PHASE10",
+      "default_before": "DECLARED",
+      "default_after": "RETIRED",
+      "production_readers": [],
+      "runtime_behavior_changed_by_reader": "no reader exists",
+      "dual_read_dual_write_shadow_fallback": "none - a single stream owner: WorkspaceTaskRuntimeService.stream_task_events (one v1 SSE route)",
+      "versioned_public_api_name_only": "SSE v1 is a versioned protocol contract; the flag was the rollout switch, now retired",
+      "deleting_flag_deletes_public_api": "no - GET /api/v1/workspace/task/{taskId}/events/stream stays",
+      "fact_owner": "WorkspaceTaskRuntimeService in-memory event list (single owner); ProductProjectionEventRef/ProductStreamCursorRef are the durable projection contract",
+      "rollback_command_executable": "no - RETIRED",
+      "retirement_form": "RETIRE_FLAG_FAIL_CLOSED",
+      "reason": "no production reader; single stream owner verified; v1 SSE contract stays",
+      "reader_audit": "AST reference audit over src/backend/zuno/**: no identifier, constant, wrapper, alias, registry-file read or env lookup",
+      "repository_truth": "registry slice only; repository-wide runtime truth is tracked separately (verifier_report.json)"
+    },
+    "tool_runtime_readonly_gateway": {
+      "migration_problem": "PHASE15 rollout of the read-only ToolInvocationGateway before the side-effect cutover",
+      "expires_at_phase": "PHASE15",
+      "default_before": "DECLARED",
+      "default_after": "RETIRED",
+      "production_readers": [],
+      "runtime_behavior_changed_by_reader": "no reader exists",
+      "dual_read_dual_write_shadow_fallback": "none in the canonical surface; known out-of-scope direct-execution surface pinned (workspace simple/wechat agents + legacy agent modules owned by PR #127)",
+      "versioned_public_api_name_only": "no - the gateway is a runtime mechanism; the flag was its rollout switch",
+      "deleting_flag_deletes_public_api": "no - ToolInvocationGateway.invoke_readonly stays the only execution entry",
+      "fact_owner": "ToolInvocationGateway -> PreparedToolAction/Attempt/Effect (Tool Runtime owns facts); Security owns Approval/Epoch",
+      "rollback_command_executable": "no - RETIRED",
+      "retirement_form": "RETIRE_FLAG_FAIL_CLOSED",
+      "reason": "no production reader; READ_ONLY exempt from human approval but never from Security/Audit; unknown side-effect level fails closed",
+      "reader_audit": "AST reference audit over src/backend/zuno/**: no identifier, constant, wrapper, alias, registry-file read or env lookup",
+      "repository_truth": "registry slice only; repository-wide runtime truth is tracked separately (verifier_report.json)"
+    },
+    "postgres_domain_uow_shadow": {
+      "migration_problem": "PHASE04 migration of domain persistence from SQLite/local adapters to PostgreSQL owner tables with outbox",
+      "expires_at_phase": "PHASE04",
+      "default_before": "DECLARED",
+      "default_after": "RETIRED",
+      "production_readers": [],
+      "runtime_behavior_changed_by_reader": "no reader exists",
+      "dual_read_dual_write_shadow_fallback": "none - ProductUnitOfWork is the single PostgreSQL path; current state + outbox commit in one transaction on one connection; no shadow write markers in platform/database (Phase08CutoverController shadow mode is the parallel session's domain, read-only here)",
+      "versioned_public_api_name_only": "no",
+      "deleting_flag_deletes_public_api": "no",
+      "fact_owner": "canonical owner tables (product_*, infrastructure outbox) after cutover",
+      "rollback_command_executable": "no - RETIRED; rollback cannot return to the pre-UoW adapter",
+      "retirement_form": "RETIRE_FLAG_FAIL_CLOSED",
+      "reason": "no production reader; single-transaction UoW verified; unknown commit state is reconciliation-bound (outbox replay)",
+      "reader_audit": "AST reference audit over src/backend/zuno/**: no identifier, constant, wrapper, alias, registry-file read or env lookup",
+      "repository_truth": "registry slice only; repository-wide runtime truth is tracked separately (verifier_report.json)"
+    }
+  },
+  "dynamic_selectors_absent": [
+    "ZUNO_PRODUCT_ADAPTER",
+    "ZUNO_PROJECTION_STREAM",
+    "ZUNO_TOOL_GATEWAY",
+    "ZUNO_UOW"
+  ],
+  "known_out_of_scope_surface": {
+    "policy": "No surface is excluded from the repository result. Every real bypass is reported as a finding with an annotation (owner_work_package / candidate_pr / external_dependency); the temporary allowlist can annotate, never exempt. Repository status is FEATURE_FLAG_RUNTIME_CUTOVER_BLOCKED while any active bypass exists.",
+    "workspace_simple_wechat_agents": "platform/services/workspace/simple_agent.py + wechat_agent.py - owner PHASE22-WORKSPACE-AGENT-CUTOVER; reported as direct_tool_bypass findings",
+    "legacy_agent_modules": "agent/core/agents/react_agent.py + plan_execute_agent.py direct tool dispatch - candidate PR #127; reported as direct_tool_bypass findings",
+    "phase08_dual_runtime": "api/services/workspace_task_runtime.py imports Phase08CutoverController/Phase08RunService - external dependency PHASE08 cutover; reported as phase08_dual_runtime finding",
+    "agent_control_runtime": "zuno/agent/control_runtime.py reachable from product_baseline.py (production tree) - reported as residual_product_runtime_found until PR #127 removal lands"
+  },
+  "candidate_dependencies": {
+    "pr_124": "NOT assumed accepted; referenced as candidate dependency only",
+    "pr_127": "NOT assumed accepted; the legacy GeneralAgent-family retirement remains on origin/main and is reported here as annotated findings, not fixed, not cherry-picked",
+    "workspace_cutover_wave": "owner_work_package PHASE22-WORKSPACE-AGENT-CUTOVER; keeps repository BLOCKED",
+    "phase08_cutover": "external_dependency DeepSeek-Legacy-Runtime; keeps repository BLOCKED"
+  }
+}

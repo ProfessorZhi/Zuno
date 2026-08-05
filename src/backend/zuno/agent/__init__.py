@@ -9,7 +9,6 @@ if TYPE_CHECKING:
         AgentRuntimeBatchReport,
         validate_agent_runtime_batch,
     )
-    from zuno.agent.control_runtime import AgentControlRuntime, AgentRuntimeResult, RuntimeObservation
     from zuno.agent.context import (
         AgentExecutionContext,
         ContextOrchestrator,
@@ -39,10 +38,8 @@ if TYPE_CHECKING:
 
 _EXPORT_TO_MODULE = {
     "AgentConfig": "zuno.agent.core.agents",
-    "AgentControlRuntime": "zuno.agent.control_runtime",
     "AgentRuntimeBatchError": "zuno.agent.runtime_batch",
     "AgentRuntimeBatchReport": "zuno.agent.runtime_batch",
-    "AgentRuntimeResult": "zuno.agent.control_runtime",
     "AgentExecutionContext": "zuno.agent.context",
     "ContextOrchestrator": "zuno.agent.context",
     "ContextPackPolicy": "zuno.agent.context",
@@ -57,7 +54,6 @@ _EXPORT_TO_MODULE = {
     "RuntimeCheckpoint": "zuno.agent.harness",
     "RuntimeInterrupt": "zuno.agent.harness",
     "RuntimeNodeContract": "zuno.agent.harness",
-    "RuntimeObservation": "zuno.agent.control_runtime",
     "RuntimeTurnLedger": "zuno.agent.post_turn",
     "SingleControllerRuntimeHarness": "zuno.agent.harness",
     "SingleControllerDurableRuntime": "zuno.agent.durable_runtime",
@@ -70,10 +66,8 @@ _EXPORT_TO_MODULE = {
 
 __all__ = [
     "AgentConfig",
-    "AgentControlRuntime",
     "AgentRuntimeBatchError",
     "AgentRuntimeBatchReport",
-    "AgentRuntimeResult",
     "AgentExecutionContext",
     "ContextOrchestrator",
     "ContextPackPolicy",
@@ -88,7 +82,6 @@ __all__ = [
     "RuntimeCheckpoint",
     "RuntimeInterrupt",
     "RuntimeNodeContract",
-    "RuntimeObservation",
     "RuntimeTurnLedger",
     "SingleControllerRuntimeHarness",
     "SingleControllerDurableRuntime",

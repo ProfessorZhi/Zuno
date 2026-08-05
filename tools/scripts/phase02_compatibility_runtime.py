@@ -205,20 +205,29 @@ def verify_phase02_runtime_controls() -> list[str]:
     errors.extend(cutover.validate())
     errors.extend(rollback.validate())
 
+    # PHASE22-FEATURE-FLAG-AND-RESIDUAL-RUNTIME-CUTOVER: every flag is retired
+    # fail-closed. A retired flag must reject ANY non-RETIRED transition
+    # (rollback attempt) with ValueError, and must keep a rollback_command
+    # that documents the fail-closed semantics.
     for flag, desired in [
-        ("product_api_v1_adapter", "SHADOW"),
-        ("workspace_projection_stream_v1", "SHADOW"),
+        ("product_api_v1_adapter", "RETIRED"),
+        ("workspace_projection_stream_v1", "RETIRED"),
         ("legacy_general_agent_completion_rollback", "RETIRED"),
-        ("tool_runtime_readonly_gateway", "SHADOW"),
-        ("postgres_domain_uow_shadow", "SHADOW"),
+        ("tool_runtime_readonly_gateway", "RETIRED"),
+        ("postgres_domain_uow_shadow", "RETIRED"),
     ]:
+        current = flags.flags[flag]["default"]
+        if current != "RETIRED":
+            errors.append(f"{flag} must be RETIRED before PHASE22 closure, current default: {current}")
+            continue
         try:
-            decision = flags.decide_transition(flag, desired)
-        except (KeyError, ValueError) as exc:
-            errors.append(str(exc))
+            flags.decide_transition(flag, "ROLLBACK_WINDOW")
+        except ValueError:
+            pass
         else:
-            if not decision.rollback_command:
-                errors.append(f"{flag} transition lacks rollback command")
+            errors.append(f"{flag} retired flag must reject rollback transition fail-closed")
+        if not flags.flags[flag]["rollback_command"]:
+            errors.append(f"{flag} retired flag lacks fail-closed rollback command")
 
     try:
         allowlist.assert_allowed("src/backend/zuno/platform/compatibility/legacy_aliases.py")
