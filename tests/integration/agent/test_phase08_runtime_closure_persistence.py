@@ -11,10 +11,9 @@ from sqlalchemy import text
 from zuno.agent.domain import AgentDomainConflict, AgentRun, GoalInputClassification, GoalVersion, TaskContract
 from zuno.agent.runtime import (
     PHASE08_RUN_SCHEMA,
-    Phase08CutoverController,
     Phase08CutoverError,
+    Phase08RetiredController,
     Phase08RuntimeRequest,
-    Phase08RuntimeResponse,
     Phase08SideEffectClaimError,
     Phase08RunService,
     Phase08StepService,
@@ -41,12 +40,6 @@ POSTGRES_DSN = os.environ.get(
     "postgresql://postgres:postgres@localhost:5432/zuno?connect_timeout=5",
 )
 HEX_64 = "a" * 64
-
-
-class _UnavailablePhase08Runtime:
-    def start(self, state):
-        del state
-        raise RuntimeError("phase08 unavailable after previous effect")
 
 
 @pytest.fixture(scope="session", autouse=True)
@@ -363,7 +356,7 @@ def test_phase08_signal_reconciliation_and_cutover_are_persistent(engine) -> Non
         assert cutover.status == "canary"
 
 
-def test_phase08_product_cutover_uses_persistent_effect_and_audit_ledgers(engine) -> None:
+def test_phase08_retired_cutover_surface_fails_closed_with_persistent_ledgers(engine) -> None:
     request = Phase08RuntimeRequest(
         request_id="request:p08:cutover:postgres",
         tenant_id="tenant-a",
@@ -371,42 +364,14 @@ def test_phase08_product_cutover_uses_persistent_effect_and_audit_ledgers(engine
         user_id="principal-a",
         task_id="task-p08-cutover-postgres",
         trace_id="trace:p08:cutover:postgres",
-        goal="answer through phase08 cutover",
+        goal="answer through the canonical phase08 runtime",
         idempotency_key="idem:p08:cutover:postgres",
     )
-    calls: list[tuple[str, bool]] = []
 
-    def legacy_runner(request: Phase08RuntimeRequest, allow_side_effect: bool) -> Phase08RuntimeResponse:
-        calls.append((request.idempotency_key, allow_side_effect))
-        return Phase08RuntimeResponse(
-            runtime="legacy",
-            request_hash=request.request_hash,
-            output_ref=f"answer:{request.request_hash[:16]}",
-            trace_ref=f"legacy-trace:{request.trace_id}",
-            side_effect_ref=f"legacy-side-effect:{request.idempotency_key}" if allow_side_effect else None,
-        )
-
-    first = Phase08CutoverController(
-        mode="canary",
-        legacy_runner=legacy_runner,
-        new_runtime=Phase08RunService(graph=build_phase08_run_graph(checkpointer=build_phase08_test_checkpointer())),
-        side_effect_ledger=PostgresPhase08CutoverLedger(engine),
-        audit=PostgresPhase08CutoverLedger(engine),
-    )
-    second = Phase08CutoverController(
-        mode="canary",
-        legacy_runner=legacy_runner,
-        new_runtime=Phase08RunService(graph=build_phase08_run_graph(checkpointer=build_phase08_test_checkpointer())),
-        side_effect_ledger=PostgresPhase08CutoverLedger(engine),
-        audit=PostgresPhase08CutoverLedger(engine),
-    )
-
-    first_response = first.handle(request)
-    second_response = second.handle(request)
-
-    assert first_response.runtime == "phase08"
-    assert second_response.side_effect_ref == first_response.side_effect_ref
-    assert calls == [(request.idempotency_key, False), (request.idempotency_key, False)]
+    # The retired controller refuses before any ledger write: no effect claim
+    # and no audit event are produced by a rejected request.
+    with pytest.raises(Phase08CutoverError, match="retired"):
+        Phase08RetiredController().handle(request)
     with engine.connect() as conn:
         counts = conn.execute(
             text(
@@ -415,7 +380,7 @@ def test_phase08_product_cutover_uses_persistent_effect_and_audit_ledgers(engine
                     (SELECT count(*) FROM agent_effect_claims
                      WHERE tenant_id = :tenant_id AND idempotency_key = :idempotency_key) AS effects,
                     (SELECT count(*) FROM agent_cutover_audit_events
-                     WHERE tenant_id = :tenant_id AND request_id = :request_id AND mode = 'canary') AS audits
+                     WHERE tenant_id = :tenant_id AND request_id = :request_id) AS audits
                 """
             ),
             {
@@ -424,65 +389,22 @@ def test_phase08_product_cutover_uses_persistent_effect_and_audit_ledgers(engine
                 "request_id": request.request_id,
             },
         ).mappings().one()
-    assert dict(counts) == {"effects": 1, "audits": 1}
+    assert dict(counts) == {"effects": 0, "audits": 0}
 
-    conflicting = Phase08RuntimeRequest(
-        request_id="request:p08:cutover:postgres:conflict",
-        tenant_id=request.tenant_id,
-        workspace_id=request.workspace_id,
-        user_id=request.user_id,
-        task_id=request.task_id,
-        trace_id=request.trace_id,
-        goal="different payload must conflict",
-        idempotency_key=request.idempotency_key,
+    # The persistent ledgers themselves remain canonical: claims and audit
+    # events are durable and idempotent, and audit events never allow fallback.
+    ledger = PostgresPhase08CutoverLedger(engine)
+    first_ref = ledger.claim(request, runtime="phase08")
+    duplicate_ref = ledger.claim(request, runtime="phase08")
+    assert first_ref == duplicate_ref == f"side-effect:{request.idempotency_key}"
+    ledger.record(
+        request,
+        mode="retired",
+        primary_runtime="phase08",
+        effect_committed=True,
+        fallback_allowed=False,
+        trace_ref=request.trace_id,
     )
-    with pytest.raises(Phase08SideEffectClaimError, match="conflicting effect payload"):
-        second.handle(conflicting)
-    assert calls == [(request.idempotency_key, False), (request.idempotency_key, False)]
-
-
-def test_phase08_cutover_blocks_legacy_fallback_after_persistent_effect_claim(engine) -> None:
-    request = Phase08RuntimeRequest(
-        request_id="request:p08:cutover:fallback-blocked",
-        tenant_id="tenant-a",
-        workspace_id="workspace-a",
-        user_id="principal-a",
-        task_id="task-p08-cutover-fallback-blocked",
-        trace_id="trace:p08:cutover:fallback-blocked",
-        goal="block legacy fallback after phase08 side effect",
-        idempotency_key="idem:p08:cutover:fallback-blocked",
-    )
-    calls: list[tuple[str, bool]] = []
-
-    def legacy_runner(request: Phase08RuntimeRequest, allow_side_effect: bool) -> Phase08RuntimeResponse:
-        calls.append((request.idempotency_key, allow_side_effect))
-        return Phase08RuntimeResponse(
-            runtime="legacy",
-            request_hash=request.request_hash,
-            output_ref=f"answer:{request.request_hash[:16]}",
-            trace_ref=f"legacy-trace:{request.trace_id}",
-            side_effect_ref=f"legacy-side-effect:{request.idempotency_key}" if allow_side_effect else None,
-        )
-
-    Phase08CutoverController(
-        mode="canary",
-        legacy_runner=legacy_runner,
-        new_runtime=Phase08RunService(graph=build_phase08_run_graph(checkpointer=build_phase08_test_checkpointer())),
-        side_effect_ledger=PostgresPhase08CutoverLedger(engine),
-        audit=PostgresPhase08CutoverLedger(engine),
-    ).handle(request)
-
-    unavailable = Phase08CutoverController(
-        mode="new_default",
-        legacy_runner=legacy_runner,
-        new_runtime=_UnavailablePhase08Runtime(),  # type: ignore[arg-type]
-        side_effect_ledger=PostgresPhase08CutoverLedger(engine),
-        audit=PostgresPhase08CutoverLedger(engine),
-    )
-    with pytest.raises(Phase08CutoverError, match="fallback_blocked_after_effect"):
-        unavailable.handle(request)
-
-    assert calls == [(request.idempotency_key, False)]
     with engine.connect() as conn:
         counts = conn.execute(
             text(
@@ -494,8 +416,7 @@ def test_phase08_cutover_blocks_legacy_fallback_after_persistent_effect_claim(en
                      WHERE tenant_id = :tenant_id AND request_id = :request_id) AS audits,
                     (SELECT count(*) FROM agent_cutover_audit_events
                      WHERE tenant_id = :tenant_id AND request_id = :request_id
-                       AND mode = 'new_default' AND fallback_allowed = false
-                       AND primary_runtime = 'phase08') AS blocked_audits
+                       AND fallback_allowed = false) AS audits_without_fallback
                 """
             ),
             {
@@ -504,10 +425,72 @@ def test_phase08_cutover_blocks_legacy_fallback_after_persistent_effect_claim(en
                 "request_id": request.request_id,
             },
         ).mappings().one()
-    assert dict(counts) == {"effects": 1, "audits": 2, "blocked_audits": 1}
+    assert dict(counts) == {"effects": 1, "audits": 1, "audits_without_fallback": 1}
 
 
-def test_phase08_shadow_product_cutover_suppresses_phase08_domain_commits(engine) -> None:
+def test_phase08_no_second_runtime_after_persistent_effect_claim(engine) -> None:
+    request = Phase08RuntimeRequest(
+        request_id="request:p08:cutover:fallback-blocked",
+        tenant_id="tenant-a",
+        workspace_id="workspace-a",
+        user_id="principal-a",
+        task_id="task-p08-cutover-fallback-blocked",
+        trace_id="trace:p08:cutover:fallback-blocked",
+        goal="no second runtime after phase08 side effect",
+        idempotency_key="idem:p08:cutover:fallback-blocked",
+    )
+
+    # A persistent effect claim exists for the request idempotency key.
+    ledger = PostgresPhase08CutoverLedger(engine)
+    ledger.claim(request, runtime="phase08")
+    assert ledger.has_claim(request) is True
+
+    # A second execution attempt cannot re-claim the effect: the row is
+    # idempotent, so no second runtime can ever commit for this request.
+    with engine.connect() as conn:
+        effects_before = conn.execute(
+            text(
+                """
+                SELECT count(*) FROM agent_effect_claims
+                WHERE tenant_id = :tenant_id AND idempotency_key = :idempotency_key
+                """
+            ),
+            {
+                "tenant_id": request.tenant_id,
+                "idempotency_key": request.idempotency_key,
+            },
+        ).scalar_one()
+    assert effects_before == 1
+
+    # The retired surface refuses the request outright; there is no fallback
+    # path and no audit event recording fallback-allowed=true.
+    with pytest.raises(Phase08CutoverError, match="retired"):
+        Phase08RetiredController().handle(request)
+
+    with engine.connect() as conn:
+        counts = conn.execute(
+            text(
+                """
+                SELECT
+                    (SELECT count(*) FROM agent_effect_claims
+                     WHERE tenant_id = :tenant_id AND idempotency_key = :idempotency_key) AS effects,
+                    (SELECT count(*) FROM agent_cutover_audit_events
+                     WHERE tenant_id = :tenant_id AND request_id = :request_id) AS audits,
+                    (SELECT count(*) FROM agent_cutover_audit_events
+                     WHERE tenant_id = :tenant_id AND request_id = :request_id
+                       AND fallback_allowed = true) AS fallback_audits
+                """
+            ),
+            {
+                "tenant_id": request.tenant_id,
+                "idempotency_key": request.idempotency_key,
+                "request_id": request.request_id,
+            },
+        ).mappings().one()
+    assert dict(counts) == {"effects": 1, "audits": 0, "fallback_audits": 0}
+
+
+def test_phase08_shadow_domain_suppression_is_a_direct_graph_capability(engine) -> None:
     thread_id = "thread:task-p08-shadow-postgres:phase08"
     goal = _goal("goal:p08:shadow-postgres")
     task = _task(goal, "task-contract:p08:shadow-postgres")
@@ -527,33 +510,29 @@ def test_phase08_shadow_product_cutover_suppresses_phase08_domain_commits(engine
         goal="shadow must not commit phase08 outcome",
         idempotency_key="idem:p08:shadow-postgres",
     )
-    calls: list[tuple[str, bool]] = []
 
-    def legacy_runner(request: Phase08RuntimeRequest, allow_side_effect: bool) -> Phase08RuntimeResponse:
-        calls.append((request.idempotency_key, allow_side_effect))
-        return Phase08RuntimeResponse(
-            runtime="legacy",
-            request_hash=request.request_hash,
-            output_ref="answer:legacy-shadow",
-            trace_ref=f"legacy-trace:{request.trace_id}",
-            side_effect_ref="legacy-side-effect:shadow" if allow_side_effect else None,
-        )
-
+    # The shadow domain-commit suppression is a direct canonical graph
+    # capability, not a cutover-controller feature.
     try:
         with phase08_postgres_run_service(conn_string=POSTGRES_DSN, engine=engine) as service:
-            controller = Phase08CutoverController(
-                mode="shadow",
-                legacy_runner=legacy_runner,
-                new_runtime=service,
-                side_effect_ledger=PostgresPhase08CutoverLedger(engine),
-                audit=PostgresPhase08CutoverLedger(engine),
+            final_state = service.start(
+                {
+                    "tenant_id": task.tenant_id,
+                    "run_id": run.run_id,
+                    "thread_id": thread_id,
+                    "trace_id": run.trace_id,
+                    "task_contract_id": task.task_contract_id,
+                    "active_goal_version_id": goal.goal_version_id,
+                    "security_epoch_ref": task.security_epoch_ref,
+                    "current_security_epoch_ref": task.security_epoch_ref,
+                    "budget_requested_units": 1,
+                    "budget_available_units": 10,
+                    "shadow_domain_commit_suppressed": True,
+                }
             )
-            response = controller.handle(request)
 
-        assert response.runtime == "legacy"
-        assert response.side_effect_ref == "legacy-side-effect:shadow"
-        assert response.shadow_output_ref.startswith("answer:")
-        assert calls == [(request.idempotency_key, True)]
+        assert final_state["finalization_status"] == "finalized"
+        assert final_state["shadow_domain_commit_suppressed"] is True
         with engine.connect() as conn:
             counts = conn.execute(
                 text(
@@ -563,9 +542,7 @@ def test_phase08_shadow_product_cutover_suppresses_phase08_domain_commits(engine
                         (SELECT count(*) FROM agent_final_gate_receipts WHERE run_id = :run_id) AS final_gates,
                         (SELECT count(*) FROM agent_run_outcomes WHERE run_id = :run_id) AS outcomes,
                         (SELECT count(*) FROM agent_effect_claims
-                         WHERE tenant_id = :tenant_id AND idempotency_key = :idempotency_key) AS effects,
-                        (SELECT count(*) FROM agent_cutover_audit_events
-                         WHERE tenant_id = :tenant_id AND request_id = :request_id AND mode = 'shadow') AS audits
+                         WHERE tenant_id = :tenant_id AND idempotency_key = :idempotency_key) AS effects
                     """
                 ),
                 {
@@ -573,14 +550,17 @@ def test_phase08_shadow_product_cutover_suppresses_phase08_domain_commits(engine
                     "run_id": run.run_id,
                     "tenant_id": request.tenant_id,
                     "idempotency_key": request.idempotency_key,
-                    "request_id": request.request_id,
                 },
             ).mappings().one()
         assert counts["checkpoints"] >= 1
         assert counts["final_gates"] == 0
         assert counts["outcomes"] == 0
         assert counts["effects"] == 0
-        assert counts["audits"] == 1
+
+        # There is no cutover controller that could run this in "shadow" mode:
+        # the retired surface refuses the request.
+        with pytest.raises(Phase08CutoverError, match="retired"):
+            Phase08RetiredController().handle(request)
     finally:
         with engine.begin() as conn:
             for table in ("checkpoint_writes", "checkpoint_blobs", "checkpoints"):
