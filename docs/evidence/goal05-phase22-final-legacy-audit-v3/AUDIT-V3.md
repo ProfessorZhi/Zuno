@@ -2,7 +2,7 @@
 
 Work package: `PHASE22-FINAL-LEGACY-AUDIT-V3`
 Worker: `minimax2` (Execution-Client: Claude Code, Provider: MiniMax)
-Integration Basis: `claude/minimax-phase22-approved-slices-integration` @ `10501e0382d863014513f993822abd6bcf758cf6`
+Integration Basis: `claude/minimax-phase22-approved-slices-integration` @ `d730d31de93e2f3cd77f0a9ebddf37798ba2c6d7`
 Branch: `claude/minimax-phase22-final-legacy-audit-v3`
 Verifier source: `tools/scripts/verify_phase22_final_legacy_cutover.py`
 
@@ -13,10 +13,10 @@ TOOL_BYPASS_BLOCKERS_FOUND
 ```
 
 The current Integration Branch does **not** include the retirement of
-the workspace agents / legacy GeneralAgent family / direct tool bypass
-patterns. Per the task contract, the audit must NOT be declared
-`LEGACY_CUTOVER_AUDIT_CLEAN` until the live tree returns zero blockers
-across all five detection categories.
+the workspace agents / direct tool bypass patterns. Per the task
+contract, the audit must NOT be declared `LEGACY_CUTOVER_AUDIT_CLEAN`
+until the live tree returns zero blockers across all five detection
+categories.
 
 ## Status priority
 
@@ -39,7 +39,7 @@ runtime in priority order.
 
 | Category | Count |
 |---|---|
-| `legacy_runtime_class_def` | 5 |
+| `legacy_runtime_class_def` | 0 |
 | `legacy_workspace_runtime` | 10 |
 | `tool_bypass_handler` | 4 |
 | `tool_bypass_mcp_direct` | 1 |
@@ -48,7 +48,7 @@ runtime in priority order.
 | `ownership_plan_owned` | 0 |
 | `unresolved_dynamic_constructor` | 0 |
 | `unresolved_alias_factory` | 0 |
-| **Total** | **20** |
+| **Total** | **15** |
 
 ## Detection categories
 

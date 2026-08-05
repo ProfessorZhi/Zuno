@@ -26,43 +26,8 @@
       "reason": "non-production surface (tests/docs/evals/agent scripts)"
     }
   ],
-  "finding_count": 20,
+  "finding_count": 15,
   "findings": [
-    {
-      "category": "legacy_runtime_class_def",
-      "detail": "legacy GeneralAgent family class definition 'CodeActAgent' is present in production tree",
-      "line": 0,
-      "path": "src/backend/zuno/agent/core/agents/codeact_agent.py",
-      "severity": "error"
-    },
-    {
-      "category": "legacy_runtime_class_def",
-      "detail": "legacy GeneralAgent family class definition 'GeneralAgent' is present in production tree",
-      "line": 0,
-      "path": "src/backend/zuno/agent/core/agents/general_agent.py",
-      "severity": "error"
-    },
-    {
-      "category": "legacy_runtime_class_def",
-      "detail": "legacy GeneralAgent family class definition 'PlanExecuteAgent' is present in production tree",
-      "line": 0,
-      "path": "src/backend/zuno/agent/core/agents/plan_execute_agent.py",
-      "severity": "error"
-    },
-    {
-      "category": "legacy_runtime_class_def",
-      "detail": "legacy GeneralAgent family class definition 'ReactAgent' is present in production tree",
-      "line": 0,
-      "path": "src/backend/zuno/agent/core/agents/react_agent.py",
-      "severity": "error"
-    },
-    {
-      "category": "legacy_runtime_class_def",
-      "detail": "legacy GeneralAgent family class definition 'Text2SQLAgent' is present in production tree",
-      "line": 0,
-      "path": "src/backend/zuno/agent/core/agents/text2sql_agent.py",
-      "severity": "error"
-    },
     {
       "category": "legacy_workspace_runtime",
       "detail": "workspace runtime 'WorkSpaceSimpleAgent' constructs independent graph via create_agent",
@@ -169,7 +134,7 @@
       "severity": "error"
     }
   ],
-  "integration_base_sha": "10501e0382d863014513f993822abd6bcf758cf6",
+  "integration_base_sha": "d730d31de93e2f3cd77f0a9ebddf37798ba2c6d7",
   "not_proven_boundary": [
     "history-only caller like /agent/product_baseline.py is excluded by construction; reachability is not proven for runtime selectors that resolve via attribute-chain / class-name-only dispatch."
   ],
@@ -183,5 +148,5 @@
   "status": "TOOL_BYPASS_BLOCKERS_FOUND",
   "unresolved": [],
   "unresolved_count": 0,
-  "verifier_commit_sha": "10501e0382d863014513f993822abd6bcf758cf6"
+  "verifier_commit_sha": "3dec863df3ee8afbd6a14426b7df71046d34a5aa"
 }
