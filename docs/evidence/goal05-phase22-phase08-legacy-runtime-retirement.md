@@ -7,12 +7,21 @@ agent_name: DeepSeek-Legacy-Runtime
 execution_client: Claude Code
 provider: DeepSeek
 base_sha: 83c1bbd0689d1b2b3b4ffd7f3983de813da11ebb
-head_sha: a83f0c53c6c6e9058138736965a218e006e6ff95
+# Runtime Subject Head: the commit at which the Phase08 *execution*
+# dual-path retirement landed in source. This is NOT the Evidence
+# Revision SHA — see `evidence_revision` below.
+runtime_subject_head_sha: a83f0c53c6c6e9058138736965a218e006e6ff95
 truth_boundary: PHASE08_EXECUTION_DUAL_PATH_RETIRED
 production_ready: false
 pr: https://github.com/ProfessorZhi/Zuno/pull/124
 pr_v1_record: https://github.com/ProfessorZhi/Zuno/pull/122 (closed; trailer gate)  # noqa: E501
-ci_run: "30876963807" (PHASE22 Contract Verification; conclusion success)
+# Evidence Revision is intentionally NOT recorded inside this file.
+# Any commit that mutates this Evidence would change its own content,
+# so a self-referenced "final SHA" inside the file would be a
+# circular reference. The Evidence Revision SHA is recorded at the
+# PR Body / GitHub commit history instead.
+evidence_revision: see PR #124 body (recorded externally to avoid self-reference)
+ci_run: "30909803998" (PHASE22 Contract Verification; conclusion success; against runtime_subject_head_sha a83f0c53... in the same branch as this Evidence file)
 ci_jobs:
   - "Repository Gates & Static Checks: success"
   - "PHASE22 Focused Test Suite: success"
