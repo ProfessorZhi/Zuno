@@ -29,6 +29,7 @@ from zuno.api.services.workspace_session import WorkSpaceSessionService
 from zuno.api.services.capability import CapabilityService
 from zuno.agent.core.callbacks import usage_metadata_callback
 from zuno.agent.core.models.manager import ModelManager
+from zuno.agent.runtime import PROFILE_DEVELOPER_TEST, PROFILE_PRODUCT
 from zuno.platform.services.graphrag.query_service import KnowledgeQueryResult
 from zuno.platform.services.application.knowledge import KnowledgeQueryService
 from zuno.platform.database import AgentSkill
@@ -67,9 +68,14 @@ from zuno.platform.services.workspace.desktop_bridge_runtime import (
     build_terminal_langchain_tools,
 )
 from zuno.platform.services.workspace.single_controller_runtime import (
+    BlockedConfiguration,
+    DeclaredToolPolicy,
     WorkspaceAgentRuntime,
     WorkspaceRunRequest,
+    WorkspaceRuntimeComposition,
     WorkspaceToolBinding,
+    declared_policy_from_metadata,
+    get_workspace_product_composition,
 )
 from zuno.capability.tools import WorkSpacePlugins
 from zuno.capability.tools.text2image.action import _text_to_image
@@ -134,6 +140,8 @@ class WorkSpaceSimpleAgent:
         original_query: str | None = None,
         usage_agent_name: str | None = None,
         multi_agent_enabled: bool = False,
+        runtime_profile: str = PROFILE_PRODUCT,
+        client_request_id: str | None = None,
     ):
         self.model_name = model_config.get("model", "")
         self.base_url = model_config.get("base_url", "")
@@ -165,6 +173,15 @@ class WorkSpaceSimpleAgent:
         self.original_query = original_query
         self.usage_agent_name = (usage_agent_name or UsageStatsAgentType.simple_agent.value).strip()
         self.multi_agent_enabled = bool(multi_agent_enabled)
+        # PHASE22 repair: runtime composition profile. Product mode requires
+        # the server composition binding; the explicit developer test profile
+        # may construct a SQLite-backed runtime.
+        self.runtime_profile = runtime_profile
+        self._client_request_id = client_request_id or ""
+        self._submission_counter = 0
+        self._last_client_request_id = ""
+        self._last_submission_id = ""
+        self._tenant_id = "tenant:default"
         self.desktop_bridge_config = (
             DesktopBridgeConfig(url=desktop_bridge_url, token=desktop_bridge_token)
             if desktop_bridge_url and desktop_bridge_token
@@ -1009,41 +1026,115 @@ class WorkSpaceSimpleAgent:
         else:
             self.tools = self.plugin_tools + self.mcp_tools + self.knowledge_tools + self.skill_tools
         self.bindings = self._build_bindings()
-        self._runtime = WorkspaceAgentRuntime(
-            model=self.model,
-            bindings=self.bindings,
-            store_path=Path(tempfile.gettempdir())
-            / f"zuno_workspace_agent_{self.user_id}_{self.session_id}.db",
-        )
+        self._runtime = self._build_canonical_runtime(self.bindings)
         self._initialized = True
 
-    # -- PHASE22 single-controller tool binding classification --------------
+    # -- PHASE22 single-controller tool binding declaration ------------------
+
+    @staticmethod
+    def _declare_tool_policy(metadata_map: Dict[str, Dict[str, Any]], tool_name: str, policy: Any) -> None:
+        """Attach an owner-declared tool policy to the registration metadata.
+
+        The policy is declared by the tool owner at registration time; it is
+        never derived from the tool name (PHASE22 repair, B2).
+        """
+        metadata_map.setdefault(tool_name, {}).update(policy.to_metadata())
 
     def _build_bindings(self) -> List[WorkspaceToolBinding]:
         """Convert the session tool set into governed control-plane bindings.
 
-        Classification follows the PHASE22 effect taxonomy:
-
-        - READ (security gate + budget + trace, auto-executed);
-        - WRITE_LOCAL (reversible write, approval policy);
-        - WRITE_EXTERNAL / DESTRUCTIVE (irreversible effect, explicit
-          approval + side-effect claim).
+        PHASE22 repair (B2): tool policy is declared by the tool owner at
+        registration time (structured ``tool_metadata_map`` entries); it is
+        never inferred from the tool name. A tool without an owner-declared
+        policy is bound as ``policy_resolution="unresolved"`` and fails
+        closed with ``UNRESOLVED_TOOL_POLICY`` at execution.
         """
         bindings: List[WorkspaceToolBinding] = []
         for tool in self.tools:
+            # Owner declaration source: the workspace adapter's registration
+            # metadata first, then the tool's own structured metadata (a
+            # future tool owner may declare policy there).
+            declared = declared_policy_from_metadata(self.tool_metadata_map.get(tool.name))
+            if declared is None:
+                tool_metadata = getattr(tool, "metadata", None)
+                if isinstance(tool_metadata, dict):
+                    declared = declared_policy_from_metadata(tool_metadata)
+            if declared is None:
+                bindings.append(
+                    WorkspaceToolBinding(
+                        tool_id=f"tool.{tool.name}",
+                        display_name=tool.name,
+                        description=str(getattr(tool, "description", "") or ""),
+                        input_schema=self._tool_input_schema(tool),
+                        side_effect_level=ToolSideEffectLevel.READ,
+                        executor=lambda args, t=tool: self._execute_binding_tool(t, args),
+                        policy_resolution="unresolved",
+                    )
+                )
+                continue
             bindings.append(
                 WorkspaceToolBinding(
                     tool_id=f"tool.{tool.name}",
                     display_name=tool.name,
                     description=str(getattr(tool, "description", "") or ""),
                     input_schema=self._tool_input_schema(tool),
-                    side_effect_level=self._classify_tool_effect(tool.name),
+                    side_effect_level=declared.side_effect_level,
                     executor=lambda args, t=tool: self._execute_binding_tool(t, args),
-                    execution_mode=self._tool_execution_mode(tool.name),
-                    network_policy="allow" if self._tool_has_network(tool.name) else "deny",
+                    execution_mode=declared.execution_mode,
+                    network_policy=declared.network_policy,
                 )
             )
         return bindings
+
+    def _build_canonical_runtime(self, bindings: List[WorkspaceToolBinding]) -> WorkspaceAgentRuntime:
+        """Compose the canonical runtime from the server composition root.
+
+        PHASE22 repair (B1): product mode requires the server composition
+        binding (durable store + owner facts). Missing bindings raise
+        ``BLOCKED_CONFIGURATION``; there is no per-session temp-SQLite
+        fallback outside the explicit developer test profile.
+        """
+        composition = get_workspace_product_composition()
+        if composition is None:
+            if self.runtime_profile != "developer_test_profile":
+                raise BlockedConfiguration(
+                    "BLOCKED_CONFIGURATION: workspace product composition not configured; "
+                    "cannot initialize a product runtime"
+                )
+            composition = WorkspaceRuntimeComposition()
+        if composition.store is None and self.runtime_profile != "developer_test_profile":
+            raise BlockedConfiguration(
+                "BLOCKED_CONFIGURATION: product composition has no durable AgentRunStore binding"
+            )
+        self._tenant_id = composition.tenant_id or "tenant:default"
+        return WorkspaceAgentRuntime(
+            model=self.model,
+            bindings=bindings,
+            tenant_id=self._tenant_id,
+            workspace_id=f"workspace:{self.user_id}",
+            principal_id=self.user_id,
+            profile=(
+                "developer_test_profile"
+                if self.runtime_profile == "developer_test_profile"
+                else "server_product"
+            ),
+            store=composition.store,
+            sqlite_store_path=(
+                Path(tempfile.gettempdir())
+                / f"zuno_workspace_agent_{self.user_id}_{self.session_id}.db"
+                if self.runtime_profile == "developer_test_profile"
+                else None
+            ),
+            security_approval_sink=composition.security_approval_sink,
+            tool_unit_of_work_factory=composition.tool_unit_of_work_factory,
+            security_unit_of_work_factory=composition.security_unit_of_work_factory,
+            infrastructure_unit_of_work_factory=composition.infrastructure_unit_of_work_factory,
+            security_epoch_ref=composition.security_epoch_ref,
+            approval_flow=composition.approval_flow,
+            security_decision_issuer=composition.security_decision_issuer,
+            budget_decision_issuer=composition.budget_decision_issuer,
+            dynamic_dag_planner=composition.dynamic_dag_planner,
+        )
 
     async def _execute_binding_tool(self, tool: BaseTool, args: dict[str, Any]) -> Any:
         """Execute one governed binding.
@@ -1072,34 +1163,6 @@ class WorkSpaceSimpleAgent:
                 except Exception:
                     pass
         return {"type": "object"}
-
-    @staticmethod
-    def _classify_tool_effect(tool_name: str) -> ToolSideEffectLevel:
-        name = (tool_name or "").lower()
-        if any(token in name for token in ("send_", "text_to_image", "email", "post_", "submit_")):
-            return ToolSideEffectLevel.WRITE_EXTERNAL
-        if name.startswith(("create_", "update_", "delete_", "write_", "convert_", "add_", "save_")):
-            return ToolSideEffectLevel.WRITE_LOCAL
-        if name.startswith(("terminal", "cli_", "exec_", "shell", "desktop_")):
-            return ToolSideEffectLevel.DESTRUCTIVE
-        return ToolSideEffectLevel.READ
-
-    @staticmethod
-    def _tool_execution_mode(tool_name: str) -> ToolExecutionMode:
-        name = (tool_name or "").lower()
-        if name.startswith(("terminal", "cli_", "exec_", "shell")):
-            return ToolExecutionMode.CLI
-        if "mcp" in name or name.startswith("maps_") or name.startswith("bing_"):
-            return ToolExecutionMode.MCP_LOCAL
-        return ToolExecutionMode.LOCAL_FUNCTION
-
-    @staticmethod
-    def _tool_has_network(tool_name: str) -> bool:
-        name = (tool_name or "").lower()
-        return any(
-            token in name
-            for token in ("search", "maps_", "bing_", "weather", "web", "api", "remote", "send_", "text_to_image")
-        )
 
     async def setup_terminal_tools(self):
         if self.execution_mode != "terminal":
@@ -1463,6 +1526,17 @@ class WorkSpaceSimpleAgent:
                     "name": "文生图",
                     "type": "默认能力",
                 }
+                # Image generation invokes an external provider: declared
+                # WRITE_EXTERNAL by the tool owner (approval required).
+                self._declare_tool_policy(
+                    self.tool_metadata_map,
+                    default_image_tool.name,
+                    DeclaredToolPolicy(
+                        side_effect_level=ToolSideEffectLevel.WRITE_EXTERNAL,
+                        execution_mode=ToolExecutionMode.API,
+                        network_policy="allow",
+                    ),
+                )
                 existing_names.add(default_image_tool.name)
 
             if "list_enabled_capabilities" not in existing_names:
@@ -1471,6 +1545,15 @@ class WorkSpaceSimpleAgent:
                     "name": "能力清单查询",
                     "type": "只读工具",
                 }
+                self._declare_tool_policy(
+                    self.tool_metadata_map,
+                    list_enabled_capabilities.name,
+                    DeclaredToolPolicy(
+                        side_effect_level=ToolSideEffectLevel.READ,
+                        execution_mode=ToolExecutionMode.LOCAL_FUNCTION,
+                        network_policy="deny",
+                    ),
+                )
                 existing_names.add(list_enabled_capabilities.name)
             if "search_available_capabilities" not in existing_names:
                 self.plugin_tools.append(search_available_capabilities)
@@ -1478,6 +1561,15 @@ class WorkSpaceSimpleAgent:
                     "name": "能力模糊搜索",
                     "type": "只读工具",
                 }
+                self._declare_tool_policy(
+                    self.tool_metadata_map,
+                    search_available_capabilities.name,
+                    DeclaredToolPolicy(
+                        side_effect_level=ToolSideEffectLevel.READ,
+                        execution_mode=ToolExecutionMode.LOCAL_FUNCTION,
+                        network_policy="deny",
+                    ),
+                )
                 existing_names.add(search_available_capabilities.name)
             if "create_remote_api_tool" not in existing_names:
                 self.plugin_tools.append(create_remote_api_tool)
@@ -1485,6 +1577,17 @@ class WorkSpaceSimpleAgent:
                     "name": "创建 API 工具",
                     "type": "默认能力",
                 }
+                # Registry write (user-owned capability), reversible; declared
+                # by the tool owner, not inferred from the name.
+                self._declare_tool_policy(
+                    self.tool_metadata_map,
+                    create_remote_api_tool.name,
+                    DeclaredToolPolicy(
+                        side_effect_level=ToolSideEffectLevel.WRITE_LOCAL,
+                        execution_mode=ToolExecutionMode.LOCAL_FUNCTION,
+                        network_policy="deny",
+                    ),
+                )
                 existing_names.add(create_remote_api_tool.name)
             if "create_cli_tool" not in existing_names:
                 self.plugin_tools.append(create_cli_tool)
@@ -1492,6 +1595,15 @@ class WorkSpaceSimpleAgent:
                     "name": "创建 CLI 工具",
                     "type": "默认能力",
                 }
+                self._declare_tool_policy(
+                    self.tool_metadata_map,
+                    create_cli_tool.name,
+                    DeclaredToolPolicy(
+                        side_effect_level=ToolSideEffectLevel.WRITE_LOCAL,
+                        execution_mode=ToolExecutionMode.LOCAL_FUNCTION,
+                        network_policy="deny",
+                    ),
+                )
                 existing_names.add(create_cli_tool.name)
         except Exception as err:
             logger.exception(f"Failed to initialize plugin tools: {err}")
@@ -1525,6 +1637,15 @@ class WorkSpaceSimpleAgent:
             "name": "知识库检索",
             "type": "知识库",
         }
+        self._declare_tool_policy(
+            self.tool_metadata_map,
+            search_knowledge_base.name,
+            DeclaredToolPolicy(
+                side_effect_level=ToolSideEffectLevel.READ,
+                execution_mode=ToolExecutionMode.LOCAL_FUNCTION,
+                network_policy="deny",
+            ),
+        )
 
     async def setup_skill_tools(self):
         if self.execution_mode == "terminal" or not self.agent_skill_ids:
@@ -1559,6 +1680,16 @@ class WorkSpaceSimpleAgent:
                 "name": skill.name,
                 "type": "Skill",
             }
+            # Skill tools are read-only context loaders (owner-declared).
+            self._declare_tool_policy(
+                self.tool_metadata_map,
+                skill_tool.name,
+                DeclaredToolPolicy(
+                    side_effect_level=ToolSideEffectLevel.READ,
+                    execution_mode=ToolExecutionMode.LOCAL_FUNCTION,
+                    network_policy="deny",
+                ),
+            )
 
     @staticmethod
     def _extract_reference_image_url(content: Any) -> str:
@@ -1642,25 +1773,38 @@ class WorkSpaceSimpleAgent:
 
         Resolution only selects the tool + arguments; execution always flows
         through the canonical runtime's plan / gates / gateway.
+
+        PHASE22 repair (B6): the run identity is the product submission
+        (``client_request_id`` bound to tenant / workspace / principal); the
+        request text is only a content fingerprint.
         """
         if self._runtime is None:
             raise RuntimeError("workspace agent runtime not initialized")
         resolved_tool_id, resolved_args = self._resolve_governed_tool(original_query)
         plan_kind = "tool" if resolved_tool_id else self._plan_kind_for(original_query)
-        task_id = self._task_id_for(original_query, plan_kind, resolved_tool_id)
+        client_request_id = self._next_client_request_id()
+        submission_id = self._next_submission_id()
+        task_id = self._task_id_for(client_request_id)
         request = WorkspaceRunRequest(
             task_id=task_id,
             thread_id=self.session_id or task_id,
+            tenant_id=self._tenant_id,
             workspace_id=f"workspace:{self.user_id}",
+            principal_id=self.user_id,
+            submission_id=submission_id,
+            client_request_id=client_request_id,
             user_id=self.user_id,
             trace_id=f"trace:{task_id}",
             goal=original_query,
+            conversation_id=self.session_id,
+            agent_version="workspace-adapter-v1",
+            content_fingerprint=self._content_fingerprint(original_query),
             tool_id=resolved_tool_id,
             tool_arguments=resolved_args,
             plan_kind=plan_kind,
         )
-        # Idempotent product entry: same request -> same facts, no duplicate
-        # execution or events; explicit retry uses retry_run().
+        # Idempotent product entry: same client_request_id -> same facts, no
+        # duplicate execution or events; explicit retry uses retry_run().
         return self._runtime.start_with_replay(request)
 
     def _run_idempotent(self, original_query: str) -> Any:
@@ -1677,23 +1821,34 @@ class WorkSpaceSimpleAgent:
     def retry_run(self, original_query: str) -> Any:
         """Retry a FAILED/BLOCKED run with the original plan.
 
-        Refuses to re-run when a side effect was already committed.
+        Refuses to re-run when a side effect was already committed. Retry
+        reuses the previous submission identity so the original run is
+        resumed, never duplicated.
         """
         if self._runtime is None:
             raise RuntimeError("workspace agent runtime not initialized")
         resolved_tool_id, resolved_args = self._resolve_governed_tool(original_query)
         plan_kind = "tool" if resolved_tool_id else self._plan_kind_for(original_query)
-        task_id = self._task_id_for(original_query, plan_kind, resolved_tool_id)
+        client_request_id = self._last_client_request_id or self._next_client_request_id()
+        submission_id = self._last_submission_id or self._next_submission_id()
+        task_id = self._task_id_for(client_request_id)
         existing = self._runtime.snapshot(task_id)
         if existing is not None and self._runtime.classify_final_state(existing) == "EFFECT_COMMITTED":
             return existing
         request = WorkspaceRunRequest(
             task_id=task_id,
             thread_id=self.session_id or task_id,
+            tenant_id=self._tenant_id,
             workspace_id=f"workspace:{self.user_id}",
+            principal_id=self.user_id,
+            submission_id=submission_id,
+            client_request_id=client_request_id,
             user_id=self.user_id,
             trace_id=f"trace:{task_id}",
             goal=original_query,
+            conversation_id=self.session_id,
+            agent_version="workspace-adapter-v1",
+            content_fingerprint=self._content_fingerprint(original_query),
             tool_id=resolved_tool_id,
             tool_arguments=resolved_args,
             plan_kind=plan_kind,
@@ -1705,9 +1860,38 @@ class WorkSpaceSimpleAgent:
             raise RuntimeError("workspace agent runtime not initialized")
         return self._runtime.resume(task_id=task_id, approval_decision=approval_decision)
 
+    def _next_client_request_id(self) -> str:
+        """Product submission identity for this request.
+
+        An explicit product ``client_request_id`` wins (idempotent replay);
+        otherwise a per-session monotonic id is generated — the request text
+        is never the identity.
+        """
+        if self._client_request_id:
+            self._last_client_request_id = self._client_request_id
+            return self._client_request_id
+        generated = f"req:{self.session_id or self.user_id}:{self._submission_counter}"
+        self._last_client_request_id = generated
+        return generated
+
+    def _next_submission_id(self) -> str:
+        self._submission_counter += 1
+        submission = f"sub:{self.session_id or self.user_id}:{self._submission_counter}"
+        self._last_submission_id = submission
+        return submission
+
     @staticmethod
-    def _task_id_for(original_query: str, plan_kind: str, tool_id: str | None) -> str:
-        source = f"{plan_kind}|{tool_id or ''}|{original_query}"
+    def _content_fingerprint(original_query: str) -> str:
+        """Content fingerprint only — never the business request identity."""
+        return f"content:{hashlib.sha256((original_query or '').encode('utf-8')).hexdigest()[:16]}"
+
+    def _task_id_for(self, client_request_id: str) -> str:
+        """Run identity: tenant + workspace + client_request_id.
+
+        Same text with a different client_request_id is a different request
+        and therefore a different run (PHASE22 repair, B6).
+        """
+        source = f"{self._tenant_id}|workspace:{self.user_id}|{client_request_id}"
         return f"workspace:{hashlib.sha256(source.encode('utf-8')).hexdigest()[:16]}"
 
     @staticmethod

@@ -14,7 +14,7 @@ from zuno.api.services.usage_stats import UsageStatsService
 from zuno.api.services.workspace_session import WorkSpaceSessionService
 from zuno.api.services.user import UserService
 from zuno.platform.services.rag.handler import RagHandler
-from zuno.capability.control_plane import ToolExecutionMode, ToolSideEffectLevel
+from zuno.capability.control_plane import ToolSideEffectLevel
 from zuno.capability.tools import WeChatTools
 from zuno.api.dto.usage_stats import UsageStatsAgentType
 from zuno.api.dto.workspace import WorkSpaceAgents
@@ -31,10 +31,14 @@ from zuno.platform.common.model_output import (
     strip_think_tags,
 )
 from zuno.platform.services.workspace.single_controller_runtime import (
+    BlockedConfiguration,
     WorkspaceAgentRuntime,
     WorkspaceRunRequest,
     WorkspaceToolBinding,
+    declared_policy_from_metadata,
+    get_workspace_product_composition,
 )
+from zuno.agent.runtime import PROFILE_DEVELOPER_TEST, PROFILE_PRODUCT
 
 
 class MCPConfig(BaseModel):
@@ -67,7 +71,8 @@ class WeChatAgent:
                  session_id: str,
                  wechat_account_user: str = None,
                  plugins: List[str] = [],
-                 mcp_configs: List[MCPConfig] = []):
+                 mcp_configs: List[MCPConfig] = [],
+                 runtime_profile: str = PROFILE_PRODUCT):
 
         # The chat model is used by the canonical runtime's model steps via
         # the workspace model gateway; the adapter never answers directly.
@@ -85,6 +90,10 @@ class WeChatAgent:
         self.bindings: list[WorkspaceToolBinding] = []
         self._runtime: WorkspaceAgentRuntime | None = None
         self._initialized = False
+        # PHASE22 repair: composition profile + product submission identity.
+        self.runtime_profile = runtime_profile
+        self._submission_counter = 0
+        self._tenant_id = "tenant:default"
 
     async def init_wechat_agent(self):
         """Initialize the canonical composition root for this session."""
@@ -96,11 +105,50 @@ class WeChatAgent:
             await self.setup_plugin_tools()
             self.tools = self.plugin_tools + self.mcp_tools
             self.bindings = self._build_bindings()
+            composition = get_workspace_product_composition()
+            if composition is None:
+                if self.runtime_profile != PROFILE_DEVELOPER_TEST:
+                    raise BlockedConfiguration(
+                        "BLOCKED_CONFIGURATION: workspace product composition not configured; "
+                        "cannot initialize a product runtime"
+                    )
+                from zuno.platform.services.workspace.single_controller_runtime import (
+                    WorkspaceRuntimeComposition,
+                )
+
+                composition = WorkspaceRuntimeComposition()
+            if composition.store is None and self.runtime_profile != PROFILE_DEVELOPER_TEST:
+                raise BlockedConfiguration(
+                    "BLOCKED_CONFIGURATION: product composition has no durable AgentRunStore binding"
+                )
+            self._tenant_id = composition.tenant_id or "tenant:default"
             self._runtime = WorkspaceAgentRuntime(
                 model=self.model,
                 bindings=self.bindings,
-                store_path=Path(tempfile.gettempdir())
-                / f"zuno_wechat_agent_{self.user_id}_{self.session_id}.db",
+                tenant_id=self._tenant_id,
+                workspace_id=f"workspace:{self.user_id}",
+                principal_id=self.user_id,
+                profile=(
+                    PROFILE_DEVELOPER_TEST
+                    if self.runtime_profile == PROFILE_DEVELOPER_TEST
+                    else PROFILE_PRODUCT
+                ),
+                store=composition.store,
+                sqlite_store_path=(
+                    Path(tempfile.gettempdir())
+                    / f"zuno_wechat_agent_{self.user_id}_{self.session_id}.db"
+                    if self.runtime_profile == PROFILE_DEVELOPER_TEST
+                    else None
+                ),
+                security_approval_sink=composition.security_approval_sink,
+                tool_unit_of_work_factory=composition.tool_unit_of_work_factory,
+                security_unit_of_work_factory=composition.security_unit_of_work_factory,
+                infrastructure_unit_of_work_factory=composition.infrastructure_unit_of_work_factory,
+                security_epoch_ref=composition.security_epoch_ref,
+                approval_flow=composition.approval_flow,
+                security_decision_issuer=composition.security_decision_issuer,
+                budget_decision_issuer=composition.budget_decision_issuer,
+                dynamic_dag_planner=composition.dynamic_dag_planner,
             )
             self._initialized = True
             logger.info("WeChat Agent initialized with canonical runtime")
@@ -111,18 +159,36 @@ class WeChatAgent:
     # -- governed bindings --------------------------------------------------
 
     def _build_bindings(self) -> List[WorkspaceToolBinding]:
+        # PHASE22 repair (B2): policy is declared by the tool owner at
+        # registration time (structured tool metadata); never inferred from
+        # the tool name. Undeclared tools fail closed with
+        # UNRESOLVED_TOOL_POLICY at execution.
         bindings: List[WorkspaceToolBinding] = []
         for tool in self.tools:
+            declared = declared_policy_from_metadata(getattr(tool, "metadata", None))
+            if declared is None:
+                bindings.append(
+                    WorkspaceToolBinding(
+                        tool_id=f"tool.{tool.name}",
+                        display_name=tool.name,
+                        description=str(getattr(tool, "description", "") or ""),
+                        input_schema=self._tool_input_schema(tool),
+                        side_effect_level=ToolSideEffectLevel.READ,
+                        executor=lambda args, t=tool: self._execute_binding_tool(t, args),
+                        policy_resolution="unresolved",
+                    )
+                )
+                continue
             bindings.append(
                 WorkspaceToolBinding(
                     tool_id=f"tool.{tool.name}",
                     display_name=tool.name,
                     description=str(getattr(tool, "description", "") or ""),
                     input_schema=self._tool_input_schema(tool),
-                    side_effect_level=self._classify_tool_effect(tool.name),
+                    side_effect_level=declared.side_effect_level,
                     executor=lambda args, t=tool: self._execute_binding_tool(t, args),
-                    execution_mode=self._tool_execution_mode(tool.name),
-                    network_policy="allow" if self._tool_has_network(tool.name) else "deny",
+                    execution_mode=declared.execution_mode,
+                    network_policy=declared.network_policy,
                 )
             )
         return bindings
@@ -138,30 +204,6 @@ class WeChatAgent:
                 except Exception:
                     pass
         return {"type": "object"}
-
-    @staticmethod
-    def _classify_tool_effect(tool_name: str) -> ToolSideEffectLevel:
-        name = (tool_name or "").lower()
-        if any(token in name for token in ("send_", "email", "text_to_image", "post_", "submit_")):
-            return ToolSideEffectLevel.WRITE_EXTERNAL
-        if name.startswith(("create_", "update_", "delete_", "write_", "convert_", "add_", "save_")):
-            return ToolSideEffectLevel.WRITE_LOCAL
-        return ToolSideEffectLevel.READ
-
-    @staticmethod
-    def _tool_execution_mode(tool_name: str) -> ToolExecutionMode:
-        name = (tool_name or "").lower()
-        if "mcp" in name:
-            return ToolExecutionMode.MCP_LOCAL
-        return ToolExecutionMode.LOCAL_FUNCTION
-
-    @staticmethod
-    def _tool_has_network(tool_name: str) -> bool:
-        name = (tool_name or "").lower()
-        return any(
-            token in name
-            for token in ("search", "weather", "web", "api", "remote", "send_", "text_to_image", "email")
-        )
 
     async def _execute_binding_tool(self, tool: Any, args: dict[str, Any]) -> Any:
         call_args = dict(args)
@@ -227,14 +269,26 @@ class WeChatAgent:
     async def _run_request(self, goal: str) -> Any:
         if self._runtime is None:
             raise RuntimeError("wechat agent runtime not initialized")
-        task_id = f"wechat:{hashlib.sha256(goal.encode('utf-8')).hexdigest()[:16]}"
+        # PHASE22 repair (B6): run identity is the product submission, never
+        # the request text hash.
+        self._submission_counter += 1
+        client_request_id = f"req:{self.session_id or self.user_id}:{self._submission_counter}"
+        submission_id = f"sub:{self.session_id or self.user_id}:{self._submission_counter}"
+        task_id = f"wechat:{hashlib.sha256(f'{self._tenant_id}|{self.user_id}|{client_request_id}'.encode('utf-8')).hexdigest()[:16]}"
         request = WorkspaceRunRequest(
             task_id=task_id,
             thread_id=self.session_id or task_id,
+            tenant_id=self._tenant_id,
             workspace_id=f"workspace:{self.user_id}",
+            principal_id=self.user_id,
+            submission_id=submission_id,
+            client_request_id=client_request_id,
             user_id=self.user_id,
             trace_id=f"trace:{task_id}",
             goal=goal,
+            conversation_id=self.session_id,
+            agent_version="wechat-adapter-v1",
+            content_fingerprint=f"content:{hashlib.sha256(goal.encode('utf-8')).hexdigest()[:16]}",
             plan_kind="simple",
         )
         return self._runtime.start(request)

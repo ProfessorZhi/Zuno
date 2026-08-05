@@ -101,6 +101,10 @@ from zuno.platform.security import (
     build_product_action_hash,
 )
 from zuno.platform.storage import DurableMinioObjectStore, MinioObjectStore
+from zuno.platform.services.workspace.single_controller_runtime import (
+    WorkspaceRuntimeComposition,
+    configure_workspace_product_composition,
+)
 
 
 DEFAULT_PACKAGE_A_UPLOAD_BUCKET = "zuno-ingestion"
@@ -349,6 +353,42 @@ class WorkspaceTaskRuntimeService:
         cls._security_product_action_guard = guard
 
     @classmethod
+    @classmethod
+    def configure_workspace_agent_product_composition(cls) -> None:
+        """Bind the server composition root for workspace product agents.
+
+        PHASE22 repair (B1 / B9): workspace / wechat product agents receive
+        the server's shared durable run store, the PostgreSQL tool / security
+        / infrastructure UoW factories and the Postgres security approval
+        sink from the server composition — never a per-session temp SQLite
+        store. The product approval command flow is not connected yet:
+        side-effect tools fail closed with PRODUCT_APPROVAL_FLOW_NOT_BOUND
+        (read-only cutover) and tool plans fail closed until the Security /
+        Budget owner issuers are wired.
+        """
+        from zuno.platform.database import engine
+        from zuno.platform.database.foundation import InfrastructureUnitOfWork
+        from zuno.platform.database.tool_runtime import ToolUnitOfWork
+        from zuno.platform.security import PostgresSecurityApprovalFactSink, SecurityUnitOfWork
+
+        configure_workspace_product_composition(
+            WorkspaceRuntimeComposition(
+                store=cls._unified_runtime_store,
+                tenant_id="tenant:default",
+                tool_unit_of_work_factory=lambda: ToolUnitOfWork(engine),
+                security_unit_of_work_factory=lambda: SecurityUnitOfWork(engine),
+                infrastructure_unit_of_work_factory=lambda tenant: InfrastructureUnitOfWork(
+                    engine, tenant_id=tenant
+                ),
+                security_approval_sink=PostgresSecurityApprovalFactSink(engine),
+                security_epoch_ref="",
+                approval_flow="none",
+                security_decision_issuer=None,
+                budget_decision_issuer=None,
+                dynamic_dag_planner=None,
+            )
+        )
+
     def reset_runtime_state_for_tests(cls) -> None:
         cls._tasks = {}
         cls._task_inputs = {}
@@ -385,6 +425,7 @@ class WorkspaceTaskRuntimeService:
         cls._phase08_cutover_ledger = None
         cls._phase08_cutover_audit = None
         cls._security_product_action_guard = None
+        cls.configure_workspace_agent_product_composition()
 
     @classmethod
     def _rehydrate_from_durable_store(cls) -> None:
@@ -3412,6 +3453,12 @@ class WorkspaceTaskRuntimeService:
             "timestamp": event.timestamp,
             "data": data,
         }
+
+
+# PHASE22 repair (B1): the server composition root binds the workspace agent
+# composition at import time. Product agents never fall back to a per-session
+# temp SQLite store; missing security / approval bindings fail closed.
+WorkspaceTaskRuntimeService.configure_workspace_agent_product_composition()
 
 
 def _product_mode_for_retrieval(product_mode: str) -> ProductMode:

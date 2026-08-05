@@ -1,22 +1,41 @@
 from __future__ import annotations
 
-"""PHASE22 workspace / wechat single-controller cutover composition root.
+"""PHASE22 workspace / wechat single-controller cutover composition adapter.
 
 Product adapters (``WorkSpaceSimpleAgent`` / ``WeChatAgent``) drive the
-canonical Single Controller Runtime through this composition root instead of
-owning a top-level ReAct product runtime:
+canonical Single Controller Runtime through this composition adapter instead
+of owning a top-level ReAct product runtime:
 
     Product Request
       -> Product Adapter (astream / ainvoke, product SSE contract)
-      -> WorkspaceAgentRuntime (this module)
-      -> UnifiedAgentRuntimeService (canonical)
+      -> WorkspaceAgentRuntime (this module — composition ADAPTER only)
+      -> UnifiedAgentRuntimeService (canonical Agent Core facade)
       -> Fixed AgentRunGraph
-      -> deterministic plan (single-step or multi-step with bound tools)
+      -> explicit deterministic plan (single-step / tool / DAG or blocked)
       -> StepExecutionGraph -> ReActStepRunner (inside a step only)
       -> Capability Resolution (session tool manifests)
       -> Security Gate -> Approval Gate -> Budget Gate
       -> ToolInvocationGateway / Tool Control Plane
       -> Observation / Acceptance -> Final Gate -> RunOutcome
+
+PHASE22 architecture repair invariants (per Coordinator review):
+
+- The workspace runtime never owns a second store / checkpointer / security /
+  budget / plan activation / tool fact owner: everything is injected from the
+  server composition root (``WorkspaceRuntimeComposition``).
+- Product mode requires a durable injected store; SQLite exists only behind
+  the explicit ``DEVELOPER_TEST_PROFILE``. Missing product bindings fail
+  closed with ``BLOCKED_CONFIGURATION`` — never a silent temp-SQLite fallback.
+- Tool policy comes from authoritative per-tool declarations (the tool owner
+  declares the manifest); unknown tools fail closed with
+  ``UNRESOLVED_TOOL_POLICY`` — never a name-based guess defaulting to READ.
+- Side-effect tools require the formal ToolInvocationGateway binding and a
+  reachable product approval flow; otherwise they fail closed with
+  ``SIDE_EFFECT_GATEWAY_NOT_BOUND`` / ``PRODUCT_APPROVAL_FLOW_NOT_BOUND``.
+- Security / Budget facts are owner decision refs verified by Agent Core;
+  raw caller dicts are never owner decisions.
+- Every task has a formal plan; complex tasks use the bound Dynamic DAG
+  planner or fail closed with ``DYNAMIC_PLAN_RUNTIME_NOT_BOUND``.
 
 No direct tool handler calls, no direct model answers, no legacy fallback:
 every request is planned, gated (security / approval / budget), traced and
@@ -25,19 +44,34 @@ finalized to a RunOutcome through the canonical runtime.
 
 import asyncio
 import threading
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from pathlib import Path
 from typing import Any, Awaitable, Callable
 
-from zuno.agent.contracts import CapabilityPlan, PlanState, PlanStep
+from zuno.agent.contracts import (
+    BudgetDecisionRef,
+    CapabilityPlan,
+    PlanState,
+    PlanStep,
+    SecurityDecisionRef,
+)
 from zuno.agent.runtime import (
+    PROFILE_DEVELOPER_TEST,
+    PROFILE_PRODUCT,
     RuntimeStartRequest,
     SQLiteAgentRunStore,
     UnifiedAgentRuntimeService,
 )
 from zuno.agent.runtime.contracts import FinalizationStatus, StrategyMode
 from zuno.agent.runtime.dependencies import RuntimeDependencies
+from zuno.agent.runtime.owner_refs import (
+    budget_ref_hash,
+    security_ref_hash,
+    validate_budget_decision_ref,
+    validate_security_decision_ref,
+)
 from zuno.agent.runtime.state import AgentRuntimeSnapshot
+from zuno.agent.runtime.store import AgentRunStore
 from zuno.capability.control_plane import (
     SIDE_EFFECT_RISK_MATRIX,
     ExecutorAdapterContract,
@@ -51,6 +85,7 @@ from zuno.capability.runtime import (
     SecurityApprovalFactSink,
     ToolControlPlaneRuntime,
     ToolRuntimeRequest,
+    manifest_policy_hash,
 )
 from zuno.platform.model_gateway import (
     ModelCategory,
@@ -59,6 +94,15 @@ from zuno.platform.model_gateway import (
     ModelGatewayResult,
     ModelProvider,
 )
+
+UNRESOLVED_TOOL_POLICY = "UNRESOLVED_TOOL_POLICY"
+SIDE_EFFECT_GATEWAY_NOT_BOUND = "SIDE_EFFECT_GATEWAY_NOT_BOUND"
+PRODUCT_APPROVAL_FLOW_NOT_BOUND = "PRODUCT_APPROVAL_FLOW_NOT_BOUND"
+DYNAMIC_PLAN_RUNTIME_NOT_BOUND = "DYNAMIC_PLAN_RUNTIME_NOT_BOUND"
+
+
+class BlockedConfiguration(RuntimeError):
+    """A required product binding is missing; the run must fail closed."""
 
 
 # ---------------------------------------------------------------------------
@@ -136,16 +180,63 @@ class WorkspaceChatModelProvider:
 
 
 @dataclass(frozen=True, slots=True)
+class DeclaredToolPolicy:
+    """Tool-owner-declared policy (PHASE22 repair, B2).
+
+    The tool owner declares the policy at registration time; nothing is
+    inferred from the tool name. An undeclared tool stays unresolved and
+    fails closed with ``UNRESOLVED_TOOL_POLICY`` at execution.
+    """
+
+    side_effect_level: ToolSideEffectLevel
+    execution_mode: ToolExecutionMode = ToolExecutionMode.LOCAL_FUNCTION
+    network_policy: str = "deny"
+    credential_policy: str = "none"
+
+    def to_metadata(self) -> dict[str, str]:
+        return {
+            "tool_policy_side_effect_level": self.side_effect_level.value,
+            "tool_policy_execution_mode": self.execution_mode.value,
+            "tool_policy_network_policy": self.network_policy,
+            "tool_policy_credential_policy": self.credential_policy,
+            "tool_policy_resolved": "true",
+        }
+
+
+def declared_policy_from_metadata(metadata: dict[str, Any] | None) -> DeclaredToolPolicy | None:
+    """Resolve a tool-owner declaration from structured metadata.
+
+    ``None`` means the tool has no owner-declared policy (unresolved -> the
+    tool fails closed at execution).
+    """
+    if not metadata:
+        return None
+    if str(metadata.get("tool_policy_resolved") or "").lower() != "true":
+        return None
+    raw_level = str(metadata.get("tool_policy_side_effect_level") or "").lower()
+    if raw_level not in ToolSideEffectLevel._value2member_map_:
+        return None
+    raw_mode = str(metadata.get("tool_policy_execution_mode") or "").lower()
+    try:
+        execution_mode = ToolExecutionMode(raw_mode)
+    except ValueError:
+        execution_mode = ToolExecutionMode.LOCAL_FUNCTION
+    return DeclaredToolPolicy(
+        side_effect_level=ToolSideEffectLevel(raw_level),
+        execution_mode=execution_mode,
+        network_policy=str(metadata.get("tool_policy_network_policy") or "deny"),
+        credential_policy=str(metadata.get("tool_policy_credential_policy") or "none"),
+    )
+
+
+@dataclass(frozen=True, slots=True)
 class WorkspaceToolBinding:
-    """One session tool bound to a governed manifest.
+    """One session tool bound to an authoritative owner-declared manifest.
 
-    ``side_effect_level`` classifies the effect:
-
-    - ``READ`` — security gate + budget + trace; auto-executed.
-    - ``WRITE_LOCAL`` (reversible write) — approval policy + idempotency.
-    - ``WRITE_EXTERNAL`` / ``DESTRUCTIVE`` (irreversible effect) — explicit
-      approval + side-effect claim; never auto-fallback; unknown state goes
-      to reconciliation.
+    PHASE22 repair (B2): the policy is declared by the tool owner at
+    registration time — never inferred from the tool name. A binding without
+    a resolved policy (``policy_resolution="unresolved"``) fails closed with
+    ``UNRESOLVED_TOOL_POLICY`` at execution instead of defaulting to READ.
     """
 
     tool_id: str
@@ -157,7 +248,10 @@ class WorkspaceToolBinding:
     capability_domain: str = "workspace_tool"
     execution_mode: ToolExecutionMode = ToolExecutionMode.LOCAL_FUNCTION
     network_policy: str = "deny"
+    credential_policy: str = "none"
     timeout_seconds: int = 30
+    policy_resolution: str = "resolved"
+    manifest_version: str = "v1"
 
 
 def _binding_executor(binding: WorkspaceToolBinding) -> Callable[[dict[str, Any], Any], Any]:
@@ -173,6 +267,8 @@ def _binding_executor(binding: WorkspaceToolBinding) -> Callable[[dict[str, Any]
 def build_workspace_tool_control_plane(
     *,
     bindings: list[WorkspaceToolBinding],
+    tenant_id: str,
+    workspace_id: str,
     security_approval_sink: SecurityApprovalFactSink | None = None,
     tool_unit_of_work_factory: Callable[[], Any] | None = None,
     security_unit_of_work_factory: Callable[[], Any] | None = None,
@@ -183,7 +279,8 @@ def build_workspace_tool_control_plane(
     Every tool call must pass Security -> Network Policy -> Approval gates
     inside ``ToolControlPlaneRuntime``; side-effect tools additionally flow
     through ``ToolInvocationGateway`` when the persistence factories are
-    provided (production wiring).
+    bound. Missing gateway factories block side-effect execution
+    (``SIDE_EFFECT_GATEWAY_NOT_BOUND``) — never direct executor fallback.
     """
     runtime = ToolControlPlaneRuntime(
         security_approval_sink=security_approval_sink,
@@ -212,11 +309,21 @@ def build_workspace_tool_control_plane(
                 ToolApprovalPolicy.AUTO if is_read_only else ToolApprovalPolicy.APPROVAL_REQUIRED
             ),
             sandbox_profile=str(risk.get("default_sandbox_profile") or "read_only"),
-            credential_policy="none",
+            credential_policy=binding.credential_policy,
             network_policy=binding.network_policy,
             audit_policy="trace",
             budget={"timeout_seconds": binding.timeout_seconds},
             executor_adapter=adapter_id,
+            tenant_id=tenant_id,
+            workspace_id=workspace_id,
+            manifest_version=binding.manifest_version,
+            policy_resolution=binding.policy_resolution,
+        )
+        # Authoritative policy hash over the declared policy fields; a forged
+        # or tampered manifest fails closed at execution.
+        manifest = replace(
+            manifest,
+            policy_hash=manifest_policy_hash(manifest),
         )
         runtime.register_manifest(manifest)
         runtime.register_executor_adapter(
@@ -225,7 +332,7 @@ def build_workspace_tool_control_plane(
                 execution_mode=binding.execution_mode,
                 sandbox_profile=str(risk.get("default_sandbox_profile") or "read_only"),
                 network_policy=binding.network_policy,
-                credential_policy="none",
+                credential_policy=binding.credential_policy,
                 timeout_seconds=binding.timeout_seconds,
             ),
             _binding_executor(binding),
@@ -234,7 +341,63 @@ def build_workspace_tool_control_plane(
 
 
 # ---------------------------------------------------------------------------
-# Per-session composition root
+# Server composition root binding
+# ---------------------------------------------------------------------------
+
+
+@dataclass(frozen=True, slots=True)
+class WorkspaceRuntimeComposition:
+    """Formal server-product composition binding (PHASE22 repair).
+
+    The workspace agent never constructs its own durable store, security /
+    budget owner facts, plan activation, side-effect gateway or approval
+    flow: every one of these is injected from the server composition root.
+    Missing product bindings fail closed — the adapter never degrades to a
+    per-session temp SQLite runtime.
+    """
+
+    store: AgentRunStore | None = None
+    # Platform tenant identity for the product composition; every domain fact
+    # and runtime ref carries this tenant (PHASE22 repair, B7).
+    tenant_id: str = "tenant:default"
+    tool_unit_of_work_factory: Callable[[], Any] | None = None
+    security_unit_of_work_factory: Callable[[], Any] | None = None
+    infrastructure_unit_of_work_factory: Callable[[str], Any] | None = None
+    security_approval_sink: SecurityApprovalFactSink | None = None
+    # Security owner fact: the epoch the server security layer currently
+    # certifies. Product requests may only reference this epoch.
+    security_epoch_ref: str = ""
+    # Product approval flow binding: "none" -> side-effect tools fail closed
+    # with PRODUCT_APPROVAL_FLOW_NOT_BOUND (read-only cutover only).
+    approval_flow: str = "none"
+    # Security / Budget owner decision issuers (server security layer).
+    security_decision_issuer: Callable[[Any], dict[str, Any] | None] | None = None
+    budget_decision_issuer: Callable[[Any], dict[str, Any] | None] | None = None
+    # Formal Dynamic DAG planner binding; unbound -> complex tasks fail
+    # closed with DYNAMIC_PLAN_RUNTIME_NOT_BOUND.
+    dynamic_dag_planner: Callable[[Any], list[PlanStep]] | None = None
+
+
+_workspace_product_composition: WorkspaceRuntimeComposition | None = None
+
+
+def configure_workspace_product_composition(composition: WorkspaceRuntimeComposition | None) -> None:
+    """Bind the server composition root for workspace product adapters.
+
+    ``None`` clears the binding. In product mode a missing binding is a
+    ``BLOCKED_CONFIGURATION`` at adapter initialization — never a silent
+    fallback to temp SQLite.
+    """
+    global _workspace_product_composition
+    _workspace_product_composition = composition
+
+
+def get_workspace_product_composition() -> WorkspaceRuntimeComposition | None:
+    return _workspace_product_composition
+
+
+# ---------------------------------------------------------------------------
+# Per-session composition adapter
 # ---------------------------------------------------------------------------
 
 
@@ -242,37 +405,51 @@ def build_workspace_tool_control_plane(
 class WorkspaceRunRequest:
     """One product request converted to the canonical runtime contract.
 
-    ``plan_kind`` selects the deterministic plan contract:
+    PHASE22 repair (B6): identity is the product submission —
+    ``client_request_id`` / ``submission_id`` bound to tenant / workspace /
+    principal. The request content hash is only a ``content_fingerprint`` and
+    is never the business request identity.
 
-    - ``simple`` — single-step direct-answer plan (selector-driven).
+    ``plan_kind`` selects the plan contract:
+
+    - ``simple`` — explicit deterministic single-step plan
+      (``answer_from_context``), still traced / budgeted / gated.
     - ``tool`` — explicit tool step (bound ``tool_id`` + ``tool_arguments``)
       followed by a grounded answer step.
-    - ``complex`` — multi-step deterministic plan (analysis / reflection
-      boundary / grounded answer).
+    - ``complex`` — bound Dynamic DAG planner; unbound fails closed with
+      ``DYNAMIC_PLAN_RUNTIME_NOT_BOUND``.
     """
 
     task_id: str
     thread_id: str
+    tenant_id: str
     workspace_id: str
+    principal_id: str
+    submission_id: str
+    client_request_id: str
     user_id: str
     trace_id: str
     goal: str
+    conversation_id: str = ""
+    agent_version: str = ""
+    content_fingerprint: str = ""
     tool_id: str | None = None
     tool_arguments: dict[str, Any] | None = None
     plan_kind: str = "auto"
     budget_limits: dict[str, Any] | None = None
-    security_summary: dict[str, Any] | None = None
-    budget_verdict: dict[str, Any] | None = None
-    idempotency_key: str | None = None
-    security_epoch_ref: str | None = None
+    security_epoch_ref: str = ""
+    security_decision_ref: dict[str, Any] | None = None
+    budget_decision_ref: dict[str, Any] | None = None
+    idempotency_key: str = ""
 
 
 class WorkspaceAgentRuntime:
-    """Composition root: canonical runtime with product dependencies bound.
+    """Composition adapter: canonical runtime with product dependencies bound.
 
-    One instance per product session (user + workspace + tool set). It never
-    falls back to another runtime and never executes a tool outside the
-    control plane.
+    One instance per product session (tenant + user + workspace + tool set).
+    It never falls back to another runtime, never executes a tool outside the
+    control plane, and never owns a second store / security / budget / plan
+    activation / side-effect gateway.
     """
 
     def __init__(
@@ -280,15 +457,69 @@ class WorkspaceAgentRuntime:
         *,
         model: Any,
         bindings: list[WorkspaceToolBinding],
-        store_path: Path,
+        tenant_id: str,
+        workspace_id: str,
+        principal_id: str,
+        profile: str = PROFILE_PRODUCT,
+        store: AgentRunStore | None = None,
+        sqlite_store_path: Path | None = None,
         security_approval_sink: SecurityApprovalFactSink | None = None,
         tool_unit_of_work_factory: Callable[[], Any] | None = None,
         security_unit_of_work_factory: Callable[[], Any] | None = None,
         infrastructure_unit_of_work_factory: Callable[[str], Any] | None = None,
-        security_epoch_ref: str = "security-epoch:workspace-v1",
+        security_epoch_ref: str = "",
+        approval_flow: str = "none",
+        security_decision_issuer: Callable[[Any], dict[str, Any] | None] | None = None,
+        budget_decision_issuer: Callable[[Any], dict[str, Any] | None] | None = None,
+        dynamic_dag_planner: Callable[[Any], list[PlanStep]] | None = None,
     ) -> None:
-        self.bindings = tuple(bindings)
+        self._tenant_id = tenant_id
+        self._workspace_id = workspace_id
+        self._principal_id = principal_id
+        self._profile = profile
         self._security_epoch_ref = security_epoch_ref
+        self._approval_flow = approval_flow
+        self._security_decision_issuer = security_decision_issuer
+        self._budget_decision_issuer = budget_decision_issuer
+        self._dynamic_dag_planner = dynamic_dag_planner
+        self.bindings = tuple(bindings)
+        self._side_effect_tool_ids = tuple(
+            binding.tool_id
+            for binding in self.bindings
+            if binding.side_effect_level not in {ToolSideEffectLevel.NONE, ToolSideEffectLevel.READ}
+        )
+
+        # PHASE22 repair (B1): the durable store comes from the server
+        # composition root. SQLite is only an explicit developer test profile;
+        # a product runtime without an injected store is BLOCKED_CONFIGURATION.
+        if store is not None:
+            self._store = store
+        elif profile == PROFILE_DEVELOPER_TEST:
+            if sqlite_store_path is None:
+                raise BlockedConfiguration(
+                    "BLOCKED_CONFIGURATION: DEVELOPER_TEST_PROFILE requires an explicit sqlite_store_path"
+                )
+            self._store = SQLiteAgentRunStore(sqlite_store_path)
+        else:
+            raise BlockedConfiguration(
+                "BLOCKED_CONFIGURATION: product runtime requires an injected durable AgentRunStore "
+                "from the server composition root"
+            )
+
+        # PHASE22 repair (B3): side-effect bindings require the formal
+        # ToolInvocationGateway UoW factories; fail closed at composition in
+        # product mode (the control plane also fails closed per tool).
+        if self._side_effect_tool_ids and not (
+            tool_unit_of_work_factory
+            and security_unit_of_work_factory
+            and infrastructure_unit_of_work_factory
+        ):
+            if profile == PROFILE_PRODUCT:
+                raise BlockedConfiguration(
+                    "BLOCKED_CONFIGURATION: side-effect tools require Tool/Security/Infrastructure "
+                    "UoW factories from the server composition root"
+                )
+
         self._model_gateway = ModelGateway(
             providers=[
                 WorkspaceChatModelProvider(
@@ -300,12 +531,13 @@ class WorkspaceAgentRuntime:
         )
         self._tool_control_plane = build_workspace_tool_control_plane(
             bindings=list(bindings),
+            tenant_id=tenant_id,
+            workspace_id=workspace_id,
             security_approval_sink=security_approval_sink,
             tool_unit_of_work_factory=tool_unit_of_work_factory,
             security_unit_of_work_factory=security_unit_of_work_factory,
             infrastructure_unit_of_work_factory=infrastructure_unit_of_work_factory,
         )
-        self._store = SQLiteAgentRunStore(store_path)
         self._service = UnifiedAgentRuntimeService(
             store=self._store,
             dependencies=RuntimeDependencies(
@@ -322,16 +554,32 @@ class WorkspaceAgentRuntime:
     def start(self, request: WorkspaceRunRequest) -> AgentRuntimeSnapshot:
         return self._service.start(self._to_runtime_request(request))
 
-    def resume(self, *, task_id: str, approval_decision: str = "approved") -> AgentRuntimeSnapshot:
-        return self._service.resume(task_id=task_id, approval_decision=approval_decision)
+    def resume(
+        self,
+        *,
+        task_id: str,
+        approval_decision: str = "approved",
+    ) -> AgentRuntimeSnapshot:
+        return self._service.resume(
+            task_id=task_id,
+            approval_decision=approval_decision,
+            tenant_id=self._tenant_id,
+            workspace_id=self._workspace_id,
+        )
 
     def cancel(self, *, task_id: str, reason: str) -> Any:
+        self._assert_scope(task_id)
         return self._service.cancel(task_id=task_id, reason=reason)
 
     def snapshot(self, task_id: str) -> AgentRuntimeSnapshot | None:
-        return self._service.get_snapshot(task_id)
+        return self._service.get_snapshot(
+            task_id,
+            tenant_id=self._tenant_id,
+            workspace_id=self._workspace_id,
+        )
 
     def events(self, task_id: str) -> list[dict[str, Any]]:
+        self._assert_scope(task_id)
         return [
             {
                 "event_type": event.type,
@@ -346,20 +594,34 @@ class WorkspaceAgentRuntime:
         """Idempotent product entry: replay a run that already produced a
         snapshot instead of executing a second time.
 
-        Same request -> same task id -> same facts, and the event stream is
-        never duplicated. Explicit retry of a FAILED/BLOCKED run (before any
-        committed effect) goes through :meth:`start` with the original plan.
+        Same ``client_request_id`` -> same task id -> same facts, and the
+        event stream is never duplicated. A different ``client_request_id``
+        (even with the same text) creates a new run.
         """
         existing = self.snapshot(request.task_id)
         if existing is not None:
             return existing
         return self._service.start(self._to_runtime_request(request))
 
-    def store(self) -> SQLiteAgentRunStore:
+    def store(self) -> AgentRunStore:
         return self._store
 
     def tool_control_plane(self) -> ToolControlPlaneRuntime:
         return self._tool_control_plane
+
+    def _assert_scope(self, task_id: str) -> None:
+        if not self._store.has_task(task_id):
+            return
+        snapshot = self._service.get_snapshot(
+            task_id,
+            tenant_id=self._tenant_id,
+            workspace_id=self._workspace_id,
+        )
+        if snapshot is None:
+            raise PermissionError(
+                f"runtime task outside tenant/workspace scope: {task_id} "
+                f"(tenant={self._tenant_id}, workspace={self._workspace_id})"
+            )
 
     # -- product -> runtime conversion -------------------------------------
 
@@ -371,78 +633,176 @@ class WorkspaceAgentRuntime:
             if binding.side_effect_level
             not in {ToolSideEffectLevel.NONE, ToolSideEffectLevel.READ}
         )
-        plan_steps = self._plan_steps(request)
-        # Security epoch fail-closed: a stale epoch blocks the plan at
-        # planning admission (canonical security gate) before any tool
-        # execution or side effect.
-        security_summary = dict(request.security_summary or {})
-        if (
-            request.security_epoch_ref is not None
-            and request.security_epoch_ref != self._security_epoch_ref
-        ):
-            security_summary = {
-                **security_summary,
-                "decision": "block",
-                "recommended_action": "refuse",
-                "reason": "stale_security_epoch",
-            }
-        security_blocked = _is_security_blocked(security_summary)
-        budget_blocked = _is_budget_blocked(request.budget_verdict)
         foreign_tool = bool(
             request.plan_kind == "tool"
             and request.tool_id
             and request.tool_id not in tool_ids
         )
-        if foreign_tool:
-            # Cross-tenant / cross-workspace isolation: a tool id outside this
-            # session's bindings fails closed at planning admission (never a
-            # KeyError deep inside tool execution).
-            security_summary = {
-                **security_summary,
-                "decision": "block",
-                "recommended_action": "refuse",
-                "reason": "unknown_tool_for_workspace",
-            }
-            security_blocked = True
-        if security_blocked or budget_blocked:
-            # Planning admission blocks the plan: the canonical selector
-            # produces a blocked plan (no steps) instead of a tool plan.
+        unresolved_tool = bool(
+            request.plan_kind == "tool"
+            and request.tool_id
+            and not any(
+                binding.tool_id == request.tool_id and binding.policy_resolution == "resolved"
+                for binding in self.bindings
+            )
+        )
+        side_effect_flow_blocked = bool(
+            request.plan_kind == "tool"
+            and request.tool_id
+            and request.tool_id in self._side_effect_tool_ids
+            and self._approval_flow == "none"
+        )
+        complex_unbound = bool(
+            request.plan_kind == "complex" and self._dynamic_dag_planner is None
+        )
+
+        # PHASE22 repair (B4): Security / Budget owner decision refs. The
+        # adapter carries refs only; Agent Core verifies them at start.
+        security_ref = self._resolve_security_ref(request)
+        budget_ref = self._resolve_budget_ref(request)
+        security_verdict = validate_security_decision_ref(
+            security_ref,
+            tenant_id=request.tenant_id,
+            workspace_id=request.workspace_id,
+            principal_id=request.principal_id or request.user_id,
+            action="tool.execute",
+            resource=",".join(tool_ids if request.plan_kind == "tool" else ()),
+            bound_security_epoch_ref=self._security_epoch_ref,
+            required=(
+                self._profile == PROFILE_PRODUCT
+                and bool(request.plan_kind == "tool")
+                and bool(request.tool_id)
+            ),
+        )
+        budget_verdict = validate_budget_decision_ref(
+            budget_ref,
+            tenant_id=request.tenant_id,
+            workspace_id=request.workspace_id,
+            run_id=f"run:{request.task_id}",
+            required=(
+                self._profile == PROFILE_PRODUCT
+                and bool(request.plan_kind == "tool")
+                and bool(request.tool_id)
+            ),
+        )
+
+        admission_reason = ""
+        if (
+            request.security_epoch_ref
+            and self._security_epoch_ref
+            and request.security_epoch_ref != self._security_epoch_ref
+        ):
+            # Security epoch fail-closed: a stale caller-supplied epoch blocks
+            # the plan at planning admission, before any tool execution.
+            admission_reason = "stale_security_epoch"
+        elif not security_verdict.allowed:
+            admission_reason = security_verdict.reason
+        elif not budget_verdict.allowed:
+            admission_reason = budget_verdict.reason
+        elif foreign_tool:
+            # PHASE22 repair (B7): a tool outside this session's tenant /
+            # workspace bindings fails closed at planning admission.
+            admission_reason = "unknown_tool_for_workspace"
+        elif unresolved_tool:
+            admission_reason = UNRESOLVED_TOOL_POLICY
+        elif side_effect_flow_blocked:
+            # PHASE22 repair (B9): side effects require a reachable product
+            # approval flow; otherwise they fail closed (read-only cutover).
+            admission_reason = PRODUCT_APPROVAL_FLOW_NOT_BOUND
+        elif complex_unbound:
+            # PHASE22 repair (B5): complex tasks require the formal Dynamic
+            # DAG planner; an unbound composition must never fake a fixed
+            # three-step DAG or fall back to a direct answer.
+            admission_reason = DYNAMIC_PLAN_RUNTIME_NOT_BOUND
+
+        plan_steps = None
+        if not admission_reason:
+            plan_steps = self._plan_steps(request)
+
+        if admission_reason:
             return RuntimeStartRequest(
                 run_id=f"run:{request.task_id}",
                 thread_id=request.thread_id,
+                tenant_id=request.tenant_id,
                 workspace_id=request.workspace_id,
+                principal_id=request.principal_id,
                 user_id=request.user_id,
                 task_id=request.task_id,
                 trace_id=request.trace_id,
                 goal=request.goal,
+                submission_id=request.submission_id,
+                client_request_id=request.client_request_id,
+                conversation_id=request.conversation_id,
+                agent_version=request.agent_version,
+                content_fingerprint=request.content_fingerprint,
                 capability_ids=(),
                 allowed_tools=(),
                 approval_required_tools=(),
                 budget_limits=request.budget_limits,
-                security_summary=security_summary,
-                budget_verdict=request.budget_verdict,
+                security_decision_ref=security_ref.to_dict() if security_ref else None,
+                budget_decision_ref=budget_ref.to_dict() if budget_ref else None,
+                security_epoch_ref=self._security_epoch_ref,
+                profile=self._profile,
                 strategy_mode=None,
                 plan_steps=(),
+                security_summary={
+                    "decision": "block",
+                    "recommended_action": "refuse",
+                    "reason": admission_reason,
+                },
+                budget_verdict={"allowed": False, "reason": admission_reason},
             )
+
+        capability_ids = tool_ids if (plan_steps and request.plan_kind == "tool") else ()
         return RuntimeStartRequest(
             run_id=f"run:{request.task_id}",
             thread_id=request.thread_id,
+            tenant_id=request.tenant_id,
             workspace_id=request.workspace_id,
+            principal_id=request.principal_id,
             user_id=request.user_id,
             task_id=request.task_id,
             trace_id=request.trace_id,
             goal=request.goal,
-            capability_ids=tool_ids if plan_steps else (),
-            allowed_tools=tool_ids if plan_steps else (),
-            approval_required_tools=approval_required if plan_steps else (),
+            submission_id=request.submission_id,
+            client_request_id=request.client_request_id,
+            conversation_id=request.conversation_id,
+            agent_version=request.agent_version,
+            content_fingerprint=request.content_fingerprint,
+            capability_ids=capability_ids,
+            allowed_tools=capability_ids,
+            approval_required_tools=approval_required if (plan_steps and request.plan_kind == "tool") else (),
             budget_limits=request.budget_limits,
-            security_summary=security_summary,
-            budget_verdict=request.budget_verdict,
+            security_decision_ref=security_ref.to_dict() if security_ref else None,
+            budget_decision_ref=budget_ref.to_dict() if budget_ref else None,
+            security_epoch_ref=self._security_epoch_ref,
+            profile=self._profile,
             strategy_mode=_strategy_mode_for(request),
             plan_steps=tuple(step.model_dump(mode="json") for step in plan_steps) if plan_steps else (),
         )
 
+    def _resolve_security_ref(self, request: WorkspaceRunRequest) -> SecurityDecisionRef | None:
+        if request.security_decision_ref:
+            return SecurityDecisionRef(**request.security_decision_ref)
+        if self._security_decision_issuer is not None:
+            raw = self._security_decision_issuer(request)
+            if raw:
+                return SecurityDecisionRef(**raw)
+        return None
+
+    def _resolve_budget_ref(self, request: WorkspaceRunRequest) -> BudgetDecisionRef | None:
+        if request.budget_decision_ref:
+            return BudgetDecisionRef(**request.budget_decision_ref)
+        if self._budget_decision_issuer is not None:
+            raw = self._budget_decision_issuer(request)
+            if raw:
+                return BudgetDecisionRef(**raw)
+        return None
+
     def _plan_steps(self, request: WorkspaceRunRequest) -> list[PlanStep] | None:
+        # PHASE22 repair (B5): every task has a formal plan. Simple tasks get
+        # an explicit deterministic single-step plan (no direct-answer
+        # bypass); tool tasks bind real tool id + arguments in the plan.
         if request.plan_kind == "tool" and request.tool_id:
             return [
                 PlanStep(
@@ -465,31 +825,25 @@ class WorkspaceAgentRuntime:
                 ),
             ]
         if request.plan_kind == "complex":
-            return [
-                PlanStep(
-                    step_id="step_1",
-                    goal="Analyze the request and decompose it into sub-questions.",
-                    action_type="model_transform",
-                    expected_output="analysis",
-                    acceptance_criteria=["step status completed"],
-                ),
-                PlanStep(
-                    step_id="step_2",
-                    goal="Reconcile partial evidence before answering; prepare replan when evidence is low.",
-                    action_type="prepare_replan_if_evidence_low",
-                    expected_output="reflection note",
-                    acceptance_criteria=["step status completed"],
-                ),
-                PlanStep(
-                    step_id="step_3",
-                    goal="Produce the final grounded answer.",
-                    action_type="answer_from_context",
-                    model_role="synthesis",
-                    expected_output="grounded answer",
-                    acceptance_criteria=["step status completed"],
-                ),
-            ]
-        return None
+            # The formal Dynamic DAG planner binding owns complex plans.
+            # ``_to_runtime_request`` fails closed before reaching here when
+            # the planner is not bound (DYNAMIC_PLAN_RUNTIME_NOT_BOUND).
+            if self._dynamic_dag_planner is None:
+                return None
+            steps = self._dynamic_dag_planner(request)
+            if not steps:
+                return None
+            return steps
+        return [
+            PlanStep(
+                step_id="step_1",
+                goal="Answer the user from current context.",
+                action_type="answer_from_context",
+                model_role="synthesis",
+                expected_output="grounded answer",
+                acceptance_criteria=["step status completed"],
+            ),
+        ]
 
     # -- final state classification ----------------------------------------
 
@@ -497,33 +851,33 @@ class WorkspaceAgentRuntime:
     def classify_final_state(snapshot: AgentRuntimeSnapshot) -> str:
         """PHASE22 failure contract for the canonical run.
 
-        - ``EFFECT_COMMITTED`` — a side-effect claim was recorded; no second
-          runtime may execute; return the committed facts or reconcile.
+        - ``EFFECT_COMMITTED`` — a durable side-effect receipt was recorded
+          (effect certainty CONFIRMED_EFFECT); no second runtime may execute.
+        - ``RECONCILIATION_REQUIRED`` — a side effect was dispatched but its
+          outcome is unknown (UNKNOWN_EFFECT); no automatic retry.
         - ``COMPLETED`` — finalized with an outcome.
         - ``FAILED/BLOCKED`` — failed or blocked before any side effect.
-        - ``RECONCILIATION_REQUIRED`` — effect state unknown (no terminal
-          shape); operator/coordinator confirmation required.
         """
-        observations = list(snapshot.observations)
-        approval_required = set(snapshot.capability_plan.approval_required_tools)
-        committed = any(
-            obs.kind == "tool"
-            and obs.status == "completed"
-            and obs.tool_id in approval_required
-            for obs in observations
-        )
-        if committed:
+        effect_certainties = [
+            str(obs.metadata.get("effect_certainty") or "")
+            for obs in snapshot.observations
+            if obs.kind == "tool"
+        ]
+        if any(certainty == "CONFIRMED_EFFECT" for certainty in effect_certainties):
             return "EFFECT_COMMITTED"
+        if any(certainty == "UNKNOWN_EFFECT" for certainty in effect_certainties):
+            return "RECONCILIATION_REQUIRED"
         # A tool step that failed or was blocked (permanent failure, sandbox
-        # denial, missing manifest) marks the run FAILED/BLOCKED even when the
-        # graph reaches a nominal finalize boundary.
+        # denial, missing manifest, unbound gateway) marks the run
+        # FAILED/BLOCKED even when the graph reaches a nominal finalize
+        # boundary.
         if any(
             obs.kind == "tool" and obs.status in {"blocked", "failed"}
-            for obs in observations
+            for obs in snapshot.observations
         ):
             return "FAILED/BLOCKED"
-        # Planning-admission denials (security / budget) produce a blocked
-        # plan and a "direct_answer"-strategy run with the denial reason.
+        # Planning-admission denials (security / budget / unresolved policy /
+        # unbound approval flow / unbound dynamic DAG) produce a blocked plan.
         strategy_reason = str(snapshot.strategy.reason) if snapshot.strategy is not None else ""
         if strategy_reason in {"security_blocked", "budget_guard_blocked"}:
             return "FAILED/BLOCKED"
@@ -544,18 +898,6 @@ class WorkspaceAgentRuntime:
         return "RECONCILIATION_REQUIRED"
 
 
-def _is_security_blocked(security_summary: dict[str, Any]) -> bool:
-    decision = str(security_summary.get("decision") or "").lower()
-    recommended = str(security_summary.get("recommended_action") or "").lower()
-    return decision in {"block", "blocked", "deny", "refuse"} or recommended in {"refuse", "ask_user"}
-
-
-def _is_budget_blocked(verdict: dict[str, Any] | None) -> bool:
-    if verdict is None:
-        return False
-    return verdict.get("allowed") is False
-
-
 def _strategy_mode_for(request: WorkspaceRunRequest) -> StrategyMode | str | None:
     if request.plan_kind == "tool":
         return StrategyMode.REACT
@@ -565,9 +907,19 @@ def _strategy_mode_for(request: WorkspaceRunRequest) -> StrategyMode | str | Non
 
 
 __all__ = [
+    "BlockedConfiguration",
+    "DeclaredToolPolicy",
+    "DYNAMIC_PLAN_RUNTIME_NOT_BOUND",
+    "PRODUCT_APPROVAL_FLOW_NOT_BOUND",
+    "SIDE_EFFECT_GATEWAY_NOT_BOUND",
+    "UNRESOLVED_TOOL_POLICY",
     "WorkspaceAgentRuntime",
     "WorkspaceChatModelProvider",
     "WorkspaceRunRequest",
+    "WorkspaceRuntimeComposition",
     "WorkspaceToolBinding",
     "build_workspace_tool_control_plane",
+    "configure_workspace_product_composition",
+    "declared_policy_from_metadata",
+    "get_workspace_product_composition",
 ]
