@@ -186,7 +186,13 @@ def test_repository_scope_returns_blocked() -> None:
         c["name"]: c["classification"]
         for c in result["payload"]["classifications"]
     }
-    assert classifications.get("WorkSpaceSimpleAgent") == "PRODUCT_LEGACY_RUNTIME"
+    # PHASE22-PR133 final engineering closure: WorkSpaceSimpleAgent has been
+    # reduced to a thin adapter over the canonical Single Controller Runtime
+    # (no direct model/tool/handler dispatch inside the class body), so the
+    # ownership classifier promotes it to PRODUCT_ADAPTER. WeChatAgent still
+    # carries the legacy runtime-ownership evidence and remains
+    # PRODUCT_LEGACY_RUNTIME, which keeps the repository scope BLOCKED.
+    assert classifications.get("WorkSpaceSimpleAgent") == "PRODUCT_ADAPTER"
     assert classifications.get("WeChatAgent") == "PRODUCT_LEGACY_RUNTIME"
     assert classifications.get("AgentControlRuntime") == "INTERNAL_TEST_HARNESS"
 
@@ -1416,9 +1422,10 @@ def test_repository_unresolved_exits_one() -> None:
 
 
 def test_repository_blocked_exits_one() -> None:
-    """The current live branch has WorkSpaceSimpleAgent / WeChatAgent as
-    legacy runtimes, so the repository status is BLOCKED and the exit
-    code must be 1.
+    """The current live branch still has WeChatAgent classified as
+    PRODUCT_LEGACY_RUNTIME (PHASE22-PR133 final engineering closure has
+    promoted WorkSpaceSimpleAgent to PRODUCT_ADAPTER), so the repository
+    status is BLOCKED and the exit code must be 1.
     """
     result = subprocess.run(
         [

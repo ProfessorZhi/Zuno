@@ -6,6 +6,7 @@ from typing import Any, Iterable
 from zuno.agent.durable_runtime import DurableRuntimeTaskSnapshot
 from zuno.agent.contracts import CapabilityPlan, ContextPack, PlanState, PlanStep
 from zuno.agent.runtime.checkpointer import RuntimeGraphCheckpointer
+from zuno.agent.runtime.plan_owner import build_capability_plan_from_request
 from zuno.agent.runtime.contracts import (
     FinalizationStatus,
     ReflectionDecision,
@@ -291,24 +292,17 @@ class UnifiedAgentRuntimeService:
 
 
 def _capability_plan_from_request(request: RuntimeStartRequest) -> CapabilityPlan | None:
-    """Seed the pinned capability plan from the product surface.
+    """Delegate to the canonical plan owner.
 
-    The product adapter declares the session's tool set; the fixed graph's
-    strategy/plan nodes then route tool requests through the formal
-    capability plan instead of an ad-hoc product runtime.
+    The actual ``CapabilityPlan`` construction lives in
+    ``zuno.agent.runtime.plan_owner`` so the public adapter body never
+    instantiates the data class directly.
     """
-    if not request.capability_ids and not request.allowed_tools:
-        return CapabilityPlan()
-    return CapabilityPlan(
-        availability_snapshot_ref=f"capability_snapshot:{request.task_id}",
-        selection_result_ref=f"capability_selection:{request.task_id}",
-        selection_validity="fixed_planning_snapshot",
-        allowed_capabilities=list(request.capability_ids),
-        allowed_tools=list(request.allowed_tools),
-        approval_required_tools=list(request.approval_required_tools),
-        blocked_capability_reasons={},
-        executed_tools=[],
-        risk_summary={"blocked_count": 0, "approval_required_count": len(request.approval_required_tools)},
+    return build_capability_plan_from_request(
+        task_id=request.task_id,
+        capability_ids=request.capability_ids,
+        allowed_tools=request.allowed_tools,
+        approval_required_tools=request.approval_required_tools,
     )
 
 

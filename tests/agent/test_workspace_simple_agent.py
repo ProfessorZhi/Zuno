@@ -126,7 +126,7 @@ def test_tool_result_for_model_enriches_market_ohlc_payload():
     assert "+4.32%" in formatted
 
 
-def test_guess_direct_mcp_call_extracts_clean_weather_city(monkeypatch):
+def test_classify_mcp_route_tool_extracts_clean_weather_city(monkeypatch):
     from zuno.platform.services.workspace.simple_agent import MCPConfig, WorkSpaceSimpleAgent
 
     monkeypatch.setattr(
@@ -155,7 +155,7 @@ def test_guess_direct_mcp_call_extracts_clean_weather_city(monkeypatch):
     agent.mcp_tools = [maps_weather]
     agent.server_dict = {"高德地图": ["maps_weather"]}
 
-    direct_tool, direct_args = agent._guess_direct_mcp_call(agent.original_query)
+    direct_tool, direct_args = agent._classify_mcp_route_tool(agent.original_query)
 
     assert direct_tool is not None
     assert direct_tool.name == "maps_weather"
