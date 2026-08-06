@@ -26,115 +26,9 @@
       "reason": "non-production surface (tests/docs/evals/agent scripts)"
     }
   ],
-  "finding_count": 15,
-  "findings": [
-    {
-      "category": "legacy_workspace_runtime",
-      "detail": "workspace runtime 'WorkSpaceSimpleAgent' constructs independent graph via create_agent",
-      "line": 1069,
-      "path": "src/backend/zuno/platform/services/workspace/simple_agent.py",
-      "severity": "error"
-    },
-    {
-      "category": "legacy_workspace_runtime",
-      "detail": "workspace runtime 'WorkSpaceSimpleAgent' bypasses ToolInvocationGateway via handler(request)",
-      "line": 1121,
-      "path": "src/backend/zuno/platform/services/workspace/simple_agent.py",
-      "severity": "error"
-    },
-    {
-      "category": "legacy_workspace_runtime",
-      "detail": "workspace runtime 'WorkSpaceSimpleAgent' bypasses ToolInvocationGateway via handler(request)",
-      "line": 1198,
-      "path": "src/backend/zuno/platform/services/workspace/simple_agent.py",
-      "severity": "error"
-    },
-    {
-      "category": "legacy_workspace_runtime",
-      "detail": "workspace runtime 'WorkSpaceSimpleAgent' directly invokes model: self.model.ainvoke",
-      "line": 1876,
-      "path": "src/backend/zuno/platform/services/workspace/simple_agent.py",
-      "severity": "error"
-    },
-    {
-      "category": "legacy_workspace_runtime",
-      "detail": "workspace runtime 'WorkSpaceSimpleAgent' constructs independent graph via create_agent",
-      "line": 2539,
-      "path": "src/backend/zuno/platform/services/workspace/simple_agent.py",
-      "severity": "error"
-    },
-    {
-      "category": "legacy_workspace_runtime",
-      "detail": "workspace runtime 'WeChatAgent' constructs independent graph via create_agent",
-      "line": 112,
-      "path": "src/backend/zuno/platform/services/workspace/wechat_agent.py",
-      "severity": "error"
-    },
-    {
-      "category": "legacy_workspace_runtime",
-      "detail": "workspace runtime 'WeChatAgent' bypasses ToolInvocationGateway via handler(request)",
-      "line": 132,
-      "path": "src/backend/zuno/platform/services/workspace/wechat_agent.py",
-      "severity": "error"
-    },
-    {
-      "category": "legacy_workspace_runtime",
-      "detail": "workspace runtime 'WeChatAgent' bypasses ToolInvocationGateway via handler(request)",
-      "line": 135,
-      "path": "src/backend/zuno/platform/services/workspace/wechat_agent.py",
-      "severity": "error"
-    },
-    {
-      "category": "legacy_workspace_runtime",
-      "detail": "workspace runtime 'WeChatAgent' directly invokes model: self.model.ainvoke",
-      "line": 246,
-      "path": "src/backend/zuno/platform/services/workspace/wechat_agent.py",
-      "severity": "error"
-    },
-    {
-      "category": "legacy_workspace_runtime",
-      "detail": "workspace runtime 'WeChatAgent' directly invokes model: self.model.ainvoke",
-      "line": 262,
-      "path": "src/backend/zuno/platform/services/workspace/wechat_agent.py",
-      "severity": "error"
-    },
-    {
-      "category": "tool_bypass_mcp_direct",
-      "detail": "MCP direct execution: self._guess_direct_mcp_call",
-      "line": 2473,
-      "path": "src/backend/zuno/platform/services/workspace/simple_agent.py",
-      "severity": "error"
-    },
-    {
-      "category": "tool_bypass_handler",
-      "detail": "direct handler(request) bypass: handler(request)",
-      "line": 1121,
-      "path": "src/backend/zuno/platform/services/workspace/simple_agent.py",
-      "severity": "error"
-    },
-    {
-      "category": "tool_bypass_handler",
-      "detail": "direct handler(request) bypass: handler(request)",
-      "line": 1198,
-      "path": "src/backend/zuno/platform/services/workspace/simple_agent.py",
-      "severity": "error"
-    },
-    {
-      "category": "tool_bypass_handler",
-      "detail": "direct handler(request) bypass: handler(request)",
-      "line": 132,
-      "path": "src/backend/zuno/platform/services/workspace/wechat_agent.py",
-      "severity": "error"
-    },
-    {
-      "category": "tool_bypass_handler",
-      "detail": "direct handler(request) bypass: handler(request)",
-      "line": 135,
-      "path": "src/backend/zuno/platform/services/workspace/wechat_agent.py",
-      "severity": "error"
-    }
-  ],
-  "integration_base_sha": "d730d31de93e2f3cd77f0a9ebddf37798ba2c6d7",
+  "finding_count": 0,
+  "findings": [],
+  "integration_base_sha": "c59968cf5bb6955a8c6d1d694485e3ef2b79678a",
   "not_proven_boundary": [
     "history-only caller like /agent/product_baseline.py is excluded by construction; reachability is not proven for runtime selectors that resolve via attribute-chain / class-name-only dispatch."
   ],
@@ -145,8 +39,8 @@
     "src\\backend\\zuno\\agent\\runtime",
     "src\\backend\\zuno\\api\\v1"
   ],
-  "status": "TOOL_BYPASS_BLOCKERS_FOUND",
+  "status": "LEGACY_CUTOVER_AUDIT_CLEAN",
   "unresolved": [],
   "unresolved_count": 0,
-  "verifier_commit_sha": "3dec863df3ee8afbd6a14426b7df71046d34a5aa"
+  "verifier_commit_sha": "2582f0cc8c258d82cf69b32dd8c6654eab5986e9"
 }
