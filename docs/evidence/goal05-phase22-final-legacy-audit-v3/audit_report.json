@@ -1,5 +1,7 @@
 {
+  "audit_subject_sha": "1ae54b58871163fb76213990ca0fea1bb04080f3",
   "candidate_pr": "PHASE22-FINAL-LEGACY-AUDIT-V3",
+  "evidence_revision_sha": "pending-evidence-commit-b",
   "exclusions": [
     {
       "path": "tests/",
@@ -42,5 +44,5 @@
   "status": "LEGACY_CUTOVER_AUDIT_CLEAN",
   "unresolved": [],
   "unresolved_count": 0,
-  "verifier_commit_sha": "2582f0cc8c258d82cf69b32dd8c6654eab5986e9"
+  "workflow_head_sha": "pending-ci-head"
 }

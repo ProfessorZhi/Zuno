@@ -449,12 +449,25 @@ def test_unknown_path_does_not_silence_findings() -> None:
 
 def test_exact_integration_tree_sha_recorded() -> None:
     """The audit report must record the integration_base_sha passed
-    via --integration-base-sha.
+    via --integration-base-sha and the explicit subject / evidence /
+    workflow SHAs. The old ``verifier_commit_sha`` (auto-derived from
+    ``git rev-parse HEAD``) was removed in PHASE22 final engineering
+    closure (P0-8) because committing the audit_report.json would move
+    HEAD and create a self-reference.
     """
-    result = _run(["--integration-base-sha", "10501e0382d863014513f993822abd6bcf758cf6"])
+    result = _run([
+        "--integration-base-sha", "10501e0382d863014513f993822abd6bcf758cf6",
+        "--audit-subject-sha", "10501e0382d863014513f993822abd6bcf758cf6",
+        "--evidence-revision-sha", "abcdef0000000000000000000000000000000000",
+        "--workflow-head-sha", "fedcba0000000000000000000000000000000000",
+    ])
     payload = result["payload"]
     assert payload["integration_base_sha"] == "10501e0382d863014513f993822abd6bcf758cf6"
-    assert payload["verifier_commit_sha"] != ""
+    assert payload["audit_subject_sha"] == "10501e0382d863014513f993822abd6bcf758cf6"
+    assert payload["evidence_revision_sha"] == "abcdef0000000000000000000000000000000000"
+    assert payload["workflow_head_sha"] == "fedcba0000000000000000000000000000000000"
+    # No more self-referential ``verifier_commit_sha`` (PHASE22 P0-8).
+    assert "verifier_commit_sha" not in payload
     assert payload["owner_work_package"] == "PHASE22-FINAL-LEGACY-AUDIT-V3"
     assert payload["candidate_pr"] == "PHASE22-FINAL-LEGACY-AUDIT-V3"
 
@@ -530,7 +543,9 @@ def test_json_shape_is_stable() -> None:
         "owner_work_package",
         "candidate_pr",
         "integration_base_sha",
-        "verifier_commit_sha",
+        "audit_subject_sha",
+        "evidence_revision_sha",
+        "workflow_head_sha",
         "scanned_roots",
         "exclusions",
         "not_proven_boundary",
@@ -540,6 +555,10 @@ def test_json_shape_is_stable() -> None:
         "unresolved",
     }
     assert expected_keys <= set(payload.keys())
+    # PHASE22 final engineering closure (P0-8): the self-referential
+    # ``verifier_commit_sha`` is gone. Any reintroduction must fail this
+    # assertion explicitly.
+    assert "verifier_commit_sha" not in payload
     for finding in payload["findings"]:
         assert set(finding.keys()) == {"category", "path", "line", "detail", "severity"}
 

@@ -393,6 +393,21 @@ def _write_atomic(path: Path, content: str) -> None:
     tmp_path.replace(path)
 
 
+def _write_sidecar_sha256(sidecar_path: Path, target_path: Path) -> str:
+    """Compute the SHA-256 of the on-disk final ``target_path`` bytes and
+    persist it to ``sidecar_path``. The hash is derived from the actual
+    bytes committed to disk via ``_write_atomic`` so the sidecar is
+    byte-stable and never self-referential.
+    """
+    final_bytes = target_path.read_bytes()
+    digest = hashlib.sha256(final_bytes).hexdigest()
+    sidecar_path.parent.mkdir(parents=True, exist_ok=True)
+    tmp_sidecar = sidecar_path.with_suffix(sidecar_path.suffix + ".tmp")
+    tmp_sidecar.write_text(digest + "\n", encoding="utf-8", newline="\n")
+    tmp_sidecar.replace(sidecar_path)
+    return digest
+
+
 def serialize_json(payload: Any) -> str:
     text = json.dumps(
         payload,
@@ -1197,10 +1212,23 @@ def run_formal_benchmark(
         },
         "reproduce_command": _reproduce_command(),
     }
-    report_text = serialize_json(report)
-    checksum = canonical_sha256_hex(json.loads(report_text))
-    report["report_checksum_sidecar"] = checksum
+    # PHASE22 final engineering closure (P0-7): the report MUST NOT carry a
+    # self-referential checksum. ``report_integrity`` only documents the
+    # sidecar protocol; the actual SHA-256 is computed from the on-disk
+    # final bytes after atomic rename and persisted to
+    # ``benchmark_report.json.sha256``.
+    report["report_integrity"] = {
+        "algorithm": "sha256",
+        "sidecar_path": "benchmark_report.json.sha256",
+        "encoding": "utf-8",
+        "line_endings": "lf",
+    }
+    report.pop("report_checksum_sidecar", None)
     _write_atomic(report_path, serialize_json(report))
+    _write_sidecar_sha256(
+        output_dir / "benchmark_report.json.sha256",
+        report_path,
+    )
 
     env_payload = serialize_json(environment)
     env_hash = canonical_sha256_hex(json.loads(env_payload))
@@ -1374,11 +1402,24 @@ def _incomparable_report(
         },
         "reproduce_command": _reproduce_command(),
     }
-    report_text = serialize_json(report)
-    report["report_checksum_sidecar"] = canonical_sha256_hex(
-        json.loads(report_text)
+    # PHASE22 final engineering closure (P0-7): the report MUST NOT carry a
+    # self-referential checksum. ``report_integrity`` only documents the
+    # sidecar protocol; the actual SHA-256 is computed from the on-disk
+    # final bytes after atomic rename and persisted to
+    # ``benchmark_report.json.sha256``.
+    report["report_integrity"] = {
+        "algorithm": "sha256",
+        "sidecar_path": "benchmark_report.json.sha256",
+        "encoding": "utf-8",
+        "line_endings": "lf",
+    }
+    report.pop("report_checksum_sidecar", None)
+    report_path = output_dir / "benchmark_report.json"
+    _write_atomic(report_path, serialize_json(report))
+    _write_sidecar_sha256(
+        output_dir / "benchmark_report.json.sha256",
+        report_path,
     )
-    _write_atomic(output_dir / "benchmark_report.json", serialize_json(report))
     return report
 
 

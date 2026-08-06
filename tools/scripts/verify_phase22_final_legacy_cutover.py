@@ -228,7 +228,19 @@ class AuditResult:
     scanned_roots: list[str] = field(default_factory=list)
     not_proven_boundary: list[str] = field(default_factory=list)
     integration_base_sha: str = ""
-    verifier_commit_sha: str = ""
+    # PHASE22 final engineering closure (P0-8): the audit MUST NOT carry a
+    # self-referential SHA. ``audit_subject_sha`` records the candidate
+    # commit actually scanned (passed via --audit-subject-sha); the
+    # ``evidence_revision_sha`` field is the SHA of the commit that
+    # carries the audit_report.json into the tree and is supplied
+    # externally (typically by CI metadata or the PR body). ``workflow_head_sha``
+    # is the head of the GitHub Actions run that published this report,
+    # also externally supplied. None of these three are derived from
+    # ``git rev-parse HEAD`` because HEAD moves as soon as the audit
+    # report is committed, producing an obvious self-reference.
+    audit_subject_sha: str = ""
+    evidence_revision_sha: str = ""
+    workflow_head_sha: str = ""
 
     def add(self, finding: Finding) -> None:
         self.findings.append(finding)
@@ -250,7 +262,9 @@ class AuditResult:
             "scanned_roots": list(self.scanned_roots),
             "not_proven_boundary": list(self.not_proven_boundary),
             "integration_base_sha": self.integration_base_sha,
-            "verifier_commit_sha": self.verifier_commit_sha,
+            "audit_subject_sha": self.audit_subject_sha,
+            "evidence_revision_sha": self.evidence_revision_sha,
+            "workflow_head_sha": self.workflow_head_sha,
         }
 
 
@@ -874,11 +888,15 @@ def _resolve_priority(findings: list[Finding], unresolved: list[Finding]) -> str
 def run_audit(
     *,
     integration_base_sha: str,
-    verifier_commit_sha: str,
+    audit_subject_sha: str = "",
+    evidence_revision_sha: str = "",
+    workflow_head_sha: str = "",
 ) -> AuditResult:
     result = AuditResult(
         integration_base_sha=integration_base_sha,
-        verifier_commit_sha=verifier_commit_sha,
+        audit_subject_sha=audit_subject_sha,
+        evidence_revision_sha=evidence_revision_sha,
+        workflow_head_sha=workflow_head_sha,
         scanned_roots=[str(p.relative_to(REPO_ROOT)) for p in SCANNED_ROOTS],
     )
     file_index = _build_file_index()
@@ -954,6 +972,31 @@ def main(argv: list[str] | None = None) -> int:
         help="Exact integration tree SHA the audit is recorded for.",
     )
     parser.add_argument(
+        "--audit-subject-sha",
+        default=os.environ.get("AUDIT_SUBJECT_SHA", ""),
+        help=(
+            "Exact commit SHA of the production-tree candidate the audit "
+            "scanned. Recorded verbatim in audit_report.json. NOT derived "
+            "from git rev-parse HEAD (PHASE22 final engineering closure P0-8)."
+        ),
+    )
+    parser.add_argument(
+        "--evidence-revision-sha",
+        default=os.environ.get("EVIDENCE_REVISION_SHA", ""),
+        help=(
+            "Exact commit SHA that carries this audit_report.json. Recorded "
+            "verbatim. Usually supplied by CI / PR body; never derived."
+        ),
+    )
+    parser.add_argument(
+        "--workflow-head-sha",
+        default=os.environ.get("WORKFLOW_HEAD_SHA", ""),
+        help=(
+            "Exact commit SHA on which the GitHub Actions run that published "
+            "this report was triggered. Recorded verbatim; never derived."
+        ),
+    )
+    parser.add_argument(
         "--json",
         action="store_true",
         help="Print machine-readable JSON output.",
@@ -966,12 +1009,16 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
 
     integration_base_sha = args.integration_base_sha
-    verifier_commit_sha = _git_head_sha()
+    audit_subject_sha = args.audit_subject_sha
+    evidence_revision_sha = args.evidence_revision_sha
+    workflow_head_sha = args.workflow_head_sha
 
     try:
         result = run_audit(
             integration_base_sha=integration_base_sha,
-            verifier_commit_sha=verifier_commit_sha,
+            audit_subject_sha=audit_subject_sha,
+            evidence_revision_sha=evidence_revision_sha,
+            workflow_head_sha=workflow_head_sha,
         )
     except Exception as exc:
         # Tool error dominates.
@@ -994,7 +1041,9 @@ def main(argv: list[str] | None = None) -> int:
         "owner_work_package": OWNER_WORK_PACKAGE,
         "candidate_pr": CANDIDATE_PR,
         "integration_base_sha": result.integration_base_sha,
-        "verifier_commit_sha": result.verifier_commit_sha,
+        "audit_subject_sha": result.audit_subject_sha,
+        "evidence_revision_sha": result.evidence_revision_sha,
+        "workflow_head_sha": result.workflow_head_sha,
         "scanned_roots": result.scanned_roots,
         "exclusions": result.exclusions,
         "not_proven_boundary": result.not_proven_boundary,

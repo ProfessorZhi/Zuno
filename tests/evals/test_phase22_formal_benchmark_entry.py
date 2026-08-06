@@ -786,9 +786,23 @@ class FormalBenchmarkEntryTests(unittest.TestCase):
                 sha256_file(out_a / "profiles" / f"{profile}.json"),
                 sha256_file(out_b / "profiles" / f"{profile}.json"),
             )
+        # PHASE22 final engineering closure (P0-7): the report MUST NOT carry
+        # a self-referential checksum. The integrity contract is documented
+        # via ``report_integrity`` and the actual hash lives in the external
+        # ``benchmark_report.json.sha256`` sidecar. The two sidecars must
+        # agree across runs.
+        self.assertNotIn("report_checksum_sidecar", report_a)
+        self.assertNotIn("report_checksum_sidecar", report_b)
         self.assertEqual(
-            report_a["report_checksum_sidecar"], report_b["report_checksum_sidecar"]
+            report_a["report_integrity"], report_b["report_integrity"]
         )
+        sidecar_a = (out_a / "benchmark_report.json.sha256").read_text(
+            encoding="utf-8"
+        ).strip()
+        sidecar_b = (out_b / "benchmark_report.json.sha256").read_text(
+            encoding="utf-8"
+        ).strip()
+        self.assertEqual(sidecar_a, sidecar_b)
 
     # ------------------------------------------------------------------
     # 14. Profile-independent blockers
@@ -817,6 +831,49 @@ class FormalBenchmarkEntryTests(unittest.TestCase):
                 by_profile[name]["measurement_status"], STATUS_RUNTIME_OBSERVED
             )
             self.assertEqual(by_profile[name]["blocker_codes"], [])
+
+    # ------------------------------------------------------------------
+    # 14b. Sidecar protocol: sidecar bytes match SHA-256 of on-disk
+    # final benchmark_report.json bytes; report never carries a self-
+    # referential checksum; environment ref is present in the report.
+    # ------------------------------------------------------------------
+
+    def test_sidecar_matches_on_disk_report_bytes(self) -> None:
+        manifest = self.fixture.build()
+        output = self._output("sidecar")
+        report = run_formal_benchmark(
+            manifest,
+            output,
+            profile_runtime_factory=_FakeFactory(state="RUNTIME_OBSERVED"),
+        )
+        report_path = output / "benchmark_report.json"
+        sidecar_path = output / "benchmark_report.json.sha256"
+        self.assertTrue(report_path.exists())
+        self.assertTrue(sidecar_path.exists())
+        # PHASE22 final engineering closure (P0-7): the report MUST NOT
+        # contain a self-referential checksum. The integrity contract is
+        # declared in ``report_integrity`` and the actual hash is computed
+        # from the on-disk final bytes via the external sidecar.
+        self.assertNotIn("report_checksum_sidecar", report)
+        self.assertEqual(
+            report["report_integrity"],
+            {
+                "algorithm": "sha256",
+                "sidecar_path": "benchmark_report.json.sha256",
+                "encoding": "utf-8",
+                "line_endings": "lf",
+            },
+        )
+        report_bytes = report_path.read_bytes()
+        expected_digest = hashlib.sha256(report_bytes).hexdigest()
+        actual_digest = sidecar_path.read_text(encoding="utf-8").strip()
+        self.assertEqual(actual_digest, expected_digest)
+        # Environment ref must be present in the report (env_payload was
+        # also published under ``artifact_refs.environment``).
+        self.assertTrue(report["environment"]["python_version"])
+        self.assertEqual(
+            report["artifact_refs"]["environment"]["path"], "environment.json"
+        )
 
     # ------------------------------------------------------------------
     # 15/16. Test double / runtime observed can never become MEASURED
