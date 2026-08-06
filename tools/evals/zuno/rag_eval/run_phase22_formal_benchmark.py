@@ -55,6 +55,7 @@ import hashlib
 import json
 import os
 import platform
+import shutil
 import sys
 from pathlib import Path
 from typing import Any, Callable, Mapping, Optional
@@ -406,6 +407,114 @@ def _write_sidecar_sha256(sidecar_path: Path, target_path: Path) -> str:
     tmp_sidecar.write_text(digest + "\n", encoding="utf-8", newline="\n")
     tmp_sidecar.replace(sidecar_path)
     return digest
+
+
+class _AtomicArtifactPublisher:
+    """PHASE22 (Slice A): atomic publish for the formal benchmark artifacts.
+
+    Contract:
+
+    - The publisher NEVER writes to ``output_dir`` directly. Every artifact
+      is first written to a unique staging directory under
+      ``output_dir.parent / f".staging-{run_id}"`` so partial output cannot
+      be observed by a downstream consumer reading ``output_dir``.
+    - On commit, the staging directory is renamed to ``output_dir`` in a
+      single atomic step. A failure at any time leaves the staging dir as
+      the only on-disk residue — the final output directory is never
+      partially populated.
+    - The report bytes are committed to disk first; the sidecar SHA-256 is
+      computed from the on-disk final bytes (not from a serialized dict
+      that contains the sidecar field). The ``report_integrity`` field
+      documents the sidecar protocol — the report NEVER carries a
+      self-referential hash.
+    - If the final output directory already exists, the publisher raises
+      ``OUTPUT_PATH_EXISTS`` rather than overwriting. The final output is
+      write-once; tests assert that re-running against the same directory
+      fails closed.
+    - The staging directory is removed on every failure path. The final
+      output directory is published only after the rename succeeds.
+    """
+
+    def __init__(self, output_dir: Path, run_id: str) -> None:
+        self.output_dir = Path(output_dir)
+        self.run_id = str(run_id or "run")
+        self.parent_dir = self.output_dir.parent
+        self.staging_dir = self.parent_dir / f".staging-{self.run_id}"
+        self._committed = False
+
+    def open(self) -> None:
+        """Prepare the staging directory. Raises ``OUTPUT_PATH_EXISTS`` if the
+        final output already exists, or ``OUTPUT_PATH_UNAVAILABLE`` if the
+        staging directory cannot be created.
+        """
+        if self.output_dir.exists():
+            raise OutputPathExists(self.output_dir)
+        if self.staging_dir.exists():
+            # left-over from a previous crash; remove so we don't reuse stale
+            # partial artifacts.
+            shutil.rmtree(self.staging_dir, ignore_errors=True)
+        try:
+            self.staging_dir.mkdir(parents=True, exist_ok=False)
+        except OSError as exc:
+            raise OutputPathUnavailable(str(exc)) from exc
+
+    def write(self, relative_path: str, content: str) -> None:
+        """Write one artifact to the staging directory."""
+        target = self.staging_dir / relative_path
+        _write_atomic(target, content)
+
+    def write_binary(self, relative_path: str, content: bytes) -> None:
+        target = self.staging_dir / relative_path
+        target.parent.mkdir(parents=True, exist_ok=True)
+        tmp_path = target.with_suffix(target.suffix + ".tmp")
+        tmp_path.write_bytes(content)
+        tmp_path.replace(target)
+
+    def write_sidecar_for(self, relative_path: str) -> str:
+        """Compute the SHA-256 of the on-disk staging bytes for
+        ``relative_path`` and persist the sidecar next to it. Returns the
+        digest. The sidecar hash is always derived from the on-disk bytes,
+        never from the serialized dict that may carry a sidecar field.
+        """
+        target = self.staging_dir / relative_path
+        sidecar = self.staging_dir / f"{relative_path}.sha256"
+        return _write_sidecar_sha256(sidecar, target)
+
+    def path(self, relative_path: str) -> Path:
+        return self.staging_dir / relative_path
+
+    def commit(self) -> None:
+        """Atomically rename the staging directory to the final output
+        directory. Raises if the rename fails (the staging dir is left
+        on disk for diagnostics; the final output is not partially
+        populated)."""
+        if self._committed:
+            raise RuntimeError("publisher already committed")
+        try:
+            self.staging_dir.replace(self.output_dir)
+        except OSError as exc:
+            raise OutputPathUnavailable(
+                f"rename staging->final failed: {exc}"
+            ) from exc
+        self._committed = True
+
+    def discard(self) -> None:
+        """Remove the staging directory. Used on every failure path so the
+        final output dir is never partially populated."""
+        if self._committed:
+            return
+        shutil.rmtree(self.staging_dir, ignore_errors=True)
+
+
+class OutputPathExists(RuntimeError):
+    """PHASE22 (Slice A): the final output directory already exists. The
+    publisher refuses to overwrite an immutable artifact set."""
+
+
+class OutputPathUnavailable(RuntimeError):
+    """PHASE22 (Slice A): the staging directory cannot be created, or the
+    final rename to ``output_dir`` failed. The publish is aborted; no
+    final output is published."""
 
 
 def serialize_json(payload: Any) -> str:
@@ -837,9 +946,20 @@ def run_formal_benchmark(
         )
 
     output_dir = Path(output_dir)
-    if not output_dir.exists():
+    if output_dir.exists():
+        # PHASE22 (Slice A): the final output dir is write-once. A re-run
+        # against the same path is rejected up-front — never silently
+        # overwrite the immutable artifact set.
+        return _error_report(
+            manifest=manifest,
+            output_dir=output_dir,
+            reason=BLOCKER_OUTPUT_PATH_EXISTS,
+            blocker_details=["immutable_artifact_exists"],
+        )
+    parent_dir = output_dir.parent
+    if not parent_dir.exists():
         try:
-            output_dir.mkdir(parents=True, exist_ok=True)
+            parent_dir.mkdir(parents=True, exist_ok=True)
         except OSError:
             return _error_report(
                 manifest=manifest,
@@ -847,7 +967,7 @@ def run_formal_benchmark(
                 reason=BLOCKER_OUTPUT_PATH_UNAVAILABLE,
                 blocker_details=["output_dir_creation_failed"],
             )
-    if not output_dir.is_dir():
+    if not parent_dir.is_dir():
         return _error_report(
             manifest=manifest,
             output_dir=output_dir,
@@ -855,12 +975,28 @@ def run_formal_benchmark(
             blocker_details=["output_path_not_a_directory"],
         )
     report_path = output_dir / "benchmark_report.json"
-    if report_path.exists():
+
+    # PHASE22 (Slice A): atomic publish via the staging directory. Every
+    # artifact is written to ``output_dir.parent / f".staging-{run_id}"``
+    # first; the final rename publishes the entire set. The publisher
+    # raises OutputPathExists / OutputPathUnavailable on failure paths.
+    run_id = str(manifest.get("eval_run_id") or "run")
+    publisher = _AtomicArtifactPublisher(output_dir=output_dir, run_id=run_id)
+    try:
+        publisher.open()
+    except OutputPathExists:
         return _error_report(
             manifest=manifest,
             output_dir=output_dir,
             reason=BLOCKER_OUTPUT_PATH_EXISTS,
             blocker_details=["immutable_artifact_exists"],
+        )
+    except OutputPathUnavailable as exc:
+        return _error_report(
+            manifest=manifest,
+            output_dir=output_dir,
+            reason=BLOCKER_OUTPUT_PATH_UNAVAILABLE,
+            blocker_details=[f"staging_open_failed:{exc}"],
         )
 
     # -- dataset / case hash validation (actual files, never declared-only)
@@ -917,7 +1053,6 @@ def run_formal_benchmark(
     if preflight_report.state == STATE_INCOMPARABLE:
         incomparable_report = _incomparable_report(
             manifest=manifest,
-            output_dir=output_dir,
             preflight_dict=preflight_dict,
             gap_codes=list(preflight_report.gap_codes),
             dataset_sha=dataset_sha,
@@ -926,8 +1061,18 @@ def run_formal_benchmark(
             declared_case_set_hash=declared_case_hash,
             declared_count=declared_count,
             actual_count=len(rows),
+            publisher=publisher,
         )
-        _write_atomic(report_path, serialize_json(incomparable_report))
+        try:
+            publisher.commit()
+        except OutputPathUnavailable as exc:
+            publisher.discard()
+            return _error_report(
+                manifest=manifest,
+                output_dir=output_dir,
+                reason=BLOCKER_OUTPUT_PATH_UNAVAILABLE,
+                blocker_details=[f"commit_failed:{exc}"],
+            )
         return incomparable_report
 
     # -- execution factory
@@ -1108,16 +1253,17 @@ def run_formal_benchmark(
                     set(artifact_payload["blocker_details"]) | {attestation_gap}
                 )
             else:
-                attestation_path = (
-                    output_dir / "profiles" / f"{profile_name}.measurement-attestation.json"
+                attestation_relpath = (
+                    f"profiles/{profile_name}.measurement-attestation.json"
                 )
                 attestation_text = serialize_json(attestation)
-                _write_atomic(attestation_path, attestation_text)
+                publisher.write(attestation_relpath, attestation_text)
                 attestation_hash = text_sha256(attestation_text)
+                attestation_path = attestation_relpath
 
-        artifact_path = output_dir / "profiles" / f"{profile_name}.json"
+        artifact_relpath = f"profiles/{profile_name}.json"
         artifact_text = serialize_json(artifact_payload)
-        _write_atomic(artifact_path, artifact_text)
+        publisher.write(artifact_relpath, artifact_text)
         artifact_hash = text_sha256(artifact_text)
         profiles_block[profile_name] = {
             "profile_id": profile_name,
@@ -1224,22 +1370,34 @@ def run_formal_benchmark(
         "line_endings": "lf",
     }
     report.pop("report_checksum_sidecar", None)
-    _write_atomic(report_path, serialize_json(report))
-    _write_sidecar_sha256(
-        output_dir / "benchmark_report.json.sha256",
-        report_path,
-    )
 
+    # PHASE22 (Slice A): atomic publish. Write the report + sidecar to the
+    # staging directory first, then rename once every artifact is on disk.
     env_payload = serialize_json(environment)
     env_hash = canonical_sha256_hex(json.loads(env_payload))
-    _write_atomic(output_dir / "environment.json", env_payload)
+    publisher.write("environment.json", env_payload)
+    publisher.write("environment.json.sha256", env_hash + "\n")
+    publisher.write("benchmark_report.json", serialize_json(report))
+    publisher.write_sidecar_for("benchmark_report.json")
+
+    # Update the report's environment reference now that the staging bytes
+    # are stable; the on-disk file is the source of truth and the report
+    # in-process copy is the verifier view.
     report["artifact_refs"]["environment"] = {
         "path": "environment.json",
         "sha256": env_hash,
     }
-    _write_atomic(
-        output_dir / "environment.json.sha256", env_hash + "\n"
-    )
+
+    try:
+        publisher.commit()
+    except OutputPathUnavailable as exc:
+        publisher.discard()
+        return _error_report(
+            manifest=manifest,
+            output_dir=output_dir,
+            reason=BLOCKER_OUTPUT_PATH_UNAVAILABLE,
+            blocker_details=[f"commit_failed:{exc}"],
+        )
 
     return report
 
@@ -1288,7 +1446,6 @@ def _aggregate_overall(profiles: list[dict[str, Any]]) -> str:
 def _incomparable_report(
     *,
     manifest: Mapping[str, Any],
-    output_dir: Path,
     preflight_dict: Mapping[str, Any],
     gap_codes: list[str],
     dataset_sha: Optional[str],
@@ -1297,9 +1454,13 @@ def _incomparable_report(
     declared_case_set_hash: str,
     declared_count: int,
     actual_count: int,
+    publisher: _AtomicArtifactPublisher,
 ) -> dict[str, Any]:
     """Report for a preflight INCOMPARABLE run: every profile is marked
-    INCOMPARABLE with the mismatch codes; execution is skipped."""
+    INCOMPARABLE with the mismatch codes; execution is skipped. The
+    publisher is used to atomically publish the report and profile
+    artifacts via the staging directory.
+    """
     profiles = []
     profiles_block: dict[str, Any] = {}
     for profile_name in CANONICAL_PROFILES:
@@ -1323,17 +1484,16 @@ def _incomparable_report(
             "blocker_details": list(gap_codes),
             "per_case_results": [],
         }
+        artifact_relpath = f"profiles/{profile_name}.json"
         artifact_text = serialize_json(artifact_payload)
-        _write_atomic(
-            output_dir / "profiles" / f"{profile_name}.json", artifact_text
-        )
+        publisher.write(artifact_relpath, artifact_text)
         artifact_hash = text_sha256(artifact_text)
         profiles_block[profile_name] = {
             "profile_id": profile_name,
             "measurement_status": STATUS_INCOMPARABLE,
             "blocker_codes": [BLOCKER_PROFILES_INCOMPARABLE],
             "artifact": {
-                "path": f"profiles/{profile_name}.json",
+                "path": artifact_relpath,
                 "artifact_hash": artifact_hash,
             },
             "measurement_attestation": None,
@@ -1354,7 +1514,7 @@ def _incomparable_report(
                 "reviewer_attestation_ref": "",
                 "budget_approval_ref": "",
                 "runtime_attestation_ref": "",
-                "output_artifact_path": f"profiles/{profile_name}.json",
+                "output_artifact_path": artifact_relpath,
                 "output_artifact_hash": artifact_hash,
                 "measurement_status": STATUS_INCOMPARABLE,
                 "blocker_codes": [BLOCKER_PROFILES_INCOMPARABLE],
@@ -1414,12 +1574,8 @@ def _incomparable_report(
         "line_endings": "lf",
     }
     report.pop("report_checksum_sidecar", None)
-    report_path = output_dir / "benchmark_report.json"
-    _write_atomic(report_path, serialize_json(report))
-    _write_sidecar_sha256(
-        output_dir / "benchmark_report.json.sha256",
-        report_path,
-    )
+    publisher.write("benchmark_report.json", serialize_json(report))
+    publisher.write_sidecar_for("benchmark_report.json")
     return report
 
 
@@ -1544,19 +1700,40 @@ def run(argv: Optional[list] = None) -> int:
             check_only=bool(args.check_only),
         )
     except Exception:
-        report = _error_report(
+        # PHASE22 (Slice A): an exception inside the orchestrator must not
+        # be silently swallowed. The error report is written through the
+        # atomic publisher so we never leave a partial output directory.
+        error_publisher = _AtomicArtifactPublisher(
+            output_dir=Path(args.output),
+            run_id=str((manifest or {}).get("eval_run_id") or "run"),
+        )
+        try:
+            error_publisher.open()
+        except (OutputPathExists, OutputPathUnavailable):
+            # Final output already exists or staging unavailable; surface
+            # the error without writing any artifact.
+            sys.stderr.write("formal_benchmark: output_path_unavailable\n")
+            return EXIT_ERROR
+        error_report = _error_report(
             manifest=manifest,
             output_dir=Path(args.output),
             reason=BLOCKER_INTERNAL_ERROR,
             blocker_details=["entry_internal_error"],
         )
-
-    try:
-        if report.get("overall_status") == STATUS_ERROR and not (Path(args.output) / "benchmark_report.json").exists():
-            # write the error report as the immutable artifact
-            _write_atomic(Path(args.output) / "benchmark_report.json", serialize_json(report))
-    except OSError:
-        sys.stderr.write("formal_benchmark: output_write_failed\n")
+        error_report["report_integrity"] = {
+            "algorithm": "sha256",
+            "sidecar_path": "benchmark_report.json.sha256",
+            "encoding": "utf-8",
+            "line_endings": "lf",
+        }
+        error_publisher.write("benchmark_report.json", serialize_json(error_report))
+        error_publisher.write_sidecar_for("benchmark_report.json")
+        try:
+            error_publisher.commit()
+        except OutputPathUnavailable:
+            error_publisher.discard()
+            sys.stderr.write("formal_benchmark: output_write_failed\n")
+            return EXIT_ERROR
         return EXIT_ERROR
 
     return STATUS_TO_EXIT.get(str(report.get("overall_status")), EXIT_ERROR)
