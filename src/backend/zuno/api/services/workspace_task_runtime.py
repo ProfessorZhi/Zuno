@@ -23,6 +23,7 @@ from zuno.agent.runtime import (
     UnifiedAgentRuntimeService,
 )
 from zuno.api.services.user import UserPayload
+from zuno.platform.services.workspace.single_controller_runtime import BlockedConfiguration
 from zuno.capability.runtime import (
     SecurityApprovalFactSink,
     ToolRuntimeExecutionResult,
@@ -1140,7 +1141,19 @@ class WorkspaceTaskRuntimeService:
         simple_task: WorkSpaceSimpleTask,
         login_user: UserPayload,
     ) -> dict:
-        workspace_id = simple_task.workspace_id or "workspace_default"
+        workspace_id = (simple_task.workspace_id or "").strip()
+        # PHASE22 final engineering closure (P0-3): no synthetic
+        # ``workspace_default``. A missing / empty workspace_id fails
+        # closed with the canonical
+        # ``BLOCKED_CONFIGURATION: missing_product_workspace_context``
+        # token before any model / tool execution.
+        if not workspace_id:
+            raise BlockedConfiguration(
+                "BLOCKED_CONFIGURATION: missing_product_workspace_context — "
+                "workspace_id must come from the validated Server-owned "
+                "product context; the synthetic 'workspace_default' fallback "
+                "is forbidden"
+            )
         task_id = simple_task.task_id or f"task_{uuid4().hex[:12]}"
         trace_id = simple_task.trace_id or f"trace_{uuid4().hex[:12]}"
         goal = simple_task.goal or simple_task.query
@@ -1521,16 +1534,25 @@ class WorkspaceTaskRuntimeService:
         goal: str,
         tenant_id: str = "",
     ) -> None:
-        # PHASE22 repair (B7): RuntimeStartRequest never falls back to a
-        # synthetic tenant:default. The workspace-task surface carries a real
-        # workspace_id but no tenant context today; the caller must supply the
-        # real tenant explicitly. Empty tenant stays empty (no fabricated
-        # identity) and the single-controller composition path fails closed
-        # until the product surface wires real tenant context.
+        # PHASE22 final engineering closure (P0-1, P0-4): the unified runtime
+        # entry point MUST NOT accept an empty / fabricated tenant identity.
+        # The caller must supply a real Server-owned tenant_id (the product
+        # surface reads it from the validated authentication context, never
+        # the request body, and never ``f"user:{login_user.user_id}"``).
+        # Empty or synthetic tenant identity fails closed before any model /
+        # tool is invoked, with the canonical
+        # ``BLOCKED_CONFIGURATION: tenant_identity_not_available`` token.
+        tenant_identity = (tenant_id or "").strip()
+        if not tenant_identity or tenant_identity.startswith("user:") or tenant_identity == "tenant:default":
+            raise BlockedConfiguration(
+                "BLOCKED_CONFIGURATION: tenant_identity_not_available — "
+                "real Server-owned tenant identity is required; "
+                "synthetic user:* / tenant:default fallbacks are forbidden"
+            )
         request = RuntimeStartRequest(
             run_id=f"run:{task.task_id}",
             thread_id=simple_task.session_id or task.task_id,
-            tenant_id=tenant_id,
+            tenant_id=tenant_identity,
             workspace_id=task.workspace_id,
             user_id=login_user.user_id,
             task_id=task.task_id,
@@ -2316,13 +2338,22 @@ class WorkspaceTaskRuntimeService:
         login_user: UserPayload,
         runtime_state: ControllerRuntimeState,
     ) -> ToolRuntimeExecutionResult | None:
+        workspace_id = (simple_task.workspace_id or "").strip()
+        # PHASE22 final engineering closure (P0-3): missing workspace_id
+        # fails closed before any tool is dispatched.
+        if not workspace_id:
+            raise BlockedConfiguration(
+                "BLOCKED_CONFIGURATION: missing_product_workspace_context — "
+                "workspace_id must come from the validated Server-owned "
+                "product context; synthetic fallbacks are forbidden"
+            )
         for tool_id in simple_task.plugins:
             if cls._tool_runtime.get_manifest(tool_id) is None:
                 continue
             request = ToolRuntimeRequest(
                 tool_id=tool_id,
                 arguments=cls._tool_arguments(simple_task=simple_task, tool_id=tool_id),
-                workspace_id=simple_task.workspace_id or "workspace_default",
+                workspace_id=workspace_id,
                 user_id=login_user.user_id,
                 task_id=task_id,
                 trace_id=simple_task.trace_id or runtime_state.trace_id,
@@ -3019,7 +3050,10 @@ class WorkspaceTaskRuntimeService:
                     "trace_id": task.trace_id or "",
                     "workspace_id": task.workspace_id,
                     "user_id": login_user.user_id,
-                    "tenant_id": f"user:{login_user.user_id}",
+                    # PHASE22 final engineering closure (P0-1): no synthetic
+                    # user:* tenant. The capability-plan layer receives the
+                    # Server-owned tenant from the validated auth context.
+                    "tenant_id": (getattr(login_user, "tenant_id", "") or "").strip(),
                     "user_goal": task.goal,
                     "available_capability_ids": tuple(simple_task.plugins),
                     "pinned_skill_id": (
@@ -3069,8 +3103,20 @@ class WorkspaceTaskRuntimeService:
         ).hexdigest()[:24]
         submitter = cls._product_runtime_submitter_for_tests
         bootstrap_runtime_agent = False
-        tenant_id = f"user:{login_user.user_id}"
-        if submitter is None:
+        # PHASE22 final engineering closure (P0-1): no synthetic tenant from
+        # user_id. The product surface must surface the Server-owned tenant
+        # from the validated authentication context. If the auth context
+        # carries no tenant, this Product Run MUST NOT execute — we fail
+        # closed with the canonical token before any model / tool is invoked.
+        tenant_id = (
+            getattr(login_user, "tenant_id", "") or ""
+        )
+        if not tenant_id.strip() or tenant_id.strip().startswith("user:"):
+            raise BlockedConfiguration(
+                "BLOCKED_CONFIGURATION: tenant_identity_not_available — "
+                "workspace product surface requires Server-owned tenant_id "
+                "from the validated auth context; user:* fallbacks are forbidden"
+            )
             from zuno.api.services.product import ProductService
 
             submitter = ProductService.submit_runtime_request

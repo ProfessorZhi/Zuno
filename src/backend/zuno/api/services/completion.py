@@ -18,6 +18,7 @@ from zuno.platform.common.helpers import (
     build_completion_user_input,
 )
 from zuno.platform.resources.prompts.completion import SYSTEM_PROMPT
+from zuno.platform.services.workspace.single_controller_runtime import BlockedConfiguration
 
 
 class CompletionService:
@@ -157,7 +158,17 @@ class CompletionService:
                 "query_method": req.query_method,
             }
         )[:24]
-        tenant_id = f"user:{login_user_id}"
+        tenant_id = (getattr(req, "tenant_id", "") or "").strip()
+        # PHASE22 final engineering closure (P0-1): request body tenant_id
+        # is NOT a trusted identity fact. The Server-owned product identity
+        # must come from the validated authentication context. If absent,
+        # fail closed before any model / tool invocation.
+        if not tenant_id or tenant_id.startswith("user:"):
+            raise BlockedConfiguration(
+                "BLOCKED_CONFIGURATION: tenant_identity_not_available — "
+                "completion product surface requires Server-owned tenant_id; "
+                "user:* fallbacks are forbidden"
+            )
         active_agent_version_id = ProductService.runtime_agent_version_id(
             surface="completion",
             tenant_id=tenant_id,

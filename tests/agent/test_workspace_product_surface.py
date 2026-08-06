@@ -20,7 +20,7 @@ from typing import Any
 
 import pytest
 
-from zuno.api.dto.workspace import WorkSpaceSimpleTask
+from zuno.api.dto.workspace import WorkSpaceSimpleTask, WorkspaceTaskContract
 from zuno.api.services.user import UserPayload
 from zuno.api.services.workspace import WorkspaceService
 from zuno.agent.runtime import SQLiteAgentRunStore
@@ -433,6 +433,41 @@ def test_wechat_product_path_requires_real_identity(product_composition, product
                 history_messages="",
             )
         )
+
+
+def test_unified_runtime_rejects_synthetic_user_tenant(product_composition) -> None:
+    """PHASE22 final engineering closure (P0-1, P0-4): the unified runtime
+    entry MUST NOT accept ``f"user:{user_id}"`` / ``tenant:default`` /
+    empty tenant. The entry fails closed with the canonical token
+    ``BLOCKED_CONFIGURATION: tenant_identity_not_available`` before any
+    model / tool invocation. Synthetic user:* fallbacks are forbidden
+    even if some upstream caller still produces them.
+    """
+    from zuno.api.services.workspace_task_runtime import (
+        WorkspaceTaskRuntimeService,
+    )
+
+    login_user = UserPayload(user_id="user-a", role="admin")
+    task_contract = WorkspaceTaskContract(
+        task_id="t-1",
+        workspace_id="ws-1",
+        session_id="s-1",
+        user_id=login_user.user_id,
+        goal="hello",
+    )
+    simple_task = _product_task(
+        tenant_id="tenant-a", workspace_id="ws-1", task_id="t-1"
+    )
+
+    for bad_tenant in (f"user:{login_user.user_id}", "", "tenant:default"):
+        with pytest.raises(BlockedConfiguration, match="tenant_identity_not_available"):
+            WorkspaceTaskRuntimeService._start_unified_runtime_for_task(
+                task=task_contract,
+                simple_task=simple_task,
+                login_user=login_user,
+                goal="hello",
+                tenant_id=bad_tenant,
+            )
 
 
 def test_wechat_product_path_accepts_explicit_real_identity(
