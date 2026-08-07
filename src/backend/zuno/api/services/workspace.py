@@ -19,7 +19,6 @@ from zuno.api.services.workspace_session import WorkSpaceSessionService
 from zuno.api.dto.schemas import resp_200
 from zuno.api.dto.usage_stats import UsageStatsAgentType
 from zuno.api.dto.workspace import WorkSpaceSimpleTask
-from zuno.capability.tools.text2image.action import _text_to_image
 from zuno.platform.common.contexts import set_agent_name_context, set_user_id_context
 from zuno.platform.common.helpers import parse_imported_config
 from zuno.platform.common.model_output import normalize_model_id_for_provider
@@ -237,110 +236,6 @@ class WorkspaceService:
 
         return StreamingResponse(
             blocked_generate(),
-            media_type="text/event-stream",
-            headers={
-                "Cache-Control": "no-cache",
-                "Connection": "keep-alive",
-                "X-Accel-Buffering": "no",
-            },
-        )
-
-    @classmethod
-    def build_direct_image_response(cls, simple_task: WorkSpaceSimpleTask) -> StreamingResponse:
-        """Developer-test-profile-only image generation entry point.
-
-        PHASE22 product wiring: the product surface never calls this — image
-        regeneration in the product profile fails closed with
-        IMAGE_TOOL_RUNTIME_NOT_BOUND (no formal Tool Policy / Owner binding
-        for text_to_image). Kept only so developer tests can exercise the
-        image capability in isolation; never wired into the product API.
-        """
-        reference_image_url = cls.pick_reference_image_url(simple_task)
-
-        async def direct_generate():
-            status_event = {
-                "event": "status",
-                "timestamp": time.time(),
-                "data": {
-                    "phase": "start",
-                    "status": "START",
-                    "message": "Detected an image-regeneration task and routed it to image generation.",
-                },
-            }
-            yield f"data: {json.dumps(status_event, ensure_ascii=False)}\n\n"
-
-            tool_call_event = {
-                "event": "tool_call",
-                "timestamp": time.time(),
-                "data": {
-                    "tool_name": "text_to_image",
-                    "tool_type": "builtin",
-                    "tool_call_id": "workspace-direct-image-generation",
-                    "arguments": {
-                        "user_prompt": simple_task.query,
-                        "reference_image_url": reference_image_url,
-                    },
-                    "message": "Generating a new image from the uploaded reference image.",
-                },
-            }
-            yield f"data: {json.dumps(tool_call_event, ensure_ascii=False)}\n\n"
-
-            try:
-                result = await asyncio.to_thread(_text_to_image, simple_task.query, reference_image_url)
-                tool_result_event = {
-                    "event": "tool_result",
-                    "timestamp": time.time(),
-                    "data": {
-                        "tool_name": "text_to_image",
-                        "tool_type": "builtin",
-                        "tool_call_id": "workspace-direct-image-generation",
-                        "ok": True,
-                        "result": result,
-                        "message": "Image generation completed.",
-                    },
-                }
-                yield f"data: {json.dumps(tool_result_event, ensure_ascii=False)}\n\n"
-                final_event = {
-                    "event": "final",
-                    "timestamp": time.time(),
-                    "data": {
-                        "chunk": result,
-                        "message": result,
-                        "accumulated": result,
-                        "done": True,
-                    },
-                }
-                yield f"data: {json.dumps(final_event, ensure_ascii=False)}\n\n"
-            except Exception as err:
-                error_text = f"Image generation failed: {err}"
-                tool_error_event = {
-                    "event": "tool_result",
-                    "timestamp": time.time(),
-                    "data": {
-                        "tool_name": "text_to_image",
-                        "tool_type": "builtin",
-                        "tool_call_id": "workspace-direct-image-generation",
-                        "ok": False,
-                        "error": str(err),
-                        "result": error_text,
-                        "message": "Image generation failed.",
-                    },
-                }
-                yield f"data: {json.dumps(tool_error_event, ensure_ascii=False)}\n\n"
-                final_error_event = {
-                    "event": "final",
-                    "timestamp": time.time(),
-                    "data": {
-                        "chunk": error_text,
-                        "message": error_text,
-                        "accumulated": error_text,
-                        "done": True,
-                    },
-                }
-                yield f"data: {json.dumps(final_error_event, ensure_ascii=False)}\n\n"
-
-        return StreamingResponse(
-            direct_generate(),
             media_type="text/event-stream",
             headers={
                 "Cache-Control": "no-cache",

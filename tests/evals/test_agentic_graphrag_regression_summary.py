@@ -4,7 +4,7 @@ import json
 
 import pytest
 
-from zuno.agent.product_baseline import run_workspace_product_e2e_scenario
+from tools.evals.zuno.agent.product_baseline import run_workspace_product_e2e_scenario
 from zuno.platform.observability.product_benchmark import (
     build_agentic_graphrag_regression_summary,
 )

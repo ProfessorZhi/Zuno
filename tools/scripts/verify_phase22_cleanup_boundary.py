@@ -201,7 +201,7 @@ QUEUE_RUNNER = REPO_ROOT / "src" / "backend" / "zuno" / "platform" / "services" 
 PLATFORM_SETTINGS = REPO_ROOT / "src" / "backend" / "zuno" / "platform" / "settings.py"
 MAIN_ENTRYPOINT = REPO_ROOT / "src" / "backend" / "zuno" / "main.py"
 MEMORY_FEEDBACK_CONSUMER = REPO_ROOT / "src" / "backend" / "zuno" / "memory" / "feedback_consumer.py"
-AGENT_PRODUCT_BASELINE = REPO_ROOT / "src" / "backend" / "zuno" / "agent" / "product_baseline.py"
+AGENT_PRODUCT_BASELINE = REPO_ROOT / "tools" / "evals" / "zuno" / "agent" / "product_baseline.py"
 WORKSPACE_TASK_RUNTIME_SERVICE = (
     REPO_ROOT / "src" / "backend" / "zuno" / "api" / "services" / "workspace_task_runtime.py"
 )
@@ -623,6 +623,7 @@ def verify_phase22_cleanup_boundary() -> list[str]:
             "src/backend/zuno/main.py",
             "src/backend/zuno/memory/feedback_consumer.py",
             "src/backend/zuno/agent/product_baseline.py",
+            "tools/evals/zuno/agent/product_baseline.py",
             "src/backend/zuno/api/services/workspace_task_runtime.py",
             "src/backend/zuno/api/dto/knowledge.py",
             "src/backend/zuno/platform/services/cli_tool_discovery.py",
