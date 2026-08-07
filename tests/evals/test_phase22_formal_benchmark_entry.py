@@ -1054,6 +1054,186 @@ class FormalBenchmarkEntryTests(unittest.TestCase):
                 profile["measurement_status"], "READY_FOR_FORMAL_EXECUTION"
             )
 
+    # ------------------------------------------------------------------
+    # Slice A: Atomic publish — staging, sidecar, fail-closed.
+    # ------------------------------------------------------------------
+
+    def test_atomic_publish_writes_sidecar_bytes_match_report_bytes(self) -> None:
+        """The sidecar SHA-256 must be computed from the on-disk final
+        report bytes, not from any in-memory dict that already contains the
+        sidecar field. The report must NOT carry a self-referential hash.
+        """
+        manifest = self.fixture.build()
+        rows = self.fixture.rows
+        case_set_hash = self.fixture.case_set_hash
+        attestations = _attestations_for(_FakeFactory(state="MEASURED"), manifest, rows, case_set_hash)
+        factory = _FakeFactory(state="MEASURED", measurement_attestation=attestations)
+        output = self._output("atomic-sidecar")
+        report = run_formal_benchmark(manifest, output, profile_runtime_factory=factory)
+        # The report does NOT carry a self-referential hash.
+        self.assertNotIn("report_checksum_sidecar", report)
+        report_integrity = report.get("report_integrity", {})
+        self.assertEqual(report_integrity.get("algorithm"), "sha256")
+        self.assertEqual(
+            report_integrity.get("sidecar_path"), "benchmark_report.json.sha256"
+        )
+        # The on-disk file is the source of truth.
+        report_bytes = (output / "benchmark_report.json").read_bytes()
+        sidecar_bytes = (output / "benchmark_report.json.sha256").read_bytes()
+        expected_digest = hashlib.sha256(report_bytes).hexdigest()
+        self.assertEqual(sidecar_bytes.decode().strip(), expected_digest)
+
+    def test_atomic_publish_rejects_existing_output_directory(self) -> None:
+        """If the final output directory already exists, the entry refuses
+        to publish and returns OUTPUT_PATH_EXISTS. The supplied directory
+        is treated as write-once."""
+        output = self._output("exists")
+        # Pre-create the output directory.
+        output.mkdir(parents=True, exist_ok=True)
+        manifest = self.fixture.build()
+        report = run_formal_benchmark(
+            manifest, output, profile_runtime_factory=_FakeFactory(state="RUNTIME_OBSERVED")
+        )
+        self.assertEqual(report["overall_status"], "ERROR")
+        self.assertEqual(report.get("error"), "OUTPUT_PATH_EXISTS")
+
+    def test_atomic_publish_profile_failure_publishes_failure_record(self) -> None:
+        """A profile execution failure must be captured in the published
+        artifact. The publish completes (the failure is a recorded
+        measurement outcome, not a publish abort); the run_formal_benchmark
+        contract is fail-closed at the score level, not at the publish
+        level.
+        """
+        manifest = self.fixture.build()
+        output = self._output("profile-failure")
+        factory = _FakeFactory(state="MEASURED", fail_profiles={"standard_rag"})
+        report = run_formal_benchmark(manifest, output, profile_runtime_factory=factory)
+        # The publisher commits; the output directory is published.
+        self.assertTrue(output.exists(), f"output should exist: {output}")
+        # The failed profile is recorded as BLOCKED with a precise blocker.
+        standard = next(p for p in report["profiles"] if p["profile_id"] == "standard_rag")
+        self.assertEqual(standard["measurement_status"], "BLOCKED_NOT_MEASURED")
+        self.assertIn("PROFILE_RUNTIME_UNAVAILABLE", standard["blocker_codes"])
+        # The other profiles retain their handbook statuses.
+        other_statuses = {
+            p["profile_id"]: p["measurement_status"]
+            for p in report["profiles"]
+            if p["profile_id"] != "standard_rag"
+        }
+        self.assertTrue(
+            all(s in {"MEASURED", "BLOCKED_NOT_MEASURED"} for s in other_statuses.values()),
+            other_statuses,
+        )
+
+    def test_atomic_publish_staging_isolated_from_final(self) -> None:
+        """The staging directory lives next to the final output directory
+        and is renamed atomically. While staging is populated, the final
+        output directory is never partially written.
+        """
+        manifest = self.fixture.build()
+        rows = self.fixture.rows
+        case_set_hash = self.fixture.case_set_hash
+        attestations = _attestations_for(_FakeFactory(state="MEASURED"), manifest, rows, case_set_hash)
+        factory = _FakeFactory(state="MEASURED", measurement_attestation=attestations)
+        output = self._output("staging-isolated")
+        run_formal_benchmark(manifest, output, profile_runtime_factory=factory)
+        # After a successful publish, no staging directory remains.
+        staging_residue = [
+            p for p in output.parent.iterdir() if p.name.startswith(".staging-")
+        ]
+        self.assertEqual(staging_residue, [], f"residual staging: {staging_residue}")
+        # And the final output contains the published report.
+        self.assertTrue((output / "benchmark_report.json").exists())
+
+    def test_atomic_publish_staging_failure_does_not_publish(self) -> None:
+        """If the staging directory cannot be created (e.g. parent not
+        writable), the publisher aborts before any artifact is written and
+        no final output directory exists.
+        """
+        manifest = self.fixture.build()
+        # Pick a path whose parent cannot be created: a path under a
+        # non-existent device on Windows.
+        output = self._output("staging-failure")
+        # Lock the parent so mkdir fails.
+        parent = output.parent
+        # Use a deliberately unwriteable path: a deeply nested path under
+        # an existing file.
+        blocker = parent / "_blocker"
+        blocker.write_text("block", encoding="utf-8")
+        try:
+            bad_output = blocker / "nested" / "out"
+            report = run_formal_benchmark(
+                manifest,
+                bad_output,
+                profile_runtime_factory=_FakeFactory(state="RUNTIME_OBSERVED"),
+            )
+            self.assertEqual(report["overall_status"], "ERROR")
+            self.assertEqual(report.get("error"), "OUTPUT_PATH_UNAVAILABLE")
+            # The final output directory must not exist.
+            self.assertFalse(bad_output.exists())
+        finally:
+            blocker.unlink(missing_ok=True)
+
+    def test_atomic_publish_lf_line_endings(self) -> None:
+        """The on-disk report bytes must use LF line endings so the SHA-256
+        is byte-stable across platforms (Windows reads would otherwise
+        rewrite the bytes)."""
+        manifest = self.fixture.build()
+        rows = self.fixture.rows
+        case_set_hash = self.fixture.case_set_hash
+        attestations = _attestations_for(_FakeFactory(state="MEASURED"), manifest, rows, case_set_hash)
+        factory = _FakeFactory(state="MEASURED", measurement_attestation=attestations)
+        output = self._output("lf-bytes")
+        run_formal_benchmark(manifest, output, profile_runtime_factory=factory)
+        report_bytes = (output / "benchmark_report.json").read_bytes()
+        self.assertNotIn(b"\r\n", report_bytes, "report bytes must use LF only")
+        # The sidecar's digest must match the LF bytes.
+        sidecar = (output / "benchmark_report.json.sha256").read_bytes()
+        self.assertEqual(sidecar.decode().strip(), hashlib.sha256(report_bytes).hexdigest())
+
+    def test_atomic_publish_test_double_not_measured(self) -> None:
+        """Test doubles must never become MEASURED. The entry contract
+        enforces this even when the audit gates promise MEASURED."""
+        manifest = self.fixture.build()
+        rows = self.fixture.rows
+        case_set_hash = self.fixture.case_set_hash
+        attestations = _attestations_for(_FakeFactory(state="MEASURED"), manifest, rows, case_set_hash)
+        factory = _FakeFactory(
+            state="MEASURED",
+            is_test_double=True,
+            measurement_attestation=attestations,
+        )
+        output = self._output("test-double")
+        report = run_formal_benchmark(manifest, output, profile_runtime_factory=factory)
+        for profile in report["profiles"]:
+            self.assertEqual(profile["measurement_status"], "BLOCKED_NOT_MEASURED")
+            self.assertIn("TEST_DOUBLE_NOT_MEASURED", profile["blocker_codes"])
+
+    def test_atomic_publish_blocked_profile_does_not_drag_others(self) -> None:
+        """A BLOCKED profile must not contaminate the other profiles'
+        measurements. The aggregator keeps each profile's identity."""
+        manifest = self.fixture.build()
+        rows = self.fixture.rows
+        case_set_hash = self.fixture.case_set_hash
+        attestations = _attestations_for(_FakeFactory(state="MEASURED"), manifest, rows, case_set_hash)
+        factory = _FakeFactory(
+            state="MEASURED",
+            measurement_attestation=attestations,
+            fail_profiles={"standard_rag"},
+        )
+        output = self._output("blocked-only")
+        report = run_formal_benchmark(manifest, output, profile_runtime_factory=factory)
+        # The other three profiles still surface; the BLOCKED status must
+        # not cascade.
+        profile_status = {p["profile_id"]: p["measurement_status"] for p in report["profiles"]}
+        self.assertEqual(profile_status["standard_rag"], "BLOCKED_NOT_MEASURED")
+        # INCOMPARABLE state is allowed when only one profile is BLOCKED
+        # because the comparability contract requires all-or-nothing.
+        self.assertIn(
+            report["overall_status"],
+            {"INCOMPARABLE", "BLOCKED_NOT_MEASURED", "ERROR"},
+        )
+
 
 if __name__ == "__main__":
     unittest.main()

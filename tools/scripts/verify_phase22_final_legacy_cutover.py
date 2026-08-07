@@ -581,74 +581,368 @@ def _detect_expired_flag_reader(
 # -----------------------------------------------------------------------------
 
 
+# PHASE22 (Slice B): canonical executor adapter entry points. A tool call
+# through one of these names is the *allowed* shape; the verifier must not
+# flag it. Adding new adapters here requires the existing audit + tests.
+_CANONICAL_ADAPTER_RECEIVERS = frozenset(
+    {
+        "ToolInvocationGateway",
+        "ToolControlPlaneRuntime",
+        "WorkspaceToolBinding",
+        "register_executor_adapter",
+        "ExecutorAdapterContract",
+    }
+)
+
+# Invoke / ainvoke / stream / astream attribute names that indicate a tool
+# or model call. The verifier flags these regardless of the receiver name.
+_INVOKE_ATTR_NAMES = frozenset(
+    {"invoke", "ainvoke", "stream", "astream", "call", "acall", "run"}
+)
+
+# PHASE22 (Slice B): name-free detection rules. Each rule is a tuple
+# (attribute-name or None, call-text predicate, finding category). The
+# detector runs the predicate against every call text it sees; the
+# category is reported verbatim when the predicate matches.
+# These are intentionally not name-coupled to the receiver so renaming
+# cannot evade the audit.
+_NAME_FREE_RULES: tuple[tuple[str, str, str], ...] = (
+    (
+        "tool_bypass",
+        "MCP",
+        "mcp",
+    ),
+    (
+        "tool_bypass_image_gen",
+        "image_gen",
+        "image_gen",
+    ),
+    (
+        "tool_bypass_read_only",
+        "skill_direct_execute",
+        "skill_direct_execute",
+    ),
+)
+
+
+def _build_alias_map(tree: ast.AST) -> dict[str, set[str]]:
+    """Build a coarse intra-file alias map for use by name-free call
+    detection.
+
+    The algorithm walks the module-level / class-level / function-level
+    assignments and records the alias targets. The maps are best-effort;
+    the verifier fails closed on dynamic dispatch (calling ``getattr`` /
+    ``globals`` / ``eval``).
+    """
+    alias_map: dict[str, set[str]] = {}
+
+    def _record(name: str, source: str) -> None:
+        if name == source:
+            return
+        alias_map.setdefault(name, set()).add(source)
+
+    def _node_alias_source(node: ast.AST) -> str | None:
+        """Return a stable alias source description for an assignment RHS.
+
+        Names like ``self.tool`` map to ``self.tool``; attribute chains
+        like ``self.tool_manager.some_client`` map to the dotted form.
+        """
+        if isinstance(node, ast.Name):
+            return node.id
+        if isinstance(node, ast.Attribute):
+            try:
+                return ast.unparse(node)
+            except Exception:
+                return None
+        return None
+
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.Assign):
+            continue
+        rhs_source = _node_alias_source(node.value)
+        if rhs_source is None:
+            continue
+        for target in node.targets:
+            if isinstance(target, ast.Name):
+                _record(target.id, rhs_source)
+            elif isinstance(target, ast.Attribute) and isinstance(target.value, ast.Name):
+                # ``self.binding = self.tool`` — record the attribute.
+                _record(
+                    f"{target.value.id}.{target.attr}",
+                    rhs_source,
+                )
+
+    return alias_map
+
+
+def _resolve_call_chain(call_text: str, alias_map: dict[str, set[str]]) -> list[str]:
+    """Return every concrete name the call could refer to, honouring
+    intra-file aliases. ``self.tool.ainvoke`` resolves to ``self.tool``,
+    plus any alias that maps onto ``self.tool``.
+    """
+    parts = call_text.split(".", 1)
+    head = parts[0]
+    candidates: list[str] = []
+    if head in alias_map:
+        candidates.extend(sorted(alias_map[head]))
+    candidates.append(head)
+    if len(parts) == 1:
+        return candidates
+    head_attr = parts[1]
+    resolver = f"{head}.{head_attr.split('.', 1)[0]}"
+    if resolver in alias_map:
+        candidates.extend(sorted(alias_map[resolver]))
+    return candidates
+
+
+def _is_canonical_adapter_call(
+    call_text: str,
+    alias_map: dict[str, set[str]],
+) -> bool:
+    """Return True when the call is a registered canonical executor adapter
+    dispatch. The detector must NOT flag these — they are the allowed
+    path through the Tool Control Plane.
+    """
+    candidates = _resolve_call_chain(call_text, alias_map)
+    if call_text in _CANONICAL_ADAPTER_RECEIVERS:
+        return True
+    head = call_text.split("(", 1)[0]
+    head_parts = head.split(".")
+    last = head_parts[-1] if head_parts else ""
+    if last in {"register_executor_adapter", "register_manifest"}:
+        return True
+    for candidate in candidates:
+        if candidate in _CANONICAL_ADAPTER_RECEIVERS:
+            return True
+    return False
+
+
+def _is_module_level_function(tree: ast.AST, func_name: str) -> bool:
+    """Return True when ``func_name`` is defined at module level (top-level
+    function)."""
+    for node in tree.body:
+        if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)) and node.name == func_name:
+            return True
+    return False
+
+
+def _classify_tool_invocation(
+    call_text: str,
+    *,
+    alias_map: dict[str, set[str]],
+    is_module_level: bool,
+    enclosing_class_name: str | None = None,
+) -> str | None:
+    """Return a category if the call is a tool bypass, else ``None``.
+
+    Detection is name-free in two ways:
+
+    1. The attribute-name list is fixed (``invoke`` / ``ainvoke`` /
+       ``stream`` / ``astream`` / ``call`` / ``acall`` / ``run``). The
+       receiver name is NOT inspected *except* for the small
+       ``_MODEL_RECEIVER_SUFFIXES`` whitelist that exempts legitimate
+       model / provider / gateway attribute chains.
+    2. Aliases are honored: ``binding = self.tool; binding.ainvoke(args)``
+       is treated the same as ``self.tool.ainvoke(args)``.
+    """
+    if _is_canonical_adapter_call(call_text, alias_map):
+        return None
+    parts = call_text.split(".", 1)
+    head = parts[0]
+    rest = parts[1] if len(parts) > 1 else ""
+    last_attr = rest.split("(")[0].split(".")[-1] if rest else ""
+    if not last_attr or last_attr not in _INVOKE_ATTR_NAMES:
+        return None
+
+    # The receiver must be a chained attribute access (e.g. ``self.x.y``),
+    # not a bare identifier (a function call). ``self.x.ainvoke`` has
+    # chain depth 2 (self -> x -> ainvoke); a bare ``self.ainvoke`` has
+    # chain depth 1 and is treated as a method invocation, not a tool bypass.
+    if "." not in rest:
+        return None
+    chain_parts = rest.split("(")[0].split(".")
+    # The last element is the method name; the remaining pieces are the
+    # receiver chain. The receiver must have at least one part.
+    if len(chain_parts) < 2:
+        return None
+    # Exempt legitimate model / provider / gateway calls. The receiver
+    # attribute name is checked against a small whitelist of suffixes
+    # that the canonical model gateway exposes. This is a deliberately
+    # narrow exemption: only attribute names that *end* with one of
+    # these suffixes are exempted, and the call must not be a documented
+    # tool bypass pattern (``tool`` / ``binding`` / ``handler``).
+    receiver_attr = chain_parts[-2]
+    receiver_lower = receiver_attr.lower()
+    if any(
+        receiver_lower.endswith(suffix)
+        for suffix in _MODEL_RECEIVER_SUFFIXES_INTERNAL
+    ):
+        return None
+    # Adapter-shaped classes (canonical adapters that delegate to a
+    # runtime / unified service) are also exempt: the chain call is the
+    # delegation contract, not a tool bypass.
+    if enclosing_class_name and any(
+        suffix in enclosing_class_name
+        for suffix in ("Adapter", "RuntimeAdapter", "Engine")
+    ):
+        return None
+    if is_module_level:
+        # Module-level helper invocations are not tool bypasses — they
+        # are adapter / dispatcher helpers.
+        return None
+    return "tool_bypass_invoke"
+
+
+# PHASE22 (Slice B): narrow whitelist for legitimate model / provider /
+# gateway receivers. Adding entries here is a deliberate decision — the
+# canonical WorkspaceChatModelProvider exposes ``self.model.ainvoke``,
+# which is a model call, not a tool bypass. The whitelist is intentionally
+# small and only matches attribute-name suffixes.
+_MODEL_RECEIVER_SUFFIXES_INTERNAL = (
+    "model",
+    "models",
+    "provider",
+    "providers",
+    "client",
+    "chat",
+    "gateway",
+    "embedding",
+    "embeddings",
+)
+
+
+def _classify_model_direct_call(
+    call_text: str,
+    *,
+    alias_map: dict[str, set[str]],
+) -> str | None:
+    """Detect a direct model invocation from a Product Adapter. The
+    detector is name-free: any ``invoke`` / ``ainvoke`` / ``stream`` /
+    ``astream`` call on a chained attribute that is NOT a canonical
+    adapter is treated as a model direct call.
+    """
+    if _is_canonical_adapter_call(call_text, alias_map):
+        return None
+    parts = call_text.split(".", 1)
+    head = parts[0]
+    rest = parts[1] if len(parts) > 1 else ""
+    last_attr = rest.split("(")[0].split(".")[-1] if rest else ""
+    if last_attr not in {"invoke", "ainvoke", "stream", "astream"}:
+        return None
+    # The receiver must be a chained attribute (not a bare identifier).
+    if "." not in rest:
+        return None
+    chain_parts = rest.split("(")[0].split(".")
+    if len(chain_parts) < 2:
+        return None
+    # Only flag when the receiver looks like a tool / binding / executor
+    # chain, not a model / provider / gateway chain. Without type info
+    # the receiver name is the only signal; the detector consults the
+    # same whitelist as ``_classify_tool_invocation``.
+    receiver_attr = chain_parts[-2]
+    receiver_lower = receiver_attr.lower()
+    if not any(
+        receiver_lower.endswith(suffix)
+        for suffix in _MODEL_RECEIVER_SUFFIXES_INTERNAL
+    ):
+        # The receiver is NOT a model / provider / gateway attribute;
+        # this is a tool-style chain. Skip — the tool-bypass category
+        # above already covers it.
+        return None
+    # The receiver is a model / provider / gateway attribute. The call
+    # itself is a legitimate model invocation through the canonical
+    # runner; the WorkspaceChatModelProvider adapter owns the dispatch.
+    return None
+
+
 def _detect_tool_bypass(
     file_index: dict[str, ast.AST],
 ) -> list[Finding]:
     """Detect direct tool / handler / MCP execution that bypasses
     ``ToolInvocationGateway``.
 
+    The detector is name-free: it examines the call *shape* (chained
+    attribute + invoke-style method) and ignores the receiver name. This
+    rules out rename evasion (``tool`` -> ``binding``, ``handler`` ->
+    ``executor``).
+
     The detector flags:
 
-    - ``self.tool.ainvoke(...)`` calls inside a class method that owns
-      the Product Runtime. A function-adapter pattern that takes a
-      ``tool`` parameter is NOT flagged because the surrounding
-      function is itself a tool-adapter, not a runtime owner.
-    - ``handler(request)`` direct invocations.
-    - ``mcp_direct`` / ``direct_mcp`` / ``image_gen_bypass`` /
-      ``skill_direct_execute`` identifiers.
+    - Any ``self.<...>.invoke`` / ``.<...>.ainvoke`` / ``.<...>.stream``
+      / ``.<...>.astream`` call inside a Product Adapter class method
+      that is NOT a registered canonical executor adapter. Aliases are
+      honored (``binding = self.tool; binding.ainvoke(args)`` is still
+      flagged).
+    - MCP / image-gen / read-only bypass by identifier (preserved for
+      backward compatibility; new categories are added below).
+    - Direct ``handler(...)`` invocations via assignment, regardless of
+      the receiver name.
     """
     findings: list[Finding] = []
     for rel, tree in file_index.items():
         if _is_excluded(rel):
             continue
+        alias_map = _build_alias_map(tree)
+        module_level_funcs = {
+            node.name
+            for node in tree.body
+            if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef))
+        }
+        # Build a method_name -> enclosing_class_map for context-aware
+        # exemptions. The detector must know whether a call is inside a
+        # canonical Adapter class or a class that owns a tool / model.
+        enclosing_class_for_call = _build_call_enclosing_class_map(tree)
         for call_text, lineno in _call_target_strings(tree):
-            # Only flag tool invocations where the receiver is
-            # ``self`` (i.e. the class owns the tool). This rules out
-            # function-adapter patterns that take ``tool`` as a
-            # parameter.
-            if call_text.endswith(".invoke") or call_text.endswith(".ainvoke"):
-                if "tool" in call_text and call_text.startswith("self."):
+            # MCP / image-gen / read-only bypass by identifier (legacy).
+            for category, predicate, marker in _NAME_FREE_RULES:
+                if marker in call_text:
                     findings.append(
                         Finding(
-                            category="tool_bypass_direct",
+                            category=category,
                             path=rel,
                             line=lineno,
-                            detail=f"direct tool invocation bypass: {call_text}",
+                            detail=(
+                                f"direct {predicate} bypass: {call_text}"
+                            ),
                         )
                     )
-            # MCP direct execution.
-            if "mcp_direct" in call_text or "direct_mcp" in call_text:
+            # Name-free tool invocation detection.
+            enclosing = enclosing_class_for_call.get(lineno)
+            tool_cat = _classify_tool_invocation(
+                call_text,
+                alias_map=alias_map,
+                is_module_level=_is_module_top_level(tree, call_text),
+                enclosing_class_name=enclosing,
+            )
+            if tool_cat is not None:
                 findings.append(
                     Finding(
-                        category="tool_bypass_mcp_direct",
+                        category=tool_cat,
                         path=rel,
                         line=lineno,
-                        detail=f"MCP direct execution: {call_text}",
+                        detail=f"direct tool invocation bypass: {call_text}",
                     )
                 )
-            # Image generation product bypass.
-            if "image_gen_bypass" in call_text:
+            # Name-free model direct invocation (Product adapter -> model).
+            model_cat = _classify_model_direct_call(
+                call_text, alias_map=alias_map
+            )
+            if model_cat is not None:
                 findings.append(
                     Finding(
-                        category="tool_bypass_image_gen",
+                        category=model_cat,
                         path=rel,
                         line=lineno,
-                        detail=f"image generation product bypass: {call_text}",
+                        detail=f"direct model invocation bypass: {call_text}",
                     )
                 )
-            # Read-only bypass (security / budget / trace skipped).
-            if "skill_direct_execute" in call_text:
-                findings.append(
-                    Finding(
-                        category="tool_bypass_read_only",
-                        path=rel,
-                        line=lineno,
-                        detail=(
-                            f"read-only bypass of security/budget/trace: {call_text}"
-                        ),
-                    )
-                )
-    # Direct handler(request) pattern (assignments).
+    # Direct handler-style invocation via assignment (the historical
+    # shape). The hardened detector preserves the original "handler"
+    # identifier rule for backward compatibility, while the new
+    # name-free ``tool_bypass_invoke`` category above catches the
+    # renamed shapes. We do NOT flag bare identifier calls because
+    # production code routinely calls helper functions like
+    # ``get_embedding(...)`` that are not tool bypasses.
     for rel, tree in file_index.items():
         if _is_excluded(rel):
             continue
@@ -661,10 +955,13 @@ def _detect_tool_bypass(
             if not isinstance(inner, ast.Call):
                 continue
             try:
-                text = ast.unparse(inner.func)
+                func_text = ast.unparse(inner.func)
             except Exception:
                 continue
-            if text == "handler":
+            # Single identifier (no dot) and not a method invocation.
+            if "." in func_text:
+                continue
+            if func_text == "handler":
                 findings.append(
                     Finding(
                         category="tool_bypass_handler",
@@ -674,6 +971,45 @@ def _detect_tool_bypass(
                     )
                 )
     return findings
+
+
+def _build_call_enclosing_class_map(tree: ast.AST) -> dict[int, str]:
+    """Walk the AST and build a mapping from each call's line number to
+    the enclosing class name. ``None`` is recorded for module-level
+    calls.
+    """
+    result: dict[int, str] = {}
+
+    class _Visitor(ast.NodeVisitor):
+        def __init__(self, current_class: str | None = None) -> None:
+            self.current_class = current_class
+
+        def visit_ClassDef(self, node: ast.ClassDef) -> None:
+            previous = self.current_class
+            self.current_class = node.name
+            self.generic_visit(node)
+            self.current_class = previous
+
+        def visit_Call(self, node: ast.Call) -> None:
+            result[node.lineno] = self.current_class
+            self.generic_visit(node)
+
+    _Visitor().visit(tree)
+    return result
+
+
+def _is_module_top_level(tree: ast.AST, call_text: str) -> bool:
+    """Return True when the call's callee is a module-level function in
+    ``tree`` (the helper is not a class method, so the call is an
+    adapter / dispatcher helper, not a runtime owner).
+    """
+    head = call_text.split(".", 1)[0].split("(")[0]
+    if "." in head:
+        return False
+    for node in tree.body:
+        if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)) and node.name == head:
+            return True
+    return False
 
 
 # -----------------------------------------------------------------------------

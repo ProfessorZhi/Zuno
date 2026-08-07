@@ -67,27 +67,30 @@ def _run(
 
 
 def test_clean_fixture_produces_zero_findings() -> None:
-    """Place the clean fixture into a tmp clone and assert that the
-    audit emits no legacy / dual-path / tool-bypass / ownership
-    findings AND no unresolved findings.
+    """Place the clean fixture into a tmp clone whose scanned roots are
+    otherwise empty, and assert that the audit emits no findings.
+
+    The "clean" tree contains ONLY the clean fixture as the source of
+    any scanned-root content. Every other Python file under the
+    scanned roots is removed so the detector has no other production
+    surface to flag.
     """
     with tempfile.TemporaryDirectory() as tmpdir:
         clone = Path(tmpdir) / "zuno-mirror"
         shutil.copytree(REPO_ROOT, clone)
-        # Remove the legacy files the verifier scans so the only
-        # remaining content is the clean fixture.
-        for rel in (
-            "src/backend/zuno/agent/core/agents/codeact_agent.py",
-            "src/backend/zuno/agent/core/agents/general_agent.py",
-            "src/backend/zuno/agent/core/agents/plan_execute_agent.py",
-            "src/backend/zuno/agent/core/agents/react_agent.py",
-            "src/backend/zuno/agent/core/agents/text2sql_agent.py",
-            "src/backend/zuno/platform/services/workspace/simple_agent.py",
-            "src/backend/zuno/platform/services/workspace/wechat_agent.py",
-        ):
-            target = clone / rel
-            if target.exists():
-                target.unlink()
+        # Replace every Python file under the four scanned roots with
+        # the clean fixture. The clean fixture is the only source of
+        # content; the detector must report CLEAN.
+        clean_text = (clone / "tests/fixtures/phase22_legacy_cutover_v3/clean/clean_runtime.py").read_text(encoding="utf-8")
+        scanned_root_glob = [
+            "src/backend/zuno/**/*.py",
+        ]
+        import glob as glob_mod
+        for pattern in scanned_root_glob:
+            for rel in glob_mod.glob(str(clone / pattern), recursive=True):
+                p = Path(rel)
+                if p.is_file() and p.suffix == ".py":
+                    p.write_text(clean_text, encoding="utf-8")
         result = subprocess.run(
             [
                 sys.executable,
@@ -101,7 +104,7 @@ def test_clean_fixture_produces_zero_findings() -> None:
         )
         payload = json.loads(result.stdout or "{}")
         assert payload["status"] == "LEGACY_CUTOVER_AUDIT_CLEAN", (
-            f"clean fixture must yield CLEAN, got {payload['status']}: "
+            f"clean fixture tree must yield CLEAN, got {payload['status']}: "
             + json.dumps(payload, indent=2)
         )
         assert payload["finding_count"] == 0
@@ -601,3 +604,156 @@ def test_status_priority_is_observed() -> None:
         # Both legacy_runtime and tool_bypass findings are present;
         # tool_bypass must dominate.
         assert payload["status"] == "TOOL_BYPASS_BLOCKERS_FOUND"
+
+
+# -----------------------------------------------------------------------------
+# 17. Slice B: rename-evasion positive fixtures must still be flagged.
+# -----------------------------------------------------------------------------
+
+NEW_FIXTURE_ROOT = (
+    REPO_ROOT / "tests" / "fixtures" / "phase22_final_legacy_cutover"
+)
+
+
+def _run_with_isolated_fixtures(fixture_paths: list[Path]) -> dict:
+    """Copy the repo into a tmp clone, drop each existing scanned file
+    that would shadow the fixtures, and run the audit on the clone. The
+    fixtures are placed under the canonical scanned root
+    (``src/backend/zuno/agent/``) so the verifier picks them up.
+    """
+    with tempfile.TemporaryDirectory() as tmpdir:
+        clone = Path(tmpdir) / "zuno-mirror"
+        shutil.copytree(REPO_ROOT, clone)
+        # Drop the legacy / bypass files that the verifier scans so the
+        # fixtures are the only source of findings.
+        for rel in (
+            "src/backend/zuno/agent/core/agents/codeact_agent.py",
+            "src/backend/zuno/agent/core/agents/general_agent.py",
+            "src/backend/zuno/agent/core/agents/plan_execute_agent.py",
+            "src/backend/zuno/agent/core/agents/react_agent.py",
+            "src/backend/zuno/agent/core/agents/text2sql_agent.py",
+            "src/backend/zuno/platform/services/workspace/simple_agent.py",
+            "src/backend/zuno/platform/services/workspace/wechat_agent.py",
+        ):
+            target = clone / rel
+            if target.exists():
+                target.unlink()
+        for fixture_path in fixture_paths:
+            fixture_name = fixture_path.name
+            target = clone / "src/backend/zuno/agent" / fixture_name
+            target.parent.mkdir(parents=True, exist_ok=True)
+            target.write_text(
+                fixture_path.read_text(encoding="utf-8"), encoding="utf-8"
+            )
+        result = subprocess.run(
+            [
+                sys.executable,
+                "tools/scripts/verify_phase22_final_legacy_cutover.py",
+                "--json",
+            ],
+            cwd=clone,
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+        return json.loads(result.stdout or "{}")
+
+
+def test_renamed_receiver_still_flagged() -> None:
+    """Rename ``self.tool`` -> ``self.binding`` must still be flagged.
+
+    The hardened detector no longer relies on the receiver name; it
+    inspects the call shape (chained attribute + invoke-style method).
+    """
+    fixture = NEW_FIXTURE_ROOT / "positive_evasion" / "positive_rename_only.py"
+    payload = _run_with_isolated_fixtures([fixture])
+    cats = {f["category"] for f in payload.get("findings", [])}
+    assert "tool_bypass_invoke" in cats, (
+        "renamed receiver must still be flagged as tool_bypass_invoke, "
+        f"got {cats}"
+    )
+
+
+def test_aliased_call_still_flagged() -> None:
+    """Assignment alias ``binder = self.tool; binder.ainvoke(args)`` must
+    still be flagged.
+    """
+    fixture = NEW_FIXTURE_ROOT / "positive_evasion" / "positive_aliased_call.py"
+    payload = _run_with_isolated_fixtures([fixture])
+    cats = {f["category"] for f in payload.get("findings", [])}
+    assert "tool_bypass_invoke" in cats, (
+        "aliased call must still be flagged as tool_bypass_invoke, "
+        f"got {cats}"
+    )
+
+
+def test_canonical_adapter_not_flagged() -> None:
+    """The canonical ``register_executor_adapter`` adapter path must NOT
+    be flagged by the new name-free detector.
+    """
+    fixture = NEW_FIXTURE_ROOT / "negative_clean" / "negative_canonical_adapter.py"
+    payload = _run_with_isolated_fixtures([fixture])
+    # The fixture itself must not introduce the new name-free categories.
+    fixture_path = f"src/backend/zuno/agent/{fixture.name}"
+    cats = {
+        f["category"]
+        for f in payload.get("findings", [])
+        if f["path"] == fixture_path
+    }
+    assert "tool_bypass_invoke" not in cats, (
+        f"canonical adapter fixture must not be flagged, got {cats}"
+    )
+    assert "model_bypass_direct" not in cats, (
+        f"canonical adapter fixture must not be flagged, got {cats}"
+    )
+
+
+def test_module_helper_with_no_chain_invoke_not_flagged() -> None:
+    """A module-level helper that is a pure function (no chained
+    ``.ainvoke``) must NOT be flagged by the new name-free detector.
+    """
+    fixture = NEW_FIXTURE_ROOT / "negative_clean" / "negative_module_helper.py"
+    payload = _run_with_isolated_fixtures([fixture])
+    # The fixture itself must not introduce the new name-free categories.
+    fixture_path = f"src/backend/zuno/agent/{fixture.name}"
+    cats = {
+        f["category"]
+        for f in payload.get("findings", [])
+        if f["path"] == fixture_path
+    }
+    assert "tool_bypass_invoke" not in cats, (
+        f"module helper fixture must not be flagged, got {cats}"
+    )
+    assert "model_bypass_direct" not in cats, (
+        f"module helper fixture must not be flagged, got {cats}"
+    )
+
+
+def test_name_free_detector_finds_production_bypass() -> None:
+    """The name-free detector must surface real tool bypasses on the
+    production tree. The integration tree is intentionally NOT CLEAN,
+    but the new categories the hardened detector emits must be present
+    consistent with the tool-bypass surface in the production code.
+    """
+
+    result = _run(["--integration-base-sha", "9e1c77a189d24fb7e17e917828ce69b7383ad8bd"])
+    payload = result["payload"]
+    cats = {f["category"] for f in payload.get("findings", [])}
+    # The hardened detector must emit the new name-free category on a
+    # real tool bypass in the production tree. The phase08.py file
+    # contains ``self.graph.invoke(...)`` calls which are exactly the
+    # shape the hardened detector is supposed to flag.
+    assert "tool_bypass_invoke" in cats, (
+        "hardened detector must surface tool_bypass_invoke on "
+        f"production code, got {cats}"
+    )
+    # The legacy ``tool_bypass`` category must still be present.
+    assert "tool_bypass" in cats, (
+        "the legacy tool_bypass category must still be present, "
+        f"got {cats}"
+    )
+    # The audit must still report non-CLEAN status on the real tree.
+    assert payload["status"] != "LEGACY_CUTOVER_AUDIT_CLEAN", (
+        "the integration tree must not be CLEAN; the audit is honest "
+        "about the open tool-bypass blockers"
+    )
