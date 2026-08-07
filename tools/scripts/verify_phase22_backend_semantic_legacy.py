@@ -177,6 +177,7 @@ INTERNAL_STEP_CAPABILITY_CLASSES = (
 # baseline generators, fixture scripts, or doc-only references.
 NON_PRODUCTION_ENTRY_POINT_FILES = (
     "src/backend/zuno/agent/product_baseline.py",
+    "tools/evals/zuno/agent/product_baseline.py",
     "src/backend/zuno/agent/control_runtime.py",
 )
 

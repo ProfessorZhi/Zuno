@@ -389,7 +389,9 @@ def test_api_service_layer_uses_canonical_platform_imports() -> None:
 def test_runtime_entrypoints_and_cross_module_dtos_use_canonical_imports() -> None:
     main = _read("src/backend/zuno/main.py")
     memory_feedback = _read("src/backend/zuno/memory/feedback_consumer.py")
-    product_baseline = _read("src/backend/zuno/agent/product_baseline.py")
+    # PHASE22 runtime cutover: product_baseline is now a tests/evals
+    # internal tool. Read it from its new location.
+    product_baseline = _read("tools/evals/zuno/agent/product_baseline.py")
     workspace_task_runtime = _read("src/backend/zuno/api/services/workspace_task_runtime.py")
     knowledge_dto = _read("src/backend/zuno/api/dto/knowledge.py")
 
