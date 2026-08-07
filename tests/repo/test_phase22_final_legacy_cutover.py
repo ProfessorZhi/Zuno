@@ -747,13 +747,146 @@ def test_name_free_detector_finds_production_bypass() -> None:
         "hardened detector must surface tool_bypass_invoke on "
         f"production code, got {cats}"
     )
-    # The legacy ``tool_bypass`` category must still be present.
-    assert "tool_bypass" in cats, (
-        "the legacy tool_bypass category must still be present, "
-        f"got {cats}"
-    )
     # The audit must still report non-CLEAN status on the real tree.
     assert payload["status"] != "LEGACY_CUTOVER_AUDIT_CLEAN", (
         "the integration tree must not be CLEAN; the audit is honest "
         "about the open tool-bypass blockers"
+    )
+
+
+# -----------------------------------------------------------------------------
+# 18. Slice C: MCP ownership classifier fixtures.
+#     The hardened verifier must recognise MCP admin / control plane,
+#     MCP discovery / registration, and the canonical gateway executor
+#     shape — without resorting to path substring Allowlists. It must
+#     still flag Product-direct MCP / registered-executor calls and
+#     unknown dynamic executors.
+# -----------------------------------------------------------------------------
+
+
+def test_mcp_admin_control_plane_not_flagged() -> None:
+    """MCP server bootstrap / lifecycle / config CRUD / health /
+    admin management surfaces must NOT be flagged as tool bypass.
+
+    The hardened verifier must classify these as
+    ``MCP_ADMIN_CONTROL_PLANE`` (admin surfaces) without resorting to
+    path substring Allowlists.
+    """
+    fixture = NEW_FIXTURE_ROOT / "mcp_ownership" / "mcp_admin_control_plane.py"
+    payload = _run_with_isolated_fixtures([fixture])
+    fixture_path = f"src/backend/zuno/agent/{fixture.name}"
+    cats = {
+        f["category"]
+        for f in payload.get("findings", [])
+        if f["path"] == fixture_path
+    }
+    assert "tool_bypass_invoke" not in cats, (
+        f"MCP admin / control plane must not be flagged, got {cats}"
+    )
+    assert "tool_bypass" not in cats, (
+        f"MCP admin / control plane must not be flagged, got {cats}"
+    )
+
+
+def test_mcp_discovery_registration_not_flagged() -> None:
+    """MCP tool / schema / resource / prompt discovery and executor
+    registration surfaces must NOT be flagged as tool bypass.
+
+    The hardened verifier must classify these as
+    ``MCP_DISCOVERY_REGISTRATION`` without resorting to receiver-name
+    Allowlists.
+    """
+    fixture = NEW_FIXTURE_ROOT / "mcp_ownership" / "mcp_discovery_registration.py"
+    payload = _run_with_isolated_fixtures([fixture])
+    fixture_path = f"src/backend/zuno/agent/{fixture.name}"
+    cats = {
+        f["category"]
+        for f in payload.get("findings", [])
+        if f["path"] == fixture_path
+    }
+    assert "tool_bypass_invoke" not in cats, (
+        f"MCP discovery / registration must not be flagged, got {cats}"
+    )
+    assert "tool_bypass" not in cats, (
+        f"MCP discovery / registration must not be flagged, got {cats}"
+    )
+
+
+def test_canonical_gateway_executor_not_flagged() -> None:
+    """The canonical ToolInvocationGateway → registered executor →
+    provider call → Observation / Receipt shape must NOT be flagged.
+
+    Ownership is statically proven by three co-located markers:
+    ``registration_site`` + ``gateway_dispatch_site`` + ``executor_adapter``.
+    """
+    fixture = NEW_FIXTURE_ROOT / "mcp_ownership" / "canonical_gateway_executor.py"
+    payload = _run_with_isolated_fixtures([fixture])
+    fixture_path = f"src/backend/zuno/agent/{fixture.name}"
+    cats = {
+        f["category"]
+        for f in payload.get("findings", [])
+        if f["path"] == fixture_path
+    }
+    assert "tool_bypass_invoke" not in cats, (
+        f"canonical gateway executor must not be flagged, got {cats}"
+    )
+    assert "tool_bypass" not in cats, (
+        f"canonical gateway executor must not be flagged, got {cats}"
+    )
+
+
+def test_product_direct_registered_executor_still_flagged() -> None:
+    """A Product Adapter that calls a registered executor directly
+    (without the ToolInvocationGateway in between) MUST still be
+    flagged as ``REAL_PRODUCT_BYPASS`` / ``tool_bypass_invoke``.
+
+    The hardened verifier must prove ownership via three co-located
+    markers — when ``gateway_dispatch_site`` is missing, the call is
+    a bypass even if the executor is registered.
+    """
+    fixture = NEW_FIXTURE_ROOT / "mcp_ownership" / "product_direct_registered_executor.py"
+    payload = _run_with_isolated_fixtures([fixture])
+    cats = {f["category"] for f in payload.get("findings", [])}
+    assert "tool_bypass_invoke" in cats, (
+        "product direct registered executor call must still be flagged, "
+        f"got {cats}"
+    )
+
+
+def test_product_direct_mcp_still_flagged() -> None:
+    """A Product Adapter that reaches into an MCP tool directly (no
+    gateway, possibly renamed binding) MUST still be flagged as
+    ``REAL_PRODUCT_BYPASS`` / ``tool_bypass_invoke``."""
+    fixture = NEW_FIXTURE_ROOT / "mcp_ownership" / "product_direct_mcp.py"
+    payload = _run_with_isolated_fixtures([fixture])
+    cats = {f["category"] for f in payload.get("findings", [])}
+    assert "tool_bypass_invoke" in cats, (
+        "product direct MCP call must still be flagged, got "
+        f"{cats}"
+    )
+
+
+def test_unknown_dynamic_executor_yields_audit_unresolved() -> None:
+    """A dynamic dispatch (``getattr``) whose resolved attribute is
+    not statically known must surface ``AUDIT_UNRESOLVED`` — the
+    verifier cannot prove the runtime type.
+
+    The hardened verifier must NOT default-safe this fixture.
+    """
+    fixture = NEW_FIXTURE_ROOT / "mcp_ownership" / "unknown_dynamic_executor.py"
+    payload = _run_with_isolated_fixtures([fixture])
+    fixture_path = f"src/backend/zuno/agent/{fixture.name}"
+    unresolved_cats = {
+        u["category"]
+        for u in payload.get("unresolved", [])
+        if u["path"] == fixture_path
+    }
+    assert "unresolved_file_rename" in unresolved_cats, (
+        "unknown dynamic executor must surface unresolved_file_rename, "
+        f"got {unresolved_cats}"
+    )
+    # The audit must not claim CLEAN while unresolved findings exist.
+    assert payload.get("status") != "LEGACY_CUTOVER_AUDIT_CLEAN", (
+        "unknown dynamic executor must not yield CLEAN, got "
+        + payload.get("status", "")
     )
