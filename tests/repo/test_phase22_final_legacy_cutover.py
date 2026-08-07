@@ -757,3 +757,82 @@ def test_name_free_detector_finds_production_bypass() -> None:
         "the integration tree must not be CLEAN; the audit is honest "
         "about the open tool-bypass blockers"
     )
+
+
+# -----------------------------------------------------------------------------
+# 18. Renamed direct MCP (alias ``direct_mcp as foo``) must still be
+#     flagged. PHASE22 (Slice B) hardening: name-independence.
+# -----------------------------------------------------------------------------
+
+
+def test_direct_mcp_renamed_still_flagged() -> None:
+    """A direct MCP import renamed to ``foo`` must still surface a
+    ``tool_bypass_direct_mcp`` finding. The hardened detector walks the
+    import alias map so the local binding name is not inspected."""
+    fixture = NEW_FIXTURE_ROOT / "positive_evasion" / "positive_direct_mcp_renamed.py"
+    payload = _run_with_isolated_fixtures([fixture])
+    cats = {f["category"] for f in payload.get("findings", [])}
+    assert "tool_bypass_direct_mcp" in cats, (
+        "renamed direct MCP import must still be flagged, got "
+        f"{cats}"
+    )
+
+
+# -----------------------------------------------------------------------------
+# 19. Two-hop helper chain (class method -> _middle -> _final ->
+#     tool.ainvoke) must still be flagged. PHASE22 (Slice B) hardening.
+# -----------------------------------------------------------------------------
+
+
+def test_two_hop_helper_still_flagged() -> None:
+    """A two-hop helper chain (class method -> module-level helper ->
+    another module-level helper -> tool.ainvoke) must still surface a
+    ``tool_bypass_two_hop_helper`` finding. The hardened detector walks
+    the intra-file module-level call graph."""
+    fixture = NEW_FIXTURE_ROOT / "positive_evasion" / "positive_two_hop_helper.py"
+    payload = _run_with_isolated_fixtures([fixture])
+    cats = {f["category"] for f in payload.get("findings", [])}
+    assert "tool_bypass_two_hop_helper" in cats, (
+        "two-hop helper chain must still be flagged, got "
+        f"{cats}"
+    )
+
+
+# -----------------------------------------------------------------------------
+# 20. File-rename ambiguity must surface AUDIT_UNRESOLVED. PHASE22
+#     (Slice B) hardening: a file rename is not detectable from the
+#     AST alone — the verifier cannot prove the file is not a renamed
+#     legacy / bypass surface and must surface AUDIT_UNRESOLVED.
+# -----------------------------------------------------------------------------
+
+
+def test_file_rename_ambiguity_triggers_audit_unresolved() -> None:
+    """A file whose name does NOT match the canonical executor adapter
+    naming contract but whose body shows a direct tool invocation
+    chain OR a dynamic dispatch shape must surface the
+    ``unresolved_file_rename`` category. The verifier cannot
+    statically prove the file is not a renamed legacy / bypass
+    surface, so the audit cannot claim CLEAN — at minimum, the
+    unresolved category must be present.
+
+    The overall audit status is determined by priority order across
+    the whole tree, so a clone containing other production findings
+    may report a specific status (TOOL_BYPASS_BLOCKERS_FOUND) rather
+    than AUDIT_UNRESOLVED. The category assertion is the
+    authoritative contract: the unresolved_file_rename category must
+    be emitted whenever the shape condition holds.
+    """
+    fixture = NEW_FIXTURE_ROOT / "positive_evasion" / "positive_file_renamed.py"
+    payload = _run_with_isolated_fixtures([fixture])
+    cats = {f["category"] for f in payload.get("unresolved", [])}
+    assert "unresolved_file_rename" in cats, (
+        "ambiguous-shape file must surface unresolved_file_rename, got "
+        f"{cats}"
+    )
+    # The audit must NOT claim CLEAN while the unresolved_file_rename
+    # category is present — the verifier cannot statically prove the
+    # file is not a renamed legacy / bypass surface.
+    assert payload["status"] != "LEGACY_CUTOVER_AUDIT_CLEAN", (
+        "ambiguous-shape file must not yield CLEAN, got "
+        + payload.get("status", "")
+    )

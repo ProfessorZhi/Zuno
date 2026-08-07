@@ -633,6 +633,10 @@ def _build_alias_map(tree: ast.AST) -> dict[str, set[str]]:
     assignments and records the alias targets. The maps are best-effort;
     the verifier fails closed on dynamic dispatch (calling ``getattr`` /
     ``globals`` / ``eval``).
+
+    The alias map also records ``from X import Y as Z`` import aliases,
+    so a renamed import (``direct_mcp as foo``) is walked back to the
+    original MCP symbol when the detector checks a call site.
     """
     alias_map: dict[str, set[str]] = {}
 
@@ -657,6 +661,13 @@ def _build_alias_map(tree: ast.AST) -> dict[str, set[str]]:
         return None
 
     for node in ast.walk(tree):
+        # ``from X import Y as Z`` — record ``Z -> X.Y`` so renamed
+        # MCP / tool imports are walked back to their original name.
+        if isinstance(node, ast.ImportFrom):
+            for alias in node.names:
+                local = alias.asname or alias.name
+                source = f"{node.module}.{alias.name}" if node.module else alias.name
+                _record(local, source)
         if not isinstance(node, ast.Assign):
             continue
         rhs_source = _node_alias_source(node.value)
@@ -675,23 +686,135 @@ def _build_alias_map(tree: ast.AST) -> dict[str, set[str]]:
     return alias_map
 
 
-def _resolve_call_chain(call_text: str, alias_map: dict[str, set[str]]) -> list[str]:
+def _build_module_level_call_graph(tree: ast.AST) -> dict[str, set[str]]:
+    """Build a coarse intra-file module-level function call graph.
+
+    Maps ``func_name -> {callee_name, ...}`` for module-level functions
+    so the two-hop helper detector can walk a chain
+    ``class.method -> _middle -> _final -> tool.ainvoke`` and surface
+    the canonical ToolInvocationGateway bypass even though no direct
+    ``<...>.ainvoke`` appears in the class method body.
+    """
+    graph: dict[str, set[str]] = {}
+
+    def _walk(func_node: ast.FunctionDef | ast.AsyncFunctionDef) -> None:
+        called: set[str] = set()
+        for child in ast.walk(func_node):
+            if not isinstance(child, ast.Call):
+                continue
+            if isinstance(child.func, ast.Name):
+                called.add(child.func.id)
+        graph[func_node.name] = called
+
+    for node in tree.body:
+        if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
+            _walk(node)
+    return graph
+
+
+def _walk_helper_chain(
+    start: str,
+    graph: dict[str, set[str]],
+    *,
+    max_depth: int = 4,
+) -> set[str]:
+    """Return every helper reachable from ``start`` within ``max_depth``
+    hops in the module-level call graph.
+
+    Used by the two-hop helper detector: a class method's callee is
+    expanded into its transitive helper set so a chain that ultimately
+    reaches a direct tool invocation is still flagged.
+    """
+    visited: set[str] = set()
+    frontier = {start}
+    for _ in range(max_depth):
+        next_frontier: set[str] = set()
+        for node in frontier:
+            for callee in graph.get(node, ()):
+                if callee in visited or callee == node:
+                    continue
+                visited.add(callee)
+                next_frontier.add(callee)
+        if not next_frontier:
+            break
+        frontier = next_frontier
+    return visited
+
+
+# PHASE22 (Slice B): symbols whose import alias chain must trigger the
+# direct-MCP bypass category. The verifier walks every ``from X import
+# Y as Z`` alias chain; if any resolved name ends with one of these
+# suffixes, a chained ``<...>.ainvoke`` call site is flagged regardless
+# of the local binding name (``foo``, ``helper``, ...).
+_MCP_ALIAS_SUFFIXES = ("mcp", "direct_mcp", "mcp_direct")
+
+
+def _call_resolves_to_mcp(
+    call_text: str,
+    alias_map: dict[str, set[str]],
+) -> bool:
+    """Return True when any alias of the call's receiver resolves to an
+    MCP-shaped symbol."""
+    candidates = _resolve_call_chain(call_text, alias_map)
+    for candidate in candidates:
+        lowered = candidate.lower()
+        if any(lowered.endswith(suffix) for suffix in _MCP_ALIAS_SUFFIXES):
+            return True
+        if "mcp" in lowered:
+            return True
+    return False
+
+
+def _resolve_call_chain(
+    call_text: str,
+    alias_map: dict[str, set[str]],
+    *,
+    _seen: frozenset[str] | None = None,
+) -> list[str]:
     """Return every concrete name the call could refer to, honouring
     intra-file aliases. ``self.tool.ainvoke`` resolves to ``self.tool``,
     plus any alias that maps onto ``self.tool``.
+
+    Aliases are walked recursively so a renamed import chain
+    ``from x import direct_mcp as foo`` → ``self._binding = foo``
+    → ``self._binding.ainvoke`` resolves all the way back to the
+    original ``direct_mcp`` symbol. The recursive walk is bounded by
+    ``_seen`` to prevent infinite cycles on cyclic alias maps.
     """
     parts = call_text.split(".", 1)
     head = parts[0]
+    seen = _seen or frozenset()
+    # Cycle guard: if ``head`` was already visited on this walk path,
+    # return the head verbatim and let the caller dedupe. Cyclic alias
+    # maps would otherwise recurse without bound.
+    if head in seen:
+        return [head]
     candidates: list[str] = []
+    next_seen = seen | {head}
     if head in alias_map:
-        candidates.extend(sorted(alias_map[head]))
+        for alias_target in sorted(alias_map[head]):
+            if alias_target not in candidates:
+                candidates.append(alias_target)
+            # Walk further: the alias target may itself be aliased.
+            for deeper in _resolve_call_chain(
+                alias_target, alias_map, _seen=next_seen
+            ):
+                if deeper not in candidates:
+                    candidates.append(deeper)
     candidates.append(head)
     if len(parts) == 1:
         return candidates
     head_attr = parts[1]
     resolver = f"{head}.{head_attr.split('.', 1)[0]}"
     if resolver in alias_map:
-        candidates.extend(sorted(alias_map[resolver]))
+        for alias_target in sorted(alias_map[resolver]):
+            if alias_target not in candidates:
+                candidates.append(alias_target)
+            for deeper in _resolve_call_chain(
+                alias_target, alias_map, _seen=next_seen
+            ):
+                if deeper not in candidates:
+                    candidates.append(deeper)
     return candidates
 
 
@@ -877,6 +1000,16 @@ def _detect_tool_bypass(
       backward compatibility; new categories are added below).
     - Direct ``handler(...)`` invocations via assignment, regardless of
       the receiver name.
+    - Renamed MCP imports (``from x import direct_mcp as foo`` ->
+      ``self.foo.ainvoke(...)``) — the alias map walks the import back
+      to the MCP-shaped symbol and flags the call regardless of the
+      local binding name.
+    - Two-hop helper chains: a class method that delegates to a
+      module-level helper which itself delegates to another helper
+      which performs the direct tool invocation. The hardened detector
+      walks the intra-file module-level call graph so the chain is
+      flagged even though no ``<...>.ainvoke`` appears in the class
+      method body.
     """
     findings: list[Finding] = []
     for rel, tree in file_index.items():
@@ -892,6 +1025,56 @@ def _detect_tool_bypass(
         # exemptions. The detector must know whether a call is inside a
         # canonical Adapter class or a class that owns a tool / model.
         enclosing_class_for_call = _build_call_enclosing_class_map(tree)
+        # Pre-compute the module-level call graph for two-hop helper
+        # detection. A class method whose callee expands (transitively)
+        # to a direct tool invocation is flagged even though no
+        # ``<...>.ainvoke`` appears in the class method body.
+        call_graph = _build_module_level_call_graph(tree)
+        # Pre-compute which module-level helpers are flagged as
+        # "tool-bypass helpers" (they themselves perform a direct
+        # ``<...>.ainvoke`` call). The two-hop detector then flags any
+        # class method whose callees transitively reach one of these.
+        # To find direct tool invocations INSIDE a helper's body, we
+        # walk the helper's function node specifically — the previous
+        # iteration over all call targets in the file matched calls
+        # TO the helper rather than calls INSIDE the helper.
+        # We use a broader check than ``_classify_tool_invocation`` so
+        # helpers that take a tool as a parameter and call
+        # ``tool.ainvoke(...)`` are still classified as tool-bypass
+        # helpers (the strict detector exempts single-name receivers
+        # because they look like local variables; the helper-bypass
+        # check is a structural concern, not a context-aware one).
+        helper_bypass_names: set[str] = set()
+        for node in tree.body:
+            if not isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
+                continue
+            helper_name = node.name
+            helper_has_bypass = False
+            for child in ast.walk(node):
+                if not isinstance(child, ast.Call):
+                    continue
+                try:
+                    child_text = ast.unparse(child)
+                except Exception:
+                    continue
+                last_attr = child_text.split("(")[0].split(".")[-1]
+                if last_attr not in {"invoke", "ainvoke", "stream", "astream"}:
+                    continue
+                # Structural check: any chained-attribute or
+                # bare-identifier receiver paired with an invoke-style
+                # method is a tool-bypass shape inside a helper.
+                head = child_text.split("(", 1)[0].split(".")[0]
+                if head and head != child_text.split("(", 1)[0]:
+                    helper_has_bypass = True
+                    break
+                # Single-identifier receiver: still a tool-bypass
+                # shape if the call is on a parameter / local that
+                # carries a tool.
+                if head and head.islower():
+                    helper_has_bypass = True
+                    break
+            if helper_has_bypass:
+                helper_bypass_names.add(helper_name)
         for call_text, lineno in _call_target_strings(tree):
             # MCP / image-gen / read-only bypass by identifier (legacy).
             for category, predicate, marker in _NAME_FREE_RULES:
@@ -906,6 +1089,30 @@ def _detect_tool_bypass(
                             ),
                         )
                     )
+            # PHASE22 (Slice B): direct MCP bypass via renamed import
+            # alias. ``from x import direct_mcp as foo`` followed by
+            # ``self.foo.ainvoke(...)`` is flagged regardless of the
+            # local binding name. The detector only fires when the
+            # call is an invoke-style method call — a class-method
+            # dispatch on an MCP-named class (``MCPService.foo()``)
+            # is not flagged because the receiver is a registered MCP
+            # service, not a renamed tool bypass.
+            last_attr = call_text.split("(")[0].split(".")[-1]
+            if (
+                _call_resolves_to_mcp(call_text, alias_map)
+                and last_attr in {"invoke", "ainvoke", "stream", "astream"}
+            ):
+                findings.append(
+                    Finding(
+                        category="tool_bypass_direct_mcp",
+                        path=rel,
+                        line=lineno,
+                        detail=(
+                            "direct MCP bypass via import alias: "
+                            f"{call_text}"
+                        ),
+                    )
+                )
             # Name-free tool invocation detection.
             enclosing = enclosing_class_for_call.get(lineno)
             tool_cat = _classify_tool_invocation(
@@ -936,6 +1143,36 @@ def _detect_tool_bypass(
                         detail=f"direct model invocation bypass: {call_text}",
                     )
                 )
+            # PHASE22 (Slice B): two-hop helper detection. A class
+            # method whose callees transitively reach a module-level
+            # helper that performs the direct tool invocation is
+            # flagged as a tool bypass even though no chained
+            # ``<...>.ainvoke`` appears in the class method body.
+            if (
+                enclosing is not None
+                and helper_bypass_names
+            ):
+                head = call_text.split("(", 1)[0].split(".")[0]
+                # The class method's callee (``head``) must itself be a
+                # module-level helper, AND its transitive callees must
+                # include at least one helper-bypass function. A
+                # two-hop chain (class method -> helper A -> helper B
+                # -> tool.ainvoke) lands here when ``helper A`` is in
+                # the transitive set that includes ``helper B``.
+                if head in module_level_funcs and _walk_helper_chain(
+                    head, call_graph
+                ) & helper_bypass_names:
+                    findings.append(
+                        Finding(
+                            category="tool_bypass_two_hop_helper",
+                            path=rel,
+                            line=lineno,
+                            detail=(
+                                "direct tool invocation bypass via "
+                                f"two-hop helper chain: {call_text}"
+                            ),
+                        )
+                    )
     # Direct handler-style invocation via assignment (the historical
     # shape). The hardened detector preserves the original "handler"
     # identifier rule for backward compatibility, while the new
@@ -1189,6 +1426,132 @@ def _detect_alias_factory_unresolved(
     return findings
 
 
+# PHASE22 (Slice B): file-rename AUDIT_UNRESOLVED detector. A file
+# rename is not detectable from the AST alone: the verifier cannot
+# distinguish a renamed legacy / bypass surface from an originally-named
+# file. The detector treats any scanned-root file whose module name does
+# NOT match the canonical executor adapter naming contract but whose
+# body shows a direct tool / model invocation chain as AUDIT_UNRESOLVED.
+# The verifier must fail-closed: it cannot statically prove the file is
+# not a renamed legacy / bypass surface, so the audit must surface the
+# ambiguity rather than claim CLEAN.
+_CANONICAL_ADAPTER_FILE_MARKERS = (
+    "adapter",
+    "runtime_adapter",
+    "engine",
+    "harness",
+    "control_plane",
+)
+
+# Vendor / third-party surface — never produced / maintained by this
+# repository, so a file rename ambiguity in vendor code is not a
+# concern for the PHASE22 cutover audit. The detector must skip these
+# paths so the audit does not block on imported library code.
+_FILE_RENAME_SKIP_PREFIXES = (
+    "src/backend/zuno/platform/vendor/",
+    "vendor/",
+)
+
+
+def _detect_unresolved_file_rename(
+    file_index: dict[str, ast.AST],
+) -> list[Finding]:
+    """Surface AUDIT_UNRESOLVED for any scanned-root file whose module
+    name does NOT match the canonical executor adapter naming contract
+    AND whose body shows a direct tool invocation chain (chained
+    attribute + invoke-style method call) OR a dynamic dispatch shape
+    (getattr / __import__ / import_module / eval / globals) that
+    targets a tool / model / handler symbol.
+
+    A file rename is not detectable from the AST alone: the verifier
+    cannot distinguish a renamed file from an originally-named file.
+    The detector therefore treats any "ambiguous-shape" file — one
+    whose name does not match the canonical executor adapter naming
+    contract and whose classes do not match the canonical adapter
+    naming contract, but whose body shows a direct tool invocation
+    chain OR a dynamic dispatch — as AUDIT_UNRESOLVED.
+
+    Files that contain at least one class whose name matches the
+    canonical executor adapter naming contract (``Adapter`` /
+    ``RuntimeAdapter`` / ``Engine`` / ``Harness``) are exempt: they
+    are not "renamed" relative to the canonical contract. This keeps
+    legitimate thin adapters — like the canonical
+    ``CleanRuntimeAdapter`` shape — from blocking the audit.
+
+    Vendor / third-party paths are excluded — file-rename ambiguity in
+    imported library code is not a concern for the PHASE22 cutover
+    audit.
+    """
+    canonical_class_markers = (
+        "Adapter",
+        "RuntimeAdapter",
+        "Engine",
+        "Harness",
+    )
+    findings: list[Finding] = []
+    for rel, tree in file_index.items():
+        if _is_excluded(rel):
+            continue
+        lowered = rel.lower()
+        if any(
+            lowered.startswith(prefix) for prefix in _FILE_RENAME_SKIP_PREFIXES
+        ):
+            continue
+        if any(marker in lowered for marker in _CANONICAL_ADAPTER_FILE_MARKERS):
+            continue
+        # Class-name exemption: if any class in this file matches the
+        # canonical executor adapter naming contract, the file is not
+        # a renamed legacy / bypass surface.
+        class_names = {
+            node.name
+            for node in ast.walk(tree)
+            if isinstance(node, ast.ClassDef)
+        }
+        if any(
+            any(marker in name for marker in canonical_class_markers)
+            for name in class_names
+        ):
+            continue
+        has_invoke_chain = False
+        has_dynamic_dispatch = False
+        for call_text, _lineno in _call_target_strings(tree):
+            head = call_text.split("(", 1)[0]
+            last = head.split(".")[-1] if head else ""
+            # Direct invocation chain: ``<receiver>.<method>(...)``
+            # where the method is an invoke-style name and the
+            # receiver is a chained attribute (not a bare identifier).
+            if (
+                last in {"invoke", "ainvoke", "stream", "astream", "call", "acall", "run"}
+                and "." in head
+                and head.split(".")[0]
+            ):
+                has_invoke_chain = True
+                break
+            # Dynamic dispatch: getattr(...) on a tool/model/handler
+            # symbol. The verifier cannot statically prove the
+            # resolved attribute is a canonical executor adapter.
+            if call_text.startswith("getattr("):
+                has_dynamic_dispatch = True
+                break
+        if not (has_invoke_chain or has_dynamic_dispatch):
+            continue
+        findings.append(
+            Finding(
+                category="unresolved_file_rename",
+                path=rel,
+                line=0,
+                detail=(
+                    "file contains a direct tool invocation chain or a "
+                    "dynamic dispatch shape but does not match the "
+                    "canonical executor adapter naming contract; the "
+                    "verifier cannot statically prove it is not a "
+                    "renamed legacy / bypass surface"
+                ),
+            )
+        )
+    return findings
+
+
 # -----------------------------------------------------------------------------
 # Verifier entrypoint.
 # -----------------------------------------------------------------------------
@@ -1206,10 +1569,36 @@ def _build_file_index() -> dict[str, ast.AST]:
 
 
 def _resolve_priority(findings: list[Finding], unresolved: list[Finding]) -> str:
-    """Determine the final status by priority order."""
-    if unresolved:
-        return STATUS_AUDIT_UNRESOLVED
+    """Determine the final status by priority order.
+
+    Priority semantics (PHASE22 final engineering closure):
+
+    - ``unresolved_dynamic_constructor`` / ``unresolved_alias_factory``
+      mean the verifier cannot statically prove the runtime type. These
+      dominate over every specific finding — the audit cannot claim a
+      concrete verdict when the runtime is unresolvable.
+    - Specific findings (ownership / tool-bypass / legacy / dual-path)
+      dominate over the generic ``unresolved_file_rename`` shape
+      concern. A file may legitimately live outside the canonical
+      adapter naming contract while still being a canonical adapter;
+      a specific tool-bypass / ownership / legacy / dual-path finding
+      on the same file is the dominant signal.
+    - Pure ``unresolved_file_rename`` ambiguity without any specific
+      finding still surfaces AUDIT_UNRESOLVED — the verifier cannot
+      prove the file is not a renamed legacy / bypass surface.
+    """
     categories = {f.category for f in findings}
+    # The two highest-priority unresolved categories dominate over
+    # every specific finding.
+    unresolved_categories = {u.category for u in unresolved}
+    strong_unresolved = {
+        "unresolved_dynamic_constructor",
+        "unresolved_alias_factory",
+    } & unresolved_categories
+    if strong_unresolved:
+        return STATUS_AUDIT_UNRESOLVED
+    # Specific findings dominate over the generic unresolved_file_rename
+    # shape concern.
     if any(c.startswith("ownership_") for c in categories):
         return STATUS_OWNERSHIP_VIOLATION
     if any(c.startswith("tool_bypass_") for c in categories):
@@ -1218,6 +1607,10 @@ def _resolve_priority(findings: list[Finding], unresolved: list[Finding]) -> str
         return STATUS_LEGACY_RUNTIME
     if any(c.startswith("dual_path_") for c in categories):
         return STATUS_DUAL_PATH
+    # Pure unresolved-file-rename ambiguity without any specific
+    # finding surfaces AUDIT_UNRESOLVED.
+    if unresolved:
+        return STATUS_AUDIT_UNRESOLVED
     return STATUS_CLEAN
 
 
@@ -1257,10 +1650,12 @@ def run_audit(
     for finding in _detect_public_adapter_ownership(file_index):
         result.add(finding)
 
-    # 5. Unresolved (dynamic / alias / factory).
+    # 5. Unresolved (dynamic / alias / factory / file-rename ambiguity).
     for finding in _detect_dynamic_constructor_sites(file_index):
         result.add_unresolved(finding)
     for finding in _detect_alias_factory_unresolved(file_index):
+        result.add_unresolved(finding)
+    for finding in _detect_unresolved_file_rename(file_index):
         result.add_unresolved(finding)
 
     # Record standard exclusions.

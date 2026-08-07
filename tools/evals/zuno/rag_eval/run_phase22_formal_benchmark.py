@@ -1371,22 +1371,29 @@ def run_formal_benchmark(
     }
     report.pop("report_checksum_sidecar", None)
 
-    # PHASE22 (Slice A): atomic publish. Write the report + sidecar to the
-    # staging directory first, then rename once every artifact is on disk.
+    # PHASE22 (Slice A): atomic publish — fixed canonical order. The
+    # report object MUST be fully assembled (including
+    # ``artifact_refs.environment`` and ``report_integrity``) BEFORE
+    # serialization; the on-disk ``benchmark_report.json`` and the
+    # returned in-memory report must agree byte-for-byte modulo the
+    # ``report_integrity`` sidecar field. The sidecar SHA-256 is always
+    # derived from the on-disk final bytes, never from the in-memory
+    # dict.
     env_payload = serialize_json(environment)
     env_hash = canonical_sha256_hex(json.loads(env_payload))
-    publisher.write("environment.json", env_payload)
-    publisher.write("environment.json.sha256", env_hash + "\n")
-    publisher.write("benchmark_report.json", serialize_json(report))
-    publisher.write_sidecar_for("benchmark_report.json")
-
-    # Update the report's environment reference now that the staging bytes
-    # are stable; the on-disk file is the source of truth and the report
-    # in-process copy is the verifier view.
     report["artifact_refs"]["environment"] = {
         "path": "environment.json",
         "sha256": env_hash,
     }
+
+    publisher.write("environment.json", env_payload)
+    publisher.write("environment.json.sha256", env_hash + "\n")
+    report_text = serialize_json(report)
+    publisher.write("benchmark_report.json", report_text)
+    # Sidecar bytes are computed from the on-disk final report bytes
+    # written via ``publisher.write``, so the sidecar is byte-stable and
+    # never self-referential.
+    publisher.write_sidecar_for("benchmark_report.json")
 
     try:
         publisher.commit()
@@ -1574,6 +1581,19 @@ def _incomparable_report(
         "line_endings": "lf",
     }
     report.pop("report_checksum_sidecar", None)
+    # PHASE22 (Slice A): the INCOMPARABLE report must also publish the
+    # environment artifact and carry the same ``artifact_refs.environment``
+    # contract as the main path — the sidecar is derived from the on-disk
+    # final report bytes, never from the in-memory dict.
+    environment_payload = report["environment"]
+    env_payload_text = serialize_json(environment_payload)
+    env_hash = canonical_sha256_hex(json.loads(env_payload_text))
+    report["artifact_refs"]["environment"] = {
+        "path": "environment.json",
+        "sha256": env_hash,
+    }
+    publisher.write("environment.json", env_payload_text)
+    publisher.write("environment.json.sha256", env_hash + "\n")
     publisher.write("benchmark_report.json", serialize_json(report))
     publisher.write_sidecar_for("benchmark_report.json")
     return report
