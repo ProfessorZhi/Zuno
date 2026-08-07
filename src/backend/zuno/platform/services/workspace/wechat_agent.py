@@ -85,18 +85,32 @@ async def execute_wechat_binding_tool(
     mcp_user_config_resolver: Callable[[str, str], Awaitable[Dict[str, Any]]] | None = None,
     is_mcp_tool: Callable[[str], bool] | None = None,
     mcp_tool_id_resolver: Callable[[str], str] | None = None,
+    tool_adapter_registry: Any = None,
+    tool_id: str | None = None,
+    tenant_id: str = "",
+    workspace_id: str = "",
+    principal_id: str = "",
+    run_id: str = "",
+    step_run_id: str = "",
+    trace_id: str = "",
+    approved_artifact: Dict[str, Any] | None = None,
 ) -> Any:
     """Module-level WeChat binding execution helper.
 
-    Lives outside ``WeChatAgent`` so the final legacy cutover audit does
-    not see a ``tool.ainvoke`` direct dispatch site inside the legacy
-    workspace runtime class.
-
-    The receiver is intentionally named ``binding`` (not ``tool``) so the
-    feature-flag runtime cutover verifier's direct-dispatch detector,
-    which keys on AST receivers named ``tool`` / ``current_tool`` /
-    ``handler``, does not surface a false positive for the helper.
+    PHASE22 runtime cutover V2: every ``binding.ainvoke`` call routes
+    through the registered ``MCPToolExecutorAdapter`` /
+    ``ToolInvocationGateway``. A production call without a registered
+    adapter fails closed BEFORE the LangChain tool is dispatched.
+    The legacy dev-test shortcut is preserved for fixtures that
+    intentionally exercise the legacy direct path.
     """
+    from zuno.capability.mcp.mcp_tool_executor_adapter import (
+        MCPToolAdapterNotBound,
+    )
+    from zuno.platform.services.workspace.simple_agent import (
+        execute_binding_tool as _workspace_execute_binding_tool,
+    )
+
     call_args = dict(args)
     if (
         is_mcp_tool is not None
@@ -109,7 +123,33 @@ async def execute_wechat_binding_tool(
             mcp_tool_id_resolver(binding.name),
         )
         call_args.update(mcp_config)
-    return await binding.ainvoke(call_args)
+
+    if tool_adapter_registry is None:
+        raise MCPToolAdapterNotBound(
+            f"execute_wechat_binding_tool requires tool_adapter_registry for tool={binding.name!r}"
+        )
+
+    # PHASE22 runtime cutover V2: WeChat delegates to the workspace
+    # adapter so the registry lookup / gateway path is shared. The
+    # workspace adapter is the canonical registry consumer.
+    return await _workspace_execute_binding_tool(
+        binding=binding,
+        args=call_args,
+        user_id=user_id,
+        mcp_user_config_resolver=mcp_user_config_resolver,
+        is_mcp_tool=is_mcp_tool,
+        mcp_tool_id_resolver=mcp_tool_id_resolver,
+        mcp_requires_user_config=None,
+        tool_adapter_registry=tool_adapter_registry,
+        tool_id=tool_id or f"tool.{binding.name}",
+        tenant_id=tenant_id,
+        workspace_id=workspace_id,
+        principal_id=principal_id,
+        run_id=run_id,
+        step_run_id=step_run_id,
+        trace_id=trace_id,
+        approved_artifact=approved_artifact,
+    )
 
 
 class WeChatAgent:
@@ -161,6 +201,19 @@ class WeChatAgent:
         # PHASE22 product wiring: request-declared runtime limits flow into
         # the formal Budget Admission resolver (never self-attested).
         self._budget_limits = dict(budget_limits or {})
+        # PHASE22 runtime cutover V2: tool gateway-bound runtime identity.
+        from zuno.capability.mcp.mcp_tool_executor_adapter import (
+            MCPToolExecutorAdapterRegistry,
+        )
+
+        self._tool_adapter_registry: MCPToolExecutorAdapterRegistry = (
+            MCPToolExecutorAdapterRegistry()
+        )
+        self._runtime_run_id = (
+            f"wechat-run:{session_id}:{user_id}"
+        )
+        self._step_run_id = ""
+        self._trace_id = ""
 
     async def init_wechat_agent(self):
         """Initialize the canonical composition root for this session."""
@@ -278,6 +331,14 @@ class WeChatAgent:
         return {"type": "object"}
 
     async def _execute_binding_tool(self, tool: Any, args: dict[str, Any]) -> Any:
+        """PHASE22 runtime cutover V2: route through the registered
+        ``MCPToolExecutorAdapter`` / ``ToolInvocationGateway``.
+
+        WeChat shares the workspace adapter registry so that the
+        registry lookup / gateway path is identical to the workspace
+        surface. The ``WeChatAgent`` only injects the binding call into
+        the same gateway dispatch that ``WorkSpaceSimpleAgent`` uses.
+        """
         return await execute_wechat_binding_tool(
             binding=tool,
             args=args,
@@ -285,6 +346,14 @@ class WeChatAgent:
             mcp_user_config_resolver=MCPUserConfigService.get_mcp_user_config,
             is_mcp_tool=self.is_mcp_tool,
             mcp_tool_id_resolver=self.get_mcp_id_by_tool,
+            tool_adapter_registry=self._tool_adapter_registry,
+            tool_id=f"tool.{tool.name}",
+            tenant_id=self._tenant_id,
+            workspace_id=self._workspace_id,
+            principal_id=self.user_id,
+            run_id=self._runtime_run_id,
+            step_run_id=getattr(self, "_step_run_id", ""),
+            trace_id=self._trace_id,
         )
 
     async def setup_mcp_tools(self):
