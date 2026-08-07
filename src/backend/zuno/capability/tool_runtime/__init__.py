@@ -10,7 +10,11 @@ from .runtime_batch import (
     ToolAttemptStatus,
     ToolRuntimeBatch,
 )
-from .invocation_gateway import ToolGatewayReceipt, ToolInvocationGateway
+from .invocation_gateway import (
+    ToolEffectUnknownError,
+    ToolGatewayReceipt,
+    ToolInvocationGateway,
+)
 from .sandbox import (
     DenoPyodideWasmRunner,
     InMemorySandboxSessionStore,
@@ -33,6 +37,7 @@ __all__ = [
     "PreparedActionStatus",
     "ReconciliationConclusion",
     "ToolAttemptStatus",
+    "ToolEffectUnknownError",
     "ToolGatewayReceipt",
     "ToolInvocationGateway",
     "ToolRuntimeBatch",

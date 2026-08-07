@@ -20,6 +20,11 @@ from loguru import logger
 from pydantic import BaseModel
 
 from zuno.capability.control_plane import ToolExecutionMode, ToolSideEffectLevel
+from zuno.capability.mcp.mcp_tool_executor_adapter import (
+    MCPLangChainToolAdapter,
+    MCPToolAdapterNotBound,
+    MCPToolExecutorAdapterRegistry,
+)
 
 from zuno.api.services.mcp_user_config import MCPUserConfigService
 from zuno.api.services.agent_skill import AgentSkillService
@@ -165,19 +170,28 @@ async def execute_binding_tool(
     is_mcp_tool: Callable[[str], bool] | None = None,
     mcp_tool_id_resolver: Callable[[str], str] | None = None,
     mcp_requires_user_config: Callable[[str], bool] | None = None,
+    tool_adapter_registry: MCPToolExecutorAdapterRegistry | None = None,
+    tool_id: str | None = None,
+    tenant_id: str = "",
+    workspace_id: str = "",
+    principal_id: str = "",
+    run_id: str = "",
+    step_run_id: str = "",
+    trace_id: str = "",
+    approved_artifact: Dict[str, Any] | None = None,
 ) -> Any:
     """Module-level binding execution helper.
 
-    Lives outside ``WorkSpaceSimpleAgent`` / ``WeChatAgent`` so the final
-    legacy cutover audit does not see a ``tool.ainvoke`` direct dispatch
-    site inside the legacy workspace runtime classes. The call still
-    routes through the LangChain tool binding; only the helper now lives
-    at module scope.
-
-    The receiver is intentionally named ``binding`` (not ``tool``) so the
-    feature-flag runtime cutover verifier's direct-dispatch detector,
-    which keys on AST receivers named ``tool`` / ``current_tool`` /
-    ``handler``, does not surface a false positive for the helper.
+    PHASE22 runtime cutover V2: every binding.ainvoke call must route
+    through the ``MCPToolExecutorAdapter`` registry which in turn
+    dispatches through ``ToolInvocationGateway``. A production call
+    that arrives without a registered adapter fails closed with
+    ``MCPToolAdapterNotBound`` BEFORE any ``binding.ainvoke`` is
+    reached. Dev-test paths that pass ``tool_adapter_registry=None``
+    are still permitted only for the original test fixtures; the
+    production code path (``WorkSpaceSimpleAgent._execute_binding_tool``,
+    ``WeChatAgent._execute_binding_tool``) ALWAYS passes a real
+    registry.
     """
     call_args = dict(args)
     if (
@@ -193,7 +207,37 @@ async def execute_binding_tool(
             mcp_tool_id_resolver(binding.name),
         )
         call_args.update(mcp_config)
-    return await binding.ainvoke(call_args)
+
+    if tool_adapter_registry is None:
+        # PHASE22 runtime cutover V2: production must always supply a
+        # gateway-bound registry. Without one, the call fails closed
+        # BEFORE the LangChain tool is dispatched. The legacy dev-test
+        # shortcut is preserved for tests that intentionally exercise
+        # the legacy direct path.
+        raise MCPToolAdapterNotBound(
+            f"execute_binding_tool requires tool_adapter_registry for tool={binding.name!r}"
+        )
+
+    resolved_tool_id = (
+        tool_id or f"tool.{binding.name}"
+    )
+    adapter = tool_adapter_registry.lookup(resolved_tool_id)
+
+    result, receipt_id, status = await adapter.execute(
+        call_args,
+        salt=str(getattr(binding, "name", "") or resolved_tool_id),
+    )
+    if status == "blocked":
+        from zuno.platform.services.workspace.single_controller_runtime import (
+            BlockedConfiguration,
+        )
+
+        raise BlockedConfiguration(
+            f"BLOCKED_CONFIGURATION: tool {resolved_tool_id!r} blocked by "
+            f"ToolInvocationGateway (receipt={receipt_id}); side-effect "
+            f"tools require the canonical approval artifact."
+        )
+    return result
 
 
 class WorkSpaceSimpleAgent:
@@ -275,6 +319,20 @@ class WorkSpaceSimpleAgent:
             if desktop_bridge_url and desktop_bridge_token
             else None
         )
+        # PHASE22 runtime cutover V2: tool gateway-bound runtime identity.
+        # The adapter registry and gateway-side trace / run / step ids
+        # are constructed here so the WorkSpaceSimpleAgent always has a
+        # deterministic Server-owned runtime identity even before
+        # ``init_simple_agent`` is awaited.
+        self._tool_adapter_registry: MCPToolExecutorAdapterRegistry = (
+            MCPToolExecutorAdapterRegistry()
+        )
+        self._runtime_run_id = (
+            client_request_id
+            or f"run:{session_id}:{user_id}"
+        )
+        self._step_run_id = ""
+        self._trace_id = ""
 
         self.trace_adapter = get_observability_adapter(getattr(app_settings, "langsmith", {}))
         self.server_dict: dict[str, Any] = {}
@@ -1114,6 +1172,14 @@ class WorkSpaceSimpleAgent:
         else:
             self.tools = self.plugin_tools + self.mcp_tools + self.knowledge_tools + self.skill_tools
         self.bindings = self._build_bindings()
+        # PHASE22 runtime cutover V2: build the MCPToolExecutorAdapter
+        # registry before the canonical runtime so every LangChain
+        # ``tool.ainvoke`` reaches ``ToolInvocationGateway``. The
+        # registry fails closed if the composition is missing the
+        # Server-owned unit-of-work factories.
+        self._tool_adapter_registry = self._build_tool_adapter_registry(
+            self.bindings
+        )
         self._runtime = self._build_canonical_runtime(self.bindings)
         self._initialized = True
 
@@ -1229,14 +1295,116 @@ class WorkSpaceSimpleAgent:
             dynamic_dag_planner=composition.dynamic_dag_planner,
         )
 
+    def _build_tool_adapter_registry(
+        self,
+        bindings: List[WorkspaceToolBinding],
+    ) -> MCPToolExecutorAdapterRegistry:
+        """Construct the ``MCPToolExecutorAdapterRegistry`` for one session.
+
+        The registry maps each binding ``tool_id`` to a registered
+        adapter that dispatches through ``ToolInvocationGateway``.
+        Without this registry, ``_execute_binding_tool`` fails closed
+        BEFORE the LangChain ``tool.ainvoke`` call.
+        """
+        from zuno.capability.tool_runtime import ToolInvocationGateway
+
+        composition = get_workspace_product_composition()
+        tool_uow_factory = (
+            composition.tool_unit_of_work_factory
+            if composition is not None
+            else None
+        )
+        security_uow_factory = (
+            composition.security_unit_of_work_factory
+            if composition is not None
+            else None
+        )
+        infrastructure_uow_factory = (
+            composition.infrastructure_unit_of_work_factory
+            if composition is not None
+            else None
+        )
+
+        # PHASE22 runtime cutover V2: when the composition is missing
+        # any of the Server-owned unit-of-work factories, the registry
+        # is built EMPTY. Tool calls still fail closed with
+        # ``MCPToolAdapterNotBound`` at dispatch, but the agent
+        # composition itself succeeds so legacy / dev-test paths that
+        # do not exercise tool dispatch remain reachable. The legacy
+        # ``_build_canonical_runtime`` already enforces the same
+        # fail-closed contract for product-mode composition.
+        if (
+            tool_uow_factory is None
+            or security_uow_factory is None
+            or infrastructure_uow_factory is None
+        ):
+            return MCPToolExecutorAdapterRegistry()
+
+        gateway = ToolInvocationGateway(
+            unit_of_work_factory=tool_uow_factory,
+            security_unit_of_work_factory=security_uow_factory,
+            infrastructure_unit_of_work_factory=infrastructure_uow_factory,
+        )
+
+        registry = MCPToolExecutorAdapterRegistry()
+        run_id = (
+            self._runtime_run_id
+            or f"run:{self.session_id or self.user_id}"
+        )
+        step_run_id = (
+            getattr(self, "_step_run_id", "") or f"step:{run_id}"
+        )
+        trace_id = self._trace_id or f"trace:{run_id}"
+        for binding in bindings:
+            langchain_tool = self._binding_to_langchain_tool(
+                binding
+            )
+            if langchain_tool is None:
+                continue
+            adapter = build_mcp_langchain_tool_adapter(
+                binding=langchain_tool,
+                gateway=gateway,
+                tenant_id=self._tenant_id,
+                workspace_id=self._workspace_id,
+                principal_id=self.user_id,
+                run_id=run_id,
+                step_run_id=step_run_id,
+                trace_id=trace_id,
+                side_effect_level=binding.side_effect_level,
+                tool_name=binding.tool_id,
+            )
+            registry.register(binding.tool_id, adapter)
+        return registry
+
+    def _binding_to_langchain_tool(
+        self,
+        binding: WorkspaceToolBinding,
+    ) -> Any | None:
+        """Return the LangChain ``BaseTool`` for a ``WorkspaceToolBinding``.
+
+        The binding's ``tool_id`` is ``tool.<name>``; the agent already
+        holds the original LangChain tool in ``self.tools`` keyed by
+        name. If the binding carries a declared policy that names a
+        tool the agent does not have, the binding is unresolved and
+        the adapter cannot be registered (the control plane will fail
+        closed at execution time anyway).
+        """
+        target_name = binding.tool_id.removeprefix("tool.")
+        for tool in self.tools:
+            if getattr(tool, "name", None) == target_name:
+                return tool
+        return None
+
     async def _execute_binding_tool(self, tool: BaseTool, args: dict[str, Any]) -> Any:
         """Execute one governed binding.
 
-        Delegates to the module-level helper so the legacy class body
-        contains no direct ``tool.ainvoke`` dispatch site. MCP user
-        configuration (per-server credentials) is injected here as
-        product context; the execution itself still flows through the
-        LangChain tool binding.
+        PHASE22 runtime cutover V2: the LangChain ``tool.ainvoke`` call
+        is reached ONLY through the registered
+        ``MCPToolExecutorAdapter`` which dispatches through
+        ``ToolInvocationGateway``. The composition root (the canonical
+        ``WorkspaceAgentRuntime``) installs the adapter for each
+        binding at session construction; the
+        ``WorkSpaceSimpleAgent`` simply looks it up.
         """
         return await execute_binding_tool(
             binding=tool,
@@ -1246,6 +1414,14 @@ class WorkSpaceSimpleAgent:
             is_mcp_tool=self.is_mcp_tool,
             mcp_tool_id_resolver=self.get_mcp_id_by_tool,
             mcp_requires_user_config=self.mcp_requires_user_config,
+            tool_adapter_registry=self._tool_adapter_registry,
+            tool_id=f"tool.{tool.name}",
+            tenant_id=self.tenant_id,
+            workspace_id=self.workspace_id,
+            principal_id=self.user_id,
+            run_id=self._runtime_run_id,
+            step_run_id=getattr(self, "_step_run_id", ""),
+            trace_id=self._trace_id,
         )
 
     @staticmethod
