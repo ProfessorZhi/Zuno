@@ -25,6 +25,7 @@ def _client() -> TestClient:
         user_id="user_phase11_completion",
         user_name="Phase11 Completion User",
         role="admin",
+        tenant_id="tenant-a",
     )
     return TestClient(app)
 
@@ -124,6 +125,7 @@ def test_completion_product_runtime_shadow_records_product_command(monkeypatch) 
             product_mode="auto",
         ),
         login_user_id="principal-a",
+        tenant_id="tenant-a",
     )
 
     assert result["status"] == "ACCEPTED"
@@ -134,13 +136,13 @@ def test_completion_product_runtime_shadow_records_product_command(monkeypatch) 
     assert result["request_hash"]
     assert result["projection_event_id"] == "projection:completion-shadow"
     assert result["available_action_tokens"] == ["action-token:completion-shadow:cancel"]
-    assert captured["tenant_id"] == "user:principal-a"
+    assert captured["tenant_id"] == "tenant-a"
     assert captured["workspace_id"] == "completion"
     assert captured["conversation_id"] == "dialog_phase09"
     assert captured["principal_id"] == "principal-a"
     assert captured["active_agent_version_id"] == ProductService.runtime_agent_version_id(
         surface="completion",
-        tenant_id="user:principal-a",
+        tenant_id="tenant-a",
         workspace_id="completion",
     )
     assert captured["bootstrap_runtime_agent"] is True
@@ -166,6 +168,7 @@ def test_completion_product_runtime_shadow_fail_closed(monkeypatch) -> None:
             product_mode="auto",
         ),
         login_user_id="principal-a",
+        tenant_id="tenant-a",
     )
 
     assert result["status"] == "blocked"

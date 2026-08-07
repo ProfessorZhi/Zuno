@@ -1,0 +1,1617 @@
+{
+  "audit_subject_sha": "76e9c403d76e123e2fe7d0bb9226a53e013d8db2",
+  "candidate_pr": "PHASE22-FINAL-LEGACY-AUDIT-V3",
+  "evidence_revision_sha": "pending-b",
+  "exclusions": [
+    {
+      "path": "tests/",
+      "reason": "non-production surface (tests/docs/evals/agent scripts)"
+    },
+    {
+      "path": "docs/",
+      "reason": "non-production surface (tests/docs/evals/agent scripts)"
+    },
+    {
+      "path": ".agent/",
+      "reason": "non-production surface (tests/docs/evals/agent scripts)"
+    },
+    {
+      "path": "tools/evals/",
+      "reason": "non-production surface (tests/docs/evals/agent scripts)"
+    },
+    {
+      "path": "tools/scripts/_archive/",
+      "reason": "non-production surface (tests/docs/evals/agent scripts)"
+    },
+    {
+      "path": "node_modules/",
+      "reason": "non-production surface (tests/docs/evals/agent scripts)"
+    }
+  ],
+  "finding_count": 224,
+  "findings": [
+    {
+      "category": "tool_bypass",
+      "detail": "direct MCP bypass: update_system_mcp_server",
+      "line": 97,
+      "path": "src/backend/zuno/main.py",
+      "severity": "error"
+    },
+    {
+      "category": "tool_bypass_invoke",
+      "detail": "direct tool invocation bypass: self.graph.invoke",
+      "line": 133,
+      "path": "src/backend/zuno/agent/runtime/phase08.py",
+      "severity": "error"
+    },
+    {
+      "category": "tool_bypass_invoke",
+      "detail": "direct tool invocation bypass: self.graph.invoke",
+      "line": 153,
+      "path": "src/backend/zuno/agent/runtime/phase08.py",
+      "severity": "error"
+    },
+    {
+      "category": "tool_bypass_invoke",
+      "detail": "direct tool invocation bypass: self.graph.invoke",
+      "line": 201,
+      "path": "src/backend/zuno/agent/runtime/phase08.py",
+      "severity": "error"
+    },
+    {
+      "category": "tool_bypass_invoke",
+      "detail": "direct tool invocation bypass: self.graph.invoke",
+      "line": 159,
+      "path": "src/backend/zuno/agent/runtime/phase08.py",
+      "severity": "error"
+    },
+    {
+      "category": "tool_bypass_invoke",
+      "detail": "direct tool invocation bypass: self.graph.invoke",
+      "line": 191,
+      "path": "src/backend/zuno/agent/runtime/service.py",
+      "severity": "error"
+    },
+    {
+      "category": "tool_bypass_invoke",
+      "detail": "direct tool invocation bypass: self.graph.invoke",
+      "line": 269,
+      "path": "src/backend/zuno/agent/runtime/service.py",
+      "severity": "error"
+    },
+    {
+      "category": "tool_bypass_invoke",
+      "detail": "direct tool invocation bypass: self.structured_agent.invoke",
+      "line": 21,
+      "path": "src/backend/zuno/agent/core/agents/structured_response_agent.py",
+      "severity": "error"
+    },
+    {
+      "category": "tool_bypass_invoke",
+      "detail": "direct tool invocation bypass: self.runner.run",
+      "line": 24,
+      "path": "src/backend/zuno/agent/runtime/execution/react_step.py",
+      "severity": "error"
+    },
+    {
+      "category": "tool_bypass",
+      "detail": "direct MCP bypass: _default_mcp_logo_url",
+      "line": 63,
+      "path": "src/backend/zuno/api/dto/mcp.py",
+      "severity": "error"
+    },
+    {
+      "category": "tool_bypass",
+      "detail": "direct MCP bypass: MCPAgentDao.create_mcp_agent",
+      "line": 26,
+      "path": "src/backend/zuno/api/services/mcp_agent.py",
+      "severity": "error"
+    },
+    {
+      "category": "tool_bypass",
+      "detail": "direct MCP bypass: MCPAgentDao.get_mcp_agent_user_id",
+      "line": 88,
+      "path": "src/backend/zuno/api/services/mcp_agent.py",
+      "severity": "error"
+    },
+    {
+      "category": "tool_bypass",
+      "detail": "direct MCP bypass: MCPAgentDao.select_mcp_agent_by_name",
+      "line": 129,
+      "path": "src/backend/zuno/api/services/mcp_agent.py",
+      "severity": "error"
+    },
+    {
+      "category": "tool_bypass",
+      "detail": "direct MCP bypass: MCPAgentDao.get_mcp_agent_by_user_id",
+      "line": 144,
+      "path": "src/backend/zuno/api/services/mcp_agent.py",
+      "severity": "error"
+    },
+    {
+      "category": "tool_bypass",
+      "detail": "direct MCP bypass: MCPAgentDao.get_mcp_agent_by_user_id",
+      "line": 145,
+      "path": "src/backend/zuno/api/services/mcp_agent.py",
+      "severity": "error"
+    },
+    {
+      "category": "tool_bypass",
+      "detail": "direct MCP bypass: MCPAgentDao.select_mcp_agent_by_name",
+      "line": 160,
+      "path": "src/backend/zuno/api/services/mcp_agent.py",
+      "severity": "error"
+    },
+    {
+      "category": "tool_bypass",
+      "detail": "direct MCP bypass: MCPAgentDao.select_mcp_agent_by_id",
+      "line": 168,
+      "path": "src/backend/zuno/api/services/mcp_agent.py",
+      "severity": "error"
+    },
+    {
+      "category": "tool_bypass",
+      "detail": "direct MCP bypass: MCPAgentDao.get_mcp_agent",
+      "line": 43,
+      "path": "src/backend/zuno/api/services/mcp_agent.py",
+      "severity": "error"
+    },
+    {
+      "category": "tool_bypass",
+      "detail": "direct MCP bypass: MCPAgentDao.update_mcp_agent_by_id",
+      "line": 70,
+      "path": "src/backend/zuno/api/services/mcp_agent.py",
+      "severity": "error"
+    },
+    {
+      "category": "tool_bypass",
+      "detail": "direct MCP bypass: MCPAgentDao.delete_mcp_agent_by_id",
+      "line": 105,
+      "path": "src/backend/zuno/api/services/mcp_agent.py",
+      "severity": "error"
+    },
+    {
+      "category": "tool_bypass",
+      "detail": "direct MCP bypass: MCPAgentDao.search_mcp_agent_name",
+      "line": 114,
+      "path": "src/backend/zuno/api/services/mcp_agent.py",
+      "severity": "error"
+    },
+    {
+      "category": "tool_bypass",
+      "detail": "direct MCP bypass: MCPAgentDao.get_mcp_agent_by_user_id",
+      "line": 137,
+      "path": "src/backend/zuno/api/services/mcp_agent.py",
+      "severity": "error"
+    },
+    {
+      "category": "tool_bypass",
+      "detail": "direct MCP bypass: MCPAgentDao.select_mcp_agent_by_custom",
+      "line": 153,
+      "path": "src/backend/zuno/api/services/mcp_agent.py",
+      "severity": "error"
+    },
+    {
+      "category": "tool_bypass",
+      "detail": "direct MCP bypass: mcp_response.append",
+      "line": 50,
+      "path": "src/backend/zuno/api/services/mcp_chat.py",
+      "severity": "error"
+    },
+    {
+      "category": "tool_bypass",
+      "detail": "direct MCP bypass: self._init_mcp_manager",
+      "line": 31,
+      "path": "src/backend/zuno/api/services/mcp_chat.py",
+      "severity": "error"
+    },
+    {
+      "category": "tool_bypass",
+      "detail": "direct MCP bypass: MCPServerService.get_mcp_server_user",
+      "line": 34,
+      "path": "src/backend/zuno/api/services/mcp_chat.py",
+      "severity": "error"
+    },
+    {
+      "category": "tool_bypass",
+      "detail": "direct MCP bypass: self.mcp_manager.connect_client",
+      "line": 40,
+      "path": "src/backend/zuno/api/services/mcp_chat.py",
+      "severity": "error"
+    },
+    {
+      "category": "tool_bypass",
+      "detail": "direct MCP bypass: self.mcp_manager.process_query",
+      "line": 48,
+      "path": "src/backend/zuno/api/services/mcp_chat.py",
+      "severity": "error"
+    },
+    {
+      "category": "tool_bypass_invoke",
+      "detail": "direct tool invocation bypass: self.deep_anthropic.ainvoke",
+      "line": 67,
+      "path": "src/backend/zuno/api/services/mcp_chat.py",
+      "severity": "error"
+    },
+    {
+      "category": "tool_bypass",
+      "detail": "direct MCP bypass: self.mcp_manager.enter_mcp_server",
+      "line": 35,
+      "path": "src/backend/zuno/api/services/mcp_chat.py",
+      "severity": "error"
+    },
+    {
+      "category": "tool_bypass",
+      "detail": "direct MCP bypass: cls.summarize_mcp_tools",
+      "line": 110,
+      "path": "src/backend/zuno/api/services/mcp_server.py",
+      "severity": "error"
+    },
+    {
+      "category": "tool_bypass",
+      "detail": "direct MCP bypass: cls.summarize_mcp_tools",
+      "line": 158,
+      "path": "src/backend/zuno/api/services/mcp_server.py",
+      "severity": "error"
+    },
+    {
+      "category": "tool_bypass",
+      "detail": "direct MCP bypass: mcp_servers.extend",
+      "line": 397,
+      "path": "src/backend/zuno/api/services/mcp_server.py",
+      "severity": "error"
+    },
+    {
+      "category": "tool_bypass",
+      "detail": "direct MCP bypass: mcp_servers.items",
+      "line": 411,
+      "path": "src/backend/zuno/api/services/mcp_server.py",
+      "severity": "error"
+    },
+    {
+      "category": "tool_bypass",
+      "detail": "direct MCP bypass: mcp_manager.show_mcp_tools",
+      "line": 74,
+      "path": "src/backend/zuno/api/services/mcp_server.py",
+      "severity": "error"
+    },
+    {
+      "category": "tool_bypass",
+      "detail": "direct MCP bypass: MCPServerDao.create_mcp_server",
+      "line": 188,
+      "path": "src/backend/zuno/api/services/mcp_server.py",
+      "severity": "error"
+    },
+    {
+      "category": "tool_bypass",
+      "detail": "direct MCP bypass: MCPServerDao.get_mcp_server_from_id",
+      "line": 206,
+      "path": "src/backend/zuno/api/services/mcp_server.py",
+      "severity": "error"
+    },
+    {
+      "category": "tool_bypass",
+      "detail": "direct MCP bypass: MCPServerDao.update_mcp_server",
+      "line": 213,
+      "path": "src/backend/zuno/api/services/mcp_server.py",
+      "severity": "error"
+    },
+    {
+      "category": "tool_bypass",
+      "detail": "direct MCP bypass: MCPServerDao.delete_mcp_server",
+      "line": 222,
+      "path": "src/backend/zuno/api/services/mcp_server.py",
+      "severity": "error"
+    },
+    {
+      "category": "tool_bypass",
+      "detail": "direct MCP bypass: MCPServerDao.get_mcp_server_from_id",
+      "line": 226,
+      "path": "src/backend/zuno/api/services/mcp_server.py",
+      "severity": "error"
+    },
+    {
+      "category": "tool_bypass",
+      "detail": "direct MCP bypass: cls.get_mcp_server_from_id",
+      "line": 288,
+      "path": "src/backend/zuno/api/services/mcp_server.py",
+      "severity": "error"
+    },
+    {
+      "category": "tool_bypass",
+      "detail": "direct MCP bypass: MCPUserConfigService.show_mcp_user_config",
+      "line": 289,
+      "path": "src/backend/zuno/api/services/mcp_server.py",
+      "severity": "error"
+    },
+    {
+      "category": "tool_bypass",
+      "detail": "direct MCP bypass: mcp_manager.show_mcp_tools",
+      "line": 336,
+      "path": "src/backend/zuno/api/services/mcp_server.py",
+      "severity": "error"
+    },
+    {
+      "category": "tool_bypass",
+      "detail": "direct MCP bypass: MCPServerDao.get_first_mcp_server",
+      "line": 361,
+      "path": "src/backend/zuno/api/services/mcp_server.py",
+      "severity": "error"
+    },
+    {
+      "category": "tool_bypass",
+      "detail": "direct MCP bypass: MCPServerDao.get_mcp_server_from_id",
+      "line": 368,
+      "path": "src/backend/zuno/api/services/mcp_server.py",
+      "severity": "error"
+    },
+    {
+      "category": "tool_bypass",
+      "detail": "direct MCP bypass: MCPServerDao.get_mcp_server_ids_from_name",
+      "line": 396,
+      "path": "src/backend/zuno/api/services/mcp_server.py",
+      "severity": "error"
+    },
+    {
+      "category": "tool_bypass",
+      "detail": "direct MCP bypass: cls.build_mcp_summary",
+      "line": 69,
+      "path": "src/backend/zuno/api/services/mcp_server.py",
+      "severity": "error"
+    },
+    {
+      "category": "tool_bypass",
+      "detail": "direct MCP bypass: convert_mcp_config",
+      "line": 73,
+      "path": "src/backend/zuno/api/services/mcp_server.py",
+      "severity": "error"
+    },
+    {
+      "category": "tool_bypass",
+      "detail": "direct MCP bypass: imported_config.get('mcpServers', {}).items",
+      "line": 94,
+      "path": "src/backend/zuno/api/services/mcp_server.py",
+      "severity": "error"
+    },
+    {
+      "category": "tool_bypass",
+      "detail": "direct MCP bypass: MCPServerDao.get_all_mcp_servers",
+      "line": 272,
+      "path": "src/backend/zuno/api/services/mcp_server.py",
+      "severity": "error"
+    },
+    {
+      "category": "tool_bypass",
+      "detail": "direct MCP bypass: MCPServerDao.get_mcp_servers_from_user",
+      "line": 274,
+      "path": "src/backend/zuno/api/services/mcp_server.py",
+      "severity": "error"
+    },
+    {
+      "category": "tool_bypass",
+      "detail": "direct MCP bypass: MCPServerDao.get_mcp_servers_from_user",
+      "line": 275,
+      "path": "src/backend/zuno/api/services/mcp_server.py",
+      "severity": "error"
+    },
+    {
+      "category": "tool_bypass",
+      "detail": "direct MCP bypass: MCPUserConfigService.show_mcp_user_config",
+      "line": 280,
+      "path": "src/backend/zuno/api/services/mcp_server.py",
+      "severity": "error"
+    },
+    {
+      "category": "tool_bypass",
+      "detail": "direct MCP bypass: convert_mcp_config",
+      "line": 320,
+      "path": "src/backend/zuno/api/services/mcp_server.py",
+      "severity": "error"
+    },
+    {
+      "category": "tool_bypass",
+      "detail": "direct MCP bypass: MCPServerDao.get_mcp_server_ids_from_name",
+      "line": 397,
+      "path": "src/backend/zuno/api/services/mcp_server.py",
+      "severity": "error"
+    },
+    {
+      "category": "tool_bypass",
+      "detail": "direct MCP bypass: MCPServerStdioDao.create_mcp_server",
+      "line": 38,
+      "path": "src/backend/zuno/api/services/mcp_stdio_server.py",
+      "severity": "error"
+    },
+    {
+      "category": "tool_bypass",
+      "detail": "direct MCP bypass: cls.get_mcp_server_user",
+      "line": 52,
+      "path": "src/backend/zuno/api/services/mcp_stdio_server.py",
+      "severity": "error"
+    },
+    {
+      "category": "tool_bypass",
+      "detail": "direct MCP bypass: cls.get_mcp_server_user",
+      "line": 74,
+      "path": "src/backend/zuno/api/services/mcp_stdio_server.py",
+      "severity": "error"
+    },
+    {
+      "category": "tool_bypass",
+      "detail": "direct MCP bypass: MCPServerStdioDao.get_mcp_server_by_id",
+      "line": 94,
+      "path": "src/backend/zuno/api/services/mcp_stdio_server.py",
+      "severity": "error"
+    },
+    {
+      "category": "tool_bypass",
+      "detail": "direct MCP bypass: MCPServerStdioDao.get_mcp_server_by_id",
+      "line": 99,
+      "path": "src/backend/zuno/api/services/mcp_stdio_server.py",
+      "severity": "error"
+    },
+    {
+      "category": "tool_bypass",
+      "detail": "direct MCP bypass: mcp_server.to_dict",
+      "line": 100,
+      "path": "src/backend/zuno/api/services/mcp_stdio_server.py",
+      "severity": "error"
+    },
+    {
+      "category": "tool_bypass",
+      "detail": "direct MCP bypass: MCPServerStdioDao.get_mcp_servers",
+      "line": 48,
+      "path": "src/backend/zuno/api/services/mcp_stdio_server.py",
+      "severity": "error"
+    },
+    {
+      "category": "tool_bypass",
+      "detail": "direct MCP bypass: MCPServerStdioDao.delete_mcp_server",
+      "line": 60,
+      "path": "src/backend/zuno/api/services/mcp_stdio_server.py",
+      "severity": "error"
+    },
+    {
+      "category": "tool_bypass",
+      "detail": "direct MCP bypass: MCPServerStdioDao.update_mcp_server",
+      "line": 82,
+      "path": "src/backend/zuno/api/services/mcp_stdio_server.py",
+      "severity": "error"
+    },
+    {
+      "category": "tool_bypass",
+      "detail": "direct MCP bypass: MCPUserConfigDao.get_mcp_user_configs",
+      "line": 104,
+      "path": "src/backend/zuno/api/services/mcp_user_config.py",
+      "severity": "error"
+    },
+    {
+      "category": "tool_bypass",
+      "detail": "direct MCP bypass: MCPUserConfigDao.create_mcp_user_config",
+      "line": 69,
+      "path": "src/backend/zuno/api/services/mcp_user_config.py",
+      "severity": "error"
+    },
+    {
+      "category": "tool_bypass",
+      "detail": "direct MCP bypass: MCPUserConfigDao.get_mcp_user_config_from_id",
+      "line": 76,
+      "path": "src/backend/zuno/api/services/mcp_user_config.py",
+      "severity": "error"
+    },
+    {
+      "category": "tool_bypass",
+      "detail": "direct MCP bypass: MCPUserConfigDao.get_mcp_user_configs",
+      "line": 84,
+      "path": "src/backend/zuno/api/services/mcp_user_config.py",
+      "severity": "error"
+    },
+    {
+      "category": "tool_bypass",
+      "detail": "direct MCP bypass: MCPUserConfigDao.create_mcp_user_config",
+      "line": 116,
+      "path": "src/backend/zuno/api/services/mcp_user_config.py",
+      "severity": "error"
+    },
+    {
+      "category": "tool_bypass",
+      "detail": "direct MCP bypass: MCPUserConfigDao.update_mcp_user_config",
+      "line": 118,
+      "path": "src/backend/zuno/api/services/mcp_user_config.py",
+      "severity": "error"
+    },
+    {
+      "category": "tool_bypass",
+      "detail": "direct MCP bypass: MCPUserConfigDao.delete_mcp_user_config",
+      "line": 123,
+      "path": "src/backend/zuno/api/services/mcp_user_config.py",
+      "severity": "error"
+    },
+    {
+      "category": "tool_bypass",
+      "detail": "direct MCP bypass: MCPUserConfigDao.get_mcp_user_configs",
+      "line": 130,
+      "path": "src/backend/zuno/api/services/mcp_user_config.py",
+      "severity": "error"
+    },
+    {
+      "category": "tool_bypass",
+      "detail": "direct MCP bypass: MCPUserConfigDao.get_mcp_user_configs",
+      "line": 143,
+      "path": "src/backend/zuno/api/services/mcp_user_config.py",
+      "severity": "error"
+    },
+    {
+      "category": "tool_bypass",
+      "detail": "direct MCP bypass: MCPUserConfigDao.create_mcp_user_config",
+      "line": 88,
+      "path": "src/backend/zuno/api/services/mcp_user_config.py",
+      "severity": "error"
+    },
+    {
+      "category": "tool_bypass",
+      "detail": "direct MCP bypass: MCPUserConfigDao.update_mcp_user_config",
+      "line": 90,
+      "path": "src/backend/zuno/api/services/mcp_user_config.py",
+      "severity": "error"
+    },
+    {
+      "category": "tool_bypass_image_gen",
+      "detail": "direct image_gen bypass: cls.should_run_direct_image_generation",
+      "line": 404,
+      "path": "src/backend/zuno/api/services/workspace.py",
+      "severity": "error"
+    },
+    {
+      "category": "tool_bypass",
+      "detail": "direct MCP bypass: mcp_server.get",
+      "line": 128,
+      "path": "src/backend/zuno/api/services/workspace.py",
+      "severity": "error"
+    },
+    {
+      "category": "tool_bypass",
+      "detail": "direct MCP bypass: cls.build_mcp_configs",
+      "line": 417,
+      "path": "src/backend/zuno/api/services/workspace.py",
+      "severity": "error"
+    },
+    {
+      "category": "tool_bypass",
+      "detail": "direct MCP bypass: MCPService.get_mcp_server_from_id",
+      "line": 123,
+      "path": "src/backend/zuno/api/services/workspace.py",
+      "severity": "error"
+    },
+    {
+      "category": "tool_bypass",
+      "detail": "direct MCP bypass: missing_mcp_ids.append",
+      "line": 125,
+      "path": "src/backend/zuno/api/services/workspace.py",
+      "severity": "error"
+    },
+    {
+      "category": "tool_bypass",
+      "detail": "direct MCP bypass: mcp_server.get",
+      "line": 132,
+      "path": "src/backend/zuno/api/services/workspace.py",
+      "severity": "error"
+    },
+    {
+      "category": "tool_bypass",
+      "detail": "direct MCP bypass: mcp_server.get",
+      "line": 133,
+      "path": "src/backend/zuno/api/services/workspace.py",
+      "severity": "error"
+    },
+    {
+      "category": "tool_bypass",
+      "detail": "direct MCP bypass: mcp_server.get",
+      "line": 134,
+      "path": "src/backend/zuno/api/services/workspace.py",
+      "severity": "error"
+    },
+    {
+      "category": "tool_bypass",
+      "detail": "direct MCP bypass: mcp_server.get",
+      "line": 136,
+      "path": "src/backend/zuno/api/services/workspace.py",
+      "severity": "error"
+    },
+    {
+      "category": "tool_bypass",
+      "detail": "direct MCP bypass: mcp_server.get",
+      "line": 137,
+      "path": "src/backend/zuno/api/services/workspace.py",
+      "severity": "error"
+    },
+    {
+      "category": "tool_bypass",
+      "detail": "direct MCP bypass: mcp_server.get",
+      "line": 138,
+      "path": "src/backend/zuno/api/services/workspace.py",
+      "severity": "error"
+    },
+    {
+      "category": "tool_bypass",
+      "detail": "direct MCP bypass: mcp_server.get",
+      "line": 135,
+      "path": "src/backend/zuno/api/services/workspace.py",
+      "severity": "error"
+    },
+    {
+      "category": "tool_bypass",
+      "detail": "direct MCP bypass: MCPAgentService.create_mcp_agent",
+      "line": 41,
+      "path": "src/backend/zuno/api/v1/mcp_agent.py",
+      "severity": "error"
+    },
+    {
+      "category": "tool_bypass",
+      "detail": "direct MCP bypass: MCPAgentService.get_all_mcp_agent_by_user",
+      "line": 60,
+      "path": "src/backend/zuno/api/v1/mcp_agent.py",
+      "severity": "error"
+    },
+    {
+      "category": "tool_bypass",
+      "detail": "direct MCP bypass: MCPAgentService.delete_mcp_agent_by_id",
+      "line": 89,
+      "path": "src/backend/zuno/api/v1/mcp_agent.py",
+      "severity": "error"
+    },
+    {
+      "category": "tool_bypass",
+      "detail": "direct MCP bypass: MCPAgentService.update_mcp_agent_by_id",
+      "line": 119,
+      "path": "src/backend/zuno/api/v1/mcp_agent.py",
+      "severity": "error"
+    },
+    {
+      "category": "tool_bypass",
+      "detail": "direct MCP bypass: MCPAgentService.search_mcp_agent_name",
+      "line": 142,
+      "path": "src/backend/zuno/api/v1/mcp_agent.py",
+      "severity": "error"
+    },
+    {
+      "category": "tool_bypass",
+      "detail": "direct MCP bypass: mcp_chat_agent.init_MCP_Server",
+      "line": 18,
+      "path": "src/backend/zuno/api/v1/mcp_chat.py",
+      "severity": "error"
+    },
+    {
+      "category": "tool_bypass",
+      "detail": "direct MCP bypass: mcp_chat_agent.ainvoke",
+      "line": 22,
+      "path": "src/backend/zuno/api/v1/mcp_chat.py",
+      "severity": "error"
+    },
+    {
+      "category": "tool_bypass",
+      "detail": "direct MCP bypass: MCPService.build_mcp_summary",
+      "line": 14,
+      "path": "src/backend/zuno/api/v1/mcp_server.py",
+      "severity": "error"
+    },
+    {
+      "category": "tool_bypass",
+      "detail": "direct MCP bypass: MCPService.create_mcp_server",
+      "line": 30,
+      "path": "src/backend/zuno/api/v1/mcp_server.py",
+      "severity": "error"
+    },
+    {
+      "category": "tool_bypass",
+      "detail": "direct MCP bypass: MCPService.get_mcp_tools_info",
+      "line": 68,
+      "path": "src/backend/zuno/api/v1/mcp_server.py",
+      "severity": "error"
+    },
+    {
+      "category": "tool_bypass",
+      "detail": "direct MCP bypass: MCPService.get_mcp_server_from_id",
+      "line": 82,
+      "path": "src/backend/zuno/api/v1/mcp_server.py",
+      "severity": "error"
+    },
+    {
+      "category": "tool_bypass",
+      "detail": "direct MCP bypass: MCPService.update_mcp_server",
+      "line": 97,
+      "path": "src/backend/zuno/api/v1/mcp_server.py",
+      "severity": "error"
+    },
+    {
+      "category": "tool_bypass",
+      "detail": "direct MCP bypass: MCPServerService.create_mcp_server",
+      "line": 20,
+      "path": "src/backend/zuno/api/v1/mcp_stdio_server.py",
+      "severity": "error"
+    },
+    {
+      "category": "tool_bypass",
+      "detail": "direct MCP bypass: MCPServerService.get_mcp_servers",
+      "line": 36,
+      "path": "src/backend/zuno/api/v1/mcp_stdio_server.py",
+      "severity": "error"
+    },
+    {
+      "category": "tool_bypass",
+      "detail": "direct MCP bypass: MCPServerService.delete_mcp_server",
+      "line": 62,
+      "path": "src/backend/zuno/api/v1/mcp_stdio_server.py",
+      "severity": "error"
+    },
+    {
+      "category": "tool_bypass",
+      "detail": "direct MCP bypass: MCPServerService.update_mcp_server",
+      "line": 79,
+      "path": "src/backend/zuno/api/v1/mcp_stdio_server.py",
+      "severity": "error"
+    },
+    {
+      "category": "tool_bypass",
+      "detail": "direct MCP bypass: MCPUserConfigService.create_mcp_user_config",
+      "line": 24,
+      "path": "src/backend/zuno/api/v1/mcp_user_config.py",
+      "severity": "error"
+    },
+    {
+      "category": "tool_bypass",
+      "detail": "direct MCP bypass: MCPUserConfigService.get_mcp_user_config_from_id",
+      "line": 56,
+      "path": "src/backend/zuno/api/v1/mcp_user_config.py",
+      "severity": "error"
+    },
+    {
+      "category": "tool_bypass",
+      "detail": "direct MCP bypass: MCPUserConfigService.update_mcp_user_config",
+      "line": 70,
+      "path": "src/backend/zuno/api/v1/mcp_user_config.py",
+      "severity": "error"
+    },
+    {
+      "category": "tool_bypass",
+      "detail": "direct MCP bypass: MCPUserConfigService.delete_mcp_user_config",
+      "line": 87,
+      "path": "src/backend/zuno/api/v1/mcp_user_config.py",
+      "severity": "error"
+    },
+    {
+      "category": "tool_bypass",
+      "detail": "direct MCP bypass: MCPUserConfigService.show_mcp_user_config",
+      "line": 101,
+      "path": "src/backend/zuno/api/v1/mcp_user_config.py",
+      "severity": "error"
+    },
+    {
+      "category": "tool_bypass",
+      "detail": "direct MCP bypass: mcp.tool",
+      "line": 8,
+      "path": "src/backend/zuno/capability/mcp/servers/arxiv/mcp_arxiv.py",
+      "severity": "error"
+    },
+    {
+      "category": "tool_bypass",
+      "detail": "direct MCP bypass: mcp.run",
+      "line": 19,
+      "path": "src/backend/zuno/capability/mcp/servers/arxiv/mcp_arxiv.py",
+      "severity": "error"
+    },
+    {
+      "category": "tool_bypass",
+      "detail": "direct MCP bypass: register_mcp_server",
+      "line": 11,
+      "path": "src/backend/zuno/capability/mcp/servers/lark_mcp/main.py",
+      "severity": "error"
+    },
+    {
+      "category": "tool_bypass",
+      "detail": "direct MCP bypass: mcp.run",
+      "line": 30,
+      "path": "src/backend/zuno/capability/mcp/servers/lark_mcp/main.py",
+      "severity": "error"
+    },
+    {
+      "category": "tool_bypass",
+      "detail": "direct MCP bypass: mcp.sse_app",
+      "line": 21,
+      "path": "src/backend/zuno/capability/mcp/servers/lark_mcp/main.py",
+      "severity": "error"
+    },
+    {
+      "category": "tool_bypass",
+      "detail": "direct MCP bypass: mcp.tool(description=batch_get_user_info.__doc__)",
+      "line": 24,
+      "path": "src/backend/zuno/capability/mcp/servers/lark_mcp/mcp_server.py",
+      "severity": "error"
+    },
+    {
+      "category": "tool_bypass",
+      "detail": "direct MCP bypass: mcp.tool(description=create_calendar_event.__doc__)",
+      "line": 27,
+      "path": "src/backend/zuno/capability/mcp/servers/lark_mcp/mcp_server.py",
+      "severity": "error"
+    },
+    {
+      "category": "tool_bypass",
+      "detail": "direct MCP bypass: mcp.tool(description=append_calendar_event_attendee.__doc__)",
+      "line": 28,
+      "path": "src/backend/zuno/capability/mcp/servers/lark_mcp/mcp_server.py",
+      "severity": "error"
+    },
+    {
+      "category": "tool_bypass",
+      "detail": "direct MCP bypass: mcp.tool(description=get_calendar_event.__doc__)",
+      "line": 29,
+      "path": "src/backend/zuno/capability/mcp/servers/lark_mcp/mcp_server.py",
+      "severity": "error"
+    },
+    {
+      "category": "tool_bypass",
+      "detail": "direct MCP bypass: mcp.tool(description=update_calendar_event.__doc__)",
+      "line": 30,
+      "path": "src/backend/zuno/capability/mcp/servers/lark_mcp/mcp_server.py",
+      "severity": "error"
+    },
+    {
+      "category": "tool_bypass",
+      "detail": "direct MCP bypass: mcp.tool(description=delete_calendar_event.__doc__)",
+      "line": 31,
+      "path": "src/backend/zuno/capability/mcp/servers/lark_mcp/mcp_server.py",
+      "severity": "error"
+    },
+    {
+      "category": "tool_bypass",
+      "detail": "direct MCP bypass: mcp.tool(description=create_calendar.__doc__)",
+      "line": 34,
+      "path": "src/backend/zuno/capability/mcp/servers/lark_mcp/mcp_server.py",
+      "severity": "error"
+    },
+    {
+      "category": "tool_bypass",
+      "detail": "direct MCP bypass: mcp.tool(description=delete_calendar.__doc__)",
+      "line": 35,
+      "path": "src/backend/zuno/capability/mcp/servers/lark_mcp/mcp_server.py",
+      "severity": "error"
+    },
+    {
+      "category": "tool_bypass",
+      "detail": "direct MCP bypass: mcp.tool(description=get_calendar_info.__doc__)",
+      "line": 36,
+      "path": "src/backend/zuno/capability/mcp/servers/lark_mcp/mcp_server.py",
+      "severity": "error"
+    },
+    {
+      "category": "tool_bypass",
+      "detail": "direct MCP bypass: mcp.tool(description=get_calendars_list.__doc__)",
+      "line": 37,
+      "path": "src/backend/zuno/capability/mcp/servers/lark_mcp/mcp_server.py",
+      "severity": "error"
+    },
+    {
+      "category": "tool_bypass",
+      "detail": "direct MCP bypass: mcp.tool(description=update_calendar.__doc__)",
+      "line": 38,
+      "path": "src/backend/zuno/capability/mcp/servers/lark_mcp/mcp_server.py",
+      "severity": "error"
+    },
+    {
+      "category": "tool_bypass",
+      "detail": "direct MCP bypass: mcp.tool(description=create_document.__doc__)",
+      "line": 41,
+      "path": "src/backend/zuno/capability/mcp/servers/lark_mcp/mcp_server.py",
+      "severity": "error"
+    },
+    {
+      "category": "tool_bypass",
+      "detail": "direct MCP bypass: mcp.tool(description=get_document.__doc__)",
+      "line": 42,
+      "path": "src/backend/zuno/capability/mcp/servers/lark_mcp/mcp_server.py",
+      "severity": "error"
+    },
+    {
+      "category": "tool_bypass",
+      "detail": "direct MCP bypass: mcp.tool(description=create_folder.__doc__)",
+      "line": 45,
+      "path": "src/backend/zuno/capability/mcp/servers/lark_mcp/mcp_server.py",
+      "severity": "error"
+    },
+    {
+      "category": "tool_bypass",
+      "detail": "direct MCP bypass: mcp.tool(description=list_folder_files.__doc__)",
+      "line": 46,
+      "path": "src/backend/zuno/capability/mcp/servers/lark_mcp/mcp_server.py",
+      "severity": "error"
+    },
+    {
+      "category": "tool_bypass",
+      "detail": "direct MCP bypass: mcp.tool(description=create_message.__doc__)",
+      "line": 49,
+      "path": "src/backend/zuno/capability/mcp/servers/lark_mcp/mcp_server.py",
+      "severity": "error"
+    },
+    {
+      "category": "tool_bypass",
+      "detail": "direct MCP bypass: mcp.tool",
+      "line": 24,
+      "path": "src/backend/zuno/capability/mcp/servers/lark_mcp/mcp_server.py",
+      "severity": "error"
+    },
+    {
+      "category": "tool_bypass",
+      "detail": "direct MCP bypass: mcp.tool",
+      "line": 27,
+      "path": "src/backend/zuno/capability/mcp/servers/lark_mcp/mcp_server.py",
+      "severity": "error"
+    },
+    {
+      "category": "tool_bypass",
+      "detail": "direct MCP bypass: mcp.tool",
+      "line": 28,
+      "path": "src/backend/zuno/capability/mcp/servers/lark_mcp/mcp_server.py",
+      "severity": "error"
+    },
+    {
+      "category": "tool_bypass",
+      "detail": "direct MCP bypass: mcp.tool",
+      "line": 29,
+      "path": "src/backend/zuno/capability/mcp/servers/lark_mcp/mcp_server.py",
+      "severity": "error"
+    },
+    {
+      "category": "tool_bypass",
+      "detail": "direct MCP bypass: mcp.tool",
+      "line": 30,
+      "path": "src/backend/zuno/capability/mcp/servers/lark_mcp/mcp_server.py",
+      "severity": "error"
+    },
+    {
+      "category": "tool_bypass",
+      "detail": "direct MCP bypass: mcp.tool",
+      "line": 31,
+      "path": "src/backend/zuno/capability/mcp/servers/lark_mcp/mcp_server.py",
+      "severity": "error"
+    },
+    {
+      "category": "tool_bypass",
+      "detail": "direct MCP bypass: mcp.tool",
+      "line": 34,
+      "path": "src/backend/zuno/capability/mcp/servers/lark_mcp/mcp_server.py",
+      "severity": "error"
+    },
+    {
+      "category": "tool_bypass",
+      "detail": "direct MCP bypass: mcp.tool",
+      "line": 35,
+      "path": "src/backend/zuno/capability/mcp/servers/lark_mcp/mcp_server.py",
+      "severity": "error"
+    },
+    {
+      "category": "tool_bypass",
+      "detail": "direct MCP bypass: mcp.tool",
+      "line": 36,
+      "path": "src/backend/zuno/capability/mcp/servers/lark_mcp/mcp_server.py",
+      "severity": "error"
+    },
+    {
+      "category": "tool_bypass",
+      "detail": "direct MCP bypass: mcp.tool",
+      "line": 37,
+      "path": "src/backend/zuno/capability/mcp/servers/lark_mcp/mcp_server.py",
+      "severity": "error"
+    },
+    {
+      "category": "tool_bypass",
+      "detail": "direct MCP bypass: mcp.tool",
+      "line": 38,
+      "path": "src/backend/zuno/capability/mcp/servers/lark_mcp/mcp_server.py",
+      "severity": "error"
+    },
+    {
+      "category": "tool_bypass",
+      "detail": "direct MCP bypass: mcp.tool",
+      "line": 41,
+      "path": "src/backend/zuno/capability/mcp/servers/lark_mcp/mcp_server.py",
+      "severity": "error"
+    },
+    {
+      "category": "tool_bypass",
+      "detail": "direct MCP bypass: mcp.tool",
+      "line": 42,
+      "path": "src/backend/zuno/capability/mcp/servers/lark_mcp/mcp_server.py",
+      "severity": "error"
+    },
+    {
+      "category": "tool_bypass",
+      "detail": "direct MCP bypass: mcp.tool",
+      "line": 45,
+      "path": "src/backend/zuno/capability/mcp/servers/lark_mcp/mcp_server.py",
+      "severity": "error"
+    },
+    {
+      "category": "tool_bypass",
+      "detail": "direct MCP bypass: mcp.tool",
+      "line": 46,
+      "path": "src/backend/zuno/capability/mcp/servers/lark_mcp/mcp_server.py",
+      "severity": "error"
+    },
+    {
+      "category": "tool_bypass",
+      "detail": "direct MCP bypass: mcp.tool",
+      "line": 49,
+      "path": "src/backend/zuno/capability/mcp/servers/lark_mcp/mcp_server.py",
+      "severity": "error"
+    },
+    {
+      "category": "tool_bypass",
+      "detail": "direct MCP bypass: mcp.tool",
+      "line": 7,
+      "path": "src/backend/zuno/capability/mcp/servers/qa_echo/main.py",
+      "severity": "error"
+    },
+    {
+      "category": "tool_bypass",
+      "detail": "direct MCP bypass: mcp.run",
+      "line": 14,
+      "path": "src/backend/zuno/capability/mcp/servers/qa_echo/main.py",
+      "severity": "error"
+    },
+    {
+      "category": "tool_bypass",
+      "detail": "direct MCP bypass: mcp.add_tool",
+      "line": 135,
+      "path": "src/backend/zuno/capability/mcp/servers/remote_proxy/main.py",
+      "severity": "error"
+    },
+    {
+      "category": "tool_bypass",
+      "detail": "direct MCP bypass: mcp.run",
+      "line": 177,
+      "path": "src/backend/zuno/capability/mcp/servers/remote_proxy/main.py",
+      "severity": "error"
+    },
+    {
+      "category": "tool_bypass",
+      "detail": "direct MCP bypass: mcp.tool",
+      "line": 15,
+      "path": "src/backend/zuno/capability/mcp/servers/weather/mcp_weather.py",
+      "severity": "error"
+    },
+    {
+      "category": "tool_bypass",
+      "detail": "direct MCP bypass: mcp.run",
+      "line": 63,
+      "path": "src/backend/zuno/capability/mcp/servers/weather/mcp_weather.py",
+      "severity": "error"
+    },
+    {
+      "category": "tool_bypass",
+      "detail": "direct MCP bypass: convert_single_mcp",
+      "line": 64,
+      "path": "src/backend/zuno/platform/common/convert.py",
+      "severity": "error"
+    },
+    {
+      "category": "tool_bypass",
+      "detail": "direct MCP bypass: convert_single_mcp",
+      "line": 66,
+      "path": "src/backend/zuno/platform/common/convert.py",
+      "severity": "error"
+    },
+    {
+      "category": "tool_bypass",
+      "detail": "direct MCP bypass: imported_config.get('mcpServers', {}).items",
+      "line": 26,
+      "path": "src/backend/zuno/platform/common/helpers.py",
+      "severity": "error"
+    },
+    {
+      "category": "tool_bypass",
+      "detail": "direct MCP bypass: load_system_mcp_server",
+      "line": 372,
+      "path": "src/backend/zuno/platform/database/init_data.py",
+      "severity": "error"
+    },
+    {
+      "category": "tool_bypass",
+      "detail": "direct MCP bypass: mcp_manager.show_mcp_tools",
+      "line": 384,
+      "path": "src/backend/zuno/platform/database/init_data.py",
+      "severity": "error"
+    },
+    {
+      "category": "tool_bypass",
+      "detail": "direct MCP bypass: _fallback_mcp_tool_name",
+      "line": 422,
+      "path": "src/backend/zuno/platform/database/init_data.py",
+      "severity": "error"
+    },
+    {
+      "category": "tool_bypass",
+      "detail": "direct MCP bypass: _fallback_mcp_description",
+      "line": 423,
+      "path": "src/backend/zuno/platform/database/init_data.py",
+      "severity": "error"
+    },
+    {
+      "category": "tool_bypass",
+      "detail": "direct MCP bypass: imported_config['mcpServers'].items",
+      "line": 487,
+      "path": "src/backend/zuno/platform/database/init_data.py",
+      "severity": "error"
+    },
+    {
+      "category": "tool_bypass",
+      "detail": "direct MCP bypass: update_mcp_server_into_mysql",
+      "line": 121,
+      "path": "src/backend/zuno/platform/database/init_data.py",
+      "severity": "error"
+    },
+    {
+      "category": "tool_bypass",
+      "detail": "direct MCP bypass: update_mcp_server_into_mysql",
+      "line": 123,
+      "path": "src/backend/zuno/platform/database/init_data.py",
+      "severity": "error"
+    },
+    {
+      "category": "tool_bypass",
+      "detail": "direct MCP bypass: MCPService.mcp_server_need_update",
+      "line": 379,
+      "path": "src/backend/zuno/platform/database/init_data.py",
+      "severity": "error"
+    },
+    {
+      "category": "tool_bypass",
+      "detail": "direct MCP bypass: convert_mcp_config",
+      "line": 383,
+      "path": "src/backend/zuno/platform/database/init_data.py",
+      "severity": "error"
+    },
+    {
+      "category": "tool_bypass",
+      "detail": "direct MCP bypass: _fallback_mcp_tool_name",
+      "line": 402,
+      "path": "src/backend/zuno/platform/database/init_data.py",
+      "severity": "error"
+    },
+    {
+      "category": "tool_bypass",
+      "detail": "direct MCP bypass: _fallback_mcp_description",
+      "line": 403,
+      "path": "src/backend/zuno/platform/database/init_data.py",
+      "severity": "error"
+    },
+    {
+      "category": "tool_bypass",
+      "detail": "direct MCP bypass: MCPService.update_mcp_server",
+      "line": 417,
+      "path": "src/backend/zuno/platform/database/init_data.py",
+      "severity": "error"
+    },
+    {
+      "category": "tool_bypass",
+      "detail": "direct MCP bypass: MCPService.create_mcp_server",
+      "line": 424,
+      "path": "src/backend/zuno/platform/database/init_data.py",
+      "severity": "error"
+    },
+    {
+      "category": "tool_bypass",
+      "detail": "direct MCP bypass: cls._mcp_status",
+      "line": 160,
+      "path": "src/backend/zuno/platform/services/capability_registry.py",
+      "severity": "error"
+    },
+    {
+      "category": "tool_bypass",
+      "detail": "direct MCP bypass: cls._iter_mcp_tool_defs",
+      "line": 185,
+      "path": "src/backend/zuno/platform/services/capability_registry.py",
+      "severity": "error"
+    },
+    {
+      "category": "tool_bypass",
+      "detail": "direct MCP bypass: cls._mcp_capabilities",
+      "line": 94,
+      "path": "src/backend/zuno/platform/services/capability_registry.py",
+      "severity": "error"
+    },
+    {
+      "category": "tool_bypass",
+      "detail": "direct MCP bypass: cls._get_mcp_agent_sql",
+      "line": 51,
+      "path": "src/backend/zuno/platform/database/dao/mcp_agent.py",
+      "severity": "error"
+    },
+    {
+      "category": "tool_bypass",
+      "detail": "direct MCP bypass: update(MCPServerTable).where(MCPServerTable.mcp_server_id == mcp_server_id).values",
+      "line": 60,
+      "path": "src/backend/zuno/platform/database/dao/mcp_server.py",
+      "severity": "error"
+    },
+    {
+      "category": "tool_bypass",
+      "detail": "direct MCP bypass: update(MCPServerStdioTable).where(MCPServerStdioTable.mcp_server_id == mcp_server_id).values",
+      "line": 66,
+      "path": "src/backend/zuno/platform/database/dao/mcp_stdio_server.py",
+      "severity": "error"
+    },
+    {
+      "category": "tool_bypass",
+      "detail": "direct MCP bypass: update(MCPUserConfigTable).where(and_(MCPUserConfigTable.user_id == user_id, MCPUserConfigTable.mcp_server_id == mcp_server_id)).values",
+      "line": 43,
+      "path": "src/backend/zuno/platform/database/dao/mcp_user_config.py",
+      "severity": "error"
+    },
+    {
+      "category": "tool_bypass_invoke",
+      "detail": "direct tool invocation bypass: self.base_agent.ainvoke",
+      "line": 205,
+      "path": "src/backend/zuno/platform/services/autobuild/client.py",
+      "severity": "error"
+    },
+    {
+      "category": "tool_bypass_invoke",
+      "detail": "direct tool invocation bypass: self.abstract_agent.ainvoke",
+      "line": 215,
+      "path": "src/backend/zuno/platform/services/autobuild/client.py",
+      "severity": "error"
+    },
+    {
+      "category": "tool_bypass_invoke",
+      "detail": "direct tool invocation bypass: self.base_agent.ainvoke",
+      "line": 264,
+      "path": "src/backend/zuno/platform/services/autobuild/client.py",
+      "severity": "error"
+    },
+    {
+      "category": "tool_bypass_invoke",
+      "detail": "direct tool invocation bypass: self.base_agent.invoke",
+      "line": 297,
+      "path": "src/backend/zuno/platform/services/autobuild/client.py",
+      "severity": "error"
+    },
+    {
+      "category": "tool_bypass_invoke",
+      "detail": "direct tool invocation bypass: self.orchestrator.run",
+      "line": 194,
+      "path": "src/backend/zuno/platform/services/graphrag/query_service.py",
+      "severity": "error"
+    },
+    {
+      "category": "tool_bypass",
+      "detail": "direct MCP bypass: mcp_config.model_dump",
+      "line": 21,
+      "path": "src/backend/zuno/platform/services/mcp/manager.py",
+      "severity": "error"
+    },
+    {
+      "category": "tool_bypass",
+      "detail": "direct MCP bypass: self.get_mcp_tools",
+      "line": 65,
+      "path": "src/backend/zuno/platform/services/mcp/manager.py",
+      "severity": "error"
+    },
+    {
+      "category": "tool_bypass",
+      "detail": "direct MCP bypass: load_mcp_tools",
+      "line": 73,
+      "path": "src/backend/zuno/platform/services/mcp/multi_client.py",
+      "severity": "error"
+    },
+    {
+      "category": "tool_bypass",
+      "detail": "direct MCP bypass: load_mcp_tools",
+      "line": 77,
+      "path": "src/backend/zuno/platform/services/mcp/multi_client.py",
+      "severity": "error"
+    },
+    {
+      "category": "tool_bypass",
+      "detail": "direct MCP bypass: load_mcp_prompt",
+      "line": 93,
+      "path": "src/backend/zuno/platform/services/mcp/multi_client.py",
+      "severity": "error"
+    },
+    {
+      "category": "tool_bypass",
+      "detail": "direct MCP bypass: load_mcp_resources",
+      "line": 102,
+      "path": "src/backend/zuno/platform/services/mcp/multi_client.py",
+      "severity": "error"
+    },
+    {
+      "category": "tool_bypass",
+      "detail": "direct MCP bypass: request_mcp_list_tools",
+      "line": 57,
+      "path": "src/backend/zuno/platform/services/mcp_openai/mcp_langchain.py",
+      "severity": "error"
+    },
+    {
+      "category": "tool_bypass",
+      "detail": "direct MCP bypass: request_mcp_call_tools",
+      "line": 28,
+      "path": "src/backend/zuno/platform/services/mcp_openai/mcp_langchain.py",
+      "severity": "error"
+    },
+    {
+      "category": "tool_bypass",
+      "detail": "direct MCP bypass: self.mcp_server_stack.append",
+      "line": 20,
+      "path": "src/backend/zuno/platform/services/mcp_openai/mcp_manager.py",
+      "severity": "error"
+    },
+    {
+      "category": "tool_bypass",
+      "detail": "direct MCP bypass: self.mcp_clients.append",
+      "line": 31,
+      "path": "src/backend/zuno/platform/services/mcp_openai/mcp_manager.py",
+      "severity": "error"
+    },
+    {
+      "category": "tool_bypass",
+      "detail": "direct MCP bypass: self.callable_mcp_tools[name].on_run_tool",
+      "line": 106,
+      "path": "src/backend/zuno/platform/services/mcp_openai/mcp_manager.py",
+      "severity": "error"
+    },
+    {
+      "category": "tool_bypass",
+      "detail": "direct MCP bypass: mcp_client.connect_to_server",
+      "line": 30,
+      "path": "src/backend/zuno/platform/services/mcp_openai/mcp_manager.py",
+      "severity": "error"
+    },
+    {
+      "category": "tool_bypass",
+      "detail": "direct MCP bypass: is_mcp_tool",
+      "line": 188,
+      "path": "src/backend/zuno/platform/services/workspace/simple_agent.py",
+      "severity": "error"
+    },
+    {
+      "category": "tool_bypass",
+      "detail": "direct MCP bypass: mcp_requires_user_config",
+      "line": 189,
+      "path": "src/backend/zuno/platform/services/workspace/simple_agent.py",
+      "severity": "error"
+    },
+    {
+      "category": "tool_bypass",
+      "detail": "direct MCP bypass: self._canonical_mcp_target",
+      "line": 2582,
+      "path": "src/backend/zuno/platform/services/workspace/simple_agent.py",
+      "severity": "error"
+    },
+    {
+      "category": "tool_bypass",
+      "detail": "direct MCP bypass: self._canonical_mcp_target",
+      "line": 2698,
+      "path": "src/backend/zuno/platform/services/workspace/simple_agent.py",
+      "severity": "error"
+    },
+    {
+      "category": "tool_bypass",
+      "detail": "direct MCP bypass: self.get_mcp_id_by_tool",
+      "line": 2777,
+      "path": "src/backend/zuno/platform/services/workspace/simple_agent.py",
+      "severity": "error"
+    },
+    {
+      "category": "tool_bypass",
+      "detail": "direct MCP bypass: mcp_user_config_resolver",
+      "line": 191,
+      "path": "src/backend/zuno/platform/services/workspace/simple_agent.py",
+      "severity": "error"
+    },
+    {
+      "category": "tool_bypass",
+      "detail": "direct MCP bypass: convert_mcp_config",
+      "line": 241,
+      "path": "src/backend/zuno/platform/services/workspace/simple_agent.py",
+      "severity": "error"
+    },
+    {
+      "category": "tool_bypass",
+      "detail": "direct MCP bypass: self.setup_mcp_tools",
+      "line": 1100,
+      "path": "src/backend/zuno/platform/services/workspace/simple_agent.py",
+      "severity": "error"
+    },
+    {
+      "category": "tool_bypass",
+      "detail": "direct MCP bypass: self._classify_mcp_route_tool",
+      "line": 2019,
+      "path": "src/backend/zuno/platform/services/workspace/simple_agent.py",
+      "severity": "error"
+    },
+    {
+      "category": "tool_bypass",
+      "detail": "direct MCP bypass: mcp_tool_id_resolver",
+      "line": 193,
+      "path": "src/backend/zuno/platform/services/workspace/simple_agent.py",
+      "severity": "error"
+    },
+    {
+      "category": "tool_bypass",
+      "detail": "direct MCP bypass: mcp_lines.append",
+      "line": 1064,
+      "path": "src/backend/zuno/platform/services/workspace/simple_agent.py",
+      "severity": "error"
+    },
+    {
+      "category": "tool_bypass",
+      "detail": "direct MCP bypass: self.mcp_manager.get_mcp_tools",
+      "line": 1284,
+      "path": "src/backend/zuno/platform/services/workspace/simple_agent.py",
+      "severity": "error"
+    },
+    {
+      "category": "tool_bypass",
+      "detail": "direct MCP bypass: self.mcp_manager.show_mcp_tools",
+      "line": 1285,
+      "path": "src/backend/zuno/platform/services/workspace/simple_agent.py",
+      "severity": "error"
+    },
+    {
+      "category": "tool_bypass",
+      "detail": "direct MCP bypass: self._canonical_mcp_target",
+      "line": 2623,
+      "path": "src/backend/zuno/platform/services/workspace/simple_agent.py",
+      "severity": "error"
+    },
+    {
+      "category": "tool_bypass",
+      "detail": "direct MCP bypass: mcp_config.model_dump",
+      "line": 241,
+      "path": "src/backend/zuno/platform/services/workspace/simple_agent.py",
+      "severity": "error"
+    },
+    {
+      "category": "tool_bypass",
+      "detail": "direct MCP bypass: mcp_servers_info.items",
+      "line": 1288,
+      "path": "src/backend/zuno/platform/services/workspace/simple_agent.py",
+      "severity": "error"
+    },
+    {
+      "category": "tool_bypass",
+      "detail": "direct MCP bypass: self._canonical_mcp_target",
+      "line": 2663,
+      "path": "src/backend/zuno/platform/services/workspace/simple_agent.py",
+      "severity": "error"
+    },
+    {
+      "category": "tool_bypass",
+      "detail": "direct MCP bypass: self._canonical_mcp_target",
+      "line": 2706,
+      "path": "src/backend/zuno/platform/services/workspace/simple_agent.py",
+      "severity": "error"
+    },
+    {
+      "category": "tool_bypass",
+      "detail": "direct MCP bypass: self._canonical_mcp_target",
+      "line": 2630,
+      "path": "src/backend/zuno/platform/services/workspace/simple_agent.py",
+      "severity": "error"
+    },
+    {
+      "category": "tool_bypass",
+      "detail": "direct MCP bypass: self._canonical_mcp_target",
+      "line": 2632,
+      "path": "src/backend/zuno/platform/services/workspace/simple_agent.py",
+      "severity": "error"
+    },
+    {
+      "category": "tool_bypass",
+      "detail": "direct MCP bypass: is_mcp_tool",
+      "line": 105,
+      "path": "src/backend/zuno/platform/services/workspace/wechat_agent.py",
+      "severity": "error"
+    },
+    {
+      "category": "tool_bypass",
+      "detail": "direct MCP bypass: mcp_user_config_resolver",
+      "line": 107,
+      "path": "src/backend/zuno/platform/services/workspace/wechat_agent.py",
+      "severity": "error"
+    },
+    {
+      "category": "tool_bypass",
+      "detail": "direct MCP bypass: convert_mcp_config",
+      "line": 144,
+      "path": "src/backend/zuno/platform/services/workspace/wechat_agent.py",
+      "severity": "error"
+    },
+    {
+      "category": "tool_bypass",
+      "detail": "direct MCP bypass: mcp_tool_id_resolver",
+      "line": 109,
+      "path": "src/backend/zuno/platform/services/workspace/wechat_agent.py",
+      "severity": "error"
+    },
+    {
+      "category": "tool_bypass",
+      "detail": "direct MCP bypass: self.setup_mcp_tools",
+      "line": 171,
+      "path": "src/backend/zuno/platform/services/workspace/wechat_agent.py",
+      "severity": "error"
+    },
+    {
+      "category": "tool_bypass",
+      "detail": "direct MCP bypass: self.mcp_manager.get_mcp_tools",
+      "line": 298,
+      "path": "src/backend/zuno/platform/services/workspace/wechat_agent.py",
+      "severity": "error"
+    },
+    {
+      "category": "tool_bypass",
+      "detail": "direct MCP bypass: self.mcp_manager.show_mcp_tools",
+      "line": 300,
+      "path": "src/backend/zuno/platform/services/workspace/wechat_agent.py",
+      "severity": "error"
+    },
+    {
+      "category": "tool_bypass",
+      "detail": "direct MCP bypass: mcp_config.model_dump",
+      "line": 144,
+      "path": "src/backend/zuno/platform/services/workspace/wechat_agent.py",
+      "severity": "error"
+    },
+    {
+      "category": "tool_bypass",
+      "detail": "direct MCP bypass: mcp_servers_info.items",
+      "line": 302,
+      "path": "src/backend/zuno/platform/services/workspace/wechat_agent.py",
+      "severity": "error"
+    },
+    {
+      "category": "tool_bypass",
+      "detail": "direct MCP bypass: convert_mcp_prompt_message_to_langchain_message",
+      "line": 31,
+      "path": "src/backend/zuno/platform/services/mcp/load_mcp/prompts.py",
+      "severity": "error"
+    },
+    {
+      "category": "tool_bypass",
+      "detail": "direct MCP bypass: convert_mcp_resource_to_langchain_blob",
+      "line": 31,
+      "path": "src/backend/zuno/platform/services/mcp/load_mcp/resources.py",
+      "severity": "error"
+    },
+    {
+      "category": "tool_bypass",
+      "detail": "direct MCP bypass: get_mcp_resource",
+      "line": 55,
+      "path": "src/backend/zuno/platform/services/mcp/load_mcp/resources.py",
+      "severity": "error"
+    },
+    {
+      "category": "tool_bypass",
+      "detail": "direct MCP bypass: convert_mcp_tool_to_langchain_tool",
+      "line": 116,
+      "path": "src/backend/zuno/platform/services/mcp/load_mcp/tools.py",
+      "severity": "error"
+    }
+  ],
+  "integration_base_sha": "76e9c403",
+  "not_proven_boundary": [
+    "history-only caller like /agent/product_baseline.py is excluded by construction; reachability is not proven for runtime selectors that resolve via attribute-chain / class-name-only dispatch."
+  ],
+  "owner_work_package": "PHASE22-FINAL-LEGACY-AUDIT-V3",
+  "scanned_roots": [
+    "src\\backend\\zuno",
+    "src\\backend\\zuno\\platform\\services\\workspace",
+    "src\\backend\\zuno\\agent\\runtime",
+    "src\\backend\\zuno\\api\\v1"
+  ],
+  "status": "TOOL_BYPASS_BLOCKERS_FOUND",
+  "unresolved": [],
+  "unresolved_count": 0,
+  "workflow_head_sha": ""
+}

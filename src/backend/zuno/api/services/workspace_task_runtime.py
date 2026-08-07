@@ -23,6 +23,7 @@ from zuno.agent.runtime import (
     UnifiedAgentRuntimeService,
 )
 from zuno.api.services.user import UserPayload
+from zuno.platform.services.workspace.single_controller_runtime import BlockedConfiguration
 from zuno.capability.runtime import (
     SecurityApprovalFactSink,
     ToolRuntimeExecutionResult,
@@ -95,6 +96,10 @@ from zuno.platform.security import (
     build_product_action_hash,
 )
 from zuno.platform.storage import DurableMinioObjectStore, MinioObjectStore
+from zuno.platform.services.workspace.single_controller_runtime import (
+    WorkspaceRuntimeComposition,
+    configure_workspace_product_composition,
+)
 
 
 DEFAULT_PACKAGE_A_UPLOAD_BUCKET = "zuno-ingestion"
@@ -321,6 +326,60 @@ class WorkspaceTaskRuntimeService:
         cls._security_product_action_guard = guard
 
     @classmethod
+    def configure_workspace_agent_product_composition(cls) -> None:
+        """Bind the server composition root for workspace product agents.
+
+        PHASE22 repair (B1 / B9): workspace / wechat product agents receive
+        the server's shared durable run store, the PostgreSQL tool / security
+        / infrastructure UoW factories and the Postgres security approval
+        sink from the server composition — never a per-session temp SQLite
+        store. The product approval command flow is not connected yet:
+        side-effect tools fail closed with PRODUCT_APPROVAL_FLOW_NOT_BOUND
+        (read-only cutover) and tool plans fail closed until the Security /
+        Budget owner resolvers are wired.
+
+        This is an explicit, idempotent initialization point — it is wired
+        from the application startup composition root (``zuno.main.init_config``)
+        and never executed at module import time. The composition binds
+        infrastructure only; tenant / workspace identity is per-request and
+        never owned by this composition.
+        """
+        from zuno.platform.database import engine
+        from zuno.platform.database.foundation import InfrastructureUnitOfWork
+        from zuno.platform.database.tool_runtime import ToolUnitOfWork
+        from zuno.platform.security import PostgresSecurityApprovalFactSink, SecurityUnitOfWork
+        from zuno.platform.security.decision_resolvers import (
+            PostgresBudgetDecisionResolver,
+            PostgresSecurityDecisionResolver,
+        )
+
+        configure_workspace_product_composition(
+            WorkspaceRuntimeComposition(
+                store=cls._unified_runtime_store,
+                tool_unit_of_work_factory=lambda: ToolUnitOfWork(engine),
+                security_unit_of_work_factory=lambda: SecurityUnitOfWork(engine),
+                infrastructure_unit_of_work_factory=lambda tenant: InfrastructureUnitOfWork(
+                    engine, tenant_id=tenant
+                ),
+                security_approval_sink=PostgresSecurityApprovalFactSink(engine),
+                security_epoch_ref="",
+                approval_flow="none",
+                # PHASE22 product wiring: the formal Security / Budget owner
+                # resolvers are bound here at the server composition root.
+                # Product adapters carry only opaque decision ids; Agent Core
+                # resolves and re-verifies the owner facts. The bound security
+                # epoch is the epoch the server security layer currently
+                # certifies (empty -> owner facts fail closed as stale until
+                # the epoch binding is supplied).
+                security_decision_resolver=PostgresSecurityDecisionResolver(
+                    engine, security_epoch_ref=""
+                ),
+                budget_decision_resolver=PostgresBudgetDecisionResolver(),
+                dynamic_dag_planner=None,
+            )
+        )
+
+    @classmethod
     def reset_runtime_state_for_tests(cls) -> None:
         cls._tasks = {}
         cls._task_inputs = {}
@@ -353,6 +412,10 @@ class WorkspaceTaskRuntimeService:
         cls._package_a_production_configured = False
         cls._package_a_upload_bucket = DEFAULT_PACKAGE_A_UPLOAD_BUCKET
         cls._security_product_action_guard = None
+        # PHASE22 repair: test reset must never create a Product Composition
+        # (the composition is wired explicitly at application startup). It
+        # clears any previously configured composition so tests stay isolated.
+        configure_workspace_product_composition(None)
 
     @classmethod
     def _rehydrate_from_durable_store(cls) -> None:
@@ -1078,7 +1141,19 @@ class WorkspaceTaskRuntimeService:
         simple_task: WorkSpaceSimpleTask,
         login_user: UserPayload,
     ) -> dict:
-        workspace_id = simple_task.workspace_id or "workspace_default"
+        workspace_id = (simple_task.workspace_id or "").strip()
+        # PHASE22 final engineering closure (P0-3): no synthetic
+        # ``workspace_default``. A missing / empty workspace_id fails
+        # closed with the canonical
+        # ``BLOCKED_CONFIGURATION: missing_product_workspace_context``
+        # token before any model / tool execution.
+        if not workspace_id:
+            raise BlockedConfiguration(
+                "BLOCKED_CONFIGURATION: missing_product_workspace_context — "
+                "workspace_id must come from the validated Server-owned "
+                "product context; the synthetic 'workspace_default' fallback "
+                "is forbidden"
+            )
         task_id = simple_task.task_id or f"task_{uuid4().hex[:12]}"
         trace_id = simple_task.trace_id or f"trace_{uuid4().hex[:12]}"
         goal = simple_task.goal or simple_task.query
@@ -1457,10 +1532,27 @@ class WorkspaceTaskRuntimeService:
         simple_task: WorkSpaceSimpleTask,
         login_user: UserPayload,
         goal: str,
+        tenant_id: str = "",
     ) -> None:
+        # PHASE22 final engineering closure (P0-1, P0-4): the unified runtime
+        # entry point MUST NOT accept an empty / fabricated tenant identity.
+        # The caller must supply a real Server-owned tenant_id (the product
+        # surface reads it from the validated authentication context, never
+        # the request body, and never ``f"user:{login_user.user_id}"``).
+        # Empty or synthetic tenant identity fails closed before any model /
+        # tool is invoked, with the canonical
+        # ``BLOCKED_CONFIGURATION: tenant_identity_not_available`` token.
+        tenant_identity = (tenant_id or "").strip()
+        if not tenant_identity or tenant_identity.startswith("user:") or tenant_identity == "tenant:default":
+            raise BlockedConfiguration(
+                "BLOCKED_CONFIGURATION: tenant_identity_not_available — "
+                "real Server-owned tenant identity is required; "
+                "synthetic user:* / tenant:default fallbacks are forbidden"
+            )
         request = RuntimeStartRequest(
             run_id=f"run:{task.task_id}",
             thread_id=simple_task.session_id or task.task_id,
+            tenant_id=tenant_identity,
             workspace_id=task.workspace_id,
             user_id=login_user.user_id,
             task_id=task.task_id,
@@ -2246,13 +2338,22 @@ class WorkspaceTaskRuntimeService:
         login_user: UserPayload,
         runtime_state: ControllerRuntimeState,
     ) -> ToolRuntimeExecutionResult | None:
+        workspace_id = (simple_task.workspace_id or "").strip()
+        # PHASE22 final engineering closure (P0-3): missing workspace_id
+        # fails closed before any tool is dispatched.
+        if not workspace_id:
+            raise BlockedConfiguration(
+                "BLOCKED_CONFIGURATION: missing_product_workspace_context — "
+                "workspace_id must come from the validated Server-owned "
+                "product context; synthetic fallbacks are forbidden"
+            )
         for tool_id in simple_task.plugins:
             if cls._tool_runtime.get_manifest(tool_id) is None:
                 continue
             request = ToolRuntimeRequest(
                 tool_id=tool_id,
                 arguments=cls._tool_arguments(simple_task=simple_task, tool_id=tool_id),
-                workspace_id=simple_task.workspace_id or "workspace_default",
+                workspace_id=workspace_id,
                 user_id=login_user.user_id,
                 task_id=task_id,
                 trace_id=simple_task.trace_id or runtime_state.trace_id,
@@ -2949,7 +3050,10 @@ class WorkspaceTaskRuntimeService:
                     "trace_id": task.trace_id or "",
                     "workspace_id": task.workspace_id,
                     "user_id": login_user.user_id,
-                    "tenant_id": f"user:{login_user.user_id}",
+                    # PHASE22 final engineering closure (P0-1): no synthetic
+                    # user:* tenant. The capability-plan layer receives the
+                    # Server-owned tenant from the validated auth context.
+                    "tenant_id": (getattr(login_user, "tenant_id", "") or "").strip(),
                     "user_goal": task.goal,
                     "available_capability_ids": tuple(simple_task.plugins),
                     "pinned_skill_id": (
@@ -2997,9 +3101,30 @@ class WorkspaceTaskRuntimeService:
         request_hash = hashlib.sha256(
             json.dumps(payload, ensure_ascii=True, sort_keys=True).encode("utf-8")
         ).hexdigest()[:24]
+        # PHASE22 final engineering closure (P0-1): resolve the trusted
+        # tenant FIRST. The Server-owned tenant must come from the
+        # validated authentication context — never from the request body
+        # and never ``f"user:{login_user.user_id}"``. A missing / synthetic
+        # / default tenant fails closed with the canonical
+        # ``BLOCKED_CONFIGURATION: tenant_identity_not_available`` token
+        # BEFORE we touch the submitter. Once the tenant is trusted, we
+        # either use the test override (already wired in
+        # ``_product_runtime_submitter_for_tests``) or fall back to the
+        # production ``ProductService.submit_runtime_request``.
+        tenant_id = (getattr(login_user, "tenant_id", "") or "").strip()
+        if (
+            not tenant_id
+            or tenant_id.startswith("user:")
+            or tenant_id == "tenant:default"
+        ):
+            raise BlockedConfiguration(
+                "BLOCKED_CONFIGURATION: tenant_identity_not_available — "
+                "workspace product surface requires Server-owned tenant_id "
+                "from the validated auth context; user:* / tenant:default "
+                "fallbacks are forbidden"
+            )
         submitter = cls._product_runtime_submitter_for_tests
         bootstrap_runtime_agent = False
-        tenant_id = f"user:{login_user.user_id}"
         if submitter is None:
             from zuno.api.services.product import ProductService
 
@@ -3303,6 +3428,15 @@ class WorkspaceTaskRuntimeService:
             "timestamp": event.timestamp,
             "data": data,
         }
+
+
+# PHASE22 repair (B1): the server composition root for workspace product
+# agents is wired explicitly from the application startup composition root
+# (``zuno.main.init_config`` -> configure_workspace_agent_product_composition),
+# never at module import time. Importing this module must not mutate global
+# composition state or require a live PostgreSQL connection.
+# Product agents never fall back to a per-session temp SQLite store; missing
+# security / budget / approval bindings fail closed.
 
 
 def _product_mode_for_retrieval(product_mode: str) -> ProductMode:

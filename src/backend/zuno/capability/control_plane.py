@@ -86,6 +86,15 @@ class ToolCardManifest:
     budget: dict[str, Any]
     failure_modes: tuple[str, ...] = ()
     executor_adapter: str = ""
+    # PHASE22 repair: authoritative manifest fields. The policy may never be
+    # guessed from the tool name: an unresolved manifest (``policy_resolution``
+    # != "resolved") must fail closed before execution, and a resolved manifest
+    # must carry tenant / workspace scope plus a policy hash.
+    tenant_id: str = ""
+    workspace_id: str = ""
+    manifest_version: str = "v1"
+    policy_hash: str = ""
+    policy_resolution: str = "resolved"
 
     @property
     def requires_approval(self) -> bool:
@@ -114,6 +123,11 @@ class ToolCardManifest:
             "failure_modes": list(self.failure_modes),
             "executor_adapter": self.executor_adapter,
             "requires_approval": self.requires_approval,
+            "tenant_id": self.tenant_id,
+            "workspace_id": self.workspace_id,
+            "manifest_version": self.manifest_version,
+            "policy_hash": self.policy_hash,
+            "policy_resolution": self.policy_resolution,
         }
 
 

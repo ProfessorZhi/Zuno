@@ -39,11 +39,17 @@ class WatchedStreamingResponse(StreamingResponse):
 @router.post("/completion", description="Completion chat endpoint")
 async def completion(*, req: CompletionReq, login_user: UserPayload = Depends(get_login_user)):
     cutover_mode = CompletionService.resolve_cutover_mode()
+    # PHASE22 final engineering closure (P0-1): the Server-owned
+    # tenant_id comes from the validated authentication context, never
+    # from the request body. The product surface fails closed when no
+    # trusted tenant is present in the auth context.
+    trusted_tenant = (getattr(login_user, "tenant_id", "") or "").strip()
     async def unified_generate():
         async for event in CompletionService.stream_unified_runtime(
             req=req,
             login_user_id=login_user.user_id,
             cutover_mode=cutover_mode,
+            tenant_id=trusted_tenant,
         ):
             yield f"data: {json.dumps(event)}\n\n"
 

@@ -61,7 +61,13 @@ from zuno.agent.runtime.planning import (
     RuntimeStrategySelector,
 )
 from zuno.agent.runtime.routing import RuntimeNode, route_after_reflection, route_after_strategy
-from zuno.agent.runtime.service import RuntimeStartRequest, RuntimeStreamEvent, UnifiedAgentRuntimeService
+from zuno.agent.runtime.service import (
+    PROFILE_DEVELOPER_TEST,
+    PROFILE_PRODUCT,
+    RuntimeStartRequest,
+    RuntimeStreamEvent,
+    UnifiedAgentRuntimeService,
+)
 from zuno.agent.runtime.state import (
     AGENT_RUNTIME_STATE_VERSION,
     AgentRuntimeSnapshot,
@@ -73,6 +79,8 @@ from zuno.agent.runtime.sqlite_store import SQLiteAgentRunStore
 
 __all__ = [
     "AGENT_RUNTIME_STATE_VERSION",
+    "PROFILE_DEVELOPER_TEST",
+    "PROFILE_PRODUCT",
     "AgentRuntimeSnapshot",
     "AgentRuntimeState",
     "AgentRunStore",

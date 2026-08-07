@@ -138,11 +138,38 @@ def build_terminal_langchain_tools(
             )
         )
 
-    metadata = {
-        tool.name: {
+    # PHASE22 repair (B2): the tool owner declares each tool's policy at
+    # registration time; the agent runtime never infers policy from names.
+    # Undeclared tools fail closed with UNRESOLVED_TOOL_POLICY.
+    _read_policy = {
+        "tool_policy_side_effect_level": "read",
+        "tool_policy_execution_mode": "local_function",
+        "tool_policy_network_policy": "deny",
+        "tool_policy_resolved": "true",
+    }
+    _write_policy = {
+        "tool_policy_side_effect_level": "write_local",
+        "tool_policy_execution_mode": "local_function",
+        "tool_policy_network_policy": "deny",
+        "tool_policy_resolved": "true",
+    }
+    _destructive_policy = {
+        "tool_policy_side_effect_level": "destructive",
+        "tool_policy_execution_mode": "cli",
+        "tool_policy_network_policy": "deny",
+        "tool_policy_resolved": "true",
+    }
+    metadata = {}
+    for tool in tools:
+        if tool.name == "write_file":
+            policy = _write_policy
+        elif tool.name == "run_command":
+            policy = _destructive_policy
+        else:
+            policy = _read_policy
+        metadata[tool.name] = {
             "name": tool.name,
             "type": "终端工具",
+            **policy,
         }
-        for tool in tools
-    }
     return tools, metadata

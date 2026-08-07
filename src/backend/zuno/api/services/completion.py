@@ -18,6 +18,7 @@ from zuno.platform.common.helpers import (
     build_completion_user_input,
 )
 from zuno.platform.resources.prompts.completion import SYSTEM_PROMPT
+from zuno.platform.services.workspace.single_controller_runtime import BlockedConfiguration
 
 
 class CompletionService:
@@ -39,11 +40,13 @@ class CompletionService:
         req: CompletionReq,
         login_user_id: str,
         cutover_mode: CutoverMode = "new_default",
+        tenant_id: str = "",
     ) -> AsyncIterator[dict]:
         product_runtime_record = cls.record_product_runtime_request(
             req=req,
             login_user_id=login_user_id,
             cutover_mode=cutover_mode,
+            tenant_id=tenant_id,
         )
         yield {
             "type": "product_runtime_record",
@@ -132,11 +135,13 @@ class CompletionService:
         req: CompletionReq,
         login_user_id: str,
         cutover_mode: CutoverMode = "new_default",
+        tenant_id: str = "",
     ) -> dict:
         return CompletionService.record_product_runtime_request(
             req=req,
             login_user_id=login_user_id,
             cutover_mode=cutover_mode,
+            tenant_id=tenant_id,
         )
 
     @staticmethod
@@ -145,6 +150,7 @@ class CompletionService:
         req: CompletionReq,
         login_user_id: str,
         cutover_mode: CutoverMode = "new_default",
+        tenant_id: str = "",
     ) -> dict:
         workspace_id = str(getattr(req, "workspace_id", "") or "completion")
         request_hash = canonical_sha256(
@@ -157,15 +163,33 @@ class CompletionService:
                 "query_method": req.query_method,
             }
         )[:24]
-        tenant_id = f"user:{login_user_id}"
+        # PHASE22 final engineering closure (P0-1): the Server-owned
+        # tenant identity MUST come from the validated authentication
+        # context. The caller (API layer) is responsible for resolving
+        # the trusted tenant and passing it explicitly. ``req.tenant_id``
+        # is untrusted request-body data and is NEVER used here. A
+        # missing / synthetic / default tenant fails closed with the
+        # canonical token BEFORE we touch the submitter.
+        resolved_tenant = (tenant_id or "").strip()
+        if (
+            not resolved_tenant
+            or resolved_tenant.startswith("user:")
+            or resolved_tenant == "tenant:default"
+        ):
+            raise BlockedConfiguration(
+                "BLOCKED_CONFIGURATION: tenant_identity_not_available — "
+                "completion product surface requires Server-owned tenant_id "
+                "from the validated auth context; user:* / tenant:default "
+                "fallbacks are forbidden"
+            )
         active_agent_version_id = ProductService.runtime_agent_version_id(
             surface="completion",
-            tenant_id=tenant_id,
+            tenant_id=resolved_tenant,
             workspace_id=workspace_id,
         )
         try:
             result = ProductService.submit_runtime_request(
-                tenant_id=tenant_id,
+                tenant_id=resolved_tenant,
                 workspace_id=workspace_id,
                 conversation_id=req.dialog_id,
                 principal_id=login_user_id,

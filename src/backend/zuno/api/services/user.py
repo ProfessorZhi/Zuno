@@ -39,6 +39,11 @@ class UserPayload:
             roles = UserRoleDao.get_user_roles(self.user_id)
             self.user_role = [one.role_id for one in roles]
         self.user_name = kwargs.get("user_name")
+        # PHASE22 final engineering closure (P0-1): the validated auth
+        # context carries the Server-owned tenant_id. Product surfaces
+        # MUST read tenant_id from this attribute, never from the
+        # request body, and never fabricate ``f"user:{user_id}"``.
+        self.tenant_id = str(kwargs.get("tenant_id") or "")
 
     def is_admin(self):
         if self.user_role == "admin":

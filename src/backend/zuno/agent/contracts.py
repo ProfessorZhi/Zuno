@@ -370,13 +370,67 @@ class PlanStep(BaseModel):
     attempt: int = 0
     status: str = "pending"
     observation_refs: list[str] = Field(default_factory=list)
+    # Single-controller product cutover: tool_call steps carry the resolved
+    # tool id and arguments so execution goes through the formal capability /
+    # security / approval / budget gates (never a direct tool handler).
+    tool_id: str | None = None
+    tool_arguments: dict[str, Any] | None = None
 
 
 class PlanState(BaseModel):
+    """Active plan state of one run.
+
+    Every run must have a formal plan (INV-AGENT-001): the Product Adapter
+    only supplies step definitions; activation (``activation_status`` /
+    ``activated_by`` / ``plan_version``) belongs to Agent Core.
+    """
+
     plan_id: str
     status: str = "created"
     steps: list[PlanStep] = Field(default_factory=list)
     current_step_id: str | None = None
+    plan_version: int = 1
+    activation_status: str = "proposed"
+    activated_by: str = ""
+
+
+class SecurityDecisionRef(BaseModel):
+    """Immutable Security-owner decision reference carried by the Product
+    Adapter. Agent Core never treats caller-provided raw dicts as owner
+    decisions: the ref is verified against the bound security epoch, tenant /
+    workspace / principal scope and its decision hash before any tool step.
+    """
+
+    decision_id: str
+    tenant_id: str
+    workspace_id: str
+    principal_id: str
+    action: str
+    resource: str
+    decision: str
+    security_epoch_ref: str
+    decision_hash: str
+    expires_at: str | None = None
+
+    def to_dict(self) -> dict[str, Any]:
+        return self.model_dump(mode="json")
+
+
+class BudgetDecisionRef(BaseModel):
+    """Immutable Budget-owner decision reference. ``owner`` is the Budget
+    owner identity; a missing owner or a forged hash fails closed."""
+
+    budget_decision_id: str
+    tenant_id: str
+    workspace_id: str
+    run_id: str
+    allowed: bool
+    limits: dict[str, Any] = Field(default_factory=dict)
+    decision_hash: str
+    owner: str
+
+    def to_dict(self) -> dict[str, Any]:
+        return self.model_dump(mode="json")
 
 
 class StrategySelectorOutput(BaseModel):
@@ -762,4 +816,6 @@ __all__ = [
     "TraceRecord",
     "TraceSummary",
     "RetrievalPlan",
+    "BudgetDecisionRef",
+    "SecurityDecisionRef",
 ]
