@@ -9,24 +9,26 @@ Verifier source: `tools/scripts/verify_phase22_final_legacy_cutover.py`
 ## Verdict (current Integration Branch)
 
 ```
-FINAL_AUDIT_REVALIDATION_REQUIRED
+TOOL_BYPASS_BLOCKERS_FOUND
 ```
 
-PHASE22-PR133-FINAL-ENGINEERING-CLOSURE interim state after
-worker `minimax1` (Execution-Client: Claude Code, Provider: MiniMax).
-The prior `LEGACY_CUTOVER_AUDIT_CLEAN` verdict at HEAD `1ae54b58` is
-**withdrawn** because the CLEAN was achieved partly through name
-changes (variable `tool` → `binding`, identifier
-`_guess_direct_mcp_call` → `_classify_mcp_route_tool`) that bypassed
-the AST substring detector. Variable / function / file location
-changes MUST NOT change the safety classification.
+PHASE22-PR133-FINAL-ENGINEERING-CLOSURE post-minimax2-harden state
+on the antigravity integration tree at HEAD `76e9c403d76e123e2fe7d0bb9226a53e013d8db2`
+(Code Candidate A). The minimax2 hardening slice
+(`ca644f42 test(phase22): harden final audit against alias and rename evasion`)
+has merged. The semantically-strengthened verifier is now in effect and
+the prior `LEGACY_CUTOVER_AUDIT_CLEAN` verdict at HEAD `1ae54b58`
+remains **withdrawn** — it was achieved partly through name changes
+(variable `tool` → `binding`, identifier `_guess_direct_mcp_call` →
+`_classify_mcp_route_tool`) that bypassed the AST substring detector.
 
-Until `minimax2` delivers its semantic-hardening verifier slice, the
-audit is held at `FINAL_AUDIT_REVALIDATION_REQUIRED` and the live
-tree is NOT eligible to claim CLEAN, regardless of the current
-`findings` count. After the `minimax2` slice merges and the
-semantically-strengthened verifier runs against the combined tree,
-the final verdict will be re-evaluated.
+Variable / function / file location changes MUST NOT change the safety
+classification. The hardened detector now reports 224 findings
+(209 `tool_bypass`, 14 `tool_bypass_invoke`, 1 `tool_bypass_image_gen`)
+across the production tree, dominated by direct MCP bypasses and
+direct tool / graph invocations inside the workspace single-controller
+agent and its MCP loader layer. Tool bypass dominates legacy runtime
+in the priority order.
 
 The audit is a **structural boundary**, not a runtime correctness
 guarantee. It does NOT declare `PHASE22_COMPLETED`, `PRODUCTION_READY`,
@@ -53,16 +55,10 @@ runtime in priority order.
 
 | Category | Count |
 |---|---|
-| `legacy_runtime_class_def` | 0 |
-| `legacy_workspace_runtime` | 10 |
-| `tool_bypass_handler` | 4 |
-| `tool_bypass_mcp_direct` | 1 |
-| `dual_path_expired_flag_reader` | 0 |
-| `ownership_dao_write` | 0 |
-| `ownership_plan_owned` | 0 |
-| `unresolved_dynamic_constructor` | 0 |
-| `unresolved_alias_factory` | 0 |
-| **Total** | **15** |
+| `tool_bypass` | 209 |
+| `tool_bypass_invoke` | 14 |
+| `tool_bypass_image_gen` | 1 |
+| **Total** | **224** |
 
 ## Detection categories
 
