@@ -3101,22 +3101,31 @@ class WorkspaceTaskRuntimeService:
         request_hash = hashlib.sha256(
             json.dumps(payload, ensure_ascii=True, sort_keys=True).encode("utf-8")
         ).hexdigest()[:24]
-        submitter = cls._product_runtime_submitter_for_tests
-        bootstrap_runtime_agent = False
-        # PHASE22 final engineering closure (P0-1): no synthetic tenant from
-        # user_id. The product surface must surface the Server-owned tenant
-        # from the validated authentication context. If the auth context
-        # carries no tenant, this Product Run MUST NOT execute — we fail
-        # closed with the canonical token before any model / tool is invoked.
-        tenant_id = (
-            getattr(login_user, "tenant_id", "") or ""
-        )
-        if not tenant_id.strip() or tenant_id.strip().startswith("user:"):
+        # PHASE22 final engineering closure (P0-1): resolve the trusted
+        # tenant FIRST. The Server-owned tenant must come from the
+        # validated authentication context — never from the request body
+        # and never ``f"user:{login_user.user_id}"``. A missing / synthetic
+        # / default tenant fails closed with the canonical
+        # ``BLOCKED_CONFIGURATION: tenant_identity_not_available`` token
+        # BEFORE we touch the submitter. Once the tenant is trusted, we
+        # either use the test override (already wired in
+        # ``_product_runtime_submitter_for_tests``) or fall back to the
+        # production ``ProductService.submit_runtime_request``.
+        tenant_id = (getattr(login_user, "tenant_id", "") or "").strip()
+        if (
+            not tenant_id
+            or tenant_id.startswith("user:")
+            or tenant_id == "tenant:default"
+        ):
             raise BlockedConfiguration(
                 "BLOCKED_CONFIGURATION: tenant_identity_not_available — "
                 "workspace product surface requires Server-owned tenant_id "
-                "from the validated auth context; user:* fallbacks are forbidden"
+                "from the validated auth context; user:* / tenant:default "
+                "fallbacks are forbidden"
             )
+        submitter = cls._product_runtime_submitter_for_tests
+        bootstrap_runtime_agent = False
+        if submitter is None:
             from zuno.api.services.product import ProductService
 
             submitter = ProductService.submit_runtime_request
