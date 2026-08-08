@@ -373,9 +373,12 @@ def test_api_service_layer_uses_canonical_platform_imports() -> None:
     assert "from zuno.platform.services.memory.client import memory_client" in completion
     assert "from zuno.platform.services.redis import redis_client" in wechat
     assert "from zuno.platform.services.workspace.wechat_agent import WeChatAgent" in wechat
-    assert "from zuno.agent.core.models.anthropic import DeepAsyncAnthropic" in mcp_chat
-    assert "from zuno.platform.services.mcp_openai.mcp_manager import MCPManager" in mcp_chat
+    assert "from zuno.agent.core.models.anthropic import DeepAsyncAnthropic" not in mcp_chat
+    assert "from zuno.platform.services.mcp_openai" not in mcp_chat
     assert "from zuno.platform.services.rag.handler import RagHandler" in mcp_chat
+    # PHASE22: MCP Chat execution fails closed — the endpoint never holds a
+    # provider model nor an MCP execution manager.
+    assert "MCP_CHAT_CANONICAL_RUNTIME_NOT_BOUND" in mcp_chat
 
     for content in [upload, knowledge_file, workspace_session, user, tool, knowledge, agent, history, llm, mcp_server, message, dialog, message_events, mcp_user_config, mcp_stdio_server, usage_stats, mcp_agent, capability, agent_skill, completion, wechat, mcp_chat]:
         assert "from zuno.services." not in content

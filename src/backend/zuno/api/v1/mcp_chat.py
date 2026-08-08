@@ -1,9 +1,6 @@
-from fastapi import APIRouter, Body
-from fastapi.responses import StreamingResponse
+from fastapi import APIRouter, Body, HTTPException
 
-from zuno.api.services.dialog import DialogService
-from zuno.api.services.history import HistoryService
-from zuno.api.services.mcp_chat import MCPChatAgent
+from zuno.api.services.mcp_chat import MCP_CHAT_CANONICAL_RUNTIME_NOT_BOUND
 
 router = APIRouter(tags=["MCP-Chat"])
 
@@ -13,21 +10,16 @@ async def chat(
     user_input: str = Body(description="user input"),
     dialog_id: str = Body(description="dialog id"),
 ):
-    agent = await DialogService.get_agent_by_dialog_id(dialog_id)
-    mcp_chat_agent = MCPChatAgent(**agent)
-    await mcp_chat_agent.init_MCP_Server()
-
-    async def general_generate():
-        assistant_result = ""
-        async for text in await mcp_chat_agent.ainvoke(user_input, dialog_id, True):
-            assistant_result += text
-            yield f"{text}\n\n"
-        yield "[DONE]"
-        await HistoryService.save_chat_history("assistant", assistant_result, dialog_id)
-
-    await HistoryService.save_chat_history("user", user_input, dialog_id)
-    DialogService.update_dialog_time(dialog_id)
-    return StreamingResponse(general_generate(), media_type="text/event-stream")
+    del user_input, dialog_id
+    # PHASE22: this legacy endpoint has no canonical tenant / workspace /
+    # principal / security / budget binding. It must fail closed before
+    # resolving a dialog, constructing a legacy agent, or touching a model /
+    # MCP provider. Product execution belongs to the canonical workspace
+    # runtime and ToolInvocationGateway surface.
+    raise HTTPException(
+        status_code=503,
+        detail=MCP_CHAT_CANONICAL_RUNTIME_NOT_BOUND,
+    )
 
 
 __all__ = ["chat", "router"]
