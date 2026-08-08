@@ -183,9 +183,14 @@ def validate_budget_decision_ref(
 
 def _check_expiry(expires_at: str | None) -> OwnerRefVerification | None:
     """PHASE22 repair: ``expires_at`` must really be validated, never just
-    defined. A malformed or already-passed expiry fails closed."""
+    defined. A missing / malformed / already-passed expiry fails closed.
+
+    PHASE22-OWNER-FACTS-POSTGRES-INTEGRATION: the owner fact MUST come
+    with an ``expires_at``. A ref whose expiry is missing is treated as
+    not owner-signed and fails closed here.
+    """
     if not expires_at:
-        return None
+        return OwnerRefVerification(False, "security_ref_expiry_missing")
     try:
         expires = datetime.fromisoformat(str(expires_at).replace("Z", "+00:00"))
     except ValueError:

@@ -157,7 +157,7 @@ def _security_owner_fact(
     action: str = "tool.execute",
     resource: str = "tool.read_doc",
     epoch: str = TEST_EPOCH,
-    expires_at: str | None = None,
+    expires_at: str | None = "2099-01-01T00:00:00+00:00",
 ) -> dict:
     base = {
         "decision_id": decision_id,
@@ -506,7 +506,10 @@ def test_forged_security_ref_hash_fails_closed(tmp_path) -> None:
             plan_kind="tool",
             tool_id="tool.read_doc",
             tool_arguments={"path": "docs/contract.md"},
-            security_ref=_security_ref(forged=True),
+            security_ref=_security_ref(
+                forged=True,
+                expires_at="2099-01-01T00:00:00+00:00",
+            ),
         )
     )
 
@@ -542,7 +545,7 @@ def test_current_security_epoch_allows_execution(tmp_path) -> None:
             plan_kind="tool",
             tool_id="tool.read_doc",
             tool_arguments={"path": "docs/contract.md"},
-            security_ref=_security_ref(),
+            security_ref=_security_ref(expires_at="2099-01-01T00:00:00+00:00"),
         )
     )
 

@@ -36,6 +36,10 @@ from zuno.platform.security.runtime_batch import (
     TrustLabel,
 )
 from zuno.platform.security.persistence import (
+    BudgetAdmissionReceipt,
+    BudgetPersistenceError,
+    BudgetRepository,
+    BudgetUnitOfWork,
     PostgresSecurityApprovalFactSink,
     SecurityApprovalDecisionReceipt,
     SecurityApprovalRequestReceipt,
@@ -62,6 +66,10 @@ from zuno.platform.security.product_actions import (
 __all__ = [
     "AccessScope",
     "AuthorizationVerdict",
+    "BudgetAdmissionReceipt",
+    "BudgetPersistenceError",
+    "BudgetRepository",
+    "BudgetUnitOfWork",
     "Classification",
     "ExecutionMode",
     "GateRequest",
