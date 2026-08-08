@@ -20,15 +20,22 @@ and reachability**, not by class name alone:
   PRODUCT_LEGACY_RUNTIME
       Was or still is a complete Product Runtime: constructs an independent
       LangGraph/LangChain agent graph, owns Product Run lifecycle, executes
-      tools/models directly, bypasses ToolInvocationGateway, or owns
-      Plan / Final Gate / RunOutcome / Trace.
+      tools/models directly, bypasses ToolInvocationGateway, owns
+      Plan / Final Gate / RunOutcome / Trace, or falls back to a legacy
+      runtime class inside a handler / alternate branch.
 
   PRODUCT_ADAPTER
       A thin facade that delegates to the canonical Product Runtime
       (``UnifiedAgentRuntimeService`` / ``SingleControllerRuntimeHarness``
-      or a known composition root), does not construct an independent
-      graph, and does not directly execute models or tools. Requires
-      ``canonical_delegate`` evidence inside the class methods.
+      / ``WorkspaceAgentRuntime`` or a known composition root), does not
+      construct an independent graph, and does not directly execute models
+      or tools. Requires ``canonical_delegate`` evidence inside the class
+      methods. Lifecycle-attribute detection is ownership-aware: reading a
+      lifecycle field off a canonical run result (``snapshot.observations``,
+      ``obs.metadata.get("final_answer")``) or binding a channel message
+      contract from such a read is channel mapping, not Product Run
+      ownership; only ``self.``-owned lifecycle state and self-produced
+      lifecycle values count as legacy evidence.
 
   INTERNAL_TEST_HARNESS
       Class definition exists but is only reached from ``tests/``,
@@ -261,7 +268,9 @@ DIRECT_EXEC_ATTR_NAMES = (
 )
 
 # Attributes / locals that show the candidate owns Plan / Trace / Budget /
-# Final Gate / RunOutcome directly.
+# Final Gate / RunOutcome directly. Detection is ownership-aware: a marker
+# counts only as ``self.<marker>`` (class-owned state) or as a self-produced
+# assignment target — never as a read of a canonical run-result container.
 PRODUCT_LIFECYCLE_ATTRIBUTES = (
     "trace_events",
     "trace_event",
@@ -279,6 +288,40 @@ PRODUCT_LIFECYCLE_ATTRIBUTES = (
     "FinalGate",
     "planner_output",
     "PlannerOutput",
+)
+
+# Containers that carry the canonical run result. Reading a lifecycle field
+# off one of these (``snapshot.X``, ``obs.metadata``, ``result.X``,
+# ``planner_output.X``) is consuming the canonical run outcome — a thin
+# adapter maps it to its channel contract. Only when a marker assignment is
+# NOT derived from such a container read does the class itself produce the
+# lifecycle value.
+CANONICAL_RUN_RESULT_CONTAINERS = (
+    "snapshot",
+    "obs",
+    "observation",
+    "observations",
+    "result",
+    "run_result",
+    "outcome",
+    "run_outcome",
+    "metadata",
+    "planner_output",
+)
+
+# Legacy runtime class names whose construction inside a try/except handler
+# or an alternate branch proves a legacy runtime fallback / dual-runtime
+# branch. The class may still delegate to the canonical runtime on the main
+# path; the fallback keeps the legacy runtime alive and is a blocker.
+LEGACY_FALLBACK_RUNTIME_CLASS_NAMES = (
+    "LegacyRuntime",
+    "GeneralAgent",
+    "ReactAgent",
+    "PlanExecuteAgent",
+    "CodeActAgent",
+    "Text2SQLAgent",
+    "AgentControlRuntime",
+    "ControlRuntime",
 )
 
 
@@ -469,6 +512,114 @@ def _collect_attribute_names(tree: ast.AST) -> set[str]:
     return names
 
 
+def _expr_reads_run_result_container(value: ast.AST | None) -> bool:
+    """True when ``value`` reads a canonical run-result container.
+
+    A lifecycle assignment derived from ``snapshot`` / ``obs`` / ``result`` /
+    ``outcome`` / ``run_outcome`` / ``metadata`` / ``planner_output`` is
+    channel mapping (the class consumes the canonical run outcome); an
+    assignment that produces the value itself is ownership.
+    """
+    if value is None:
+        return False
+    for node in ast.walk(value):
+        if isinstance(node, ast.Name) and node.id in CANONICAL_RUN_RESULT_CONTAINERS:
+            return True
+    return False
+
+
+def _lifecycle_evidence_for_method(method: ast.AST) -> list[str]:
+    """Ownership-aware lifecycle-attribute detection.
+
+    A lifecycle marker (``final_answer``, ``run_outcome``, ``budget``, ...)
+    is legacy evidence ONLY when the class actually owns the state:
+
+      - ``self.<marker>`` attribute access — the class stores lifecycle
+        state on itself;
+      - bare ``<marker>`` used as an assignment target whose value is NOT
+        derived from a canonical run-result container read.
+
+    Reading a lifecycle field off a canonical run result
+    (``obs.metadata.get("final_answer")``) or binding a channel-message
+    local from such a read is mapping the canonical run outcome to the
+    channel contract (WeChat message, SSE event) — a thin Product Adapter
+    behaviour, not Product Run ownership.
+    """
+    evidence: list[str] = []
+    for node in ast.walk(method):
+        if isinstance(node, ast.Attribute):
+            try:
+                text = ast.unparse(node)
+            except Exception:  # pragma: no cover - defensive
+                continue
+            parts = text.split(".")
+            if (
+                len(parts) >= 2
+                and parts[0] == "self"
+                and parts[1] in PRODUCT_LIFECYCLE_ATTRIBUTES
+            ):
+                evidence.append(f"product_lifecycle_attr:{text}@{method.name}")
+        elif isinstance(node, (ast.Assign, ast.AnnAssign, ast.AugAssign)):
+            targets = (
+                node.targets if isinstance(node, ast.Assign) else [node.target]
+            )
+            for target in targets:
+                for name_node in ast.walk(target):
+                    if not (
+                        isinstance(name_node, ast.Name)
+                        and name_node.id in PRODUCT_LIFECYCLE_ATTRIBUTES
+                        and isinstance(name_node.ctx, ast.Store)
+                    ):
+                        continue
+                    if _expr_reads_run_result_container(
+                        getattr(node, "value", None)
+                    ):
+                        continue
+                    evidence.append(
+                        f"product_lifecycle_attr:{name_node.id}@{method.name}"
+                    )
+    seen: set[str] = set()
+    deduped: list[str] = []
+    for item in evidence:
+        if item in seen:
+            continue
+        seen.add(item)
+        deduped.append(item)
+    return deduped
+
+
+def _legacy_fallback_evidence_for_method(method: ast.AST) -> list[str]:
+    """Detect legacy runtime fallback / dual-runtime branches.
+
+    A legacy runtime class constructed inside a ``try/except`` handler or
+    an ``if`` ``else`` branch keeps the legacy runtime alive even when the
+    main path delegates to the canonical runtime. The verifier reports it
+    as ``legacy_fallback`` evidence (BLOCKED).
+    """
+    evidence: list[str] = []
+    for node in ast.walk(method):
+        fallback_bodies: list[list[ast.stmt]] = []
+        if isinstance(node, ast.Try):
+            fallback_bodies.extend(handler.body for handler in node.handlers)
+        elif isinstance(node, ast.If):
+            fallback_bodies.append(node.orelse)
+        for body in fallback_bodies:
+            if not body:
+                continue
+            wrapper = ast.Module(body=body, type_ignores=[])
+            for call_text, line in _call_target_strings(wrapper):
+                head = call_text.split("(", 1)[0].rsplit(".", 1)[-1]
+                if any(
+                    head == name or head.endswith(name)
+                    for name in LEGACY_FALLBACK_RUNTIME_CLASS_NAMES
+                ):
+                    evidence.append(
+                        f"legacy_fallback:{call_text}@{method.name}:{line}"
+                    )
+                    break
+    return evidence
+
+
 def _evidence_for_class(class_node: ast.ClassDef) -> list[str]:
     """Walk every method body of a candidate class and collect behaviour
     evidence strings.
@@ -533,14 +684,10 @@ def _evidence_for_class(class_node: ast.ClassDef) -> list[str]:
                     )
         for line, snippet in _direct_handler_await_sites(method):
             evidence.append(f"direct_handler_await:{snippet}@{method.name}:{line}")
-        attrs = _collect_attribute_names(method)
-        for attr in attrs:
-            for marker in PRODUCT_LIFECYCLE_ATTRIBUTES:
-                if attr == marker or attr.endswith("." + marker):
-                    evidence.append(
-                        f"product_lifecycle_attr:{attr}@{method.name}"
-                    )
-                    break
+        for entry in _lifecycle_evidence_for_method(method):
+            evidence.append(entry)
+        for entry in _legacy_fallback_evidence_for_method(method):
+            evidence.append(entry)
     # De-duplicate while preserving order.
     seen: set[str] = set()
     deduped: list[str] = []
@@ -762,8 +909,8 @@ def classify_class(
          cannot block on its own).
       4. ``class_name`` has production callers AND any of:
          ``independent_graph``, ``direct_model_call``, ``direct_tool_call``,
-         ``direct_handler_await`` or ``product_lifecycle_attr`` →
-         ``PRODUCT_LEGACY_RUNTIME`` (BLOCKED).
+         ``direct_handler_await``, ``product_lifecycle_attr`` or
+         ``legacy_fallback`` → ``PRODUCT_LEGACY_RUNTIME`` (BLOCKED).
       5. ``class_name`` has production callers AND has
          ``canonical_delegate`` evidence AND no legacy evidence →
          ``PRODUCT_ADAPTER`` (allowed).
@@ -811,6 +958,7 @@ def classify_class(
         "direct_tool_call",
         "direct_handler_await",
         "product_lifecycle_attr",
+        "legacy_fallback",
     )
     for entry in ev:
         for kind in legacy_kinds:
