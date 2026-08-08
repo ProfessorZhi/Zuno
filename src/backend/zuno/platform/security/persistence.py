@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from typing import Any
 
 from sqlalchemy import Engine, text
@@ -423,7 +423,11 @@ class SecurityRepository:
         decision: str,
         reason_code: str,
         prepared_action_hash: str | None = None,
+        expires_at: datetime | None = None,
     ) -> SecurityAuthorizationReceipt:
+        effective_expires_at = expires_at or (
+            datetime.now(tz=UTC) + timedelta(minutes=15)
+        )
         payload = {
             "decision_id": decision_id,
             "tenant_id": tenant_id,
@@ -434,6 +438,7 @@ class SecurityRepository:
             "decision": decision,
             "reason_code": reason_code,
             "prepared_action_hash": prepared_action_hash,
+            "expires_at": effective_expires_at.isoformat(),
         }
         decision_hash = canonical_sha256(payload)
         self.connection.execute(
@@ -442,11 +447,11 @@ class SecurityRepository:
                 INSERT INTO security_authorization_decisions(
                     decision_id, tenant_id, principal_context_id, epoch_ref,
                     resource_ref, action, decision, reason_code,
-                    prepared_action_hash, decision_hash
+                    prepared_action_hash, decision_hash, expires_at
                 ) VALUES (
                     :decision_id, :tenant_id, :principal_context_id, :epoch_ref,
                     :resource_ref, :action, :decision, :reason_code,
-                    :prepared_action_hash, :decision_hash
+                    :prepared_action_hash, :decision_hash, :expires_at
                 )
                 """
             ),
@@ -471,7 +476,11 @@ class SecurityRepository:
         decision: str,
         reason_code: str,
         prepared_action_hash: str | None = None,
+        expires_at: datetime | None = None,
     ) -> SecurityAuthorizationReceipt:
+        effective_expires_at = expires_at or (
+            datetime.now(tz=UTC) + timedelta(minutes=15)
+        )
         payload = {
             "decision_id": decision_id,
             "tenant_id": tenant_id,
@@ -482,6 +491,7 @@ class SecurityRepository:
             "decision": decision,
             "reason_code": reason_code,
             "prepared_action_hash": prepared_action_hash,
+            "expires_at": effective_expires_at.isoformat(),
         }
         decision_hash = canonical_sha256(payload)
         self.connection.execute(
@@ -490,11 +500,11 @@ class SecurityRepository:
                 INSERT INTO security_authorization_decisions(
                     decision_id, tenant_id, principal_context_id, epoch_ref,
                     resource_ref, action, decision, reason_code,
-                    prepared_action_hash, decision_hash
+                    prepared_action_hash, decision_hash, expires_at
                 ) VALUES (
                     :decision_id, :tenant_id, :principal_context_id, :epoch_ref,
                     :resource_ref, :action, :decision, :reason_code,
-                    :prepared_action_hash, :decision_hash
+                    :prepared_action_hash, :decision_hash, :expires_at
                 )
                 ON CONFLICT (decision_id) DO NOTHING
                 """
@@ -527,7 +537,7 @@ class SecurityRepository:
                 """
                 SELECT d.decision_id, d.tenant_id, d.principal_context_id,
                        d.epoch_ref, d.resource_ref, d.action, d.decision,
-                       d.decision_hash, e.status AS epoch_status,
+                       d.decision_hash, d.expires_at, e.status AS epoch_status,
                        p.user_principal_id
                 FROM security_authorization_decisions d
                 JOIN security_effective_epochs e
@@ -1062,7 +1072,306 @@ class SecurityRepository:
                 self._reject_secret_material(item)
 
 
+@dataclass(frozen=True, slots=True)
+class BudgetAdmissionReceipt:
+    budget_decision_id: str
+    tenant_id: str
+    workspace_id: str
+    principal_id: str
+    run_id: str
+    allowed: bool
+    requested_limits: dict[str, Any]
+    admitted_limits: dict[str, Any]
+    policy_ref: str
+    owner: str
+    expires_at: datetime
+    status: str
+    decision_hash: str
+
+
+class BudgetPersistenceError(RuntimeError):
+    pass
+
+
+def _budget_owner_payload(
+    *,
+    budget_decision_id: str,
+    tenant_id: str,
+    workspace_id: str,
+    principal_id: str,
+    run_id: str,
+    allowed: bool,
+    requested_limits: dict[str, Any],
+    admitted_limits: dict[str, Any],
+    policy_ref: str,
+    owner: str,
+    issued_at: datetime,
+    expires_at: datetime,
+    status: str,
+) -> dict[str, Any]:
+    """Canonical payload the Budget Owner signs. The hash is over every
+    scope-binding field plus the runtime values; the resolver recomputes
+    the same payload on read and rejects any row whose stored hash does
+    not match.
+    """
+    return {
+        "budget_decision_id": budget_decision_id,
+        "tenant_id": tenant_id,
+        "workspace_id": workspace_id,
+        "principal_id": principal_id,
+        "run_id": run_id,
+        "allowed": allowed,
+        "requested_limits": dict(requested_limits),
+        "admitted_limits": dict(admitted_limits),
+        "policy_ref": policy_ref,
+        "owner": owner,
+        "issued_at": issued_at.isoformat(),
+        "expires_at": expires_at.isoformat(),
+        "status": status,
+    }
+
+
+class BudgetUnitOfWork:
+    """Unit-of-Work for the Budget owner-fact store.
+
+    Mirrors :class:`SecurityUnitOfWork`: a single SQLAlchemy transaction
+    that yields a :class:`BudgetRepository` and commits / rolls back on
+    exit. The Budget owner service writes through this UoW; the runtime
+    resolver reads through the same repository.
+    """
+
+    def __init__(self, engine: Engine) -> None:
+        self.engine = engine
+        self._active = False
+
+    def __enter__(self) -> BudgetRepository:
+        if self._active:
+            raise RuntimeError("BudgetUnitOfWork cannot be nested")
+        self._active = True
+        self._context = self.engine.begin()
+        try:
+            self.connection = self._context.__enter__()
+            return BudgetRepository(self.connection)
+        except BaseException:
+            self._active = False
+            raise
+
+    def __exit__(self, exc_type: object, exc: object, tb: object) -> None:
+        try:
+            self._context.__exit__(exc_type, exc, tb)
+        finally:
+            self._active = False
+
+
+class BudgetRepository:
+    """Server-owned repository for the Budget Admission fact table."""
+
+    _ALLOWED_STATUSES = frozenset({"ACTIVE", "DENIED", "EXPIRED", "REVOKED"})
+
+    def __init__(self, connection: Connection) -> None:
+        self.connection = connection
+
+    @staticmethod
+    def compute_decision_hash(
+        *,
+        budget_decision_id: str,
+        tenant_id: str,
+        workspace_id: str,
+        principal_id: str,
+        run_id: str,
+        allowed: bool,
+        requested_limits: dict[str, Any],
+        admitted_limits: dict[str, Any],
+        policy_ref: str,
+        owner: str,
+        issued_at: datetime,
+        expires_at: datetime,
+        status: str,
+    ) -> str:
+        """Compute the canonical Budget owner-fact hash. Exposed so the
+        resolver can recompute the expected hash and reject any stored row
+        that does not match.
+        """
+        payload = _budget_owner_payload(
+            budget_decision_id=budget_decision_id,
+            tenant_id=tenant_id,
+            workspace_id=workspace_id,
+            principal_id=principal_id,
+            run_id=run_id,
+            allowed=allowed,
+            requested_limits=requested_limits,
+            admitted_limits=admitted_limits,
+            policy_ref=policy_ref,
+            owner=owner,
+            issued_at=issued_at,
+            expires_at=expires_at,
+            status=status,
+        )
+        return canonical_sha256(payload)
+
+    def record_budget_owner_admission(
+        self,
+        *,
+        budget_decision_id: str,
+        tenant_id: str,
+        workspace_id: str,
+        principal_id: str,
+        run_id: str,
+        allowed: bool,
+        requested_limits: dict[str, Any],
+        admitted_limits: dict[str, Any],
+        policy_ref: str,
+        owner: str,
+        issued_at: datetime | None = None,
+        expires_at: datetime,
+        status: str = "ACTIVE",
+    ) -> BudgetAdmissionReceipt:
+        """Record a Server-owned Budget Admission fact.
+
+        The decision_hash is computed over the canonical payload; the
+        row stores the limit maps as JSON. The resolver recomputes the
+        same hash on read and rejects any row whose stored hash does
+        not match.
+        """
+        if not allowed and status == "ACTIVE":
+            # A denied fact is recorded as DENIED, never ACTIVE.
+            status = "DENIED"
+        if status not in self._ALLOWED_STATUSES:
+            raise BudgetPersistenceError(
+                f"invalid budget owner status: {status!r}"
+            )
+        if not admitted_limits:
+            raise BudgetPersistenceError(
+                "budget owner fact must carry admitted_limits"
+            )
+        effective_issued_at = issued_at or datetime.now(tz=UTC)
+        decision_hash = self.compute_decision_hash(
+            budget_decision_id=budget_decision_id,
+            tenant_id=tenant_id,
+            workspace_id=workspace_id,
+            principal_id=principal_id,
+            run_id=run_id,
+            allowed=allowed,
+            requested_limits=requested_limits,
+            admitted_limits=admitted_limits,
+            policy_ref=policy_ref,
+            owner=owner,
+            issued_at=effective_issued_at,
+            expires_at=expires_at,
+            status=status,
+        )
+        self.connection.execute(
+            text(
+                """
+                INSERT INTO budget_owner_admissions(
+                    budget_decision_id, tenant_id, workspace_id, principal_id,
+                    run_id, allowed, requested_limits, admitted_limits,
+                    policy_ref, owner, issued_at, expires_at, status,
+                    decision_hash
+                ) VALUES (
+                    :budget_decision_id, :tenant_id, :workspace_id, :principal_id,
+                    :run_id, :allowed, CAST(:requested_limits AS jsonb),
+                    CAST(:admitted_limits AS jsonb),
+                    :policy_ref, :owner, :issued_at, :expires_at, :status,
+                    :decision_hash
+                )
+                """
+            ),
+            {
+                "budget_decision_id": budget_decision_id,
+                "tenant_id": tenant_id,
+                "workspace_id": workspace_id,
+                "principal_id": principal_id,
+                "run_id": run_id,
+                "allowed": allowed,
+                "requested_limits": canonical_json(requested_limits),
+                "admitted_limits": canonical_json(admitted_limits),
+                "policy_ref": policy_ref,
+                "owner": owner,
+                "issued_at": effective_issued_at,
+                "expires_at": expires_at,
+                "status": status,
+                "decision_hash": decision_hash,
+            },
+        )
+        return BudgetAdmissionReceipt(
+            budget_decision_id=budget_decision_id,
+            tenant_id=tenant_id,
+            workspace_id=workspace_id,
+            principal_id=principal_id,
+            run_id=run_id,
+            allowed=allowed,
+            requested_limits=dict(requested_limits),
+            admitted_limits=dict(admitted_limits),
+            policy_ref=policy_ref,
+            owner=owner,
+            expires_at=expires_at,
+            status=status,
+            decision_hash=decision_hash,
+        )
+
+    def revoke_budget_owner_admission(
+        self,
+        *,
+        budget_decision_id: str,
+        tenant_id: str,
+    ) -> None:
+        """Mark a Budget owner fact as REVOKED. The runtime resolver
+        rejects REVOKED rows."""
+        result = self.connection.execute(
+            text(
+                """
+                UPDATE budget_owner_admissions
+                SET status = 'REVOKED'
+                WHERE budget_decision_id = :budget_decision_id
+                  AND tenant_id = :tenant_id
+                """
+            ),
+            {"budget_decision_id": budget_decision_id, "tenant_id": tenant_id},
+        )
+        if result.rowcount == 0:
+            raise BudgetPersistenceError("budget owner fact missing")
+
+    def read_budget_owner_admission(
+        self,
+        *,
+        budget_decision_id: str,
+        tenant_id: str,
+    ) -> dict[str, Any] | None:
+        """Read the Server-owned Budget Admission fact for the runtime
+        resolver.
+
+        Returns the raw row (with ``expires_at`` as a ``datetime`` and
+        the limit maps as Python dicts) or ``None`` when the owner has
+        no such fact. The resolver recomputes the expected hash and
+        rejects any row whose stored hash does not match -- a forged
+        row is never accepted.
+        """
+        row = self.connection.execute(
+            text(
+                """
+                SELECT budget_decision_id, tenant_id, workspace_id, principal_id,
+                       run_id, allowed, requested_limits, admitted_limits,
+                       policy_ref, owner, issued_at, expires_at, status,
+                       decision_hash
+                FROM budget_owner_admissions
+                WHERE budget_decision_id = :budget_decision_id
+                  AND tenant_id = :tenant_id
+                """
+            ),
+            {"budget_decision_id": budget_decision_id, "tenant_id": tenant_id},
+        ).mappings().first()
+        if row is None:
+            return None
+        return dict(row)
+
+
 __all__ = [
+    "BudgetAdmissionReceipt",
+    "BudgetPersistenceError",
+    "BudgetRepository",
+    "BudgetUnitOfWork",
+    "PostgresSecurityApprovalFactSink",
     "SecurityApprovalDecisionReceipt",
     "SecurityApprovalRequestReceipt",
     "SecurityAuditRequirementReceipt",
@@ -1071,7 +1380,6 @@ __all__ = [
     "SecurityOutboxReceipt",
     "SecurityPersistenceError",
     "SecurityPrincipalContextReceipt",
-    "PostgresSecurityApprovalFactSink",
     "SecurityRedactionDecisionReceipt",
     "SecurityRepository",
     "SecuritySecretLeaseReceipt",

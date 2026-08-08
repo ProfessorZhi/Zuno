@@ -14,13 +14,15 @@ expiry / hash before any tool step.
   context). The workspace dimension comes from the owner-recorded principal
   context id (``principal-context:{workspace_id}:{call_id}``); an owner fact
   whose workspace cannot be recovered is not resolvable and fails closed.
-- :class:`PostgresBudgetDecisionResolver` performs formal Budget Admission
-  from the request context (the runtime contract allows ``decision_id`` to be
-  empty when the resolver admits from the request context). Limits must be
-  present (request-declared or composition default); a run with no limits is
-  not admitted and fails closed.
+- :class:`PostgresBudgetDecisionResolver` reads the Server-owned Budget
+  Admission fact from ``budget_owner_admissions``. The Budget owner
+  computes and signs the canonical decision hash; the resolver recomputes
+  the same hash on read and rejects any row whose stored hash does not
+  match. Status / expiry / scope are re-validated before the runtime is
+  allowed to dispatch any tool step.
 """
 
+from datetime import datetime, timezone
 from typing import Any
 
 from sqlalchemy import Engine
@@ -30,7 +32,7 @@ from zuno.agent.runtime.owner_refs import (
     budget_ref_hash,
     security_ref_hash,
 )
-from zuno.platform.security import SecurityUnitOfWork
+from zuno.platform.security import BudgetRepository, BudgetUnitOfWork, SecurityUnitOfWork
 
 PRINCIPAL_CONTEXT_PREFIX = "principal-context:"
 BUDGET_OWNER = "platform.budget.admission"
@@ -120,7 +122,8 @@ class PostgresSecurityDecisionResolver:
         if not (principal_id and resource and decision and epoch_ref):
             return None
         # PHASE22 final engineering closure (P0-5): expires_at MUST come
-        # from the owner fact; missing or malformed expiry fails closed.
+        # from the owner fact; missing / malformed / passed expiry fails
+        # closed.
         expires_at_raw = fact.get("expires_at")
         if expires_at_raw is None:
             return None
@@ -128,10 +131,17 @@ class PostgresSecurityDecisionResolver:
         if not expires_at:
             return None
         try:
-            # Validate that the expiry is a parseable ISO-8601 timestamp.
-            from datetime import datetime
-            datetime.fromisoformat(expires_at.replace("Z", "+00:00"))
+            # Validate that the expiry is a parseable ISO-8601 timestamp
+            # AND that it has not already passed. A fact with an expiry
+            # in the past is treated as expired and fails closed.
+            parsed_expiry = datetime.fromisoformat(
+                expires_at.replace("Z", "+00:00")
+            )
         except (TypeError, ValueError):
+            return None
+        if parsed_expiry.tzinfo is None:
+            parsed_expiry = parsed_expiry.replace(tzinfo=timezone.utc)
+        if datetime.now(timezone.utc) >= parsed_expiry:
             return None
         decision_hash = security_ref_hash(
             decision_id=decision_id,
@@ -269,14 +279,83 @@ class PostgresBudgetDecisionResolver:
     ) -> dict[str, Any] | None:
         """Resolve the Server-owned budget owner fact.
 
-        Subclasses / production bindings override this with a PostgreSQL
-        lookup against the budget owner store. The default
-        ``resolve(...)`` entry point MUST be paired with a real
-        ``resolve_owner_fact`` implementation before any run can be
-        admitted; without it, the resolver returns ``None`` and the
-        Product Profile fails closed as ``BUDGET_OWNER_NOT_BOUND``.
+        Reads from ``budget_owner_admissions`` and re-verifies the
+        canonical decision_hash against the recomputed hash. Any of
+        the following fails closed and returns ``None``:
+
+        - DB unavailable / fact missing
+        - stored hash does not match recomputed hash (forged / mutated)
+        - ``status`` is not ``ACTIVE``
+        - ``allowed`` is not ``True``
+        - ``expires_at`` missing / malformed / passed
+        - foreign tenant / workspace scope
         """
-        return None
+        if self._engine is None:
+            return None
+        with BudgetUnitOfWork(self._engine) as repo:
+            row = repo.read_budget_owner_admission(
+                budget_decision_id=decision_id,
+                tenant_id=tenant_id,
+            )
+        if row is None:
+            return None
+        fact_tenant_id = str(row.get("tenant_id") or "").strip()
+        if fact_tenant_id != tenant_id:
+            return None
+        fact_workspace_id = str(row.get("workspace_id") or "").strip()
+        if fact_workspace_id != workspace_id:
+            return None
+        status = str(row.get("status") or "").strip()
+        if status != "ACTIVE":
+            return None
+        if not bool(row.get("allowed")):
+            return None
+        expires_at = row.get("expires_at")
+        if expires_at is None:
+            return None
+        if isinstance(expires_at, datetime):
+            effective_expiry = expires_at
+        else:
+            try:
+                effective_expiry = datetime.fromisoformat(
+                    str(expires_at).replace("Z", "+00:00")
+                )
+            except (TypeError, ValueError):
+                return None
+        if effective_expiry.tzinfo is None:
+            effective_expiry = effective_expiry.replace(tzinfo=timezone.utc)
+        if datetime.now(timezone.utc) >= effective_expiry:
+            return None
+        issued_at = row.get("issued_at")
+        if isinstance(issued_at, datetime):
+            effective_issued = issued_at
+        else:
+            try:
+                effective_issued = datetime.fromisoformat(
+                    str(issued_at).replace("Z", "+00:00")
+                )
+            except (TypeError, ValueError):
+                return None
+        # Recompute the canonical hash and reject any row whose stored
+        # hash does not match -- forged / mutated rows are never admitted.
+        expected_hash = BudgetRepository.compute_decision_hash(
+            budget_decision_id=str(row.get("budget_decision_id") or ""),
+            tenant_id=fact_tenant_id,
+            workspace_id=fact_workspace_id,
+            principal_id=str(row.get("principal_id") or ""),
+            run_id=str(row.get("run_id") or ""),
+            allowed=bool(row.get("allowed")),
+            requested_limits=dict(row.get("requested_limits") or {}),
+            admitted_limits=dict(row.get("admitted_limits") or {}),
+            policy_ref=str(row.get("policy_ref") or ""),
+            owner=str(row.get("owner") or BUDGET_OWNER),
+            issued_at=effective_issued,
+            expires_at=effective_expiry,
+            status=status,
+        )
+        if str(row.get("decision_hash") or "") != expected_hash:
+            return None
+        return row
 
 
 __all__ = [
