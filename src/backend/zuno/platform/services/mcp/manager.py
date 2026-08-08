@@ -61,43 +61,4 @@ class MCPManager:
             logger.info(f"Error getting MCP service tool list: {err}")
             return {}
 
-    async def call_mcp_tools(self, tools_info: List[Dict[str, Any]]):
-        tools = await self.get_mcp_tools()
-        tool_dict = {tool.name: tool for tool in tools}
-
-        async def execute_tool(tool_name: str, args: Dict[str, Any]):
-            if tool_name not in tool_dict:
-                return f"Tool {tool_name} does not exist"
-
-            tool = tool_dict[tool_name]
-            try:
-                if asyncio.iscoroutinefunction(tool.coroutine):
-                    result = await tool.coroutine(**args)
-                else:
-                    result = await asyncio.to_thread(tool.coroutine, **args)
-                return result
-            except Exception as exc:
-                logger.error(f"Error executing tool: {exc}")
-                return f"Error executing tool {tool_name}: {exc}"
-
-        tasks = []
-        for tool in tools_info:
-            tool_name = tool.get("tool_name")
-            tool_args = tool.get("tool_args")
-            task = execute_tool(tool_name, tool_args)
-            tasks.append(task)
-
-        try:
-            tool_results = await asyncio.gather(*tasks, return_exceptions=True)
-            for index, result in enumerate(tool_results):
-                if isinstance(result, Exception):
-                    tool_name = tools_info[index].get("tool_name")
-                    tool_results[index] = f"Error executing tool {tool_name}: {result}"
-                    logger.error(f"Error executing tool {tool_name}: {result}")
-            return tool_results
-        except Exception as err:
-            logger.error(f"Error calling tools: {err}")
-            return []
-
-
 __all__ = ["HIDE_FIELDS", "MCPManager"]

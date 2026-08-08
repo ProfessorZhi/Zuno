@@ -153,50 +153,61 @@ FINDING_CATEGORIES = BLOCKING_REPOSITORY_CATEGORIES + (
 )
 
 # ---------------------------------------------------------------------------
-# MCP semantic classification (PHASE22 repair)
+# MCP semantic classification (PHASE22 final repair)
 #
-# Every MCP-related dispatch site is classified into one of four categories;
-# the first three are MCP-layer responsibilities and are never Feature Flag
-# findings, the fourth (Product / Agent -> MCP client/provider) blocks:
+# Every dispatch site is classified per CALL SITE. Admin / discovery are
+# classified by operation semantics and never execute a Product Action:
 #
 #   MCP_ADMIN_CONTROL_PLANE      server bootstrap, connection lifecycle,
 #                                configuration CRUD, health
 #   MCP_DISCOVERY_REGISTRATION   list tools, load schema, resources,
 #                                prompts, registration
-#   MCP_CANONICAL_EXECUTOR       Gateway -> registered adapter -> provider
-#                                execution
-#   PRODUCT_DIRECT_MCP_EXECUTION Product / Agent -> MCP client/provider
 #
-# Classification is per dispatch site by (module role x call shape), never
-# by path substring, never by receiver name alone, never by an allowlist.
+# Provider execution (call_tool / run_mcp_tool / on_run_tool /
+# call_server_tool / process_query / binding.ainvoke / tool.ainvoke ...)
+# is MCP_CANONICAL_EXECUTOR ONLY when the file proves the canonical chain
+#   ToolInvocationGateway -> registered executor registry
+#      -> MCPToolExecutorAdapter -> provider/client call
+# with file-local AST evidence:
+#
+#   - gateway evidence: the module imports / constructs / defines
+#     ToolInvocationGateway (or build_default_tool_control_plane_runtime)
+#     AND the call site is a gateway ``.invoke*`` invocation,
+#   - executor callback evidence: the enclosing function is referenced as
+#     the ``executor=`` argument of a gateway invocation (or the call sits
+#     inside such an executor lambda),
+#   - registered binding evidence: the enclosing function is referenced as
+#     the ``coroutine=`` / ``fn=`` of a LangChain ``StructuredTool`` or a
+#     FastMCP server tool registration (the binding executed by the
+#     canonical adapter / the server-side tool callback),
+#   - adapter evidence: the call is a gateway invocation inside a module
+#     that imports the MCPToolExecutorAdapter family.
+#
+# Module location is NOT authorization: a file inside an MCP package or a
+# file that imports the raw MCP SDK is still BLOCKED when its provider
+# execution has no gateway proof. An admin module containing a
+# ``session.call_tool`` still classifies that site separately. Unknown
+# dynamic dispatch is UNRESOLVED (fail-closed), never default-safe.
 # ---------------------------------------------------------------------------
 
-# Canonical tool execution package: the Gateway and its provider adapters.
-CANONICAL_GATEWAY_PACKAGE_PREFIX = "zuno/capability/tool_runtime/"
-CANONICAL_MCP_EXECUTOR_ADAPTER_REL = (
-    "src/backend/zuno/capability/mcp/mcp_tool_executor_adapter.py"
+# Gateway import / construction evidence.
+GATEWAY_PROOF_IMPORT_FRAGMENTS = (
+    "zuno.capability.tool_runtime",
+    "invocation_gateway",
 )
-
-# The MCP integration packages implement the MCP client / loader / server
-# layer itself. Dispatch inside these packages is MCP-layer behaviour.
-MCP_INTEGRATION_PACKAGE_PREFIXES = (
-    "src/backend/zuno/platform/services/mcp/",
-    "src/backend/zuno/platform/services/mcp_openai/",
-    "src/backend/zuno/capability/mcp/",
+GATEWAY_CONSTRUCT_NAMES = (
+    "ToolInvocationGateway",
+    "build_default_tool_control_plane_runtime",
 )
+GATEWAY_INVOKE_METHODS = ("invoke", "invoke_readonly")
 
-# Raw MCP SDK imports: any module that imports the SDK implements MCP
-# client / server primitives itself and is part of the MCP layer.
-MCP_SDK_IMPORT_FRAGMENTS = (
-    "import mcp",
-    "from mcp import",
-    "from mcp.server",
-    "from mcp.types",
-    "from mcp.client",
-    "mcp.server.fastmcp",
-)
+# Registered binding provider evidence (LangChain tool coroutine / FastMCP
+# server tool callback) — executed by the canonical binding chain.
+BINDING_REGISTRATION_CONSTRUCTORS = ("StructuredTool", "FastMCPTool")
+BINDING_REGISTRATION_KWARGS = ("coroutine", "fn")
 
-# Discovery / registration / lifecycle shapes: never a Feature Flag finding.
+# Discovery / registration / lifecycle shapes: they never execute a Product
+# Action and are never a Feature Flag finding.
 MCP_DISCOVERY_CALL_NAMES = (
     "get_mcp_tools",
     "show_mcp_tools",
@@ -217,9 +228,8 @@ MCP_DISCOVERY_CALL_NAMES = (
     "connect_client",
 )
 
-# Execution shapes: calling one of these from PRODUCT code is
-# PRODUCT_DIRECT_MCP_EXECUTION (the Product / Agent -> MCP client/provider
-# edge). Inside the MCP layer the same shapes are provider execution.
+# Provider / client execution shapes. A call site with one of these names
+# BLOCKS unless the file proves the canonical chain (see above).
 MCP_EXECUTION_CALL_NAMES = (
     "call_server_tool",
     "call_tool",
@@ -233,11 +243,6 @@ MCP_EXECUTION_CALL_NAMES = (
 
 # Annotations are informational. They never exempt a finding.
 KNOWN_ANNOTATIONS: dict[str, dict[str, str]] = {
-    "src/backend/zuno/api/services/mcp_chat.py": {
-        "owner_work_package": "",
-        "candidate_pr": "",
-        "external_dependency": "legacy mcp_openai MCP client path",
-    },
     "src/backend/zuno/agent/control_runtime.py": {
         "owner_work_package": "",
         "candidate_pr": "PR #127 (residual runtime removal)",
@@ -507,11 +512,10 @@ def _v1_contract_check(root: Path) -> dict[str, list]:
 # ---------------------------------------------------------------------------
 # Direct tool / MCP dispatch scan (repository scope, whole production tree)
 #
-# Semantic classification of every dispatch site by (module role x call
-# shape). Module role is computed from the code (canonical gateway package,
-# MCP integration package membership, raw MCP SDK imports) — never from the
-# substring "mcp" in the path and never from a file allowlist. Unknown
-# dynamic dispatch is UNRESOLVED (fail-closed), never default-safe.
+# Semantic classification of every dispatch site per CALL SITE with
+# file-local canonical-chain proof. Module location / MCP-package membership
+# / raw MCP SDK imports never make an execution site safe by themselves.
+# Unknown dynamic dispatch is UNRESOLVED (fail-closed), never default-safe.
 # ---------------------------------------------------------------------------
 
 def _receiver_id(node: ast.AST) -> str:
@@ -527,48 +531,118 @@ def _receiver_id(node: ast.AST) -> str:
 TOOL_DISPATCH_RECEIVERS = frozenset({"tool", "current_tool", "handler"})
 
 
-def _module_role(rel: str, tree: ast.AST) -> str:
-    """Classify a module's runtime role.
-
-    - ``canonical_executor``: the canonical Gateway package
-      (``capability/tool_runtime``) plus the MCPToolExecutorAdapter — every
-      dispatch there is Gateway -> registered adapter -> provider execution.
-    - ``mcp_integration``: the MCP integration packages (platform MCP
-      client / loader / server layer) or any module that imports the raw
-      MCP SDK — these modules ARE the MCP admin / discovery / client layer.
-    - ``product``: everything else (api services, agents, workspace
-      services). A dispatch here is product-side execution.
-    """
-    if rel.startswith(CANONICAL_GATEWAY_PACKAGE_PREFIX) or (
-        rel == CANONICAL_MCP_EXECUTOR_ADAPTER_REL
-    ):
-        return "canonical_executor"
-    for prefix in MCP_INTEGRATION_PACKAGE_PREFIXES:
-        if rel.startswith(prefix):
-            return "mcp_integration"
+def _module_imports(tree: ast.AST) -> list[str]:
+    """Every module path imported by the file (bare names)."""
+    imports: list[str] = []
     for node in ast.walk(tree):
-        if not isinstance(node, (ast.Import, ast.ImportFrom)):
+        if isinstance(node, ast.Import):
+            for alias in node.names:
+                imports.append(alias.name)
+        elif isinstance(node, ast.ImportFrom) and node.module:
+            imports.append(node.module)
+    return imports
+
+
+def _canonical_proof_map(tree: ast.AST) -> dict[str, Any]:
+    """File-local canonical-chain proof.
+
+    Returns:
+      - ``has_gateway``: the module imports / constructs / defines
+        ToolInvocationGateway (or the canonical tool-runtime builder).
+      - ``gateway_invoke_lines``: lines of ``<gateway>.invoke*`` calls.
+      - ``executor_fn_names``: functions referenced as the ``executor=``
+        argument of a gateway invocation.
+      - ``executor_lambda_calls``: call nodes inside ``executor=`` lambdas.
+      - ``binding_fn_names``: functions referenced as ``coroutine=`` /
+        ``fn=`` of a LangChain StructuredTool / FastMCP server tool.
+      - ``gateway_class_defined``: the module defines ToolInvocationGateway.
+    """
+    imports = _module_imports(tree)
+    has_gateway_import = any(
+        fragment in full for full in imports for fragment in GATEWAY_PROOF_IMPORT_FRAGMENTS
+    )
+    gateway_class_defined = any(
+        isinstance(node, ast.ClassDef) and node.name == "ToolInvocationGateway"
+        for node in ast.walk(tree)
+    )
+    gateway_constructed = False
+    gateway_invoke_lines: set[int] = set()
+    executor_fn_names: set[str] = set()
+    executor_lambda_calls: set[int] = set()
+    binding_fn_names: set[str] = set()
+
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.Call):
             continue
-        for alias in node.names:
-            full = alias.name
-            if isinstance(node, ast.ImportFrom) and node.module:
-                full = node.module
-            if any(fragment in full for fragment in MCP_SDK_IMPORT_FRAGMENTS):
-                return "mcp_integration"
-    return "product"
+        callee = ""
+        if isinstance(node.func, ast.Attribute):
+            callee = node.func.attr
+        elif isinstance(node.func, ast.Name):
+            callee = node.func.id
+        if callee in GATEWAY_CONSTRUCT_NAMES:
+            gateway_constructed = True
+        if callee in GATEWAY_INVOKE_METHODS:
+            gateway_invoke_lines.add(node.lineno)
+            for keyword in node.keywords:
+                if keyword.arg != "executor":
+                    continue
+                if isinstance(keyword.value, ast.Name):
+                    executor_fn_names.add(keyword.value.id)
+                elif isinstance(keyword.value, ast.Lambda):
+                    for inner in ast.walk(keyword.value):
+                        if isinstance(inner, ast.Call):
+                            executor_lambda_calls.add(inner.lineno)
+        if callee in BINDING_REGISTRATION_CONSTRUCTORS:
+            for keyword in node.keywords:
+                if (
+                    keyword.arg in BINDING_REGISTRATION_KWARGS
+                    and isinstance(keyword.value, ast.Name)
+                ):
+                    binding_fn_names.add(keyword.value.id)
+
+    has_gateway = has_gateway_import or gateway_constructed or gateway_class_defined
+    return {
+        "has_gateway": has_gateway,
+        "gateway_invoke_lines": gateway_invoke_lines,
+        "executor_fn_names": executor_fn_names,
+        "executor_lambda_calls": executor_lambda_calls,
+        "binding_fn_names": binding_fn_names,
+        "gateway_class_defined": gateway_class_defined,
+    }
 
 
-def _classify_dispatch_hits(
-    rel: str,
-    tree: ast.AST,
-    role: str,
-) -> list[tuple[str, str]]:
+def _enclosing_function(tree: ast.AST, call_node: ast.Call) -> tuple[str | None, bool]:
+    """Return (enclosing function name, inside ToolInvocationGateway class)
+    for a call node, resolved by walking the tree with context."""
+    enclosing: str | None = None
+    inside_gateway_class = False
+    for node in ast.walk(tree):
+        if node is call_node:
+            break
+        if isinstance(node, ast.ClassDef) and node.name == "ToolInvocationGateway":
+            if _node_contains(node, call_node):
+                inside_gateway_class = True
+        if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
+            if _node_contains(node, call_node):
+                enclosing = node.name
+    return enclosing, inside_gateway_class
+
+
+def _node_contains(parent: ast.AST, child: ast.AST) -> bool:
+    for node in ast.walk(parent):
+        if node is child:
+            return True
+    return False
+
+
+def _classify_call_sites(rel: str, tree: ast.AST) -> list[tuple[str, str]]:
     """Classify every dispatch Call in a module.
 
     Returns ``(category, evidence)`` pairs. ``category`` is one of
     ``mcp_classification`` (recorded, never blocking), ``direct_tool_bypass``
     or ``product_direct_mcp_execution`` (blocking).
     """
+    proof = _canonical_proof_map(tree)
     classified: list[tuple[str, str]] = []
 
     def _record(category: str, evidence: str) -> None:
@@ -586,7 +660,8 @@ def _classify_dispatch_hits(
         if not callee:
             continue
 
-        # --- MCP discovery / admin shapes (never a finding) ---------------
+        # --- MCP discovery / admin shapes (operation semantics, never
+        #     a finding; they do not execute a Product Action) ------------
         if callee in MCP_DISCOVERY_CALL_NAMES:
             _record(
                 "mcp_classification",
@@ -594,21 +669,17 @@ def _classify_dispatch_hits(
             )
             continue
 
-        # --- MCP client / provider execution shapes -----------------------
-        if callee in MCP_EXECUTION_CALL_NAMES:
-            if role in ("canonical_executor", "mcp_integration"):
-                _record(
-                    "mcp_classification",
-                    f"{callee}(...) MCP_CANONICAL_EXECUTOR (MCP-layer provider execution)",
-                )
-            else:
-                _record(
-                    "product_direct_mcp_execution",
-                    f"{callee}(...) Product/Agent -> MCP client/provider (no ToolInvocationGateway)",
-                )
+        # --- canonical gateway invocation ---------------------------------
+        if callee in GATEWAY_INVOKE_METHODS and proof["has_gateway"]:
+            _record(
+                "mcp_classification",
+                f"{callee}(...) MCP_CANONICAL_EXECUTOR (gateway invocation, "
+                f"proven ToolInvocationGateway binding)",
+            )
             continue
 
-        # --- generic tool dispatch shapes ----------------------------------
+        # --- execution shapes: need canonical proof, else BLOCK -----------
+        is_mcp_exec = callee in MCP_EXECUTION_CALL_NAMES
         legacy_hit: str | None = None
         if isinstance(func, ast.Attribute):
             attr = func.attr
@@ -624,12 +695,44 @@ def _classify_dispatch_hits(
             elif name == "handler" and len(node.args) == 1 \
                     and isinstance(node.args[0], ast.Name) and node.args[0].id == "request":
                 legacy_hit = "handler(request) direct tool dispatch"
-        if legacy_hit is None:
+        if not is_mcp_exec and legacy_hit is None:
             continue
-        if role in ("canonical_executor", "mcp_integration"):
+
+        enclosing_fn, inside_gateway_class = _enclosing_function(tree, node)
+        if enclosing_fn in proof["executor_fn_names"]:
             _record(
                 "mcp_classification",
-                f"{legacy_hit} (MCP_CANONICAL_EXECUTOR: gateway executor slot / MCP-layer dispatch)",
+                f"{callee}(...) MCP_CANONICAL_EXECUTOR (executor callback of a "
+                f"gateway invocation)",
+            )
+            continue
+        if node.lineno in proof["executor_lambda_calls"]:
+            _record(
+                "mcp_classification",
+                f"{callee}(...) MCP_CANONICAL_EXECUTOR (call inside an executor "
+                f"lambda of a gateway invocation)",
+            )
+            continue
+        if enclosing_fn in proof["binding_fn_names"]:
+            _record(
+                "mcp_classification",
+                f"{callee}(...) MCP_CANONICAL_EXECUTOR (registered binding "
+                f"provider / server tool callback)",
+            )
+            continue
+        if proof["gateway_class_defined"] and inside_gateway_class:
+            _record(
+                "mcp_classification",
+                f"{callee}(...) MCP_CANONICAL_EXECUTOR (inside ToolInvocationGateway "
+                f"implementation)",
+            )
+            continue
+
+        if is_mcp_exec:
+            _record(
+                "product_direct_mcp_execution",
+                f"{callee}(...) Product/Agent -> MCP client/provider "
+                f"(no ToolInvocationGateway proof in module)",
             )
         else:
             _record("direct_tool_bypass", legacy_hit)
@@ -647,9 +750,10 @@ def _annotate(rel: str) -> dict[str, str]:
 
 def _bypass_scan(root: Path) -> dict[str, list]:
     """Direct tool / MCP dispatch findings across the entire production tree,
-    classified semantically. MCP admin / discovery / canonical executor are
-    recorded as ``mcp_classification`` (never blocking); product-side direct
-    tool dispatch and Product/Agent -> MCP client/provider execution block.
+    classified per call site. MCP admin / discovery and proven canonical
+    executor sites are recorded as ``mcp_classification`` (never blocking);
+    provider execution without a gateway proof and product-side direct tool
+    dispatch block.
     """
     findings: dict[str, list] = {cat: [] for cat in FINDING_CATEGORIES}
     seen: set[tuple[str, str]] = set()
@@ -659,8 +763,7 @@ def _bypass_scan(root: Path) -> dict[str, list]:
         tree = _parse_tree(source)
         if tree is None:
             continue
-        role = _module_role(rel, tree)
-        for category, evidence in _classify_dispatch_hits(rel, tree, role):
+        for category, evidence in _classify_call_sites(rel, tree):
             key = (rel, evidence)
             if key in seen:
                 continue
@@ -669,7 +772,6 @@ def _bypass_scan(root: Path) -> dict[str, list]:
                 {
                     "path": rel,
                     "evidence": evidence,
-                    "module_role": role,
                     **_annotate(rel),
                 }
             )

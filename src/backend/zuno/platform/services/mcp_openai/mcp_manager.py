@@ -52,58 +52,26 @@ class MCPManager:
             raise
 
     async def process_query(self, messages):
-        response = await self.list_all_server_tools()
-        available_tools = [
-            {
-                "name": tool.name,
-                "description": tool.description,
-                "input_schema": tool.params_json_schema,
-            }
-            for tool in response
-        ]
+        """Chat loop with direct MCP provider execution fails closed.
 
-        response = await self._chat_model(messages, available_tools)
-        final_text = []
+        PHASE22: the legacy chat loop executed MCP provider tools directly
+        (``on_run_tool`` -> ``run_mcp_tool`` -> ``call_server_tool``) without
+        the canonical ``ToolInvocationGateway``. Product execution must be
+        routed through the canonical runtime; a raw chat loop is rejected
+        before any provider call is made.
+        """
+        from zuno.platform.services.mcp_openai.mcp_client import (
+            MCP_CANONICAL_RUNTIME_NOT_BOUND,
+        )
 
-        assistant_message_content = []
-        for content in response.content:
-            if content.type == "text":
-                final_text.append(content.text)
-                assistant_message_content.append(content)
-            elif content.type == "tool_use":
-                tool_name = content.name
-                tool_args = content.input
-
-                result = await self._get_tool_response(tool_name, tool_args)
-                final_text.append(f"[Calling tool {tool_name} with args {tool_args}]")
-
-                assistant_message_content.append(content)
-                messages.append(
-                    {
-                        "role": "assistant",
-                        "content": assistant_message_content,
-                    }
-                )
-                messages.append(
-                    {
-                        "role": "user",
-                        "content": [
-                            {
-                                "type": "tool_result",
-                                "tool_use_id": content.id,
-                                "content": result.content,
-                            }
-                        ],
-                    }
-                )
-
-                response = await self._chat_model(messages, available_tools)
-                final_text.append(response.content[0].text)
-
-        return final_text
+        raise RuntimeError(MCP_CANONICAL_RUNTIME_NOT_BOUND)
 
     async def _get_tool_response(self, name, arguments) -> CallToolResult:
-        return await self.callable_mcp_tools[name].on_run_tool(arguments)
+        from zuno.platform.services.mcp_openai.mcp_client import (
+            MCP_CANONICAL_RUNTIME_NOT_BOUND,
+        )
+
+        raise RuntimeError(MCP_CANONICAL_RUNTIME_NOT_BOUND)
 
 
 __all__ = ["MCPManager"]

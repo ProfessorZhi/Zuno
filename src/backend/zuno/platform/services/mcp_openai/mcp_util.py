@@ -73,26 +73,17 @@ class MCPUtil:
         tool: MCPTool,
         input_json: str,
     ) -> str:
-        try:
-            json_data: dict[str, Any] = json.loads(input_json) if input_json else {}
-        except Exception as exc:
-            logging.debug(f"Invalid JSON input for tool {tool.name}: {input_json}")
-            raise ValueError(f"Invalid JSON input for tool {tool.name}: {input_json}") from exc
+        """Provider execution without a canonical gateway binding fails closed.
 
-        logging.debug(f"Invoking MCP tool {tool.name} with input {input_json}")
-        try:
-            result = await client.call_server_tool(tool.name, json_data)
-        except Exception as exc:
-            logging.error(f"Error invoking MCP tool {tool.name}: {exc}")
-            raise ValueError(f"Error invoking MCP tool {tool.name}: {exc}") from exc
+        PHASE22: discovery / registration (``get_function_tools``,
+        ``to_function_tool``) stays; executing the provider tool is the
+        canonical executor's job and is rejected before any provider call.
+        """
+        from zuno.platform.services.mcp_openai.mcp_client import (
+            MCP_CANONICAL_RUNTIME_NOT_BOUND,
+        )
 
-        logging.debug(f"MCP tool {tool.name} returned {result}")
-        if len(result.content) == 1:
-            return result.content[0].model_dump_json()
-        if len(result.content) > 1:
-            return json.dumps([item.model_dump() for item in result.content])
-        logging.error(f"Error MCP tool result: {result}")
-        return "Error running tool."
+        raise RuntimeError(MCP_CANONICAL_RUNTIME_NOT_BOUND)
 
 
 __all__ = ["MCPUtil"]

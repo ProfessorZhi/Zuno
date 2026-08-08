@@ -1,9 +1,12 @@
-from fastapi import APIRouter, Body
+from fastapi import APIRouter, Body, HTTPException
 from fastapi.responses import StreamingResponse
 
 from zuno.api.services.dialog import DialogService
 from zuno.api.services.history import HistoryService
-from zuno.api.services.mcp_chat import MCPChatAgent
+from zuno.api.services.mcp_chat import (
+    MCPChatAgent,
+    MCPChatCanonicalRuntimeNotBound,
+)
 
 router = APIRouter(tags=["MCP-Chat"])
 
@@ -15,7 +18,17 @@ async def chat(
 ):
     agent = await DialogService.get_agent_by_dialog_id(dialog_id)
     mcp_chat_agent = MCPChatAgent(**agent)
-    await mcp_chat_agent.init_MCP_Server()
+
+    try:
+        await mcp_chat_agent.init_MCP_Server()
+    except MCPChatCanonicalRuntimeNotBound as err:
+        # PHASE22: MCP Chat execution fails closed — the endpoint cannot
+        # provide tenant / workspace / principal / security / budget
+        # product context, so no provider call and no model call happens.
+        raise HTTPException(
+            status_code=503,
+            detail=str(err),
+        ) from err
 
     async def general_generate():
         assistant_result = ""

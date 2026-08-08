@@ -6,6 +6,14 @@ from mcp import ClientSession, StdioServerParameters, stdio_client
 from mcp.types import CallToolResult, Prompt, Resource, Tool
 
 
+MCP_CANONICAL_RUNTIME_NOT_BOUND = (
+    "MCP_CHAT_CANONICAL_RUNTIME_NOT_BOUND: MCP provider execution requires a "
+    "canonical ToolInvocationGateway binding (Gateway -> registered "
+    "MCPToolExecutorAdapter -> provider). A raw MCP client must never execute "
+    "a provider tool on its own."
+)
+
+
 class MCPClient:
     def __init__(self):
         self.session: Optional[ClientSession] = None
@@ -35,7 +43,16 @@ class MCPClient:
         return response.resources
 
     async def call_server_tool(self, name, arguments) -> CallToolResult:
-        return await self.session.call_tool(name, arguments)
+        """Provider execution without a canonical gateway binding fails closed.
+
+        PHASE22: the MCP client performs admin / discovery (connect, list
+        tools, prompts, resources) only. Executing a provider tool is the
+        canonical executor's job (``ToolInvocationGateway`` -> registered
+        ``MCPToolExecutorAdapter`` -> provider call). A direct call here
+        bypasses Security / Budget / receipt / idempotency and is rejected
+        before any provider call is made.
+        """
+        raise RuntimeError(MCP_CANONICAL_RUNTIME_NOT_BOUND)
 
 
 __all__ = ["MCPClient"]

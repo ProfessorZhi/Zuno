@@ -488,17 +488,16 @@ def test_react_remains_step_internal_mechanism() -> None:
 # Real tree: repository truth is fail-closed and honest
 # ---------------------------------------------------------------------------
 
-# 26. Repository scope is the default and returns BLOCKED on the current
-#     branch. After the PR #135 cutover the workspace agents are canonical
-#     thin adapters (MCP discovery only, execution through
-#     MCPToolExecutorAdapter -> ToolInvocationGateway), so they are NO
-#     LONGER bypass findings. The gate blocks on the real remaining
-#     Product/Agent -> MCP client/provider surface (mcp_chat.py driving
-#     the legacy mcp_openai manager) — MCP admin / discovery / canonical
-#     executor sites are recorded as mcp_classification, never blocking.
-def test_repository_scope_default_and_blocked_on_real_tree() -> None:
+# 26. Repository scope is the default and returns CONFIRMED on the current
+#     branch. The workspace agents are canonical thin adapters (PR #135);
+#     the MCP Chat surface fails closed (MCP_CHAT_CANONICAL_RUNTIME_NOT_BOUND,
+#     zero provider / model calls); the legacy mcp_openai execution loop and
+#     MCPManager.call_mcp_tools are retired. MCP admin / discovery / proven
+#     canonical executor sites are recorded as mcp_classification, never
+#     blocking; provider execution without a gateway proof is absent.
+def test_repository_scope_default_and_confirmed_on_real_tree() -> None:
     status, report = VERIFIER_MOD.verify(REPO_ROOT, "repository")
-    assert status == STATUS_REPO_BLOCKED
+    assert status == STATUS_REPO_CONFIRMED
     bypass_paths = {f["path"] for f in report["findings"]["direct_tool_bypass"]}
     # Workspace agents are canonical thin adapters now (PR #135): no
     # direct tool dispatch may be reported against them.
@@ -513,17 +512,16 @@ def test_repository_scope_default_and_blocked_on_real_tree() -> None:
         "src/backend/zuno/platform/services/mcp/manager.py",
         "src/backend/zuno/platform/services/mcp/multi_client.py",
         "src/backend/zuno/platform/services/mcp/load_mcp/tools.py",
-        "src/backend/zuno/platform/services/mcp_openai/mcp_client.py",
         "src/backend/zuno/capability/mcp/servers/remote_proxy/main.py",
     ):
         assert path not in bypass_paths, f"MCP layer misreported as bypass: {path}"
-    # The honest Product direct MCP execution finding:
-    product_direct = {f["path"] for f in report["findings"]["product_direct_mcp_execution"]}
-    assert "src/backend/zuno/api/services/mcp_chat.py" in product_direct, (
-        "MCPChatAgent (Product/Agent -> MCP client/provider) must block: "
-        f"{product_direct}"
+    # No Product/Agent -> MCP client/provider execution may remain.
+    product_direct = report["findings"]["product_direct_mcp_execution"]
+    assert product_direct == [], (
+        "no product direct MCP execution may remain: " + json.dumps(product_direct)
     )
-    # mcp_classification records the MCP layer sites without blocking.
+    # mcp_classification records the MCP admin/discovery/canonical executor
+    # sites without blocking.
     assert report["findings"]["mcp_classification"], (
         "MCP admin/discovery/canonical executor sites must be recorded"
     )
@@ -547,7 +545,7 @@ def test_repository_scope_default_and_blocked_on_real_tree() -> None:
 
 # 27. The verifier's default scope is repository (fail-closed).
 def test_default_scope_is_repository() -> None:
-    assert VERIFIER_MOD.verify(REPO_ROOT)[0] == STATUS_REPO_BLOCKED
+    assert VERIFIER_MOD.verify(REPO_ROOT)[0] == STATUS_REPO_CONFIRMED
 
 
 # 28. Static evidence never masquerades as live evidence: string-contract
@@ -880,26 +878,121 @@ def test_fixture_mcp_discovery_not_blocking(tmp_path: Path) -> None:
 
 
 # 41d. The canonical MCP executor (gateway -> registered adapter -> provider
-#      execution inside capability/tool_runtime and the MCPToolExecutorAdapter)
-#      is never a bypass.
+#      execution) is never a bypass WHEN the file proves the gateway chain
+#      (ToolInvocationGateway import/construction + invocation). Raw SDK
+#      usage inside a proven canonical executor is allowed.
 def test_fixture_canonical_mcp_executor_not_blocking(tmp_path: Path) -> None:
     root = FIXTURE.build_fixture_tree(
         tmp_path,
         modules={
             "src/backend/zuno/capability/tool_runtime/fixture_gateway.py":
+                "from zuno.capability.tool_runtime import ToolInvocationGateway\n"
+                "def build():\n"
+                "    return ToolInvocationGateway()\n"
                 "async def execute(gateway, args):\n"
                 "    result, receipt = await gateway.invoke_readonly(args=args)\n"
                 "    return result\n",
             "src/backend/zuno/capability/mcp/mcp_tool_executor_adapter.py":
+                "from zuno.capability.tool_runtime import ToolInvocationGateway\n"
                 "class MCPLangChainToolAdapter:\n"
+                "    def __init__(self, gateway):\n"
+                "        self._gateway = gateway\n"
                 "    async def execute(self, args):\n"
-                "        return await self._binding.ainvoke(args)\n",
+                "        async def _actual_call():\n"
+                "            return await self._binding.ainvoke(dict(args))\n"
+                "        result, receipt = await self._gateway.invoke_readonly(\n"
+                "            executor=_actual_call,\n"
+                "        )\n"
+                "        return result\n",
         },
     )
     status, report = VERIFIER_MOD.verify(root, "repository")
     assert status == STATUS_REPO_CONFIRMED
     assert report["findings"]["direct_tool_bypass"] == []
     assert report["findings"]["product_direct_mcp_execution"] == []
+
+
+# 41g. MCP package containing direct provider execution NOT behind the
+#      Gateway blocks — module location is not authorization.
+def test_fixture_mcp_package_direct_provider_execution_blocks(tmp_path: Path) -> None:
+    root = FIXTURE.build_fixture_tree(
+        tmp_path,
+        modules={
+            "src/backend/zuno/platform/services/mcp/fixture_direct_exec.py":
+                "from mcp import ClientSession\n"
+                "async def run(session: ClientSession, name, args):\n"
+                "    return await session.call_tool(name, args)\n",
+        },
+    )
+    status, report = VERIFIER_MOD.verify(root, "repository")
+    assert status == STATUS_REPO_BLOCKED
+    direct = report["findings"]["product_direct_mcp_execution"]
+    assert any(f["path"].endswith("fixture_direct_exec.py") for f in direct), (
+        "provider execution inside an MCP package without gateway proof must block"
+    )
+
+
+# 41h. Raw MCP SDK imported in a Product module with provider execution
+#      blocks — importing the SDK is not canonical executor proof.
+def test_fixture_raw_sdk_in_product_module_blocks(tmp_path: Path) -> None:
+    root = FIXTURE.build_fixture_tree(
+        tmp_path,
+        modules={
+            "src/backend/zuno/api/services/fixture_raw_sdk.py":
+                "from mcp import ClientSession\n"
+                "async def run(session: ClientSession, name, args):\n"
+                "    return await session.call_tool(name, args)\n",
+        },
+    )
+    status, report = VERIFIER_MOD.verify(root, "repository")
+    assert status == STATUS_REPO_BLOCKED
+    direct = report["findings"]["product_direct_mcp_execution"]
+    assert any(f["path"].endswith("fixture_raw_sdk.py") for f in direct), (
+        "raw MCP SDK provider execution in a product module must block"
+    )
+
+
+# 41i. Admin module with a discovery call is allowed (operation semantics).
+def test_fixture_admin_module_discovery_allowed(tmp_path: Path) -> None:
+    root = FIXTURE.build_fixture_tree(
+        tmp_path,
+        modules={
+            "src/backend/zuno/platform/services/mcp/fixture_admin.py":
+                "from mcp import ClientSession\n"
+                "async def health(session: ClientSession):\n"
+                "    await session.initialize()\n"
+                "    return await session.list_tools()\n",
+        },
+    )
+    status, report = VERIFIER_MOD.verify(root, "repository")
+    assert status == STATUS_REPO_CONFIRMED
+    assert report["findings"]["product_direct_mcp_execution"] == []
+    assert report["findings"]["mcp_classification"], (
+        "admin/discovery sites must be recorded as mcp_classification"
+    )
+
+
+# 41j. Admin module with a call_tool execution site blocks unless the
+#      canonical executor path is proven — module role never covers call
+#      site truth.
+def test_fixture_admin_module_with_call_tool_blocks(tmp_path: Path) -> None:
+    root = FIXTURE.build_fixture_tree(
+        tmp_path,
+        modules={
+            "src/backend/zuno/platform/services/mcp/fixture_admin_exec.py":
+                "from mcp import ClientSession\n"
+                "async def health(session: ClientSession):\n"
+                "    await session.initialize()\n"
+                "async def run(session: ClientSession, name, args):\n"
+                "    return await session.call_tool(name, args)\n",
+        },
+    )
+    status, report = VERIFIER_MOD.verify(root, "repository")
+    assert status == STATUS_REPO_BLOCKED
+    direct = report["findings"]["product_direct_mcp_execution"]
+    assert any(f["path"].endswith("fixture_admin_exec.py") for f in direct), (
+        "admin module with an unproven call_tool execution site must block"
+    )
 
 
 # 41e. Product/Agent -> MCP client/provider execution blocks.

@@ -137,7 +137,11 @@ def test_real_work_product_admits_only_mandatory_active_candidates() -> None:
     allowlist, errors = _load_active_candidate_allowlist(WORK_PRODUCT)
     assert errors == [], errors
     assert RETIRED_LEGACY_CUTOVER_PATH not in allowlist
-    assert GENERAL_AGENT_PATH in allowlist
+    # general_agent.py was retired and deleted by PR #127 (agent-family
+    # legacy cleanup): it is resolved_retired in the work product, so it is
+    # no longer an active candidate and needs NO allowlist entry. The stale
+    # temporary-allowlist entry was removed with it.
+    assert GENERAL_AGENT_PATH not in allowlist
     # resolved_retired entries inside mandatory must NOT leak in
     assert "tests/legacy_guards/" not in allowlist
     assert "legacy_general_agent_completion_rollback" not in allowlist
