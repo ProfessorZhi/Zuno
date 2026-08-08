@@ -9,29 +9,25 @@ from zuno.platform.settings import app_settings
 
 
 async def request_mcp_call_tools(mcp_tools_args):
-    json_data = {
-        "mcp_tools_args": mcp_tools_args # case: [{"server_name": "xxx", "url": "xxxx", "type": "xxx", "tool_name": "xxxx", "tool_args": "xxxx"}]
-    }
-    async with httpx.AsyncClient() as client:
-        try:
-            response = await client.post(app_settings.mcp_base_url + "/call_tools", json=json_data, timeout=30.0)
-            response.raise_for_status()
-            return response.json()  # 返回字典类型
-        except httpx.HTTPStatusError as e:
-            raise ValueError(f"Error: HTTP 错误: {e.response.status_code}")
-        except Exception as e:
-            raise ValueError(f"Error: 请求失败: {str(e)}")
+    """Remote MCP tool execution bridge fails closed.
+
+    PHASE22: executing MCP tools over the legacy HTTP bridge bypasses the
+    canonical ``ToolInvocationGateway`` (Security / Budget / receipt /
+    idempotency). The bridge is rejected before any provider call is made.
+    """
+    from zuno.platform.services.mcp_openai.mcp_client import (
+        MCP_CANONICAL_RUNTIME_NOT_BOUND,
+    )
+
+    raise RuntimeError(MCP_CANONICAL_RUNTIME_NOT_BOUND)
 
 
 async def call_mcp_tools(mcp_tools_args):
-    try:
-        response = await request_mcp_call_tools(mcp_tools_args)
-        tools_data = response["data"]
-        tools_result = "\n".join(tools_data)
+    from zuno.platform.services.mcp_openai.mcp_client import (
+        MCP_CANONICAL_RUNTIME_NOT_BOUND,
+    )
 
-        return tools_result
-    except Exception as err:
-        return err
+    raise RuntimeError(MCP_CANONICAL_RUNTIME_NOT_BOUND)
 
 
 async def request_mcp_list_tools(mcp_servers):

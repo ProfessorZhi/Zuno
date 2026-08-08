@@ -1,33 +1,15 @@
 import asyncio
-from types import SimpleNamespace
+import pytest
 
 
-def test_mcp_chat_agent_ainvoke_uses_ranked_retrieval(monkeypatch):
-    from zuno.api.services.mcp_chat import MCPChatAgent
-
-    async def fake_ainvoke(messages):
-        return {"messages": messages}
-
-    class FakeMCPManager:
-        async def process_query(self, messages):
-            return list(messages)
-
-    async def fake_history(self, user_input, dialog_id, top_k=5):
-        assert user_input == "解释一下这套 Python 课程结构"
-        assert dialog_id == "dialog_1"
-        assert top_k == 5
-        return [{"role": "user", "content": "历史消息"}]
-
-    async def fake_retrieve(query, collection_names, index_names=None, **kwargs):
-        assert query == "解释一下这套 Python 课程结构"
-        assert collection_names == ["kb_1"]
-        assert index_names == ["kb_1"]
-        return "知识库召回结果"
-
-    monkeypatch.setattr(MCPChatAgent, "get_history_message", fake_history)
-    monkeypatch.setattr(
-        "zuno.api.services.mcp_chat.RagHandler.retrieve_ranked_documents",
-        fake_retrieve,
+def test_mcp_chat_agent_ainvoke_fails_closed(monkeypatch):
+    """PHASE22: MCP Chat execution fails closed with
+    MCP_CHAT_CANONICAL_RUNTIME_NOT_BOUND — zero provider calls, zero model
+    calls. The legacy MCPManager.process_query / deep_anthropic direct
+    execution loop is retired."""
+    from zuno.api.services.mcp_chat import (
+        MCPChatAgent,
+        MCPChatCanonicalRuntimeNotBound,
     )
 
     agent = MCPChatAgent(
@@ -36,12 +18,18 @@ def test_mcp_chat_agent_ainvoke_uses_ranked_retrieval(monkeypatch):
         enable_memory=False,
         knowledges_id=["kb_1"],
     )
-    agent.deep_anthropic = SimpleNamespace(ainvoke=fake_ainvoke)
-    agent.mcp_manager = FakeMCPManager()
 
-    result = asyncio.run(agent.ainvoke("解释一下这套 Python 课程结构", "dialog_1"))
+    with pytest.raises(MCPChatCanonicalRuntimeNotBound) as excinfo:
+        asyncio.run(agent.ainvoke("解释一下这套 Python 课程结构", "dialog_1"))
+    assert "MCP_CHAT_CANONICAL_RUNTIME_NOT_BOUND" in str(excinfo.value)
 
-    assert result["messages"][-1] == {"role": "user", "content": "知识库召回结果"}
+    # init_MCP_Server fails closed too: no MCP server connection is made.
+    with pytest.raises(MCPChatCanonicalRuntimeNotBound):
+        asyncio.run(agent.init_MCP_Server())
+
+    # The agent never holds a provider model or an MCP execution manager.
+    assert not hasattr(agent, "deep_anthropic")
+    assert not hasattr(agent, "mcp_manager")
 
 
 def test_mcp_chat_agent_memory_history_falls_back_to_direct_history(monkeypatch):

@@ -27,13 +27,21 @@ Layer 2 - Repository Runtime Truth (``--scope repository``, the default):
     TOOL_ERROR
 
     The repository scope scans the ENTIRE production tree. Every real
-    bypass - workspace simple/wechat agents, legacy React/PlanExecute/
-    GeneralAgent modules, MCP direct-call surfaces, the Phase08 dual
-    runtime machinery, and any direct tool dispatch outside the canonical
-    ``zuno/capability/tool_runtime`` package - is reported with its
-    annotation (owner_work_package / candidate_pr / external_dependency).
-    The temporary allowlist may ANNOTATE a finding, never remove it: an
-    allowlisted active bypass keeps the repository result BLOCKED.
+    bypass - direct tool dispatch outside the canonical
+    ``zuno/capability/tool_runtime`` package, Product/Agent direct MCP
+    client/provider execution, legacy runtime / rollout / shadow / canary /
+    rollback selectors, the Phase08 dual runtime machinery and residual
+    runtime reachability - is reported with its annotation
+    (owner_work_package / candidate_pr / external_dependency).
+
+    MCP dispatch sites are classified semantically by (module role x call
+    shape) into MCP_ADMIN_CONTROL_PLANE / MCP_DISCOVERY_REGISTRATION /
+    MCP_CANONICAL_EXECUTOR (recorded as ``mcp_classification``, never
+    blocking) and PRODUCT_DIRECT_MCP_EXECUTION (Product/Agent -> MCP
+    client/provider; blocking). Classification is never based on the
+    substring "mcp" in a path, never on receiver names alone, and never
+    on a file allowlist: unknown dynamic dispatch is UNRESOLVED
+    (fail-closed), never default-safe.
 
 Residual runtime reachability (repository-wide import / call / dynamic-load
 audit, AST based):
@@ -61,7 +69,6 @@ from __future__ import annotations
 import ast
 import importlib
 import json
-import re
 import sys
 from pathlib import Path
 from typing import Any
@@ -74,9 +81,7 @@ EVIDENCE_DIR = (
     REPO_ROOT / "docs" / "evidence" / "goal05-phase22-feature-flag-runtime-cutover"
 )
 REGISTRY_REL = ".agent/programs/work-products/feature-flag-registry.yaml"
-ALLOWLIST_REL = ".agent/programs/work-products/temporary-allowlist.yaml"
 PRODUCTION_ROOT_REL = "src/backend/zuno"
-CANONICAL_TOOL_RUNTIME_REL = "src/backend/zuno/capability/tool_runtime"
 CANONICAL_AGENT_RUNTIME_REL = "src/backend/zuno/agent/runtime"
 
 # --- Status values ---------------------------------------------------------
@@ -100,15 +105,32 @@ RETIRED_FLAGS = [
 NON_RETIRED_STATES = ("DECLARED", "SHADOW", "CANARY", "DEFAULT_NEW", "ROLLBACK_WINDOW")
 
 # Retired-flag selector markers that must never be looked up dynamically.
+# These are the exact PHASE22 selector family keys: a dynamic lookup of one
+# of them (getenv / get / __getitem__ / getattr / string constant) is a
+# runtime / rollout / shadow / canary / rollback selector and blocks the
+# gate. Classification is exact-key based, never substring based — a module
+# that merely contains "runtime" / "mcp" / "tool" text is not a finding.
 SELECTOR_MARKERS = (
+    # retired rollout flags
     "ZUNO_PRODUCT_ADAPTER",
     "ZUNO_PROJECTION_STREAM",
     "ZUNO_TOOL_GATEWAY",
     "ZUNO_UOW",
+    # legacy runtime selector family
+    "ZUNO_AGENT_RUNTIME",
+    "ZUNO_LEGACY_RUNTIME",
+    "ZUNO_RUNTIME_SELECTOR",
+    "ZUNO_DUAL_RUNTIME",
+    # rollout / shadow / canary / rollback selector family
+    "ZUNO_ROLLOUT",
+    "ZUNO_ROLLOUT_MODE",
+    "ZUNO_SHADOW_MODE",
+    "ZUNO_CANARY_MODE",
+    "ZUNO_ROLLBACK_MODE",
 )
 
 # Finding categories; order matters only for reporting. ``internal_test_harness``
-# is recorded but never blocks a CONFIRMED result.
+# and ``mcp_classification`` are recorded but never block a CONFIRMED result.
 BLOCKING_REGISTRY_CATEGORIES = (
     "flag_not_retired",
     "rollback_transition_accepted",
@@ -119,74 +141,112 @@ BLOCKING_REGISTRY_CATEGORIES = (
 )
 BLOCKING_REPOSITORY_CATEGORIES = BLOCKING_REGISTRY_CATEGORIES + (
     "direct_tool_bypass",
+    "product_direct_mcp_execution",
     "residual_product_runtime_found",
     "phase08_dual_runtime",
     "static_contract_violation",
 )
 FINDING_CATEGORIES = BLOCKING_REPOSITORY_CATEGORIES + (
+    "mcp_classification",
     "internal_test_harness",
     "unresolved",
 )
 
-# Allowlist categories that document active tool-runtime bypasses. Entries with
-# these categories are reported as repository findings (with annotations);
-# entries with other categories (root_alias, old_dto, subprocess, ...) belong
-# to other audit domains and are only used for annotations.
-BYPASS_ALLOWLIST_CATEGORIES = frozenset(
-    {"direct_tool_execute", "old_runtime", "dynamic_bypass", "direct_mcp_call"}
+# ---------------------------------------------------------------------------
+# MCP semantic classification (PHASE22 final repair)
+#
+# Every dispatch site is classified per CALL SITE. Admin / discovery are
+# classified by operation semantics and never execute a Product Action:
+#
+#   MCP_ADMIN_CONTROL_PLANE      server bootstrap, connection lifecycle,
+#                                configuration CRUD, health
+#   MCP_DISCOVERY_REGISTRATION   list tools, load schema, resources,
+#                                prompts, registration
+#
+# Provider execution (call_tool / run_mcp_tool / on_run_tool /
+# call_server_tool / process_query / binding.ainvoke / tool.ainvoke ...)
+# is MCP_CANONICAL_EXECUTOR ONLY when the file proves the canonical chain
+#   ToolInvocationGateway -> registered executor registry
+#      -> MCPToolExecutorAdapter -> provider/client call
+# with file-local AST evidence:
+#
+#   - gateway evidence: the module imports / constructs / defines
+#     ToolInvocationGateway (or build_default_tool_control_plane_runtime)
+#     AND the call site is a gateway ``.invoke*`` invocation,
+#   - executor callback evidence: the enclosing function is referenced as
+#     the ``executor=`` argument of a gateway invocation (or the call sits
+#     inside such an executor lambda),
+#   - registered binding evidence: the enclosing function is referenced as
+#     the ``coroutine=`` / ``fn=`` of a LangChain ``StructuredTool`` or a
+#     FastMCP server tool registration (the binding executed by the
+#     canonical adapter / the server-side tool callback),
+#   - adapter evidence: the call is a gateway invocation inside a module
+#     that imports the MCPToolExecutorAdapter family.
+#
+# Module location is NOT authorization: a file inside an MCP package or a
+# file that imports the raw MCP SDK is still BLOCKED when its provider
+# execution has no gateway proof. An admin module containing a
+# ``session.call_tool`` still classifies that site separately. Unknown
+# dynamic dispatch is UNRESOLVED (fail-closed), never default-safe.
+# ---------------------------------------------------------------------------
+
+# Gateway import / construction evidence.
+GATEWAY_PROOF_IMPORT_FRAGMENTS = (
+    "zuno.capability.tool_runtime",
+    "invocation_gateway",
+)
+GATEWAY_CONSTRUCT_NAMES = (
+    "ToolInvocationGateway",
+    "build_default_tool_control_plane_runtime",
+)
+GATEWAY_INVOKE_METHODS = ("invoke", "invoke_readonly")
+
+# Registered binding provider evidence (LangChain tool coroutine / FastMCP
+# server tool callback) — executed by the canonical binding chain.
+BINDING_REGISTRATION_CONSTRUCTORS = ("StructuredTool", "FastMCPTool")
+BINDING_REGISTRATION_KWARGS = ("coroutine", "fn")
+
+# Discovery / registration / lifecycle shapes: they never execute a Product
+# Action and are never a Feature Flag finding.
+MCP_DISCOVERY_CALL_NAMES = (
+    "get_mcp_tools",
+    "show_mcp_tools",
+    "list_tools",
+    "list_all_server_tools",
+    "list_server_tools",
+    "list_server_prompts",
+    "list_server_resources",
+    "get_all_function_tools",
+    "get_function_tools",
+    "get_mcp_tools_info",
+    "load_mcp_tools",
+    "convert_mcp_tool_to_langchain_tool",
+    "to_fastmcp",
+    "initialize",
+    "connect_to_server",
+    "enter_mcp_server",
+    "connect_client",
+)
+
+# Provider / client execution shapes. A call site with one of these names
+# BLOCKS unless the file proves the canonical chain (see above).
+MCP_EXECUTION_CALL_NAMES = (
+    "call_server_tool",
+    "call_tool",
+    "run_mcp_tool",
+    "on_run_tool",
+    "call_mcp_tools",
+    "request_mcp_call_tools",
+    "process_query",
+    "_get_tool_response",
 )
 
 # Annotations are informational. They never exempt a finding.
 KNOWN_ANNOTATIONS: dict[str, dict[str, str]] = {
-    "src/backend/zuno/platform/services/workspace/simple_agent.py": {
-        "owner_work_package": "PHASE22-WORKSPACE-AGENT-CUTOVER",
-        "candidate_pr": "",
-        "external_dependency": "",
-    },
-    "src/backend/zuno/platform/services/workspace/wechat_agent.py": {
-        "owner_work_package": "PHASE22-WORKSPACE-AGENT-CUTOVER",
-        "candidate_pr": "",
-        "external_dependency": "",
-    },
-    "src/backend/zuno/agent/core/agents/react_agent.py": {
-        "owner_work_package": "",
-        "candidate_pr": "PR #127 (semantic legacy cleanup)",
-        "external_dependency": "",
-    },
-    "src/backend/zuno/agent/core/agents/plan_execute_agent.py": {
-        "owner_work_package": "",
-        "candidate_pr": "PR #127 (semantic legacy cleanup)",
-        "external_dependency": "",
-    },
-    "src/backend/zuno/agent/core/agents/general_agent.py": {
-        "owner_work_package": "",
-        "candidate_pr": "PR #127 (semantic legacy cleanup)",
-        "external_dependency": "",
-    },
-    "src/backend/zuno/agent/core/agents/codeact_agent.py": {
-        "owner_work_package": "",
-        "candidate_pr": "PR #127 (semantic legacy cleanup)",
-        "external_dependency": "",
-    },
     "src/backend/zuno/agent/control_runtime.py": {
         "owner_work_package": "",
         "candidate_pr": "PR #127 (residual runtime removal)",
         "external_dependency": "",
-    },
-    "src/backend/zuno/agent/product_baseline.py": {
-        "owner_work_package": "",
-        "candidate_pr": "PR #127 (residual runtime removal)",
-        "external_dependency": "",
-    },
-    "src/backend/zuno/api/services/workspace_task_runtime.py": {
-        "owner_work_package": "",
-        "candidate_pr": "",
-        "external_dependency": "PHASE08 cutover (DeepSeek-Legacy-Runtime)",
-    },
-    "src/backend/zuno/platform/services/mcp/manager.py": {
-        "owner_work_package": "",
-        "candidate_pr": "",
-        "external_dependency": "MCP direct-call cutover",
     },
 }
 
@@ -450,7 +510,12 @@ def _v1_contract_check(root: Path) -> dict[str, list]:
 
 
 # ---------------------------------------------------------------------------
-# Direct tool dispatch scan (repository scope, whole production tree)
+# Direct tool / MCP dispatch scan (repository scope, whole production tree)
+#
+# Semantic classification of every dispatch site per CALL SITE with
+# file-local canonical-chain proof. Module location / MCP-package membership
+# / raw MCP SDK imports never make an execution site safe by themselves.
+# Unknown dynamic dispatch is UNRESOLVED (fail-closed), never default-safe.
 # ---------------------------------------------------------------------------
 
 def _receiver_id(node: ast.AST) -> str:
@@ -466,132 +531,249 @@ def _receiver_id(node: ast.AST) -> str:
 TOOL_DISPATCH_RECEIVERS = frozenset({"tool", "current_tool", "handler"})
 
 
-def _direct_dispatch_hits(source: str) -> list[str]:
-    """AST detection of direct tool dispatch outside the canonical gateway.
+def _module_imports(tree: ast.AST) -> list[str]:
+    """Every module path imported by the file (bare names)."""
+    imports: list[str] = []
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Import):
+            for alias in node.names:
+                imports.append(alias.name)
+        elif isinstance(node, ast.ImportFrom) and node.module:
+            imports.append(node.module)
+    return imports
 
-    Precise shapes only (LLM model calls, ``@tool`` decorators, ``create_tool``
-    / ``load_default_tool`` helpers, and generic ``handler`` callbacks must
-    not match):
 
-    - ``tool.ainvoke(...)`` / ``current_tool.invoke(...)`` / ``handler.ainvoke``
-      (attribute dispatch on a tool receiver)
-    - ``execute_tool(...)`` / ``self._execute_tool(...)`` (any name carrying
-      execute_tool)
-    - ``await handler(request)`` (single positional arg named ``request``;
-      the workspace direct-execution pattern)"""
-    tree = _parse_tree(source)
-    if tree is None:
-        return []
-    hits: list[str] = []
+def _canonical_proof_map(tree: ast.AST) -> dict[str, Any]:
+    """File-local canonical-chain proof.
+
+    Returns:
+      - ``has_gateway``: the module imports / constructs / defines
+        ToolInvocationGateway (or the canonical tool-runtime builder).
+      - ``gateway_invoke_lines``: lines of ``<gateway>.invoke*`` calls.
+      - ``executor_fn_names``: functions referenced as the ``executor=``
+        argument of a gateway invocation.
+      - ``executor_lambda_calls``: call nodes inside ``executor=`` lambdas.
+      - ``binding_fn_names``: functions referenced as ``coroutine=`` /
+        ``fn=`` of a LangChain StructuredTool / FastMCP server tool.
+      - ``gateway_class_defined``: the module defines ToolInvocationGateway.
+    """
+    imports = _module_imports(tree)
+    has_gateway_import = any(
+        fragment in full for full in imports for fragment in GATEWAY_PROOF_IMPORT_FRAGMENTS
+    )
+    gateway_class_defined = any(
+        isinstance(node, ast.ClassDef) and node.name == "ToolInvocationGateway"
+        for node in ast.walk(tree)
+    )
+    gateway_constructed = False
+    gateway_invoke_lines: set[int] = set()
+    executor_fn_names: set[str] = set()
+    executor_lambda_calls: set[int] = set()
+    binding_fn_names: set[str] = set()
+
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.Call):
+            continue
+        callee = ""
+        if isinstance(node.func, ast.Attribute):
+            callee = node.func.attr
+        elif isinstance(node.func, ast.Name):
+            callee = node.func.id
+        if callee in GATEWAY_CONSTRUCT_NAMES:
+            gateway_constructed = True
+        if callee in GATEWAY_INVOKE_METHODS:
+            gateway_invoke_lines.add(node.lineno)
+            for keyword in node.keywords:
+                if keyword.arg != "executor":
+                    continue
+                if isinstance(keyword.value, ast.Name):
+                    executor_fn_names.add(keyword.value.id)
+                elif isinstance(keyword.value, ast.Lambda):
+                    for inner in ast.walk(keyword.value):
+                        if isinstance(inner, ast.Call):
+                            executor_lambda_calls.add(inner.lineno)
+        if callee in BINDING_REGISTRATION_CONSTRUCTORS:
+            for keyword in node.keywords:
+                if (
+                    keyword.arg in BINDING_REGISTRATION_KWARGS
+                    and isinstance(keyword.value, ast.Name)
+                ):
+                    binding_fn_names.add(keyword.value.id)
+
+    has_gateway = has_gateway_import or gateway_constructed or gateway_class_defined
+    return {
+        "has_gateway": has_gateway,
+        "gateway_invoke_lines": gateway_invoke_lines,
+        "executor_fn_names": executor_fn_names,
+        "executor_lambda_calls": executor_lambda_calls,
+        "binding_fn_names": binding_fn_names,
+        "gateway_class_defined": gateway_class_defined,
+    }
+
+
+def _enclosing_function(tree: ast.AST, call_node: ast.Call) -> tuple[str | None, bool]:
+    """Return (enclosing function name, inside ToolInvocationGateway class)
+    for a call node, resolved by walking the tree with context."""
+    enclosing: str | None = None
+    inside_gateway_class = False
+    for node in ast.walk(tree):
+        if node is call_node:
+            break
+        if isinstance(node, ast.ClassDef) and node.name == "ToolInvocationGateway":
+            if _node_contains(node, call_node):
+                inside_gateway_class = True
+        if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
+            if _node_contains(node, call_node):
+                enclosing = node.name
+    return enclosing, inside_gateway_class
+
+
+def _node_contains(parent: ast.AST, child: ast.AST) -> bool:
+    for node in ast.walk(parent):
+        if node is child:
+            return True
+    return False
+
+
+def _classify_call_sites(rel: str, tree: ast.AST) -> list[tuple[str, str]]:
+    """Classify every dispatch Call in a module.
+
+    Returns ``(category, evidence)`` pairs. ``category`` is one of
+    ``mcp_classification`` (recorded, never blocking), ``direct_tool_bypass``
+    or ``product_direct_mcp_execution`` (blocking).
+    """
+    proof = _canonical_proof_map(tree)
+    classified: list[tuple[str, str]] = []
+
+    def _record(category: str, evidence: str) -> None:
+        classified.append((category, evidence))
+
     for node in ast.walk(tree):
         if not isinstance(node, ast.Call):
             continue
         func = node.func
+        callee = ""
+        if isinstance(func, ast.Attribute):
+            callee = func.attr
+        elif isinstance(func, ast.Name):
+            callee = func.id
+        if not callee:
+            continue
+
+        # --- MCP discovery / admin shapes (operation semantics, never
+        #     a finding; they do not execute a Product Action) ------------
+        if callee in MCP_DISCOVERY_CALL_NAMES:
+            _record(
+                "mcp_classification",
+                f"{callee}(...) MCP_DISCOVERY_REGISTRATION / MCP_ADMIN_CONTROL_PLANE",
+            )
+            continue
+
+        # --- canonical gateway invocation ---------------------------------
+        if callee in GATEWAY_INVOKE_METHODS and proof["has_gateway"]:
+            _record(
+                "mcp_classification",
+                f"{callee}(...) MCP_CANONICAL_EXECUTOR (gateway invocation, "
+                f"proven ToolInvocationGateway binding)",
+            )
+            continue
+
+        # --- execution shapes: need canonical proof, else BLOCK -----------
+        is_mcp_exec = callee in MCP_EXECUTION_CALL_NAMES
+        legacy_hit: str | None = None
         if isinstance(func, ast.Attribute):
             attr = func.attr
             receiver = _receiver_id(func.value)
             if attr in ("ainvoke", "invoke") and receiver in TOOL_DISPATCH_RECEIVERS:
-                hits.append(f"{receiver}.{attr}(...) direct tool dispatch")
+                legacy_hit = f"{receiver}.{attr}(...) direct tool dispatch"
             elif "execute_tool" in attr.lower():
-                hits.append(f"{attr}(...) direct tool dispatch")
+                legacy_hit = f"{attr}(...) direct tool dispatch"
         elif isinstance(func, ast.Name):
             name = func.id
             if "execute_tool" in name.lower():
-                hits.append(f"{name}(...) direct tool dispatch")
+                legacy_hit = f"{name}(...) direct tool dispatch"
             elif name == "handler" and len(node.args) == 1 \
                     and isinstance(node.args[0], ast.Name) and node.args[0].id == "request":
-                hits.append("handler(request) direct tool dispatch")
-    return hits
-
-
-def _allowlist_entries(root: Path) -> tuple[dict[str, dict[str, str]], dict[str, dict[str, str]]]:
-    """temporary-allowlist.yaml -> (path -> entry info, path -> annotations).
-    The allowlist documents bypasses; it never exempts them."""
-    entries: dict[str, dict[str, str]] = {}
-    annotations: dict[str, dict[str, str]] = {}
-    path = root / ALLOWLIST_REL
-    if not path.exists():
-        return entries, annotations
-    try:
-        parsed = yaml.safe_load(_read(path))
-    except Exception:  # pragma: no cover - defensive
-        return entries, annotations
-    if not isinstance(parsed, dict):
-        return entries, annotations
-    items: list[dict[str, Any]] = []
-    for value in parsed.values():
-        if isinstance(value, list) and value and isinstance(value[0], dict) and "path" in value[0]:
-            items = value
-            break
-    for item in items:
-        entry_path = item.get("path")
-        if not isinstance(entry_path, str):
+                legacy_hit = "handler(request) direct tool dispatch"
+        if not is_mcp_exec and legacy_hit is None:
             continue
-        entries[entry_path] = {
-            "category": item.get("category") or "",
-            "symbol": item.get("symbol") or "",
-            "reason": item.get("reason") or "",
-        }
-        annotations[entry_path] = {
-            "owner_work_package": item.get("owner") or "",
-            "candidate_pr": "",
-            "external_dependency": "",
-        }
-    return entries, annotations
+
+        enclosing_fn, inside_gateway_class = _enclosing_function(tree, node)
+        if enclosing_fn in proof["executor_fn_names"]:
+            _record(
+                "mcp_classification",
+                f"{callee}(...) MCP_CANONICAL_EXECUTOR (executor callback of a "
+                f"gateway invocation)",
+            )
+            continue
+        if node.lineno in proof["executor_lambda_calls"]:
+            _record(
+                "mcp_classification",
+                f"{callee}(...) MCP_CANONICAL_EXECUTOR (call inside an executor "
+                f"lambda of a gateway invocation)",
+            )
+            continue
+        if enclosing_fn in proof["binding_fn_names"]:
+            _record(
+                "mcp_classification",
+                f"{callee}(...) MCP_CANONICAL_EXECUTOR (registered binding "
+                f"provider / server tool callback)",
+            )
+            continue
+        if proof["gateway_class_defined"] and inside_gateway_class:
+            _record(
+                "mcp_classification",
+                f"{callee}(...) MCP_CANONICAL_EXECUTOR (inside ToolInvocationGateway "
+                f"implementation)",
+            )
+            continue
+
+        if is_mcp_exec:
+            _record(
+                "product_direct_mcp_execution",
+                f"{callee}(...) Product/Agent -> MCP client/provider "
+                f"(no ToolInvocationGateway proof in module)",
+            )
+        else:
+            _record("direct_tool_bypass", legacy_hit)
+    return classified
 
 
-def _pattern_matches(rel: str, pattern: str) -> bool:
-    """Allowlist paths may use brace alternation, e.g.
-    src/backend/zuno/knowledge/{__init__,citation}.py"""
-    if "{" not in pattern:
-        return rel == pattern
-    try:
-        regex = re.sub(r"\{([^}]*)\}", lambda m: "(" + "|".join(re.escape(x) for x in m.group(1).split(",")) + ")", re.escape(pattern))
-        return re.fullmatch(regex, rel) is not None
-    except re.error:  # pragma: no cover - defensive
-        return rel == pattern
-
-
-def _annotate(rel: str, allowlist_annotations: dict[str, dict[str, str]]) -> dict[str, str]:
+def _annotate(rel: str) -> dict[str, str]:
     merged = dict(KNOWN_ANNOTATIONS.get(rel, _finding("", "")))
     for key in ("owner_work_package", "candidate_pr", "external_dependency"):
         merged[key] = merged.get(key) or ""
-    for pattern, ann in allowlist_annotations.items():
-        if _pattern_matches(rel, pattern):
-            for key, value in ann.items():
-                if value and not merged.get(key):
-                    merged[key] = value
     merged["path"] = rel
     merged.pop("evidence", None)
     return merged
 
 
 def _bypass_scan(root: Path) -> dict[str, list]:
-    """Direct tool dispatch findings across the entire production tree.
-    Annotated, never allowlisted away."""
+    """Direct tool / MCP dispatch findings across the entire production tree,
+    classified per call site. MCP admin / discovery and proven canonical
+    executor sites are recorded as ``mcp_classification`` (never blocking);
+    provider execution without a gateway proof and product-side direct tool
+    dispatch block.
+    """
     findings: dict[str, list] = {cat: [] for cat in FINDING_CATEGORIES}
-    allowlist_entries, allowlist_annotations = _allowlist_entries(root)
     seen: set[tuple[str, str]] = set()
     for path in _production_files(root):
         rel = _rel(path, root)
-        if rel.startswith(CANONICAL_TOOL_RUNTIME_REL):
-            continue  # canonical tool execution entry (ToolInvocationGateway)
         source = _read(path)
-        hits = _direct_dispatch_hits(source)
-        for pattern, entry in allowlist_entries.items():
-            if entry["category"] in BYPASS_ALLOWLIST_CATEGORIES and _pattern_matches(rel, pattern):
-                hits.append(
-                    f"allowlisted bypass category={entry['category']}: "
-                    f"{entry['symbol'] or entry['reason']}"
-                )
-        for hit in sorted(set(hits)):
-            key = (rel, hit)
+        tree = _parse_tree(source)
+        if tree is None:
+            continue
+        for category, evidence in _classify_call_sites(rel, tree):
+            key = (rel, evidence)
             if key in seen:
                 continue
             seen.add(key)
-            annotation = _annotate(rel, allowlist_annotations)
-            findings["direct_tool_bypass"].append(
-                {"path": rel, "evidence": hit, **annotation}
+            findings[category].append(
+                {
+                    "path": rel,
+                    "evidence": evidence,
+                    **_annotate(rel),
+                }
             )
     return findings
 
@@ -706,9 +888,10 @@ def _harness_reachability(root: Path) -> dict[str, list]:
             continue  # residual surface already reported above
         if fragment not in test_fragments:
             continue  # not present in the tree; nothing to classify
+        module_rel = _resolve_harness_module_path(root, fragment)
         findings["internal_test_harness"].append(
             {
-                "path": f"src/backend/zuno/agent/{fragment}.py",
+                "path": module_rel,
                 "evidence": "reachability audit found no production-tree reference "
                             "(tests/evals only)",
                 "owner_work_package": "",
@@ -725,6 +908,24 @@ def _fragment_of(evidence: str) -> str:
         if fragment in evidence:
             return fragment
     return ""
+
+
+def _resolve_harness_module_path(root: Path, fragment: str) -> str:
+    """Resolve where the residual harness module actually lives.
+
+    The harness moved out of production (``product_baseline`` now lives
+    under ``tools/evals/zuno/agent/``); the reported path must reflect the
+    real location, never a stale production path.
+    """
+    candidates = (
+        f"src/backend/zuno/agent/{fragment}.py",
+        f"tools/evals/zuno/agent/{fragment}.py",
+        f"evals/zuno/agent/{fragment}.py",
+    )
+    for candidate in candidates:
+        if (root / candidate).exists():
+            return candidate
+    return candidates[0]
 
 
 # ---------------------------------------------------------------------------

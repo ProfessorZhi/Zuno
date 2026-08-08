@@ -162,43 +162,45 @@ def test_agent_family_scope_returns_clean() -> None:
 
 
 # ---------------------------------------------------------------------------
-# 3. Repository mode returns BLOCKED because Workspace agents still run.
+# 3. Repository mode returns CONFIRMED: both workspace agents are canonical
+#    thin adapters over the Single Controller Runtime (PR #135 cutover).
 # ---------------------------------------------------------------------------
 
 
-def test_repository_scope_returns_blocked() -> None:
+def test_repository_scope_returns_confirmed() -> None:
     result = _run("repository")
-    assert result["returncode"] != 0, (
-        "repository scope must exit non-zero while workspace agents exist: "
-        + result["stdout"]
+    assert result["returncode"] == 0, (
+        "repository scope must exit 0 when all candidate runtimes are "
+        "canonical thin adapters: " + result["stdout"]
     )
     assert (
-        result["payload"]["status"] == "BACKEND_PRODUCT_RUNTIME_CUTOVER_BLOCKED"
+        result["payload"]["status"] == "BACKEND_PRODUCT_RUNTIME_CUTOVER_CONFIRMED"
     ), result["payload"]
     categories = {finding["category"] for finding in result["payload"]["findings"]}
-    assert "legacy_runtime_owner" in categories
+    assert "legacy_runtime_owner" not in categories
     # PHASE22 workspace cutover (PR #129): the workspace adapters no longer
     # dispatch `handler(request)` directly — the direct handler bypass is
-    # gone. The repository stays BLOCKED on the remaining runtime-ownership
-    # evidence only.
+    # gone.
     assert "direct_handler_bypass" not in categories
     classifications = {
         c["name"]: c["classification"]
         for c in result["payload"]["classifications"]
     }
-    # PHASE22-PR133 final engineering closure: WorkSpaceSimpleAgent has been
-    # reduced to a thin adapter over the canonical Single Controller Runtime
-    # (no direct model/tool/handler dispatch inside the class body), so the
-    # ownership classifier promotes it to PRODUCT_ADAPTER. WeChatAgent still
-    # carries the legacy runtime-ownership evidence and remains
-    # PRODUCT_LEGACY_RUNTIME, which keeps the repository scope BLOCKED.
+    # PHASE22-PR135 final engineering closure: WorkSpaceSimpleAgent AND
+    # WeChatAgent are thin adapters over the canonical workspace composition
+    # (WorkspaceAgentRuntime -> MCPToolExecutorAdapter -> ToolInvocationGateway).
+    # WeChatAgent's ``final_answer`` is a channel-message mapping off the
+    # canonical run snapshot, not Product Run ownership — ownership-aware
+    # lifecycle detection promotes it to PRODUCT_ADAPTER, which confirms the
+    # repository scope.
     assert classifications.get("WorkSpaceSimpleAgent") == "PRODUCT_ADAPTER"
-    assert classifications.get("WeChatAgent") == "PRODUCT_LEGACY_RUNTIME"
+    assert classifications.get("WeChatAgent") == "PRODUCT_ADAPTER"
     assert classifications.get("AgentControlRuntime") == "INTERNAL_TEST_HARNESS"
 
 
 # ---------------------------------------------------------------------------
-# 4. Default mode must NOT return scoped CLEAN.
+# 4. Default mode must NOT return scoped CLEAN — it reports the repository
+#    status (CONFIRMED after the PR #135 thin-adapter cutover).
 # ---------------------------------------------------------------------------
 
 
@@ -215,7 +217,8 @@ def test_default_mode_does_not_return_scoped_clean() -> None:
     assert payload.get("status") != "AGENT_FAMILY_LEGACY_SLICE_CLEAN", (
         "default mode must report repository status, not scoped status"
     )
-    assert result.returncode != 0
+    assert payload.get("status") == "BACKEND_PRODUCT_RUNTIME_CUTOVER_CONFIRMED"
+    assert result.returncode == 0
 
 
 # ---------------------------------------------------------------------------
@@ -283,7 +286,7 @@ def test_scoped_and_repository_status_are_independent() -> None:
     assert scoped["scope"] != repo["scope"]
     assert scoped["status"] != repo["status"]
     assert scoped["status"] == "AGENT_FAMILY_LEGACY_SLICE_CLEAN"
-    assert repo["status"] == "BACKEND_PRODUCT_RUNTIME_CUTOVER_BLOCKED"
+    assert repo["status"] == "BACKEND_PRODUCT_RUNTIME_CUTOVER_CONFIRMED"
 
 
 # ---------------------------------------------------------------------------
@@ -421,6 +424,78 @@ def test_await_handler_request_is_blocked() -> None:
 
 
 # ---------------------------------------------------------------------------
+# 13b. Fixture: canonical WeChat thin adapter (PR #135 shape) is
+#      PRODUCT_ADAPTER. ``final_answer`` is a channel-message mapping off
+#      the canonical run snapshot — not Product Run ownership.
+# ---------------------------------------------------------------------------
+
+
+def test_thin_wechat_adapter_is_product_adapter() -> None:
+    src = (RUNTIME_DEFS / "thin_wechat_adapter.py").read_text(encoding="utf-8")
+    verdict = _fixture_classification(
+        src,
+        "WeChatAgent",
+        production_callers=[("api/services/wechat.py", 74)],
+    )
+    assert verdict == "PRODUCT_ADAPTER", (
+        f"canonical WeChat thin adapter should classify as PRODUCT_ADAPTER, got {verdict}"
+    )
+
+
+# ---------------------------------------------------------------------------
+# 13c. Fixture: same class + direct tool invocation is BLOCKED. A canonical
+#      delegate does not excuse ``tool.ainvoke`` on the run path.
+# ---------------------------------------------------------------------------
+
+
+def test_same_class_direct_tool_is_legacy_runtime() -> None:
+    src = (RUNTIME_DEFS / "same_class_direct_tool.py").read_text(encoding="utf-8")
+    verdict = _fixture_classification(
+        src,
+        "WeChatAgent",
+        production_callers=[("api/services/wechat.py", 74)],
+    )
+    assert verdict == "PRODUCT_LEGACY_RUNTIME", (
+        f"same class + direct tool must classify as PRODUCT_LEGACY_RUNTIME, got {verdict}"
+    )
+
+
+# ---------------------------------------------------------------------------
+# 13d. Fixture: same class + direct model final-answer loop is BLOCKED.
+# ---------------------------------------------------------------------------
+
+
+def test_same_class_direct_model_is_legacy_runtime() -> None:
+    src = (RUNTIME_DEFS / "same_class_direct_model.py").read_text(encoding="utf-8")
+    verdict = _fixture_classification(
+        src,
+        "WorkSpaceSimpleAgent",
+        production_callers=[("api/services/workspace.py", 160)],
+    )
+    assert verdict == "PRODUCT_LEGACY_RUNTIME", (
+        f"same class + direct model must classify as PRODUCT_LEGACY_RUNTIME, got {verdict}"
+    )
+
+
+# ---------------------------------------------------------------------------
+# 13e. Fixture: same class + legacy runtime fallback (try/except handler
+#      constructing AgentControlRuntime) is BLOCKED.
+# ---------------------------------------------------------------------------
+
+
+def test_same_class_legacy_fallback_is_legacy_runtime() -> None:
+    src = (RUNTIME_DEFS / "same_class_legacy_fallback.py").read_text(encoding="utf-8")
+    verdict = _fixture_classification(
+        src,
+        "WeChatAgent",
+        production_callers=[("api/services/wechat.py", 74)],
+    )
+    assert verdict == "PRODUCT_LEGACY_RUNTIME", (
+        f"same class + legacy fallback must classify as PRODUCT_LEGACY_RUNTIME, got {verdict}"
+    )
+
+
+# ---------------------------------------------------------------------------
 # 14. Fixture: AgentControlRuntime with only tests/evals callers is
 #     classified INTERNAL_TEST_HARNESS.
 # ---------------------------------------------------------------------------
@@ -441,11 +516,15 @@ def test_agent_control_runtime_with_only_test_callers_is_internal_test_harness()
 
 
 # ---------------------------------------------------------------------------
-# 15. Fixture: AgentControlRuntime with a production caller is BLOCKED.
+# 15. Fixture: AgentControlRuntime with a production caller is UNRESOLVED
+#     (fail-closed). The fixture only reads lifecycle fields off the
+#     ``planner_output`` input — reading a run-result container is not
+#     lifecycle ownership, and without canonical delegation the class
+#     cannot be proven safe: UNRESOLVED keeps the gate fail-closed.
 # ---------------------------------------------------------------------------
 
 
-def test_agent_control_runtime_with_production_caller_is_blocked() -> None:
+def test_agent_control_runtime_with_production_caller_is_unresolved() -> None:
     src = (
         RUNTIME_DEFS / "agent_control_runtime_with_prod_caller.py"
     ).read_text(encoding="utf-8")
@@ -474,8 +553,9 @@ def test_agent_control_runtime_with_production_caller_is_blocked() -> None:
         ],
         evidence=evidence,
     )
-    assert verdict.classification == "PRODUCT_LEGACY_RUNTIME", (
-        f"AgentControlRuntime with production caller should classify as PRODUCT_LEGACY_RUNTIME, got {verdict.classification}"
+    assert verdict.classification == "UNRESOLVED", (
+        f"AgentControlRuntime with production caller and no canonical "
+        f"delegation must classify as UNRESOLVED (fail-closed), got {verdict.classification}"
     )
 
 
@@ -748,11 +828,12 @@ def test_invalid_adapter_in_production_tree_is_blocked() -> None:
 
 
 # ---------------------------------------------------------------------------
-# 24. AgentControlRuntime with production caller fixture is BLOCKED.
+# 24. AgentControlRuntime with production caller fixture is UNRESOLVED —
+#     a production caller without canonical delegation fails closed.
 # ---------------------------------------------------------------------------
 
 
-def test_agent_control_runtime_production_caller_fixture_is_blocked() -> None:
+def test_agent_control_runtime_production_caller_fixture_is_unresolved() -> None:
     with tempfile.TemporaryDirectory() as tmpdir:
         clone = Path(tmpdir) / "zuno-mirror"
         shutil.copytree(REPO_ROOT, clone)
@@ -781,10 +862,11 @@ def test_agent_control_runtime_production_caller_fixture_is_blocked() -> None:
             c["name"]: c["classification"]
             for c in payload.get("classifications", [])
         }
-        assert classifications.get("AgentControlRuntime") == "PRODUCT_LEGACY_RUNTIME", (
-            "AgentControlRuntime with production caller must classify as PRODUCT_LEGACY_RUNTIME"
+        assert classifications.get("AgentControlRuntime") == "UNRESOLVED", (
+            "AgentControlRuntime with production caller and no canonical "
+            "delegation must classify as UNRESOLVED (fail-closed)"
         )
-        assert payload.get("status") == "BACKEND_PRODUCT_RUNTIME_CUTOVER_BLOCKED"
+        assert payload.get("status") == "BACKEND_PRODUCT_RUNTIME_UNRESOLVED"
 
 
 # ---------------------------------------------------------------------------
@@ -1325,12 +1407,13 @@ def test_only_test_callers_yields_internal_test_harness() -> None:
 
 
 # ---------------------------------------------------------------------------
-# 38. Production caller AgentControlRuntime is PRODUCT_LEGACY_RUNTIME
-#     (re-pinned).
+# 38. Production caller AgentControlRuntime is UNRESOLVED (re-pinned):
+#     reads of a plan/outcome container are not ownership evidence, and a
+#     production caller without canonical delegation fails closed.
 # ---------------------------------------------------------------------------
 
 
-def test_production_caller_agent_control_runtime_is_legacy() -> None:
+def test_production_caller_agent_control_runtime_is_unresolved() -> None:
     from tools.scripts.verify_phase22_backend_semantic_legacy import (
         _classdef_nodes,
         _evidence_for_class,
@@ -1348,9 +1431,9 @@ def test_production_caller_agent_control_runtime_is_legacy() -> None:
         production_callers=[("production_callers/caller_of_agent_control.py", 7)],
         evidence=evidence,
     )
-    assert verdict.classification == "PRODUCT_LEGACY_RUNTIME", (
-        f"production caller AgentControlRuntime must classify as "
-        f"PRODUCT_LEGACY_RUNTIME, got {verdict.classification}"
+    assert verdict.classification == "UNRESOLVED", (
+        f"production caller AgentControlRuntime without canonical "
+        f"delegation must classify as UNRESOLVED, got {verdict.classification}"
     )
 
 
@@ -1417,15 +1500,16 @@ def test_repository_unresolved_exits_one() -> None:
 
 
 # ---------------------------------------------------------------------------
-# 40. Repository BLOCKED in production tree exits with code 1.
+# 40. Repository CONFIRMED in the real production tree exits with code 0.
 # ---------------------------------------------------------------------------
 
 
-def test_repository_blocked_exits_one() -> None:
-    """The current live branch still has WeChatAgent classified as
-    PRODUCT_LEGACY_RUNTIME (PHASE22-PR133 final engineering closure has
-    promoted WorkSpaceSimpleAgent to PRODUCT_ADAPTER), so the repository
-    status is BLOCKED and the exit code must be 1.
+def test_repository_confirmed_exits_zero_on_real_tree() -> None:
+    """The live branch has both workspace agents classified as
+    PRODUCT_ADAPTER (PR #135 cutover: WorkSpaceSimpleAgent and WeChatAgent
+    are canonical thin adapters over WorkspaceAgentRuntime ->
+    MCPToolExecutorAdapter -> ToolInvocationGateway), so the repository
+    status is CONFIRMED and the exit code must be 0.
     """
     result = subprocess.run(
         [
@@ -1439,9 +1523,12 @@ def test_repository_blocked_exits_one() -> None:
         text=True,
         check=False,
     )
-    assert result.returncode == 1, (
-        f"repository BLOCKED must exit 1, got {result.returncode}"
+    assert result.returncode == 0, (
+        f"repository CONFIRMED must exit 0, got {result.returncode}: "
+        + result.stdout
+        + result.stderr
     )
+    assert "BACKEND_PRODUCT_RUNTIME_CUTOVER_CONFIRMED" in result.stdout
 
 
 # ---------------------------------------------------------------------------
