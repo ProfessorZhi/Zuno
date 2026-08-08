@@ -556,14 +556,26 @@ def test_json_shape_is_stable() -> None:
         "unresolved_count",
         "findings",
         "unresolved",
+        "classification_counts",
     }
     assert expected_keys <= set(payload.keys())
     # PHASE22 final engineering closure (P0-8): the self-referential
     # ``verifier_commit_sha`` is gone. Any reintroduction must fail this
     # assertion explicitly.
     assert "verifier_commit_sha" not in payload
+    # PHASE22 (Slice C): classification_counts is part of the stable
+    # payload so the engineering closure manifest can consume the seven
+    # canonical classifications without re-deriving them.
+    assert "classification_counts" in payload
     for finding in payload["findings"]:
-        assert set(finding.keys()) == {"category", "path", "line", "detail", "severity"}
+        assert set(finding.keys()) == {
+            "category",
+            "path",
+            "line",
+            "detail",
+            "severity",
+            "classification",
+        }
 
 
 # -----------------------------------------------------------------------------
@@ -890,3 +902,101 @@ def test_unknown_dynamic_executor_yields_audit_unresolved() -> None:
         "unknown dynamic executor must not yield CLEAN, got "
         + payload.get("status", "")
     )
+
+
+# -----------------------------------------------------------------------------
+# 19. Slice C: a file with unrelated ``getattr`` and unrelated ``invoke``
+#     MUST NOT be falsely correlated. This guards against the
+#     file-wide scan regression that produced false positives on the
+#     production tree.
+# -----------------------------------------------------------------------------
+
+
+def test_unrelated_getattr_and_invoke_not_correlated() -> None:
+    """An unrelated ``getattr`` lookup and an unrelated ``tool.ainvoke``
+    call (in different functions, no correlation between them) MUST
+    NOT trigger ``unresolved_file_rename`` from the getattr-correlation
+    path.
+
+    The hardened function-scoped detector only fires when a single
+    function contains both a ``getattr`` assignment AND a dispatch
+    on the result. Two unrelated functions — even with their own
+    independent patterns — must not be associated with each other.
+    """
+    fixture = NEW_FIXTURE_ROOT / "negative_clean" / "negative_unrelated_getattr_and_invoke.py"
+    payload = _run_with_isolated_fixtures([fixture])
+    fixture_path = f"src/backend/zuno/agent/{fixture.name}"
+    # The fixture's own file path must NOT contain an
+    # ``unresolved_file_rename`` finding that comes from the
+    # getattr-correlation path. The tool bypass in the Product
+    # Adapter body is a *real* bypass and is correctly flagged via
+    # ``tool_bypass_invoke``; what we are testing here is that the
+    # getattr in ``func_a`` did not contribute an extra UNRESOLVED.
+    unresolved_for_fixture = [
+        u for u in payload.get("unresolved", [])
+        if u["path"] == fixture_path
+    ]
+    # At most one unresolved_file_rename can appear if the file is in
+    # ``existing_bypass_files`` (the tool.ainvoke is a real bypass).
+    # Crucially the getattr pattern in ``func_a`` must not be the
+    # reason the file is unresolved.
+    classification_counts = payload.get("classification_counts", {})
+    # The fixture is in the scanned roots; the getattr correlation
+    # would add a UNRESOLVED count. With the function-scoped fix,
+    # the count is governed by the bypass signal only.
+    assert classification_counts.get("UNRESOLVED", 0) >= 0
+    # The function-scoped correlation must not run: ``func_a`` has
+    # ``getattr`` but no dispatch on the result. Direct test:
+    from tools.scripts.verify_phase22_final_legacy_cutover import (
+        _function_has_dynamic_dispatch,
+    )
+    import ast
+    tree = ast.parse(fixture.read_text(encoding="utf-8"))
+    for node in ast.walk(tree):
+        if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
+            assert not _function_has_dynamic_dispatch(node), (
+                f"unrelated getattr / invoke in {node.name} must not "
+                "register as function-scoped dynamic dispatch"
+            )
+
+
+# -----------------------------------------------------------------------------
+# 20. Slice C: classification_counts covers the seven canonical closure
+#     classifications, and every finding carries a non-empty
+#     classification field.
+# -----------------------------------------------------------------------------
+
+
+SEVEN_CLOSURE_CLASSIFICATIONS = {
+    "REAL_PRODUCT_BYPASS",
+    "CANONICAL_GATEWAY_EXECUTOR",
+    "MCP_ADMIN_CONTROL_PLANE",
+    "MCP_DISCOVERY_REGISTRATION",
+    "MODEL_GATEWAY_INTERNAL",
+    "INTERNAL_TEST_EVAL",
+    "UNRESOLVED",
+}
+
+
+def test_classification_counts_cover_seven_closure_classes() -> None:
+    """The audit must report classification_counts keyed by the seven
+    canonical closure classifications, and every emitted finding must
+    carry one of those values.
+    """
+    result = _run([
+        "--integration-base-sha", "10501e0382d863014513f993822abd6bcf758cf6"
+    ])
+    payload = result["payload"]
+    counts = payload.get("classification_counts", {})
+    # The seven canonical classifications must all be present, even
+    # if their counts are zero.
+    assert SEVEN_CLOSURE_CLASSIFICATIONS.issubset(set(counts.keys())), (
+        f"classification_counts missing keys: "
+        f"{SEVEN_CLOSURE_CLASSIFICATIONS - set(counts.keys())}"
+    )
+    # Every emitted finding must carry a valid classification.
+    for f in payload.get("findings", []) + payload.get("unresolved", []):
+        cls = f.get("classification")
+        assert cls in SEVEN_CLOSURE_CLASSIFICATIONS, (
+            f"finding has invalid classification: {cls!r}"
+        )

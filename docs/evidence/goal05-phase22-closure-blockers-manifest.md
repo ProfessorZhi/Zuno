@@ -2,12 +2,13 @@
 
 status: current_blocker_gate_available
 phase: PHASE22
-date: 2026-08-07
-revision: 2 (truth correction — see "PR #134 History Truth" below)
-source_sha_at_generation: 177d92db55478a7102a13d00b6b4393312ef075d
+date: 2026-08-08
+revision: 3 (minimax1 audit slice — function-scoped getattr fix + seven classification taxonomy; see "minimax1 Audit Slice (Revision 3)" below)
+source_sha_at_generation: b7796246d41d51b8f9cb92409cb1acc116d1fda8
 main_after_pr133: 8e6f5228e8b553199714a420cbf292df8c679e9a
 main_after_pr134: 1dedd54830de6f761ac492a8348ec59f29b56a98
-main_at_generation: 177d92db55478a7102a13d00b6b4393312ef075d
+main_after_pr135: b7796246d41d51b8f9cb92409cb1acc116d1fda8
+main_at_generation: b7796246d41d51b8f9cb92409cb1acc116d1fda8
 integration_basis: claude/minimax-phase22-post-integration-closure
 
 ## 结论（修订）
@@ -80,19 +81,44 @@ Verifier 不允许 default-safe：
 
 ```json
 {
-  "manifest_version": "phase22-closure-blockers-manifest.v2",
+  "manifest_version": "phase22-closure-blockers-manifest.v3",
   "phase": "PHASE22",
   "main_after_pr133": "8e6f5228e8b553199714a420cbf292df8c679e9a",
   "main_after_pr134": "1dedd54830de6f761ac492a8348ec59f29b56a98",
-  "main_at_generation": "177d92db55478a7102a13d00b6b4393312ef075d",
+  "main_after_pr135": "b7796246d41d51b8f9cb92409cb1acc116d1fda8",
+  "main_at_generation": "b7796246d41d51b8f9cb92409cb1acc116d1fda8",
   "integration_basis": "claude/minimax-phase22-post-integration-closure",
+  "minimax1_audit_slice": {
+    "owner": "minimax1",
+    "scope": "Final Legacy Audit Verifier hardening + MCP semantic classification",
+    "function_scoped_getattr_fix": "applied — _detect_unresolved_file_rename now requires function-scoped getattr→dispatch correlation, not file-wide scan",
+    "seven_classification_taxonomy": [
+      "REAL_PRODUCT_BYPASS",
+      "CANONICAL_GATEWAY_EXECUTOR",
+      "MCP_ADMIN_CONTROL_PLANE",
+      "MCP_DISCOVERY_REGISTRATION",
+      "MODEL_GATEWAY_INTERNAL",
+      "INTERNAL_TEST_EVAL",
+      "UNRESOLVED"
+    ],
+    "classification_counts_at_pr135_main": {
+      "REAL_PRODUCT_BYPASS": 16,
+      "CANONICAL_GATEWAY_EXECUTOR": 0,
+      "MCP_ADMIN_CONTROL_PLANE": 0,
+      "MCP_DISCOVERY_REGISTRATION": 0,
+      "MODEL_GATEWAY_INTERNAL": 0,
+      "INTERNAL_TEST_EVAL": 0,
+      "UNRESOLVED": 10
+    },
+    "test_status": "29 passed in 11m19s (test_phase22_final_legacy_cutover.py)"
+  },
   "repository_internal_blockers": [
     {
       "blocker_id": "BLK-INT-001",
       "owner": "minimax2 (semantic verifier) + minimax1 (runtime producer)",
       "category": "WORKSPACE_DIRECT_TOOL_BYPASS",
       "required_fact": "WorkSpaceSimpleAgent.execute_binding_tool no longer reaches a real Product Tool bypass; instead routes through ToolInvocationGateway → registered executor → provider call",
-      "current_status": "binding.ainvoke direct dispatch remains on the post-integration main",
+      "current_status": "binding.ainvoke direct dispatch remains on the post-integration main (workspace.py:299 image_gen, autobuild/client.py:5 sites)",
       "proof_required": "Final Legacy Audit CLEAN for WorkSpaceSimpleAgent + Backend Semantic Legacy PRODUCT_CANONICAL classification",
       "unblocks_task": "P22-T03, P22-T04",
       "repository_action_remaining": "minimax1 Runtime V2 cutover (next merge) + verifier re-classification"
@@ -112,17 +138,17 @@ Verifier 不允许 default-safe：
       "owner": "minimax2 (semantic verifier)",
       "category": "MCP_EXECUTION_OWNERSHIP_UNRESOLVED",
       "required_fact": "MCP server / loader / multi_client layer every direct execute path is classified as MCP_ADMIN_CONTROL_PLANE or MCP_DISCOVERY_REGISTRATION, with static ownership proof (registration_site + gateway_dispatch_site + executor_adapter)",
-      "current_status": "many call sites lack complete ownership proof; surfaced as MCP_ADMIN or MCP_DISCOVERY only after semantic classifier upgrade",
-      "proof_required": "Final Legacy Audit MCP_ADMIN/MCP_DISCOVERY count equals total MCP call sites minus canonical_gateway_executor sites",
+      "current_status": "verifier now classifies findings into the seven canonical closure classes (REAL_PRODUCT_BYPASS / CANONICAL_GATEWAY_EXECUTOR / MCP_ADMIN_CONTROL_PLANE / MCP_DISCOVERY_REGISTRATION / MODEL_GATEWAY_INTERNAL / INTERNAL_TEST_EVAL / UNRESOLVED); MCP_ADMIN and MCP_DISCOVERY classifier wires through ToolControlPlane / register_executor_adapter, but legacy MCP chat paths in api/services/mcp_chat.py and api/v1/mcp_chat.py still surface as REAL_PRODUCT_BYPASS",
+      "proof_required": "Final Legacy Audit MCP_ADMIN/MCP_DISCOVERY count equals total MCP call sites minus canonical_gateway_executor sites minus product_direct_mcp sites",
       "unblocks_task": "P22-T03",
-      "repository_action_remaining": "verifier hardening + new fixtures proving MCP ownership (this PR)"
+      "repository_action_remaining": "PR #135 has routed Workspace/WeChat MCP tool execution through MCPToolExecutorAdapter — verifier now proves ownership statically; remaining cleanup is the api/services/mcp_chat.py + api/v1/mcp_chat.py direct dispatch sites"
     },
     {
       "blocker_id": "BLK-INT-004",
       "owner": "minimax2 (semantic verifier)",
       "category": "FINAL_LEGACY_AUDIT_NOT_CLEAN",
       "required_fact": "verify_phase22_final_legacy_cutover.py reports LEGACY_CUTOVER_AUDIT_CLEAN with 0 findings and 0 unresolved",
-      "current_status": "TOOL_BYPASS_BLOCKERS_FOUND with finding_count=224 and unresolved_count=0 (latest main @ 177d92db)",
+      "current_status": "TOOL_BYPASS_BLOCKERS_FOUND with finding_count=16 (REAL_PRODUCT_BYPASS) and unresolved_count=10 (UNRESOLVED — phase08.py + service.py + structured_response_agent.py + react_step.py + mcp_chat.py × 2 + workspace.py + autobuild/client.py + graphrag/query_service.py + graphrag/retriever.py) on PR #135 main @ b7796246",
       "proof_required": "audit_report.json status=LEGACY_CUTOVER_AUDIT_CLEAN",
       "unblocks_task": "P22-T03, P22-T07 (engineering closure upgrade)",
       "repository_action_remaining": "minimax1 Runtime V2 cutover (next merge) + semantic classifier upgrade + re-audit"
@@ -146,6 +172,16 @@ Verifier 不允许 default-safe：
       "proof_required": "verifier output status=FEATURE_FLAG_RUNTIME_CUTOVER_CONFIRMED",
       "unblocks_task": "P22-T04",
       "repository_action_remaining": "minimax1 Runtime V2 cutover + verifier hardening"
+    },
+    {
+      "blocker_id": "BLK-INT-007",
+      "owner": "minimax1 (postgres owner fact)",
+      "category": "OWNER_FACT_POSTGRES_NOT_FINAL",
+      "required_fact": "Budget/Security PostgreSQL Owner Fact is finalised (canonical table + audit trail)",
+      "current_status": "Owner Fact pending minimax2 worker (separate worker scope, not minimax1)",
+      "proof_required": "minimax2 closes OWNER_FACT_POSTGRES_NOT_FINAL",
+      "unblocks_task": "P22-T03, P22-T04",
+      "repository_action_remaining": "out of minimax1 scope — minimax2 will close this"
     }
   ],
   "external_blockers": [
@@ -240,6 +276,15 @@ Verifier 不允许 default-safe：
     "P22-T07": "engineering_closure_in_progress_measurement_blocked"
   },
   "audit_status": "TOOL_BYPASS_BLOCKERS_FOUND",
+  "audit_classification_counts": {
+    "REAL_PRODUCT_BYPASS": 16,
+    "CANONICAL_GATEWAY_EXECUTOR": 0,
+    "MCP_ADMIN_CONTROL_PLANE": 0,
+    "MCP_DISCOVERY_REGISTRATION": 0,
+    "MODEL_GATEWAY_INTERNAL": 0,
+    "INTERNAL_TEST_EVAL": 0,
+    "UNRESOLVED": 10
+  },
   "production_readiness": "not_established",
   "quality_proven": false,
   "claims_disallowed": [
@@ -249,7 +294,8 @@ Verifier 不允许 default-safe：
     "PROGRAM_ARCHIVED",
     "QUALITY_PROVEN",
     "22/22 completed",
-    "ENGINEERING_CLOSURE_COMPLETE (until repository_internal_blockers is empty and Repository Gates are clean)"
+    "ENGINEERING_CLOSURE_COMPLETE (until repository_internal_blockers is empty and Repository Gates are clean)",
+    "LEGACY_CUTOVER_AUDIT_CLEAN (until classification_counts.UNRESOLVED == 0 AND classification_counts.REAL_PRODUCT_BYPASS == 0)"
   ]
 }
 ```
@@ -278,6 +324,99 @@ Verifier 必须证明 ownership：
 - 见 `docs/evidence/goal05-phase22-final-legacy-audit-v3/AUDIT-V3.md`
 - 见 `docs/evidence/goal05-phase22-backend-semantic-legacy-cleanup/`（待 minimax1 Runtime V2 merge 后重新生成）
 - 见 `docs/evidence/goal05-phase22-feature-flag-runtime-cutover/`（待 minimax1 Runtime V2 merge 后重新生成）
+
+## minimax1 Audit Slice (Revision 3)
+
+minimax1 is the owner of the **Final Legacy Audit Verifier** + **MCP semantic classification** + **AUDIT_UNRESOLVED convergence** + **Closure Manifest Truth** + **Final Audit Evidence** + **PHASE22 Program Truth** + **最终 Engineering Closure 集成** scope on `claude/minimax-phase22-post-integration-closure`.
+
+This revision (rev 3) records three concrete outcomes delivered by the minimax1 worker against the PR #135 main (`b7796246d41d51b8f9cb92409cb1acc116d1fda8`):
+
+### 1. Function-scoped getattr correlation (fix for the previous over-broad scan)
+
+`_detect_unresolved_file_rename` previously walked the file-wide `ast.walk(tree)` twice — once looking for any `getattr(...)` call and once looking for any `await <attr>.invoke(...)` pattern anywhere in the file. This produced massive false positives on the production tree because an unrelated `getattr` in function A and an unrelated `tool.ainvoke` in function B were incorrectly associated.
+
+The hardened detector (rev 3) is **function-scoped**: it walks each `FunctionDef` / `AsyncFunctionDef` in isolation and only fires when the SAME function contains both:
+
+- an assignment `var = getattr(...)` (with transitive alias resolution: `handler = getattr(...)` → `alias = handler` → `await alias.ainvoke(...)`); AND
+- an `await` whose receiver chain terminates at a getattr-derived name.
+
+Minimum data flow the detector requires:
+
+```python
+async def run(self, payload):
+    executor = getattr(obj, dynamic_name)   # (1) assignment from getattr
+    return await executor.ainvoke(payload)   # (2) dispatch on result
+```
+
+The new `tests/fixtures/phase22_final_legacy_cutover/negative_clean/negative_unrelated_getattr_and_invoke.py` + `test_unrelated_getattr_and_invoke_not_correlated` prove case 11 ("unrelated getattr + unrelated invoke → 不得误关联") is now fail-closed.
+
+### 2. Seven canonical closure classifications
+
+Every emitted finding now carries exactly one of seven canonical classifications (used by the engineering closure manifest):
+
+| classification | mapped internal categories |
+| --- | --- |
+| `REAL_PRODUCT_BYPASS` | `tool_bypass_invoke`, `tool_bypass_handler`, `tool_bypass_direct_mcp`, `tool_bypass_image_gen`, `tool_bypass_read_only`, `model_bypass_direct`, `legacy_runtime_class_def`, `legacy_phase08_reachability`, `legacy_workspace_runtime`, `dual_path_signal`, `dual_path_expired_flag_reader`, `ownership_dao_write`, `ownership_plan_owned` |
+| `UNRESOLVED` | `unresolved_dynamic_constructor`, `unresolved_alias_factory`, `unresolved_file_rename` |
+| `CANONICAL_GATEWAY_EXECUTOR` | reserved for canonical gateway executor sites (currently 0 — none qualify statically yet) |
+| `MCP_ADMIN_CONTROL_PLANE` | reserved for MCP admin / lifecycle / config CRUD / health surfaces |
+| `MCP_DISCOVERY_REGISTRATION` | reserved for MCP list tools / schema discovery / executor registration |
+| `MODEL_GATEWAY_INTERNAL` | reserved for model-gateway internal model/provider invocations |
+| `INTERNAL_TEST_EVAL` | reserved for test/eval scaffolding |
+
+The audit JSON now reports `classification_counts` (all seven keys present even when count is zero). The fixture suite in `tests/fixtures/phase22_final_legacy_cutover/mcp_ownership/` + `tests/fixtures/phase22_final_legacy_cutover/negative_clean/` proves the detector recognises the canonical gateway / admin / discovery shapes without resorting to path substring Allowlists.
+
+Unknown internal categories default to `UNRESOLVED` (fail-closed): adding a new category without updating `_CLASSIFICATION_FOR_CATEGORY` immediately surfaces every emitted finding as `UNRESOLVED`.
+
+### 3. Verifier findings inventory on PR #135 main
+
+Run on `b7796246d41d51b8f9cb92409cb1acc116d1fda8`:
+
+```
+status: TOOL_BYPASS_BLOCKERS_FOUND
+classification_counts:
+  REAL_PRODUCT_BYPASS:        16
+  CANONICAL_GATEWAY_EXECUTOR:  0
+  MCP_ADMIN_CONTROL_PLANE:     0
+  MCP_DISCOVERY_REGISTRATION:  0
+  MODEL_GATEWAY_INTERNAL:      0
+  INTERNAL_TEST_EVAL:          0
+  UNRESOLVED:                 10
+```
+
+Breakdown:
+
+- **REAL_PRODUCT_BYPASS (16)** — every direct tool / model dispatch that bypasses the canonical Tool Control Plane. Distribution: `agent/runtime/phase08.py` (4 × `self.graph.invoke`), `agent/runtime/service.py` (2 × `self.graph.invoke`), `agent/core/agents/structured_response_agent.py:21`, `agent/runtime/execution/react_step.py:24`, `api/services/mcp_chat.py:67` (direct `deep_anthropic.ainvoke`), `api/services/workspace.py:299` (image_gen bypass), `api/v1/mcp_chat.py:22` (alias MCP direct dispatch), `platform/services/autobuild/client.py` (4 × `self.base_agent.ainvoke` / `self.abstract_agent.ainvoke`), `platform/services/graphrag/query_service.py:194` (`self.orchestrator.run`).
+
+- **UNRESOLVED (10)** — file-rename / function-scoped dynamic-dispatch ambiguity. Distribution: `agent/runtime/phase08.py`, `agent/runtime/service.py`, `agent/core/agents/structured_response_agent.py`, `agent/runtime/execution/react_step.py`, `api/services/mcp_chat.py`, `api/services/workspace.py`, `api/v1/mcp_chat.py`, `platform/services/autobuild/client.py`, `platform/services/graphrag/query_service.py`, `platform/services/graphrag/retriever.py`. These files do not match the canonical executor adapter naming contract and either have a real bypass on them or exhibit a function-scoped `getattr`→dispatch chain.
+
+The audit remains **fail-closed**: `UNRESOLVED > 0` means the audit cannot claim `LEGACY_CUTOVER_AUDIT_CLEAN`. The current non-CLEAN status is the honest repository-gate state.
+
+### Test status
+
+`tests/repo/test_phase22_final_legacy_cutover.py` — **29 passed** in 11m19s on PR #135 main.
+
+Key coverage added or restored in rev 3:
+
+- `test_unrelated_getattr_and_invoke_not_correlated` — case 11 (unrelated getattr + unrelated invoke).
+- `test_classification_counts_cover_seven_closure_classes` — every finding carries a valid classification.
+- Updated `test_json_shape_is_stable` to assert `classification_counts` is part of the stable payload and each finding carries the `classification` field.
+
+### Path ownership (minimax1 slice)
+
+Modified on the closure branch:
+
+- `tools/scripts/verify_phase22_final_legacy_cutover.py`
+- `tests/repo/test_phase22_final_legacy_cutover.py`
+- `tests/fixtures/phase22_final_legacy_cutover/negative_clean/negative_unrelated_getattr_and_invoke.py`
+- `docs/evidence/goal05-phase22-closure-blockers-manifest.md`
+
+Out of minimax1 scope (other workers own these):
+
+- `tools/scripts/verify_phase22_backend_semantic_legacy.py`
+- `tools/scripts/verify_phase22_feature_flag_runtime_cutover.py`
+- Budget/Security PostgreSQL Owner Fact implementation
+- Workspace / WeChat / MCP production runtime (PR #135 closed Workspace/WeChat; MCP admin/discovery classifier wires through ToolControlPlane / register_executor_adapter but `api/services/mcp_chat.py` and `api/v1/mcp_chat.py` remain to be retired)
 
 ## 验证命令
 
@@ -311,12 +450,47 @@ python -m pytest tests/repo/test_phase22_backend_semantic_legacy.py -q -p no:cac
 - `docs/evidence/goal05-phase22-final-legacy-audit-v3/AUDIT-V3.md`
 - `.agent/programs/PHASE22_fixed-benchmark-production-readiness-and-closure.md`
 - `.agent/programs/work-products/goal05-target-gap-ledger.yaml`
+- `tests/repo/test_phase22_final_legacy_cutover.py` (29 tests, all passing)
+- `tests/fixtures/phase22_final_legacy_cutover/` (12 fixtures covering all 12 required scenarios)
+
+## minimax1 Audit Slice Evidence (Revision 3)
+
+The minimax1 audit slice produces the following evidence:
+
+| Artifact | Location | Status |
+| --- | --- | --- |
+| Function-scoped getattr fix | `tools/scripts/verify_phase22_final_legacy_cutover.py` (lines ~1585–1755) | applied |
+| Seven-classification taxonomy | `tools/scripts/verify_phase22_final_legacy_cutover.py::_CLASSIFICATION_FOR_CATEGORY` | applied |
+| Case 11 negative fixture | `tests/fixtures/phase22_final_legacy_cutover/negative_clean/negative_unrelated_getattr_and_invoke.py` | added |
+| Case 11 test | `tests/repo/test_phase22_final_legacy_cutover.py::test_unrelated_getattr_and_invoke_not_correlated` | passing |
+| Classification counts test | `tests/repo/test_phase22_final_legacy_cutover.py::test_classification_counts_cover_seven_closure_classes` | passing |
+| JSON shape stability test | `tests/repo/test_phase22_final_legacy_cutover.py::test_json_shape_is_stable` | updated + passing |
+| Manifest revision 3 | `docs/evidence/goal05-phase22-closure-blockers-manifest.md` | this document |
+
+Final audit verdict on PR #135 main (`b7796246d41d51b8f9cb92409cb1acc116d1fda8`):
+
+```text
+status:                         TOOL_BYPASS_BLOCKERS_FOUND
+finding_count:                  16
+unresolved_count:               10
+classification_counts:
+  REAL_PRODUCT_BYPASS:          16
+  CANONICAL_GATEWAY_EXECUTOR:    0
+  MCP_ADMIN_CONTROL_PLANE:       0
+  MCP_DISCOVERY_REGISTRATION:    0
+  MODEL_GATEWAY_INTERNAL:        0
+  INTERNAL_TEST_EVAL:            0
+  UNRESOLVED:                   10
+```
+
+The audit is honest: 16 real-product bypasses remain on the post-integration main (these are owned by the minimax2 worker / minimax1 Runtime V2 cutover scope, not by the verifier itself), and 10 files remain `UNRESOLVED` because they exhibit either a real bypass or a function-scoped `getattr`→dispatch chain.
 
 ## Known Limitations
 
 - This report does not claim PHASE22 completed.
 - It does not claim BENCHMARK_PASSED, PRODUCTION_READY, QUALITY_PROVEN or 22/22 completed.
 - It does not claim ENGINEERING_CLOSURE_COMPLETE until `repository_internal_blockers == []` and Repository Gates are clean.
+- It does not claim LEGACY_CUTOVER_AUDIT_CLEAN until `classification_counts.UNRESOLVED == 0` and `classification_counts.REAL_PRODUCT_BYPASS == 0`.
 - It is a reproducible engineering-closure-in-progress snapshot for the current post-integration main.
 - The audit verdict on the post-integration main is `TOOL_BYPASS_BLOCKERS_FOUND`; this is the honest repository-gate state.
 - Production Readiness remains `not_established` until external Postgres / Load / Soak / DR / Security evidence is supplied.
