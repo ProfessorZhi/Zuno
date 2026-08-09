@@ -1,9 +1,9 @@
 # PHASE22 Final Legacy Cutover Audit — V3
 
 Work package: `PHASE22-FINAL-LEGACY-AUDIT-V3`
-Worker: `minimax2` (Execution-Client: Claude Code, Provider: MiniMax)
-Integration Basis: `claude/minimax-phase22-approved-slices-integration` @ `d730d31de93e2f3cd77f0a9ebddf37798ba2c6d7`
-Branch: `claude/minimax-phase22-final-legacy-audit-v3`
+Worker: `Codex`
+Integration Basis: `codex/phase22-closure-audit` @ `27615813`
+Branch: `codex/phase22-closure-audit`
 Verifier source: `tools/scripts/verify_phase22_final_legacy_cutover.py`
 
 ## Verdict (current Integration Branch)
@@ -12,23 +12,13 @@ Verifier source: `tools/scripts/verify_phase22_final_legacy_cutover.py`
 TOOL_BYPASS_BLOCKERS_FOUND
 ```
 
-PHASE22-PR133-FINAL-ENGINEERING-CLOSURE post-minimax2-harden state
-on the antigravity integration tree at HEAD `76e9c403d76e123e2fe7d0bb9226a53e013d8db2`
-(Code Candidate A). The minimax2 hardening slice
-(`ca644f42 test(phase22): harden final audit against alias and rename evasion`)
-has merged. The semantically-strengthened verifier is now in effect and
-the prior `LEGACY_CUTOVER_AUDIT_CLEAN` verdict at HEAD `1ae54b58`
-remains **withdrawn** — it was achieved partly through name changes
-(variable `tool` → `binding`, identifier `_guess_direct_mcp_call` →
-`_classify_mcp_route_tool`) that bypassed the AST substring detector.
-
-Variable / function / file location changes MUST NOT change the safety
-classification. The hardened detector now reports 224 findings
-(209 `tool_bypass`, 14 `tool_bypass_invoke`, 1 `tool_bypass_image_gen`)
-across the production tree, dominated by direct MCP bypasses and
-direct tool / graph invocations inside the workspace single-controller
-agent and its MCP loader layer. Tool bypass dominates legacy runtime
-in the priority order.
+The current verifier run on the exact branch head reports 19 findings
+(4 `tool_bypass`, 14 `tool_bypass_invoke`, 1 `tool_bypass_image_gen`).
+The previous MCP substring rule reported inventory, DAO, configuration and
+registration calls as bypasses; the current rule requires a known execution
+shape such as `call_tool`, `process_query`, `on_run_tool` or MCP
+`invoke`/`ainvoke`. The real `/api/v1/mcp_chat` direct execution chain remains
+blocked and is not hidden by this precision fix.
 
 The audit is a **structural boundary**, not a runtime correctness
 guarantee. It does NOT declare `PHASE22_COMPLETED`, `PRODUCTION_READY`,
@@ -46,19 +36,21 @@ TOOL_ERROR
 > LEGACY_CUTOVER_AUDIT_CLEAN
 ```
 
-The current run reports `TOOL_BYPASS_BLOCKERS_FOUND` because the
-workspace agents still call `await handler(request)` directly,
-bypassing `ToolInvocationGateway`. Tool bypass dominates legacy
-runtime in priority order.
+The current run reports `TOOL_BYPASS_BLOCKERS_FOUND` because the old
+`/api/v1/mcp_chat` path still reaches `MCPManager.process_query` and
+`FunctionTool.on_run_tool` outside the canonical gateway. Additional
+`tool_bypass_invoke` findings include the remaining Phase08 graph runtime;
+the audit therefore remains fail-closed. Tool bypass dominates legacy
+runtime in the priority order.
 
 ## Findings summary
 
 | Category | Count |
 |---|---|
-| `tool_bypass` | 209 |
+| `tool_bypass` | 4 |
 | `tool_bypass_invoke` | 14 |
 | `tool_bypass_image_gen` | 1 |
-| **Total** | **224** |
+| **Total** | **19** |
 
 ## Detection categories
 
