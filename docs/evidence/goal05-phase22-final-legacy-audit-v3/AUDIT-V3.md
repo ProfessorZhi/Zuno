@@ -2,7 +2,7 @@
 
 Work package: `PHASE22-FINAL-LEGACY-AUDIT-V3`
 Worker: `Codex`
-Integration Basis: `codex/phase22-closure-audit` @ `27615813`
+Integration Basis: `codex/phase22-closure-audit` @ `c6a179fe`
 Branch: `codex/phase22-closure-audit`
 Verifier source: `tools/scripts/verify_phase22_final_legacy_cutover.py`
 
@@ -12,8 +12,8 @@ Verifier source: `tools/scripts/verify_phase22_final_legacy_cutover.py`
 TOOL_BYPASS_BLOCKERS_FOUND
 ```
 
-The current verifier run on the exact branch head reports 19 findings
-(4 `tool_bypass`, 14 `tool_bypass_invoke`, 1 `tool_bypass_image_gen`).
+The current verifier run on the exact branch head reports 4 findings
+(3 `tool_bypass`, 1 `tool_bypass_invoke`).
 The previous MCP substring rule reported inventory, DAO, configuration and
 registration calls as bypasses; the current rule requires a known execution
 shape such as `call_tool`, `process_query`, `on_run_tool` or MCP
@@ -37,20 +37,20 @@ TOOL_ERROR
 ```
 
 The current run reports `TOOL_BYPASS_BLOCKERS_FOUND` because the old
-`/api/v1/mcp_chat` path still reaches `MCPManager.process_query` and
-`FunctionTool.on_run_tool` outside the canonical gateway. Additional
-`tool_bypass_invoke` findings include the remaining Phase08 graph runtime;
-the audit therefore remains fail-closed. Tool bypass dominates legacy
-runtime in the priority order.
+`/api/v1/mcp_chat` path still reaches `MCPManager.process_query`, direct
+model dispatch in `MCPChatAgent`, and `FunctionTool.on_run_tool` outside
+the canonical gateway. Internal controller graph, model-agent, ReAct and
+GraphRAG calls are classified by their owning class and are not tool
+bypasses. Tool bypass dominates legacy runtime in the priority order.
 
 ## Findings summary
 
 | Category | Count |
 |---|---|
-| `tool_bypass` | 4 |
-| `tool_bypass_invoke` | 14 |
-| `tool_bypass_image_gen` | 1 |
-| **Total** | **19** |
+| `tool_bypass` | 3 |
+| `tool_bypass_invoke` | 1 |
+| `tool_bypass_image_gen` | 0 |
+| **Total** | **4** |
 
 ## Detection categories
 
@@ -154,7 +154,7 @@ The exit code is non-zero for every status except
 
 ## Test matrix
 
-`tests/repo/test_phase22_final_legacy_cutover.py` — 16 tests:
+`tests/repo/test_phase22_final_legacy_cutover.py` — 17 tests:
 
 1. `test_clean_fixture_produces_zero_findings` — clean fixture → CLEAN.
 2. `test_phase08_fallback_triggers_legacy_runtime_blocker` — phase08
@@ -186,6 +186,8 @@ The exit code is non-zero for every status except
 15. `test_json_shape_is_stable` — JSON output schema is stable.
 16. `test_status_priority_is_observed` — TOOL_BYPASS > LEGACY_RUNTIME
     priority is observed.
+17. `test_exact_tool_bypass_category_blocks_audit` — exact
+    `tool_bypass` findings also force a blocked audit status.
 
 ## What this slice does NOT declare
 

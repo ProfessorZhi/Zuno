@@ -2,7 +2,7 @@
 
 Work package: `PHASE22-FEATURE-FLAG-SCOPED-AND-REPOSITORY-TRUTH`
 Worker: `Codex`
-Base: `codex/phase22-closure-audit` @ `27615813`
+Base: `codex/phase22-closure-audit` @ `c6a179fe`
 
 ## Two-Layer Truth
 
@@ -44,7 +44,7 @@ bypass with an annotation (`owner_work_package` / `candidate_pr` /
 `external_dependency`). An active bypass can be annotated — never
 allowlisted away. An allowlisted bypass keeps the repository result BLOCKED.
 
-Findings on this branch (`verifier_report.json`, 11 findings):
+Findings on this branch (`verifier_report.json`, 9 findings):
 
 - **Direct tool dispatch** (`direct_tool_bypass`):
   - `capability/mcp/servers/remote_proxy/main.py` — allowlisted direct MCP
@@ -52,8 +52,10 @@ Findings on this branch (`verifier_report.json`, 11 findings):
   - `platform/__init__.py` — allowlisted dynamic import facade.
   - `mcp/load_mcp/tools.py` — direct `tool.ainvoke(...)` plus direct MCP
     loader call.
-  - `mcp/multi_client.py` and `mcp_openai/{mcp_client,mcp_langchain,mcp_util}.py`
-    — direct MCP client/transport surfaces.
+  - `mcp/multi_client.py` and `mcp_openai/{mcp_client,mcp_util}.py`
+    — direct MCP client/transport surfaces. The unused
+    `mcp_openai/mcp_langchain.py` adapter has been retired because no
+    production caller remained.
   - `platform/services/user_defined_tool_runtime.py` — direct user-defined
     tool adapter execution.
 - **Residual product runtime**: none. `AgentControlRuntime` and

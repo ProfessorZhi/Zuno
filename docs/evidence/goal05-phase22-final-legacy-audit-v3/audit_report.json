@@ -1,7 +1,7 @@
 {
-  "audit_subject_sha": "27615813",
+  "audit_subject_sha": "",
   "candidate_pr": "PHASE22-FINAL-LEGACY-AUDIT-V3",
-  "evidence_revision_sha": "pending-mcp-precision",
+  "evidence_revision_sha": "",
   "exclusions": [
     {
       "path": "tests/",
@@ -28,64 +28,8 @@
       "reason": "non-production surface (tests/docs/evals/agent scripts)"
     }
   ],
-  "finding_count": 19,
+  "finding_count": 4,
   "findings": [
-    {
-      "category": "tool_bypass_invoke",
-      "detail": "direct tool invocation bypass: self.graph.invoke",
-      "line": 133,
-      "path": "src/backend/zuno/agent/runtime/phase08.py",
-      "severity": "error"
-    },
-    {
-      "category": "tool_bypass_invoke",
-      "detail": "direct tool invocation bypass: self.graph.invoke",
-      "line": 153,
-      "path": "src/backend/zuno/agent/runtime/phase08.py",
-      "severity": "error"
-    },
-    {
-      "category": "tool_bypass_invoke",
-      "detail": "direct tool invocation bypass: self.graph.invoke",
-      "line": 201,
-      "path": "src/backend/zuno/agent/runtime/phase08.py",
-      "severity": "error"
-    },
-    {
-      "category": "tool_bypass_invoke",
-      "detail": "direct tool invocation bypass: self.graph.invoke",
-      "line": 159,
-      "path": "src/backend/zuno/agent/runtime/phase08.py",
-      "severity": "error"
-    },
-    {
-      "category": "tool_bypass_invoke",
-      "detail": "direct tool invocation bypass: self.graph.invoke",
-      "line": 191,
-      "path": "src/backend/zuno/agent/runtime/service.py",
-      "severity": "error"
-    },
-    {
-      "category": "tool_bypass_invoke",
-      "detail": "direct tool invocation bypass: self.graph.invoke",
-      "line": 269,
-      "path": "src/backend/zuno/agent/runtime/service.py",
-      "severity": "error"
-    },
-    {
-      "category": "tool_bypass_invoke",
-      "detail": "direct tool invocation bypass: self.structured_agent.invoke",
-      "line": 21,
-      "path": "src/backend/zuno/agent/core/agents/structured_response_agent.py",
-      "severity": "error"
-    },
-    {
-      "category": "tool_bypass_invoke",
-      "detail": "direct tool invocation bypass: self.runner.run",
-      "line": 24,
-      "path": "src/backend/zuno/agent/runtime/execution/react_step.py",
-      "severity": "error"
-    },
     {
       "category": "tool_bypass",
       "detail": "direct MCP execution bypass: self.mcp_manager.process_query",
@@ -101,59 +45,10 @@
       "severity": "error"
     },
     {
-      "category": "tool_bypass_image_gen",
-      "detail": "direct image_gen bypass: cls.should_run_direct_image_generation",
-      "line": 299,
-      "path": "src/backend/zuno/api/services/workspace.py",
-      "severity": "error"
-    },
-    {
       "category": "tool_bypass",
       "detail": "direct MCP execution bypass: mcp_chat_agent.ainvoke",
       "line": 22,
       "path": "src/backend/zuno/api/v1/mcp_chat.py",
-      "severity": "error"
-    },
-    {
-      "category": "tool_bypass_invoke",
-      "detail": "direct tool invocation bypass: self.base_agent.ainvoke",
-      "line": 205,
-      "path": "src/backend/zuno/platform/services/autobuild/client.py",
-      "severity": "error"
-    },
-    {
-      "category": "tool_bypass_invoke",
-      "detail": "direct tool invocation bypass: self.abstract_agent.ainvoke",
-      "line": 215,
-      "path": "src/backend/zuno/platform/services/autobuild/client.py",
-      "severity": "error"
-    },
-    {
-      "category": "tool_bypass_invoke",
-      "detail": "direct tool invocation bypass: self.base_agent.ainvoke",
-      "line": 264,
-      "path": "src/backend/zuno/platform/services/autobuild/client.py",
-      "severity": "error"
-    },
-    {
-      "category": "tool_bypass_invoke",
-      "detail": "direct tool invocation bypass: self.base_agent.invoke",
-      "line": 297,
-      "path": "src/backend/zuno/platform/services/autobuild/client.py",
-      "severity": "error"
-    },
-    {
-      "category": "tool_bypass_invoke",
-      "detail": "direct tool invocation bypass: self.orchestrator.run",
-      "line": 194,
-      "path": "src/backend/zuno/platform/services/graphrag/query_service.py",
-      "severity": "error"
-    },
-    {
-      "category": "tool_bypass",
-      "detail": "direct MCP execution bypass: request_mcp_call_tools",
-      "line": 28,
-      "path": "src/backend/zuno/platform/services/mcp_openai/mcp_langchain.py",
       "severity": "error"
     },
     {
@@ -164,7 +59,7 @@
       "severity": "error"
     }
   ],
-  "integration_base_sha": "27615813",
+  "integration_base_sha": "",
   "not_proven_boundary": [
     "history-only caller like /agent/product_baseline.py is excluded by construction; reachability is not proven for runtime selectors that resolve via attribute-chain / class-name-only dispatch."
   ],

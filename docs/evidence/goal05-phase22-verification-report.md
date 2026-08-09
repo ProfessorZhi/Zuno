@@ -39,7 +39,7 @@ python -m pytest -q tests/repo/test_phase22_closure_summary.py tests/platform/te
 - 通过：Phase22 cleanup boundary、repo structure、current program、completion blocker gate、docs entrypoints、Agent System、doc boundaries；四 Profile canonical/contract 回归为 `237 passed, 30 subtests passed`。
 - 通过：全量 pytest collection 已恢复，收集 `2750 tests`；Phase22 focused regression（candidate/review/dataset/closure/formal/measurement/cleanup）为 `114 passed`，backend semantic ownership focused regression 为 `5 passed`，product baseline/regression summary 为 `3 passed`，workspace task 关键回归为 `3 passed`，统一产品 E2E 为 `1 passed`。完整 pytest、`-k phase22` 和 workspace runtime 全文件运行均在 5 分钟执行上限内 timeout，未产生全量汇总，不能宣称全量通过。
 - 通过：`verify_phase22_backend_semantic_legacy.py --scope repository` 返回 `BACKEND_PRODUCT_RUNTIME_CUTOVER_CONFIRMED`、0 findings；最终 legacy 审计的 MCP 规则已从子串匹配收敛为执行形状匹配。
-- 仍失败：feature-flag runtime cutover verifier 仍有 `11` 条 findings；final legacy cutover verifier 仍有 `19` 条 findings，包含真实 `/api/v1/mcp_chat` → `MCPChatAgent` → `mcp_openai.MCPManager` 旧生产执行链，以及其他未完成 legacy/runtime 收口。
+- 仍失败：feature-flag runtime cutover verifier 仍有 `9` 条 findings；final legacy cutover verifier 仍有 `4` 条 findings，包含真实 `/api/v1/mcp_chat` → `MCPChatAgent` → `mcp_openai.MCPManager` 旧生产执行链，以及其他未完成 legacy/runtime 收口。
 
 因此 Full final verification 仍是 `incomplete`，Production Readiness 仍不能判定；本报告不声明 `PHASE22_COMPLETED`、`BENCHMARK_PASSED` 或 `PRODUCTION_READY`。
 

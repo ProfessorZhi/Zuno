@@ -9,6 +9,8 @@ PROGRAM = REPO_ROOT / ".agent" / "programs" / "PHASE22_fixed-benchmark-productio
 CLOSURE_SUMMARY = REPO_ROOT / "docs" / "evidence" / "goal05-phase22-closure-summary.md"
 COMPLETION_BLOCKERS = REPO_ROOT / "docs" / "evidence" / "goal05-phase22-completion-blockers.md"
 REVIEWED_SUMMARY = REPO_ROOT / "docs" / "evidence" / "goal05-phase22-public-benchmark-review-pack" / "reviewed" / "review_summary.json"
+FEATURE_FLAG_REPORT = REPO_ROOT / "docs" / "evidence" / "goal05-phase22-feature-flag-runtime-cutover" / "verifier_report.json"
+LEGACY_AUDIT_REPORT = REPO_ROOT / "docs" / "evidence" / "goal05-phase22-final-legacy-audit-v3" / "audit_report.json"
 
 
 def _read_text(path: Path) -> str:
@@ -27,6 +29,8 @@ def build_phase22_verification_report() -> str:
     approved_count = reviewed_summary.get("reviewer_approved_count", 0)
     eligible_count = reviewed_summary.get("benchmark_eligible_count", 0)
     total_cases = reviewed_summary.get("total_cases", 0)
+    feature_findings = _read_json(FEATURE_FLAG_REPORT).get("finding_count", 0)
+    legacy_findings = _read_json(LEGACY_AUDIT_REPORT).get("finding_count", 0)
 
     return "\n".join(
         [
@@ -71,7 +75,7 @@ def build_phase22_verification_report() -> str:
             "- 通过：Phase22 cleanup boundary、repo structure、current program、completion blocker gate、docs entrypoints、Agent System、doc boundaries；四 Profile canonical/contract 回归为 `237 passed, 30 subtests passed`。",
             "- 通过：全量 pytest collection 已恢复，收集 `2750 tests`；Phase22 focused regression（candidate/review/dataset/closure/formal/measurement/cleanup）为 `114 passed`，backend semantic ownership focused regression 为 `5 passed`，product baseline/regression summary 为 `3 passed`，workspace task 关键回归为 `3 passed`，统一产品 E2E 为 `1 passed`。完整 pytest、`-k phase22` 和 workspace runtime 全文件运行均在 5 分钟执行上限内 timeout，未产生全量汇总，不能宣称全量通过。",
             "- 通过：`verify_phase22_backend_semantic_legacy.py --scope repository` 返回 `BACKEND_PRODUCT_RUNTIME_CUTOVER_CONFIRMED`、0 findings；最终 legacy 审计的 MCP 规则已从子串匹配收敛为执行形状匹配。",
-            "- 仍失败：feature-flag runtime cutover verifier 仍有 `11` 条 findings；final legacy cutover verifier 仍有 `19` 条 findings，包含真实 `/api/v1/mcp_chat` → `MCPChatAgent` → `mcp_openai.MCPManager` 旧生产执行链，以及其他未完成 legacy/runtime 收口。",
+            f"- 仍失败：feature-flag runtime cutover verifier 仍有 `{feature_findings}` 条 findings；final legacy cutover verifier 仍有 `{legacy_findings}` 条 findings，包含真实 `/api/v1/mcp_chat` → `MCPChatAgent` → `mcp_openai.MCPManager` 旧生产执行链，以及其他未完成 legacy/runtime 收口。",
             "",
             "因此 Full final verification 仍是 `incomplete`，Production Readiness 仍不能判定；本报告不声明 `PHASE22_COMPLETED`、`BENCHMARK_PASSED` 或 `PRODUCTION_READY`。",
             "",
