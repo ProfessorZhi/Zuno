@@ -19,9 +19,21 @@ from zuno.agent.contracts import CapabilityPlan
 from zuno.knowledge.agentic import CorrectiveAgenticGraphRAGRuntime
 from zuno.platform.security import SecurityProductActionDenied
 from zuno.api.dto.workspace import WorkSpaceSimpleTask, WorkspaceTaskContract
+from tests.agent._phase22_gateway_fakes import FakeGatewayBinding
 
 
 _PRODUCT_RUNTIME_SUBMISSIONS: list[dict] = []
+
+
+def _bind_fake_tool_gateway_for_tests() -> FakeGatewayBinding:
+    """Keep the real tool gateway while replacing only its persistence UoWs."""
+
+    binding = FakeGatewayBinding()
+    runtime = WorkspaceTaskRuntimeService._tool_runtime
+    runtime._tool_unit_of_work_factory = binding.tool_factory
+    runtime._security_unit_of_work_factory = binding.security_factory
+    runtime._infrastructure_unit_of_work_factory = binding.infrastructure_factory
+    return binding
 
 
 def _fake_product_submitter(**kwargs) -> ProductRuntimeRequestResult:
@@ -917,6 +929,7 @@ def test_workspace_task_runtime_product_entry_fails_closed_without_legacy_fallba
 
 
 def test_workspace_task_runtime_requires_tool_approval_then_executes_brokered_tool() -> None:
+    _bind_fake_tool_gateway_for_tests()
     client = _client()
 
     create_response = client.post(
@@ -1020,6 +1033,7 @@ def test_workspace_task_runtime_emits_security_approval_facts_from_active_tool_p
 
     WorkspaceTaskRuntimeService.reset_runtime_state_for_tests()
     WorkspaceTaskRuntimeService.configure_security_approval_sink(SecurityFactSink())
+    _bind_fake_tool_gateway_for_tests()
     try:
         client = _client()
 

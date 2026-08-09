@@ -493,6 +493,10 @@ def test_search_knowledge_endpoint_returns_retrieval_metadata(monkeypatch):
         "zuno.platform.services.application.knowledge.KnowledgeQueryService.query",
         fake_project_query,
     )
+    monkeypatch.setattr(
+        "zuno.api.services.knowledge.KnowledgeService.record_search_query_run",
+        lambda **kwargs: None,
+    )
 
     response = asyncio.run(
         search_knowledge(
