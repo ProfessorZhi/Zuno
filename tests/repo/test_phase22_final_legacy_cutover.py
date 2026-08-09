@@ -476,6 +476,25 @@ class Surface:
     )
 
 
+def test_exact_tool_bypass_category_blocks_audit() -> None:
+    """The legacy ``tool_bypass`` category must not be mistaken for clean.
+
+    The priority resolver historically only matched ``tool_bypass_*`` and
+    could therefore return CLEAN when the remaining findings were all direct
+    MCP execution findings.
+    """
+    from tools.scripts.verify_phase22_final_legacy_cutover import (
+        Finding,
+        STATUS_TOOL_BYPASS,
+        _resolve_priority,
+    )
+
+    assert _resolve_priority(
+        [Finding(category="tool_bypass", path="x.py", line=1, detail="mcp")],
+        [],
+    ) == STATUS_TOOL_BYPASS
+
+
 # -----------------------------------------------------------------------------
 # 11. Unknown path default-blocks.
 # -----------------------------------------------------------------------------
@@ -790,19 +809,27 @@ def test_name_free_detector_finds_production_bypass() -> None:
     result = _run(["--integration-base-sha", "9e1c77a189d24fb7e17e917828ce69b7383ad8bd"])
     payload = result["payload"]
     cats = {f["category"] for f in payload.get("findings", [])}
-    # The hardened detector must emit the new name-free category on a
-    # real tool bypass in the production tree. The phase08.py file
-    # contains ``self.graph.invoke(...)`` calls which are exactly the
-    # shape the hardened detector is supposed to flag.
-    assert "tool_bypass_invoke" in cats, (
-        "hardened detector must surface tool_bypass_invoke on "
-        f"production code, got {cats}"
-    )
     # The legacy ``tool_bypass`` category must still be present.
     assert "tool_bypass" in cats, (
         "the legacy tool_bypass category must still be present, "
         f"got {cats}"
     )
+    # Internal graph/model/runner calls are not ToolInvocationGateway
+    # bypasses; the name-free detector keeps unknown receiver shapes
+    # fail-closed while classifying these owners explicitly.
+    assert not any(
+        finding["category"] == "tool_bypass_invoke"
+        and finding["path"]
+        in {
+            "src/backend/zuno/agent/runtime/phase08.py",
+            "src/backend/zuno/agent/runtime/service.py",
+            "src/backend/zuno/agent/core/agents/structured_response_agent.py",
+            "src/backend/zuno/agent/runtime/execution/react_step.py",
+            "src/backend/zuno/platform/services/autobuild/client.py",
+            "src/backend/zuno/platform/services/graphrag/query_service.py",
+        }
+        for finding in payload.get("findings", [])
+    ), "internal runtime dispatch must not be mislabeled as tool bypass"
     # The audit must still report non-CLEAN status on the real tree.
     assert payload["status"] != "LEGACY_CUTOVER_AUDIT_CLEAN", (
         "the integration tree must not be CLEAN; the audit is honest "

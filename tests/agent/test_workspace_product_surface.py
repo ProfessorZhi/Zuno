@@ -375,7 +375,7 @@ def test_product_image_regen_fails_closed_not_bound(
     )
     login_user = UserPayload(user_id="user-a", role="admin")
 
-    assert WorkspaceService.should_run_direct_image_generation(task) is True
+    assert WorkspaceService.is_image_regeneration_request(task) is True
     events = _consume_sse(
         WorkspaceService.workspace_simple_chat_response(
             simple_task=task, login_user=login_user
@@ -400,7 +400,7 @@ def test_product_image_regen_without_reference_is_not_rerouted(
     )
     login_user = UserPayload(user_id="user-a", role="admin")
 
-    assert WorkspaceService.should_run_direct_image_generation(task) is False
+    assert WorkspaceService.is_image_regeneration_request(task) is False
     events = _consume_sse(
         WorkspaceService.workspace_simple_chat_response(
             simple_task=task, login_user=login_user

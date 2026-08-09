@@ -39,7 +39,7 @@ def test_workspace_product_surface_blocks_image_generation() -> None:
         "src/backend/zuno/api/services/workspace.py", encoding="utf-8"
     ).read()
     assert "IMAGE_TOOL_RUNTIME_NOT_BOUND" in src
-    assert re.search(r"if\s+cls\.should_run_direct_image_generation", src)
+    assert re.search(r"if\s+cls\.is_image_regeneration_request", src)
 
 
 def test_build_direct_image_response_is_deleted() -> None:

@@ -497,10 +497,13 @@ def test_repository_scope_default_and_blocked_on_real_tree() -> None:
     # Their gateway ownership is proven by the backend semantic verifier.
     for expected in (
         "src/backend/zuno/platform/services/mcp_openai/mcp_client.py",
-        "src/backend/zuno/platform/services/mcp_openai/mcp_langchain.py",
         "src/backend/zuno/platform/services/user_defined_tool_runtime.py",
     ):
         assert expected in bypass_paths, f"real bypass not reported: {expected}"
+    assert not any(
+        finding["path"] == "src/backend/zuno/platform/services/mcp_openai/mcp_langchain.py"
+        for finding in report["findings"]["direct_tool_bypass"]
+    ), "retired mcp_langchain dead code must not remain in the bypass inventory"
     assert "src/backend/zuno/platform/services/workspace/simple_agent.py" not in bypass_paths
     assert "src/backend/zuno/platform/services/workspace/wechat_agent.py" not in bypass_paths
     # The residual control runtime/product baseline are now test/eval-only;

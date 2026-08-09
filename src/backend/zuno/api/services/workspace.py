@@ -79,7 +79,7 @@ class WorkspaceService:
         return ""
 
     @classmethod
-    def should_run_direct_image_generation(cls, simple_task: WorkSpaceSimpleTask) -> bool:
+    def is_image_regeneration_request(cls, simple_task: WorkSpaceSimpleTask) -> bool:
         if simple_task.execution_mode != "tool":
             return False
         reference_image_url = cls.pick_reference_image_url(simple_task)
@@ -296,7 +296,7 @@ class WorkspaceService:
         )
         set_agent_name_context(usage_agent_name)
 
-        if cls.should_run_direct_image_generation(simple_task):
+        if cls.is_image_regeneration_request(simple_task):
             # PHASE22 product wiring: text_to_image has no formal Tool
             # Policy / Owner binding in the product profile, so the product
             # API fails closed with IMAGE_TOOL_RUNTIME_NOT_BOUND — it never

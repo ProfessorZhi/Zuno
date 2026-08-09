@@ -1,20 +1,15 @@
 """Tools adapter for converting MCP tools to LangChain tools."""
 
-from typing import Any, cast, get_args
+from typing import Any, cast
 
 from langchain_core.tools import (
     BaseTool,
-    InjectedToolArg,
     StructuredTool,
     ToolException,
 )
-from langchain_core.tools.base import get_all_basemodel_annotations
 from mcp import ClientSession
-from mcp.server.fastmcp.tools import Tool as FastMCPTool
-from mcp.server.fastmcp.utilities.func_metadata import ArgModelBase, FuncMetadata
 from mcp.types import CallToolResult, EmbeddedResource, ImageContent, TextContent
 from mcp.types import Tool as MCPTool
-from pydantic import BaseModel, create_model
 
 from zuno.platform.services.mcp.sessions import Connection, create_session
 
@@ -117,52 +112,3 @@ async def load_mcp_tools(
         for tool in tools
     ]
 
-
-def _get_injected_args(tool: BaseTool) -> list[str]:
-    def _is_injected_arg_type(type_: type) -> bool:
-        return any(
-            isinstance(arg, InjectedToolArg)
-            or (isinstance(arg, type) and issubclass(arg, InjectedToolArg))
-            for arg in get_args(type_)[1:]
-        )
-
-    return [
-        field
-        for field, field_info in get_all_basemodel_annotations(tool.args_schema).items()
-        if _is_injected_arg_type(field_info)
-    ]
-
-
-def to_fastmcp(tool: BaseTool) -> FastMCPTool:
-    if not issubclass(tool.args_schema, BaseModel):
-        msg = (
-            "Tool args_schema must be a subclass of pydantic.BaseModel. "
-            "Tools with dict args schema are not supported."
-        )
-        raise TypeError(msg)
-
-    parameters = tool.tool_call_schema.model_json_schema()
-    field_definitions = {
-        field: (field_info.annotation, field_info)
-        for field, field_info in tool.tool_call_schema.model_fields.items()
-    }
-    arg_model = create_model(
-        f"{tool.name}Arguments", **field_definitions, __base__=ArgModelBase
-    )
-    fn_metadata = FuncMetadata(arg_model=arg_model)
-
-    async def fn(**arguments: dict[str, Any]) -> Any:
-        return await tool.ainvoke(arguments)
-
-    injected_args = _get_injected_args(tool)
-    if injected_args:
-        raise NotImplementedError("LangChain tools with injected arguments are not supported")
-
-    return FastMCPTool(
-        fn=fn,
-        name=tool.name,
-        description=tool.description,
-        parameters=parameters,
-        fn_metadata=fn_metadata,
-        is_async=True,
-    )

@@ -600,6 +600,22 @@ _INVOKE_ATTR_NAMES = frozenset(
     {"invoke", "ainvoke", "stream", "astream", "call", "acall", "run"}
 )
 
+# Internal execution owners are not ToolInvocationGateway bypasses. They
+# invoke a controller graph, model-backed agent, retrieval orchestrator, or
+# ReAct step runner that owns a different contract. Keep this allowlist
+# receiver- and class-specific: unknown chained invoke/run calls remain
+# fail-closed findings, while generic names such as ``tool``/``binding`` are
+# never exempted.
+_INTERNAL_EXECUTION_RECEIVERS: dict[str, frozenset[str]] = {
+    "Phase08RunService": frozenset({"graph"}),
+    "Phase08StepService": frozenset({"graph"}),
+    "UnifiedAgentRuntimeService": frozenset({"graph"}),
+    "StructuredResponseAgent": frozenset({"structured_agent"}),
+    "ReActStepExecutor": frozenset({"runner"}),
+    "AutoBuildClient": frozenset({"base_agent", "abstract_agent"}),
+    "GraphRAGQueryService": frozenset({"orchestrator"}),
+}
+
 # PHASE22 (Slice B): name-free detection rules. Each rule is a tuple
 # (finding category, call-text predicate, marker). The detector runs the
 # predicate against every call text it sees; the category is reported
@@ -750,6 +766,30 @@ def _is_canonical_adapter_call(
     return False
 
 
+def _is_internal_execution_call(
+    call_text: str,
+    *,
+    enclosing_class_name: str | None,
+) -> bool:
+    """Return whether a known internal runtime owner is being executed.
+
+    These calls are intentionally exempted by both class and receiver. A
+    generic ``self.binding.ainvoke`` remains a bypass finding, and a call in
+    a new class is not silently accepted until it is explicitly classified.
+    """
+    if enclosing_class_name is None:
+        return False
+    receivers = _INTERNAL_EXECUTION_RECEIVERS.get(enclosing_class_name)
+    if not receivers:
+        return False
+    callee = call_text.split("(", 1)[0]
+    parts = callee.split(".")
+    if len(parts) < 3 or parts[0] != "self":
+        return False
+    receiver = parts[-2]
+    return receiver in receivers
+
+
 def _is_module_level_function(tree: ast.AST, func_name: str) -> bool:
     """Return True when ``func_name`` is defined at module level (top-level
     function)."""
@@ -779,6 +819,10 @@ def _classify_tool_invocation(
        is treated the same as ``self.tool.ainvoke(args)``.
     """
     if _is_canonical_adapter_call(call_text, alias_map):
+        return None
+    if _is_internal_execution_call(
+        call_text, enclosing_class_name=enclosing_class_name
+    ):
         return None
     parts = call_text.split(".", 1)
     head = parts[0]
@@ -1246,7 +1290,7 @@ def _resolve_priority(findings: list[Finding], unresolved: list[Finding]) -> str
     categories = {f.category for f in findings}
     if any(c.startswith("ownership_") for c in categories):
         return STATUS_OWNERSHIP_VIOLATION
-    if any(c.startswith("tool_bypass_") for c in categories):
+    if any(c == "tool_bypass" or c.startswith("tool_bypass_") for c in categories):
         return STATUS_TOOL_BYPASS
     if any(c.startswith("legacy_") for c in categories):
         return STATUS_LEGACY_RUNTIME
