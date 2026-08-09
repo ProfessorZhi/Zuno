@@ -486,25 +486,26 @@ def test_react_remains_step_internal_mechanism() -> None:
 # ---------------------------------------------------------------------------
 
 # 26. Repository scope is the default and returns BLOCKED on the current
-#     branch: workspace agents, legacy agent modules, MCP direct-call
-#     surfaces, the Phase08 dual runtime and the residual harness caller are
-#     reported - annotated, never allowlisted away.
+#     branch: MCP direct-call surfaces, direct tool-runtime surfaces and the
+#     residual harness caller are reported - annotated, never allowlisted away.
 def test_repository_scope_default_and_blocked_on_real_tree() -> None:
     status, report = VERIFIER_MOD.verify(REPO_ROOT, "repository")
     assert status == STATUS_REPO_BLOCKED
     bypass_paths = {f["path"] for f in report["findings"]["direct_tool_bypass"]}
-    # NOTE: react_agent.py and plan_execute_agent.py were deleted by PR #127
-    # (agent-family legacy retirement). The verifier correctly no longer
-    # reports them because they no longer exist on the integration tree.
+    # Workspace simple/wechat agents are canonical product adapters and are
+    # intentionally absent from this low-level direct-dispatch report.
+    # Their gateway ownership is proven by the backend semantic verifier.
     for expected in (
-        "src/backend/zuno/platform/services/workspace/simple_agent.py",
-        "src/backend/zuno/platform/services/workspace/wechat_agent.py",
+        "src/backend/zuno/platform/services/mcp_openai/mcp_client.py",
+        "src/backend/zuno/platform/services/mcp_openai/mcp_langchain.py",
+        "src/backend/zuno/platform/services/user_defined_tool_runtime.py",
     ):
         assert expected in bypass_paths, f"real bypass not reported: {expected}"
-    residual = report["findings"]["residual_product_runtime_found"]
-    assert any("product_baseline" in f["path"] for f in residual), (
-        "AgentControlRuntime production reachability must be reported"
-    )
+    assert "src/backend/zuno/platform/services/workspace/simple_agent.py" not in bypass_paths
+    assert "src/backend/zuno/platform/services/workspace/wechat_agent.py" not in bypass_paths
+    # The residual control runtime/product baseline are now test/eval-only;
+    # production reachability must stay empty.
+    assert report["findings"]["residual_product_runtime_found"] == []
     # NOTE: phase08_dual_runtime was retired by PR #124. The verifier
     # correctly no longer reports it because the dual path is gone.
     assert not report["findings"]["phase08_dual_runtime"], (
@@ -512,8 +513,8 @@ def test_repository_scope_default_and_blocked_on_real_tree() -> None:
     )
     # allowlisted active bypasses are annotated, never exempted
     for finding in report["findings"]["direct_tool_bypass"]:
-        if finding["path"] == "src/backend/zuno/platform/services/workspace/simple_agent.py":
-            assert finding["owner_work_package"] == "PHASE22-WORKSPACE-AGENT-CUTOVER"
+        if finding["path"] == "src/backend/zuno/platform/services/mcp_openai/mcp_client.py":
+            assert finding["owner_work_package"] == "08 Tool Runtime"
     assert report["findings"]["internal_test_harness"], (
         "test-harness-only modules must be recorded (product_baseline)"
     )

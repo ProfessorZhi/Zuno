@@ -8,58 +8,9 @@
     "security_epoch": "STATIC_CONTRACT_AVAILABLE",
     "sse_stream_resume": "STATIC_CONTRACT_AVAILABLE"
   },
-  "finding_count": 25,
+  "finding_count": 12,
   "findings": {
     "direct_tool_bypass": [
-      {
-        "candidate_pr": "PR #127 (semantic legacy cleanup)",
-        "evidence": "allowlisted bypass category=direct_tool_execute: CodeActAgent sandbox.execute",
-        "external_dependency": "",
-        "owner_work_package": "06 Agent Core / 08 Tool Runtime / 09 Security",
-        "path": "src/backend/zuno/agent/core/agents/codeact_agent.py"
-      },
-      {
-        "candidate_pr": "PR #127 (semantic legacy cleanup)",
-        "evidence": "allowlisted bypass category=old_runtime: GeneralAgent.setup_plugin_tools",
-        "external_dependency": "",
-        "owner_work_package": "06 Agent Core / 08 Tool Runtime",
-        "path": "src/backend/zuno/agent/core/agents/general_agent.py"
-      },
-      {
-        "candidate_pr": "PR #127 (semantic legacy cleanup)",
-        "evidence": "handler(request) direct tool dispatch",
-        "external_dependency": "",
-        "owner_work_package": "06 Agent Core / 08 Tool Runtime",
-        "path": "src/backend/zuno/agent/core/agents/general_agent.py"
-      },
-      {
-        "candidate_pr": "PR #127 (semantic legacy cleanup)",
-        "evidence": "_execute_tool(...) direct tool dispatch",
-        "external_dependency": "",
-        "owner_work_package": "",
-        "path": "src/backend/zuno/agent/core/agents/plan_execute_agent.py"
-      },
-      {
-        "candidate_pr": "PR #127 (semantic legacy cleanup)",
-        "evidence": "current_tool.ainvoke(...) direct tool dispatch",
-        "external_dependency": "",
-        "owner_work_package": "",
-        "path": "src/backend/zuno/agent/core/agents/react_agent.py"
-      },
-      {
-        "candidate_pr": "PR #127 (semantic legacy cleanup)",
-        "evidence": "current_tool.invoke(...) direct tool dispatch",
-        "external_dependency": "",
-        "owner_work_package": "",
-        "path": "src/backend/zuno/agent/core/agents/react_agent.py"
-      },
-      {
-        "candidate_pr": "",
-        "evidence": "allowlisted bypass category=direct_tool_execute: WorkspaceTaskRuntimeService._run_workspace_tools_until_interrupt / approve_task",
-        "external_dependency": "PHASE08 cutover (DeepSeek-Legacy-Runtime)",
-        "owner_work_package": "01 Product Surface / 08 Tool Runtime",
-        "path": "src/backend/zuno/api/services/workspace_task_runtime.py"
-      },
       {
         "candidate_pr": "",
         "evidence": "allowlisted bypass category=direct_mcp_call: _register_proxy_tools / generated_tool / create_session / session.call_tool",
@@ -129,34 +80,6 @@
         "external_dependency": "",
         "owner_work_package": "08 Tool Runtime",
         "path": "src/backend/zuno/platform/services/user_defined_tool_runtime.py"
-      },
-      {
-        "candidate_pr": "",
-        "evidence": "allowlisted bypass category=old_runtime: WorkSpaceSimpleAgent.setup_plugin_tools",
-        "external_dependency": "",
-        "owner_work_package": "PHASE22-WORKSPACE-AGENT-CUTOVER",
-        "path": "src/backend/zuno/platform/services/workspace/simple_agent.py"
-      },
-      {
-        "candidate_pr": "",
-        "evidence": "handler(request) direct tool dispatch",
-        "external_dependency": "",
-        "owner_work_package": "PHASE22-WORKSPACE-AGENT-CUTOVER",
-        "path": "src/backend/zuno/platform/services/workspace/simple_agent.py"
-      },
-      {
-        "candidate_pr": "",
-        "evidence": "tool.ainvoke(...) direct tool dispatch",
-        "external_dependency": "",
-        "owner_work_package": "PHASE22-WORKSPACE-AGENT-CUTOVER",
-        "path": "src/backend/zuno/platform/services/workspace/simple_agent.py"
-      },
-      {
-        "candidate_pr": "",
-        "evidence": "handler(request) direct tool dispatch",
-        "external_dependency": "",
-        "owner_work_package": "PHASE22-WORKSPACE-AGENT-CUTOVER",
-        "path": "src/backend/zuno/platform/services/workspace/wechat_agent.py"
       }
     ],
     "dynamic_selector_found": [],
@@ -168,36 +91,20 @@
         "evidence": "reachability audit found no production-tree reference (tests/evals only)",
         "external_dependency": "",
         "owner_work_package": "",
-        "path": "src/backend/zuno/agent/product_baseline.py"
-      }
-    ],
-    "phase08_dual_runtime": [
-      {
-        "candidate_pr": "",
-        "evidence": "Phase08 runtime import: zuno.agent.runtime ['CutoverMode', 'Phase08CutoverController', 'Phase08RuntimeRequest', 'Phase08RuntimeResponse', 'Phase08RunService', 'RuntimeStartRequest', 'SQLiteAgentRunStore', 'SideEffectLedger', 'UnifiedAgentRuntimeService'] (dual runtime machinery)",
-        "external_dependency": "PHASE08 cutover (DeepSeek-Legacy-Runtime)",
-        "owner_work_package": "",
-        "path": "src/backend/zuno/api/services/workspace_task_runtime.py"
-      }
-    ],
-    "public_v1_contract_missing": [],
-    "registry_integration_violation": [],
-    "residual_product_runtime_found": [
-      {
-        "candidate_pr": "PR #127 (residual runtime removal)",
-        "evidence": "import zuno.agent.control_runtime.AgentControlRuntime",
-        "external_dependency": "",
-        "owner_work_package": "",
-        "path": "src/backend/zuno/agent/product_baseline.py"
+        "path": "src/backend/zuno/agent/control_runtime.py"
       },
       {
-        "candidate_pr": "PR #127 (residual runtime removal)",
-        "evidence": "import zuno.agent.control_runtime.RuntimeObservation",
+        "candidate_pr": "PR #127 (removal candidate)",
+        "evidence": "reachability audit found no production-tree reference (tests/evals only)",
         "external_dependency": "",
         "owner_work_package": "",
         "path": "src/backend/zuno/agent/product_baseline.py"
       }
     ],
+    "phase08_dual_runtime": [],
+    "public_v1_contract_missing": [],
+    "registry_integration_violation": [],
+    "residual_product_runtime_found": [],
     "rollback_transition_accepted": [],
     "static_contract_violation": [],
     "unresolved": []
@@ -221,7 +128,7 @@
       "rollback_command": "retired and fail-closed; dual stream switch removed, polling fallback is not re-enablable"
     }
   },
-  "repo_root": "F:\\agent_project\\Zuno\\.claude\\worktrees\\deepseek-phase22-feature-flag-cutover",
+  "repo_root": "F:\\agent_project\\Zuno",
   "retired_flags": [
     "product_api_v1_adapter",
     "workspace_projection_stream_v1",

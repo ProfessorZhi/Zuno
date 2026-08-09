@@ -1,8 +1,8 @@
 # PHASE22 Feature Flag Registry Slice and Repository Runtime Truth — Evidence
 
 Work package: `PHASE22-FEATURE-FLAG-SCOPED-AND-REPOSITORY-TRUTH`
-Worker: `deepseek-flag-cutover-truth` (Execution-Client: Claude Code, Provider: DeepSeek)
-Base: `908321e66f64d75b18b0f23e30f2986609f11209` — Branch: `claude/deepseek-phase22-feature-flag-runtime-cutover`
+Worker: `Codex`
+Base: `codex/phase22-closure-audit` @ `27615813`
 
 ## Two-Layer Truth
 
@@ -44,45 +44,26 @@ bypass with an annotation (`owner_work_package` / `candidate_pr` /
 `external_dependency`). An active bypass can be annotated — never
 allowlisted away. An allowlisted bypass keeps the repository result BLOCKED.
 
-Findings on this branch (`verifier_report.json`, 25 findings):
+Findings on this branch (`verifier_report.json`, 12 findings):
 
 - **Direct tool dispatch** (`direct_tool_bypass`):
-  - `workspace/simple_agent.py` — `tool.ainvoke(...)` + `handler(request)` ×2
-    (owner: PHASE22-WORKSPACE-AGENT-CUTOVER)
-  - `workspace/wechat_agent.py` — `handler(request)` ×2
-    (owner: PHASE22-WORKSPACE-AGENT-CUTOVER)
-  - `agent/core/agents/react_agent.py` — `current_tool.ainvoke(...)` /
-    `current_tool.invoke(...)` (candidate PR #127)
-  - `agent/core/agents/plan_execute_agent.py` — `_execute_tool(...)`
-    (candidate PR #127)
-  - `agent/core/agents/general_agent.py` — `handler(request)` + allowlisted
-    `old_runtime` (candidate PR #127)
-  - `agent/core/agents/codeact_agent.py` — allowlisted `direct_tool_execute`
-    (candidate PR #127)
-  - MCP direct-call surfaces: `mcp/load_mcp/tools.py` (`tool.ainvoke(...)` +
-    allowlisted `direct_mcp_call`), `mcp/manager.py` (`execute_tool(...)`),
-    `mcp/multi_client.py`, `mcp_openai/*`, `capability/mcp/servers/remote_proxy/main.py`
-  - `api/services/workspace_task_runtime.py` — allowlisted
-    `direct_tool_execute` (`_run_workspace_tools_until_interrupt` /
-    `approve_task`), also the Phase08 dual-runtime host
-  - `platform/services/user_defined_tool_runtime.py` — allowlisted
-    `direct_tool_execute`
-  - `platform/__init__.py`, `knowledge/{__init__,citation,evidence,trace,retrieval/__init__}.py`
-    — allowlisted `dynamic_bypass`
-- **Residual product runtime** (`residual_product_runtime_found`):
-  `agent/product_baseline.py` imports and constructs `AgentControlRuntime`
-  from within the production tree (candidate PR #127 removal). The eval
-  harness classification of `product_baseline.py` itself (tests/evals-only
-  callers) is recorded as `internal_test_harness`.
-- **Phase08 dual runtime** (`phase08_dual_runtime`):
-  `api/services/workspace_task_runtime.py` imports
-  `Phase08CutoverController` / `Phase08RunService` and runs the cutover
-  controller with `legacy_runner` + shadow comparison
-  (external dependency: PHASE08 cutover, DeepSeek-Legacy-Runtime session).
+  - `capability/mcp/servers/remote_proxy/main.py` — allowlisted direct MCP
+    proxy execution.
+  - `platform/__init__.py` — allowlisted dynamic import facade.
+  - `mcp/load_mcp/tools.py` — direct `tool.ainvoke(...)` plus direct MCP
+    loader call.
+  - `mcp/manager.py` — direct `execute_tool(...)`.
+  - `mcp/multi_client.py` and `mcp_openai/{mcp_client,mcp_langchain,mcp_util}.py`
+    — direct MCP client/transport surfaces.
+  - `platform/services/user_defined_tool_runtime.py` — direct user-defined
+    tool adapter execution.
+- **Residual product runtime**: none. `AgentControlRuntime` and
+  `product_baseline.py` are recorded as `internal_test_harness` only.
+- **Phase08 dual runtime**: none in the current repository result.
 
 `ToolInvocationGateway` is the canonical execution entry in
 `zuno/capability/tool_runtime`; the repository result is BLOCKED because the
-surfaces above execute tools outside it.
+surfaces above remain active or allowlisted direct execution surfaces.
 
 ## AgentControlRuntime Reachability (repository-wide, AST based)
 
@@ -93,12 +74,11 @@ audit, not a fixed entry-point list:
 - production-tree reference .................. `RESIDUAL_PRODUCT_RUNTIME_FOUND`
 - dynamic load that cannot be proven ......... `UNRESOLVED` (fail-closed)
 
-On this branch `product_baseline.py` (production tree) imports and
-constructs `AgentControlRuntime` → `RESIDUAL_PRODUCT_RUNTIME_FOUND`.
-`product_baseline.py`'s own callers are tests/evals only →
-`INTERNAL_TEST_HARNESS` (recorded, non-blocking). The facade no longer
-exports `AgentControlRuntime` / `AgentRuntimeResult` / `RuntimeObservation`
-and the re-import gate is enforced by the verifier.
+On this branch `product_baseline.py` and `control_runtime.py` have no
+production-tree callers. Their tests/evals-only reachability is recorded as
+`INTERNAL_TEST_HARNESS` and is non-blocking. The facade no longer exports
+`AgentControlRuntime` / `AgentRuntimeResult` / `RuntimeObservation` and the
+re-import gate is enforced by the verifier.
 
 ## Static vs Live Evidence Boundary
 
@@ -149,17 +129,16 @@ scope is `repository` (fail-closed). Statuses:
 - PR #127 (semantic legacy cleanup) — not assumed accepted; its legacy
   modules remain on origin/main and are reported here as annotated
   findings, not fixed. Not cherry-picked into this branch.
-- Workspace cutover wave — simple/wechat agents annotated
-  `PHASE22-WORKSPACE-AGENT-CUTOVER`.
-- PHASE08 cutover (DeepSeek-Legacy-Runtime) — `workspace_task_runtime.py`
-  annotated `external_dependency`.
+- Workspace cutover wave — backend semantic verifier confirms simple/wechat
+  agents are canonical product adapters, not direct-dispatch findings.
+- PHASE08 cutover — no current repository `phase08_dual_runtime` finding;
+  the remaining runtime/legacy cleanup is tracked by the final audit.
 
 ## Phase08 Dependencies
 
-`DEPENDENCY_ON_DEEPSEEK_LEGACY_RUNTIME` — Phase08CutoverController and the
-workspace_task_runtime Phase08 config block were read but NOT modified; the
-shadow-mode machinery there belongs to the parallel DeepSeek-Legacy-Runtime
-session. It is reported as a `phase08_dual_runtime` finding.
+No `phase08_dual_runtime` finding is emitted by the current repository
+verifier. This does not prove full final verification or production
+readiness; it only records the current static finding set.
 
 ## Remaining Gaps
 
@@ -168,13 +147,8 @@ session. It is reported as a `phase08_dual_runtime` finding.
    missing; legacy `zuno.core` lightweight import paths) — reproduced
    identically on a baseline worktree; not caused by and not fixed in this
    work package.
-2. Workspace simple/wechat agents still execute tools directly (workspace
-   cutover wave, other worker) — repository BLOCKED.
-3. Legacy GeneralAgent-family modules still exist on origin/main (PR #127) —
-   repository BLOCKED.
-4. AgentControlRuntime is still constructible from the production tree via
-   `product_baseline.py` (eval harness) — repository BLOCKED until the
-   residual runtime removal lands.
-5. Real-PostgreSQL integration runs (UoW fault suite) were not executed in
+2. Direct MCP/client and user-defined tool execution surfaces remain —
+   repository BLOCKED until they are migrated or retired.
+3. Real-PostgreSQL integration runs (UoW fault suite) were not executed in
    this environment (no local Postgres); static-contract evidence only, per
    the evidence boundary above.
