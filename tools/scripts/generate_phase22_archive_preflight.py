@@ -66,7 +66,7 @@ def build_phase22_archive_preflight() -> str:
             "- This is a preflight snapshot only.",
             "- `source_sha_at_generation` records the source tree used to generate this file; the commit that stores this evidence may be newer.",
             "- It does not mutate program state or perform archive copy.",
-            "- Program archive is still blocked by measured/review/final-verification gaps.",
+            "- Program archive is still blocked by missing measured runtime, formal credentials/attestations, incomplete final verification, and unresolved worktree ownership.",
             "",
         ]
     )

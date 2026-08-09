@@ -1,7 +1,7 @@
 # PHASE22 Closure Summary
 
 status: in_progress
-source_sha_at_generation: a52c00332f44239ca6d25c07b4742556926c19de
+source_sha_at_generation: 68e1172a2a87b435b78aa6dbc0416340586d4550
 origin_main_sha_at_generation: b7796246d41d51b8f9cb92409cb1acc116d1fda8
 
 ## Current Truth
@@ -11,12 +11,12 @@ origin_main_sha_at_generation: b7796246d41d51b8f9cb92409cb1acc116d1fda8
 - program archive phrase: program archive
 - blocked benchmark status: BLOCKED
 - blocked benchmark measurement_status: blocked_not_measured
-- review pack integrity_status: REVIEW_REQUIRED
-- review pack overall_status: PASS
-- review pack measurement_state: BLOCKED_PENDING_FORMAL_RUNTIME
-- review pack reviewer_approved_count: 80
-- review pack benchmark_eligible_count: 80
-- review pack rejected_or_incomplete_count: 0
+- raw candidate pack integrity_status: REVIEW_REQUIRED
+- reviewed pack overall_status: PASS
+- reviewed pack measurement_state: BLOCKED_PENDING_FORMAL_RUNTIME
+- reviewed pack reviewer_approved_count: 80
+- reviewed pack benchmark_eligible_count: 80
+- reviewed pack rejected_or_incomplete_count: 0
 
 ## Remaining Blockers
 
