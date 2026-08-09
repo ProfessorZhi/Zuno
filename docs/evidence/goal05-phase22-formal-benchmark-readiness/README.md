@@ -44,14 +44,14 @@ never crash the command and never fabricate results: they produce
 | Item | State |
 |---|---|
 | Four Profile Runners | contract-smoke test doubles + canonical boundary adapters (Standard/Local/Deep/Agentic) via `CanonicalProfileRuntimeFactory`; formal execution adapters not wired |
-| Dataset Hash | `public_dataset_registry.yaml` `expected_checksums` (3 public datasets); no jsonl case file declares `reviewer_status` |
-| Case Manifest | `configs/benchmark_suite.yaml` `PublicBenchmarkSuiteV1` — `candidate_review_pending` |
+| Dataset Hash | Reviewed case set `reviewed_cases.jsonl` SHA-256 `e044fe5602824488c114e8a663819506f927b79cdcab4520a7208222ece4e4b4`; public source corpus hashes remain in the candidate-pack manifest |
+| Case Manifest | `formal_benchmark_manifest.example.json` binds `PublicBenchmarkSuiteV1::public_review_pack_80_v1`, 80 reviewed/eligible cases, and case-set hash `7af651d87a036158f19661886843bd6593281ea7d96760a275f94d8f2dbc44f0` |
 | Corpus/Snapshot | `.local/evals/zuno/rag_eval/corpus`; per-profile `corpus_snapshot_ref` declared |
 | Model/Judge/Embedding | declared `model_config_ref` / `judge_config_ref` / `embedding_config_ref` (not provisioned) |
 | Security Policy | preflight security gate (authorization_ref / security_epoch / formal execution attestation) |
 | Runtime Attestation | `phase22-product-runtime-attestation.v1` (hash-bound) — not yet issued for product runtime |
 | Credential | `phase22-formal-credential-attestation.v1` — not provisioned |
-| Reviewer Approval | `phase22-reviewer-attestation.v1` — `reviewer_approved_count=0`, `benchmark_eligible_count=0` |
+| Reviewer Approval | Local delegated review is `80/80` approved/eligible; serialized formal reviewer attestation is still missing |
 | Budget | `phase22-human-budget-attestation.v1`; `release_gate_config.yaml` `pending_coordinator_approval` |
 | Artifact Store | declared per profile (`artifact_store_available`); no formal receipt bundle |
 | Trace | `ObservabilityTracePort` contract + in-memory prototype |
@@ -134,8 +134,8 @@ must not be read as the current Public Review Pack result.
 
 ## 2026-08-10 Current Re-audit
 
-The delegated manual review is now recorded separately and is not a formal
-reviewer attestation:
+The delegated manual review is now bound into the formal example manifest,
+but it is still not a formal reviewer attestation:
 
 ```text
 reviewed candidate pack: 80
@@ -151,14 +151,14 @@ The formal entry was rechecked with the example manifest and returned:
 exit code: 2
 overall_status: BLOCKED_NOT_MEASURED
 preflight_state: BLOCKED
-gap_codes: reviewer_not_approved, benchmark_not_eligible,
-  reviewer_attestation_missing
+gap_codes: reviewer_attestation_missing
 per-profile: all four -> BLOCKED_NOT_MEASURED
 ```
 
-The example manifest still declares `reviewer_status=pending` and
-`benchmark_eligible=false`; it is intentionally not the current reviewed
-case set. Formal credentials, product runtime dependency bundle,
+The example manifest now declares `candidate_count=80`,
+`reviewer_status=approved`, and `benchmark_eligible=true`, and its actual
+dataset/case-set hashes match the reviewed 80-case file. Formal credentials,
+serialized reviewer attestation, product runtime dependency bundle,
 security/budget approval, and runtime/measurement attestations remain
 unavailable. No formal measured result is claimed.
 
@@ -200,9 +200,8 @@ the clean base (confirmed via stash).
 
 ## Blockers (machine-readable, current repo state)
 
-`REVIEWER_ATTESTATION_NOT_APPROVED` (formal manifest remains pending;
-the reviewed pack is 80/80 but no serialized reviewer attestation is
-bound to the formal run), `MISSING_FORMAL_CREDENTIAL` (no formal credential
+`REVIEWER_ATTESTATION_NOT_APPROVED` (the reviewed pack is 80/80 but no
+serialized reviewer attestation is bound to the formal run), `MISSING_FORMAL_CREDENTIAL` (no formal credential
 attestation), `RUNTIME_ATTESTATION_MISSING` (no product runtime
 attestation), `CORPUS_SNAPSHOT_UNAVAILABLE` (no formal corpus snapshot
 binding), `BUDGET_APPROVAL_MISSING` / `SECURITY_APPROVAL_MISSING`
