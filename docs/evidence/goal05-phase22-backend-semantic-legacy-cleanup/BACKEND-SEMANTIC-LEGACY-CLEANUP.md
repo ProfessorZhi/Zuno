@@ -93,10 +93,10 @@ therefore classify as `PRODUCT_LEGACY_RUNTIME` before the
 fail-closed path runs.
 
 `AgentControlRuntime` has no production caller and remains
-`INTERNAL_TEST_HARNESS`. If a Production Entry Point constructs it, its
-run-shaped `trace_events` / `final_answer` result keys classify it as
-`PRODUCT_LEGACY_RUNTIME`; this remains covered by the production-caller
-fixture.
+`INTERNAL_TEST_HARNESS`. The synthetic runtime-definition fixture with
+run-shaped `trace_events` / `final_answer` result keys still classifies as
+`PRODUCT_LEGACY_RUNTIME`; the live class has no proven canonical delegation,
+so injecting a production caller correctly fails closed as `UNRESOLVED`.
 
 `AgentControlRuntime`'s callers today:
 
@@ -202,7 +202,7 @@ evidence classifies as `UNRESOLVED`.
 
 ### Test callers
 
-- `test_agent_control_harness.py` — synthetic test caller that proves
+- `agent_control_harness_fixture.py` — synthetic test caller that proves
   the `tests/` prefix is excluded from production reachability.
 
 ## Verifier Usage
@@ -268,8 +268,8 @@ satisfies that semantic gate.
     replacing `simple_agent.py` with the invalid adapter fixture
     keeps the BLOCKED status.
 14. `test_agent_control_runtime_production_caller_fixture_is_blocked`
-    — replacing the live repo with the production-caller fixture flips
-    `AgentControlRuntime` classification to `PRODUCT_LEGACY_RUNTIME`.
+    — adding a production caller to the live class fails closed as
+    `UNRESOLVED` rather than silently allowing it.
 
 ### Behaviour fixtures (verifier API)
 

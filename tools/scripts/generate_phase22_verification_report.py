@@ -73,7 +73,7 @@ def build_phase22_verification_report() -> str:
             "本轮验证没有把局部通过扩大解释成 Full final verification 通过：",
             "",
             "- 通过：Phase22 cleanup boundary、repo structure、current program、completion blocker gate、docs entrypoints、Agent System、doc boundaries；四 Profile canonical/contract 回归为 `237 passed, 30 subtests passed`。",
-            "- 通过：全量 pytest collection 已恢复，收集 `2750 tests`；Phase22 focused regression（candidate/review/dataset/closure/formal/measurement/cleanup）为 `114 passed`，backend semantic ownership focused regression 为 `5 passed`，product baseline/regression summary 为 `3 passed`，workspace task 关键回归为 `3 passed`，统一产品 E2E 为 `1 passed`。完整 pytest、`-k phase22` 和 workspace runtime 全文件运行均在 5 分钟执行上限内 timeout，未产生全量汇总，不能宣称全量通过。",
+            "- 通过：全量 pytest collection 已恢复，收集 `2750 tests`；本轮 Phase22 Eval 回归为 `223 passed, 30 subtests passed`，Repo 文档/契约回归为 `49 passed`，Backend semantic legacy 全套为 `43 passed`，Workspace Phase22 repair 为 `15 passed`，feature-flag runtime cutover 为 `44 passed`。完整 pytest、`-k phase22` 和 workspace runtime 全文件运行仍未产生全量汇总，不能宣称全量通过。",
             "- 通过：`verify_phase22_backend_semantic_legacy.py --scope repository` 返回 `BACKEND_PRODUCT_RUNTIME_CUTOVER_CONFIRMED`、0 findings；最终 legacy 审计的 MCP 规则已从子串匹配收敛为执行形状匹配。",
             "- 追加通过：`apps/web` 的 `npm run lint` 与 `npm run build`，以及 `apps/desktop` 三个 Electron bridge 文件的 `node --check`；浏览器 E2E、交互式 Desktop Smoke 和真实基础设施 Fault/Load/DR 仍未在本轮运行。",
             f"- 仍失败：feature-flag runtime cutover verifier 仍有 `{feature_findings}` 条 findings；final legacy cutover verifier 仍有 `{legacy_findings}` 条 findings，包含真实 `/api/v1/mcp_chat` → `MCPChatAgent` → `mcp_openai.MCPManager` 旧生产执行链，以及其他未完成 legacy/runtime 收口。",

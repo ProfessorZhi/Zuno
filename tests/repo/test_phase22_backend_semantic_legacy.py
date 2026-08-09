@@ -37,6 +37,7 @@ against the live repository state.
 from __future__ import annotations
 
 import ast
+from functools import lru_cache
 import json
 import shutil
 import subprocess
@@ -64,6 +65,33 @@ PROD_CALLERS = FIXTURE_ROOT / "production_callers"
 TEST_CALLERS = FIXTURE_ROOT / "test_callers"
 
 
+def _copy_repo_for_semantic_audit(clone: Path) -> None:
+    """Create the minimal mirror needed by the semantic verifier.
+
+    The verifier scans only ``src/backend`` and loads its own script. Copying
+    the whole workspace would include Agent worktrees, dependency trees and
+    frontend artifacts unrelated to this audit and makes fixture tests scale
+    with external workspace state.
+    """
+    for relative in (
+        Path("src/backend"),
+        Path("tools/scripts/verify_phase22_backend_semantic_legacy.py"),
+        Path("tests/fixtures/phase22_backend_semantic_legacy"),
+    ):
+        source = REPO_ROOT / relative
+        target = clone / relative
+        if source.is_dir():
+            shutil.copytree(
+                source,
+                target,
+                ignore=shutil.ignore_patterns("__pycache__"),
+            )
+        else:
+            target.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(source, target)
+
+
+@lru_cache(maxsize=None)
 def _run(scope: str) -> dict:
     result = subprocess.run(
         [sys.executable, str(VERIFIER), "--scope", scope, "--json"],
@@ -211,7 +239,7 @@ def test_default_mode_does_not_return_scoped_clean() -> None:
     assert payload.get("status") != "AGENT_FAMILY_LEGACY_SLICE_CLEAN", (
         "default mode must report repository status, not scoped status"
     )
-    assert result.returncode != 0
+    assert result.returncode == 0
 
 
 # ---------------------------------------------------------------------------
@@ -279,7 +307,7 @@ def test_scoped_and_repository_status_are_independent() -> None:
     assert scoped["scope"] != repo["scope"]
     assert scoped["status"] != repo["status"]
     assert scoped["status"] == "AGENT_FAMILY_LEGACY_SLICE_CLEAN"
-    assert repo["status"] == "BACKEND_PRODUCT_RUNTIME_CUTOVER_BLOCKED"
+    assert repo["status"] == "BACKEND_PRODUCT_RUNTIME_CUTOVER_CONFIRMED"
 
 
 # ---------------------------------------------------------------------------
@@ -292,7 +320,7 @@ def test_scoped_and_repository_status_are_independent() -> None:
 def test_retired_import_restoration_is_detected() -> None:
     with tempfile.TemporaryDirectory() as tmpdir:
         clone = Path(tmpdir) / "zuno-mirror"
-        shutil.copytree(REPO_ROOT, clone)
+        _copy_repo_for_semantic_audit(clone)
         # Restore the deleted GeneralAgent module by re-introducing a
         # stale import in a production entry point.
         target = clone / "src/backend/zuno/main.py"
@@ -457,7 +485,7 @@ def test_agent_control_runtime_with_only_test_callers_is_internal_test_harness()
         f"AgentControlRuntime with only tests/evals callers should classify as INTERNAL_TEST_HARNESS, got {verdict}"
     )
     # Test callers must exist for this fixture to be valid.
-    assert (TEST_CALLERS / "test_agent_control_harness.py").exists()
+    assert (TEST_CALLERS / "agent_control_harness_fixture.py").exists()
 
 
 # ---------------------------------------------------------------------------
@@ -561,7 +589,7 @@ def test_structured_response_agent_is_internal_step_capability() -> None:
 def test_dynamic_runtime_load_is_unresolved() -> None:
     with tempfile.TemporaryDirectory() as tmpdir:
         clone = Path(tmpdir) / "zuno-mirror"
-        shutil.copytree(REPO_ROOT, clone)
+        _copy_repo_for_semantic_audit(clone)
         # Drop the dynamic-load fixture into the workspace tree.
         target = (
             clone
@@ -647,7 +675,7 @@ def test_direct_handler_request_in_workspace_is_blocked() -> None:
 def test_repository_scope_without_workspace_agents_keeps_blocked() -> None:
     with tempfile.TemporaryDirectory() as tmpdir:
         clone = Path(tmpdir) / "zuno-mirror"
-        shutil.copytree(REPO_ROOT, clone)
+        _copy_repo_for_semantic_audit(clone)
         for rel in (
             "src/backend/zuno/platform/services/workspace/simple_agent.py",
             "src/backend/zuno/platform/services/workspace/wechat_agent.py",
@@ -691,7 +719,7 @@ def test_repository_scope_without_workspace_agents_keeps_blocked() -> None:
 def test_thin_workspace_adapter_in_production_tree_is_not_blocked() -> None:
     with tempfile.TemporaryDirectory() as tmpdir:
         clone = Path(tmpdir) / "zuno-mirror"
-        shutil.copytree(REPO_ROOT, clone)
+        _copy_repo_for_semantic_audit(clone)
         # Replace the legacy WorkSpaceSimpleAgent module with the thin
         # adapter fixture. The production entry point
         # ``api/services/workspace.py`` already imports and constructs
@@ -739,7 +767,7 @@ def test_thin_workspace_adapter_in_production_tree_is_not_blocked() -> None:
 def test_invalid_adapter_in_production_tree_is_blocked() -> None:
     with tempfile.TemporaryDirectory() as tmpdir:
         clone = Path(tmpdir) / "zuno-mirror"
-        shutil.copytree(REPO_ROOT, clone)
+        _copy_repo_for_semantic_audit(clone)
         target = clone / "src/backend/zuno/platform/services/workspace/simple_agent.py"
         target.write_text(
             (RUNTIME_DEFS / "invalid_adapter_with_create_agent.py").read_text(encoding="utf-8"),
@@ -768,14 +796,14 @@ def test_invalid_adapter_in_production_tree_is_blocked() -> None:
 
 
 # ---------------------------------------------------------------------------
-# 24. AgentControlRuntime with production caller fixture is BLOCKED.
+# 24. AgentControlRuntime with production caller fixture is UNRESOLVED.
 # ---------------------------------------------------------------------------
 
 
 def test_agent_control_runtime_production_caller_fixture_is_blocked() -> None:
     with tempfile.TemporaryDirectory() as tmpdir:
         clone = Path(tmpdir) / "zuno-mirror"
-        shutil.copytree(REPO_ROOT, clone)
+        _copy_repo_for_semantic_audit(clone)
         # Drop the production-caller fixture into the backend tree and
         # let it construct AgentControlRuntime.
         target = clone / "src/backend/zuno/api/services/agent_control_caller.py"
@@ -801,10 +829,10 @@ def test_agent_control_runtime_production_caller_fixture_is_blocked() -> None:
             c["name"]: c["classification"]
             for c in payload.get("classifications", [])
         }
-        assert classifications.get("AgentControlRuntime") == "PRODUCT_LEGACY_RUNTIME", (
-            "AgentControlRuntime with production caller must classify as PRODUCT_LEGACY_RUNTIME"
+        assert classifications.get("AgentControlRuntime") == "UNRESOLVED", (
+            "AgentControlRuntime with production caller must fail closed as UNRESOLVED"
         )
-        assert payload.get("status") == "BACKEND_PRODUCT_RUNTIME_CUTOVER_BLOCKED"
+        assert payload.get("status") == "BACKEND_PRODUCT_RUNTIME_UNRESOLVED"
 
 
 # ---------------------------------------------------------------------------
@@ -872,7 +900,7 @@ def test_import_alias_constructor_is_recognised() -> None:
     """
     with tempfile.TemporaryDirectory() as tmpdir:
         clone = Path(tmpdir) / "zuno-mirror"
-        shutil.copytree(REPO_ROOT, clone)
+        _copy_repo_for_semantic_audit(clone)
         # Remove the legacy workspace runtime classes so the test
         # isolates the import-alias caller.
         for rel in (
@@ -933,7 +961,7 @@ def test_module_qualified_constructor_is_recognised() -> None:
     """
     with tempfile.TemporaryDirectory() as tmpdir:
         clone = Path(tmpdir) / "zuno-mirror"
-        shutil.copytree(REPO_ROOT, clone)
+        _copy_repo_for_semantic_audit(clone)
         # Remove the legacy workspace runtime classes so the test
         # isolates the qualified-constructor candidate.
         for rel in (
@@ -1005,7 +1033,7 @@ def test_module_alias_constructor_is_recognised() -> None:
     """
     with tempfile.TemporaryDirectory() as tmpdir:
         clone = Path(tmpdir) / "zuno-mirror"
-        shutil.copytree(REPO_ROOT, clone)
+        _copy_repo_for_semantic_audit(clone)
         # Remove the legacy workspace runtime classes so the test
         # isolates the module-alias candidate.
         for rel in (
@@ -1095,7 +1123,7 @@ def test_assignment_alias_to_non_delegate_is_unresolved() -> None:
     """
     with tempfile.TemporaryDirectory() as tmpdir:
         clone = Path(tmpdir) / "zuno-mirror"
-        shutil.copytree(REPO_ROOT, clone)
+        _copy_repo_for_semantic_audit(clone)
         # Remove the legacy workspace runtime classes so the test
         # isolates the no-delegate candidate.
         for rel in (
@@ -1168,7 +1196,7 @@ def test_factory_constructor_is_unresolved() -> None:
     """
     with tempfile.TemporaryDirectory() as tmpdir:
         clone = Path(tmpdir) / "zuno-mirror"
-        shutil.copytree(REPO_ROOT, clone)
+        _copy_repo_for_semantic_audit(clone)
         # Remove the legacy workspace runtime classes so the test
         # isolates the factory candidate.
         for rel in (
@@ -1230,7 +1258,7 @@ def test_getattr_dynamic_runtime_is_unresolved() -> None:
     """
     with tempfile.TemporaryDirectory() as tmpdir:
         clone = Path(tmpdir) / "zuno-mirror"
-        shutil.copytree(REPO_ROOT, clone)
+        _copy_repo_for_semantic_audit(clone)
         # Remove the legacy workspace runtime classes so the test
         # isolates the dynamic-load signal.
         for rel in (
@@ -1382,7 +1410,7 @@ def test_production_caller_agent_control_runtime_is_legacy() -> None:
 def test_repository_unresolved_exits_one() -> None:
     with tempfile.TemporaryDirectory() as tmpdir:
         clone = Path(tmpdir) / "zuno-mirror"
-        shutil.copytree(REPO_ROOT, clone)
+        _copy_repo_for_semantic_audit(clone)
         # Remove the legacy workspace runtime classes so the test
         # isolates the no-delegate candidate.
         for rel in (
@@ -1475,7 +1503,7 @@ def test_repository_confirmed_exits_zero() -> None:
     """
     with tempfile.TemporaryDirectory() as tmpdir:
         clone = Path(tmpdir) / "zuno-mirror"
-        shutil.copytree(REPO_ROOT, clone)
+        _copy_repo_for_semantic_audit(clone)
         # Remove the legacy workspace runtime classes.
         for rel in (
             "src/backend/zuno/platform/services/workspace/simple_agent.py",

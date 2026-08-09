@@ -1215,7 +1215,11 @@ def main(argv: list[str] | None = None) -> int:
     if args.report:
         EVIDENCE_DIR.mkdir(parents=True, exist_ok=True)
         report_path = EVIDENCE_DIR / "verifier_report.json"
-        report_path.write_text(json.dumps(payload, indent=2, sort_keys=True), encoding="utf-8")
+        report_path.write_text(
+            json.dumps(payload, indent=2, sort_keys=True),
+            encoding="utf-8",
+            newline="\n",
+        )
         print(f"wrote {report_path.relative_to(REPO_ROOT)}", file=sys.stderr)
 
     if not args.json:
