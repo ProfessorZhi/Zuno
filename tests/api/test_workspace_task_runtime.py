@@ -74,6 +74,16 @@ def _workspace_capability_runtime_for_tests(monkeypatch) -> None:
 
     monkeypatch.setattr("zuno.capability.planning_runtime.CapabilityPlanningRuntime.select", fake_select)
 
+    async def fake_get_tools_from_id(tool_ids):
+        del tool_ids
+        return []
+
+    monkeypatch.setattr("zuno.api.services.tool.ToolService.get_tools_from_id", fake_get_tools_from_id)
+    monkeypatch.setattr(
+        "zuno.capability.runtime.ToolControlPlaneRuntime._record_tool_runtime_facts",
+        lambda self, **kwargs: None,
+    )
+
 
 def _client() -> TestClient:
     _PRODUCT_RUNTIME_SUBMISSIONS.clear()
@@ -84,6 +94,7 @@ def _client() -> TestClient:
         user_id="user_phase03",
         user_name="Phase03 User",
         role="admin",
+        tenant_id="tenant:phase03",
     )
     return TestClient(app)
 

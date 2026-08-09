@@ -1344,6 +1344,9 @@ class WorkspaceTaskRuntimeService:
             simple_task=simple_task,
             login_user=login_user,
             goal=goal,
+            # The authenticated Server-owned tenant is the only valid scope
+            # for the canonical runtime; never reconstruct it from user_id.
+            tenant_id=(getattr(login_user, "tenant_id", "") or "").strip(),
         )
         cls._complete_task(
             task_id=task_id,

@@ -9,6 +9,11 @@ from fastapi.testclient import TestClient
 from pydantic import ValidationError
 
 from zuno.api.services.user import UserPayload, get_login_user
+from zuno.api.services.product import (
+    ProductAvailableActionResult,
+    ProductProjectionResult,
+    ProductRuntimeRequestResult,
+)
 from zuno.api.services.workspace_task_runtime import WorkspaceTaskRuntimeService
 from zuno.api.v1.workspace import router as workspace_router
 from zuno.platform.security import SecurityProductActionDenied
@@ -25,14 +30,44 @@ class RecordingProductActionGuard:
             raise SecurityProductActionDenied("product action denied by Security")
 
 
+def _fake_product_submitter(**kwargs) -> ProductRuntimeRequestResult:
+    client_request_id = kwargs["client_request_id"]
+    runtime_request_ref = kwargs["runtime_request_ref"]
+    command_id = f"command:{client_request_id}"
+    return ProductRuntimeRequestResult(
+        command_id=command_id,
+        receipt_id=f"{command_id}:receipt:1",
+        status="ACCEPTED",
+        projection=ProductProjectionResult(
+            projection_event_id=f"projection:{command_id}:accepted",
+            stream_cursor_id=f"cursor:{command_id}:1",
+            stream_sequence_no=1,
+            freshness="current",
+            redaction_decision_ref=f"redaction:{command_id}:server",
+        ),
+        available_actions=(
+            ProductAvailableActionResult(
+                action="CANCEL",
+                action_token_id=f"action-token:{command_id}:cancel",
+                target_ref=runtime_request_ref,
+                effective_security_epoch_ref="security-epoch:product:default",
+                projection_version=1,
+                expires_at="2026-12-31T00:00:00+00:00",
+            ),
+        ),
+    )
+
+
 def _client() -> TestClient:
     WorkspaceTaskRuntimeService.reset_runtime_state_for_tests()
+    WorkspaceTaskRuntimeService.configure_product_runtime_submitter_for_tests(_fake_product_submitter)
     app = FastAPI()
     app.include_router(workspace_router, prefix="/api/v1")
     app.dependency_overrides[get_login_user] = lambda: UserPayload(
         user_id="user_phase11",
         user_name="Phase11 User",
         role="admin",
+        tenant_id="tenant:phase11",
     )
     return TestClient(app)
 

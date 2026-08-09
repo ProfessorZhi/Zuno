@@ -2,18 +2,89 @@ from __future__ import annotations
 
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
+import pytest
 
+from zuno.agent.contracts import CapabilityPlan
+from zuno.api.services.product import (
+    ProductAvailableActionResult,
+    ProductProjectionResult,
+    ProductRuntimeRequestResult,
+)
 from zuno.api.services.user import UserPayload, get_login_user
+from zuno.api.services.workspace_task_runtime import WorkspaceTaskRuntimeService
 from zuno.api.v1.workspace import router as workspace_router
 
 
+def _fake_product_submitter(**kwargs) -> ProductRuntimeRequestResult:
+    client_request_id = kwargs["client_request_id"]
+    runtime_request_ref = kwargs["runtime_request_ref"]
+    command_id = f"command:{client_request_id}"
+    return ProductRuntimeRequestResult(
+        command_id=command_id,
+        receipt_id=f"{command_id}:receipt:1",
+        status="ACCEPTED",
+        projection=ProductProjectionResult(
+            projection_event_id=f"projection:{command_id}:accepted",
+            stream_cursor_id=f"cursor:{command_id}:1",
+            stream_sequence_no=1,
+            freshness="current",
+            redaction_decision_ref=f"redaction:{command_id}:server",
+        ),
+        available_actions=(
+            ProductAvailableActionResult(
+                action="CANCEL",
+                action_token_id=f"action-token:{command_id}:cancel",
+                target_ref=runtime_request_ref,
+                effective_security_epoch_ref="security-epoch:product:default",
+                projection_version=1,
+                expires_at="2026-12-31T00:00:00+00:00",
+            ),
+        ),
+    )
+
+
+@pytest.fixture(autouse=True)
+def _workspace_capability_runtime_for_tests(monkeypatch) -> None:
+    def fake_select(self, request):
+        del self
+        allowed = list(request.get("available_capability_ids") or ())
+        return CapabilityPlan(
+            availability_snapshot_ref="capability_snapshot:workspace:test",
+            selection_result_ref="capability_selection:workspace:test",
+            selection_validity="fixed_planning_snapshot",
+            allowed_capabilities=allowed,
+            allowed_tools=allowed,
+            risk_summary={
+                "planner_exposure": {
+                    "exposure_ref": "capability_exposure:workspace:test",
+                    "visibility": "planner_authorized_summary_schema_only",
+                }
+            },
+        )
+
+    monkeypatch.setattr("zuno.capability.planning_runtime.CapabilityPlanningRuntime.select", fake_select)
+
+    async def fake_get_tools_from_id(tool_ids):
+        del tool_ids
+        return []
+
+    monkeypatch.setattr("zuno.api.services.tool.ToolService.get_tools_from_id", fake_get_tools_from_id)
+    monkeypatch.setattr(
+        "zuno.capability.runtime.ToolControlPlaneRuntime._record_tool_runtime_facts",
+        lambda self, **kwargs: None,
+    )
+
+
 def _client() -> TestClient:
+    WorkspaceTaskRuntimeService.reset_runtime_state_for_tests()
+    WorkspaceTaskRuntimeService.configure_product_runtime_submitter_for_tests(_fake_product_submitter)
     app = FastAPI()
     app.include_router(workspace_router, prefix="/api/v1")
     app.dependency_overrides[get_login_user] = lambda: UserPayload(
         user_id="user_phase10",
         user_name="Phase10 User",
         role="admin",
+        tenant_id="tenant:phase10",
     )
     return TestClient(app)
 

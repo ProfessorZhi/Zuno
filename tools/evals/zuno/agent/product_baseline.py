@@ -19,6 +19,11 @@ from zuno.agent.contracts import (
 )
 from zuno.agent.control_runtime import AgentControlRuntime, RuntimeObservation
 from zuno.agent.planning import PlanningRequest, build_default_strategy_selector
+from zuno.api.services.product import (
+    ProductAvailableActionResult,
+    ProductProjectionResult,
+    ProductRuntimeRequestResult,
+)
 from zuno.api.services.user import UserPayload
 from zuno.api.services.workspace_task_runtime import WorkspaceTaskRuntimeService
 from zuno.knowledge.agentic import CorrectiveAgenticGraphRAGRuntime
@@ -50,6 +55,41 @@ class WorkspaceProductE2EResult:
     trace_fixture_path: Path
 
 
+def _baseline_product_runtime_submitter(**kwargs: Any) -> ProductRuntimeRequestResult:
+    """Return deterministic product-command receipts without external Postgres.
+
+    This eval owns local ingestion/retrieval/restart evidence.  The production
+    submitter remains the application composition root; this test adapter keeps
+    the fixture hermetic while preserving the product result contract.
+    """
+
+    client_request_id = str(kwargs["client_request_id"])
+    runtime_request_ref = str(kwargs["runtime_request_ref"])
+    command_id = f"command:{client_request_id}"
+    return ProductRuntimeRequestResult(
+        command_id=command_id,
+        receipt_id=f"{command_id}:receipt:1",
+        status="ACCEPTED",
+        projection=ProductProjectionResult(
+            projection_event_id=f"projection:{command_id}:accepted",
+            stream_cursor_id=f"cursor:{command_id}:1",
+            stream_sequence_no=1,
+            freshness="current",
+            redaction_decision_ref=f"redaction:{command_id}:server",
+        ),
+        available_actions=(
+            ProductAvailableActionResult(
+                action="CANCEL",
+                action_token_id=f"action-token:{command_id}:cancel",
+                target_ref=runtime_request_ref,
+                effective_security_epoch_ref="security-epoch:product:default",
+                projection_version=1,
+                expires_at="2026-12-31T00:00:00+00:00",
+            ),
+        ),
+    )
+
+
 def run_workspace_product_e2e_scenario(*, output_dir: str | Path) -> WorkspaceProductE2EResult:
     output_root = Path(output_dir)
     output_root.mkdir(parents=True, exist_ok=True)
@@ -60,6 +100,9 @@ def run_workspace_product_e2e_scenario(*, output_dir: str | Path) -> WorkspacePr
         user_id="user_phase12_product",
         user_name="PHASE12 Product User",
         role="admin",
+        # Product-surface tests must model the validated Server-owned auth
+        # context; the runtime intentionally rejects user/default fallbacks.
+        tenant_id="tenant:phase12-product",
     )
     store_path = output_root / "phase12-product.db"
     object_root = output_root / "objects"
@@ -68,6 +111,9 @@ def run_workspace_product_e2e_scenario(*, output_dir: str | Path) -> WorkspacePr
     queue = LocalQueueBackend()
 
     WorkspaceTaskRuntimeService.reset_runtime_state_for_tests()
+    WorkspaceTaskRuntimeService.configure_product_runtime_submitter_for_tests(
+        _baseline_product_runtime_submitter
+    )
     WorkspaceTaskRuntimeService.configure_durable_ingestion(
         store=store,
         object_store=object_store,
@@ -374,23 +420,29 @@ def _register_blocked_parser_inputs(
     object_store: LocalObjectStore,
     queue: LocalQueueBackend,
 ) -> dict[str, dict[str, Any]]:
+    # These fixtures intentionally use unsupported container suffixes.  The
+    # MIME labels retain the Office/OCR coverage, while the source names make
+    # the router select the unavailable external parser and exercise the
+    # target-blocked/no-fake-index contract.  A plain-text payload named
+    # ``office.docx`` would correctly use the current local Office fallback
+    # and would not be a blocked-input fixture.
     blocked_inputs = [
         (
             "file_phase12_docx",
-            "office.docx",
+            "office.unsupported",
             "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
         ),
         (
             "file_phase12_pptx",
-            "slides.pptx",
+            "slides.unsupported",
             "application/vnd.openxmlformats-officedocument.presentationml.presentation",
         ),
         (
             "file_phase12_xlsx",
-            "sheet.xlsx",
+            "sheet.unsupported",
             "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         ),
-        ("file_phase12_image", "scan.png", "image/png"),
+        ("file_phase12_image", "scan.unsupported", "image/png"),
     ]
     blocked: dict[str, dict[str, Any]] = {}
     for file_id, filename, mime_type in blocked_inputs:
@@ -679,6 +731,9 @@ def _prove_restart_rehydrate(
     feedback_id: str,
 ) -> dict[str, str]:
     WorkspaceTaskRuntimeService.reset_runtime_state_for_tests()
+    WorkspaceTaskRuntimeService.configure_product_runtime_submitter_for_tests(
+        _baseline_product_runtime_submitter
+    )
     WorkspaceTaskRuntimeService.configure_durable_ingestion(
         store=SQLiteDurableIngestionStore(store_path),
         object_store=LocalObjectStore(object_root),

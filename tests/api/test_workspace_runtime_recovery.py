@@ -46,6 +46,7 @@ def _user() -> UserPayload:
         user_id="user_phase11_workspace",
         user_name="Phase11 Workspace User",
         role="admin",
+        tenant_id="tenant:phase11-workspace",
     )
 
 

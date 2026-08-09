@@ -1,13 +1,47 @@
 from __future__ import annotations
 
 from zuno.agent.runtime import SQLiteAgentRunStore
+from zuno.api.services.product import (
+    ProductAvailableActionResult,
+    ProductProjectionResult,
+    ProductRuntimeRequestResult,
+)
 from zuno.api.services.user import UserPayload
 from zuno.api.services.workspace_task_runtime import WorkspaceTaskRuntimeService
 from zuno.api.dto.workspace import WorkSpaceSimpleTask, WorkspaceOutputContract
 
 
+def _fake_product_submitter(**kwargs) -> ProductRuntimeRequestResult:
+    client_request_id = kwargs["client_request_id"]
+    runtime_request_ref = kwargs["runtime_request_ref"]
+    command_id = f"command:{client_request_id}"
+    return ProductRuntimeRequestResult(
+        command_id=command_id,
+        receipt_id=f"{command_id}:receipt:1",
+        status="ACCEPTED",
+        projection=ProductProjectionResult(
+            projection_event_id=f"projection:{command_id}:accepted",
+            stream_cursor_id=f"cursor:{command_id}:1",
+            stream_sequence_no=1,
+            freshness="current",
+            redaction_decision_ref=f"redaction:{command_id}:server",
+        ),
+        available_actions=(
+            ProductAvailableActionResult(
+                action="CANCEL",
+                action_token_id=f"action-token:{command_id}:cancel",
+                target_ref=runtime_request_ref,
+                effective_security_epoch_ref="security-epoch:product:default",
+                projection_version=1,
+                expires_at="2026-12-31T00:00:00+00:00",
+            ),
+        ),
+    )
+
+
 def test_unified_agent_product_scenario_exposes_artifact_trace_and_runtime_recovery(tmp_path) -> None:
     WorkspaceTaskRuntimeService.reset_runtime_state_for_tests()
+    WorkspaceTaskRuntimeService.configure_product_runtime_submitter_for_tests(_fake_product_submitter)
     WorkspaceTaskRuntimeService.configure_unified_runtime_store_for_tests(
         SQLiteAgentRunStore(tmp_path / "product_scenario_unified_runtime.db")
     )
@@ -37,6 +71,7 @@ def test_unified_agent_product_scenario_exposes_artifact_trace_and_runtime_recov
             user_id="user_phase11_product",
             user_name="Phase11 Product User",
             role="admin",
+            tenant_id="tenant:phase11-product",
         ),
     )
 
