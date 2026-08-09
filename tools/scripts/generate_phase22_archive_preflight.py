@@ -74,7 +74,9 @@ def build_phase22_archive_preflight() -> str:
 
 def main() -> int:
     OUTPUT_PATH.parent.mkdir(parents=True, exist_ok=True)
-    OUTPUT_PATH.write_text(build_phase22_archive_preflight(), encoding="utf-8")
+    OUTPUT_PATH.write_text(
+        build_phase22_archive_preflight(), encoding="utf-8", newline="\n"
+    )
     return 0
 
 
