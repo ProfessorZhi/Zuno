@@ -37,6 +37,28 @@ FIXTURE_ROOT = (
 )
 
 
+def _copy_repo_for_audit(clone: Path) -> None:
+    """Copy only the source tree needed by the verifier fixtures.
+
+    Agent worktrees, local caches, applications and dependency trees are not
+    part of the audit subject. Copying the whole workspace makes every
+    fixture test scale with unrelated workspace state, so this mirror keeps
+    only the verifier, production scan roots and legacy-audit fixtures.
+    """
+    for relative in (
+        Path("src/backend/zuno"),
+        Path("tools/scripts/verify_phase22_final_legacy_cutover.py"),
+        Path("tests/fixtures/phase22_legacy_cutover_v3"),
+    ):
+        source = REPO_ROOT / relative
+        target = clone / relative
+        if source.is_dir():
+            shutil.copytree(source, target)
+        else:
+            target.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(source, target)
+
+
 def _run(
     scope_args: list[str] | None = None,
     *,
@@ -78,7 +100,7 @@ def test_clean_fixture_produces_zero_findings() -> None:
     """
     with tempfile.TemporaryDirectory() as tmpdir:
         clone = Path(tmpdir) / "zuno-mirror"
-        shutil.copytree(REPO_ROOT, clone)
+        _copy_repo_for_audit(clone)
         # Replace every Python file under the four scanned roots with
         # the clean fixture. The clean fixture is the only source of
         # content; the detector must report CLEAN.
@@ -123,7 +145,7 @@ def test_phase08_fallback_triggers_legacy_runtime_blocker() -> None:
     """
     with tempfile.TemporaryDirectory() as tmpdir:
         clone = Path(tmpdir) / "zuno-mirror"
-        shutil.copytree(REPO_ROOT, clone)
+        _copy_repo_for_audit(clone)
         target = clone / "src/backend/zuno/agent/core/agents/legacy_phase08.py"
         target.parent.mkdir(parents=True, exist_ok=True)
         target.write_text(
@@ -161,7 +183,7 @@ def test_expired_flag_reader_triggers_dual_path_blocker() -> None:
     """
     with tempfile.TemporaryDirectory() as tmpdir:
         clone = Path(tmpdir) / "zuno-mirror"
-        shutil.copytree(REPO_ROOT, clone)
+        _copy_repo_for_audit(clone)
         target = clone / "src/backend/zuno/agent/feature_flag_reader.py"
         target.parent.mkdir(parents=True, exist_ok=True)
         target.write_text(
@@ -197,7 +219,7 @@ def test_direct_tool_call_triggers_tool_bypass_blocker() -> None:
     """A direct ``tool.ainvoke`` call must trigger tool_bypass_direct."""
     with tempfile.TemporaryDirectory() as tmpdir:
         clone = Path(tmpdir) / "zuno-mirror"
-        shutil.copytree(REPO_ROOT, clone)
+        _copy_repo_for_audit(clone)
         target = clone / "src/backend/zuno/agent/core/agents/bypass_fixture.py"
         target.parent.mkdir(parents=True, exist_ok=True)
         target.write_text(
@@ -234,7 +256,7 @@ def test_public_adapter_dao_write_triggers_ownership_violation() -> None:
     """
     with tempfile.TemporaryDirectory() as tmpdir:
         clone = Path(tmpdir) / "zuno-mirror"
-        shutil.copytree(REPO_ROOT, clone)
+        _copy_repo_for_audit(clone)
         target = clone / "src/backend/zuno/agent/runtime/adapters.py"
         body = target.read_text(encoding="utf-8")
         # Inject a direct DAO write inside the public adapter module.
@@ -271,7 +293,7 @@ def test_dynamic_import_triggers_audit_unresolved() -> None:
     """
     with tempfile.TemporaryDirectory() as tmpdir:
         clone = Path(tmpdir) / "zuno-mirror"
-        shutil.copytree(REPO_ROOT, clone)
+        _copy_repo_for_audit(clone)
         target = clone / "src/backend/zuno/agent/dynamic_loader_fixture.py"
         target.parent.mkdir(parents=True, exist_ok=True)
         target.write_text(
@@ -309,7 +331,7 @@ def test_alias_factory_triggers_audit_unresolved() -> None:
     """
     with tempfile.TemporaryDirectory() as tmpdir:
         clone = Path(tmpdir) / "zuno-mirror"
-        shutil.copytree(REPO_ROOT, clone)
+        _copy_repo_for_audit(clone)
         target = clone / "src/backend/zuno/agent/alias_factory_fixture.py"
         target.parent.mkdir(parents=True, exist_ok=True)
         target.write_text(
@@ -347,7 +369,7 @@ def test_allowlisted_bypass_still_blocks() -> None:
     """
     with tempfile.TemporaryDirectory() as tmpdir:
         clone = Path(tmpdir) / "zuno-mirror"
-        shutil.copytree(REPO_ROOT, clone)
+        _copy_repo_for_audit(clone)
         target = clone / "src/backend/zuno/agent/active_bypass_fixture.py"
         target.parent.mkdir(parents=True, exist_ok=True)
         target.write_text(
@@ -384,7 +406,7 @@ def test_history_only_docs_reference_does_not_block() -> None:
     """
     with tempfile.TemporaryDirectory() as tmpdir:
         clone = Path(tmpdir) / "zuno-mirror"
-        shutil.copytree(REPO_ROOT, clone)
+        _copy_repo_for_audit(clone)
         target = clone / "docs/evidence/legacy_history_reference.md"
         target.parent.mkdir(parents=True, exist_ok=True)
         target.write_text(
@@ -554,7 +576,7 @@ def test_unresolved_count_blocks_clean() -> None:
     """The audit must NOT report CLEAN when unresolved_count > 0."""
     with tempfile.TemporaryDirectory() as tmpdir:
         clone = Path(tmpdir) / "zuno-mirror"
-        shutil.copytree(REPO_ROOT, clone)
+        _copy_repo_for_audit(clone)
         target = clone / "src/backend/zuno/agent/dynamic_loader_fixture.py"
         target.parent.mkdir(parents=True, exist_ok=True)
         target.write_text(
@@ -648,7 +670,7 @@ def test_status_priority_is_observed() -> None:
     """
     with tempfile.TemporaryDirectory() as tmpdir:
         clone = Path(tmpdir) / "zuno-mirror"
-        shutil.copytree(REPO_ROOT, clone)
+        _copy_repo_for_audit(clone)
         # Add a tool_bypass fixture that runs in addition to the legacy
         # runtime files that already exist.
         target = clone / "src/backend/zuno/agent/bypass_only_fixture.py"
@@ -693,7 +715,7 @@ def _run_with_isolated_fixtures(fixture_paths: list[Path]) -> dict:
     """
     with tempfile.TemporaryDirectory() as tmpdir:
         clone = Path(tmpdir) / "zuno-mirror"
-        shutil.copytree(REPO_ROOT, clone)
+        _copy_repo_for_audit(clone)
         # Drop the legacy / bypass files that the verifier scans so the
         # fixtures are the only source of findings.
         for rel in (

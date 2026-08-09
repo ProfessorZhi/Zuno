@@ -154,7 +154,7 @@ The exit code is non-zero for every status except
 
 ## Test matrix
 
-`tests/repo/test_phase22_final_legacy_cutover.py` — 17 tests:
+`tests/repo/test_phase22_final_legacy_cutover.py` — 23 tests:
 
 1. `test_clean_fixture_produces_zero_findings` — clean fixture → CLEAN.
 2. `test_phase08_fallback_triggers_legacy_runtime_blocker` — phase08
@@ -188,6 +188,20 @@ The exit code is non-zero for every status except
     priority is observed.
 17. `test_exact_tool_bypass_category_blocks_audit` — exact
     `tool_bypass` findings also force a blocked audit status.
+18. `test_mcp_name_free_rule_requires_execution_shape` — MCP inventory
+    and configuration calls do not become bypasses without an execution
+    shape.
+19. `test_renamed_receiver_still_flagged` — receiver renaming does not
+    evade chained invoke detection.
+20. `test_aliased_call_still_flagged` — aliased tool calls remain
+    fail-closed.
+21. `test_canonical_adapter_not_flagged` — canonical adapter wiring is
+    not misclassified as a bypass.
+22. `test_module_helper_with_no_chain_invoke_not_flagged` — unrelated
+    module helpers are not misclassified.
+23. `test_name_free_detector_finds_production_bypass` — the production
+    tree still exposes real bypass findings while internal runtime calls
+    remain excluded.
 
 ## What this slice does NOT declare
 
