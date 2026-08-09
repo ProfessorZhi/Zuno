@@ -27,6 +27,18 @@ def _path_values(text: str) -> set[str]:
     return set(re.findall(r'^\s+- path: "([^"]+)"', text, re.MULTILINE))
 
 
+def _active_temporary_allowlist_paths(text: str) -> set[str]:
+    """Return only P01 inventory paths still marked as active exceptions."""
+    active: set[str] = set()
+    for block in _blocks(text, "  - path: "):
+        path_match = re.search(r'^\s+- path: "([^"]+)"', block, re.MULTILINE)
+        if path_match and re.search(
+            r'^\s+temporary_allowlist:\s*true\s*$', block, re.MULTILINE
+        ):
+            active.add(path_match.group(1))
+    return active
+
+
 def _blocks(text: str, marker: str) -> list[str]:
     result: list[str] = []
     current: list[str] = []
@@ -93,7 +105,7 @@ def verify_phase02_compatibility_boundaries() -> list[str]:
         if "domain_fact_owner: \"unchanged\"" not in block and "domain_fact_owner: \"canonical owner tables after cutover\"" not in block:
             errors.append(f"feature flag must not own domain facts: {block.splitlines()[0]}")
 
-    p01_paths = _path_values(p01_legacy)
+    p01_paths = _active_temporary_allowlist_paths(p01_legacy)
     p02_paths = _path_values(allowlist)
     missing_paths = sorted(p01_paths - p02_paths)
     if missing_paths:

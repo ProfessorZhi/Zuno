@@ -44,6 +44,19 @@ inventory:
     deadline: "PHASE22"
     guard: "PHASE02 static/dynamic bypass guard; PHASE22 zero-legacy closure guard"
     test: "tests/repo/test_repo_structure_consistency.py"
+  - path: "src/backend/zuno/platform/compatibility/legacy/"
+    symbol: "historical compatibility package"
+    owner: "Repository Governance"
+    category: "legacy_directory"
+    risk: "historical legacy compatibility package could preserve old module ownership and import paths"
+    target_gateway: "canonical package imports only"
+    current_callers: ["historical zuno.services alias surface", "PHASE22 removal candidate evidence"]
+    temporary_allowlist: false
+    migration_task: "PHASE02 legacy-runtime-compatibility-and-cutover-map"
+    removal_task: "P22-T03 Legacy-free Canonical Directory Cleanup"
+    deadline: "PHASE22"
+    guard: "PHASE02 static/dynamic bypass guard; PHASE22 zero-legacy closure guard"
+    test: "tests/repo/test_repo_structure_consistency.py"
   - path: "src/backend/zuno/agent/core/models/manager.py"
     symbol: "ModelManager.get_tool_invocation_model / get_conversation_model / get_qwen_vl_model / get_user_model"
     owner: "04 Model Gateway"
@@ -321,10 +334,10 @@ inventory:
     symbol: "WorkSpaceSimpleAgent.setup_plugin_tools"
     owner: "01 Product Surface / 06 Agent Core / 08 Tool Runtime"
     category: "old_runtime"
-    risk: "workspace service directly selects WorkSpacePlugins and user-defined LangChain tools"
+    risk: "workspace Product Adapter delegates tool execution through the canonical Single Controller and ToolInvocationGateway; the former direct-selection exception is retired"
     target_gateway: "Product Command Port + Single Controller + Tool Runtime"
     current_callers: ["workspace simple chat service", "legacy zuno.services.workspace alias"]
-    temporary_allowlist: true
+    temporary_allowlist: false
     migration_task: "PHASE09 + PHASE15"
     removal_task: "P22-T03"
     deadline: "PHASE10"
@@ -334,10 +347,10 @@ inventory:
     symbol: "WorkspaceTaskRuntimeService._run_workspace_tools_until_interrupt / approve_task"
     owner: "01 Product Surface / 08 Tool Runtime"
     category: "direct_tool_execute"
-    risk: "API service owns task orchestration and calls _tool_runtime.execute directly"
+    risk: "API service delegates task tool orchestration to canonical ToolControlPlaneRuntime; the former direct-execute exception is retired"
     target_gateway: "Product Surface command + Tool Runtime invocation gateway"
     current_callers: ["src/backend/zuno/api/v1/workspace.py", "tests/api/test_workspace_task_runtime.py"]
-    temporary_allowlist: true
+    temporary_allowlist: false
     migration_task: "PHASE09 + PHASE15"
     removal_task: "P22-T03"
     deadline: "PHASE15"

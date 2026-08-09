@@ -54,6 +54,18 @@ def _path_values(text: str) -> set[str]:
     return set(re.findall(r'(?m)^\s+- path: "([^"]+)"', text))
 
 
+def _active_temporary_allowlist_paths(text: str) -> set[str]:
+    """Return only inventory entries still marked as active exceptions."""
+    active: set[str] = set()
+    for block in _blocks(text, "  - path: "):
+        path_match = re.search(r'(?m)^\s+- path: "([^"]+)"', block)
+        if path_match and re.search(
+            r'(?m)^\s+temporary_allowlist:\s*true\s*$', block
+        ):
+            active.add(path_match.group(1))
+    return active
+
+
 class FlagDecision:
     def __init__(self, flag: str, current: str, desired: str, rollback_command: str) -> None:
         self.flag = flag
@@ -128,7 +140,7 @@ class TemporaryAllowlistGuard:
         self.allowlist_text = allowlist_text
         self.legacy_text = legacy_text
         self.allowlist_paths = _path_values(allowlist_text)
-        self.legacy_paths = _path_values(legacy_text)
+        self.legacy_paths = _active_temporary_allowlist_paths(legacy_text)
 
     def validate(self) -> list[str]:
         errors: list[str] = []

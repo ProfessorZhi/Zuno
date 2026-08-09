@@ -186,6 +186,22 @@ def _path_values(text: str) -> set[str]:
     return set(re.findall(r'(?m)^\s+- path: "([^"]+)"', text))
 
 
+def _active_temporary_allowlist_paths(text: str) -> set[str]:
+    """Return only inventory entries still marked as migration exceptions.
+
+    P01 is a historical inventory and must retain resolved entries for
+    traceability. PHASE02's temporary allowlist, however, represents only
+    active exceptions. Requiring every historical path to remain allowlisted
+    would make the PHASE22 zero-allowlist boundary impossible to reach.
+    """
+    active: set[str] = set()
+    for block in _yaml_list_blocks(text):
+        path_match = re.search(r'(?m)^\s+- path: "([^"]+)"', block)
+        if path_match and re.search(r'(?m)^\s+temporary_allowlist:\s*true\s*$', block):
+            active.add(path_match.group(1))
+    return active
+
+
 def _field_values(text: str, field: str) -> set[str]:
     return set(re.findall(rf'(?m)^\s+{field}:\s+"([^"]+)"', text))
 
@@ -298,7 +314,7 @@ def _verify_inventory_coverage(errors: list[str]) -> None:
         "guard",
         "test",
     ]
-    legacy_paths = _path_values(legacy)
+    legacy_paths = _active_temporary_allowlist_paths(legacy)
     allowlist_paths = _path_values(allowlist)
     missing_from_allowlist = sorted(legacy_paths - allowlist_paths)
     if missing_from_allowlist:
@@ -397,7 +413,7 @@ def _verify_requirement_ledger(errors: list[str]) -> None:
         if _field_list_is_empty(block, "reverse_trace_refs"):
             empty_reverse_trace_refs += 1
         if re.search(r"(?m)^\s+current_status:\s*target_not_current\s*$", block):
-            if "needs_evidence:" not in block and "target_not_current:" not in block:
+            if re.search(r"(?m)^\s+gap:\s*\S", block) is None:
                 unresolved_evidence_explanations += 1
         if re.search(r"(?m)^\s+target_phase:\s*[\"']?PHASE(?:0[2-9]|1[0-9]|2[0-2])[\"']?\s*$", block) is None:
             invalid_target_phase += 1
@@ -451,15 +467,31 @@ def _verify_p01_t02_contract(text: str, errors: list[str]) -> None:
         if normalized.endswith("available") or normalized in {"target_current", "production ready"}:
             errors.append(f"P01-T02 persistence inventory uses non-program status value: {normalized}")
 
-    for phrase in [
-        "PostgreSQL default domain store | needs_evidence",
-        "RabbitMQ durable queue | target_not_current",
-        "MinIO / S3-compatible object store | target_not_current",
-        "Official LangGraph PostgreSQL Checkpointer | target_not_current",
-        "Backup / Restore / PITR | target_not_current",
-    ]:
-        if phrase not in text:
-            errors.append(f"P01-T02 persistence inventory missing fail-closed target boundary: {phrase}")
+    required_capability_rows = [
+        "PostgreSQL default domain store",
+        "RabbitMQ durable queue",
+        "MinIO / S3-compatible object store",
+        "Official LangGraph PostgreSQL Checkpointer",
+        "Backup / Restore / PITR",
+    ]
+    rows = {
+        line.split("|", 2)[1].strip(): line
+        for line in text.splitlines()
+        if line.startswith("|") and line.count("|") >= 2
+    }
+    for capability in required_capability_rows:
+        row = rows.get(capability)
+        if row is None:
+            errors.append(
+                f"P01-T02 persistence inventory missing fail-closed target boundary: {capability}"
+            )
+            continue
+        cells = [cell.strip() for cell in row.strip().strip("|").split("|")]
+        status = cells[1] if len(cells) > 1 else ""
+        if status not in P01_T02_ALLOWED_STATES:
+            errors.append(
+                f"P01-T02 persistence inventory has invalid status for {capability}: {status}"
+            )
 
 
 def _verify_readiness(errors: list[str]) -> None:
