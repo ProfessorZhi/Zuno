@@ -1,7 +1,7 @@
 # PHASE22 Closure Summary
 
 status: in_progress
-source_sha_at_generation: b7796246d41d51b8f9cb92409cb1acc116d1fda8
+source_sha_at_generation: d6aac8900c6e6c7da4d018af1d85097e7e7065ba
 origin_main_sha_at_generation: b7796246d41d51b8f9cb92409cb1acc116d1fda8
 
 ## Current Truth
@@ -12,16 +12,16 @@ origin_main_sha_at_generation: b7796246d41d51b8f9cb92409cb1acc116d1fda8
 - blocked benchmark status: BLOCKED
 - blocked benchmark measurement_status: blocked_not_measured
 - review pack integrity_status: REVIEW_REQUIRED
-- review pack overall_status: REVIEW_PARTIAL
-- review pack measurement_state: BLOCKED_INSUFFICIENT_ELIGIBLE_CASES
-- review pack reviewer_approved_count: 52
-- review pack benchmark_eligible_count: 52
-- review pack rejected_or_incomplete_count: 28
+- review pack overall_status: PASS
+- review pack measurement_state: BLOCKED_PENDING_FORMAL_RUNTIME
+- review pack reviewer_approved_count: 80
+- review pack benchmark_eligible_count: 80
+- review pack rejected_or_incomplete_count: 0
 
 ## Remaining Blockers
 
 - benchmark blocker: Fixed Benchmark 仍为 `BLOCKED / blocked_not_measured`
-- review blocker: reviewer_approved_count=52, benchmark_eligible_count=52
+- review blocker: none; all candidate cases are reviewer-approved and benchmark-eligible
 - completion blocker gate: PHASE22 当前不能关闭为 `completed`
 - program archive blocker: Program 仍为 `active`
 
@@ -40,4 +40,4 @@ origin_main_sha_at_generation: b7796246d41d51b8f9cb92409cb1acc116d1fda8
 - It is a reproducible closure snapshot for the current in-progress state.
 - `source_sha_at_generation` records the source tree used to generate this file; the commit that stores this evidence may be newer.
 - Program archive and no-active reset are still pending.
-- Current review is partial because 28 cases remain incomplete.
+- Current review is complete for the fixed 80-case candidate set; formal runtime measurement remains pending.

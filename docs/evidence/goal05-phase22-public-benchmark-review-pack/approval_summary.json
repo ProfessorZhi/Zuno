@@ -2,16 +2,14 @@
   "total_cases": 80,
   "raw_question_candidate_count": 80,
   "schema_valid_question_count": 80,
-  "evidence_complete_count": 52,
-  "reviewer_approved_count": 52,
-  "benchmark_eligible_count": 52,
-  "rejected_or_incomplete_count": 28,
+  "evidence_complete_count": 80,
+  "reviewer_approved_count": 0,
+  "benchmark_eligible_count": 0,
+  "rejected_or_incomplete_count": 0,
   "reviewer_status_breakdown": {
-    "pending": 0,
-    "approved": 52,
-    "rejected": 28
+    "pending": 80,
+    "approved": 0,
+    "rejected": 0
   },
-  "overall_status": "REVIEW_PARTIAL",
-  "measurement_state": "BLOCKED_INSUFFICIENT_ELIGIBLE_CASES",
-  "review_summary_ref": "reviewed/review_summary.json"
+  "measurement_state": "blocked_pending_human_review"
 }

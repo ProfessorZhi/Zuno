@@ -1,5 +1,5 @@
 {
-  "pack_version": "2.3.0",
+  "pack_version": "2.4.0",
   "generated_from": "real_public_official_datasets",
   "evidence_synthesis": "none_strictly_parsed_from_upstream",
   "sources": [
@@ -19,7 +19,8 @@
       "url": "https://huggingface.co/datasets/yixuantt/MultiHopRAG",
       "license": "Apache-2.0",
       "sampled_count": 24,
-      "evidence_complete_count": 20
+      "evidence_complete_count": 24,
+      "selection_rule": "first_n_upstream_records_with_nonempty_evidence_list"
     },
     {
       "source_id": "awesome_graphrag_bench",
@@ -28,7 +29,110 @@
       "url": "https://huggingface.co/datasets/Awesome-GraphRAG/GraphRAG-Bench",
       "license": "MIT",
       "sampled_count": 24,
-      "evidence_complete_count": 0
+      "evidence_complete_count": 24,
+      "selection_rule": "first_n_upstream_questions_with_exact_official_textbook_match",
+      "corpus_files": [
+        {
+          "path": "textbooks/textbook1/textbook1.md",
+          "size_bytes": 948919,
+          "sha256": "6390ae405a3792df245df9641d1b5522111face04c84881a6977f661185ed10a"
+        },
+        {
+          "path": "textbooks/textbook2/textbook2.md",
+          "size_bytes": 3171936,
+          "sha256": "d6dae0f8690dab1279f651910df353d260defd59386077d441e50e69dc2259da"
+        },
+        {
+          "path": "textbooks/textbook3/textbook3.md",
+          "size_bytes": 1879663,
+          "sha256": "34b040f5d141577a39dcaac5f2ac5911da96aed9cd9a885d5ea8c03bf191f5a6"
+        },
+        {
+          "path": "textbooks/textbook4/textbook4.md",
+          "size_bytes": 1566584,
+          "sha256": "5abba7eba2de89230863d55e477ae41827c3240f8544c470b6ad46ae77bd8d23"
+        },
+        {
+          "path": "textbooks/textbook5/textbook5.md",
+          "size_bytes": 739249,
+          "sha256": "df686ca67bc4d1f5f72a2be38c9cfc88cb350bee6e7ada99a584d1533b2a981f"
+        },
+        {
+          "path": "textbooks/textbook6/textbook6.md",
+          "size_bytes": 1802468,
+          "sha256": "1dd68d08ae5d411fdcec27344451ccef4ad12b8a327feff3bf9e4130672577db"
+        },
+        {
+          "path": "textbooks/textbook7/textbook7.md",
+          "size_bytes": 1748403,
+          "sha256": "3062ce3af23aac6dd964e766bfae8be1fd15b0087e852a64425da5834378e010"
+        },
+        {
+          "path": "textbooks/textbook8/textbook8.md",
+          "size_bytes": 2328589,
+          "sha256": "bb1d87c1c55edc105f50dce4e2843860552899683cd417b92936ceaa891645bc"
+        },
+        {
+          "path": "textbooks/textbook9/textbook9.md",
+          "size_bytes": 1807329,
+          "sha256": "ad72da9161b7c28170ec25aaf4b6a1684b14a4f2b25517c3ab99989a92e6e6ee"
+        },
+        {
+          "path": "textbooks/textbook10/textbook10.md",
+          "size_bytes": 2142411,
+          "sha256": "51c360f075007b0fb87489ed272dd14cdf06ac72f2ee231244c1845f7a2aa1d3"
+        },
+        {
+          "path": "textbooks/textbook11/textbook11.md",
+          "size_bytes": 1740212,
+          "sha256": "1481fe6d4233a9465877943fd330ea1875a6c212d3d5bdfe424c0b2ae348a02e"
+        },
+        {
+          "path": "textbooks/textbook12/textbook12.md",
+          "size_bytes": 2300388,
+          "sha256": "02b4005f2cc28307ceae30caaf8e2fe7e0356d88893f831461fefef342abdbd3"
+        },
+        {
+          "path": "textbooks/textbook13/textbook13.md",
+          "size_bytes": 1270812,
+          "sha256": "b4a20ed1261a23ab44d30d2c7198d32df4175b9a4b32f5ecfc90b79d557c8f38"
+        },
+        {
+          "path": "textbooks/textbook14/textbook14.md",
+          "size_bytes": 3090782,
+          "sha256": "b520e8e5a808371bfd618f0a5acb86cdac3ca7f55ba8a074e907879a7e627017"
+        },
+        {
+          "path": "textbooks/textbook15/textbook15.md",
+          "size_bytes": 3015974,
+          "sha256": "f74a2d880151ccf6190f14da12069860fd75eb9c3da820b0e3d664d5cddb69a2"
+        },
+        {
+          "path": "textbooks/textbook16/textbook16.md",
+          "size_bytes": 1569762,
+          "sha256": "31f9e8385926bb57c5d0424b143246218708d097f37ae0a81f06c5f92968ef5d"
+        },
+        {
+          "path": "textbooks/textbook17/textbook17.md",
+          "size_bytes": 2164463,
+          "sha256": "b75b344767f1c921aa0e501d0baad5553812ee17f604e32aafb4583c5eb4e23d"
+        },
+        {
+          "path": "textbooks/textbook18/textbook18.md",
+          "size_bytes": 1137714,
+          "sha256": "a200240d2e34adccfaeffd6b2bd01c01820788ae8c202c8f7d83526dbeef3bf0"
+        },
+        {
+          "path": "textbooks/textbook19/textbook19.md",
+          "size_bytes": 1801030,
+          "sha256": "06d5b28354f266ffb06166b3cfb2b1f1999bdb64df638b78f94b884fa6252712"
+        },
+        {
+          "path": "textbooks/textbook20/textbook20.md",
+          "size_bytes": 1383281,
+          "sha256": "bba599ec4e653372d79b52ab8abd9943c45287630ab2587548e98838bb4e4c26"
+        }
+      ]
     }
   ]
 }

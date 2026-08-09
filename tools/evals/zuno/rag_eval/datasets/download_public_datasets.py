@@ -15,6 +15,9 @@ import yaml
 REPO_ROOT = Path(__file__).resolve().parents[5]
 REGISTRY_PATH = REPO_ROOT / "tools" / "evals" / "zuno" / "rag_eval" / "datasets" / "public_dataset_registry.yaml"
 CACHE_ROOT = REPO_ROOT / ".local" / "eval-datasets"
+GRAPH_RAG_TEXTBOOK_FILES = tuple(
+    f"textbooks/textbook{index}/textbook{index}.md" for index in range(1, 21)
+)
 
 
 def load_registry(path: Path = REGISTRY_PATH) -> dict[str, Any]:
@@ -116,12 +119,37 @@ def download_microsoft_graphrag(cache_dir: Path) -> dict[str, Any]:
         tmp_file.write_bytes(raw)
         tmp_file.replace(questions_file)
 
-    sha256 = calculate_sha256(questions_file)
+    files = [{
+        "path": str(questions_file.relative_to(REPO_ROOT)),
+        "size_bytes": questions_file.stat().st_size,
+        "sha256": calculate_sha256(questions_file),
+    }]
+
+    for relative_path in GRAPH_RAG_TEXTBOOK_FILES:
+        textbook_file = cache_dir / relative_path
+        textbook_file.parent.mkdir(parents=True, exist_ok=True)
+        if not textbook_file.exists() or textbook_file.stat().st_size < 1000:
+            url = (
+                "https://huggingface.co/datasets/Awesome-GraphRAG/GraphRAG-Bench/"
+                f"resolve/main/{relative_path}?download=true"
+            )
+            raw = fetch_url_bytes(url)
+            tmp_file = textbook_file.with_suffix(textbook_file.suffix + ".tmp")
+            tmp_file.write_bytes(raw)
+            tmp_file.replace(textbook_file)
+        files.append({
+            "path": str(textbook_file.relative_to(REPO_ROOT)),
+            "size_bytes": textbook_file.stat().st_size,
+            "sha256": calculate_sha256(textbook_file),
+        })
+
     return {
         "source_id": "microsoft_graphrag_benchmarking",
-        "file": str(questions_file.relative_to(REPO_ROOT)),
-        "size_bytes": questions_file.stat().st_size,
-        "sha256": sha256,
+        "file": files[0]["path"],
+        "size_bytes": files[0]["size_bytes"],
+        "sha256": files[0]["sha256"],
+        "files": files,
+        "corpus_files": [item["path"] for item in files[1:]],
     }
 
 

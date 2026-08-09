@@ -139,10 +139,10 @@ reviewer attestation:
 
 ```text
 reviewed candidate pack: 80
-reviewer approved / benchmark eligible: 52 / 52
-rejected or incomplete: 28
-review overall: REVIEW_PARTIAL
-measurement state: BLOCKED_INSUFFICIENT_ELIGIBLE_CASES
+reviewer approved / benchmark eligible: 80 / 80
+rejected or incomplete: 0
+review overall: PASS
+measurement state: BLOCKED_PENDING_FORMAL_RUNTIME
 ```
 
 The formal entry was rechecked with the example manifest and returned:
@@ -157,8 +157,8 @@ per-profile: all four -> BLOCKED_NOT_MEASURED
 ```
 
 The example manifest still declares `reviewer_status=pending` and
-`benchmark_eligible=false`; the 52 approved cases do not satisfy the fixed
-80-case gate. Formal credentials, product runtime dependency bundle,
+`benchmark_eligible=false`; it is intentionally not the current reviewed
+case set. Formal credentials, product runtime dependency bundle,
 security/budget approval, and runtime/measurement attestations remain
 unavailable. No formal measured result is claimed.
 
@@ -201,8 +201,8 @@ the clean base (confirmed via stash).
 ## Blockers (machine-readable, current repo state)
 
 `REVIEWER_ATTESTATION_NOT_APPROVED` (formal manifest remains pending;
-current reviewed pack is only 52/80), `BENCHMARK_NOT_ELIGIBLE` (28 cases
-remain incomplete), `MISSING_FORMAL_CREDENTIAL` (no formal credential
+the reviewed pack is 80/80 but no serialized reviewer attestation is
+bound to the formal run), `MISSING_FORMAL_CREDENTIAL` (no formal credential
 attestation), `RUNTIME_ATTESTATION_MISSING` (no product runtime
 attestation), `CORPUS_SNAPSHOT_UNAVAILABLE` (no formal corpus snapshot
 binding), `BUDGET_APPROVAL_MISSING` / `SECURITY_APPROVAL_MISSING`

@@ -109,7 +109,9 @@ def load_multihop_cases(start_idx: int = 33, limit: int = 24) -> list[dict[str, 
         data = json.load(f)
 
     selected: list[dict[str, Any]] = []
-    for idx, item in enumerate(data[:limit]):
+    for idx, item in enumerate(data):
+        if len(selected) >= limit:
+            break
         question = _clean_str(item.get("query", ""))
         answer = _clean_str(item.get("answer", ""))
         if not question or not answer or "Sample question" in question:
@@ -121,6 +123,8 @@ def load_multihop_cases(start_idx: int = 33, limit: int = 24) -> list[dict[str, 
 
         rec_id = f"multihop_query_{idx+1:03d}"
         has_evidence = len(gold_docs) > 0 and len(gold_ev) > 0
+        if not has_evidence:
+            continue
 
         case = {
             "case_id": f"case_pub_{start_idx + len(selected):03d}",
@@ -151,9 +155,59 @@ def load_multihop_cases(start_idx: int = 33, limit: int = 24) -> list[dict[str, 
     return selected
 
 
+def _graphrag_textbook_files() -> list[Path]:
+    corpus_root = CACHE_ROOT / "microsoft_graphrag" / "textbooks"
+    return sorted(
+        corpus_root.glob("textbook*/textbook*.md"),
+        key=lambda item: int(re.search(r"textbook(\d+)", item.name).group(1)),
+    )
+
+
+def _graphrag_corpus_manifest() -> list[dict[str, Any]]:
+    base = CACHE_ROOT / "microsoft_graphrag"
+    return [
+        {
+            "path": path.relative_to(base).as_posix(),
+            "size_bytes": path.stat().st_size,
+            "sha256": hashlib.sha256(path.read_bytes()).hexdigest(),
+        }
+        for path in _graphrag_textbook_files()
+    ]
+
+
 def load_graphrag_cases(start_idx: int = 57, limit: int = 24) -> list[dict[str, Any]]:
     path = CACHE_ROOT / "microsoft_graphrag" / "questions.jsonl"
     lines = path.read_text(encoding="utf-8").splitlines()
+    corpus_files = _graphrag_textbook_files()
+    corpus: list[tuple[str, str, str]] = []
+    for corpus_file in corpus_files:
+        raw = corpus_file.read_text(encoding="utf-8")
+        corpus.append(
+            (
+                corpus_file.relative_to(CACHE_ROOT / "microsoft_graphrag").as_posix(),
+                raw,
+                _clean_str(raw).casefold(),
+            )
+        )
+
+    def locate_question(question: str) -> tuple[str, str] | None:
+        normalized_question = _clean_str(question).casefold()
+        if not corpus:
+            return None
+        for relative_path, raw, normalized_corpus in corpus:
+            if normalized_question not in normalized_corpus:
+                continue
+            tokens = normalized_question.split()
+            pattern = r"\s+".join(re.escape(token) for token in tokens)
+            match = re.search(pattern, raw.casefold())
+            if match is None:
+                raise RuntimeError(
+                    f"GraphRAG corpus normalized match has no stable source span: {question!r}"
+                )
+            start_line = raw[: match.start()].count("\n") + 1
+            end_line = raw[: match.end()].count("\n") + 1
+            return relative_path, f"{relative_path}#L{start_line}-L{end_line}"
+        return None
 
     selected: list[dict[str, Any]] = []
     for idx, line in enumerate(lines):
@@ -167,33 +221,54 @@ def load_graphrag_cases(start_idx: int = 57, limit: int = 24) -> list[dict[str, 
         if not question or not answer or "Sample question" in question:
             continue
 
+        corpus_match = locate_question(question)
+        if corpus and corpus_match is None:
+            continue
+
         rec_id = f"graphrag_bench_q_{idx+1:03d}"
+        gold_docs = [corpus_match[0]] if corpus_match else []
+        gold_ev = [corpus_match[1]] if corpus_match else []
+        has_evidence = bool(corpus_match)
         case = {
             "case_id": f"case_pub_{start_idx + len(selected):03d}",
             "source_dataset": "Awesome-GraphRAG/GraphRAG-Bench",
             "source_split": "main",
             "source_record_id": rec_id,
             "dataset_version": "1.0.0",
+            "upstream_record_id": f"questions.jsonl:line:{idx+1}",
             "question": question,
             "question_type": "global_summary",
             "complexity": "hard",
             "expected_answer": answer,
-            "gold_document_refs": [],
-            "gold_evidence_refs": [],
-            "supporting_fact_refs": [],
-            "citation_ground_truth": [],
-            "evidence_status": "evidence_incomplete",
-            "corpus_snapshot_ref": "snapshot_global_summary_slice",
+            "gold_document_refs": gold_docs,
+            "gold_evidence_refs": gold_ev,
+            "supporting_fact_refs": gold_ev,
+            "citation_ground_truth": gold_docs,
+            "evidence_status": "evidence_complete" if has_evidence else "evidence_incomplete",
+            "corpus_snapshot_ref": "snapshot_global_summary_textbook_corpus",
             "provenance": "upstream_awesome_graphrag_bench",
             "license_ref": "MIT",
             "reviewer_status": "pending",
-            "reviewer_notes": "Upstream questions.jsonl lacks sentence-level gold evidence refs.",
-            "rejection_reason": "missing_upstream_gold_evidence_refs",
+            "reviewer_notes": (
+                "Exact question match located in the cached official GraphRAG textbook corpus."
+                if has_evidence
+                else "Official textbook corpus is unavailable or has no exact question match."
+            ),
+            "rejection_reason": "" if has_evidence else "missing_official_textbook_evidence_match",
             "contamination_risk": "low",
             "duplicate_group": None,
-            "tags": ["global_summary", "global_summary_slice"],
+            "tags": [
+                "global_summary",
+                "global_summary_slice",
+                "exact_official_textbook_match" if has_evidence else "evidence_match_missing",
+            ],
         }
         selected.append(case)
+    if corpus and len(selected) < limit:
+        raise RuntimeError(
+            f"GraphRAG official textbook corpus yielded only {len(selected)} exact matches; "
+            f"{limit} are required for the fixed candidate slice."
+        )
     return selected
 
 
@@ -258,7 +333,7 @@ def main() -> int:
 
     # 3. source_manifest.json
     source_manifest = {
-        "pack_version": "2.3.0",
+        "pack_version": "2.4.0",
         "generated_from": "real_public_official_datasets",
         "evidence_synthesis": "none_strictly_parsed_from_upstream",
         "sources": [
@@ -279,6 +354,7 @@ def main() -> int:
                 "license": "Apache-2.0",
                 "sampled_count": 24,
                 "evidence_complete_count": len([c for c in c2 if c["evidence_status"] == "evidence_complete"]),
+                "selection_rule": "first_n_upstream_records_with_nonempty_evidence_list",
             },
             {
                 "source_id": "awesome_graphrag_bench",
@@ -288,6 +364,8 @@ def main() -> int:
                 "license": "MIT",
                 "sampled_count": 24,
                 "evidence_complete_count": len([c for c in c3 if c["evidence_status"] == "evidence_complete"]),
+                "selection_rule": "first_n_upstream_questions_with_exact_official_textbook_match",
+                "corpus_files": _graphrag_corpus_manifest(),
             },
         ],
     }
@@ -296,7 +374,11 @@ def main() -> int:
     # 4. selection_manifest.json
     selection_manifest = {
         "total_cases": 80,
-        "selection_strategy": "first_n_valid_upstream_records",
+        "selection_strategy": "first_n_records_passing_source_evidence_gate",
+        "selection_filters": {
+            "multihop_rag": "nonempty_upstream_evidence_list",
+            "graphrag_bench": "exact_casefolded_question_match_in_official_textbook_corpus",
+        },
         "distribution": {
             "hotpotqa/hotpot_qa": 32,
             "yixuantt/MultiHopRAG": 24,
@@ -361,7 +443,7 @@ All candidate cases are sourced directly from upstream official open benchmark d
     # 10. README.md
     readme_content = f"""# Goal05 Phase22 Public Benchmark Review Pack
 
-- **Status**: Candidate Review Pack Generated (Pending Human Reviewer Approval)
+- **Status**: Candidate Review Pack Generated; delegated review is recorded under `reviewed/`
 - **Total Cases**: 80 real upstream cases
 - **Sources**:
   - HotpotQA (`hotpotqa/hotpot_qa`): 32 cases (CC-BY-SA-4.0)
@@ -370,8 +452,8 @@ All candidate cases are sourced directly from upstream official open benchmark d
 - **Evidence Completeness**:
   - Evidence Complete: {len(evidence_complete_cases)}
   - Evidence Incomplete / Rejected: {len(evidence_incomplete_cases)}
-- **Reviewer Approval**: `reviewer_approved_count=0`, `benchmark_eligible_count=0`
-- **Measurement State**: `BLOCKED` pending human review and formal model credentials.
+- **Reviewer Approval**: Raw candidate rows remain `pending`; current delegated review is recorded in `reviewed/review_summary.json`.
+- **Measurement State**: `BLOCKED` pending formal runtime, credentials, and attestation evidence.
 """
     (PACK_DIR / "README.md").write_text(readme_content, encoding="utf-8")
 

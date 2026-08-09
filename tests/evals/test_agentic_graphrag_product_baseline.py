@@ -3,7 +3,7 @@ from __future__ import annotations
 import json
 
 from zuno.agent.contracts import RetrievalProfile, ScenarioSummary, TraceSummary
-from zuno.agent.product_baseline import run_workspace_product_e2e_scenario
+from tools.evals.zuno.agent.product_baseline import run_workspace_product_e2e_scenario
 
 
 def test_launchable_agentic_graphrag_product_baseline_generates_shareable_summaries(

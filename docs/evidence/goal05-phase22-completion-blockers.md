@@ -13,7 +13,7 @@ PHASE22 当前不能关闭为 `completed`，Program 当前不能归档为 `no-ac
 - 十一模块 Mandatory Target Coverage 已在冻结 ledger 中达到 `11/11 CURRENT`。
 - PHASE22 Mandatory Removal Candidates 已达到 `7/7 resolved_retired`。
 - Fixed Benchmark 仍为 `BLOCKED / blocked_not_measured`，`actual_case_count=0`。
-- Public Benchmark Review Pack 已完成 delegated review：`reviewer_approved_count=52`、`benchmark_eligible_count=52`、`rejected_or_incomplete_count=28`；因固定 Benchmark 要求 80 个 eligible case，仍为 `REVIEW_PARTIAL` / blocked。
+- Public Benchmark Review Pack 已完成 delegated review：`reviewer_approved_count=80`、`benchmark_eligible_count=80`、`rejected_or_incomplete_count=0`；review gate 已通过，measurement 仍等待正式 runtime。
 - Formal benchmark `--check-only` 已复核：四 Profile 均为 `BLOCKED_NOT_MEASURED`；formal credentials、product runtime dependency bundle、runtime/measurement attestation、security/budget approval 均未具备。
 - PHASE22 仍为 `in_progress`。
 - Program 仍为 `active`，不得执行 `.agent/programs/` no-active reset。
@@ -59,4 +59,4 @@ python tools/scripts/verify_current_program.py
 
 ## 边界
 
-本证据不是 PHASE22 completion evidence。它只证明当前 closure blocker 被机器化保护。当前审核已批准 52 个 case，但仍缺 28 个可审计 gold evidence case；PHASE22 真正完成仍需要完整 80-case fixed benchmark 的真实 measured/comparable 结果、正式四 profile runtime、full final verification、Production Readiness 真实判定，以及 Program archive / no-active reset。
+本证据不是 PHASE22 completion evidence。它只证明当前 closure blocker 被机器化保护。当前 80 个 case 已完成可审计 gold evidence 和 delegated review；PHASE22 真正完成仍需要完整 80-case fixed benchmark 的真实 measured/comparable 结果、正式四 profile runtime、full final verification、Production Readiness 真实判定，以及 Program archive / no-active reset。

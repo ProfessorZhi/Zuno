@@ -72,7 +72,11 @@ def build_phase22_closure_summary() -> str:
         "## Remaining Blockers",
         "",
         f"- benchmark blocker: {_extract_phrase(blockers_text, 'Fixed Benchmark 仍为 `BLOCKED / blocked_not_measured`')}",
-        f"- review blocker: reviewer_approved_count={reviewed_summary.get('reviewer_approved_count')}, benchmark_eligible_count={reviewed_summary.get('benchmark_eligible_count')}",
+        (
+            "- review blocker: none; all candidate cases are reviewer-approved and benchmark-eligible"
+            if reviewed_summary.get("reviewer_approved_count") == reviewed_summary.get("total_cases")
+            else f"- review blocker: reviewer_approved_count={reviewed_summary.get('reviewer_approved_count')}, benchmark_eligible_count={reviewed_summary.get('benchmark_eligible_count')}"
+        ),
         f"- completion blocker gate: {_extract_phrase(blockers_text, 'PHASE22 当前不能关闭为 `completed`')}",
         f"- program archive blocker: {_extract_phrase(blockers_text, 'Program 仍为 `active`')}",
         "",
@@ -91,7 +95,11 @@ def build_phase22_closure_summary() -> str:
         "- It is a reproducible closure snapshot for the current in-progress state.",
         "- `source_sha_at_generation` records the source tree used to generate this file; the commit that stores this evidence may be newer.",
         "- Program archive and no-active reset are still pending.",
-        "- Current review is partial because 28 cases remain incomplete.",
+        (
+            "- Current review is complete for the fixed 80-case candidate set; formal runtime measurement remains pending."
+            if reviewed_summary.get("reviewer_approved_count") == reviewed_summary.get("total_cases")
+            else "- Current review is partial because some cases remain incomplete."
+        ),
         "",
     ]
     return "\n".join(lines)

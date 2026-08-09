@@ -525,7 +525,7 @@ class TestRealCandidateStats:
             registry_path=REGISTRY_PATH,
             output_dir=out,
         )
-        assert report["evidence_complete_count"] == 52
+        assert report["evidence_complete_count"] == 80
 
     def test_total_case_count(self, tmp_path: Path) -> None:
         out = tmp_path / "out"
