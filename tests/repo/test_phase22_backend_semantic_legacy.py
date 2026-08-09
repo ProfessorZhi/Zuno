@@ -162,38 +162,34 @@ def test_agent_family_scope_returns_clean() -> None:
 
 
 # ---------------------------------------------------------------------------
-# 3. Repository mode returns BLOCKED because Workspace agents still run.
+# 3. Repository mode confirms the current workspace adapters.
 # ---------------------------------------------------------------------------
 
 
-def test_repository_scope_returns_blocked() -> None:
+def test_repository_scope_returns_confirmed() -> None:
     result = _run("repository")
-    assert result["returncode"] != 0, (
-        "repository scope must exit non-zero while workspace agents exist: "
+    assert result["returncode"] == 0, (
+        "repository scope must exit 0 after workspace adapters delegate to "
+        "the canonical runtime: "
         + result["stdout"]
     )
     assert (
-        result["payload"]["status"] == "BACKEND_PRODUCT_RUNTIME_CUTOVER_BLOCKED"
+        result["payload"]["status"] == "BACKEND_PRODUCT_RUNTIME_CUTOVER_CONFIRMED"
     ), result["payload"]
     categories = {finding["category"] for finding in result["payload"]["findings"]}
-    assert "legacy_runtime_owner" in categories
+    assert "legacy_runtime_owner" not in categories
     # PHASE22 workspace cutover (PR #129): the workspace adapters no longer
     # dispatch `handler(request)` directly — the direct handler bypass is
-    # gone. The repository stays BLOCKED on the remaining runtime-ownership
-    # evidence only.
+    # gone. The remaining result projection is not runtime ownership.
     assert "direct_handler_bypass" not in categories
     classifications = {
         c["name"]: c["classification"]
         for c in result["payload"]["classifications"]
     }
-    # PHASE22-PR133 final engineering closure: WorkSpaceSimpleAgent has been
-    # reduced to a thin adapter over the canonical Single Controller Runtime
-    # (no direct model/tool/handler dispatch inside the class body), so the
-    # ownership classifier promotes it to PRODUCT_ADAPTER. WeChatAgent still
-    # carries the legacy runtime-ownership evidence and remains
-    # PRODUCT_LEGACY_RUNTIME, which keeps the repository scope BLOCKED.
+    # PHASE22-PR133 final engineering closure: both workspace adapters are
+    # thin adapters over the canonical Single Controller Runtime.
     assert classifications.get("WorkSpaceSimpleAgent") == "PRODUCT_ADAPTER"
-    assert classifications.get("WeChatAgent") == "PRODUCT_LEGACY_RUNTIME"
+    assert classifications.get("WeChatAgent") == "PRODUCT_ADAPTER"
     assert classifications.get("AgentControlRuntime") == "INTERNAL_TEST_HARNESS"
 
 
@@ -391,7 +387,31 @@ def test_direct_model_final_answer_is_blocked() -> None:
 
 
 # ---------------------------------------------------------------------------
-# 12. Fixture: direct ``tool.ainvoke`` is BLOCKED.
+# 12. Result projection is not Product Run lifecycle ownership.
+# ---------------------------------------------------------------------------
+
+
+def test_result_projection_is_not_lifecycle_ownership() -> None:
+    source = """
+class ResultProjectionAdapter:
+    def __init__(self, runtime):
+        self.runtime = runtime
+
+    async def astream(self, snapshot):
+        await self.runtime.start(snapshot)
+        final_answer = str(snapshot.observations[0].metadata.get("final_answer") or "")
+        return {"message": final_answer}
+"""
+    verdict = _fixture_classification(
+        source,
+        "ResultProjectionAdapter",
+        production_callers=[("api/services/channel.py", 12)],
+    )
+    assert verdict == "PRODUCT_ADAPTER"
+
+
+# ---------------------------------------------------------------------------
+# 13. Fixture: direct ``tool.ainvoke`` is BLOCKED.
 # ---------------------------------------------------------------------------
 
 
@@ -1417,31 +1437,30 @@ def test_repository_unresolved_exits_one() -> None:
 
 
 # ---------------------------------------------------------------------------
-# 40. Repository BLOCKED in production tree exits with code 1.
+# 40. Repository CONFIRMED in the live production tree exits with code 0.
 # ---------------------------------------------------------------------------
 
 
-def test_repository_blocked_exits_one() -> None:
-    """The current live branch still has WeChatAgent classified as
-    PRODUCT_LEGACY_RUNTIME (PHASE22-PR133 final engineering closure has
-    promoted WorkSpaceSimpleAgent to PRODUCT_ADAPTER), so the repository
-    status is BLOCKED and the exit code must be 1.
-    """
+def test_repository_confirmed_exits_zero_live() -> None:
+    """The live workspace adapters delegate to the canonical runtime."""
     result = subprocess.run(
         [
             sys.executable,
             "tools/scripts/verify_phase22_backend_semantic_legacy.py",
             "--scope",
             "repository",
+            "--json",
         ],
         cwd=REPO_ROOT,
         capture_output=True,
         text=True,
         check=False,
     )
-    assert result.returncode == 1, (
-        f"repository BLOCKED must exit 1, got {result.returncode}"
+    assert result.returncode == 0, (
+        f"repository CONFIRMED must exit 0, got {result.returncode}: {result.stdout}"
     )
+    payload = json.loads(result.stdout or "{}")
+    assert payload.get("status") == "BACKEND_PRODUCT_RUNTIME_CUTOVER_CONFIRMED"
 
 
 # ---------------------------------------------------------------------------

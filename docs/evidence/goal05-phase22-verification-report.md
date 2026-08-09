@@ -47,7 +47,8 @@ python -m pytest -q tests/repo/test_phase22_closure_summary.py tests/platform/te
 - 通过：Phase22 cleanup boundary、repo structure、current program、completion blocker gate、docs entrypoints、Agent System、doc boundaries、architecture document set、architecture semantic alignment、architecture render check、Agent Core target protocols、Wave 1 contract freeze、前端 `npm run lint` 和 `npm run build`。
 - 通过：`tests/repo/test_phase22_cleanup_boundary_allowlist.py`，在修正过时的 live assertion 后为 `10 passed`。
 - 通过：全量 pytest collection 已恢复，收集 `2747 tests`；Phase22 重点套件为 `73 passed`。完整 pytest 运行和 `-k phase22` 运行均在 5 分钟执行上限内 timeout，未产生全量汇总，不能宣称全量通过。旧 `product_baseline` harness 仍有一个已知失败：当前 Office/OCR fallback 是可执行 current，但 harness 仍要求 `BLOCKED`。
-- 仍失败：`verify_phase22_feature_flag_runtime_cutover.py`（allowlisted direct tool/MCP bypass 与 internal test harness 残留）、`verify_phase22_final_legacy_cutover.py`（direct MCP/tool invocation bypass）、`verify_phase22_backend_semantic_legacy.py`（`WeChatAgent` 仍为 `PRODUCT_LEGACY_RUNTIME`）。
+- 通过：`verify_phase22_backend_semantic_legacy.py --scope repository` 返回 `BACKEND_PRODUCT_RUNTIME_CUTOVER_CONFIRMED`、0 findings；ownership verifier 已把适配器的 runtime-result projection 与 lifecycle ownership 区分开。
+- 仍失败：`verify_phase22_feature_flag_runtime_cutover.py`（包含真实旧 MCP chat 之外的过宽静态 MCP/internal surface findings）、`verify_phase22_final_legacy_cutover.py`（真实 `/api/v1/mcp_chat` → `MCPChatAgent` → `mcp_openai.MCPManager` 旧生产执行链）。
 
 因此 Full final verification 仍是 `incomplete`，Production Readiness 仍不能判定；本报告不声明 `PHASE22_COMPLETED`、`BENCHMARK_PASSED` 或 `PRODUCTION_READY`。
 

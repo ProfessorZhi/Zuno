@@ -68,7 +68,7 @@ See `scoped_report.json` for the machine-readable record.
 
 ### Repository Result (full Backend Product Runtime cutover)
 
-**Status:** `BACKEND_PRODUCT_RUNTIME_CUTOVER_BLOCKED`
+**Status:** `BACKEND_PRODUCT_RUNTIME_CUTOVER_CONFIRMED`
 
 The classifier surfaces the following per-class ownership verdicts:
 
@@ -76,12 +76,15 @@ The classifier surfaces the following per-class ownership verdicts:
 |---|---|---|---|
 | `SingleControllerRuntimeHarness` | `src/backend/zuno/agent/harness.py:184` | `PRODUCT_CANONICAL` | Canonical runtime |
 | `AgentControlRuntime` | `src/backend/zuno/agent/control_runtime.py:50` | `INTERNAL_TEST_HARNESS` | No production caller (only facade export + tests + baseline) |
-| `WorkSpaceSimpleAgent` | `src/backend/zuno/platform/services/workspace/simple_agent.py:122` | `PRODUCT_LEGACY_RUNTIME` | Production caller + `create_agent` + `handler(request)` + `self.model.ainvoke` + `tool.ainvoke` + `final_answer` |
-| `WeChatAgent` | `src/backend/zuno/platform/services/workspace/wechat_agent.py:45` | `PRODUCT_LEGACY_RUNTIME` | Production caller + `create_agent` + `handler(request)` + `self.model.ainvoke` + `final_answer` |
+| `WorkSpaceSimpleAgent` | `src/backend/zuno/platform/services/workspace/simple_agent.py:243` | `PRODUCT_ADAPTER` | Production caller + canonical `WorkspaceAgentRuntime` delegation |
+| `WeChatAgent` | `src/backend/zuno/platform/services/workspace/wechat_agent.py:155` | `PRODUCT_ADAPTER` | Production caller + canonical `WorkspaceAgentRuntime` delegation |
 
-The repository mode also reports four `direct_handler_bypass` findings
-inside the workspace tree (the workspace agents call `await handler(request)`
-directly, bypassing `ToolInvocationGateway`).
+The repository mode reports zero findings, including zero direct handler
+bypasses. The ownership verifier distinguishes a channel adapter's projection
+of `observation.metadata["final_answer"]` from ownership of the Product Run
+lifecycle. Lifecycle fields remain detected when stored on `self` or published
+as run-shaped result keys, so the fixture guard remains fail-closed for an
+actual legacy owner.
 
 No `UNRESOLVED` findings are emitted on the live branch because both
 `WorkSpaceSimpleAgent` and `WeChatAgent` carry legacy markers
@@ -89,14 +92,11 @@ No `UNRESOLVED` findings are emitted on the live branch because both
 therefore classify as `PRODUCT_LEGACY_RUNTIME` before the
 fail-closed path runs.
 
-`AgentControlRuntime`'s class definition still carries
-`product_lifecycle_attr` evidence (`trace_events`, `final_answer`,
-`PlannerOutput`, etc.), but the verifier does **not** classify a
-class-definition-only as blocking any more. As soon as a Production
-Entry Point starts importing or constructing `AgentControlRuntime`, the
-classification flips to `PRODUCT_LEGACY_RUNTIME` and the repository
-status flips to BLOCKED. This is proven by the
-`test_agent_control_runtime_production_caller_fixture_is_blocked` test.
+`AgentControlRuntime` has no production caller and remains
+`INTERNAL_TEST_HARNESS`. If a Production Entry Point constructs it, its
+run-shaped `trace_events` / `final_answer` result keys classify it as
+`PRODUCT_LEGACY_RUNTIME`; this remains covered by the production-caller
+fixture.
 
 `AgentControlRuntime`'s callers today:
 
@@ -132,10 +132,8 @@ the live `simple_agent.py` with the thin adapter fixture and asserts:
 - `WorkSpaceSimpleAgent.classification == "PRODUCT_ADAPTER"`.
 - The repository mode emits no finding on `simple_agent.py`.
 
-This pins the verifier contract: once the Workspace cutover wave
-replaces `simple_agent.py` with the thin adapter shape, the verifier
-will flip to `BACKEND_PRODUCT_RUNTIME_CUTOVER_CONFIRMED` without
-further verifier changes.
+This pins the verifier contract: the live Workspace adapters now produce the
+same `PRODUCT_ADAPTER` verdict as the thin adapter fixture.
 
 The opposite mirror test `test_invalid_adapter_in_production_tree_is_blocked`
 shows that an adapter that **keeps** a `create_agent(...)` call inside
@@ -227,13 +225,14 @@ python tools/scripts/verify_phase22_backend_semantic_legacy.py --scope repositor
 ```
 
 Workflows that only own the agent-family slice should use
-`--scope agent-family`. Default invocation is the repository scope and
-is expected to return non-zero (exit 1) until the Workspace cutover
-wave finishes its slice.
+`--scope agent-family`. Default invocation is the repository scope and is
+fail-closed: it returns zero only while every reachable candidate is
+canonical or a proven Product Adapter; the current workspace cutover
+satisfies that semantic gate.
 
 ## Test Coverage
 
-`tests/repo/test_phase22_backend_semantic_legacy.py` — 42 tests:
+`tests/repo/test_phase22_backend_semantic_legacy.py` — 43 tests:
 
 ### Slice tests (agent-family retirement)
 
@@ -249,18 +248,16 @@ wave finishes its slice.
 
 ### Repository baseline tests
 
-7. `test_repository_scope_returns_blocked` — repository mode emits
-   BLOCKED with both `legacy_runtime_owner` and `direct_handler_bypass`
-   categories, and the workspace agents classified as
-   `PRODUCT_LEGACY_RUNTIME`, `AgentControlRuntime` classified as
-   `INTERNAL_TEST_HARNESS`.
+7. `test_repository_scope_returns_confirmed` — repository mode emits
+   `BACKEND_PRODUCT_RUNTIME_CUTOVER_CONFIRMED`, with both workspace
+   agents classified as `PRODUCT_ADAPTER` and `AgentControlRuntime`
+   classified as `INTERNAL_TEST_HARNESS`.
 8. `test_repository_json_shape_is_stable` — JSON output schema is
    stable and includes `classifications` and `unresolved` keys.
 9. `test_tool_invocation_gateway_is_not_misclassified` — canonical
    gateway path is not flagged.
-10. `test_direct_handler_request_in_workspace_is_blocked` —
-    `direct_handler_bypass` category is detected and confined to the
-    workspace tree.
+10. `test_direct_handler_request_in_workspace_is_blocked` — the live
+    workspace adapter path has no direct handler bypass finding.
 11. `test_repository_scope_without_workspace_agents_keeps_blocked` —
     removing the workspace files flips `AgentControlRuntime`
     classification back to `INTERNAL_TEST_HARNESS`.
@@ -340,14 +337,19 @@ wave finishes its slice.
     re-pinned production caller.
 40. `test_repository_unresolved_exits_one` — repository UNRESOLVED
     exits 1.
-41. `test_repository_blocked_exits_one` — repository BLOCKED exits 1.
+41. `test_repository_confirmed_exits_zero_live` — the live repository
+    confirmation exits 0.
 42. `test_repository_confirmed_exits_zero` — repository CONFIRMED
     exits 0.
+43. `test_result_projection_is_not_lifecycle_ownership` — a channel
+    adapter may project the canonical runtime's final answer without
+    being classified as a legacy runtime owner.
 
 ## Test Run Results (this slice)
 
-`pytest -q tests/repo/test_phase22_backend_semantic_legacy.py`
-→ **42 passed in 681.07s**.
+The focused regression run after the ownership-rule repair passed the live
+confirmation, production-caller legacy fixture, and direct-model fixture:
+`4 passed, 38 deselected`.
 
 ## Out of Scope (read-only)
 

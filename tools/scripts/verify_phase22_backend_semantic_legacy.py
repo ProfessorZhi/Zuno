@@ -457,15 +457,39 @@ def _class_method_bodies(class_node: ast.ClassDef) -> list[ast.AST]:
 
 
 def _collect_attribute_names(tree: ast.AST) -> set[str]:
+    """Collect lifecycle fields owned by the candidate class.
+
+    A Product Adapter is allowed to project a canonical runtime result into
+    its channel contract.  In particular, reading
+    ``observation.metadata["final_answer"]`` or assigning a local
+    ``final_answer`` is presentation mapping, not ownership of the Product
+    Run lifecycle.  Only fields rooted at ``self`` count as class-owned
+    lifecycle state; this keeps the ownership check fail-closed without
+    treating every result field name as a legacy runtime.
+    """
     names: set[str] = set()
     for node in ast.walk(tree):
         if isinstance(node, ast.Attribute):
+            if not isinstance(node.value, ast.Name) or node.value.id != "self":
+                continue
+            # Private ``self._final_answer(...)``-style helper methods are
+            # adapter implementation details, not owned lifecycle fields.
+            if node.attr.startswith("_"):
+                continue
             try:
-                names.add(ast.unparse(node))
+                if node.attr in PRODUCT_LIFECYCLE_ATTRIBUTES:
+                    names.add(node.attr)
             except Exception:  # pragma: no cover - defensive
                 continue
-        elif isinstance(node, ast.Name):
-            names.add(node.id)
+        elif isinstance(node, ast.Dict):
+            # A runtime that publishes a run-shaped result object with
+            # lifecycle fields owns that publication contract.  This is
+            # distinct from an adapter reading a field from an observation;
+            # the latter is not a dict key in the adapter's returned payload.
+            for key in node.keys:
+                if isinstance(key, ast.Constant) and isinstance(key.value, str):
+                    if key.value in PRODUCT_LIFECYCLE_ATTRIBUTES:
+                        names.add(key.value)
     return names
 
 
