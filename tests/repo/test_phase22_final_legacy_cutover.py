@@ -17,6 +17,7 @@ verifier is fail-closed on the real integration tree.
 
 from __future__ import annotations
 
+import ast
 import json
 import shutil
 import subprocess
@@ -423,6 +424,56 @@ def test_versioned_public_api_not_misclassified() -> None:
     # not part of the legacy agent family.
     assert "WorkSpaceSimpleAgentV2" in names
     assert "UnifiedAgentRuntimeServiceV2" in names
+
+
+def test_mcp_name_free_rule_requires_execution_shape() -> None:
+    """MCP inventory/configuration names must not become bypass findings.
+
+    Only known direct execution shapes are accepted by the name-free MCP
+    rule; this prevents the final audit from turning every MCP-related DAO
+    or registration call into a blocker.
+    """
+    from tools.scripts.verify_phase22_final_legacy_cutover import (
+        _detect_tool_bypass,
+    )
+
+    tree = ast.parse(
+        """
+class Surface:
+    def run(self):
+        MCPServerDao.get_mcp_server_from_id()
+        mcp_manager.show_mcp_tools()
+        convert_mcp_config()
+        mcp.run()
+        self.mcp_manager.process_query()
+        MCPClient.call_tool()
+        mcp_chat_agent.ainvoke()
+        self.callable_mcp_tools[name].on_run_tool()
+        request_mcp_call_tools()
+        self.mcp_manager.execute_tool()
+"""
+    )
+    findings = _detect_tool_bypass(
+        {"src/backend/zuno/agent/mcp_surface.py": tree}
+    )
+    mcp_findings = [
+        finding for finding in findings if finding.category == "tool_bypass"
+    ]
+    assert len(mcp_findings) == 6, [finding.detail for finding in mcp_findings]
+    assert all(
+        any(
+            marker in finding.detail.lower()
+            for marker in (
+                "process_query",
+                "call_tool",
+                "ainvoke",
+                "on_run_tool",
+                "request_mcp_call_tools",
+                "execute_tool",
+            )
+        )
+        for finding in mcp_findings
+    )
 
 
 # -----------------------------------------------------------------------------

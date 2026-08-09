@@ -601,15 +601,16 @@ _INVOKE_ATTR_NAMES = frozenset(
 )
 
 # PHASE22 (Slice B): name-free detection rules. Each rule is a tuple
-# (attribute-name or None, call-text predicate, finding category). The
-# detector runs the predicate against every call text it sees; the
-# category is reported verbatim when the predicate matches.
-# These are intentionally not name-coupled to the receiver so renaming
-# cannot evade the audit.
+# (finding category, call-text predicate, marker). The detector runs the
+# predicate against every call text it sees; the category is reported
+# verbatim when the predicate matches. MCP is handled by the semantic
+# execution predicate below rather than by substring matching: inventory,
+# DAO, configuration, and registration calls routinely contain ``mcp`` but
+# do not execute a tool.
 _NAME_FREE_RULES: tuple[tuple[str, str, str], ...] = (
     (
         "tool_bypass",
-        "MCP",
+        "MCP execution",
         "mcp",
     ),
     (
@@ -623,6 +624,38 @@ _NAME_FREE_RULES: tuple[tuple[str, str, str], ...] = (
         "skill_direct_execute",
     ),
 )
+
+
+def _is_mcp_execution_call(call_text: str) -> bool:
+    """Return whether a call text denotes direct MCP execution.
+
+    The old rule treated every call containing ``mcp`` as a tool bypass.
+    That made names such as ``MCPServerDao.get_*``, ``show_mcp_tools`` and
+    ``convert_mcp_config`` indistinguishable from real execution. Keep the
+    audit fail-closed for known execution shapes while excluding inventory,
+    configuration, and registration surfaces.
+    """
+    normalized = call_text.lower()
+    if "mcp" not in normalized:
+        return False
+    leaf = normalized.rsplit(".", 1)[-1]
+    return leaf in {
+        "call_tool",
+        "process_query",
+        "on_run_tool",
+        "execute_tool",
+        "request_mcp_call_tools",
+        "invoke",
+        "ainvoke",
+    }
+
+
+def _matches_name_free_rule(category: str, marker: str, call_text: str) -> bool:
+    """Match a name-free bypass rule without broad identifier false positives."""
+    normalized = call_text.lower()
+    if category == "tool_bypass":
+        return _is_mcp_execution_call(call_text)
+    return marker in normalized
 
 
 def _build_alias_map(tree: ast.AST) -> dict[str, set[str]]:
@@ -873,8 +906,8 @@ def _detect_tool_bypass(
       that is NOT a registered canonical executor adapter. Aliases are
       honored (``binding = self.tool; binding.ainvoke(args)`` is still
       flagged).
-    - MCP / image-gen / read-only bypass by identifier (preserved for
-      backward compatibility; new categories are added below).
+    - Direct MCP execution, image-gen, or read-only bypass. MCP inventory,
+      configuration, and registration calls are intentionally excluded.
     - Direct ``handler(...)`` invocations via assignment, regardless of
       the receiver name.
     """
@@ -893,9 +926,10 @@ def _detect_tool_bypass(
         # canonical Adapter class or a class that owns a tool / model.
         enclosing_class_for_call = _build_call_enclosing_class_map(tree)
         for call_text, lineno in _call_target_strings(tree):
-            # MCP / image-gen / read-only bypass by identifier (legacy).
+            # MCP / image-gen / read-only bypass by identifier or semantic
+            # execution shape. MCP must not be matched by substring alone.
             for category, predicate, marker in _NAME_FREE_RULES:
-                if marker in call_text:
+                if _matches_name_free_rule(category, marker, call_text):
                     findings.append(
                         Finding(
                             category=category,
