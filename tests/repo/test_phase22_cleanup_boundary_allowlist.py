@@ -132,13 +132,13 @@ def test_missing_work_product_is_reported(tmp_path: Path) -> None:
     assert any("missing" in err for err in errors)
 
 
-def test_real_work_product_admits_only_mandatory_active_candidates() -> None:
-    """Live guard: the real work product only admits mandatory+active_candidate."""
+def test_real_work_product_has_no_active_candidate_allowlist() -> None:
+    """Live guard: the current PHASE22 work product has retired all candidates."""
     allowlist, errors = _load_active_candidate_allowlist(WORK_PRODUCT)
     assert errors == [], errors
     assert RETIRED_LEGACY_CUTOVER_PATH not in allowlist
-    assert GENERAL_AGENT_PATH in allowlist
-    # resolved_retired entries inside mandatory must NOT leak in
+    assert GENERAL_AGENT_PATH not in allowlist
+    # resolved_retired entries inside mandatory must not leak in
     assert "tests/legacy_guards/" not in allowlist
     assert "legacy_general_agent_completion_rollback" not in allowlist
     # legacy_aliases.py was retired by Wave 1 and must not keep widening

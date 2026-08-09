@@ -116,7 +116,7 @@ The entry performs, in order:
 - Declared environment variables / booleans are never credentials: formal
   credential attestation must be serialized and hash-verified.
 
-## Actual Run (this environment)
+## Baseline Run (before delegated review)
 
 ```text
 command: python tools/evals/zuno/rag_eval/run_phase22_formal_benchmark.py \
@@ -129,10 +129,38 @@ per-profile: standard_rag / local_graphrag / deep_graphrag / agentic_graphrag
   -> BLOCKED_NOT_MEASURED [REVIEWER_ATTESTATION_NOT_APPROVED]
 ```
 
-Honest blockers for the current repository state: reviewer attestation not
-approved (`reviewer_approved_count=0`), no formal credential attestation,
-no product runtime attestation — exactly matching the audit of
-`production-readiness.md` and the completion-blocker evidence.
+This is the pre-review baseline snapshot. Its `reviewer_approved_count=0`
+must not be read as the current Public Review Pack result.
+
+## 2026-08-10 Current Re-audit
+
+The delegated manual review is now recorded separately and is not a formal
+reviewer attestation:
+
+```text
+reviewed candidate pack: 80
+reviewer approved / benchmark eligible: 52 / 52
+rejected or incomplete: 28
+review overall: REVIEW_PARTIAL
+measurement state: BLOCKED_INSUFFICIENT_ELIGIBLE_CASES
+```
+
+The formal entry was rechecked with the example manifest and returned:
+
+```text
+exit code: 2
+overall_status: BLOCKED_NOT_MEASURED
+preflight_state: BLOCKED
+gap_codes: reviewer_not_approved, benchmark_not_eligible,
+  reviewer_attestation_missing
+per-profile: all four -> BLOCKED_NOT_MEASURED
+```
+
+The example manifest still declares `reviewer_status=pending` and
+`benchmark_eligible=false`; the 52 approved cases do not satisfy the fixed
+80-case gate. Formal credentials, product runtime dependency bundle,
+security/budget approval, and runtime/measurement attestations remain
+unavailable. No formal measured result is claimed.
 
 ## Tests
 
@@ -172,9 +200,10 @@ the clean base (confirmed via stash).
 
 ## Blockers (machine-readable, current repo state)
 
-`REVIEWER_ATTESTATION_NOT_APPROVED` (reviewer_status=pending,
-`reviewer_approved_count=0`), `MISSING_FORMAL_CREDENTIAL` (no formal
-credential attestation), `RUNTIME_ATTESTATION_MISSING` (no product runtime
+`REVIEWER_ATTESTATION_NOT_APPROVED` (formal manifest remains pending;
+current reviewed pack is only 52/80), `BENCHMARK_NOT_ELIGIBLE` (28 cases
+remain incomplete), `MISSING_FORMAL_CREDENTIAL` (no formal credential
+attestation), `RUNTIME_ATTESTATION_MISSING` (no product runtime
 attestation), `CORPUS_SNAPSHOT_UNAVAILABLE` (no formal corpus snapshot
 binding), `BUDGET_APPROVAL_MISSING` / `SECURITY_APPROVAL_MISSING`
 (coordinator approval pending), `ARTIFACT_STORE_UNAVAILABLE`.

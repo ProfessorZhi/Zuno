@@ -20,6 +20,9 @@ BENCHMARK_MANIFEST = Path(
 REVIEW_INTEGRITY_REPORT = Path(
     "docs/evidence/goal05-phase22-public-benchmark-review-pack/integrity_report.json"
 )
+REVIEW_APPROVAL_SUMMARY = Path(
+    "docs/evidence/goal05-phase22-public-benchmark-review-pack/reviewed/review_summary.json"
+)
 REMOVAL_CANDIDATES = Path(".agent/programs/work-products/phase22-removal-candidates.yaml")
 SYNTHETIC_INVALIDATION_NOTICE = Path(
     "docs/evidence/goal05-phase22-synthetic-benchmark/INVALIDATION_NOTICE.md"
@@ -59,15 +62,16 @@ def _phase_state(manifest: dict[str, Any], phase_id: str) -> str | None:
     return None
 
 
-def _is_benchmark_blocked(benchmark: dict[str, Any], review: dict[str, Any]) -> bool:
+def _is_benchmark_blocked(
+    benchmark: dict[str, Any], approval: dict[str, Any]
+) -> bool:
     return (
         benchmark.get("status") == "BLOCKED"
         or benchmark.get("measurement_status") == "blocked_not_measured"
         or benchmark.get("actual_case_count") == 0
         or benchmark.get("benchmark_eligible_case_count") == 0
-        or review.get("overall_status") == "REVIEW_REQUIRED"
-        or review.get("reviewer_approved_count") == 0
-        or review.get("benchmark_eligible_count") == 0
+        or approval.get("overall_status") != "PASS"
+        or approval.get("benchmark_eligible_count", 0) < approval.get("total_cases", 0)
     )
 
 
@@ -137,6 +141,100 @@ def _verify_blocked_benchmark_artifacts(
             )
 
 
+def _resolve_repo_relative_file(
+    repo_root: Path,
+    raw_path: Any,
+    label: str,
+    errors: list[str],
+) -> Path | None:
+    if not isinstance(raw_path, str) or not raw_path.strip():
+        errors.append(f"review approval {label} path must be a non-empty relative path")
+        return None
+    path = Path(raw_path)
+    if path.is_absolute():
+        errors.append(f"review approval {label} path must be relative")
+        return None
+    resolved = (repo_root / path).resolve()
+    try:
+        resolved.relative_to(repo_root.resolve())
+    except ValueError:
+        errors.append(f"review approval {label} path escapes repository root")
+        return None
+    if not resolved.exists():
+        errors.append(f"missing review approval {label}: {raw_path}")
+        return None
+    return resolved
+
+
+def _read_jsonl_objects(path: Path, label: str, errors: list[str]) -> list[dict[str, Any]]:
+    rows: list[dict[str, Any]] = []
+    try:
+        lines = path.read_text(encoding="utf-8").splitlines()
+    except OSError:
+        errors.append(f"review approval {label} is not readable")
+        return rows
+    for line_number, line in enumerate(lines, 1):
+        if not line.strip():
+            continue
+        try:
+            value = json.loads(line)
+        except json.JSONDecodeError:
+            errors.append(f"review approval {label} contains invalid JSON at line {line_number}")
+            continue
+        if not isinstance(value, dict):
+            errors.append(f"review approval {label} line {line_number} must be an object")
+            continue
+        rows.append(value)
+    return rows
+
+
+def _verify_review_approval_summary(
+    repo_root: Path,
+    summary: dict[str, Any],
+    errors: list[str],
+) -> None:
+    candidate_path = _resolve_repo_relative_file(
+        repo_root, summary.get("source_candidate_pack"), "candidate pack", errors
+    )
+    reviewed_path = _resolve_repo_relative_file(
+        repo_root, summary.get("reviewed_case_set"), "reviewed case set", errors
+    )
+    decisions_path = _resolve_repo_relative_file(
+        repo_root, summary.get("review_decisions"), "review decisions", errors
+    )
+    if candidate_path is not None and summary.get("source_candidate_pack_sha256") != _sha256_file(candidate_path):
+        errors.append("review approval candidate pack hash mismatch")
+    if reviewed_path is not None and summary.get("reviewed_case_set_sha256") != _sha256_file(reviewed_path):
+        errors.append("review approval reviewed case set hash mismatch")
+    if decisions_path is not None and summary.get("review_decisions_sha256") != _sha256_file(decisions_path):
+        errors.append("review approval decision ledger hash mismatch")
+    if reviewed_path is None or decisions_path is None:
+        return
+
+    reviewed = _read_jsonl_objects(reviewed_path, "reviewed case set", errors)
+    decisions = _read_jsonl_objects(decisions_path, "review decisions", errors)
+    if len(reviewed) != summary.get("total_cases"):
+        errors.append("reviewed case set count does not match review summary")
+    if len(decisions) != summary.get("total_cases"):
+        errors.append("review decision count does not match review summary")
+
+    approved = sum(
+        1
+        for case in reviewed
+        if case.get("reviewer_status") == "approved" and case.get("benchmark_eligible") is True
+    )
+    rejected = sum(1 for case in reviewed if case.get("reviewer_status") == "rejected")
+    pending = sum(1 for case in reviewed if case.get("reviewer_status") == "pending")
+    if approved != summary.get("reviewer_approved_count"):
+        errors.append("reviewed case approved count does not match review summary")
+    if approved != summary.get("benchmark_eligible_count"):
+        errors.append("reviewed case eligible count does not match review summary")
+    if rejected != summary.get("rejected_or_incomplete_count"):
+        errors.append("reviewed case rejected count does not match review summary")
+    if pending:
+        errors.append("reviewed case set must not contain pending decisions")
+
+
 def _verify_synthetic_invalidation_notice(repo_root: Path, errors: list[str]) -> None:
     if not _require_file(repo_root, SYNTHETIC_INVALIDATION_NOTICE, errors):
         return
@@ -169,6 +267,7 @@ def verify_phase22_completion_blockers(repo_root: Path = REPO_ROOT) -> list[str]
         PRODUCTION_READINESS,
         BENCHMARK_MANIFEST,
         REVIEW_INTEGRITY_REPORT,
+        REVIEW_APPROVAL_SUMMARY,
         REMOVAL_CANDIDATES,
         SYNTHETIC_INVALIDATION_NOTICE,
     ]
@@ -179,16 +278,19 @@ def verify_phase22_completion_blockers(repo_root: Path = REPO_ROOT) -> list[str]
 
     manifest = _read_yaml(repo_root, PROGRAM_MANIFEST)
     benchmark = _read_json(repo_root, BENCHMARK_MANIFEST)
-    review = _read_json(repo_root, REVIEW_INTEGRITY_REPORT)
+    review_integrity = _read_json(repo_root, REVIEW_INTEGRITY_REPORT)
+    review_approval = _read_json(repo_root, REVIEW_APPROVAL_SUMMARY)
     removals = _read_yaml(repo_root, REMOVAL_CANDIDATES)
     phase22_text = _read_text(repo_root, PHASE22_FILE)
     closure_text = _read_text(repo_root, CLOSURE_CHECKLIST)
     readiness_text = _read_text(repo_root, PRODUCTION_READINESS)
 
+    _verify_review_approval_summary(repo_root, review_approval, errors)
+
     program_state = manifest.get("program", {}).get("state")
     current_phase = manifest.get("program", {}).get("current_phase")
     phase22_state = _phase_state(manifest, "PHASE22")
-    benchmark_blocked = _is_benchmark_blocked(benchmark, review)
+    benchmark_blocked = _is_benchmark_blocked(benchmark, review_approval)
 
     if current_phase != "PHASE22":
         errors.append(f"program current_phase must remain PHASE22 while closure is open, got {current_phase!r}")
@@ -224,13 +326,27 @@ def verify_phase22_completion_blockers(repo_root: Path = REPO_ROOT) -> list[str]
         )
     _verify_blocked_benchmark_artifacts(repo_root, benchmark, errors)
     _verify_synthetic_invalidation_notice(repo_root, errors)
-    if review.get("overall_status") != "REVIEW_REQUIRED":
+    if review_integrity.get("invalid_count") != 0 or review_integrity.get("unverifiable_count") != 0:
+        errors.append("public benchmark candidate integrity must have zero invalid or unverifiable cases")
+
+    total_cases = review_approval.get("total_cases")
+    approved_count = review_approval.get("reviewer_approved_count")
+    eligible_count = review_approval.get("benchmark_eligible_count")
+    rejected_count = review_approval.get("rejected_or_incomplete_count")
+    if not isinstance(total_cases, int) or total_cases <= 0:
+        errors.append("public benchmark review total_cases must be a positive integer")
+    if not isinstance(approved_count, int) or not 0 <= approved_count <= (total_cases or 0):
+        errors.append("public benchmark review reviewer_approved_count is out of range")
+    if not isinstance(eligible_count, int) or not 0 <= eligible_count <= (total_cases or 0):
+        errors.append("public benchmark review benchmark_eligible_count is out of range")
+    if approved_count != eligible_count:
+        errors.append("reviewer_approved_count and benchmark_eligible_count must match")
+    if isinstance(rejected_count, int) and isinstance(total_cases, int) and approved_count + rejected_count != total_cases:
+        errors.append("approved plus rejected review counts must equal total_cases")
+    if review_approval.get("overall_status") not in {"REVIEW_REQUIRED", "REVIEW_PARTIAL", "PASS"}:
         errors.append(
-            f"public benchmark review pack must remain REVIEW_REQUIRED until human review, got {review.get('overall_status')!r}"
+            "public benchmark review overall_status must be REVIEW_REQUIRED, REVIEW_PARTIAL, or PASS"
         )
-    for field in ["reviewer_approved_count", "benchmark_eligible_count"]:
-        if review.get(field) != 0:
-            errors.append(f"public benchmark review {field} must remain 0 until approval, got {review.get(field)!r}")
 
     active_removals = [
         candidate.get("path", "<unknown>")

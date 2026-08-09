@@ -10,7 +10,7 @@
       "url": "https://huggingface.co/datasets/hotpotqa/hotpot_qa",
       "license": "CC-BY-SA-4.0",
       "sampled_count": 32,
-      "evidence_complete_count": 0
+      "evidence_complete_count": 32
     },
     {
       "source_id": "multihop_rag",

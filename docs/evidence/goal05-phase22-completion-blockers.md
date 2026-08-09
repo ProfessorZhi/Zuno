@@ -2,7 +2,7 @@
 
 status: current_blocker_gate_available
 phase: PHASE22
-date: 2026-08-01
+date: 2026-08-10
 
 ## 结论
 
@@ -13,7 +13,8 @@ PHASE22 当前不能关闭为 `completed`，Program 当前不能归档为 `no-ac
 - 十一模块 Mandatory Target Coverage 已在冻结 ledger 中达到 `11/11 CURRENT`。
 - PHASE22 Mandatory Removal Candidates 已达到 `7/7 resolved_retired`。
 - Fixed Benchmark 仍为 `BLOCKED / blocked_not_measured`，`actual_case_count=0`。
-- Public Benchmark Review Pack 仍为 `REVIEW_REQUIRED`，`reviewer_approved_count=0`，`benchmark_eligible_count=0`。
+- Public Benchmark Review Pack 已完成 delegated review：`reviewer_approved_count=52`、`benchmark_eligible_count=52`、`rejected_or_incomplete_count=28`；因固定 Benchmark 要求 80 个 eligible case，仍为 `REVIEW_PARTIAL` / blocked。
+- Formal benchmark `--check-only` 已复核：四 Profile 均为 `BLOCKED_NOT_MEASURED`；formal credentials、product runtime dependency bundle、runtime/measurement attestation、security/budget approval 均未具备。
 - PHASE22 仍为 `in_progress`。
 - Program 仍为 `active`，不得执行 `.agent/programs/` no-active reset。
 - Production Readiness 仍为 not established，不能声明 `quality proven`、`22/22 completed` 或 `production ready`。
@@ -33,7 +34,7 @@ python tools/scripts/verify_phase22_completion_blockers.py
 - 状态文档在阻塞证据存在时声明 production ready / quality proven；
 - blocked benchmark manifest 被改写为非 `BLOCKED` 或非 `blocked_not_measured`；
 - blocked benchmark manifest 中的 artifact refs 缺失或 SHA-256 与实际文件不一致；
-- public review pack 在未审阅时被改写为非 `REVIEW_REQUIRED`；
+- public review pack 的 reviewed case set、decision ledger、摘要计数或 SHA-256 不一致；
 - mandatory removal candidates 仍存在 `active_candidate`。
 
 该 verifier 已接入：
@@ -58,4 +59,4 @@ python tools/scripts/verify_current_program.py
 
 ## 边界
 
-本证据不是 PHASE22 completion evidence。它只证明当前 closure blocker 被机器化保护。PHASE22 真正完成仍需要固定 benchmark 真实 measured/comparable 结果、review-approved eligible case set、full final verification、Production Readiness 真实判定，以及 Program archive / no-active reset。
+本证据不是 PHASE22 completion evidence。它只证明当前 closure blocker 被机器化保护。当前审核已批准 52 个 case，但仍缺 28 个可审计 gold evidence case；PHASE22 真正完成仍需要完整 80-case fixed benchmark 的真实 measured/comparable 结果、正式四 profile runtime、full final verification、Production Readiness 真实判定，以及 Program archive / no-active reset。

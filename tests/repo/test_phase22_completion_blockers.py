@@ -32,6 +32,9 @@ def _copy_fixture(tmp_path: Path) -> Path:
         "docs/evidence/goal05-phase22-blocked-benchmark/benchmark_manifest.json",
         "docs/evidence/goal05-phase22-blocked-benchmark/metrics.json",
         "docs/evidence/goal05-phase22-public-benchmark-review-pack/integrity_report.json",
+        "docs/evidence/goal05-phase22-public-benchmark-review-pack/reviewed/review_summary.json",
+        "docs/evidence/goal05-phase22-public-benchmark-review-pack/reviewed/reviewed_cases.jsonl",
+        "docs/evidence/goal05-phase22-public-benchmark-review-pack/reviewed/review_decisions.jsonl",
         "docs/evidence/goal05-phase22-synthetic-benchmark/INVALIDATION_NOTICE.md",
     ]
     for relative in paths:
@@ -128,6 +131,19 @@ def test_blocked_benchmark_artifact_hash_mismatch_fails(tmp_path: Path) -> None:
     errors = verifier.verify_phase22_completion_blockers(fixture)
 
     assert any("artifact hash mismatch" in error for error in errors)
+
+
+def test_review_approval_hash_mismatch_fails(tmp_path: Path) -> None:
+    verifier = _load_verifier()
+    fixture = _copy_fixture(tmp_path)
+    summary_path = fixture / "docs/evidence/goal05-phase22-public-benchmark-review-pack/reviewed/review_summary.json"
+    summary = json.loads(summary_path.read_text(encoding="utf-8"))
+    summary["reviewed_case_set_sha256"] = "0" * 64
+    summary_path.write_text(json.dumps(summary), encoding="utf-8")
+
+    errors = verifier.verify_phase22_completion_blockers(fixture)
+
+    assert any("reviewed case set hash mismatch" in error for error in errors)
 
 
 def test_blocked_benchmark_missing_artifact_fails(tmp_path: Path) -> None:

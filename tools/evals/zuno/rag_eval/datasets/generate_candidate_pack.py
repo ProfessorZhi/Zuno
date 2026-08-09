@@ -19,6 +19,42 @@ def _clean_str(val: str) -> str:
     return cleaned
 
 
+def _normalize_hotpot_supporting_facts(value: Any) -> list[tuple[str, int]]:
+    """Normalize the two official HotpotQA supporting-facts shapes.
+
+    The downloaded HotpotQA JSON uses parallel ``title`` and ``sent_id``
+    arrays, while older adapters and fixtures use ``[[title, sent_id], ...]``.
+    Treating the mapping as an iterable of pairs silently drops all official
+    gold evidence, so the pack generator must normalize both forms explicitly.
+    """
+
+    if isinstance(value, dict):
+        titles = value.get("title") or []
+        sentence_ids = value.get("sent_id") or []
+        if not isinstance(titles, list) or not isinstance(sentence_ids, list):
+            return []
+        return [
+            (str(title), int(sentence_id))
+            for title, sentence_id in zip(titles, sentence_ids)
+            if title and isinstance(sentence_id, int) and not isinstance(sentence_id, bool)
+        ]
+
+    if isinstance(value, list):
+        normalized: list[tuple[str, int]] = []
+        for item in value:
+            if (
+                isinstance(item, (list, tuple))
+                and len(item) >= 2
+                and item[0]
+                and isinstance(item[1], int)
+                and not isinstance(item[1], bool)
+            ):
+                normalized.append((str(item[0]), item[1]))
+        return normalized
+
+    return []
+
+
 def load_hotpot_cases(limit: int = 32) -> list[dict[str, Any]]:
     path = CACHE_ROOT / "hotpot_qa" / "hotpot_dev_distractor_v1.json"
     with path.open("r", encoding="utf-8") as f:
@@ -26,15 +62,15 @@ def load_hotpot_cases(limit: int = 32) -> list[dict[str, Any]]:
 
     selected: list[dict[str, Any]] = []
     for item in data[:limit]:
-        rec_id = item.get("_id") or f"hotpot_{len(selected)+1}"
+        rec_id = item.get("_id") or item.get("id") or f"hotpot_{len(selected)+1}"
         question = _clean_str(item.get("question", ""))
         answer = _clean_str(item.get("answer", ""))
         if not question or not answer or "Sample question" in question:
             continue
 
-        facts = item.get("supporting_facts", [])
-        gold_docs = list(dict.fromkeys([f[0] for f in facts if isinstance(f, list) and len(f) > 0]))
-        gold_ev = [f"{f[0]}_sent_{f[1]}" for f in facts if isinstance(f, list) and len(f) > 1]
+        facts = _normalize_hotpot_supporting_facts(item.get("supporting_facts", []))
+        gold_docs = list(dict.fromkeys(title for title, _ in facts))
+        gold_ev = [f"{title}_sent_{sentence_id}" for title, sentence_id in facts]
 
         has_evidence = len(gold_docs) > 0 and len(gold_ev) > 0
 

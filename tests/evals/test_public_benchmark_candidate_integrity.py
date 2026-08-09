@@ -518,14 +518,14 @@ class TestRealCandidateStats:
         total_from_slices = sum(slices.values())
         assert total_from_slices == 80
 
-    def test_evidence_complete_is_20(self, tmp_path: Path) -> None:
+    def test_evidence_complete_count_matches_regenerated_pack(self, tmp_path: Path) -> None:
         out = tmp_path / "out"
         report = run_validation(
             candidate_path=CANDIDATE_PATH,
             registry_path=REGISTRY_PATH,
             output_dir=out,
         )
-        assert report["evidence_complete_count"] == 20
+        assert report["evidence_complete_count"] == 52
 
     def test_total_case_count(self, tmp_path: Path) -> None:
         out = tmp_path / "out"

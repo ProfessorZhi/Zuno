@@ -1,8 +1,8 @@
 # PHASE22 Closure Summary
 
 status: in_progress
-source_sha_at_generation: 887fbb1d9e36b66bf19bb73ea1cc11cd48c3cec2
-origin_main_sha_at_generation: 887fbb1d9e36b66bf19bb73ea1cc11cd48c3cec2
+source_sha_at_generation: b7796246d41d51b8f9cb92409cb1acc116d1fda8
+origin_main_sha_at_generation: b7796246d41d51b8f9cb92409cb1acc116d1fda8
 
 ## Current Truth
 
@@ -11,13 +11,17 @@ origin_main_sha_at_generation: 887fbb1d9e36b66bf19bb73ea1cc11cd48c3cec2
 - program archive phrase: program archive
 - blocked benchmark status: BLOCKED
 - blocked benchmark measurement_status: blocked_not_measured
-- review pack overall_status: REVIEW_REQUIRED
-- review pack measurement_state: blocked_pending_human_review
+- review pack integrity_status: REVIEW_REQUIRED
+- review pack overall_status: REVIEW_PARTIAL
+- review pack measurement_state: BLOCKED_INSUFFICIENT_ELIGIBLE_CASES
+- review pack reviewer_approved_count: 52
+- review pack benchmark_eligible_count: 52
+- review pack rejected_or_incomplete_count: 28
 
 ## Remaining Blockers
 
 - benchmark blocker: Fixed Benchmark 仍为 `BLOCKED / blocked_not_measured`
-- review blocker: reviewer_approved_count=0, benchmark_eligible_count=0
+- review blocker: reviewer_approved_count=52, benchmark_eligible_count=52
 - completion blocker gate: PHASE22 当前不能关闭为 `completed`
 - program archive blocker: Program 仍为 `active`
 
@@ -27,6 +31,7 @@ origin_main_sha_at_generation: 887fbb1d9e36b66bf19bb73ea1cc11cd48c3cec2
 - `docs/evidence/goal05-phase22-completion-blockers.md`
 - `docs/evidence/goal05-phase22-public-benchmark-review-pack/integrity_report.json`
 - `docs/evidence/goal05-phase22-public-benchmark-review-pack/approval_summary.json`
+- `docs/evidence/goal05-phase22-public-benchmark-review-pack/reviewed/review_summary.json`
 - `.agent/programs/PHASE22_fixed-benchmark-production-readiness-and-closure.md`
 
 ## Known Limitations
@@ -35,3 +40,4 @@ origin_main_sha_at_generation: 887fbb1d9e36b66bf19bb73ea1cc11cd48c3cec2
 - It is a reproducible closure snapshot for the current in-progress state.
 - `source_sha_at_generation` records the source tree used to generate this file; the commit that stores this evidence may be newer.
 - Program archive and no-active reset are still pending.
+- Current review is partial because 28 cases remain incomplete.
