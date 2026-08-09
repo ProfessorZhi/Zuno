@@ -51,7 +51,7 @@ never crash the command and never fabricate results: they produce
 | Security Policy | preflight security gate (authorization_ref / security_epoch / formal execution attestation) |
 | Runtime Attestation | `phase22-product-runtime-attestation.v1` (hash-bound) — not yet issued for product runtime |
 | Credential | `phase22-formal-credential-attestation.v1` — not provisioned |
-| Reviewer Approval | Local delegated review is `80/80` approved/eligible; serialized formal reviewer attestation is still missing |
+| Reviewer Approval | Local delegated review is `80/80` approved/eligible; hash-bound reviewer attestation is recorded in `reviewer-attestation.json` |
 | Budget | `phase22-human-budget-attestation.v1`; `release_gate_config.yaml` `pending_coordinator_approval` |
 | Artifact Store | declared per profile (`artifact_store_available`); no formal receipt bundle |
 | Trace | `ObservabilityTracePort` contract + in-memory prototype |
@@ -134,8 +134,8 @@ must not be read as the current Public Review Pack result.
 
 ## 2026-08-10 Current Re-audit
 
-The delegated manual review is now bound into the formal example manifest,
-but it is still not a formal reviewer attestation:
+The delegated manual review is now bound into the formal example manifest
+and serialized as a hash-bound reviewer attestation:
 
 ```text
 reviewed candidate pack: 80
@@ -151,20 +151,26 @@ The formal entry was rechecked with the example manifest and returned:
 exit code: 2
 overall_status: BLOCKED_NOT_MEASURED
 preflight_state: BLOCKED
-gap_codes: reviewer_attestation_missing
+gap_codes: product_runtime_not_attested, product_runtime_attestation_missing,
+  runtime_adapter_unwired, knowledge_runtime_unavailable,
+  trace_adapter_unavailable, result_store_unavailable,
+  artifact_store_unavailable, usage_receipt_provider_unavailable,
+  budget_settlement_provider_unavailable, index_runtime_unavailable,
+  agent_run_runtime_unavailable
 per-profile: all four -> BLOCKED_NOT_MEASURED
 ```
 
 The example manifest now declares `candidate_count=80`,
 `reviewer_status=approved`, and `benchmark_eligible=true`, and its actual
 dataset/case-set hashes match the reviewed 80-case file. Formal credentials,
-serialized reviewer attestation, product runtime dependency bundle,
+product runtime dependency bundle,
 security/budget approval, and runtime/measurement attestations remain
 unavailable. No formal measured result is claimed.
 
 ## Tests
 
-`tests/evals/test_phase22_formal_benchmark_entry.py` (26, all passing):
+`tests/evals/test_phase22_formal_benchmark_entry.py` (35, all passing in the
+current checkout; the contract list below retains the original 26 groups):
 
 1. Manifest schema invalid → ERROR
 2. Profile entry field missing → ERROR
@@ -200,8 +206,7 @@ the clean base (confirmed via stash).
 
 ## Blockers (machine-readable, current repo state)
 
-`REVIEWER_ATTESTATION_NOT_APPROVED` (the reviewed pack is 80/80 but no
-serialized reviewer attestation is bound to the formal run), `MISSING_FORMAL_CREDENTIAL` (no formal credential
+`MISSING_FORMAL_CREDENTIAL` (no formal credential
 attestation), `RUNTIME_ATTESTATION_MISSING` (no product runtime
 attestation), `CORPUS_SNAPSHOT_UNAVAILABLE` (no formal corpus snapshot
 binding), `BUDGET_APPROVAL_MISSING` / `SECURITY_APPROVAL_MISSING`

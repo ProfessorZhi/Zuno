@@ -14,6 +14,7 @@ PHASE22 当前不能关闭为 `completed`，Program 当前不能归档为 `no-ac
 - PHASE22 Mandatory Removal Candidates 已达到 `7/7 resolved_retired`。
 - Fixed Benchmark 仍为 `BLOCKED / blocked_not_measured`，`actual_case_count=0`。
 - Public Benchmark Review Pack 已完成 delegated review：`reviewer_approved_count=80`、`benchmark_eligible_count=80`、`rejected_or_incomplete_count=0`；review gate 已通过，measurement 仍等待正式 runtime。
+- Reviewer attestation 已序列化并绑定正式 80-case manifest：`docs/evidence/goal05-phase22-formal-benchmark-readiness/reviewer-attestation.json`；该证据只关闭 Governance review blocker，不代表 runtime、credentials、budget 或 security 已通过。
 - Formal benchmark `--check-only` 已复核：四 Profile 均为 `BLOCKED_NOT_MEASURED`；formal credentials、product runtime dependency bundle、runtime/measurement attestation、security/budget approval 均未具备。
 - PHASE22 仍为 `in_progress`。
 - Program 仍为 `active`，不得执行 `.agent/programs/` no-active reset。
