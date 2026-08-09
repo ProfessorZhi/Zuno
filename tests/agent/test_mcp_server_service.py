@@ -38,6 +38,14 @@ def test_ensure_tools_available_rejects_empty_server_tools():
         MCPService.ensure_tools_available("qa-server", {"qa-server": []})
 
 
+def test_legacy_mcp_manager_tool_execution_fails_closed():
+    from zuno.platform.services.mcp.manager import MCPManager
+
+    manager = MCPManager.__new__(MCPManager)
+    with pytest.raises(RuntimeError, match="MCP_DIRECT_EXECUTION_RETIRED"):
+        asyncio.run(manager.call_mcp_tools([]))
+
+
 def test_get_mcp_tools_info_tolerates_null_params(monkeypatch):
     from zuno.api.services.mcp_server import MCPService
 

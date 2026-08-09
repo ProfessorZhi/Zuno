@@ -8,7 +8,7 @@
     "security_epoch": "STATIC_CONTRACT_AVAILABLE",
     "sse_stream_resume": "STATIC_CONTRACT_AVAILABLE"
   },
-  "finding_count": 12,
+  "finding_count": 11,
   "findings": {
     "direct_tool_bypass": [
       {
@@ -38,13 +38,6 @@
         "external_dependency": "",
         "owner_work_package": "08 Tool Runtime",
         "path": "src/backend/zuno/platform/services/mcp/load_mcp/tools.py"
-      },
-      {
-        "candidate_pr": "",
-        "evidence": "execute_tool(...) direct tool dispatch",
-        "external_dependency": "MCP direct-call cutover",
-        "owner_work_package": "",
-        "path": "src/backend/zuno/platform/services/mcp/manager.py"
       },
       {
         "candidate_pr": "",
