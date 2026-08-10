@@ -38,7 +38,7 @@ docs/
 - 前台文档默认中文。
 - 新增或重写的 `docs/`、`.agent/` Markdown 必须用中文说明目标、状态、边界、执行步骤和验收。
 - 英文术语可以保留，但必须用中文解释其边界。
-- `docs/history/` 是历史证据库，可以保留原文，不为翻译而改写历史。
+- `docs/history/` 只保存经过批准的历史摘要，可以保留原文，不为翻译而改写历史。
 
 ## 来源边界
 
@@ -47,7 +47,10 @@ docs/
 - `.agent/`：本地 Agent Skill System、Reference、Program 和模板；不保存架构或模块正文镜像。
 - `docs/history/`：历史归档。
 
-正式结论必须进入 `docs/`。只给 Agent 使用的导航、可复用提示和辅助脚本放在 `.agent/`。历史材料移动到 `docs/history/`，不要因为不再当前有效就删除。
+正式结论必须进入 `docs/`。只给 Agent 使用的导航、可复用提示和辅助脚本放在 `.agent/`。
+`docs/history/` 保存批准的历史摘要；已完成 Program 的 raw construction materials 可以在
+摘要完成、明确授权且 Git commit 可追溯时从 current tree 移除。未提交内容、未合并提交、
+Migration、benchmark evidence 和用户文件不得未经明确 disposition 删除。
 
 项目根目录必须保持干净。临时截图、PDF 预览、测试产物、本地报告和缓存不得遗留在根目录；正式附件放入对应 `docs/**/assets/`，临时调试产物放入 `.local/` 或 `tmp/`。
 
@@ -104,6 +107,7 @@ Agent Core 规范优先级：全局架构原则 → 单一模块 Target 架构�
 3. 运行 `python tools/agent/render_architecture.py --write`；
 4. 运行 `python tools/agent/render_architecture.py --check`；
 5. 运行 `python tools/scripts/verify_docs_entrypoints.py`。
+6. 运行 `python tools/scripts/verify_markdown_internal_links.py`。
 
 模块变化时：
 
@@ -205,6 +209,7 @@ Zuno 本地执行只有两类主模式：挂机模式和多线程模式。这里
 git diff --check
 python tools/agent/render_architecture.py --check
 python tools/scripts/verify_docs_entrypoints.py
+python tools/scripts/verify_markdown_internal_links.py
 python tools/scripts/verify_repo_structure.py
 python tools/scripts/verify_agent_core_target_protocols.py
 python .agent/scripts/verify_agent_system.py
@@ -236,4 +241,5 @@ pytest -q tests/repo/test_docs_entrypoints.py tests/repo/test_agent_core_target_
 - 不把隐藏思维链保存进 Trace、Memory 或数据库。
 - 不绕过 Security、Approval、Budget 或 Idempotency。
 - 不把 Target 或 Future 写成 Current。
-- 不删除历史证据来制造“目录干净”。
+- 不以“目录干净”为理由删除历史证据；只有完成摘要、明确授权且可由 Git commit 追溯的
+  raw construction materials 才能退出 current tree。

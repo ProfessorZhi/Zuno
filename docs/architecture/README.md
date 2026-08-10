@@ -47,12 +47,11 @@ docs/decisions/0006-evidence-driven-agentic-graphrag.md
 Runtime 工程收口已完成并归档；当前 `.agent/programs/` 为 `no-active`。下一阶段是独立的设计与整理工作：
 
 ```text
-Latest Current Review
-→ Repository Consolidation
-→ 11 Module Architecture Deep Review
-→ ADR 0006 Canonical Coordination
-→ Cross-module Contract Review
-→ Architecture / Mermaid / HTML Sync
+Current Baseline Review
+→ Project Workflow Consolidation
+→ Canonical Architecture Deep Review
+→ 11 Module Deep Review
+→ Cross-module Contract / ADR Coordination
 → Architecture Review
 → 设计确认后才决定是否建立新的 Implementation Program
 ```

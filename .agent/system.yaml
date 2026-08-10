@@ -168,6 +168,7 @@ skill_routes:
       - "python tools/agent/render_architecture.py --check"
       - "python tools/scripts/verify_wave1_contract_freeze.py"
       - "python tools/scripts/verify_docs_entrypoints.py"
+      - "python tools/scripts/verify_markdown_internal_links.py"
       - "python .agent/scripts/verify_agent_system.py"
       - "python .agent/scripts/verify_doc_boundaries.py"
 

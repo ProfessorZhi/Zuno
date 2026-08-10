@@ -40,7 +40,7 @@ git log --oneline origin/main..HEAD
 2. 目标清楚时，用满足验收闸门的最短路径执行。
 3. 每轮重新确认 worktree、branch、`git status --short --branch`、允许范围和禁止范围。
 4. 正式结论写入 `docs/`；只给 Agent 使用的导航、模板和执行辅助材料放入 `.agent/`。
-5. 被替换计划移动到 `docs/history/`，不要直接删除。
+5. 被替换计划压缩为批准的 `docs/history/` 摘要；完成摘要、获得授权且 Git commit 可追溯后，raw construction materials 可以从 current tree 移除。
 6. 不把 Target 写成 Current，不把执行工作流里的多 agent 写成 Zuno runtime 架构。
 7. 修改后运行本轮列出的最小有效验证。
 8. 验证通过后提交并推送；如果验证或 push 阻塞，保留证据并停止报告。

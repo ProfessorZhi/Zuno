@@ -15,13 +15,13 @@ AGENTS.md              仓库唯一入口：规则、边界、阅读顺序、任
 
 执行时先按 `AGENTS.md` 路由，再进入 `.agent/references/task-routing.md` 和 `.agent/references/workflow.md`，然后按对应参考和验证命令执行。
 
-复杂任务先判断工作模式：挂机模式由主线程作为真正的 Codex UI 目标模式一路执行到底；多线程模式由主线程作为真正的 Codex UI 目标模式 coordinator，给粗粒度子线程准备目标模式提示词、分支边界和验收闸门，再由用户在 UI 里手动创建真正的目标模式子线程。提示词目标模式不等于 Codex UI 目标模式。线程内可按范围开启多 agent 模式；这里的多 agent 是执行协作方式，不改变 Zuno runtime 的 Single GeneralAgent 主线。
+复杂任务先判断工作模式：挂机模式由主线程作为真正的 Codex UI 目标模式一路执行到底；多线程模式由主线程作为真正的 Codex UI 目标模式 coordinator，给粗粒度子线程准备目标模式提示词、分支边界和验收闸门，再由用户在 UI 里手动创建真正的目标模式子线程。提示词目标模式不等于 Codex UI 目标模式。线程内可按范围开启多 agent 模式；这里的多 agent 是执行协作方式，不改变 Zuno runtime 的 Single Controller 主线。
 
 ## 语言规则
 
 - 新写或重写的 Agent 文档默认使用中文。
 - 英文术语可以保留，但要配中文解释。
-- 历史档案放在 `docs/history/`，可以保留原文。
+- `docs/history/` 只保留经过批准的历史摘要；raw construction materials 可按 AGENTS.md 的授权、摘要和 Git 可追溯规则退出 current tree。
 
 ## 跟踪结构
 

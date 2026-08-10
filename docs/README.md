@@ -1,6 +1,9 @@
 # Zuno 文档入口
 
-前台文档默认使用中文，承载当前正式结论；历史材料保留在 `docs/history/`，不删除、不改写成当前事实。
+前台文档默认使用中文，承载当前正式结论。`docs/history/` 只保留经过批准的历史摘要；
+已完成 Program 的 raw construction materials 可以在摘要完成、明确授权且 Git commit
+可追溯时从 current tree 移除，但未提交内容、未合并提交、Migration、benchmark evidence
+和用户文件不得未经明确 disposition 删除。
 
 ## 首读路径
 
@@ -12,8 +15,8 @@
 - [Production Readiness](./status/production-readiness.md)：Current、Gap、Measurement、Blocked 和 Production Readiness 状态事实源。
 - [架构决策](./decisions/README.md)：仍影响当前或下一版 Target 的正式 ADR。
 - [工程治理](./governance/repo-ownership-matrix.md)：代码 Owner、迁移边界和兼容路径。
-- [公开证据](./evidence/public-demo.md)：精选可展示证据。
-- [历史归档](./history/README.md)：过时计划、旧 Program、旧架构基线和历史证据。
+- [当前证据](./evidence/README.md)：当前仍有证明价值的 baseline 与 closure evidence。
+- [历史归档](./history/README.md)：经过批准的历史摘要，不重新解释成当前事实。
 
 ```text
 architecture/    总架构四个 canonical 文件
@@ -65,18 +68,17 @@ Evidence-Driven Agentic GraphRAG v2
     由 ADR 0006 独立定义为 accepted-target；当前 Program 尚未把它完整实现为 Current。
 
 History
-    进入 docs/history/，不能重新解释成当前事实。
+    只保留批准的摘要；raw construction materials 可按授权和 Git 可追溯规则退出 current tree。
 ```
 
 上一轮 Runtime 工程收口已完成并归档，`.agent/programs/` 当前为 `no-active`。下一阶段不是新的 Runtime Implementation Program；只在独立设计工作中按以下顺序推进：
 
 ```text
-Latest Current Review
-→ Repository Fresh-State Review
-→ 11 Module Architecture Deep Review
-→ ADR 0006 Canonical Coordination
-→ Cross-module Contract Review
-→ Architecture / Mermaid / HTML Sync
+Current Baseline Review
+→ Project Workflow Consolidation
+→ Canonical Architecture Deep Review
+→ 11 Module Deep Review
+→ Cross-module Contract / ADR Coordination
 → Architecture Review
 → 设计确认后才决定是否建立新的 Implementation Program
 ```

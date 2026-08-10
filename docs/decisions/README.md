@@ -17,9 +17,8 @@
   - 当前状态：`accepted-target`；定义 Architecture v2 的 Broad Evidence Discovery、Evidence Deliberation、Evidence Reasoning Graph、ClaimEvidenceState、Targeted Probe 与安全停止。
   - 不修改现有 Program 与 PHASE01–PHASE22，不构成代码、Migration、质量或生产就绪证据。
 
-已被替换的决策归档在：
-
-- `docs/history/decisions/`
+已被替换的决策不再伪造一个当前树目录；需要考古时使用 Git history，或在
+`docs/history/` 的批准摘要中读取结论。
 
 新增 ADR 时优先记录：
 

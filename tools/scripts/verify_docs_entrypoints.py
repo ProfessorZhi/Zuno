@@ -67,8 +67,22 @@ def _load_renderer():
     return module
 
 
+def _load_markdown_link_verifier():
+    path = REPO_ROOT / "tools/scripts/verify_markdown_internal_links.py"
+    spec = importlib.util.spec_from_file_location("verify_markdown_internal_links", path)
+    if spec is None or spec.loader is None:
+        raise RuntimeError("cannot load tools/scripts/verify_markdown_internal_links.py")
+    module = importlib.util.module_from_spec(spec)
+    sys.modules[spec.name] = module
+    spec.loader.exec_module(module)
+    return module
+
+
 def verify() -> list[str]:
     errors: list[str] = []
+
+    markdown_link_verifier = _load_markdown_link_verifier()
+    errors.extend(markdown_link_verifier.verify())
 
     for relative_path in REQUIRED_FRONT_PATHS:
         if not (REPO_ROOT / relative_path).exists():

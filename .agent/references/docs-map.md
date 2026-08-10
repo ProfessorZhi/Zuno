@@ -83,6 +83,7 @@ git diff --check
 python tools/scripts/verify_architecture_document_set.py
 python tools/agent/render_architecture.py --check
 python tools/scripts/verify_docs_entrypoints.py
+python tools/scripts/verify_markdown_internal_links.py
 python .agent/scripts/verify_agent_system.py
 python .agent/scripts/verify_doc_boundaries.py
 pytest -q tests/repo/test_architecture_document_set.py tests/repo/test_docs_entrypoints.py -p no:cacheprovider

@@ -16,5 +16,5 @@ Accepted
 
 ## 结果
 
-- 先推进 Single GeneralAgent、Context / Memory、ToolCard、GraphRAG、retrieval fusion 和 eval / trace 闭环。
+- 先推进 Single Controller、Context / Memory、ToolCard、GraphRAG、retrieval fusion 和 eval / trace 闭环。
 - 等能力稳定后，再删除兼容命名空间并统一到 `zuno` 主线。
