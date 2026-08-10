@@ -128,6 +128,8 @@ def test_workspace_simple_chat_can_enable_multi_agent_runtime(monkeypatch):
                 mcp_servers=[],
                 knowledge_ids=["kb_1"],
                 multi_agent_enabled=True,
+                tenant_id="tenant_1",
+                workspace_id="workspace_1",
             ),
             login_user=type("User", (), {"user_id": "user_1"})(),
         )

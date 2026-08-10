@@ -346,7 +346,12 @@ def test_wechat_agent_runs_on_the_same_single_controller(tmp_path, monkeypatch) 
         "zuno.platform.services.workspace.wechat_agent.ModelManager.get_conversation_model",
         lambda: _FakeChatModel(),
     )
-    wechat = WeChatAgent(user_id="u-1", session_id="s-1")
+    wechat = WeChatAgent(
+        user_id="u-1",
+        session_id="s-1",
+        tenant_id="tenant-1",
+        workspace_id="workspace-1",
+    )
     # Same composition root type as the workspace simple agent.
     assert wechat._runtime is None
     runtime = _runtime(tmp_path)

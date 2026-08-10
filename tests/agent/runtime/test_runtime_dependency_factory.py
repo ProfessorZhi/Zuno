@@ -77,10 +77,12 @@ def test_completion_factory_knowledge_step_uses_durable_port_not_missing_depende
         deps=assembly.dependencies,
     )
 
-    assert result.observation.status == "completed"
+    assert result.observation.status == "blocked"
     assert result.observation.source == "DurableKnowledgeRetrievalPort"
+    assert result.observation.failure_reason == "knowledge_retrieval_abstained"
     assert result.observation.metadata["durable_knowledge_port"]["status"] == "skipped"
     assert result.observation.metadata["durable_knowledge_port"]["reason"] == "knowledge_scope_empty"
+    assert result.observation.metadata["agent_core_proposal_decision"]["decision"] == "rejected"
     assert result.observation.metadata.get("missing_dependency") is None
 
 

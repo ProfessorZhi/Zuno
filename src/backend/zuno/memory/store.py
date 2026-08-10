@@ -283,34 +283,12 @@ class DatabaseMemoryStore(InMemoryLayerStore):
 
     def save_task_summary(self, summary: TaskMemorySummary) -> None:
         with MemoryRuntimeDao.session_scope(self._session_factory) as session:
-            session.execute(
-                text(
-                    """
-                    INSERT INTO memory_task_summary (
-                        summary_id, user_id, agent_id, project_id, thread_id,
-                        layer, content, source_event_ids, token_count, metadata
-                    )
-                    VALUES (
-                        :summary_id, :user_id, :agent_id, :project_id, :thread_id,
-                        :layer, :content, CAST(:source_event_ids AS jsonb), :token_count,
-                        CAST(:metadata AS jsonb)
-                    )
-                    ON CONFLICT (summary_id) DO NOTHING
-                    """
-                ),
-                {
-                    "summary_id": summary.summary_id,
-                    "user_id": summary.scope.user_id,
-                    "agent_id": summary.scope.agent_id,
-                    "project_id": summary.scope.project_id,
-                    "thread_id": summary.scope.thread_id,
-                    "layer": summary.layer.value,
-                    "content": summary.content,
-                    "source_event_ids": canonical_json(list(summary.source_event_ids)),
-                    "token_count": summary.token_count,
-                    "metadata": canonical_json(summary.metadata),
-                },
-            )
+            # Use the model's JSON type here so SQLite test stores and the
+            # PostgreSQL runtime both preserve source bindings as arrays.
+            # The previous raw CAST(... AS jsonb) path silently collapsed the
+            # array on SQLite, which broke cross-engine evidence recovery.
+            if session.get(MemoryTaskSummaryTable, summary.summary_id) is None:
+                session.add(_task_summary_to_table(summary))
 
     def save_memory_candidate(self, candidate: MemoryCandidate) -> None:
         with MemoryRuntimeDao.session_scope(self._session_factory) as session:
@@ -625,6 +603,11 @@ def _governance_entry_to_table(
 
 
 def _raw_event_from_table(row: MemoryRawEventTable) -> RawMemoryEvent:
+    metadata = dict(row.memory_metadata or {})
+    if row.trace_id:
+        metadata["trace_id"] = row.trace_id
+    if row.task_id:
+        metadata["task_id"] = row.task_id
     return RawMemoryEvent(
         event_id=row.event_id,
         scope=MemoryScope(
@@ -636,7 +619,7 @@ def _raw_event_from_table(row: MemoryRawEventTable) -> RawMemoryEvent:
         event_type=row.event_type,
         payload=dict(row.payload or {}),
         layer=MemoryLayer(row.layer),
-        metadata=dict(row.memory_metadata or {}),
+        metadata=metadata,
     )
 
 

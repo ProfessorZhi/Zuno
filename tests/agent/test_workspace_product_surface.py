@@ -68,6 +68,10 @@ def _patch_product_dependencies(monkeypatch: pytest.MonkeyPatch) -> None:
         "zuno.platform.services.workspace.simple_agent.ModelManager.get_user_model",
         lambda **_: _FakeChatModel(),
     )
+    monkeypatch.setattr(
+        "zuno.platform.services.workspace.wechat_agent.ModelManager.get_conversation_model",
+        lambda: _FakeChatModel(),
+    )
     async def _get_llm_by_id(model_id: str) -> dict[str, Any]:
         return {
             "model": "mock-model",

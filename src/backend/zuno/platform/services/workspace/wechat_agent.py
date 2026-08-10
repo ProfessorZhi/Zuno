@@ -174,6 +174,19 @@ class WeChatAgent:
                  workspace_id: str = "",
                  budget_limits: dict[str, Any] | None = None):
 
+        # Reject unauthenticated channel requests before constructing model,
+        # MCP, or runtime dependencies. The WeChat callback has no tenant /
+        # workspace authority of its own, so failing closed must also avoid
+        # external provider calls and tool discovery side effects.
+        self._tenant_id = str(tenant_id or "").strip()
+        self._workspace_id = str(workspace_id or "").strip()
+        if not self._tenant_id or not self._workspace_id:
+            raise BlockedConfiguration(
+                "BLOCKED_CONFIGURATION: product runtime requires a real tenant_id and "
+                "workspace_id from the product request/auth context; missing product "
+                "context must not fall back to a synthetic identity"
+            )
+
         # The chat model is used by the canonical runtime's model steps via
         # the workspace model gateway; the adapter never answers directly.
         self.model = ModelManager.get_conversation_model()
@@ -196,8 +209,6 @@ class WeChatAgent:
         # Real tenant / workspace identity from the product request / auth
         # context; no synthetic tenant:default and no workspace derived from
         # user_id. Missing identity fails closed with BLOCKED_CONFIGURATION.
-        self._tenant_id = str(tenant_id or "").strip()
-        self._workspace_id = str(workspace_id or "").strip()
         # PHASE22 product wiring: request-declared runtime limits flow into
         # the formal Budget Admission resolver (never self-attested).
         self._budget_limits = dict(budget_limits or {})

@@ -124,6 +124,8 @@ EXPECTED_EXPORTS = {
         "PreparedActionStatus",
         "ReconciliationConclusion",
         "ToolAttemptStatus",
+        "ToolEffectUnknownError",
+        "ToolApprovalBinding",
         "ToolGatewayReceipt",
         "ToolInvocationGateway",
         "ToolRuntimeBatch",

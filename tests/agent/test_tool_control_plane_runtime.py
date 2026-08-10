@@ -81,7 +81,7 @@ def test_read_only_tool_auto_executes_with_sandbox_audit_and_normalized_result()
     assert result.task_events[1]["payload"]["audit"]["sandbox_profile"] == "workspace_ro"
 
 
-def test_high_side_effect_tool_waits_for_approval_then_uses_brokered_credentials() -> None:
+def test_high_side_effect_tool_fails_closed_without_gateway_before_approval() -> None:
     from zuno.capability.control_plane import (
         ExecutorAdapterContract,
         ToolApprovalPolicy,
@@ -182,77 +182,25 @@ def test_high_side_effect_tool_waits_for_approval_then_uses_brokered_credentials
         )
     )
 
-    assert pending.status == "approval_required"
-    assert pending.approval_required is True
+    # Side-effect execution cannot even enter approval waiting until the
+    # formal ToolInvocationGateway is bound. This test intentionally uses the
+    # lightweight runtime without persistence factories, so PHASE22 must fail
+    # closed before approval or executor dispatch.
+    assert pending.status == "blocked"
+    assert pending.blocked_reason == "SIDE_EFFECT_GATEWAY_NOT_BOUND"
+    assert pending.approval_required is False
     assert pending.normalized_result is None
     assert calls == []
     assert [event["type"] for event in pending.task_events] == [
         "tool_call",
         "sandbox_audit",
-        "approval_required",
-    ]
-    assert pending.audit_event.final_decision == "pending"
-    assert pending.task_events[-1]["payload"]["required_approval"] == "tool:mail.send"
-    assert "raw-secret" not in repr(pending.to_dict())
-    assert security_facts[0]["status"] == "approval_waiting"
-    assert security_facts[0]["required_approval"] == "tool:mail.send"
-    assert "prepared_action_hash" in security_facts[0]
-    assert "raw-secret" not in repr(security_facts)
-
-    approved = runtime.execute(
-        ToolRuntimeRequest(
-            tool_id="mail.send",
-            arguments={
-                "to": "hr@example.com",
-                "body": "Candidate update",
-                "smtp_password": "raw-secret",
-            },
-            workspace_id="workspace_tools",
-            user_id="user_tools",
-            task_id="task_mail",
-            trace_id="trace_mail",
-            model_intent="Send a candidate update email.",
-            approved=True,
-            approval_comment="Approved by user.",
-        )
-    )
-
-    assert approved.status == "completed"
-    assert approved.approval_required is False
-    assert approved.normalized_result is not None
-    assert approved.normalized_result.data["message_id"] == "msg_123"
-    assert approved.audit_event.final_decision == "approved"
-    assert approved.sandbox_context.credential_refs == ("credref://workspace_tools/mail",)
-    assert calls == [
-        {
-            "kind": "executor",
-            "args": {
-                "to": "hr@example.com",
-                "body": "Candidate update",
-                "smtp_password": "raw-secret",
-            },
-            "credential_refs": ("credref://workspace_tools/mail",),
-            "network_policy": "egress_mail_only",
-        }
-    ]
-    assert [event["type"] for event in approved.task_events] == [
-        "tool_call",
-        "sandbox_audit",
         "tool_result",
     ]
-    assert [item["kind"] for item in timeline] == [
-        "security_fact",
-        "security_fact",
-        "executor",
-    ]
-    assert security_facts[-1]["status"] == "approved_before_effect"
-    assert security_facts[-1]["credential_refs"] == ["credref://workspace_tools/mail"]
-    assert security_facts[-1]["approval_decision_ref"].startswith(
-        "temporary.adapter.tool_runtime.approved_bool:"
-    )
-    assert security_facts[-1]["approval_adapter_ref"] == "temporary.adapter.tool_runtime.approved_bool"
-    assert security_facts[-1]["approval_adapter_removal_phase"] == "PHASE16"
-    assert "raw-secret" not in repr(approved.to_dict())
+    assert pending.audit_event.final_decision == "blocked"
+    assert pending.effect_certainty == "NO_EFFECT"
+    assert pending.task_events[-1]["payload"]["error"] == "SIDE_EFFECT_GATEWAY_NOT_BOUND"
+    assert "raw-secret" not in repr(pending.to_dict())
+    assert "raw-secret" not in repr(security_facts)
 
 
 def test_tool_runtime_blocks_disabled_tool_before_executor_runs() -> None:
