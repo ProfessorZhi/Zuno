@@ -6,7 +6,7 @@
 
 冻结基线：20d50b60df6f1c654c77cf9c5bc2c6375e3bcd00
 
-closure_sha：PENDING_FIRST_CLOSURE_COMMIT
+closure_sha：9752a348b5fbfcb8194e1b665515988ba78bf3e0
 
 本清单记录本机工程工作区治理的最终收口证据。不激活 PROGRAM01 Real Unified Runtime Cutover，不进入 Architecture Deep Review，不改变业务 Runtime。Repository Closure 仍为 CLOSED。
 
@@ -166,7 +166,7 @@ OWNER_REQUIRED 在 stash 语境表示“明确知道对象是什么，但未来�
 收口指标：
 
 ~~~yaml
-closure_sha: PENDING_FIRST_CLOSURE_COMMIT
+closure_sha: 9752a348b5fbfcb8194e1b665515988ba78bf3e0
 worktree_count_before: 47
 worktree_count_after: 33
 dirty_preserved_count: 7
