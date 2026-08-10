@@ -14,9 +14,10 @@ def test_phase5_docs_sync_current_public_story() -> None:
     ).read_text(encoding="utf-8")
 
     for phrase in [
-        "本地优先、短小精悍但工程完整的",
-        "后端主路径位于 `src/backend/zuno`",
-        "当前 program 前台：`.agent/programs/`",
+        "前后端分离",
+        "LangGraph Single Controller",
+        "当前 active program：",
+        "PHASE22_fixed-benchmark-production-readiness-and-closure",
     ]:
         assert phrase in readme
 

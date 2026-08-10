@@ -39,32 +39,26 @@ def test_readme_and_roadmap_share_current_program_truth() -> None:
 
     for phrase in [
         ".agent/programs/",
-        "zuno-production-architecture-and-deliverables-completion-v1",
-        "docs/history/programs/zuno-production-architecture-and-deliverables-completion-v1/",
-        "zuno-target-architecture-runtime-full-implementation-v1",
-        "zuno-master-architecture-implementation-v1",
+        "zuno-canonical-architecture-runtime-realization-v1",
+        "PHASE22_fixed-benchmark-production-readiness-and-closure",
+        "./docs/architecture/architecture.md",
     ]:
         assert phrase in readme
 
     for phrase in [
         "Current",
         "Target",
-        "Document Ingestion / Parse Gateway",
-        "Tool Control Plane",
-        "LangSmith-compatible Trace / Eval",
+        "Input / Document Ingestion",
+        "Tool Runtime",
+        "Observability & Eval",
     ]:
         assert phrase in architecture
-    assert _current_phase_name(current_program) == "none"
-    assert "state: no-active" in current_program
-    assert "active_program: none" in current_program
-    assert "latest_completed_program: zuno-real-unified-runtime-cutover-v1" in current_program
-    assert "measurement blocked" in current_program
-    assert "UnifiedAgentRuntimeService" in current_program
-    assert "docs/history/programs/zuno-real-unified-runtime-cutover-v1/" in current_program
-    assert "zuno-production-architecture-and-deliverables-completion-v1" in readme
-    assert "zuno-production-architecture-and-deliverables-completion-v1" in architecture
-    assert "zuno-production-architecture-and-deliverables-completion-v1" in readme
-    assert "zuno-production-architecture-and-deliverables-completion-v1" in architecture
+    assert _current_phase_name(current_program) == "PHASE22"
+    assert "state: active" in current_program
+    assert "active_program: zuno-canonical-architecture-runtime-realization-v1" in current_program
+    assert "measurement in_progress" in current_program
+    assert "production readiness not established" in current_program
+    assert "PHASE22 in progress" in current_program
 
 
 def test_public_docs_keep_history_off_front_path_but_reachable() -> None:
@@ -77,7 +71,7 @@ def test_public_docs_keep_history_off_front_path_but_reachable() -> None:
     )
 
     assert "./docs/architecture/architecture.md" in readme
-    assert "docs/history/architecture-surface-cleanup-2026-06-30/" in architecture_index
+    assert "docs/history/architecture-v1-baseline.md" in architecture_index
     assert "phases/" in history_index
     assert "plans/" in history_index
     assert "src/backend/zuno" in readme

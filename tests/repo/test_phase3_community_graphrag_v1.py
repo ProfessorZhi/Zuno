@@ -211,7 +211,7 @@ def test_phase3_pipeline_marks_community_stale_after_graph_refresh(monkeypatch):
     async def fake_get_runtime_settings(knowledge_id):
         return {"domain_pack": None, "domain_pack_id": None}
 
-    async def fake_parse_chunks(task):
+    async def fake_parse_graph_documents(self, task):
         return []
 
     async def fake_record_stage(*args, **kwargs):
@@ -230,7 +230,11 @@ def test_phase3_pipeline_marks_community_stale_after_graph_refresh(monkeypatch):
         return None
 
     monkeypatch.setattr(KnowledgePipelineManager, "_load_task", staticmethod(fake_load_task))
-    monkeypatch.setattr(KnowledgePipelineManager, "_parse_chunks", staticmethod(fake_parse_chunks))
+    monkeypatch.setattr(
+        KnowledgePipelineManager,
+        "_parse_graph_documents",
+        fake_parse_graph_documents,
+    )
     monkeypatch.setattr(KnowledgePipelineManager, "_record_stage", staticmethod(fake_record_stage))
     monkeypatch.setattr("zuno.platform.services.pipeline.manager.KnowledgeService.get_knowledge_config", fake_get_knowledge_config)
     monkeypatch.setattr("zuno.platform.services.pipeline.manager.KnowledgeService.get_runtime_settings", fake_get_runtime_settings)

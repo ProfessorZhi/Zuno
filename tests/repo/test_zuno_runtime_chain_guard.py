@@ -164,11 +164,12 @@ def test_domain_pack_retirement_guards_live_in_legacy_guard_tests() -> None:
     assert (REPO_ROOT / "tests/repo/test_phase5_retrieval_modes.py").exists()
 
 
-def test_phase5_domain_runtime_paths_stays_on_current_general_agent_path() -> None:
+def test_phase5_domain_runtime_paths_stays_on_retired_general_agent_guard() -> None:
     phase5_paths_test = (
         REPO_ROOT / "tests" / "repo" / "test_phase5_domain_runtime_paths.py"
     ).read_text(encoding="utf-8")
 
-    assert "KnowledgeQueryService" in phase5_paths_test
+    assert "retired GeneralAgent domain runtime paths" in phase5_paths_test
+    assert "zuno.agent.core.agents.general_agent" in phase5_paths_test
     assert "DomainQAGraph" not in phase5_paths_test
     assert "MultiAgentSupervisorGraph" not in phase5_paths_test
