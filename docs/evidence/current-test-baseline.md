@@ -4,10 +4,12 @@
 
 ## Final HEAD Verification
 
-本次收口复核绑定到：`verified_head: 171ba0e0aeb2de5f9f3aad1ca8043c92291e9a3a`。
+本次收口复核绑定到：`verified_head: 1ea56a5d61afa27ebda8f8745a6dbc6584796d05`。
 
 - `repository_gates`: `PASS`；
 - `canonical_runtime_tests`: `67 passed`；
+- `closure_documentation_tests`: `23 passed`；
+- `final_selected_suite`: `90 passed`；
 - `full_ci`: `NOT_RUN / NO_GITHUB_STATUS`；
 - `benchmark`: `BLOCKED_NOT_MEASURED`；
 - `quality`: `NOT_YET_PROVEN`；
