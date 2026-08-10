@@ -26,8 +26,9 @@ def test_phase22_archive_preflight_generation() -> None:
     source_sha = _git_rev_parse("HEAD")
 
     assert "PHASE22 Archive Preflight" in text
-    assert "status: not_ready_for_archive" in text
+    assert "status: completed" in text
     assert f"source_sha_at_generation: {source_sha}" in text
-    assert "program archive is still blocked" in lowered
-    assert "PHASE22 still in progress: True" in text
+    assert "closure_kind: engineering_program_closure" in text
+    assert "current program state: no-active" in text
+    assert "PHASE22 engineering closure complete: True" in text
     assert "docs/evidence/goal05-phase22-verification-report.md" in text

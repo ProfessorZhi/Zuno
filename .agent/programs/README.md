@@ -1,49 +1,22 @@
 # Agent 执行计划
 
-`.agent/programs/` 当前承载一个 active 总 Program：
+`.agent/programs/` 当前是 no-active 前台状态，不承载 active implementation program；no active implementation program。
+
+最近归档 Program：
 
 ```text
 zuno-canonical-architecture-runtime-realization-v1
+docs/history/programs/zuno-canonical-architecture-runtime-realization-v1/
 ```
 
-该 Program 负责把十一模块 Target 架构完整迁移为 Runtime Current，包括后端、PostgreSQL、RabbitMQ、Object Store、LangGraph Checkpointer、Security、Observability、Agent Core、Agentic GraphRAG、Tool Effect、Web/Desktop、故障恢复、Benchmark、切流和旧路径删除。
-
-## 当前状态
-
-- State: active
-- Current phase: `PHASE22`
-- Program version: 2
-- Phase count: 22
-- Atomic Work Packages: 163
-- Execution mode: full-scope / runtime-first / vertical-slice checkpoints / evidence-gated
-- Implementer target: Codex GPT-5.5 medium，单次只执行一个 Work Package
-
-2026-07-20 Goal01 audit 将 PHASE11 Durable Ingestion and Source Lineage 重新打开为 in_progress。2026-07-24 的 Goal02 final closure 已完成有限 Closure Review 并恢复传输。Goal03 Backend Platform Expansion 已完成 Wave A 和 Wave B，但 Goal05 一次性 Target Coverage Audit 曾撤回 PHASE15 completed 结论，随后在真实 Deno/Pyodide、OCI runtime 和 Postgres integration 证据补齐后重新关闭 PHASE15。Goal04 PR B 已完成 PHASE16 Coordinator Closure 并合并到 main；Goal04 PR C 已完成 PHASE17 Coordinator Closure 并合并到 main；Goal04 PR D 已完成 PHASE18 Coordinator Closure 并合并到 main；Goal04 PR A 已完成 PHASE10 Coordinator Closure 并合并到 main。PHASE19 已完成 Coordinator Closure，closure evidence 为 `docs/evidence/goal04-phase19-coordinator-closure.md`。PHASE20 Eval Runtime 已完成 Coordinator Closure，closure evidence 为 `docs/evidence/goal05-phase20-eval-runtime.md`。PHASE21 已完成 full Web / browser E2E 和 cutover evidence。当前执行入口为 PHASE22 Fixed Benchmark / Cleanup / Closure；production ready 未建立。
-
-## 必读文件
+当前前台只保留：
 
 ```text
+README.md
 current.md
 implementation-roadmap.md
-task-execution-contract.md
-codex-medium-runbook.md
-legacy-to-target-migration-map.md
-canonical-directory-contract.md
-program-manifest.yaml
-当前 PHASENN_*.md
 closure-checklist.md
+queued-programs/
 ```
 
-## 使用规则
-
-1. Coordinator 选择一个 `ready` Work Package。
-2. Codex 只读取 Runbook 指定的最小文件集，不重新推导整个架构。
-3. 每个任务使用独立 Worktree 和 `codex/<task-id>-<slug>` Branch。
-4. Implementer 只能提交 `completion_candidate`；Phase `completed` 由 Coordinator 审核后更新。
-5. 最小 Vertical Slice 只能作为中间检查点，不能代替当前 Phase 的完整范围、失败恢复和真实依赖证明。
-6. 架构能力不得为了节省 Token、时间或测试而删减，也不得把剩余范围无条件推给后续 Phase。
-7. 只新增接口、类型、表、Mock、README、Fixture 或未来目录不能关闭 Runtime Task。
-8. Readiness/Evidence 仍为 `completion_candidate` 或 Coordinator Approval 仍为 `pending` 时，Manifest 不得写 `completed`。
-9. blocked、unavailable、incomparable 和未运行验证必须如实报告。
-10. 兼容桥只允许存在于迁移期；PHASE22 后生产源码零 Legacy 文件夹、零 alias registry、零永久双路径。
-11. Program 完成后整体归档到 `docs/history/programs/zuno-canonical-architecture-runtime-realization-v1/`，不得拆成多个竞争的 active Program。
+下一阶段是 Canonical Target Architecture Deep Design。打开新的 Program 必须由用户明确确认，并从新的 PHASE01 建立独立执行事实；不得把下一阶段设计 handoff 自动变成 PHASE23 或 Runtime Program。

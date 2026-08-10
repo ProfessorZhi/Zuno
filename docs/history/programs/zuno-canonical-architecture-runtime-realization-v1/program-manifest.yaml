@@ -1,7 +1,7 @@
 program:
   id: zuno-canonical-architecture-runtime-realization-v1
   version: 2
-  state: active
+  state: completed
   current_phase: PHASE22
   phase_count: 22
   atomic_work_package_count: 163
@@ -14,6 +14,21 @@ program:
   canonical_directory_contract: .agent/programs/canonical-directory-contract.md
   roadmap: .agent/programs/implementation-roadmap.md
   closure_checklist: .agent/programs/closure-checklist.md
+  archive_state: archived
+  engineering_closure:
+    status: completed
+    decision: archive_allowed
+    repository_owned_blockers: []
+    external_qualification_blockers:
+      - formal_four_profile_runtime_unavailable
+      - formal_model_judge_embedding_credentials_unavailable
+      - product_runtime_and_measurement_attestation_unavailable
+      - production_scale_load_environment_unavailable
+      - disaster_recovery_and_operational_attestation_unavailable
+      - external_security_and_budget_qualification_unavailable
+    measurement: blocked_external
+    quality: not_yet_proven
+    production_readiness: not_established
 
 status_policy:
   phase_states: [planned, ready, in_progress, blocked, completed]
@@ -74,4 +89,4 @@ phases:
   - {id: PHASE19, file: .agent/programs/PHASE19_final-synthesis-publication-reflexion.md, state: completed, depends_on: [PHASE10,PHASE13,PHASE16,PHASE18], tasks: [P19-T01,P19-T02,P19-T03,P19-T04,P19-T05,P19-T06,P19-T07,P19-T08]}
   - {id: PHASE20, file: .agent/programs/PHASE20_observability-eval-benchmark-release-gate.md, state: completed, depends_on: [PHASE06,PHASE18,PHASE19], tasks: [P20-T01,P20-T02,P20-T03,P20-T04,P20-T05,P20-T06,P20-T07,P20-T08]}
   - {id: PHASE21, file: .agent/programs/PHASE21_fault-recovery-full-e2e-and-cutover.md, state: completed, depends_on: [PHASE10,PHASE19,PHASE20], tasks: [P21-T01,P21-T02,P21-T03,P21-T04,P21-T05,P21-T06,P21-T07,P21-T08]}
-  - {id: PHASE22, file: .agent/programs/PHASE22_fixed-benchmark-production-readiness-and-closure.md, state: in_progress, depends_on: [PHASE21], tasks: [P22-T01,P22-T02,P22-T03,P22-T04,P22-T05,P22-T06,P22-T07]}
+  - {id: PHASE22, file: .agent/programs/PHASE22_fixed-benchmark-production-readiness-and-closure.md, state: completed, depends_on: [PHASE21], tasks: [P22-T01,P22-T02,P22-T03,P22-T04,P22-T05,P22-T06,P22-T07]}

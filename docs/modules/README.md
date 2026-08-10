@@ -24,9 +24,9 @@ docs/decisions/0006-evidence-driven-agentic-graphrag.md
 
 该 ADR 定义：Broad Evidence Discovery、Evidence Deliberation、Knowledge Graph + Evidence Reasoning Graph、ClaimEvidenceState、Targeted Evidence Probe、安全停止和 Knowledge Health Diagnosis。
 
-为了避免当前 Program 与 PHASE01–PHASE22 在收口前失去原 Contract 基线，本轮不以精简重写覆盖 Module 03、04、06、10 的完整文档。现有 Phase 继续使用 `c9d099d64a1af28102231751ce55df8217173e89` 基线；ADR 0006 是后续 Program 的新 Target 输入，不授权立即实现。
+为了避免已归档 Program 与 PHASE01–PHASE22 失去原 Contract 基线，本轮不以精简重写覆盖 Module 03、04、06、10 的完整文档。既有 Phase 使用过 `c9d099d64a1af28102231751ce55df8217173e89` 基线；ADR 0006 是后续设计工作的新 Target 输入，不授权本次收口立即实现。当前 `.agent/programs/` 为 `no-active`。
 
-PHASE22 收口后必须执行正式协调：
+PHASE22 已完成 Engineering Closure 并归档。下一阶段只做正式设计协调，不创建 PHASE23 或启动 v2 Runtime：
 
 ```text
 读取最新 Current

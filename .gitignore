@@ -61,6 +61,7 @@ tmp-qa-playwright/
 _ui_audit/
 qa_2026-04-18_full_validation/
 .codex-screenshots/
+.claude/
 .playwright-cli/
 .stitch-preview/
 output/

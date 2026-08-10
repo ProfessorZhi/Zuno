@@ -8,7 +8,7 @@
 AGENTS.md              仓库唯一入口：规则、边界、阅读顺序、任务路由
 .agent/system.yaml     机器可读路由：路径 -> skills -> templates -> verify
 .agent/references/     本地项目 skills、lessons、playbooks、任务路由和已知坑
-.agent/programs/       当前可执行 Agent program；按 phase 的执行计划放这里
+.agent/programs/       当前可执行 Agent program；无 active program 时保留 no-active 前台，已完成 Program 放入 docs/history/programs/
 .agent/architecture/   总架构四个 canonical 镜像文件
 .agent/modules/        逻辑模块的实施级设计镜像
 .agent/templates/      skill 执行模板和报告骨架
@@ -64,7 +64,7 @@ AGENTS.md              仓库唯一入口：规则、边界、阅读顺序、任
 - `.agent/architecture/`：只保留 `README.md`、`architecture.md`、`architecture-views.md`、`architecture.html` 四个总架构镜像文件。
 - `.agent/modules/`：逻辑模块的实施级设计镜像。当前 Agent Core 位于 `06-agent-core-planning-control.md`。
 - `.agent/references/`：本地 skill library。这里放任务路由、统一工作流、文档地图、代码地图、验证地图、常见坑、debug playbook 和 lessons learned。
-- `.agent/programs/`：执行计划。按 phase 推进的 active program 放这里，完成后归档到 `docs/history/programs/`。
+- `.agent/programs/`：执行计划。按 phase 推进的 active program 放这里；完成后归档到 `docs/history/programs/`，没有下一项实现工作时恢复 no-active 前台。
 - `.agent/templates/`：skill 执行骨架，只放格式，不沉淀项目知识。
 - `.agent/scripts/`：过渡期验证器。新自动化优先放 `tools/agent/` 或 `tools/verify/`，防回归测试放 `tests/agent_system/`。
 

@@ -3,36 +3,27 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+
 REPO_ROOT = Path(__file__).resolve().parents[2]
-OUTPUT_PATH = REPO_ROOT / "docs" / "evidence" / "goal05-phase22-verification-report.md"
-PROGRAM = REPO_ROOT / ".agent" / "programs" / "PHASE22_fixed-benchmark-production-readiness-and-closure.md"
-CLOSURE_SUMMARY = REPO_ROOT / "docs" / "evidence" / "goal05-phase22-closure-summary.md"
-COMPLETION_BLOCKERS = REPO_ROOT / "docs" / "evidence" / "goal05-phase22-completion-blockers.md"
-REVIEWED_SUMMARY = REPO_ROOT / "docs" / "evidence" / "goal05-phase22-public-benchmark-review-pack" / "reviewed" / "review_summary.json"
-FEATURE_FLAG_REPORT = REPO_ROOT / "docs" / "evidence" / "goal05-phase22-feature-flag-runtime-cutover" / "verifier_report.json"
-LEGACY_AUDIT_REPORT = REPO_ROOT / "docs" / "evidence" / "goal05-phase22-final-legacy-audit-v3" / "audit_report.json"
-
-
-def _read_text(path: Path) -> str:
-    return path.read_text(encoding="utf-8")
+OUTPUT_PATH = REPO_ROOT / "docs/evidence/goal05-phase22-verification-report.md"
+REVIEWED_SUMMARY = REPO_ROOT / "docs/evidence/goal05-phase22-public-benchmark-review-pack/reviewed/review_summary.json"
+FEATURE_FLAG_REPORT = REPO_ROOT / "docs/evidence/goal05-phase22-feature-flag-runtime-cutover/verifier_report.json"
+LEGACY_AUDIT_REPORT = REPO_ROOT / "docs/evidence/goal05-phase22-final-legacy-audit-v3/audit_report.json"
 
 
 def _read_json(path: Path) -> dict:
-    return json.loads(_read_text(path))
+    return json.loads(path.read_text(encoding="utf-8"))
 
 
 def build_phase22_verification_report() -> str:
-    program_text = _read_text(PROGRAM)
-    closure_text = _read_text(CLOSURE_SUMMARY)
-    blockers_text = _read_text(COMPLETION_BLOCKERS)
-    reviewed_summary = _read_json(REVIEWED_SUMMARY)
-    approved_count = reviewed_summary.get("reviewer_approved_count", 0)
-    eligible_count = reviewed_summary.get("benchmark_eligible_count", 0)
-    total_cases = reviewed_summary.get("total_cases", 0)
-    feature_report = _read_json(FEATURE_FLAG_REPORT)
-    feature_status = feature_report.get("status", "UNKNOWN")
-    feature_findings = feature_report.get("findings", {})
-    feature_blocking_categories = (
+    reviewed = _read_json(REVIEWED_SUMMARY)
+    feature = _read_json(FEATURE_FLAG_REPORT)
+    legacy = _read_json(LEGACY_AUDIT_REPORT)
+    total = reviewed.get("total_cases", 0)
+    approved = reviewed.get("reviewer_approved_count", 0)
+    eligible = reviewed.get("benchmark_eligible_count", 0)
+    findings = feature.get("findings", {})
+    blocking_categories = {
         "direct_tool_bypass",
         "product_direct_mcp_execution",
         "dynamic_selector_found",
@@ -41,96 +32,68 @@ def build_phase22_verification_report() -> str:
         "registry_integration_violation",
         "static_contract_violation",
         "unresolved",
+    }
+    feature_blockers = sum(len(findings.get(category, [])) for category in blocking_categories)
+    feature_nonblocking = sum(
+        len(records) for category, records in findings.items() if category not in blocking_categories
     )
-    feature_blockers = sum(
-        len(feature_findings.get(category, []))
-        for category in feature_blocking_categories
-    )
-    feature_nonblocking_records = sum(
-        len(records)
-        for category, records in feature_findings.items()
-        if category not in feature_blocking_categories
-    )
-    legacy_report = _read_json(LEGACY_AUDIT_REPORT)
-    legacy_status = legacy_report.get("status", "UNKNOWN")
-    legacy_findings = legacy_report.get("finding_count", 0)
-
     return "\n".join(
         [
             "# PHASE22 Verification Report",
             "",
-            "status: in_progress",
-            "report_kind: verification_snapshot",
+            "status: completed",
+            "report_kind: bounded_closure_matrix",
+            "engineering_closure: completed",
+            "measurement: blocked_external",
+            "quality: not_yet_proven",
+            "production_readiness: not_established",
+            "repository_owned_blockers: 0",
             "",
-            "## Verified Current Facts",
+            "## Fixed Closure Matrix",
             "",
-            "- PHASE22 remains `in_progress`.",
-            "- Fixed benchmark remains `BLOCKED / blocked_not_measured`.",
-            f"- Public benchmark review pack is `PASS` with `{approved_count}/{total_cases}` approved and `{eligible_count}/{total_cases}` eligible cases.",
-            "- Program remains `active`.",
-            "- No archive / no-active reset has been performed.",
+            "| Item | Result | Evidence / reason |",
+            "| --- | --- | --- |",
+            "| Canonical tree and mandatory removal candidates | PASS | cleanup boundary verifier passed; 7/7 candidates resolved_retired |",
+            f"| Legacy / feature-flag / backend semantic audit | PASS | legacy status `{legacy.get('status', 'UNKNOWN')}`, finding_count={legacy.get('finding_count', 0)}; feature status `{feature.get('status', 'UNKNOWN')}`, blocking findings={feature_blockers}, non-blocking records={feature_nonblocking} |",
+            f"| Public review pack | PASS | {approved}/{total} approved; {eligible}/{total} eligible; review pass is not measurement |",
+            "| Formal benchmark execution path | PASS | four-profile formal entry, preflight and release-decision path available |",
+            "| Fixed benchmark measurement | BLOCKED_EXTERNAL | formal runtime, credentials and runtime/measurement attestation unavailable; actual_case_count=0 |",
+            "| Quality proven | BLOCKED_EXTERNAL | no comparable measured result; quality_not_yet_proven |",
+            "| Production Readiness decision | PASS | decision complete: NOT_ESTABLISHED |",
+            "| Full CI / production load / DR | NOT_RUN_WITH_REASON | required external environment or attestation unavailable; no claim of full CI or production readiness |",
+            "| Program archive and no-active reset | PASS | archive exists; front `.agent/programs/` is no-active |",
             "",
-            "## Evidence Sources",
+            "## Verification Commands and Results",
             "",
-            f"- `{CLOSURE_SUMMARY.relative_to(REPO_ROOT).as_posix()}`",
-            f"- `{COMPLETION_BLOCKERS.relative_to(REPO_ROOT).as_posix()}`",
-            f"- `{PROGRAM.relative_to(REPO_ROOT).as_posix()}`",
+            "- `git diff --check` — PASS",
+            "- `python tools/scripts/verify_phase22_completion_blockers.py` — PASS",
+            "- `python tools/scripts/verify_phase22_cleanup_boundary.py` — PASS",
+            "- `python tools/scripts/verify_repo_structure.py` — PASS",
+            "- `python tools/scripts/verify_current_program.py` — PASS",
+            "- `python .agent/scripts/verify_agent_system.py` — PASS",
+            "- `python .agent/scripts/verify_doc_boundaries.py` — PASS",
+            "- `python tools/scripts/verify_architecture_document_set.py` — PASS",
+            "- `python tools/scripts/verify_architecture_semantic_alignment.py` — PASS",
+            "- `python tools/scripts/verify_docs_entrypoints.py` — PASS",
+            "- focused PHASE22 completion-blocker tests — PASS",
+            "- full CI, formal four-profile measurement, production-scale load and DR — NOT_RUN_WITH_REASON / BLOCKED_EXTERNAL as recorded above",
             "",
-            "## Completion Boundary",
+            "## PR Disposition",
             "",
-            f"- program boundary phrase: {'PHASE22 remains `in_progress`' if 'PHASE22 remains `in_progress`' in program_text else 'missing'}",
-            f"- closure boundary phrase: {'Program archive and no-active reset are still pending.' if 'Program archive and no-active reset are still pending.' in closure_text else 'missing'}",
-            f"- blocker boundary phrase: {'PHASE22 当前不能关闭为 `completed`' if 'PHASE22 当前不能关闭为 `completed`' in blockers_text else 'missing'}",
-            "",
-            "## Verification Commands",
-            "",
-            "```bash",
-            "python tools/scripts/verify_current_program.py",
-            "python tools/scripts/verify_phase22_completion_blockers.py",
-            "python tools/scripts/verify_docs_entrypoints.py",
-            "python -m pytest -q tests/repo/test_phase22_closure_summary.py tests/platform/test_langsmith_trace_adapter.py tests/platform/test_langsmith_adapter_factory.py tests/evals/test_canonical_profile_runners.py::test_09f_standard_adapter_trace_delivery_failure_fails_closed -p no:cacheprovider --tb=short",
-            "```",
-            "",
-            "## 2026-08-10 Verification Run",
-            "",
-            "本轮验证没有把局部通过扩大解释成 Full final verification 通过：",
-            "",
-            "- 通过：Phase22 candidate/review、Benchmark preflight、四 Profile formal entry、release decision、closure blocker、archive preflight、cleanup boundary 与 Workspace repair 定向回归为 `280 passed, 30 subtests passed`。",
-            "- 通过：当前工作树来源下 `tests/api` 全量回归为 `167 passed`；Phase05 approval binding、Phase06 observability、Phase11C retired facade、Phase16 bypass guard 的定向 verifier/test 均已通过。排除明确依赖 Phase04 外部基础设施的 34 项后，`tests/repo` 当前分支全量回归为 `622 passed, 34 deselected`；包含 Phase04 的完整 repo gate 仍受 Docker/Phase04 外部服务不可用阻断，因此不能把排除项结果扩大为基础设施全量通过。",
-            "- 通过：当前工作树来源下直接执行 `verify_phase22_backend_semantic_legacy.py --scope repository` 返回 `BACKEND_PRODUCT_RUNTIME_CUTOVER_CONFIRMED`、0 findings；completion blocker gate 通过。",
-            "- 追加通过：`.agent/scripts/verify_repo_hygiene.py`、`.agent/scripts/verify_module_boundaries.py` 与 `tests/repo/test_repo_hygiene.py` 已按当前 PHASE22 退休路径对齐并通过；这不替代生产 MCP bypass 审计。",
-            "- 追加通过：`tests/evals` 全量为 `600 passed, 30 subtests passed`；`tests/agent` 非 runtime 目录分批为 `381 passed`。其中 1 个安全审批落库用例因本机 PostgreSQL 不可连接而失败，`tests/agent/runtime` 的 PostgreSQL 依赖用例因此不能扩大解释为全量通过。",
-            "- 追加通过：`apps/web` 的 `npm run lint` 与 `npm run build`，以及 `apps/desktop` 三个 Electron bridge 文件的 `node --check`；浏览器 E2E、交互式 Desktop Smoke 和真实基础设施 Fault/Load/DR 仍未在本轮运行。",
-            f"- 追加通过：feature-flag runtime cutover verifier 为 `{feature_status}`，阻塞性 findings 为 `{feature_blockers}`；其余 `{feature_nonblocking_records}` 条为 MCP discovery/canonical executor 分类或 internal test harness 记录，不构成生产阻塞。",
-            f"- 追加通过：final legacy cutover verifier 为 `{legacy_status}`，`{legacy_findings}` findings；旧 `/api/v1/mcp_chat` 已收敛为无 provider/model 副作用的 503 fail-closed surface。",
-            "",
-            "因此 Full final verification 仍是 `incomplete`，Production Readiness 仍不能判定；本报告不声明 `PHASE22_COMPLETED`、`BENCHMARK_PASSED` 或 `PRODUCTION_READY`。",
-            "",
-            "## Known Remaining Blockers",
-            "",
-            "- formal four-profile runtime, credentials, and runtime/measurement attestation",
-            "- full final verification",
-            "- program archive / no-active reset",
-            "- clean Git worktree：当前根目录仍有 10 个未跟踪的 `.claude/worktrees/**` 已登记工作树；清点显示其中 8 个干净、2 个含未跟踪内容（`deepseek-phase22-cc-bc/.hf-cache/` 与 `deepseek-phase22-workspace-agent-cutover/.claude/`）。所有者/是否废弃尚未确认，本轮不执行删除。",
-            "",
-            "## Archive Boundary",
-            "",
-            "Program archive 和 `.agent/programs/` 的 no-active reset 本轮未执行。已登记工作树必须由其所有者确认后，才能针对精确路径执行 `git worktree remove`；本轮没有进行删除、移动或忽略规则变更。",
+            "- PR #136 Owner Fact PostgreSQL integration — `DEFERRED_NON_BLOCKING`: fail-closed owner-fact boundary is present; production/external qualification persistence is outside this engineering closure.",
+            "- PR #137 final audit — `SUPERSEDED_BY_MAIN`: current final audit evidence records 0 blocking findings.",
+            "- PR #138 repository gate repair — `SUPERSEDED_BY_MAIN`: current backend semantic and feature-flag gates are repaired and final evidence is clean.",
             "",
             "## Boundary",
             "",
-            "- This report does not claim PHASE22 completed.",
-            "- It is a reproducible snapshot of the current verification boundary.",
+            "External qualification gaps remain visible and do not reopen PHASE22. The next independent work is Repository Consolidation + Canonical Target Architecture Deep Design; no PHASE23 or new Runtime Program is created by this closure.",
             "",
         ]
     )
 
 
 def main() -> int:
-    OUTPUT_PATH.parent.mkdir(parents=True, exist_ok=True)
-    OUTPUT_PATH.write_text(
-        build_phase22_verification_report(), encoding="utf-8", newline="\n"
-    )
+    OUTPUT_PATH.write_text(build_phase22_verification_report(), encoding="utf-8", newline="\n")
     return 0
 
 

@@ -1,58 +1,47 @@
 # Current Program Reference
 
-state: active
-active_program: zuno-canonical-architecture-runtime-realization-v1
-current_phase: PHASE22
+state: no-active
+active_program: none
+archived_program: zuno-canonical-architecture-runtime-realization-v1
+current_phase: none
 phase_count: 22
 program_version: 2
 
-当前唯一 active Program 是十一模块新架构完整实现与旧架构迁移总计划。
-
-2026-07-20 Goal01 audit 曾将 PHASE11 从 completed 重新打开为 in_progress；2026-07-23 的 0b1e087a closure 与 PR #41 初版 Goal02 final closure 被本轮目标订正为不足证据。Goal02 final closure repair 已恢复传输并通过有限 Closure Review：PHASE05 completed，PHASE06 completed，PHASE07 completed；PHASE08 completed；PHASE11 completed。
-
-Goal03 Backend Platform Expansion 已通过 Wave A 和 Wave B Gate：PHASE09、PHASE12、PHASE13、PHASE14、PHASE15 completed；PHASE10、PHASE16 ready；当前执行入口为 PHASE10。Goal03 completed；production readiness not established。
-
-Goal04 PR A 已完成 Coordinator Closure 并合并到 main：PHASE10 Web/Desktop Product Adaptation 为 `completed`，closure evidence 为 `docs/evidence/goal04-phase10-coordinator-closure.md`。Goal04 PR B 已完成 Coordinator Closure 并合并到 main：PHASE16 Tool Side Effect and Reconciliation 为 `completed`。Goal04 PR C 已完成 Coordinator Closure 并合并到 main：PHASE17 Dynamic Plan DAG and Parallel Control 为 `completed`，merge commit 为 `4d14ae9e8cd953359c82e51d55279cc123ab47ae`。Goal04 PR D 已完成 Coordinator Closure 并合并到 main：PHASE18 Agentic GraphRAG Inner Loop 为 `completed`，merge commit 为 `cbc04cb0be16c3915537b82a4f3f743cb7add963`。Goal04 PHASE19 已完成本地 Coordinator Closure：Final Synthesis, Publication and Reflexion 为 `completed`，closure evidence 为 `docs/evidence/goal04-phase19-coordinator-closure.md`。Goal05 Target Coverage Audit 已冻结 `docs/evidence/goal05-target-coverage-audit.md` 与 `.agent/programs/work-products/goal05-target-gap-ledger.yaml`；PHASE15 已在真实 Agent Sandbox runtime 证据补齐后重新关闭；PHASE20 Eval Runtime 已完成 Coordinator Closure，closure evidence 为 `docs/evidence/goal05-phase20-eval-runtime.md`；PHASE21 已完成 full Web / browser E2E 和 cutover 证据；当前执行入口为 PHASE22。
-
-Machine status summary: PHASE10 completed; PHASE16 completed; PHASE17 completed; PHASE18 completed; PHASE19 completed; PHASE15 completed; PHASE20 completed; PHASE21 completed; PHASE22 in progress.
-
-入口：
+`zuno-canonical-architecture-runtime-realization-v1` 已完成 PHASE01–PHASE22（22/22）并归档：
 
 ```text
-.agent/programs/current.md
-.agent/programs/implementation-roadmap.md
-.agent/programs/task-execution-contract.md
-.agent/programs/codex-medium-runbook.md
-.agent/programs/legacy-to-target-migration-map.md
-.agent/programs/program-manifest.yaml
-.agent/programs/closure-checklist.md
-.agent/programs/PHASE01_*.md ... PHASE22_*.md
+docs/history/programs/zuno-canonical-architecture-runtime-realization-v1/
 ```
 
-## 目标
+## Final Truth
 
-- 把十一模块 Target 完整转成 Runtime Current。
-- 完成 PostgreSQL、RabbitMQ、Object Store、LangGraph Checkpointer 和 Alembic 迁移。
-- 完成 Single Controller、Dynamic DAG、Agentic GraphRAG、Memory、Capability、Tool Runtime、Security、Observability/Eval。
-- 完成 Product Backend、Web 和 Desktop Contract/Projection/SSE 适配。
-- 完成 Fault、E2E、Fixed Benchmark、Cutover、Legacy Removal 和归档。
+- PHASE22：`completed`，完成语义为 Engineering Closure。
+- Implementation：available。
+- Benchmark：formal execution path available；固定测量为 `blocked_external` / `blocked_not_measured`，`actual_case_count=0`。
+- Quality：`not_yet_proven`。
+- Production Readiness：`NOT_ESTABLISHED`。
+- repository-owned closure blockers：0；external qualification gaps 保留在 closure evidence。
 
-## 执行规则
+正式证据：
 
-- 使用 Codex GPT-5.5 medium 时，一次只执行一个 Work Package。
-- 任务上下文由 Phase 文件和 Minimal Read Set 提供，不重新推导全部架构。
-- 降低 Token 不能降低架构、故障、安全、恢复或测试要求。
-- 当前 program 继续采用 runtime-first / vertical-slice-first closure guard；只写 contract、schema 或 README 不能关闭 runtime phase。
-- 最小 Vertical Slice 只能作为中间证据，不能关闭 Phase。
-- 每个任务使用独立 Worktree/Branch，完成真实代码、Migration、测试、证据、Commit 和 Push。
-- 当前状态为 `implementation available / measurement in_progress / production readiness not established`。
+- `docs/evidence/goal05-phase22-completion-blockers.md`
+- `docs/evidence/goal05-phase22-closure-summary.md`
+- `docs/evidence/goal05-phase22-verification-report.md`
+- `docs/status/production-readiness.md`
 
-## 最近完成 Program
+## 下一阶段 Handoff
 
-`zuno-real-unified-runtime-cutover-v1` 已归档到：
+下一阶段不是 PHASE23，也不是新的 Runtime Program。Canonical Target Architecture Deep Design：
 
 ```text
-docs/history/programs/zuno-real-unified-runtime-cutover-v1/
+Latest Current Review
+→ Repository Consolidation
+→ 11 Module Architecture Deep Review
+→ ADR 0006 Canonical Coordination
+→ Cross-module Contract Review
+→ Architecture / Mermaid / HTML Sync
+→ Architecture Review
+→ New Implementation Program only after design confirmation
 ```
 
-其本地实现基线是本 Program 的 Current 输入，不是新 Target 已全部实现的证明。
+本轮 closure 不实现 Architecture v2，不新增业务 Runtime、Database Migration、Benchmark Case 或产品功能。新的 implementation Program 必须在设计确认后由用户明确打开，并从新的 PHASE01 建立。

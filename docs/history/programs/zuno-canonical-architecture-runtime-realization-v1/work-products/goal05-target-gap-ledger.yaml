@@ -8,8 +8,8 @@ current_decision:
   phase15: completed
   phase20: completed
   phase21: completed
-  phase22: in_progress
-  reason: "PHASE15 sandbox repair, PHASE20 Eval Runtime and PHASE21 full Web / browser E2E / cutover evidence are completed; PHASE22 Fixed Benchmark / Cleanup / Closure remains active and production readiness is not established."
+  phase22: completed
+  reason: "PHASE15 sandbox repair, PHASE20 Eval Runtime, PHASE21 full Web / browser E2E / cutover evidence and PHASE22 Engineering Closure are completed; fixed benchmark measurement remains externally blocked and production readiness is not established."
 known_environment_blockers:
   deno:
     command: "deno --version"

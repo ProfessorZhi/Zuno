@@ -16,6 +16,7 @@ ARCHITECTURE_ALLOWED_FILES = {
 ACTIVE_PROGRAM_NAME = "zuno-canonical-architecture-runtime-realization-v1"
 ACTIVE_PROGRAM_ROOT = ".agent/programs"
 HISTORY_PROGRAM_ROOT = "docs/history/programs"
+ARCHIVED_PROGRAM_ROOT = f"{HISTORY_PROGRAM_ROOT}/{ACTIVE_PROGRAM_NAME}"
 ARCHIVED_PROGRAM_REQUIRED_FILES = {"README.md"}
 
 REQUIRED_PATHS = [
@@ -27,7 +28,6 @@ REQUIRED_PATHS = [
     ".agent/references/task-routing.md",
     ".agent/references/workflow.md",
     ".agent/programs/current.md",
-    ".agent/programs/program-manifest.yaml",
     ".agent/programs/implementation-roadmap.md",
     ".agent/programs/closure-checklist.md",
     "docs/README.md",
@@ -91,10 +91,15 @@ def verify_active_program_contract() -> list[str]:
     errors: list[str] = []
     current_path = REPO_ROOT / ACTIVE_PROGRAM_ROOT / "current.md"
     manifest_path = REPO_ROOT / ACTIVE_PROGRAM_ROOT / "program-manifest.yaml"
-    if not current_path.exists() or not manifest_path.exists():
-        return ["active program current.md or program-manifest.yaml is missing"]
+    if not current_path.exists():
+        return ["program current.md is missing"]
 
     current = current_path.read_text(encoding="utf-8")
+    if "state: no-active" in current:
+        errors.extend(_verify_no_active_program_contract(current))
+        return errors
+    if not manifest_path.exists():
+        return ["active program program-manifest.yaml is missing"]
     manifest = manifest_path.read_text(encoding="utf-8")
     required_current = [
         "state: active",
@@ -119,15 +124,50 @@ def verify_active_program_contract() -> list[str]:
     return errors
 
 
+def _verify_no_active_program_contract(current: str) -> list[str]:
+    errors: list[str] = []
+    required_current = [
+        "state: no-active",
+        "active_program: none",
+        "current_phase: none",
+        f"archived_program: {ACTIVE_PROGRAM_NAME}",
+    ]
+    for phrase in required_current:
+        if phrase not in current:
+            errors.append(f"no-active current.md missing phrase: {phrase}")
+    program_root = REPO_ROOT / ACTIVE_PROGRAM_ROOT
+    actual_files = {path.name for path in program_root.iterdir() if path.is_file()}
+    expected_files = {"README.md", "current.md", "implementation-roadmap.md", "closure-checklist.md"}
+    if actual_files != expected_files:
+        errors.append(
+            f".agent/programs no-active front must contain only {sorted(expected_files)}; got {sorted(actual_files)}"
+        )
+    actual_dirs = {path.name for path in program_root.iterdir() if path.is_dir()}
+    if actual_dirs != {"queued-programs"}:
+        errors.append(f".agent/programs no-active front must contain only queued-programs; got {sorted(actual_dirs)}")
+    archive = REPO_ROOT / ARCHIVED_PROGRAM_ROOT
+    for relative in [
+        "README.md",
+        "current.md",
+        "closure-summary.md",
+        "verification-report.md",
+        "program-manifest.yaml",
+        "PHASE22_fixed-benchmark-production-readiness-and-closure.md",
+    ]:
+        if not (archive / relative).exists():
+            errors.append(f"no-active archive missing required file: {ARCHIVED_PROGRAM_ROOT}/{relative}")
+    if archive.exists() and len(list(archive.glob("PHASE*.md"))) != 22:
+        errors.append("no-active archive must contain all 22 PHASE files")
+    return errors
+
+
 def verify_history_program_archives() -> list[str]:
     errors: list[str] = []
     history_root = REPO_ROOT / HISTORY_PROGRAM_ROOT
     if not history_root.exists():
         return [f"missing history program root: {HISTORY_PROGRAM_ROOT}"]
 
-    archived_programs = [
-        path for path in history_root.iterdir() if path.is_dir() and path.name != ACTIVE_PROGRAM_NAME
-    ]
+    archived_programs = [path for path in history_root.iterdir() if path.is_dir()]
     if not archived_programs:
         errors.append("history program root contains no archived programs")
         return errors

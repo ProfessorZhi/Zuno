@@ -23,6 +23,7 @@ def _load_verifier():
 
 def _copy_fixture(tmp_path: Path) -> Path:
     fixture_root = tmp_path / "repo"
+    archive_root = REPO_ROOT / "docs/history/programs/zuno-canonical-architecture-runtime-realization-v1"
     paths = [
         ".agent/programs/program-manifest.yaml",
         ".agent/programs/PHASE22_fixed-benchmark-production-readiness-and-closure.md",
@@ -39,9 +40,17 @@ def _copy_fixture(tmp_path: Path) -> Path:
     ]
     for relative in paths:
         source = REPO_ROOT / relative
+        if not source.exists():
+            source = archive_root / relative.removeprefix(".agent/programs/")
         target = fixture_root / relative
         target.parent.mkdir(parents=True, exist_ok=True)
         shutil.copyfile(source, target)
+    review_source = REPO_ROOT / "docs/evidence/goal05-phase22-public-benchmark-review-pack"
+    review_target = fixture_root / "docs/evidence/goal05-phase22-public-benchmark-review-pack"
+    shutil.copytree(review_source, review_target, dirs_exist_ok=True)
+    benchmark_source = REPO_ROOT / "docs/evidence/goal05-phase22-blocked-benchmark"
+    benchmark_target = fixture_root / "docs/evidence/goal05-phase22-blocked-benchmark"
+    shutil.copytree(benchmark_source, benchmark_target, dirs_exist_ok=True)
     return fixture_root
 
 
@@ -50,22 +59,22 @@ def test_phase22_completion_blockers_match_current_truth() -> None:
     assert verifier.verify_phase22_completion_blockers() == []
 
 
-def test_phase22_completed_fails_when_benchmark_is_blocked(tmp_path: Path) -> None:
+def test_phase22_completed_fails_when_repository_blocker_remains(tmp_path: Path) -> None:
     verifier = _load_verifier()
     fixture = _copy_fixture(tmp_path)
     manifest_path = fixture / ".agent/programs/program-manifest.yaml"
     manifest = yaml.safe_load(manifest_path.read_text(encoding="utf-8"))
-    for phase in manifest["phases"]:
-        if phase["id"] == "PHASE22":
-            phase["state"] = "completed"
+    manifest["program"]["engineering_closure"]["repository_owned_blockers"] = [
+        "fixture_repository_blocker"
+    ]
     manifest_path.write_text(yaml.safe_dump(manifest, sort_keys=False), encoding="utf-8")
 
     errors = verifier.verify_phase22_completion_blockers(fixture)
 
-    assert any("PHASE22 must remain in_progress" in error for error in errors)
+    assert any("cannot complete with repository-owned blockers" in error for error in errors)
 
 
-def test_program_archive_fails_when_benchmark_is_blocked(tmp_path: Path) -> None:
+def test_program_archive_is_allowed_when_only_external_qualification_is_blocked(tmp_path: Path) -> None:
     verifier = _load_verifier()
     fixture = _copy_fixture(tmp_path)
     manifest_path = fixture / ".agent/programs/program-manifest.yaml"
@@ -75,7 +84,7 @@ def test_program_archive_fails_when_benchmark_is_blocked(tmp_path: Path) -> None
 
     errors = verifier.verify_phase22_completion_blockers(fixture)
 
-    assert any("program state must remain active" in error for error in errors)
+    assert errors == []
 
 
 def test_production_ready_claim_fails_when_benchmark_is_blocked(tmp_path: Path) -> None:
@@ -102,7 +111,7 @@ def test_active_removal_candidate_fails(tmp_path: Path) -> None:
 
     errors = verifier.verify_phase22_completion_blockers(fixture)
 
-    assert any("mandatory removal candidates remain active" in error for error in errors)
+    assert any("repository-owned mandatory removal blockers remain" in error for error in errors)
 
 
 def test_measured_benchmark_must_not_use_blocked_manifest(tmp_path: Path) -> None:

@@ -32,7 +32,7 @@ Zuno 正式架构设计事实共十三份：
 
 ## Architecture v1 与 v2 路由
 
-现有 Program 与 PHASE01–PHASE22 继续使用其冻结的 Architecture v1 基线：
+已归档的 `zuno-canonical-architecture-runtime-realization-v1` Program 与 PHASE01–PHASE22 使用过以下冻结的 Architecture v1 基线；该基线现在作为 History 证据保留：
 
 ```text
 c9d099d64a1af28102231751ce55df8217173e89
@@ -44,9 +44,22 @@ c9d099d64a1af28102231751ce55df8217173e89
 docs/decisions/0006-evidence-driven-agentic-graphrag.md
 ```
 
-这样做是为了避免在 PHASE22 收口前，用新 Target 静默改变旧 Program 的 Contract 和验收条件。ADR 0006 是 `accepted-target`，优先于旧模块中的冲突描述，但不授权立即实现，也不证明任何 v2 Runtime 已成为 Current。
+这样做是为了避免用新 Target 静默改变已归档 Program 的 Contract 和验收条件。ADR 0006 是 `accepted-target`，优先于旧模块中的冲突描述，但不授权本次收口立即实现，也不证明任何 v2 Runtime 已成为 Current。
 
-PHASE22 收口后，Architecture Owner 必须读取最新 Current，把 ADR 0006 与 Module 03、04、06、10 和总架构协调为下一版 Canonical Target，再创建独立 Program。历史路由说明见：
+PHASE22 已完成 Engineering Closure 并归档；当前 `.agent/programs/` 为 `no-active`。下一阶段不是 PHASE23，也不是新的 Runtime Program，而是独立的设计与整理工作：
+
+```text
+Latest Current Review
+→ Repository Consolidation
+→ 11 Module Architecture Deep Review
+→ ADR 0006 Canonical Coordination
+→ Cross-module Contract Review
+→ Architecture / Mermaid / HTML Sync
+→ Architecture Review
+→ 设计确认后才决定是否建立新的 Implementation Program
+```
+
+历史路由说明见：
 
 ```text
 docs/history/architecture-v1-baseline.md
@@ -77,7 +90,7 @@ docs/decisions/0006-evidence-driven-agentic-graphrag.md
 .agent/programs/current.md
 ```
 
-`docs/modules/` 说明十一模块既有完整 Target；`architecture.md` 说明跨模块集成；ADR 0006 说明新的 v2 Target overlay；`.agent/programs/current.md` 说明当前 active program 和 Current / Gap 边界。clone 或 pull 只证明文件同步，不证明 Target 已成为 Current。
+`docs/modules/` 说明十一模块既有完整 Target；`architecture.md` 说明跨模块集成；ADR 0006 说明新的 v2 Target overlay；`.agent/programs/current.md` 说明当前是否存在 active program 和 Current / Gap 边界。clone 或 pull 只证明文件同步，不证明 Target 已成为 Current。
 
 ## 规范优先级
 

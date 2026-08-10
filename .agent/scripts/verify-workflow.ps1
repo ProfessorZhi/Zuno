@@ -1,4 +1,4 @@
-﻿Set-StrictMode -Version Latest
+Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 
 $root = Resolve-Path (Join-Path $PSScriptRoot "..\..")
@@ -343,8 +343,12 @@ foreach ($required in @("docs/", "AGENTS.md", ".agent/", "docs/history/", ".agen
 }
 
 $currentProgram = Get-Content -LiteralPath ".agent\references\current-program.md" -Raw -Encoding UTF8
-if ($currentProgram -notmatch "state: active" -or $currentProgram -notmatch "active_program: zuno-canonical-architecture-runtime-realization-v1" -or $currentProgram -notmatch "current_phase: PHASE22" -or $currentProgram -notmatch "zuno-real-unified-runtime-cutover-v1") {
-    $failures.Add("current-program.md must declare active canonical architecture runtime realization PHASE22 state")
+if ($currentProgram -match "state: no-active") {
+    if ($currentProgram -notmatch "active_program: none" -or $currentProgram -notmatch "current_phase: none" -or $currentProgram -notmatch "archived_program: zuno-canonical-architecture-runtime-realization-v1" -or $currentProgram -notmatch "no active implementation program") {
+        $failures.Add("current-program.md must declare the archived PHASE22 program and no-active handoff state")
+    }
+} elseif ($currentProgram -notmatch "state: active" -or $currentProgram -notmatch "active_program: zuno-canonical-architecture-runtime-realization-v1" -or $currentProgram -notmatch "current_phase: PHASE22" -or $currentProgram -notmatch "zuno-real-unified-runtime-cutover-v1") {
+    $failures.Add("current-program.md must declare active canonical architecture runtime realization PHASE22 state or the no-active archive handoff")
 }
 $requiredArchivedPrograms = @(
     "zuno-evidence-span-agentic-graphrag-hardening-v1",

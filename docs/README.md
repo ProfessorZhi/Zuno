@@ -68,7 +68,18 @@ History
     进入 docs/history/，不能重新解释成当前事实。
 ```
 
-当前 Program 与 PHASE01–PHASE22 继续使用其冻结的 Architecture v1 基线。PHASE22 收口后，Architecture Owner 需要读取最新 Current，把 ADR 0006 与 Module 03、04、06、10、总体架构和共享 Contract Registry 正式协调，再创建新的实现 Program。
+当前 22-Phase Program `zuno-canonical-architecture-runtime-realization-v1` 已完成 Engineering Closure 并归档，`.agent/programs/` 已恢复 `no-active`。下一阶段不是 PHASE23，也不是新的 Runtime Program；只在独立设计工作中按以下顺序推进：
+
+```text
+Latest Current Review
+→ Repository Consolidation
+→ 11 Module Architecture Deep Review
+→ ADR 0006 Canonical Coordination
+→ Cross-module Contract Review
+→ Architecture / Mermaid / HTML Sync
+→ Architecture Review
+→ 设计确认后才决定是否建立新的 Implementation Program
+```
 
 ## 前后端边界
 

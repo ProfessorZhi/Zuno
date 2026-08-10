@@ -207,9 +207,15 @@ WORKSPACE_TASK_RUNTIME_SERVICE = (
 )
 KNOWLEDGE_DTO = REPO_ROOT / "src" / "backend" / "zuno" / "api" / "dto" / "knowledge.py"
 API_DTO_INIT = REPO_ROOT / "src" / "backend" / "zuno" / "api" / "dto" / "__init__.py"
+PROGRAM_ARCHIVE = REPO_ROOT / "docs" / "history" / "programs" / "zuno-canonical-architecture-runtime-realization-v1"
+PROGRAM_WORK_PRODUCTS = REPO_ROOT / ".agent" / "programs" / "work-products"
+if not PROGRAM_WORK_PRODUCTS.exists():
+    PROGRAM_WORK_PRODUCTS = PROGRAM_ARCHIVE / "work-products"
 WORK_PRODUCT = (
-    REPO_ROOT / ".agent" / "programs" / "work-products" / "phase22-removal-candidates.yaml"
+    PROGRAM_WORK_PRODUCTS / "phase22-removal-candidates.yaml"
 )
+if not WORK_PRODUCT.exists():
+    WORK_PRODUCT = PROGRAM_ARCHIVE / "work-products" / "phase22-removal-candidates.yaml"
 PRODUCT_RUNTIME_BATCH = REPO_ROOT / "src" / "backend" / "zuno" / "product" / "runtime_batch.py"
 PRODUCT_COMMAND_SERVICE = (
     REPO_ROOT / "src" / "backend" / "zuno" / "api" / "services" / "product" / "command_service.py"
@@ -316,6 +322,8 @@ RETIRED_AGENT_CORE_FILES = [
 ]
 CURRENT_PROGRAM = REPO_ROOT / ".agent" / "programs" / "current.md"
 MANIFEST = REPO_ROOT / ".agent" / "programs" / "program-manifest.yaml"
+if not MANIFEST.exists():
+    MANIFEST = PROGRAM_ARCHIVE / "program-manifest.yaml"
 
 
 def _read(path: Path) -> str:
@@ -792,7 +800,7 @@ def verify_phase22_cleanup_boundary() -> list[str]:
     if _contains_non_artifact_path(retired_vendor_shim):
         errors.append("retired vendor shim still present under platform/compatibility/vendor/fastapi_jwt_auth")
 
-    feature_flags = _read(REPO_ROOT / ".agent" / "programs" / "work-products" / "feature-flag-registry.yaml")
+    feature_flags = _read(PROGRAM_WORK_PRODUCTS / "feature-flag-registry.yaml")
     if 'flag: "legacy_general_agent_completion_rollback"' not in feature_flags:
         errors.append("feature flag registry missing legacy rollback retirement record")
     else:
@@ -803,7 +811,7 @@ def verify_phase22_cleanup_boundary() -> list[str]:
         if "ZUNO_AGENT_RUNTIME=legacy_general_agent" in legacy_flag_block:
             errors.append("feature flag registry still exposes legacy general agent runtime rollback command")
 
-    api_contract_matrix = _read(REPO_ROOT / ".agent" / "programs" / "work-products" / "api-contract-compatibility-matrix.yaml")
+    api_contract_matrix = _read(PROGRAM_WORK_PRODUCTS / "api-contract-compatibility-matrix.yaml")
     if "legacy completion SSE chunk stream with ZUNO_AGENT_RUNTIME rollback" in api_contract_matrix:
         errors.append("API contract compatibility matrix still describes ZUNO_AGENT_RUNTIME rollback as current contract")
     if "ZUNO_AGENT_RUNTIME=legacy_general_agent" in api_contract_matrix:
@@ -1063,9 +1071,16 @@ def verify_phase22_cleanup_boundary() -> list[str]:
 
     current = _read(CURRENT_PROGRAM)
     manifest = _read(MANIFEST)
-    for label, text in [("current.md", current), ("program-manifest.yaml", manifest)]:
-        if "current_phase: PHASE22" not in text:
-            errors.append(f"{label} missing PHASE22 current phase")
+    if "state: no-active" in current:
+        for label, text in [("current.md", current), ("program-manifest.yaml", manifest)]:
+            if label == "current.md" and "current_phase: none" not in text:
+                errors.append("current.md no-active surface missing current_phase: none")
+            if label == "program-manifest.yaml" and "current_phase: PHASE22" not in text:
+                errors.append("archived program manifest missing PHASE22 closure phase")
+    else:
+        for label, text in [("current.md", current), ("program-manifest.yaml", manifest)]:
+            if "current_phase: PHASE22" not in text:
+                errors.append(f"{label} missing PHASE22 current phase")
 
     return errors
 

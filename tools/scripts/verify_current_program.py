@@ -12,6 +12,9 @@ PHASE_COUNT = 22
 ATOMIC_TASK_COUNT = 163
 PROGRAM_ROOT = REPO_ROOT / ".agent" / "programs"
 WORK_PRODUCTS = PROGRAM_ROOT / "work-products"
+ARCHIVE_ROOT = REPO_ROOT / "docs" / "history" / "programs" / PROGRAM
+if not WORK_PRODUCTS.exists():
+    WORK_PRODUCTS = ARCHIVE_ROOT / "work-products"
 
 PHASE_FILES = [
     "PHASE01_current-baseline-and-requirement-ledger.md",
@@ -194,7 +197,7 @@ def _verify_goal05_gap_ledger_repair_state() -> list[str]:
         "phase15: completed",
         "phase20: completed",
         "phase21: completed",
-        "phase22: in_progress",
+        "phase22: completed",
         "docs/evidence/goal05-phase21-fault-e2e-cutover-slice.md#phase21-closure",
     ]:
         if phrase not in text:
@@ -254,16 +257,107 @@ def _verify_phase22_status_block(phase22: str) -> list[str]:
         errors.append("PHASE22 markdown code fence is not closed")
     if not current_status_seen:
         errors.append("PHASE22 missing Current Status section")
-    for phrase in [
-        "PR #52 merged into `main`",
-        "PHASE22 remains `in_progress`",
-        "fixed benchmark measurement",
-        "formal four-profile runtime",
-        "production readiness decision",
-        "program archive are not complete",
-    ]:
-        if phrase not in phase22:
+    if "status: completed" in phase22 and "engineering_closure: completed" in phase22:
+        required_phrases = [
+            "PR #52 merged into `main`",
+            "engineering closure",
+            "fixed benchmark measurement",
+            "formal four-profile runtime",
+            "production readiness decision",
+            "Program Archive",
+        ]
+    else:
+        required_phrases = [
+            "PR #52 merged into `main`",
+            "PHASE22 remains `in_progress`",
+            "fixed benchmark measurement",
+            "formal four-profile runtime",
+            "production readiness decision",
+            "program archive are not complete",
+        ]
+    phase22_folded = phase22.casefold()
+    for phrase in required_phrases:
+        if phrase.casefold() not in phase22_folded:
             errors.append(f"PHASE22 Current Status missing phrase: {phrase}")
+    return errors
+
+
+def _verify_no_active_program() -> list[str]:
+    errors: list[str] = []
+    current_path = PROGRAM_ROOT / "current.md"
+    current = _read(current_path)
+    allowed_files = {"README.md", "current.md", "implementation-roadmap.md", "closure-checklist.md"}
+    actual_files = {path.name for path in PROGRAM_ROOT.iterdir() if path.is_file()}
+    if actual_files != allowed_files:
+        errors.append(
+            ".agent/programs no-active front must contain only "
+            + ", ".join(sorted(allowed_files))
+        )
+    actual_dirs = {path.name for path in PROGRAM_ROOT.iterdir() if path.is_dir()}
+    if actual_dirs != {"queued-programs"}:
+        errors.append(".agent/programs no-active front must keep only queued-programs directory")
+    for phrase in [
+        "state: no-active",
+        "active_program: none",
+        "current_phase: none",
+        f"archived_program: {PROGRAM}",
+        "no active implementation program",
+    ]:
+        if phrase not in current:
+            errors.append(f"no-active current.md missing phrase: {phrase}")
+
+    required_archive_files = {
+        "README.md",
+        "current.md",
+        "implementation-roadmap.md",
+        "closure-checklist.md",
+        "program-manifest.yaml",
+        "task-execution-contract.md",
+        "codex-medium-runbook.md",
+        "legacy-to-target-migration-map.md",
+        "canonical-directory-contract.md",
+        "closure-summary.md",
+        "verification-report.md",
+        "pr-disposition.md",
+    }
+    if not ARCHIVE_ROOT.exists():
+        errors.append(f"missing archived program: {ARCHIVE_ROOT.relative_to(REPO_ROOT).as_posix()}")
+        return errors
+    archive_files = {path.name for path in ARCHIVE_ROOT.iterdir() if path.is_file()}
+    missing = sorted(required_archive_files - archive_files)
+    if missing:
+        errors.append("archived program missing root files: " + ", ".join(missing))
+    phase_files = sorted(path.name for path in ARCHIVE_ROOT.glob("PHASE*.md"))
+    if len(phase_files) != 22:
+        errors.append(f"archived program must contain 22 phase files, got {len(phase_files)}")
+    if not (ARCHIVE_ROOT / "work-products").is_dir():
+        errors.append("archived program missing work-products directory")
+    if not (ARCHIVE_ROOT / "thread-prompts").is_dir():
+        errors.append("archived program missing thread-prompts directory")
+
+    manifest = _read(ARCHIVE_ROOT / "program-manifest.yaml") if (ARCHIVE_ROOT / "program-manifest.yaml").exists() else ""
+    phase22 = _read(ARCHIVE_ROOT / "PHASE22_fixed-benchmark-production-readiness-and-closure.md") if (ARCHIVE_ROOT / "PHASE22_fixed-benchmark-production-readiness-and-closure.md").exists() else ""
+    reference = _read(REPO_ROOT / ".agent" / "references" / "current-program.md")
+    readme = _read(PROGRAM_ROOT / "README.md")
+    for phrase in [
+        "state: completed",
+        "archive_state: archived",
+        "current_phase: PHASE22",
+        "id: PHASE22",
+        "state: completed",
+    ]:
+        if phrase not in manifest:
+            errors.append(f"archived program manifest missing phrase: {phrase}")
+    errors.extend(_verify_phase22_status_block(phase22))
+    for phrase in [
+        "state: no-active",
+        "archived_program:",
+        "Repository Consolidation",
+        "Canonical Target Architecture Deep Design",
+        "ADR 0006",
+    ]:
+        if phrase not in reference + readme:
+            errors.append(f"no-active routing missing phrase: {phrase}")
     return errors
 
 
@@ -350,6 +444,18 @@ def _verify_correction_states() -> list[str]:
 
 
 def load_manifest() -> dict[str, object]:
+    current_path = PROGRAM_ROOT / "current.md"
+    if current_path.exists() and "state: no-active" in _read(current_path):
+        return {
+            "program": PROGRAM,
+            "state": "no-active",
+            "current_phase": "none",
+            "phase_count": PHASE_COUNT,
+            "atomic_task_count": ATOMIC_TASK_COUNT,
+            "measurement_status": "blocked_external",
+            "quality_gate_status": "quality_not_proven",
+            "production_readiness": "not_established",
+        }
     return {
         "program": PROGRAM,
         "state": "active",
@@ -364,6 +470,9 @@ def load_manifest() -> dict[str, object]:
 
 
 def verify_current_program() -> list[str]:
+    current_path = PROGRAM_ROOT / "current.md"
+    if current_path.exists() and "state: no-active" in _read(current_path):
+        return _verify_no_active_program()
     errors: list[str] = []
     for path in REQUIRED_SHARED:
         if not path.exists():

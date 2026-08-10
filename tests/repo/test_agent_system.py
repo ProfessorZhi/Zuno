@@ -286,7 +286,7 @@ def test_agent_architecture_docs_map_explains_dual_mirror_rule() -> None:
         assert phrase in content
 
 
-def test_agent_program_surface_records_active_runtime_program() -> None:
+def test_agent_program_surface_records_no_active_runtime_program() -> None:
     program_files = sorted(
         path.name for path in (REPO_ROOT / ".agent/programs").iterdir() if path.is_file()
     )
@@ -294,27 +294,24 @@ def test_agent_program_surface_records_active_runtime_program() -> None:
         "README.md",
         "current.md",
         "implementation-roadmap.md",
-        "task-execution-contract.md",
-        "program-manifest.yaml",
         "closure-checklist.md",
-        "PHASE22_fixed-benchmark-production-readiness-and-closure.md",
     }
-    assert required_files.issubset(set(program_files))
+    assert set(program_files) == required_files
     current_program = (REPO_ROOT / ".agent/programs/current.md").read_text(encoding="utf-8")
     current_reference = (REPO_ROOT / ".agent/references/current-program.md").read_text(encoding="utf-8")
-    phase22 = (REPO_ROOT / ".agent/programs/PHASE22_fixed-benchmark-production-readiness-and-closure.md").read_text(encoding="utf-8")
+    phase22 = (REPO_ROOT / "docs/history/programs/zuno-canonical-architecture-runtime-realization-v1/PHASE22_fixed-benchmark-production-readiness-and-closure.md").read_text(encoding="utf-8")
     for phrase in [
-        "state: active",
-        "active_program: zuno-canonical-architecture-runtime-realization-v1",
-        "current_phase: PHASE22",
+        "state: no-active",
+        "active_program: none",
+        "current_phase: none",
         "phase_count: 22",
     ]:
         assert phrase in current_program + current_reference
     assert "phase_id: PHASE22" in phase22
-    assert "status: in_progress" in phase22
+    assert "status: completed" in phase22
     assert "Fixed Benchmark" in phase22
-    assert (REPO_ROOT / ".agent/programs/thread-prompts").is_dir()
-    assert list((REPO_ROOT / ".agent/programs").glob("PHASE*.md"))
+    assert (REPO_ROOT / "docs/history/programs/zuno-canonical-architecture-runtime-realization-v1/thread-prompts").is_dir()
+    assert list((REPO_ROOT / "docs/history/programs/zuno-canonical-architecture-runtime-realization-v1").glob("PHASE*.md"))
 
 
 def test_program2_thread_prompts_are_target_mode_ready_and_guarded() -> None:

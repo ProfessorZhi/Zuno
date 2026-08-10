@@ -53,12 +53,12 @@ def test_readme_and_roadmap_share_current_program_truth() -> None:
         "Observability & Eval",
     ]:
         assert phrase in architecture
-    assert _current_phase_name(current_program) == "PHASE22"
-    assert "state: active" in current_program
-    assert "active_program: zuno-canonical-architecture-runtime-realization-v1" in current_program
-    assert "measurement in_progress" in current_program
-    assert "production readiness not established" in current_program
-    assert "PHASE22 in progress" in current_program
+    assert _current_phase_name(current_program) == "none"
+    assert "state: no-active" in current_program
+    assert "active_program: none" in current_program
+    assert "blocked_external" in current_program
+    assert "NOT_ESTABLISHED" in current_program
+    assert "PHASE22" in current_program and "completed" in current_program
 
 
 def test_public_docs_keep_history_off_front_path_but_reachable() -> None:

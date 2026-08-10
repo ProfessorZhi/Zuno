@@ -17,24 +17,24 @@ def _load_verifier():
     return module
 
 
-def test_active_program_is_machine_verifiable() -> None:
+def test_no_active_program_is_machine_verifiable() -> None:
     verifier = _load_verifier()
     assert verifier.verify_current_program() == []
 
 
-def test_active_program_manifest_preserves_current_status_boundary() -> None:
+def test_archived_program_manifest_preserves_final_status_boundary() -> None:
     verifier = _load_verifier()
     manifest = verifier.load_manifest()
-    assert manifest["state"] == "active"
-    assert manifest["current_phase"] == "PHASE22"
+    assert manifest["state"] == "no-active"
+    assert manifest["current_phase"] == "none"
     assert manifest["phase_count"] == 22
     assert manifest["atomic_task_count"] == 163
-    assert manifest["measurement_status"] == "measurement_in_progress"
+    assert manifest["measurement_status"] == "blocked_external"
     assert manifest["quality_gate_status"] == "quality_not_proven"
 
 
 def test_phase_states_reflect_goal05_target_coverage_audit() -> None:
-    program_root = REPO_ROOT / ".agent" / "programs"
+    program_root = REPO_ROOT / "docs" / "history" / "programs" / "zuno-canonical-architecture-runtime-realization-v1"
     expected = {
         "PHASE04_postgres-domain-and-transaction-foundation.md": "status: completed",
         "PHASE05_security-control-plane.md": "status: completed",
@@ -54,7 +54,7 @@ def test_phase_states_reflect_goal05_target_coverage_audit() -> None:
         "PHASE19_final-synthesis-publication-reflexion.md": "status: completed",
         "PHASE20_observability-eval-benchmark-release-gate.md": "status: completed",
         "PHASE21_fault-recovery-full-e2e-and-cutover.md": "status: completed",
-        "PHASE22_fixed-benchmark-production-readiness-and-closure.md": "status: in_progress",
+        "PHASE22_fixed-benchmark-production-readiness-and-closure.md": "status: completed",
     }
     for filename, state in expected.items():
         text = (program_root / filename).read_text(encoding="utf-8")
@@ -72,14 +72,14 @@ def test_phase_states_reflect_goal05_target_coverage_audit() -> None:
     assert "id: PHASE19, file: .agent/programs/PHASE19_final-synthesis-publication-reflexion.md, state: completed" in manifest
     assert "id: PHASE20, file: .agent/programs/PHASE20_observability-eval-benchmark-release-gate.md, state: completed" in manifest
     assert "id: PHASE21, file: .agent/programs/PHASE21_fault-recovery-full-e2e-and-cutover.md, state: completed" in manifest
-    assert "id: PHASE22, file: .agent/programs/PHASE22_fixed-benchmark-production-readiness-and-closure.md, state: in_progress" in manifest
+    assert "id: PHASE22, file: .agent/programs/PHASE22_fixed-benchmark-production-readiness-and-closure.md, state: completed" in manifest
 
 
 def test_phase22_current_status_is_machine_guarded() -> None:
     verifier = _load_verifier()
     phase22 = (
         REPO_ROOT
-        / ".agent/programs/PHASE22_fixed-benchmark-production-readiness-and-closure.md"
+        / "docs/history/programs/zuno-canonical-architecture-runtime-realization-v1/PHASE22_fixed-benchmark-production-readiness-and-closure.md"
     ).read_text(encoding="utf-8")
 
     assert verifier._verify_phase22_status_block(phase22) == []
@@ -102,17 +102,17 @@ def test_goal05_gap_ledger_matches_repaired_phase_state() -> None:
     assert verifier._verify_goal05_gap_ledger_repair_state() == []
 
     ledger = (
-        REPO_ROOT / ".agent/programs/work-products/goal05-target-gap-ledger.yaml"
+        REPO_ROOT / "docs/history/programs/zuno-canonical-architecture-runtime-realization-v1/work-products/goal05-target-gap-ledger.yaml"
     ).read_text(encoding="utf-8")
     assert "phase21: completed" in ledger
-    assert "phase22: in_progress" in ledger
+    assert "phase22: completed" in ledger
     assert "ARCH-AGENT-MANDATORY-GOAL05" in ledger
     assert "ARCH-CAPABILITY-MANDATORY-GOAL05" in ledger
     assert "docs/evidence/goal05-phase21-fault-e2e-cutover-slice.md#phase21-closure" in ledger
 
 def test_goal05_audit_reopens_phase15_without_production_ready() -> None:
     readiness = (
-        REPO_ROOT / ".agent/programs/work-products/phase11-readiness.yaml"
+        REPO_ROOT / "docs/history/programs/zuno-canonical-architecture-runtime-realization-v1/work-products/phase11-readiness.yaml"
     ).read_text(encoding="utf-8")
     current = (REPO_ROOT / ".agent/programs/current.md").read_text(encoding="utf-8")
     production = (REPO_ROOT / "docs/status/production-readiness.md").read_text(
@@ -122,23 +122,11 @@ def test_goal05_audit_reopens_phase15_without_production_ready() -> None:
     assert "current_phase_status: completed" in readiness
     assert "coordinator_approval: approved" in readiness
     assert "target_not_current: 0" in readiness
-    assert "current_phase: PHASE22" in current
-    assert "PHASE09 completed" in current
-    assert "PHASE15 completed" in current
-    assert "PHASE10 completed" in current
-    assert "PHASE16 completed" in current
-    assert "PHASE17 completed" in current
-    assert "goal04-phase17-coordinator-closure.md" in current
-    assert "PHASE18 completed" in current
-    assert "goal04-phase18-coordinator-closure.md" in current
-    assert "goal04-phase10-coordinator-closure.md" in current
-    assert "PHASE19 completed" in current
-    assert "goal04-phase19-coordinator-closure.md" in current
-    assert "PHASE20 completed" in current
-    assert "PHASE21 completed" in current
-    assert "PHASE22 in progress" in current
-    assert "goal05-target-coverage-audit.md" in current
-    assert "production readiness not established" in production
+    assert "current_phase: none" in current
+    assert "archived_program: zuno-canonical-architecture-runtime-realization-v1" in current
+    assert "PHASE22" in current
+    assert "Engineering Closure" in current
+    assert "production_readiness: not_established" in production
 
 
 def test_program_has_all_phase_files_and_atomic_tasks() -> None:
@@ -146,7 +134,7 @@ def test_program_has_all_phase_files_and_atomic_tasks() -> None:
     assert len(verifier.PHASE_FILES) == 22
     task_count = 0
     for phase_file in verifier.PHASE_FILES:
-        text = (verifier.PROGRAM_ROOT / phase_file).read_text(encoding="utf-8")
+        text = (verifier.ARCHIVE_ROOT / phase_file).read_text(encoding="utf-8")
         import re
 
         task_count += len(set(re.findall(r"P\d{2}-T\d{2}", text)))
