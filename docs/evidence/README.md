@@ -8,3 +8,4 @@
 
 - [公开演示证据](public-demo.md)
 - [Eval Baseline](eval-baselines.md)
+- [Local Workspace Consolidation 注册清单](local-workspace-consolidation.md)

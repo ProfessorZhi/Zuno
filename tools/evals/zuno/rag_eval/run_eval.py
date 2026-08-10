@@ -15,7 +15,7 @@ if str(BACKEND_ROOT) not in sys.path:
     sys.path.insert(0, str(BACKEND_ROOT))
 
 from tools.evals.zuno.rag_eval.metrics import compute_metrics
-from tools.evals.zuno.rag_eval.paths import default_runs_root
+from tools.evals.zuno.rag_eval.paths import default_runs_root, resolve_local_artifact_path
 from zuno.platform.common.runtime_observability import configure_langsmith
 from zuno.platform.services.rag.handler import RagHandler
 from zuno.platform.settings import initialize_app_settings
@@ -1306,6 +1306,7 @@ async def run_eval(
     answer_mode: str = "extractive",
     judge_mode: str = "heuristic",
 ) -> dict[str, Any]:
+    output_dir = resolve_local_artifact_path(Path(output_dir))
     await initialize_app_settings()
     langsmith_configured = False
     if trace_langsmith:
@@ -1489,7 +1490,11 @@ def main() -> None:
     parser.add_argument("--judge-mode", choices=["heuristic", "llm"], default="heuristic")
     args = parser.parse_args()
 
-    output_dir = args.output_dir or default_runs_root() / time.strftime("%Y%m%d-%H%M%S")
+    output_dir = (
+        resolve_local_artifact_path(args.output_dir)
+        if args.output_dir is not None
+        else default_runs_root() / time.strftime("%Y%m%d-%H%M%S")
+    )
     report = asyncio.run(
         run_eval(
             dataset_path=args.dataset,
@@ -1506,4 +1511,3 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-

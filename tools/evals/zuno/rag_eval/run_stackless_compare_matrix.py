@@ -13,7 +13,7 @@ if str(BACKEND_ROOT) not in sys.path:
     sys.path.insert(0, str(BACKEND_ROOT))
 
 from tools.evals.zuno.rag_eval.run_stackless_local_eval import run_stackless_local_eval
-from tools.evals.zuno.rag_eval.paths import default_runs_root
+from tools.evals.zuno.rag_eval.paths import default_runs_root, resolve_local_artifact_path
 from tools.evals.zuno.rag_eval.summarize_eval_profiles import summarize as summarize_profiles
 
 
@@ -183,6 +183,7 @@ async def run_matrix(
     chunk_size_override: int | None = None,
     overlap_override: int | None = None,
 ) -> dict[str, Any]:
+    output_root = resolve_local_artifact_path(Path(output_root))
     output_root.mkdir(parents=True, exist_ok=True)
     runs: dict[str, Any] = {}
     coverage = _build_dataset_coverage(dataset_path=dataset_path, sample_limit=sample_limit)
@@ -344,7 +345,11 @@ def main() -> None:
     parser.add_argument("--overlap-override", type=int, default=None)
     args = parser.parse_args()
 
-    output_root = args.output_root or default_runs_root() / f"stackless-compare-matrix-{time.strftime('%Y%m%d-%H%M%S')}"
+    output_root = (
+        resolve_local_artifact_path(args.output_root)
+        if args.output_root is not None
+        else default_runs_root() / f"stackless-compare-matrix-{time.strftime('%Y%m%d-%H%M%S')}"
+    )
     summary = asyncio.run(
         run_matrix(
             manifest_path=args.manifest,
@@ -367,4 +372,3 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-

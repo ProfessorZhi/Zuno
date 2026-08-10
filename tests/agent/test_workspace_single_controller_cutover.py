@@ -1624,7 +1624,7 @@ def test_security_owner_fact_missing_fails_closed(tmp_path) -> None:
     assert "security_owner_fact_not_found" in _admission_reason(snapshot)
 
 
-def test_missing_product_tenant_context_fails_closed() -> None:
+def test_missing_product_tenant_context_fails_closed(tmp_path) -> None:
     """Missing tenant / workspace product context -> BLOCKED_CONFIGURATION
     (never a tenant:default fallback, never a workspace guessed from user)."""
     from zuno.agent.runtime import SQLiteAgentRunStore
@@ -1637,7 +1637,7 @@ def test_missing_product_tenant_context_fails_closed() -> None:
             workspace_id="workspace-a",
             principal_id="user-a",
             profile=PROFILE_PRODUCT,
-            store=SQLiteAgentRunStore(Path("runtime-tenant.db")),
+            store=SQLiteAgentRunStore(tmp_path / "runtime-tenant.db"),
         )
     assert "BLOCKED_CONFIGURATION" in str(exc_info.value)
     assert "tenant_id" in str(exc_info.value)
@@ -1650,7 +1650,7 @@ def test_missing_product_tenant_context_fails_closed() -> None:
             workspace_id="",
             principal_id="user-a",
             profile=PROFILE_PRODUCT,
-            store=SQLiteAgentRunStore(Path("runtime-workspace.db")),
+            store=SQLiteAgentRunStore(tmp_path / "runtime-workspace.db"),
         )
     assert "BLOCKED_CONFIGURATION" in str(exc_info.value)
     assert "workspace_id" in str(exc_info.value)

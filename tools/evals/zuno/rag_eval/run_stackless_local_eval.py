@@ -22,7 +22,7 @@ if str(BACKEND_ROOT) not in sys.path:
 from zuno.api.services.knowledge import DEFAULT_KNOWLEDGE_CONFIG
 from tools.evals.zuno.rag_eval.ingest_prepared_corpus import build_eval_knowledge_config
 from tools.evals.zuno.rag_eval.local_embedding_server import run_dev_server
-from tools.evals.zuno.rag_eval.paths import default_runs_root
+from tools.evals.zuno.rag_eval.paths import default_runs_root, resolve_local_artifact_path
 from tools.evals.zuno.rag_eval.local_rerank_server import run_dev_server as run_rerank_dev_server
 from tools.evals.zuno.rag_eval.run_eval import PROFILE_SETTINGS, resolve_profiles, run_eval
 from tools.evals.zuno.rag_eval.run_local_embedding_eval import preflight_local_embedding_eval
@@ -349,6 +349,7 @@ async def run_stackless_local_eval(
     chunk_size_override: int | None = None,
     overlap_override: int | None = None,
 ) -> dict[str, Any]:
+    output_root = resolve_local_artifact_path(Path(output_root))
     temp_config = _build_temp_config()
     os.environ["ZUNO_CONFIG"] = str(temp_config)
     await initialize_app_settings(str(temp_config))
@@ -529,7 +530,11 @@ def main() -> None:
     parser.add_argument("--overlap-override", type=int, default=None)
     args = parser.parse_args()
 
-    output_root = args.output_root or default_runs_root() / f"stackless-local-{time.strftime('%Y%m%d-%H%M%S')}"
+    output_root = (
+        resolve_local_artifact_path(args.output_root)
+        if args.output_root is not None
+        else default_runs_root() / f"stackless-local-{time.strftime('%Y%m%d-%H%M%S')}"
+    )
     result = asyncio.run(
         run_stackless_local_eval(
             manifest_path=args.manifest,
@@ -569,4 +574,3 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-

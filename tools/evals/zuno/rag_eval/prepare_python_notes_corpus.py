@@ -5,7 +5,7 @@ import json
 import shutil
 from pathlib import Path
 
-from tools.evals.zuno.rag_eval.paths import default_corpus_root
+from tools.evals.zuno.rag_eval.paths import default_corpus_root, resolve_local_artifact_path
 
 
 DEFAULT_INCLUDE_NAMES = {
@@ -39,6 +39,7 @@ def collect_markdown_files(source: Path, limit_files: int | None = None) -> list
 
 
 def prepare_corpus(source: Path, output_dir: Path, limit_files: int | None = None) -> dict:
+    output_dir = resolve_local_artifact_path(Path(output_dir))
     if not source.exists():
         raise FileNotFoundError(f"source path does not exist: {source}")
 
@@ -83,10 +84,13 @@ def main() -> None:
     parser.add_argument("--limit-files", type=int, default=40)
     args = parser.parse_args()
 
-    manifest = prepare_corpus(args.source, args.output_dir, args.limit_files)
+    manifest = prepare_corpus(
+        args.source,
+        resolve_local_artifact_path(args.output_dir),
+        args.limit_files,
+    )
     print(json.dumps({"file_count": manifest["file_count"], "output_dir": manifest["output_dir"]}, ensure_ascii=False))
 
 
 if __name__ == "__main__":
     main()
-

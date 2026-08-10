@@ -4,6 +4,8 @@ import argparse
 import json
 from pathlib import Path
 
+from tools.evals.zuno.rag_eval.paths import resolve_local_artifact_path
+
 
 BASE_DIR = Path(__file__).resolve().parent
 BASE_MANIFEST = BASE_DIR / "corpus" / "contract_review" / "manifest.json"
@@ -63,6 +65,7 @@ def _variantize(text: str, *, round_index: int) -> str:
 
 
 def build_scaled_corpus(*, output_dir: Path, copies_per_file: int) -> dict:
+    output_dir = resolve_local_artifact_path(Path(output_dir))
     manifest = json.loads(BASE_MANIFEST.read_text(encoding="utf-8"))
     output_files_dir = output_dir / "files"
     output_files_dir.mkdir(parents=True, exist_ok=True)

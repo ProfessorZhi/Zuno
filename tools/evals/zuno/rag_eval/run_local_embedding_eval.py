@@ -16,7 +16,7 @@ if str(BACKEND_ROOT) not in sys.path:
     sys.path.insert(0, str(BACKEND_ROOT))
 
 from zuno.api.services.llm import LLMService
-from tools.evals.zuno.rag_eval.paths import default_runs_root
+from tools.evals.zuno.rag_eval.paths import default_runs_root, resolve_local_artifact_path
 from zuno.platform.database.dao.llm import LLMDao
 from zuno.platform.database.models.user import SystemUser
 from zuno.platform.settings import app_settings, initialize_app_settings
@@ -401,6 +401,7 @@ async def run_local_embedding_eval(
     direct_local_embedding_base_url: str | None = None,
     direct_local_embedding_api_key: str | None = None,
 ) -> dict[str, Any]:
+    output_root = resolve_local_artifact_path(Path(output_root))
     from tools.evals.zuno.rag_eval.ingest_prepared_corpus import ingest_prepared_corpus
     from tools.evals.zuno.rag_eval.run_eval import resolve_profiles, run_eval
     from tools.evals.zuno.rag_eval.summarize_eval_profiles import summarize, write_markdown
@@ -511,7 +512,11 @@ def main() -> None:
         print(json.dumps(result, ensure_ascii=False, indent=2))
         return
 
-    output_root = args.output_root or default_runs_root() / f"local-embedding-{time.strftime('%Y%m%d-%H%M%S')}"
+    output_root = (
+        resolve_local_artifact_path(args.output_root)
+        if args.output_root is not None
+        else default_runs_root() / f"local-embedding-{time.strftime('%Y%m%d-%H%M%S')}"
+    )
     if args.validate_only:
         result = asyncio.run(
             preflight_local_embedding_eval(
@@ -562,4 +567,3 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-

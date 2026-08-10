@@ -6,7 +6,7 @@ import re
 from pathlib import Path
 from typing import Any, Iterable
 
-from tools.evals.zuno.rag_eval.paths import default_corpus_root
+from tools.evals.zuno.rag_eval.paths import default_corpus_root, resolve_local_artifact_path
 
 
 ENTERPRISE_DOCUMENT_COLUMN_ALIASES: dict[str, tuple[str, ...]] = {
@@ -704,6 +704,7 @@ def prepare_public_enterprise_eval(
     source_root: Path | None = None,
     limit: int | None = None,
 ) -> dict[str, Any]:
+    output_dir = resolve_local_artifact_path(Path(output_dir))
     normalized = _normalize_dataset_id(dataset_id)
     definition = get_dataset_definition(normalized)
     rows = _read_rows(raw_path)
@@ -748,7 +749,11 @@ def main() -> None:
     parser.add_argument("--limit", type=int)
     args = parser.parse_args()
 
-    output_dir = args.output_dir or default_corpus_root() / "public_enterprise_v1" / args.dataset
+    output_dir = (
+        resolve_local_artifact_path(args.output_dir)
+        if args.output_dir is not None
+        else default_corpus_root() / "public_enterprise_v1" / args.dataset
+    )
     summary = prepare_public_enterprise_eval(
         dataset_id=args.dataset,
         raw_path=args.raw,

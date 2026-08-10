@@ -14,7 +14,7 @@ from pathlib import Path
 from sqlalchemy.exc import SQLAlchemyError
 
 import shlex
-from tools.evals.zuno.rag_eval.paths import default_runs_root
+from tools.evals.zuno.rag_eval.paths import default_runs_root, resolve_local_artifact_path
 from tools.evals.zuno.rag_eval.metrics import _is_context_relevant
 from tools.evals.zuno.rag_eval.public_enterprise_datasets import (
     EnterpriseDocumentSchemaError,
@@ -1993,6 +1993,7 @@ async def run_enterprise_rag_paired_benchmark(
     canonical_deps: Any | None = None,
     profile_runtime_factory: Any | None = None,
 ) -> dict[str, Any]:
+    output_root = resolve_local_artifact_path(Path(output_root))
     # Validate canonical runtime configuration BEFORE creating directories or reading dataset!
     validate_canonical_runtime_config(
         runtime_mode=runtime_mode,
@@ -2481,7 +2482,11 @@ def main() -> None:
         print(f"ERROR: {err}", file=sys.stderr)
         sys.exit(2)
 
-    output_root = args.output_root or default_runs_root() / f"enterprise-rag-paired-{time.strftime('%Y%m%d-%H%M%S')}"
+    output_root = (
+        resolve_local_artifact_path(args.output_root)
+        if args.output_root is not None
+        else default_runs_root() / f"enterprise-rag-paired-{time.strftime('%Y%m%d-%H%M%S')}"
+    )
     result = asyncio.run(
         run_enterprise_rag_paired_benchmark(
             questions_file=args.questions_file,
