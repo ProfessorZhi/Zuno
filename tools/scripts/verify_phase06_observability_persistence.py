@@ -306,8 +306,8 @@ def verify_phase06_observability_persistence() -> list[str]:
         REPO_ROOT / "src" / "backend" / "zuno" / "api" / "v1" / "observability.py"
     ).read_text(encoding="utf-8")
     for phrase in [
-        "APIRouter(prefix=\"/observability\"",
-        "@router.get(\"/traces/{trace_id}\"",
+        "router = APIRouter(tags=[\"Observability\"])",
+        "@router.get(\"/observability/traces/{trace_id}\"",
         "ObservabilityProjectionQueryService",
         "ObservabilityQueryPrincipal",
         "observability:read",

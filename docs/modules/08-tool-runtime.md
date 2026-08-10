@@ -1813,6 +1813,14 @@ hidden_retry_violation_rate
 
 SLO 以 Confirmed Effect、UNKNOWN 收口和重复 Effect 事故为核心，不能只统计 HTTP 成功率。
 
+### Approval Binding 边界
+
+`ToolInvocationGateway` 接收带 `decision_ref`、`adapter_ref` 和可选 comment 的
+`ToolApprovalBinding`，不再接收无来源的 approval boolean。`ToolRuntimeRequest.approved`
+只作为已登记的临时 adapter 输入，在进入 Gateway 前转换为 decision/ref binding；MCP
+LangChain adapter 则从 Server-owned approval artifact 构造同一 binding。这样 Security
+持久化记录的批准事实能追溯到 decision/ref，而不是追溯到一个无法审计的布尔值。
+
 ## 64. 目标 PostgreSQL 表
 
 Tool Runtime 领域 Schema：

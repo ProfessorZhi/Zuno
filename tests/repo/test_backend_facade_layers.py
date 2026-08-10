@@ -14,10 +14,8 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 FACADE_ALL = {
     "zuno.api": ["Settings", "router"],
     "zuno.agent": [
-        "AgentControlRuntime",
         "AgentRuntimeBatchError",
         "AgentRuntimeBatchReport",
-        "AgentRuntimeResult",
         "AgentExecutionContext",
         "ContextOrchestrator",
         "ContextPackPolicy",
@@ -31,7 +29,6 @@ FACADE_ALL = {
         "RuntimeCheckpoint",
         "RuntimeInterrupt",
         "RuntimeNodeContract",
-        "RuntimeObservation",
         "RuntimeTurnLedger",
         "SingleControllerRuntimeHarness",
         "SingleControllerDurableRuntime",

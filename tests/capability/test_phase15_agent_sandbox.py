@@ -10,7 +10,7 @@ import subprocess
 
 import pytest
 
-from zuno.capability.tool_runtime.invocation_gateway import ToolInvocationGateway, _ExecutePrerequisiteResult
+from zuno.capability.tool_runtime.invocation_gateway import ToolApprovalBinding, ToolInvocationGateway, _ExecutePrerequisiteResult
 from zuno.capability.tool_runtime import SandboxAdapterRegistry, SandboxExecutionResult, SandboxRunner, InMemorySandboxSessionStore
 from zuno.capability.tool_runtime.sandbox import (
     DenoPyodideWasmRunner,
@@ -504,7 +504,7 @@ def test_phase15_side_effect_sandbox_output_is_observation_only_before_domain_ef
             adapter_kind="API",
             executor=executor,
             readonly=False,
-            approved=True,
+            approval=ToolApprovalBinding(decision_ref="test:phase15-approval", adapter_ref="test"),
         )
     )
 

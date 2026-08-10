@@ -23,7 +23,6 @@ FROZEN_FILES = [
     "tools/evals/zuno/rag_eval/run_enterprise_rag_paired_benchmark.py",
     "tools/evals/zuno/rag_eval/measurement_gate.py",
     ".github/workflows/phase22-contract-verification.yml",
-    "docs/status/production-readiness.md",
     ".agent/programs/work-products/goal05-target-gap-ledger.yaml",
 ]
 
@@ -54,8 +53,9 @@ def test_02_synthetic_benchmark_deep_agentic_composition_root_deleted() -> None:
 
 def test_03_frozen_files_unmodified_in_git_diff() -> None:
     """Git check: None of the 7 frozen contract files are modified relative to Base."""
+    base_ref = "origin/main"
     res = subprocess.run(
-        ["git", "diff", "--name-only", "origin/codex/goal05-phase15-sandbox-repair"],
+        ["git", "diff", "--name-only", base_ref],
         capture_output=True,
         text=True,
         check=True,

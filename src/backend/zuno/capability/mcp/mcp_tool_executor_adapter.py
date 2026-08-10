@@ -44,7 +44,7 @@ from dataclasses import dataclass
 from typing import Any, Awaitable, Callable, Mapping
 
 from zuno.capability.control_plane import ToolSideEffectLevel
-from zuno.capability.tool_runtime import ToolInvocationGateway
+from zuno.capability.tool_runtime import ToolApprovalBinding, ToolInvocationGateway
 
 
 ADAPTER_KIND = "LANGCHAIN_TOOL"
@@ -153,7 +153,7 @@ class MCPLangChainToolAdapter:
             adapter_kind=ADAPTER_KIND,
             executor=_actual_call,
             readonly=self.is_read_only(),
-            approved=self.is_approved(),
+            approval=ToolApprovalBinding.from_artifact(self._approved_artifact),
         )
         return (result, gateway_receipt.receipt_id, gateway_receipt.status)
 

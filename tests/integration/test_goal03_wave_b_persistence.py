@@ -9,7 +9,7 @@ import pytest
 from sqlalchemy import text
 
 from zuno.capability.tool_runtime.effect_policy import classify_tool_effect
-from zuno.capability.tool_runtime.invocation_gateway import ToolEffectUnknownError, ToolInvocationGateway
+from zuno.capability.tool_runtime.invocation_gateway import ToolApprovalBinding, ToolEffectUnknownError, ToolInvocationGateway
 from zuno.capability.tool_runtime.sandbox import SandboxAdapterRegistry, SandboxDispatch, SandboxExecutionResult, SandboxRunner
 
 from zuno.platform.contracts import canonical_sha256
@@ -817,7 +817,7 @@ def test_phase16_gateway_records_known_effect_receipt_after_approval(engine) -> 
         adapter_kind="API",
         executor=executor,
         readonly=False,
-        approved=True,
+        approval=ToolApprovalBinding(decision_ref="test:goal03-approval", adapter_ref="test"),
     ))
 
     assert result == {"provider_effect_id": "mail-provider-effect:phase16:1", "message_id": "message-1"}
@@ -979,7 +979,7 @@ def test_phase16_gateway_reauthorizes_latest_epoch_before_effect_dispatch(engine
         adapter_kind="API",
         executor=executor,
         readonly=False,
-        approved=True,
+        approval=ToolApprovalBinding(decision_ref="test:goal03-approval", adapter_ref="test"),
     ))
 
     assert result is None
@@ -1080,7 +1080,7 @@ def test_phase16_gateway_reauthorizes_approval_deadline_before_effect_dispatch(e
         adapter_kind="API",
         executor=executor,
         readonly=False,
-        approved=True,
+        approval=ToolApprovalBinding(decision_ref="test:goal03-approval", adapter_ref="test"),
     ))
 
     assert result is None
@@ -1167,7 +1167,7 @@ def test_phase16_gateway_blocks_revoked_secret_before_effect_dispatch(engine) ->
         adapter_kind="API",
         executor=executor,
         readonly=False,
-        approved=True,
+        approval=ToolApprovalBinding(decision_ref="test:goal03-approval", adapter_ref="test"),
     ))
 
     assert result is None
@@ -1284,7 +1284,7 @@ def test_phase16_gateway_blocks_preheld_idempotency_claim_before_effect_dispatch
         adapter_kind="API",
         executor=executor,
         readonly=False,
-        approved=True,
+        approval=ToolApprovalBinding(decision_ref="test:goal03-approval", adapter_ref="test"),
     ))
 
     assert result is None
@@ -1366,7 +1366,7 @@ def test_phase16_gateway_replays_completed_side_effect_idempotency_without_dispa
         adapter_kind="API",
         executor=executor,
         readonly=False,
-        approved=True,
+        approval=ToolApprovalBinding(decision_ref="test:goal03-approval", adapter_ref="test"),
     ))
 
     async def replay_executor() -> dict[str, str]:
@@ -1382,7 +1382,7 @@ def test_phase16_gateway_replays_completed_side_effect_idempotency_without_dispa
         adapter_kind="API",
         executor=replay_executor,
         readonly=False,
-        approved=True,
+        approval=ToolApprovalBinding(decision_ref="test:goal03-approval", adapter_ref="test"),
     ))
 
     assert first_result == {"provider_effect_id": "mail-provider-effect:phase16:idempotent:1", "message_id": "message-idem-1"}
@@ -1486,7 +1486,7 @@ def test_phase16_gateway_recovers_durable_effect_when_claim_completion_failed(en
         adapter_kind="API",
         executor=executor,
         readonly=False,
-        approved=True,
+        approval=ToolApprovalBinding(decision_ref="test:goal03-approval", adapter_ref="test"),
     ))
 
     assert first_result is None
@@ -1506,7 +1506,7 @@ def test_phase16_gateway_recovers_durable_effect_when_claim_completion_failed(en
         adapter_kind="API",
         executor=replay_executor,
         readonly=False,
-        approved=True,
+        approval=ToolApprovalBinding(decision_ref="test:goal03-approval", adapter_ref="test"),
     ))
 
     assert calls == 1
@@ -1607,7 +1607,7 @@ def test_phase16_gateway_recovers_unknown_when_effect_receipt_persistence_fails(
         adapter_kind="API",
         executor=executor,
         readonly=False,
-        approved=True,
+        approval=ToolApprovalBinding(decision_ref="test:goal03-approval", adapter_ref="test"),
     ))
 
     assert result is None
@@ -1713,7 +1713,7 @@ def test_phase16_gateway_records_provider_exception_as_unknown_reconciliation(en
         adapter_kind="API",
         executor=executor,
         readonly=False,
-        approved=True,
+        approval=ToolApprovalBinding(decision_ref="test:goal03-approval", adapter_ref="test"),
     ))
 
     assert result is None
@@ -1839,7 +1839,7 @@ def test_phase16_gateway_records_unknown_effect_reconciliation_without_retry(eng
         adapter_kind="API",
         executor=executor,
         readonly=False,
-        approved=True,
+        approval=ToolApprovalBinding(decision_ref="test:goal03-approval", adapter_ref="test"),
     ))
 
     assert result is None
@@ -2036,7 +2036,7 @@ def test_phase16_reconciliation_restart_age_escalates_without_retry(engine) -> N
         adapter_kind="API",
         executor=executor,
         readonly=False,
-        approved=True,
+        approval=ToolApprovalBinding(decision_ref="test:goal03-approval", adapter_ref="test"),
     ))
 
     assert result is None
@@ -2127,7 +2127,7 @@ def test_phase16_gateway_records_async_job_callback_and_cancellation(engine) -> 
         adapter_kind="ASYNC_JOB",
         executor=executor,
         readonly=False,
-        approved=True,
+        approval=ToolApprovalBinding(decision_ref="test:goal03-approval", adapter_ref="test"),
     ))
 
     assert result == {"provider_job_id": "provider-job:phase16:async:1", "status_url": "https://provider/jobs/1"}
@@ -2337,7 +2337,7 @@ def test_phase16_gateway_recovers_unknown_when_async_job_persistence_fails(engin
         adapter_kind="ASYNC_JOB",
         executor=executor,
         readonly=False,
-        approved=True,
+        approval=ToolApprovalBinding(decision_ref="test:goal03-approval", adapter_ref="test"),
     ))
 
     assert result is None
@@ -2443,7 +2443,7 @@ def test_phase16_async_restart_times_out_due_job_without_callback_replay(engine)
         adapter_kind="ASYNC_JOB",
         executor=executor,
         readonly=False,
-        approved=True,
+        approval=ToolApprovalBinding(decision_ref="test:goal03-approval", adapter_ref="test"),
     ))
 
     assert result == {"provider_job_id": "provider-job:phase16:async-timeout:1"}
@@ -2534,7 +2534,7 @@ def test_phase16_async_cancellation_moves_waiting_job_without_timeout_overwrite(
         adapter_kind="ASYNC_JOB",
         executor=executor,
         readonly=False,
-        approved=True,
+        approval=ToolApprovalBinding(decision_ref="test:goal03-approval", adapter_ref="test"),
     ))
 
     assert result == {"provider_job_id": provider_job_id}
@@ -2637,7 +2637,7 @@ def test_phase16_gateway_records_compensation_as_new_governed_action(engine) -> 
         adapter_kind="API",
         executor=source_executor,
         readonly=False,
-        approved=True,
+        approval=ToolApprovalBinding(decision_ref="test:goal03-approval", adapter_ref="test"),
     ))
     compensation_result, compensation_receipt = asyncio.run(gateway.invoke_readonly(
         tool_name="mail.send",
@@ -2649,7 +2649,7 @@ def test_phase16_gateway_records_compensation_as_new_governed_action(engine) -> 
         adapter_kind="API",
         executor=compensation_executor,
         readonly=False,
-        approved=True,
+        approval=ToolApprovalBinding(decision_ref="test:goal03-approval", adapter_ref="test"),
     ))
 
     assert source_result["provider_effect_id"] == "mail-provider-effect:phase16:source:1"
@@ -2795,7 +2795,7 @@ def test_phase16_compensation_from_unresolved_reconciliation_requires_escalation
         adapter_kind="API",
         executor=executor,
         readonly=False,
-        approved=True,
+        approval=ToolApprovalBinding(decision_ref="test:goal03-approval", adapter_ref="test"),
     ))
 
     assert result is None
@@ -2815,7 +2815,7 @@ def test_phase16_compensation_from_unresolved_reconciliation_requires_escalation
         adapter_kind="API",
         executor=compensation_executor,
         readonly=False,
-        approved=True,
+        approval=ToolApprovalBinding(decision_ref="test:goal03-approval", adapter_ref="test"),
     ))
 
     assert compensation_result["provider_effect_id"] == "mail-provider-effect:phase16:compensation-reconcile:2"

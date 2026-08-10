@@ -99,6 +99,14 @@ def _client(monkeypatch, *, role: str | list[str]) -> TestClient:
     app = FastAPI()
     app.include_router(observability.router, prefix="/api/v1")
 
+    # The route contract supplies its own authenticated payload. Keep the
+    # role lookup at the auth boundary in-memory so non-admin cases do not
+    # open a real PostgreSQL connection while exercising authorization.
+    monkeypatch.setattr(
+        "zuno.api.services.user.UserRoleDao.get_user_roles",
+        lambda _user_id: [],
+    )
+
     async def fake_login_user():
         return UserPayload(user_id="user-a", user_name="User A", role=role)
 

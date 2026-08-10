@@ -900,7 +900,7 @@ class ToolControlPlaneRuntime:
         execution_context: ToolExecutionContext,
         sandbox_context: ToolSandboxContext,
     ) -> tuple[Any | None, str, str, str]:
-        from zuno.capability.tool_runtime import ToolInvocationGateway
+        from zuno.capability.tool_runtime import ToolApprovalBinding, ToolInvocationGateway
 
         gateway_args = dict(request.arguments)
         if sandbox_context.credential_refs and "secret_ref" not in gateway_args:
@@ -938,7 +938,7 @@ class ToolControlPlaneRuntime:
                 adapter_kind=adapter.execution_mode.value.upper(),
                 executor=executor,
                 readonly=False,
-                approved=request.approved,
+                approval=ToolApprovalBinding.from_runtime_request(request),
             )
         )
         return result, receipt.status, receipt.blocked_reason, receipt.receipt_id

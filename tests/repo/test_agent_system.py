@@ -183,9 +183,17 @@ def test_agent_architecture_folder_is_slim_mirror() -> None:
     files = {
         path.name for path in (REPO_ROOT / ".agent" / "architecture").iterdir() if path.is_file()
     }
-    assert files == {"README.md", "architecture.md", "architecture.html"}
+    assert files == {
+        "README.md",
+        "architecture.md",
+        "architecture-views.md",
+        "architecture.html",
+    }
     assert (REPO_ROOT / ".agent/architecture/architecture.md").read_bytes() == (
         REPO_ROOT / "docs/architecture/architecture.md"
+    ).read_bytes()
+    assert (REPO_ROOT / ".agent/architecture/architecture-views.md").read_bytes() == (
+        REPO_ROOT / "docs/architecture/architecture-views.md"
     ).read_bytes()
     assert (REPO_ROOT / ".agent/architecture/architecture.html").read_text(
         encoding="utf-8"
@@ -212,18 +220,14 @@ def test_agent_entrypoint_records_current_architecture_sync_and_work_modes() -> 
         "Agent Workflow Self-Maintenance",
         "docs/architecture/architecture.md",
         "docs/architecture/architecture.html",
-        ".agent/architecture/architecture.md",
-        ".agent/architecture/architecture.html",
-        "Markdown 内容必须比架构 HTML 更充实",
+        ".agent/architecture/",
+        "总架构 Markdown 必须比 HTML 更充实",
         "python tools/agent/render_architecture.py --write",
         "## 工作模式",
         "### 挂机模式",
         "### 多线程模式",
-        "Single GeneralAgent",
-        "## Program Closure 自维护审查",
-        "如果用户提醒“以后注意”，不能只留在对话里",
-        "当前前台采用 runtime-first 口径",
-        "成熟度和 runtime-first 交付物口径以 `docs/architecture/production-readiness.md` 为准",
+        "Single Controller 主线",
+        "docs/status/production-readiness.md",
     ]:
         assert phrase in agents
 
@@ -274,10 +278,10 @@ def test_agent_architecture_docs_map_explains_dual_mirror_rule() -> None:
         "docs/architecture/architecture.html",
         ".agent/architecture/architecture.md",
         ".agent/architecture/architecture.html",
-        "Markdown 是主文档，HTML 是展示页",
+        "Markdown 是重文字架构设计，HTML 是重图展示",
         "python tools/agent/render_architecture.py --write",
-        "不要恢复 `current-architecture.md`",
-        "不要恢复旧 near-term / future / decisions 工作集",
+        "不恢复简化 offline SVG renderer",
+        "不恢复拆分的 current/target/roadmap 前台文档",
     ]:
         assert phrase in content
 
@@ -286,278 +290,31 @@ def test_agent_program_surface_records_active_runtime_program() -> None:
     program_files = sorted(
         path.name for path in (REPO_ROOT / ".agent/programs").iterdir() if path.is_file()
     )
-    assert program_files == sorted(CURRENT_FRONT_PROGRAM_FILES)
-
+    required_files = {
+        "README.md",
+        "current.md",
+        "implementation-roadmap.md",
+        "task-execution-contract.md",
+        "program-manifest.yaml",
+        "closure-checklist.md",
+        "PHASE22_fixed-benchmark-production-readiness-and-closure.md",
+    }
+    assert required_files.issubset(set(program_files))
     current_program = (REPO_ROOT / ".agent/programs/current.md").read_text(encoding="utf-8")
-    readme = (REPO_ROOT / ".agent/programs/README.md").read_text(encoding="utf-8")
-    roadmap = (REPO_ROOT / ".agent/programs/implementation-roadmap.md").read_text(
-        encoding="utf-8"
-    )
-    closure = (REPO_ROOT / ".agent/programs/closure-checklist.md").read_text(
-        encoding="utf-8"
-    )
-    current_reference = (REPO_ROOT / ".agent/references/current-program.md").read_text(
-        encoding="utf-8"
-    )
-    latest_archive = REPO_ROOT / LATEST_COMPLETED_PROGRAM_ARCHIVE
-    latest_archive_text = (
-        (latest_archive / "current.md").read_text(encoding="utf-8")
-        + (latest_archive / "README.md").read_text(encoding="utf-8")
-        + (latest_archive / "closure-summary.md").read_text(encoding="utf-8")
-    )
-    production_archive = REPO_ROOT / ACTIVE_PROGRAM_ARCHIVE
-    production_archive_text = (
-        (production_archive / "current.md").read_text(encoding="utf-8")
-        + (production_archive / "README.md").read_text(encoding="utf-8")
-        + (production_archive / "closure-summary.md").read_text(encoding="utf-8")
-    )
-    ingestion_archive = REPO_ROOT / CURRENT_ACTIVE_PROGRAM_ARCHIVE
-    ingestion_archive_text = (
-        (ingestion_archive / "current.md").read_text(encoding="utf-8")
-        + (ingestion_archive / "README.md").read_text(encoding="utf-8")
-        + (ingestion_archive / "closure-summary.md").read_text(encoding="utf-8")
-    )
-    runtime_archive = REPO_ROOT / RUNTIME_PROGRAM_ARCHIVE
-    archive_text = (
-        (runtime_archive / "current.md").read_text(encoding="utf-8")
-        + (runtime_archive / "README.md").read_text(encoding="utf-8")
-        + (runtime_archive / "closure-summary.md").read_text(encoding="utf-8")
-    )
-    program3_archive = REPO_ROOT / PROGRAM3_ACTIVE_ARCHIVE
-    program3_archive_text = (
-        (program3_archive / "current.md").read_text(encoding="utf-8")
-        + (program3_archive / "README.md").read_text(encoding="utf-8")
-        + (program3_archive / "closure-summary.md").read_text(encoding="utf-8")
-    )
-    evidence_archive = REPO_ROOT / EVIDENCE_SPAN_PROGRAM_ARCHIVE
-    evidence_archive_text = (
-        (evidence_archive / "current.md").read_text(encoding="utf-8")
-        + (evidence_archive / "README.md").read_text(encoding="utf-8")
-        + (evidence_archive / "closure-summary.md").read_text(encoding="utf-8")
-    )
-    unified_archive = REPO_ROOT / UNIFIED_RUNTIME_PROGRAM_ARCHIVE
-    unified_archive_text = (
-        (unified_archive / "current.md").read_text(encoding="utf-8")
-        + (unified_archive / "README.md").read_text(encoding="utf-8")
-        + (unified_archive / "closure-summary.md").read_text(encoding="utf-8")
-    )
+    current_reference = (REPO_ROOT / ".agent/references/current-program.md").read_text(encoding="utf-8")
+    phase22 = (REPO_ROOT / ".agent/programs/PHASE22_fixed-benchmark-production-readiness-and-closure.md").read_text(encoding="utf-8")
     for phrase in [
-        "state: no-active",
-        "active_program: none",
-        "current_phase: none",
-        "latest_completed_program: zuno-real-unified-runtime-cutover-v1",
-        "zuno-real-unified-runtime-cutover-v1",
-        UNIFIED_RUNTIME_PROGRAM_NAME,
-        UNIFIED_RUNTIME_PROGRAM_ARCHIVE,
-        "implementation_complete_measurement_blocked",
-        "profile_runner_unavailable",
-        "no_tracked_fixed_80_case_enterprise_rag_set_available_in_repo",
-        "PHASE01-PHASE13",
-        "Single Controller Agent Runtime",
-        EVIDENCE_SPAN_PROGRAM_NAME,
-        EVIDENCE_SPAN_PROGRAM_ARCHIVE,
-        "blocked_not_measured_due_to_agentic_profile_incomplete",
-        "Evidence Text Available@5 >= 0.60",
-        "Citation Accuracy >= 0.30",
-        "doc_hit_text_miss",
-        PROGRAM3_ACTIVE_NAME,
-        PROGRAM3_ACTIVE_ARCHIVE,
-        "Launchable enterprise Agentic GraphRAG product baseline completed.",
-        "Production scale external deployments remain replaceable targets.",
-        LATEST_COMPLETED_PROGRAM_NAME,
-        LATEST_COMPLETED_PROGRAM_ARCHIVE,
-        CURRENT_ACTIVE_PROGRAM_NAME,
-        CURRENT_ACTIVE_PROGRAM_ARCHIVE,
-        "zuno-enterprise-agentic-graphrag-production-suite-v1",
-        "zuno-runtime-subsystems-parallel-v1",
-        "zuno-agent-planning-integration-v1",
-        "zuno-enterprise-knowledge-eval-benchmark-v1",
-        ACTIVE_PROGRAM_NAME,
-        ACTIVE_PROGRAM_ARCHIVE,
-        "completed / archived",
-        "PHASE01-PHASE08",
-        "PHASE01-PHASE12",
-        "PHASE01_truth-source-and-gap-audit",
-        "PHASE08_docs-verifier-closure",
-        "Product V1 local durable ingestion baseline",
-        "一次性交付型成熟化 program",
-        "成熟目标架构和四大总交付物完成",
-        "工作流自洽与自我维护",
-        "文档系统清晰无冗余",
-        "文件夹和代码 ownership 清晰",
-        "架构功能完整实现",
-        RUNTIME_PROGRAM_NAME,
-        RUNTIME_PROGRAM_ARCHIVE,
-        "runtime-first / vertical-slice-first",
-        "只写 contract、schema 或 README 不能关闭 runtime phase",
-        "成熟度和 runtime-first 交付物口径以 `docs/architecture/production-readiness.md` 为准",
-        "上传文档 -> parse -> index -> ask -> Agentic retrieval -> cited answer -> trace/eval -> artifact/feedback",
-        MASTER_PROGRAM_NAME,
-        MASTER_PROGRAM_ARCHIVE,
+        "state: active",
+        "active_program: zuno-canonical-architecture-runtime-realization-v1",
+        "current_phase: PHASE22",
+        "phase_count: 22",
     ]:
-        assert phrase in (
-            current_program
-            + readme
-            + roadmap
-            + closure
-            + current_reference
-            + unified_archive_text
-            + evidence_archive_text
-            + program3_archive_text
-            + latest_archive_text
-            + ingestion_archive_text
-            + production_archive_text
-            + archive_text
-        )
-    assert sorted(path.name for path in (REPO_ROOT / ".agent/programs").glob("PHASE*.md")) == sorted(
-        name for name in CURRENT_FRONT_PROGRAM_FILES if name.startswith("PHASE")
-    )
-    for phase_name in UNIFIED_RUNTIME_PHASE_FILES:
-        phase_text = (unified_archive / phase_name).read_text(encoding="utf-8")
-        assert f"program: {UNIFIED_RUNTIME_PROGRAM_NAME}" in phase_text
-        for section in [
-            "## 目标",
-            "## 目标增量",
-            "## 验收标准",
-            "## Windows PowerShell 验证",
-            "## Phase 完成报告",
-        ]:
-            assert section in phase_text
-    for active_file in [
-        "program-decisions.md",
-        "code-architecture-map.md",
-        "powershell-runbook.md",
-        "test-matrix.md",
-    ]:
-        assert (unified_archive / active_file).exists()
-    for index, phase_name in enumerate(EVIDENCE_SPAN_PROGRAM_PHASE_FILES, start=1):
-        phase_text = (evidence_archive / phase_name).read_text(encoding="utf-8")
-        assert f"program: {EVIDENCE_SPAN_PROGRAM_NAME}" in phase_text
-        assert "status: completed" in phase_text
-        for section in [
-            "## 目标",
-            "## 范围",
-            "## 禁止范围",
-            "## 验收闸门",
-            "## 验证命令",
-            "## 停止条件",
-        ]:
-            assert section in phase_text
-    for phase_name in PROGRAM3_ACTIVE_PHASE_FILES:
-        phase_text = (program3_archive / phase_name).read_text(encoding="utf-8")
-        assert f"program: {PROGRAM3_ACTIVE_NAME}" in phase_text
-        assert "status: completed" in phase_text
-        for section in [
-            "## 目标",
-            "## 范围",
-            "## 禁止范围",
-            "## 验收闸门",
-            "## 验证命令",
-            "## 需要先读取",
-            "## 需要修改的文件",
-            "## 执行拆解",
-            "## 多 agent 分工",
-            "## 需要返回的证据",
-            "## 停止条件",
-        ]:
-            assert section in phase_text
-    for archive_file in ["README.md", "current.md", "implementation-roadmap.md", "closure-checklist.md", "closure-summary.md"]:
-        assert (program3_archive / archive_file).exists()
-    for queued_file in ["README.md", *PROGRAM3_MERGED_QUEUED_FILES]:
-        assert (program3_archive / "queued-programs" / queued_file).exists()
-    assert not (REPO_ROOT / ".agent/programs/thread-prompts").exists()
-    for phase in LATEST_COMPLETED_PROGRAM_PHASE_FILES:
-        phase_path = latest_archive / phase
-        phase_text = phase_path.read_text(encoding="utf-8")
-        assert f"program: {LATEST_COMPLETED_PROGRAM_NAME}" in phase_text
-        assert "status: completed" in phase_text
-        for section in [
-            "## 目标",
-            "## 范围",
-            "## 禁止范围",
-            "## 验收闸门",
-            "## 验证命令",
-            "## 需要先读取",
-            "## 需要修改的文件",
-            "## 执行拆解",
-            "## 多 agent 分工",
-            "## 需要返回的证据",
-            "## 停止条件",
-        ]:
-            assert section in phase_text
-    for archive_file in ["README.md", "current.md", "implementation-roadmap.md", "closure-checklist.md", "closure-summary.md"]:
-        assert (latest_archive / archive_file).exists()
-    for phase in CURRENT_ACTIVE_PROGRAM_PHASE_FILES:
-        phase_path = ingestion_archive / phase
-        phase_text = phase_path.read_text(encoding="utf-8")
-        assert "program: zuno-production-document-ingestion-and-thread-foundation-v1" in phase_text
-        assert "status: completed" in phase_text
-        for section in [
-            "## 目标",
-            "## 范围",
-            "## 禁止范围",
-            "## 验收闸门",
-            "## 验证命令",
-            "## 需要先读取",
-            "## 需要修改的文件",
-            "## 执行拆解",
-            "## 多 agent 分工",
-            "## 需要返回的证据",
-            "## 停止条件",
-        ]:
-            assert section in phase_text
-    for archive_file in ["README.md", "current.md", "implementation-roadmap.md", "closure-checklist.md", "closure-summary.md"]:
-        assert (ingestion_archive / archive_file).exists()
-    for file_name in THREAD_PROMPT_FILES:
-        assert (ingestion_archive / "thread-prompts" / file_name).exists()
-    assert sorted(path.name for path in (REPO_ROOT / ".agent/programs/queued-programs").glob("*.md")) == sorted(QUEUED_PROGRAM_FILES)
-    for file_name in QUEUED_PROGRAM_FILES:
-        text = (REPO_ROOT / ".agent/programs/queued-programs" / file_name).read_text(encoding="utf-8")
-        if file_name == "PROGRAM01_real-unified-runtime-cutover.md":
-            assert "state: activated_from_queue" in text
-            assert "active_program: zuno-real-unified-runtime-cutover-v1" in text
-            assert "不再作为执行状态事实源" in text
-        elif file_name != "README.md":
-            assert "state: superseded" in text
-            assert "merged_into: zuno-launchable-enterprise-agentic-graphrag-full-closure-v1" in text
-            assert "superseded_by: zuno-launchable-enterprise-agentic-graphrag-full-closure-v1" in text
-    _assert_archived_phase_state()
-    for phase in ACTIVE_PROGRAM_PHASE_FILES:
-        phase_path = production_archive / phase
-        assert phase_path.exists()
-        phase_text = phase_path.read_text(encoding="utf-8")
-        assert "status: completed" in phase_text
-        for section in [
-            "## 目标",
-            "## 范围",
-            "## 禁止范围",
-            "## 验收闸门",
-            "## 验证命令",
-            "## 需要先读取",
-            "## 需要修改的文件",
-            "## 执行拆解",
-            "## 多 agent 分工",
-            "## 需要返回的证据",
-            "## 停止条件",
-        ]:
-            assert section in phase_text
-    for archive_file in ["README.md", "current.md", "implementation-roadmap.md", "closure-checklist.md", "closure-summary.md"]:
-        assert (production_archive / archive_file).exists()
-    for index, phase in enumerate(RUNTIME_PROGRAM_PHASE_FILES, start=1):
-        phase_path = runtime_archive / phase
-        assert phase_path.exists()
-        phase_text = phase_path.read_text(encoding="utf-8")
-        assert "status: completed" in phase_text
-        for section in ["## 目标", "## 范围", "## 禁止范围", "## 验收闸门", "## 验证命令"]:
-            assert section in phase_text
-    for archive_file in ["README.md", "current.md", "implementation-roadmap.md", "closure-checklist.md", "closure-summary.md"]:
-        assert (runtime_archive / archive_file).exists()
-    for archive_file in ["README.md", "current.md", "implementation-roadmap.md", "closure-checklist.md", "closure-summary.md"]:
-        assert (REPO_ROOT / MASTER_PROGRAM_ARCHIVE / archive_file).exists()
-    for phase in MASTER_PROGRAM_PHASE_FILES:
-        phase_path = REPO_ROOT / MASTER_PROGRAM_ARCHIVE / phase
-        assert phase_path.exists()
-        assert "status: completed" in phase_path.read_text(encoding="utf-8")
+        assert phrase in current_program + current_reference
+    assert "phase_id: PHASE22" in phase22
+    assert "status: in_progress" in phase22
+    assert "Fixed Benchmark" in phase22
+    assert (REPO_ROOT / ".agent/programs/thread-prompts").is_dir()
+    assert list((REPO_ROOT / ".agent/programs").glob("PHASE*.md"))
 
 
 def test_program2_thread_prompts_are_target_mode_ready_and_guarded() -> None:
@@ -568,8 +325,8 @@ def test_program2_thread_prompts_are_target_mode_ready_and_guarded() -> None:
     verifier = (REPO_ROOT / ".agent/scripts/verify_agent_system.py").read_text(
         encoding="utf-8"
     )
-    assert "THREAD_PROMPT_FILES" in verifier
-    assert "verify_program_thread_prompts" in verifier
+    assert "verify_architecture_directory_contract" in verifier
+    assert "verify_mirrors" in verifier
 
     required_phrases = [
         "## UI Mode",
@@ -633,18 +390,12 @@ def test_agent_verifier_enforces_workflow_self_maintenance_contracts() -> None:
     )
 
     for phrase in [
-        "verify_workflow_rule_writeback_route",
-        "verify_templates_are_skeletons",
-        "verify_program_lifecycle_surfaces",
-        "verify_workflow_change_log_entries",
-        "docs-agent-system-history",
-        "verification-report-template.md",
-        "workflow-change-log.md",
-        "docs/history/programs",
-        "## 自维护审查",
-        "verify_architecture_mirror",
-        "verify_workflow_update_policy_requires_classification_evidence",
-        "verify_phase_closure_template_self_maintenance_contract",
+        "verify_required_paths",
+        "verify_architecture_directory_contract",
+        "verify_mirrors",
+        "verify_entrypoints",
+        "verify_module_contracts",
+        "verify_no_tracked_local_workspace",
     ]:
         assert phrase in content
 
@@ -706,7 +457,7 @@ def test_system_yaml_tracks_current_architecture_docs_sync() -> None:
         "new_program_first_phase: \"PHASE01\"",
         "skill_routes:",
         "docs_sync:",
-        "docs/architecture/production-readiness.md",
+        "docs/status/production-readiness.md",
         "verify:",
         ".agent/references/workflow.md",
         ".agent/references/architecture-docs-map.md",

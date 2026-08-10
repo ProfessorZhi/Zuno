@@ -64,6 +64,58 @@ class ToolGatewayReceipt:
     result_ref: str = ""
 
 
+@dataclass(frozen=True, slots=True)
+class ToolApprovalBinding:
+    """Server-owned approval identity passed into the tool gateway.
+
+    The gateway accepts a decision/reference binding, never an unscoped
+    approval boolean. The legacy boolean remains an adapter concern of
+    ``ToolRuntimeRequest`` and is converted before reaching this boundary.
+    """
+
+    decision_ref: str
+    adapter_ref: str
+    comment: str = ""
+
+    @property
+    def granted(self) -> bool:
+        return bool(self.decision_ref)
+
+    @classmethod
+    def from_runtime_request(cls, request: Any) -> "ToolApprovalBinding | None":
+        decision_ref = str(getattr(request, "approval_decision_ref", "") or "")
+        legacy_granted = bool(getattr(request, "approved", False))
+        if not decision_ref and not legacy_granted:
+            return None
+        return cls(
+            decision_ref=decision_ref or f"runtime-approval:{getattr(request, 'approval_id', '')}",
+            adapter_ref=(
+                str(getattr(request, "approval_adapter_ref", "") or "")
+                or "temporary.adapter.tool_runtime.approved_bool"
+            ),
+            comment=str(getattr(request, "approval_comment", "") or ""),
+        )
+
+    @classmethod
+    def from_artifact(cls, artifact: Any) -> "ToolApprovalBinding | None":
+        if artifact is None:
+            return None
+        payload = artifact if isinstance(artifact, dict) else {}
+        return cls(
+            decision_ref=str(
+                payload.get("approval_decision_ref")
+                or payload.get("decision_ref")
+                or payload.get("approval_id")
+                or "mcp:approved-artifact"
+            ),
+            adapter_ref=str(
+                payload.get("approval_adapter_ref")
+                or "mcp.approval_artifact"
+            ),
+            comment=str(payload.get("approval_comment") or ""),
+        )
+
+
 
 @dataclass(frozen=True, slots=True)
 class _SecurityPrepareResult:
@@ -165,8 +217,9 @@ class ToolInvocationGateway:
         adapter_kind: str,
         executor: Callable[[], Awaitable[Any]],
         readonly: bool,
-        approved: bool = False,
+        approval: ToolApprovalBinding | None = None,
     ) -> tuple[Any | None, ToolGatewayReceipt]:
+        approved = approval.granted if approval is not None else False
         prepared_id = f"prepared-tool-action:{call_id}"
         attempt_id = f"tool-attempt:{call_id}"
         receipt_id = f"tool-execution-receipt:{call_id}"
@@ -256,7 +309,7 @@ class ToolInvocationGateway:
                 prepared_action_hash=prepared_action_hash,
                 approval_required=effect_policy.approval_required,
                 target_resource_set_ref=effect_policy.target_resource_set.resource_set_ref,
-                approved=approved,
+                approval=approval,
             )
 
         if not effect_policy.provider_dispatch_allowed:
@@ -830,7 +883,7 @@ class ToolInvocationGateway:
         prepared_action_hash: str,
         approval_required: bool,
         target_resource_set_ref: str,
-        approved: bool,
+        approval: ToolApprovalBinding | None,
     ) -> _SecurityPrepareResult:
         epoch_ref = f"security-epoch:{trace_id}"
         principal_context_id = f"principal-context:{workspace_id}:{call_id}"
@@ -886,12 +939,12 @@ class ToolInvocationGateway:
                     requested_by_principal_id="agent:zuno-tool-runtime",
                     required_approver_policy_ref="approval-policy:tool-runtime:phase16",
                 )
-                if approved:
+                if approval is not None and approval.granted:
                     repo.ensure_approval_decision(
                         approval_decision_id=f"approval-decision:{call_id}",
                         tenant_id=tenant_id,
                         approval_request_id=f"approval-request:{call_id}",
-                        approver_principal_id="workspace-user:approved",
+                        approver_principal_id=f"approval-binding:{approval.decision_ref}",
                         decision="approved",
                     )
             repo.ensure_audit_requirement(

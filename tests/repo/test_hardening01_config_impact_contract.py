@@ -247,7 +247,7 @@ def test_query_prompt_version_change_is_immediate_without_graph_rebuild():
     assert impact["recommended_action"] == "save_only"
 
 
-def test_image_index_reindex_action_is_accepted():
+def test_image_index_reindex_action_is_accepted(monkeypatch):
     from zuno.api.services.knowledge import KnowledgeService
     import asyncio
 
@@ -269,19 +269,35 @@ def test_image_index_reindex_action_is_accepted():
     async def fake_select_knowledge_file(_knowledge_id):
         return []
 
+    class FakeKnowledgeRepository:
+        def next_version_no(self, **_kwargs):
+            return 1
+
+        def next_cutover_expected_generation(self, **_kwargs):
+            return 1
+
+        def __getattr__(self, _name):
+            return lambda *_args, **_kwargs: None
+
+    class FakeKnowledgeUnitOfWork:
+        def __enter__(self):
+            return FakeKnowledgeRepository()
+
+        def __exit__(self, _exc_type, _exc, _tb):
+            return None
+
+    monkeypatch.setattr(
+        "zuno.api.services.knowledge.KnowledgeUnitOfWork",
+        lambda _engine: FakeKnowledgeUnitOfWork(),
+    )
+
     from zuno.platform.database.dao.knowledge import KnowledgeDao
     from zuno.platform.database.dao.knowledge_file import KnowledgeFileDao
 
-    KnowledgeDao_select_user_by_id = KnowledgeDao.select_user_by_id
-    KnowledgeFileDao_select_knowledge_file = KnowledgeFileDao.select_knowledge_file
-    KnowledgeDao.select_user_by_id = fake_select_user_by_id
-    KnowledgeFileDao.select_knowledge_file = fake_select_knowledge_file
+    monkeypatch.setattr(KnowledgeDao, "select_user_by_id", fake_select_user_by_id)
+    monkeypatch.setattr(KnowledgeFileDao, "select_knowledge_file", fake_select_knowledge_file)
 
-    try:
-        result = asyncio.run(KnowledgeService.run_reindex_action("kb_1", "image_index"))
-    finally:
-        KnowledgeDao.select_user_by_id = KnowledgeDao_select_user_by_id
-        KnowledgeFileDao.select_knowledge_file = KnowledgeFileDao_select_knowledge_file
+    result = asyncio.run(KnowledgeService.run_reindex_action("kb_1", "image_index"))
 
     assert result["action"] == "image_index"
     assert result["status"] == "published"

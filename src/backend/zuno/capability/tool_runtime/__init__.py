@@ -12,6 +12,7 @@ from .runtime_batch import (
 )
 from .invocation_gateway import (
     ToolEffectUnknownError,
+    ToolApprovalBinding,
     ToolGatewayReceipt,
     ToolInvocationGateway,
 )
@@ -38,6 +39,7 @@ __all__ = [
     "ReconciliationConclusion",
     "ToolAttemptStatus",
     "ToolEffectUnknownError",
+    "ToolApprovalBinding",
     "ToolGatewayReceipt",
     "ToolInvocationGateway",
     "ToolRuntimeBatch",
