@@ -128,6 +128,11 @@ def verify_knowledge_query_boundary(errors: list[str]) -> None:
 
 def verify_phase09_runtime_owner_imports(errors: list[str]) -> None:
     path = REPO_ROOT / "src/backend/zuno/agent/core/agents/general_agent.py"
+    # The former GeneralAgent product runtime was retired by PHASE22. The
+    # absence of this path is the current invariant; only inspect imports if
+    # a future change reintroduces the retired file.
+    if not path.exists():
+        return
     content = _read(path)
     for phrase in GENERAL_AGENT_FORBIDDEN_OWNER_IMPORTS:
         if phrase in content:

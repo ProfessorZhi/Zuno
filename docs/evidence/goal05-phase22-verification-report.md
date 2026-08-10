@@ -39,6 +39,7 @@ python -m pytest -q tests/repo/test_phase22_closure_summary.py tests/platform/te
 - 通过：Phase22 candidate/review、Benchmark preflight、四 Profile formal entry、release decision、closure blocker、archive preflight、cleanup boundary 与 Workspace repair 定向回归为 `280 passed, 30 subtests passed`。
 - 通过：当前工作树来源下 `tests/api` 全量回归为 `167 passed`；Phase05 approval binding、Phase06 observability、Phase11C retired facade、Phase16 bypass guard 的定向 verifier/test 均已通过。排除明确依赖 Phase04 外部基础设施的 34 项后，`tests/repo` 当前分支全量回归为 `622 passed, 34 deselected`；包含 Phase04 的完整 repo gate 仍受 Docker/Phase04 外部服务不可用阻断，因此不能把排除项结果扩大为基础设施全量通过。
 - 通过：当前工作树来源下直接执行 `verify_phase22_backend_semantic_legacy.py --scope repository` 返回 `BACKEND_PRODUCT_RUNTIME_CUTOVER_CONFIRMED`、0 findings；completion blocker gate 通过。
+- 追加通过：`.agent/scripts/verify_repo_hygiene.py`、`.agent/scripts/verify_module_boundaries.py` 与 `tests/repo/test_repo_hygiene.py` 已按当前 PHASE22 退休路径对齐并通过；这不替代生产 MCP bypass 审计。
 - 追加通过：`tests/evals` 全量为 `600 passed, 30 subtests passed`；`tests/agent` 非 runtime 目录分批为 `381 passed`。其中 1 个安全审批落库用例因本机 PostgreSQL 不可连接而失败，`tests/agent/runtime` 的 PostgreSQL 依赖用例因此不能扩大解释为全量通过。
 - 追加通过：`apps/web` 的 `npm run lint` 与 `npm run build`，以及 `apps/desktop` 三个 Electron bridge 文件的 `node --check`；浏览器 E2E、交互式 Desktop Smoke 和真实基础设施 Fault/Load/DR 仍未在本轮运行。
 - 仍失败：feature-flag runtime cutover verifier 仍有 `9` 条 findings；final legacy cutover verifier 仍有 `4` 条 findings，包含真实 `/api/v1/mcp_chat` → `MCPChatAgent` → `mcp_openai.MCPManager` 旧生产执行链，以及其他未完成 legacy/runtime 收口。

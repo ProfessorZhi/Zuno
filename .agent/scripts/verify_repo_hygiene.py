@@ -400,7 +400,6 @@ def main() -> int:
         "tests/agent/test_completion_agent_config_compatibility.py",
         "tests/graphrag/test_contract_review_project_payload.py",
         "tests/repo/test_project_query_compatibility_boundaries.py",
-        "tests/agent/test_general_agent_project_query_runtime.py",
         "tests/agent/test_workspace_project_query_runtime.py",
     ]
     for relative_path in retired_root_migration_test_names:
