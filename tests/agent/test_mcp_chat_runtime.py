@@ -32,6 +32,19 @@ def test_mcp_chat_agent_ainvoke_fails_closed(monkeypatch):
     assert not hasattr(agent, "mcp_manager")
 
 
+def test_mcp_chat_http_route_fails_closed_before_legacy_resolution():
+    """The legacy HTTP surface must fail before resolving a dialog or agent."""
+    from fastapi import HTTPException
+
+    from zuno.api.v1.mcp_chat import chat
+
+    with pytest.raises(HTTPException) as excinfo:
+        asyncio.run(chat("问题", "dialog_legacy"))
+
+    assert excinfo.value.status_code == 503
+    assert "MCP_CHAT_CANONICAL_RUNTIME_NOT_BOUND" in str(excinfo.value.detail)
+
+
 def test_mcp_chat_agent_memory_history_falls_back_to_direct_history(monkeypatch):
     from zuno.api.services.mcp_chat import MCPChatAgent
 
