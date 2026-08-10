@@ -1,6 +1,6 @@
 # Zuno 总体 Target 架构
 
-updated: 2026-07-14
+updated: 2026-08-10
 status: normative-target-integration-architecture
 document_role: cross-module integration source
 canonical_domain_sources: `docs/modules/01-*.md` through `docs/modules/11-*.md`
@@ -443,7 +443,319 @@ flowchart LR
 
 # 7. Agentic GraphRAG 与证据闭环
 
-Agentic GraphRAG 是两层控制系统：Agent Core 外层决定 why/when、Evidence Goal、Task Budget、继续、Ask User、External Tool、Replan、Abstain 与 Finalize；Knowledge 内层在固定安全、Snapshot、Profile 和预算范围内决定 how，包括 Query Strategy、Retriever、Graph Route、Fusion、Rerank、Evidence Quality、Corrective Retrieval 和局部 Stop Proposal。
+本节是 Agentic GraphRAG 的跨模块集成规范；字段级 Contract、KnowledgeVersion 生命周期、RetrieverAttempt 细节和模块内测试矩阵由 `docs/modules/03-knowledge-agentic-graphrag.md` 唯一拥有。本节只定义模块之间必须一致的控制边界、证据语义、版本一致性、失败恢复和评测标准。
+
+Agentic GraphRAG 不是“BM25 + Vector + Graph 三路固定执行”，而是一个受治理的
+`Plan → Act → Observe → Evaluate → Adapt → Stop` 闭环：
+
+```text
+用户任务
+→ Claim 分解
+→ EvidenceRequirement
+→ RetrievalStrategyProposal
+→ Deterministic Admission
+→ RetrievalPlan / SearchAction
+→ RetrievalRound
+→ EvidenceLedger
+→ EvidenceEvaluation
+→ CorrectiveDecision / StopDecision
+→ SelectedEvidenceBundle
+→ Agent Core Final Grounding Gate
+```
+
+目标架构仍是 `TARGET`，不代表当前 Runtime、Graph Index、Community Report 或质量指标已经生产证明。
+
+## 7.1 Control Plane 与 Retrieval Data Plane
+
+两层必须分开。Control Plane 回答“为什么搜、搜什么、是否够、下一步怎么办”；Data Plane 回答“如何在授权和版本边界内找到候选证据”。Knowledge 不得自行创建新的产品任务、Tool Step 或 PlanVersion。
+
+```text
+Agentic Retrieval Control Plane
+  Task Understanding
+  Claim Decomposition
+  Evidence Requirement
+  Retrieval Planning
+  Admission / Security / Budget
+  Evidence Evaluation
+  Failure Diagnosis
+  Corrective Decision
+  Stop / Ask User / Replan Proposal
+
+Retrieval Data Plane
+  pinned KnowledgeSnapshot
+    ├─ Hybrid Channel: BM25 + Vector → RRF → first-pass rerank
+    ├─ Graph Channel: Local / Global / DRIFT
+    └─ Structured / Multimodal Channel（按 Policy 开启）
+  → Evidence Materialization
+  → Candidate Deduplication
+  → Unified Evidence Reranker
+  → EvidenceLedger / SelectedEvidenceBundle
+```
+
+跨模块 Owner 固定为：
+
+| 事实或决定 | Canonical Owner | 允许的消费者行为 |
+| --- | --- | --- |
+| Task、Claim、Goal、Plan、Step、Run Outcome | Agent Core | 创建 Retrieval Need，接受 Knowledge Outcome，决定 Replan / Finalize |
+| KnowledgeSnapshot、EvidenceRequirement、RetrievalPlan、EvidenceLedger | Knowledge | 在授权 Scope 和 Snapshot 内生成、版本化和评估 |
+| Authorization、Security Epoch、数据分类 | Security | 授权、拒绝和最终重验；不得由 Retriever 自行放宽 |
+| Model Proposal、Embedding、Rerank、Judge Attempt | Model Gateway | 产生有边界的 Proposal / Score / Result，不提交领域终态 |
+| Retrieval Trace、Eval Metric、Release Gate | Observability / Eval | 投影和测量，不改写 Knowledge 或 Agent 事实 |
+| Index、Queue、Object Store、Checkpoint 物理事实 | Infrastructure | 提供 Receipt、Lease、Claim 和恢复能力，不冒充领域 Acceptance |
+
+## 7.2 Retrieval Strategy 的正式语义
+
+底层策略是内部 `SearchAction` 的 `action_type`，不是用户必须理解的产品模式，也不是多个自治 Retriever 的竞争控制器。
+
+| 策略 | 解决的问题 | 输出边界 | 默认升级条件 |
+| --- | --- | --- | --- |
+| `HYBRID` | 法条号、专名、语义改写和常规事实 | `SourceSpan` 候选；BM25 / Vector 通过版本化 RRF 合并 | 基础覆盖不足、引用缺口或语义复杂 |
+| `GRAPH_LOCAL` | 定义、交叉引用、实体关系和有界多跳 | `GraphPath` + Evidence Backlink + `SourceSpan` | Requirement 明确需要关系或局部多跳 |
+| `GRAPH_GLOBAL` | 全库主题、群体模式、风险分布 | `DerivedEvidence` / Navigation Evidence；严格回答必须 drill-down | 需要 corpus-level synthesis 且预算允许 |
+| `GRAPH_DRIFT` | 从社区 Primer 逐步发现未知局部路径 | Primer、Follow-up 和 Local 结果；禁止无限游走 | 初始证据指出存在未闭合路径 |
+| `STRUCTURED` | 表格、元数据、时间、权限和业务字段 | 带字段 lineage 的结构化候选 | Requirement 指定结构化事实 |
+
+`BM25` 和 `Vector` 只在相同粒度的文本候选上做 rank fusion；不能把 BM25 score、Vector score、Graph distance、Community score 直接相加。Graph 原生对象必须先 Materialize 为 Source-backed EvidenceCandidate，GraphPath 作为 provenance 和 reranking feature 保留。
+
+## 7.3 Claim、EvidenceRequirement、QuerySpec 与 Requery
+
+检索闭环必须区分四种对象：
+
+```text
+Claim
+    最终回答需要支持、反驳或限定的断言。
+
+EvidenceRequirement
+    为证明 Claim 必须满足的证据条件，包括来源类型、权限、时间、管辖区、权威级别、
+    最小独立来源数和严格引用要求。
+
+QuerySpec
+    本一轮 SearchAction 具体如何查，包括 query、route、filters、top_k、graph policy 和 budget。
+
+Requery / Query Rewrite
+    Requirement 不变，只改变 QuerySpec、路径或检索策略；不能被误写成新 PlanVersion。
+```
+
+示例：
+
+```yaml
+EvidenceRequirement:
+  requirement_id: ER-003
+  claim_id: C1
+  mandatory: true
+  required_source_types: [CONTRACT]
+  graph_dependency:
+    required: true
+    allowed_relations: [REFERS_TO, EXCEPTION_TO, SUBJECT_TO]
+  temporal_policy: {as_of: contract_execution_date}
+  citation_policy: {source_span_required: true}
+  completion_policy: {min_independent_sources: 1}
+```
+
+Requirement 不因一次查询失败而消失；每一个新 SearchAction 必须指向至少一个未满足 Requirement、冲突解析目标或 Citation Repair 目标。
+
+## 7.4 Retrieval Planner 与 Admission
+
+Planner 可以是模型辅助的，但只产生 `RetrievalStrategyProposal`，不能直接执行：
+
+```text
+RetrievalStrategyProposal
+→ Retrieval Admission Controller
+→ Admitted RetrievalPlan
+→ SearchAction Claim / Dispatch
+```
+
+Admission 必须确定性检查：
+
+```text
+Authorization / Knowledge Scope
+KnowledgeSnapshot 与 Index Availability
+Graph Freshness / Community Eligibility
+Retrieval Profile 与 Assurance Level
+Latency / Token / Cost / Concurrency Budget
+Deadline / Cancellation / Security Epoch
+```
+
+例如 Planner 提议对一个明确条款号问题执行 `GRAPH_GLOBAL`，Admission 可以因成本超过 Requirement 的预期收益而拒绝，并降为允许的 `HYBRID`；模型不能绕过 ACL、Budget、Snapshot 或 Assurance Policy。
+
+## 7.5 Canonical EvidenceCandidate 与融合
+
+所有通道最终只能向 Agent Core 提供统一的 Source-backed EvidenceCandidate：
+
+```yaml
+EvidenceCandidate:
+  evidence_id: string
+  requirement_ids: [string]
+  source:
+    knowledge_snapshot_id: string
+    document_id: string
+    document_version_id: string
+    citation_chunk_id: string
+    source_span_id: string
+    content_hash: string
+  retrieval_origins: [HYBRID_BM25 | HYBRID_VECTOR | GRAPH_LOCAL | GRAPH_GLOBAL | GRAPH_DRIFT]
+  retrieval_features:
+    bm25_rank: int | null
+    vector_rank: int | null
+    hybrid_rrf_rank: int | null
+    rerank_score: number | null
+    entity_match: boolean | null
+    graph_distance: int | null
+  graph_provenance: [GraphPathRef]
+  legal_metadata_ref: string | null
+  authorization_decision_ref: string
+  security_epoch: string
+  lineage:
+    retrieval_run_id: string
+    retrieval_round_id: string
+    search_action_ids: [string]
+```
+
+同一个 SourceSpan 被多个通道找到时，Canonical Dedup Key 至少为：
+
+```text
+tenant_id + knowledge_snapshot_id + document_version_id + source_span_id + content_hash
+```
+
+合并后增加 `retrieval_origins` 和 provenance，不把同一文本复制多份进入 Context。Unified Evidence Reranker 的输入必须包含 `EvidenceRequirement + QuerySpec + Candidate + Retrieval Features + Graph Provenance + Legal Metadata`；Reranker 只决定候选排序，不能决定 Requirement 是否已经满足。
+
+`GRAPH_GLOBAL` 产生的 Community Report 默认是 Derived / Navigation Evidence。若最终 Claim 依赖该结论，必须 drill-down 到有权限的 Entity、Relation 和 SourceSpan；没有 SourceSpan 的 Graph 结果只能 `AUXILIARY_ONLY`，不能作为严格法律或合规引用。
+
+## 7.6 RetrievalRound、EvidenceLedger 与质量评价
+
+一个 `RetrievalRound` 是一组已 Admission 的 SearchAction、其 Observation、Evidence Materialization、EvidenceEvaluation 和 ControlDecision，不是一次 Provider 调用：
+
+```text
+PLANNED
+→ ADMITTED
+→ DISPATCHING
+→ RETRIEVING
+→ MATERIALIZING
+→ FUSING
+→ EVALUATING
+→ COMPLETED
+```
+
+异常状态为 `PARTIAL`、`FAILED`、`CANCELLED`、`BLOCKED`；每个状态转换必须有版本、原因码、Trace、Budget 影响和持久化事实。
+
+`EvidenceLedger` 按 `Claim → EvidenceRequirement → EvidenceCandidate` 组织 Observation。Evidence Evaluation 不能压缩成单一 `0.0–1.0` 分数，至少要分别记录：
+
+```text
+Requirement Coverage
+Claim Support
+Citation Integrity
+Source Authority
+Temporal / Jurisdiction Applicability
+Conflict Status
+Security Validity
+Novelty / Marginal Evidence Gain
+Cost / Latency / Budget Consumption
+```
+
+评价结果只产生 `EvidenceEvaluation` 和 `StopDecision / CorrectiveDecision`。`Sufficient`、`Partial`、`Conflict`、`No Safe Path` 等结论必须可回到具体 Requirement、Evidence ID 和原因码。
+
+## 7.7 Corrective Retrieval、Replan 与 Stop
+
+三者边界固定：
+
+```text
+Retry
+    相同语义的 SearchAction 因瞬时故障失败，使用同一 Fingerprint 重试。
+
+Corrective Retrieval
+    Evidence Goal 不变，改变 QuerySpec、Route、Expansion 或证据补全方式，创建新的 RetrievalRound。
+
+Replan
+    Task Goal、Plan Dependency、Capability、权限或外部前提失效；Knowledge 只能提出
+    KnowledgeControlProposal，Agent Core 才能经 Replan Barrier 创建新 PlanVersion。
+```
+
+标准 StopReason：
+
+```text
+SUFFICIENT
+BUDGET_EXHAUSTED
+DEADLINE_REACHED
+MAX_ROUNDS_REACHED
+LOW_MARGINAL_GAIN
+UNRESOLVED_CONFLICT
+PERMISSION_BLOCKED
+INDEX_UNAVAILABLE
+USER_INPUT_REQUIRED
+NO_SUPPORTED_EVIDENCE
+CANCELLED
+```
+
+对应的控制输出为 `SYNTHESIZE`、`PARTIAL_ANSWER`、`ASK_USER`、`WAIT`、`ABSTAIN` 或 `FAIL`。`STANDARD / DEEP / AGENTIC_DEEP` 可以拥有不同的 safety cap，但 cap 不是正常停止条件；正常停止必须由 Evidence Sufficiency、Marginal Gain、Budget、Deadline 和 Hard Round Limit 共同决定。
+
+## 7.8 Snapshot、权限、降级与幂等
+
+一次 RetrievalRun 固定不可变 `KnowledgeSnapshot`，至少绑定：
+
+```yaml
+KnowledgeSnapshot:
+  snapshot_id: string
+  document_cutoff: datetime
+  lexical_index_version: string
+  vector_index_version: string
+  embedding_model_version: string
+  graph_version: string
+  community_report_version: string | null
+  retrieval_policy_version: string
+  security_epoch: string
+```
+
+BM25、Vector、Graph、Community 必须读取同一 Snapshot 兼容的服务版本，禁止把新旧索引静默混入一个 EvidenceLedger。Graph Entity、Relation、Community、GraphPath 和 SourceSpan 都必须保留 ACL lineage；权限检查至少发生在 Search Admission、Evidence Materialization 和 Final Selection 三个点，最后一次检查使用最新 Security Epoch。
+
+降级遵守：
+
+> Capability 可以降级，Assurance 不能静默降级。
+
+Graph 对当前 Requirement 是 optional 时，Graph unavailable 可以降级到允许的 Hybrid，并记录内部 degradation；Graph 是 mandatory 时只能 `WAIT`、`PARTIAL` 或 `ABSTAIN`，不能假装 Hybrid 等价。Snapshot mismatch、ACL mismatch 和未知外部 Evidence 不允许盲目 Retry。
+
+SearchAction 的 Idempotency Fingerprint 至少包含：
+
+```text
+retrieval_run_id + retrieval_round_id + requirement_id + action_type
++ query_spec + knowledge_snapshot_id + policy_version + model_version
+```
+
+同一 Fingerprint 不得产生新的逻辑 SearchAction；EvidenceCandidate Dedup 仍使用 SourceSpan Canonical Key。
+
+## 7.9 SelectedEvidenceBundle、最终 Grounding 与评测
+
+Knowledge 返回 `SelectedEvidenceBundle`，不直接生成最终 Answer：
+
+```yaml
+SelectedEvidenceBundle:
+  claims:
+    C1:
+      status: SUPPORTED | PARTIAL | UNSUPPORTED
+      supporting: [EvidenceRef]
+      conflicting: [EvidenceRef]
+      requirements: {ER-001: SATISFIED}
+  unresolved: [EvidenceRequirementRef]
+  citations: [SourceSpanRef]
+  limitations: [string]
+  retrieval_outcome:
+    stop_reason: string
+  trace_ref: string
+```
+
+Agent Core 在 Synthesis 后执行 Final Grounding Gate：所有关键 Claim 必须绑定 EvidenceCandidate；所有 Citation 必须指向仍授权、属于 pinned Snapshot 的 SourceSpan；Mandatory Requirement 必须满足；Community Derived Evidence 不得被误当作原始法律依据。失败时只能 `REVISE`、`PARTIAL` 或 `ABSTAIN`。
+
+可观测性至少记录：`retrieval_run_id`、`knowledge_snapshot_id`、`security_epoch`、Requirement、Plan、Round、Action、QuerySpec hash、各通道延迟和状态、candidate/materialized/dedup 数量、coverage before/after、failure diagnosis、corrective decision、novelty gain、token、latency、cost 和 stop reason。
+
+评测必须区分通道收益和控制收益：
+
+```text
+Retriever：Recall@K / MRR / NDCG
+Evidence：SourceSpan Recall / Citation Precision / Requirement Coverage
+Agentic：Route Accuracy / Corrective Decision Accuracy / Stop Accuracy / Unnecessary Retrieval Rate
+End-to-End：Supported Claim Rate / Unsupported Claim Rate / Abstention Accuracy / Latency / Cost
+```
+
+至少比较 `Hybrid-only`、`Hybrid + Local`、`Hybrid + Graph fixed` 与 `Agentic GraphRAG`，并覆盖 Exact Fact、Defined Term、Cross Reference、Multi-hop、Temporal、Jurisdiction、Conflict、Whole-corpus、No-answer 和 Permission-blocked 数据集。没有这些对照，不能证明 Agentic Control 本身带来收益。
 
 ```mermaid
 flowchart TB
@@ -470,7 +782,7 @@ flowchart TB
   ACCEPT --> FINAL[Claim / Citation Binding and Final Gate]
 ```
 
-## 7.1 Evidence Lineage
+## 7.10 Evidence Lineage 与跨模块追踪
 
 ```text
 DocumentVersion
@@ -487,11 +799,11 @@ DocumentVersion
 
 没有 SourceSpan 的 Graph 结果只能 `AUXILIARY_ONLY`，不能成为 strict citation。ACL 必须进入 Retriever Query；不能先召回敏感内容再在 Python 中删除。
 
-## 7.2 Corrective Retrieval 与 Replan
+## 7.11 Knowledge 内层纠正与 Agent Core 控制边界
 
 Knowledge 内层纠正创建新的 append-only RetrievalRound，例如 Query Rewrite、Multi-query、Parent/Adjacent Expansion、Graph Route、Citation Repair、Conflict Retrieval 或 Index Recovery Proposal。只有当任务目标、计划依赖、能力结构或前提失效时，Knowledge 才输出 `KnowledgeControlProposal`；Agent Core 验证后才能形成 Replan ControlDecision 和新 PlanVersion。
 
-## 7.3 Stop 与输出
+## 7.12 Knowledge-to-Agent 输出 Contract
 
 Knowledge 输出只允许 SUFFICIENT_EVIDENCE、PARTIAL_EVIDENCE、ASK_USER_PROPOSAL、EXTERNAL_SEARCH_PROPOSAL、REPLAN_REQUIRED、ABSTAIN_PROPOSAL、FAILED 或 CANCELLED。最终 Ask User、外部 Tool Step、Replan、Abstain 与 Finalize 由 Agent Core 决定。
 

@@ -30,10 +30,12 @@ Runtime 工程收口已完成并归档。下一阶段只做正式设计协调，
 
 ```text
 读取最新 Current
-→ 将 ADR 0006 合并进 Module 03
-→ 同步 Module 04 / 06 / 10 和总架构
+→ Project Workflow Consolidation：合并重复事实源和工作流入口
+→ Canonical Architecture Deep Review
+→ 将 ADR 0006 协调进 Module 03、总架构和相关模块
 → 更新共享 Contract Registry
-→ 创建新的 Program / Phase
+→ Architecture Review
+→ 用户明确激活新的 Implementation Program
 → 代码、Migration、测试、Trace、Eval 落地
 ```
 

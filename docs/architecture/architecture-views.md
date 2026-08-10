@@ -495,22 +495,34 @@ flowchart LR
 #### Overall — Outer Agent Control and Inner Knowledge Retrieval
 
 ```mermaid
-flowchart TB
-  TASK[TaskContract / GoalVersion] --> NEED[Agent Core RetrievalNeedDecision]
-  NEED --> REQ[EvidenceRequirement / KnowledgeQueryRequest]
-  REQ --> KG[Fixed KnowledgeRetrievalGraph]
-  KG --> PLAN[RetrievalPlan / RetrievalRound]
-  PLAN --> RET[Parallel RetrieverBatch]
-  RET --> LEDGER[EvidenceLedger / EvidenceFrontier]
-  LEDGER --> VERDICT[RetrievalQualityVerdict]
-  VERDICT -->|inner correction| CORR[CorrectiveRetrievalDecision + new RetrievalRound]
-  CORR --> PLAN
-  VERDICT -->|sufficient or partial| OUT[SelectedEvidenceBundle / KnowledgeRetrievalOutcome]
-  VERDICT -->|task-level proposal| PROP[KnowledgeControlProposal]
+flowchart LR
+  subgraph CP[Agentic Retrieval Control Plane]
+    TASK[TaskContract / GoalVersion] --> NEED[RetrievalNeedDecision]
+    NEED --> REQ[Claim / EvidenceRequirement]
+    REQ --> PROPOSAL[Strategy Proposal]
+    PROPOSAL --> ADMISSION[Deterministic Admission]
+    ADMISSION --> PLAN[Admitted RetrievalPlan / Fixed KnowledgeRetrievalGraph]
+    VERDICT[EvidenceEvaluation]
+    DECISION[Corrective / Stop Decision]
+    VERDICT --> DECISION
+  end
+  subgraph DP[Retrieval Data Plane]
+    PLAN --> RET[Parallel SearchAction Batch]
+    RET --> HYBRID[BM25 / Vector / RRF]
+    RET --> GRAPH[Local / Global / DRIFT]
+    HYBRID --> MATERIALIZE[Source-backed Materialization]
+    GRAPH --> MATERIALIZE
+    MATERIALIZE --> DEDUP[Canonical Dedup / Rerank]
+    DEDUP --> LEDGER[EvidenceLedger]
+    LEDGER --> VERDICT
+  end
+  DECISION -->|next RetrievalRound| PLAN
+  VERDICT -->|sufficient / partial| OUT[SelectedEvidenceBundle]
+  DECISION -->|task-level proposal| PROP[KnowledgeControlProposal]
   OUT --> ACCEPT[Agent Core Step Acceptance]
-  PROP --> DECIDE[Agent Core ControlDecision]
-  DECIDE -->|replan| BARRIER[Replan Barrier + new PlanVersion]
-  ACCEPT --> FINAL[Final Gate / Publication]
+  PROP --> CONTROL[Agent Core ControlDecision]
+  CONTROL -->|replan| BARRIER[Replan Barrier + new PlanVersion]
+  ACCEPT --> FINAL[Final Grounding Gate / Publication]
 ```
 
 #### Local — Evidence Lineage and Context Assembly
