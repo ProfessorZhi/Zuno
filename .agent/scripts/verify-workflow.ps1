@@ -40,7 +40,10 @@ Require-Path ".agent\programs\current.md"
 Require-Path ".agent\programs\README.md"
 Require-Path ".agent\programs\implementation-roadmap.md"
 Require-Path ".agent\programs\closure-checklist.md"
-Require-Path ".agent\programs\thread-prompts"
+$frontCurrentProgram = Get-Content -LiteralPath ".agent\programs\current.md" -Raw -Encoding UTF8
+if ($frontCurrentProgram -notmatch "state: no-active") {
+    Require-Path ".agent\programs\thread-prompts"
+}
 Require-Path "docs\history\programs\zuno-unified-agent-runtime-closure-v1\baseline-manifest.md"
 Require-Path "docs\history\programs\zuno-unified-agent-runtime-closure-v1\program-decisions.md"
 Require-Path "docs\history\programs\zuno-unified-agent-runtime-closure-v1\code-architecture-map.md"
@@ -84,7 +87,6 @@ $expectedUnifiedRuntimePhaseFiles = @(
     "PHASE13_paired-benchmark-release-gate-and-program-closure.md"
 )
 $activePhaseFiles = @(Get-ChildItem -LiteralPath ".agent\programs" -Filter "PHASE*.md" -File -ErrorAction SilentlyContinue | ForEach-Object { $_.Name } | Sort-Object)
-$frontCurrentProgram = Get-Content -LiteralPath ".agent\programs\current.md" -Raw -Encoding UTF8
 if ($frontCurrentProgram -match "state: no-active" -and $activePhaseFiles.Count -ne 0) {
     $failures.Add(".agent/programs must not keep active phase files in no-active state")
 }
@@ -364,7 +366,7 @@ $requiredArchivedPrograms = @(
 foreach ($programId in $requiredArchivedPrograms) {
     Require-Path "docs\history\programs\$programId"
 }
-if ($currentProgram -notmatch "runtime-first / vertical-slice-first" -or $currentProgram -notmatch "只写 contract、schema 或 README 不能关闭 runtime phase") {
+if ($currentProgram -notmatch "state: no-active" -and ($currentProgram -notmatch "runtime-first / vertical-slice-first" -or $currentProgram -notmatch "只写 contract、schema 或 README 不能关闭 runtime phase")) {
     $failures.Add("current-program.md missing runtime-first closure guard")
 }
 if ($currentProgram -notmatch "\.agent/programs/") {

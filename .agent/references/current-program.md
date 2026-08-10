@@ -7,6 +7,9 @@ current_phase: none
 phase_count: 22
 program_version: 2
 
+no active implementation program
+front program path: `.agent/programs/`
+
 `zuno-canonical-architecture-runtime-realization-v1` 已完成 PHASE01–PHASE22（22/22）并归档：
 
 ```text
