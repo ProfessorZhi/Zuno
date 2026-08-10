@@ -9,11 +9,14 @@
 - 远端 `main` 的工程收口已经完成，且 `closure_sha` 已修正为真实提交：`9752a3482a50aed85172e3b6d8318ab1efcc2d4a`。
 - 旧 Program1 已标记为 `SUPERSEDED / RETIRED`，没有激活新的 Implementation Program。
 - 历史 `.local/.local` placeholder 已清理；生成根因已在当前代码和测试闸门中处理。
+- Repository Fresh-State Reset 已完成：本地只保留 `F:\agent_project\Zuno` 的单一
+  `main` shallow clone，旧 worktree、local branch 和 stash 已清理。
 - 本记录不授权删除任何未提交内容、未合并提交、用户文件、benchmark evidence 或 stash。
 
 ## 当前边界
 
-本地 Git 的 Fresh-State Reset 是独立的后续操作：必须在当前树完成、提交并推送后，才可通过重新 shallow clone 获得单一 `main` 工作副本。该操作不重写 GitHub 历史，也不把本文件解释为本地 reset 已完成的证据。
+本地 Git 的 Fresh-State Reset 已在当前树提交并推送后完成。该操作不重写 GitHub 历史；
+后续只需把本地单一 shallow clone 作为工作副本，不再恢复旧 worktree、branch 或 stash。
 
 ## 复核入口
 
