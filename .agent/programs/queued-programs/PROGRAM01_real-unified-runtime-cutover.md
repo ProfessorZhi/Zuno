@@ -2,15 +2,15 @@
 
 ```yaml
 program: zuno-real-unified-runtime-cutover-v1
-state: activated_from_queue
-active_program: zuno-real-unified-runtime-cutover-v1
+state: queued_candidate
+active_program: none
 baseline_commit: 2bcba3fd0a6391b1718b291d54560e292c9ebfbd
 program_type: implementation_and_product_cutover
 ```
 
 ## 适用性判断
 
-这个 program 已在 `d90dc0013c1721a56828a6dc6f889e209454b346` 之后由用户授权激活。当前 active truth source 是 `.agent/programs/current.md` 和平铺 PHASE 文件；本文件只保留 queued candidate 的来源设计，不再作为执行状态事实源。
+这个 program 目前没有被激活。当前 active truth source 是 `.agent/programs/current.md`；本文件只保留 queued candidate 的来源设计，不作为执行状态事实源。本轮对其做的是 repository closure follow-up，不等于打开完整七阶段 runtime cutover。
 
 原因：
 

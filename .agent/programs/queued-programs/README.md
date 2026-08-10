@@ -1,10 +1,10 @@
 # Queued Programs
 
-当前 queued program 已激活：
+当前 queued program 尚未激活：
 
 - `PROGRAM01_real-unified-runtime-cutover.md`
 
-该 program 已展开为 `.agent/programs/` active program。当前执行状态以 `.agent/programs/current.md` 和平铺 PHASE 文件为准；本目录只保留 activated_from_queue 设计稿，不得把它写成 completed 或 measured。
+该 program 仍是 queued candidate；本轮只完成了其第一阶段 repository closure follow-up，未展开 `.agent/programs/` active program，也未创建平铺 PHASE 文件。不得把 queued design 写成 completed 或 measured。
 
 旧 Program 4-6 已合并进并随 Program 3 Mega 归档：
 

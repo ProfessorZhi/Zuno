@@ -19,6 +19,7 @@ from zuno.api.services.product.projection_service import (
     ObservabilityQueryAuthorizationError,
     ObservabilityQueryPrincipal,
 )
+from zuno.api.services.product.artifact_service import ProductArtifactService
 
 __all__ = [
     "ProductRuntimeRequestResult",
@@ -33,6 +34,7 @@ __all__ = [
     "ProductAvailableActionResult",
     "ProductProjectionResult",
     "ProductService",
+    "ProductArtifactService",
     "ProductStreamEventResult",
     "ObservabilityProjectionQueryService",
     "ObservabilityEvalQueryService",

@@ -51,7 +51,7 @@ README 同时展示 Current 和 Target，但二者不能混为一谈。
 | Memory & Context | Candidate、Governance、MemoryVersion、ContextPack、CompressionTrace 和 MemoryUseTrace 已有实现基线 |
 | Agentic GraphRAG | 现有 KnowledgeRetrievalGraph、RetrievalPlan/Round、EvidenceLedger/Frontier、Corrective Retrieval 和 KnowledgeControlProposal 已有实现基线 |
 | Evidence-Driven Agentic GraphRAG v2 | `accepted-target`，设计可用；Claim-level Evidence Deliberation、Evidence Reasoning Graph 和 Targeted Probe 尚不能声明为 Current |
-| Eval 与发布质量 | PHASE22 仍在 Fixed Benchmark / Closure；measurement 尚未完成，quality not yet proven，production readiness not established |
+| Eval 与发布质量 | PHASE22 Engineering Closure 已完成；固定测量仍为 blocked，quality not yet proven，production readiness not established |
 
 正式状态事实以 [`docs/status/production-readiness.md`](./docs/status/production-readiness.md)、最新代码、Migration、测试、Trace、Eval 和 Evidence 为准。README、类名、表名、Phase 名称或架构图本身都不能证明 Target 已实现。
 
@@ -503,11 +503,11 @@ Object upload success != Artifact published
 
 ## Program 状态
 
-- 当前 active program：`zuno-canonical-architecture-runtime-realization-v1`
-- 当前 phase：`PHASE22_fixed-benchmark-production-readiness-and-closure`
+- 当前 active program：无；`zuno-canonical-architecture-runtime-realization-v1` 已归档
+- 最近收口：Program1 queued design 的 repository closure follow-up 已完成，未激活完整七阶段实现计划
 - Program 入口：[`.agent/programs/current.md`](./.agent/programs/current.md)
 
-Current Program 仍使用其冻结的 Architecture v1 基线。ADR 0006 是下一版 accepted-target overlay；PHASE22 收口后，需读取最新 Current，把 ADR 0006 与 Module 03、04、06、10 和总体架构正式协调，再创建新的实现 Program。
+当前仍以最新 Current、正式架构文档和 closure evidence 为准。ADR 0006 是下一版 accepted-target overlay；新的实现 Program 需在设计确认后由用户明确打开。
 
 ## 开发与验证入口
 

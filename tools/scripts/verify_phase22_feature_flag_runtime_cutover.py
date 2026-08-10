@@ -81,6 +81,11 @@ EVIDENCE_DIR = (
     REPO_ROOT / "docs" / "evidence" / "goal05-phase22-feature-flag-runtime-cutover"
 )
 REGISTRY_REL = ".agent/programs/work-products/feature-flag-registry.yaml"
+ARCHIVED_REGISTRY_REL = (
+    "docs/history/programs/"
+    "zuno-canonical-architecture-runtime-realization-v1/work-products/"
+    "feature-flag-registry.yaml"
+)
 PRODUCTION_ROOT_REL = "src/backend/zuno"
 CANONICAL_AGENT_RUNTIME_REL = "src/backend/zuno/agent/runtime"
 
@@ -289,6 +294,20 @@ def _parse_registry(registry_path: Path) -> dict[str, Any] | None:
     if not isinstance(parsed, dict):
         return None
     return parsed
+
+
+def _resolve_registry_path(root: Path) -> Path:
+    """Resolve the active registry, or its canonical archived evidence copy.
+
+    PHASE22 is archived, so an empty active work-products directory is a
+    valid repository state. The verifier must follow the repository's
+    Current/History boundary instead of treating that archive move as a
+    missing registry.
+    """
+    active = root / REGISTRY_REL
+    if active.exists():
+        return active
+    return root / ARCHIVED_REGISTRY_REL
 
 
 def _registry_checks(root: Path, registry_path: Path) -> tuple[dict[str, list], dict[str, str]]:
@@ -1127,7 +1146,7 @@ def verify(root: Path = REPO_ROOT, scope: str = "repository") -> tuple[str, dict
             "error": f"unknown scope {scope!r}",
         }
     root = Path(root)
-    registry_path = root / REGISTRY_REL
+    registry_path = _resolve_registry_path(root)
     try:
         findings, registry_evidence = _registry_checks(root, registry_path)
         reader_findings, reader_evidence = _reader_audit(root)

@@ -147,7 +147,7 @@ def test_completion_product_runtime_shadow_records_product_command(monkeypatch) 
     )
     assert captured["bootstrap_runtime_agent"] is True
     assert captured["runtime_surface"] == "completion"
-    assert captured["command_kind"] == "COMPLETION_RUNTIME_REQUEST"
+    assert captured["command_kind"] == "SUBMIT_USER_GOAL"
     assert captured["payload"]["legacy_route"] == "/completion"
     assert captured["payload"]["cutover_mode"] == "new_default"
     assert "user_input" not in captured["payload"]
@@ -182,7 +182,7 @@ def test_completion_product_runtime_shadow_fail_closed(monkeypatch) -> None:
     assert result["request_hash"]
 
 
-def test_completion_route_continues_unified_runtime_when_product_shadow_fails(tmp_path, monkeypatch) -> None:
+def test_completion_route_blocks_all_modes_when_product_record_fails(tmp_path, monkeypatch) -> None:
     CompletionService.configure_unified_runtime_store_for_tests(
         SQLiteAgentRunStore(tmp_path / "completion_shadow_fail_runtime.db")
     )
@@ -219,9 +219,7 @@ def test_completion_route_continues_unified_runtime_when_product_shadow_fails(tm
     assert streamed[0]["data"]["failure_type"] == "RuntimeError"
     assert streamed[0]["data"]["request_hash"]
     assert "user_input" not in streamed[0]["data"]
-    assert "runtime_started" in [event["type"] for event in streamed]
-    assert streamed[-1]["type"] == "response_chunk"
-    assert streamed[-1]["data"]["runtime_topology"] == "unified_agent_runtime"
+    assert [event["type"] for event in streamed] == ["product_runtime_record"]
 
 
 def test_completion_route_blocks_default_runtime_when_product_record_fails(tmp_path, monkeypatch) -> None:
@@ -298,14 +296,31 @@ def test_completion_cutover_mode_resolution_rejects_unknown_mode(monkeypatch) ->
 
 def test_completion_product_command_kind_tracks_cutover_mode() -> None:
     assert CompletionService._completion_product_command_kind("shadow") == (
-        "SHADOW_COMPLETION_RUNTIME_REQUEST"
+        "SHADOW_SUBMIT_USER_GOAL"
     )
     assert CompletionService._completion_product_command_kind("canary") == (
-        "CANARY_COMPLETION_RUNTIME_REQUEST"
+        "CANARY_SUBMIT_USER_GOAL"
     )
     assert CompletionService._completion_product_command_kind("new_default") == (
-        "COMPLETION_RUNTIME_REQUEST"
+        "SUBMIT_USER_GOAL"
     )
+
+
+@pytest.mark.parametrize(
+    ("cutover_mode", "command_kind"),
+    [
+        ("shadow", "SHADOW_SUBMIT_USER_GOAL"),
+        ("canary", "CANARY_SUBMIT_USER_GOAL"),
+        ("new_default", "SUBMIT_USER_GOAL"),
+    ],
+)
+def test_completion_command_kind_is_accepted_by_product_contract(cutover_mode, command_kind) -> None:
+    actual = CompletionService._completion_product_command_kind(cutover_mode)
+    assert actual == command_kind
+    assert ProductService.validate_runtime_cutover_contract(
+        command_kind=actual,
+        payload={"cutover_mode": cutover_mode},
+    ) == cutover_mode
 
 
 @pytest.mark.parametrize("cutover_mode", ["shadow", "canary", "new_default"])

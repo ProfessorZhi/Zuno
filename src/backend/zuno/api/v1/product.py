@@ -9,7 +9,6 @@ from pydantic import BaseModel, Field
 from zuno.api.dto.schemas import UnifiedResponseModel, resp_200, resp_500
 from zuno.api.services.product import ProductService
 from zuno.api.services.user import UserPayload, get_login_user
-from zuno.api.services.workspace_task_runtime import WorkspaceTaskRuntimeService
 
 
 class ProductRuntimeRequestBody(BaseModel):
@@ -386,7 +385,7 @@ async def get_product_artifact(
     artifact_id: str,
     login_user: UserPayload = Depends(get_login_user),
 ):
-    payload = WorkspaceTaskRuntimeService.get_artifact(
+    payload = ProductService.get_artifact(
         artifact_id,
         principal_id=str(login_user.user_id or ""),
     )
@@ -438,7 +437,7 @@ async def download_product_artifact(
     artifact_id: str,
     login_user: UserPayload = Depends(get_login_user),
 ):
-    payload = WorkspaceTaskRuntimeService.download_artifact(
+    payload = ProductService.download_artifact(
         artifact_id,
         principal_id=str(login_user.user_id or ""),
     )
@@ -460,7 +459,7 @@ async def create_product_feedback(
 ):
     _ = login_user
     return resp_200(
-        data=WorkspaceTaskRuntimeService.record_feedback(
+        data=ProductService.record_feedback(
             task_id=payload.task_id,
             rating=payload.rating,
             label=payload.label,

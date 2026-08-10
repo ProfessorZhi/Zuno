@@ -1,4 +1,6 @@
-# PHASE04 Infrastructure Docs Governance Evidence
+# PHASE04 Infrastructure Docs Governance Evidence（历史）
+
+> 当前状态：`SUPERSEDED`。本文件保留 2026-07-18 的镜像治理证据；当前正式治理已移除 `.agent/architecture/` 与 `.agent/modules/`，不能按旧 Verification Results 恢复镜像。
 
 phase_id: PHASE04
 task_id: P04-T07

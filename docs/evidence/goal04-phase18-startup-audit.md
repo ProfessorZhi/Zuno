@@ -1,4 +1,6 @@
-# Goal04 PHASE18 Startup Audit
+# Goal04 PHASE18 Startup Audit（历史）
+
+> 当前状态：`SUPERSEDED`。这是 PHASE18 启动时的历史冻结记录，不是当前 Program 状态或当前 architecture mirror 规则。当前入口见 `.agent/programs/current.md` 与 `docs/status/production-readiness.md`。
 
 phase_id: PHASE18
 phase_name: Agentic GraphRAG Inner Loop

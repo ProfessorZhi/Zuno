@@ -1,4 +1,6 @@
-# PHASE22 Feature Flag Registry Slice and Repository Runtime Truth — Evidence
+# PHASE22 Feature Flag Registry Slice and Repository Runtime Truth — Historical Evidence
+
+> 当前状态：`SUPERSEDED`。本文件保留旧分支上的历史审计叙述，不能作为当前仓库结论。当前结论见 `verifier_report.json`、`docs/evidence/program1-repository-closure.md` 和 `docs/status/production-readiness.md`。当前 verifier 已支持从 `docs/history/.../feature-flag-registry.yaml` 读取已归档 registry。
 
 Work package: `PHASE22-FEATURE-FLAG-SCOPED-AND-REPOSITORY-TRUTH`
 Worker: `Codex`

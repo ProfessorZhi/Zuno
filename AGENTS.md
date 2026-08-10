@@ -17,8 +17,6 @@ AGENTS.md
 .agent/
   -> Zuno Local Agent Skill System
      references/    本地项目 skills、lessons、playbooks、任务路由和已知坑
-     architecture/  总架构路由和维护参考（正式正文在 docs/）
-     modules/       模块路由和维护参考（正式正文在 docs/）
      programs/      当前执行计划、状态、Phase 和收口清单
      templates/     执行模板和报告骨架
      scripts/       过渡期验证器

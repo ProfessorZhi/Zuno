@@ -121,8 +121,7 @@ PHASE03 后，长期自动化目标位置是 `tools/agent` 与 `tools/verify`，
 - `docs/` 只放正式人类真相。
 - `.agent/` 只放本地 Agent Skill System、目标设计、当前 program、模板和过渡期 verifier。
 - `docs/history/` 保存旧 audit、旧 spec、旧 runbook、旧 UI 原型、旧 phase、旧 program 和被替换设计。
-- `docs/architecture/architecture.md` 是文字总架构文档；`.agent/architecture/architecture.md` 是 Agent 侧总架构维护文档，两者必须一起维护。
-- `.agent/architecture/architecture.md` 是 Target / Proposed 视觉蓝图，不是 Current proof。
+- `docs/architecture/` 是唯一正式总架构文档源；`.agent/` 不保存 architecture/module 正文镜像。
 - 修改任务必须验证、commit、push，除非验证或 push 被阻塞。
 - 两种默认工作模式是挂机模式和多线程模式；选择哪一种取决于任务能否拆成粗粒度、低冲突的独立范围。
 - 常驻线程只是执行工位；每轮任务必须以 worktree + `codex/` branch 作为隔离边界。
@@ -141,10 +140,10 @@ PHASE03 后，长期自动化目标位置是 `tools/agent` 与 `tools/verify`，
 1. `git status --short --branch`
 2. 读 `AGENTS.md` 和 `.agent/system.yaml`。
 3. 读 `task-routing.md` 选择 route。
-4. 架构任务先读 `docs/architecture/architecture.md` 和 `.agent/architecture/architecture.md`。
+4. 架构任务先读 `docs/architecture/architecture.md`、`architecture-views.md` 和 `architecture.html`。
 5. 读 Current / Target / Roadmap。
 6. 读需要的 reference skills：`docs-map.md`、`code-map.md`、`verification-map.md`、`known-pitfalls.md`。
-7. 如果涉及目标架构，读 `docs/history/architecture-surface-cleanup-2026-06-30/agent-architecture/near-term/` 和 `.agent/architecture/architecture.md`。
+7. 如果涉及目标架构，只读 `docs/` 正式架构源和明确引用的历史 evidence；不要恢复 `.agent/architecture/` 镜像。
 8. 确认任务允许范围和 forbidden paths。
 9. 判断使用挂机模式还是多线程模式；如果任务可以拆成粗粒度独立范围，先规划多线程：每个常驻线程绑定或切换一个本轮 worktree / `codex/` 分支、一个目标模式提示词、一个验收闸门，并由用户在 UI 里手动创建或确认真正的目标模式线程。
 10. 如果使用 Claude Code worker，先写明 `agent`、`model`、`worker`、`session_id` 获取方式、worktree、branch、PR 标题格式、验证命令、成本预算和回执字段。
@@ -257,7 +256,7 @@ PHASE03 后，长期自动化目标位置是 `tools/agent` 与 `tools/verify`，
 ### 架构重构
 
 1. 明确 Current / Foundation / Target / Future / History。
-2. 总架构文字同步到 `docs/architecture/architecture.md` 和 `.agent/architecture/architecture.md`。
+2. 总架构文字只同步到 `docs/architecture/architecture.md`；图形关系变化时同步 `architecture-views.md` 并重新生成 HTML。
 3. 目标设计放 `docs/history/architecture-surface-cleanup-2026-06-30/agent-architecture/near-term/`。
 4. 正式结论放 `docs/architecture/`。
 5. 执行计划放 `.agent/programs/` 根层。
@@ -379,7 +378,7 @@ pytest -q tests/repo/test_docs_entrypoints.py tests/repo/test_repo_structure_con
 - `docs/architecture/architecture.md`
 - `docs/architecture/architecture.md`
 - `docs/architecture/architecture.md`
-- `.agent/architecture/architecture.md`
+- `docs/architecture/architecture.md`
 - verifier scripts and repo tests
 
 Program closure 还必须执行一次 Program Closure 自维护审查，确认本轮新增经验没有只停留在 final answer 或聊天上下文里。

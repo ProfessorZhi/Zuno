@@ -16,6 +16,7 @@ production_readiness: not_established
 - Public Benchmark Review Pack：80/80 reviewer-approved、80/80 benchmark-eligible、0 rejected/incomplete；这只证明 candidate/review evidence，不证明 runtime measurement。
 - Fixed Benchmark：`status: BLOCKED`、`measurement_status: blocked_not_measured`、`actual_case_count: 0`。Contract smoke 或 test double 不被当作正式 Benchmark。
 - Canonical Tree：final legacy cutover audit 为 `LEGACY_CUTOVER_AUDIT_CLEAN`（0 findings）；feature-flag runtime cutover 为 `FEATURE_FLAG_RUNTIME_CUTOVER_CONFIRMED`（0 blocking findings）；backend semantic ownership 已确认。
+- Program1 queued candidate 的 repository closure follow-up 已完成：Product artifact/feedback 已切换到 Product-owned durable service，`/completion` 三种模式使用 canonical Product command，并在 Product 持久化失败时全模式 fail-closed。
 - Repository-owned closure blocker count：`0`。这些是允许 Program archive 的条件，不是 quality 结果。
 
 ## PHASE22 Final Decision
@@ -52,6 +53,7 @@ Production Readiness Decision 已完成，结果为 `NOT_ESTABLISHED`，不是 `
 - `docs/evidence/goal05-phase22-verification-report.md`
 - `docs/evidence/goal05-phase22-blocked-benchmark/benchmark_manifest.json`
 - `docs/evidence/goal05-phase22-public-benchmark-review-pack/reviewed/review_summary.json`
+- `docs/evidence/program1-repository-closure.md`
 - `docs/history/programs/zuno-canonical-architecture-runtime-realization-v1/`
 
 ## Architecture and Next Work Boundary

@@ -52,7 +52,7 @@ class CompletionService:
             "type": "product_runtime_record",
             "data": product_runtime_record,
         }
-        if cutover_mode != "shadow" and product_runtime_record.get("status") == "blocked":
+        if product_runtime_record.get("status") == "blocked":
             return
         task_id = f"completion:{req.dialog_id}:{uuid4().hex[:8]}"
         request = RuntimeStartRequest(
@@ -123,11 +123,7 @@ class CompletionService:
 
     @staticmethod
     def _completion_product_command_kind(cutover_mode: CutoverMode) -> str:
-        if cutover_mode == "shadow":
-            return "SHADOW_COMPLETION_RUNTIME_REQUEST"
-        if cutover_mode == "canary":
-            return "CANARY_COMPLETION_RUNTIME_REQUEST"
-        return "COMPLETION_RUNTIME_REQUEST"
+        return ProductService.runtime_cutover_command_kind(cutover_mode)
 
     @staticmethod
     def record_product_runtime_shadow(

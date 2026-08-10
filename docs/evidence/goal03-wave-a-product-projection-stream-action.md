@@ -1,4 +1,6 @@
-# Goal03 Wave A Product Projection Stream Action Evidence
+# Goal03 Wave A Product Projection Stream Action Evidence（历史）
+
+> 当前状态：`SUPERSEDED`。本文件保留 PHASE09 旧实现的局部证据；其中关于 `/completion` command kind、rollback 和 shadow failure 的描述已被 Program1 repository closure follow-up 替换。当前结论见 `docs/evidence/program1-repository-closure.md`。
 
 状态：局部实现证据，不是 Wave A completed 证明。
 

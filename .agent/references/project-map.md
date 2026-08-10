@@ -34,7 +34,7 @@ tools/ and tests/
 - `.agent/programs/` 是当前执行计划和状态入口；仓库当前不启用 `.agent/plans/`。
 - `docs/architecture/` 是正式架构文档源。
 - `docs/architecture/architecture.html`、`docs/architecture/architecture.html`、`docs/architecture/architecture.html` 由 `tools/agent/render_architecture.py` 从 `docs/architecture/architecture.md` 生成。
-- `src/backend/zuno` 当前顶层只保留 `api / agent / memory / capability / knowledge / platform` 加 `__init__.py` 和 `main.py`。
+- `src/backend/zuno` 当前还包含 `product/`。它是现存 Product 支持包，尚未被声明为独立逻辑模块；不得因为目录地图整理而删除，Product API 的 artifact/feedback owner 由 `api/services/product/` 的 Product service 明确承接。
 - `docs/` 应少而精，保留稳定的人类正式结论；`.agent/` 保留更细、更常变化的 Agent 操作记忆、计划、模板和治理细则。
 
 ## Target Direction

@@ -44,7 +44,13 @@ import yaml
 REPO_ROOT = Path(__file__).resolve().parents[2]
 BACKEND_ROOT = REPO_ROOT / "src" / "backend"
 REGISTRY = (
-    REPO_ROOT / ".agent" / "programs" / "work-products" / "feature-flag-registry.yaml"
+    REPO_ROOT
+    / "docs"
+    / "history"
+    / "programs"
+    / "zuno-canonical-architecture-runtime-realization-v1"
+    / "work-products"
+    / "feature-flag-registry.yaml"
 )
 VERIFIER = REPO_ROOT / "tools" / "scripts" / "verify_phase22_feature_flag_runtime_cutover.py"
 FIXTURE_TREE = (

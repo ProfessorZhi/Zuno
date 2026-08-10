@@ -1,4 +1,7 @@
 {
+  "status": "SUPERSEDED",
+  "superseded_by": "verifier_report.json",
+  "superseded_reason": "该 inventory 绑定旧分支 base_sha；当前 registry/runtime 结论以 verifier_report.json 为准。",
   "work_package": "PHASE22-FEATURE-FLAG-SCOPED-AND-REPOSITORY-TRUTH",
   "worker": "deepseek-flag-cutover-truth",
   "method": "yaml.safe_load parse of feature-flag-registry.yaml plus AST reference audit over src/backend/zuno/** (identifiers, string constants, attribute wrappers, import aliases, registry-file reads, env/config lookups); concatenated/f-string keys resolve to UNRESOLVED (fail-closed)",

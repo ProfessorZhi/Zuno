@@ -1,4 +1,6 @@
-# PHASE22 Final Legacy Cutover Audit — V3
+# PHASE22 Final Legacy Cutover Audit — V3 Historical Evidence
+
+> 当前状态：`SUPERSEDED`。下方内容保留旧分支审计结果；当前可复现结果以同目录 `audit_report.json` 和 `docs/evidence/program1-repository-closure.md` 为准。旧的 `TOOL_BYPASS_BLOCKERS_FOUND` 不代表当前 main 的结论。
 
 Work package: `PHASE22-FINAL-LEGACY-AUDIT-V3`
 Worker: `Codex`

@@ -1,4 +1,7 @@
 {
+  "status": "SUPERSEDED",
+  "superseded_by": "verifier_report.json",
+  "superseded_reason": "该分类文件记录旧分支的残留判断；当前 verifier 已将 tests/evals-only 引用分类为 INTERNAL_TEST_HARNESS。",
   "work_package": "PHASE22-FEATURE-FLAG-SCOPED-AND-REPOSITORY-TRUTH",
   "worker": "deepseek-flag-cutover-truth",
   "classification_schema": [

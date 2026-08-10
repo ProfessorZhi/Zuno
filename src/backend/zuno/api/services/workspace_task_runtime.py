@@ -165,10 +165,11 @@ from zuno.api.dto.workspace import (
 
 
 class WorkspaceTaskRuntimeService:
-    """In-process PHASE03 task runtime surface.
+    """Bounded compatibility facade for the workspace task surface.
 
-    This is the first API/runtime bridge for task, event, artifact, and feedback
-    IDs. Durability moves to later runtime/storage phases.
+    ``/workspace/task*`` remains a compatibility surface for legacy clients.
+    Product artifact and feedback routes are owned by ProductArtifactService
+    and must not call this process-local state.
     """
 
     _tasks: dict[str, WorkspaceTaskContract] = {}
@@ -287,6 +288,12 @@ class WorkspaceTaskRuntimeService:
     ) -> None:
         cls._durable_ingestion_store = store
         cls._source_object_store = object_store
+        from zuno.api.services.product import ProductService
+
+        ProductService.configure_product_artifact_store(
+            store=store,
+            security_guard=cls._security_product_action_guard,
+        )
         if rehydrate and store is not None:
             cls._rehydrate_from_durable_store()
 
@@ -324,6 +331,9 @@ class WorkspaceTaskRuntimeService:
         guard: SecurityProductActionGuard | None,
     ) -> None:
         cls._security_product_action_guard = guard
+        from zuno.api.services.product import ProductService
+
+        ProductService.configure_security_product_action_guard(guard)
 
     @classmethod
     def configure_workspace_agent_product_composition(cls) -> None:

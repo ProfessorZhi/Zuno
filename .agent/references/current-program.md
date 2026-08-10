@@ -23,6 +23,7 @@ docs/history/programs/zuno-canonical-architecture-runtime-realization-v1/
 - Benchmark：formal execution path available；固定测量为 `blocked_external` / `blocked_not_measured`，`actual_case_count=0`。
 - Quality：`not_yet_proven`。
 - Production Readiness：`NOT_ESTABLISHED`。
+- Program1 queued design 未激活；本轮完成其 repository closure follow-up，不等于开始完整七阶段 runtime cutover。
 - repository-owned closure blockers：0；external qualification gaps 保留在 closure evidence。
 
 正式证据：
@@ -31,6 +32,7 @@ docs/history/programs/zuno-canonical-architecture-runtime-realization-v1/
 - `docs/evidence/goal05-phase22-closure-summary.md`
 - `docs/evidence/goal05-phase22-verification-report.md`
 - `docs/status/production-readiness.md`
+- `docs/evidence/program1-repository-closure.md`
 
 ## 下一阶段 Handoff
 

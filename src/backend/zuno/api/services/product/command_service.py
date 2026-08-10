@@ -9,6 +9,7 @@ from zuno.platform.contracts import canonical_sha256
 from zuno.platform.database.agent import AgentDomainRepository
 from zuno.platform.database.foundation import InfrastructureRepository
 from zuno.platform.database.product import ProductCommandSubmission, ProductRepository, ProductUnitOfWork
+from zuno.api.services.product.artifact_service import ProductArtifactService
 
 
 PRODUCT_DEFAULT_SECURITY_EPOCH_REF = "security-epoch:product:default"
@@ -163,6 +164,46 @@ class ProductAgentEditorSnapshotResult:
 
 
 class ProductService:
+    @staticmethod
+    def configure_product_artifact_store(store, security_guard=None) -> None:
+        ProductArtifactService.configure(store=store, security_guard=security_guard)
+
+    @staticmethod
+    def configure_security_product_action_guard(guard) -> None:
+        ProductArtifactService.configure_security_product_action_guard(guard)
+
+    @staticmethod
+    def get_artifact(artifact_id: str, *, principal_id: str = "") -> dict[str, Any]:
+        return ProductArtifactService.get_artifact(artifact_id, principal_id=principal_id)
+
+    @staticmethod
+    def download_artifact(artifact_id: str, *, principal_id: str = "") -> dict[str, Any]:
+        return ProductArtifactService.download_artifact(artifact_id, principal_id=principal_id)
+
+    @staticmethod
+    def record_feedback(
+        *,
+        task_id: str,
+        rating: int | None,
+        label: str | None,
+        comment: str | None,
+        dataset_candidate: bool,
+    ) -> dict[str, Any]:
+        return ProductArtifactService.record_feedback(
+            task_id=task_id,
+            rating=rating,
+            label=label,
+            comment=comment,
+            dataset_candidate=dataset_candidate,
+        )
+
+    @staticmethod
+    def runtime_cutover_command_kind(cutover_mode: str) -> str:
+        try:
+            return PRODUCT_RUNTIME_CUTOVER_COMMANDS[cutover_mode]
+        except KeyError as exc:
+            raise ValueError(f"unsupported Product runtime cutover mode: {cutover_mode}") from exc
+
     @staticmethod
     def validate_runtime_cutover_contract(*, command_kind: str, payload: dict[str, Any]) -> str:
         cutover_mode = str(payload.get("cutover_mode") or "new_default").strip().lower()

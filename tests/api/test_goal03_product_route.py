@@ -20,7 +20,6 @@ from zuno.api.services.product import (
     ProductService,
     ProductStreamEventResult,
 )
-from zuno.api.services.workspace_task_runtime import WorkspaceTaskRuntimeService
 
 
 class _LoginUser:
@@ -666,8 +665,8 @@ def test_goal03_product_artifact_routes_reauthorize_through_product_surface(monk
             "media_type": "text/markdown; charset=utf-8",
         }
 
-    monkeypatch.setattr(WorkspaceTaskRuntimeService, "get_artifact", classmethod(lambda cls, *args, **kwargs: fake_get(*args, **kwargs)))
-    monkeypatch.setattr(WorkspaceTaskRuntimeService, "download_artifact", classmethod(lambda cls, *args, **kwargs: fake_download(*args, **kwargs)))
+    monkeypatch.setattr(ProductService, "get_artifact", staticmethod(fake_get))
+    monkeypatch.setattr(ProductService, "download_artifact", staticmethod(fake_download))
 
     client = TestClient(app)
     read_response = client.get("/api/v1/product/artifacts/artifact-1")
@@ -714,7 +713,7 @@ def test_goal03_product_feedback_route_records_delivery_feedback(monkeypatch) ->
             "dataset_candidate": kwargs["dataset_candidate"],
         }
 
-    monkeypatch.setattr(WorkspaceTaskRuntimeService, "record_feedback", classmethod(lambda cls, **kwargs: fake_feedback(**kwargs)))
+    monkeypatch.setattr(ProductService, "record_feedback", staticmethod(fake_feedback))
 
     client = TestClient(app)
     response = client.post(
