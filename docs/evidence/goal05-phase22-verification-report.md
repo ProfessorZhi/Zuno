@@ -52,7 +52,7 @@ python -m pytest -q tests/repo/test_phase22_closure_summary.py tests/platform/te
 - formal four-profile runtime, credentials, and runtime/measurement attestation
 - full final verification
 - program archive / no-active reset
-- clean Git worktree：`.claude/worktrees` 下有 10 个已登记工作树，其中含未跟踪内容；另有未登记目录，所有者/是否废弃尚未确认
+- clean Git worktree：当前根目录仍有 10 个未跟踪的 `.claude/worktrees/**` 已登记工作树；清点显示其中 8 个干净、2 个含未跟踪内容（`deepseek-phase22-cc-bc/.hf-cache/` 与 `deepseek-phase22-workspace-agent-cutover/.claude/`）。所有者/是否废弃尚未确认，本轮不执行删除。
 
 ## Archive Boundary
 
