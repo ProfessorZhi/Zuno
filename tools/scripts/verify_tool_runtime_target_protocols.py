@@ -6,9 +6,7 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 FORMAL = REPO_ROOT / "docs/modules/08-tool-runtime.md"
-MIRROR = REPO_ROOT / ".agent/modules/08-tool-runtime.md"
 DOCS_INDEX = REPO_ROOT / "docs/modules/README.md"
-AGENT_INDEX = REPO_ROOT / ".agent/modules/README.md"
 CAPABILITY_DOC = REPO_ROOT / "docs/modules/07-capability-skill.md"
 DOCS_MAP = REPO_ROOT / ".agent/references/docs-map.md"
 AGENT_SYSTEM = REPO_ROOT / ".agent/system.yaml"
@@ -94,9 +92,7 @@ def verify() -> list[str]:
     errors: list[str] = []
     required_paths = [
         FORMAL,
-        MIRROR,
         DOCS_INDEX,
-        AGENT_INDEX,
         CAPABILITY_DOC,
         DOCS_MAP,
         AGENT_SYSTEM,
@@ -110,15 +106,10 @@ def verify() -> list[str]:
         return errors
 
     formal_candidates = sorted(path.name for path in FORMAL.parent.glob("08-*.md"))
-    mirror_candidates = sorted(path.name for path in MIRROR.parent.glob("08-*.md"))
     if formal_candidates != ["08-tool-runtime.md"]:
         errors.append(f"Module 08 must keep one formal design document, got: {formal_candidates}")
-    if mirror_candidates != ["08-tool-runtime.md"]:
-        errors.append(f"Module 08 must keep one Agent mirror, got: {mirror_candidates}")
 
     formal = _read(FORMAL)
-    if FORMAL.read_bytes() != MIRROR.read_bytes():
-        errors.append("Tool Runtime formal document and Agent mirror must be byte-identical")
 
     positions: list[int] = []
     for part in REQUIRED_PARTS:
@@ -144,7 +135,6 @@ def verify() -> list[str]:
         errors.append("Tool Runtime document must map RC-TOOL-001 through RC-TOOL-080")
 
     docs_index = _read(DOCS_INDEX)
-    agent_index = _read(AGENT_INDEX)
     docs_map = _read(DOCS_MAP)
     agent_system = _read(AGENT_SYSTEM)
     docs_verifier = _read(DOCS_ENTRYPOINT_VERIFIER)
@@ -152,11 +142,8 @@ def verify() -> list[str]:
 
     if "(./08-tool-runtime.md)" not in docs_index:
         errors.append("docs/modules/README.md must link the sole Tool Runtime document")
-    if "(./08-tool-runtime.md)" not in agent_index:
-        errors.append(".agent/modules/README.md must link the Tool Runtime mirror")
     for content_name, content in [
         ("docs/modules/README.md", docs_index),
-        (".agent/modules/README.md", agent_index),
     ]:
         if "单一完整 Target 架构" not in content:
             errors.append(f"{content_name} must describe Tool Runtime as a single complete Target architecture")

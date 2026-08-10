@@ -2,7 +2,7 @@
 
 ## When To Use
 
-当任务涉及 `docs/architecture/`、`.agent/architecture/`、`docs/modules/`、`architecture.html`、Mermaid 图、README 架构摘要、目标架构或文档同步时，先读本文件。
+当任务涉及 `docs/architecture/`、`docs/modules/`、`architecture.html`、Mermaid 图、README 架构摘要、目标架构或文档同步时，先读本文件。
 
 ## Mental Model
 
@@ -25,10 +25,8 @@ docs/decisions/
 docs/governance/
   -> ownership and documentation governance
 
-.agent/architecture/
-  -> four canonical architecture mirrors
-.agent/modules/
-  -> selected module mirrors
+.agent/
+  -> 项目级 Skill、路由、验证器和执行状态；不保存架构或模块镜像
 ```
 
 ## Current Truth
@@ -42,12 +40,11 @@ docs/governance/
 - `docs/status/production-readiness.md`：Current、Short-term Closure Gap、Measurement Blocked、Completed、Future Optional。
 - `docs/decisions/README.md`：正式 ADR 入口。
 - `docs/governance/repo-ownership-matrix.md`：Repository ownership 和迁移边界。
-- `.agent/architecture/architecture.md`、`.agent/architecture/architecture-views.md` 与 `.agent/architecture/architecture.html`：总架构镜像。
-- `.agent/modules/06-agent-core-planning-control.md`：Agent Core 模块镜像。
+- `.agent/README.md` 与 `.agent/system.yaml`：Agent 执行系统入口和机器路由；架构事实仍只读 `docs/`。
 
 ## Directory Contract
 
-以下两个目录都只能有四个文件：
+正式总架构目录只能有四个文件：
 
 ```text
 README.md
@@ -58,7 +55,6 @@ architecture.html
 
 ```text
 docs/architecture/
-.agent/architecture/
 ```
 
 模块专题、状态报告、ADR、Program、ownership matrix 和实施计划不得进入 architecture 目录。
@@ -88,18 +84,7 @@ python tools/agent/render_architecture.py --check
 python tools/scripts/verify_docs_entrypoints.py
 ```
 
-`--write` 负责验证三份正式源并同步：
-
-- `architecture.md` -> `.agent/architecture/architecture.md`
-- `architecture-views.md` -> `.agent/architecture/architecture-views.md`
-- `architecture.html` -> `.agent/architecture/architecture.html`
-
-Agent Core 模块文档单独同步：
-
-```text
-docs/modules/06-agent-core-planning-control.md
-.agent/modules/06-agent-core-planning-control.md
-```
+`--write` 只验证并生成正式 `docs/architecture/` 展示文件，不复制到 `.agent/`。
 
 HTML 仍使用 `/docs/architecture/architecture-views.md` 作为运行时 Mermaid 图源。
 
@@ -110,8 +95,7 @@ HTML 仍使用 `/docs/architecture/architecture-views.md` 作为运行时 Mermai
 - `architecture-views.md` 保留十类、至少三十张 Mermaid 图。
 - Current 与 Target 分离。
 - RabbitMQ、LangSmith、外部数据库和 sandbox 使用可替换 Adapter 表达，不成为近期强依赖。
-- `.agent` 三份总架构镜像与正式文件完全一致。
-- Agent Core 模块镜像与正式模块文档完全一致。
+- `.agent/` 不得重新出现架构或模块镜像目录；重复事实源会被 verifier 拒绝。
 
 ## Forbidden Changes
 
@@ -122,6 +106,10 @@ HTML 仍使用 `/docs/architecture/architecture-views.md` 作为运行时 Mermai
 - 不恢复简化 offline SVG renderer。
 - 不恢复拆分的 current/target/roadmap 前台文档。
 - 不把 Future Optional 写成 Current。
+
+## Interview-Ready Design Review
+
+下一阶段目标架构必须优先回答：Problem、Boundary、Owner、Invariant、State、Contract、Failure、Recovery、Idempotency、Security、Observability、Evidence、Trade-off 和 Interview Questions。文档变长不是完成标准；完成标准是每个关键决策都能说明“为什么这样做、谁负责、失败如何收敛、如何被证据证明”。
 
 ## Focused Tests
 

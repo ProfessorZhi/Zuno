@@ -46,15 +46,9 @@ REQUIRED_FRONT_PATHS = [
     "docs/status/production-readiness.md",
     "docs/decisions/README.md",
     "docs/governance/repo-ownership-matrix.md",
-    ".agent/architecture/README.md",
-    ".agent/architecture/architecture.md",
-    ".agent/architecture/architecture-views.md",
-    ".agent/architecture/architecture.html",
-    ".agent/modules/README.md",
     ".agent/references/docs-map.md",
     ".agent/system.yaml",
     *[f"docs/modules/{name}" for name in MODULE_DOCS],
-    *[f".agent/modules/{name}" for name in MODULE_DOCS],
 ]
 
 
@@ -80,7 +74,7 @@ def verify() -> list[str]:
         if not (REPO_ROOT / relative_path).exists():
             errors.append(f"missing documentation entrypoint: {relative_path}")
 
-    for root_name in ["docs/architecture", ".agent/architecture"]:
+    for root_name in ["docs/architecture"]:
         root = REPO_ROOT / root_name
         files = {path.name for path in root.iterdir() if path.is_file()}
         directories = [path.name for path in root.iterdir() if path.is_dir()]
@@ -92,34 +86,25 @@ def verify() -> list[str]:
             errors.append(f"{root_name} must not contain subdirectories: {sorted(directories)}")
 
     formal_modules = sorted(path.name for path in (REPO_ROOT / "docs/modules").glob("[0-9][0-9]-*.md"))
-    mirror_modules = sorted(path.name for path in (REPO_ROOT / ".agent/modules").glob("[0-9][0-9]-*.md"))
     if formal_modules != MODULE_DOCS:
         errors.append(f"formal module document set mismatch: {formal_modules}")
-    if mirror_modules != MODULE_DOCS:
-        errors.append(f"Agent module mirror set mismatch: {mirror_modules}")
 
-    for name in MODULE_DOCS:
-        formal = REPO_ROOT / "docs/modules" / name
-        mirror = REPO_ROOT / ".agent/modules" / name
-        if formal.exists() and mirror.exists() and formal.read_bytes() != mirror.read_bytes():
-            errors.append(f"module mirror mismatch: {name}")
+    for retired_root in [REPO_ROOT / ".agent/architecture", REPO_ROOT / ".agent/modules"]:
+        if retired_root.exists():
+            errors.append(f"retired Agent documentation mirror must not exist: {retired_root.relative_to(REPO_ROOT)}")
 
     for name in RETIRED_MODULE_DOCS:
-        if (REPO_ROOT / "docs/modules" / name).exists() or (REPO_ROOT / ".agent/modules" / name).exists():
+        if (REPO_ROOT / "docs/modules" / name).exists():
             errors.append(f"retired split module document remains active: {name}")
 
     docs_index = _read("docs/modules/README.md")
-    agent_index = _read(".agent/modules/README.md")
     docs_map = _read(".agent/references/docs-map.md")
     system = _read(".agent/system.yaml")
     architecture_index = _read("docs/architecture/README.md")
-    agent_architecture_index = _read(".agent/architecture/README.md")
 
     for name in MODULE_DOCS:
         if name not in docs_index:
             errors.append(f"docs/modules/README.md does not route {name}")
-        if name not in agent_index:
-            errors.append(f".agent/modules/README.md does not route {name}")
         if name not in docs_map:
             errors.append(f".agent/references/docs-map.md does not route {name}")
         if name not in system:
@@ -128,9 +113,9 @@ def verify() -> list[str]:
     for phrase in ["docs/modules/", "docs/status/", "docs/decisions/", "docs/governance/"]:
         if phrase not in architecture_index:
             errors.append(f"docs/architecture/README.md missing phrase: {phrase}")
-    for phrase in [".agent/modules/06-agent-core-planning-control.md", "docs/status/production-readiness.md"]:
-        if phrase not in agent_architecture_index:
-            errors.append(f".agent/architecture/README.md missing phrase: {phrase}")
+    for phrase in [".agent/", "docs/status/production-readiness.md"]:
+        if phrase not in architecture_index:
+            errors.append(f"docs/architecture/README.md missing phrase: {phrase}")
 
     renderer = _load_renderer()
     design = _read("docs/architecture/architecture.md")
@@ -139,14 +124,6 @@ def verify() -> list[str]:
     errors.extend(renderer.validate_design(design))
     errors.extend(renderer.validate_source(views))
     errors.extend(renderer.validate_html(html))
-
-    for formal, mirror in [
-        ("docs/architecture/architecture.md", ".agent/architecture/architecture.md"),
-        ("docs/architecture/architecture-views.md", ".agent/architecture/architecture-views.md"),
-        ("docs/architecture/architecture.html", ".agent/architecture/architecture.html"),
-    ]:
-        if (REPO_ROOT / formal).read_bytes() != (REPO_ROOT / mirror).read_bytes():
-            errors.append(f"architecture mirror mismatch: {mirror}")
 
     for phrase in [
         "十一模块",

@@ -44,8 +44,6 @@ RETIRED_FRONT_PATHS = [
     "docs/architecture/input-layer-and-document-processing.md",
     "docs/architecture/knowledge-space-product-configuration.md",
     "docs/architecture/repo-ownership-matrix.md",
-    ".agent/architecture/overall-architecture.md",
-    ".agent/architecture/agent-core-runtime.md",
     ".agent/architecture/near-term",
     ".agent/architecture/future",
     ".agent/architecture/decisions",
@@ -89,7 +87,7 @@ def _read(path: str) -> str:
 
 def verify_architecture_surface() -> list[str]:
     errors: list[str] = []
-    for relative_root in ["docs/architecture", ".agent/architecture"]:
+    for relative_root in ["docs/architecture"]:
         root = REPO_ROOT / relative_root
         files = {path.name for path in root.iterdir() if path.is_file()}
         directories = [path.name for path in root.iterdir() if path.is_dir()]
@@ -108,26 +106,15 @@ def verify_architecture_surface() -> list[str]:
             errors.append(f"missing architecture cleanup archive path: {relative_path}")
 
     formal_modules = sorted(path.name for path in (REPO_ROOT / "docs/modules").glob("[0-9][0-9]-*.md"))
-    mirror_modules = sorted(path.name for path in (REPO_ROOT / ".agent/modules").glob("[0-9][0-9]-*.md"))
     if formal_modules != MODULE_DOCS:
         errors.append(f"formal module document set mismatch: {formal_modules}")
-    if mirror_modules != MODULE_DOCS:
-        errors.append(f"Agent module mirror set mismatch: {mirror_modules}")
+    for retired_root in [REPO_ROOT / ".agent/architecture", REPO_ROOT / ".agent/modules"]:
+        if retired_root.exists():
+            errors.append(f"retired Agent documentation mirror must not exist: {retired_root.relative_to(REPO_ROOT)}")
 
     for name in RETIRED_MODULE_DOCS:
-        if (REPO_ROOT / "docs/modules" / name).exists() or (REPO_ROOT / ".agent/modules" / name).exists():
+        if (REPO_ROOT / "docs/modules" / name).exists():
             errors.append(f"retired split module document remains active: {name}")
-
-    pairs = [
-        ("docs/architecture/README.md", ".agent/architecture/README.md"),
-        ("docs/architecture/architecture.md", ".agent/architecture/architecture.md"),
-        ("docs/architecture/architecture-views.md", ".agent/architecture/architecture-views.md"),
-        ("docs/architecture/architecture.html", ".agent/architecture/architecture.html"),
-        *[(f"docs/modules/{name}", f".agent/modules/{name}") for name in MODULE_DOCS],
-    ]
-    for formal, mirror in pairs:
-        if (REPO_ROOT / formal).read_bytes() != (REPO_ROOT / mirror).read_bytes():
-            errors.append(f"mirror mismatch: {mirror} must match {formal}")
     return errors
 
 

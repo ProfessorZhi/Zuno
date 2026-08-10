@@ -11,9 +11,7 @@ ADR = REPO_ROOT / "docs/decisions/0003-wave1-cross-module-contract-freeze.md"
 DECISIONS_INDEX = REPO_ROOT / "docs/decisions/README.md"
 REGISTRY = REPO_ROOT / "docs/governance/wave1-cross-module-contract-registry.md"
 MODULES_INDEX = REPO_ROOT / "docs/modules/README.md"
-AGENT_MODULES_INDEX = REPO_ROOT / ".agent/modules/README.md"
 CORE = REPO_ROOT / "docs/modules/06-agent-core-planning-control.md"
-CORE_MIRROR = REPO_ROOT / ".agent/modules/06-agent-core-planning-control.md"
 
 BASELINE_SHA = "729e439e29deadc101c5687fc47125104e62e2c1"
 
@@ -143,9 +141,7 @@ def verify() -> list[Finding]:
         (DECISIONS_INDEX, "XMOD_DECISIONS_INDEX_MISSING"),
         (REGISTRY, "XMOD_REGISTRY_MISSING"),
         (MODULES_INDEX, "XMOD_MODULES_INDEX_MISSING"),
-        (AGENT_MODULES_INDEX, "XMOD_AGENT_INDEX_MISSING"),
         (CORE, "XMOD_CORE_MISSING"),
-        (CORE_MIRROR, "XMOD_CORE_MIRROR_MISSING"),
     ]:
         if not path.exists():
             findings.append(Finding(code, str(path.relative_to(REPO_ROOT))))
@@ -157,10 +153,7 @@ def verify() -> list[Finding]:
     registry = _read(REGISTRY)
     decisions_index = _read(DECISIONS_INDEX)
     modules_index = _read(MODULES_INDEX)
-    agent_index = _read(AGENT_MODULES_INDEX)
     core = _read(CORE)
-    if CORE.read_bytes() != CORE_MIRROR.read_bytes():
-        findings.append(Finding("XMOD_CORE_MIRROR_DRIFT", "Agent Core formal document and mirror differ"))
     for term in [
         "ActionProposal",
         "ActionExecutionBinding",
@@ -195,7 +188,7 @@ def verify() -> list[Finding]:
     if "0003-wave1-cross-module-contract-freeze.md" not in decisions_index:
         findings.append(Finding("XMOD_DECISION_ROUTE", "docs/decisions/README.md does not route ADR 0003"))
 
-    for content, label in [(modules_index, "docs/modules/README.md"), (agent_index, ".agent/modules/README.md")]:
+    for content, label in [(modules_index, "docs/modules/README.md")]:
         for term in [
             "0003-wave1-cross-module-contract-freeze.md",
             "wave1-cross-module-contract-registry.md",
@@ -214,8 +207,6 @@ def verify() -> list[Finding]:
 
     if modules_index.count("## Model Gateway 文档边界") != 1:
         findings.append(Finding("XMOD_INDEX_DUPLICATE", "docs/modules/README.md must contain exactly one Model Gateway boundary section"))
-    if agent_index.count("## Model Gateway Target 镜像") != 1:
-        findings.append(Finding("XMOD_AGENT_INDEX_DUPLICATE", ".agent/modules/README.md must contain exactly one Model Gateway mirror section"))
 
     requirement_ids = [int(value) for value in re.findall(r"ARCH-XMOD-(\d{3})", registry)]
     if sorted(requirement_ids) != list(range(1, 11)):

@@ -4,7 +4,6 @@ updated: 2026-07-14
 status: normative-target-module-architecture
 module_number: 01
 formal_path: `docs/modules/01-product-surface.md`
-agent_mirror: `.agent/modules/01-product-surface.md`
 
 > 本文是 Zuno 第 01 个逻辑模块——Product Surface——唯一的正式 Target 架构文档。
 >
@@ -34,8 +33,7 @@ Requirement、Control、Test 与完成证据
 docs/modules/01-product-surface.md
     唯一正式 Product Surface Target 架构事实源。
 
-.agent/modules/01-product-surface.md
-    字节级一致的 Agent 镜像。
+.agent/ 不保存模块镜像；本文是唯一正式事实源。
 
 .agent/programs/
     Current → Target 的实现、迁移、兼容、切流和收口计划。
@@ -2331,7 +2329,7 @@ status
 | `ARCH-PRODUCT-076` | 时间、Deadline、Expiry 和用户时区语义明确 |
 | `ARCH-PRODUCT-077` | Product SLO 覆盖 Command、Projection、Stream 和 Delivery |
 | `ARCH-PRODUCT-078` | Legacy 产品入口只能作为兼容 Adapter |
-| `ARCH-PRODUCT-079` | 正式文档与 Agent 镜像字节级一致且只有一份 |
+| `ARCH-PRODUCT-079` | Product Surface 只有一份正式文档事实源，`.agent/` 不得复制架构正文 |
 | `ARCH-PRODUCT-080` | Target 变 Current 必须有完整工程证据 |
 
 ## 75. Requirement Control Registry
@@ -2416,7 +2414,7 @@ status
 | `RC-PRODUCT-076` | ProductTimeSemanticGuard | PROD076_VIOLATION | PS-076-UT/FT | EV-PS-076 |
 | `RC-PRODUCT-077` | ProductSloEvidenceRegistry | PROD077_VIOLATION | PS-077-IT/E2E | EV-PS-077 |
 | `RC-PRODUCT-078` | LegacyAdapterConformance | PROD078_VIOLATION | PS-078-IT/E2E | EV-PS-078 |
-| `RC-PRODUCT-079` | SingleDocumentMirrorVerifier | PROD079_VIOLATION | PS-079-UT | EV-PS-079 |
+| `RC-PRODUCT-079` | SingleDocumentSourceVerifier | PROD079_VIOLATION | PS-079-UT | EV-PS-079 |
 | `RC-PRODUCT-080` | RequirementEvidenceRegistry | PROD080_VIOLATION | PS-080-UT/IT | EV-PS-080 |
 
 ## 76. 完成证据

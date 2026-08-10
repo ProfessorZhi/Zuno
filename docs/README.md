@@ -95,7 +95,7 @@ Web / Desktop 通过 HTTP Command / Query、SSE Projection Stream 和版本化 C
 
 ## 文档治理
 
-`docs/architecture/` 和 `.agent/architecture/` 只能保留：
+`docs/architecture/` 是唯一正式总架构目录，只能保留四个 canonical 文件；`.agent/` 不保存架构镜像：
 
 ```text
 README.md

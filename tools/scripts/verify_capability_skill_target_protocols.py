@@ -7,9 +7,7 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 FORMAL = REPO_ROOT / "docs/modules/07-capability-skill.md"
-MIRROR = REPO_ROOT / ".agent/modules/07-capability-skill.md"
 DOCS_INDEX = REPO_ROOT / "docs/modules/README.md"
-AGENT_INDEX = REPO_ROOT / ".agent/modules/README.md"
 
 REQUIRED_PARTS = [
     "# Part I：定位、术语与概念架构",
@@ -126,7 +124,7 @@ def _read(path: Path) -> str:
 def verify() -> list[str]:
     errors: list[str] = []
 
-    for path in [FORMAL, MIRROR, DOCS_INDEX, AGENT_INDEX]:
+    for path in [FORMAL, DOCS_INDEX]:
         if not path.exists():
             errors.append(f"missing Capability / Skill target path: {path.relative_to(REPO_ROOT)}")
     if errors:
@@ -134,8 +132,6 @@ def verify() -> list[str]:
 
     formal = _read(FORMAL)
 
-    if FORMAL.read_bytes() != MIRROR.read_bytes():
-        errors.append("Capability / Skill formal document and Agent mirror must be byte-identical")
 
     if "status: normative-target-module-architecture" not in formal:
         errors.append("Capability / Skill document must declare normative-target-module-architecture")
@@ -188,10 +184,7 @@ def verify() -> list[str]:
             if token not in formal:
                 errors.append(f"Capability / Skill requirement mapping missing: {token}")
 
-    for index_name, content in {
-        "docs/modules/README.md": _read(DOCS_INDEX),
-        ".agent/modules/README.md": _read(AGENT_INDEX),
-    }.items():
+    for index_name, content in {"docs/modules/README.md": _read(DOCS_INDEX)}.items():
         for term in [
             "07-capability-skill.md",
             "verify_capability_skill_target_protocols.py",

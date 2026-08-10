@@ -8,16 +8,12 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 FORMAL = REPO_ROOT / "docs/modules/11-infrastructure.md"
-MIRROR = REPO_ROOT / ".agent/modules/11-infrastructure.md"
 FORMAL_INDEX = REPO_ROOT / "docs/modules/README.md"
-MIRROR_INDEX = REPO_ROOT / ".agent/modules/README.md"
 CONTRACT_REGISTRY = REPO_ROOT / "docs/governance/wave1-cross-module-contract-registry.md"
 
 RETIRED_APPENDICES = [
     REPO_ROOT / "docs/modules/11-infrastructure-data-services.md",
-    REPO_ROOT / ".agent/modules/11-infrastructure-data-services.md",
     REPO_ROOT / "docs/modules/11-infrastructure-consistency-lifecycle.md",
-    REPO_ROOT / ".agent/modules/11-infrastructure-consistency-lifecycle.md",
 ]
 
 PARTS = [
@@ -211,9 +207,7 @@ def verify() -> list[Finding]:
 
     for path, code in [
         (FORMAL, "INFRA_DOC_MISSING"),
-        (MIRROR, "INFRA_MIRROR_MISSING"),
         (FORMAL_INDEX, "INFRA_FORMAL_INDEX_MISSING"),
-        (MIRROR_INDEX, "INFRA_MIRROR_INDEX_MISSING"),
         (CONTRACT_REGISTRY, "INFRA_CONTRACT_REGISTRY_MISSING"),
     ]:
         if not path.exists():
@@ -228,11 +222,7 @@ def verify() -> list[Finding]:
 
     content = _read(FORMAL)
     formal_index = _read(FORMAL_INDEX)
-    mirror_index = _read(MIRROR_INDEX)
     registry_content = _read(CONTRACT_REGISTRY)
-
-    if FORMAL.read_bytes() != MIRROR.read_bytes():
-        findings.append(Finding("INFRA_MIRROR_DRIFT", "formal document and Agent mirror are not byte-identical"))
 
     for term in [
         "唯一正式 Target 架构文档",
@@ -299,14 +289,12 @@ def verify() -> list[Finding]:
 
     if "[`11-infrastructure.md`](./11-infrastructure.md)" not in formal_index:
         findings.append(Finding("INFRA_FORMAL_INDEX_ROUTE", "docs/modules/README.md does not route the single Infrastructure document"))
-    if "[`11-infrastructure.md`](./11-infrastructure.md)" not in mirror_index:
-        findings.append(Finding("INFRA_MIRROR_INDEX_ROUTE", ".agent/modules/README.md does not route the single Infrastructure mirror"))
 
     for retired_name in [
         "11-infrastructure-data-services.md",
         "11-infrastructure-consistency-lifecycle.md",
     ]:
-        for index_content, label in [(formal_index, "formal index"), (mirror_index, "mirror index")]:
+        for index_content, label in [(formal_index, "formal index")]:
             if retired_name in index_content:
                 findings.append(Finding("INFRA_RETIRED_ROUTE", f"{label} still routes {retired_name}"))
 
@@ -314,9 +302,6 @@ def verify() -> list[Finding]:
         if term not in formal_index:
             findings.append(Finding("INFRA_FORMAL_SINGLE_DOC_GOVERNANCE", f"formal index missing {term}"))
 
-    for term in ["单一完整实施级 Target", "唯一 Target 镜像", "不得寻找或重新创建"]:
-        if term not in mirror_index:
-            findings.append(Finding("INFRA_MIRROR_SINGLE_DOC_GOVERNANCE", f"mirror index missing {term}"))
 
     if "status: confirmed-target" not in registry_content:
         findings.append(Finding("INFRA_REGISTRY_STATUS", "Wave 1 registry is not confirmed-target"))

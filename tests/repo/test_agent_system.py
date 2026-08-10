@@ -179,25 +179,9 @@ def _assert_archived_phase_state() -> None:
         assert "status: completed" in phase_text
 
 
-def test_agent_architecture_folder_is_slim_mirror() -> None:
-    files = {
-        path.name for path in (REPO_ROOT / ".agent" / "architecture").iterdir() if path.is_file()
-    }
-    assert files == {
-        "README.md",
-        "architecture.md",
-        "architecture-views.md",
-        "architecture.html",
-    }
-    assert (REPO_ROOT / ".agent/architecture/architecture.md").read_bytes() == (
-        REPO_ROOT / "docs/architecture/architecture.md"
-    ).read_bytes()
-    assert (REPO_ROOT / ".agent/architecture/architecture-views.md").read_bytes() == (
-        REPO_ROOT / "docs/architecture/architecture-views.md"
-    ).read_bytes()
-    assert (REPO_ROOT / ".agent/architecture/architecture.html").read_text(
-        encoding="utf-8"
-    ) == (REPO_ROOT / "docs/architecture/architecture.html").read_text(encoding="utf-8")
+def test_agent_architecture_and_module_mirrors_are_removed() -> None:
+    assert not (REPO_ROOT / ".agent/architecture").exists()
+    assert not (REPO_ROOT / ".agent/modules").exists()
 
 
 def test_archived_agent_architecture_worksets_are_reachable() -> None:
@@ -268,7 +252,7 @@ def test_agent_references_keep_canonical_set() -> None:
     assert reference_files == expected_references
 
 
-def test_agent_architecture_docs_map_explains_dual_mirror_rule() -> None:
+def test_agent_architecture_docs_map_explains_single_formal_source() -> None:
     content = (REPO_ROOT / ".agent/references/architecture-docs-map.md").read_text(
         encoding="utf-8"
     )
@@ -276,8 +260,7 @@ def test_agent_architecture_docs_map_explains_dual_mirror_rule() -> None:
     for phrase in [
         "docs/architecture/architecture.md",
         "docs/architecture/architecture.html",
-        ".agent/architecture/architecture.md",
-        ".agent/architecture/architecture.html",
+        ".agent/",
         "Markdown 是重文字架构设计，HTML 是重图展示",
         "python tools/agent/render_architecture.py --write",
         "不恢复简化 offline SVG renderer",
@@ -323,7 +306,7 @@ def test_program2_thread_prompts_are_target_mode_ready_and_guarded() -> None:
         encoding="utf-8"
     )
     assert "verify_architecture_directory_contract" in verifier
-    assert "verify_mirrors" in verifier
+    assert "verify_mirrors" not in verifier
 
     required_phrases = [
         "## UI Mode",
@@ -389,7 +372,7 @@ def test_agent_verifier_enforces_workflow_self_maintenance_contracts() -> None:
     for phrase in [
         "verify_required_paths",
         "verify_architecture_directory_contract",
-        "verify_mirrors",
+        "retired Agent documentation mirror must not exist",
         "verify_entrypoints",
         "verify_module_contracts",
         "verify_no_tracked_local_workspace",
@@ -438,9 +421,7 @@ def test_phase_closure_template_self_maintenance_review_is_not_duplicate() -> No
         "`.agent/programs/`",
         "`docs/history/programs/`",
         "`docs/architecture/architecture.md`",
-        "`.agent/architecture/architecture.md`",
         "`docs/architecture/architecture.html`",
-        "`.agent/architecture/architecture.html`",
         "verifier / tests",
     ]:
         assert phrase in self_review

@@ -27,7 +27,7 @@ def _write(path: Path, text: str = "ok") -> None:
 def _minimal_repo(root: Path, verifier) -> None:
     for relative_path in verifier.REQUIRED_PATHS:
         _write(root / relative_path)
-    for relative_dir in ["docs/architecture", ".agent/architecture"]:
+    for relative_dir in ["docs/architecture"]:
         for name in verifier.ARCHITECTURE_ALLOWED_FILES:
             _write(root / relative_dir / name)
     _write(

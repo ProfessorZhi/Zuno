@@ -82,7 +82,7 @@ pytest -q tests/repo/test_docs_entrypoints.py -p no:cacheprovider
 - 顶层类别缺失：检查 `EXPECTED_VIEWS` 和 `architecture-views.md` 标题。
 - Mermaid parse error：在浏览器控制台定位具体图，并检查 Mermaid v11 语法。
 - HTML 读取失败：确认通过本地 HTTP 服务访问，并检查 `/docs/architecture/architecture-views.md`。
-- HTML 或镜像漂移：运行 `python tools/agent/render_architecture.py --write`。
+- HTML 或正式图源漂移：运行 `python tools/agent/render_architecture.py --write`。
 
 ## Lessons Learned
 

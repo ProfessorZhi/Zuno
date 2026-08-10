@@ -68,7 +68,7 @@ def verify_required_paths() -> list[str]:
 
 def verify_architecture_directory_contract() -> list[str]:
     errors: list[str] = []
-    for relative_dir in ["docs/architecture", ".agent/architecture"]:
+    for relative_dir in ["docs/architecture"]:
         directory = REPO_ROOT / relative_dir
         if not directory.exists():
             errors.append(f"missing architecture directory: {relative_dir}")
@@ -84,6 +84,9 @@ def verify_architecture_directory_contract() -> list[str]:
             errors.append(
                 f"{relative_dir} missing canonical files: {', '.join(missing)}"
             )
+    for retired_dir in [REPO_ROOT / ".agent/architecture", REPO_ROOT / ".agent/modules"]:
+        if retired_dir.exists():
+            errors.append(f"retired Agent documentation mirror must not exist: {retired_dir.relative_to(REPO_ROOT)}")
     return errors
 
 

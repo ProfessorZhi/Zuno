@@ -9,7 +9,6 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parents[2]
 VERIFIER_PATH = REPO_ROOT / "tools/scripts/verify_capability_skill_target_protocols.py"
 FORMAL = REPO_ROOT / "docs/modules/07-capability-skill.md"
-MIRROR = REPO_ROOT / ".agent/modules/07-capability-skill.md"
 
 
 def _load_verifier():
@@ -34,8 +33,8 @@ def test_capability_skill_target_contract() -> None:
     assert verifier.verify() == []
 
 
-def test_capability_skill_mirror_is_byte_identical() -> None:
-    assert MIRROR.read_bytes() == FORMAL.read_bytes()
+def test_capability_skill_has_no_agent_mirror() -> None:
+    assert not (REPO_ROOT / ".agent/modules").exists()
 
 
 def test_concept_boundaries_are_explicit() -> None:

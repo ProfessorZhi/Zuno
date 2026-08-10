@@ -4,7 +4,6 @@ updated: 2026-07-14
 status: normative-target-module-architecture
 module_number: 08
 formal_path: `docs/modules/08-tool-runtime.md`
-agent_mirror: `.agent/modules/08-tool-runtime.md`
 
 > 本文是 Zuno 第 08 个逻辑模块——Tool Runtime——唯一的正式 Target 架构主设计。
 >
@@ -36,8 +35,7 @@ Requirement、测试与完成证据
 docs/modules/08-tool-runtime.md
     唯一正式 Tool Runtime Target 架构事实源。
 
-.agent/modules/08-tool-runtime.md
-    与正式文档字节级一致的 Agent 镜像，不是第二事实源。
+.agent/ 不保存模块镜像；本文是唯一正式事实源。
 
 docs/decisions/0003-wave1-cross-module-contract-freeze.md
     Wave 1 共享 Owner、Envelope、Receipt、Security Epoch 与恢复边界。
@@ -2218,7 +2216,7 @@ malicious archive / oversized payload
 | Requirement | Control | Mandatory tests | Runtime evidence |
 | --- | --- | --- | --- |
 | ARCH-TOOL-001 唯一正式模块文档 | RC-TOOL-001 document boundary verifier | repository | document hash |
-| ARCH-TOOL-002 正式文档与镜像一致 | RC-TOOL-002 byte compare | repository | blob SHA |
+| ARCH-TOOL-002 正式文档唯一来源 | RC-TOOL-002 source check | repository | path and content |
 | ARCH-TOOL-003 08 拥有权威 ToolDefinition | RC-TOOL-003 ownership guard | contract | definition event |
 | ARCH-TOOL-004 07 只拥有 Planner 投影 | RC-TOOL-004 boundary test | contract | projection lineage |
 | ARCH-TOOL-005 所有执行进入 Gateway | RC-TOOL-005 bypass guard | integration | gateway trace |
@@ -2303,7 +2301,7 @@ malicious archive / oversized payload
 ### design available
 
 ```text
-唯一正式文档与镜像
+唯一正式文档与 Agent 路由
 Ownership、流程、状态机、Contract、Failure、存储和测试规格
 ARCH-TOOL-001..080 映射
 专用 Verifier 和 focused tests

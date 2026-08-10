@@ -7,7 +7,7 @@ Set-Location $root
 $required = @(
     "docs\architecture\README.md",
     "docs\architecture\architecture.md",
-    "docs\architecture\production-readiness.md",
+    "docs\status\production-readiness.md",
     "docs\architecture\architecture.html",
     "docs\history\architecture-surface-cleanup-2026-06-30\docs-architecture\current-architecture.md",
     "docs\history\architecture-surface-cleanup-2026-06-30\docs-architecture\target-architecture.md",
@@ -29,17 +29,17 @@ if ($index -notmatch "production-readiness.md") {
 if ($index -notmatch "architecture.md") {
     throw "docs/architecture/README.md does not point to architecture.md"
 }
-if ($index -notmatch "\.agent/architecture/architecture.md") {
-    throw "docs/architecture/README.md does not describe Agent architecture mirror"
+if ($index -notmatch "\.agent/") {
+    throw "docs/architecture/README.md does not describe the Agent routing boundary"
 }
 
-$readiness = Get-Content -LiteralPath "docs\architecture\production-readiness.md" -Raw -Encoding UTF8
-$hasRuntimeSliceBoundary = $readiness -match "runtime-first vertical slice"
-$hasProductionTargetBoundary = $readiness -match "Production Target"
-$hasLaunchablePrototypeBoundary = $readiness -match "Launchable Prototype Target"
-$hasProductionScaleBoundary = $readiness -match "Production Scale Target"
-if (-not $hasRuntimeSliceBoundary -or -not $hasProductionTargetBoundary -or -not $hasLaunchablePrototypeBoundary -or -not $hasProductionScaleBoundary) {
-    throw "production-readiness.md does not describe runtime slice, Launchable Prototype Target, and Production Scale Target boundary"
+$readiness = Get-Content -LiteralPath "docs\status\production-readiness.md" -Raw -Encoding UTF8
+$hasEngineeringClosure = $readiness -match "engineering_closure: completed"
+$hasBlockedMeasurement = $readiness -match "measurement: blocked_external"
+$hasQualityBoundary = $readiness -match "quality: not_yet_proven"
+$hasReadinessBoundary = $readiness -match "production_readiness: not_established"
+if (-not $hasEngineeringClosure -or -not $hasBlockedMeasurement -or -not $hasQualityBoundary -or -not $hasReadinessBoundary) {
+    throw "production-readiness.md does not describe the final Engineering Closure, measurement, quality and readiness boundaries"
 }
 
 Write-Host "Docs verification passed."

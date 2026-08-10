@@ -7,9 +7,7 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 FORMAL = REPO_ROOT / "docs/modules/01-product-surface.md"
-MIRROR = REPO_ROOT / ".agent/modules/01-product-surface.md"
 DOCS_INDEX = REPO_ROOT / "docs/modules/README.md"
-AGENT_INDEX = REPO_ROOT / ".agent/modules/README.md"
 DOCS_MAP = REPO_ROOT / ".agent/references/docs-map.md"
 WEB_AGENTS = REPO_ROOT / "apps/web/AGENTS.md"
 
@@ -157,26 +155,21 @@ def _read(path: Path) -> str:
 
 def verify() -> list[str]:
     errors: list[str] = []
-    for path in [FORMAL, MIRROR, DOCS_INDEX, AGENT_INDEX, DOCS_MAP, WEB_AGENTS]:
+    for path in [FORMAL, DOCS_INDEX, DOCS_MAP, WEB_AGENTS]:
         if not path.exists():
             errors.append(f"missing Product Surface path: {path.relative_to(REPO_ROOT)}")
     if errors:
         return errors
 
     formal = _read(FORMAL)
-    if FORMAL.read_bytes() != MIRROR.read_bytes():
-        errors.append("Product Surface formal document and mirror must be byte-identical")
     if "status: normative-target-module-architecture" not in formal:
         errors.append("Product Surface document must declare normative-target-module-architecture")
 
     formal_variants = sorted(p.name for p in FORMAL.parent.glob("01-product-surface*.md"))
-    mirror_variants = sorted(p.name for p in MIRROR.parent.glob("01-product-surface*.md"))
     if formal_variants != ["01-product-surface.md"]:
         errors.append(f"Product Surface must have one formal document; got {formal_variants}")
-    if mirror_variants != ["01-product-surface.md"]:
-        errors.append(f"Product Surface must have one Agent mirror; got {mirror_variants}")
     for name in SPLIT_NAMES:
-        if (FORMAL.parent / name).exists() or (MIRROR.parent / name).exists():
+        if (FORMAL.parent / name).exists():
             errors.append(f"split Product Surface document is forbidden: {name}")
 
     positions: list[int] = []
@@ -219,16 +212,12 @@ def verify() -> list[str]:
         errors.append("INV-PRODUCT-001 through INV-PRODUCT-030 must exist exactly once")
 
     docs_index = _read(DOCS_INDEX)
-    agent_index = _read(AGENT_INDEX)
     docs_map = _read(DOCS_MAP)
     web_agents = _read(WEB_AGENTS)
     for text in ["01-product-surface.md", "单一完整 Target 架构", "verify_product_surface_target_protocols.py"]:
         if text not in docs_index:
             errors.append(f"docs/modules/README.md missing Product route: {text}")
-    for text in [".agent/modules/01-product-surface.md", "docs/modules/01-product-surface.md", "verify_product_surface_target_protocols.py"]:
-        if text not in agent_index:
-            errors.append(f".agent/modules/README.md missing Product route: {text}")
-    for text in ["docs/modules/01-product-surface.md", ".agent/modules/01-product-surface.md", "verify_product_surface_target_protocols.py"]:
+    for text in ["docs/modules/01-product-surface.md", "verify_product_surface_target_protocols.py"]:
         if text not in docs_map:
             errors.append(f".agent/references/docs-map.md missing Product route: {text}")
     for text in ["docs/modules/01-product-surface.md", "AvailableAction", "Product Projection"]:

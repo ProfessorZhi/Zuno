@@ -9,7 +9,6 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parents[2]
 VERIFIER_PATH = REPO_ROOT / "tools/scripts/verify_memory_context_target_protocols.py"
 FORMAL = REPO_ROOT / "docs/modules/05-memory-context.md"
-MIRROR = REPO_ROOT / ".agent/modules/05-memory-context.md"
 
 
 def _load_verifier():
@@ -34,8 +33,8 @@ def test_memory_context_target_contract() -> None:
     assert verifier.verify() == []
 
 
-def test_memory_context_mirror_is_byte_identical() -> None:
-    assert MIRROR.read_bytes() == FORMAL.read_bytes()
+def test_memory_context_has_no_agent_mirror() -> None:
+    assert not (REPO_ROOT / ".agent/modules").exists()
 
 
 def test_three_temporal_layers_and_three_long_term_kinds() -> None:

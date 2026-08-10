@@ -9,7 +9,6 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parents[2]
 VERIFIER_PATH = REPO_ROOT / "tools/scripts/verify_agent_core_target_protocols.py"
 FORMAL = REPO_ROOT / "docs/modules/06-agent-core-planning-control.md"
-MIRROR = REPO_ROOT / ".agent/modules/06-agent-core-planning-control.md"
 
 
 def _load_verifier():
@@ -33,12 +32,10 @@ def test_refined_agent_core_target_contract() -> None:
 
 def test_only_one_agent_core_target_document_exists() -> None:
     assert FORMAL.exists()
-    assert MIRROR.exists()
+    assert not (REPO_ROOT / ".agent/modules").exists()
     for relative in [
         "docs/modules/06-agent-core-control-protocols.md",
         "docs/modules/06-agent-core-consistency-lifecycle-protocols.md",
-        ".agent/modules/06-agent-core-control-protocols.md",
-        ".agent/modules/06-agent-core-consistency-lifecycle-protocols.md",
     ]:
         assert not (REPO_ROOT / relative).exists()
 
@@ -74,8 +71,8 @@ def test_target_only_and_program_separated() -> None:
     assert "未来 Program 必须以本文及配套规范" not in content
 
 
-def test_agent_core_mirror_is_byte_identical() -> None:
-    assert MIRROR.read_bytes() == FORMAL.read_bytes()
+def test_agent_core_has_no_agent_mirror() -> None:
+    assert not (REPO_ROOT / ".agent/modules").exists()
 
 
 def test_domain_objects_have_storage_decisions() -> None:

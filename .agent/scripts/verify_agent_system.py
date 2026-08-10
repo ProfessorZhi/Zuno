@@ -40,11 +40,6 @@ REQUIRED_PATHS = [
     "docs/governance/repo-ownership-matrix.md",
     ".agent/README.md",
     ".agent/system.yaml",
-    ".agent/architecture/README.md",
-    ".agent/architecture/architecture.md",
-    ".agent/architecture/architecture-views.md",
-    ".agent/architecture/architecture.html",
-    ".agent/modules/README.md",
     ".agent/references/docs-map.md",
     ".agent/references/task-routing.md",
     ".agent/references/workflow.md",
@@ -52,7 +47,6 @@ REQUIRED_PATHS = [
     ".agent/references/verification-map.md",
     ".agent/programs/README.md",
     *[f"docs/modules/{name}" for name in MODULE_DOCS],
-    *[f".agent/modules/{name}" for name in MODULE_DOCS],
 ]
 
 FORBIDDEN_ACTIVE_PATHS = [
@@ -83,7 +77,7 @@ def verify_required_paths() -> list[str]:
 
 def verify_architecture_directory_contract() -> list[str]:
     errors: list[str] = []
-    for relative_root in ["docs/architecture", ".agent/architecture"]:
+    for relative_root in ["docs/architecture"]:
         root = REPO_ROOT / relative_root
         files = {path.name for path in root.iterdir() if path.is_file()}
         directories = [path.name for path in root.iterdir() if path.is_dir()]
@@ -96,17 +90,11 @@ def verify_architecture_directory_contract() -> list[str]:
     return errors
 
 
-def verify_mirrors() -> list[str]:
+def verify_retired_mirror_paths() -> list[str]:
     errors: list[str] = []
-    pairs = [
-        ("docs/architecture/architecture.md", ".agent/architecture/architecture.md"),
-        ("docs/architecture/architecture-views.md", ".agent/architecture/architecture-views.md"),
-        ("docs/architecture/architecture.html", ".agent/architecture/architecture.html"),
-        *[(f"docs/modules/{name}", f".agent/modules/{name}") for name in MODULE_DOCS],
-    ]
-    for formal, mirror in pairs:
-        if (REPO_ROOT / formal).read_bytes() != (REPO_ROOT / mirror).read_bytes():
-            errors.append(f"mirror mismatch: {mirror} must match {formal}")
+    for relative_path in [".agent/architecture", ".agent/modules"]:
+        if (REPO_ROOT / relative_path).exists():
+            errors.append(f"retired Agent documentation mirror must not exist: {relative_path}")
     return errors
 
 
@@ -118,8 +106,6 @@ def verify_entrypoints() -> list[str]:
         "docs/architecture/README.md",
         "docs/modules/README.md",
         ".agent/README.md",
-        ".agent/architecture/README.md",
-        ".agent/modules/README.md",
         ".agent/references/docs-map.md",
         ".agent/system.yaml",
     ]
@@ -132,7 +118,6 @@ def verify_entrypoints() -> list[str]:
     for name in MODULE_DOCS:
         for relative_path in [
             "docs/modules/README.md",
-            ".agent/modules/README.md",
             ".agent/references/docs-map.md",
             ".agent/system.yaml",
         ]:
@@ -153,7 +138,6 @@ def verify_entrypoints() -> list[str]:
     for phrase in [
         "Single Controller Agent Runtime",
         'formal: "docs/modules/04-model-gateway.md"',
-        'mirror: ".agent/modules/04-model-gateway.md"',
         'verifier: "python tools/scripts/verify_model_gateway_target_protocols.py"',
         'formal: "docs/modules/08-tool-runtime.md"',
     ]:
@@ -205,7 +189,7 @@ def main() -> int:
     checks = [
         verify_required_paths,
         verify_architecture_directory_contract,
-        verify_mirrors,
+        verify_retired_mirror_paths,
         verify_entrypoints,
         verify_module_contracts,
         verify_no_tracked_local_workspace,

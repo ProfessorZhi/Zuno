@@ -9,7 +9,6 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parents[2]
 VERIFIER_PATH = REPO_ROOT / "tools/scripts/verify_model_gateway_target_protocols.py"
 FORMAL = REPO_ROOT / "docs/modules/04-model-gateway.md"
-MIRROR = REPO_ROOT / ".agent/modules/04-model-gateway.md"
 
 
 def _load_verifier():
@@ -30,16 +29,14 @@ def test_unified_model_gateway_contract_is_complete() -> None:
     assert _load_verifier().verify() == []
 
 
-def test_formal_and_agent_mirror_are_byte_identical() -> None:
-    assert FORMAL.read_bytes() == MIRROR.read_bytes()
+def test_formal_document_has_no_agent_mirror() -> None:
+    assert not (REPO_ROOT / ".agent/modules").exists()
 
 
 def test_split_architecture_documents_and_validators_are_removed() -> None:
     for path in [
         REPO_ROOT / "docs/modules/04-model-gateway-contract-freeze.md",
-        REPO_ROOT / ".agent/modules/04-model-gateway-contract-freeze.md",
         REPO_ROOT / "docs/modules/04-model-gateway-operations-conformance.md",
-        REPO_ROOT / ".agent/modules/04-model-gateway-operations-conformance.md",
         REPO_ROOT / "tools/scripts/verify_model_gateway_contract_freeze.py",
         REPO_ROOT / "tools/scripts/verify_model_gateway_operations_conformance.py",
         REPO_ROOT / "tests/repo/test_model_gateway_contract_freeze.py",

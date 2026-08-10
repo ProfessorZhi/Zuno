@@ -9,7 +9,6 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parents[2]
 VERIFIER_PATH = REPO_ROOT / "tools/scripts/verify_tool_runtime_target_protocols.py"
 FORMAL = REPO_ROOT / "docs/modules/08-tool-runtime.md"
-MIRROR = REPO_ROOT / ".agent/modules/08-tool-runtime.md"
 
 
 def _load_verifier():
@@ -33,14 +32,11 @@ def test_tool_runtime_target_verifier() -> None:
     assert verifier.verify() == []
 
 
-def test_tool_runtime_has_one_formal_document_and_one_identical_mirror() -> None:
+def test_tool_runtime_has_one_formal_document_and_no_agent_mirror() -> None:
     assert sorted(path.name for path in FORMAL.parent.glob("08-*.md")) == [
         "08-tool-runtime.md"
     ]
-    assert sorted(path.name for path in MIRROR.parent.glob("08-*.md")) == [
-        "08-tool-runtime.md"
-    ]
-    assert FORMAL.read_bytes() == MIRROR.read_bytes()
+    assert not (REPO_ROOT / ".agent/modules").exists()
 
 
 def test_tool_runtime_parts_are_complete_and_ordered() -> None:

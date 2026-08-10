@@ -28,7 +28,6 @@ def test_formal_design_count_is_eleven_plus_two() -> None:
     assert (REPO_ROOT / "docs/architecture/architecture.html").exists()
 
 
-def test_all_module_mirrors_match() -> None:
-    for formal in (REPO_ROOT / "docs/modules").glob("[0-9][0-9]-*.md"):
-        mirror = REPO_ROOT / ".agent/modules" / formal.name
-        assert formal.read_bytes() == mirror.read_bytes()
+def test_agent_architecture_and_module_mirrors_are_absent() -> None:
+    assert not (REPO_ROOT / ".agent/architecture").exists()
+    assert not (REPO_ROOT / ".agent/modules").exists()

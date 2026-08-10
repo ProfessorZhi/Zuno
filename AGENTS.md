@@ -17,8 +17,8 @@ AGENTS.md
 .agent/
   -> Zuno Local Agent Skill System
      references/    本地项目 skills、lessons、playbooks、任务路由和已知坑
-     architecture/  总架构四个 canonical 镜像文件
-     modules/       逻辑模块实施级设计镜像
+     architecture/  总架构路由和维护参考（正式正文在 docs/）
+     modules/       模块路由和维护参考（正式正文在 docs/）
      programs/      当前执行计划、状态、Phase 和收口清单
      templates/     执行模板和报告骨架
      scripts/       过渡期验证器
@@ -46,7 +46,7 @@ docs/
 
 - `docs/`：正式人类文档真相。
 - `AGENTS.md`：仓库级 Agent 入口和工作流契约。
-- `.agent/`：本地 Agent Skill System、镜像、Reference、Program 和模板。
+- `.agent/`：本地 Agent Skill System、Reference、Program 和模板；不保存架构或模块正文镜像。
 - `docs/history/`：历史归档。
 
 正式结论必须进入 `docs/`。只给 Agent 使用的导航、可复用提示和辅助脚本放在 `.agent/`。历史材料移动到 `docs/history/`，不要因为不再当前有效就删除。
@@ -68,7 +68,6 @@ architecture.html
 
 ```text
 docs/architecture/
-.agent/architecture/
 ```
 
 职责：
@@ -77,7 +76,7 @@ docs/architecture/
 - `docs/architecture/architecture-views.md`：十类 canonical views 的 Mermaid 规范图源。
 - `docs/architecture/architecture.html`：读取独立图源的原生 Mermaid Architecture Atlas。
 - `docs/architecture/README.md`：目录边界和维护方式。
-- `.agent/architecture/`：上述正式总架构的 Agent 镜像，不是独立事实源。
+- `.agent/` 不再保存总架构或模块镜像；Agent 通过 `docs/` 唯一正式文档源读取架构事实。
 
 禁止把模块设计、Production Readiness、ADR、Program、Ownership Matrix 或实施计划放入 architecture 目录。
 
@@ -85,9 +84,7 @@ docs/architecture/
 
 - `docs/modules/README.md`：十一个逻辑模块入口。
 - `docs/modules/<number>-<module>.md`：单个模块实施级设计。
-- `.agent/modules/`：需要被 Agent System 高频读取的模块镜像。
 - Agent Core 唯一正式 Target 文档：`docs/modules/06-agent-core-planning-control.md`。
-- Agent Core 唯一镜像：`.agent/modules/06-agent-core-planning-control.md`。
 
 Agent Core 规范优先级：全局架构原则 → 单一模块 Target 架构文档 → Program → 代码与 Migration。
 
@@ -113,7 +110,7 @@ Agent Core 规范优先级：全局架构原则 → 单一模块 Target 架构�
 模块变化时：
 
 1. 更新对应 `docs/modules/<module>.md`；
-2. 若存在 `.agent/modules` 镜像，同步全部镜像；
+2. `docs/` 是架构和模块的唯一正式事实源，不维护 `.agent` 镜像；
 3. 更新 `docs/status/production-readiness.md` 只能写已经由实现和证据证明的 Current 变化；
 4. 更新测试和验证器；
 5. Agent Core 变更运行 `python tools/scripts/verify_agent_core_target_protocols.py`。
@@ -139,22 +136,20 @@ Agent Core 规范优先级：全局架构原则 → 单一模块 Target 架构�
 4. `docs/modules/README.md`
 5. 与任务对应的 `docs/modules/<module>.md`
 6. `docs/status/production-readiness.md`
-7. `.agent/architecture/architecture.md`
-8. `.agent/modules/README.md`
-9. `.agent/README.md`
-10. `.agent/system.yaml`
-11. `.agent/references/current-program.md`
-12. `.agent/references/docs-map.md`
-13. `.agent/references/code-map.md`
-14. `.agent/references/task-routing.md`
-15. `.agent/references/workflow.md`
-16. `.agent/references/project-map.md`
-17. `.agent/references/architecture-docs-map.md`
-18. `.agent/references/documentation-governance.md`
-19. `.agent/references/architecture-update-policy.md`
-20. `.agent/references/diagram-inventory.md`
-21. `.agent/references/current-target-future-rules.md`
-22. `.agent/references/verification-map.md`
+7. `.agent/README.md`
+8. `.agent/system.yaml`
+9. `.agent/references/current-program.md`
+10. `.agent/references/docs-map.md`
+11. `.agent/references/code-map.md`
+12. `.agent/references/task-routing.md`
+13. `.agent/references/workflow.md`
+14. `.agent/references/project-map.md`
+15. `.agent/references/architecture-docs-map.md`
+16. `.agent/references/documentation-governance.md`
+17. `.agent/references/architecture-update-policy.md`
+18. `.agent/references/diagram-inventory.md`
+19. `.agent/references/current-target-future-rules.md`
+20. `.agent/references/verification-map.md`
 
 Agent Core 任务必须读取唯一正式 Target 文档 `docs/modules/06-agent-core-planning-control.md`。
 
@@ -241,7 +236,7 @@ pytest -q tests/repo/test_docs_entrypoints.py tests/repo/test_agent_core_target_
 
 ## 禁止
 
-- 不恢复 `docs/architecture/` 或 `.agent/architecture/` 的第五个文件。
+- 不在 `docs/architecture/` 增加第五个文件，也不重新创建 `.agent/architecture/` 或 `.agent/modules/` 镜像目录。
 - 不把模块专题放回 Architecture 目录。
 - 不把 Product Runtime 改成默认自治 Multi-Agent。
 - 不把隐藏思维链保存进 Trace、Memory 或数据库。

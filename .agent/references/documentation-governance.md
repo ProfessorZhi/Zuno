@@ -8,8 +8,8 @@
 
 - `docs/architecture/architecture.md` 是 Zuno Lean Complete Agentic GraphRAG Product 的详细实施蓝图事实源。
 - `docs/architecture/architecture.html` 是从十类 canonical view categories 和可展开 Mermaid 子图生成的架构图谱。
-- `.agent/architecture/architecture.md` 和 `.agent/architecture/architecture.html` 是生成镜像，不承载独立结论。
-- `docs/architecture/production-readiness.md` 只维护 Current、Short-term Closure Gap、Measurement Blocked、Completed 和 Future Optional。
+- `.agent/` 只维护项目级 Agent Skill、路由、验证器、模板和执行状态，不承载架构镜像或独立架构结论。
+- `docs/status/production-readiness.md` 只维护 Current、Short-term Closure Gap、Measurement Blocked、Completed 和 Future Optional。
 - 专题文档保留运行域技术细节，但服从六个运行域。
 - 历史 program 和旧架构材料保留在 `docs/history/`。
 

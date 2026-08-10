@@ -1,6 +1,6 @@
 # Zuno 架构文档
 
-`docs/architecture/` 与 `.agent/architecture/` 只能保留：
+`docs/architecture/` 是唯一正式总架构目录，只能保留：
 
 ```text
 README.md
@@ -24,11 +24,9 @@ Zuno 正式架构设计事实共十三份：
 - `architecture.md`：十一模块的跨模块集成架构、全局不变量和端到端流程。
 - `architecture.html`：总体架构的 Mermaid 可视化入口。
 - `architecture-views.md`：HTML 的 Mermaid 渲染源，不是第二份文字总架构。
-- `README.md`：目录、镜像和维护规则，不是架构正文。
+- `README.md`：目录、唯一事实源和维护规则，不是架构正文。
 - `docs/modules/`：每个领域 Owner 的唯一详细 Target 架构；领域细节冲突时以对应模块文档为准。
-- `.agent/modules/06-agent-core-planning-control.md`：Agent Core 正式模块文档的字节级镜像示例；十一模块均遵循同一镜像规则。
-
-`.agent/architecture/` 是字节级镜像，不是独立事实源。
+- `.agent/` 只保存项目级 Skill、路由、验证器、模板和当前执行状态，不保存架构或模块镜像。
 
 ## Architecture v1 与 v2 路由
 
@@ -58,6 +56,40 @@ Latest Current Review
 → Architecture Review
 → 设计确认后才决定是否建立新的 Implementation Program
 ```
+
+## 下一阶段目标架构的设计准入标准
+
+下一阶段的目标不是把模块 README 写得更长，而是把每个设计决策写到经得起技术面试追问的程度。设计阶段只修改 `docs/architecture/`、`docs/modules/`、ADR 和共享 Contract 文档，不创建新的 Runtime Program。
+
+每个总架构和模块设计都必须用文字回答以下问题：
+
+| 面试官会追问什么 | 文档必须说明什么 |
+| --- | --- |
+| 你到底解决了什么问题？ | Problem、用户/系统场景、成功边界和明确 Non-goal |
+| 谁拥有这个事实？ | Owner、Canonical Source、读写权限、禁止越权的模块 |
+| 为什么这样拆？ | 模块边界、依赖方向、替代方案和取舍，而不是只给目录图 |
+| 状态怎样推进？ | 状态机、Transition Guard、版本、并发、事务和可见性 |
+| 模型输出能直接改变系统吗？ | Proposal、Validation、Approval、Commit、Publication 的分层 |
+| 失败后怎么办？ | Failure Namespace、Retry、Backoff、Timeout、Recovery、Reconciliation 和人工介入 |
+| 如何避免重复副作用？ | Idempotency Key、Effect Domain、Fencing、Dedup、Unknown Effect 语义 |
+| 安全边界在哪里？ | Identity、Tenant、Scope、Security Epoch、Approval、Information Flow、Audit |
+| 如何知道真的工作？ | Trace、Audit、Metric、Eval、Release Gate，以及 Current/Target/Gap 证据边界 |
+| 为什么不选另一种架构？ | 延迟、成本、复杂度、可靠性、运维和迁移代价的可解释权衡 |
+
+每份文档的最低叙事顺序固定为：
+
+```text
+Problem / Scope / Non-goal
+→ Ownership / Trust Boundary / Invariant
+→ Runtime Flow / State Machine / Contract
+→ Failure / Retry / Recovery / Idempotency
+→ Security / Approval / Budget / Audit
+→ Observability / Eval / Evidence
+→ Current / Target / Gap / Future
+→ Alternatives / Trade-offs / Interview Questions
+```
+
+“设计完整”只表示边界和决策已经写清楚、内部一致且可审查；不等于实现可用、质量已证明或 Production Ready。新实现 Program 只有在这套设计审查通过后才允许单独建立。
 
 历史路由说明见：
 
@@ -134,4 +166,4 @@ python .agent/scripts/verify_doc_boundaries.py
 pytest -q tests/repo/test_architecture_document_set.py tests/repo/test_docs_entrypoints.py -p no:cacheprovider
 ```
 
-禁止在 architecture 目录放置模块专题、状态报告、ADR、Program、Migration 计划或附件目录。
+禁止在 architecture 目录放置模块专题、状态报告、ADR、Program、Migration 计划或附件目录。禁止重新创建 `.agent/architecture/`、`.agent/modules/` 作为并行事实源。

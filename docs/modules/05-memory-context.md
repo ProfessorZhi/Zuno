@@ -4,7 +4,6 @@ updated: 2026-07-14
 status: normative-target-module-architecture
 module_number: 05
 formal_path: `docs/modules/05-memory-context.md`
-agent_mirror: `.agent/modules/05-memory-context.md`
 
 > 本文是 Zuno 第 05 个逻辑模块——Memory & Context——唯一的正式 Target 架构主设计。
 >
@@ -33,8 +32,7 @@ Reflexion、Consolidation、Utility 与负迁移
 docs/modules/05-memory-context.md
     唯一正式 Target 架构事实源。
 
-.agent/modules/05-memory-context.md
-    字节级一致的 Agent 镜像，不是第二份独立架构文档。
+.agent/ 不保存模块镜像；本文是唯一正式事实源。
 
 .agent/programs/
     Current → Target 的实现、Migration、回填、切流和收口计划。
@@ -2394,7 +2392,7 @@ MemoryUseTrace
 Privacy Delete Proof
 Fixed Eval
 Restart / Recovery Evidence
-文档与镜像同步
+文档与入口同步
 Verifier 和 CI
 ```
 

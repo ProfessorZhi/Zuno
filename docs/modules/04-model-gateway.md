@@ -4,7 +4,6 @@ updated: 2026-07-14
 status: normative-target-module-architecture
 module_number: 04
 formal_path: `docs/modules/04-model-gateway.md`
-agent_mirror: `.agent/modules/04-model-gateway.md`
 dependency_baseline_sha: `140128fa7352094cac5a7a58f247090d0b451753`
 confirmed_wave1_contract_sha: `849820d2c52d36abebee8c3d4a974bf035524e0a`
 
@@ -36,8 +35,7 @@ Security、Credential、Residency、Redaction、Retention、Deletion 与 Legal H
 docs/modules/04-model-gateway.md
     唯一 Target 架构事实源。
 
-.agent/modules/04-model-gateway.md
-    字节级一致的 Agent 镜像。
+.agent/ 不保存模块镜像；本文是唯一正式事实源。
 
 .agent/programs/
     Current → Target 的实现、升级、迁移、切流与收口计划。

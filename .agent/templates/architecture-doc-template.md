@@ -96,7 +96,5 @@ Current / Target / Future / History
 - `docs/architecture/architecture-views.md`
 - `docs/architecture/architecture.html`
 - `docs/architecture/production-readiness.md`
-- `.agent/architecture/architecture.md`
-- `.agent/architecture/architecture.html`
 - `.agent/references/architecture-docs-map.md`
 - `.agent/references/diagram-inventory.md`

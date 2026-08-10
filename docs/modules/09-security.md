@@ -4,7 +4,6 @@ updated: 2026-07-14
 status: normative-target-module-architecture
 module_number: 09
 formal_path: `docs/modules/09-security.md`
-agent_mirror: `.agent/modules/09-security.md`
 current_state_source: `docs/status/production-readiness.md`
 shared_contract_source: `docs/governance/wave1-cross-module-contract-registry.md`
 shared_adr: `docs/decisions/0003-wave1-cross-module-contract-freeze.md`
@@ -36,8 +35,7 @@ Approval、Epoch、Revocation、Secret、Sandbox 与 Supply Chain
 docs/modules/09-security.md
     唯一正式 Target 架构事实源。
 
-.agent/modules/09-security.md
-    字节级一致的 Agent 镜像。
+.agent/ 不保存模块镜像；本文是唯一正式事实源。
 
 docs/governance/wave1-cross-module-contract-registry.md
     Wave 1 已确认共享 Contract 的字段、Owner 和 Failure Namespace。
@@ -2589,7 +2587,7 @@ Trace / Audit / Incident Evidence
 Recovery / Idempotency / Reconcile
 SSO / Workload Identity / Secret Store Integration
 Sandbox / Egress / Supply Chain Verification
-文档、镜像、入口和验证器同步
+文档、入口和验证器同步
 ```
 
 至少必须证明：

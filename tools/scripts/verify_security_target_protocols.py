@@ -7,7 +7,6 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 FORMAL = REPO_ROOT / "docs/modules/09-security.md"
-MIRROR = REPO_ROOT / ".agent/modules/09-security.md"
 
 
 REQUIRED_PARTS = [
@@ -195,14 +194,7 @@ def verify() -> list[str]:
     errors: list[str] = []
     if not FORMAL.exists():
         return [f"missing formal document: {FORMAL.relative_to(REPO_ROOT)}"]
-    if not MIRROR.exists():
-        return [f"missing agent mirror: {MIRROR.relative_to(REPO_ROOT)}"]
-
     formal = _read(FORMAL)
-    mirror = _read(MIRROR)
-
-    if formal != mirror:
-        errors.append("formal Security document and Agent mirror must be byte-identical")
 
     for phrase in (
         REQUIRED_PARTS

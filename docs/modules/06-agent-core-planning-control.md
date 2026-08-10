@@ -4,7 +4,6 @@ updated: 2026-07-14
 status: normative-target-module-architecture
 module_number: 06
 formal_path: `docs/modules/06-agent-core-planning-control.md`
-agent_mirror: `.agent/modules/06-agent-core-planning-control.md`
 
 > 本文是 Zuno 第 06 个逻辑模块——Agent Core / Planning & Control——的正式 Target 架构主设计。
 >
@@ -31,8 +30,7 @@ Failure、Budget、Recovery、Event 与时间语义
 docs/modules/06-agent-core-planning-control.md
     唯一 Target 架构事实源。
 
-.agent/modules/06-agent-core-planning-control.md
-    字节级一致的 Agent 镜像。
+.agent/ 不保存模块镜像；本文是唯一正式事实源。
 
 .agent/programs/
     Current → Target 的实现、升级、迁移、切流和收口计划。
@@ -1867,7 +1865,7 @@ RunOutcome、Correction 与 Budget Settlement 边界明确
 LangGraph Adapter 不绕过领域 Retry、Interrupt、Security 和 Publication
 ModelCapabilityProfile 能产生确定性 StepFeasibilityDecision
 每个 Requirement 存在 RC-AG、Test ID 与 Evidence Key
-正式文档与 Agent 镜像字节级一致
+正式文档只有一份，Agent 从 `docs/` 读取同一事实源
 ```
 
 这些条件只证明 Target 可实施；代码、Migration、故障注入、E2E、Trace、Eval 完成前仍不得声明 implementation available 或 production ready。

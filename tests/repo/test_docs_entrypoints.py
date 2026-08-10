@@ -21,7 +21,7 @@ def _load_render_architecture():
 
 
 def test_architecture_directories_only_contain_support_files() -> None:
-    for root in [REPO_ROOT / "docs/architecture", REPO_ROOT / ".agent/architecture"]:
+    for root in [REPO_ROOT / "docs/architecture"]:
         assert {p.name for p in root.iterdir() if p.is_file()} == CANONICAL_ARCHITECTURE_FILES
         assert not [p for p in root.iterdir() if p.is_dir()]
 
@@ -32,11 +32,9 @@ def test_formal_architecture_set_is_eleven_plus_two() -> None:
     assert (REPO_ROOT / "docs/architecture/architecture.html").exists()
 
 
-def test_all_module_and_architecture_mirrors_match() -> None:
-    for file_name in MODULE_DOCS:
-        assert (REPO_ROOT / "docs/modules" / file_name).read_bytes() == (REPO_ROOT / ".agent/modules" / file_name).read_bytes()
-    for file_name in ["architecture.md", "architecture-views.md", "architecture.html"]:
-        assert (REPO_ROOT / "docs/architecture" / file_name).read_bytes() == (REPO_ROOT / ".agent/architecture" / file_name).read_bytes()
+def test_agent_architecture_and_module_mirrors_are_absent() -> None:
+    assert not (REPO_ROOT / ".agent/architecture").exists()
+    assert not (REPO_ROOT / ".agent/modules").exists()
 
 
 def test_architecture_markdown_is_integration_first() -> None:
@@ -64,7 +62,7 @@ def test_architecture_html_routes_to_text_modules_and_status() -> None:
         assert phrase in html
 
 
-def test_renderer_and_mirrors_are_synchronized() -> None:
+def test_renderer_checks_formal_architecture_surface() -> None:
     assert _load_render_architecture().check_outputs() == []
 
 
@@ -78,7 +76,6 @@ def test_active_architecture_surfaces_do_not_reference_retired_split_docs() -> N
     ]
     active = [
         REPO_ROOT / "docs/modules/README.md",
-        REPO_ROOT / ".agent/modules/README.md",
         REPO_ROOT / "docs/architecture/README.md",
         REPO_ROOT / "docs/architecture/architecture.md",
         REPO_ROOT / "docs/architecture/architecture-views.md",

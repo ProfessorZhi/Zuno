@@ -1,6 +1,6 @@
 # Zuno 十一个逻辑模块
 
-`docs/modules/` 保存 Zuno 十一个逻辑模块的唯一正式 Target 架构。每个模块只有一份正式模块文档；`.agent/modules/` 保存同名字节级镜像。
+`docs/modules/` 保存 Zuno 十一个逻辑模块的唯一正式 Target 架构。每个模块只有一份正式模块文档；`.agent/` 不再保存模块镜像。
 
 ## 规范优先级
 
@@ -39,6 +39,24 @@ PHASE22 已完成 Engineering Closure 并归档。下一阶段只做正式设计
 
 这一版本路由不是两套并行事实：已接受 ADR 在冲突处优先；旧模块文档继续服务既有 Program；后续协调 PR 负责将新 Target 收敛回单一 Canonical 模块文档。
 
+## 下一阶段的模块深度要求
+
+下一阶段从面试官视角重新审查十一模块。每个模块不是只给“职责 + 类名 + 目录”，而必须把以下内容写成可追问、可验证的设计：
+
+```text
+模块问题与边界
+→ Owner、Canonical Fact、输入输出与跨模块 Contract
+→ 不变量、状态机、版本和并发规则
+→ 完整 Runtime Flow 与关键时序
+→ Failure、Retry、Timeout、Recovery、Reconciliation、Idempotency
+→ Security、Approval、Budget、Audit 与 Information Flow
+→ Trace、Metric、Eval、Release Gate 与证据来源
+→ Current / Target / Gap / Future 的严格分层
+→ 关键替代方案、取舍和面试追问清单
+```
+
+设计审查优先追问：谁拥有事实、谁可以拒绝动作、模型输出是否只是 Proposal、提交点在哪里、失败后如何恢复、重复执行如何证明安全、如何从证据区分“代码存在”和“运行已证明”。没有回答这些问题的文字，不得直接进入新的 Implementation Program。
+
 ## 十一个模块
 
 | 编号 | 模块 | 唯一正式文档 | 状态 |
@@ -61,7 +79,7 @@ PHASE22 已完成 Engineering Closure 并归档。下一阶段只做正式设计
 
 | 读者 / 任务 | 推荐路径 | 结束时应知道什么 |
 | --- | --- | --- |
-| 新 clone 的开发者 | 本 README → `docs/architecture/architecture.md` → `.agent/programs/current.md` | 十一模块 Target、跨模块总图、当前 Program 处于哪个 Phase |
+| 新 clone 的开发者 | 本 README → `docs/architecture/architecture.md` → `.agent/programs/current.md` | 十一模块 Target、跨模块总图、当前是否存在 active Program |
 | Runtime 实现者 | 对应模块文档 → `docs/governance/wave1-cross-module-contract-registry.md` → 当前 Phase | Owner、Contract、Failure、Recovery Owner 和允许修改范围 |
 | 前端 / 产品实现者 | `01-product-surface.md` → `06-agent-core-planning-control.md` → 当前 Phase 的 Product Surface 任务 | 前端只消费 Projection 和 AvailableAction，不拥有领域事实 |
 | RAG / GraphRAG 实现者 | `03-knowledge-agentic-graphrag.md` → `docs/decisions/0006-evidence-driven-agentic-graphrag.md` → `10-observability-eval.md` → 当前 Phase | v1 运行边界、v2 Evidence Target、Benchmark 与 blocked-not-measured 边界 |
@@ -104,7 +122,6 @@ ADR 0006 尚未改变 Wave 1 冻结 Contract。后续实现 Program 若需要新
 
 ```text
 docs/modules/04-model-gateway.md
-.agent/modules/04-model-gateway.md
 ```
 
 历史 Contract Freeze 与 Operations Conformance 附录已经吸收到唯一主文档，不再维护，不得重新创建。
@@ -113,7 +130,6 @@ docs/modules/04-model-gateway.md
 
 ```text
 docs/modules/06-agent-core-planning-control.md
-.agent/modules/06-agent-core-planning-control.md
 ```
 
 Target 架构与执行 Program 的边界明确：模块设计在本目录，Current → Target 的实施、迁移、切流和收口计划进入 `.agent/programs/`。
@@ -122,7 +138,6 @@ Target 架构与执行 Program 的边界明确：模块设计在本目录，Curr
 
 ```text
 docs/modules/11-infrastructure.md
-.agent/modules/11-infrastructure.md
 ```
 
 原数据服务与一致性生命周期附录已经吸收到唯一正式 Target 文档，不再维护，不得寻找或重新创建分拆规范。

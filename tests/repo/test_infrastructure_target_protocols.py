@@ -8,12 +8,9 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parents[2]
 VERIFIER_PATH = REPO_ROOT / "tools/scripts/verify_infrastructure_target_protocols.py"
 FORMAL = REPO_ROOT / "docs/modules/11-infrastructure.md"
-MIRROR = REPO_ROOT / ".agent/modules/11-infrastructure.md"
 RETIRED_APPENDICES = [
     REPO_ROOT / "docs/modules/11-infrastructure-data-services.md",
-    REPO_ROOT / ".agent/modules/11-infrastructure-data-services.md",
     REPO_ROOT / "docs/modules/11-infrastructure-consistency-lifecycle.md",
-    REPO_ROOT / ".agent/modules/11-infrastructure-consistency-lifecycle.md",
 ]
 
 
@@ -31,8 +28,8 @@ def test_infrastructure_target_verifier_passes() -> None:
     assert verifier.verify() == []
 
 
-def test_single_formal_document_and_mirror_are_byte_identical() -> None:
-    assert FORMAL.read_bytes() == MIRROR.read_bytes()
+def test_single_formal_document_has_no_agent_mirror() -> None:
+    assert not (REPO_ROOT / ".agent/modules").exists()
     for appendix in RETIRED_APPENDICES:
         assert not appendix.exists()
 

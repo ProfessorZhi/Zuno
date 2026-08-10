@@ -4,7 +4,6 @@ updated: 2026-07-14
 status: normative-target-module-architecture
 module_number: 10
 formal_path: `docs/modules/10-observability-eval.md`
-agent_mirror: `.agent/modules/10-observability-eval.md`
 
 > 本文是 Zuno 第 10 个逻辑模块——Observability & Eval（可观测性与评测）——唯一的正式 Target 架构主设计。
 >
@@ -35,8 +34,7 @@ Evidence Registry、Release Gate 和质量证明
 docs/modules/10-observability-eval.md
     唯一 Target 架构事实源。
 
-.agent/modules/10-observability-eval.md
-    字节级一致的 Agent 镜像。
+.agent/ 不保存模块镜像；本文是唯一正式事实源。
 
 .agent/programs/
     Current → Target 的实现、Migration、Backfill、Cutover 和收口计划。
@@ -2062,7 +2060,7 @@ Comparable Benchmark
 Release Gate Artifact
 Evidence Registry
 Dashboard / API Authorization
-文档与 Agent 镜像同步
+文档与 Agent 路由同步
 ```
 
 `quality proven` 还必须同时满足：

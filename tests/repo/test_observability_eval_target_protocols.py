@@ -7,10 +7,8 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parents[2]
 VERIFIER_PATH = REPO_ROOT / "tools/scripts/verify_observability_eval_target_protocols.py"
 FORMAL_PATH = REPO_ROOT / "docs/modules/10-observability-eval.md"
-MIRROR_PATH = REPO_ROOT / ".agent/modules/10-observability-eval.md"
 RETIRED_PATHS = [
     REPO_ROOT / "docs/modules/10-observability-eval-rag-agent-evaluation.md",
-    REPO_ROOT / ".agent/modules/10-observability-eval-rag-agent-evaluation.md",
     REPO_ROOT / "tools/scripts/align_observability_wave1.py",
 ]
 
@@ -31,8 +29,8 @@ def test_observability_eval_protocol_verifier_passes() -> None:
     assert _load_verifier().verify() == []
 
 
-def test_single_formal_document_and_agent_mirror_are_byte_identical() -> None:
-    assert FORMAL_PATH.read_bytes() == MIRROR_PATH.read_bytes()
+def test_single_formal_document_has_no_agent_mirror() -> None:
+    assert not (REPO_ROOT / ".agent/modules").exists()
     for path in RETIRED_PATHS:
         assert not path.exists()
 

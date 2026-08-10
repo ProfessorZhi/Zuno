@@ -4,7 +4,6 @@ updated: 2026-07-14
 status: normative-target-module-architecture
 module_number: 07
 formal_path: `docs/modules/07-capability-skill.md`
-agent_mirror: `.agent/modules/07-capability-skill.md`
 
 > 本文是 Zuno 第 07 个逻辑模块——Capability / Skill——唯一的正式 Target 架构主设计。
 >
@@ -32,8 +31,7 @@ Requirement、Control、Test 与 Evidence 映射
 docs/modules/07-capability-skill.md
     唯一正式 Target 事实源。
 
-.agent/modules/07-capability-skill.md
-    字节级一致的 Agent 镜像，不是第二份独立架构。
+.agent/ 不保存模块镜像；本文是唯一正式事实源。
 
 docs/status/production-readiness.md
     Current、Gap、Measurement、Blocked 和完成证据状态。
@@ -2242,7 +2240,7 @@ Connector Pack 文件直接作为生产运行时真相
 | `RC-CAP-003` | FOUNDATION | Skill 必须通过 CapabilityRequirement 组合能力，不得把具体执行命令冒充方法步骤 | `SkillRequirementBoundaryGuard` | `CAP_SKILL_DIRECT_EXECUTION_FORBIDDEN` | `CAP-003-UT`, `CAP-003-IT` | `EV-CAP-003` |
 | `RC-CAP-004` | FOUNDATION | API、CLI、SDK、MCP、Browser、RPC 是 Provider 或执行协议，不是业务 CapabilityKind | `ProviderProtocolTaxonomyGuard` | `CAP_PROVIDER_PROTOCOL_MISCLASSIFIED` | `CAP-004-UT`, `CAP-004-IT` | `EV-CAP-004` |
 | `RC-CAP-005` | FOUNDATION | Security Gate、Approval、Budget、Trace、Checkpoint、Lease 和 IdempotencyClaim 不是业务 Capability | `GovernanceCapabilityExclusionGuard` | `CAP_GOVERNANCE_OBJECT_MISCLASSIFIED` | `CAP-005-UT`, `CAP-005-IT` | `EV-CAP-005` |
-| `RC-CAP-006` | FOUNDATION | Capability / Skill 的 Target 主设计只能由单一正式文档承载，Agent 镜像必须字节级一致 | `CapabilityDocMirrorGuard` | `CAP_DOC_MIRROR_MISMATCH` | `CAP-006-UT`, `CAP-006-IT` | `EV-CAP-006` |
+| `RC-CAP-006` | FOUNDATION | Capability / Skill 的 Target 主设计只能由单一正式文档承载，Agent 不得维护副本 | `CapabilityDocSourceGuard` | `CAP_DOC_SOURCE_DUPLICATE` | `CAP-006-UT`, `CAP-006-IT` | `EV-CAP-006` |
 | `RC-CAP-007` | FOUNDATION | Current、Gap 和 Measurement 只能由状态事实源维护，Target 文档不得冒充实现完成 | `CurrentTargetSeparationGuard` | `CAP_TARGET_CURRENT_CONFUSION` | `CAP-007-UT`, `CAP-007-IT` | `EV-CAP-007` |
 | `RC-CAP-008` | FOUNDATION | 模型只能产生 Discovery、Mapping、Selection 或 Load Proposal，不得激活 Version、Binding 或执行 Tool | `ModelProposalOnlyGuard` | `CAP_MODEL_COMMIT_FORBIDDEN` | `CAP-008-UT`, `CAP-008-IT` | `EV-CAP-008` |
 | `RC-CAP-009` | FOUNDATION | 跨模块消息必须使用 CrossModuleEnvelopeV1 并携带版本、Hash、Tenant、Trace 和适用的 Security Epoch | `CapabilityEnvelopeValidator` | `CAP_ENVELOPE_INVALID` | `CAP-009-UT`, `CAP-009-IT`, `CAP-009-FT` | `EV-CAP-009` |
@@ -2401,7 +2399,7 @@ Trace 与 Metric
 Skill discovery / selection Eval
 Revocation 与 recovery 运行证据
 Security attack / supply-chain test
-文档与 Agent 镜像同步
+文档与 Agent 路由同步
 ```
 
 推荐状态：
@@ -2431,7 +2429,7 @@ production ready
 | `ARCH-CAP-003` | FOUNDATION | Skill 必须通过 CapabilityRequirement 组合能力，不得把具体执行命令冒充方法步骤 |
 | `ARCH-CAP-004` | FOUNDATION | API、CLI、SDK、MCP、Browser、RPC 是 Provider 或执行协议，不是业务 CapabilityKind |
 | `ARCH-CAP-005` | FOUNDATION | Security Gate、Approval、Budget、Trace、Checkpoint、Lease 和 IdempotencyClaim 不是业务 Capability |
-| `ARCH-CAP-006` | FOUNDATION | Capability / Skill 的 Target 主设计只能由单一正式文档承载，Agent 镜像必须字节级一致 |
+| `ARCH-CAP-006` | FOUNDATION | Capability / Skill 的 Target 主设计只能由单一正式文档承载，Agent 不得维护副本 |
 | `ARCH-CAP-007` | FOUNDATION | Current、Gap 和 Measurement 只能由状态事实源维护，Target 文档不得冒充实现完成 |
 | `ARCH-CAP-008` | FOUNDATION | 模型只能产生 Discovery、Mapping、Selection 或 Load Proposal，不得激活 Version、Binding 或执行 Tool |
 | `ARCH-CAP-009` | FOUNDATION | 跨模块消息必须使用 CrossModuleEnvelopeV1 并携带版本、Hash、Tenant、Trace 和适用的 Security Epoch |

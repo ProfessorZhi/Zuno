@@ -7,18 +7,14 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 FORMAL = ROOT / "docs/modules/04-model-gateway.md"
-MIRROR = ROOT / ".agent/modules/04-model-gateway.md"
 DOCS_INDEX = ROOT / "docs/modules/README.md"
-AGENT_INDEX = ROOT / ".agent/modules/README.md"
 SYSTEM = ROOT / ".agent/system.yaml"
 WORKFLOW = ROOT / ".github/workflows/model-gateway-target-docs.yml"
 ADR = ROOT / "docs/decisions/0003-wave1-cross-module-contract-freeze.md"
 
 REMOVED = [
     "docs/modules/04-model-gateway-contract-freeze.md",
-    ".agent/modules/04-model-gateway-contract-freeze.md",
     "docs/modules/04-model-gateway-operations-conformance.md",
-    ".agent/modules/04-model-gateway-operations-conformance.md",
     "tools/scripts/verify_model_gateway_contract_freeze.py",
     "tools/scripts/verify_model_gateway_operations_conformance.py",
     "tests/repo/test_model_gateway_contract_freeze.py",
@@ -173,7 +169,7 @@ def read(path: Path) -> str:
 
 def verify() -> list[str]:
     errors: list[str] = []
-    for path in [FORMAL, MIRROR, DOCS_INDEX, AGENT_INDEX, SYSTEM, WORKFLOW, ADR]:
+    for path in [FORMAL, DOCS_INDEX, SYSTEM, WORKFLOW, ADR]:
         if not path.exists():
             errors.append(f"missing required path: {path.relative_to(ROOT)}")
     for relative in REMOVED:
@@ -183,8 +179,6 @@ def verify() -> list[str]:
         return errors
 
     doc = read(FORMAL)
-    if FORMAL.read_bytes() != MIRROR.read_bytes():
-        errors.append("Gateway formal document and Agent mirror must be byte-identical")
 
     for term in [
         "status: normative-target-module-architecture",
@@ -226,7 +220,7 @@ def verify() -> list[str]:
         if doc.count(evidence_id) != 1:
             errors.append(f"Gateway requirement must map evidence exactly once: {evidence_id}")
 
-    for path in [DOCS_INDEX, AGENT_INDEX]:
+    for path in [DOCS_INDEX]:
         content = read(path)
         for term in ["04-model-gateway.md", "单一完整 Target", "verify_model_gateway_target_protocols.py"]:
             if term not in content:
@@ -238,7 +232,6 @@ def verify() -> list[str]:
     system = read(SYSTEM)
     for term in [
         'formal: "docs/modules/04-model-gateway.md"',
-        'mirror: ".agent/modules/04-model-gateway.md"',
         'verifier: "python tools/scripts/verify_model_gateway_target_protocols.py"',
         'test: "pytest -q tests/repo/test_model_gateway_target_protocols.py -p no:cacheprovider"',
     ]:

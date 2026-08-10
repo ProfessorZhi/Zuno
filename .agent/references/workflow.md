@@ -320,7 +320,7 @@ PHASE03 后，长期自动化目标位置是 `tools/agent` 与 `tools/verify`，
 
 `docs/architecture/` 是 human-facing formal architecture source；`docs/architecture/architecture.html` 是展示聚合页，不是唯一事实来源；`.agent/references/` 是 Agent-facing operating memory。不要只改其中一个表面。
 
-`docs/architecture/architecture.md` 是文字总架构文档，`.agent/architecture/architecture.md` 是 Agent 维护镜像。架构 HTML 图为主，但必须继续由 `docs/architecture/architecture.md` 生成，不在 `.agent/architecture/` 复制第二个 HTML。
+`docs/architecture/architecture.md` 是唯一文字总架构文档；`.agent/` 只维护 Agent 路由和执行工作流。架构 HTML 继续读取 `docs/architecture/architecture-views.md`，不生成第二套架构正文。
 
 ## Agent Workflow Self-Maintenance
 

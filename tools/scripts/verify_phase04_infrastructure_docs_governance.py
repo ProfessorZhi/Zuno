@@ -6,9 +6,7 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 DOCS_ARCH = REPO_ROOT / "docs" / "architecture"
-AGENT_ARCH = REPO_ROOT / ".agent" / "architecture"
 DOCS_INFRA = REPO_ROOT / "docs" / "modules" / "11-infrastructure.md"
-AGENT_INFRA = REPO_ROOT / ".agent" / "modules" / "11-infrastructure.md"
 DOCS_ENTRYPOINTS_VERIFIER = (
     REPO_ROOT / "tools" / "scripts" / "verify_docs_entrypoints.py"
 )
@@ -43,7 +41,7 @@ def _read(path: Path) -> str:
 
 def _architecture_file_set_errors() -> list[str]:
     errors: list[str] = []
-    for root in [DOCS_ARCH, AGENT_ARCH]:
+    for root in [DOCS_ARCH]:
         files = {path.name for path in root.iterdir() if path.is_file()}
         dirs = sorted(path.name for path in root.iterdir() if path.is_dir())
         if files != CANONICAL_ARCHITECTURE_FILES:
@@ -81,11 +79,9 @@ def verify_phase04_infrastructure_docs_governance() -> list[str]:
 
     errors.extend(_architecture_file_set_errors())
 
-    if not DOCS_INFRA.exists() or not AGENT_INFRA.exists():
-        errors.append("Infrastructure formal document or Agent mirror is missing")
+    if not DOCS_INFRA.exists():
+        errors.append("Infrastructure formal document is missing")
         return errors
-    if DOCS_INFRA.read_bytes() != AGENT_INFRA.read_bytes():
-        errors.append("Infrastructure formal document and Agent mirror differ")
 
     infra = _read(DOCS_INFRA)
     for phrase in [
@@ -102,20 +98,13 @@ def verify_phase04_infrastructure_docs_governance() -> list[str]:
         if phrase not in infra:
             errors.append(f"Infrastructure target document missing phrase: {phrase}")
 
-    for formal, mirror in [
-        ("architecture.md", "architecture.md"),
-        ("architecture-views.md", "architecture-views.md"),
-        ("architecture.html", "architecture.html"),
-    ]:
-        if (DOCS_ARCH / formal).read_bytes() != (AGENT_ARCH / mirror).read_bytes():
-            errors.append(f"architecture mirror differs: {mirror}")
-
     status = _read(REPO_ROOT / "docs" / "status" / "production-readiness.md")
     for phrase in [
         "## Current",
         "## Future Optional",
-        "target_not_current",
-        "blocked、prepared、runtime observed 和 measured 必须严格区分",
+        "measurement: blocked_external",
+        "quality: not_yet_proven",
+        "production_readiness: not_established",
     ]:
         if phrase not in status:
             errors.append(f"production readiness boundary missing phrase: {phrase}")

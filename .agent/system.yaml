@@ -8,8 +8,6 @@ system_identity:
   local_skills_root: ".agent/references"
   template_root: ".agent/templates"
   active_program_root: ".agent/programs"
-  architecture_mirror_root: ".agent/architecture"
-  module_mirror_root: ".agent/modules"
   formal_truth_root: "docs"
   formal_architecture_root: "docs/architecture"
   formal_module_root: "docs/modules"
@@ -41,11 +39,6 @@ architecture_directory_contract:
     - "docs/architecture/architecture.md"
     - "docs/architecture/architecture-views.md"
     - "docs/architecture/architecture.html"
-  mirror_files:
-    - ".agent/architecture/README.md"
-    - ".agent/architecture/architecture.md"
-    - ".agent/architecture/architecture-views.md"
-    - ".agent/architecture/architecture.html"
   formal_design_fact_count: "11 module documents + architecture.md + architecture.html"
   visual_source_role: "architecture-views.md is the Mermaid source for architecture.html, not a second textual architecture"
   forbidden_content:
@@ -57,45 +50,38 @@ architecture_directory_contract:
 
 module_document_contract:
   formal_index: "docs/modules/README.md"
-  agent_index: ".agent/modules/README.md"
   status_truth: "docs/status/production-readiness.md"
-  mirror_policy: "all eleven module formal documents and mirrors must be byte-identical"
+  mirror_policy: "no architecture or module mirrors are maintained under .agent"
   owner_precedence: "the owning module document is canonical for domain objects, state machines, failures, persistence, and tests"
 
   product_surface:
     formal: "docs/modules/01-product-surface.md"
-    mirror: ".agent/modules/01-product-surface.md"
     verifier: "python tools/scripts/verify_product_surface_target_protocols.py"
     test: "pytest -q tests/repo/test_product_surface_target_protocols.py -p no:cacheprovider"
 
   input_document_ingestion:
     formal: "docs/modules/02-input-document-ingestion.md"
-    mirror: ".agent/modules/02-input-document-ingestion.md"
     verifier: "python tools/scripts/verify_architecture_document_set.py"
     test: "pytest -q tests/repo/test_architecture_document_set.py -p no:cacheprovider"
 
   knowledge_agentic_graphrag:
     formal: "docs/modules/03-knowledge-agentic-graphrag.md"
-    mirror: ".agent/modules/03-knowledge-agentic-graphrag.md"
     verifier: "python tools/scripts/verify_architecture_document_set.py"
     test: "pytest -q tests/repo/test_architecture_document_set.py -p no:cacheprovider"
 
   model_gateway:
     formal: "docs/modules/04-model-gateway.md"
-    mirror: ".agent/modules/04-model-gateway.md"
     target_only: true
     verifier: "python tools/scripts/verify_model_gateway_target_protocols.py"
     test: "pytest -q tests/repo/test_model_gateway_target_protocols.py -p no:cacheprovider"
 
   memory_context:
     formal: "docs/modules/05-memory-context.md"
-    mirror: ".agent/modules/05-memory-context.md"
     verifier: "python tools/scripts/verify_memory_context_target_protocols.py"
     test: "pytest -q tests/repo/test_memory_context_target_protocols.py -p no:cacheprovider"
 
   agent_core:
     formal: "docs/modules/06-agent-core-planning-control.md"
-    mirror: ".agent/modules/06-agent-core-planning-control.md"
     target_only: true
     execution_plan_root: ".agent/programs"
     verifier: "python tools/scripts/verify_agent_core_target_protocols.py"
@@ -103,31 +89,26 @@ module_document_contract:
 
   capability_skill:
     formal: "docs/modules/07-capability-skill.md"
-    mirror: ".agent/modules/07-capability-skill.md"
     verifier: "python tools/scripts/verify_capability_skill_target_protocols.py"
     test: "pytest -q tests/repo/test_capability_skill_target_protocols.py -p no:cacheprovider"
 
   tool_runtime:
     formal: "docs/modules/08-tool-runtime.md"
-    mirror: ".agent/modules/08-tool-runtime.md"
     verifier: "python tools/scripts/verify_tool_runtime_target_protocols.py"
     test: "pytest -q tests/repo/test_tool_runtime_target_protocols.py -p no:cacheprovider"
 
   security:
     formal: "docs/modules/09-security.md"
-    mirror: ".agent/modules/09-security.md"
     verifier: "python tools/scripts/verify_security_target_protocols.py"
     test: "pytest -q tests/repo/test_security_target_protocols.py -p no:cacheprovider"
 
   observability_eval:
     formal: "docs/modules/10-observability-eval.md"
-    mirror: ".agent/modules/10-observability-eval.md"
     verifier: "python tools/scripts/verify_observability_eval_target_protocols.py"
     test: "pytest -q tests/repo/test_observability_eval_target_protocols.py -p no:cacheprovider"
 
   infrastructure:
     formal: "docs/modules/11-infrastructure.md"
-    mirror: ".agent/modules/11-infrastructure.md"
     verifier: "python tools/scripts/verify_infrastructure_target_protocols.py"
     test: "pytest -q tests/repo/test_infrastructure_target_protocols.py -p no:cacheprovider"
 
@@ -187,8 +168,6 @@ skill_routes:
       - "docs/status/production-readiness.md"
       - "docs/decisions/"
       - "docs/governance/"
-      - ".agent/architecture/"
-      - ".agent/modules/"
       - ".agent/references/docs-map.md"
       - ".agent/system.yaml"
     verify:

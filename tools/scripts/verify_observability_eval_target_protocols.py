@@ -7,10 +7,8 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 FORMAL = REPO_ROOT / "docs/modules/10-observability-eval.md"
-MIRROR = REPO_ROOT / ".agent/modules/10-observability-eval.md"
 RETIRED_PATHS = [
     REPO_ROOT / "docs/modules/10-observability-eval-rag-agent-evaluation.md",
-    REPO_ROOT / ".agent/modules/10-observability-eval-rag-agent-evaluation.md",
     REPO_ROOT / "tools/scripts/align_observability_wave1.py",
 ]
 
@@ -269,13 +267,7 @@ def verify() -> list[str]:
     errors: list[str] = []
     if not FORMAL.exists():
         return [f"missing formal document: {FORMAL.relative_to(REPO_ROOT)}"]
-    if not MIRROR.exists():
-        return [f"missing agent mirror: {MIRROR.relative_to(REPO_ROOT)}"]
-
     formal = _read(FORMAL)
-    mirror = _read(MIRROR)
-    if formal != mirror:
-        errors.append("formal document and agent mirror must be byte-identical")
 
     for retired in RETIRED_PATHS:
         if retired.exists():

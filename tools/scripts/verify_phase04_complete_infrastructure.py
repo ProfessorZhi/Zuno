@@ -1685,7 +1685,7 @@ def verify_phase04_complete_infrastructure() -> list[str]:
         for phrase in [
             "current_target_future_not_selected_layering: passed",
             "single_formal_infrastructure_target_document: passed",
-            "agent_infrastructure_mirror_byte_identical: passed",
+            "formal_architecture_source_only: passed",
             "architecture_canonical_file_set: passed",
             "本证据不证明任何 runtime adapter",
         ]:

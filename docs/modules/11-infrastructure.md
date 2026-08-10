@@ -4,7 +4,6 @@ updated: 2026-07-14
 status: normative-target-module-architecture
 module_number: 11
 formal_path: `docs/modules/11-infrastructure.md`
-agent_mirror: `.agent/modules/11-infrastructure.md`
 current_state_source: `docs/status/production-readiness.md`
 shared_contract_source: `docs/decisions/0003-wave1-cross-module-contract-freeze.md`
 shared_contract_registry: `docs/governance/wave1-cross-module-contract-registry.md`
@@ -35,8 +34,7 @@ Milvus、Neo4j、BM25 / Search、Redis、Trace/Audit、Secret/KMS
 docs/modules/11-infrastructure.md
     唯一 Infrastructure Target 架构事实源。
 
-.agent/modules/11-infrastructure.md
-    字节级一致的 Agent 镜像。
+.agent/ 不保存模块镜像；本文是唯一正式事实源。
 
 docs/decisions/0003-wave1-cross-module-contract-freeze.md
     Wave 1 共享 Contract、物理目录和副作用 Ownership 决议。
@@ -1880,7 +1878,7 @@ IndexWriteReceipt != IndexManifest Accepted
 | Requirement | Target | Control / Failure | Required Tests | Evidence |
 | --- | --- | --- | --- | --- |
 | `ARCH-INFRA-001` | Current/Target/Future/Not Selected 分层 | `RC-INFRA-001` | `INFRA-001-UT, INFRA-001-IT` | `EV-INFRA-001` |
-| `ARCH-INFRA-002` | 单一正式架构文档与镜像 | `RC-INFRA-002` | `INFRA-002-UT, INFRA-002-IT` | `EV-INFRA-002` |
+| `ARCH-INFRA-002` | 单一正式架构文档事实源 | `RC-INFRA-002` | `INFRA-002-UT, INFRA-002-IT` | `EV-INFRA-002` |
 | `ARCH-INFRA-003` | Capability Profile immutable/versioned | `RC-INFRA-003` | `INFRA-003-UT, INFRA-003-IT` | `EV-INFRA-003` |
 | `ARCH-INFRA-004` | Infrastructure 不拥有领域终局 | `RC-INFRA-004` | `INFRA-004-UT, INFRA-004-IT` | `EV-INFRA-004` |
 | `ARCH-INFRA-005` | Local/Server Product 共用 Typed Port | `RC-INFRA-005` | `INFRA-005-UT, INFRA-005-IT` | `EV-INFRA-005` |

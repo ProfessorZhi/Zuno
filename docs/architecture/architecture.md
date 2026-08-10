@@ -24,14 +24,13 @@ Zuno 正式架构设计事实共十三份：
 
 ```text
 docs/architecture/README.md
-    目录、优先级、镜像与维护规则。
+    目录、优先级、唯一事实源与维护规则。
 
 docs/architecture/architecture-views.md
     architecture.html 使用的 Mermaid 图源；不是第二份文字架构。
 
-.agent/architecture/*
-.agent/modules/*
-    正式文件的字节级镜像；不是独立事实源。
+.agent/*
+    仅保存项目级 Agent Skill、路由、验证器、模板和当前执行状态；不保存架构或模块镜像。
 ```
 
 规范优先级和更新方向固定为：
@@ -908,6 +907,6 @@ HTML 可打开，所以模块 Contract 已同步。
 
 ```text
 云端最新 main 已提供十一模块 Target、总架构、十类图和 22-phase 实施 Program。
-本地 clone / pull 后可以用 verifier 证明文档集同步、镜像同步和语义对齐。
+本地 clone / pull 后可以用 verifier 证明正式文档集、路由边界和语义对齐；`.agent/` 不再提供第二套架构正文。
 Current、quality proven 和 production ready 仍只由实现、测试、Trace、Eval 和证据提升。
 ```

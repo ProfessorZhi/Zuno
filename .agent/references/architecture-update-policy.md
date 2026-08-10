@@ -50,8 +50,7 @@ docs/architecture/production-readiness.md
 - `architecture.md` 解释职责、边界、近期精简实现、成熟扩展、contract、失败语义和完成标准。
 - `architecture-views.md` 维护图形关系，不重复长篇设计说明。
 - HTML 从 `architecture-views.md` 读取图源。
-- `.agent/architecture/architecture.md` 与正式文字文档完全一致。
-- `.agent/architecture/architecture.html` 与正式 HTML 完全一致。
+- `.agent/` 不保存架构镜像；所有架构含义只写回 `docs/` 正式文档。
 - Current 只有代码、测试、trace/eval 或 verifier 证明后才能更新。
 - Future Optional 不得成为近期 blocker。
 - GraphRAG 补充 BM25 与 Dense Retrieval，不替代它们。

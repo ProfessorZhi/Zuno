@@ -60,9 +60,7 @@ integration risk and merge readiness: 10
 - `.agent/programs/`：
 - `docs/history/programs/`：
 - `docs/architecture/architecture.md`：
-- `.agent/architecture/architecture.md`：
 - `docs/architecture/architecture.html`：
-- `.agent/architecture/architecture.html`：
 - verifier / tests：
 
 ## 剩余风险

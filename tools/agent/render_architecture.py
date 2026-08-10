@@ -8,12 +8,7 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 DESIGN_PATH = REPO_ROOT / "docs/architecture/architecture.md"
 VIEWS_PATH = REPO_ROOT / "docs/architecture/architecture-views.md"
 HTML_PATH = REPO_ROOT / "docs/architecture/architecture.html"
-AGENT_DESIGN_PATH = REPO_ROOT / ".agent/architecture/architecture.md"
-AGENT_VIEWS_PATH = REPO_ROOT / ".agent/architecture/architecture-views.md"
-AGENT_HTML_PATH = REPO_ROOT / ".agent/architecture/architecture.html"
-
 SOURCE_PATH = VIEWS_PATH
-AGENT_SOURCE_PATH = AGENT_VIEWS_PATH
 
 EXPECTED_VIEWS = [
     "Logical View (4+1)",
@@ -53,9 +48,7 @@ STALE_OUTPUTS = [
     REPO_ROOT / "docs/architecture/overview.html",
     REPO_ROOT / "docs/architecture.md",
     REPO_ROOT / "docs/architecture.html",
-    REPO_ROOT / ".agent/architecture/blueprint.html",
     REPO_ROOT / "docs/architecture/overall-architecture.md",
-    REPO_ROOT / ".agent/architecture/overall-architecture.md",
 ]
 
 
@@ -227,16 +220,19 @@ def write_outputs() -> None:
     errors = [*validate_design(design), *validate_source(views), *validate_html(html)]
     if errors:
         raise ValueError("\n".join(errors))
-    AGENT_DESIGN_PATH.parent.mkdir(parents=True, exist_ok=True)
-    AGENT_DESIGN_PATH.write_text(design, encoding="utf-8", newline="\n")
-    AGENT_VIEWS_PATH.write_text(views, encoding="utf-8", newline="\n")
-    AGENT_HTML_PATH.write_text(html, encoding="utf-8", newline="\n")
+    # Formal docs are the only architecture source.  The old .agent mirrors
+    # were removed so --write must never recreate a second fact surface.
 
 
 def check_outputs() -> list[str]:
     errors: list[str] = []
     errors.extend(_directory_errors(REPO_ROOT / "docs/architecture"))
-    errors.extend(_directory_errors(REPO_ROOT / ".agent/architecture"))
+    agent_arch = REPO_ROOT / ".agent/architecture"
+    agent_modules = REPO_ROOT / ".agent/modules"
+    if agent_arch.exists():
+        errors.append(".agent/architecture must not exist; docs/architecture is the only formal architecture surface")
+    if agent_modules.exists():
+        errors.append(".agent/modules must not exist; docs/modules is the only formal module surface")
 
     design = DESIGN_PATH.read_text(encoding="utf-8")
     views = VIEWS_PATH.read_text(encoding="utf-8")
@@ -244,16 +240,6 @@ def check_outputs() -> list[str]:
     errors.extend(validate_design(design))
     errors.extend(validate_source(views))
     errors.extend(validate_html(html))
-
-    for formal, mirror, label in [
-        (DESIGN_PATH, AGENT_DESIGN_PATH, "architecture.md"),
-        (VIEWS_PATH, AGENT_VIEWS_PATH, "architecture-views.md"),
-        (HTML_PATH, AGENT_HTML_PATH, "architecture.html"),
-    ]:
-        if not mirror.exists():
-            errors.append(f"missing Agent mirror: {mirror.relative_to(REPO_ROOT)}")
-        elif formal.read_bytes() != mirror.read_bytes():
-            errors.append(f"Agent mirror is not byte-identical: {label}")
 
     for path in STALE_OUTPUTS:
         if path.exists():
@@ -267,7 +253,7 @@ def build_html() -> str:
 
 def main() -> int:
     parser = argparse.ArgumentParser(
-        description="Validate Zuno integration architecture, visual source, HTML and mirrors."
+        description="Validate Zuno integration architecture, visual source and HTML."
     )
     parser.add_argument("--write", action="store_true")
     parser.add_argument("--check", action="store_true")

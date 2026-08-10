@@ -14,11 +14,16 @@ date: 2026-07-18
 
 本证据不证明任何 runtime adapter、Checkpointer、Backup/Restore/PITR、RecoverySet 或故障恢复已经完成。它只证明 Target→Current 的文档边界和镜像治理可验证。
 
+## 后续治理说明
+
+上面的镜像结论是 2026-07-18 该证据生成时的历史事实。PHASE22 收口后的正式治理已经移除 `.agent/architecture/` 与 `.agent/modules/`；当前唯一正式架构和模块事实源是 `docs/`，`.agent/` 只保留项目级 Skill、路由、验证器、模板和执行状态。历史 Verification Results 保留，不得据此重新创建镜像目录。
+
 ## Verification Results
 
 - current_target_future_not_selected_layering: passed
 - single_formal_infrastructure_target_document: passed
 - agent_infrastructure_mirror_byte_identical: passed
+- formal_architecture_source_only: passed
 - architecture_canonical_file_set: passed
 - architecture_mirror_byte_identical: passed
 - docs_entrypoint_gate: passed

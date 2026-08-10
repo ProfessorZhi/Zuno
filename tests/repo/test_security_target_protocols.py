@@ -7,7 +7,6 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parents[2]
 VERIFIER_PATH = REPO_ROOT / "tools/scripts/verify_security_target_protocols.py"
 FORMAL_PATH = REPO_ROOT / "docs/modules/09-security.md"
-MIRROR_PATH = REPO_ROOT / ".agent/modules/09-security.md"
 
 
 def _load_verifier():
@@ -27,8 +26,8 @@ def test_security_architecture_verifier_passes() -> None:
     assert verifier.verify() == []
 
 
-def test_formal_document_and_agent_mirror_are_byte_identical() -> None:
-    assert FORMAL_PATH.read_bytes() == MIRROR_PATH.read_bytes()
+def test_formal_document_has_no_agent_mirror() -> None:
+    assert not (REPO_ROOT / ".agent/modules").exists()
 
 
 def test_single_security_target_document_boundary_is_explicit() -> None:

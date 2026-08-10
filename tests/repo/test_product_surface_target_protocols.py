@@ -9,7 +9,6 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parents[2]
 VERIFIER = REPO_ROOT / "tools/scripts/verify_product_surface_target_protocols.py"
 FORMAL = REPO_ROOT / "docs/modules/01-product-surface.md"
-MIRROR = REPO_ROOT / ".agent/modules/01-product-surface.md"
 
 
 def _load_verifier():
@@ -35,17 +34,17 @@ def test_product_surface_target_verifier_passes() -> None:
 
 def test_only_one_product_surface_target_document_exists() -> None:
     assert FORMAL.exists()
-    assert MIRROR.exists()
+    assert not (REPO_ROOT / ".agent/modules").exists()
     assert sorted(p.name for p in FORMAL.parent.glob("01-product-surface*.md")) == [
         "01-product-surface.md"
     ]
-    assert sorted(p.name for p in MIRROR.parent.glob("01-product-surface*.md")) == [
+    assert sorted(p.name for p in FORMAL.parent.glob("01-product-surface*.md")) == [
         "01-product-surface.md"
     ]
 
 
-def test_product_surface_mirror_is_byte_identical() -> None:
-    assert FORMAL.read_bytes() == MIRROR.read_bytes()
+def test_product_surface_has_no_agent_mirror() -> None:
+    assert not (REPO_ROOT / ".agent/modules").exists()
 
 
 def test_document_has_eight_ordered_parts() -> None:
