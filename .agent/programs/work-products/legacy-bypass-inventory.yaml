@@ -310,8 +310,10 @@ inventory:
     category: "old_runtime"
     risk: "GeneralAgent builds LangChain tools from AgentToolsWithName and user-defined runtime"
     target_gateway: "Single Controller + Tool Runtime"
-    current_callers: ["src/backend/zuno/api/services/completion.py", "legacy general_agent rollback flag"]
-    temporary_allowlist: true
+    current_callers: ["historical PHASE01 baseline; retired by PHASE22 canonical runtime cutover"]
+    temporary_allowlist: false
+    current_status: "resolved_retired"
+    resolution: "PHASE22 retired the GeneralAgent family and removed the legacy completion rollback path."
     migration_task: "PHASE08 + PHASE15"
     removal_task: "P22-T03"
     deadline: "PHASE15"
@@ -323,8 +325,10 @@ inventory:
     category: "direct_tool_execute"
     risk: "Agent Core invokes sandbox execute directly outside Tool Runtime reconciliation"
     target_gateway: "Tool Runtime sandbox adapter with Security policy"
-    current_callers: ["legacy CodeAct agent path", "static .execute scan"]
-    temporary_allowlist: true
+    current_callers: ["historical PHASE01 baseline; retired with the legacy Agent Core family"]
+    temporary_allowlist: false
+    current_status: "resolved_retired"
+    resolution: "PHASE22 retired CodeActAgent and removed the direct sandbox execution path."
     migration_task: "PHASE08 + PHASE15"
     removal_task: "P22-T03"
     deadline: "PHASE15"
