@@ -807,6 +807,73 @@ Knowledge 内层纠正创建新的 append-only RetrievalRound，例如 Query Rew
 
 Knowledge 输出只允许 SUFFICIENT_EVIDENCE、PARTIAL_EVIDENCE、ASK_USER_PROPOSAL、EXTERNAL_SEARCH_PROPOSAL、REPLAN_REQUIRED、ABSTAIN_PROPOSAL、FAILED 或 CANCELLED。最终 Ask User、外部 Tool Step、Replan、Abstain 与 Finalize 由 Agent Core 决定。
 
+## 7.13 四大主题统一端到端 Case
+
+以下案例是四个面试深挖主题共同使用的集成 Contract。它是 Target 设计案例，不是 Current 运行证据：
+
+> 审查合同 A 的责任限制条款是否存在重大风险，结合公司 Legal Playbook 和适用法律形成报告，经过用户批准后发送给法务负责人。
+
+Agent Core 创建一个不可变 `PlanVersion`，但不把每个专业判断都塞进 Controller：
+
+```text
+S1 解析任务、主体、法域、输出格式和发送约束
+S2 读取受授权的合同、Legal Playbook 和适用法律范围
+S3 形成责任限制 Claim 与 EvidenceRequirement
+S4 通过 Knowledge Retrieval Control Loop 补齐文本、交叉引用和冲突证据
+S5 由 Agent Core 依据 AcceptancePolicy 判断风险并生成带 Citation 的报告
+S6 等待用户 Approval，并把当前 Markdown 要求作为本次任务指令
+S7 通过唯一 ToolInvocationGateway 发送邮件，确认 Effect 后结束 Run
+```
+
+四个主题在这个案例中的职责边界是：
+
+| 主题 | 唯一回答的问题 | 产物 Owner | 不拥有的事实 |
+| --- | --- | --- | --- |
+| Agent Core / Planning & Control | 现在为什么做、何时做、任务是否继续 | `GoalVersion`、`PlanVersion`、`StepRun`、`ControlDecision` | 证据内容、权限决定、外部效果 |
+| Agentic GraphRAG / Evidence | 如何获得并证明足够可信的证据 | `EvidenceRequirement`、`RetrievalRound`、`EvidenceLedger`、`SelectedEvidenceBundle` | 任务级 Replan、最终风险结论、Tool 执行 |
+| Memory & Context | 过去哪些上下文可安全复用 | `MemoryCandidate`、`MemoryVersion`、`ContextPackVersion` | 企业知识事实、当前用户指令、权限放大 |
+| Governed Tool Execution | 外部动作如何可靠地产生或确认效果 | `PreparedToolAction`、`ToolAttempt`、`EffectReceipt`、`EffectReconciliation` | Authorization、Approval、Plan 控制 |
+
+跨域安全与基础设施是支撑约束，而不是第五个 Controller：
+
+```text
+Security       → 是否允许读取数据、调用能力、产生动作和发布结果
+Observability  → 是否能用 Trace / Audit / Eval 证明系统发生了什么、是否有效
+Infrastructure → 提供事务、Outbox、Inbox、Lease、Checkpoint、Object Store 和 Index 原语
+```
+
+正常路径必须保持下面的单向控制流：
+
+```text
+Agent Core: RetrievalNeedDecision
+    ↓ Proposal
+Knowledge: EvidenceRequirement → RetrievalPlan → RetrievalRound
+    ↓ Source-backed EvidenceCandidate
+Knowledge: EvidenceLedger → QualityVerdict
+    ↓ Outcome / ControlProposal
+Agent Core: Acceptance / Repair / Replan / Finalize
+    ↓ ActionProposal
+Tool Runtime: PreparedToolAction → Security Gate → Approval
+    ↓
+Tool Runtime: Idempotency → Attempt → Adapter → Observation → Effect Receipt
+    ↓
+Agent Core: Effect Acceptance → Final Gate → Run Completed
+```
+
+这里的 `Proposal`、`Candidate` 和 `Verdict` 都不是权限或业务事实的直接写入。确定性 Runtime / Policy 负责校验版本、Scope、哈希、状态迁移、幂等和持久化；模型只提出检索策略、解释、计划草案或风险候选。任何跨模块调用都携带 `run_id`、`step_run_id`、`correlation_id`、`idempotency_key`、Snapshot/Version refs、Security Epoch、deadline 和 payload/schema hash。
+
+案例中的关键异常仍由原 Owner 处理：
+
+| 异常 | 先由谁判断 | 必须发生的状态变化 | Agent Core 的边界动作 |
+| --- | --- | --- | --- |
+| MCP Server 在审批后改变工具 Schema | Tool Runtime + Security | 新 `McpCapabilitySnapshot` 使未 dispatch 的旧 `PreparedToolAction` 与 `SecurityApprovalDecision` 失效 | 重新 Prepare、重新授权和重新审批 |
+| 邮件 dispatch 超时且效果未知 | Tool Runtime / Reconciliation | `EffectState=UNKNOWN`，保留原 Attempt 与业务幂等键 | 禁止盲目 Retry；等待 Reconciliation 或请求人工确认 |
+| 旧 Memory 偏好 PDF，但用户本次要求 Markdown | Agent Core（当前指令）+ Memory（作用域） | 本次 `ContextPackVersion` 排除冲突偏好；长期 Memory 不被原地修改 | 遵循当前明确指令，并可记录使用/负迁移证据 |
+| Graph 不可用但交叉引用是强制 EvidenceRequirement | Knowledge + Infrastructure | 当前 RetrievalRound 标为能力失败；不能伪造 Graph evidence | 等待、允许治理后的降级，或输出 `REPLAN_REQUIRED` / `ABSTAIN_PROPOSAL` |
+| Clause 12.3 依赖引入新事实范围 | Knowledge 先诊断 | 创建新的 Corrective Retrieval Round；若计划前提失效再产生 `KnowledgeControlProposal` | 仅 Agent Core 能创建 Replan Barrier 与新 `PlanVersion` |
+
+验收不是“模型给了一个像样答案”，而是同时满足：每个强制 Claim 有合格 Citation/SourceSpan；Knowledge Snapshot 和授权范围保持一致；报告符合 AcceptancePolicy；发送动作的 Approval、Idempotency、Attempt、Effect/Reconciliation 可追踪；最终输出没有越权内容。若任一条件不可证明，Run 必须进入显式 Partial、Ask User、Replan、Abstain、Failed 或 Human Required，而不能静默完成。
+
 ---
 
 # 8. Model、Capability 与 Memory 协作

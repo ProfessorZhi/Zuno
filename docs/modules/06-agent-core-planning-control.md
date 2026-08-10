@@ -175,6 +175,45 @@ Agent Core             Run、Goal、Plan、Step、Dispatch、Decision、Outcome
 
 Agent Core 是编排者，不冒充其他模块的事实 Owner。
 
+## 4.1 Deep Dive 04：统一端到端控制案例
+
+统一端到端案例：审查合同 A 的责任限制条款是否存在重大风险，结合公司 Legal Playbook 和适用法律形成报告，经过用户批准后发送给法务负责人。
+
+统一案例的 Plan DAG 可以是：
+
+```text
+S1 识别合同责任限制条款
+S2 查 Defined Term / Cross Reference
+S3 查公司 Legal Playbook
+S4 查适用法律
+S5 综合风险与冲突
+S6 生成报告
+S7 经审批发送邮件
+```
+
+五种控制机制不是五选一 Router，而是分层协作：
+
+```text
+Plan-and-Execute
+    定义 S1–S7、依赖、并行、Join 和 Acceptance。
+
+ReAct
+    在单个 Step 内执行 Action → Observation → Action，受 action / budget / deadline 上限控制。
+
+Reflection
+    在 Action、Step、Join 或 Final Acceptance 失败、冲突、高风险或重复失败时提出受限 Proposal。
+
+Replan
+    当目标、依赖、能力或外部前提失效时，经 Replan Barrier 创建新 PlanVersion。
+
+Reflexion
+    Run 结束后产生 MemoryCandidate / ReflexionCandidate，不直接写 Active Memory。
+```
+
+正常路径是 `PlanVersion → ReadySet → durable Dispatch Commit → Send → BranchResult → Join → Step Acceptance → Final Gate → Publication → RunOutcome`。S2 发现 Clause 12.3 新依赖时，如果只是补充 EvidenceRequirement，由 Knowledge 创建新的 RetrievalRound；如果改变了剩余任务结构、需要新增 Tool Step 或审批，则由 Knowledge 提出 `KnowledgeControlProposal`，只有 Agent Core 可以创建新 GoalVersion / PlanVersion。
+
+必须覆盖的竞态和异常包括：MCP Schema 在 Approval 等待期间变化、邮件 Dispatch 后 Effect UNKNOWN、Memory 偏好与当前用户指令冲突、Graph Index 不可用但 Cross-reference Requirement 为 mandatory，以及 Replan Barrier 期间旧 Plan 的晚到 BranchResult。所有异常都必须先进入确定性状态和 Owner 规则，再决定 Retry、Repair、Fallback、Wait、Replan、Partial、Abstain 或 Fail。
+
 ---
 
 # Part II：智能机制与运行流程

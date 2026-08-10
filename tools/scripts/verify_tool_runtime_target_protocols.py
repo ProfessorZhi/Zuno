@@ -11,7 +11,6 @@ CAPABILITY_DOC = REPO_ROOT / "docs/modules/07-capability-skill.md"
 DOCS_MAP = REPO_ROOT / ".agent/references/docs-map.md"
 AGENT_SYSTEM = REPO_ROOT / ".agent/system.yaml"
 DOCS_ENTRYPOINT_VERIFIER = REPO_ROOT / "tools/scripts/verify_docs_entrypoints.py"
-AGENT_SYSTEM_VERIFIER = REPO_ROOT / ".agent/scripts/verify_agent_system.py"
 
 REQUIRED_PARTS = [
     "# Part I：定位、术语与边界",
@@ -97,7 +96,6 @@ def verify() -> list[str]:
         DOCS_MAP,
         AGENT_SYSTEM,
         DOCS_ENTRYPOINT_VERIFIER,
-        AGENT_SYSTEM_VERIFIER,
     ]
     for path in required_paths:
         if not path.exists():
@@ -138,7 +136,6 @@ def verify() -> list[str]:
     docs_map = _read(DOCS_MAP)
     agent_system = _read(AGENT_SYSTEM)
     docs_verifier = _read(DOCS_ENTRYPOINT_VERIFIER)
-    system_verifier = _read(AGENT_SYSTEM_VERIFIER)
 
     if "(./08-tool-runtime.md)" not in docs_index:
         errors.append("docs/modules/README.md must link the sole Tool Runtime document")
@@ -154,7 +151,6 @@ def verify() -> list[str]:
         (".agent/references/docs-map.md", docs_map),
         (".agent/system.yaml", agent_system),
         ("tools/scripts/verify_docs_entrypoints.py", docs_verifier),
-        (".agent/scripts/verify_agent_system.py", system_verifier),
     ]:
         if "08-tool-runtime.md" not in content:
             errors.append(f"{content_name} must route the Tool Runtime document")

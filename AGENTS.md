@@ -209,6 +209,7 @@ Zuno 本地执行只有两类主模式：挂机模式和多线程模式。这里
 git diff --check
 python tools/agent/render_architecture.py --check
 python tools/scripts/verify_docs_entrypoints.py
+python tools/scripts/verify_deep_dive_architecture.py
 python tools/scripts/verify_markdown_internal_links.py
 python tools/scripts/verify_repo_structure.py
 python tools/scripts/verify_agent_core_target_protocols.py

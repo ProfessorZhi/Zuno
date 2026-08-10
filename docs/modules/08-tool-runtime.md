@@ -261,6 +261,68 @@ Plan / Control               → 06 Agent Core
 | 10 Observability & Eval | Telemetry、AuditEvent、Projection、Eval | 08 产生源事实和 Envelope，10 接受、投影和评估 |
 | 11 Infrastructure | Claim、Transaction、Queue、Lease、Fencing、Object、SecretLease | 08 使用 Primitive，不把基础设施 Receipt 当业务 Effect |
 
+## 7.1 Deep Dive 02：Governed Tool Execution 案例
+
+统一端到端案例：审查合同 A 的责任限制条款是否存在重大风险，结合公司 Legal Playbook 和适用法律形成报告，经过用户批准后发送给法务负责人。
+
+Tool Calling 的正式故事不是 `LLM → Function → Result`，而是：
+
+```text
+Model Tool Proposal
+→ ActionProposal
+→ Capability Resolution
+→ ToolInvocationGateway.prepare
+→ PreparedToolAction
+→ Security Prepare Gate
+→ optional Approval
+→ Security Execute Gate + latest EffectiveSecurityEpoch
+→ Audit requirement
+→ Idempotency Claim
+→ Secret Lease / Sandbox / Network policy
+→ ToolAttempt
+→ Adapter Dispatch
+→ ToolObservation / ToolExecutionReceipt
+→ EffectReceipt 或 EffectReconciliation
+→ Agent Core ActionExecutionBinding / Step Acceptance
+```
+
+以统一案例的“发送报告邮件”为例，用户权限只是 ceiling，不会自动成为 Agent 的完整权限。目标 Effective Tool Scope 为：
+
+```text
+Principal Ceiling
+∩ Tenant / Workspace Grant
+∩ AgentVersion Capability Scope
+∩ Task Downscope
+∩ Tool Installation / Activation
+∩ Target Resource Policy
+∩ Current Security Epoch
+```
+
+`PreparedToolAction` 必须在 Prepare 阶段固定 `ToolVersion`、Operation、canonical args、TargetResourceSet、side-effect class、reversibility、credential scope、network/sandbox policy、deadline 和 `prepared_action_hash`。Approval 绑定这些不可变事实；任意参数、收件人、附件、ToolVersion、Epoch 或 Schema hash 变化都使旧 Action / Approval 失效，不得复用。
+
+MCP 需要区分 Protocol Version、Server Implementation Version、`McpCapabilitySnapshot` 和 Zuno `ToolVersion`。`tools/list` 或 `list_changed` 形成新 Capability Snapshot：尚未 Dispatch 的旧 PreparedAction 变为 `OBSOLETE`，挂起 Approval 失效，必须重新 Prepare / Authorize / Approve；已 Dispatch 但 Provider 状态未知则进入 `EffectReconciliation`，禁止 blind retry。
+
+关键故障不统一压成 `TOOL_ERROR`：
+
+```text
+PREPARE_FAILURE
+AUTHORIZATION_DENIED
+APPROVAL_TIMEOUT
+STALE_SECURITY_EPOCH
+IDEMPOTENCY_CONFLICT
+SECRET_LEASE_FAILURE
+SANDBOX_START_FAILURE
+DISPATCH_NOT_STARTED
+DISPATCH_TIMEOUT
+PROVIDER_REJECTED
+INVALID_OUTPUT
+EFFECT_CONFIRMED_FAILED
+EFFECT_UNKNOWN
+RECONCILIATION_FAILED
+```
+
+安全批准、审计提交、Idempotency Claim、Queue ACK、ToolExecutionReceipt 都不能单独冒充外部 Effect 成功；最终必须由 `EffectReceipt / EffectReconciliation` 和 Agent Core Step Acceptance 共同决定下一步。
+
 固定不等价关系：
 
 ```text

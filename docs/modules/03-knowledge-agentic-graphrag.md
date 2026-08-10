@@ -219,6 +219,53 @@ Observability & Eval owns:
     Trace/Eval projection and quality claim
 ```
 
+## 5.1 Deep Dive 01：统一端到端案例
+
+统一案例：
+
+> 审查合同 A 的责任限制条款是否存在重大风险，结合公司 Legal Playbook 和适用法律形成报告，经过用户批准后发送给法务负责人。
+
+Knowledge 只拥有“如何获取和验证证据”，不拥有业务任务控制权：
+
+```text
+Agent Core 提供 KnowledgeQueryRequest
+→ Claim：责任限制是否造成重大风险
+→ EvidenceRequirement：目标条款、定义/交叉引用、carve-out、Legal Playbook、适用法律
+→ RetrievalStrategyProposal
+→ Admission：Scope / Snapshot / ACL / Budget / Assurance
+→ RetrievalPlan / SearchAction
+→ RetrievalRound
+→ EvidenceCandidate / EvidenceLedger
+→ EvidenceEvaluation
+→ Corrective Retrieval 或 KnowledgeControlProposal
+→ SelectedEvidenceBundle / KnowledgeRetrievalOutcome
+```
+
+正常路径示例：
+
+```text
+ER1 目标责任限制条款       → HYBRID
+ER2 Defined Term / 引用定义 → GRAPH_LOCAL
+ER3 carve-out / exception   → HYBRID + GRAPH_LOCAL
+ER4 公司 Legal Playbook     → HYBRID
+ER5 适用法律                → HYBRID + temporal / jurisdiction filter
+```
+
+必须保留的结构事实：`Clause 8.2 → REFERS_TO → DefinedTerm(间接损失) → DEFINED_BY → Clause 1.4`。Clause 1.4 即使文本相似度低，也因有界 GraphPath 和 Evidence Backlink 进入候选池；GraphPath 作为 provenance、structural relevance、debug trace 和 Eval feature，严格引用仍必须回到 `SourceSpan`。
+
+异常路径必须先由 Knowledge 诊断，再决定局部纠正还是向 Agent Core 提案：
+
+| 观察 | Knowledge 处理 | Agent Core 处理 |
+| --- | --- | --- |
+| `CITATION_SPAN_MISSING` | focused SourceSpan backfill | Partial / Abstain |
+| `DEFINED_TERM_MISSING` | `GRAPH_LOCAL + DEFINED_BY` | 只有任务结构变化才 Replan |
+| `BROAD_EXPLORATORY_GAP` | 受预算约束的 DRIFT | 仍由 Knowledge 内部闭环 |
+| `JURISDICTION_UNKNOWN` | 不猜测、不扩大 Scope | Ask User / Replan Proposal |
+| `SECURITY_FILTERED` | 保留受限缺口 | 不得扩大权限 |
+| `INDEX_UNAVAILABLE` | 按 Assurance Policy 选择降级 | Graph 为 mandatory 时 Wait / Partial / Abstain |
+
+这条案例的完成条件不是“某个 Retriever 返回了结果”，而是每个 Mandatory Requirement 都有可授权、版本一致、可引用的 Evidence，或 Ledger 明确记录未满足原因和停止决定。
+
 ---
 
 # Part II：总体架构与完整运行流程
@@ -1590,6 +1637,25 @@ RETRIEVAL_BUDGET_EXHAUSTED
 KNOWLEDGE_OUTCOME_COMMIT_FAILED
 KNOWLEDGE_CANCELLED
 ```
+
+### 44.1 失败诊断到路由的确定性映射
+
+失败码不是给模型自由发挥的标签，而是把“缺什么”和“下一步为什么这样做”固定到可审计的路线。一次失败可以同时保留原始 `RetrieverAttempt` 与诊断结果，但不能覆盖上一轮证据：
+
+| 诊断 | 典型表现 | 首选 Corrective Route | 不能做的事 |
+| --- | --- | --- | --- |
+| `LEXICAL_MISS` | 关键术语没有字面命中 | `VECTOR` 或 `QUERY_REWRITE` | 直接判定知识不存在 |
+| `SEMANTIC_MISS` | 相关语义存在但当前召回排序不足 | `BM25`、`MULTI_QUERY` 或受限 RRF 复核 | 用相似度分数冒充证据充分 |
+| `DEFINED_TERM_MISSING` | 命中文本含定义引用但定义实体未展开 | `LOCAL`，沿 `DEFINED_BY` / 定义关系扩展 | 把未展开的术语当作已证明事实 |
+| `CROSS_REFERENCE_MISSING` | `Clause 8.2` 指向的 `Clause 1.4` 或 `DefinedTerm` 未回链 | `LOCAL`，沿 `REFERS_TO` / `SUBJECT_TO` 扩展 | 无边界地遍历整个图 |
+| `GLOBAL_COVERAGE_GAP` | 需要跨文档、跨社区的主题概览 | `GLOBAL` 社区摘要，再回到 SourceSpan drill-down | 用社区摘要直接作为 strict citation |
+| `BROAD_EXPLORATORY_GAP` | 问题范围尚未收敛，不能只靠单点查询 | 有界 `DRIFT` primer/follow-up | 不设 hop、token、deadline 和预算上限 |
+| `CITATION_SPAN_MISSING` | 候选有主题相关性但没有可引用原文跨度 | focused `SourceSpan` backfill | 生成或猜测引用位置 |
+| `JURISDICTION_UNKNOWN` | 法域或时间有效性不足 | 向用户询问或缩小 `QuerySpec` | 用默认法域替代用户事实 |
+| `SECURITY_FILTERED` | 证据被授权范围过滤 | 保持范围，输出 partial/ask/abstain | 通过扩大 Scope 绕过过滤 |
+| `INDEX_UNAVAILABLE` | 需要的索引能力不可用 | 按 Assurance Policy 降级或等待 | 把未执行的 Retriever 当作成功 |
+
+`Corrective Retrieval` 只修复当前 Knowledge 问题。若修复会改变任务目标、计划依赖、能力需求或强制前提，Knowledge 必须输出 `KnowledgeControlProposal`，由 Agent Core 决定是否 Replan；Knowledge 不能自行修改 `PlanVersion`。
 
 ## 45. Failure Decision Matrix
 

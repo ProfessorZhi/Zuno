@@ -234,6 +234,52 @@ Run、Plan、Step、Action 或 RunOutcome
 | Checkpoint / Queue / Lease / CAS / Object Store | Infrastructure | 作为持久化与执行 Primitive |
 | MemoryCandidate / MemoryVersion / ContextPackVersion | Memory & Context | Canonical Owner |
 
+## 5.1 Deep Dive 03：Memory 与 Context 统一案例
+
+统一端到端案例：审查合同 A 的责任限制条款是否存在重大风险，结合公司 Legal Playbook 和适用法律形成报告，经过用户批准后发送给法务负责人。
+
+统一案例中，Memory 不复制企业知识，也不把一次模型总结直接写成长期事实：
+
+```text
+Current Task / Contract Evidence / Tool Observation / Run Outcome
+→ Working Memory
+→ SessionSummaryVersion（满足边界和增长触发）
+→ MemoryExtractionProposal
+→ MemoryCandidate
+→ Scope / Security / Consent / Conflict / Utility Governance
+→ MemoryVersion
+→ Projection Verification / Activation
+→ MemorySnapshot + ContextPackVersion
+```
+
+生命周期和内容类型必须正交：Working / Session / Long-term 表示“活多久”；Episodic / Semantic / Procedural 表示“长期记什么”。统一案例中可形成的候选包括：本次合同审查发生过什么（Episodic）、用户明确的输出偏好（Semantic/Preference）和经多次证据支持的检索策略提示（Procedural）；合同正文和 Legal Playbook 仍归 Knowledge，不复制成 Memory authority。
+
+Memory 进入 Context 前必须完成：
+
+```text
+MemorySnapshot pin
+→ tenant / workspace / user / agent scope
+→ state / validity time / security epoch
+→ source provenance / authority
+→ conflict and freshness check
+→ ContextCandidate selection
+→ protected set
+→ compression / token packing
+→ immutable ContextPackVersion
+```
+
+当前用户明确要求 Markdown 时，覆盖旧的 PDF 偏好；但用户对企业赔偿规则的陈述不能覆盖当前有权威、版本一致的 Knowledge Evidence。冲突必须按 `ConflictType → AuthorityRule → TemporalRule → ScopeRule → Resolution / Quarantine` 处理，禁止背诵一个固定的 `User > Memory > Knowledge` 顺序。
+
+Memory 污染或失效的处理是版本化的：
+
+```text
+ACTIVE
+→ QUARANTINED / STALE / DORMANT / REVOKED
+→ revalidate / supersede / delete according to policy
+```
+
+`MemoryVersion` 和 `ContextPackVersion` 都不可原地修改。一次 Run 默认最多形成 Episodic Candidate；Procedural Memory 需要多个 Episode 或足够强的人工 / Eval 证据，并且永远只是 Strategy Hint，不能覆盖 Security、Skill、Tool Permission、Plan 或 Approval。
+
 # 6. 核心架构不变量
 
 1. 所有长期 Memory 必须经过 Candidate 和 Governance；不存在模型直写 Active Memory 的正式路径。

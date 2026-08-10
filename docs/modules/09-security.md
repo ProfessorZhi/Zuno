@@ -714,6 +714,40 @@ Session 曾经批准一次
 Agent / Session 绑定
 ```
 
+## 12.1 Deep Dive 02：Effective Tool Scope 与 Approval 统一案例
+
+统一端到端案例：审查合同 A 的责任限制条款是否存在重大风险，结合公司 Legal Playbook 和适用法律形成报告，经过用户批准后发送给法务负责人。
+
+以“审查合同 A 并在用户批准后发送报告”为例，用户的外部系统权限只是上限，不是 Agent 的自动继承结果。Target 的有效工具范围明确计算为：
+
+```text
+EffectiveToolScope
+= Principal Ceiling
+∩ Tenant / Workspace Grant
+∩ AgentVersion Capability Scope
+∩ Task Downscope
+∩ Tool Installation / Activation
+∩ Resource Policy
+∩ Current Security Epoch
+```
+
+例如用户可读写 Repo A、Repo B，但当前 AgentVersion 只允许 Repo A read，当前 Task 只需要 Repo A `/src`，则 Agent 只能读取 Repo A `/src`；用户拥有的 Repo B 写权限不能放大 Agent Scope，Agent 的长期邮件能力也不能放大本次 Task 的收件人或副作用范围。
+
+当 Agent Core 提出 `send_email` 时，Security 不直接执行 Tool，而是产生可解释、可审计的 `SecurityApprovalDecision`。该决定必须绑定：
+
+```text
+principal / tenant / workspace / run / step
+PreparedToolAction canonical hash
+canonical arguments / TargetResourceSet / recipient constraints
+risk profile / effect profile
+PolicyVersion / EffectiveSecurityEpoch
+expires_at / single-use-or-replay rule
+```
+
+在 dispatch 前，若 MCP Server 通过 `tools/list_changed` 导致新的 `McpCapabilitySnapshot` 或 Zuno `ToolVersion` 改变了 input schema、annotations、目标资源语义或 effect profile，则旧 `PreparedToolAction` 与 Approval 都必须标记 `OBSOLETE` / `INVALID`，重新 Prepare、重新评估 Scope、重新 Approval。不能把“同名 Tool”视为同一个安全对象。
+
+Security 负责“是否允许”，08 Tool Runtime 负责“如何可靠执行”，11 Infrastructure 负责事务、Lease、Inbox/Outbox 和耐久化原语。若外部调用超时，Security 不把 UNKNOWN 转成失败或成功；Tool Runtime 必须进入 `EffectReconciliation`，直到效果被确认、明确未执行或升级人工处理。
+
 # 13. Policy 架构：PAP、PDP、PEP、PIP
 
 ```text

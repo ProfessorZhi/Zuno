@@ -5,6 +5,7 @@
 ```powershell
 git diff --check
 python tools/scripts/verify_docs_entrypoints.py
+python tools/scripts/verify_deep_dive_architecture.py
 python tools/scripts/verify_markdown_internal_links.py
 python tools/scripts/verify_repo_structure.py
 python .agent/scripts/verify_agent_system.py
