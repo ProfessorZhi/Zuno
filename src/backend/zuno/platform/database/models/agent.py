@@ -26,7 +26,7 @@ class AgentTable(SQLModelSerializable, table=True):
     tool_ids: List[str] = Field(default=[], sa_column=Column(JSON), description="Bound tool IDs")
     agent_skill_ids: List[str] = Field(default=[], sa_column=Column(JSON), description="Bound agent skill IDs")
     knowledge_ids: List[str] = Field(default=[], sa_column=Column(JSON), description="Bound knowledge IDs")
-    domain_pack_id: Optional[str] = Field(default=None, description="Default Domain Pack ID")
+    graphrag_project_id: Optional[str] = Field(default=None, description="Default GraphRAG project ID")
 
     update_time: Optional[datetime] = Field(
         sa_column=Column(

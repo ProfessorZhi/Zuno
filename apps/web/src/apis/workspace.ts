@@ -410,7 +410,7 @@ export interface WorkspaceAttachment {
 
 export const getWorkspaceRetrievalObservabilityAPI = async (limit = 20) => {
   return request({
-    url: '/api/v1/workspace/retrieval-observability',
+    url: '/api/v1/product/observability/retrieval',
     method: 'get',
     params: { limit },
   })
@@ -418,7 +418,7 @@ export const getWorkspaceRetrievalObservabilityAPI = async (limit = 20) => {
 
 export const createWorkspaceFileAPI = async (data: WorkspaceFileCreateRequest) => {
   return request({
-    url: '/api/v1/workspace/file',
+    url: '/api/v1/product/files',
     method: 'post',
     data,
   })
@@ -426,7 +426,7 @@ export const createWorkspaceFileAPI = async (data: WorkspaceFileCreateRequest) =
 
 export const createWorkspaceIngestAPI = async (data: WorkspaceIngestRequest) => {
   return request({
-    url: '/api/v1/workspace/ingest',
+    url: '/api/v1/product/ingestions',
     method: 'post',
     data,
   })

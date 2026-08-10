@@ -186,11 +186,11 @@ class GraphRAGQueryService:
             "index_version": dict(snapshot.index_version),
             "index_health": dict(snapshot.index_health),
         }
-        mode = "enhanced_retrieval" if snapshot.knowledge_capability == "rag_graph" else "standard_retrieval"
+        mode = "rag_graph_deep" if snapshot.knowledge_capability == "rag_graph" else "rag"
         if resolved_product_mode == "normal":
-            mode = "standard_retrieval"
+            mode = "rag"
         elif resolved_product_mode == "enhanced":
-            mode = "enhanced_retrieval"
+            mode = "rag_graph_deep"
         raw_result = await self.orchestrator.run(
             mode,
             query,

@@ -69,10 +69,6 @@ from zuno.platform.observability.trace_eval import (
     ZunoSpanBuilder,
     ZunoSpanKind,
 )
-from zuno.platform.observability.product_benchmark import (
-    AgenticGraphRAGRegressionSummary,
-    build_agentic_graphrag_regression_summary,
-)
 from zuno.platform.observability.local_trace_store import SQLiteLocalTraceStore
 from zuno.platform.observability.eval_runtime import (
     AgentEfficiencyVector,
@@ -193,12 +189,10 @@ __all__ = [
     "ZunoSpanKind",
     "build_langchain_run_config",
     "build_langsmith_metadata",
-    "AgenticGraphRAGRegressionSummary",
     "AgentEfficiencyVector",
     "BenchmarkComparison",
     "BenchmarkComparisonReport",
     "build_error_release_gate",
-    "build_agentic_graphrag_regression_summary",
     "CaseExecutionResult",
     "CORE_FIVE_METRICS",
     "configure_langsmith",

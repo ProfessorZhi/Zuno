@@ -1,78 +1,42 @@
 # Production Readiness
 
-status: implementation_available_measurement_blocked
-engineering_closure: completed
-measurement: blocked_external
-quality: not_yet_proven
-production_readiness: not_established
+状态：`NOT_ESTABLISHED`
 
-本文是 Current、Gap、Measurement 和 Production Readiness 的事实源；完整 Target 架构仍以 `docs/architecture/architecture.md`、`docs/modules/` 和 accepted ADR 为准。
+本文只记录当前事实，不把目标架构、目录存在或 smoke test 当作生产证据。
 
 ## Current
 
-- PHASE01–PHASE21 的完成结论保留在代码、测试和历史 evidence 中；它们不自动推出 quality proven 或 production ready。
-- PHASE22 已完成 Engineering Closure：固定 Benchmark execution / qualification decision、Canonical Tree Closure、Final Verification Reporting、Production Readiness Decision、Program Archive 和 no-active handoff 均已完成。
-- `implementation available`：四 Profile formal execution path、preflight、runtime evidence binding、measurement truth gate、release decision contract 和 cleanup/cutover verifiers 可用。
-- Public Benchmark Review Pack：80/80 reviewer-approved、80/80 benchmark-eligible、0 rejected/incomplete；这只证明 candidate/review evidence，不证明 runtime measurement。
-- Fixed Benchmark：`status: BLOCKED`、`measurement_status: blocked_not_measured`、`actual_case_count: 0`。Contract smoke 或 test double 不被当作正式 Benchmark。
-- Canonical Tree：final legacy cutover audit 为 `LEGACY_CUTOVER_AUDIT_CLEAN`（0 findings）；feature-flag runtime cutover 为 `FEATURE_FLAG_RUNTIME_CUTOVER_CONFIRMED`（0 blocking findings）；backend semantic ownership 已确认。
-- Program1 queued candidate 的 repository closure follow-up 已完成：Product artifact/feedback 已切换到 Product-owned durable service，`/completion` 三种模式使用 canonical Product command，并在 Product 持久化失败时全模式 fail-closed。
-- Repository-owned closure blocker count：`0`。这些是允许 Program archive 的条件，不是 quality 结果。
+- Repository Closure：`CLOSED`。
+- Local Workspace Closure：已完成历史现场收口；本轮 Fresh-State Reset 后本地仓库
+  只保留 `main` 的 shallow clone。
+- Product Runtime：单一 Product command 路径，固定 `SUBMIT_USER_GOAL`；旧
+  shadow/canary/rollback 与 `/workspace/task*` 兼容层已移除。
+- 旧 Program1：`SUPERSEDED / RETIRED`；当前没有 active implementation program。
+- 正式 benchmark 执行路径可用，但外部数据与运行资格不足，当前 measurement 为
+  `blocked_external / blocked_not_measured`。
 
-## PHASE22 Final Decision
+## Quality Boundary
 
-```yaml
-phase22: completed
-engineering_closure: completed
-measurement: blocked_external
-quality_proven: false
-production_readiness: NOT_ESTABLISHED
-```
-
-Engineering Program Closure != Measurement Passed != Quality Proven != Production Ready。
-
-Production Readiness Decision 已完成，结果为 `NOT_ESTABLISHED`，不是 `Production Ready`，也不是待继续延长 PHASE22 的状态。Quality 为 `not_yet_proven`，是最终事实，不是 unfinished task。
-
-## External Qualification Gaps
-
-以下 gap 必须保留在 Evidence，不能改写为 `PASSED`、`MEASURED` 或 `quality proven`：
-
-- formal four-profile runtime unavailable；
-- formal Model / Judge / Embedding credentials unavailable；
-- Product Runtime and measurement attestation unavailable；
-- production-scale load environment unavailable；
-- DR and production operational attestation unavailable；
-- external Security / Budget qualification unavailable。
-
-因此 Full final verification 的未运行项只记录为 `NOT_RUN_WITH_REASON`，不扩大解释为完整 CI、Production Load、DR 或 Production Ready 已通过。
+Public review evidence 不能替代固定 benchmark 的实际测量。Quality 仍为
+`not_yet_proven`，Production Readiness 仍为 `NOT_ESTABLISHED`。
 
 ## Evidence
 
-- `docs/evidence/goal05-phase22-completion-blockers.md`
-- `docs/evidence/goal05-phase22-closure-summary.md`
-- `docs/evidence/goal05-phase22-verification-report.md`
-- `docs/evidence/goal05-phase22-blocked-benchmark/benchmark_manifest.json`
-- `docs/evidence/goal05-phase22-public-benchmark-review-pack/reviewed/review_summary.json`
-- `docs/evidence/program1-repository-closure.md`
-- `docs/history/programs/zuno-canonical-architecture-runtime-realization-v1/`
+- [Current Runtime Baseline](../evidence/current-runtime-baseline.md)
+- [Current Test Baseline](../evidence/current-test-baseline.md)
+- [Current Eval Baseline](../evidence/current-eval-baseline.md)
+- [Repository Closure](../evidence/repository-closure.md)
+- [Local Workspace Closure](../evidence/local-workspace-closure.md)
 
-## Architecture and Next Work Boundary
-
-当前 22-Phase Program 已归档。下一阶段不是 PHASE23，也不是新的 Runtime Program；只有在独立设计确认后才可建立新的实现 Program：
+## Next Boundary
 
 ```text
-Latest Current Review
-→ Repository Consolidation
-→ 11 Module Architecture Deep Review
-→ ADR 0006 Canonical Coordination
-→ Cross-module Contract Review
-→ Architecture / Mermaid / HTML Sync
+Project Workflow Consolidation
+→ Canonical Architecture Deep Review
+→ 11 Module Deep Review
+→ Cross-module Contract / ADR Coordination
 → Architecture Review
-→ New Implementation Program only after design confirmation
+→ decide whether to create a new implementation Program
 ```
 
-本轮不实现 Architecture v2，不新增业务 Runtime、Database Migration、Benchmark Case 或产品功能。
-
-## Future Optional
-
-Redis/Kafka/Kubernetes、多区域部署、Managed 基础设施、外部 index 集群、复杂 SSO/DLP/Vault、Firecracker、在线评测平台和产品级自治 Multi-Agent runtime 仍属于 Future Optional；它们不改变本次 closure decision。
+不要创建新的阶段列表，不恢复旧 Program，不在外围治理阶段继续扩张业务 Runtime。

@@ -80,7 +80,7 @@ def test_completion_controller_avoids_direct_agent_and_memory_imports() -> None:
     assert "from zuno.core.agents.general_agent import AgentConfig, GeneralAgent" not in controller
     assert "from zuno.services.memory.client import memory_client" not in controller
     assert "from zuno.agent.core.agents.general_agent import AgentConfig, GeneralAgent" not in service
-    assert "CompletionService.stream_unified_runtime" in controller
+    assert "CompletionService.stream_product_command" in controller
     assert "from zuno.platform.services.memory.client import memory_client" in service
     assert "from zuno.platform.resources.prompts.completion import SYSTEM_PROMPT" in service
     assert "from zuno.api.dto.completion import CompletionReq" in service
@@ -369,7 +369,8 @@ def test_api_service_layer_uses_canonical_platform_imports() -> None:
     assert "from zuno.platform.database.models.agent_skill import AgentSkill" in agent_skill
     assert "from zuno.platform.resources.prompts.skill import AgentSkillAsToolPrompt" in agent_skill
     assert "from zuno.agent.core.agents.general_agent import AgentConfig, GeneralAgent" not in completion
-    assert "async def stream_unified_runtime" in completion
+    assert "async def stream_product_command" in completion
+    assert "RuntimeDependencyFactory" not in completion
     assert "from zuno.platform.services.memory.client import memory_client" in completion
     assert "from zuno.platform.services.redis import redis_client" in wechat
     assert "from zuno.platform.services.workspace.wechat_agent import WeChatAgent" in wechat
@@ -392,20 +393,16 @@ def test_api_service_layer_uses_canonical_platform_imports() -> None:
 def test_runtime_entrypoints_and_cross_module_dtos_use_canonical_imports() -> None:
     main = _read("src/backend/zuno/main.py")
     memory_feedback = _read("src/backend/zuno/memory/feedback_consumer.py")
-    # PHASE22 runtime cutover: product_baseline is now a tests/evals
-    # internal tool. Read it from its new location.
-    product_baseline = _read("tools/evals/zuno/agent/product_baseline.py")
-    workspace_task_runtime = _read("src/backend/zuno/api/services/workspace_task_runtime.py")
+    product_runtime = _read("src/backend/zuno/api/services/product/runtime_engine.py")
     knowledge_dto = _read("src/backend/zuno/api/dto/knowledge.py")
 
     assert "from zuno.platform.common.runtime_observability import configure_langsmith" in main
     assert "from zuno.platform.database.init_data import (" in main
     assert "from zuno.platform.database.models.memory_runtime import MemoryRawEventTable" in memory_feedback
-    assert "from zuno.api.dto.workspace import WorkSpaceSimpleTask, WorkspaceOutputContract" in product_baseline
-    assert "from zuno.api.dto.workspace import (" in workspace_task_runtime
+    assert "from zuno.api.dto.workspace import (" in product_runtime
     assert "from zuno.platform.services.graphrag.models import GraphRAGProjectContract" in knowledge_dto
 
-    for content in [main, memory_feedback, product_baseline, workspace_task_runtime, knowledge_dto]:
+    for content in [main, memory_feedback, product_runtime, knowledge_dto]:
         assert "from zuno.schema." not in content
         assert "from zuno.database." not in content
         assert "from zuno.services." not in content
@@ -509,7 +506,6 @@ def test_platform_graphrag_lightweight_packages_use_canonical_imports() -> None:
         "src/backend/zuno/platform/services/graphrag/graph_store/__init__.py",
         "src/backend/zuno/platform/services/graphrag/prompts/__init__.py",
         "src/backend/zuno/platform/services/graphrag/retrievers/__init__.py",
-        "src/backend/zuno/platform/services/graphrag/retrievers/domain_graph_retriever.py",
         "src/backend/zuno/platform/services/graphrag/project/loader.py",
     ]
     contents = {path: _read(path) for path in paths}
@@ -524,9 +520,8 @@ def test_platform_graphrag_lightweight_packages_use_canonical_imports() -> None:
     assert "from zuno.platform.services.graphrag.extractors.structured_extractor import StructuredGraphExtractor" in contents[paths[7]]
     assert "from zuno.platform.services.graphrag.graph_store.entity_resolver import EntityResolver" in contents[paths[8]]
     assert "from zuno.platform.services.graphrag.prompts.registry import (" in contents[paths[9]]
-    assert "from zuno.platform.services.graphrag.retrievers.domain_graph_retriever import DomainGraphRetriever" in contents[paths[10]]
-    assert "from zuno.platform.services.graphrag.retriever import GraphRetriever" in contents[paths[11]]
-    assert "from zuno.platform.services.graphrag.models import GraphRAGProjectContract" in contents[paths[12]]
+    assert "from zuno.platform.services.graphrag.retrievers.hybrid_retriever import HybridRetriever" in contents[paths[10]]
+    assert "from zuno.platform.services.graphrag.models import GraphRAGProjectContract" in contents[paths[11]]
 
     for content in contents.values():
         assert "from zuno.services." not in content

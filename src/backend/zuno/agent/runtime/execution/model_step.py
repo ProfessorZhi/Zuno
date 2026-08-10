@@ -100,7 +100,7 @@ def _prompt_for_step(*, state: AgentRuntimeState, step: PlanStep) -> str:
 def _tool_observation_context(state: AgentRuntimeState) -> str:
     """Feed governed tool observations back into the answer step.
 
-    PHASE22 workspace-agent cutover: the final answer is grounded in real
+    The final answer is grounded in real
     tool results (Observation -> Acceptance), never invented by the model.
     """
     lines = []

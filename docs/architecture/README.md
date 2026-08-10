@@ -30,7 +30,7 @@ Zuno 正式架构设计事实共十三份：
 
 ## Architecture v1 与 v2 路由
 
-已归档的 `zuno-canonical-architecture-runtime-realization-v1` Program 与 PHASE01–PHASE22 使用过以下冻结的 Architecture v1 基线；该基线现在作为 History 证据保留：
+已归档的 Runtime 工程工作使用过冻结的 Architecture v1 基线；该基线现在作为 History 证据保留：
 
 ```text
 c9d099d64a1af28102231751ce55df8217173e89
@@ -44,7 +44,7 @@ docs/decisions/0006-evidence-driven-agentic-graphrag.md
 
 这样做是为了避免用新 Target 静默改变已归档 Program 的 Contract 和验收条件。ADR 0006 是 `accepted-target`，优先于旧模块中的冲突描述，但不授权本次收口立即实现，也不证明任何 v2 Runtime 已成为 Current。
 
-PHASE22 已完成 Engineering Closure 并归档；当前 `.agent/programs/` 为 `no-active`。下一阶段不是 PHASE23，也不是新的 Runtime Program，而是独立的设计与整理工作：
+Runtime 工程收口已完成并归档；当前 `.agent/programs/` 为 `no-active`。下一阶段是独立的设计与整理工作：
 
 ```text
 Latest Current Review

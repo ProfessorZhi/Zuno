@@ -464,14 +464,14 @@ class RagHandler:
             "max_paths_per_entity": retrieval_settings.get("max_paths_per_entity", 10),
             "use_rag_entry_chunk": graph_index_settings.get("use_rag_entry_chunk", True),
             "knowledge_capability": knowledge_config.get("index_capability", "rag"),
-            "domain_pack_id": runtime_settings.get("domain_pack_id"),
+            "graphrag_project_id": runtime_settings.get("graphrag_project_id"),
             "requested_profile": retrieval_settings.get("profile", "auto"),
             "budget_policy": {},
             "fallback_policy": {},
             "trace_policy": {"enabled": True},
             "scope_policy": {
                 "knowledge_ids": list(collection_names or []),
-                "domain_pack_id": runtime_settings.get("domain_pack_id"),
+                "graphrag_project_id": runtime_settings.get("graphrag_project_id"),
                 "status": str(
                     runtime_settings.get("knowledge_status")
                     or knowledge_config.get("index_settings", {}).get("status")

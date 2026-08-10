@@ -1,5 +1,0 @@
-phase_id: PHASE20
-status: completed
-coordinator_approval: approved
-evidence_ref: docs/evidence/goal05-phase20-eval-runtime.md
-closure_note: "Eval Runtime, Core Five, GraphRAG diagnostics, Agent Efficiency, Benchmark Comparison, Release Gate, EvidenceRecord, query/report API, late revision, expired evidence, artifact hash readback, fixed profile replay, Alembic head 20260729_56 and Postgres integration evidence are available; PHASE21 may proceed. This does not claim quality proven or production ready."

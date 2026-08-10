@@ -21,7 +21,7 @@ Phase E adds the first real runtime multihop retrieval standard. The committed
 standard lives in:
 
 ```text
-docs/history/audits/real-runtime-multihop-eval-standards.md
+docs/evidence/current-eval-baseline.md
 ```
 
 Its core rule is simple:
@@ -221,35 +221,14 @@ real runtime round.
 
 ## Runtime Eval Mode Naming
 
-Current real runtime runner now accepts both product-facing aliases and legacy
-engineering labels.
+当前评估只接受三种正式模式：
 
-Preferred product-facing modes:
+- `normal`：标准检索路径；
+- `enhanced`：增强检索与图检索路径；
+- `auto`：由查询规划器选择上述路径。
 
-- `standard_retrieval`
-- `enhanced_retrieval`
-
-Legacy compatible modes:
-
-- `baseline_rag`
-- `local_graphrag`
-- `deep_graphrag`
-
-Meaning:
-
-- `standard_retrieval`
-  - product mode
-  - intended baseline category
-- `enhanced_retrieval`
-  - product mode
-  - intended enhanced category
-- `baseline_rag`
-  - deprecated eval alias
-  - historical behavior, not the full product `standard_retrieval`
-- `local_graphrag`
-  - internal local graph ablation
-- `deep_graphrag`
-  - internal deep-route ablation
+历史别名不再解析。评估结果必须记录实际解析后的正式模式，避免把
+历史行为名称误当成当前产品契约。
 
 Every real runtime report should now expose:
 
@@ -260,33 +239,28 @@ Every real runtime report should now expose:
 - `is_deprecated_alias`
 - `is_ablation_mode`
 
-Recommended next product comparison:
+Recommended product comparison:
 
-- `standard_retrieval`
-- `enhanced_retrieval`
-
-Optional engineering-only follow-up cuts:
-
-- `vector_only_ablation`
-- `local_graphrag_ablation`
-- `deep_route_ablation`
+- `normal`
+- `enhanced`
+- `auto`
 
 Current checked result:
 
 - HotpotQA `limit=10` has now been run for
-  `standard_retrieval` vs `enhanced_retrieval`
+  `normal` vs `enhanced`
 - current outcome is a baseline-preserving tie
 - next allowed expansion is HotpotQA `limit=20`
 
 Current follow-up result:
 
 - HotpotQA `limit=20` has now also been run for
-  `standard_retrieval` vs `enhanced_retrieval`
+  `normal` vs `enhanced`
 - current outcome remains baseline-preserving, but enhanced is still not
   superior
 - HotpotQA hard-subset targeted tuning has now been completed
 - HotpotQA `limit=50` has now also been run for
-  `standard_retrieval` vs `enhanced_retrieval`
+  `normal` vs `enhanced`
 - current outcome at `limit=50` remains baseline-preserving, but enhanced is
   still not superior
 - recommended next move is HotpotQA missed-opportunity tuning; do not move to
@@ -307,9 +281,9 @@ Current follow-up result:
   failure was addressed by targeted tuning
 - a fresh `2Wiki limit=20` product rerun on `2026-06-23` is now
   baseline-preserving:
-  - `standard Recall@5 = 0.725`
+  - `normal Recall@5 = 0.725`
   - `enhanced Recall@5 = 0.75`
-  - `standard FullChainHit@5 = 0.35`
+  - `normal FullChainHit@5 = 0.35`
   - `enhanced FullChainHit@5 = 0.40`
   - `enhanced Recall@10 = 0.80 > 0.725`
   - `enhanced FullChainHit@10 = 0.50 > 0.35`
@@ -328,9 +302,9 @@ Current follow-up result:
 Phase D exposes:
 
 ```powershell
-python tools/evals/zuno/multihop_eval/run_multihop_eval.py --dataset hotpotqa --mode baseline_rag
-python tools/evals/zuno/multihop_eval/run_multihop_eval.py --dataset hotpotqa --mode local_graphrag
-python tools/evals/zuno/multihop_eval/run_multihop_eval.py --dataset hotpotqa --mode deep_graphrag
+python tools/evals/zuno/multihop_eval/run_multihop_eval.py --dataset hotpotqa --mode normal
+python tools/evals/zuno/multihop_eval/run_multihop_eval.py --dataset hotpotqa --mode enhanced
+python tools/evals/zuno/multihop_eval/run_multihop_eval.py --dataset hotpotqa --mode auto
 ```
 
 Current runner status:
@@ -357,8 +331,8 @@ Future real runtime output must instead:
 The real runtime runner is now:
 
 ```powershell
-python tools/evals/zuno/multihop_eval/run_real_runtime_eval.py --dataset hotpotqa --mode standard_retrieval --questions data/evals/multihop/normalized/hotpotqa/dev_sample50.jsonl --corpus data/evals/multihop/corpus/hotpotqa/dev_sample50_corpus.jsonl --limit 5 --top-k 10
-python tools/evals/zuno/multihop_eval/run_real_runtime_eval.py --dataset hotpotqa --mode enhanced_retrieval --questions data/evals/multihop/normalized/hotpotqa/dev_sample50.jsonl --corpus data/evals/multihop/corpus/hotpotqa/dev_sample50_corpus.jsonl --limit 5 --top-k 10
+python tools/evals/zuno/multihop_eval/run_real_runtime_eval.py --dataset hotpotqa --mode normal --questions data/evals/multihop/normalized/hotpotqa/dev_sample50.jsonl --corpus data/evals/multihop/corpus/hotpotqa/dev_sample50_corpus.jsonl --limit 5 --top-k 10
+python tools/evals/zuno/multihop_eval/run_real_runtime_eval.py --dataset hotpotqa --mode enhanced --questions data/evals/multihop/normalized/hotpotqa/dev_sample50.jsonl --corpus data/evals/multihop/corpus/hotpotqa/dev_sample50_corpus.jsonl --limit 5 --top-k 10
 ```
 
 Important:
@@ -367,7 +341,7 @@ Important:
 - only the audit summary belongs in Git
 - local graph or deep routes may legitimately degrade if graph or community
   capability is not actually exercised by the runtime
-- PHASE07 trace diagnostics read `evidence_verdict.status`,
+- Runtime trace diagnostics read `evidence_verdict.status`,
   `evidence_verdict.fallback_reason`, `artifact_manifest.trace_id`, and
   `runtime_trace_events` count so eval reports can distinguish retrieval
   fallback from low-confidence evidence fallback.

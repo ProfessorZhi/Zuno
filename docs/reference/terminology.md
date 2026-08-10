@@ -2,7 +2,7 @@
 
 ## 用途
 
-保持公开架构术语稳定、简短。详细 target contract 放在 `docs/history/architecture-surface-cleanup-2026-06-30/agent-architecture/near-term/`。
+保持公开架构术语稳定、简短。详细 target contract 放在当前 `docs/architecture/` 和 `docs/modules/` 正式文档。
 
 ## 状态标签
 
@@ -16,18 +16,18 @@
 ## 当前术语
 
 - `GeneralAgent single loop`：当前知识问答会话主线。
-- `KnowledgeQueryService`：application knowledge query service，Phase 11A 引入，并在 Target Runtime V2 中移动到 application boundary。
+- `KnowledgeQueryService`：application knowledge query service，位于 application boundary。
 - `GraphRAGQueryService`：GraphRAG Project query runtime。
 - `GraphRAGProjectSnapshot`：查询时不可变 project/config snapshot。
 - `KnowledgeQueryResult`：包含 answer、documents、evidence、citation、version 和 trace 的结果模型。
 
-## 目标运行时 V2 术语
+## Target Runtime 术语
 
-- 目标运行时 V2 Phase 05：记忆引擎
-- 目标运行时 V2 Phase 06：能力与工具检索
-- 目标运行时 V2 Phase 07：GraphRAG LLM 实体抽取与知识检索融合
-- 目标运行时 V2 Phase 08：GeneralAgent LangGraph 运行时
-- 目标运行时 V2 Phase 09：产品边界、Trace 与 Eval 收口
+- Memory Engine
+- Capability and Tool Retrieval
+- GraphRAG entity extraction and retrieval fusion
+- GeneralAgent LangGraph runtime
+- Product boundary, Trace and Eval
 - Context / Memory Engine
 - Summary Compression
 - Structured Extraction
@@ -59,4 +59,4 @@
 - `DomainQAGraph`
 - `MultiAgentSupervisorGraph`
 
-这些只应出现在迁移兼容、历史档案、DB 兼容、eval CLI 兼容或 retirement tests 中。
+这些不属于当前运行时、API 或架构入口。

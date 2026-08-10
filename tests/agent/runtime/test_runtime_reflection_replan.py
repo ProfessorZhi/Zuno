@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from zuno.agent.runtime import RuntimeDependencyFactory, RuntimeStartRequest, SQLiteAgentRunStore, UnifiedAgentRuntimeService
+from zuno.agent.runtime import AgentRuntimeService, RuntimeDependencyFactory, RuntimeStartRequest, SQLiteAgentRunStore
 from zuno.knowledge.agentic import (
     CorrectiveAction,
     CorrectiveRetrievalResult,
@@ -80,7 +80,7 @@ def _dependencies_with_knowledge(knowledge_runtime):
 
 def test_reflection_replan_executes_second_retrieval_and_finalizes(tmp_path) -> None:
     knowledge_runtime = _StatefulKnowledgeRuntime()
-    service = UnifiedAgentRuntimeService(
+    service = AgentRuntimeService(
         store=SQLiteAgentRunStore(tmp_path / "runtime.db"),
         dependencies=_dependencies_with_knowledge(knowledge_runtime),
     )
@@ -104,7 +104,7 @@ def test_reflection_replan_executes_second_retrieval_and_finalizes(tmp_path) -> 
 
 def test_rewrite_answer_routes_back_to_claim_binding_before_abstain(tmp_path) -> None:
     knowledge_runtime = _StatefulKnowledgeRuntime(second_has_source_span=False)
-    service = UnifiedAgentRuntimeService(
+    service = AgentRuntimeService(
         store=SQLiteAgentRunStore(tmp_path / "runtime.db"),
         dependencies=_dependencies_with_knowledge(knowledge_runtime),
     )

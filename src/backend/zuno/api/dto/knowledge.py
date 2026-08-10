@@ -1,17 +1,8 @@
-from typing import Any, Optional
+from typing import Optional
 
-from pydantic import BaseModel, Field, model_validator
+from pydantic import BaseModel, Field
 
 from zuno.platform.services.graphrag.models import GraphRAGProjectContract
-
-
-def _with_legacy_project_id(data: Any) -> Any:
-    if isinstance(data, dict) and not data.get("graphrag_project_id") and data.get("domain_pack_id"):
-        next_data = dict(data)
-        next_data["graphrag_project_id"] = next_data.get("domain_pack_id")
-        return next_data
-    return data
-
 
 class KnowledgeModelRefs(BaseModel):
     text_embedding_model_id: Optional[str] = Field(default=None, min_length=1)
@@ -144,7 +135,7 @@ class KnowledgeGraphIndexSettingsPatch(BaseModel):
 
 
 class KnowledgeRetrievalSettings(BaseModel):
-    default_mode: str = Field(default="rag", pattern="^(auto|hybrid|rag|graphrag|rag_graph|rag_graph_deep)$")
+    default_mode: str = Field(default="rag", pattern="^(auto|rag|rag_graph_deep)$")
     profile: str = Field(default="auto", min_length=1, max_length=64)
     refill_policy: str = Field(default="smart", pattern="^(none|auto|smart)$")
     top_k: int = Field(default=5, ge=1, le=50)
@@ -156,7 +147,7 @@ class KnowledgeRetrievalSettings(BaseModel):
 
 
 class KnowledgeRetrievalSettingsPatch(BaseModel):
-    default_mode: Optional[str] = Field(default=None, pattern="^(auto|hybrid|rag|graphrag|rag_graph|rag_graph_deep)$")
+    default_mode: Optional[str] = Field(default=None, pattern="^(auto|rag|rag_graph_deep)$")
     profile: Optional[str] = Field(default=None, min_length=1, max_length=64)
     refill_policy: Optional[str] = Field(default=None, pattern="^(none|auto|smart)$")
     top_k: Optional[int] = Field(default=None, ge=1, le=50)
@@ -181,12 +172,6 @@ class KnowledgeConfig(BaseModel):
     graph_index_settings: KnowledgeGraphIndexSettings = Field(default_factory=KnowledgeGraphIndexSettings)
     retrieval_settings: KnowledgeRetrievalSettings = Field(default_factory=KnowledgeRetrievalSettings)
 
-    @model_validator(mode="before")
-    @classmethod
-    def accept_legacy_domain_pack_id(cls, data: Any) -> Any:
-        return _with_legacy_project_id(data)
-
-
 class KnowledgeConfigPatch(BaseModel):
     index_capability: Optional[str] = Field(default=None, pattern="^(rag|rag_graph)$")
     graphrag_project_id: Optional[str] = Field(default=None, min_length=1, max_length=64)
@@ -200,12 +185,6 @@ class KnowledgeConfigPatch(BaseModel):
     index_settings: Optional[KnowledgeIndexSettingsPatch] = Field(default=None)
     graph_index_settings: Optional[KnowledgeGraphIndexSettingsPatch] = Field(default=None)
     retrieval_settings: Optional[KnowledgeRetrievalSettingsPatch] = Field(default=None)
-
-    @model_validator(mode="before")
-    @classmethod
-    def accept_legacy_domain_pack_id(cls, data: Any) -> Any:
-        return _with_legacy_project_id(data)
-
 
 class KnowledgeCreateRequest(BaseModel):
     knowledge_name: str = Field(description="knowledge name", min_length=2, max_length=10)

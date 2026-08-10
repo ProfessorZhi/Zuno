@@ -105,7 +105,7 @@ python tools/scripts/verify_phase04_operator_readiness.py
 
 ## DR Profile
 
-`docs/governance/infrastructure-dr-profile.yaml` 是 PHASE04 当前唯一 DR Profile。它必须声明每个恢复组件的 RPO、RTO、owner、recovery owner、verification command、evidence ref 和 current boundary。
+`docs/governance/infrastructure-dr-profile.yaml` 是当前唯一 DR Profile。它声明恢复组件、owner、恢复不变量、证据入口和未测量边界；不把目标 RPO/RTO 冒充为生产证据。
 
 DR Profile 只证明恢复策略、owner 和 cutover policy 已机器可验证；它不能替代真实 Restore、PITR、Projection Replay 或 official LangGraph PostgreSQL Checkpointer 恢复证据。
 

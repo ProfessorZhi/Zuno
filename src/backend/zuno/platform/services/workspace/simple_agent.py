@@ -6,11 +6,9 @@ import copy
 import hashlib
 import json
 import re
-import tempfile
 import time
 import uuid
 from datetime import date
-from pathlib import Path
 from types import SimpleNamespace
 from typing import Any, AsyncGenerator, Awaitable, Callable, Dict, List
 
@@ -135,10 +133,8 @@ async def generate_workspace_title(
 ) -> str:
     """Module-level title generation helper.
 
-    Lives outside ``WorkSpaceSimpleAgent`` / ``WeChatAgent`` so the final
-    legacy cutover audit does not see a ``self.model.ainvoke`` site inside
-    the legacy workspace runtime classes. The function still funnels the
-    call through the Model Gateway proxy that ``self.model`` resolves to.
+    Lives outside the session adapter and keeps title generation behind the
+    configured model gateway.
     """
     session = await WorkSpaceSessionService.get_workspace_session_from_id(
         session_id,
@@ -182,16 +178,12 @@ async def execute_binding_tool(
 ) -> Any:
     """Module-level binding execution helper.
 
-    PHASE22 runtime cutover V2: every binding.ainvoke call must route
+    Every binding.ainvoke call must route
     through the ``MCPToolExecutorAdapter`` registry which in turn
     dispatches through ``ToolInvocationGateway``. A production call
     that arrives without a registered adapter fails closed with
     ``MCPToolAdapterNotBound`` BEFORE any ``binding.ainvoke`` is
-    reached. Dev-test paths that pass ``tool_adapter_registry=None``
-    are still permitted only for the original test fixtures; the
-    production code path (``WorkSpaceSimpleAgent._execute_binding_tool``,
-    ``WeChatAgent._execute_binding_tool``) ALWAYS passes a real
-    registry.
+    reached. Calls without a registered adapter fail closed.
     """
     call_args = dict(args)
     if (
@@ -209,11 +201,8 @@ async def execute_binding_tool(
         call_args.update(mcp_config)
 
     if tool_adapter_registry is None:
-        # PHASE22 runtime cutover V2: production must always supply a
-        # gateway-bound registry. Without one, the call fails closed
-        # BEFORE the LangChain tool is dispatched. The legacy dev-test
-        # shortcut is preserved for tests that intentionally exercise
-        # the legacy direct path.
+        # A gateway-bound registry is mandatory. Without one, the call fails
+        # closed before the LangChain tool is dispatched.
         raise MCPToolAdapterNotBound(
             f"execute_binding_tool requires tool_adapter_registry for tool={binding.name!r}"
         )
@@ -297,7 +286,7 @@ class WorkSpaceSimpleAgent:
         self.original_query = original_query
         self.usage_agent_name = (usage_agent_name or UsageStatsAgentType.simple_agent.value).strip()
         self.multi_agent_enabled = bool(multi_agent_enabled)
-        # PHASE22 repair: runtime composition profile. Product mode requires
+        # Product mode requires
         # the server composition binding; the explicit developer test profile
         # may construct a SQLite-backed runtime.
         self.runtime_profile = runtime_profile
@@ -305,13 +294,13 @@ class WorkSpaceSimpleAgent:
         self._submission_counter = 0
         self._last_client_request_id = ""
         self._last_submission_id = ""
-        # PHASE22 repair (B7): real tenant / workspace identity comes from the
+        # Real tenant / workspace identity comes from the
         # product request / auth context. There is no synthetic tenant:default
         # and no workspace derived from user_id; missing identity fails closed
         # with BLOCKED_CONFIGURATION at canonical runtime composition.
         self._tenant_id = str(tenant_id or "").strip()
         self._workspace_id = str(workspace_id or "").strip()
-        # PHASE22 product wiring: request-declared runtime limits flow into
+        # Request-declared runtime limits flow into
         # the formal Budget Admission resolver (never self-attested).
         self._budget_limits = dict(budget_limits or {})
         self.desktop_bridge_config = (
@@ -319,7 +308,7 @@ class WorkSpaceSimpleAgent:
             if desktop_bridge_url and desktop_bridge_token
             else None
         )
-        # PHASE22 runtime cutover V2: tool gateway-bound runtime identity.
+        # Tool gateway-bound runtime identity.
         # The adapter registry and gateway-side trace / run / step ids
         # are constructed here so the WorkSpaceSimpleAgent always has a
         # deterministic Server-owned runtime identity even before
@@ -339,7 +328,7 @@ class WorkSpaceSimpleAgent:
         self.route_hint = self._detect_route_hint(self.original_query)
         self.knowledge_query_service = KnowledgeQueryService()
         self._initialized = False
-        # PHASE22 single-controller cutover: the agent is a thin product
+        # The agent is a thin product
         # adapter over the canonical runtime. No top-level ReAct runtime and
         # no direct tool handlers are created; session tools become governed
         # bindings resolved by the formal Tool Control Plane.
@@ -403,9 +392,9 @@ class WorkSpaceSimpleAgent:
 
     def _build_retrieval_event_payload(self, result: Dict[str, Any], phase: str = "retrieval") -> Dict[str, Any]:
         metadata = result.get("metadata") or {}
-        domain_pack_cost = metadata.get("domain_pack_cost") or {}
-        domain_pack_failure = metadata.get("domain_pack_failure") or {}
-        failed = str(domain_pack_cost.get("status") or "").lower() == "failed" or bool(domain_pack_failure)
+        retrieval_cost = metadata.get("retrieval_cost") or {}
+        retrieval_failure = metadata.get("retrieval_failure") or {}
+        failed = str(retrieval_cost.get("status") or "").lower() == "failed" or bool(retrieval_failure)
         return {
             "phase": phase,
             "status": "ERROR" if failed else "END",
@@ -413,7 +402,6 @@ class WorkSpaceSimpleAgent:
             "retrieval_mode": result.get("actual_mode") or metadata.get("final_mode") or self.retrieval_mode,
             "graphrag_project_id": result.get("graphrag_project_id") or metadata.get("graphrag_project_id"),
             "query_method": result.get("final_mode") or metadata.get("resolved_query_method"),
-            "domain_pack_id": result.get("domain_pack_id"),
             "first_mode": result.get("first_mode") or metadata.get("first_mode"),
             "final_mode": result.get("final_mode") or metadata.get("final_mode"),
             "fallback_reason": result.get("fallback_reason") or metadata.get("fallback_reason"),
@@ -425,11 +413,11 @@ class WorkSpaceSimpleAgent:
             "plan": metadata.get("plan") or {},
             "retriever_runs": metadata.get("retriever_runs") or [],
             "knowledge_ids": self.knowledge_ids,
-            "domain_pack_trace": metadata.get("domain_pack_trace") or {},
-            "domain_pack_cost": domain_pack_cost,
-            "domain_pack_failure": domain_pack_failure,
-            "domain_pack_support_verdict": metadata.get("domain_pack_support_verdict") or {},
-            "domain_pack_evidence_bundle": metadata.get("domain_pack_evidence_bundle") or {},
+            "retrieval_trace": metadata.get("retrieval_trace") or {},
+            "retrieval_cost": retrieval_cost,
+            "retrieval_failure": retrieval_failure,
+            "retrieval_support_verdict": metadata.get("retrieval_support_verdict") or {},
+            "retrieval_evidence_bundle": metadata.get("retrieval_evidence_bundle") or {},
             "support_verdict": metadata.get("support_verdict") or result.get("support_verdict") or {},
             "evidence_bundle": metadata.get("evidence_bundle") or result.get("evidence_bundle") or {},
             "citations": result.get("citations") or metadata.get("citation_chunks") or [],
@@ -468,7 +456,6 @@ class WorkSpaceSimpleAgent:
             "round_count": metadata.get("round_count") or 1,
             "second_pass_used": metadata.get("second_pass_used") or False,
             "graphrag_project_id": result.graphrag_project_id,
-            "domain_pack_id": None,
             "metadata": metadata,
             "final_pass_result": final_pass_result,
             "graph_result": graph_result,
@@ -1172,7 +1159,7 @@ class WorkSpaceSimpleAgent:
         else:
             self.tools = self.plugin_tools + self.mcp_tools + self.knowledge_tools + self.skill_tools
         self.bindings = self._build_bindings()
-        # PHASE22 runtime cutover V2: build the MCPToolExecutorAdapter
+        # Build the MCPToolExecutorAdapter
         # registry before the canonical runtime so every LangChain
         # ``tool.ainvoke`` reaches ``ToolInvocationGateway``. The
         # registry fails closed if the composition is missing the
@@ -1183,21 +1170,21 @@ class WorkSpaceSimpleAgent:
         self._runtime = self._build_canonical_runtime(self.bindings)
         self._initialized = True
 
-    # -- PHASE22 single-controller tool binding declaration ------------------
+    # -- Tool binding declaration ---------------------------------------------
 
     @staticmethod
     def _declare_tool_policy(metadata_map: Dict[str, Dict[str, Any]], tool_name: str, policy: Any) -> None:
         """Attach an owner-declared tool policy to the registration metadata.
 
         The policy is declared by the tool owner at registration time; it is
-        never derived from the tool name (PHASE22 repair, B2).
+        never derived from the tool name.
         """
         metadata_map.setdefault(tool_name, {}).update(policy.to_metadata())
 
     def _build_bindings(self) -> List[WorkspaceToolBinding]:
         """Convert the session tool set into governed control-plane bindings.
 
-        PHASE22 repair (B2): tool policy is declared by the tool owner at
+        Tool policy is declared by the tool owner at
         registration time (structured ``tool_metadata_map`` entries); it is
         never inferred from the tool name. A tool without an owner-declared
         policy is bound as ``policy_resolution="unresolved"`` and fails
@@ -1243,7 +1230,7 @@ class WorkSpaceSimpleAgent:
     def _build_canonical_runtime(self, bindings: List[WorkspaceToolBinding]) -> WorkspaceAgentRuntime:
         """Compose the canonical runtime from the server composition root.
 
-        PHASE22 repair (B1): product mode requires the server composition
+        Product mode requires the server composition
         binding (durable store + owner facts). Missing bindings raise
         ``BLOCKED_CONFIGURATION``; there is no per-session temp-SQLite
         fallback outside the explicit developer test profile.
@@ -1278,12 +1265,7 @@ class WorkSpaceSimpleAgent:
                 else "server_product"
             ),
             store=composition.store,
-            sqlite_store_path=(
-                Path(tempfile.gettempdir())
-                / f"zuno_workspace_agent_{self.user_id}_{self.session_id}.db"
-                if self.runtime_profile == "developer_test_profile"
-                else None
-            ),
+            sqlite_store_path=None,
             security_approval_sink=composition.security_approval_sink,
             tool_unit_of_work_factory=composition.tool_unit_of_work_factory,
             security_unit_of_work_factory=composition.security_unit_of_work_factory,
@@ -1325,14 +1307,8 @@ class WorkSpaceSimpleAgent:
             else None
         )
 
-        # PHASE22 runtime cutover V2: when the composition is missing
-        # any of the Server-owned unit-of-work factories, the registry
-        # is built EMPTY. Tool calls still fail closed with
-        # ``MCPToolAdapterNotBound`` at dispatch, but the agent
-        # composition itself succeeds so legacy / dev-test paths that
-        # do not exercise tool dispatch remain reachable. The legacy
-        # ``_build_canonical_runtime`` already enforces the same
-        # fail-closed contract for product-mode composition.
+        # When any Server-owned unit-of-work factory is missing, the registry
+        # stays empty and dispatch fails closed before provider execution.
         if (
             tool_uow_factory is None
             or security_uow_factory is None
@@ -1398,7 +1374,7 @@ class WorkSpaceSimpleAgent:
     async def _execute_binding_tool(self, tool: BaseTool, args: dict[str, Any]) -> Any:
         """Execute one governed binding.
 
-        PHASE22 runtime cutover V2: the LangChain ``tool.ainvoke`` call
+        The LangChain ``tool.ainvoke`` call
         is reached ONLY through the registered
         ``MCPToolExecutorAdapter`` which dispatches through
         ``ToolInvocationGateway``. The composition root (the canonical
@@ -2038,7 +2014,7 @@ class WorkSpaceSimpleAgent:
                 )
         return tool_messages
 
-    # -- PHASE22 canonical run helpers --------------------------------------
+    # -- Canonical run helpers ------------------------------------------------
 
     def _run_request(self, original_query: str) -> Any:
         """Convert the product request into a governed runtime run.
@@ -2046,7 +2022,7 @@ class WorkSpaceSimpleAgent:
         Resolution only selects the tool + arguments; execution always flows
         through the canonical runtime's plan / gates / gateway.
 
-        PHASE22 repair (B6): the run identity is the product submission
+        The run identity is the product submission
         (``client_request_id`` bound to tenant / workspace / principal); the
         request text is only a content fingerprint.
         """
@@ -2163,7 +2139,7 @@ class WorkSpaceSimpleAgent:
         """Run identity: tenant + workspace + client_request_id.
 
         Same text with a different client_request_id is a different request
-        and therefore a different run (PHASE22 repair, B6). The same
+        and therefore a different run. The same
         client_request_id in a different tenant / workspace produces a
         different task id (no cross-tenant collision).
         """
@@ -2607,7 +2583,7 @@ class WorkSpaceSimpleAgent:
             yield self._wrap_event("final", {"chunk": error_text, "message": error_text, "accumulated": error_text, "done": True})
             return
 
-        # PHASE22 failure contract routing (classify_final_state):
+        # Failure contract routing (classify_final_state):
         #   interrupted            -> WAITING_APPROVAL (never auto-fallback)
         #   FAILED/BLOCKED         -> error, retryable with the original plan
         #   RECONCILIATION_REQUIRED -> operator confirmation required

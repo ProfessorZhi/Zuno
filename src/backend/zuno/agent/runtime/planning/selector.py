@@ -48,7 +48,7 @@ class RuntimeStrategySelector:
             ],
         )
         state.strategy = strategy
-        # PHASE22 repair (B5): every task has a formal plan. The product
+        # Every task has a formal plan. The product
         # adapter supplies explicit step definitions which Agent Core keeps
         # as the active plan (already activated by the service); the
         # selector-generated plan only applies when no explicit plan exists.

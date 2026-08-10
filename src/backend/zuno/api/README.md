@@ -1,33 +1,20 @@
 # API 层边界
 
-分类：`target-layer`
-
 ## 当前角色
 
-`src/backend/zuno/api/` 是当前 HTTP 边界，承载 route、DTO、auth、response envelope、SSE 和 API 兼容入口。它已经属于六层目标里的 `api` 层，但目录内仍有过渡期 service import，不能把它误读成业务实现已经全部下沉完成。
+`src/backend/zuno/api/` 是 HTTP、DTO、认证、response envelope、SSE 和 application owner 的公开边界。
 
-`src/backend/zuno/api/dto/` 是 API DTO / Pydantic schema 的当前物理 owner。旧 public import path `zuno.schema.*` 不再由 `platform/compatibility/legacy_aliases.py` 承接；它不是默认路径，也不是仍存在的 root-level schema 目录。
+Product API 的提交、action、agent studio 和 projection 入口进入明确的 application service；文件与 ingestion 进入 `ProductIngestionService`，检索观测进入 `ProductObservabilityService`。API 不直接拥有 Agent loop、retrieval、memory 或数据库 schema。
 
-## Target role
+## 规则
 
-目标状态下，API 层只负责传输协议、公开契约、认证、校验、错误映射和响应形状；业务用例编排继续进入 application service 或更明确的 owner 层。前端只能依赖公开 DTO 和 response key，不能依赖 Agent、GraphRAG、DB 或内部 service 对象。
+- route 只负责输入校验、身份提取、调用 owner 和响应映射。
+- DTO 是公开传输契约；前端不得依赖内部 service 或数据库对象。
+- 新的业务行为必须先确定 application owner，再增加 route。
+- 失败必须保留安全拒绝、持久化失败、幂等冲突和租户隔离语义。
 
-## 允许新增内容
+## 验证入口
 
-- 新的 HTTP route、request / response DTO、auth 或 middleware 边界说明。
-- 保持旧 response key 的兼容 wrapper。
-- 不触发重 runtime import 的轻量 facade 导出。
-
-## 禁止事项
-
-- 禁止在 API 层直接实现 Agent loop、retrieval、GraphRAG、memory commit 或数据库 schema 逻辑。
-- 禁止为了目录整洁直接迁移或删除旧 `zuno.api.*` import path。
-- 禁止改变 URL、DTO 字段、SSE event、auth 行为或 response envelope，除非有单独 public API 变更计划。
-
-## Focused tests
-
-- `tests/repo/test_zuno_canonical_import_surfaces.py`
-- `tests/api/**`
-- `tests/frontend/test_product_wiring_v1_api_contract.py`
-- `tests/repo/test_backend_facade_layers.py`
-- `tests/repo/test_static_target_layer_imports.py`
+- `tests/api/`
+- `tests/frontend/test_product_runtime_contracts.py`
+- `python tools/scripts/verify_docs_entrypoints.py`

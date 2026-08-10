@@ -51,7 +51,7 @@ import { getSettingsIcon } from '../../../utils/settings-icons'
 import MascotPresence from '../../../components/MascotPresence.vue'
 import type { ZunoPetMood } from '../../../components/zuno-pet'
 import messageIcon from '../../../assets/message.svg'
-import { DEFAULT_USER_AVATAR, isLegacyRemoteUserAvatar, withUserAvatarVersion } from '../../../utils/user-avatars'
+import { DEFAULT_USER_AVATAR, withUserAvatarVersion } from '../../../utils/user-avatars'
 import Agent from '../../agent'
 import AgentEditor from '../../agent/agent-editor.vue'
 import AgentSkillPage from '../../agent-skill'
@@ -281,7 +281,7 @@ const getThreadLoadingVerb = (thread: SettingsThreadItem) => isAccountThread(thr
 const getThreadLoadingText = (thread: SettingsThreadItem) => isAccountThread(thread) ? 'Zuno 正在整理账号内容' : 'Zuno 正在拉取配置'
 const normalizeAvatarUrl = (avatar?: string) => {
   const raw = String(avatar || '').trim()
-  if (!raw || raw.startsWith('/src/assets/') || isLegacyRemoteUserAvatar(raw)) return DEFAULT_USER_AVATAR
+  if (!raw || raw.startsWith('/src/assets/')) return DEFAULT_USER_AVATAR
   return withUserAvatarVersion(raw)
 }
 const userAvatarSrc = computed(() => normalizeAvatarUrl(userStore.userInfo?.avatar))

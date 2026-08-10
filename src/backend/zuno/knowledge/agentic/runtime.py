@@ -24,7 +24,7 @@ from zuno.knowledge.agentic.corrective import CorrectiveRetrievalPolicy
 from zuno.knowledge.agentic.evidence_ledger import EvidenceLedger
 from zuno.knowledge.agentic.quality import RetrievalQualityGate
 from zuno.knowledge.agentic_graphrag import (
-    AgenticRetrievalRuntime,
+    AgenticRetrievalRuntime as BaseAgenticRetrievalRuntime,
     AgenticRetrievalRuntimeRequest,
     AgenticRetrievalRuntimeResult,
     ProductMode,
@@ -67,15 +67,15 @@ class CorrectiveRetrievalResult:
     base_result: AgenticRetrievalRuntimeResult | None = None
 
 
-class CorrectiveAgenticGraphRAGRuntime:
-    """Compatibility default path that exposes the legacy answer contract through PHASE18 retrieval."""
+class AgenticGraphRAGRuntime:
+    """Canonical agentic retrieval runtime with corrective evidence control."""
 
     def __init__(self, *, index_runtime: Any) -> None:
-        self._corrective_runtime = CorrectiveAgenticRetrievalRuntime(index_runtime=index_runtime)
-        self._fallback_runtime = AgenticRetrievalRuntime(index_runtime=index_runtime)
+        self._retrieval_coordinator = AgenticRetrievalCoordinator(index_runtime=index_runtime)
+        self._base_runtime = BaseAgenticRetrievalRuntime(index_runtime=index_runtime)
 
     def answer(self, request: AgenticRetrievalRuntimeRequest) -> AgenticRetrievalRuntimeResult:
-        retrieval_result = self._corrective_runtime.retrieve(
+        retrieval_result = self._retrieval_coordinator.retrieve(
             CorrectiveRetrievalRequest(
                 query=request.query,
                 workspace_id=request.workspace_id,
@@ -93,14 +93,14 @@ class CorrectiveAgenticGraphRAGRuntime:
                 retriever_timeout_ms=int(request.budget.get("retriever_timeout_ms") or 1500),
             )
         )
-        base_result = retrieval_result.base_result or self._fallback_runtime.answer(request)
+        base_result = retrieval_result.base_result or self._base_runtime.answer(request)
         trace_metadata = dict(base_result.trace_metadata)
         trace_metadata.update(
             {
-                "phase18_default_path": True,
-                "corrective_final_action": retrieval_result.final_action.value,
-                "corrective_final_verdict": retrieval_result.final_verdict.value,
-                "corrective_rounds": list(retrieval_result.rounds),
+                "retrieval_runtime": "agentic_graph_rag",
+                "final_action": retrieval_result.final_action.value,
+                "final_verdict": retrieval_result.final_verdict.value,
+                "retrieval_rounds": list(retrieval_result.rounds),
                 "knowledge_retrieval_graph": retrieval_result.graph_trace.model_dump(mode="json"),
                 "knowledge_control_proposal": retrieval_result.graph_trace.proposal.model_dump(mode="json")
                 if retrieval_result.graph_trace.proposal
@@ -116,9 +116,9 @@ class CorrectiveAgenticGraphRAGRuntime:
         )
 
 
-class CorrectiveAgenticRetrievalRuntime:
+class AgenticRetrievalCoordinator:
     def __init__(self, *, index_runtime: Any) -> None:
-        self._base_runtime = AgenticRetrievalRuntime(index_runtime=index_runtime)
+        self._base_runtime = BaseAgenticRetrievalRuntime(index_runtime=index_runtime)
         self._quality_gate = RetrievalQualityGate()
         self._policy = CorrectiveRetrievalPolicy()
 
@@ -605,8 +605,8 @@ def _control_proposal(
 
 
 __all__ = [
-    "CorrectiveAgenticGraphRAGRuntime",
-    "CorrectiveAgenticRetrievalRuntime",
+    "AgenticGraphRAGRuntime",
+    "AgenticRetrievalCoordinator",
     "CorrectiveRetrievalRequest",
     "CorrectiveRetrievalResult",
 ]

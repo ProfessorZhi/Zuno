@@ -4,8 +4,6 @@ from typing import Any, Dict, List
 
 from langchain_core.tools import BaseTool
 
-from zuno.capability.tool_runtime.bypass_guard import ensure_legacy_direct_tool_allowed
-
 from zuno.platform.services.mcp.multi_client import MultiServerMCPClient
 from zuno.api.dto.mcp import MCPBaseConfig
 
@@ -65,9 +63,8 @@ class MCPManager:
         """Retired direct MCP execution surface.
 
         Tool discovery remains available to the MCP management/API surface,
-        but executing a discovered tool must be proposed and dispatched by
-        ``ToolInvocationGateway`` so security, approval, idempotency, and
-        receipts cannot be bypassed by this compatibility manager.
+        but execution belongs to ``ToolInvocationGateway`` so security,
+        approval, idempotency and receipts cannot be bypassed by discovery.
         """
         del tools_info
         raise RuntimeError(

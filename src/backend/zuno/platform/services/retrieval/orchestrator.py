@@ -206,8 +206,8 @@ class RetrievalOrchestrator:
         if not fallback_reason or not fallback_policy.get("allow_retry", True):
             return []
         attempts: list[dict] = []
-        if fallback_policy.get("route_broadening", True) and first_mode in {"rag", "graphrag"}:
-            attempts.append({"mode": "hybrid", "query": candidate_queries[0], "trigger": "route_broadening"})
+        if fallback_policy.get("route_broadening", True) and first_mode == "rag_graph_deep":
+            attempts.append({"mode": first_mode, "query": candidate_queries[0], "trigger": "route_broadening"})
         alternate_query = next(
             (
                 candidate
@@ -217,7 +217,7 @@ class RetrievalOrchestrator:
             None,
         )
         if alternate_query and fallback_policy.get("query_rewrite_retry", True):
-            attempts.append({"mode": "hybrid", "query": alternate_query, "trigger": "query_rewrite_retry"})
+            attempts.append({"mode": first_mode, "query": alternate_query, "trigger": "query_rewrite_retry"})
         max_rounds = int(fallback_policy.get("max_rounds") or self.max_rounds)
         max_rounds = max(1, min(max_rounds, 3))
         return attempts[: max(max_rounds - 1, 0)]
@@ -671,16 +671,7 @@ class RetrievalOrchestrator:
                 graph_query = f"{query}\n{entry_text[:2000]}"
             graph_options = dict(retrieval_options)
             graph_options["candidate_context"] = candidate_context
-            try:
-                graph_result = await self.graph_retriever.retrieve(graph_query, knowledge_ids, graph_options)
-            except TypeError:
-                graph_result = await self.graph_retriever.retrieve(
-                    graph_query,
-                    knowledge_ids[0] if knowledge_ids else "",
-                    graph_hop_limit=retrieval_options.get("graph_hop_limit", 2),
-                    max_paths_per_entity=retrieval_options.get("max_paths_per_entity", 10),
-                    candidate_context=candidate_context,
-                )
+            graph_result = await self.graph_retriever.retrieve(graph_query, knowledge_ids, graph_options)
             docs = [self._dict_to_document(item, source_type="graph", source_backend="neo4j") for item in graph_result.get("documents") or []]
             documents_by_source["graph"] = docs
             retriever_runs.append({"source": "graph", "result_count": len(docs), "mode": mode})
@@ -726,20 +717,6 @@ class RetrievalOrchestrator:
                 if cleaned and cleaned not in parts:
                     parts.append(cleaned)
             content = "\n".join(parts)
-        elif mode in {"hybrid", "hybrid_rag"}:
-            if merged_content:
-                parts = [merged_content]
-                graph_content = str(graph_result.get("content") or "").strip()
-                if graph_content and not (graph_result.get("documents") or []) and graph_content not in parts:
-                    parts.append(graph_content)
-                content = "\n".join(parts)
-            else:
-                parts: list[str] = []
-                for part in [graph_result.get("content"), rag_result.get("content"), keyword_result.get("content")]:
-                    cleaned = str(part or "").strip()
-                    if cleaned and cleaned not in parts:
-                        parts.append(cleaned)
-                content = "\n".join(parts)
         else:
             content = merged_content or rag_result.get("content") or keyword_result.get("content") or ""
 
@@ -757,7 +734,7 @@ class RetrievalOrchestrator:
             "entities": graph_result.get("entities", []),
             "paths": graph_result.get("paths", []),
             "structured_paths": graph_result.get("structured_paths", []),
-            "domain_pack_id": graph_result.get("domain_pack_id") or retrieval_options.get("domain_pack_id"),
+            "graphrag_project_id": graph_result.get("graphrag_project_id") or retrieval_options.get("graphrag_project_id"),
             "rag_result": rag_result,
             "keyword_result": keyword_result,
             "graph_result": graph_result,
@@ -1183,7 +1160,7 @@ class RetrievalOrchestrator:
             "actual_mode": final_mode,
             "first_mode": first_mode,
             "final_mode": final_mode,
-            "domain_pack_id": final_pass.get("domain_pack_id"),
+            "graphrag_project_id": final_pass.get("graphrag_project_id"),
             "second_pass_used": second_pass_used,
             "fallback_triggered": second_pass_used,
             "fallback_reason": metadata["fallback_reason"],

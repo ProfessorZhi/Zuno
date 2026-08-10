@@ -47,7 +47,7 @@ class Neo4jClient:
                             "knowledge_id": entity.get("knowledge_id", ""),
                             "knowledge_file_id": entity.get("knowledge_file_id", ""),
                             "type": entity.get("type", "entity"),
-                            "graphrag_project_id": entity.get("graphrag_project_id") or entity.get("domain_pack_id"),
+                            "graphrag_project_id": entity.get("graphrag_project_id"),
                             "index_version": entity.get("index_version"),
                             "status": entity.get("status"),
                             "source_chunk_id": entity.get("source_chunk_id"),
@@ -97,7 +97,7 @@ class Neo4jClient:
                             "knowledge_file_id": relation.get("knowledge_file_id", ""),
                             "relation_type": relation.get("relation_type", "related_to"),
                             "chunk_id": relation.get("chunk_id", ""),
-                            "graphrag_project_id": relation.get("graphrag_project_id") or relation.get("domain_pack_id"),
+                            "graphrag_project_id": relation.get("graphrag_project_id"),
                             "index_version": relation.get("index_version"),
                             "status": relation.get("status"),
                             "source_chunk_id": relation.get("source_chunk_id"),
@@ -162,7 +162,6 @@ class Neo4jClient:
         hops: int = 1,
         limit: int = 10,
         graphrag_project_id: str | None = None,
-        domain_pack_id: str | None = None,
         index_version: str | None = None,
         status: str | None = None,
     ) -> list[dict]:
@@ -177,8 +176,8 @@ class Neo4jClient:
                         f"""
                         MATCH p=(e:Entity {{name: $name, knowledge_id: $knowledge_id}})-[:RELATES_TO*1..{safe_hops}]-(n:Entity {{knowledge_id: $knowledge_id}})
                         WHERE $graphrag_project_id IS NULL OR (
-                          COALESCE(e.graphrag_project_id, e.domain_pack_id) = $graphrag_project_id
-                          AND COALESCE(n.graphrag_project_id, n.domain_pack_id) = $graphrag_project_id
+                          e.graphrag_project_id = $graphrag_project_id
+                          AND n.graphrag_project_id = $graphrag_project_id
                         )
                         AND ($index_version IS NULL OR (
                           e.index_version = $index_version
@@ -201,7 +200,7 @@ class Neo4jClient:
                             "name": entity_name,
                             "knowledge_id": knowledge_id,
                             "limit": safe_limit,
-                            "graphrag_project_id": graphrag_project_id or domain_pack_id,
+                            "graphrag_project_id": graphrag_project_id,
                             "index_version": index_version,
                             "status": status,
                         },

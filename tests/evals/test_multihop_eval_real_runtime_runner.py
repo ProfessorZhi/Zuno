@@ -10,9 +10,9 @@ sys.path.insert(0, str(REPO_ROOT))
 def test_real_runtime_runner_resolves_public_modes():
     from tools.evals.zuno.multihop_eval.run_real_runtime_eval import resolve_runtime_mode
 
-    assert resolve_runtime_mode("baseline_rag") == "rag"
-    assert resolve_runtime_mode("local_graphrag") == "local_graphrag"
-    assert resolve_runtime_mode("deep_graphrag") == "rag_graph_deep"
+    assert resolve_runtime_mode("normal") == "rag"
+    assert resolve_runtime_mode("enhanced") == "rag_graph_deep"
+    assert resolve_runtime_mode("auto") == "auto"
 
 
 def test_real_runtime_runner_loads_named_eval_profile(tmp_path):
@@ -87,7 +87,7 @@ def test_real_runtime_runner_extracts_route_diagnostics_from_runtime_payload():
     runtime_result = {
         "metadata": {
             "route_policy": "auto",
-            "requested_mode": "local_graphrag",
+            "requested_mode": "enhanced",
             "resolved_mode": "hybrid_rag",
             "internal_route": "standard_rag",
             "seed_entities": ["Scott Derrickson", "Ed Wood"],
@@ -148,7 +148,7 @@ def test_real_runtime_runner_extracts_route_diagnostics_from_runtime_payload():
         fallback_reason="graph_result_empty",
     )
 
-    assert diagnostics["requested_mode"] == "local_graphrag"
+    assert diagnostics["requested_mode"] == "enhanced"
     assert diagnostics["resolved_mode"] == "hybrid_rag"
     assert diagnostics["internal_route"] == "standard_rag"
     assert diagnostics["route_policy"] == "auto"

@@ -36,26 +36,20 @@ class RetrievalPlanner:
         normalized = str(method or "").strip().lower()
         if requested_mode == "rag" and normalized in {"", "auto"}:
             return "basic"
-        legacy_map = {
-            "rag": "basic",
-            "standard_retrieval": "basic",
-            "rag_graph_deep": "auto",
-            "enhanced_retrieval": "auto",
-            "local_graphrag": "local",
-            "community_global": "global",
-            "drift_like": "drift",
-        }
-        if normalized in {"", "auto"} and requested_mode in legacy_map:
-            return legacy_map[requested_mode]
         if normalized in {"auto", "basic", "local", "global", "drift"}:
             return normalized
-        return legacy_map.get(requested_mode, "auto")
+        raise ValueError(f"unsupported retrieval query method: {method}")
 
     @staticmethod
     def _resolve_product_mode(request: RetrievalRequest) -> str:
         if request.product_mode is not None:
             return normalize_product_mode(request.product_mode)
-        return normalize_product_mode(request.mode)
+        retrieval_mode = normalize_retrieval_mode(request.mode)
+        if retrieval_mode == "rag":
+            return "normal"
+        if retrieval_mode == "rag_graph_deep":
+            return "enhanced"
+        return "auto"
 
     @staticmethod
     def _router_decision(*, resolved_product_mode: str, resolved_query_method: str) -> str:

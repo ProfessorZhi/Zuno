@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from zuno.agent.contracts import PlanStep
-from zuno.agent.runtime import RuntimeDependencyFactory, RuntimeStartRequest, SQLiteAgentRunStore, UnifiedAgentRuntimeService
+from zuno.agent.runtime import AgentRuntimeService, RuntimeDependencyFactory, RuntimeStartRequest, SQLiteAgentRunStore
 from zuno.agent.runtime.configuration import RuntimeFactoryConfig
 from zuno.agent.runtime.dependencies import RuntimeDependencies
 from zuno.agent.runtime.execution.knowledge_step import KnowledgeStepExecutor
@@ -119,9 +119,9 @@ def test_missing_runtime_dependencies_return_blocked_observations() -> None:
     assert tool.observation.metadata["missing_dependency"] == "tool_control_plane"
 
 
-def test_unified_runtime_service_can_start_from_factory_assembly(tmp_path) -> None:
+def test_agent_run_service_can_start_from_factory_assembly(tmp_path) -> None:
     assembly = RuntimeDependencyFactory.for_completion(store=SQLiteAgentRunStore(tmp_path / "runtime.db"))
-    service = UnifiedAgentRuntimeService(store=assembly.store, dependencies=assembly.dependencies)
+    service = AgentRuntimeService(store=assembly.store, dependencies=assembly.dependencies)
 
     snapshot = service.start(
         RuntimeStartRequest(
@@ -131,7 +131,7 @@ def test_unified_runtime_service_can_start_from_factory_assembly(tmp_path) -> No
             user_id="user:factory",
             task_id="task:factory",
             trace_id="trace:factory",
-            goal="Answer with the unified runtime factory.",
+            goal="Answer with the Agent Run factory.",
         )
     )
 

@@ -1,28 +1,7 @@
 # Platform Vendor 边界
 
-PHASE22 status: canonical-owner-active (P22-T03 Wave 1)
+`platform/vendor/` 是第三方库适配与隔离的唯一目录。这里可以保存第三方 API 的最小 shim、配置转换和 import guard，但不实现业务用例、Product API 或 Agent Runtime。
 
-## 当前角色
+所有新代码必须直接使用本目录声明的 canonical import。供应商适配器必须保持输入、输出、异常和安全边界可测试；不得把第三方对象泄漏为业务层的隐式契约。
 
-`platform/vendor/` 是第三方 shim 的 canonical owner。`fastapi_jwt_auth` 已从 `platform/compatibility/vendor/fastapi_jwt_auth` 物理迁移到 `platform/vendor/fastapi_jwt_auth`，canonical import path 为 `zuno.platform.vendor.fastapi_jwt_auth`。
-
-## Target role
-
-第三方 shim 只允许放在本目录；legacy import registry 由 `platform/compatibility/` 持有（PHASE22 Wave 1 删除兼容目录后该目录不再存在）。
-
-## 允许新增内容
-
-- 第三方 shim 实现、README、import guard 与迁移说明。
-- 通过 canonical import path 暴露的 public surface。
-
-## 禁止事项
-
-- 禁止把 legacy alias registry 写入 `platform/vendor/`。
-- 禁止恢复 `platform/compatibility/vendor/fastapi_jwt_auth/` 或 `src/backend/fastapi_jwt_auth/` 顶层 public shell。
-- 禁止在 shim 包内写业务逻辑。
-
-## Focused tests
-
-- `python tools/scripts/verify_repo_structure.py`
-- `python tools/scripts/verify_phase22_cleanup_boundary.py`
-- `pytest -q tests/api/test_fastapi_jwt_auth_compat.py tests/repo/test_repo_structure_consistency.py -p no:cacheprovider`
+验证入口：`python tools/scripts/verify_repo_structure.py`。

@@ -10,7 +10,7 @@ import { getWorkspaceSessionsAPI, deleteWorkspaceSessionAPI } from '../../apis/w
 import { useResizablePanel } from '../../composables/useResizablePanel'
 import { getSettingsIcon } from '../../utils/settings-icons'
 import { isDesktopRuntime } from '../../utils/api'
-import { DEFAULT_USER_AVATAR, isLegacyRemoteUserAvatar, withUserAvatarVersion } from '../../utils/user-avatars'
+import { DEFAULT_USER_AVATAR, withUserAvatarVersion } from '../../utils/user-avatars'
 import { PRODUCT_AGENT_WORKSPACE_ID, PRODUCT_WEB_TENANT_ID, listProductAgentCatalog, type AgentCatalogEntry } from '../../product'
 import SidebarMascot from '../../components/SidebarMascot.vue'
 import ZunoMiniPager from '../../components/ZunoMiniPager.vue'
@@ -100,7 +100,7 @@ const {
 
 const normalizeAvatarUrl = (avatar?: string) => {
   const raw = String(avatar || '').trim()
-  if (!raw || raw.startsWith('/src/assets/') || isLegacyRemoteUserAvatar(raw)) return DEFAULT_USER_AVATAR
+  if (!raw || raw.startsWith('/src/assets/')) return DEFAULT_USER_AVATAR
   return withUserAvatarVersion(raw)
 }
 

@@ -7,7 +7,7 @@ This folder contains local helper scripts that are useful for development and ma
 - `start.py`: local recovery-period starter for the current backend/frontend development surface.
 - `clean_workspace.py`: removes safe local cache and temporary directories from the repo root.
 - `run-full-e2e-smoke.ps1`: browser smoke-test helper.
-- `zuno-*.bat`: legacy forwarders that now call the stable scripts in `tools/launchers/windows/`.
+- `zuno-*.bat`: Windows entrypoint forwarders that call the stable scripts in `tools/launchers/windows/`.
 
 One-off migrations live in `tools/migrations/`.
 
@@ -19,10 +19,10 @@ From the repository root:
 python tools/scripts/start.py
 ```
 
-This script currently exists to help during the mixed-runtime recovery period:
+This script provides the current local development entrypoint:
 
 - frontend starts from `apps/web`
-- backend startup still follows the repo's current mixed runtime surface
+- backend startup follows the canonical runtime composition
 - when PostgreSQL is unavailable, backend startup should now fail fast instead of hanging indefinitely
 - this script should not be treated as proof that the paused service migration is the active architecture target
 

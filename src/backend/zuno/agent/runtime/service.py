@@ -49,11 +49,9 @@ class RuntimeStartRequest:
     task_id: str
     trace_id: str
     goal: str
-    # Product submission identity (PHASE22 repair): the task id must be bound
-    # to the product submission, never to a content hash. There is no
-    # synthetic default tenant: real tenant context comes from the product
-    # request / auth context and must be supplied explicitly (missing product
-    # context fails closed at the composition adapter).
+    # The task id is bound to the product submission, never to a content hash.
+    # Tenant identity is supplied by authenticated server context; missing
+    # product context fails closed at the composition boundary.
     tenant_id: str = ""
     principal_id: str = ""
     submission_id: str = ""
@@ -65,16 +63,15 @@ class RuntimeStartRequest:
     knowledge_space_ids: tuple[str, ...] = ()
     strategy_mode: StrategyMode | str | None = None
     reflection_decision: ReflectionDecision | str | None = None
-    # Single-controller product cutover: product adapters seed the capability
-    # plan, planning-admission gates and a deterministic plan so product
-    # traffic runs through the fixed graph's plan / security / approval /
-    # budget / run-outcome pipeline (never a direct tool or model handler).
+    # The application boundary may seed capabilities and a plan, but execution
+    # always goes through the graph's planning, security, approval, budget and
+    # run-outcome stages.
     capability_ids: tuple[str, ...] = ()
     allowed_tools: tuple[str, ...] = ()
     approval_required_tools: tuple[str, ...] = ()
     budget_limits: dict[str, Any] | None = None
-    # Owner decision refs only: raw caller dicts are never trusted as owner
-    # decisions (PHASE22 repair).
+    # Only owner decision references are accepted; raw caller dictionaries are
+    # never treated as authorization facts.
     security_decision_ref: dict[str, Any] | None = None
     budget_decision_ref: dict[str, Any] | None = None
     security_epoch_ref: str = ""
@@ -94,12 +91,8 @@ class RuntimeStreamEvent:
     payload: dict
 
 
-class UnifiedAgentRuntimeService:
-    """PHASE05 unified graph skeleton facade.
-
-    Product traffic stays on the existing path until the later feature-flag phase. This service
-    gives tests and future integration work a single start/stream/resume/cancel/snapshot surface.
-    """
+class AgentRuntimeService:
+    """Canonical Agent Run execution and recovery surface."""
 
     def __init__(
         self,
@@ -114,9 +107,8 @@ class UnifiedAgentRuntimeService:
         self.graph = graph or build_agent_graph(dependencies=self.dependencies, checkpointer=self.checkpointer)
 
     def start(self, request: RuntimeStartRequest) -> AgentRuntimeSnapshot:
-        # PHASE22 repair: Security / Budget facts come from owner decision
-        # refs verified by Agent Core; a caller raw dict is never an owner
-        # decision, and an invalid / missing / stale ref fails closed.
+        # Security and Budget facts come from owner decision references verified
+        # by Agent Core. Invalid, missing or stale references fail closed.
         security_verdict = _verify_security_owner_ref(request)
         budget_verdict = _verify_budget_owner_ref(request)
         admission_blocked = not security_verdict.allowed or not budget_verdict.allowed
@@ -292,7 +284,7 @@ class UnifiedAgentRuntimeService:
 
 
 def _capability_plan_from_request(request: RuntimeStartRequest) -> CapabilityPlan | None:
-    """Delegate to the canonical plan owner.
+    """Delegate plan construction to the canonical plan owner.
 
     The actual ``CapabilityPlan`` construction lives in
     ``zuno.agent.runtime.plan_owner`` so the public adapter body never
@@ -309,11 +301,10 @@ def _capability_plan_from_request(request: RuntimeStartRequest) -> CapabilityPla
 def _plan_state_from_request(request: RuntimeStartRequest, *, blocked: bool = False) -> PlanState | None:
     """Activate the deterministic plan carried by the product surface.
 
-    PHASE22 repair: every task must have a formal plan (INV-AGENT-001). The
-    adapter supplies step definitions only; activation status / plan version
-    are owned by Agent Core here. A request without any plan steps and without
-    an explicit blocked admission produces a blocked plan instead of a
-    direct-answer bypass.
+    Every task has a formal plan (INV-AGENT-001). The application supplies
+    step definitions only; activation status and plan version belong to Agent
+    Core. A request without steps becomes blocked rather than bypassing the
+    planning boundary.
     """
     if blocked:
         return PlanState(
@@ -344,7 +335,7 @@ def _plan_state_from_request(request: RuntimeStartRequest, *, blocked: bool = Fa
 
 
 def _verify_security_owner_ref(request: RuntimeStartRequest) -> OwnerRefVerification:
-    """Agent Core verifies the Security-owner decision ref (PHASE22 repair).
+    """Agent Core verifies the Security-owner decision reference.
 
     In the product profile the ref is required only for a plan that actually
     executes a tool (``tool.execute`` security decision). A simple no-tool
@@ -370,7 +361,7 @@ def _verify_security_owner_ref(request: RuntimeStartRequest) -> OwnerRefVerifica
 
 
 def _verify_budget_owner_ref(request: RuntimeStartRequest) -> OwnerRefVerification:
-    """Agent Core verifies the Budget-owner decision ref (PHASE22 repair).
+    """Agent Core verifies the Budget-owner decision reference.
 
     Every product run with a formal plan must pass Budget Admission: the
     budget ref is required for any planned product run (simple no-tool runs
@@ -408,7 +399,7 @@ def _assert_scope(
     tenant_id: str,
     workspace_id: str,
 ) -> None:
-    """PHASE22 repair: tenant / workspace isolation for read and resume paths.
+    """Enforce tenant and workspace isolation for read and resume paths.
 
     The store may be shared across tenants (e.g. the server's durable store);
     a run recovered from the store whose owner scope does not match the
@@ -450,5 +441,5 @@ __all__ = [
     "PROFILE_PRODUCT",
     "RuntimeStartRequest",
     "RuntimeStreamEvent",
-    "UnifiedAgentRuntimeService",
+    "AgentRuntimeService",
 ]

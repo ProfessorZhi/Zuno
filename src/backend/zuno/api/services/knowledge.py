@@ -218,7 +218,6 @@ class KnowledgeService:
         graph_update_fields = {
             "index_capability",
             "graphrag_project_id",
-            "domain_pack_id",
             "graphrag_project.prompt_version",
             "graph_index_settings.entity_extraction_mode",
             "graph_index_settings.entity_extraction_fallback_mode",
@@ -244,7 +243,6 @@ class KnowledgeService:
         }
         community_report_fields = {
             "graphrag_project_id",
-            "domain_pack_id",
             "graphrag_project.prompt_version",
             "eval_profile_id",
             "graph_index_settings.community_report_prompt_id",
@@ -354,15 +352,8 @@ class KnowledgeService:
     @staticmethod
     def _normalize_retrieval_mode(mode: str | None, *, index_capability: str) -> str:
         normalized = str(mode or "").strip().lower()
-        legacy_map = {
-            "hybrid": "rag_graph",
-            "graphrag": "rag_graph",
-            "auto": "rag",
-            "default": "rag",
-        }
-        normalized = legacy_map.get(normalized, normalized)
-        if normalized not in {"rag", "rag_graph", "rag_graph_deep"}:
-            normalized = "rag"
+        if normalized not in {"auto", "rag", "rag_graph_deep"}:
+            raise ValueError(f"unsupported retrieval mode: {mode}")
         if index_capability != "rag_graph":
             return "rag"
         return normalized
@@ -372,16 +363,15 @@ class KnowledgeService:
         normalized = str(value or "").strip().lower()
         if normalized in {"rag", "rag_graph"}:
             return normalized
-        if str(retrieval_mode or "").strip().lower() in {"hybrid", "graphrag", "rag_graph", "rag_graph_deep"}:
-            return "rag_graph"
-        return "rag"
+        if not normalized:
+            return "rag"
+        raise ValueError(f"unsupported knowledge index capability: {value}")
 
     @staticmethod
     def _normalize_project_identity(config: dict[str, Any]) -> None:
         project = dict(config.get("graphrag_project") or {})
-        project_id = config.get("graphrag_project_id") or project.get("graphrag_project_id") or config.get("domain_pack_id")
+        project_id = config.get("graphrag_project_id") or project.get("graphrag_project_id")
         config["graphrag_project_id"] = project_id
-        config.pop("domain_pack_id", None)
         if project_id:
             project.setdefault("settings_path", None)
             project.setdefault("prompt_version", "default")
@@ -401,16 +391,11 @@ class KnowledgeService:
     def _normalize_knowledge_config(
         cls,
         knowledge_config: dict[str, Any] | None,
-        legacy_default_mode: str | None = None,
     ) -> dict[str, Any]:
         normalized = deepcopy(DEFAULT_KNOWLEDGE_CONFIG)
         if knowledge_config:
             normalized = cls._deep_merge(normalized, knowledge_config)
         cls._normalize_project_identity(normalized)
-        if legacy_default_mode and not (
-            (knowledge_config or {}).get("retrieval_settings", {}).get("default_mode")
-        ):
-            normalized["retrieval_settings"]["default_mode"] = legacy_default_mode
         retrieval_mode = normalized.get("retrieval_settings", {}).get("default_mode")
         explicit_index_capability = (knowledge_config or {}).get("index_capability")
         normalized["index_capability"] = cls._normalize_index_capability(
@@ -426,11 +411,7 @@ class KnowledgeService:
     @classmethod
     def _sanitize_knowledge_payload(cls, knowledge: dict) -> dict:
         sanitized = dict(knowledge)
-        legacy_default_mode = sanitized.pop("default_retrieval_mode", None)
-        sanitized["knowledge_config"] = cls._normalize_knowledge_config(
-            sanitized.get("knowledge_config"),
-            legacy_default_mode,
-        )
+        sanitized["knowledge_config"] = cls._normalize_knowledge_config(sanitized.get("knowledge_config"))
         return sanitized
 
     @classmethod
@@ -443,7 +424,6 @@ class KnowledgeService:
                 knowledge_name,
                 knowledge_desc,
                 user_id,
-                default_retrieval_mode=normalized_config["retrieval_settings"]["default_mode"],
                 knowledge_config=normalized_config,
             )
             return cls._sanitize_knowledge_payload(knowledge.to_dict())
@@ -527,7 +507,6 @@ class KnowledgeService:
                 current_payload = current_knowledge.to_dict() if current_knowledge else {}
                 base_config = cls._normalize_knowledge_config(
                     current_payload.get("knowledge_config"),
-                    current_payload.get("default_retrieval_mode"),
                 )
                 normalized_config = cls._normalize_knowledge_config(
                     cls._deep_merge(base_config, knowledge_config)
@@ -537,11 +516,6 @@ class KnowledgeService:
                 knowledge_id,
                 knowledge_desc,
                 knowledge_name,
-                default_retrieval_mode=(
-                    normalized_config["retrieval_settings"]["default_mode"]
-                    if normalized_config is not None
-                    else None
-                ),
                 knowledge_config=normalized_config,
             )
         except Exception as err:
@@ -559,7 +533,6 @@ class KnowledgeService:
             payload = knowledge.to_dict()
             return cls._normalize_knowledge_config(
                 payload.get("knowledge_config"),
-                payload.get("default_retrieval_mode"),
             )
         except Exception as err:
             raise ValueError(f"Get Knowledge Config Error: {err}")
@@ -596,14 +569,12 @@ class KnowledgeService:
         if local_runtime:
             runtime = dict(local_runtime)
             config = cls._normalize_knowledge_config(runtime.get("knowledge_config"))
-            domain_pack_id = runtime.get("domain_pack_id") or config.get("graphrag_project_id")
-            project_payload = runtime.get("project_payload") or runtime.get("domain_pack")
+            project_payload = runtime.get("project_payload")
             config = cls._apply_project_payload_defaults(config, project_payload)
             runtime["knowledge_id"] = knowledge_id
             runtime["knowledge_config"] = config
-            runtime["domain_pack_id"] = domain_pack_id
+            runtime["graphrag_project_id"] = config.get("graphrag_project_id")
             runtime["project_payload"] = project_payload
-            runtime.pop("domain_pack", None)
             runtime.setdefault("text_embedding_config", None)
             runtime.setdefault("vl_embedding_config", None)
             runtime.setdefault("rerank_config", None)
@@ -611,14 +582,13 @@ class KnowledgeService:
         payload = await cls.get_knowledge_payload(knowledge_id)
         config = payload["knowledge_config"]
         model_refs = config.get("model_refs", {})
-        domain_pack_id = config.get("graphrag_project_id")
         project_payload = None
         config = cls._apply_project_payload_defaults(config, project_payload)
 
         return {
             "knowledge_id": knowledge_id,
             "knowledge_config": config,
-            "domain_pack_id": domain_pack_id,
+            "graphrag_project_id": config.get("graphrag_project_id"),
             "project_payload": project_payload,
             "text_embedding_config": await cls.resolve_model_config_by_id(model_refs.get("text_embedding_model_id")),
             "vl_embedding_config": await cls.resolve_model_config_by_id(model_refs.get("vl_embedding_model_id")),
@@ -633,7 +603,6 @@ class KnowledgeService:
         payload = knowledge.to_dict()
         normalized_config = cls._normalize_knowledge_config(
             payload.get("knowledge_config"),
-            payload.get("default_retrieval_mode"),
         )
         graph_index_settings = dict(normalized_config.get("graph_index_settings") or {})
         graph_index_settings["community_detection_status"] = "stale"
@@ -643,7 +612,6 @@ class KnowledgeService:
             knowledge_id,
             payload.get("description"),
             payload.get("name"),
-            default_retrieval_mode=normalized_config["retrieval_settings"]["default_mode"],
             knowledge_config=normalized_config,
         )
         return normalized_config
@@ -659,7 +627,7 @@ class KnowledgeService:
             {
                 "eval_profile_id": "contract_review_local",
                 "label": "合同本地评测",
-                "scope": "domain_pack",
+                "scope": "knowledge",
             },
         ]
 
@@ -684,7 +652,6 @@ class KnowledgeService:
         payload = knowledge.to_dict()
         normalized_config = cls._normalize_knowledge_config(
             payload.get("knowledge_config"),
-            payload.get("default_retrieval_mode"),
         )
         tenant_id = f"user:{payload.get('user_id') or 'unknown'}"
         workspace_id = f"workspace:{knowledge_id}"
@@ -716,7 +683,7 @@ class KnowledgeService:
         )[:24]
         knowledge_version_id = f"knowledge-version:{fingerprint}"
         snapshot_id = f"knowledge-snapshot:{fingerprint}"
-        cutover_id = f"knowledge-cutover:{fingerprint}"
+        publication_id = f"knowledge-publication:{fingerprint}"
         with KnowledgeUnitOfWork(engine) as repo:
             version_no = repo.next_version_no(
                 tenant_id=tenant_id,
@@ -739,7 +706,7 @@ class KnowledgeService:
                     source_span_manifest={
                         "source_spans": [
                             {
-                                "source_span_ref": f"legacy:file:{file.id}",
+                                "source_span_ref": f"file:{file.id}",
                                 "file_name": file.file_name,
                                 "oss_url": file.oss_url,
                             }
@@ -756,7 +723,7 @@ class KnowledgeService:
                     tenant_id=tenant_id,
                     knowledge_version_id=knowledge_version_id,
                     document_version_id=f"document-version:{file.id}",
-                    source_span_ref=f"legacy:file:{file.id}",
+                    source_span_ref=f"file:{file.id}",
                     chunk_payload={
                         "file_name": file.file_name,
                         "oss_url": file.oss_url,
@@ -798,7 +765,7 @@ class KnowledgeService:
                 serving_watermark_ref=f"serving-watermark:{knowledge_version_id}",
             )
             repo.cutover(
-                cutover_id=cutover_id,
+                cutover_id=publication_id,
                 tenant_id=tenant_id,
                 knowledge_space_id=knowledge_id,
                 to_version_id=knowledge_version_id,
@@ -819,7 +786,7 @@ class KnowledgeService:
             "status": "published",
             "knowledge_version_id": knowledge_version_id,
             "snapshot_id": snapshot_id,
-            "cutover_id": cutover_id,
+            "publication_id": publication_id,
         }
 
     @classmethod

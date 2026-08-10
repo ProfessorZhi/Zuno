@@ -113,7 +113,7 @@ def test_hail_from_query_triggers_proactive_requery():
 
     result = asyncio.run(
         orchestrator.run(
-            mode="enhanced_retrieval",
+                    mode="rag_graph_deep",
             query=query,
             knowledge_ids=["kb_1"],
             retrieval_options={
@@ -153,7 +153,7 @@ def test_located_in_what_city_query_triggers_proactive_requery():
 
     result = asyncio.run(
         orchestrator.run(
-            mode="enhanced_retrieval",
+                    mode="rag_graph_deep",
             query=query,
             knowledge_ids=["kb_1"],
             retrieval_options={
@@ -186,7 +186,7 @@ def test_simple_fact_query_does_not_trigger_proactive_requery():
 
     result = asyncio.run(
         orchestrator.run(
-            mode="enhanced_retrieval",
+                    mode="rag_graph_deep",
             query=query,
             knowledge_ids=["kb_1"],
             retrieval_options={
@@ -224,7 +224,7 @@ def test_low_confidence_requery_falls_back_to_standard_floor():
 
     result = asyncio.run(
         orchestrator.run(
-            mode="enhanced_retrieval",
+                    mode="rag_graph_deep",
             query=query,
             knowledge_ids=["kb_1"],
             retrieval_options={

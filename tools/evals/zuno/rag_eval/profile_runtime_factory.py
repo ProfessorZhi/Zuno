@@ -5,7 +5,7 @@ and Production-Grade Canonical Profile Runners ('canonical').
 
 canonical mode rules:
 - Requires a non-empty CanonicalRuntimeDependencies bundle from Composition Root.
-- MUST NOT create KnowledgeIndexRuntime, AgentControlRuntime, or any other
+- MUST NOT create a separate controller runtime or any other
   infrastructure object internally.
 - Empty or missing dependencies -> RuntimeError (fail closed). No fallback.
 

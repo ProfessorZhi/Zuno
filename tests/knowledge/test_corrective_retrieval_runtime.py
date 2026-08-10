@@ -6,8 +6,8 @@ from zuno.agent.runtime.execution import KnowledgeStepExecutor
 from zuno.agent.runtime.state import AgentRuntimeState
 from zuno.knowledge.agentic import (
     CorrectiveAction,
-    CorrectiveAgenticGraphRAGRuntime,
-    CorrectiveAgenticRetrievalRuntime,
+    AgenticGraphRAGRuntime,
+    AgenticRetrievalCoordinator,
     CorrectiveRetrievalRequest,
     DurableKnowledgeRetrievalPort,
     KnowledgeControlProposalType,
@@ -56,9 +56,9 @@ def _index_runtime() -> KnowledgeIndexRuntime:
     return index
 
 
-def _runtime() -> CorrectiveAgenticRetrievalRuntime:
+def _runtime() -> AgenticRetrievalCoordinator:
     index = _index_runtime()
-    return CorrectiveAgenticRetrievalRuntime(index_runtime=index)
+    return AgenticRetrievalCoordinator(index_runtime=index)
 
 
 def test_corrective_runtime_runs_second_round_after_doc_miss() -> None:
@@ -101,7 +101,7 @@ def test_corrective_runtime_continues_when_first_round_has_strict_source_span() 
 
 
 def test_corrective_graphrag_default_path_preserves_legacy_answer_contract() -> None:
-    runtime = CorrectiveAgenticGraphRAGRuntime(index_runtime=_index_runtime())
+    runtime = AgenticGraphRAGRuntime(index_runtime=_index_runtime())
 
     result = runtime.answer(
         AgenticRetrievalRuntimeRequest(
@@ -117,7 +117,7 @@ def test_corrective_graphrag_default_path_preserves_legacy_answer_contract() -> 
     )
 
     assert isinstance(result, AgenticRetrievalRuntimeResult)
-    assert result.trace_metadata["phase18_default_path"] is True
+    assert result.trace_metadata["retrieval_runtime"] == "agentic_graph_rag"
     assert result.trace_metadata["corrective_final_action"] == CorrectiveAction.CONTINUE.value
     assert result.trace_metadata["knowledge_retrieval_graph"]["fixed_graph"] == [
         node.value for node in KnowledgeRetrievalGraphNode

@@ -11,7 +11,6 @@ class KnowledgeDao:
         knowledge_name,
         knowledge_desc,
         user_id,
-        default_retrieval_mode="rag",
         knowledge_config=None,
     ):
         with session_getter() as session:
@@ -19,7 +18,6 @@ class KnowledgeDao:
                 name=knowledge_name,
                 description=knowledge_desc,
                 user_id=user_id,
-                default_retrieval_mode=default_retrieval_mode,
                 knowledge_config=knowledge_config or {},
             )
             session.add(knowledge)
@@ -52,7 +50,6 @@ class KnowledgeDao:
         knowledge_id,
         knowledge_desc,
         knowledge_name,
-        default_retrieval_mode=None,
         knowledge_config=None,
     ):
         with session_getter() as session:
@@ -61,8 +58,6 @@ class KnowledgeDao:
                 update_values["name"] = knowledge_name
             if knowledge_desc is not None:
                 update_values["description"] = knowledge_desc
-            if default_retrieval_mode is not None:
-                update_values["default_retrieval_mode"] = default_retrieval_mode
             if knowledge_config is not None:
                 update_values["knowledge_config"] = knowledge_config
             sql = update(KnowledgeTable).where(KnowledgeTable.id == knowledge_id).values(**update_values)

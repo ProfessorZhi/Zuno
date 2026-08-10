@@ -24,16 +24,16 @@ from zuno.knowledge.agentic.durable import DurableKnowledgeRetrievalPort
 from zuno.knowledge.agentic.evidence_ledger import EvidenceLedger
 from zuno.knowledge.agentic.quality import RetrievalQualityGate
 from zuno.knowledge.agentic.runtime import (
-    CorrectiveAgenticGraphRAGRuntime,
-    CorrectiveAgenticRetrievalRuntime,
+    AgenticGraphRAGRuntime,
+    AgenticRetrievalCoordinator,
     CorrectiveRetrievalRequest,
     CorrectiveRetrievalResult,
 )
 
 __all__ = [
     "CorrectiveAction",
-    "CorrectiveAgenticGraphRAGRuntime",
-    "CorrectiveAgenticRetrievalRuntime",
+    "AgenticGraphRAGRuntime",
+    "AgenticRetrievalCoordinator",
     "CorrectiveRetrievalPolicy",
     "CorrectiveRetrievalRequest",
     "CorrectiveRetrievalResult",

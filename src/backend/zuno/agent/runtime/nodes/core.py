@@ -485,7 +485,7 @@ def post_turn_commit(state: AgentRuntimeState, deps: RuntimeDependencies) -> Age
 def _memory_scope(state: AgentRuntimeState) -> MemoryScope:
     return MemoryScope(
         user_id=state.user_id,
-        agent_id="unified_runtime",
+        agent_id="agent_run",
         project_id=state.workspace_id,
         thread_id=state.thread_id,
     )

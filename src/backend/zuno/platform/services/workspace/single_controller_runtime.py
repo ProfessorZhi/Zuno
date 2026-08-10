@@ -9,7 +9,7 @@ of owning a top-level ReAct product runtime:
     Product Request
       -> Product Adapter (astream / ainvoke, product SSE contract)
       -> WorkspaceAgentRuntime (this module — composition ADAPTER only)
-      -> UnifiedAgentRuntimeService (canonical Agent Core facade)
+      -> AgentRuntimeService (canonical Agent Core facade)
       -> Fixed AgentRunGraph
       -> explicit deterministic plan (single-step / tool / DAG or blocked)
       -> StepExecutionGraph -> ReActStepRunner (inside a step only)
@@ -60,7 +60,7 @@ from zuno.agent.runtime import (
     PROFILE_PRODUCT,
     RuntimeStartRequest,
     SQLiteAgentRunStore,
-    UnifiedAgentRuntimeService,
+    AgentRuntimeService,
 )
 from zuno.agent.runtime.contracts import FinalizationStatus, StrategyMode
 from zuno.agent.runtime.dependencies import RuntimeDependencies
@@ -567,7 +567,7 @@ class WorkspaceAgentRuntime:
             security_unit_of_work_factory=security_unit_of_work_factory,
             infrastructure_unit_of_work_factory=infrastructure_unit_of_work_factory,
         )
-        self._service = UnifiedAgentRuntimeService(
+        self._service = AgentRuntimeService(
             store=self._store,
             dependencies=RuntimeDependencies(
                 model_gateway=self._model_gateway,

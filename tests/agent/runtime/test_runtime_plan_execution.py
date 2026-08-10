@@ -5,7 +5,7 @@ from dataclasses import dataclass
 import pytest
 
 from zuno.agent.contracts import PlanState, PlanStep
-from zuno.agent.runtime import RuntimeDependencyFactory, RuntimeStartRequest, SQLiteAgentRunStore, UnifiedAgentRuntimeService
+from zuno.agent.runtime import AgentRuntimeService, RuntimeDependencyFactory, RuntimeStartRequest, SQLiteAgentRunStore
 from zuno.agent.runtime.planning import PlanExecutor, PlanValidationError, PlanValidator
 from zuno.knowledge.agentic import (
     CorrectiveAction,
@@ -67,7 +67,7 @@ class _EvidenceRuntime:
         )
 
 
-def test_unified_runtime_executes_multiple_plan_steps_before_reflection(tmp_path) -> None:
+def test_agent_run_executes_multiple_plan_steps_before_reflection(tmp_path) -> None:
     knowledge_runtime = _EvidenceRuntime()
     dependencies = RuntimeDependencyFactory().dependencies()
     dependencies = dependencies.__class__(
@@ -78,7 +78,7 @@ def test_unified_runtime_executes_multiple_plan_steps_before_reflection(tmp_path
         tool_control_plane=dependencies.tool_control_plane,
         trace_sink=dependencies.trace_sink,
     )
-    service = UnifiedAgentRuntimeService(
+    service = AgentRuntimeService(
         store=SQLiteAgentRunStore(tmp_path / "runtime.db"),
         dependencies=dependencies,
     )
@@ -177,7 +177,7 @@ def test_plan_executor_marks_attempt_status_and_observation_refs() -> None:
 
 
 def test_step_budget_limit_forces_finalize_without_fake_completion(tmp_path) -> None:
-    service = UnifiedAgentRuntimeService(store=SQLiteAgentRunStore(tmp_path / "runtime.db"))
+    service = AgentRuntimeService(store=SQLiteAgentRunStore(tmp_path / "runtime.db"))
     request = _request("task_budget", "Compare evidence across documents and synthesize conflicts.")
     snapshot = service.start(request)
 

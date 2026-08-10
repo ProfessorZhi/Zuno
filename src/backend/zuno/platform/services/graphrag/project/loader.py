@@ -58,18 +58,17 @@ class LoadedGraphRAGProject:
         }
 
     def to_project_payload(self) -> dict[str, Any]:
-        source_domain_pack = dict(self.settings.get("source_domain_pack") or {})
         prompts = dict(self.settings.get("prompts") or {})
         return {
             "id": self.contract.graphrag_project_id,
             "graphrag_project_id": self.contract.graphrag_project_id,
-            "name": source_domain_pack.get("name") or self.contract.graphrag_project_id,
-            "version": source_domain_pack.get("version") or self.contract.prompt_version or "project",
+            "name": self.contract.graphrag_project_id,
+            "version": self.contract.prompt_version or "project",
             "prompt_version": self.contract.prompt_version,
             "query_prompt_version": self.contract.query_prompt_version,
             "index_version": self.contract.index_version,
             "community_version": self.contract.community_version,
-            "description": source_domain_pack.get("description") or "GraphRAG Project compatibility payload",
+            "description": f"GraphRAG project {self.contract.graphrag_project_id}",
             "base_path": self.base_path,
             "schema": self.settings.get("schema_path"),
             "extraction_prompt": prompts.get("extract_graph"),

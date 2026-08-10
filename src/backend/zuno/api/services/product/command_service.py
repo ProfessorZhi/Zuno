@@ -17,11 +17,7 @@ PRODUCT_RUNTIME_DISPATCH_TOPIC = "product.runtime_request.dispatch"
 PRODUCT_RUNTIME_DISPATCH_CONSUMER = "agent-core-product-runtime-dispatch"
 PRODUCT_PROJECTION_REBUILD_TOPIC = "product.projection.rebuild.requested"
 PRODUCT_PROJECTION_REBUILD_CONSUMER = "product-projection-rebuild-worker"
-PRODUCT_RUNTIME_CUTOVER_COMMANDS = {
-    "shadow": "SHADOW_SUBMIT_USER_GOAL",
-    "canary": "CANARY_SUBMIT_USER_GOAL",
-    "new_default": "SUBMIT_USER_GOAL",
-}
+PRODUCT_RUNTIME_COMMAND_KIND = "SUBMIT_USER_GOAL"
 
 
 @dataclass(frozen=True, slots=True)
@@ -198,46 +194,18 @@ class ProductService:
         )
 
     @staticmethod
-    def runtime_cutover_command_kind(cutover_mode: str) -> str:
-        try:
-            return PRODUCT_RUNTIME_CUTOVER_COMMANDS[cutover_mode]
-        except KeyError as exc:
-            raise ValueError(f"unsupported Product runtime cutover mode: {cutover_mode}") from exc
-
-    @staticmethod
-    def validate_runtime_cutover_contract(*, command_kind: str, payload: dict[str, Any]) -> str:
-        cutover_mode = str(payload.get("cutover_mode") or "new_default").strip().lower()
-        if cutover_mode == "rollback":
-            raise ValueError(
-                "Product runtime rollback mode is active; Product command submission is blocked fail-closed."
-            )
-        expected_command_kind = PRODUCT_RUNTIME_CUTOVER_COMMANDS.get(cutover_mode)
-        if expected_command_kind is None:
-            raise ValueError(f"unsupported Product runtime cutover mode: {cutover_mode}")
-        if command_kind != expected_command_kind:
-            raise ValueError(
-                "Product runtime cutover command mismatch: "
-                f"cutover_mode={cutover_mode} requires command_kind={expected_command_kind}."
-            )
-        return cutover_mode
-
-    @staticmethod
-    def build_runtime_cutover_owner_context(
+    def build_runtime_owner_context(
         *,
         active_agent_version_id: str | None,
         command_id: str,
         command_kind: str,
         payload: dict[str, Any],
     ) -> dict[str, str]:
-        cutover_mode = ProductService.validate_runtime_cutover_contract(
-            command_kind=command_kind,
-            payload=payload,
-        )
         context = {
             "active_agent_version_id": str(active_agent_version_id or ""),
             "command_id": command_id,
             "command_kind": command_kind,
-            "cutover_mode": cutover_mode,
+            "runtime_request_ref": str(payload.get("runtime_request_ref") or ""),
         }
         return {
             **context,
@@ -266,12 +234,10 @@ class ProductService:
         client_request_id: str,
         runtime_request_ref: str,
         raw_intent_ref: str,
-        command_kind: str,
         payload: dict[str, Any],
         bootstrap_runtime_agent: bool = False,
         runtime_surface: str = "product",
     ) -> ProductRuntimeRequestResult:
-        ProductService.validate_runtime_cutover_contract(command_kind=command_kind, payload=payload)
         submission = ProductCommandSubmission(
             tenant_id=tenant_id,
             workspace_id=workspace_id,
@@ -282,7 +248,7 @@ class ProductService:
             client_request_id=client_request_id,
             raw_intent_ref=raw_intent_ref,
             command_id=f"command:{client_request_id}",
-            command_kind=command_kind,
+            command_kind=PRODUCT_RUNTIME_COMMAND_KIND,
             owner_module="Agent Core",
             runtime_request_ref=runtime_request_ref,
             payload=payload,
@@ -298,7 +264,7 @@ class ProductService:
                     tenant_id=tenant_id,
                     workspace_id=workspace_id,
                     owner_principal_id=principal_id,
-                    display_name=f"{runtime_surface} unified runtime {active_agent_version_id[-8:]}",
+                    display_name=f"{runtime_surface} agent run {active_agent_version_id[-8:]}",
                     primary_agent_core_profile_ref=f"agent-core-profile:{runtime_surface}:unified-runtime",
                 )
             receipt = repo.submit_command(submission)
@@ -758,10 +724,10 @@ class ProductService:
             principal_id = str(payload["principal_id"])
             command_id = str(payload["command_id"])
             runtime_request_ref = str(payload["runtime_request_ref"])
-            cutover_context = ProductService.build_runtime_cutover_owner_context(
+            owner_context = ProductService.build_runtime_owner_context(
                 active_agent_version_id=str(payload.get("active_agent_version_id") or ""),
                 command_id=command_id,
-                command_kind=str(payload.get("command_kind") or "SUBMIT_USER_GOAL"),
+                command_kind=PRODUCT_RUNTIME_COMMAND_KIND,
                 payload=payload,
             )
             agent_run_id = f"agent-run:{runtime_request_ref}"
@@ -795,7 +761,7 @@ class ProductService:
                                 input_classification=GoalInputClassification.NEW_TASK,
                                 objective_hash=str(payload["payload_hash"]),
                                 output_contract_ref=f"output-contract:{runtime_request_ref}",
-                                constraints_hash=cutover_context["constraints_hash"],
+                                constraints_hash=owner_context["constraints_hash"],
                             )
                         )
                         agent_repo.record_task_contract(
@@ -833,9 +799,8 @@ class ProductService:
                                 "agent_run_ref": run_receipt.ref,
                                 "task_contract_ref": task_contract_id,
                                 "outbox_event_id": record.event_id,
-                                "command_kind": cutover_context["command_kind"],
-                                "cutover_mode": cutover_context["cutover_mode"],
-                                "constraints_hash": cutover_context["constraints_hash"],
+                                "command_kind": owner_context["command_kind"],
+                                "constraints_hash": owner_context["constraints_hash"],
                             },
                         )
                         infra_repo.mark_inbox_processed(

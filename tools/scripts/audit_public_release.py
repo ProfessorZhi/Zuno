@@ -17,9 +17,9 @@ PUBLIC_DOC_FILES = [
     REPO_ROOT / "README.md",
     REPO_ROOT / "docs" / "README.md",
     REPO_ROOT / "docs" / "architecture" / "architecture.md",
-    REPO_ROOT / "docs" / "architecture" / "production-readiness.md",
-    REPO_ROOT / "docs" / "evidence" / "public-demo.md",
-    REPO_ROOT / "docs" / "evidence" / "eval-baselines.md",
+    REPO_ROOT / "docs" / "status" / "production-readiness.md",
+    REPO_ROOT / "docs" / "evidence" / "README.md",
+    REPO_ROOT / "docs" / "evidence" / "current-eval-baseline.md",
 ]
 
 FORBIDDEN_PUBLIC_INDEX_MENTIONS = {
@@ -35,7 +35,6 @@ FORBIDDEN_PUBLIC_INDEX_MENTIONS = {
 SUSPICIOUS_STATUS_PREFIXES = [
     ".local/",
     "docs/superpowers/",
-    "apps/web/AGENTS.md",
     "infra/docker/docker_config.local.yaml",
     ".local/config/zuno/",
     ".local/evals/zuno/rag_eval/runs/",

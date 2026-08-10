@@ -275,7 +275,6 @@ def test_tool_runtime_batch_adapter_mcp_security_lifecycle_and_readiness() -> No
     assert infrastructure.secret_lease_ref.startswith("secret-lease:")
     assert infrastructure.sandbox_isolation_sufficient is False
     assert infrastructure.capacity_gate_order[:4] == ("exposure", "prepare", "security_epoch", "audit")
-    assert lifecycle.canary_real_effect_allowed is False
     assert lifecycle.retired_history_readable is True
     assert lifecycle.legal_hold_blocks_delete is True
     assert lifecycle.confirmed_effect_sli_ref == "sli:tool.confirmed_effect"

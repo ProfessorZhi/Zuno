@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from zuno.agent.runtime import ReflectionDecision, RuntimeStartRequest, SQLiteAgentRunStore, UnifiedAgentRuntimeService
+from zuno.agent.runtime import AgentRuntimeService, ReflectionDecision, RuntimeStartRequest, SQLiteAgentRunStore
 from zuno.agent.runtime.dependencies import RuntimeDependencies
 from zuno.memory.contracts import MemoryCandidate, MemoryLayer, MemoryReviewStatus, MemoryScope
 from zuno.memory.engine import MemoryEngine
@@ -10,7 +10,7 @@ from zuno.memory.policy import RetentionPolicy
 def _scope() -> MemoryScope:
     return MemoryScope(
         user_id="user_memory",
-        agent_id="unified_runtime",
+        agent_id="agent_run",
         project_id="workspace_memory",
         thread_id="thread_memory",
     )
@@ -47,7 +47,7 @@ def test_approved_reflexion_lesson_influences_unified_strategy(tmp_path) -> None
             metadata={"memory_category": "procedural_memory", "hidden_cot": False},
         )
     )
-    service = UnifiedAgentRuntimeService(
+    service = AgentRuntimeService(
         store=SQLiteAgentRunStore(tmp_path / "runtime.db"),
         dependencies=RuntimeDependencies(memory_engine=engine),
     )
@@ -63,7 +63,7 @@ def test_approved_reflexion_lesson_influences_unified_strategy(tmp_path) -> None
 
 def test_post_turn_abstain_creates_pending_reflexion_candidate_not_approved_memory(tmp_path) -> None:
     engine = MemoryEngine()
-    service = UnifiedAgentRuntimeService(
+    service = AgentRuntimeService(
         store=SQLiteAgentRunStore(tmp_path / "runtime.db"),
         dependencies=RuntimeDependencies(memory_engine=engine),
     )
@@ -96,7 +96,7 @@ def test_post_turn_abstain_creates_pending_reflexion_candidate_not_approved_memo
 
 def test_post_turn_memory_writes_raw_event_and_task_summary(tmp_path) -> None:
     engine = MemoryEngine()
-    service = UnifiedAgentRuntimeService(
+    service = AgentRuntimeService(
         store=SQLiteAgentRunStore(tmp_path / "runtime.db"),
         dependencies=RuntimeDependencies(memory_engine=engine),
     )

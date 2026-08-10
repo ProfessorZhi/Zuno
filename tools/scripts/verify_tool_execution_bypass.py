@@ -12,9 +12,8 @@ DEFAULT_ENTRYPOINTS = {
     "CapabilityRuntime": REPO_ROOT / "src/backend/zuno/capability/runtime.py",
 }
 
-# The GeneralAgent entry point was retired in the PHASE22 backend semantic
-# legacy cleanup. Its gateway wiring checks are obsolete; the file must stay
-# absent.
+# The old generic agent entry point is retired. Product execution enters
+# through the explicit application owners and the governed tool gateway.
 RETIRED_DEFAULT_ENTRYPOINTS = {
     "GeneralAgent": REPO_ROOT / "src/backend/zuno/agent/core/agents/general_agent.py",
 }
@@ -24,15 +23,15 @@ REQUIRED_PHRASES = {
         "ToolInvocationGateway",
         "gateway.invoke_readonly",
         "_is_openapi_readonly",
-        "PHASE16_REQUIRED",
+        "TOOL_EFFECT_POLICY_REQUIRED",
     ],
     "RuntimeFactory": [
         "GovernedMemoryContextRuntime",
         "MemoryUnitOfWork",
     ],
     "CapabilityRuntime": [
-        "readonly_cutover_only=False",
-        "PHASE16_REQUIRED_FOR_SIDE_EFFECT_TOOL",
+        "ToolRuntimeRequest",
+        "approval_decision_ref",
         "_record_tool_runtime_facts",
         "email sent",
     ],
@@ -85,7 +84,7 @@ def verify() -> list[str]:
         for phrase in [
             "class ToolInvocationGateway",
             "readonly: bool",
-            "PHASE16_REQUIRED_FOR_SIDE_EFFECT_TOOL",
+            "TOOL_EFFECT_POLICY_REQUIRED",
             "ToolAttemptInput",
             "ToolExecutionReceiptInput",
             "record_bypass_guard",

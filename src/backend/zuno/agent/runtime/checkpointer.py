@@ -11,7 +11,7 @@ from zuno.agent.runtime.store import AgentRunStore
 
 
 class RuntimeGraphCheckpointer:
-    """Store-backed PHASE05 checkpoint bridge for the unified runtime skeleton."""
+    """Store-backed checkpoint bridge for the canonical Agent Run graph."""
 
     def __init__(self, store: AgentRunStore) -> None:
         self.store = store
@@ -28,7 +28,7 @@ class RuntimeGraphCheckpointer:
             trace_id=state.trace_id,
             node=node,
             state=state.to_snapshot().model_dump(mode="json"),
-            payload={"runtime": "unified_graph_skeleton"},
+            payload={"runtime": "agent_run_graph"},
             state_version=state.to_snapshot().state_version,
         )
         self.store.update_state(_controller_state_from_runtime_state(state))

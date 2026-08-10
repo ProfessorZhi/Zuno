@@ -1,4 +1,0 @@
-pr_number,pr_url,agent_shell,provider,visible_model,work_package,implementation_rounds,repair_rounds,reported_wall_clock,total_tokens,current_ci,reviewed_head,decision,current_score,merge_state
-56,https://github.com/ProfessorZhi/Zuno/pull/56,Antigravity,not reported,Gemini 3.6 Flash,AG-PR56-FAIL-CLOSED-PAYLOAD-HARDENING,1,4+,partially reported,not reported,success,8cc0101af0214690387d3a187be3904b72070ccd,REQUEST_CHANGES,72,Open Draft
-57,https://github.com/ProfessorZhi/Zuno/pull/57,Claude Code,MiniMax,MiniMax-M3,MM-PHASE22-BENCHMARK-PREFLIGHT-CONTRACT,1,0,8m 29s,not reported,failure,e7e007d47f471610966201394b84ddc118814aff,REQUEST_CHANGES,80,Open Draft; replacement required
-58,https://github.com/ProfessorZhi/Zuno/pull/58,Claude Code,DeepSeek,deepseek-v4-flash,DS-PHASE22-RUNTIME-EVIDENCE-BINDING-CONTRACT,1,0,19m 31s,not reported,failure,999d00a93734c02be26082116b4bc19673a179b3,REQUEST_CHANGES,83,Open Draft; replacement required

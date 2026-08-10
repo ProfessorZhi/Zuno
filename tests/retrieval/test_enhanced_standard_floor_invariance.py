@@ -132,7 +132,7 @@ def test_enhanced_reuses_standard_floor_when_no_enhancement_channel_is_used():
 
     result = asyncio.run(
         orchestrator.run(
-            mode="enhanced_retrieval",
+                    mode="rag_graph_deep",
             query="where is alpha located",
             knowledge_ids=["kb_1"],
             retrieval_options={
@@ -166,7 +166,7 @@ def test_enhanced_can_change_ranking_when_graph_confidently_contributes():
 
     result = asyncio.run(
         orchestrator.run(
-            mode="enhanced_retrieval",
+                    mode="rag_graph_deep",
             query="who founded alpha and where is it based",
             knowledge_ids=["kb_1"],
             retrieval_options={
@@ -199,7 +199,7 @@ def test_low_confidence_graph_falls_back_to_standard_floor():
 
     result = asyncio.run(
         orchestrator.run(
-            mode="enhanced_retrieval",
+                    mode="rag_graph_deep",
             query="who founded alpha and where is it based",
             knowledge_ids=["kb_1"],
             retrieval_options={

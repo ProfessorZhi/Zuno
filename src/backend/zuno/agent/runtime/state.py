@@ -34,10 +34,10 @@ class AgentRuntimeSnapshot(BaseModel):
     task_id: str
     trace_id: str
     goal: str
-    # Product submission identity + tenant scope (PHASE22 repair; optional
-    # with defaults so the state schema stays backward compatible). There is
-    # no synthetic tenant default: real tenant context is supplied explicitly
-    # by the product request.
+    # Product submission identity and tenant scope are explicit product
+    # context fields. Empty values are permitted only for non-product
+    # developer/test compositions; production requests supply them at the
+    # application boundary.
     tenant_id: str = ""
     principal_id: str = ""
     submission_id: str = ""
@@ -127,8 +127,8 @@ class AgentRuntimeState:
     interrupt_refs: list[str] = field(default_factory=list)
     checkpoint_refs: list[str] = field(default_factory=list)
     trace_event_ids: list[str] = field(default_factory=list)
-    # Planning-admission gates: seeded by the product surface (single-controller
-    # cutover) so security/budget denials block the plan before any tool
+    # Planning-admission gates: seeded by the product surface so
+    # security/budget denials block the plan before any tool
     # execution; consumed by RuntimeStrategySelector.
     security_summary: dict[str, Any] = field(default_factory=dict)
     budget_verdict: dict[str, Any] | None = None

@@ -4,7 +4,7 @@
 
 ## 当前角色
 
-`src/backend/zuno/api/dto/` 当前保存 DTO、Pydantic schema 和 API request / response 相关类型。旧 public import path `zuno.schema.*` 不再由 `platform/compatibility/legacy_aliases.py` 承接；它不是默认路径，也不是仍存在的物理目录。
+`src/backend/zuno/api/dto/` 当前保存 DTO、Pydantic schema 和 API request / response 相关类型。这里的字段直接对应当前公开契约，不承担旧字段翻译或隐式输入迁移。
 
 ## Target role
 

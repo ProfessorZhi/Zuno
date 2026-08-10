@@ -46,17 +46,11 @@ class AgentService:
     @staticmethod
     def _agent_request_to_db_values(req: AgentCreateReq) -> dict:
         values = req.model_dump()
-        graphrag_project_id = values.pop("graphrag_project_id", None)
-        if graphrag_project_id:
-            values["domain_pack_id"] = graphrag_project_id
         return values
 
     @staticmethod
     def _agent_update_to_db_values(update_values: dict) -> dict:
         values = dict(update_values)
-        graphrag_project_id = values.pop("graphrag_project_id", None)
-        if graphrag_project_id is not None:
-            values["domain_pack_id"] = graphrag_project_id
         return values
 
     @classmethod

@@ -24,10 +24,9 @@ from zuno.platform.security import (
 class ProductArtifactService:
     """Product-owned durable artifact and feedback surface.
 
-    The workspace task runtime may still serve bounded compatibility routes,
-    but Product routes must read and write durable ingestion contracts from
-    this service. An unbound store is an explicit configuration failure rather
-    than permission to fall back to process-local state.
+    Product routes read and write durable ingestion contracts from this service.
+    An unbound store is an explicit configuration failure rather than permission
+    to fall back to process-local state.
     """
 
     _store: SQLiteDurableIngestionStore | None = None

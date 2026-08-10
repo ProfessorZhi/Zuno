@@ -102,67 +102,41 @@ class GraphRetrieverAdapter:
         options = options or {}
         knowledge_id = knowledge_ids[0] if knowledge_ids else ""
         runtime_settings = await KnowledgeService.get_runtime_settings(knowledge_id) if knowledge_id else {
-            "domain_pack_id": None,
+            "graphrag_project_id": None,
         }
-        project_payload = runtime_settings.get("project_payload") or runtime_settings.get("domain_pack")
+        project_payload = runtime_settings.get("project_payload") or {}
         scope_policy = dict(options.get("scope_policy") or {})
         graphrag_project_id = (
             options.get("graphrag_project_id")
             or scope_policy.get("graphrag_project_id")
+            or runtime_settings.get("graphrag_project_id")
             or (project_payload or {}).get("graphrag_project_id")
             or (project_payload or {}).get("id")
         )
-        domain_pack_id = options.get("domain_pack_id")
         effective_query_policy = dict((project_payload or {}).get("retrieval_policy_data") or {})
         effective_query_policy.update(options)
         index_version = dict(options.get("index_version") or {})
         local_graph_retriever = runtime_settings.get("graph_retriever")
         if local_graph_retriever:
-            try:
-                return await local_graph_retriever.retrieve(
-                    query,
-                    knowledge_id,
-                    graph_hop_limit=options.get("graph_hop_limit", 2),
-                    max_paths_per_entity=options.get("max_paths_per_entity", 10),
-                    graphrag_project_id=graphrag_project_id or domain_pack_id,
-                    domain_pack_id=domain_pack_id,
-                    index_version=index_version.get("graph"),
-                    status=scope_policy.get("status"),
-                    query_policy=effective_query_policy,
-                    candidate_context=options.get("candidate_context"),
-                )
-            except TypeError:
-                return await local_graph_retriever.retrieve(
-                    query,
-                    knowledge_id,
-                    graph_hop_limit=options.get("graph_hop_limit", 2),
-                    max_paths_per_entity=options.get("max_paths_per_entity", 10),
-                    domain_pack_id=graphrag_project_id or domain_pack_id,
-                    index_version=index_version.get("graph"),
-                    status=scope_policy.get("status"),
-                    candidate_context=options.get("candidate_context"),
-                )
-        try:
-            return await self.retriever.retrieve(
+            return await local_graph_retriever.retrieve(
                 query,
                 knowledge_id,
                 graph_hop_limit=options.get("graph_hop_limit", 2),
                 max_paths_per_entity=options.get("max_paths_per_entity", 10),
-                graphrag_project_id=graphrag_project_id or domain_pack_id,
-                domain_pack_id=domain_pack_id,
+                graphrag_project_id=graphrag_project_id,
                 index_version=index_version.get("graph"),
                 status=scope_policy.get("status"),
                 query_policy=effective_query_policy,
                 candidate_context=options.get("candidate_context"),
             )
-        except TypeError:
-            return await self.retriever.retrieve(
-                query,
-                knowledge_id,
-                graph_hop_limit=options.get("graph_hop_limit", 2),
-                max_paths_per_entity=options.get("max_paths_per_entity", 10),
-                domain_pack_id=graphrag_project_id or domain_pack_id,
-                index_version=index_version.get("graph"),
-                status=scope_policy.get("status"),
-                candidate_context=options.get("candidate_context"),
-            )
+        return await self.retriever.retrieve(
+            query,
+            knowledge_id,
+            graph_hop_limit=options.get("graph_hop_limit", 2),
+            max_paths_per_entity=options.get("max_paths_per_entity", 10),
+            graphrag_project_id=graphrag_project_id,
+            index_version=index_version.get("graph"),
+            status=scope_policy.get("status"),
+            query_policy=effective_query_policy,
+            candidate_context=options.get("candidate_context"),
+        )

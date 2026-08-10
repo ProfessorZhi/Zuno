@@ -98,8 +98,7 @@ def _blocked_audit_event(*, request: ToolRuntimeRequest, audit_id: str, reason: 
     )
 
 
-ToolExecutor = Callable[["ToolExecutionContext"], Any]
-LegacyToolExecutor = Callable[[dict[str, Any], "ToolExecutionContext"], Any]
+ToolExecutor = Callable[[dict[str, Any], "ToolExecutionContext"], Any]
 
 
 class SecurityApprovalFactSink(Protocol):
@@ -107,8 +106,6 @@ class SecurityApprovalFactSink(Protocol):
         ...
 
 
-LEGACY_APPROVAL_BOOLEAN_ADAPTER_ID = "temporary.adapter.tool_runtime.approved_bool"
-LEGACY_APPROVAL_BOOLEAN_ADAPTER_REMOVAL_PHASE = "PHASE16"
 WORKSPACE_APPROVAL_DECISION_REF_ADAPTER_ID = "workspace.approval_decision_ref"
 
 
@@ -121,10 +118,8 @@ class ToolRuntimeRequest:
     task_id: str
     trace_id: str
     model_intent: str
-    approved: bool = False
     approval_decision_ref: str = ""
     approval_adapter_ref: str = ""
-    approval_adapter_removal_phase: str = ""
     approval_comment: str = ""
     runtime_state: Any | None = None
     tool_request_id: str = field(default_factory=lambda: f"toolreq_{uuid4().hex[:12]}")
@@ -366,18 +361,16 @@ class ToolControlPlaneRuntime:
         tool_unit_of_work_factory: Callable[[], Any] | None = None,
         security_unit_of_work_factory: Callable[[], Any] | None = None,
         infrastructure_unit_of_work_factory: Callable[[str], Any] | None = None,
-        readonly_cutover_only: bool = False,
     ) -> None:
         self._manifests: dict[str, ToolCardManifest] = {}
         self._executor_registry = ExecutorRegistry()
-        self._executors: dict[str, LegacyToolExecutor] = {}
+        self._executors: dict[str, ToolExecutor] = {}
         self._credential_broker = credential_broker or InMemoryCredentialBroker()
         self._sandbox_enforcer = sandbox_enforcer or SandboxPolicyEnforcer()
         self._security_approval_sink = security_approval_sink
         self._tool_unit_of_work_factory = tool_unit_of_work_factory
         self._security_unit_of_work_factory = security_unit_of_work_factory
         self._infrastructure_unit_of_work_factory = infrastructure_unit_of_work_factory
-        self._readonly_cutover_only = readonly_cutover_only
         self._approval_gate = ApprovalGate()
         self._tool_gate = ToolSecurityGate()
         self._approval_ledger: list[dict[str, Any]] = []
@@ -397,10 +390,10 @@ class ToolControlPlaneRuntime:
     def register_executor_adapter(
         self,
         adapter: ExecutorAdapterContract,
-        executor: LegacyToolExecutor | ToolExecutor,
+        executor: ToolExecutor,
     ) -> None:
         self._executor_registry.register(adapter)
-        self._executors[adapter.adapter_id] = _normalize_executor(executor)
+        self._executors[adapter.adapter_id] = executor
 
     def execute(self, request: ToolRuntimeRequest) -> ToolRuntimeExecutionResult:
         manifest = self._manifests.get(request.tool_id)
@@ -588,59 +581,6 @@ class ToolControlPlaneRuntime:
                 approval_id=request.approval_id,
             )
 
-        if self._readonly_cutover_only and manifest.side_effect_level not in {
-            ToolSideEffectLevel.NONE,
-            ToolSideEffectLevel.READ,
-        }:
-            audit_event = replace(
-                gate_result.audit_event,
-                policy_decision=SecurityDecision.BLOCK,
-                final_decision="blocked",
-                risk_reasons=[
-                    *gate_result.audit_event.risk_reasons,
-                    "PHASE16_REQUIRED_FOR_SIDE_EFFECT_TOOL",
-                ],
-            )
-            events = self._events_for_blocked(
-                request=request,
-                manifest=manifest,
-                audit_event=audit_event,
-                sandbox_context=sandbox_context,
-                reason="PHASE16_REQUIRED_FOR_SIDE_EFFECT_TOOL",
-            )
-            self._record_security_approval_fact(
-                status="failed_closed_before_effect",
-                request=request,
-                manifest=manifest,
-                audit_event=audit_event,
-                sandbox_context=sandbox_context,
-                security_decision=SecurityDecision.BLOCK.value,
-                approval_decision=approval_decision.to_dict(),
-            )
-            result = ToolRuntimeExecutionResult(
-                tool_id=manifest.tool_id,
-                status="blocked",
-                approval_required=False,
-                security_decision=SecurityDecision.BLOCK.value,
-                approval_decision=approval_decision.to_dict(),
-                audit_event=audit_event,
-                sandbox_context=sandbox_context,
-                task_events=events,
-                tool_request_id=request.tool_request_id,
-                approval_id=request.approval_id,
-            )
-            self._record_tool_runtime_facts(
-                request=request,
-                manifest=manifest,
-                adapter=adapter,
-                result=result,
-                attempt_status="FAILED",
-                dispatch_certainty="NOT_DISPATCHED",
-                effect_certainty="NO_EFFECT",
-                observation_payload={"blocked": True, "reason": "PHASE16_REQUIRED_FOR_SIDE_EFFECT_TOOL"},
-            )
-            return result
-
         # PHASE22 repair (B3): a side-effect tool without the formal
         # ToolInvocationGateway binding fails closed BEFORE any approval wait
         # or dispatch. There is no "missing gateway -> direct executor" path.
@@ -690,7 +630,7 @@ class ToolControlPlaneRuntime:
             gate_result.decision is SecurityDecision.REQUIRE_APPROVAL
             or approval_decision.approval_required
         )
-        if requires_approval and not request.approved:
+        if requires_approval and not request.approval_decision_ref:
             audit_event = replace(gate_result.audit_event, final_decision="pending")
             events = self._events_for_pending_approval(
                 request=request,
@@ -730,9 +670,9 @@ class ToolControlPlaneRuntime:
 
         audit_event = replace(
             gate_result.audit_event,
-            final_decision="approved" if request.approved or requires_approval else "approved",
+            final_decision="approved",
         )
-        if request.approved or requires_approval:
+        if request.approval_decision_ref or requires_approval:
             self._record_security_approval_fact(
                 status="approved_before_effect",
                 request=request,
@@ -844,7 +784,7 @@ class ToolControlPlaneRuntime:
             execution_id=execution_id,
             result_id=result_id,
         )
-        if request.approved or manifest.requires_approval:
+        if request.approval_decision_ref or manifest.requires_approval:
             self._record_approval_ledger(
                 status="approved_executed",
                 request=request,
@@ -1373,7 +1313,6 @@ class ToolControlPlaneRuntime:
                 "approval_id": request.approval_id,
                 "approval_decision_ref": _approval_decision_ref(request),
                 "approval_adapter_ref": _approval_adapter_ref(request),
-                "approval_adapter_removal_phase": _approval_adapter_removal_phase(request),
                 "task_id": request.task_id,
                 "trace_id": request.trace_id,
                 "required_approval": f"tool:{manifest.tool_id}",
@@ -1405,7 +1344,6 @@ class ToolControlPlaneRuntime:
             "approval_id": request.approval_id,
             "approval_decision_ref": _approval_decision_ref(request),
             "approval_adapter_ref": _approval_adapter_ref(request),
-            "approval_adapter_removal_phase": _approval_adapter_removal_phase(request),
             "workspace_id": request.workspace_id,
             "user_id": request.user_id,
             "task_id": request.task_id,
@@ -1433,18 +1371,27 @@ class ToolControlPlaneRuntime:
 def build_default_tool_control_plane_runtime(
     *,
     security_approval_sink: SecurityApprovalFactSink | None = None,
+    persist_facts: bool = True,
 ) -> ToolControlPlaneRuntime:
-    from zuno.platform.database import engine
-    from zuno.platform.database.foundation import InfrastructureUnitOfWork
-    from zuno.platform.database.tool_runtime import ToolUnitOfWork
-    from zuno.platform.security import SecurityUnitOfWork
+    if persist_facts:
+        from zuno.platform.database import engine
+        from zuno.platform.database.foundation import InfrastructureUnitOfWork
+        from zuno.platform.database.tool_runtime import ToolUnitOfWork
+        from zuno.platform.security import SecurityUnitOfWork
+
+        tool_unit_of_work_factory = lambda: ToolUnitOfWork(engine)
+        security_unit_of_work_factory = lambda: SecurityUnitOfWork(engine)
+        infrastructure_unit_of_work_factory = lambda tenant: InfrastructureUnitOfWork(engine, tenant_id=tenant)
+    else:
+        tool_unit_of_work_factory = None
+        security_unit_of_work_factory = None
+        infrastructure_unit_of_work_factory = None
 
     runtime = ToolControlPlaneRuntime(
         security_approval_sink=security_approval_sink,
-        tool_unit_of_work_factory=lambda: ToolUnitOfWork(engine),
-        security_unit_of_work_factory=lambda: SecurityUnitOfWork(engine),
-        infrastructure_unit_of_work_factory=lambda tenant: InfrastructureUnitOfWork(engine, tenant_id=tenant),
-        readonly_cutover_only=False,
+        tool_unit_of_work_factory=tool_unit_of_work_factory,
+        security_unit_of_work_factory=security_unit_of_work_factory,
+        infrastructure_unit_of_work_factory=infrastructure_unit_of_work_factory,
     )
 
     runtime.register_manifest(
@@ -1558,16 +1505,6 @@ def build_default_tool_control_plane_runtime(
     return runtime
 
 
-def _normalize_executor(executor: LegacyToolExecutor | ToolExecutor) -> LegacyToolExecutor:
-    def invoke(args: dict[str, Any], context: ToolExecutionContext) -> Any:
-        try:
-            return executor(args, context)  # type: ignore[misc]
-        except TypeError:
-            return executor(context)  # type: ignore[misc]
-
-    return invoke
-
-
 def _run_gateway_coroutine(coro: Any) -> Any:
     try:
         asyncio.get_running_loop()
@@ -1637,27 +1574,11 @@ def _redact_approval_comment(comment: str) -> str:
 
 
 def _approval_decision_ref(request: ToolRuntimeRequest) -> str:
-    if request.approval_decision_ref:
-        return request.approval_decision_ref
-    if request.approved:
-        return f"{LEGACY_APPROVAL_BOOLEAN_ADAPTER_ID}:{request.approval_id}"
-    return ""
+    return request.approval_decision_ref
 
 
 def _approval_adapter_ref(request: ToolRuntimeRequest) -> str:
-    if request.approval_adapter_ref:
-        return request.approval_adapter_ref
-    if request.approved:
-        return LEGACY_APPROVAL_BOOLEAN_ADAPTER_ID
-    return ""
-
-
-def _approval_adapter_removal_phase(request: ToolRuntimeRequest) -> str:
-    if request.approval_adapter_removal_phase:
-        return request.approval_adapter_removal_phase
-    if request.approved and not request.approval_decision_ref:
-        return LEGACY_APPROVAL_BOOLEAN_ADAPTER_REMOVAL_PHASE
-    return ""
+    return request.approval_adapter_ref
 
 
 def _hash_payload(payload: Any) -> str:

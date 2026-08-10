@@ -25,7 +25,7 @@ def normalized_observation_from_runtime_observation(observation: Any) -> Normali
         step_id=str(getattr(observation, "step_id", "") or ""),
         kind=_kind_from_observation(observation),
         status=_status(str(getattr(observation, "status", "completed") or "completed")),
-        source="AgentControlRuntime.RuntimeObservation",
+        source="AgentRuntimeObservation",
         summary=str(getattr(observation, "output", "") or getattr(observation, "failure_reason", "") or ""),
         payload_ref=_payload_ref("runtime_observation", getattr(observation, "step_id", ""), metadata),
         evidence_ids=list(getattr(evidence, "evidence_ids", []) or []),

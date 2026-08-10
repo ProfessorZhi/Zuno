@@ -7,7 +7,7 @@ PDF_FIXTURE = Path("tests/fixtures/documents/phase12_source_span.pdf")
 
 
 def test_pdf_agent_answer_binds_page_level_citation_and_evidence_ledger() -> None:
-    from zuno.knowledge.agentic import CorrectiveAgenticRetrievalRuntime, CorrectiveRetrievalRequest
+    from zuno.knowledge.agentic import AgenticRetrievalCoordinator, CorrectiveRetrievalRequest
     from zuno.knowledge.agentic.contracts import CorrectiveAction, RetrievalQualityVerdict
     from zuno.knowledge.agentic_graphrag import AgenticRetrievalRuntime, AgenticRetrievalRuntimeRequest, ProductMode
     from zuno.knowledge.indexing import KnowledgeIndexRuntime
@@ -57,7 +57,7 @@ def test_pdf_agent_answer_binds_page_level_citation_and_evidence_ledger() -> Non
     assert result.claim_bindings[0].source_span["page_number"] == 1
     assert result.trace_metadata["claim_citation_binding_metrics"]["supported_claim_count"] == 1
 
-    corrective = CorrectiveAgenticRetrievalRuntime(index_runtime=index_runtime).retrieve(
+    corrective = AgenticRetrievalCoordinator(index_runtime=index_runtime).retrieve(
         CorrectiveRetrievalRequest(
             query="release gate status quality not yet proven",
             workspace_id="workspace_phase12_pdf_agent",
@@ -79,8 +79,8 @@ def test_pdf_agent_answer_binds_page_level_citation_and_evidence_ledger() -> Non
     assert records[0].trace_span == "trace_phase12_pdf_ledger:retrieval:1"
 
 
-def test_unified_runtime_pdf_retrieval_synthesis_binds_page_citation(tmp_path) -> None:
-    from zuno.agent.runtime import RuntimeDependencyFactory, RuntimeStartRequest, SQLiteAgentRunStore, UnifiedAgentRuntimeService
+def test_agent_run_pdf_retrieval_synthesis_binds_page_citation(tmp_path) -> None:
+    from zuno.agent.runtime import AgentRuntimeService, RuntimeDependencyFactory, RuntimeStartRequest, SQLiteAgentRunStore
     from zuno.knowledge.indexing import KnowledgeIndexRuntime
     from zuno.knowledge.ingestion import ParseDocumentRequest, ParseGateway
 
@@ -109,7 +109,7 @@ def test_unified_runtime_pdf_retrieval_synthesis_binds_page_citation(tmp_path) -
         store=SQLiteAgentRunStore(tmp_path / "runtime.db"),
         knowledge_index_runtime=index_runtime,
     )
-    service = UnifiedAgentRuntimeService(store=assembly.store, dependencies=assembly.dependencies)
+    service = AgentRuntimeService(store=assembly.store, dependencies=assembly.dependencies)
 
     snapshot = service.start(
         RuntimeStartRequest(

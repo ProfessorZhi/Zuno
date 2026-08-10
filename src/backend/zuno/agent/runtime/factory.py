@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from pathlib import Path
-import tempfile
 
 from zuno.agent.runtime.configuration import RuntimeFactoryConfig
 from zuno.agent.runtime.dependencies import RuntimeDependencies
@@ -14,6 +13,10 @@ from zuno.agent.runtime.store import AgentRunStore
 class RuntimeAssembly:
     dependencies: RuntimeDependencies
     store: AgentRunStore
+
+
+class RuntimeStoreBindingError(RuntimeError):
+    """Raised when a runtime is built without an explicit durable store."""
 
 
 class RuntimeDependencyFactory:
@@ -43,9 +46,17 @@ class RuntimeDependencyFactory:
         return factory.build(store=store)
 
     def build(self, *, store: AgentRunStore | None = None) -> RuntimeAssembly:
+        resolved_store = store
+        if resolved_store is None:
+            sqlite_path = self.config.sqlite_path
+            if sqlite_path is None:
+                raise RuntimeStoreBindingError(
+                    "runtime requires an explicit durable AgentRunStore or sqlite_path"
+                )
+            resolved_store = SQLiteAgentRunStore(sqlite_path)
         return RuntimeAssembly(
             dependencies=self.dependencies(),
-            store=store or SQLiteAgentRunStore(self._sqlite_path()),
+            store=resolved_store,
         )
 
     def dependencies(self) -> RuntimeDependencies:
@@ -56,11 +67,6 @@ class RuntimeDependencyFactory:
             capability_runtime=self._capability_runtime(),
             tool_control_plane=self._tool_control_plane(),
         )
-
-    def _sqlite_path(self) -> Path:
-        if self.config.sqlite_path is not None:
-            return self.config.sqlite_path
-        return Path(tempfile.gettempdir()) / "zuno_unified_agent_runtime.db"
 
     def _model_gateway(self) -> object | None:
         if not self.config.enable_default_model_gateway:
@@ -87,13 +93,13 @@ class RuntimeDependencyFactory:
     def _knowledge_runtime(self) -> object | None:
         if not self.config.enable_knowledge_runtime:
             return None
-        from zuno.knowledge.agentic import CorrectiveAgenticRetrievalRuntime, DurableKnowledgeRetrievalPort
+        from zuno.knowledge.agentic import AgenticRetrievalCoordinator, DurableKnowledgeRetrievalPort
         from zuno.knowledge.indexing import KnowledgeIndexRuntime
         from zuno.platform.database.knowledge import KnowledgeUnitOfWork
         from zuno.platform.database import engine
 
         index_runtime = self.config.knowledge_index_runtime or KnowledgeIndexRuntime()
-        runtime = CorrectiveAgenticRetrievalRuntime(index_runtime=index_runtime)
+        runtime = AgenticRetrievalCoordinator(index_runtime=index_runtime)
         return DurableKnowledgeRetrievalPort(
             runtime=runtime,
             unit_of_work_factory=lambda: KnowledgeUnitOfWork(engine),
@@ -120,4 +126,4 @@ class RuntimeDependencyFactory:
         )
 
 
-__all__ = ["RuntimeAssembly", "RuntimeDependencyFactory"]
+__all__ = ["RuntimeAssembly", "RuntimeDependencyFactory", "RuntimeStoreBindingError"]

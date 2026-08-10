@@ -68,11 +68,11 @@ History
     进入 docs/history/，不能重新解释成当前事实。
 ```
 
-当前 22-Phase Program `zuno-canonical-architecture-runtime-realization-v1` 已完成 Engineering Closure 并归档，`.agent/programs/` 已恢复 `no-active`。下一阶段不是 PHASE23，也不是新的 Runtime Program；只在独立设计工作中按以下顺序推进：
+上一轮 Runtime 工程收口已完成并归档，`.agent/programs/` 当前为 `no-active`。下一阶段不是新的 Runtime Implementation Program；只在独立设计工作中按以下顺序推进：
 
 ```text
 Latest Current Review
-→ Repository Consolidation
+→ Repository Fresh-State Review
 → 11 Module Architecture Deep Review
 → ADR 0006 Canonical Coordination
 → Cross-module Contract Review

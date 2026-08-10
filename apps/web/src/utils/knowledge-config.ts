@@ -15,11 +15,9 @@ export type KnowledgeImageStrategy = 'text_only' | 'vl_only' | 'dual'
 export type KnowledgeVectorBackend = 'milvus' | 'chroma' | 'milvus_lite'
 export type KnowledgeRefillPolicy = 'none' | 'auto' | 'smart'
 export type KnowledgeProductMode = 'standard' | 'deep'
-export type LegacyKnowledgeProductMode = KnowledgeProductMode | 'enhanced'
+export type KnowledgeProductModeInput = KnowledgeProductMode | 'enhanced'
 export type WorkspaceRetrievalProductProfile = 'standard' | 'deep'
-type LegacyKnowledgeConfigInput = Partial<KnowledgeConfigPayload> & {
-  domain_pack_id?: string | null
-}
+type KnowledgeConfigInput = Partial<KnowledgeConfigPayload>
 
 export interface KnowledgeModelBinding {
   llm_id: string
@@ -191,35 +189,27 @@ const normalizeRetrievalModeForCapability = (
   mode: string | null | undefined,
   capability: KnowledgeIndexCapability,
 ): KnowledgeConfigPayload['retrieval_settings']['default_mode'] => {
-  const legacyMap: Record<string, KnowledgeConfigPayload['retrieval_settings']['default_mode']> = {
-    auto: 'rag',
-    default: 'rag',
-    hybrid: 'rag_graph',
-    graphrag: 'rag_graph',
-  }
   const raw = String(mode || 'rag').toLowerCase()
-  const normalized = (legacyMap[raw] || raw) as KnowledgeConfigPayload['retrieval_settings']['default_mode']
   if (capability === 'rag') return 'rag'
-  return normalized === 'rag_graph' ? normalized : 'rag'
+  if (raw === 'rag_graph_deep') return 'rag_graph_deep'
+  return 'rag'
 }
 
 const normalizeIndexCapability = (
   capability: string | null | undefined,
-  defaultMode?: string | null,
+  _defaultMode?: string | null,
 ): KnowledgeIndexCapability => {
   if (capability === 'rag_graph' || capability === 'rag') return capability
-  return ['hybrid', 'graphrag', 'rag_graph'].includes(String(defaultMode || '').toLowerCase())
-    ? 'rag_graph'
-    : 'rag'
+  return 'rag'
 }
 
 export const createDefaultKnowledgeConfig = defaultConfig
 
 export const normalizeKnowledgeConfig = (
-  config?: LegacyKnowledgeConfigInput | null,
+  config?: KnowledgeConfigInput | null,
 ): KnowledgeConfigPayload => {
   const base = defaultConfig()
-  const graphragProjectId = config?.graphrag_project_id ?? config?.domain_pack_id ?? base.graphrag_project_id
+  const graphragProjectId = config?.graphrag_project_id ?? base.graphrag_project_id
   const graphragProject = graphragProjectId
     ? {
         ...defaultGraphRAGProject(graphragProjectId),
@@ -260,11 +250,11 @@ export const normalizeKnowledgeConfig = (
 }
 
 export const toWorkspaceRetrievalProfile = (
-  configInput?: LegacyKnowledgeConfigInput | null,
+  configInput?: KnowledgeConfigInput | null,
 ): WorkspaceRetrievalProductProfile => {
   const rawDefaultMode = String(configInput?.retrieval_settings?.default_mode || '').trim().toLowerCase()
-  if (['deep', 'rag_graph', 'graphrag', 'hybrid'].includes(rawDefaultMode)) return 'deep'
-  if (['standard', 'rag', 'auto', 'default'].includes(rawDefaultMode)) return 'standard'
+  if (rawDefaultMode === 'rag_graph_deep') return 'deep'
+  if (rawDefaultMode === 'rag' || rawDefaultMode === 'auto') return 'standard'
 
   const config = normalizeKnowledgeConfig(configInput)
   return config.index_capability === 'rag_graph' ? 'deep' : 'standard'
@@ -282,13 +272,13 @@ export const toKnowledgeConfigPatch = (config: KnowledgeConfigPayload): Knowledg
 })
 
 export const toProductKnowledgeConfig = (
-  mode: LegacyKnowledgeProductMode,
+  mode: KnowledgeProductModeInput,
   overrides: Partial<KnowledgeConfigPayload> = {},
 ): KnowledgeConfigPayload => {
   const config = normalizeKnowledgeConfig(overrides)
   if (mode === 'deep' || mode === 'enhanced') {
     config.index_capability = 'rag_graph'
-    config.retrieval_settings.default_mode = 'rag_graph'
+    config.retrieval_settings.default_mode = 'rag_graph_deep'
     if (config.graphrag_project) {
       config.graphrag_project.query_method = config.graphrag_project.query_method || 'auto'
     }

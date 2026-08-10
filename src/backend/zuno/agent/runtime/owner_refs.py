@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-"""Security / Budget owner-decision reference verification (PHASE22 repair).
+"""Security / Budget owner-decision reference verification.
 
 The Product Adapter may only carry immutable owner decision refs
 (:class:`SecurityDecisionRef` / :class:`BudgetDecisionRef`); Agent Core must
@@ -33,7 +33,7 @@ class OwnerRefVerification:
 
 
 class SecurityDecisionResolver(Protocol):
-    """Security-owner fact resolver (PHASE22 repair, owner fact contract).
+    """Security-owner fact resolver.
 
     The Product Adapter carries only an opaque ``decision_id``; Agent Core /
     Composition resolves the formal owner fact through this injected port and
@@ -48,7 +48,7 @@ class SecurityDecisionResolver(Protocol):
 
 
 class BudgetDecisionResolver(Protocol):
-    """Budget-owner fact resolver (PHASE22 repair, owner fact contract).
+    """Budget-owner fact resolver.
 
     Same contract as :class:`SecurityDecisionResolver`; returns the
     Budget-owner fact (or ``None``). ``decision_id`` may be empty when the
@@ -182,7 +182,7 @@ def validate_budget_decision_ref(
 
 
 def _check_expiry(expires_at: str | None) -> OwnerRefVerification | None:
-    """PHASE22 repair: ``expires_at`` must really be validated, never just
+    """``expires_at`` must be validated explicitly, never just
     defined. A malformed or already-passed expiry fails closed."""
     if not expires_at:
         return None

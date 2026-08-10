@@ -4,8 +4,7 @@
 
 1. `docs/modules/01-product-surface.md`
 2. `.agent/references/code-map.md`
-3. `docs/history/architecture-surface-cleanup-2026-06-30/agent-architecture/near-term/05-repository-boundaries-and-acceptance-gates.md`
-4. `.agent/references/workflow.md`
+3. `.agent/references/workflow.md`
 
 如果任务涉及前后端契约迁移、页面边界或仓库布局，还要读：
 

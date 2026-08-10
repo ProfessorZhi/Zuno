@@ -133,8 +133,8 @@ def _graph_payload():
     }
 
 
-def test_enhanced_retrieval_alias_normalizes_to_deep_runtime():
-    assert normalize_retrieval_mode("enhanced_retrieval") == "rag_graph_deep"
+def test_canonical_retrieval_modes_are_explicit():
+    assert normalize_retrieval_mode("rag_graph_deep") == "rag_graph_deep"
 
 
 def _step_status(metadata, name: str) -> str:
@@ -157,7 +157,7 @@ def test_enhanced_retrieval_uses_standard_floor_and_local_graph_route():
 
     result = asyncio.run(
         orchestrator.run(
-            mode="enhanced_retrieval",
+            mode="rag_graph_deep",
             query="终止条款和通知期限是什么关系",
             knowledge_ids=["kb_1"],
             retrieval_options={
@@ -212,7 +212,7 @@ def test_enhanced_retrieval_reports_available_drift_route_when_ready():
 
     result = asyncio.run(
         orchestrator.run(
-            mode="enhanced_retrieval",
+            mode="rag_graph_deep",
             query="这批合同整体有哪些风险 并给出条款依据",
             knowledge_ids=["kb_1"],
             retrieval_options={
@@ -256,7 +256,7 @@ def test_enhanced_retrieval_reports_global_route_without_chunk_level_fusion() ->
 
     result = asyncio.run(
         orchestrator.run(
-            mode="enhanced_retrieval",
+            mode="rag_graph_deep",
             query="这批合同整体有哪些风险",
             knowledge_ids=["kb_1"],
             retrieval_options={
@@ -299,7 +299,7 @@ def test_explicit_basic_query_method_keeps_enhanced_mode_on_standard_pipeline():
 
     result = asyncio.run(
         orchestrator.run(
-            mode="enhanced_retrieval",
+            mode="rag_graph_deep",
             query="Which clause defines notice?",
             knowledge_ids=["kb_1"],
             retrieval_options={

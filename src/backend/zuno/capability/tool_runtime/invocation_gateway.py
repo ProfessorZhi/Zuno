@@ -68,9 +68,7 @@ class ToolGatewayReceipt:
 class ToolApprovalBinding:
     """Server-owned approval identity passed into the tool gateway.
 
-    The gateway accepts a decision/reference binding, never an unscoped
-    approval boolean. The legacy boolean remains an adapter concern of
-    ``ToolRuntimeRequest`` and is converted before reaching this boundary.
+    The gateway accepts an explicit server-owned decision/reference binding.
     """
 
     decision_ref: str
@@ -84,15 +82,12 @@ class ToolApprovalBinding:
     @classmethod
     def from_runtime_request(cls, request: Any) -> "ToolApprovalBinding | None":
         decision_ref = str(getattr(request, "approval_decision_ref", "") or "")
-        legacy_granted = bool(getattr(request, "approved", False))
-        if not decision_ref and not legacy_granted:
+        adapter_ref = str(getattr(request, "approval_adapter_ref", "") or "")
+        if not decision_ref or not adapter_ref:
             return None
         return cls(
-            decision_ref=decision_ref or f"runtime-approval:{getattr(request, 'approval_id', '')}",
-            adapter_ref=(
-                str(getattr(request, "approval_adapter_ref", "") or "")
-                or "temporary.adapter.tool_runtime.approved_bool"
-            ),
+            decision_ref=decision_ref,
+            adapter_ref=adapter_ref,
             comment=str(getattr(request, "approval_comment", "") or ""),
         )
 
@@ -101,17 +96,13 @@ class ToolApprovalBinding:
         if artifact is None:
             return None
         payload = artifact if isinstance(artifact, dict) else {}
+        decision_ref = str(payload.get("approval_decision_ref") or payload.get("decision_ref") or "")
+        adapter_ref = str(payload.get("approval_adapter_ref") or "")
+        if not decision_ref or not adapter_ref:
+            return None
         return cls(
-            decision_ref=str(
-                payload.get("approval_decision_ref")
-                or payload.get("decision_ref")
-                or payload.get("approval_id")
-                or "mcp:approved-artifact"
-            ),
-            adapter_ref=str(
-                payload.get("approval_adapter_ref")
-                or "mcp.approval_artifact"
-            ),
+            decision_ref=decision_ref,
+            adapter_ref=adapter_ref,
             comment=str(payload.get("approval_comment") or ""),
         )
 
@@ -313,7 +304,7 @@ class ToolInvocationGateway:
             )
 
         if not effect_policy.provider_dispatch_allowed:
-            blocked_reason = effect_policy.blocked_reason or "PHASE16_REQUIRED_FOR_SIDE_EFFECT_TOOL"
+            blocked_reason = effect_policy.blocked_reason or "TOOL_EFFECT_POLICY_REQUIRED"
             payload = {
                 "blocked": True,
                 "reason": blocked_reason,

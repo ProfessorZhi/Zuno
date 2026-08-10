@@ -20,8 +20,6 @@ import type { useProductProjectionStore } from './store'
 export const PRODUCT_WEB_TENANT_ID = 'tenant:web'
 export const PRODUCT_AGENT_WORKSPACE_ID = 'workspace:agent-studio:web'
 export const PRODUCT_WEB_AGENT_VERSION_ID = 'agent-version:web-default'
-export const PRODUCT_RUNTIME_CUTOVER_STORAGE_KEY = 'zuno.productRuntimeCutoverMode'
-export type ProductRuntimeCutoverMode = 'shadow' | 'canary' | 'new_default' | 'rollback'
 
 type ProductProjectionStore = ReturnType<typeof useProductProjectionStore>
 
@@ -38,42 +36,11 @@ export interface ProductRuntimeSubmissionResult {
   accepted_actions: AvailableAction[]
 }
 
-export class ProductRuntimeRollbackError extends Error {
-  constructor() {
-    super('Product runtime rollback mode is active; Product command submission is blocked fail-closed.')
-    this.name = 'ProductRuntimeRollbackError'
-  }
-}
-
-export const resolveProductRuntimeCutoverMode = (rawMode?: string | null): ProductRuntimeCutoverMode => {
-  const fromStorage = typeof window !== 'undefined'
-    ? window.localStorage.getItem(PRODUCT_RUNTIME_CUTOVER_STORAGE_KEY)
-    : ''
-  const fromEnv = typeof import.meta !== 'undefined'
-    ? String(import.meta.env?.VITE_PRODUCT_RUNTIME_CUTOVER_MODE || '')
-    : ''
-  const normalized = String(rawMode || fromStorage || fromEnv || 'new_default').trim().toLowerCase()
-  if (normalized === 'shadow' || normalized === 'canary' || normalized === 'new_default' || normalized === 'rollback') {
-    return normalized
-  }
-  return 'new_default'
-}
-
-export const buildProductCommandKindForCutover = (cutoverMode: ProductRuntimeCutoverMode) => {
-  if (cutoverMode === 'shadow') return 'SHADOW_SUBMIT_USER_GOAL'
-  if (cutoverMode === 'canary') return 'CANARY_SUBMIT_USER_GOAL'
-  return 'SUBMIT_USER_GOAL'
-}
-
 export const submitWorkspacePayloadToProductRuntime = async (
   payload: Record<string, unknown>,
   context: ProductRuntimeSubmissionContext,
   store: ProductProjectionStore
 ): Promise<ProductRuntimeSubmissionResult> => {
-  const cutoverMode = resolveProductRuntimeCutoverMode()
-  if (cutoverMode === 'rollback') {
-    throw new ProductRuntimeRollbackError()
-  }
   const command = buildProductRuntimeRequestCommand(payload, context)
   const receipt = await submitProductRuntimeRequest(command)
   const projection = productProjectionFromRuntimeReceipt(receipt)
@@ -143,7 +110,6 @@ export const buildProductRuntimeRequestCommand = (
   context: ProductRuntimeSubmissionContext
 ): ProductRuntimeRequestCommand => {
   const requestId = createProductClientRequestId('runtime-request')
-  const cutoverMode = resolveProductRuntimeCutoverMode()
   return {
     tenant_id: PRODUCT_WEB_TENANT_ID,
     workspace_id: context.workspace_id,
@@ -151,13 +117,10 @@ export const buildProductRuntimeRequestCommand = (
     client_request_id: requestId,
     runtime_request_ref: `runtime:${requestId}`,
     raw_intent_ref: `intent:${context.conversation_id}:${requestId}`,
-    command_kind: buildProductCommandKindForCutover(cutoverMode),
     active_agent_version_id: context.active_agent_version_id || PRODUCT_WEB_AGENT_VERSION_ID,
     payload: {
       ...payload,
       goal: context.query,
-      cutover_mode: cutoverMode,
-      ...(cutoverMode === 'rollback' ? { rollback_reason: 'product_runtime_cutover_rollback' } : {}),
     },
   }
 }

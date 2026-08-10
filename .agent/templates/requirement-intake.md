@@ -14,7 +14,7 @@
 判断本任务是否需要同步：
 
 1. `.agent/programs/`
-2. phase 文档
+2. 当前正式设计文档
 3. 规格、ADR 或审计
 4. `docs/history/`
 5. `docs/architecture/README.md`
@@ -23,7 +23,7 @@
 8. `AGENTS.md`
 9. `.agent/references/current-program.md`
 10. `.agent/references/docs-map.md`
-11. `.agent/programs/` 平铺 phase 文件
+11. `.agent/programs/` 当前状态文件
 12. `.agent/scripts/` 或 `.agent/templates/`
 13. `.gitignore`
 14. 验证、提交和推送

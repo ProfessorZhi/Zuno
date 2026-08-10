@@ -55,23 +55,6 @@ class CLIToolAdapter:
             return Path(env_root).resolve()
 
         cwd_tools_candidate = (Path.cwd() / "tools" / "cli").resolve()
-        if cwd_tools_candidate.exists():
-            return cwd_tools_candidate
-
-        cwd_legacy_candidate = (Path.cwd() / "cli_tools").resolve()
-        if cwd_legacy_candidate.exists():
-            return cwd_legacy_candidate
-
-        app_root = Path("/app/cli_tools")
-        if app_root.exists():
-            return app_root.resolve()
-
-        current = Path(__file__).resolve()
-        for parent in current.parents:
-            for candidate in (parent / "tools" / "cli", parent / "cli_tools"):
-                if candidate.exists():
-                    return candidate.resolve()
-
         return cwd_tools_candidate
 
     @staticmethod

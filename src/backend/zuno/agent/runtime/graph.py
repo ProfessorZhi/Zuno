@@ -12,11 +12,11 @@ from zuno.agent.runtime.state import AgentRuntimeSnapshot, AgentRuntimeState
 
 
 def build_agent_graph(dependencies: RuntimeDependencies | None = None, checkpointer: Any | None = None) -> Any:
-    """Build the unified runtime graph.
+    """Build the canonical Agent Run graph.
 
     ``checkpointer`` is Zuno's domain checkpoint bridge, not a LangGraph BaseCheckpointSaver.
-    Nodes persist through it after execution so the existing SQLite run store remains the
-    domain source of truth while LangGraph owns transition control.
+    Nodes persist through it after execution so the Agent Run store remains
+    the source of truth while LangGraph owns transition control.
     """
 
     deps = dependencies or RuntimeDependencies()

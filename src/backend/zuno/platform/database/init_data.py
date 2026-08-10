@@ -75,22 +75,11 @@ def _ensure_knowledge_pipeline_schema():
 
     if "knowledge" in inspector.get_table_names():
         knowledge_columns = {column["name"] for column in inspector.get_columns("knowledge")}
-        if "default_retrieval_mode" not in knowledge_columns:
-            with engine.begin() as connection:
-                connection.execute(
-                    text("ALTER TABLE knowledge ADD COLUMN default_retrieval_mode VARCHAR DEFAULT 'rag'")
-                )
         if "knowledge_config" not in knowledge_columns:
             with engine.begin() as connection:
                 connection.execute(
                     text("ALTER TABLE knowledge ADD COLUMN knowledge_config JSON DEFAULT '{}'::json")
                 )
-
-    if "agent" in inspector.get_table_names():
-        agent_columns = {column["name"] for column in inspector.get_columns("agent")}
-        if "domain_pack_id" not in agent_columns:
-            with engine.begin() as connection:
-                connection.execute(text("ALTER TABLE agent ADD COLUMN domain_pack_id VARCHAR"))
 
     if "llm" in inspector.get_table_names():
         llm_columns = {column["name"] for column in inspector.get_columns("llm")}

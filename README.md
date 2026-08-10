@@ -51,7 +51,7 @@ README 同时展示 Current 和 Target，但二者不能混为一谈。
 | Memory & Context | Candidate、Governance、MemoryVersion、ContextPack、CompressionTrace 和 MemoryUseTrace 已有实现基线 |
 | Agentic GraphRAG | 现有 KnowledgeRetrievalGraph、RetrievalPlan/Round、EvidenceLedger/Frontier、Corrective Retrieval 和 KnowledgeControlProposal 已有实现基线 |
 | Evidence-Driven Agentic GraphRAG v2 | `accepted-target`，设计可用；Claim-level Evidence Deliberation、Evidence Reasoning Graph 和 Targeted Probe 尚不能声明为 Current |
-| Eval 与发布质量 | PHASE22 Engineering Closure 已完成；固定测量仍为 blocked，quality not yet proven，production readiness not established |
+| Eval 与发布质量 | 工程收口已完成；固定测量仍为 blocked，quality not yet proven，production readiness not established |
 
 正式状态事实以 [`docs/status/production-readiness.md`](./docs/status/production-readiness.md)、最新代码、Migration、测试、Trace、Eval 和 Evidence 为准。README、类名、表名、Phase 名称或架构图本身都不能证明 Target 已实现。
 
@@ -484,7 +484,7 @@ Object upload success != Artifact published
 - [架构决策](./docs/decisions/README.md)
 - [Repository Ownership Matrix](./docs/governance/repo-ownership-matrix.md)
 - [文档总入口](./docs/README.md)
-- [公开证据入口](./docs/evidence/public-demo.md)
+- [当前证据入口](./docs/evidence/README.md)
 - [历史归档入口](./docs/history/README.md)
 
 十一模块：
@@ -553,7 +553,7 @@ python .agent/scripts/verify_doc_boundaries.py
 pytest -q tests/repo/test_docs_entrypoints.py tests/repo/test_repo_structure_consistency.py
 ```
 
-完整依赖、容器、Migration、Fault、E2E 和 PHASE22 验证以当前 Program 和 CI Workflow 为准。
+完整依赖、容器、Migration、Fault、E2E 和 CI 验证以当前代码、文档和 Workflow 为准。
 
 ## Agent 协作
 
@@ -561,7 +561,7 @@ pytest -q tests/repo/test_docs_entrypoints.py tests/repo/test_repo_structure_con
 
 - [`AGENTS.md`](./AGENTS.md)
 - [`.agent/references/workflow.md`](./.agent/references/workflow.md)
-- [`.agent/references/command-catalog.md`](./.agent/references/command-catalog.md)
+- [`.agent/references/task-routing.md`](./.agent/references/task-routing.md)
 
 Worker 贡献只是候选；架构 Owner 与 Coordinator 必须审查 Diff、Contract、状态机、错误语义、安全、恢复、测试和 Evidence 后再合并。README 不记录机器专属 worktree 绝对路径、个人环境或临时 Session。
 

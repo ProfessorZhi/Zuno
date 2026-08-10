@@ -24,9 +24,9 @@ docs/decisions/0006-evidence-driven-agentic-graphrag.md
 
 该 ADR 定义：Broad Evidence Discovery、Evidence Deliberation、Knowledge Graph + Evidence Reasoning Graph、ClaimEvidenceState、Targeted Evidence Probe、安全停止和 Knowledge Health Diagnosis。
 
-为了避免已归档 Program 与 PHASE01–PHASE22 失去原 Contract 基线，本轮不以精简重写覆盖 Module 03、04、06、10 的完整文档。既有 Phase 使用过 `c9d099d64a1af28102231751ce55df8217173e89` 基线；ADR 0006 是后续设计工作的新 Target 输入，不授权本次收口立即实现。当前 `.agent/programs/` 为 `no-active`。
+为了避免丢失原 Contract 基线，本轮不以精简重写覆盖 Module 03、04、06、10 的完整文档。它们继续作为 Target 设计输入；ADR 0006 是后续设计工作的新 Target 输入，不授权本次收口立即实现。当前 `.agent/programs/` 为 `no-active`。
 
-PHASE22 已完成 Engineering Closure 并归档。下一阶段只做正式设计协调，不创建 PHASE23 或启动 v2 Runtime：
+Runtime 工程收口已完成并归档。下一阶段只做正式设计协调，不启动新的 Runtime Implementation Program：
 
 ```text
 读取最新 Current
@@ -64,7 +64,7 @@ PHASE22 已完成 Engineering Closure 并归档。下一阶段只做正式设计
 | 01 | Product Surface | [`01-product-surface.md`](./01-product-surface.md) | 单一完整 Target 架构；实施规格可用 |
 | 02 | Input / Document Ingestion | [`02-input-document-ingestion.md`](./02-input-document-ingestion.md) | 单一完整 Target 架构；实施规格可用 |
 | 03 | Knowledge / Agentic GraphRAG | [`03-knowledge-agentic-graphrag.md`](./03-knowledge-agentic-graphrag.md) | v1 完整模块规范；v2 accepted-target overlay 见 ADR 0006 |
-| 04 | Model Gateway | [`04-model-gateway.md`](./04-model-gateway.md) | 完整模块规范；v2 Evidence 任务边界待 PHASE22 后协调 |
+| 04 | Model Gateway | [`04-model-gateway.md`](./04-model-gateway.md) | 完整模块规范；新的 Evidence 任务边界待架构协调 |
 | 05 | Memory & Context | [`05-memory-context.md`](./05-memory-context.md) | 单一完整 Target 架构；实施规格可用 |
 | 06 | Agent Core / Planning & Control | [`06-agent-core-planning-control.md`](./06-agent-core-planning-control.md) | 完整 Single Controller 规范；v2 Knowledge 边界待协调 |
 | 07 | Capability / Skill | [`07-capability-skill.md`](./07-capability-skill.md) | 单一完整 Target 架构；实施规格可用 |

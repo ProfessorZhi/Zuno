@@ -1,22 +1,11 @@
 # Agent 执行计划
 
-`.agent/programs/` 当前是 no-active 前台状态，不承载 active implementation program；no active implementation program。
+`.agent/programs/` 只保存当前执行状态，不保存历史施工计划、closure checklist
+或旧 thread prompt。
 
-最近归档 Program：
+当前状态：`no-active`。
 
-```text
-zuno-canonical-architecture-runtime-realization-v1
-docs/history/programs/zuno-canonical-architecture-runtime-realization-v1/
-```
+入口：
 
-当前前台只保留：
-
-```text
-README.md
-current.md
-implementation-roadmap.md
-closure-checklist.md
-queued-programs/
-```
-
-下一阶段是 Canonical Target Architecture Deep Design。打开新的 Program 必须由用户明确确认，并从新的 PHASE01 建立独立执行事实；不得把下一阶段设计 handoff 自动变成 PHASE23 或 Runtime Program。
+- `current.md`
+- `queued-programs/`：当前为空；新的 Program 只能在架构评审后生成。

@@ -69,8 +69,8 @@ def _bm25_payload():
     }
 
 
-def test_standard_retrieval_alias_normalizes_to_rag_runtime():
-    assert normalize_retrieval_mode("standard_retrieval") == "rag"
+def test_canonical_standard_retrieval_mode_is_explicit():
+    assert normalize_retrieval_mode("rag") == "rag"
 
 
 def test_standard_retrieval_uses_vector_bm25_fusion_and_rerank_when_available():
@@ -85,7 +85,7 @@ def test_standard_retrieval_uses_vector_bm25_fusion_and_rerank_when_available():
 
     result = asyncio.run(
         orchestrator.run(
-            mode="standard_retrieval",
+            mode="rag",
             query="redis persistence mode",
             knowledge_ids=["kb_1"],
             retrieval_options={
@@ -123,7 +123,7 @@ def test_standard_retrieval_falls_back_to_vector_when_bm25_is_unavailable():
 
     result = asyncio.run(
         orchestrator.run(
-            mode="standard_retrieval",
+            mode="rag",
             query="redis persistence mode",
             knowledge_ids=["kb_1"],
             retrieval_options={

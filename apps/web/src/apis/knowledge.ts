@@ -57,7 +57,7 @@ export interface KnowledgeConfigPayload {
     community_version?: string
   }
   retrieval_settings: {
-    default_mode: 'rag' | 'rag_graph'
+    default_mode: 'rag' | 'rag_graph_deep'
     profile: string
     refill_policy: 'none' | 'auto' | 'smart'
     top_k: number

@@ -35,7 +35,7 @@ const form = ref({
   text_embedding_model_id: '',
   vl_embedding_model_id: '',
   rerank_model_id: '',
-  graphrag_project_id: String(route.query.graphrag_project_id || route.query.domain_pack_id || ''),
+  graphrag_project_id: String(route.query.graphrag_project_id || ''),
 })
 
 const embeddingModels = computed(() => models.value.filter((item) => item.llm_type === 'Embedding'))

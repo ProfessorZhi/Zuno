@@ -149,7 +149,6 @@ class EffectProfile:
     level: EffectLevel
     requires_approval: bool
     requires_effect_receipt: bool
-    canary_real_effect_allowed: bool = False
 
 
 @dataclass(frozen=True, slots=True)
@@ -330,7 +329,6 @@ class ToolInfrastructureBoundary:
 
 @dataclass(frozen=True, slots=True)
 class LifecycleRecord:
-    canary_real_effect_allowed: bool
     drain_watermark_ref: str
     retired_history_readable: bool
     large_payload_object_ref: str
@@ -526,7 +524,7 @@ class ToolRuntimeBatch:
         )
 
     def lifecycle(self, *, drain_watermark_ref: str, large_payload_object_ref: str, legal_hold: bool) -> LifecycleRecord:
-        return LifecycleRecord(False, drain_watermark_ref, True, large_payload_object_ref, legal_hold_blocks_delete=legal_hold, confirmed_effect_sli_ref="sli:tool.confirmed_effect")
+        return LifecycleRecord(drain_watermark_ref, True, large_payload_object_ref, legal_hold_blocks_delete=legal_hold, confirmed_effect_sli_ref="sli:tool.confirmed_effect")
 
     def allowlist(self, *, current_allowlist_refs: tuple[str, ...], zero_gate_ref: str, previous_count: int) -> BypassAllowlistRecord:
         return BypassAllowlistRecord(current_allowlist_refs, zero_gate_ref, monotonic_decrease=len(current_allowlist_refs) <= previous_count)

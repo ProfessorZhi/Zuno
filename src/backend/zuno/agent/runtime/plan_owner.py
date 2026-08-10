@@ -1,6 +1,6 @@
 """Canonical Plan Owner — Agent Core.
 
-PHASE22 final legacy cutover: public adapter modules
+Canonical Agent Run planning adapter modules.
 (``service.py`` / ``factory.py`` / ``harness.py`` / ``adapters.py``) must
 not own Plan / RunOutcome / CapabilityPlan / FinalGate instantiations.
 The plan owner is the single source of truth for seeding

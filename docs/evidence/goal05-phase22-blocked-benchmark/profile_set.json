@@ -1,6 +1,0 @@
-{
-  "standard_rag": "baseline_rag",
-  "local_graphrag": "local_graphrag",
-  "deep_graphrag": "deep_graphrag",
-  "agentic_graphrag": "agentic_graphrag"
-}

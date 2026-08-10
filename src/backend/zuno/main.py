@@ -54,13 +54,14 @@ async def init_config():
 
     database_ready = await init_database()
     if not database_ready:
-        raise RuntimeError("Database bootstrap failed during Phase 0 startup recovery")
+        raise RuntimeError("Database bootstrap failed during startup recovery")
 
     from zuno.api.services.mcp_server import MCPService
     from zuno.api.services.mcp_stdio_server import MCPServerService
     from zuno.api.services.security_admin_actions import configure_security_admin_action_guard
-    from zuno.api.services.workspace_task_runtime import (
-        WorkspaceTaskRuntimeService,
+    from zuno.api.services.product import (
+        ProductIngestionService,
+        ProductService,
         build_package_a_production_ingestion_runtime,
         resolve_package_a_upload_bucket,
     )
@@ -68,20 +69,14 @@ async def init_config():
     from zuno.platform.security import PostgresSecurityProductActionGuard
 
     product_action_guard = PostgresSecurityProductActionGuard(engine)
-    WorkspaceTaskRuntimeService.configure_security_product_action_guard(product_action_guard)
-    WorkspaceTaskRuntimeService.configure_package_a_production_ingestion(
+    ProductService.configure_security_product_action_guard(product_action_guard)
+    ProductIngestionService.configure_package_a_production_ingestion(
         build_package_a_production_ingestion_runtime(
             engine=engine,
             settings=app_settings,
         ),
         upload_bucket=resolve_package_a_upload_bucket(app_settings),
     )
-    # PHASE22 repair (B1): the workspace agent product composition is wired
-    # explicitly here at the application startup composition root — never at
-    # module import time. Idempotent; the workspace / wechat product agents
-    # fail closed (BLOCKED_CONFIGURATION) until this binding is present and
-    # the product surface supplies real tenant / workspace identity.
-    WorkspaceTaskRuntimeService.configure_workspace_agent_product_composition()
     MCPService.configure_security_product_action_guard(product_action_guard)
     MCPServerService.configure_security_product_action_guard(product_action_guard)
     configure_security_admin_action_guard(product_action_guard)

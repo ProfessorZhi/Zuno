@@ -11,7 +11,7 @@ REPO_ROOT = Path(__file__).resolve().parents[4]
 SAMPLE_ROOT = REPO_ROOT / "tools" / "evals" / "zuno" / "multihop_eval" / "sample_data"
 DEFAULT_OUTPUT_ROOT = REPO_ROOT / "reports" / "evals" / "multihop"
 
-SUPPORTED_MODES = {"baseline_rag", "local_graphrag", "deep_graphrag"}
+SUPPORTED_MODES = {"normal", "enhanced", "auto"}
 SAMPLE_FILES = {
     "hotpotqa": SAMPLE_ROOT / "hotpotqa_sample.jsonl",
     "twowiki": SAMPLE_ROOT / "twowiki_sample.jsonl",
@@ -49,6 +49,12 @@ def _dataset_label(dataset: str) -> str:
     return normalized
 
 
+def _resolved_mode(record: dict[str, Any], *, requested_mode: str) -> str:
+    if requested_mode != "auto":
+        return requested_mode
+    return "enhanced" if len(record.get("gold_evidence_path") or []) > 1 else "normal"
+
+
 def _doc_score(question: str, document: dict[str, Any], *, mode: str) -> float:
     question_tokens = _tokenize(question)
     title_tokens = _tokenize(document.get("title") or "")
@@ -56,9 +62,9 @@ def _doc_score(question: str, document: dict[str, Any], *, mode: str) -> float:
     overlap = len(question_tokens & text_tokens)
     title_overlap = len(question_tokens & title_tokens)
     score = float(overlap * 2 + title_overlap * 3)
-    if mode in {"local_graphrag", "deep_graphrag"}:
+    if mode == "enhanced":
         score += float(len(title_tokens) * 0.05)
-    if mode == "deep_graphrag":
+    if mode == "enhanced":
         score += 1.0 if len(document.get("sentences") or []) > 1 else 0.25
     return score
 
@@ -119,11 +125,16 @@ def _answer_scores(retrieved: list[dict[str, Any]], answer: str) -> tuple[float 
     return (1.0 if found else 0.0, 1.0 if found else 0.0)
 
 
-def _route_metadata(mode: str) -> dict[str, Any]:
-    if mode == "baseline_rag":
+def _route_metadata(*, requested_mode: str, resolved_mode: str) -> dict[str, Any]:
+    if resolved_mode == "normal":
         return {
-            "requested_mode": "baseline_rag",
-            "resolved_mode": "baseline_rag",
+            "requested_mode": requested_mode,
+            "normalized_mode": requested_mode,
+            "resolved_mode": "normal",
+            "product_mode": requested_mode,
+            "is_product_mode": True,
+            "is_deprecated_alias": False,
+            "is_ablation_mode": False,
             "internal_route": "mocked_standard_rag",
             "used_vector": True,
             "used_bm25": False,
@@ -132,22 +143,15 @@ def _route_metadata(mode: str) -> dict[str, Any]:
             "follow_up_questions": [],
             "stackless_or_mocked": "mocked",
         }
-    if mode == "local_graphrag":
-        return {
-            "requested_mode": "local_graphrag",
-            "resolved_mode": "local_graphrag",
-            "internal_route": "mocked_local_graphrag",
-            "used_vector": True,
-            "used_bm25": False,
-            "used_graph": True,
-            "used_communities": [],
-            "follow_up_questions": [],
-            "stackless_or_mocked": "mocked",
-        }
     return {
-        "requested_mode": "deep_graphrag",
-        "resolved_mode": "deep_graphrag",
-        "internal_route": "mocked_drift_like",
+        "requested_mode": requested_mode,
+        "normalized_mode": requested_mode,
+        "resolved_mode": "enhanced",
+        "product_mode": requested_mode,
+        "is_product_mode": True,
+        "is_deprecated_alias": False,
+        "is_ablation_mode": False,
+        "internal_route": "mocked_enhanced_rag",
         "used_vector": True,
         "used_bm25": False,
         "used_graph": True,
@@ -215,7 +219,8 @@ def run_multihop_eval(
     result_rows: list[dict[str, Any]] = []
 
     for record in records:
-        ranked = _rank_documents(record, mode=mode)
+        resolved_mode = _resolved_mode(record, requested_mode=mode)
+        ranked = _rank_documents(record, mode=resolved_mode)
         metrics = {
             "Recall@2": _doc_recall(ranked, record.get("gold_support") or [], 2),
             "Recall@5": _doc_recall(ranked, record.get("gold_support") or [], 5),
@@ -232,7 +237,7 @@ def run_multihop_eval(
                 "question": record.get("question"),
                 "metrics": metrics,
                 "retrieved_titles": [document.get("title") for document in ranked[:10]],
-                "route_metadata": _route_metadata(mode),
+                "route_metadata": _route_metadata(requested_mode=mode, resolved_mode=resolved_mode),
             }
         )
 
@@ -289,4 +294,3 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-

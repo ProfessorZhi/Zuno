@@ -39,11 +39,6 @@ SUPPORTED_MODES = {
     "normal",
     "enhanced",
     "auto",
-    "standard_retrieval",
-    "enhanced_retrieval",
-    "baseline_rag",
-    "local_graphrag",
-    "deep_graphrag",
 }
 SUPPORTED_ROUTE_POLICIES = {"auto", "force_graph", "force_deep"}
 MODE_METADATA = {
@@ -52,12 +47,9 @@ MODE_METADATA = {
         "runtime_mode": "rag",
         "knowledge_capability": "rag",
         "product_mode": "normal",
-        "legacy_product_mode": "standard_retrieval",
         "default_query_method": "basic",
         "is_product_mode": True,
         "is_router_mode": False,
-        "is_deprecated_alias": False,
-        "is_ablation_mode": False,
         "warning": None,
     },
     "enhanced": {
@@ -65,12 +57,9 @@ MODE_METADATA = {
         "runtime_mode": "rag_graph_deep",
         "knowledge_capability": "rag_graph",
         "product_mode": "enhanced",
-        "legacy_product_mode": "enhanced_retrieval",
         "default_query_method": "auto",
         "is_product_mode": True,
         "is_router_mode": False,
-        "is_deprecated_alias": False,
-        "is_ablation_mode": False,
         "warning": None,
     },
     "auto": {
@@ -78,78 +67,10 @@ MODE_METADATA = {
         "runtime_mode": "auto",
         "knowledge_capability": "auto",
         "product_mode": "auto",
-        "legacy_product_mode": None,
         "default_query_method": "auto",
         "is_product_mode": True,
         "is_router_mode": True,
-        "is_deprecated_alias": False,
-        "is_ablation_mode": False,
         "warning": None,
-    },
-    "standard_retrieval": {
-        "normalized_mode": "standard_retrieval",
-        "runtime_mode": "rag",
-        "knowledge_capability": "rag",
-        "product_mode": "standard_retrieval",
-        "legacy_product_mode": "standard_retrieval",
-        "default_query_method": "basic",
-        "is_product_mode": True,
-        "is_router_mode": False,
-        "is_deprecated_alias": False,
-        "is_ablation_mode": False,
-        "warning": None,
-    },
-    "enhanced_retrieval": {
-        "normalized_mode": "enhanced_retrieval",
-        "runtime_mode": "rag_graph_deep",
-        "knowledge_capability": "rag_graph",
-        "product_mode": "enhanced_retrieval",
-        "legacy_product_mode": "enhanced_retrieval",
-        "default_query_method": "auto",
-        "is_product_mode": True,
-        "is_router_mode": False,
-        "is_deprecated_alias": False,
-        "is_ablation_mode": False,
-        "warning": None,
-    },
-    "baseline_rag": {
-        "normalized_mode": "baseline_rag",
-        "runtime_mode": "rag",
-        "knowledge_capability": "rag",
-        "product_mode": "standard_retrieval",
-        "legacy_product_mode": "standard_retrieval",
-        "default_query_method": "basic",
-        "is_product_mode": False,
-        "is_router_mode": False,
-        "is_deprecated_alias": True,
-        "is_ablation_mode": False,
-        "warning": "baseline_rag is a deprecated eval alias, not full product standard_retrieval",
-    },
-    "local_graphrag": {
-        "normalized_mode": "local_graphrag",
-        "runtime_mode": "local_graphrag",
-        "knowledge_capability": "rag_graph",
-        "product_mode": "enhanced_retrieval",
-        "legacy_product_mode": "enhanced_retrieval",
-        "default_query_method": "local",
-        "is_product_mode": False,
-        "is_router_mode": False,
-        "is_deprecated_alias": False,
-        "is_ablation_mode": True,
-        "warning": "local_graphrag is an internal local graph ablation",
-    },
-    "deep_graphrag": {
-        "normalized_mode": "deep_graphrag",
-        "runtime_mode": "rag_graph_deep",
-        "knowledge_capability": "rag_graph",
-        "product_mode": "enhanced_retrieval",
-        "legacy_product_mode": "enhanced_retrieval",
-        "default_query_method": "auto",
-        "is_product_mode": False,
-        "is_router_mode": False,
-        "is_deprecated_alias": False,
-        "is_ablation_mode": True,
-        "warning": "deep_graphrag is an internal deep route ablation",
     },
 }
 MODEL_SLOT_BY_TYPE = {
@@ -478,7 +399,7 @@ async def run_real_runtime_eval(
     notes: list[str] = []
     graph_init_error: str | None = None
     graph_retriever = None
-    if normalized_mode in {"local_graphrag", "deep_graphrag", "enhanced_retrieval"}:
+    if normalized_mode == "enhanced":
         try:
             graph_retriever = await _build_local_graph_retriever(chunks)
         except Exception as exc:
@@ -541,7 +462,7 @@ async def run_real_runtime_eval(
                 error_message = str(exc)
                 fallback_reason = (
                     graph_init_error
-                    if normalized_mode in {"local_graphrag", "deep_graphrag", "enhanced_retrieval"}
+                    if normalized_mode == "enhanced"
                     else None
                 )
 
@@ -605,8 +526,6 @@ async def run_real_runtime_eval(
         "normalized_mode": normalized_mode,
         "product_mode": mode_metadata["product_mode"],
         "is_product_mode": mode_metadata["is_product_mode"],
-        "is_deprecated_alias": mode_metadata["is_deprecated_alias"],
-        "is_ablation_mode": mode_metadata["is_ablation_mode"],
         "mode_warning": mode_metadata["warning"],
         "mode": normalized_mode,
         "requested_runtime_mode": runtime_mode,

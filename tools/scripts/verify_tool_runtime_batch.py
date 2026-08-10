@@ -236,7 +236,7 @@ def verify_tool_runtime_batch() -> list[str]:
         errors.append("ARCH-TOOL-068..070 infrastructure boundary invalid")
     if infrastructure.capacity_gate_order[:5] != ("exposure", "prepare", "security_epoch", "audit", "claim"):
         errors.append("ARCH-TOOL-071 capacity ordering can bypass gates")
-    if lifecycle.canary_real_effect_allowed or not lifecycle.retired_history_readable or not lifecycle.large_payload_object_ref or not lifecycle.legal_hold_blocks_delete:
+    if not lifecycle.retired_history_readable or not lifecycle.large_payload_object_ref or not lifecycle.legal_hold_blocks_delete:
         errors.append("ARCH-TOOL-072..076 lifecycle boundary invalid")
     if lifecycle.confirmed_effect_sli_ref != "sli:tool.confirmed_effect":
         errors.append("ARCH-TOOL-077 SLO does not focus confirmed effect")

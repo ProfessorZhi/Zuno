@@ -82,26 +82,10 @@ ACCESS_SCOPE_DEFINITIONS: dict[AccessScope, dict[str, Any]] = {
 }
 
 
-LEGACY_EXECUTION_MODE_MAP = {
-    "default": ExecutionMode.TOOL.value,
-    "tool": ExecutionMode.TOOL.value,
-    "high_privilege": ExecutionMode.TERMINAL.value,
-    "terminal": ExecutionMode.TERMINAL.value,
-}
-
-LEGACY_ACCESS_SCOPE_MAP = {
-    "default": AccessScope.WORKSPACE.value,
-    "workspace": AccessScope.WORKSPACE.value,
-    "high_privilege": AccessScope.UNRESTRICTED.value,
-    "unrestricted": AccessScope.UNRESTRICTED.value,
-}
-
-
 def normalize_execution_mode(mode: str | None) -> ExecutionMode:
     normalized = (mode or "").strip().lower()
     if not normalized:
         return ExecutionMode.TOOL
-    normalized = LEGACY_EXECUTION_MODE_MAP.get(normalized, normalized)
     try:
         return ExecutionMode(normalized)
     except ValueError:
@@ -112,7 +96,6 @@ def normalize_access_scope(scope: str | None) -> AccessScope:
     normalized = (scope or "").strip().lower()
     if not normalized:
         return AccessScope.WORKSPACE
-    normalized = LEGACY_ACCESS_SCOPE_MAP.get(normalized, normalized)
     try:
         return AccessScope(normalized)
     except ValueError:

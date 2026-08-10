@@ -14,21 +14,15 @@ MCP_CHAT_CANONICAL_RUNTIME_NOT_BOUND = (
 class MCPChatCanonicalRuntimeNotBound(RuntimeError):
     """MCP Chat execution fail-closed marker.
 
-    The legacy MCP Chat surface (``MCPChatAgent`` -> ``MCPManager.process_query``
-    -> ``MCPUtil.run_mcp_tool`` -> ``MCPClient.call_server_tool``) executed MCP
-    provider tools directly, bypassing ``ToolInvocationGateway`` (Security /
-    Budget / receipt / idempotency) and held a provider model directly,
-    bypassing the Model Gateway. The endpoint has no tenant / workspace /
-    principal / security / budget product context, so PHASE22 fails closed:
-    the canonical runtime is not bound and no provider or model call is made.
+    This endpoint has no tenant / workspace / principal / security / budget
+    product context, so it fails closed and makes no provider or model call.
     """
 
 
 class MCPChatAgent:
     def __init__(self, **kwargs):
-        # Agent configuration is retained for contract compatibility; the
-        # canonical product context (tenant / workspace / principal /
-        # security decision / budget decision) is NOT derivable from it.
+        # These values are metadata only; product security context is not
+        # derivable from an unscoped chat request.
         self.mcp_servers_id = kwargs.get("mcp_servers_id")
         self.llm_id = kwargs.get("llm_id")
         self.enable_memory = kwargs.get("enable_memory")
@@ -37,8 +31,8 @@ class MCPChatAgent:
     async def init_MCP_Server(self):
         """Fail closed: no MCP server connection, no provider client.
 
-        PHASE22: without a canonical runtime binding the agent must not
-        connect MCP servers for execution. The endpoint returns
+        Without a canonical runtime binding the agent must not connect MCP
+        servers for execution. The endpoint returns
         ``MCP_CHAT_CANONICAL_RUNTIME_NOT_BOUND`` instead.
         """
         raise MCPChatCanonicalRuntimeNotBound(MCP_CHAT_CANONICAL_RUNTIME_NOT_BOUND)
@@ -46,8 +40,8 @@ class MCPChatAgent:
     async def ainvoke(self, user_input: str, dialog_id: str, stream: bool = False):
         """Fail closed: zero provider calls, zero model calls.
 
-        PHASE22: the legacy direct MCP execution loop is retired. A
-        canonical integration would route through the Product Runtime
+        Direct MCP execution is not available here. A canonical integration
+        routes through the Product Runtime
         (WorkspaceAgentRuntime -> ToolInvocationGateway ->
         MCPToolExecutorAdapter -> MCP provider); this endpoint cannot
         provide the required product context, so it fails closed.

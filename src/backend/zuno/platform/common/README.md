@@ -1,28 +1,5 @@
-# Utils 迁移源
+# Platform Common 边界
 
-分类：`migration-source`
+`platform/common/` 只承载跨模块、无业务 owner 的纯函数和基础类型，例如文件路径、hash、日期、模型输出和观测辅助函数。
 
-## 当前角色
-
-`src/backend/zuno/utils/` 当前保存通用 helper，例如文件路径、context、模型输出、runtime observability 和配置转换。它被 core、services、tools 和 tests 共同引用，因此不能直接整体搬迁。
-
-## Target role
-
-目标状态下，helper 不应长期停留在泛化 utils 桶里。每个 helper 要按实际 owner 迁入 `agent/`、`capability/`、`knowledge/`、`platform/` 或具体 service 边界；旧 `zuno.utils.*` import path 作为迁移兼容面保留。
-
-## 允许新增内容
-
-- 允许小型纯函数 helper 暂留，前提是职责明确且有测试。
-- 允许按 owner 小切片迁移，并保留旧路径 re-export 作为迁移兼容面。
-
-## 禁止事项
-
-- 禁止把新业务逻辑放进泛化 utils。
-- 禁止无测试移动被 core/services/tools 共享的 helper。
-- 禁止改变 trace id、文件路径、模型输出或 MCP config 转换语义。
-
-## Focused tests
-
-- `tests/agent/test_runtime_observability.py`
-- `tests/storage/test_storage_utils.py`
-- `tests/repo/test_zuno_canonical_import_surfaces.py`
+新业务逻辑必须进入明确的 Agent、Capability、Knowledge、Memory 或 application owner。保留在 common 的 helper 要有清晰输入输出和针对性测试，不得形成隐式 service facade。

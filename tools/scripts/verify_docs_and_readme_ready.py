@@ -11,28 +11,17 @@ EXPECTED_GROUP_PATHS = {
     "docs/architecture/",
     "docs/architecture/README.md",
     "docs/architecture/architecture.md",
+    "docs/architecture/architecture-views.md",
     "docs/architecture/architecture.html",
-    "docs/architecture/decisions/README.md",
-    "docs/architecture/decisions/0002-rename-zuno-to-zuno.md",
-    "docs/architecture/decisions/0002-retire-compat-namespace.md",
-    "docs/history/phases/README.md",
-    "docs/history/plans/rag-local-eval-scheme.md",
-    "docs/history/phases/phase-04-local-eval-strengthening.md",
-    "docs/history/phases/phase-05-docs-and-public-explanation-sync.md",
-    "docs/history/phases/phase-06-agent-graphrag-pluginization.md",
-    "docs/history/specs/architecture-upgrade-2026-06.md",
-    "docs/history/specs/enterprise-retrieval-governance.md",
-    "docs/history/specs/platform-evolution-and-future-direction.md",
-    "docs/history/development/README.md",
-    "docs/history/development/backend-layering-guidelines.md",
-    "docs/history/development/github-publish-boundary.md",
-    "docs/history/development/public-demo-acceptance.md",
-    "docs/history/development/public-demo-evidence.md",
-    "docs/history/development/public-demo-runbook.md",
-    "docs/history/development/public-release-checklist.md",
-    "docs/history/development/public-release-staging-plan.md",
-    "docs/history/reference/core.md",
-    "docs/history/reference/zuno.md",
+    "docs/history/README.md",
+    "docs/history/architecture-evolution.md",
+    "docs/history/program-history.md",
+    "docs/evidence/README.md",
+    "docs/evidence/repository-closure.md",
+    "docs/evidence/local-workspace-closure.md",
+    "docs/evidence/current-runtime-baseline.md",
+    "docs/evidence/current-test-baseline.md",
+    "docs/evidence/current-eval-baseline.md",
 }
 EXCLUDED_LOCAL_PATHS = {
     "docs/superpowers/",
@@ -108,8 +97,19 @@ def main() -> int:
     dry_run_paths = _strip_excluded_local(_extract_stage_dry_run_paths(dry_run.stdout))
 
     errors: list[str] = []
-    unexpected_preview = sorted(preview_paths - EXPECTED_GROUP_PATHS)
-    unexpected_dry_run = sorted(dry_run_paths - EXPECTED_GROUP_PATHS)
+    # Deleted historical paths are expected during the reset and must not be
+    # treated as public-surface leaks. Validate the boundary of the group,
+    # while allowing current docs/governance files to evolve without another
+    # hard-coded archive manifest.
+    allowed_prefixes = ("README.md", "docs/")
+    unexpected_preview = sorted(
+        path for path in preview_paths
+        if not path.startswith(allowed_prefixes)
+    )
+    unexpected_dry_run = sorted(
+        path for path in dry_run_paths
+        if not path.startswith(allowed_prefixes)
+    )
     if unexpected_preview:
         errors.append(
             "preview paths escaped docs_and_readme allowed set: "

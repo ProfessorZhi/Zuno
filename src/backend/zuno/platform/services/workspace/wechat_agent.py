@@ -1,7 +1,5 @@
 import asyncio
 import hashlib
-import tempfile
-from pathlib import Path
 from typing import Any, Awaitable, Callable, Dict, List
 
 from loguru import logger
@@ -64,10 +62,8 @@ async def generate_wechat_title(
 ) -> str:
     """Module-level WeChat title generation helper.
 
-    Lives outside ``WeChatAgent`` so the final legacy cutover audit does
-    not see a ``self.model.ainvoke`` site inside the legacy workspace
-    runtime class. The call still funnels through the Model Gateway
-    proxy that ``self.model`` resolves to.
+    Lives outside the channel adapter and keeps title generation behind the
+    configured model gateway.
     """
     session = await WorkSpaceSessionService.get_workspace_session_from_id(session_id, user_id)
     if session:
@@ -97,12 +93,11 @@ async def execute_wechat_binding_tool(
 ) -> Any:
     """Module-level WeChat binding execution helper.
 
-    PHASE22 runtime cutover V2: every ``binding.ainvoke`` call routes
+    Every ``binding.ainvoke`` call routes
     through the registered ``MCPToolExecutorAdapter`` /
     ``ToolInvocationGateway``. A production call without a registered
     adapter fails closed BEFORE the LangChain tool is dispatched.
-    The legacy dev-test shortcut is preserved for fixtures that
-    intentionally exercise the legacy direct path.
+    Calls without a registered adapter fail closed.
     """
     from zuno.capability.mcp.mcp_tool_executor_adapter import (
         MCPToolAdapterNotBound,
@@ -129,9 +124,8 @@ async def execute_wechat_binding_tool(
             f"execute_wechat_binding_tool requires tool_adapter_registry for tool={binding.name!r}"
         )
 
-    # PHASE22 runtime cutover V2: WeChat delegates to the workspace
-    # adapter so the registry lookup / gateway path is shared. The
-    # workspace adapter is the canonical registry consumer.
+    # WeChat delegates to the workspace adapter so registry lookup and
+    # gateway execution use one canonical path.
     return await _workspace_execute_binding_tool(
         binding=binding,
         args=call_args,
@@ -155,8 +149,7 @@ async def execute_wechat_binding_tool(
 class WeChatAgent:
     """WeChat product adapter over the canonical Single Controller Runtime.
 
-    PHASE22 cutover: the previous independent langchain prebuilt-agent ReAct
-    runtime and direct model answer generation are removed. Every request is
+    Every request is
     planned and executed by the canonical runtime (security / approval /
     budget gates, tool control plane, run outcome); the adapter only converts
     the channel request to ``WorkspaceRunRequest`` and maps the run back to
@@ -203,16 +196,16 @@ class WeChatAgent:
         self.bindings: list[WorkspaceToolBinding] = []
         self._runtime: WorkspaceAgentRuntime | None = None
         self._initialized = False
-        # PHASE22 repair: composition profile + product submission identity.
+        # Composition profile + product submission identity.
         self.runtime_profile = runtime_profile
         self._submission_counter = 0
         # Real tenant / workspace identity from the product request / auth
         # context; no synthetic tenant:default and no workspace derived from
         # user_id. Missing identity fails closed with BLOCKED_CONFIGURATION.
-        # PHASE22 product wiring: request-declared runtime limits flow into
+        # Request-declared runtime limits flow into
         # the formal Budget Admission resolver (never self-attested).
         self._budget_limits = dict(budget_limits or {})
-        # PHASE22 runtime cutover V2: tool gateway-bound runtime identity.
+        # Tool gateway-bound runtime identity.
         from zuno.capability.mcp.mcp_tool_executor_adapter import (
             MCPToolExecutorAdapterRegistry,
         )
@@ -270,12 +263,7 @@ class WeChatAgent:
                     else PROFILE_PRODUCT
                 ),
                 store=composition.store,
-                sqlite_store_path=(
-                    Path(tempfile.gettempdir())
-                    / f"zuno_wechat_agent_{self.user_id}_{self.session_id}.db"
-                    if self.runtime_profile == PROFILE_DEVELOPER_TEST
-                    else None
-                ),
+                sqlite_store_path=None,
                 security_approval_sink=composition.security_approval_sink,
                 tool_unit_of_work_factory=composition.tool_unit_of_work_factory,
                 security_unit_of_work_factory=composition.security_unit_of_work_factory,
@@ -295,7 +283,7 @@ class WeChatAgent:
     # -- governed bindings --------------------------------------------------
 
     def _build_bindings(self) -> List[WorkspaceToolBinding]:
-        # PHASE22 repair (B2): policy is declared by the tool owner at
+        # Policy is declared by the tool owner at
         # registration time (structured tool metadata); never inferred from
         # the tool name. Undeclared tools fail closed with
         # UNRESOLVED_TOOL_POLICY at execution.
@@ -342,7 +330,7 @@ class WeChatAgent:
         return {"type": "object"}
 
     async def _execute_binding_tool(self, tool: Any, args: dict[str, Any]) -> Any:
-        """PHASE22 runtime cutover V2: route through the registered
+        """Route through the registered
         ``MCPToolExecutorAdapter`` / ``ToolInvocationGateway``.
 
         WeChat shares the workspace adapter registry so that the
@@ -421,7 +409,7 @@ class WeChatAgent:
     async def _run_request(self, goal: str) -> Any:
         if self._runtime is None:
             raise RuntimeError("wechat agent runtime not initialized")
-        # PHASE22 repair (B6): run identity is the product submission, never
+        # Run identity is the product submission, never
         # the request text hash.
         self._submission_counter += 1
         client_request_id = f"req:{self.session_id or self.user_id}:{self._submission_counter}"

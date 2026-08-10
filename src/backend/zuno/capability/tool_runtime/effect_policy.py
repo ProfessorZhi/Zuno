@@ -83,7 +83,7 @@ def classify_tool_effect(
         approval_required=effect_class not in {ToolEffectClass.NONE, ToolEffectClass.READ},
         audit_required=effect_class is not ToolEffectClass.NONE,
         provider_dispatch_allowed=provider_dispatch_allowed,
-        blocked_reason="" if provider_dispatch_allowed else "PHASE16_REQUIRED_FOR_SIDE_EFFECT_TOOL",
+        blocked_reason="" if provider_dispatch_allowed else "TOOL_EFFECT_POLICY_REQUIRED",
     )
 
 

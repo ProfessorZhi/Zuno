@@ -1,4 +1,4 @@
-"""PHASE22 runtime cutover V2: MCP / LangChain tool executor adapter.
+"""MCP / LangChain tool executor adapter.
 
 The MCP / LangChain tool executor adapter wraps every LangChain tool
 binding so that the actual ``tool.ainvoke`` call flows through the
@@ -10,8 +10,7 @@ tool runtime, so duplicate dispatches and UNKNOWN_EFFECT outcomes
 cannot be reconciled against a Server-owned tool-attempt store.
 
 The adapter is the ONLY path through which a product runtime is
-allowed to invoke a LangChain ``BaseTool`` for any product MCP / MCP
-loader / MCP executor / legacy direct tool / direct LangChain tool.
+allowed to invoke a LangChain ``BaseTool`` for a product MCP binding.
 
 Authoritative call chain (product-side):
 
@@ -27,13 +26,12 @@ Authoritative call chain (product-side):
                    adapter_kind="LANGCHAIN_TOOL",
                    executor=actual_langchain_call,
                    readonly=...,
-                   approved=...,
+                   approval=...,
                )
 
 The adapter never calls ``binding.ainvoke`` outside the gateway's
 executor slot. Side-effect tools (WRITE_LOCAL / WRITE_EXTERNAL /
-DESTRUCTIVE) MUST set ``approved=True`` with the canonical approval
-artifact; the gateway then handles prepared-action / approval /
+DESTRUCTIVE) MUST provide the canonical approval artifact; the gateway then handles prepared-action / approval /
 budget / receipt / dispatch-certainty / reconciliation through the
 ToolUnitOfWork / SecurityUnitOfWork / InfrastructureUnitOfWork.
 """

@@ -20,7 +20,7 @@ import { useUserStore } from '../store/user'
 import { logoutAPI, getUserInfoAPI } from '../apis/auth'
 import { useResizablePanel } from '../composables/useResizablePanel'
 import { zunoBrandMark } from '../utils/brand'
-import { DEFAULT_USER_AVATAR, isLegacyRemoteUserAvatar, withUserAvatarVersion } from '../utils/user-avatars'
+import { DEFAULT_USER_AVATAR, withUserAvatarVersion } from '../utils/user-avatars'
 
 const agentCardStore = useAgentCardStore()
 const userStore = useUserStore()
@@ -56,7 +56,7 @@ const navMenuItems = [
 
 const normalizeAvatarUrl = (avatar?: string) => {
   const raw = String(avatar || '').trim()
-  if (!raw || raw.startsWith('/src/assets/') || isLegacyRemoteUserAvatar(raw)) return DEFAULT_USER_AVATAR
+  if (!raw || raw.startsWith('/src/assets/')) return DEFAULT_USER_AVATAR
   return withUserAvatarVersion(raw)
 }
 

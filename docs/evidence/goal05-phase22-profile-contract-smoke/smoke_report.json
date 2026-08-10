@@ -1,8 +1,0 @@
-{
-  "status": "CONTRACT_SMOKE_COMPLETED",
-  "output_dir": "docs\\evidence\\goal05-phase22-profile-contract-smoke",
-  "candidates_count": 6,
-  "measurement_state": "MEASUREMENT_BLOCKED",
-  "blocked_reason": "not_measured_test_double_runner",
-  "runner_type": "test_double"
-}

@@ -1,151 +1,33 @@
-# PHASE04 Infrastructure DR Profile
-
-status: implementation_available_for_phase04_dr_profile_subscope
-phase: PHASE04
-task_id: P04-T07
-owner: Infrastructure
-last_verified: 2026-07-18
+schema_version: 1
 profile_id: zuno-server-product-dr-profile
-profile_version: 1
-deployment_class: SERVER_PRODUCT
-phase04_completion_claim: false
-phase05_ready: false
-boundary: "This profile defines RPO/RTO/Owner and cutover policy; PITR alignment, official LangGraph PostgreSQL Checkpointer graph interrupt/resume plus retention cleanup plus backup/restore, Product Projection Replay from restored authoritative fact, and combined-service fault including official Checkpointer is proven by local drills; cross-domain projection replay remains outside the proven subset."
+status: target_not_measured
+owner: Infrastructure
+recovery_owner: Infrastructure Restore Owner
 
-backup_scope_profile_version: 1
-backup_scope_boundary: "Backup scope profile defines backup scope, RPO source, encryption requirement, verification command and evidence ref only; it does not claim production encrypted backup completion, PITR, full RecoverySet or official Checkpointer restore."
+boundary: >-
+  This profile defines the current recovery contract. PostgreSQL facts, object
+  manifests, outbox delivery, checkpoints and derived projections must be
+  restored from authoritative sources and revalidated before serving traffic.
+  The repository does not claim production RPO/RTO or an encrypted backup
+  custody measurement from local tests.
 
-backup_scope_profiles:
-  - component: postgresql_domain_store
-    backup_scope: "PostgreSQL PHASE04 infrastructure tables and domain-owned authoritative facts covered by the bounded restore rehearsal"
-    rpo_source: "last verified pg_dump artifact or PITR target when WAL archive is enabled"
-    encryption_requirement: "Production backup artifacts require at-rest encryption and key reference/version metadata before storage outside the local restore rehearsal boundary."
-    encryption_current_boundary: "The PHASE04 local pg_dump artifact is transient inside the PostgreSQL container and is not promoted as a production encrypted backup."
-    verification_command: "python tools/scripts/verify_phase04_backup_restore_replay.py"
-    evidence_ref: "docs/evidence/phase04-backup-restore-replay.md"
-    completion_boundary: "implementation_available_subset; PITR alignment is proven separately; full product recovery remains target_not_current"
+authoritative_components:
+  - postgresql_domain_store
+  - object_manifest_and_object_store
+  - outbox_inbox_delivery
+  - agent_runtime_checkpoint
+  - product_projection
 
-  - component: object_manifest_and_minio
-    backup_scope: "Committed object manifests, object restore points, content hash receipts and MinIO object bytes for the PHASE04 object-store subset"
-    rpo_source: "last committed manifest generation and content hash"
-    encryption_requirement: "Production object backups require object-store encryption metadata or KMS key reference/version metadata bound to the manifest."
-    encryption_current_boundary: "PHASE04 proves object restore and manifest reconciliation, not production KMS-backed backup encryption."
-    verification_command: "python tools/scripts/verify_phase04_minio_object_store.py"
-    evidence_ref: "docs/evidence/phase04-minio-object-store.md"
-    completion_boundary: "implementation_available_subset; full cross-domain RecoverySet remains target_not_current"
+recovery_invariants:
+  - queue receipt is not domain success
+  - derived projections are rebuilt from authoritative facts
+  - external effect uncertainty enters reconciliation
+  - security and budget facts are revalidated after restore
+  - recovered runs remain idempotent
 
-  - component: rabbitmq_outbox_inbox_delivery
-    backup_scope: "Durable PostgreSQL outbox/inbox rows, delivery watermarks and RabbitMQ delivery receipts used for replay"
-    rpo_source: "last durable outbox/inbox watermark"
-    encryption_requirement: "Production replay backups inherit PostgreSQL backup encryption requirements for durable outbox/inbox rows and must not persist secret material in queue payloads."
-    encryption_current_boundary: "PHASE04 proves durable replay rows and RabbitMQ receipts, not a production encrypted backup vault."
-    verification_command: "python tools/scripts/verify_phase04_outbox_rabbitmq_publisher.py"
-    evidence_ref: "docs/evidence/phase04-outbox-rabbitmq-publisher.md"
-    completion_boundary: "implementation_available_subset; queue receipt is not domain success"
+evidence_refs:
+  - docs/evidence/current-runtime-baseline.md
+  - docs/evidence/current-test-baseline.md
 
-  - component: langgraph_postgres_checkpointer
-    backup_scope: "Official LangGraph PostgreSQL Checkpointer schema, checkpoints, thread state and resume metadata"
-    rpo_source: "checkpoint generation aligned with domain RecoveryWatermark"
-    encryption_requirement: "Production Checkpointer backups require the same encrypted PostgreSQL backup policy plus checkpoint schema/version compatibility checks."
-    encryption_current_boundary: "PHASE04 proves local pg_dump/pg_restore for official Checkpointer rows; production encrypted backup custody remains outside the local evidence boundary."
-    verification_command: "python tools/scripts/verify_phase04_official_checkpointer_backup_restore.py"
-    evidence_ref: "docs/evidence/phase04-official-checkpointer-backup-restore.md"
-    completion_boundary: "implementation_available_subset; combined-service fault including official Checkpointer is proven separately"
-
-  - component: product_projection_replay
-    backup_scope: "Derived product projections rebuilt from authoritative PostgreSQL facts and object manifests"
-    rpo_source: "source domain fact recovery point"
-    encryption_requirement: "Projection replay artifacts must derive from encrypted authoritative backups or be rebuilt after restore without becoming a new fact source."
-    encryption_current_boundary: "PHASE04 proves Product Projection replay from restored authoritative outbox fact and object manifest; cross-domain Product/Agent/Knowledge/Memory/Tool/Observability replay remains outside this subset."
-    verification_command: "python tools/scripts/verify_phase04_backup_restore_replay.py"
-    evidence_ref: "docs/evidence/phase04-backup-restore-replay.md"
-    completion_boundary: "implementation_available_subset; cross-domain replay and final cutover remain incomplete"
-
-  - component: pitr
-    backup_scope: "PostgreSQL WAL archive and point-in-time restore window"
-    rpo_source: "WAL archive target once enabled"
-    encryption_requirement: "Production WAL archive requires encrypted storage and key reference/version metadata."
-    encryption_current_boundary: "Local PITR alignment is proven with transient WAL archive; production encrypted WAL archive custody remains outside the local evidence boundary."
-    verification_command: "python tools/scripts/verify_phase04_pitr_alignment.py"
-    evidence_ref: "docs/evidence/phase04-pitr-alignment.md"
-    completion_boundary: "implementation_available_subset; cross-domain replay remains Phase-level blocker"
-
-cutover_policy:
-  explicit_cutover_required: true
-  cutover_allowed_by_default: false
-  approval_owner: Coordinator
-  rollback_owner: Infrastructure
-  forbidden_auto_cutover_reason: "Restore validation and owner acceptance are required before production cutover."
-
-recovery_profiles:
-  - component: postgresql_domain_store
-    authority: authoritative
-    owner: Infrastructure/PostgreSQL Runtime
-    recovery_owner: Infrastructure Restore Owner
-    rpo: "last verified pg_dump artifact or PITR target when WAL archive is enabled"
-    rto: "documented per restore run; local PHASE04 subset is measured by verify_phase04_backup_restore_replay.py"
-    backup_method: "pg_dump schema/data subset plus separate WAL archive PITR alignment drill"
-    verification_command: "python tools/scripts/verify_phase04_backup_restore_replay.py"
-    evidence_ref: "docs/evidence/phase04-backup-restore-replay.md"
-    current_status: implementation_available_subset
-    current_boundary: "PostgreSQL backup/isolated restore/runtime restart and PITR alignment subsets are proven; full product recovery is not proven."
-
-  - component: object_manifest_and_minio
-    authority: authoritative_manifest_with_object_receipts
-    owner: Infrastructure/Object Store
-    recovery_owner: Infrastructure Object Restore Owner
-    rpo: "last committed manifest generation and content hash"
-    rto: "documented per restore run; local PHASE04 object restore is measured by MinIO verifiers"
-    backup_method: "object restore point plus PostgreSQL manifest reconciliation"
-    verification_command: "python tools/scripts/verify_phase04_minio_object_store.py"
-    evidence_ref: "docs/evidence/phase04-minio-object-store.md"
-    current_status: implementation_available_subset
-    current_boundary: "Object restore and manifest reconciliation are proven against MinIO; full cross-domain recovery set is not proven."
-
-  - component: rabbitmq_outbox_inbox_delivery
-    authority: infrastructure_receipt
-    owner: Infrastructure/RabbitMQ Transport
-    recovery_owner: Outbox Publisher Owner
-    rpo: "last durable outbox/inbox watermark"
-    rto: "documented per replay run; local PHASE04 delivery recovery is measured by RabbitMQ and outbox verifiers"
-    backup_method: "PostgreSQL outbox/inbox rows plus RabbitMQ durable delivery receipts"
-    verification_command: "python tools/scripts/verify_phase04_outbox_rabbitmq_publisher.py"
-    evidence_ref: "docs/evidence/phase04-outbox-rabbitmq-publisher.md"
-    current_status: implementation_available_subset
-    current_boundary: "Transactional outbox/inbox and RabbitMQ recovery subsets are proven; queue ACK is not domain success."
-
-  - component: langgraph_postgres_checkpointer
-    authority: control_checkpoint
-    owner: Infrastructure/Checkpointer Adapter
-    recovery_owner: Agent Core Recovery Owner
-    rpo: "checkpoint generation aligned with domain RecoveryWatermark"
-    rto: "measured for local graph interrupt/resume, retention cleanup and pg_dump/pg_restore subsets"
-    backup_method: "official LangGraph PostgreSQL Checkpointer backup/restore path"
-    verification_command: "python tools/scripts/verify_phase04_official_checkpointer_backup_restore.py"
-    evidence_ref: "docs/evidence/phase04-official-checkpointer-backup-restore.md"
-    current_status: implementation_available_subset
-    current_boundary: "Official Checkpointer lifecycle, graph interrupt/resume, retention cleanup, backup/restore and combined-service fault subsets are proven; cross-domain replay still blocks PHASE04 closure."
-
-  - component: product_projection_replay
-    authority: derived_projection
-    owner: Product/Domain Projection Owners
-    recovery_owner: Product Projection Replay Owner
-    rpo: "source domain fact recovery point"
-    rto: "measured by local restore/replay drill for Product projection subset"
-    backup_method: "rebuild from authoritative PostgreSQL facts and object manifests"
-    verification_command: "python tools/scripts/verify_phase04_backup_restore_replay.py"
-    evidence_ref: "docs/evidence/phase04-backup-restore-replay.md"
-    current_status: implementation_available_subset
-    current_boundary: "Product projection replay from restored authoritative fact is proven; cross-domain Product/Agent/Knowledge/Memory/Tool/Observability replay remains outside this PHASE04 subset."
-
-  - component: pitr
-    authority: recovery_window
-    owner: Infrastructure/PostgreSQL Runtime
-    recovery_owner: Infrastructure Restore Owner
-    rpo: "WAL archive target once enabled"
-    rto: "measured by local PITR drill runtime"
-    backup_method: "PostgreSQL WAL archive and point-in-time restore"
-    verification_command: "python tools/scripts/verify_phase04_pitr_alignment.py"
-    evidence_ref: "docs/evidence/phase04-pitr-alignment.md"
-    current_status: implementation_available_subset
-    current_boundary: "Local PITR alignment is proven with transient WAL archive/basebackup/recovery containers; production encrypted WAL archive custody and official Checkpointer restore are not proven."
+measurement_status: not_measured
+production_readiness: NOT_ESTABLISHED

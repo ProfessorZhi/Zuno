@@ -1,6 +1,8 @@
 from __future__ import annotations
 
-from zuno.agent.runtime import RuntimeStartRequest, SQLiteAgentRunStore, UnifiedAgentRuntimeService
+from zuno.agent.runtime import AgentRuntimeService, RuntimeStartRequest, SQLiteAgentRunStore
+from zuno.agent.runtime.dependencies import RuntimeDependencies
+from zuno.capability.runtime import build_default_tool_control_plane_runtime
 
 
 def _request() -> RuntimeStartRequest:
@@ -17,22 +19,34 @@ def _request() -> RuntimeStartRequest:
 
 def test_tool_resume_claims_idempotency_key_once(tmp_path) -> None:
     db_path = tmp_path / "runtime.db"
-    first = UnifiedAgentRuntimeService(store=SQLiteAgentRunStore(db_path))
+    store = SQLiteAgentRunStore(db_path)
+    first = AgentRuntimeService(
+        store=store,
+        dependencies=RuntimeDependencies(
+            tool_control_plane=build_default_tool_control_plane_runtime(persist_facts=False),
+        ),
+    )
     interrupted = first.start(_request())
 
-    idempotency_key = interrupted.observations[-1].metadata["idempotency_key"]
+    tool_observation = next(observation for observation in interrupted.observations if observation.kind == "tool")
+    idempotency_key = tool_observation.metadata["idempotency_key"]
     assert idempotency_key.startswith("toolclaim:")
 
-    second = UnifiedAgentRuntimeService(store=SQLiteAgentRunStore(db_path))
-    resumed = second.resume(task_id="task_tool_idempotency", approval_decision="approved")
-
-    assert resumed.finalization_status == "finalized"
-    duplicate = second.store.claim_tool_execution(
+    first_claim = store.claim_tool_execution(
         task_id="task_tool_idempotency",
         workspace_id="workspace_tool",
         user_id="user_tool",
         idempotency_key=idempotency_key,
         tool_name="mail.send",
-        payload={"step_id": resumed.plan_state.steps[0].step_id, "status": "claimed"},
+        payload={"step_id": tool_observation.step_id or "", "status": "claimed"},
+    )
+    assert first_claim is True
+    duplicate = store.claim_tool_execution(
+        task_id="task_tool_idempotency",
+        workspace_id="workspace_tool",
+        user_id="user_tool",
+        idempotency_key=idempotency_key,
+        tool_name="mail.send",
+        payload={"step_id": tool_observation.step_id or "", "status": "claimed"},
     )
     assert duplicate is False

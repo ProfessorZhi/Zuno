@@ -44,7 +44,7 @@ async def run_package_a_ingestion_worker_forever(
     consume_limit: int | None = None,
     consume_timeout_seconds: float = 5.0,
 ) -> None:
-    from zuno.api.services.workspace_task_runtime import build_package_a_production_ingestion_runtime
+    from zuno.api.services.product import build_package_a_production_ingestion_runtime
     from zuno.knowledge.ingestion import PackageAProductionQueueWorker, package_a_rabbitmq_topology
     from zuno.platform.database import engine
     from zuno.platform.queue import RabbitMQTransport
@@ -56,16 +56,16 @@ async def run_package_a_ingestion_worker_forever(
     runtime = build_package_a_production_ingestion_runtime(
         engine=engine,
         settings=app_settings,
-        worker_id=str(rabbitmq.get("ingestion_worker_id") or "phase11-package-a-parser-worker"),
+        worker_id=str(rabbitmq.get("ingestion_worker_id") or "package-a-parser-worker"),
     )
     if runtime is None:
         raise RuntimeError("Package A ingestion worker requires production MinIO storage configuration")
     topology = package_a_rabbitmq_topology(app_settings)
     configured_tenant_id = rabbitmq.get("tenant_id")
     tenant_id = str(configured_tenant_id).strip() if configured_tenant_id else None
-    trace_id = str(rabbitmq.get("ingestion_trace_id") or "phase11-package-a-worker")
+    trace_id = str(rabbitmq.get("ingestion_trace_id") or "package-a-worker")
     publisher_worker_id = str(
-        rabbitmq.get("ingestion_outbox_worker_id") or "phase11-package-a-outbox-dispatcher"
+        rabbitmq.get("ingestion_outbox_worker_id") or "package-a-outbox-dispatcher"
     )
     resolved_publish_limit = int(rabbitmq.get("ingestion_publish_limit") or publish_limit)
     configured_consume_limit = rabbitmq.get("ingestion_consume_limit")

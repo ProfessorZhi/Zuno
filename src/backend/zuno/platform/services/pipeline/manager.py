@@ -272,10 +272,9 @@ class KnowledgePipelineManager:
             if self.enable_graph_indexing and index_capability == "rag_graph":
                 graph_documents = await self._parse_graph_documents(task)
                 runtime_settings = await KnowledgeService.get_runtime_settings(task.knowledge_id)
-                project_payload = runtime_settings.get("project_payload") or runtime_settings.get("domain_pack")
+                project_payload = runtime_settings.get("project_payload") or {}
                 graphrag_project_id = (
                     runtime_settings.get("graphrag_project_id")
-                    or runtime_settings.get("domain_pack_id")
                     or (project_payload or {}).get("graphrag_project_id")
                     or (project_payload or {}).get("id")
                 )

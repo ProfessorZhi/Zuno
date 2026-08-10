@@ -20,9 +20,9 @@ runtime_boundary:
 
 program_rules:
   current_program_root: ".agent/programs"
-  phase_filename_pattern: "PHASE[0-9][0-9]_<name>.md"
-  new_program_first_phase: "PHASE01"
-  replaced_program_policy: "archive evidence under docs/history/programs and do not keep competing active truth"
+  phase_filename_pattern: "retired-do-not-create"
+  new_program_first_phase: "architecture-review-required"
+  replaced_program_policy: "compress approved history into docs/history summaries; do not keep raw phase materials or competing active truth"
 
 work_modes:
   branch_prefix: "codex/"
@@ -128,24 +128,16 @@ skill_routes:
         - "AGENTS.md"
         - ".agent/**"
     skills:
-      - ".agent/references/project-map.md"
       - ".agent/references/task-routing.md"
       - ".agent/references/workflow.md"
       - ".agent/references/docs-map.md"
-      - ".agent/references/architecture-docs-map.md"
-      - ".agent/references/documentation-governance.md"
-      - ".agent/references/architecture-update-policy.md"
-      - ".agent/references/current-target-future-rules.md"
       - ".agent/references/verification-map.md"
       - ".agent/references/known-pitfalls.md"
-      - ".agent/references/zuno-repo-hygiene.md"
+      - ".agent/references/debugging.md"
     templates:
       - ".agent/templates/requirement-intake.md"
       - ".agent/templates/readonly-audit-prompt.md"
-      - ".agent/templates/phase-plan.md"
-      - ".agent/templates/phase-closure-report.md"
       - ".agent/templates/spec-coding-checklist.md"
-      - ".agent/templates/architecture-doc-template.md"
       - ".agent/templates/verification-report-template.md"
     docs_sync:
       - "AGENTS.md"

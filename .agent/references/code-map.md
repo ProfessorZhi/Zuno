@@ -1,79 +1,42 @@
 # 代码地图
 
-## 目的
+## 当前 owner
 
-帮助 Agent 找到当前代码 owner，不复制目标架构设计，也不单独授权代码修改。
+- `src/backend/zuno/api/`：HTTP 路由、DTO、认证和 response envelope。
+- `src/backend/zuno/api/services/product/`：Product Surface application services；
+  `command_service.py` 拥有 Product command，`ingestion_service.py` 拥有文件与
+  ingestion，`artifact_service.py` 拥有 artifact，`observability_service.py` 拥有
+  projection query；`runtime_engine.py` 仅提供内部 mechanics，不是 HTTP owner。
+- `src/backend/zuno/agent/`：Agent Core 单 Controller、Plan/Step/Retry/Replan 和 runtime state。
+- `src/backend/zuno/capability/`：Capability / Skill 语义、选择和 Tool Runtime 请求。
+- `src/backend/zuno/knowledge/`：Document ingestion、Index、GraphRAG、Evidence、Citation。
+- `src/backend/zuno/memory/`：Memory 与 Context。
+- `src/backend/zuno/platform/`：数据库、Security、Model Gateway、Observability、Storage、Queue。
+- `apps/web/src/product/`：Product command、projection、action、artifact 和 stream client。
+- `apps/web/src/apis/workspace.ts`：工作区配置/session API 与 Product ingestion client；不再声明 task runtime owner。
+- `tools/scripts/`：当前 repository/module verifiers；phase/legacy/cutover verifier 不保留。
+- `docs/`：正式人类文档和当前证据。
 
-## 主要表面
-
-- `apps/web/`：Vue Web 工作区。
-- `apps/desktop/`：Electron 桌面壳。
-- `src/backend/zuno/`：当前 Python 后端 runtime 真相。
-- `src/backend/zuno/api/`：HTTP routes、DTO、auth、response envelope、SSE。
-- `src/backend/zuno/agent/`：单一 GeneralAgent runtime 入口和 runtime / context / post_turn / state / streaming / tool_bridge 薄入口；旧 `zuno.core.*` 由 legacy alias registry 兼容。
-- `src/backend/zuno/memory/`：Memory contracts / store / policy / review / retrieval / rendering / engine 薄入口。
-- `src/backend/zuno/capability/`：Tool、Skill、MCP、capability registry / selector / policy / execution / trace 薄入口。
-- `src/backend/zuno/knowledge/`：RAG / GraphRAG / Evidence / Citation / retrieval / fusion 薄入口；Program 2 已把 `knowledge/storage/` 接入 Product V1 local durable ingestion baseline，覆盖 source object、workspace file、parse job / snapshot、document version / blocks、index manifest / chunks 和 citation lineage 的 SQLite / local file store round-trip；当前包含 `GraphRAGExtractorConfig`、`AgenticRetrievalRouter`、`EvidenceBundle`、`CitationBuilder` 和 `GraphRAGIndexPipelineContract` 等 contract，不表示生产级 GraphRAG runtime 已迁入。
-- `src/backend/zuno/platform/`：配置、数据库、兼容、资源、middleware、model gateway、security、observability、storage 和旧 services 的物理归属。
-- `tools/`：脚本、启动器、eval 和维护工具。
-- `tests/`：仓库级验证和聚焦回归测试。
-- `docs/`：正式人类文档。
-- `.agent/`：Agent 工作流库和目标设计工作区。
-
-## 当前 Runtime 路径
+## Product Runtime 调用链
 
 ```text
-Completion API
-  -> CompletionService
-  -> GeneralAgent single loop
-  -> prepare_context
-  -> capability selection trace
-  -> ContextOrchestrator.prepare
-  -> search_knowledge_base
-  -> KnowledgeQueryService
-  -> GraphRAGQueryService
-  -> RetrievalPlanner / RetrievalOrchestrator
-  -> Evidence / Citation / Trace contract
-  -> post_turn_commit
-  -> RuntimeTurnLedger
+Web Product Client
+  -> /api/v1/product/runtime-requests
+  -> ProductService.submit_runtime_request
+  -> durable Product command + outbox
+  -> Agent Core owner
+  -> Tool Runtime / Security / Infrastructure
+  -> Product projection / stream / artifact / feedback
 ```
 
-这是 PHASE09 已验证的 foundation path。它证明当前轮 context / capability / knowledge / tool / post-turn evidence 可以被汇总，不表示完整产品级 model-visible context injection、动态工具编排、DB 持久化或前端 trace UI 已完成。
+Product command 只有 `SUBMIT_USER_GOAL` 语义。不要新增 shadow、canary、rollback
+或旧 `/workspace/task*` 入口来隐藏失败。
 
-## 任务路由
+## 代码边界
 
-- 后端变更：读本文和 `.agent/references/runtime-call-chain.md`。
-- 前端变更：读 `apps/web/AGENTS.md`。
-- Eval 变更：读 `tools/evals/zuno/AGENTS.md`。
-- 文档或 Agent 工作流变更：读 `AGENTS.md`、`.agent/references/task-routing.md` 和 `.agent/references/workflow.md`。
-
-文档和工作流整理任务不得修改 runtime 代码。如果验证需要修改 runtime，先停止并返回证据。
-
-## 后端包根规则
-
-`src/backend/zuno` 顶层目录只允许六层：
-
-```text
-api / agent / memory / capability / knowledge / platform
-```
-
-旧入口不允许继续以根级 `.py` alias 文件留在顶层；`zuno.services`、`zuno.core`、`zuno.schema`、`zuno.database`、`zuno.config`、`zuno.resources`、`zuno.tools`、`zuno.utils`、`zuno.settings`、`zuno.mcp_servers`、`zuno.middleware`、`zuno.evals` 由当前 canonical owner 暴露，旧 `platform/compatibility/legacy_aliases.py` 与 `platform/compatibility/` 目录已在 PHASE22 Wave 1 退役。
-
-后端实现规则：
-
-- 路由层不拥有业务逻辑或检索策略。
-- Application Service 负责用例编排。
-- Agent runtime 不能反向依赖 API 层。
-- 公共契约变化必须同步 DTO、前端类型和测试。
-- 检索、Agent、记忆和 GraphRAG 变更必须对齐对应参考文档和目标架构说明。
-- 目标层新入口内部必须优先引用物理 owner，不从 `zuno.services`、`zuno.core` 等 legacy alias 路径反向取对象。
-
-## 受保护边界
-
-- `src/backend/zuno/`
-- `apps/web/`
-- `infra/`
-- `tools/evals/zuno/*runner*`
-- 依赖文件
-
-如果任务授权不包含这些路径，不要触碰它们。
+- Route 只做输入校验、认证和 response mapping，不编排业务。
+- Product Surface 不拥有 Plan、Step、Retry、Replan 或 Tool Effect。
+- Agent Core 不反向依赖 API；模型只能提交 proposal。
+- Tool Effect 必须经过 Capability、Security、Approval、Budget 和 Idempotency。
+- 前端不得直接访问数据库或 provider；所有事实通过 Product/API projection 获取。
+- 需要修改 runtime 时先读 `docs/architecture/architecture.md` 和对应模块 Target。

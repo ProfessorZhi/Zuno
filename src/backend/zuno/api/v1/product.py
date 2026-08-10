@@ -2,12 +2,18 @@ from __future__ import annotations
 
 import json
 
+from datetime import datetime
+
 from fastapi import APIRouter, Body, Depends, Header, Query
-from fastapi.responses import PlainTextResponse, StreamingResponse
+from fastapi.responses import PlainTextResponse
 from pydantic import BaseModel, Field
 
 from zuno.api.dto.schemas import UnifiedResponseModel, resp_200, resp_500
 from zuno.api.services.product import ProductService
+from zuno.api.services.product import (
+    ProductIngestionService,
+    ProductObservabilityService,
+)
 from zuno.api.services.user import UserPayload, get_login_user
 
 
@@ -18,7 +24,6 @@ class ProductRuntimeRequestBody(BaseModel):
     client_request_id: str = Field(min_length=1)
     runtime_request_ref: str = Field(min_length=1)
     raw_intent_ref: str = Field(min_length=1)
-    command_kind: str = Field(min_length=1)
     active_agent_version_id: str = Field(min_length=1)
     payload: dict = Field(default_factory=dict)
 
@@ -66,6 +71,27 @@ class ProductAgentInstallationBody(BaseModel):
     client_request_id: str = Field(min_length=1)
     agent_version_id: str = Field(min_length=1)
     installation_scope: str = Field(default="USER", min_length=1)
+
+
+class ProductFileBody(BaseModel):
+    workspace_id: str = Field(min_length=1)
+    file_id: str | None = None
+    name: str | None = None
+    mime_type: str = Field(min_length=1)
+    hash: str | None = None
+    uri: str | None = None
+    content: str | None = None
+    trace_id: str | None = None
+    security_label: str = "internal"
+    deadline_at: datetime | None = None
+
+
+class ProductIngestionBody(BaseModel):
+    workspace_id: str = Field(min_length=1)
+    file_id: str = Field(min_length=1)
+    knowledge_space_id: str = Field(min_length=1)
+    session_id: str | None = None
+    trace_id: str | None = None
 
 
 router = APIRouter(tags=["Product"], prefix="/product")
@@ -146,7 +172,6 @@ async def submit_runtime_request(
     login_user: UserPayload = Depends(get_login_user),
 ):
     try:
-        ProductService.validate_runtime_cutover_contract(command_kind=body.command_kind, payload=body.payload)
         result = ProductService.submit_runtime_request(
             tenant_id=body.tenant_id,
             workspace_id=body.workspace_id,
@@ -156,7 +181,6 @@ async def submit_runtime_request(
             client_request_id=body.client_request_id,
             runtime_request_ref=body.runtime_request_ref,
             raw_intent_ref=body.raw_intent_ref,
-            command_kind=body.command_kind,
             payload=body.payload,
         )
         return resp_200(
@@ -186,6 +210,63 @@ async def submit_runtime_request(
         )
     except Exception as err:
         return resp_500(message=str(err))
+
+
+@router.post("/files", response_model=UnifiedResponseModel)
+async def register_product_file(
+    *,
+    body: ProductFileBody = Body(...),
+    login_user: UserPayload = Depends(get_login_user),
+):
+    try:
+        return resp_200(
+            data=ProductIngestionService.register_file(
+                workspace_id=body.workspace_id,
+                login_user=login_user,
+                file_id=body.file_id,
+                mime_type=body.mime_type,
+                file_hash=body.hash,
+                name=body.name,
+                uri=body.uri,
+                trace_id=body.trace_id,
+                security_label=body.security_label,
+                content=body.content,
+                deadline_at=body.deadline_at,
+            )
+        )
+    except Exception as err:
+        return resp_500(message=str(err))
+
+
+@router.post("/ingestions", response_model=UnifiedResponseModel)
+async def create_product_ingestion(
+    *,
+    body: ProductIngestionBody = Body(...),
+    login_user: UserPayload = Depends(get_login_user),
+):
+    _ = login_user
+    try:
+        return resp_200(
+            data=ProductIngestionService.create_ingest_job(
+                workspace_id=body.workspace_id,
+                file_id=body.file_id,
+                knowledge_space_id=body.knowledge_space_id,
+                session_id=body.session_id,
+                trace_id=body.trace_id,
+            )
+        )
+    except Exception as err:
+        return resp_500(message=str(err))
+
+
+@router.get("/observability/retrieval", response_model=UnifiedResponseModel)
+async def get_product_retrieval_observability(
+    *,
+    limit: int = Query(default=20, ge=1, le=200),
+    login_user: UserPayload = Depends(get_login_user),
+):
+    _ = login_user
+    return resp_200(data=ProductObservabilityService.retrieval_observability_summary(limit=limit))
 
 
 @router.post("/actions/consume", response_model=UnifiedResponseModel)
@@ -556,6 +637,10 @@ __all__ = [
     "list_stream_events",
     "stream_projection_events",
     "ProductRuntimeRequestBody",
+    "ProductFileBody",
+    "ProductIngestionBody",
+    "ProductRuntimeApprovalBody",
+    "ProductRuntimeCancelBody",
     "ProductActionConsumeBody",
     "ProductFeedbackBody",
     "ProductAgentDraftBody",
@@ -570,4 +655,13 @@ __all__ = [
     "get_product_artifact",
     "download_product_artifact",
     "create_product_feedback",
+    "register_product_file",
+    "create_product_ingestion",
+    "get_product_runtime_lifecycle",
+    "get_product_retrieval_observability",
+    "get_product_runtime_snapshot",
+    "list_product_runtime_events",
+    "approve_product_runtime",
+    "cancel_product_runtime",
+    "stream_product_runtime_events",
 ]

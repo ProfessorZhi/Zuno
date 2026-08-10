@@ -17,7 +17,6 @@ class KnowledgeTable(SQLModelSerializable, table=True):
     id: str = Field(default_factory=get_knowledge_id, primary_key=True)
     name: str = Field(index=True, unique=True, max_length=128)
     description: Optional[str] = Field(max_length=1024, default=None)
-    default_retrieval_mode: str = Field(default="rag", max_length=32)
     knowledge_config: dict = Field(
         default_factory=dict,
         sa_column=Column(JSON, nullable=False),

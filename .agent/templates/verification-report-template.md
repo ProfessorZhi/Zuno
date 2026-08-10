@@ -2,7 +2,7 @@
 
 ## Scope
 
-- Phase:
+- Scope:
 - Branch:
 - Commit:
 - Files covered:

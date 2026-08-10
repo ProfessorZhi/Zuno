@@ -29,7 +29,7 @@ git log --oneline origin/main..HEAD
 
 - `AGENTS.md`
 - `<本轮相关 docs / .agent / module AGENTS>`
-- `<本轮相关 phase 或 program 文件>`
+- `<本轮相关正式设计或 program 文件>`
 - `<本轮相关 verifier / test / code map>`
 
 实现任务在读完相关文档后再读代码；不要只凭文档推断 runtime 行为。

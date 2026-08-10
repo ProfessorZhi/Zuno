@@ -15,36 +15,36 @@ def test_multihop_runner_supports_three_public_modes_and_writes_compare_matrix(t
     output_root = tmp_path / "reports"
     input_path = SAMPLE_ROOT / "hotpotqa_sample.jsonl"
 
-    baseline = run_multihop_eval(
+    normal = run_multihop_eval(
         dataset="hotpotqa",
-        mode="baseline_rag",
+        mode="normal",
         split="dev",
         limit=10,
         input_path=input_path,
         output_root=output_root,
     )
-    local = run_multihop_eval(
+    enhanced = run_multihop_eval(
         dataset="hotpotqa",
-        mode="local_graphrag",
+        mode="enhanced",
         split="dev",
         limit=10,
         input_path=input_path,
         output_root=output_root,
     )
-    deep = run_multihop_eval(
+    auto = run_multihop_eval(
         dataset="hotpotqa",
-        mode="deep_graphrag",
+        mode="auto",
         split="dev",
         limit=10,
         input_path=input_path,
         output_root=output_root,
     )
 
-    assert baseline["execution_mode"] == "mocked"
-    assert local["mode"] == "local_graphrag"
-    assert deep["mode"] == "deep_graphrag"
+    assert normal["execution_mode"] == "mocked"
+    assert enhanced["mode"] == "enhanced"
+    assert auto["mode"] == "auto"
 
-    for result in [baseline, local, deep]:
+    for result in [normal, enhanced, auto]:
         assert Path(result["report_path"]).exists()
         assert "Recall@5" in result["metrics"]
         assert "Supporting Evidence Recall" in result["metrics"]
@@ -53,7 +53,7 @@ def test_multihop_runner_supports_three_public_modes_and_writes_compare_matrix(t
     assert compare_matrix.exists()
     payload = json.loads(compare_matrix.read_text(encoding="utf-8"))
     assert payload["dataset"] == "hotpotqa"
-    assert set(payload["modes"]) >= {"baseline_rag", "local_graphrag", "deep_graphrag"}
+    assert set(payload["modes"]) >= {"normal", "enhanced", "auto"}
     assert payload["execution_mode"] == "mocked"
 
 
@@ -81,4 +81,3 @@ def test_multihop_runner_rejects_unknown_mode():
         assert "Unsupported mode" in str(error)
     else:
         raise AssertionError("unknown mode should be rejected")
-

@@ -20,6 +20,12 @@ from zuno.api.services.product.projection_service import (
     ObservabilityQueryPrincipal,
 )
 from zuno.api.services.product.artifact_service import ProductArtifactService
+from zuno.api.services.product.ingestion_service import ProductIngestionService
+from zuno.api.services.product.observability_service import ProductObservabilityService
+from zuno.api.services.product.runtime_engine import (
+    build_package_a_production_ingestion_runtime,
+    resolve_package_a_upload_bucket,
+)
 
 __all__ = [
     "ProductRuntimeRequestResult",
@@ -35,6 +41,10 @@ __all__ = [
     "ProductProjectionResult",
     "ProductService",
     "ProductArtifactService",
+    "ProductIngestionService",
+    "ProductObservabilityService",
+    "build_package_a_production_ingestion_runtime",
+    "resolve_package_a_upload_bucket",
     "ProductStreamEventResult",
     "ObservabilityProjectionQueryService",
     "ObservabilityEvalQueryService",

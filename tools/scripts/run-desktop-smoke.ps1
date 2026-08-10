@@ -41,7 +41,7 @@ function New-SmokeToken {
     try {
         $token = @'
 import json
-from zuno.compatibility.vendor.fastapi_jwt_auth import AuthJWT
+from zuno.platform.vendor.fastapi_jwt_auth import AuthJWT
 from zuno.api.JWT import Settings
 
 @AuthJWT.load_config

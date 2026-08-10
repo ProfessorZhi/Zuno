@@ -14,7 +14,7 @@ packages = [
 python = "^3.12"
 # PHASE22 repair: zuno.api.services.user imports rsa directly (production
 # code) — the workspace composition import chain reaches it, so `rsa` must be
-# a declared dependency for `import zuno.api.services.workspace_task_runtime`
+  # a declared dependency for the Product Runtime import chain
 # to work in CI (compileall does not execute imports).
 rsa = "^4.9"
 langchain = "^1.0.3"

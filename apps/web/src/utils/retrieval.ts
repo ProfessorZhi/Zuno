@@ -5,20 +5,13 @@ const retrievalModeOptions = [
     description: '默认融合向量检索与 BM25 关键词检索，适合大多数文档问答与配置查找。',
   },
   {
-    value: 'rag_graph',
+    value: 'rag_graph_deep',
     label: '图谱增强检索',
     description: '在标准检索上增加 GraphRAG 路径扩展，适合关系追问、依赖链路和结构化问题。',
   },
 ] as const
 
 export type RetrievalMode = typeof retrievalModeOptions[number]['value']
-
-const legacyModeMap: Record<string, RetrievalMode> = {
-  auto: 'rag',
-  default: 'rag',
-  hybrid: 'rag_graph',
-  graphrag: 'rag_graph',
-}
 
 const retrievalModeLabelMap = Object.fromEntries(
   retrievalModeOptions.map((item) => [item.value, item.label]),
@@ -33,8 +26,7 @@ const fallbackReasonLabelMap: Record<string, string> = {
 
 export const normalizeRetrievalMode = (mode?: string | null): RetrievalMode => {
   const value = String(mode || 'rag').toLowerCase()
-  const mapped = legacyModeMap[value] || value
-  return mapped in retrievalModeLabelMap ? (mapped as RetrievalMode) : 'rag'
+  return value in retrievalModeLabelMap ? (value as RetrievalMode) : 'rag'
 }
 
 export const getRetrievalModeLabel = (mode?: string | null) => (

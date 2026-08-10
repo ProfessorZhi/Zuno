@@ -5,7 +5,7 @@ import { Check, Close, Edit, Refresh, Upload } from '@element-plus/icons-vue'
 import { getUserIconsAPI, getUserInfoAPI, updateUserInfoAPI } from '../../apis/auth'
 import { useUserStore } from '../../store/user'
 import { apiUrl } from '../../utils/api'
-import { DEFAULT_USER_AVATAR, USER_AVATAR_PRESETS, isLegacyRemoteUserAvatar, withUserAvatarVersion } from '../../utils/user-avatars'
+import { DEFAULT_USER_AVATAR, USER_AVATAR_PRESETS, withUserAvatarVersion } from '../../utils/user-avatars'
 
 const DEFAULT_DESCRIPTION = '这个用户很懒，还没有留下任何描述'
 const PRESET_AVATARS = USER_AVATAR_PRESETS
@@ -29,7 +29,7 @@ const selectedAvatar = ref(DEFAULT_USER_AVATAR)
 
 const normalizeAvatarUrl = (avatar?: string) => {
   const raw = String(avatar || '').trim()
-  if (!raw || raw.startsWith('/src/assets/') || isLegacyRemoteUserAvatar(raw)) return DEFAULT_USER_AVATAR
+  if (!raw || raw.startsWith('/src/assets/')) return DEFAULT_USER_AVATAR
   return withUserAvatarVersion(raw)
 }
 

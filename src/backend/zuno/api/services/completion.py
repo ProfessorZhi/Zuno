@@ -1,16 +1,10 @@
-import os
-from pathlib import Path
-import tempfile
 from typing import AsyncIterator, List
-from uuid import uuid4
 
 from langchain_core.messages import BaseMessage, HumanMessage, SystemMessage
 
 from zuno.api.services.history import HistoryService
 from zuno.api.services.product import ProductService
 from zuno.api.dto.completion import CompletionReq
-from zuno.agent.runtime import CutoverMode
-from zuno.agent.runtime import RuntimeDependencyFactory, RuntimeStartRequest, SQLiteAgentRunStore, UnifiedAgentRuntimeService
 from zuno.platform.contracts import canonical_sha256
 from zuno.platform.common.helpers import (
     build_completion_history_messages,
@@ -22,30 +16,17 @@ from zuno.platform.services.workspace.single_controller_runtime import BlockedCo
 
 
 class CompletionService:
-    _unified_runtime_store = SQLiteAgentRunStore(Path(tempfile.gettempdir()) / "zuno_completion_unified_runtime.db")
-
     @classmethod
-    def configure_unified_runtime_store_for_tests(cls, store: SQLiteAgentRunStore) -> None:
-        cls._unified_runtime_store = store
-
-    @classmethod
-    def unified_runtime_service(cls) -> UnifiedAgentRuntimeService:
-        assembly = RuntimeDependencyFactory.for_completion(store=cls._unified_runtime_store)
-        return UnifiedAgentRuntimeService(store=assembly.store, dependencies=assembly.dependencies)
-
-    @classmethod
-    async def stream_unified_runtime(
+    async def stream_product_command(
         cls,
         *,
         req: CompletionReq,
         login_user_id: str,
-        cutover_mode: CutoverMode = "new_default",
         tenant_id: str = "",
     ) -> AsyncIterator[dict]:
         product_runtime_record = cls.record_product_runtime_request(
             req=req,
             login_user_id=login_user_id,
-            cutover_mode=cutover_mode,
             tenant_id=tenant_id,
         )
         yield {
@@ -54,104 +35,25 @@ class CompletionService:
         }
         if product_runtime_record.get("status") == "blocked":
             return
-        task_id = f"completion:{req.dialog_id}:{uuid4().hex[:8]}"
-        request = RuntimeStartRequest(
-            run_id=f"run:{task_id}",
-            thread_id=req.dialog_id,
-            workspace_id=str(getattr(req, "workspace_id", "") or "completion"),
-            user_id=login_user_id,
-            task_id=task_id,
-            trace_id=f"trace:{task_id}",
-            goal=req.user_input,
-        )
-        for event in cls.unified_runtime_service().stream(request):
-            payload = {
-                "type": event.event_type,
-                "data": {
-                    "runtime_topology": "unified_agent_runtime",
-                    "run_id": event.run_id,
-                    "task_id": event.task_id,
-                    "trace_id": event.trace_id,
-                    "node": event.node,
-                    "status": event.status,
-                    **dict(event.payload),
-                },
-            }
-            yield payload
-            if event.event_type == "runtime_node":
-                yield {
-                    "type": "node_started",
-                    "data": {
-                        "runtime_topology": "unified_agent_runtime",
-                        "run_id": event.run_id,
-                        "task_id": event.task_id,
-                        "trace_id": event.trace_id,
-                        "node": event.node,
-                        "status": event.status,
-                    },
-                }
-        snapshot = cls.unified_runtime_service().get_snapshot(task_id)
-        if snapshot is not None:
-            for derived_event in _derived_sse_events(snapshot):
-                yield derived_event
-        final_answer = _final_answer_from_snapshot(snapshot) if snapshot is not None else ""
-        chunk_data = {
-            "chunk": final_answer or "Unified runtime finished without a final answer.",
-            "runtime_topology": "unified_agent_runtime",
-            "task_id": task_id,
-            "finalization_status": snapshot.finalization_status if snapshot else "unknown",
-        }
         yield {
-            "type": "answer_chunk",
-            "data": chunk_data,
+            "type": "runtime_accepted",
+            "data": {
+                "runtime_topology": "product-command-outbox",
+                **product_runtime_record,
+            },
         }
-        yield {
-            "type": "response_chunk",
-            "data": chunk_data,
-        }
-
-    @staticmethod
-    def resolve_cutover_mode() -> CutoverMode:
-        configured_mode = str(os.getenv("ZUNO_COMPLETION_CUTOVER_MODE", "") or "").strip().lower()
-        if configured_mode in {"shadow", "canary", "new_default"}:
-            return configured_mode
-        if configured_mode == "rollback":
-            raise ValueError("completion rollback mode is retired after PHASE22 cutover")
-        if configured_mode:
-            raise ValueError(f"unsupported completion cutover mode: {configured_mode}")
-        return "new_default"
-
-    @staticmethod
-    def _completion_product_command_kind(cutover_mode: CutoverMode) -> str:
-        return ProductService.runtime_cutover_command_kind(cutover_mode)
-
-    @staticmethod
-    def record_product_runtime_shadow(
-        *,
-        req: CompletionReq,
-        login_user_id: str,
-        cutover_mode: CutoverMode = "new_default",
-        tenant_id: str = "",
-    ) -> dict:
-        return CompletionService.record_product_runtime_request(
-            req=req,
-            login_user_id=login_user_id,
-            cutover_mode=cutover_mode,
-            tenant_id=tenant_id,
-        )
 
     @staticmethod
     def record_product_runtime_request(
         *,
         req: CompletionReq,
         login_user_id: str,
-        cutover_mode: CutoverMode = "new_default",
         tenant_id: str = "",
     ) -> dict:
         workspace_id = str(getattr(req, "workspace_id", "") or "completion")
         request_hash = canonical_sha256(
             {
-                "legacy_route": "/completion",
+                "runtime_surface": "completion",
                 "dialog_id": req.dialog_id,
                 "workspace_id": workspace_id,
                 "user_input": req.user_input,
@@ -159,7 +61,7 @@ class CompletionService:
                 "query_method": req.query_method,
             }
         )[:24]
-        # PHASE22 final engineering closure (P0-1): the Server-owned
+        # The Server-owned
         # tenant identity MUST come from the validated authentication
         # context. The caller (API layer) is responsible for resolving
         # the trusted tenant and passing it explicitly. ``req.tenant_id``
@@ -193,14 +95,12 @@ class CompletionService:
                 client_request_id=f"completion:{req.dialog_id}:{request_hash}",
                 runtime_request_ref=f"completion-runtime-request:{req.dialog_id}:{request_hash}",
                 raw_intent_ref=f"completion-intent:{req.dialog_id}:{request_hash}",
-                command_kind=CompletionService._completion_product_command_kind(cutover_mode),
                 payload={
-                    "legacy_route": "/completion",
+                    "runtime_surface": "completion",
                     "dialog_id": req.dialog_id,
                     "user_input_hash": canonical_sha256({"user_input": req.user_input}),
                     "product_mode": req.product_mode,
                     "query_method": req.query_method,
-                    "cutover_mode": cutover_mode,
                 },
                 bootstrap_runtime_agent=True,
                 runtime_surface="completion",
@@ -208,23 +108,17 @@ class CompletionService:
         except Exception as exc:
             return {
                 "status": "blocked",
-                "route": "/completion",
-                "mode": cutover_mode,
-                "cutover_mode": cutover_mode,
+                "runtime_surface": "completion",
                 "request_hash": request_hash,
                 "product_runtime_recorded": False,
-                "product_shadow_recorded": False,
                 "failure_type": type(exc).__name__,
                 "reason": str(exc),
             }
         return {
             "status": result.status,
-            "route": "/completion",
-            "mode": cutover_mode,
-            "cutover_mode": cutover_mode,
+            "runtime_surface": "completion",
             "request_hash": request_hash,
             "product_runtime_recorded": True,
-            "product_shadow_recorded": cutover_mode == "shadow",
             "command_id": result.command_id,
             "receipt_id": result.receipt_id,
             "projection_event_id": result.projection.projection_event_id,
@@ -284,50 +178,3 @@ class CompletionService:
 
 
 __all__ = ["CompletionService"]
-
-
-def _final_answer_from_snapshot(snapshot) -> str:
-    for observation in reversed(snapshot.observations):
-        if observation.metadata.get("grounded_synthesis"):
-            return str(observation.metadata.get("final_answer") or "")
-    return ""
-
-
-def _derived_sse_events(snapshot) -> list[dict]:
-    events: list[dict] = []
-    base = {
-        "runtime_topology": "unified_agent_runtime",
-        "run_id": snapshot.run_id,
-        "task_id": snapshot.task_id,
-        "trace_id": snapshot.trace_id,
-    }
-    for observation in snapshot.observations:
-        if observation.kind == "model" and (
-            observation.metadata.get("model_gateway_call") or observation.metadata.get("grounded_synthesis")
-        ):
-            source = "model_gateway" if observation.metadata.get("model_gateway_call") else "grounded_synthesis"
-            events.append({"type": "model_call", "data": {**base, "model_call_source": source, **observation.metadata}})
-        if observation.kind == "retrieval":
-            events.append(
-                {
-                    "type": "retrieval_round",
-                    "data": {
-                        **base,
-                        "evidence_ids": list(observation.evidence_ids),
-                        "citation_ids": list(observation.citation_ids),
-                        **observation.metadata,
-                    },
-                }
-            )
-        if observation.kind == "tool":
-            event_type = "approval_required" if observation.status == "waiting" else "tool_call"
-            events.append({"type": event_type, "data": {**base, **observation.metadata}})
-        if observation.kind == "reflection":
-            events.append({"type": "reflection", "data": {**base, **observation.metadata}})
-        if observation.kind == "replan":
-            events.append({"type": "replan", "data": {**base, **observation.metadata}})
-        if observation.metadata.get("grounded_synthesis"):
-            for binding in observation.metadata.get("citation_bindings", []):
-                if binding.get("citation_id"):
-                    events.append({"type": "citation", "data": {**base, **binding}})
-    return events

@@ -1,11 +1,10 @@
-# 证据入口
+# 当前证据入口
 
-这里只放精选、稳定、适合人阅读的证据入口。
+这里只保留支撑当前判断所需的稳定证据。旧 Phase 原材料已经移出 active tree；
+完整历史由 GitHub 提交历史承担。
 
-本地临时输出、截图、原始 eval 数据和完整运行报告不直接放在前台；需要长期保留时归档到 `docs/history/`，或由正式证据文档引用。
-
-当前入口：
-
-- [公开演示证据](public-demo.md)
-- [Eval Baseline](eval-baselines.md)
-- [Local Workspace Consolidation 注册清单](local-workspace-consolidation.md)
+- [Repository Closure](repository-closure.md)
+- [Local Workspace Closure](local-workspace-closure.md)
+- [Current Runtime Baseline](current-runtime-baseline.md)
+- [Current Test Baseline](current-test-baseline.md)
+- [Current Eval Baseline](current-eval-baseline.md)

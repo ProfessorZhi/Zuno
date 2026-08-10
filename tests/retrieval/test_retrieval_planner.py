@@ -39,16 +39,16 @@ def test_auto_mode_prefers_graphrag_for_relation_question():
     assert plan.fallback_policy["allow_retry"] is True
 
 
-def test_hybrid_mode_enables_keyword_when_elasticsearch_is_available():
+def test_enhanced_mode_enables_keyword_when_elasticsearch_is_available():
     planner = RetrievalPlanner(enable_keyword_recall=True)
 
     plan = planner.build_plan(
-        RetrievalRequest(query="MILVUS FLUSH PARAM", knowledge_ids=["kb_1"], mode="hybrid"),
+        RetrievalRequest(query="MILVUS FLUSH PARAM", knowledge_ids=["kb_1"], mode="rag_graph_deep"),
         _processed("MILVUS FLUSH PARAM", keyword=True),
         knowledge_capability="rag_graph",
     )
 
-    assert plan.resolved_mode == "hybrid_rag"
+    assert plan.resolved_mode == "rag_graph_deep"
     assert plan.internal_route == "standard_rag"
     assert plan.resolved_profile == "hybrid_balanced"
     assert plan.enabled_retrievers == ["vector", "bm25"]
@@ -106,7 +106,7 @@ def test_planner_drops_graph_when_graph_index_health_is_unavailable():
         RetrievalRequest(
             query="合同中的赔偿责任关系是什么",
             knowledge_ids=["kb_1"],
-            mode="rag_graph",
+            mode="rag_graph_deep",
             scope_policy={"status": "active"},
             index_health={"graph": "unavailable"},
             index_version={"vector": "vector_v2", "graph": "graph_v2"},
@@ -131,7 +131,7 @@ def test_planner_disables_retrievers_for_inactive_scope():
         RetrievalRequest(
             query="review archived knowledge",
             knowledge_ids=["kb_1"],
-            mode="hybrid",
+            mode="rag_graph_deep",
             scope_policy={"status": "archived", "knowledge_ids": ["kb_1"]},
         ),
         _processed("review archived knowledge"),
@@ -147,12 +147,12 @@ def test_public_query_methods_route_without_old_names_as_public_methods():
     planner = RetrievalPlanner(enable_keyword_recall=True)
 
     local = planner.build_plan(
-        RetrievalRequest(query="contract relation", knowledge_ids=["kb_1"], mode="rag_graph", query_method="local"),
+        RetrievalRequest(query="contract relation", knowledge_ids=["kb_1"], mode="rag_graph_deep", query_method="local"),
         _processed("contract relation", relation=True),
         knowledge_capability="rag_graph",
     )
     global_plan = planner.build_plan(
-        RetrievalRequest(query="overall risk", knowledge_ids=["kb_1"], mode="rag_graph", query_method="global"),
+        RetrievalRequest(query="overall risk", knowledge_ids=["kb_1"], mode="rag_graph_deep", query_method="global"),
         ProcessedQuery(
             original_query="overall risk",
             normalized_query="overall risk",
@@ -163,7 +163,7 @@ def test_public_query_methods_route_without_old_names_as_public_methods():
         rerank_available=True,
     )
     drift = planner.build_plan(
-        RetrievalRequest(query="summary with evidence", knowledge_ids=["kb_1"], mode="rag_graph", query_method="drift"),
+        RetrievalRequest(query="summary with evidence", knowledge_ids=["kb_1"], mode="rag_graph_deep", query_method="drift"),
         ProcessedQuery(
             original_query="summary with evidence",
             normalized_query="summary with evidence",
@@ -185,20 +185,6 @@ def test_public_query_methods_route_without_old_names_as_public_methods():
     assert drift.route_trace["fallback_reason"] == "community_not_ready"
 
 
-def test_legacy_route_names_map_to_public_query_methods():
-    planner = RetrievalPlanner(enable_keyword_recall=False)
-
-    plan = planner.build_plan(
-        RetrievalRequest(query="legacy local", knowledge_ids=["kb_1"], mode="local_graphrag"),
-        _processed("legacy local", relation=True),
-        knowledge_capability="rag_graph",
-    )
-
-    assert plan.requested_query_method == "local"
-    assert plan.resolved_query_method == "local"
-    assert plan.internal_route == "local_graphrag"
-
-
 def test_product_normal_mode_forces_basic_query_method_trace():
     planner = RetrievalPlanner(enable_keyword_recall=True)
 
@@ -206,7 +192,7 @@ def test_product_normal_mode_forces_basic_query_method_trace():
         RetrievalRequest(
             query="只需要普通检索合同条款",
             knowledge_ids=["kb_1"],
-            mode="normal",
+            mode="rag",
             query_method="auto",
             product_mode="normal",
         ),
@@ -257,7 +243,7 @@ def test_product_enhanced_explicit_global_method_falls_back_with_trace():
         RetrievalRequest(
             query="总结所有合同风险",
             knowledge_ids=["kb_1"],
-            mode="enhanced",
+            mode="rag_graph_deep",
             product_mode="enhanced",
             query_method="global",
             index_health={"community": "not_built"},

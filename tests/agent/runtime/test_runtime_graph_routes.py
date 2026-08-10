@@ -7,7 +7,7 @@ from zuno.agent.runtime import (
     SQLiteAgentRunStore,
     StrategyDecision,
     StrategyMode,
-    UnifiedAgentRuntimeService,
+    AgentRuntimeService,
     build_agent_graph,
     route_after_reflection,
     route_after_strategy,
@@ -55,9 +55,9 @@ def test_runtime_routes_cover_direct_replan_rewrite_and_tool_paths() -> None:
     assert route_after_reflection(_with_reflection(state, ReflectionDecision.ASK_USER)) == RuntimeNode.INTERRUPT
 
 
-def test_unified_runtime_service_completes_graph_and_persists_checkpoints(tmp_path) -> None:
+def test_agent_run_service_completes_graph_and_persists_checkpoints(tmp_path) -> None:
     store = SQLiteAgentRunStore(tmp_path / "runtime.db")
-    service = UnifiedAgentRuntimeService(store=store)
+    service = AgentRuntimeService(store=store)
 
     snapshot = service.start(_request())
 
@@ -75,8 +75,8 @@ def test_unified_runtime_service_completes_graph_and_persists_checkpoints(tmp_pa
     assert store.latest_checkpoint("task_graph").node == RuntimeNode.POST_TURN_COMMIT.value
 
 
-def test_unified_runtime_stream_order_uses_runtime_events(tmp_path) -> None:
-    service = UnifiedAgentRuntimeService(store=SQLiteAgentRunStore(tmp_path / "runtime.db"))
+def test_agent_run_stream_order_uses_runtime_events(tmp_path) -> None:
+    service = AgentRuntimeService(store=SQLiteAgentRunStore(tmp_path / "runtime.db"))
 
     events = list(service.stream(_request("task_stream")))
 
@@ -86,8 +86,8 @@ def test_unified_runtime_stream_order_uses_runtime_events(tmp_path) -> None:
     assert events[-1].status == "completed"
 
 
-def test_unified_runtime_skeleton_does_not_emit_simulated_marker(tmp_path) -> None:
-    service = UnifiedAgentRuntimeService(store=SQLiteAgentRunStore(tmp_path / "runtime.db"))
+def test_agent_run_does_not_emit_simulated_marker(tmp_path) -> None:
+    service = AgentRuntimeService(store=SQLiteAgentRunStore(tmp_path / "runtime.db"))
 
     service.start(_request("task_no_simulated"))
     payload = store_payloads(service.store, "task_no_simulated")

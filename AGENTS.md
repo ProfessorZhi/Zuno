@@ -141,13 +141,9 @@ Agent Core 规范优先级：全局架构原则 → 单一模块 Target 架构�
 11. `.agent/references/code-map.md`
 12. `.agent/references/task-routing.md`
 13. `.agent/references/workflow.md`
-14. `.agent/references/project-map.md`
-15. `.agent/references/architecture-docs-map.md`
-16. `.agent/references/documentation-governance.md`
-17. `.agent/references/architecture-update-policy.md`
-18. `.agent/references/diagram-inventory.md`
-19. `.agent/references/current-target-future-rules.md`
-20. `.agent/references/verification-map.md`
+14. `.agent/references/debugging.md`
+15. `.agent/references/known-pitfalls.md`
+16. `.agent/references/verification-map.md`
 
 Agent Core 任务必须读取唯一正式 Target 文档 `docs/modules/06-agent-core-planning-control.md`。
 

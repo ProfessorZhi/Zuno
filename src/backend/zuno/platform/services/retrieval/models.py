@@ -11,26 +11,9 @@ QUERY_METHOD_ROUTER = "auto"
 
 def normalize_product_mode(mode: str | None) -> str:
     normalized = str(mode or "auto").strip().lower() or "auto"
-    alias_map = {
-        "standard": "normal",
-        "standard_retrieval": "normal",
-        "baseline_rag": "normal",
-        "rag": "normal",
-        "basic": "normal",
-        "normal": "normal",
-        "enhanced": "enhanced",
-        "enhanced_retrieval": "enhanced",
-        "rag_graph": "enhanced",
-        "rag_graph_deep": "enhanced",
-        "graphrag": "enhanced",
-        "local_graphrag": "enhanced",
-        "community_global": "enhanced",
-        "drift_like": "enhanced",
-        "deep_graphrag": "enhanced",
-        "auto": "auto",
-        "default": "auto",
-    }
-    return alias_map.get(normalized, "auto")
+    if normalized not in PRODUCT_MODES:
+        raise ValueError(f"unsupported product retrieval mode: {mode}")
+    return normalized
 
 
 @dataclass(slots=True)

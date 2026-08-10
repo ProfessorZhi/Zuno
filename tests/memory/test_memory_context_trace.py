@@ -8,7 +8,7 @@ from zuno.memory.policy import RetentionPolicy
 def _scope() -> MemoryScope:
     return MemoryScope(
         user_id="user_trace",
-        agent_id="unified_runtime",
+        agent_id="agent_run",
         project_id="workspace_trace",
         thread_id="thread_trace",
     )

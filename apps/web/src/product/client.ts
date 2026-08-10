@@ -22,7 +22,6 @@ export interface ProductRuntimeRequestCommand {
   client_request_id?: string
   runtime_request_ref: string
   raw_intent_ref: string
-  command_kind: string
   active_agent_version_id: string
   payload: Record<string, unknown>
 }

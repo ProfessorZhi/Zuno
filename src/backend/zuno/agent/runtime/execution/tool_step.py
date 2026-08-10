@@ -40,7 +40,11 @@ class ToolStepExecutor:
         tool_id = _tool_id_for_step(state, step)
         arguments = _arguments_for_step(state, step, tool_id)
         idempotency_key = _idempotency_key(state, step, tool_id, arguments)
-        approved = f"approved:{idempotency_key}" in state.interrupt_refs
+        approval_decision_ref = (
+            f"runtime-approval:{idempotency_key}"
+            if f"approved:{idempotency_key}" in state.interrupt_refs
+            else ""
+        )
         request = ToolRuntimeRequest(
             tool_id=tool_id,
             arguments=arguments,
@@ -49,7 +53,8 @@ class ToolStepExecutor:
             task_id=state.task_id,
             trace_id=state.trace_id,
             model_intent=step.goal,
-            approved=approved,
+            approval_decision_ref=approval_decision_ref,
+            approval_adapter_ref=("agent.runtime.approval" if approval_decision_ref else ""),
             runtime_state=state,
             execution_id=idempotency_key,
             tenant_id=state.tenant_id,
@@ -118,7 +123,7 @@ class ToolStepExecutor:
 
 
 def _tool_id_for_step(state: AgentRuntimeState, step: PlanStep) -> str:
-    # Single-controller product cutover: tool steps bind the real tool id in
+    # Tool steps bind the real tool id in
     # the plan; execution still flows through the control plane gates.
     if step.tool_id:
         return step.tool_id

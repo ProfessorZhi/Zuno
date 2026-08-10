@@ -13,10 +13,8 @@ from zuno.platform.services.rag.vl_embedding import get_vl_image_embedding, get_
 
 def _resolve_vector_db_path() -> Path:
     modern_path = Path(".local/state/vector_db")
-    legacy_path = Path("vector_db")
-    target_path = legacy_path if legacy_path.exists() and not modern_path.exists() else modern_path
-    target_path.mkdir(parents=True, exist_ok=True)
-    return target_path
+    modern_path.mkdir(parents=True, exist_ok=True)
+    return modern_path
 
 
 class ChromaClient:

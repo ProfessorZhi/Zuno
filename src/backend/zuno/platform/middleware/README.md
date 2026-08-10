@@ -1,20 +1,5 @@
 # Platform Middleware 边界
 
-## 当前角色
+`platform/middleware/` 承载 FastAPI startup 使用的 HTTP middleware。它处理 trace id、白名单状态和请求链横切行为，不拥有 route、DTO 或业务用例。
 
-`src/backend/zuno/platform/middleware/` 承载 FastAPI app startup 使用的 HTTP middleware 实现。旧 `zuno.middleware.*` import path 仅作为迁移兼容面通过 compatibility shell 指向这里。
-
-## Target role
-
-Middleware 是 Platform 层的 HTTP 底座能力：它处理 trace id、白名单状态和请求链横切行为，不拥有 API route、DTO 或业务用例。
-
-## 禁止事项
-
-- 禁止改变 trace id header、error response 或 whitelist matching 语义。
-- 禁止把 API route、auth service 或业务逻辑放入 middleware。
-- 禁止删除旧 `zuno.middleware.*` 迁移兼容路径，除非 legacy guard 明确退休。
-
-## Focused tests
-
-- `tests/repo/test_zuno_canonical_import_surfaces.py`
-- API startup/import focused tests
+Middleware 变更必须保持 trace header、错误响应和 whitelist matching 的契约；业务拒绝应由对应 security/application owner 决定。

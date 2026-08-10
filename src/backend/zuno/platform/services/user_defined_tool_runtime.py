@@ -13,7 +13,7 @@ from zuno.capability.tools.cli_tool.adapter import CLIToolAdapter
 from zuno.capability.tools.openapi_tool.adapter import OpenAPIToolAdapter
 
 
-PHASE15_SIDE_EFFECT_BLOCK_REASON = "PHASE16_REQUIRED_FOR_SIDE_EFFECT_TOOL"
+TOOL_EFFECT_POLICY_BLOCK_REASON = "TOOL_EFFECT_POLICY_REQUIRED"
 
 
 def get_user_defined_runtime_type(db_tool: ToolTable) -> str:
