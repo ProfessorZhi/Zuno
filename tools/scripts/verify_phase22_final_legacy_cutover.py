@@ -824,22 +824,32 @@ def _classify_tool_invocation(
         call_text, enclosing_class_name=enclosing_class_name
     ):
         return None
-    parts = call_text.split(".", 1)
-    head = parts[0]
-    rest = parts[1] if len(parts) > 1 else ""
-    last_attr = rest.split("(")[0].split(".")[-1] if rest else ""
+    call_head = call_text.split("(", 1)[0]
+    call_parts = call_head.split(".")
+    head = call_parts[0]
+    last_attr = call_parts[-1] if call_parts else ""
     if not last_attr or last_attr not in _INVOKE_ATTR_NAMES:
         return None
 
-    # The receiver must be a chained attribute access (e.g. ``self.x.y``),
-    # not a bare identifier (a function call). ``self.x.ainvoke`` has
-    # chain depth 2 (self -> x -> ainvoke); a bare ``self.ainvoke`` has
-    # chain depth 1 and is treated as a method invocation, not a tool bypass.
-    if "." not in rest:
-        return None
-    chain_parts = rest.split("(")[0].split(".")
+    receiver_candidates = [".".join(call_parts[:-1])]
+    # A local alias such as ``binder = self.tool`` produces the short call
+    # shape ``binder.ainvoke``. Resolve that alias before deciding whether
+    # the receiver is a tool-shaped chain; otherwise alias-based evasion
+    # would be accepted merely because the visible call has one dot.
+    if len(call_parts) == 2 and head in alias_map:
+        receiver_candidates = [
+            candidate
+            for candidate in _resolve_call_chain(call_text, alias_map)
+            if "." in candidate
+        ]
+        if not receiver_candidates:
+            return None
+
     # The last element is the method name; the remaining pieces are the
-    # receiver chain. The receiver must have at least one part.
+    # receiver chain. The receiver must have at least one dotted part after
+    # alias resolution.
+    receiver_chain = receiver_candidates[0]
+    chain_parts = receiver_chain.split(".")
     if len(chain_parts) < 2:
         return None
     # Exempt legitimate model / provider / gateway calls. The receiver
@@ -848,7 +858,7 @@ def _classify_tool_invocation(
     # narrow exemption: only attribute names that *end* with one of
     # these suffixes are exempted, and the call must not be a documented
     # tool bypass pattern (``tool`` / ``binding`` / ``handler``).
-    receiver_attr = chain_parts[-2]
+    receiver_attr = chain_parts[-1]
     receiver_lower = receiver_attr.lower()
     if any(
         receiver_lower.endswith(suffix)

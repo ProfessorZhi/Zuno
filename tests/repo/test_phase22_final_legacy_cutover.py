@@ -602,23 +602,22 @@ def test_unresolved_count_blocks_clean() -> None:
 
 
 # -----------------------------------------------------------------------------
-# 14. The current Integration Branch returns non-zero status.
+# 14. The current integration tree is clean after the final cutover.
 # -----------------------------------------------------------------------------
 
 
-def test_current_integration_branch_returns_nonzero() -> None:
-    """The integration tree (which has not yet been retired) must
-    return non-zero, non-CLEAN status — confirming the audit is
-    fail-closed on the real integration tree.
+def test_current_integration_branch_returns_clean() -> None:
+    """The current production tree has completed the legacy cutover and
+    must return a zero, CLEAN audit verdict.
     """
     result = _run([
         "--integration-base-sha", "10501e0382d863014513f993822abd6bcf758cf6"
     ])
-    assert result["returncode"] != 0, (
-        "current integration branch must exit non-zero"
+    assert result["returncode"] == 0, (
+        "current integration branch must exit zero after cutover"
     )
-    assert result["payload"]["status"] != "LEGACY_CUTOVER_AUDIT_CLEAN", (
-        "current integration branch must not be claimed CLEAN"
+    assert result["payload"]["status"] == "LEGACY_CUTOVER_AUDIT_CLEAN", (
+        "current integration branch must be claimed CLEAN after cutover"
     )
 
 
@@ -821,19 +820,17 @@ def test_module_helper_with_no_chain_invoke_not_flagged() -> None:
     )
 
 
-def test_name_free_detector_finds_production_bypass() -> None:
-    """The name-free detector must surface real tool bypasses on the
-    production tree. The integration tree is intentionally NOT CLEAN,
-    but the new categories the hardened detector emits must be present
-    consistent with the tool-bypass surface in the production code.
+def test_name_free_detector_confirms_production_cutover() -> None:
+    """The name-free detector must confirm that production tool bypasses
+    have been retired while preserving fail-closed fixture coverage.
     """
 
     result = _run(["--integration-base-sha", "9e1c77a189d24fb7e17e917828ce69b7383ad8bd"])
     payload = result["payload"]
     cats = {f["category"] for f in payload.get("findings", [])}
-    # The legacy ``tool_bypass`` category must still be present.
-    assert "tool_bypass" in cats, (
-        "the legacy tool_bypass category must still be present, "
+    # The legacy ``tool_bypass`` category must be absent on the cutover tree.
+    assert "tool_bypass" not in cats, (
+        "the production cutover must have no tool_bypass finding, "
         f"got {cats}"
     )
     # Internal graph/model/runner calls are not ToolInvocationGateway
@@ -852,8 +849,7 @@ def test_name_free_detector_finds_production_bypass() -> None:
         }
         for finding in payload.get("findings", [])
     ), "internal runtime dispatch must not be mislabeled as tool bypass"
-    # The audit must still report non-CLEAN status on the real tree.
-    assert payload["status"] != "LEGACY_CUTOVER_AUDIT_CLEAN", (
-        "the integration tree must not be CLEAN; the audit is honest "
-        "about the open tool-bypass blockers"
+    # The audit must report CLEAN status on the real tree.
+    assert payload["status"] == "LEGACY_CUTOVER_AUDIT_CLEAN", (
+        "the production tree must be CLEAN after the tool-bypass cutover"
     )
