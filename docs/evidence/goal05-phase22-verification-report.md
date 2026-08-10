@@ -40,7 +40,7 @@ python -m pytest -q tests/repo/test_phase22_closure_summary.py tests/platform/te
 - 通过：当前工作树来源下 `tests/api` 全量回归为 `167 passed`；Phase05 approval binding、Phase06 observability、Phase11C retired facade、Phase16 bypass guard 的定向 verifier/test 均已通过。排除明确依赖 Phase04 外部基础设施的 34 项后，`tests/repo` 当前分支全量回归为 `622 passed, 34 deselected`；包含 Phase04 的完整 repo gate 仍受 Docker/Phase04 外部服务不可用阻断，因此不能把排除项结果扩大为基础设施全量通过。
 - 通过：当前工作树来源下直接执行 `verify_phase22_backend_semantic_legacy.py --scope repository` 返回 `BACKEND_PRODUCT_RUNTIME_CUTOVER_CONFIRMED`、0 findings；completion blocker gate 通过。
 - 追加通过：`.agent/scripts/verify_repo_hygiene.py`、`.agent/scripts/verify_module_boundaries.py` 与 `tests/repo/test_repo_hygiene.py` 已按当前 PHASE22 退休路径对齐并通过；这不替代生产 MCP bypass 审计。
-- 追加通过：`tests/evals` 全量为 `600 passed, 30 subtests passed`；`tests/agent` 非 runtime 目录分批为 `381 passed`。其中 1 个安全审批落库用例因本机 PostgreSQL 不可连接而失败，`tests/agent/runtime` 的 PostgreSQL 依赖用例因此不能扩大解释为全量通过。
+- 追加通过：`tests/api` 全量为 `167 passed`，`tests/evals` 全量为 `600 passed, 30 subtests passed`；`tests/agent --ignore=tests/agent/runtime` 为 `382 passed, 1 failed`。唯一失败为安全审批落库用例，因本机 PostgreSQL `localhost:5432` 不可连接而超时；`tests/agent/runtime` 的 PostgreSQL 依赖用例因此不能扩大解释为全量通过。
 - 追加通过：`apps/web` 的 `npm run lint` 与 `npm run build`，以及 `apps/desktop` 三个 Electron bridge 文件的 `node --check`；浏览器 E2E、交互式 Desktop Smoke 和真实基础设施 Fault/Load/DR 仍未在本轮运行。
 - 追加通过：feature-flag runtime cutover verifier 为 `FEATURE_FLAG_RUNTIME_CUTOVER_CONFIRMED`，阻塞性 findings 为 `0`；其余 `26` 条为 MCP discovery/canonical executor 分类或 internal test harness 记录，不构成生产阻塞。
 - 追加通过：final legacy cutover verifier 为 `LEGACY_CUTOVER_AUDIT_CLEAN`，`0` findings；旧 `/api/v1/mcp_chat` 已收敛为无 provider/model 副作用的 503 fail-closed surface。
