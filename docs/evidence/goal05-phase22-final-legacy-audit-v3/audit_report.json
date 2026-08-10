@@ -1,5 +1,5 @@
 {
-  "audit_subject_sha": "",
+  "audit_subject_sha": "53d26f6c",
   "candidate_pr": "PHASE22-FINAL-LEGACY-AUDIT-V3",
   "evidence_revision_sha": "",
   "exclusions": [
@@ -28,37 +28,8 @@
       "reason": "non-production surface (tests/docs/evals/agent scripts)"
     }
   ],
-  "finding_count": 4,
-  "findings": [
-    {
-      "category": "tool_bypass",
-      "detail": "direct MCP execution bypass: self.mcp_manager.process_query",
-      "line": 48,
-      "path": "src/backend/zuno/api/services/mcp_chat.py",
-      "severity": "error"
-    },
-    {
-      "category": "tool_bypass_invoke",
-      "detail": "direct tool invocation bypass: self.deep_anthropic.ainvoke",
-      "line": 67,
-      "path": "src/backend/zuno/api/services/mcp_chat.py",
-      "severity": "error"
-    },
-    {
-      "category": "tool_bypass",
-      "detail": "direct MCP execution bypass: mcp_chat_agent.ainvoke",
-      "line": 22,
-      "path": "src/backend/zuno/api/v1/mcp_chat.py",
-      "severity": "error"
-    },
-    {
-      "category": "tool_bypass",
-      "detail": "direct MCP execution bypass: self.callable_mcp_tools[name].on_run_tool",
-      "line": 106,
-      "path": "src/backend/zuno/platform/services/mcp_openai/mcp_manager.py",
-      "severity": "error"
-    }
-  ],
+  "finding_count": 0,
+  "findings": [],
   "integration_base_sha": "",
   "not_proven_boundary": [
     "history-only caller like /agent/product_baseline.py is excluded by construction; reachability is not proven for runtime selectors that resolve via attribute-chain / class-name-only dispatch."
@@ -70,7 +41,7 @@
     "src\\backend\\zuno\\agent\\runtime",
     "src\\backend\\zuno\\api\\v1"
   ],
-  "status": "TOOL_BYPASS_BLOCKERS_FOUND",
+  "status": "LEGACY_CUTOVER_AUDIT_CLEAN",
   "unresolved": [],
   "unresolved_count": 0,
   "workflow_head_sha": ""

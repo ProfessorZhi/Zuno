@@ -8,59 +8,9 @@
     "security_epoch": "STATIC_CONTRACT_AVAILABLE",
     "sse_stream_resume": "STATIC_CONTRACT_AVAILABLE"
   },
-  "finding_count": 9,
+  "finding_count": 26,
   "findings": {
-    "direct_tool_bypass": [
-      {
-        "candidate_pr": "",
-        "evidence": "allowlisted bypass category=direct_mcp_call: _register_proxy_tools / generated_tool / create_session / session.call_tool",
-        "external_dependency": "",
-        "owner_work_package": "08 Tool Runtime",
-        "path": "src/backend/zuno/capability/mcp/servers/remote_proxy/main.py"
-      },
-      {
-        "candidate_pr": "",
-        "evidence": "allowlisted bypass category=dynamic_bypass: lazy import facade / import_module / getattr",
-        "external_dependency": "",
-        "owner_work_package": "11 Infrastructure",
-        "path": "src/backend/zuno/platform/__init__.py"
-      },
-      {
-        "candidate_pr": "",
-        "evidence": "allowlisted bypass category=direct_mcp_call: load_mcp_tools / call_tool",
-        "external_dependency": "",
-        "owner_work_package": "08 Tool Runtime",
-        "path": "src/backend/zuno/platform/services/mcp/load_mcp/tools.py"
-      },
-      {
-        "candidate_pr": "",
-        "evidence": "allowlisted bypass category=direct_mcp_call: MultiServerMCPClient",
-        "external_dependency": "",
-        "owner_work_package": "08 Tool Runtime",
-        "path": "src/backend/zuno/platform/services/mcp/multi_client.py"
-      },
-      {
-        "candidate_pr": "",
-        "evidence": "allowlisted bypass category=direct_mcp_call: MCPClient.call_tool / MCPClient.list_tools",
-        "external_dependency": "",
-        "owner_work_package": "08 Tool Runtime",
-        "path": "src/backend/zuno/platform/services/mcp_openai/mcp_client.py"
-      },
-      {
-        "candidate_pr": "",
-        "evidence": "allowlisted bypass category=direct_mcp_call: MCPClient utility bridge",
-        "external_dependency": "",
-        "owner_work_package": "08 Tool Runtime",
-        "path": "src/backend/zuno/platform/services/mcp_openai/mcp_util.py"
-      },
-      {
-        "candidate_pr": "",
-        "evidence": "allowlisted bypass category=direct_tool_execute: execute_user_defined_tool / tool_adapter.execute",
-        "external_dependency": "",
-        "owner_work_package": "08 Tool Runtime",
-        "path": "src/backend/zuno/platform/services/user_defined_tool_runtime.py"
-      }
-    ],
+    "direct_tool_bypass": [],
     "dynamic_selector_found": [],
     "flag_not_retired": [],
     "flag_reader_found": [],
@@ -77,10 +27,181 @@
         "evidence": "reachability audit found no production-tree reference (tests/evals only)",
         "external_dependency": "",
         "owner_work_package": "",
-        "path": "src/backend/zuno/agent/product_baseline.py"
+        "path": "tools/evals/zuno/agent/product_baseline.py"
+      }
+    ],
+    "mcp_classification": [
+      {
+        "candidate_pr": "",
+        "evidence": "show_mcp_tools(...) MCP_DISCOVERY_REGISTRATION / MCP_ADMIN_CONTROL_PLANE",
+        "external_dependency": "",
+        "owner_work_package": "",
+        "path": "src/backend/zuno/api/services/mcp_server.py"
+      },
+      {
+        "candidate_pr": "",
+        "evidence": "get_mcp_tools_info(...) MCP_DISCOVERY_REGISTRATION / MCP_ADMIN_CONTROL_PLANE",
+        "external_dependency": "",
+        "owner_work_package": "",
+        "path": "src/backend/zuno/api/v1/mcp_server.py"
+      },
+      {
+        "candidate_pr": "",
+        "evidence": "invoke_readonly(...) MCP_CANONICAL_EXECUTOR (gateway invocation, proven ToolInvocationGateway binding)",
+        "external_dependency": "",
+        "owner_work_package": "",
+        "path": "src/backend/zuno/capability/mcp/mcp_tool_executor_adapter.py"
+      },
+      {
+        "candidate_pr": "",
+        "evidence": "initialize(...) MCP_DISCOVERY_REGISTRATION / MCP_ADMIN_CONTROL_PLANE",
+        "external_dependency": "",
+        "owner_work_package": "",
+        "path": "src/backend/zuno/capability/mcp/servers/remote_proxy/main.py"
+      },
+      {
+        "candidate_pr": "",
+        "evidence": "list_tools(...) MCP_DISCOVERY_REGISTRATION / MCP_ADMIN_CONTROL_PLANE",
+        "external_dependency": "",
+        "owner_work_package": "",
+        "path": "src/backend/zuno/capability/mcp/servers/remote_proxy/main.py"
+      },
+      {
+        "candidate_pr": "",
+        "evidence": "invoke_readonly(...) MCP_CANONICAL_EXECUTOR (gateway invocation, proven ToolInvocationGateway binding)",
+        "external_dependency": "",
+        "owner_work_package": "",
+        "path": "src/backend/zuno/capability/runtime.py"
+      },
+      {
+        "candidate_pr": "",
+        "evidence": "show_mcp_tools(...) MCP_DISCOVERY_REGISTRATION / MCP_ADMIN_CONTROL_PLANE",
+        "external_dependency": "",
+        "owner_work_package": "",
+        "path": "src/backend/zuno/platform/database/init_data.py"
+      },
+      {
+        "candidate_pr": "",
+        "evidence": "convert_mcp_tool_to_langchain_tool(...) MCP_DISCOVERY_REGISTRATION / MCP_ADMIN_CONTROL_PLANE",
+        "external_dependency": "",
+        "owner_work_package": "",
+        "path": "src/backend/zuno/platform/services/mcp/load_mcp/tools.py"
+      },
+      {
+        "candidate_pr": "",
+        "evidence": "list_tools(...) MCP_DISCOVERY_REGISTRATION / MCP_ADMIN_CONTROL_PLANE",
+        "external_dependency": "",
+        "owner_work_package": "",
+        "path": "src/backend/zuno/platform/services/mcp/load_mcp/tools.py"
+      },
+      {
+        "candidate_pr": "",
+        "evidence": "call_tool(...) MCP_CANONICAL_EXECUTOR (registered binding provider / server tool callback)",
+        "external_dependency": "",
+        "owner_work_package": "",
+        "path": "src/backend/zuno/platform/services/mcp/load_mcp/tools.py"
+      },
+      {
+        "candidate_pr": "",
+        "evidence": "initialize(...) MCP_DISCOVERY_REGISTRATION / MCP_ADMIN_CONTROL_PLANE",
+        "external_dependency": "",
+        "owner_work_package": "",
+        "path": "src/backend/zuno/platform/services/mcp/load_mcp/tools.py"
+      },
+      {
+        "candidate_pr": "",
+        "evidence": "load_mcp_tools(...) MCP_DISCOVERY_REGISTRATION / MCP_ADMIN_CONTROL_PLANE",
+        "external_dependency": "",
+        "owner_work_package": "",
+        "path": "src/backend/zuno/platform/services/mcp/multi_client.py"
+      },
+      {
+        "candidate_pr": "",
+        "evidence": "initialize(...) MCP_DISCOVERY_REGISTRATION / MCP_ADMIN_CONTROL_PLANE",
+        "external_dependency": "",
+        "owner_work_package": "",
+        "path": "src/backend/zuno/platform/services/mcp/multi_client.py"
+      },
+      {
+        "candidate_pr": "",
+        "evidence": "initialize(...) MCP_DISCOVERY_REGISTRATION / MCP_ADMIN_CONTROL_PLANE",
+        "external_dependency": "",
+        "owner_work_package": "",
+        "path": "src/backend/zuno/platform/services/mcp_openai/mcp_client.py"
+      },
+      {
+        "candidate_pr": "",
+        "evidence": "list_tools(...) MCP_DISCOVERY_REGISTRATION / MCP_ADMIN_CONTROL_PLANE",
+        "external_dependency": "",
+        "owner_work_package": "",
+        "path": "src/backend/zuno/platform/services/mcp_openai/mcp_client.py"
+      },
+      {
+        "candidate_pr": "",
+        "evidence": "get_all_function_tools(...) MCP_DISCOVERY_REGISTRATION / MCP_ADMIN_CONTROL_PLANE",
+        "external_dependency": "",
+        "owner_work_package": "",
+        "path": "src/backend/zuno/platform/services/mcp_openai/mcp_manager.py"
+      },
+      {
+        "candidate_pr": "",
+        "evidence": "connect_to_server(...) MCP_DISCOVERY_REGISTRATION / MCP_ADMIN_CONTROL_PLANE",
+        "external_dependency": "",
+        "owner_work_package": "",
+        "path": "src/backend/zuno/platform/services/mcp_openai/mcp_manager.py"
+      },
+      {
+        "candidate_pr": "",
+        "evidence": "list_server_tools(...) MCP_DISCOVERY_REGISTRATION / MCP_ADMIN_CONTROL_PLANE",
+        "external_dependency": "",
+        "owner_work_package": "",
+        "path": "src/backend/zuno/platform/services/mcp_openai/mcp_util.py"
+      },
+      {
+        "candidate_pr": "",
+        "evidence": "get_function_tools(...) MCP_DISCOVERY_REGISTRATION / MCP_ADMIN_CONTROL_PLANE",
+        "external_dependency": "",
+        "owner_work_package": "",
+        "path": "src/backend/zuno/platform/services/mcp_openai/mcp_util.py"
+      },
+      {
+        "candidate_pr": "",
+        "evidence": "invoke_readonly(...) MCP_CANONICAL_EXECUTOR (gateway invocation, proven ToolInvocationGateway binding)",
+        "external_dependency": "",
+        "owner_work_package": "",
+        "path": "src/backend/zuno/platform/services/user_defined_tool_runtime.py"
+      },
+      {
+        "candidate_pr": "",
+        "evidence": "get_mcp_tools(...) MCP_DISCOVERY_REGISTRATION / MCP_ADMIN_CONTROL_PLANE",
+        "external_dependency": "",
+        "owner_work_package": "",
+        "path": "src/backend/zuno/platform/services/workspace/simple_agent.py"
+      },
+      {
+        "candidate_pr": "",
+        "evidence": "show_mcp_tools(...) MCP_DISCOVERY_REGISTRATION / MCP_ADMIN_CONTROL_PLANE",
+        "external_dependency": "",
+        "owner_work_package": "",
+        "path": "src/backend/zuno/platform/services/workspace/simple_agent.py"
+      },
+      {
+        "candidate_pr": "",
+        "evidence": "get_mcp_tools(...) MCP_DISCOVERY_REGISTRATION / MCP_ADMIN_CONTROL_PLANE",
+        "external_dependency": "",
+        "owner_work_package": "",
+        "path": "src/backend/zuno/platform/services/workspace/wechat_agent.py"
+      },
+      {
+        "candidate_pr": "",
+        "evidence": "show_mcp_tools(...) MCP_DISCOVERY_REGISTRATION / MCP_ADMIN_CONTROL_PLANE",
+        "external_dependency": "",
+        "owner_work_package": "",
+        "path": "src/backend/zuno/platform/services/workspace/wechat_agent.py"
       }
     ],
     "phase08_dual_runtime": [],
+    "product_direct_mcp_execution": [],
     "public_v1_contract_missing": [],
     "registry_integration_violation": [],
     "residual_product_runtime_found": [],
@@ -115,6 +236,6 @@
     "postgres_domain_uow_shadow"
   ],
   "scope": "repository",
-  "status": "FEATURE_FLAG_RUNTIME_CUTOVER_BLOCKED",
+  "status": "FEATURE_FLAG_RUNTIME_CUTOVER_CONFIRMED",
   "verifier": "verify_phase22_feature_flag_runtime_cutover.py"
 }

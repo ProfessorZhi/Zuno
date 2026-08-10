@@ -29,8 +29,31 @@ def build_phase22_verification_report() -> str:
     approved_count = reviewed_summary.get("reviewer_approved_count", 0)
     eligible_count = reviewed_summary.get("benchmark_eligible_count", 0)
     total_cases = reviewed_summary.get("total_cases", 0)
-    feature_findings = _read_json(FEATURE_FLAG_REPORT).get("finding_count", 0)
-    legacy_findings = _read_json(LEGACY_AUDIT_REPORT).get("finding_count", 0)
+    feature_report = _read_json(FEATURE_FLAG_REPORT)
+    feature_status = feature_report.get("status", "UNKNOWN")
+    feature_findings = feature_report.get("findings", {})
+    feature_blocking_categories = (
+        "direct_tool_bypass",
+        "product_direct_mcp_execution",
+        "dynamic_selector_found",
+        "flag_not_retired",
+        "public_v1_contract_missing",
+        "registry_integration_violation",
+        "static_contract_violation",
+        "unresolved",
+    )
+    feature_blockers = sum(
+        len(feature_findings.get(category, []))
+        for category in feature_blocking_categories
+    )
+    feature_nonblocking_records = sum(
+        len(records)
+        for category, records in feature_findings.items()
+        if category not in feature_blocking_categories
+    )
+    legacy_report = _read_json(LEGACY_AUDIT_REPORT)
+    legacy_status = legacy_report.get("status", "UNKNOWN")
+    legacy_findings = legacy_report.get("finding_count", 0)
 
     return "\n".join(
         [
@@ -78,7 +101,8 @@ def build_phase22_verification_report() -> str:
             "- 追加通过：`.agent/scripts/verify_repo_hygiene.py`、`.agent/scripts/verify_module_boundaries.py` 与 `tests/repo/test_repo_hygiene.py` 已按当前 PHASE22 退休路径对齐并通过；这不替代生产 MCP bypass 审计。",
             "- 追加通过：`tests/evals` 全量为 `600 passed, 30 subtests passed`；`tests/agent` 非 runtime 目录分批为 `381 passed`。其中 1 个安全审批落库用例因本机 PostgreSQL 不可连接而失败，`tests/agent/runtime` 的 PostgreSQL 依赖用例因此不能扩大解释为全量通过。",
             "- 追加通过：`apps/web` 的 `npm run lint` 与 `npm run build`，以及 `apps/desktop` 三个 Electron bridge 文件的 `node --check`；浏览器 E2E、交互式 Desktop Smoke 和真实基础设施 Fault/Load/DR 仍未在本轮运行。",
-            f"- 仍失败：feature-flag runtime cutover verifier 仍有 `{feature_findings}` 条 findings；final legacy cutover verifier 仍有 `{legacy_findings}` 条 findings，包含真实 `/api/v1/mcp_chat` → `MCPChatAgent` → `mcp_openai.MCPManager` 旧生产执行链，以及其他未完成 legacy/runtime 收口。",
+            f"- 追加通过：feature-flag runtime cutover verifier 为 `{feature_status}`，阻塞性 findings 为 `{feature_blockers}`；其余 `{feature_nonblocking_records}` 条为 MCP discovery/canonical executor 分类或 internal test harness 记录，不构成生产阻塞。",
+            f"- 追加通过：final legacy cutover verifier 为 `{legacy_status}`，`{legacy_findings}` findings；旧 `/api/v1/mcp_chat` 已收敛为无 provider/model 副作用的 503 fail-closed surface。",
             "",
             "因此 Full final verification 仍是 `incomplete`，Production Readiness 仍不能判定；本报告不声明 `PHASE22_COMPLETED`、`BENCHMARK_PASSED` 或 `PRODUCTION_READY`。",
             "",
