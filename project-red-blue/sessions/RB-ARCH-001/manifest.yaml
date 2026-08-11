@@ -38,6 +38,6 @@ started_at: "2026-08-12T10:00:00+08:00"
 completed_at: "2026-08-12T18:00:00+08:00"
 status: "COMPLETED"
 user_gate_resolution: "APPROVED_WITH_AMENDMENTS"
-resolution_status: "CANONICAL_SYNC_IN_PROGRESS"
-canonical_sync_sha: null
+resolution_status: "CANONICAL_SYNC_COMPLETE"
+canonical_sync_sha: "4133d1837aa8f9255f753b3603b21eeae2615531"
 mutation_retest: "NOT_STARTED"

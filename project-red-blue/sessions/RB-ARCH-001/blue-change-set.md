@@ -3,7 +3,7 @@
 本文件保留第一轮 100 问和 Blue Research 的提案语义，并记录本轮 User Gate 决议。第一轮 Transcript、原始 Question、Score 和 Baseline Evidence 不修改；本文件不拥有正式架构事实。
 
 User Gate Resolution：`APPROVED_WITH_AMENDMENTS`
-Canonical Sync Commit A：`PENDING_COMMIT_A`
+Canonical Sync Commit A：`4133d1837aa8f9255f753b3603b21eeae2615531`
 Gate Resolution Commit B：`PENDING_COMMIT_B`
 本轮禁止：Runtime、Migration、Implementation Program、SKILL.md、RB-ARCH-002 和 Mutation Retest。
 
@@ -36,10 +36,10 @@ Migration / Implementation Implication：收集历史材料，形成最小 A/B/C
 Evidence Needed：原始项目材料、Git/任务/发布记录、用户确认。
 User Gate：APPROVED
 Canonical Destination：docs/project/facts/；必要时 docs/status/ 与 docs/evidence/
-Sync Status：PARTIAL
+Sync Status：APPLIED
 Canonical Paths：docs/project/facts/project-background.md; docs/project/facts/team-and-ownership.md; docs/project/facts/delivery-and-usage.md
-Applied Commit SHA：NONE
-Validation Run：NOT RUN - Commit A pending
+Applied Commit SHA：4133d1837aa8f9255f753b3603b21eeae2615531
+Validation Run：Commit A validation suite: PASS
 Validation Not Run：事实核验和用户确认未完成。
 Retest IDs：NONE
 ```
@@ -62,10 +62,10 @@ Migration / Implementation Implication：建立一条最小可观察 workflow �
 Evidence Needed：真实用户任务、人工基线、规模和验收。
 User Gate：APPROVED
 Canonical Destination：docs/project/architecture/architecture.md；docs/project/modules/01-product-surface.md
-Sync Status：PARTIAL
+Sync Status：APPLIED
 Canonical Paths：docs/project/architecture/architecture.md; docs/project/modules/01-product-surface.md
-Applied Commit SHA：NONE
-Validation Run：NOT RUN - Commit A pending
+Applied Commit SHA：4133d1837aa8f9255f753b3603b21eeae2615531
+Validation Run：Commit A validation suite: PASS
 Validation Not Run：Scope-down 需要用户确认历史任务和目标范围。
 Retest IDs：NONE
 ```
@@ -90,8 +90,8 @@ User Gate：APPROVED
 Canonical Destination：docs/project/modules/02-input-document-ingestion.md；docs/decisions/
 Sync Status：PARTIAL
 Canonical Paths：docs/project/modules/02-input-document-ingestion.md; docs/decisions/
-Applied Commit SHA：NONE
-Validation Run：NOT RUN - Commit A pending; Adapter Spike not executed
+Applied Commit SHA：4133d1837aa8f9255f753b3603b21eeae2615531
+Validation Run：Commit A validation suite: PASS
 Validation Not Run：未执行 Adapter Spike 或 Contract Conformance。
 Retest IDs：NONE
 ```
@@ -114,10 +114,10 @@ Migration / Implementation Implication：固定 Query Class、错误 Graph、Ver
 Evidence Needed：分层 Recall、Support、Citation、Unsupported、Latency、Cost 和停止原因。
 User Gate：APPROVED
 Canonical Destination：docs/project/modules/03-knowledge-agentic-graphrag.md；docs/decisions/0006-evidence-driven-agentic-graphrag.md；docs/project/modules/10-observability-eval.md
-Sync Status：PARTIAL
+Sync Status：APPLIED
 Canonical Paths：docs/project/modules/03-knowledge-agentic-graphrag.md; docs/project/modules/10-observability-eval.md
-Applied Commit SHA：NONE
-Validation Run：NOT RUN - Commit A pending
+Applied Commit SHA：4133d1837aa8f9255f753b3603b21eeae2615531
+Validation Run：Commit A validation suite: PASS
 Validation Not Run：Benchmark 与 ADR 协调未完成。
 Retest IDs：NONE
 ```
@@ -142,8 +142,8 @@ User Gate：APPROVED
 Canonical Destination：docs/project/modules/05-memory-context.md；docs/decisions/
 Sync Status：PARTIAL
 Canonical Paths：docs/project/modules/05-memory-context.md; docs/decisions/
-Applied Commit SHA：NONE
-Validation Run：NOT RUN - Commit A pending; Memory Backend Spike not executed
+Applied Commit SHA：4133d1837aa8f9255f753b3603b21eeae2615531
+Validation Run：Commit A validation suite: PASS
 Validation Not Run：Memory Backend Spike 未执行。
 Retest IDs：NONE
 ```
@@ -166,10 +166,10 @@ Migration / Implementation Implication：补 Current/Target 对照、崩溃恢�
 Evidence Needed：代码、Checkpoint/Domain Trace、故障测试和替换 Provider Spike。
 User Gate：APPROVED
 Canonical Destination：docs/project/modules/06-agent-core-planning-control.md；docs/project/architecture/architecture.md
-Sync Status：PARTIAL
+Sync Status：APPLIED
 Canonical Paths：docs/project/modules/06-agent-core-planning-control.md; docs/project/architecture/architecture.md
-Applied Commit SHA：NONE
-Validation Run：NOT RUN - Commit A pending
+Applied Commit SHA：4133d1837aa8f9255f753b3603b21eeae2615531
+Validation Run：Commit A validation suite: PASS
 Validation Not Run：Runtime Conformance 未执行。
 Retest IDs：NONE
 ```
@@ -192,10 +192,10 @@ Migration / Implementation Implication：构造 timeout、schema change、revoca
 Evidence Needed：Provider/Connection/Grant/Approval/Effect Trace、权限撤销和人工对账结果。
 User Gate：APPROVED
 Canonical Destination：docs/project/modules/07-capability-skill.md；docs/project/modules/08-tool-runtime.md；docs/project/modules/09-security.md
-Sync Status：PARTIAL
+Sync Status：APPLIED
 Canonical Paths：docs/project/modules/07-capability-skill.md; docs/project/modules/08-tool-runtime.md; docs/project/modules/09-security.md
-Applied Commit SHA：NONE
-Validation Run：NOT RUN - Commit A pending; Conformance/Fault Test not executed
+Applied Commit SHA：4133d1837aa8f9255f753b3603b21eeae2615531
+Validation Run：Commit A validation suite: PASS
 Validation Not Run：Tool Conformance 和 Fault Test 未执行。
 Retest IDs：NONE
 ```
@@ -220,8 +220,8 @@ User Gate：APPROVED
 Canonical Destination：docs/project/modules/02-input-document-ingestion.md；docs/project/modules/09-security.md；docs/decisions/
 Sync Status：PARTIAL
 Canonical Paths：docs/project/modules/02-input-document-ingestion.md; docs/project/modules/09-security.md; docs/decisions/
-Applied Commit SHA：NONE
-Validation Run：NOT RUN - Commit A pending; Connector/Permission Spike not executed
+Applied Commit SHA：4133d1837aa8f9255f753b3603b21eeae2615531
+Validation Run：Commit A validation suite: PASS
 Validation Not Run：Connector/permission Spike 未执行。
 Retest IDs：NONE
 ```
@@ -244,10 +244,10 @@ Migration / Implementation Implication：创建固定数据集、Bad Case、指�
 Evidence Needed：数据集版本、运行报告、成本/延迟、失败注入和发布决策。
 User Gate：APPROVED
 Canonical Destination：docs/project/modules/10-observability-eval.md；docs/status/；docs/evidence/
-Sync Status：PARTIAL
+Sync Status：APPLIED
 Canonical Paths：docs/project/modules/10-observability-eval.md; docs/status/; docs/evidence/
-Applied Commit SHA：NONE
-Validation Run：NOT RUN - Commit A pending; Benchmark not run
+Applied Commit SHA：4133d1837aa8f9255f753b3603b21eeae2615531
+Validation Run：Commit A validation suite: PASS
 Validation Not Run：Benchmark 未运行，当前状态必须保持 blocked_not_measured。
 Retest IDs：NONE
 ```
@@ -270,10 +270,10 @@ Migration / Implementation Implication：先做 Fact Gate 和模型现实清单�
 Evidence Needed：调用配置、Provider、实验数据、Artifact、GPU/Endpoint、发布/回滚记录。
 User Gate：APPROVED
 Canonical Destination：docs/project/facts/technology-reality.md；docs/project/modules/04-model-gateway.md；docs/status/；Resume source
-Sync Status：PARTIAL
+Sync Status：APPLIED
 Canonical Paths：docs/project/facts/technology-reality.md; docs/project/modules/04-model-gateway.md
-Applied Commit SHA：NONE
-Validation Run：NOT RUN - Commit A pending; training/serving evidence not run
+Applied Commit SHA：4133d1837aa8f9255f753b3603b21eeae2615531
+Validation Run：Commit A validation suite: PASS
 Validation Not Run：模型事实和用户贡献未确认。
 Retest IDs：NONE
 ```
