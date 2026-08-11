@@ -110,6 +110,16 @@ Skill 可以声明需要的 Model Role、Knowledge、Memory、Capability 和 Too
 
 同一 Capability 可以有企业邮件 API 和 MCP Mail Tool 两个实现。系统可以根据安全、可靠性、成本、环境和健康状态选择 Provider Binding，但选择实现不能放大业务权限，也不能绕过 Security Gate、Approval 或 Tool Runtime。Capability/Skill 模块回答“能否以这种方式完成”，Agent Core 决定“本次计划是否需要它”，Tool Runtime 才回答“具体动作如何安全执行”。
 
+## A4. “需要发送邮件”不等于“选择 Gmail”
+
+用户目标通常先表达为业务能力：`SEND_EMAIL`、`GENERATE_DOCX` 或 `SEARCH_CONTRACT`。Capability 层再回答哪些已安装且兼容的 Tool 可以实现它。Gmail MCP、Microsoft Graph 和企业 Mail API 都可能实现 `SEND_EMAIL`，但它们的连接身份、Schema、风险、地域、健康和审批要求不同。Agent Core 可以决定“本次需要发送邮件”，也可以提出“偏好 Gmail”，但不应直接把一个 Provider 名称当成最终执行事实。
+
+候选选择至少要经过硬过滤和确定性选择：企业/Workspace 是否安装并激活，精确 ToolVersion 是否兼容，Connection 或 ProviderInstance 是否可用，当前 Data Residency 和 Security Policy 是否满足，AgentVersion 是否允许，用户是 AUTO、PREFERRED 还是 PINNED，Provider 健康、Quota、Latency 和 Cost 如何。只有在这些条件都通过后，07 才提交版本化 `CapabilitySelectionResult`；08 仍需重新 Preflight 并创建 PreparedToolAction。
+
+三个选择模式必须保持不同：AUTO 允许 Runtime 在最终有效候选中确定实现；PREFERRED 表示首选实现不可用时可以按政策切换；PINNED 表示必须使用指定实现，不可用就阻塞。企业 Policy 的 PIN 优先于 AgentVersion 约束、用户要求、用户偏好和自动选择。Availability 只回答“它可能可用”，Authorization 只由 09 回答“这个主体能不能用”，Execution Readiness 还要由 08 在本次动作中确认。
+
+这个分层会比让 LLM 直接挑工具多一次 Resolver 和 Snapshot，但它能解释为什么没有选 Gmail、为什么切换到企业 Mail Gateway，以及为什么旧 Schema 或过期 Connection 会让动作失效。模型仍可提出偏好和理由，不能自行改变候选集合或扩大授权。
+
 # Part I：定位、术语与概念架构
 
 # 1. 为什么需要 Capability / Skill

@@ -132,6 +132,16 @@ Matter
 
 本模块拥有用户要做什么、用户看到什么以及用户能否发出一个产品命令；它不拥有 Plan、Evidence、Security Decision 或 Tool Effect。这个取舍避免前端成为第二个 Controller，也避免一次 HTTP 成功响应被误读为法律工作已经完成。
 
+## A6. 工具中心不是权限放大器
+
+企业管理员需要一个**工具中心（Tool Center）**来查看工具目录、安装状态、当前版本、健康状态、风险等级、支持的操作和连接方式。注册工具回答“这个工具是什么”；安装或激活回答“这个企业现在是否启用它”；授权回答“谁可以用哪些操作”。这三个动作不能被一个“添加工具”按钮混成一个不可解释的结果。
+
+用户的“我的工具”页面再展示当前已获授权的候选集合。用户勾选 Gmail、DOCX 和 Contract Search，表示愿意让自己的 Agent 使用它们；这只是一个产品配置或 Enabled Set，不是新的 Grant。用户不能勾选上级没有授权的 Shell，也不能因为自己连接了某个账号就自动获得该账号对应的业务权限。
+
+同样，AgentVersion 还需要一份产品级 Allowlist。用户可能被授权使用 GitHub、SQL 和 Shell，但合同审查 Agent 只应看到 Legal Knowledge、Contract Search、DOCX 和受控邮件。Product Surface 保存 Agent 配置和用户意图，07 负责把能力需求解析成候选选择，09 计算最终授权，08 负责准备和执行；页面不能把勾选结果直接变成可执行 ToolAttempt。
+
+工具的可用性也要向用户解释清楚：Gmail 可能显示“企业允许、Workspace 允许、用户已启用、Agent 已启用，但 Connection 已过期”；Shell 可能显示“工具存在，但企业安全策略禁止”；Microsoft Graph 可能显示“可用，但外部发送需要审批”。把原因展示出来比简单显示一个灰色按钮更重要，因为它区分了配置问题、连接问题、权限问题和运行健康问题。
+
 # Part I：定位与概念架构
 
 ## 1. 为什么需要 Product Surface

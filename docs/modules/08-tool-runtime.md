@@ -134,6 +134,14 @@ Approval 不是永久通行证。Execute 前仍需读取最新 Security Epoch；
 
 这说明 Tool Calling 和普通 Function Calling 的取舍不同：Function Calling 只表达模型意图；Tool Runtime 还要承担准备、授权、审批、Attempt、观察、效果确认和恢复。它的复杂度换来的是外部世界不被一次网络故障或 Worker 重启意外写两遍。
 
+## A5. Tool、Installation 和 Connection 是三个问题
+
+ToolDefinition 说明“如何调用 Gmail”；ToolVersion 说明“按哪一版 Schema 和副作用语义调用”；ToolInstallation/Activation 说明“哪个企业当前启用了它”；ProviderInstance 则表示一个具体的业务连接实例，例如企业 Mail Gateway、某个 OAuth App 或某种 Tenant/Region/Identity Mode。真正的账号、Credential Scope 和 Secret Lease 不能被当作 Tool Definition 的一部分，也不能因为 Connection 存在就跳过 09 的授权。
+
+MCP、HTTP API、CLI、SDK、Browser 和 Local Bridge 统一进入 Tool Runtime 的 Invocation Gateway，差异留在 Adapter、Sandbox、Network Policy 和 Provider 协议里。普通 `git status` 可以作为受控只读操作，`git push main` 或任意 Shell 则必须有更细的 Operation、Resource、Effect Profile 和安全策略；管理员不能只勾选一个宽泛的“CLI”就让 Agent 获得所有命令。
+
+因此，08 的准备流程会接收 07 的精确选择引用和 09 的授权决定，但不会自己决定“谁有权使用”。它要确认 ToolVersion、Installation、ProviderInstance、Canonical Arguments、TargetResourceSet、Credential Scope、Sandbox、Network、Deadline 和 Action Hash 都一致，然后才创建 ToolAttempt。Connection 存在、Tool 可用和本次动作可执行是三个不同的事实。
+
 # Part I：定位、术语与边界
 
 ## 1. 为什么需要独立 Tool Runtime

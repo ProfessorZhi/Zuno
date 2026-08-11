@@ -92,6 +92,43 @@ PostgreSQL 保存“业务世界现在是什么状态”，例如 Review、PlanV
 
 恢复时要对两者做对账，而不是盲信其中一个。如果数据库已经记录邮件 Effect 成功，但 Checkpoint 仍停留在调用前，恢复不能再次发送；如果 Checkpoint 显示节点结束，但领域事务没有提交，系统也不能假装业务已经完成。正确做法是由对应 Owner 根据提交 Receipt、版本、幂等记录和当前状态重新决定是继续、补偿、对账还是阻塞。具体状态、失败命名和持久化 Contract 以 Part B 为准。
 
+## A8.1. 从工具中心到一次安全执行
+
+企业管理员首先要解决的不是“Agent 能不能调用 MCP”，而是企业究竟安装了哪些可用工具、哪些组织可以使用、哪个身份连接外部系统，以及某个 Agent 在当前任务中到底能看到什么。工具目录可以同时展示 Gmail MCP、Microsoft Graph Mail、企业 Mail API、Word、合同系统和 GitHub，但它们不应形成四套独立权限系统；MCP、HTTP API、CLI、SDK 和本地桥接只是不同的 Adapter，产品层统一把它们当作 Tool，执行层再选择对应 Adapter 和 Sandbox。
+
+这条链路应按四层理解：
+
+```text
+工具目录 / 安装与激活
+        ↓
+组织、Workspace、成员和资源授权
+        ↓
+用户偏好 + AgentVersion Allowlist
+        ↓
+当前 Task Downscope + Capability Selection
+        ↓
+PreparedToolAction → Security Gate → Effect Assurance
+```
+
+上级组织给出的是权限上限，下级只能继续缩小；用户在“我的工具”中勾选的是“允许自己的 Agent 使用哪些已获授权工具”，不是给自己增加授权；AgentVersion 再做一次最小权限裁剪；当前任务还可以继续 Downscope。最终集合可以抽象为：
+
+```text
+Principal Ceiling
+∩ Tenant / OrgUnit / Workspace Grant
+∩ User Enabled Set
+∩ AgentVersion Allowlist
+∩ Task Downscope
+∩ Tool Installation / Activation
+∩ Resource Policy
+∩ Current Security Epoch
+```
+
+工具是什么、企业是否安装、谁能用、Agent 想用什么、这次动作是否真的执行，是不同问题。当前架构中，能力语义与候选选择由 07 管理，具体可执行 Tool Definition、Version、Installation 和业务连接由 08 管理，授权和 Approval 由 09 管理，AgentVersion 与用户配置体验由 01 管理。可用性、授权和执行结果不能互相推断：工具可能 `AVAILABLE` 但用户无权使用，也可能已授权但 Connection 过期或 Provider 不健康。
+
+工具选择也要区分自动选择、优先选择和固定选择。用户说“通常用 Gmail”是偏好，Gmail 不可用时可以在政策允许的范围内切换；用户说“必须经过企业 Mail Gateway”是约束，固定实现不可用时应阻塞；企业 Security/Compliance Policy 的 Pin 优先于 AgentVersion 约束、用户要求、用户偏好和 Runtime 自动选择。模型可以提出“偏好 Gmail”的 Proposal，但最终 Resolver 必须按 Policy、Compatibility、Availability、Connection、Health、Cost、Residency 和风险确定选择。
+
+> **ARCHITECTURE_SEMANTIC_GAP**：当前 Part B 已定义 07/08/09 的相关底层事实，但尚未统一冻结 `ToolConnection`、`ToolGrant`、`AgentToolBinding` 和 `ToolSelectionPolicy` 这组产品命名与 Owner。本文先采用“Tool Connection 对应 08 的 ProviderInstance/credential scope；用户和 Agent 的配置由 01 表达；授权仍由 09 决定；选择结果由 07 提交”的目标映射，正式字段、状态和跨模块 Contract 需要下一轮单独冻结。
+
 ## A9. 从这篇总览怎样进入规范
 
 Part A 的目的，是让读者先理解“为什么 Zuno 需要这些边界、正常流程怎样走、异常时用户和系统分别等待什么”。它不替代模块 Contract，也不凭叙事新增状态。继续阅读时，按案例中的顺序进入 Product、Ingestion、Knowledge、Model、Memory、Agent Core、Capability、Tool、Security、Observability 和 Infrastructure；任何涉及正式字段、状态终态、Failure Namespace、CAS、Outbox、Approval 或测试门槛的实现，都必须以 Part B 和对应模块文档为准。

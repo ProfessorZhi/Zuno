@@ -113,6 +113,16 @@ Memory Poisoning 同理。一次模型抽取的偏好、一次用户断言或一
 
 如果只在登录入口做一次授权，系统实现简单但无法覆盖长时间运行、版本变化和权限撤销；如果每一步都重新做完整策略计算，成本和延迟会上升。Zuno 通过版本化 Decision、Prepare/Execute Gate、Security Epoch、最小权限和可审计 Receipt 取得平衡：可以缓存经过范围绑定的决定，但外部副作用和敏感数据发布仍在关键时刻重新验证。
 
+## A5. 上级给上限，下级只能裁剪
+
+工具授权应沿组织层级向下收敛：Tenant 管理员可以把 Gmail、Word 和 Contract System 授权给法务 OrgUnit；OrgUnit 再给合同 Workspace；Workspace 再给成员。下级不能把上级禁止的生产数据库写入或任意 Shell 自己加回来。用户在“我的工具”中的 Enabled Set 只是主动选择，不产生新的 Grant；AgentVersion Allowlist 和 Task Downscope 还会继续缩小范围。
+
+因此，Effective Tool Scope 不是某一层的列表，而是多个上限与限制的交集：Principal/Tenant/OrgUnit/Workspace Grant、AgentVersion Capability Scope、Task Downscope、Tool Installation/Activation、Target Resource Policy、Connection Scope 和 Current Security Epoch。显式 DENY、企业 Pin 和数据驻留要求不能被用户偏好或模型 Proposal 覆盖。
+
+Security 还要把“能用哪个工具”和“用哪个账号连接”分开判断。用户连接了自己的 Gmail，并不代表 Contract Review Agent 可以用它向外发送；企业可能要求只能使用 `legal-team@company.com` 的 ProviderInstance，或要求所有外部合同邮件经过 Corporate Mail Gateway。Connection 存在不等于 Connection 对当前 Task 授权，Authorization 也不等于 Provider 健康或 Effect 成功。
+
+这条边界会让 UI、Capability Resolver 和 Tool Runtime 多次协作，但能把配置错误、权限拒绝、连接过期、Provider 不健康和审批要求分别解释。正式的 `ToolGrant`、`AgentToolBinding` 和 `ToolSelectionPolicy` 命名与字段仍需在下一轮跨模块 Contract 中冻结；本节只说明不可放大的安全原则。
+
 # Part I：定位、事实状态与威胁模型
 
 # 1. 为什么需要独立 Security 模块
