@@ -112,7 +112,7 @@ def test_provider_instance_credential_and_constraint_are_separated() -> None:
         "ProviderInstance",
         "Credential Scope",
         "CapabilityConstraint",
-        "07 选择业务路由；08 只在同一 Tenant/App/Identity/Effect Domain 的 Replica Pool 内负载均衡",
+        "07 选择业务路由；08 只在同一 ToolConnection、Identity、Effect Domain 的 ProviderInstance Replica Pool 内负载均衡",
     ]:
         assert term in content
 

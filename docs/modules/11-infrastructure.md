@@ -618,6 +618,28 @@ Part B 是 Infrastructure 的实现规范入口；它规定物理运行原语的
 | Persistence / Code Boundary | Part IV、Part VII 的组件、事务和代码映射 |
 | Test / Evidence | Part VIII 的 Fault/E2E、Requirement 和 Current 证据 |
 
+## B1. Tool Governance 的物理执行保障
+
+11 不拥有 ToolDefinition、ToolGrant 或 Effect，但为这条跨模块 Contract 提供不可绕过的物理原语：
+
+```text
+ToolConnection
+    CredentialVersionRef 的 Secret Delivery、加密存储、连接池和生命周期。
+
+ProviderInstance / Adapter
+    Endpoint、TLS、Network Egress、Region、SandboxProfile 和运行时配置。
+
+ToolAttempt
+    Lease、Heartbeat、Fencing、Queue Delivery、Timeout 和 Crash Recovery。
+
+External Effect
+    Idempotency Claim、Operation Record、Audit Persistence、Receipt Durable Commit。
+```
+
+11 的职责是保证 Secret 不进入 ToolDefinition、ToolVersion、SelectionResult、日志或普通 Prompt；保证同一业务动作在 Worker 重启和至少一次投递下不会无界重复；保证旧 Lease 不能在新 Worker 接管后晚到提交；保证本地 CLI、Local Bridge、MCP 和 HTTP Adapter 分别受 Network、Sandbox、Device/Trust Scope 和 Credential Lease 约束。
+
+物理 Receipt 不能冒充业务事实：Secret Lease 成功不等于 Authorization，Sandbox 启动成功不等于 ToolAttempt 成功，Queue ACK 不等于 EffectReceipt，Provider Transport Receipt 也不等于业务效果已经确认。11 只提交可验证的物理结果，08、09 和 07/06 依据这些结果完成各自领域判断。
+
 # Part III：核心 Contract 与事实边界
 
 # 14. InfrastructureCapabilityProfile

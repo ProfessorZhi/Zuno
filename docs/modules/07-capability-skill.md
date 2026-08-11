@@ -477,7 +477,7 @@ fallback_policy
 
 ```text
 管理员安装或配置 Connector / Provider
-→ 08 创建 ToolProviderDefinition / ToolProviderInstance
+→ 08 创建 ToolProviderDefinition / ToolDefinition / ToolConnection / ProviderInstance
 → 08 发现或导入 ToolDefinitionVersion
 → 08 发布 ToolInventoryGeneration
 → 07 创建 ToolCapabilityDescriptor
@@ -703,6 +703,54 @@ Part B 是 Capability / Skill 的实现规格入口，强调能力描述与执�
 | Security / Audit | Provider Trust、Credential Scope、Security Gate |
 | Persistence / Code Boundary | Part VI 的数据库、API、SPI 和 Migration |
 | Test / Evidence | Part VII–VIII 的矩阵、Requirement 和完成证据 |
+
+## B1. Capability Selection 跨模块 Contract
+
+07 拥有“系统能以哪些业务能力完成任务”以及“在已授权候选中如何选择实现”的事实，但不拥有 Tool、Grant、Connection 或执行效果：
+
+```yaml
+capability_selection_policy:
+  policy_id: string
+  policy_version: string
+  capability_version_ref: string
+  hard_constraints:
+    residency: string | null
+    risk_ceiling: string | null
+    compatibility: string
+    required_operations: [string]
+  ranking:
+    health_weight: number
+    latency_weight: number
+    cost_weight: number
+    quota_weight: number
+    reliability_weight: number
+  fallback_limit: int
+  deterministic_tie_breaker: string
+  status: DRAFT | ACTIVE | RETIRED
+```
+
+`CapabilitySelectionPolicy` 是 07 的正式跨模块名称；本文后续历史章节中的 `ProviderSelectionPolicy` 表示该 Policy 的 Provider-ranking 部分，不是第二套用户偏好或 Security Policy。用户的 AUTO/PREFERRED/PINNED 来自 01，企业强制约束来自 09，07 只能在二者产生的候选边界内执行硬过滤、兼容检查、可用性检查和确定性排序。
+
+`CapabilitySelectionResult` 必须至少固定：
+
+```yaml
+capability_selection_result:
+  result_id: string
+  capability_version_ref: string
+  agent_tool_binding_ref: string
+  authorized_candidate_set_ref: string
+  availability_snapshot_ref: string
+  selection_policy_ref: string
+  user_preference_ref: string | null
+  selected_tool_definition_ref: string
+  selected_tool_version_ref: string
+  selected_tool_connection_ref: string
+  selected_provider_instance_ref: string
+  rejection_reasons: [{candidate_ref: string, reason_code: string}]
+  result_hash: string
+```
+
+07 不创建 `ToolGrant`，也不把 `AVAILABLE` 推断为 `AUTHORIZED`。如果 PINNED 实现不可用，Selection Result 必须记录阻塞原因；如果只是 PREFERRED 实现不可用，才可以在 Security 允许的候选内 fallback。08 Prepare 必须重新验证 Selection Result 的 ToolVersion、Connection、ProviderInstance、Schema Hash 和 Availability Generation。
 
 # Part III：状态、失败、恢复与一致性
 
@@ -1516,9 +1564,9 @@ Port 不暴露其他模块 Repository、数据库 Session、Provider SDK 或 Sec
 
 # Part V：Policy、版本、安全与 Provider 治理
 
-# 49. Provider Selection Policy
+# 49. CapabilitySelectionPolicy / Provider Selection Policy
 
-`ProviderSelectionPolicy` 至少定义：
+`CapabilitySelectionPolicy` 是跨模块正式 Contract；`ProviderSelectionPolicy` 只是其中用于 Provider 排序的实现层字段。它至少定义：
 
 ```text
 hard_constraints
@@ -1570,12 +1618,16 @@ INCOMPATIBLE
 
 安全、SideEffectClass、Idempotency、Reconciliation 和数据等级变化视为破坏性变更。
 
-# 51. ProviderInstance、Credential Scope 与 CapabilityConstraint
+# 51. ToolConnection、ProviderInstance、Credential Scope 与 CapabilityConstraint
 
 ```text
+ToolConnection
+    “通过哪个业务身份、OAuth App、Service Account、Region 和 Scope 连接外部系统”
+    Owner = 08 Tool Runtime；不保存 Secret Material。
+
 ProviderInstance
-    “连接的是哪个 Tenant、App、Region、Identity 和业务效果域”
-    Owner = 08 Tool Runtime
+    “哪个精确 ToolVersion 通过哪个 Adapter 绑定到哪个 ToolConnection、Endpoint 和 Effect Domain”
+    Owner = 08 Tool Runtime；是执行选择事实，不是用户账号本身。
 
 Credential Scope
     “当前 Principal / App 被允许做什么”
@@ -1590,16 +1642,16 @@ CapabilityConstraint
 
 | 概念 | Owner / 表达 |
 | --- | --- |
-| 外部 Tenant / 企业安装 | 08 ProviderInstance |
-| App ID / 非敏感应用身份 | 08 ProviderInstance |
+| 外部 Tenant / 企业安装 | 08 ToolInstallation |
+| App ID / 非敏感应用身份 | 08 ToolConnection |
 | App Secret / Token | 09 CredentialVersion + 11 SecretLease |
 | OAuth Scope / delegated authority | 09 |
-| Bot/User identity mode | 08 Instance metadata + 09 authorization |
-| Region / Data Residency | 08 Instance metadata + 07 Constraint + 09 Policy |
+| Bot/User identity mode | 08 ToolConnection metadata + 09 authorization |
+| Region / Data Residency | 08 ToolConnection/ProviderInstance metadata + 07 Constraint + 09 Policy |
 | 业务 chat/document/resource id | Action 参数或 Canonical Resource ID |
-| 07 Selection | 保存 ProviderInstanceRef/PoolRef，不保存 Secret |
+| 07 Selection | 保存 ToolConnectionRef、ProviderInstanceRef/PoolRef，不保存 Secret |
 
-07 选择业务路由；08 只在同一 Tenant/App/Identity/Effect Domain 的 Replica Pool 内负载均衡。
+07 选择业务路由；08 只在同一 ToolConnection、Identity、Effect Domain 的 ProviderInstance Replica Pool 内负载均衡。ToolConnection 存在不等于当前 ToolGrant 允许使用，ProviderInstance 健康也不等于外部 Effect 成功。
 
 # 52. Dynamic Tool Inventory
 
@@ -2350,7 +2402,7 @@ Connector Pack 文件直接作为生产运行时真相
 | `RC-CAP-048` | VERSIONING | Active Plan 引用失效时由 Agent Core 决定 Wait、Fallback、Replan 或 Block，07 不得改写 Plan | `PlanMutationBoundaryGuard` | `CAP_PLAN_MUTATION_FORBIDDEN` | `CAP-048-UT`, `CAP-048-IT`, `CAP-048-FT`, `CAP-048-E2E` | `EV-CAP-048` |
 | `RC-CAP-049` | VERSIONING | SelectionResult、LoadResult 和 Snapshot 必须有 ResultValidity，支持 VALID、STALE、REVOKED、SUPERSEDED 和 UNKNOWN_VALIDITY | `CapabilityResultValidityGuard` | `CAP_RESULT_VALIDITY_MISSING` | `CAP-049-UT`, `CAP-049-IT` | `EV-CAP-049` |
 | `RC-CAP-050` | VERSIONING | Result reuse 前必须重验 Version、Scope、Security Epoch、Snapshot TTL 和 Resource Integrity | `CapabilityReuseGuard` | `CAP_RESULT_REUSE_INVALID` | `CAP-050-UT`, `CAP-050-IT`, `CAP-050-FT` | `EV-CAP-050` |
-| `RC-CAP-051` | SECURITY | ProviderInstance 表示业务连接实例，Credential Scope 表示授权能力，CapabilityConstraint 表示任务要求，三者不得混合 | `InstanceCredentialConstraintGuard` | `CAP_INSTANCE_CREDENTIAL_CONFLATION` | `CAP-051-UT`, `CAP-051-IT` | `EV-CAP-051` |
+| `RC-CAP-051` | SECURITY | ToolConnection 表示业务身份连接，ProviderInstance 表示 ToolVersion/Adapter 的执行绑定，Credential Scope 表示授权能力，CapabilityConstraint 表示任务要求，四者不得混合 | `InstanceCredentialConstraintGuard` | `CAP_INSTANCE_CREDENTIAL_CONFLATION` | `CAP-051-UT`, `CAP-051-IT` | `EV-CAP-051` |
 | `RC-CAP-052` | SECURITY | 07 可以选择 ProviderInstanceRef 或 ProviderPoolRef，但 08 只能在同一业务身份池内选择 RuntimeEndpointReplica | `BusinessRouteReplicaGuard` | `CAP_PROVIDER_INSTANCE_ROUTE_VIOLATION` | `CAP-052-UT`, `CAP-052-IT`, `CAP-052-FT` | `EV-CAP-052` |
 | `RC-CAP-053` | SECURITY | 不同 Tenant、App、Region、Identity Mode 或 Effect Domain 之间切换必须重新 Selection、Prepare 和 Authorization | `ProviderIdentitySwitchGuard` | `CAP_PROVIDER_IDENTITY_SWITCH_UNGOVERNED` | `CAP-053-UT`, `CAP-053-IT`, `CAP-053-FT`, `CAP-053-E2E` | `EV-CAP-053` |
 | `RC-CAP-054` | SECURITY | 07 不保存 Secret、Token、Credential Material 或可执行 Payload，只保存 Requirement 和 Ref | `CapabilitySecretBoundaryGuard` | `CAP_SECRET_MATERIAL_FORBIDDEN` | `CAP-054-UT`, `CAP-054-IT` | `EV-CAP-054` |
@@ -2539,7 +2591,7 @@ production ready
 | `ARCH-CAP-048` | VERSIONING | Active Plan 引用失效时由 Agent Core 决定 Wait、Fallback、Replan 或 Block，07 不得改写 Plan |
 | `ARCH-CAP-049` | VERSIONING | SelectionResult、LoadResult 和 Snapshot 必须有 ResultValidity，支持 VALID、STALE、REVOKED、SUPERSEDED 和 UNKNOWN_VALIDITY |
 | `ARCH-CAP-050` | VERSIONING | Result reuse 前必须重验 Version、Scope、Security Epoch、Snapshot TTL 和 Resource Integrity |
-| `ARCH-CAP-051` | SECURITY | ProviderInstance 表示业务连接实例，Credential Scope 表示授权能力，CapabilityConstraint 表示任务要求，三者不得混合 |
+| `ARCH-CAP-051` | SECURITY | ToolConnection 表示业务身份连接，ProviderInstance 表示 ToolVersion/Adapter 的执行绑定，Credential Scope 表示授权能力，CapabilityConstraint 表示任务要求，四者不得混合 |
 | `ARCH-CAP-052` | SECURITY | 07 可以选择 ProviderInstanceRef 或 ProviderPoolRef，但 08 只能在同一业务身份池内选择 RuntimeEndpointReplica |
 | `ARCH-CAP-053` | SECURITY | 不同 Tenant、App、Region、Identity Mode 或 Effect Domain 之间切换必须重新 Selection、Prepare 和 Authorization |
 | `ARCH-CAP-054` | SECURITY | 07 不保存 Secret、Token、Credential Material 或可执行 Payload，只保存 Requirement 和 Ref |

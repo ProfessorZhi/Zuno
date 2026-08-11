@@ -136,7 +136,7 @@ Approval 不是永久通行证。Execute 前仍需读取最新 Security Epoch；
 
 ## A5. Tool、Installation 和 Connection 是三个问题
 
-ToolDefinition 说明“如何调用 Gmail”；ToolVersion 说明“按哪一版 Schema 和副作用语义调用”；ToolInstallation/Activation 说明“哪个企业当前启用了它”；ProviderInstance 则表示一个具体的业务连接实例，例如企业 Mail Gateway、某个 OAuth App 或某种 Tenant/Region/Identity Mode。真正的账号、Credential Scope 和 Secret Lease 不能被当作 Tool Definition 的一部分，也不能因为 Connection 存在就跳过 09 的授权。
+ToolDefinition 说明“如何调用 Gmail”；ToolVersion 说明“按哪一版 Schema 和副作用语义调用”；ToolInstallation/Activation 说明“哪个企业当前启用了它”；ToolConnection 表示业务身份连接，例如企业 Mail Gateway、某个 OAuth App 或某个 Service Account；ProviderInstance 再把精确 ToolVersion、ToolConnection 和 Adapter 绑定成可执行实例。真正的账号 Secret、Credential Scope 和 Secret Lease 不能被当作 Tool Definition 的一部分，也不能因为 Connection 存在就跳过 09 的授权。
 
 MCP、HTTP API、CLI、SDK、Browser 和 Local Bridge 统一进入 Tool Runtime 的 Invocation Gateway，差异留在 Adapter、Sandbox、Network Policy 和 Provider 协议里。普通 `git status` 可以作为受控只读操作，`git push main` 或任意 Shell 则必须有更细的 Operation、Resource、Effect Profile 和安全策略；管理员不能只勾选一个宽泛的“CLI”就让 Agent 获得所有命令。
 
@@ -262,8 +262,8 @@ MCP
 Tool Runtime 负责：
 
 ```text
-权威 ToolDefinition、ToolVersion、ToolOperation
-Tool Provider、Installation、Activation 与 Adapter Binding
+ToolOnboardingRequest、权威 ToolDefinition、ToolVersion、ToolOperation
+Tool Provider、Installation、Activation、ToolConnection、ProviderInstance 与 Adapter Binding
 把 ActionProposal 准备为 PreparedToolAction
 输入 Schema、Canonicalization 和 TargetResourceSet
 Effect、Reversibility、Idempotency 和 Impact 分类
@@ -316,7 +316,7 @@ Plan / Control               → 06 Agent Core
 | 05 Memory & Context | MemoryCandidate、MemoryVersion、ContextPack | Tool 输出不得自动进入长期 Memory |
 | 06 Agent Core | ActionProposal、ActionExecutionBinding、ControlDecision | 08 消费 Proposal，返回执行和效果事实；06 决定下一步 |
 | 07 Capability / Skill | Capability、Skill、ToolCapabilityDescriptor | 07 发布可选能力；08 保存权威可执行定义 |
-| 08 Tool Runtime | PreparedToolAction、Attempt、Observation、Effect | Canonical Owner |
+| 08 Tool Runtime | ToolOnboardingRequest、ToolDefinition、ToolVersion、ToolOperation、ToolInstallation、ToolConnection、ProviderInstance、PreparedToolAction、Attempt、Observation、Effect | Canonical Owner |
 | 09 Security | Authorization、Approval、Epoch、Classification、Redaction | 08 只能消费 Security Decision，不自行授权 |
 | 10 Observability & Eval | Telemetry、AuditEvent、Projection、Eval | 08 产生源事实和 Envelope，10 接受、投影和评估 |
 | 11 Infrastructure | Claim、Transaction、Queue、Lease、Fencing、Object、SecretLease | 08 使用 Primitive，不把基础设施 Receipt 当业务 Effect |
@@ -881,6 +881,87 @@ Part B 是 Tool Runtime 的唯一执行规范；Capability 只描述能力，Sec
 | Persistence / Code Boundary | Part VII 的表、Adapter SPI、代码和部署 |
 | Test / Evidence | Part IX 的测试、Requirement 和完成证据 |
 
+## B1. Tool Onboarding、Installation 与 Connection Contract
+
+08 拥有具体可执行 Tool 的生命周期，但“进入 Catalog”“当前 Tenant 启用”“用哪个业务身份连接”和“这次是否允许执行”必须是不同事实。
+
+### B1.1 ToolOnboardingRequest
+
+```yaml
+tool_onboarding_request:
+  request_id: string
+  requester_principal_ref: string
+  tenant_ref: string
+  requested_provider_kind: MCP | HTTP_API | CLI | SDK | BROWSER | LOCAL_BRIDGE | OTHER
+  proposed_tool_definition_ref: string | null
+  proposed_tool_version_ref: string | null
+  endpoint_profile_ref: string | null
+  requested_operations: [string]
+  data_classification: string
+  residency_requirement: string | null
+  review_refs:
+    technical: string | null
+    security: string | null
+    capability: string | null
+    business: string | null
+  status: DRAFT | TECHNICAL_REVIEW | SECURITY_REVIEW | CAPABILITY_REVIEW | BUSINESS_REVIEW | ACCEPTED | REJECTED | CANCELLED
+  request_hash: string
+```
+
+成员或 Product Surface 只能提交申请；08 负责技术接入、Tool Schema、Operation、Adapter、Timeout、Idempotency 和 Reconciliation 的事实。09 负责安全、数据、供应链和 Egress 决定；07 负责 Capability Contract 与 `ProviderConformanceRecord`；必要时由业务负责人提供独立业务审查。`ACCEPTED` 只表示 ToolDefinition/ToolVersion 可以进入企业 Tool Catalog，不授予任何 ToolGrant，也不代表已经安装、连接或可执行。
+
+### B1.2 ToolConnection 与 ProviderInstance
+
+```yaml
+tool_connection:
+  tool_connection_id: string
+  tool_installation_ref: string
+  identity_ref: string
+  credential_version_ref: string
+  authorized_scope_ref: string
+  region: string | null
+  connection_status: DRAFT | CONNECTING | CONNECTED | EXPIRED | SUSPENDED | REVOKED
+  connection_generation: int
+  status_reason: string | null
+
+provider_instance:
+  provider_instance_id: string
+  tool_version_ref: string
+  tool_connection_ref: string
+  adapter_binding_ref: string
+  endpoint_profile_ref: string
+  effect_domain: string
+  runtime_generation: int
+  status: ACTIVE | DEGRADED | DRAINING | QUARANTINED | RETIRED
+```
+
+`ToolConnection` 是稳定的业务身份连接，只保存引用和元数据，不保存 Secret Material；`ProviderInstance` 是 08 的执行绑定，必须固定精确 ToolVersion、Connection、Adapter 和 Effect Domain。`RuntimeEndpointReplica` 只能在同一 ProviderInstance 池内做技术负载均衡，不能改变业务身份、授权范围或副作用语义。Secret Lease、物理 Credential Delivery、Sandbox、Network 和 Lease/Fencing 由 09/11 提供。
+
+### B1.3 五种生命周期事实
+
+```text
+ToolDefinition REGISTERED
+    企业接受并纳入 Tool Catalog。
+
+ToolInstallation ACTIVE
+    Tenant / Workspace 已安装并允许新 Prepare。
+
+ToolConnection CONNECTED
+    指定业务身份和 Credential Scope 可建立连接。
+
+CapabilityAvailability AVAILABLE
+    07 的候选投影认为它可参与选择。
+
+ToolGrant ACTIVE
+    09 允许指定主体在给定操作、资源和 Connection 范围内使用。
+```
+
+这些状态可以独立存在：`ToolDefinition=REGISTERED`、`ToolInstallation=ACTIVE`、`ToolConnection=EXPIRED`、`Availability=UNAVAILABLE`、`ToolGrant=ACTIVE` 是合法的组合；UI 应显示具体原因，而不是合成一个没有来源的 `Tool=DISABLED`。
+
+### B1.4 四类 Approval 不共用一个状态机
+
+08 参与 Tool Registration / Admission Review，并保存 `ToolOnboardingRequest` 的技术事实；09 分别保存 Tool Access Decision、Delegation Decision 和 Runtime Action `SecurityApprovalDecision`。一次 Registration 不产生 Access，Access 不产生 Delegation，Delegation 也不产生某一次 PreparedToolAction 的 Runtime Approval。每类决定必须绑定自己的对象、范围、Policy Version、期限、理由和审计引用。
+
 # Part III：领域对象与 Contract
 
 ## 23. ToolProviderDefinition
@@ -1080,6 +1161,9 @@ workspace_id
 principal_context_ref
 tool_definition_ref
 tool_definition_version
+tool_installation_ref
+tool_connection_ref
+provider_instance_ref
 operation
 canonical_args_ref
 canonical_args_hash
@@ -1355,7 +1439,7 @@ output governance profile
 
 ```text
 ToolDefinition
-DRAFT → ACTIVE → DEPRECATED → RETIRED
+DRAFT → REGISTERED → ACTIVE → DEPRECATED → RETIRED
 
 ToolVersion
 DISCOVERED → VALIDATING → ADMITTED → ACTIVE
@@ -1965,8 +2049,11 @@ tool_provider_definitions
 tool_definitions
 tool_versions
 tool_operations
+tool_onboarding_requests
 tool_installations
 tool_activations
+tool_connections
+provider_instances
 tool_adapter_bindings
 adapter_conformance_profiles
 tool_runtime_config_snapshots

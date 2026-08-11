@@ -121,7 +121,7 @@ Memory Poisoning 同理。一次模型抽取的偏好、一次用户断言或一
 
 Security 还要把“能用哪个工具”和“用哪个账号连接”分开判断。用户连接了自己的 Gmail，并不代表 Contract Review Agent 可以用它向外发送；企业可能要求只能使用 `legal-team@company.com` 的 ProviderInstance，或要求所有外部合同邮件经过 Corporate Mail Gateway。Connection 存在不等于 Connection 对当前 Task 授权，Authorization 也不等于 Provider 健康或 Effect 成功。
 
-这条边界会让 UI、Capability Resolver 和 Tool Runtime 多次协作，但能把配置错误、权限拒绝、连接过期、Provider 不健康和审批要求分别解释。正式的 `ToolGrant`、`AgentToolBinding` 和 `ToolSelectionPolicy` 命名与字段仍需在下一轮跨模块 Contract 中冻结；本节只说明不可放大的安全原则。
+这条边界会让 UI、Capability Resolver 和 Tool Runtime 多次协作，但能把配置错误、权限拒绝、连接过期、Provider 不健康和审批要求分别解释。本篇 Part B 已冻结 `ToolGrant`、`DelegationGrant`、`ToolAccessRequest`、`AgentToolBinding` 和 `CapabilitySelectionPolicy` 的跨模块边界；本节只说明不可放大的安全原则，具体字段以 B1 和对应 Owner 文档为准。
 
 # Part I：定位、事实状态与威胁模型
 
@@ -350,7 +350,7 @@ Frontend、模型输出、文档、Tool Observation、MCP Metadata 和外部 Eve
 PrincipalContext / SecurityContext 安全语义
 AgentPrincipal、TaskPrincipal、SessionPrincipal、WorkloadIdentity 引用语义
 OrgUnit 安全树约束和 DelegatedAdminScope
-ResourceGrant、ActionSet、Grant lineage、Revocation
+ResourceGrant、ToolGrant、DelegationGrant、ToolAccessRequest、ActionSet、Grant lineage、Revocation
 PolicyVersion、PolicySchemaRef、EffectiveSecurityPolicySnapshot
 PAP / PDP Contract、AuthorizationDecision 和 DecisionExplanation
 InstructionTrustLabel、InformationFlowDecision、ProtectedSinkPolicy
@@ -432,6 +432,111 @@ Part B 是 Security 的实现规范入口；它把“企业敢用 Agent”落实
 | Security / Audit | Part III–V 的 Trust、Gate、Approval、Audit |
 | Persistence / Code Boundary | Storage Mapping、Migration、API 和代码布局 |
 | Test / Evidence | Part VIII 的 Fault、Eval、Requirement 和完成证据 |
+
+## B1. ToolGrant、DelegationGrant 与 Access Request Contract
+
+09 把“本人能使用什么”和“本人能把什么授予别人”拆成两个独立 Scope。前端可以把它们投影成简单权限档位，后端不能只保存一个 `USE_AND_DELEGATE` 枚举。
+
+### B1.1 ToolGrant
+
+```yaml
+tool_grant:
+  grant_id: string
+  subject_type: PRINCIPAL | ORG_UNIT | WORKSPACE | AGENT_PRINCIPAL | TASK_PRINCIPAL | SESSION
+  subject_id: string
+  tool_definition_ref: string
+  operation_scope_ref: string
+  resource_scope_ref: string
+  connection_scope_ref: string | null
+  destination_scope_ref: string | null
+  data_classification_ceiling: string
+  risk_ceiling: string
+  version_constraint_ref: string | null
+  source_delegation_grant_ref: string | null
+  grant_lineage_hash: string
+  valid_from: datetime
+  expires_at: datetime | null
+  status: PROPOSED | VALIDATING | ACTIVE | REVALIDATION_REQUIRED | SUSPENDED | REVOKED | EXPIRED | REVOKED_BY_ANCESTOR | REJECTED
+```
+
+`ToolGrant` 至少细化到 ToolOperation、Resource、Connection、Destination、数据分类、风险上限、版本约束和有效期。它表达“这个主体可以在什么范围内使用”，不表达某一次动作已经批准，也不自动包含 `DELEGATE`。
+
+`version_constraint_ref` 默认针对稳定的 ToolDefinition/ToolOperation identity 和风险兼容范围，而不是永久绑定某个精确 ToolVersion。兼容修复可以保留 Grant；Operation、Effect、Credential、Residency、Idempotency 或 Reconciliation 语义发生破坏性变化时，Grant 进入 `REVALIDATION_REQUIRED`，受影响的 Selection、PreparedAction 和 Runtime Approval 不能继续复用。
+
+### B1.2 DelegationGrant
+
+```yaml
+delegation_grant:
+  delegation_grant_id: string
+  grantor_principal_id: string
+  target_scope_ref: string
+  tool_definition_ref: string
+  delegate_operation_scope_ref: string
+  delegate_resource_scope_ref: string
+  delegate_connection_scope_ref: string | null
+  delegation_target_org_scope_ref: string
+  risk_ceiling: string
+  parent_grant_ref: string | null
+  grant_lineage_hash: string
+  max_delegation_depth: int
+  remaining_delegation_depth: int
+  valid_from: datetime
+  expires_at: datetime | null
+  status: PROPOSED | ACTIVE | SUSPENDED | REVOKED | EXPIRED | REVOKED_BY_ANCESTOR | REJECTED
+```
+
+子 Grant 必须满足：
+
+```text
+child.use_actions ⊆ parent.delegate_actions
+child.resource_scope ⊆ parent.resource_scope
+child.connection_scope ⊆ parent.connection_scope
+child.org_scope ⊆ parent.delegation_target_scope
+child.risk_ceiling <= parent.risk_ceiling
+child.expiry <= parent.expiry
+child.delegation_depth < parent.remaining_delegation_depth
+```
+
+父 Grant 撤销、过期或收窄时，所有依赖其 lineage 的子 Grant 立即在 Effective Decision 中失效；历史 Grant 保留，Reconciler 通过 Security Epoch 标记 `REVOKED_BY_ANCESTOR`。不能只阻止未来继续下发而让已经派生的权限继续有效。
+
+### B1.3 ToolAccessRequest 与最近一级管理员路由
+
+```yaml
+tool_access_request:
+  request_id: string
+  requester_principal_id: string
+  target_subject_ref: string
+  tool_definition_ref: string
+  operation_scope_ref: string
+  resource_scope_ref: string
+  connection_scope_ref: string | null
+  data_classification: string
+  risk_class: string
+  reason: string
+  routed_admin_scope_ref: string | null
+  additional_approver_refs: [string]
+  status: DRAFT | ROUTING | WAITING_DECISION | APPROVED | REJECTED | EXPIRED | CANCELLED
+```
+
+默认路由从目标成员所属的最近 Workspace/OrgUnit 管理范围向上查找能够覆盖所申请操作、资源、Connection 和风险的 DelegationGrant；找不到才继续向上。高风险、外部外发、生产写入、Confidential 数据或特定 Connection 可以强制增加中央 Security、Data Owner 或业务负责人的共同决定。最近管理员拥有的是有界的决定能力，不是无限授权能力。
+
+### B1.4 四类决定分离
+
+```text
+Tool Registration / Admission
+    08 Onboarding + 技术、Security、Capability、业务审查；决定能否进入 Catalog。
+
+Tool Access
+    09 ToolAccessRequest → ToolGrant；决定主体能否使用操作/资源/Connection。
+
+Delegation
+    09 DelegationGrant；决定管理员能否在限定子树和范围内创建子 Grant。
+
+Runtime Action
+    09 SecurityApprovalDecision；绑定 PreparedToolAction Hash、Canonical Args、Target、Connection、Policy Version 和 Security Epoch。
+```
+
+四类决定不能共用一个 `Approval` 状态机。Registration 不授予 Access，Access 不授予 Delegation，Delegation 不批准一次 Runtime Action；每类决定都有独立的对象、状态、期限、理由和 Audit Reference。
 
 # Part II：身份、组织、授权与策略
 
@@ -624,7 +729,9 @@ delegated_admin_scope:
   include_descendants: bool
   managed_resource_types: [string]
   managed_action_set_ref: string
-  max_permission: DENY | USE_ONLY | USE_AND_DELEGATE
+  managed_use_action_set_ref: string | null
+  managed_delegation_scope_ref: string | null
+  max_permission: DENY | USE_ONLY | USE_AND_DELEGATE | MANAGE_ONLY
   max_delegation_depth: int
   allow_grant: bool
   allow_revoke: bool
@@ -658,6 +765,7 @@ resource_ref:
 
 ```text
 DISCOVER
+REQUEST_ACCESS
 READ_METADATA
 READ_CONTENT
 RETRIEVE
@@ -672,6 +780,7 @@ WRITE
 DELETE
 PUBLISH
 DELEGATE
+MANAGE_CONNECTION
 MANAGE_ACL
 MANAGE_DEFINITION
 VIEW_AUDIT
@@ -687,8 +796,11 @@ BREAK_GLASS
 | 禁止使用 | `DENY` | 对默认 ActionSet 或指定动作显式拒绝 |
 | 只能使用，不能分发 | `USE_ONLY` | 使用型动作集合，不含 `DELEGATE` |
 | 可以使用并分发 | `USE_AND_DELEGATE` | 使用型动作集合 + 有界 `DELEGATE` |
+| 仅管理权限 | `MANAGE_ONLY` | 使用型动作可以为空，但存在独立、有限的 DelegationGrant |
 
-三档 UI 是产品抽象，不能替代 ActionSet。例：
+`permission` 是兼容的 UI 投影，不是后端授权的唯一事实。后端分别计算 `use_action_set_ref` 与 `delegation_scope_ref`；安全管理员可以 `MANAGE_ONLY`，而不因此获得读取或发送法务邮件的 Use Scope。三档 UI 是普通用户产品抽象，高级管理界面可以展示第四档。
+
+例：
 
 ```text
 Knowledge USE_ONLY
@@ -710,8 +822,13 @@ resource_grant:
   subject_type: PRINCIPAL | ORG_UNIT | ROLE | AGENT_PROFILE | AGENT_PRINCIPAL | TASK_PRINCIPAL | SESSION
   subject_id: string
   resource_ref: string
-  permission: DENY | USE_ONLY | USE_AND_DELEGATE
+  permission: DENY | USE_ONLY | USE_AND_DELEGATE | MANAGE_ONLY
   action_set_ref: string
+  use_action_set_ref: string | null
+  delegation_scope_ref: string | null
+  connection_scope_ref: string | null
+  destination_scope_ref: string | null
+  risk_ceiling: string | null
   inherit_to_descendants: bool
   delegation_depth: int
   source_grant_id: string | null
@@ -723,7 +840,7 @@ resource_grant:
   valid_from: datetime
   expires_at: datetime | null
   max_uses: int | null
-  status: PROPOSED | VALIDATING | ACTIVE | SUSPENDED | REVOKED | EXPIRED | REJECTED
+  status: PROPOSED | VALIDATING | ACTIVE | REVALIDATION_REQUIRED | SUSPENDED | REVOKED | EXPIRED | REJECTED
   reason_code: string
 ```
 
@@ -757,6 +874,23 @@ User Effective ActionSet
 ∩ Data Classification Policy
 ∩ Current SecurityEpoch
 ```
+
+工具场景还必须显式加入产品和运行时裁剪：
+
+```text
+Authorized Tool Candidate Set
+= ToolGrant / Delegation-derived Use Scope
+  ∩ Organization / Workspace Scope
+  ∩ ToolInstallation / Activation
+  ∩ UserToolPreference Enabled Set
+  ∩ AgentToolBinding
+  ∩ Task Downscope
+  ∩ Connection Scope
+  ∩ Resource / Data / Destination Policy
+  ∩ Current SecurityEpoch
+```
+
+这只是 09 计算的 `Authorized Candidate Set`。ToolVersion Compatibility、Provider Health、Quota、Latency 和 Runtime Availability 由 07/08 形成 `Executable Candidate Set`；授权候选与可执行候选不能混成一个布尔值。
 
 不允许：
 
@@ -1492,6 +1626,9 @@ task_principal_id
 tenant_id
 workspace_id
 tool_definition_ref + version
+tool_installation_ref
+tool_connection_ref
+provider_instance_ref
 operation
 canonical_args_hash
 target_resource_refs_hash
@@ -2259,6 +2396,9 @@ security_org_memberships
 security_delegated_admin_scopes
 security_action_sets
 security_resource_grants
+security_tool_grants
+security_delegation_grants
+security_tool_access_requests
 security_grant_lineage
 security_task_authorization_grants
 security_policy_schemas

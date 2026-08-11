@@ -112,7 +112,7 @@ Matter
 
 例如供应商合同从 V1 到 V3，仍然可以属于同一个 Contract；用户上传 V4 时，正在基于 V3 的 Review 不能隐式切换到“最新文件”。产品应让用户显式启动新的 ReviewRun 或版本比较，并清楚展示本次审查绑定的版本、Profile 和 Playbook。这样，运行失败、断线、人工等待和重新取证都不会抹掉业务身份。
 
-> **ARCHITECTURE_SEMANTIC_GAP**：上述 Matter、Contract、Review 和 ReviewFinding 是当前法律产品目标模型；当前 Part B 仍以通用 Agent Product Surface 的对象和 Contract 为主，尚未在本文中正式冻结这些法律业务对象的字段、状态和迁移规则。本轮只把它们作为人类可读的产品叙事，不把目标模型冒充为 Current 实现。
+上述 Matter、Contract、Review 和 ReviewFinding 已作为法律产品目标模型；本篇当前冻结的 Product Contract 仍只涉及产品入口和配置边界。它们的业务字段、状态和迁移规则继续由法律领域模型 Contract 单独维护，不因本节的工具配置语义被隐式扩展。
 
 ## A3. 为什么 Finding 比 Assistant Message 更重要
 
@@ -210,6 +210,7 @@ Web、Desktop 和 External API 北向适配
 Authentication Adapter 与 PrincipalContext 解析入口
 Tenant / OrgUnit / Workspace 管理入口与授权后的管理员视图
 Agent Studio、Agent Catalog、Agent Draft / Version / Publication / Installation
+Tool Center、Tool onboarding/access request UI、AgentToolBinding、UserToolPreference
 Effective Permission Preview：资料、Tool、Model、审批、预算和外部 Provider 暴露范围预览
 Conversation、UserSubmission、UserMessage 和产品交互事实
 RuntimeRequest 与 ProductCommand 的规范化
@@ -243,7 +244,7 @@ Product Surface 不负责：
 
 | 模块 | Canonical Fact | Product Surface 行为 |
 | --- | --- | --- |
-| Product Surface | AgentDefinition、AgentDraft、AgentVersion、AgentPublication、AgentInstallation、AgentCatalogEntry、ConversationThread、UserSubmission、UserMessage、ProductCommand、RuntimeRequest、CommandReceipt、ProductProjection、ChannelDelivery、ClientRenderReceipt、UserReadReceipt、FeedbackSubmission | 直接拥有 |
+| Product Surface | AgentDefinition、AgentDraft、AgentVersion、AgentPublication、AgentInstallation、AgentToolBinding、UserToolPreference、AgentCatalogEntry、ConversationThread、UserSubmission、UserMessage、ProductCommand、RuntimeRequest、CommandReceipt、ProductProjection、ChannelDelivery、ClientRenderReceipt、UserReadReceipt、FeedbackSubmission | 直接拥有 |
 | Input / Ingestion | SourceObject、WorkspaceFile、ParseJob、DocumentVersion、Ingestion Readiness | 消费 Projection，展示阶段，不推断 Searchable |
 | Knowledge | RetrievalRound、Evidence、CitationLineage、KnowledgeVersion、Evidence Sufficiency | 形成授权后的 Evidence/Citation View，不改写事实 |
 | Model Gateway | ModelRoutingDecision、ModelCallAttempt、UsageReceipt、Provider Failure | 只展示允许披露的执行与成本摘要 |
@@ -790,6 +791,72 @@ Part B 是 Product Surface 的实现规范入口。它把前面的用户叙事�
 | Persistence / Code Boundary | Target Tables、Typed Ports、事务和代码目录章节 |
 | Test / Evidence | Part VIII 的测试矩阵、Requirement Registry 与完成证据 |
 
+## B1. Tool Center 配置 Contract
+
+Product Surface 拥有工具治理的用户体验和 Agent 配置事实，但不拥有工具执行或安全授权事实：
+
+```text
+AgentToolBinding
+    AgentVersion 的不可变候选范围。
+    只能允许 Capability、ToolDefinition、ToolOperation 或 Connection 的子集。
+    不创建 ToolGrant，不绕过 09，不直接选择 ProviderInstance。
+
+UserToolPreference
+    用户在已授权候选中的 Enabled / AUTO / PREFERRED / PINNED 配置。
+    `enabled=false` 只会移除候选；重新勾选只能恢复到当前授权范围。
+    PREFERRED / PINNED 可引用 ToolDefinition、ToolOperation 或 ToolConnection，
+    但不能把偏好升级为 Grant。
+```
+
+### B1.1 AgentToolBinding
+
+```yaml
+agent_tool_binding:
+  binding_id: string
+  agent_version_ref: string
+  allowed_capability_refs: [string]
+  allowed_tool_definition_refs: [string]
+  allowed_operation_refs: [string]
+  allowed_connection_refs: [string]
+  constraint_version_ref: string
+  binding_hash: string
+  status: DRAFT | ACTIVE | RETIRED
+```
+
+`AgentToolBinding` 在 AgentVersion 发布后不可原地修改；AgentVersion 变化创建新的 Binding。空的 Allowlist 表示该 Agent 不暴露相应工具能力，不表示用户或企业 Grant 被撤销。07 只能消费 Binding 作为候选裁剪，08 和 09 仍需分别完成执行和授权检查。
+
+### B1.2 UserToolPreference
+
+```yaml
+user_tool_preference:
+  preference_id: string
+  principal_id: string
+  scope_ref: string
+  capability_ref: string | null
+  tool_definition_ref: string | null
+  preferred_operation_ref: string | null
+  preferred_connection_ref: string | null
+  mode: AUTO | PREFERRED | PINNED
+  enabled: bool
+  preference_version: string
+  status: ACTIVE | CLEARED
+```
+
+`UserToolPreference` 只表达用户意图。企业 Security Constraint、AgentToolBinding、当前 Task Downscope、Connection Authorization 和 Tool Availability 永远优先；PINNED 不可用时应返回 BLOCKED/UNAVAILABLE 原因，不得静默改成另一个 Provider。
+
+### B1.3 Product / Runtime 边界
+
+```text
+ToolOnboardingRequest        08 Tool Runtime Canonical Owner
+ToolDefinition / Version     08 Tool Runtime Canonical Owner
+ToolInstallation / Connection 08 Tool Runtime Canonical Owner
+ToolGrant / DelegationGrant  09 Security Canonical Owner
+CapabilitySelectionResult    07 Capability Canonical Owner
+PreparedToolAction / Effect  08 Tool Runtime Canonical Owner
+```
+
+Product Surface 可以提交 Tool Onboarding、Tool Access 或配置命令，也可以展示每一层的解释状态，但不能直接创建上述事实。工具中心中的“已注册、已安装、已授权、用户已启用、Agent 已启用、Connection 已过期、需要审批”必须使用对应 Owner 的 Projection，而不是前端本地枚举拼接。
+
 # Part III：状态、Projection、恢复与一致性概览
 
 ## 21. Product-owned 核心对象
@@ -1122,6 +1189,10 @@ Conversation and Input
 ├── product_command_receipts
 └── product_runtime_requests
 
+Agent Tool Configuration
+├── product_agent_tool_bindings
+└── product_user_tool_preferences
+
 Delivery and Feedback
 ├── product_channel_deliveries
 ├── product_delivery_attempts
@@ -1263,6 +1334,8 @@ Storage Mapping：
 | ProductCommand | Product | `product_commands` | Ordered journal + request hash |
 | CommandReceipt | Product | `product_command_receipts` | Append-only version |
 | RuntimeRequest | Product | `product_runtime_requests` | 一个请求最多一个 AgentRun Ref |
+| AgentToolBinding | Product | `product_agent_tool_bindings` | AgentVersion immutable allowlist；不授予权限 |
+| UserToolPreference | Product | `product_user_tool_preferences` | Enabled / AUTO / PREFERRED / PINNED；不产生 Grant |
 | ChannelDelivery | Product | `product_channel_deliveries` | Publication Ref + Channel + Recipient Scope |
 | DeliveryAttempt | Product | `product_delivery_attempts` | 每次真实发送一个 Attempt |
 | ClientRenderReceipt | Product | `product_client_render_receipts` | 不能改变 Publication |

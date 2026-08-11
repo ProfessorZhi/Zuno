@@ -127,7 +127,7 @@ Principal Ceiling
 
 工具选择也要区分自动选择、优先选择和固定选择。用户说“通常用 Gmail”是偏好，Gmail 不可用时可以在政策允许的范围内切换；用户说“必须经过企业 Mail Gateway”是约束，固定实现不可用时应阻塞；企业 Security/Compliance Policy 的 Pin 优先于 AgentVersion 约束、用户要求、用户偏好和 Runtime 自动选择。模型可以提出“偏好 Gmail”的 Proposal，但最终 Resolver 必须按 Policy、Compatibility、Availability、Connection、Health、Cost、Residency 和风险确定选择。
 
-> **ARCHITECTURE_SEMANTIC_GAP**：当前 Part B 已定义 07/08/09 的相关底层事实，但尚未统一冻结 `ToolConnection`、`ToolGrant`、`AgentToolBinding` 和 `ToolSelectionPolicy` 这组产品命名与 Owner。本文先采用“Tool Connection 对应 08 的 ProviderInstance/credential scope；用户和 Agent 的配置由 01 表达；授权仍由 09 决定；选择结果由 07 提交”的目标映射，正式字段、状态和跨模块 Contract 需要下一轮单独冻结。
+本轮将这条工具治理链提升为正式跨模块 Contract：`ToolConnection` 是 08 拥有的业务身份连接，`ProviderInstance` 是绑定 ToolVersion、Connection 和 Adapter 的执行实例；`ToolGrant` 与 `DelegationGrant` 由 09 拥有；`AgentToolBinding` 与 `UserToolPreference` 由 01 拥有；07 只负责在已授权候选中做能力兼容和确定性选择。详细字段和状态以各 Owner 的 Part B 为准。
 
 ## A9. 从这篇总览怎样进入规范
 
@@ -401,15 +401,15 @@ flowchart TB
 
 | 编号 | 模块 | Canonical Ownership | 唯一详细设计 |
 | --- | --- | --- | --- |
-| 01 | Product Surface | AgentDefinition、AgentDraft、AgentVersion、AgentPublication、AgentInstallation、AgentCatalogEntry、Conversation、Submission、ProductCommand、RuntimeRequest、CommandReceipt、Projection、ChannelDelivery、ClientRender、UserRead | `docs/modules/01-product-surface.md` |
+| 01 | Product Surface | AgentDefinition、AgentDraft、AgentVersion、AgentPublication、AgentInstallation、AgentToolBinding、UserToolPreference、AgentCatalogEntry、Conversation、Submission、ProductCommand、RuntimeRequest、CommandReceipt、Projection、ChannelDelivery、ClientRender、UserRead | `docs/modules/01-product-surface.md` |
 | 02 | Input / Document Ingestion | SourceObject、DocumentVersion、ParsePlan/Job/Attempt/Snapshot、CanonicalDocumentIR、原始 SourceSpan、质量门和 Handoff | `docs/modules/02-input-document-ingestion.md` |
 | 03 | Knowledge / Agentic GraphRAG | KnowledgeVersion/Snapshot、IndexSpec/Manifest 接受语义、RetrievalPlan/Round、EvidenceLedger、CitationLineage | `docs/modules/03-knowledge-agentic-graphrag.md` |
 | 04 | Model Gateway | Model Role/Operation、Provider/Model、Routing、Call/Attempt、Response、Usage、Quota、Health、Circuit | `docs/modules/04-model-gateway.md` |
 | 05 | Memory & Context | Session/Long-term Memory、Candidate、Governance、MemoryVersion、ContextPackVersion、UseTrace、Privacy Lifecycle | `docs/modules/05-memory-context.md` |
 | 06 | Agent Core | TaskContract、GoalVersion、AgentRun、PlanVersion、StepRun、ActionRun、ControlDecision、Publication、RunOutcome | `docs/modules/06-agent-core-planning-control.md` |
-| 07 | Capability / Skill | Capability/Skill Definition 与 Version、Requirement、ProviderBinding、Conformance、Availability、Selection | `docs/modules/07-capability-skill.md` |
-| 08 | Tool Runtime | Tool Provider/Definition/Version、PreparedToolAction、ToolAttempt、Observation、Execution/Effect/Reconciliation | `docs/modules/08-tool-runtime.md` |
-| 09 | Security | Principal、授权、Policy、Grant、Approval、EffectiveSecurityEpoch、Secret、Information Flow 与安全 Gate | `docs/modules/09-security.md` |
+| 07 | Capability / Skill | Capability/Skill Definition 与 Version、Requirement、ProviderBinding、CapabilitySelectionPolicy、Availability、Selection | `docs/modules/07-capability-skill.md` |
+| 08 | Tool Runtime | ToolOnboardingRequest、Tool Provider/Definition/Version/Operation、ToolInstallation、ToolConnection、ProviderInstance、PreparedToolAction、ToolAttempt、Observation、Execution/Effect/Reconciliation | `docs/modules/08-tool-runtime.md` |
+| 09 | Security | Principal、ToolGrant、DelegationGrant、ToolAccessRequest、授权、Policy、Approval、EffectiveSecurityEpoch、Secret、Information Flow 与安全 Gate | `docs/modules/09-security.md` |
 | 10 | Observability & Eval | Trace/Metric/Log Projection、accepted AuditEvent、Eval、Benchmark、Evidence Registry、ReleaseGateEvaluation | `docs/modules/10-observability-eval.md` |
 | 11 | Infrastructure | Transaction、Object、Queue、Inbox/Outbox、Lease/Fencing、Checkpoint、Index 物理执行、Backup/Restore | `docs/modules/11-infrastructure.md` |
 
@@ -419,15 +419,15 @@ flowchart TB
 
 | 事实 | Owner | 不可跨越的边界 |
 | --- | --- | --- |
-| ConversationThread、UserSubmission、ProductCommand、ChannelDelivery | Product Surface | 不创建 Plan、Approval、Effect 或 RunOutcome |
+| ConversationThread、UserSubmission、ProductCommand、ChannelDelivery、AgentToolBinding、UserToolPreference | Product Surface | 不创建 ToolGrant、DelegationGrant、PreparedAction 或 Effect |
 | SourceObject、DocumentVersion、ParseSnapshot、CanonicalDocumentIR、原始 SourceSpan | Input | 不创建 Chunk、Evidence 或 KnowledgeVersion |
 | KnowledgeVersion、KnowledgeSnapshot、RetrievalRound、Evidence、CitationLineage | Knowledge | 物理索引成功不等于领域 Acceptance |
 | ModelRoutingDecision、ModelCallAttempt、ModelResponse、UsageReceipt | Model Gateway | 模型结果不是最终业务事实 |
 | MemoryCandidate、MemoryVersion、ContextPackVersion | Memory | Reflexion、Summary 和 Entity Fact 先成为 Candidate |
 | TaskContract、GoalVersion、AgentRun、PlanVersion、StepRun、ActionRun、Publication、RunOutcome | Agent Core | 编排其他模块但不冒充其事实 Owner |
-| CapabilityVersion、SkillVersion、AvailabilitySnapshot、SelectionResult | Capability | Selection 不等于 Authorization、Execution Readiness 或 Plan Activation |
-| PreparedToolAction、ToolAttempt、ToolObservation、EffectReceipt、EffectReconciliation | Tool Runtime | 不拥有 Approval、SecretLease 或 IdempotencyClaim |
-| AuthorizationDecision、ApprovalDecision、EffectiveSecurityEpoch、InformationFlowDecision | Security | 前端、模型和不可信内容都不是安全事实源 |
+| CapabilityVersion、SkillVersion、CapabilitySelectionPolicy、AvailabilitySnapshot、SelectionResult | Capability | Selection 不等于 Authorization、Execution Readiness 或 Plan Activation |
+| ToolOnboardingRequest、ToolDefinition、ToolVersion、ToolOperation、ToolInstallation、ToolConnection、ProviderInstance、PreparedToolAction、ToolAttempt、ToolObservation、EffectReceipt、EffectReconciliation | Tool Runtime | 不拥有 ToolGrant、DelegationGrant、SecurityApprovalDecision、SecretLease 或 IdempotencyClaim |
+| AuthorizationDecision、ToolGrant、DelegationGrant、ToolAccessRequest、ApprovalDecision、EffectiveSecurityEpoch、InformationFlowDecision | Security | 前端、模型和不可信内容都不是安全事实源 |
 | Trace/Metric/Log Projection、accepted AuditEvent、Eval、Benchmark、EvidenceRecord、ReleaseGateEvaluation | Observability & Eval | 接收事件不转移源领域 Ownership |
 | QueueDelivery、Lease、Fencing、ObjectCommit、Checkpoint、Physical Index Receipt、AuditPersistenceReceipt | Infrastructure | 物理 Receipt 不冒充领域终态 |
 
@@ -1168,6 +1168,128 @@ Part B 是 Agent、工程师和实现 Program 使用的规范入口。它不新�
 | Retry、Idempotency、Reconciliation | 分布式正确性、Tool、Knowledge、Memory 和 Infrastructure 章节 |
 | Security、Audit、Observability | Security、Observability & Eval 及各模块安全章节 |
 | Persistence、Code Boundary、Test、Evidence | 部署、Contract、验证和 `docs/status/` / `docs/evidence/` |
+
+## B1. Tool Governance 跨模块 Contract
+
+工具体系的正式主流程冻结为：
+
+```text
+ToolOnboardingRequest（08）
+→ technical / security / capability / business review
+→ ToolDefinition + ToolVersion admitted to Enterprise Tool Catalog（08）
+→ ToolInstallation / Activation（08）
+→ ToolConnection（08，业务身份连接）
+→ ToolGrant / DelegationGrant（09，操作、资源、连接和组织范围）
+→ UserToolPreference（01，Enabled / AUTO / PREFERRED / PINNED）
+→ AgentToolBinding（01，AgentVersion allowlist）
+→ Task Downscope（06）
+→ Authorized Candidate Set（09）
+→ Executable Candidate Set + CapabilitySelectionResult（07）
+→ PreparedToolAction / ToolAttempt / EffectReceipt（08）
+```
+
+### B1.1 五件事不能合并
+
+```text
+Registration / Admission
+    企业是否接受这个 ToolDefinition / ToolVersion 进入 Tool Catalog。
+
+Installation / Activation
+    当前 Tenant / Workspace 是否启用某个已接受版本。
+
+Connection
+    这次通过哪个业务身份、OAuth App 或 Service Account 连接外部系统。
+
+Authorization / Delegation
+    哪个主体能对哪些 ToolOperation、Resource 和 Connection 做什么，谁能继续授予下属。
+
+Usage / Execution
+    当前 Agent、Task 和 Tool Runtime 是否允许并成功完成某次具体动作。
+```
+
+`ToolDefinition`、`ToolVersion`、`ToolOperation`、`ToolInstallation`、`ToolConnection` 的 Canonical Owner 是 08；`CapabilityDefinition`、`CapabilityProviderBinding`、`CapabilitySelectionPolicy`、`CapabilitySelectionResult` 的 Canonical Owner 是 07；`ToolGrant`、`DelegationGrant`、`ToolAccessRequest`、`SecurityApprovalDecision` 的 Canonical Owner 是 09；`AgentToolBinding` 和 `UserToolPreference` 的 Canonical Owner 是 01；Secret、Sandbox、Network、Lease、Fencing 和 Idempotency 的物理保障由 11 提供。
+
+### B1.2 Connection 与 ProviderInstance 不重复
+
+```text
+ToolConnection
+    稳定的业务身份连接：identity_ref、credential_version_ref、scope、region、status。
+    不保存 Secret Material。
+
+ProviderInstance
+    08 的执行绑定：ToolVersion + ToolConnection + AdapterBinding + EndpointProfile
+    + Effect Domain + Runtime Generation。
+
+RuntimeEndpointReplica
+    同一 ProviderInstance 池内的技术副本，不能改变业务身份、权限或 Effect Domain。
+```
+
+07 选择时可以返回精确的 `ProviderInstanceRef` 和 `ToolConnectionRef`；08 Prepare 时必须重新验证二者仍然属于同一已授权候选。Connection 存在不等于 Authorization，ProviderInstance 健康不等于 Effect 成功。
+
+### B1.3 权限与偏好是不同事实
+
+权限由 `ToolGrant` 和 `DelegationGrant` 表达，且至少细化到 ToolOperation、Resource、Connection、Destination、Data Classification、Risk Ceiling、组织范围、有效期和 Grant Lineage。用户勾选的 `UserToolPreference` 只能从已授权集合中移除候选；`AgentToolBinding` 只能进一步缩小 AgentVersion 的候选，二者都不能创建 Grant。
+
+`AUTO / PREFERRED / PINNED` 是 01 的用户或 Agent 选择偏好；07 的 `CapabilitySelectionPolicy` 是候选过滤、兼容性、健康度、成本和 fallback 算法；09 的 Security / Enterprise Constraint 是不可被偏好覆盖的强制约束。优先级冻结为：
+
+```text
+Security / Enterprise Constraint
+    > AgentVersion Constraint
+    > User Explicit Requirement
+    > User Preference
+    > Runtime Automatic Selection
+```
+
+### B1.4 四类 Approval 不能共用状态机
+
+```text
+Tool Registration / Admission Review
+    这个 Tool 能否进入企业 Catalog；与 ToolAccess 无关。
+
+Tool Access Decision
+    这个主体能否获得指定 ToolOperation / Resource / Connection 的 ToolGrant。
+
+Delegation Decision
+    这个管理员能否在给定组织子树、操作集合、风险上限、委派深度和期限内创建子 Grant。
+
+Runtime Action Approval
+    这一次绑定具体 PreparedToolAction Hash、参数、资源、Connection 和 Security Epoch 的动作能否执行。
+```
+
+四类决定必须分别记录申请主体、目标范围、Policy Version、状态、理由、有效期和审计引用；前一种决定不能替代后一种决定。尤其是 Tool Catalog admission 不能让所有人自动获得使用权，Access Grant 也不能替代一次高风险外发动作的 Runtime Approval。
+
+### B1.5 全局不变量
+
+```text
+Child Grant.use_actions ⊆ Parent DelegationGrant.delegate_actions
+Child resource_scope ⊆ Parent resource_scope
+Child connection_scope ⊆ Parent connection_scope
+Child org_scope ⊆ Parent delegation_target_scope
+Child risk_ceiling <= Parent risk_ceiling
+Child expiry <= Parent expiry
+Child delegation_depth < Parent remaining_delegation_depth
+```
+
+父 Grant 撤销、过期或收窄时，依赖其 lineage 的子 Grant 立即在 Effective Decision 中失效，并通过 Security Epoch 和 Reconciler 标记 `REVOKED_BY_ANCESTOR`；历史 Grant 不物理删除。`Authorized Candidate Set` 与 `Executable Candidate Set` 分开：09 只计算授权候选，07/08 再检查版本、兼容、Connection、健康、Quota 和 Runtime Availability。
+
+### B1.6 版本变化的影响范围
+
+```text
+ToolGrant
+    默认绑定稳定 ToolDefinition + ToolOperation identity + version/risk constraint，
+    不因兼容修复版本自动要求所有成员重新申请；破坏性语义变化触发 REVALIDATION_REQUIRED。
+
+AgentToolBinding
+    绑定 AgentVersion 的能力/工具 allowlist 和允许的版本约束；AgentVersion 发布后不可变。
+
+CapabilitySelectionResult
+    固定精确 CapabilityVersion、ToolVersion、ToolConnection、ProviderInstance 和 Snapshot。
+
+PreparedToolAction
+    固定精确 ToolVersion、Schema Hash、Canonical Args、Target、Connection 和 Security Epoch。
+```
+
+因此，ToolVersion 的兼容升级可以保留稳定授权但必须重建新的 Selection/Prepare；Operation、Effect、Credential、Residency、Idempotency 或 Reconciliation 语义变化则必须让受影响 Grant 进入重新验证，旧 PreparedAction/Approval 立即失效。
 
 # Part IV — 分布式系统如何保持正确
 
