@@ -2995,6 +2995,41 @@ NEW_TASK
 
 Constraint、Output Contract 或 Objective 的实质变化创建新 GoalVersion，并要求 Replan。
 
+### 1.5.1 用户到底想完成什么：TaskUnderstandingSnapshot
+
+在 Planner 创建 `TaskContract` 前，Agent Core 先把自然语言输入规范化为可审计的任务理解快照。流程是：
+
+```text
+Raw Input
+→ Input Normalization
+→ TaskUnderstandingProposal
+→ Reference Resolution
+→ Ambiguity / Security Validation
+→ TaskUnderstandingSnapshot
+→ Planning
+```
+
+`TaskUnderstandingProposal` 可以由模型提出；`TaskUnderstandingSnapshot` 由 Agent Core 在确定性校验、引用解析和边界确认后提交。它至少包含：
+
+```text
+Task Type
+Target / Entity
+Goal
+Constraint
+Output Requirement
+Context Need
+Knowledge Need
+Memory Need
+Potential Action Need
+Risk / Assurance Requirement
+Language Context
+Unresolved Ambiguity
+```
+
+法律例子：用户说“看供应商第三版合同，重点责任限制有没有按上次改，没改给建议。”快照应解析为 Vendor A / Contract V3、Liability 主题、对比上次 Review/Redline、需要当前合同 + 上次 Finding + Playbook + 相关 Memory、输出 Finding + Redline，并标记需要证据绑定和人工审阅。Tenant、Workspace、Matter、Contract 归属和 Security Epoch 由各自确定性 Owner 校验，模型不得自行推断授权范围。
+
+Task Understanding 不是 Memory，也不是 Knowledge Evidence；未解决歧义应进入 `WAITING_FOR_USER` 或受治理的 Clarification，而不是被模型静默填空。若输入改变 Objective、Constraint 或 Output Contract，才创建新 `GoalVersion`。
+
 ### 1.6 GoalVersion 与 PlanVersion
 
 ```text

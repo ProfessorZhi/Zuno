@@ -221,6 +221,20 @@ Observability & Eval owns:
     Trace/Eval projection and quality claim
 ```
 
+## Knowledge 与 Memory 为什么不能互相冒充
+
+法律任务至少有三个证据域，Knowledge 负责它们的权威内容和版本；Memory 只保存用户、事项或 Agent 的历史上下文，不能因为被召回就升级为企业事实。
+
+| 证据域 | 证明什么 | 典型来源 |
+| --- | --- | --- |
+| Matter Evidence | 当前合同、附件和事项实际上发生了什么 | 当前 Contract / DocumentVersion、往来文件 |
+| Enterprise Policy Evidence | 企业希望接受什么风险 | Playbook、批准模板、正式 precedent |
+| Legal Authority Evidence | 法律或权威材料要求什么 | 法律、法规、司法解释、案例 |
+
+三类 Evidence 分别按 Authority、Freshness、Applicability、Permission 和 Version 评估。不能背诵固定的 `User > Memory > Knowledge` 顺序：当前用户意图可以覆盖旧的个人偏好，但用户关于企业规则的 Assertion 不能覆盖有版本的 Playbook；合同当前条款也不能被旧 Memory 的概括替代。
+
+Memory 可以保留 `knowledge_evidence_ref`，用于说明过去曾使用了哪个 Knowledge Snapshot；它不能复制 Knowledge 正文，也不能成为法律权威。若被引用的 Knowledge Evidence 被撤销、删除、替代或权限改变，Memory 消费方必须触发 Revalidation，而不是继续把旧引用当作当前证据。
+
 ## 5.1 Deep Dive 01：统一端到端案例
 
 统一案例：

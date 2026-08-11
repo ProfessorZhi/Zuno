@@ -15,7 +15,7 @@
 | L7 | Evidence / Eval：如何用 Test、Trace、Eval 证明 |
 | L8 | System Stress：长任务、部分失败和跨模块压力 |
 
-Q001–Q232 按连续编号轮换 L1–L8，每个 Domain 的 Chain 均覆盖多层追问。
+Q001–Q267 按连续编号轮换 L1–L8，每个 Domain 的 Chain 均覆盖多层追问。
 
 ## 主题模式族
 
@@ -30,6 +30,10 @@ Function Calling、Capability/Skill/Tool、PreparedToolAction、Canonicalization
 ### Memory / Context
 
 Working/Session/Long-term、Episodic/Semantic/Procedural、SessionSummaryVersion、Recent Raw Tail、Compression、Protected Set、ContextPack、Budget、MemoryCandidate、Governance、Version、Supersede、Stale、Dormant、Quarantine、Revoke、Delete、Poisoning、Conflict、Privacy、Scope、Utility、Negative Transfer、Recall、Projection、Eval。
+
+### Memory / Information Extraction
+
+TaskUnderstandingSnapshot、StructuredObservation、ExtractionProposal、Entity Resolution、Temporal Normalization、occurred_at/observed_at/recorded_at、valid_from/valid_to、Capture Policy、MemoryWriteDecision、ConflictType、Provenance、Revalidation、Knowledge/Memory Authority、Effective Memory Scope、Memory Poisoning、Deletion Propagation、Extraction/Memory Eval。
 
 ### Agent Core / Planning & Control
 

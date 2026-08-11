@@ -29,7 +29,7 @@
 - 启发式问题行：12945；
 - 显式包含 ? / ？ 的问题行：9059；
 - 人工语义合并后的 question pattern family：64；
-- 最终冻结并扩展为 Zuno QA：232 题。
+- 最终冻结并扩展为 Zuno QA：267 题；本轮新增 Memory & Information Extraction 35 题。
 
 64 个 pattern family 是经过主题、触发条件和追问方向合并后的人工审计结果，不是把每一行标点变化都当作新问题。语义去重和来源归类仍属于 manual review；自动 verifier 只负责题库结构、引用和覆盖状态，不伪造语义质量。
 
@@ -61,8 +61,8 @@
 | --- | ---: |
 | REAL | 88 |
 | DERIVED | 80 |
-| ARCHITECTURE_STRESS | 64 |
-| 合计 | 232 |
+| ARCHITECTURE_STRESS | 99 |
+| 合计 | 267 |
 
 REAL 保留真实来源路径和必要的短问题摘要；DERIVED 明确指出派生来源；ARCHITECTURE_STRESS 只引用 Zuno Target，不把压力题伪装成真实面经。
 

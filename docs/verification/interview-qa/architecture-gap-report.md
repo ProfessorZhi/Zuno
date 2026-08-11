@@ -65,6 +65,10 @@ PARTIAL 的主要原因不是缺少类名，而是文档已有相关词汇，却
 
 所有 QA 最终答案保留 Target 警告；生产规模、线上指标和实现状态不由面试语料推断。状态来源仍为 docs/status/production-readiness.md。状态：CLOSED。
 
+### G-X-006：Memory Information Extraction 链缺少统一验证主题
+
+本轮补齐 TaskUnderstandingSnapshot、StructuredObservation、Capture Policy、MemoryWriteDecision、时间演化、Provenance、Knowledge/Memory 权威、安全 Scope、Poisoning、Revalidation 和 Extraction/Memory Eval 的连续追问。状态：CLOSED；QA 只引用 canonical Target 文档。
+
 ## P2：低概率或未来压力题
 
 ### G-F-001：具体十万并发容量数字
@@ -81,7 +85,7 @@ Zuno 不拥有外部 Provider 部署时，不能承诺 rollback。QA 已明确�
 
 ## 修复后最终状态
 
-- 232 / 232 coverage_status=FULL。
+- 267 / 267 coverage_status=FULL。
 - 0 PARTIAL、0 MISSING、0 CONFLICTING。
 - 73 个第一轮 PARTIAL 已有对应 CLOSED-GAP 标记或由既有 canonical sections 关闭。
 - QA 没有新增架构事实；正式架构修改仅为 Module 03 的四个明确机制段落。

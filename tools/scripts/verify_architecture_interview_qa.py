@@ -10,6 +10,7 @@ QA_FILES = {
     "zuno-agentic-graphrag-qa.md": "knowledge",
     "zuno-tool-mcp-security-qa.md": "tool",
     "zuno-memory-context-qa.md": "memory",
+    "zuno-memory-information-extraction-qa.md": "memory-extraction",
     "zuno-agent-core-qa.md": "agent",
     "zuno-cross-module-system-design-qa.md": "cross-module",
 }
@@ -17,6 +18,7 @@ EXPECTED_DOMAIN_COUNTS = {
     "knowledge": 65,
     "tool": 58,
     "memory": 44,
+    "memory-extraction": 35,
     "agent": 45,
     "cross-module": 20,
 }
@@ -123,12 +125,12 @@ def verify() -> list[str]:
                 errors.append(f"{qid} must have at least two follow-up questions")
 
     ids = [int(qid[1:]) for qid, _, _ in all_questions]
-    if len(all_questions) != 232:
-        errors.append(f"expected exactly 232 QA questions, got {len(all_questions)}")
+    if len(all_questions) != 267:
+        errors.append(f"expected exactly 267 QA questions, got {len(all_questions)}")
     if len(set(ids)) != len(ids):
         errors.append("QA question IDs are not unique")
-    if sorted(ids) != list(range(1, 233)):
-        errors.append("QA question IDs must be continuous Q001..Q232")
+    if sorted(ids) != list(range(1, 268)):
+        errors.append("QA question IDs must be continuous Q001..Q267")
     counts: dict[str, int] = {}
     for _, _, domain in all_questions:
         counts[domain] = counts.get(domain, 0) + 1

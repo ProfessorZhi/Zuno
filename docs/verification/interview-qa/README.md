@@ -12,16 +12,17 @@ QA 与正式架构冲突时，正式架构优先。QA 中的 Expected Answer 只
 
 ## 题库范围
 
-当前冻结 Q001–Q232，分布为：
+当前冻结 Q001–Q267，分布为：
 
 | Domain | 题数 |
 | --- | ---: |
 | Agentic GraphRAG / Evidence | 65 |
 | Tool / MCP / Permission / Effect Safety | 58 |
 | Memory & Context | 44 |
+| Memory & Information Extraction | 35 |
 | Agent Core / Planning & Control | 45 |
 | Cross-module / System Design | 20 |
-| 合计 | 232 |
+| 合计 | 267 |
 
 每题标记 source_type：REAL（真实问题）、DERIVED（从真实问题合理延伸）、ARCHITECTURE_STRESS（根据 Zuno Target 设计构造）。
 
@@ -41,7 +42,7 @@ QA 与正式架构冲突时，正式架构优先。QA 中的 Expected Answer 只
 
 ## 覆盖闸门
 
-Architecture Interview Coverage = PASS 仅表示：232/232 有 canonical references，232/232 final coverage=FULL，且没有 conflicting canonical definition 和 QA-only architecture fact。
+Architecture Interview Coverage = PASS 仅表示：267/267 有 canonical references，267/267 final coverage=FULL，且没有 conflicting canonical definition 和 QA-only architecture fact。
 
 它不表示 implementation available、quality proven 或 production ready。Current / Target / Future 状态仍以 docs/status/production-readiness.md 为准。
 

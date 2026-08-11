@@ -63,6 +63,11 @@ def verify() -> list[str]:
         "UNAVAILABLE",
         "INCOMPARABLE",
         "BudgetSettlement",
+        "TaskUnderstandingSnapshot",
+        "StructuredObservation",
+        "MemoryWriteDecision",
+        "occurred_at",
+        "MemoryUseTrace",
     ]
     for marker in required_arch:
         if marker not in architecture:
@@ -82,6 +87,9 @@ def verify() -> list[str]:
         "BenchmarkComparison",
         "UNAVAILABLE",
         "INCOMPARABLE",
+        "05 StructuredObservation",
+        "09 Scope / Trust / Write Gate",
+        "10 Trace / Eval / Release Gate",
     ]
     for marker in required_views:
         if marker not in views:

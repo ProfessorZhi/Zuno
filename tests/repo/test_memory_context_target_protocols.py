@@ -85,6 +85,7 @@ def test_domain_objects_have_storage_decisions() -> None:
     content = _content()
     for object_name, table_name in {
         "MemoryCaptureIntent": "memory_capture_intents",
+        "StructuredObservation": "memory_structured_observations",
         "MemoryCandidate": "memory_candidates",
         "MemoryGovernanceDecision": "memory_governance_decisions",
         "MemoryRecord": "memory_records",
@@ -137,3 +138,22 @@ def test_target_and_current_are_separated() -> None:
     assert ".agent/programs/" in content
     assert "# Current Baseline" not in content
     assert "# 当前与短期目标" not in content
+
+
+def test_memory_information_extraction_deepening_contract() -> None:
+    content = _content()
+    for term in [
+        "TaskUnderstandingSnapshot",
+        "StructuredObservation",
+        "Information Extraction != Memory Write",
+        "MemoryWriteDecision",
+        "occurred_at",
+        "observed_at",
+        "recorded_at",
+        "ConflictType",
+        "Memory Provenance",
+        "Memory Retrieval 不能直接等于 Context Injection",
+        "CREATE_CANDIDATE",
+        "SECURITY_BLOCKED",
+    ]:
+        assert term in content

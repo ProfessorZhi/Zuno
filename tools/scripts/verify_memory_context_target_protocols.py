@@ -63,10 +63,19 @@ REQUIRED_TERMS = [
     "PostgreSQL",
     ".agent/programs/",
     "唯一的正式 Target 架构主设计",
+    "StructuredObservation",
+    "MemoryWriteDecision",
+    "Memory Provenance",
+    "occurred_at",
+    "recorded_at",
+    "ConflictType",
+    "Memory Retrieval 不能直接等于 Context Injection",
+    "Information Extraction != Memory Write",
 ]
 
 REQUIRED_TABLES = [
     "memory_capture_intents",
+    "memory_structured_observations",
     "memory_candidates",
     "memory_candidate_validations",
     "memory_governance_decisions",

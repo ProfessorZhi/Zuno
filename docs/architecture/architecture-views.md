@@ -57,18 +57,21 @@ flowchart TB
   DECIDE -->|complete| FINAL[Final Gate / Publication / RunOutcome]
 ```
 
-#### Local — Evidence Memory and Publication Boundaries
+#### Local — Understanding, Extraction, Capture and Context
 
 ```mermaid
 flowchart LR
-  SOURCE[DocumentVersion / SourceSpan] --> EVID[Knowledge Evidence / CitationLineage]
-  EVID --> CONTEXT[Memory ContextPackVersion]
-  CONTEXT --> CORE[Agent Core Step / Final Synthesis]
-  CORE --> CAND[FinalCandidate]
-  CAND --> GATE[Final Gate]
-  GATE --> PUB[Agent Core Publication]
-  PUB --> VIEW[Product authorized Projection]
-  VIEW --> DELIVERY[ChannelDelivery / ClientRender / UserRead]
+  INPUT[Raw User / Source Input] --> U[06 TaskUnderstandingSnapshot]
+  U --> X[05 ExtractionProposal / StructuredObservation]
+  X --> C[05 Capture Policy / MemoryCandidate]
+  C --> S[09 Scope / Trust / Write Gate]
+  S --> V[05 MemoryVersion]
+  V --> R[05 Recall / Conflict / Freshness]
+  R --> P[05 ContextPackVersion]
+  K[03 Knowledge Evidence / Authority] -.-> U
+  K -.-> R
+  O[10 Trace / Eval / Release Gate] -.-> X
+  O -.-> P
 ```
 
 ### Development View (4+1)
@@ -531,20 +534,21 @@ flowchart LR
   ACCEPT --> FINAL[Final Grounding Gate / Publication]
 ```
 
-#### Local — Evidence Lineage and Context Assembly
+#### Local — Source, Observation, Provenance and Revalidation
 
 ```mermaid
 flowchart LR
-  DOC[DocumentVersion] --> SPAN[SourceSpan]
-  SPAN --> CHUNK[CitationChunk]
-  CHUNK --> GRAPH[Entity / Relation / Community Evidence Backlink]
-  GRAPH --> ATTEMPT[RetrieverAttempt]
-  ATTEMPT --> ROUND[RetrievalRound]
-  ROUND --> LEDGER[EvidenceLedger / EvidenceFrontier]
-  LEDGER --> BUNDLE[SelectedEvidenceBundle]
-  BUNDLE --> CONTEXT[ContextPackVersion]
-  CONTEXT --> CLAIM[ClaimEvidenceBinding]
-  CLAIM --> CITATION[Citation / Publication]
+  SOURCE[Source Fact / DocumentVersion / ToolObservation] --> RANGE[SourceRange / VersionPin]
+  RANGE --> OBS[05 StructuredObservation]
+  OBS --> CAND[05 MemoryCandidate]
+  CAND --> MV[05 MemoryVersion]
+  MV --> PROV[Provenance / Hash / Policy / Epoch]
+  PROV --> USE[MemoryUseTrace]
+  SOURCE -. revoked / deleted / scope changed .-> REVAL[09 Revalidation]
+  REVAL --> DISP[Keep / Stale / Quarantine / Revoke / Delete Derived / Supersede]
+  DISP --> MV
+  EVAL[10 Propagation Eval] -.-> REVAL
+  K[03 Knowledge Evidence Ref] -.-> PROV
 ```
 
 #### Local — Corrective Retrieval versus Agent Replan

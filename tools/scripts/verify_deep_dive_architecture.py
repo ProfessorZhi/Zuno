@@ -31,6 +31,9 @@ DOCUMENT_REQUIREMENTS = {
         "MemoryVersion",
         "SessionSummaryVersion",
         "ContextPackVersion",
+        "StructuredObservation",
+        "MemoryWriteDecision",
+        "Memory Provenance",
     ),
     "docs/modules/06-agent-core-planning-control.md": (
         "PlanVersion",
@@ -39,6 +42,7 @@ DOCUMENT_REQUIREMENTS = {
         "Reflection",
         "Replan",
         "Reflexion",
+        "TaskUnderstandingSnapshot",
     ),
     "docs/modules/08-tool-runtime.md": (
         "PreparedToolAction",
@@ -54,6 +58,8 @@ DOCUMENT_REQUIREMENTS = {
         "EffectiveSecurityEpoch",
         "PreparedToolAction",
         "McpCapabilitySnapshot",
+        "Effective Memory Scope",
+        "Memory Poisoning",
     ),
 }
 

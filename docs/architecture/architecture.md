@@ -961,6 +961,30 @@ Conversation / RunOutcome / approved feedback / Evidence refs
 
 Working Memory 的控制语义归 Agent Core；Session 和 Long-term Memory 归 Memory。Episodic、Semantic、Procedural 是长期内容类型；Entity 是 Semantic Projection；Vector/Graph/Lexical 是可重建 Projection。ContextPack 是预算化只读视图，不是另一层 Memory。Reflexion 只生成 Candidate。
 
+### 8.3.1 从输入理解到 Memory Context 的统一链
+
+这条链把任务理解、信息抽取、记忆治理、证据权威、安全和评测放在同一张 Ownership 视图中：
+
+```mermaid
+flowchart LR
+  INPUT[Raw User / Source Input] --> UNDER[06 TaskUnderstandingSnapshot]
+  UNDER --> EXTRACT[05 ExtractionProposal / StructuredObservation]
+  EXTRACT --> CAPTURE[05 Capture Policy / MemoryCandidate]
+  CAPTURE --> GATE[09 Scope / Trust / Write Gate]
+  GATE --> DECIDE[05 MemoryWriteDecision]
+  DECIDE --> VERSION[05 immutable MemoryVersion]
+  VERSION --> RECALL[05 Recall / Conflict / Freshness]
+  RECALL --> CONTEXT[05 ContextPackVersion]
+  KNOW[03 Knowledge Evidence / Authority] -.-> UNDER
+  KNOW -.-> RECALL
+  TRACE[10 Trace / Eval / Release Requirement] -.-> EXTRACT
+  TRACE -.-> CONTEXT
+```
+
+这里的“抽取”不是独立模块：02 拥有文档结构，03 拥有 Knowledge Entity/Relation 和 Evidence，05 拥有进入 Session/Long-term 的 StructuredObservation，06 拥有 TaskUnderstandingSnapshot，09 拥有安全与授权 Gate，10 拥有质量测量与 Release 语义。`Knowledge != Memory`、`Checkpoint != Memory`、`Conversation != Memory`；Memory 只能保存 `knowledge_evidence_ref`，不能复制或替代权威 Knowledge。
+
+Recall 也不等于 Injection。候选必须经过 `Conflict/Freshness → Applicability → Security Filter → Context Priority → Token Budget → Atomic Group → Compression`，才可以形成不可变 `ContextPackVersion`，并为每个实际使用的 Memory 记录 `MemoryUseTrace`。
+
 ---
 
 # 9. Tool Runtime 与外部效果

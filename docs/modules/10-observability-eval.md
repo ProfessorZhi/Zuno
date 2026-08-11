@@ -1066,6 +1066,33 @@ Agent
 
 # 27. JudgePolicy、Calibration 与统计有效性
 
+## 27.1 Memory 与 Information Extraction 的质量闭环
+
+Memory 质量不能被一个总分掩盖。评测必须把“抽取对不对”“写入是否克制”“召回是否适用”“注入是否安全”“删除是否传播”拆成可复现的 MetricDefinition：
+
+```text
+Extraction Precision / Recall
+Entity Resolution Accuracy
+Temporal Normalization Accuracy
+Event Extraction Accuracy
+Memory Write Precision / Recall
+Duplicate Rate
+Conflict Detection / Resolution Accuracy
+Stale Memory Injection Rate
+Invalid Memory Recall Rate
+Cross-scope Leakage Rate
+Provenance Completeness
+Memory Utility
+Context Contribution
+Token Cost
+Memory-caused Answer Regression
+Deletion / Revocation Propagation Correctness
+```
+
+每个指标必须绑定 Dataset Version、Case Set Hash、计算 Method、评测 Scope、Trace/Artifact 输入和 Release Requirement；不得在本文填入未运行的生产数字。训练、验证和评测数据集必须隔离，律师反馈只能先成为 `FeedbackCandidate`，经权限、去敏、质量审查、规范化、去重和标签验证后才可能进入 Dataset Version。
+
+这些指标的失败语义必须保持可区分：抽取 Schema 失败通常 Re-extract；实体或时间歧义通常 Clarify；来源不可信或 Scope 不明进入 Quarantine；冲突未解决拒绝晋升；撤销/删除传播不完整进入 Reconcile。`BLOCKED`、`UNAVAILABLE` 和 `INCOMPARABLE` 不得折算成零分或 PASS。
+
 ```yaml
 JudgePolicy:
   judge_policy_id: string
@@ -1973,6 +2000,14 @@ Candidate 更快但质量下降时 Gate 失败；质量等价且 Cost/Latency �
 | Embedding Policy Drift | Benchmark INCOMPARABLE |
 | Answer Correctness Reference Mismatch | INVALID/INCOMPARABLE |
 | Entity Resolution Miss | `entity_resolution_miss` 且可下钻 Mention/Entity |
+| Extraction Schema Invalid | `EXTRACTION_SCHEMA_INVALID`；Re-extract 或 Quarantine，不创建长期 Version |
+| Temporal Normalization Failure | `TEMPORAL_NORMALIZATION_FAILED`；保留原始表达并 Clarify/Quarantine |
+| Missing Memory Provenance | `SOURCE_PROVENANCE_MISSING`；Memory Write BLOCKED |
+| Memory Scope Unresolved | `MEMORY_SCOPE_UNRESOLVED`；Security BLOCKED，不进入 Context |
+| Memory Conflict Unresolved | `MEMORY_CONFLICT_UNRESOLVED`；Reject/Quarantine，不静默覆盖 |
+| Stale Memory Injection | `MEMORY_STALE`；Context Validation 排除并记录 MemoryUseTrace |
+| Source Revocation Propagation | `MEMORY_REVALIDATION_REQUIRED`；Revalidate，Delete 失败进入 Reconciliation |
+| Cross-scope Memory Leakage | `MEMORY_SECURITY_BLOCKED`；Security violation，不能由模型忽略 |
 | Graph Snapshot Missing | Graph 流程 BLOCKED；Fallback 必须记录 |
 | Graph-to-Text Mapping Loss | Graph Candidate 不可作为 Strict Evidence |
 | Fusion Drops Gold | `fusion_dropped_gold_evidence` |
