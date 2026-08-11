@@ -13,6 +13,19 @@ python .agent/scripts/verify_agent_system.py
 python .agent/scripts/verify_doc_boundaries.py
 ```
 
+架构红蓝队任务先读取：
+
+```text
+docs/verification/architecture-red-blue/README.md
+docs/verification/architecture-red-blue/01-project-context-intake.md
+docs/verification/architecture-red-blue/02-red-blue-interaction.md
+docs/verification/architecture-red-blue/03-attack-surface.md
+docs/verification/architecture-red-blue/04-blue-fix-routing.md
+docs/verification/architecture-red-blue/05-skill-contract.md
+```
+
+该工作区负责事实采集和红蓝互动；`docs/verification/interview-qa/` 负责架构攻击题和 Coverage。两者都不拥有 Canonical Architecture，正式变更必须回到 `docs/architecture/`、`docs/modules/`、`docs/decisions/`、`docs/status/` 或 `docs/evidence/` 的正确 Owner。
+
 ## 架构与模块
 
 ```powershell
