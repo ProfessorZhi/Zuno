@@ -5,7 +5,7 @@
 User Gate Resolution：`APPROVED_WITH_AMENDMENTS`
 Canonical Sync Commit A：`4133d1837aa8f9255f753b3603b21eeae2615531`
 Gate Resolution Commit B：`24813da6a6f0da8758406493fd51ab923a94b580`
-本轮禁止：Runtime、Migration、Implementation Program、SKILL.md、RB-ARCH-002 和 Mutation Retest。
+Canonical Sync 阶段禁止：Runtime、Migration、Implementation Program、SKILL.md 和 RB-ARCH-002；Mutation Retest 作为后续独立阶段记录在 `retest.md`。
 
 ## Blue Research References
 
@@ -67,7 +67,7 @@ Canonical Paths：docs/project/architecture/architecture.md; docs/project/module
 Applied Commit SHA：4133d1837aa8f9255f753b3603b21eeae2615531
 Validation Run：Commit A validation suite: PASS
 Validation Not Run：Scope-down 需要用户确认历史任务和目标范围。
-Retest IDs：NONE
+Retest IDs：RETEST-001
 ```
 
 ## CHANGE-003
@@ -119,7 +119,7 @@ Canonical Paths：docs/project/modules/03-knowledge-agentic-graphrag.md; docs/pr
 Applied Commit SHA：4133d1837aa8f9255f753b3603b21eeae2615531
 Validation Run：Commit A validation suite: PASS
 Validation Not Run：Benchmark 与 ADR 协调未完成。
-Retest IDs：NONE
+Retest IDs：RETEST-001
 ```
 
 ## CHANGE-005
@@ -171,7 +171,7 @@ Canonical Paths：docs/project/modules/06-agent-core-planning-control.md; docs/p
 Applied Commit SHA：4133d1837aa8f9255f753b3603b21eeae2615531
 Validation Run：Commit A validation suite: PASS
 Validation Not Run：Runtime Conformance 未执行。
-Retest IDs：NONE
+Retest IDs：RETEST-001
 ```
 
 ## CHANGE-007
@@ -197,7 +197,7 @@ Canonical Paths：docs/project/modules/07-capability-skill.md; docs/project/modu
 Applied Commit SHA：4133d1837aa8f9255f753b3603b21eeae2615531
 Validation Run：Commit A validation suite: PASS
 Validation Not Run：Tool Conformance 和 Fault Test 未执行。
-Retest IDs：NONE
+Retest IDs：RETEST-001
 ```
 
 ## CHANGE-008
@@ -249,7 +249,7 @@ Canonical Paths：docs/project/modules/10-observability-eval.md; docs/status/; d
 Applied Commit SHA：4133d1837aa8f9255f753b3603b21eeae2615531
 Validation Run：Commit A validation suite: PASS
 Validation Not Run：Benchmark 未运行，当前状态必须保持 blocked_not_measured。
-Retest IDs：NONE
+Retest IDs：RETEST-001
 ```
 
 ## CHANGE-010
@@ -275,5 +275,5 @@ Canonical Paths：docs/project/facts/technology-reality.md; docs/project/modules
 Applied Commit SHA：4133d1837aa8f9255f753b3603b21eeae2615531
 Validation Run：Commit A validation suite: PASS
 Validation Not Run：模型事实和用户贡献未确认。
-Retest IDs：NONE
+Retest IDs：RETEST-001
 ```
