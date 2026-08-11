@@ -105,7 +105,7 @@ Implementation / Evidence Repair
 
 | 文件 | 职责 |
 |---|---|
-| `00-charter.md` | 红蓝实验区章程、边界和成功标准 |
+| `00-charter.md` | Red Team Thinking Kernel、红队风险模型、Claim 取证漏斗、动态追问和红蓝边界 |
 | `01-project-facts.md` | 项目事实、重建置信度和 Claim 清单 |
 | `02-project-model.md` | 背景、用户、问题、团队、架构、落地、证据及跨层 Alignment Gate |
 | `03-team-ownership.md` | 真实团队职责与目标 Ownership 的分离 |
@@ -119,6 +119,8 @@ Implementation / Evidence Repair
 | `sources/` | 外部面经模式和仓库证据入口，不拥有 Zuno 新事实 |
 | `sessions/` | 经过批准的红蓝会话摘要，不保存隐藏思维链 |
 | `skill/` | 未来 Skill 的接口草案；多次实跑前不生成 `SKILL.md` |
+
+`00-charter.md` 是红队的唯一底层思维框架。`04` 提供攻击工具，`05` 提供面试官视角，`06` 规定会话运行方式，`sources/` 负责用真实面经校准问法；这些文件不能反过来各自维护一套互相冲突的红队决策逻辑。
 
 ## 第一次真正运行时怎么问用户
 
