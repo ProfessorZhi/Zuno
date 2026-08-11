@@ -6,7 +6,7 @@ Source Cluster IDs: CLUSTER-001, CLUSTER-002, CLUSTER-003, CLUSTER-004
 User Gate: APPROVED
 Sync Status: APPLIED
 Canonical Paths: docs/decisions/0009-python-only-backend.md; docs/decisions/0010-microservice-target-and-service-boundaries.md; docs/project/architecture/architecture.md; docs/project/services/service-architecture.md; docs/project/deployment/microservice-deployment.md
-Applied Commit SHA: d264dbd
+Applied Commit SHA: a8c167a
 Validation Run: architecture reframe, link, governance, red-blue and focused pytest suite passed
 Validation Not Run: full CI and production service/eval evidence
 Retest IDs: RETEST-001
@@ -19,7 +19,7 @@ Source Cluster IDs: CLUSTER-005, CLUSTER-006
 User Gate: APPROVED
 Sync Status: APPLIED
 Canonical Paths: docs/project/README.md; docs/project/architecture/README.md; docs/project/architecture/architecture-views.md; docs/project/architecture/architecture.html; docs/project/product/; docs/project/domain/; docs/project/agents/; docs/project/knowledge/; docs/project/services/; docs/project/data/; docs/project/security/; docs/project/eval/; docs/project/deployment/; .agent/system.yaml; AGENTS.md
-Applied Commit SHA: d264dbd
+Applied Commit SHA: a8c167a
 Validation Run: architecture reframe, link, governance, red-blue and focused pytest suite passed
 Validation Not Run: full CI and production service/eval evidence
 Retest IDs: RETEST-001

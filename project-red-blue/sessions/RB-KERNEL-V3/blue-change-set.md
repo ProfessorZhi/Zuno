@@ -8,8 +8,9 @@ Source Cluster IDs: CLUSTER-001, CLUSTER-002, CLUSTER-003
 User Gate: APPROVED
 Sync Status: APPLIED
 Canonical Paths: docs/decisions/0008-legal-domain-kernel-and-host-boundary.md; docs/project/architecture/architecture.md
-Applied Commit SHA: d264dbd
+Applied Commit SHA: a8c167a
 Validation Run: architecture/document/module verifier suite passed; no Runtime implementation performed
+Validation Not Run: full CI and production service/eval evidence
 Retest IDs: RETEST-001
 
 Decision: 保留最小 Legal Domain Kernel 作为可审计业务状态契约；不把完整法律对象列表或 Native Runtime 当作 Current。默认 Host + Legal Backend，Native Runtime 只保留可逆 benchmark 变体。

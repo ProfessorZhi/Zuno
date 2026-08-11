@@ -9,7 +9,7 @@ actual_question_count: 24
 stop_reason: "QUESTION_BUDGET_REACHED_AFTER_SERVICE_BOUNDARY_FALSIFICATION"
 zuno_base_sha: "0c07cfd69e4fcf76d5be53c0f7dce38171abfc8f"
 defense_base_sha: "0c07cfd69e4fcf76d5be53c0f7dce38171abfc8f"
-post_sync_sha: d264dbd
+post_sync_sha: a8c167a
 resume_version: "V1_PUBLIC_REPOSITORY_EVIDENCE"
 project_fact_version: "docs/project/facts@0c07cfd"
 campaign_id: "ZUNO-ARCHITECTURE-REFRAME-V1"
@@ -30,6 +30,6 @@ completed_at: "2026-08-13T02:30:00+08:00"
 status: "COMPLETED"
 user_gate_resolution: "APPROVED_WITH_AMENDMENTS"
 resolution_status: "CANONICAL_SYNC_COMPLETE"
-canonical_sync_sha: "d264dbd"
+canonical_sync_sha: "a8c167a"
 mutation_retest: "COMPLETED"
 mutation_retest_result: "PASS_WITH_OPEN_EVIDENCE_GAPS"
