@@ -89,3 +89,9 @@ def test_retest_cannot_use_non_applied_change(tmp_path: Path) -> None:
     _replace(session / "blue-change-set.md", "Sync Status：APPLIED", "Sync Status：PARTIAL")
     errors = _verifier().verify_session(session)
     assert any("may only use APPLIED Change" in error for error in errors)
+
+
+def test_not_started_retest_is_allowed(tmp_path: Path) -> None:
+    session = _copy_fixture(tmp_path)
+    _replace(session / "retest.md", "Result：PASS", "Result：NOT_STARTED")
+    assert _verifier().verify_session(session) == []

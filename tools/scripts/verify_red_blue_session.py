@@ -31,6 +31,7 @@ ALLOWED_PHASES = {"BASELINE", "RETEST", "ADVERSARIAL_ESCALATION", "FULL_REVIEW"}
 ALLOWED_STATUS = {"IN_PROGRESS", "COMPLETED", "STOPPED", "REOPENED"}
 ALLOWED_SYNC_STATUS = {"NOT_APPLIED", "APPLIED", "PARTIAL", "REJECTED"}
 ALLOWED_USER_GATE = {"PENDING", "APPROVED", "REJECTED"}
+ALLOWED_RETEST_RESULTS = {"PASS", "REOPEN", "NOT_STARTED", "WAITING_FOR_CANONICAL_SYNC"}
 
 
 def _text(path: Path) -> str:
@@ -362,7 +363,7 @@ def _validate_retests(
         if _is_empty(mutation) or _is_none_marker(mutation):
             errors.append(f"{retest_id} must declare Mutation Variable")
         result = (_field(section, ("Result",)) or "").upper()
-        if result not in {"PASS", "REOPEN"}:
+        if result not in ALLOWED_RETEST_RESULTS:
             errors.append(f"{retest_id} has invalid Result: {result}")
     return retest_ids
 
