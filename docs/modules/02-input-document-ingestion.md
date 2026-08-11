@@ -1,7 +1,10 @@
-# 02 Input / Document Ingestion
+# 一份法律文档怎样变成机器可理解、可追溯的知识？
 
 updated: 2026-08-11
 status: normative-target-module-architecture
+formal_module: 02 Input / Document Ingestion
+human_readable_part: Part A — 面向人的设计说明
+normative_specification_part: Part B — 规范性架构与实施约束
 module_number: 02
 formal_path: `docs/modules/02-input-document-ingestion.md`
 writing_standard: `docs/governance/architecture-document-writing-standard.md`
@@ -88,6 +91,16 @@ StructuredObservation / MemoryCandidate 归 05；02 不直接写长期 Memory。
 ```
 
 源内容变化创建新 `DocumentVersion`；Parser、Schema 或模型变化创建新 `ParseSnapshot`。只有通过质量与安全门的 Snapshot 才能交给 Knowledge 或 Agent Core，历史 Review 不得隐式跟随“最新版本”。
+
+# Part A — 面向人的设计说明
+
+## A0. 用第三版 SaaS 合同理解 Ingestion
+
+供应商提交 V3 时，系统不能只把 PDF 转成一串文本。这个合同审查案例需要保留合同身份、不可变版本、条款层级、定义项、交叉引用、SourceSpan 和解析质量，让后续审查能够回答“这句话来自哪个版本的哪一页”。
+
+## A1. Part A 与 Part B 的边界
+
+本部分解释文档为什么要经过版本化、结构解析和质量门；Part B 才定义 SourceObject、ParseSnapshot、CanonicalDocumentIR、状态机、队列、持久化、失败恢复和完成证据。解析失败不能被叙事层压成“上传失败”，正式 Failure 以规范章节为准。
 
 # Part I：定位、问题与 Ownership
 
@@ -701,6 +714,21 @@ REJECTED_UNSUPPORTED
 ```
 
 ---
+
+# Part B — 规范性架构与实施约束
+
+Part B 是 Ingestion 的实现规格入口；它不改变 Contract，只把 Part A 的“可追溯文档”要求落实为唯一 Owner、不可变版本和可验证的解析交接。
+
+## B0. 规范索引
+
+| 规范主题 | 本文正式位置 |
+| --- | --- |
+| Invariant / Ownership | Part I 的 Ownership 与架构不变量 |
+| Contract / State / Failure | Part III、Part VI 和 Failure Taxonomy |
+| Recovery / Idempotency | Part V 的 Lease、Outbox、Retry、Reconciliation |
+| Security / Audit | Security Gate、Sandbox、Deletion 与 Legal Hold |
+| Persistence / Code Boundary | Part VII、Part IX 的表、对象、目录和 Migration 要求 |
+| Test / Evidence | Part X 的测试、Requirement 和完成证据 |
 
 # Part III：原始证据、版本与完整性
 

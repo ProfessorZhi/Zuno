@@ -1,7 +1,10 @@
-# 10 Observability & Eval
+# 我们怎样知道 Agent 做得对不对？
 
 updated: 2026-08-11
 status: normative-target-module-architecture
+formal_module: 10 Observability & Eval
+human_readable_part: Part A — 面向人的设计说明
+normative_specification_part: Part B — 规范性架构与实施约束
 module_number: 10
 formal_path: `docs/modules/10-observability-eval.md`
 writing_standard: `docs/governance/architecture-document-writing-standard.md`
@@ -98,6 +101,16 @@ Matter / Review / AgentRun
 ```
 
 Memory Extraction、Temporal、Conflict、Scope、Provenance、Context Contribution 和删除传播都必须有独立 MetricDefinition；Target 的指标定义不等于 Current 质量证明。
+
+# Part A — 面向人的设计说明
+
+## A0. 用一次合同审查理解 Observability & Eval
+
+最终 Finding 不能因为模型“看起来回答得像”就被认为可靠。系统要解决的问题是：能回放一次审查的 Plan、Retrieval、Memory、Tool 和 Security 路径，检查每个 Claim 的证据、权限和输出质量，并把结果与成本、延迟和失败原因联系起来。
+
+## A1. Part A 与 Part B 的边界
+
+本部分解释 Trace、Audit、Metric、Eval、Release Gate 为什么分开，以及如何定位“召回错、证据不足、模型幻觉、权限拒绝和副作用未知”。Part B 定义 Telemetry、Trace、Dataset、Metric、状态、失败、存储、测试和完成证据；文档覆盖不能冒充生产质量证明。
 
 # Part I：定位与概念架构
 
@@ -401,6 +414,21 @@ Input Completeness
 ```
 
 ---
+
+# Part B — 规范性架构与实施约束
+
+Part B 是 Observability & Eval 的质量规范入口；它拥有评测与 Release Gate 事实，但不拥有 Matter、Evidence、Memory 或 Tool 的业务源事实。
+
+## B0. 规范索引
+
+| 规范主题 | 本文正式位置 |
+| --- | --- |
+| Invariant / Ownership | Part I 的模块边界与 Cross-module Ownership |
+| Contract / State / Failure | Part III–VI 的 Telemetry、Eval、状态和 Failure |
+| Recovery / Idempotency | Delivery、Retry、Recovery、Dedup 和重跑章节 |
+| Security / Audit | Audit、Redaction、Sampling、Retention 和 Legal Hold |
+| Persistence / Code Boundary | Part VII 的存储、代码和 API |
+| Test / Evidence | Part VIII 的 Release Gate、测试、Requirement 和证据 |
 
 # Part III：Telemetry、Trace、Audit 与 Delivery Contract
 

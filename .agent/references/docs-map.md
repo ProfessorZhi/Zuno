@@ -31,6 +31,15 @@ docs/governance/wave1-cross-module-contract-registry.md
 
 `architecture-views.md` 与 `architecture.html` 是不可拆分的 HTML Mermaid 展示配对，不是第二份文字总架构，也不拥有独立架构事实。
 
+两层阅读路径：
+
+```text
+人类理解：architecture.md Part A → module Part A → module Part B（按需）
+工程实现：architecture.md Part B → Owner module Part B → ADR/Contract → Status/Evidence → Program
+```
+
+Part A 和 Part B 必须共存于同一 Canonical Markdown；禁止创建 `*-human.md`、`*-spec.md` 或新的架构镜像。
+
 总架构和模块的统一信息架构、标题、Mermaid、Current/Target 和 QA 引用规则见：
 
 `docs/governance/architecture-document-writing-standard.md`

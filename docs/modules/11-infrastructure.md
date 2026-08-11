@@ -1,7 +1,10 @@
-# 11 Infrastructure
+# 一个长运行 Agent 系统怎样稳定地跑起来？
 
 updated: 2026-08-11
 status: normative-target-module-architecture
+formal_module: 11 Infrastructure
+human_readable_part: Part A — 面向人的设计说明
+normative_specification_part: Part B — 规范性架构与实施约束
 module_number: 11
 formal_path: `docs/modules/11-infrastructure.md`
 writing_standard: `docs/governance/architecture-document-writing-standard.md`
@@ -83,6 +86,16 @@ Domain Fact / Version / Intent
 ```
 
 `IndexWriteReceipt`、`Checkpoint Commit`、`Queue ACK` 和 `Object Commit` 只证明各自物理边界，不能冒充 KnowledgeVersion、MemoryVersion、EffectReceipt、ReviewFinding 或 Eval Quality。Infrastructure 不因收到消息而创建业务对象。
+
+# Part A — 面向人的设计说明
+
+## A0. 用 Worker 崩溃理解 Infrastructure
+
+合同审查可能运行几十分钟，期间会排队、并行解析、等待模型、等待审批和调用外部工具。Worker 崩溃、消息重复或数据库与 Checkpoint 不一致时，基础设施不能把物理成功伪装成业务成功；它要提供事务、Outbox/Inbox、Lease、Fencing、对象存储、队列和恢复原语，让领域 Owner 能重新判断。
+
+## A1. Part A 与 Part B 的边界
+
+本部分解释为什么 Zuno 需要多种存储和异步运行原语，以及 Java/Python、Queue、Database、Object Store 和 Checkpointer 如何分工。Part B 定义数据服务 Contract、状态机、一致性、故障、安全、部署、Migration、测试和证据；Infrastructure 不创建 Review、Evidence、MemoryVersion 或 EffectReceipt。
 
 # Part I：定位、目标与架构选择
 
@@ -571,6 +584,21 @@ Backup / PITR Request
 - `cutover_allowed=false` 时不得自动切生产。
 
 ---
+
+# Part B — 规范性架构与实施约束
+
+Part B 是 Infrastructure 的实现规范入口；它规定物理运行原语的保证边界，不能越权成为业务事实 Owner。
+
+## B0. 规范索引
+
+| 规范主题 | 本文正式位置 |
+| --- | --- |
+| Invariant / Ownership | Part I、Part III 的事实边界和 Owner 规则 |
+| Contract / State / Failure | Part III、Part V、Part VI 的 Contract、状态和 Failure |
+| Recovery / Idempotency | Lease、Fencing、Inbox/Outbox、Backup、Restore、Reconciliation |
+| Security / Audit | Tenant Isolation、Encryption、Secret、Audit 和 Network Plane |
+| Persistence / Code Boundary | Part IV、Part VII 的组件、事务和代码映射 |
+| Test / Evidence | Part VIII 的 Fault/E2E、Requirement 和 Current 证据 |
 
 # Part III：核心 Contract 与事实边界
 

@@ -19,6 +19,15 @@
 - [架构面试验证语料](./verification/interview-qa/README.md)：非规范性 QA Corpus，用真实追问压力测试 canonical architecture。
 - [历史归档](./history/README.md)：经过批准的历史摘要，不重新解释成当前事实。
 
+## 两条阅读路径
+
+```text
+人类理解：architecture.md Part A → 对应模块 Part A → 按需进入 Part B
+工程实现：architecture.md Part B → Owner module Part B → ADR/Contract → Status/Evidence → Program
+```
+
+Part A 解释问题、案例、取舍和正常/异常流程；Part B 是 Contract、状态、失败、恢复、安全、持久化、测试和完成证据的规范入口。两部分始终位于同一份 Canonical Markdown 中。
+
 ```text
 architecture/    总架构正文与架构图展示配对
 modules/         十一个逻辑模块 Target 设计

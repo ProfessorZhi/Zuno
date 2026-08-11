@@ -110,6 +110,7 @@ Agent Core 规范优先级：全局架构原则 → 单一模块 Target 架构�
 5. 运行 `python tools/scripts/verify_docs_entrypoints.py`。
 6. 运行 `python tools/scripts/verify_markdown_internal_links.py`。
 7. 运行 `python tools/scripts/verify_architecture_writing_standard.py`。
+8. 运行 `python tools/scripts/verify_architecture_human_readability.py`。
 
 模块变化时：
 
@@ -119,7 +120,9 @@ Agent Core 规范优先级：全局架构原则 → 单一模块 Target 架构�
 4. 更新测试和验证器；
 5. Agent Core 变更运行 `python tools/scripts/verify_agent_core_target_protocols.py`。
 
-总架构 Markdown 必须比 HTML 更充实；HTML 偏图形展示。禁止把三十张详细图重新堆回 `architecture.md`。
+总架构 Markdown 必须比展示配对更充实；展示配对只用于图形理解。禁止把三十张详细图重新堆回 `architecture.md`。
+
+阅读路由：用户问“为什么这样设计”时优先读总体架构和对应模块的 Part A；用户要求实现、修改或验证时，必须继续读取总体架构 Part B、对应 Owner 模块 Part B、ADR/共享 Contract、Current Status 和当前 Program。Part A 负责解释，不创建第二套状态机；Part B 才是 Codex 生成实现约束的规范入口。
 
 ## Current / Target / Future / History
 

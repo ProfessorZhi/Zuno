@@ -98,6 +98,28 @@ Problem / Scope / Non-goal
 docs/history/architecture-v1-baseline.md
 ```
 
+## 两条阅读路径
+
+给第一次接触 Zuno 的工程师：
+
+```text
+architecture.md Part A
+→ 感兴趣的模块 Part A
+→ 需要深挖时进入对应模块 Part B
+```
+
+给 Codex、实现者和架构审查者：
+
+```text
+architecture.md Part B / global invariants
+→ Owner module Part B
+→ ADR / Shared Contract Registry
+→ docs/status/ 与 docs/evidence/
+→ .agent/programs/（只有用户明确激活 Program 后）
+```
+
+当问题是“为什么这样设计”时优先读 Part A；当任务是“实现、修改或验证”时必须读 Part B。两条路径最终回到同一份 Canonical Markdown，不产生 human/spec 镜像。
+
 ## 从云端同步到本地
 
 本仓库架构文档以 GitHub `main` 为共享基线。已有 checkout 时先快进同步：
@@ -155,11 +177,12 @@ docs/governance/
 
 模块含义变化时先更新对应模块唯一文档，再同步总架构的跨模块关系。图形关系变化时，把 `architecture-views.md` 和 `architecture.html` 作为一个整体同步；本轮只更新文字事实，不改展示配对。
 
-总架构按“问题 → 平台形态 → 端到端运行 → 分布式正确性 → 生产运维 → 验证与演进”的顺序组织；模块正文保留各自稳定标题锚点，但遵循同一套七 Part 写作协议。标题锚点是为了保持已有 QA 和外部引用稳定，不代表模块细节脱离 Owner 文档。
+总架构的 Part A 按“问题 → 平台形态 → 端到端运行”组织，Part B 按“全局不变量 → Contract → 分布式正确性 → 生产运维 → 验证与演进”组织；模块正文保留各自稳定标题锚点，同时在同一文件内提供 Part A / Part B。标题锚点是为了保持已有 QA 和外部引用稳定，不代表模块细节脱离 Owner 文档。
 
 ```text
 python tools/scripts/verify_architecture_document_set.py
 python tools/scripts/verify_architecture_semantic_alignment.py
+python tools/scripts/verify_architecture_human_readability.py
 python tools/agent/render_architecture.py --write
 python tools/agent/render_architecture.py --check
 python tools/scripts/verify_docs_entrypoints.py

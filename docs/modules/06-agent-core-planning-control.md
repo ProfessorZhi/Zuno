@@ -1,7 +1,10 @@
-# 06 Agent Core / Planning & Control
+# Agent 怎样理解任务、制定计划并控制执行？
 
 updated: 2026-08-11
 status: normative-target-module-architecture
+formal_module: 06 Agent Core / Planning & Control
+human_readable_part: Part A — 面向人的设计说明
+normative_specification_part: Part B — 规范性架构与实施约束
 module_number: 06
 formal_path: `docs/modules/06-agent-core-planning-control.md`
 writing_standard: `docs/governance/architecture-document-writing-standard.md`
@@ -74,6 +77,16 @@ Review / ReviewScope
 ```
 
 Agent Core 拥有 Why/When、Plan、Run、Step、Proposal 和 Replan；Knowledge 拥有证据获取，Memory 拥有历史上下文，Tool/Security 拥有外部效果与授权。模型只产生 Proposal，不能直接提交领域终态。
+
+# Part A — 面向人的设计说明
+
+## A0. 用合同审查理解 Agent Core
+
+面对“检查 SaaS 合同责任限制”这个问题时，Agent Core 先理解目标，再生成 Review Plan；它可以让 Knowledge 补证据、让 Memory 提供受治理上下文、让 Tool 执行外部动作，但模型只能提出 Proposal，最终控制权仍由 Single Controller 和确定性 Gate 持有。
+
+## A1. Part A 与 Part B 的边界
+
+本部分解释为什么简单任务也有 Plan、为什么保留固定 AgentRunGraph、为什么 Plan DAG 可以动态、为什么 Retry 不等于 Replan，以及并行发现计划错误时如何暂停。Part B 定义 TaskContract、PlanVersion、StepRun、ControlDecision、Barrier、状态、恢复、幂等、权限和完成证据。
 
 # Part I：定位与概念架构
 
@@ -619,6 +632,21 @@ Run → CANCELLING
 ```
 
 ---
+
+# Part B — 规范性架构与实施约束
+
+Part B 是 Agent Core 的唯一实现规范入口；它定义控制权和状态边界，不把 Knowledge、Memory、Tool 或 Security 的事实重新维护一份。
+
+## B0. 规范索引
+
+| 规范主题 | 本文正式位置 |
+| --- | --- |
+| Invariant / Ownership | Part I、Part V–VII 的控制权和 Owner 章节 |
+| Contract / State / Failure | AgentRun、PlanVersion、StepRun 与 Failure Taxonomy |
+| Recovery / Idempotency | Dispatch、Fencing、Retry、Replan Barrier 和 Orphan Recovery |
+| Security / Audit | Effective Policy、Approval、Side Effect 和 Audit 章节 |
+| Persistence / Code Boundary | Domain Store、Checkpointer、表、Ports 和目录章节 |
+| Test / Evidence | Part VIII 的测试矩阵、Requirement 和完成证据 |
 
 # Part III：状态、恢复与一致性概览
 

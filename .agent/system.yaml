@@ -47,6 +47,10 @@ architecture_directory_contract:
     - "docs/architecture/architecture-views.md"
     - "docs/architecture/architecture.html"
   visual_source_role: "architecture-views.md and architecture.html are one paired diagram presentation surface; neither is an independent architecture fact source"
+  reading_protocol:
+    human_question: "read architecture.md Part A, then the relevant module Part A"
+    implementation_or_review: "read architecture.md Part B, the owning module Part B, ADR/shared contracts, status/evidence, and the active Program if any"
+    no_mirror_rule: "Part A and Part B live in the same canonical Markdown; never create human/spec mirror documents"
   forbidden_content:
     - "module-specific second architecture documents"
     - "production readiness"
@@ -178,6 +182,7 @@ skill_routes:
       - "python tools/scripts/verify_deep_dive_architecture.py"
       - "python tools/scripts/verify_architecture_interview_qa.py"
       - "python tools/scripts/verify_architecture_writing_standard.py"
+      - "python tools/scripts/verify_architecture_human_readability.py"
       - "python tools/scripts/verify_markdown_internal_links.py"
       - "python .agent/scripts/verify_agent_system.py"
       - "python .agent/scripts/verify_doc_boundaries.py"

@@ -2,6 +2,9 @@
 
 updated: 2026-08-11
 status: normative-target-integration-architecture
+human_readable_part: Part A — 面向人的设计说明
+normative_specification_part: Part B — 规范性架构与实施约束
+reading_order: Part A → Owner module Part A → Part B → Current Status / Evidence
 document_role: cross-module integration source
 canonical_domain_sources: `docs/modules/01-*.md` through `docs/modules/11-*.md`
 current_state_source: `docs/status/production-readiness.md`
@@ -12,6 +15,22 @@ writing_standard: `docs/governance/architecture-document-writing-standard.md`
 > 领域对象、状态转换、Failure、持久化和测试细节发生冲突时，以对应 Canonical Owner 的模块文档为准；本文必须在同一轮治理变更中被修正。正式文字设计面只包括本文和十一份模块文档；`architecture-views.md` 与 `architecture.html` 是不可拆分的展示配对，不拥有独立架构语义。
 
 本文按六个阅读 Part 组织，但保留既有章节编号作为稳定引用锚点。阅读顺序是：问题与约束 → 平台形态 → 一次任务如何运行 → 分布式系统如何保持正确 → 如何部署和演练 → 如何验证与演进。模块文档中的字段、状态和 Failure 细节不在此复制。
+
+# Part A — 面向人的设计说明
+
+本部分先回答“Zuno 为什么这样设计”。读者可以把它当作总体架构导读：先理解企业法律工作的业务问题，再沿着一个统一案例看到模块如何协作。正式对象、状态和实现约束在 Part B 与对应 Owner 模块中定义，本部分不创建第二套状态机。
+
+## A0. 用一个案例理解 Zuno
+
+统一案例是企业采购 SaaS 合同审查：供应商提交第三版合同，用户希望检查责任限制是否按上一轮意见修改；若仍有偏离，系统形成带证据的 Finding 和 Redline，经律师确认后生成报告，必要时在批准后发送给法务负责人。这个案例会贯穿 Matter、DocumentVersion、Evidence、Memory、Plan、Tool、Security 和 Eval。
+
+## A1. 先读问题，再读规范
+
+Part A 解释问题、取舍、正常流程和异常体验；Part B 解释谁拥有事实、状态如何推进、什么可以重试、什么必须对账、数据如何持久化以及什么证据才算完成。两部分共用同一份 Canonical Markdown，任何正式 Contract 只在规范部分和 Owner 模块中定义一次。
+
+## A2. 本部分的阅读出口
+
+读完 Part A 后，读者应能用自己的话说明 Zuno 的产品定位、四层能力、十一个模块、Single Controller、Evidence-driven Agent、Memory、Tool Safety 和恢复边界；继续实现或审查时，必须转入 Part B，而不是从叙事段落推断代码行为。
 
 # Part I — 为什么需要 Zuno
 
@@ -1033,6 +1052,21 @@ accepted immutable AuditEvent     Owner: Observability & Eval
 `AuditPersistenceReceipt != AuditEvent != Tool Effect success`。ExternalSinkDelivery、StructuredLog、Trace Projection 与 Queue ACK 都不能替代 AuditEvent。
 
 ---
+
+# Part B — 规范性架构与实施约束
+
+Part B 是 Agent、工程师和实现 Program 使用的规范入口。它不新增业务 Contract；完整定义仍由本总架构和对应 Owner 模块共同持有。
+
+## B0. 规范索引
+
+| 规范主题 | 本文和 Owner 文档中的正式位置 |
+| --- | --- |
+| 核心架构不变量 | Part I 的全局原则与对应模块的不变量章节 |
+| 事实负责方与 Contract | Part II、Part V 及各模块 Contract 章节 |
+| 状态、失败与恢复 | Part B 的状态/恢复章节及各模块状态机 |
+| Retry、Idempotency、Reconciliation | 分布式正确性、Tool、Knowledge、Memory 和 Infrastructure 章节 |
+| Security、Audit、Observability | Security、Observability & Eval 及各模块安全章节 |
+| Persistence、Code Boundary、Test、Evidence | 部署、Contract、验证和 `docs/status/` / `docs/evidence/` |
 
 # Part IV — 分布式系统如何保持正确
 

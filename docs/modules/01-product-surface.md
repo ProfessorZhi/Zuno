@@ -1,7 +1,10 @@
-# 01 Product Surface
+# 企业法律工作怎样进入 Zuno？
 
 updated: 2026-08-11
 status: normative-target-module-architecture
+formal_module: 01 Product Surface
+human_readable_part: Part A — 面向人的设计说明
+normative_specification_part: Part B — 规范性架构与实施约束
 module_number: 01
 formal_path: `docs/modules/01-product-surface.md`
 writing_standard: `docs/governance/architecture-document-writing-standard.md`
@@ -90,6 +93,16 @@ Matter
 ```
 
 `Matter`、`Review`、`Finding` 是产品业务对象；`ReviewRun` 是一次审查执行记录；`AgentRun` 是 Runtime 执行对象。`Review != AgentRun`、`Finding != Answer`。Product Surface 拥有 Matter、Contract、Review、ReviewFinding、ReviewerDecision、WorkProduct 和 ReviewProfileBinding，但不越权拥有 DocumentVersion、Evidence、Plan、Memory 或 Security Decision。
+
+# Part A — 面向人的设计说明
+
+## A0. 用 SaaS 合同审查理解 Product Surface
+
+法务用户上传供应商第三版 SaaS 合同、查看审查进度、逐条处理 Finding，并在确认后生成 Redline 和报告。Product Surface 的任务不是把后端对象原样摊给用户，而是把 Matter、Contract、Review、Reviewer Decision 和 Work Product 组织成可理解、可恢复的法律工作。
+
+## A1. Part A 与 Part B 的边界
+
+本部分解释用户完成什么工作、为什么以 Matter 而不是 Chat 为中心，以及断线、等待审批和版本变化时用户看到什么。Part B 的完整 Command、Projection、状态、权限、持久化和测试规则仍以本文后半部分为准，不在本节复制。
 
 # Part I：定位与概念架构
 
@@ -723,6 +736,21 @@ freshness
 Product 只组合授权 View，不成为 Security Policy、AuditEvent 或 EvalResult Owner。
 
 ---
+
+# Part B — 规范性架构与实施约束
+
+Part B 是 Product Surface 的实现规范入口。它把前面的用户叙事落实为唯一的事实负责方、状态和交付 Contract。
+
+## B0. 规范索引
+
+| 规范主题 | 本文正式位置 |
+| --- | --- |
+| Invariant / Ownership | Part I 的架构不变量、Product-owned 对象和 Ownership 章节 |
+| Contract / State / Failure | Part V–VII 的领域对象、状态矩阵和 Failure Taxonomy |
+| Recovery / Idempotency | Command、SSE Resume、Reconciler 与交付章节 |
+| Security / Audit | Product Security Gate、重新授权和审计章节 |
+| Persistence / Code Boundary | Target Tables、Typed Ports、事务和代码目录章节 |
+| Test / Evidence | Part VIII 的测试矩阵、Requirement Registry 与完成证据 |
 
 # Part III：状态、Projection、恢复与一致性概览
 

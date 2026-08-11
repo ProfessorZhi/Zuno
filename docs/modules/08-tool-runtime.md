@@ -1,7 +1,10 @@
-# 08 Tool Runtime
+# Agent 怎样安全地执行真实世界操作？
 
 updated: 2026-08-11
 status: normative-target-module-architecture
+formal_module: 08 Tool Runtime
+human_readable_part: Part A — 面向人的设计说明
+normative_specification_part: Part B — 规范性架构与实施约束
 module_number: 08
 formal_path: `docs/modules/08-tool-runtime.md`
 writing_standard: `docs/governance/architecture-document-writing-standard.md`
@@ -100,6 +103,16 @@ ActionProposal
 ```
 
 ToolObservation 可以作为 Memory 的 Source Fact 候选，但不自动成为 Memory；不可信 Tool Output 也不能直接绑定下一次 Tool 的目标、收件人或权限。
+
+# Part A — 面向人的设计说明
+
+## A0. 用 Redline 和邮件发送理解 Tool Runtime
+
+合同审查完成后，系统可能生成 Redline、写入文档系统或发送邮件。Tool Runtime 面对的核心问题是如何不把模型的一句话直接变成副作用；它要经过 ToolVersion、PreparedToolAction、安全门、审批、幂等、Attempt、Effect Receipt 和 Reconciliation，才能把“可能发生”变成“外部世界已确认发生”。
+
+## A1. Part A 与 Part B 的边界
+
+本部分解释为什么 Tool Calling 必须受治理、为什么 timeout 不能盲目重试，以及 MCP Schema 变化为什么会使旧 Approval 失效。Part B 定义 PreparedToolAction、ToolAttempt、EffectReceipt、状态机、失败、恢复、权限、Adapter、持久化、测试和完成证据。
 
 # Part I：定位、术语与边界
 
@@ -824,6 +837,21 @@ Replan Barrier 后的旧 PlanVersion
 Infrastructure 提供 Lock、Lease、CAS 和 Fencing；Tool Runtime 不自建第二套物理锁系统。
 
 ---
+
+# Part B — 规范性架构与实施约束
+
+Part B 是 Tool Runtime 的唯一执行规范；Capability 只描述能力，Security 决定是否允许，Infrastructure 提供耐久化原语，Tool Runtime 才拥有外部 Effect 的执行和对账事实。
+
+## B0. 规范索引
+
+| 规范主题 | 本文正式位置 |
+| --- | --- |
+| Invariant / Ownership | Part I、Part IV 的执行边界和不变量 |
+| Contract / State / Failure | Part III–V 的对象、状态机和 Failure Namespace |
+| Recovery / Idempotency | Effect Assurance、Retry、Reconciliation、Crash Cut Points |
+| Security / Audit | Part VI 的 Security Gate、Output Firewall 和 Audit |
+| Persistence / Code Boundary | Part VII 的表、Adapter SPI、代码和部署 |
+| Test / Evidence | Part IX 的测试、Requirement 和完成证据 |
 
 # Part III：领域对象与 Contract
 

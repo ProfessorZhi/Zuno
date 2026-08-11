@@ -1,7 +1,10 @@
-# Zuno 09 Security Target 架构
+# 为什么企业敢把敏感数据和操作权限交给 Agent？
 
 updated: 2026-08-11
 status: normative-target-module-architecture
+formal_module: 09 Security
+human_readable_part: Part A — 面向人的设计说明
+normative_specification_part: Part B — 规范性架构与实施约束
 module_number: 09
 formal_path: `docs/modules/09-security.md`
 writing_standard: `docs/governance/architecture-document-writing-standard.md`
@@ -83,6 +86,16 @@ Principal / Tenant / Workspace / Matter / Agent / Task
 ```
 
 Memory 的读取、摘要、写入、Projection Serving 和删除都必须经过 Security；不可信 Knowledge、Tool Output 或 Memory Candidate 不能升级为指令或外部副作用授权。
+
+# Part A — 面向人的设计说明
+
+## A0. 用合同审查理解 Security
+
+同一份合同可能被法务、采购和 Agent 以不同范围访问；同一个发送邮件动作还需要考虑 Matter 权限、Agent Scope、Task Down-scope、Approval 和当前 Security Epoch。Security 的问题不是简单的“用户是否登录”，而是每个数据读取、模型调用、记忆使用、工具动作和最终发布都必须在正确上下文中被允许。
+
+## A1. Part A 与 Part B 的边界
+
+本部分先解释信任边界、权限交集、Prompt Injection、Privilege、MCP 和外部副作用风险；Part B 定义 Principal、Grant、Policy、Epoch、Gate、状态机、Failure、Audit、持久化、测试和评测。Security 决定“是否允许”，但不拥有合同事实、Evidence 或 Tool Effect。
 
 # Part I：定位、事实状态与威胁模型
 
@@ -378,6 +391,21 @@ Receipt 不得冒充其他模块领域成功。
 25. 安全 Release Gate 必须同时评估攻击成功率和正常任务效用。
 
 ---
+
+# Part B — 规范性架构与实施约束
+
+Part B 是 Security 的实现规范入口；它把“企业敢用 Agent”落实为可计算的 Scope、可失效的 Epoch、Fail-closed Gate 和可审计的 Decision。
+
+## B0. 规范索引
+
+| 规范主题 | 本文正式位置 |
+| --- | --- |
+| Invariant / Ownership | Part I 的 Security Ownership 与强制不变量 |
+| Contract / State / Failure | Part II、Part VI 的授权、状态和 Failure |
+| Recovery / Idempotency | Revocation、TOCTOU、Retry、Recovery、Reconcile |
+| Security / Audit | Part III–V 的 Trust、Gate、Approval、Audit |
+| Persistence / Code Boundary | Storage Mapping、Migration、API 和代码布局 |
+| Test / Evidence | Part VIII 的 Fault、Eval、Requirement 和完成证据 |
 
 # Part II：身份、组织、授权与策略
 

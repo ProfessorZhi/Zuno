@@ -19,6 +19,7 @@ python .agent/scripts/verify_doc_boundaries.py
 python tools/agent/render_architecture.py --check
 python tools/scripts/verify_architecture_document_set.py
 python tools/scripts/verify_architecture_writing_standard.py
+python tools/scripts/verify_architecture_human_readability.py
 python tools/scripts/verify_agent_core_target_protocols.py
 ```
 

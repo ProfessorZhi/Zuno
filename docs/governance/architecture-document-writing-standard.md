@@ -24,6 +24,30 @@ scope: `docs/architecture/`, `docs/modules/` 与其入口、图源、验证器
 → 取舍与追问
 ```
 
+## 0.1 双层阅读结构
+
+每一份 Canonical Markdown 都必须同时提供两种阅读深度，但不得拆成两份文件：
+
+```text
+Part A — 面向人的设计说明
+    问题 → 业务案例 → 设计矛盾 → 概念 → 正常流程 → 异常流程 → 取舍 → 模块边界
+
+Part B — 规范性架构与实施约束
+    Invariant → Ownership → Contract → State/Guard → Failure
+    → Recovery/Idempotency → Security/Audit → Persistence/Code
+    → Test/Evidence → Current/Target/Future
+```
+
+Part A 允许用简化流程帮助第一次阅读，但不得定义与 Part B 不同的终态；Part B 是 Agent、实现者和 Program 生成时的规范入口。Part A 需要引用正式规范时，应指向同一文件的 Part B 或对应 Owner 模块，而不是复制一套状态机。
+
+## 0.2 统一业务案例和术语规则
+
+默认业务案例是“企业采购 SaaS 合同审查”：供应商提交 V3，系统检查责任限制是否按上一轮意见修改，形成带证据的 Finding 和 Redline，经律师决定后生成报告，必要时在批准后发送邮件。每个模块从自己的 Owner 视角解释该案例，局部案例最后必须回到这个主线。
+
+项目内部术语第一次出现时采用“中文概念（Formal English Term）”。中文不是机械翻译，而要解释责任边界。例如：事实唯一负责方（Canonical Owner）是唯一有权提交和终结某类事实状态的模块；候选结果（Proposal）是尚未通过 Schema、Policy、安全门和 Owner Commit 的建议；派生读模型（Projection）可重建，不能反向修改正式事实；副作用对账（Reconciliation）是在 UNKNOWN 时先核实外部世界，而不是盲目重试。
+
+正式 Contract 名称、状态名、代码标识和 Schema 字段在代码块及规范段落中保持原名；正文第一次出现时使用中文概念优先。禁止连续堆叠未经解释的英文缩写、类名或表名。
+
 ## 1. 事实源和状态边界
 
 正式架构事实的优先级为：
@@ -189,9 +213,17 @@ Domain Contract
 
 包括 Trace、Metric、Unit / Contract / Integration / Fault / E2E / Eval、Completion Evidence、Current / Target / Gap / Future、替代方案和 Interview QA 引用。
 
+### Part VIII — Part B 规范索引
+
+模块的 Part B 至少可以定位：核心不变量、事实负责方、正式 Contract、状态与 Transition Guard、Failure Taxonomy、Retry/Recovery/Idempotency、Security/Approval/Audit、Persistence/Queue/Projection、Code Boundary、Database/Migration Requirement、Observability/Metric/Trace、Test/Evidence 和 Current/Target/Future。已有详细章节优先复用，不为满足目录而复制事实。
+
 ## 4. 写作规则
 
 - 重要概念第一次出现时，先写问题和原因，再给术语、字段或状态名。
+- Part A 的标题优先写人类问题，例如“工具调用超时以后，怎么判断邮件到底发没发？”，正式英文名放在标题后或首次解释处。
+- 不使用“类名 + enum + 表结构”作为第一阅读体验；Schema、Contract 和状态图应在 Part B 或 Part A 已经解释原因之后出现。
+- 每个 Part A 至少有一个 Problem、Case、Flow、Failure/Trade-off 叙事出口；每个 Part B 至少有 Invariant、Ownership、Contract、State/Failure、Recovery/Idempotency、Security、Test/Evidence 出口。
+- 不为了满足面试问题虚构 Current 数字；没有 Eval、Trace、Benchmark 或 Production Evidence 时，明确说明这是 Architecture 如何测量，而不是当前结果。
 - 每个重要章节以一句结论句开始，再用 2–4 段解释、必要图表和异常 Case 支撑。
 - 标题优先写问题或决策，例如“为什么 RRF 后仍需要 Rerank”，而不是只写“Rerank”。
 - H1 只用于文档标题、Part 和一级架构章节；H2 负责设计问题；H3 负责问题内部策略。
@@ -231,6 +263,7 @@ python tools/agent/render_architecture.py --check
 - 十一个模块均可路由到唯一正式文档；
 - 模块文档可以定位 Problem、Ownership、Runtime Flow、State / Failure、Security、Observability、Current / Target；
 - 展示配对、内部链接和 QA references 可解析；
+- 十二份 Canonical Markdown 均有 Part A 和 Part B，且 Part A/Part B 不产生相互冲突的第二套事实；
 - 未接受 Candidate 不被标为 accepted / normative Current。
 
 建议验证顺序：

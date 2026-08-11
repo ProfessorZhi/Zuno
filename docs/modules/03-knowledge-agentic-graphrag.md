@@ -1,7 +1,10 @@
-# 03 Knowledge / Agentic GraphRAG
+# 一个法律结论怎样找到足够可靠的证据？
 
 updated: 2026-08-11
 status: normative-target-module-architecture
+formal_module: 03 Knowledge / Agentic GraphRAG
+human_readable_part: Part A — 面向人的设计说明
+normative_specification_part: Part B — 规范性架构与实施约束
 module_number: 03
 formal_path: `docs/modules/03-knowledge-agentic-graphrag.md`
 writing_standard: `docs/governance/architecture-document-writing-standard.md`
@@ -72,6 +75,16 @@ TaskUnderstandingSnapshot / Claim
 ```
 
 Knowledge 不创建 Matter、Review、MemoryVersion 或 Tool Effect；当证据缺口改变任务结构时，只提交 `KnowledgeControlProposal`，由 Agent Core 决定是否 Replan。
+
+# Part A — 面向人的设计说明
+
+## A0. 用责任限制问题理解 Agentic GraphRAG
+
+当用户问“当前合同的责任上限是否覆盖数据泄露，并且是否偏离 Playbook”时，单个相似片段不够。系统要分别找到合同事实、定义和例外、企业规则与适用法律，再判断证据是否足以支持每个 Claim。
+
+## A1. Part A 与 Part B 的边界
+
+本部分解释为什么 BM25、Vector、Graph、Rerank 和 Evidence-driven Control 要协作；Part B 定义 EvidenceRequirement、KnowledgeSnapshot、RetrievalRound、EvidenceEvaluation、状态机、失败、权限、索引版本和评测 Contract。图谱或索引只能提供候选，不会自动成为正式证据。
 
 # Part I：问题、定义与模块边界
 
@@ -952,6 +965,21 @@ CANCELLED
 最终 Ask User、External Tool Step、Replan、Abstain 和 Answer Finalization 由 Agent Core 决定。
 
 ---
+
+# Part B — 规范性架构与实施约束
+
+Part B 是 Knowledge 的实现规格入口，负责把“证据足够”变成可检查的 Contract，而不是把 Agent Core 的任务控制权复制进检索模块。
+
+## B0. 规范索引
+
+| 规范主题 | 本文正式位置 |
+| --- | --- |
+| Invariant / Ownership | Part I 的模块边界、不变量与 Knowledge/Memory 分工 |
+| Contract / State / Failure | Part III、Part V、Part VI 的状态和 Typed Contract |
+| Recovery / Idempotency | Retrieval Attempt、Budget、Cancellation、Reconciliation |
+| Security / Audit | Knowledge Scope、Citation、Taint 和权限章节 |
+| Persistence / Code Boundary | Part VI、Part VII 的事务、表、API 和代码边界 |
+| Test / Evidence | Part VIII 的 Requirement、Test Matrix 和完成证据 |
 
 # Part III：状态、并发、有效性与恢复
 

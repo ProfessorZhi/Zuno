@@ -1,7 +1,10 @@
-# 05 Memory & Context
+# Agent 怎样形成长期记忆，又怎样避免记错？
 
 updated: 2026-08-11
 status: normative-target-module-architecture
+formal_module: 05 Memory & Context
+human_readable_part: Part A — 面向人的设计说明
+normative_specification_part: Part B — 规范性架构与实施约束
 module_number: 05
 formal_path: `docs/modules/05-memory-context.md`
 writing_standard: `docs/governance/architecture-document-writing-standard.md`
@@ -75,6 +78,16 @@ TaskUnderstandingSnapshot / Source Fact
 ```
 
 Memory 仍不拥有 Matter、Review、Knowledge Evidence 或 Tool Effect；它提供可治理的历史上下文和读取视图。
+
+# Part A — 面向人的设计说明
+
+## A0. 用一次合同审查理解 Memory
+
+上一轮审查的律师意见、用户当前偏好和历史经验可能帮助本次审查，但它们不能未经筛选直接塞进 Prompt。系统要先抽取 StructuredObservation，再经过 Capture Policy、候选、治理、版本和权限检查，最后才形成可召回的长期记忆。
+
+## A1. Part A 与 Part B 的边界
+
+本部分解释 Working、Session、Long-term、Episodic、Semantic、Procedural、冲突和失效；Part B 定义 MemoryCandidate、MemoryWriteDecision、MemoryVersion、ContextPackVersion、时间语义、来源追溯、删除传播、持久化、测试和 Eval。Memory 不拥有 Knowledge Evidence，也不能覆盖当前 User Instruction 或 Security Policy。
 
 # Part I：定位、术语与概念架构
 
@@ -1268,6 +1281,21 @@ Backup / Legal Hold Workflow
 ```
 
 ---
+
+# Part B — 规范性架构与实施约束
+
+Part B 是 Memory 的实现规范入口。前面的故事说明为什么需要治理，后面的唯一状态机和 Contract 说明何时能写入、何时能召回、何时必须隔离或撤销。
+
+## B0. 规范索引
+
+| 规范主题 | 本文正式位置 |
+| --- | --- |
+| Invariant / Ownership | Part I 的边界、职责和不变量 |
+| Contract / State / Failure | Part III、Part IV 的状态机和领域对象 |
+| Recovery / Idempotency | Commit、Generation、Reconciliation 和删除章节 |
+| Security / Audit | Part V 的 Scope、Poisoning、Privacy 和验证 |
+| Persistence / Code Boundary | Part VI、Cross-module Contract 与 Infrastructure |
+| Test / Evidence | Part VII–VIII 的矩阵、Eval 和完成证据 |
 
 # Part III：状态、失败、恢复与一致性
 

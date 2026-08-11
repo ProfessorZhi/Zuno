@@ -1,7 +1,10 @@
-# 04 Model Gateway
+# Agent 需要模型时，系统怎样选择和治理调用？
 
 updated: 2026-08-11
 status: normative-target-module-architecture
+formal_module: 04 Model Gateway
+human_readable_part: Part A — 面向人的设计说明
+normative_specification_part: Part B — 规范性架构与实施约束
 module_number: 04
 formal_path: `docs/modules/04-model-gateway.md`
 writing_standard: `docs/governance/architecture-document-writing-standard.md`
@@ -90,6 +93,16 @@ TaskUnderstanding / Extraction / Query Rewrite / Risk / Evidence Critic
 ```
 
 法律领域的 Embedding、Reranker 和 Task Model 可以由 Domain Engineering 提供候选 Artifact，但只有经过 Eval/Release Gate 后，Model Gateway 才能按版本提供在线服务。模型永远不能直接激活 Plan、MemoryVersion、KnowledgeVersion、Approval 或 Publication。
+
+# Part A — 面向人的设计说明
+
+## A0. 用一次合同审查理解 Model Gateway
+
+同一次审查的调用流程可能需要 Planner、Clause Extractor、Query Rewriter、Reranker、Legal Reasoner 和 Evidence Critic。Model Gateway 解决的是“调用哪个已批准模型、如何控制成本和失败”，不替 Agent Core 决定目标，也不替 Knowledge、Memory 或 Security 提交领域事实。
+
+## A1. Part A 与 Part B 的边界
+
+本部分先解释模型角色和路由取舍；Part B 定义 ModelCall、Attempt、Quota、Usage、Provider、Config Snapshot、Retry、Fallback、Security、持久化、测试和 Release 证据。模型输出始终是 Proposal、Score 或 Result，不能直接激活 Plan、MemoryVersion 或外部 Effect。
 
 # Part I：定位、问题与跨模块模型使用地图
 
@@ -705,6 +718,21 @@ raw_payload_ref
 Unknown Provider Enum、Event、Finish Reason 或 Error Shape 不得默认为成功；必须 Fail-closed、Quarantine 或进入 Mapping Warning + Conformance Failure。
 
 ---
+
+# Part B — 规范性架构与实施约束
+
+Part B 是 Model Gateway 的在线调用规范，不包含离线法律模型训练工厂；候选 Artifact 必须经过 Eval/Release Gate 后才能进入在线 Profile。
+
+## B0. 规范索引
+
+| 规范主题 | 本文正式位置 |
+| --- | --- |
+| Invariant / Ownership | Part I 的 Ownership 与架构不变量 |
+| Contract / State / Failure | Part III–V 的 Operation、Attempt 和 Failure 章节 |
+| Recovery / Idempotency | Retry、Fallback、Budget、Circuit 和 Cache 章节 |
+| Security / Audit | Security Gate、Redaction、Residency、Audit 章节 |
+| Persistence / Code Boundary | Part VI–VII 的表、目录、API 和 Versioning |
+| Test / Evidence | Part VIII 的 Requirement、测试和 Current 证据 |
 
 # Part III：完整运行流程与 Operation 协议
 

@@ -1,7 +1,10 @@
-# 07 Capability / Skill
+# 平台怎样描述、组合和选择可执行能力？
 
 updated: 2026-08-11
 status: normative-target-module-architecture
+formal_module: 07 Capability / Skill
+human_readable_part: Part A — 面向人的设计说明
+normative_specification_part: Part B — 规范性架构与实施约束
 module_number: 07
 formal_path: `docs/modules/07-capability-skill.md`
 writing_standard: `docs/governance/architecture-document-writing-standard.md`
@@ -84,6 +87,16 @@ Capability / Skill Definition
 ```
 
 Skill 可以声明需要的 Model Role、Knowledge、Memory、Capability 和 Tool，但授权、预算、审批、幂等和最终状态仍由对应 Owner 决定。
+
+# Part A — 面向人的设计说明
+
+## A0. 用合同审查理解 Capability / Skill
+
+一次 SaaS 合同审查要解决的能力问题，可能包括合同审查 Skill、证据检索能力、条款比较能力、Redline 能力和报告生成能力。Capability / Skill 负责描述、发现、组合和选择这些能力，不直接拥有 Matter、Evidence、Memory 或外部 Effect。
+
+## A1. Part A 与 Part B 的边界
+
+本部分先解释能力为什么要渐进式加载、版本化和可用性判断；Part B 定义 CapabilityVersion、SkillVersion、Provider Binding、Selection Result、状态机、失败、权限、持久化、测试和完成证据。Agent Core 决定是否把选择结果纳入 Plan，Tool Runtime 决定如何执行副作用。
 
 # Part I：定位、术语与概念架构
 
@@ -653,6 +666,21 @@ Credential Lease
 完整审计 Payload
 ```
 
+
+# Part B — 规范性架构与实施约束
+
+Part B 是 Capability / Skill 的实现规格入口，强调能力描述与执行事实分离，避免把“可用”误写成“已执行”。
+
+## B0. 规范索引
+
+| 规范主题 | 本文正式位置 |
+| --- | --- |
+| Invariant / Ownership | Part I 的职责、不变量和 Ownership |
+| Contract / State / Failure | Part III–IV 的生命周期、Failure 和 Typed Contract |
+| Recovery / Idempotency | Fallback、Wait、Replan、Reconciler 和事务章节 |
+| Security / Audit | Provider Trust、Credential Scope、Security Gate |
+| Persistence / Code Boundary | Part VI 的数据库、API、SPI 和 Migration |
+| Test / Evidence | Part VII–VIII 的矩阵、Requirement 和完成证据 |
 
 # Part III：状态、失败、恢复与一致性
 
