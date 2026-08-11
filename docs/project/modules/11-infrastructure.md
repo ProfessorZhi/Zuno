@@ -1,7 +1,8 @@
 # 一个长运行 Agent 系统怎样稳定地跑起来？
 
 updated: 2026-08-11
-status: normative-target-module-architecture
+status: superseded-legacy-reference
+canonical_status: Superseded; see `docs/project/services/service-architecture.md` and `docs/project/deployment/microservice-deployment.md`
 formal_module: 11 Infrastructure
 human_readable_part: Part A — 面向人的设计说明
 normative_specification_part: Part B — 规范性架构与实施约束
@@ -16,6 +17,10 @@ shared_contract_registry: `docs/governance/wave1-cross-module-contract-registry.
 > 本文是 Zuno 第 11 个逻辑模块 Infrastructure 的唯一正式 Target 架构文档。
 >
 > 本文统一承载原主文档、数据服务附录和一致性生命周期附录中的全部有效设计。模块不再维护第二份规范性附录。Current、Gap、Measurement 与 production readiness 仍由 `docs/status/production-readiness.md` 维护；实现和迁移计划进入 `.agent/programs/`。
+
+## RED-KERNEL-V3 部署边界
+
+用户数量假设不能单独证明微服务。默认先采用模块化单体 + independently scalable workers，按 API/Domain、Agent long-running、Ingestion/Index、Sandbox 和 Eval 的 workload heterogeneity 观察 scaling、failure、security 和 team ownership；只有证据证明边界不足时才拆服务。Graph、Memory、Runtime 和外部 Host 的替换不应迫使 Domain Store 改变。
 
 ## 0. 文档边界与规范优先级
 

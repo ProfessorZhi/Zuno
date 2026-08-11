@@ -1,6 +1,6 @@
 # Zuno 架构文档
 
-`docs/project/architecture/` 是唯一正式总架构目录，只能保留：
+`docs/project/architecture/` 是唯一正式总体架构目录，只能保留四个文件：
 
 ```text
 README.md
@@ -9,188 +9,35 @@ architecture-views.md
 architecture.html
 ```
 
-架构文档的统一信息架构、标题、图源、Current/Target 表达和 QA 引用规则见：
+## 职责
 
-[`docs/governance/architecture-document-writing-standard.md`](../../governance/architecture-document-writing-standard.md)
+- `architecture.md`：Product、Domain、Logical Capability、Physical Service/Deployment 的跨层关系、全局边界、读取顺序和 Current/Target/History。
+- `architecture-views.md` + `architecture.html`：不可拆分的 Mermaid 展示配对，不拥有独立事实。
+- `README.md`：维护规则和入口，不承载专题 Contract。
 
-## 正式设计事实与展示配对
+专题设计必须放在 `docs/project/<topic>/`，不能重新塞回 architecture 目录。当前 Canonical Taxonomy 和服务边界由 `docs/decisions/` 下的 [`ADR-0011`](../../decisions/0011-architecture-document-taxonomy.md)、[`ADR-0010`](../../decisions/0010-microservice-target-and-service-boundaries.md) 维护。
 
-Zuno 正式架构设计事实共十二份：
-
-```text
-11 × docs/project/modules/<NN>-<module>.md
- 1 × docs/project/architecture/architecture.md
-```
-
-职责：
-
-- `architecture.md`：十一模块的跨模块集成架构、全局不变量和端到端流程。
-- `architecture-views.md` + `architecture.html`：不可拆分的架构图展示配对；前者是图源，后者是展示入口，二者不拥有独立架构事实。
-- `README.md`：目录、唯一事实源和维护规则，不是架构正文。
-- `docs/project/modules/`：每个领域 Owner 的唯一详细 Target 架构；领域细节冲突时以对应模块文档为准。
-- `.agent/` 只保存项目级 Skill、路由、验证器、模板和当前执行状态，不保存架构或模块镜像。
-
-## Architecture v1 与 v2 路由
-
-已归档的 Runtime 工程工作使用过冻结的 Architecture v1 基线；该基线现在作为 History 证据保留：
+## Priority
 
 ```text
-c9d099d64a1af28102231751ce55df8217173e89
+Accepted ADR / Shared Contract
+→ Domain / Owner专题文档
+→ architecture.md 跨域组合
+→ architecture-views.md + architecture.html 展示
 ```
 
-新的 Evidence-Driven Retrieval 目标与 Reuse-first Provider 边界由以下正式 ADR 独立定义：
+Current 状态必须回到 `docs/status/`、`docs/evidence/` 和最新代码；Target 文档不能证明部署或生产就绪。
 
-```text
-docs/decisions/0006-evidence-driven-agentic-graphrag.md
-docs/decisions/0007-reuse-first-provider-boundary.md
-```
+## Maintenance
 
-这样做是为了避免用新 Target 静默改变已归档 Program 的 Contract 和验收条件。ADR 0006 是 `accepted-target`，优先于旧模块中的冲突描述，但不授权本次收口立即实现，也不证明任何 v2 Runtime 已成为 Current。ADR 0007 是 `accepted-target`，确立 Reuse-first 与 Provider Boundary；它不把任何候选项目标记为最终 Adopt。
-
-Runtime 工程收口已完成并归档；当前 `.agent/programs/` 为 `no-active`。下一阶段是独立的设计与整理工作：
-
-```text
-Current Baseline Review
-→ Project Workflow Consolidation
-→ Canonical Architecture Deep Review
-→ 11 Module Deep Review
-→ Cross-module Contract / ADR Coordination
-→ Architecture Review
-→ 设计确认后才决定是否建立新的 Implementation Program
-```
-
-## 下一阶段目标架构的设计准入标准
-
-下一阶段的目标不是把模块 README 写得更长，而是把每个设计决策写到经得起技术面试追问的程度。设计阶段只修改 `docs/project/architecture/`、`docs/project/modules/`、ADR 和共享 Contract 文档，不创建新的 Runtime Program。
-
-每个总架构和模块设计都必须用文字回答以下问题：
-
-| 面试官会追问什么 | 文档必须说明什么 |
-| --- | --- |
-| 你到底解决了什么问题？ | Problem、用户/系统场景、成功边界和明确 Non-goal |
-| 谁拥有这个事实？ | Owner、Canonical Source、读写权限、禁止越权的模块 |
-| 为什么这样拆？ | 模块边界、依赖方向、替代方案和取舍，而不是只给目录图 |
-| 状态怎样推进？ | 状态机、Transition Guard、版本、并发、事务和可见性 |
-| 模型输出能直接改变系统吗？ | Proposal、Validation、Approval、Commit、Publication 的分层 |
-| 失败后怎么办？ | Failure Namespace、Retry、Backoff、Timeout、Recovery、Reconciliation 和人工介入 |
-| 如何避免重复副作用？ | Idempotency Key、Effect Domain、Fencing、Dedup、Unknown Effect 语义 |
-| 安全边界在哪里？ | Identity、Tenant、Scope、Security Epoch、Approval、Information Flow、Audit |
-| 如何知道真的工作？ | Trace、Audit、Metric、Eval、Release Gate，以及 Current/Target/Gap 证据边界 |
-| 为什么不选另一种架构？ | 延迟、成本、复杂度、可靠性、运维和迁移代价的可解释权衡 |
-
-每份文档的最低叙事顺序固定为：
-
-```text
-Problem / Scope / Non-goal
-→ Ownership / Trust Boundary / Invariant
-→ Runtime Flow / State Machine / Contract
-→ Failure / Retry / Recovery / Idempotency
-→ Security / Approval / Budget / Audit
-→ Observability / Eval / Evidence
-→ Current / Target / Gap / Future
-→ Alternatives / Trade-offs / Interview Questions
-```
-
-“设计完整”只表示边界和决策已经写清楚、内部一致且可审查；不等于实现可用、质量已证明或 Production Ready。新实现 Program 只有在这套设计审查通过后才允许单独建立。
-
-历史路由说明见：
-
-```text
-docs/history/architecture-v1-baseline.md
-```
-
-## 两条阅读路径
-
-给第一次接触 Zuno 的工程师：
-
-```text
-architecture.md Part A
-→ 感兴趣的模块 Part A
-→ 需要深挖时进入对应模块 Part B
-```
-
-给 Codex、实现者和架构审查者：
-
-```text
-architecture.md Part B / global invariants
-→ Owner module Part B
-→ ADR / Shared Contract Registry
-→ docs/status/ 与 docs/evidence/
-→ .agent/programs/（只有用户明确激活 Program 后）
-```
-
-当问题是“为什么这样设计”时优先读 Part A；当任务是“实现、修改或验证”时必须读 Part B。两条路径最终回到同一份 Canonical Markdown，不产生 human/spec 镜像。
-
-## 从云端同步到本地
-
-本仓库架构文档以 GitHub `main` 为共享基线。已有 checkout 时先快进同步：
+含义变化时先修改对应专题 Owner 文档，再同步总架构和图源；图形关系变化时运行：
 
 ```powershell
-git status --short --branch
-git pull --ff-only origin main
-```
-
-全新机器先 clone：
-
-```powershell
-git clone https://github.com/ProfessorZhi/Zuno.git
-Set-Location -LiteralPath .\Zuno
-```
-
-同步后先读五处：
-
-```text
-docs/project/modules/README.md
-docs/project/architecture/architecture.md
-docs/decisions/0006-evidence-driven-agentic-graphrag.md
-docs/decisions/0007-reuse-first-provider-boundary.md
-.agent/programs/current.md
-```
-
-`docs/project/modules/` 说明十一模块既有完整 Target；`architecture.md` 说明跨模块集成；ADR 0006 说明证据检索 Target；ADR 0007 说明 Reuse-first 和 Provider Boundary；`.agent/programs/current.md` 说明当前是否存在 active program 和 Current / Gap 边界。clone 或 pull 只证明文件同步，不证明 Target 已成为 Current。
-
-## 规范优先级
-
-```text
-全局不可变原则、已接受 ADR、共享 Contract Registry
-→ 十一份 Canonical Owner 模块文档
-→ architecture.md 跨模块集成
-→ architecture-views.md + architecture.html 展示配对
-```
-
-模块文档更新后，总架构和图必须向模块对齐；禁止根据旧 Mermaid 反向修改新模块 Contract。已接受 ADR 与模块文本冲突时，先按 ADR 执行决策治理，再通过后续文档协调 PR 消除冲突。
-
-## 状态、决策与治理入口
-
-```text
-docs/status/production-readiness.md
-docs/evidence/
-docs/decisions/
-docs/governance/
-最新 main 的代码、Migration、测试、Trace、Eval 与运行证据
-```
-
-- `docs/status/` 和 `docs/evidence/` 负责 Current、Gap、Measurement 和 Production Readiness。
-- `docs/decisions/` 保存正式 ADR。
-- `docs/governance/` 保存跨模块 Contract Registry、Ownership 和文档治理。
-- Target 文档存在不能自动提升状态。
-
-## 更新与验证
-
-模块含义变化时先更新对应模块唯一文档，再同步总架构的跨模块关系。图形关系变化时，把 `architecture-views.md` 和 `architecture.html` 作为一个整体同步；禁止手工编辑 HTML 形成第二套事实。
-
-总架构的 Part A 按“问题 → 平台形态 → 端到端运行”组织，Part B 按“全局不变量 → Contract → 分布式正确性 → 生产运维 → 验证与演进”组织；模块正文保留各自稳定标题锚点，同时在同一文件内提供 Part A / Part B。标题锚点是为了保持已有 QA 和外部引用稳定，不代表模块细节脱离 Owner 文档。
-
-```text
-python tools/scripts/verify_architecture_document_set.py
-python tools/scripts/verify_architecture_semantic_alignment.py
-python tools/scripts/verify_architecture_human_readability.py
 python tools/agent/render_architecture.py --write
 python tools/agent/render_architecture.py --check
+python tools/scripts/verify_architecture_document_set.py
 python tools/scripts/verify_docs_entrypoints.py
-python .agent/scripts/verify_agent_system.py
-python .agent/scripts/verify_doc_boundaries.py
-pytest -q tests/repo/test_architecture_document_set.py tests/repo/test_docs_entrypoints.py -p no:cacheprovider
+python tools/scripts/verify_markdown_internal_links.py
 ```
 
-禁止在 architecture 目录放置模块专题、状态报告、ADR、Program、Migration 计划或附件目录。禁止重新创建 `.agent/architecture/`、`.agent/modules/` 作为并行事实源。
+禁止创建第五个文件、`.agent/architecture/` 镜像或第二套 Service/Domain/State 清单。

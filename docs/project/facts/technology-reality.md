@@ -23,6 +23,9 @@ Business Need
 | 训练数据、权限、Train/Validation/Test 隔离 | `[UNKNOWN]` | 需要 Dataset、实验和治理证据 |
 | API / Model Gateway 当前实现 | `[REPO_EVIDENCE]` 或 `[UNKNOWN]` | 以模块文档、代码和运行证据交叉确认 |
 | 目标模型路由、Serving 和回滚 | `[TARGET_ACCEPTED]` 或 `[BLUE_PROPOSAL]` | 不能冒充历史部署 |
+| 当前后端语言与 API 入口 | `[REPO_EVIDENCE]` | `pyproject.toml` 为 Python 3.12，Docker 使用 Python 3.12，`zuno.main:app` 为 FastAPI 入口 |
+| 当前是否存在 Java / Spring 后端 | `[UNKNOWN]`（仓库内无匹配证据） | 只能说明当前仓库没有 Java/Spring 文件或配置匹配，不能推断外部系统 |
+| 当前是否已经是真微服务部署 | `[REPO_EVIDENCE]` + `[UNKNOWN]` | Compose 有 backend、worker、frontend 应用容器和基础设施；没有独立 Domain/Runtime/Knowledge/Tool 服务的生产证据 |
 
 ## 本轮事实 Gate 的明确保留项
 
@@ -43,4 +46,4 @@ Hosted API 主要需要证明 Provider/API Contract、数据出境、Quota、Fal
 
 ## 其他技术事实
 
-RAG、Memory、Agent、Tool、MQ、DB、GPU 和部署的实际使用情况，都必须区分：个人工作、团队工作、框架提供、外部团队工作和目标设计。详细技术如何工作进入 [`../modules/`](../modules/README.md)；实际证据进入 [`../../evidence/`](../../evidence/README.md)。
+RAG、Memory、Agent、Tool、MQ、DB、GPU 和部署的实际使用情况，都必须区分：个人工作、团队工作、框架提供、外部团队工作和目标设计。目标架构进入 [`../architecture/`](../architecture/README.md) 与专题目录；实际证据进入 [`../../evidence/`](../../evidence/README.md)。

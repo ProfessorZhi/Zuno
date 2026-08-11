@@ -1,7 +1,8 @@
 # 我们怎样知道 Agent 做得对不对？
 
 updated: 2026-08-11
-status: normative-target-module-architecture
+status: superseded-legacy-reference
+canonical_status: Superseded; see `docs/project/eval/legal-eval-and-benchmark.md`
 formal_module: 10 Observability & Eval
 human_readable_part: Part A — 面向人的设计说明
 normative_specification_part: Part B — 规范性架构与实施约束
@@ -13,6 +14,10 @@ reading_order: Problem → Case → Ownership → Runtime → State/Failure → 
 > 本文是 Zuno 第 10 个逻辑模块——Observability & Eval（可观测性与评测）——唯一的正式 Target 架构主设计。
 >
 > 本文统一承载 Trace、Audit、Metric、Log、Eval、RAG Core Five、Conditional Evidence Retrieval 全过程观测、Agent Efficiency、Evidence Registry、Benchmark 和 Release Gate。Current、Gap、Measurement 和 Production Readiness 由 `docs/status/production-readiness.md` 维护；实现与迁移计划进入 `.agent/programs/`。
+
+## RED-KERNEL-V3 竞争评测边界
+
+本模块冻结 A/B/C 评测协议，而不冻结质量结论：A 为 WorkBuddy Generic Legal Agent，B 为 WorkBuddy + Zuno Legal Capabilities，C 为 Zuno Native Runtime + first-class Domain State。三者必须固定模型、原始语料、外部工具、Prompt/Skills、Token 和时间预算；报告 Evidence Sufficiency、Citation Correctness、Unsupported Claim Rate、Conflict/Dispute F1、Fact–Article F1、Applicability Accuracy、Reviewer Acceptance、Latency、Token、Cost、Model Calls、Tool Calls 与 Domain State Reuse Rate。`C ≈ B` 时 Native Runtime 不保留。
 
 ## 0. 文档边界与事实源
 

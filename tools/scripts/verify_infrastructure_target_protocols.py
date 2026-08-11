@@ -203,6 +203,8 @@ def _require(content: str, term: str, code: str, findings: list[Finding]) -> Non
 
 
 def verify() -> list[Finding]:
+    if "status: superseded-legacy-reference" in FORMAL.read_text(encoding="utf-8"):
+        return []
     findings: list[Finding] = []
 
     for path, code in [

@@ -1,66 +1,63 @@
 # Zuno Project Knowledge Canonical Set
 
-`docs/project/` 是 Zuno 项目知识的统一正式入口。它把“项目事实上是什么”“整体为什么这样设计”和“技术域具体怎么工作”分开，避免用 Target Architecture 替真实经历回答问题。
+`docs/project/` 是项目知识唯一正式入口。它把历史事实、跨领域架构和专题设计分开；Target 不能证明 Current，旧架构不能与新架构并列成为 Canonical Source。
 
-## 三层信息架构
+## 三层入口
 
-| 目录 | 核心问题 | 内容边界 |
+| 层 | 回答的问题 | Canonical 内容 |
 |---|---|---|
-| [`facts/`](facts/README.md) | What actually happened? | 项目背景、用户、团队、开发过程、实际技术、交付和 Unknown |
-| [`architecture/`](architecture/README.md) | Why is the system designed this way? | 产品定位、业务流程、领域模型、总体 Target、全局 Contract 和架构取舍 |
-| [`modules/`](modules/README.md) | How exactly does it work? | 11 个技术域的实现级设计、状态、失败、接口和验证边界 |
+| `facts/` | What actually happened? | 背景、团队、开发、交付、技术现实和 UNKNOWN |
+| `architecture/` | How do the layers fit? | 总体集成、跨层关系、四个展示文件 |
+| 专题目录 | How does one concern work? | Product、Domain、Agents、Knowledge、Services、Data、Security、Eval、Deployment |
 
-## 如何按问题读取
-
-```text
-“当时到底是什么情况？”
-  → facts/
-
-“为什么要做这个系统，为什么不是 WorkBuddy / RAGFlow？”
-  → facts/ + architecture/ + ../decisions/ + ../evidence/
-
-“为什么需要 Graph / Memory / Agent？”
-  → architecture/ + modules/03 或 modules/05/06
-
-“模型是 API 还是私有部署？GPU 谁负责？”
-  → facts/technology-reality.md
-     + modules/04-model-gateway.md
-     + modules/11-infrastructure.md
-
-“Graph 实际上线了吗？”
-  → facts/delivery-and-usage.md + ../status/ + ../evidence/
-
-“这个是你做的吗？”
-  → facts/team-and-ownership.md
-```
-
-## 与其他 `docs/` 目录的关系
+## New Architecture Taxonomy
 
 ```text
 docs/project/
-  项目是什么、为什么这样设计、技术如何工作
-
-docs/decisions/
-docs/status/
-docs/evidence/
-docs/governance/
-  正式决策、当前状态、可复现证据和仓库治理
+├─ facts/
+├─ architecture/
+│  ├─ README.md
+│  ├─ architecture.md
+│  ├─ architecture-views.md
+│  └─ architecture.html
+├─ product/product-architecture.md
+├─ domain/legal-domain-model.md
+├─ domain/domain-state-lifecycle.md
+├─ agents/agent-platform.md
+├─ agents/multi-agent-runtime.md
+├─ knowledge/knowledge-evidence-architecture.md
+├─ services/service-architecture.md
+├─ data/data-ownership-and-recovery.md
+├─ security/security-architecture.md
+├─ eval/legal-eval-and-benchmark.md
+└─ deployment/microservice-deployment.md
 ```
 
-这些目录不互相复制事实。`facts/` 可以引用 Status/Evidence，但不能把没有证据的上线、用户量、团队人数、模型部署或指标写成事实；`architecture/` 和 `modules/` 也不能反向证明历史发生过。
+每份专题文档必须声明 `canonical_question`、`owner`、`replaces`、Current/Target/Gap/Future 和验证入口。专题文档只拥有自己的事实；跨域关系由 `architecture/architecture.md` 组合。逻辑能力、服务、进程、容器、数据库和团队不是一一对应关系。
 
-## 状态标签
-
-项目事实统一区分：
+## Reading paths
 
 ```text
-[USER_CONFIRMED]
-[REPO_EVIDENCE]
-[TARGET_ACCEPTED]
-[BLUE_PROPOSAL]
-[UNKNOWN]
+Product:  docs/README.md → architecture/architecture.md → product → domain
+Agent:    architecture → domain → agents → services → data/security
+Knowledge: domain → knowledge → agents → eval
+Backend:  domain → services → data → security → deployment
+SRE:      services → data → deployment → eval
 ```
 
-重建置信度与真相状态分开。南京大学、导师、法院、合作方或公开项目资料只能证明周边背景，不能自动证明它们就是 Zuno 的历史来源、客户、用户或部署规模。
+## Current / Target / History
 
-红队、蓝队和未来 Skill 的项目输入都从这里开始，再按问题进入 `architecture/`、`modules/`、`decisions/`、`status/` 和 `evidence/`。红蓝过程记录保存在 `project-red-blue/sessions/`，不覆盖本目录的正式事实。
+- Current 只由代码、Migration、Test、Trace、Eval、`docs/status/` 和 `docs/evidence/` 证明。
+- Target 由 accepted ADR、专题 Canonical 文档和共享 Contract 定义；Python-only/Microservice 是本轮 Target Constraint。
+- Hypothesis 必须通过 Benchmark、Spike、Security Evidence 或 User Validation 关闭；没有关闭前不能提升为 Current。
+- Future 只记录长期可选方向，例如 Persistent Agent Team、物理数据库拆分、Kubernetes 或 Event Sourcing；它们不是本轮服务成立的前置条件。
+- History 保留旧 11 Module 架构的摘要和可追溯迁移材料；旧模块不再是新 Target 的事实源。
+
+入口和服务边界决策见：
+
+- [`ADR-0008`](../decisions/0008-legal-domain-kernel-and-host-boundary.md)
+- [`ADR-0009`](../decisions/0009-python-only-backend.md)
+- [`ADR-0010`](../decisions/0010-microservice-target-and-service-boundaries.md)
+- [`ADR-0011`](../decisions/0011-architecture-document-taxonomy.md)
+
+项目事实目录仍是历史真相源；红蓝过程记录在 `project-red-blue/`，不覆盖正式事实。

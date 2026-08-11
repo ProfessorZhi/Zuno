@@ -2,7 +2,7 @@
 
 ## 用途
 
-保持公开架构术语稳定、简短。详细 target contract 放在当前 `docs/project/architecture/` 和 `docs/project/modules/` 正式文档。
+保持公开架构术语稳定、简短。详细 Target Contract 放在当前 `docs/project/architecture/` 和 `docs/project/<topic>/` 正式文档；旧 `docs/project/modules/` 只作 Superseded 迁移材料。
 
 ## 状态标签
 

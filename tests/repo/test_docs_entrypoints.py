@@ -5,7 +5,12 @@ import sys
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
-EXPECTED_VIEWS = ['Logical View (4+1)', 'Development View (4+1)', 'Process View (4+1)', 'Physical View (4+1)', 'Scenarios View (4+1)', 'Module View (Views & Beyond)', 'Component-and-Connector View (Views & Beyond)', 'Data View (Views & Beyond)', 'Quality View (Views & Beyond)', 'Conditional Evidence Retrieval and Agent Loop (Zuno)']
+EXPECTED_VIEWS = [
+    "Product Context View", "Business Flow View", "Logical Capability View", "Provider Boundary View",
+    "Domain State View", "Staleness and Review View", "Agent Runtime View", "Runtime and Domain State View",
+    "Microservice View", "Deployment Profiles View", "Data Ownership View", "Failure and Recovery View",
+    "A/B/C Eval View", "Security Verification View",
+]
 MODULE_DOCS = ['01-product-surface.md', '02-input-document-ingestion.md', '03-knowledge-agentic-graphrag.md', '04-model-gateway.md', '05-memory-context.md', '06-agent-core-planning-control.md', '07-capability-skill.md', '08-tool-runtime.md', '09-security.md', '10-observability-eval.md', '11-infrastructure.md']
 CANONICAL_ARCHITECTURE_FILES = {"README.md", "architecture.md", "architecture-views.md", "architecture.html"}
 
@@ -26,8 +31,9 @@ def test_architecture_directories_only_contain_support_files() -> None:
         assert not [p for p in root.iterdir() if p.is_dir()]
 
 
-def test_formal_architecture_set_is_eleven_plus_two() -> None:
+def test_legacy_modules_are_explicitly_superseded() -> None:
     assert sorted(p.name for p in (REPO_ROOT / "docs/project/modules").glob("[0-9][0-9]-*.md")) == MODULE_DOCS
+    assert all("status: superseded-legacy-reference" in p.read_text(encoding="utf-8") for p in (REPO_ROOT / "docs/project/modules").glob("[0-9][0-9]-*.md"))
     assert (REPO_ROOT / "docs/project/architecture/architecture.md").exists()
     assert (REPO_ROOT / "docs/project/architecture/architecture.html").exists()
 
@@ -41,24 +47,24 @@ def test_architecture_markdown_is_integration_first() -> None:
     renderer = _load_render_architecture()
     design = (REPO_ROOT / "docs/project/architecture/architecture.md").read_text(encoding="utf-8")
     assert renderer.validate_design(design) == []
-    assert 3 <= design.count("```mermaid") <= 8
-    for file_name in MODULE_DOCS:
-        assert f"docs/project/modules/{file_name}" in design
+    assert design.count("```mermaid") == 0
+    for marker in ["product-architecture.md", "legal-domain-model.md", "service-architecture.md", "microservice-deployment.md"]:
+        assert marker in design
 
 
-def test_visual_source_keeps_ten_views_and_thirty_diagrams() -> None:
+def test_visual_source_matches_new_architecture_taxonomy() -> None:
     renderer = _load_render_architecture()
     views = (REPO_ROOT / "docs/project/architecture/architecture-views.md").read_text(encoding="utf-8")
     assert renderer.EXPECTED_VIEWS == EXPECTED_VIEWS
     assert renderer.validate_source(views) == []
-    assert views.count("```mermaid") == 30
+    assert views.count("```mermaid") == len(EXPECTED_VIEWS)
 
 
-def test_architecture_html_routes_to_text_modules_and_status() -> None:
+def test_architecture_html_routes_to_text_taxonomy_and_status() -> None:
     renderer = _load_render_architecture()
     html = (REPO_ROOT / "docs/project/architecture/architecture.html").read_text(encoding="utf-8")
     assert renderer.validate_html(html) == []
-    for phrase in ["./architecture.md", "../modules/README.md", "../../status/production-readiness.md", "./architecture-views.md"]:
+    for phrase in ["./architecture.md", "../product/product-architecture.md", "../services/service-architecture.md", "../../status/production-readiness.md", "./architecture-views.md"]:
         assert phrase in html
 
 

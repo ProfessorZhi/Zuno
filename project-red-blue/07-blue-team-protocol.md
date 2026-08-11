@@ -64,7 +64,7 @@
 → 提出 1–3 个 Target 候选
 → 比较成本、替代方案和非目标
 → 用户确认架构方向
-→ 修改 docs/project/architecture / docs/project/modules / ADR / governance
+→ 修改 docs/project/architecture / docs/project/<topic> / ADR / governance
 → 运行验证
 → Red Retest
 ```
@@ -109,7 +109,7 @@ Zuno 自己保留法律/司法领域事实、Evidence、Review/Human Decision、
 
 | 内容 | 正式去向 |
 |---|---|
-| 产品定位、范围和工作流 | 总架构 Part A / `01 Product` |
+| 产品定位、范围和工作流 | 总架构 / `product/product-architecture.md` |
 | Domain Model 与跨模块 Alignment | 总架构 / 相关模块 / ADR |
 | Owner、Contract、Failure | 对应模块文档 / ADR |
 | 技术取舍、Build/Buy | `docs/decisions/` / ADR |

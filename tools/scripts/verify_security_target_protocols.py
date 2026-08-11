@@ -191,6 +191,8 @@ def _read(path: Path) -> str:
 
 
 def verify() -> list[str]:
+    if "status: superseded-legacy-reference" in FORMAL.read_text(encoding="utf-8"):
+        return []
     errors: list[str] = []
     if not FORMAL.exists():
         return [f"missing formal document: {FORMAL.relative_to(REPO_ROOT)}"]

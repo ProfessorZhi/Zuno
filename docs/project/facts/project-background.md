@@ -4,7 +4,7 @@
 
 | Claim | 状态 | 说明 |
 |---|---|---|
-| Zuno 当前维护总体架构和 11 个逻辑模块 | `[REPO_EVIDENCE]` | 见 [`../architecture/`](../architecture/README.md) 和 [`../modules/`](../modules/README.md)；这只证明当前文档存在 |
+| Zuno 在基线仓库中维护过 11 个逻辑模块 | `[REPO_EVIDENCE]` | 见 [`../modules/`](../modules/README.md)；这是上一阶段文档结构，不证明新 Target 永久保留该拆分 |
 | 项目最初由什么真实需求启动 | `[UNKNOWN]` | 需要历史材料、用户确认或直接项目证据 |
 | 真实用户、客户和业务决策人 | `[UNKNOWN]` | 不得从学校、导师或法院线索自动推出 |
 | 原工作流、痛点和为什么值得做 | `[UNKNOWN]` | 需要建立 As-Is Workflow、Pain 和人工基线 |
@@ -34,7 +34,7 @@ Repo / Git History / Status / Evidence
   → 用户确认或保持 UNKNOWN
 ```
 
-可提出研究候选，但不得编造客户、法院采购、上线用户、收入、用户数量或项目需求来源。项目定位只有在“用户—任务—As-Is Workflow—Pain—Required Capability”因果链成立后，才能进入 Architecture Part A。
+可提出研究候选，但不得编造客户、法院采购、上线用户、收入、用户数量或项目需求来源。项目定位只有在“用户—任务—As-Is Workflow—Pain—Required Capability”因果链成立后，才能进入 Product / Domain Target。
 
 ## 事实 Owner
 

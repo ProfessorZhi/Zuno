@@ -3,11 +3,11 @@ from __future__ import annotations
 import sys
 from pathlib import Path
 
+
 ROOT = Path(__file__).resolve().parents[2]
 ARCH = ROOT / "docs/project/architecture/architecture.md"
 VIEWS = ROOT / "docs/project/architecture/architecture-views.md"
 HTML = ROOT / "docs/project/architecture/architecture.html"
-MODULES = ROOT / "docs/project/modules"
 
 
 def verify() -> list[str]:
@@ -15,117 +15,46 @@ def verify() -> list[str]:
     architecture = ARCH.read_text(encoding="utf-8")
     views = VIEWS.read_text(encoding="utf-8")
     html = HTML.read_text(encoding="utf-8")
-    modules = {
-        name: (MODULES / name).read_text(encoding="utf-8")
-        for name in [
-            "01-product-surface.md",
-            "02-input-document-ingestion.md",
-            "03-knowledge-agentic-graphrag.md",
-            "04-model-gateway.md",
-            "05-memory-context.md",
-            "06-agent-core-planning-control.md",
-            "07-capability-skill.md",
-            "08-tool-runtime.md",
-            "09-security.md",
-            "10-observability-eval.md",
-            "11-infrastructure.md",
-        ]
-    }
 
     precedence = [
-        "Canonical Owner 的十一份模块 Target 文档",
-        "architecture.md 跨模块集成架构",
-        "已确认 Program",
-        "代码、Migration、测试、Trace、Eval 与运行证据",
+        "Product / Domain",
+        "Logical Capability Architecture",
+        "Physical Service / Deployment Architecture",
+        "Current / Target / History",
     ]
-    last = -1
-    for marker in precedence:
-        pos = architecture.find(marker)
-        if pos < 0:
+    positions = [architecture.find(marker) for marker in precedence]
+    for marker, position in zip(precedence, positions):
+        if position < 0:
             errors.append(f"architecture precedence missing: {marker}")
-        elif pos <= last:
-            errors.append(f"architecture precedence out of order: {marker}")
-        last = max(last, pos)
+    if all(position >= 0 for position in positions) and positions != sorted(positions):
+        errors.append("architecture layers are not ordered Product/Domain → Logical → Physical → status")
 
-    required_arch = [
-        "TaskContract",
-        "GoalVersion",
-        "ExecutionContextSnapshot",
-        "Controller Loop",
-        "DispatchGroup",
-        "BranchResultRef",
-        "Join Evaluation",
-        "Replan Barrier",
-        "KnowledgeControlProposal",
-        "CorrectiveRetrieval",
-        "TelemetryEnvelopeV1",
-        "accepted immutable AuditEvent",
-        "UNAVAILABLE",
-        "INCOMPARABLE",
-        "BudgetSettlement",
-        "TaskUnderstandingSnapshot",
-        "StructuredObservation",
-        "MemoryWriteDecision",
-        "occurred_at",
-        "MemoryUseTrace",
-    ]
-    for marker in required_arch:
-        if marker not in architecture:
+    for marker in [
+        "Python-only", "Microservice", "FastAPI", "LangGraph", "PostgreSQL",
+        "Checkpoint", "Reconciliation", "edge-api", "platform-domain-service",
+        "agent-runtime-service", "knowledge-service", "tool-sandbox-service",
+        "Target Candidate", "not Current",
+    ]:
+        if marker not in architecture and not (marker == "not Current" and "不是 Current" in architecture):
             errors.append(f"architecture integration semantics missing: {marker}")
 
-    required_views = [
-        "TaskContract / GoalVersion",
-        "Dispatch commit before Send",
-        "BranchResultRef",
-        "Replan Barrier + new PlanVersion",
-        "KnowledgeControlProposal",
-        "Agent Core ControlDecision",
-        "CorrectiveRetrievalDecision",
-        "TelemetryEnvelopeV1",
-        "Append-only Ingest",
-        "Accepted immutable AuditEvent",
-        "BenchmarkComparison",
-        "UNAVAILABLE",
-        "INCOMPARABLE",
-        "05 StructuredObservation",
-        "09 Scope / Trust / Write Gate",
-        "10 Trace / Eval / Release Gate",
-    ]
-    for marker in required_views:
+    for marker in [
+        "Product Context View", "Logical Capability View", "Domain State View",
+        "Agent Runtime View", "Microservice View", "Data Ownership View",
+        "Failure and Recovery View", "A/B/C Eval View", "Security Verification View",
+        "EvidenceRequirement", "ConflictProposal", "EffectReceipt", "PostgreSQL",
+    ]:
         if marker not in views:
             errors.append(f"architecture visual semantics missing: {marker}")
-
-    forbidden_views = [
-        "PROP --> PLAN",
-        "Reflection / Replan Barrier] --> C[Query Normalize",
-        "KnowledgeControlProposal] --> PLAN",
-    ]
-    for marker in forbidden_views:
-        if marker in views:
-            errors.append(f"architecture view retains stale control shortcut: {marker}")
-
-    if "03-agentic-graphrag-cross-module-coordination.md" in modules["03-knowledge-agentic-graphrag.md"]:
-        errors.append("Knowledge module still references retired temporary coordination document")
-    if "Source Object、ParseRun、Chunk 和摄取状态" in modules["04-model-gateway.md"]:
-        errors.append("Model Gateway still assigns Chunk ownership to Input")
-    if "ExecutionAttempt、EffectReceipt" in modules["10-observability-eval.md"]:
-        errors.append("Observability still uses retired Tool ExecutionAttempt terminology")
-
-    for name in ["03-knowledge-agentic-graphrag.md", "05-memory-context.md", "06-agent-core-planning-control.md"]:
-        content = modules[name]
-        adr = content.find("已接受 ADR")
-        module = content.find("本模块 Target")
-        if adr < 0 or module < 0 or adr > module:
-            errors.append(f"module precedence does not place accepted ADR before module contract: {name}")
-
+    for forbidden in ("PROP --> PLAN", "Graph checkpoint = Domain Fact", "GraphRAG always wins"):
+        if forbidden in views or forbidden in architecture:
+            errors.append(f"architecture retains forbidden shortcut: {forbidden}")
     if 'fetch("./architecture-views.md")' not in html:
-        errors.append("architecture.html must render the canonical Mermaid source")
-    if "模块 Owner 文档是领域规范源" not in html:
-        errors.append("architecture.html does not disclose module-first precedence")
-
-    if views.count("```mermaid") != 30:
-        errors.append("architecture-views.md must retain exactly 30 canonical diagrams")
-
+        errors.append("architecture.html must render canonical Mermaid source")
+    if "../product/product-architecture.md" not in html or "../services/service-architecture.md" not in html:
+        errors.append("architecture.html must expose new taxonomy entrypoints")
+    if views.count("```mermaid") != 14:
+        errors.append("architecture-views.md must contain exactly 14 canonical diagrams")
     return errors
 
 

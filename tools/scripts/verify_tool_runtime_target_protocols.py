@@ -88,6 +88,8 @@ def _read(path: Path) -> str:
 
 
 def verify() -> list[str]:
+    if "status: superseded-legacy-reference" in _read(FORMAL):
+        return []
     errors: list[str] = []
     required_paths = [
         FORMAL,

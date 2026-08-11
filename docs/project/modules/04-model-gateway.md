@@ -1,7 +1,8 @@
 # Agent 需要模型时，系统怎样选择和治理调用？
 
 updated: 2026-08-11
-status: normative-target-module-architecture
+status: superseded-legacy-reference
+canonical_status: Superseded; see `docs/project/agents/agent-platform.md` and `docs/project/services/service-architecture.md`
 formal_module: 04 Model Gateway
 human_readable_part: Part A — 面向人的设计说明
 normative_specification_part: Part B — 规范性架构与实施约束

@@ -36,7 +36,7 @@ UNKNOWN
 运维责任、SLA、On-call、Backup / Restore / 灾备演练
 ```
 
-十一模块、架构图、Provider 名称、目录存在或目标部署拓扑，都不能把这些状态提升为 Current。
+旧模块、架构图、Provider 名称、目录存在或目标部署拓扑，都不能把这些状态提升为 Current。
 
 学校、导师、法院或合作对象的公开规模只能用于 Target Capacity Planning，不能推出 Zuno 的实际用户量、部署规模或生产状态。
 

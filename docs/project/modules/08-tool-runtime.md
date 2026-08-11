@@ -1,7 +1,8 @@
 # Agent 怎样安全地执行真实世界操作？
 
 updated: 2026-08-11
-status: normative-target-module-architecture
+status: superseded-legacy-reference
+canonical_status: Superseded; see `docs/project/services/service-architecture.md` and `docs/project/security/security-architecture.md`
 formal_module: 08 Tool Runtime
 human_readable_part: Part A — 面向人的设计说明
 normative_specification_part: Part B — 规范性架构与实施约束
@@ -13,6 +14,10 @@ reading_order: Problem → Case → Ownership → Runtime → State/Failure → 
 > 本文是 Zuno 第 08 个逻辑模块——Tool Runtime——唯一的正式 Target 架构主设计。
 >
 > 本文定义统一工具执行平面、领域对象、状态机、效果保证、CLI / HTTP / OpenAPI / SDK / MCP / Browser / Async Job Adapter Contract、跨模块边界、目标代码与数据库规格、测试和完成证据。Current、Gap、Measurement 与生产状态仍由 `docs/status/production-readiness.md` 维护；实现、Migration、回填、切流和旁路收口必须进入 `.agent/programs/`。
+
+## RED-KERNEL-V3 边界收窄
+
+Tool Runtime 不等于自研 Agent Host，也不拥有 Legal Domain State。MCP/API/CLI/SDK/Async Job 与现有 Sandbox 是优先 Adapter；Zuno 只冻结 Capability execution 的授权、Prepared Action、幂等、Receipt、审计、对账和副作用边界。WorkBuddy 等 Host 可以调用 Legal Backend，不需要先引入 Zuno Native Tool Runtime。
 
 ## 0. 文档边界、优先级与状态
 

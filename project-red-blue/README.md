@@ -130,24 +130,23 @@ Implementation / Evidence Repair
 
 ```text
 Project / Domain Alignment
-  → 02 Ingestion Fit Analysis
-  → 03 Knowledge Fit Analysis
-  → 05 Memory Fit Analysis
-  → 06 Agent Core Fit Analysis
-  → 07/08 Tool / Capability
-  → 09 Security
-  → Remaining Modules
-  → Cross-module Architecture Review
+  → Product / Domain Fit Analysis
+  → Knowledge / Evidence Fit Analysis
+  → Agent / Multi-Agent Runtime Fit Analysis
+  → Service / Data Ownership Fit Analysis
+  → Tool / Capability / Security
+  → Deployment / Eval
+  → Cross-service Architecture Review
 ```
 
-每个模块统一执行：
+每个 Canonical Question 专题统一执行：
 
 ```text
 Read Current + Target + Evidence + OSS Candidate
   → Red Attack
   → Gap Report
   → Blue Review
-  → KEEP / SIMPLIFY / ADOPT / EXTEND / BUILD / DEFER / REMOVE
+  → KEEP / SIMPLIFY / ADOPT / EXTEND / BUILD / DEFER / DELETE
   → Architecture Change Set
   → User Architecture Gate
   → Canonical Docs Update

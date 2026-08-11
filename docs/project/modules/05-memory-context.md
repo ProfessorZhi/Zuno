@@ -1,7 +1,8 @@
 # Agent 怎样形成长期记忆，又怎样避免记错？
 
 updated: 2026-08-11
-status: normative-target-module-architecture
+status: superseded-legacy-reference
+canonical_status: Superseded; see `docs/project/agents/agent-platform.md` and `docs/project/domain/legal-domain-model.md`
 formal_module: 05 Memory & Context
 human_readable_part: Part A — 面向人的设计说明
 normative_specification_part: Part B — 规范性架构与实施约束
@@ -13,6 +14,10 @@ reading_order: Problem → Case → Ownership → Runtime → State/Failure → 
 > 本文是 Zuno 第 05 个逻辑模块——Memory & Context——唯一的正式 Target 架构主设计。
 >
 > 本文只描述目标架构、规范性 Contract、状态、失败、恢复、存储和验证要求，不把现有类名、SQLite 表、局部测试或历史 Phase 当成 Current 完成事实。Current、Gap、Measurement 与完成证据由 `docs/status/production-readiness.md` 维护；具体实现、迁移、切流和收口计划必须进入 `.agent/programs/`。
+
+## RED-KERNEL-V3 边界收窄
+
+Memory 只管理可复用上下文/经验及其召回、冲突、权限和生命周期；Matter、Claim、Evidence、Fact、Finding 和 HumanDecision 不是 Memory。第一阶段先使用 Domain Store + Runtime Checkpoint 覆盖 Matter context 与恢复；Working/Session Memory 优先，Long-term Memory 只有在消融证明收益后启用。
 
 ## 0. 文档边界与事实源
 

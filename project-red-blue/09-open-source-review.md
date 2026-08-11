@@ -2,7 +2,7 @@
 
 ## 当前状态
 
-这是 Zuno 的正式 Build-vs-Buy 评审协议和候选记录，不是“为什么不用开源”的面试话术，也不是已经批准的架构变更。当前结论状态允许为 `TO_REVIEW`；只有完成 Fit Analysis、Modification Surface、运行验证和用户确认后，才可把结果回写 `docs/project/architecture/`、`docs/project/modules/` 或 ADR。
+这是 Zuno 的正式 Build-vs-Buy 评审协议和候选记录，不是“为什么不用开源”的面试话术，也不是已经批准的架构变更。当前结论状态允许为 `TO_REVIEW`；只有完成 Fit Analysis、Modification Surface、运行验证和用户确认后，才可把结果回写 `docs/project/architecture/`、`docs/project/<topic>/` 或 ADR。
 
 核心问题不是“开源项目功能多不多”，而是：
 
@@ -233,3 +233,17 @@ README
 ```
 
 DeepWiki 或 Wiki 只用于导航和源码地图，不能作为 Security、Failure、Recovery、Permission 或 Idempotency 的最终证据；关键结论必须回到官方文档、源码和测试。
+
+## RED-KERNEL-V3 分层复核（2026-08-12）
+
+本节是本轮竞争性反证的官方资料快照，不是 Adopt 清单，也不把产品按一个总分排序。完整来源、访问日期、UNKNOWN 和许可证备注见 `project-red-blue/sources/red-kernel-v3-official-platform-matrix.md`。
+
+| 产品/项目 | 正确比较层级 | 公开资料支持的最小判断 | 保持 UNKNOWN 的关键边界 | V3 处置 |
+|---|---|---|---|---|
+| [WorkBuddy](https://www.workbuddy.cn/work/) | Horizontal Agent Workspace / Host | Expert、Skill、MCP、自然语言任务执行；企业页面另有模型、权限、审计、OpenAPI/插件等能力描述 | Legal Canonical State、Evidence Dependency、Finding Review、法律 Eval Contract | 默认 Host 候选；不作安全负面断言 |
+| [Dify](https://dify.ai/) | Agent / Workflow App Platform | Workflow、RAG、Agent、Tools、MCP/API、Observability、自托管/VPC | 法律 Domain State；仓库许可证额外条件的具体商用部署适配 | BUY/EXTEND 候选；G4 必须复核 |
+| [Pi mono](https://github.com/badlogic/pi-mono) | Agent Harness / Toolkit | Agent Core、tool calling、session/state、LLM API 与 coding agent 组件 | 企业租户、法律 Owner、审计、HITL、生产部署 | Runtime/嵌入候选，不是完整产品竞品 |
+| [LangGraph](https://docs.langchain.com/oss/python/langgraph/overview) | Agent Runtime Framework | Durable execution、checkpoint/persistence、interrupt/resume、HITL、低层编排 | Domain Fact、法律正确性、Evidence Owner | 可替换 Runtime Provider；不承载法律事实 |
+| [RAGFlow](https://github.com/infiniflow/ragflow) | Retrieval / Context Provider | 文档理解、chunking、多路召回/融合/rerank、引用、MCP/API | Canonical Matter/Fact/Finding、人工决定、依赖失效 | Retrieval Provider 候选；Graph 需 Kill Test |
+
+结论：WorkBuddy、Dify、Pi、LangGraph 和 RAGFlow 不是完全同层竞品。它们的公开能力足以击穿“Zuno 必须自建全部 Host/Runtime/RAG/Memory”的命题；它们没有公开证明“法律业务状态后端”必然多余。这个剩余命题只能由 A/B/C 和替换 Spike 证明，不能由品牌比较证明。

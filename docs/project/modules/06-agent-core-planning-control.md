@@ -1,7 +1,8 @@
 # Agent 怎样理解任务、制定计划并控制执行？
 
 updated: 2026-08-11
-status: normative-target-module-architecture
+status: superseded-legacy-reference
+canonical_status: Superseded; see `docs/project/agents/agent-platform.md` and `docs/project/agents/multi-agent-runtime.md`
 formal_module: 06 Agent Core / Planning & Control
 human_readable_part: Part A — 面向人的设计说明
 normative_specification_part: Part B — 规范性架构与实施约束
@@ -13,6 +14,10 @@ reading_order: Problem → Case → Ownership → Runtime → State/Failure → 
 > 本文是 Zuno 第 06 个逻辑模块——Agent Core / Planning & Control——的正式 Target 架构主设计。
 >
 > 本文只描述理想目标架构，不包含当前实现事实或具体迁移计划。Current 与 Gap 由 `docs/status/production-readiness.md` 维护；未来 Program 必须以本文为目标约束。
+
+## RED-KERNEL-V3 边界收窄
+
+Agent Core 只拥有通用 Task/Plan/AgentRun/Step 控制权，不拥有法律事实。Domain State 以版本化 typed Contract 作为输入/输出；LangGraph、Pi、WorkBuddy Runtime 或普通 State Machine 都是可替换 Provider，checkpoint 不是 Domain Fact。Native Domain-aware Runtime 不作为默认实现，只有公平 A/B/C Benchmark 证明 C>B 且收益不能由普通 Backend Workflow 解释时才重新冻结。
 
 ## 0. 文档边界与事实源
 

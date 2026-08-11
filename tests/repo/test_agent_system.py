@@ -47,7 +47,7 @@ def test_agent_entrypoint_routes_to_current_sources() -> None:
     agents = (REPO_ROOT / "AGENTS.md").read_text(encoding="utf-8")
     for path in (
         "docs/project/architecture/architecture.md",
-        "docs/project/modules/README.md",
+        "docs/project/product/product-architecture.md",
         "docs/status/production-readiness.md",
         ".agent/system.yaml",
         ".agent/references/current-program.md",
@@ -55,4 +55,4 @@ def test_agent_entrypoint_routes_to_current_sources() -> None:
         ".agent/references/verification-map.md",
     ):
         assert path in agents
-    assert "Single Controller" in agents
+    assert "Multi-Agent" in agents or "Coordinator" in agents

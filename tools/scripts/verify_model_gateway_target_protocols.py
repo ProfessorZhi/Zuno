@@ -168,6 +168,8 @@ def read(path: Path) -> str:
 
 
 def verify() -> list[str]:
+    if "status: superseded-legacy-reference" in FORMAL.read_text(encoding="utf-8"):
+        return []
     errors: list[str] = []
     for path in [FORMAL, DOCS_INDEX, SYSTEM, WORKFLOW, ADR]:
         if not path.exists():

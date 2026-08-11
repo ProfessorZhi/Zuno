@@ -15,7 +15,7 @@ AGENTS.md              仓库唯一入口：规则、边界、阅读顺序、任
 
 执行时先按 `AGENTS.md` 路由，再进入 `.agent/references/task-routing.md` 和 `.agent/references/workflow.md`，然后按对应参考和验证命令执行。
 
-复杂任务先判断工作模式：挂机模式由主线程作为真正的 Codex UI 目标模式一路执行到底；多线程模式由主线程作为真正的 Codex UI 目标模式 coordinator，给粗粒度子线程准备目标模式提示词、分支边界和验收闸门，再由用户在 UI 里手动创建真正的目标模式子线程。提示词目标模式不等于 Codex UI 目标模式。线程内可按范围开启多 agent 模式；这里的多 agent 是执行协作方式，不改变 Zuno runtime 的 Single Controller 主线。
+复杂任务先判断工作模式：挂机模式由主线程作为真正的 Codex UI 目标模式一路执行到底；多线程模式由主线程作为真正的 Codex UI 目标模式 coordinator，给粗粒度子线程准备目标模式提示词、分支边界和验收闸门，再由用户在 UI 里手动创建真正的目标模式子线程。提示词目标模式不等于 Codex UI 目标模式。线程内可按范围开启多 agent 模式；这里的多 agent 是执行协作方式，不自动改变 Zuno runtime 的产品边界。
 
 ## 语言规则
 
@@ -63,7 +63,7 @@ AGENTS.md              仓库唯一入口：规则、边界、阅读顺序、任
 docs/project/            Zuno 项目知识唯一正式入口
 docs/project/facts/      项目历史事实、Unknown 和证据路由
 docs/project/architecture/   总架构四个 canonical 文件，唯一正式事实源
-docs/project/modules/        十一个逻辑模块设计
+docs/project/<topic>/        Product/Domain/Agents/Knowledge/Services 等 Canonical 专题
 docs/status/         Current 与差距
 docs/decisions/      ADR
 docs/governance/     工程治理
@@ -72,7 +72,7 @@ docs/history/        历史归档
 
 ## 操作规则
 
-- 先从 `docs/project/README.md` 读取项目知识路由；涉及历史或实际落地时先读 `docs/project/facts/`，涉及设计再读 `docs/project/architecture/` 和 `docs/project/modules/`。
+- 先从 `docs/project/README.md` 读取项目知识路由；涉及历史或实际落地时先读 `docs/project/facts/`，涉及设计再读 `docs/project/architecture/` 和对应 `docs/project/<topic>/`。
 - `.agent/system.yaml` 只写路由规则，不写长知识。
 - `.agent/references/` 承载可复用项目 skill，不写一次性调查流水账。
 - `.agent/programs/` 只承载当前状态，不保存旧施工文件。

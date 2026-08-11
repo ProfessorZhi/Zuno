@@ -25,7 +25,7 @@ docs/                     正式人类事实
 ## 代码规则
 
 - Product Surface 负责 northbound API、command、projection、delivery。
-- Agent Core 是唯一 controller；不把工程协作多线程写成产品 Multi-Agent。
+- Agent Runtime 负责 Controller/Coordinator；是否启用 Multi-Agent 由 Target policy 和 Eval 决定，不把工程协作多线程写成产品事实。
 - Tool effect 必须经过 Security、Approval、Budget、Idempotency 和 audit。
 - API、前端、worker 不直接访问 provider 或数据库 owner。
 - 失败必须保留 blocked/refused/recovery 事实，不用 fallback 把失败改成成功。

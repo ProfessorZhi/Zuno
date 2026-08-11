@@ -245,7 +245,7 @@ def test_requirement_registry_is_contiguous_and_fully_mapped() -> None:
 
 def test_target_does_not_claim_implementation_or_production_readiness() -> None:
     content = _content()
-    assert "status: normative-target-module-architecture" in content
+    assert "status: superseded-legacy-reference" in content
     assert "所有真实模型调用已经统一进入 Gateway" not in content
     assert "status: production-ready" not in content
     assert "不得仅凭本文声明" in content

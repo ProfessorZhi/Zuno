@@ -1,7 +1,8 @@
 # 为什么企业敢把敏感数据和操作权限交给 Agent？
 
 updated: 2026-08-11
-status: normative-target-module-architecture
+status: superseded-legacy-reference
+canonical_status: Superseded; see `docs/project/security/security-architecture.md`
 formal_module: 09 Security
 human_readable_part: Part A — 面向人的设计说明
 normative_specification_part: Part B — 规范性架构与实施约束
@@ -18,6 +19,10 @@ shared_adr: `docs/decisions/0003-wave1-cross-module-contract-freeze.md`
 > 本文统一定义企业知识库 Agent 的身份、组织管理树、资源和动作授权、委派、Policy、Agent / Task 临时权限、可信指令与不可信数据隔离、Prompt Injection 防御、输入输出检测、脱敏、审批、撤销、Secret、MCP / Tool 安全、Sandbox、供应链信任、安全审计、红队评测以及跨模块 Contract。
 >
 > 文档中的对象、状态、表和流程均为 Target 规格；除非 `main` 上已有代码、Migration、测试、Trace、Eval 或运行证据，否则不得写成 Current。
+
+## RED-KERNEL-V3 安全边界
+
+不能以“闭源不安全”或“开源天然安全”作为架构事实。Zuno 的可辩护差异只是 Target/Hypothesis：Source-level Audit、Build Reproducibility、SBOM、Signed Artifact、Network Egress Audit、Secret/Model/Tool/Domain/Human Decision Trace、Sandbox Boundary Test 与部署主权。WorkBuddy 的公开企业能力和未知项分别记录，不做品牌推断；同口径 Security Benchmark 通过后才可升级为 Current。
 
 ## 0. 文档边界与规范层级
 

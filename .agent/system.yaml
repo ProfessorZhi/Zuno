@@ -1,6 +1,6 @@
-version: 2
+version: 3
 
-purpose: "Route Zuno tasks to the eleven canonical module architectures, total architecture, presentation pair, Programs, and verification."
+purpose: "Route Zuno work to the new Product/Domain/Agents/Knowledge/Services/Data/Security/Eval/Deployment canonical taxonomy, Programs, and verification."
 
 system_identity:
   name: "Zuno Local Agent Skill System"
@@ -12,13 +12,16 @@ system_identity:
   formal_project_root: "docs/project"
   formal_project_facts_root: "docs/project/facts"
   formal_architecture_root: "docs/project/architecture"
-  formal_module_root: "docs/project/modules"
+  formal_taxonomy_root: "docs/project"
   formal_status_root: "docs/status"
   history_root: "docs/history"
 
 runtime_boundary:
-  product_runtime: "Single Controller Agent Runtime"
-  engineering_parallelism: "parallel agents are engineering workflow helpers and do not change the product runtime architecture"
+  product_runtime_target: "Python-only Microservice Architecture"
+  product_runtime_current: "FastAPI backend + RabbitMQ worker in current Compose evidence; not yet target microservice evidence"
+  agent_runtime: "Composable Multi-Agent Runtime Service; profiles/workers are not automatically services"
+  language_policy: "Python-only backend; external Java/Spring systems integrate through versioned protocols"
+  engineering_parallelism: "parallel agents are engineering workflow helpers and do not change product runtime architecture"
 
 program_rules:
   current_program_root: ".agent/programs"
@@ -41,95 +44,52 @@ architecture_directory_contract:
     - "docs/project/architecture/architecture.md"
     - "docs/project/architecture/architecture-views.md"
     - "docs/project/architecture/architecture.html"
-  canonical_design_files:
-    - "docs/project/architecture/architecture.md"
-    - "docs/project/modules/01-product-surface.md through docs/project/modules/11-infrastructure.md"
-  formal_design_fact_count: "11 module documents + architecture.md"
+  canonical_taxonomy:
+    - "docs/project/product/product-architecture.md"
+    - "docs/project/domain/legal-domain-model.md"
+    - "docs/project/domain/domain-state-lifecycle.md"
+    - "docs/project/agents/agent-platform.md"
+    - "docs/project/agents/multi-agent-runtime.md"
+    - "docs/project/knowledge/knowledge-evidence-architecture.md"
+    - "docs/project/services/service-architecture.md"
+    - "docs/project/data/data-ownership-and-recovery.md"
+    - "docs/project/security/security-architecture.md"
+    - "docs/project/eval/legal-eval-and-benchmark.md"
+    - "docs/project/deployment/microservice-deployment.md"
+  legacy_taxonomy: "docs/project/modules/README.md and docs/project/modules/01..11 are Superseded migration material"
   presentation_pair:
     - "docs/project/architecture/architecture-views.md"
     - "docs/project/architecture/architecture.html"
   visual_source_role: "architecture-views.md and architecture.html are one paired diagram presentation surface; neither is an independent architecture fact source"
   reading_protocol:
-    human_question: "read architecture.md Part A, then the relevant module Part A"
-    implementation_or_review: "read architecture.md Part B, the owning module Part B, ADR/shared contracts, status/evidence, and the active Program if any"
-    no_mirror_rule: "Part A and Part B live in the same canonical Markdown; never create human/spec mirror documents"
+    human_question: "read architecture.md, then the relevant canonical taxonomy document"
+    implementation_or_review: "read architecture.md, owning taxonomy document, ADR/shared contracts, status/evidence, and active Program if any"
+    no_mirror_rule: "do not create human/spec mirrors or a second Service/Domain/State registry"
   forbidden_content:
-    - "module-specific second architecture documents"
-    - "production readiness"
-    - "ADR"
-    - "program plan"
-    - "repo ownership matrix"
+    - "module-specific second architecture documents in architecture/"
+    - "production readiness claims without evidence"
+    - "Program plan in architecture/"
+    - "repo ownership matrix in architecture/"
 
-module_document_contract:
-  formal_index: "docs/project/modules/README.md"
-  status_truth: "docs/status/production-readiness.md"
-  mirror_policy: "no architecture or module mirrors are maintained under .agent"
-  owner_precedence: "the owning module document is canonical for domain objects, state machines, failures, persistence, and tests"
-
-  product_surface:
-    formal: "docs/project/modules/01-product-surface.md"
-    verifier: "python tools/scripts/verify_product_surface_target_protocols.py"
-    test: "pytest -q tests/repo/test_product_surface_target_protocols.py -p no:cacheprovider"
-
-  input_document_ingestion:
-    formal: "docs/project/modules/02-input-document-ingestion.md"
-    verifier: "python tools/scripts/verify_architecture_document_set.py"
-    test: "pytest -q tests/repo/test_architecture_document_set.py -p no:cacheprovider"
-
-  knowledge_agentic_graphrag:
-    formal: "docs/project/modules/03-knowledge-agentic-graphrag.md"
-    verifier: "python tools/scripts/verify_architecture_document_set.py"
-    test: "pytest -q tests/repo/test_architecture_document_set.py -p no:cacheprovider"
-
-  model_gateway:
-    formal: "docs/project/modules/04-model-gateway.md"
-    target_only: true
-    verifier: "python tools/scripts/verify_model_gateway_target_protocols.py"
-    test: "pytest -q tests/repo/test_model_gateway_target_protocols.py -p no:cacheprovider"
-
-  memory_context:
-    formal: "docs/project/modules/05-memory-context.md"
-    verifier: "python tools/scripts/verify_memory_context_target_protocols.py"
-    test: "pytest -q tests/repo/test_memory_context_target_protocols.py -p no:cacheprovider"
-
-  agent_core:
-    formal: "docs/project/modules/06-agent-core-planning-control.md"
-    target_only: true
-    execution_plan_root: ".agent/programs"
-    verifier: "python tools/scripts/verify_agent_core_target_protocols.py"
-    test: "pytest -q tests/repo/test_agent_core_target_protocols.py -p no:cacheprovider"
-
-  capability_skill:
-    formal: "docs/project/modules/07-capability-skill.md"
-    verifier: "python tools/scripts/verify_capability_skill_target_protocols.py"
-    test: "pytest -q tests/repo/test_capability_skill_target_protocols.py -p no:cacheprovider"
-
-  tool_runtime:
-    formal: "docs/project/modules/08-tool-runtime.md"
-    verifier: "python tools/scripts/verify_tool_runtime_target_protocols.py"
-    test: "pytest -q tests/repo/test_tool_runtime_target_protocols.py -p no:cacheprovider"
-
-  security:
-    formal: "docs/project/modules/09-security.md"
-    verifier: "python tools/scripts/verify_security_target_protocols.py"
-    test: "pytest -q tests/repo/test_security_target_protocols.py -p no:cacheprovider"
-
-  observability_eval:
-    formal: "docs/project/modules/10-observability-eval.md"
-    verifier: "python tools/scripts/verify_observability_eval_target_protocols.py"
-    test: "pytest -q tests/repo/test_observability_eval_target_protocols.py -p no:cacheprovider"
-
-  infrastructure:
-    formal: "docs/project/modules/11-infrastructure.md"
-    verifier: "python tools/scripts/verify_infrastructure_target_protocols.py"
-    test: "pytest -q tests/repo/test_infrastructure_target_protocols.py -p no:cacheprovider"
+canonical_ownership:
+  domain_fact_owner: "docs/project/domain/legal-domain-model.md"
+  domain_lifecycle_owner: "docs/project/domain/domain-state-lifecycle.md"
+  runtime_control_owner: "docs/project/agents/agent-platform.md"
+  multi_agent_owner: "docs/project/agents/multi-agent-runtime.md"
+  knowledge_owner: "docs/project/knowledge/knowledge-evidence-architecture.md"
+  service_boundary_owner: "docs/project/services/service-architecture.md"
+  data_recovery_owner: "docs/project/data/data-ownership-and-recovery.md"
+  security_decision_owner: "docs/project/security/security-architecture.md"
+  eval_fact_owner: "docs/project/eval/legal-eval-and-benchmark.md"
+  deployment_owner: "docs/project/deployment/microservice-deployment.md"
 
 shared_contracts:
   adr: "docs/decisions/0003-wave1-cross-module-contract-freeze.md"
   registry: "docs/governance/wave1-cross-module-contract-registry.md"
-  status: "CONFIRMED_TARGET"
-  verifier: "python tools/scripts/verify_wave1_contract_freeze.py"
-  test: "pytest -q tests/repo/test_wave1_contract_freeze.py -p no:cacheprovider"
+  state_boundary_adr: "docs/decisions/0008-legal-domain-kernel-and-host-boundary.md"
+  language_adr: "docs/decisions/0009-python-only-backend.md"
+  service_adr: "docs/decisions/0010-microservice-target-and-service-boundaries.md"
+  taxonomy_adr: "docs/decisions/0011-architecture-document-taxonomy.md"
 
 skill_routes:
   - name: "architecture-and-document-governance"
@@ -139,53 +99,30 @@ skill_routes:
         - "docs/**"
         - "AGENTS.md"
         - ".agent/**"
-    skills:
-      - ".agent/references/task-routing.md"
-      - ".agent/references/workflow.md"
-      - ".agent/references/docs-map.md"
-      - ".agent/references/verification-map.md"
-      - ".agent/references/known-pitfalls.md"
-      - ".agent/references/debugging.md"
-    templates:
-      - ".agent/templates/requirement-intake.md"
-      - ".agent/templates/readonly-audit-prompt.md"
-      - ".agent/templates/spec-coding-checklist.md"
-      - ".agent/templates/verification-report-template.md"
     docs_sync:
-      - "AGENTS.md"
-      - "docs/project/architecture/README.md"
-      - "docs/project/architecture/architecture.md"
-      - "docs/project/architecture/architecture-views.md"
-      - "docs/project/architecture/architecture.html"
-      - "docs/project/modules/README.md"
-      - "docs/project/modules/01-product-surface.md"
-      - "docs/project/modules/02-input-document-ingestion.md"
-      - "docs/project/modules/03-knowledge-agentic-graphrag.md"
-      - "docs/project/modules/04-model-gateway.md"
-      - "docs/project/modules/05-memory-context.md"
-      - "docs/project/modules/06-agent-core-planning-control.md"
-      - "docs/project/modules/07-capability-skill.md"
-      - "docs/project/modules/08-tool-runtime.md"
-      - "docs/project/modules/09-security.md"
-      - "docs/project/modules/10-observability-eval.md"
-      - "docs/project/modules/11-infrastructure.md"
-      - "docs/status/production-readiness.md"
+      - "docs/README.md"
+      - "docs/project/README.md"
+      - "docs/project/architecture/"
+      - "docs/project/product/"
+      - "docs/project/domain/"
+      - "docs/project/agents/"
+      - "docs/project/knowledge/"
+      - "docs/project/services/"
+      - "docs/project/data/"
+      - "docs/project/security/"
+      - "docs/project/eval/"
+      - "docs/project/deployment/"
       - "docs/decisions/"
       - "docs/governance/"
-      - "docs/governance/architecture-document-writing-standard.md"
-      - ".agent/references/docs-map.md"
       - ".agent/system.yaml"
     verify:
       - "git diff --check"
       - "python tools/scripts/verify_architecture_document_set.py"
       - "python tools/agent/render_architecture.py --check"
-      - "python tools/scripts/verify_wave1_contract_freeze.py"
       - "python tools/scripts/verify_docs_entrypoints.py"
-      - "python tools/scripts/verify_deep_dive_architecture.py"
-      - "python tools/scripts/verify_architecture_interview_qa.py"
+      - "python tools/scripts/verify_markdown_internal_links.py"
       - "python tools/scripts/verify_architecture_writing_standard.py"
       - "python tools/scripts/verify_architecture_human_readability.py"
-      - "python tools/scripts/verify_markdown_internal_links.py"
       - "python .agent/scripts/verify_agent_system.py"
       - "python .agent/scripts/verify_doc_boundaries.py"
 
@@ -193,49 +130,37 @@ skill_routes:
     match:
       paths:
         - "src/backend/zuno/agent/**"
-        - "src/backend/zuno/core/agents/**"
     docs_sync:
-      - "docs/project/modules/06-agent-core-planning-control.md"
-      - "docs/project/modules/04-model-gateway.md"
-      - "docs/project/modules/05-memory-context.md"
-      - "docs/project/modules/07-capability-skill.md"
-      - "docs/project/modules/08-tool-runtime.md"
-    verify:
-      - "python tools/scripts/verify_agent_core_target_protocols.py"
-      - "pytest -q tests/repo/test_agent_core_target_protocols.py -p no:cacheprovider"
+      - "docs/project/agents/agent-platform.md"
+      - "docs/project/agents/multi-agent-runtime.md"
+      - "docs/project/domain/"
+      - "docs/project/services/service-architecture.md"
+      - "docs/project/data/data-ownership-and-recovery.md"
 
-  - name: "knowledge-ingestion-memory"
+  - name: "knowledge-and-evidence"
     match:
       paths:
         - "src/backend/zuno/knowledge/**"
         - "src/backend/zuno/memory/**"
-        - "src/backend/zuno/services/rag/**"
+        - "src/backend/zuno/platform/services/rag/**"
+        - "src/backend/zuno/platform/services/graphrag/**"
     docs_sync:
-      - "docs/project/modules/02-input-document-ingestion.md"
-      - "docs/project/modules/03-knowledge-agentic-graphrag.md"
-      - "docs/project/modules/05-memory-context.md"
+      - "docs/project/knowledge/knowledge-evidence-architecture.md"
+      - "docs/project/domain/legal-domain-model.md"
+      - "docs/project/eval/legal-eval-and-benchmark.md"
 
-  - name: "capability-and-tool"
+  - name: "service-and-tool-boundary"
     match:
       paths:
+        - "src/backend/zuno/api/**"
         - "src/backend/zuno/capability/**"
-    docs_sync:
-      - "docs/project/modules/07-capability-skill.md"
-      - "docs/project/modules/08-tool-runtime.md"
-    verify:
-      - "python tools/scripts/verify_capability_skill_target_protocols.py"
-      - "python tools/scripts/verify_tool_runtime_target_protocols.py"
-
-  - name: "platform-foundation"
-    match:
-      paths:
         - "src/backend/zuno/platform/**"
+        - "infra/docker/**"
     docs_sync:
-      - "docs/project/modules/04-model-gateway.md"
-      - "docs/project/modules/09-security.md"
-      - "docs/project/modules/10-observability-eval.md"
-      - "docs/project/modules/11-infrastructure.md"
-      - "docs/governance/repo-ownership-matrix.md"
+      - "docs/project/services/service-architecture.md"
+      - "docs/project/security/security-architecture.md"
+      - "docs/project/data/data-ownership-and-recovery.md"
+      - "docs/project/deployment/microservice-deployment.md"
 
 stop_conditions:
   - "public API field rename"
@@ -243,4 +168,4 @@ stop_conditions:
   - "dependency upgrade"
   - "security boundary change"
   - "Target behavior promoted to Current without evidence"
-  - "architecture principle changed by an implementation task"
+  - "architecture taxonomy changed without ADR and entrypoint migration"

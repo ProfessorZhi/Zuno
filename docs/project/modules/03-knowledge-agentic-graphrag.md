@@ -1,7 +1,8 @@
 # 一个法律结论怎样找到足够可靠的证据？
 
 updated: 2026-08-11
-status: normative-target-module-architecture
+status: superseded-legacy-reference
+canonical_status: Superseded; see `docs/project/knowledge/knowledge-evidence-architecture.md`
 formal_module: 03 Knowledge / Conditional Evidence Retrieval
 human_readable_part: Part A — 面向人的设计说明
 normative_specification_part: Part B — 规范性架构与实施约束
@@ -15,6 +16,10 @@ reading_order: Problem → Case → Ownership → Runtime → State/Failure → 
 > 本文只描述目标架构、规范性 Contract、状态、故障语义、目标代码与数据库规格，不把任何设计描述当作 Current 实现证据。Current、Gap、Measurement 与生产就绪状态由 `docs/status/production-readiness.md` 和 `docs/evidence/` 维护。
 >
 > Conditional Evidence Retrieval 不是“所有问题固定执行更多 Retriever”，也不是产品级 Multi-Agent Runtime。它是 Agent Core 外层任务控制与 Knowledge 内层证据获取控制共同组成的受治理闭环；Graph 只是其中一种按问题类型和证据缺口启用的 Retrieval Backend。
+
+## RED-KERNEL-V3 边界收窄
+
+Knowledge 负责检索、Evidence、Citation Lineage 和 Retrieval Round，不拥有 Matter、Finding、Memory 或法律最终事实。`Fact → LegalElement → Statute`、事件关系和相似案件是 Legal Capability/Projection 候选，不自动增加 Graph Canonical State。Graph 必须通过 query-class Kill Test 证明收益，否则使用 lexical/dense/hybrid 或外部 RAGFlow 等 Provider；Host 可经 MCP/API 消费结果。
 
 ## 0. 文档边界与规范层级
 

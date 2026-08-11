@@ -33,7 +33,7 @@ project-red-blue/09-open-source-review.md
 project-red-blue/10-delivery-evolution.md
 ```
 
-该工作区负责项目事实采集和红蓝互动；`docs/verification/interview-qa/` 负责架构攻击题和 Coverage。两者都不拥有 Canonical Architecture，正式变更必须回到 `docs/project/architecture/`、`docs/project/modules/`、`docs/decisions/`、`docs/status/` 或 `docs/evidence/` 的正确 Owner。
+该工作区负责项目事实采集和红蓝互动；`docs/verification/interview-qa/` 负责架构攻击题和 Coverage。两者都不拥有 Canonical Architecture，正式变更必须回到 `docs/project/architecture/`、`docs/project/<topic>/`、`docs/decisions/`、`docs/status/` 或 `docs/evidence/` 的正确 Owner。
 
 ## 架构与模块
 
@@ -45,8 +45,7 @@ python tools/scripts/verify_architecture_human_readability.py
 python tools/scripts/verify_agent_core_target_protocols.py
 ```
 
-模块变更再运行对应 `verify_<module>_target_protocols.py`。验证器只检查当前
-架构不变量，不再检查旧施工计划的完成状态。
+专题变更再运行对应专题 verifier；旧 11 模块 verifier 不得把 Superseded 文档重新升级为 Canonical。验证器只检查架构不变量，不把目标文档存在当作完成证据。
 
 ## Product Runtime
 

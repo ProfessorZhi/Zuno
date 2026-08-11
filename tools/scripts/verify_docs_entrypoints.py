@@ -4,86 +4,34 @@ import importlib.util
 import sys
 from pathlib import Path
 
+
 REPO_ROOT = Path(__file__).resolve().parents[2]
-
-CANONICAL_ARCHITECTURE_FILES = {
-    "README.md",
-    "architecture.md",
-    "architecture-views.md",
-    "architecture.html",
-}
-
-MODULE_DOCS = [
-    "01-product-surface.md",
-    "02-input-document-ingestion.md",
-    "03-knowledge-agentic-graphrag.md",
-    "04-model-gateway.md",
-    "05-memory-context.md",
-    "06-agent-core-planning-control.md",
-    "07-capability-skill.md",
-    "08-tool-runtime.md",
-    "09-security.md",
-    "10-observability-eval.md",
-    "11-infrastructure.md",
+TAXONOMY = [
+    "docs/project/product/product-architecture.md",
+    "docs/project/domain/legal-domain-model.md",
+    "docs/project/domain/domain-state-lifecycle.md",
+    "docs/project/agents/agent-platform.md",
+    "docs/project/agents/multi-agent-runtime.md",
+    "docs/project/knowledge/knowledge-evidence-architecture.md",
+    "docs/project/services/service-architecture.md",
+    "docs/project/data/data-ownership-and-recovery.md",
+    "docs/project/security/security-architecture.md",
+    "docs/project/eval/legal-eval-and-benchmark.md",
+    "docs/project/deployment/microservice-deployment.md",
 ]
-
-FACT_DOCS = [
-    "README.md",
-    "project-background.md",
-    "team-and-ownership.md",
-    "development-evolution.md",
-    "delivery-and-usage.md",
-    "technology-reality.md",
-]
-
-RETIRED_MODULE_DOCS = [
-    "04-model-gateway-contract-freeze.md",
-    "04-model-gateway-operations-conformance.md",
-    "10-observability-eval-rag-agent-evaluation.md",
-    "11-infrastructure-data-services.md",
-    "11-infrastructure-consistency-lifecycle.md",
-]
-
-REQUIRED_FRONT_PATHS = [
-    "README.md",
-    "docs/README.md",
-    "docs/project/README.md",
-    "docs/project/facts/README.md",
-    "docs/project/architecture/README.md",
-    "docs/project/architecture/architecture.md",
-    "docs/project/architecture/architecture-views.md",
-    "docs/project/architecture/architecture.html",
-    "docs/project/modules/README.md",
-    "docs/status/production-readiness.md",
-    "docs/decisions/README.md",
-    "docs/governance/repo-ownership-matrix.md",
-    ".agent/references/docs-map.md",
-    ".agent/system.yaml",
-    *[f"docs/project/modules/{name}" for name in MODULE_DOCS],
-    *[f"docs/project/facts/{name}" for name in FACT_DOCS if name != "README.md"],
-]
+FACTS = ["README.md", "project-background.md", "team-and-ownership.md", "development-evolution.md", "delivery-and-usage.md", "technology-reality.md"]
+ARCHITECTURE_FILES = {"README.md", "architecture.md", "architecture-views.md", "architecture.html"}
 
 
-def _read(relative_path: str) -> str:
-    return (REPO_ROOT / relative_path).read_text(encoding="utf-8")
+def read(path: str) -> str:
+    return (REPO_ROOT / path).read_text(encoding="utf-8")
 
 
-def _load_renderer():
-    path = REPO_ROOT / "tools/agent/render_architecture.py"
-    spec = importlib.util.spec_from_file_location("render_architecture", path)
-    if spec is None or spec.loader is None:
-        raise RuntimeError("cannot load tools/agent/render_architecture.py")
-    module = importlib.util.module_from_spec(spec)
-    sys.modules[spec.name] = module
-    spec.loader.exec_module(module)
-    return module
-
-
-def _load_markdown_link_verifier():
+def load_links():
     path = REPO_ROOT / "tools/scripts/verify_markdown_internal_links.py"
     spec = importlib.util.spec_from_file_location("verify_markdown_internal_links", path)
     if spec is None or spec.loader is None:
-        raise RuntimeError("cannot load tools/scripts/verify_markdown_internal_links.py")
+        raise RuntimeError("cannot load markdown link verifier")
     module = importlib.util.module_from_spec(spec)
     sys.modules[spec.name] = module
     spec.loader.exec_module(module)
@@ -91,97 +39,45 @@ def _load_markdown_link_verifier():
 
 
 def verify() -> list[str]:
-    errors: list[str] = []
+    errors = list(load_links().verify())
+    required = [
+        "README.md", "docs/README.md", "docs/project/README.md", "docs/project/facts/README.md",
+        "docs/project/architecture/README.md", "docs/project/architecture/architecture.md",
+        "docs/project/architecture/architecture-views.md", "docs/project/architecture/architecture.html",
+        "docs/project/modules/README.md", "docs/status/production-readiness.md", "docs/decisions/README.md",
+        "docs/governance/repo-ownership-matrix.md", ".agent/references/docs-map.md", ".agent/system.yaml",
+        *TAXONOMY,
+        *[f"docs/project/facts/{name}" for name in FACTS if name != "README.md"],
+    ]
+    for path in required:
+        if not (REPO_ROOT / path).exists():
+            errors.append(f"missing documentation entrypoint: {path}")
+    root = REPO_ROOT / "docs/project/architecture"
+    if {path.name for path in root.iterdir() if path.is_file()} != ARCHITECTURE_FILES:
+        errors.append("docs/project/architecture must contain exactly four files")
+    if any(path.is_dir() for path in root.iterdir()):
+        errors.append("docs/project/architecture must not contain subdirectories")
+    for mirror in (REPO_ROOT / ".agent/architecture", REPO_ROOT / ".agent/modules"):
+        if mirror.exists():
+            errors.append(f"documentation mirror must not exist: {mirror.relative_to(REPO_ROOT)}")
 
-    markdown_link_verifier = _load_markdown_link_verifier()
-    errors.extend(markdown_link_verifier.verify())
-
-    for relative_path in REQUIRED_FRONT_PATHS:
-        if not (REPO_ROOT / relative_path).exists():
-            errors.append(f"missing documentation entrypoint: {relative_path}")
-
-    for root_name in ["docs/project/architecture"]:
-        root = REPO_ROOT / root_name
-        files = {path.name for path in root.iterdir() if path.is_file()}
-        directories = [path.name for path in root.iterdir() if path.is_dir()]
-        if files != CANONICAL_ARCHITECTURE_FILES:
-            errors.append(
-                f"{root_name} must contain only {sorted(CANONICAL_ARCHITECTURE_FILES)}; got {sorted(files)}"
-            )
-        if directories:
-            errors.append(f"{root_name} must not contain subdirectories: {sorted(directories)}")
-
-    formal_modules = sorted(path.name for path in (REPO_ROOT / "docs/project/modules").glob("[0-9][0-9]-*.md"))
-    if formal_modules != MODULE_DOCS:
-        errors.append(f"formal module document set mismatch: {formal_modules}")
-
-    formal_facts = sorted(path.name for path in (REPO_ROOT / "docs/project/facts").glob("*.md"))
-    if formal_facts != sorted(FACT_DOCS):
-        errors.append(f"formal project fact document set mismatch: {formal_facts}")
-
-    for retired_root in [REPO_ROOT / ".agent/architecture", REPO_ROOT / ".agent/modules"]:
-        if retired_root.exists():
-            errors.append(f"retired Agent documentation mirror must not exist: {retired_root.relative_to(REPO_ROOT)}")
-
-    for name in RETIRED_MODULE_DOCS:
-        if (REPO_ROOT / "docs/project/modules" / name).exists():
-            errors.append(f"retired split module document remains active: {name}")
-
-    docs_index = _read("docs/project/modules/README.md")
-    docs_map = _read(".agent/references/docs-map.md")
-    system = _read(".agent/system.yaml")
-    architecture_index = _read("docs/project/architecture/README.md")
-
-    for name in MODULE_DOCS:
-        if name not in docs_index:
-            errors.append(f"docs/project/modules/README.md does not route {name}")
-        if name not in docs_map:
-            errors.append(f".agent/references/docs-map.md does not route {name}")
-        if name not in system:
-            errors.append(f".agent/system.yaml does not route {name}")
-
-    for phrase in ["docs/project/modules/", "docs/status/", "docs/decisions/", "docs/governance/"]:
-        if phrase not in architecture_index:
-            errors.append(f"docs/project/architecture/README.md missing phrase: {phrase}")
-    for phrase in [".agent/", "docs/status/production-readiness.md"]:
-        if phrase not in architecture_index:
-            errors.append(f"docs/project/architecture/README.md missing phrase: {phrase}")
-
-    renderer = _load_renderer()
-    design = _read("docs/project/architecture/architecture.md")
-    views = _read("docs/project/architecture/architecture-views.md")
-    html = _read("docs/project/architecture/architecture.html")
-    errors.extend(renderer.validate_design(design))
-    errors.extend(renderer.validate_source(views))
-    errors.extend(renderer.validate_html(html))
-
-    for phrase in [
-        "十一模块",
-        "Single Controller",
-        "AgentRunGraph",
-        "Plan DAG",
-        "StepExecutionGraph",
-        "跨模块 Contract",
-        "PreparedToolAction",
-        "EffectReconciliation",
-        "EvidenceLedger",
-        "ContextPackVersion",
-    ]:
-        if phrase not in design:
-            errors.append(f"docs/project/architecture/architecture.md missing integration phrase: {phrase}")
-
-    for phrase in [
-        "./architecture.md",
-        "../modules/README.md",
-        "../../status/production-readiness.md",
-        "./architecture-views.md",
-        "mermaid@11",
-        "diagram-dialog",
-        "Mermaid source",
-    ]:
-        if phrase not in html:
-            errors.append(f"docs/project/architecture/architecture.html missing marker: {phrase}")
-
+    index = read("docs/project/README.md")
+    docs_readme = read("docs/README.md")
+    system = read(".agent/system.yaml")
+    for path in TAXONOMY:
+        marker = path.split("docs/project/", 1)[-1]
+        for label, content in (("docs/project/README.md", index), ("docs/README.md", docs_readme), (".agent/system.yaml", system)):
+            if marker not in content and Path(path).name not in content:
+                errors.append(f"{label} does not route to {path}")
+    legacy_index = read("docs/project/modules/README.md")
+    if "Superseded" not in legacy_index:
+        errors.append("legacy module index must be marked Superseded")
+    for path in (REPO_ROOT / "docs/project/modules").glob("[0-9][0-9]-*.md"):
+        if "status: superseded-legacy-reference" not in path.read_text(encoding="utf-8"):
+            errors.append(f"legacy module lacks superseded status: {path.relative_to(REPO_ROOT)}")
+    for marker in ("Current", "Target", "Hypothesis", "History", "Microservice", "Python-only"):
+        if marker not in index:
+            errors.append(f"docs/project/README.md missing status/architecture marker: {marker}")
     return errors
 
 

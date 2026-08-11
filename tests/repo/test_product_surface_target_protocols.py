@@ -79,7 +79,7 @@ def test_requirements_controls_and_invariants_are_contiguous() -> None:
 
 def test_target_only_status_and_program_boundary() -> None:
     content = _content()
-    assert "status: normative-target-module-architecture" in content
+    assert "status: superseded-legacy-reference" in content
     assert "唯一的正式 Target 架构文档" in content
     assert ".agent/programs/" in content
     assert "# Current Baseline" not in content

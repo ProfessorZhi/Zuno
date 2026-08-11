@@ -3,103 +3,77 @@ from __future__ import annotations
 import sys
 from pathlib import Path
 
-REPO_ROOT = Path(__file__).resolve().parents[2]
-DOCS_MODULES = REPO_ROOT / "docs/project/modules"
-DOCS_ARCH = REPO_ROOT / "docs/project/architecture"
 
-MODULE_DOCS = [
-    "01-product-surface.md",
-    "02-input-document-ingestion.md",
-    "03-knowledge-agentic-graphrag.md",
-    "04-model-gateway.md",
-    "05-memory-context.md",
-    "06-agent-core-planning-control.md",
-    "07-capability-skill.md",
-    "08-tool-runtime.md",
-    "09-security.md",
-    "10-observability-eval.md",
-    "11-infrastructure.md",
+REPO_ROOT = Path(__file__).resolve().parents[2]
+ARCH_ROOT = REPO_ROOT / "docs/project/architecture"
+TAXONOMY = [
+    "docs/project/product/product-architecture.md",
+    "docs/project/domain/legal-domain-model.md",
+    "docs/project/domain/domain-state-lifecycle.md",
+    "docs/project/agents/agent-platform.md",
+    "docs/project/agents/multi-agent-runtime.md",
+    "docs/project/knowledge/knowledge-evidence-architecture.md",
+    "docs/project/services/service-architecture.md",
+    "docs/project/data/data-ownership-and-recovery.md",
+    "docs/project/security/security-architecture.md",
+    "docs/project/eval/legal-eval-and-benchmark.md",
+    "docs/project/deployment/microservice-deployment.md",
 ]
-RETIRED_MODULE_DOCS = [
-    "04-model-gateway-contract-freeze.md",
-    "04-model-gateway-operations-conformance.md",
-    "10-observability-eval-rag-agent-evaluation.md",
-    "11-infrastructure-data-services.md",
-    "11-infrastructure-consistency-lifecycle.md",
-]
-CANONICAL_ARCH_SUPPORT = {"README.md", "architecture.md", "architecture-views.md", "architecture.html"}
+ARCHITECTURE_FILES = {"README.md", "architecture.md", "architecture-views.md", "architecture.html"}
+LEGACY_MODULES = sorted(path.name for path in (REPO_ROOT / "docs/project/modules").glob("[0-9][0-9]-*.md"))
+
+
+def read(path: str) -> str:
+    return (REPO_ROOT / path).read_text(encoding="utf-8")
 
 
 def verify() -> list[str]:
     errors: list[str] = []
+    files = {path.name for path in ARCH_ROOT.iterdir() if path.is_file()}
+    dirs = [path.name for path in ARCH_ROOT.iterdir() if path.is_dir()]
+    if files != ARCHITECTURE_FILES:
+        errors.append(f"architecture file set mismatch: {sorted(files)}")
+    if dirs:
+        errors.append(f"architecture directory must not contain subdirectories: {dirs}")
 
-    formal_candidates = sorted(path.name for path in DOCS_MODULES.glob("[0-9][0-9]-*.md"))
-    if formal_candidates != MODULE_DOCS:
-        errors.append(f"formal module document set must be exactly {MODULE_DOCS}, got {formal_candidates}")
+    for path in TAXONOMY:
+        full = REPO_ROOT / path
+        if not full.exists():
+            errors.append(f"missing canonical taxonomy document: {path}")
+        else:
+            content = full.read_text(encoding="utf-8")
+            for marker in ("status:", "canonical_question:", "owner:", "Current", "Target", "Gap"):
+                if marker not in content:
+                    errors.append(f"{path} missing taxonomy metadata or boundary: {marker}")
 
-    for index, file_name in enumerate(MODULE_DOCS, start=1):
-        formal = DOCS_MODULES / file_name
-        if not formal.exists():
-            errors.append(f"missing formal module document: {file_name}")
-            continue
-        content = formal.read_text(encoding="utf-8")
-        if f"module_number: {index:02d}" not in content:
-            errors.append(f"module metadata mismatch for {file_name}")
-        if "Target" not in content:
-            errors.append(f"module document does not declare Target boundary: {file_name}")
-        if "production ready" not in content.lower():
-            errors.append(f"module document lacks production-readiness boundary: {file_name}")
+    for path in (REPO_ROOT / "docs/project/modules").glob("[0-9][0-9]-*.md"):
+        content = path.read_text(encoding="utf-8")
+        if "status: superseded-legacy-reference" not in content:
+            errors.append(f"legacy module is not explicitly superseded: {path.relative_to(REPO_ROOT)}")
 
-    for retired in RETIRED_MODULE_DOCS:
-        if (DOCS_MODULES / retired).exists():
-            errors.append(f"retired split module document still exists: {retired}")
+    for mirror in (REPO_ROOT / ".agent/architecture", REPO_ROOT / ".agent/modules"):
+        if mirror.exists():
+            errors.append(f"documentation mirror must not exist: {mirror.relative_to(REPO_ROOT)}")
 
-    docs_arch_files = {p.name for p in DOCS_ARCH.iterdir() if p.is_file()}
-    if docs_arch_files != CANONICAL_ARCH_SUPPORT:
-        errors.append(f"docs/project/architecture file set mismatch: {sorted(docs_arch_files)}")
-    if [p for p in DOCS_ARCH.iterdir() if p.is_dir()]:
-        errors.append("docs/project/architecture must not contain subdirectories")
-    for retired_root in [REPO_ROOT / ".agent/architecture", REPO_ROOT / ".agent/modules"]:
-        if retired_root.exists():
-            errors.append(f"retired Agent documentation mirror must not exist: {retired_root.relative_to(REPO_ROOT)}")
-
-    design = (DOCS_ARCH / "architecture.md").read_text(encoding="utf-8")
-    html = (DOCS_ARCH / "architecture.html").read_text(encoding="utf-8")
-    modules_index = (DOCS_MODULES / "README.md").read_text(encoding="utf-8")
-    architecture_index = (DOCS_ARCH / "README.md").read_text(encoding="utf-8")
-
-    for file_name in MODULE_DOCS:
-        for label, content in [
-            ("architecture.md", design),
-            ("docs/project/modules/README.md", modules_index),
-        ]:
-            if file_name not in content:
-                errors.append(f"{label} does not route to {file_name}")
-
-    for label, content in [
-        ("docs/project/modules/README.md", modules_index),
-        ("docs/project/architecture/README.md", architecture_index),
-    ]:
-        for phrase in ["十一", "architecture.md", "architecture.html"]:
-            if phrase not in content:
-                errors.append(f"{label} missing architecture-set explanation: {phrase}")
-
-    for retired in RETIRED_MODULE_DOCS:
-        active_files = [
-            DOCS_MODULES / "README.md",
-            DOCS_ARCH / "architecture.md",
-            DOCS_ARCH / "architecture-views.md",
-            DOCS_ARCH / "architecture.html",
-        ]
-        for path in active_files:
-            if retired in path.read_text(encoding="utf-8"):
-                errors.append(f"active architecture surface references retired split doc {retired}: {path.relative_to(REPO_ROOT)}")
-
-    if "11 × docs/project/modules" not in design or "1 × docs/project/architecture/architecture.md" not in design:
-        errors.append("architecture.md must declare the 11+1 formal design set")
-    if "../modules/README.md" not in html:
-        errors.append("architecture.html must route to the eleven module documents")
-
+    design = read("docs/project/architecture/architecture.md")
+    index = read("docs/project/README.md")
+    arch_index = read("docs/project/architecture/README.md")
+    legacy_index = read("docs/project/modules/README.md")
+    system = read(".agent/system.yaml")
+    for path in TAXONOMY:
+        marker = path.split("docs/project/", 1)[-1]
+        for label, content in (("architecture.md", design), ("docs/project/README.md", index), (".agent/system.yaml", system)):
+            if marker not in content and Path(path).name not in content:
+                errors.append(f"{label} does not route to {path}")
+    if "Superseded" not in legacy_index or "History" not in legacy_index:
+        errors.append("legacy module index must explain Superseded and History")
+    for marker in ("architecture.md", "architecture-views.md", "architecture.html", "docs/project/", "docs/status/", "ADR"):
+        if marker not in arch_index:
+            errors.append(f"architecture README missing boundary marker: {marker}")
+    if "11 Logical Modules + 1 Architecture" not in design or "History" not in design:
+        errors.append("architecture.md must record the former 11+1 arrangement as History")
+    if "Current" not in index or "Target" not in index or "Hypothesis" not in index:
+        errors.append("project README must explain Current/Target/Hypothesis")
     return errors
 
 

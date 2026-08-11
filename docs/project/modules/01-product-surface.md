@@ -1,7 +1,8 @@
 # 企业法律工作怎样进入 Zuno？
 
 updated: 2026-08-11
-status: normative-target-module-architecture
+status: superseded-legacy-reference
+canonical_status: Superseded; see `docs/project/product/product-architecture.md`
 formal_module: 01 Product Surface
 human_readable_part: Part A — 面向人的设计说明
 normative_specification_part: Part B — 规范性架构与实施约束
@@ -15,6 +16,10 @@ reading_order: Problem → Case → Ownership → Runtime → State/Failure → 
 > 本文定义北向产品边界、用户场景、Product-owned 领域对象、Command / Query / Projection / Stream / Delivery 协议、状态机、故障与恢复语义、安全与生命周期、目标代码和数据库规格，以及 Requirement-to-Test-to-Evidence 闭环。
 >
 > 本文只描述 Target，不把当前 FastAPI、Vue、Workspace Service 或内存态实现冒充为完成事实。Current、Gap、Measurement 和完成证据由 `docs/status/production-readiness.md` 维护；迁移、兼容入口和 Cutover 计划进入 `.agent/programs/`。
+
+## RED-KERNEL-V3 边界收窄
+
+Product Surface 可以由 Zuno UI、WorkBuddy、Dify、Pi 或企业 Portal 承载。它拥有用户意图、Matter 入口、Review/WorkProduct 展示和 HumanDecision 交互，但不因 Host 是 Zuno 就获得 Domain State 的全部写入权。Legal Backend 通过 MCP/API 提供版本化 Domain、Evidence、Review 和 Capability Contract；Native Domain-aware Runtime 仍为 deferred hypothesis，详见 `docs/decisions/0008-legal-domain-kernel-and-host-boundary.md`。
 
 ## 0. 文档边界与规范优先级
 

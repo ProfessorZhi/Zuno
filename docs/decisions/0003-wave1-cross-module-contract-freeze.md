@@ -1,6 +1,7 @@
 # ADR 0003：Wave 1 跨模块 Contract 与 Infrastructure 物理边界冻结
 
 status: accepted-target
+taxonomy_status: partially-superseded-by-ADR-0011
 updated: 2026-07-13
 baseline_main_sha: `729e439e29deadc101c5687fc47125104e62e2c1`
 confirmed_wave1_main_sha: `849820d2c52d36abebee8c3d4a974bf035524e0a`
@@ -8,6 +9,8 @@ coordinating_pr: `#17`
 reviewed_and_merged_prs: `#18 Model Gateway`、`#19 Security`、`#17 Infrastructure / shared contracts`、`#21 Observability & Eval`
 
 > 本 ADR 已合并到 `main`，是 Wave 1 的正式共享 Target Contract；它仍不是 Current、实现证据、质量证明或 production readiness 声明。
+
+> 维护边界：本 ADR 仍约束共享 Contract 和物理基础设施 Owner，但其中“11 模块”的目录/服务组织方式已被 ADR 0011 替换；新文档 taxonomy 和 service boundary 以 ADR 0009–0011 及对应专题 Owner 为准。
 
 ## 1. 背景
 

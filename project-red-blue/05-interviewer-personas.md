@@ -52,7 +52,7 @@
 
 ```text
 项目定位 → Business + Forensic
-11 模块 → Architecture + Investor + Implementation
+多专题/少服务 → Architecture + Investor + Implementation
 GraphRAG / Memory → Architecture + Fundamentals + Open-source Skeptic
 个人贡献 → Forensic + Manager
 上线与指标 → Implementation + Production + Forensic

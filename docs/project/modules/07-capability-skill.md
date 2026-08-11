@@ -1,7 +1,8 @@
 # 平台怎样描述、组合和选择可执行能力？
 
 updated: 2026-08-11
-status: normative-target-module-architecture
+status: superseded-legacy-reference
+canonical_status: Superseded; see `docs/project/agents/agent-platform.md`
 formal_module: 07 Capability / Skill
 human_readable_part: Part A — 面向人的设计说明
 normative_specification_part: Part B — 规范性架构与实施约束
@@ -13,6 +14,10 @@ reading_order: Problem → Case → Ownership → Runtime → State/Failure → 
 > 本文是 Zuno 第 07 个逻辑模块——Capability / Skill——唯一的正式 Target 架构主设计。
 >
 > 本文只描述理想目标架构、规范性 Contract 和实现规格，不把当前代码、历史 PHASE、短期迁移或运行证据写成 Target 事实。Current、Gap、Measurement 和完成状态由 `docs/status/production-readiness.md` 维护；Current → Target 的实现、迁移、切流和收口计划必须进入 `.agent/programs/`。
+
+## RED-KERNEL-V3 法律能力边界
+
+法律能力按 Contract 组织，而不是按 Agent 复制专业代码：`EVENT_EXTRACTION`、`EVENT_ALIGNMENT`、`CONFLICT_DETECTION`、`FACT_ARTICLE_MAPPING`、`SIMILAR_CASE_RETRIEVAL`、`LEGAL_APPLICABILITY`、`EVIDENCE_REASONING`。Local Algorithm、LLM、Fine-tuned Model、OSS、API 或 MCP 都是 Provider；输出只能是 Proposal、Candidate、Observation、Reference 或 Receipt，由 Canonical Owner 经过 Schema、Provenance、Evidence、Permission、Version 和 Review 后提交事实。
 
 ## 0. 文档边界与规范优先级
 

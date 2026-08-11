@@ -56,7 +56,7 @@ Claim
 按范围读取：
 
 1. `docs/project/architecture/architecture.md`、`docs/project/architecture/architecture-views.md`；
-2. 相关 `docs/project/modules/`、`docs/decisions/`、`docs/status/`、`docs/evidence/`；
+2. 相关 `docs/project/<topic>/`、`docs/decisions/`、`docs/status/`、`docs/evidence/`；旧 `modules/` 只作 History 对照；
 3. `docs/verification/interview-qa/` 中与目标机制相关的既有攻击链；
 4. 代码、测试、Git 提交和可复现证据（需要验证 Current 时）；
 5. `01-project-facts.md` 的事实状态和重建置信度。
@@ -76,7 +76,7 @@ BLUE_PROPOSAL / RECONSTRUCTION
 UNKNOWN
 ```
 
-同时做跨文档冲突检查：项目背景、架构 Part A、模块文档、Status、简历 Claim 或真实面试回答之间有冲突时，先记录冲突，不替蓝队选择一个“最顺”的版本。
+同时做跨文档冲突检查：项目背景、总架构、Canonical Question 专题、Status、简历 Claim 或真实面试回答之间有冲突时，先记录冲突，不替蓝队选择一个“最顺”的版本。
 
 ### 阶段二：建立 Claim Inventory
 

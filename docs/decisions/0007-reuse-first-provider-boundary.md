@@ -2,7 +2,8 @@
 
 status: accepted-target
 decision_date: 2026-08-12
-scope: Zuno 全局架构、11 个逻辑模块、Build-vs-Buy 评审和后续 Provider 适配
+scope: Zuno 全局架构、Canonical Taxonomy、Build-vs-Buy 评审和后续 Provider 适配
+taxonomy_note: 旧 11 模块仅作为 History；目录和服务边界以 ADR 0011 为准。
 
 ## Context
 

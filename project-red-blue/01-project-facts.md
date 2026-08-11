@@ -29,8 +29,8 @@
 | 事实 | 标签 | 证据或待补信息 |
 |---|---|---|
 | Zuno 当前有总体架构文档 | `[REPO_EVIDENCE]` | `docs/project/architecture/architecture.md` |
-| Zuno 当前维护 11 个逻辑模块 | `[REPO_EVIDENCE]` | `docs/project/modules/README.md` |
-| 目标设计覆盖 Agent、Knowledge、Memory、Tool、Security 等能力 | `[REPO_EVIDENCE]` | `docs/project/modules/` 与总体架构；它证明“文档存在”，不证明 Runtime 完成 |
+| 基线仓库曾维护 11 个逻辑模块 | `[REPO_EVIDENCE]` | `docs/project/modules/README.md`；这是 History，不是新 Target |
+| 新 Target 由 Product/Domain/Agents/Knowledge/Services/Data/Security/Eval/Deployment 组成 | `[TARGET_ACCEPTED]` | `docs/project/README.md`、ADR 0011；不证明 Runtime 完成 |
 | 项目最初来自什么真实需求 | `[UNKNOWN]` | 先研究历史材料，再让用户确认剩余歧义 |
 | 真实用户、客户和生产使用情况 | `[UNKNOWN]` | 不能由法院合作背景自动推出 |
 | 当前用户量、数据量、QPS、延迟和成本 | `[UNKNOWN]` | 需要用户、运行记录或证据；只允许给候选区间 |
