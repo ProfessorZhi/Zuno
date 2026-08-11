@@ -1,6 +1,11 @@
-# Future Skill：Project Red-Blue Architect
+# Future Skill Design
 
-这是未来 Skill 的接口草案，不是当前可执行的 `SKILL.md`。至少完成数次真实红蓝会话、观察提问质量和修复闭环后，才决定是否固化为 Skill。
+这里保存未来 Skill 的设计规格，不是当前可执行的 `SKILL.md`。当前不安装、不生成正式 Skill。至少完成数次真实红蓝会话、观察提问质量和修复闭环后，才决定是否固化为 Skill。
+
+候选规格：
+
+- [mock-interviewer-skill-spec.md](mock-interviewer-skill-spec.md)：只问问题的模拟面试官；
+- [red-blue-architect-skill-spec.md](red-blue-architect-skill-spec.md)：Red → Blue → Repair → Retest 架构优化器。
 
 候选模式：
 

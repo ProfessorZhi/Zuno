@@ -116,9 +116,10 @@ Implementation / Evidence Repair
 | `08-gap-register.md` | 缺口分类、生命周期、优先级和关闭条件 |
 | `09-open-source-review.md` | Adopt / Extend / Build / Defer 评估协议 |
 | `10-delivery-evolution.md` | 从最小落地到生产治理的演进假设 |
+| `workflows/` | 三套可组合工作流：Red Interview、Blue Answer、Red-Blue Optimization |
 | `sources/` | 外部面经模式和仓库证据入口，不拥有 Zuno 新事实 |
-| `sessions/` | 经过批准的红蓝会话摘要，不保存隐藏思维链 |
-| `skill/` | 未来 Skill 的接口草案；多次实跑前不生成 `SKILL.md` |
+| `sessions/` | 可审计的公开 Session 记录和 TEMPLATE，不保存隐藏思维链 |
+| `skill/` | 两个 Future Skill Design Spec；多次实跑前不生成 `SKILL.md` |
 
 `00-charter.md` 是红队的唯一底层思维框架。`04` 提供攻击工具，`05` 提供面试官视角，`06` 规定会话运行方式，`sources/` 负责用真实面经校准问法；这些文件不能反过来各自维护一套互相冲突的红队决策逻辑。
 
