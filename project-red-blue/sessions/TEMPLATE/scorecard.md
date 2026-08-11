@@ -42,3 +42,27 @@ RESUME
 - Coverage Status：`SUFFICIENT / COVERAGE_FAILURE`
 
 如果一轮 Question Budget 几乎全部集中在 Agent/RAG，而没有触及背景、价值、Ownership、开发过程、模型部署、开源替代或上线证据，Session 必须标记 `COVERAGE_FAILURE`，不能因为平均分高而通过。
+
+## Campaign Quality Profile
+
+按 Attack Area 聚合，不使用一个掩盖 P0 或 Unsupported 的总分：
+
+| Attack Area | question_count | avg_answer_defensibility | avg_architecture_project_fitness | P0_count | P1_count | unsupported_count | unsupported_rate |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| PROJECT_BACKGROUND |  |  |  |  |  |  |  |
+
+## Campaign Summary
+
+- coverage_status: `SUFFICIENT | COVERAGE_FAILURE`
+- P0_total:
+- P1_total:
+- unsupported_rate:
+- reopened_gap_count:
+
+## Baseline Delta
+
+baseline_session_id:
+
+| Attack Area | Baseline | Current | Delta |
+|---|---:|---:|---:|
+| PROJECT_BACKGROUND |  |  |  |

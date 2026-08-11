@@ -28,4 +28,4 @@ UNKNOWN
 
 ## 证据路由
 
-当前状态和运行指标进入 [`../../status/`](../../status/README.md)；可复现代码、测试、Trace、Eval 和部署证据进入 [`../../evidence/`](../../evidence/README.md)。本文件只维护项目层的事实摘要和缺口，不复制证据正文。
+当前状态和运行指标进入 [`../../status/production-readiness.md`](../../status/production-readiness.md)；可复现代码、测试、Trace、Eval 和部署证据进入 [`../../evidence/`](../../evidence/README.md)。本文件只维护项目层的事实摘要和缺口，不复制证据正文。

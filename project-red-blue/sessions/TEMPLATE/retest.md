@@ -4,6 +4,8 @@
 
 ```text
 上一轮 Gap：
+Gap IDs：GAP-...
+Change IDs：CHANGE-...
 修复内容：
 Mutation Variable：问法 / 反例 / Failure / 规模 / 版本 / 权限 / 替代方案
 Mutation Question：

@@ -9,9 +9,12 @@ python tools/scripts/verify_deep_dive_architecture.py
 python tools/scripts/verify_architecture_interview_qa.py
 python tools/scripts/verify_markdown_internal_links.py
 python tools/scripts/verify_repo_structure.py
+python tools/scripts/verify_red_blue_session.py
 python .agent/scripts/verify_agent_system.py
 python .agent/scripts/verify_doc_boundaries.py
 ```
+
+红蓝 Campaign Session 的公开记录一致性由 `python tools/scripts/verify_red_blue_session.py` 负责；它只验证已落盘的 YAML/Markdown 记录，不运行红队、蓝队或架构同步 Runtime。
 
 架构红蓝队任务先读取：
 

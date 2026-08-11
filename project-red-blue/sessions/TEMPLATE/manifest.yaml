@@ -5,12 +5,25 @@ scope: "<project / module / claim / resume>"
 project_package_version: "<version or file set hash>"
 target_role: "<job or interview context>"
 question_budget: 0
+actual_question_count: 0
+stop_reason: null
 zuno_base_sha: "<commit>"
+defense_base_sha: "<commit>"
+post_sync_sha: null
 resume_version: "<version or file hash>"
 project_fact_version: "<version or file hash>"
 internship_work_sha: "<commit or unknown>"
 interview_notes_sha: "<commit or unknown>"
+campaign_id: "<stable campaign id>"
+round_id: "<round id>"
+parent_session_id: null
+baseline_session_id: "<baseline session id>"
+campaign_scope: "<PROJECT_DOMAIN_OVERALL | MODULE | ...>"
+campaign_phase: "<BASELINE | RETEST | ADVERSARIAL_ESCALATION | FULL_REVIEW>"
 red_kernel_version: "v1"
+judge_policy_version: "v1"
+source_scope:
+  - "<pinned source path or repository>"
 started_at: "<ISO-8601>"
 completed_at: "<ISO-8601 or null>"
 status: "<IN_PROGRESS | COMPLETED | STOPPED | REOPENED>"

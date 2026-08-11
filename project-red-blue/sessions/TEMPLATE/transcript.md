@@ -30,6 +30,14 @@
 
 <!-- 只写公开理由，不写隐藏推理。 -->
 
+### Scorecard Ref
+
+<!-- 必须是本题 Question ID，例如 Q001。 -->
+
+### Gap Candidate Refs
+
+<!-- GAP-* ID 列表；没有 Gap 时写 NONE。不要在 Transcript 复制分数或 Gap 正文。 -->
+
 ## Q002
 
 <!-- 按 Q001 复制；问题必须由上一轮回答动态产生。 -->

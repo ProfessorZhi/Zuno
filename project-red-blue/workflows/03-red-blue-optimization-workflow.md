@@ -41,6 +41,8 @@ Question Budget / Stop Boundary
   ↓
 Gap Clustering
   ↓
+Campaign Escalation Plan
+  ↓
 Blue Project Package / Architecture Review
   ↓
 Research if needed
@@ -170,6 +172,24 @@ Canonical Destination
 ```
 
 如果旧 Gap 在新问法下重新出现，状态为 `REOPEN`，不能因为文档已经更新就宣称关闭。
+
+## Campaign 级升级
+
+下一轮不能把上一轮问题原样重放。默认从三类问题源动态分配预算，比例是治理建议，不是静态题库：
+
+```text
+REGRESSION             30%–50%
+ADVERSARIAL_MUTATION   30%–50%
+NEW_SURFACE            10%–30%
+```
+
+`REGRESSION` 检查上一轮 CLOSED Gap 是否重新出现；`ADVERSARIAL_MUTATION` 保持 Claim 不变但改变问法、Failure、规模、版本、权限、开源替代、团队约束、预算、时间或部署模式；`NEW_SURFACE` 攻击修复后新产生的 Architecture Claim。下一轮通过 `parent_session_id`、`baseline_session_id`、`campaign_phase` 和 `defense_base_sha` 连接上一轮，不能把三个 Markdown Session 当成互相独立的成绩单。
+
+Campaign Score 使用按 Attack Area 聚合的 **Campaign Quality Profile**，至少观察回答防守度、项目/架构适配度、P0/P1、Unsupported Rate、Coverage Status 和 Reopened Gap；平均分只作辅助，不产生一个掩盖危险缺口的总分。
+
+## Canonical Sync 追踪
+
+`blue-change-set.md` 的每个 Change 必须记录来源 Cluster、User Gate、Sync Status、Canonical Paths、Applied Commit SHA、Validation Run、Validation Not Run 和 Retest IDs。`NOT_APPLIED`、`PARTIAL` 或 `REJECTED` 的 Change 仍是提案或未完成修复；只有 `APPLIED` 且通过 User Gate 的 Change 才能被 Retest 当作正式修复。
 
 ## 边界
 

@@ -6,6 +6,7 @@
 
 ```text
 Cluster ID：CLUSTER-001
+Gap IDs：GAP-Q001-01
 Questions：Q001, Q...
 Failed Claim：
 Root Cause：

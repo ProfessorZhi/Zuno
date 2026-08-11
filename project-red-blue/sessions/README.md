@@ -17,6 +17,25 @@ retest.md
 
 会话记录必须 Pin 输入版本，区分真实面试与 Architecture Campaign，并把逐题 Gap 聚类后再进入 Blue Change Set。`sessions/` 不覆盖 `docs/` 的正式架构事实；Canonical Sync 只能记录已经通过 User Gate 的结果。
 
+## Session Conformance
+
+每个已完成 Session 必须能由机器复核，而不是只依赖书写协议：
+
+```powershell
+python tools/scripts/verify_red_blue_session.py
+python tools/scripts/verify_red_blue_session.py project-red-blue/sessions/<session-id>
+```
+
+验证器检查：
+
+- `Q001..QNNN` 连续且不重复，Transcript 的 `Scorecard Ref` / `Gap Candidate Refs` 可解析；
+- `actual_question_count`、`question_budget` 和不足预算时的 `stop_reason` 一致；
+- Scorecard、Gap Cluster、Change Set 和 Retest 之间没有孤儿引用；
+- Campaign / Round Lineage、Attack Area Quality Profile 和 Baseline Delta 已声明；
+- `APPLIED` Change 必须有 User Gate、Canonical Paths、Applied Commit 和验证记录；只有 `APPLIED` Change 才能被 Retest 作为正式修复引用。
+
+`TEMPLATE/` 和以下划线开头的 synthetic fixture 不会被默认全目录扫描；它们可以被测试直接传给 verifier。
+
 Scorecard 必须覆盖完整 Project Package。若问题长期只集中在 Agent/RAG，遗漏项目背景、产品价值、Ownership、开发过程、模型部署、竞品替代、上线和生产证据，应标记 `COVERAGE_FAILURE`。
 
 建议命名：`YYYY-MM-DD-<scope>-<short-name>.md`。

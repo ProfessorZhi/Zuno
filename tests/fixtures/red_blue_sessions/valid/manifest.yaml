@@ -1,0 +1,30 @@
+session_id: "RB-TEST-VALID"
+workflow: "03-red-blue-optimization"
+mode: "FULL_REVIEW"
+scope: "project"
+project_package_version: "fixture-v1"
+target_role: "architecture-interview"
+question_budget: 3
+actual_question_count: 3
+stop_reason: null
+zuno_base_sha: "7c4b740ac5760b6a3ed42286d4231fe70fbbf18a"
+defense_base_sha: "7c4b740ac5760b6a3ed42286d4231fe70fbbf18a"
+post_sync_sha: null
+resume_version: "fixture-v1"
+project_fact_version: "fixture-v1"
+internship_work_sha: "fixture"
+interview_notes_sha: "fixture"
+campaign_id: "ZUNO-ARCH-TEST"
+round_id: "RB-ARCH-TEST-001"
+parent_session_id: null
+baseline_session_id: "RB-ARCH-TEST-001"
+campaign_scope: "PROJECT_DOMAIN_OVERALL"
+campaign_phase: "BASELINE"
+red_kernel_version: "v1"
+judge_policy_version: "v1"
+source_scope:
+  - "project-red-blue"
+  - "docs/project"
+started_at: "2026-08-11T10:00:00+08:00"
+completed_at: "2026-08-11T11:00:00+08:00"
+status: "COMPLETED"

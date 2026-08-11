@@ -119,6 +119,7 @@ Implementation / Evidence Repair
 | `workflows/` | 三套可组合工作流：Red Interview、Blue Answer、Red-Blue Optimization |
 | `sources/` | 外部面经模式和仓库证据入口，不拥有 Zuno 新事实 |
 | `sessions/` | 可审计的公开 Session 记录和 TEMPLATE，不保存隐藏思维链 |
+| `tools/scripts/verify_red_blue_session.py` | Campaign Session 的 YAML/Markdown 一致性验证器；不运行红队或修改正式架构 |
 | `skill/` | 两个 Future Skill Design Spec；多次实跑前不生成 `SKILL.md` |
 
 `00-charter.md` 是红队的唯一底层思维框架。`04` 提供攻击工具，`05` 提供面试官视角，`06` 规定会话运行方式，`sources/` 负责用真实面经校准问法；这些文件不能反过来各自维护一套互相冲突的红队决策逻辑。

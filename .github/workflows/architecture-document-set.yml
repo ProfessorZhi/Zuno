@@ -6,6 +6,7 @@ on:
     paths:
       - "docs/project/architecture/**"
       - "docs/project/modules/**"
+      - "project-red-blue/sessions/**"
       - "tools/agent/render_architecture.py"
       - "tools/scripts/verify_*_target_protocols.py"
       - "tools/scripts/verify_architecture_document_set.py"
@@ -14,6 +15,8 @@ on:
       - "tests/repo/test_architecture_document_set.py"
       - "tests/repo/test_architecture_semantic_alignment.py"
       - "tests/repo/test_docs_entrypoints.py"
+      - "tests/repo/test_red_blue_session.py"
+      - "tools/scripts/verify_red_blue_session.py"
       - "AGENTS.md"
       - ".agent/system.yaml"
       - ".agent/references/**"
@@ -23,6 +26,7 @@ on:
     paths:
       - "docs/project/architecture/**"
       - "docs/project/modules/**"
+      - "project-red-blue/sessions/**"
       - "tools/agent/render_architecture.py"
       - "tools/scripts/verify_*_target_protocols.py"
       - "tools/scripts/verify_architecture_document_set.py"
@@ -31,6 +35,8 @@ on:
       - "tests/repo/test_architecture_document_set.py"
       - "tests/repo/test_architecture_semantic_alignment.py"
       - "tests/repo/test_docs_entrypoints.py"
+      - "tests/repo/test_red_blue_session.py"
+      - "tools/scripts/verify_red_blue_session.py"
       - "AGENTS.md"
       - ".agent/system.yaml"
       - ".agent/references/**"
@@ -61,6 +67,7 @@ jobs:
             tools/agent/render_architecture.py \
             tools/scripts/verify_architecture_document_set.py \
             tools/scripts/verify_architecture_semantic_alignment.py \
+            tools/scripts/verify_red_blue_session.py \
             tests/repo/test_architecture_document_set.py \
             tests/repo/test_architecture_semantic_alignment.py \
             tests/repo/test_docs_entrypoints.py \
@@ -78,6 +85,7 @@ jobs:
             python tools/scripts/verify_docs_entrypoints.py
             python .agent/scripts/verify_agent_system.py
             python .agent/scripts/verify_doc_boundaries.py
+            python tools/scripts/verify_red_blue_session.py
           } 2>&1 | tee architecture-validation-logs/entrypoints.log
       - name: Run architecture and module focused tests
         run: |
@@ -86,6 +94,7 @@ jobs:
             tests/repo/test_architecture_document_set.py \
             tests/repo/test_architecture_semantic_alignment.py \
             tests/repo/test_docs_entrypoints.py \
+            tests/repo/test_red_blue_session.py \
             tests/repo/test_agent_core_target_protocols.py \
             tests/repo/test_product_surface_target_protocols.py \
             tests/repo/test_model_gateway_target_protocols.py \
