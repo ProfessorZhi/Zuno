@@ -1,6 +1,15 @@
-# Question Taxonomy
+# Architecture Red Team Drill Taxonomy
 
-题库按真实面试的连续追问方式组织，而不是按名词表堆题。每个 Drill Chain 从 Why/Definition 进入 Trigger/Mechanism，再进入 Failure、Trade-off、Consistency、Evidence 或 Future 边界。
+红队 QA 按真实面试的连续追问方式组织，而不是按名词表堆题。每个 Drill Chain 从 Why/Definition 进入 Trigger/Mechanism，再进入 Failure、Trade-off、Consistency、Evidence 或 Future 边界。这里的目标不是覆盖更多名词，而是让一个核心机制能够经受连续五层以上追问。
+
+```text
+概念是什么
+→ 为什么需要它
+→ 运行时什么时候触发
+→ 输入、状态和 Owner 是什么
+→ 失败、版本、权限和并发怎么处理
+→ 如何验证设计真的有效
+```
 
 ## 难度层级
 
@@ -15,7 +24,7 @@
 | L7 | Evidence / Eval：如何用 Test、Trace、Eval 证明 |
 | L8 | System Stress：长任务、部分失败和跨模块压力 |
 
-Q001–Q267 按连续编号轮换 L1–L8，每个 Domain 的 Chain 均覆盖多层追问。
+Q001–Q267 按连续编号轮换 L1–L8，每个 Domain 的 Chain 均覆盖多层追问。新增内容应优先补进现有 Chain；题目数量不是质量指标。
 
 ## 主题模式族
 

@@ -11,4 +11,6 @@
 
 如果验证材料与正式架构冲突，以正式架构为准；如果验证暴露 Gap，应先修改正式事实源，再重新生成验证结果。
 
-- [Architecture Interview Verification Corpus](./interview-qa/README.md)
+- [Architecture Red Team QA](./interview-qa/README.md)
+
+`docs/verification/interview-qa/` 是 Zuno 架构红队模拟面试 QA 的唯一维护目录。它按“为什么 → 怎么判断 → 怎么执行 → 失败怎么办 → 如何恢复 → 如何证明有效”的连续追问组织材料，不是第二套架构事实，也不是只罗列术语的题库。
