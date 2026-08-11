@@ -350,14 +350,28 @@ IndexableDocumentSnapshot:
 
 ```text
 CitationChunk
-    检索和严格引用的最小稳定单元。
+    面向检索、排序、Context 和 Citation 组织的可消费文本单元。
 
 ParentChunk
     Context 扩展单元，不替代 CitationChunk 的 SourceSpan。
 
 SourceSpan
-    原始文档定位、Citation 和审计单元。
+    原始 DocumentVersion 中的精确定位、provenance、内容 hash 和审计单元。
 ```
+
+`CitationChunk` 与 `SourceSpan` 不是同一个抽象，也不保证一对一：
+
+```text
+EvidenceCandidate
+→ CitationChunk
+→ one-or-more SourceSpan
+→ DocumentVersion
+→ SourceObject
+```
+
+通常一个 CitationChunk 来自一个连续 SourceSpan；但表格、跨段落结构、Parent/Adjacent 扩展或规范化序列化可能让一个 CitationChunk 由多个 SourceSpan 组成。反过来，一个 SourceSpan 也可以在不同 ChunkingPolicy、ParentChunk 或 RetrievalProfile 下被多个 CitationChunk 引用。严格 Citation 必须列出全部组成 SourceSpan、DocumentVersion、定位和 content hash；不能只保存 Chunk 文本，也不能把 GraphPath 当作 SourceSpan。
+
+SourceSpan 的身份至少受 `knowledge_space_id + document_version_id + source_object_ref + locator + content_hash` 约束。文档重新上传或切分策略变化会产生新的 DocumentVersion / SourceSpan lineage；旧 Citation 不被原地改写，若新版本没有等价 span，则进入 Citation Repair 或 `CITATION_INELIGIBLE`，不能按字符位置盲目迁移。
 
 Graph 节点和边必须带 Evidence Backlink：
 
@@ -693,6 +707,35 @@ EvidenceFrontier:
 
 每个新动作必须指向至少一个未解决 Requirement 或 Citation 修复目标。
 
+### 14.1 SearchAction 层级
+
+`EvidenceRequirement` 是证据目标，不是检索动作；一个 Requirement 可以选择一个或多个互补 `SearchAction`，但必须由 Planner Proposal 和确定性 Admission 说明目标、预期收益、预算和停止条件：
+
+```yaml
+SearchAction:
+  action_id: string
+  kind: HYBRID | GRAPH_LOCAL | GRAPH_GLOBAL | GRAPH_DRIFT | STRUCTURED
+  target_requirement_refs: [string]
+  query_spec_refs: [string]
+  snapshot_ref: string
+  policy_ref: string
+  expected_failure_to_fix: string | null
+  budget_reservation_ref: string
+```
+
+`HYBRID` 是一个逻辑 SearchAction，内部并行运行 `BM25` 与 `VECTOR` 两个 Recall Operator；Planner 不需要在 BM25 和 Vector 之间做错误的二选一。底层 `RetrieverAction` 才记录具体 `retriever_type`、candidate limit、timeout 和 operator attempt。典型映射：
+
+```text
+Exact fact / named clause       → HYBRID
+Cross-reference / defined term  → GRAPH_LOCAL
+Risk review                     → HYBRID + GRAPH_LOCAL
+Corpus-level trend              → GRAPH_GLOBAL
+Broad exploratory gap           → GRAPH_DRIFT
+Structured field                → STRUCTURED
+```
+
+`1..N` 不是“默认全开”：每个额外 Action 都必须绑定未解决 Requirement、互补性或失败诊断；没有预期边际收益时禁止同时启用 Hybrid、Local、Global 和 Drift。
+
 ## 15. Fusion、Rerank 与 Selection
 
 ```text
@@ -712,6 +755,48 @@ Structured -----/
 6. 相同 SourceSpan、重复 Chunk、Parent/Child 重叠必须去重。
 7. Selection 记录 rank_before、rank_after、reason、budget cost。
 8. Context Budget 不是无限扩展理由；最终进入 Context 的是 SelectedEvidence，不是全部 Candidate。
+
+### 15.1 Recall、RRF、Rerank 与 Evidence Evaluation 的分工
+
+第一阶段 Retriever 追求 Recall：宁可保留较多候选，避免关键条款、术语或交叉引用漏召。BM25 产生 lexical ranked list，擅长精确术语、编号、版本和专名；Vector 产生 semantic ranked list，擅长同义表达和语义改写。两者返回的是带版本和 lineage 的 CitationChunk / SourceSpan 候选，不是可以直接相加的同质分数。
+
+RRF 只解决“多个 ranked list 如何融合”：输入各路候选的 rank，输出稳定的 fused candidate ranking；它不声称 BM25 raw score、Vector similarity、graph distance 和 community score 处于同一量纲，也不把 GraphPath 变成文本证据。RRF 之后候选仍可能主题相关但缺少必要定义、法域、引用跨度或 Claim 支持，因此还需要有限 Candidate Pool 上的 Unified Evidence Rerank。
+
+```text
+每个 Operator 的 Retriever Top-N
+→ RRF candidate limit / union cap
+→ Source-backed canonical dedup
+→ Unified Evidence Rerank Top-K
+→ Evidence selection budget / protected requirements
+→ Evidence Evaluation
+```
+
+`Unified Evidence Rerank` 的输入是 `Claim / EvidenceRequirement / QuerySpec` 与已经物化、可追溯的 `EvidenceCandidate`；输出是精度排序和 `rank_before / rank_after / reason_codes`。它不是 Evidence Evaluation：Rerank 回答“候选谁更相关”，Evaluation 回答“候选集合是否足够支持 Claim”。最终 Top-K 也不是唯一固定数字，Retriever N、fusion cap、rerank K 和 evidence budget 由 Profile、deadline、token、成本与 Eval 调参；没有基准证据时只能写 Target / tunable，不能声称某个数值是 Current 最优。
+
+Target 只保留一个 canonical Unified Evidence Rerank。某个 Retriever Adapter 内部可以有 provider-native pre-rank 作为实现优化，但它不能改变 SearchAction 层级、不能取代统一 Rerank，也不能被当成第二个独立架构事实源。
+
+### 15.2 Candidate Materialization 与 Canonical Dedup
+
+不同 Action 的原生结果先转为同一个 `EvidenceCandidate`：
+
+```text
+BM25 / Vector CitationChunk + SourceSpan
+Graph Local Entity / Relation / GraphPath
+    → Evidence Materialization → Source-backed CitationChunk / SourceSpan
+Community Report / DRIFT primer
+    → derived candidate → source backfill when strict citation is required
+```
+
+Canonical dedup key 为：
+
+```text
+(knowledge_space_id,
+ document_version_id,
+ source_span_ref,
+ content_hash)
+```
+
+同一 SourceSpan 被 BM25、Vector 和 Graph Local 重复发现时，只保留一个 EvidenceCandidate，合并 `retrieval_origins`、QuerySpec、Action refs 和 Graph provenance；不同 DocumentVersion 不得因为文本相似而静默合并。Community 或 GraphPath 没有 SourceSpan 时只能是 `AUXILIARY_ONLY` / `SUPPORTING`，不能通过融合分数升级为 strict citation。
 
 ## 16. Evidence Quality Gates
 

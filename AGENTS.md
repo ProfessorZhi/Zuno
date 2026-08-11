@@ -210,6 +210,7 @@ git diff --check
 python tools/agent/render_architecture.py --check
 python tools/scripts/verify_docs_entrypoints.py
 python tools/scripts/verify_deep_dive_architecture.py
+python tools/scripts/verify_architecture_interview_qa.py
 python tools/scripts/verify_markdown_internal_links.py
 python tools/scripts/verify_repo_structure.py
 python tools/scripts/verify_agent_core_target_protocols.py

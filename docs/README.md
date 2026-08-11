@@ -16,6 +16,7 @@
 - [架构决策](./decisions/README.md)：仍影响当前或下一版 Target 的正式 ADR。
 - [工程治理](./governance/repo-ownership-matrix.md)：代码 Owner、迁移边界和兼容路径。
 - [当前证据](./evidence/README.md)：当前仍有证明价值的 baseline 与 closure evidence。
+- [架构面试验证语料](./verification/interview-qa/README.md)：非规范性 QA Corpus，用真实追问压力测试 canonical architecture。
 - [历史归档](./history/README.md)：经过批准的历史摘要，不重新解释成当前事实。
 
 ```text
@@ -25,6 +26,7 @@ status/          Current、Gap、Measurement 与 Production Readiness
 decisions/       ADR
 governance/      工程、Ownership 与文档治理
 evidence/        验证证据
+verification/    非规范性架构验证语料与覆盖审计
 history/         历史归档
 ```
 
