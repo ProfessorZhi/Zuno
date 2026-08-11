@@ -122,6 +122,38 @@ Implementation / Evidence Repair
 
 `00-charter.md` 是红队的唯一底层思维框架。`04` 提供攻击工具，`05` 提供面试官视角，`06` 规定会话运行方式，`sources/` 负责用真实面经校准问法；这些文件不能反过来各自维护一套互相冲突的红队决策逻辑。
 
+## Kernel 冻结后的 Architecture Loop
+
+`Red Team Thinking Kernel v1` 冻结后，主工作转入架构红蓝循环，不再无限扩张红队制度：
+
+```text
+Project / Domain Alignment
+  → 02 Ingestion Fit Analysis
+  → 03 Knowledge Fit Analysis
+  → 05 Memory Fit Analysis
+  → 06 Agent Core Fit Analysis
+  → 07/08 Tool / Capability
+  → 09 Security
+  → Remaining Modules
+  → Cross-module Architecture Review
+```
+
+每个模块统一执行：
+
+```text
+Read Current + Target + Evidence + OSS Candidate
+  → Red Attack
+  → Gap Report
+  → Blue Review
+  → KEEP / SIMPLIFY / ADOPT / EXTEND / BUILD / DEFER / REMOVE
+  → Architecture Change Set
+  → User Architecture Gate
+  → Canonical Docs Update
+  → Red Retest
+```
+
+蓝队可以推翻旧 Target；未经过用户架构确认，不把红蓝提案写入正式 `docs/architecture/` 或 `docs/modules/`。
+
 ## 第一次真正运行时怎么问用户
 
 不要先把十个 P0 问题逐项丢给用户。先由蓝队读仓库、历史面试和可核验外部资料，输出：

@@ -37,12 +37,14 @@
 |---|---|---|
 | `R1` | Authenticity Risk | 项目、用户、上线和结果是否真实发生过？ |
 | `R2` | Ownership Risk | 候选人本人究竟做了什么，团队其他人做了什么？ |
-| `R3` | Business Understanding Risk | 为什么做、谁使用、原来的流程哪里失效？ |
+| `R3` | Business Causality Risk | 用户、任务、原流程、痛点和技术选择是否连成因果链？ |
 | `R4` | Technical Depth Risk | 能否解释机制、数据、状态、参数和边界？ |
 | `R5` | Engineering Risk | 失败、恢复、规模、成本、安全和运维是否可处理？ |
-| `R6` | Judgment Risk | 为什么选这个方案，为什么不用更简单或成熟的方案？ |
-| `R7` | Evidence Risk | “更好、更快、上线、有效”是否有基线和可复现证据？ |
-| `R8` | Learning / Retrospective Risk | 今天重做是否知道该保留、删除、采用或延期什么？ |
+| `R6` | Technical Judgment Risk | 为什么选这个方案，为什么不用更简单的方案？ |
+| `R7` | Reuse / Build Judgment Risk | 是否合理使用产品、子系统、框架、组件和协议？ |
+| `R8` | Evidence Risk | “更好、更快、上线、有效”是否有基线和可复现证据？ |
+| `R9` | Truth Boundary Risk | Current、Target、Future、History、团队和个人贡献是否混淆？ |
+| `R10` | Learning / Retrospective Risk | 今天重做是否知道该保留、删除、采用或延期什么？ |
 
 如果一个问题无法降低上述风险，或者只是随机考察术语，它不应成为当前主问题。项目无关基础题仍然可以问，但必须标记为 `PROJECT_INDEPENDENT`，不能伪装成项目架构缺陷。
 
@@ -86,10 +88,11 @@ C6 “效果更好”有明确基线、数据集、指标和成本证据。
 ```text
 CLAIM
   → Reality          真的发生了吗？
-  → Context          为什么会有它？
+  → Pain / Context   哪个用户问题产生了它？
   → Ownership        谁决定、实现、评审和维护？
-  → Necessity         为什么需要？
-  → Alternative       为什么不用别的方法？
+  → Necessity         为什么必须解决？
+  → Simpler Alternative 不用它能不能解决？
+  → Reuse Alternative  产品、Fork、子系统、框架、组件或协议呢？
   → Mechanism         它怎么工作？
   → Implementation    代码、状态、数据和参数是什么？
   → Failure           出错、超时、重复或部分成功怎么办？
@@ -107,12 +110,15 @@ CLAIM
 ```text
 User
   → Task
-  → Existing Workflow
-  → Specific Pain
-  → Why Existing Solution Fails
+  → As-Is Workflow
+  → Pain
+  → Severity / Frequency / Risk
+  → Existing Workaround
+  → Why Workaround Fails
   → Required Capability
-  → Candidate Technologies
-  → Chosen Architecture
+  → Candidate Solutions
+  → Selected Design
+  → Measurement
 ```
 
 任意一层接不上，记录 `PROJECT_ARCHITECTURE_ALIGNMENT_GAP`。这样可以区分真正的业务因果和事后把技术名词贴到项目上的叙事。
@@ -127,19 +133,21 @@ User
     → 能否只复用子系统？
       → 能否采用框架？
         → 能否直接使用组件？
-          → 最后还剩哪条必须自己拥有的 Contract？
+          → 能否直接使用 Protocol / SDK？
+            → 最后还剩哪条必须自己拥有的 Contract？
 ```
 
-最终要逼出 Zuno 的最小 Delta，并把修改面、许可证、升级、部署和证据交给 `09-open-source-review.md`，不能用品牌偏好替代评估。
+出现“自研”“自己设计”“我们实现了一套”时默认触发这条 Reuse Ladder。最终要逼出 Zuno 的最小 Delta，并把修改面、许可证、升级、部署和证据交给 `09-open-source-review.md`，不能用品牌偏好替代评估。`BUILD` 承担举证责任；默认 `Reuse First, Build Requires Evidence`。
 
 ## 5. Dynamic Trigger & Transition：回答决定下一问
 
 红队每次收到回答后执行四步：
 
-1. 提取回答中的新 Claim、限定条件和绝对化词；
-2. 给 Claim 更新真实性、Ownership、实现、失败和证据风险；
+1. 提取回答中的新 Claim、限定条件、绝对化词、矛盾、模糊词和无依据指标；
+2. 给 Claim 更新真实性、业务因果、Ownership、实现、失败、复用和证据风险；
 3. 找出仍然没有证据、且一旦失败会改变整体判断的最大缺口；
-4. 只提出一个能最大程度降低该缺口的主问题。
+4. 决定继续项目深挖、切基础原理、追 Ownership、注入 Failure 或做反事实比较；
+5. 只提出一个能最大程度降低该缺口的主问题。
 
 以下词语是疑点放大器，不是固定题目：
 
@@ -195,16 +203,43 @@ Project Claim
 
 ```text
 当前方案
-  → 删除一个能力或组件
+  → 删除 Graph / Memory / Agent / MQ / Neo4j 或一个微服务
+  → 缩小到一个开发者、一个客户或一周 MVP
   → 构造一个具体任务 / 失败案例
-  → 判断是否仍能完成 MVP
+  → 判断是否仍能完成核心 Pain
   → 若能，记录该能力不是当前必要条件
   → 若不能，记录不可删除的失败语义和证据
 ```
 
-固定反事实包括：一个人一周能留下什么、删掉一半组件、暂时不用 Graph、Agent、Memory 或 MQ 时哪个用户任务会失败。复杂度只有在对应用户风险、失败案例或规模约束下才成立。
+复杂度只有在对应用户风险、失败案例、规模约束或不可替代 Contract 下才成立；否则记录 `OVERENGINEERING`、`DEFER` 或 `DELETE` 候选。
 
-## 8. Kernel 的停止与越权边界
+## 8. Kernel 验收测试：由 Claim 动态生成，而不是硬编码题单
+
+用下面这句作为黑盒输入：
+
+> “我负责企业知识库 Agent 的 Agentic GraphRAG 和 Memory。”
+
+Kernel 不应读取预置题单，而应根据 Claim、Risk 和 Transition 自然形成类似的验证方向：
+
+```text
+项目给谁用？
+  → 原流程哪里有问题？
+  → 为什么普通 Search / Hybrid RAG 不够？
+  → Graph 解决哪个可复现 Bad Case？
+  → 为什么不用成熟 GraphRAG 或 RAG 平台？
+  → 为什么不能只复用 Retriever / Memory Engine？
+  → Zuno 真正自己拥有的最小 Delta 是什么？
+  → Graph Relation 如何构建，错 Relation 怎么办？
+  → Relation 能直接作为 Evidence 吗？
+  → 哪一段是候选人本人负责？
+  → 测过 Graph 与 no-Graph 的差异吗？
+  → 如果没测，为什么知道复杂度值得？
+  → 今天重做还会保留 Graph / Memory 吗？
+```
+
+验收标准不是问题文本完全相同，而是同一条 Claim 能够被动态带到业务因果、替代方案、实现、Ownership、Failure、Evidence 和 Retrospective。候选人只看到当前一个问题，不看到内部风险、攻击角度或预期答案。
+
+## 9. Kernel 的停止与越权边界
 
 红队可以判定一个 Claim 不可信、Target 不合理或证据不足，但不能在会话中自行改写架构。满足以下任一条件才停止一条链：
 
