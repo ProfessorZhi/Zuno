@@ -88,6 +88,30 @@ Agent Core 拥有 Why/When、Plan、Run、Step、Proposal 和 Replan；Knowledge
 
 本部分解释为什么简单任务也有 Plan、为什么保留固定 AgentRunGraph、为什么 Plan DAG 可以动态、为什么 Retry 不等于 Replan，以及并行发现计划错误时如何暂停。Part B 定义 TaskContract、PlanVersion、StepRun、ControlDecision、Barrier、状态、恢复、幂等、权限和完成证据。
 
+## A2. 一句用户请求怎样变成可恢复计划
+
+以“审查这份 SaaS 合同，重点看责任限制，形成报告，审批后发给法务负责人”为例，Agent Core 不能只把它压成 `intent=contract_review`。它要识别 Goal、Target、Constraints、Output、Knowledge Need、Memory Need、Action Need 和 Risk，形成可追踪的 TaskUnderstandingSnapshot，再决定需要哪些 Step 和 Capability。
+
+即使是简单问答，也生成一个 Deterministic Single-Step Plan，因为 Plan 同时承载完成条件、预算、Trace、允许能力和恢复位置。复杂合同审查则形成带依赖的 Plan DAG。一个 Step 必须能在有限预算内完成，拥有明确输入、输出和 Acceptance；“完成所有法律分析”这种无法验证的巨大 Step 应继续拆分。
+
+## A3. Plan、并行和 ReAct 的分工
+
+没有数据依赖、资源冲突、审批要求或副作用冲突的步骤可以并行；写同一资源、有明确前置关系或需要最终综合的步骤必须串行。Plan 决定“这一步要完成什么”，而 Step 内的 ReAct 决定“观察到当前结果后下一步做什么”。ReAct 不是另一套自由 Agent，它始终受 Step Goal、预算、Capability、Security Scope 和 Acceptance 限制。
+
+常见失败必须分开处理：网络暂时失败是 Retry；参数或查询格式有问题是 Repair；同一 Role 的 Provider 不可用是 Fallback；当前模型不够用是 Escalate Model；原计划的目标、依赖或能力假设失效才是 Replan。Evidence 不足通常先交给 Knowledge 做 Corrective Retrieval，不应因为少了一段证据就重写整个业务计划。
+
+## A4. 并行执行中发现计划错误怎么办
+
+假设 S3 和 S4 正在并行，S3 发现合同还有一个必须审查的附件。Controller 不能让旧 Plan 和包含新附件的 Plan 同时继续写同一组业务状态。它需要进入 Replan Barrier，停止新的 Dispatch，等待或取消受影响分支，创建新的不可变 PlanVersion，再根据新的依赖重新计算 ReadySet。
+
+旧分支结果可能在 Barrier 之后晚到。系统要用 PlanVersion、Execution Epoch 和 BranchResultRef 判断结果属于哪一版执行；不属于当前版本的结果只能作为诊断或历史记录，不能污染新计划。这个取舍会增加 Barrier、取消和晚到结果处理成本，却避免两个计划同时产生互相矛盾的 Finding 或 Tool Action。
+
+## A5. 恢复和最终完成
+
+AgentRun 崩溃后，Agent Core 要把 PostgreSQL 中的领域提交、Checkpoint 中的图位置、队列重投、Lease 和幂等记录放在一起对账。Checkpoint 显示某节点已完成，不等于领域事实一定已提交；领域事实已提交，也不意味着可以重新执行同一个外部动作。恢复必须根据 Receipt、版本和当前状态决定继续、补偿、Reconcile 或阻塞。
+
+模型说“完成”也不等于任务完成。最终候选仍需通过 Claim/Evidence、Citation、AnswerPolicy、权限、Budget、Final Gate 和 Publication。只有对应 Owner 提交了可查询的 RunOutcome 或 Work Product，产品层才可以向用户展示完成。这样，执行的灵活性不会牺牲企业任务的可恢复性和可审计性。
+
 # Part I：定位与概念架构
 
 # 1. 为什么需要 Agent Core

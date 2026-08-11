@@ -104,6 +104,24 @@ TaskUnderstanding / Extraction / Query Rewrite / Risk / Evidence Critic
 
 本部分先解释模型角色和路由取舍；Part B 定义 ModelCall、Attempt、Quota、Usage、Provider、Config Snapshot、Retry、Fallback、Security、持久化、测试和 Release 证据。模型输出始终是 Proposal、Score 或 Result，不能直接激活 Plan、MemoryVersion 或外部 Effect。
 
+## A2. Agent 请求的是角色能力，不是某个厂商名字
+
+一次合同审查可能同时需要条款分类、关系抽取、Query Rewrite、规划、推理、综合和最终质量检查。如果所有步骤都使用最强模型，延迟、成本和配额压力会失控；如果所有步骤都使用便宜模型，复杂的法律关系和冲突判断又容易失败。因此 Agent Core 请求的是“我现在需要 Planner / Extractor / Critic”，而不是把 `gpt-x` 或某个 Provider 名称写进业务计划。
+
+Model Role 可以包括 Planner、Extractor、Query Rewriter、Executor Fast、Executor Reasoning、Critic 和 Synthesizer。Gateway 再根据能力、Context Window、延迟、成本、Quota、健康状态、数据驻留和安全等级选择实际 Provider。这样业务计划和供应商切换解耦，历史 Run 也可以解释当时为什么选中了某个模型。
+
+## A3. 路由失败怎样区分容量问题和计划问题
+
+Provider 返回 429，通常首先说明容量或配额问题，不代表审查计划错误。Gateway 应按 Retry Policy 退避；仍失败时，可以在同一个 Model Role 中选择满足相同安全、驻留和能力要求的备用 Provider。Fallback 不是“只要能回答就换”，如果当前 Matter 要求指定地域或禁止某类数据出境，成功率不能凌驾于安全约束。
+
+如果 Fast Executor 只是参数格式错误，可以先 Repair；如果模型能力不足，可以升级到 Reasoning Role；如果 Critic 发现原来的任务假设已经不成立，例如需要新增一个未规划的附件审查步骤，则由 Agent Core Replan。Model Gateway 负责“调用哪个模型以及这次调用怎样结算”，不负责把一次失败改写成新的业务目标。
+
+## A4. 版本和 Embedding 的特殊取舍
+
+普通生成模型可以在同一 Role 中按兼容策略替换，但 Embedding 不能随意 Fallback。Query 使用 V4 Embedding，而索引仍然是 V3 向量空间时，相似度的数学含义已经不再可靠。检索任务必须固定与 KnowledgeSnapshot 兼容的 Model Artifact、Embedding Version 和 Routing Policy Version；ReviewRun 也要能够回看当时使用的配置。
+
+这种版本绑定会增加重建索引和发布管理成本，却避免“模型升级后历史结果无法解释”的问题。模型输出仍然只是 Proposal、Score 或 Result，真正的 Plan 激活、Memory 写入、Evidence 采用和外部 Effect 必须回到对应模块的 Gate。
+
 # Part I：定位、问题与跨模块模型使用地图
 
 # 1. 为什么需要 Model Gateway

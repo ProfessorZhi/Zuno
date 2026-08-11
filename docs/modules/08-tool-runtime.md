@@ -114,6 +114,26 @@ ToolObservation 可以作为 Memory 的 Source Fact 候选，但不自动成为 
 
 本部分解释为什么 Tool Calling 必须受治理、为什么 timeout 不能盲目重试，以及 MCP Schema 变化为什么会使旧 Approval 失效。Part B 定义 PreparedToolAction、ToolAttempt、EffectReceipt、状态机、失败、恢复、权限、Adapter、持久化、测试和完成证据。
 
+## A2. 模型说“发送邮件”还没有产生任何外部效果
+
+模型提出“把报告发送给法务负责人”只是一项 ActionProposal。Tool Runtime 首先解析 Capability 和 ToolVersion，按照该版本的 Schema 规范化收件人、主题、正文、附件和目标资源，形成不可变的**准备动作（PreparedToolAction）**。权限判断和人工审批必须针对这份准确动作，而不是针对一句模糊的自然语言。
+
+如果用户只有生成报告权限，没有 external_send 权限，Security Gate 应直接拒绝，甚至不创建 ToolAttempt。Agent 可以降级为生成报告供用户下载，不能换一个 Tool 绕过权限。如果动作需要审批，Approval 至少要绑定 ToolVersion、Canonical Arguments、目标资源、Action Hash 和 Security Epoch。
+
+## A3. Schema 变化和权限撤销会让旧动作失效
+
+假设审批等待期间，MCP Server 将 `send_email(to, subject, body)` 更新为新 Schema。若只是增加未使用的 Optional Field，兼容性检查可以证明动作语义未变；如果参数结构、目标资源或副作用语义变化，旧 PreparedToolAction 必须失效并重新 Prepare，原 Approval 也不能复用，因为批准人批准的是旧动作。
+
+Approval 不是永久通行证。Execute 前仍需读取最新 Security Epoch；如果权限从 Epoch 21 变为 22，系统要重新验证，已撤销的权限直接 Block。这样会多一次读取和验证，但避免长时间等待审批的旧动作在权限变化后偷偷执行。
+
+## A4. 幂等、超时和未知结果
+
+正式 Dispatch 前要取得幂等执行权。幂等键应绑定业务操作身份、目标、规范化参数和 ToolVersion，而不是每次随机生成。Worker 重启或队列重复投递时，系统可以识别同一动作已经执行、正在执行或尚未执行。
+
+邮件 Provider 调用后网络超时，是最危险的路径：邮件可能已经成功，只是响应没回来。此时 ToolAttempt 进入 UNKNOWN，系统先用 Provider Operation ID、幂等键、Sent Message 查询或业务侧查询进行**副作用对账（Effect Reconciliation）**，不能盲目 Retry。Provider 如果不支持幂等，也要用本地 Operation Record、业务唯一键和查询接口尽量确认；对无法可靠确认的高风险动作，进入人工对账而不是自动重复执行。
+
+这说明 Tool Calling 和普通 Function Calling 的取舍不同：Function Calling 只表达模型意图；Tool Runtime 还要承担准备、授权、审批、Attempt、观察、效果确认和恢复。它的复杂度换来的是外部世界不被一次网络故障或 Worker 重启意外写两遍。
+
 # Part I：定位、术语与边界
 
 ## 1. 为什么需要独立 Tool Runtime

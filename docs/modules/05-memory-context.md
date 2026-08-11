@@ -89,6 +89,37 @@ Memory 仍不拥有 Matter、Review、Knowledge Evidence 或 Tool Effect；它�
 
 本部分解释 Working、Session、Long-term、Episodic、Semantic、Procedural、冲突和失效；Part B 定义 MemoryCandidate、MemoryWriteDecision、MemoryVersion、ContextPackVersion、时间语义、来源追溯、删除传播、持久化、测试和 Eval。Memory 不拥有 Knowledge Evidence，也不能覆盖当前 User Instruction 或 Security Policy。
 
+## A2. 记忆不是把全部历史塞进 Prompt
+
+长期运行的 Agent 不能把每次对话都永久拼进 Context Window：历史太长、很多内容已经无关或过期，而且权限可能已经变化；完全不保存又会让系统忘记 Matter 决策、用户偏好和过去失败经验。Zuno 先区分三种生命周期：Working Memory 服务当前 Step，Session Memory 服务当前会话或审查运行，Long-term Memory 才保存经过治理、可跨任务复用的信息。Episodic、Semantic、Procedural 则描述长期内容的类型，不是又一套生命周期。
+
+例如用户说：“王总说方案基本没问题，下周让法务确认合同，价格最好再降 5%。”抽取器可以提出 Person、Opinion、Todo、Time、Preference 或 Constraint 等 StructuredObservation，但“抽取出来”不等于“应该长期记住”。系统还要判断这条信息是否只对当前 Session 有用、是否需要用户确认、是否只能作为 Reference、是否具有保存价值，或者明确不保存。
+
+## A3. 从观察到记忆必须经过治理
+
+记忆链路应当能回答“系统为什么记住这件事”：
+
+```text
+Source → StructuredObservation → MemoryCandidate
+       → MemoryWriteDecision → MemoryVersion
+```
+
+模型可以提出 Candidate，但不能直接创建 Active MemoryVersion。写入前需要检查来源、范围、时间、权限、敏感性、冲突和质量；用户一次明确确认也不等于企业安全审批。Memory 只能保存可复用的上下文事实或策略提示，不能替代 Knowledge Evidence、Security Policy 或 Skill。
+
+时间语义也必须保留。用户说“我上个月离开南京 A，现在加入杭州 B”，系统不能简单 DELETE A、INSERT B，因为事件发生时间、系统观察时间和事实生效时间不同。应分别记录 occurred_at、observed_at、valid_from 等语义，并让历史审查仍能看到当时有效的上下文。
+
+## A4. 冲突、过期和污染怎样处理
+
+冲突至少有四类：时间上的 succession、直接矛盾、来源权威冲突和用户偏好变化。用户说“王律师告诉我公司现在允许三个月责任上限”是一个需要验证的用户断言，不能直接覆盖正式 Playbook；合同当前条款和适用法律也不能被一条旧的偏好记忆替换。
+
+Memory 不能用“置信度低于 0.5 就删除”解决所有问题。Stale 表示可能不再适合当前事实，Superseded 表示已经被新版本明确替代，Dormant 表示暂时价值较低，Quarantined 表示存在冲突或安全疑点，Revoked 表示当前权限已失效，Deleted 才是按隐私、保留或法律要求真正清理。版本化可以让系统保留为什么失效、谁作出决定以及哪些 Projection 需要重建。
+
+## A5. 召回不等于注入 Context
+
+Semantic、Episodic 和 Procedural Memory 的召回问题不同，不能都用同一个向量 Top-K。召回后还要按 Matter/Workspace 范围、时效、冲突、权限、适用性、优先级和 Token Budget 过滤，再形成 ContextPack。Recall 找到 20 条记忆，不代表 20 条都应该进入 Prompt；高风险任务还需要保留 Protected Set，例如当前用户指令、当前版本和正在等待的审批信息。
+
+上下文压缩可以做 Exact Dedup、Tool Payload Offload、保留最近原文尾部和结构化 Summary，但必须披露可能的 Fidelity Degradation。压缩不能删除证据引用、权限边界或恢复所需的控制事实。这个取舍会牺牲一部分完整历史，换来可控的 Token、延迟和更稳定的注意力；真正重要的原文仍通过引用和持久化事实按需取回。
+
 # Part I：定位、术语与概念架构
 
 # 1. 为什么需要独立的 Memory & Context 模块

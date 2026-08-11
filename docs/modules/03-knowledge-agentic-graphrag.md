@@ -86,6 +86,40 @@ Knowledge 不创建 Matter、Review、MemoryVersion 或 Tool Effect；当证据�
 
 本部分解释为什么 BM25、Vector、Graph、Rerank 和 Evidence-driven Control 要协作；Part B 定义 EvidenceRequirement、KnowledgeSnapshot、RetrievalRound、EvidenceEvaluation、状态机、失败、权限、索引版本和评测 Contract。图谱或索引只能提供候选，不会自动成为正式证据。
 
+## A2. 从“找相似文本”转向“证明一个 Claim”
+
+考虑问题：“当前合同的责任上限是否覆盖数据泄露，而且是否偏离公司 Playbook？”一个 Vector Top-K 可能找回责任、赔偿和上限相关片段，但还不能证明结论成立。至少要找到当前合同的责任上限、数据泄露条款、相关定义和例外、企业 Playbook，以及在问题需要时的适用法律依据。
+
+因此，Zuno 先把结论拆成 Claim，再定义每个 Claim 成立前必须取得的**证据需求（Evidence Requirement）**。例如“数据泄露责任是否受责任上限限制”可能需要：找到数据泄露条款、找到责任上限条款、展开两者之间的交叉引用或例外、检查 Defined Term，并检查 Playbook 对 carve-out 的要求。检索器的目标不再是“多返回几段文本”，而是让 Evidence Ledger 能明确显示哪些条件已经满足、哪些仍然缺失。
+
+## A3. BM25、Vector、融合和 Reranker 各自解决什么
+
+法律检索不能只依赖语义相似度。BM25 对条款编号、合同编号、法条号、金额、百分比和专有术语很有价值；查询 `12.3(b)` 时，精确匹配比让向量模型猜语义更可靠。Vector 检索适合处理表达不同但语义相近的说法，例如“赔偿责任上限”和“aggregate liability cap”。两者先分别召回候选，再做混合融合。
+
+不同 Retriever 的原始分数不在同一尺度，BM25 的 12.7 不能直接和 Vector 的 0.82 相加。排名融合可以采用 Reciprocal Rank Fusion：
+
+```text
+score(d) = Σ 1 / (k + rank_i(d))
+```
+
+它只比较候选在各路列表中的名次；一个结果同时在关键词和语义列表中靠前，就能获得更稳定的融合排名。融合解决的是“多路召回如何合并”，不是“候选是否适用于当前 Claim”。所以只对融合后的 Top-N 运行更昂贵的 Cross-Encoder 或强模型 Reranker，再取 Top-M，以控制成本和延迟。
+
+Reranker 可以结合合同身份、DocumentVersion、Clause Type、Jurisdiction、Authority、时间有效性、Graph Provenance 等特征。它回答“谁应该排在前面”；后面的 Evidence Evaluation 才回答“这些证据是否足以支持 Claim”。
+
+## A4. Graph 什么时候值得使用，以及怎样回到原文
+
+Graph 不是每次查询都要打开的昂贵通道。它最有价值的场景，是关系本身就是答案的一部分：一个 Clause 引用另一个 Clause，一个 Defined Term 在别处定义，一条规则是另一条规则的 Exception，或者某条合同条款偏离了某个 Playbook Rule。Local 查询适合沿着当前条款的邻接关系补上下文；Global 查询适合回答跨文档或整体分布问题；DRIFT 这类路径适合从局部问题出发，逐步发现需要扩展的更大范围。具体路由仍受 Evidence Requirement、预算和权限约束，而不是固定把所有图算法都跑一遍。
+
+图找到 `8.2 → SUBJECT_TO → 12.3` 还不能直接进入报告，因为用户无法引用一个 Neo4j Edge。系统必须沿着节点的 DocumentVersion、SourceSpan 和 CitationChunk 回到原文，形成可审阅的**证据物化（Evidence Materialization）**。索引和图关系是召回投影，Citation 和 Evidence 才是经过权限、版本和来源检查的知识事实。
+
+## A5. 证据评价、补检和停止条件
+
+Evidence Evaluation 至少要区分六个维度：Relevance 表示是否相关；Support 表示是否真的支持或反驳 Claim；Authority 表示来源权威性；Applicability 表示是否适用于当前合同、法域和 Matter；Freshness 表示版本和时间是否有效；Completeness 表示 Claim 所需证据是否齐全。只看相关性，容易把旧合同、相邻条款或公司模板误当成当前事实。
+
+如果已找到合同条款和 Playbook，但尚未确认数据泄露是否属于 carve-out，下一步不应只是把 Top-K 从 10 调到 50。系统应记录证据缺口，再选择 Query Rewrite、展开 Cross Reference、沿 Graph Local 查询父 Clause、查询特定文档版本，或者请求用户补充法域。目标没有变化、只是证据没找齐时，属于 Knowledge 内的 Corrective Retrieval；只有发现还需要一个新的业务步骤、依赖或能力，才交给 Agent Core Replan。
+
+检索也必须有停止语义：证据已经充分、预算耗尽、连续几轮边际收益过低、权限阻断或证据冲突无法解决，都可以停止。停止后生成器必须根据原因选择继续、请求澄清、升级人工或拒绝形成确定性结论，而不是用更多相似片段掩盖证据不足。
+
 # Part I：问题、定义与模块边界
 
 ## 1. 为什么需要 Agentic GraphRAG

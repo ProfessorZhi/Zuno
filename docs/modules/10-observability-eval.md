@@ -112,6 +112,22 @@ Memory Extraction、Temporal、Conflict、Scope、Provenance、Context Contribut
 
 本部分解释 Trace、Audit、Metric、Eval、Release Gate 为什么分开，以及如何定位“召回错、证据不足、模型幻觉、权限拒绝和副作用未知”。Part B 定义 Telemetry、Trace、Dataset、Metric、状态、失败、存储、测试和完成证据；文档覆盖不能冒充生产质量证明。
 
+## A2. “看起来回答得对”不能证明系统可靠
+
+一次合同审查的错误可能来自 Parser 漏掉表格、Retriever 没找到当前版本、Reranker 把旧模板排在前面、Memory 注入过期偏好、Planner 漏了附件、模型产生 unsupported Claim、Tool Effect 重复，或者 Security 正确地阻止了动作。只看最终回答或平均延迟，无法知道问题发生在哪里。
+
+因此 Trace 要把一次 Review/AgentRun 的 correlation、run、step、attempt、PlanVersion、KnowledgeSnapshot、ModelCall、PreparedToolAction 和最终 Work Product 串起来，同时保留足够的版本、输入摘要、输出引用和失败原因进行回放。日志服务工程诊断，可以采样和清理；**审计（Audit）**记录谁在何时对哪个受保护对象作出什么决定，不能用普通 Log 代替，也不能为了可观测性保存 Secret 或隐藏思维链。
+
+## A3. 评测要分层回答“哪里变好了”
+
+RAG 需要看 Recall、Rerank、Evidence Sufficiency 和 Citation Integrity；Memory 需要看抽取精度、写入精度、冲突、过期注入和泄露；Agent 需要看 Plan Validity、完成率、Retry/Replan 正确性；Tool 需要看重复副作用和 UNKNOWN 对账；法律产品还要看 Finding Recall、Unsupported Claim Rate 和 Attorney Agreement。每一层指标都要绑定 Dataset、Profile、Model Artifact 和版本，不能用一个黑盒分数掩盖局部退化。
+
+模型或检索升级时，Candidate Artifact 先在隔离的固定 Dataset 上进行可复现比较，再经过 Release Gate 进入新的 Profile Version。没有实际 Run、Metric 和对比基线，就不能写“准确率提升 20%”或声称生产可用。Eval 的价值不是为复杂系统增加仪表盘，而是把失败、取舍和发布决定变成可以复核的证据。
+
+## A4. 从一次失败反推修复位置
+
+如果某个 Finding 缺少 Defined Term，Trace 应能区分是 Parse 没有抽取、Graph 没有建边、Retrieval 没有触发 Local Expansion，还是 Evidence Evaluation 判定不完整；如果邮件重复发送，应能关联同一个 Action Hash、Idempotency Key、ToolAttempt 和 Reconciliation。这样修复可以落到真正的 Owner，而不是把所有问题都归因于“模型不够强”。
+
 # Part I：定位与概念架构
 
 # 1. 为什么需要 Observability & Eval

@@ -32,6 +32,70 @@ Part A 解释问题、取舍、正常流程和异常体验；Part B 解释谁拥
 
 读完 Part A 后，读者应能用自己的话说明 Zuno 的产品定位、四层能力、十一个模块、Single Controller、Evidence-driven Agent、Memory、Tool Safety 和恢复边界；继续实现或审查时，必须转入 Part B，而不是从叙事段落推断代码行为。
 
+## A3. 先从一项真实的法律工作开始
+
+企业合同审查看起来像“上传文件然后问 AI”，但真实工作通常持续数小时、数天甚至数周。一份 SaaS 采购合同可能经历供应商初稿、我方修改、对方返稿和最终签署多个版本；法务不仅要知道合同写了什么，还要比较企业 Playbook、历史审查意见和适用法律。最后的成果也不是一段聊天文本，而是可以逐条复核的风险发现、修改建议、Redline、报告以及经过授权的后续动作。
+
+因此，Zuno 的产品中心不是一轮 Conversation，而是一项可持续的法律工作。下面用一个统一案例说明这条链路：用户上传供应商发回的第三版合同，并提出“重点检查责任限制是否按照上一轮意见修改；如果没有，给出修改建议，审批后发给法务负责人”。
+
+系统首先要确定用户说的是哪个 Matter、哪个 Contract 和哪个不可变 DocumentVersion，而不能把“最新上传文件”当成隐式答案。随后，文档摄取层解析责任限制条款、相关 Defined Term、交叉引用和附件；知识层分别查找当前合同事实、企业 Playbook 和适用法律；Agent 先判断结论成立前必须取得哪些证据，再决定是否需要补充检索。证据充分后，系统形成一条包含问题位置、原子 Claim、证据、适用政策、风险和建议的 FindingProposal，经过确定性检查后交给律师接受、修改、拒绝或升级。最终报告和 Redline 仍然是受控 Work Product；如果用户还要求发送邮件，发送动作必须再次通过权限、审批、幂等和外部效果确认。
+
+这条流程可以概括为：
+
+```text
+Matter / Contract / DocumentVersion
+        ↓
+Document Understanding
+        ↓
+Review Profile + Playbook
+        ↓
+Task Understanding + Plan
+        ↓
+Evidence Requirement → Hybrid / Graph / Corrective Retrieval
+        ↓
+Claim + Evidence → FindingProposal
+        ↓
+Human Review → FindingVersion / ReviewerDecision
+        ↓
+Redline / Report / Work Product
+        ↓
+受控 Tool Effect + Audit + Feedback / Eval
+```
+
+## A4. Zuno 是什么，以及它刻意不是什么
+
+Zuno 是面向企业法律与合同工作的 Agent 平台。合同审查是当前旗舰场景，但底层 Agent、检索、记忆、模型、工具和安全机制保持领域可扩展；法律能力通过文档结构、证据需求、企业 Playbook、法律知识和审查工作流进入系统，而不是在 Agent Runtime 中散落许多 `if legal` 分支。
+
+这也决定了 Zuno 不只是一个通用聊天 Agent、一个向量数据库前端或一个 MCP 工具箱。通用平台更侧重“给定目标后灵活调用模型和工具”，Zuno 保留这种通用能力，同时把企业法律工作需要的 Matter、版本、证据域、Finding、人工审查和审计做成正式业务链。差异不在于有没有 GraphRAG 或能不能调工具，而在于能否从合同原文走到可引用 Evidence，再走到可复核 Finding、律师决定和受控 Work Product。这里不是贬低通用平台，而是说明两者的优化目标不同：一个优化横向任务覆盖，Zuno 优化高风险法律工作的可验证性、可追溯性和可持续改进。
+
+## A5. 模块为什么存在：不是为了凑成十一份微服务
+
+上述案例里存在几类不能混在一起的问题：用户到底在完成哪一项法律工作；PDF 的第 8.2 条究竟是什么；哪些证据足以支撑一个 Claim；哪个模型适合当前步骤；过去哪些信息可以安全复用；下一步如何规划；一个能力是否可用；外部动作是否允许执行；权限是否已经撤销；质量如何证明；进程崩溃后怎样恢复。Zuno 将这些责任拆成十一个逻辑模块，模块数量服务于事实 Ownership，不要求每个模块都对应独立进程。
+
+这里引出一个核心原则：**事实唯一负责方（Canonical Owner）**。例如，Agent Core 可以提出“下一步需要查 Playbook”，但不能自己伪造 Evidence；Knowledge 可以返回候选证据，但不能仅凭召回结果宣布整个 Review 完成；模型可以建议发送邮件，但不能批准发送；前端可以展示状态，却不能因为收到 HTTP 200 就把 AgentRun 写成成功。跨模块调用可以传递 Proposal、Snapshot、Reference 和 Receipt，但不能复制另一模块的最终事实。
+
+## A6. 模型负责提出候选，系统负责确认事实
+
+模型适合处理语义判断：理解用户任务、提出计划、生成检索查询、抽取条款关系、评估候选证据和形成风险分析。但模型输出首先是**候选结果（Proposal）**，不是已经生效的业务事实。Proposal 需要经过 Schema 校验、权限检查、版本检查、Evidence Gate、状态转换和对应 Canonical Owner 的提交。
+
+这条边界的原因不是简单地“不信模型”，而是企业系统必须能够解释：谁产生了这个候选，依据了哪一版文档、Profile 和模型，谁批准了状态变更，进程崩溃后从哪里恢复，以及外部动作是否真的发生。它同样适用于 Memory 写入、Finding 接受、Tool Effect 和最终发布。模型可以建议，确定性规则和业务 Owner 才能提交。
+
+## A7. 计划、执行和恢复如何连接
+
+即使是简单任务，也需要一个最小的 Plan。Plan 不只是把复杂任务拆小，它同时承载目标、完成条件、预算、允许能力、Trace 和恢复位置。复杂任务会形成带依赖关系的 Plan DAG；没有数据依赖、资源冲突、审批要求或副作用冲突的步骤可以并行，有前后依赖、共享可变资源或需要最终综合的步骤必须串行。一个 Step 内部还可以根据观察结果动态选择下一步行动，这就是 ReAct；但 ReAct 始终受 Step 的目标、预算、Capability 和 Acceptance 约束。
+
+“失败以后怎么办”也不能统一叫 Retry。网络暂时超时且计划仍然正确时可以重试；参数格式不对时先 Repair；当前 Provider 不可用时可以在安全约束内 Fallback；能力不足时可以升级模型；只有发现原任务结构、依赖或能力假设已经失效，才需要 Replan。外部副作用又是另一类问题：发送邮件后网络超时，不能因为没有响应就再次发送，因为第一封可能已经成功。系统必须先查询 Provider Operation ID、幂等记录或业务结果，确认外部世界发生了什么，这叫**副作用对账（Effect Reconciliation）**。
+
+## A8. 业务事实与图执行位置为什么要分开保存
+
+PostgreSQL 保存“业务世界现在是什么状态”，例如 Review、PlanVersion、Finding、Approval 和 EffectReceipt；LangGraph Checkpointer 保存“图执行到了哪里”，例如哪个节点完成、哪个分支待恢复、下一次从哪里继续。队列负责分发工作，不是业务事实源；向量索引、图索引和缓存是可重建投影，也不能反向覆盖业务事实。
+
+恢复时要对两者做对账，而不是盲信其中一个。如果数据库已经记录邮件 Effect 成功，但 Checkpoint 仍停留在调用前，恢复不能再次发送；如果 Checkpoint 显示节点结束，但领域事务没有提交，系统也不能假装业务已经完成。正确做法是由对应 Owner 根据提交 Receipt、版本、幂等记录和当前状态重新决定是继续、补偿、对账还是阻塞。具体状态、失败命名和持久化 Contract 以 Part B 为准。
+
+## A9. 从这篇总览怎样进入规范
+
+Part A 的目的，是让读者先理解“为什么 Zuno 需要这些边界、正常流程怎样走、异常时用户和系统分别等待什么”。它不替代模块 Contract，也不凭叙事新增状态。继续阅读时，按案例中的顺序进入 Product、Ingestion、Knowledge、Model、Memory、Agent Core、Capability、Tool、Security、Observability 和 Infrastructure；任何涉及正式字段、状态终态、Failure Namespace、CAS、Outbox、Approval 或测试门槛的实现，都必须以 Part B 和对应模块文档为准。
+
 # Part I — 为什么需要 Zuno
 
 ## 0. 正式事实源、优先级与维护顺序

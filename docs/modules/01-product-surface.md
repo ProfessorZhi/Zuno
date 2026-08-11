@@ -104,6 +104,34 @@ Matter
 
 本部分解释用户完成什么工作、为什么以 Matter 而不是 Chat 为中心，以及断线、等待审批和版本变化时用户看到什么。Part B 的完整 Command、Projection、状态、权限、持久化和测试规则仍以本文后半部分为准，不在本节复制。
 
+## A2. 用户处理的是一项长期法律工作，不是一轮聊天
+
+法务用户往往要连续几周处理同一笔 SaaS 采购：供应商不断发来新版本，我方不断返还 Redline，采购和安全团队还会补充意见。如果产品把每次对话都当成独立任务，合同身份会丢失，上一轮审查的 Finding 无法比较，最终报告也无法解释它到底基于哪个版本。
+
+在法律工作台的目标模型中，**法律事项（Matter）**是长期容器；**合同（Contract）**是稳定的商业和法律身份；**文档版本（DocumentVersion）**是该合同某一次不可变内容。**审查（Review）**表示一项业务工作，**Agent 运行（AgentRun）**只是其中一次运行。Conversation 只是用户在 Matter 中与系统交互的渠道，不是业务事实的根。
+
+例如供应商合同从 V1 到 V3，仍然可以属于同一个 Contract；用户上传 V4 时，正在基于 V3 的 Review 不能隐式切换到“最新文件”。产品应让用户显式启动新的 ReviewRun 或版本比较，并清楚展示本次审查绑定的版本、Profile 和 Playbook。这样，运行失败、断线、人工等待和重新取证都不会抹掉业务身份。
+
+> **ARCHITECTURE_SEMANTIC_GAP**：上述 Matter、Contract、Review 和 ReviewFinding 是当前法律产品目标模型；当前 Part B 仍以通用 Agent Product Surface 的对象和 Contract 为主，尚未在本文中正式冻结这些法律业务对象的字段、状态和迁移规则。本轮只把它们作为人类可读的产品叙事，不把目标模型冒充为 Current 实现。
+
+## A3. 为什么 Finding 比 Assistant Message 更重要
+
+“责任上限偏低”不应该只存在于聊天气泡里。一个可审阅的**审查发现（ReviewFinding）**至少要回答：问题在哪里、由哪些原子 Claim 组成、哪些合同和 Playbook 证据支持它、风险为什么这样分级、建议如何处理，以及律师最终接受、修改、拒绝还是升级。
+
+模型先产生 FindingProposal；确定性 Schema、Evidence 和权限门检查通过后，才把它展示为待审阅业务成果。律师编辑 Finding 时不能静默覆盖旧文本，因为旧版本可能已经被引用或进入报告；应保留 FindingVersion 和 ReviewerDecision 的历史。这样 Product Surface 展示的是“一个可追溯工作成果的当前版本”，而不是“模型最后一次说了什么”。
+
+## A4. 正常路径和异常路径怎样呈现给用户
+
+正常路径是：创建 Matter，选择 Contract 和具体 DocumentVersion，绑定 Review Profile，生成审查计划，等待证据，查看 Finding，做 Reviewer Decision，最后生成 Redline、报告和其他 Work Product。页面可以把复杂的 AgentRun、RetrievalRound 和 ToolAttempt 聚合成用户能理解的 Review 状态，但不能丢掉详情入口。
+
+异常路径必须保留业务语义：AgentRun 失败不等于 Review 失败；供应商上传 V4 不会偷偷改写 V3 Review；等待人工输入是 `WAITING_FOR_USER`，等待安全批准是另一种等待；外部邮件超时则显示“结果待确认”，不能把“请求已发出”伪装成“邮件已发送”。产品层提供恢复、重试、重新审查或下载报告等动作，真正的状态转换仍由对应 Owner 提交。
+
+## A5. Product Surface 的取舍
+
+以 Matter 为中心会比“Chat + 历史消息”多出版本、权限、审查和工作成果的界面，但换来了跨天运行、多人协作和审计能力。把所有后端状态原样展示又会让用户暴露在内部术语中，因此 Product Surface 采用“业务对象摘要 + 可展开运行证据”的方式：主界面讲合同和 Finding，详情页再展示 Plan、Evidence、Approval、Attempt 和失败原因。
+
+本模块拥有用户要做什么、用户看到什么以及用户能否发出一个产品命令；它不拥有 Plan、Evidence、Security Decision 或 Tool Effect。这个取舍避免前端成为第二个 Controller，也避免一次 HTTP 成功响应被误读为法律工作已经完成。
+
 # Part I：定位与概念架构
 
 ## 1. 为什么需要 Product Surface

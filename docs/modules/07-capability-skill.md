@@ -98,6 +98,18 @@ Skill 可以声明需要的 Model Role、Knowledge、Memory、Capability 和 Too
 
 本部分先解释能力为什么要渐进式加载、版本化和可用性判断；Part B 定义 CapabilityVersion、SkillVersion、Provider Binding、Selection Result、状态机、失败、权限、持久化、测试和完成证据。Agent Core 决定是否把选择结果纳入 Plan，Tool Runtime 决定如何执行副作用。
 
+## A2. Planner 怎样知道系统到底会什么
+
+模型看到一个工具名称，并不代表系统真的具备完成任务的能力。可以把三层概念分开：Tool 是一个具体可执行动作，例如发送邮件；Capability 是系统声明的能力，例如“发送受控邮件”或“生成 DOCX”；Skill 是使用一组 Capability 完成一类任务的方法，例如“合同审查报告生成”。Planner 先判断 Capability 是否可用，再决定是否把它放进 Plan。
+
+选择前至少要检查：能力是否已发布、输入和输出 Contract 是否满足、依赖的 Skill/Tool/Model 版本是否兼容、当前 Security Scope 是否允许、资源和预算是否可用，以及是否存在可接受的 Provider Binding。这样 Agent 不会等到执行一半才发现缺少参数、权限或实现。
+
+## A3. 版本变化和多实现取舍
+
+假设 Skill V3 依赖某个邮件 Tool Schema，而 MCP Server 更新了参数或副作用语义。Capability Catalog 应在兼容性检查后把 Skill 标为 unavailable 或 degraded，不能继续把它描述成可用，再让 Agent 在执行阶段失败。版本化带来维护成本，但能把“暂时不可用”变成 Planner 可处理的事实。
+
+同一 Capability 可以有企业邮件 API 和 MCP Mail Tool 两个实现。系统可以根据安全、可靠性、成本、环境和健康状态选择 Provider Binding，但选择实现不能放大业务权限，也不能绕过 Security Gate、Approval 或 Tool Runtime。Capability/Skill 模块回答“能否以这种方式完成”，Agent Core 决定“本次计划是否需要它”，Tool Runtime 才回答“具体动作如何安全执行”。
+
 # Part I：定位、术语与概念架构
 
 # 1. 为什么需要 Capability / Skill

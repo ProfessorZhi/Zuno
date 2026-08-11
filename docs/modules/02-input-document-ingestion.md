@@ -102,6 +102,24 @@ StructuredObservation / MemoryCandidate 归 05；02 不直接写长期 Memory。
 
 本部分解释文档为什么要经过版本化、结构解析和质量门；Part B 才定义 SourceObject、ParseSnapshot、CanonicalDocumentIR、状态机、队列、持久化、失败恢复和完成证据。解析失败不能被叙事层压成“上传失败”，正式 Failure 以规范章节为准。
 
+## A2. 为什么法律文件不能只做 PDF 转文本和固定切块
+
+法律文本的含义高度依赖结构。“除第 12.3 条另有规定外”如果和第 8.2 条被切成两个互不相干的片段，后续系统可能只看到责任上限，却漏掉例外。Defined Term 可能在第一页定义、二十页以后使用；附件、表格和修订痕迹也可能改变条款实际含义。因此，解析首先要恢复法律结构，再考虑 Token Budget，而不是先按 500 Token 粗暴切分。
+
+用户上传的 PDF 是**源对象（SourceObject）**，而“供应商 SaaS 合同第三版”是**文档版本（DocumentVersion）**。一个不可变 DocumentVersion 可以关联原始 DOCX、转换 PDF、签署副本等多个物理对象；内容 Hash 变化必须创建新版本，不能用新文件覆盖旧版本。相反，如果合同内容没有变化，只是 Parser 从 V2 升级到 V3，应该创建新的**解析快照（ParseSnapshot）**，而不是伪造一个新的法律版本。
+
+## A3. 结构恢复怎样同时使用规则和模型
+
+条款编号、标题层级、页码、表格坐标和修订标记等可重复判断，优先使用确定性规则；复杂标题、Defined Term 或跨段关系可以由模型提出候选。但模型说“这是第 8.2 条”还不够，候选必须经过 Schema、父子层级、原始位置和上下文一致性检查，并保留回到原文的**源位置（SourceSpan）**。
+
+SourceSpan 是从 CanonicalDocumentIR、CitationChunk 和 Evidence 回到原始字符、页码或对象区域的稳定映射。它让系统可以回答“这条风险来自哪一个版本的哪一页”，也让人工能够复核模型抽取有没有越过原文。任何无法定位的抽取结果都只能作为低信任候选，不能静默升级为正式文档事实。
+
+## A4. 内容变化、解析变化和质量门必须分开
+
+OCR 失败不代表合同不存在。DocumentVersion 已经是正式内容身份，失败的是某次 ParseAttempt 或 ParseSnapshot；系统可以更换 OCR、Parser 或人工修复后重新解析，并保留失败记录。`REVIEWABLE` 只表示该解析快照通过了 Ingestion 的最低质量门，可以交给 Review 或 Knowledge 使用，它不表示检索质量已经证明，也不表示任何法律结论正确。
+
+这种分离的代价是需要保存更多 Hash、快照和 lineage，但换来可重放、可比较和可审计的异常处理：文档变了，就比较新的 DocumentVersion；解释方法变了，就比较新的 ParseSnapshot；质量不足，就隔离该快照而不是删除输入。
+
 # Part I：定位、问题与 Ownership
 
 # 1. 为什么需要企业级 Ingestion

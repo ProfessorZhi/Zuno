@@ -97,6 +97,24 @@ Domain Fact / Version / Intent
 
 本部分解释为什么 Zuno 需要多种存储和异步运行原语，以及 Java/Python、Queue、Database、Object Store 和 Checkpointer 如何分工。Part B 定义数据服务 Contract、状态机、一致性、故障、安全、部署、Migration、测试和证据；Infrastructure 不创建 Review、Evidence、MemoryVersion 或 EffectReceipt。
 
+## A2. Agent 跑几小时甚至几天，不能依赖一个进程活着
+
+合同审查可能等待文档解析、模型调用、用户输入和工具审批。普通 HTTP 请求结束后就释放进程，但 Agent 任务不能把业务身份和恢复位置藏在某个 Python Worker 的内存里。Worker 崩溃、消息重复、ACK 丢失或部署 Drain 时，基础设施要让领域 Owner 能重新判断，而不是把物理动作伪装成业务成功。
+
+PostgreSQL 保存“业务世界现在是什么状态”，例如 AgentRun、PlanVersion、Finding、Approval 和 EffectReceipt；LangGraph Checkpointer 保存“图控制流到了哪里”。RabbitMQ 负责异步分发，不是业务事实源；Milvus、Neo4j、BM25 Index 和 Cache 是可重建 Projection。这个分工允许 Runtime 重启和索引重建，同时保持领域事实的唯一 Owner。
+
+## A3. 一致性、重复投递和租约
+
+典型双写问题是数据库事务已经提交，但 MQ Publish 失败；或者对象已经上传，但 metadata 没有提交。Outbox 让领域事务同时写事实和待发布事件，Publisher 稍后发送；Inbox、event_id 和 Idempotency Claim 让至少一次投递不会重复提交。Worker 完成工作但 ACK 丢失时，消息会重投，所以 Consumer 必须先根据领域状态和幂等键确认是否已经处理。
+
+Lease 不是永久所有权。Worker 超时后可以由另一个 Worker 接管，但接管前要检查原 Worker 是否已经提交结果，并使用 Fencing 防止旧进程晚到写入。这样会增加心跳、版本和条件写，却避免“两个 Worker 都认为自己拥有同一项副作用”。外部 Provider 调用不能嵌在数据库事务里，必须依靠 Attempt、Receipt 和 Reconciliation。
+
+## A4. 容量、发布和恢复的取舍
+
+Ingestion 突然收到一万个 PDF 时，系统不能让它耗尽所有 Worker 和 Model Quota。队列、并发、Tenant Quota、Budget 和 Worker Pool 需要按 Workload 隔离，并通过 Backpressure 让上游知道“稍后再来”。部署新版本时进入 Graceful Drain：停止接收新任务，让当前任务在安全点提交 Checkpoint 或领域事实，再由新 Worker Resume。
+
+备份存在不等于系统可恢复。PITR 恢复 PostgreSQL 后，派生索引可能包含恢复点之后的数据，因此需要按 Watermark 重建或切换；删除、Legal Hold、Migration、兼容和灾备都必须有可验证 Receipt。Infrastructure 提供这些物理原语，但不因为 Queue ACK、对象上传或 Checkpoint 存在就宣布 Review、Evidence 或 Tool Effect 已成功。
+
 # Part I：定位、目标与架构选择
 
 # 1. 为什么需要 Infrastructure
