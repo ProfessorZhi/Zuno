@@ -27,8 +27,10 @@ Red Interviewer Mode
 ## 输入
 
 ```text
-Project Facts
-Resume / Project Material
+Project Package:
+  Project Facts / Project Model
+  Team Ownership / Delivery Evolution
+  Resume / Project Material
 Target Role JD
 Current + Target Architecture
 Module Documents
@@ -47,6 +49,12 @@ Scorecard
 Gap Clusters
 Blue Change Set
 Research / Implementation / Eval Tasks
+Project Positioning Proposal
+Team / Ownership Reconstruction Candidate
+Delivery Evolution Reconstruction
+Build-vs-Buy Decision
+Model Deployment Strategy
+Resume Scope Change
 User Gate Status
 Canonical Sync Record
 Red Retest Result

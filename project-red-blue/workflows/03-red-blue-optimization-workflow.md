@@ -12,10 +12,14 @@
 
 ```text
 PROJECT_POSITIONING
+PROJECT_PACKAGE
 ARCHITECTURE
 MODULE
 IMPLEMENTATION_STRATEGY
 BUILD_BUY
+MODEL_DEPLOYMENT
+DEVELOPMENT_PROCESS
+TEAM_OWNERSHIP
 RESUME
 FULL_PROJECT
 ```
@@ -37,7 +41,7 @@ Question Budget / Stop Boundary
   ↓
 Gap Clustering
   ↓
-Blue Architecture / Project Review
+Blue Project Package / Architecture Review
   ↓
 Research if needed
   ↓
@@ -51,6 +55,21 @@ Canonical Sync
   ↓
 Red Retest
 ```
+
+允许形成的 Change Set 不只包括 Architecture Proposal，还可以是：
+
+```text
+Project Positioning Proposal
+Team / Ownership Reconstruction Candidate
+Delivery Evolution Reconstruction
+Build-vs-Buy Decision
+Model Deployment Strategy
+Architecture Change Set
+Resume Scope Change
+Implementation / Eval Task
+```
+
+历史事实仍必须经过 User Fact Gate；重建候选不得被写成真实开发过程、客户关系、部署记录或个人贡献。
 
 ## 评分：回答防守能力与架构适配度分开
 

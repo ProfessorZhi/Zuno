@@ -2,6 +2,7 @@ session_id: "<unique-session-id>"
 workflow: "<01-red-team-interview | 02-blue-team-answer | 03-red-blue-optimization>"
 mode: "<PROJECT_INTERVIEW | ARCHITECTURE_INTERVIEW | IMPLEMENTATION_INTERVIEW | FULL_INTERVIEW | PROJECT_POSITIONING | MODULE | BUILD_BUY | ...>"
 scope: "<project / module / claim / resume>"
+project_package_version: "<version or file set hash>"
 target_role: "<job or interview context>"
 question_budget: 0
 zuno_base_sha: "<commit>"

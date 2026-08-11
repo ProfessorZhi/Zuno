@@ -15,8 +15,12 @@
 ```text
 Resume
 JD
-Target Project / Project Facts
-Architecture / Module
+Project Package:
+  Project Facts / Project Model
+  Team Ownership
+  Delivery Evolution
+  Architecture / Modules
+  Status / Evidence
 Interview Duration or Question Budget
 Persona
 Interview Mode
@@ -45,7 +49,7 @@ Stop Reason
 
 ## 不拥有的事实
 
-该 Skill 不拥有 Zuno Architecture、Current Evidence、Project History、用户规模、团队分工或正式 Resume Claim。所有事实都从输入 Source Boundary 读取。
+该 Skill 不拥有 Zuno Architecture、Current Evidence、Project History、用户规模、团队分工、部署历史或正式 Resume Claim。所有事实都从输入 Source Boundary 读取；如果 Project Package 某维度没有材料，必须暴露 Unknown，而不是自行补全。
 
 ## 成熟条件
 

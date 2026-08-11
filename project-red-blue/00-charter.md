@@ -29,6 +29,46 @@
 
 本文件只保存这个选择逻辑；具体问题、Persona 和会话字段由下游文件承载。
 
+## 审计对象：完整 Project Package
+
+红蓝体系审查的对象不是单独的 Architecture，而是完整的**项目包（Project Package）**：
+
+```text
+Project Package
+├─ Project Origin / Background
+├─ User / Business Problem / As-Is Workflow
+├─ Product Positioning / Competitor
+├─ Existing Alternative / Build-vs-Buy
+├─ Team / Ownership / Personal Contribution
+├─ Development Process / Version Evolution
+├─ Target Architecture / Module Contract / Failure
+├─ Model / Data / RAG / Memory / Agent / Tool
+├─ API / Hosted vs Self-hosted / Fine-tuning
+├─ Deployment / Infrastructure / GPU / MQ / DB
+├─ Evaluation / Benchmark / Evidence
+├─ Landing / Pilot / Production / Operations
+└─ Current / Target / Future / History / Unknown
+```
+
+`Architecture` 只是其中一部分。红队可以从“为什么做”“谁使用”“谁负责”“第一版是什么”“模型怎么进入系统”“是否真正上线”进入，再回到架构机制。项目历史和运行事实不能由当前 Target 反推；无法恢复的背景进入 `PROJECT_FACT_RESEARCH`，不擅自补成事实。
+
+Project Package 也不等于一个新事实源。内容必须回到已有 Owner：
+
+| 审计内容 | 主要 Owner |
+|---|---|
+| 背景、用户、痛点、项目立意 | `01-project-facts.md`、`02-project-model.md` |
+| 团队、分工、个人贡献 | `03-team-ownership.md` |
+| 第一版到当前的开发演进 | `10-delivery-evolution.md` |
+| 稳定产品问题与 Target 工作流 | `docs/architecture/` Part A |
+| Model Role、路由、API/本地模型 | `docs/modules/04-model-gateway.md` |
+| Serving、GPU、扩缩容和部署 | `docs/modules/11-infrastructure.md` |
+| RAG、Graph、Memory、Agent、Tool | 对应模块文档 |
+| 上线、用户、Benchmark、运行证据 | `docs/status/`、`docs/evidence/` |
+| 开源替代评审 | `09-open-source-review.md` 与 ADR |
+| 红蓝问答、评分、Gap 和修复过程 | `sessions/` |
+
+只有真正改变稳定产品问题、Target 边界或架构 Contract 的结论，才进入 Canonical Architecture。
+
 ## 1. Mission：红队到底在降低什么风险
 
 真实面试官的目标不是把候选人问住，而是在有限时间内降低招聘风险。红队的每个问题至少必须服务于下面一种风险：

@@ -27,6 +27,14 @@ project_fact_version
 - `project-red-blue/01-project-facts.md`；
 - 已确认 Project Facts、Resume / Project Material。
 
+如问题属于 Project Package 的其他维度，还可以读取已 Pin 的：
+
+- `project-red-blue/02-project-model.md`：产品、用户、痛点、竞品和项目因果链；
+- `project-red-blue/03-team-ownership.md`：团队与个人 Ownership；
+- `project-red-blue/10-delivery-evolution.md`：开发过程和版本演进；
+- `docs/status/`、`docs/evidence/`：上线、用户、Benchmark、Trace 和运行证据；
+- 对应模块文档：模型、RAG、Memory、Agent、Tool、Infra 和 Security。
+
 如果问题涉及外部项目，但当前正式材料没有最终 Build-vs-Buy 结论，不能在回答过程中临时研究并伪造一个已存在的项目决策。应记录“当前正式材料尚未形成最终决策”，把研究交给 Workflow 03。
 
 ## Answer Status
@@ -71,6 +79,17 @@ Confidence
 - 用最新 Web Research 覆盖 Pin 版本中没有的决策；
 - 把目标文档、类名、Mock Test 或目录结构当成生产证据；
 - 为了提高分数替用户补出团队人数、用户规模、QPS、上线状态或个人代码贡献。
+
+尤其要区分：
+
+```text
+TEAM WORK
+PERSONAL WORK
+FRAMEWORK PROVIDED
+EXTERNAL TEAM WORK
+```
+
+“团队中有人部署了模型”不能被回答成“我负责模型部署”；“使用 DeepSeek”不能被回答成“我们自建了 DeepSeek 推理集群”，除非 Pin 的来源明确支持。
 
 ## 输出
 

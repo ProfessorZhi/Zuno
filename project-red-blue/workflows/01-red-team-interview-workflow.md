@@ -10,13 +10,25 @@
 
 | 输入 | 用途 |
 |---|---|
-| Target Project / Project Facts | 建立项目和 Claim 上下文 |
+| Project Package | 建立背景、用户、产品、团队、开发、架构、模型、部署、证据和简历 Claim 上下文 |
 | Resume / Project Material | 检查简历陈述、个人贡献和边界 |
 | Target Role JD | 决定岗位相关攻击优先级 |
 | Architecture Docs / Module | 攻击目标架构、模块 Contract 和 Current/Target 边界 |
 | Interview Mode | 选择项目、架构、实现或完整面试模式 |
 | Question Budget | 限制动态问题次数，不是预生成题目数量 |
 | Persona | 只改变提问视角和风格 |
+
+红队必须覆盖的不只是架构机制，还包括：
+
+```text
+Project Origin / User / Pain / Product Positioning
+Competitor / Existing Alternative
+Team / Personal Ownership / Development Process
+Model API vs Self-hosted / Fine-tuning Necessity
+Deployment / GPU / Serving / Operations
+Evaluation / Landing / Production Evidence
+Resume Scope / Current-Target Boundary
+```
 
 支持的最小模式：
 
@@ -35,7 +47,7 @@ FULL_INTERVIEW
 
 ### 2. Claim Inventory
 
-从项目陈述或被审计文档拆出 Candidate Claim，并记录：来源、事实状态、Ownership、关联风险、可核验证据和反例。不得先从静态题单开始。
+从 Project Package 的任意维度拆出 Candidate Claim，并记录：来源、事实状态、Ownership、关联风险、可核验证据和反例。不得先从静态题单开始。
 
 ### 3. Select Persona and Highest Risk
 
@@ -59,6 +71,20 @@ FULL_INTERVIEW
 ```text
 Project → Deep Dive → Fundamental → Project → Ownership → Failure → Trade-off → Evidence
 ```
+
+模型相关 Claim 必须先区分 Hosted API 和 Self-hosted：
+
+```text
+Business Need
+  → Model Role / Candidate
+  → Hosted API or Self-hosted
+  → Prompt / RAG / Few-shot 是否足够
+  → Fine-tuning 是否必要
+  → Serving / Resource / Cost
+  → Failure / Fallback / Eval
+```
+
+听到“用了 DeepSeek”不能自动推断有模型权重、GPU、推理 Runtime 或私有化部署；只有回答明确进入 Self-hosted，才继续追问这些部署事实。模型 API、部署和微调 Ownership 也必须分别确认。
 
 基础题识别为 `PROJECT_INDEPENDENT` 后，Gap 记为 `FUNDAMENTAL_GAP`；回到项目时必须重新验证项目实现，不能用基础题答案替代项目证据。
 

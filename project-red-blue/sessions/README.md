@@ -17,6 +17,8 @@ retest.md
 
 会话记录必须 Pin 输入版本，区分真实面试与 Architecture Campaign，并把逐题 Gap 聚类后再进入 Blue Change Set。`sessions/` 不覆盖 `docs/` 的正式架构事实；Canonical Sync 只能记录已经通过 User Gate 的结果。
 
+Scorecard 必须覆盖完整 Project Package。若问题长期只集中在 Agent/RAG，遗漏项目背景、产品价值、Ownership、开发过程、模型部署、竞品替代、上线和生产证据，应标记 `COVERAGE_FAILURE`。
+
 建议命名：`YYYY-MM-DD-<scope>-<short-name>.md`。
 
 最低结构：
