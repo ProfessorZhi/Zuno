@@ -120,6 +120,20 @@ Semantic、Episodic 和 Procedural Memory 的召回问题不同，不能都用�
 
 上下文压缩可以做 Exact Dedup、Tool Payload Offload、保留最近原文尾部和结构化 Summary，但必须披露可能的 Fidelity Degradation。压缩不能删除证据引用、权限边界或恢复所需的控制事实。这个取舍会牺牲一部分完整历史，换来可控的 Token、延迟和更稳定的注意力；真正重要的原文仍通过引用和持久化事实按需取回。
 
+## A6. 信息抽取、去重和冲突判断怎样逐步收紧
+
+抽取器不是把一句话直接变成 Memory。以“王总说方案没问题，下周让法务确认合同”为例，模型先提出 Person、Opinion、Todo 和 Time 等结构化候选；随后由确定性 Schema 校验、Entity Resolution、Temporal Normalization 和 Source Binding 逐层收紧。`王总` 不能因为语义相似就自动合并成某个已有 Person；若 exact identifier、已知 alias、Workspace Entity 和语义候选都无法消除歧义，应保留 unresolved。
+
+去重也分层处理：先用 content hash 或稳定结构化 key 找 exact duplicate，再用 subject、predicate、scope 和 time 找结构化重复，最后才用 Embedding 找 near-duplicate 候选。相似度只是候选发现，不是合并决定；阈值应在标注 Dataset 上 calibration，并根据风险 Profile 在 Precision 与 Recall 之间取舍，而不是拍一个固定 0.85。
+
+冲突判断需要把“换了一个事实”和“同一时间互相矛盾”分开。用户换公司通常是 Temporal Succession：旧任职记录设置有效结束，新记录从相邻时间生效；同一 Scope 和有效时间内的两个不同责任上限才可能是 Direct Contradiction。冲突未解决时进入 Quarantine 或请求确认，不通过删除旧版本来假装冲突消失。
+
+## A7. Recall 之后怎样装配 ContextPack
+
+三类长期记忆查询条件不同：Semantic 关注 subject、predicate、entity、scope 和有效时间；Episodic 关注 task signature、环境、失败与结果；Procedural 关注 trigger、capability、risk 和 contraindication。Recall 返回候选后还要经过 Scope、Freshness、Conflict、Applicability、Security 和 Token Budget 过滤，才能成为 ContextCandidate。
+
+当 Context Budget 不足、加入新 Evidence、Tool Result 过大或 Session 持续增长时，压缩顺序可以是：去重、把大 payload 外置、淘汰低优先级旧原文、生成结构化摘要，最后才使用模型辅助压缩。当前 Goal、Plan、Security Constraint、用户最新纠正、有效 Approval 和关键 Evidence 属于 Protected Set，不得为了节省 Token 静默删除。跨语言 Recall 可以使用翻译或多语言 Embedding，但 MemoryVersion 仍只保留一个原始来源和 `source_language`；翻译是派生表示，不是第二条事实。
+
 # Part I：定位、术语与概念架构
 
 # 1. 为什么需要独立的 Memory & Context 模块

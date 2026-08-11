@@ -120,6 +120,18 @@ Skill 可以声明需要的 Model Role、Knowledge、Memory、Capability 和 Too
 
 这个分层会比让 LLM 直接挑工具多一次 Resolver 和 Snapshot，但它能解释为什么没有选 Gmail、为什么切换到企业 Mail Gateway，以及为什么旧 Schema 或过期 Connection 会让动作失效。模型仍可提出偏好和理由，不能自行改变候选集合或扩大授权。
 
+## A5. Provider Conformance 怎样证明“同一个能力”真的等价
+
+Gmail MCP 和 Microsoft Graph 都声称支持 `SEND_EMAIL`，不能只因为名称相同就视为可替换。07 要把 CapabilityVersion 的输入、输出、错误、风险和效果语义，与 Provider 的实际映射逐项比较：收件人和附件如何映射，成功结果如何确认，是否支持幂等，timeout 后是否能对账，是否需要特定 Connection 或 Security Scope。
+
+Provider Conformance 可以由确定性 Schema/Contract 检查、Adapter Probe 和受控测试组成；模型可以辅助解释或生成候选，但不能自行宣布 Conformance 通过。若 Tool Schema 兼容而副作用语义改变，例如 `send_email` 新增任意身份代发能力，仍然属于语义不兼容，需要重新做 Conformance 和 Security Review。
+
+## A6. Capability Selection 是过滤后选择，不是模型自由挑选
+
+Selection 的输入是 `CapabilityRequirement`、09 计算的 Authorized Candidate Set、01 的 Agent/User Preference、企业约束和当前 Availability Snapshot。先硬过滤权限、版本、Connection、Residency、必需特性和 Conformance，再在剩余候选中按健康、可靠性、延迟、成本和 Quota 排序，提交不可变 `CapabilitySelectionResult`。
+
+`AUTO` 允许在合法候选中自动选择，`PREFERRED` 允许首选不可用时按政策 fallback，`PINNED` 则要求指定实现不可用即阻塞。LLM 可以提出偏好或理由，但不能改变候选集合；07 的选择结果也不是最终执行授权，08 仍需在 Prepare 时重新检查精确 ToolVersion、Connection 和当前状态。这样 Availability、Authorization、Selection 和 Execution Readiness 各自有清楚的失败位置。
+
 # Part I：定位、术语与概念架构
 
 # 1. 为什么需要 Capability / Skill

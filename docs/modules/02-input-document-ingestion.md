@@ -120,6 +120,39 @@ OCR 失败不代表合同不存在。DocumentVersion 已经是正式内容身份
 
 这种分离的代价是需要保存更多 Hash、快照和 lineage，但换来可重放、可比较和可审计的异常处理：文档变了，就比较新的 DocumentVersion；解释方法变了，就比较新的 ParseSnapshot；质量不足，就隔离该快照而不是删除输入。
 
+## A5. 一次解析如何从原始页面走到可用 Snapshot
+
+面试中说“Parser + LLM”还不够，因为它没有说明哪个阶段可以相信模型、哪个阶段必须确定性校验。一个更可解释的处理链是：
+
+```text
+Source Profiling
+→ 页面 / 区域分类
+→ 规则恢复候选结构
+→ 模型补充不规则结构 Proposal
+→ SourceSpan / page / bounding box 校验
+→ CanonicalDocumentIR
+→ Quality Evaluation
+→ ParseSnapshot 提交或隔离
+```
+
+条款编号、缩进、字体、布局坐标、表格边界和页眉页脚优先使用规则，因为它们可重复、可测试；复杂标题、阅读顺序、Defined Term 或跨段关系可以由模型提出候选，但候选必须回到原始位置、父子关系和 Schema 验证。模型不能凭语言流畅度把不存在的条款补进 IR。
+
+一个 DocumentVersion 可以拥有多个 ParseSnapshot。Parser 升级不自动意味着新快照更好：系统需要比较结构完整率、SourceSpan 覆盖、OCR 置信度、表格覆盖、Defined Term 解析和 Cross-reference 解析，再由质量门决定哪个 Snapshot 可以交给下游。失败的 ParseAttempt 保留失败原因；低质量 Snapshot 隔离，不覆盖历史可用 Snapshot。
+
+## A6. OCR、Redline 和 Chunking 为什么必须共享原文坐标
+
+文本层存在时先使用原生文本；扫描页才进入 OCR。OCR 结果至少要能解释覆盖了哪些区域、置信度怎样、版面是否完整。低置信度不能简单替换成模型猜测，而应二次 OCR、局部纠正或进入人工复核，并在质量报告中保留缺失范围。
+
+Redline 可能来自 DOCX Track Changes、文本差异或 PDF 视觉差异。它们最终都要归一化为 insert、delete、replace、move 或 uncertain，并绑定版本和 SourceSpan；不确定的视觉差异只能作为待确认候选，不能直接变成合同事实。
+
+法律 Chunk 先尊重 Clause、SubClause、Definition、Table Row、Schedule 等结构单元；只有超过模型上下文或检索预算时才做子切分。子 Chunk 保留父条款、相邻条款和层级引用，这样检索命中局部内容后可以恢复足够上下文，同时仍能回到不可变 DocumentVersion。固定 500 或 512 Token 只是预算参数，不是法律边界。
+
+## A7. 多语言输入不能牺牲原文可复核性
+
+输入层可以识别文档语言、混合语言页面和局部术语，并为下游提供语言信息；但无论 OCR、规范化还是翻译，原始 SourceObject、原始字符、页码和坐标都必须保留。翻译文本只能作为派生解析或检索表示，不能覆盖英文或中文原文，也不能生成脱离 SourceSpan 的 Citation。
+
+例如英文合同中的 `limitation of liability` 可以帮助中文 Query 召回，但最终报告仍应能回到英文条款和原始页面。跨模块 `LanguageContext`、翻译 Policy 和版本绑定尚未在 Part B 中统一冻结，本节只说明保真边界；正式 Contract 需要单独记录 Architecture Gap。
+
 # Part I：定位、问题与 Ownership
 
 # 1. 为什么需要企业级 Ingestion

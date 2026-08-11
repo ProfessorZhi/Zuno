@@ -55,3 +55,5 @@ Single Controller、固定 AgentRunGraph、动态 Plan DAG、StepExecutionGraph�
 ## Source 分层
 
 真实来源先提取问题和追问顺序；DERIVED 只向当前 Contract 合理延伸；ARCHITECTURE_STRESS 只能测试已存在的 Target 边界，不得为了答题凭空增加技术。
+
+Source 分层与 Gap 分层是两件事：前者说明问题从哪里来，后者说明攻击暴露了什么。真实来源可以暴露 `NARRATIVE_GAP` 或 `ARCHITECTURE_GAP`；架构压力题也不能因为是人工构造就自动标为缺口。详细的 `Question → Weakness → Gap Type → Resolution` 记录进入 `deep-dive-chains.md` 和 `architecture-gap-report.md`。

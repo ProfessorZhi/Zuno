@@ -112,6 +112,41 @@ AgentRun 崩溃后，Agent Core 要把 PostgreSQL 中的领域提交、Checkpoin
 
 模型说“完成”也不等于任务完成。最终候选仍需通过 Claim/Evidence、Citation、AnswerPolicy、权限、Budget、Final Gate 和 Publication。只有对应 Owner 提交了可查询的 RunOutcome 或 Work Product，产品层才可以向用户展示完成。这样，执行的灵活性不会牺牲企业任务的可恢复性和可审计性。
 
+## A6. Task Understanding 怎样避免把歧义藏进 Intent Label
+
+任务理解不是一个 `intent=contract_review` 分类结果。Runtime 先做确定性规范化，例如读取当前 Matter、选中文档和最近交互；再解析实体和引用候选；模型提出结构化的 Goal、Target、Constraint、Output、Knowledge Need、Memory Need、Action Need、Risk 和 Ambiguity；最后由 Schema、权限和澄清规则校验，形成可审计的 `TaskUnderstandingSnapshot`。
+
+“这份合同”若只对应一个当前选中版本，可以绑定该对象；若 Matter 中同时有 V3 和 V4，模型不能凭最近文本猜测，必须进入 Clarification。用户补充约束但没有改变 Objective、Constraint 或 Output Contract 时，可以更新当前输入或 Context；真正改变目标、交付物或风险边界时，才创建新的 GoalVersion。这样能把“用户补充信息”和“重新规划”分开。
+
+## A7. ReadySet 到 Dispatch 的判断顺序
+
+一个 Step 进入 ReadySet 只表示其 DAG 前置依赖满足，不等于立刻可以并行或执行。Scheduler 还要依次检查：输入是否齐全、ResourceClaim 是否冲突、是否涉及外部副作用、Security 和 Approval 是否满足、Run/Step Budget 是否可预留、Tenant/Provider Quota 是否可用，以及 Capability/Tool 是否仍然 Available。
+
+```text
+Dependency Ready
+→ Input Ready
+→ Resource / Side-effect Admission
+→ Security / Approval Gate
+→ Budget / Quota Reservation
+→ Capability Availability
+→ max concurrency / fairness
+→ Durable Dispatch Commit
+```
+
+只读且资源不冲突的检索可以并行；同时写同一 WorkProduct 的两个 Step 必须串行；即使两个邮件动作技术上可以并行，业务 Policy 也可能要求按顺序执行。最大并行度由全局容量、Tenant 配额、Run Budget、Provider 配额和资源锁共同限制，不是越大越好。这个顺序让“Ready”“Admitted”和“Dispatched”成为不同的可解释事实。
+
+## A8. 同一案例怎样区分 Retry、Repair、Fallback、升级和 Replan
+
+一个统一判断例子是：Evidence 缺少 Data Breach carve-out，先做 Corrective Retrieval；JSON Schema 参数错误，做 Repair；Provider 短暂 timeout，按预算 Retry 或在同 Role 候选中 Fallback；Fast Executor 推理不足，升级 Reasoning Role；发现合同还有一份原计划没有纳入的附件，目标范围和依赖已经改变，才进入 Replan Barrier。
+
+Barrier 先停止新的 Dispatch，标记受影响旧分支，等待或取消可安全取消的执行，创建不可变新 PlanVersion，再重新计算 ReadySet。晚到结果必须按 PlanVersion、Step Generation 和 Execution Epoch 判断有效性，不能把旧计划的结果写进新计划。恢复时 PostgreSQL 的领域事实、Checkpoint 的控制位置、Receipt 和幂等记录一起对账；不能盲目 Replay，也不能因为 Checkpoint 已前进就假装业务事实已经提交。
+
+## A9. 语言要求属于任务约束，不改变证据权威
+
+用户可以用中文提出问题、要求中文输出，而合同和法律依据使用英文。Task Understanding 应识别输入语言、期望输出语言和是否需要跨语言检索，并把它作为 Plan 的约束传递给 Knowledge、Model Gateway 和 Product Surface。它不能因为翻译结果更顺滑就改变原始 Evidence、Citation 或法律 Authority。
+
+如果翻译会改变责任条款含义、法域术语或用户意图，Agent 应请求澄清或保留原文并展示译文的不确定性。跨模块语言 Contract 尚未在 Part B 统一冻结，因此本节只表达任务控制边界；正式字段、版本和 Policy 仍需单独 Architecture Decision。
+
 # Part I：定位与概念架构
 
 # 1. 为什么需要 Agent Core

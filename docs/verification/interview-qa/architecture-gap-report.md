@@ -1,4 +1,29 @@
-# Architecture Gap Report
+# Architecture Red Team Gap Report
+
+本报告不是 Coverage 成绩单，而是红队攻击的缺口账本。`docs/verification/interview-qa/` 是测试用例，11+1 Canonical Architecture 是被测试对象。每次攻击都应沿着以下闭环记录：
+
+```text
+Question
+→ Deep Dive
+→ Observed Weakness
+→ Gap Type
+→ Target Document
+→ Required Improvement
+→ Resolution / Evidence
+→ Retest
+```
+
+Gap Type 的处理边界：
+
+| Gap Type | 含义 | 正确处理 |
+| --- | --- | --- |
+| `NARRATIVE_GAP` | Contract 已存在，但 Part A 无法用行为解释 | 修改对应 Part A，再重新攻击 |
+| `ARCHITECTURE_GAP` | Owner、状态、版本、失败或跨模块 Contract 尚未决定 | 先做架构设计确认，再修改 Part B / ADR |
+| `CURRENT_EVIDENCE_GAP` | Target 有设计，但代码、测试、Trace 或运行证据不足 | 留给实现、Status 和 Evidence，不改 Target 冒充完成 |
+| `MEASUREMENT_GAP` | 需要真实质量、延迟、成本或回归数字 | 留给 Eval / Benchmark，不凭文档填写数字 |
+| `OUT_OF_SCOPE` | 问题属于简历、个人贡献或其他非架构范围 | 保留边界，不把它写进 Canonical Architecture |
+
+当前的 `267/267 coverage_status=FULL` 只说明题目有正式引用；它不是 `human_explainability=YES`，也不是 Runtime 或质量证明。旗舰攻击链的四维诊断维护在 [deep-dive-chains.md](./deep-dive-chains.md)。
 
 ## 第一轮盲审结果
 
@@ -42,6 +67,16 @@ PARTIAL 的主要原因不是缺少类名，而是文档已有相关词汇，却
 - Gap 类型：MISSING_LINEAGE、MISSING_IDEMPOTENCY、MISSING_VERSION_BOUNDARY。
 - 修复：docs/modules/03-knowledge-agentic-graphrag.md § 15.2，定义 Materialization、Dedup Key、retrieval_origins 和 Graph provenance。
 - 状态：CLOSED。
+
+## 当前待冻结的正式架构缺口
+
+### G-LANG-001：跨模块 LanguageContext Contract
+
+- 问题：02/03/04/05/06 都需要表达输入语言、期望输出语言、来源语言、跨语言检索和翻译边界，但当前 Part B 尚未统一字段、版本、Owner、权限和生命周期。
+- Gap 类型：`ARCHITECTURE_GAP`。
+- 处理边界：Part A 可以先说明原文保留、翻译为派生表示和 Citation 不漂移；不得把未冻结的 LanguageContext 写成 Current 或已完成 Contract。
+- 下一步：先完成跨模块设计确认，再决定是否更新 Part B、共享 Registry 和对应 verifier。
+- 状态：OPEN；不由本轮 QA 文案关闭。
 
 ## P1：重要系统设计追问
 

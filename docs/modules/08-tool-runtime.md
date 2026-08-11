@@ -142,6 +142,18 @@ MCP、HTTP API、CLI、SDK、Browser 和 Local Bridge 统一进入 Tool Runtime 
 
 因此，08 的准备流程会接收 07 的精确选择引用和 09 的授权决定，但不会自己决定“谁有权使用”。它要确认 ToolVersion、Installation、ProviderInstance、Canonical Arguments、TargetResourceSet、Credential Scope、Sandbox、Network、Deadline 和 Action Hash 都一致，然后才创建 ToolAttempt。Connection 存在、Tool 可用和本次动作可执行是三个不同的事实。
 
+## A6. 从工具接入到可执行实例的生命周期
+
+普通成员提出“接入 Gmail MCP”，首先产生的是 ToolOnboardingRequest，而不是 Grant。技术审核检查协议、Endpoint、Schema、Version、Timeout、Health、Auth、幂等和对账能力；07 检查它是否满足目标 Capability；09 检查 OAuth Scope、数据流向、Residency、Vendor Trust、网络出口、Secret 和 Operation Risk。通过后才进入企业 Tool Catalog，之后还要分别经历 Installation/Activation 和 Connection 建立。
+
+这条链把五件容易混淆的事情分开：Registration 表示企业承认工具，Installation 表示租户启用工具，Connection 表示使用哪个业务身份，Authorization 表示谁能做哪些操作，Usage 才是某次具体动作。ToolConnection 不是 Secret；它只引用稳定的身份和凭证版本，明文凭证通过受控 Secret Lease 交付给实际执行环境。
+
+## A7. Prepare 是把模糊意图变成可审计动作
+
+`ActionProposal` 说“发送报告”还不够。Runtime 要解析精确 ToolVersion，规范化参数，绑定目标资源和 Connection，计算 Action Hash，检查 Security Epoch、Sandbox、Network、Deadline 和需要的 Approval，形成不可变 PreparedToolAction。没有授权时不创建 ToolAttempt；审批等待期间 ToolVersion、Schema、目标、Connection 或 Epoch 发生关键变化时，旧动作必须重新 Prepare，旧 Approval 不能复用。
+
+执行后的结果也分层：ToolAttempt 记录一次尝试，ToolObservation 记录返回数据，EffectReceipt 才说明外部效果的确认状态。邮件、数据库、Git 和 Browser 的对账方式不同；无法可靠确认高风险 Browser Click 是否发生时，进入人工评估而不是盲目 Retry。这个分层使 Worker 重启、MQ 重投和 Provider timeout 都可以恢复，而不会把“调用过”误写成“效果已发生”。
+
 # Part I：定位、术语与边界
 
 ## 1. 为什么需要独立 Tool Runtime

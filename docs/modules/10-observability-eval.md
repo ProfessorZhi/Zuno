@@ -128,6 +128,43 @@ RAG 需要看 Recall、Rerank、Evidence Sufficiency 和 Citation Integrity；Me
 
 如果某个 Finding 缺少 Defined Term，Trace 应能区分是 Parse 没有抽取、Graph 没有建边、Retrieval 没有触发 Local Expansion，还是 Evidence Evaluation 判定不完整；如果邮件重复发送，应能关联同一个 Action Hash、Idempotency Key、ToolAttempt 和 Reconciliation。这样修复可以落到真正的 Owner，而不是把所有问题都归因于“模型不够强”。
 
+## A5. Eval Dataset 怎样从反馈变成可复现基准
+
+真实用户反馈不能直接变成 Benchmark，更不能把一次律师 Reject 自动当成训练标签。较可靠的链路是：
+
+```text
+Feedback
+→ FeedbackCandidate
+→ Privacy / Permission Check
+→ Deduplication
+→ Labeling / Adjudication
+→ immutable DatasetVersion
+→ Train / Validation / Evaluation 隔离
+→ Experiment
+→ Benchmark Comparison
+→ Release Gate
+```
+
+同一份合同版本不能同时泄漏到训练集和评测集；同一类 hard negative 也要在数据划分时保持隔离。Experiment 不只比较平均分，还要看关键风险切片、Unsupported Claim、Citation、延迟、成本、安全回归和 Abstention。没有固定 DatasetVersion、方法、Case Set Hash 和可复现输入，就不能把 Demo 结果写成质量提升。
+
+## A6. 红队问题怎样反向驱动架构改进
+
+面试深挖是一个外部压力测试入口：如果只能从 Part B 的 Schema 和 Enum 拼答案，说明 Part A 存在 Narrative Gap；如果正式 Owner、状态或跨模块边界尚未决定，记录 Architecture Gap；如果设计有但代码、Trace 或 Eval 尚未证明，记录 Current Evidence Gap；如果问题需要真实效果数字，记录 Measurement Gap。四类 Gap 的处理路径不同，不能用补充 QA 答案把它们都标成 FULL。
+
+因此一次红队结果应形成：
+
+```text
+Question
+→ Deep Dive Chain
+→ Observed Weakness
+→ Gap Type
+→ Target Document
+→ Required Improvement
+→ Resolution / Evidence
+```
+
+Observability & Eval 负责保存可复核的测量和证据边界；它不替模块修改 Contract，也不把“文档能够解释”误报成“Runtime 已实现”。
+
 # Part I：定位与概念架构
 
 # 1. 为什么需要 Observability & Eval

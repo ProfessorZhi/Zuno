@@ -6,6 +6,7 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 QA_ROOT = REPO_ROOT / "docs/verification/interview-qa"
+DEEP_DIVE_PATH = QA_ROOT / "deep-dive-chains.md"
 QA_FILES = {
     "zuno-agentic-graphrag-qa.md": "knowledge",
     "zuno-tool-mcp-security-qa.md": "tool",
@@ -29,7 +30,7 @@ EXPECTED_ARCHITECTURE_FILES = {
     "architecture.html",
 }
 SOURCE_TYPES = {"REAL", "DERIVED", "ARCHITECTURE_STRESS"}
-FINAL_COVERAGE = {"FULL"}
+COVERAGE_VALUES = {"FULL", "PARTIAL", "MISSING", "CONFLICTING"}
 REQUIRED_FIELDS = (
     "source_type",
     "source_ref",
@@ -53,6 +54,13 @@ REQUIRED_HEADINGS = (
     "### 当前文档是否足够回答",
     "### 如果不够，缺什么",
 )
+DEEP_DIVE_REQUIRED_FIELDS = (
+    "target_documents",
+    "architecture_coverage",
+    "human_explainability",
+    "gap_type",
+    "resolution_state",
+)
 
 
 def _question_blocks(text: str) -> list[tuple[str, str]]:
@@ -70,6 +78,23 @@ def verify() -> list[str]:
     errors: list[str] = []
     if not QA_ROOT.exists():
         return ["missing QA root: docs/verification/interview-qa"]
+
+    if not DEEP_DIVE_PATH.exists():
+        errors.append("missing red-team deep-dive chain file: docs/verification/interview-qa/deep-dive-chains.md")
+    else:
+        deep_dive_text = DEEP_DIVE_PATH.read_text(encoding="utf-8")
+        deep_dive_chains = list(re.finditer(r"^## (RT-[A-Z]+-\d{3}) (.+)$", deep_dive_text, re.MULTILINE))
+        if len(deep_dive_chains) != 10:
+            errors.append(f"expected exactly 10 red-team deep-dive chains, got {len(deep_dive_chains)}")
+        for index, match in enumerate(deep_dive_chains):
+            end = deep_dive_chains[index + 1].start() if index + 1 < len(deep_dive_chains) else len(deep_dive_text)
+            block = deep_dive_text[match.start() : end]
+            for field in DEEP_DIVE_REQUIRED_FIELDS:
+                if not re.search(rf"^- {re.escape(field)}:\s*.+$", block, re.MULTILINE):
+                    errors.append(f"{match.group(1)} missing field: {field}")
+            for heading in ("### Attack Chain", "### Weakness Record"):
+                if heading not in block:
+                    errors.append(f"{match.group(1)} missing section: {heading}")
 
     architecture_root = REPO_ROOT / "docs/architecture"
     architecture_files = {path.name for path in architecture_root.iterdir() if path.is_file()}
@@ -108,12 +133,14 @@ def verify() -> list[str]:
             if not difficulty_match:
                 errors.append(f"{qid} has invalid difficulty")
             coverage_match = re.search(r"^- coverage_status:\s*(\S+)$", block, re.MULTILINE)
-            if coverage_match and coverage_match.group(1) not in FINAL_COVERAGE:
-                errors.append(f"{qid} final coverage is not FULL: {coverage_match.group(1)}")
+            if coverage_match and coverage_match.group(1) not in COVERAGE_VALUES:
+                errors.append(f"{qid} has invalid coverage_status: {coverage_match.group(1)}")
             initial_match = re.search(r"^- initial_coverage_status:\s*(FULL|PARTIAL|MISSING|CONFLICTING)$", block, re.MULTILINE)
             gap_match = re.search(r"^- gap_id:\s*(\S+)$", block, re.MULTILINE)
             if initial_match and initial_match.group(1) != "FULL" and (not gap_match or gap_match.group(1) == "None"):
                 errors.append(f"{qid} initial non-FULL coverage has no gap_id")
+            if coverage_match and coverage_match.group(1) != "FULL" and (not gap_match or gap_match.group(1) == "None"):
+                errors.append(f"{qid} non-FULL coverage has no gap_id")
             for ref_file, heading in re.findall(r"^  - (.+?) — § (.+)$", block, re.MULTILINE):
                 target = REPO_ROOT / ref_file
                 if not target.exists():

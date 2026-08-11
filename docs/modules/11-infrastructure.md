@@ -115,6 +115,18 @@ Ingestion 突然收到一万个 PDF 时，系统不能让它耗尽所有 Worker 
 
 备份存在不等于系统可恢复。PITR 恢复 PostgreSQL 后，派生索引可能包含恢复点之后的数据，因此需要按 Watermark 重建或切换；删除、Legal Hold、Migration、兼容和灾备都必须有可验证 Receipt。Infrastructure 提供这些物理原语，但不因为 Queue ACK、对象上传或 Checkpoint 存在就宣布 Review、Evidence 或 Tool Effect 已成功。
 
+## A5. 一条消息怎样安全地走过事务、队列和 Worker
+
+RabbitMQ 的任务消息和 AgentRun 不是一回事。消息只是异步分发载体，通常至少一次投递，因此 Consumer 可能收到重复消息；业务事实必须由领域 Owner 在 PostgreSQL 中提交，Consumer 用 `event_id`、领域状态和幂等记录判断是否已经处理。ACK 丢失时重新投递也不能重复创建 Finding、Effect 或 MemoryVersion。
+
+典型双写由 Outbox 解决：领域事务同时提交 Domain Fact 和 Outbox Record，Publisher 之后发送；Inbox 记录已消费事件，重复发送只会再次命中幂等检查。Worker 取得 Lease 也不是永久所有权，Lease 过期后新 Worker 可以接管；单调递增的 Fencing Generation 让旧 Worker 即使网络恢复，也不能把迟到结果写进新一代状态。
+
+## A6. Checkpoint、领域事实和派生索引如何对账
+
+Checkpoint 记录图控制流，PostgreSQL 记录业务事实，Milvus、Neo4j、BM25 和 Cache 是可重建投影。恢复不能机械地从 Checkpoint 节点重新 Replay：如果领域数据库已有 EffectReceipt，必须先确认幂等和外部效果；如果 Checkpoint 前进但领域提交缺失，不能把节点结束当成业务成功。正确动作是读取版本、Receipt、Domain State 和 Generation，选择继续、补偿、重建或阻塞。
+
+同样，Graph Index 不可用不代表所有任务都能降级；如果当前 EvidenceRequirement 强依赖 Cross-reference，应该等待、阻塞或 Abstain，而不是返回没有关系证明的答案。容量方面，队列类别、Tenant Quota、Worker Pool、Model Quota 和最大并发共同形成 Backpressure，避免一个大租户占满所有资源。Graceful Drain 则停止新 Lease，让旧任务在安全点提交事实或 Checkpoint，再由新 Worker 接管。
+
 # Part I：定位、目标与架构选择
 
 # 1. 为什么需要 Infrastructure

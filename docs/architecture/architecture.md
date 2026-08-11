@@ -1152,6 +1152,48 @@ accepted immutable AuditEvent     Owner: Observability & Eval
 
 `AuditPersistenceReceipt != AuditEvent != Tool Effect success`。ExternalSinkDelivery、StructuredLog、Trace Projection 与 Queue ACK 都不能替代 AuditEvent。
 
+## A11. Agent 怎样判断应该查 Knowledge、读 Memory、执行 Tool 还是先问人
+
+用户的一句话通常同时包含事实问题、历史上下文和外部动作。Zuno 不让模型凭直觉在三者之间跳转，而是先把任务理解成几类需要：
+
+```text
+Knowledge Need
+    需要从当前事项、企业资料或法律资料证明一个事实。
+
+Memory Need
+    需要过去会话、Matter 经验或用户偏好来恢复连续上下文。
+
+Action Need
+    需要改变外部世界，例如生成文件、写入系统或发送邮件。
+
+Clarification Need
+    目标、对象、法域、版本或权限不足以安全形成计划。
+```
+
+这不是四选一的模型分类。一次合同审查可以同时需要四类信息：Knowledge 证明责任条款，Memory 找到上一轮律师意见，Action 生成 Redline，Clarification 解决“这份合同”对应 V3 还是 V4。Agent Core 负责把这些需要变成受约束的 Plan；Knowledge、Memory、Tool 和 Security 分别拥有自己的事实和 Gate。若对象或权限仍有歧义，先等待用户或安全决定，比让模型静默猜测更安全。
+
+## A12. 同一个失败为什么要先定位 Owner 再决定动作
+
+“失败”不是一个可以统一 Retry 的按钮。一次证据不足可能是检索策略不对，属于 Knowledge 的 Corrective Retrieval；参数不符合 Schema，属于 Repair；Provider 短暂不可用，才可能在同一 Role 的合法候选中 Retry 或 Fallback；发现原计划漏掉附件，才是 Agent Core 的 Replan；邮件请求超时而效果未知，则必须由 Tool Runtime Reconciliation 判断外部世界发生了什么。
+
+恢复时沿着事实链定位，而不是沿着最后一条日志猜测：
+
+```text
+Product / Review 状态
+→ AgentRun / PlanVersion / StepRun
+→ Knowledge / Memory / Model / Tool Attempt
+→ Receipt、Security Epoch、Domain Commit、Checkpoint
+→ 对应 Owner 的继续、补偿、对账、等待或阻塞
+```
+
+这样做的代价是每种失败都需要明确分类和证据；收益是不会用一个成功的 HTTP 响应、一次 Queue ACK 或一段模型文本覆盖真正的业务失败。Part A 只解释这个因果顺序，具体状态、Failure Namespace 和持久化字段仍以 Part B 为准。
+
+## A13. 多语言是横向约束，不是另一个 Runtime
+
+跨语言合同工作会让中文问题命中英文合同、中文 Memory 命中英文事项记录，或让用户要求用中文解释英文 Citation。设计上必须把“原始事实”和“派生翻译”分开：原文、SourceSpan、Evidence 和 Citation 保留来源语言；翻译、规范化和跨语言向量只是帮助检索或表达的派生表示，不能成为新的事实源或覆盖原始引用。
+
+语言策略还必须同时考虑法域、术语、权限、成本和可复核性。不能因为翻译后相似度更高，就把英文条款替换成未经核对的中文法律结论。当前跨模块语言 Contract 尚未在 Part B 中统一冻结，因此本节只固定问题边界；正式 `LanguageContext`、翻译策略和跨模块版本语义必须作为独立 Architecture Gap 处理，不能由 Part A 偷渡成 Current 或已完成 Contract。
+
 ---
 
 # Part B — 规范性架构与实施约束

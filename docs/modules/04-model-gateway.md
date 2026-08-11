@@ -122,6 +122,37 @@ Provider 返回 429，通常首先说明容量或配额问题，不代表审查�
 
 这种版本绑定会增加重建索引和发布管理成本，却避免“模型升级后历史结果无法解释”的问题。模型输出仍然只是 Proposal、Score 或 Result，真正的 Plan 激活、Memory 写入、Evidence 采用和外部 Effect 必须回到对应模块的 Gate。
 
+## A5. 一次 Model Routing Decision 怎样形成
+
+路由不能从“所有模型按价格排序”开始。Gateway 先建立本次请求的约束快照，再执行两阶段选择：
+
+```text
+Hard Constraint Filter
+→ Capability / Schema / Context / Residency / Security / Quota
+→ Health 与 Circuit 状态
+→ Soft Ranking
+→ immutable RoutingDecision
+→ ModelCallAttempt
+```
+
+硬约束不满足就直接淘汰：模型是否支持当前模态、结构化输出或 Tool Calling，Context Window 是否足够，数据驻留和分类是否允许，Tenant 是否禁用该 Provider，Quota 是否有可预留空间。剩余候选才比较近期质量、p95 延迟、成本、Quota Headroom 和错误率。这样“便宜但不合规”的模型不会因为分数高进入候选集。
+
+健康度不是一个永远正确的布尔值。近期 timeout、429 和 transient 5xx 会更新 Health Projection；Circuit CLOSED 允许正常请求，OPEN 在冷却期暂时拒绝选择，HALF_OPEN 只放少量探测请求，探测成功才回到 CLOSED。探测和路由都受版本化 Policy 与 Retry Budget 约束，避免一个 Step 的重试耗尽整个 Run。
+
+## A6. Retry、Fallback 和 Embedding 不能用同一种直觉
+
+429 或 transient 5xx 可以使用带 jitter 的 exponential backoff，但 Retry 只处理同一请求在当前合法候选中的暂时性失败。Fallback 也只能在同一 Role、同一安全和驻留约束、同一结构化输出能力的候选集合内发生；不能为了成功率降低 Security 或换到禁止区域。
+
+Fast Executor 参数错误时先 Repair；能力不足时升级到 Reasoning Role；如果失败暴露的是任务结构缺失，则由 Agent Core Replan。Model Gateway 记录 Attempt、Routing、Usage 和 Provider 结果，但不把这些调用控制误写成业务完成。
+
+Embedding 更严格：索引 V3 与 Query V4 即使维度相同，也不代表仍在同一个向量空间。切换 Embedding 必须使用兼容的 KnowledgeSnapshot 或重新建立 Index Generation；不能像普通 Chat Provider 那样无感 fallback。每次调用还要能回看 Model Version、Prompt/Schema Version、Routing Policy Version、Tokenizer 和 Pricing Version，才能解释质量、成本和历史结果。
+
+## A7. 多语言请求怎样进入模型路由
+
+语言不是简单的 UI 偏好。中文 Query 检索英文合同、英文 Citation 需要中文解释时，Gateway 需要确认候选模型是否支持输入和输出语言、上下文混合、结构化 Schema 以及当前数据驻留要求；不能因为某个 Provider 价格低就忽略语言能力或法律术语准确性。原始证据语言仍归 Knowledge / Ingestion 保存，Gateway 只执行受版本约束的翻译、生成或 Embedding 调用。
+
+跨语言翻译是派生表示，不是新的业务事实；ModelAttempt 应能追溯使用的模型、Prompt/Schema 和语言策略版本。当前跨模块 `LanguageContext` Contract 尚未在 Part B 统一冻结，本节不把它写成已完成接口，正式字段和生命周期需作为独立 Architecture Gap 处理。
+
 # Part I：定位、问题与跨模块模型使用地图
 
 # 1. 为什么需要 Model Gateway

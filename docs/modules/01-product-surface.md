@@ -142,6 +142,12 @@ Matter
 
 工具的可用性也要向用户解释清楚：Gmail 可能显示“企业允许、Workspace 允许、用户已启用、Agent 已启用，但 Connection 已过期”；Shell 可能显示“工具存在，但企业安全策略禁止”；Microsoft Graph 可能显示“可用，但外部发送需要审批”。把原因展示出来比简单显示一个灰色按钮更重要，因为它区分了配置问题、连接问题、权限问题和运行健康问题。
 
+## A7. 多人审查和版本冲突怎样保持业务连续性
+
+两个律师同时编辑同一条 Finding 时，产品不能使用 Last Write Wins。每次编辑都基于一个不可变 FindingVersion；提交时如果当前版本已经变化，系统返回明确的 Version Conflict，让用户选择 Merge、重新审阅或基于最新版本继续编辑。旧版本仍可追溯，因为它可能已经进入报告、审批或其他人的工作记录。
+
+供应商上传 V4 也不会让 V3 Review 偷偷跳到“最新”。页面应明确显示当前 Review 绑定 V3、V4 已可用，并提供启动新 ReviewRun、比较 V3→V4、继承上一轮 Findings 或重新判断已解决风险等显式动作。Product Surface 展示的是业务状态、运行状态、等待原因和 Effect 状态的聚合，不把 HTTP 200、SSE 断开或单个 Worker 成功当作 Review 完成。
+
 # Part I：定位与概念架构
 
 ## 1. 为什么需要 Product Surface

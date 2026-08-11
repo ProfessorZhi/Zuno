@@ -120,6 +120,20 @@ Evidence Evaluation 至少要区分六个维度：Relevance 表示是否相关�
 
 检索也必须有停止语义：证据已经充分、预算耗尽、连续几轮边际收益过低、权限阻断或证据冲突无法解决，都可以停止。停止后生成器必须根据原因选择继续、请求澄清、升级人工或拒绝形成确定性结论，而不是用更多相似片段掩盖证据不足。
 
+## A6. 系统怎样从 Query Features 选择检索策略
+
+“复杂问题走 Graph”不是可执行的判断。Knowledge 先从 Query、Claim 和当前 Matter 提取可审计特征：是否包含 Clause ID 或法条号，是否是语义改写，是否出现明确 Cross-reference，是否要求跨文档比较，是否需要多跳关系，当前 Snapshot 是否存在可用 Graph，以及 Evidence Ledger 是否已经暴露缺口。
+
+确定性 Policy 先用这些特征和硬约束淘汰不适合的路径；模型可以提出 Strategy Proposal，但不能跳过 Snapshot、权限、预算和 Index Availability。典型决策是：精确编号优先 lexical，表达差异优先 Dense，Definition → Clause → Exception 优先 Graph Local，主题级跨文档概览才考虑 Global，首轮缺口明确时做 Corrective Retrieval。一个 Requirement 可以组合多个互补 Action，但每个 Action 都必须说明触发原因、成本上限和预期补齐的 Evidence Gap。
+
+这比让 LLM 直接选择 Retriever 多一层 Policy 和 Admission，却能回答“为什么这轮没跑 Graph”“为什么不是简单增大 Top-K”，也能在 Graph 不可用时明确降级、等待或 Abstain，而不是产生不可引用的关系答案。
+
+## A7. 法律证据的相关性不等于适用性
+
+法律检索还要处理 Jurisdiction、Governing Law、Effective Period 和 Legal Hierarchy。Reranker 可以把候选排得更靠前，但不能单独宣布它足以支持 Claim。Evidence Evaluation 要检查候选是否来自当前 DocumentVersion、是否能支持具体原子 Claim、来源是否有足够 Authority、法域和时间是否适用，以及 Claim 所需的证据类型是否已经完整。
+
+跨语言检索也遵循同一边界：中文 Query 可以通过 multilingual embedding、受控 Query Translation 或词法扩展召回英文合同，但原始 Evidence 和 Citation 必须保留英文 SourceSpan。翻译是检索和表达的派生表示，不是新的法律事实；正式跨模块 LanguageContext 和翻译版本 Contract 若尚未冻结，仍必须记录为 Architecture Gap，不能在 QA 中把它写成 Current。
+
 # Part I：问题、定义与模块边界
 
 ## 1. 为什么需要 Agentic GraphRAG
