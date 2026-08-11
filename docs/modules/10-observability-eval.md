@@ -4,6 +4,8 @@ updated: 2026-07-14
 status: normative-target-module-architecture
 module_number: 10
 formal_path: `docs/modules/10-observability-eval.md`
+writing_standard: `docs/governance/architecture-document-writing-standard.md`
+reading_order: Problem → Case → Ownership → Runtime → State/Failure → Contract/Implementation → Verification
 
 > 本文是 Zuno 第 10 个逻辑模块——Observability & Eval（可观测性与评测）——唯一的正式 Target 架构主设计。
 >

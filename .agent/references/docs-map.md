@@ -31,6 +31,10 @@ docs/governance/wave1-cross-module-contract-registry.md
 
 `architecture-views.md` 是 HTML Mermaid 图源，不是第二份文字总架构。
 
+总架构和模块的统一信息架构、标题、Mermaid、Current/Target 和 QA 引用规则见：
+
+`docs/governance/architecture-document-writing-standard.md`
+
 ## 十一个模块路由
 
 | 模块 | 唯一正式文档 | Verifier |
@@ -75,6 +79,8 @@ docs/architecture/architecture.md
 docs/architecture/architecture-views.md
 docs/architecture/architecture.html
 ```
+
+如果修改的是文档结构或阅读顺序，还要同步写作标准入口和写作标准 verifier；不在 `.agent/` 创建架构正文镜像。
 
 ## Focused Tests
 

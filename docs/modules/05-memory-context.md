@@ -4,6 +4,8 @@ updated: 2026-07-14
 status: normative-target-module-architecture
 module_number: 05
 formal_path: `docs/modules/05-memory-context.md`
+writing_standard: `docs/governance/architecture-document-writing-standard.md`
+reading_order: Problem → Case → Ownership → Runtime → State/Failure → Contract/Implementation → Verification
 
 > 本文是 Zuno 第 05 个逻辑模块——Memory & Context——唯一的正式 Target 架构主设计。
 >

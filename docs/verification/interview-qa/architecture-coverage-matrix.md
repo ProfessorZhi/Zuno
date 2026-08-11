@@ -2,6 +2,8 @@
 
 本矩阵记录冻结题库的第一轮盲审状态与修复后状态。QA 是验证消费者，Architecture File/Section 才是事实源。
 
+写作协议重组说明：本轮新增 Part 阅读层并保留既有章节锚点，232 条 `section_ref` 无需改写；覆盖状态不因排版变化自动提升。
+
 | QID | Domain | Difficulty | Source Type | Primary Question | Architecture File | Architecture Section | Initial Coverage | Final Coverage | Gap ID | Current/Target Risk | Verification |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | Q001 | knowledge | L1 | REAL | 什么是 Zuno 的 Agentic GraphRAG？ | docs/modules/03-knowledge-agentic-graphrag.md | 1. 为什么需要 Agentic GraphRAG | PARTIAL | FULL | CLOSED-GAP-03-001 | Target；不证明 Current | verify_architecture_interview_qa.py |

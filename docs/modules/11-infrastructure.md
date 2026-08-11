@@ -4,6 +4,8 @@ updated: 2026-07-14
 status: normative-target-module-architecture
 module_number: 11
 formal_path: `docs/modules/11-infrastructure.md`
+writing_standard: `docs/governance/architecture-document-writing-standard.md`
+reading_order: Problem → Case → Ownership → Runtime → State/Failure → Contract/Implementation → Verification
 current_state_source: `docs/status/production-readiness.md`
 shared_contract_source: `docs/decisions/0003-wave1-cross-module-contract-freeze.md`
 shared_contract_registry: `docs/governance/wave1-cross-module-contract-registry.md`

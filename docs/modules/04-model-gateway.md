@@ -4,6 +4,8 @@ updated: 2026-07-14
 status: normative-target-module-architecture
 module_number: 04
 formal_path: `docs/modules/04-model-gateway.md`
+writing_standard: `docs/governance/architecture-document-writing-standard.md`
+reading_order: Problem → Case → Ownership → Runtime → State/Failure → Contract/Implementation → Verification
 dependency_baseline_sha: `140128fa7352094cac5a7a58f247090d0b451753`
 confirmed_wave1_contract_sha: `849820d2c52d36abebee8c3d4a974bf035524e0a`
 

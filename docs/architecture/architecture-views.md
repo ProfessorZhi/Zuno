@@ -1,15 +1,16 @@
 # Zuno Architecture Visual Atlas Source
 
-updated: 2026-07-14
+updated: 2026-08-11
 status: normative-target-visual-source
 text_design_source: `docs/architecture/architecture.md`
 canonical_domain_sources: `docs/modules/01-*.md` through `docs/modules/11-*.md`
+writing_standard: `docs/governance/architecture-document-writing-standard.md`
 
 本文件只提供说明性 Mermaid。领域 Contract、状态、Failure、持久化和测试以十一份模块文档为准；跨模块关系以 `architecture.md` 为准；本图源和 HTML 优先级最低。
 
 箭头规范：`==>` 命令/控制，`-->` 数据/结果，`-.->` 横切约束/观测。
 
-## 一、4+1 View Model
+## 一、Canonical View Model 与 Plane 阅读层
 
 ### Logical View (4+1)
 
@@ -17,23 +18,26 @@ canonical_domain_sources: `docs/modules/01-*.md` through `docs/modules/11-*.md`
 
 ```mermaid
 flowchart TB
-  PS[01 Product Surface] ==>|RuntimeRequest / Signal| AC[06 Agent Core]
-  AC -->|Publication / RunOutcome| PS
-  PS ==>|InputSubmission| IN[02 Input]
-  IN -->|IndexableDocumentSnapshot| KN[03 Knowledge]
-  AC ==>|KnowledgeQueryRequest| KN
-  KN -->|KnowledgeRetrievalOutcome / KnowledgeControlProposal| AC
-  AC ==>|ModelRoleRequirement| MG[04 Model Gateway]
-  MG -->|ModelResponse / UsageReceipt| AC
-  AC ==>|MemoryReadRequest| MM[05 Memory]
-  MM -->|ContextPackVersion| AC
-  AC ==>|CapabilityRequirement| CP[07 Capability]
-  CP -->|AvailabilitySnapshot / SelectionResult| AC
-  AC ==>|ActionProposal| TR[08 Tool Runtime]
-  TR -->|ToolObservation / EffectReceipt / Reconciliation| AC
-  SEC[09 Security] -.-> PS & IN & KN & MG & MM & AC & CP & TR
-  OBS[10 Observability and Eval] -.-> PS & IN & KN & MG & MM & AC & CP & TR & SEC
-  PS & IN & KN & MG & MM & AC & CP & TR & SEC & OBS --> INF[11 Infrastructure]
+  CLIENT[Client / Enterprise Apps] --> EDGE[Edge / Experience Plane]
+  EDGE --> CONTROL[Platform Control Plane]
+  EDGE --> EXEC[Agent Execution Plane]
+  EXEC --> KNOW[Knowledge Plane]
+  EXEC --> MEMORY[Memory & Context Plane]
+  EXEC --> MODEL[Model Access Plane]
+  EXEC --> EFFECT[Tool / Effect Plane]
+  SECURITY[Security Enforcement] -.-> CONTROL & EXEC & KNOW & MEMORY & MODEL & EFFECT
+  OBS[Observability / Eval] -.-> CONTROL & EXEC & KNOW & MEMORY & MODEL & EFFECT
+  CONTROL & EXEC & KNOW & MEMORY & MODEL & EFFECT --> INFRA[Infrastructure Plane]
+  CONTROL -.-> PS[01 Product]
+  KNOW -.-> IN[02 Input] & K3[03 Knowledge]
+  MODEL -.-> M4[04 Model]
+  MEMORY -.-> M5[05 Memory]
+  EXEC -.-> A6[06 Agent Core]
+  CONTROL -.-> C7[07 Capability]
+  EFFECT -.-> T8[08 Tool]
+  SECURITY -.-> S9[09 Security]
+  OBS -.-> O10[10 Observability]
+  INFRA -.-> I11[11 Infrastructure]
 ```
 
 #### Local — Agent Core Control Stack
@@ -174,17 +178,19 @@ flowchart TB
 ```mermaid
 flowchart TB
   CLIENT[Web / Desktop / External API] --> API[Server-hosted Product API]
-  API --> CONTROL[Controller role]
-  API --> WORKER[Async worker roles]
-  CONTROL --> PG[(PostgreSQL domain facts)]
-  CONTROL --> CHECK[(LangGraph PostgreSQL Checkpointer)]
-  WORKER --> PG
-  WORKER --> OBJ[(S3-compatible Object Store)]
-  WORKER --> Q[(RabbitMQ durable quorum queue)]
-  WORKER --> IDX[(BM25 / Milvus / Neo4j projections)]
-  CONTROL --> IDX
-  CONTROL --> OBS[(Trace / Audit / Eval stores)]
-  CONTROL & WORKER --> SECRET[Secret Manager / KMS Adapter]
+  API --> AGENT_API[Agent API Tier]
+  AGENT_API --> QUEUE[Durable Run Queue]
+  QUEUE --> AGENT_WORKER[Agent Worker Pool]
+  AGENT_WORKER --> KNOW_WORKER[Knowledge / Memory Workers]
+  AGENT_WORKER --> INGEST_WORKER[Ingestion CPU / GPU Workers]
+  AGENT_WORKER --> TOOL_WORKER[Tool / Sandbox Workers]
+  AGENT_API & AGENT_WORKER --> PG[(PostgreSQL domain facts)]
+  AGENT_API & AGENT_WORKER --> CHECK[(LangGraph PostgreSQL Checkpointer)]
+  AGENT_WORKER & INGEST_WORKER --> OBJ[(S3-compatible Object Store)]
+  AGENT_WORKER & INGEST_WORKER --> Q[(RabbitMQ durable quorum queue)]
+  KNOW_WORKER & INGEST_WORKER --> IDX[(BM25 / Milvus / Neo4j projections)]
+  AGENT_API & AGENT_WORKER --> OBS[(Trace / Audit / Eval stores)]
+  AGENT_API & AGENT_WORKER & TOOL_WORKER --> SECRET[Secret Manager / KMS Adapter]
 ```
 
 #### Local — Domain Facts Checkpoint and Projections

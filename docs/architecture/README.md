@@ -9,6 +9,10 @@ architecture-views.md
 architecture.html
 ```
 
+架构文档的统一信息架构、标题、图源、Current/Target 表达和 QA 引用规则见：
+
+[`docs/governance/architecture-document-writing-standard.md`](../governance/architecture-document-writing-standard.md)
+
 ## 正式设计事实
 
 Zuno 正式架构设计事实共十三份：
@@ -153,6 +157,8 @@ docs/governance/
 ## 更新与验证
 
 模块含义变化时先更新对应模块唯一文档，再同步总架构的跨模块关系。图形关系变化时同步 `architecture-views.md` 和 HTML。
+
+总架构按“问题 → 平台形态 → 端到端运行 → 分布式正确性 → 生产运维 → 验证与演进”的顺序组织；模块正文保留各自稳定标题锚点，但遵循同一套七 Part 写作协议。标题锚点是为了保持已有 QA 和外部引用稳定，不代表模块细节脱离 Owner 文档。
 
 ```text
 python tools/scripts/verify_architecture_document_set.py

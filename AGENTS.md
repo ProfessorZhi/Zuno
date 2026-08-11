@@ -100,6 +100,8 @@ Agent Core 规范优先级：全局架构原则 → 单一模块 Target 架构�
 
 ### 架构同步
 
+架构文档的统一信息架构和写作规则见 `docs/governance/architecture-document-writing-standard.md`。它是文档治理规范，不是新的架构事实源；总架构和模块正文仍分别由 `docs/architecture/` 与 `docs/modules/` 持有。
+
 设计含义变化时：
 
 1. 更新 `docs/architecture/architecture.md`；
@@ -108,6 +110,7 @@ Agent Core 规范优先级：全局架构原则 → 单一模块 Target 架构�
 4. 运行 `python tools/agent/render_architecture.py --check`；
 5. 运行 `python tools/scripts/verify_docs_entrypoints.py`。
 6. 运行 `python tools/scripts/verify_markdown_internal_links.py`。
+7. 运行 `python tools/scripts/verify_architecture_writing_standard.py`。
 
 模块变化时：
 

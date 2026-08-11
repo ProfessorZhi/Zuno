@@ -15,6 +15,7 @@
 - [Production Readiness](./status/production-readiness.md)：Current、Gap、Measurement、Blocked 和 Production Readiness 状态事实源。
 - [架构决策](./decisions/README.md)：仍影响当前或下一版 Target 的正式 ADR。
 - [工程治理](./governance/repo-ownership-matrix.md)：代码 Owner、迁移边界和兼容路径。
+- [架构文档写作标准](./governance/architecture-document-writing-standard.md)：总架构和十一模块的统一信息架构与验证规则。
 - [当前证据](./evidence/README.md)：当前仍有证明价值的 baseline 与 closure evidence。
 - [架构面试验证语料](./verification/interview-qa/README.md)：非规范性 QA Corpus，用真实追问压力测试 canonical architecture。
 - [历史归档](./history/README.md)：经过批准的历史摘要，不重新解释成当前事实。

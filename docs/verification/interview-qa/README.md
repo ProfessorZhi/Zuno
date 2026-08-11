@@ -8,6 +8,8 @@
 
 QA 与正式架构冲突时，正式架构优先。QA 中的 Expected Answer 只允许复述或压缩 canonical docs，不得创造新的 Runtime、Current、Benchmark 或 Production 事实。
 
+本轮架构文档写作重组保留了既有 canonical section anchors，以避免无语义变化的标题改名破坏外部引用；因此本轮 `section_ref` 更新数量为 `0`。若未来语义迁移导致 anchor 消失，必须先修复 canonical 文档，再更新覆盖矩阵和 QA metadata。
+
 ## 题库范围
 
 当前冻结 Q001–Q232，分布为：

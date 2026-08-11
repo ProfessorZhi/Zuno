@@ -2,6 +2,8 @@
 
 `docs/modules/` 保存 Zuno 十一个逻辑模块的唯一正式 Target 架构。每个模块只有一份正式模块文档；`.agent/` 不再保存模块镜像。
 
+统一写作和阅读协议：[`docs/governance/architecture-document-writing-standard.md`](../governance/architecture-document-writing-standard.md)。它约束模块叙事顺序和验证边界，不取代任何模块的 Canonical Contract。
+
 ## 规范优先级
 
 ```text
@@ -78,6 +80,8 @@ Runtime 工程收口已完成并归档。下一阶段只做正式设计协调，
 ## 本地阅读路径
 
 不同读者不要从同一个入口硬读到底：
+
+第一次阅读单个模块时，先按“问题 → 场景 → Owner/边界 → 决策 → 正常流程 → 状态/失败 → Contract/实现 → 验证”阅读。现有模块的 Part 标题和 QA 锚点保持稳定；入口协议统一，不机械改写模块专属术语。
 
 | 读者 / 任务 | 推荐路径 | 结束时应知道什么 |
 | --- | --- | --- |

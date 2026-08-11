@@ -1,14 +1,19 @@
 # Zuno 总体 Target 架构
 
-updated: 2026-08-10
+updated: 2026-08-11
 status: normative-target-integration-architecture
 document_role: cross-module integration source
 canonical_domain_sources: `docs/modules/01-*.md` through `docs/modules/11-*.md`
 current_state_source: `docs/status/production-readiness.md`
+writing_standard: `docs/governance/architecture-document-writing-standard.md`
 
 > 本文是 Zuno 十一模块（十一个逻辑模块）的跨模块集成架构。它解释模块如何组成一个可恢复、可并行、可审计的企业 Agent 系统，但不复制每个模块的全部字段、状态机、数据库表和 Adapter 规格。
 >
 > 领域对象、状态转换、Failure、持久化和测试细节发生冲突时，以对应 Canonical Owner 的模块文档为准；本文必须在同一轮治理变更中被修正。`architecture-views.md` 与 `architecture.html` 是说明性可视化，优先级最低，不得反向修改模块 Contract。
+
+本文按六个阅读 Part 组织，但保留既有章节编号作为稳定引用锚点。阅读顺序是：问题与约束 → 平台形态 → 一次任务如何运行 → 分布式系统如何保持正确 → 如何部署和演练 → 如何验证与演进。模块文档中的字段、状态和 Failure 细节不在此复制。
+
+# Part I — 为什么需要 Zuno
 
 ## 0. 正式事实源、优先级与维护顺序
 
@@ -227,6 +232,28 @@ ActionProposal
 → Agent Core ControlDecision
 ```
 
+## 2.8 统一平台责任视图
+
+Plane 是跨模块责任的阅读视图，不等于十一模块，也不等于一一对应的微服务或编程语言。它帮助读者先理解“系统为什么这样组合”，再进入模块 Owner 文档。
+
+```mermaid
+flowchart TB
+  CLIENT[Client / Enterprise Apps] --> EDGE[Edge / Experience Plane]
+  EDGE --> CONTROL[Platform Control Plane]
+  EDGE --> EXEC[Agent Execution Plane]
+  EXEC --> KNOW[Knowledge Plane]
+  EXEC --> MEMORY[Memory & Context Plane]
+  EXEC --> MODEL[Model Access Plane]
+  EXEC --> EFFECT[Tool / Effect Plane]
+  SECURITY[Security Enforcement] -.-> CONTROL & EXEC & KNOW & MEMORY & MODEL & EFFECT
+  OBS[Observability / Eval] -.-> CONTROL & EXEC & KNOW & MEMORY & MODEL & EFFECT
+  CONTROL & EXEC & KNOW & MEMORY & MODEL & EFFECT --> INFRA[Infrastructure Plane]
+```
+
+当前正式 Target 只冻结这些责任和 Owner 边界。Java/Python、多服务拆分和 Kubernetes 等实现候选，若尚未有 accepted ADR，必须保持为 Candidate，不得由本图或本文章节暗示为 Current。
+
+# Part II — 平台宏观架构
+
 ---
 
 # 3. 十一个逻辑模块
@@ -284,7 +311,11 @@ flowchart TB
 | Trace/Metric/Log Projection、accepted AuditEvent、Eval、Benchmark、EvidenceRecord、ReleaseGateEvaluation | Observability & Eval | 接收事件不转移源领域 Ownership |
 | QueueDelivery、Lease、Fencing、ObjectCommit、Checkpoint、Physical Index Receipt、AuditPersistenceReceipt | Infrastructure | 物理 Receipt 不冒充领域终态 |
 
-跨模块 Envelope 至少支持 tenant、workspace、principal、run、plan、step、action、trace、correlation、causation、aggregate version、expected generation、security epoch、deadline、payload hash 和 schema hash。
+## 4.1 Logical Module 不等于 Deployable Service
+
+逻辑模块回答“谁拥有哪个事实”，部署服务回答“哪些负载、故障域、安全边界和发布周期需要独立运行”。因此当前总架构不要求十一模块一一拆成十一服务，也不把服务数量当作成熟度证明。任何进一步的微服务或 Polyglot 方案必须经过独立 Architecture Decision，并保持 Wire Contract、Ownership 和 Failure Semantics 不变。
+
+# Part III — 一次企业 Agent 任务如何运行
 
 ---
 
@@ -979,6 +1010,8 @@ accepted immutable AuditEvent     Owner: Observability & Eval
 
 ---
 
+# Part IV — 分布式系统如何保持正确
+
 # 11. 状态、并发、恢复与幂等
 
 ## 11.1 版本不可变
@@ -1037,6 +1070,8 @@ RunOrphan、Dispatch、StepLease、UnknownAction、InterruptExpiry、Publication
 
 ---
 
+# Part V — 部署、扩容与生产演练
+
 # 12. 物理运行域与部署
 
 六个物理运行域：
@@ -1068,6 +1103,8 @@ PostgreSQL 16+ 是结构化领域事实 Target；S3-compatible Object Store/MinI
 ---
 
 # 13. 跨模块 Contract
+
+跨模块 Envelope 至少支持 tenant、workspace、principal、run、plan、step、action、trace、correlation、causation、aggregate version、expected generation、security epoch、deadline、payload hash 和 schema hash。
 
 `CrossModuleEnvelopeV1` 至少携带：
 
@@ -1156,6 +1193,8 @@ Release Gate 显式区分 `PASSED | FAILED | BLOCKED | INCOMPARABLE | ERROR`。�
 固定 Benchmark 必须绑定 Dataset Version、Case Set Hash、Corpus Manifest、Knowledge/Graph/Memory Snapshot、Runtime Bundle、Model Routing、Prompt、Judge、Embedding、Security Policy、Budget Profile、Metric Definition 与 Sampling Policy。RAG Core Five、Agentic GraphRAG 路由/停止、Citation、Tool 最终状态、Memory 正/负迁移、安全攻击、成本、关键路径和恢复可靠性分别测量；低成本不能补偿安全或质量硬 Gate 失败。
 
 ---
+
+# Part VI — 架构边界、演进与验证
 
 # 15. Program、测试与完成证据
 

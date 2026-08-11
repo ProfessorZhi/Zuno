@@ -4,6 +4,8 @@ updated: 2026-07-14
 status: normative-target-module-architecture
 module_number: 03
 formal_path: `docs/modules/03-knowledge-agentic-graphrag.md`
+writing_standard: `docs/governance/architecture-document-writing-standard.md`
+reading_order: Problem → Case → Ownership → Runtime → State/Failure → Contract/Implementation → Verification
 
 > 本文是 Zuno 第 03 个逻辑模块——Knowledge / Agentic GraphRAG——的唯一正式 Target 架构主设计。
 >
