@@ -499,7 +499,7 @@ flowchart LR
 
 ## 三、Zuno Product Core
 
-### Agentic GraphRAG Evidence and Agent Loop (Zuno)
+### Conditional Evidence Retrieval and Agent Loop (Zuno)
 
 #### Overall — Outer Agent Control and Inner Knowledge Retrieval
 
@@ -517,9 +517,12 @@ flowchart LR
   end
   subgraph DP[Retrieval Data Plane]
     PLAN --> RET[Parallel SearchAction Batch]
-    RET --> HYBRID[BM25 / Vector / RRF]
-    RET --> GRAPH[Local / Global / DRIFT]
-    HYBRID --> MATERIALIZE[Source-backed Materialization]
+    RET --> ROUTE{Query Class / Evidence Need / Cost / Quality}
+    ROUTE -->|exact clause / structure| STRUCT[Lexical / Structural]
+    ROUTE -->|semantic expression| HYBRID[BM25 / Vector / RRF]
+    ROUTE -->|relationship / global need| GRAPH[Graph Local / Global / DRIFT]
+    STRUCT --> MATERIALIZE[Source-backed Materialization]
+    HYBRID --> MATERIALIZE
     GRAPH --> MATERIALIZE
     MATERIALIZE --> DEDUP[Canonical Dedup / Rerank]
     DEDUP --> LEDGER[EvidenceLedger]

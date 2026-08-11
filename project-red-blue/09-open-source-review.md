@@ -104,20 +104,20 @@ Replaceable Capability Layer
 
 | 能力 | 候选 | 当前状态 |
 |---|---|---|
-| Memory backend | OpenViking / Mem0 / Graphiti / Cognee | `TO_REVIEW` |
-| Agent workflow | LangGraph / Dify / 自建 | `TO_REVIEW` |
+| Memory backend | OpenViking / Mem0 / Graphiti / Cognee | `EXTEND_CANDIDATE / TO_REVIEW` |
+| Agent workflow | LangGraph / Dify / 自建 | `ADOPT_CANDIDATE / TO_REVIEW` |
 | GraphRAG | Microsoft GraphRAG / LightRAG / LlamaIndex / 自建 | `TO_REVIEW` |
-| Retrieval | OpenSearch / Milvus / pgvector / 自建 | `TO_REVIEW` |
+| Retrieval | RAGFlow / LightRAG / OpenSearch / Milvus / pgvector / 自建 | `TO_REVIEW` |
 
 ## 本轮优先评审顺序
 
 | Zuno 能力 | 候选方向 | 首要验证问题 | 当前状态 |
 |---|---|---|---|
-| 02 Ingestion | RAGFlow / Docling / MinerU / Native | 结构、表格、Redline、SourceSpan 和版本能否进入 `DocumentPipelineContract`？ | `TO_REVIEW` |
+| 02 Ingestion | RAGFlow / Docling / MinerU / Native | 结构、表格、Redline、SourceSpan 和版本能否进入 `DocumentPipelineContract`？ | `EXTEND_CANDIDATE / TO_REVIEW` |
 | 03 Knowledge | RAGFlow / Microsoft GraphRAG / LightRAG / Native | 能否按 Evidence Requirement 选择 Basic/Hybrid/Local/Global/DRIFT，并回到 Citation？ | `TO_REVIEW` |
-| 05 Memory | OpenViking / Mem0 / Graphiti / Native | Engine 能否被 Zuno Memory Governance 约束写入、冲突、时效、权限和 Provenance？ | `TO_REVIEW` |
-| 06 Agent Core | LangGraph / Native Controller | LangGraph 负责 Runtime，Zuno 保留哪些 Plan、Run、Proposal 和业务完成语义？ | `ADOPT_CANDIDATE` |
-| Enterprise Connector | Onyx / Native Connector | 能否吸收连接、同步、权限和索引状态而不丢 Zuno `SourceObject` / Access Contract？ | `TO_REVIEW` |
+| 05 Memory | OpenViking / Mem0 / Graphiti / Native | Engine 能否被 Zuno Memory Governance 约束写入、冲突、时效、权限和 Provenance？ | `EXTEND_CANDIDATE / TO_REVIEW` |
+| 06 Agent Core | LangGraph / Native Controller | LangGraph 负责 Runtime，Zuno 保留哪些 Plan、Run、Proposal 和业务完成语义？ | `ADOPT_CANDIDATE / TO_REVIEW` |
+| Enterprise Connector | Onyx / Native Connector | 能否吸收连接、同步、权限和索引状态而不丢 Zuno `SourceObject` / Access Contract？ | `ADOPT_CANDIDATE / TO_REVIEW` |
 | Product / Platform | Coze / MaxKB / Dify / Native | Fork 会触及多少 Domain/Runtime/Security/Persistence，是否应作为入口或 Backend？ | `TO_REVIEW` |
 
 `ADOPT_CANDIDATE` 不是生产结论；它只表示该候选与现有“低层 Agent orchestration + Zuno Domain Control Plane”方向初步一致，仍需检查 Zuno 当前实现和部署要求。
@@ -187,3 +187,49 @@ Benchmark / Spike：
 `PENDING` 只允许出现在研究阶段，不能进入最终架构决策。
 
 任何“比 WorkBuddy 强”“开源方案不适合企业”等结论都必须进入待验证状态，不能用品牌印象替代技术和业务证据。
+
+## Reuse-first Capability Atlas（2026-08-12 官方资料快照）
+
+下表是本轮 Blue Research 的能力地图，不是正式 Adopt 清单。`HEAD` 只用于复现本轮资料快照；它不代表已完成 Spike、Contract Conformance、许可证审批或生产部署。
+
+| 能力 | Candidate | 官方资料 / HEAD | Reuse Mode | Zuno Contract Owner | Modification Surface | License / 运营观察 | G1 | G2 | G3 | G4 | G5 | Status |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| Document Pipeline | RAGFlow | [repo](https://github.com/infiniflow/ragflow) / `a0e091e75051f278ab21e7e1c2ce3d1fcccbd5a2` | `EXTEND_CANDIDATE` | 02 | S1/S3/S4/S5 需验证 | Apache-2.0；需核验部署、数据出口和版本兼容 | UNKNOWN | UNKNOWN | UNKNOWN | UNKNOWN | UNKNOWN | `TO_REVIEW` |
+| Document Parser | Docling | [repo](https://github.com/docling-project/docling) / exact pin pending Spike | `ADAPTER_CANDIDATE` | 02 | S1/S3/S5 需验证 | 需按实际版本和依赖清单核验 | UNKNOWN | UNKNOWN | UNKNOWN | UNKNOWN | UNKNOWN | `TO_REVIEW` |
+| Document Parser | MinerU | [repo](https://github.com/opendatalab/MinerU) / exact pin pending Spike | `ADAPTER_CANDIDATE` | 02 | S1/S3/S5 需验证 | 需按实际模型、服务和许可证核验 | UNKNOWN | UNKNOWN | UNKNOWN | UNKNOWN | UNKNOWN | `TO_REVIEW` |
+| Retrieval / Graph | Microsoft GraphRAG | [query docs](https://microsoft.github.io/graphrag/query/overview/) / [repo](https://github.com/microsoft/graphrag) / `14a00ad88fc33cf2b52f4f113f25807556f8e25e` | `ADAPTER_CANDIDATE` | 03 | S1/S2/S3/S5 需验证 | Query Engine 同时包含 Basic、Local、Global、DRIFT；不能直接替代 Zuno Evidence Contract | FACT | UNKNOWN | UNKNOWN | UNKNOWN | UNKNOWN | `TO_REVIEW` |
+| Retrieval / Graph | LightRAG | [repo](https://github.com/HKUDS/LightRAG) / `6f50fddd8b4a0520d62639b7ea0a1f173d7e5dfc` | `ADAPTER_CANDIDATE` | 03 | S1/S2/S3/S5 需验证 | 提供 API、图检索、存储后端和评测集成；许可证与部署需按 pin 核验 | FACT | UNKNOWN | UNKNOWN | UNKNOWN | UNKNOWN | `TO_REVIEW` |
+| Memory | OpenViking | [docs](https://docs.openviking.ai/) / [repo](https://github.com/volcengine/OpenViking) / `00f3738edbc3615481011054012b3fe171f91dd3` | `EXTEND_CANDIDATE` | 05 | S1/S2/S3/S4/S5 需验证 | Context Database；Memory/Resource/Skill、分层上下文和递归检索；License、版本和部署需复核 | FACT | UNKNOWN | UNKNOWN | UNKNOWN | UNKNOWN | `EXTEND_CANDIDATE / TO_REVIEW` |
+| Memory | Mem0 | [repo](https://github.com/mem0ai/mem0) / exact pin pending Spike | `ADAPTER_CANDIDATE` | 05 | S1/S3/S4/S5 需验证 | 需核验存储、Scope、删除、冲突和许可证边界 | UNKNOWN | UNKNOWN | UNKNOWN | UNKNOWN | UNKNOWN | `TO_REVIEW` |
+| Memory / Graph | Graphiti | [repo](https://github.com/getzep/graphiti) / exact pin pending Spike | `ADAPTER_CANDIDATE` | 05 | S1/S3/S4/S5 需验证 | 需核验时间知识图谱、权限和数据退出能力 | UNKNOWN | UNKNOWN | UNKNOWN | UNKNOWN | UNKNOWN | `TO_REVIEW` |
+| Agent Runtime | LangGraph | [persistence docs](https://docs.langchain.com/oss/python/langgraph/persistence) / [repo](https://github.com/langchain-ai/langgraph) / `644815f9e5bc52ad8f7a5227a456227e9c3e639b` | `ADOPT_CANDIDATE` | 06 | S2/S3/S5 需验证 | Checkpoint、Interrupt、Resume 和 HITL 机制；Zuno 仍拥有 Domain Fact 和 Business Completion | FACT | UNKNOWN | UNKNOWN | UNKNOWN | UNKNOWN | `ADOPT_CANDIDATE / TO_REVIEW` |
+| Connector | Onyx | [connector docs](https://docs.onyx.app/admins/connectors/overview) / [repo](https://github.com/onyx-dot-app/onyx) / `e2125952f0bacdc02e3e8a879edf21e33d4a999d` | `ADOPT_CANDIDATE` | 02/03/09 | S1/S3/S4/S5 需验证 | 持久同步和权限同步能力；Permission Sync 为 Enterprise/Cloud 边界，需核验 CE/EE、退出和权限映射 | FACT | UNKNOWN | UNKNOWN | UNKNOWN | UNKNOWN | `ADOPT_CANDIDATE / TO_REVIEW` |
+| Full Agent Platform | Coze Studio | [repo](https://github.com/coze-dev/coze-studio) / `fefb05ff27be1da939612fbf9faf5db62583b8ae` | `FORK_OR_ENTRY_CANDIDATE` | 01/06/07/08/09 | S1/S2/S3/S4/S5 需验证 | Agent、Workflow、Knowledge、Plugin、API/SDK；Apache-2.0，但完整 Fork 的 Domain/Runtime/Security 面需实测 | FACT | UNKNOWN | UNKNOWN | UNKNOWN | UNKNOWN | `TO_REVIEW` |
+| Full Agent Platform | MaxKB | [repo](https://github.com/1Panel-dev/maxkb) / `d59728533538130fc77656559c4a1caa78e9aa01` | `FORK_OR_ENTRY_CANDIDATE` | 01/03/06/08/09 | S1/S2/S3/S4/S5 需验证 | Agent/RAG/Workflow/MCP；GPLv3，必须先做 G4 许可证和部署模型评估 | FACT | UNKNOWN | UNKNOWN | UNKNOWN | UNKNOWN | `TO_REVIEW` |
+| Full Agent Platform | Dify | [repo](https://github.com/langgenius/dify) / `ef8544b173fd6cd7a8e71df2cab576e52bebbfbc` | `FORK_OR_ENTRY_CANDIDATE` | 01/03/04/06/07/08/09 | S1/S2/S3/S4/S5 需验证 | Agent Workflow、RAG、Model、Observability；Dify Open Source License 含额外条件，需做 G4 | FACT | UNKNOWN | UNKNOWN | UNKNOWN | UNKNOWN | `TO_REVIEW` |
+| Full Agent Platform | FastGPT | [repo](https://github.com/labring/FastGPT) / `08dc58e9e1051ecc414b718a5ac36e2226633ee0` | `FORK_OR_ENTRY_CANDIDATE` | 01/03/06/07/08 | S1/S2/S3/S4/S5 需验证 | RAG、数据处理、可视化 Workflow；官方 Open Source License 对 SaaS/商用有额外条件，需做 G4 | FACT | UNKNOWN | UNKNOWN | UNKNOWN | UNKNOWN | `TO_REVIEW` |
+| Horizontal Agent Surface | WorkBuddy | [official site](https://www.workbuddy.cn/work/) / version not applicable | `FUTURE_INTEGRATION_CANDIDATE` | 01/03/06/07/08/09 via Skill/MCP/API | S1/S2/S3/S4/S5 需验证 | 商业产品入口，不按开源 Fork 评估；需按公开接口和企业合作边界核验 | FACT | UNKNOWN | UNKNOWN | UNKNOWN | UNKNOWN | `FUTURE` |
+
+### 本表中的结论层级
+
+- `FACT`：官方资料明确声明的能力、许可证或公开接口；不等于 Zuno 已经采用。
+- `INFERENCE`：基于公开资料对潜在适配面的推断，必须回源码、测试或 Spike 验证。
+- `CANDIDATE`：可进入 Adapter / Provider 评估的方向。
+- `TARGET DECISION`：只有完成 G1–G5、用户批准和必要 ADR 后才能进入正式 Architecture。
+
+### DeepWiki / Wiki 研究协议
+
+```text
+README
+→ Official Docs / Wiki
+→ DeepWiki 等辅助 Architecture Map
+→ Source Code
+→ Tests
+→ Issues / Releases
+→ License
+→ Zuno Contract Mapping
+→ Spike
+→ Decision
+```
+
+DeepWiki 或 Wiki 只用于导航和源码地图，不能作为 Security、Failure、Recovery、Permission 或 Idempotency 的最终证据；关键结论必须回到官方文档、源码和测试。

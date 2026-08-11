@@ -13,9 +13,12 @@
 - [ADR 0003：Wave 1 跨模块 Contract 与 Infrastructure 物理边界冻结](0003-wave1-cross-module-contract-freeze.md)
   - 当前状态：`accepted-target`；已合并到 `main`，是正式共享 Target Contract，但不是 Current 或实现证据。
   - 冻结范围：服务端权威产品边界、`zuno/platform/**` 物理 Ownership、共享 Envelope、Security Epoch、Secret/Credential、Audit、Model Gateway、派生索引、PreparedToolAction、Failure Code 与 Retry/Recovery Owner。
-- [ADR 0006：Evidence-Driven Agentic GraphRAG Decision Architecture](0006-evidence-driven-agentic-graphrag.md)
+- [ADR 0006：Evidence-Driven Conditional Retrieval Decision Architecture](0006-evidence-driven-agentic-graphrag.md)
   - 当前状态：`accepted-target`；定义 Architecture v2 的 Broad Evidence Discovery、Evidence Deliberation、Evidence Reasoning Graph、ClaimEvidenceState、Targeted Probe 与安全停止。
   - 不修改现有 Program 与 PHASE01–PHASE22，不构成代码、Migration、质量或生产就绪证据。
+- [ADR 0007：Reuse-first 与可替换能力 Provider 边界](0007-reuse-first-provider-boundary.md)
+  - 当前状态：`accepted-target`；确立 Zuno Domain / Control Plane 与可替换能力 Provider 的边界，以及 `Reuse First, Build Requires Evidence` 的 G1–G5 评审闸门。
+  - 不把 RAGFlow、OpenViking、Onyx、Coze 或其他候选标记为最终 Adopt；不授权本轮实现 Adapter、Runtime、Migration 或 Production Benchmark。
 
 已被替换的决策不再伪造一个当前树目录；需要考古时使用 Git history，或在
 `docs/history/` 的批准摘要中读取结论。

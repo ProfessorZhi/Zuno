@@ -87,6 +87,12 @@ Principal / Tenant / Workspace / Matter / Agent / Task
 
 Memory 的读取、摘要、写入、Projection Serving 和删除都必须经过 Security；不可信 Knowledge、Tool Output 或 Memory Candidate 不能升级为指令或外部副作用授权。
 
+## 0.3 Provider Security Boundary
+
+任何 Provider 候选都必须先经过 Security 的权限、Secret、Residency、Data Classification、Sandbox、Supply Chain、Revocation 和 Security Epoch 约束。Provider 不能授予自己权限，RAGFlow 的工具输出、OpenViking 的自动 Memory、Onyx 的权限投影和外部 Connector 的返回值都只能作为不可信 Observation，不能绕过 Zuno 的 Scope、Policy 和 Gate 直接成为事实。
+
+因此“Provider 可替换”不意味着安全责任外包：09 仍拥有 Authorization、Grant、Delegation、Approval、Effective Security Epoch 和 Information Flow Decision；执行前必须重新验证当前授权和 Provider 状态。
+
 # Part A — 面向人的设计说明
 
 ## A0. 用合同审查理解 Security

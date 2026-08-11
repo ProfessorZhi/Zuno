@@ -94,6 +94,12 @@ TaskUnderstanding / Extraction / Query Rewrite / Risk / Evidence Critic
 
 法律领域的 Embedding、Reranker 和 Task Model 可以由 Domain Engineering 提供候选 Artifact，但只有经过 Eval/Release Gate 后，Model Gateway 才能按版本提供在线服务。模型永远不能直接激活 Plan、MemoryVersion、KnowledgeVersion、Approval 或 Publication。
 
+## 0.4 ModelProvider Boundary 与 Serving 成熟度
+
+04 负责模型角色、路由、兼容性、Fallback、Attempt、Usage、Cost、Quota 和 Health；Hosted Model Provider 与 Self-hosted Model Provider 都只是可替换实现候选。11 负责自建 Serving、GPU、Endpoint、物理伸缩和回滚，04 不把它们冒充为当前已部署事实。
+
+DeepSeek、具体 Provider、自托管、GPU、Fine-tuning 和 DPO 的历史状态仍以 `docs/project/facts/technology-reality.md` 为准，当前没有证据就保持 `UNKNOWN`。任何模型 Artifact 或领域适配只有经过 10 的固定数据集评测和 Release Gate，才能进入 Target Profile；本段不构成 Current 部署或训练声明。
+
 # Part A — 面向人的设计说明
 
 ## A0. 用一次合同审查理解 Model Gateway
@@ -221,7 +227,7 @@ Tool 执行、外部副作用、幂等 Effect Claim 或副作用审批
 | --- | --- | --- | --- |
 | 01 Product Surface | 意图分类、问题改写、语言转换、展示风格转换 | `TASK_ANALYZER`、`QUERY_REWRITER`、`CLASSIFICATION`、`TEXT_GENERATION` | Product Surface 拥有用户请求、渠道与展示状态 |
 | 02 Input / Document Ingestion | VLM OCR、版面理解、表格恢复、文档分类、Metadata 和字段抽取 | `EXTRACTOR`、`VISION_EXTRACTION`、`STRUCTURED_GENERATION`、`CLASSIFICATION` | Ingestion 拥有 SourceObject、ParseSnapshot、CanonicalDocumentIR 和摄取状态 |
-| 03 Knowledge / Agentic GraphRAG | Chunk/Query Embedding、Rerank、Query Rewrite、实体关系抽取、证据质量判断 | `QUERY_REWRITER`、`EXTRACTOR`、`EMBEDDING`、`RERANK`、`JUDGE` | Knowledge 拥有 Evidence、RetrievalRound、IndexManifest 和 CitationLineage |
+| 03 Knowledge / Conditional Evidence Retrieval | Chunk/Query Embedding、Rerank、Query Rewrite、实体关系抽取、证据质量判断 | `QUERY_REWRITER`、`EXTRACTOR`、`EMBEDDING`、`RERANK`、`JUDGE` | Knowledge 拥有 Evidence、RetrievalRound、IndexManifest 和 CitationLineage |
 | 04 Model Gateway | Adapter Probe、Conformance、调用修复和归一化 | 所有 Operation 的执行控制 | Gateway 拥有 ModelCall、Attempt、Routing、Usage、Health、Circuit |
 | 05 Memory & Context | 上下文压缩、对话摘要、Memory Candidate、实体记忆、Consolidation、Reflexion | `EXTRACTOR`、`SYNTHESIZER`、`STRUCTURED_GENERATION` | Memory 拥有 ContextPack、MemoryCandidate、Memory Commit 和删除语义 |
 | 06 Agent Core | Task Analysis、Planning、Plan Repair、Step ReAct、Critic、Reflection、Final Synthesis | 所有主要 Model Role | Agent Core 拥有 Run、Plan、Step、Decision、Final Gate 和 Outcome |
@@ -256,7 +262,7 @@ OCR 结果纠错、语义补全和低置信度区域复核
 
 模型只产生 `ExtractionCandidate` 或 `VisionExtractionResult`。Ingestion 必须负责 Source Lineage、页码和坐标绑定、Parser 版本、置信度、人工复核、Chunk 提交与 Index Handoff。
 
-## 4.3 Knowledge / Agentic GraphRAG
+## 4.3 Knowledge / Conditional Evidence Retrieval
 
 ### Embedding
 

@@ -24,6 +24,20 @@ UNKNOWN
 | Backup / Restore / 灾备 | `[UNKNOWN]` | 演练或运行证据 |
 | 真实用户反馈和验收 | `[UNKNOWN]` | 反馈、验收记录或可复现任务 |
 
+## 本轮事实 Gate 的明确保留项
+
+以下均继续保持 `[UNKNOWN]`：
+
+```text
+实际部署位置
+真实用户数量和访问范围
+团队内部试点 / Pilot / Production 状态
+上线时间、验收结果、QPS、延迟和成本
+运维责任、SLA、On-call、Backup / Restore / 灾备演练
+```
+
+十一模块、架构图、Provider 名称、目录存在或目标部署拓扑，都不能把这些状态提升为 Current。
+
 学校、导师、法院或合作对象的公开规模只能用于 Target Capacity Planning，不能推出 Zuno 的实际用户量、部署规模或生产状态。
 
 ## 证据路由

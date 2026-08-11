@@ -20,7 +20,7 @@ EXPECTED_VIEWS = [
     "Component-and-Connector View (Views & Beyond)",
     "Data View (Views & Beyond)",
     "Quality View (Views & Beyond)",
-    "Agentic GraphRAG Evidence and Agent Loop (Zuno)",
+    "Conditional Evidence Retrieval and Agent Loop (Zuno)",
 ]
 EXPECTED_DIAGRAMS = EXPECTED_VIEWS
 MODULE_DOCS = [
@@ -76,7 +76,7 @@ def validate_design(content: str) -> list[str]:
         "# 4. 全局事实所有权",
         "# 5. 在线 Agent 完整运行流程",
         "# 6. 文档摄取与 Knowledge 发布流程",
-        "# 7. Agentic GraphRAG 与证据闭环",
+        "# 7. Conditional Evidence Retrieval 与证据闭环",
         "# 8. Model、Capability 与 Memory 协作",
         "# 9. Tool Runtime 与外部效果",
         "# 10. Security、Audit 与 Information Flow",

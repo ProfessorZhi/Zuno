@@ -104,6 +104,12 @@ ActionProposal
 
 ToolObservation 可以作为 Memory 的 Source Fact 候选，但不自动成为 Memory；不可信 Tool Output 也不能直接绑定下一次 Tool 的目标、收件人或权限。
 
+## 0.3 Tool Provider / Adapter Boundary
+
+08 继续拥有 `ToolDefinition`、`ToolVersion`、Installation、Connection、ProviderInstance、`PreparedToolAction`、Attempt、Effect Receipt 和 Reconciliation。MCP、HTTP、SDK、CLI、Browser、Connector 或 Native 实现都通过 Adapter/Provider 接入；Provider 的 transport response 不能直接成为 Zuno 的业务 Effect，必须经过 Schema、Security、Idempotency、Receipt 和 Reconciliation Contract。
+
+本轮对 Tool Governance 的判断是 Architecture KEEP，缺口主要是 Implementation、Current Evidence 和 Failure Recovery。先完成一条受控 Side-effect Provider 的 Conformance Path，再扩展 Tool 数量；本模块不因 Provider 候选增加新的权限或状态语义。
+
 # Part A — 面向人的设计说明
 
 ## A0. 用 Redline 和邮件发送理解 Tool Runtime

@@ -12,7 +12,7 @@ reading_order: Problem → Case → Ownership → Runtime → State/Failure → 
 
 > 本文是 Zuno 第 10 个逻辑模块——Observability & Eval（可观测性与评测）——唯一的正式 Target 架构主设计。
 >
-> 本文统一承载 Trace、Audit、Metric、Log、Eval、RAG Core Five、Agentic GraphRAG 全过程观测、Agent Efficiency、Evidence Registry、Benchmark 和 Release Gate。Current、Gap、Measurement 和 Production Readiness 由 `docs/status/production-readiness.md` 维护；实现与迁移计划进入 `.agent/programs/`。
+> 本文统一承载 Trace、Audit、Metric、Log、Eval、RAG Core Five、Conditional Evidence Retrieval 全过程观测、Agent Efficiency、Evidence Registry、Benchmark 和 Release Gate。Current、Gap、Measurement 和 Production Readiness 由 `docs/status/production-readiness.md` 维护；实现与迁移计划进入 `.agent/programs/`。
 
 ## 0. 文档边界与事实源
 
@@ -24,8 +24,8 @@ reading_order: Problem → Case → Ownership → Runtime → State/Failure → 
 跨模块 Envelope、Audit、Delivery 和 Ownership
 Trace、Span、Event、Metric、Log、Sampling、Retention
 Eval Dataset、Case、Run、Judge、Result、Benchmark
-RAG Core Five 与 GraphRAG 专项诊断
-Agentic GraphRAG 全过程 Trace 与 Failure Bucket
+RAG Core Five 与 Graph Retrieval 专项诊断
+Conditional Evidence Retrieval 全过程 Trace 与 Failure Bucket
 Agent Efficiency、成本、并行、返工和质量约束
 状态机、失败语义、Retry、Recovery、Idempotency
 Security、Redaction、Legal Hold、External Sink
@@ -102,6 +102,12 @@ Matter / Review / AgentRun
 
 Memory Extraction、Temporal、Conflict、Scope、Provenance、Context Contribution 和删除传播都必须有独立 MetricDefinition；Target 的指标定义不等于 Current 质量证明。
 
+## 0.3 Zuno Eval Contract Boundary
+
+10 拥有 Dataset Version、Eval Run、Metric、Benchmark、Evidence Registry 和 Release Gate。任何 RAGFlow、GraphRAG、Memory 或 Model Backend 自带的 Benchmark 都只能作为外部 Observation，不能替代 Zuno 对 Retrieval Recall、Evidence Support、Citation Correctness、Unsupported Claim、Abstention、Finding Quality、Human Reviewer Agreement、Permission Violation、Tool Effect Correctness、UNKNOWN/Reconciliation、Recovery、Latency 和 Cost 的统一评测 Contract。
+
+Core 使用通用的 `Human Reviewer Agreement`；Legal/Contract Review Profile 再将其具体化为 Attorney/Legal Reviewer Agreement。检索策略还必须按 Query Class 分层比较，避免用单一平均分宣称 Graph、Memory 或某个 Provider 总体更优。
+
 # Part A — 面向人的设计说明
 
 ## A0. 用一次合同审查理解 Observability & Eval
@@ -120,7 +126,7 @@ Memory Extraction、Temporal、Conflict、Scope、Provenance、Context Contribut
 
 ## A3. 评测要分层回答“哪里变好了”
 
-RAG 需要看 Recall、Rerank、Evidence Sufficiency 和 Citation Integrity；Memory 需要看抽取精度、写入精度、冲突、过期注入和泄露；Agent 需要看 Plan Validity、完成率、Retry/Replan 正确性；Tool 需要看重复副作用和 UNKNOWN 对账；法律产品还要看 Finding Recall、Unsupported Claim Rate 和 Attorney Agreement。每一层指标都要绑定 Dataset、Profile、Model Artifact 和版本，不能用一个黑盒分数掩盖局部退化。
+RAG 需要看 Recall、Rerank、Evidence Sufficiency 和 Citation Integrity；Memory 需要看抽取精度、写入精度、冲突、过期注入和泄露；Agent 需要看 Plan Validity、完成率、Retry/Replan 正确性；Tool 需要看重复副作用和 UNKNOWN 对账；法律产品还要看 Finding Recall、Unsupported Claim Rate 和 Legal Reviewer Agreement。每一层指标都要绑定 Dataset、Profile、Model Artifact 和版本，不能用一个黑盒分数掩盖局部退化。
 
 模型或检索升级时，Candidate Artifact 先在隔离的固定 Dataset 上进行可复现比较，再经过 Release Gate 进入新的 Profile Version。没有实际 Run、Metric 和对比基线，就不能写“准确率提升 20%”或声称生产可用。Eval 的价值不是为复杂系统增加仪表盘，而是把失败、取舍和发布决定变成可以复核的证据。
 
@@ -197,7 +203,7 @@ Release Gate 为什么 PASS、FAIL、BLOCKED 或 INCOMPARABLE
 3. 在重复、乱序、延迟、Store/Queue/Sink 故障下保持可解释、可恢复和幂等。
 4. 建立 Eval Dataset、Case、Run、Metric、Judge、Failure Bucket、Benchmark Comparison 和 Release Gate。
 5. 冻结 RAG Core Five：Context Precision、Context Recall、Faithfulness、Answer Relevancy、Answer Correctness。
-6. 观察 Agentic GraphRAG 从 Query Rewrite 到 Graph Traversal、Grounding、Fusion、Rerank、Reflection、Replan 和 Final Gate 的完整过程。
+6. 观察 Conditional Evidence Retrieval 从 Query Rewrite 到可选 Graph Traversal、Grounding、Fusion、Rerank、Reflection、Replan 和 Final Gate 的完整过程。
 7. 以质量约束的多维向量衡量 Agent Goal、Tool Use、步骤、并行、延迟、Token、成本、返工和 Evidence Yield。
 8. 严格区分 `PREPARED`、`RUNTIME_OBSERVED`、`MEASURED`、`BLOCKED`、`UNAVAILABLE` 与 `QUALITY_PROVEN`。
 9. 使用服务端权威存储，通过经 Security Redaction 的 vendor-neutral Adapter 导出到 OpenTelemetry、LangSmith-compatible 或其他外部 Sink。
@@ -266,7 +272,7 @@ Evidence and Release
 | --- | --- | --- | --- |
 | Product Surface | Runtime Request、展示与用户交互 | session/request/presentation refs | 保存权威 Trace/Audit/Eval 事实 |
 | Input / Ingestion | Document、IngestionRun、Parser/OCR 事实 | ingestion events、artifact refs | 修改摄取终态 |
-| Knowledge / Agentic GraphRAG | RetrievalRound、Evidence、Citation、GraphTraversal、Snapshot | route/retrieval/fusion/rerank/grounding events | 修改 Knowledge 或 Graph 事实 |
+| Knowledge / Conditional Evidence Retrieval | RetrievalRound、Evidence、Citation、GraphTraversal、Snapshot | route/retrieval/fusion/rerank/grounding events | 修改 Knowledge 或 Graph 事实 |
 | Model Gateway | ModelCallAttempt、RoutingDecision、UsageReceipt、ProviderHealth、StructuredOutputFailure | model attempt、usage、fallback、judge call | 重路由或结算 Provider 用量 |
 | Memory & Context | ContextPack、MemoryCandidate、MemoryCommit | context/memory refs | 直接写长期 Memory |
 | Agent Core | Run、Goal、Plan、Step、Action、Decision、Outcome、BudgetSettlement | 生命周期、控制决策和证据引用 | 修改 Agent Core 状态 |
@@ -379,7 +385,7 @@ FinalCandidate、ArtifactVersion、Publication、RunOutcome、BudgetSettlement
 RC-AG/EV-AG Evidence
 ```
 
-# 9. Agentic GraphRAG 完整流程
+# 9. Conditional Evidence Retrieval 完整流程
 
 ```mermaid
 flowchart TD
@@ -417,7 +423,7 @@ standard_rag | local_graphrag | deep_graphrag | agentic_graphrag
 
 # 10. Agentic 循环
 
-每一次 Agentic GraphRAG 循环必须记录：
+每一次 Conditional Evidence Retrieval 循环必须记录：
 
 ```text
 Query Variant 来源：INITIAL | REWRITE | DECOMPOSITION | REFLECTION | REPLAN
@@ -1257,7 +1263,7 @@ outcome: success / abstain / refuse / failure
 
 ---
 
-# Part V：Agentic GraphRAG 与 Agent Efficiency Contract
+# Part V：Conditional Evidence Retrieval 与 Agent Efficiency Contract
 
 # 29. AgenticGraphRAGTrace
 
@@ -2185,7 +2191,7 @@ Eval Worker Crash / Lease Recovery
 MetricDefinition、Claim Ledger 和 Core Five 实现
 固定 Dataset / Profile / Snapshot 全量运行
 Judge / Embedding Calibration
-Agentic GraphRAG Trace 和 Failure Bucket
+Conditional Evidence Retrieval Trace 和 Failure Bucket
 Agent Efficiency Measurement
 Comparable Benchmark
 Release Gate Artifact

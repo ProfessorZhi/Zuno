@@ -78,6 +78,12 @@ Review / ReviewScope
 
 Agent Core 拥有 Why/When、Plan、Run、Step、Proposal 和 Replan；Knowledge 拥有证据获取，Memory 拥有历史上下文，Tool/Security 拥有外部效果与授权。模型只产生 Proposal，不能直接提交领域终态。
 
+## 0.3 AgentRuntime Provider Boundary
+
+06 保持 Single Controller，不把产品运行时改成自治 Multi-Agent。LangGraph 可以作为**Agent Runtime Provider**，负责图执行、Checkpoint、Interrupt 和 Resume Mechanics；Zuno 仍拥有 `TaskAnalysis`、`Plan`、`PlanVersion`、StepRun 的业务含义、Proposal、`RunOutcome`、Final Gate、Security/Budget Constraint、Business Completion 和 Recovery Decision。
+
+PostgreSQL 中的领域事实与 LangGraph Checkpointer 中的图控制状态必须分开。Checkpoint 证明图执行到了哪里，不证明 Review、Evidence、Effect 或业务 Run 已经完成；替换 AgentRuntime 不能改变 Zuno 的 Proposal、Publication、Reconciliation 和 Completion Contract。
+
 # Part A — 面向人的设计说明
 
 ## A0. 用合同审查理解 Agent Core

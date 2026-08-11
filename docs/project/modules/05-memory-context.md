@@ -79,6 +79,22 @@ TaskUnderstandingSnapshot / Source Fact
 
 Memory 仍不拥有 Matter、Review、Knowledge Evidence 或 Tool Effect；它提供可治理的历史上下文和读取视图。
 
+## 0.3 Memory Governance 与 MemoryBackend Boundary
+
+Zuno 拥有 Memory Governance：`StructuredObservation`、`MemoryCandidate`、`MemoryWriteDecision`、`MemoryVersion`、Scope、Authority、Temporal Validity、Conflict、Supersede、Quarantine、Revocation、Provenance、Security、Applicability 和 `ContextPack` Policy。OpenViking、Mem0、Graphiti 和 Native 都只是 `MemoryBackend` 候选，后端可以负责存储、索引、层级上下文、基础召回、Session Extraction 和 Context Retrieval Mechanism。
+
+后端自动产生的 Memory 不能直接成为 ACTIVE 的 Zuno `MemoryVersion`，必须经过：
+
+```text
+Backend Proposal / Observation
+→ MemoryCandidate
+→ Zuno Governance
+→ MemoryWriteDecision
+→ MemoryVersion
+```
+
+候选后端的版本、许可证、部署约束、召回质量、污染/冲突/过期/撤权和重建行为，在 Conformance Spike 与 10 的评测完成前都保持候选状态。
+
 # Part A — 面向人的设计说明
 
 ## A0. 用一次合同审查理解 Memory

@@ -88,6 +88,12 @@ Capability / Skill Definition
 
 Skill 可以声明需要的 Model Role、Knowledge、Memory、Capability 和 Tool，但授权、预算、审批、幂等和最终状态仍由对应 Owner 决定。
 
+## 0.3 Capability Provider Boundary
+
+07 拥有 Capability/Skill Contract、Provider Binding、Conformance、Availability 和 Selection；实际实现可以是 Tool、MCP、API、SDK、CLI、Browser 或独立 Provider。Selection 只回答“在有效候选中选哪个实现”，不等于 Authorization、Execution Readiness 或副作用执行；01 的 `AgentToolBinding`/用户偏好和 09 的 Grant/Policy 仍分别拥有自己的事实。
+
+Provider 只能返回 Capability Proposal、Conformance Record、Availability Snapshot、Selection Result 或执行引用，不能直接提交 Matter、Evidence、MemoryVersion、Authorization 或 Effect。候选实现必须经过输入/输出、副作用、幂等、Reconciliation、安全、许可证和供应链检查；不能因为 Provider 名称或功能列表相似就默认等价。
+
 # Part A — 面向人的设计说明
 
 ## A0. 用合同审查理解 Capability / Skill

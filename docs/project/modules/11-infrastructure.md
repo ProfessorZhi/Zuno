@@ -87,6 +87,12 @@ Domain Fact / Version / Intent
 
 `IndexWriteReceipt`、`Checkpoint Commit`、`Queue ACK` 和 `Object Commit` 只证明各自物理边界，不能冒充 KnowledgeVersion、MemoryVersion、EffectReceipt、ReviewFinding 或 Eval Quality。Infrastructure 不因收到消息而创建业务对象。
 
+## 0.3 Provider / Infrastructure Boundary
+
+11 拥有 PostgreSQL、对象存储、队列、缓存、索引物理写入、Checkpoint、Lease/Fencing、Secret Delivery、Sandbox、Self-hosted Serving 和 GPU 等物理能力的执行与 Receipt；它不拥有 Domain Fact、Evidence、MemoryVersion、Authorization、Effect 或 Eval Gate。Provider Runtime Receipt、Queue ACK、Secret Lease 和 Checkpoint 都不能单独证明业务完成。
+
+Self-hosted Model Serving、GPU、生产 DR 和具体部署拓扑在没有代码、配置、测试或运行证据时仍是 Target/Future 候选。11 是逻辑 Owner，不等于必须部署成独立服务，也不等于 11 个模块都已在第一版激活。
+
 # Part A — 面向人的设计说明
 
 ## A0. 用 Worker 崩溃理解 Infrastructure

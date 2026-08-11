@@ -5,7 +5,7 @@ import sys
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
-EXPECTED_VIEWS = ['Logical View (4+1)', 'Development View (4+1)', 'Process View (4+1)', 'Physical View (4+1)', 'Scenarios View (4+1)', 'Module View (Views & Beyond)', 'Component-and-Connector View (Views & Beyond)', 'Data View (Views & Beyond)', 'Quality View (Views & Beyond)', 'Agentic GraphRAG Evidence and Agent Loop (Zuno)']
+EXPECTED_VIEWS = ['Logical View (4+1)', 'Development View (4+1)', 'Process View (4+1)', 'Physical View (4+1)', 'Scenarios View (4+1)', 'Module View (Views & Beyond)', 'Component-and-Connector View (Views & Beyond)', 'Data View (Views & Beyond)', 'Quality View (Views & Beyond)', 'Conditional Evidence Retrieval and Agent Loop (Zuno)']
 MODULE_DOCS = ['01-product-surface.md', '02-input-document-ingestion.md', '03-knowledge-agentic-graphrag.md', '04-model-gateway.md', '05-memory-context.md', '06-agent-core-planning-control.md', '07-capability-skill.md', '08-tool-runtime.md', '09-security.md', '10-observability-eval.md', '11-infrastructure.md']
 CANONICAL_ARCHITECTURE_FILES = {"README.md", "architecture.md", "architecture-views.md", "architecture.html"}
 

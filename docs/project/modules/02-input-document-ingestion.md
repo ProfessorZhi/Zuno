@@ -92,6 +92,12 @@ StructuredObservation / MemoryCandidate 归 05；02 不直接写长期 Memory。
 
 源内容变化创建新 `DocumentVersion`；Parser、Schema 或模型变化创建新 `ParseSnapshot`。只有通过质量与安全门的 Snapshot 才能交给 Knowledge 或 Agent Core，历史 Review 不得隐式跟随“最新版本”。
 
+## 0.3 DocumentPipelineBackend 与 Canonical Ingestion Contract
+
+02 的目标不是证明所有解析、OCR、版面理解和通用切分都必须由 Zuno Native 实现。RAGFlow、Docling、MinerU 和 Native Parser 都可以作为**文档流水线后端（DocumentPipelineBackend）候选**，但候选后端只负责解析、OCR、布局和表格提取、通用 Chunk 准备以及基础索引准备。
+
+Zuno 仍拥有 `SourceObject`、不可变 `DocumentVersion`、`ParseSnapshot`、`CanonicalDocumentIR`、原始 `SourceSpan`、权限绑定、版本关系、审计和 `REVIEWABLE` 质量门。Provider 的输出只能是 `Observation`、`Candidate`、`Snapshot` 或 `Receipt`，不能直接创建 `Evidence`、`KnowledgeVersion` 或 Review 结论。适配器必须通过结构、引用、失败、权限、版本和退出路径的 Contract Conformance；在 Spike、许可证/运营评估和分层 Benchmark 完成前，候选仍是 `EXTEND_CANDIDATE`，不表示 Zuno 已采用某个具体产品。
+
 # Part A — 面向人的设计说明
 
 ## A0. 用第三版 SaaS 合同理解 Ingestion

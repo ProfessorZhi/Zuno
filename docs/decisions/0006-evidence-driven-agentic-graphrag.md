@@ -1,12 +1,14 @@
-# ADR 0006：Evidence-Driven Agentic GraphRAG Decision Architecture
+# ADR 0006：Evidence-Driven Conditional Retrieval Decision Architecture
 
 status: accepted-target
 updated: 2026-08-04
 decision_scope: Architecture v2 Target
+canonical_term: Conditional Evidence Retrieval
+terminology_note: Agentic GraphRAG remains a historical/strategy label in this ADR, not Zuno's product identity or an Always-On execution rule.
 
 ## Context
 
-Zuno 既有 Agentic GraphRAG Target 已具备 RetrievalPlan、RetrievalRound、EvidenceLedger、EvidenceFrontier、CorrectiveRetrievalDecision 和 KnowledgeControlProposal 等基础概念，但控制中心仍容易被理解为“动态选择 Retriever”。
+Zuno 既有 Evidence Retrieval Target 已具备 RetrievalPlan、RetrievalRound、EvidenceLedger、EvidenceFrontier、CorrectiveRetrievalDecision 和 KnowledgeControlProposal 等基础概念，但控制中心仍容易被理解为“动态选择 Retriever”。
 
 企业知识任务的主要风险并不是缺少更多 Retriever，而是：
 
@@ -19,7 +21,7 @@ Zuno 既有 Agentic GraphRAG Target 已具备 RetrievalPlan、RetrievalRound、E
 - 没找到知识、检索漏召回、解析失败、索引故障和权限限制无法区分；
 - 系统为了最短路径在证据不足时提前回答，或为了“深入”无条件运行全部 Retriever。
 
-因此需要把 Target 从 retrieval-centric routing 升级为 Evidence-Driven Agentic GraphRAG。
+因此需要把 Target 从 retrieval-centric routing 升级为以 Claim 和证据充分性为中心的 Conditional Evidence Retrieval。
 
 ## Decision
 
@@ -212,7 +214,7 @@ Evidence Deliberation 是 Module 03 内层受治理闭环，不是自治 Multi-A
 正面：
 
 - 回答质量目标从“相关 Chunk”提升到“Claim 证据充分性”；
-- GraphRAG 的 Local、Global、DRIFT 能按问题和缺口使用；
+- Graph Retrieval 的 Local、Global、DRIFT 能按问题和缺口使用；
 - 冲突、版本、适用范围和同源证据可以显式治理；
 - 支持动态补证和安全无据拒答；
 - 可分别测量 Route、Evidence、Probe、Stop 和 Diagnosis。
@@ -232,9 +234,9 @@ Evidence Deliberation 是 Module 03 内层受治理闭环，不是自治 Multi-A
 ```text
 Vector-only RAG
 BM25 + Vector Hybrid
-Fixed GraphRAG
-Agentic Routing
-Evidence-Driven Agentic GraphRAG
+Always-On Graph Retrieval
+Agentic Retrieval without Graph
+Evidence-Driven Conditional Retrieval
 ```
 
 按精确事实、语义 FAQ、实体关系、多跳、全局主题、新旧版本、冲突、无答案和权限受限分层报告。

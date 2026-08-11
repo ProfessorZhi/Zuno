@@ -80,7 +80,7 @@
 </dialog>
 <script type="module">
   import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
-  const EXPECTED_VIEWS = ["Logical View (4+1)", "Development View (4+1)", "Process View (4+1)", "Physical View (4+1)", "Scenarios View (4+1)", "Module View (Views & Beyond)", "Component-and-Connector View (Views & Beyond)", "Data View (Views & Beyond)", "Quality View (Views & Beyond)", "Agentic GraphRAG Evidence and Agent Loop (Zuno)"];
+  const EXPECTED_VIEWS = ["Logical View (4+1)", "Development View (4+1)", "Process View (4+1)", "Physical View (4+1)", "Scenarios View (4+1)", "Module View (Views & Beyond)", "Component-and-Connector View (Views & Beyond)", "Data View (Views & Beyond)", "Quality View (Views & Beyond)", "Conditional Evidence Retrieval and Agent Loop (Zuno)"];
   mermaid.initialize({ startOnLoad:false, securityLevel:"strict", theme:"base", flowchart:{curve:"basis",useMaxWidth:false}, sequence:{useMaxWidth:false} });
   const slug = value => value.toLowerCase().replace(/[^a-z0-9\u4e00-\u9fff]+/g,"-").replace(/^-|-$/g,"");
   function parse(markdown) {

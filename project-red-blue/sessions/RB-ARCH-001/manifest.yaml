@@ -37,3 +37,7 @@ source_scope:
 started_at: "2026-08-12T10:00:00+08:00"
 completed_at: "2026-08-12T18:00:00+08:00"
 status: "COMPLETED"
+user_gate_resolution: "APPROVED_WITH_AMENDMENTS"
+resolution_status: "CANONICAL_SYNC_IN_PROGRESS"
+canonical_sync_sha: null
+mutation_retest: "NOT_STARTED"

@@ -24,6 +24,21 @@ Business Need
 | API / Model Gateway 当前实现 | `[REPO_EVIDENCE]` 或 `[UNKNOWN]` | 以模块文档、代码和运行证据交叉确认 |
 | 目标模型路由、Serving 和回滚 | `[TARGET_ACCEPTED]` 或 `[BLUE_PROPOSAL]` | 不能冒充历史部署 |
 
+## 本轮事实 Gate 的明确保留项
+
+以下信息仍然是 `[UNKNOWN]`，不能写入 Resume Current Claim，也不能由 Target Architecture 推导：
+
+```text
+实际 DeepSeek 使用
+Hosted / Self-hosted
+GPU 与 Model Serving
+Fine-tuning / DPO
+训练数据与实验结果
+真实模型 Provider、Version、Quota、Cost 和运行 Trace
+```
+
+后续如果需要把某个模型或训练方案从 Candidate 推进到 Target，必须经过 Prompt / Structured Output / RAG / Few-shot / Routing 的对照，以及 10 Observability & Eval 的可复现 Release Gate。
+
 Hosted API 主要需要证明 Provider/API Contract、数据出境、Quota、Fallback、版本和成本；Self-hosted 才需要进一步证明 Model Artifact、Inference Runtime、GPU、Health、Scaling、Version 和 Rollback。
 
 ## 其他技术事实

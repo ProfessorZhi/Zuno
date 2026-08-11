@@ -38,13 +38,14 @@ Zuno 正式架构设计事实共十二份：
 c9d099d64a1af28102231751ce55df8217173e89
 ```
 
-新的 Evidence-Driven Agentic GraphRAG 目标由以下正式 ADR 独立定义：
+新的 Evidence-Driven Retrieval 目标与 Reuse-first Provider 边界由以下正式 ADR 独立定义：
 
 ```text
 docs/decisions/0006-evidence-driven-agentic-graphrag.md
+docs/decisions/0007-reuse-first-provider-boundary.md
 ```
 
-这样做是为了避免用新 Target 静默改变已归档 Program 的 Contract 和验收条件。ADR 0006 是 `accepted-target`，优先于旧模块中的冲突描述，但不授权本次收口立即实现，也不证明任何 v2 Runtime 已成为 Current。
+这样做是为了避免用新 Target 静默改变已归档 Program 的 Contract 和验收条件。ADR 0006 是 `accepted-target`，优先于旧模块中的冲突描述，但不授权本次收口立即实现，也不证明任何 v2 Runtime 已成为 Current。ADR 0007 是 `accepted-target`，确立 Reuse-first 与 Provider Boundary；它不把任何候选项目标记为最终 Adopt。
 
 Runtime 工程收口已完成并归档；当前 `.agent/programs/` 为 `no-active`。下一阶段是独立的设计与整理工作：
 
@@ -136,16 +137,17 @@ git clone https://github.com/ProfessorZhi/Zuno.git
 Set-Location -LiteralPath .\Zuno
 ```
 
-同步后先读四处：
+同步后先读五处：
 
 ```text
 docs/project/modules/README.md
 docs/project/architecture/architecture.md
 docs/decisions/0006-evidence-driven-agentic-graphrag.md
+docs/decisions/0007-reuse-first-provider-boundary.md
 .agent/programs/current.md
 ```
 
-`docs/project/modules/` 说明十一模块既有完整 Target；`architecture.md` 说明跨模块集成；ADR 0006 说明新的 v2 Target overlay；`.agent/programs/current.md` 说明当前是否存在 active program 和 Current / Gap 边界。clone 或 pull 只证明文件同步，不证明 Target 已成为 Current。
+`docs/project/modules/` 说明十一模块既有完整 Target；`architecture.md` 说明跨模块集成；ADR 0006 说明证据检索 Target；ADR 0007 说明 Reuse-first 和 Provider Boundary；`.agent/programs/current.md` 说明当前是否存在 active program 和 Current / Gap 边界。clone 或 pull 只证明文件同步，不证明 Target 已成为 Current。
 
 ## 规范优先级
 
@@ -175,7 +177,7 @@ docs/governance/
 
 ## 更新与验证
 
-模块含义变化时先更新对应模块唯一文档，再同步总架构的跨模块关系。图形关系变化时，把 `architecture-views.md` 和 `architecture.html` 作为一个整体同步；本轮只更新文字事实，不改展示配对。
+模块含义变化时先更新对应模块唯一文档，再同步总架构的跨模块关系。图形关系变化时，把 `architecture-views.md` 和 `architecture.html` 作为一个整体同步；禁止手工编辑 HTML 形成第二套事实。
 
 总架构的 Part A 按“问题 → 平台形态 → 端到端运行”组织，Part B 按“全局不变量 → Contract → 分布式正确性 → 生产运维 → 验证与演进”组织；模块正文保留各自稳定标题锚点，同时在同一文件内提供 Part A / Part B。标题锚点是为了保持已有 QA 和外部引用稳定，不代表模块细节脱离 Owner 文档。
 

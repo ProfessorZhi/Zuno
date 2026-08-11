@@ -16,9 +16,9 @@
 
 总架构不能覆盖模块 Owner 的规范性 Contract。跨模块冲突必须修改总架构、协调模块文档，或通过 ADR / 共享 Contract Registry 解决，不能保留两套事实。
 
-## Architecture v2 Target Overlay
+## Architecture Target Overlay 与 Provider 边界
 
-Evidence-Driven Agentic GraphRAG 的新目标已经通过以下 ADR 接受：
+Evidence-Driven Retrieval 的新目标已经通过以下 ADR 接受：
 
 ```text
 docs/decisions/0006-evidence-driven-agentic-graphrag.md
@@ -26,7 +26,17 @@ docs/decisions/0006-evidence-driven-agentic-graphrag.md
 
 该 ADR 定义：Broad Evidence Discovery、Evidence Deliberation、Knowledge Graph + Evidence Reasoning Graph、ClaimEvidenceState、Targeted Evidence Probe、安全停止和 Knowledge Health Diagnosis。
 
-为了避免丢失原 Contract 基线，本轮不以精简重写覆盖 Module 03、04、06、10 的完整文档。它们继续作为 Target 设计输入；ADR 0006 是后续设计工作的新 Target 输入，不授权本次收口立即实现。当前 `.agent/programs/` 为 `no-active`。
+为了避免丢失原 Contract 基线，ADR 0006 继续作为证据检索 Target 输入；本轮同时由 ADR 0007 建立 Reuse-first 与 Provider Boundary。模块文档仍然是 Zuno Canonical Contract 的 Owner，不把 RAGFlow、OpenViking、Onyx、Coze 或其他候选标记为最终 Adopt；当前 `.agent/programs/` 为 `no-active`。
+
+### Reuse First, Build Requires Evidence
+
+11 个模块是 Logical Ownership，不是 11 个必须同时激活或分别部署的服务。通用能力优先通过 Provider / Adapter 接入：
+
+```text
+Complete Product → Fork → Reuse Subsystem → Framework → Component → Protocol / SDK → Build Delta
+```
+
+每项候选都必须经过 G1 Capability Fit、G2 Contract Fit、G3 Modification Surface、G4 Operational / License Fit、G5 Evidence。Provider 只能输出 Proposal、Observation、Candidate、Snapshot、Reference 或 Receipt；最终 Domain Fact、Evidence、MemoryVersion、RunOutcome、Effect、Audit 和 Eval Gate 仍由 Zuno Canonical Owner 提交。
 
 Runtime 工程收口已完成并归档。下一阶段只做正式设计协调，不启动新的 Runtime Implementation Program：
 
@@ -67,7 +77,7 @@ Runtime 工程收口已完成并归档。下一阶段只做正式设计协调，
 | --- | --- | --- | --- |
 | 01 | 企业法律工作怎样进入 Zuno？<br>*Product Surface* | [`01-product-surface.md`](./01-product-surface.md) | 单一完整 Target 架构；实施规格可用 |
 | 02 | 一份法律文档怎样变成机器可理解、可追溯的知识？<br>*Input / Document Ingestion* | [`02-input-document-ingestion.md`](./02-input-document-ingestion.md) | 单一完整 Target 架构；实施规格可用 |
-| 03 | 一个法律结论怎样找到足够可靠的证据？<br>*Knowledge / Agentic GraphRAG* | [`03-knowledge-agentic-graphrag.md`](./03-knowledge-agentic-graphrag.md) | v1 完整模块规范；v2 accepted-target overlay 见 ADR 0006 |
+| 03 | 一个法律结论怎样找到足够可靠的证据？<br>*Knowledge / Conditional Evidence Retrieval* | [`03-knowledge-agentic-graphrag.md`](./03-knowledge-agentic-graphrag.md) | Evidence-driven Target；Graph 只是条件 Retrieval Backend，ADR 0006 定义证据检索 overlay |
 | 04 | Agent 需要模型时，系统怎样选择和治理调用？<br>*Model Gateway* | [`04-model-gateway.md`](./04-model-gateway.md) | 完整模块规范；新的 Evidence 任务边界待架构协调 |
 | 05 | Agent 怎样形成长期记忆，又怎样避免记错？<br>*Memory & Context* | [`05-memory-context.md`](./05-memory-context.md) | 单一完整 Target 架构；实施规格可用 |
 | 06 | Agent 怎样理解任务、制定计划并控制执行？<br>*Agent Core / Planning & Control* | [`06-agent-core-planning-control.md`](./06-agent-core-planning-control.md) | 完整 Single Controller 规范；v2 Knowledge 边界待协调 |

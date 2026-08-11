@@ -64,9 +64,34 @@ Redline / Report / Work Product
 
 ## A4. Zuno 是什么，以及它刻意不是什么
 
-Zuno 是面向企业法律与合同工作的 Agent 平台。合同审查是当前旗舰场景，但底层 Agent、检索、记忆、模型、工具和安全机制保持领域可扩展；法律能力通过文档结构、证据需求、企业 Playbook、法律知识和审查工作流进入系统，而不是在 Agent Runtime 中散落许多 `if legal` 分支。
+Zuno 的 Target 定位是**受治理的证据驱动 Agent 平台（Governed Evidence-driven Agent Platform）**。合同审查是当前旗舰场景，但它不是历史事实的替代叙事；项目是否以合同审查启动仍由 `docs/project/facts/` 维护。法律能力通过文档结构、证据需求、企业 Playbook、法律知识和审查工作流进入系统，而不是在 Agent Runtime 中散落许多 `if legal` 分支。
 
-这也决定了 Zuno 不只是一个通用聊天 Agent、一个向量数据库前端或一个 MCP 工具箱。通用平台更侧重“给定目标后灵活调用模型和工具”，Zuno 保留这种通用能力，同时把企业法律工作需要的 Matter、版本、证据域、Finding、人工审查和审计做成正式业务链。差异不在于有没有 GraphRAG 或能不能调工具，而在于能否从合同原文走到可引用 Evidence，再走到可复核 Finding、律师决定和受控 Work Product。这里不是贬低通用平台，而是说明两者的优化目标不同：一个优化横向任务覆盖，Zuno 优化高风险法律工作的可验证性、可追溯性和可持续改进。
+这也决定了 Zuno 不只是一个通用聊天 Agent、一个向量数据库前端或一个 MCP 工具箱。WorkBuddy、Coze 和类似产品可以作为横向通用 Agent Surface，主要优化用户如何使用模型、工具、Skills、MCP 和 Workflow 完成大量通用任务；Zuno 的 Target 优化的是高风险企业任务的 Domain Facts、Evidence、Human Decision、Security Gate、Effect Assurance、Recovery 和 Eval Contract。差异不在于有没有 RAG、Memory、MCP 或 Agent，而在于能否从受版本保护的原始事实走到可引用 Evidence，再走到可复核 Finding、人工决定和受控 Work Product。这个定位不声称 Zuno 整体优于任何通用平台。
+
+## A4.1. Zuno 拥有什么，Provider 只提供什么
+
+为了避免“自己实现一切”与“直接 Fork 一个完整产品”之间的假二选一，Zuno 把系统分为**领域/控制平面（Domain / Control Plane）**和**可替换能力 Provider（Replaceable Capability Provider）**：
+
+```text
+External / Product Surfaces
+  WorkBuddy / Coze / Enterprise Portal / Zuno Native UI
+       │ Skill / MCP / API
+       ▼
+Zuno Domain / Control Plane
+  Matter / LegalTask / Review / DocumentVersion
+  Claim / Evidence / Provenance / Finding / HumanDecision
+  WorkProduct / Plan / RunOutcome / Security Decision
+  Approval / Effect / Audit / Recovery Contract / Eval Contract
+       │ Canonical Contracts
+       ▼
+Replaceable Capability Providers
+  DocumentPipeline / Retrieval / GraphRetrieval / Memory
+  AgentRuntime / Connector / Model / Parser / Reranker / Embedding
+```
+
+Provider 可以负责解析、索引、检索、上下文组织、图执行、模型调用或外部连接，但不能直接提交 Zuno 的最终业务事实。Provider 输出必须先规范化为 `Proposal`、`Observation`、`Candidate`、`Snapshot`、`Reference` 或 `Receipt`，再由对应 Canonical Owner 完成版本、权限、质量、状态和审计确认。替换 Provider 不应改变 Zuno 的业务对象、Evidence 语义、Human Decision、Security Gate、Effect Assurance 或 Recovery Contract。
+
+能力选型遵循**复用优先、构建需要证据（Reuse First, Build Requires Evidence）**：先看完整产品、Fork、子系统、Framework、Component、Protocol/SDK，最后才是 Build Delta；每次进入 Build 前都必须完成 G1 Capability Fit、G2 Contract Fit、G3 Modification Surface、G4 Operational / License Fit 和 G5 Evidence。候选项目只要仍有 `UNKNOWN`，就只能停留在 `CANDIDATE` 或 `TO_REVIEW`。
 
 ## A5. 模块为什么存在：不是为了凑成十一份微服务
 
@@ -204,26 +229,28 @@ Trace、Audit、Eval 与源领域事实分别由谁拥有
 
 Zuno 的正式产品定位是：
 
-> Zuno 是面向企业内部资料和业务系统的可治理自定义 Agent 平台。企业管理员统一管理 Tenant、OrgUnit、Workspace、知识、模型、Skill、Tool、权限、预算与审批；员工可以在授权范围内创建或使用多个个人、团队或企业 Agent，通过任务式工作台完成知识问答、跨文档分析、报告生成和受控业务操作。
+> Zuno 是面向企业法律与高风险业务工作的受治理证据驱动 Agent 平台。底层提供可扩展的 Agent、检索、Memory、Model、Tool 和 Security 能力；上层通过 Domain / Control Plane 拥有 Matter、Review、DocumentVersion、Claim、Evidence、Finding、HumanDecision、WorkProduct、Security、Effect、Recovery 和 Eval Contract。合同审查是当前 Target 旗舰场景，但历史项目是否以合同审查启动仍保持在 `docs/project/facts/` 的事实边界内。
 
-Zuno 不是单一 RAG 聊天机器人、Prompt 管理器、MCP 工具箱或 LangGraph Runtime。它的产品组合是：
+Zuno 不是单一 RAG 聊天机器人、Prompt 管理器、MCP 工具箱、完整通用办公平台或 LangGraph Runtime。它的产品组合是：
 
 ```text
-企业组织和权限
-+ 企业资料库
-+ Agent Studio / Agent Catalog
-+ Single Controller Agent Runtime
-+ 受控工具执行
-+ Evidence / Citation / Audit / Eval
+External / Product Surface（可包含 Zuno Native UI、WorkBuddy、Coze 或企业 Portal）
+        ↓ Skill / MCP / API
+Zuno Domain / Control Plane
+  Matter / LegalTask / Review / DocumentVersion
+  Claim / Evidence / Finding / HumanDecision / WorkProduct
+  Plan / RunOutcome / Security Decision / Approval / Effect / Audit
+  Recovery Contract / Eval Contract / Release Gate
+        ↓ Canonical Contracts
+Replaceable Capability Providers
+  DocumentPipeline / Retrieval / Graph / Memory / AgentRuntime
+  Connector / Model / Parser / Reranker / Embedding
 ```
 
 产品层允许多个 Agent 资产共存：
 
 ```text
-一个用户可以创建多个个人 Agent
-一个 Workspace 可以发布多个团队 Agent
-一个 Tenant 可以维护企业 Agent 目录
-多个用户可以使用同一个已发布 AgentVersion
+一个用户可以创建多个个人 Agent；一个 Workspace 可以发布多个团队 Agent；一个 Tenant 可以维护企业 Agent 目录；多个用户可以使用同一个已发布 AgentVersion。Product Surface 是一种入口，不拥有全部领域事实；未来 WorkBuddy、Coze 或企业 Portal 可以通过 Skill、MCP 或 API 调用 Zuno，但这仍是 Future Integration Candidate，不是 Current Integration。
 ```
 
 运行层的边界是：一次 `AgentRun` 绑定一个 Primary `AgentVersion`、一个 Single Controller 和一个 Active `PlanVersion`。Run 内可以有多个 Step、并行分支、Capability、Model Role 和 Tool Action，但当前不建设多个自治 Agent 各自拥有控制权的 Runtime。
@@ -263,6 +290,28 @@ Kubernetes 作为完成条件
 ```
 
 ---
+
+## 1.5 复用优先、能力激活与实现成熟度是三个维度
+
+11 个逻辑模块回答“谁拥有哪类事实”，不回答“第一版是否已经实现全部能力”。每个模块都要同时标记三个正交维度：
+
+| 维度 | 回答的问题 | 示例 |
+|---|---|---|
+| Logical Ownership | 谁负责最终事实和 Contract？ | 03 拥有 Evidence，05 拥有 MemoryVersion |
+| Capability Activation | 当前任务是否启用这项能力？ | 简单 Query 可以 `GraphRetrieval=DISABLED` |
+| Implementation Maturity | 当前有何种实现和证据？ | `UNKNOWN`、Target、代码、测试、Trace、Eval |
+
+因此：
+
+```text
+11 Logical Modules
+≠ 11 Deployable Services
+≠ 11 First-Version Fully Implemented Components
+```
+
+简单任务可以关闭长期 Memory、Graph Retrieval 或 Production DR，而不改变模块 Ownership。反过来，文档中存在一个完整 Target，也不能证明该能力已经在 Current 中激活。
+
+任何 Provider 采用都必须保留 Exit Path。若某候选需要穿透 Zuno 的 Domain Model、Runtime/State、Persistence、Security 和 Failure/Effect 五个面，优先判定为重度 Private Fork 风险，并回到 G1–G5 重新评审，而不是用“二次开发”掩盖维护责任。
 
 # 2. 全局架构原则
 
@@ -383,7 +432,7 @@ flowchart TB
   PS[01 Product Surface] ==>|RuntimeRequest / ProductCommand / Signal| AC[06 Agent Core]
   AC -->|Publication / RunOutcome / Progress facts| PS
   PS ==>|InputSubmission / Upload command| IN[02 Input and Ingestion]
-  IN -->|IndexableDocumentSnapshot| KN[03 Knowledge and Agentic GraphRAG]
+  IN -->|IndexableDocumentSnapshot| KN[03 Knowledge and Conditional Evidence Retrieval]
   AC ==>|KnowledgeQueryRequest| KN
   KN -->|KnowledgeRetrievalOutcome / KnowledgeControlProposal| AC
   AC ==>|ModelRoleRequirement| MG[04 Model Gateway]
@@ -403,9 +452,9 @@ flowchart TB
 | --- | --- | --- | --- |
 | 01 | Product Surface | AgentDefinition、AgentDraft、AgentVersion、AgentPublication、AgentInstallation、AgentToolBinding、UserToolPreference、AgentCatalogEntry、Conversation、Submission、ProductCommand、RuntimeRequest、CommandReceipt、Projection、ChannelDelivery、ClientRender、UserRead | `docs/project/modules/01-product-surface.md` |
 | 02 | Input / Document Ingestion | SourceObject、DocumentVersion、ParsePlan/Job/Attempt/Snapshot、CanonicalDocumentIR、原始 SourceSpan、质量门和 Handoff | `docs/project/modules/02-input-document-ingestion.md` |
-| 03 | Knowledge / Agentic GraphRAG | KnowledgeVersion/Snapshot、IndexSpec/Manifest 接受语义、RetrievalPlan/Round、EvidenceLedger、CitationLineage | `docs/project/modules/03-knowledge-agentic-graphrag.md` |
+| 03 | Knowledge / Conditional Evidence Retrieval | KnowledgeVersion/Snapshot、IndexSpec/Manifest 接受语义、EvidenceRequirement、RetrievalPlan/Round、EvidenceLedger、CitationLineage | `docs/project/modules/03-knowledge-agentic-graphrag.md` |
 | 04 | Model Gateway | Model Role/Operation、Provider/Model、Routing、Call/Attempt、Response、Usage、Quota、Health、Circuit | `docs/project/modules/04-model-gateway.md` |
-| 05 | Memory & Context | Session/Long-term Memory、Candidate、Governance、MemoryVersion、ContextPackVersion、UseTrace、Privacy Lifecycle | `docs/project/modules/05-memory-context.md` |
+| 05 | Memory Governance & Context | Session/Long-term Memory、Candidate、Governance、MemoryVersion、ContextPackVersion、UseTrace、Privacy Lifecycle；Memory Engine 可替换 | `docs/project/modules/05-memory-context.md` |
 | 06 | Agent Core | TaskContract、GoalVersion、AgentRun、PlanVersion、StepRun、ActionRun、ControlDecision、Publication、RunOutcome | `docs/project/modules/06-agent-core-planning-control.md` |
 | 07 | Capability / Skill | Capability/Skill Definition 与 Version、Requirement、ProviderBinding、CapabilitySelectionPolicy、Availability、Selection | `docs/project/modules/07-capability-skill.md` |
 | 08 | Tool Runtime | ToolOnboardingRequest、Tool Provider/Definition/Version/Operation、ToolInstallation、ToolConnection、ProviderInstance、PreparedToolAction、ToolAttempt、Observation、Execution/Effect/Reconciliation | `docs/project/modules/08-tool-runtime.md` |
@@ -434,6 +483,18 @@ flowchart TB
 ## 4.1 Logical Module 不等于 Deployable Service
 
 逻辑模块回答“谁拥有哪个事实”，部署服务回答“哪些负载、故障域、安全边界和发布周期需要独立运行”。因此当前总架构不要求十一模块一一拆成十一服务，也不把服务数量当作成熟度证明。任何进一步的微服务或 Polyglot 方案必须经过独立 Architecture Decision，并保持 Wire Contract、Ownership 和 Failure Semantics 不变。
+
+## 4.2 Provider 输出不能越过 Canonical Owner
+
+```text
+Provider / Adapter
+  → Proposal / Observation / Candidate / Snapshot / Reference / Receipt
+  → Schema + Version + Scope + Security + Quality Gate
+  → Zuno Canonical Owner
+  → Domain Fact / Evidence / MemoryVersion / RunOutcome / Effect / Audit / Eval Gate
+```
+
+本架构接受成熟能力复用，但不接受 Provider 直接写入 Zuno 的最终业务事实。02、03、05、06、07、08、09、10 和 11 的 Owner 边界必须保持稳定；替换解析器、Retriever、Memory Engine、Agent Runtime、Connector 或 Model Provider，不得改变这些事实的提交语义。`ProviderInstance`、健康状态、索引写入 Receipt 或 Checkpoint 只证明各自边界，不代表业务事实已经被接受。
 
 # Part III — 一次企业 Agent 任务如何运行
 
@@ -592,11 +653,11 @@ flowchart LR
 
 ---
 
-# 7. Agentic GraphRAG 与证据闭环
+# 7. Conditional Evidence Retrieval 与证据闭环
 
-本节是 Agentic GraphRAG 的跨模块集成规范；字段级 Contract、KnowledgeVersion 生命周期、RetrieverAttempt 细节和模块内测试矩阵由 `docs/project/modules/03-knowledge-agentic-graphrag.md` 唯一拥有。本节只定义模块之间必须一致的控制边界、证据语义、版本一致性、失败恢复和评测标准。
+本节是受控证据检索（Conditional Evidence Retrieval）的跨模块集成规范；字段级 Contract、KnowledgeVersion 生命周期、RetrieverAttempt 细节和模块内测试矩阵由 `docs/project/modules/03-knowledge-agentic-graphrag.md` 唯一拥有。本节只定义模块之间必须一致的控制边界、证据语义、版本一致性、失败恢复和评测标准。
 
-Agentic GraphRAG 不是“BM25 + Vector + Graph 三路固定执行”，而是一个受治理的
+受控证据检索不是“BM25 + Vector + Graph 三路固定执行”，也不是 Graph Always-On；它是一个受治理的
 `Plan → Act → Observe → Evaluate → Adapt → Stop` 闭环：
 
 ```text
@@ -634,8 +695,9 @@ Agentic Retrieval Control Plane
 
 Retrieval Data Plane
   pinned KnowledgeSnapshot
-    ├─ Hybrid Channel: BM25 + Vector → RRF → first-pass rerank
-    ├─ Graph Channel: Local / Global / DRIFT
+    ├─ Lexical / Structural Channel（精确条款、编号、法条号）
+    ├─ Dense / Hybrid Channel: Vector + BM25 → RRF → first-pass rerank
+    ├─ Graph Channel: Local / Global / DRIFT（按 Query Class 和 Evidence Gap 开启）
     └─ Structured / Multimodal Channel（按 Policy 开启）
   → Evidence Materialization
   → Candidate Deduplication
@@ -653,6 +715,8 @@ Retrieval Data Plane
 | Model Proposal、Embedding、Rerank、Judge Attempt | Model Gateway | 产生有边界的 Proposal / Score / Result，不提交领域终态 |
 | Retrieval Trace、Eval Metric、Release Gate | Observability / Eval | 投影和测量，不改写 Knowledge 或 Agent 事实 |
 | Index、Queue、Object Store、Checkpoint 物理事实 | Infrastructure | 提供 Receipt、Lease、Claim 和恢复能力，不冒充领域 Acceptance |
+
+Strategy Selection 至少结合 Query Class、Evidence Need、Graph Dependency、Latency、Cost、权限、Snapshot 完整性和历史 Benchmark。精确条款不应为了“使用 Graph”而付出额外成本；只有 Defined Term、Cross Reference、多跳关系、全局主题或证据缺口明确需要时，才进入 Graph Local、Global 或 DRIFT。没有分层 Benchmark，不得宣称 GraphRAG 总体优于 Vector 或 Hybrid。
 
 ## 7.2 Retrieval Strategy 的正式语义
 
@@ -906,7 +970,7 @@ Agentic：Route Accuracy / Corrective Decision Accuracy / Stop Accuracy / Unnece
 End-to-End：Supported Claim Rate / Unsupported Claim Rate / Abstention Accuracy / Latency / Cost
 ```
 
-至少比较 `Hybrid-only`、`Hybrid + Local`、`Hybrid + Graph fixed` 与 `Agentic GraphRAG`，并覆盖 Exact Fact、Defined Term、Cross Reference、Multi-hop、Temporal、Jurisdiction、Conflict、Whole-corpus、No-answer 和 Permission-blocked 数据集。没有这些对照，不能证明 Agentic Control 本身带来收益。
+至少比较 `Fixed Vector`、`Fixed Hybrid`、`Always Graph`、`Agentic RAG without Graph` 与 `Conditional Graph Retrieval`，并覆盖 Exact Fact、Defined Term、Cross Reference、Multi-hop、Temporal、Jurisdiction、Conflict、Whole-corpus、No-answer 和 Permission-blocked 数据集。没有这些分层对照，不能证明 Graph 或 Agentic Control 本身带来收益。
 
 ```mermaid
 flowchart TB
@@ -981,7 +1045,7 @@ S7 通过唯一 ToolInvocationGateway 发送邮件，确认 Effect 后结束 Run
 | 主题 | 唯一回答的问题 | 产物 Owner | 不拥有的事实 |
 | --- | --- | --- | --- |
 | Agent Core / Planning & Control | 现在为什么做、何时做、任务是否继续 | `GoalVersion`、`PlanVersion`、`StepRun`、`ControlDecision` | 证据内容、权限决定、外部效果 |
-| Agentic GraphRAG / Evidence | 如何获得并证明足够可信的证据 | `EvidenceRequirement`、`RetrievalRound`、`EvidenceLedger`、`SelectedEvidenceBundle` | 任务级 Replan、最终风险结论、Tool 执行 |
+| Conditional Evidence Retrieval | 如何获得并证明足够可信的证据 | `EvidenceRequirement`、`RetrievalRound`、`EvidenceLedger`、`SelectedEvidenceBundle` | 任务级 Replan、最终风险结论、Tool 执行 |
 | Memory & Context | 过去哪些上下文可安全复用 | `MemoryCandidate`、`MemoryVersion`、`ContextPackVersion` | 企业知识事实、当前用户指令、权限放大 |
 | Governed Tool Execution | 外部动作如何可靠地产生或确认效果 | `PreparedToolAction`、`ToolAttempt`、`EffectReceipt`、`EffectReconciliation` | Authorization、Approval、Plan 控制 |
 
@@ -1513,7 +1577,7 @@ QUALITY_PROVEN
 
 Release Gate 显式区分 `PASSED | FAILED | BLOCKED | INCOMPARABLE | ERROR`。缺失 Reference、Trace、Profile、Judge、Embedding、Corpus 或 Snapshot 不能写 0 分，也不能拼接旧 Run。
 
-固定 Benchmark 必须绑定 Dataset Version、Case Set Hash、Corpus Manifest、Knowledge/Graph/Memory Snapshot、Runtime Bundle、Model Routing、Prompt、Judge、Embedding、Security Policy、Budget Profile、Metric Definition 与 Sampling Policy。RAG Core Five、Agentic GraphRAG 路由/停止、Citation、Tool 最终状态、Memory 正/负迁移、安全攻击、成本、关键路径和恢复可靠性分别测量；低成本不能补偿安全或质量硬 Gate 失败。
+固定 Benchmark 必须绑定 Dataset Version、Case Set Hash、Corpus Manifest、Knowledge/Graph/Memory Snapshot、Runtime Bundle、Model Routing、Prompt、Judge、Embedding、Security Policy、Budget Profile、Metric Definition 与 Sampling Policy。RAG Core Five、Conditional Evidence Retrieval 的路由/停止、Citation、Tool 最终状态、Memory 正/负迁移、安全攻击、成本、关键路径和恢复可靠性分别测量；低成本不能补偿安全或质量硬 Gate 失败。
 
 ---
 

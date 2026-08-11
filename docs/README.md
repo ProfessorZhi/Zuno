@@ -12,7 +12,8 @@
 - [总体 Target 架构](./project/architecture/architecture.md)：十一模块跨模块集成、Single Controller、Contract、状态、失败、恢复和验证原则。
 - [架构图展示配对](./project/architecture/architecture-views.md)：与 `architecture.html` 配套的 Mermaid 图源；二者只负责展示，不拥有独立架构语义。
 - [十一逻辑模块设计](./project/modules/README.md)：每个领域 Owner 的唯一完整 Target 设计入口。
-- [Evidence-Driven Agentic GraphRAG ADR](./decisions/0006-evidence-driven-agentic-graphrag.md)：下一版 `accepted-target` overlay；不代表 Current 实现。
+- [Evidence-Driven Retrieval ADR](./decisions/0006-evidence-driven-agentic-graphrag.md)：受控证据检索的 `accepted-target` overlay；不代表 Current 实现。
+- [Reuse-first / Provider Boundary ADR](./decisions/0007-reuse-first-provider-boundary.md)：成熟能力优先复用、Zuno 控制面和 Provider 边界。
 - [Production Readiness](./status/production-readiness.md)：Current、Gap、Measurement、Blocked 和 Production Readiness 状态事实源。
 - [架构决策](./decisions/README.md)：仍影响当前或下一版 Target 的正式 ADR。
 - [工程治理](./governance/repo-ownership-matrix.md)：代码 Owner、迁移边界和兼容路径。
@@ -52,7 +53,7 @@ history/         历史归档
 
 ### 智能核心
 
-- [03 Knowledge / Agentic GraphRAG](./project/modules/03-knowledge-agentic-graphrag.md)
+- [03 Knowledge / Conditional Evidence Retrieval](./project/modules/03-knowledge-agentic-graphrag.md)
 - [05 Memory & Context](./project/modules/05-memory-context.md)
 - [06 Agent Core / Planning & Control](./project/modules/06-agent-core-planning-control.md)
 
@@ -79,7 +80,7 @@ Current
 Canonical Target
     由已接受 ADR、共享 Contract Registry、十一模块文档和总体架构定义。
 
-Evidence-Driven Agentic GraphRAG v2
+Conditional Evidence Retrieval v2
     由 ADR 0006 独立定义为 accepted-target；当前 Program 尚未把它完整实现为 Current。
 
 History

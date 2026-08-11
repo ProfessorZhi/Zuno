@@ -54,7 +54,7 @@ Part A 和 Part B 必须共存于同一 Canonical Markdown；禁止创建 `*-hum
 | --- | --- | --- |
 | 01 Product Surface | `docs/project/modules/01-product-surface.md` | `python tools/scripts/verify_product_surface_target_protocols.py` |
 | 02 Input / Document Ingestion | `docs/project/modules/02-input-document-ingestion.md` | `python tools/scripts/verify_architecture_document_set.py` |
-| 03 Knowledge / Agentic GraphRAG | `docs/project/modules/03-knowledge-agentic-graphrag.md` | `python tools/scripts/verify_architecture_document_set.py` |
+| 03 Knowledge / Conditional Evidence Retrieval | `docs/project/modules/03-knowledge-agentic-graphrag.md` | `python tools/scripts/verify_architecture_document_set.py` |
 | 04 Model Gateway | `docs/project/modules/04-model-gateway.md` | `python tools/scripts/verify_model_gateway_target_protocols.py` |
 | 05 Memory & Context | `docs/project/modules/05-memory-context.md` | `python tools/scripts/verify_memory_context_target_protocols.py` |
 | 06 Agent Core / Planning & Control | `docs/project/modules/06-agent-core-planning-control.md` | `python tools/scripts/verify_agent_core_target_protocols.py` |

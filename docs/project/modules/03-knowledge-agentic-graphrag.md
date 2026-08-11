@@ -2,7 +2,7 @@
 
 updated: 2026-08-11
 status: normative-target-module-architecture
-formal_module: 03 Knowledge / Agentic GraphRAG
+formal_module: 03 Knowledge / Conditional Evidence Retrieval
 human_readable_part: Part A — 面向人的设计说明
 normative_specification_part: Part B — 规范性架构与实施约束
 module_number: 03
@@ -10,11 +10,11 @@ formal_path: `docs/project/modules/03-knowledge-agentic-graphrag.md`
 writing_standard: `docs/governance/architecture-document-writing-standard.md`
 reading_order: Problem → Case → Ownership → Runtime → State/Failure → Contract/Implementation → Verification
 
-> 本文是 Zuno 第 03 个逻辑模块——Knowledge / Agentic GraphRAG——的唯一正式 Target 架构主设计。
+> 本文是 Zuno 第 03 个逻辑模块——Knowledge / Conditional Evidence Retrieval——的唯一正式 Target 架构主设计。
 >
 > 本文只描述目标架构、规范性 Contract、状态、故障语义、目标代码与数据库规格，不把任何设计描述当作 Current 实现证据。Current、Gap、Measurement 与生产就绪状态由 `docs/status/production-readiness.md` 和 `docs/evidence/` 维护。
 >
-> Agentic GraphRAG 不是“所有问题固定执行更多 Retriever”，也不是产品级 Multi-Agent Runtime。它是 Agent Core 外层任务控制与 Knowledge 内层证据获取控制共同组成的受治理闭环。
+> Conditional Evidence Retrieval 不是“所有问题固定执行更多 Retriever”，也不是产品级 Multi-Agent Runtime。它是 Agent Core 外层任务控制与 Knowledge 内层证据获取控制共同组成的受治理闭环；Graph 只是其中一种按问题类型和证据缺口启用的 Retrieval Backend。
 
 ## 0. 文档边界与规范层级
 
@@ -22,7 +22,7 @@ reading_order: Problem → Case → Ownership → Runtime → State/Failure → 
 
 ```text
 问题、目标与非目标
-Agentic GraphRAG 概念架构
+Conditional Evidence Retrieval 概念架构
 索引、检索、证据与版本的完整运行流程
 KnowledgeRetrievalGraph、状态机和并发语义
 Agent Core、Memory & Context、Security、Observability 的边界
@@ -35,7 +35,7 @@ KnowledgeVersion、KnowledgeSnapshot、配置、持久化与事务
 
 ```text
 docs/project/modules/03-knowledge-agentic-graphrag.md
-    Knowledge / Agentic GraphRAG 唯一 Target 架构事实源。
+    Knowledge / Conditional Evidence Retrieval 唯一 Target 架构事实源。
 
 .agent/programs/
     Current → Target 的实现、迁移、切流、回滚和收口 Program。
@@ -76,9 +76,25 @@ TaskUnderstandingSnapshot / Claim
 
 Knowledge 不创建 Matter、Review、MemoryVersion 或 Tool Effect；当证据缺口改变任务结构时，只提交 `KnowledgeControlProposal`，由 Agent Core 决定是否 Replan。
 
+## 0.3 Conditional Evidence Retrieval 与 Provider Boundary
+
+03 的上位能力是**受控证据检索（Conditional Evidence Retrieval）**，不是 Always-On GraphRAG。Knowledge 根据 `Query Class`、`Evidence Requirement`、关系依赖、权限、延迟、成本和已验证质量，选择 Lexical、Structural、Dense、Hybrid、Graph Local、Graph Global、DRIFT 或 Corrective Retrieval。Graph 是否参与每一次检索，必须由这组条件共同决定。
+
+RAGFlow、Microsoft GraphRAG、LightRAG、OpenSearch 以及 Native 实现都可以作为 `RetrievalBackend` 或 `GraphRetrievalBackend` 候选。Provider 只能返回 `Candidate`、`Observation`、`Reference` 或评分结果；03 仍拥有 `EvidenceRequirement`、`RetrievalRound`、`Evidence`、`CitationLineage` 和 `EvidenceEvaluation`。没有 Adapter Conformance、权限/版本验证和按 Query Class 分层 Benchmark，不得把候选后端写成最终 Adopt，也不得把 Graph 作为产品差异化本身。
+
+# 0.4 旧 QA 引用锚点
+
+现有非规范性 QA Corpus 仍引用以下旧章节文本。它们只是兼容锚点，不恢复旧的产品命名，也不改变本模块的正式上位能力；新的阅读入口以本节和 `Conditional Evidence Retrieval` 章节为准：
+
+```text
+1. 为什么需要 Agentic GraphRAG
+2. 普通 GraphRAG 与 Agentic GraphRAG
+34. Agentic GraphRAG Eval
+```
+
 # Part A — 面向人的设计说明
 
-## A0. 用责任限制问题理解 Agentic GraphRAG
+## A0. 用责任限制问题理解 Conditional Evidence Retrieval
 
 当用户问“当前合同的责任上限是否覆盖数据泄露，并且是否偏离 Playbook”时，单个相似片段不够。系统要分别找到合同事实、定义和例外、企业规则与适用法律，再判断证据是否足以支持每个 Claim。
 
@@ -136,7 +152,7 @@ Evidence Evaluation 至少要区分六个维度：Relevance 表示是否相关�
 
 # Part I：问题、定义与模块边界
 
-## 1. 为什么需要 Agentic GraphRAG
+## 1. 为什么需要 Conditional Evidence Retrieval
 
 固定 RAG 或固定 GraphRAG Pipeline 对简单问题可以稳定工作，但面对企业知识场景会出现：
 
@@ -155,16 +171,16 @@ Evidence Evaluation 至少要区分六个维度：Relevance 表示是否相关�
 
 一句话定义：
 
-> Agentic GraphRAG 是由 Agent Core 决定“是否、何时、为什么检索”，由 Knowledge 在固定安全、版本、预算和 Profile 边界内，根据问题与 Evidence Ledger 动态决定“查什么、走哪些路径、是否补检以及何时停止”的证据获取控制系统。
+> Conditional Evidence Retrieval 是由 Agent Core 决定“是否、何时、为什么检索”，由 Knowledge 在固定安全、版本、预算和 Profile 边界内，根据问题与 Evidence Ledger 动态决定“查什么、走哪些路径、是否补检以及何时停止”的证据获取控制系统。
 
-## 2. 普通 GraphRAG 与 Agentic GraphRAG
+## 2. 不同 Retrieval Strategy 与 Conditional Evidence Retrieval
 
 ```text
 普通 GraphRAG
     预先定义 Graph Local / Global / Community 等路径，
     按固定 Pipeline 或固定规则路由查询图谱和文本。
 
-Agentic GraphRAG
+Conditional Evidence Retrieval
     先建立 Evidence Requirement，
     再按当前证据状态动态选择 Text / Vector / Graph / Corrective Action，
     每轮观察结果、更新缺口、判断边际收益并受治理停止。
@@ -172,7 +188,7 @@ Agentic GraphRAG
 
 关键区别：
 
-| 维度 | 普通 GraphRAG | Agentic GraphRAG |
+| 维度 | 固定 Graph Retrieval | Conditional Evidence Retrieval |
 | --- | --- | --- |
 | 是否检索 | 通常进入 Pipeline 即检索 | Agent Core 明确产生 RetrievalNeedDecision |
 | Graph 地位 | 默认或主要检索路径 | 可选能力，不保证每次启用 |
@@ -643,7 +659,7 @@ STANDARD 的目标是：
 没有足够证据时不编造
 ```
 
-## 11. DEEP / Agentic GraphRAG 完整流程
+## 11. DEEP / Conditional Evidence Retrieval 完整流程
 
 ```text
 Evidence Requirement interpretation
@@ -1509,7 +1525,7 @@ KnowledgeRuntimeEvent:
 
 禁止在普通事件中记录完整文档文本、Prompt、隐藏思维链、凭证或未脱敏用户数据。
 
-## 34. Agentic GraphRAG Eval
+## 34. Conditional Evidence Retrieval Eval
 
 至少比较：
 
@@ -2329,7 +2345,7 @@ Unit / Integration / Fault / E2E / Eval
 不得改变的架构不变量
 ```
 
-禁止生成“实现 Agentic GraphRAG”“完善 Knowledge 模块”之类没有 Requirement、Contract、故障和验收条件的任务。
+禁止生成“实现 Conditional Evidence Retrieval”“完善 Knowledge 模块”之类没有 Requirement、Contract、故障和验收条件的任务。
 
 ## 58. 设计参考
 

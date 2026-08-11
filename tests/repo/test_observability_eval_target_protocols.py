@@ -42,7 +42,7 @@ def test_document_has_agent_core_style_parts_and_single_source_boundary() -> Non
         "# Part II：完整运行流程",
         "# Part III：Telemetry、Trace、Audit 与 Delivery Contract",
         "# Part IV：Eval、RAG Core Five 与质量 Contract",
-        "# Part V：Agentic GraphRAG 与 Agent Efficiency Contract",
+        "# Part V：Conditional Evidence Retrieval 与 Agent Efficiency Contract",
         "# Part VI：状态机、安全、失败与恢复",
         "# Part VII：存储、代码与 API 规格",
         "# Part VIII：Release Gate、测试与完成证据",
