@@ -34,6 +34,8 @@
 | A14 | Over-engineering | 小团队和小规模是否真的需要这套复杂度？ |
 | A15 | Evolution / Retrospective | 如果重来一次，什么会采用、延期或删除？ |
 | A16 | Project–Architecture Alignment | 真实背景、用户、领域对象、技术复杂度和简历 Claim 是否属于同一条因果链？ |
+| A17 | Development Process | 需求、设计、评审、实现、测试、发布和回滚是否真实经历过？ |
+| A18 | Retrospective | 今天重做会保留、采用、延期或删除什么？是否理解长期代价？ |
 
 ## 攻击优先级
 
@@ -61,6 +63,8 @@ P2：参数依据 / 成本 / Eval / 演进 / 非核心基础
 | “微服务架构” | A05/A10/A14：拆分解决了什么，通信和运维成本是否值得？ |
 | “比 WorkBuddy / Dify 更适合” | A01/A06/A12/A16：不可替代 Delta 是什么，是否可以只做 Extension，证据在哪里？ |
 | “我主要负责 Agent / Memory / RAG” | A04/A07/A13：本人具体链路、代码、决策和未负责范围分别是什么？ |
+| “项目从一开始就是现在这样” | A02/A17：第一版是什么，为什么演进，谁评审和推动了变化？ |
+| “现在这样设计没有问题” | A14/A15/A18：删掉一半会删什么，今天重做还会这样选吗？ |
 
 ## A16：Project–Architecture Alignment 固定攻击
 
@@ -86,6 +90,25 @@ P2：参数依据 / 成本 / Eval / 演进 / 非核心基础
 ```
 
 如果这条链断裂，优先记录 `PROJECT_ARCHITECTURE_ALIGNMENT_GAP`，而不是先扩写话术。
+
+## 项目相关与项目无关的切换
+
+一场真实面试可以从项目突然切到基础题，再从基础题回到项目机制。红队要记录切换原因：
+
+```text
+项目 Claim 暴露基础原理风险
+  → PROJECT_INDEPENDENT 基础追问
+  → FUNDAMENTAL_GAP（不改写 Zuno 架构）
+
+岗位要求基础能力
+  → PROJECT_INDEPENDENT 独立题
+  → 结束后再回到项目 Claim
+
+项目回答出现具体机制
+  → PROJECT_DEPENDENT 实现 / 参数 / Failure 追问
+```
+
+基础题的考点、项目题的事实和个人 Ownership 必须分开记录。
 
 ## 连续追问骨架
 

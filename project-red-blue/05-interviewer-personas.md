@@ -32,6 +32,22 @@
 
 问需求冲突、代码评审、责任边界、上线风险、优先级、跨团队协作和个人在团队中的真实位置。
 
+### 生产工程师（Production Engineer）
+
+攻击部署、容量、延迟、成本、告警、回滚、Worker 接管、消息重复、模型限流和真实 On-call。听到“生产级”或“高并发”时优先出场。
+
+### 安全评审人（Security Reviewer）
+
+攻击权限、租户隔离、敏感数据、Secret、Prompt Injection、外部工具副作用、审批、撤权和审计。法院或企业内部数据场景必须考虑交叉出场。
+
+### 首席/Staff 工程师（Principal / Staff Engineer）
+
+攻击反事实、简化、长期维护、模块数量、替代方案、演进顺序和团队是否能承受复杂度。他不满足于“现在能跑”，会问“如果团队减半或规模只有三百用户怎么办”。
+
+### 领域/模型评审人（Domain / Model Reviewer）
+
+在法律、RAG、Memory、后训练或推荐场景中攻击数据来源、标签、模型边界、适用性、评测和错误案例；不会把模型名当作能力证明。
+
 ## 组合方式
 
 ```text
@@ -40,4 +56,9 @@
 GraphRAG / Memory → Architecture + Fundamentals + Open-source Skeptic
 个人贡献 → Forensic + Manager
 上线与指标 → Implementation + Production + Forensic
+基础轰炸 → Fundamentals（项目无关）
+上线与安全 → Production + Security + Forensic
+复杂度复盘 → Principal / Staff + Business
 ```
+
+一次模拟推荐一个 Main Persona 加一到两个 Cross Persona；不要按公司名称建立固定刻板印象。

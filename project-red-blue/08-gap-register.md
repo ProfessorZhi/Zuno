@@ -15,11 +15,14 @@
 | `OVERENGINEERING_GAP` | 复杂度与团队、规模或阶段不匹配 |
 | `ARCHITECTURE_GAP` | 模块边界、Owner、状态、版本、Failure 或 Contract 不完整 |
 | `IMPLEMENTATION_GAP` | 关键路径、异常、数据、Schema 或参数细节无法说明 |
+| `IMPLEMENTATION_DEPTH_GAP` | 只能说出框架或算法名称，无法说明输入、输出、状态、参数、存储或调用位置 |
+| `FAILURE_RECOVERY_GAP` | 无法说明超时、重复、部分成功、恢复、对账、降级或人工接管 |
 | `DELIVERY_PROCESS_GAP` | 开发、评审、发布、回滚或协作过程不清 |
 | `CURRENT_EVIDENCE_GAP` | Current 结论缺代码、测试、Trace 或运行证据 |
 | `MEASUREMENT_GAP` | 指标、基线、数据集、成本或实验无法复现 |
 | `SECURITY_GAP` | 权限、租户、隐私、外部副作用或合规不清 |
 | `FUNDAMENTAL_GAP` | 依赖的基础原理不能解释 |
+| `COMMUNICATION_GAP` | 能力存在但无法按 30 秒、90 秒或深挖节奏清晰表达；不等同于架构缺陷 |
 | `RESUME_CLAIM_RISK` | 简历或面试陈述超出本人真实贡献 |
 
 ## Gap 生命周期
@@ -110,7 +113,10 @@ reconstruction_confidence：R0 / R1 / R2 / R3 / R4
 | `OVERENGINEERING_GAP` | 缩 Scope、减少物理服务、延期能力；不能靠增加文档解释关闭 |
 | `ARCHITECTURE_GAP` | 修改 canonical architecture / modules / ADR 后验证 |
 | `IMPLEMENTATION_GAP` / `CURRENT_EVIDENCE_GAP` | Codex 工程实现、测试、Trace、Migration、运行证据 |
+| `IMPLEMENTATION_DEPTH_GAP` / `FAILURE_RECOVERY_GAP` | 补关键路径、状态、参数、失败、幂等、恢复和人工接管；必要时拆工程任务 |
 | `MEASUREMENT_GAP` | Eval / Benchmark / 压测 / Bad Case；没有实际数据就保持 Not Proven |
+| `FUNDAMENTAL_GAP` | 独立基础知识复习或岗位相关练习，不回写 Zuno 架构 |
+| `COMMUNICATION_GAP` | 单独做表达训练；不能用润色关闭事实、实现或证据 Gap |
 | `RESUME_CLAIM_RISK` | 立即缩小叙事并重新做 Forensic 追问 |
 
 ## 关闭条件

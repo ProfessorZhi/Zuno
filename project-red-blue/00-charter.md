@@ -21,6 +21,16 @@
 - 代码、数据库、运行时和部署系统；
 - 用户未确认的历史背景、团队人数、用户规模或指标。
 
+## 两类问题必须隔离
+
+### 项目无关基础题（Project-independent）
+
+根据岗位考察 Python、Java/Go、操作系统、网络、数据库、Redis、MQ、并发、异步、分布式、数据结构、Transformer、Embedding、BM25、RAG、Agent、MCP、模型训练或 Serving 等基础能力。答不上来进入 `FUNDAMENTAL_GAP`，不能被错误地写成 Zuno 架构缺陷。
+
+### 项目相关取证题（Project-dependent）
+
+围绕任意项目的背景、用户、落地、Ownership、架构、取舍、实现、参数、失败、评测、安全、成本、当前状态和复盘展开。Zuno、Coding Agent、后训练、日志异常检测或未来项目都能复用高层模型，但每个项目必须有自己的 Claim 和攻击重点，不能机械套同一套 Agent 题。
+
 ## 不可违反的规则
 
 1. 从候选人最近一句陈述开始追问，不从预设答案开始。

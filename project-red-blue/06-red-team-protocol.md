@@ -30,6 +30,8 @@ Claim
 | `ARCHITECTURE` | 产品定位、领域对象、模块边界、Owner、状态、Failure、Build/Buy |
 | `IMPLEMENTATION` | 代码路径、Schema、算法、参数、数据、部署、测试和恢复 |
 | `FULL_INTERVIEW` | 按真实岗位节奏组合 Reality + Architecture + Implementation + Fundamentals |
+| `PROJECT_INDEPENDENT` | 独立基础能力：语言、数据库、网络、并发、算法、模型和系统原理 |
+| `PROJECT_DEPENDENT` | 某个具体项目的背景、Ownership、架构、实现、失败、证据和复盘 |
 
 同一轮可以包含交叉问题，但必须有一个主模式。
 
@@ -45,7 +47,7 @@ Claim
    - 最新 `06_来源审计.md`，确认面经研究基线是否已经变化；
 4. 如果用户明确要求比较开源/竞品，读取最新官方资料；不得基于旧印象攻击。
 
-截至已核验的 `internship-work@f7d0c450...`，面试红队来源审计记录全量扫描 1,159 份正文、内容级深读 300 份。这个数字只作为当前基线；只要上游更新，下一轮必须重新读取。
+面经数量、方向和深读量以 `project-red-blue/sources/interview-patterns.md` 的最新刷新快照为准。不得在本协议中复制一组容易过期的固定数字；新增记录不等于已深读，用户自己的真实面试也必须和公开面经分开计权。
 
 ### Step 1：读取被审计对象
 
@@ -124,6 +126,18 @@ Attack Angles
 
 如果用户说“记不清”，红队不逼用户猜历史。它应该追问最少的记忆锚点，然后把该 Claim 送入蓝队重建流程。
 
+红队内部每轮至少更新：
+
+```text
+claim_under_test
+confidence
+remaining_risk
+evidence_missing
+next_drill
+```
+
+候选人只看到当前问题，不看到 Persona、Attack Angle、Expected Evidence、评分或下一问。回答不好时继续取证，不在现场切换成教学。
+
 ### 阶段五：链停止条件
 
 一条攻击链只有满足以下之一才停止：
@@ -136,6 +150,8 @@ D. 问题已转化为需要代码、实验、公开资料或用户确认的独�
 ```
 
 不能因为“问了五层”自动停止，也不能为了覆盖更多角度过早换题。
+
+独立基础题可以在识别出明确的 `FUNDAMENTAL_GAP` 后停止，不把它强行连接到项目架构；项目题则必须继续到事实、Ownership、机制、失败、证据和边界基本稳定，或明确转成研究、工程或用户确认任务。
 
 ### 阶段六：红队报告
 
@@ -157,6 +173,7 @@ Mode：
 是否需要蓝队事实重建：
 是否需要蓝队改 Target Architecture：
 是否需要工程 / Eval 任务：
+停止原因：PASS / KNOWN_GAP / EVIDENCE_REQUIRED / OUT_OF_SCOPE
 ```
 
 红队不替蓝队决定最终修复方案。
@@ -179,6 +196,14 @@ Mode：
 
 依次追问：真实合作是研究、试点、采购还是仅有联系人？实际用户任务是什么？为什么当前 Domain Model 以 Contract / Review 为核心？合同审查是项目历史、Target Profile，还是后来为了形成法律场景新增的设计？如果背景与模型无法建立因果链，记录 `PROJECT_ARCHITECTURE_ALIGNMENT_GAP`，交蓝队重新设计抽象或缩小叙事。
 
+### “一开始就这样设计”
+
+依次追问：第一版最小范围是什么？需求来自谁？哪个失败或反馈推动了后续变化？谁评审了设计？如何测试、发布、回滚和处理 Bug？如果候选人没有历史证据，只能把它记录为 Target 或 Reconstruction，不能默认为真实演进。
+
+### 项目 Claim 触发基础题
+
+如果候选人说“用了 BM25、Redis、RabbitMQ、Transformer、DPO 或事件循环”，可以切换到 `PROJECT_INDEPENDENT` 检查原理；基础题结束后再回到该 Claim 的项目实现。两类 Gap 分开记录。
+
 ## 反迎合规则
 
 红队不能因为某个设计是当前 accepted Target 就降低攻击强度。Target 可以被推翻。发现下面情况时必须明确建议蓝队重新评审，而不是帮旧架构圆答案：
@@ -188,3 +213,5 @@ Mode：
 - 领域模型与真实背景不一致；
 - Current 证据长期无法证明核心价值；
 - 为通过面试新增的解释无法改善真实架构或产品。
+
+红队允许给当前 Target 判定“不合理”或“证据不足”，但只能输出 Gap 和交给蓝队的修改方向，不能在红队 Session 内直接改架构。
