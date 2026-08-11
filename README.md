@@ -476,9 +476,10 @@ Object upload success != Artifact published
 
 ## 文档入口
 
-- [总体 Target 架构](./docs/architecture/architecture.md)
-- [架构视图 HTML](./docs/architecture/architecture.html)
-- [十一逻辑模块设计](./docs/modules/README.md)
+- [Zuno 项目知识入口](./docs/project/README.md)
+- [总体 Target 架构](./docs/project/architecture/architecture.md)
+- [架构视图 HTML](./docs/project/architecture/architecture.html)
+- [十一逻辑模块设计](./docs/project/modules/README.md)
 - [Production Readiness 状态](./docs/status/production-readiness.md)
 - [Evidence-Driven Agentic GraphRAG ADR](./docs/decisions/0006-evidence-driven-agentic-graphrag.md)
 - [架构决策](./docs/decisions/README.md)
@@ -489,17 +490,17 @@ Object upload success != Artifact published
 
 十一模块：
 
-- [01 Product Surface](./docs/modules/01-product-surface.md)
-- [02 Input / Document Ingestion](./docs/modules/02-input-document-ingestion.md)
-- [03 Knowledge / Agentic GraphRAG](./docs/modules/03-knowledge-agentic-graphrag.md)
-- [04 Model Gateway](./docs/modules/04-model-gateway.md)
-- [05 Memory & Context](./docs/modules/05-memory-context.md)
-- [06 Agent Core / Planning & Control](./docs/modules/06-agent-core-planning-control.md)
-- [07 Capability / Skill](./docs/modules/07-capability-skill.md)
-- [08 Tool Runtime](./docs/modules/08-tool-runtime.md)
-- [09 Security](./docs/modules/09-security.md)
-- [10 Observability & Eval](./docs/modules/10-observability-eval.md)
-- [11 Infrastructure](./docs/modules/11-infrastructure.md)
+- [01 Product Surface](./docs/project/modules/01-product-surface.md)
+- [02 Input / Document Ingestion](./docs/project/modules/02-input-document-ingestion.md)
+- [03 Knowledge / Agentic GraphRAG](./docs/project/modules/03-knowledge-agentic-graphrag.md)
+- [04 Model Gateway](./docs/project/modules/04-model-gateway.md)
+- [05 Memory & Context](./docs/project/modules/05-memory-context.md)
+- [06 Agent Core / Planning & Control](./docs/project/modules/06-agent-core-planning-control.md)
+- [07 Capability / Skill](./docs/project/modules/07-capability-skill.md)
+- [08 Tool Runtime](./docs/project/modules/08-tool-runtime.md)
+- [09 Security](./docs/project/modules/09-security.md)
+- [10 Observability & Eval](./docs/project/modules/10-observability-eval.md)
+- [11 Infrastructure](./docs/project/modules/11-infrastructure.md)
 
 ## Program 状态
 

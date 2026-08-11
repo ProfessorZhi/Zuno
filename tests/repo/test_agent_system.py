@@ -46,8 +46,8 @@ def test_agent_system_has_no_archived_runtime_facades_or_phase_verifiers() -> No
 def test_agent_entrypoint_routes_to_current_sources() -> None:
     agents = (REPO_ROOT / "AGENTS.md").read_text(encoding="utf-8")
     for path in (
-        "docs/architecture/architecture.md",
-        "docs/modules/README.md",
+        "docs/project/architecture/architecture.md",
+        "docs/project/modules/README.md",
         "docs/status/production-readiness.md",
         ".agent/system.yaml",
         ".agent/references/current-program.md",

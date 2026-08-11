@@ -44,28 +44,28 @@ PARTIAL 的主要原因不是缺少类名，而是文档已有相关词汇，却
 
 - 问题：无法直接回答二者是否一对一、为什么都需要、如何回到 DocumentVersion/SourceObject，以及 ChunkingPolicy 或文档版本变化后如何避免 Citation 漂移。
 - Gap 类型：MISSING_EXPLANATION、MISSING_LINEAGE、MISSING_VERSION_BOUNDARY。
-- 修复：docs/modules/03-knowledge-agentic-graphrag.md § 7.2 三种检索粒度，补充多对多关系、strict Citation、content hash 和版本迁移边界。
+- 修复：docs/project/modules/03-knowledge-agentic-graphrag.md § 7.2 三种检索粒度，补充多对多关系、strict Citation、content hash 和版本迁移边界。
 - 状态：CLOSED。
 
 ### G-03-002：SearchAction 层级与 1..N 选择
 
 - 问题：旧文档同时出现 BM25/Vector/Local/Global/DRIFT，容易被理解成完全平级的五种 Planner Action，无法明确 HYBRID 内部 Operator 和一个 Requirement 如何选择多个互补 Action。
 - Gap 类型：AMBIGUOUS_TERMINOLOGY、MISSING_OWNERSHIP、MISSING_TRIGGER。
-- 修复：docs/modules/03-knowledge-agentic-graphrag.md § 14.1 SearchAction 层级，定义 HYBRID、GRAPH_LOCAL、GRAPH_GLOBAL、GRAPH_DRIFT、STRUCTURED 与 RetrieverAction 的关系。
+- 修复：docs/project/modules/03-knowledge-agentic-graphrag.md § 14.1 SearchAction 层级，定义 HYBRID、GRAPH_LOCAL、GRAPH_GLOBAL、GRAPH_DRIFT、STRUCTURED 与 RetrieverAction 的关系。
 - 状态：CLOSED。
 
 ### G-03-003：RRF、Rerank、Top-N/Top-K 与 Evidence Evaluation
 
 - 问题：已有 Fusion/Rerank 名词，但第一阶段 Recall、rank-only RRF、有限候选 Rerank 和充分性判断的区别不够面试级；First-pass 与 Unified Rerank 也可能被误解为两套架构。
 - Gap 类型：MISSING_EXPLANATION、MISSING_TRADEOFF、MISSING_EVAL。
-- 修复：docs/modules/03-knowledge-agentic-graphrag.md § 15.1，明确 Recall、RRF、Unified Evidence Rerank、Evidence Evaluation 和可调参数边界。
+- 修复：docs/project/modules/03-knowledge-agentic-graphrag.md § 15.1，明确 Recall、RRF、Unified Evidence Rerank、Evidence Evaluation 和可调参数边界。
 - 状态：CLOSED。
 
 ### G-03-004：Graph/Hybrid Candidate Materialization 与 Canonical Dedup
 
 - 问题：无法只凭一段文字回答 GraphPath、Community、DRIFT 如何转成 Source-backed Candidate，以及同一个 SourceSpan 被多路发现时如何只保留一个 Candidate。
 - Gap 类型：MISSING_LINEAGE、MISSING_IDEMPOTENCY、MISSING_VERSION_BOUNDARY。
-- 修复：docs/modules/03-knowledge-agentic-graphrag.md § 15.2，定义 Materialization、Dedup Key、retrieval_origins 和 Graph provenance。
+- 修复：docs/project/modules/03-knowledge-agentic-graphrag.md § 15.2，定义 Materialization、Dedup Key、retrieval_origins 和 Graph provenance。
 - 状态：CLOSED。
 
 ## 当前待冻结的正式架构缺口

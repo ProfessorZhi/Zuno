@@ -6,7 +6,7 @@ formal_module: 01 Product Surface
 human_readable_part: Part A — 面向人的设计说明
 normative_specification_part: Part B — 规范性架构与实施约束
 module_number: 01
-formal_path: `docs/modules/01-product-surface.md`
+formal_path: `docs/project/modules/01-product-surface.md`
 writing_standard: `docs/governance/architecture-document-writing-standard.md`
 reading_order: Problem → Case → Ownership → Runtime → State/Failure → Contract/Implementation → Verification
 
@@ -35,7 +35,7 @@ Requirement、Control、Test 与完成证据
 文档边界：
 
 ```text
-docs/modules/01-product-surface.md
+docs/project/modules/01-product-surface.md
     唯一正式 Product Surface Target 架构事实源。
 
 .agent/ 不保存模块镜像；本文是唯一正式事实源。

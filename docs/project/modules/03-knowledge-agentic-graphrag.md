@@ -6,7 +6,7 @@ formal_module: 03 Knowledge / Agentic GraphRAG
 human_readable_part: Part A — 面向人的设计说明
 normative_specification_part: Part B — 规范性架构与实施约束
 module_number: 03
-formal_path: `docs/modules/03-knowledge-agentic-graphrag.md`
+formal_path: `docs/project/modules/03-knowledge-agentic-graphrag.md`
 writing_standard: `docs/governance/architecture-document-writing-standard.md`
 reading_order: Problem → Case → Ownership → Runtime → State/Failure → Contract/Implementation → Verification
 
@@ -34,7 +34,7 @@ KnowledgeVersion、KnowledgeSnapshot、配置、持久化与事务
 文档边界：
 
 ```text
-docs/modules/03-knowledge-agentic-graphrag.md
+docs/project/modules/03-knowledge-agentic-graphrag.md
     Knowledge / Agentic GraphRAG 唯一 Target 架构事实源。
 
 .agent/programs/

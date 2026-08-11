@@ -64,7 +64,7 @@
 → 提出 1–3 个 Target 候选
 → 比较成本、替代方案和非目标
 → 用户确认架构方向
-→ 修改 docs/architecture / docs/modules / ADR / governance
+→ 修改 docs/project/architecture / docs/project/modules / ADR / governance
 → 运行验证
 → Red Retest
 ```

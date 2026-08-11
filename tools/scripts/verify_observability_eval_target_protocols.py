@@ -6,9 +6,9 @@ from pathlib import Path
 
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
-FORMAL = REPO_ROOT / "docs/modules/10-observability-eval.md"
+FORMAL = REPO_ROOT / "docs/project/modules/10-observability-eval.md"
 RETIRED_PATHS = [
-    REPO_ROOT / "docs/modules/10-observability-eval-rag-agent-evaluation.md",
+    REPO_ROOT / "docs/project/modules/10-observability-eval-rag-agent-evaluation.md",
     REPO_ROOT / "tools/scripts/align_observability_wave1.py",
 ]
 

@@ -27,6 +27,15 @@ MODULE_DOCS = [
     "11-infrastructure.md",
 ]
 
+FACT_DOCS = [
+    "README.md",
+    "project-background.md",
+    "team-and-ownership.md",
+    "development-evolution.md",
+    "delivery-and-usage.md",
+    "technology-reality.md",
+]
+
 RETIRED_MODULE_DOCS = [
     "04-model-gateway-contract-freeze.md",
     "04-model-gateway-operations-conformance.md",
@@ -38,17 +47,20 @@ RETIRED_MODULE_DOCS = [
 REQUIRED_FRONT_PATHS = [
     "README.md",
     "docs/README.md",
-    "docs/architecture/README.md",
-    "docs/architecture/architecture.md",
-    "docs/architecture/architecture-views.md",
-    "docs/architecture/architecture.html",
-    "docs/modules/README.md",
+    "docs/project/README.md",
+    "docs/project/facts/README.md",
+    "docs/project/architecture/README.md",
+    "docs/project/architecture/architecture.md",
+    "docs/project/architecture/architecture-views.md",
+    "docs/project/architecture/architecture.html",
+    "docs/project/modules/README.md",
     "docs/status/production-readiness.md",
     "docs/decisions/README.md",
     "docs/governance/repo-ownership-matrix.md",
     ".agent/references/docs-map.md",
     ".agent/system.yaml",
-    *[f"docs/modules/{name}" for name in MODULE_DOCS],
+    *[f"docs/project/modules/{name}" for name in MODULE_DOCS],
+    *[f"docs/project/facts/{name}" for name in FACT_DOCS if name != "README.md"],
 ]
 
 
@@ -88,7 +100,7 @@ def verify() -> list[str]:
         if not (REPO_ROOT / relative_path).exists():
             errors.append(f"missing documentation entrypoint: {relative_path}")
 
-    for root_name in ["docs/architecture"]:
+    for root_name in ["docs/project/architecture"]:
         root = REPO_ROOT / root_name
         files = {path.name for path in root.iterdir() if path.is_file()}
         directories = [path.name for path in root.iterdir() if path.is_dir()]
@@ -99,42 +111,46 @@ def verify() -> list[str]:
         if directories:
             errors.append(f"{root_name} must not contain subdirectories: {sorted(directories)}")
 
-    formal_modules = sorted(path.name for path in (REPO_ROOT / "docs/modules").glob("[0-9][0-9]-*.md"))
+    formal_modules = sorted(path.name for path in (REPO_ROOT / "docs/project/modules").glob("[0-9][0-9]-*.md"))
     if formal_modules != MODULE_DOCS:
         errors.append(f"formal module document set mismatch: {formal_modules}")
+
+    formal_facts = sorted(path.name for path in (REPO_ROOT / "docs/project/facts").glob("*.md"))
+    if formal_facts != sorted(FACT_DOCS):
+        errors.append(f"formal project fact document set mismatch: {formal_facts}")
 
     for retired_root in [REPO_ROOT / ".agent/architecture", REPO_ROOT / ".agent/modules"]:
         if retired_root.exists():
             errors.append(f"retired Agent documentation mirror must not exist: {retired_root.relative_to(REPO_ROOT)}")
 
     for name in RETIRED_MODULE_DOCS:
-        if (REPO_ROOT / "docs/modules" / name).exists():
+        if (REPO_ROOT / "docs/project/modules" / name).exists():
             errors.append(f"retired split module document remains active: {name}")
 
-    docs_index = _read("docs/modules/README.md")
+    docs_index = _read("docs/project/modules/README.md")
     docs_map = _read(".agent/references/docs-map.md")
     system = _read(".agent/system.yaml")
-    architecture_index = _read("docs/architecture/README.md")
+    architecture_index = _read("docs/project/architecture/README.md")
 
     for name in MODULE_DOCS:
         if name not in docs_index:
-            errors.append(f"docs/modules/README.md does not route {name}")
+            errors.append(f"docs/project/modules/README.md does not route {name}")
         if name not in docs_map:
             errors.append(f".agent/references/docs-map.md does not route {name}")
         if name not in system:
             errors.append(f".agent/system.yaml does not route {name}")
 
-    for phrase in ["docs/modules/", "docs/status/", "docs/decisions/", "docs/governance/"]:
+    for phrase in ["docs/project/modules/", "docs/status/", "docs/decisions/", "docs/governance/"]:
         if phrase not in architecture_index:
-            errors.append(f"docs/architecture/README.md missing phrase: {phrase}")
+            errors.append(f"docs/project/architecture/README.md missing phrase: {phrase}")
     for phrase in [".agent/", "docs/status/production-readiness.md"]:
         if phrase not in architecture_index:
-            errors.append(f"docs/architecture/README.md missing phrase: {phrase}")
+            errors.append(f"docs/project/architecture/README.md missing phrase: {phrase}")
 
     renderer = _load_renderer()
-    design = _read("docs/architecture/architecture.md")
-    views = _read("docs/architecture/architecture-views.md")
-    html = _read("docs/architecture/architecture.html")
+    design = _read("docs/project/architecture/architecture.md")
+    views = _read("docs/project/architecture/architecture-views.md")
+    html = _read("docs/project/architecture/architecture.html")
     errors.extend(renderer.validate_design(design))
     errors.extend(renderer.validate_source(views))
     errors.extend(renderer.validate_html(html))
@@ -152,19 +168,19 @@ def verify() -> list[str]:
         "ContextPackVersion",
     ]:
         if phrase not in design:
-            errors.append(f"docs/architecture/architecture.md missing integration phrase: {phrase}")
+            errors.append(f"docs/project/architecture/architecture.md missing integration phrase: {phrase}")
 
     for phrase in [
         "./architecture.md",
         "../modules/README.md",
-        "../status/production-readiness.md",
+        "../../status/production-readiness.md",
         "./architecture-views.md",
         "mermaid@11",
         "diagram-dialog",
         "Mermaid source",
     ]:
         if phrase not in html:
-            errors.append(f"docs/architecture/architecture.html missing marker: {phrase}")
+            errors.append(f"docs/project/architecture/architecture.html missing marker: {phrase}")
 
     return errors
 

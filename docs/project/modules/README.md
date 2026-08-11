@@ -1,8 +1,8 @@
 # Zuno 十一个逻辑模块
 
-`docs/modules/` 保存 Zuno 十一个逻辑模块的唯一正式 Target 架构。每个模块只有一份正式模块文档；`.agent/` 不再保存模块镜像。
+`docs/project/modules/` 保存 Zuno 十一个逻辑模块的唯一正式 Target 架构。每个模块只有一份正式模块文档；`.agent/` 不再保存模块镜像。
 
-统一写作和阅读协议：[`docs/governance/architecture-document-writing-standard.md`](../governance/architecture-document-writing-standard.md)。它约束模块叙事顺序和验证边界，不取代任何模块的 Canonical Contract。
+统一写作和阅读协议：[`docs/governance/architecture-document-writing-standard.md`](../../governance/architecture-document-writing-standard.md)。它约束模块叙事顺序和验证边界，不取代任何模块的 Canonical Contract。
 
 ## 规范优先级
 
@@ -127,7 +127,7 @@ ADR 0006 尚未改变 Wave 1 冻结 Contract。后续实现 Program 若需要新
 ### Model Gateway 文档边界
 
 ```text
-docs/modules/04-model-gateway.md
+docs/project/modules/04-model-gateway.md
 ```
 
 历史 Contract Freeze 与 Operations Conformance 附录已经吸收到唯一主文档，不再维护，不得重新创建。
@@ -135,7 +135,7 @@ docs/modules/04-model-gateway.md
 ### Agent Core 文档边界
 
 ```text
-docs/modules/06-agent-core-planning-control.md
+docs/project/modules/06-agent-core-planning-control.md
 ```
 
 Target 架构与执行 Program 的边界明确：模块设计在本目录，Current → Target 的实施、迁移、切流和收口计划进入 `.agent/programs/`。
@@ -143,7 +143,7 @@ Target 架构与执行 Program 的边界明确：模块设计在本目录，Curr
 ### Infrastructure 文档边界
 
 ```text
-docs/modules/11-infrastructure.md
+docs/project/modules/11-infrastructure.md
 ```
 
 原数据服务与一致性生命周期附录已经吸收到唯一正式 Target 文档，不再维护，不得寻找或重新创建分拆规范。
@@ -153,11 +153,11 @@ docs/modules/11-infrastructure.md
 正式设计事实共十二份：
 
 ```text
-11 × docs/modules/<NN>-<module>.md
-1  × docs/architecture/architecture.md
+11 × docs/project/modules/<NN>-<module>.md
+1  × docs/project/architecture/architecture.md
 ```
 
-`docs/architecture/README.md` 是目录说明；`architecture-views.md` 与 `architecture.html` 是不可拆分的架构图展示配对。它们是维护支撑文件，不是额外模块或第二份总架构。
+`docs/project/architecture/README.md` 是目录说明；`architecture-views.md` 与 `architecture.html` 是不可拆分的架构图展示配对。它们是维护支撑文件，不是额外模块或第二份总架构。
 
 ## 状态边界
 

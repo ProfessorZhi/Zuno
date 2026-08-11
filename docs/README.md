@@ -7,9 +7,11 @@
 
 ## 首读路径
 
-- [总体 Target 架构](./architecture/architecture.md)：十一模块跨模块集成、Single Controller、Contract、状态、失败、恢复和验证原则。
-- [架构图展示配对](./architecture/architecture-views.md)：与 `architecture.html` 配套的 Mermaid 图源；二者只负责展示，不拥有独立架构语义。
-- [十一逻辑模块设计](./modules/README.md)：每个领域 Owner 的唯一完整 Target 设计入口。
+- [Zuno 项目知识入口](./project/README.md)：事实、总体架构和技术模块的统一入口。
+- [项目事实目录](./project/facts/README.md)：项目背景、团队、开发演进、交付使用和技术现实；未知信息保留为 `UNKNOWN`。
+- [总体 Target 架构](./project/architecture/architecture.md)：十一模块跨模块集成、Single Controller、Contract、状态、失败、恢复和验证原则。
+- [架构图展示配对](./project/architecture/architecture-views.md)：与 `architecture.html` 配套的 Mermaid 图源；二者只负责展示，不拥有独立架构语义。
+- [十一逻辑模块设计](./project/modules/README.md)：每个领域 Owner 的唯一完整 Target 设计入口。
 - [Evidence-Driven Agentic GraphRAG ADR](./decisions/0006-evidence-driven-agentic-graphrag.md)：下一版 `accepted-target` overlay；不代表 Current 实现。
 - [Production Readiness](./status/production-readiness.md)：Current、Gap、Measurement、Blocked 和 Production Readiness 状态事实源。
 - [架构决策](./decisions/README.md)：仍影响当前或下一版 Target 的正式 ADR。
@@ -29,8 +31,10 @@
 Part A 解释问题、案例、取舍和正常/异常流程；Part B 是 Contract、状态、失败、恢复、安全、持久化、测试和完成证据的规范入口。两部分始终位于同一份 Canonical Markdown 中。
 
 ```text
-architecture/    总架构正文与架构图展示配对
-modules/         十一个逻辑模块 Target 设计
+project/          Zuno 项目知识唯一正式入口
+  facts/          项目事实
+  architecture/   总架构正文与架构图展示配对
+  modules/        十一个逻辑模块 Target 设计
 status/          Current、Gap、Measurement 与 Production Readiness
 decisions/       ADR
 governance/      工程、Ownership 与文档治理
@@ -43,26 +47,26 @@ history/         历史归档
 
 ### 产品入口与知识供给
 
-- [01 Product Surface](./modules/01-product-surface.md)
-- [02 Input / Document Ingestion](./modules/02-input-document-ingestion.md)
+- [01 Product Surface](./project/modules/01-product-surface.md)
+- [02 Input / Document Ingestion](./project/modules/02-input-document-ingestion.md)
 
 ### 智能核心
 
-- [03 Knowledge / Agentic GraphRAG](./modules/03-knowledge-agentic-graphrag.md)
-- [05 Memory & Context](./modules/05-memory-context.md)
-- [06 Agent Core / Planning & Control](./modules/06-agent-core-planning-control.md)
+- [03 Knowledge / Agentic GraphRAG](./project/modules/03-knowledge-agentic-graphrag.md)
+- [05 Memory & Context](./project/modules/05-memory-context.md)
+- [06 Agent Core / Planning & Control](./project/modules/06-agent-core-planning-control.md)
 
 ### 能力执行层
 
-- [04 Model Gateway](./modules/04-model-gateway.md)
-- [07 Capability / Skill](./modules/07-capability-skill.md)
-- [08 Tool Runtime](./modules/08-tool-runtime.md)
+- [04 Model Gateway](./project/modules/04-model-gateway.md)
+- [07 Capability / Skill](./project/modules/07-capability-skill.md)
+- [08 Tool Runtime](./project/modules/08-tool-runtime.md)
 
 ### 治理与运行底座
 
-- [09 Security](./modules/09-security.md)
-- [10 Observability & Eval](./modules/10-observability-eval.md)
-- [11 Infrastructure](./modules/11-infrastructure.md)
+- [09 Security](./project/modules/09-security.md)
+- [10 Observability & Eval](./project/modules/10-observability-eval.md)
+- [11 Infrastructure](./project/modules/11-infrastructure.md)
 
 四组只是阅读视图，不改变模块 Ownership，也不是物理部署层级。十一模块均已有唯一正式 Target 文档，不再使用“其余模块后续逐步细化”的旧表述。
 
@@ -108,7 +112,7 @@ Web / Desktop 通过 HTTP Command / Query、SSE Projection Stream 和版本化 C
 
 ## 文档治理
 
-`docs/architecture/` 是唯一正式总架构目录。正文 canonical surface 是 `architecture.md`；图源与 HTML 作为不可拆分的展示配对保留；`.agent/` 不保存架构镜像：
+`docs/project/architecture/` 是唯一正式总架构目录。正文 canonical surface 是 `architecture.md`；图源与 HTML 作为不可拆分的展示配对保留；`.agent/` 不保存架构镜像：
 
 ```text
 README.md
@@ -117,6 +121,6 @@ architecture-views.md
 architecture.html
 ```
 
-模块专题进入 `docs/modules/`；状态进入 `docs/status/`；ADR 进入 `docs/decisions/`；治理进入 `docs/governance/`；历史进入 `docs/history/`。
+模块专题进入 `docs/project/modules/`；状态进入 `docs/status/`；ADR 进入 `docs/decisions/`；治理进入 `docs/governance/`；历史进入 `docs/history/`。
 
 存在 `.agent` 镜像时，正式文档和镜像必须字节级一致。Target 文档完成不代表实现、测量、质量或生产就绪。

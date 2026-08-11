@@ -1,4 +1,4 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 import subprocess
 from pathlib import Path
@@ -8,11 +8,11 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 EXPECTED_GROUP_PATHS = {
     "README.md",
     "docs/README.md",
-    "docs/architecture/",
-    "docs/architecture/README.md",
-    "docs/architecture/architecture.md",
-    "docs/architecture/architecture-views.md",
-    "docs/architecture/architecture.html",
+    "docs/project/architecture/",
+    "docs/project/architecture/README.md",
+    "docs/project/architecture/architecture.md",
+    "docs/project/architecture/architecture-views.md",
+    "docs/project/architecture/architecture.html",
     "docs/history/README.md",
     "docs/history/architecture-evolution.md",
     "docs/history/program-history.md",

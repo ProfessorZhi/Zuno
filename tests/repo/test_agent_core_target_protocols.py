@@ -8,7 +8,7 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 VERIFIER_PATH = REPO_ROOT / "tools/scripts/verify_agent_core_target_protocols.py"
-FORMAL = REPO_ROOT / "docs/modules/06-agent-core-planning-control.md"
+FORMAL = REPO_ROOT / "docs/project/modules/06-agent-core-planning-control.md"
 
 
 def _load_verifier():
@@ -34,8 +34,8 @@ def test_only_one_agent_core_target_document_exists() -> None:
     assert FORMAL.exists()
     assert not (REPO_ROOT / ".agent/modules").exists()
     for relative in [
-        "docs/modules/06-agent-core-control-protocols.md",
-        "docs/modules/06-agent-core-consistency-lifecycle-protocols.md",
+        "docs/project/modules/06-agent-core-control-protocols.md",
+        "docs/project/modules/06-agent-core-consistency-lifecycle-protocols.md",
     ]:
         assert not (REPO_ROOT / relative).exists()
 

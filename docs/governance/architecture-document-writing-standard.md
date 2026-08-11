@@ -2,7 +2,7 @@
 
 updated: 2026-08-11
 status: active-document-governance
-scope: `docs/architecture/`, `docs/modules/` 与其入口、图源、验证器
+scope: `docs/project/architecture/`, `docs/project/modules/` 与其入口、图源、验证器
 
 ## 0. 这份标准解决什么问题
 
@@ -54,8 +54,8 @@ Part A 允许用简化流程帮助第一次阅读，但不得定义与 Part B �
 
 ```text
 全局原则、已接受 ADR、共享 Contract Registry
-→ 对应 Owner 的 `docs/modules/<NN>-*.md`
-→ `docs/architecture/architecture.md` 的跨模块集成
+→ 对应 Owner 的 `docs/project/modules/<NN>-*.md`
+→ `docs/project/architecture/architecture.md` 的跨模块集成
 → `architecture-views.md` + `architecture.html` 的展示配对
 ```
 
@@ -63,9 +63,9 @@ Part A 允许用简化流程帮助第一次阅读，但不得定义与 Part B �
 
 | 位置 | 唯一职责 |
 | --- | --- |
-| `docs/architecture/architecture.md` | 为什么需要平台、跨模块运行链、全局正确性和部署语义 |
-| `docs/architecture/architecture-views.md` + `docs/architecture/architecture.html` | 不可拆分的 Mermaid 图展示配对；不拥有额外文字事实，HTML 不得手工创造架构语义 |
-| `docs/modules/` | 十一个领域 Owner 的详细 Target、状态、Failure、Contract、实现规格和验证要求 |
+| `docs/project/architecture/architecture.md` | 为什么需要平台、跨模块运行链、全局正确性和部署语义 |
+| `docs/project/architecture/architecture-views.md` + `docs/project/architecture/architecture.html` | 不可拆分的 Mermaid 图展示配对；不拥有额外文字事实，HTML 不得手工创造架构语义 |
+| `docs/project/modules/` | 十一个领域 Owner 的详细 Target、状态、Failure、Contract、实现规格和验证要求 |
 | `docs/status/`、`docs/evidence/` | Current、Gap、Measurement 和运行证据 |
 | `docs/decisions/` | 被接受或正在审查的架构决策 |
 | `docs/governance/` | 写作、Ownership、共享 Contract 和工程治理 |
@@ -235,7 +235,7 @@ Domain Contract
 
 ## 5. 图源、入口和引用规则
 
-`docs/architecture/` 只能存在以下四个文件：
+`docs/project/architecture/` 只能存在以下四个文件：
 
 ```text
 README.md

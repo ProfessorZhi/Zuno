@@ -5,9 +5,9 @@ import sys
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
-DESIGN_PATH = REPO_ROOT / "docs/architecture/architecture.md"
-VIEWS_PATH = REPO_ROOT / "docs/architecture/architecture-views.md"
-HTML_PATH = REPO_ROOT / "docs/architecture/architecture.html"
+DESIGN_PATH = REPO_ROOT / "docs/project/architecture/architecture.md"
+VIEWS_PATH = REPO_ROOT / "docs/project/architecture/architecture-views.md"
+HTML_PATH = REPO_ROOT / "docs/project/architecture/architecture.html"
 SOURCE_PATH = VIEWS_PATH
 
 EXPECTED_VIEWS = [
@@ -45,10 +45,10 @@ CANONICAL_ARCHITECTURE_FILES = {
 MERMAID_MODULE_URL = "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs"
 
 STALE_OUTPUTS = [
-    REPO_ROOT / "docs/architecture/overview.html",
-    REPO_ROOT / "docs/architecture.md",
-    REPO_ROOT / "docs/architecture.html",
-    REPO_ROOT / "docs/architecture/overall-architecture.md",
+    REPO_ROOT / "docs/project/architecture/overview.html",
+    REPO_ROOT / "docs/project/architecture.md",
+    REPO_ROOT / "docs/project/architecture.html",
+    REPO_ROOT / "docs/project/architecture/overall-architecture.md",
 ]
 
 
@@ -121,7 +121,7 @@ def validate_design(content: str) -> list[str]:
             errors.append(f"architecture.md missing required integration term: {term}")
 
     for module_doc in MODULE_DOCS:
-        if f"docs/modules/{module_doc}" not in content:
+        if f"docs/project/modules/{module_doc}" not in content:
             errors.append(f"architecture.md does not route to module document: {module_doc}")
 
     if not 3 <= content.count("```mermaid") <= 8:
@@ -185,7 +185,7 @@ def validate_html(content: str) -> list[str]:
         MERMAID_MODULE_URL,
         "模块 Owner 文档是领域规范源",
         "../modules/README.md",
-        "../status/production-readiness.md",
+        "../../status/production-readiness.md",
         "diagram-dialog",
         "Mermaid source",
     ]
@@ -226,13 +226,13 @@ def write_outputs() -> None:
 
 def check_outputs() -> list[str]:
     errors: list[str] = []
-    errors.extend(_directory_errors(REPO_ROOT / "docs/architecture"))
+    errors.extend(_directory_errors(REPO_ROOT / "docs/project/architecture"))
     agent_arch = REPO_ROOT / ".agent/architecture"
     agent_modules = REPO_ROOT / ".agent/modules"
     if agent_arch.exists():
-        errors.append(".agent/architecture must not exist; docs/architecture is the only formal architecture surface")
+        errors.append(".agent/architecture must not exist; docs/project/architecture is the only formal architecture surface")
     if agent_modules.exists():
-        errors.append(".agent/modules must not exist; docs/modules is the only formal module surface")
+        errors.append(".agent/modules must not exist; docs/project/modules is the only formal module surface")
 
     design = DESIGN_PATH.read_text(encoding="utf-8")
     views = VIEWS_PATH.read_text(encoding="utf-8")

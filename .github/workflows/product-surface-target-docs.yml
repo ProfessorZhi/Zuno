@@ -5,10 +5,8 @@ on:
     branches:
       - main
     paths:
-      - "docs/modules/01-product-surface*.md"
-      - ".agent/modules/01-product-surface*.md"
-      - "docs/modules/README.md"
-      - ".agent/modules/README.md"
+      - "docs/project/modules/01-product-surface*.md"
+      - "docs/project/modules/README.md"
       - ".agent/references/docs-map.md"
       - "apps/web/AGENTS.md"
       - "AGENTS.md"

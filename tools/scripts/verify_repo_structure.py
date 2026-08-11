@@ -37,11 +37,11 @@ def main() -> int:
         if phrase not in current:
             errors.append(f"current program missing {phrase}")
 
-    architecture = ROOT / "docs" / "architecture"
+    architecture = ROOT / "docs" / "project" / "architecture"
     if {path.name for path in architecture.iterdir() if path.is_file()} != {
         "README.md", "architecture.md", "architecture-views.md", "architecture.html"
     }:
-        errors.append("docs/architecture must contain its four canonical files")
+        errors.append("docs/project/architecture must contain its four canonical files")
 
     if (ROOT / "src/backend/zuno/api/services/workspace_task_runtime.py").exists():
         errors.append("retired workspace runtime module still exists")

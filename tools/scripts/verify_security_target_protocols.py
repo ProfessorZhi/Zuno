@@ -6,7 +6,7 @@ from pathlib import Path
 
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
-FORMAL = REPO_ROOT / "docs/modules/09-security.md"
+FORMAL = REPO_ROOT / "docs/project/modules/09-security.md"
 
 
 REQUIRED_PARTS = [

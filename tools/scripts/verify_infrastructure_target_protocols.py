@@ -7,13 +7,13 @@ from pathlib import Path
 
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
-FORMAL = REPO_ROOT / "docs/modules/11-infrastructure.md"
-FORMAL_INDEX = REPO_ROOT / "docs/modules/README.md"
+FORMAL = REPO_ROOT / "docs/project/modules/11-infrastructure.md"
+FORMAL_INDEX = REPO_ROOT / "docs/project/modules/README.md"
 CONTRACT_REGISTRY = REPO_ROOT / "docs/governance/wave1-cross-module-contract-registry.md"
 
 RETIRED_APPENDICES = [
-    REPO_ROOT / "docs/modules/11-infrastructure-data-services.md",
-    REPO_ROOT / "docs/modules/11-infrastructure-consistency-lifecycle.md",
+    REPO_ROOT / "docs/project/modules/11-infrastructure-data-services.md",
+    REPO_ROOT / "docs/project/modules/11-infrastructure-consistency-lifecycle.md",
 ]
 
 PARTS = [
@@ -288,7 +288,7 @@ def verify() -> list[Finding]:
             findings.append(Finding("INFRA_EVIDENCE_MAPPING", f"missing {evidence_id}"))
 
     if "[`11-infrastructure.md`](./11-infrastructure.md)" not in formal_index:
-        findings.append(Finding("INFRA_FORMAL_INDEX_ROUTE", "docs/modules/README.md does not route the single Infrastructure document"))
+        findings.append(Finding("INFRA_FORMAL_INDEX_ROUTE", "docs/project/modules/README.md does not route the single Infrastructure document"))
 
     for retired_name in [
         "11-infrastructure-data-services.md",

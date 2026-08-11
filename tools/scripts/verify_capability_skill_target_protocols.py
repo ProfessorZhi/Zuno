@@ -6,8 +6,8 @@ from pathlib import Path
 
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
-FORMAL = REPO_ROOT / "docs/modules/07-capability-skill.md"
-DOCS_INDEX = REPO_ROOT / "docs/modules/README.md"
+FORMAL = REPO_ROOT / "docs/project/modules/07-capability-skill.md"
+DOCS_INDEX = REPO_ROOT / "docs/project/modules/README.md"
 
 REQUIRED_PARTS = [
     "# Part I：定位、术语与概念架构",
@@ -184,7 +184,7 @@ def verify() -> list[str]:
             if token not in formal:
                 errors.append(f"Capability / Skill requirement mapping missing: {token}")
 
-    for index_name, content in {"docs/modules/README.md": _read(DOCS_INDEX)}.items():
+    for index_name, content in {"docs/project/modules/README.md": _read(DOCS_INDEX)}.items():
         for term in [
             "07-capability-skill.md",
             "verify_capability_skill_target_protocols.py",

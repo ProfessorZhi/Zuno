@@ -6,8 +6,8 @@ from pathlib import Path
 
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
-FORMAL = REPO_ROOT / "docs/modules/01-product-surface.md"
-DOCS_INDEX = REPO_ROOT / "docs/modules/README.md"
+FORMAL = REPO_ROOT / "docs/project/modules/01-product-surface.md"
+DOCS_INDEX = REPO_ROOT / "docs/project/modules/README.md"
 DOCS_MAP = REPO_ROOT / ".agent/references/docs-map.md"
 WEB_AGENTS = REPO_ROOT / "apps/web/AGENTS.md"
 
@@ -216,11 +216,11 @@ def verify() -> list[str]:
     web_agents = _read(WEB_AGENTS)
     for text in ["01-product-surface.md", "单一完整 Target 架构", "verify_product_surface_target_protocols.py"]:
         if text not in docs_index:
-            errors.append(f"docs/modules/README.md missing Product route: {text}")
-    for text in ["docs/modules/01-product-surface.md", "verify_product_surface_target_protocols.py"]:
+            errors.append(f"docs/project/modules/README.md missing Product route: {text}")
+    for text in ["docs/project/modules/01-product-surface.md", "verify_product_surface_target_protocols.py"]:
         if text not in docs_map:
             errors.append(f".agent/references/docs-map.md missing Product route: {text}")
-    for text in ["docs/modules/01-product-surface.md", "AvailableAction", "Product Projection"]:
+    for text in ["docs/project/modules/01-product-surface.md", "AvailableAction", "Product Projection"]:
         if text not in web_agents:
             errors.append(f"apps/web/AGENTS.md missing Product rule: {text}")
 

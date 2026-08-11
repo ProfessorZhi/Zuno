@@ -5,9 +5,9 @@ import sys
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
-FORMAL = REPO_ROOT / "docs/modules/08-tool-runtime.md"
-DOCS_INDEX = REPO_ROOT / "docs/modules/README.md"
-CAPABILITY_DOC = REPO_ROOT / "docs/modules/07-capability-skill.md"
+FORMAL = REPO_ROOT / "docs/project/modules/08-tool-runtime.md"
+DOCS_INDEX = REPO_ROOT / "docs/project/modules/README.md"
+CAPABILITY_DOC = REPO_ROOT / "docs/project/modules/07-capability-skill.md"
 DOCS_MAP = REPO_ROOT / ".agent/references/docs-map.md"
 AGENT_SYSTEM = REPO_ROOT / ".agent/system.yaml"
 DOCS_ENTRYPOINT_VERIFIER = REPO_ROOT / "tools/scripts/verify_docs_entrypoints.py"
@@ -138,9 +138,9 @@ def verify() -> list[str]:
     docs_verifier = _read(DOCS_ENTRYPOINT_VERIFIER)
 
     if "(./08-tool-runtime.md)" not in docs_index:
-        errors.append("docs/modules/README.md must link the sole Tool Runtime document")
+        errors.append("docs/project/modules/README.md must link the sole Tool Runtime document")
     for content_name, content in [
-        ("docs/modules/README.md", docs_index),
+        ("docs/project/modules/README.md", docs_index),
     ]:
         if "单一完整 Target 架构" not in content:
             errors.append(f"{content_name} must describe Tool Runtime as a single complete Target architecture")

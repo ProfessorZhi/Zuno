@@ -11,7 +11,7 @@
 | `apps/web` | `apps/web/AGENTS.md`、`code-map.md` | Product client / UI |
 | `src/backend/zuno` | `code-map.md`、`debugging.md` | 对应模块 owner |
 | API / DTO / 前后端契约 | `code-map.md`、Product Surface module doc | Product Surface |
-| Agent Core | `docs/modules/06-agent-core-planning-control.md`、`code-map.md` | Agent Core |
+| Agent Core | `docs/project/modules/06-agent-core-planning-control.md`、`code-map.md` | Agent Core |
 | Tool / Security / persistence | 对应模块 Target、`debugging.md` | Tool Runtime / Security / Infrastructure |
 | eval / dataset / metric | `tools/evals/zuno/AGENTS.md`、`verification-map.md` | Eval owner |
 

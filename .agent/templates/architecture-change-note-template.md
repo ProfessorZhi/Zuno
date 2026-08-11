@@ -28,7 +28,7 @@
 
 ## Docs Updated
 
-- `docs/architecture/...`
+- `docs/project/architecture/...`
 - `README.md`
 
 ## Diagrams Updated

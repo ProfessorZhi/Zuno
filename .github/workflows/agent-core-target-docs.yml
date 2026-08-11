@@ -5,12 +5,9 @@ on:
     branches:
       - main
     paths:
-      - "docs/modules/06-agent-core-*.md"
-      - ".agent/modules/06-agent-core-*.md"
-      - "docs/modules/README.md"
-      - ".agent/modules/README.md"
-      - "docs/architecture/**"
-      - ".agent/architecture/**"
+      - "docs/project/modules/06-agent-core-*.md"
+      - "docs/project/modules/README.md"
+      - "docs/project/architecture/**"
       - "AGENTS.md"
       - ".agent/system.yaml"
       - ".agent/scripts/verify_agent_system.py"

@@ -27,7 +27,7 @@
 
 ## RT-ARCH-001 总体架构：一次合同审查到底怎样完成
 
-- target_documents: `docs/architecture/architecture.md`、`docs/modules/01-product-surface.md`、`docs/modules/03-knowledge-agentic-graphrag.md`、`docs/modules/06-agent-core-planning-control.md`、`docs/modules/08-tool-runtime.md`、`docs/modules/09-security.md`
+- target_documents: `docs/project/architecture/architecture.md`、`docs/project/modules/01-product-surface.md`、`docs/project/modules/03-knowledge-agentic-graphrag.md`、`docs/project/modules/06-agent-core-planning-control.md`、`docs/project/modules/08-tool-runtime.md`、`docs/project/modules/09-security.md`
 - architecture_coverage: `FULL`（由现有 Q001–Q267 引用矩阵检查）
 - human_explainability: `PARTIAL`
 - gap_type: `NARRATIVE_GAP`
@@ -54,7 +54,7 @@
 
 ## RT-INGEST-001 文档摄取：PDF 怎样成为可引用知识
 
-- target_documents: `docs/modules/02-input-document-ingestion.md`、`docs/modules/03-knowledge-agentic-graphrag.md`
+- target_documents: `docs/project/modules/02-input-document-ingestion.md`、`docs/project/modules/03-knowledge-agentic-graphrag.md`
 - architecture_coverage: `FULL`
 - human_explainability: `PARTIAL`
 - gap_type: `NARRATIVE_GAP`
@@ -81,7 +81,7 @@
 
 ## RT-RAG-001 Agentic GraphRAG：为什么不是直接 Vector Top-K
 
-- target_documents: `docs/modules/03-knowledge-agentic-graphrag.md`、`docs/modules/06-agent-core-planning-control.md`、`docs/modules/10-observability-eval.md`
+- target_documents: `docs/project/modules/03-knowledge-agentic-graphrag.md`、`docs/project/modules/06-agent-core-planning-control.md`、`docs/project/modules/10-observability-eval.md`
 - architecture_coverage: `FULL`
 - human_explainability: `PARTIAL`
 - gap_type: `NARRATIVE_GAP`
@@ -108,7 +108,7 @@
 
 ## RT-MEM-001 Memory：一次对话怎样变成可治理记忆
 
-- target_documents: `docs/modules/05-memory-context.md`、`docs/modules/09-security.md`、`docs/modules/10-observability-eval.md`
+- target_documents: `docs/project/modules/05-memory-context.md`、`docs/project/modules/09-security.md`、`docs/project/modules/10-observability-eval.md`
 - architecture_coverage: `FULL`
 - human_explainability: `PARTIAL`
 - gap_type: `NARRATIVE_GAP`
@@ -135,7 +135,7 @@
 
 ## RT-PLAN-001 Agent Core：一句话怎样变成可恢复计划
 
-- target_documents: `docs/modules/06-agent-core-planning-control.md`、`docs/architecture/architecture.md`、`docs/modules/11-infrastructure.md`
+- target_documents: `docs/project/modules/06-agent-core-planning-control.md`、`docs/project/architecture/architecture.md`、`docs/project/modules/11-infrastructure.md`
 - architecture_coverage: `FULL`
 - human_explainability: `PARTIAL`
 - gap_type: `NARRATIVE_GAP`
@@ -162,7 +162,7 @@
 
 ## RT-MODEL-001 Model Gateway：模型到底怎样被选择
 
-- target_documents: `docs/modules/04-model-gateway.md`、`docs/modules/10-observability-eval.md`
+- target_documents: `docs/project/modules/04-model-gateway.md`、`docs/project/modules/10-observability-eval.md`
 - architecture_coverage: `FULL`
 - human_explainability: `PARTIAL`
 - gap_type: `NARRATIVE_GAP`
@@ -189,7 +189,7 @@
 
 ## RT-TOOL-001 Tool Governance：从新增 MCP 到发送邮件
 
-- target_documents: `docs/modules/01-product-surface.md`、`docs/modules/07-capability-skill.md`、`docs/modules/08-tool-runtime.md`、`docs/modules/09-security.md`、`docs/modules/11-infrastructure.md`
+- target_documents: `docs/project/modules/01-product-surface.md`、`docs/project/modules/07-capability-skill.md`、`docs/project/modules/08-tool-runtime.md`、`docs/project/modules/09-security.md`、`docs/project/modules/11-infrastructure.md`
 - architecture_coverage: `FULL`
 - human_explainability: `PARTIAL`
 - gap_type: `NONE`
@@ -216,7 +216,7 @@
 
 ## RT-SEC-001 Security：用户权限为什么不能直接传给 Agent
 
-- target_documents: `docs/modules/09-security.md`、`docs/modules/01-product-surface.md`、`docs/modules/08-tool-runtime.md`
+- target_documents: `docs/project/modules/09-security.md`、`docs/project/modules/01-product-surface.md`、`docs/project/modules/08-tool-runtime.md`
 - architecture_coverage: `FULL`
 - human_explainability: `PARTIAL`
 - gap_type: `NARRATIVE_GAP`
@@ -242,7 +242,7 @@
 
 ## RT-EVAL-001 Eval：我们怎么证明架构和系统真的有效
 
-- target_documents: `docs/modules/10-observability-eval.md`、`docs/modules/03-knowledge-agentic-graphrag.md`、`docs/modules/05-memory-context.md`
+- target_documents: `docs/project/modules/10-observability-eval.md`、`docs/project/modules/03-knowledge-agentic-graphrag.md`、`docs/project/modules/05-memory-context.md`
 - architecture_coverage: `FULL`
 - human_explainability: `PARTIAL`
 - gap_type: `MEASUREMENT_GAP`
@@ -269,7 +269,7 @@
 
 ## RT-INFRA-001 Infrastructure：Worker、队列和恢复怎样不丢业务
 
-- target_documents: `docs/modules/11-infrastructure.md`、`docs/modules/06-agent-core-planning-control.md`、`docs/modules/08-tool-runtime.md`
+- target_documents: `docs/project/modules/11-infrastructure.md`、`docs/project/modules/06-agent-core-planning-control.md`、`docs/project/modules/08-tool-runtime.md`
 - architecture_coverage: `FULL`
 - human_explainability: `PARTIAL`
 - gap_type: `NARRATIVE_GAP`

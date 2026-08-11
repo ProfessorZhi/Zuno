@@ -6,7 +6,7 @@ formal_module: 02 Input / Document Ingestion
 human_readable_part: Part A — 面向人的设计说明
 normative_specification_part: Part B — 规范性架构与实施约束
 module_number: 02
-formal_path: `docs/modules/02-input-document-ingestion.md`
+formal_path: `docs/project/modules/02-input-document-ingestion.md`
 writing_standard: `docs/governance/architecture-document-writing-standard.md`
 reading_order: Problem → Case → Ownership → Runtime → State/Failure → Contract/Implementation → Verification
 
@@ -34,7 +34,7 @@ PostgreSQL、S3-compatible Object Store、Redis 和 Worker Runtime 边界
 文档边界：
 
 ```text
-docs/modules/02-input-document-ingestion.md
+docs/project/modules/02-input-document-ingestion.md
     本模块唯一 Target 架构事实源。
 
 .agent/programs/
@@ -4821,7 +4821,7 @@ S3 Object Lock 的 Versioning、Retention 和 Legal Hold 提供 WORM 能力。Zu
 Module Number: 02
 Module Name: Input / Document Ingestion
 Canonical Owner Namespace: INPUT_INGESTION
-Formal Target Document: docs/modules/02-input-document-ingestion.md
+Formal Target Document: docs/project/modules/02-input-document-ingestion.md
 Primary Upstream: Product Surface / Connector / Agent Attachment
 Primary Downstream: 03 Knowledge / 06 Agent Core
 Control Dependencies: 09 Security / 10 Observability & Eval / 11 Infrastructure / 04 Model Gateway

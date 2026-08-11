@@ -10,8 +10,8 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 ADR = REPO_ROOT / "docs/decisions/0003-wave1-cross-module-contract-freeze.md"
 DECISIONS_INDEX = REPO_ROOT / "docs/decisions/README.md"
 REGISTRY = REPO_ROOT / "docs/governance/wave1-cross-module-contract-registry.md"
-MODULES_INDEX = REPO_ROOT / "docs/modules/README.md"
-CORE = REPO_ROOT / "docs/modules/06-agent-core-planning-control.md"
+MODULES_INDEX = REPO_ROOT / "docs/project/modules/README.md"
+CORE = REPO_ROOT / "docs/project/modules/06-agent-core-planning-control.md"
 
 BASELINE_SHA = "729e439e29deadc101c5687fc47125104e62e2c1"
 
@@ -188,7 +188,7 @@ def verify() -> list[Finding]:
     if "0003-wave1-cross-module-contract-freeze.md" not in decisions_index:
         findings.append(Finding("XMOD_DECISION_ROUTE", "docs/decisions/README.md does not route ADR 0003"))
 
-    for content, label in [(modules_index, "docs/modules/README.md")]:
+    for content, label in [(modules_index, "docs/project/modules/README.md")]:
         for term in [
             "0003-wave1-cross-module-contract-freeze.md",
             "wave1-cross-module-contract-registry.md",
@@ -206,7 +206,7 @@ def verify() -> list[Finding]:
             findings.append(Finding("XMOD_INDEX_STALE_STATUS", f"{label} still advertises pending-merge status"))
 
     if modules_index.count("## Model Gateway 文档边界") != 1:
-        findings.append(Finding("XMOD_INDEX_DUPLICATE", "docs/modules/README.md must contain exactly one Model Gateway boundary section"))
+        findings.append(Finding("XMOD_INDEX_DUPLICATE", "docs/project/modules/README.md must contain exactly one Model Gateway boundary section"))
 
     requirement_ids = [int(value) for value in re.findall(r"ARCH-XMOD-(\d{3})", registry)]
     if sorted(requirement_ids) != list(range(1, 11)):

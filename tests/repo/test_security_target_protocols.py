@@ -6,7 +6,7 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 VERIFIER_PATH = REPO_ROOT / "tools/scripts/verify_security_target_protocols.py"
-FORMAL_PATH = REPO_ROOT / "docs/modules/09-security.md"
+FORMAL_PATH = REPO_ROOT / "docs/project/modules/09-security.md"
 
 
 def _load_verifier():

@@ -2,7 +2,7 @@
 
 ## Diagram Name
 
-填写固定图名。若是 canonical 架构视图之一，必须与 `docs/architecture/architecture-views.md` 和 `tools/agent/render_architecture.py` 的 `EXPECTED_DIAGRAMS` 一致。
+填写固定图名。若是 canonical 架构视图之一，必须与 `docs/project/architecture/architecture-views.md` 和 `tools/agent/render_architecture.py` 的 `EXPECTED_DIAGRAMS` 一致。
 
 ## Diagram Type
 

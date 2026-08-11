@@ -4,8 +4,8 @@ import sys
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
-DOCS_MODULES = REPO_ROOT / "docs/modules"
-DOCS_ARCH = REPO_ROOT / "docs/architecture"
+DOCS_MODULES = REPO_ROOT / "docs/project/modules"
+DOCS_ARCH = REPO_ROOT / "docs/project/architecture"
 
 MODULE_DOCS = [
     "01-product-surface.md",
@@ -56,9 +56,9 @@ def verify() -> list[str]:
 
     docs_arch_files = {p.name for p in DOCS_ARCH.iterdir() if p.is_file()}
     if docs_arch_files != CANONICAL_ARCH_SUPPORT:
-        errors.append(f"docs/architecture file set mismatch: {sorted(docs_arch_files)}")
+        errors.append(f"docs/project/architecture file set mismatch: {sorted(docs_arch_files)}")
     if [p for p in DOCS_ARCH.iterdir() if p.is_dir()]:
-        errors.append("docs/architecture must not contain subdirectories")
+        errors.append("docs/project/architecture must not contain subdirectories")
     for retired_root in [REPO_ROOT / ".agent/architecture", REPO_ROOT / ".agent/modules"]:
         if retired_root.exists():
             errors.append(f"retired Agent documentation mirror must not exist: {retired_root.relative_to(REPO_ROOT)}")
@@ -71,14 +71,14 @@ def verify() -> list[str]:
     for file_name in MODULE_DOCS:
         for label, content in [
             ("architecture.md", design),
-            ("docs/modules/README.md", modules_index),
+            ("docs/project/modules/README.md", modules_index),
         ]:
             if file_name not in content:
                 errors.append(f"{label} does not route to {file_name}")
 
     for label, content in [
-        ("docs/modules/README.md", modules_index),
-        ("docs/architecture/README.md", architecture_index),
+        ("docs/project/modules/README.md", modules_index),
+        ("docs/project/architecture/README.md", architecture_index),
     ]:
         for phrase in ["十一", "architecture.md", "architecture.html"]:
             if phrase not in content:
@@ -95,7 +95,7 @@ def verify() -> list[str]:
             if retired in path.read_text(encoding="utf-8"):
                 errors.append(f"active architecture surface references retired split doc {retired}: {path.relative_to(REPO_ROOT)}")
 
-    if "11 × docs/modules" not in design or "1 × docs/architecture/architecture.md" not in design:
+    if "11 × docs/project/modules" not in design or "1 × docs/project/architecture/architecture.md" not in design:
         errors.append("architecture.md must declare the 11+1 formal design set")
     if "../modules/README.md" not in html:
         errors.append("architecture.html must route to the eleven module documents")

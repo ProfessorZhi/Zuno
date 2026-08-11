@@ -22,10 +22,10 @@ def test_architecture_document_set_is_canonical() -> None:
 
 
 def test_formal_design_count_is_eleven_plus_two() -> None:
-    module_docs = sorted((REPO_ROOT / "docs/modules").glob("[0-9][0-9]-*.md"))
+    module_docs = sorted((REPO_ROOT / "docs/project/modules").glob("[0-9][0-9]-*.md"))
     assert len(module_docs) == 11
-    assert (REPO_ROOT / "docs/architecture/architecture.md").exists()
-    assert (REPO_ROOT / "docs/architecture/architecture.html").exists()
+    assert (REPO_ROOT / "docs/project/architecture/architecture.md").exists()
+    assert (REPO_ROOT / "docs/project/architecture/architecture.html").exists()
 
 
 def test_agent_architecture_and_module_mirrors_are_absent() -> None:

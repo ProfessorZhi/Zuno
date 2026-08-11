@@ -55,8 +55,8 @@ Claim
 
 按范围读取：
 
-1. `docs/architecture/architecture.md`、`docs/architecture/architecture-views.md`；
-2. 相关 `docs/modules/`、`docs/decisions/`、`docs/status/`、`docs/evidence/`；
+1. `docs/project/architecture/architecture.md`、`docs/project/architecture/architecture-views.md`；
+2. 相关 `docs/project/modules/`、`docs/decisions/`、`docs/status/`、`docs/evidence/`；
 3. `docs/verification/interview-qa/` 中与目标机制相关的既有攻击链；
 4. 代码、测试、Git 提交和可复现证据（需要验证 Current 时）；
 5. `01-project-facts.md` 的事实状态和重建置信度。

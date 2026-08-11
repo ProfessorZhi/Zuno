@@ -3,10 +3,8 @@ name: Infrastructure target docs
 on:
   pull_request:
     paths:
-      - "docs/modules/11-infrastructure.md"
-      - ".agent/modules/11-infrastructure.md"
-      - "docs/modules/README.md"
-      - ".agent/modules/README.md"
+      - "docs/project/modules/11-infrastructure.md"
+      - "docs/project/modules/README.md"
       - ".agent/system.yaml"
       - "tools/scripts/verify_infrastructure_target_protocols.py"
       - "tests/repo/test_infrastructure_target_protocols.py"
@@ -15,10 +13,8 @@ on:
     branches:
       - main
     paths:
-      - "docs/modules/11-infrastructure.md"
-      - ".agent/modules/11-infrastructure.md"
-      - "docs/modules/README.md"
-      - ".agent/modules/README.md"
+      - "docs/project/modules/11-infrastructure.md"
+      - "docs/project/modules/README.md"
       - ".agent/system.yaml"
       - "tools/scripts/verify_infrastructure_target_protocols.py"
       - "tests/repo/test_infrastructure_target_protocols.py"

@@ -60,8 +60,10 @@ AGENTS.md              仓库唯一入口：规则、边界、阅读顺序、任
 正式文档位置：
 
 ```text
-docs/architecture/   总架构四个 canonical 文件，唯一正式事实源
-docs/modules/        十一个逻辑模块设计
+docs/project/            Zuno 项目知识唯一正式入口
+docs/project/facts/      项目历史事实、Unknown 和证据路由
+docs/project/architecture/   总架构四个 canonical 文件，唯一正式事实源
+docs/project/modules/        十一个逻辑模块设计
 docs/status/         Current 与差距
 docs/decisions/      ADR
 docs/governance/     工程治理
@@ -70,7 +72,7 @@ docs/history/        历史归档
 
 ## 操作规则
 
-- 先从 `docs/architecture/` 读取总架构，再从 `docs/modules/` 读取对应模块设计。
+- 先从 `docs/project/README.md` 读取项目知识路由；涉及历史或实际落地时先读 `docs/project/facts/`，涉及设计再读 `docs/project/architecture/` 和 `docs/project/modules/`。
 - `.agent/system.yaml` 只写路由规则，不写长知识。
 - `.agent/references/` 承载可复用项目 skill，不写一次性调查流水账。
 - `.agent/programs/` 只承载当前状态，不保存旧施工文件。

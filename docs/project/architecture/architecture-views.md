@@ -2,8 +2,8 @@
 
 updated: 2026-08-11
 status: normative-target-visual-source
-text_design_source: `docs/architecture/architecture.md`
-canonical_domain_sources: `docs/modules/01-*.md` through `docs/modules/11-*.md`
+text_design_source: `docs/project/architecture/architecture.md`
+canonical_domain_sources: `docs/project/modules/01-*.md` through `docs/project/modules/11-*.md`
 writing_standard: `docs/governance/architecture-document-writing-standard.md`
 
 本文件只提供说明性 Mermaid。领域 Contract、状态、Failure、持久化和测试以十一份模块文档为准；跨模块关系以 `architecture.md` 为准；本图源和 HTML 优先级最低。

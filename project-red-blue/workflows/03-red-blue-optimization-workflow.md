@@ -154,7 +154,7 @@ User Gate
 Canonical Destination
 ```
 
-只有用户通过 Architecture Gate 后，才允许同步到 `docs/architecture/`、`docs/modules/`、ADR、Status 或 Evidence 的正式 Owner。没有用户确认的内容保持 `[BLUE_PROPOSAL]`，不进入 Current。
+只有用户通过 Architecture Gate 后，才允许同步到 `docs/project/architecture/`、`docs/project/modules/`、ADR、Status 或 Evidence 的正式 Owner。没有用户确认的内容保持 `[BLUE_PROPOSAL]`，不进入 Current。
 
 ## Red Retest
 

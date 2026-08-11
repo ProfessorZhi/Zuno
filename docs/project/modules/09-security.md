@@ -6,7 +6,7 @@ formal_module: 09 Security
 human_readable_part: Part A — 面向人的设计说明
 normative_specification_part: Part B — 规范性架构与实施约束
 module_number: 09
-formal_path: `docs/modules/09-security.md`
+formal_path: `docs/project/modules/09-security.md`
 writing_standard: `docs/governance/architecture-document-writing-standard.md`
 reading_order: Problem → Case → Ownership → Runtime → State/Failure → Contract/Implementation → Verification
 current_state_source: `docs/status/production-readiness.md`
@@ -37,7 +37,7 @@ Approval、Epoch、Revocation、Secret、Sandbox 与 Supply Chain
 文档边界：
 
 ```text
-docs/modules/09-security.md
+docs/project/modules/09-security.md
     唯一正式 Target 架构事实源。
 
 .agent/ 不保存模块镜像；本文是唯一正式事实源。

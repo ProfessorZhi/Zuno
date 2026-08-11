@@ -9,8 +9,10 @@ system_identity:
   template_root: ".agent/templates"
   active_program_root: ".agent/programs"
   formal_truth_root: "docs"
-  formal_architecture_root: "docs/architecture"
-  formal_module_root: "docs/modules"
+  formal_project_root: "docs/project"
+  formal_project_facts_root: "docs/project/facts"
+  formal_architecture_root: "docs/project/architecture"
+  formal_module_root: "docs/project/modules"
   formal_status_root: "docs/status"
   history_root: "docs/history"
 
@@ -35,17 +37,17 @@ work_modes:
 
 architecture_directory_contract:
   formal_files:
-    - "docs/architecture/README.md"
-    - "docs/architecture/architecture.md"
-    - "docs/architecture/architecture-views.md"
-    - "docs/architecture/architecture.html"
+    - "docs/project/architecture/README.md"
+    - "docs/project/architecture/architecture.md"
+    - "docs/project/architecture/architecture-views.md"
+    - "docs/project/architecture/architecture.html"
   canonical_design_files:
-    - "docs/architecture/architecture.md"
-    - "docs/modules/01-product-surface.md through docs/modules/11-infrastructure.md"
+    - "docs/project/architecture/architecture.md"
+    - "docs/project/modules/01-product-surface.md through docs/project/modules/11-infrastructure.md"
   formal_design_fact_count: "11 module documents + architecture.md"
   presentation_pair:
-    - "docs/architecture/architecture-views.md"
-    - "docs/architecture/architecture.html"
+    - "docs/project/architecture/architecture-views.md"
+    - "docs/project/architecture/architecture.html"
   visual_source_role: "architecture-views.md and architecture.html are one paired diagram presentation surface; neither is an independent architecture fact source"
   reading_protocol:
     human_question: "read architecture.md Part A, then the relevant module Part A"
@@ -59,66 +61,66 @@ architecture_directory_contract:
     - "repo ownership matrix"
 
 module_document_contract:
-  formal_index: "docs/modules/README.md"
+  formal_index: "docs/project/modules/README.md"
   status_truth: "docs/status/production-readiness.md"
   mirror_policy: "no architecture or module mirrors are maintained under .agent"
   owner_precedence: "the owning module document is canonical for domain objects, state machines, failures, persistence, and tests"
 
   product_surface:
-    formal: "docs/modules/01-product-surface.md"
+    formal: "docs/project/modules/01-product-surface.md"
     verifier: "python tools/scripts/verify_product_surface_target_protocols.py"
     test: "pytest -q tests/repo/test_product_surface_target_protocols.py -p no:cacheprovider"
 
   input_document_ingestion:
-    formal: "docs/modules/02-input-document-ingestion.md"
+    formal: "docs/project/modules/02-input-document-ingestion.md"
     verifier: "python tools/scripts/verify_architecture_document_set.py"
     test: "pytest -q tests/repo/test_architecture_document_set.py -p no:cacheprovider"
 
   knowledge_agentic_graphrag:
-    formal: "docs/modules/03-knowledge-agentic-graphrag.md"
+    formal: "docs/project/modules/03-knowledge-agentic-graphrag.md"
     verifier: "python tools/scripts/verify_architecture_document_set.py"
     test: "pytest -q tests/repo/test_architecture_document_set.py -p no:cacheprovider"
 
   model_gateway:
-    formal: "docs/modules/04-model-gateway.md"
+    formal: "docs/project/modules/04-model-gateway.md"
     target_only: true
     verifier: "python tools/scripts/verify_model_gateway_target_protocols.py"
     test: "pytest -q tests/repo/test_model_gateway_target_protocols.py -p no:cacheprovider"
 
   memory_context:
-    formal: "docs/modules/05-memory-context.md"
+    formal: "docs/project/modules/05-memory-context.md"
     verifier: "python tools/scripts/verify_memory_context_target_protocols.py"
     test: "pytest -q tests/repo/test_memory_context_target_protocols.py -p no:cacheprovider"
 
   agent_core:
-    formal: "docs/modules/06-agent-core-planning-control.md"
+    formal: "docs/project/modules/06-agent-core-planning-control.md"
     target_only: true
     execution_plan_root: ".agent/programs"
     verifier: "python tools/scripts/verify_agent_core_target_protocols.py"
     test: "pytest -q tests/repo/test_agent_core_target_protocols.py -p no:cacheprovider"
 
   capability_skill:
-    formal: "docs/modules/07-capability-skill.md"
+    formal: "docs/project/modules/07-capability-skill.md"
     verifier: "python tools/scripts/verify_capability_skill_target_protocols.py"
     test: "pytest -q tests/repo/test_capability_skill_target_protocols.py -p no:cacheprovider"
 
   tool_runtime:
-    formal: "docs/modules/08-tool-runtime.md"
+    formal: "docs/project/modules/08-tool-runtime.md"
     verifier: "python tools/scripts/verify_tool_runtime_target_protocols.py"
     test: "pytest -q tests/repo/test_tool_runtime_target_protocols.py -p no:cacheprovider"
 
   security:
-    formal: "docs/modules/09-security.md"
+    formal: "docs/project/modules/09-security.md"
     verifier: "python tools/scripts/verify_security_target_protocols.py"
     test: "pytest -q tests/repo/test_security_target_protocols.py -p no:cacheprovider"
 
   observability_eval:
-    formal: "docs/modules/10-observability-eval.md"
+    formal: "docs/project/modules/10-observability-eval.md"
     verifier: "python tools/scripts/verify_observability_eval_target_protocols.py"
     test: "pytest -q tests/repo/test_observability_eval_target_protocols.py -p no:cacheprovider"
 
   infrastructure:
-    formal: "docs/modules/11-infrastructure.md"
+    formal: "docs/project/modules/11-infrastructure.md"
     verifier: "python tools/scripts/verify_infrastructure_target_protocols.py"
     test: "pytest -q tests/repo/test_infrastructure_target_protocols.py -p no:cacheprovider"
 
@@ -151,22 +153,22 @@ skill_routes:
       - ".agent/templates/verification-report-template.md"
     docs_sync:
       - "AGENTS.md"
-      - "docs/architecture/README.md"
-      - "docs/architecture/architecture.md"
-      - "docs/architecture/architecture-views.md"
-      - "docs/architecture/architecture.html"
-      - "docs/modules/README.md"
-      - "docs/modules/01-product-surface.md"
-      - "docs/modules/02-input-document-ingestion.md"
-      - "docs/modules/03-knowledge-agentic-graphrag.md"
-      - "docs/modules/04-model-gateway.md"
-      - "docs/modules/05-memory-context.md"
-      - "docs/modules/06-agent-core-planning-control.md"
-      - "docs/modules/07-capability-skill.md"
-      - "docs/modules/08-tool-runtime.md"
-      - "docs/modules/09-security.md"
-      - "docs/modules/10-observability-eval.md"
-      - "docs/modules/11-infrastructure.md"
+      - "docs/project/architecture/README.md"
+      - "docs/project/architecture/architecture.md"
+      - "docs/project/architecture/architecture-views.md"
+      - "docs/project/architecture/architecture.html"
+      - "docs/project/modules/README.md"
+      - "docs/project/modules/01-product-surface.md"
+      - "docs/project/modules/02-input-document-ingestion.md"
+      - "docs/project/modules/03-knowledge-agentic-graphrag.md"
+      - "docs/project/modules/04-model-gateway.md"
+      - "docs/project/modules/05-memory-context.md"
+      - "docs/project/modules/06-agent-core-planning-control.md"
+      - "docs/project/modules/07-capability-skill.md"
+      - "docs/project/modules/08-tool-runtime.md"
+      - "docs/project/modules/09-security.md"
+      - "docs/project/modules/10-observability-eval.md"
+      - "docs/project/modules/11-infrastructure.md"
       - "docs/status/production-readiness.md"
       - "docs/decisions/"
       - "docs/governance/"
@@ -193,11 +195,11 @@ skill_routes:
         - "src/backend/zuno/agent/**"
         - "src/backend/zuno/core/agents/**"
     docs_sync:
-      - "docs/modules/06-agent-core-planning-control.md"
-      - "docs/modules/04-model-gateway.md"
-      - "docs/modules/05-memory-context.md"
-      - "docs/modules/07-capability-skill.md"
-      - "docs/modules/08-tool-runtime.md"
+      - "docs/project/modules/06-agent-core-planning-control.md"
+      - "docs/project/modules/04-model-gateway.md"
+      - "docs/project/modules/05-memory-context.md"
+      - "docs/project/modules/07-capability-skill.md"
+      - "docs/project/modules/08-tool-runtime.md"
     verify:
       - "python tools/scripts/verify_agent_core_target_protocols.py"
       - "pytest -q tests/repo/test_agent_core_target_protocols.py -p no:cacheprovider"
@@ -209,17 +211,17 @@ skill_routes:
         - "src/backend/zuno/memory/**"
         - "src/backend/zuno/services/rag/**"
     docs_sync:
-      - "docs/modules/02-input-document-ingestion.md"
-      - "docs/modules/03-knowledge-agentic-graphrag.md"
-      - "docs/modules/05-memory-context.md"
+      - "docs/project/modules/02-input-document-ingestion.md"
+      - "docs/project/modules/03-knowledge-agentic-graphrag.md"
+      - "docs/project/modules/05-memory-context.md"
 
   - name: "capability-and-tool"
     match:
       paths:
         - "src/backend/zuno/capability/**"
     docs_sync:
-      - "docs/modules/07-capability-skill.md"
-      - "docs/modules/08-tool-runtime.md"
+      - "docs/project/modules/07-capability-skill.md"
+      - "docs/project/modules/08-tool-runtime.md"
     verify:
       - "python tools/scripts/verify_capability_skill_target_protocols.py"
       - "python tools/scripts/verify_tool_runtime_target_protocols.py"
@@ -229,10 +231,10 @@ skill_routes:
       paths:
         - "src/backend/zuno/platform/**"
     docs_sync:
-      - "docs/modules/04-model-gateway.md"
-      - "docs/modules/09-security.md"
-      - "docs/modules/10-observability-eval.md"
-      - "docs/modules/11-infrastructure.md"
+      - "docs/project/modules/04-model-gateway.md"
+      - "docs/project/modules/09-security.md"
+      - "docs/project/modules/10-observability-eval.md"
+      - "docs/project/modules/11-infrastructure.md"
       - "docs/governance/repo-ownership-matrix.md"
 
 stop_conditions:

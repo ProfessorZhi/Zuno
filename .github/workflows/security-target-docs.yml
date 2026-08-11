@@ -5,10 +5,8 @@ on:
     branches:
       - main
     paths:
-      - "docs/modules/09-security.md"
-      - ".agent/modules/09-security.md"
-      - "docs/modules/README.md"
-      - ".agent/modules/README.md"
+      - "docs/project/modules/09-security.md"
+      - "docs/project/modules/README.md"
       - "tools/scripts/verify_security_target_protocols.py"
       - "tests/repo/test_security_target_protocols.py"
       - ".github/workflows/security-target-docs.yml"
@@ -16,10 +14,8 @@ on:
     branches:
       - main
     paths:
-      - "docs/modules/09-security.md"
-      - ".agent/modules/09-security.md"
-      - "docs/modules/README.md"
-      - ".agent/modules/README.md"
+      - "docs/project/modules/09-security.md"
+      - "docs/project/modules/README.md"
       - "tools/scripts/verify_security_target_protocols.py"
       - "tests/repo/test_security_target_protocols.py"
       - ".github/workflows/security-target-docs.yml"
@@ -66,8 +62,6 @@ jobs:
       - name: Verify Security target protocols
         run: python tools/scripts/verify_security_target_protocols.py
 
-      - name: Verify formal and Agent mirror bytes
-        run: cmp docs/modules/09-security.md .agent/modules/09-security.md
 
       - name: Verify documentation entrypoints and boundaries
         run: |

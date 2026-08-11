@@ -7,8 +7,10 @@
 ## Mental Model
 
 ```text
-docs/architecture/ = 总架构正文与架构图展示配对
-docs/modules/      = 十一个领域模块唯一正式 Target 文档
+docs/project/             = Zuno 项目知识统一正式入口
+docs/project/facts/       = 项目事实、Unknown、历史证据路由
+docs/project/architecture/ = 总架构正文与架构图展示配对
+docs/project/modules/      = 十一个领域模块唯一正式 Target 文档
 docs/status/       = Current / Gap / Readiness
 docs/decisions/    = ADR
 docs/governance/   = Ownership 与共享 Contract
@@ -18,12 +20,14 @@ docs/history/      = History
 .agent/programs/     = Current → Target 实施计划；无 active 时保持 no-active
 ```
 
+项目知识入口：`docs/project/README.md`。它把问题路由为：事实问题进入 `facts/`，整体设计问题进入 `architecture/`，技术深挖进入 `modules/`；`docs/decisions/`、`docs/status/`、`docs/evidence/` 和 `docs/governance/` 仍是跨项目仓库治理事实源。
+
 ## 正式架构入口
 
 ```text
-docs/architecture/architecture.md
-docs/architecture/architecture.html
-docs/architecture/architecture-views.md
+docs/project/architecture/architecture.md
+docs/project/architecture/architecture.html
+docs/project/architecture/architecture-views.md
 docs/status/production-readiness.md
 docs/decisions/0003-wave1-cross-module-contract-freeze.md
 docs/governance/wave1-cross-module-contract-registry.md
@@ -48,22 +52,22 @@ Part A 和 Part B 必须共存于同一 Canonical Markdown；禁止创建 `*-hum
 
 | 模块 | 唯一正式文档 | Verifier |
 | --- | --- | --- |
-| 01 Product Surface | `docs/modules/01-product-surface.md` | `python tools/scripts/verify_product_surface_target_protocols.py` |
-| 02 Input / Document Ingestion | `docs/modules/02-input-document-ingestion.md` | `python tools/scripts/verify_architecture_document_set.py` |
-| 03 Knowledge / Agentic GraphRAG | `docs/modules/03-knowledge-agentic-graphrag.md` | `python tools/scripts/verify_architecture_document_set.py` |
-| 04 Model Gateway | `docs/modules/04-model-gateway.md` | `python tools/scripts/verify_model_gateway_target_protocols.py` |
-| 05 Memory & Context | `docs/modules/05-memory-context.md` | `python tools/scripts/verify_memory_context_target_protocols.py` |
-| 06 Agent Core / Planning & Control | `docs/modules/06-agent-core-planning-control.md` | `python tools/scripts/verify_agent_core_target_protocols.py` |
-| 07 Capability / Skill | `docs/modules/07-capability-skill.md` | `python tools/scripts/verify_capability_skill_target_protocols.py` |
-| 08 Tool Runtime | `docs/modules/08-tool-runtime.md` | `python tools/scripts/verify_tool_runtime_target_protocols.py` |
-| 09 Security | `docs/modules/09-security.md` | `python tools/scripts/verify_security_target_protocols.py` |
-| 10 Observability & Eval | `docs/modules/10-observability-eval.md` | `python tools/scripts/verify_observability_eval_target_protocols.py` |
-| 11 Infrastructure | `docs/modules/11-infrastructure.md` | `python tools/scripts/verify_infrastructure_target_protocols.py` |
+| 01 Product Surface | `docs/project/modules/01-product-surface.md` | `python tools/scripts/verify_product_surface_target_protocols.py` |
+| 02 Input / Document Ingestion | `docs/project/modules/02-input-document-ingestion.md` | `python tools/scripts/verify_architecture_document_set.py` |
+| 03 Knowledge / Agentic GraphRAG | `docs/project/modules/03-knowledge-agentic-graphrag.md` | `python tools/scripts/verify_architecture_document_set.py` |
+| 04 Model Gateway | `docs/project/modules/04-model-gateway.md` | `python tools/scripts/verify_model_gateway_target_protocols.py` |
+| 05 Memory & Context | `docs/project/modules/05-memory-context.md` | `python tools/scripts/verify_memory_context_target_protocols.py` |
+| 06 Agent Core / Planning & Control | `docs/project/modules/06-agent-core-planning-control.md` | `python tools/scripts/verify_agent_core_target_protocols.py` |
+| 07 Capability / Skill | `docs/project/modules/07-capability-skill.md` | `python tools/scripts/verify_capability_skill_target_protocols.py` |
+| 08 Tool Runtime | `docs/project/modules/08-tool-runtime.md` | `python tools/scripts/verify_tool_runtime_target_protocols.py` |
+| 09 Security | `docs/project/modules/09-security.md` | `python tools/scripts/verify_security_target_protocols.py` |
+| 10 Observability & Eval | `docs/project/modules/10-observability-eval.md` | `python tools/scripts/verify_observability_eval_target_protocols.py` |
+| 11 Infrastructure | `docs/project/modules/11-infrastructure.md` | `python tools/scripts/verify_infrastructure_target_protocols.py` |
 
 ## Must Preserve
 
-- 每个模块只有一份 `docs/modules/<NN>-*.md` 正式 Target 文档。
-- `docs/architecture/` 物理上只保留 README、`architecture.md`、`architecture-views.md` 和 `architecture.html`；其中正式文字设计是 `architecture.md`，后两者是展示配对；`.agent/` 不保存架构镜像。
+- 每个模块只有一份 `docs/project/modules/<NN>-*.md` 正式 Target 文档。
+- `docs/project/architecture/` 物理上只保留 README、`architecture.md`、`architecture-views.md` 和 `architecture.html`；其中正式文字设计是 `architecture.md`，后两者是展示配对；`.agent/` 不保存架构镜像。
 - 模块领域细节以对应 Owner 模块文档为准；总架构只做跨模块集成。
 - Current 只由代码、Migration、测试、Trace、Eval 和运行证据证明。
 - 历史分拆文档不得重新成为活跃事实源。
@@ -74,8 +78,8 @@ Part A 和 Part B 必须共存于同一 Canonical Markdown；禁止创建 `*-hum
 修改模块设计时同步：
 
 ```text
-docs/modules/<NN>-module.md
-docs/modules/README.md
+docs/project/modules/<NN>-module.md
+docs/project/modules/README.md
 .agent/system.yaml
 对应 verifier / focused test
 必要时同步 architecture.md；如果图形关系变化，把 architecture-views.md 与 architecture.html 作为一个整体同步
@@ -84,8 +88,8 @@ docs/modules/README.md
 修改总架构时同步：
 
 ```text
-docs/architecture/architecture.md
-docs/architecture/architecture-views.md + docs/architecture/architecture.html（展示配对）
+docs/project/architecture/architecture.md
+docs/project/architecture/architecture-views.md + docs/project/architecture/architecture.html（展示配对）
 ```
 
 如果修改的是文档结构或阅读顺序，还要同步写作标准入口和写作标准 verifier；不在 `.agent/` 创建架构正文镜像。

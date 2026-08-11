@@ -25,8 +25,10 @@ project-red-blue/
   -> 项目级 Red/Blue Lab：事实采集、项目模型、红队攻击、蓝队提案和 Skill 契约；不拥有正式架构事实。
 
 docs/
-  architecture/    总架构正文与架构图展示配对
-  modules/         十一个逻辑模块设计
+  project/          Zuno 项目知识唯一正式入口
+    facts/          已知事实、未知事实和证据路由
+    architecture/   总架构正文与架构图展示配对
+    modules/        十一个逻辑模块设计
   status/          Current 与差距
   decisions/       ADR
   governance/      Ownership 和文档治理
@@ -35,6 +37,8 @@ docs/
 ```
 
 `AGENTS.md` 不承载所有细节，只负责把任务路由到正确的正式文档、Reference、Program 和验证入口。
+
+`docs/project/README.md` 是项目知识入口：`facts/` 回答项目事实上发生了什么，`architecture/` 回答整体为什么这样设计，`modules/` 回答各技术域如何工作。事实不确定时必须保留 `UNKNOWN`，不能用 Target Architecture 代替历史事实。
 
 ## 文档语言规则
 
@@ -72,25 +76,31 @@ architecture.html
 ```
 
 ```text
-docs/architecture/
+docs/project/architecture/
 ```
 
 职责：
 
-- `docs/architecture/architecture.md`：重文字目标总架构，说明“轻量实现、成熟设计”、十一逻辑模块、六个物理运行域、Agent 闭环、Contract、状态、失败语义和验收。
-- `docs/architecture/architecture-views.md` 与 `docs/architecture/architecture.html`：不可拆分的架构图展示配对；前者提供图源，后者负责展示，二者不拥有独立架构事实。
-- `docs/architecture/README.md`：目录边界和维护方式。
+- `docs/project/architecture/architecture.md`：重文字目标总架构，说明“轻量实现、成熟设计”、十一逻辑模块、六个物理运行域、Agent 闭环、Contract、状态、失败语义和验收。
+- `docs/project/architecture/architecture-views.md` 与 `docs/project/architecture/architecture.html`：不可拆分的架构图展示配对；前者提供图源，后者负责展示，二者不拥有独立架构事实。
+- `docs/project/architecture/README.md`：目录边界和维护方式。
 - `.agent/` 不再保存总架构或模块镜像；Agent 通过 `docs/` 唯一正式文档源读取架构事实。
 
 禁止把模块设计、Production Readiness、ADR、Program、Ownership Matrix 或实施计划放入 architecture 目录。
 
 ### 模块设计
 
-- `docs/modules/README.md`：十一个逻辑模块入口。
-- `docs/modules/<number>-<module>.md`：单个模块实施级设计。
-- Agent Core 唯一正式 Target 文档：`docs/modules/06-agent-core-planning-control.md`。
+- `docs/project/modules/README.md`：十一个逻辑模块入口。
+- `docs/project/modules/<number>-<module>.md`：单个模块实施级设计。
+- Agent Core 唯一正式 Target 文档：`docs/project/modules/06-agent-core-planning-control.md`。
 
 Agent Core 规范优先级：全局架构原则 → 单一模块 Target 架构文档 → Program → 代码与 Migration。
+
+### 项目事实
+
+- `docs/project/README.md`：项目知识总入口和事实、架构、模块的路由规则。
+- `docs/project/facts/README.md`：事实文档写作、状态标签和证据边界。
+- `docs/project/facts/`：项目背景、团队与 Ownership、开发演进、交付使用、技术现实；未知信息必须明确标记，不得由红蓝工作区的候选假设直接升级为正式事实。
 
 模块文档可以很详细，但必须服从总架构的 Owner 边界，不得把 Target 冒充为 Current。Agent Core Target 文档不承载 Current Baseline、实现 Phase、Cutover 或具体迁移计划；这些内容必须进入 `.agent/programs/`。
 
@@ -103,11 +113,11 @@ Agent Core 规范优先级：全局架构原则 → 单一模块 Target 架构�
 
 ### 架构同步
 
-架构文档的统一信息架构和写作规则见 `docs/governance/architecture-document-writing-standard.md`。它是文档治理规范，不是新的架构事实源；总架构和模块正文仍分别由 `docs/architecture/` 与 `docs/modules/` 持有。
+架构文档的统一信息架构和写作规则见 `docs/governance/architecture-document-writing-standard.md`。它是文档治理规范，不是新的架构事实源；总架构和模块正文仍分别由 `docs/project/architecture/` 与 `docs/project/modules/` 持有。
 
 设计含义变化时：
 
-1. 更新 `docs/architecture/architecture.md`；
+1. 更新 `docs/project/architecture/architecture.md`；
 2. 图形关系变化时，把 `architecture-views.md` 与 `architecture.html` 作为一个展示配对同步更新；
 3. 运行 `python tools/agent/render_architecture.py --write`；
 4. 运行 `python tools/agent/render_architecture.py --check`；
@@ -118,7 +128,7 @@ Agent Core 规范优先级：全局架构原则 → 单一模块 Target 架构�
 
 模块变化时：
 
-1. 更新对应 `docs/modules/<module>.md`；
+1. 更新对应 `docs/project/modules/<module>.md`；
 2. `docs/` 是架构和模块的唯一正式事实源，不维护 `.agent` 镜像；
 3. 更新 `docs/status/production-readiness.md` 只能写已经由实现和证据证明的 Current 变化；
 4. 更新测试和验证器；
@@ -141,24 +151,28 @@ Agent Core 规范优先级：全局架构原则 → 单一模块 Target 架构�
 
 架构、重构、新功能或工作流任务先读：
 
-1. `docs/architecture/architecture.md`
-2. `docs/modules/README.md`
-3. 与任务对应的 `docs/modules/<module>.md`
-4. `docs/status/production-readiness.md`
-5. `.agent/README.md`
-6. `.agent/system.yaml`
-7. `.agent/references/current-program.md`
-8. `.agent/references/docs-map.md`
-9. `.agent/references/code-map.md`
-10. `.agent/references/task-routing.md`
-11. `.agent/references/workflow.md`
-12. `.agent/references/debugging.md`
-13. `.agent/references/known-pitfalls.md`
-14. `.agent/references/verification-map.md`
+1. `docs/project/README.md`
+2. 与任务对应的 `docs/project/facts/*.md`
+3. `docs/project/architecture/architecture.md`
+4. `docs/project/architecture/architecture-views.md`
+5. `docs/project/architecture/architecture.html`
+6. `docs/project/modules/README.md`
+7. 与任务对应的 `docs/project/modules/<module>.md`
+8. `docs/status/production-readiness.md`
+9. `.agent/README.md`
+10. `.agent/system.yaml`
+11. `.agent/references/current-program.md`
+12. `.agent/references/docs-map.md`
+13. `.agent/references/code-map.md`
+14. `.agent/references/task-routing.md`
+15. `.agent/references/workflow.md`
+16. `.agent/references/debugging.md`
+17. `.agent/references/known-pitfalls.md`
+18. `.agent/references/verification-map.md`
 
 `architecture-views.md` 与 `architecture.html` 只在需要查看或维护架构图时作为一个整体打开；它们不是必读的文字事实源。
 
-Agent Core 任务必须读取唯一正式 Target 文档 `docs/modules/06-agent-core-planning-control.md`。
+Agent Core 任务必须读取唯一正式 Target 文档 `docs/project/modules/06-agent-core-planning-control.md`。
 
 实现任务在读完相关文档后再读代码。不要只凭文档推断 Runtime 行为。
 
@@ -238,8 +252,8 @@ pytest -q tests/repo/test_docs_entrypoints.py tests/repo/test_agent_core_target_
 - `.agent/references/*`
 - `.agent/templates/*`
 - `.agent/programs/*`
-- `docs/architecture/*`
-- `docs/modules/*`
+- `docs/project/architecture/*`
+- `docs/project/modules/*`
 - `docs/status/*`
 - 对应 Verifier 和 Tests
 
@@ -247,7 +261,7 @@ pytest -q tests/repo/test_docs_entrypoints.py tests/repo/test_agent_core_target_
 
 ## 禁止
 
-- 不在 `docs/architecture/` 增加第五个文件，也不重新创建 `.agent/architecture/` 或 `.agent/modules/` 镜像目录。
+- 不在 `docs/project/architecture/` 增加第五个文件，也不重新创建 `.agent/architecture/` 或 `.agent/modules/` 镜像目录。
 - 不把模块专题放回 Architecture 目录。
 - 不把 Product Runtime 改成默认自治 Multi-Agent。
 - 不把隐藏思维链保存进 Trace、Memory 或数据库。

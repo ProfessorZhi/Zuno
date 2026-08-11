@@ -96,13 +96,13 @@ def verify() -> list[str]:
                 if heading not in block:
                     errors.append(f"{match.group(1)} missing section: {heading}")
 
-    architecture_root = REPO_ROOT / "docs/architecture"
+    architecture_root = REPO_ROOT / "docs/project/architecture"
     architecture_files = {path.name for path in architecture_root.iterdir() if path.is_file()}
     architecture_dirs = [path.name for path in architecture_root.iterdir() if path.is_dir()]
     if architecture_files != EXPECTED_ARCHITECTURE_FILES:
-        errors.append(f"docs/architecture file set changed: {sorted(architecture_files)}")
+        errors.append(f"docs/project/architecture file set changed: {sorted(architecture_files)}")
     if architecture_dirs:
-        errors.append(f"docs/architecture must not contain subdirectories: {architecture_dirs}")
+        errors.append(f"docs/project/architecture must not contain subdirectories: {architecture_dirs}")
     if (REPO_ROOT / "docs/validation/architecture-interview-qa").exists():
         errors.append("retired docs/validation/architecture-interview-qa path must not exist")
 
@@ -166,7 +166,7 @@ def verify() -> list[str]:
     if chain_count < 20:
         errors.append(f"expected at least 20 Interview Drill Chains, got {chain_count}")
 
-    if "docs/verification/interview-qa" in (REPO_ROOT / "docs/architecture/README.md").read_text(encoding="utf-8"):
+    if "docs/verification/interview-qa" in (REPO_ROOT / "docs/project/architecture/README.md").read_text(encoding="utf-8"):
         errors.append("QA corpus must not be registered as canonical architecture")
     if "docs/verification/interview-qa" in (REPO_ROOT / ".agent/system.yaml").read_text(encoding="utf-8"):
         errors.append("QA corpus must not be registered as an architecture fact source in system.yaml")

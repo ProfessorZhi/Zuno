@@ -6,15 +6,15 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[2]
-FORMAL = ROOT / "docs/modules/04-model-gateway.md"
-DOCS_INDEX = ROOT / "docs/modules/README.md"
+FORMAL = ROOT / "docs/project/modules/04-model-gateway.md"
+DOCS_INDEX = ROOT / "docs/project/modules/README.md"
 SYSTEM = ROOT / ".agent/system.yaml"
 WORKFLOW = ROOT / ".github/workflows/model-gateway-target-docs.yml"
 ADR = ROOT / "docs/decisions/0003-wave1-cross-module-contract-freeze.md"
 
 REMOVED = [
-    "docs/modules/04-model-gateway-contract-freeze.md",
-    "docs/modules/04-model-gateway-operations-conformance.md",
+    "docs/project/modules/04-model-gateway-contract-freeze.md",
+    "docs/project/modules/04-model-gateway-operations-conformance.md",
     "tools/scripts/verify_model_gateway_contract_freeze.py",
     "tools/scripts/verify_model_gateway_operations_conformance.py",
     "tests/repo/test_model_gateway_contract_freeze.py",
@@ -231,7 +231,7 @@ def verify() -> list[str]:
 
     system = read(SYSTEM)
     for term in [
-        'formal: "docs/modules/04-model-gateway.md"',
+        'formal: "docs/project/modules/04-model-gateway.md"',
         'verifier: "python tools/scripts/verify_model_gateway_target_protocols.py"',
         'test: "pytest -q tests/repo/test_model_gateway_target_protocols.py -p no:cacheprovider"',
     ]:

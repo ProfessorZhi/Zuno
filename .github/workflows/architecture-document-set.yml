@@ -4,10 +4,8 @@ on:
   pull_request:
     branches: [main]
     paths:
-      - "docs/architecture/**"
-      - ".agent/architecture/**"
-      - "docs/modules/**"
-      - ".agent/modules/**"
+      - "docs/project/architecture/**"
+      - "docs/project/modules/**"
       - "tools/agent/render_architecture.py"
       - "tools/scripts/verify_*_target_protocols.py"
       - "tools/scripts/verify_architecture_document_set.py"
@@ -23,10 +21,8 @@ on:
   push:
     branches: [main, agent/wave2-architecture-integration]
     paths:
-      - "docs/architecture/**"
-      - ".agent/architecture/**"
-      - "docs/modules/**"
-      - ".agent/modules/**"
+      - "docs/project/architecture/**"
+      - "docs/project/modules/**"
       - "tools/agent/render_architecture.py"
       - "tools/scripts/verify_*_target_protocols.py"
       - "tools/scripts/verify_architecture_document_set.py"

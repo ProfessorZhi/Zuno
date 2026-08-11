@@ -21,15 +21,15 @@ def _load_render_architecture():
 
 
 def test_architecture_directories_only_contain_support_files() -> None:
-    for root in [REPO_ROOT / "docs/architecture"]:
+    for root in [REPO_ROOT / "docs/project/architecture"]:
         assert {p.name for p in root.iterdir() if p.is_file()} == CANONICAL_ARCHITECTURE_FILES
         assert not [p for p in root.iterdir() if p.is_dir()]
 
 
 def test_formal_architecture_set_is_eleven_plus_two() -> None:
-    assert sorted(p.name for p in (REPO_ROOT / "docs/modules").glob("[0-9][0-9]-*.md")) == MODULE_DOCS
-    assert (REPO_ROOT / "docs/architecture/architecture.md").exists()
-    assert (REPO_ROOT / "docs/architecture/architecture.html").exists()
+    assert sorted(p.name for p in (REPO_ROOT / "docs/project/modules").glob("[0-9][0-9]-*.md")) == MODULE_DOCS
+    assert (REPO_ROOT / "docs/project/architecture/architecture.md").exists()
+    assert (REPO_ROOT / "docs/project/architecture/architecture.html").exists()
 
 
 def test_agent_architecture_and_module_mirrors_are_absent() -> None:
@@ -39,16 +39,16 @@ def test_agent_architecture_and_module_mirrors_are_absent() -> None:
 
 def test_architecture_markdown_is_integration_first() -> None:
     renderer = _load_render_architecture()
-    design = (REPO_ROOT / "docs/architecture/architecture.md").read_text(encoding="utf-8")
+    design = (REPO_ROOT / "docs/project/architecture/architecture.md").read_text(encoding="utf-8")
     assert renderer.validate_design(design) == []
     assert 3 <= design.count("```mermaid") <= 8
     for file_name in MODULE_DOCS:
-        assert f"docs/modules/{file_name}" in design
+        assert f"docs/project/modules/{file_name}" in design
 
 
 def test_visual_source_keeps_ten_views_and_thirty_diagrams() -> None:
     renderer = _load_render_architecture()
-    views = (REPO_ROOT / "docs/architecture/architecture-views.md").read_text(encoding="utf-8")
+    views = (REPO_ROOT / "docs/project/architecture/architecture-views.md").read_text(encoding="utf-8")
     assert renderer.EXPECTED_VIEWS == EXPECTED_VIEWS
     assert renderer.validate_source(views) == []
     assert views.count("```mermaid") == 30
@@ -56,9 +56,9 @@ def test_visual_source_keeps_ten_views_and_thirty_diagrams() -> None:
 
 def test_architecture_html_routes_to_text_modules_and_status() -> None:
     renderer = _load_render_architecture()
-    html = (REPO_ROOT / "docs/architecture/architecture.html").read_text(encoding="utf-8")
+    html = (REPO_ROOT / "docs/project/architecture/architecture.html").read_text(encoding="utf-8")
     assert renderer.validate_html(html) == []
-    for phrase in ["./architecture.md", "../modules/README.md", "../status/production-readiness.md", "./architecture-views.md"]:
+    for phrase in ["./architecture.md", "../modules/README.md", "../../status/production-readiness.md", "./architecture-views.md"]:
         assert phrase in html
 
 
@@ -75,11 +75,11 @@ def test_active_architecture_surfaces_do_not_reference_retired_split_docs() -> N
         "11-infrastructure-consistency-lifecycle.md",
     ]
     active = [
-        REPO_ROOT / "docs/modules/README.md",
-        REPO_ROOT / "docs/architecture/README.md",
-        REPO_ROOT / "docs/architecture/architecture.md",
-        REPO_ROOT / "docs/architecture/architecture-views.md",
-        REPO_ROOT / "docs/architecture/architecture.html",
+        REPO_ROOT / "docs/project/modules/README.md",
+        REPO_ROOT / "docs/project/architecture/README.md",
+        REPO_ROOT / "docs/project/architecture/architecture.md",
+        REPO_ROOT / "docs/project/architecture/architecture-views.md",
+        REPO_ROOT / "docs/project/architecture/architecture.html",
     ]
     for path in active:
         content = path.read_text(encoding="utf-8")

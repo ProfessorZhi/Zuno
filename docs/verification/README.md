@@ -4,8 +4,8 @@
 
 正式事实源仍然是：
 
-- docs/architecture/
-- docs/modules/
+- docs/project/architecture/
+- docs/project/modules/
 - docs/decisions/
 - docs/governance/
 

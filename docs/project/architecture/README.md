@@ -1,6 +1,6 @@
 # Zuno 架构文档
 
-`docs/architecture/` 是唯一正式总架构目录，只能保留：
+`docs/project/architecture/` 是唯一正式总架构目录，只能保留：
 
 ```text
 README.md
@@ -11,15 +11,15 @@ architecture.html
 
 架构文档的统一信息架构、标题、图源、Current/Target 表达和 QA 引用规则见：
 
-[`docs/governance/architecture-document-writing-standard.md`](../governance/architecture-document-writing-standard.md)
+[`docs/governance/architecture-document-writing-standard.md`](../../governance/architecture-document-writing-standard.md)
 
 ## 正式设计事实与展示配对
 
 Zuno 正式架构设计事实共十二份：
 
 ```text
-11 × docs/modules/<NN>-<module>.md
- 1 × docs/architecture/architecture.md
+11 × docs/project/modules/<NN>-<module>.md
+ 1 × docs/project/architecture/architecture.md
 ```
 
 职责：
@@ -27,7 +27,7 @@ Zuno 正式架构设计事实共十二份：
 - `architecture.md`：十一模块的跨模块集成架构、全局不变量和端到端流程。
 - `architecture-views.md` + `architecture.html`：不可拆分的架构图展示配对；前者是图源，后者是展示入口，二者不拥有独立架构事实。
 - `README.md`：目录、唯一事实源和维护规则，不是架构正文。
-- `docs/modules/`：每个领域 Owner 的唯一详细 Target 架构；领域细节冲突时以对应模块文档为准。
+- `docs/project/modules/`：每个领域 Owner 的唯一详细 Target 架构；领域细节冲突时以对应模块文档为准。
 - `.agent/` 只保存项目级 Skill、路由、验证器、模板和当前执行状态，不保存架构或模块镜像。
 
 ## Architecture v1 与 v2 路由
@@ -60,7 +60,7 @@ Current Baseline Review
 
 ## 下一阶段目标架构的设计准入标准
 
-下一阶段的目标不是把模块 README 写得更长，而是把每个设计决策写到经得起技术面试追问的程度。设计阶段只修改 `docs/architecture/`、`docs/modules/`、ADR 和共享 Contract 文档，不创建新的 Runtime Program。
+下一阶段的目标不是把模块 README 写得更长，而是把每个设计决策写到经得起技术面试追问的程度。设计阶段只修改 `docs/project/architecture/`、`docs/project/modules/`、ADR 和共享 Contract 文档，不创建新的 Runtime Program。
 
 每个总架构和模块设计都必须用文字回答以下问题：
 
@@ -139,13 +139,13 @@ Set-Location -LiteralPath .\Zuno
 同步后先读四处：
 
 ```text
-docs/modules/README.md
-docs/architecture/architecture.md
+docs/project/modules/README.md
+docs/project/architecture/architecture.md
 docs/decisions/0006-evidence-driven-agentic-graphrag.md
 .agent/programs/current.md
 ```
 
-`docs/modules/` 说明十一模块既有完整 Target；`architecture.md` 说明跨模块集成；ADR 0006 说明新的 v2 Target overlay；`.agent/programs/current.md` 说明当前是否存在 active program 和 Current / Gap 边界。clone 或 pull 只证明文件同步，不证明 Target 已成为 Current。
+`docs/project/modules/` 说明十一模块既有完整 Target；`architecture.md` 说明跨模块集成；ADR 0006 说明新的 v2 Target overlay；`.agent/programs/current.md` 说明当前是否存在 active program 和 Current / Gap 边界。clone 或 pull 只证明文件同步，不证明 Target 已成为 Current。
 
 ## 规范优先级
 

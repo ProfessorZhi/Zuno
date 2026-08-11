@@ -30,7 +30,7 @@ project-red-blue/09-open-source-review.md
 project-red-blue/10-delivery-evolution.md
 ```
 
-该工作区负责项目事实采集和红蓝互动；`docs/verification/interview-qa/` 负责架构攻击题和 Coverage。两者都不拥有 Canonical Architecture，正式变更必须回到 `docs/architecture/`、`docs/modules/`、`docs/decisions/`、`docs/status/` 或 `docs/evidence/` 的正确 Owner。
+该工作区负责项目事实采集和红蓝互动；`docs/verification/interview-qa/` 负责架构攻击题和 Coverage。两者都不拥有 Canonical Architecture，正式变更必须回到 `docs/project/architecture/`、`docs/project/modules/`、`docs/decisions/`、`docs/status/` 或 `docs/evidence/` 的正确 Owner。
 
 ## 架构与模块
 

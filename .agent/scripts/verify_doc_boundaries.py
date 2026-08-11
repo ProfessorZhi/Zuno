@@ -32,7 +32,7 @@ def main() -> int:
     if actual_evidence != expected_evidence:
         errors.append(f"evidence boundary mismatch: {sorted(actual_evidence)}")
 
-    architecture = ROOT / "docs" / "architecture"
+    architecture = ROOT / "docs" / "project" / "architecture"
     expected_architecture = {"README.md", "architecture.md", "architecture-views.md", "architecture.html"}
     actual_architecture = {path.name for path in architecture.iterdir() if path.is_file()}
     if actual_architecture != expected_architecture:

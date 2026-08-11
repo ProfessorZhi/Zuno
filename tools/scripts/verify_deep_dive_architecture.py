@@ -8,7 +8,7 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 COMMON_CASE = "审查合同 A 的责任限制条款"
 
 DOCUMENT_REQUIREMENTS = {
-    "docs/architecture/architecture.md": (
+    "docs/project/architecture/architecture.md": (
         "PlanVersion",
         "EvidenceRequirement",
         "PreparedToolAction",
@@ -18,7 +18,7 @@ DOCUMENT_REQUIREMENTS = {
         "Observability",
         "Infrastructure",
     ),
-    "docs/modules/03-knowledge-agentic-graphrag.md": (
+    "docs/project/modules/03-knowledge-agentic-graphrag.md": (
         "EvidenceRequirement",
         "EvidenceCandidate",
         "EvidenceLedger",
@@ -26,7 +26,7 @@ DOCUMENT_REQUIREMENTS = {
         "Corrective Retrieval",
         "KnowledgeSnapshot",
     ),
-    "docs/modules/05-memory-context.md": (
+    "docs/project/modules/05-memory-context.md": (
         "MemoryCandidate",
         "MemoryVersion",
         "SessionSummaryVersion",
@@ -35,7 +35,7 @@ DOCUMENT_REQUIREMENTS = {
         "MemoryWriteDecision",
         "Memory Provenance",
     ),
-    "docs/modules/06-agent-core-planning-control.md": (
+    "docs/project/modules/06-agent-core-planning-control.md": (
         "PlanVersion",
         "StepRun",
         "ActionProposal",
@@ -44,7 +44,7 @@ DOCUMENT_REQUIREMENTS = {
         "Reflexion",
         "TaskUnderstandingSnapshot",
     ),
-    "docs/modules/08-tool-runtime.md": (
+    "docs/project/modules/08-tool-runtime.md": (
         "PreparedToolAction",
         "ToolAttempt",
         "ToolObservation",
@@ -53,7 +53,7 @@ DOCUMENT_REQUIREMENTS = {
         "EffectReconciliation",
         "McpCapabilitySnapshot",
     ),
-    "docs/modules/09-security.md": (
+    "docs/project/modules/09-security.md": (
         "SecurityApprovalDecision",
         "EffectiveSecurityEpoch",
         "PreparedToolAction",

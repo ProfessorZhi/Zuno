@@ -19,8 +19,8 @@ project_fact_version
 
 允许读取的事实源由 Session manifest 指定，通常包括：
 
-- `docs/architecture/`；
-- `docs/modules/`；
+- `docs/project/architecture/`；
+- `docs/project/modules/`；
 - `docs/decisions/`；
 - `docs/status/`；
 - `docs/evidence/`；

@@ -5,11 +5,9 @@ on:
     branches:
       - main
     paths:
-      - "docs/modules/08-tool-runtime.md"
-      - ".agent/modules/08-tool-runtime.md"
-      - "docs/modules/07-capability-skill.md"
-      - "docs/modules/README.md"
-      - ".agent/modules/README.md"
+      - "docs/project/modules/08-tool-runtime.md"
+      - "docs/project/modules/07-capability-skill.md"
+      - "docs/project/modules/README.md"
       - "AGENTS.md"
       - ".agent/system.yaml"
       - ".agent/references/docs-map.md"
@@ -22,11 +20,9 @@ on:
     branches:
       - main
     paths:
-      - "docs/modules/08-tool-runtime.md"
-      - ".agent/modules/08-tool-runtime.md"
-      - "docs/modules/07-capability-skill.md"
-      - "docs/modules/README.md"
-      - ".agent/modules/README.md"
+      - "docs/project/modules/08-tool-runtime.md"
+      - "docs/project/modules/07-capability-skill.md"
+      - "docs/project/modules/README.md"
       - "AGENTS.md"
       - ".agent/system.yaml"
       - ".agent/references/docs-map.md"
@@ -100,8 +96,6 @@ jobs:
         if: steps.tool_runtime_verifier.outcome == 'failure'
         run: exit 1
 
-      - name: Verify formal and Agent mirror bytes
-        run: cmp docs/modules/08-tool-runtime.md .agent/modules/08-tool-runtime.md
 
       - name: Verify documentation entrypoints and boundaries
         run: |

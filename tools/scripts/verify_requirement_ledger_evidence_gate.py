@@ -51,7 +51,7 @@ def verify_requirement_ledger_evidence_gate() -> list[str]:
             )
         if not any(_path_exists(path) for path in current_paths):
             errors.append(f"{requirement_id} has no existing current path")
-        if all(path.startswith("docs/modules/") for path in current_paths):
+        if all(path.startswith("docs/project/modules/") for path in current_paths):
             errors.append(f"{requirement_id} only points current_paths at target docs")
 
         if not test_ids:

@@ -4,10 +4,10 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
-ARCH = ROOT / "docs/architecture/architecture.md"
-VIEWS = ROOT / "docs/architecture/architecture-views.md"
-HTML = ROOT / "docs/architecture/architecture.html"
-MODULES = ROOT / "docs/modules"
+ARCH = ROOT / "docs/project/architecture/architecture.md"
+VIEWS = ROOT / "docs/project/architecture/architecture-views.md"
+HTML = ROOT / "docs/project/architecture/architecture.html"
+MODULES = ROOT / "docs/project/modules"
 
 
 def verify() -> list[str]:

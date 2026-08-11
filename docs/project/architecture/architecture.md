@@ -6,7 +6,7 @@ human_readable_part: Part A — 面向人的设计说明
 normative_specification_part: Part B — 规范性架构与实施约束
 reading_order: Part A → Owner module Part A → Part B → Current Status / Evidence
 document_role: cross-module integration source
-canonical_domain_sources: `docs/modules/01-*.md` through `docs/modules/11-*.md`
+canonical_domain_sources: `docs/project/modules/01-*.md` through `docs/project/modules/11-*.md`
 current_state_source: `docs/status/production-readiness.md`
 writing_standard: `docs/governance/architecture-document-writing-standard.md`
 
@@ -140,20 +140,20 @@ Part A 的目的，是让读者先理解“为什么 Zuno 需要这些边界、�
 Zuno 正式架构设计事实共十二份：
 
 ```text
-11 × docs/modules/<NN>-<module>.md
- 1 × docs/architecture/architecture.md
+11 × docs/project/modules/<NN>-<module>.md
+ 1 × docs/project/architecture/architecture.md
 ```
 
 维护支撑文件：
 
 ```text
-docs/architecture/README.md
+docs/project/architecture/README.md
     目录、优先级、唯一事实源与维护规则。
 
-docs/architecture/architecture-views.md
+docs/project/architecture/architecture-views.md
     HTML 的 Mermaid 图源；与 architecture.html 作为展示配对维护，不是文字事实源。
 
-docs/architecture/architecture.html
+docs/project/architecture/architecture.html
     Mermaid Architecture Atlas 展示层；与 architecture-views.md 配对维护，不是文字事实源。
 
 .agent/*
@@ -401,17 +401,17 @@ flowchart TB
 
 | 编号 | 模块 | Canonical Ownership | 唯一详细设计 |
 | --- | --- | --- | --- |
-| 01 | Product Surface | AgentDefinition、AgentDraft、AgentVersion、AgentPublication、AgentInstallation、AgentToolBinding、UserToolPreference、AgentCatalogEntry、Conversation、Submission、ProductCommand、RuntimeRequest、CommandReceipt、Projection、ChannelDelivery、ClientRender、UserRead | `docs/modules/01-product-surface.md` |
-| 02 | Input / Document Ingestion | SourceObject、DocumentVersion、ParsePlan/Job/Attempt/Snapshot、CanonicalDocumentIR、原始 SourceSpan、质量门和 Handoff | `docs/modules/02-input-document-ingestion.md` |
-| 03 | Knowledge / Agentic GraphRAG | KnowledgeVersion/Snapshot、IndexSpec/Manifest 接受语义、RetrievalPlan/Round、EvidenceLedger、CitationLineage | `docs/modules/03-knowledge-agentic-graphrag.md` |
-| 04 | Model Gateway | Model Role/Operation、Provider/Model、Routing、Call/Attempt、Response、Usage、Quota、Health、Circuit | `docs/modules/04-model-gateway.md` |
-| 05 | Memory & Context | Session/Long-term Memory、Candidate、Governance、MemoryVersion、ContextPackVersion、UseTrace、Privacy Lifecycle | `docs/modules/05-memory-context.md` |
-| 06 | Agent Core | TaskContract、GoalVersion、AgentRun、PlanVersion、StepRun、ActionRun、ControlDecision、Publication、RunOutcome | `docs/modules/06-agent-core-planning-control.md` |
-| 07 | Capability / Skill | Capability/Skill Definition 与 Version、Requirement、ProviderBinding、CapabilitySelectionPolicy、Availability、Selection | `docs/modules/07-capability-skill.md` |
-| 08 | Tool Runtime | ToolOnboardingRequest、Tool Provider/Definition/Version/Operation、ToolInstallation、ToolConnection、ProviderInstance、PreparedToolAction、ToolAttempt、Observation、Execution/Effect/Reconciliation | `docs/modules/08-tool-runtime.md` |
-| 09 | Security | Principal、ToolGrant、DelegationGrant、ToolAccessRequest、授权、Policy、Approval、EffectiveSecurityEpoch、Secret、Information Flow 与安全 Gate | `docs/modules/09-security.md` |
-| 10 | Observability & Eval | Trace/Metric/Log Projection、accepted AuditEvent、Eval、Benchmark、Evidence Registry、ReleaseGateEvaluation | `docs/modules/10-observability-eval.md` |
-| 11 | Infrastructure | Transaction、Object、Queue、Inbox/Outbox、Lease/Fencing、Checkpoint、Index 物理执行、Backup/Restore | `docs/modules/11-infrastructure.md` |
+| 01 | Product Surface | AgentDefinition、AgentDraft、AgentVersion、AgentPublication、AgentInstallation、AgentToolBinding、UserToolPreference、AgentCatalogEntry、Conversation、Submission、ProductCommand、RuntimeRequest、CommandReceipt、Projection、ChannelDelivery、ClientRender、UserRead | `docs/project/modules/01-product-surface.md` |
+| 02 | Input / Document Ingestion | SourceObject、DocumentVersion、ParsePlan/Job/Attempt/Snapshot、CanonicalDocumentIR、原始 SourceSpan、质量门和 Handoff | `docs/project/modules/02-input-document-ingestion.md` |
+| 03 | Knowledge / Agentic GraphRAG | KnowledgeVersion/Snapshot、IndexSpec/Manifest 接受语义、RetrievalPlan/Round、EvidenceLedger、CitationLineage | `docs/project/modules/03-knowledge-agentic-graphrag.md` |
+| 04 | Model Gateway | Model Role/Operation、Provider/Model、Routing、Call/Attempt、Response、Usage、Quota、Health、Circuit | `docs/project/modules/04-model-gateway.md` |
+| 05 | Memory & Context | Session/Long-term Memory、Candidate、Governance、MemoryVersion、ContextPackVersion、UseTrace、Privacy Lifecycle | `docs/project/modules/05-memory-context.md` |
+| 06 | Agent Core | TaskContract、GoalVersion、AgentRun、PlanVersion、StepRun、ActionRun、ControlDecision、Publication、RunOutcome | `docs/project/modules/06-agent-core-planning-control.md` |
+| 07 | Capability / Skill | Capability/Skill Definition 与 Version、Requirement、ProviderBinding、CapabilitySelectionPolicy、Availability、Selection | `docs/project/modules/07-capability-skill.md` |
+| 08 | Tool Runtime | ToolOnboardingRequest、Tool Provider/Definition/Version/Operation、ToolInstallation、ToolConnection、ProviderInstance、PreparedToolAction、ToolAttempt、Observation、Execution/Effect/Reconciliation | `docs/project/modules/08-tool-runtime.md` |
+| 09 | Security | Principal、ToolGrant、DelegationGrant、ToolAccessRequest、授权、Policy、Approval、EffectiveSecurityEpoch、Secret、Information Flow 与安全 Gate | `docs/project/modules/09-security.md` |
+| 10 | Observability & Eval | Trace/Metric/Log Projection、accepted AuditEvent、Eval、Benchmark、Evidence Registry、ReleaseGateEvaluation | `docs/project/modules/10-observability-eval.md` |
+| 11 | Infrastructure | Transaction、Object、Queue、Inbox/Outbox、Lease/Fencing、Checkpoint、Index 物理执行、Backup/Restore | `docs/project/modules/11-infrastructure.md` |
 
 ---
 
@@ -594,7 +594,7 @@ flowchart LR
 
 # 7. Agentic GraphRAG 与证据闭环
 
-本节是 Agentic GraphRAG 的跨模块集成规范；字段级 Contract、KnowledgeVersion 生命周期、RetrieverAttempt 细节和模块内测试矩阵由 `docs/modules/03-knowledge-agentic-graphrag.md` 唯一拥有。本节只定义模块之间必须一致的控制边界、证据语义、版本一致性、失败恢复和评测标准。
+本节是 Agentic GraphRAG 的跨模块集成规范；字段级 Contract、KnowledgeVersion 生命周期、RetrieverAttempt 细节和模块内测试矩阵由 `docs/project/modules/03-knowledge-agentic-graphrag.md` 唯一拥有。本节只定义模块之间必须一致的控制边界、证据语义、版本一致性、失败恢复和评测标准。
 
 Agentic GraphRAG 不是“BM25 + Vector + Graph 三路固定执行”，而是一个受治理的
 `Plan → Act → Observe → Evaluate → Adapt → Stop` 闭环：
@@ -1592,7 +1592,7 @@ Set-Location -LiteralPath .\Zuno
 
 | 层级 | 先读什么 | 用来回答什么 |
 | --- | --- | --- |
-| 架构目标 | `docs/modules/README.md`、十一份 `docs/modules/<NN>-*.md`、`docs/architecture/architecture.md` | Target 应该长什么样，Owner、Contract、Failure 和状态边界由谁定义 |
+| 架构目标 | `docs/project/modules/README.md`、十一份 `docs/project/modules/<NN>-*.md`、`docs/project/architecture/architecture.md` | Target 应该长什么样，Owner、Contract、Failure 和状态边界由谁定义 |
 | 可视化理解 | `architecture.md` 内嵌 Mermaid；`architecture-views.md` + `architecture.html` 展示配对 | 只帮助阅读，不作为独立事实源 |
 | 当前状态 | `.agent/programs/current.md`、`.agent/programs/program-manifest.yaml`、`docs/status/production-readiness.md` | 当前 active program、Current / Gap / Measurement Blocked 和完成证据是什么 |
 

@@ -6,8 +6,8 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 CANONICAL = [
-    ROOT / "docs/architecture/architecture.md",
-    *sorted((ROOT / "docs/modules").glob("[0-9][0-9]-*.md")),
+    ROOT / "docs/project/architecture/architecture.md",
+    *sorted((ROOT / "docs/project/modules").glob("[0-9][0-9]-*.md")),
 ]
 PART_A = "# Part A — 面向人的设计说明"
 PART_B = "# Part B — 规范性架构与实施约束"
@@ -72,8 +72,8 @@ def verify() -> list[str]:
     for forbidden in (ROOT / "docs").glob("**/*-spec.md"):
         errors.append(f"human/spec mirror document must not exist: {forbidden.relative_to(ROOT)}")
 
-    views = ROOT / "docs/architecture/architecture-views.md"
-    html = ROOT / "docs/architecture/architecture.html"
+    views = ROOT / "docs/project/architecture/architecture-views.md"
+    html = ROOT / "docs/project/architecture/architecture.html"
     if not views.exists() or not html.exists():
         errors.append("architecture diagram presentation pair must remain present")
     elif 'fetch("./architecture-views.md")' not in html.read_text(encoding="utf-8"):
