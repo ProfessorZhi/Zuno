@@ -9,7 +9,7 @@ writing_standard: `docs/governance/architecture-document-writing-standard.md`
 
 > 本文是 Zuno 十一模块（十一个逻辑模块）的跨模块集成架构。它解释模块如何组成一个可恢复、可并行、可审计的企业 Agent 系统，但不复制每个模块的全部字段、状态机、数据库表和 Adapter 规格。
 >
-> 领域对象、状态转换、Failure、持久化和测试细节发生冲突时，以对应 Canonical Owner 的模块文档为准；本文必须在同一轮治理变更中被修正。`architecture-views.md` 与 `architecture.html` 是说明性可视化，优先级最低，不得反向修改模块 Contract。
+> 领域对象、状态转换、Failure、持久化和测试细节发生冲突时，以对应 Canonical Owner 的模块文档为准；本文必须在同一轮治理变更中被修正。正式文字设计面只包括本文和十一份模块文档；`architecture-views.md` 与 `architecture.html` 是不可拆分的展示配对，不拥有独立架构语义。
 
 本文按六个阅读 Part 组织，但保留既有章节编号作为稳定引用锚点。阅读顺序是：问题与约束 → 平台形态 → 一次任务如何运行 → 分布式系统如何保持正确 → 如何部署和演练 → 如何验证与演进。模块文档中的字段、状态和 Failure 细节不在此复制。
 
@@ -17,12 +17,11 @@ writing_standard: `docs/governance/architecture-document-writing-standard.md`
 
 ## 0. 正式事实源、优先级与维护顺序
 
-Zuno 正式架构设计事实共十三份：
+Zuno 正式架构设计事实共十二份：
 
 ```text
 11 × docs/modules/<NN>-<module>.md
  1 × docs/architecture/architecture.md
- 1 × docs/architecture/architecture.html
 ```
 
 维护支撑文件：
@@ -32,7 +31,10 @@ docs/architecture/README.md
     目录、优先级、唯一事实源与维护规则。
 
 docs/architecture/architecture-views.md
-    architecture.html 使用的 Mermaid 图源；不是第二份文字架构。
+    HTML 的 Mermaid 图源；与 architecture.html 作为展示配对维护，不是文字事实源。
+
+docs/architecture/architecture.html
+    Mermaid Architecture Atlas 展示层；与 architecture-views.md 配对维护，不是文字事实源。
 
 .agent/*
     仅保存项目级 Agent Skill、路由、验证器、模板和当前执行状态；不保存架构或模块镜像。
@@ -44,8 +46,6 @@ docs/architecture/architecture-views.md
 全局不可变原则、已接受 ADR、共享 Contract Registry
 → 对应 Canonical Owner 的十一份模块 Target 文档
 → architecture.md 跨模块集成架构
-→ architecture-views.md 说明性 Mermaid
-→ architecture.html 渲染与导航
 → 已确认 Program
 → 代码、Migration、测试、Trace、Eval 与运行证据
 ```
@@ -54,8 +54,8 @@ docs/architecture/architecture-views.md
 
 1. 模块文档最接近领域事实，定义 Owner、Contract、状态、Failure 和完成证据。
 2. 总架构负责跨模块组合，不得发明模块文档不存在的领域终态。
-3. Mermaid 为阅读服务，可以压缩流程，但不能删除会改变语义的 Gate、Commit、Proposal、Barrier、Reconciliation 或状态分支。
-4. HTML 动态渲染 Mermaid，不拥有任何独立架构语义。
+3. `architecture.md` 中的 Mermaid 仅服务于阅读，不能删除会改变语义的 Gate、Commit、Proposal、Barrier、Reconciliation 或状态分支。
+4. `architecture-views.md` 与 `architecture.html` 不拥有独立架构语义；只有图形关系变化时才作为一个整体同步。
 5. Current、Gap、Measurement 和 Production Readiness 只由最新 `main` 的代码、Migration、测试、Trace、Eval、`docs/status/` 与 `docs/evidence/` 证明。
 
 ---
@@ -1294,7 +1294,7 @@ Set-Location -LiteralPath .\Zuno
 | 层级 | 先读什么 | 用来回答什么 |
 | --- | --- | --- |
 | 架构目标 | `docs/modules/README.md`、十一份 `docs/modules/<NN>-*.md`、`docs/architecture/architecture.md` | Target 应该长什么样，Owner、Contract、Failure 和状态边界由谁定义 |
-| 可视化理解 | `docs/architecture/architecture-views.md`、`docs/architecture/architecture.html` | 十类图如何帮助阅读，不作为独立事实源 |
+| 可视化理解 | `architecture.md` 内嵌 Mermaid；`architecture-views.md` + `architecture.html` 展示配对 | 只帮助阅读，不作为独立事实源 |
 | 当前状态 | `.agent/programs/current.md`、`.agent/programs/program-manifest.yaml`、`docs/status/production-readiness.md` | 当前 active program、Current / Gap / Measurement Blocked 和完成证据是什么 |
 
 判断一句话能不能写成 Current 时，只看第三层和最新代码证据；判断一个模块未来应该怎样实现时，先看第一层。
@@ -1338,7 +1338,7 @@ pytest -q tests/repo/test_architecture_document_set.py tests/repo/test_architect
 
 ```text
 云端 architecture.md 更新了，所以 Runtime 已完成。
-Mermaid 图画出来了，所以状态机可恢复。
+Mermaid 图画出来了，所以状态机可恢复；这种说法不成立。恢复能力必须由模块 Contract、状态、Receipt、Reconciliation 和运行证据证明。
 Program 激活了，所以 Phase 已完成。
 Target 写了 PostgreSQL，所以当前 SQLite / local adapter 已经退休。
 EvidenceLedger 写在文档里，所以 fixed benchmark 已 measured。

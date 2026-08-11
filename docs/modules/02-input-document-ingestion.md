@@ -1,6 +1,6 @@
 # 02 Input / Document Ingestion
 
-updated: 2026-07-14
+updated: 2026-08-11
 status: normative-target-module-architecture
 module_number: 02
 formal_path: `docs/modules/02-input-document-ingestion.md`
@@ -75,6 +75,19 @@ Part X
 字段、状态、Policy 和不变量是规范性内容。示例流程和技术候选不得覆盖规范性 Contract。
 
 ---
+
+## 0.2 当前文档事实与下游交接
+
+当前 Target 固定以下边界：
+
+```text
+Contract 是稳定业务身份；DocumentVersion 是不可变内容版本。
+SourceObject 保存物理文件与 Hash；ParseSnapshot 保存一次解析解释。
+CanonicalDocumentIR / SourceSpan 归 02；Evidence / Citation / Knowledge Entity 归 03。
+StructuredObservation / MemoryCandidate 归 05；02 不直接写长期 Memory。
+```
+
+源内容变化创建新 `DocumentVersion`；Parser、Schema 或模型变化创建新 `ParseSnapshot`。只有通过质量与安全门的 Snapshot 才能交给 Knowledge 或 Agent Core，历史 Review 不得隐式跟随“最新版本”。
 
 # Part I：定位、问题与 Ownership
 

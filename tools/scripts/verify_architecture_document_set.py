@@ -96,7 +96,7 @@ def verify() -> list[str]:
                 errors.append(f"active architecture surface references retired split doc {retired}: {path.relative_to(REPO_ROOT)}")
 
     if "11 × docs/modules" not in design or "1 × docs/architecture/architecture.md" not in design:
-        errors.append("architecture.md must declare the 11+2 formal design set")
+        errors.append("architecture.md must declare the 11+1 formal design set")
     if "../modules/README.md" not in html:
         errors.append("architecture.html must route to the eleven module documents")
 

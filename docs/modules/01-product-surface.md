@@ -1,6 +1,6 @@
 # 01 Product Surface
 
-updated: 2026-07-14
+updated: 2026-08-11
 status: normative-target-module-architecture
 module_number: 01
 formal_path: `docs/modules/01-product-surface.md`
@@ -73,6 +73,23 @@ docs/status/production-readiness.md
 Part I–IV 是定位、流程和实现表面的说明性视图；Part V–VII 是对象、状态、协议和一致性的规范性视图；Part VIII 定义 Requirement、Control、测试和完成证据。说明性视图不得覆盖规范性 Contract。
 
 ---
+
+## 0.2 当前统一业务主线
+
+Zuno 当前以法律事项为产品中心，而不是以聊天或 AgentRun 为中心：
+
+```text
+Matter
+→ Contract / DocumentVersion
+→ Review / ReviewProfileBinding
+→ ReviewRun
+→ AgentRun
+→ FindingProposal
+→ ReviewFinding / ReviewerDecision
+→ Redline / Report / WorkProduct
+```
+
+`Matter`、`Review`、`Finding` 是产品业务对象；`ReviewRun` 是一次审查执行记录；`AgentRun` 是 Runtime 执行对象。`Review != AgentRun`、`Finding != Answer`。Product Surface 拥有 Matter、Contract、Review、ReviewFinding、ReviewerDecision、WorkProduct 和 ReviewProfileBinding，但不越权拥有 DocumentVersion、Evidence、Plan、Memory 或 Security Decision。
 
 # Part I：定位与概念架构
 

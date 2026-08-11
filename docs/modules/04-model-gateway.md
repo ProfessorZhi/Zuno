@@ -1,6 +1,6 @@
 # 04 Model Gateway
 
-updated: 2026-07-14
+updated: 2026-08-11
 status: normative-target-module-architecture
 module_number: 04
 formal_path: `docs/modules/04-model-gateway.md`
@@ -78,6 +78,18 @@ Part I–III 是问题、模型使用地图、概念架构与运行流程的说�
 | History | 被替换的旧设计、旧路径和完成后的 Program，进入 `docs/history/`，不再作为规范入口。 |
 
 ---
+
+## 0.3 当前模型角色边界
+
+Model Gateway 只拥有在线模型调用、Routing、Usage、Cost、Health、Attempt 和 Provider 适配事实；它不拥有任务目标、知识证据、长期记忆、权限或外部效果。
+
+```text
+TaskUnderstanding / Extraction / Query Rewrite / Risk / Evidence Critic
+→ Model Proposal / Score / Result
+→ 各 Canonical Owner 校验并提交领域事实
+```
+
+法律领域的 Embedding、Reranker 和 Task Model 可以由 Domain Engineering 提供候选 Artifact，但只有经过 Eval/Release Gate 后，Model Gateway 才能按版本提供在线服务。模型永远不能直接激活 Plan、MemoryVersion、KnowledgeVersion、Approval 或 Publication。
 
 # Part I：定位、问题与跨模块模型使用地图
 

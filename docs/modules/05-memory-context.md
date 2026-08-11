@@ -60,6 +60,22 @@ Part I–IV 解释问题、概念、流程和实现表面；Part V–VII 给出�
 
 ---
 
+## 0.2 当前 Memory 主线
+
+当前 Memory 主线与产品业务主线连接为：
+
+```text
+TaskUnderstandingSnapshot / Source Fact
+→ StructuredObservation
+→ Capture Policy
+→ MemoryCandidate
+→ MemoryWriteDecision
+→ immutable MemoryVersion
+→ Recall / Security / ContextPackVersion
+```
+
+Memory 仍不拥有 Matter、Review、Knowledge Evidence 或 Tool Effect；它提供可治理的历史上下文和读取视图。
+
 # Part I：定位、术语与概念架构
 
 # 1. 为什么需要独立的 Memory & Context 模块

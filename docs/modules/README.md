@@ -150,15 +150,14 @@ docs/modules/11-infrastructure.md
 
 ## 正式架构文档集
 
-正式设计事实共十三份：
+正式设计事实共十二份：
 
 ```text
 11 × docs/modules/<NN>-<module>.md
 1  × docs/architecture/architecture.md
-1  × docs/architecture/architecture.html
 ```
 
-`docs/architecture/README.md` 是目录说明；`architecture-views.md` 是 HTML 的 Mermaid 渲染源。它们是维护支撑文件，不是额外模块或第二份总架构。
+`docs/architecture/README.md` 是目录说明；`architecture-views.md` 与 `architecture.html` 是不可拆分的架构图展示配对。它们是维护支撑文件，不是额外模块或第二份总架构。
 
 ## 状态边界
 

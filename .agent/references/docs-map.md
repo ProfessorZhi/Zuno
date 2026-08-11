@@ -7,7 +7,7 @@
 ## Mental Model
 
 ```text
-docs/architecture/ = 总架构四个支撑文件
+docs/architecture/ = 总架构正文与架构图展示配对
 docs/modules/      = 十一个领域模块唯一正式 Target 文档
 docs/status/       = Current / Gap / Readiness
 docs/decisions/    = ADR
@@ -29,7 +29,7 @@ docs/decisions/0003-wave1-cross-module-contract-freeze.md
 docs/governance/wave1-cross-module-contract-registry.md
 ```
 
-`architecture-views.md` 是 HTML Mermaid 图源，不是第二份文字总架构。
+`architecture-views.md` 与 `architecture.html` 是不可拆分的 HTML Mermaid 展示配对，不是第二份文字总架构，也不拥有独立架构事实。
 
 总架构和模块的统一信息架构、标题、Mermaid、Current/Target 和 QA 引用规则见：
 
@@ -54,7 +54,7 @@ docs/governance/wave1-cross-module-contract-registry.md
 ## Must Preserve
 
 - 每个模块只有一份 `docs/modules/<NN>-*.md` 正式 Target 文档。
-- `docs/architecture/` 只能包含 README、Markdown、Mermaid source 和 HTML 四个文件；`.agent/` 不保存架构镜像。
+- `docs/architecture/` 物理上只保留 README、`architecture.md`、`architecture-views.md` 和 `architecture.html`；其中正式文字设计是 `architecture.md`，后两者是展示配对；`.agent/` 不保存架构镜像。
 - 模块领域细节以对应 Owner 模块文档为准；总架构只做跨模块集成。
 - Current 只由代码、Migration、测试、Trace、Eval 和运行证据证明。
 - 历史分拆文档不得重新成为活跃事实源。
@@ -69,15 +69,14 @@ docs/modules/<NN>-module.md
 docs/modules/README.md
 .agent/system.yaml
 对应 verifier / focused test
-必要时同步 architecture.md / architecture-views.md / architecture.html
+必要时同步 architecture.md；如果图形关系变化，把 architecture-views.md 与 architecture.html 作为一个整体同步
 ```
 
 修改总架构时同步：
 
 ```text
 docs/architecture/architecture.md
-docs/architecture/architecture-views.md
-docs/architecture/architecture.html
+docs/architecture/architecture-views.md + docs/architecture/architecture.html（展示配对）
 ```
 
 如果修改的是文档结构或阅读顺序，还要同步写作标准入口和写作标准 verifier；不在 `.agent/` 创建架构正文镜像。

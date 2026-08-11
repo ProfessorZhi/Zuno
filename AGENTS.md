@@ -22,7 +22,7 @@ AGENTS.md
      scripts/       过渡期验证器
 
 docs/
-  architecture/    总架构四个 canonical 文件
+  architecture/    总架构正文与架构图展示配对
   modules/         十一个逻辑模块设计
   status/          Current 与差距
   decisions/       ADR
@@ -74,8 +74,7 @@ docs/architecture/
 职责：
 
 - `docs/architecture/architecture.md`：重文字目标总架构，说明“轻量实现、成熟设计”、十一逻辑模块、六个物理运行域、Agent 闭环、Contract、状态、失败语义和验收。
-- `docs/architecture/architecture-views.md`：十类 canonical views 的 Mermaid 规范图源。
-- `docs/architecture/architecture.html`：读取独立图源的原生 Mermaid Architecture Atlas。
+- `docs/architecture/architecture-views.md` 与 `docs/architecture/architecture.html`：不可拆分的架构图展示配对；前者提供图源，后者负责展示，二者不拥有独立架构事实。
 - `docs/architecture/README.md`：目录边界和维护方式。
 - `.agent/` 不再保存总架构或模块镜像；Agent 通过 `docs/` 唯一正式文档源读取架构事实。
 
@@ -105,7 +104,7 @@ Agent Core 规范优先级：全局架构原则 → 单一模块 Target 架构�
 设计含义变化时：
 
 1. 更新 `docs/architecture/architecture.md`；
-2. 图形关系变化时更新 `architecture-views.md`；
+2. 图形关系变化时，把 `architecture-views.md` 与 `architecture.html` 作为一个展示配对同步更新；
 3. 运行 `python tools/agent/render_architecture.py --write`；
 4. 运行 `python tools/agent/render_architecture.py --check`；
 5. 运行 `python tools/scripts/verify_docs_entrypoints.py`。
@@ -136,21 +135,21 @@ Agent Core 规范优先级：全局架构原则 → 单一模块 Target 架构�
 架构、重构、新功能或工作流任务先读：
 
 1. `docs/architecture/architecture.md`
-2. `docs/architecture/architecture-views.md`
-3. `docs/architecture/architecture.html`
-4. `docs/modules/README.md`
-5. 与任务对应的 `docs/modules/<module>.md`
-6. `docs/status/production-readiness.md`
-7. `.agent/README.md`
-8. `.agent/system.yaml`
-9. `.agent/references/current-program.md`
-10. `.agent/references/docs-map.md`
-11. `.agent/references/code-map.md`
-12. `.agent/references/task-routing.md`
-13. `.agent/references/workflow.md`
-14. `.agent/references/debugging.md`
-15. `.agent/references/known-pitfalls.md`
-16. `.agent/references/verification-map.md`
+2. `docs/modules/README.md`
+3. 与任务对应的 `docs/modules/<module>.md`
+4. `docs/status/production-readiness.md`
+5. `.agent/README.md`
+6. `.agent/system.yaml`
+7. `.agent/references/current-program.md`
+8. `.agent/references/docs-map.md`
+9. `.agent/references/code-map.md`
+10. `.agent/references/task-routing.md`
+11. `.agent/references/workflow.md`
+12. `.agent/references/debugging.md`
+13. `.agent/references/known-pitfalls.md`
+14. `.agent/references/verification-map.md`
+
+`architecture-views.md` 与 `architecture.html` 只在需要查看或维护架构图时作为一个整体打开；它们不是必读的文字事实源。
 
 Agent Core 任务必须读取唯一正式 Target 文档 `docs/modules/06-agent-core-planning-control.md`。
 

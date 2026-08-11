@@ -1,6 +1,6 @@
 version: 2
 
-purpose: "Route Zuno tasks to the eleven canonical module architectures, total architecture, Programs, and verification."
+purpose: "Route Zuno tasks to the eleven canonical module architectures, total architecture, presentation pair, Programs, and verification."
 
 system_identity:
   name: "Zuno Local Agent Skill System"
@@ -39,8 +39,14 @@ architecture_directory_contract:
     - "docs/architecture/architecture.md"
     - "docs/architecture/architecture-views.md"
     - "docs/architecture/architecture.html"
-  formal_design_fact_count: "11 module documents + architecture.md + architecture.html"
-  visual_source_role: "architecture-views.md is the Mermaid source for architecture.html, not a second textual architecture"
+  canonical_design_files:
+    - "docs/architecture/architecture.md"
+    - "docs/modules/01-product-surface.md through docs/modules/11-infrastructure.md"
+  formal_design_fact_count: "11 module documents + architecture.md"
+  presentation_pair:
+    - "docs/architecture/architecture-views.md"
+    - "docs/architecture/architecture.html"
+  visual_source_role: "architecture-views.md and architecture.html are one paired diagram presentation surface; neither is an independent architecture fact source"
   forbidden_content:
     - "module-specific second architecture documents"
     - "production readiness"

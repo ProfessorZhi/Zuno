@@ -1,6 +1,6 @@
 # 06 Agent Core / Planning & Control
 
-updated: 2026-07-14
+updated: 2026-08-11
 status: normative-target-module-architecture
 module_number: 06
 formal_path: `docs/modules/06-agent-core-planning-control.md`
@@ -58,6 +58,22 @@ docs/status/
 Part I–IV 是问题、流程和实现表面的说明性视图；Part V–VII 是字段、状态、Policy、持久化与恢复的规范性视图；Part VIII 定义 Requirement、测试和完成证据。说明性视图不得覆盖规范性 Contract。
 
 ---
+
+## 0.2 当前控制主线
+
+Agent Core 连接产品业务目标与受治理执行：
+
+```text
+Review / ReviewScope
+→ TaskUnderstandingSnapshot
+→ TaskContract / GoalVersion
+→ PlanVersion / Step
+→ EvidenceRequirement / ActionProposal
+→ Acceptance / FindingProposal
+→ Human Review / WorkProduct
+```
+
+Agent Core 拥有 Why/When、Plan、Run、Step、Proposal 和 Replan；Knowledge 拥有证据获取，Memory 拥有历史上下文，Tool/Security 拥有外部效果与授权。模型只产生 Proposal，不能直接提交领域终态。
 
 # Part I：定位与概念架构
 

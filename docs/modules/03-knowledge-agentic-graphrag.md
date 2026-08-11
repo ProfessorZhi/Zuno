@@ -1,6 +1,6 @@
 # 03 Knowledge / Agentic GraphRAG
 
-updated: 2026-07-14
+updated: 2026-08-11
 status: normative-target-module-architecture
 module_number: 03
 formal_path: `docs/modules/03-knowledge-agentic-graphrag.md`
@@ -57,6 +57,21 @@ docs/evidence/
 Part I–IV 是概念、流程和控制语义；Part V–VII 是 Contract、持久化和实现规格；Part VIII 定义 Requirement、测试与完成证据。说明性示例不得覆盖规范性字段、状态机和不变量。
 
 ---
+
+## 0.2 当前证据主线
+
+Knowledge 的运行时职责是为 Agent Core 的 Claim 建立 `EvidenceRequirement`，在授权的 Knowledge Snapshot 内获取、评价、物化和引用证据。Memory 可以保存 `knowledge_evidence_ref` 作为历史上下文，但不能复制 Knowledge 正文或替代 Matter、Enterprise Policy、Legal Authority 的权威事实。
+
+```text
+TaskUnderstandingSnapshot / Claim
+→ EvidenceRequirement
+→ RetrievalRound / SearchAction
+→ EvidenceCandidate / EvidenceEvaluation
+→ SelectedEvidenceBundle
+→ Agent Core Acceptance / Finding Claim
+```
+
+Knowledge 不创建 Matter、Review、MemoryVersion 或 Tool Effect；当证据缺口改变任务结构时，只提交 `KnowledgeControlProposal`，由 Agent Core 决定是否 Replan。
 
 # Part I：问题、定义与模块边界
 

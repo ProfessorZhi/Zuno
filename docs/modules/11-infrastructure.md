@@ -1,6 +1,6 @@
 # 11 Infrastructure
 
-updated: 2026-07-14
+updated: 2026-08-11
 status: normative-target-module-architecture
 module_number: 11
 formal_path: `docs/modules/11-infrastructure.md`
@@ -68,6 +68,21 @@ docs/status/production-readiness.md
 Part I–II 描述问题、概念架构和完整流程；Part III–VI 冻结 Contract、状态、故障、安全与运维语义；Part VII–VIII 冻结实现表面、Requirement、测试与证据。说明性流程不得覆盖规范性 Contract。
 
 ---
+
+## 0.2 当前物理运行边界
+
+Infrastructure 提供物理可靠性原语，不拥有领域 Acceptance：
+
+```text
+Domain Fact / Version / Intent
+→ PostgreSQL Transaction / Outbox
+→ Queue / Lease / Fencing / Worker
+→ Object / Index / External Receipt
+→ Verification / Reconciliation
+→ Domain Owner Acceptance / CAS Cutover
+```
+
+`IndexWriteReceipt`、`Checkpoint Commit`、`Queue ACK` 和 `Object Commit` 只证明各自物理边界，不能冒充 KnowledgeVersion、MemoryVersion、EffectReceipt、ReviewFinding 或 Eval Quality。Infrastructure 不因收到消息而创建业务对象。
 
 # Part I：定位、目标与架构选择
 

@@ -1,6 +1,6 @@
 # 10 Observability & Eval
 
-updated: 2026-07-14
+updated: 2026-08-11
 status: normative-target-module-architecture
 module_number: 10
 formal_path: `docs/modules/10-observability-eval.md`
@@ -85,6 +85,19 @@ History
 存在 Runner、Report、Dashboard 或 Trace helper 只证明局部 `implementation available`，不能证明 `quality proven` 或 `production ready`。
 
 ---
+
+## 0.2 当前质量主线
+
+Observability & Eval 不夺取源领域事实 Ownership，而是把同一条业务链上的事实、Trace、Eval 和 Release Gate 关联起来：
+
+```text
+Matter / Review / AgentRun
+→ Evidence / Memory / Tool / Model Attempts
+→ Trace / Audit / Metric / EvalResult
+→ Benchmark Comparison / Release Gate
+```
+
+Memory Extraction、Temporal、Conflict、Scope、Provenance、Context Contribution 和删除传播都必须有独立 MetricDefinition；Target 的指标定义不等于 Current 质量证明。
 
 # Part I：定位与概念架构
 

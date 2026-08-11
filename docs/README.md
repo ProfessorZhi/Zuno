@@ -8,8 +8,7 @@
 ## 首读路径
 
 - [总体 Target 架构](./architecture/architecture.md)：十一模块跨模块集成、Single Controller、Contract、状态、失败、恢复和验证原则。
-- [架构 Mermaid 图源](./architecture/architecture-views.md)：总体架构的说明性视图源。
-- [架构 HTML 展示](./architecture/architecture.html)：Architecture Atlas；不拥有独立架构语义。
+- [架构图展示配对](./architecture/architecture-views.md)：与 `architecture.html` 配套的 Mermaid 图源；二者只负责展示，不拥有独立架构语义。
 - [十一逻辑模块设计](./modules/README.md)：每个领域 Owner 的唯一完整 Target 设计入口。
 - [Evidence-Driven Agentic GraphRAG ADR](./decisions/0006-evidence-driven-agentic-graphrag.md)：下一版 `accepted-target` overlay；不代表 Current 实现。
 - [Production Readiness](./status/production-readiness.md)：Current、Gap、Measurement、Blocked 和 Production Readiness 状态事实源。
@@ -21,7 +20,7 @@
 - [历史归档](./history/README.md)：经过批准的历史摘要，不重新解释成当前事实。
 
 ```text
-architecture/    总架构四个 canonical 文件
+architecture/    总架构正文与架构图展示配对
 modules/         十一个逻辑模块 Target 设计
 status/          Current、Gap、Measurement 与 Production Readiness
 decisions/       ADR
@@ -100,7 +99,7 @@ Web / Desktop 通过 HTTP Command / Query、SSE Projection Stream 和版本化 C
 
 ## 文档治理
 
-`docs/architecture/` 是唯一正式总架构目录，只能保留四个 canonical 文件；`.agent/` 不保存架构镜像：
+`docs/architecture/` 是唯一正式总架构目录。正文 canonical surface 是 `architecture.md`；图源与 HTML 作为不可拆分的展示配对保留；`.agent/` 不保存架构镜像：
 
 ```text
 README.md

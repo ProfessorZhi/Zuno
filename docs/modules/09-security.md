@@ -1,6 +1,6 @@
 # Zuno 09 Security Target 架构
 
-updated: 2026-07-14
+updated: 2026-08-11
 status: normative-target-module-architecture
 module_number: 09
 formal_path: `docs/modules/09-security.md`
@@ -69,6 +69,20 @@ docs/status/
 Part I–IV 解释问题、概念和运行流程；Part V–VII 定义规范性 Contract、状态、故障、持久化和恢复；Part VIII 定义 Requirement、测试、Eval 和完成证据。说明性视图不得覆盖规范性字段和不变量。
 
 ---
+
+## 0.2 当前安全主线
+
+Security 横切 Matter、Knowledge、Memory、Model、Tool 和 Publication，但不拥有这些业务事实。当前 Target 的核心是：
+
+```text
+Principal / Tenant / Workspace / Matter / Agent / Task
+→ Effective Scope ∩ Security Epoch
+→ Instruction Trust / Information Flow
+→ Read / Write / Prepare / Execute / Publish Gate
+→ Audit / Revocation / Revalidation
+```
+
+Memory 的读取、摘要、写入、Projection Serving 和删除都必须经过 Security；不可信 Knowledge、Tool Output 或 Memory Candidate 不能升级为指令或外部副作用授权。
 
 # Part I：定位、事实状态与威胁模型
 

@@ -35,8 +35,8 @@ def verify() -> list[str]:
     precedence = [
         "Canonical Owner 的十一份模块 Target 文档",
         "architecture.md 跨模块集成架构",
-        "architecture-views.md 说明性 Mermaid",
-        "architecture.html 渲染与导航",
+        "已确认 Program",
+        "代码、Migration、测试、Trace、Eval 与运行证据",
     ]
     last = -1
     for marker in precedence:

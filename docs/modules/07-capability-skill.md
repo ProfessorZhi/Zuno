@@ -1,6 +1,6 @@
 # 07 Capability / Skill
 
-updated: 2026-07-14
+updated: 2026-08-11
 status: normative-target-module-architecture
 module_number: 07
 formal_path: `docs/modules/07-capability-skill.md`
@@ -71,6 +71,19 @@ Part VIII
 
 说明性视图不得覆盖规范性 Contract；发生冲突时按 Part IV–VII 解释，并在同一轮文档修改中消除冲突。
 
+
+## 0.2 当前领域能力边界
+
+Capability / Skill 是能力发现与复用层，不是业务事实 Owner。法律产品可以通过 `Legal Domain Profile` 提供 Contract Review、Legal Research、Redline 等 Skill 的输入输出 Contract、Evidence Requirement、Risk 和人工审阅约束，但 Skill 不能直接写 Matter、Knowledge、Memory 或执行 Tool Effect。
+
+```text
+Capability / Skill Definition
+→ Availability / Selection / Feasibility Proposal
+→ Agent Core Plan Step
+→ Tool Runtime Prepare / Execute（如有副作用）
+```
+
+Skill 可以声明需要的 Model Role、Knowledge、Memory、Capability 和 Tool，但授权、预算、审批、幂等和最终状态仍由对应 Owner 决定。
 
 # Part I：定位、术语与概念架构
 

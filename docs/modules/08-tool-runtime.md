@@ -1,6 +1,6 @@
 # 08 Tool Runtime
 
-updated: 2026-07-14
+updated: 2026-08-11
 status: normative-target-module-architecture
 module_number: 08
 formal_path: `docs/modules/08-tool-runtime.md`
@@ -83,6 +83,23 @@ production ready
 ```
 
 ---
+
+## 0.2 当前外部效果主线
+
+所有外部副作用统一进入：
+
+```text
+ActionProposal
+→ Capability / ToolVersion Resolution
+→ PreparedToolAction
+→ Security Gate / Approval
+→ Idempotency Claim / Attempt
+→ Adapter Dispatch
+→ ToolObservation / EffectReceipt
+→ Reconciliation or Agent Core ControlDecision
+```
+
+ToolObservation 可以作为 Memory 的 Source Fact 候选，但不自动成为 Memory；不可信 Tool Output 也不能直接绑定下一次 Tool 的目标、收件人或权限。
 
 # Part I：定位、术语与边界
 

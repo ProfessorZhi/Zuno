@@ -32,8 +32,7 @@ scope: `docs/architecture/`, `docs/modules/` 与其入口、图源、验证器
 全局原则、已接受 ADR、共享 Contract Registry
 → 对应 Owner 的 `docs/modules/<NN>-*.md`
 → `docs/architecture/architecture.md` 的跨模块集成
-→ `docs/architecture/architecture-views.md` 的图源
-→ `docs/architecture/architecture.html` 的展示
+→ `architecture-views.md` + `architecture.html` 的展示配对
 ```
 
 职责边界：
@@ -41,8 +40,7 @@ scope: `docs/architecture/`, `docs/modules/` 与其入口、图源、验证器
 | 位置 | 唯一职责 |
 | --- | --- |
 | `docs/architecture/architecture.md` | 为什么需要平台、跨模块运行链、全局正确性和部署语义 |
-| `docs/architecture/architecture-views.md` | 与总架构对应的 Mermaid 图源；不拥有额外文字事实 |
-| `docs/architecture/architecture.html` | 读取图源的展示层；不得手工创造架构语义 |
+| `docs/architecture/architecture-views.md` + `docs/architecture/architecture.html` | 不可拆分的 Mermaid 图展示配对；不拥有额外文字事实，HTML 不得手工创造架构语义 |
 | `docs/modules/` | 十一个领域 Owner 的详细 Target、状态、Failure、Contract、实现规格和验证要求 |
 | `docs/status/`、`docs/evidence/` | Current、Gap、Measurement 和运行证据 |
 | `docs/decisions/` | 被接受或正在审查的架构决策 |
@@ -200,7 +198,7 @@ Domain Contract
 - 表格用于比较、Ownership、Strategy Matrix、Failure Matrix、State Transition 和 Service Mapping；不使用超大表格承载整章叙事。
 - Schema 只展示表达语义所需字段；完整字段由 Owner 模块的实现规格持有。
 - Mermaid 一张图只回答一个问题；必须保留 Gate、Commit、Barrier、Proposal、Effect、Interrupt、Reconciliation 等改变语义的节点。
-- `architecture.md` 必须比 HTML 充实；HTML 只能读取图源，不得反向成为事实源。
+- `architecture.md` 是唯一总架构文字事实；展示配对只负责帮助阅读，不得反向成为事实源。
 - `Current`、`Target`、`Future`、`History` 必须显式标注，禁止用目标语气暗示已经实现。
 
 ## 5. 图源、入口和引用规则
@@ -214,7 +212,7 @@ architecture-views.md
 architecture.html
 ```
 
-图形关系变化时同步 `architecture-views.md`，运行：
+图形关系变化时，将 `architecture-views.md` 与 `architecture.html` 作为一个整体同步，运行：
 
 ```powershell
 python tools/agent/render_architecture.py --write
@@ -232,7 +230,7 @@ python tools/agent/render_architecture.py --check
 - 总架构包含六 Part 语义入口和统一 Case；
 - 十一个模块均可路由到唯一正式文档；
 - 模块文档可以定位 Problem、Ownership、Runtime Flow、State / Failure、Security、Observability、Current / Target；
-- 图源与 HTML、内部链接和 QA references 可解析；
+- 展示配对、内部链接和 QA references 可解析；
 - 未接受 Candidate 不被标为 accepted / normative Current。
 
 建议验证顺序：

@@ -13,21 +13,19 @@ architecture.html
 
 [`docs/governance/architecture-document-writing-standard.md`](../governance/architecture-document-writing-standard.md)
 
-## 正式设计事实
+## 正式设计事实与展示配对
 
-Zuno 正式架构设计事实共十三份：
+Zuno 正式架构设计事实共十二份：
 
 ```text
 11 × docs/modules/<NN>-<module>.md
  1 × docs/architecture/architecture.md
- 1 × docs/architecture/architecture.html
 ```
 
 职责：
 
 - `architecture.md`：十一模块的跨模块集成架构、全局不变量和端到端流程。
-- `architecture.html`：总体架构的 Mermaid 可视化入口。
-- `architecture-views.md`：HTML 的 Mermaid 渲染源，不是第二份文字总架构。
+- `architecture-views.md` + `architecture.html`：不可拆分的架构图展示配对；前者是图源，后者是展示入口，二者不拥有独立架构事实。
 - `README.md`：目录、唯一事实源和维护规则，不是架构正文。
 - `docs/modules/`：每个领域 Owner 的唯一详细 Target 架构；领域细节冲突时以对应模块文档为准。
 - `.agent/` 只保存项目级 Skill、路由、验证器、模板和当前执行状态，不保存架构或模块镜像。
@@ -133,8 +131,7 @@ docs/decisions/0006-evidence-driven-agentic-graphrag.md
 全局不可变原则、已接受 ADR、共享 Contract Registry
 → 十一份 Canonical Owner 模块文档
 → architecture.md 跨模块集成
-→ architecture-views.md 说明性 Mermaid
-→ architecture.html 渲染
+→ architecture-views.md + architecture.html 展示配对
 ```
 
 模块文档更新后，总架构和图必须向模块对齐；禁止根据旧 Mermaid 反向修改新模块 Contract。已接受 ADR 与模块文本冲突时，先按 ADR 执行决策治理，再通过后续文档协调 PR 消除冲突。
@@ -156,7 +153,7 @@ docs/governance/
 
 ## 更新与验证
 
-模块含义变化时先更新对应模块唯一文档，再同步总架构的跨模块关系。图形关系变化时同步 `architecture-views.md` 和 HTML。
+模块含义变化时先更新对应模块唯一文档，再同步总架构的跨模块关系。图形关系变化时，把 `architecture-views.md` 和 `architecture.html` 作为一个整体同步；本轮只更新文字事实，不改展示配对。
 
 总架构按“问题 → 平台形态 → 端到端运行 → 分布式正确性 → 生产运维 → 验证与演进”的顺序组织；模块正文保留各自稳定标题锚点，但遵循同一套七 Part 写作协议。标题锚点是为了保持已有 QA 和外部引用稳定，不代表模块细节脱离 Owner 文档。
 
