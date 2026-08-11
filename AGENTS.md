@@ -21,6 +21,9 @@ AGENTS.md
      templates/     执行模板和报告骨架
      scripts/       过渡期验证器
 
+project-red-blue/
+  -> 项目级 Red/Blue Lab：事实采集、项目模型、红队攻击、蓝队提案和 Skill 契约；不拥有正式架构事实。
+
 docs/
   architecture/    总架构正文与架构图展示配对
   modules/         十一个逻辑模块设计
@@ -45,6 +48,7 @@ docs/
 - `docs/`：正式人类文档真相。
 - `AGENTS.md`：仓库级 Agent 入口和工作流契约。
 - `.agent/`：本地 Agent Skill System、Reference、Program 和模板；不保存架构或模块正文镜像。
+- `project-red-blue/`：项目级红蓝实验区，维护项目事实、攻击协议、Gap 和会话摘要；不替代 `docs/` 的正式事实源。
 - `docs/history/`：历史归档。
 
 正式结论必须进入 `docs/`。只给 Agent 使用的导航、可复用提示和辅助脚本放在 `.agent/`。
@@ -162,6 +166,7 @@ Agent Core 任务必须读取唯一正式 Target 文档 `docs/modules/06-agent-c
 
 - 范围不清楚 → `.agent/references/task-routing.md` 的只读审计路由。
 - 文档、`.agent`、History、README → `.agent/references/workflow.md` 的文档维护流程。
+- 项目红蓝队、项目事实、落地真实性或个人贡献 → `project-red-blue/README.md` 的项目红蓝工作流。
 - 目录移动、删除、归档、忽略规则和缓存清理 → 仓库卫生流程。
 - `apps/web` → `apps/web/AGENTS.md` 和 `.agent/references/code-map.md`。
 - `src/backend/zuno/agent/**` → Agent Core 单一模块 Target 文档、Runtime Call Chain 和 Code Map。

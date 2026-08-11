@@ -16,15 +16,21 @@ python .agent/scripts/verify_doc_boundaries.py
 架构红蓝队任务先读取：
 
 ```text
-docs/verification/architecture-red-blue/README.md
-docs/verification/architecture-red-blue/01-project-context-intake.md
-docs/verification/architecture-red-blue/02-red-blue-interaction.md
-docs/verification/architecture-red-blue/03-attack-surface.md
-docs/verification/architecture-red-blue/04-blue-fix-routing.md
-docs/verification/architecture-red-blue/05-skill-contract.md
+project-red-blue/README.md
+project-red-blue/00-charter.md
+project-red-blue/01-project-facts.md
+project-red-blue/02-project-model.md
+project-red-blue/03-team-ownership.md
+project-red-blue/04-attack-taxonomy.md
+project-red-blue/05-interviewer-personas.md
+project-red-blue/06-red-team-protocol.md
+project-red-blue/07-blue-team-protocol.md
+project-red-blue/08-gap-register.md
+project-red-blue/09-open-source-review.md
+project-red-blue/10-delivery-evolution.md
 ```
 
-该工作区负责事实采集和红蓝互动；`docs/verification/interview-qa/` 负责架构攻击题和 Coverage。两者都不拥有 Canonical Architecture，正式变更必须回到 `docs/architecture/`、`docs/modules/`、`docs/decisions/`、`docs/status/` 或 `docs/evidence/` 的正确 Owner。
+该工作区负责项目事实采集和红蓝互动；`docs/verification/interview-qa/` 负责架构攻击题和 Coverage。两者都不拥有 Canonical Architecture，正式变更必须回到 `docs/architecture/`、`docs/modules/`、`docs/decisions/`、`docs/status/` 或 `docs/evidence/` 的正确 Owner。
 
 ## 架构与模块
 

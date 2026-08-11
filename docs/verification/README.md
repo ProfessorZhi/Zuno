@@ -12,10 +12,10 @@
 如果验证材料与正式架构冲突，以正式架构为准；如果验证暴露 Gap，应先修改正式事实源，再重新生成验证结果。
 
 - [Architecture Red Team QA](./interview-qa/README.md)
-- [Architecture Red-Blue Workspace](./architecture-red-blue/README.md)
+- [Project Red-Blue Lab](../../project-red-blue/README.md)
 
 `docs/verification/interview-qa/` 是 Zuno 架构红队模拟面试 QA 的唯一维护目录。它按“为什么 → 怎么判断 → 怎么执行 → 失败怎么办 → 如何恢复 → 如何证明有效”的连续追问组织材料，不是第二套架构事实，也不是只罗列术语的题库。
 
 红队发动攻击从 [`deep-dive-chains.md`](./interview-qa/deep-dive-chains.md) 开始；题目、覆盖矩阵和 Gap 报告都是该攻击工具的辅助材料。
 
-`docs/verification/architecture-red-blue/` 是更上层的项目红蓝协作工作区：先采集用户、规模、团队、当前落地和约束，再把产品价值、WorkBuddy 替代、团队协作、架构规模、开发过程、成本、安全和可靠性纳入盘问。它调用 `interview-qa/` 的架构攻击题，但不复制题目，也不拥有正式架构事实。未来的 Architecture Red-Blue Skill 按该目录的 `05-skill-contract.md` 执行。
+`project-red-blue/` 是更上层的项目红蓝协作工作区：先采集用户、规模、团队、当前落地和约束，再把产品价值、WorkBuddy 替代、团队协作、架构规模、开发过程、成本、安全和可靠性纳入盘问。它调用 `interview-qa/` 的架构攻击题，但不复制题目，也不拥有正式架构事实。未来的 Project Red-Blue Architect Skill 按其 `skill/README.md` 的延后规则评估，不在多次真实会话前生成正式 `SKILL.md`。
