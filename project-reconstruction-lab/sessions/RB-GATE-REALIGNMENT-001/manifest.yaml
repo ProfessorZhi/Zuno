@@ -18,10 +18,10 @@ closure_class_counts:
   evidence_measurement_blocking: 1
   external_qualification_blocking: 1
 original_p0_closed: 0
-user_architecture_gate: PENDING_USER_DECISION
-canonical_sync_status: NOT_APPLIED
-round_002_status: BLOCKED_BY_USER_ARCHITECTURE_GATE
-implementation_program: NOT_STARTED
+user_architecture_gate: APPROVED
+canonical_sync_status: APPLIED
+round_002_status: READY_NOT_STARTED
+implementation_program: READY_FOR_TASK_DEFINITION
 runtime_changes: NONE
 schema_or_migration_changes: NONE
 canonical_facts_changed: NONE

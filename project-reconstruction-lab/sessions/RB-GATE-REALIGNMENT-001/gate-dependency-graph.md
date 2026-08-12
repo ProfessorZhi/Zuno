@@ -73,4 +73,5 @@ Fact / Product Baseline
 3. I-P0 必须有 Target Contract 和 Implementation Task Candidate，但 I-P0 仍为 OPEN。
 4. E-P0 必须有 Benchmark/Eval Plan，但不能因此成为 `MEASURED`。
 5. X-P0 必须有 Qualification Plan，但不能因此成为 `SECURITY_QUALIFIED` 或生产证明。
-6. 用户 Gate 记录必须保持 `PENDING_USER_DECISION`，模型不得代签。
+6. 用户 Gate 必须由用户明确记录 `APPROVE`、`REJECT` 或 `REQUEST_REVISION`；模型不得代签。
+   本次用户已经明确 `APPROVE`，批准范围仅为 `ACCEPTED_TARGET`。

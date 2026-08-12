@@ -16,13 +16,13 @@ program_class: `architecture-review-and-reconstruction`
 - Track B 从真实问题重新攻击 Product、Domain、Runtime、Knowledge、Service、Data、Security 和 Eval；
 - Python-only 与 Microservice 是 Owner Target Constraint，但具体服务数量和边界仍在审查；
 - 本 Program 不修改业务 Runtime、UI、Schema/Migration、依赖或生产 Infra；
-- 未通过 User Architecture Gate 前不激活 implementation task；可以在 Lab 中记录有边界的
-  Implementation Task Candidate，但不得修改 Runtime 或创建 implementation Program。
-- `ZUNO-RED-BLUE-WORKFLOW-V2 / ROUND-001` 已生成并完成 100 题记录；当前为
-  `NOT_PASSED_PENDING_USER_GATE`，P0 Critical Gate 保持 OPEN，Canonical Docs 未同步。
-- 当前先执行 `RB-BLUE-REPAIR-001`，完成 Root-Cause Clustering、Part-A Repair 和 Counter Retest；
-  Round-002 在 A-P0、User Architecture Gate 和 Canonical Sync 通过前保持 BLOCKED；I/E/X
-  Closure 继续作为后续轨道推进。
+- User Architecture Gate 已批准 Part-A Target，Canonical Sync 已应用；Implementation Task
+  Candidate 仅进入 `READY_FOR_TASK_DEFINITION`，本 Program 仍不得修改 Runtime 或创建 active
+  implementation Program。
+- `ZUNO-RED-BLUE-WORKFLOW-V2 / ROUND-001` 已生成并完成 100 题记录；其原始 P0/Critical
+  Closure 仍保持 OPEN，但经 Gate Realignment 后 Part-A Target 已被批准并完成 Canonical Sync。
+- `RB-BLUE-REPAIR-001` 已完成 Root-Cause Clustering、Part-A Repair 和 Counter Retest；
+  Round-002 具备启动条件但保持 `READY_NOT_STARTED`；I/E/X Closure 继续作为后续轨道推进。
 - 当前 Evidence Closure 会话为 `RB-EVIDENCE-CLOSURE-001`；它复用已有 focused verifier/test，
   不修改 Runtime/UI/Schema/Migration/生产 Infra。当前 Final P0 为 12，Closure-grade evidence
   为 0/12，Counter Retest 尚未执行，Canonical Docs 不得同步。
@@ -30,7 +30,7 @@ program_class: `architecture-review-and-reconstruction`
   current/narrow records；Red 接受为 Closure 的数量为 0，Q066 为 BLOCKED_EXTERNAL，Q039-B
   为 V5 benchmark gap，12 个原始 P0 仍 OPEN。
 - 当前 Gate Realignment 会话为 `RB-GATE-REALIGNMENT-001`：A-P0=0、I-P0=11、E-P0=1、
-  X-P0=1；用户 Gate 保持 `PENDING_USER_DECISION`，Canonical Sync 未应用。该分类不关闭
+  X-P0=1；用户 Gate 已 `APPROVED`，Canonical Sync 已应用为 `ACCEPTED_TARGET`。该分类不关闭
   原始 P0，也不激活 Implementation Program。
 
 ## 当前交接
@@ -43,8 +43,8 @@ Canonical Facts Taxonomy V1         DONE
 Fact Depth Recovery                 IN_PROGRESS
 Product / Architecture Reconstruction IN_PROGRESS
 Red / Blue / Interview Review       READY / IN_PROGRESS
-Canonical Architecture Sync         AFTER USER ARCHITECTURE GATE
-Implementation Program              NOT_STARTED
+Canonical Architecture Sync         APPLIED / ACCEPTED_TARGET
+Implementation Program              READY_FOR_TASK_DEFINITION (not active)
 ```
 
 Canonical Runtime Program V1 已完成并归档。可读历史摘要位于：

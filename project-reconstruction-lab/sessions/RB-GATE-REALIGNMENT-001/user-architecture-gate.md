@@ -1,13 +1,18 @@
 # USER-ARCHITECTURE-GATE-001 — User Decision Package
 
 ```text
-Status: PENDING_USER_DECISION
-User decision: NOT_ENTERED
-Canonical Sync: NOT_APPLIED
+Status: APPROVED
+User decision: APPROVE
+Canonical Sync: APPLIED
+Approved scope: Canonical Part-A Target Architecture only
+Architecture state: ACCEPTED_TARGET
 ```
 
-本包不是自动批准书。它把已完成的设计审查、仍未实现的 Contract、Benchmark 和外部
-资格缺口放在同一份可审阅材料中，等待用户选择 `APPROVE`、`REJECT` 或 `REQUEST_REVISION`。
+本包记录用户明确的 `APPROVE`。批准只接受当前 Part-A 作为下一阶段 Canonical Target；不把
+Target 标记为 `IMPLEMENTED`、`VERIFIED`、`MEASURED` 或 `PRODUCTION_PROVEN`。
+
+批准条件：服务数量和物理边界仍可按证据合并/拆分；OpenViking 只是可替换 Memory Provider；
+所有未测量的质量、效率、安全和竞品优势仍保持 Hypothesis。
 
 ## 1. Product / Architecture Thesis
 
@@ -113,8 +118,9 @@ Latency、Token、Cost、Calls、Retrieval Rounds 和 State Reuse。Q039-B 是 P
 ## 17. Architecture changes made by Red/Blue
 
 本轮对治理的修改是：增加 Closure Class；分离 User Architecture Gate 与 Evidence/Production
-Closure；允许 `SURVIVED` 设计在实现前进入用户审阅；将 I/E/X 变成可追踪的后续轨道。没有
-修改 Product Runtime、Canonical Architecture 内容或历史 P0 记录。
+Closure；允许 `SURVIVED` 设计在实现前进入用户审阅；将 I/E/X 变成可追踪的后续轨道。用户批准
+后，本包的 Part-A Target 已同步到 Canonical Architecture 与专题 Owner 文档；没有修改 Product
+Runtime、Schema/Migration 或历史 P0 记录。
 
 ## 18. Known Current gaps
 
@@ -133,7 +139,7 @@ Closure；允许 `SURVIVED` 设计在实现前进入用户审阅；将 I/E/X 变
 - Docker/Deno 或等价可审计 Sandbox 运行资格（Q066）。
 - 真实 Provider、部署环境、负载、网络和安全环境的资格证据仍未建立。
 
-## 21. Proposed Canonical Sync Scope
+## 21. Applied Canonical Sync Scope
 
 仅在用户批准后，候选同步范围为：
 
@@ -142,12 +148,13 @@ Closure；允许 `SURVIVED` 设计在实现前进入用户审阅；将 I/E/X 变
 3. `docs/governance/` 的 Gate policy 已在本轮作为治理变更记录，但不改变 Target→Current；
 4. 相关 ADR/Program 引用和 `docs/status/` 的 Current/Gaps（不把本包写成 Current）。
 
-当前 `Canonical Sync Status: NOT_APPLIED`，没有新增或修改 `docs/project/`、`docs/decisions/`
-中的架构事实。
+当前 `Canonical Sync Status: APPLIED`。同步写入 `docs/project/architecture/`、Product/Domain/
+Agents/Knowledge/Services/Data/Security/Eval/Deployment 专题及 `docs/status/`；没有新增 ADR，
+因为 ADR-0008/0009/0010/0011 已记录本次设计决定。
 
 ## 22. Proposed first Codex implementation tasks
 
-以下只是候选，不能在本轮激活：
+以下是已具备定义条件、但尚未激活的候选；状态为 `READY_FOR_TASK_DEFINITION`，不能在本轮执行：
 
 1. `TASK-CANDIDATE-001`：Canonical Domain Mutation / Version Contract（Q005）。
 2. `TASK-CANDIDATE-002`：PlanVersion ↔ DomainVersion optimistic concurrency / replan（Q053）。
@@ -155,6 +162,8 @@ Closure；允许 `SURVIVED` 设计在实现前进入用户审阅；将 I/E/X 变
 4. `TASK-CANDIDATE-004`：Tool execute-time authorization and SecurityEpoch revocation（Q061）。
 5. `TASK-CANDIDATE-005`：EffectReceipt、`outcome_unknown` 和 reconcile（Q063/Q064/Q070）。
 6. `TASK-CANDIDATE-006`：Domain/Checkpoint/Effect/Queue recovery reconciliation（Q016/Q097）。
+
+建议波次：Wave 1=`001/003`；Wave 2=`002/004`；Wave 3=`005`；Wave 4=`006`。
 
 激活前置条件：用户 Gate `APPROVED`、Canonical Sync 完成、Stop Condition 已确认、每项
 任务有 Allowed/Forbidden Scope、Migration、Rollback、Test 和 Evidence Acceptance Criteria。

@@ -1,6 +1,7 @@
 # Knowledge & Evidence Architecture：文档如何变成可引用证据？
 
 status: normative-target
+architecture_state: ACCEPTED_TARGET
 canonical_question: Ingestion、Retrieval、EvidenceCandidate 和 Citation Lineage 如何服务 Domain/Agent？
 owner: Knowledge Service
 replaces: `docs/project/modules/02-input-document-ingestion.md`、`03-knowledge-agentic-graphrag.md`（Superseded）
@@ -28,6 +29,16 @@ Raw Document / DocumentVersion
 ```
 
 Graph、向量、BM25、RAGFlow 或其他 Provider 不能直接产生法律事实。Citation 必须回到授权 SourceSpan；Graph path 不是天然 citation。
+
+## Citation provenance gate
+
+Target Citation Contract 必须绑定 `claim_id`、`evidence_id`、`document_version_id`、`source_span_id`
+和 provenance。缺少来源、引用了错误 DocumentVersion/SourceSpan、证据与 Claim 冲突或权限不可验证
+时，系统必须拒绝、标记 unsupported、请求更多证据或进入人工复核；不能只因为检索结果存在就发布
+Finding。当前 `CitationBinder` 尚未证明这条 wrong-span 校验，属于 `Q039-C / P0-I`，不能写成 Current。
+
+Graph 是 Conditional Projection。只有按 Query Class 的 Graph ablation、质量、延迟和成本结果证明
+收益，Graph 才保留；否则降级为 Hybrid/Vector/Lexical Provider。
 
 ## Current / Target / Gap
 

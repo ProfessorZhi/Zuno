@@ -43,10 +43,15 @@ scope: `docs/project/architecture/` 与 `docs/project/<topic>/`
 
 ```yaml
 status: normative-target | current-fact | hypothesis | history
+architecture_state: ACCEPTED_TARGET | PROPOSED | UNDER_ATTACK | REJECTED | DEFERRED
 canonical_question: ...
 owner: ...
 replaces: ...
 ```
+
+`architecture_state` 与 `status` 正交：`ACCEPTED_TARGET` 只表示用户已经接受该设计作为
+下一阶段 Canonical Target，不表示代码已实现、验证、测量或具备生产资格。实现、证据和外部
+资格仍分别由 `Current / Target / Gap`、ADR、Program 和 `docs/status/` 记录。
 
 正文至少回答：
 

@@ -4,6 +4,7 @@
 
 updated: 2026-08-13
 status: normative-target-visual-source
+architecture_state: ACCEPTED_TARGET
 text_design_source: `docs/project/architecture/architecture.md`
 canonical_taxonomy_source: `docs/project/README.md` and `docs/decisions/0011-architecture-document-taxonomy.md`
 
@@ -26,12 +27,14 @@ flowchart LR
 ```mermaid
 flowchart LR
   M[Create Matter] --> D[Upload DocumentVersion]
-  D --> K[Knowledge ingestion + Evidence retrieval]
-  K --> A[Agent Coordinator + role profiles]
-  A --> P[Legal Capability Proposal]
-  P --> V[Domain validation/version]
-  V --> F[Finding + HumanDecision]
-  F --> W[WorkProduct]
+  D --> S[Domain Snapshot / DomainVersion]
+  S --> A[Agent Coordinator + PlanVersion]
+  A --> G[Evidence / Security / Budget Gate]
+  G --> K[Retrieval / Memory / Capability / Tool Proposal]
+  K --> P[Domain Proposal + Evidence lineage]
+  P --> V[Domain Owner validation/version]
+  V --> F[Finding + Human Review]
+  F --> W[WorkProduct / Response]
 ```
 
 ## Logical Architecture
@@ -100,11 +103,12 @@ flowchart LR
 
 ```mermaid
 flowchart TB
-  SUBMIT[FastAPI Run Submit] --> COORD[Coordinator]
-  COORD --> PLAN[Plan / Budget / Policy]
-  PLAN --> ROLE[Role Profiles]
+  SUBMIT[FastAPI Run Submit] --> COORD[Single Controller]
+  COORD --> PLAN[PlanVersion / Budget / Policy]
+  PLAN --> ROLE[Role Profiles / Dynamic Plan DAG]
   ROLE --> WORKER[Ephemeral Workers / Parallel Tools]
-  WORKER --> OBS[Observation / Proposal]
+  WORKER --> GATE[Evidence / Security / Budget Gate]
+  GATE --> OBS[Observation / Proposal / Receipt]
   OBS --> COORD
   COORD --> HITL[HITL / Replan / Finalize]
   HITL --> DOMAIN[Domain Owner Commit]
@@ -129,7 +133,7 @@ flowchart LR
 
 ```mermaid
 flowchart TB
-  CLIENT[External surfaces] --> EDGE[edge-api]
+  CLIENT[External surfaces / WorkBuddy / MCP] --> EDGE[edge-api]
   EDGE --> PLATFORM[platform-domain-service]
   EDGE --> AGENT[agent-runtime-service]
   EDGE --> KNOW[knowledge-service]
@@ -138,6 +142,7 @@ flowchart TB
   AGENT --> AW[Agent workers]
   TOOL --> SW[Sandbox workers]
   PLATFORM --> DB[(PostgreSQL logical schemas)]
+  NOTE[Candidate boundary; count remains revisable] -.-> EDGE
 ```
 
 ### Deployment Profiles View
@@ -193,7 +198,7 @@ flowchart LR
   C[Zuno Native Runtime] --> METRIC
   METRIC --> GATE{C>B?}
   GATE -->|yes, repeatable and attributable| KEEP[Runtime Target may survive]
-  GATE -->|no / C≈B| DELETE[Delete extra runtime complexity]
+  GATE -->|no / C≈B| DELETE[Delete or shrink extra runtime complexity]
 ```
 
 ### Security Verification View

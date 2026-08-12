@@ -1,6 +1,7 @@
 # Multi-Agent Runtime：Agent 怎样协作而不复制业务代码？
 
 status: normative-target
+architecture_state: ACCEPTED_TARGET
 canonical_question: Multi-Agent 的协作层级、共享状态和服务边界是什么？
 owner: Agent Runtime Service
 
@@ -23,6 +24,11 @@ Coordinator、Evidence Agent、Dispute Agent、Legal Research Agent、Similar Ca
 ## Service rule
 
 默认所有 profiles 运行在 `agent-runtime-service` 中，使用 ephemeral worker。一个 Agent 不自动成为一个微服务；拆分必须证明 independent deployment、security boundary、SLA 或 resource isolation 的收益。
+
+`Single Controller + specialized role/profile + parallel steps` 是 Part-A 默认模型，不是自治
+Agent Society。只有当某个 Agent 同时需要独立 Context、Permission、Model、Tool、Knowledge、
+Resource Pool、Lifecycle 或 Evaluation，才保留独立 Agent Identity；否则降级为 Step、Skill 或
+Capability Provider。
 
 ## Eval
 

@@ -3,14 +3,14 @@
 ## 状态
 
 ```text
-Track: READY_AFTER_USER_GATE
+Track: READY_FOR_TASK_DEFINITION
 Active implementation program: NOT_STARTED
 Task candidates: 6
 Runtime changes in this session: NONE
 ```
 
-I-P0 的“阻塞”是实施完成阻塞，不是 Target 设计阻塞。只有 User Architecture Gate 通过并
-完成 Canonical Sync 后，候选任务才可以转成 active implementation Program。
+I-P0 的“阻塞”是实施完成阻塞，不是 Target 设计阻塞。User Architecture Gate 已通过并完成
+Canonical Sync，候选任务现在可以进入任务定义；本会话仍不创建或执行 active implementation Program。
 
 ## 任务候选
 
@@ -28,3 +28,14 @@ I-P0 的“阻塞”是实施完成阻塞，不是 Target 设计阻塞。只有 
 每个任务激活前必须有：Canonical Owner、Target Contract、Allowed/Forbidden Scope、状态迁移、
 失败/Retry/Recovery/Idempotency、Security、Observability、Migration、Rollback 和 focused
 acceptance tests。任务候选存在不等于 Implementation Complete。
+
+## 波次
+
+```text
+Wave 1: TASK-CANDIDATE-001, TASK-CANDIDATE-003
+Wave 2: TASK-CANDIDATE-002, TASK-CANDIDATE-004
+Wave 3: TASK-CANDIDATE-005
+Wave 4: TASK-CANDIDATE-006
+```
+
+所有波次均为 `READY_FOR_TASK_DEFINITION`，未在本 Program 自动启动。

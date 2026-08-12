@@ -1,6 +1,7 @@
 # Legal Eval & Benchmark：怎样证明做得对？
 
 status: normative-target
+architecture_state: ACCEPTED_TARGET
 canonical_question: 如何公平测量法律质量、效率、安全和服务复杂度收益？
 owner: Eval / Observability
 replaces: `docs/project/modules/10-observability-eval.md`（Superseded）
@@ -62,6 +63,11 @@ staleness/dependency 或 Review 对账，才可以支持 Native Runtime 的保�
 ## Worker boundary
 
 Eval/benchmark runs are asynchronous batch jobs. Product API submits a job and returns receipt; Eval Worker owns dataset/run/result/release gate facts. It不能提升 Domain Finding、质量或 Production Readiness，除非有通过的证据协议。
+
+`A/B/C` 是 `Q039-B / P0-E` 的 Target Contract，不是已执行结果。相同模型、语料、工具、预算和
+评测集下，只有 `C >> B >> A` 且收益可归因于 first-class Domain State、EvidenceRequirement、
+staleness/dependency 或 Review 对账，才允许 Native Runtime 继续存在；`C ≈ B >> A` 应收缩为
+Legal Backend；`C ≈ B ≈ A` 必须删除无证据复杂度。
 
 ## Current / Target / Gap
 

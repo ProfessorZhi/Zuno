@@ -1,6 +1,7 @@
 # Legal Domain Model：法律业务世界是什么？
 
 status: normative-target
+architecture_state: ACCEPTED_TARGET
 canonical_question: 哪些对象是法律业务世界的 Canonical State，谁可以改变它？
 owner: Platform / Domain Service
 replaces: `docs/project/modules/01-product-surface.md`、`03-knowledge-agentic-graphrag.md` 中的重复领域描述（Superseded）
@@ -26,6 +27,18 @@ Domain Model 不是 LLM Model、Prompt、Knowledge Base、Memory、Skill、Tool�
 ## Provider rule
 
 Agent、Legal Intelligence、Knowledge、LLM、OSS、API 和 MCP Provider 只能返回 `Proposal`、`Candidate`、`Observation`、`Reference` 或 `Receipt`，不能直接写 `FactVersion`、`ConflictVersion` 或 `FindingVersion`。
+
+## Part-A owner and mutation boundary
+
+Domain Owner 的责任范围包括 Tenant、Workspace、Matter、DocumentVersion、Fact、Claim、Evidence、
+Conflict、Dispute、LegalIssue、Finding、HumanDecision、WorkProduct、Review、DomainVersion 和
+Provenance 的正式版本。这个 Owner 清单不等于每个名称都必须立即新增一张表：`Fact`、`Event`、
+`Conflict`、`Dispute`、`LegalIssue`、`ApplicableLaw` 等仍须先满足 identity、version、dependency、
+review 和 audit 的必要性条件，才从 typed proposal/derived view 升级为独立 Canonical Object。
+
+只有 Domain Owner 能执行 Canonical mutation。任何 Provider 输出都必须经过 Schema、Provenance、
+Evidence、Permission、Version、State transition 和必要 Human Review；业务语义不随 Runtime、
+Memory Provider 或模型拓扑漂移。
 
 ## Scope boundary
 

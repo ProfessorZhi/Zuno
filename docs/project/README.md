@@ -49,6 +49,8 @@ SRE:      services → data → deployment → eval
 
 - Current 只由代码、Migration、Test、Trace、Eval、`docs/status/` 和 `docs/evidence/` 证明。
 - Target 由 accepted ADR、专题 Canonical 文档和共享 Contract 定义；Python-only/Microservice 是本轮 Target Constraint。
+- `architecture_state: ACCEPTED_TARGET` 表示用户已接受下一阶段 Canonical Part-A 设计；它不表示
+  `IMPLEMENTED`、`VERIFIED`、`MEASURED` 或 `PRODUCTION_PROVEN`。
 - Hypothesis 必须通过 Benchmark、Spike、Security Evidence 或 User Validation 关闭；没有关闭前不能提升为 Current。
 - Future 只记录长期可选方向，例如 Persistent Agent Team、物理数据库拆分、Kubernetes 或 Event Sourcing；它们不是本轮服务成立的前置条件。
 - History 保留旧 11 Module 架构的摘要和可追溯迁移材料；旧模块不再是新 Target 的事实源。

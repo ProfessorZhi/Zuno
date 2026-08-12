@@ -64,14 +64,15 @@ def validate_design(content: str) -> list[str]:
         "## 0. 这次重构改变了什么",
         "## 1. 产品与领域核心",
         "## 2. Python-only Target",
-        "## 3. 五个 Network-facing Python Services",
+        "## 3. Target Network-facing Service Boundary Candidates",
         "## 4. 逻辑能力如何落到服务",
         "## 5. FastAPI 与 LangGraph 的硬边界",
         "## 6. 同步、异步与队列",
         "## 7. Domain State 与 Runtime State",
         "## 8. Deployment Profiles",
-        "## 9. Current / Target / History",
-        "## 10. Canonical Reading Order",
+        "## 9. Acceptance、Reversal 与 Current / Target / History",
+        "## 10. Current / Target / History",
+        "## 11. Canonical Reading Order",
     ]
     required_terms = [
         "Python-only", "Microservice", "edge-api", "platform-domain-service",
@@ -89,8 +90,10 @@ def validate_design(content: str) -> list[str]:
             errors.append(f"architecture.md does not route to canonical document: {path}")
     if "11 Logical Modules + 1 Architecture" not in content:
         errors.append("architecture.md must record the old 11-module taxonomy as History")
-    if "五个服务的 Target Candidate，不是 Current" not in content:
-        errors.append("architecture.md must distinguish service Target from Current")
+    if "五个候选服务角色，不是冻结的服务数量，也不是 Current" not in content:
+        errors.append("architecture.md must distinguish candidate service roles from Current and fixed count")
+    if "architecture_state: ACCEPTED_TARGET" not in content:
+        errors.append("architecture.md must record ACCEPTED_TARGET")
     if content.count("```mermaid") > 8:
         errors.append("architecture.md must remain text-first with at most eight diagrams")
     return errors

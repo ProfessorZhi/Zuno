@@ -2,6 +2,8 @@
 
 updated: 2026-08-13
 status: normative-target-architecture-reframe-v1
+architecture_state: ACCEPTED_TARGET
+acceptance_scope: Canonical Part-A Target; implementation, measurement and external qualification remain open
 document_role: cross-cutting integration source
 canonical_taxonomy: `docs/project/product/`, `domain/`, `agents/`, `knowledge/`, `services/`, `data/`, `security/`, `eval/`, `deployment/`
 current_state_source: `docs/status/production-readiness.md` and `docs/evidence/`
@@ -25,6 +27,13 @@ Physical Service / Deployment Architecture
 ```
 
 Logical capability 不等于 service，service 不等于 process，process 不等于 container，container 不等于 team。任何物理拆分都必须回答 `Why service? Why not library? Why not worker? Who owns state? How does it recover?`。
+
+### Part-A Gate 状态
+
+`USER-ARCHITECTURE-GATE-001` 已记录为 `APPROVED`，本文件及对应专题因此进入
+`ACCEPTED_TARGET`。该 Gate 只批准 Canonical Part-A Target，不批准实现、验证、测量、安全资格或
+生产就绪。原始 12 个 P0 仍为 `0/12 closed`，其中 `I-P0=11`、`E-P0=1`、`X-P0=1`；这些缺口
+必须继续通过 Implementation、Measurement 和 External Qualification 轨道关闭。
 
 ## 1. 产品与领域核心
 
@@ -87,7 +96,7 @@ Python-only 是 Target Constraint，不是 Current 生产证明。理由是工�
 
 Java/Spring 的企业生态、强类型、JVM 并发和人才池是有效反对理由，但不足以单独改变 Target；只有跨语言 RPC、组织维护、性能和安全证据显示 Python-only 的总成本更高，才进入逆转评审。
 
-## 3. 五个 Network-facing Python Services
+## 3. Target Network-facing Service Boundary Candidates
 
 ```text
 External surfaces / WorkBuddy / Firm systems / Court systems / MCP clients
@@ -111,7 +120,10 @@ platform-domain        agent-runtime              knowledge
 | `knowledge-service` | OCR/parse/index/embed/rerank/graph build 与 retrieval API 资源异构 | Source/ingestion、Index/Projection、RetrievalRound、EvidenceCandidate、Citation Lineage | accepted Finding、权限事实和人工决定 |
 | `tool-sandbox-service` | Secret、filesystem/network policy、Sandbox 和 external effect 需要强 security/resource/failure isolation | ToolAttempt、EffectReceipt、Provider Operation ID、Reconciliation | Agent Plan、Domain Fact、模型编排 |
 
-这是五个服务的 Target Candidate，不是 Current。服务可由同一个 Python 镜像构建，但服务 Contract、配置、资源池、队列和部署边界必须独立可测试。
+这是五个候选服务角色，不是冻结的服务数量，也不是 Current。服务可由同一个 Python 镜像构建，
+但服务 Contract、配置、资源池、队列和部署边界必须独立可测试。后续可合并、拆分或把某个角色
+降级为 Worker；只有独立扩缩容、失败隔离、安全/资源隔离、独立部署、可用性、数据 Ownership
+或 Operational Lifecycle 证据才能改变边界。
 
 ## 4. 逻辑能力如何落到服务
 
@@ -175,6 +187,26 @@ agent-runtime store / LangGraph Checkpointer
 
 数据和一致性规范见 [`data-ownership-and-recovery.md`](../data/data-ownership-and-recovery.md)。
 
+### 7.1 Version、Mutation 与 Staleness Contract
+
+`DomainVersion` 是业务事实版本；`PlanVersion` 在激活后不可变，重新规划必须创建新的
+`PlanVersion`。每个 Step 必须记录其输入的 DomainVersion/Snapshot；若提交时版本已变化，必须
+进入冲突、重试、重新规划或拒答/请求更多证据，不能静默覆盖。新 Evidence 到来后按依赖边界把
+受影响的 Fact、Conflict、Dispute、ApplicableLaw、Finding 标记为 `STALE` 或
+`REVIEW_REQUIRED`，再决定 bounded re-evaluation 或新的 Agent Run。
+
+### 7.2 Canonical Owner Registry
+
+| Owner | 唯一拥有的事实 | 边界输出 |
+|---|---|---|
+| Domain Owner | Tenant、Workspace、Matter、DocumentVersion、Fact、Claim、Evidence、Conflict、Dispute、LegalIssue、Finding、HumanDecision、WorkProduct、Review、DomainVersion、Provenance 的正式版本 | 只由 Domain Owner 提交 Canonical Domain State；Provider 只能提交 Proposal/Candidate/Reference/Observation/Receipt |
+| Runtime Owner | AgentRun、PlanVersion、StepRun、DispatchGroup/Item、Branch、Reducer、Interrupt、Checkpoint、Resume、Generation、Budget | 只拥有 Graph Control/Execution State，不拥有法律事实 |
+| Knowledge Owner | Source、Parse、Chunk、Embedding、Index、Graph、Retrieval、Evidence Candidate、Citation Lineage 及 Projection Version | 只能提供可追溯候选和投影，不能提交 Finding/HumanDecision |
+| Memory Policy Owner | Working/Session/Matter Context、Recall/Write/Promotion Policy | Memory 可过期、压缩、删除、召回；不是 Case Fact/Evidence/Finding |
+| Tool Owner | ToolAttempt、PreparedAction、EffectReceipt、ProviderOperationId、Reconciliation | Tool Effect 必须经过权限、预算、Approval 和 execute-time Auth |
+| Security Owner | Authorization、Approval、SecurityEpoch、Secret Scope、Capability Permission、Policy Decision | 负责决策与执行约束，不能被 Agent 或 Provider 自行提升 |
+| Eval Owner | DatasetVersion、EvaluationRun、Metric、RawResult、Comparison、ReleaseDecision | 负责可复现评测事实，不把结果写成 Domain Finding |
+
 ## 8. Deployment Profiles
 
 ```text
@@ -185,18 +217,26 @@ Production:  HA/滚动升级/独立扩缩容/安全隔离；是否 Kubernetes �
 
 Microservice Target 不自动要求 Kubernetes、Kafka、service mesh、Database-per-service、Event Sourcing 或 Saga Framework。共享 PostgreSQL Cluster 可以作为 V1 物理基础设施，但按 schema/table ownership 隔离，禁止跨服务 JOIN 私有表；物理数据库拆分需要独立 availability、scaling、security 或 lifecycle 证据。
 
-## 9. Current / Target / History
+## 9. Acceptance、Reversal 与 Current / Target / History
+
+接受的 Target 必须保留删除出口：A/B/C 中 `C≈B>A` 时保留 Legal Backend 并缩减 Native
+Runtime；`C≈B≈A` 时删除无测量收益的 Native 复杂度；Graph、OpenViking、Dedicated Tool
+Runtime、Dedicated Model Gateway、Multiple Datastore 和更细服务边界都同样受 Kill Test、
+成本、恢复和安全证据约束。没有独立责任、故障域或测量收益的复杂度不得因为已写入 Target
+就继续存在。
+
+## 10. Current / Target / History
 
 | 状态 | 事实 |
 |---|---|
 | Current | `pyproject.toml` 为 Python 3.12；Docker 使用 Python 3.12；`zuno.main:app` 是 FastAPI 入口；Compose 有 backend、worker、frontend 应用容器与基础设施；存在 PostgreSQL migrations；仓库没有 Java/Spring 匹配证据 |
-| Target | Python-only、五个 network-facing services、独立 worker profiles、Domain/Runtime State 分离、HTTP/queue/MCP 分层、Developer/Staging/Production profiles |
+| Target | Python-only、候选 network-facing service roles、独立 worker profiles、Domain/Runtime State 分离、HTTP/queue/MCP 分层、Developer/Staging/Production profiles |
 | Hypothesis | Python 总成本、每个服务的扩缩容/失败/安全收益、Multi-Agent 质量/效率、Kubernetes、物理 DB split 和 service count |
 | Future | Persistent Agent Team、物理 Database-per-service、Kubernetes、Event Sourcing、Saga 或更细粒度 Provider Service；只有新的证据和 ADR 才能进入 Target |
 | History | 旧 `docs/project/modules/01..11` 作为上一阶段设计材料；被新 taxonomy 标记 Superseded，不再是 Canonical Target |
 | UNKNOWN | 实际线上服务数、真实用户/容量、SLO、团队 Ownership、Java 外部系统、生产部署和当前质量 |
 
-## 10. Canonical Reading Order
+## 11. Canonical Reading Order
 
 ```text
 Product reader:   docs/README.md → architecture.md → product → domain

@@ -1,13 +1,14 @@
 # Service Architecture：逻辑能力如何形成服务？
 
 status: normative-target
+architecture_state: ACCEPTED_TARGET
 canonical_question: 哪些能力值得独立部署，哪些应该是 library/worker/provider？
 owner: Service Architecture / Infrastructure
 replaces: old 11-module physical interpretation and `docs/project/modules/11-infrastructure.md` (Superseded)
 
 ## Service set
 
-Target candidate is five network-facing Python services:
+Target candidate is five network-facing Python service roles; the count is revisable:
 
 | Service | API | state/contract owner | heavy workers |
 |---|---|---|---|
@@ -36,5 +37,5 @@ Eval/Observability is an independently deployable batch/trace worker, not a V1 s
 ## Current / Target / Gap
 
 - Current：Compose has one backend application container, one worker application container and one frontend; infrastructure dependencies are not business services.
-- Target：five network-facing services plus independently scaled workers.
+- Target：candidate network-facing service roles plus independently scaled workers；服务数量不因本表冻结。
 - Gap：service images, API contracts, schema ownership, fault injection, tracing, deployment and on-call evidence。

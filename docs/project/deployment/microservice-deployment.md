@@ -1,6 +1,7 @@
 # Microservice Deployment：服务怎样运行和扩缩容？
 
 status: normative-target
+architecture_state: ACCEPTED_TARGET
 canonical_question: Python services、workers、基础设施和部署 Profile 如何运行、扩容、升级和隔离？
 owner: Deployment / SRE
 replaces: `docs/project/modules/11-infrastructure.md`（Superseded）
@@ -9,7 +10,7 @@ replaces: `docs/project/modules/11-infrastructure.md`（Superseded）
 
 | Profile | Target |
 |---|---|
-| Developer | Docker Compose；可用同镜像启动五服务和最小 workers；重依赖按 profile 启用 |
+| Developer | Docker Compose；可用同镜像启动候选五类 service role 和最小 workers；重依赖按 profile 启用 |
 | Staging | 多 service、多 worker、真实 queue/object/index provider；做 contract/fault/observability tests |
 | Production | HA、滚动升级、独立 scale、network/security isolation、backup/restore；运行时选择 managed container/VM/Kubernetes |
 
@@ -34,5 +35,6 @@ HTTP for CRUD/query/small commands; durable queue for long-running work; MCP/API
 ## Current / Target / Gap
 
 - Current：Compose backend + worker + frontend and infrastructure dependencies; Docker uses Python 3.12; no production microservice deployment evidence。
-- Target：five network-facing services + parse/index/graph/agent/sandbox/eval workers；independent scale and failure isolation。
+- Target：可独立扩缩容的 network-facing service roles + parse/index/graph/agent/sandbox/eval workers；
+  具体数量和物理拆分仍由 workload/failure/security/lifecycle evidence 决定。
 - Gap：capacity assumptions、SLO、deployment traces、HA/rollback、service discovery/config/secret distribution、on-call ownership。

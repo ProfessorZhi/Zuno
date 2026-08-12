@@ -1,6 +1,7 @@
 # Domain State Lifecycle：新证据如何改变业务状态？
 
 status: normative-target
+architecture_state: ACCEPTED_TARGET
 canonical_question: Domain State 如何版本化、失效、审核、提交和恢复？
 owner: Platform / Domain Service
 replaces: old module domain-state sections (Superseded)
@@ -31,6 +32,16 @@ EvidenceVersion committed
 - HumanDecision 改变依据：下游 Finding/WorkProduct 标 stale，按 policy 创建新 Run。
 
 默认不引入 Event Sourcing；PostgreSQL current state + version + dependency + audit 足够作为第一阶段 Target。若未来需要完整事件重放，必须另立 ADR。
+
+## PlanVersion / DomainVersion contract
+
+`DomainVersion` 表示 Canonical 业务状态；`PlanVersion` 在激活后不可变。Replan 必须创建新的
+`PlanVersion`，并在并行分支汇合前建立 barrier。每个 Step 记录读取的 DomainVersion/Snapshot；
+提交时发现版本变化，必须选择冲突、重试、重新规划或 abstain/request-more-evidence，不能静默覆盖。
+
+New Evidence 提交后，按依赖把受影响的 Fact、Conflict、Dispute、ApplicableLaw 和 Finding 标记
+为 `STALE` 或 `REVIEW_REQUIRED`。只有 bounded re-evaluation 与 Domain Owner 验证完成后，才可
+形成新的 Canonical Version 或触发新的 Agent Run。
 
 ## Current / Target / Gap
 

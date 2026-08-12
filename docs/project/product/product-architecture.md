@@ -1,6 +1,7 @@
 # Product Architecture：用户如何完成法律工作？
 
 status: normative-target
+architecture_state: ACCEPTED_TARGET
 canonical_question: 用户、Host、Matter、Review 和 WorkProduct 的产品边界是什么？
 owner: Product / Domain Surface
 replaces: `docs/project/modules/01-product-surface.md`（Superseded）
@@ -26,6 +27,12 @@ User / External Host
 ## Canonical / non-canonical
 
 Platform Domain Service owns `Tenant`、`User`、`Workspace`、`Matter`、`DocumentVersion`、accepted Domain facts、`Review`、`HumanDecision` 和 `WorkProduct`。Agent、Knowledge、Tool、Security 和 Eval 通过 Contract 引用，不复制 Product 状态机。
+
+## Part-A acceptance boundary
+
+本专题的 `ACCEPTED_TARGET` 只冻结 Product/Host 与 Domain、Runtime、Review 的边界：WorkBuddy、
+Dify、Pi 或 Zuno UI 都可以作为外部 Host；Host 不能因为拥有交互入口就获得 Canonical Domain
+State 的全部写入权。真实产品交付、客户质量和生产部署仍由 facts、eval 和 readiness 证据决定。
 
 ## Current / Target / Gap
 

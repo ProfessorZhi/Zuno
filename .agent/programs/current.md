@@ -106,8 +106,8 @@ Fact Depth Recovery              IN_PROGRESS
 Product Problem Reconstruction   IN_PROGRESS
 Architecture Red/Blue            READY / IN_PROGRESS
 Interview Red Team               READY
-Canonical Architecture Sync      BLOCKED_BY_USER_ARCHITECTURE_GATE
-Implementation Program           NOT_STARTED
+Canonical Architecture Sync      APPLIED / ACCEPTED_TARGET
+Implementation Program           READY_FOR_TASK_DEFINITION (not active)
 ```
 
 ## V2 Round status
@@ -120,9 +120,9 @@ Answer raw score                 361/500 (72.2)
 Architecture fitness raw score  457/500 (91.4)
 Critical Gate                    OPEN
 P0 / P1                          58 / 42
-Canonical Docs Sync              NOT_APPLIED
-User Architecture Gate          PENDING
-Round decision                   NOT_PASSED_PENDING_USER_GATE
+Canonical Docs Sync              APPLIED (after Gate Realignment)
+User Architecture Gate          APPROVED (Part-A Target only)
+Round decision                   DESIGN_ACCEPTED_TARGET; P0 CLOSURE OPEN
 ```
 
 Round-001 的完整记录、Gap、Blue Change Set 和 Counter Retest 位于
@@ -141,9 +141,9 @@ Evidence Coverage              0% closure-grade
 Complexity Justification       10/10 structural, 0/10 measured
 Counter Retest                 9 REOPEN + 1 WAITING_FOR_EVIDENCE
 Round-001 closure              NOT_CLOSED
-Round-002                      BLOCKED
-Canonical Docs Sync             NOT_APPLIED
-User Architecture Gate         PENDING
+Round-002                      READY_NOT_STARTED
+Canonical Docs Sync             APPLIED
+User Architecture Gate         APPROVED
 ```
 
 Repair 只写入 Lab，不修改业务 Runtime、UI、Schema/Migration 或正式 Canonical Architecture。
@@ -197,18 +197,18 @@ Original P0                    12
 Derived closure records        13 (Q039-C / Q039-B)
 A-P0 / I-P0 / E-P0 / X-P0     0 / 11 / 1 / 1
 Original P0 closed             0 / 12
-User Architecture Gate         PENDING_USER_DECISION
-Canonical Sync                  NOT_APPLIED
-Implementation Program          NOT_STARTED
+User Architecture Gate         APPROVED
+Canonical Sync                  APPLIED / ACCEPTED_TARGET
+Implementation Program          READY_FOR_TASK_DEFINITION (not active)
 ```
 
-Closure Class 只决定阻塞面，不改变历史 Severity 或 P0 Closure。用户 Gate 前可以提出
-Implementation Task Candidate，但不能激活实现或把候选写成 Current。
+Closure Class 只决定阻塞面，不改变历史 Severity 或 P0 Closure。用户 Gate 已批准后，
+Implementation Task Candidate 仍不能自动激活或写成 Current；必须另行定义并启动实现 Program。
 
 ## Exit condition
 
-本 Program 只有在每个保留的重大设计都有 Red、Blue、Counter Attack、替代方案、验证方式和
-逆转条件，并且用户明确通过 Architecture Gate 后，才可以结束设计阶段。实现 Program
-必须另行生成；本文件不得把设计完成写成代码完成或 Production Ready。
+本 Program 的 Part-A 设计阶段已通过用户 Gate 并完成 Canonical Sync；事实深度、面试挑战和
+后续反事实审查仍可继续。实现 Program 必须另行生成；本文件不得把设计完成写成代码完成或
+Production Ready。
 
 旧 Program1 已 `SUPERSEDED / RETIRED`，不得恢复或重新激活。

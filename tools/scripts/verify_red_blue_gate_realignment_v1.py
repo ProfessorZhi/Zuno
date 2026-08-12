@@ -12,6 +12,20 @@ import yaml
 
 ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_SESSION = ROOT / "project-reconstruction-lab" / "sessions" / "RB-GATE-REALIGNMENT-001"
+CANONICAL_SYNC_DOCS = (
+    ROOT / "docs/project/architecture/architecture.md",
+    ROOT / "docs/project/product/product-architecture.md",
+    ROOT / "docs/project/domain/legal-domain-model.md",
+    ROOT / "docs/project/domain/domain-state-lifecycle.md",
+    ROOT / "docs/project/agents/agent-platform.md",
+    ROOT / "docs/project/agents/multi-agent-runtime.md",
+    ROOT / "docs/project/knowledge/knowledge-evidence-architecture.md",
+    ROOT / "docs/project/services/service-architecture.md",
+    ROOT / "docs/project/data/data-ownership-and-recovery.md",
+    ROOT / "docs/project/security/security-architecture.md",
+    ROOT / "docs/project/eval/legal-eval-and-benchmark.md",
+    ROOT / "docs/project/deployment/microservice-deployment.md",
+)
 ORIGINAL_P0 = ["Q005", "Q016", "Q033", "Q039", "Q053", "Q061", "Q063", "Q064", "Q066", "Q067", "Q070", "Q097"]
 DERIVED = ["Q005", "Q016", "Q033", "Q039-C", "Q039-B", "Q053", "Q061", "Q063", "Q064", "Q066", "Q067", "Q070", "Q097"]
 REQUIRED_FILES = (
@@ -56,10 +70,10 @@ def verify_session(session: Path = DEFAULT_SESSION) -> list[str]:
         "original_p0_count": 12,
         "derived_closure_record_count": 13,
         "original_p0_closed": 0,
-        "user_architecture_gate": "PENDING_USER_DECISION",
-        "canonical_sync_status": "NOT_APPLIED",
-        "round_002_status": "BLOCKED_BY_USER_ARCHITECTURE_GATE",
-        "implementation_program": "NOT_STARTED",
+        "user_architecture_gate": "APPROVED",
+        "canonical_sync_status": "APPLIED",
+        "round_002_status": "READY_NOT_STARTED",
+        "implementation_program": "READY_FOR_TASK_DEFINITION",
         "runtime_changes": "NONE",
         "schema_or_migration_changes": "NONE",
         "canonical_facts_changed": "NONE",
@@ -109,15 +123,17 @@ def verify_session(session: Path = DEFAULT_SESSION) -> list[str]:
         "这是 Governance Deadlock",
         "A-P0 = 0",
         "I-P0 必须有 Target Contract",
-        "用户 Gate 记录必须保持 `PENDING_USER_DECISION`",
+        "用户 Gate 必须由用户明确记录",
     ):
         if marker not in graph:
             errors.append(f"gate-dependency-graph.md missing {marker}")
 
     package = _text(session / "user-architecture-gate.md")
     for marker in (
-        "Status: PENDING_USER_DECISION",
-        "Canonical Sync: NOT_APPLIED",
+        "Status: APPROVED",
+        "User decision: APPROVE",
+        "Canonical Sync: APPLIED",
+        "Approved scope: Canonical Part-A Target Architecture only",
         "## 1. Product / Architecture Thesis",
         "## 3. Canonical State Ownership",
         "## 4. Runtime vs Domain State",
@@ -130,16 +146,16 @@ def verify_session(session: Path = DEFAULT_SESSION) -> list[str]:
         "## 11. Eval Architecture",
         "## 12. 12 P0 Gate Classification",
         "## 22. Proposed first Codex implementation tasks",
-        "不能在本轮激活",
+        "不能在本轮执行",
     ):
         if marker not in package:
             errors.append(f"user-architecture-gate.md missing {marker}")
-    for marker in ("A=0 / I=11 / E=1 / X=1", "Q039-B", "Q066", "PENDING_USER_DECISION"):
+    for marker in ("A=0 / I=11 / E=1 / X=1", "Q039-B", "Q066", "APPROVED", "ACCEPTED_TARGET"):
         if marker not in _text(session / "README.md") + package:
             errors.append(f"Gate record missing {marker}")
 
     plan = _text(session / "canonical-sync-plan.md")
-    for marker in ("Status: NOT_APPLIED", "User Gate: PENDING_USER_DECISION", "Applied Commit SHA: NONE"):
+    for marker in ("Status: APPLIED", "User Gate: APPROVED", "Applied Commit SHA: recorded in final handoff"):
         if marker not in plan:
             errors.append(f"canonical-sync-plan.md missing {marker}")
 
@@ -153,8 +169,9 @@ def verify_session(session: Path = DEFAULT_SESSION) -> list[str]:
         "E-P0: 1",
         "X-P0: 1",
         "Original P0 closed: 0 / 12",
-        "User Architecture Gate: PENDING_USER_DECISION",
-        "Canonical Sync: NOT_APPLIED",
+        "User Architecture Gate: APPROVED",
+        "Canonical Sync: APPLIED",
+        "Architecture State: ACCEPTED_TARGET",
         "Runtime / UI / Schema / Migration changed: NONE",
         "Production Readiness: NOT_ESTABLISHED (UNCHANGED)",
         "Full CI: NOT_RUN",
@@ -182,6 +199,11 @@ def verify_session(session: Path = DEFAULT_SESSION) -> list[str]:
         for marker in ("Severity 与 Closure Class 分离", "A-P0 = 0", "I-P0 = 0", "E-P0 = 0", "X-P0 = 0", "PENDING_USER_DECISION"):
             if marker not in policy_text:
                 errors.append(f"architecture-gate-policy.md missing {marker}")
+    for path in CANONICAL_SYNC_DOCS:
+        if not path.exists():
+            errors.append(f"Canonical Sync document is missing: {path.relative_to(ROOT)}")
+        elif "architecture_state: ACCEPTED_TARGET" not in _text(path):
+            errors.append(f"Canonical Sync document lacks ACCEPTED_TARGET: {path.relative_to(ROOT)}")
     return errors
 
 
@@ -195,7 +217,7 @@ def main(argv: list[str] | None = None) -> int:
         for error in errors:
             print(f"ERROR: {error}", file=sys.stderr)
         return 1
-    print("red-blue Gate Realignment V1 verification passed: 12 original P0s, 0 A-P0, user decision pending.")
+    print("red-blue Gate Realignment V1 verification passed: 12 original P0s, 0 A-P0, Part-A Target approved and synced.")
     return 0
 
 

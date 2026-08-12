@@ -3,7 +3,8 @@
 ## 会话定位
 
 本会话审计并修正 `RB-P0-V4-EXECUTION-001` 暴露的 Architecture Governance Gate Deadlock。
-它不是新的 100Q、V4 执行、Runtime 实现或 Canonical Architecture Sync。
+它不是新的 100Q、V4 执行或 Runtime 实现；用户批准后，本会话负责记录 Part-A Canonical
+Architecture Sync 的落地状态。
 
 本会话只回答一个流程问题：
 
@@ -23,14 +24,15 @@ I-P0 Implementation Blocking              11
 E-P0 Evidence / Measurement Blocking       1
 X-P0 External Qualification Blocking       1
 Original P0 closed                        0 / 12
-User Architecture Gate                    PENDING_USER_DECISION
-Canonical Sync                             NOT_APPLIED
+User Architecture Gate                    APPROVED
+Canonical Sync                             APPLIED
 Runtime / Schema / Migration changes       NONE
-Round-002                                  BLOCKED_BY_USER_ARCHITECTURE_GATE
+Round-002                                  READY_NOT_STARTED
 ```
 
 `A=0` 只表示本次 12 项 Final P0 范围内没有发现仍未决定的设计级矛盾；它不代表用户已
-接受 Target，也不代表任何 P0 已关闭、代码已实现、结果已测量或已具备生产资格。
+接受 Target，也不代表任何 P0 已关闭、代码已实现、结果已测量或已具备生产资格。用户 Gate
+现在已批准，但批准范围仅为 Canonical Part-A Target。
 
 ## 入口
 

@@ -1,6 +1,7 @@
 # Agent Platform：怎样计划、执行和组合能力？
 
 status: normative-target
+architecture_state: ACCEPTED_TARGET
 canonical_question: Agent 如何把任务、计划、能力、权限和结果连接起来？
 owner: Agent Runtime Service
 replaces: `docs/project/modules/06-agent-core-planning-control.md`、`07-capability-skill.md`（Superseded）
@@ -47,9 +48,25 @@ Runtime 不获得额外保留理由。
 
 LangGraph、Plain Python workflow、State Machine、Pi 或 Host Runtime 都是 provider。LangGraph 只在 Agent Runtime Service 内负责 orchestration/durable workflow；Checkpoint 是 control state，不是 Domain State。
 
+## Part-A execution model
+
+默认执行模型是 `Single Controller + Plan`：简单任务使用确定性单步 Plan，复杂任务使用动态
+Plan DAG；固定的 AgentRunGraph 负责生命周期，Plan DAG 负责业务步骤，StepExecutionGraph
+负责执行、重试和汇合。可组合能力包括 Plan-and-Execute、ReAct、Reflection、Replan 和 Reflexion，
+但 Retry 不等于 Replan，也不是每个 Step 都自动触发模型 Reflection。
+
+每个 Step 都经过适用的 Action Evaluation、Step Acceptance/Reflection、Join Evaluation/Reflection、
+Final Gate 和 Final Reflection。Reflection 是受策略、预算和 Eval 控制的能力，不是隐藏思维链的
+持久化协议。
+
 ## Capability and Skill
 
 Skill 是 HOW；Capability 是 WHAT；Tool 是 HOW executed；Knowledge 是可检索信息；Memory 是可复用上下文；Domain State 是业务世界当前状态。法律能力 Contract 不嵌入每个 Agent，Provider 通过统一 Proposal boundary 接入。
+
+Zuno 只拥有 Memory 的 Scope、Write Gate、Recall Gate、Promotion Gate 和 Context Contract。
+OpenViking 或其他 Memory/Context 实现是可替换 Provider，不是 Canonical Domain Store，也不是
+所有部署都必须存在的 Runtime 组件；历史项目中用户参与过 OpenViking 接入这一事实仍由
+`docs/project/facts/` 单独维护。
 
 ## Current / Target / Gap
 
