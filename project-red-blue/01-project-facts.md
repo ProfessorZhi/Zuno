@@ -33,6 +33,12 @@
 | 新 Target 由 Product/Domain/Agents/Knowledge/Services/Data/Security/Eval/Deployment 组成 | `[TARGET_ACCEPTED]` | `docs/project/README.md`、ADR 0011；不证明 Runtime 完成 |
 | 项目最初来自什么真实需求 | `[UNKNOWN]` | 先研究历史材料，再让用户确认剩余歧义 |
 | 真实用户、客户和生产使用情况 | `[UNKNOWN]` | 不能由法院合作背景自动推出 |
+| 历史客户日常称谓为“智慧法院项目组” | `[USER_CONFIRMED]` | 正式机构、合同主体和业务决策人仍 UNKNOWN |
+| Zuno 是该项目组中的一个产品/产品线 | `[USER_CONFIRMED]` | 不等于覆盖整个智慧法院项目 |
+| 覆盖 22 家法院体系中的部分法院 | `[USER_CONFIRMED]` | 用户记忆中的范围；具体法院和直接项目材料 UNKNOWN |
+| 正式生产部署尚未发生 | `[USER_CONFIRMED]` | 不等于已经证明有 Demo、Pilot 或真实用户测试 |
+| 核心日常研发约 7–8 人 | `[USER_CONFIRMED]` | 不含教师、项目负责人和外部业务/客户参与者 |
+| Python-only Microservice Architecture | `[TARGET_ACCEPTED]` | 当前 Target，不是历史实现事实 |
 | 当前用户量、数据量、QPS、延迟和成本 | `[UNKNOWN]` | 需要用户、运行记录或证据；只允许给候选区间 |
 | 真实团队人数、角色和开发过程 | `[UNKNOWN]` | 可结合真实面试碎片生成候选分工，再让用户确认 |
 | 用户本人实际负责和未负责的范围 | `[UNKNOWN]` | 必须最终由用户或可核验提交/任务证明 |
@@ -89,6 +95,10 @@ A / B / C 哪个更接近？
 4. **确认层**：让用户低负担选择、修正或继续 UNKNOWN。只有确认后才升级项目事实。
 
 合作对象不能直接推出：真实采购、正式客户、部署规模、法院全员使用、商业收入或历史生产指标。规模最多先写待验证区间，并列出核验动作。
+
+## 本轮附件候选稿的裁判结果
+
+附件中的项目时间、内部/客户 Demo、法院侧测试、Pilot、学硕学长的具体技术负责人角色、个人 Agent/RAG 职责、历史技术栈和模块化单体形态，当前均保留为 `[BLUE_PROPOSAL]` 或 `[UNKNOWN]`。它们可以作为下一轮低负担回忆提示，但不能因为出现在候选稿或简历叙事中就升级为项目事实。
 
 ## 五、背景重建记录模板
 

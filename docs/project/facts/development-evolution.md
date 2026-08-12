@@ -26,4 +26,6 @@
 
 当前不能把“最终 11 模块 Target”描述为项目第一天就存在。真实 V0/V1/V2 需要通过 Git History、面试原始记录、任务和部署材料重建；如果无法证明，就保持候选阶段。
 
+本轮用户还确认：微服务架构不是历史实现事实，而是当前重新设计后的 `Target`。因此不能用 Python-only Microservice Architecture 反推历史项目已经拆分为多个独立服务；历史架构形态仍需通过代码、部署或个人记忆确认。
+
 红蓝攻击材料见 [`../../../project-red-blue/10-delivery-evolution.md`](../../../project-red-blue/10-delivery-evolution.md)，本文件是正式事实 Owner。
