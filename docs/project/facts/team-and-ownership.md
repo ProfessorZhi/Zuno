@@ -1,41 +1,58 @@
 # Team and Ownership
 
-## 现实分工与目标分工必须分开
-
-| 责任 | 现实负责人 | 证据 | 状态 |
-|---|---|---|---|
-| 需求、产品和范围决策 | 待确认 | 会议、任务、邮件 | `[UNKNOWN]` |
-| Agent / Workflow | 待确认 | 代码、提交、评审 | `[UNKNOWN]` |
-| Knowledge / Retrieval / RAG | 待确认 | 代码、实验、指标 | `[UNKNOWN]` |
-| 模型选择、微调或 Serving | 待确认 | 配置、训练、部署记录 | `[UNKNOWN]` |
-| 前后端和 API | 待确认 | 代码、部署 | `[UNKNOWN]` |
-| 数据、基础设施、发布和故障 | 待确认 | 发布记录、告警、Runbook | `[UNKNOWN]` |
-| 本人实际贡献 | 待确认 | 具体提交、任务和产物 | `[UNKNOWN]` |
-
-## 用户确认的角色边界
+## 已确认的团队事实
 
 | Claim | 状态 | 边界 |
 |---|---|---|
-| 用户是研究生工程参与者 | `[USER_CONFIRMED]` | 不等于项目商业立项人、客户负责人或整个项目负责人 |
-| 核心日常研发规模约 7–8 人 | `[USER_CONFIRMED]` | 用户明确确认；不包括教师、项目负责人和外部业务/客户参与者 |
-| 用户具体负责过哪些模块、提交和上线动作 | `[UNKNOWN]` | 需要 Git、任务、评审、部署或可复现产物证据 |
-| 团队完整人数、成员分工和交付责任链 | `[UNKNOWN]` | 不得从十一份 Target 模块文档推导 |
+| 核心研发约 7–8 人 | `[USER_CONFIRMED]` | 这是核心研发规模，不据此推出 LIPLAB 总人数或完整项目团队 |
+| 一名学硕学长承担主要技术负责人角色 | `[USER_CONFIRMED]` | 不自动推出正式 title、全部架构决策或生产责任 |
+| 用户由该学硕学长带入项目 | `[USER_CONFIRMED]` | 说明加入路径，不证明该学长是合同或产品负责人 |
+| 用户是研究生工程参与者 | `[USER_CONFIRMED]` | 不等于项目负责人、客户负责人或整个后端负责人 |
 
-本文件中的目标 Ownership 只回答“Target 中谁应当拥有事实”；它不能证明历史团队曾按该方式分工。
+以下仍为 `[UNKNOWN]`：是否包含教师、精确前端/算法人数、是否有独立测试或 DevOps、成员姓名、正式 title、责任链和评审流程。
 
-## 红队必须区分
+## 用户本人工作
+
+下表只记录用户明确确认过的参与范围，不扩大为完整 Owner：
+
+| 工作 | 状态 | 保守表述 |
+|---|---|---|
+| Agent 开发参与 | `[USER_CONFIRMED]` | 参与 Agent 部分开发 |
+| Memory 模块 | `[USER_CONFIRMED]` | 第一批重要任务之一是 Memory 模块 |
+| OpenViking | `[USER_CONFIRMED]` | 参与 OpenViking 在 Memory / Context 区域的接入 |
+| Tool Calling Strategy | `[USER_CONFIRMED]` | 参与工具调用策略相关开发 |
+| LangGraph / GraphRAG | `[USER_CONFIRMED]` | 在开发过程中学习相关技术；不等于完整主链路实现 |
+| 数据库 | `[USER_CONFIRMED]` | 曾进入数据库查看或调试数据；具体数据库产品、表、SQL 和客户端未知 |
+
+以下不能直接写成用户主责，保持 `[UNKNOWN]`：整个 Agent Runtime、全部 RAG/GraphRAG、全部 FastAPI 后端、全部数据库、全部法律算法、整体架构、生产部署、前端和客户项目管理。
+
+## 四类责任边界
 
 ```text
 TEAM WORK
+    团队共同完成的产品、算法、部署和交付；不能自动归属于用户。
+
 PERSONAL WORK
+    用户本人明确参与的 Agent、Memory、OpenViking 接入和 Tool Calling Strategy。
+
 FRAMEWORK PROVIDED
-EXTERNAL TEAM WORK
+    LangGraph、OpenViking 或其他库提供的通用能力；参与接入不等于用户实现框架。
+
+OTHER TEAM WORK
+    技术负责人、前端、算法、后端、测试、部署和客户侧人员的工作；当前大部分细节 UNKNOWN。
 ```
 
-“团队中有人部署了模型”不能写成“本人负责模型部署”；目标模块 Owner 不能自动代表历史团队分工。每一项“我负责”都需要能回答：谁提出需求、谁设计、谁实现关键路径、谁评审、谁发布、谁处理故障、谁能接替维护。
+## 待恢复的 Ownership
 
-## 当前团队事实
+| 责任 | 状态 | 需要的证据 |
+|---|---|---|
+| 产品范围和客户需求 | `[UNKNOWN]` | 会议、任务、邮件或客户反馈 |
+| Agent / Workflow 的具体设计与提交 | `[UNKNOWN]` | Git、任务、评审记录 |
+| RAG / Retrieval 的具体实现 | `[UNKNOWN]` | 代码、实验、指标 |
+| FastAPI/API 的具体实现 | `[UNKNOWN]` | 提交、接口文档、联调记录 |
+| 模型选择、训练或 Serving | `[UNKNOWN]` | 配置、训练和部署记录 |
+| 发布、基础设施和故障处理 | `[UNKNOWN]` | 部署记录、告警、Runbook |
 
-真实团队人数、角色、协作方式和个人贡献目前保持 `[UNKNOWN]`，除非获得用户确认或直接证据。可以在红蓝工作区维护 A/B/C 候选，但候选不能进入简历、Current 或历史叙事。
+## 事实 Owner
 
-目标 Ownership 由 [`../architecture/`](../architecture/README.md) 和对应 [`../modules/`](../modules/README.md) 描述；它回答“未来谁应当负责”，不回答“过去谁已经负责”。
+本文件负责现实团队和个人贡献，不负责未来架构 Ownership。目标 Owner 进入架构专题，候选团队结构和追问进入 [`../../../project-red-blue/01-project-facts.md`](../../../project-red-blue/01-project-facts.md)。

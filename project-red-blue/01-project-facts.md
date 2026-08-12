@@ -1,142 +1,119 @@
-# 项目事实与 Claim Inventory
+# PROJECT-FACTS-RECONSTRUCTION-V2
 
-本文件只记录事实输入、重建候选和待确认陈述。Agent 可以整理、研究和追问，但不得把提案写成已发生的历史。
+本文件是 Project Facts 的红蓝工作材料。它维护候选、攻击、未知和下一轮回忆问题；正式事实以 [`docs/project/facts/`](../docs/project/facts/README.md) 为准。
 
-记忆模糊本身也是事实状态。用户可以回答“我不确定”“大概是”“需要查原始材料”；红队应继续拆分已记得的部分、遗忘的部分和不能断言的部分，蓝队先做证据搜索和候选重建，再只让用户确认真正无法恢复的关键事实。
+## 一、证据标签
 
-## 一、真相状态与重建置信度必须分开
+| 标签 | 含义 |
+|---|---|
+| `[USER_CONFIRMED]` | 用户明确确认 |
+| `[USER_PARTIAL_RECALL]` | 用户记得大致发生过，细节模糊 |
+| `[PARTIAL_REPOSITORY_EVIDENCE]` | 当前/历史 Git、代码、配置、测试或 Migration 的部分支持 |
+| `[ARTIFACT_EVIDENCE]` | 简历、截图、PPT、聊天、任务或旧文档直接支持 |
+| `[PUBLIC_CONTEXT]` | 学校、实验室、法院或公开项目外围资料 |
+| `[RECONSTRUCTED_CANDIDATE]` | 多线索形成但尚未确认的历史候选 |
+| `[UNKNOWN]` | 当前无法恢复 |
+| `[TARGET_ONLY]` | 新架构目标，不是历史事实 |
+| `[CONTRADICTED]` | 证据冲突或被直接事实否定 |
 
-### 1.1 真相状态
+## 二、V2 User Gate：已确认事实
 
-`[USER_CONFIRMED]` 用户确认的现实事实；`[REPO_EVIDENCE]` 仓库可复核事实；`[TARGET_ACCEPTED]` 已确认目标；`[BLUE_PROPOSAL]` 蓝队提案或重建候选；`[UNKNOWN]` 尚不清楚。
+### 项目与客户
 
-### 1.2 重建置信度
+- `[USER_CONFIRMED]` 项目属于南京大学软件学院葛季栋 / LIPLAB 侧长期智慧司法相关研发背景。
+- `[USER_CONFIRMED]` 合作侧日常称谓是“智慧法院项目组”。
+- `[USER_CONFIRMED]` Zuno 是该项目体系中的一个产品，不是整个智慧法院项目。
+- `[USER_CONFIRMED]` 历史正式产品名称不叫 Zuno。
+- `[USER_PARTIAL_RECALL]` 正式名称偏企业化/项目化风格，但已遗忘。
+- `[USER_CONFIRMED]` 项目涉及天津智慧法院体系，Zuno 覆盖 22 家法院体系中的部分法院。
+- `[UNKNOWN]` 合同甲方、正式机构、正式项目名、具体法院名单和是否属于某个正式合同子项目。
 
-重建置信度只表示“这个候选解释有多强”，**不自动改变真相状态**。
+### 时间、团队与加入过程
 
-| 等级 | 含义 | 允许用途 |
+- `[USER_CONFIRMED]` 用户约在 2026 年 3 月加入，2026 年期间项目持续推进，是长期持续型研发。
+- `[USER_CONFIRMED]` 核心研发约 7–8 人。
+- `[USER_CONFIRMED]` 一名学硕学长承担主要技术负责人角色，并由其带用户进入项目。
+- `[USER_CONFIRMED]` 用户加入时 clone 了已有项目代码，并已有简易自研前端页面。
+- `[USER_CONFIRMED]` 用户加入后参与开发，同时学习 LangGraph / GraphRAG。
+
+### 交付与个人参与
+
+- `[USER_CONFIRMED]` 存在内部 Demo、客户侧 Demo、法院侧人员测试和 Pilot Validation。
+- `[USER_CONFIRMED]` 尚未正式生产部署。
+- `[USER_CONFIRMED]` 客户 Demo 后的重要反馈之一是回答质量需要进一步提高。
+- `[USER_CONFIRMED]` 用户参与 Agent 开发，第一批重要任务之一是 Memory。
+- `[USER_CONFIRMED]` 用户参与 OpenViking 在 Memory / Context 区域的接入。
+- `[USER_CONFIRMED]` 用户参与 Tool Calling Strategy 相关开发。
+- `[USER_CONFIRMED]` 用户亲自进入数据库查看或调试过数据，但具体数据库产品未知。
+
+## 三、V2 历史技术矩阵裁判
+
+| 技术/能力 | 当前裁判 | 不能推出的内容 |
 |---|---|---|
-| `R0_DIRECT` | 用户直接确认，或存在能把 Claim 与 Zuno 直接关联的仓库/原始材料 | 可进入事实台账；仍需区分 Current / Target |
-| `R1_PUBLIC_CONTEXT` | 公开资料能直接证明周边背景，例如学校、教师、法院、公开项目本身 | 可以用于解释背景；不能自动证明 Zuno 与其存在直接项目关系 |
-| `R2_STRONG_RECONSTRUCTION` | 至少两类独立线索相互支持、无明显反证，且与用户模糊记忆一致 | 生成优先候选，必须让用户或原始材料确认后才能升级为项目事实 |
-| `R3_PLAUSIBLE_RECONSTRUCTION` | 业务上合理，但存在多个同样合理解释 | 只作为 A/B/C 候选，不用于简历或 Current |
-| `R4_UNSUPPORTED` | 主要来自想象、包装需要或单一弱线索 | 不进入项目故事；必要时记录为被拒绝假设 |
+| OpenViking | `[USER_CONFIRMED]`：Memory/Context 接入 | 不等于所有 Memory、法律事实存储或生产关键路径 |
+| LangGraph | `[USER_CONFIRMED]`：学习/参与上下文 | 不等于完整 Runtime 或历史生产主链路 |
+| GraphRAG | `[USER_CONFIRMED]`：学习 | 不等于 Experiment、Demo 或 Product Main Path 已确认 |
+| Agent | `[USER_CONFIRMED]`：参与部分开发 | 不等于整个 Agent Runtime Owner |
+| Tool Calling Strategy | `[USER_CONFIRMED]`：参与开发 | 具体工具选择、参数、失败、Retry、Approval 和 MCP 仍 UNKNOWN |
+| 数据库 | `[USER_CONFIRMED]`：查看/调试过 | 不知道具体产品、表、SQL、客户端 |
+| Python/FastAPI/PostgreSQL/RabbitMQ/MinIO/Milvus/Neo4j/Elasticsearch/Redis/MCP/Pytest/Compose | `[UNKNOWN]` + 当前仓库 `[PARTIAL_REPOSITORY_EVIDENCE]` | 当前代码/配置不能证明历史使用或用户本人负责 |
+| Hybrid Retrieval/BM25/Vector/Reranker | `[UNKNOWN]` | 不从简历候选或 Target 推导历史主链路 |
 
-例如：公开资料可以证明“南京大学软件学院长期参与智慧法院相关研发”，这属于 `R1_PUBLIC_CONTEXT`；除非找到合同、邮件、会议、项目材料、代码提交或用户明确确认，不能据此把“Zuno 就是该公开项目的后续版本”升级成 `[USER_CONFIRMED]`。
+当前仓库未发现 OpenViking 实现或依赖。这个事实不推翻用户确认的历史接入；它证明的是 Current GitHub 与完整历史项目不能等同。
 
-## 二、当前已知边界
-
-| 事实 | 标签 | 证据或待补信息 |
-|---|---|---|
-| Zuno 当前有总体架构文档 | `[REPO_EVIDENCE]` | `docs/project/architecture/architecture.md` |
-| 基线仓库曾维护 11 个逻辑模块 | `[REPO_EVIDENCE]` | `docs/project/modules/README.md`；这是 History，不是新 Target |
-| 新 Target 由 Product/Domain/Agents/Knowledge/Services/Data/Security/Eval/Deployment 组成 | `[TARGET_ACCEPTED]` | `docs/project/README.md`、ADR 0011；不证明 Runtime 完成 |
-| 项目最初来自什么真实需求 | `[UNKNOWN]` | 先研究历史材料，再让用户确认剩余歧义 |
-| 真实用户、客户和生产使用情况 | `[UNKNOWN]` | 不能由法院合作背景自动推出 |
-| 历史客户日常称谓为“智慧法院项目组” | `[USER_CONFIRMED]` | 正式机构、合同主体和业务决策人仍 UNKNOWN |
-| Zuno 是该项目组中的一个产品/产品线 | `[USER_CONFIRMED]` | 不等于覆盖整个智慧法院项目 |
-| 覆盖 22 家法院体系中的部分法院 | `[USER_CONFIRMED]` | 用户记忆中的范围；具体法院和直接项目材料 UNKNOWN |
-| 正式生产部署尚未发生 | `[USER_CONFIRMED]` | 不等于已经证明有 Demo、Pilot 或真实用户测试 |
-| 核心日常研发约 7–8 人 | `[USER_CONFIRMED]` | 不含教师、项目负责人和外部业务/客户参与者 |
-| Python-only Microservice Architecture | `[TARGET_ACCEPTED]` | 当前 Target，不是历史实现事实 |
-| 当前用户量、数据量、QPS、延迟和成本 | `[UNKNOWN]` | 需要用户、运行记录或证据；只允许给候选区间 |
-| 真实团队人数、角色和开发过程 | `[UNKNOWN]` | 可结合真实面试碎片生成候选分工，再让用户确认 |
-| 用户本人实际负责和未负责的范围 | `[UNKNOWN]` | 必须最终由用户或可核验提交/任务证明 |
-| 目标 Ownership 如何映射到未来实现 | `[BLUE_PROPOSAL]` | 不能当作历史分工 |
-| 学校、法院或其他合作线索的具体合作内容 | `[UNKNOWN]` | 公开资料只作为 `R1_PUBLIC_CONTEXT`；项目链接需另证 |
-| 根据合作对象推测的内部使用和规模区间 | `[BLUE_PROPOSAL]` | 只能用于敏感性分析，不能当作实际用户数 |
-| Zuno 与 WorkBuddy 等通用平台的差异化 | `[BLUE_PROPOSAL]` | 必须通过用户任务、不可接受风险和可替代性评估验证 |
-
-## 三、Agent 先研究，再向用户提问
-
-P0 事实仍然需要最终确认，但**不要求用户从空白页手工重建整个项目**。顺序固定为：
+## 四、开发时间线
 
 ```text
-查 Zuno Repo / Git History / Status / Evidence
-→ 查用户真实面试、历史项目材料和已有简历叙事
-→ 必要时查公开背景、开源生态和竞品
-→ 列出事实、冲突和 2–3 个候选解释
-→ 只向用户询问仍会改变真实性或架构结论的 Unknown
+约 2026-03 加入
+  ↓
+clone 已有代码；已有简易前端；学习 LangGraph / GraphRAG
+  ↓
+参与 Memory / OpenViking 接入
+  ↓
+参与 Tool Calling Strategy
+  ↓
+内部 Demo / 客户 Demo（技术任务与 Demo 精确顺序 UNKNOWN）
+  ↓
+客户反馈：回答质量需要进一步提高
+  ↓
+继续开发/优化
+  ↓
+法院侧人员测试与 Pilot Validation（精确相对顺序 UNKNOWN）
+  ↓
+尚未正式生产部署
 ```
 
-### 3.1 适合让用户确认的 P0 事实
+早期 Demo 是否展示检索过程是 `[USER_PARTIAL_RECALL]`；第一次任务、第一次提交、第一次联调 endpoint、本地启动命令、反馈根因和质量指标均为 `[UNKNOWN]`。
 
-1. 项目来源：课程、个人、导师、横向、实习、公司项目还是其他？
-2. 目标用户：谁会真实使用，谁拥有业务决策权？
-3. 核心问题：没有 Zuno 时用户怎样完成工作，最主要痛点是什么？
-4. 当前状态：概念、原型、开发中、内部试用、上线还是已停止？
-5. 规模：用户、事项、文档、并发、延迟、模型调用量；记不清可以给区间或 UNKNOWN。
-6. 团队：总人数和大方向是否大致正确；精细分工先由蓝队提出候选模型。
-7. 个人贡献：哪些是亲自设计/实现/验证，哪些只是了解或团队成果？
-8. 约束：时间、预算、数据、合规、模型、基础设施和团队能力限制是什么？
-9. 证据：是否还保留代码、任务、会议、邮件、部署、反馈或指标？
-10. 保密边界：哪些名称、数据和组织关系不能进入公开项目叙事？
+## 五、历史与 Target 隔离
 
-### 3.2 低负担确认方式
+以下只能标为 `[TARGET_ONLY]`：Python-only、Microservices、Legal Domain Kernel、Domain-aware Runtime、新 Multi-Agent 服务、新 Legal Intelligence Engine、新 Service Boundary。当前仓库的目录、依赖或目标文档不能改写历史。
 
-优先使用：
+## 六、下一轮 Project Fact Recovery Questions
 
-```text
-A / B / C 哪个更接近？
-更接近 2 人 Agent + 2 人后端，还是业务纵切小队？
-用户是几十 / 几百 / 上千潜在内部用户，还是完全不记得？
-这是研究合作 / 内部试点 / 采购交付 / 组内原型，哪个最接近？
-```
+按回忆价值排序，只保留最能关闭事实缺口的问题：
 
-用户说“不记得”后，系统必须保留 UNKNOWN 或继续研究，不能要求用户为了让项目完整而猜一个答案。
+1. 你第一次 clone 后，本地启动时最少需要启动哪些服务？是只启动后端/数据库，还是还要启动队列、对象存储、向量库或图数据库？
+2. 上传 PDF 后页面是一直等待，还是立即显示“处理中”？是否能回忆出后台异步任务或进度状态？
+3. 你是否见过 RabbitMQ 的管理页面（通常是 15672 端口）、exchange、queue、ack 或 retry？
+4. 你是否在 MinIO 控制台见过 bucket/object，或亲自调试过对象路径？
+5. 你是否打开过 Neo4j Browser 并执行过 Cypher，还是只学习过 GraphRAG 概念？
+6. 你是否见过 Milvus collection/index，或只知道团队方案中提到向量库？
+7. 你当时进入的数据库更像 PostgreSQL、SQLite、MySQL 还是其他？只需判断产品，不需要猜表名。
+8. Memory 任务的输入和输出是什么？是 Session 对话、用户偏好、检索上下文、Agent 状态，还是其他内容？
+9. OpenViking 接入时你改的是配置/Adapter、Memory API、召回逻辑，还是页面/接口？
+10. Tool Calling Strategy 具体解决的是“何时调用、选哪个工具、参数构造、失败重试、观察结果回注”中的哪一项或哪几项？
+11. 第一次客户 Demo 时，页面有没有显示检索命中文档、引用来源或原文片段？
+12. 客户说“回答质量需要提高”时，最先被指出的是事实错误、引用不准、漏召回、答案不完整、响应慢，还是其他问题？
+13. 法院侧人员测试是直接登录系统、远程演示，还是通过你们提供的样例任务反馈？
+14. 你能回忆第一次实际提交或第一次被技术负责人 Review 的文件/功能吗？记不清文件名时，描述功能即可。
+15. 你参与的 OpenViking、Tool Calling 和 Memory 工作是在客户 Demo 之前还是之后？如果只记得相对关系，也足够。
 
-## 四、记忆不完整时的重建规则
+## 七、审计红线
 
-当用户只记得“南京大学葛继栋”“天津法院组”或类似线索时，Agent 按四步处理：
-
-1. **线索层**：原话和来源照录；用户确认过的只有其真正记得的内容。
-2. **证据层**：搜索仓库、历史面试和公开资料；明确哪些只是周边背景，哪些能直接连接到 Zuno。
-3. **候选层**：提出最多 3 个互斥或可比较的候选解释，为每个候选标 `R2/R3/R4`、支持证据、反证和如果成立对架构意味着什么。
-4. **确认层**：让用户低负担选择、修正或继续 UNKNOWN。只有确认后才升级项目事实。
-
-合作对象不能直接推出：真实采购、正式客户、部署规模、法院全员使用、商业收入或历史生产指标。规模最多先写待验证区间，并列出核验动作。
-
-## 本轮附件候选稿的裁判结果
-
-附件中的项目时间、内部/客户 Demo、法院侧测试、Pilot、学硕学长的具体技术负责人角色、个人 Agent/RAG 职责、历史技术栈和模块化单体形态，当前均保留为 `[BLUE_PROPOSAL]` 或 `[UNKNOWN]`。它们可以作为下一轮低负担回忆提示，但不能因为出现在候选稿或简历叙事中就升级为项目事实。
-
-## 五、背景重建记录模板
-
-```text
-线索：
-我实际记得的内容：
-我不确定的内容：
-公开/仓库证据：
-候选 A：
-  truth_status: [BLUE_PROPOSAL]
-  reconstruction_confidence: R2/R3/R4
-  支持证据：
-  反证：
-  若成立，对架构意味着什么：
-候选 B：
-候选 C：
-需要用户确认的最小问题：
-下一步核验：
-```
-
-## 六、Claim 记录模板
-
-```text
-Claim ID：RB-C-XXX
-陈述：
-truth_status：[USER_CONFIRMED] / [REPO_EVIDENCE] / [TARGET_ACCEPTED] / [BLUE_PROPOSAL] / [UNKNOWN]
-reconstruction_confidence：R0 / R1 / R2 / R3 / R4
-来源：
-事实 Owner：
-红队风险：为什么面试官或架构评审可能不相信？
-与架构的对应：这个 Claim 具体要求哪个模块、Contract 或非目标？
-需要的证据：
-正式去向：docs / modules / decisions / status / evidence / project material
-裁判决定：KEEP / NARROW / REQUEST_EVIDENCE / REJECT / DEFER
-```
-
-## 七、不得自行推断的内容
-
-以下内容没有用户或直接项目证据时必须保持 `[UNKNOWN]` 或 `[BLUE_PROPOSAL]`：真实客户、用户数量、上线状态、团队成员、个人贡献、业务收入、准确率提升、生产事故、采购关系、竞品用户量和任何“已经落地”的表述。
-
-公开背景很强、业务上非常合理，也不能替代这条边界。
+- `Current GitHub Repository ≠ Complete Historical Project Repository`。
+- 当前依赖或 Compose 服务不等于历史使用。
+- 团队使用不等于用户本人实现。
+- 学习 GraphRAG 不等于产品主链路 GraphRAG。
+- 有 Demo/Pilot 不等于生产部署或 Production Ready。
+- 不创造正式产品名、合同甲方、法院名单、用户量、准确率、SLA 或生产流量。
