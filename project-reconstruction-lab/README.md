@@ -116,6 +116,10 @@ V2 Red/Blue Round 的执行契约见 `05-red-blue/round-protocol-v2.md`，复杂
 `sessions/RB-WORKFLOW-V2-001/`；它仍是 Lab 记录，状态为待 User Architecture Gate，不是
 Canonical Architecture。
 
+Round-001 后的 Blue Repair 记录位于 `sessions/RB-BLUE-REPAIR-001/`。它负责根因聚类、Part-A
+修复、Severity Reclassification、P0 Burn-down 和 Counter Retest；它不是第二轮 100Q，也不
+改变 Round-001 的原始记录。当前 Repair 结果仍为 `COUNTER_RETEST_REOPENED`，Round-002 阻塞。
+
 每个专题只回答自己的问题。`02-history/` 与 `03-current/` 是工作视图，不替代 `docs/project/facts/`；`06-architecture/` 不替代 `docs/project/architecture/`。
 
 ## Continuous Reconstruction Loop

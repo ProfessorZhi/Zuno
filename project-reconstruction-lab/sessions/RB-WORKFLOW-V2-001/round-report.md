@@ -60,11 +60,15 @@ Facts Changed: NONE
 User Gate: PENDING
 ```
 
-## Next Round Focus
+## Next Phase Focus（Round-002 暂缓）
 
-1. 真实法院任务和 Court QA 协议；
-2. WorkBuddy Host + Legal Backend 的最小可行性；
+先执行 `project-reconstruction-lab/sessions/RB-BLUE-REPAIR-001/`：
+
+1. 10 个 Root-Cause Cluster 与 Part-A Blue Repair；
+2. Severity Reclassification 和 P0 Burn-down；
 3. Domain State/Effect/Checkpoint 的 fault matrix；
 4. Tool/Sandbox security and unknown-effect reconciliation；
-5. 五服务物理边界与 Worker/Library 替代；
-6. 个人贡献与当前仓库证据分离。
+5. 真实法院任务、Court QA 和个人贡献的 Fact Recovery；
+6. Counter Retest、Round Closure 和 User Architecture Gate。
+
+只有 Repair Closure 满足 Gate 后，才重新设计 Round-002 的至少 70% 新问题。

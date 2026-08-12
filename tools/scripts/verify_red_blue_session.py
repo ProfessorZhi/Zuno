@@ -32,6 +32,7 @@ ALLOWED_STATUS = {"IN_PROGRESS", "COMPLETED", "STOPPED", "REOPENED"}
 ALLOWED_SYNC_STATUS = {"NOT_APPLIED", "APPLIED", "PARTIAL", "REJECTED"}
 ALLOWED_USER_GATE = {"PENDING", "APPROVED", "REJECTED"}
 ALLOWED_RETEST_RESULTS = {"PASS", "REOPEN", "NOT_STARTED", "WAITING_FOR_CANONICAL_SYNC"}
+SPECIALIZED_PROTOCOLS = {"ZUNO-BLUE-REPAIR-V1"}
 
 
 def _text(path: Path) -> str:
@@ -437,11 +438,21 @@ def verify_session(session_dir: Path, known_session_ids: set[str] | None = None)
 def _session_dirs(root: Path) -> list[Path]:
     if not root.exists():
         return []
-    return sorted(
-        path
-        for path in root.iterdir()
-        if path.is_dir() and path.name != "TEMPLATE" and not path.name.startswith("_")
-    )
+    sessions: list[Path] = []
+    for path in root.iterdir():
+        if not path.is_dir() or path.name == "TEMPLATE" or path.name.startswith("_"):
+            continue
+        manifest_path = path / "manifest.yaml"
+        if manifest_path.exists():
+            try:
+                manifest = yaml.safe_load(_text(manifest_path)) or {}
+            except yaml.YAMLError:
+                manifest = {}
+            if isinstance(manifest, dict) and manifest.get("protocol_version") in SPECIALIZED_PROTOCOLS:
+                # Specialized sessions have their own verifier and contract.
+                continue
+        sessions.append(path)
+    return sorted(sessions)
 
 
 def verify_root(root: Path = SESSIONS_ROOT) -> list[str]:

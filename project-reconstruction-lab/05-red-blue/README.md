@@ -19,6 +19,23 @@ Claim
 
 Blue 回答不会自动通过。只有反击后仍成立，Architecture 才能进入 `SURVIVED`。
 
+Round 结束后不直接进入下一 Round。若存在大量 P0/P1，先执行：
+
+```text
+Discovery
+→ Root-Cause Clustering
+→ Blue Repair
+→ Severity Reclassification
+→ P0 Burn-down
+→ Counter Retest
+→ Round Closure
+→ User Architecture Gate
+→ Next Round
+```
+
+具体规则见 [Blue Repair Protocol](blue-repair-protocol.md)。Severity Burn-down 只减少严重度
+饱和，不能把没有证据的 P0 宣称为已关闭。
+
 ## 输出
 
 每项设计必须得到：`KEEP`、`SIMPLIFY`、`ADOPT`、`EXTEND`、`BUILD`、`DEFER` 或 `DELETE`，并附原因、替代方案、证据和回滚条件。
@@ -98,11 +115,21 @@ project-reconstruction-lab/sessions/<session-id>/
 `gaps.md` 保存 Fact/Architecture/Blocker 聚类；`blue-change-set.md` 保存重构提案；
 `retest.md` 保存 Counter Attack/回归结果。
 
+Blue Repair 使用同一个 `sessions/` 根目录，Repair Session 以独立协议记录根因聚类、Part-A
+修复、五指标、Counter Retest 和 Closure Report，例如：
+
+```text
+project-reconstruction-lab/sessions/RB-BLUE-REPAIR-001/
+```
+
+它不是新的 100Q Round，也不覆盖 Round-001 的原始分数和原始 Severity。
+
 验证：
 
 ```powershell
 python tools/scripts/verify_red_blue_session.py
 python tools/scripts/verify_red_blue_round_v2.py
+python tools/scripts/verify_red_blue_repair_v1.py
 ```
 
 V2 Round 未通过 User Architecture Gate 前，不得把 Blue Proposal 写入 `docs/project/`，

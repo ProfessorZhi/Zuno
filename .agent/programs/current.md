@@ -129,6 +129,24 @@ Round-001 的完整记录、Gap、Blue Change Set 和 Counter Retest 位于
 Recovery、Benchmark 和 Architecture Review，不能把 Target 候选升级为 Current，也不能生成
 Runtime implementation task。
 
+## Blue Repair status
+
+```text
+Repair                         RB-BLUE-REPAIR-001
+Root-cause clusters             10
+Final severity                 P0=12 P1=46 P2=32 P3=10
+Final P0 closed                0/12
+Evidence Coverage              0% closure-grade
+Complexity Justification       10/10 structural, 0/10 measured
+Counter Retest                 9 REOPEN + 1 WAITING_FOR_EVIDENCE
+Round-001 closure              NOT_CLOSED
+Round-002                      BLOCKED
+Canonical Docs Sync             NOT_APPLIED
+User Architecture Gate         PENDING
+```
+
+Repair 只写入 Lab，不修改业务 Runtime、UI、Schema/Migration 或正式 Canonical Architecture。
+
 ## Exit condition
 
 本 Program 只有在每个保留的重大设计都有 Red、Blue、Counter Attack、替代方案、验证方式和

@@ -19,6 +19,8 @@ program_class: `architecture-review-and-reconstruction`
 - 未通过 User Architecture Gate 前不生成 implementation task。
 - `ZUNO-RED-BLUE-WORKFLOW-V2 / ROUND-001` 已生成并完成 100 题记录；当前为
   `NOT_PASSED_PENDING_USER_GATE`，P0 Critical Gate 保持 OPEN，Canonical Docs 未同步。
+- 当前先执行 `RB-BLUE-REPAIR-001`，完成 Root-Cause Clustering、Part-A Repair 和 Counter Retest；
+  Round-002 在 Final P0、Evidence 和 Closure Gate 通过前保持 BLOCKED。
 
 ## 当前交接
 

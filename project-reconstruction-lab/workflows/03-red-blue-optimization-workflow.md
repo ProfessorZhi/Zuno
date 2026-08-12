@@ -58,6 +58,25 @@ Canonical Sync
 Red Retest
 ```
 
+如果上一轮产生了大量 P0/P1，`Campaign Escalation Plan` 必须先进入 Blue Repair，而不是直接
+启动新的 100Q：
+
+```text
+Round Discovery
+→ Root-Cause Clustering
+→ Blue Repair / Part-A Reconstruction
+→ Severity Reclassification
+→ P0 Burn-down
+→ Counter Retest
+→ Round Closure
+→ User Architecture Gate
+→ Next Round
+```
+
+只有 Round Closure 记录了未关闭 P0、Evidence Coverage、Counter Retest 和决策，才允许评估
+下一轮。`58→12` 这种变化只能表示 Severity Reclassification；`Final P0 closed` 必须由实际
+Retest Evidence 证明。
+
 允许形成的 Change Set 不只包括 Architecture Proposal，还可以是：
 
 ```text
@@ -186,6 +205,22 @@ NEW_SURFACE            10%–30%
 `REGRESSION` 检查上一轮 CLOSED Gap 是否重新出现；`ADVERSARIAL_MUTATION` 保持 Claim 不变但改变问法、Failure、规模、版本、权限、开源替代、团队约束、预算、时间或部署模式；`NEW_SURFACE` 攻击修复后新产生的 Architecture Claim。下一轮通过 `parent_session_id`、`baseline_session_id`、`campaign_phase` 和 `defense_base_sha` 连接上一轮，不能把三个 Markdown Session 当成互相独立的成绩单。
 
 Campaign Score 使用按 Attack Area 聚合的 **Campaign Quality Profile**，至少观察回答防守度、项目/架构适配度、P0/P1、Unsupported Rate、Coverage Status 和 Reopened Gap；平均分只作辅助，不产生一个掩盖危险缺口的总分。
+
+## Blue Repair 五指标
+
+Repair 阶段必须同时报告：
+
+```text
+Answer Quality
+Architecture Fitness
+Evidence Coverage
+Critical Closure
+Complexity Justification
+```
+
+其中 `Critical Closure = closed Final P0 / total Final P0`。Complexity Justification 只统计
+Problem、Alternative、Owner、State、Failure、Deletion Condition、Validation 是否形成卡片；
+结构化卡片完成不等于实验测量完成。任一 Critical Gate OPEN，最终状态仍为 `NOT_PASSED`。
 
 ## V2 Round 执行契约
 

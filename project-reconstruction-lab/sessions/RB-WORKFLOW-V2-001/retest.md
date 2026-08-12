@@ -54,4 +54,6 @@ Status: OPEN
 
 ## 当前结论
 
-`counter_attack_status: WAITING_FOR_USER_GATE`。下一轮应至少 70% 新问题，最多 30% Regression；不能因为 Round-001 分数较高而降低攻击难度。
+`counter_attack_status: WAITING_FOR_USER_GATE`。当前下一执行阶段是 `RB-BLUE-REPAIR-001`，不是
+Round-002。Repair Closure、Final P0、Evidence 和 User Architecture Gate 通过后，才重新设计
+Round-002；届时至少 70% 是新问题，最多 30% Regression，不能因为 Round-001 分数较高而降低攻击难度。
