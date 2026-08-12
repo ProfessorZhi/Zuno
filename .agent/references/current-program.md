@@ -17,6 +17,8 @@ program_class: `architecture-review-and-reconstruction`
 - Python-only 与 Microservice 是 Owner Target Constraint，但具体服务数量和边界仍在审查；
 - 本 Program 不修改业务 Runtime、UI、Schema/Migration、依赖或生产 Infra；
 - 未通过 User Architecture Gate 前不生成 implementation task。
+- `ZUNO-RED-BLUE-WORKFLOW-V2 / ROUND-001` 已生成并完成 100 题记录；当前为
+  `NOT_PASSED_PENDING_USER_GATE`，P0 Critical Gate 保持 OPEN，Canonical Docs 未同步。
 
 ## 当前交接
 

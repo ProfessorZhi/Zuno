@@ -187,6 +187,46 @@ NEW_SURFACE            10%–30%
 
 Campaign Score 使用按 Attack Area 聚合的 **Campaign Quality Profile**，至少观察回答防守度、项目/架构适配度、P0/P1、Unsupported Rate、Coverage Status 和 Reopened Gap；平均分只作辅助，不产生一个掩盖危险缺口的总分。
 
+## V2 Round 执行契约
+
+当 Campaign 采用 `ZUNO-RED-BLUE-WORKFLOW-V2` 时，必须创建一个可审计的 Round Session，并完成
+恰好 100 个独立问题。默认配额为：
+
+```text
+A Product / Domain / Requirement       10
+B Conceptual Architecture / Necessity 10
+C Agent Runtime / Planning             15
+D Knowledge / RAG / Graph / Memory     15
+E Data / State / DB / Consistency       10
+F Tool Runtime / Sandbox / Security     10
+G Failure / Retry / Recovery            10
+H Microservice / Scale / Deployment      8
+I Observability / Eval / Benchmark       7
+J Engineering Reality / Interview       5
+```
+
+每题必须能回链 Question ID、Category、Attack Intent、Target、Assumption、Severity、Evidence、
+Kill Condition、Blue Answer、State Boundary、Ownership、Failure/Retry/Recovery/Idempotency、
+Security、Observability、Alternative、Tradeoff、Benchmark、Red Critique、Blue Revision、Score 和
+Gap。记录可以使用行首字段，也可以使用已定义的紧凑分号字段，但不得用未标注的模型推断填空。
+
+Round 目录至少包含：
+
+```text
+manifest.yaml
+transcript.md
+scorecard.md
+gaps.md
+blue-change-set.md
+retest.md
+round-report.md
+```
+
+Answer Defensibility 与 Architecture / Project Fitness 都按 0–5 记录；Round 同时报告 Raw、
+Normalized、P0/P1 和 Critical Gate。高分不能绕过 P0，也不能绕过 User Architecture Gate。
+Round-001 的固定配额、状态和分数由
+`project-reconstruction-lab/sessions/RB-WORKFLOW-V2-001/` 作为可复核样本保存。
+
 ## Canonical Sync 追踪
 
 `blue-change-set.md` 的每个 Change 必须记录来源 Cluster、User Gate、Sync Status、Canonical Paths、Applied Commit SHA、Validation Run、Validation Not Run 和 Retest IDs。`NOT_APPLIED`、`PARTIAL` 或 `REJECTED` 的 Change 仍是提案或未完成修复；只有 `APPLIED` 且通过 User Gate 的 Change 才能被 Retest 当作正式修复。
@@ -198,5 +238,6 @@ Workflow 03 允许研究和提出架构修改，但仍禁止：
 - 在红队 Session 内直接改正式架构；
 - 把研究候选写成历史事实；
 - 为通过面试虚构用户、团队、指标或实现；
-- 生成新的大规模静态 QA 题库；
+- 脱离 Round 生成无审计的大规模静态 QA 题库；V2 Round 内固定生成的 100 题必须有 manifest、
+  transcript、scorecard、Gap、Change、Retest 和 Round Report；
 - 在未完成真实 Session 和用户审查前生成正式 `SKILL.md`。

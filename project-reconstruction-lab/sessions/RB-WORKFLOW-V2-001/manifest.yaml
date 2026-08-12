@@ -1,0 +1,52 @@
+session_id: "RB-WORKFLOW-V2-001"
+workflow: "03-red-blue-optimization"
+mode: "FULL_REVIEW"
+scope: "PROJECT_ARCHITECTURE_100Q_V2"
+project_package_version: "ZUNO-MAIN@1155d696fa0dcc08a7682f3c873c345cfccf016a"
+target_role: "principal architect / distributed systems / legal AI / staff interviewer"
+question_budget: 100
+actual_question_count: 100
+stop_reason: "QUESTION_BUDGET_REACHED_AFTER_SCORED_BLUE_REVIEW"
+zuno_base_sha: "1155d696fa0dcc08a7682f3c873c345cfccf016a"
+defense_base_sha: "1155d696fa0dcc08a7682f3c873c345cfccf016a"
+post_sync_sha: null
+resume_version: "PROJECT-FACTS-V1@4b960408f0693a42edd9a1a89accb98ac49d1edc"
+project_fact_version: "docs/project/facts@4b960408f0693a42edd9a1a89accb98ac49d1edc"
+internship_work_sha: "UNKNOWN"
+interview_notes_sha: "UNKNOWN"
+campaign_id: "ZUNO-RED-BLUE-WORKFLOW-V2"
+round_id: "ROUND-001"
+parent_session_id: "RB-ARCH-001"
+baseline_session_id: "RB-ARCH-001"
+campaign_scope: "PROJECT_ARCHITECTURE_100Q_V2"
+campaign_phase: "FULL_REVIEW"
+red_kernel_version: "v2.0"
+judge_policy_version: "v2.0"
+protocol_version: "ZUNO-RED-BLUE-WORKFLOW-V2"
+category_distribution:
+  A: 10
+  B: 10
+  C: 15
+  D: 15
+  E: 10
+  F: 10
+  G: 10
+  H: 8
+  I: 7
+  J: 5
+novelty_status: "NOT_ASSESSED"
+source_scope:
+  - "Zuno main @ 1155d696fa0dcc08a7682f3c873c345cfccf016a"
+  - "docs/project/facts/**"
+  - "docs/project/architecture/**"
+  - "docs/project/{product,domain,agents,knowledge,services,data,security,eval,deployment}/**"
+  - "docs/decisions/0006-0011*.md"
+  - "project-reconstruction-lab/**"
+  - "AGENTS.md, .agent/system.yaml, .agent/programs/current.md"
+started_at: "2026-08-12T00:00:00+08:00"
+completed_at: "2026-08-12T00:00:00+08:00"
+status: "COMPLETED"
+user_gate_resolution: "PENDING"
+resolution_status: "ROUND_REVIEW_PENDING"
+canonical_sync_status: "NOT_APPLIED"
+counter_attack_status: "WAITING_FOR_USER_GATE"

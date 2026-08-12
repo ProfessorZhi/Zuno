@@ -109,6 +109,26 @@ Canonical Architecture Sync      BLOCKED_BY_USER_ARCHITECTURE_GATE
 Implementation Program           NOT_STARTED
 ```
 
+## V2 Round status
+
+```text
+Protocol                         ZUNO-RED-BLUE-WORKFLOW-V2
+Round                            ROUND-001 / 100 independent questions
+Question distribution            A10 B10 C15 D15 E10 F10 G10 H8 I7 J5
+Answer raw score                 361/500 (72.2)
+Architecture fitness raw score  457/500 (91.4)
+Critical Gate                    OPEN
+P0 / P1                          58 / 42
+Canonical Docs Sync              NOT_APPLIED
+User Architecture Gate          PENDING
+Round decision                   NOT_PASSED_PENDING_USER_GATE
+```
+
+Round-001 的完整记录、Gap、Blue Change Set 和 Counter Retest 位于
+`project-reconstruction-lab/sessions/RB-WORKFLOW-V2-001/`。这些结果只能指导下一轮 Fact
+Recovery、Benchmark 和 Architecture Review，不能把 Target 候选升级为 Current，也不能生成
+Runtime implementation task。
+
 ## Exit condition
 
 本 Program 只有在每个保留的重大设计都有 Red、Blue、Counter Attack、替代方案、验证方式和

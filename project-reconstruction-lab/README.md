@@ -111,6 +111,11 @@ project-reconstruction-lab/
 └─ legacy/         # 旧编号文档和旧 Skill Spec，可追溯但不再是主入口
 ```
 
+V2 Red/Blue Round 的执行契约见 `05-red-blue/round-protocol-v2.md`，复杂度审查卡见
+`05-red-blue/complexity-justification-card.md`。Round-001 的完整 100 题记录位于
+`sessions/RB-WORKFLOW-V2-001/`；它仍是 Lab 记录，状态为待 User Architecture Gate，不是
+Canonical Architecture。
+
 每个专题只回答自己的问题。`02-history/` 与 `03-current/` 是工作视图，不替代 `docs/project/facts/`；`06-architecture/` 不替代 `docs/project/architecture/`。
 
 ## Continuous Reconstruction Loop
@@ -217,6 +222,7 @@ python tools/scripts/verify_markdown_internal_links.py
 python .agent/scripts/verify_agent_system.py
 python .agent/scripts/verify_doc_boundaries.py
 python tools/scripts/verify_red_blue_session.py
+python tools/scripts/verify_red_blue_round_v2.py
 ```
 
 完整 CI 未运行时，不得写 `CI PASS`。
