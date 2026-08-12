@@ -1,0 +1,3103 @@
+# Round-003 Blue Answers
+
+Answers are Target/document decisions, not Current implementation evidence.
+
+## Q001
+
+- Question ID: Q001
+- Round ID: RB-WORKFLOW-V3-ROUND-003
+- Blue Answer: Preserve this responsibility only as a Target contract: the narrative must explain why the 00 Overall Architecture boundary exists, while the specification makes it testable. This does not establish Current or Production evidence.
+- Current / Target / Future / History: Current is limited to repository/status evidence already marked Current; Target is the Part A/Part B contract; Future is provider or topology expansion after evidence; History is the Superseded 11-module organization.
+- Problem: A reader or implementation can mistake a proposal, projection or control checkpoint for the stable legal responsibility described by the document.
+- Target Decision: KEEP
+- Owner: docs/project/architecture/architecture.md owns the Canonical question; linked providers may propose but cannot duplicate final state.
+- State Transition: proposed → validated → authorized or review_required → committed, rejected, stale or reconciled; control state and business state remain separate.
+- Failure: Missing provenance, version conflict, unavailable provider, timeout or incomplete review is a typed failure, not silent success.
+- Failure Propagation: Downstream receives blocked, stale, unsupported, unknown or review_required with a trace reference.
+- Retry: Retry only bounded idempotent transient work under the same input version; changed conditions require replan, reauthorization or reconciliation.
+- Recovery: Reload the last valid DomainVersion/PlanVersion, compare receipts and generations, then resume, retry, replan or request Human Review.
+- Idempotency: A stable operation identity and input version make duplicate delivery converge to one proposal, effect receipt or decision.
+- Security: Enforce tenant, matter, scope, capability/tool, secret and current policy epoch; untrusted content cannot change policy.
+- Observability: Trace Run/Plan/Step or Job, version, provider, evidence lineage, decision, receipt and failure class without hidden chain of thought.
+- Alternative: A simpler Host, library, worker or existing OSS remains preferred if it passes the same quality, recovery, security and cost checks.
+- OSS Alternative: Provider/framework substitution is allowed behind the Contract; license, build and operational qualification remain separate.
+- Tradeoff: Explicit Part A explanation and Part B fields add review and implementation work but reduce ambiguity, duplicate state and untestable claims.
+- Test / Benchmark: Review the concrete 00 Overall Architecture scenario with stale input, duplicate delivery, permission change and provider failure; compare quality, latency, cost and recovery where applicable.
+- Evidence: This is a Target/document-quality decision; implementation, benchmark, security attestation and production evidence remain open.
+- Remaining Gap: DOC-R3-001
+- Reversal Condition: If the simpler alternative passes the same contract and scenario with no loss of quality, safety, recovery or ownership, docs/project/architecture/architecture.md must be simplified or externalized.
+- Delta Ref: D001
+- Document Impact: BOTH
+- Part A Change Required?: YES
+- Part B Change Required?: YES
+- Canonical Owner Doc: docs/project/architecture/architecture.md
+- Red Score Context: 4/5 reflects the remaining assumption or evidence gap, not runtime quality.
+
+## Q002
+
+- Question ID: Q002
+- Round ID: RB-WORKFLOW-V3-ROUND-003
+- Blue Answer: Preserve this responsibility only as a Target contract: the narrative must explain why the 00 Overall Architecture boundary exists, while the specification makes it testable. This does not establish Current or Production evidence.
+- Current / Target / Future / History: Current is limited to repository/status evidence already marked Current; Target is the Part A/Part B contract; Future is provider or topology expansion after evidence; History is the Superseded 11-module organization.
+- Problem: A reader or implementation can mistake a proposal, projection or control checkpoint for the stable legal responsibility described by the document.
+- Target Decision: KEEP
+- Owner: docs/project/architecture/architecture.md owns the Canonical question; linked providers may propose but cannot duplicate final state.
+- State Transition: proposed → validated → authorized or review_required → committed, rejected, stale or reconciled; control state and business state remain separate.
+- Failure: Missing provenance, version conflict, unavailable provider, timeout or incomplete review is a typed failure, not silent success.
+- Failure Propagation: Downstream receives blocked, stale, unsupported, unknown or review_required with a trace reference.
+- Retry: Retry only bounded idempotent transient work under the same input version; changed conditions require replan, reauthorization or reconciliation.
+- Recovery: Reload the last valid DomainVersion/PlanVersion, compare receipts and generations, then resume, retry, replan or request Human Review.
+- Idempotency: A stable operation identity and input version make duplicate delivery converge to one proposal, effect receipt or decision.
+- Security: Enforce tenant, matter, scope, capability/tool, secret and current policy epoch; untrusted content cannot change policy.
+- Observability: Trace Run/Plan/Step or Job, version, provider, evidence lineage, decision, receipt and failure class without hidden chain of thought.
+- Alternative: A simpler Host, library, worker or existing OSS remains preferred if it passes the same quality, recovery, security and cost checks.
+- OSS Alternative: Provider/framework substitution is allowed behind the Contract; license, build and operational qualification remain separate.
+- Tradeoff: Explicit Part A explanation and Part B fields add review and implementation work but reduce ambiguity, duplicate state and untestable claims.
+- Test / Benchmark: Review the concrete 00 Overall Architecture scenario with stale input, duplicate delivery, permission change and provider failure; compare quality, latency, cost and recovery where applicable.
+- Evidence: This is a Target/document-quality decision; implementation, benchmark, security attestation and production evidence remain open.
+- Remaining Gap: DOC-R3-002
+- Reversal Condition: If the simpler alternative passes the same contract and scenario with no loss of quality, safety, recovery or ownership, docs/project/architecture/architecture.md must be simplified or externalized.
+- Delta Ref: D001
+- Document Impact: BOTH
+- Part A Change Required?: YES
+- Part B Change Required?: YES
+- Canonical Owner Doc: docs/project/architecture/architecture.md
+- Red Score Context: 5/5 reflects the remaining assumption or evidence gap, not runtime quality.
+
+## Q003
+
+- Question ID: Q003
+- Round ID: RB-WORKFLOW-V3-ROUND-003
+- Blue Answer: Preserve this responsibility only as a Target contract: the narrative must explain why the 00 Overall Architecture boundary exists, while the specification makes it testable. This does not establish Current or Production evidence.
+- Current / Target / Future / History: Current is limited to repository/status evidence already marked Current; Target is the Part A/Part B contract; Future is provider or topology expansion after evidence; History is the Superseded 11-module organization.
+- Problem: A reader or implementation can mistake a proposal, projection or control checkpoint for the stable legal responsibility described by the document.
+- Target Decision: KEEP
+- Owner: docs/project/architecture/architecture.md owns the Canonical question; linked providers may propose but cannot duplicate final state.
+- State Transition: proposed → validated → authorized or review_required → committed, rejected, stale or reconciled; control state and business state remain separate.
+- Failure: Missing provenance, version conflict, unavailable provider, timeout or incomplete review is a typed failure, not silent success.
+- Failure Propagation: Downstream receives blocked, stale, unsupported, unknown or review_required with a trace reference.
+- Retry: Retry only bounded idempotent transient work under the same input version; changed conditions require replan, reauthorization or reconciliation.
+- Recovery: Reload the last valid DomainVersion/PlanVersion, compare receipts and generations, then resume, retry, replan or request Human Review.
+- Idempotency: A stable operation identity and input version make duplicate delivery converge to one proposal, effect receipt or decision.
+- Security: Enforce tenant, matter, scope, capability/tool, secret and current policy epoch; untrusted content cannot change policy.
+- Observability: Trace Run/Plan/Step or Job, version, provider, evidence lineage, decision, receipt and failure class without hidden chain of thought.
+- Alternative: A simpler Host, library, worker or existing OSS remains preferred if it passes the same quality, recovery, security and cost checks.
+- OSS Alternative: Provider/framework substitution is allowed behind the Contract; license, build and operational qualification remain separate.
+- Tradeoff: Explicit Part A explanation and Part B fields add review and implementation work but reduce ambiguity, duplicate state and untestable claims.
+- Test / Benchmark: Review the concrete 00 Overall Architecture scenario with stale input, duplicate delivery, permission change and provider failure; compare quality, latency, cost and recovery where applicable.
+- Evidence: This is a Target/document-quality decision; implementation, benchmark, security attestation and production evidence remain open.
+- Remaining Gap: DOC-R3-003
+- Reversal Condition: If the simpler alternative passes the same contract and scenario with no loss of quality, safety, recovery or ownership, docs/project/architecture/architecture.md must be simplified or externalized.
+- Delta Ref: D001
+- Document Impact: BOTH
+- Part A Change Required?: YES
+- Part B Change Required?: YES
+- Canonical Owner Doc: docs/project/architecture/architecture.md
+- Red Score Context: 4/5 reflects the remaining assumption or evidence gap, not runtime quality.
+
+## Q004
+
+- Question ID: Q004
+- Round ID: RB-WORKFLOW-V3-ROUND-003
+- Blue Answer: Preserve this responsibility only as a Target contract: the narrative must explain why the 00 Overall Architecture boundary exists, while the specification makes it testable. This does not establish Current or Production evidence.
+- Current / Target / Future / History: Current is limited to repository/status evidence already marked Current; Target is the Part A/Part B contract; Future is provider or topology expansion after evidence; History is the Superseded 11-module organization.
+- Problem: A reader or implementation can mistake a proposal, projection or control checkpoint for the stable legal responsibility described by the document.
+- Target Decision: REFINE
+- Owner: docs/project/architecture/architecture.md owns the Canonical question; linked providers may propose but cannot duplicate final state.
+- State Transition: proposed → validated → authorized or review_required → committed, rejected, stale or reconciled; control state and business state remain separate.
+- Failure: Missing provenance, version conflict, unavailable provider, timeout or incomplete review is a typed failure, not silent success.
+- Failure Propagation: Downstream receives blocked, stale, unsupported, unknown or review_required with a trace reference.
+- Retry: Retry only bounded idempotent transient work under the same input version; changed conditions require replan, reauthorization or reconciliation.
+- Recovery: Reload the last valid DomainVersion/PlanVersion, compare receipts and generations, then resume, retry, replan or request Human Review.
+- Idempotency: A stable operation identity and input version make duplicate delivery converge to one proposal, effect receipt or decision.
+- Security: Enforce tenant, matter, scope, capability/tool, secret and current policy epoch; untrusted content cannot change policy.
+- Observability: Trace Run/Plan/Step or Job, version, provider, evidence lineage, decision, receipt and failure class without hidden chain of thought.
+- Alternative: A simpler Host, library, worker or existing OSS remains preferred if it passes the same quality, recovery, security and cost checks.
+- OSS Alternative: Provider/framework substitution is allowed behind the Contract; license, build and operational qualification remain separate.
+- Tradeoff: Explicit Part A explanation and Part B fields add review and implementation work but reduce ambiguity, duplicate state and untestable claims.
+- Test / Benchmark: Review the concrete 00 Overall Architecture scenario with stale input, duplicate delivery, permission change and provider failure; compare quality, latency, cost and recovery where applicable.
+- Evidence: This is a Target/document-quality decision; implementation, benchmark, security attestation and production evidence remain open.
+- Remaining Gap: DOC-R3-004
+- Reversal Condition: If the simpler alternative passes the same contract and scenario with no loss of quality, safety, recovery or ownership, docs/project/architecture/architecture.md must be simplified or externalized.
+- Delta Ref: D001
+- Document Impact: BOTH
+- Part A Change Required?: YES
+- Part B Change Required?: YES
+- Canonical Owner Doc: docs/project/architecture/architecture.md
+- Red Score Context: 3/5 reflects the remaining assumption or evidence gap, not runtime quality.
+
+## Q005
+
+- Question ID: Q005
+- Round ID: RB-WORKFLOW-V3-ROUND-003
+- Blue Answer: Preserve this responsibility only as a Target contract: the narrative must explain why the 00 Overall Architecture boundary exists, while the specification makes it testable. This does not establish Current or Production evidence.
+- Current / Target / Future / History: Current is limited to repository/status evidence already marked Current; Target is the Part A/Part B contract; Future is provider or topology expansion after evidence; History is the Superseded 11-module organization.
+- Problem: A reader or implementation can mistake a proposal, projection or control checkpoint for the stable legal responsibility described by the document.
+- Target Decision: KEEP
+- Owner: docs/project/architecture/architecture.md owns the Canonical question; linked providers may propose but cannot duplicate final state.
+- State Transition: proposed → validated → authorized or review_required → committed, rejected, stale or reconciled; control state and business state remain separate.
+- Failure: Missing provenance, version conflict, unavailable provider, timeout or incomplete review is a typed failure, not silent success.
+- Failure Propagation: Downstream receives blocked, stale, unsupported, unknown or review_required with a trace reference.
+- Retry: Retry only bounded idempotent transient work under the same input version; changed conditions require replan, reauthorization or reconciliation.
+- Recovery: Reload the last valid DomainVersion/PlanVersion, compare receipts and generations, then resume, retry, replan or request Human Review.
+- Idempotency: A stable operation identity and input version make duplicate delivery converge to one proposal, effect receipt or decision.
+- Security: Enforce tenant, matter, scope, capability/tool, secret and current policy epoch; untrusted content cannot change policy.
+- Observability: Trace Run/Plan/Step or Job, version, provider, evidence lineage, decision, receipt and failure class without hidden chain of thought.
+- Alternative: A simpler Host, library, worker or existing OSS remains preferred if it passes the same quality, recovery, security and cost checks.
+- OSS Alternative: Provider/framework substitution is allowed behind the Contract; license, build and operational qualification remain separate.
+- Tradeoff: Explicit Part A explanation and Part B fields add review and implementation work but reduce ambiguity, duplicate state and untestable claims.
+- Test / Benchmark: Review the concrete 00 Overall Architecture scenario with stale input, duplicate delivery, permission change and provider failure; compare quality, latency, cost and recovery where applicable.
+- Evidence: This is a Target/document-quality decision; implementation, benchmark, security attestation and production evidence remain open.
+- Remaining Gap: DOC-R3-005
+- Reversal Condition: If the simpler alternative passes the same contract and scenario with no loss of quality, safety, recovery or ownership, docs/project/architecture/architecture.md must be simplified or externalized.
+- Delta Ref: D001
+- Document Impact: BOTH
+- Part A Change Required?: YES
+- Part B Change Required?: YES
+- Canonical Owner Doc: docs/project/architecture/architecture.md
+- Red Score Context: 4/5 reflects the remaining assumption or evidence gap, not runtime quality.
+
+## Q006
+
+- Question ID: Q006
+- Round ID: RB-WORKFLOW-V3-ROUND-003
+- Blue Answer: Preserve this responsibility only as a Target contract: the narrative must explain why the 00 Overall Architecture boundary exists, while the specification makes it testable. This does not establish Current or Production evidence.
+- Current / Target / Future / History: Current is limited to repository/status evidence already marked Current; Target is the Part A/Part B contract; Future is provider or topology expansion after evidence; History is the Superseded 11-module organization.
+- Problem: A reader or implementation can mistake a proposal, projection or control checkpoint for the stable legal responsibility described by the document.
+- Target Decision: MEASUREMENT_GAP
+- Owner: docs/project/architecture/architecture.md owns the Canonical question; linked providers may propose but cannot duplicate final state.
+- State Transition: proposed → validated → authorized or review_required → committed, rejected, stale or reconciled; control state and business state remain separate.
+- Failure: Missing provenance, version conflict, unavailable provider, timeout or incomplete review is a typed failure, not silent success.
+- Failure Propagation: Downstream receives blocked, stale, unsupported, unknown or review_required with a trace reference.
+- Retry: Retry only bounded idempotent transient work under the same input version; changed conditions require replan, reauthorization or reconciliation.
+- Recovery: Reload the last valid DomainVersion/PlanVersion, compare receipts and generations, then resume, retry, replan or request Human Review.
+- Idempotency: A stable operation identity and input version make duplicate delivery converge to one proposal, effect receipt or decision.
+- Security: Enforce tenant, matter, scope, capability/tool, secret and current policy epoch; untrusted content cannot change policy.
+- Observability: Trace Run/Plan/Step or Job, version, provider, evidence lineage, decision, receipt and failure class without hidden chain of thought.
+- Alternative: A simpler Host, library, worker or existing OSS remains preferred if it passes the same quality, recovery, security and cost checks.
+- OSS Alternative: Provider/framework substitution is allowed behind the Contract; license, build and operational qualification remain separate.
+- Tradeoff: Explicit Part A explanation and Part B fields add review and implementation work but reduce ambiguity, duplicate state and untestable claims.
+- Test / Benchmark: Review the concrete 00 Overall Architecture scenario with stale input, duplicate delivery, permission change and provider failure; compare quality, latency, cost and recovery where applicable.
+- Evidence: This is a Target/document-quality decision; implementation, benchmark, security attestation and production evidence remain open.
+- Remaining Gap: DOC-R3-006
+- Reversal Condition: If the simpler alternative passes the same contract and scenario with no loss of quality, safety, recovery or ownership, docs/project/architecture/architecture.md must be simplified or externalized.
+- Delta Ref: D001
+- Document Impact: BOTH
+- Part A Change Required?: YES
+- Part B Change Required?: YES
+- Canonical Owner Doc: docs/project/architecture/architecture.md
+- Red Score Context: 2/5 reflects the remaining assumption or evidence gap, not runtime quality.
+
+## Q007
+
+- Question ID: Q007
+- Round ID: RB-WORKFLOW-V3-ROUND-003
+- Blue Answer: Preserve this responsibility only as a Target contract: the narrative must explain why the 00 Overall Architecture boundary exists, while the specification makes it testable. This does not establish Current or Production evidence.
+- Current / Target / Future / History: Current is limited to repository/status evidence already marked Current; Target is the Part A/Part B contract; Future is provider or topology expansion after evidence; History is the Superseded 11-module organization.
+- Problem: A reader or implementation can mistake a proposal, projection or control checkpoint for the stable legal responsibility described by the document.
+- Target Decision: KEEP
+- Owner: docs/project/architecture/architecture.md owns the Canonical question; linked providers may propose but cannot duplicate final state.
+- State Transition: proposed → validated → authorized or review_required → committed, rejected, stale or reconciled; control state and business state remain separate.
+- Failure: Missing provenance, version conflict, unavailable provider, timeout or incomplete review is a typed failure, not silent success.
+- Failure Propagation: Downstream receives blocked, stale, unsupported, unknown or review_required with a trace reference.
+- Retry: Retry only bounded idempotent transient work under the same input version; changed conditions require replan, reauthorization or reconciliation.
+- Recovery: Reload the last valid DomainVersion/PlanVersion, compare receipts and generations, then resume, retry, replan or request Human Review.
+- Idempotency: A stable operation identity and input version make duplicate delivery converge to one proposal, effect receipt or decision.
+- Security: Enforce tenant, matter, scope, capability/tool, secret and current policy epoch; untrusted content cannot change policy.
+- Observability: Trace Run/Plan/Step or Job, version, provider, evidence lineage, decision, receipt and failure class without hidden chain of thought.
+- Alternative: A simpler Host, library, worker or existing OSS remains preferred if it passes the same quality, recovery, security and cost checks.
+- OSS Alternative: Provider/framework substitution is allowed behind the Contract; license, build and operational qualification remain separate.
+- Tradeoff: Explicit Part A explanation and Part B fields add review and implementation work but reduce ambiguity, duplicate state and untestable claims.
+- Test / Benchmark: Review the concrete 00 Overall Architecture scenario with stale input, duplicate delivery, permission change and provider failure; compare quality, latency, cost and recovery where applicable.
+- Evidence: This is a Target/document-quality decision; implementation, benchmark, security attestation and production evidence remain open.
+- Remaining Gap: DOC-R3-007
+- Reversal Condition: If the simpler alternative passes the same contract and scenario with no loss of quality, safety, recovery or ownership, docs/project/architecture/architecture.md must be simplified or externalized.
+- Delta Ref: D001
+- Document Impact: BOTH
+- Part A Change Required?: YES
+- Part B Change Required?: YES
+- Canonical Owner Doc: docs/project/architecture/architecture.md
+- Red Score Context: 4/5 reflects the remaining assumption or evidence gap, not runtime quality.
+
+## Q008
+
+- Question ID: Q008
+- Round ID: RB-WORKFLOW-V3-ROUND-003
+- Blue Answer: Preserve this responsibility only as a Target contract: the narrative must explain why the 00 Overall Architecture boundary exists, while the specification makes it testable. This does not establish Current or Production evidence.
+- Current / Target / Future / History: Current is limited to repository/status evidence already marked Current; Target is the Part A/Part B contract; Future is provider or topology expansion after evidence; History is the Superseded 11-module organization.
+- Problem: A reader or implementation can mistake a proposal, projection or control checkpoint for the stable legal responsibility described by the document.
+- Target Decision: KEEP
+- Owner: docs/project/architecture/architecture.md owns the Canonical question; linked providers may propose but cannot duplicate final state.
+- State Transition: proposed → validated → authorized or review_required → committed, rejected, stale or reconciled; control state and business state remain separate.
+- Failure: Missing provenance, version conflict, unavailable provider, timeout or incomplete review is a typed failure, not silent success.
+- Failure Propagation: Downstream receives blocked, stale, unsupported, unknown or review_required with a trace reference.
+- Retry: Retry only bounded idempotent transient work under the same input version; changed conditions require replan, reauthorization or reconciliation.
+- Recovery: Reload the last valid DomainVersion/PlanVersion, compare receipts and generations, then resume, retry, replan or request Human Review.
+- Idempotency: A stable operation identity and input version make duplicate delivery converge to one proposal, effect receipt or decision.
+- Security: Enforce tenant, matter, scope, capability/tool, secret and current policy epoch; untrusted content cannot change policy.
+- Observability: Trace Run/Plan/Step or Job, version, provider, evidence lineage, decision, receipt and failure class without hidden chain of thought.
+- Alternative: A simpler Host, library, worker or existing OSS remains preferred if it passes the same quality, recovery, security and cost checks.
+- OSS Alternative: Provider/framework substitution is allowed behind the Contract; license, build and operational qualification remain separate.
+- Tradeoff: Explicit Part A explanation and Part B fields add review and implementation work but reduce ambiguity, duplicate state and untestable claims.
+- Test / Benchmark: Review the concrete 00 Overall Architecture scenario with stale input, duplicate delivery, permission change and provider failure; compare quality, latency, cost and recovery where applicable.
+- Evidence: This is a Target/document-quality decision; implementation, benchmark, security attestation and production evidence remain open.
+- Remaining Gap: DOC-R3-008
+- Reversal Condition: If the simpler alternative passes the same contract and scenario with no loss of quality, safety, recovery or ownership, docs/project/architecture/architecture.md must be simplified or externalized.
+- Delta Ref: D001
+- Document Impact: BOTH
+- Part A Change Required?: YES
+- Part B Change Required?: YES
+- Canonical Owner Doc: docs/project/architecture/architecture.md
+- Red Score Context: 4/5 reflects the remaining assumption or evidence gap, not runtime quality.
+
+## Q009
+
+- Question ID: Q009
+- Round ID: RB-WORKFLOW-V3-ROUND-003
+- Blue Answer: Preserve this responsibility only as a Target contract: the narrative must explain why the 00 Overall Architecture boundary exists, while the specification makes it testable. This does not establish Current or Production evidence.
+- Current / Target / Future / History: Current is limited to repository/status evidence already marked Current; Target is the Part A/Part B contract; Future is provider or topology expansion after evidence; History is the Superseded 11-module organization.
+- Problem: A reader or implementation can mistake a proposal, projection or control checkpoint for the stable legal responsibility described by the document.
+- Target Decision: KEEP
+- Owner: docs/project/architecture/architecture.md owns the Canonical question; linked providers may propose but cannot duplicate final state.
+- State Transition: proposed → validated → authorized or review_required → committed, rejected, stale or reconciled; control state and business state remain separate.
+- Failure: Missing provenance, version conflict, unavailable provider, timeout or incomplete review is a typed failure, not silent success.
+- Failure Propagation: Downstream receives blocked, stale, unsupported, unknown or review_required with a trace reference.
+- Retry: Retry only bounded idempotent transient work under the same input version; changed conditions require replan, reauthorization or reconciliation.
+- Recovery: Reload the last valid DomainVersion/PlanVersion, compare receipts and generations, then resume, retry, replan or request Human Review.
+- Idempotency: A stable operation identity and input version make duplicate delivery converge to one proposal, effect receipt or decision.
+- Security: Enforce tenant, matter, scope, capability/tool, secret and current policy epoch; untrusted content cannot change policy.
+- Observability: Trace Run/Plan/Step or Job, version, provider, evidence lineage, decision, receipt and failure class without hidden chain of thought.
+- Alternative: A simpler Host, library, worker or existing OSS remains preferred if it passes the same quality, recovery, security and cost checks.
+- OSS Alternative: Provider/framework substitution is allowed behind the Contract; license, build and operational qualification remain separate.
+- Tradeoff: Explicit Part A explanation and Part B fields add review and implementation work but reduce ambiguity, duplicate state and untestable claims.
+- Test / Benchmark: Review the concrete 00 Overall Architecture scenario with stale input, duplicate delivery, permission change and provider failure; compare quality, latency, cost and recovery where applicable.
+- Evidence: This is a Target/document-quality decision; implementation, benchmark, security attestation and production evidence remain open.
+- Remaining Gap: DOC-R3-009
+- Reversal Condition: If the simpler alternative passes the same contract and scenario with no loss of quality, safety, recovery or ownership, docs/project/architecture/architecture.md must be simplified or externalized.
+- Delta Ref: D001
+- Document Impact: BOTH
+- Part A Change Required?: YES
+- Part B Change Required?: YES
+- Canonical Owner Doc: docs/project/architecture/architecture.md
+- Red Score Context: 4/5 reflects the remaining assumption or evidence gap, not runtime quality.
+
+## Q010
+
+- Question ID: Q010
+- Round ID: RB-WORKFLOW-V3-ROUND-003
+- Blue Answer: Preserve this responsibility only as a Target contract: the narrative must explain why the 00 Overall Architecture boundary exists, while the specification makes it testable. This does not establish Current or Production evidence.
+- Current / Target / Future / History: Current is limited to repository/status evidence already marked Current; Target is the Part A/Part B contract; Future is provider or topology expansion after evidence; History is the Superseded 11-module organization.
+- Problem: A reader or implementation can mistake a proposal, projection or control checkpoint for the stable legal responsibility described by the document.
+- Target Decision: KEEP
+- Owner: docs/project/architecture/architecture.md owns the Canonical question; linked providers may propose but cannot duplicate final state.
+- State Transition: proposed → validated → authorized or review_required → committed, rejected, stale or reconciled; control state and business state remain separate.
+- Failure: Missing provenance, version conflict, unavailable provider, timeout or incomplete review is a typed failure, not silent success.
+- Failure Propagation: Downstream receives blocked, stale, unsupported, unknown or review_required with a trace reference.
+- Retry: Retry only bounded idempotent transient work under the same input version; changed conditions require replan, reauthorization or reconciliation.
+- Recovery: Reload the last valid DomainVersion/PlanVersion, compare receipts and generations, then resume, retry, replan or request Human Review.
+- Idempotency: A stable operation identity and input version make duplicate delivery converge to one proposal, effect receipt or decision.
+- Security: Enforce tenant, matter, scope, capability/tool, secret and current policy epoch; untrusted content cannot change policy.
+- Observability: Trace Run/Plan/Step or Job, version, provider, evidence lineage, decision, receipt and failure class without hidden chain of thought.
+- Alternative: A simpler Host, library, worker or existing OSS remains preferred if it passes the same quality, recovery, security and cost checks.
+- OSS Alternative: Provider/framework substitution is allowed behind the Contract; license, build and operational qualification remain separate.
+- Tradeoff: Explicit Part A explanation and Part B fields add review and implementation work but reduce ambiguity, duplicate state and untestable claims.
+- Test / Benchmark: Review the concrete 00 Overall Architecture scenario with stale input, duplicate delivery, permission change and provider failure; compare quality, latency, cost and recovery where applicable.
+- Evidence: This is a Target/document-quality decision; implementation, benchmark, security attestation and production evidence remain open.
+- Remaining Gap: DOC-R3-010
+- Reversal Condition: If the simpler alternative passes the same contract and scenario with no loss of quality, safety, recovery or ownership, docs/project/architecture/architecture.md must be simplified or externalized.
+- Delta Ref: D001
+- Document Impact: BOTH
+- Part A Change Required?: YES
+- Part B Change Required?: YES
+- Canonical Owner Doc: docs/project/architecture/architecture.md
+- Red Score Context: 5/5 reflects the remaining assumption or evidence gap, not runtime quality.
+
+## Q011
+
+- Question ID: Q011
+- Round ID: RB-WORKFLOW-V3-ROUND-003
+- Blue Answer: Preserve this responsibility only as a Target contract: the narrative must explain why the 00 Overall Architecture boundary exists, while the specification makes it testable. This does not establish Current or Production evidence.
+- Current / Target / Future / History: Current is limited to repository/status evidence already marked Current; Target is the Part A/Part B contract; Future is provider or topology expansion after evidence; History is the Superseded 11-module organization.
+- Problem: A reader or implementation can mistake a proposal, projection or control checkpoint for the stable legal responsibility described by the document.
+- Target Decision: KEEP
+- Owner: docs/project/architecture/architecture.md owns the Canonical question; linked providers may propose but cannot duplicate final state.
+- State Transition: proposed → validated → authorized or review_required → committed, rejected, stale or reconciled; control state and business state remain separate.
+- Failure: Missing provenance, version conflict, unavailable provider, timeout or incomplete review is a typed failure, not silent success.
+- Failure Propagation: Downstream receives blocked, stale, unsupported, unknown or review_required with a trace reference.
+- Retry: Retry only bounded idempotent transient work under the same input version; changed conditions require replan, reauthorization or reconciliation.
+- Recovery: Reload the last valid DomainVersion/PlanVersion, compare receipts and generations, then resume, retry, replan or request Human Review.
+- Idempotency: A stable operation identity and input version make duplicate delivery converge to one proposal, effect receipt or decision.
+- Security: Enforce tenant, matter, scope, capability/tool, secret and current policy epoch; untrusted content cannot change policy.
+- Observability: Trace Run/Plan/Step or Job, version, provider, evidence lineage, decision, receipt and failure class without hidden chain of thought.
+- Alternative: A simpler Host, library, worker or existing OSS remains preferred if it passes the same quality, recovery, security and cost checks.
+- OSS Alternative: Provider/framework substitution is allowed behind the Contract; license, build and operational qualification remain separate.
+- Tradeoff: Explicit Part A explanation and Part B fields add review and implementation work but reduce ambiguity, duplicate state and untestable claims.
+- Test / Benchmark: Review the concrete 00 Overall Architecture scenario with stale input, duplicate delivery, permission change and provider failure; compare quality, latency, cost and recovery where applicable.
+- Evidence: This is a Target/document-quality decision; implementation, benchmark, security attestation and production evidence remain open.
+- Remaining Gap: DOC-R3-011
+- Reversal Condition: If the simpler alternative passes the same contract and scenario with no loss of quality, safety, recovery or ownership, docs/project/architecture/architecture.md must be simplified or externalized.
+- Delta Ref: D001
+- Document Impact: BOTH
+- Part A Change Required?: YES
+- Part B Change Required?: YES
+- Canonical Owner Doc: docs/project/architecture/architecture.md
+- Red Score Context: 4/5 reflects the remaining assumption or evidence gap, not runtime quality.
+
+## Q012
+
+- Question ID: Q012
+- Round ID: RB-WORKFLOW-V3-ROUND-003
+- Blue Answer: Preserve this responsibility only as a Target contract: the narrative must explain why the 00 Overall Architecture boundary exists, while the specification makes it testable. This does not establish Current or Production evidence.
+- Current / Target / Future / History: Current is limited to repository/status evidence already marked Current; Target is the Part A/Part B contract; Future is provider or topology expansion after evidence; History is the Superseded 11-module organization.
+- Problem: A reader or implementation can mistake a proposal, projection or control checkpoint for the stable legal responsibility described by the document.
+- Target Decision: KEEP
+- Owner: docs/project/architecture/architecture.md owns the Canonical question; linked providers may propose but cannot duplicate final state.
+- State Transition: proposed → validated → authorized or review_required → committed, rejected, stale or reconciled; control state and business state remain separate.
+- Failure: Missing provenance, version conflict, unavailable provider, timeout or incomplete review is a typed failure, not silent success.
+- Failure Propagation: Downstream receives blocked, stale, unsupported, unknown or review_required with a trace reference.
+- Retry: Retry only bounded idempotent transient work under the same input version; changed conditions require replan, reauthorization or reconciliation.
+- Recovery: Reload the last valid DomainVersion/PlanVersion, compare receipts and generations, then resume, retry, replan or request Human Review.
+- Idempotency: A stable operation identity and input version make duplicate delivery converge to one proposal, effect receipt or decision.
+- Security: Enforce tenant, matter, scope, capability/tool, secret and current policy epoch; untrusted content cannot change policy.
+- Observability: Trace Run/Plan/Step or Job, version, provider, evidence lineage, decision, receipt and failure class without hidden chain of thought.
+- Alternative: A simpler Host, library, worker or existing OSS remains preferred if it passes the same quality, recovery, security and cost checks.
+- OSS Alternative: Provider/framework substitution is allowed behind the Contract; license, build and operational qualification remain separate.
+- Tradeoff: Explicit Part A explanation and Part B fields add review and implementation work but reduce ambiguity, duplicate state and untestable claims.
+- Test / Benchmark: Review the concrete 00 Overall Architecture scenario with stale input, duplicate delivery, permission change and provider failure; compare quality, latency, cost and recovery where applicable.
+- Evidence: This is a Target/document-quality decision; implementation, benchmark, security attestation and production evidence remain open.
+- Remaining Gap: DOC-R3-012
+- Reversal Condition: If the simpler alternative passes the same contract and scenario with no loss of quality, safety, recovery or ownership, docs/project/architecture/architecture.md must be simplified or externalized.
+- Delta Ref: D001
+- Document Impact: BOTH
+- Part A Change Required?: YES
+- Part B Change Required?: YES
+- Canonical Owner Doc: docs/project/architecture/architecture.md
+- Red Score Context: 4/5 reflects the remaining assumption or evidence gap, not runtime quality.
+
+## Q013
+
+- Question ID: Q013
+- Round ID: RB-WORKFLOW-V3-ROUND-003
+- Blue Answer: Preserve this responsibility only as a Target contract: the narrative must explain why the 01 Product Surface boundary exists, while the specification makes it testable. This does not establish Current or Production evidence.
+- Current / Target / Future / History: Current is limited to repository/status evidence already marked Current; Target is the Part A/Part B contract; Future is provider or topology expansion after evidence; History is the Superseded 11-module organization.
+- Problem: A reader or implementation can mistake a proposal, projection or control checkpoint for the stable legal responsibility described by the document.
+- Target Decision: KEEP
+- Owner: docs/project/product/product-architecture.md owns the Canonical question; linked providers may propose but cannot duplicate final state.
+- State Transition: proposed → validated → authorized or review_required → committed, rejected, stale or reconciled; control state and business state remain separate.
+- Failure: Missing provenance, version conflict, unavailable provider, timeout or incomplete review is a typed failure, not silent success.
+- Failure Propagation: Downstream receives blocked, stale, unsupported, unknown or review_required with a trace reference.
+- Retry: Retry only bounded idempotent transient work under the same input version; changed conditions require replan, reauthorization or reconciliation.
+- Recovery: Reload the last valid DomainVersion/PlanVersion, compare receipts and generations, then resume, retry, replan or request Human Review.
+- Idempotency: A stable operation identity and input version make duplicate delivery converge to one proposal, effect receipt or decision.
+- Security: Enforce tenant, matter, scope, capability/tool, secret and current policy epoch; untrusted content cannot change policy.
+- Observability: Trace Run/Plan/Step or Job, version, provider, evidence lineage, decision, receipt and failure class without hidden chain of thought.
+- Alternative: A simpler Host, library, worker or existing OSS remains preferred if it passes the same quality, recovery, security and cost checks.
+- OSS Alternative: Provider/framework substitution is allowed behind the Contract; license, build and operational qualification remain separate.
+- Tradeoff: Explicit Part A explanation and Part B fields add review and implementation work but reduce ambiguity, duplicate state and untestable claims.
+- Test / Benchmark: Review the concrete 01 Product Surface scenario with stale input, duplicate delivery, permission change and provider failure; compare quality, latency, cost and recovery where applicable.
+- Evidence: This is a Target/document-quality decision; implementation, benchmark, security attestation and production evidence remain open.
+- Remaining Gap: DOC-R3-013
+- Reversal Condition: If the simpler alternative passes the same contract and scenario with no loss of quality, safety, recovery or ownership, docs/project/product/product-architecture.md must be simplified or externalized.
+- Delta Ref: D002
+- Document Impact: PART_A
+- Part A Change Required?: YES
+- Part B Change Required?: NO
+- Canonical Owner Doc: docs/project/product/product-architecture.md
+- Red Score Context: 4/5 reflects the remaining assumption or evidence gap, not runtime quality.
+
+## Q014
+
+- Question ID: Q014
+- Round ID: RB-WORKFLOW-V3-ROUND-003
+- Blue Answer: Preserve this responsibility only as a Target contract: the narrative must explain why the 01 Product Surface boundary exists, while the specification makes it testable. This does not establish Current or Production evidence.
+- Current / Target / Future / History: Current is limited to repository/status evidence already marked Current; Target is the Part A/Part B contract; Future is provider or topology expansion after evidence; History is the Superseded 11-module organization.
+- Problem: A reader or implementation can mistake a proposal, projection or control checkpoint for the stable legal responsibility described by the document.
+- Target Decision: KEEP
+- Owner: docs/project/product/product-architecture.md owns the Canonical question; linked providers may propose but cannot duplicate final state.
+- State Transition: proposed → validated → authorized or review_required → committed, rejected, stale or reconciled; control state and business state remain separate.
+- Failure: Missing provenance, version conflict, unavailable provider, timeout or incomplete review is a typed failure, not silent success.
+- Failure Propagation: Downstream receives blocked, stale, unsupported, unknown or review_required with a trace reference.
+- Retry: Retry only bounded idempotent transient work under the same input version; changed conditions require replan, reauthorization or reconciliation.
+- Recovery: Reload the last valid DomainVersion/PlanVersion, compare receipts and generations, then resume, retry, replan or request Human Review.
+- Idempotency: A stable operation identity and input version make duplicate delivery converge to one proposal, effect receipt or decision.
+- Security: Enforce tenant, matter, scope, capability/tool, secret and current policy epoch; untrusted content cannot change policy.
+- Observability: Trace Run/Plan/Step or Job, version, provider, evidence lineage, decision, receipt and failure class without hidden chain of thought.
+- Alternative: A simpler Host, library, worker or existing OSS remains preferred if it passes the same quality, recovery, security and cost checks.
+- OSS Alternative: Provider/framework substitution is allowed behind the Contract; license, build and operational qualification remain separate.
+- Tradeoff: Explicit Part A explanation and Part B fields add review and implementation work but reduce ambiguity, duplicate state and untestable claims.
+- Test / Benchmark: Review the concrete 01 Product Surface scenario with stale input, duplicate delivery, permission change and provider failure; compare quality, latency, cost and recovery where applicable.
+- Evidence: This is a Target/document-quality decision; implementation, benchmark, security attestation and production evidence remain open.
+- Remaining Gap: DOC-R3-014
+- Reversal Condition: If the simpler alternative passes the same contract and scenario with no loss of quality, safety, recovery or ownership, docs/project/product/product-architecture.md must be simplified or externalized.
+- Delta Ref: D002
+- Document Impact: PART_A
+- Part A Change Required?: YES
+- Part B Change Required?: NO
+- Canonical Owner Doc: docs/project/product/product-architecture.md
+- Red Score Context: 4/5 reflects the remaining assumption or evidence gap, not runtime quality.
+
+## Q015
+
+- Question ID: Q015
+- Round ID: RB-WORKFLOW-V3-ROUND-003
+- Blue Answer: Preserve this responsibility only as a Target contract: the narrative must explain why the 01 Product Surface boundary exists, while the specification makes it testable. This does not establish Current or Production evidence.
+- Current / Target / Future / History: Current is limited to repository/status evidence already marked Current; Target is the Part A/Part B contract; Future is provider or topology expansion after evidence; History is the Superseded 11-module organization.
+- Problem: A reader or implementation can mistake a proposal, projection or control checkpoint for the stable legal responsibility described by the document.
+- Target Decision: KEEP
+- Owner: docs/project/product/product-architecture.md owns the Canonical question; linked providers may propose but cannot duplicate final state.
+- State Transition: proposed → validated → authorized or review_required → committed, rejected, stale or reconciled; control state and business state remain separate.
+- Failure: Missing provenance, version conflict, unavailable provider, timeout or incomplete review is a typed failure, not silent success.
+- Failure Propagation: Downstream receives blocked, stale, unsupported, unknown or review_required with a trace reference.
+- Retry: Retry only bounded idempotent transient work under the same input version; changed conditions require replan, reauthorization or reconciliation.
+- Recovery: Reload the last valid DomainVersion/PlanVersion, compare receipts and generations, then resume, retry, replan or request Human Review.
+- Idempotency: A stable operation identity and input version make duplicate delivery converge to one proposal, effect receipt or decision.
+- Security: Enforce tenant, matter, scope, capability/tool, secret and current policy epoch; untrusted content cannot change policy.
+- Observability: Trace Run/Plan/Step or Job, version, provider, evidence lineage, decision, receipt and failure class without hidden chain of thought.
+- Alternative: A simpler Host, library, worker or existing OSS remains preferred if it passes the same quality, recovery, security and cost checks.
+- OSS Alternative: Provider/framework substitution is allowed behind the Contract; license, build and operational qualification remain separate.
+- Tradeoff: Explicit Part A explanation and Part B fields add review and implementation work but reduce ambiguity, duplicate state and untestable claims.
+- Test / Benchmark: Review the concrete 01 Product Surface scenario with stale input, duplicate delivery, permission change and provider failure; compare quality, latency, cost and recovery where applicable.
+- Evidence: This is a Target/document-quality decision; implementation, benchmark, security attestation and production evidence remain open.
+- Remaining Gap: DOC-R3-015
+- Reversal Condition: If the simpler alternative passes the same contract and scenario with no loss of quality, safety, recovery or ownership, docs/project/product/product-architecture.md must be simplified or externalized.
+- Delta Ref: D002
+- Document Impact: BOTH
+- Part A Change Required?: YES
+- Part B Change Required?: YES
+- Canonical Owner Doc: docs/project/product/product-architecture.md
+- Red Score Context: 4/5 reflects the remaining assumption or evidence gap, not runtime quality.
+
+## Q016
+
+- Question ID: Q016
+- Round ID: RB-WORKFLOW-V3-ROUND-003
+- Blue Answer: Preserve this responsibility only as a Target contract: the narrative must explain why the 01 Product Surface boundary exists, while the specification makes it testable. This does not establish Current or Production evidence.
+- Current / Target / Future / History: Current is limited to repository/status evidence already marked Current; Target is the Part A/Part B contract; Future is provider or topology expansion after evidence; History is the Superseded 11-module organization.
+- Problem: A reader or implementation can mistake a proposal, projection or control checkpoint for the stable legal responsibility described by the document.
+- Target Decision: KEEP
+- Owner: docs/project/product/product-architecture.md owns the Canonical question; linked providers may propose but cannot duplicate final state.
+- State Transition: proposed → validated → authorized or review_required → committed, rejected, stale or reconciled; control state and business state remain separate.
+- Failure: Missing provenance, version conflict, unavailable provider, timeout or incomplete review is a typed failure, not silent success.
+- Failure Propagation: Downstream receives blocked, stale, unsupported, unknown or review_required with a trace reference.
+- Retry: Retry only bounded idempotent transient work under the same input version; changed conditions require replan, reauthorization or reconciliation.
+- Recovery: Reload the last valid DomainVersion/PlanVersion, compare receipts and generations, then resume, retry, replan or request Human Review.
+- Idempotency: A stable operation identity and input version make duplicate delivery converge to one proposal, effect receipt or decision.
+- Security: Enforce tenant, matter, scope, capability/tool, secret and current policy epoch; untrusted content cannot change policy.
+- Observability: Trace Run/Plan/Step or Job, version, provider, evidence lineage, decision, receipt and failure class without hidden chain of thought.
+- Alternative: A simpler Host, library, worker or existing OSS remains preferred if it passes the same quality, recovery, security and cost checks.
+- OSS Alternative: Provider/framework substitution is allowed behind the Contract; license, build and operational qualification remain separate.
+- Tradeoff: Explicit Part A explanation and Part B fields add review and implementation work but reduce ambiguity, duplicate state and untestable claims.
+- Test / Benchmark: Review the concrete 01 Product Surface scenario with stale input, duplicate delivery, permission change and provider failure; compare quality, latency, cost and recovery where applicable.
+- Evidence: This is a Target/document-quality decision; implementation, benchmark, security attestation and production evidence remain open.
+- Remaining Gap: DOC-R3-016
+- Reversal Condition: If the simpler alternative passes the same contract and scenario with no loss of quality, safety, recovery or ownership, docs/project/product/product-architecture.md must be simplified or externalized.
+- Delta Ref: D002
+- Document Impact: PART_A
+- Part A Change Required?: YES
+- Part B Change Required?: NO
+- Canonical Owner Doc: docs/project/product/product-architecture.md
+- Red Score Context: 4/5 reflects the remaining assumption or evidence gap, not runtime quality.
+
+## Q017
+
+- Question ID: Q017
+- Round ID: RB-WORKFLOW-V3-ROUND-003
+- Blue Answer: Preserve this responsibility only as a Target contract: the narrative must explain why the 01 Product Surface boundary exists, while the specification makes it testable. This does not establish Current or Production evidence.
+- Current / Target / Future / History: Current is limited to repository/status evidence already marked Current; Target is the Part A/Part B contract; Future is provider or topology expansion after evidence; History is the Superseded 11-module organization.
+- Problem: A reader or implementation can mistake a proposal, projection or control checkpoint for the stable legal responsibility described by the document.
+- Target Decision: KEEP
+- Owner: docs/project/product/product-architecture.md owns the Canonical question; linked providers may propose but cannot duplicate final state.
+- State Transition: proposed → validated → authorized or review_required → committed, rejected, stale or reconciled; control state and business state remain separate.
+- Failure: Missing provenance, version conflict, unavailable provider, timeout or incomplete review is a typed failure, not silent success.
+- Failure Propagation: Downstream receives blocked, stale, unsupported, unknown or review_required with a trace reference.
+- Retry: Retry only bounded idempotent transient work under the same input version; changed conditions require replan, reauthorization or reconciliation.
+- Recovery: Reload the last valid DomainVersion/PlanVersion, compare receipts and generations, then resume, retry, replan or request Human Review.
+- Idempotency: A stable operation identity and input version make duplicate delivery converge to one proposal, effect receipt or decision.
+- Security: Enforce tenant, matter, scope, capability/tool, secret and current policy epoch; untrusted content cannot change policy.
+- Observability: Trace Run/Plan/Step or Job, version, provider, evidence lineage, decision, receipt and failure class without hidden chain of thought.
+- Alternative: A simpler Host, library, worker or existing OSS remains preferred if it passes the same quality, recovery, security and cost checks.
+- OSS Alternative: Provider/framework substitution is allowed behind the Contract; license, build and operational qualification remain separate.
+- Tradeoff: Explicit Part A explanation and Part B fields add review and implementation work but reduce ambiguity, duplicate state and untestable claims.
+- Test / Benchmark: Review the concrete 01 Product Surface scenario with stale input, duplicate delivery, permission change and provider failure; compare quality, latency, cost and recovery where applicable.
+- Evidence: This is a Target/document-quality decision; implementation, benchmark, security attestation and production evidence remain open.
+- Remaining Gap: DOC-R3-017
+- Reversal Condition: If the simpler alternative passes the same contract and scenario with no loss of quality, safety, recovery or ownership, docs/project/product/product-architecture.md must be simplified or externalized.
+- Delta Ref: D002
+- Document Impact: PART_A
+- Part A Change Required?: YES
+- Part B Change Required?: NO
+- Canonical Owner Doc: docs/project/product/product-architecture.md
+- Red Score Context: 4/5 reflects the remaining assumption or evidence gap, not runtime quality.
+
+## Q018
+
+- Question ID: Q018
+- Round ID: RB-WORKFLOW-V3-ROUND-003
+- Blue Answer: Preserve this responsibility only as a Target contract: the narrative must explain why the 01 Product Surface boundary exists, while the specification makes it testable. This does not establish Current or Production evidence.
+- Current / Target / Future / History: Current is limited to repository/status evidence already marked Current; Target is the Part A/Part B contract; Future is provider or topology expansion after evidence; History is the Superseded 11-module organization.
+- Problem: A reader or implementation can mistake a proposal, projection or control checkpoint for the stable legal responsibility described by the document.
+- Target Decision: REFINE
+- Owner: docs/project/product/product-architecture.md owns the Canonical question; linked providers may propose but cannot duplicate final state.
+- State Transition: proposed → validated → authorized or review_required → committed, rejected, stale or reconciled; control state and business state remain separate.
+- Failure: Missing provenance, version conflict, unavailable provider, timeout or incomplete review is a typed failure, not silent success.
+- Failure Propagation: Downstream receives blocked, stale, unsupported, unknown or review_required with a trace reference.
+- Retry: Retry only bounded idempotent transient work under the same input version; changed conditions require replan, reauthorization or reconciliation.
+- Recovery: Reload the last valid DomainVersion/PlanVersion, compare receipts and generations, then resume, retry, replan or request Human Review.
+- Idempotency: A stable operation identity and input version make duplicate delivery converge to one proposal, effect receipt or decision.
+- Security: Enforce tenant, matter, scope, capability/tool, secret and current policy epoch; untrusted content cannot change policy.
+- Observability: Trace Run/Plan/Step or Job, version, provider, evidence lineage, decision, receipt and failure class without hidden chain of thought.
+- Alternative: A simpler Host, library, worker or existing OSS remains preferred if it passes the same quality, recovery, security and cost checks.
+- OSS Alternative: Provider/framework substitution is allowed behind the Contract; license, build and operational qualification remain separate.
+- Tradeoff: Explicit Part A explanation and Part B fields add review and implementation work but reduce ambiguity, duplicate state and untestable claims.
+- Test / Benchmark: Review the concrete 01 Product Surface scenario with stale input, duplicate delivery, permission change and provider failure; compare quality, latency, cost and recovery where applicable.
+- Evidence: This is a Target/document-quality decision; implementation, benchmark, security attestation and production evidence remain open.
+- Remaining Gap: DOC-R3-018
+- Reversal Condition: If the simpler alternative passes the same contract and scenario with no loss of quality, safety, recovery or ownership, docs/project/product/product-architecture.md must be simplified or externalized.
+- Delta Ref: D002
+- Document Impact: PART_A
+- Part A Change Required?: YES
+- Part B Change Required?: NO
+- Canonical Owner Doc: docs/project/product/product-architecture.md
+- Red Score Context: 3/5 reflects the remaining assumption or evidence gap, not runtime quality.
+
+## Q019
+
+- Question ID: Q019
+- Round ID: RB-WORKFLOW-V3-ROUND-003
+- Blue Answer: Preserve this responsibility only as a Target contract: the narrative must explain why the 02 Input / Document Ingestion boundary exists, while the specification makes it testable. This does not establish Current or Production evidence.
+- Current / Target / Future / History: Current is limited to repository/status evidence already marked Current; Target is the Part A/Part B contract; Future is provider or topology expansion after evidence; History is the Superseded 11-module organization.
+- Problem: A reader or implementation can mistake a proposal, projection or control checkpoint for the stable legal responsibility described by the document.
+- Target Decision: KEEP
+- Owner: docs/project/knowledge/knowledge-evidence-architecture.md owns the Canonical question; linked providers may propose but cannot duplicate final state.
+- State Transition: proposed → validated → authorized or review_required → committed, rejected, stale or reconciled; control state and business state remain separate.
+- Failure: Missing provenance, version conflict, unavailable provider, timeout or incomplete review is a typed failure, not silent success.
+- Failure Propagation: Downstream receives blocked, stale, unsupported, unknown or review_required with a trace reference.
+- Retry: Retry only bounded idempotent transient work under the same input version; changed conditions require replan, reauthorization or reconciliation.
+- Recovery: Reload the last valid DomainVersion/PlanVersion, compare receipts and generations, then resume, retry, replan or request Human Review.
+- Idempotency: A stable operation identity and input version make duplicate delivery converge to one proposal, effect receipt or decision.
+- Security: Enforce tenant, matter, scope, capability/tool, secret and current policy epoch; untrusted content cannot change policy.
+- Observability: Trace Run/Plan/Step or Job, version, provider, evidence lineage, decision, receipt and failure class without hidden chain of thought.
+- Alternative: A simpler Host, library, worker or existing OSS remains preferred if it passes the same quality, recovery, security and cost checks.
+- OSS Alternative: Provider/framework substitution is allowed behind the Contract; license, build and operational qualification remain separate.
+- Tradeoff: Explicit Part A explanation and Part B fields add review and implementation work but reduce ambiguity, duplicate state and untestable claims.
+- Test / Benchmark: Review the concrete 02 Input / Document Ingestion scenario with stale input, duplicate delivery, permission change and provider failure; compare quality, latency, cost and recovery where applicable.
+- Evidence: This is a Target/document-quality decision; implementation, benchmark, security attestation and production evidence remain open.
+- Remaining Gap: DOC-R3-019
+- Reversal Condition: If the simpler alternative passes the same contract and scenario with no loss of quality, safety, recovery or ownership, docs/project/knowledge/knowledge-evidence-architecture.md must be simplified or externalized.
+- Delta Ref: D003
+- Document Impact: PART_B
+- Part A Change Required?: NO
+- Part B Change Required?: YES
+- Canonical Owner Doc: docs/project/knowledge/knowledge-evidence-architecture.md
+- Red Score Context: 4/5 reflects the remaining assumption or evidence gap, not runtime quality.
+
+## Q020
+
+- Question ID: Q020
+- Round ID: RB-WORKFLOW-V3-ROUND-003
+- Blue Answer: Preserve this responsibility only as a Target contract: the narrative must explain why the 02 Input / Document Ingestion boundary exists, while the specification makes it testable. This does not establish Current or Production evidence.
+- Current / Target / Future / History: Current is limited to repository/status evidence already marked Current; Target is the Part A/Part B contract; Future is provider or topology expansion after evidence; History is the Superseded 11-module organization.
+- Problem: A reader or implementation can mistake a proposal, projection or control checkpoint for the stable legal responsibility described by the document.
+- Target Decision: KEEP
+- Owner: docs/project/knowledge/knowledge-evidence-architecture.md owns the Canonical question; linked providers may propose but cannot duplicate final state.
+- State Transition: proposed → validated → authorized or review_required → committed, rejected, stale or reconciled; control state and business state remain separate.
+- Failure: Missing provenance, version conflict, unavailable provider, timeout or incomplete review is a typed failure, not silent success.
+- Failure Propagation: Downstream receives blocked, stale, unsupported, unknown or review_required with a trace reference.
+- Retry: Retry only bounded idempotent transient work under the same input version; changed conditions require replan, reauthorization or reconciliation.
+- Recovery: Reload the last valid DomainVersion/PlanVersion, compare receipts and generations, then resume, retry, replan or request Human Review.
+- Idempotency: A stable operation identity and input version make duplicate delivery converge to one proposal, effect receipt or decision.
+- Security: Enforce tenant, matter, scope, capability/tool, secret and current policy epoch; untrusted content cannot change policy.
+- Observability: Trace Run/Plan/Step or Job, version, provider, evidence lineage, decision, receipt and failure class without hidden chain of thought.
+- Alternative: A simpler Host, library, worker or existing OSS remains preferred if it passes the same quality, recovery, security and cost checks.
+- OSS Alternative: Provider/framework substitution is allowed behind the Contract; license, build and operational qualification remain separate.
+- Tradeoff: Explicit Part A explanation and Part B fields add review and implementation work but reduce ambiguity, duplicate state and untestable claims.
+- Test / Benchmark: Review the concrete 02 Input / Document Ingestion scenario with stale input, duplicate delivery, permission change and provider failure; compare quality, latency, cost and recovery where applicable.
+- Evidence: This is a Target/document-quality decision; implementation, benchmark, security attestation and production evidence remain open.
+- Remaining Gap: DOC-R3-020
+- Reversal Condition: If the simpler alternative passes the same contract and scenario with no loss of quality, safety, recovery or ownership, docs/project/knowledge/knowledge-evidence-architecture.md must be simplified or externalized.
+- Delta Ref: D003
+- Document Impact: PART_B
+- Part A Change Required?: NO
+- Part B Change Required?: YES
+- Canonical Owner Doc: docs/project/knowledge/knowledge-evidence-architecture.md
+- Red Score Context: 4/5 reflects the remaining assumption or evidence gap, not runtime quality.
+
+## Q021
+
+- Question ID: Q021
+- Round ID: RB-WORKFLOW-V3-ROUND-003
+- Blue Answer: Preserve this responsibility only as a Target contract: the narrative must explain why the 02 Input / Document Ingestion boundary exists, while the specification makes it testable. This does not establish Current or Production evidence.
+- Current / Target / Future / History: Current is limited to repository/status evidence already marked Current; Target is the Part A/Part B contract; Future is provider or topology expansion after evidence; History is the Superseded 11-module organization.
+- Problem: A reader or implementation can mistake a proposal, projection or control checkpoint for the stable legal responsibility described by the document.
+- Target Decision: KEEP
+- Owner: docs/project/knowledge/knowledge-evidence-architecture.md owns the Canonical question; linked providers may propose but cannot duplicate final state.
+- State Transition: proposed → validated → authorized or review_required → committed, rejected, stale or reconciled; control state and business state remain separate.
+- Failure: Missing provenance, version conflict, unavailable provider, timeout or incomplete review is a typed failure, not silent success.
+- Failure Propagation: Downstream receives blocked, stale, unsupported, unknown or review_required with a trace reference.
+- Retry: Retry only bounded idempotent transient work under the same input version; changed conditions require replan, reauthorization or reconciliation.
+- Recovery: Reload the last valid DomainVersion/PlanVersion, compare receipts and generations, then resume, retry, replan or request Human Review.
+- Idempotency: A stable operation identity and input version make duplicate delivery converge to one proposal, effect receipt or decision.
+- Security: Enforce tenant, matter, scope, capability/tool, secret and current policy epoch; untrusted content cannot change policy.
+- Observability: Trace Run/Plan/Step or Job, version, provider, evidence lineage, decision, receipt and failure class without hidden chain of thought.
+- Alternative: A simpler Host, library, worker or existing OSS remains preferred if it passes the same quality, recovery, security and cost checks.
+- OSS Alternative: Provider/framework substitution is allowed behind the Contract; license, build and operational qualification remain separate.
+- Tradeoff: Explicit Part A explanation and Part B fields add review and implementation work but reduce ambiguity, duplicate state and untestable claims.
+- Test / Benchmark: Review the concrete 02 Input / Document Ingestion scenario with stale input, duplicate delivery, permission change and provider failure; compare quality, latency, cost and recovery where applicable.
+- Evidence: This is a Target/document-quality decision; implementation, benchmark, security attestation and production evidence remain open.
+- Remaining Gap: DOC-R3-021
+- Reversal Condition: If the simpler alternative passes the same contract and scenario with no loss of quality, safety, recovery or ownership, docs/project/knowledge/knowledge-evidence-architecture.md must be simplified or externalized.
+- Delta Ref: D003
+- Document Impact: PART_B
+- Part A Change Required?: NO
+- Part B Change Required?: YES
+- Canonical Owner Doc: docs/project/knowledge/knowledge-evidence-architecture.md
+- Red Score Context: 5/5 reflects the remaining assumption or evidence gap, not runtime quality.
+
+## Q022
+
+- Question ID: Q022
+- Round ID: RB-WORKFLOW-V3-ROUND-003
+- Blue Answer: Preserve this responsibility only as a Target contract: the narrative must explain why the 02 Input / Document Ingestion boundary exists, while the specification makes it testable. This does not establish Current or Production evidence.
+- Current / Target / Future / History: Current is limited to repository/status evidence already marked Current; Target is the Part A/Part B contract; Future is provider or topology expansion after evidence; History is the Superseded 11-module organization.
+- Problem: A reader or implementation can mistake a proposal, projection or control checkpoint for the stable legal responsibility described by the document.
+- Target Decision: KEEP
+- Owner: docs/project/knowledge/knowledge-evidence-architecture.md owns the Canonical question; linked providers may propose but cannot duplicate final state.
+- State Transition: proposed → validated → authorized or review_required → committed, rejected, stale or reconciled; control state and business state remain separate.
+- Failure: Missing provenance, version conflict, unavailable provider, timeout or incomplete review is a typed failure, not silent success.
+- Failure Propagation: Downstream receives blocked, stale, unsupported, unknown or review_required with a trace reference.
+- Retry: Retry only bounded idempotent transient work under the same input version; changed conditions require replan, reauthorization or reconciliation.
+- Recovery: Reload the last valid DomainVersion/PlanVersion, compare receipts and generations, then resume, retry, replan or request Human Review.
+- Idempotency: A stable operation identity and input version make duplicate delivery converge to one proposal, effect receipt or decision.
+- Security: Enforce tenant, matter, scope, capability/tool, secret and current policy epoch; untrusted content cannot change policy.
+- Observability: Trace Run/Plan/Step or Job, version, provider, evidence lineage, decision, receipt and failure class without hidden chain of thought.
+- Alternative: A simpler Host, library, worker or existing OSS remains preferred if it passes the same quality, recovery, security and cost checks.
+- OSS Alternative: Provider/framework substitution is allowed behind the Contract; license, build and operational qualification remain separate.
+- Tradeoff: Explicit Part A explanation and Part B fields add review and implementation work but reduce ambiguity, duplicate state and untestable claims.
+- Test / Benchmark: Review the concrete 02 Input / Document Ingestion scenario with stale input, duplicate delivery, permission change and provider failure; compare quality, latency, cost and recovery where applicable.
+- Evidence: This is a Target/document-quality decision; implementation, benchmark, security attestation and production evidence remain open.
+- Remaining Gap: DOC-R3-022
+- Reversal Condition: If the simpler alternative passes the same contract and scenario with no loss of quality, safety, recovery or ownership, docs/project/knowledge/knowledge-evidence-architecture.md must be simplified or externalized.
+- Delta Ref: D003
+- Document Impact: PART_B
+- Part A Change Required?: NO
+- Part B Change Required?: YES
+- Canonical Owner Doc: docs/project/knowledge/knowledge-evidence-architecture.md
+- Red Score Context: 4/5 reflects the remaining assumption or evidence gap, not runtime quality.
+
+## Q023
+
+- Question ID: Q023
+- Round ID: RB-WORKFLOW-V3-ROUND-003
+- Blue Answer: Preserve this responsibility only as a Target contract: the narrative must explain why the 02 Input / Document Ingestion boundary exists, while the specification makes it testable. This does not establish Current or Production evidence.
+- Current / Target / Future / History: Current is limited to repository/status evidence already marked Current; Target is the Part A/Part B contract; Future is provider or topology expansion after evidence; History is the Superseded 11-module organization.
+- Problem: A reader or implementation can mistake a proposal, projection or control checkpoint for the stable legal responsibility described by the document.
+- Target Decision: KEEP
+- Owner: docs/project/knowledge/knowledge-evidence-architecture.md owns the Canonical question; linked providers may propose but cannot duplicate final state.
+- State Transition: proposed → validated → authorized or review_required → committed, rejected, stale or reconciled; control state and business state remain separate.
+- Failure: Missing provenance, version conflict, unavailable provider, timeout or incomplete review is a typed failure, not silent success.
+- Failure Propagation: Downstream receives blocked, stale, unsupported, unknown or review_required with a trace reference.
+- Retry: Retry only bounded idempotent transient work under the same input version; changed conditions require replan, reauthorization or reconciliation.
+- Recovery: Reload the last valid DomainVersion/PlanVersion, compare receipts and generations, then resume, retry, replan or request Human Review.
+- Idempotency: A stable operation identity and input version make duplicate delivery converge to one proposal, effect receipt or decision.
+- Security: Enforce tenant, matter, scope, capability/tool, secret and current policy epoch; untrusted content cannot change policy.
+- Observability: Trace Run/Plan/Step or Job, version, provider, evidence lineage, decision, receipt and failure class without hidden chain of thought.
+- Alternative: A simpler Host, library, worker or existing OSS remains preferred if it passes the same quality, recovery, security and cost checks.
+- OSS Alternative: Provider/framework substitution is allowed behind the Contract; license, build and operational qualification remain separate.
+- Tradeoff: Explicit Part A explanation and Part B fields add review and implementation work but reduce ambiguity, duplicate state and untestable claims.
+- Test / Benchmark: Review the concrete 02 Input / Document Ingestion scenario with stale input, duplicate delivery, permission change and provider failure; compare quality, latency, cost and recovery where applicable.
+- Evidence: This is a Target/document-quality decision; implementation, benchmark, security attestation and production evidence remain open.
+- Remaining Gap: DOC-R3-023
+- Reversal Condition: If the simpler alternative passes the same contract and scenario with no loss of quality, safety, recovery or ownership, docs/project/knowledge/knowledge-evidence-architecture.md must be simplified or externalized.
+- Delta Ref: D003
+- Document Impact: PART_B
+- Part A Change Required?: NO
+- Part B Change Required?: YES
+- Canonical Owner Doc: docs/project/knowledge/knowledge-evidence-architecture.md
+- Red Score Context: 4/5 reflects the remaining assumption or evidence gap, not runtime quality.
+
+## Q024
+
+- Question ID: Q024
+- Round ID: RB-WORKFLOW-V3-ROUND-003
+- Blue Answer: Preserve this responsibility only as a Target contract: the narrative must explain why the 02 Input / Document Ingestion boundary exists, while the specification makes it testable. This does not establish Current or Production evidence.
+- Current / Target / Future / History: Current is limited to repository/status evidence already marked Current; Target is the Part A/Part B contract; Future is provider or topology expansion after evidence; History is the Superseded 11-module organization.
+- Problem: A reader or implementation can mistake a proposal, projection or control checkpoint for the stable legal responsibility described by the document.
+- Target Decision: KEEP
+- Owner: docs/project/knowledge/knowledge-evidence-architecture.md owns the Canonical question; linked providers may propose but cannot duplicate final state.
+- State Transition: proposed → validated → authorized or review_required → committed, rejected, stale or reconciled; control state and business state remain separate.
+- Failure: Missing provenance, version conflict, unavailable provider, timeout or incomplete review is a typed failure, not silent success.
+- Failure Propagation: Downstream receives blocked, stale, unsupported, unknown or review_required with a trace reference.
+- Retry: Retry only bounded idempotent transient work under the same input version; changed conditions require replan, reauthorization or reconciliation.
+- Recovery: Reload the last valid DomainVersion/PlanVersion, compare receipts and generations, then resume, retry, replan or request Human Review.
+- Idempotency: A stable operation identity and input version make duplicate delivery converge to one proposal, effect receipt or decision.
+- Security: Enforce tenant, matter, scope, capability/tool, secret and current policy epoch; untrusted content cannot change policy.
+- Observability: Trace Run/Plan/Step or Job, version, provider, evidence lineage, decision, receipt and failure class without hidden chain of thought.
+- Alternative: A simpler Host, library, worker or existing OSS remains preferred if it passes the same quality, recovery, security and cost checks.
+- OSS Alternative: Provider/framework substitution is allowed behind the Contract; license, build and operational qualification remain separate.
+- Tradeoff: Explicit Part A explanation and Part B fields add review and implementation work but reduce ambiguity, duplicate state and untestable claims.
+- Test / Benchmark: Review the concrete 02 Input / Document Ingestion scenario with stale input, duplicate delivery, permission change and provider failure; compare quality, latency, cost and recovery where applicable.
+- Evidence: This is a Target/document-quality decision; implementation, benchmark, security attestation and production evidence remain open.
+- Remaining Gap: DOC-R3-024
+- Reversal Condition: If the simpler alternative passes the same contract and scenario with no loss of quality, safety, recovery or ownership, docs/project/knowledge/knowledge-evidence-architecture.md must be simplified or externalized.
+- Delta Ref: D003
+- Document Impact: PART_B
+- Part A Change Required?: NO
+- Part B Change Required?: YES
+- Canonical Owner Doc: docs/project/knowledge/knowledge-evidence-architecture.md
+- Red Score Context: 4/5 reflects the remaining assumption or evidence gap, not runtime quality.
+
+## Q025
+
+- Question ID: Q025
+- Round ID: RB-WORKFLOW-V3-ROUND-003
+- Blue Answer: Preserve this responsibility only as a Target contract: the narrative must explain why the 02 Input / Document Ingestion boundary exists, while the specification makes it testable. This does not establish Current or Production evidence.
+- Current / Target / Future / History: Current is limited to repository/status evidence already marked Current; Target is the Part A/Part B contract; Future is provider or topology expansion after evidence; History is the Superseded 11-module organization.
+- Problem: A reader or implementation can mistake a proposal, projection or control checkpoint for the stable legal responsibility described by the document.
+- Target Decision: REFINE
+- Owner: docs/project/knowledge/knowledge-evidence-architecture.md owns the Canonical question; linked providers may propose but cannot duplicate final state.
+- State Transition: proposed → validated → authorized or review_required → committed, rejected, stale or reconciled; control state and business state remain separate.
+- Failure: Missing provenance, version conflict, unavailable provider, timeout or incomplete review is a typed failure, not silent success.
+- Failure Propagation: Downstream receives blocked, stale, unsupported, unknown or review_required with a trace reference.
+- Retry: Retry only bounded idempotent transient work under the same input version; changed conditions require replan, reauthorization or reconciliation.
+- Recovery: Reload the last valid DomainVersion/PlanVersion, compare receipts and generations, then resume, retry, replan or request Human Review.
+- Idempotency: A stable operation identity and input version make duplicate delivery converge to one proposal, effect receipt or decision.
+- Security: Enforce tenant, matter, scope, capability/tool, secret and current policy epoch; untrusted content cannot change policy.
+- Observability: Trace Run/Plan/Step or Job, version, provider, evidence lineage, decision, receipt and failure class without hidden chain of thought.
+- Alternative: A simpler Host, library, worker or existing OSS remains preferred if it passes the same quality, recovery, security and cost checks.
+- OSS Alternative: Provider/framework substitution is allowed behind the Contract; license, build and operational qualification remain separate.
+- Tradeoff: Explicit Part A explanation and Part B fields add review and implementation work but reduce ambiguity, duplicate state and untestable claims.
+- Test / Benchmark: Review the concrete 02 Input / Document Ingestion scenario with stale input, duplicate delivery, permission change and provider failure; compare quality, latency, cost and recovery where applicable.
+- Evidence: This is a Target/document-quality decision; implementation, benchmark, security attestation and production evidence remain open.
+- Remaining Gap: DOC-R3-025
+- Reversal Condition: If the simpler alternative passes the same contract and scenario with no loss of quality, safety, recovery or ownership, docs/project/knowledge/knowledge-evidence-architecture.md must be simplified or externalized.
+- Delta Ref: D003
+- Document Impact: PART_B
+- Part A Change Required?: NO
+- Part B Change Required?: YES
+- Canonical Owner Doc: docs/project/knowledge/knowledge-evidence-architecture.md
+- Red Score Context: 3/5 reflects the remaining assumption or evidence gap, not runtime quality.
+
+## Q026
+
+- Question ID: Q026
+- Round ID: RB-WORKFLOW-V3-ROUND-003
+- Blue Answer: Preserve this responsibility only as a Target contract: the narrative must explain why the 03 Knowledge / Agentic GraphRAG boundary exists, while the specification makes it testable. This does not establish Current or Production evidence.
+- Current / Target / Future / History: Current is limited to repository/status evidence already marked Current; Target is the Part A/Part B contract; Future is provider or topology expansion after evidence; History is the Superseded 11-module organization.
+- Problem: A reader or implementation can mistake a proposal, projection or control checkpoint for the stable legal responsibility described by the document.
+- Target Decision: KEEP
+- Owner: docs/project/knowledge/knowledge-evidence-architecture.md owns the Canonical question; linked providers may propose but cannot duplicate final state.
+- State Transition: proposed → validated → authorized or review_required → committed, rejected, stale or reconciled; control state and business state remain separate.
+- Failure: Missing provenance, version conflict, unavailable provider, timeout or incomplete review is a typed failure, not silent success.
+- Failure Propagation: Downstream receives blocked, stale, unsupported, unknown or review_required with a trace reference.
+- Retry: Retry only bounded idempotent transient work under the same input version; changed conditions require replan, reauthorization or reconciliation.
+- Recovery: Reload the last valid DomainVersion/PlanVersion, compare receipts and generations, then resume, retry, replan or request Human Review.
+- Idempotency: A stable operation identity and input version make duplicate delivery converge to one proposal, effect receipt or decision.
+- Security: Enforce tenant, matter, scope, capability/tool, secret and current policy epoch; untrusted content cannot change policy.
+- Observability: Trace Run/Plan/Step or Job, version, provider, evidence lineage, decision, receipt and failure class without hidden chain of thought.
+- Alternative: A simpler Host, library, worker or existing OSS remains preferred if it passes the same quality, recovery, security and cost checks.
+- OSS Alternative: Provider/framework substitution is allowed behind the Contract; license, build and operational qualification remain separate.
+- Tradeoff: Explicit Part A explanation and Part B fields add review and implementation work but reduce ambiguity, duplicate state and untestable claims.
+- Test / Benchmark: Review the concrete 03 Knowledge / Agentic GraphRAG scenario with stale input, duplicate delivery, permission change and provider failure; compare quality, latency, cost and recovery where applicable.
+- Evidence: This is a Target/document-quality decision; implementation, benchmark, security attestation and production evidence remain open.
+- Remaining Gap: DOC-R3-026
+- Reversal Condition: If the simpler alternative passes the same contract and scenario with no loss of quality, safety, recovery or ownership, docs/project/knowledge/knowledge-evidence-architecture.md must be simplified or externalized.
+- Delta Ref: D004
+- Document Impact: PART_B
+- Part A Change Required?: NO
+- Part B Change Required?: YES
+- Canonical Owner Doc: docs/project/knowledge/knowledge-evidence-architecture.md
+- Red Score Context: 4/5 reflects the remaining assumption or evidence gap, not runtime quality.
+
+## Q027
+
+- Question ID: Q027
+- Round ID: RB-WORKFLOW-V3-ROUND-003
+- Blue Answer: Preserve this responsibility only as a Target contract: the narrative must explain why the 03 Knowledge / Agentic GraphRAG boundary exists, while the specification makes it testable. This does not establish Current or Production evidence.
+- Current / Target / Future / History: Current is limited to repository/status evidence already marked Current; Target is the Part A/Part B contract; Future is provider or topology expansion after evidence; History is the Superseded 11-module organization.
+- Problem: A reader or implementation can mistake a proposal, projection or control checkpoint for the stable legal responsibility described by the document.
+- Target Decision: KEEP
+- Owner: docs/project/knowledge/knowledge-evidence-architecture.md owns the Canonical question; linked providers may propose but cannot duplicate final state.
+- State Transition: proposed → validated → authorized or review_required → committed, rejected, stale or reconciled; control state and business state remain separate.
+- Failure: Missing provenance, version conflict, unavailable provider, timeout or incomplete review is a typed failure, not silent success.
+- Failure Propagation: Downstream receives blocked, stale, unsupported, unknown or review_required with a trace reference.
+- Retry: Retry only bounded idempotent transient work under the same input version; changed conditions require replan, reauthorization or reconciliation.
+- Recovery: Reload the last valid DomainVersion/PlanVersion, compare receipts and generations, then resume, retry, replan or request Human Review.
+- Idempotency: A stable operation identity and input version make duplicate delivery converge to one proposal, effect receipt or decision.
+- Security: Enforce tenant, matter, scope, capability/tool, secret and current policy epoch; untrusted content cannot change policy.
+- Observability: Trace Run/Plan/Step or Job, version, provider, evidence lineage, decision, receipt and failure class without hidden chain of thought.
+- Alternative: A simpler Host, library, worker or existing OSS remains preferred if it passes the same quality, recovery, security and cost checks.
+- OSS Alternative: Provider/framework substitution is allowed behind the Contract; license, build and operational qualification remain separate.
+- Tradeoff: Explicit Part A explanation and Part B fields add review and implementation work but reduce ambiguity, duplicate state and untestable claims.
+- Test / Benchmark: Review the concrete 03 Knowledge / Agentic GraphRAG scenario with stale input, duplicate delivery, permission change and provider failure; compare quality, latency, cost and recovery where applicable.
+- Evidence: This is a Target/document-quality decision; implementation, benchmark, security attestation and production evidence remain open.
+- Remaining Gap: DOC-R3-027
+- Reversal Condition: If the simpler alternative passes the same contract and scenario with no loss of quality, safety, recovery or ownership, docs/project/knowledge/knowledge-evidence-architecture.md must be simplified or externalized.
+- Delta Ref: D004
+- Document Impact: PART_B
+- Part A Change Required?: NO
+- Part B Change Required?: YES
+- Canonical Owner Doc: docs/project/knowledge/knowledge-evidence-architecture.md
+- Red Score Context: 4/5 reflects the remaining assumption or evidence gap, not runtime quality.
+
+## Q028
+
+- Question ID: Q028
+- Round ID: RB-WORKFLOW-V3-ROUND-003
+- Blue Answer: Preserve this responsibility only as a Target contract: the narrative must explain why the 03 Knowledge / Agentic GraphRAG boundary exists, while the specification makes it testable. This does not establish Current or Production evidence.
+- Current / Target / Future / History: Current is limited to repository/status evidence already marked Current; Target is the Part A/Part B contract; Future is provider or topology expansion after evidence; History is the Superseded 11-module organization.
+- Problem: A reader or implementation can mistake a proposal, projection or control checkpoint for the stable legal responsibility described by the document.
+- Target Decision: KEEP
+- Owner: docs/project/knowledge/knowledge-evidence-architecture.md owns the Canonical question; linked providers may propose but cannot duplicate final state.
+- State Transition: proposed → validated → authorized or review_required → committed, rejected, stale or reconciled; control state and business state remain separate.
+- Failure: Missing provenance, version conflict, unavailable provider, timeout or incomplete review is a typed failure, not silent success.
+- Failure Propagation: Downstream receives blocked, stale, unsupported, unknown or review_required with a trace reference.
+- Retry: Retry only bounded idempotent transient work under the same input version; changed conditions require replan, reauthorization or reconciliation.
+- Recovery: Reload the last valid DomainVersion/PlanVersion, compare receipts and generations, then resume, retry, replan or request Human Review.
+- Idempotency: A stable operation identity and input version make duplicate delivery converge to one proposal, effect receipt or decision.
+- Security: Enforce tenant, matter, scope, capability/tool, secret and current policy epoch; untrusted content cannot change policy.
+- Observability: Trace Run/Plan/Step or Job, version, provider, evidence lineage, decision, receipt and failure class without hidden chain of thought.
+- Alternative: A simpler Host, library, worker or existing OSS remains preferred if it passes the same quality, recovery, security and cost checks.
+- OSS Alternative: Provider/framework substitution is allowed behind the Contract; license, build and operational qualification remain separate.
+- Tradeoff: Explicit Part A explanation and Part B fields add review and implementation work but reduce ambiguity, duplicate state and untestable claims.
+- Test / Benchmark: Review the concrete 03 Knowledge / Agentic GraphRAG scenario with stale input, duplicate delivery, permission change and provider failure; compare quality, latency, cost and recovery where applicable.
+- Evidence: This is a Target/document-quality decision; implementation, benchmark, security attestation and production evidence remain open.
+- Remaining Gap: DOC-R3-028
+- Reversal Condition: If the simpler alternative passes the same contract and scenario with no loss of quality, safety, recovery or ownership, docs/project/knowledge/knowledge-evidence-architecture.md must be simplified or externalized.
+- Delta Ref: D004
+- Document Impact: PART_B
+- Part A Change Required?: NO
+- Part B Change Required?: YES
+- Canonical Owner Doc: docs/project/knowledge/knowledge-evidence-architecture.md
+- Red Score Context: 4/5 reflects the remaining assumption or evidence gap, not runtime quality.
+
+## Q029
+
+- Question ID: Q029
+- Round ID: RB-WORKFLOW-V3-ROUND-003
+- Blue Answer: Preserve this responsibility only as a Target contract: the narrative must explain why the 03 Knowledge / Agentic GraphRAG boundary exists, while the specification makes it testable. This does not establish Current or Production evidence.
+- Current / Target / Future / History: Current is limited to repository/status evidence already marked Current; Target is the Part A/Part B contract; Future is provider or topology expansion after evidence; History is the Superseded 11-module organization.
+- Problem: A reader or implementation can mistake a proposal, projection or control checkpoint for the stable legal responsibility described by the document.
+- Target Decision: KEEP
+- Owner: docs/project/knowledge/knowledge-evidence-architecture.md owns the Canonical question; linked providers may propose but cannot duplicate final state.
+- State Transition: proposed → validated → authorized or review_required → committed, rejected, stale or reconciled; control state and business state remain separate.
+- Failure: Missing provenance, version conflict, unavailable provider, timeout or incomplete review is a typed failure, not silent success.
+- Failure Propagation: Downstream receives blocked, stale, unsupported, unknown or review_required with a trace reference.
+- Retry: Retry only bounded idempotent transient work under the same input version; changed conditions require replan, reauthorization or reconciliation.
+- Recovery: Reload the last valid DomainVersion/PlanVersion, compare receipts and generations, then resume, retry, replan or request Human Review.
+- Idempotency: A stable operation identity and input version make duplicate delivery converge to one proposal, effect receipt or decision.
+- Security: Enforce tenant, matter, scope, capability/tool, secret and current policy epoch; untrusted content cannot change policy.
+- Observability: Trace Run/Plan/Step or Job, version, provider, evidence lineage, decision, receipt and failure class without hidden chain of thought.
+- Alternative: A simpler Host, library, worker or existing OSS remains preferred if it passes the same quality, recovery, security and cost checks.
+- OSS Alternative: Provider/framework substitution is allowed behind the Contract; license, build and operational qualification remain separate.
+- Tradeoff: Explicit Part A explanation and Part B fields add review and implementation work but reduce ambiguity, duplicate state and untestable claims.
+- Test / Benchmark: Review the concrete 03 Knowledge / Agentic GraphRAG scenario with stale input, duplicate delivery, permission change and provider failure; compare quality, latency, cost and recovery where applicable.
+- Evidence: This is a Target/document-quality decision; implementation, benchmark, security attestation and production evidence remain open.
+- Remaining Gap: DOC-R3-029
+- Reversal Condition: If the simpler alternative passes the same contract and scenario with no loss of quality, safety, recovery or ownership, docs/project/knowledge/knowledge-evidence-architecture.md must be simplified or externalized.
+- Delta Ref: D004
+- Document Impact: PART_B
+- Part A Change Required?: NO
+- Part B Change Required?: YES
+- Canonical Owner Doc: docs/project/knowledge/knowledge-evidence-architecture.md
+- Red Score Context: 4/5 reflects the remaining assumption or evidence gap, not runtime quality.
+
+## Q030
+
+- Question ID: Q030
+- Round ID: RB-WORKFLOW-V3-ROUND-003
+- Blue Answer: Preserve this responsibility only as a Target contract: the narrative must explain why the 03 Knowledge / Agentic GraphRAG boundary exists, while the specification makes it testable. This does not establish Current or Production evidence.
+- Current / Target / Future / History: Current is limited to repository/status evidence already marked Current; Target is the Part A/Part B contract; Future is provider or topology expansion after evidence; History is the Superseded 11-module organization.
+- Problem: A reader or implementation can mistake a proposal, projection or control checkpoint for the stable legal responsibility described by the document.
+- Target Decision: KEEP
+- Owner: docs/project/knowledge/knowledge-evidence-architecture.md owns the Canonical question; linked providers may propose but cannot duplicate final state.
+- State Transition: proposed → validated → authorized or review_required → committed, rejected, stale or reconciled; control state and business state remain separate.
+- Failure: Missing provenance, version conflict, unavailable provider, timeout or incomplete review is a typed failure, not silent success.
+- Failure Propagation: Downstream receives blocked, stale, unsupported, unknown or review_required with a trace reference.
+- Retry: Retry only bounded idempotent transient work under the same input version; changed conditions require replan, reauthorization or reconciliation.
+- Recovery: Reload the last valid DomainVersion/PlanVersion, compare receipts and generations, then resume, retry, replan or request Human Review.
+- Idempotency: A stable operation identity and input version make duplicate delivery converge to one proposal, effect receipt or decision.
+- Security: Enforce tenant, matter, scope, capability/tool, secret and current policy epoch; untrusted content cannot change policy.
+- Observability: Trace Run/Plan/Step or Job, version, provider, evidence lineage, decision, receipt and failure class without hidden chain of thought.
+- Alternative: A simpler Host, library, worker or existing OSS remains preferred if it passes the same quality, recovery, security and cost checks.
+- OSS Alternative: Provider/framework substitution is allowed behind the Contract; license, build and operational qualification remain separate.
+- Tradeoff: Explicit Part A explanation and Part B fields add review and implementation work but reduce ambiguity, duplicate state and untestable claims.
+- Test / Benchmark: Review the concrete 03 Knowledge / Agentic GraphRAG scenario with stale input, duplicate delivery, permission change and provider failure; compare quality, latency, cost and recovery where applicable.
+- Evidence: This is a Target/document-quality decision; implementation, benchmark, security attestation and production evidence remain open.
+- Remaining Gap: DOC-R3-030
+- Reversal Condition: If the simpler alternative passes the same contract and scenario with no loss of quality, safety, recovery or ownership, docs/project/knowledge/knowledge-evidence-architecture.md must be simplified or externalized.
+- Delta Ref: D004
+- Document Impact: PART_B
+- Part A Change Required?: NO
+- Part B Change Required?: YES
+- Canonical Owner Doc: docs/project/knowledge/knowledge-evidence-architecture.md
+- Red Score Context: 5/5 reflects the remaining assumption or evidence gap, not runtime quality.
+
+## Q031
+
+- Question ID: Q031
+- Round ID: RB-WORKFLOW-V3-ROUND-003
+- Blue Answer: Preserve this responsibility only as a Target contract: the narrative must explain why the 03 Knowledge / Agentic GraphRAG boundary exists, while the specification makes it testable. This does not establish Current or Production evidence.
+- Current / Target / Future / History: Current is limited to repository/status evidence already marked Current; Target is the Part A/Part B contract; Future is provider or topology expansion after evidence; History is the Superseded 11-module organization.
+- Problem: A reader or implementation can mistake a proposal, projection or control checkpoint for the stable legal responsibility described by the document.
+- Target Decision: KEEP
+- Owner: docs/project/knowledge/knowledge-evidence-architecture.md owns the Canonical question; linked providers may propose but cannot duplicate final state.
+- State Transition: proposed → validated → authorized or review_required → committed, rejected, stale or reconciled; control state and business state remain separate.
+- Failure: Missing provenance, version conflict, unavailable provider, timeout or incomplete review is a typed failure, not silent success.
+- Failure Propagation: Downstream receives blocked, stale, unsupported, unknown or review_required with a trace reference.
+- Retry: Retry only bounded idempotent transient work under the same input version; changed conditions require replan, reauthorization or reconciliation.
+- Recovery: Reload the last valid DomainVersion/PlanVersion, compare receipts and generations, then resume, retry, replan or request Human Review.
+- Idempotency: A stable operation identity and input version make duplicate delivery converge to one proposal, effect receipt or decision.
+- Security: Enforce tenant, matter, scope, capability/tool, secret and current policy epoch; untrusted content cannot change policy.
+- Observability: Trace Run/Plan/Step or Job, version, provider, evidence lineage, decision, receipt and failure class without hidden chain of thought.
+- Alternative: A simpler Host, library, worker or existing OSS remains preferred if it passes the same quality, recovery, security and cost checks.
+- OSS Alternative: Provider/framework substitution is allowed behind the Contract; license, build and operational qualification remain separate.
+- Tradeoff: Explicit Part A explanation and Part B fields add review and implementation work but reduce ambiguity, duplicate state and untestable claims.
+- Test / Benchmark: Review the concrete 03 Knowledge / Agentic GraphRAG scenario with stale input, duplicate delivery, permission change and provider failure; compare quality, latency, cost and recovery where applicable.
+- Evidence: This is a Target/document-quality decision; implementation, benchmark, security attestation and production evidence remain open.
+- Remaining Gap: DOC-R3-031
+- Reversal Condition: If the simpler alternative passes the same contract and scenario with no loss of quality, safety, recovery or ownership, docs/project/knowledge/knowledge-evidence-architecture.md must be simplified or externalized.
+- Delta Ref: D004
+- Document Impact: PART_B
+- Part A Change Required?: NO
+- Part B Change Required?: YES
+- Canonical Owner Doc: docs/project/knowledge/knowledge-evidence-architecture.md
+- Red Score Context: 4/5 reflects the remaining assumption or evidence gap, not runtime quality.
+
+## Q032
+
+- Question ID: Q032
+- Round ID: RB-WORKFLOW-V3-ROUND-003
+- Blue Answer: Preserve this responsibility only as a Target contract: the narrative must explain why the 03 Knowledge / Agentic GraphRAG boundary exists, while the specification makes it testable. This does not establish Current or Production evidence.
+- Current / Target / Future / History: Current is limited to repository/status evidence already marked Current; Target is the Part A/Part B contract; Future is provider or topology expansion after evidence; History is the Superseded 11-module organization.
+- Problem: A reader or implementation can mistake a proposal, projection or control checkpoint for the stable legal responsibility described by the document.
+- Target Decision: KEEP
+- Owner: docs/project/knowledge/knowledge-evidence-architecture.md owns the Canonical question; linked providers may propose but cannot duplicate final state.
+- State Transition: proposed → validated → authorized or review_required → committed, rejected, stale or reconciled; control state and business state remain separate.
+- Failure: Missing provenance, version conflict, unavailable provider, timeout or incomplete review is a typed failure, not silent success.
+- Failure Propagation: Downstream receives blocked, stale, unsupported, unknown or review_required with a trace reference.
+- Retry: Retry only bounded idempotent transient work under the same input version; changed conditions require replan, reauthorization or reconciliation.
+- Recovery: Reload the last valid DomainVersion/PlanVersion, compare receipts and generations, then resume, retry, replan or request Human Review.
+- Idempotency: A stable operation identity and input version make duplicate delivery converge to one proposal, effect receipt or decision.
+- Security: Enforce tenant, matter, scope, capability/tool, secret and current policy epoch; untrusted content cannot change policy.
+- Observability: Trace Run/Plan/Step or Job, version, provider, evidence lineage, decision, receipt and failure class without hidden chain of thought.
+- Alternative: A simpler Host, library, worker or existing OSS remains preferred if it passes the same quality, recovery, security and cost checks.
+- OSS Alternative: Provider/framework substitution is allowed behind the Contract; license, build and operational qualification remain separate.
+- Tradeoff: Explicit Part A explanation and Part B fields add review and implementation work but reduce ambiguity, duplicate state and untestable claims.
+- Test / Benchmark: Review the concrete 03 Knowledge / Agentic GraphRAG scenario with stale input, duplicate delivery, permission change and provider failure; compare quality, latency, cost and recovery where applicable.
+- Evidence: This is a Target/document-quality decision; implementation, benchmark, security attestation and production evidence remain open.
+- Remaining Gap: DOC-R3-032
+- Reversal Condition: If the simpler alternative passes the same contract and scenario with no loss of quality, safety, recovery or ownership, docs/project/knowledge/knowledge-evidence-architecture.md must be simplified or externalized.
+- Delta Ref: D004
+- Document Impact: PART_B
+- Part A Change Required?: NO
+- Part B Change Required?: YES
+- Canonical Owner Doc: docs/project/knowledge/knowledge-evidence-architecture.md
+- Red Score Context: 4/5 reflects the remaining assumption or evidence gap, not runtime quality.
+
+## Q033
+
+- Question ID: Q033
+- Round ID: RB-WORKFLOW-V3-ROUND-003
+- Blue Answer: Preserve this responsibility only as a Target contract: the narrative must explain why the 03 Knowledge / Agentic GraphRAG boundary exists, while the specification makes it testable. This does not establish Current or Production evidence.
+- Current / Target / Future / History: Current is limited to repository/status evidence already marked Current; Target is the Part A/Part B contract; Future is provider or topology expansion after evidence; History is the Superseded 11-module organization.
+- Problem: A reader or implementation can mistake a proposal, projection or control checkpoint for the stable legal responsibility described by the document.
+- Target Decision: KEEP
+- Owner: docs/project/knowledge/knowledge-evidence-architecture.md owns the Canonical question; linked providers may propose but cannot duplicate final state.
+- State Transition: proposed → validated → authorized or review_required → committed, rejected, stale or reconciled; control state and business state remain separate.
+- Failure: Missing provenance, version conflict, unavailable provider, timeout or incomplete review is a typed failure, not silent success.
+- Failure Propagation: Downstream receives blocked, stale, unsupported, unknown or review_required with a trace reference.
+- Retry: Retry only bounded idempotent transient work under the same input version; changed conditions require replan, reauthorization or reconciliation.
+- Recovery: Reload the last valid DomainVersion/PlanVersion, compare receipts and generations, then resume, retry, replan or request Human Review.
+- Idempotency: A stable operation identity and input version make duplicate delivery converge to one proposal, effect receipt or decision.
+- Security: Enforce tenant, matter, scope, capability/tool, secret and current policy epoch; untrusted content cannot change policy.
+- Observability: Trace Run/Plan/Step or Job, version, provider, evidence lineage, decision, receipt and failure class without hidden chain of thought.
+- Alternative: A simpler Host, library, worker or existing OSS remains preferred if it passes the same quality, recovery, security and cost checks.
+- OSS Alternative: Provider/framework substitution is allowed behind the Contract; license, build and operational qualification remain separate.
+- Tradeoff: Explicit Part A explanation and Part B fields add review and implementation work but reduce ambiguity, duplicate state and untestable claims.
+- Test / Benchmark: Review the concrete 03 Knowledge / Agentic GraphRAG scenario with stale input, duplicate delivery, permission change and provider failure; compare quality, latency, cost and recovery where applicable.
+- Evidence: This is a Target/document-quality decision; implementation, benchmark, security attestation and production evidence remain open.
+- Remaining Gap: DOC-R3-033
+- Reversal Condition: If the simpler alternative passes the same contract and scenario with no loss of quality, safety, recovery or ownership, docs/project/knowledge/knowledge-evidence-architecture.md must be simplified or externalized.
+- Delta Ref: D004
+- Document Impact: PART_B
+- Part A Change Required?: NO
+- Part B Change Required?: YES
+- Canonical Owner Doc: docs/project/knowledge/knowledge-evidence-architecture.md
+- Red Score Context: 4/5 reflects the remaining assumption or evidence gap, not runtime quality.
+
+## Q034
+
+- Question ID: Q034
+- Round ID: RB-WORKFLOW-V3-ROUND-003
+- Blue Answer: Preserve this responsibility only as a Target contract: the narrative must explain why the 03 Knowledge / Agentic GraphRAG boundary exists, while the specification makes it testable. This does not establish Current or Production evidence.
+- Current / Target / Future / History: Current is limited to repository/status evidence already marked Current; Target is the Part A/Part B contract; Future is provider or topology expansion after evidence; History is the Superseded 11-module organization.
+- Problem: A reader or implementation can mistake a proposal, projection or control checkpoint for the stable legal responsibility described by the document.
+- Target Decision: REFINE
+- Owner: docs/project/knowledge/knowledge-evidence-architecture.md owns the Canonical question; linked providers may propose but cannot duplicate final state.
+- State Transition: proposed → validated → authorized or review_required → committed, rejected, stale or reconciled; control state and business state remain separate.
+- Failure: Missing provenance, version conflict, unavailable provider, timeout or incomplete review is a typed failure, not silent success.
+- Failure Propagation: Downstream receives blocked, stale, unsupported, unknown or review_required with a trace reference.
+- Retry: Retry only bounded idempotent transient work under the same input version; changed conditions require replan, reauthorization or reconciliation.
+- Recovery: Reload the last valid DomainVersion/PlanVersion, compare receipts and generations, then resume, retry, replan or request Human Review.
+- Idempotency: A stable operation identity and input version make duplicate delivery converge to one proposal, effect receipt or decision.
+- Security: Enforce tenant, matter, scope, capability/tool, secret and current policy epoch; untrusted content cannot change policy.
+- Observability: Trace Run/Plan/Step or Job, version, provider, evidence lineage, decision, receipt and failure class without hidden chain of thought.
+- Alternative: A simpler Host, library, worker or existing OSS remains preferred if it passes the same quality, recovery, security and cost checks.
+- OSS Alternative: Provider/framework substitution is allowed behind the Contract; license, build and operational qualification remain separate.
+- Tradeoff: Explicit Part A explanation and Part B fields add review and implementation work but reduce ambiguity, duplicate state and untestable claims.
+- Test / Benchmark: Review the concrete 03 Knowledge / Agentic GraphRAG scenario with stale input, duplicate delivery, permission change and provider failure; compare quality, latency, cost and recovery where applicable.
+- Evidence: This is a Target/document-quality decision; implementation, benchmark, security attestation and production evidence remain open.
+- Remaining Gap: DOC-R3-034
+- Reversal Condition: If the simpler alternative passes the same contract and scenario with no loss of quality, safety, recovery or ownership, docs/project/knowledge/knowledge-evidence-architecture.md must be simplified or externalized.
+- Delta Ref: D004
+- Document Impact: PART_B
+- Part A Change Required?: NO
+- Part B Change Required?: YES
+- Canonical Owner Doc: docs/project/knowledge/knowledge-evidence-architecture.md
+- Red Score Context: 3/5 reflects the remaining assumption or evidence gap, not runtime quality.
+
+## Q035
+
+- Question ID: Q035
+- Round ID: RB-WORKFLOW-V3-ROUND-003
+- Blue Answer: Preserve this responsibility only as a Target contract: the narrative must explain why the 03 Knowledge / Agentic GraphRAG boundary exists, while the specification makes it testable. This does not establish Current or Production evidence.
+- Current / Target / Future / History: Current is limited to repository/status evidence already marked Current; Target is the Part A/Part B contract; Future is provider or topology expansion after evidence; History is the Superseded 11-module organization.
+- Problem: A reader or implementation can mistake a proposal, projection or control checkpoint for the stable legal responsibility described by the document.
+- Target Decision: KEEP
+- Owner: docs/project/knowledge/knowledge-evidence-architecture.md owns the Canonical question; linked providers may propose but cannot duplicate final state.
+- State Transition: proposed → validated → authorized or review_required → committed, rejected, stale or reconciled; control state and business state remain separate.
+- Failure: Missing provenance, version conflict, unavailable provider, timeout or incomplete review is a typed failure, not silent success.
+- Failure Propagation: Downstream receives blocked, stale, unsupported, unknown or review_required with a trace reference.
+- Retry: Retry only bounded idempotent transient work under the same input version; changed conditions require replan, reauthorization or reconciliation.
+- Recovery: Reload the last valid DomainVersion/PlanVersion, compare receipts and generations, then resume, retry, replan or request Human Review.
+- Idempotency: A stable operation identity and input version make duplicate delivery converge to one proposal, effect receipt or decision.
+- Security: Enforce tenant, matter, scope, capability/tool, secret and current policy epoch; untrusted content cannot change policy.
+- Observability: Trace Run/Plan/Step or Job, version, provider, evidence lineage, decision, receipt and failure class without hidden chain of thought.
+- Alternative: A simpler Host, library, worker or existing OSS remains preferred if it passes the same quality, recovery, security and cost checks.
+- OSS Alternative: Provider/framework substitution is allowed behind the Contract; license, build and operational qualification remain separate.
+- Tradeoff: Explicit Part A explanation and Part B fields add review and implementation work but reduce ambiguity, duplicate state and untestable claims.
+- Test / Benchmark: Review the concrete 03 Knowledge / Agentic GraphRAG scenario with stale input, duplicate delivery, permission change and provider failure; compare quality, latency, cost and recovery where applicable.
+- Evidence: This is a Target/document-quality decision; implementation, benchmark, security attestation and production evidence remain open.
+- Remaining Gap: DOC-R3-035
+- Reversal Condition: If the simpler alternative passes the same contract and scenario with no loss of quality, safety, recovery or ownership, docs/project/knowledge/knowledge-evidence-architecture.md must be simplified or externalized.
+- Delta Ref: D004
+- Document Impact: PART_B
+- Part A Change Required?: NO
+- Part B Change Required?: YES
+- Canonical Owner Doc: docs/project/knowledge/knowledge-evidence-architecture.md
+- Red Score Context: 4/5 reflects the remaining assumption or evidence gap, not runtime quality.
+
+## Q036
+
+- Question ID: Q036
+- Round ID: RB-WORKFLOW-V3-ROUND-003
+- Blue Answer: Preserve this responsibility only as a Target contract: the narrative must explain why the 03 Knowledge / Agentic GraphRAG boundary exists, while the specification makes it testable. This does not establish Current or Production evidence.
+- Current / Target / Future / History: Current is limited to repository/status evidence already marked Current; Target is the Part A/Part B contract; Future is provider or topology expansion after evidence; History is the Superseded 11-module organization.
+- Problem: A reader or implementation can mistake a proposal, projection or control checkpoint for the stable legal responsibility described by the document.
+- Target Decision: KEEP
+- Owner: docs/project/knowledge/knowledge-evidence-architecture.md owns the Canonical question; linked providers may propose but cannot duplicate final state.
+- State Transition: proposed → validated → authorized or review_required → committed, rejected, stale or reconciled; control state and business state remain separate.
+- Failure: Missing provenance, version conflict, unavailable provider, timeout or incomplete review is a typed failure, not silent success.
+- Failure Propagation: Downstream receives blocked, stale, unsupported, unknown or review_required with a trace reference.
+- Retry: Retry only bounded idempotent transient work under the same input version; changed conditions require replan, reauthorization or reconciliation.
+- Recovery: Reload the last valid DomainVersion/PlanVersion, compare receipts and generations, then resume, retry, replan or request Human Review.
+- Idempotency: A stable operation identity and input version make duplicate delivery converge to one proposal, effect receipt or decision.
+- Security: Enforce tenant, matter, scope, capability/tool, secret and current policy epoch; untrusted content cannot change policy.
+- Observability: Trace Run/Plan/Step or Job, version, provider, evidence lineage, decision, receipt and failure class without hidden chain of thought.
+- Alternative: A simpler Host, library, worker or existing OSS remains preferred if it passes the same quality, recovery, security and cost checks.
+- OSS Alternative: Provider/framework substitution is allowed behind the Contract; license, build and operational qualification remain separate.
+- Tradeoff: Explicit Part A explanation and Part B fields add review and implementation work but reduce ambiguity, duplicate state and untestable claims.
+- Test / Benchmark: Review the concrete 03 Knowledge / Agentic GraphRAG scenario with stale input, duplicate delivery, permission change and provider failure; compare quality, latency, cost and recovery where applicable.
+- Evidence: This is a Target/document-quality decision; implementation, benchmark, security attestation and production evidence remain open.
+- Remaining Gap: DOC-R3-036
+- Reversal Condition: If the simpler alternative passes the same contract and scenario with no loss of quality, safety, recovery or ownership, docs/project/knowledge/knowledge-evidence-architecture.md must be simplified or externalized.
+- Delta Ref: D004
+- Document Impact: PART_B
+- Part A Change Required?: NO
+- Part B Change Required?: YES
+- Canonical Owner Doc: docs/project/knowledge/knowledge-evidence-architecture.md
+- Red Score Context: 4/5 reflects the remaining assumption or evidence gap, not runtime quality.
+
+## Q037
+
+- Question ID: Q037
+- Round ID: RB-WORKFLOW-V3-ROUND-003
+- Blue Answer: Preserve this responsibility only as a Target contract: the narrative must explain why the 04 Model Gateway boundary exists, while the specification makes it testable. This does not establish Current or Production evidence.
+- Current / Target / Future / History: Current is limited to repository/status evidence already marked Current; Target is the Part A/Part B contract; Future is provider or topology expansion after evidence; History is the Superseded 11-module organization.
+- Problem: A reader or implementation can mistake a proposal, projection or control checkpoint for the stable legal responsibility described by the document.
+- Target Decision: KEEP
+- Owner: docs/project/agents/agent-platform.md owns the Canonical question; linked providers may propose but cannot duplicate final state.
+- State Transition: proposed → validated → authorized or review_required → committed, rejected, stale or reconciled; control state and business state remain separate.
+- Failure: Missing provenance, version conflict, unavailable provider, timeout or incomplete review is a typed failure, not silent success.
+- Failure Propagation: Downstream receives blocked, stale, unsupported, unknown or review_required with a trace reference.
+- Retry: Retry only bounded idempotent transient work under the same input version; changed conditions require replan, reauthorization or reconciliation.
+- Recovery: Reload the last valid DomainVersion/PlanVersion, compare receipts and generations, then resume, retry, replan or request Human Review.
+- Idempotency: A stable operation identity and input version make duplicate delivery converge to one proposal, effect receipt or decision.
+- Security: Enforce tenant, matter, scope, capability/tool, secret and current policy epoch; untrusted content cannot change policy.
+- Observability: Trace Run/Plan/Step or Job, version, provider, evidence lineage, decision, receipt and failure class without hidden chain of thought.
+- Alternative: A simpler Host, library, worker or existing OSS remains preferred if it passes the same quality, recovery, security and cost checks.
+- OSS Alternative: Provider/framework substitution is allowed behind the Contract; license, build and operational qualification remain separate.
+- Tradeoff: Explicit Part A explanation and Part B fields add review and implementation work but reduce ambiguity, duplicate state and untestable claims.
+- Test / Benchmark: Review the concrete 04 Model Gateway scenario with stale input, duplicate delivery, permission change and provider failure; compare quality, latency, cost and recovery where applicable.
+- Evidence: This is a Target/document-quality decision; implementation, benchmark, security attestation and production evidence remain open.
+- Remaining Gap: DOC-R3-037
+- Reversal Condition: If the simpler alternative passes the same contract and scenario with no loss of quality, safety, recovery or ownership, docs/project/agents/agent-platform.md must be simplified or externalized.
+- Delta Ref: D005
+- Document Impact: PART_B
+- Part A Change Required?: NO
+- Part B Change Required?: YES
+- Canonical Owner Doc: docs/project/agents/agent-platform.md
+- Red Score Context: 4/5 reflects the remaining assumption or evidence gap, not runtime quality.
+
+## Q038
+
+- Question ID: Q038
+- Round ID: RB-WORKFLOW-V3-ROUND-003
+- Blue Answer: Preserve this responsibility only as a Target contract: the narrative must explain why the 04 Model Gateway boundary exists, while the specification makes it testable. This does not establish Current or Production evidence.
+- Current / Target / Future / History: Current is limited to repository/status evidence already marked Current; Target is the Part A/Part B contract; Future is provider or topology expansion after evidence; History is the Superseded 11-module organization.
+- Problem: A reader or implementation can mistake a proposal, projection or control checkpoint for the stable legal responsibility described by the document.
+- Target Decision: KEEP
+- Owner: docs/project/agents/agent-platform.md owns the Canonical question; linked providers may propose but cannot duplicate final state.
+- State Transition: proposed → validated → authorized or review_required → committed, rejected, stale or reconciled; control state and business state remain separate.
+- Failure: Missing provenance, version conflict, unavailable provider, timeout or incomplete review is a typed failure, not silent success.
+- Failure Propagation: Downstream receives blocked, stale, unsupported, unknown or review_required with a trace reference.
+- Retry: Retry only bounded idempotent transient work under the same input version; changed conditions require replan, reauthorization or reconciliation.
+- Recovery: Reload the last valid DomainVersion/PlanVersion, compare receipts and generations, then resume, retry, replan or request Human Review.
+- Idempotency: A stable operation identity and input version make duplicate delivery converge to one proposal, effect receipt or decision.
+- Security: Enforce tenant, matter, scope, capability/tool, secret and current policy epoch; untrusted content cannot change policy.
+- Observability: Trace Run/Plan/Step or Job, version, provider, evidence lineage, decision, receipt and failure class without hidden chain of thought.
+- Alternative: A simpler Host, library, worker or existing OSS remains preferred if it passes the same quality, recovery, security and cost checks.
+- OSS Alternative: Provider/framework substitution is allowed behind the Contract; license, build and operational qualification remain separate.
+- Tradeoff: Explicit Part A explanation and Part B fields add review and implementation work but reduce ambiguity, duplicate state and untestable claims.
+- Test / Benchmark: Review the concrete 04 Model Gateway scenario with stale input, duplicate delivery, permission change and provider failure; compare quality, latency, cost and recovery where applicable.
+- Evidence: This is a Target/document-quality decision; implementation, benchmark, security attestation and production evidence remain open.
+- Remaining Gap: DOC-R3-038
+- Reversal Condition: If the simpler alternative passes the same contract and scenario with no loss of quality, safety, recovery or ownership, docs/project/agents/agent-platform.md must be simplified or externalized.
+- Delta Ref: D005
+- Document Impact: PART_B
+- Part A Change Required?: NO
+- Part B Change Required?: YES
+- Canonical Owner Doc: docs/project/agents/agent-platform.md
+- Red Score Context: 4/5 reflects the remaining assumption or evidence gap, not runtime quality.
+
+## Q039
+
+- Question ID: Q039
+- Round ID: RB-WORKFLOW-V3-ROUND-003
+- Blue Answer: Preserve this responsibility only as a Target contract: the narrative must explain why the 04 Model Gateway boundary exists, while the specification makes it testable. This does not establish Current or Production evidence.
+- Current / Target / Future / History: Current is limited to repository/status evidence already marked Current; Target is the Part A/Part B contract; Future is provider or topology expansion after evidence; History is the Superseded 11-module organization.
+- Problem: A reader or implementation can mistake a proposal, projection or control checkpoint for the stable legal responsibility described by the document.
+- Target Decision: KEEP
+- Owner: docs/project/agents/agent-platform.md owns the Canonical question; linked providers may propose but cannot duplicate final state.
+- State Transition: proposed → validated → authorized or review_required → committed, rejected, stale or reconciled; control state and business state remain separate.
+- Failure: Missing provenance, version conflict, unavailable provider, timeout or incomplete review is a typed failure, not silent success.
+- Failure Propagation: Downstream receives blocked, stale, unsupported, unknown or review_required with a trace reference.
+- Retry: Retry only bounded idempotent transient work under the same input version; changed conditions require replan, reauthorization or reconciliation.
+- Recovery: Reload the last valid DomainVersion/PlanVersion, compare receipts and generations, then resume, retry, replan or request Human Review.
+- Idempotency: A stable operation identity and input version make duplicate delivery converge to one proposal, effect receipt or decision.
+- Security: Enforce tenant, matter, scope, capability/tool, secret and current policy epoch; untrusted content cannot change policy.
+- Observability: Trace Run/Plan/Step or Job, version, provider, evidence lineage, decision, receipt and failure class without hidden chain of thought.
+- Alternative: A simpler Host, library, worker or existing OSS remains preferred if it passes the same quality, recovery, security and cost checks.
+- OSS Alternative: Provider/framework substitution is allowed behind the Contract; license, build and operational qualification remain separate.
+- Tradeoff: Explicit Part A explanation and Part B fields add review and implementation work but reduce ambiguity, duplicate state and untestable claims.
+- Test / Benchmark: Review the concrete 04 Model Gateway scenario with stale input, duplicate delivery, permission change and provider failure; compare quality, latency, cost and recovery where applicable.
+- Evidence: This is a Target/document-quality decision; implementation, benchmark, security attestation and production evidence remain open.
+- Remaining Gap: DOC-R3-039
+- Reversal Condition: If the simpler alternative passes the same contract and scenario with no loss of quality, safety, recovery or ownership, docs/project/agents/agent-platform.md must be simplified or externalized.
+- Delta Ref: D005
+- Document Impact: PART_B
+- Part A Change Required?: NO
+- Part B Change Required?: YES
+- Canonical Owner Doc: docs/project/agents/agent-platform.md
+- Red Score Context: 5/5 reflects the remaining assumption or evidence gap, not runtime quality.
+
+## Q040
+
+- Question ID: Q040
+- Round ID: RB-WORKFLOW-V3-ROUND-003
+- Blue Answer: Preserve this responsibility only as a Target contract: the narrative must explain why the 04 Model Gateway boundary exists, while the specification makes it testable. This does not establish Current or Production evidence.
+- Current / Target / Future / History: Current is limited to repository/status evidence already marked Current; Target is the Part A/Part B contract; Future is provider or topology expansion after evidence; History is the Superseded 11-module organization.
+- Problem: A reader or implementation can mistake a proposal, projection or control checkpoint for the stable legal responsibility described by the document.
+- Target Decision: KEEP
+- Owner: docs/project/agents/agent-platform.md owns the Canonical question; linked providers may propose but cannot duplicate final state.
+- State Transition: proposed → validated → authorized or review_required → committed, rejected, stale or reconciled; control state and business state remain separate.
+- Failure: Missing provenance, version conflict, unavailable provider, timeout or incomplete review is a typed failure, not silent success.
+- Failure Propagation: Downstream receives blocked, stale, unsupported, unknown or review_required with a trace reference.
+- Retry: Retry only bounded idempotent transient work under the same input version; changed conditions require replan, reauthorization or reconciliation.
+- Recovery: Reload the last valid DomainVersion/PlanVersion, compare receipts and generations, then resume, retry, replan or request Human Review.
+- Idempotency: A stable operation identity and input version make duplicate delivery converge to one proposal, effect receipt or decision.
+- Security: Enforce tenant, matter, scope, capability/tool, secret and current policy epoch; untrusted content cannot change policy.
+- Observability: Trace Run/Plan/Step or Job, version, provider, evidence lineage, decision, receipt and failure class without hidden chain of thought.
+- Alternative: A simpler Host, library, worker or existing OSS remains preferred if it passes the same quality, recovery, security and cost checks.
+- OSS Alternative: Provider/framework substitution is allowed behind the Contract; license, build and operational qualification remain separate.
+- Tradeoff: Explicit Part A explanation and Part B fields add review and implementation work but reduce ambiguity, duplicate state and untestable claims.
+- Test / Benchmark: Review the concrete 04 Model Gateway scenario with stale input, duplicate delivery, permission change and provider failure; compare quality, latency, cost and recovery where applicable.
+- Evidence: This is a Target/document-quality decision; implementation, benchmark, security attestation and production evidence remain open.
+- Remaining Gap: DOC-R3-040
+- Reversal Condition: If the simpler alternative passes the same contract and scenario with no loss of quality, safety, recovery or ownership, docs/project/agents/agent-platform.md must be simplified or externalized.
+- Delta Ref: D005
+- Document Impact: PART_B
+- Part A Change Required?: NO
+- Part B Change Required?: YES
+- Canonical Owner Doc: docs/project/agents/agent-platform.md
+- Red Score Context: 4/5 reflects the remaining assumption or evidence gap, not runtime quality.
+
+## Q041
+
+- Question ID: Q041
+- Round ID: RB-WORKFLOW-V3-ROUND-003
+- Blue Answer: Preserve this responsibility only as a Target contract: the narrative must explain why the 04 Model Gateway boundary exists, while the specification makes it testable. This does not establish Current or Production evidence.
+- Current / Target / Future / History: Current is limited to repository/status evidence already marked Current; Target is the Part A/Part B contract; Future is provider or topology expansion after evidence; History is the Superseded 11-module organization.
+- Problem: A reader or implementation can mistake a proposal, projection or control checkpoint for the stable legal responsibility described by the document.
+- Target Decision: REFINE
+- Owner: docs/project/agents/agent-platform.md owns the Canonical question; linked providers may propose but cannot duplicate final state.
+- State Transition: proposed → validated → authorized or review_required → committed, rejected, stale or reconciled; control state and business state remain separate.
+- Failure: Missing provenance, version conflict, unavailable provider, timeout or incomplete review is a typed failure, not silent success.
+- Failure Propagation: Downstream receives blocked, stale, unsupported, unknown or review_required with a trace reference.
+- Retry: Retry only bounded idempotent transient work under the same input version; changed conditions require replan, reauthorization or reconciliation.
+- Recovery: Reload the last valid DomainVersion/PlanVersion, compare receipts and generations, then resume, retry, replan or request Human Review.
+- Idempotency: A stable operation identity and input version make duplicate delivery converge to one proposal, effect receipt or decision.
+- Security: Enforce tenant, matter, scope, capability/tool, secret and current policy epoch; untrusted content cannot change policy.
+- Observability: Trace Run/Plan/Step or Job, version, provider, evidence lineage, decision, receipt and failure class without hidden chain of thought.
+- Alternative: A simpler Host, library, worker or existing OSS remains preferred if it passes the same quality, recovery, security and cost checks.
+- OSS Alternative: Provider/framework substitution is allowed behind the Contract; license, build and operational qualification remain separate.
+- Tradeoff: Explicit Part A explanation and Part B fields add review and implementation work but reduce ambiguity, duplicate state and untestable claims.
+- Test / Benchmark: Review the concrete 04 Model Gateway scenario with stale input, duplicate delivery, permission change and provider failure; compare quality, latency, cost and recovery where applicable.
+- Evidence: This is a Target/document-quality decision; implementation, benchmark, security attestation and production evidence remain open.
+- Remaining Gap: DOC-R3-041
+- Reversal Condition: If the simpler alternative passes the same contract and scenario with no loss of quality, safety, recovery or ownership, docs/project/agents/agent-platform.md must be simplified or externalized.
+- Delta Ref: D005
+- Document Impact: PART_B
+- Part A Change Required?: NO
+- Part B Change Required?: YES
+- Canonical Owner Doc: docs/project/agents/agent-platform.md
+- Red Score Context: 3/5 reflects the remaining assumption or evidence gap, not runtime quality.
+
+## Q042
+
+- Question ID: Q042
+- Round ID: RB-WORKFLOW-V3-ROUND-003
+- Blue Answer: Preserve this responsibility only as a Target contract: the narrative must explain why the 04 Model Gateway boundary exists, while the specification makes it testable. This does not establish Current or Production evidence.
+- Current / Target / Future / History: Current is limited to repository/status evidence already marked Current; Target is the Part A/Part B contract; Future is provider or topology expansion after evidence; History is the Superseded 11-module organization.
+- Problem: A reader or implementation can mistake a proposal, projection or control checkpoint for the stable legal responsibility described by the document.
+- Target Decision: KEEP
+- Owner: docs/project/agents/agent-platform.md owns the Canonical question; linked providers may propose but cannot duplicate final state.
+- State Transition: proposed → validated → authorized or review_required → committed, rejected, stale or reconciled; control state and business state remain separate.
+- Failure: Missing provenance, version conflict, unavailable provider, timeout or incomplete review is a typed failure, not silent success.
+- Failure Propagation: Downstream receives blocked, stale, unsupported, unknown or review_required with a trace reference.
+- Retry: Retry only bounded idempotent transient work under the same input version; changed conditions require replan, reauthorization or reconciliation.
+- Recovery: Reload the last valid DomainVersion/PlanVersion, compare receipts and generations, then resume, retry, replan or request Human Review.
+- Idempotency: A stable operation identity and input version make duplicate delivery converge to one proposal, effect receipt or decision.
+- Security: Enforce tenant, matter, scope, capability/tool, secret and current policy epoch; untrusted content cannot change policy.
+- Observability: Trace Run/Plan/Step or Job, version, provider, evidence lineage, decision, receipt and failure class without hidden chain of thought.
+- Alternative: A simpler Host, library, worker or existing OSS remains preferred if it passes the same quality, recovery, security and cost checks.
+- OSS Alternative: Provider/framework substitution is allowed behind the Contract; license, build and operational qualification remain separate.
+- Tradeoff: Explicit Part A explanation and Part B fields add review and implementation work but reduce ambiguity, duplicate state and untestable claims.
+- Test / Benchmark: Review the concrete 04 Model Gateway scenario with stale input, duplicate delivery, permission change and provider failure; compare quality, latency, cost and recovery where applicable.
+- Evidence: This is a Target/document-quality decision; implementation, benchmark, security attestation and production evidence remain open.
+- Remaining Gap: DOC-R3-042
+- Reversal Condition: If the simpler alternative passes the same contract and scenario with no loss of quality, safety, recovery or ownership, docs/project/agents/agent-platform.md must be simplified or externalized.
+- Delta Ref: D005
+- Document Impact: PART_B
+- Part A Change Required?: NO
+- Part B Change Required?: YES
+- Canonical Owner Doc: docs/project/agents/agent-platform.md
+- Red Score Context: 4/5 reflects the remaining assumption or evidence gap, not runtime quality.
+
+## Q043
+
+- Question ID: Q043
+- Round ID: RB-WORKFLOW-V3-ROUND-003
+- Blue Answer: Preserve this responsibility only as a Target contract: the narrative must explain why the 05 Memory & Context boundary exists, while the specification makes it testable. This does not establish Current or Production evidence.
+- Current / Target / Future / History: Current is limited to repository/status evidence already marked Current; Target is the Part A/Part B contract; Future is provider or topology expansion after evidence; History is the Superseded 11-module organization.
+- Problem: A reader or implementation can mistake a proposal, projection or control checkpoint for the stable legal responsibility described by the document.
+- Target Decision: KEEP
+- Owner: docs/project/agents/agent-platform.md owns the Canonical question; linked providers may propose but cannot duplicate final state.
+- State Transition: proposed → validated → authorized or review_required → committed, rejected, stale or reconciled; control state and business state remain separate.
+- Failure: Missing provenance, version conflict, unavailable provider, timeout or incomplete review is a typed failure, not silent success.
+- Failure Propagation: Downstream receives blocked, stale, unsupported, unknown or review_required with a trace reference.
+- Retry: Retry only bounded idempotent transient work under the same input version; changed conditions require replan, reauthorization or reconciliation.
+- Recovery: Reload the last valid DomainVersion/PlanVersion, compare receipts and generations, then resume, retry, replan or request Human Review.
+- Idempotency: A stable operation identity and input version make duplicate delivery converge to one proposal, effect receipt or decision.
+- Security: Enforce tenant, matter, scope, capability/tool, secret and current policy epoch; untrusted content cannot change policy.
+- Observability: Trace Run/Plan/Step or Job, version, provider, evidence lineage, decision, receipt and failure class without hidden chain of thought.
+- Alternative: A simpler Host, library, worker or existing OSS remains preferred if it passes the same quality, recovery, security and cost checks.
+- OSS Alternative: Provider/framework substitution is allowed behind the Contract; license, build and operational qualification remain separate.
+- Tradeoff: Explicit Part A explanation and Part B fields add review and implementation work but reduce ambiguity, duplicate state and untestable claims.
+- Test / Benchmark: Review the concrete 05 Memory & Context scenario with stale input, duplicate delivery, permission change and provider failure; compare quality, latency, cost and recovery where applicable.
+- Evidence: This is a Target/document-quality decision; implementation, benchmark, security attestation and production evidence remain open.
+- Remaining Gap: DOC-R3-043
+- Reversal Condition: If the simpler alternative passes the same contract and scenario with no loss of quality, safety, recovery or ownership, docs/project/agents/agent-platform.md must be simplified or externalized.
+- Delta Ref: D006
+- Document Impact: PART_B
+- Part A Change Required?: NO
+- Part B Change Required?: YES
+- Canonical Owner Doc: docs/project/agents/agent-platform.md
+- Red Score Context: 4/5 reflects the remaining assumption or evidence gap, not runtime quality.
+
+## Q044
+
+- Question ID: Q044
+- Round ID: RB-WORKFLOW-V3-ROUND-003
+- Blue Answer: Preserve this responsibility only as a Target contract: the narrative must explain why the 05 Memory & Context boundary exists, while the specification makes it testable. This does not establish Current or Production evidence.
+- Current / Target / Future / History: Current is limited to repository/status evidence already marked Current; Target is the Part A/Part B contract; Future is provider or topology expansion after evidence; History is the Superseded 11-module organization.
+- Problem: A reader or implementation can mistake a proposal, projection or control checkpoint for the stable legal responsibility described by the document.
+- Target Decision: KEEP
+- Owner: docs/project/agents/agent-platform.md owns the Canonical question; linked providers may propose but cannot duplicate final state.
+- State Transition: proposed → validated → authorized or review_required → committed, rejected, stale or reconciled; control state and business state remain separate.
+- Failure: Missing provenance, version conflict, unavailable provider, timeout or incomplete review is a typed failure, not silent success.
+- Failure Propagation: Downstream receives blocked, stale, unsupported, unknown or review_required with a trace reference.
+- Retry: Retry only bounded idempotent transient work under the same input version; changed conditions require replan, reauthorization or reconciliation.
+- Recovery: Reload the last valid DomainVersion/PlanVersion, compare receipts and generations, then resume, retry, replan or request Human Review.
+- Idempotency: A stable operation identity and input version make duplicate delivery converge to one proposal, effect receipt or decision.
+- Security: Enforce tenant, matter, scope, capability/tool, secret and current policy epoch; untrusted content cannot change policy.
+- Observability: Trace Run/Plan/Step or Job, version, provider, evidence lineage, decision, receipt and failure class without hidden chain of thought.
+- Alternative: A simpler Host, library, worker or existing OSS remains preferred if it passes the same quality, recovery, security and cost checks.
+- OSS Alternative: Provider/framework substitution is allowed behind the Contract; license, build and operational qualification remain separate.
+- Tradeoff: Explicit Part A explanation and Part B fields add review and implementation work but reduce ambiguity, duplicate state and untestable claims.
+- Test / Benchmark: Review the concrete 05 Memory & Context scenario with stale input, duplicate delivery, permission change and provider failure; compare quality, latency, cost and recovery where applicable.
+- Evidence: This is a Target/document-quality decision; implementation, benchmark, security attestation and production evidence remain open.
+- Remaining Gap: DOC-R3-044
+- Reversal Condition: If the simpler alternative passes the same contract and scenario with no loss of quality, safety, recovery or ownership, docs/project/agents/agent-platform.md must be simplified or externalized.
+- Delta Ref: D006
+- Document Impact: PART_B
+- Part A Change Required?: NO
+- Part B Change Required?: YES
+- Canonical Owner Doc: docs/project/agents/agent-platform.md
+- Red Score Context: 4/5 reflects the remaining assumption or evidence gap, not runtime quality.
+
+## Q045
+
+- Question ID: Q045
+- Round ID: RB-WORKFLOW-V3-ROUND-003
+- Blue Answer: Preserve this responsibility only as a Target contract: the narrative must explain why the 05 Memory & Context boundary exists, while the specification makes it testable. This does not establish Current or Production evidence.
+- Current / Target / Future / History: Current is limited to repository/status evidence already marked Current; Target is the Part A/Part B contract; Future is provider or topology expansion after evidence; History is the Superseded 11-module organization.
+- Problem: A reader or implementation can mistake a proposal, projection or control checkpoint for the stable legal responsibility described by the document.
+- Target Decision: KEEP
+- Owner: docs/project/agents/agent-platform.md owns the Canonical question; linked providers may propose but cannot duplicate final state.
+- State Transition: proposed → validated → authorized or review_required → committed, rejected, stale or reconciled; control state and business state remain separate.
+- Failure: Missing provenance, version conflict, unavailable provider, timeout or incomplete review is a typed failure, not silent success.
+- Failure Propagation: Downstream receives blocked, stale, unsupported, unknown or review_required with a trace reference.
+- Retry: Retry only bounded idempotent transient work under the same input version; changed conditions require replan, reauthorization or reconciliation.
+- Recovery: Reload the last valid DomainVersion/PlanVersion, compare receipts and generations, then resume, retry, replan or request Human Review.
+- Idempotency: A stable operation identity and input version make duplicate delivery converge to one proposal, effect receipt or decision.
+- Security: Enforce tenant, matter, scope, capability/tool, secret and current policy epoch; untrusted content cannot change policy.
+- Observability: Trace Run/Plan/Step or Job, version, provider, evidence lineage, decision, receipt and failure class without hidden chain of thought.
+- Alternative: A simpler Host, library, worker or existing OSS remains preferred if it passes the same quality, recovery, security and cost checks.
+- OSS Alternative: Provider/framework substitution is allowed behind the Contract; license, build and operational qualification remain separate.
+- Tradeoff: Explicit Part A explanation and Part B fields add review and implementation work but reduce ambiguity, duplicate state and untestable claims.
+- Test / Benchmark: Review the concrete 05 Memory & Context scenario with stale input, duplicate delivery, permission change and provider failure; compare quality, latency, cost and recovery where applicable.
+- Evidence: This is a Target/document-quality decision; implementation, benchmark, security attestation and production evidence remain open.
+- Remaining Gap: DOC-R3-045
+- Reversal Condition: If the simpler alternative passes the same contract and scenario with no loss of quality, safety, recovery or ownership, docs/project/agents/agent-platform.md must be simplified or externalized.
+- Delta Ref: D006
+- Document Impact: PART_B
+- Part A Change Required?: NO
+- Part B Change Required?: YES
+- Canonical Owner Doc: docs/project/agents/agent-platform.md
+- Red Score Context: 4/5 reflects the remaining assumption or evidence gap, not runtime quality.
+
+## Q046
+
+- Question ID: Q046
+- Round ID: RB-WORKFLOW-V3-ROUND-003
+- Blue Answer: Preserve this responsibility only as a Target contract: the narrative must explain why the 05 Memory & Context boundary exists, while the specification makes it testable. This does not establish Current or Production evidence.
+- Current / Target / Future / History: Current is limited to repository/status evidence already marked Current; Target is the Part A/Part B contract; Future is provider or topology expansion after evidence; History is the Superseded 11-module organization.
+- Problem: A reader or implementation can mistake a proposal, projection or control checkpoint for the stable legal responsibility described by the document.
+- Target Decision: KEEP
+- Owner: docs/project/agents/agent-platform.md owns the Canonical question; linked providers may propose but cannot duplicate final state.
+- State Transition: proposed → validated → authorized or review_required → committed, rejected, stale or reconciled; control state and business state remain separate.
+- Failure: Missing provenance, version conflict, unavailable provider, timeout or incomplete review is a typed failure, not silent success.
+- Failure Propagation: Downstream receives blocked, stale, unsupported, unknown or review_required with a trace reference.
+- Retry: Retry only bounded idempotent transient work under the same input version; changed conditions require replan, reauthorization or reconciliation.
+- Recovery: Reload the last valid DomainVersion/PlanVersion, compare receipts and generations, then resume, retry, replan or request Human Review.
+- Idempotency: A stable operation identity and input version make duplicate delivery converge to one proposal, effect receipt or decision.
+- Security: Enforce tenant, matter, scope, capability/tool, secret and current policy epoch; untrusted content cannot change policy.
+- Observability: Trace Run/Plan/Step or Job, version, provider, evidence lineage, decision, receipt and failure class without hidden chain of thought.
+- Alternative: A simpler Host, library, worker or existing OSS remains preferred if it passes the same quality, recovery, security and cost checks.
+- OSS Alternative: Provider/framework substitution is allowed behind the Contract; license, build and operational qualification remain separate.
+- Tradeoff: Explicit Part A explanation and Part B fields add review and implementation work but reduce ambiguity, duplicate state and untestable claims.
+- Test / Benchmark: Review the concrete 05 Memory & Context scenario with stale input, duplicate delivery, permission change and provider failure; compare quality, latency, cost and recovery where applicable.
+- Evidence: This is a Target/document-quality decision; implementation, benchmark, security attestation and production evidence remain open.
+- Remaining Gap: DOC-R3-046
+- Reversal Condition: If the simpler alternative passes the same contract and scenario with no loss of quality, safety, recovery or ownership, docs/project/agents/agent-platform.md must be simplified or externalized.
+- Delta Ref: D006
+- Document Impact: PART_B
+- Part A Change Required?: NO
+- Part B Change Required?: YES
+- Canonical Owner Doc: docs/project/agents/agent-platform.md
+- Red Score Context: 4/5 reflects the remaining assumption or evidence gap, not runtime quality.
+
+## Q047
+
+- Question ID: Q047
+- Round ID: RB-WORKFLOW-V3-ROUND-003
+- Blue Answer: Preserve this responsibility only as a Target contract: the narrative must explain why the 05 Memory & Context boundary exists, while the specification makes it testable. This does not establish Current or Production evidence.
+- Current / Target / Future / History: Current is limited to repository/status evidence already marked Current; Target is the Part A/Part B contract; Future is provider or topology expansion after evidence; History is the Superseded 11-module organization.
+- Problem: A reader or implementation can mistake a proposal, projection or control checkpoint for the stable legal responsibility described by the document.
+- Target Decision: KEEP
+- Owner: docs/project/agents/agent-platform.md owns the Canonical question; linked providers may propose but cannot duplicate final state.
+- State Transition: proposed → validated → authorized or review_required → committed, rejected, stale or reconciled; control state and business state remain separate.
+- Failure: Missing provenance, version conflict, unavailable provider, timeout or incomplete review is a typed failure, not silent success.
+- Failure Propagation: Downstream receives blocked, stale, unsupported, unknown or review_required with a trace reference.
+- Retry: Retry only bounded idempotent transient work under the same input version; changed conditions require replan, reauthorization or reconciliation.
+- Recovery: Reload the last valid DomainVersion/PlanVersion, compare receipts and generations, then resume, retry, replan or request Human Review.
+- Idempotency: A stable operation identity and input version make duplicate delivery converge to one proposal, effect receipt or decision.
+- Security: Enforce tenant, matter, scope, capability/tool, secret and current policy epoch; untrusted content cannot change policy.
+- Observability: Trace Run/Plan/Step or Job, version, provider, evidence lineage, decision, receipt and failure class without hidden chain of thought.
+- Alternative: A simpler Host, library, worker or existing OSS remains preferred if it passes the same quality, recovery, security and cost checks.
+- OSS Alternative: Provider/framework substitution is allowed behind the Contract; license, build and operational qualification remain separate.
+- Tradeoff: Explicit Part A explanation and Part B fields add review and implementation work but reduce ambiguity, duplicate state and untestable claims.
+- Test / Benchmark: Review the concrete 05 Memory & Context scenario with stale input, duplicate delivery, permission change and provider failure; compare quality, latency, cost and recovery where applicable.
+- Evidence: This is a Target/document-quality decision; implementation, benchmark, security attestation and production evidence remain open.
+- Remaining Gap: DOC-R3-047
+- Reversal Condition: If the simpler alternative passes the same contract and scenario with no loss of quality, safety, recovery or ownership, docs/project/agents/agent-platform.md must be simplified or externalized.
+- Delta Ref: D006
+- Document Impact: PART_B
+- Part A Change Required?: NO
+- Part B Change Required?: YES
+- Canonical Owner Doc: docs/project/agents/agent-platform.md
+- Red Score Context: 4/5 reflects the remaining assumption or evidence gap, not runtime quality.
+
+## Q048
+
+- Question ID: Q048
+- Round ID: RB-WORKFLOW-V3-ROUND-003
+- Blue Answer: Preserve this responsibility only as a Target contract: the narrative must explain why the 05 Memory & Context boundary exists, while the specification makes it testable. This does not establish Current or Production evidence.
+- Current / Target / Future / History: Current is limited to repository/status evidence already marked Current; Target is the Part A/Part B contract; Future is provider or topology expansion after evidence; History is the Superseded 11-module organization.
+- Problem: A reader or implementation can mistake a proposal, projection or control checkpoint for the stable legal responsibility described by the document.
+- Target Decision: REFINE
+- Owner: docs/project/agents/agent-platform.md owns the Canonical question; linked providers may propose but cannot duplicate final state.
+- State Transition: proposed → validated → authorized or review_required → committed, rejected, stale or reconciled; control state and business state remain separate.
+- Failure: Missing provenance, version conflict, unavailable provider, timeout or incomplete review is a typed failure, not silent success.
+- Failure Propagation: Downstream receives blocked, stale, unsupported, unknown or review_required with a trace reference.
+- Retry: Retry only bounded idempotent transient work under the same input version; changed conditions require replan, reauthorization or reconciliation.
+- Recovery: Reload the last valid DomainVersion/PlanVersion, compare receipts and generations, then resume, retry, replan or request Human Review.
+- Idempotency: A stable operation identity and input version make duplicate delivery converge to one proposal, effect receipt or decision.
+- Security: Enforce tenant, matter, scope, capability/tool, secret and current policy epoch; untrusted content cannot change policy.
+- Observability: Trace Run/Plan/Step or Job, version, provider, evidence lineage, decision, receipt and failure class without hidden chain of thought.
+- Alternative: A simpler Host, library, worker or existing OSS remains preferred if it passes the same quality, recovery, security and cost checks.
+- OSS Alternative: Provider/framework substitution is allowed behind the Contract; license, build and operational qualification remain separate.
+- Tradeoff: Explicit Part A explanation and Part B fields add review and implementation work but reduce ambiguity, duplicate state and untestable claims.
+- Test / Benchmark: Review the concrete 05 Memory & Context scenario with stale input, duplicate delivery, permission change and provider failure; compare quality, latency, cost and recovery where applicable.
+- Evidence: This is a Target/document-quality decision; implementation, benchmark, security attestation and production evidence remain open.
+- Remaining Gap: DOC-R3-048
+- Reversal Condition: If the simpler alternative passes the same contract and scenario with no loss of quality, safety, recovery or ownership, docs/project/agents/agent-platform.md must be simplified or externalized.
+- Delta Ref: D006
+- Document Impact: PART_B
+- Part A Change Required?: NO
+- Part B Change Required?: YES
+- Canonical Owner Doc: docs/project/agents/agent-platform.md
+- Red Score Context: 3/5 reflects the remaining assumption or evidence gap, not runtime quality.
+
+## Q049
+
+- Question ID: Q049
+- Round ID: RB-WORKFLOW-V3-ROUND-003
+- Blue Answer: Preserve this responsibility only as a Target contract: the narrative must explain why the 05 Memory & Context boundary exists, while the specification makes it testable. This does not establish Current or Production evidence.
+- Current / Target / Future / History: Current is limited to repository/status evidence already marked Current; Target is the Part A/Part B contract; Future is provider or topology expansion after evidence; History is the Superseded 11-module organization.
+- Problem: A reader or implementation can mistake a proposal, projection or control checkpoint for the stable legal responsibility described by the document.
+- Target Decision: KEEP
+- Owner: docs/project/agents/agent-platform.md owns the Canonical question; linked providers may propose but cannot duplicate final state.
+- State Transition: proposed → validated → authorized or review_required → committed, rejected, stale or reconciled; control state and business state remain separate.
+- Failure: Missing provenance, version conflict, unavailable provider, timeout or incomplete review is a typed failure, not silent success.
+- Failure Propagation: Downstream receives blocked, stale, unsupported, unknown or review_required with a trace reference.
+- Retry: Retry only bounded idempotent transient work under the same input version; changed conditions require replan, reauthorization or reconciliation.
+- Recovery: Reload the last valid DomainVersion/PlanVersion, compare receipts and generations, then resume, retry, replan or request Human Review.
+- Idempotency: A stable operation identity and input version make duplicate delivery converge to one proposal, effect receipt or decision.
+- Security: Enforce tenant, matter, scope, capability/tool, secret and current policy epoch; untrusted content cannot change policy.
+- Observability: Trace Run/Plan/Step or Job, version, provider, evidence lineage, decision, receipt and failure class without hidden chain of thought.
+- Alternative: A simpler Host, library, worker or existing OSS remains preferred if it passes the same quality, recovery, security and cost checks.
+- OSS Alternative: Provider/framework substitution is allowed behind the Contract; license, build and operational qualification remain separate.
+- Tradeoff: Explicit Part A explanation and Part B fields add review and implementation work but reduce ambiguity, duplicate state and untestable claims.
+- Test / Benchmark: Review the concrete 05 Memory & Context scenario with stale input, duplicate delivery, permission change and provider failure; compare quality, latency, cost and recovery where applicable.
+- Evidence: This is a Target/document-quality decision; implementation, benchmark, security attestation and production evidence remain open.
+- Remaining Gap: DOC-R3-049
+- Reversal Condition: If the simpler alternative passes the same contract and scenario with no loss of quality, safety, recovery or ownership, docs/project/agents/agent-platform.md must be simplified or externalized.
+- Delta Ref: D006
+- Document Impact: PART_B
+- Part A Change Required?: NO
+- Part B Change Required?: YES
+- Canonical Owner Doc: docs/project/agents/agent-platform.md
+- Red Score Context: 4/5 reflects the remaining assumption or evidence gap, not runtime quality.
+
+## Q050
+
+- Question ID: Q050
+- Round ID: RB-WORKFLOW-V3-ROUND-003
+- Blue Answer: Preserve this responsibility only as a Target contract: the narrative must explain why the 05 Memory & Context boundary exists, while the specification makes it testable. This does not establish Current or Production evidence.
+- Current / Target / Future / History: Current is limited to repository/status evidence already marked Current; Target is the Part A/Part B contract; Future is provider or topology expansion after evidence; History is the Superseded 11-module organization.
+- Problem: A reader or implementation can mistake a proposal, projection or control checkpoint for the stable legal responsibility described by the document.
+- Target Decision: KEEP
+- Owner: docs/project/agents/agent-platform.md owns the Canonical question; linked providers may propose but cannot duplicate final state.
+- State Transition: proposed → validated → authorized or review_required → committed, rejected, stale or reconciled; control state and business state remain separate.
+- Failure: Missing provenance, version conflict, unavailable provider, timeout or incomplete review is a typed failure, not silent success.
+- Failure Propagation: Downstream receives blocked, stale, unsupported, unknown or review_required with a trace reference.
+- Retry: Retry only bounded idempotent transient work under the same input version; changed conditions require replan, reauthorization or reconciliation.
+- Recovery: Reload the last valid DomainVersion/PlanVersion, compare receipts and generations, then resume, retry, replan or request Human Review.
+- Idempotency: A stable operation identity and input version make duplicate delivery converge to one proposal, effect receipt or decision.
+- Security: Enforce tenant, matter, scope, capability/tool, secret and current policy epoch; untrusted content cannot change policy.
+- Observability: Trace Run/Plan/Step or Job, version, provider, evidence lineage, decision, receipt and failure class without hidden chain of thought.
+- Alternative: A simpler Host, library, worker or existing OSS remains preferred if it passes the same quality, recovery, security and cost checks.
+- OSS Alternative: Provider/framework substitution is allowed behind the Contract; license, build and operational qualification remain separate.
+- Tradeoff: Explicit Part A explanation and Part B fields add review and implementation work but reduce ambiguity, duplicate state and untestable claims.
+- Test / Benchmark: Review the concrete 05 Memory & Context scenario with stale input, duplicate delivery, permission change and provider failure; compare quality, latency, cost and recovery where applicable.
+- Evidence: This is a Target/document-quality decision; implementation, benchmark, security attestation and production evidence remain open.
+- Remaining Gap: DOC-R3-050
+- Reversal Condition: If the simpler alternative passes the same contract and scenario with no loss of quality, safety, recovery or ownership, docs/project/agents/agent-platform.md must be simplified or externalized.
+- Delta Ref: D006
+- Document Impact: PART_B
+- Part A Change Required?: NO
+- Part B Change Required?: YES
+- Canonical Owner Doc: docs/project/agents/agent-platform.md
+- Red Score Context: 4/5 reflects the remaining assumption or evidence gap, not runtime quality.
+
+## Q051
+
+- Question ID: Q051
+- Round ID: RB-WORKFLOW-V3-ROUND-003
+- Blue Answer: Preserve this responsibility only as a Target contract: the narrative must explain why the 06 Agent Core / Planning & Control boundary exists, while the specification makes it testable. This does not establish Current or Production evidence.
+- Current / Target / Future / History: Current is limited to repository/status evidence already marked Current; Target is the Part A/Part B contract; Future is provider or topology expansion after evidence; History is the Superseded 11-module organization.
+- Problem: A reader or implementation can mistake a proposal, projection or control checkpoint for the stable legal responsibility described by the document.
+- Target Decision: KEEP
+- Owner: docs/project/agents/agent-platform.md owns the Canonical question; linked providers may propose but cannot duplicate final state.
+- State Transition: proposed → validated → authorized or review_required → committed, rejected, stale or reconciled; control state and business state remain separate.
+- Failure: Missing provenance, version conflict, unavailable provider, timeout or incomplete review is a typed failure, not silent success.
+- Failure Propagation: Downstream receives blocked, stale, unsupported, unknown or review_required with a trace reference.
+- Retry: Retry only bounded idempotent transient work under the same input version; changed conditions require replan, reauthorization or reconciliation.
+- Recovery: Reload the last valid DomainVersion/PlanVersion, compare receipts and generations, then resume, retry, replan or request Human Review.
+- Idempotency: A stable operation identity and input version make duplicate delivery converge to one proposal, effect receipt or decision.
+- Security: Enforce tenant, matter, scope, capability/tool, secret and current policy epoch; untrusted content cannot change policy.
+- Observability: Trace Run/Plan/Step or Job, version, provider, evidence lineage, decision, receipt and failure class without hidden chain of thought.
+- Alternative: A simpler Host, library, worker or existing OSS remains preferred if it passes the same quality, recovery, security and cost checks.
+- OSS Alternative: Provider/framework substitution is allowed behind the Contract; license, build and operational qualification remain separate.
+- Tradeoff: Explicit Part A explanation and Part B fields add review and implementation work but reduce ambiguity, duplicate state and untestable claims.
+- Test / Benchmark: Review the concrete 06 Agent Core / Planning & Control scenario with stale input, duplicate delivery, permission change and provider failure; compare quality, latency, cost and recovery where applicable.
+- Evidence: This is a Target/document-quality decision; implementation, benchmark, security attestation and production evidence remain open.
+- Remaining Gap: DOC-R3-051
+- Reversal Condition: If the simpler alternative passes the same contract and scenario with no loss of quality, safety, recovery or ownership, docs/project/agents/agent-platform.md must be simplified or externalized.
+- Delta Ref: D007
+- Document Impact: BOTH
+- Part A Change Required?: YES
+- Part B Change Required?: YES
+- Canonical Owner Doc: docs/project/agents/agent-platform.md
+- Red Score Context: 4/5 reflects the remaining assumption or evidence gap, not runtime quality.
+
+## Q052
+
+- Question ID: Q052
+- Round ID: RB-WORKFLOW-V3-ROUND-003
+- Blue Answer: Preserve this responsibility only as a Target contract: the narrative must explain why the 06 Agent Core / Planning & Control boundary exists, while the specification makes it testable. This does not establish Current or Production evidence.
+- Current / Target / Future / History: Current is limited to repository/status evidence already marked Current; Target is the Part A/Part B contract; Future is provider or topology expansion after evidence; History is the Superseded 11-module organization.
+- Problem: A reader or implementation can mistake a proposal, projection or control checkpoint for the stable legal responsibility described by the document.
+- Target Decision: KEEP
+- Owner: docs/project/agents/agent-platform.md owns the Canonical question; linked providers may propose but cannot duplicate final state.
+- State Transition: proposed → validated → authorized or review_required → committed, rejected, stale or reconciled; control state and business state remain separate.
+- Failure: Missing provenance, version conflict, unavailable provider, timeout or incomplete review is a typed failure, not silent success.
+- Failure Propagation: Downstream receives blocked, stale, unsupported, unknown or review_required with a trace reference.
+- Retry: Retry only bounded idempotent transient work under the same input version; changed conditions require replan, reauthorization or reconciliation.
+- Recovery: Reload the last valid DomainVersion/PlanVersion, compare receipts and generations, then resume, retry, replan or request Human Review.
+- Idempotency: A stable operation identity and input version make duplicate delivery converge to one proposal, effect receipt or decision.
+- Security: Enforce tenant, matter, scope, capability/tool, secret and current policy epoch; untrusted content cannot change policy.
+- Observability: Trace Run/Plan/Step or Job, version, provider, evidence lineage, decision, receipt and failure class without hidden chain of thought.
+- Alternative: A simpler Host, library, worker or existing OSS remains preferred if it passes the same quality, recovery, security and cost checks.
+- OSS Alternative: Provider/framework substitution is allowed behind the Contract; license, build and operational qualification remain separate.
+- Tradeoff: Explicit Part A explanation and Part B fields add review and implementation work but reduce ambiguity, duplicate state and untestable claims.
+- Test / Benchmark: Review the concrete 06 Agent Core / Planning & Control scenario with stale input, duplicate delivery, permission change and provider failure; compare quality, latency, cost and recovery where applicable.
+- Evidence: This is a Target/document-quality decision; implementation, benchmark, security attestation and production evidence remain open.
+- Remaining Gap: DOC-R3-052
+- Reversal Condition: If the simpler alternative passes the same contract and scenario with no loss of quality, safety, recovery or ownership, docs/project/agents/agent-platform.md must be simplified or externalized.
+- Delta Ref: D007
+- Document Impact: BOTH
+- Part A Change Required?: YES
+- Part B Change Required?: YES
+- Canonical Owner Doc: docs/project/agents/agent-platform.md
+- Red Score Context: 4/5 reflects the remaining assumption or evidence gap, not runtime quality.
+
+## Q053
+
+- Question ID: Q053
+- Round ID: RB-WORKFLOW-V3-ROUND-003
+- Blue Answer: Preserve this responsibility only as a Target contract: the narrative must explain why the 06 Agent Core / Planning & Control boundary exists, while the specification makes it testable. This does not establish Current or Production evidence.
+- Current / Target / Future / History: Current is limited to repository/status evidence already marked Current; Target is the Part A/Part B contract; Future is provider or topology expansion after evidence; History is the Superseded 11-module organization.
+- Problem: A reader or implementation can mistake a proposal, projection or control checkpoint for the stable legal responsibility described by the document.
+- Target Decision: KEEP
+- Owner: docs/project/agents/agent-platform.md owns the Canonical question; linked providers may propose but cannot duplicate final state.
+- State Transition: proposed → validated → authorized or review_required → committed, rejected, stale or reconciled; control state and business state remain separate.
+- Failure: Missing provenance, version conflict, unavailable provider, timeout or incomplete review is a typed failure, not silent success.
+- Failure Propagation: Downstream receives blocked, stale, unsupported, unknown or review_required with a trace reference.
+- Retry: Retry only bounded idempotent transient work under the same input version; changed conditions require replan, reauthorization or reconciliation.
+- Recovery: Reload the last valid DomainVersion/PlanVersion, compare receipts and generations, then resume, retry, replan or request Human Review.
+- Idempotency: A stable operation identity and input version make duplicate delivery converge to one proposal, effect receipt or decision.
+- Security: Enforce tenant, matter, scope, capability/tool, secret and current policy epoch; untrusted content cannot change policy.
+- Observability: Trace Run/Plan/Step or Job, version, provider, evidence lineage, decision, receipt and failure class without hidden chain of thought.
+- Alternative: A simpler Host, library, worker or existing OSS remains preferred if it passes the same quality, recovery, security and cost checks.
+- OSS Alternative: Provider/framework substitution is allowed behind the Contract; license, build and operational qualification remain separate.
+- Tradeoff: Explicit Part A explanation and Part B fields add review and implementation work but reduce ambiguity, duplicate state and untestable claims.
+- Test / Benchmark: Review the concrete 06 Agent Core / Planning & Control scenario with stale input, duplicate delivery, permission change and provider failure; compare quality, latency, cost and recovery where applicable.
+- Evidence: This is a Target/document-quality decision; implementation, benchmark, security attestation and production evidence remain open.
+- Remaining Gap: DOC-R3-053
+- Reversal Condition: If the simpler alternative passes the same contract and scenario with no loss of quality, safety, recovery or ownership, docs/project/agents/agent-platform.md must be simplified or externalized.
+- Delta Ref: D007
+- Document Impact: BOTH
+- Part A Change Required?: YES
+- Part B Change Required?: YES
+- Canonical Owner Doc: docs/project/agents/agent-platform.md
+- Red Score Context: 5/5 reflects the remaining assumption or evidence gap, not runtime quality.
+
+## Q054
+
+- Question ID: Q054
+- Round ID: RB-WORKFLOW-V3-ROUND-003
+- Blue Answer: Preserve this responsibility only as a Target contract: the narrative must explain why the 06 Agent Core / Planning & Control boundary exists, while the specification makes it testable. This does not establish Current or Production evidence.
+- Current / Target / Future / History: Current is limited to repository/status evidence already marked Current; Target is the Part A/Part B contract; Future is provider or topology expansion after evidence; History is the Superseded 11-module organization.
+- Problem: A reader or implementation can mistake a proposal, projection or control checkpoint for the stable legal responsibility described by the document.
+- Target Decision: KEEP
+- Owner: docs/project/agents/agent-platform.md owns the Canonical question; linked providers may propose but cannot duplicate final state.
+- State Transition: proposed → validated → authorized or review_required → committed, rejected, stale or reconciled; control state and business state remain separate.
+- Failure: Missing provenance, version conflict, unavailable provider, timeout or incomplete review is a typed failure, not silent success.
+- Failure Propagation: Downstream receives blocked, stale, unsupported, unknown or review_required with a trace reference.
+- Retry: Retry only bounded idempotent transient work under the same input version; changed conditions require replan, reauthorization or reconciliation.
+- Recovery: Reload the last valid DomainVersion/PlanVersion, compare receipts and generations, then resume, retry, replan or request Human Review.
+- Idempotency: A stable operation identity and input version make duplicate delivery converge to one proposal, effect receipt or decision.
+- Security: Enforce tenant, matter, scope, capability/tool, secret and current policy epoch; untrusted content cannot change policy.
+- Observability: Trace Run/Plan/Step or Job, version, provider, evidence lineage, decision, receipt and failure class without hidden chain of thought.
+- Alternative: A simpler Host, library, worker or existing OSS remains preferred if it passes the same quality, recovery, security and cost checks.
+- OSS Alternative: Provider/framework substitution is allowed behind the Contract; license, build and operational qualification remain separate.
+- Tradeoff: Explicit Part A explanation and Part B fields add review and implementation work but reduce ambiguity, duplicate state and untestable claims.
+- Test / Benchmark: Review the concrete 06 Agent Core / Planning & Control scenario with stale input, duplicate delivery, permission change and provider failure; compare quality, latency, cost and recovery where applicable.
+- Evidence: This is a Target/document-quality decision; implementation, benchmark, security attestation and production evidence remain open.
+- Remaining Gap: DOC-R3-054
+- Reversal Condition: If the simpler alternative passes the same contract and scenario with no loss of quality, safety, recovery or ownership, docs/project/agents/agent-platform.md must be simplified or externalized.
+- Delta Ref: D007
+- Document Impact: BOTH
+- Part A Change Required?: YES
+- Part B Change Required?: YES
+- Canonical Owner Doc: docs/project/agents/agent-platform.md
+- Red Score Context: 4/5 reflects the remaining assumption or evidence gap, not runtime quality.
+
+## Q055
+
+- Question ID: Q055
+- Round ID: RB-WORKFLOW-V3-ROUND-003
+- Blue Answer: Preserve this responsibility only as a Target contract: the narrative must explain why the 06 Agent Core / Planning & Control boundary exists, while the specification makes it testable. This does not establish Current or Production evidence.
+- Current / Target / Future / History: Current is limited to repository/status evidence already marked Current; Target is the Part A/Part B contract; Future is provider or topology expansion after evidence; History is the Superseded 11-module organization.
+- Problem: A reader or implementation can mistake a proposal, projection or control checkpoint for the stable legal responsibility described by the document.
+- Target Decision: KEEP
+- Owner: docs/project/agents/agent-platform.md owns the Canonical question; linked providers may propose but cannot duplicate final state.
+- State Transition: proposed → validated → authorized or review_required → committed, rejected, stale or reconciled; control state and business state remain separate.
+- Failure: Missing provenance, version conflict, unavailable provider, timeout or incomplete review is a typed failure, not silent success.
+- Failure Propagation: Downstream receives blocked, stale, unsupported, unknown or review_required with a trace reference.
+- Retry: Retry only bounded idempotent transient work under the same input version; changed conditions require replan, reauthorization or reconciliation.
+- Recovery: Reload the last valid DomainVersion/PlanVersion, compare receipts and generations, then resume, retry, replan or request Human Review.
+- Idempotency: A stable operation identity and input version make duplicate delivery converge to one proposal, effect receipt or decision.
+- Security: Enforce tenant, matter, scope, capability/tool, secret and current policy epoch; untrusted content cannot change policy.
+- Observability: Trace Run/Plan/Step or Job, version, provider, evidence lineage, decision, receipt and failure class without hidden chain of thought.
+- Alternative: A simpler Host, library, worker or existing OSS remains preferred if it passes the same quality, recovery, security and cost checks.
+- OSS Alternative: Provider/framework substitution is allowed behind the Contract; license, build and operational qualification remain separate.
+- Tradeoff: Explicit Part A explanation and Part B fields add review and implementation work but reduce ambiguity, duplicate state and untestable claims.
+- Test / Benchmark: Review the concrete 06 Agent Core / Planning & Control scenario with stale input, duplicate delivery, permission change and provider failure; compare quality, latency, cost and recovery where applicable.
+- Evidence: This is a Target/document-quality decision; implementation, benchmark, security attestation and production evidence remain open.
+- Remaining Gap: DOC-R3-055
+- Reversal Condition: If the simpler alternative passes the same contract and scenario with no loss of quality, safety, recovery or ownership, docs/project/agents/agent-platform.md must be simplified or externalized.
+- Delta Ref: D007
+- Document Impact: BOTH
+- Part A Change Required?: YES
+- Part B Change Required?: YES
+- Canonical Owner Doc: docs/project/agents/agent-platform.md
+- Red Score Context: 4/5 reflects the remaining assumption or evidence gap, not runtime quality.
+
+## Q056
+
+- Question ID: Q056
+- Round ID: RB-WORKFLOW-V3-ROUND-003
+- Blue Answer: Preserve this responsibility only as a Target contract: the narrative must explain why the 06 Agent Core / Planning & Control boundary exists, while the specification makes it testable. This does not establish Current or Production evidence.
+- Current / Target / Future / History: Current is limited to repository/status evidence already marked Current; Target is the Part A/Part B contract; Future is provider or topology expansion after evidence; History is the Superseded 11-module organization.
+- Problem: A reader or implementation can mistake a proposal, projection or control checkpoint for the stable legal responsibility described by the document.
+- Target Decision: KEEP
+- Owner: docs/project/agents/agent-platform.md owns the Canonical question; linked providers may propose but cannot duplicate final state.
+- State Transition: proposed → validated → authorized or review_required → committed, rejected, stale or reconciled; control state and business state remain separate.
+- Failure: Missing provenance, version conflict, unavailable provider, timeout or incomplete review is a typed failure, not silent success.
+- Failure Propagation: Downstream receives blocked, stale, unsupported, unknown or review_required with a trace reference.
+- Retry: Retry only bounded idempotent transient work under the same input version; changed conditions require replan, reauthorization or reconciliation.
+- Recovery: Reload the last valid DomainVersion/PlanVersion, compare receipts and generations, then resume, retry, replan or request Human Review.
+- Idempotency: A stable operation identity and input version make duplicate delivery converge to one proposal, effect receipt or decision.
+- Security: Enforce tenant, matter, scope, capability/tool, secret and current policy epoch; untrusted content cannot change policy.
+- Observability: Trace Run/Plan/Step or Job, version, provider, evidence lineage, decision, receipt and failure class without hidden chain of thought.
+- Alternative: A simpler Host, library, worker or existing OSS remains preferred if it passes the same quality, recovery, security and cost checks.
+- OSS Alternative: Provider/framework substitution is allowed behind the Contract; license, build and operational qualification remain separate.
+- Tradeoff: Explicit Part A explanation and Part B fields add review and implementation work but reduce ambiguity, duplicate state and untestable claims.
+- Test / Benchmark: Review the concrete 06 Agent Core / Planning & Control scenario with stale input, duplicate delivery, permission change and provider failure; compare quality, latency, cost and recovery where applicable.
+- Evidence: This is a Target/document-quality decision; implementation, benchmark, security attestation and production evidence remain open.
+- Remaining Gap: DOC-R3-056
+- Reversal Condition: If the simpler alternative passes the same contract and scenario with no loss of quality, safety, recovery or ownership, docs/project/agents/agent-platform.md must be simplified or externalized.
+- Delta Ref: D007
+- Document Impact: BOTH
+- Part A Change Required?: YES
+- Part B Change Required?: YES
+- Canonical Owner Doc: docs/project/agents/agent-platform.md
+- Red Score Context: 4/5 reflects the remaining assumption or evidence gap, not runtime quality.
+
+## Q057
+
+- Question ID: Q057
+- Round ID: RB-WORKFLOW-V3-ROUND-003
+- Blue Answer: Preserve this responsibility only as a Target contract: the narrative must explain why the 06 Agent Core / Planning & Control boundary exists, while the specification makes it testable. This does not establish Current or Production evidence.
+- Current / Target / Future / History: Current is limited to repository/status evidence already marked Current; Target is the Part A/Part B contract; Future is provider or topology expansion after evidence; History is the Superseded 11-module organization.
+- Problem: A reader or implementation can mistake a proposal, projection or control checkpoint for the stable legal responsibility described by the document.
+- Target Decision: REFINE
+- Owner: docs/project/agents/agent-platform.md owns the Canonical question; linked providers may propose but cannot duplicate final state.
+- State Transition: proposed → validated → authorized or review_required → committed, rejected, stale or reconciled; control state and business state remain separate.
+- Failure: Missing provenance, version conflict, unavailable provider, timeout or incomplete review is a typed failure, not silent success.
+- Failure Propagation: Downstream receives blocked, stale, unsupported, unknown or review_required with a trace reference.
+- Retry: Retry only bounded idempotent transient work under the same input version; changed conditions require replan, reauthorization or reconciliation.
+- Recovery: Reload the last valid DomainVersion/PlanVersion, compare receipts and generations, then resume, retry, replan or request Human Review.
+- Idempotency: A stable operation identity and input version make duplicate delivery converge to one proposal, effect receipt or decision.
+- Security: Enforce tenant, matter, scope, capability/tool, secret and current policy epoch; untrusted content cannot change policy.
+- Observability: Trace Run/Plan/Step or Job, version, provider, evidence lineage, decision, receipt and failure class without hidden chain of thought.
+- Alternative: A simpler Host, library, worker or existing OSS remains preferred if it passes the same quality, recovery, security and cost checks.
+- OSS Alternative: Provider/framework substitution is allowed behind the Contract; license, build and operational qualification remain separate.
+- Tradeoff: Explicit Part A explanation and Part B fields add review and implementation work but reduce ambiguity, duplicate state and untestable claims.
+- Test / Benchmark: Review the concrete 06 Agent Core / Planning & Control scenario with stale input, duplicate delivery, permission change and provider failure; compare quality, latency, cost and recovery where applicable.
+- Evidence: This is a Target/document-quality decision; implementation, benchmark, security attestation and production evidence remain open.
+- Remaining Gap: DOC-R3-057
+- Reversal Condition: If the simpler alternative passes the same contract and scenario with no loss of quality, safety, recovery or ownership, docs/project/agents/agent-platform.md must be simplified or externalized.
+- Delta Ref: D007
+- Document Impact: BOTH
+- Part A Change Required?: YES
+- Part B Change Required?: YES
+- Canonical Owner Doc: docs/project/agents/agent-platform.md
+- Red Score Context: 3/5 reflects the remaining assumption or evidence gap, not runtime quality.
+
+## Q058
+
+- Question ID: Q058
+- Round ID: RB-WORKFLOW-V3-ROUND-003
+- Blue Answer: Preserve this responsibility only as a Target contract: the narrative must explain why the 06 Agent Core / Planning & Control boundary exists, while the specification makes it testable. This does not establish Current or Production evidence.
+- Current / Target / Future / History: Current is limited to repository/status evidence already marked Current; Target is the Part A/Part B contract; Future is provider or topology expansion after evidence; History is the Superseded 11-module organization.
+- Problem: A reader or implementation can mistake a proposal, projection or control checkpoint for the stable legal responsibility described by the document.
+- Target Decision: KEEP
+- Owner: docs/project/agents/agent-platform.md owns the Canonical question; linked providers may propose but cannot duplicate final state.
+- State Transition: proposed → validated → authorized or review_required → committed, rejected, stale or reconciled; control state and business state remain separate.
+- Failure: Missing provenance, version conflict, unavailable provider, timeout or incomplete review is a typed failure, not silent success.
+- Failure Propagation: Downstream receives blocked, stale, unsupported, unknown or review_required with a trace reference.
+- Retry: Retry only bounded idempotent transient work under the same input version; changed conditions require replan, reauthorization or reconciliation.
+- Recovery: Reload the last valid DomainVersion/PlanVersion, compare receipts and generations, then resume, retry, replan or request Human Review.
+- Idempotency: A stable operation identity and input version make duplicate delivery converge to one proposal, effect receipt or decision.
+- Security: Enforce tenant, matter, scope, capability/tool, secret and current policy epoch; untrusted content cannot change policy.
+- Observability: Trace Run/Plan/Step or Job, version, provider, evidence lineage, decision, receipt and failure class without hidden chain of thought.
+- Alternative: A simpler Host, library, worker or existing OSS remains preferred if it passes the same quality, recovery, security and cost checks.
+- OSS Alternative: Provider/framework substitution is allowed behind the Contract; license, build and operational qualification remain separate.
+- Tradeoff: Explicit Part A explanation and Part B fields add review and implementation work but reduce ambiguity, duplicate state and untestable claims.
+- Test / Benchmark: Review the concrete 06 Agent Core / Planning & Control scenario with stale input, duplicate delivery, permission change and provider failure; compare quality, latency, cost and recovery where applicable.
+- Evidence: This is a Target/document-quality decision; implementation, benchmark, security attestation and production evidence remain open.
+- Remaining Gap: DOC-R3-058
+- Reversal Condition: If the simpler alternative passes the same contract and scenario with no loss of quality, safety, recovery or ownership, docs/project/agents/agent-platform.md must be simplified or externalized.
+- Delta Ref: D007
+- Document Impact: BOTH
+- Part A Change Required?: YES
+- Part B Change Required?: YES
+- Canonical Owner Doc: docs/project/agents/agent-platform.md
+- Red Score Context: 4/5 reflects the remaining assumption or evidence gap, not runtime quality.
+
+## Q059
+
+- Question ID: Q059
+- Round ID: RB-WORKFLOW-V3-ROUND-003
+- Blue Answer: Preserve this responsibility only as a Target contract: the narrative must explain why the 06 Agent Core / Planning & Control boundary exists, while the specification makes it testable. This does not establish Current or Production evidence.
+- Current / Target / Future / History: Current is limited to repository/status evidence already marked Current; Target is the Part A/Part B contract; Future is provider or topology expansion after evidence; History is the Superseded 11-module organization.
+- Problem: A reader or implementation can mistake a proposal, projection or control checkpoint for the stable legal responsibility described by the document.
+- Target Decision: KEEP
+- Owner: docs/project/agents/agent-platform.md owns the Canonical question; linked providers may propose but cannot duplicate final state.
+- State Transition: proposed → validated → authorized or review_required → committed, rejected, stale or reconciled; control state and business state remain separate.
+- Failure: Missing provenance, version conflict, unavailable provider, timeout or incomplete review is a typed failure, not silent success.
+- Failure Propagation: Downstream receives blocked, stale, unsupported, unknown or review_required with a trace reference.
+- Retry: Retry only bounded idempotent transient work under the same input version; changed conditions require replan, reauthorization or reconciliation.
+- Recovery: Reload the last valid DomainVersion/PlanVersion, compare receipts and generations, then resume, retry, replan or request Human Review.
+- Idempotency: A stable operation identity and input version make duplicate delivery converge to one proposal, effect receipt or decision.
+- Security: Enforce tenant, matter, scope, capability/tool, secret and current policy epoch; untrusted content cannot change policy.
+- Observability: Trace Run/Plan/Step or Job, version, provider, evidence lineage, decision, receipt and failure class without hidden chain of thought.
+- Alternative: A simpler Host, library, worker or existing OSS remains preferred if it passes the same quality, recovery, security and cost checks.
+- OSS Alternative: Provider/framework substitution is allowed behind the Contract; license, build and operational qualification remain separate.
+- Tradeoff: Explicit Part A explanation and Part B fields add review and implementation work but reduce ambiguity, duplicate state and untestable claims.
+- Test / Benchmark: Review the concrete 06 Agent Core / Planning & Control scenario with stale input, duplicate delivery, permission change and provider failure; compare quality, latency, cost and recovery where applicable.
+- Evidence: This is a Target/document-quality decision; implementation, benchmark, security attestation and production evidence remain open.
+- Remaining Gap: DOC-R3-059
+- Reversal Condition: If the simpler alternative passes the same contract and scenario with no loss of quality, safety, recovery or ownership, docs/project/agents/agent-platform.md must be simplified or externalized.
+- Delta Ref: D007
+- Document Impact: BOTH
+- Part A Change Required?: YES
+- Part B Change Required?: YES
+- Canonical Owner Doc: docs/project/agents/agent-platform.md
+- Red Score Context: 4/5 reflects the remaining assumption or evidence gap, not runtime quality.
+
+## Q060
+
+- Question ID: Q060
+- Round ID: RB-WORKFLOW-V3-ROUND-003
+- Blue Answer: Preserve this responsibility only as a Target contract: the narrative must explain why the 06 Agent Core / Planning & Control boundary exists, while the specification makes it testable. This does not establish Current or Production evidence.
+- Current / Target / Future / History: Current is limited to repository/status evidence already marked Current; Target is the Part A/Part B contract; Future is provider or topology expansion after evidence; History is the Superseded 11-module organization.
+- Problem: A reader or implementation can mistake a proposal, projection or control checkpoint for the stable legal responsibility described by the document.
+- Target Decision: KEEP
+- Owner: docs/project/agents/agent-platform.md owns the Canonical question; linked providers may propose but cannot duplicate final state.
+- State Transition: proposed → validated → authorized or review_required → committed, rejected, stale or reconciled; control state and business state remain separate.
+- Failure: Missing provenance, version conflict, unavailable provider, timeout or incomplete review is a typed failure, not silent success.
+- Failure Propagation: Downstream receives blocked, stale, unsupported, unknown or review_required with a trace reference.
+- Retry: Retry only bounded idempotent transient work under the same input version; changed conditions require replan, reauthorization or reconciliation.
+- Recovery: Reload the last valid DomainVersion/PlanVersion, compare receipts and generations, then resume, retry, replan or request Human Review.
+- Idempotency: A stable operation identity and input version make duplicate delivery converge to one proposal, effect receipt or decision.
+- Security: Enforce tenant, matter, scope, capability/tool, secret and current policy epoch; untrusted content cannot change policy.
+- Observability: Trace Run/Plan/Step or Job, version, provider, evidence lineage, decision, receipt and failure class without hidden chain of thought.
+- Alternative: A simpler Host, library, worker or existing OSS remains preferred if it passes the same quality, recovery, security and cost checks.
+- OSS Alternative: Provider/framework substitution is allowed behind the Contract; license, build and operational qualification remain separate.
+- Tradeoff: Explicit Part A explanation and Part B fields add review and implementation work but reduce ambiguity, duplicate state and untestable claims.
+- Test / Benchmark: Review the concrete 06 Agent Core / Planning & Control scenario with stale input, duplicate delivery, permission change and provider failure; compare quality, latency, cost and recovery where applicable.
+- Evidence: This is a Target/document-quality decision; implementation, benchmark, security attestation and production evidence remain open.
+- Remaining Gap: DOC-R3-060
+- Reversal Condition: If the simpler alternative passes the same contract and scenario with no loss of quality, safety, recovery or ownership, docs/project/agents/agent-platform.md must be simplified or externalized.
+- Delta Ref: D007
+- Document Impact: BOTH
+- Part A Change Required?: YES
+- Part B Change Required?: YES
+- Canonical Owner Doc: docs/project/agents/agent-platform.md
+- Red Score Context: 4/5 reflects the remaining assumption or evidence gap, not runtime quality.
+
+## Q061
+
+- Question ID: Q061
+- Round ID: RB-WORKFLOW-V3-ROUND-003
+- Blue Answer: Preserve this responsibility only as a Target contract: the narrative must explain why the 06 Agent Core / Planning & Control boundary exists, while the specification makes it testable. This does not establish Current or Production evidence.
+- Current / Target / Future / History: Current is limited to repository/status evidence already marked Current; Target is the Part A/Part B contract; Future is provider or topology expansion after evidence; History is the Superseded 11-module organization.
+- Problem: A reader or implementation can mistake a proposal, projection or control checkpoint for the stable legal responsibility described by the document.
+- Target Decision: REFINE
+- Owner: docs/project/agents/agent-platform.md owns the Canonical question; linked providers may propose but cannot duplicate final state.
+- State Transition: proposed → validated → authorized or review_required → committed, rejected, stale or reconciled; control state and business state remain separate.
+- Failure: Missing provenance, version conflict, unavailable provider, timeout or incomplete review is a typed failure, not silent success.
+- Failure Propagation: Downstream receives blocked, stale, unsupported, unknown or review_required with a trace reference.
+- Retry: Retry only bounded idempotent transient work under the same input version; changed conditions require replan, reauthorization or reconciliation.
+- Recovery: Reload the last valid DomainVersion/PlanVersion, compare receipts and generations, then resume, retry, replan or request Human Review.
+- Idempotency: A stable operation identity and input version make duplicate delivery converge to one proposal, effect receipt or decision.
+- Security: Enforce tenant, matter, scope, capability/tool, secret and current policy epoch; untrusted content cannot change policy.
+- Observability: Trace Run/Plan/Step or Job, version, provider, evidence lineage, decision, receipt and failure class without hidden chain of thought.
+- Alternative: A simpler Host, library, worker or existing OSS remains preferred if it passes the same quality, recovery, security and cost checks.
+- OSS Alternative: Provider/framework substitution is allowed behind the Contract; license, build and operational qualification remain separate.
+- Tradeoff: Explicit Part A explanation and Part B fields add review and implementation work but reduce ambiguity, duplicate state and untestable claims.
+- Test / Benchmark: Review the concrete 06 Agent Core / Planning & Control scenario with stale input, duplicate delivery, permission change and provider failure; compare quality, latency, cost and recovery where applicable.
+- Evidence: This is a Target/document-quality decision; implementation, benchmark, security attestation and production evidence remain open.
+- Remaining Gap: DOC-R3-061
+- Reversal Condition: If the simpler alternative passes the same contract and scenario with no loss of quality, safety, recovery or ownership, docs/project/agents/agent-platform.md must be simplified or externalized.
+- Delta Ref: D007
+- Document Impact: BOTH
+- Part A Change Required?: YES
+- Part B Change Required?: YES
+- Canonical Owner Doc: docs/project/agents/agent-platform.md
+- Red Score Context: 3/5 reflects the remaining assumption or evidence gap, not runtime quality.
+
+## Q062
+
+- Question ID: Q062
+- Round ID: RB-WORKFLOW-V3-ROUND-003
+- Blue Answer: Preserve this responsibility only as a Target contract: the narrative must explain why the 06 Agent Core / Planning & Control boundary exists, while the specification makes it testable. This does not establish Current or Production evidence.
+- Current / Target / Future / History: Current is limited to repository/status evidence already marked Current; Target is the Part A/Part B contract; Future is provider or topology expansion after evidence; History is the Superseded 11-module organization.
+- Problem: A reader or implementation can mistake a proposal, projection or control checkpoint for the stable legal responsibility described by the document.
+- Target Decision: KEEP
+- Owner: docs/project/agents/agent-platform.md owns the Canonical question; linked providers may propose but cannot duplicate final state.
+- State Transition: proposed → validated → authorized or review_required → committed, rejected, stale or reconciled; control state and business state remain separate.
+- Failure: Missing provenance, version conflict, unavailable provider, timeout or incomplete review is a typed failure, not silent success.
+- Failure Propagation: Downstream receives blocked, stale, unsupported, unknown or review_required with a trace reference.
+- Retry: Retry only bounded idempotent transient work under the same input version; changed conditions require replan, reauthorization or reconciliation.
+- Recovery: Reload the last valid DomainVersion/PlanVersion, compare receipts and generations, then resume, retry, replan or request Human Review.
+- Idempotency: A stable operation identity and input version make duplicate delivery converge to one proposal, effect receipt or decision.
+- Security: Enforce tenant, matter, scope, capability/tool, secret and current policy epoch; untrusted content cannot change policy.
+- Observability: Trace Run/Plan/Step or Job, version, provider, evidence lineage, decision, receipt and failure class without hidden chain of thought.
+- Alternative: A simpler Host, library, worker or existing OSS remains preferred if it passes the same quality, recovery, security and cost checks.
+- OSS Alternative: Provider/framework substitution is allowed behind the Contract; license, build and operational qualification remain separate.
+- Tradeoff: Explicit Part A explanation and Part B fields add review and implementation work but reduce ambiguity, duplicate state and untestable claims.
+- Test / Benchmark: Review the concrete 06 Agent Core / Planning & Control scenario with stale input, duplicate delivery, permission change and provider failure; compare quality, latency, cost and recovery where applicable.
+- Evidence: This is a Target/document-quality decision; implementation, benchmark, security attestation and production evidence remain open.
+- Remaining Gap: DOC-R3-062
+- Reversal Condition: If the simpler alternative passes the same contract and scenario with no loss of quality, safety, recovery or ownership, docs/project/agents/agent-platform.md must be simplified or externalized.
+- Delta Ref: D007
+- Document Impact: BOTH
+- Part A Change Required?: YES
+- Part B Change Required?: YES
+- Canonical Owner Doc: docs/project/agents/agent-platform.md
+- Red Score Context: 4/5 reflects the remaining assumption or evidence gap, not runtime quality.
+
+## Q063
+
+- Question ID: Q063
+- Round ID: RB-WORKFLOW-V3-ROUND-003
+- Blue Answer: Preserve this responsibility only as a Target contract: the narrative must explain why the 06 Agent Core / Planning & Control boundary exists, while the specification makes it testable. This does not establish Current or Production evidence.
+- Current / Target / Future / History: Current is limited to repository/status evidence already marked Current; Target is the Part A/Part B contract; Future is provider or topology expansion after evidence; History is the Superseded 11-module organization.
+- Problem: A reader or implementation can mistake a proposal, projection or control checkpoint for the stable legal responsibility described by the document.
+- Target Decision: KEEP
+- Owner: docs/project/agents/agent-platform.md owns the Canonical question; linked providers may propose but cannot duplicate final state.
+- State Transition: proposed → validated → authorized or review_required → committed, rejected, stale or reconciled; control state and business state remain separate.
+- Failure: Missing provenance, version conflict, unavailable provider, timeout or incomplete review is a typed failure, not silent success.
+- Failure Propagation: Downstream receives blocked, stale, unsupported, unknown or review_required with a trace reference.
+- Retry: Retry only bounded idempotent transient work under the same input version; changed conditions require replan, reauthorization or reconciliation.
+- Recovery: Reload the last valid DomainVersion/PlanVersion, compare receipts and generations, then resume, retry, replan or request Human Review.
+- Idempotency: A stable operation identity and input version make duplicate delivery converge to one proposal, effect receipt or decision.
+- Security: Enforce tenant, matter, scope, capability/tool, secret and current policy epoch; untrusted content cannot change policy.
+- Observability: Trace Run/Plan/Step or Job, version, provider, evidence lineage, decision, receipt and failure class without hidden chain of thought.
+- Alternative: A simpler Host, library, worker or existing OSS remains preferred if it passes the same quality, recovery, security and cost checks.
+- OSS Alternative: Provider/framework substitution is allowed behind the Contract; license, build and operational qualification remain separate.
+- Tradeoff: Explicit Part A explanation and Part B fields add review and implementation work but reduce ambiguity, duplicate state and untestable claims.
+- Test / Benchmark: Review the concrete 06 Agent Core / Planning & Control scenario with stale input, duplicate delivery, permission change and provider failure; compare quality, latency, cost and recovery where applicable.
+- Evidence: This is a Target/document-quality decision; implementation, benchmark, security attestation and production evidence remain open.
+- Remaining Gap: DOC-R3-063
+- Reversal Condition: If the simpler alternative passes the same contract and scenario with no loss of quality, safety, recovery or ownership, docs/project/agents/agent-platform.md must be simplified or externalized.
+- Delta Ref: D007
+- Document Impact: BOTH
+- Part A Change Required?: YES
+- Part B Change Required?: YES
+- Canonical Owner Doc: docs/project/agents/agent-platform.md
+- Red Score Context: 4/5 reflects the remaining assumption or evidence gap, not runtime quality.
+
+## Q064
+
+- Question ID: Q064
+- Round ID: RB-WORKFLOW-V3-ROUND-003
+- Blue Answer: Preserve this responsibility only as a Target contract: the narrative must explain why the 06 Agent Core / Planning & Control boundary exists, while the specification makes it testable. This does not establish Current or Production evidence.
+- Current / Target / Future / History: Current is limited to repository/status evidence already marked Current; Target is the Part A/Part B contract; Future is provider or topology expansion after evidence; History is the Superseded 11-module organization.
+- Problem: A reader or implementation can mistake a proposal, projection or control checkpoint for the stable legal responsibility described by the document.
+- Target Decision: REFINE
+- Owner: docs/project/agents/agent-platform.md owns the Canonical question; linked providers may propose but cannot duplicate final state.
+- State Transition: proposed → validated → authorized or review_required → committed, rejected, stale or reconciled; control state and business state remain separate.
+- Failure: Missing provenance, version conflict, unavailable provider, timeout or incomplete review is a typed failure, not silent success.
+- Failure Propagation: Downstream receives blocked, stale, unsupported, unknown or review_required with a trace reference.
+- Retry: Retry only bounded idempotent transient work under the same input version; changed conditions require replan, reauthorization or reconciliation.
+- Recovery: Reload the last valid DomainVersion/PlanVersion, compare receipts and generations, then resume, retry, replan or request Human Review.
+- Idempotency: A stable operation identity and input version make duplicate delivery converge to one proposal, effect receipt or decision.
+- Security: Enforce tenant, matter, scope, capability/tool, secret and current policy epoch; untrusted content cannot change policy.
+- Observability: Trace Run/Plan/Step or Job, version, provider, evidence lineage, decision, receipt and failure class without hidden chain of thought.
+- Alternative: A simpler Host, library, worker or existing OSS remains preferred if it passes the same quality, recovery, security and cost checks.
+- OSS Alternative: Provider/framework substitution is allowed behind the Contract; license, build and operational qualification remain separate.
+- Tradeoff: Explicit Part A explanation and Part B fields add review and implementation work but reduce ambiguity, duplicate state and untestable claims.
+- Test / Benchmark: Review the concrete 06 Agent Core / Planning & Control scenario with stale input, duplicate delivery, permission change and provider failure; compare quality, latency, cost and recovery where applicable.
+- Evidence: This is a Target/document-quality decision; implementation, benchmark, security attestation and production evidence remain open.
+- Remaining Gap: DOC-R3-064
+- Reversal Condition: If the simpler alternative passes the same contract and scenario with no loss of quality, safety, recovery or ownership, docs/project/agents/agent-platform.md must be simplified or externalized.
+- Delta Ref: D007
+- Document Impact: BOTH
+- Part A Change Required?: YES
+- Part B Change Required?: YES
+- Canonical Owner Doc: docs/project/agents/agent-platform.md
+- Red Score Context: 3/5 reflects the remaining assumption or evidence gap, not runtime quality.
+
+## Q065
+
+- Question ID: Q065
+- Round ID: RB-WORKFLOW-V3-ROUND-003
+- Blue Answer: Preserve this responsibility only as a Target contract: the narrative must explain why the 07 Capability / Skill boundary exists, while the specification makes it testable. This does not establish Current or Production evidence.
+- Current / Target / Future / History: Current is limited to repository/status evidence already marked Current; Target is the Part A/Part B contract; Future is provider or topology expansion after evidence; History is the Superseded 11-module organization.
+- Problem: A reader or implementation can mistake a proposal, projection or control checkpoint for the stable legal responsibility described by the document.
+- Target Decision: KEEP
+- Owner: docs/project/agents/agent-platform.md owns the Canonical question; linked providers may propose but cannot duplicate final state.
+- State Transition: proposed → validated → authorized or review_required → committed, rejected, stale or reconciled; control state and business state remain separate.
+- Failure: Missing provenance, version conflict, unavailable provider, timeout or incomplete review is a typed failure, not silent success.
+- Failure Propagation: Downstream receives blocked, stale, unsupported, unknown or review_required with a trace reference.
+- Retry: Retry only bounded idempotent transient work under the same input version; changed conditions require replan, reauthorization or reconciliation.
+- Recovery: Reload the last valid DomainVersion/PlanVersion, compare receipts and generations, then resume, retry, replan or request Human Review.
+- Idempotency: A stable operation identity and input version make duplicate delivery converge to one proposal, effect receipt or decision.
+- Security: Enforce tenant, matter, scope, capability/tool, secret and current policy epoch; untrusted content cannot change policy.
+- Observability: Trace Run/Plan/Step or Job, version, provider, evidence lineage, decision, receipt and failure class without hidden chain of thought.
+- Alternative: A simpler Host, library, worker or existing OSS remains preferred if it passes the same quality, recovery, security and cost checks.
+- OSS Alternative: Provider/framework substitution is allowed behind the Contract; license, build and operational qualification remain separate.
+- Tradeoff: Explicit Part A explanation and Part B fields add review and implementation work but reduce ambiguity, duplicate state and untestable claims.
+- Test / Benchmark: Review the concrete 07 Capability / Skill scenario with stale input, duplicate delivery, permission change and provider failure; compare quality, latency, cost and recovery where applicable.
+- Evidence: This is a Target/document-quality decision; implementation, benchmark, security attestation and production evidence remain open.
+- Remaining Gap: DOC-R3-065
+- Reversal Condition: If the simpler alternative passes the same contract and scenario with no loss of quality, safety, recovery or ownership, docs/project/agents/agent-platform.md must be simplified or externalized.
+- Delta Ref: D008
+- Document Impact: PART_B
+- Part A Change Required?: NO
+- Part B Change Required?: YES
+- Canonical Owner Doc: docs/project/agents/agent-platform.md
+- Red Score Context: 4/5 reflects the remaining assumption or evidence gap, not runtime quality.
+
+## Q066
+
+- Question ID: Q066
+- Round ID: RB-WORKFLOW-V3-ROUND-003
+- Blue Answer: Preserve this responsibility only as a Target contract: the narrative must explain why the 07 Capability / Skill boundary exists, while the specification makes it testable. This does not establish Current or Production evidence.
+- Current / Target / Future / History: Current is limited to repository/status evidence already marked Current; Target is the Part A/Part B contract; Future is provider or topology expansion after evidence; History is the Superseded 11-module organization.
+- Problem: A reader or implementation can mistake a proposal, projection or control checkpoint for the stable legal responsibility described by the document.
+- Target Decision: KEEP
+- Owner: docs/project/agents/agent-platform.md owns the Canonical question; linked providers may propose but cannot duplicate final state.
+- State Transition: proposed → validated → authorized or review_required → committed, rejected, stale or reconciled; control state and business state remain separate.
+- Failure: Missing provenance, version conflict, unavailable provider, timeout or incomplete review is a typed failure, not silent success.
+- Failure Propagation: Downstream receives blocked, stale, unsupported, unknown or review_required with a trace reference.
+- Retry: Retry only bounded idempotent transient work under the same input version; changed conditions require replan, reauthorization or reconciliation.
+- Recovery: Reload the last valid DomainVersion/PlanVersion, compare receipts and generations, then resume, retry, replan or request Human Review.
+- Idempotency: A stable operation identity and input version make duplicate delivery converge to one proposal, effect receipt or decision.
+- Security: Enforce tenant, matter, scope, capability/tool, secret and current policy epoch; untrusted content cannot change policy.
+- Observability: Trace Run/Plan/Step or Job, version, provider, evidence lineage, decision, receipt and failure class without hidden chain of thought.
+- Alternative: A simpler Host, library, worker or existing OSS remains preferred if it passes the same quality, recovery, security and cost checks.
+- OSS Alternative: Provider/framework substitution is allowed behind the Contract; license, build and operational qualification remain separate.
+- Tradeoff: Explicit Part A explanation and Part B fields add review and implementation work but reduce ambiguity, duplicate state and untestable claims.
+- Test / Benchmark: Review the concrete 07 Capability / Skill scenario with stale input, duplicate delivery, permission change and provider failure; compare quality, latency, cost and recovery where applicable.
+- Evidence: This is a Target/document-quality decision; implementation, benchmark, security attestation and production evidence remain open.
+- Remaining Gap: DOC-R3-066
+- Reversal Condition: If the simpler alternative passes the same contract and scenario with no loss of quality, safety, recovery or ownership, docs/project/agents/agent-platform.md must be simplified or externalized.
+- Delta Ref: D008
+- Document Impact: PART_B
+- Part A Change Required?: NO
+- Part B Change Required?: YES
+- Canonical Owner Doc: docs/project/agents/agent-platform.md
+- Red Score Context: 4/5 reflects the remaining assumption or evidence gap, not runtime quality.
+
+## Q067
+
+- Question ID: Q067
+- Round ID: RB-WORKFLOW-V3-ROUND-003
+- Blue Answer: Preserve this responsibility only as a Target contract: the narrative must explain why the 07 Capability / Skill boundary exists, while the specification makes it testable. This does not establish Current or Production evidence.
+- Current / Target / Future / History: Current is limited to repository/status evidence already marked Current; Target is the Part A/Part B contract; Future is provider or topology expansion after evidence; History is the Superseded 11-module organization.
+- Problem: A reader or implementation can mistake a proposal, projection or control checkpoint for the stable legal responsibility described by the document.
+- Target Decision: KEEP
+- Owner: docs/project/agents/agent-platform.md owns the Canonical question; linked providers may propose but cannot duplicate final state.
+- State Transition: proposed → validated → authorized or review_required → committed, rejected, stale or reconciled; control state and business state remain separate.
+- Failure: Missing provenance, version conflict, unavailable provider, timeout or incomplete review is a typed failure, not silent success.
+- Failure Propagation: Downstream receives blocked, stale, unsupported, unknown or review_required with a trace reference.
+- Retry: Retry only bounded idempotent transient work under the same input version; changed conditions require replan, reauthorization or reconciliation.
+- Recovery: Reload the last valid DomainVersion/PlanVersion, compare receipts and generations, then resume, retry, replan or request Human Review.
+- Idempotency: A stable operation identity and input version make duplicate delivery converge to one proposal, effect receipt or decision.
+- Security: Enforce tenant, matter, scope, capability/tool, secret and current policy epoch; untrusted content cannot change policy.
+- Observability: Trace Run/Plan/Step or Job, version, provider, evidence lineage, decision, receipt and failure class without hidden chain of thought.
+- Alternative: A simpler Host, library, worker or existing OSS remains preferred if it passes the same quality, recovery, security and cost checks.
+- OSS Alternative: Provider/framework substitution is allowed behind the Contract; license, build and operational qualification remain separate.
+- Tradeoff: Explicit Part A explanation and Part B fields add review and implementation work but reduce ambiguity, duplicate state and untestable claims.
+- Test / Benchmark: Review the concrete 07 Capability / Skill scenario with stale input, duplicate delivery, permission change and provider failure; compare quality, latency, cost and recovery where applicable.
+- Evidence: This is a Target/document-quality decision; implementation, benchmark, security attestation and production evidence remain open.
+- Remaining Gap: DOC-R3-067
+- Reversal Condition: If the simpler alternative passes the same contract and scenario with no loss of quality, safety, recovery or ownership, docs/project/agents/agent-platform.md must be simplified or externalized.
+- Delta Ref: D008
+- Document Impact: PART_B
+- Part A Change Required?: NO
+- Part B Change Required?: YES
+- Canonical Owner Doc: docs/project/agents/agent-platform.md
+- Red Score Context: 5/5 reflects the remaining assumption or evidence gap, not runtime quality.
+
+## Q068
+
+- Question ID: Q068
+- Round ID: RB-WORKFLOW-V3-ROUND-003
+- Blue Answer: Preserve this responsibility only as a Target contract: the narrative must explain why the 07 Capability / Skill boundary exists, while the specification makes it testable. This does not establish Current or Production evidence.
+- Current / Target / Future / History: Current is limited to repository/status evidence already marked Current; Target is the Part A/Part B contract; Future is provider or topology expansion after evidence; History is the Superseded 11-module organization.
+- Problem: A reader or implementation can mistake a proposal, projection or control checkpoint for the stable legal responsibility described by the document.
+- Target Decision: KEEP
+- Owner: docs/project/agents/agent-platform.md owns the Canonical question; linked providers may propose but cannot duplicate final state.
+- State Transition: proposed → validated → authorized or review_required → committed, rejected, stale or reconciled; control state and business state remain separate.
+- Failure: Missing provenance, version conflict, unavailable provider, timeout or incomplete review is a typed failure, not silent success.
+- Failure Propagation: Downstream receives blocked, stale, unsupported, unknown or review_required with a trace reference.
+- Retry: Retry only bounded idempotent transient work under the same input version; changed conditions require replan, reauthorization or reconciliation.
+- Recovery: Reload the last valid DomainVersion/PlanVersion, compare receipts and generations, then resume, retry, replan or request Human Review.
+- Idempotency: A stable operation identity and input version make duplicate delivery converge to one proposal, effect receipt or decision.
+- Security: Enforce tenant, matter, scope, capability/tool, secret and current policy epoch; untrusted content cannot change policy.
+- Observability: Trace Run/Plan/Step or Job, version, provider, evidence lineage, decision, receipt and failure class without hidden chain of thought.
+- Alternative: A simpler Host, library, worker or existing OSS remains preferred if it passes the same quality, recovery, security and cost checks.
+- OSS Alternative: Provider/framework substitution is allowed behind the Contract; license, build and operational qualification remain separate.
+- Tradeoff: Explicit Part A explanation and Part B fields add review and implementation work but reduce ambiguity, duplicate state and untestable claims.
+- Test / Benchmark: Review the concrete 07 Capability / Skill scenario with stale input, duplicate delivery, permission change and provider failure; compare quality, latency, cost and recovery where applicable.
+- Evidence: This is a Target/document-quality decision; implementation, benchmark, security attestation and production evidence remain open.
+- Remaining Gap: DOC-R3-068
+- Reversal Condition: If the simpler alternative passes the same contract and scenario with no loss of quality, safety, recovery or ownership, docs/project/agents/agent-platform.md must be simplified or externalized.
+- Delta Ref: D008
+- Document Impact: PART_B
+- Part A Change Required?: NO
+- Part B Change Required?: YES
+- Canonical Owner Doc: docs/project/agents/agent-platform.md
+- Red Score Context: 4/5 reflects the remaining assumption or evidence gap, not runtime quality.
+
+## Q069
+
+- Question ID: Q069
+- Round ID: RB-WORKFLOW-V3-ROUND-003
+- Blue Answer: Preserve this responsibility only as a Target contract: the narrative must explain why the 07 Capability / Skill boundary exists, while the specification makes it testable. This does not establish Current or Production evidence.
+- Current / Target / Future / History: Current is limited to repository/status evidence already marked Current; Target is the Part A/Part B contract; Future is provider or topology expansion after evidence; History is the Superseded 11-module organization.
+- Problem: A reader or implementation can mistake a proposal, projection or control checkpoint for the stable legal responsibility described by the document.
+- Target Decision: KEEP
+- Owner: docs/project/agents/agent-platform.md owns the Canonical question; linked providers may propose but cannot duplicate final state.
+- State Transition: proposed → validated → authorized or review_required → committed, rejected, stale or reconciled; control state and business state remain separate.
+- Failure: Missing provenance, version conflict, unavailable provider, timeout or incomplete review is a typed failure, not silent success.
+- Failure Propagation: Downstream receives blocked, stale, unsupported, unknown or review_required with a trace reference.
+- Retry: Retry only bounded idempotent transient work under the same input version; changed conditions require replan, reauthorization or reconciliation.
+- Recovery: Reload the last valid DomainVersion/PlanVersion, compare receipts and generations, then resume, retry, replan or request Human Review.
+- Idempotency: A stable operation identity and input version make duplicate delivery converge to one proposal, effect receipt or decision.
+- Security: Enforce tenant, matter, scope, capability/tool, secret and current policy epoch; untrusted content cannot change policy.
+- Observability: Trace Run/Plan/Step or Job, version, provider, evidence lineage, decision, receipt and failure class without hidden chain of thought.
+- Alternative: A simpler Host, library, worker or existing OSS remains preferred if it passes the same quality, recovery, security and cost checks.
+- OSS Alternative: Provider/framework substitution is allowed behind the Contract; license, build and operational qualification remain separate.
+- Tradeoff: Explicit Part A explanation and Part B fields add review and implementation work but reduce ambiguity, duplicate state and untestable claims.
+- Test / Benchmark: Review the concrete 07 Capability / Skill scenario with stale input, duplicate delivery, permission change and provider failure; compare quality, latency, cost and recovery where applicable.
+- Evidence: This is a Target/document-quality decision; implementation, benchmark, security attestation and production evidence remain open.
+- Remaining Gap: DOC-R3-069
+- Reversal Condition: If the simpler alternative passes the same contract and scenario with no loss of quality, safety, recovery or ownership, docs/project/agents/agent-platform.md must be simplified or externalized.
+- Delta Ref: D008
+- Document Impact: PART_B
+- Part A Change Required?: NO
+- Part B Change Required?: YES
+- Canonical Owner Doc: docs/project/agents/agent-platform.md
+- Red Score Context: 4/5 reflects the remaining assumption or evidence gap, not runtime quality.
+
+## Q070
+
+- Question ID: Q070
+- Round ID: RB-WORKFLOW-V3-ROUND-003
+- Blue Answer: Preserve this responsibility only as a Target contract: the narrative must explain why the 07 Capability / Skill boundary exists, while the specification makes it testable. This does not establish Current or Production evidence.
+- Current / Target / Future / History: Current is limited to repository/status evidence already marked Current; Target is the Part A/Part B contract; Future is provider or topology expansion after evidence; History is the Superseded 11-module organization.
+- Problem: A reader or implementation can mistake a proposal, projection or control checkpoint for the stable legal responsibility described by the document.
+- Target Decision: KEEP
+- Owner: docs/project/agents/agent-platform.md owns the Canonical question; linked providers may propose but cannot duplicate final state.
+- State Transition: proposed → validated → authorized or review_required → committed, rejected, stale or reconciled; control state and business state remain separate.
+- Failure: Missing provenance, version conflict, unavailable provider, timeout or incomplete review is a typed failure, not silent success.
+- Failure Propagation: Downstream receives blocked, stale, unsupported, unknown or review_required with a trace reference.
+- Retry: Retry only bounded idempotent transient work under the same input version; changed conditions require replan, reauthorization or reconciliation.
+- Recovery: Reload the last valid DomainVersion/PlanVersion, compare receipts and generations, then resume, retry, replan or request Human Review.
+- Idempotency: A stable operation identity and input version make duplicate delivery converge to one proposal, effect receipt or decision.
+- Security: Enforce tenant, matter, scope, capability/tool, secret and current policy epoch; untrusted content cannot change policy.
+- Observability: Trace Run/Plan/Step or Job, version, provider, evidence lineage, decision, receipt and failure class without hidden chain of thought.
+- Alternative: A simpler Host, library, worker or existing OSS remains preferred if it passes the same quality, recovery, security and cost checks.
+- OSS Alternative: Provider/framework substitution is allowed behind the Contract; license, build and operational qualification remain separate.
+- Tradeoff: Explicit Part A explanation and Part B fields add review and implementation work but reduce ambiguity, duplicate state and untestable claims.
+- Test / Benchmark: Review the concrete 07 Capability / Skill scenario with stale input, duplicate delivery, permission change and provider failure; compare quality, latency, cost and recovery where applicable.
+- Evidence: This is a Target/document-quality decision; implementation, benchmark, security attestation and production evidence remain open.
+- Remaining Gap: DOC-R3-070
+- Reversal Condition: If the simpler alternative passes the same contract and scenario with no loss of quality, safety, recovery or ownership, docs/project/agents/agent-platform.md must be simplified or externalized.
+- Delta Ref: D008
+- Document Impact: PART_B
+- Part A Change Required?: NO
+- Part B Change Required?: YES
+- Canonical Owner Doc: docs/project/agents/agent-platform.md
+- Red Score Context: 4/5 reflects the remaining assumption or evidence gap, not runtime quality.
+
+## Q071
+
+- Question ID: Q071
+- Round ID: RB-WORKFLOW-V3-ROUND-003
+- Blue Answer: Preserve this responsibility only as a Target contract: the narrative must explain why the 08 Tool Runtime boundary exists, while the specification makes it testable. This does not establish Current or Production evidence.
+- Current / Target / Future / History: Current is limited to repository/status evidence already marked Current; Target is the Part A/Part B contract; Future is provider or topology expansion after evidence; History is the Superseded 11-module organization.
+- Problem: A reader or implementation can mistake a proposal, projection or control checkpoint for the stable legal responsibility described by the document.
+- Target Decision: KEEP
+- Owner: docs/project/security/security-architecture.md owns the Canonical question; linked providers may propose but cannot duplicate final state.
+- State Transition: proposed → validated → authorized or review_required → committed, rejected, stale or reconciled; control state and business state remain separate.
+- Failure: Missing provenance, version conflict, unavailable provider, timeout or incomplete review is a typed failure, not silent success.
+- Failure Propagation: Downstream receives blocked, stale, unsupported, unknown or review_required with a trace reference.
+- Retry: Retry only bounded idempotent transient work under the same input version; changed conditions require replan, reauthorization or reconciliation.
+- Recovery: Reload the last valid DomainVersion/PlanVersion, compare receipts and generations, then resume, retry, replan or request Human Review.
+- Idempotency: A stable operation identity and input version make duplicate delivery converge to one proposal, effect receipt or decision.
+- Security: Enforce tenant, matter, scope, capability/tool, secret and current policy epoch; untrusted content cannot change policy.
+- Observability: Trace Run/Plan/Step or Job, version, provider, evidence lineage, decision, receipt and failure class without hidden chain of thought.
+- Alternative: A simpler Host, library, worker or existing OSS remains preferred if it passes the same quality, recovery, security and cost checks.
+- OSS Alternative: Provider/framework substitution is allowed behind the Contract; license, build and operational qualification remain separate.
+- Tradeoff: Explicit Part A explanation and Part B fields add review and implementation work but reduce ambiguity, duplicate state and untestable claims.
+- Test / Benchmark: Review the concrete 08 Tool Runtime scenario with stale input, duplicate delivery, permission change and provider failure; compare quality, latency, cost and recovery where applicable.
+- Evidence: This is a Target/document-quality decision; implementation, benchmark, security attestation and production evidence remain open.
+- Remaining Gap: DOC-R3-071
+- Reversal Condition: If the simpler alternative passes the same contract and scenario with no loss of quality, safety, recovery or ownership, docs/project/security/security-architecture.md must be simplified or externalized.
+- Delta Ref: D009
+- Document Impact: BOTH
+- Part A Change Required?: YES
+- Part B Change Required?: YES
+- Canonical Owner Doc: docs/project/security/security-architecture.md
+- Red Score Context: 4/5 reflects the remaining assumption or evidence gap, not runtime quality.
+
+## Q072
+
+- Question ID: Q072
+- Round ID: RB-WORKFLOW-V3-ROUND-003
+- Blue Answer: Preserve this responsibility only as a Target contract: the narrative must explain why the 08 Tool Runtime boundary exists, while the specification makes it testable. This does not establish Current or Production evidence.
+- Current / Target / Future / History: Current is limited to repository/status evidence already marked Current; Target is the Part A/Part B contract; Future is provider or topology expansion after evidence; History is the Superseded 11-module organization.
+- Problem: A reader or implementation can mistake a proposal, projection or control checkpoint for the stable legal responsibility described by the document.
+- Target Decision: KEEP
+- Owner: docs/project/security/security-architecture.md owns the Canonical question; linked providers may propose but cannot duplicate final state.
+- State Transition: proposed → validated → authorized or review_required → committed, rejected, stale or reconciled; control state and business state remain separate.
+- Failure: Missing provenance, version conflict, unavailable provider, timeout or incomplete review is a typed failure, not silent success.
+- Failure Propagation: Downstream receives blocked, stale, unsupported, unknown or review_required with a trace reference.
+- Retry: Retry only bounded idempotent transient work under the same input version; changed conditions require replan, reauthorization or reconciliation.
+- Recovery: Reload the last valid DomainVersion/PlanVersion, compare receipts and generations, then resume, retry, replan or request Human Review.
+- Idempotency: A stable operation identity and input version make duplicate delivery converge to one proposal, effect receipt or decision.
+- Security: Enforce tenant, matter, scope, capability/tool, secret and current policy epoch; untrusted content cannot change policy.
+- Observability: Trace Run/Plan/Step or Job, version, provider, evidence lineage, decision, receipt and failure class without hidden chain of thought.
+- Alternative: A simpler Host, library, worker or existing OSS remains preferred if it passes the same quality, recovery, security and cost checks.
+- OSS Alternative: Provider/framework substitution is allowed behind the Contract; license, build and operational qualification remain separate.
+- Tradeoff: Explicit Part A explanation and Part B fields add review and implementation work but reduce ambiguity, duplicate state and untestable claims.
+- Test / Benchmark: Review the concrete 08 Tool Runtime scenario with stale input, duplicate delivery, permission change and provider failure; compare quality, latency, cost and recovery where applicable.
+- Evidence: This is a Target/document-quality decision; implementation, benchmark, security attestation and production evidence remain open.
+- Remaining Gap: DOC-R3-072
+- Reversal Condition: If the simpler alternative passes the same contract and scenario with no loss of quality, safety, recovery or ownership, docs/project/security/security-architecture.md must be simplified or externalized.
+- Delta Ref: D009
+- Document Impact: BOTH
+- Part A Change Required?: YES
+- Part B Change Required?: YES
+- Canonical Owner Doc: docs/project/security/security-architecture.md
+- Red Score Context: 4/5 reflects the remaining assumption or evidence gap, not runtime quality.
+
+## Q073
+
+- Question ID: Q073
+- Round ID: RB-WORKFLOW-V3-ROUND-003
+- Blue Answer: Preserve this responsibility only as a Target contract: the narrative must explain why the 08 Tool Runtime boundary exists, while the specification makes it testable. This does not establish Current or Production evidence.
+- Current / Target / Future / History: Current is limited to repository/status evidence already marked Current; Target is the Part A/Part B contract; Future is provider or topology expansion after evidence; History is the Superseded 11-module organization.
+- Problem: A reader or implementation can mistake a proposal, projection or control checkpoint for the stable legal responsibility described by the document.
+- Target Decision: REFINE
+- Owner: docs/project/security/security-architecture.md owns the Canonical question; linked providers may propose but cannot duplicate final state.
+- State Transition: proposed → validated → authorized or review_required → committed, rejected, stale or reconciled; control state and business state remain separate.
+- Failure: Missing provenance, version conflict, unavailable provider, timeout or incomplete review is a typed failure, not silent success.
+- Failure Propagation: Downstream receives blocked, stale, unsupported, unknown or review_required with a trace reference.
+- Retry: Retry only bounded idempotent transient work under the same input version; changed conditions require replan, reauthorization or reconciliation.
+- Recovery: Reload the last valid DomainVersion/PlanVersion, compare receipts and generations, then resume, retry, replan or request Human Review.
+- Idempotency: A stable operation identity and input version make duplicate delivery converge to one proposal, effect receipt or decision.
+- Security: Enforce tenant, matter, scope, capability/tool, secret and current policy epoch; untrusted content cannot change policy.
+- Observability: Trace Run/Plan/Step or Job, version, provider, evidence lineage, decision, receipt and failure class without hidden chain of thought.
+- Alternative: A simpler Host, library, worker or existing OSS remains preferred if it passes the same quality, recovery, security and cost checks.
+- OSS Alternative: Provider/framework substitution is allowed behind the Contract; license, build and operational qualification remain separate.
+- Tradeoff: Explicit Part A explanation and Part B fields add review and implementation work but reduce ambiguity, duplicate state and untestable claims.
+- Test / Benchmark: Review the concrete 08 Tool Runtime scenario with stale input, duplicate delivery, permission change and provider failure; compare quality, latency, cost and recovery where applicable.
+- Evidence: This is a Target/document-quality decision; implementation, benchmark, security attestation and production evidence remain open.
+- Remaining Gap: DOC-R3-073
+- Reversal Condition: If the simpler alternative passes the same contract and scenario with no loss of quality, safety, recovery or ownership, docs/project/security/security-architecture.md must be simplified or externalized.
+- Delta Ref: D009
+- Document Impact: BOTH
+- Part A Change Required?: YES
+- Part B Change Required?: YES
+- Canonical Owner Doc: docs/project/security/security-architecture.md
+- Red Score Context: 3/5 reflects the remaining assumption or evidence gap, not runtime quality.
+
+## Q074
+
+- Question ID: Q074
+- Round ID: RB-WORKFLOW-V3-ROUND-003
+- Blue Answer: Preserve this responsibility only as a Target contract: the narrative must explain why the 08 Tool Runtime boundary exists, while the specification makes it testable. This does not establish Current or Production evidence.
+- Current / Target / Future / History: Current is limited to repository/status evidence already marked Current; Target is the Part A/Part B contract; Future is provider or topology expansion after evidence; History is the Superseded 11-module organization.
+- Problem: A reader or implementation can mistake a proposal, projection or control checkpoint for the stable legal responsibility described by the document.
+- Target Decision: KEEP
+- Owner: docs/project/security/security-architecture.md owns the Canonical question; linked providers may propose but cannot duplicate final state.
+- State Transition: proposed → validated → authorized or review_required → committed, rejected, stale or reconciled; control state and business state remain separate.
+- Failure: Missing provenance, version conflict, unavailable provider, timeout or incomplete review is a typed failure, not silent success.
+- Failure Propagation: Downstream receives blocked, stale, unsupported, unknown or review_required with a trace reference.
+- Retry: Retry only bounded idempotent transient work under the same input version; changed conditions require replan, reauthorization or reconciliation.
+- Recovery: Reload the last valid DomainVersion/PlanVersion, compare receipts and generations, then resume, retry, replan or request Human Review.
+- Idempotency: A stable operation identity and input version make duplicate delivery converge to one proposal, effect receipt or decision.
+- Security: Enforce tenant, matter, scope, capability/tool, secret and current policy epoch; untrusted content cannot change policy.
+- Observability: Trace Run/Plan/Step or Job, version, provider, evidence lineage, decision, receipt and failure class without hidden chain of thought.
+- Alternative: A simpler Host, library, worker or existing OSS remains preferred if it passes the same quality, recovery, security and cost checks.
+- OSS Alternative: Provider/framework substitution is allowed behind the Contract; license, build and operational qualification remain separate.
+- Tradeoff: Explicit Part A explanation and Part B fields add review and implementation work but reduce ambiguity, duplicate state and untestable claims.
+- Test / Benchmark: Review the concrete 08 Tool Runtime scenario with stale input, duplicate delivery, permission change and provider failure; compare quality, latency, cost and recovery where applicable.
+- Evidence: This is a Target/document-quality decision; implementation, benchmark, security attestation and production evidence remain open.
+- Remaining Gap: DOC-R3-074
+- Reversal Condition: If the simpler alternative passes the same contract and scenario with no loss of quality, safety, recovery or ownership, docs/project/security/security-architecture.md must be simplified or externalized.
+- Delta Ref: D009
+- Document Impact: BOTH
+- Part A Change Required?: YES
+- Part B Change Required?: YES
+- Canonical Owner Doc: docs/project/security/security-architecture.md
+- Red Score Context: 5/5 reflects the remaining assumption or evidence gap, not runtime quality.
+
+## Q075
+
+- Question ID: Q075
+- Round ID: RB-WORKFLOW-V3-ROUND-003
+- Blue Answer: Preserve this responsibility only as a Target contract: the narrative must explain why the 08 Tool Runtime boundary exists, while the specification makes it testable. This does not establish Current or Production evidence.
+- Current / Target / Future / History: Current is limited to repository/status evidence already marked Current; Target is the Part A/Part B contract; Future is provider or topology expansion after evidence; History is the Superseded 11-module organization.
+- Problem: A reader or implementation can mistake a proposal, projection or control checkpoint for the stable legal responsibility described by the document.
+- Target Decision: KEEP
+- Owner: docs/project/security/security-architecture.md owns the Canonical question; linked providers may propose but cannot duplicate final state.
+- State Transition: proposed → validated → authorized or review_required → committed, rejected, stale or reconciled; control state and business state remain separate.
+- Failure: Missing provenance, version conflict, unavailable provider, timeout or incomplete review is a typed failure, not silent success.
+- Failure Propagation: Downstream receives blocked, stale, unsupported, unknown or review_required with a trace reference.
+- Retry: Retry only bounded idempotent transient work under the same input version; changed conditions require replan, reauthorization or reconciliation.
+- Recovery: Reload the last valid DomainVersion/PlanVersion, compare receipts and generations, then resume, retry, replan or request Human Review.
+- Idempotency: A stable operation identity and input version make duplicate delivery converge to one proposal, effect receipt or decision.
+- Security: Enforce tenant, matter, scope, capability/tool, secret and current policy epoch; untrusted content cannot change policy.
+- Observability: Trace Run/Plan/Step or Job, version, provider, evidence lineage, decision, receipt and failure class without hidden chain of thought.
+- Alternative: A simpler Host, library, worker or existing OSS remains preferred if it passes the same quality, recovery, security and cost checks.
+- OSS Alternative: Provider/framework substitution is allowed behind the Contract; license, build and operational qualification remain separate.
+- Tradeoff: Explicit Part A explanation and Part B fields add review and implementation work but reduce ambiguity, duplicate state and untestable claims.
+- Test / Benchmark: Review the concrete 08 Tool Runtime scenario with stale input, duplicate delivery, permission change and provider failure; compare quality, latency, cost and recovery where applicable.
+- Evidence: This is a Target/document-quality decision; implementation, benchmark, security attestation and production evidence remain open.
+- Remaining Gap: DOC-R3-075
+- Reversal Condition: If the simpler alternative passes the same contract and scenario with no loss of quality, safety, recovery or ownership, docs/project/security/security-architecture.md must be simplified or externalized.
+- Delta Ref: D009
+- Document Impact: BOTH
+- Part A Change Required?: YES
+- Part B Change Required?: YES
+- Canonical Owner Doc: docs/project/security/security-architecture.md
+- Red Score Context: 4/5 reflects the remaining assumption or evidence gap, not runtime quality.
+
+## Q076
+
+- Question ID: Q076
+- Round ID: RB-WORKFLOW-V3-ROUND-003
+- Blue Answer: Preserve this responsibility only as a Target contract: the narrative must explain why the 08 Tool Runtime boundary exists, while the specification makes it testable. This does not establish Current or Production evidence.
+- Current / Target / Future / History: Current is limited to repository/status evidence already marked Current; Target is the Part A/Part B contract; Future is provider or topology expansion after evidence; History is the Superseded 11-module organization.
+- Problem: A reader or implementation can mistake a proposal, projection or control checkpoint for the stable legal responsibility described by the document.
+- Target Decision: KEEP
+- Owner: docs/project/security/security-architecture.md owns the Canonical question; linked providers may propose but cannot duplicate final state.
+- State Transition: proposed → validated → authorized or review_required → committed, rejected, stale or reconciled; control state and business state remain separate.
+- Failure: Missing provenance, version conflict, unavailable provider, timeout or incomplete review is a typed failure, not silent success.
+- Failure Propagation: Downstream receives blocked, stale, unsupported, unknown or review_required with a trace reference.
+- Retry: Retry only bounded idempotent transient work under the same input version; changed conditions require replan, reauthorization or reconciliation.
+- Recovery: Reload the last valid DomainVersion/PlanVersion, compare receipts and generations, then resume, retry, replan or request Human Review.
+- Idempotency: A stable operation identity and input version make duplicate delivery converge to one proposal, effect receipt or decision.
+- Security: Enforce tenant, matter, scope, capability/tool, secret and current policy epoch; untrusted content cannot change policy.
+- Observability: Trace Run/Plan/Step or Job, version, provider, evidence lineage, decision, receipt and failure class without hidden chain of thought.
+- Alternative: A simpler Host, library, worker or existing OSS remains preferred if it passes the same quality, recovery, security and cost checks.
+- OSS Alternative: Provider/framework substitution is allowed behind the Contract; license, build and operational qualification remain separate.
+- Tradeoff: Explicit Part A explanation and Part B fields add review and implementation work but reduce ambiguity, duplicate state and untestable claims.
+- Test / Benchmark: Review the concrete 08 Tool Runtime scenario with stale input, duplicate delivery, permission change and provider failure; compare quality, latency, cost and recovery where applicable.
+- Evidence: This is a Target/document-quality decision; implementation, benchmark, security attestation and production evidence remain open.
+- Remaining Gap: DOC-R3-076
+- Reversal Condition: If the simpler alternative passes the same contract and scenario with no loss of quality, safety, recovery or ownership, docs/project/security/security-architecture.md must be simplified or externalized.
+- Delta Ref: D009
+- Document Impact: BOTH
+- Part A Change Required?: YES
+- Part B Change Required?: YES
+- Canonical Owner Doc: docs/project/security/security-architecture.md
+- Red Score Context: 4/5 reflects the remaining assumption or evidence gap, not runtime quality.
+
+## Q077
+
+- Question ID: Q077
+- Round ID: RB-WORKFLOW-V3-ROUND-003
+- Blue Answer: Preserve this responsibility only as a Target contract: the narrative must explain why the 08 Tool Runtime boundary exists, while the specification makes it testable. This does not establish Current or Production evidence.
+- Current / Target / Future / History: Current is limited to repository/status evidence already marked Current; Target is the Part A/Part B contract; Future is provider or topology expansion after evidence; History is the Superseded 11-module organization.
+- Problem: A reader or implementation can mistake a proposal, projection or control checkpoint for the stable legal responsibility described by the document.
+- Target Decision: KEEP
+- Owner: docs/project/security/security-architecture.md owns the Canonical question; linked providers may propose but cannot duplicate final state.
+- State Transition: proposed → validated → authorized or review_required → committed, rejected, stale or reconciled; control state and business state remain separate.
+- Failure: Missing provenance, version conflict, unavailable provider, timeout or incomplete review is a typed failure, not silent success.
+- Failure Propagation: Downstream receives blocked, stale, unsupported, unknown or review_required with a trace reference.
+- Retry: Retry only bounded idempotent transient work under the same input version; changed conditions require replan, reauthorization or reconciliation.
+- Recovery: Reload the last valid DomainVersion/PlanVersion, compare receipts and generations, then resume, retry, replan or request Human Review.
+- Idempotency: A stable operation identity and input version make duplicate delivery converge to one proposal, effect receipt or decision.
+- Security: Enforce tenant, matter, scope, capability/tool, secret and current policy epoch; untrusted content cannot change policy.
+- Observability: Trace Run/Plan/Step or Job, version, provider, evidence lineage, decision, receipt and failure class without hidden chain of thought.
+- Alternative: A simpler Host, library, worker or existing OSS remains preferred if it passes the same quality, recovery, security and cost checks.
+- OSS Alternative: Provider/framework substitution is allowed behind the Contract; license, build and operational qualification remain separate.
+- Tradeoff: Explicit Part A explanation and Part B fields add review and implementation work but reduce ambiguity, duplicate state and untestable claims.
+- Test / Benchmark: Review the concrete 08 Tool Runtime scenario with stale input, duplicate delivery, permission change and provider failure; compare quality, latency, cost and recovery where applicable.
+- Evidence: This is a Target/document-quality decision; implementation, benchmark, security attestation and production evidence remain open.
+- Remaining Gap: DOC-R3-077
+- Reversal Condition: If the simpler alternative passes the same contract and scenario with no loss of quality, safety, recovery or ownership, docs/project/security/security-architecture.md must be simplified or externalized.
+- Delta Ref: D009
+- Document Impact: BOTH
+- Part A Change Required?: YES
+- Part B Change Required?: YES
+- Canonical Owner Doc: docs/project/security/security-architecture.md
+- Red Score Context: 4/5 reflects the remaining assumption or evidence gap, not runtime quality.
+
+## Q078
+
+- Question ID: Q078
+- Round ID: RB-WORKFLOW-V3-ROUND-003
+- Blue Answer: Preserve this responsibility only as a Target contract: the narrative must explain why the 08 Tool Runtime boundary exists, while the specification makes it testable. This does not establish Current or Production evidence.
+- Current / Target / Future / History: Current is limited to repository/status evidence already marked Current; Target is the Part A/Part B contract; Future is provider or topology expansion after evidence; History is the Superseded 11-module organization.
+- Problem: A reader or implementation can mistake a proposal, projection or control checkpoint for the stable legal responsibility described by the document.
+- Target Decision: KEEP
+- Owner: docs/project/security/security-architecture.md owns the Canonical question; linked providers may propose but cannot duplicate final state.
+- State Transition: proposed → validated → authorized or review_required → committed, rejected, stale or reconciled; control state and business state remain separate.
+- Failure: Missing provenance, version conflict, unavailable provider, timeout or incomplete review is a typed failure, not silent success.
+- Failure Propagation: Downstream receives blocked, stale, unsupported, unknown or review_required with a trace reference.
+- Retry: Retry only bounded idempotent transient work under the same input version; changed conditions require replan, reauthorization or reconciliation.
+- Recovery: Reload the last valid DomainVersion/PlanVersion, compare receipts and generations, then resume, retry, replan or request Human Review.
+- Idempotency: A stable operation identity and input version make duplicate delivery converge to one proposal, effect receipt or decision.
+- Security: Enforce tenant, matter, scope, capability/tool, secret and current policy epoch; untrusted content cannot change policy.
+- Observability: Trace Run/Plan/Step or Job, version, provider, evidence lineage, decision, receipt and failure class without hidden chain of thought.
+- Alternative: A simpler Host, library, worker or existing OSS remains preferred if it passes the same quality, recovery, security and cost checks.
+- OSS Alternative: Provider/framework substitution is allowed behind the Contract; license, build and operational qualification remain separate.
+- Tradeoff: Explicit Part A explanation and Part B fields add review and implementation work but reduce ambiguity, duplicate state and untestable claims.
+- Test / Benchmark: Review the concrete 08 Tool Runtime scenario with stale input, duplicate delivery, permission change and provider failure; compare quality, latency, cost and recovery where applicable.
+- Evidence: This is a Target/document-quality decision; implementation, benchmark, security attestation and production evidence remain open.
+- Remaining Gap: DOC-R3-078
+- Reversal Condition: If the simpler alternative passes the same contract and scenario with no loss of quality, safety, recovery or ownership, docs/project/security/security-architecture.md must be simplified or externalized.
+- Delta Ref: D009
+- Document Impact: BOTH
+- Part A Change Required?: YES
+- Part B Change Required?: YES
+- Canonical Owner Doc: docs/project/security/security-architecture.md
+- Red Score Context: 4/5 reflects the remaining assumption or evidence gap, not runtime quality.
+
+## Q079
+
+- Question ID: Q079
+- Round ID: RB-WORKFLOW-V3-ROUND-003
+- Blue Answer: Preserve this responsibility only as a Target contract: the narrative must explain why the 08 Tool Runtime boundary exists, while the specification makes it testable. This does not establish Current or Production evidence.
+- Current / Target / Future / History: Current is limited to repository/status evidence already marked Current; Target is the Part A/Part B contract; Future is provider or topology expansion after evidence; History is the Superseded 11-module organization.
+- Problem: A reader or implementation can mistake a proposal, projection or control checkpoint for the stable legal responsibility described by the document.
+- Target Decision: KEEP
+- Owner: docs/project/security/security-architecture.md owns the Canonical question; linked providers may propose but cannot duplicate final state.
+- State Transition: proposed → validated → authorized or review_required → committed, rejected, stale or reconciled; control state and business state remain separate.
+- Failure: Missing provenance, version conflict, unavailable provider, timeout or incomplete review is a typed failure, not silent success.
+- Failure Propagation: Downstream receives blocked, stale, unsupported, unknown or review_required with a trace reference.
+- Retry: Retry only bounded idempotent transient work under the same input version; changed conditions require replan, reauthorization or reconciliation.
+- Recovery: Reload the last valid DomainVersion/PlanVersion, compare receipts and generations, then resume, retry, replan or request Human Review.
+- Idempotency: A stable operation identity and input version make duplicate delivery converge to one proposal, effect receipt or decision.
+- Security: Enforce tenant, matter, scope, capability/tool, secret and current policy epoch; untrusted content cannot change policy.
+- Observability: Trace Run/Plan/Step or Job, version, provider, evidence lineage, decision, receipt and failure class without hidden chain of thought.
+- Alternative: A simpler Host, library, worker or existing OSS remains preferred if it passes the same quality, recovery, security and cost checks.
+- OSS Alternative: Provider/framework substitution is allowed behind the Contract; license, build and operational qualification remain separate.
+- Tradeoff: Explicit Part A explanation and Part B fields add review and implementation work but reduce ambiguity, duplicate state and untestable claims.
+- Test / Benchmark: Review the concrete 08 Tool Runtime scenario with stale input, duplicate delivery, permission change and provider failure; compare quality, latency, cost and recovery where applicable.
+- Evidence: This is a Target/document-quality decision; implementation, benchmark, security attestation and production evidence remain open.
+- Remaining Gap: DOC-R3-079
+- Reversal Condition: If the simpler alternative passes the same contract and scenario with no loss of quality, safety, recovery or ownership, docs/project/security/security-architecture.md must be simplified or externalized.
+- Delta Ref: D009
+- Document Impact: BOTH
+- Part A Change Required?: YES
+- Part B Change Required?: YES
+- Canonical Owner Doc: docs/project/security/security-architecture.md
+- Red Score Context: 4/5 reflects the remaining assumption or evidence gap, not runtime quality.
+
+## Q080
+
+- Question ID: Q080
+- Round ID: RB-WORKFLOW-V3-ROUND-003
+- Blue Answer: Preserve this responsibility only as a Target contract: the narrative must explain why the 08 Tool Runtime boundary exists, while the specification makes it testable. This does not establish Current or Production evidence.
+- Current / Target / Future / History: Current is limited to repository/status evidence already marked Current; Target is the Part A/Part B contract; Future is provider or topology expansion after evidence; History is the Superseded 11-module organization.
+- Problem: A reader or implementation can mistake a proposal, projection or control checkpoint for the stable legal responsibility described by the document.
+- Target Decision: KEEP
+- Owner: docs/project/security/security-architecture.md owns the Canonical question; linked providers may propose but cannot duplicate final state.
+- State Transition: proposed → validated → authorized or review_required → committed, rejected, stale or reconciled; control state and business state remain separate.
+- Failure: Missing provenance, version conflict, unavailable provider, timeout or incomplete review is a typed failure, not silent success.
+- Failure Propagation: Downstream receives blocked, stale, unsupported, unknown or review_required with a trace reference.
+- Retry: Retry only bounded idempotent transient work under the same input version; changed conditions require replan, reauthorization or reconciliation.
+- Recovery: Reload the last valid DomainVersion/PlanVersion, compare receipts and generations, then resume, retry, replan or request Human Review.
+- Idempotency: A stable operation identity and input version make duplicate delivery converge to one proposal, effect receipt or decision.
+- Security: Enforce tenant, matter, scope, capability/tool, secret and current policy epoch; untrusted content cannot change policy.
+- Observability: Trace Run/Plan/Step or Job, version, provider, evidence lineage, decision, receipt and failure class without hidden chain of thought.
+- Alternative: A simpler Host, library, worker or existing OSS remains preferred if it passes the same quality, recovery, security and cost checks.
+- OSS Alternative: Provider/framework substitution is allowed behind the Contract; license, build and operational qualification remain separate.
+- Tradeoff: Explicit Part A explanation and Part B fields add review and implementation work but reduce ambiguity, duplicate state and untestable claims.
+- Test / Benchmark: Review the concrete 08 Tool Runtime scenario with stale input, duplicate delivery, permission change and provider failure; compare quality, latency, cost and recovery where applicable.
+- Evidence: This is a Target/document-quality decision; implementation, benchmark, security attestation and production evidence remain open.
+- Remaining Gap: DOC-R3-080
+- Reversal Condition: If the simpler alternative passes the same contract and scenario with no loss of quality, safety, recovery or ownership, docs/project/security/security-architecture.md must be simplified or externalized.
+- Delta Ref: D009
+- Document Impact: BOTH
+- Part A Change Required?: YES
+- Part B Change Required?: YES
+- Canonical Owner Doc: docs/project/security/security-architecture.md
+- Red Score Context: 4/5 reflects the remaining assumption or evidence gap, not runtime quality.
+
+## Q081
+
+- Question ID: Q081
+- Round ID: RB-WORKFLOW-V3-ROUND-003
+- Blue Answer: Preserve this responsibility only as a Target contract: the narrative must explain why the 09 Security boundary exists, while the specification makes it testable. This does not establish Current or Production evidence.
+- Current / Target / Future / History: Current is limited to repository/status evidence already marked Current; Target is the Part A/Part B contract; Future is provider or topology expansion after evidence; History is the Superseded 11-module organization.
+- Problem: A reader or implementation can mistake a proposal, projection or control checkpoint for the stable legal responsibility described by the document.
+- Target Decision: KEEP
+- Owner: docs/project/security/security-architecture.md owns the Canonical question; linked providers may propose but cannot duplicate final state.
+- State Transition: proposed → validated → authorized or review_required → committed, rejected, stale or reconciled; control state and business state remain separate.
+- Failure: Missing provenance, version conflict, unavailable provider, timeout or incomplete review is a typed failure, not silent success.
+- Failure Propagation: Downstream receives blocked, stale, unsupported, unknown or review_required with a trace reference.
+- Retry: Retry only bounded idempotent transient work under the same input version; changed conditions require replan, reauthorization or reconciliation.
+- Recovery: Reload the last valid DomainVersion/PlanVersion, compare receipts and generations, then resume, retry, replan or request Human Review.
+- Idempotency: A stable operation identity and input version make duplicate delivery converge to one proposal, effect receipt or decision.
+- Security: Enforce tenant, matter, scope, capability/tool, secret and current policy epoch; untrusted content cannot change policy.
+- Observability: Trace Run/Plan/Step or Job, version, provider, evidence lineage, decision, receipt and failure class without hidden chain of thought.
+- Alternative: A simpler Host, library, worker or existing OSS remains preferred if it passes the same quality, recovery, security and cost checks.
+- OSS Alternative: Provider/framework substitution is allowed behind the Contract; license, build and operational qualification remain separate.
+- Tradeoff: Explicit Part A explanation and Part B fields add review and implementation work but reduce ambiguity, duplicate state and untestable claims.
+- Test / Benchmark: Review the concrete 09 Security scenario with stale input, duplicate delivery, permission change and provider failure; compare quality, latency, cost and recovery where applicable.
+- Evidence: This is a Target/document-quality decision; implementation, benchmark, security attestation and production evidence remain open.
+- Remaining Gap: DOC-R3-081
+- Reversal Condition: If the simpler alternative passes the same contract and scenario with no loss of quality, safety, recovery or ownership, docs/project/security/security-architecture.md must be simplified or externalized.
+- Delta Ref: D010
+- Document Impact: BOTH
+- Part A Change Required?: YES
+- Part B Change Required?: YES
+- Canonical Owner Doc: docs/project/security/security-architecture.md
+- Red Score Context: 4/5 reflects the remaining assumption or evidence gap, not runtime quality.
+
+## Q082
+
+- Question ID: Q082
+- Round ID: RB-WORKFLOW-V3-ROUND-003
+- Blue Answer: Preserve this responsibility only as a Target contract: the narrative must explain why the 09 Security boundary exists, while the specification makes it testable. This does not establish Current or Production evidence.
+- Current / Target / Future / History: Current is limited to repository/status evidence already marked Current; Target is the Part A/Part B contract; Future is provider or topology expansion after evidence; History is the Superseded 11-module organization.
+- Problem: A reader or implementation can mistake a proposal, projection or control checkpoint for the stable legal responsibility described by the document.
+- Target Decision: KEEP
+- Owner: docs/project/security/security-architecture.md owns the Canonical question; linked providers may propose but cannot duplicate final state.
+- State Transition: proposed → validated → authorized or review_required → committed, rejected, stale or reconciled; control state and business state remain separate.
+- Failure: Missing provenance, version conflict, unavailable provider, timeout or incomplete review is a typed failure, not silent success.
+- Failure Propagation: Downstream receives blocked, stale, unsupported, unknown or review_required with a trace reference.
+- Retry: Retry only bounded idempotent transient work under the same input version; changed conditions require replan, reauthorization or reconciliation.
+- Recovery: Reload the last valid DomainVersion/PlanVersion, compare receipts and generations, then resume, retry, replan or request Human Review.
+- Idempotency: A stable operation identity and input version make duplicate delivery converge to one proposal, effect receipt or decision.
+- Security: Enforce tenant, matter, scope, capability/tool, secret and current policy epoch; untrusted content cannot change policy.
+- Observability: Trace Run/Plan/Step or Job, version, provider, evidence lineage, decision, receipt and failure class without hidden chain of thought.
+- Alternative: A simpler Host, library, worker or existing OSS remains preferred if it passes the same quality, recovery, security and cost checks.
+- OSS Alternative: Provider/framework substitution is allowed behind the Contract; license, build and operational qualification remain separate.
+- Tradeoff: Explicit Part A explanation and Part B fields add review and implementation work but reduce ambiguity, duplicate state and untestable claims.
+- Test / Benchmark: Review the concrete 09 Security scenario with stale input, duplicate delivery, permission change and provider failure; compare quality, latency, cost and recovery where applicable.
+- Evidence: This is a Target/document-quality decision; implementation, benchmark, security attestation and production evidence remain open.
+- Remaining Gap: DOC-R3-082
+- Reversal Condition: If the simpler alternative passes the same contract and scenario with no loss of quality, safety, recovery or ownership, docs/project/security/security-architecture.md must be simplified or externalized.
+- Delta Ref: D010
+- Document Impact: BOTH
+- Part A Change Required?: YES
+- Part B Change Required?: YES
+- Canonical Owner Doc: docs/project/security/security-architecture.md
+- Red Score Context: 5/5 reflects the remaining assumption or evidence gap, not runtime quality.
+
+## Q083
+
+- Question ID: Q083
+- Round ID: RB-WORKFLOW-V3-ROUND-003
+- Blue Answer: Preserve this responsibility only as a Target contract: the narrative must explain why the 09 Security boundary exists, while the specification makes it testable. This does not establish Current or Production evidence.
+- Current / Target / Future / History: Current is limited to repository/status evidence already marked Current; Target is the Part A/Part B contract; Future is provider or topology expansion after evidence; History is the Superseded 11-module organization.
+- Problem: A reader or implementation can mistake a proposal, projection or control checkpoint for the stable legal responsibility described by the document.
+- Target Decision: KEEP
+- Owner: docs/project/security/security-architecture.md owns the Canonical question; linked providers may propose but cannot duplicate final state.
+- State Transition: proposed → validated → authorized or review_required → committed, rejected, stale or reconciled; control state and business state remain separate.
+- Failure: Missing provenance, version conflict, unavailable provider, timeout or incomplete review is a typed failure, not silent success.
+- Failure Propagation: Downstream receives blocked, stale, unsupported, unknown or review_required with a trace reference.
+- Retry: Retry only bounded idempotent transient work under the same input version; changed conditions require replan, reauthorization or reconciliation.
+- Recovery: Reload the last valid DomainVersion/PlanVersion, compare receipts and generations, then resume, retry, replan or request Human Review.
+- Idempotency: A stable operation identity and input version make duplicate delivery converge to one proposal, effect receipt or decision.
+- Security: Enforce tenant, matter, scope, capability/tool, secret and current policy epoch; untrusted content cannot change policy.
+- Observability: Trace Run/Plan/Step or Job, version, provider, evidence lineage, decision, receipt and failure class without hidden chain of thought.
+- Alternative: A simpler Host, library, worker or existing OSS remains preferred if it passes the same quality, recovery, security and cost checks.
+- OSS Alternative: Provider/framework substitution is allowed behind the Contract; license, build and operational qualification remain separate.
+- Tradeoff: Explicit Part A explanation and Part B fields add review and implementation work but reduce ambiguity, duplicate state and untestable claims.
+- Test / Benchmark: Review the concrete 09 Security scenario with stale input, duplicate delivery, permission change and provider failure; compare quality, latency, cost and recovery where applicable.
+- Evidence: This is a Target/document-quality decision; implementation, benchmark, security attestation and production evidence remain open.
+- Remaining Gap: DOC-R3-083
+- Reversal Condition: If the simpler alternative passes the same contract and scenario with no loss of quality, safety, recovery or ownership, docs/project/security/security-architecture.md must be simplified or externalized.
+- Delta Ref: D010
+- Document Impact: BOTH
+- Part A Change Required?: YES
+- Part B Change Required?: YES
+- Canonical Owner Doc: docs/project/security/security-architecture.md
+- Red Score Context: 4/5 reflects the remaining assumption or evidence gap, not runtime quality.
+
+## Q084
+
+- Question ID: Q084
+- Round ID: RB-WORKFLOW-V3-ROUND-003
+- Blue Answer: Preserve this responsibility only as a Target contract: the narrative must explain why the 09 Security boundary exists, while the specification makes it testable. This does not establish Current or Production evidence.
+- Current / Target / Future / History: Current is limited to repository/status evidence already marked Current; Target is the Part A/Part B contract; Future is provider or topology expansion after evidence; History is the Superseded 11-module organization.
+- Problem: A reader or implementation can mistake a proposal, projection or control checkpoint for the stable legal responsibility described by the document.
+- Target Decision: MEASUREMENT_GAP
+- Owner: docs/project/security/security-architecture.md owns the Canonical question; linked providers may propose but cannot duplicate final state.
+- State Transition: proposed → validated → authorized or review_required → committed, rejected, stale or reconciled; control state and business state remain separate.
+- Failure: Missing provenance, version conflict, unavailable provider, timeout or incomplete review is a typed failure, not silent success.
+- Failure Propagation: Downstream receives blocked, stale, unsupported, unknown or review_required with a trace reference.
+- Retry: Retry only bounded idempotent transient work under the same input version; changed conditions require replan, reauthorization or reconciliation.
+- Recovery: Reload the last valid DomainVersion/PlanVersion, compare receipts and generations, then resume, retry, replan or request Human Review.
+- Idempotency: A stable operation identity and input version make duplicate delivery converge to one proposal, effect receipt or decision.
+- Security: Enforce tenant, matter, scope, capability/tool, secret and current policy epoch; untrusted content cannot change policy.
+- Observability: Trace Run/Plan/Step or Job, version, provider, evidence lineage, decision, receipt and failure class without hidden chain of thought.
+- Alternative: A simpler Host, library, worker or existing OSS remains preferred if it passes the same quality, recovery, security and cost checks.
+- OSS Alternative: Provider/framework substitution is allowed behind the Contract; license, build and operational qualification remain separate.
+- Tradeoff: Explicit Part A explanation and Part B fields add review and implementation work but reduce ambiguity, duplicate state and untestable claims.
+- Test / Benchmark: Review the concrete 09 Security scenario with stale input, duplicate delivery, permission change and provider failure; compare quality, latency, cost and recovery where applicable.
+- Evidence: This is a Target/document-quality decision; implementation, benchmark, security attestation and production evidence remain open.
+- Remaining Gap: DOC-R3-084
+- Reversal Condition: If the simpler alternative passes the same contract and scenario with no loss of quality, safety, recovery or ownership, docs/project/security/security-architecture.md must be simplified or externalized.
+- Delta Ref: D010
+- Document Impact: BOTH
+- Part A Change Required?: YES
+- Part B Change Required?: YES
+- Canonical Owner Doc: docs/project/security/security-architecture.md
+- Red Score Context: 2/5 reflects the remaining assumption or evidence gap, not runtime quality.
+
+## Q085
+
+- Question ID: Q085
+- Round ID: RB-WORKFLOW-V3-ROUND-003
+- Blue Answer: Preserve this responsibility only as a Target contract: the narrative must explain why the 09 Security boundary exists, while the specification makes it testable. This does not establish Current or Production evidence.
+- Current / Target / Future / History: Current is limited to repository/status evidence already marked Current; Target is the Part A/Part B contract; Future is provider or topology expansion after evidence; History is the Superseded 11-module organization.
+- Problem: A reader or implementation can mistake a proposal, projection or control checkpoint for the stable legal responsibility described by the document.
+- Target Decision: KEEP
+- Owner: docs/project/security/security-architecture.md owns the Canonical question; linked providers may propose but cannot duplicate final state.
+- State Transition: proposed → validated → authorized or review_required → committed, rejected, stale or reconciled; control state and business state remain separate.
+- Failure: Missing provenance, version conflict, unavailable provider, timeout or incomplete review is a typed failure, not silent success.
+- Failure Propagation: Downstream receives blocked, stale, unsupported, unknown or review_required with a trace reference.
+- Retry: Retry only bounded idempotent transient work under the same input version; changed conditions require replan, reauthorization or reconciliation.
+- Recovery: Reload the last valid DomainVersion/PlanVersion, compare receipts and generations, then resume, retry, replan or request Human Review.
+- Idempotency: A stable operation identity and input version make duplicate delivery converge to one proposal, effect receipt or decision.
+- Security: Enforce tenant, matter, scope, capability/tool, secret and current policy epoch; untrusted content cannot change policy.
+- Observability: Trace Run/Plan/Step or Job, version, provider, evidence lineage, decision, receipt and failure class without hidden chain of thought.
+- Alternative: A simpler Host, library, worker or existing OSS remains preferred if it passes the same quality, recovery, security and cost checks.
+- OSS Alternative: Provider/framework substitution is allowed behind the Contract; license, build and operational qualification remain separate.
+- Tradeoff: Explicit Part A explanation and Part B fields add review and implementation work but reduce ambiguity, duplicate state and untestable claims.
+- Test / Benchmark: Review the concrete 09 Security scenario with stale input, duplicate delivery, permission change and provider failure; compare quality, latency, cost and recovery where applicable.
+- Evidence: This is a Target/document-quality decision; implementation, benchmark, security attestation and production evidence remain open.
+- Remaining Gap: DOC-R3-085
+- Reversal Condition: If the simpler alternative passes the same contract and scenario with no loss of quality, safety, recovery or ownership, docs/project/security/security-architecture.md must be simplified or externalized.
+- Delta Ref: D010
+- Document Impact: BOTH
+- Part A Change Required?: YES
+- Part B Change Required?: YES
+- Canonical Owner Doc: docs/project/security/security-architecture.md
+- Red Score Context: 4/5 reflects the remaining assumption or evidence gap, not runtime quality.
+
+## Q086
+
+- Question ID: Q086
+- Round ID: RB-WORKFLOW-V3-ROUND-003
+- Blue Answer: Preserve this responsibility only as a Target contract: the narrative must explain why the 09 Security boundary exists, while the specification makes it testable. This does not establish Current or Production evidence.
+- Current / Target / Future / History: Current is limited to repository/status evidence already marked Current; Target is the Part A/Part B contract; Future is provider or topology expansion after evidence; History is the Superseded 11-module organization.
+- Problem: A reader or implementation can mistake a proposal, projection or control checkpoint for the stable legal responsibility described by the document.
+- Target Decision: KEEP
+- Owner: docs/project/security/security-architecture.md owns the Canonical question; linked providers may propose but cannot duplicate final state.
+- State Transition: proposed → validated → authorized or review_required → committed, rejected, stale or reconciled; control state and business state remain separate.
+- Failure: Missing provenance, version conflict, unavailable provider, timeout or incomplete review is a typed failure, not silent success.
+- Failure Propagation: Downstream receives blocked, stale, unsupported, unknown or review_required with a trace reference.
+- Retry: Retry only bounded idempotent transient work under the same input version; changed conditions require replan, reauthorization or reconciliation.
+- Recovery: Reload the last valid DomainVersion/PlanVersion, compare receipts and generations, then resume, retry, replan or request Human Review.
+- Idempotency: A stable operation identity and input version make duplicate delivery converge to one proposal, effect receipt or decision.
+- Security: Enforce tenant, matter, scope, capability/tool, secret and current policy epoch; untrusted content cannot change policy.
+- Observability: Trace Run/Plan/Step or Job, version, provider, evidence lineage, decision, receipt and failure class without hidden chain of thought.
+- Alternative: A simpler Host, library, worker or existing OSS remains preferred if it passes the same quality, recovery, security and cost checks.
+- OSS Alternative: Provider/framework substitution is allowed behind the Contract; license, build and operational qualification remain separate.
+- Tradeoff: Explicit Part A explanation and Part B fields add review and implementation work but reduce ambiguity, duplicate state and untestable claims.
+- Test / Benchmark: Review the concrete 09 Security scenario with stale input, duplicate delivery, permission change and provider failure; compare quality, latency, cost and recovery where applicable.
+- Evidence: This is a Target/document-quality decision; implementation, benchmark, security attestation and production evidence remain open.
+- Remaining Gap: DOC-R3-086
+- Reversal Condition: If the simpler alternative passes the same contract and scenario with no loss of quality, safety, recovery or ownership, docs/project/security/security-architecture.md must be simplified or externalized.
+- Delta Ref: D010
+- Document Impact: BOTH
+- Part A Change Required?: YES
+- Part B Change Required?: YES
+- Canonical Owner Doc: docs/project/security/security-architecture.md
+- Red Score Context: 4/5 reflects the remaining assumption or evidence gap, not runtime quality.
+
+## Q087
+
+- Question ID: Q087
+- Round ID: RB-WORKFLOW-V3-ROUND-003
+- Blue Answer: Preserve this responsibility only as a Target contract: the narrative must explain why the 09 Security boundary exists, while the specification makes it testable. This does not establish Current or Production evidence.
+- Current / Target / Future / History: Current is limited to repository/status evidence already marked Current; Target is the Part A/Part B contract; Future is provider or topology expansion after evidence; History is the Superseded 11-module organization.
+- Problem: A reader or implementation can mistake a proposal, projection or control checkpoint for the stable legal responsibility described by the document.
+- Target Decision: KEEP
+- Owner: docs/project/security/security-architecture.md owns the Canonical question; linked providers may propose but cannot duplicate final state.
+- State Transition: proposed → validated → authorized or review_required → committed, rejected, stale or reconciled; control state and business state remain separate.
+- Failure: Missing provenance, version conflict, unavailable provider, timeout or incomplete review is a typed failure, not silent success.
+- Failure Propagation: Downstream receives blocked, stale, unsupported, unknown or review_required with a trace reference.
+- Retry: Retry only bounded idempotent transient work under the same input version; changed conditions require replan, reauthorization or reconciliation.
+- Recovery: Reload the last valid DomainVersion/PlanVersion, compare receipts and generations, then resume, retry, replan or request Human Review.
+- Idempotency: A stable operation identity and input version make duplicate delivery converge to one proposal, effect receipt or decision.
+- Security: Enforce tenant, matter, scope, capability/tool, secret and current policy epoch; untrusted content cannot change policy.
+- Observability: Trace Run/Plan/Step or Job, version, provider, evidence lineage, decision, receipt and failure class without hidden chain of thought.
+- Alternative: A simpler Host, library, worker or existing OSS remains preferred if it passes the same quality, recovery, security and cost checks.
+- OSS Alternative: Provider/framework substitution is allowed behind the Contract; license, build and operational qualification remain separate.
+- Tradeoff: Explicit Part A explanation and Part B fields add review and implementation work but reduce ambiguity, duplicate state and untestable claims.
+- Test / Benchmark: Review the concrete 09 Security scenario with stale input, duplicate delivery, permission change and provider failure; compare quality, latency, cost and recovery where applicable.
+- Evidence: This is a Target/document-quality decision; implementation, benchmark, security attestation and production evidence remain open.
+- Remaining Gap: DOC-R3-087
+- Reversal Condition: If the simpler alternative passes the same contract and scenario with no loss of quality, safety, recovery or ownership, docs/project/security/security-architecture.md must be simplified or externalized.
+- Delta Ref: D010
+- Document Impact: BOTH
+- Part A Change Required?: YES
+- Part B Change Required?: YES
+- Canonical Owner Doc: docs/project/security/security-architecture.md
+- Red Score Context: 4/5 reflects the remaining assumption or evidence gap, not runtime quality.
+
+## Q088
+
+- Question ID: Q088
+- Round ID: RB-WORKFLOW-V3-ROUND-003
+- Blue Answer: Preserve this responsibility only as a Target contract: the narrative must explain why the 09 Security boundary exists, while the specification makes it testable. This does not establish Current or Production evidence.
+- Current / Target / Future / History: Current is limited to repository/status evidence already marked Current; Target is the Part A/Part B contract; Future is provider or topology expansion after evidence; History is the Superseded 11-module organization.
+- Problem: A reader or implementation can mistake a proposal, projection or control checkpoint for the stable legal responsibility described by the document.
+- Target Decision: KEEP
+- Owner: docs/project/security/security-architecture.md owns the Canonical question; linked providers may propose but cannot duplicate final state.
+- State Transition: proposed → validated → authorized or review_required → committed, rejected, stale or reconciled; control state and business state remain separate.
+- Failure: Missing provenance, version conflict, unavailable provider, timeout or incomplete review is a typed failure, not silent success.
+- Failure Propagation: Downstream receives blocked, stale, unsupported, unknown or review_required with a trace reference.
+- Retry: Retry only bounded idempotent transient work under the same input version; changed conditions require replan, reauthorization or reconciliation.
+- Recovery: Reload the last valid DomainVersion/PlanVersion, compare receipts and generations, then resume, retry, replan or request Human Review.
+- Idempotency: A stable operation identity and input version make duplicate delivery converge to one proposal, effect receipt or decision.
+- Security: Enforce tenant, matter, scope, capability/tool, secret and current policy epoch; untrusted content cannot change policy.
+- Observability: Trace Run/Plan/Step or Job, version, provider, evidence lineage, decision, receipt and failure class without hidden chain of thought.
+- Alternative: A simpler Host, library, worker or existing OSS remains preferred if it passes the same quality, recovery, security and cost checks.
+- OSS Alternative: Provider/framework substitution is allowed behind the Contract; license, build and operational qualification remain separate.
+- Tradeoff: Explicit Part A explanation and Part B fields add review and implementation work but reduce ambiguity, duplicate state and untestable claims.
+- Test / Benchmark: Review the concrete 09 Security scenario with stale input, duplicate delivery, permission change and provider failure; compare quality, latency, cost and recovery where applicable.
+- Evidence: This is a Target/document-quality decision; implementation, benchmark, security attestation and production evidence remain open.
+- Remaining Gap: DOC-R3-088
+- Reversal Condition: If the simpler alternative passes the same contract and scenario with no loss of quality, safety, recovery or ownership, docs/project/security/security-architecture.md must be simplified or externalized.
+- Delta Ref: D010
+- Document Impact: BOTH
+- Part A Change Required?: YES
+- Part B Change Required?: YES
+- Canonical Owner Doc: docs/project/security/security-architecture.md
+- Red Score Context: 4/5 reflects the remaining assumption or evidence gap, not runtime quality.
+
+## Q089
+
+- Question ID: Q089
+- Round ID: RB-WORKFLOW-V3-ROUND-003
+- Blue Answer: Preserve this responsibility only as a Target contract: the narrative must explain why the 10 Observability & Eval boundary exists, while the specification makes it testable. This does not establish Current or Production evidence.
+- Current / Target / Future / History: Current is limited to repository/status evidence already marked Current; Target is the Part A/Part B contract; Future is provider or topology expansion after evidence; History is the Superseded 11-module organization.
+- Problem: A reader or implementation can mistake a proposal, projection or control checkpoint for the stable legal responsibility described by the document.
+- Target Decision: KEEP
+- Owner: docs/project/eval/legal-eval-and-benchmark.md owns the Canonical question; linked providers may propose but cannot duplicate final state.
+- State Transition: proposed → validated → authorized or review_required → committed, rejected, stale or reconciled; control state and business state remain separate.
+- Failure: Missing provenance, version conflict, unavailable provider, timeout or incomplete review is a typed failure, not silent success.
+- Failure Propagation: Downstream receives blocked, stale, unsupported, unknown or review_required with a trace reference.
+- Retry: Retry only bounded idempotent transient work under the same input version; changed conditions require replan, reauthorization or reconciliation.
+- Recovery: Reload the last valid DomainVersion/PlanVersion, compare receipts and generations, then resume, retry, replan or request Human Review.
+- Idempotency: A stable operation identity and input version make duplicate delivery converge to one proposal, effect receipt or decision.
+- Security: Enforce tenant, matter, scope, capability/tool, secret and current policy epoch; untrusted content cannot change policy.
+- Observability: Trace Run/Plan/Step or Job, version, provider, evidence lineage, decision, receipt and failure class without hidden chain of thought.
+- Alternative: A simpler Host, library, worker or existing OSS remains preferred if it passes the same quality, recovery, security and cost checks.
+- OSS Alternative: Provider/framework substitution is allowed behind the Contract; license, build and operational qualification remain separate.
+- Tradeoff: Explicit Part A explanation and Part B fields add review and implementation work but reduce ambiguity, duplicate state and untestable claims.
+- Test / Benchmark: Review the concrete 10 Observability & Eval scenario with stale input, duplicate delivery, permission change and provider failure; compare quality, latency, cost and recovery where applicable.
+- Evidence: This is a Target/document-quality decision; implementation, benchmark, security attestation and production evidence remain open.
+- Remaining Gap: DOC-R3-089
+- Reversal Condition: If the simpler alternative passes the same contract and scenario with no loss of quality, safety, recovery or ownership, docs/project/eval/legal-eval-and-benchmark.md must be simplified or externalized.
+- Delta Ref: D011
+- Document Impact: BOTH
+- Part A Change Required?: YES
+- Part B Change Required?: YES
+- Canonical Owner Doc: docs/project/eval/legal-eval-and-benchmark.md
+- Red Score Context: 5/5 reflects the remaining assumption or evidence gap, not runtime quality.
+
+## Q090
+
+- Question ID: Q090
+- Round ID: RB-WORKFLOW-V3-ROUND-003
+- Blue Answer: Preserve this responsibility only as a Target contract: the narrative must explain why the 10 Observability & Eval boundary exists, while the specification makes it testable. This does not establish Current or Production evidence.
+- Current / Target / Future / History: Current is limited to repository/status evidence already marked Current; Target is the Part A/Part B contract; Future is provider or topology expansion after evidence; History is the Superseded 11-module organization.
+- Problem: A reader or implementation can mistake a proposal, projection or control checkpoint for the stable legal responsibility described by the document.
+- Target Decision: REFINE
+- Owner: docs/project/eval/legal-eval-and-benchmark.md owns the Canonical question; linked providers may propose but cannot duplicate final state.
+- State Transition: proposed → validated → authorized or review_required → committed, rejected, stale or reconciled; control state and business state remain separate.
+- Failure: Missing provenance, version conflict, unavailable provider, timeout or incomplete review is a typed failure, not silent success.
+- Failure Propagation: Downstream receives blocked, stale, unsupported, unknown or review_required with a trace reference.
+- Retry: Retry only bounded idempotent transient work under the same input version; changed conditions require replan, reauthorization or reconciliation.
+- Recovery: Reload the last valid DomainVersion/PlanVersion, compare receipts and generations, then resume, retry, replan or request Human Review.
+- Idempotency: A stable operation identity and input version make duplicate delivery converge to one proposal, effect receipt or decision.
+- Security: Enforce tenant, matter, scope, capability/tool, secret and current policy epoch; untrusted content cannot change policy.
+- Observability: Trace Run/Plan/Step or Job, version, provider, evidence lineage, decision, receipt and failure class without hidden chain of thought.
+- Alternative: A simpler Host, library, worker or existing OSS remains preferred if it passes the same quality, recovery, security and cost checks.
+- OSS Alternative: Provider/framework substitution is allowed behind the Contract; license, build and operational qualification remain separate.
+- Tradeoff: Explicit Part A explanation and Part B fields add review and implementation work but reduce ambiguity, duplicate state and untestable claims.
+- Test / Benchmark: Review the concrete 10 Observability & Eval scenario with stale input, duplicate delivery, permission change and provider failure; compare quality, latency, cost and recovery where applicable.
+- Evidence: This is a Target/document-quality decision; implementation, benchmark, security attestation and production evidence remain open.
+- Remaining Gap: DOC-R3-090
+- Reversal Condition: If the simpler alternative passes the same contract and scenario with no loss of quality, safety, recovery or ownership, docs/project/eval/legal-eval-and-benchmark.md must be simplified or externalized.
+- Delta Ref: D011
+- Document Impact: BOTH
+- Part A Change Required?: YES
+- Part B Change Required?: YES
+- Canonical Owner Doc: docs/project/eval/legal-eval-and-benchmark.md
+- Red Score Context: 3/5 reflects the remaining assumption or evidence gap, not runtime quality.
+
+## Q091
+
+- Question ID: Q091
+- Round ID: RB-WORKFLOW-V3-ROUND-003
+- Blue Answer: Preserve this responsibility only as a Target contract: the narrative must explain why the 10 Observability & Eval boundary exists, while the specification makes it testable. This does not establish Current or Production evidence.
+- Current / Target / Future / History: Current is limited to repository/status evidence already marked Current; Target is the Part A/Part B contract; Future is provider or topology expansion after evidence; History is the Superseded 11-module organization.
+- Problem: A reader or implementation can mistake a proposal, projection or control checkpoint for the stable legal responsibility described by the document.
+- Target Decision: KEEP
+- Owner: docs/project/eval/legal-eval-and-benchmark.md owns the Canonical question; linked providers may propose but cannot duplicate final state.
+- State Transition: proposed → validated → authorized or review_required → committed, rejected, stale or reconciled; control state and business state remain separate.
+- Failure: Missing provenance, version conflict, unavailable provider, timeout or incomplete review is a typed failure, not silent success.
+- Failure Propagation: Downstream receives blocked, stale, unsupported, unknown or review_required with a trace reference.
+- Retry: Retry only bounded idempotent transient work under the same input version; changed conditions require replan, reauthorization or reconciliation.
+- Recovery: Reload the last valid DomainVersion/PlanVersion, compare receipts and generations, then resume, retry, replan or request Human Review.
+- Idempotency: A stable operation identity and input version make duplicate delivery converge to one proposal, effect receipt or decision.
+- Security: Enforce tenant, matter, scope, capability/tool, secret and current policy epoch; untrusted content cannot change policy.
+- Observability: Trace Run/Plan/Step or Job, version, provider, evidence lineage, decision, receipt and failure class without hidden chain of thought.
+- Alternative: A simpler Host, library, worker or existing OSS remains preferred if it passes the same quality, recovery, security and cost checks.
+- OSS Alternative: Provider/framework substitution is allowed behind the Contract; license, build and operational qualification remain separate.
+- Tradeoff: Explicit Part A explanation and Part B fields add review and implementation work but reduce ambiguity, duplicate state and untestable claims.
+- Test / Benchmark: Review the concrete 10 Observability & Eval scenario with stale input, duplicate delivery, permission change and provider failure; compare quality, latency, cost and recovery where applicable.
+- Evidence: This is a Target/document-quality decision; implementation, benchmark, security attestation and production evidence remain open.
+- Remaining Gap: DOC-R3-091
+- Reversal Condition: If the simpler alternative passes the same contract and scenario with no loss of quality, safety, recovery or ownership, docs/project/eval/legal-eval-and-benchmark.md must be simplified or externalized.
+- Delta Ref: D011
+- Document Impact: BOTH
+- Part A Change Required?: YES
+- Part B Change Required?: YES
+- Canonical Owner Doc: docs/project/eval/legal-eval-and-benchmark.md
+- Red Score Context: 4/5 reflects the remaining assumption or evidence gap, not runtime quality.
+
+## Q092
+
+- Question ID: Q092
+- Round ID: RB-WORKFLOW-V3-ROUND-003
+- Blue Answer: Preserve this responsibility only as a Target contract: the narrative must explain why the 10 Observability & Eval boundary exists, while the specification makes it testable. This does not establish Current or Production evidence.
+- Current / Target / Future / History: Current is limited to repository/status evidence already marked Current; Target is the Part A/Part B contract; Future is provider or topology expansion after evidence; History is the Superseded 11-module organization.
+- Problem: A reader or implementation can mistake a proposal, projection or control checkpoint for the stable legal responsibility described by the document.
+- Target Decision: KEEP
+- Owner: docs/project/eval/legal-eval-and-benchmark.md owns the Canonical question; linked providers may propose but cannot duplicate final state.
+- State Transition: proposed → validated → authorized or review_required → committed, rejected, stale or reconciled; control state and business state remain separate.
+- Failure: Missing provenance, version conflict, unavailable provider, timeout or incomplete review is a typed failure, not silent success.
+- Failure Propagation: Downstream receives blocked, stale, unsupported, unknown or review_required with a trace reference.
+- Retry: Retry only bounded idempotent transient work under the same input version; changed conditions require replan, reauthorization or reconciliation.
+- Recovery: Reload the last valid DomainVersion/PlanVersion, compare receipts and generations, then resume, retry, replan or request Human Review.
+- Idempotency: A stable operation identity and input version make duplicate delivery converge to one proposal, effect receipt or decision.
+- Security: Enforce tenant, matter, scope, capability/tool, secret and current policy epoch; untrusted content cannot change policy.
+- Observability: Trace Run/Plan/Step or Job, version, provider, evidence lineage, decision, receipt and failure class without hidden chain of thought.
+- Alternative: A simpler Host, library, worker or existing OSS remains preferred if it passes the same quality, recovery, security and cost checks.
+- OSS Alternative: Provider/framework substitution is allowed behind the Contract; license, build and operational qualification remain separate.
+- Tradeoff: Explicit Part A explanation and Part B fields add review and implementation work but reduce ambiguity, duplicate state and untestable claims.
+- Test / Benchmark: Review the concrete 10 Observability & Eval scenario with stale input, duplicate delivery, permission change and provider failure; compare quality, latency, cost and recovery where applicable.
+- Evidence: This is a Target/document-quality decision; implementation, benchmark, security attestation and production evidence remain open.
+- Remaining Gap: DOC-R3-092
+- Reversal Condition: If the simpler alternative passes the same contract and scenario with no loss of quality, safety, recovery or ownership, docs/project/eval/legal-eval-and-benchmark.md must be simplified or externalized.
+- Delta Ref: D011
+- Document Impact: BOTH
+- Part A Change Required?: YES
+- Part B Change Required?: YES
+- Canonical Owner Doc: docs/project/eval/legal-eval-and-benchmark.md
+- Red Score Context: 4/5 reflects the remaining assumption or evidence gap, not runtime quality.
+
+## Q093
+
+- Question ID: Q093
+- Round ID: RB-WORKFLOW-V3-ROUND-003
+- Blue Answer: Preserve this responsibility only as a Target contract: the narrative must explain why the 10 Observability & Eval boundary exists, while the specification makes it testable. This does not establish Current or Production evidence.
+- Current / Target / Future / History: Current is limited to repository/status evidence already marked Current; Target is the Part A/Part B contract; Future is provider or topology expansion after evidence; History is the Superseded 11-module organization.
+- Problem: A reader or implementation can mistake a proposal, projection or control checkpoint for the stable legal responsibility described by the document.
+- Target Decision: KEEP
+- Owner: docs/project/eval/legal-eval-and-benchmark.md owns the Canonical question; linked providers may propose but cannot duplicate final state.
+- State Transition: proposed → validated → authorized or review_required → committed, rejected, stale or reconciled; control state and business state remain separate.
+- Failure: Missing provenance, version conflict, unavailable provider, timeout or incomplete review is a typed failure, not silent success.
+- Failure Propagation: Downstream receives blocked, stale, unsupported, unknown or review_required with a trace reference.
+- Retry: Retry only bounded idempotent transient work under the same input version; changed conditions require replan, reauthorization or reconciliation.
+- Recovery: Reload the last valid DomainVersion/PlanVersion, compare receipts and generations, then resume, retry, replan or request Human Review.
+- Idempotency: A stable operation identity and input version make duplicate delivery converge to one proposal, effect receipt or decision.
+- Security: Enforce tenant, matter, scope, capability/tool, secret and current policy epoch; untrusted content cannot change policy.
+- Observability: Trace Run/Plan/Step or Job, version, provider, evidence lineage, decision, receipt and failure class without hidden chain of thought.
+- Alternative: A simpler Host, library, worker or existing OSS remains preferred if it passes the same quality, recovery, security and cost checks.
+- OSS Alternative: Provider/framework substitution is allowed behind the Contract; license, build and operational qualification remain separate.
+- Tradeoff: Explicit Part A explanation and Part B fields add review and implementation work but reduce ambiguity, duplicate state and untestable claims.
+- Test / Benchmark: Review the concrete 10 Observability & Eval scenario with stale input, duplicate delivery, permission change and provider failure; compare quality, latency, cost and recovery where applicable.
+- Evidence: This is a Target/document-quality decision; implementation, benchmark, security attestation and production evidence remain open.
+- Remaining Gap: DOC-R3-093
+- Reversal Condition: If the simpler alternative passes the same contract and scenario with no loss of quality, safety, recovery or ownership, docs/project/eval/legal-eval-and-benchmark.md must be simplified or externalized.
+- Delta Ref: D011
+- Document Impact: BOTH
+- Part A Change Required?: YES
+- Part B Change Required?: YES
+- Canonical Owner Doc: docs/project/eval/legal-eval-and-benchmark.md
+- Red Score Context: 4/5 reflects the remaining assumption or evidence gap, not runtime quality.
+
+## Q094
+
+- Question ID: Q094
+- Round ID: RB-WORKFLOW-V3-ROUND-003
+- Blue Answer: Preserve this responsibility only as a Target contract: the narrative must explain why the 10 Observability & Eval boundary exists, while the specification makes it testable. This does not establish Current or Production evidence.
+- Current / Target / Future / History: Current is limited to repository/status evidence already marked Current; Target is the Part A/Part B contract; Future is provider or topology expansion after evidence; History is the Superseded 11-module organization.
+- Problem: A reader or implementation can mistake a proposal, projection or control checkpoint for the stable legal responsibility described by the document.
+- Target Decision: KEEP
+- Owner: docs/project/eval/legal-eval-and-benchmark.md owns the Canonical question; linked providers may propose but cannot duplicate final state.
+- State Transition: proposed → validated → authorized or review_required → committed, rejected, stale or reconciled; control state and business state remain separate.
+- Failure: Missing provenance, version conflict, unavailable provider, timeout or incomplete review is a typed failure, not silent success.
+- Failure Propagation: Downstream receives blocked, stale, unsupported, unknown or review_required with a trace reference.
+- Retry: Retry only bounded idempotent transient work under the same input version; changed conditions require replan, reauthorization or reconciliation.
+- Recovery: Reload the last valid DomainVersion/PlanVersion, compare receipts and generations, then resume, retry, replan or request Human Review.
+- Idempotency: A stable operation identity and input version make duplicate delivery converge to one proposal, effect receipt or decision.
+- Security: Enforce tenant, matter, scope, capability/tool, secret and current policy epoch; untrusted content cannot change policy.
+- Observability: Trace Run/Plan/Step or Job, version, provider, evidence lineage, decision, receipt and failure class without hidden chain of thought.
+- Alternative: A simpler Host, library, worker or existing OSS remains preferred if it passes the same quality, recovery, security and cost checks.
+- OSS Alternative: Provider/framework substitution is allowed behind the Contract; license, build and operational qualification remain separate.
+- Tradeoff: Explicit Part A explanation and Part B fields add review and implementation work but reduce ambiguity, duplicate state and untestable claims.
+- Test / Benchmark: Review the concrete 10 Observability & Eval scenario with stale input, duplicate delivery, permission change and provider failure; compare quality, latency, cost and recovery where applicable.
+- Evidence: This is a Target/document-quality decision; implementation, benchmark, security attestation and production evidence remain open.
+- Remaining Gap: DOC-R3-094
+- Reversal Condition: If the simpler alternative passes the same contract and scenario with no loss of quality, safety, recovery or ownership, docs/project/eval/legal-eval-and-benchmark.md must be simplified or externalized.
+- Delta Ref: D011
+- Document Impact: BOTH
+- Part A Change Required?: YES
+- Part B Change Required?: YES
+- Canonical Owner Doc: docs/project/eval/legal-eval-and-benchmark.md
+- Red Score Context: 4/5 reflects the remaining assumption or evidence gap, not runtime quality.
+
+## Q095
+
+- Question ID: Q095
+- Round ID: RB-WORKFLOW-V3-ROUND-003
+- Blue Answer: Preserve this responsibility only as a Target contract: the narrative must explain why the 11 Infrastructure boundary exists, while the specification makes it testable. This does not establish Current or Production evidence.
+- Current / Target / Future / History: Current is limited to repository/status evidence already marked Current; Target is the Part A/Part B contract; Future is provider or topology expansion after evidence; History is the Superseded 11-module organization.
+- Problem: A reader or implementation can mistake a proposal, projection or control checkpoint for the stable legal responsibility described by the document.
+- Target Decision: KEEP
+- Owner: docs/project/deployment/microservice-deployment.md owns the Canonical question; linked providers may propose but cannot duplicate final state.
+- State Transition: proposed → validated → authorized or review_required → committed, rejected, stale or reconciled; control state and business state remain separate.
+- Failure: Missing provenance, version conflict, unavailable provider, timeout or incomplete review is a typed failure, not silent success.
+- Failure Propagation: Downstream receives blocked, stale, unsupported, unknown or review_required with a trace reference.
+- Retry: Retry only bounded idempotent transient work under the same input version; changed conditions require replan, reauthorization or reconciliation.
+- Recovery: Reload the last valid DomainVersion/PlanVersion, compare receipts and generations, then resume, retry, replan or request Human Review.
+- Idempotency: A stable operation identity and input version make duplicate delivery converge to one proposal, effect receipt or decision.
+- Security: Enforce tenant, matter, scope, capability/tool, secret and current policy epoch; untrusted content cannot change policy.
+- Observability: Trace Run/Plan/Step or Job, version, provider, evidence lineage, decision, receipt and failure class without hidden chain of thought.
+- Alternative: A simpler Host, library, worker or existing OSS remains preferred if it passes the same quality, recovery, security and cost checks.
+- OSS Alternative: Provider/framework substitution is allowed behind the Contract; license, build and operational qualification remain separate.
+- Tradeoff: Explicit Part A explanation and Part B fields add review and implementation work but reduce ambiguity, duplicate state and untestable claims.
+- Test / Benchmark: Review the concrete 11 Infrastructure scenario with stale input, duplicate delivery, permission change and provider failure; compare quality, latency, cost and recovery where applicable.
+- Evidence: This is a Target/document-quality decision; implementation, benchmark, security attestation and production evidence remain open.
+- Remaining Gap: DOC-R3-095
+- Reversal Condition: If the simpler alternative passes the same contract and scenario with no loss of quality, safety, recovery or ownership, docs/project/deployment/microservice-deployment.md must be simplified or externalized.
+- Delta Ref: D012
+- Document Impact: PART_B
+- Part A Change Required?: NO
+- Part B Change Required?: YES
+- Canonical Owner Doc: docs/project/deployment/microservice-deployment.md
+- Red Score Context: 4/5 reflects the remaining assumption or evidence gap, not runtime quality.
+
+## Q096
+
+- Question ID: Q096
+- Round ID: RB-WORKFLOW-V3-ROUND-003
+- Blue Answer: Preserve this responsibility only as a Target contract: the narrative must explain why the 11 Infrastructure boundary exists, while the specification makes it testable. This does not establish Current or Production evidence.
+- Current / Target / Future / History: Current is limited to repository/status evidence already marked Current; Target is the Part A/Part B contract; Future is provider or topology expansion after evidence; History is the Superseded 11-module organization.
+- Problem: A reader or implementation can mistake a proposal, projection or control checkpoint for the stable legal responsibility described by the document.
+- Target Decision: KEEP
+- Owner: docs/project/deployment/microservice-deployment.md owns the Canonical question; linked providers may propose but cannot duplicate final state.
+- State Transition: proposed → validated → authorized or review_required → committed, rejected, stale or reconciled; control state and business state remain separate.
+- Failure: Missing provenance, version conflict, unavailable provider, timeout or incomplete review is a typed failure, not silent success.
+- Failure Propagation: Downstream receives blocked, stale, unsupported, unknown or review_required with a trace reference.
+- Retry: Retry only bounded idempotent transient work under the same input version; changed conditions require replan, reauthorization or reconciliation.
+- Recovery: Reload the last valid DomainVersion/PlanVersion, compare receipts and generations, then resume, retry, replan or request Human Review.
+- Idempotency: A stable operation identity and input version make duplicate delivery converge to one proposal, effect receipt or decision.
+- Security: Enforce tenant, matter, scope, capability/tool, secret and current policy epoch; untrusted content cannot change policy.
+- Observability: Trace Run/Plan/Step or Job, version, provider, evidence lineage, decision, receipt and failure class without hidden chain of thought.
+- Alternative: A simpler Host, library, worker or existing OSS remains preferred if it passes the same quality, recovery, security and cost checks.
+- OSS Alternative: Provider/framework substitution is allowed behind the Contract; license, build and operational qualification remain separate.
+- Tradeoff: Explicit Part A explanation and Part B fields add review and implementation work but reduce ambiguity, duplicate state and untestable claims.
+- Test / Benchmark: Review the concrete 11 Infrastructure scenario with stale input, duplicate delivery, permission change and provider failure; compare quality, latency, cost and recovery where applicable.
+- Evidence: This is a Target/document-quality decision; implementation, benchmark, security attestation and production evidence remain open.
+- Remaining Gap: DOC-R3-096
+- Reversal Condition: If the simpler alternative passes the same contract and scenario with no loss of quality, safety, recovery or ownership, docs/project/deployment/microservice-deployment.md must be simplified or externalized.
+- Delta Ref: D012
+- Document Impact: PART_B
+- Part A Change Required?: NO
+- Part B Change Required?: YES
+- Canonical Owner Doc: docs/project/deployment/microservice-deployment.md
+- Red Score Context: 4/5 reflects the remaining assumption or evidence gap, not runtime quality.
+
+## Q097
+
+- Question ID: Q097
+- Round ID: RB-WORKFLOW-V3-ROUND-003
+- Blue Answer: Preserve this responsibility only as a Target contract: the narrative must explain why the 11 Infrastructure boundary exists, while the specification makes it testable. This does not establish Current or Production evidence.
+- Current / Target / Future / History: Current is limited to repository/status evidence already marked Current; Target is the Part A/Part B contract; Future is provider or topology expansion after evidence; History is the Superseded 11-module organization.
+- Problem: A reader or implementation can mistake a proposal, projection or control checkpoint for the stable legal responsibility described by the document.
+- Target Decision: MEASUREMENT_GAP
+- Owner: docs/project/deployment/microservice-deployment.md owns the Canonical question; linked providers may propose but cannot duplicate final state.
+- State Transition: proposed → validated → authorized or review_required → committed, rejected, stale or reconciled; control state and business state remain separate.
+- Failure: Missing provenance, version conflict, unavailable provider, timeout or incomplete review is a typed failure, not silent success.
+- Failure Propagation: Downstream receives blocked, stale, unsupported, unknown or review_required with a trace reference.
+- Retry: Retry only bounded idempotent transient work under the same input version; changed conditions require replan, reauthorization or reconciliation.
+- Recovery: Reload the last valid DomainVersion/PlanVersion, compare receipts and generations, then resume, retry, replan or request Human Review.
+- Idempotency: A stable operation identity and input version make duplicate delivery converge to one proposal, effect receipt or decision.
+- Security: Enforce tenant, matter, scope, capability/tool, secret and current policy epoch; untrusted content cannot change policy.
+- Observability: Trace Run/Plan/Step or Job, version, provider, evidence lineage, decision, receipt and failure class without hidden chain of thought.
+- Alternative: A simpler Host, library, worker or existing OSS remains preferred if it passes the same quality, recovery, security and cost checks.
+- OSS Alternative: Provider/framework substitution is allowed behind the Contract; license, build and operational qualification remain separate.
+- Tradeoff: Explicit Part A explanation and Part B fields add review and implementation work but reduce ambiguity, duplicate state and untestable claims.
+- Test / Benchmark: Review the concrete 11 Infrastructure scenario with stale input, duplicate delivery, permission change and provider failure; compare quality, latency, cost and recovery where applicable.
+- Evidence: This is a Target/document-quality decision; implementation, benchmark, security attestation and production evidence remain open.
+- Remaining Gap: DOC-R3-097
+- Reversal Condition: If the simpler alternative passes the same contract and scenario with no loss of quality, safety, recovery or ownership, docs/project/deployment/microservice-deployment.md must be simplified or externalized.
+- Delta Ref: D012
+- Document Impact: PART_B
+- Part A Change Required?: NO
+- Part B Change Required?: YES
+- Canonical Owner Doc: docs/project/deployment/microservice-deployment.md
+- Red Score Context: 2/5 reflects the remaining assumption or evidence gap, not runtime quality.
+
+## Q098
+
+- Question ID: Q098
+- Round ID: RB-WORKFLOW-V3-ROUND-003
+- Blue Answer: Preserve this responsibility only as a Target contract: the narrative must explain why the 11 Infrastructure boundary exists, while the specification makes it testable. This does not establish Current or Production evidence.
+- Current / Target / Future / History: Current is limited to repository/status evidence already marked Current; Target is the Part A/Part B contract; Future is provider or topology expansion after evidence; History is the Superseded 11-module organization.
+- Problem: A reader or implementation can mistake a proposal, projection or control checkpoint for the stable legal responsibility described by the document.
+- Target Decision: KEEP
+- Owner: docs/project/deployment/microservice-deployment.md owns the Canonical question; linked providers may propose but cannot duplicate final state.
+- State Transition: proposed → validated → authorized or review_required → committed, rejected, stale or reconciled; control state and business state remain separate.
+- Failure: Missing provenance, version conflict, unavailable provider, timeout or incomplete review is a typed failure, not silent success.
+- Failure Propagation: Downstream receives blocked, stale, unsupported, unknown or review_required with a trace reference.
+- Retry: Retry only bounded idempotent transient work under the same input version; changed conditions require replan, reauthorization or reconciliation.
+- Recovery: Reload the last valid DomainVersion/PlanVersion, compare receipts and generations, then resume, retry, replan or request Human Review.
+- Idempotency: A stable operation identity and input version make duplicate delivery converge to one proposal, effect receipt or decision.
+- Security: Enforce tenant, matter, scope, capability/tool, secret and current policy epoch; untrusted content cannot change policy.
+- Observability: Trace Run/Plan/Step or Job, version, provider, evidence lineage, decision, receipt and failure class without hidden chain of thought.
+- Alternative: A simpler Host, library, worker or existing OSS remains preferred if it passes the same quality, recovery, security and cost checks.
+- OSS Alternative: Provider/framework substitution is allowed behind the Contract; license, build and operational qualification remain separate.
+- Tradeoff: Explicit Part A explanation and Part B fields add review and implementation work but reduce ambiguity, duplicate state and untestable claims.
+- Test / Benchmark: Review the concrete 11 Infrastructure scenario with stale input, duplicate delivery, permission change and provider failure; compare quality, latency, cost and recovery where applicable.
+- Evidence: This is a Target/document-quality decision; implementation, benchmark, security attestation and production evidence remain open.
+- Remaining Gap: DOC-R3-098
+- Reversal Condition: If the simpler alternative passes the same contract and scenario with no loss of quality, safety, recovery or ownership, docs/project/deployment/microservice-deployment.md must be simplified or externalized.
+- Delta Ref: D012
+- Document Impact: PART_B
+- Part A Change Required?: NO
+- Part B Change Required?: YES
+- Canonical Owner Doc: docs/project/deployment/microservice-deployment.md
+- Red Score Context: 4/5 reflects the remaining assumption or evidence gap, not runtime quality.
+
+## Q099
+
+- Question ID: Q099
+- Round ID: RB-WORKFLOW-V3-ROUND-003
+- Blue Answer: Preserve this responsibility only as a Target contract: the narrative must explain why the 11 Infrastructure boundary exists, while the specification makes it testable. This does not establish Current or Production evidence.
+- Current / Target / Future / History: Current is limited to repository/status evidence already marked Current; Target is the Part A/Part B contract; Future is provider or topology expansion after evidence; History is the Superseded 11-module organization.
+- Problem: A reader or implementation can mistake a proposal, projection or control checkpoint for the stable legal responsibility described by the document.
+- Target Decision: KEEP
+- Owner: docs/project/deployment/microservice-deployment.md owns the Canonical question; linked providers may propose but cannot duplicate final state.
+- State Transition: proposed → validated → authorized or review_required → committed, rejected, stale or reconciled; control state and business state remain separate.
+- Failure: Missing provenance, version conflict, unavailable provider, timeout or incomplete review is a typed failure, not silent success.
+- Failure Propagation: Downstream receives blocked, stale, unsupported, unknown or review_required with a trace reference.
+- Retry: Retry only bounded idempotent transient work under the same input version; changed conditions require replan, reauthorization or reconciliation.
+- Recovery: Reload the last valid DomainVersion/PlanVersion, compare receipts and generations, then resume, retry, replan or request Human Review.
+- Idempotency: A stable operation identity and input version make duplicate delivery converge to one proposal, effect receipt or decision.
+- Security: Enforce tenant, matter, scope, capability/tool, secret and current policy epoch; untrusted content cannot change policy.
+- Observability: Trace Run/Plan/Step or Job, version, provider, evidence lineage, decision, receipt and failure class without hidden chain of thought.
+- Alternative: A simpler Host, library, worker or existing OSS remains preferred if it passes the same quality, recovery, security and cost checks.
+- OSS Alternative: Provider/framework substitution is allowed behind the Contract; license, build and operational qualification remain separate.
+- Tradeoff: Explicit Part A explanation and Part B fields add review and implementation work but reduce ambiguity, duplicate state and untestable claims.
+- Test / Benchmark: Review the concrete 11 Infrastructure scenario with stale input, duplicate delivery, permission change and provider failure; compare quality, latency, cost and recovery where applicable.
+- Evidence: This is a Target/document-quality decision; implementation, benchmark, security attestation and production evidence remain open.
+- Remaining Gap: DOC-R3-099
+- Reversal Condition: If the simpler alternative passes the same contract and scenario with no loss of quality, safety, recovery or ownership, docs/project/deployment/microservice-deployment.md must be simplified or externalized.
+- Delta Ref: D012
+- Document Impact: PART_B
+- Part A Change Required?: NO
+- Part B Change Required?: YES
+- Canonical Owner Doc: docs/project/deployment/microservice-deployment.md
+- Red Score Context: 4/5 reflects the remaining assumption or evidence gap, not runtime quality.
+
+## Q100
+
+- Question ID: Q100
+- Round ID: RB-WORKFLOW-V3-ROUND-003
+- Blue Answer: Preserve this responsibility only as a Target contract: the narrative must explain why the 11 Infrastructure boundary exists, while the specification makes it testable. This does not establish Current or Production evidence.
+- Current / Target / Future / History: Current is limited to repository/status evidence already marked Current; Target is the Part A/Part B contract; Future is provider or topology expansion after evidence; History is the Superseded 11-module organization.
+- Problem: A reader or implementation can mistake a proposal, projection or control checkpoint for the stable legal responsibility described by the document.
+- Target Decision: REFINE
+- Owner: docs/project/deployment/microservice-deployment.md owns the Canonical question; linked providers may propose but cannot duplicate final state.
+- State Transition: proposed → validated → authorized or review_required → committed, rejected, stale or reconciled; control state and business state remain separate.
+- Failure: Missing provenance, version conflict, unavailable provider, timeout or incomplete review is a typed failure, not silent success.
+- Failure Propagation: Downstream receives blocked, stale, unsupported, unknown or review_required with a trace reference.
+- Retry: Retry only bounded idempotent transient work under the same input version; changed conditions require replan, reauthorization or reconciliation.
+- Recovery: Reload the last valid DomainVersion/PlanVersion, compare receipts and generations, then resume, retry, replan or request Human Review.
+- Idempotency: A stable operation identity and input version make duplicate delivery converge to one proposal, effect receipt or decision.
+- Security: Enforce tenant, matter, scope, capability/tool, secret and current policy epoch; untrusted content cannot change policy.
+- Observability: Trace Run/Plan/Step or Job, version, provider, evidence lineage, decision, receipt and failure class without hidden chain of thought.
+- Alternative: A simpler Host, library, worker or existing OSS remains preferred if it passes the same quality, recovery, security and cost checks.
+- OSS Alternative: Provider/framework substitution is allowed behind the Contract; license, build and operational qualification remain separate.
+- Tradeoff: Explicit Part A explanation and Part B fields add review and implementation work but reduce ambiguity, duplicate state and untestable claims.
+- Test / Benchmark: Review the concrete 11 Infrastructure scenario with stale input, duplicate delivery, permission change and provider failure; compare quality, latency, cost and recovery where applicable.
+- Evidence: This is a Target/document-quality decision; implementation, benchmark, security attestation and production evidence remain open.
+- Remaining Gap: DOC-R3-100
+- Reversal Condition: If the simpler alternative passes the same contract and scenario with no loss of quality, safety, recovery or ownership, docs/project/deployment/microservice-deployment.md must be simplified or externalized.
+- Delta Ref: D012
+- Document Impact: PART_B
+- Part A Change Required?: NO
+- Part B Change Required?: YES
+- Canonical Owner Doc: docs/project/deployment/microservice-deployment.md
+- Red Score Context: 3/5 reflects the remaining assumption or evidence gap, not runtime quality.

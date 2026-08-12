@@ -5,6 +5,33 @@ architecture_state: ACCEPTED_TARGET
 canonical_question: Multi-Agent 的协作层级、共享状态和服务边界是什么？
 owner: Agent Runtime Service
 
+## Part A — Architecture Narrative
+
+多个 Agent profile 只有在它们带来清晰的角色隔离、并行收益或不同权限/资源策略时才有意义。
+复杂案件分析可以先由一个 Coordinator 生成 Plan，再让 Evidence、Dispute 和 Legal Research
+profile 作为短生命周期 worker 并行执行；它们共享同一 Domain、Capability、Knowledge、Security
+和 Eval Contract，因此不会因为角色不同就复制法律业务代码。
+
+默认选择是 L0 Single Agent、L1 Role Pipeline 或 L2 Ephemeral Worker。L3 Specialized Profile
+需要可解释的角色、权限、知识范围或模型策略；L4 Persistent Team 只有在独立长期状态、SLA、
+资源池或发布生命周期被证明时才值得保留。L5 Autonomous Society 不属于当前目标。
+
+如果一个强 Agent + parallel tools 已经达到相同的证据充分性、人工接受率、延迟和成本，多 Agent
+拓扑应删除。主要失败是 delegation 放大权限、共享 Context 污染或一个 worker 的恢复状态与主
+Controller 不一致；因此协作必须通过受版本约束的 Proposal、Snapshot 和 Receipt，而不是自由写共享事实。
+Multi-Agent 不负责拥有 Canonical Fact、Permission、Secret 或最终 WorkProduct；这些责任留在
+对应 Owner。
+
+## Part B — Detailed Architecture Specification
+
+### Delegation and shared-state contract
+
+Coordinator 只向 profile/worker 发送受 `RunId`、`PlanVersion`、`DomainVersion`、scope、budget 和
+permission downscope 约束的任务；worker 返回 Proposal、Observation、Reference 或 Receipt，不得
+直接写共享 Domain State。Join 以 branch identity 和 input version 去重，重复结果幂等；失败分为
+worker retry、replan、cancel、blocked 或 manual review。Delegation 不能扩大权限、Memory scope 或
+Tool grant；恢复时 Runtime 先对账 branch receipt，再恢复或创建新的 PlanVersion。
+
 ## Levels
 
 ```text

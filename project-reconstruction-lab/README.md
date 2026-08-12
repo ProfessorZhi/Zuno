@@ -111,11 +111,13 @@ project-reconstruction-lab/
 └─ legacy/         # 旧编号文档和旧 Skill Spec，可追溯但不再是主入口
 ```
 
-V2 Red/Blue Round 的历史执行契约见 `05-red-blue/round-protocol-v2.md`；永久工作流以
-`05-red-blue/round-protocol-v3.md` 为准，11+1 覆盖见 `05-red-blue/11-plus-1-canonical-coverage-map.md`。
+V2 Red/Blue Round 的历史执行契约见 `05-red-blue/round-protocol-v2.md`；Round-002 使用 V3，
+当前永久工作流以 `05-red-blue/round-protocol-v3.1.md` 为准，11+1 覆盖见
+`05-red-blue/11-plus-1-canonical-coverage-map.md`。
 Round-001 的完整 100 题记录位于 `sessions/RB-WORKFLOW-V2-001/`，保持 immutable history；
 Round-002 位于 `sessions/RB-WORKFLOW-V3-ROUND-002/`，按 V3 完成 Question → Answer → Score
-→ Decision → Delta → Canonical Sync。
+→ Decision → Delta → Canonical Sync。Round-003 使用 V3.1，额外审查 Canonical Part A / Part B
+质量和每题 `document_impact`。
 
 Round-001 后的 Blue Repair 记录位于 `sessions/RB-BLUE-REPAIR-001/`。它负责根因聚类、Part-A
 修复、Severity Reclassification、P0 Burn-down 和 Counter Retest；它不是第二轮 100Q，也不
@@ -242,6 +244,8 @@ python tools/scripts/verify_red_blue_round_v2.py
 python tools/scripts/verify_red_blue_round_v3.py
 python tools/scripts/verify_red_blue_score_v3.py
 python tools/scripts/verify_canonical_diff_v3.py
+python tools/scripts/verify_red_blue_round_v31.py
+python tools/scripts/verify_document_quality_v31.py
 ```
 
 完整 CI 未运行时，不得写 `CI PASS`。

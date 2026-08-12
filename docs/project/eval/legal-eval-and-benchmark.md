@@ -6,6 +6,33 @@ canonical_question: 如何公平测量法律质量、效率、安全和服务复
 owner: Eval / Observability
 replaces: `docs/project/modules/10-observability-eval.md`（Superseded）
 
+## Part A — Architecture Narrative
+
+法律系统不能用一个 LLM Judge 分数回答“是否做得对”。法院或律师真正关心的是证据是否充分、
+引用是否落到正确材料、冲突是否被发现、结论是否适用、人工是否愿意接受，以及系统是否在预算
+和时间内完成。更重要的是，评测必须把 Legal Capability 的价值与 Native Runtime 的额外价值
+分开，否则一个更好的模型或 Prompt 会被误认为是 Domain-aware Runtime 的收益。
+
+因此先用同模型、同语料、同工具和同预算比较 A Generic Host、B Host + Zuno Legal Capabilities、
+C Zuno Runtime + first-class Domain State。再按 QueryClass、缺证、冲突、法条版本变化和 stale
+行为做功能性测试。评测结果只能说明指定数据切片和协议下的表现，不能自动升级历史事实、Current
+质量或 Production Readiness。
+
+主要失败是分母变化、随机切片不一致、引用正确但证据不足、只测最终文本不测恢复和成本，或把
+blocked/unavailable 当作零分。Eval Worker 负责保留原始结果、trace、reviewer protocol 和 release
+gate；如果 C 与 B 无稳定差异，就应收缩 Native Runtime；如果 Graph 与 Hybrid 无收益，Graph
+默认路径也应被删除。
+
+## Part B — Detailed Architecture Specification
+
+### Evaluation run contract
+
+每个 EvaluationRun 固定 DatasetVersion、CaseSetHash、Variant、Model/Prompt/Skill、Tool/Provider、
+Token/Time budget、QueryClass、随机种子、retrieval rounds、reviewer protocol 和 trace。RawResult、
+Metric、FailureClass、Comparison 和 ReleaseDecision 分开保存；BLOCKED、UNAVAILABLE、INCOMPARABLE
+不能折算为零或 PASS。A/B/C、Graph-vs-Hybrid 和 L0-L4 都必须使用同一切片和可复现分母，并同时
+报告质量、效率、安全和复杂度指标。
+
 ## A/B/C
 
 | Variant | fixed | variable |
@@ -64,23 +91,13 @@ staleness/dependency 或 Review 对账，才可以支持 Native Runtime 的保�
 
 Eval/benchmark runs are asynchronous batch jobs. Product API submits a job and returns receipt; Eval Worker owns dataset/run/result/release gate facts. It不能提升 Domain Finding、质量或 Production Readiness，除非有通过的证据协议。
 
-`A/B/C` 是 `Q039-B / P0-E` 的 Target Contract，不是已执行结果。相同模型、语料、工具、预算和
-评测集下，只有 `C >> B >> A` 且收益可归因于 first-class Domain State、EvidenceRequirement、
-staleness/dependency 或 Review 对账，才允许 Native Runtime 继续存在；`C ≈ B >> A` 应收缩为
-Legal Backend；`C ≈ B ≈ A` 必须删除无证据复杂度。
+`A/B/C` 是 Target Contract，不是已执行结果。相同模型、语料、工具、预算和评测集下，只有
+`C >> B >> A` 且收益可归因于 first-class Domain State、EvidenceRequirement、staleness/dependency
+或 Review 对账，才允许 Native Runtime 继续存在；`C ≈ B >> A` 应收缩为 Legal Backend；
+`C ≈ B ≈ A` 必须删除无证据复杂度。
 
 ## Current / Target / Gap
 
 - Current：仓库有 eval tooling、trace structures and blocked/not-measured status；没有公平 A/B/C 运行结果。
 - Target：独立 Eval/Trace Worker 与可复现 release gate。
 - Gap：法律真实数据、标注、reviewer protocol、重复运行、成本/延迟和 service-level evidence。
-
-## Round-002 Target refinements（D004、D010）
-
-每个检索或 Agent 评测 run 必须记录 query class、数据切片、模型/Prompt/Skill、工具、预算、
-检索轮次、CitationLineage、reviewer protocol 和失败类型；分母、随机切片、重复运行和排除规则
-必须可复现。Graph 只能通过同 corpus、同模型、同预算的消融进入默认路径。
-
-Legal Intelligence 与 Domain-aware Runtime 的价值继续按 A/B/C 分层：若 `C≈B>A`，保留
-Legal Backend 并缩减 Native Runtime；若 `C≈B≈A`，删除无测量收益的复杂度。Round-002 没有任何
-实测质量、效率、安全或生产结论。

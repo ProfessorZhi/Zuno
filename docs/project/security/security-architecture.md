@@ -6,6 +6,32 @@ canonical_question: 身份、权限、Secret、Sandbox、网络和副作用如�
 owner: Security Decision Owner
 replaces: `docs/project/modules/09-security.md`（Superseded）
 
+## Part A — Architecture Narrative
+
+法律场景的安全目标不是拥有最多的安全名词，而是让每一次读取、模型调用和外部动作都能说明
+谁在什么 Matter/Scope 下、以哪一版权限、对哪个对象做了什么。Prompt Injection 属于不可信内容，
+不能改变 Grant；Agent 可以提出 Action，但不能自己扩展 Tool 权限、读取 plaintext Secret 或批准
+不可逆副作用。
+
+以“案件文档诱导 Agent 调用外部 API”为例，系统先把任务和权限 downscope，生成绑定参数和范围
+的 PreparedAction，执行前按当前 SecurityEpoch 重新授权，必要时等待人工 Approval，最后由 Sandbox
+执行并记录 EffectReceipt。撤权、参数、ToolVersion 或 Secret 变化会使旧批准失效。timeout 不能
+直接视为失败或安全重试，因为 provider 可能已经执行。
+
+这条链会增加授权检查和审计成本，但比“模型输出一段调用参数，服务直接执行”更可验证。安全
+差异的目标是 Source Audit、Build Reproducibility、No-egress、Secret Trace、Sandbox Boundary
+和 Cross-tenant Evidence；在这些证据出现前，不能宣称当前系统已经安全或生产合规。
+
+## Part B — Detailed Architecture Specification
+
+### Authorization and effect contract
+
+`PreparedAction` 必须绑定 canonical action hash、Subject、Tenant、Scope、ToolVersion、Arguments、
+EffectScope、SecurityEpoch、Approval 和 Expiry。执行前重新授权，执行后写 EffectReceipt、provider
+operation ID 和 durable audit。任何 revoke、参数/版本/Secret 变化都使旧批准失效；timeout 进入
+outcome_unknown/reconciling/manual_review，不直接 retry 不可逆动作。所有服务和 worker 都执行同一
+策略，Prompt Injection 永远不能改变 policy decision。
+
 ## Boundary
 
 Security owns Principal/Tenant/Workspace/Grant/Policy/SecurityEpoch/Approval decisions and audit authority. Platform Domain stores business authorization references; Tool/Sandbox enforces action gates; Agent Runtime cannot mint permission or access plaintext Secret.
@@ -40,13 +66,3 @@ Tool/Sandbox 的 Target Effect 状态包括 `proposed`、`validated`、`authoriz
 - Target：security decision authority + enforcement in every service and worker；保留独立 Sandbox
   Boundary，但 Docker/Deno 或其他执行 Provider 仍待外部资格测试。
 - Gap：offline egress、secret leakage、tenant isolation、revocation、sandbox escape、duplicate side effect、artifact attestation。
-
-## Round-002 Target refinement（D009）
-
-执行授权必须绑定 canonical action hash、Subject/Tenant/Scope、ToolVersion、Arguments、Effect
-Scope、SecurityEpoch、Approval 和 Expiry；执行前再次验证，执行后以 EffectReceipt 和 durable audit
-记录结果。授权、撤销、Secret 变化或参数变化时，旧 approval 失效；timeout/unknown outcome 进入
-reconciliation 或 manual review，不能直接 retry 不可逆副作用。
-
-这是可验证性 Target，不是“已经安全”的声明。no-egress、tenant isolation、secret leakage、
-sandbox escape 和 signed artifact 仍需真实测试与 attestation。

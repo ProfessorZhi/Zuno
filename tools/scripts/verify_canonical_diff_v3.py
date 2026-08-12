@@ -56,8 +56,17 @@ def verify_canonical_diff(session: Path) -> list[str]:
             doc_path = ROOT / doc
             if not doc_path.exists():
                 errors.append(f"{delta_id} Canonical Doc does not exist: {doc}")
-            elif "Round-002" not in doc_path.read_text(encoding="utf-8"):
-                errors.append(f"{delta_id} Canonical Doc lacks the Round-002 sync marker: {doc}")
+            else:
+                doc_text = doc_path.read_text(encoding="utf-8")
+                legacy_marker = "Round-002" in doc_text
+                v31_structure = (
+                    "## Part A — Architecture Narrative" in doc_text
+                    and "## Part B — Detailed Architecture Specification" in doc_text
+                )
+                if not legacy_marker and not v31_structure:
+                    errors.append(
+                        f"{delta_id} Canonical Doc lacks a legacy Round-002 marker or V3.1 Part A/Part B structure: {doc}"
+                    )
             if doc not in diff:
                 errors.append(f"{delta_id} AUTO_APPLY Canonical Doc not changed from baseline: {doc}")
     if not all_mapped:

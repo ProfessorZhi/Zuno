@@ -106,8 +106,10 @@ Fact Depth Recovery              IN_PROGRESS
 Product Problem Reconstruction   IN_PROGRESS
 Architecture Red/Blue            READY / IN_PROGRESS
 Architecture Red/Blue Round-002   COMPLETE (V3, 100Q, 80 NOVEL / 20 REGRESSION)
+Architecture Red/Blue Round-003   COMPLETE (V3.1, 100Q, 85 NOVEL / 15 REGRESSION)
 Interview Red Team               READY
 Canonical Architecture Sync      APPLIED / ACCEPTED_TARGET (Round-002 refinements)
+Document Quality V3.1             COMPLETE (Part A >= 80 / Part B >= 85)
 Implementation Program           READY_FOR_TASK_DEFINITION (not active)
 ```
 
@@ -162,12 +164,31 @@ P0 / P1 / P2 / P3                8 / 23 / 69 / 0
 A / I / E / X                    0 / 5 / 3 / 0
 New A-P0                         0
 Canonical Sync                   APPLIED (Target refinements only)
-Round-003                       READY_NOT_STARTED
+Round-003                       COMPLETE (V3.1 documentation quality)
 ```
 
 V3 Round-002 没有关闭原始 P0，也没有改变 Current、Facts、Runtime、Schema/Migration、生产或
 依赖状态。其完整记录位于 `project-reconstruction-lab/sessions/RB-WORKFLOW-V3-ROUND-002/`；
 Round 文件关闭后按 immutable archive 处理。
+
+## V3.1 Round-003 status
+
+```text
+Protocol                         ZUNO-RED-BLUE-WORKFLOW-V3.1
+Round                            RB-WORKFLOW-V3-ROUND-003
+Questions / Answers / Scores     100 / 100 / 100
+Novel / Regression               85 / 15
+Raw / Normalized Score           392/500 / 78.40
+Part A / Part B Quality Gate     PASS / PASS
+Document Quality                 DOC_QUALITY_COMPLETE
+New A-P0                         0
+Canonical Sync                   APPLIED (documentation Target refinement only)
+Round-004                       READY_NOT_STARTED
+```
+
+Round-003 只修复 Canonical 文档的同文件 Part A/Part B 可读性与 Contract 表达，删除过程性
+Round trace；没有改变 Facts、Runtime、Schema/Migration、依赖、生产状态或既有 ADR 原则。完整
+记录位于 `project-reconstruction-lab/sessions/RB-WORKFLOW-V3-ROUND-003/`。
 
 ## Evidence Closure status
 

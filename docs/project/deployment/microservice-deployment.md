@@ -6,6 +6,36 @@ canonical_question: Python services、workers、基础设施和部署 Profile �
 owner: Deployment / SRE
 replaces: `docs/project/modules/11-infrastructure.md`（Superseded）
 
+## Part A — Architecture Narrative
+
+部署设计要解决的是 workload heterogeneity，而不是用用户数量证明微服务。一次法律任务的短
+API 请求、LLM-bound 长运行、OCR/Embedding/Graph 的 CPU/GPU/IO 批处理、Sandbox 的安全隔离和
+Eval 的离线成本曲线不同；它们需要不同的资源池、超时、backpressure、failure domain 和扩缩容
+策略。
+
+因此 Target 允许几个 network-facing Python service role 加独立 workers，但不把逻辑领域、服务、
+进程、容器和团队强行一一对应。Developer 可以用 Compose 验证合同，Staging 关注真实队列、故障
+注入和观测，Production 才需要 HA、滚动升级、备份和隔离证据。Kubernetes、Kafka、gRPC 和物理
+Database split 都必须由实际部署规模、SLO、升级或资源证据推动。
+
+典型失败是长任务占满短请求资源、重复消费造成双重 Effect，或升级时旧 Schema 与 checkpoint
+不兼容。部署必须通过版本兼容窗口、幂等、drain、rollback 和 reconciliation 收口。若一个
+模块化服务加 worker 已经满足相同的隔离和扩缩容要求，就不增加平台复杂度。
+部署文档不负责定义 Domain Fact、Agent Plan 或 Tool Permission；它只规定运行单元、资源、网络、
+升级和恢复边界。
+
+## Part B — Detailed Architecture Specification
+
+### Deployment and rollout contract
+
+每个 deployment unit 声明 service/schema version、resource profile、queue/backpressure、timeout、
+cancellation、health/readiness、trace、secret/network policy 和 rollback path。HTTP、queue、MCP/API
+的选择必须有 workload 依据；升级采用 compatibility window、drain、idempotent retry、rollback 和
+reconciliation。Developer/Compose、Staging 和 Production 是不同证据等级，声明配置存在不能替代
+HA、fault-injection、backup/restore、capacity 或 on-call 证据。
+Job/Effect 使用幂等键，重复消费只能产生同一 receipt；unknown outcome 先对账，compatibility
+失败才允许 rollback 或人工介入。
+
 ## Profiles
 
 | Profile | Target |
@@ -38,13 +68,3 @@ HTTP for CRUD/query/small commands; durable queue for long-running work; MCP/API
 - Target：可独立扩缩容的 network-facing service roles + parse/index/graph/agent/sandbox/eval workers；
   具体数量和物理拆分仍由 workload/failure/security/lifecycle evidence 决定。
 - Gap：capacity assumptions、SLO、deployment traces、HA/rollback、service discovery/config/secret distribution、on-call ownership。
-
-## Round-002 Target refinement（D011）
-
-部署单元按 workload/failure/security/lifecycle 证据划分：Platform/Domain 的短事务、Agent 的
-长任务、Knowledge 的 CPU/GPU/IO worker、Tool/Sandbox 的隔离边界和 Eval 的 batch worker 可以
-独立扩缩容，但不强制一逻辑领域对应一服务。HTTP 用于小命令与查询，durable queue 用于长任务，
-MCP/API 用于外部互操作；gRPC、Kafka、Kubernetes 和物理 Database-per-service 仍是候选而非默认。
-
-本节只收敛 Target deployment rule。实际 service count、SLO、HA、rollback、容量和 on-call 仍是
-开放证据缺口。

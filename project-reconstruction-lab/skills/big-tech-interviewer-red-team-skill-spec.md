@@ -23,6 +23,11 @@ Reality
 面试攻击结果必须可以回链到 Round Question、Blue Answer、Red Score、Blue Decision 和 Delta；
 面试官不能用“你应该知道”补造历史事实。
 
+针对 V3.1，面试问题必须同时检查两层深度：Part A 是否能讲清 Why/What、真实场景、职责与
+非职责、Happy Path、失败和反转条件；Part B 是否能讲清 Contract、状态/版本、错误传播、
+幂等、重试恢复、安全、审计、可观测性和验证。答不上时分别记录 Narrative Gap、Contract
+Gap 或 Fact Gap，不用架构术语掩盖历史未知。
+
 ## Outputs
 
 按 P0–P3 分级的 Challenge Log、当前回答、证据、薄弱点、行动和 Interview Readiness Report。

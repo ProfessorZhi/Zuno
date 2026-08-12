@@ -6,6 +6,36 @@ canonical_question: Domain State 如何版本化、失效、审核、提交和�
 owner: Platform / Domain Service
 replaces: old module domain-state sections (Superseded)
 
+## Part A — Architecture Narrative
+
+Domain State 的生命周期回答一个业务问题：当案件材料变化、人工决定变化或一次长任务中断时，
+系统如何知道原来的法律结论还能不能继续使用。Canonical Store 保存当前业务事实及其版本，
+而 Agent checkpoint 只说明执行走到哪里；两者分开，才能在恢复时优先相信已经提交的业务状态，
+而不是相信一个可能过期的控制快照。
+
+以“新证据推翻旧事实”为例，EvidenceVersion 先被接受，再沿 dependency 找到受影响的 Claim、
+Fact、Conflict、ApplicableLaw 或 Finding，并把它们标记为 stale 或 review_required。系统可以
+启动有界重算、等待人工决定或保持旧版本但显式告知过期；只有新的 Proposal 通过 Domain Owner
+和必要 Human Review，才产生新的 Canonical Version。这个流程避免全量重算，也避免旧 Finding
+在新材料出现后继续伪装成当前事实。
+
+主要失败包括 Domain commit 成功但队列确认丢失、checkpoint 显示完成但 Domain transaction
+未提交，以及并行分支依据了不同 DomainVersion。恢复必须使用 generation/version/CAS 和
+幂等标识进行对账。PostgreSQL current state + version 足以作为 Target 起点；Event Sourcing、
+2PC 或 Saga 只有在重放、跨边界一致性或运营证据证明必要时才进入候选。
+若更简单的 current-state + outbox/reconciliation 已经通过同一恢复测试，则应删除额外事件日志
+或分布式事务复杂度。
+
+## Part B — Detailed Architecture Specification
+
+### Version and recovery contract
+
+`DomainVersion` 是业务事实版本，`PlanVersion` 在激活后不可变，`CheckpointGeneration` 只表示
+Runtime 控制位置。新 Evidence 通过 dependency lookup 产生 stale/review_required，再由 bounded
+re-evaluation 和 Domain Owner 形成新版本。Domain commit、outbox publish、checkpoint、provider
+receipt 各自可重试但必须幂等；未知副作用先 reconciliation，不能盲 retry。崩溃恢复必须比较
+DomainGeneration 与 CheckpointGeneration，冲突则 quarantine/replan/manual review。
+
 ## Version and authority
 
 Canonical Store 保存当前状态、不可变版本、provenance、dependency reference、review/audit 和必要 outbox。Provider 结果先进入 quarantine/proposal；Schema、权限、Evidence gate、CAS/version guard 和 Human Review 决定是否提交。
@@ -48,14 +78,3 @@ New Evidence 提交后，按依赖把受影响的 Fact、Conflict、Dispute、Ap
 - Current：PostgreSQL migrations、outbox、generation/checkpoint 相关基础设施存在，但法律状态闭环未被 E2E 证明。
 - Target：DomainGeneration 与 Runtime/CheckpointGeneration 分离，并可 reconciliation。
 - Gap：新证据 stale propagation、跨服务 CAS、outbox/inbox 和 crash recovery evidence。
-
-## Round-002 Target refinement（D001、D007）
-
-Domain State 的 admission 必须记录输入的 `DomainVersion`、Proposal provenance、Evidence
-lineage、权限/策略 epoch 与 Domain Owner 决策。`PlanVersion` 激活后不可变；重规划、输入版本
-变化或并行分支合流冲突都必须创建新的 PlanVersion 或进入 review_required，不能静默覆盖旧业务
-事实。Runtime 恢复先对账 Domain generation 与 checkpoint generation，再决定 resume、replan、
-retry 或 abstain。
-
-这只是 Target contract refinement。新证据触发 stale 传播、Finding 重算或新 Agent Run 的实际
-运行结果仍是 implementation/evidence gap；它不改变 `Current` 状态，也不自动引入 Event Sourcing。

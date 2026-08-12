@@ -3,6 +3,8 @@
 updated: 2026-08-13
 status: normative-target-architecture-reframe-v1
 architecture_state: ACCEPTED_TARGET
+canonical_question: Product、Domain、Logical Capability、Service、Data、Security、Eval 和 Deployment 如何形成一个可恢复的目标闭环？
+owner: Cross-cutting Architecture Owner
 acceptance_scope: Canonical Part-A Target; implementation, measurement and external qualification remain open
 document_role: cross-cutting integration source
 canonical_taxonomy: `docs/project/product/`, `domain/`, `agents/`, `knowledge/`, `services/`, `data/`, `security/`, `eval/`, `deployment/`
@@ -28,12 +30,50 @@ Physical Service / Deployment Architecture
 
 Logical capability 不等于 service，service 不等于 process，process 不等于 container，container 不等于 team。任何物理拆分都必须回答 `Why service? Why not library? Why not worker? Who owns state? How does it recover?`。
 
-### Part-A Gate 状态
+### Acceptance boundary
 
-`USER-ARCHITECTURE-GATE-001` 已记录为 `APPROVED`，本文件及对应专题因此进入
-`ACCEPTED_TARGET`。该 Gate 只批准 Canonical Part-A Target，不批准实现、验证、测量、安全资格或
-生产就绪。原始 12 个 P0 仍为 `0/12 closed`，其中 `I-P0=11`、`E-P0=1`、`X-P0=1`；这些缺口
-必须继续通过 Implementation、Measurement 和 External Qualification 轨道关闭。
+本文件和对应专题处于 `ACCEPTED_TARGET`，但这只表示目标架构边界已经被接受，不表示实现、测量、
+安全资格或生产就绪。所有 Current 结论仍以 `docs/status/`、`docs/evidence/` 和代码/测试证据为准。
+
+## Part A — Architecture Narrative
+
+Zuno 解决的不是“再做一个能调用模型的聊天入口”，而是让法律专业人员能够把一组案件材料变成
+可复核的工作成果。系统必须同时处理业务事实、证据来源、长期运行的 Agent 计划和可能影响外部
+世界的工具动作；如果这些状态被混在同一份上下文或同一个框架 checkpoint 里，用户无法判断回答
+究竟基于哪一版材料，也无法在新证据到来后解释旧结论为何失效。
+
+以复杂案件分析为例，用户创建 Matter、上传材料，系统先形成带来源的 DocumentVersion，再进行
+检索和专业能力分析。Agent 可以并行寻找证据、识别争议并提出事实或 Finding，但这些输出仍是
+Proposal；Domain Owner 经过证据、权限和必要人工复核后才提交 Canonical State。最终 WorkProduct
+引用已接受的版本，外部工具动作则经过独立授权并留下 EffectReceipt。这个路径说明为什么 Product、
+Domain、Knowledge、Runtime 和 Tool 必须协作，却不能互相拥有对方的事实。
+
+架构的关键取舍是：业务语义保持稳定，计算 Provider 可以替换，Agent profile 可以组合。FastAPI
+提供应用入口，Runtime 负责长任务控制，Knowledge 负责可引用检索，PostgreSQL 保存业务事实和
+版本；它们之间用 Proposal、Snapshot、Reference 和 Receipt 传递边界，而不是共享隐式状态。最小
+替代方案仍然是 WorkBuddy/普通 Host + Legal Backend；只有 Domain State、证据门禁、失效传播和
+恢复对账在公平 Benchmark 中带来可重复收益，才保留 Native Domain-aware Runtime。
+
+主要失败故事是“Domain 已提交、checkpoint 却停在副作用之前”或“新证据使旧 Finding 失效”。
+系统必须按 Domain Owner 的已提交版本对账，禁止重复副作用或继续发布 stale 结论。若更简单的
+Host、Library 或 Worker 能以相同质量、安全和恢复语义完成同一场景，服务、Graph、Memory Provider
+或 Native Runtime 都应降级或删除。当前代码只证明部分 Python/FastAPI/Worker 表面，Target 的
+服务数量、质量收益、生产安全和部署能力仍未被证明。
+
+## Part B — Detailed Architecture Specification
+
+### Cross-layer contract registry
+
+| Contract | Input / output | Owner | Failure and verification |
+|---|---|---|---|
+| Domain admission | versioned Proposal + Evidence → Canonical Version or review_required | Domain Owner | CAS/version conflict、provenance failure；contract and failure replay |
+| Runtime execution | PlanVersion + Domain Snapshot → Step/Branch/Receipt | Runtime Owner | checkpoint/domain divergence；reconciliation and resume test |
+| Retrieval evidence | QueryClass + Scope + Claim → EvidenceCandidate/CitationLineage | Knowledge Owner | stale index、wrong span、ACL leak；citation and Graph ablation |
+| External effect | PreparedAction + current policy → EffectReceipt or outcome_unknown | Tool/Security Owner | timeout/unknown effect；idempotency and authorization fault test |
+
+Queue ACK、HTTP 2xx、checkpoint 和 Provider result 只证明各自边界；它们不能替换 Domain commit。
+跨层发布必须带版本、权限/策略 epoch、幂等键和可追溯 receipt。没有实现、测量或外部资格证据时，
+以下规范仍属于 Target/Gap，不升级为 Current。
 
 ## 1. 产品与领域核心
 
@@ -249,16 +289,3 @@ SRE:              services → data → deployment → eval/observability
 Canonical 专题入口：[`service-architecture.md`](../services/service-architecture.md)、[`security-architecture.md`](../security/security-architecture.md)、[`legal-eval-and-benchmark.md`](../eval/legal-eval-and-benchmark.md)、[`microservice-deployment.md`](../deployment/microservice-deployment.md)。完整 taxonomy 还包括 [`product-architecture.md`](../product/product-architecture.md)、[`legal-domain-model.md`](../domain/legal-domain-model.md)、[`domain-state-lifecycle.md`](../domain/domain-state-lifecycle.md)、[`agent-platform.md`](../agents/agent-platform.md)、[`multi-agent-runtime.md`](../agents/multi-agent-runtime.md)、[`knowledge-evidence-architecture.md`](../knowledge/knowledge-evidence-architecture.md) 和 [`data-ownership-and-recovery.md`](../data/data-ownership-and-recovery.md)。
 
 新 taxonomy 的唯一入口和迁移规则见 [`docs/project/README.md`](../README.md)、[`docs/decisions/0011-architecture-document-taxonomy.md`](../../decisions/0011-architecture-document-taxonomy.md)。`architecture-views.md` 与 `architecture.html` 只展示本架构，不拥有第二套事实。
-
-## Round-002 Target refinements（D001、D011）
-
-本节只记录 Round-002 对已接受 Target 的边界澄清，不是实现证据。跨层请求必须携带可追踪的
-`DomainVersion`、`PlanVersion`、权限/策略版本和执行收据；Domain Service 的事务提交、Runtime
-Checkpoint、Queue 投递和 Provider Receipt 各自只证明自己的边界。恢复时以 Domain Owner 的
-已提交版本为业务依据，对未确认的投递或副作用执行对账，禁止用 checkpoint 或 HTTP 成功替代
-业务成功。
-
-Service role 仍是可验证的物理候选，不是 11 个旧模块的机械映射。只有独立扩缩容、失败域、
-安全/资源隔离、部署生命周期或数据 Ownership 证据出现时，才把逻辑能力提升为独立服务；否则
-保留为 Python package、worker 或外部 Provider。Round-002 没有冻结服务数量，也没有把这些
-Target refinements 写成 Current。

@@ -48,9 +48,10 @@ Discovery
 
 每项设计必须得到：`KEEP`、`SIMPLIFY`、`ADOPT`、`EXTEND`、`BUILD`、`DEFER` 或 `DELETE`，并附原因、替代方案、证据和回滚条件。
 
-## V3 百问协议
+## V3.1 百问与文档质量协议
 
-`ZUNO-RED-BLUE-WORKFLOW-V3` 将一次完整架构攻击固定为一个可回放、可同步 Round：
+`ZUNO-RED-BLUE-WORKFLOW-V3.1` 在 V3 的可回放、可同步 Round 上增加同文件 Part A Narrative /
+Part B Specification 质量门。完整契约见 [`round-protocol-v3.1.md`](round-protocol-v3.1.md)。
 
 ```text
 Fact Baseline
@@ -62,6 +63,7 @@ Fact Baseline
   → Automatic Canonical Sync（只限 AUTO_APPLY）
   → Completeness / Governance Verification
   → Immutable Round Archive
+  → Part-A / Part-B Quality Gate
   → ChatGPT Review Package
 ```
 
@@ -92,8 +94,9 @@ Remaining Gap / Red Critique / Blue Revision / Final Red Assessment / Score
 字段不能使用 `N/A` 逃避边界；不适用时也要写清楚“不适用原因和替代验证”。不得保存隐藏思维链；
 只保存用户可见的问题、回答、批评、修订、评分和决策摘要。
 
-V3 额外要求：每道题进入独立 `questions.md`、`blue-answers.md`、`red-scores.md` 和
-`blue-decisions.md`；Delta 必须回链 Question IDs，Canonical Sync 必须回链 Delta IDs。
+V3.1 额外要求：每道题进入独立 `questions.md`、`blue-answers.md`、`red-scores.md` 和
+`blue-decisions.md`；每个 Blue Decision 必须记录 `document_impact`、Part A/Part B change
+required 和 Canonical Owner；Delta 必须回链 Question IDs，Canonical Sync 必须回链 Delta IDs。
 
 ### 评分和 Gate
 
@@ -126,6 +129,10 @@ project-reconstruction-lab/sessions/<session-id>/
 使用 `transcript.md` 等旧契约；V3 使用 `questions.md`、`blue-answers.md`、`red-scores.md`、
 `blue-decisions.md`、`architecture-deltas.md` 和 `canonical-sync-record.md`。不要修改
 Round-001 的历史格式，也不要让 V2 与 V3 形成第二套当前协议。
+
+V3.1 Round-003 在同一套 `sessions/` 记录中增加 `baseline-audit.md`、Part A/Part B 文档质量
+Scorecard、`document_impact`、12 个 Delta、Review Package 和专用 verifier；Round-specific
+changelog 只留在 Session，不写回 Canonical 文档。
 
 Blue Repair 使用同一个 `sessions/` 根目录，Repair Session 以独立协议记录根因聚类、Part-A
 修复、五指标、Counter Retest 和 Closure Report，例如：

@@ -42,9 +42,24 @@ Blue Decision 完成后，允许的 Contract/State/Failure/Owner/Provider/Eval/R
 安全边界或 Python-only/Microservice/Single Controller 的变化只能进入 ADR/User Gate Escalation。
 Round 记录仍是 immutable history，后续错误使用 Errata，不无痕改写。
 
+## V3.1 Document Quality Contract
+
+V3.1 在每个 Canonical Owner Doc 内固定同文件双层结构：Part A — Architecture Narrative
+回答问题、场景、职责边界、Happy Path、主要失败、取舍、替代方案、反转条件和
+Current/Target/Gap；Part B — Detailed Architecture Specification 定义输入输出、状态/版本、
+错误传播、重试恢复、幂等、安全、审计、可观测性、所有权、扩缩容、兼容性和验证证据。
+不创建 `-human.md`、`-spec.md` 或第二套 Canonical 文档；Part A 与 Part B 不复制同一状态机。
+
+每道 Round-003 问题必须记录 `document_impact: PART_A | PART_B | BOTH | NONE`，同时记录
+Part A/Part B Change Required 和 Canonical Owner Doc。Part A 质量门槛为 80，Part B 为 85；
+门槛只衡量文档可读性和契约完整性，不代表 Runtime、法律回答、安全或 Production 证据。
+Round/Dxxx/Qxxx 追踪只保留在 Lab Session、Delta 和 Review Package，不写回 Canonical 正文。
+
 ## Guardrails
 
 - 不因“企业级”保留服务；
 - 不将 GraphRAG、Multi-Agent、Memory 或自研 Runtime 视为默认必要；
 - WorkBuddy/Dify/Pi/LangGraph/RAGFlow 按层级比较；
 - 任何质量、效率、安全和生产声明必须绑定测量证据。
+- `AUTO_APPLY` 只允许不改变 Facts、Runtime、Schema/Migration、基础架构原则或 Active ADR 的
+  Target/document refinement；否则必须升级 ADR 或 User Gate。

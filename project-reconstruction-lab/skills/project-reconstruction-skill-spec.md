@@ -25,6 +25,13 @@ Evidence Intake
 → Architecture-to-Code Gap
 ```
 
+## Document Quality V3.1
+
+进入 Canonical Sync 前先做 Part A/Part B baseline audit。每个 Canonical Owner Doc 必须在同一
+文件中同时解释为什么存在以及怎样实现；Round Decision 记录 `document_impact`、两部分的变更
+标记和唯一 Owner。文档质量门槛通过后才能标记 `DOC_QUALITY_COMPLETE`，但仍不能把 Target
+升级为 Current、Measured 或 Production。
+
 ## Outputs
 
 Fact Baseline、Evidence Ledger、Open Questions、History、Current Audit、Challenge Log、Architecture Decisions、Implementation Gaps 和 Mentor Package。
@@ -38,6 +45,8 @@ Fact Baseline、Evidence Ledger、Open Questions、History、Current Audit、Cha
 - 需要用户确认的事实必须停在 `USER_CONFIRMATION_REQUIRED`。
 - Red/Blue 不能自动修改 Facts；Fact Gap 进入 Fact Recovery Queue。
 - Canonical Sync 只能升级 Target Design，不能升级 Current、Measured 或 Production。
+- Lab Session 是证据和攻击工作区；Canonical Docs 只保留去过程化的正式事实和 Target，不能把
+  Round changelog、问题编号或评分明细写进 Canonical 正文。
 
 ## Shared Contracts
 
