@@ -12,6 +12,7 @@
 | E-REPO-002 | REPO | `infra/docker/docker-compose.yml` | 当前 Compose 服务表面 | Current Repository | MEDIUM | 不代表历史启动清单 |
 | E-REPO-003 | REPO | `git log` 与当前文档 | 当前仓库阶段性架构和文档演进 | Current Repository | MEDIUM | 不代表横向项目最初状态 |
 | E-PUBLIC-001 | PUBLIC_CONTEXT | 南京大学软件学院 / LIPLAB / 最高人民法院公开页面 | 天津智慧法院外围背景 | Public Context | HIGH | 不证明 Zuno 合同关系 |
+| E-PUBLIC-002 | PUBLIC_CONTEXT | LawBench、LJPCheck、JIA、Fact–Article Correspondence、InternLM-Law primary sources；见 `sources/legal-ai-capability-matrix.md` | 法律能力分层、结构化中间任务、功能测试和人工/长文本评测可作为 Zuno Eval 设计输入 | Architecture Context | HIGH | 不证明 Zuno 已集成、质量优于竞品或 Native Runtime 有额外收益 |
 | E-ARTIFACT-001 | ARTIFACT_EVIDENCE | 简历与附件候选稿 | 技术名词和个人叙事线索 | Historical Candidate | LOW/MEDIUM | 需逐项回忆或原始材料核验 |
 
 新增证据必须带来源、Scope 和不能推出的内容。没有 Evidence ID 的重要 Claim 不得进入报告结论。

@@ -18,3 +18,24 @@ commercial_reuse_rule: GitHub Public != Commercially Licensed；没有 LICENSE �
 1. 论文结果是 PUBLIC_CONTEXT，不是 Zuno Current，也不是跨语料、跨任务的质量承诺。
 2. Provider 只能返回 `Proposal`、`Candidate`、`Observation`、`Reference` 或 `Receipt`；不能直接写 `FactVersion`、`ConflictVersion` 或 `FindingVersion`。
 3. 每个候选 provider 进入 Spike 前必须锁定 commit、模型/数据版本、输入输出 Contract、许可证、复现步骤与退出路径。
+
+## 对 Zuno 架构的可用推断边界
+
+上述研究共同支持的是 `PUBLIC_CONTEXT` 层面的设计启发：法律任务可以被拆成领域能力、
+中间结构、功能行为和真实任务结果，而不应只用一个最终生成分数描述。它们不支持以下
+更强结论：
+
+- 论文系统已经集成到 Zuno；
+- Zuno 当前质量优于 WorkBuddy、Dify 或其他 Host；
+- Legal Domain State 已经证明能提升 Native Runtime；
+- 研究报告中的指标可以直接迁移为 Zuno 指标；
+- 公开仓库、论文代码或模型权重可以未经许可证复核进入商业产品。
+
+因此本矩阵只支持两个下一步候选：
+
+1. 把 Event、Fact–Article、Conflict、Evidence Retrieval 等登记为可替换
+   `Legal Capability Contract` 的候选 Provider；
+2. 把 L1–L5 评测结构和 A/B/C 对照登记为 Zuno Benchmark 设计输入。
+
+Native Runtime 的必要性仍由 `H2 — Runtime–Domain Integration Advantage` 决定，
+不能从研究背景直接升级为事实。

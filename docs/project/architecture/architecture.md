@@ -36,6 +36,22 @@ Computation Pluggable
 Agents Composable
 ```
 
+本架构对 Domain 与 Runtime 的关系采用以下原则：
+
+```text
+业务语义强集成
+技术实现松耦合
+```
+
+Legal Domain State 是 Planner、Retrieval、Legal Capability、Evidence Gate、Finding
+和 Human Review 的一等 Contract 输入/输出；但 Domain Owner 不依赖 LangGraph、某个模型、
+某个 Host 或某种服务拓扑。Runtime Provider 可以替换，Domain Contract、版本、来源、
+权限、失效和审查语义不能随 Provider 自由漂移。
+
+这是一条 Target 设计原则，不是已测得的质量结论。`H2 — Runtime–Domain Integration
+Advantage` 仍需 A/B/C Benchmark 证明；如果 Native Runtime 与 Host + Legal Backend
+没有可重复的质量或效率差异，应删除 Native Runtime 复杂度。
+
 产品流程以复杂案件分析为例：
 
 ```text

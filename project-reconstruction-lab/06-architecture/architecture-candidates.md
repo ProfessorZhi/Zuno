@@ -5,7 +5,7 @@
 | Candidate | Why it might exist | Simplest alternative | Current State | Required Proof |
 |---|---|---|---|---|
 | Legal Domain Kernel | 业务事实、证据、版本和人工决策需要稳定 Owner | JSON + PostgreSQL | UNDER_ATTACK | Domain mutation/review/staleness tests |
-| Domain-aware Runtime | Planner/Completion 直接使用领域条件 | WorkBuddy Tool JSON / ordinary workflow | UNDER_ATTACK | C vs B quality and efficiency benchmark |
+| Domain-aware Runtime | Planner/Completion 直接使用版本化 Domain Conditions、EvidenceRequirement、staleness 和 Review gate | WorkBuddy Tool JSON / ordinary workflow / Host + Legal Backend | UNDER_ATTACK | C vs B quality and efficiency benchmark；必须证明收益不是普通 Backend Workflow 可实现 |
 | Conditional Graph Retrieval | 跨文档、关系型证据可能需要 Graph | Hybrid RAG | UNDER_ATTACK | Kill Graph Benchmark |
 | Composable Multi-Agent | 专业角色、并行和权限隔离 | Single Agent + workers | PROPOSED | task/cost/failure comparison |
 | Python-only | AI/NLP ecosystem 和团队复杂度 | Java + Python | ACCEPTED_TARGET | workload/schema/deployment rationale |
