@@ -5,7 +5,7 @@
 | Original P0 | 12 |
 | Scope Split | 1 (Q039 → Q039-C/Q039-B) |
 | V4 execution records | 6 / 12 |
-| V3 current/narrow execution | 4 / 12 |
+| V3 current/narrow execution | 5 / 12 |
 | V4 accepted by Red | 0 / 12 |
 | Counter Retest PASS | 0 / 12 |
 | P0 CLOSED | 0 / 12 |

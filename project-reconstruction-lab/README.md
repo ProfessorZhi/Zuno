@@ -125,7 +125,7 @@ Final P0 的证据战役记录位于 `sessions/RB-EVIDENCE-CLOSURE-001/`。它�
 当前 12 个 Final P0 均未闭合，已有 10 项 V3 窄证据，Closure-grade evidence 为 `0/12`。
 
 随后执行的 `sessions/RB-P0-V4-EXECUTION-001/` 只验证可安全执行的 V4 候选：6 项 V4
-verification/emulator records、4 项 V3 current/narrow records；Red accepted 为 0，Counter
+verification/emulator records、5 项 V3 current/narrow records；Red accepted 为 0，Counter
 Retest 未运行，12 个原始 P0 仍保持 OPEN。Q039 被追踪为 Q039-C Critical Invariant 与
 Q039-B V5 Benchmark Gap，原始 Q039 不删除。
 

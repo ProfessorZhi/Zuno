@@ -24,7 +24,7 @@ program_class: `architecture-review-and-reconstruction`
 - 当前 Evidence Closure 会话为 `RB-EVIDENCE-CLOSURE-001`；它复用已有 focused verifier/test，
   不修改 Runtime/UI/Schema/Migration/生产 Infra。当前 Final P0 为 12，Closure-grade evidence
   为 0/12，Counter Retest 尚未执行，Canonical Docs 不得同步。
-- 当前已执行 `RB-P0-V4-EXECUTION-001`：6 项 V4 verification/emulator records、4 项 V3
+- 当前已执行 `RB-P0-V4-EXECUTION-001`：6 项 V4 verification/emulator records、5 项 V3
   current/narrow records；Red 接受为 Closure 的数量为 0，Q066 为 BLOCKED_EXTERNAL，Q039-B
   为 V5 benchmark gap，12 个原始 P0 仍 OPEN。
 

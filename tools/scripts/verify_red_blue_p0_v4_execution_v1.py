@@ -66,7 +66,7 @@ def verify_session(session: Path) -> list[str]:
         "original_p0_count": 12,
         "scope_split_count": 1,
         "v4_execution_records": 6,
-        "v3_or_narrow_records": 4,
+        "v3_or_narrow_records": 5,
         "v4_accepted": 0,
         "counter_retest_passed": 0,
         "p0_closed": 0,

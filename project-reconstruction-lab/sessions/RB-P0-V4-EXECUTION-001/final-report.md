@@ -7,7 +7,7 @@ BASE_SHA: 71630f16edf027b610e9b0ca7f17a6a4c0fc9080
 Original P0 Count: 12
 Scope Splits: 1
 V4 Executed: 6 / 12 records
-V3 current/narrow execution: 4 / 12
+V3 current/narrow execution: 5 / 12
 V4 Accepted: 0 / 12
 Counter Retest Passed: 0 / 12
 P0 Closed: 0 / 12

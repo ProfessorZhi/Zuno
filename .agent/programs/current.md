@@ -172,7 +172,7 @@ Campaign                       RB-P0-V4-EXECUTION-001
 Original P0                    12
 Scope Split                   1 (Q039-C / Q039-B)
 V4 executed records            6/12
-V3 current/narrow records      4/12
+V3 current/narrow records      5/12
 V4 accepted by Red             0/12
 Counter Retest                 NOT_RUN
 P0 closed                      0/12
