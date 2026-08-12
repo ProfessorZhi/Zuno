@@ -39,3 +39,13 @@ Eval/Observability is an independently deployable batch/trace worker, not a V1 s
 - Current：Compose has one backend application container, one worker application container and one frontend; infrastructure dependencies are not business services.
 - Target：candidate network-facing service roles plus independently scaled workers；服务数量不因本表冻结。
 - Gap：service images, API contracts, schema ownership, fault injection, tracing, deployment and on-call evidence。
+
+## Round-002 Target refinements（D005、D009、D011）
+
+Model Gateway、Memory、Legal Intelligence 和 Eval 默认是 library/provider/worker，而不是因为
+逻辑名称就独立成 network-facing service。它们只有在独立资源池、失败域、部署生命周期、配额/安全
+边界或可测吞吐收益成立时，才获得独立服务候选资格。
+
+Tool/Sandbox 则按安全和副作用边界保留独立候选：`PreparedAction` 在执行时重新授权，EffectReceipt
+记录 provider operation ID 和 unknown outcome，Tool 服务不能写 Domain final state。队列和服务调用
+必须可重试、可取消、可对账；Round-002 不冻结具体 MQ、gRPC、容器编排或服务数量。

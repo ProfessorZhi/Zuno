@@ -74,3 +74,13 @@ Legal Backend；`C ≈ B ≈ A` 必须删除无证据复杂度。
 - Current：仓库有 eval tooling、trace structures and blocked/not-measured status；没有公平 A/B/C 运行结果。
 - Target：独立 Eval/Trace Worker 与可复现 release gate。
 - Gap：法律真实数据、标注、reviewer protocol、重复运行、成本/延迟和 service-level evidence。
+
+## Round-002 Target refinements（D004、D010）
+
+每个检索或 Agent 评测 run 必须记录 query class、数据切片、模型/Prompt/Skill、工具、预算、
+检索轮次、CitationLineage、reviewer protocol 和失败类型；分母、随机切片、重复运行和排除规则
+必须可复现。Graph 只能通过同 corpus、同模型、同预算的消融进入默认路径。
+
+Legal Intelligence 与 Domain-aware Runtime 的价值继续按 A/B/C 分层：若 `C≈B>A`，保留
+Legal Backend 并缩减 Native Runtime；若 `C≈B≈A`，删除无测量收益的复杂度。Round-002 没有任何
+实测质量、效率、安全或生产结论。

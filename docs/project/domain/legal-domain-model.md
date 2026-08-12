@@ -49,3 +49,13 @@ Knowledge owns retrieval data and EvidenceCandidate；Agent owns plan/control；
 - Current：仓库已有通用 DocumentVersion、Claim/Evidence 和 Product/Agent tables；未证明完整 Legal Domain Kernel。
 - Target：最小 Canonical Domain Model 与 Proposal → Validation → Version → Review 闭环。
 - Gap：Matter/Fact/Finding identity、dependency invalidation、human review 和跨服务 write trace 未实现证明。
+
+## Round-002 Target refinement（D002、D008）
+
+法律能力 Provider 必须返回带 `capability_version`、输入 DomainVersion、Evidence lineage、
+provenance 和不确定性说明的 Proposal/Observation/Reference。Provider 版本和算法结果可以替换，
+但不得绕过 Domain Owner 将 `FactVersion`、`ConflictVersion` 或 `FindingVersion` 直接写入正式
+业务状态。Host 的交付边界与 Legal Capability 的提案边界均服从同一套 Schema、Permission、
+Version、Review 和 Audit admission。
+
+这是 Target contract，不代表论文算法、外部 Provider 或当前仓库已经完成该实现或商业资格审查。

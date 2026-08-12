@@ -249,3 +249,16 @@ SRE:              services → data → deployment → eval/observability
 Canonical 专题入口：[`service-architecture.md`](../services/service-architecture.md)、[`security-architecture.md`](../security/security-architecture.md)、[`legal-eval-and-benchmark.md`](../eval/legal-eval-and-benchmark.md)、[`microservice-deployment.md`](../deployment/microservice-deployment.md)。完整 taxonomy 还包括 [`product-architecture.md`](../product/product-architecture.md)、[`legal-domain-model.md`](../domain/legal-domain-model.md)、[`domain-state-lifecycle.md`](../domain/domain-state-lifecycle.md)、[`agent-platform.md`](../agents/agent-platform.md)、[`multi-agent-runtime.md`](../agents/multi-agent-runtime.md)、[`knowledge-evidence-architecture.md`](../knowledge/knowledge-evidence-architecture.md) 和 [`data-ownership-and-recovery.md`](../data/data-ownership-and-recovery.md)。
 
 新 taxonomy 的唯一入口和迁移规则见 [`docs/project/README.md`](../README.md)、[`docs/decisions/0011-architecture-document-taxonomy.md`](../../decisions/0011-architecture-document-taxonomy.md)。`architecture-views.md` 与 `architecture.html` 只展示本架构，不拥有第二套事实。
+
+## Round-002 Target refinements（D001、D011）
+
+本节只记录 Round-002 对已接受 Target 的边界澄清，不是实现证据。跨层请求必须携带可追踪的
+`DomainVersion`、`PlanVersion`、权限/策略版本和执行收据；Domain Service 的事务提交、Runtime
+Checkpoint、Queue 投递和 Provider Receipt 各自只证明自己的边界。恢复时以 Domain Owner 的
+已提交版本为业务依据，对未确认的投递或副作用执行对账，禁止用 checkpoint 或 HTTP 成功替代
+业务成功。
+
+Service role 仍是可验证的物理候选，不是 11 个旧模块的机械映射。只有独立扩缩容、失败域、
+安全/资源隔离、部署生命周期或数据 Ownership 证据出现时，才把逻辑能力提升为独立服务；否则
+保留为 Python package、worker 或外部 Provider。Round-002 没有冻结服务数量，也没有把这些
+Target refinements 写成 Current。

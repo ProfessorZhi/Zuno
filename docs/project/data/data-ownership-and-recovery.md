@@ -56,3 +56,14 @@ reconciliation；队列不是 Business Truth，也不能通过重复投递直接
 - Current：PostgreSQL migrations、RabbitMQ outbox/worker、runtime tables and checkpoint adapters exist in repository; actual distributed deployment remains UNKNOWN。
 - Target：logical ownership first, explicit reconciliation, no default 2PC/Event Sourcing/Saga。
 - Gap：cross-service transaction traces, crash tests, schema compatibility, outbox/inbox and backup/restore evidence。
+
+## Round-002 Target refinements（D003、D006、D009、D011）
+
+Queue Job、Memory projection、Tool Effect 和 Service command 都必须拥有稳定的 operation/job
+identity、输入版本、幂等键、attempt/lease 与 reconciliation 记录。Queue、Cache、Memory Provider、
+Checkpoint、Index 和 Receipt 只能证明各自边界；它们不得复制 Domain Owner 的最终状态机。跨服务
+读取通过 API、Reference、Snapshot 或受版本约束的事件完成，禁止跨服务 JOIN 私有表。
+
+物理数据库拆分仍需独立 availability、scaling、security 或 lifecycle 证据；共享 PostgreSQL
+Cluster + logical ownership 是允许的 Target 选项。以上是恢复和 Ownership contract refinement，
+不是已完成的分布式事务、备份恢复或生产部署证明。

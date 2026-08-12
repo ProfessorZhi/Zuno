@@ -24,12 +24,12 @@ Claim Registry
 
 Attack Registry、Blue Response、Counter Attack、Kill Tests、Decision Candidate、ADR Backlog 和 Architecture Review Report。
 
-## V2 Scored Round Contract
+## V3 Scored Round Contract
 
-`ZUNO-RED-BLUE-WORKFLOW-V2` 是可重复执行的 Round 协议，不是脱离项目上下文的静态题库。每个
-Round 固定记录 100 个独立问题，并按 A–J 配额分布：10/10/15/15/10/10/10/8/7/5。每题同时
-记录 Answer Defensibility 与 Architecture / Project Fitness（0–5），保留 Raw Score、Normalized
-Score、P0/P1、Gap、Blue Revision、Counter Retest 和 User Gate。
+`ZUNO-RED-BLUE-WORKFLOW-V3` 是可重复执行的 Round 协议，不是脱离项目上下文的静态题库。每个
+Round 固定记录 100 个独立问题，按 11+1 Lens 配额分布；每题记录完整 Question、Blue Answer、
+Red Score 和 Blue Decision。Round 还必须生成 Delta、Canonical Sync Record、完整性验证和
+ChatGPT Review Package。
 
 Round 完整记录位于 `project-reconstruction-lab/sessions/<session-id>/`，至少包含
 `manifest.yaml`、`transcript.md`、`scorecard.md`、`gaps.md`、`blue-change-set.md`、`retest.md`
@@ -37,10 +37,10 @@ Round 完整记录位于 `project-reconstruction-lab/sessions/<session-id>/`，�
 重复执行、数据损坏、版本冲突、跨服务一致性和证据完整性等 Critical Gate 仍为 OPEN 时，
 状态必须保持 `NOT_PASSED_PENDING_USER_GATE`。
 
-Round 可以修订 Candidate Architecture，但不得直接写正式 `docs/`。只有经过 Counter Attack、
-证据追踪和用户 Architecture Gate 的 Change 才能进入 Canonical Sync。这里的“禁止静态题库”
-是指禁止脱离 Round 生成无审计的通用问题池；并不禁止在每个可追溯 Round 中固定生成并验证 100
-个独立问题。
+Blue Decision 完成后，允许的 Contract/State/Failure/Owner/Provider/Eval/Reversal refinement
+必须在同一 Round 通过 Delta trace 自动同步 Canonical Docs；改变基本原则、Active ADR、重大
+安全边界或 Python-only/Microservice/Single Controller 的变化只能进入 ADR/User Gate Escalation。
+Round 记录仍是 immutable history，后续错误使用 Errata，不无痕改写。
 
 ## Guardrails
 

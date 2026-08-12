@@ -48,3 +48,14 @@ New Evidence 提交后，按依赖把受影响的 Fact、Conflict、Dispute、Ap
 - Current：PostgreSQL migrations、outbox、generation/checkpoint 相关基础设施存在，但法律状态闭环未被 E2E 证明。
 - Target：DomainGeneration 与 Runtime/CheckpointGeneration 分离，并可 reconciliation。
 - Gap：新证据 stale propagation、跨服务 CAS、outbox/inbox 和 crash recovery evidence。
+
+## Round-002 Target refinement（D001、D007）
+
+Domain State 的 admission 必须记录输入的 `DomainVersion`、Proposal provenance、Evidence
+lineage、权限/策略 epoch 与 Domain Owner 决策。`PlanVersion` 激活后不可变；重规划、输入版本
+变化或并行分支合流冲突都必须创建新的 PlanVersion 或进入 review_required，不能静默覆盖旧业务
+事实。Runtime 恢复先对账 Domain generation 与 checkpoint generation，再决定 resume、replan、
+retry 或 abstain。
+
+这只是 Target contract refinement。新证据触发 stale 传播、Finding 重算或新 Agent Run 的实际
+运行结果仍是 implementation/evidence gap；它不改变 `Current` 状态，也不自动引入 Event Sourcing。

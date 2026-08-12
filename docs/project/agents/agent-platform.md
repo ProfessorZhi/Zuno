@@ -73,3 +73,14 @@ OpenViking 或其他 Memory/Context 实现是可替换 Provider，不是 Canonic
 - Current：仓库有 Agent runtime/graph/checkpoint 和 FastAPI run surfaces，但是单 backend image；没有独立 Agent Runtime Service evidence。
 - Target：Python Agent Runtime Service + coordinator + profile/worker pools。
 - Gap：multi-agent profile benchmark、service contract、独立 scaling/failure 和 runtime/domain reconciliation trace。
+
+## Round-002 Target refinements（D005、D006、D007、D008）
+
+Model、Memory、Graph 和 Legal Capability 都通过可替换 Provider Contract 接入：Provider 只返回
+Proposal、Candidate、Observation、Reference 或 Receipt，并携带版本、输入快照、provenance 和
+预算/不确定性信息。Agent Runtime 负责 `PlanVersion`、Step/DAG、barrier、retry/replan 和
+checkpoint recovery；Domain Owner 负责 Canonical admission，Memory Provider 不能成为法律事实源。
+
+单 Controller 仍是 Target 的默认控制面；多个 Agent profile 共享 Domain、Capability、Security
+和 Eval contract，不自动形成多个服务。Provider replacement、OpenViking 资格、Multi-Agent 质量
+和 Runtime 额外收益仍须由 benchmark/implementation evidence 证明。

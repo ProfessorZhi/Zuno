@@ -20,6 +20,9 @@ Reality
 → Fact Gap / Architecture Gap
 ```
 
+面试攻击结果必须可以回链到 Round Question、Blue Answer、Red Score、Blue Decision 和 Delta；
+面试官不能用“你应该知道”补造历史事实。
+
 ## Outputs
 
 按 P0–P3 分级的 Challenge Log、当前回答、证据、薄弱点、行动和 Interview Readiness Report。

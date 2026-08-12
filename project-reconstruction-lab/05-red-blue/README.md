@@ -48,33 +48,34 @@ Discovery
 
 每项设计必须得到：`KEEP`、`SIMPLIFY`、`ADOPT`、`EXTEND`、`BUILD`、`DEFER` 或 `DELETE`，并附原因、替代方案、证据和回滚条件。
 
-## V2 百问协议
+## V3 百问协议
 
-`ZUNO-RED-BLUE-WORKFLOW-V2` 将一次完整架构攻击固定为一个可回放 Round：
+`ZUNO-RED-BLUE-WORKFLOW-V3` 将一次完整架构攻击固定为一个可回放、可同步 Round：
 
 ```text
 Fact Baseline
   → Red 100Q Attack
   → Blue 100Q Response
   → Red Scoring
-  → Gap / Blocker Clustering
-  → Blue Reconstruction Proposal
-  → Counter Attack
-  → Decision / User Gate
-  → Canonical Sync（仅在通过 Gate 后）
+  → Blue Architecture Decision
+  → Architecture Delta Consolidation
+  → Automatic Canonical Sync（只限 AUTO_APPLY）
+  → Completeness / Governance Verification
+  → Immutable Round Archive
+  → ChatGPT Review Package
 ```
 
 事实结构仍然冻结为十类 Canonical Facts 和 E0–E5 Evidence Strength；Red 发现的历史事实
 缺口必须进入 Fact Recovery Queue，不能由 Blue 为了维护架构叙事自行填空。
 
-### 固定配额
+### 11+1 固定配额
 
-每轮恰好 100 个问题：A Product/Domain/Requirement 10；B Conceptual Architecture/Necessity 10；
-C Agent Runtime/Planning/Multi-Agent 15；D Knowledge/RAG/Graph/Memory 15；E Data/State/Database/Consistency 10；
-F Tool Runtime/Sandbox/Security 10；G Failure/Retry/Recovery/Idempotency 10；H Microservice/Scale/Deployment 8；
-I Observability/Eval/Benchmark 7；J Engineering Reality/Interview Attack 5。
+每轮恰好 100 个问题：00 Overall 12；01 Product 6；02 Ingestion 7；03 Knowledge/GraphRAG 11；
+04 Model Gateway 6；05 Memory 8；06 Agent Core 14；07 Capability/Skill 6；08 Tool Runtime 10；
+09 Security 8；10 Observability/Eval 6；11 Infrastructure 6。
 
-问题必须独立、具体、可回答，并能改变设计决策；禁止用同一问题的同义改写凑数。
+问题必须独立、具体、可回答，并能改变设计决策；至少 70% 标记 `NOVEL`，最多 30% 标记
+`REGRESSION`。完整映射见 [`11-plus-1-canonical-coverage-map.md`](11-plus-1-canonical-coverage-map.md)。
 
 ### 逐题记录契约
 
@@ -88,8 +89,11 @@ Security / Observability / Alternative / Tradeoff / Test-Benchmark / Evidence
 Remaining Gap / Red Critique / Blue Revision / Final Red Assessment / Score
 ```
 
-可以写 `N/A`，但不能省略真正适用的字段。不得保存隐藏思维链；只保存用户可见的问题、
-回答、批评、修订、评分和决策摘要。
+字段不能使用 `N/A` 逃避边界；不适用时也要写清楚“不适用原因和替代验证”。不得保存隐藏思维链；
+只保存用户可见的问题、回答、批评、修订、评分和决策摘要。
+
+V3 额外要求：每道题进入独立 `questions.md`、`blue-answers.md`、`red-scores.md` 和
+`blue-decisions.md`；Delta 必须回链 Question IDs，Canonical Sync 必须回链 Delta IDs。
 
 ### 评分和 Gate
 
@@ -112,16 +116,16 @@ Audit Governance 或 Measured Quality Improvement 至少一项成立，并且简
 
 ### Round 记录位置
 
-本仓库已有 `sessions/` 的机器校验契约，因此 V2 Round 的物理记录位于：
+本仓库已有 `sessions/` 的机器校验契约，因此每个 Round 的物理记录位于：
 
 ```text
 project-reconstruction-lab/sessions/<session-id>/
 ```
 
-它等价于建议的 `05-red-blue/rounds/<round-id>/`，避免同时维护两套 QA 记录。`manifest.yaml`
-保存 Round 元数据；`transcript.md` 保存逐题辩论；`scorecard.md` 保存评分和类别汇总；
-`gaps.md` 保存 Fact/Architecture/Blocker 聚类；`blue-change-set.md` 保存重构提案；
-`retest.md` 保存 Counter Attack/回归结果。
+它等价于建议的 `05-red-blue/rounds/<round-id>/`，避免同时维护两套 QA 记录。V2 的历史 Round
+使用 `transcript.md` 等旧契约；V3 使用 `questions.md`、`blue-answers.md`、`red-scores.md`、
+`blue-decisions.md`、`architecture-deltas.md` 和 `canonical-sync-record.md`。不要修改
+Round-001 的历史格式，也不要让 V2 与 V3 形成第二套当前协议。
 
 Blue Repair 使用同一个 `sessions/` 根目录，Repair Session 以独立协议记录根因聚类、Part-A
 修复、五指标、Counter Retest 和 Closure Report，例如：
@@ -156,10 +160,14 @@ Boundary、Target 和 External Block；它不直接修改产品 Runtime。
 ```powershell
 python tools/scripts/verify_red_blue_session.py
 python tools/scripts/verify_red_blue_round_v2.py
+python tools/scripts/verify_red_blue_round_v3.py
+python tools/scripts/verify_red_blue_score_v3.py
+python tools/scripts/verify_canonical_diff_v3.py
 python tools/scripts/verify_red_blue_repair_v1.py
 python tools/scripts/verify_red_blue_evidence_closure_v1.py
 python tools/scripts/verify_red_blue_p0_v4_execution_v1.py
 ```
 
-V2 Round 未通过 User Architecture Gate 前，不得把 Blue Proposal 写入 `docs/project/`，
-也不得激活 Runtime implementation task；可审计的 Candidate 只能留在 Lab。
+V2 Round-001 的历史 Gate 规则继续约束其自身记录；V3 Round 的 AUTO_APPLY 只允许协议定义的
+Target refinement，并由 V3 verifier 和 Canonical Diff Validator 证明。它不能修改 Runtime、
+Facts、Schema/Migration 或激活 implementation Program。

@@ -105,8 +105,9 @@ Fact Taxonomy V1                 DONE
 Fact Depth Recovery              IN_PROGRESS
 Product Problem Reconstruction   IN_PROGRESS
 Architecture Red/Blue            READY / IN_PROGRESS
+Architecture Red/Blue Round-002   COMPLETE (V3, 100Q, 80 NOVEL / 20 REGRESSION)
 Interview Red Team               READY
-Canonical Architecture Sync      APPLIED / ACCEPTED_TARGET
+Canonical Architecture Sync      APPLIED / ACCEPTED_TARGET (Round-002 refinements)
 Implementation Program           READY_FOR_TASK_DEFINITION (not active)
 ```
 
@@ -141,12 +142,32 @@ Evidence Coverage              0% closure-grade
 Complexity Justification       10/10 structural, 0/10 measured
 Counter Retest                 9 REOPEN + 1 WAITING_FOR_EVIDENCE
 Round-001 closure              NOT_CLOSED
-Round-002                      READY_NOT_STARTED
+V3 Round-002                   COMPLETE
 Canonical Docs Sync             APPLIED
 User Architecture Gate         APPROVED
 ```
 
 Repair 只写入 Lab，不修改业务 Runtime、UI、Schema/Migration 或正式 Canonical Architecture。
+
+## V3 Round-002 status
+
+```text
+Protocol                         ZUNO-RED-BLUE-WORKFLOW-V3
+Round                            RB-WORKFLOW-V3-ROUND-002
+Questions / Answers / Scores     100 / 100 / 100
+Novel / Regression               80 / 20
+Raw / Normalized Score           371/500 / 74.20
+Grade                            Architecture Requires Significant Repair
+P0 / P1 / P2 / P3                8 / 23 / 69 / 0
+A / I / E / X                    0 / 5 / 3 / 0
+New A-P0                         0
+Canonical Sync                   APPLIED (Target refinements only)
+Round-003                       READY_NOT_STARTED
+```
+
+V3 Round-002 没有关闭原始 P0，也没有改变 Current、Facts、Runtime、Schema/Migration、生产或
+依赖状态。其完整记录位于 `project-reconstruction-lab/sessions/RB-WORKFLOW-V3-ROUND-002/`；
+Round 文件关闭后按 immutable archive 处理。
 
 ## Evidence Closure status
 
@@ -160,7 +181,7 @@ P0 closed                      0/12
 Red Evidence Review            completed; no closure accepted
 Counter Retest                 NOT_RUN
 Canonical Docs Sync            NOT_APPLIED
-Round-002                      BLOCKED
+V3 Round-002                   COMPLETE; this evidence campaign remains OPEN
 ```
 
 Evidence Closure 不是第二轮百问，也不是 Runtime implementation。它只登记实际证据、证据范围、
@@ -181,7 +202,7 @@ Implementation-dependent       4
 External-blocked               1 (Q066)
 V5 benchmark gaps              1 (Q039-B)
 Critical Closure               0%
-Round-002                      BLOCKED
+V3 Round-002                   COMPLETE; this execution campaign remains OPEN
 Canonical Docs Sync            NOT_APPLIED
 ```
 

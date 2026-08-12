@@ -40,3 +40,13 @@ Tool/Sandbox 的 Target Effect 状态包括 `proposed`、`validated`、`authoriz
 - Target：security decision authority + enforcement in every service and worker；保留独立 Sandbox
   Boundary，但 Docker/Deno 或其他执行 Provider 仍待外部资格测试。
 - Gap：offline egress、secret leakage、tenant isolation、revocation、sandbox escape、duplicate side effect、artifact attestation。
+
+## Round-002 Target refinement（D009）
+
+执行授权必须绑定 canonical action hash、Subject/Tenant/Scope、ToolVersion、Arguments、Effect
+Scope、SecurityEpoch、Approval 和 Expiry；执行前再次验证，执行后以 EffectReceipt 和 durable audit
+记录结果。授权、撤销、Secret 变化或参数变化时，旧 approval 失效；timeout/unknown outcome 进入
+reconciliation 或 manual review，不能直接 retry 不可逆副作用。
+
+这是可验证性 Target，不是“已经安全”的声明。no-egress、tenant isolation、secret leakage、
+sandbox escape 和 signed artifact 仍需真实测试与 attestation。

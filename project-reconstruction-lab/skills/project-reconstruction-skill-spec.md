@@ -19,7 +19,9 @@ Evidence Intake
 → Product Reconstruction
 → architecture-red-blue
 → big-tech-interviewer-red-team
-→ Canonical Sync
+→ Red 100Q
+→ Blue Answer / Red Score / Blue Decision
+→ Canonical Delta Sync
 → Architecture-to-Code Gap
 ```
 
@@ -34,6 +36,8 @@ Fact Baseline、Evidence Ledger、Open Questions、History、Current Audit、Cha
 - 不扩大个人贡献；
 - 不在证据不足时创建 implementation task；
 - 需要用户确认的事实必须停在 `USER_CONFIRMATION_REQUIRED`。
+- Red/Blue 不能自动修改 Facts；Fact Gap 进入 Fact Recovery Queue。
+- Canonical Sync 只能升级 Target Design，不能升级 Current、Measured 或 Production。
 
 ## Shared Contracts
 

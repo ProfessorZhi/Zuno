@@ -111,14 +111,15 @@ project-reconstruction-lab/
 └─ legacy/         # 旧编号文档和旧 Skill Spec，可追溯但不再是主入口
 ```
 
-V2 Red/Blue Round 的执行契约见 `05-red-blue/round-protocol-v2.md`，复杂度审查卡见
-`05-red-blue/complexity-justification-card.md`。Round-001 的完整 100 题记录位于
-`sessions/RB-WORKFLOW-V2-001/`；它仍是 Lab 记录，状态为待 User Architecture Gate，不是
-Canonical Architecture。
+V2 Red/Blue Round 的历史执行契约见 `05-red-blue/round-protocol-v2.md`；永久工作流以
+`05-red-blue/round-protocol-v3.md` 为准，11+1 覆盖见 `05-red-blue/11-plus-1-canonical-coverage-map.md`。
+Round-001 的完整 100 题记录位于 `sessions/RB-WORKFLOW-V2-001/`，保持 immutable history；
+Round-002 位于 `sessions/RB-WORKFLOW-V3-ROUND-002/`，按 V3 完成 Question → Answer → Score
+→ Decision → Delta → Canonical Sync。
 
 Round-001 后的 Blue Repair 记录位于 `sessions/RB-BLUE-REPAIR-001/`。它负责根因聚类、Part-A
 修复、Severity Reclassification、P0 Burn-down 和 Counter Retest；它不是第二轮 100Q，也不
-改变 Round-001 的原始记录。当前 Repair 结果仍为 `COUNTER_RETEST_REOPENED`，Round-002 阻塞。
+改变 Round-001 的原始记录。Round-002 通过 V3 重新检验了这些变化。
 
 Final P0 的证据战役记录位于 `sessions/RB-EVIDENCE-CLOSURE-001/`。它不重开 100Q，而是逐项
 记录 Evidence ID、Closure Condition、实际 Artifact、Red Evidence Review 和 Counter Retest。
@@ -157,7 +158,7 @@ Workspace Bootstrap
   ↺ 新证据回到 Fact Recovery / Architecture Red Team
 ```
 
-## 当前 Program：PROJECT-ARCHITECTURE-RECONSTRUCTION-V1
+## 当前 Program：PROJECT-ARCHITECTURE-RECONSTRUCTION-V1 / RB-WORKFLOW-V3-ROUND-002
 
 Canonical Facts Framework V1 已形成。本 Program 不再扩张事实目录，而是把事实深度恢复
 与架构重构并行推进：
@@ -165,7 +166,7 @@ Canonical Facts Framework V1 已形成。本 Program 不再扩张事实目录，
 | Track | 目标 | 当前输出边界 |
 |---|---|---|
 | Track A — Fact Depth Recovery | 恢复真实法院工作流、个人代码 Ownership、Court QA、Incident、协作和复用/研究转化 | 只进入 Facts、Evidence Ledger、Open Questions 或候选，不创造未知细节 |
-| Track B — Architecture Reconstruction | 从真实问题推导 Product、Domain、Runtime、Knowledge、Service、Data、Security 和 Eval | 只进入 Lab 候选、Red/Blue、Benchmark、ADR 候选和 Gap，未过 Gate 不同步 Canonical Target |
+| Track B — Architecture Reconstruction | 从真实问题推导 Product、Domain、Runtime、Knowledge、Service、Data、Security 和 Eval | V3 允许受 Gate 规则约束的 refinement AUTO_APPLY；重大原则变化仍只进入 Escalation |
 
 ## Fact Readiness Gate
 
@@ -238,6 +239,9 @@ python .agent/scripts/verify_agent_system.py
 python .agent/scripts/verify_doc_boundaries.py
 python tools/scripts/verify_red_blue_session.py
 python tools/scripts/verify_red_blue_round_v2.py
+python tools/scripts/verify_red_blue_round_v3.py
+python tools/scripts/verify_red_blue_score_v3.py
+python tools/scripts/verify_canonical_diff_v3.py
 ```
 
 完整 CI 未运行时，不得写 `CI PASS`。

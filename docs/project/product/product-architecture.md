@@ -39,3 +39,13 @@ State 的全部写入权。真实产品交付、客户质量和生产部署仍�
 - Current：仓库有 FastAPI Product API 和 Web/Desktop client；目标业务状态、历史用户和真实交付保持以 facts/status/evidence 为准。
 - Target：外部 Host 可调用 Product/Domain API；Product 与 Service/Domain/Runtime 分离。
 - Gap：没有独立 edge-api/platform-domain service 的部署和 E2E 证据。
+
+## Round-002 Target refinement（D002）
+
+Product Host（Zuno UI、WorkBuddy、Dify 或其他 API Client）提交的是带租户、Matter、权限、
+幂等键和版本上下文的意图/命令；Host 不能把一次 HTTP 成功、模型文本或 Runtime checkpoint
+直接解释为法律业务完成。交付前必须经过 Evidence/Proposal、Domain Owner 和适用的 Human Review
+门禁，并返回可追溯的 WorkProduct/Review projection。
+
+这项澄清强化 Host 与 Canonical Domain 的边界，不声称任何外部 Host 当前已经实现该契约，也不
+改变历史交付事实。

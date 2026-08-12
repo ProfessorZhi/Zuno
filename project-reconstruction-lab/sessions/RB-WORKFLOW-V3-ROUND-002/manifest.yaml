@@ -1,0 +1,41 @@
+protocol_version: ZUNO-RED-BLUE-WORKFLOW-V3
+session_id: RB-WORKFLOW-V3-ROUND-002
+round_id: RB-WORKFLOW-V3-ROUND-002
+baseline_sha: 19ba6e050e1334f71c511a5968c9ea9d15c68111
+final_sha: recorded in final handoff
+source_canonical_state: ACCEPTED_TARGET
+question_budget: 100
+actual_question_count: 100
+answer_count: 100
+score_count: 100
+decision_count: 100
+novelty_status: ASSESSED
+novel_question_count: 80
+regression_question_count: 20
+novelty_threshold_percent: 70
+regression_max_percent: 30
+category_distribution:
+  "00 Overall Architecture": 12
+  "01 Product Surface": 6
+  "02 Input / Document Ingestion": 7
+  "03 Knowledge / Agentic GraphRAG": 11
+  "04 Model Gateway": 6
+  "05 Memory & Context": 8
+  "06 Agent Core / Planning & Control": 14
+  "07 Capability / Skill": 6
+  "08 Tool Runtime": 10
+  "09 Security": 8
+  "10 Observability & Eval": 6
+  "11 Infrastructure": 6
+red_blue_order: RED_ATTACK -> BLUE_ANSWER -> RED_SCORE -> BLUE_DECISION -> DELTA -> CANONICAL_SYNC
+canonical_sync_status: APPLIED
+round_status: COMPLETE
+new_a_p0: 0
+original_p0_closed: 0
+implementation_program: READY_FOR_TASK_DEFINITION
+round_003_status: READY_NOT_STARTED
+runtime_changed: NONE
+schema_or_migration_changed: NONE
+facts_changed: NONE
+adr_escalation_count: 0
+user_gate_escalation_count: 0

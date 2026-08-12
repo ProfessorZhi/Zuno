@@ -45,3 +45,15 @@ Graph 是 Conditional Projection。只有按 Query Class 的 Graph ablation、�
 - Current：仓库有 ingestion、RAG、GraphRAG、Milvus/Neo4j adapters 和 RabbitMQ workers；这些是代码/基础设施事实，不等于质量证明。
 - Target：一个 Knowledge Service + resource-specific workers；Graph conditional。
 - Gap：服务独立运行、retrieval SLO、Graph Kill Test、evidence sufficiency 和 cross-service Contract。
+
+## Round-002 Target refinements（D003、D004）
+
+Ingestion 发布必须保留 `source_artifact_id`、`DocumentVersion`、解析器/模型版本、内容 hash、
+scope、ACL 和 JobId；重复投递应收敛到同一版本或明确的 rejected/stale 结果，不能依赖队列 ACK
+证明业务发布成功。检索计划必须根据 QueryClass、Claim、EvidenceRequirement 和预算选择
+lexical、dense、hybrid、rerank 或 conditional graph，并把最终 Claim 绑定到可验证的
+`SourceSpan`/`CitationLineage`。
+
+Graph 仍是 Conditional Provider。没有按查询类别的 Graph-vs-Hybrid 消融、证据充分性、引用正确性、
+延迟、Token 和成本结果时，系统必须能够降级为更简单的检索路径；本节没有把 GraphRAG 质量收益
+或当前服务拆分写成事实。

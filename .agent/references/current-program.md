@@ -22,7 +22,8 @@ program_class: `architecture-review-and-reconstruction`
 - `ZUNO-RED-BLUE-WORKFLOW-V2 / ROUND-001` 已生成并完成 100 题记录；其原始 P0/Critical
   Closure 仍保持 OPEN，但经 Gate Realignment 后 Part-A Target 已被批准并完成 Canonical Sync。
 - `RB-BLUE-REPAIR-001` 已完成 Root-Cause Clustering、Part-A Repair 和 Counter Retest；
-  Round-002 具备启动条件但保持 `READY_NOT_STARTED`；I/E/X Closure 继续作为后续轨道推进。
+  `RB-WORKFLOW-V3-ROUND-002` 已完成 100Q、评分、决策、Delta 和 Canonical Sync；I/E/X
+  Closure 继续作为后续轨道推进。
 - 当前 Evidence Closure 会话为 `RB-EVIDENCE-CLOSURE-001`；它复用已有 focused verifier/test，
   不修改 Runtime/UI/Schema/Migration/生产 Infra。当前 Final P0 为 12，Closure-grade evidence
   为 0/12，Counter Retest 尚未执行，Canonical Docs 不得同步。
@@ -43,8 +44,9 @@ Canonical Facts Taxonomy V1         DONE
 Fact Depth Recovery                 IN_PROGRESS
 Product / Architecture Reconstruction IN_PROGRESS
 Red / Blue / Interview Review       READY / IN_PROGRESS
-Canonical Architecture Sync         APPLIED / ACCEPTED_TARGET
+Canonical Architecture Sync         APPLIED / ACCEPTED_TARGET (V3 refinements)
 Implementation Program              READY_FOR_TASK_DEFINITION (not active)
+V3 Round-002                       COMPLETE; Round-003 READY_NOT_STARTED
 ```
 
 Canonical Runtime Program V1 已完成并归档。可读历史摘要位于：
