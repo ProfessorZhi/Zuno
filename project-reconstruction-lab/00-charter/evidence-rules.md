@@ -24,9 +24,13 @@ observed_at: 访问/记录时间
 claim_supported: 支持的具体 Claim
 scope: 历史 | 当前仓库 | Target | 外围背景
 confidence: HIGH | MEDIUM | LOW
+strength: E0 | E1 | E2 | E3 | E4 | E5
 contradictions: []
 notes: 边界和不能推出的内容
 ```
+
+Strength 不是 Confidence 的别名：Confidence 表示当前对该证据解释的把握，Strength 表示
+证据来源和可复核程度。两者都不能突破 Claim 的 Scope。
 
 ## 反向约束
 

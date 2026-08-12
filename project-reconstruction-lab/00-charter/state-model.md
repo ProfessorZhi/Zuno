@@ -17,6 +17,23 @@ TARGET_ONLY
 FUTURE
 ```
 
+## Evidence Strength
+
+Evidence Strength 与 Fact State 分开维护：
+
+```text
+E0  memory / inference only
+E1  explicit user confirmation
+E2  artifact corroboration
+E3  repository / trace corroboration
+E4  independent public corroboration
+E5  reproducible engineering evidence
+```
+
+Strength 必须结合 Scope 解读。E4 只能证明公开来源范围，E5 只能证明可复现的 Current 或
+Target 行为；它们都不能自动证明完整历史项目。每个重要 Claim 应关联 Evidence ID，不能
+只写一个抽象等级。
+
 ## Architecture State
 
 架构状态只描述设计审查生命周期，不能替代历史事实：
