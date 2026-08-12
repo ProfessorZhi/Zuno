@@ -13,6 +13,8 @@ Claim
 → Red Attack
 → Blue Response
 → Counter Attack
+→ Closure Class
+→ User Architecture Gate
 → Decision
 → Canonical Sync / Gap
 ```
@@ -26,15 +28,21 @@ Discovery
 → Root-Cause Clustering
 → Blue Repair
 → Severity Reclassification
-→ P0 Burn-down
+→ Closure Class
+→ A-P0 Burn-down
+→ User Architecture Gate
+→ Canonical Sync
+→ Implementation / Evidence / External Tracks
 → Counter Retest
 → Round Closure
-→ User Architecture Gate
 → Next Round
 ```
 
 具体规则见 [Blue Repair Protocol](blue-repair-protocol.md)。Severity Burn-down 只减少严重度
-饱和，不能把没有证据的 P0 宣称为已关闭。
+饱和，不能把没有证据的 P0 宣称为已关闭。若 P0 只是实现、测量或外部资格阻塞，不得因此
+把已经设计清楚的 Target 锁死在 User Architecture Gate 之前；具体规则见
+[Architecture Gate Policy](../../docs/governance/architecture-gate-policy.md) 和
+`sessions/RB-GATE-REALIGNMENT-001/`。
 
 ## 输出
 
@@ -135,7 +143,9 @@ project-reconstruction-lab/sessions/RB-EVIDENCE-CLOSURE-001/
 ```
 
 没有 V3–V5 证据的设计只能保持 `TARGET_ONLY` 或 `COUNTER_RETEST_PENDING`；不得因为 Blue
-Repair 已经写过状态模型，就把 P0 标成 `CLOSED`。
+Repair 已经写过状态模型，就把 P0 标成 `CLOSED`。`RB-GATE-REALIGNMENT-001` 只分离
+Architecture、Implementation、Measurement 和 External Qualification 的阻塞面，不改变
+原始 P0 Closure。
 
 P0 V4 Execution 记录位于 `sessions/RB-P0-V4-EXECUTION-001/`。该会话允许 verification-only
 spike、fault model、loopback Provider emulator 和 focused test，但必须区分 Current、Emulated
@@ -152,4 +162,4 @@ python tools/scripts/verify_red_blue_p0_v4_execution_v1.py
 ```
 
 V2 Round 未通过 User Architecture Gate 前，不得把 Blue Proposal 写入 `docs/project/`，
-也不得生成 Runtime implementation task。
+也不得激活 Runtime implementation task；可审计的 Candidate 只能留在 Lab。

@@ -66,16 +66,19 @@ Round Discovery
 → Root-Cause Clustering
 → Blue Repair / Part-A Reconstruction
 → Severity Reclassification
-→ P0 Burn-down
-→ Counter Retest
-→ Round Closure
+→ Closure Class
+→ A-P0 Burn-down
 → User Architecture Gate
+→ Canonical Sync
+→ Implementation / Evidence / External Tracks
+→ Counter Retest / Round Closure
 → Next Round
 ```
 
 只有 Round Closure 记录了未关闭 P0、Evidence Coverage、Counter Retest 和决策，才允许评估
 下一轮。`58→12` 这种变化只能表示 Severity Reclassification；`Final P0 closed` 必须由实际
-Retest Evidence 证明。
+Retest Evidence 证明。`A-P0` 阻塞 User Gate；`I/E/X-P0` 在 User Gate 后分别进入实现、测量
+和外部资格轨道，不再形成“必须先实现才能接受 Target”的循环。
 
 允许形成的 Change Set 不只包括 Architecture Proposal，还可以是：
 
@@ -258,7 +261,8 @@ round-report.md
 ```
 
 Answer Defensibility 与 Architecture / Project Fitness 都按 0–5 记录；Round 同时报告 Raw、
-Normalized、P0/P1 和 Critical Gate。高分不能绕过 P0，也不能绕过 User Architecture Gate。
+Normalized、P0/P1 和 Critical Gate。高分不能绕过 P0 Closure，也不能绕过 User Architecture
+Gate 的 A-P0 和 Contract 条件。
 Round-001 的固定配额、状态和分数由
 `project-reconstruction-lab/sessions/RB-WORKFLOW-V2-001/` 作为可复核样本保存。
 

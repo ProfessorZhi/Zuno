@@ -109,7 +109,8 @@ Final Closure
 3. 运行测试必须明确环境、输入、预期、失败判定和限制；
 4. 失败和阻塞同样是有效结果，必须保存原始原因；
 5. 本轮不修改业务 Runtime、UI、Schema/Migration、依赖或生产 Infra；
-6. Canonical Docs 只有在全部最终 P0 通过 User Architecture Gate 后才允许同步；
+6. Canonical Docs 只有在 User Architecture Gate 通过且 A-P0=0、I/E/X 风险计划可追踪后才允许同步；
+   I/E/X 的 Closure 仍需在后续 Implementation、Benchmark 和 External Qualification Track 完成；
 7. 历史事实缺口回到 Facts / Evidence Ledger，不由架构证据包填空。
 
 ## 会话输出

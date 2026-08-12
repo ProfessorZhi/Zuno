@@ -83,8 +83,9 @@ Evidence Intake
 → Canonical Docs Sync
 ```
 
-在 `User Architecture Gate` 之前，只能写 Lab 候选、Spike、Benchmark 或 Gap；不能生成
-Runtime implementation task。`Microservice Target` 不等于五个服务已实现，`Domain-aware
+在 `User Architecture Gate` 之前，只能写 Lab 候选、Spike、Benchmark 或 Gap；可以记录
+带边界的 `Codex Implementation Task Candidate`，但不能激活 Runtime implementation task
+或 implementation Program。`Microservice Target` 不等于五个服务已实现，`Domain-aware
 Runtime` 也不等于已证明优于 Host + Legal Backend。
 
 ## Expected outputs
@@ -187,6 +188,22 @@ Canonical Docs Sync            NOT_APPLIED
 本轮使用 verification-only harness 和 loopback Provider emulator；它们不能证明 Current Domain
 Persistence、第三方 Provider、真实 Sandbox、法院质量或 Production。Q039 的 Scope Split 不
 删除原始 P0，Q039-B 继续保持 V5 Benchmark Gap。
+
+## Gate Realignment status
+
+```text
+Campaign                       RB-GATE-REALIGNMENT-001
+Original P0                    12
+Derived closure records        13 (Q039-C / Q039-B)
+A-P0 / I-P0 / E-P0 / X-P0     0 / 11 / 1 / 1
+Original P0 closed             0 / 12
+User Architecture Gate         PENDING_USER_DECISION
+Canonical Sync                  NOT_APPLIED
+Implementation Program          NOT_STARTED
+```
+
+Closure Class 只决定阻塞面，不改变历史 Severity 或 P0 Closure。用户 Gate 前可以提出
+Implementation Task Candidate，但不能激活实现或把候选写成 Current。
 
 ## Exit condition
 

@@ -15,6 +15,8 @@ Architecture：PROPOSED / UNDER_ATTACK / SURVIVED / REJECTED / DEFERRED /
               ACCEPTED_TARGET / IMPLEMENTED / MEASURED / PRODUCTION_PROVEN
 
 Gap：OPEN / BLUE_PROPOSED / UNDER_COUNTER_ATTACK / RESOLVED / DEFERRED / REJECTED
+
+Closure Class：A / I / E / X（与 Severity 正交；见 `docs/governance/architecture-gate-policy.md`）
 ```
 
 Facts 的结构冻结，事实内容可以通过 Evidence Intake 和 Memory Recovery 增量恢复。Target
@@ -40,8 +42,11 @@ User Gate：批准、拒绝或要求继续研究；不由模型代签
 5. Fact Gap、Architecture Gap、Blocker 有 Question traceability；
 6. Blue Change Set 有 User Gate、Sync Status、Validation 和 Rollback；
 7. Counter Attack 记录结果；
-8. P0 Critical Gate 未关闭时，Round 不能标记通过；
-9. 未经 User Architecture Gate 不写正式 `docs/project/`，不生成实现任务。
+8. P0 Critical Gate 未关闭时，不能把原始 P0 标为 `CLOSED`；
+9. `A-P0 > 0` 时 User Architecture Gate 不能通过；
+10. 未经 User Architecture Gate 不写正式 `docs/project/`，不激活 implementation Program；
+11. User Gate 前可以提出可审计的 Implementation Task Candidate、Benchmark Plan 和
+    Qualification Plan，但不得把它们写成 active task、Measured 或 Production Evidence。
 
 ## Score
 

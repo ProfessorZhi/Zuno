@@ -10,11 +10,12 @@ Round Discovery
 → Root-Cause Clustering
 → Blue Repair
 → Severity Reclassification
-→ P0 Burn-down
-→ Counter Retest
-→ Round Closure
+→ Closure Class
+→ A-P0 Burn-down
 → User Architecture Gate
 → Canonical Sync
+→ Implementation / Evidence / External Tracks
+→ Counter Retest / Round Closure
 → Next Round
 ```
 
@@ -54,13 +55,17 @@ Repair 阶段不制造一个总分。至少报告：
 最终状态由 Gate 决定，而不是由平均分决定：
 
 ```text
-P0 = 0
+A-P0 = 0
 Part A 无核心矛盾
 Canonical Ownership 闭合
-Critical Failure Paths 有可执行 Contract
-Counter Retest 完成
+Critical Failure Paths 有明确 Target Contract
+I/E/X-P0 分别有 Implementation / Benchmark / Qualification Plan
 User Architecture Gate 通过
 ```
+
+这组条件只决定能否接受已设计清楚的 Target，不关闭原始 Final P0。`Final P0` 的 Closure
+仍必须由相应 Evidence、Red Review 和 Counter Retest 证明；具体 Gate 分离见
+`docs/governance/architecture-gate-policy.md`。
 
 ## Repair 边界
 

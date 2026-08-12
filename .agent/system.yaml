@@ -129,6 +129,7 @@ skill_routes:
       - "python tools/scripts/verify_red_blue_repair_v1.py"
       - "python tools/scripts/verify_red_blue_evidence_closure_v1.py"
       - "python tools/scripts/verify_red_blue_p0_v4_execution_v1.py"
+      - "python tools/scripts/verify_red_blue_gate_realignment_v1.py"
 
   - name: "backend-agent-runtime"
     match:

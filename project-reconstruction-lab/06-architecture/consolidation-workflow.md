@@ -56,6 +56,8 @@ Security / Observability / Test / Replacement / Reversal
 ```
 
 `ACCEPTED_TARGET` 不跳过 Red/Blue；`SURVIVED` 只有在 Counter Attack 后才能使用。
+`A-P0` 阻塞 User Gate；`I/E/X-P0` 分别阻塞实现完成、测量和外部资格，不自动阻塞对已
+设计清楚 Target 的用户审阅。完整规则见 `docs/governance/architecture-gate-policy.md`。
 
 ## Canonical Sync Rules
 

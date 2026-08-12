@@ -147,10 +147,12 @@ Workspace Bootstrap
   → Big Tech Interview Attack
   → Gap Repair
   → Architecture Consolidation
+  → Closure Class / User Architecture Gate
   → ADR Preparation
   → Canonical Docs Sync
   → Architecture-to-Code Gap
-  → Codex Task Generation
+  → Codex Task Candidate
+  → User-approved Implementation Program
   → Implementation Review
   ↺ 新证据回到 Fact Recovery / Architecture Red Team
 ```
@@ -206,8 +208,8 @@ GraphRAG、Memory、OpenViking、Legal Domain Kernel 和 Native Domain-aware Run
 因为当前文档出现就自动保留。
 
 本 Program 是 active design program，不是 implementation program。业务 Runtime、UI、
-Schema/Migration、依赖和生产 Infra 不在本轮修改范围内；实现任务必须等用户通过
-Architecture Gate 后另行生成。
+Schema/Migration、依赖和生产 Infra 不在本轮修改范围内；Implementation Task Candidate 可以
+在 Lab 中记录，但必须等用户通过 Architecture Gate 后才能激活 implementation Program。
 
 ## Reader Paths
 

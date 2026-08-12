@@ -36,6 +36,9 @@ python tools/scripts/verify_red_blue_session.py project-reconstruction-lab/sessi
 
 `TEMPLATE/` 和以下划线开头的 synthetic fixture 不会被默认全目录扫描；它们可以被测试直接传给 verifier。
 
+Gate Realignment 等 specialized session 可以使用独立的 `protocol_version` 和专用 verifier，
+但仍必须声明基线、状态、用户 Gate、Canonical Sync、事实/Runtime 边界和不可升级的证据结论。
+
 Scorecard 必须覆盖完整 Project Package。若问题长期只集中在 Agent/RAG，遗漏项目背景、产品价值、Ownership、开发过程、模型部署、竞品替代、上线和生产证据，应标记 `COVERAGE_FAILURE`。
 
 建议命名：`YYYY-MM-DD-<scope>-<short-name>.md`。

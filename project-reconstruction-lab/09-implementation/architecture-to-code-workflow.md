@@ -2,7 +2,10 @@
 
 ## 入口条件
 
-只有设计状态为 `ACCEPTED_TARGET`，且对应 ADR/Canonical Doc 已通过用户架构 Gate，才允许生成实现任务。`PROPOSED` 或 `UNDER_ATTACK` 设计只能生成 Spike/Benchmark 任务，不能直接改生产 Runtime。
+只有设计状态为 `ACCEPTED_TARGET`，且对应 ADR/Canonical Doc 已通过用户架构 Gate，才允许
+激活 implementation Program 和执行实现任务。User Gate 前可以生成有边界的
+`Codex Implementation Task Candidate`，用于说明 I-P0 如何解锁，但不能修改 Product Runtime、
+创建 active implementation Program，或把 Candidate 写成 `IMPLEMENTED`。
 
 ## 流程
 
@@ -17,6 +20,10 @@ Current Repository Inventory
   → Contract
   → Evidence Update
 ```
+
+`I-P0` 不能作为“先有实现才能通过 User Gate”的循环前置条件；它们应在 Gate Package 中
+记录 Contract、Scope、Evidence 和 Rollback，再在 User Gate 通过后激活。`E-P0` 和 `X-P0`
+分别继续走 Benchmark 与 External Qualification Track。
 
 ## 每个 Gap 的审查项
 
