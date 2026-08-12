@@ -137,6 +137,10 @@ project-reconstruction-lab/sessions/RB-EVIDENCE-CLOSURE-001/
 没有 V3–V5 证据的设计只能保持 `TARGET_ONLY` 或 `COUNTER_RETEST_PENDING`；不得因为 Blue
 Repair 已经写过状态模型，就把 P0 标成 `CLOSED`。
 
+P0 V4 Execution 记录位于 `sessions/RB-P0-V4-EXECUTION-001/`。该会话允许 verification-only
+spike、fault model、loopback Provider emulator 和 focused test，但必须区分 Current、Emulated
+Boundary、Target 和 External Block；它不直接修改产品 Runtime。
+
 验证：
 
 ```powershell
@@ -144,6 +148,7 @@ python tools/scripts/verify_red_blue_session.py
 python tools/scripts/verify_red_blue_round_v2.py
 python tools/scripts/verify_red_blue_repair_v1.py
 python tools/scripts/verify_red_blue_evidence_closure_v1.py
+python tools/scripts/verify_red_blue_p0_v4_execution_v1.py
 ```
 
 V2 Round 未通过 User Architecture Gate 前，不得把 Blue Proposal 写入 `docs/project/`，

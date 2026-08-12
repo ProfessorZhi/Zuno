@@ -165,6 +165,29 @@ Round-002                      BLOCKED
 Evidence Closure 不是第二轮百问，也不是 Runtime implementation。它只登记实际证据、证据范围、
 反驳意见和下一步验证；所有最终 P0 仍保持 OPEN。
 
+## P0 V4 Execution status
+
+```text
+Campaign                       RB-P0-V4-EXECUTION-001
+Original P0                    12
+Scope Split                   1 (Q039-C / Q039-B)
+V4 executed records            6/12
+V3 current/narrow records      4/12
+V4 accepted by Red             0/12
+Counter Retest                 NOT_RUN
+P0 closed                      0/12
+Implementation-dependent       4
+External-blocked               1 (Q066)
+V5 benchmark gaps              1 (Q039-B)
+Critical Closure               0%
+Round-002                      BLOCKED
+Canonical Docs Sync            NOT_APPLIED
+```
+
+本轮使用 verification-only harness 和 loopback Provider emulator；它们不能证明 Current Domain
+Persistence、第三方 Provider、真实 Sandbox、法院质量或 Production。Q039 的 Scope Split 不
+删除原始 P0，Q039-B 继续保持 V5 Benchmark Gap。
+
 ## Exit condition
 
 本 Program 只有在每个保留的重大设计都有 Red、Blue、Counter Attack、替代方案、验证方式和
