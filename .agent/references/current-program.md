@@ -21,6 +21,9 @@ program_class: `architecture-review-and-reconstruction`
   `NOT_PASSED_PENDING_USER_GATE`，P0 Critical Gate 保持 OPEN，Canonical Docs 未同步。
 - 当前先执行 `RB-BLUE-REPAIR-001`，完成 Root-Cause Clustering、Part-A Repair 和 Counter Retest；
   Round-002 在 Final P0、Evidence 和 Closure Gate 通过前保持 BLOCKED。
+- 当前 Evidence Closure 会话为 `RB-EVIDENCE-CLOSURE-001`；它复用已有 focused verifier/test，
+  不修改 Runtime/UI/Schema/Migration/生产 Infra。当前 Final P0 为 12，Closure-grade evidence
+  为 0/12，Counter Retest 尚未执行，Canonical Docs 不得同步。
 
 ## 当前交接
 

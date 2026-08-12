@@ -124,12 +124,26 @@ project-reconstruction-lab/sessions/RB-BLUE-REPAIR-001/
 
 它不是新的 100Q Round，也不覆盖 Round-001 的原始分数和原始 Severity。
 
+### Evidence Closure
+
+Blue Repair 之后，如果 Final P0 仍未闭合，进入 [Evidence Closure Protocol](evidence-closure-protocol.md)。
+Evidence Closure 是证据战役，不是新的百问 Round：它逐项要求执行验证、保存原始 Artifact、
+接受 Red Evidence Review，并完成 Counter Retest。当前会话位于：
+
+```text
+project-reconstruction-lab/sessions/RB-EVIDENCE-CLOSURE-001/
+```
+
+没有 V3–V5 证据的设计只能保持 `TARGET_ONLY` 或 `COUNTER_RETEST_PENDING`；不得因为 Blue
+Repair 已经写过状态模型，就把 P0 标成 `CLOSED`。
+
 验证：
 
 ```powershell
 python tools/scripts/verify_red_blue_session.py
 python tools/scripts/verify_red_blue_round_v2.py
 python tools/scripts/verify_red_blue_repair_v1.py
+python tools/scripts/verify_red_blue_evidence_closure_v1.py
 ```
 
 V2 Round 未通过 User Architecture Gate 前，不得把 Blue Proposal 写入 `docs/project/`，

@@ -120,6 +120,10 @@ Round-001 后的 Blue Repair 记录位于 `sessions/RB-BLUE-REPAIR-001/`。它�
 修复、Severity Reclassification、P0 Burn-down 和 Counter Retest；它不是第二轮 100Q，也不
 改变 Round-001 的原始记录。当前 Repair 结果仍为 `COUNTER_RETEST_REOPENED`，Round-002 阻塞。
 
+Final P0 的证据战役记录位于 `sessions/RB-EVIDENCE-CLOSURE-001/`。它不重开 100Q，而是逐项
+记录 Evidence ID、Closure Condition、实际 Artifact、Red Evidence Review 和 Counter Retest。
+当前 12 个 Final P0 均未闭合，已有 10 项 V3 窄证据，Closure-grade evidence 为 `0/12`。
+
 每个专题只回答自己的问题。`02-history/` 与 `03-current/` 是工作视图，不替代 `docs/project/facts/`；`06-architecture/` 不替代 `docs/project/architecture/`。
 
 ## Continuous Reconstruction Loop

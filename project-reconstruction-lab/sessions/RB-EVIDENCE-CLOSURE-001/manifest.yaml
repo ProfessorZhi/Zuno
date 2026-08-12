@@ -1,0 +1,27 @@
+protocol_version: ZUNO-EVIDENCE-CLOSURE-V1
+session_id: RB-EVIDENCE-CLOSURE-001
+source_repair_session: RB-BLUE-REPAIR-001
+source_round_id: RB-WORKFLOW-V2-001
+baseline_sha: e0e67ede267025f5203ff8b06bc6c185b8a96000
+scope: architecture-evidence-closure
+runtime_changes: NONE
+schema_or_migration_changes: NONE
+canonical_sync_status: NOT_APPLIED
+user_architecture_gate: PENDING
+round_002_status: BLOCKED
+status: COUNTER_RETEST_PENDING
+root_cause_cluster_count: 10
+final_p0_count: 12
+closed_p0_count: 0
+blocked_p0_count: 0
+failed_p0_count: 0
+executed_p0_count: 10
+critical_closure:
+  closed_p0: 0
+  final_p0: 12
+  percentage: 0
+evidence_coverage:
+  closure_grade_items: 0
+  total_items: 12
+  percentage: 0
+  note: V3 focused evidence exists for a subset but no item has passed Red Review and Counter Retest

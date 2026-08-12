@@ -147,6 +147,24 @@ User Architecture Gate         PENDING
 
 Repair 只写入 Lab，不修改业务 Runtime、UI、Schema/Migration 或正式 Canonical Architecture。
 
+## Evidence Closure status
+
+```text
+Campaign                       RB-EVIDENCE-CLOSURE-001
+Baseline SHA                   e0e67ede267025f5203ff8b06bc6c185b8a96000
+Final P0                       12
+Executed focused evidence      10/12 (V3 narrow claims)
+Closure-grade evidence         0/12 = 0%
+P0 closed                      0/12
+Red Evidence Review            completed; no closure accepted
+Counter Retest                 NOT_RUN
+Canonical Docs Sync            NOT_APPLIED
+Round-002                      BLOCKED
+```
+
+Evidence Closure 不是第二轮百问，也不是 Runtime implementation。它只登记实际证据、证据范围、
+反驳意见和下一步验证；所有最终 P0 仍保持 OPEN。
+
 ## Exit condition
 
 本 Program 只有在每个保留的重大设计都有 Red、Blue、Counter Attack、替代方案、验证方式和
