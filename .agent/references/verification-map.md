@@ -19,18 +19,15 @@ python .agent/scripts/verify_doc_boundaries.py
 架构红蓝队任务先读取：
 
 ```text
-project-red-blue/README.md
-project-red-blue/00-charter.md
-project-red-blue/01-project-facts.md
-project-red-blue/02-project-model.md
-project-red-blue/03-team-ownership.md
-project-red-blue/04-attack-taxonomy.md
-project-red-blue/05-interviewer-personas.md
-project-red-blue/06-red-team-protocol.md
-project-red-blue/07-blue-team-protocol.md
-project-red-blue/08-gap-register.md
-project-red-blue/09-open-source-review.md
-project-red-blue/10-delivery-evolution.md
+project-reconstruction-lab/README.md
+project-reconstruction-lab/00-charter/
+project-reconstruction-lab/01-facts/
+project-reconstruction-lab/02-history/
+project-reconstruction-lab/03-current/
+project-reconstruction-lab/05-red-blue/
+project-reconstruction-lab/07-interview-red-team/
+project-reconstruction-lab/08-decisions/
+project-reconstruction-lab/09-implementation/
 ```
 
 该工作区负责项目事实采集和红蓝互动；`docs/verification/interview-qa/` 负责架构攻击题和 Coverage。两者都不拥有 Canonical Architecture，正式变更必须回到 `docs/project/architecture/`、`docs/project/<topic>/`、`docs/decisions/`、`docs/status/` 或 `docs/evidence/` 的正确 Owner。

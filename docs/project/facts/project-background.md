@@ -46,4 +46,4 @@ Python-only、Microservice、Legal Domain Kernel、Domain-aware Runtime、Multi-
 
 ## 事实 Owner
 
-本文件负责项目来源、客户称谓、产品关系、公开背景和未知边界；开发过程进入 [`development-evolution.md`](development-evolution.md)，交付状态进入 [`delivery-and-usage.md`](delivery-and-usage.md)，候选重建进入 [`../../../project-red-blue/01-project-facts.md`](../../../project-red-blue/01-project-facts.md)。
+本文件负责项目来源、客户称谓、产品关系、公开背景和未知边界；开发过程进入 [`development-evolution.md`](development-evolution.md)，交付状态进入 [`delivery-and-usage.md`](delivery-and-usage.md)，候选重建进入 [`../../../project-reconstruction-lab/01-facts/`](../../../project-reconstruction-lab/01-facts/fact-baseline.md)。

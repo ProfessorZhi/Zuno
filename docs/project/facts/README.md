@@ -22,7 +22,7 @@ Complete Historical Project Repository
 | [`delivery-and-usage.md`](delivery-and-usage.md) | Demo、测试、试点和生产状态是什么？ |
 | [`technology-reality.md`](technology-reality.md) | 哪些技术历史上真正使用，哪些只是当前仓库或 Target？ |
 
-候选重建、攻击和下一轮回忆问题维护在 [`project-red-blue/01-project-facts.md`](../../../project-red-blue/01-project-facts.md)，不替代本目录的 Canonical Fact。
+候选重建、攻击和下一轮回忆问题维护在 [`project-reconstruction-lab/01-facts/`](../../../project-reconstruction-lab/01-facts/fact-baseline.md)，不替代本目录的 Canonical Fact。
 
 ## 统一事实标签
 

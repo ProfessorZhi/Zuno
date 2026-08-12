@@ -3,7 +3,7 @@
 - 状态：`accepted-target`
 - 日期：2026-08-12
 - 依据：`RED-KERNEL-V3`，基线 `0c07cfd69e4fcf76d5be53c0f7dce38171abfc8f`
-- 关联：`project-red-blue/sessions/RB-KERNEL-V3/`
+- 关联：`project-reconstruction-lab/sessions/RB-KERNEL-V3/`
 - 适用：Legal Domain State、Host Integration、Capability Provider、Agent Runtime、Knowledge、Memory、Security、Eval、Infrastructure
 
 ## Context

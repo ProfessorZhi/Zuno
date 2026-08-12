@@ -55,4 +55,4 @@ OTHER TEAM WORK
 
 ## 事实 Owner
 
-本文件负责现实团队和个人贡献，不负责未来架构 Ownership。目标 Owner 进入架构专题，候选团队结构和追问进入 [`../../../project-red-blue/01-project-facts.md`](../../../project-red-blue/01-project-facts.md)。
+本文件负责现实团队和个人贡献，不负责未来架构 Ownership。目标 Owner 进入架构专题，候选团队结构和追问进入 [`../../../project-reconstruction-lab/01-facts/`](../../../project-reconstruction-lab/02-history/team-and-ownership.md)。

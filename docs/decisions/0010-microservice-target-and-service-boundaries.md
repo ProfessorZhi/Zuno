@@ -3,7 +3,7 @@
 - 状态：`accepted-target`
 - 日期：2026-08-13
 - 基线：`0c07cfd69e4fcf76d5be53c0f7dce38171abfc8f`
-- 关联：`ADR-0003`、`ADR-0005`、`ADR-0007`、`project-red-blue/sessions/RB-ARCH-REFRAME-V1/`
+- 关联：`ADR-0003`、`ADR-0005`、`ADR-0007`、`project-reconstruction-lab/sessions/RB-ARCH-REFRAME-V1/`
 
 ## Context
 

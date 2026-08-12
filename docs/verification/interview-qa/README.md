@@ -13,7 +13,7 @@
 
 QA 是架构消费者。正式事实仍由 `docs/project/architecture/`、`docs/project/modules/`、`docs/decisions/` 和 `docs/governance/` 负责；QA 只能验证、压缩和引用这些事实，不能为了让答案完整而新增 Runtime 语义。
 
-如果任务还包含项目背景、用户规模、团队协作、WorkBuddy/开源替代、交付过程或落地真实性，先进入 [`../../../project-red-blue/README.md`](../../../project-red-blue/README.md)。本目录继续只维护架构攻击题、Deep Dive Chain 和 Coverage；上层红蓝工作区调用这里的题库，不复制或另建第二套 QA 事实源。
+如果任务还包含项目背景、用户规模、团队协作、WorkBuddy/开源替代、交付过程或落地真实性，先进入 [`../../../project-reconstruction-lab/README.md`](../../../project-reconstruction-lab/README.md)。本目录继续只维护架构攻击题、Deep Dive Chain 和 Coverage；上层 Lab 调用这里的题库，不复制或另建第二套 QA 事实源。
 
 红队的最终产出不是“题目更多”或“Coverage 更好看”，而是：
 

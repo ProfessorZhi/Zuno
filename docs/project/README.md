@@ -60,4 +60,4 @@ SRE:      services → data → deployment → eval
 - [`ADR-0010`](../decisions/0010-microservice-target-and-service-boundaries.md)
 - [`ADR-0011`](../decisions/0011-architecture-document-taxonomy.md)
 
-项目事实目录仍是历史真相源；红蓝过程记录在 `project-red-blue/`，不覆盖正式事实。
+项目事实目录仍是历史真相源；项目重建与红蓝过程记录在 `project-reconstruction-lab/`，不覆盖正式事实。

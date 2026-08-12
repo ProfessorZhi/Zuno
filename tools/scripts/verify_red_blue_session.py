@@ -18,7 +18,7 @@ import yaml
 
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
-SESSIONS_ROOT = REPO_ROOT / "project-red-blue" / "sessions"
+SESSIONS_ROOT = REPO_ROOT / "project-reconstruction-lab" / "sessions"
 REQUIRED_SESSION_FILES = (
     "manifest.yaml",
     "transcript.md",

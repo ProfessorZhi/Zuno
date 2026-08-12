@@ -24,7 +24,7 @@ Questions：Q003
 Failed Claim：Canonical Sync 是否具备完整审计链。
 Root Cause：需要把验证和复测引用落到 Change Set。
 Gap Types：IMPLEMENTATION
-Current Evidence：project-red-blue/sessions/TEMPLATE/
+Current Evidence：project-reconstruction-lab/sessions/TEMPLATE/
 Required Research：无
 Suggested Blue Route：TASK
 Status：PROPOSED

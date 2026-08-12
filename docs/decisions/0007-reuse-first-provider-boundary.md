@@ -104,6 +104,6 @@ G4 必须记录许可证、版本、部署模型、数据出口、升级责任�
 
 ## Verification
 
-本 ADR 的文档一致性由架构文档集、语义对齐、内部链接、红蓝会话和 Repository Verifier 检查；具体候选的 G1–G5 必须由 `project-red-blue/09-open-source-review.md` 记录官方资料、源码、测试、License、Spike 和 Benchmark 证据后，才可升级决策状态。
+本 ADR 的文档一致性由架构文档集、语义对齐、内部链接、红蓝会话和 Repository Verifier 检查；具体候选的 G1–G5 必须由 `project-reconstruction-lab/legacy/numbered/09-open-source-review.md` 与当前 `05-red-blue/` 记录官方资料、源码、测试、License、Spike 和 Benchmark 证据后，才可升级决策状态。
 
 本 ADR 是 `accepted-target`，不是 Current、实现证明或 Production Readiness 证明。

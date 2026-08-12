@@ -21,7 +21,7 @@ AGENTS.md
      templates/     执行模板和报告骨架
      scripts/       过渡期验证器
 
-project-red-blue/
+project-reconstruction-lab/
   -> 项目级 Red/Blue Lab：事实采集、项目模型、红队攻击、蓝队提案和 Skill 契约；不拥有正式架构事实。
 
 docs/
@@ -60,7 +60,7 @@ docs/
 - `docs/`：正式人类文档真相。
 - `AGENTS.md`：仓库级 Agent 入口和工作流契约。
 - `.agent/`：本地 Agent Skill System、Reference、Program 和模板；不保存架构或模块正文镜像。
-- `project-red-blue/`：项目级红蓝实验区，维护项目事实、攻击协议、Gap 和会话摘要；不替代 `docs/` 的正式事实源。
+- `project-reconstruction-lab/`：项目级项目重建与架构实验室，维护事实恢复、证据、攻击协议、Gap、面试挑战和会话摘要；不替代 `docs/` 的正式事实源。
 - `docs/history/`：历史归档。
 
 正式结论必须进入 `docs/`。只给 Agent 使用的导航、可复用提示和辅助脚本放在 `.agent/`。
@@ -188,7 +188,7 @@ Agent Runtime 任务必须读取 `docs/project/agents/agent-platform.md`、`docs
 
 - 范围不清楚 → `.agent/references/task-routing.md` 的只读审计路由。
 - 文档、`.agent`、History、README → `.agent/references/workflow.md` 的文档维护流程。
-- 项目红蓝队、项目事实、落地真实性或个人贡献 → `project-red-blue/README.md` 的项目红蓝工作流。
+- 项目事实、历史恢复、落地真实性、个人贡献或架构红蓝队 → `project-reconstruction-lab/README.md` 的项目重建工作流。
 - 目录移动、删除、归档、忽略规则和缓存清理 → 仓库卫生流程。
 - `apps/web` → `apps/web/AGENTS.md` 和 `.agent/references/code-map.md`。
 - `src/backend/zuno/agent/**` → `docs/project/agents/`、Domain、Services、Data。

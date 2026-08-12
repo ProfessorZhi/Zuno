@@ -92,7 +92,7 @@ Canonical Sync 是否可追溯且受 User Gate 约束。
 
 ### Blue Sources
 
-- `project-red-blue/workflows/03-red-blue-optimization-workflow.md`
+- `project-reconstruction-lab/workflows/03-red-blue-optimization-workflow.md`
 
 ### Scorecard Ref
 

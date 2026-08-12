@@ -6,7 +6,7 @@ on:
     paths:
       - "docs/project/architecture/**"
       - "docs/project/modules/**"
-      - "project-red-blue/sessions/**"
+      - "project-reconstruction-lab/sessions/**"
       - "tools/agent/render_architecture.py"
       - "tools/scripts/verify_*_target_protocols.py"
       - "tools/scripts/verify_architecture_document_set.py"
@@ -26,7 +26,7 @@ on:
     paths:
       - "docs/project/architecture/**"
       - "docs/project/modules/**"
-      - "project-red-blue/sessions/**"
+      - "project-reconstruction-lab/sessions/**"
       - "tools/agent/render_architecture.py"
       - "tools/scripts/verify_*_target_protocols.py"
       - "tools/scripts/verify_architecture_document_set.py"
