@@ -36,8 +36,8 @@ Closure Condition 不相等：现有结果主要是 V3 focused contract/model/re
 
 ```text
 Accepted closure evidence: 0 / 12
-Narrow-claim evidence: 7 / 12
-Request-more-evidence: 5 / 12
+Narrow-claim evidence: 6 / 12
+Request-more-evidence: 6 / 12
 Counter Retest: not run
 ```
 
