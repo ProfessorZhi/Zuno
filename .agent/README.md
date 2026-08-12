@@ -8,7 +8,7 @@
 AGENTS.md              仓库唯一入口：规则、边界、阅读顺序、任务路由
 .agent/system.yaml     机器可读路由：路径 -> skills -> templates -> verify
 .agent/references/     当前项目 skills、任务路由、代码地图、验证地图和已知坑
-.agent/programs/       当前可执行 Agent program；无 active program 时保留 no-active 前台，历史只保留 docs/history 摘要
+.agent/programs/       当前可执行 Agent program；可有 active design program，implementation program 仍需单独 Gate
 .agent/templates/      skill 执行模板和报告骨架
 .agent/scripts/        过渡期验证器；长期自动化目标位置是 tools/agent 与 tools/verify
 ```
@@ -53,7 +53,7 @@ AGENTS.md              仓库唯一入口：规则、边界、阅读顺序、任
 
 - `.agent/` 不保存总架构或模块镜像；架构与模块文档统一从 `docs/` 读取。
 - `.agent/references/`：当前 skill library。这里放任务路由、统一工作流、文档地图、代码地图、验证地图、debugging 和 known pitfalls。
-- `.agent/programs/`：执行计划。只保存 active/queued 状态；历史原始 Program 不复制回当前树，没有下一项实现工作时保持 no-active。
+- `.agent/programs/`：执行计划。只保存 active/queued 状态；历史原始 Program 不复制回当前树。设计审查 Program 与 implementation Program 分开登记。
 - `.agent/templates/`：skill 执行骨架，只放格式，不沉淀项目知识。
 - `.agent/scripts/`：过渡期验证器。新自动化优先放 `tools/agent/` 或 `tools/verify/`，防回归测试放 `tests/agent_system/`。
 
@@ -77,7 +77,7 @@ docs/history/        历史归档
 - `.agent/references/` 承载可复用项目 skill，不写一次性调查流水账。
 - `.agent/programs/` 只承载当前状态，不保存旧施工文件。
 - 不在 `.agent/` 下重新创建架构或模块目录作为并行事实源。
-- 新的 implementation program 必须在架构评审后由用户明确激活；旧施工文件不回到当前树。
+- 新的 implementation program 必须在架构评审和用户 Gate 后由用户明确激活；active design program 不等于实现已开始，旧施工文件不回到当前树。
 - 大任务默认多用目标模式；共享文件多或风险集中时使用挂机模式，由主线程执行到底。
 - 可并行时使用多线程模式：主线程拆成粗粒度线程，每个线程都必须带目标、范围、禁止范围、验收闸门和验证命令。
 - 多线程模式下，主线程先盘点可复用 Codex 线程和 git worktree；有合适可复用线程就复用，没有合适线程才创建新线程。

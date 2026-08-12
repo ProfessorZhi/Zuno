@@ -84,15 +84,18 @@ History
     只保留批准的摘要；raw construction materials 可按授权和 Git 可追溯规则退出 current tree。
 ```
 
-上一轮 Runtime 工程收口已完成并归档，`.agent/programs/` 当前为 `no-active`。下一阶段不是新的 Runtime Implementation Program；只在独立设计工作中按以下顺序推进：
+上一轮 Runtime 工程收口已完成并归档。当前 `.agent/programs/` 登记的是
+`PROJECT-ARCHITECTURE-RECONSTRUCTION-V1` 设计/审查 Program，不是 Runtime Implementation
+Program；实现仍须等待架构 Gate。下一阶段按以下顺序推进：
 
 ```text
-Current Baseline Review
-→ Project Workflow Consolidation
-→ Canonical Architecture Deep Review
+Fact Depth Recovery
+→ Product Problem Reconstruction
+→ Architecture Red / Blue / Counter Attack
 → Domain / Agent / Service Boundary Review
+→ Big Tech Interview Red Team
 → Cross-service Contract / ADR Coordination
-→ Architecture Review
+→ User Architecture Gate
 → 设计确认后才决定是否建立新的 Implementation Program
 ```
 

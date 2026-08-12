@@ -33,9 +33,14 @@ def main() -> int:
     if {path.name for path in program_root.glob("*.md")} != {"README.md", "current.md"}:
         errors.append(".agent/programs front must contain README.md and current.md")
     current = (program_root / "current.md").read_text(encoding="utf-8")
-    for phrase in ("state: `no-active`", "active_program: `none`", "SUPERSEDED / RETIRED"):
-        if phrase not in current:
-            errors.append(f"current program missing {phrase}")
+    has_no_active_state = all(phrase in current for phrase in ("state: `no-active`", "active_program: `none`"))
+    has_design_state = "state: `active-design-program`" in current and re.search(
+        r"active_program: `(?!none`)[^`]+`", current
+    ) is not None
+    if not (has_no_active_state or has_design_state):
+        errors.append("current program has no recognized design/implementation state")
+    if "SUPERSEDED / RETIRED" not in current:
+        errors.append("current program missing SUPERSEDED / RETIRED")
 
     architecture = ROOT / "docs" / "project" / "architecture"
     if {path.name for path in architecture.iterdir() if path.is_file()} != {

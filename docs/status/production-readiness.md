@@ -31,12 +31,12 @@ Public review evidence 不能替代固定 benchmark 的实际测量。Quality �
 ## Next Boundary
 
 ```text
-Project Workflow Consolidation
-→ Canonical Architecture Deep Review
-→ 11 Module Deep Review
-→ Cross-module Contract / ADR Coordination
-→ Architecture Review
-→ decide whether to create a new implementation Program
+PROJECT-ARCHITECTURE-RECONSTRUCTION-V1
+  → Fact Depth Recovery
+  → Product / Architecture Red-Blue Review
+  → User Architecture Gate
+  → decide whether to create a new implementation Program
 ```
 
-不要创建新的阶段列表，不恢复旧 Program，不在外围治理阶段继续扩张业务 Runtime。
+当前 Program 只推进事实深度和设计审查，不改变 Production Readiness。不要恢复旧 Program，
+不要把设计 Program 写成 implementation，未经用户 Gate 不扩张业务 Runtime。

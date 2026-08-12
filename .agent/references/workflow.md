@@ -47,3 +47,7 @@ git diff --check PASS
 旧 Program1 SUPERSEDED / RETIRED
 active implementation program NONE
 ```
+
+说明：`active implementation program NONE` 不排斥一个 active design/review Program。
+当前设计 Program 为 `PROJECT-ARCHITECTURE-RECONSTRUCTION-V1`；只有通过用户 Architecture
+Gate 后，才可以生成 implementation Program。

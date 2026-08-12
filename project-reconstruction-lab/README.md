@@ -137,6 +137,60 @@ Workspace Bootstrap
   ↺ 新证据回到 Fact Recovery / Architecture Red Team
 ```
 
+## 当前 Program：PROJECT-ARCHITECTURE-RECONSTRUCTION-V1
+
+Canonical Facts Framework V1 已形成。本 Program 不再扩张事实目录，而是把事实深度恢复
+与架构重构并行推进：
+
+| Track | 目标 | 当前输出边界 |
+|---|---|---|
+| Track A — Fact Depth Recovery | 恢复真实法院工作流、个人代码 Ownership、Court QA、Incident、协作和复用/研究转化 | 只进入 Facts、Evidence Ledger、Open Questions 或候选，不创造未知细节 |
+| Track B — Architecture Reconstruction | 从真实问题推导 Product、Domain、Runtime、Knowledge、Service、Data、Security 和 Eval | 只进入 Lab 候选、Red/Blue、Benchmark、ADR 候选和 Gap，未过 Gate 不同步 Canonical Target |
+
+## Fact Readiness Gate
+
+事实层不追求 `UNKNOWN = 0`。当下面主链能够逐段回答，且每段都标注事实状态与 Evidence
+ID 时，即可在事实未完全闭合的情况下开始架构重构：
+
+```text
+为什么做
+  → 谁在用
+  → 团队怎么做
+  → 我做了什么
+  → 一个请求怎么跑
+  → 真实遇到什么问题
+  → 怎么改
+  → 怎么测试
+  → 客户怎么反馈
+  → 为什么后来要改架构
+```
+
+正式产品名、合同甲方、精确法院名单、历史中间件、用户规模、SLA 和指标如果没有证据，
+继续保持 `UNKNOWN`，不成为架构启动阻塞项。
+
+## Architecture Review Gate
+
+本 Program 的目标不是把已有 Target 文档重新排版，而是对每项复杂度执行：
+
+```text
+Historical Problem
+→ Candidate Design
+→ Red Attack
+→ Blue Response
+→ Counter Attack
+→ Benchmark / Spike / Evidence
+→ KEEP / SIMPLIFY / EXTERNALIZE / DEFER / DELETE
+```
+
+Python-only 和 Microservice 是 Owner 给定的 Target Constraint；Red Team 仍必须攻击第二
+语言、服务数量、服务边界、Worker/Library 替代、通信与数据成本。Multi-Agent、LangGraph、
+GraphRAG、Memory、OpenViking、Legal Domain Kernel 和 Native Domain-aware Runtime 都不是
+因为当前文档出现就自动保留。
+
+本 Program 是 active design program，不是 implementation program。业务 Runtime、UI、
+Schema/Migration、依赖和生产 Infra 不在本轮修改范围内；实现任务必须等用户通过
+Architecture Gate 后另行生成。
+
 ## Reader Paths
 
 | Reader | 路径 |
