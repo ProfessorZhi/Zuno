@@ -13,6 +13,7 @@
 - [Technology History](technology-history.md)
 - [Production Readiness Baseline](production-readiness-baseline.md)
 - [Interview and Red-Team QA](interview-qa/README.md)
+- [Red / Blue Architecture Rounds](red-blue/README.md)
 - [Superseded Document Taxonomy](superseded-document-taxonomy/README.md)
 
 历史摘要不是 Current 运行事实，也不是新的实施授权。它们用于理解演进、审计旧决策和恢复上下文。
