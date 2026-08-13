@@ -59,9 +59,9 @@ Project Package 也不等于一个新事实源。内容必须回到已有 Owner�
 | 背景、用户、痛点、项目立意 | `01-project-facts.md`、`02-project-model.md` |
 | 团队、分工、个人贡献 | `03-team-ownership.md` |
 | 第一版到当前的开发演进 | `10-delivery-evolution.md` |
-| 稳定产品问题与 Target 工作流 | `docs/project/architecture/` 与 `docs/project/product/` |
-| Model Role、路由、API/本地模型 | `docs/project/agents/agent-platform.md` |
-| Serving、GPU、扩缩容和部署 | `docs/project/deployment/microservice-deployment.md` |
+| 稳定产品问题与 Target 工作流 | `docs/architecture/` 与 `docs/product/` |
+| Model Role、路由、API/本地模型 | `docs/agents/agent-platform.md` |
+| Serving、GPU、扩缩容和部署 | `docs/deployment/microservice-deployment.md` |
 | RAG、Graph、Memory、Agent、Tool | 对应模块文档 |
 | 上线、用户、Benchmark、运行证据 | `docs/status/`、`docs/evidence/` |
 | 开源替代评审 | `09-open-source-review.md` 与 ADR |
@@ -309,7 +309,7 @@ Claim 明确降为 UNKNOWN / BLUE_PROPOSAL；
 
 红蓝队不直接拥有：
 
-- `docs/project/architecture/`、`docs/project/<topic>/` 的正式架构事实；
+- `docs/architecture/`、`docs/<topic>/` 的正式架构事实；
 - 代码、数据库、运行时和部署系统；
 - 用户未确认的历史背景、团队人数、用户规模或指标。
 

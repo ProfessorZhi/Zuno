@@ -29,11 +29,11 @@ Microservice 和 Python-only 是当前 Owner Target Constraint；该已完成 Pr
 
 ## Inputs
 
-- `docs/project/history/` 的历史事实与 UNKNOWN；本轮不新增新的事实分类；
-- `docs/project/status/` 的 Current / Target / Production Readiness 边界；
+- `docs/facts/` 的当前项目上下文、Current 与 UNKNOWN；本轮不新增新的事实分类；
+- `docs/architecture/` 的 Target 边界，以及 `docs/facts/current-state.md` 的 Production Readiness；
 - `project-reconstruction-lab/01-facts/` 的事实恢复、证据台账和未决问题；
 - `project-reconstruction-lab/04-product/` 的问题模型与产品命题候选；
-- `docs/project/architecture/`、ADR 0008–0011 和 `docs/project/status/`；旧专题只作为 Superseded 迁移材料；
+- `docs/architecture/`、ADR 0008–0011 和 `docs/facts/`；旧专题只作为 Superseded 迁移材料；
 - 当前代码、测试、配置、Compose、Migration 和可复现验证结果；
 - 已完成 Red/Blue 会话，仅作为输入和可追溯历史，不自动继承其结论。
 

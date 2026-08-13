@@ -39,6 +39,7 @@ DECISIONS = {
 TABLE_LINE = re.compile(r"^\|\s*(Q\d{3})\s*\|(.+)\|\s*$")
 
 CANONICAL_OWNER_ALIASES = {
+    "docs/project/architecture/": "docs/architecture/",
     "docs/project/product/": "docs/history/superseded-document-taxonomy/project-topics/product/",
     "docs/project/domain/": "docs/history/superseded-document-taxonomy/project-topics/domain/",
     "docs/project/agents/": "docs/history/superseded-document-taxonomy/project-topics/agents/",

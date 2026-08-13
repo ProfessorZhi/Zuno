@@ -96,7 +96,7 @@ REQUIRED_TOP_LEVEL_GATES: Final[tuple[str, ...]] = (
     "failure_buckets",
 )
 
-# Closed-set PHASE22 Failure Bucket Taxonomy (per docs/project/modules/10-observability-eval.md
+# Closed-set PHASE22 Failure Bucket Taxonomy (per docs/modules/10-observability-eval.md
 # Part 33: GraphRAG and Agent Failure Bucket baseline). High-risk entries are
 # tracked separately so callers can distinguish them from generic high-risk
 # regressions in evidence.

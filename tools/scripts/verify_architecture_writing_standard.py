@@ -6,9 +6,9 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 STANDARD = ROOT / "docs/governance/architecture-document-writing-standard.md"
-ARCH = ROOT / "docs/project/architecture/architecture.md"
-VIEWS = ROOT / "docs/project/architecture/architecture-views.md"
-HTML = ROOT / "docs/project/architecture/architecture.html"
+ARCH = ROOT / "docs/architecture/architecture.md"
+VIEWS = ROOT / "docs/architecture/architecture-views.md"
+HTML = ROOT / "docs/architecture/architecture.html"
 
 
 def verify() -> list[str]:

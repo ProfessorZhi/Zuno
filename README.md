@@ -53,7 +53,7 @@ README 同时展示 Current 和 Target，但二者不能混为一谈。
 | Evidence-Driven Agentic GraphRAG v2 | `accepted-target`，设计可用；Claim-level Evidence Deliberation、Evidence Reasoning Graph 和 Targeted Probe 尚不能声明为 Current |
 | Eval 与发布质量 | 工程收口已完成；固定测量仍为 blocked，quality not yet proven，production readiness not established |
 
-正式状态事实以 [`docs/project/status/production-readiness.md`](./docs/project/status/production-readiness.md)、最新代码、Migration、测试、Trace、Eval 和 Evidence 为准。README、类名、表名、Phase 名称或架构图本身都不能证明 Target 已实现。
+正式状态事实以 [`docs/facts/current-state.md`](./docs/facts/current-state.md)、最新代码、Migration、测试、Trace、Eval 和 Evidence 为准。README、类名、表名、Phase 名称或架构图本身都不能证明 Target 已实现。
 
 ## 四组架构总览
 
@@ -476,13 +476,13 @@ Object upload success != Artifact published
 
 ## 文档入口
 
-- [Zuno 项目知识入口](./docs/project/README.md)
-- [总体 Target 架构](./docs/project/architecture/architecture.md)
-- [架构视图 HTML](./docs/project/architecture/architecture.html)
-- [历史项目入口](./docs/project/history/README.md)
-- [Current Repository Reality](./docs/project/status/current-reality.md)
-- [Target Status](./docs/project/status/target-status.md)
-- [Production Readiness 状态](./docs/project/status/production-readiness.md)
+- [Zuno 项目知识入口](./docs/README.md)
+- [总体 Target 架构](./docs/architecture/architecture.md)
+- [架构视图 HTML](./docs/architecture/architecture.html)
+- [历史项目入口](./docs/facts/README.md)
+- [Current Repository Reality](./docs/facts/current-state.md)
+- [Target Status](./docs/architecture/architecture.md)
+- [Production Readiness 状态](./docs/facts/current-state.md)
 - [Evidence-Driven Agentic GraphRAG ADR](./docs/decisions/0006-evidence-driven-agentic-graphrag.md)
 - [架构决策](./docs/decisions/README.md)
 - [Repository Ownership Matrix](./docs/governance/repo-ownership-matrix.md)

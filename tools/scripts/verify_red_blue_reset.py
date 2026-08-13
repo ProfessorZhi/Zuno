@@ -157,7 +157,7 @@ def verify() -> list[str]:
         if "CANCELLED_BEFORE_START" not in content:
             errors.append(f"{_relative(path)} does not record Round-007 cancellation")
 
-    architecture = REPO_ROOT / "docs/project/architecture/architecture.md"
+    architecture = REPO_ROOT / "docs/architecture/architecture.md"
     if architecture.exists():
         content = _read(architecture)
         for marker in ("readability_state: READABILITY_BASELINE_REFOUNDED", "readability_gate: REQUIRED_BEFORE_NEXT_RED_BLUE_PROTOCOL"):

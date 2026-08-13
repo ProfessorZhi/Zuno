@@ -29,4 +29,4 @@ Runtime Provider。`H2 — Runtime–Domain Integration Advantage` 继续由 A/B
 - Matter DB + Checkpoint 是否足够；
 - Modular Monolith + Workers 是否满足 Target Constraint 下的 workload/failure/security。
 
-Survived 设计最终写回 `docs/project/architecture/` 和 ADR，不在本报告形成第二套 Canonical Architecture。
+Survived 设计最终写回 `docs/architecture/` 和 ADR，不在本报告形成第二套 Canonical Architecture。

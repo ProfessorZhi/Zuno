@@ -5,8 +5,8 @@ on:
     branches:
       - main
     paths:
-      - "docs/project/modules/04-model-gateway.md"
-      - "docs/project/modules/README.md"
+      - "docs/modules/04-model-gateway.md"
+      - "docs/modules/README.md"
       - ".agent/system.yaml"
       - "tools/scripts/verify_model_gateway_target_protocols.py"
       - "tools/scripts/verify_model_gateway_boundaries.py"

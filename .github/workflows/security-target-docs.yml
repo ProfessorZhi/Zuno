@@ -5,8 +5,8 @@ on:
     branches:
       - main
     paths:
-      - "docs/project/modules/09-security.md"
-      - "docs/project/modules/README.md"
+      - "docs/modules/09-security.md"
+      - "docs/modules/README.md"
       - "tools/scripts/verify_security_target_protocols.py"
       - "tests/repo/test_security_target_protocols.py"
       - ".github/workflows/security-target-docs.yml"
@@ -14,8 +14,8 @@ on:
     branches:
       - main
     paths:
-      - "docs/project/modules/09-security.md"
-      - "docs/project/modules/README.md"
+      - "docs/modules/09-security.md"
+      - "docs/modules/README.md"
       - "tools/scripts/verify_security_target_protocols.py"
       - "tests/repo/test_security_target_protocols.py"
       - ".github/workflows/security-target-docs.yml"

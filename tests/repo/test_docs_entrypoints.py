@@ -25,17 +25,18 @@ def _load_render_architecture():
 
 
 def test_architecture_directories_only_contain_support_files() -> None:
-    for root in [REPO_ROOT / "docs/project/architecture"]:
+    for root in [REPO_ROOT / "docs/architecture"]:
         assert {p.name for p in root.iterdir() if p.is_file()} == CANONICAL_ARCHITECTURE_FILES
         assert not [p for p in root.iterdir() if p.is_dir()]
 
 
 def test_legacy_documents_are_archived_and_not_active() -> None:
-    assert not (REPO_ROOT / "docs/project/facts").exists()
-    assert not (REPO_ROOT / "docs/project/modules").exists()
+    assert (REPO_ROOT / "docs/facts/project-context.md").exists()
+    assert (REPO_ROOT / "docs/facts/current-state.md").exists()
+    assert (REPO_ROOT / "docs/modules/README.md").exists()
     assert (REPO_ROOT / "docs/history/superseded-document-taxonomy/README.md").exists()
-    assert (REPO_ROOT / "docs/project/architecture/architecture.md").exists()
-    assert (REPO_ROOT / "docs/project/architecture/architecture.html").exists()
+    assert (REPO_ROOT / "docs/architecture/architecture.md").exists()
+    assert (REPO_ROOT / "docs/architecture/architecture.html").exists()
 
 
 def test_agent_architecture_and_module_mirrors_are_absent() -> None:
@@ -45,16 +46,16 @@ def test_agent_architecture_and_module_mirrors_are_absent() -> None:
 
 def test_architecture_markdown_is_integration_first() -> None:
     renderer = _load_render_architecture()
-    design = (REPO_ROOT / "docs/project/architecture/architecture.md").read_text(encoding="utf-8")
+    design = (REPO_ROOT / "docs/architecture/architecture.md").read_text(encoding="utf-8")
     assert renderer.validate_design(design) == []
     assert design.count("```mermaid") == 0
-    for marker in ["docs/project/history/", "docs/project/status/", "Part A — Architecture Narrative", "Part B — Detailed Architecture Specification"]:
+    for marker in ["docs/history/", "docs/facts/", "Part A — Architecture Narrative", "Part B — Detailed Architecture Specification"]:
         assert marker in design
 
 
 def test_visual_source_matches_new_architecture_taxonomy() -> None:
     renderer = _load_render_architecture()
-    views = (REPO_ROOT / "docs/project/architecture/architecture-views.md").read_text(encoding="utf-8")
+    views = (REPO_ROOT / "docs/architecture/architecture-views.md").read_text(encoding="utf-8")
     assert renderer.EXPECTED_VIEWS == EXPECTED_VIEWS
     assert renderer.validate_source(views) == []
     assert views.count("```mermaid") == len(EXPECTED_VIEWS)
@@ -62,9 +63,9 @@ def test_visual_source_matches_new_architecture_taxonomy() -> None:
 
 def test_architecture_html_routes_to_text_taxonomy_and_status() -> None:
     renderer = _load_render_architecture()
-    html = (REPO_ROOT / "docs/project/architecture/architecture.html").read_text(encoding="utf-8")
+    html = (REPO_ROOT / "docs/architecture/architecture.html").read_text(encoding="utf-8")
     assert renderer.validate_html(html) == []
-    for phrase in ["./architecture.md", "../history/README.md", "../status/target-status.md", "../../evidence/README.md", "../status/production-readiness.md", "./architecture-views.md"]:
+    for phrase in ["./architecture.md", "../history/README.md", "./architecture.md#target-status-boundary", "../evidence/README.md", "../facts/current-state.md", "./architecture-views.md"]:
         assert phrase in html
 
 
@@ -81,10 +82,10 @@ def test_active_architecture_surfaces_do_not_reference_retired_split_docs() -> N
         "11-infrastructure-consistency-lifecycle.md",
     ]
     active = [
-        REPO_ROOT / "docs/project/architecture/README.md",
-        REPO_ROOT / "docs/project/architecture/architecture.md",
-        REPO_ROOT / "docs/project/architecture/architecture-views.md",
-        REPO_ROOT / "docs/project/architecture/architecture.html",
+        REPO_ROOT / "docs/architecture/README.md",
+        REPO_ROOT / "docs/architecture/architecture.md",
+        REPO_ROOT / "docs/architecture/architecture-views.md",
+        REPO_ROOT / "docs/architecture/architecture.html",
     ]
     for path in active:
         content = path.read_text(encoding="utf-8")

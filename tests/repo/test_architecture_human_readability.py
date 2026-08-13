@@ -21,5 +21,5 @@ def test_canonical_markdown_has_human_and_normative_layers() -> None:
 
 
 def test_presentation_pair_remains_intact() -> None:
-    assert (REPO_ROOT / "docs/project/architecture/architecture-views.md").exists()
-    assert (REPO_ROOT / "docs/project/architecture/architecture.html").exists()
+    assert (REPO_ROOT / "docs/architecture/architecture-views.md").exists()
+    assert (REPO_ROOT / "docs/architecture/architecture.html").exists()

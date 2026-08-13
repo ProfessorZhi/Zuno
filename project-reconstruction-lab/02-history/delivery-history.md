@@ -1,6 +1,6 @@
 # Historical Delivery History
 
-正式历史状态以 [`docs/project/history/delivery-and-usage.md`](../../docs/project/history/delivery-and-usage.md) 为准：
+正式历史状态以 [`docs/history/delivery-and-usage.md`](../../docs/history/delivery-and-usage.md) 为准：
 
 ```text
 Internal Demo = YES

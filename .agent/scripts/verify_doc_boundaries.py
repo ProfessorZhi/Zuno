@@ -12,10 +12,18 @@ def main() -> int:
     errors: list[str] = []
     history = ROOT / "docs" / "history"
     evidence = ROOT / "docs" / "evidence"
-    expected_history = {
+    expected_history_front = {
         "docs/history/README.md",
         "docs/history/architecture-evolution.md",
         "docs/history/program-history.md",
+        "docs/history/project-background-history.md",
+        "docs/history/requirements-and-workflows-history.md",
+        "docs/history/team-and-ownership-history.md",
+        "docs/history/development-history.md",
+        "docs/history/incidents-and-improvements.md",
+        "docs/history/delivery-and-usage.md",
+        "docs/history/technology-history.md",
+        "docs/history/production-readiness-baseline.md",
     }
     expected_evidence = {
         "docs/evidence/README.md",
@@ -25,41 +33,46 @@ def main() -> int:
         "docs/evidence/current-test-baseline.md",
         "docs/evidence/current-eval-baseline.md",
     }
-    actual_history = {
+    actual_history_front = {
         path.relative_to(ROOT).as_posix()
         for path in history.iterdir()
         if path.is_file()
     }
     actual_evidence = _relative_files(evidence)
-    if actual_history != expected_history:
-        errors.append(f"history boundary mismatch: {sorted(actual_history)}")
+    if actual_history_front != expected_history_front:
+        errors.append(f"history boundary mismatch: {sorted(actual_history_front)}")
     if actual_evidence != expected_evidence:
         errors.append(f"evidence boundary mismatch: {sorted(actual_evidence)}")
 
-    expected_project_history = {
-        "docs/project/history/README.md",
-        "docs/project/history/project-background.md",
-        "docs/project/history/requirements-and-workflows.md",
-        "docs/project/history/team-and-ownership.md",
-        "docs/project/history/development-history.md",
-        "docs/project/history/incidents-and-improvements.md",
-        "docs/project/history/delivery-and-usage.md",
-        "docs/project/history/technology-history.md",
+    expected_facts = {
+        "docs/facts/README.md",
+        "docs/facts/project-context.md",
+        "docs/facts/current-state.md",
+        "docs/facts/assets/zuno-banner.svg",
     }
-    expected_project_status = {
-        "docs/project/status/README.md",
-        "docs/project/status/current-reality.md",
-        "docs/project/status/target-status.md",
-        "docs/project/status/production-readiness.md",
+    expected_modules = {"docs/modules/README.md"}
+    expected_history_interview = {
+        "docs/history/interview-qa/README.md",
+        "docs/history/interview-qa/architecture-coverage-matrix.md",
+        "docs/history/interview-qa/architecture-gap-report.md",
+        "docs/history/interview-qa/deep-dive-chains.md",
+        "docs/history/interview-qa/question-taxonomy.md",
+        "docs/history/interview-qa/source-audit.md",
+        "docs/history/interview-qa/zuno-agent-core-qa.md",
+        "docs/history/interview-qa/zuno-agentic-graphrag-qa.md",
+        "docs/history/interview-qa/zuno-cross-module-system-design-qa.md",
+        "docs/history/interview-qa/zuno-memory-context-qa.md",
+        "docs/history/interview-qa/zuno-memory-information-extraction-qa.md",
+        "docs/history/interview-qa/zuno-tool-mcp-security-qa.md",
     }
-    if _relative_files(ROOT / "docs/project/history") != expected_project_history:
-        errors.append("project history boundary mismatch")
-    if _relative_files(ROOT / "docs/project/status") != expected_project_status:
-        errors.append("project status boundary mismatch")
-    if (ROOT / "docs/project/facts").exists() or (ROOT / "docs/project/modules").exists():
-        errors.append("old project facts/modules directories must not remain active")
+    if _relative_files(ROOT / "docs/facts") != expected_facts:
+        errors.append("facts boundary mismatch")
+    if _relative_files(ROOT / "docs/modules") != expected_modules:
+        errors.append("modules boundary mismatch")
+    if _relative_files(ROOT / "docs/history/interview-qa") != expected_history_interview:
+        errors.append("historical interview material boundary mismatch")
 
-    architecture = ROOT / "docs" / "project" / "architecture"
+    architecture = ROOT / "docs" / "architecture"
     expected_architecture = {"README.md", "architecture.md", "architecture-views.md", "architecture.html"}
     actual_architecture = {path.name for path in architecture.iterdir() if path.is_file()}
     if actual_architecture != expected_architecture:

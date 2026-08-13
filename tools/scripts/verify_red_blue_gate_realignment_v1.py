@@ -13,7 +13,7 @@ import yaml
 ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_SESSION = ROOT / "project-reconstruction-lab" / "sessions" / "RB-GATE-REALIGNMENT-001"
 CANONICAL_SYNC_DOCS = (
-    ROOT / "docs/project/architecture/architecture.md",
+    ROOT / "docs/architecture/architecture.md",
 )
 ORIGINAL_P0 = ["Q005", "Q016", "Q033", "Q039", "Q053", "Q061", "Q063", "Q064", "Q066", "Q067", "Q070", "Q097"]
 DERIVED = ["Q005", "Q016", "Q033", "Q039-C", "Q039-B", "Q053", "Q061", "Q063", "Q064", "Q066", "Q067", "Q070", "Q097"]

@@ -49,7 +49,7 @@ def _write_common(directory: Path) -> dict[str, object]:
     base = "0123456789abcdef0123456789abcdef01234567"
     snapshot = directory / "canonical-snapshot.yaml"
     snapshot.write_text(
-        f"round_id: R006\nbase_sha: {base}\ncanonical_part_a: docs/project/architecture/architecture.md\n",
+        f"round_id: R006\nbase_sha: {base}\ncanonical_part_a: docs/architecture/architecture.md\n",
         encoding="utf-8",
     )
     snapshot_sha = _sha(snapshot.read_bytes())

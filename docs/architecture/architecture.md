@@ -9,11 +9,11 @@ acceptance_scope: Target Architecture baseline；实现、测量和外部资格�
 readability_state: READABILITY_BASELINE_REFOUNDED
 readability_gate: REQUIRED_BEFORE_NEXT_RED_BLUE_PROTOCOL
 document_role: cross-cutting integration source
-canonical_taxonomy: docs/project/architecture/ 仅保存四文件；History/Current/Target 状态由相邻 Canonical 层负责
-current_state_source: docs/project/status/ 和 docs/evidence/
+canonical_taxonomy: docs/architecture/ 仅保存总体架构四文件；Current Facts 由 docs/facts/ 负责
+current_state_source: docs/facts/ 和 docs/evidence/
 decision_sources: docs/decisions/0008-legal-domain-kernel-and-host-boundary.md、0009-python-only-backend.md、0010-microservice-target-and-service-boundaries.md、0011-architecture-document-taxonomy.md
 
-> 本文先说明问题和产品动机，再说明 Target 责任边界，最后给出 Contract。历史项目由 `docs/project/history/` 负责；当前仓库由 `docs/project/status/current-reality.md` 和 `docs/evidence/` 负责。本正文不创建第二套事实状态机，也不把 Target 写成 Current。
+> 本文先说明问题和产品动机，再说明 Target 责任边界，最后给出 Contract。项目上下文和当前仓库事实由 `docs/facts/` 负责；当前证据由 `docs/evidence/` 负责。本正文不创建第二套事实状态机，也不把 Target 写成 Current。
 
 ## Part A — Architecture Narrative
 
@@ -39,9 +39,9 @@ Retry、Recovery、Security 和 Eval。理解顺序由架构问题决定，而�
 
 ### 2. 历史事实、当前仓库和 Target 不是一条时间线
 
-历史项目来自智慧司法研发背景，曾有内部 Demo、客户侧 Demo、法院侧测试和 Pilot Validation，但尚未正式生产；客户明确反馈过回答质量需要提高。具体历史需求、完整技术主链路和用户代码级 Ownership 仍有未知项，详见 [`../history/project-background.md`](../history/project-background.md)。
+历史项目来自智慧司法研发背景，曾有内部 Demo、客户侧 Demo、法院侧测试和 Pilot Validation，但尚未正式生产；客户明确反馈过回答质量需要提高。今天仍用于理解产品边界的上下文见 [`../facts/project-context.md`](../facts/project-context.md)，完整历史过程进入 [`../history/`](../history/README.md)。
 
-当前 main 能证明 Python / FastAPI、PostgreSQL Migration、Compose、Agent / Knowledge / Memory / Tool 等代码或配置表面，但不能证明这些组件曾在历史客户环境同时运行，也不能证明用户本人负责全部能力，详见 [`../status/current-reality.md`](../status/current-reality.md)。
+当前 main 能证明 Python / FastAPI、PostgreSQL Migration、Compose、Agent / Knowledge / Memory / Tool 等代码或配置表面，但不能证明这些组件曾在历史客户环境同时运行，也不能证明用户本人负责全部能力，详见 [`../facts/current-state.md`](../facts/current-state.md)。
 
 本文以下内容都是 Target 或待测假设，不是历史项目回溯。
 
@@ -73,7 +73,7 @@ Target 用五层 Architecture Responsibility Layers 解释系统职责，但不�
 4. **Agent Runtime & Execution**：Single Controller、Plan DAG、Step、ReAct、Reflection、Replan、受控 Worker、Model、Skill 和 Tool；
 5. **Trust & Platform Engineering**：Permission、Approval、Sandbox、Audit、Observability、Eval 和 Infrastructure。
 
-逻辑能力（Logical Capability Architecture）、物理服务与部署（Physical Service / Deployment Architecture）、Worker、Process、Container、Database 和 Team 不做一一映射。上一阶段的 `11 Logical Modules + 1 Architecture` 只是 History / Superseded 文档组织方式；`FINAL_MODULE_COUNT: NOT_DECIDED`。
+逻辑能力（Logical Capability Architecture）、物理服务与部署（Physical Service / Deployment Architecture）、Worker、Process、Container、Database 和 Team 不做一一映射。上一阶段的 `11 Logical Modules + 1 Architecture` 只是 History / Superseded 文档组织方式；`FINAL_MODULE_COUNT: NOT_DECIDED`。历史材料统一从 [`docs/history/`](../history/README.md) 查阅，当前上下文和仓库状态统一从 [`docs/facts/`](../facts/README.md) 查阅。
 
 ### 5. Legal Domain、Knowledge、Intelligence 和 Memory 的边界
 
@@ -146,6 +146,42 @@ C — Zuno Native Runtime + First-class Legal Domain State
 - Matter DB + Runtime Checkpoint 足够：删除不必要的 Memory 层；
 - 模块化服务 + Worker 已满足资源和故障隔离：合并服务；
 - MCP / 现有 Sandbox 已满足安全边界：不重复建设 Tool Runtime。
+
+## Target Status Boundary
+
+本节是 Target 设计状态，不是 `docs/facts/` 的 Current 事实。`ACCEPTED_TARGET` 只表示方向已被治理接受；它不表示代码已实现、收益已测量或外部生产资格已获得。
+
+| Target 能力 / 边界 | 状态 | 关闭或反转条件 |
+| --- | --- | --- |
+| Python-only Backend | `ACCEPTED_TARGET` | Owner 工程约束；不证明历史或生产链路 |
+| Microservice Direction | `ACCEPTED_TARGET` | 服务数量和边界仍需扩缩容、故障、安全和生命周期证据 |
+| Legal Domain State | `ACCEPTED_TARGET` | 需要复杂法律任务 Benchmark 证明收益 |
+| Evidence / Citation Provenance | `ACCEPTED_TARGET` | 需要真实 QA 证明来源和引用闭环 |
+| Legal Intelligence Provider Boundary | `ACCEPTED_TARGET` | Provider 输出必须可替换、可评测，不能直接提交 Domain Fact |
+| Hybrid Retrieval | `ACCEPTED_TARGET` | 需要 Recall、Citation、Latency 和 Cost 测量 |
+| Agentic Retrieval / GraphRAG | `PROPOSED` / `HYPOTHESIS` | 只有 A/B/C 与 Graph Kill Test 证明增益才保留 |
+| Memory / Context | `PROPOSED` / `DEFERRED` | 不能成为 Canonical Legal Fact；需要替换和质量证据 |
+| Single Controller / Controlled Multi-Agent | `ACCEPTED_TARGET` / `PROPOSED` | 与更简单的单 Agent + 并行工具比较 |
+| Tool / MCP / Security / Human Review | `ACCEPTED_TARGET` | 需要授权、审批、幂等、Receipt、对账和真实 Review 证据 |
+| Physical Service Count | `MEASUREMENT_BLOCKED` | `FINAL_MODULE_COUNT: NOT_DECIDED`；按 Workload / Failure / Security / Scaling 收敛 |
+| Production Readiness | `NOT_ESTABLISHED` | 由独立运行、安全、HA、Eval 和外部资格证据证明 |
+
+## Product Thesis 与 A/B/C Kill Test
+
+Zuno 的 Target 差异不是堆更多 Agent，而是验证高风险法律任务是否需要可追溯、可复核、可持续更新且拥有明确状态 Owner 的法律工作结果。比较必须使用相同模型、原始语料、外部 Tool、相近 Prompt、Token 和时间预算：
+
+```text
+A — Generic Host + Legal Prompt / Skills
+B — Generic Host + Zuno Legal Backend / Legal Capabilities
+C — Zuno Native Runtime + First-class Domain State
+```
+
+- `B > A`：支持 Legal Backend / Legal Capability 有价值；
+- `C ≈ B`：缩减复杂 Native Runtime，优先 Host + Legal Backend；
+- `C > B`：才支持 Domain-aware Native Runtime 的额外复杂度；
+- `B ≈ A`：删除没有产生收益的 Legal Backend 复杂度。
+
+指标至少包括 Evidence Sufficiency、Citation Correctness、Unsupported Claim Rate、Reviewer Acceptance、Latency、Token、Cost、Model Calls、Retrieval Rounds、Tool Calls 和 Domain State Reuse Rate。
 
 ## Part B — Detailed Architecture Specification
 

@@ -34,11 +34,11 @@ Public review evidence 不能替代固定 benchmark 的实际测量。Quality �
 
 ## Evidence
 
-- [Current Runtime Baseline](../../evidence/current-runtime-baseline.md)
-- [Current Test Baseline](../../evidence/current-test-baseline.md)
-- [Current Eval Baseline](../../evidence/current-eval-baseline.md)
-- [Repository Closure](../../evidence/repository-closure.md)
-- [Local Workspace Closure](../../evidence/local-workspace-closure.md)
+- [Current Runtime Baseline](../evidence/current-runtime-baseline.md)
+- [Current Test Baseline](../evidence/current-test-baseline.md)
+- [Current Eval Baseline](../evidence/current-eval-baseline.md)
+- [Repository Closure](../evidence/repository-closure.md)
+- [Local Workspace Closure](../evidence/local-workspace-closure.md)
 
 ## Next Boundary
 

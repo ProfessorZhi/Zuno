@@ -1,6 +1,6 @@
 # Zuno 总体架构文档
 
-`docs/project/architecture/` 是唯一正式总体架构目录，只能保留四个文件：
+`docs/architecture/` 是唯一正式总体架构目录，只能保留四个文件：
 
 ```text
 README.md
@@ -19,7 +19,7 @@ Product、Domain、Logical Capability、Physical Service/Deployment、Data、Sec
 
 第一次阅读只读 `architecture.md` 的 Part A：先理解产品问题、History/Current/Target 边界、
 责任分层、状态 Owner、失败恢复和替代方案。第二次再读 Part B 的 Contract、State、Retry、
-Security 和验证要求。最后按问题进入对应专题、ADR、status 和 evidence；不要从术语、服务名
+Security 和验证要求。最后按问题进入 `../facts/`、`../modules/`、ADR 和 Evidence；不要从术语、服务名
 或旧模块编号倒推产品设计。
 
 可读性门的最低问题是：一个不了解 Zuno 的高级工程师，能否不用代码和 Part B 解释“为什么存在、
@@ -34,10 +34,10 @@ Security 和验证要求。最后按问题进入对应专题、ADR、status 和 
 
 ## 重要边界
 
-- 本目录不记录历史项目事实；历史事实在 `../history/`。
-- 本目录不记录当前运行证据；当前证据在 `../status/` 和 `../../evidence/`。
+- 本目录不记录项目事实和状态；这些内容统一在 `../facts/`。
+- 本目录不记录当前运行证据；可复现证据在 `../evidence/`。
 - 本目录不记录实施计划、Program、Ownership Matrix 或 ADR；这些分别进入 `.agent/programs/`、`docs/governance/` 和 `docs/decisions/`。
-- 旧专题和 11 模块不再作为平行 Canonical；归档位置见 [`../../history/superseded-document-taxonomy/README.md`](../../history/superseded-document-taxonomy/README.md)。
+- 旧专题和 11 模块不再作为平行 Canonical；归档位置见 [`../history/superseded-document-taxonomy/README.md`](../history/superseded-document-taxonomy/README.md)。
 
 ## 维护
 

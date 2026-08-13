@@ -153,7 +153,7 @@ Read Current + Target + Evidence + OSS Candidate
   → Red Retest
 ```
 
-蓝队可以推翻旧 Target；未经过用户架构确认，不把红蓝提案写入正式 `docs/project/architecture/` 或 `docs/project/modules/`。
+蓝队可以推翻旧 Target；未经过用户架构确认，不把红蓝提案写入正式 `docs/architecture/` 或 `docs/modules/`。
 
 ## 第一次真正运行时怎么问用户
 

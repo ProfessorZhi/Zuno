@@ -8,10 +8,11 @@
 | --- | --- | --- |
 | 范围不清、只读盘点 | `AGENTS.md`、`docs-map.md`、`code-map.md` | 只读审计 |
 | `docs/`、`.agent/`、History、README | `workflow.md`、`docs-map.md`、`verification-map.md` | 文档治理 |
-| 项目事实、历史恢复、个人贡献 | `project-reconstruction-lab/README.md`、`docs/project/history/`、事实证据 | Project History Owner |
-| 架构 Red/Blue | `project-reconstruction-lab/05-red-blue/README.md`、`principles.md`、`workflow-status.md`、`docs/project/architecture/`、ADR、status | Architecture Owner |
-| 当前运行/部署审计 | `docs/project/status/current-reality.md`、`docs/evidence/`、代码和测试 | Status/Evidence Owner |
-| Target 状态或 Production Readiness | `docs/project/status/`、ADR、治理 | Status/Evidence Owner |
+| 项目事实、历史恢复、个人贡献 | `project-reconstruction-lab/README.md`、`docs/facts/`、事实证据 | Project History Owner |
+| 架构 Red/Blue | `project-reconstruction-lab/05-red-blue/README.md`、`principles.md`、`workflow-status.md`、`docs/architecture/`、ADR、facts | Architecture Owner |
+| 当前运行/部署审计 | `docs/facts/current-state.md`、`docs/evidence/`、代码和测试 | Facts/Evidence Owner |
+| Target 状态 | `docs/architecture/`、ADR、治理 | Architecture Owner |
+| Production Readiness | `docs/facts/current-state.md`、`docs/evidence/` | Facts/Evidence Owner |
 | `apps/web` | `apps/web/AGENTS.md`、`code-map.md` | Product client / UI |
 | `src/backend/zuno` | `code-map.md`、`debugging.md`、总体架构 | 对应 Runtime Owner |
 | eval / dataset / metric | `tools/evals/zuno/AGENTS.md`、`verification-map.md`、`docs/evidence/` | Eval Owner |

@@ -51,6 +51,6 @@ Issue
 
 ## Owner 边界
 
-本文件负责历史问题与改进闭环；Current 运行故障进入 [`../../evidence/`](../../evidence/README.md)，
+本文件负责历史问题与改进闭环；Current 运行故障进入 [`../evidence/`](../evidence/README.md)，
 Target 的 Failure/Recovery 跨层边界进入 [`../architecture/architecture.md`](../architecture/architecture.md)
 和对应 ADR。

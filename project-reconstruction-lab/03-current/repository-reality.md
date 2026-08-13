@@ -15,6 +15,6 @@
 | Compose | `infra/docker/` |
 | Agent/Memory/Knowledge/Tool | `src/backend/zuno/agent/`、`memory/`、`knowledge/`、`capability/` |
 | Tests/Eval | `tests/`、`tools/evals/` |
-| Architecture / Status | `docs/project/architecture/`、`docs/project/status/`、`docs/evidence/` |
+| Architecture / Status | `docs/architecture/`、`docs/facts/`、`docs/evidence/` |
 
 这些入口证明某阶段仓库表面，不证明历史项目从一开始具备同样内容。

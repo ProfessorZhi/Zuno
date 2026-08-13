@@ -30,9 +30,9 @@ Fake Production Evidence Generator
 Lab 可以保留冲突、候选、攻击和未决问题；最终事实、状态与正式架构只能写回：
 
 ```text
-docs/project/history/
-docs/project/status/
-docs/project/architecture/
+docs/history/
+docs/facts/
+docs/architecture/
 docs/decisions/
 docs/governance/
 docs/evidence/
@@ -132,7 +132,7 @@ verification/emulator records、5 项 V3 current/narrow records；Red accepted �
 Retest 未运行，12 个原始 P0 仍保持 OPEN。Q039 被追踪为 Q039-C Critical Invariant 与
 Q039-B V5 Benchmark Gap，原始 Q039 不删除。
 
-每个工作视图只回答自己的问题。`02-history/` 与 `03-current/` 是调查工作材料，不替代 `docs/project/history/` 与 `docs/project/status/`；`06-architecture/` 不替代 `docs/project/architecture/`。旧事实、专题和模块原稿见 `docs/history/superseded-document-taxonomy/`，不得被 Lab 重新当作 active Canonical。
+每个工作视图只回答自己的问题。`02-history/` 与 `03-current/` 是调查工作材料，不替代 `docs/history/` 与 `docs/facts/`；`06-architecture/` 不替代 `docs/architecture/`。旧事实、专题和模块原稿见 `docs/history/superseded-document-taxonomy/`，不得被 Lab 重新当作 active Canonical。
 
 ## Continuous Reconstruction Loop
 
@@ -244,7 +244,7 @@ Blue Defense、Red Counter、Blue Counter Defense、Blue Synthesis 与 Red Judge
 | 用户：我到底做过什么？ | `01-facts/` → `02-history/` → `07-interview-red-team/personal-contribution` |
 | 导师 / 架构师：设计是否成立？ | `01-facts/` → `04-product/` → `05-red-blue/README.md` → `06-architecture/` |
 | 面试官：是否真的做过？ | `01-facts/` → `03-current/` → `07-interview-red-team/` |
-| 工程实现者：下一步改什么？ | `06-architecture/` → `09-implementation/` → `docs/project/` / ADR |
+| 工程实现者：下一步改什么？ | `06-architecture/` → `09-implementation/` → `docs/` / ADR |
 
 ## 统一原则
 

@@ -7,7 +7,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 CANONICAL = [
-    ROOT / "docs/project/architecture/architecture.md",
+    ROOT / "docs/architecture/architecture.md",
 ]
 
 PART_A_HEADING = "## Part A — Architecture Narrative"
@@ -24,7 +24,7 @@ def verify() -> list[str]:
         text = path.read_text(encoding="utf-8")
         label = str(path.relative_to(ROOT))
         metadata_markers = ("status:", "Current", "Target", "Gap")
-        if path != ROOT / "docs/project/architecture/architecture.md":
+        if path != ROOT / "docs/architecture/architecture.md":
             metadata_markers += ("canonical_question:", "owner:")
         for marker in metadata_markers:
             if marker not in text:
@@ -82,8 +82,8 @@ def verify() -> list[str]:
         }.items():
             if not any(marker in text for marker in markers):
                 errors.append(f"{label} lacks {concern} explanation")
-    views = ROOT / "docs/project/architecture/architecture-views.md"
-    html = ROOT / "docs/project/architecture/architecture.html"
+    views = ROOT / "docs/architecture/architecture-views.md"
+    html = ROOT / "docs/architecture/architecture.html"
     if not views.exists() or not html.exists():
         errors.append("architecture diagram presentation pair must remain present")
     elif 'fetch("./architecture-views.md")' not in html.read_text(encoding="utf-8"):

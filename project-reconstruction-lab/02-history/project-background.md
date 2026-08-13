@@ -2,7 +2,7 @@
 
 ## Working View
 
-上位背景、客户日常称谓、产品关系和公开 Context 以 [`docs/project/history/project-background.md`](../../docs/project/history/project-background.md) 为准。本页只提供重建阅读顺序：
+上位背景、客户日常称谓、产品关系和公开 Context 以 [`docs/history/project-background-history.md`](../../docs/history/project-background-history.md) 为准。本页只提供重建阅读顺序：
 
 ```text
 南京大学软件学院 / LIPLAB 智慧司法背景

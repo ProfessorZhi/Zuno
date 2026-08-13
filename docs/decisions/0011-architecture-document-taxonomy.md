@@ -14,7 +14,7 @@
 新的 Canonical Taxonomy 按问题而不是编号组织：
 
 ```text
-docs/project/
+docs/
 ├─ facts/                         What actually happened?
 ├─ architecture/                 How do the layers fit? (four files only)
 ├─ product/product-architecture.md
@@ -44,11 +44,11 @@ docs/project/
 | Eval | 怎样证明质量、效率和安全？ | Eval/Observability |
 | Deployment | 服务怎样运行、扩缩容、升级和故障隔离？ | Deployment/SRE |
 
-`docs/project/architecture/` 继续严格只保留 `README.md`、`architecture.md`、`architecture-views.md`、`architecture.html`；专题文档不得塞入该目录。
+`docs/architecture/` 继续严格只保留 `README.md`、`architecture.md`、`architecture-views.md`、`architecture.html`；专题文档不得塞入该目录。
 
 ## Legacy Disposition
 
-旧 `docs/project/modules/01..11` 不再是 Canonical Target。它们保留在 current tree 作为 `Superseded` 迁移材料/兼容路径，正式入口和 verifier 不再把它们视为设计事实源；后续可在历史摘要和 Git commit 可追溯条件下归档原始内容。任何旧文档与新 Taxonomy 冲突，以本 ADR、新专题文档和 Owner Registry 为准。
+旧 `docs/modules/01..11` 不再是 Canonical Target。它们保留在 current tree 作为 `Superseded` 迁移材料/兼容路径，正式入口和 verifier 不再把它们视为设计事实源；后续可在历史摘要和 Git commit 可追溯条件下归档原始内容。任何旧文档与新 Taxonomy 冲突，以本 ADR、新专题文档和 Owner Registry 为准。
 
 ## Reading Paths
 

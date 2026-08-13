@@ -6,7 +6,7 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parents[2]
 COMMON_CASE = "复杂案件分析"
 DOCUMENT_REQUIREMENTS = {
-    "docs/project/architecture/architecture.md": (
+    "docs/architecture/architecture.md": (
         "Legal Work Surface", "Legal Domain & Intelligence", "Agentic Knowledge & Context",
         "Agent Runtime & Execution", "Trust & Platform Engineering",
         "Python-only", "FastAPI", "LangGraph", "Reconciliation", "Current", "Target", "History",

@@ -2310,7 +2310,7 @@ None。第一轮记录的缺口已写回 canonical architecture；本 QA 不新�
 - resume_trigger: Agent Core、Plan、ReAct、current
 - architecture_refs:
   - docs/history/superseded-document-taxonomy/project-modules/06-agent-core-planning-control.md — § 47. 架构完成与 Program 入口门槛
-  - docs/project/status/production-readiness.md — § Production Readiness
+  - docs/facts/current-state.md — § Production Readiness
 - initial_coverage_status: FULL
 - coverage_status: FULL
 - gap_id: None
@@ -2343,7 +2343,7 @@ Single Controller、Plan mandatory、状态/Contract是Target设计事实；impl
 ### Architecture Evidence
 
 - docs/history/superseded-document-taxonomy/project-modules/06-agent-core-planning-control.md — § 47. 架构完成与 Program 入口门槛
-- docs/project/status/production-readiness.md — § Production Readiness
+- docs/facts/current-state.md — § Production Readiness
 
 ### 当前文档是否足够回答
 

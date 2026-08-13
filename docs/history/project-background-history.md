@@ -3,7 +3,7 @@
 status: canonical-history
 canonical_question: 这个历史项目从哪里来、服务什么方向、哪些背景事实可以确认？
 owner: Project History Owner
-replaces: 旧 `docs/project/facts/project-background.md` 的表格式入口
+replaces: 旧事实目录中的 project-background 表格式入口
 
 > 本文讲历史项目，不讲当前 Target Architecture。历史项目的正式产品名、合同关系和完整需求没有被完整恢复；缺失处保留 `UNKNOWN`，不使用当前仓库或目标架构补空。
 
@@ -80,4 +80,4 @@ replaces: 旧 `docs/project/facts/project-background.md` 的表格式入口
 
 葛季栋 / LIPLAB 相关公开研究属于 `PUBLIC_CONTEXT` 和 `RESEARCH_TRANSFER`。它们可以帮助解释为什么后续 Target 会关注事件抽取、事件对齐、冲突检测、争议焦点、事实—法条对应和法律评测，但不能证明历史 Zuno 已经实现这些论文算法，也不能把论文指标写成 Zuno Benchmark。
 
-历史事实、当前仓库事实和 Target 设计分别由 [`../history/README.md`](README.md)、[`../status/current-reality.md`](../status/current-reality.md) 和 [`../architecture/architecture.md`](../architecture/architecture.md) 维护。三者不得互相倒灌。
+历史事实、当前仓库事实和 Target 设计分别由本目录、[`../facts/current-state.md`](../facts/current-state.md) 和 [`../architecture/architecture.md`](../architecture/architecture.md) 维护。三者不得互相倒灌。

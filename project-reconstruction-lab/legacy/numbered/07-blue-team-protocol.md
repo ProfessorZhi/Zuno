@@ -64,7 +64,7 @@
 → 提出 1–3 个 Target 候选
 → 比较成本、替代方案和非目标
 → 用户确认架构方向
-→ 修改 docs/project/architecture / docs/project/<topic> / ADR / governance
+→ 修改 docs/architecture / docs/<topic> / ADR / governance
 → 运行验证
 → Red Retest
 ```
@@ -114,7 +114,7 @@ Zuno 自己保留法律/司法领域事实、Evidence、Review/Human Decision、
 | Owner、Contract、Failure | 对应模块文档 / ADR |
 | 技术取舍、Build/Buy | `docs/decisions/` / ADR |
 | 用户、规模、质量和上线状态 | `docs/status/` / `docs/evidence/`；现实事实仍需可靠来源 |
-| 面试叙事和攻击摘要 | `project-reconstruction-lab/` / `docs/verification/interview-qa/` |
+| 面试叙事和攻击摘要 | `project-reconstruction-lab/` / `docs/history/interview-qa/` |
 | 团队治理和交付过程 | `docs/governance/` 或项目材料 |
 | Current 实现缺口 | Codex 工程任务 + tests / migration / evidence |
 

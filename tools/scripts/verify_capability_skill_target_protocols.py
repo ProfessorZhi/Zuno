@@ -1,4 +1,4 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 import re
 import sys
@@ -64,7 +64,7 @@ REQUIRED_TERMS = [
     "ProviderFailureDomain",
     "PostgreSQL",
     ".agent/programs/",
-    "docs/project/status/production-readiness.md",
+    "docs/facts/current-state.md",
 ]
 
 REQUIRED_TABLES = [

@@ -11,10 +11,18 @@ def _files(directory: Path) -> set[str]:
 
 def main() -> int:
     errors: list[str] = []
-    expected_history = {
+    expected_history_front = {
         "docs/history/README.md",
         "docs/history/architecture-evolution.md",
         "docs/history/program-history.md",
+        "docs/history/project-background-history.md",
+        "docs/history/requirements-and-workflows-history.md",
+        "docs/history/team-and-ownership-history.md",
+        "docs/history/development-history.md",
+        "docs/history/incidents-and-improvements.md",
+        "docs/history/delivery-and-usage.md",
+        "docs/history/technology-history.md",
+        "docs/history/production-readiness-baseline.md",
     }
     expected_evidence = {
         "docs/evidence/README.md",
@@ -29,36 +37,40 @@ def main() -> int:
         for path in (ROOT / "docs/history").iterdir()
         if path.is_file()
     }
-    if history_front != expected_history:
-        errors.append("docs/history front must contain only the three approved files")
+    if history_front != expected_history_front:
+        errors.append("docs/history front does not match the approved historical summaries")
     if _files(ROOT / "docs/evidence") != expected_evidence:
         errors.append("docs/evidence must contain only current evidence entries")
 
-    expected_project_history = {
-        "docs/project/history/README.md",
-        "docs/project/history/project-background.md",
-        "docs/project/history/requirements-and-workflows.md",
-        "docs/project/history/team-and-ownership.md",
-        "docs/project/history/development-history.md",
-        "docs/project/history/incidents-and-improvements.md",
-        "docs/project/history/delivery-and-usage.md",
-        "docs/project/history/technology-history.md",
+    expected_facts = {
+        "docs/facts/README.md",
+        "docs/facts/project-context.md",
+        "docs/facts/current-state.md",
+        "docs/facts/assets/zuno-banner.svg",
     }
-    expected_project_status = {
-        "docs/project/status/README.md",
-        "docs/project/status/current-reality.md",
-        "docs/project/status/target-status.md",
-        "docs/project/status/production-readiness.md",
+    if _files(ROOT / "docs/facts") != expected_facts:
+        errors.append("docs/facts must contain only current fact entrypoints and local assets")
+    if _files(ROOT / "docs/modules") != {"docs/modules/README.md"}:
+        errors.append("docs/modules must contain only its boundary README")
+    expected_history_interview = {
+        "docs/history/interview-qa/README.md",
+        "docs/history/interview-qa/architecture-coverage-matrix.md",
+        "docs/history/interview-qa/architecture-gap-report.md",
+        "docs/history/interview-qa/deep-dive-chains.md",
+        "docs/history/interview-qa/question-taxonomy.md",
+        "docs/history/interview-qa/source-audit.md",
+        "docs/history/interview-qa/zuno-agent-core-qa.md",
+        "docs/history/interview-qa/zuno-agentic-graphrag-qa.md",
+        "docs/history/interview-qa/zuno-cross-module-system-design-qa.md",
+        "docs/history/interview-qa/zuno-memory-context-qa.md",
+        "docs/history/interview-qa/zuno-memory-information-extraction-qa.md",
+        "docs/history/interview-qa/zuno-tool-mcp-security-qa.md",
     }
-    if _files(ROOT / "docs/project/history") != expected_project_history:
-        errors.append("docs/project/history must contain the approved history entrypoints")
-    if _files(ROOT / "docs/project/status") != expected_project_status:
-        errors.append("docs/project/status must contain the approved status entrypoints")
-    if (ROOT / "docs/project/facts").exists() or (ROOT / "docs/project/modules").exists():
-        errors.append("old docs/project/facts or docs/project/modules active paths must be absent")
+    if _files(ROOT / "docs/history/interview-qa") != expected_history_interview:
+        errors.append("docs/history/interview-qa must contain the approved historical interview files")
     for directory in ("product", "domain", "agents", "knowledge", "services", "data", "security", "eval", "deployment"):
-        if (ROOT / "docs/project" / directory).exists():
-            errors.append(f"old docs/project/{directory} topic path must be absent")
+        if (ROOT / "docs" / directory).exists():
+            errors.append(f"old docs/{directory} topic path must be absent")
 
     program_root = ROOT / ".agent" / "programs"
     if {path.name for path in program_root.glob("*.md")} != {"README.md", "current.md"}:
@@ -76,11 +88,11 @@ def main() -> int:
     if "SUPERSEDED / RETIRED" not in current:
         errors.append("current program missing SUPERSEDED / RETIRED")
 
-    architecture = ROOT / "docs" / "project" / "architecture"
+    architecture = ROOT / "docs" / "architecture"
     if {path.name for path in architecture.iterdir() if path.is_file()} != {
         "README.md", "architecture.md", "architecture-views.md", "architecture.html"
     }:
-        errors.append("docs/project/architecture must contain its four canonical files")
+        errors.append("docs/architecture must contain its four canonical files")
 
     if (ROOT / "src/backend/zuno/api/services/workspace_task_runtime.py").exists():
         errors.append("retired workspace runtime module still exists")

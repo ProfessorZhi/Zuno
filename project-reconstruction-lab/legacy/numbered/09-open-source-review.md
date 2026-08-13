@@ -2,7 +2,7 @@
 
 ## 当前状态
 
-这是 Zuno 的正式 Build-vs-Buy 评审协议和候选记录，不是“为什么不用开源”的面试话术，也不是已经批准的架构变更。当前结论状态允许为 `TO_REVIEW`；只有完成 Fit Analysis、Modification Surface、运行验证和用户确认后，才可把结果回写 `docs/project/architecture/`、`docs/project/<topic>/` 或 ADR。
+这是 Zuno 的正式 Build-vs-Buy 评审协议和候选记录，不是“为什么不用开源”的面试话术，也不是已经批准的架构变更。当前结论状态允许为 `TO_REVIEW`；只有完成 Fit Analysis、Modification Surface、运行验证和用户确认后，才可把结果回写 `docs/architecture/`、`docs/<topic>/` 或 ADR。
 
 核心问题不是“开源项目功能多不多”，而是：
 

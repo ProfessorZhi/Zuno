@@ -132,4 +132,4 @@ Claim
 
 ## 反题库原则
 
-红队不是从题库随机抽题，而是根据最新回答生成下一问。`docs/verification/interview-qa/` 提供架构机制的已维护攻击素材，`ProfessorZhi/internship-work` 的面试红队研究提供真实面试行为模式；两者都不能替代当前 Claim 和当前证据。
+红队不是从题库随机抽题，而是根据最新回答生成下一问。`docs/history/interview-qa/` 提供架构机制的已维护攻击素材，`ProfessorZhi/internship-work` 的面试红队研究提供真实面试行为模式；两者都不能替代当前 Claim 和当前证据。

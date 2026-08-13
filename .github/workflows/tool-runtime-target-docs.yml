@@ -5,9 +5,9 @@ on:
     branches:
       - main
     paths:
-      - "docs/project/modules/08-tool-runtime.md"
-      - "docs/project/modules/07-capability-skill.md"
-      - "docs/project/modules/README.md"
+      - "docs/modules/08-tool-runtime.md"
+      - "docs/modules/07-capability-skill.md"
+      - "docs/modules/README.md"
       - "AGENTS.md"
       - ".agent/system.yaml"
       - ".agent/references/docs-map.md"
@@ -20,9 +20,9 @@ on:
     branches:
       - main
     paths:
-      - "docs/project/modules/08-tool-runtime.md"
-      - "docs/project/modules/07-capability-skill.md"
-      - "docs/project/modules/README.md"
+      - "docs/modules/08-tool-runtime.md"
+      - "docs/modules/07-capability-skill.md"
+      - "docs/modules/README.md"
       - "AGENTS.md"
       - ".agent/system.yaml"
       - ".agent/references/docs-map.md"

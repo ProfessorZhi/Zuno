@@ -27,31 +27,32 @@ def load_links():
 def verify() -> list[str]:
     errors = list(load_links().verify())
     required = [
-        "README.md", "docs/README.md", "docs/project/README.md", "docs/project/history/README.md",
-        "docs/project/status/README.md", "docs/project/status/current-reality.md", "docs/project/status/target-status.md",
-        "docs/project/status/production-readiness.md", "docs/history/superseded-document-taxonomy/README.md",
-        "docs/project/architecture/README.md", "docs/project/architecture/architecture.md",
-        "docs/project/architecture/architecture-views.md", "docs/project/architecture/architecture.html", "docs/decisions/README.md",
+        "README.md", "docs/README.md", "docs/facts/README.md",
+        "docs/facts/project-context.md", "docs/facts/current-state.md",
+        "docs/modules/README.md", "docs/history/README.md",
+        "docs/history/superseded-document-taxonomy/README.md",
+        "docs/architecture/README.md", "docs/architecture/architecture.md",
+        "docs/architecture/architecture-views.md", "docs/architecture/architecture.html", "docs/decisions/README.md",
         "docs/governance/repo-ownership-matrix.md", ".agent/references/docs-map.md", ".agent/system.yaml",
     ]
     for path in required:
         if not (REPO_ROOT / path).exists():
             errors.append(f"missing documentation entrypoint: {path}")
-    root = REPO_ROOT / "docs/project/architecture"
+    root = REPO_ROOT / "docs/architecture"
     if {path.name for path in root.iterdir() if path.is_file()} != ARCHITECTURE_FILES:
-        errors.append("docs/project/architecture must contain exactly four files")
+        errors.append("docs/architecture must contain exactly four files")
     if any(path.is_dir() for path in root.iterdir()):
-        errors.append("docs/project/architecture must not contain subdirectories")
+        errors.append("docs/architecture must not contain subdirectories")
     for mirror in (REPO_ROOT / ".agent/architecture", REPO_ROOT / ".agent/modules"):
         if mirror.exists():
             errors.append(f"documentation mirror must not exist: {mirror.relative_to(REPO_ROOT)}")
 
-    index = read("docs/project/README.md")
+    index = read("docs/README.md")
     docs_readme = read("docs/README.md")
     system = read(".agent/system.yaml")
-    for marker in ("Current", "Target", "Hypothesis", "History", "Microservice", "Python-only", "docs/project/history/", "docs/project/status/"):
+    for marker in ("Current", "Target", "HYPOTHESIS", "HISTORY", "facts/", "architecture/"):
         if marker not in index:
-            errors.append(f"docs/project/README.md missing status/architecture marker: {marker}")
+            errors.append(f"docs/README.md missing status/architecture marker: {marker}")
     return errors
 
 

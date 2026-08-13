@@ -13,7 +13,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 CANONICAL = [
-    ROOT / "docs/project/architecture/architecture.md",
+    ROOT / "docs/architecture/architecture.md",
     ROOT / "docs/history/superseded-document-taxonomy/project-topics/product/product-architecture.md",
     ROOT / "docs/history/superseded-document-taxonomy/project-topics/domain/legal-domain-model.md",
     ROOT / "docs/history/superseded-document-taxonomy/project-topics/domain/domain-state-lifecycle.md",

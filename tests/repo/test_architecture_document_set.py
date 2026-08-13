@@ -22,10 +22,10 @@ def test_architecture_document_set_is_canonical() -> None:
 
 
 def test_legacy_design_material_is_not_canonical() -> None:
-    assert not (REPO_ROOT / "docs/project/modules").exists()
+    assert (REPO_ROOT / "docs/modules/README.md").exists()
     assert (REPO_ROOT / "docs/history/superseded-document-taxonomy/project-modules/11-infrastructure.md").exists()
-    assert (REPO_ROOT / "docs/project/architecture/architecture.md").exists()
-    assert (REPO_ROOT / "docs/project/architecture/architecture.html").exists()
+    assert (REPO_ROOT / "docs/architecture/architecture.md").exists()
+    assert (REPO_ROOT / "docs/architecture/architecture.html").exists()
 
 
 def test_agent_architecture_and_module_mirrors_are_absent() -> None:

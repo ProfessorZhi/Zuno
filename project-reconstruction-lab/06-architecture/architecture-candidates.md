@@ -1,6 +1,6 @@
 # Architecture Candidates
 
-本页是 Target 候选登记表，不是正式架构事实。正式 Survived 设计必须同步到 `docs/project/architecture/`、专题文档和 ADR。
+本页是 Target 候选登记表，不是正式架构事实。正式 Survived 设计必须同步到 `docs/architecture/`、专题文档和 ADR。
 
 ## PROJECT-ARCHITECTURE-RECONSTRUCTION-V1 输入边界
 

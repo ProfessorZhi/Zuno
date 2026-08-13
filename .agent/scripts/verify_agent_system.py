@@ -31,7 +31,7 @@ def verify_system_yaml(root: Path) -> list[str]:
     for marker in ("version:", "system_identity:", "runtime_boundary:", "program_rules:", "skill_routes:"):
         if marker not in content:
             errors.append(f"system.yaml missing section: {marker}")
-    for relative in ("AGENTS.md", ".agent/programs/current.md", "docs/project/README.md"):
+    for relative in ("AGENTS.md", ".agent/programs/current.md", "docs/README.md"):
         if not (root / relative).exists():
             errors.append(f"system.yaml route target missing: {relative}")
     return errors

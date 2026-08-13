@@ -5,7 +5,7 @@ from pathlib import Path
 
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
-QA_ROOT = REPO_ROOT / "docs/verification/interview-qa"
+QA_ROOT = REPO_ROOT / "docs/history/interview-qa"
 DEEP_DIVE_PATH = QA_ROOT / "deep-dive-chains.md"
 QA_FILES = {
     "zuno-agentic-graphrag-qa.md": "knowledge",
@@ -77,10 +77,10 @@ def _question_blocks(text: str) -> list[tuple[str, str]]:
 def verify() -> list[str]:
     errors: list[str] = []
     if not QA_ROOT.exists():
-        return ["missing QA root: docs/verification/interview-qa"]
+        return ["missing QA root: docs/history/interview-qa"]
 
     if not DEEP_DIVE_PATH.exists():
-        errors.append("missing red-team deep-dive chain file: docs/verification/interview-qa/deep-dive-chains.md")
+        errors.append("missing red-team deep-dive chain file: docs/history/interview-qa/deep-dive-chains.md")
     else:
         deep_dive_text = DEEP_DIVE_PATH.read_text(encoding="utf-8")
         deep_dive_chains = list(re.finditer(r"^## (RT-[A-Z]+-\d{3}) (.+)$", deep_dive_text, re.MULTILINE))
@@ -96,13 +96,13 @@ def verify() -> list[str]:
                 if heading not in block:
                     errors.append(f"{match.group(1)} missing section: {heading}")
 
-    architecture_root = REPO_ROOT / "docs/project/architecture"
+    architecture_root = REPO_ROOT / "docs/architecture"
     architecture_files = {path.name for path in architecture_root.iterdir() if path.is_file()}
     architecture_dirs = [path.name for path in architecture_root.iterdir() if path.is_dir()]
     if architecture_files != EXPECTED_ARCHITECTURE_FILES:
-        errors.append(f"docs/project/architecture file set changed: {sorted(architecture_files)}")
+        errors.append(f"docs/architecture file set changed: {sorted(architecture_files)}")
     if architecture_dirs:
-        errors.append(f"docs/project/architecture must not contain subdirectories: {architecture_dirs}")
+        errors.append(f"docs/architecture must not contain subdirectories: {architecture_dirs}")
     if (REPO_ROOT / "docs/validation/architecture-interview-qa").exists():
         errors.append("retired docs/validation/architecture-interview-qa path must not exist")
 
@@ -166,9 +166,9 @@ def verify() -> list[str]:
     if chain_count < 20:
         errors.append(f"expected at least 20 Interview Drill Chains, got {chain_count}")
 
-    if "docs/verification/interview-qa" in (REPO_ROOT / "docs/project/architecture/README.md").read_text(encoding="utf-8"):
+    if "docs/history/interview-qa" in (REPO_ROOT / "docs/architecture/README.md").read_text(encoding="utf-8"):
         errors.append("QA corpus must not be registered as canonical architecture")
-    if "docs/verification/interview-qa" in (REPO_ROOT / ".agent/system.yaml").read_text(encoding="utf-8"):
+    if "docs/history/interview-qa" in (REPO_ROOT / ".agent/system.yaml").read_text(encoding="utf-8"):
         errors.append("QA corpus must not be registered as an architecture fact source in system.yaml")
 
     return errors

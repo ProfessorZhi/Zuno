@@ -1,6 +1,6 @@
 version: 3
 
-purpose: "Route Zuno work to the consolidated project history, status, architecture, governance, evidence, Programs, and verification surfaces."
+purpose: "Route Zuno work to the consolidated facts, architecture, modules, decisions, governance, evidence, Programs, and history surfaces."
 
 system_identity:
   name: "Zuno Local Agent Skill System"
@@ -9,10 +9,10 @@ system_identity:
   template_root: ".agent/templates"
   active_program_root: ".agent/programs"
   formal_truth_root: "docs"
-  formal_project_root: "docs/project"
-  formal_project_history_root: "docs/project/history"
-  formal_architecture_root: "docs/project/architecture"
-  formal_status_root: "docs/project/status"
+  formal_project_root: "docs"
+  formal_project_facts_root: "docs/facts"
+  formal_architecture_root: "docs/architecture"
+  formal_modules_root: "docs/modules"
   history_root: "docs/history"
 
 runtime_boundary:
@@ -39,22 +39,22 @@ work_modes:
 
 architecture_directory_contract:
   formal_files:
-    - "docs/project/architecture/README.md"
-    - "docs/project/architecture/architecture.md"
-    - "docs/project/architecture/architecture-views.md"
-    - "docs/project/architecture/architecture.html"
+    - "docs/architecture/README.md"
+    - "docs/architecture/architecture.md"
+    - "docs/architecture/architecture-views.md"
+    - "docs/architecture/architecture.html"
   canonical_project_layers:
-    - "docs/project/history/"
-    - "docs/project/status/"
-    - "docs/project/architecture/"
+    - "docs/facts/"
+    - "docs/architecture/"
+    - "docs/modules/"
   legacy_taxonomy: "docs/history/superseded-document-taxonomy/ contains the former facts, topic and 11-module materials; it is not an active route"
   presentation_pair:
-    - "docs/project/architecture/architecture-views.md"
-    - "docs/project/architecture/architecture.html"
+    - "docs/architecture/architecture-views.md"
+    - "docs/architecture/architecture.html"
   visual_source_role: "architecture-views.md and architecture.html are one paired diagram presentation surface; neither is an independent architecture fact source"
   reading_protocol:
-    human_question: "read history or status first, then architecture.md for cross-layer design"
-    implementation_or_review: "read architecture.md, relevant status, ADR/governance, evidence, code, and active Program if any"
+    human_question: "read facts first, then architecture.md for cross-layer design"
+    implementation_or_review: "read architecture.md, relevant facts, ADR/governance, evidence, code, and active Program if any"
     no_mirror_rule: "do not create human/spec mirrors or a second Service/Domain/State registry"
   forbidden_content:
     - "module-specific second architecture documents in architecture/"
@@ -63,12 +63,12 @@ architecture_directory_contract:
     - "repo ownership matrix in architecture/"
 
 canonical_ownership:
-  project_history_owner: "docs/project/history/"
-  current_reality_owner: "docs/project/status/current-reality.md"
-  target_status_owner: "docs/project/status/target-status.md"
-  production_readiness_owner: "docs/project/status/production-readiness.md"
-  cross_layer_architecture_owner: "docs/project/architecture/architecture.md"
-  architecture_views_owner: "docs/project/architecture/architecture-views.md and architecture.html"
+  project_facts_owner: "docs/facts/"
+  current_reality_owner: "docs/facts/current-state.md"
+  target_status_owner: "docs/architecture/architecture.md"
+  production_readiness_owner: "docs/facts/current-state.md"
+  cross_layer_architecture_owner: "docs/architecture/architecture.md"
+  architecture_views_owner: "docs/architecture/architecture-views.md and architecture.html"
   evidence_owner: "docs/evidence/"
   decision_owner: "docs/decisions/"
   governance_owner: "docs/governance/"
@@ -91,10 +91,9 @@ skill_routes:
         - ".agent/**"
     docs_sync:
       - "docs/README.md"
-      - "docs/project/README.md"
-      - "docs/project/architecture/"
-      - "docs/project/history/"
-      - "docs/project/status/"
+      - "docs/architecture/"
+      - "docs/facts/"
+      - "docs/modules/README.md"
       - "docs/decisions/"
       - "docs/governance/"
       - ".agent/system.yaml"
@@ -204,7 +203,7 @@ skill_routes:
     docs_sync:
       - "project-reconstruction-lab/05-red-blue/"
       - "project-reconstruction-lab/sessions/RB-RESET-001/"
-      - "docs/project/architecture/"
+      - "docs/architecture/"
       - ".agent/programs/current.md"
       - ".agent/references/current-program.md"
       - ".agent/references/task-routing.md"
@@ -221,8 +220,8 @@ skill_routes:
       paths:
         - "src/backend/zuno/agent/**"
     docs_sync:
-      - "docs/project/architecture/architecture.md"
-      - "docs/project/status/"
+      - "docs/architecture/architecture.md"
+      - "docs/facts/"
       - "docs/evidence/"
 
   - name: "knowledge-and-evidence"
@@ -233,8 +232,8 @@ skill_routes:
         - "src/backend/zuno/platform/services/rag/**"
         - "src/backend/zuno/platform/services/graphrag/**"
     docs_sync:
-      - "docs/project/architecture/architecture.md"
-      - "docs/project/status/"
+      - "docs/architecture/architecture.md"
+      - "docs/facts/"
       - "docs/evidence/"
 
   - name: "service-and-tool-boundary"
@@ -245,8 +244,8 @@ skill_routes:
         - "src/backend/zuno/platform/**"
         - "infra/docker/**"
     docs_sync:
-      - "docs/project/architecture/architecture.md"
-      - "docs/project/status/"
+      - "docs/architecture/architecture.md"
+      - "docs/facts/"
       - "docs/governance/"
       - "docs/evidence/"
 

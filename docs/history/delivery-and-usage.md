@@ -48,4 +48,4 @@ Pilot 与 Production 必须分开：Pilot 只能说明在有限范围内进行�
 - 正式验收、用户规模、SLA、QPS、延迟、Token、成本和灾备；
 - 质量改进前后的可复现指标。
 
-当前仓库的测试和运行证据进入 [`../../evidence/README.md`](../../evidence/README.md)；生产状态由 [`../status/production-readiness.md`](../status/production-readiness.md) 维护。本文件不把 Compose、Target 部署图或代码目录当成历史客户部署证明。
+当前仓库的测试和运行证据进入 [`../evidence/README.md`](../evidence/README.md)；当前生产状态由 [`../facts/current-state.md`](../facts/current-state.md) 维护。本文件不把 Compose、Target 部署图或代码目录当成历史客户部署证明。

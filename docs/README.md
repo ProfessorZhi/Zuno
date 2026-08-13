@@ -1,79 +1,49 @@
 # Zuno 文档入口
 
-前台文档默认使用中文，承载当前正式结论。`docs/project/` 是项目知识入口；`docs/history/` 保存批准的历史摘要和 Superseded 原稿；`project-reconstruction-lab/` 是调查、恢复和 Red/Blue 工作区，不替代正式事实源。
+`docs/` 只保留五类项目知识，外加两个支撑层。判断标准是“读者要回答什么问题”，不是材料是否曾经发生在过去。
+
+## 目录
+
+```text
+docs/
+├─ facts/        今天仍然有效的项目事实与当前状态
+├─ architecture/整体 Target Architecture 与跨层契约
+├─ modules/     稳定后各责任域的详细设计，目前尚未冻结
+├─ decisions/   仍然有效的架构决策（ADR）
+├─ history/     已替代、已结束或只用于考古的材料
+├─ evidence/    支撑 Current 判断的可复现证据
+└─ governance/  Owner、文档规则和工程治理
+```
+
+另外，[`terminology.md`](terminology.md) 是轻量术语表，不再单独设置 `reference/`；图片等附件放在所属文档目录下，不再设置独立 `assets/` 根目录。
 
 ## 首读路径
 
-- [Zuno 项目知识入口](./project/README.md)
-- [历史项目入口](./project/history/README.md)：回答历史背景、团队、演进、交付和未知事实。
-- [Current Repository Reality](./project/status/current-reality.md)：回答当前仓库有什么证据。
-- [Target Status](./project/status/target-status.md)：回答 Target、Hypothesis、Future 和 reversal boundary。
-- [总体 Target 架构](./project/architecture/architecture.md)：回答 Product、Domain、Logical Capability、Physical Service/Deployment 如何形成跨层闭环。
-- [架构图展示配对](./project/architecture/architecture-views.md)：与 `architecture.html` 配套，只负责展示，不拥有独立架构事实。
-- [Production Readiness](./project/status/production-readiness.md)：当前生产状态事实源，当前仍为 `NOT_ESTABLISHED`。
-- [架构决策](./decisions/README.md)
-- [工程治理](./governance/repo-ownership-matrix.md)
-- [当前证据](./evidence/README.md)
-- [架构面试验证语料](./verification/interview-qa/README.md)：非规范性攻击语料。
-- [历史归档](./history/README.md)
+- [当前事实](facts/README.md)：先看 [项目上下文](facts/project-context.md) 和 [当前状态](facts/current-state.md)
+- [总体架构](architecture/architecture.md)：回答系统为什么这样设计、跨层如何闭环
+- [模块入口](modules/README.md)：回答模块文档何时建立以及如何服从总架构
+- [有效决策](decisions/README.md)
+- [可复现证据](evidence/README.md)
+- [历史归档](history/README.md)
+- [治理规则](governance/repo-ownership-matrix.md)
 
-## Canonical 文档层次
+## 四条边界
 
 ```text
-docs/project/
-  README.md
-  history/       What actually happened? + UNKNOWN
-  status/        What is proven now, what is Target, is Production proven?
-  architecture/  How do Product, Domain, Capability, Service and Deployment fit?
-
-docs/decisions/  Why was a decision accepted or reversed?
-docs/governance/ Who owns the document and boundary?
-docs/evidence/   What can be reproduced from code, test, trace or eval?
-docs/history/    Approved summaries and Superseded raw document material
+FACTS        今天理解 Zuno 必须相信什么
+ARCHITECTURE 当前接受的 Target 设计为什么这样工作
+MODULES      各责任域怎样工作（边界稳定后再展开）
+HISTORY      以前发生过什么，但不再决定今天怎么设计
 ```
 
-`docs/project/architecture/` 仍严格只有四个文件。旧 `facts/`、专题目录和 `modules/` 已迁入历史归档，不再是 active Canonical taxonomy；它们的原始内容不因迁移而变成 Current 或 Target。
+`evidence/` 和 `governance/` 是支撑层，不与项目知识争夺同一事实入口：前者证明 Current，后者约束文档和工程协作。Target、目录、类名、Mock 或面试材料都不能反向证明 Current 或 Production。
 
-## Current / Target / History
+## 状态边界
 
 ```text
-Current
-    由代码、Migration、Test、Trace、Eval 或真实运行证据证明。
-
-Target
-    由已接受 ADR、总体架构和共享治理边界定义；不证明实现。
-
-Hypothesis
-    必须由 Benchmark、Spike、Security Evidence 或 User Validation 关闭。
-
-History
-    保留发生过的项目事实、未知事实和被替换的文档组织方式。
+CURRENT     代码、Migration、Test、Trace、Eval 或真实运行证据已证明
+TARGET      已接受的目标设计，不代表实现
+HYPOTHESIS  等待 Benchmark、Spike、Security Evidence 或 User Validation
+UNKNOWN     证据不足，必须保留未知
+HISTORY     已结束、已替换或只用于回顾的材料
 ```
-
-本轮文档重构不修改 Facts、ADR、Runtime、UI、Schema、Migration、Dependencies、Production Infra，也不启动 Round-007。Round-006 immutable evidence 继续保持不变。
-
-## 两条阅读路径
-
-```text
-历史/项目读者：history → current-reality → architecture → target-status → evidence
-工程/架构读者：architecture → decisions/governance → status → evidence → current Program
-```
-
-## 三条必须分开的项目故事
-
-```text
-HISTORY
-    智慧司法背景 → 已有产品 → 用户加入 → Agent / Memory / OpenViking / Tool Calling
-    → Demo → 回答质量反馈 → 法院侧测试 → Pilot → 尚未 Production。
-
-CURRENT
-    当前 main 真正被代码、Migration、Test、Config、Trace 或 Eval 证明的内容。
-
-TARGET
-    Evidence-driven Legal Agent Platform；五层责任视图、A/B/C Kill Test 和最终服务数量
-    都不把目标能力伪装成历史事实或已测量收益。
-```
-
-WorkBuddy / Dify 的比较是 `TARGET PRODUCT THESIS` 和 Benchmark 假设，不是营销结论；公开论文和研究成果是 `PUBLIC_CONTEXT` / `RESEARCH_TRANSFER`，不能倒灌为历史 Zuno 实现。
-
-项目事实不确定时保留 `UNKNOWN`、`USER_PARTIAL_RECALL` 或候选状态；Target 架构不能替代历史事实。

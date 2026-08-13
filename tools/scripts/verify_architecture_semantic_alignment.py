@@ -5,9 +5,9 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[2]
-ARCH = ROOT / "docs/project/architecture/architecture.md"
-VIEWS = ROOT / "docs/project/architecture/architecture-views.md"
-HTML = ROOT / "docs/project/architecture/architecture.html"
+ARCH = ROOT / "docs/architecture/architecture.md"
+VIEWS = ROOT / "docs/architecture/architecture-views.md"
+HTML = ROOT / "docs/architecture/architecture.html"
 
 
 def verify() -> list[str]:
@@ -51,7 +51,7 @@ def verify() -> list[str]:
             errors.append(f"architecture retains forbidden shortcut: {forbidden}")
     if 'fetch("./architecture-views.md")' not in html:
         errors.append("architecture.html must render canonical Mermaid source")
-    if "../history/README.md" not in html or "../status/target-status.md" not in html:
+    if "../facts/README.md" not in html or "./architecture.md#target-status-boundary" not in html:
         errors.append("architecture.html must expose new taxonomy entrypoints")
     if views.count("```mermaid") != 14:
         errors.append("architecture-views.md must contain exactly 14 canonical diagrams")

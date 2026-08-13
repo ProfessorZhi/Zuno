@@ -27,7 +27,7 @@
 
 ## RT-ARCH-001 总体架构：一次合同审查到底怎样完成
 
-- target_documents: `docs/project/architecture/architecture.md`、`docs/history/superseded-document-taxonomy/project-modules/01-product-surface.md`、`docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md`、`docs/history/superseded-document-taxonomy/project-modules/06-agent-core-planning-control.md`、`docs/history/superseded-document-taxonomy/project-modules/08-tool-runtime.md`、`docs/history/superseded-document-taxonomy/project-modules/09-security.md`
+- target_documents: `docs/architecture/architecture.md`、`docs/history/superseded-document-taxonomy/project-modules/01-product-surface.md`、`docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md`、`docs/history/superseded-document-taxonomy/project-modules/06-agent-core-planning-control.md`、`docs/history/superseded-document-taxonomy/project-modules/08-tool-runtime.md`、`docs/history/superseded-document-taxonomy/project-modules/09-security.md`
 - architecture_coverage: `FULL`（由现有 Q001–Q267 引用矩阵检查）
 - human_explainability: `PARTIAL`
 - gap_type: `NARRATIVE_GAP`
@@ -135,7 +135,7 @@
 
 ## RT-PLAN-001 Agent Core：一句话怎样变成可恢复计划
 
-- target_documents: `docs/history/superseded-document-taxonomy/project-modules/06-agent-core-planning-control.md`、`docs/project/architecture/architecture.md`、`docs/history/superseded-document-taxonomy/project-modules/11-infrastructure.md`
+- target_documents: `docs/history/superseded-document-taxonomy/project-modules/06-agent-core-planning-control.md`、`docs/architecture/architecture.md`、`docs/history/superseded-document-taxonomy/project-modules/11-infrastructure.md`
 - architecture_coverage: `FULL`
 - human_explainability: `PARTIAL`
 - gap_type: `NARRATIVE_GAP`

@@ -1,4 +1,4 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 import re
 import sys
@@ -13,8 +13,8 @@ WORKFLOW = ROOT / ".github/workflows/model-gateway-target-docs.yml"
 ADR = ROOT / "docs/decisions/0003-wave1-cross-module-contract-freeze.md"
 
 REMOVED = [
-    "docs/project/modules/04-model-gateway-contract-freeze.md",
-    "docs/project/modules/04-model-gateway-operations-conformance.md",
+    "docs/modules/04-model-gateway-contract-freeze.md",
+    "docs/modules/04-model-gateway-operations-conformance.md",
     "tools/scripts/verify_model_gateway_contract_freeze.py",
     "tools/scripts/verify_model_gateway_operations_conformance.py",
     "tests/repo/test_model_gateway_contract_freeze.py",

@@ -1,6 +1,6 @@
 # PROJECT-FACTS-RECONSTRUCTION-V2
 
-本文件是 Project Facts 的旧版红蓝工作材料。它维护候选、攻击、未知和下一轮回忆问题；正式历史事实以 [`docs/project/history/`](../../../docs/project/history/README.md) 为准。当前入口见 [`../../01-facts/`](../../01-facts/fact-baseline.md)。
+本文件是 Project Facts 的旧版红蓝工作材料。它维护候选、攻击、未知和下一轮回忆问题；正式历史事实以 [`docs/history/`](../../../docs/history/README.md) 为准。当前入口见 [`../../01-facts/`](../../01-facts/fact-baseline.md)。
 
 ## 一、证据标签
 

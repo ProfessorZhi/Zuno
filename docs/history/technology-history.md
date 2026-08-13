@@ -65,4 +65,4 @@ Domain-aware Runtime
 
 ## 事实 Owner
 
-本文件负责历史技术矩阵和证据边界；具体实现证据进入 [`../../evidence/`](../../evidence/README.md)，候选解释和下一轮问题进入 [`../../../project-reconstruction-lab/01-facts/`](../../../project-reconstruction-lab/01-facts/open-questions.md)。
+本文件负责历史技术矩阵和证据边界；具体实现证据进入 [`../evidence/`](../evidence/README.md)，候选解释和下一轮问题进入 [`../../project-reconstruction-lab/01-facts/`](../../project-reconstruction-lab/01-facts/open-questions.md)。

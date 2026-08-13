@@ -15,7 +15,7 @@
 - interview_probability: HIGH
 - resume_trigger: Zuno统一端到端案例、case
 - architecture_refs:
-  - docs/project/architecture/architecture.md — § Part A — Architecture Narrative
+  - docs/architecture/architecture.md — § Part A — Architecture Narrative
   - docs/history/superseded-document-taxonomy/project-modules/06-agent-core-planning-control.md — § 4.1 Deep Dive 04：统一端到端控制案例
 - initial_coverage_status: PARTIAL
 - coverage_status: FULL
@@ -48,7 +48,7 @@ Agent Core创建Plan和Acceptance，Knowledge满足EvidenceRequirement，Memory�
 
 ### Architecture Evidence
 
-- docs/project/architecture/architecture.md — § Part A — Architecture Narrative
+- docs/architecture/architecture.md — § Part A — Architecture Narrative
 - docs/history/superseded-document-taxonomy/project-modules/06-agent-core-planning-control.md — § 4.1 Deep Dive 04：统一端到端控制案例
 
 ### 当前文档是否足够回答
@@ -492,7 +492,7 @@ None。第一轮记录的缺口已写回 canonical architecture；本 QA 不新�
 - interview_probability: HIGH
 - resume_trigger: Zuno统一端到端案例、evidence
 - architecture_refs:
-  - docs/project/status/production-readiness.md — § Production Readiness
+  - docs/facts/current-state.md — § Production Readiness
   - docs/history/superseded-document-taxonomy/project-modules/06-agent-core-planning-control.md — § 47. 架构完成与 Program 入口门槛
 - initial_coverage_status: FULL
 - coverage_status: FULL
@@ -525,7 +525,7 @@ None。第一轮记录的缺口已写回 canonical architecture；本 QA 不新�
 
 ### Architecture Evidence
 
-- docs/project/status/production-readiness.md — § Production Readiness
+- docs/facts/current-state.md — § Production Readiness
 - docs/history/superseded-document-taxonomy/project-modules/06-agent-core-planning-control.md — § 47. 架构完成与 Program 入口门槛
 
 ### 当前文档是否足够回答
@@ -914,13 +914,13 @@ None。第一轮记录的缺口已写回 canonical architecture；本 QA 不新�
 ## Q230 Knowledge发现新依赖但计划中没有对应Step，谁拥有下一步？
 
 - source_type: ARCHITECTURE_STRESS
-- source_ref: zuno-target: docs/project/architecture/architecture.md — § Part A — Architecture Narrative
+- source_ref: zuno-target: docs/architecture/architecture.md — § Part A — Architecture Narrative
 - primary_domain: cross-module
 - difficulty: L6
 - interview_probability: HIGH
 - resume_trigger: Zuno统一端到端案例、ownership
 - architecture_refs:
-  - docs/project/architecture/architecture.md — § Part A — Architecture Narrative
+  - docs/architecture/architecture.md — § Part A — Architecture Narrative
   - docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 42. KnowledgeControlProposal
 - initial_coverage_status: FULL
 - coverage_status: FULL
@@ -953,7 +953,7 @@ Knowledge先记录EvidenceFrontier和ControlProposal；Agent Core判断是否需
 
 ### Architecture Evidence
 
-- docs/project/architecture/architecture.md — § Part A — Architecture Narrative
+- docs/architecture/architecture.md — § Part A — Architecture Narrative
 - docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 42. KnowledgeControlProposal
 
 ### 当前文档是否足够回答
@@ -1020,13 +1020,13 @@ None。第一轮记录的缺口已写回 canonical architecture；本 QA 不新�
 ## Q232 未来代码审查如何把这些QA升级为实现证据？
 
 - source_type: ARCHITECTURE_STRESS
-- source_ref: zuno-target: docs/project/status/production-readiness.md — § Production Readiness
+- source_ref: zuno-target: docs/facts/current-state.md — § Production Readiness
 - primary_domain: cross-module
 - difficulty: L8
 - interview_probability: HIGH
 - resume_trigger: Zuno统一端到端案例、future
 - architecture_refs:
-  - docs/project/status/production-readiness.md — § Production Readiness
+  - docs/facts/current-state.md — § Production Readiness
   - docs/history/superseded-document-taxonomy/project-modules/06-agent-core-planning-control.md — § 47. 架构完成与 Program 入口门槛
 - initial_coverage_status: FULL
 - coverage_status: FULL
@@ -1059,7 +1059,7 @@ None。第一轮记录的缺口已写回 canonical architecture；本 QA 不新�
 
 ### Architecture Evidence
 
-- docs/project/status/production-readiness.md — § Production Readiness
+- docs/facts/current-state.md — § Production Readiness
 - docs/history/superseded-document-taxonomy/project-modules/06-agent-core-planning-control.md — § 47. 架构完成与 Program 入口门槛
 
 ### 当前文档是否足够回答

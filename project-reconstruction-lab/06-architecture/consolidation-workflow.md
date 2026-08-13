@@ -1,7 +1,7 @@
 # Architecture Consolidation Workflow
 
 status: working-material
-canonical_boundary: `docs/project/architecture/architecture.md` is the only current cross-layer architecture surface; this Lab file is not a Canonical Architecture document.
+canonical_boundary: `docs/architecture/architecture.md` is the only current cross-layer architecture surface; this Lab file is not a Canonical Architecture document.
 
 ## Gate
 
@@ -64,7 +64,7 @@ Security / Observability / Test / Replacement / Reversal
 
 ## Canonical Sync Rules
 
-- Domain、Runtime、Service 和 Data 的跨层 Owner 统一进入 `docs/project/architecture/architecture.md`；状态与证据分别进入 `docs/project/status/` 和 `docs/evidence/`。
+- Domain、Runtime、Service 和 Data 的跨层 Owner 统一进入 `docs/architecture/architecture.md`；状态与证据分别进入 `docs/facts/` 和 `docs/evidence/`。
 - Security、Eval、Deployment 分别进入对应专题。
 - Lab 只保留攻击、证据、候选和迁移记录。
 

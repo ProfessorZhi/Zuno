@@ -10,7 +10,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 CANONICAL = [
-    ROOT / "docs/project/architecture/architecture.md",
+    ROOT / "docs/architecture/architecture.md",
     ROOT / "docs/history/superseded-document-taxonomy/project-topics/product/product-architecture.md",
     ROOT / "docs/history/superseded-document-taxonomy/project-topics/domain/legal-domain-model.md",
     ROOT / "docs/history/superseded-document-taxonomy/project-topics/domain/domain-state-lifecycle.md",
@@ -100,7 +100,7 @@ def verify_canonical(path: Path) -> tuple[list[str], list[str]]:
     for marker in ("status:", "Current", "Target", "Gap"):
         if marker not in text:
             errors.append(f"{label}: missing metadata or boundary marker {marker}")
-    if path != ROOT / "docs/project/architecture/architecture.md":
+    if path != ROOT / "docs/architecture/architecture.md":
         for marker in ("canonical_question:", "owner:"):
             if marker not in text:
                 errors.append(f"{label}: missing metadata {marker}")
@@ -162,8 +162,8 @@ def verify() -> list[str]:
     for path in CANONICAL:
         doc_errors, _warnings = verify_canonical(path)
         errors.extend(doc_errors)
-    views = ROOT / "docs/project/architecture/architecture-views.md"
-    html = ROOT / "docs/project/architecture/architecture.html"
+    views = ROOT / "docs/architecture/architecture-views.md"
+    html = ROOT / "docs/architecture/architecture.html"
     if not views.exists() or not html.exists():
         errors.append("architecture diagram presentation pair must remain present")
     elif 'fetch("./architecture-views.md")' not in html.read_text(encoding="utf-8"):

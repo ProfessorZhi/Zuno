@@ -17,6 +17,7 @@ EXPECTED_DELTAS = [f"D{i:03d}" for i in range(1, 12)]
 SYNC_ROW_RE = re.compile(r"^\|\s*(D\d{3})\s*\|.*?\|\s*(docs/project/[^|]+?)\s*\|\s*(AUTO_APPLY|ADR_ESCALATION|USER_GATE_ESCALATION)\s*\|", re.MULTILINE)
 IMPLEMENTATION_EVIDENCE_COMMIT_MARKER = "feat: implement domain mutation and citation provenance guards"
 CANONICAL_OWNER_ALIASES = {
+    "docs/project/architecture/": "docs/architecture/",
     "docs/project/product/": "docs/history/superseded-document-taxonomy/project-topics/product/",
     "docs/project/domain/": "docs/history/superseded-document-taxonomy/project-topics/domain/",
     "docs/project/agents/": "docs/history/superseded-document-taxonomy/project-topics/agents/",

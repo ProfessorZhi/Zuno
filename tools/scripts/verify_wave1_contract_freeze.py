@@ -139,7 +139,8 @@ def verify() -> list[Finding]:
     # The Wave-001 module registry is a historical contract. Once the old
     # active module tree has been retired, this verifier must not reintroduce
     # that tree as a second Canonical entrypoint.
-    if not (REPO_ROOT / "docs/project/modules").exists() and MODULES_INDEX.exists():
+    active_modules = REPO_ROOT / "docs/modules"
+    if MODULES_INDEX.exists() and {path.name for path in active_modules.glob("*.md")} == {"README.md"}:
         return findings
 
     for path, code in [
@@ -194,7 +195,7 @@ def verify() -> list[Finding]:
     if "0003-wave1-cross-module-contract-freeze.md" not in decisions_index:
         findings.append(Finding("XMOD_DECISION_ROUTE", "docs/decisions/README.md does not route ADR 0003"))
 
-    for content, label in [(modules_index, "docs/project/modules/README.md")]:
+    for content, label in [(modules_index, "docs/modules/README.md")]:
         for term in [
             "0003-wave1-cross-module-contract-freeze.md",
             "wave1-cross-module-contract-registry.md",
@@ -212,7 +213,7 @@ def verify() -> list[Finding]:
             findings.append(Finding("XMOD_INDEX_STALE_STATUS", f"{label} still advertises pending-merge status"))
 
     if modules_index.count("## Model Gateway 文档边界") != 1:
-        findings.append(Finding("XMOD_INDEX_DUPLICATE", "docs/project/modules/README.md must contain exactly one Model Gateway boundary section"))
+        findings.append(Finding("XMOD_INDEX_DUPLICATE", "docs/modules/README.md must contain exactly one Model Gateway boundary section"))
 
     requirement_ids = [int(value) for value in re.findall(r"ARCH-XMOD-(\d{3})", registry)]
     if sorted(requirement_ids) != list(range(1, 11)):

@@ -28,9 +28,9 @@
 
 | Lab 输出 | 正式去向 |
 |---|---|
-| 确认历史事实 | `docs/project/history/` |
+| 确认历史事实 | `docs/history/` |
 | 当前仓库证据 | `docs/evidence/` / `docs/status/` |
-| Survived Target | `docs/project/architecture/`、ADR；未来专题若需要必须另行通过文档治理 |
+| Survived Target | `docs/architecture/`、ADR；未来专题若需要必须另行通过文档治理 |
 | Ownership / 文档规则 | `docs/governance/` |
 | 被替换的旧架构 | `docs/history/superseded-document-taxonomy/` |
 | 可执行实现任务 | `.agent/programs/`，用户明确激活后才创建 |

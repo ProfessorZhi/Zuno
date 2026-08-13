@@ -1,6 +1,6 @@
 # Historical Development Timeline
 
-正式历史事实以 [`docs/project/history/development-history.md`](../../docs/project/history/development-history.md) 为准。本页把已确认节点和候选顺序分开：
+正式历史事实以 [`docs/history/development-history.md`](../../docs/history/development-history.md) 为准。本页把已确认节点和候选顺序分开：
 
 ```text
 约 2026-03 加入

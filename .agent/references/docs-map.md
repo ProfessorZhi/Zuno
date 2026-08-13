@@ -5,24 +5,24 @@
 ## 唯一正式入口
 
 ```text
-docs/project/architecture/ = 总体架构四文件
-docs/project/history/      = 历史事实与 UNKNOWN
-docs/project/status/       = Current / Target / Production Readiness
+docs/architecture/ = 总体架构四文件
+docs/facts/      = 今天仍然有效的项目上下文、Current、UNKNOWN 与 Production Readiness
+docs/modules/    = 模块设计占位，边界尚未冻结
 docs/decisions/            = ADR
 docs/governance/           = Owner、写作和门禁治理
 docs/evidence/             = 可复现 Current 证据
 docs/history/              = 批准历史和 Superseded 原稿
 ```
 
-旧 `docs/project/facts/`、专题目录和 `modules/` 已迁入 `docs/history/superseded-document-taxonomy/`，不再是 active route。`project-reconstruction-lab/` 是调查、恢复和 Red/Blue 工作区，不拥有正式架构事实。
+旧专题和旧 11 模块原稿已迁入 `docs/history/superseded-document-taxonomy/`，不再是 active route。`project-reconstruction-lab/` 是调查、恢复和 Red/Blue 工作区，不拥有正式架构事实。
 
 ## 正式阅读顺序
 
 ```text
-历史：     docs/project/history/README.md → 当前状态 → 总体架构
-架构：     docs/project/architecture/architecture.md → ADR/governance → status/evidence
-工程：     architecture → current-reality → target-status → code/evidence
-面试：     history/team → history/development → history/incidents → architecture
+项目介绍： docs/facts/project-context.md → docs/history/（需要回顾时）
+架构：     docs/architecture/architecture.md → ADR/governance → facts/evidence
+工程：     architecture → facts/current-state.md → code/evidence
+面试：     facts/project-context.md → history/团队与开发材料 → architecture
 ```
 
 `Current` 必须有代码、Migration、Test、Trace 或 Eval 证据；Target/Hypothesis 不得偷换成 Current。逻辑能力、服务、Worker、进程、容器、数据库和团队不做一一映射。
@@ -31,11 +31,12 @@ docs/history/              = 批准历史和 Superseded 原稿
 
 | 问题 | Owner |
 | --- | --- |
-| 历史项目发生了什么 | `docs/project/history/` |
-| 当前仓库被什么证明 | `docs/project/status/current-reality.md` |
-| Target 处于什么状态 | `docs/project/status/target-status.md` |
-| 生产是否已证明 | `docs/project/status/production-readiness.md` |
-| 跨层架构为什么这样设计 | `docs/project/architecture/architecture.md` |
+| 今天仍然有效的项目上下文 | `docs/facts/project-context.md` |
+| 历史项目发生了什么 | `docs/history/` |
+| 当前仓库被什么证明 | `docs/facts/current-state.md` |
+| Target 处于什么状态 | `docs/architecture/architecture.md` |
+| 生产是否已证明 | `docs/facts/current-state.md` |
+| 跨层架构为什么这样设计 | `docs/architecture/architecture.md` |
 | 图形如何展示 | `architecture-views.md` + `architecture.html` |
 | 可复现证据 | `docs/evidence/` |
 

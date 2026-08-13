@@ -1,6 +1,6 @@
 # Architecture Red Team Gap Report
 
-本报告不是 Coverage 成绩单，而是红队攻击的缺口账本。`docs/verification/interview-qa/` 是测试用例，11+1 Canonical Architecture 是被测试对象。每次攻击都应沿着以下闭环记录：
+本报告不是 Coverage 成绩单，而是红队攻击的缺口账本。`docs/history/interview-qa/` 是测试用例，11+1 Canonical Architecture 是被测试对象。每次攻击都应沿着以下闭环记录：
 
 ```text
 Question
@@ -98,7 +98,7 @@ PARTIAL 的主要原因不是缺少类名，而是文档已有相关词汇，却
 
 ### G-X-005：Current / Target / Future / History 边界
 
-所有 QA 最终答案保留 Target 警告；生产规模、线上指标和实现状态不由面试语料推断。状态来源仍为 docs/project/status/production-readiness.md。状态：CLOSED。
+所有 QA 最终答案保留 Target 警告；生产规模、线上指标和实现状态不由面试语料推断。状态来源仍为 docs/facts/current-state.md。状态：CLOSED。
 
 ### G-X-006：Memory Information Extraction 链缺少统一验证主题
 

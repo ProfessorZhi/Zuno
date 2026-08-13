@@ -2,14 +2,14 @@
 
 修改 `apps/web` 前先读：
 
-1. `docs/project/architecture/architecture.md`
+1. `docs/architecture/architecture.md`
 2. `.agent/references/code-map.md`
 3. `.agent/references/workflow.md`
 
 如果任务涉及前后端契约迁移、页面边界或仓库布局，还要读：
 
-- `docs/project/architecture/architecture.html`
-- `docs/project/status/production-readiness.md`
+- `docs/architecture/architecture.html`
+- `docs/facts/current-state.md`
 
 ## Product Surface 规则
 

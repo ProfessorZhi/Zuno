@@ -6,9 +6,9 @@ from pathlib import Path
 
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
-DESIGN_PATH = REPO_ROOT / "docs/project/architecture/architecture.md"
-VIEWS_PATH = REPO_ROOT / "docs/project/architecture/architecture-views.md"
-HTML_PATH = REPO_ROOT / "docs/project/architecture/architecture.html"
+DESIGN_PATH = REPO_ROOT / "docs/architecture/architecture.md"
+VIEWS_PATH = REPO_ROOT / "docs/architecture/architecture-views.md"
+HTML_PATH = REPO_ROOT / "docs/architecture/architecture.html"
 
 EXPECTED_VIEWS = [
     "Product Context View",
@@ -29,9 +29,9 @@ EXPECTED_VIEWS = [
 CANONICAL_ARCHITECTURE_FILES = {"README.md", "architecture.md", "architecture-views.md", "architecture.html"}
 MERMAID_MODULE_URL = "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs"
 STALE_OUTPUTS = [
-    REPO_ROOT / "docs/project/architecture/overview.html",
-    REPO_ROOT / "docs/project/architecture.md",
-    REPO_ROOT / "docs/project/architecture/overall-architecture.md",
+    REPO_ROOT / "docs/architecture/overview.html",
+    REPO_ROOT / "docs/architecture.md",
+    REPO_ROOT / "docs/architecture/overall-architecture.md",
 ]
 
 
@@ -74,7 +74,7 @@ def validate_design(content: str) -> list[str]:
     for marker in required_sections + required_terms:
         if marker not in content:
             errors.append(f"architecture.md missing required marker: {marker}")
-    for marker in ("docs/project/history/", "docs/project/status/", "docs/project/architecture/"):
+    for marker in ("docs/facts/", "docs/architecture/"):
         if marker not in content:
             errors.append(f"architecture.md does not route to canonical project layer: {marker}")
     if "11 Logical Modules + 1 Architecture" not in content or "History" not in content:
@@ -114,8 +114,8 @@ def validate_source(content: str) -> list[str]:
 def validate_html(content: str) -> list[str]:
     required = [
         "Zuno Target Architecture", '<script type="module">', 'fetch("./architecture-views.md")',
-        MERMAID_MODULE_URL, "../history/README.md", "../status/target-status.md",
-        "../../evidence/README.md", "../status/production-readiness.md", "diagram-dialog", "Mermaid source",
+        MERMAID_MODULE_URL, "../facts/README.md", "./architecture.md#target-status-boundary",
+        "../evidence/README.md", "../facts/current-state.md", "diagram-dialog", "Mermaid source",
     ]
     errors = [f"architecture.html missing marker: {marker}" for marker in required if marker not in content]
     if "offline-svg" in content or "offline-diagram" in content:
@@ -137,12 +137,11 @@ def _directory_errors(root: Path) -> list[str]:
 def validate_taxonomy() -> list[str]:
     errors: list[str] = []
     for relative_path in (
-        "docs/project/README.md",
-        "docs/project/history/README.md",
-        "docs/project/status/README.md",
-        "docs/project/status/current-reality.md",
-        "docs/project/status/target-status.md",
-        "docs/project/status/production-readiness.md",
+        "docs/README.md",
+        "docs/facts/README.md",
+        "docs/facts/current-state.md",
+        "docs/architecture/architecture.md",
+        "docs/facts/current-state.md",
     ):
         if not (REPO_ROOT / relative_path).exists():
             errors.append(f"missing canonical project entrypoint: {relative_path}")
@@ -164,7 +163,7 @@ def write_outputs() -> None:
 
 
 def check_outputs() -> list[str]:
-    errors = _directory_errors(REPO_ROOT / "docs/project/architecture")
+    errors = _directory_errors(REPO_ROOT / "docs/architecture")
     errors.extend(validate_taxonomy())
     for mirror in (REPO_ROOT / ".agent/architecture", REPO_ROOT / ".agent/modules"):
         if mirror.exists():

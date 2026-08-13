@@ -4,8 +4,8 @@ on:
   pull_request:
     branches: [main]
     paths:
-      - "docs/project/architecture/**"
-      - "docs/project/modules/**"
+      - "docs/architecture/**"
+      - "docs/modules/**"
       - "project-reconstruction-lab/sessions/**"
       - "tools/agent/render_architecture.py"
       - "tools/scripts/verify_*_target_protocols.py"
@@ -24,8 +24,8 @@ on:
   push:
     branches: [main, agent/wave2-architecture-integration]
     paths:
-      - "docs/project/architecture/**"
-      - "docs/project/modules/**"
+      - "docs/architecture/**"
+      - "docs/modules/**"
       - "project-reconstruction-lab/sessions/**"
       - "tools/agent/render_architecture.py"
       - "tools/scripts/verify_*_target_protocols.py"

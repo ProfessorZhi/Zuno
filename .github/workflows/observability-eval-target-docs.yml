@@ -5,8 +5,8 @@ on:
     branches:
       - main
     paths:
-      - "docs/project/modules/10-observability-eval.md"
-      - "docs/project/modules/README.md"
+      - "docs/modules/10-observability-eval.md"
+      - "docs/modules/README.md"
       - "tools/scripts/verify_observability_eval_target_protocols.py"
       - "tests/repo/test_observability_eval_target_protocols.py"
       - ".github/workflows/observability-eval-target-docs.yml"
@@ -50,7 +50,7 @@ jobs:
         run: |
           python -m py_compile tools/scripts/verify_observability_eval_target_protocols.py tests/repo/test_observability_eval_target_protocols.py
           python tools/scripts/verify_observability_eval_target_protocols.py
-          test ! -e docs/project/modules/10-observability-eval-rag-agent-evaluation.md
+          test ! -e docs/modules/10-observability-eval-rag-agent-evaluation.md
           test ! -e tools/scripts/align_observability_wave1.py
           python tools/scripts/verify_docs_entrypoints.py
           python .agent/scripts/verify_agent_system.py

@@ -18,7 +18,7 @@ ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_SESSION = ROOT / "project-reconstruction-lab" / "sessions" / "RB-WORKFLOW-V3-ROUND-003"
 CANONICAL_COUNT = 12
 ROW_RE = re.compile(
-    r"^\|\s*docs/project/[^|]+\s*\|\s*(\d+)\s*\|\s*(\d+)\s*\|\s*(\d+)\s*\|\s*(\d+)\s*\|\s*PASS\s*\|",
+    r"^\|\s*docs/[^|]+\s*\|\s*(\d+)\s*\|\s*(\d+)\s*\|\s*(\d+)\s*\|\s*(\d+)\s*\|\s*PASS\s*\|",
     re.MULTILINE,
 )
 
@@ -43,7 +43,7 @@ def verify_quality(session: Path) -> list[str]:
     if "DOC_QUALITY_COMPLETE" not in content:
         errors.append("scorecard must state DOC_QUALITY_COMPLETE")
     for path in (
-        ROOT / "docs/project/architecture/architecture.md",
+        ROOT / "docs/architecture/architecture.md",
         ROOT / "docs/history/superseded-document-taxonomy/project-topics/product/product-architecture.md",
         ROOT / "docs/history/superseded-document-taxonomy/project-topics/domain/legal-domain-model.md",
         ROOT / "docs/history/superseded-document-taxonomy/project-topics/domain/domain-state-lifecycle.md",

@@ -1,4 +1,4 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 import re
 import sys
@@ -12,8 +12,8 @@ AGENTS = REPO_ROOT / "AGENTS.md"
 SYSTEM_YAML = REPO_ROOT / ".agent/system.yaml"
 
 REMOVED_PATHS = [
-    REPO_ROOT / "docs/project/modules/06-agent-core-control-protocols.md",
-    REPO_ROOT / "docs/project/modules/06-agent-core-consistency-lifecycle-protocols.md",
+    REPO_ROOT / "docs/modules/06-agent-core-control-protocols.md",
+    REPO_ROOT / "docs/modules/06-agent-core-consistency-lifecycle-protocols.md",
 ]
 
 REQUIRED_PARTS = [

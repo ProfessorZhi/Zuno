@@ -12,7 +12,7 @@ consolidation 保持为历史完成记录。
 
 ## 最近完成 Program 边界
 
-- 历史事实入口已收敛到 `docs/project/history/`，本轮不继续增加事实分类；
+- 当前事实入口已收敛到 `docs/facts/`；历史背景和开发过程统一归档到 `docs/history/`，本轮不继续增加事实分类；
 - Track A 继续恢复事实深度，但不把候选记忆直接写成事实；
 - Track B 从真实问题重新攻击 Product、Domain、Runtime、Knowledge、Service、Data、Security 和 Eval；
 - Python-only 与 Microservice 是 Owner Target Constraint，但具体服务数量和边界仍在审查；
