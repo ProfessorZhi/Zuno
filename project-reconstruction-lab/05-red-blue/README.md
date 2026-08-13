@@ -149,6 +149,10 @@ V3.1.3 Round-005 把重点推进到 Deep Failure、Recovery、Concurrency 和 Ar
 见 [`round-protocol-v3.1.3.md`](round-protocol-v3.1.3.md)。任一分类超过 80% 时必须做 20 题 Distribution
 Audit；本轮即使没有超阈值也保留了 20 题人工抽查。Part A 修改必须从第一段读到最后一段，禁止补丁式尾巴。
 
+Round-005 关闭后另有 `RB-CLOSURE-SEMANTIC-AUDIT-V3.1.3.1`，专门从零复核 Closure Class。它不生成新百问，
+不修改 Round-005 原件，而是记录 `attack_time_closure_class`、`post_round_closure_class`、`finding_state`、
+逐题理由、Lens/Class Matrix 和原始文件 hash。Derived Audit 才表示当前分类视图；历史 Round 仍保持 immutable。
+
 Blue Repair 使用同一个 `sessions/` 根目录，Repair Session 以独立协议记录根因聚类、Part-A
 修复、五指标、Counter Retest 和 Closure Report，例如：
 
@@ -189,6 +193,7 @@ python tools/scripts/verify_red_blue_repair_v1.py
 python tools/scripts/verify_red_blue_evidence_closure_v1.py
 python tools/scripts/verify_red_blue_p0_v4_execution_v1.py
 python tools/scripts/verify_red_blue_round_v313.py
+python tools/scripts/verify_closure_semantic_audit_v3131.py
 ```
 
 V2 Round-001 的历史 Gate 规则继续约束其自身记录；V3 Round 的 AUTO_APPLY 只允许协议定义的

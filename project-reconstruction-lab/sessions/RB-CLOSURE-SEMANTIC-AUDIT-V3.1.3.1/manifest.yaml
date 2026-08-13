@@ -1,0 +1,57 @@
+audit_protocol: RB-CLOSURE-SEMANTIC-AUDIT-V3.1.3.1
+audit_id: RB-CLOSURE-SEMANTIC-AUDIT-V3.1.3.1
+baseline_sha: cf67a751e909fcff26d107904534709758193319
+final_sha: recorded in final handoff
+round_005_session: RB-WORKFLOW-V3-ROUND-005
+round_005_immutable: true
+questions_audited: 100
+inputs_re-read:
+  - project-reconstruction-lab/sessions/RB-WORKFLOW-V3-ROUND-005/questions.md
+  - project-reconstruction-lab/sessions/RB-WORKFLOW-V3-ROUND-005/blue-answers.md
+  - project-reconstruction-lab/sessions/RB-WORKFLOW-V3-ROUND-005/red-scores.md
+  - project-reconstruction-lab/sessions/RB-WORKFLOW-V3-ROUND-005/blue-decisions.md
+  - docs/project/architecture/architecture.md
+  - docs/project/product/product-architecture.md
+  - docs/project/knowledge/knowledge-evidence-architecture.md
+  - docs/project/agents/agent-platform.md
+  - docs/project/agents/multi-agent-runtime.md
+  - docs/project/services/service-architecture.md
+  - docs/project/data/data-ownership-and-recovery.md
+  - docs/project/security/security-architecture.md
+  - docs/project/eval/legal-eval-and-benchmark.md
+  - docs/project/deployment/microservice-deployment.md
+rationale_exact_duplicates: 0
+rationale_similarity_result: WARNING_REVIEWED
+attack_time_distribution:
+  A: 6
+  E: 12
+  I: 71
+  X: 11
+post_round_open_distribution:
+  E: 13
+  I: 75
+  X: 11
+finding_state_distribution:
+  DEFERRED: 11
+  EVIDENCE_PENDING: 13
+  REMAINS_OPEN: 75
+  RESOLVED_IN_ROUND: 1
+reclassified_count: 58
+a_found: 6
+a_resolved_in_round: 1
+a_remaining: 0
+a_p0: 0
+core_architecture_contradictions_remaining: 0
+classification_integrity: PASS
+architecture_repair_required: false
+facts_changed: NONE
+runtime_changed: NONE
+adr_changed: NONE
+round_006_status: READY_NOT_STARTED
+round_005_original_sha256:
+  questions.md: d4acf6e5901b6f76ce2dad615d5002e5b1ea8507a181df82a18721742b3543b5
+  blue-answers.md: a7968b43f6d77557b5b8d6f5a63d2d229021132b5fef39edb023e7719935c6a2
+  red-scores.md: b382850600716ffe17d08b74753189386fa06ab8c16646e406fb18a77f7b37f2
+  blue-decisions.md: 02176784771255953dcafa4fbdd4a47b57fda2da0f0265fbcab1f88bdd5ede0b
+  scorecard.md: af0d1a123167c4ee429f8d29007c84d910e9164c9a4963733b23a56d3d9d3199
+  architecture-deltas.md: 28b36d2aed0a1a4d2077876c8ecbfb2ccb81a9ff4764850b7397a533ce185f0a

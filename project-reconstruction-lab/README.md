@@ -163,6 +163,7 @@ Workspace Bootstrap
 
 V3.1.2 Round-004 以 Human Writing、Architecture Consistency、Failure Semantics 和 Component Survival 为主题，保持 immutable。
 V3.1.3 Round-005 进一步审查 Deep Failure、Recovery、Concurrency 和 Closure Classification Integrity；它新增 A/I/E/X 分布审计与 Part A 连续阅读规则，但不重写 Round-004，也不把分类结果当作 Runtime 或生产证据。
+V3.1.3.1 作为 Round-005 关闭后的 Derived Semantic Audit，重新判断 attack-time/post-round Closure Class 和 finding state；它不修改 Round-005 原件，也不改变 Facts、Runtime 或 Production 状态。
 
 ## 当前 Program：PROJECT-ARCHITECTURE-RECONSTRUCTION-V1 / RB-WORKFLOW-V3-ROUND-005
 

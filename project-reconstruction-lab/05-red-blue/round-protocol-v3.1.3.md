@@ -107,3 +107,24 @@ Canonical Sync = COMPLETE
 
 本轮默认 `facts_changed = NONE`，不得修改 Runtime、UI、Schema、Migration、Dependencies 或 Production Infrastructure。
 Round-004 目录保持 immutable，原始 P0 继续由 Evidence Closure Track 管理。
+
+## V3.1.3.1 Semantic Closure Audit
+
+Round 关闭后，如果 A/I/E/X 的序列或理由显示可能存在分类偏差，必须建立独立的 Semantic Closure Audit；
+它不是新的 100Q，也不能修改原始 Question、Answer、Score、Decision、Delta 或 Scorecard。审计必须重新
+读取每题的完整链路和同步后的 Canonical Owner 文档，从零判断：
+
+```text
+attack_time_closure_class
+→ post_round_closure_class
+→ finding_state
+```
+
+`A` 只有在 Target Contract 仍无法给出唯一 Owner、State、Retry/Replan、安全或 Recovery Authority 时成立。
+如果 Round 内已通过 Blue Repair/Canonical Sync 消除矛盾，必须把“攻击时发现 A”和“Round 结束仍有 A”分开。
+`A-P1/P2` 是可被接受 Target 包含的架构债务，但若涉及 Domain Owner、Security Trust Boundary、Recovery Authority
+或 Plan/Domain Truth 等核心不变量，必须重新判断是否应升级为 A-P0。
+
+Semantic Audit 必须生成逐题 rationale、Attack-vs-Post 分布、Lens/Class Matrix、重复理由审计和 immutable source
+hash。不得设置类别配额；题号和 Lens 只能用于索引，不能用于分类。Derived Audit 是当前分类视图，Round 原件仍是
+可回放的历史记录。
