@@ -1,12 +1,12 @@
 # Current Program
 
 state: `active-design-program`
-active_program: `ZUNO-RED-BLUE-WORKFLOW-V4.1`
+active_program: `ZUNO-RED-BLUE-WORKFLOW-V4.2`
 queued_program: `none`
 program_class: `workflow-governance-bootstrap`
-baseline_sha: `ad45bd07758fd4a6b3224fa1c90e4987fb4b06e7`
+baseline_sha: `4612d9d119a9fefd5b9de01b40606636e80409c0`
 
-本 Program 只重构 ZUNO-RED-BLUE-WORKFLOW-V4.1 的工作流、治理、Session Contract、Prompt、
+本 Program 只重构 ZUNO-RED-BLUE-WORKFLOW-V4.2 的工作流、治理、Session Contract、Prompt、
 Context Packet、Artifact Handoff、Verifier、Routing 和 Docs Tests。它不启动 Round-006，
 不修改业务 Runtime、Facts、ADR、Schema、Migration、UI、Dependencies 或 Production Infra。
 
@@ -120,13 +120,16 @@ Architecture Red/Blue Round-004   COMPLETE (100Q consistency/failure review; imm
 Architecture Red/Blue Round-005   COMPLETE (100Q deep failure/recovery review; V3.1.3)
 Closure Semantic Audit V3.1.3.1   COMPLETE (derived classification; Round-005 immutable)
 Implementation Evidence Wave-001 COMPLETE (TASK-001 / TASK-003; independent Track B)
-V4.1 Workflow Bootstrap           READY_FOR_EXTERNAL_CHATGPT_REVIEW
-Architecture Round-006            READY_FOR_FRESH_RED_THREAD / NOT_STARTED
+V4.1 Workflow Bootstrap           HISTORICAL / IMMUTABLE
+V4.2 Workflow Bootstrap           READY_FOR_EXTERNAL_CHATGPT_REVIEW
+Architecture Round-006            READY_FOR_ADAPTIVE_RED_BLUE_PILOT / NOT_STARTED
 Round-006                         NOT_STARTED
 ```
 
-V4.1 Addendum：每轮 Red 使用只含提问行为的 `interview-calibration-packet.md`，组织 12–18 条
-Deep-Dive Attack Chain；Blue 不读取 packet。`INTERVIEW_DEPTH` 与
+V4.2 Addendum：每次只冻结一个 Question、一个 Answer 和一个 Chain Decision。Red 读取
+上一 Answer 后动态选择 follow-up 或关闭 Chain；`question-answer-ledger.jsonl` append-only，禁止
+whole-round question freeze。Blue 不读取 calibration，且只在 `LIVE_ATTACK_COMPLETE` 后写 Candidate。
+`INTERVIEW_DEPTH` 与
 `INTERVIEW_EXPLAINABILITY` 属于问题质量和文档可解释性信号，不是实现或生产证据。
 
 ## V2 Round status

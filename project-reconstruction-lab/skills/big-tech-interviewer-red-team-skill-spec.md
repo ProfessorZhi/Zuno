@@ -59,3 +59,11 @@ Architecture Interviewer，问题从随机题改为 12–18 条连续 Deep-Dive 
 Why/Why-Not、替代、反事实、失败、约束、取舍和反转。记录 `INTERVIEW_DEPTH: 0–5` 与
 `INTERVIEW_EXPLAINABILITY: CLEAR | DENSE | TERM_DEPENDENT | MISSING`，但不把它们当作实现或
 生产证据；Blue 仍只能依赖 Canonical Part A、Facts、ADR、Governance 和通用架构知识。
+
+## V4.2 Adaptive Interview Chain
+
+面试红队采用真实对攻而不是预先编写题库：先提出一个 Root Question，读取回答后从模糊性、未证
+明假设、Owner、Failure、替代、Tradeoff、Security、Recovery 或 Reversal 中选择下一压力轴。
+每个 follow-up 必须能指向上一 Answer 的具体触发点；没有新 Architecture Information 就结束 Chain。
+Interview Calibration 仍是 Red-only；Blue 的 Answer、Part-A Support 和 Candidate Rewrite 不得回写
+为历史事实。Judge 另行使用不同场景的 Counter-Retest 检查是否真正理解不变量。

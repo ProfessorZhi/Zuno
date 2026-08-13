@@ -54,6 +54,7 @@ Gate 后，才可以生成 implementation Program。
 
 当前 `IMPLEMENTATION-EVIDENCE-CYCLE-001` 是已经存在的独立 Evidence Track，不是 Architecture
 Review 的自动前置条件。Round-006 以后 Architecture Review 必须遵守
-`project-reconstruction-lab/05-red-blue/round-protocol-v4.1.md`：两个 Fresh Session、Part-A
-Cold-Start、Red-only interview calibration、Deep-Dive Chain、Artifact Handoff、Blue-only
-Canonical Sync 和 ChatGPT External Verdict。
+`project-reconstruction-lab/05-red-blue/round-protocol-v4.2.md`：两个 Fresh Session、Part-A
+Cold-Start、Red-only interview calibration、Question-by-Question Adaptive Interrogation、Append-only
+Ledger、Artifact Handoff、Blue-only
+Canonical Sync 和 ChatGPT External Verdict。V4.1 只作为历史协议保留。

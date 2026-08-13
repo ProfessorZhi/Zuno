@@ -117,8 +117,9 @@ User Architecture Gate
 
 ## V4.1 Review Track 与 Implementation Track 分离
 
-从 Round-006 起，Architecture Review 使用 `ZUNO-RED-BLUE-WORKFLOW-V4.1` 的 Fresh Context / Dual
-Thread、Part-A Cold-Start 和 Interview-Calibrated Deep-Dive Chain 协议。它由独立 Red
+V4.1 的历史 Round 使用 Fresh Context / Dual Thread、Part-A Cold-Start 和 Interview-Calibrated
+Deep-Dive Chain 协议。当前 Round-006 以后使用 `ZUNO-RED-BLUE-WORKFLOW-V4.2` 的 Fresh Context /
+Dual Thread、Part-A Cold-Start 和 Question-by-Question Adaptive Interrogation 协议。它由独立 Red
 Challenger/Judge、独立 Blue Canonical Writer 和外部 ChatGPT Auditor
 组成；Red Questions、Blue Answers、Canonical Delta、Counter Review 和外部 Verdict 通过
 Artifact 交接。没有用户提供的 ChatGPT Verdict，Round 只能保持
@@ -148,3 +149,20 @@ Red 必须先把 `DomainVersion`、`EffectReceipt`、`Replan Barrier` 等内部�
 `INTERVIEW_EXPLAINABILITY: TERM_DEPENDENT`。Part-A first pass 还需判断 Fresh Blue 能否在
 30–90 秒内用普通语言解释概念，状态为 `CLEAR | DENSE | TERM_DEPENDENT | MISSING`。这项判断与
 Human Writing Verifier 分离：Verifier 只能 warning，不能自动给人工写作或面试可解释性 PASS。
+
+## V4.2 Adaptive Question-by-Question Review
+
+V4.2 修复 V4.1 的 whole-round question freeze 缺陷。Red 不得在 Blue 第一次回答前生成完整
+100Q；Main 每次只冻结一个 Question，Blue 基于同一个 BASE Snapshot 回答，Main 再冻结 Answer，
+Red 读取该 Answer 后选择 follow-up、关闭 Chain 或升级 Finding。Question、Answer 和 Chain Decision
+以 append-only `question-answer-ledger.jsonl` 记录，并通过 rolling hash 防止事后重排。
+
+Chain 只预声明 Root Claim、Concept、Attack Intent 和压力轴；follow-up 必须记录触发理由及上一
+Answer 引用。80–100 是实际问题预算，Novel/Regression 统计针对实际生成的问题；没有新架构信息
+时可以提前关闭，不得为达到固定深度重复追问。
+
+Live Attack 期间 Blue 只能回答，不修改 Canonical；Candidate Synthesis 和 Canonical Rewrite
+必须在 `LIVE_ATTACK_COMPLETE` 之后、独立 Candidate Branch 上进行。Red Judge 只能用 Judge Packet
+核对 Final Part A、Part B、Ledger、Delta 和 Counter-Retest。V4.2 Bootstrap 的
+`WORKFLOW_CONTRACT_AVAILABLE` 不等于真实 Session、Context Isolation 或 Merge 已经运行；没有
+ChatGPT `ACCEPT` 或 `ACCEPT_WITH_DEBT`，Main 不得 Merge。

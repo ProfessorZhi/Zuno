@@ -63,7 +63,8 @@ Fresh Context Session，使用同一 Snapshot，通过 Artifact Handoff 连接 R
 外部 ChatGPT Auditor。历史 Facts、Current Repository Reality、Target Architecture 和
 Implementation Evidence 仍分开；Architecture Track 不等待 Implementation Track 完成。
 如果无法创建真实 Codex Thread，Orchestrator 只生成 Prompt/Manifest/Context Packet/Manual
-Launch，不声称 Session 已启动。Round-006 在 V4.1 Bootstrap 后仍为 `NOT_STARTED`。
+Launch，不声称 Session 已启动。Round-006 在 V4.2 Bootstrap 后仍为 `NOT_STARTED`；V4.1 Bootstrap
+只作为历史工作流证据保留。
 
 ## V4.1 Addendum
 
@@ -73,3 +74,10 @@ Chain 只帮助发现 Product/Domain/Runtime 的概念缺口，不得把面试�
 个人 Ownership、指标或生产状态倒推出来。若 Part A 无法让 Fresh Blue 用普通语言解释架构，
 优先记录 `CANONICAL_PART_A_GAP` 与 `INTERVIEW_EXPLAINABILITY`，再回到 Canonical 文档或事实
 恢复，而不是补写一套面试话术。
+
+## V4.2 Workflow Orchestration
+
+项目重建的 Architecture Review 子流程使用 V4.2 Live Interrogation：事实、Canonical Snapshot
+和治理是唯一输入；Red 的下一问由 Blue 的上一答触发；Main 维护 append-only ledger 和 rolling
+hash；Blue 只有在 Live Attack 完成后才能生成 Candidate。若 Ledger 显示预生成题单、回答先于
+问题或 Candidate 先于 Live 完成，流程必须失败并回到 Workflow Gap，而不能把架构分数当作有效结果。

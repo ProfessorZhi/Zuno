@@ -92,3 +92,12 @@ Failure/Counterfactual 交叉画像；不得把外部面经的答案、候选人
 每条链的 `INTERVIEW_DEPTH: 0–5` 只用于问题质量，不进入 Architecture Score；问题质量不足时
 输出 `QUESTION_QUALITY_BLOCKED`。Blue 不读取 calibration packet，仍按 Part-A Cold-Start 完成
 概念防守；Red Judge 另记录 `INTERVIEW_EXPLAINABILITY: CLEAR | DENSE | TERM_DEPENDENT | MISSING`。
+
+## V4.2 Adaptive Interrogation Contract
+
+V4.2 以后采用 `QUESTION_BY_QUESTION_ADAPTIVE_INTERROGATION`。Main 每次只冻结一个 Question、
+一个 Answer 和一个 Chain Decision；Red 必须读取上一 Answer 后决定下一问，不能预生成 Q001–Q100。
+所有事件进入 append-only `question-answer-ledger.jsonl`，follow-up 记录 `followup_reason`、
+触发说明和上一 Answer 引用。Blue Live 阶段只回答 BASE Snapshot，不读 calibration、不读代码、
+不写 Canonical；`BLUE_ARCHITECTURE_SYNTHESIS` 只能在 `LIVE_ATTACK_COMPLETE` 后开始。验证入口为
+`verify_red_blue_workflow_v42.py`，Round-006 仍须等待外部 ChatGPT Review，Bootstrap 不代表 Pilot 已运行。

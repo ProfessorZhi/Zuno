@@ -168,3 +168,11 @@ V4.1 Red 可以使用会话级 `interview-calibration-packet.md` 生成连续 De
 packet 只包含提问行为，不包含答案、包装话术或候选人事实；Blue 不读取它。Red Judge 的
 `INTERVIEW_EXPLAINABILITY`（`CLEAR | DENSE | TERM_DEPENDENT | MISSING`）和 Human Writing Review
 均需人工判断，确定性 verifier 只能提供 warning，不能宣称人工 PASS。
+
+### V4.2 Live Answer Evidence Boundary
+
+V4.2 的 Live Answer 是 BASE Snapshot 的 Cold-Start Evidence，不是 Canonical Rewrite。文档审查时
+必须能从 `live-interrogation.md` 看见 `RED Q → BLUE A → RED CHAIN DECISION` 的真实交替；不能用
+预生成题单、事后批量答案或 Candidate 中的修订内容替代这条证据。Part-A Support 必须明确为
+`SUFFICIENT`、`PARTIAL` 或 `GAP`，并区分 Answer 来自 Part A、Part A 加通用知识，还是通用架构
+推理。只有 Live Attack 完成后，Blue 才能把聚类后的 Architecture Decision Set 写入 Candidate。

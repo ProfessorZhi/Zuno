@@ -1,11 +1,11 @@
 # Current Program Reference
 
 state: `active-design-program`
-active_program: `ZUNO-RED-BLUE-WORKFLOW-V4.1`
+active_program: `ZUNO-RED-BLUE-WORKFLOW-V4.2`
 queued_program: `none`
 program_class: `workflow-governance-bootstrap`
 
-当前 active 的是 V4.1 workflow-governance Program。详细执行契约见
+当前 active 的是 V4.2 workflow-governance Program。详细执行契约见
 `.agent/programs/current.md`；项目级工作流和实施证据见
 `project-reconstruction-lab/README.md`。
 
@@ -15,7 +15,7 @@ program_class: `workflow-governance-bootstrap`
 - Track A 继续恢复事实深度，但不把候选记忆直接写成事实；
 - Track B 从真实问题重新攻击 Product、Domain、Runtime、Knowledge、Service、Data、Security 和 Eval；
 - Python-only 与 Microservice 是 Owner Target Constraint，但具体服务数量和边界仍在审查；
-- 本 V4.1 Bootstrap 只修改 Workflow、Governance、Lab Protocol、Session Contract、Prompt、
+- 本 V4.2 Bootstrap 只修改 Workflow、Governance、Lab Protocol、Session Contract、Prompt、
   Context Packet、Verifier、Routing 和 Docs Tests；不启动 Round-006，也不修改 Runtime、
   Facts、ADR、Schema、Migration、UI、Dependencies 或 Production Infra；
 - Architecture Review Track 与 Implementation Evidence Track 并行；Wave-001 不再是 Round-006
@@ -48,8 +48,9 @@ Red / Blue / Interview Review       READY / IN_PROGRESS
 Canonical Architecture Sync         APPLIED / ACCEPTED_TARGET (V3.1.3 Round-005 review)
 Implementation Evidence Wave-001   COMPLETE (TASK-001 / TASK-003; independent Track B)
 V3 Round-003                       COMPLETE; V3.1.1 normalization COMPLETE; V3.1.2 Round-004 COMPLETE; V3.1.3 Round-005 COMPLETE; V3.1.3.1 Semantic Audit COMPLETE
-V4.1 Workflow Bootstrap            READY_FOR_EXTERNAL_CHATGPT_REVIEW
-Round-006                         READY_FOR_FRESH_RED_THREAD / NOT_STARTED
+V4.1 Workflow Bootstrap            HISTORICAL / IMMUTABLE
+V4.2 Workflow Bootstrap            READY_FOR_EXTERNAL_CHATGPT_REVIEW
+Round-006                         READY_FOR_ADAPTIVE_RED_BLUE_PILOT / NOT_STARTED
 ```
 
 Canonical Runtime Program V1 已完成并归档。可读历史摘要位于：
