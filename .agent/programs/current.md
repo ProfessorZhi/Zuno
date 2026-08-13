@@ -1,17 +1,17 @@
 # Current Program
 
-state: `active-design-program`
-active_program: `RB-R006-CLOSURE-AND-V42-BATCH-PROFILE`
+state: `no-active`
+active_program: `none`
 queued_program: `none`
-program_class: `operational-pilot`
-baseline_sha: `55510d236bcc039ca255f59d07ea61b36e04143a`
 
-本 Program 收口 ZUNO-RED-BLUE-WORKFLOW-V4.2-ROUND-006 Operational Pilot，并维护 V4.2 的
+最近完成的 Program 收口了 ZUNO-RED-BLUE-WORKFLOW-V4.2-ROUND-006 Operational Pilot，并维护了 V4.2 的
 Execution Profile 与 Workflow 证据。它不修改 Canonical Architecture、Facts、ADR、Runtime、Schema、Migration、UI、Dependencies
 或 Production Infra。Bootstrap 阶段只重构 V4.2 的工作流、治理、Session Contract、Prompt、
 Context Packet、Artifact Handoff、Verifier、Routing 和 Docs Tests。Round-006 已按 Operational Pilot
 启动并在 Workflow Execution Blocker 后中止收口，当前不再继续运行，
 不修改业务 Runtime、Facts、ADR、Schema、Migration、UI、Dependencies 或 Production Infra。
+
+该 Program 已 `COMPLETED / CLOSED`；当前没有 active 或 queued Program。
 
 `IMPLEMENTATION-EVIDENCE-CYCLE-001` 是独立的 Track B；它已有自己的代码、测试和 Evidence
 Package，本轮不重写其真实状态，也不再把它作为 Architecture Review 的自动前置 Gate。
@@ -26,7 +26,7 @@ Facts、ADR、Schema/Migration、UI、Dependencies、Production Infra，或把�
 Current、Measured 或 Production Ready。
 ```
 
-Microservice 和 Python-only 是当前 Owner Target Constraint；本 Program 仍攻击服务数量、
+Microservice 和 Python-only 是当前 Owner Target Constraint；该已完成 Program 攻击了服务数量、
 服务边界、Worker 形态、Runtime Provider、Multi-Agent、Graph、Memory 和自研能力是否
 值得保留。五个服务不是预先批准的最终答案。
 
@@ -109,9 +109,9 @@ Runtime` 也不等于已证明优于 Host + Legal Backend。
 
 ```text
 Fact Taxonomy V1                 DONE
-Fact Depth Recovery              IN_PROGRESS
-Product Problem Reconstruction   IN_PROGRESS
-Architecture Red/Blue            READY / IN_PROGRESS
+Fact Depth Recovery              OPEN EVIDENCE GAP / NO ACTIVE PROGRAM
+Product Problem Reconstruction   OPEN CANDIDATE / NO ACTIVE PROGRAM
+Architecture Red/Blue            READY / NO ACTIVE ROUND
 Architecture Red/Blue Round-002   COMPLETE (V3, 100Q, 80 NOVEL / 20 REGRESSION)
 Architecture Red/Blue Round-003   COMPLETE (V3.1, 100Q, 85 NOVEL / 15 REGRESSION)
 Interview Red Team               READY
@@ -130,11 +130,15 @@ Round-006                         3 LIVE TURNS; ARCHITECTURE SCORE INVALID; CAND
 V4.2 default profile              BATCH_ADVERSARIAL
 V4.2 experimental profile         LIVE_ADAPTIVE
 Round-007                         READY_FOR_BATCH_ADVERSARIAL_PILOT / NOT_STARTED
+Round-006 closure                 COMPLETE
+V4.2 batch profile consolidation  COMPLETE
 ```
 
-V4.2 Addendum：每次只冻结一个 Question、一个 Answer 和一个 Chain Decision。Red 读取
-上一 Answer 后动态选择 follow-up 或关闭 Chain；`question-answer-ledger.jsonl` append-only，禁止
-whole-round question freeze。Blue 不读取 calibration，且只在 `LIVE_ATTACK_COMPLETE` 后写 Candidate。
+V4.2 Addendum：`LIVE_ADAPTIVE` 每次只冻结一个 Question、一个 Answer 和一个 Chain Decision。
+Red 读取上一 Answer 后动态选择 follow-up 或关闭 Chain；`question-answer-ledger.jsonl` append-only，
+禁止 whole-round question freeze（仅限 `LIVE_ADAPTIVE`）。`BATCH_ADVERSARIAL` 允许 Red Attack 一次形成完整 100Q，
+但 `RED_COUNTER` 必须基于 Blue Answers 动态攻击。Blue 不读取 calibration，且只在
+`LIVE_ATTACK_COMPLETE` 后写 Candidate。
 `INTERVIEW_DEPTH` 与
 `INTERVIEW_EXPLAINABILITY` 属于问题质量和文档可解释性信号，不是实现或生产证据。
 

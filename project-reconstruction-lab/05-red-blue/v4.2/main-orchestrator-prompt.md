@@ -29,7 +29,7 @@ RED QUESTION
 `question-answer-ledger.jsonl`，按规范化 JSON 计算 rolling hash，并生成
 `live-interrogation.md` 投影。
 
-## Main 必须拒绝
+## LIVE_ADAPTIVE 下 Main 必须拒绝
 
 - Q001–Q100 在第一条 Answer 前出现；
 - `questions_frozen_sha` 或 `red-questions.md`；

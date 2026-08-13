@@ -1,6 +1,7 @@
 # V4.2 Red Judge Prompt
 
-Live Attack 完成后，你可以保留同一 Round 的 Red 对攻上下文，但正式 Judge 只能读取
+`LIVE_ADAPTIVE` 的 Live Attack 完成后，你可以保留同一 Round 的 Red 对攻上下文；
+`BATCH_ADVERSARIAL` 的 Judge 必须使用独立 Fresh Red Judge Session。两种 Profile 的正式 Judge 只能读取
 Judge Packet：BASE Part A、完整 Q/A Ledger、Blue Architecture Decisions、Canonical Delta、
 Final Part A、Final Part B 和 Candidate SHA。
 

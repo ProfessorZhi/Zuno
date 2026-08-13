@@ -1,15 +1,15 @@
 # Current Program Reference
 
-state: `active-design-program`
-active_program: `RB-R006-CLOSURE-AND-V42-BATCH-PROFILE`
+state: `no-active`
+active_program: `none`
 queued_program: `none`
-program_class: `operational-pilot`
 
-当前 active 的是 Round-006 closure 与 V4.2 execution profile consolidation。详细执行契约见
+最近完成的是 Round-006 closure 与 V4.2 execution profile consolidation，已 `COMPLETED / CLOSED`。
+详细执行契约见
 `.agent/programs/current.md`；项目级工作流和实施证据见
 `project-reconstruction-lab/README.md`。
 
-## 当前边界
+## 最近完成 Program 边界
 
 - Canonical Facts V1 已形成，本轮不继续增加 Facts 分类；
 - Track A 继续恢复事实深度，但不把候选记忆直接写成事实；
@@ -43,9 +43,9 @@ Repository Closure                  CLOSED
 Local Workspace Closure             CLOSED
 Repository Fresh-State Reset        CLOSED
 Canonical Facts Taxonomy V1         DONE
-Fact Depth Recovery                 IN_PROGRESS
-Product / Architecture Reconstruction IN_PROGRESS
-Red / Blue / Interview Review       READY / IN_PROGRESS
+Fact Depth Recovery                 OPEN EVIDENCE GAP / NO ACTIVE PROGRAM
+Product / Architecture Reconstruction OPEN CANDIDATE / NO ACTIVE PROGRAM
+Red / Blue / Interview Review       READY / NO ACTIVE ROUND
 Canonical Architecture Sync         APPLIED / ACCEPTED_TARGET (V3.1.3 Round-005 review)
 Implementation Evidence Wave-001   COMPLETE (TASK-001 / TASK-003; independent Track B)
 V3 Round-003                       COMPLETE; V3.1.1 normalization COMPLETE; V3.1.2 Round-004 COMPLETE; V3.1.3 Round-005 COMPLETE; V3.1.3.1 Semantic Audit COMPLETE
@@ -55,6 +55,8 @@ Round-006                         ABORTED_OPERATIONAL_PILOT / WORKFLOW_EXECUTION
 V4.2 default profile              BATCH_ADVERSARIAL
 V4.2 experimental profile         LIVE_ADAPTIVE
 Round-007                         READY_FOR_BATCH_ADVERSARIAL_PILOT / NOT_STARTED
+Round-006 closure                 COMPLETE
+V4.2 batch profile consolidation  COMPLETE
 ```
 
 Canonical Runtime Program V1 已完成并归档。可读历史摘要位于：

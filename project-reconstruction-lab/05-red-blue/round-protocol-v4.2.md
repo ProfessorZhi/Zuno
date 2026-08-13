@@ -7,7 +7,7 @@ Round 的对攻方式，不重解释历史结果，不启动 Round-006，也不�
 
 ```text
 workflow: ZUNO-RED-BLUE-WORKFLOW-V4.2
-review_mode: QUESTION_BY_QUESTION_ADAPTIVE_INTERROGATION
+review_mode: PROFILE_DEPENDENT
 round_006: ABORTED_OPERATIONAL_PILOT / WORKFLOW_EXECUTION_BLOCKER / SCORE_INVALID
 round_007: READY_FOR_BATCH_ADVERSARIAL_PILOT / NOT_STARTED
 default_execution_profile: BATCH_ADVERSARIAL
@@ -16,7 +16,12 @@ architecture_track: independent
 implementation_track: independent
 canonical_part_a: BASE_SNAPSHOT_KNOWLEDGE_SOURCE
 chatgpt_merge_gate: required
-whole_round_question_freeze: FORBIDDEN
+whole_round_question_freeze: PROFILE_DEPENDENT
+full_round_question_generation: PROFILE_DEPENDENT
+batch_adversarial:
+  full_round_question_generation: ALLOWED
+live_adaptive:
+  full_round_question_generation: FORBIDDEN
 ```
 
 ## 1. V4.1 原则继续有效
@@ -26,11 +31,13 @@ Red、Blue 禁止读取 interview calibration、默认不读业务代码、`CONC
 CONTRACT_LAST`、Blue-only Candidate Canonical Writer、Main-only Integrator、ChatGPT External
 Merge Gate 和 Architecture/Implementation 双轨。
 
-但 V4.2 将 V4.1 的“预生成完整问题集”替换为逐题对攻。V4.1 的 `questions_frozen_sha`、
-`RED_QUESTIONS_FROZEN` 和 `red-questions.md` 只对历史 V4.1 Round 有效，不得出现在 V4.2
-Live Attack Contract。
+默认的 `BATCH_ADVERSARIAL` 保留 Fresh Red Attack 的整轮问题生成，但不把问题直接交给
+Blue；`RED_COUNTER` 必须在读取 Blue Answers 后重新进行动态攻击。只有实验性的
+`LIVE_ADAPTIVE` 将 V4.1 的整轮冻结替换为逐题对攻。V4.1 的 `questions_frozen_sha`、
+`RED_QUESTIONS_FROZEN` 和 `red-questions.md` 只对历史 V4.1 Round 有效；在
+`LIVE_ADAPTIVE` 中仍然禁止它们，`BATCH_ADVERSARIAL` 则使用独立的 Batch Question Artifact。
 
-## 2. Live Interrogation 的真实顺序
+## 2. LIVE_ADAPTIVE Interrogation 的真实顺序
 
 Main Thread 每次只推进一个 Turn：
 
@@ -47,7 +54,7 @@ Red 生成 Q001
 落盘；每个 Follow-up 必须能回链到上一条已冻结 Answer。Red 不能提前写出本 Chain 的完整问题
 列表，Blue 也不能修改已冻结的问题或回答。
 
-## 3. Append-only Ledger
+## 3. LIVE_ADAPTIVE Append-only Ledger
 
 V4.2 使用 `question-answer-ledger.jsonl` 作为逐事件、追加式事实账本。每行是不可变事件，包含：
 
@@ -88,7 +95,7 @@ BLUE A002
 
 它不能先列出 Q001–Q100 再统一列答案。
 
-## 4. Chain Spec 与 Follow-up
+## 4. LIVE_ADAPTIVE Chain Spec 与 Follow-up
 
 每条 Chain 只允许预声明：
 
@@ -100,8 +107,8 @@ attack_intent
 possible_pressure_axes
 ```
 
-Chain Spec 禁止包含 `question`、`questions`、`question_ids`、`generated_questions`、Answer 或
-任何完整题单。Root Question 可以没有 `followup_reason`；其余 Question 必须记录以下枚举之一
+在 `LIVE_ADAPTIVE` 中，Chain Spec 禁止包含 `question`、`questions`、`question_ids`、
+`generated_questions`、Answer 或任何完整题单。Root Question 可以没有 `followup_reason`；其余 Question 必须记录以下枚举之一
 及自然语言触发说明：
 
 ```text
@@ -124,7 +131,7 @@ CHAIN_COMPLETION_PROBE
 
 `previous_turn_ref` 必须指向触发 Follow-up 的上一条 Answer，而不是只指向 Chain 名称。
 
-## 5. Chain Stop
+## 5. LIVE_ADAPTIVE Chain Stop
 
 每个 Answer 后 Red 必须落盘一个 `CHAIN_DECISION`：
 
@@ -138,7 +145,7 @@ ESCALATE_FINDING
 必须属于新的 Root Claim。关闭条件是概念、Owner、Failure/Recovery、替代、Tradeoff 和 Reversal
 已经足够闭合，继续追问不会产生新的 Architecture Information。不得为了达到固定深度重复追问。
 
-## 6. Question Budget 与 Novelty
+## 6. LIVE_ADAPTIVE Question Budget 与 Novelty
 
 ```text
 question_target: 100
@@ -146,7 +153,7 @@ question_max: 100
 normal_min: 80
 ```
 
-实际 Question 数按账本计算，不按预设题单计算。80–99 题可以正常关闭，但必须记录
+`LIVE_ADAPTIVE` 的实际 Question 数按账本计算，不按预设题单计算。80–99 题可以正常关闭，但必须记录
 `NO_NEW_ARCHITECTURE_INFORMATION` 或 `ALL_PRIORITY_CHAINS_CLOSED`；少于 80 题只能在
 `USER_GATE` 或 `ARCHITECTURE_BLOCKER` 下关闭，并标记 `QUESTION_COVERAGE_INSUFFICIENT`。
 

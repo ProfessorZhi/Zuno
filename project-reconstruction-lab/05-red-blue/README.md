@@ -66,8 +66,9 @@ V4.2 默认使用 `BATCH_ADVERSARIAL`：Attack、Defense、Counter、Synthesis�
 `READY_FOR_BATCH_ADVERSARIAL_PILOT / NOT_STARTED`，不自动启动。
 
 Red 每轮读取会话级 `interview-calibration-packet.md`，只获取提问行为摘要；Blue 不读取该文件，
-不能根据面试题库定向准备答案。V4.2 每次只冻结一个 Question，后续问题必须由上一 Answer 动态
-触发；目标 100、最大 100、正常最小 80，实际问题不足时记录预算关闭原因。
+不能根据面试题库定向准备答案。`LIVE_ADAPTIVE` 每次只冻结一个 Question，后续问题必须由上一
+Answer 动态触发；目标 100、最大 100、正常最小 80，实际问题不足时记录预算关闭原因。Batch
+则允许 Red Attack 一次形成 100Q，但必须由 `RED_COUNTER` 对 Blue Answers 进行动态攻击。
 
 ```text
 Fact Baseline

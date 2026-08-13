@@ -115,6 +115,14 @@ def test_batch_100_questions_are_allowed(tmp_path: Path):
     assert errors == []
 
 
+def test_v42_header_scopes_question_generation_by_profile():
+    protocol = (ROOT / "project-reconstruction-lab/05-red-blue/round-protocol-v4.2.md").read_text(encoding="utf-8")
+    assert "review_mode: PROFILE_DEPENDENT" in protocol
+    assert "whole_round_question_freeze: PROFILE_DEPENDENT" in protocol
+    assert "batch_adversarial:\n  full_round_question_generation: ALLOWED" in protocol
+    assert "live_adaptive:\n  full_round_question_generation: FORBIDDEN" in protocol
+
+
 def test_live_pregen_question_set_remains_rejected(tmp_path: Path):
     directory = _write_batch(tmp_path)
     manifest_path = directory / "manifest.yaml"

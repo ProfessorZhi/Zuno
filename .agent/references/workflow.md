@@ -48,9 +48,9 @@ git diff --check PASS
 active implementation program NONE
 ```
 
-说明：`active implementation program NONE` 不排斥一个 active design/review Program。
-当前设计 Program 为 `PROJECT-ARCHITECTURE-RECONSTRUCTION-V1`；只有通过用户 Architecture
-Gate 后，才可以生成 implementation Program。
+说明：`active implementation program NONE` 不排斥 active design/review Program；当前没有
+active design/review Program。下一次设计或实现工作必须由用户明确激活，不能从 Round-007 的
+READY 状态自动启动。只有通过用户 Architecture Gate 后，才可以生成 implementation Program。
 
 当前 `IMPLEMENTATION-EVIDENCE-CYCLE-001` 是已经存在的独立 Evidence Track，不是 Architecture
 Review 的自动前置条件。Round-006 以后 Architecture Review 必须遵守

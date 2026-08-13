@@ -169,9 +169,9 @@ V3.1.2 Round-004 以 Human Writing、Architecture Consistency、Failure Semantic
 V3.1.3 Round-005 进一步审查 Deep Failure、Recovery、Concurrency 和 Closure Classification Integrity；它新增 A/I/E/X 分布审计与 Part A 连续阅读规则，但不重写 Round-004，也不把分类结果当作 Runtime 或生产证据。
 V3.1.3.1 作为 Round-005 关闭后的 Derived Semantic Audit，重新判断 attack-time/post-round Closure Class 和 finding state；它不修改 Round-005 原件，也不改变 Facts、Runtime 或 Production 状态。
 
-## 当前 Program：RB-R006-CLOSURE-AND-V42-BATCH-PROFILE
+## 最近完成 Program：RB-R006-CLOSURE-AND-V42-BATCH-PROFILE
 
-Canonical Facts Framework V1 已形成。本 Program 不再扩张事实目录，而是把事实深度恢复
+Canonical Facts Framework V1 已形成。该已完成 Program 不再扩张事实目录，而是把事实深度恢复
 与架构重构并行推进：
 
 | Track | 目标 | 当前输出边界 |
@@ -202,7 +202,7 @@ ID 时，即可在事实未完全闭合的情况下开始架构重构：
 
 ## Architecture Review Gate
 
-本 Program 的目标不是把已有 Target 文档重新排版，而是对每项复杂度执行：
+该已完成 Program 的目标不是把已有 Target 文档重新排版，而是对每项复杂度执行：
 
 ```text
 Historical Problem
@@ -219,7 +219,7 @@ Python-only 和 Microservice 是 Owner 给定的 Target Constraint；Red Team �
 GraphRAG、Memory、OpenViking、Legal Domain Kernel 和 Native Domain-aware Runtime 都不是
 因为当前文档出现就自动保留。
 
-本 Program 是 active design program，不是 implementation program。业务 Runtime、UI、
+该已完成 Program 不是 implementation program。业务 Runtime、UI、
 Schema/Migration、依赖和生产 Infra 不在本轮修改范围内；Implementation Task Candidate 可以
 在 Lab 中记录，但必须等用户通过 Architecture Gate 后才能激活 implementation Program。
 
@@ -231,11 +231,12 @@ Handoff API 返回旧 completed response 而中止，Architecture Score 无效�
 `IMPLEMENTATION-EVIDENCE-CYCLE-001` 的真实状态，当前为 `WAITING_FOR_RED_COUNTER_RETEST`。
 两条 Track 通过 Canonical Architecture 和 Architecture Delta 反馈，但互不作为对方的自动 Gate。
 
-V4.2 规定：Main Thread 每次只冻结一个 Question、一个 Answer 和一个 Chain Decision；
-`question-answer-ledger.jsonl` 是 append-only 记录，禁止 `questions_frozen_sha`、`red-questions.md`
-和 Q001–Q100 预生成题单。Interview calibration 只进入 Red Context，Blue Context 必须禁止读取。
-Chain 的后续问题必须由上一 Answer 的 follow-up reason 触发；只有 `LIVE_ATTACK_COMPLETE` 后，Blue
-才能进行 Candidate Canonical Rewrite。80–100 题是实际预算，不是预设题单。
+V4.2 规则按 Profile 解释：`BATCH_ADVERSARIAL` 允许 Fresh Red Attack 生成完整 100Q 和
+12–18 条 Deep-Dive Chain，但 `RED_COUNTER` 必须读取 Blue Answer 后动态攻击；`LIVE_ADAPTIVE`
+才要求 Main 每次只冻结一个 Question、一个 Answer 和一个 Chain Decision，使用 append-only
+`question-answer-ledger.jsonl`，并禁止 `questions_frozen_sha`、`red-questions.md` 和 Q001–Q100
+预生成题单。两种 Profile 都要求 Interview calibration 只进入 Red Context，Blue Context 禁止读取，
+且只有 `LIVE_ATTACK_COMPLETE` 后 Blue 才能进行 Candidate Canonical Rewrite。
 
 默认 Batch Profile 允许 Red Attack 预先生成完整 100Q，但不允许把这份题单直接交给 Blue。
 Blue Defense、Red Counter、Blue Counter Defense、Blue Synthesis 与 Red Judge 都必须使用独立

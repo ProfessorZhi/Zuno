@@ -15,11 +15,15 @@ V4.2 的默认执行 Profile 是 `BATCH_ADVERSARIAL`；`LIVE_ADAPTIVE` 是实验
 - `red-judge-prompt.md`：Live Attack 完成后执行 Part-A-first Judge 和 Counter-Retest。
 - `chatgpt-review-template.md`：外部审查使用的 Review Package，不等同于 Verifier。
 
-## 关键差异
+## Profile 差异
 
-V4.2 禁止 `red-questions.md`、`questions_frozen_sha` 和任何预生成 Q001–Q100 题单。
-唯一有效的对攻证据是 `question-answer-ledger.jsonl` 与其人类可读投影
-`live-interrogation.md`。
+`BATCH_ADVERSARIAL` 允许 Fresh Red Attack 一次生成完整 100Q 和 12–18 条 Deep-Dive Chain；
+它必须保留 Why、Why Not、Counterexample、Failure、Alternative、Tradeoff 和 Reversal 攻击维度，
+并由 `RED_COUNTER` 读取 Blue Answers 后进行动态追击。Batch 不得简化成 100 个独立 checklist 问题。
+
+`LIVE_ADAPTIVE` 禁止 `red-questions.md`、`questions_frozen_sha` 和任何预生成 Q001–Q100 题单；
+其唯一有效的逐题对攻证据是 `question-answer-ledger.jsonl` 与人类可读投影
+`live-interrogation.md`。这些禁止项不适用于 Batch Attack Artifact。
 
 ## 运行入口
 
