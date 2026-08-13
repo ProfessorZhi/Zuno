@@ -60,6 +60,11 @@ Handoff 和 ChatGPT External Audit 之外，要求 Conceptual Architecture Revie
 V4.2 Bootstrap 位于 `sessions/RB-WORKFLOW-V4.2-BOOTSTRAP/`，只验证工作流，不启动 Round-006；
 V4.1 Bootstrap 保持历史不变。
 
+V4.2 默认使用 `BATCH_ADVERSARIAL`：Attack、Defense、Counter、Synthesis、Judge 使用不同的
+角色 Session，并要求完整 100Q、Counter 引用、Candidate 隔离和外部 Verdict。`LIVE_ADAPTIVE`
+仅为实验性 Profile；Round-006 已因 Workflow Execution Blocker 中止，Round-007
+`READY_FOR_BATCH_ADVERSARIAL_PILOT / NOT_STARTED`，不自动启动。
+
 Red 每轮读取会话级 `interview-calibration-packet.md`，只获取提问行为摘要；Blue 不读取该文件，
 不能根据面试题库定向准备答案。V4.2 每次只冻结一个 Question，后续问题必须由上一 Answer 动态
 触发；目标 100、最大 100、正常最小 80，实际问题不足时记录预算关闭原因。

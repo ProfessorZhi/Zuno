@@ -1,0 +1,146 @@
+workflow_id: ZUNO-RED-BLUE-WORKFLOW-V4.2
+round_id: RB-WORKFLOW-V4.2-ROUND-006
+execution_profile: LIVE_ADAPTIVE
+state: ABORTED_OPERATIONAL_PILOT
+round_status: ABORTED_OPERATIONAL_PILOT
+workflow_status: BLOCKED
+stop_reason: WORKFLOW_EXECUTION_BLOCKER
+operational_finding: WF-API-001
+architecture_score: INVALID
+architecture_blocker: NONE_ESTABLISHED
+user_gate: NOT_TRIGGERED
+candidate: NONE
+canonical_sync: NOT_STARTED
+main_merge: NOT_ATTEMPTED
+artifact_base_sha: 55510d236bcc039ca255f59d07ea61b36e04143a
+external_reviewed_sha: NOT_PROVIDED
+red_session_id: 019ffa12-bdb2-7520-8ceb-9527ad76e080
+blue_session_id: 019ffa12-beca-7ac2-b1fb-456c54c3e1ee
+logical_red_session_id: RB-R006-RED
+logical_blue_session_id: RB-R006-BLUE
+canonical_snapshot_sha: ede65cd89a5d7a02da8d6b0e38310d7b38070ac535c386c9e5a3290c5cc45eef
+part_a_extracted_sha: a9bac602e00846df2a6a805b4630af2a333c904ccc60dbb3ea1ebe2826bfc595
+live_attack_base_tree_sha: ca1e1ac5fda511bd42b5e8a3110b78106db256d7
+live_attack_end_tree_sha: ca1e1ac5fda511bd42b5e8a3110b78106db256d7
+canonical_tree_unchanged_during_live: true
+ledger_artifact: question-answer-ledger.jsonl
+rolling_ledger_hash: ad3974cace9641d7e02e8e15de0f6cf56348fcea4b32a49a839ed81ffa5d32d0
+question_count: 3
+chain_count: 1
+novel_question_count: 3
+regression_question_count: 0
+adaptive_followup_ratio: 0.6666666667
+question_budget_stop_reason: WORKFLOW_EXECUTION_BLOCKER
+chain_stop_summary: C01_CLOSED; Q004_NOT_FROZEN
+part_a_support_distribution:
+  SUFFICIENT: 2
+  PARTIAL: 1
+  GAP: 0
+answer_source_distribution:
+  PART_A: 2
+  PART_A_PLUS_GENERAL_KNOWLEDGE: 1
+  GENERAL_ARCHITECTURE_REASONING: 0
+red_cold_start_evidence: PARTIAL_PROVEN
+blue_cold_start_evidence: PROVEN
+red_reads_business_code: false
+blue_reads_business_code: false
+blue_uses_code_as_architecture_reason: false
+blue_reads_interview_calibration: false
+blue_canonical_modified_during_live: false
+canonical_write_phase: AFTER_LIVE_ATTACK_COMPLETE
+candidate_branch: null
+candidate_sha: NOT_PROVIDED
+candidate_created_after_live_attack: false
+main_branch: main
+main_merge_requires_chatgpt_verdict: true
+chatgpt_review_status: WAITING_FOR_CHATGPT_REVIEW
+architecture_score_valid: false
+facts_changed: NONE
+runtime_changed: NONE
+schema_changed: NONE
+migration_changed: NONE
+adr_changed: NONE
+canonical_content_changed: NONE
+question_mode: QUESTION_BY_QUESTION_ADAPTIVE_INTERROGATION
+whole_round_question_freeze: FORBIDDEN
+question_target: 100
+question_max: 100
+normal_min: 80
+high_risk_chain_ids: [C01]
+operational_findings: [WF-API-001, PA-GAP-001]
+chain_specs:
+  - chain_id: C01
+    root_claim: Canonical business state ownership
+    primary_concept: Domain Owner boundary
+    attack_intent: test promotion authority under conflict
+    possible_pressure_axes: [owner, conflict, staleness]
+  - chain_id: C02
+    root_claim: Plan and replan
+    primary_concept: Plan validity
+    attack_intent: test invalidation and replan barrier
+    possible_pressure_axes: [version, dependency, replan]
+  - chain_id: C03
+    root_claim: Single controller
+    primary_concept: Control topology
+    attack_intent: test controller necessity
+    possible_pressure_axes: [latency, parallelism, alternative]
+  - chain_id: C04
+    root_claim: Memory boundary
+    primary_concept: Memory versus domain fact
+    attack_intent: test reuse without fact pollution
+    possible_pressure_axes: [staleness, scope, privacy]
+  - chain_id: C05
+    root_claim: Graph and hybrid retrieval
+    primary_concept: Conditional graph
+    attack_intent: test graph value versus hybrid
+    possible_pressure_axes: [recall, cost, latency]
+  - chain_id: C06
+    root_claim: Evidence semantics
+    primary_concept: Evidence gate
+    attack_intent: test sufficiency and citation
+    possible_pressure_axes: [provenance, coverage, review]
+  - chain_id: C07
+    root_claim: Tool effect
+    primary_concept: Unknown external outcome
+    attack_intent: test idempotency and reconciliation
+    possible_pressure_axes: [timeout, duplicate, unknown]
+  - chain_id: C08
+    root_claim: Security and approval
+    primary_concept: Execute-time authorization
+    attack_intent: test least privilege
+    possible_pressure_axes: [revocation, approval, egress]
+  - chain_id: C09
+    root_claim: Domain/runtime state
+    primary_concept: State source separation
+    attack_intent: test checkpoint versus business fact
+    possible_pressure_axes: [recovery, version, owner]
+  - chain_id: C10
+    root_claim: Multi-agent
+    primary_concept: Composable roles
+    attack_intent: test single agent alternative
+    possible_pressure_axes: [delegation, shared state, budget]
+  - chain_id: C11
+    root_claim: Service boundary
+    primary_concept: Physical isolation
+    attack_intent: test service versus worker/library
+    possible_pressure_axes: [scaling, failure, ownership]
+  - chain_id: C12
+    root_claim: Recovery
+    primary_concept: Reconciliation
+    attack_intent: test partial failure
+    possible_pressure_axes: [resume, retry, reconcile]
+  - chain_id: C13
+    root_claim: Evaluation
+    primary_concept: Causal benchmark
+    attack_intent: test evidence of gain
+    possible_pressure_axes: [quality, efficiency, cost]
+  - chain_id: C14
+    root_claim: Deployment
+    primary_concept: Deployment profile
+    attack_intent: test workload isolation
+    possible_pressure_axes: [capacity, security, operations]
+  - chain_id: C15
+    root_claim: Product and review
+    primary_concept: Human review value
+    attack_intent: test workflow usefulness
+    possible_pressure_axes: [acceptance, review, reversal]

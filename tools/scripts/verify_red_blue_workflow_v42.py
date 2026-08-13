@@ -30,6 +30,9 @@ POST_LIVE_STATES = {
     "CHATGPT_REPAIR_REQUIRED",
     "CLOSED",
 }
+CLOSURE_STATES = {"ABORTED_OPERATIONAL_PILOT"}
+BATCH_PROFILE = "BATCH_ADVERSARIAL"
+LIVE_PROFILE = "LIVE_ADAPTIVE"
 VALID_SUPPORT = {"SUFFICIENT", "PARTIAL", "GAP"}
 VALID_SOURCES = {"PART_A", "PART_A_PLUS_GENERAL_KNOWLEDGE", "GENERAL_ARCHITECTURE_REASONING"}
 VALID_DECISIONS = {"CONTINUE_CHAIN", "CLOSE_CHAIN", "ESCALATE_FINDING"}
@@ -44,6 +47,7 @@ VALID_STATES = {
     "CHAIN_CLOSED",
     "LIVE_ATTACK_COMPLETE",
     *POST_LIVE_STATES,
+    *CLOSURE_STATES,
     "BLOCKED_BY_USER_GATE",
 }
 VALID_FOLLOWUP_REASONS = {
@@ -180,18 +184,26 @@ def verify_bootstrap(directory: Path) -> list[str]:
         errors.append("self-referential final_sha is forbidden; use external_reviewed_sha")
     if manifest.get("artifact_content_state") != "WORKFLOW_CONTRACT_AVAILABLE":
         errors.append("artifact_content_state must be WORKFLOW_CONTRACT_AVAILABLE")
-    if manifest.get("external_reviewed_sha") != "NOT_PROVIDED":
-        errors.append("bootstrap external_reviewed_sha must be NOT_PROVIDED")
+    reviewed_sha = str(manifest.get("external_reviewed_sha", ""))
+    if not (reviewed_sha == "NOT_PROVIDED" or SHA40.fullmatch(reviewed_sha)):
+        errors.append("external_reviewed_sha must be NOT_PROVIDED or a 40-character SHA")
+    if reviewed_sha != "NOT_PROVIDED":
+        if manifest.get("chatgpt_verdict") not in {"ACCEPT", "ACCEPT_WITH_DEBT"}:
+            errors.append("provided external review requires ACCEPT or ACCEPT_WITH_DEBT")
+        if manifest.get("blocking_findings") != "NONE":
+            errors.append("provided external review must declare blocking_findings: NONE")
     if manifest.get("historical_rounds_immutable") is not True:
         errors.append("historical_rounds_immutable must be true")
     if manifest.get("round_006_status") != "READY_FOR_ADAPTIVE_RED_BLUE_PILOT":
         errors.append("round_006_status must be READY_FOR_ADAPTIVE_RED_BLUE_PILOT")
     if manifest.get("round_006_started") is not False:
         errors.append("round_006_started must be false")
-    if manifest.get("chatgpt_review_status") != "WAITING_FOR_CHATGPT_REVIEW":
-        errors.append("bootstrap must wait for ChatGPT review")
-    if manifest.get("round_status") != "V4.2_WORKFLOW_READY_FOR_CHATGPT_REVIEW":
-        errors.append("round_status must be V4.2_WORKFLOW_READY_FOR_CHATGPT_REVIEW")
+    expected_review_status = "VERDICT_PROVIDED" if reviewed_sha != "NOT_PROVIDED" else "WAITING_FOR_CHATGPT_REVIEW"
+    if manifest.get("chatgpt_review_status") != expected_review_status:
+        errors.append(f"bootstrap chatgpt_review_status must be {expected_review_status}")
+    expected_round_status = "V4.2_WORKFLOW_ACCEPTED_WITH_DEBT" if manifest.get("chatgpt_verdict") == "ACCEPT_WITH_DEBT" else "V4.2_WORKFLOW_READY_FOR_CHATGPT_REVIEW"
+    if manifest.get("round_status") != expected_round_status:
+        errors.append(f"round_status must be {expected_round_status}")
     for key in ("facts_changed", "runtime_changed", "schema_changed", "migration_changed", "adr_changed", "canonical_content_changed"):
         if manifest.get(key) != "NONE":
             errors.append(f"bootstrap must keep {key} as NONE")
@@ -223,10 +235,12 @@ def verify_bootstrap(directory: Path) -> list[str]:
     for name in ("README.md", "review-package.md", "manual-launch-instructions.md", "chatgpt-verdict.md"):
         _require(directory / name, errors)
     package = directory / "review-package.md"
-    for marker in ("WORKFLOW_CONTRACT_AVAILABLE", "READY_FOR_ADAPTIVE_RED_BLUE_PILOT", "NOT_STARTED", "external_reviewed_sha: NOT_PROVIDED"):
+    package_markers = ("WORKFLOW_CONTRACT_AVAILABLE", "READY_FOR_ADAPTIVE_RED_BLUE_PILOT")
+    package_markers += (("NOT_STARTED", "external_reviewed_sha: NOT_PROVIDED") if reviewed_sha == "NOT_PROVIDED" else ("ACCEPT_WITH_DEBT", "blocking_findings: NONE", "external_reviewed_sha:"))
+    for marker in package_markers:
         _marker(package, marker, errors)
     verdict = directory / "chatgpt-verdict.md"
-    _marker(verdict, "NOT_PROVIDED", errors)
+    _marker(verdict, "NOT_PROVIDED" if reviewed_sha == "NOT_PROVIDED" else "ACCEPT_WITH_DEBT", errors)
     return errors
 
 
@@ -416,14 +430,17 @@ def _verify_ledger(directory: Path, manifest: dict[str, Any], state: str, errors
         errors.append("manifest rolling_ledger_hash does not match ledger")
     if manifest.get("question_count") != len(question_events):
         errors.append("manifest question_count does not match ledger")
-    if state in POST_LIVE_STATES:
+    if state in POST_LIVE_STATES or state in CLOSURE_STATES:
         for qid in questions:
             if qid not in answers or qid not in decisions:
                 errors.append(f"post-live ledger is incomplete for {qid}")
     count = len(question_events)
     if count > 100:
         errors.append("question count cannot exceed 100")
-    if count < 80 and manifest.get("question_budget_stop_reason") not in {"USER_GATE", "ARCHITECTURE_BLOCKER"}:
+    allowed_insufficient_reasons = {"USER_GATE", "ARCHITECTURE_BLOCKER"}
+    if state in CLOSURE_STATES:
+        allowed_insufficient_reasons.add("WORKFLOW_EXECUTION_BLOCKER")
+    if count < 80 and manifest.get("question_budget_stop_reason") not in allowed_insufficient_reasons:
         errors.append("QUESTION_COVERAGE_INSUFFICIENT: fewer than 80 questions require a blocking reason")
     if 80 <= count < 100 and manifest.get("question_budget_stop_reason") not in {"NO_NEW_ARCHITECTURE_INFORMATION", "ALL_PRIORITY_CHAINS_CLOSED"}:
         errors.append("80-99 questions require a valid question_budget_stop_reason")
@@ -461,7 +478,7 @@ def _verify_ledger(directory: Path, manifest: dict[str, Any], state: str, errors
 def _verify_transcript(directory: Path, question_count: int, state: str, errors: list[str]) -> None:
     path = directory / "live-interrogation.md"
     _require(path, errors)
-    if not path.exists() or state not in POST_LIVE_STATES:
+    if not path.exists() or state not in POST_LIVE_STATES and state not in CLOSURE_STATES:
         return
     markers = re.findall(r"(?im)^\s*(RED Q\d{3}|BLUE A\d{3}|RED CHAIN DECISION)\b", _read(path))
     expected: list[str] = []
@@ -504,6 +521,19 @@ def _verify_phase(directory: Path, manifest: dict[str, Any], state: str, last_ev
             errors.append("candidate_branch must be distinct from main")
         if manifest.get("candidate_created_after_live_attack") is not True:
             errors.append("candidate must be created after LIVE_ATTACK_COMPLETE")
+    elif state in CLOSURE_STATES:
+        if manifest.get("candidate") != "NONE":
+            errors.append("aborted operational pilot must have candidate: NONE")
+        if manifest.get("candidate_branch") not in (None, ""):
+            errors.append("aborted operational pilot must not have a candidate branch")
+        if manifest.get("main_merge") != "NOT_ATTEMPTED":
+            errors.append("aborted operational pilot must not attempt main merge")
+        if manifest.get("architecture_score") != "INVALID":
+            errors.append("aborted operational pilot architecture_score must be INVALID")
+        if manifest.get("architecture_blocker") != "NONE_ESTABLISHED":
+            errors.append("aborted operational pilot architecture_blocker must be NONE_ESTABLISHED")
+        if manifest.get("user_gate") != "NOT_TRIGGERED":
+            errors.append("aborted operational pilot user_gate must be NOT_TRIGGERED")
 
 
 def _verify_post_live_artifacts(directory: Path, manifest: dict[str, Any], state: str, errors: list[str]) -> None:
@@ -567,7 +597,181 @@ def _verify_external_gate(manifest: dict[str, Any], state: str, errors: list[str
             errors.append("CLOSED requires MERGED")
 
 
+def _verify_batch_jsonl(path: Path, errors: list[str]) -> list[dict[str, Any]]:
+    """Read a batch-profile JSONL artifact without imposing Live Ledger rules."""
+    return _jsonl(path, errors)
+
+
+def verify_batch_round(directory: Path) -> list[str]:
+    """Validate the default V4.2 batch adversarial profile.
+
+    Batch review intentionally permits a complete 100-question artifact.  Its
+    anti-fabrication boundary is different from Live Adaptive: every answer,
+    counter question, session role, and synthesis transition must be explicit.
+    """
+    errors: list[str] = []
+    manifest = _yaml(directory / "manifest.yaml", errors)
+    if manifest.get("workflow_id") != V42_WORKFLOW:
+        errors.append("batch workflow_id must be ZUNO-RED-BLUE-WORKFLOW-V4.2")
+    if manifest.get("execution_profile") != BATCH_PROFILE:
+        errors.append("execution_profile must be BATCH_ADVERSARIAL")
+    if manifest.get("state") not in POST_LIVE_STATES:
+        errors.append("batch profile must be in a post-attack state")
+    if not SHA40.fullmatch(str(manifest.get("artifact_base_sha", ""))):
+        errors.append("batch artifact_base_sha must be a 40-character SHA")
+    if manifest.get("question_count") != 100:
+        errors.append("batch profile requires exactly 100 recorded questions")
+    if not isinstance(manifest.get("chain_count"), int) or not 12 <= manifest.get("chain_count", 0) <= 18:
+        errors.append("batch chain_count must be between 12 and 18")
+    if manifest.get("red_reads_interview_calibration") is not True:
+        errors.append("Red must read interview calibration in the batch profile")
+    if manifest.get("blue_reads_interview_calibration") is not False:
+        errors.append("Blue must not read interview calibration in the batch profile")
+    if manifest.get("red_reads_business_code") is not False or manifest.get("blue_reads_business_code") is not False:
+        errors.append("Red and Blue business-code access must be false")
+    if manifest.get("blue_defense_candidate_write") is not False:
+        errors.append("Blue defense candidate write must be false")
+    if manifest.get("synthesis_after_counter") is not True:
+        errors.append("Blue synthesis must occur after the counter-defense phase")
+
+    roles = {
+        "red_attack_session_id": "red attack",
+        "blue_defense_session_id": "blue defense",
+        "red_counter_session_id": "red counter",
+        "blue_counter_defense_session_id": "blue counter defense",
+        "blue_synthesis_session_id": "blue synthesis",
+        "red_judge_session_id": "red judge",
+    }
+    session_ids: dict[str, str] = {}
+    for key, label in roles.items():
+        value = str(manifest.get(key, ""))
+        if not value:
+            errors.append(f"missing {label} session id: {key}")
+        session_ids[key] = value
+    nonempty = [value for value in session_ids.values() if value]
+    if len(nonempty) != len(set(nonempty)):
+        errors.append("session reuse across incompatible roles is forbidden")
+    if session_ids.get("red_judge_session_id") in {
+        session_ids.get("red_attack_session_id"),
+        session_ids.get("red_counter_session_id"),
+    }:
+        errors.append("Red Judge must use a fresh session distinct from Red Attack and Counter")
+
+    base = str(manifest.get("artifact_base_sha", ""))
+    session_bases = manifest.get("session_base_shas", {})
+    if not isinstance(session_bases, dict):
+        errors.append("session_base_shas must be a mapping")
+    else:
+        for key in roles:
+            if session_bases.get(key) != base:
+                errors.append(f"{key} must use the same BASE snapshot")
+
+    question_events = _verify_batch_jsonl(directory / "batch-red-questions.jsonl", errors)
+    answer_events = _verify_batch_jsonl(directory / "batch-blue-answers.jsonl", errors)
+    counter_events = _verify_batch_jsonl(directory / "batch-red-counter.jsonl", errors)
+    counter_answers = _verify_batch_jsonl(directory / "batch-blue-counter-answers.jsonl", errors)
+    questions: dict[str, dict[str, Any]] = {}
+    answers: dict[str, dict[str, Any]] = {}
+    for index, item in enumerate(question_events, start=1):
+        qid = str(item.get("question_id", ""))
+        expected = f"Q{index:03d}"
+        if qid != expected:
+            errors.append(f"batch question ids must be sequential; expected {expected}")
+        if not str(item.get("chain_id", "")):
+            errors.append(f"batch question {qid} must have a chain_id")
+        question = str(item.get("question", ""))
+        if not question.strip() or item.get("question_sha") != _sha256(question):
+            errors.append(f"batch question {qid} has invalid question hash")
+        questions[qid] = item
+    for item in answer_events:
+        qid = str(item.get("question_id", ""))
+        if qid not in questions:
+            errors.append(f"batch answer references unknown question {qid}")
+            continue
+        answer = str(item.get("blue_answer", ""))
+        if not answer.strip() or item.get("answer_sha") != _sha256(answer):
+            errors.append(f"batch answer {qid} has invalid answer hash")
+        if item.get("question_sha") != questions[qid].get("question_sha"):
+            errors.append(f"batch answer {qid} does not preserve question identity")
+        if item.get("part_a_support") not in VALID_SUPPORT or item.get("answer_source") not in VALID_SOURCES:
+            errors.append(f"batch answer {qid} has invalid Part-A support/source")
+        answers[qid] = item
+    if len(question_events) != 100 or set(answers) != set(questions):
+        errors.append("batch answers must cover all 100 questions")
+
+    defense = directory / "batch-blue-defense.md"
+    _require(defense, errors)
+    if defense.exists():
+        text = _read(defense).lower()
+        for marker in ("live_defense", "interview_calibration: prohibited", "canonical_write: prohibited"):
+            if marker not in text:
+                errors.append(f"batch-blue-defense.md must contain {marker}")
+        for forbidden in ("interview_calibration: read", "calibration_access: allowed", "candidate_write: true", "canonical_write: allowed"):
+            if forbidden in text:
+                errors.append(f"batch-blue-defense.md contains forbidden marker: {forbidden}")
+
+    counter_ids: set[str] = set()
+    for item in counter_events:
+        counter_id = str(item.get("counter_question_id", ""))
+        original = str(item.get("original_question_id", ""))
+        answer_ref = str(item.get("blue_answer_ref", ""))
+        if not counter_id or counter_id in counter_ids:
+            errors.append("counter question ids must be unique and non-empty")
+        counter_ids.add(counter_id)
+        if original not in answers:
+            errors.append(f"counter question {counter_id} must reference a real original Blue answer")
+        if answer_ref != f"A:{original}" or answer_ref[2:] not in answers:
+            errors.append(f"counter question {counter_id} has an invalid original answer reference")
+        if not str(item.get("trigger_detail", "")).strip():
+            errors.append(f"counter question {counter_id} must explain its trigger")
+    for item in counter_answers:
+        if str(item.get("counter_question_id", "")) not in counter_ids:
+            errors.append("counter defense answer must reference a real counter question")
+
+    synthesis = directory / "batch-blue-synthesis.md"
+    judge = directory / "batch-red-judge.md"
+    candidate = directory / "batch-candidate-manifest.yaml"
+    for path in (synthesis, judge, candidate):
+        _require(path, errors)
+    if synthesis.exists():
+        for marker in ("SYNTHESIS_AFTER_COUNTER", "ROOT_ARCHITECTURE_GAPS", "CANDIDATE_WRITE_AFTER_COUNTER"):
+            _marker(synthesis, marker, errors)
+    if judge.exists():
+        for marker in ("FRESH_JUDGE_SESSION", "COUNTER_RETEST", "PART_A_FIRST"):
+            _marker(judge, marker, errors)
+    candidate_manifest = _yaml(candidate, errors) if candidate.exists() else {}
+    candidate_branch = str(candidate_manifest.get("candidate_branch", manifest.get("candidate_branch", "")))
+    main_branch = str(manifest.get("main_branch", "main"))
+    if not candidate_branch or candidate_branch == main_branch:
+        errors.append("batch candidate branch must be distinct from main")
+    if candidate_manifest.get("candidate_created_after_synthesis") is not True:
+        errors.append("batch candidate must be created after synthesis")
+
+    counter_seq = int(manifest.get("counter_event_seq", 0))
+    synthesis_seq = int(manifest.get("synthesis_event_seq", 0))
+    judge_seq = int(manifest.get("judge_event_seq", 0))
+    if not counter_seq or not synthesis_seq or synthesis_seq <= counter_seq:
+        errors.append("synthesis must occur after counter-defense")
+    if not judge_seq or judge_seq <= synthesis_seq:
+        errors.append("fresh Red Judge must occur after synthesis")
+    if manifest.get("chatgpt_review_status") != "WAITING_FOR_CHATGPT_REVIEW":
+        errors.append("batch candidate must wait for ChatGPT review")
+    if manifest.get("external_reviewed_sha") != "NOT_PROVIDED":
+        errors.append("batch merge gate must not claim an external verdict")
+    if manifest.get("main_merge_status") != "NOT_ATTEMPTED":
+        errors.append("batch merge must not occur before external verdict")
+    return errors
+
+
 def verify_round(directory: Path) -> list[str]:
+    manifest_path = directory / "manifest.yaml"
+    if manifest_path.exists():
+        try:
+            manifest = yaml.safe_load(_read(manifest_path))
+        except yaml.YAMLError:
+            manifest = {}
+        if isinstance(manifest, dict) and manifest.get("execution_profile") == BATCH_PROFILE:
+            return verify_batch_round(directory)
     errors: list[str] = []
     manifest = _yaml(directory / "manifest.yaml", errors)
     state = str(manifest.get("state", manifest.get("round_state", "")))
@@ -587,8 +791,16 @@ def main() -> int:
     group = parser.add_mutually_exclusive_group(required=True)
     group.add_argument("--bootstrap", type=Path)
     group.add_argument("--round", type=Path)
+    parser.add_argument("--profile", choices=("auto", "live_adaptive", "batch_adversarial"), default="auto")
     args = parser.parse_args()
-    errors = verify_bootstrap(args.bootstrap) if args.bootstrap else verify_round(args.round)
+    if args.bootstrap:
+        errors = verify_bootstrap(args.bootstrap)
+    elif args.profile == "batch_adversarial":
+        errors = verify_batch_round(args.round)
+    elif args.profile == "live_adaptive":
+        errors = verify_round(args.round)
+    else:
+        errors = verify_round(args.round)
     if errors:
         print("RED_BLUE_WORKFLOW_V4_2_INVALID")
         for error in errors:

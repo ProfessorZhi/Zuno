@@ -1,7 +1,11 @@
 # V4.2 Adaptive Dual-Thread Pack
 
 本目录是 `ZUNO-RED-BLUE-WORKFLOW-V4.2` 的 Prompt、Context 和外部审查模板。
-它只描述工作流契约，不创建线程、不启动 Round-006，也不拥有 Canonical Architecture。
+它只描述工作流契约，不创建线程、不启动 Round-007，也不拥有 Canonical Architecture。
+
+V4.2 的默认执行 Profile 是 `BATCH_ADVERSARIAL`；`LIVE_ADAPTIVE` 是实验性 Profile。Round-006
+的 Live Pilot 已因 `WF-API-001` 中止，不能作为架构评分；下一轮只具备
+`READY_FOR_BATCH_ADVERSARIAL_PILOT / NOT_STARTED` 状态。
 
 ## 角色边界
 
@@ -22,7 +26,9 @@ V4.2 禁止 `red-questions.md`、`questions_frozen_sha` 和任何预生成 Q001�
 ```powershell
 python tools/scripts/verify_red_blue_workflow_v42.py --bootstrap project-reconstruction-lab/sessions/RB-WORKFLOW-V4.2-BOOTSTRAP
 python tools/scripts/verify_red_blue_workflow_v42.py --round project-reconstruction-lab/sessions/<round-id>
+python tools/scripts/verify_red_blue_workflow_v42.py --profile batch_adversarial --round project-reconstruction-lab/sessions/<batch-round-id>
 ```
 
 V4.2 Bootstrap 只证明 `WORKFLOW_CONTRACT_AVAILABLE`；Round-006 的真实 Session、Context
-Isolation、Calibration boundary 和 Main Merge Gate 仍须由 Operational Pilot 提供证据。
+Isolation、Calibration boundary 和 Main Merge Gate 只取得部分/未证明的 Operational Evidence，
+并已因 `WF-API-001` 中止。下一次运行必须使用默认 Batch Profile；Round-007 尚未启动。

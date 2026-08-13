@@ -1,13 +1,16 @@
 # Current Program
 
 state: `active-design-program`
-active_program: `ZUNO-RED-BLUE-WORKFLOW-V4.2`
+active_program: `RB-R006-CLOSURE-AND-V42-BATCH-PROFILE`
 queued_program: `none`
-program_class: `workflow-governance-bootstrap`
-baseline_sha: `4612d9d119a9fefd5b9de01b40606636e80409c0`
+program_class: `operational-pilot`
+baseline_sha: `55510d236bcc039ca255f59d07ea61b36e04143a`
 
-本 Program 只重构 ZUNO-RED-BLUE-WORKFLOW-V4.2 的工作流、治理、Session Contract、Prompt、
-Context Packet、Artifact Handoff、Verifier、Routing 和 Docs Tests。它不启动 Round-006，
+本 Program 收口 ZUNO-RED-BLUE-WORKFLOW-V4.2-ROUND-006 Operational Pilot，并维护 V4.2 的
+Execution Profile 与 Workflow 证据。它不修改 Canonical Architecture、Facts、ADR、Runtime、Schema、Migration、UI、Dependencies
+或 Production Infra。Bootstrap 阶段只重构 V4.2 的工作流、治理、Session Contract、Prompt、
+Context Packet、Artifact Handoff、Verifier、Routing 和 Docs Tests。Round-006 已按 Operational Pilot
+启动并在 Workflow Execution Blocker 后中止收口，当前不再继续运行，
 不修改业务 Runtime、Facts、ADR、Schema、Migration、UI、Dependencies 或 Production Infra。
 
 `IMPLEMENTATION-EVIDENCE-CYCLE-001` 是独立的 Track B；它已有自己的代码、测试和 Evidence
@@ -18,7 +21,7 @@ Package，本轮不重写其真实状态，也不再把它作为 Architecture Re
 ```text
 允许：Workflow/Protocol、Governance、Lab、Prompt/Context、Session Manifest、V4 verifier、
 docs-related tests 和 Bootstrap review package。
-禁止：启动 Round-006、伪造 Codex Session、重构 backend、修改 Agent/Domain/Citation Runtime、
+禁止：继续运行未修复的 Round-006、伪造 Codex Session、重构 backend、修改 Agent/Domain/Citation Runtime、
 Facts、ADR、Schema/Migration、UI、Dependencies、Production Infra，或把任何 Target/测试升级为
 Current、Measured 或 Production Ready。
 ```
@@ -121,9 +124,12 @@ Architecture Red/Blue Round-005   COMPLETE (100Q deep failure/recovery review; V
 Closure Semantic Audit V3.1.3.1   COMPLETE (derived classification; Round-005 immutable)
 Implementation Evidence Wave-001 COMPLETE (TASK-001 / TASK-003; independent Track B)
 V4.1 Workflow Bootstrap           HISTORICAL / IMMUTABLE
-V4.2 Workflow Bootstrap           READY_FOR_EXTERNAL_CHATGPT_REVIEW
-Architecture Round-006            READY_FOR_ADAPTIVE_RED_BLUE_PILOT / NOT_STARTED
-Round-006                         NOT_STARTED
+V4.2 Workflow Bootstrap           ACCEPTED_WITH_DEBT / EXTERNAL_VERDICT_PROVIDED
+Architecture Round-006            ABORTED_OPERATIONAL_PILOT / WORKFLOW_EXECUTION_BLOCKER
+Round-006                         3 LIVE TURNS; ARCHITECTURE SCORE INVALID; CANDIDATE NONE
+V4.2 default profile              BATCH_ADVERSARIAL
+V4.2 experimental profile         LIVE_ADAPTIVE
+Round-007                         READY_FOR_BATCH_ADVERSARIAL_PILOT / NOT_STARTED
 ```
 
 V4.2 Addendum：每次只冻结一个 Question、一个 Answer 和一个 Chain Decision。Red 读取
@@ -131,6 +137,11 @@ V4.2 Addendum：每次只冻结一个 Question、一个 Answer 和一个 Chain D
 whole-round question freeze。Blue 不读取 calibration，且只在 `LIVE_ATTACK_COMPLETE` 后写 Candidate。
 `INTERVIEW_DEPTH` 与
 `INTERVIEW_EXPLAINABILITY` 属于问题质量和文档可解释性信号，不是实现或生产证据。
+
+V4.2 Profile：默认 `BATCH_ADVERSARIAL` 使用独立的 Attack、Defense、Counter、Counter Defense、
+Synthesis 和 Judge Session；实验性 `LIVE_ADAPTIVE` 才使用逐题 Answer-triggered Handoff。两种
+Profile 都要求 Blue 在 Defense 阶段不修改 Candidate，且必须经过 ChatGPT External Verdict 才能
+Merge。Round-007 只登记为 Ready，不在本 Program 中启动。
 
 ## V2 Round status
 
@@ -282,6 +293,7 @@ Implementation Task Candidate 仍不能自动激活或写成 Current；必须另
 
 Wave-001 已完成窄实现、focused tests 和 evidence package；PostgreSQL 真实环境、进程级故障、
 法院 QA、HA、Security Qualification 和 Production 仍未证明。它保持
-`WAITING_FOR_RED_COUNTER_RETEST`，但不阻塞 V4 Architecture Round-006 的 Fresh Red 启动。
+`WAITING_FOR_RED_COUNTER_RETEST`；Round-006 当前因 `WF-API-001` 的 Workflow Execution Blocker 中止收口，不能
+在修复 Turn Handoff 之前重放或继续。
 
 旧 Program1 已 `SUPERSEDED / RETIRED`，不得恢复或重新激活。
