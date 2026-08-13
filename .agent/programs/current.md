@@ -108,11 +108,12 @@ Architecture Red/Blue            READY / IN_PROGRESS
 Architecture Red/Blue Round-002   COMPLETE (V3, 100Q, 80 NOVEL / 20 REGRESSION)
 Architecture Red/Blue Round-003   COMPLETE (V3.1, 100Q, 85 NOVEL / 15 REGRESSION)
 Interview Red Team               READY
-Canonical Architecture Sync      APPLIED / ACCEPTED_TARGET (V3.1.2 Round-004 review)
+Canonical Architecture Sync      APPLIED / ACCEPTED_TARGET (V3.1.3 Round-005 review)
 Document Quality V3.1             COMPLETE (historical Part A >= 80 / Part B >= 85)
 Document Normalization V3.1.1      COMPLETE (Part A >= 85 / Part B >= 85)
 Human Writing V3.1.2              COMPLETE (warning report + human review package)
-Architecture Red/Blue Round-004   COMPLETE (100Q consistency/failure review)
+Architecture Red/Blue Round-004   COMPLETE (100Q consistency/failure review; immutable)
+Architecture Red/Blue Round-005   COMPLETE (100Q deep failure/recovery review; V3.1.3)
 Implementation Program           READY_FOR_TASK_DEFINITION (not active)
 ```
 

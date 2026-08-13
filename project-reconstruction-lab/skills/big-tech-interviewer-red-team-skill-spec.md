@@ -38,3 +38,7 @@ Gap 或 Fact Gap，不用架构术语掩盖历史未知。
 - Target 回答必须显式标为 Target；
 - 不为了面试补造 RabbitMQ、数据库、QPS、SLA、准确率或生产经历；
 - Interview Ready 与 Production Ready 分开。
+
+## V3.1.3 Challenge Depth
+
+面试反事实问题优先采用“状态已改变、某个 Worker 崩溃、权限被撤回、版本不一致或副作用未知”的具体场景。答不上时分别记录 Architecture Gap、Implementation Gap、Evidence/Measurement Gap、External Qualification Gap 或 Fact Gap；不得因为面试需要而把它们统一写成“系统会重试”。审查 Canonical Part A 时还要做 Human Continuity Review，防止用一串新增 Contract 名词掩盖叙事断裂。

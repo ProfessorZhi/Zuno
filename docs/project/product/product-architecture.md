@@ -14,7 +14,7 @@ replaces: docs/project/modules/01-product-surface.md（Superseded）
 
 ### 一个目标工作场景
 
-以下是 Target Scenario，不是历史项目事实。用户创建 Matter，上传合同、诉状和证据。系统先确认材料版本和可见范围，再显示哪些内容已经解析、哪些证据仍缺失。分析过程中，检索结果和专业能力只形成候选；用户进入 Review 后，能看到 Finding 的来源、冲突和所依赖的材料版本，随后作出 HumanDecision，最后确认 WorkProduct。交付可以从 Zuno UI 发出，也可以由 WorkBuddy 或组织系统作为 Host 发起，但 Host 不能跳过 Domain Admission。
+以下是 Target Scenario，不是历史项目事实。用户创建 Matter，上传合同、诉状和证据。系统先确认材料版本和可见范围，再显示哪些内容已经解析、哪些证据仍缺失。分析过程中，检索结果和专业能力只形成候选；用户进入 Review 后，能看到 Finding 的来源、冲突和所依赖的材料版本，随后作出 HumanDecision，最后确认一个不可变的 WorkProduct。若另一位 Reviewer 在新证据到来后作出相反决定，产品保留旧决定的历史并创建新的版本，不让界面把两者伪装成同一个最终结论。交付可以从 Zuno UI 发出，也可以由 WorkBuddy 或组织系统作为 Host 发起，但 Host 不能跳过 Domain Admission。
 
 这个顺序很重要：若界面只展示一段流畅的答案，用户无法知道答案是否基于最新材料，也无法区分“模型建议”和“已经审核的业务结论”。产品层要负责解释这些状态，而不是替 Domain、Knowledge 或 Runtime 重新实现它们。
 
@@ -46,6 +46,10 @@ replaces: docs/project/modules/01-product-surface.md（Superseded）
 ### 状态与版本
 
 Product API 只暴露用户可理解的 pending、running、review_required、stale、ready、failed 和 delivered 语义；底层 DomainVersion、PlanVersion 和 Provider State 由对应 Owner 管理。WorkProduct 只能引用已接受版本；引用版本变化时必须重新审查或生成新版本，不能覆盖旧交付物。
+
+### Review conflict and delivery consistency
+
+Review 是带版本的业务决定，不是 UI 上最后一次点击。产品读取当前 Matter/Domain Version 后，展示哪个 WorkProduct 仍然有效、哪个需要复核以及新的 Review 请求由谁拥有；External Host 只收到版本化状态和 Delivery Receipt。若用户在导出前取消或权限被撤回，交付进入 blocked 或 stale，而不是返回一个看似成功的空结果。
 
 ### 接口、命令与查询
 

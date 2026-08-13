@@ -26,13 +26,11 @@ L0 Single Agent、L1 Role Pipeline 和 L2 Ephemeral Worker 应覆盖大多数任
 
 如果 Evidence Worker 超时，Join 不能只等到一个时间点再把空结果当成功；它要知道该分支是必需还是可选。如果某个分支发现新的证据要求，Coordinator 可能需要补一个 Step；如果两个分支分别基于 DomainVersion V12 和 V13，它们不能直接拼成一个 Finding。重试也不是无条件的：已经请求外部工具的分支必须先经过 Tool/Security 对账。一个强 Agent 加 parallel tools 或 L1 Pipeline 可能更便宜，只有受控并行确实改善证据充分性、时延或复核质量，才值得保留更高等级。
 
-仓库和测试能够证明的只是部分执行表面；Current 并没有证明一个完整的生产 Agent Team。同一 Runtime Service 中的 Profile/Worker 是 Target，L0-L2 是优先路径。并行带来收益是 Hypothesis，Join 正确性、共享 DomainVersion、恢复、成本和独立 SLA 仍是 Gap。
+这也意味着并行结果不能只看“完成”或“失败”两个标签。每个分支都要带着输入版本、权限范围和结果类型回到 Join，Coordinator 才能判断它是可复用的观察、需要重跑的候选，还是必须交给人工处理的未知状态。
 
-这也是为什么我们把更高等级留在可逆的设计空间，而不是把它当成默认部署形态。
+这种记录会增加协调和审计成本，但它把多 Agent 的收益问题变成可以验证的工程问题：如果单 Agent 加并行工具已经提供同样的证据闭环，就没有理由为了角色数量继续保留更复杂的拓扑。
 
-Runtime 仍然需要记录每个 Worker 的输入版本和权限上下文，才能在恢复时说明哪个结果可以继续使用。
-
-这项约束属于 Target Contract；仓库当前没有因此产生 Production Evidence。
+仓库和测试能够证明的只是部分执行表面；Current 并没有证明一个完整的生产 Agent Team。同一 Runtime Service 中的 Profile/Worker 是 Target，L0-L2 是优先路径。并行带来收益是 Hypothesis，Join 正确性、共享 DomainVersion、恢复、成本和独立 SLA 仍是 Gap。因此更高等级被保留在可逆的设计空间，而不是默认部署形态；每个 Worker 的输入版本和权限上下文必须进入运行记录，才能在恢复时说明哪个结果可以继续使用。这个约束仍是 Target Contract，仓库当前没有因此产生 Production Evidence。
 
 ## Part B — Detailed Architecture Specification
 
@@ -43,6 +41,10 @@ Coordinator 发送 DispatchGroup/DispatchItem，包含 RunId、PlanVersion、Dom
 ### Join、Reducer 与版本
 
 Reducer 只合并 typed BranchResultRef；Join 维护 required/optional branch、completion、timeout、failure 和 input DomainVersion。发现版本不一致时返回 domain_version_conflict，要求重读 Snapshot、Replan 或 Human Review。Join 完成不等于 Finding accepted。
+
+### Replan barrier and reducer authority
+
+只有 Coordinator 能建立 Replan Barrier、关闭旧 DispatchGroup 并创建下一版 Plan。Reducer 按 BranchId、PlanVersion 和 DomainVersion 做确定性合并，不以消息到达顺序覆盖结果；已产生外部 Effect 的分支必须先拿到 EffectReceipt 或 reconciliation 结论。旧 BranchResult 可以作为审计引用，但不能绕过当前 Domain Admission。
 
 ### Retry、Replan 与资源
 

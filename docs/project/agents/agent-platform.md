@@ -32,7 +32,7 @@ Plan-and-Execute 处理任务分解和依赖；ReAct 处理一个 Step 内的 Ac
 
 ### 失败、取舍与反转
 
-模型超时、工具 outcome_unknown、Evidence 不足、DomainVersion 改变或预算耗尽都可能阻止 Run。Runtime 必须让失败显式传播，不能将空答案视为成功。LangGraph 可以提供 Durable Execution，但 Plain Python、State Machine、Pi 或其他 Provider 也可以实现同一 Contract。若 A/B/C 证明 WorkBuddy + Legal Backend 已经获得同样的质量、恢复和效率，Native Runtime 应被缩减或删除。
+模型超时、工具 outcome_unknown、Evidence 不足、DomainVersion 改变或预算耗尽都可能阻止 Run。Runtime 必须让失败显式传播，不能将空答案视为成功；如果并行分支看到不同 DomainVersion，Join 不能用到达顺序强行拼接，而要等待版本屏障后的局部重跑或 Replan。LangGraph 可以提供 Durable Execution，但 Plain Python、State Machine、Pi 或其他 Provider 也可以实现同一 Contract。若 A/B/C 证明 WorkBuddy + Legal Backend 已经获得同样的质量、恢复和效率，Native Runtime 应被缩减或删除。
 
 ### Current / Target / Gap
 
@@ -47,6 +47,10 @@ Current 只由仓库代码、测试、Trace 或实际运行证明；Target 是 P
 ### State and control
 
 AgentRun、PlanVersion、StepRun、DispatchGroup、Branch、Reducer、Interrupt、BudgetLedger、Checkpoint 和 ResumePosition 属于 Runtime Owner。PlanVersion 激活后不可变；Replan 创建新版本并记录原因；Checkpoint 只保存控制状态、可恢复输入引用和 Provider Receipt，不保存隐藏思维链或 Canonical Fact。
+
+### Replan barrier and recovery
+
+Coordinator 只有在确认当前 DomainVersion、权限 Epoch 和外部 Effect 状态后，才能把旧 Plan 标记为 stale。已经完成且没有受影响的只读分支可以复用；依赖新版本或存在未知副作用的分支必须重读 Snapshot、局部重跑或进入 reconciliation。新 Plan 继承剩余 Budget，但不会继承旧 Plan 的执行权；Final Gate 只接受当前 PlanVersion 的结果引用。
 
 ### Failure propagation and retry
 

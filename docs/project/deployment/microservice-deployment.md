@@ -16,7 +16,7 @@ replaces: docs/project/modules/11-infrastructure.md（Superseded）
 
 ### 一个滚动升级中的目标场景
 
-以下是 Target Scenario，不是历史事实。Agent Worker 正在等待模型响应，Knowledge Worker 同时需要 GPU 构建索引；此时发布新版本，旧 Worker 仍可能持有一个长 Run 的 Checkpoint。Deployment 必须先排空可取消的队列、保留兼容的 Checkpoint 读取能力，再逐步替换 Worker。若 Sandbox Job 违反网络策略，应只隔离该 Job，不能让在线事务和 Eval 队列一起停摆。
+以下是 Target Scenario，不是历史事实。Agent Worker 正在等待模型响应，Knowledge Worker 同时需要 GPU 构建索引；此时发布新版本，旧 Worker 仍可能持有一个长 Run 的 Checkpoint。Deployment 必须先排空可取消的队列、保留兼容的 Checkpoint 读取能力，再逐步替换 Worker；如果发现旧 Checkpoint 无法读取，Run 要进入 quarantine 或兼容读取路径，而不是被新版本假装 Resume。若 Sandbox Job 违反网络策略，应只隔离该 Job，不能让在线事务和 Eval 队列一起停摆。
 
 ### 逻辑能力如何落成物理单元
 
@@ -47,6 +47,10 @@ Target 是 Python-only Service/Worker Profiles 和三种部署 Profile；Docker�
 ### Unit、health and rollout
 
 每个 Deployment Unit 声明 Service/Schema Version、Resource Profile、Queue、Timeout、Cancellation、Health、Readiness、Drain、Trace、Secret/Network Policy 和 Rollback Path。升级使用 Compatibility Window；旧 Worker 与新消息格式必须可共存到迁移完成，无法兼容时停止接收、排空、回滚或人工对账。
+
+### Rollback、quarantine and recovery qualification
+
+滚动升级的完成条件不是实例全部变绿，而是旧消息、Checkpoint、DomainVersion 和 EffectReceipt 都有兼容或隔离路径。不能读取的控制状态进入 quarantine，保留原始 Artifact 和版本信息，等待兼容 Reader、人工恢复或明确失败；已经提交的外部 Effect 先对账，再决定是否恢复业务状态。Staging/Production 的资格需要真实 drain、crash replay、backup/restore 和 RPO/RTO 记录，配置文件本身不构成证据。
 
 ### Scaling and communication
 

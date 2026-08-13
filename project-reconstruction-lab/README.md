@@ -112,7 +112,7 @@ project-reconstruction-lab/
 ```
 
 V2 Red/Blue Round 的历史执行契约见 `05-red-blue/round-protocol-v2.md`；Round-002 使用 V3，
-当前永久工作流以 `05-red-blue/round-protocol-v3.1.2.md` 的 Human Writing 与 Round-004 规则为准，11+1 覆盖见
+当前永久工作流以 `05-red-blue/round-protocol-v3.1.3.md` 的 Closure Classification、Human Continuity 与 Round-005 规则为准，11+1 覆盖见
 `05-red-blue/11-plus-1-canonical-coverage-map.md`。
 Round-001 的完整 100 题记录位于 `sessions/RB-WORKFLOW-V2-001/`，保持 immutable history；
 Round-002 位于 `sessions/RB-WORKFLOW-V3-ROUND-002/`，按 V3 完成 Question → Answer → Score
@@ -161,7 +161,10 @@ Workspace Bootstrap
   ↺ 新证据回到 Fact Recovery / Architecture Red Team
 ```
 
-## 当前 Program：PROJECT-ARCHITECTURE-RECONSTRUCTION-V1 / RB-WORKFLOW-V3-ROUND-004
+V3.1.2 Round-004 以 Human Writing、Architecture Consistency、Failure Semantics 和 Component Survival 为主题，保持 immutable。
+V3.1.3 Round-005 进一步审查 Deep Failure、Recovery、Concurrency 和 Closure Classification Integrity；它新增 A/I/E/X 分布审计与 Part A 连续阅读规则，但不重写 Round-004，也不把分类结果当作 Runtime 或生产证据。
+
+## 当前 Program：PROJECT-ARCHITECTURE-RECONSTRUCTION-V1 / RB-WORKFLOW-V3-ROUND-005
 
 Canonical Facts Framework V1 已形成。本 Program 不再扩张事实目录，而是把事实深度恢复
 与架构重构并行推进：

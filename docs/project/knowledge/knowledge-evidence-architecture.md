@@ -16,7 +16,7 @@ Knowledge 层解决的是“从哪些材料找到什么证据”，不是直接�
 
 这是 Target Scenario，不是历史事实：
 
-用户上传 DocumentVersion，系统保留原始内容 hash、来源和 ACL。Ingestion 解析文档、页码、段落和 SourceSpan，建立词法、Dense、Hybrid 或 Rerank 索引。Agent 提出 Claim 和 EvidenceRequirement，Knowledge 根据查询类型检索 EvidenceCandidate；候选引用 DocumentVersion、SourceSpan、Scope 和 IndexVersion。Domain Owner 后续决定是否接收为 EvidenceVersion。
+用户上传 DocumentVersion，系统保留原始内容 hash、来源和 ACL。Ingestion 解析文档、页码、段落和 SourceSpan，建立词法、Dense、Hybrid 或 Rerank 索引。Agent 提出 Claim 和 EvidenceRequirement，Knowledge 根据查询类型检索 EvidenceCandidate；候选引用 DocumentVersion、SourceSpan、Scope 和 IndexVersion。若 Parser 或索引版本并发完成，只有带有 published generation 的结果可以进入检索；Domain Owner 后续决定是否接收为 EvidenceVersion。
 
 Happy Path 是：DocumentVersion → Parse → SourceSpan → QueryClass/Scope → Retrieval → EvidenceCandidate → Domain Admission。
 
@@ -30,7 +30,7 @@ Knowledge Owner 负责 Source、Parse、Chunk、Index、Retrieval、Citation Lin
 
 ### 失败、取舍与反转
 
-索引可能 stale、不可用、互相不一致或返回错误 span；Scope 选择错误还可能造成跨 Matter 泄漏。系统必须显式返回 no_evidence、stale_index、scope_denied 或 provider_unavailable，而不是伪造高置信答案。索引、Graph 和 Rerank 增加构建、存储、延迟和维护成本；若 Hybrid RAG 覆盖目标任务，Graph 降级；若 Matter DB 加简单检索已足够，删除复杂 Projection。
+索引可能 stale、不可用、互相不一致或返回错误 span；Scope 选择错误还可能造成跨 Matter 泄漏。系统必须显式返回 no_evidence、stale_index、scope_denied 或 provider_unavailable，而不是伪造高置信答案。索引、Graph 和 Rerank 增加构建、存储、延迟和维护成本；若 Hybrid RAG 覆盖目标任务，Graph 降级；若 Matter DB 加简单检索已足够，删除复杂 Projection。发布门本身也要可恢复：旧 Projection 可以继续服务已声明范围，但不能把未发布的部分混入同一 CitationLineage。
 
 ### Current / Target / Gap
 
@@ -57,6 +57,10 @@ Public、Organization 和 Matter Scope 分层选择；Scope selected 不等于 r
 ### Index and Graph policy
 
 Lexical、Dense、Hybrid、Rerank、Graph 和 Corrective Retrieval 是 Provider 策略。Graph Build 记录 source version、edge provenance、projection version 和 rebuild cursor；Graph 不可用时回退到 Hybrid 或明确 blocked。Graph Path 不能作为 Citation，最终引用必须有 SourceSpan。
+
+### Publication and staleness gate
+
+Ingestion、Index 和 Graph Worker 只能写候选 Projection；Knowledge Owner 根据 SourceVersion、ACL、ProjectionVersion 和发布游标原子地发布可检索范围。检索前比较 Matter/DocumentVersion 与 ProjectionVersion，发现撤权、删除、回滚或覆盖不足时返回 stale/denied/blocked。旧 Citation 不被静默改写；需要新 span 时产生新的 lineage，供 Domain Admission 决定是否重算。
 
 ### Failure、Retry 与 Recovery
 

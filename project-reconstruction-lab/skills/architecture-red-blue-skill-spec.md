@@ -63,3 +63,7 @@ Round/Dxxx/Qxxx 追踪只保留在 Lab Session、Delta 和 Review Package，不�
 - 任何质量、效率、安全和生产声明必须绑定测量证据。
 - `AUTO_APPLY` 只允许不改变 Facts、Runtime、Schema/Migration、基础架构原则或 Active ADR 的
   Target/document refinement；否则必须升级 ADR 或 User Gate。
+
+## V3.1.3 Review Contract
+
+每题独立判断 Severity 和 Primary Closure Class：先排除架构矛盾，再判断实现、测量和外部资格；不能把“代码还没写”自动归为 `I`。记录 `secondary_gaps` 与一句 `closure_class_rationale`，Round 末生成 A/I/E/X 分布审计；任一类别超过 80% 时至少人工抽查 20 题。Part A 同步采用 Human Continuity Pass，从第一段读到最后一段，禁止把 Delta 逐条追加到结尾。

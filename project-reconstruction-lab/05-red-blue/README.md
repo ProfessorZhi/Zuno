@@ -51,7 +51,7 @@ Discovery
 ## V3.1 百问与文档质量协议
 
 `ZUNO-RED-BLUE-WORKFLOW-V3.1` 是历史 Round-003 的 Part A Narrative / Part B Specification 质量门；
-当前 Human Writing 与 Round-004 的完整契约见 [`round-protocol-v3.1.2.md`](round-protocol-v3.1.2.md)。
+当前 Human Writing、Closure Classification 与 Round-005 的完整契约见 [`round-protocol-v3.1.3.md`](round-protocol-v3.1.3.md)。
 
 ```text
 Fact Baseline
@@ -72,12 +72,13 @@ Fact Baseline
 
 ### 11+1 固定配额
 
-每轮恰好 100 个问题：00 Overall 12；01 Product 6；02 Ingestion 7；03 Knowledge/GraphRAG 11；
+历史 V3/V3.1 Round 使用过：00 Overall 12；01 Product 6；02 Ingestion 7；03 Knowledge/GraphRAG 11；
 04 Model Gateway 6；05 Memory 8；06 Agent Core 14；07 Capability/Skill 6；08 Tool Runtime 10；
-09 Security 8；10 Observability/Eval 6；11 Infrastructure 6。
+09 Security 8；10 Observability/Eval 6；11 Infrastructure 6。Round-005 按 V3.1.3 将配额调整为
+12、6、7、10、5、8、15、6、10、8、6、7，仍然恰好 100 题。
 
-问题必须独立、具体、可回答，并能改变设计决策；至少 70% 标记 `NOVEL`，最多 30% 标记
-`REGRESSION`。完整映射见 [`11-plus-1-canonical-coverage-map.md`](11-plus-1-canonical-coverage-map.md)。
+问题必须独立、具体、可回答，并能改变设计决策；历史 Round 的 novelty 门槛由各自协议负责，Round-005
+要求至少 80% 标记 `NOVEL`、最多 20% 标记 `REGRESSION`。完整映射见 Session 内的 coverage map。
 
 ### 逐题记录契约
 
@@ -141,7 +142,12 @@ V3.1.1 进一步要求 Canonical Sync 使用 `SECTION_REWRITE` 或 `FULL_PART_RE
 V3.1.2 在此基础上加入 Human Writing Contract：Part A 必须 prose-led、scenario-driven、
 technically precise、non-template、human-reviewable；确定性 verifier 只能输出 warning，不能
 把机器检查冒充人工审查。Round-004 使用具体时序和失败场景审查 Architecture Consistency、
-Failure Semantics 与 Component Survival，完整协议见 [`round-protocol-v3.1.2.md`](round-protocol-v3.1.2.md)。
+Failure Semantics 与 Component Survival，并保持 immutable。
+
+V3.1.3 Round-005 把重点推进到 Deep Failure、Recovery、Concurrency 和 Architecture Survival。每题
+必须独立记录 Severity、Primary Closure Class 和 `closure_class_rationale`；A/I/E/X 的含义和判断顺序
+见 [`round-protocol-v3.1.3.md`](round-protocol-v3.1.3.md)。任一分类超过 80% 时必须做 20 题 Distribution
+Audit；本轮即使没有超阈值也保留了 20 题人工抽查。Part A 修改必须从第一段读到最后一段，禁止补丁式尾巴。
 
 Blue Repair 使用同一个 `sessions/` 根目录，Repair Session 以独立协议记录根因聚类、Part-A
 修复、五指标、Counter Retest 和 Closure Report，例如：
@@ -182,6 +188,7 @@ python tools/scripts/verify_canonical_diff_v3.py
 python tools/scripts/verify_red_blue_repair_v1.py
 python tools/scripts/verify_red_blue_evidence_closure_v1.py
 python tools/scripts/verify_red_blue_p0_v4_execution_v1.py
+python tools/scripts/verify_red_blue_round_v313.py
 ```
 
 V2 Round-001 的历史 Gate 规则继续约束其自身记录；V3 Round 的 AUTO_APPLY 只允许协议定义的

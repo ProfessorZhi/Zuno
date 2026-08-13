@@ -51,3 +51,7 @@ Fact Baseline、Evidence Ledger、Open Questions、History、Current Audit、Cha
 ## Shared Contracts
 
 复用 `00-charter/state-model.md`、`01-facts/evidence-ledger.md`、`07-interview-red-team/challenge-log.md` 和 `08-decisions/decision-candidates.md`。
+
+## V3.1.3 Extensions
+
+在 Architecture Red/Blue 阶段共享 Closure Class Integrity、Distribution Audit 和 Human Continuity。Fact Recovery 仍然不能被架构题库反向填空；`A/I/E/X` 只描述当前 Claim 的主要阻塞 Gate，不改变历史事实状态。Canonical Sync 前必须完成整篇 Part A 阅读，并把复杂度收益、实现缺口、测量缺口和外部资格缺口分开记录。

@@ -88,6 +88,17 @@ precedence over template consistency。
 占比、英文术语密度和场景/失败/取舍标记等确定性 warning，不自动宣称 Human Writing PASS。最终
 结论必须由 Blue self-review、Red documentation review 和 ChatGPT review 共同给出。
 
+### Human Writing Continuity V3.1.3
+
+当一轮审查修改 Part A 时，审查者必须从第一段重新读到最后一段，而不能只看变更行。重点检查场景、
+问题、决策、代价和反转条件是否仍然连成一条叙事；连续的补丁式短段、重复 Current/Target 声明、
+突然出现的英文 Contract 名词和 Round-specific wording 都必须合并或移回 Lab Session。禁止为了满足
+检查项在正文结尾追加“此外”“Runtime 仍然”“这项约束”式孤立段落。
+
+Part A 先讲业务事件和失败后果，再引出术语；Part B 保持精确的状态、版本、并发、失败、恢复、授权、
+对账和测试 Contract。`closure_class_rationale` 只属于 Red/Blue Session，不得进入 Canonical 正文。
+确定性检查只能报告 narrative warning，不能把机器信号升级为人工 `PASS`。
+
 ## 3. Logical 与 Physical 的写作边界
 
 ```text

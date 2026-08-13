@@ -51,7 +51,7 @@ Platform/Domain Owner 拥有 Canonical Business State；Agent Runtime 拥有 Run
 
 ### 最危险的失败与恢复
 
-最危险的情况是 Domain Commit 已经成功，而 Runtime Checkpoint 仍停在执行前；或者 Tool 已经执行，Queue 又重复投递，Agent 误以为副作用未发生。另一类危险是新 Evidence 使旧 Fact、Conflict 或 Finding stale，但旧 WorkProduct 仍被展示为最终答案。恢复必须以 Domain Owner 的已提交版本和 EffectReceipt 为依据，对账后再 Resume、Retry、Replan 或请求 Human Review，不能把 HTTP 200、Queue ACK 或 Checkpoint 当成业务成功。
+最危险的情况是 Domain Commit 已经成功，而 Runtime Checkpoint 仍停在执行前；或者 Tool 已经执行，Queue 又重复投递，Agent 误以为副作用未发生。另一类危险是新 Evidence 使旧 Fact、Conflict 或 Finding stale，但旧 WorkProduct 仍被展示为最终答案。恢复时先读取 Domain Owner 的最后合法版本，再比较 Runtime 控制版本、Knowledge Projection、EffectReceipt 和当前授权；只有在这些边界完成对账后，才选择 Resume、Retry、Replan 或 Human Review。这个顺序会牺牲一部分恢复速度，却避免把 HTTP 200、Queue ACK 或 Checkpoint 误当成业务成功。
 
 ### 取舍与反转条件
 
@@ -80,6 +80,10 @@ FastAPI 是 Application / HTTP Interface；LangGraph 若被保留，只承担 Ag
 ### State、Version 与 Recovery Contract
 
 DomainVersion 是业务事实版本；PlanVersion 激活后不可变；Step 必须记录输入 DomainVersion/Snapshot。提交时版本不一致只能进入 conflict、retry、replan、review_required 或 rejected。Runtime Checkpoint 保存控制位置，不保存 Canonical Case Fact。Recovery 先读取最后合法 DomainGeneration，再检查 EffectReceipt、Provider Operation ID、Outbox/Inbox 和当前权限，最后决定 Resume、Retry、Replan 或人工介入。
+
+### Concurrency and reconciliation authority
+
+任何跨边界恢复都必须留下一个可重放的比较结果：DomainGeneration 是业务事实基准，Runtime 只能依据它重建控制位置，Knowledge 需要声明 ProjectionVersion 是否覆盖该版本，Tool 需要用 ProviderOperationId 判断外部动作是否已发生。比较中出现未知结果、版本倒退或权限撤销时，系统进入 `reconciling` 或 `manual_review`，不能把“最新收到的消息”当成最终顺序。这样把恢复责任集中在各 Owner 的事实上，而不是让 Coordinator 临时猜测。
 
 ### Owner Registry
 

@@ -20,7 +20,7 @@ replaces: docs/project/modules/10-observability-eval.md（Superseded）
 
 法律质量至少要看 Evidence Sufficiency、Citation Correctness、Unsupported Claim、Conflict/Dispute、Fact–Article、Applicability、Reviewer Acceptance 和 Task Completion；工程成本还包括 Latency、Token、Model Calls、Retrieval Rounds、Tool Calls、Retry/Recovery 和 Domain State Reuse。某个变体如果因为服务不可用而没有结果，不能把它折成零分再宣称质量差；它应该保留为 blocked 或 incomparable。
 
-评测的正常路径是冻结 DatasetVersion，运行变体，保存 RawResult 和 Trace，再由 Reviewer 与 Metric 形成 Comparison。Eval Owner 拥有这些评测事实，但不拥有产品 Finding，也不把历史 Demo 自动当作数据集。人工标注和重复运行确实昂贵，却是判断复杂度是否值得保留的必要成本。
+评测的正常路径是冻结 DatasetVersion，运行变体，保存 RawResult 和 Trace，再由 Reviewer 与 Metric 形成 Comparison。Eval Owner 拥有这些评测事实，但不拥有产品 Finding，也不把历史 Demo 自动当作数据集。人工标注和重复运行确实昂贵，却是判断复杂度是否值得保留的必要成本；如果某个变体因 Provider outage 或权限阻断没有结果，它必须保留阻塞原因，不能被悄悄放进失败分母。
 
 失败时，最危险的不是一次分数偏低，而是比较条件悄悄变化：数据切片不同、Reviewer 标准不同、模型预算不同，或者只看最终文本而漏掉引用和恢复错误。若 C≈B>A，应保留 Legal Backend 并缩减 Native Runtime；若 C≈B≈A，就删除未经证明的复杂度。Graph、Multi-Agent 和 Service Boundary 也必须接受各自的消融测试。
 
@@ -51,6 +51,10 @@ Graph Ablation 比较 Fixed Vector、Fixed Hybrid、Always Graph、Agentic RAG �
 ### Metrics and denominator
 
 Quality 包括 Evidence Sufficiency、Citation Correctness、Unsupported Claim Rate、Conflict/Dispute F1、Fact–Article F1、Applicability Accuracy、Reviewer Acceptance 和 Task Completion。Efficiency 包括 Latency、Token、Cost、Model Calls、Retrieval Rounds、Tool Calls、Retry、Recovery、State Reuse。BLOCKED、UNAVAILABLE、INCOMPARABLE 必须单独报告，不能变成零分或 PASS。
+
+### Attribution and fault evidence
+
+一次 Run 的 retry、fallback、replan、人工暂停和恢复都要在 Trace 中区分 Attempt 与最终 Task。比较 Native Runtime、Graph、Memory 或服务拆分时，必须固定模型、语料、工具、预算和 Reviewer Protocol，并分别报告缺失 Span、阻塞 Run、不可比样本和故障注入覆盖。只有结果可归因时，才允许把复杂度写成 Measured；否则保持 Hypothesis 或 Measurement Gap。
 
 ### Reviewer、统计与发布门
 

@@ -30,7 +30,7 @@ Security Owner 负责 Principal、Tenant、Grant、Policy、SecurityEpoch、Appr
 
 ### 失败、取舍与反转
 
-Prompt Injection、跨租户查询、过期凭据、Sandbox escape、Tool timeout 和 duplicate effect 都必须 fail closed 或进入未知结果对账。开源不天然安全，闭源也不天然不安全；Zuno 的候选差异是 Security Verifiability 和 Deployment Sovereignty。若真实测试不能证明安全边界，不能把安全目标写成 Current 或 Production 事实。
+Prompt Injection、跨租户查询、过期凭据、Sandbox escape、Tool timeout 和 duplicate effect 都必须 fail closed 或进入未知结果对账。权限在长 Run 中被撤回时，Queue 里的 PreparedAction 仍然只是候选；执行 Worker 必须用当前 SecurityEpoch 重新授权，不能因为旧 Approval 还在消息里就继续执行。开源不天然安全，闭源也不天然不安全；Zuno 的候选差异是 Security Verifiability 和 Deployment Sovereignty。若真实测试不能证明安全边界，不能把安全目标写成 Current 或 Production 事实。
 
 ### Current / Target / Gap
 
@@ -47,6 +47,10 @@ PreparedAction 必须绑定 action hash、Subject、Tenant、Matter、Scope、To
 Effect 状态包括 proposed、validated、authorized、approval_required、ready、executing、succeeded、failed_known、outcome_unknown、reconciling 和 manual_review。Timeout 不能直接等于 failed；不可逆动作的 outcome_unknown 必须先依据 ProviderOperationId 对账，禁止盲目 Retry。
 
 每次 Execute 使用稳定 Idempotency Key；重复请求必须返回同一 EffectReceipt 或明确的 reconciliation 状态，不能依靠模型记忆去重。
+
+### Revocation race and execution gate
+
+PreparedAction 的准备时间不等于执行授权。Worker 取出队列消息后重新读取 Grant、SecurityEpoch、Approval、ToolVersion、Arguments 和 Secret Lease；任何一个版本变化都使旧动作进入 rejected、expired 或 manual_review。取消请求与 Provider 已收到请求并不互相覆盖，系统必须保留 cancel_requested、executing、outcome_unknown 和 reconciling 的顺序。
 
 ### Secrets、Sandbox 与 Network
 
