@@ -20,19 +20,32 @@ class GroundedSynthesisEngine:
 
     def synthesize(self, state: AgentRuntimeState) -> NormalizedObservation:
         evidence_ids = _evidence_ids(state.observations) or list(state.evidence_refs)
-        citation_ids = _citation_ids(state.observations)
+        candidate_citation_ids = _citation_ids(state.observations)
         requires_citation = any(observation.kind == ObservationKind.RETRIEVAL for observation in state.observations)
         rewritten = any(item.metadata.get("answer_rewritten") for item in state.observations)
-        final_answer = _final_answer(goal=state.goal, observations=state.observations, citation_ids=citation_ids, rewritten=rewritten)
+        draft_answer = _final_answer(
+            goal=state.goal,
+            observations=state.observations,
+            citation_ids=candidate_citation_ids,
+            rewritten=rewritten,
+        )
         claims = tuple(
             claim.__class__(
                 claim_id=claim.claim_id,
                 text=claim.text,
                 required_citation=requires_citation,
+                evidence_ids=claim.evidence_ids,
             )
-            for claim in self.claim_extractor.extract(goal=state.goal, draft=final_answer)
+            for claim in self.claim_extractor.extract(goal=state.goal, draft=draft_answer)
         )
         bindings = self.citation_binder.bind(claims=claims, observations=state.observations)
+        citation_ids = [binding.citation_id for binding in bindings if binding.citation_id]
+        final_answer = _final_answer(
+            goal=state.goal,
+            observations=state.observations,
+            citation_ids=citation_ids,
+            rewritten=rewritten,
+        )
         unsupported_claims = [
             claim.text
             for claim, binding in zip(claims, bindings)

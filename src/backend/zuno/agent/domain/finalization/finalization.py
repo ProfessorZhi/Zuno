@@ -33,6 +33,11 @@ class ClaimCitationBinding:
     support_verdict: str
     lineage_ref: str | None
     authorization_ref: str
+    document_version_ref: str | None = None
+    source_span_ref: str | None = None
+    provenance_ref: str | None = None
+    failure_class: str | None = None
+    trace_ref: str | None = None
 
 
 @dataclass(frozen=True, slots=True)

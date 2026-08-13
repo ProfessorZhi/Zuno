@@ -324,7 +324,36 @@ def test_q039_citation_fixture_abstains_when_retrieval_has_no_citation() -> None
 
 
 def test_q039_wrong_span_is_not_silently_accepted() -> None:
-    pytest.xfail("current CitationBinding is positional and has no document/span provenance check")
+    from zuno.knowledge.provenance import CitationCandidate, CitationProvenanceGuard, EvidenceLineage, SourceSpanLineage
+
+    evidence = {
+        "evidence:wrong-span": EvidenceLineage(
+            evidence_id="evidence:wrong-span",
+            document_version_id="document:q039:v1",
+            source_span_id="span:correct",
+            claim_refs=("claim:q039",),
+        )
+    }
+    spans = {
+        "span:wrong": SourceSpanLineage(
+            source_span_id="span:wrong",
+            evidence_id="evidence:wrong-span",
+            document_version_id="document:q039:v1",
+        )
+    }
+    result = CitationProvenanceGuard().validate(
+        CitationCandidate(
+            claim_id="claim:q039",
+            evidence_id="evidence:wrong-span",
+            document_version_id="document:q039:v1",
+            source_span_id="span:wrong",
+            citation_id="citation:evidence:wrong-span",
+        ),
+        evidence_by_id=evidence,
+        spans_by_id=spans,
+    )
+    assert result.accepted is False
+    assert result.reason_code == "evidence_span_mismatch"
 
 
 def test_q067_untrusted_context_cannot_authorize_tool() -> None:

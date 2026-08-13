@@ -95,7 +95,10 @@ def main() -> int:
     has_design_state = "state: `active-design-program`" in current and re.search(
         r"active_program: `(?!none`)[^`]+`", current
     ) is not None
-    if not (has_no_active_state or has_design_state):
+    has_implementation_evidence_state = "state: `active-implementation-evidence-program`" in current and re.search(
+        r"active_program: `(?!none`)[^`]+`", current
+    ) is not None
+    if not (has_no_active_state or has_design_state or has_implementation_evidence_state):
         errors.append("current program has no recognized design/implementation state")
     for phrase in ("queued_program: `none`", "SUPERSEDED / RETIRED"):
         if phrase not in current:

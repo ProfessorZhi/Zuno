@@ -143,18 +143,29 @@ def _claims(metadata: dict[str, Any]) -> tuple[FinalClaim, ...]:
 
 def _bindings(metadata: dict[str, Any], state: AgentRuntimeState) -> tuple[ClaimCitationBinding, ...]:
     raw_bindings = metadata.get("citation_bindings") or []
-    evidence_refs = _evidence_refs(state)
     bindings: list[ClaimCitationBinding] = []
     for index, raw in enumerate(raw_bindings):
-        citation_id = raw.get("citation_id")
+        citation_id = raw.get("citation_id") if raw.get("support_verdict") == "supported" else None
+        evidence_ref = raw.get("evidence_id") or raw.get("evidence_ref")
         bindings.append(
             ClaimCitationBinding(
                 claim_id=str(raw.get("claim_id") or f"claim:{index + 1}"),
                 citation_id=str(citation_id) if citation_id else None,
-                evidence_ref=evidence_refs[index] if index < len(evidence_refs) else None,
+                evidence_ref=str(evidence_ref) if evidence_ref else None,
                 support_verdict=str(raw.get("support_verdict") or "insufficient"),
-                lineage_ref=stable_ref("citation-lineage", str(citation_id), evidence_refs[index] if index < len(evidence_refs) else ""),
+                lineage_ref=(
+                    str(raw.get("provenance_ref"))
+                    if raw.get("provenance_ref")
+                    else stable_ref("citation-lineage", str(citation_id), str(evidence_ref or ""))
+                ),
                 authorization_ref=_security_epoch_ref(state),
+                document_version_ref=(
+                    str(raw.get("document_version_id")) if raw.get("document_version_id") else None
+                ),
+                source_span_ref=str(raw.get("source_span_id")) if raw.get("source_span_id") else None,
+                provenance_ref=str(raw.get("provenance_ref")) if raw.get("provenance_ref") else None,
+                failure_class=str(raw.get("failure_class")) if raw.get("failure_class") else None,
+                trace_ref=str(raw.get("trace_ref")) if raw.get("trace_ref") else None,
             )
         )
     return tuple(bindings)

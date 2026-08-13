@@ -89,6 +89,18 @@ class KnowledgeStepExecutor:
                 "final_verdict": result.final_verdict.value,
                 "rounds": list(result.rounds),
                 "ledger": result.ledger.to_trace(),
+                "citation_lineage": [
+                    {
+                        "evidence_id": record.evidence_id,
+                        "document_id": record.document_id,
+                        "document_version": record.document_version,
+                        "source_span": dict(record.source_span),
+                        "claim_refs": list(record.claim_refs),
+                        "strict_citation_allowed": record.strict_citation_allowed,
+                        "trace_span": record.trace_span,
+                    }
+                    for record in ledger_records
+                ],
                 "knowledge_retrieval_graph": graph_trace,
                 "knowledge_control_proposal": control_proposal,
                 "agent_core_proposal_decision": proposal_decision,

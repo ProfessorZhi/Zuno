@@ -1,22 +1,24 @@
 # Current Program
 
-state: `active-design-program`
-active_program: `PROJECT-ARCHITECTURE-RECONSTRUCTION-V1`
+state: `active-implementation-evidence-program`
+active_program: `IMPLEMENTATION-EVIDENCE-CYCLE-001`
 queued_program: `none`
-program_class: `architecture-review-and-reconstruction`
-baseline_sha: `4b960408f0693a42edd9a1a89accb98ac49d1edc`
+program_class: `bounded-implementation-and-verification`
+baseline_sha: `a402683f245e1e4b31c3b2c31b4d352eb9f9a23f`
 
-本 Program 已由用户明确启动，但它不是 implementation program。它只负责从
-Canonical Facts V1、当前仓库证据和已有 Target 输入重新推导 Product Problem、Domain、
-Agent Runtime、Knowledge、Service Boundary、Data Ownership、Security 和 Eval，并接受
-Red Team、Blue Team、Counter Attack 与 Interview Red Team 审查。
+本 Program 是用户明确启动的 Wave-001 implementation/evidence cycle。它只实现
+TASK-001 Canonical Domain Mutation / Version 与 TASK-003 Citation Provenance Guard，
+并把每个 Claim 映射到代码、测试和已观察结果。上一阶段的 Architecture Reconstruction
+是本 Program 的输入，不在本轮重新设计。
 
 ## Scope
 
 ```text
-允许：事实深度恢复、问题模型、架构候选、红蓝攻击、面试深挖、Gap 和 ADR 候选
-禁止：业务 Runtime、UI、数据库 Schema/Migration、依赖升级、生产 Infra 实现
-禁止：把历史 UNKNOWN 或 Target 候选升级为 Current
+允许：Domain Mutation/Version、Citation Provenance、必要 Migration、Domain/Knowledge
+focused tests、fault evidence 和 implementation review package。
+禁止：重构整个 backend、Agent Planner、完整 Multi-Agent、Tool Runtime、Provider 替换、
+微服务拆分、Kafka、Event Sourcing、2PC、Saga、Security 重写、关闭原始 P0。
+禁止：把实现代码或本地测试升级为 Production Ready。
 ```
 
 Microservice 和 Python-only 是当前 Owner Target Constraint；本 Program 仍攻击服务数量、
@@ -115,7 +117,8 @@ Human Writing V3.1.2              COMPLETE (warning report + human review packag
 Architecture Red/Blue Round-004   COMPLETE (100Q consistency/failure review; immutable)
 Architecture Red/Blue Round-005   COMPLETE (100Q deep failure/recovery review; V3.1.3)
 Closure Semantic Audit V3.1.3.1   COMPLETE (derived classification; Round-005 immutable)
-Implementation Program           READY_FOR_TASK_DEFINITION (not active)
+Implementation Evidence Wave-001 COMPLETE (TASK-001 / TASK-003)
+Round-006                         WAITING_FOR_WAVE_001_EVIDENCE_REVIEW
 ```
 
 ## V2 Round status
@@ -264,10 +267,10 @@ Implementation Program          READY_FOR_TASK_DEFINITION (not active)
 Closure Class 只决定阻塞面，不改变历史 Severity 或 P0 Closure。用户 Gate 已批准后，
 Implementation Task Candidate 仍不能自动激活或写成 Current；必须另行定义并启动实现 Program。
 
-## Exit condition
+## Implementation Wave-001 exit condition
 
-本 Program 的 Part-A 设计阶段已通过用户 Gate 并完成 Canonical Sync；事实深度、面试挑战和
-后续反事实审查仍可继续。实现 Program 必须另行生成；本文件不得把设计完成写成代码完成或
-Production Ready。
+本 Wave 已完成窄实现、focused tests 和 evidence package；PostgreSQL 真实环境、进程级故障、
+法院 QA、HA、Security Qualification 和 Production 仍未证明。Round-006 必须等待 Wave-001
+Evidence Review，不得自动启动 100Q。
 
 旧 Program1 已 `SUPERSEDED / RETIRED`，不得恢复或重新激活。

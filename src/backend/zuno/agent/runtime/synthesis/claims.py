@@ -8,6 +8,7 @@ class StructuredClaim:
     claim_id: str
     text: str
     required_citation: bool = True
+    evidence_ids: tuple[str, ...] = ()
 
 
 class ClaimExtractor:

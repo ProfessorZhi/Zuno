@@ -26,6 +26,18 @@ def test_grounded_synthesis_binds_only_strict_retrieval_citations() -> None:
         source="unit",
         evidence_ids=["ev_1"],
         citation_ids=["citation:ev_1"],
+        metadata={
+            "ledger": {
+                "records": [
+                    {
+                        "evidence_id": "ev_1",
+                        "document_version": "doc-1:v1",
+                        "source_span": {"span_id": "span-1", "document_version_id": "doc-1:v1"},
+                        "claim_refs": ["claim:1"],
+                    }
+                ]
+            }
+        },
     )
 
     synthesis = GroundedSynthesisEngine().synthesize(_state([observation]))
