@@ -224,7 +224,8 @@ Schema/Migration、依赖和生产 Infra 不在本轮修改范围内；Implement
 在 Lab 中记录，但必须等用户通过 Architecture Gate 后才能激活 implementation Program。
 
 V4.2 Bootstrap 只改工作流和治理。Architecture Evolution Track 当前为
-`ROUND-006 READY_FOR_ADAPTIVE_RED_BLUE_PILOT / NOT_STARTED`；Implementation Evidence Track 保留
+`ROUND-006 BLOCKED_BY_USER_GATE / ARCHITECTURE_BLOCKER`；已完成 3 个真实 Live Turn，但因 Session
+Handoff API 返回旧 completed response 而停止，Architecture Score 无效；Implementation Evidence Track 保留
 `IMPLEMENTATION-EVIDENCE-CYCLE-001` 的真实状态，当前为 `WAITING_FOR_RED_COUNTER_RETEST`。
 两条 Track 通过 Canonical Architecture 和 Architecture Delta 反馈，但互不作为对方的自动 Gate。
 

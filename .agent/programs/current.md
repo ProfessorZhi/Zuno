@@ -1,13 +1,16 @@
 # Current Program
 
 state: `active-design-program`
-active_program: `ZUNO-RED-BLUE-WORKFLOW-V4.2`
+active_program: `RB-WORKFLOW-V4.2-ROUND-006`
 queued_program: `none`
-program_class: `workflow-governance-bootstrap`
+program_class: `operational-pilot`
 baseline_sha: `4612d9d119a9fefd5b9de01b40606636e80409c0`
 
-本 Program 只重构 ZUNO-RED-BLUE-WORKFLOW-V4.2 的工作流、治理、Session Contract、Prompt、
-Context Packet、Artifact Handoff、Verifier、Routing 和 Docs Tests。它不启动 Round-006，
+本 Program 执行 ZUNO-RED-BLUE-WORKFLOW-V4.2-ROUND-006 Operational Pilot，并维护其 Workflow
+证据。它不修改 Canonical Architecture、Facts、ADR、Runtime、Schema、Migration、UI、Dependencies
+或 Production Infra。Bootstrap 阶段只重构 V4.2 的工作流、治理、Session Contract、Prompt、
+Context Packet、Artifact Handoff、Verifier、Routing 和 Docs Tests。Round-006 已按 Operational Pilot
+启动并在 Workflow Blocker 后停止，当前不再继续运行，
 不修改业务 Runtime、Facts、ADR、Schema、Migration、UI、Dependencies 或 Production Infra。
 
 `IMPLEMENTATION-EVIDENCE-CYCLE-001` 是独立的 Track B；它已有自己的代码、测试和 Evidence
@@ -18,7 +21,7 @@ Package，本轮不重写其真实状态，也不再把它作为 Architecture Re
 ```text
 允许：Workflow/Protocol、Governance、Lab、Prompt/Context、Session Manifest、V4 verifier、
 docs-related tests 和 Bootstrap review package。
-禁止：启动 Round-006、伪造 Codex Session、重构 backend、修改 Agent/Domain/Citation Runtime、
+禁止：继续运行未修复的 Round-006、伪造 Codex Session、重构 backend、修改 Agent/Domain/Citation Runtime、
 Facts、ADR、Schema/Migration、UI、Dependencies、Production Infra，或把任何 Target/测试升级为
 Current、Measured 或 Production Ready。
 ```
@@ -121,9 +124,9 @@ Architecture Red/Blue Round-005   COMPLETE (100Q deep failure/recovery review; V
 Closure Semantic Audit V3.1.3.1   COMPLETE (derived classification; Round-005 immutable)
 Implementation Evidence Wave-001 COMPLETE (TASK-001 / TASK-003; independent Track B)
 V4.1 Workflow Bootstrap           HISTORICAL / IMMUTABLE
-V4.2 Workflow Bootstrap           READY_FOR_EXTERNAL_CHATGPT_REVIEW
-Architecture Round-006            READY_FOR_ADAPTIVE_RED_BLUE_PILOT / NOT_STARTED
-Round-006                         NOT_STARTED
+V4.2 Workflow Bootstrap           ACCEPTED_WITH_DEBT / EXTERNAL_VERDICT_PROVIDED
+Architecture Round-006            BLOCKED_BY_USER_GATE / ARCHITECTURE_BLOCKER
+Round-006                         3 LIVE TURNS; ARCHITECTURE SCORE INVALID
 ```
 
 V4.2 Addendum：每次只冻结一个 Question、一个 Answer 和一个 Chain Decision。Red 读取
@@ -282,6 +285,7 @@ Implementation Task Candidate 仍不能自动激活或写成 Current；必须另
 
 Wave-001 已完成窄实现、focused tests 和 evidence package；PostgreSQL 真实环境、进程级故障、
 法院 QA、HA、Security Qualification 和 Production 仍未证明。它保持
-`WAITING_FOR_RED_COUNTER_RETEST`，但不阻塞 V4 Architecture Round-006 的 Fresh Red 启动。
+`WAITING_FOR_RED_COUNTER_RETEST`；Round-006 当前因 `WF-API-001` 的 Workflow Blocker 停止，不能
+在修复 Turn Handoff 之前重放或继续。
 
 旧 Program1 已 `SUPERSEDED / RETIRED`，不得恢复或重新激活。

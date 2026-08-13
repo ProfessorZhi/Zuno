@@ -1,0 +1,13 @@
+# RB-R006-BLUE Live Context
+
+blue_session_id: 019ffa12-beca-7ac2-b1fb-456c54c3e1ee
+base_sha: 55510d236bcc039ca255f59d07ea61b36e04143a
+canonical_snapshot_sha: ede65cd89a5d7a02da8d6b0e38310d7b38070ac535c386c9e5a3290c5cc45eef
+part_a_payload: part-a-live-context.md
+business_implementation_code: PROHIBITED
+part_a_role: ARCHITECTURE_KNOWLEDGE_SOURCE
+answer_context: BASE_SNAPSHOT_ONLY
+canonical_write_phase: AFTER_LIVE_ATTACK_COMPLETE
+interview_calibration: PROHIBITED
+part_b: PROHIBITED
+previous_blue_reasoning: PROHIBITED
