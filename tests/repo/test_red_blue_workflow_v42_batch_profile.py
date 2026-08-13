@@ -116,7 +116,7 @@ def test_batch_100_questions_are_allowed(tmp_path: Path):
 
 
 def test_v42_header_scopes_question_generation_by_profile():
-    protocol = (ROOT / "project-reconstruction-lab/05-red-blue/round-protocol-v4.2.md").read_text(encoding="utf-8")
+    protocol = (ROOT / "project-reconstruction-lab/05-red-blue/history/protocols/round-protocol-v4.2.md").read_text(encoding="utf-8")
     assert "review_mode: PROFILE_DEPENDENT" in protocol
     assert "whole_round_question_freeze: PROFILE_DEPENDENT" in protocol
     assert "batch_adversarial:\n  full_round_question_generation: ALLOWED" in protocol

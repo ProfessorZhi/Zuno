@@ -71,11 +71,10 @@ project-reconstruction-lab/
 │  ├─ users-and-workflows.md
 │  └─ problem-model.md
 ├─ 05-red-blue/
-│  ├─ README.md
-│  ├─ attack-registry.md
-│  ├─ blue-responses.md
-│  ├─ counter-attacks.md
-│  └─ kill-tests.md
+│  ├─ README.md                 # 当前 RESET/PAUSED 入口
+│  ├─ principles.md             # 跨协议稳定原则
+│  ├─ workflow-status.md        # 当前状态和可读性门
+│  └─ history/                  # 旧 Protocol、Prompt 和操作指南
 ├─ 06-architecture/
 │  ├─ architecture-candidates.md
 │  ├─ consolidation-workflow.md
@@ -110,13 +109,10 @@ project-reconstruction-lab/
 └─ legacy/         # 旧编号文档和旧 Skill Spec，可追溯但不再是主入口
 ```
 
-V2 Red/Blue Round 的历史执行契约见 `05-red-blue/round-protocol-v2.md`；Round-001 至 Round-005
-继续按各自 V2/V3/V3.1.3 协议保持 immutable。Round-006 以后使用
-`05-red-blue/round-protocol-v4.2.md`：Fresh Context、Dual Thread、Conceptual Architecture、
-逐题 Adaptive Interrogation、Append-only Question/Answer Ledger、Artifact Handoff、
-Interview-Calibrated Red 和外部 ChatGPT Audit。V4.1 作为历史工作流基线保留，不 retroactively
-改写历史 Round，也不把 Implementation Evidence 当作 Architecture
-Review 的前置 Gate。
+Red/Blue 当前入口是 `05-red-blue/README.md`，状态为 RESET/PAUSED，active Protocol 为 NONE。
+V2–V4.2 的历史执行契约、Prompt 和操作指南见 `05-red-blue/history/`；Round-001 至 Round-006
+继续按原协议保持 immutable。归档材料解释历史流程，不自动成为下一代 Protocol，也不把
+Implementation Evidence 当作 Architecture Review 的前置 Gate。
 Round-001 的完整 100 题记录位于 `sessions/RB-WORKFLOW-V2-001/`，保持 immutable history；
 Round-002 位于 `sessions/RB-WORKFLOW-V3-ROUND-002/`，按 V3 完成 Question → Answer → Score
 → Decision → Delta → Canonical Sync。Round-003 使用 V3.1，额外审查 Canonical Part A / Part B
@@ -222,22 +218,21 @@ GraphRAG、Memory、OpenViking、Legal Domain Kernel 和 Native Domain-aware Run
 Schema/Migration、依赖和生产 Infra 不在本轮修改范围内；Implementation Task Candidate 可以
 在 Lab 中记录，但必须等用户通过 Architecture Gate 后才能激活 implementation Program。
 
-V4.2 Bootstrap 只改工作流和治理。Architecture Evolution Track 当前为
+V4.2 Bootstrap 只改工作流和治理。它及 Round-006 当前属于
 `ROUND-006 ABORTED_OPERATIONAL_PILOT / WORKFLOW_EXECUTION_BLOCKER`；已完成 3 个真实 Live Turn，但因 Session
-Handoff API 返回旧 completed response 而中止，Architecture Score 无效。V4.2 默认执行
-`BATCH_ADVERSARIAL`，`LIVE_ADAPTIVE` 仅为实验性 Profile；Round-007 为
-`READY_FOR_BATCH_ADVERSARIAL_PILOT / NOT_STARTED`。Implementation Evidence Track 保留
+Handoff API 返回旧 completed response 而中止，Architecture Score 无效。相关协议和 Profile 仅是
+历史材料；Round-007 已在启动前取消。Implementation Evidence Track 保留
 `IMPLEMENTATION-EVIDENCE-CYCLE-001` 的真实状态，当前为 `WAITING_FOR_RED_COUNTER_RETEST`。
 两条 Track 通过 Canonical Architecture 和 Architecture Delta 反馈，但互不作为对方的自动 Gate。
 
-V4.2 规则按 Profile 解释：`BATCH_ADVERSARIAL` 允许 Fresh Red Attack 生成完整 100Q 和
+历史 V4.2 规则按 Profile 解释：`BATCH_ADVERSARIAL` 允许 Fresh Red Attack 生成完整 100Q 和
 12–18 条 Deep-Dive Chain，但 `RED_COUNTER` 必须读取 Blue Answer 后动态攻击；`LIVE_ADAPTIVE`
 才要求 Main 每次只冻结一个 Question、一个 Answer 和一个 Chain Decision，使用 append-only
 `question-answer-ledger.jsonl`，并禁止 `questions_frozen_sha`、`red-questions.md` 和 Q001–Q100
 预生成题单。两种 Profile 都要求 Interview calibration 只进入 Red Context，Blue Context 禁止读取，
 且只有 `LIVE_ATTACK_COMPLETE` 后 Blue 才能进行 Candidate Canonical Rewrite。
 
-默认 Batch Profile 允许 Red Attack 预先生成完整 100Q，但不允许把这份题单直接交给 Blue。
+历史默认 Batch Profile 允许 Red Attack 预先生成完整 100Q，但不允许把这份题单直接交给 Blue。
 Blue Defense、Red Counter、Blue Counter Defense、Blue Synthesis 与 Red Judge 都必须使用独立
 角色 Session，且通过 manifest 与 artifact 记录同一 BASE Snapshot、Answer 覆盖、Counter 引用、
 阶段顺序和外部 Merge Gate。Live Adaptive 保留逐题 append-only ledger 的严格规则。
@@ -247,7 +242,7 @@ Blue Defense、Red Counter、Blue Counter Defense、Blue Synthesis 与 Red Judge
 | Reader | 路径 |
 |---|---|
 | 用户：我到底做过什么？ | `01-facts/` → `02-history/` → `07-interview-red-team/personal-contribution` |
-| 导师 / 架构师：设计是否成立？ | `01-facts/` → `04-product/` → `05-red-blue/` → `06-architecture/` |
+| 导师 / 架构师：设计是否成立？ | `01-facts/` → `04-product/` → `05-red-blue/README.md` → `06-architecture/` |
 | 面试官：是否真的做过？ | `01-facts/` → `03-current/` → `07-interview-red-team/` |
 | 工程实现者：下一步改什么？ | `06-architecture/` → `09-implementation/` → `docs/project/` / ADR |
 

@@ -455,6 +455,10 @@ def _session_dirs(root: Path) -> list[Path]:
     for path in root.iterdir():
         if not path.is_dir() or path.name == "TEMPLATE" or path.name.startswith("_"):
             continue
+        if path.name.startswith("RB-RESET-"):
+            # Workspace governance audits have their own report contract and
+            # must not be interpreted as Campaign Sessions.
+            continue
         if path.name == "IMPLEMENTATION-EVIDENCE-CYCLE-001":
             # The implementation evidence track has its own README/review-package contract.
             continue

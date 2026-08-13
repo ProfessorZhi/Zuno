@@ -61,7 +61,7 @@ docs/
 - `AGENTS.md`：仓库级 Agent 入口和工作流契约。
 - `.agent/`：本地 Agent Skill System、Reference、Program 和模板；不保存架构或模块正文镜像。
 - `project-reconstruction-lab/`：项目级项目重建与架构实验室，维护事实恢复、证据、攻击协议、Gap、面试挑战和会话摘要；不替代 `docs/` 的正式事实源。
-  Round-006 以后 Architecture Review 遵循 `project-reconstruction-lab/05-red-blue/round-protocol-v4.2.md`：两个 Fresh Context Session、Part-A Cold-Start、Red-only interview calibration、Question-by-Question Adaptive Interrogation、Append-only Ledger、Artifact Handoff、Blue-only Canonical Sync 和 ChatGPT External Audit。V4.1 保持历史 immutable。Architecture Review 与 `IMPLEMENTATION-EVIDENCE-CYCLE-001` Implementation Track 并行；不要因 Wave-001 未完成而自动阻塞 Round-006，也不要在 Bootstrap 中启动 Round-006。
+  Red/Blue 当前处于 RESET/PAUSED：`project-reconstruction-lab/05-red-blue/` 只保留稳定原则、当前状态和历史入口。V2–V4.2 协议与 Round-001–Round-006 是 immutable history，Round-007 在启动前取消。下一代 Protocol 尚未设计；必须先通过 Canonical Architecture Readability Gate，再由用户明确激活新的 Red/Blue 工作流。
 - `docs/history/`：历史归档。
 
 正式结论必须进入 `docs/`。只给 Agent 使用的导航、可复用提示和辅助脚本放在 `.agent/`。

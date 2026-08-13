@@ -46,7 +46,7 @@ Public review evidence 不能替代固定 benchmark 的实际测量。Quality �
 当前 Program                  no-active
 Round-006 closure             COMPLETE / ABORTED_OPERATIONAL_PILOT
 V4.2 batch profile            COMPLETE / ACCEPTED_WITH_DEBT
-Round-007                     READY_FOR_BATCH_ADVERSARIAL_PILOT / NOT_STARTED
+Round-007                     CANCELLED_BEFORE_START
 ```
 
-本状态文档只记录 Current 与生产证据。Round-007 尚未启动；没有新的 Session、Candidate、架构修改或实现授权。后续任何事实深挖或 Architecture Red/Blue 都必须由用户显式激活新的工作流，不恢复已关闭 Program。
+本状态文档只记录 Current 与生产证据。Round-007 在启动前取消；没有新的 Session、Candidate、架构修改或实现授权。后续任何事实深挖或 Architecture Red/Blue 都必须先通过可读性门并由用户显式激活新的工作流，不恢复已关闭 Program。

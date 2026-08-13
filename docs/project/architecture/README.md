@@ -13,7 +13,18 @@ architecture.html
 
 Product、Domain、Logical Capability、Physical Service/Deployment、Data、Security 和 Eval 如何形成一个可恢复、可验证、可被简化或替换的跨层目标闭环？
 
-总体架构先回答“为什么做这个系统”，再说明五层责任视图、WorkBuddy / Dify 竞争假设、A/B/C Kill Test 和 State / Failure / Recovery 边界；五层不是最终模块或服务数量。
+总体架构先回答“为什么做这个系统”，再说明五层责任视图、WorkBuddy / Dify 竞争假设、A/B/C Kill Test 和 State / Failure / Recovery 边界；五层不是最终模块或服务数量。当前文档处于 `READABILITY_BASELINE_REFOUNDED`；下一轮 Red/Blue 前必须通过可读性门。
+
+## 阅读顺序
+
+第一次阅读只读 `architecture.md` 的 Part A：先理解产品问题、History/Current/Target 边界、
+责任分层、状态 Owner、失败恢复和替代方案。第二次再读 Part B 的 Contract、State、Retry、
+Security 和验证要求。最后按问题进入对应专题、ADR、status 和 evidence；不要从术语、服务名
+或旧模块编号倒推产品设计。
+
+可读性门的最低问题是：一个不了解 Zuno 的高级工程师，能否不用代码和 Part B 解释“为什么存在、
+谁拥有状态、失败如何恢复、什么时候删除”。这不是 Production Readiness 证明，也不冻结服务或
+模块数量。
 
 ## 文件职责
 

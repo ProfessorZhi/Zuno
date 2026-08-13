@@ -19,9 +19,10 @@ python .agent/scripts/verify_agent_system.py
 python .agent/scripts/verify_doc_boundaries.py
 ```
 
+当前 RESET 边界由 `python tools/scripts/verify_red_blue_reset.py` 负责；它不创建 Session、不运行红队或蓝队。
 红蓝 Campaign Session 的公开记录一致性由 `python tools/scripts/verify_red_blue_session.py` 负责；它只验证已落盘的 YAML/Markdown 记录，不运行红队、蓝队或架构同步 Runtime。
 
-Round-006 以后使用 `verify_red_blue_workflow_v42.py` 验证 Fresh Context、Dual Thread、相同
+历史 V4.2 使用 `verify_red_blue_workflow_v42.py` 验证 Fresh Context、Dual Thread、相同
 Snapshot、Part-A Cold-Start、Red-only interview calibration、Deep-Dive Chain、问题冻结、
 Blue-only Canonical Writer、外部 ChatGPT Gate 和双轨状态。它不创建 Session、不启动 Round、
 不修改 Canonical，也不代签 Verdict。
@@ -33,7 +34,10 @@ Round-006 的中止收口还必须通过 `verify_red_blue_round006_closure.py`�
 `RB-GATE-REALIGNMENT-001` 使用专用 Gate verifier，检查 Closure Class、无环 Gate 依赖、
 用户决策包、原始 P0 记录保持 OPEN，以及 Canonical Sync 未应用。
 
-架构红蓝队任务先读取：
+当前架构 Red/Blue 任务先读取 `project-reconstruction-lab/05-red-blue/README.md`、
+`principles.md` 和 `workflow-status.md`；需要考古时再读取 `history/` 和指定 Session。
+
+架构红蓝队历史材料先读取：
 
 ```text
 project-reconstruction-lab/README.md

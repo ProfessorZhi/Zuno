@@ -6,6 +6,8 @@ architecture_state: ACCEPTED_TARGET_WITH_OPEN_EVIDENCE
 canonical_question: Zuno 为什么存在，Target Product、Domain、Capability、Runtime、Service、Data、Security 和 Eval 如何形成可反转的闭环？
 owner: Cross-cutting Architecture Owner
 acceptance_scope: Target Architecture baseline；实现、测量和外部资格尚未完成
+readability_state: READABILITY_BASELINE_REFOUNDED
+readability_gate: REQUIRED_BEFORE_NEXT_RED_BLUE_PROTOCOL
 document_role: cross-cutting integration source
 canonical_taxonomy: docs/project/architecture/ 仅保存四文件；History/Current/Target 状态由相邻 Canonical 层负责
 current_state_source: docs/project/status/ 和 docs/evidence/
@@ -14,6 +16,14 @@ decision_sources: docs/decisions/0008-legal-domain-kernel-and-host-boundary.md�
 > 本文先说明问题和产品动机，再说明 Target 责任边界，最后给出 Contract。历史项目由 `docs/project/history/` 负责；当前仓库由 `docs/project/status/current-reality.md` 和 `docs/evidence/` 负责。本正文不创建第二套事实状态机，也不把 Target 写成 Current。
 
 ## Part A — Architecture Narrative
+
+### 阅读地图
+
+第一次阅读只需回答四个问题：产品为什么存在？哪些内容只是 Target/Hypothesis？Domain State
+与 Runtime、Memory、Knowledge、Tool Effect 如何分开？复杂度在什么证据不足时应被删除？这些
+问题都在 Part A 用普通工程语言回答；Part B 只在需要实现或验证时展开 Contract、Version、
+Retry、Recovery、Security 和 Eval。理解顺序由架构问题决定，而不是由旧模块编号、服务清单
+或内部术语决定。
 
 ### 1. 为什么做这个系统
 
@@ -158,6 +168,12 @@ CRUD、小命令和外部互操作默认使用 HTTP / API；长运行 Agent Run�
 
 FastAPI 只拥有 Application / HTTP Interface；LangGraph 只拥有 Agent Control State。PostgreSQL 保存 Canonical Business / Domain State；Runtime Checkpoint 保存 Graph Control / Execution State。两者必须分别验证和恢复，不能把 Checkpoint 当成 Case Fact。
 
+### State、Version 与 Recovery Contract
+
+本节先给出跨 Domain、Runtime 和 Memory 的共同恢复原则：版本化业务事实由 Domain Owner
+管理；Runtime 只保存执行控制；Memory 只保存可按策略复用的上下文。任何新输入都必须比较
+依赖、版本、权限和副作用状态，再决定继续、重试、重规划或人工复核。
+
 ### Domain State、Runtime State 与 Memory
 
 Domain State 包括 Matter、DocumentVersion、Evidence、Fact、Event、Conflict、Dispute、Finding、HumanDecision 和 WorkProduct。Runtime State 包括 AgentRun、Plan、Step、Branch、Interrupt、Checkpoint 和 Budget。Memory 包括 Working、Session、Matter Context、Long-term 或 Reflexion Candidate，必须可以按策略过期或删除。
@@ -186,4 +202,4 @@ Developer、Staging、Production 是不同证据等级；Compose、Kubernetes、
 
 `Current` 只由代码、测试、Trace、Migration 或真实运行证据证明；`Target` 记录已接受的方向；`Hypothesis` 需要 Benchmark、Spike、Security Evidence 或 User Validation；`Future` 是长期可选；`UNKNOWN` 保留未恢复事实。当前开放 Gap 包括 Court QA、A/B/C、负载、故障注入、HA、备份恢复、Sandbox 资格、Provider 替换和外部许可。
 
-本轮不修改 Runtime、Schema、Migration、Dependencies、Infra 或 ADR，不启动 Red/Blue，不启动 Round-007，也不冻结最终模块或服务数量。总体架构图由 [`architecture-views.md`](architecture-views.md) 提供展示配对；它不拥有第二套架构事实。
+本文不承载工作流状态、实施授权或最终模块/服务数量。总体架构图由 [`architecture-views.md`](architecture-views.md) 提供展示配对；它不拥有第二套架构事实。

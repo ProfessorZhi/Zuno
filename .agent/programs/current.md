@@ -4,12 +4,9 @@ state: `no-active`
 active_program: `none`
 queued_program: `none`
 
-最近完成的 Program 收口了 ZUNO-RED-BLUE-WORKFLOW-V4.2-ROUND-006 Operational Pilot，并维护了 V4.2 的
-Execution Profile 与 Workflow 证据。它不修改 Canonical Architecture、Facts、ADR、Runtime、Schema、Migration、UI、Dependencies
-或 Production Infra。Bootstrap 阶段只重构 V4.2 的工作流、治理、Session Contract、Prompt、
-Context Packet、Artifact Handoff、Verifier、Routing 和 Docs Tests。Round-006 已按 Operational Pilot
-启动并在 Workflow Execution Blocker 后中止收口，当前不再继续运行，
-不修改业务 Runtime、Facts、ADR、Schema、Migration、UI、Dependencies 或 Production Infra。
+最近完成的 Program 已收口 Round-006 Operational Pilot 与 V4.2 profile；本次 Workspace Reset
+将上一代 Red/Blue 协议归档，并把 active 入口置为 RESET/PAUSED。它不修改 Canonical Architecture、
+Facts、ADR、Runtime、Schema、Migration、UI、Dependencies 或 Production Infra。
 
 该 Program 已 `COMPLETED / CLOSED`；当前没有 active 或 queued Program。
 
@@ -111,7 +108,7 @@ Runtime` 也不等于已证明优于 Host + Legal Backend。
 Fact Taxonomy V1                 DONE
 Fact Depth Recovery              OPEN EVIDENCE GAP / NO ACTIVE PROGRAM
 Product Problem Reconstruction   OPEN CANDIDATE / NO ACTIVE PROGRAM
-Architecture Red/Blue            READY / NO ACTIVE ROUND
+Architecture Red/Blue            RESET / NO ACTIVE PROTOCOL
 Architecture Red/Blue Round-002   COMPLETE (V3, 100Q, 80 NOVEL / 20 REGRESSION)
 Architecture Red/Blue Round-003   COMPLETE (V3.1, 100Q, 85 NOVEL / 15 REGRESSION)
 Interview Red Team               READY
@@ -129,12 +126,14 @@ Architecture Round-006            ABORTED_OPERATIONAL_PILOT / WORKFLOW_EXECUTION
 Round-006                         3 LIVE TURNS; ARCHITECTURE SCORE INVALID; CANDIDATE NONE
 V4.2 default profile              BATCH_ADVERSARIAL
 V4.2 experimental profile         LIVE_ADAPTIVE
-Round-007                         READY_FOR_BATCH_ADVERSARIAL_PILOT / NOT_STARTED
+Round-007                         CANCELLED_BEFORE_START
 Round-006 closure                 COMPLETE
-V4.2 batch profile consolidation  COMPLETE
+V4.2 batch profile consolidation  COMPLETE / HISTORY
+Architecture Readability Gate    IN_PROGRESS
+Next Red/Blue Protocol            NOT_DESIGNED
 ```
 
-V4.2 Addendum：`LIVE_ADAPTIVE` 每次只冻结一个 Question、一个 Answer 和一个 Chain Decision。
+历史 V4.2 Addendum：`LIVE_ADAPTIVE` 每次只冻结一个 Question、一个 Answer 和一个 Chain Decision。
 Red 读取上一 Answer 后动态选择 follow-up 或关闭 Chain；`question-answer-ledger.jsonl` append-only，
 禁止 whole-round question freeze（仅限 `LIVE_ADAPTIVE`）。`BATCH_ADVERSARIAL` 允许 Red Attack 一次形成完整 100Q，
 但 `RED_COUNTER` 必须基于 Blue Answers 动态攻击。Blue 不读取 calibration，且只在
@@ -142,10 +141,10 @@ Red 读取上一 Answer 后动态选择 follow-up 或关闭 Chain；`question-an
 `INTERVIEW_DEPTH` 与
 `INTERVIEW_EXPLAINABILITY` 属于问题质量和文档可解释性信号，不是实现或生产证据。
 
-V4.2 Profile：默认 `BATCH_ADVERSARIAL` 使用独立的 Attack、Defense、Counter、Counter Defense、
+历史 V4.2 Profile：默认 `BATCH_ADVERSARIAL` 使用独立的 Attack、Defense、Counter、Counter Defense、
 Synthesis 和 Judge Session；实验性 `LIVE_ADAPTIVE` 才使用逐题 Answer-triggered Handoff。两种
 Profile 都要求 Blue 在 Defense 阶段不修改 Candidate，且必须经过 ChatGPT External Verdict 才能
-Merge。Round-007 只登记为 Ready，不在本 Program 中启动。
+Merge。Round-007 已在启动前取消，不在当前 Program 中启动。
 
 ## V2 Round status
 

@@ -95,3 +95,9 @@ def test_not_started_retest_is_allowed(tmp_path: Path) -> None:
     session = _copy_fixture(tmp_path)
     _replace(session / "retest.md", "Result：PASS", "Result：NOT_STARTED")
     assert _verifier().verify_session(session) == []
+
+
+def test_reset_audit_is_not_a_campaign_session() -> None:
+    sessions_root = REPO_ROOT / "project-reconstruction-lab/sessions"
+    session_names = {path.name for path in _verifier()._session_dirs(sessions_root)}
+    assert "RB-RESET-001" not in session_names

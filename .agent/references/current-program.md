@@ -4,7 +4,8 @@ state: `no-active`
 active_program: `none`
 queued_program: `none`
 
-最近完成的是 Round-006 closure 与 V4.2 execution profile consolidation，已 `COMPLETED / CLOSED`。
+最近完成的是 Red/Blue Workspace Reset；上一代 Round-006 closure 与 V4.2 execution profile
+consolidation 保持为历史完成记录。
 详细执行契约见
 `.agent/programs/current.md`；项目级工作流和实施证据见
 `project-reconstruction-lab/README.md`。
@@ -45,7 +46,7 @@ Repository Fresh-State Reset        CLOSED
 Canonical Facts Taxonomy V1         DONE
 Fact Depth Recovery                 OPEN EVIDENCE GAP / NO ACTIVE PROGRAM
 Product / Architecture Reconstruction OPEN CANDIDATE / NO ACTIVE PROGRAM
-Red / Blue / Interview Review       READY / NO ACTIVE ROUND
+Red / Blue / Interview Review       RESET / NO ACTIVE PROTOCOL
 Canonical Architecture Sync         APPLIED / ACCEPTED_TARGET (V3.1.3 Round-005 review)
 Implementation Evidence Wave-001   COMPLETE (TASK-001 / TASK-003; independent Track B)
 V3 Round-003                       COMPLETE; V3.1.1 normalization COMPLETE; V3.1.2 Round-004 COMPLETE; V3.1.3 Round-005 COMPLETE; V3.1.3.1 Semantic Audit COMPLETE
@@ -54,9 +55,11 @@ V4.2 Workflow Bootstrap            ACCEPTED_WITH_DEBT / EXTERNAL_VERDICT_PROVIDE
 Round-006                         ABORTED_OPERATIONAL_PILOT / WORKFLOW_EXECUTION_BLOCKER; 3 LIVE TURNS; SCORE INVALID; CANDIDATE NONE
 V4.2 default profile              BATCH_ADVERSARIAL
 V4.2 experimental profile         LIVE_ADAPTIVE
-Round-007                         READY_FOR_BATCH_ADVERSARIAL_PILOT / NOT_STARTED
+Round-007                         CANCELLED_BEFORE_START
 Round-006 closure                 COMPLETE
-V4.2 batch profile consolidation  COMPLETE
+V4.2 batch profile consolidation  COMPLETE / HISTORY
+Architecture Readability Gate    IN_PROGRESS
+Next Red/Blue Protocol            NOT_DESIGNED
 ```
 
 Canonical Runtime Program V1 已完成并归档。可读历史摘要位于：

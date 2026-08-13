@@ -131,7 +131,8 @@ skill_routes:
   - name: "architecture-red-blue-v4-workflow"
     match:
       paths:
-        - "project-reconstruction-lab/**"
+        - "project-reconstruction-lab/05-red-blue/history/protocols/round-protocol-v4.md"
+        - "project-reconstruction-lab/05-red-blue/history/protocols/v4/**"
     docs_sync:
       - "project-reconstruction-lab/README.md"
       - "project-reconstruction-lab/05-red-blue/"
@@ -147,7 +148,8 @@ skill_routes:
   - name: "architecture-red-blue-v41-workflow"
     match:
       paths:
-        - "project-reconstruction-lab/05-red-blue/**"
+        - "project-reconstruction-lab/05-red-blue/history/protocols/round-protocol-v4.1.md"
+        - "project-reconstruction-lab/05-red-blue/history/protocols/v4.1/**"
         - "project-reconstruction-lab/sessions/RB-WORKFLOW-V4.1-BOOTSTRAP/**"
         - "tests/repo/test_red_blue_workflow_v41.py"
         - "tools/scripts/verify_red_blue_workflow_v41.py"
@@ -166,8 +168,8 @@ skill_routes:
   - name: "architecture-red-blue-v42-workflow"
     match:
       paths:
-        - "project-reconstruction-lab/05-red-blue/round-protocol-v4.2.md"
-        - "project-reconstruction-lab/05-red-blue/v4.2/**"
+        - "project-reconstruction-lab/05-red-blue/history/protocols/round-protocol-v4.2.md"
+        - "project-reconstruction-lab/05-red-blue/history/protocols/v4.2/**"
         - "project-reconstruction-lab/sessions/RB-WORKFLOW-V4.2-BOOTSTRAP/**"
         - "project-reconstruction-lab/sessions/RB-WORKFLOW-V4.2-ROUND-006/**"
         - "tests/repo/test_red_blue_workflow_v42.py"
@@ -188,6 +190,31 @@ skill_routes:
       - "python tools/scripts/verify_red_blue_workflow_v42.py --profile batch_adversarial --round project-reconstruction-lab/sessions/<batch-round-id>"
       - "pytest -q tests/repo/test_red_blue_workflow_v42.py -p no:cacheprovider"
       - "pytest -q tests/repo/test_red_blue_workflow_v42_batch_profile.py tests/repo/test_red_blue_round006_closure.py -p no:cacheprovider"
+
+  - name: "red-blue-reset-readability"
+    match:
+      paths:
+        - "project-reconstruction-lab/05-red-blue/README.md"
+        - "project-reconstruction-lab/05-red-blue/principles.md"
+        - "project-reconstruction-lab/05-red-blue/workflow-status.md"
+        - "project-reconstruction-lab/05-red-blue/history/**"
+        - "project-reconstruction-lab/sessions/RB-RESET-001/**"
+        - "tools/scripts/verify_red_blue_reset.py"
+        - "tests/repo/test_red_blue_reset.py"
+    docs_sync:
+      - "project-reconstruction-lab/05-red-blue/"
+      - "project-reconstruction-lab/sessions/RB-RESET-001/"
+      - "docs/project/architecture/"
+      - ".agent/programs/current.md"
+      - ".agent/references/current-program.md"
+      - ".agent/references/task-routing.md"
+      - ".agent/references/verification-map.md"
+    verify:
+      - "git diff --check"
+      - "python tools/scripts/verify_red_blue_reset.py"
+      - "python tools/scripts/verify_docs_entrypoints.py"
+      - "python tools/scripts/verify_markdown_internal_links.py"
+      - "python tools/agent/render_architecture.py --check"
 
   - name: "backend-agent-runtime"
     match:
