@@ -1,6 +1,6 @@
 version: 3
 
-purpose: "Route Zuno work to the new Product/Domain/Agents/Knowledge/Services/Data/Security/Eval/Deployment canonical taxonomy, Programs, and verification."
+purpose: "Route Zuno work to the consolidated project history, status, architecture, governance, evidence, Programs, and verification surfaces."
 
 system_identity:
   name: "Zuno Local Agent Skill System"
@@ -10,10 +10,9 @@ system_identity:
   active_program_root: ".agent/programs"
   formal_truth_root: "docs"
   formal_project_root: "docs/project"
-  formal_project_facts_root: "docs/project/facts"
+  formal_project_history_root: "docs/project/history"
   formal_architecture_root: "docs/project/architecture"
-  formal_taxonomy_root: "docs/project"
-  formal_status_root: "docs/status"
+  formal_status_root: "docs/project/status"
   history_root: "docs/history"
 
 runtime_boundary:
@@ -44,26 +43,18 @@ architecture_directory_contract:
     - "docs/project/architecture/architecture.md"
     - "docs/project/architecture/architecture-views.md"
     - "docs/project/architecture/architecture.html"
-  canonical_taxonomy:
-    - "docs/project/product/product-architecture.md"
-    - "docs/project/domain/legal-domain-model.md"
-    - "docs/project/domain/domain-state-lifecycle.md"
-    - "docs/project/agents/agent-platform.md"
-    - "docs/project/agents/multi-agent-runtime.md"
-    - "docs/project/knowledge/knowledge-evidence-architecture.md"
-    - "docs/project/services/service-architecture.md"
-    - "docs/project/data/data-ownership-and-recovery.md"
-    - "docs/project/security/security-architecture.md"
-    - "docs/project/eval/legal-eval-and-benchmark.md"
-    - "docs/project/deployment/microservice-deployment.md"
-  legacy_taxonomy: "docs/project/modules/README.md and docs/project/modules/01..11 are Superseded migration material"
+  canonical_project_layers:
+    - "docs/project/history/"
+    - "docs/project/status/"
+    - "docs/project/architecture/"
+  legacy_taxonomy: "docs/history/superseded-document-taxonomy/ contains the former facts, topic and 11-module materials; it is not an active route"
   presentation_pair:
     - "docs/project/architecture/architecture-views.md"
     - "docs/project/architecture/architecture.html"
   visual_source_role: "architecture-views.md and architecture.html are one paired diagram presentation surface; neither is an independent architecture fact source"
   reading_protocol:
-    human_question: "read architecture.md, then the relevant canonical taxonomy document"
-    implementation_or_review: "read architecture.md, owning taxonomy document, ADR/shared contracts, status/evidence, and active Program if any"
+    human_question: "read history or status first, then architecture.md for cross-layer design"
+    implementation_or_review: "read architecture.md, relevant status, ADR/governance, evidence, code, and active Program if any"
     no_mirror_rule: "do not create human/spec mirrors or a second Service/Domain/State registry"
   forbidden_content:
     - "module-specific second architecture documents in architecture/"
@@ -72,16 +63,15 @@ architecture_directory_contract:
     - "repo ownership matrix in architecture/"
 
 canonical_ownership:
-  domain_fact_owner: "docs/project/domain/legal-domain-model.md"
-  domain_lifecycle_owner: "docs/project/domain/domain-state-lifecycle.md"
-  runtime_control_owner: "docs/project/agents/agent-platform.md"
-  multi_agent_owner: "docs/project/agents/multi-agent-runtime.md"
-  knowledge_owner: "docs/project/knowledge/knowledge-evidence-architecture.md"
-  service_boundary_owner: "docs/project/services/service-architecture.md"
-  data_recovery_owner: "docs/project/data/data-ownership-and-recovery.md"
-  security_decision_owner: "docs/project/security/security-architecture.md"
-  eval_fact_owner: "docs/project/eval/legal-eval-and-benchmark.md"
-  deployment_owner: "docs/project/deployment/microservice-deployment.md"
+  project_history_owner: "docs/project/history/"
+  current_reality_owner: "docs/project/status/current-reality.md"
+  target_status_owner: "docs/project/status/target-status.md"
+  production_readiness_owner: "docs/project/status/production-readiness.md"
+  cross_layer_architecture_owner: "docs/project/architecture/architecture.md"
+  architecture_views_owner: "docs/project/architecture/architecture-views.md and architecture.html"
+  evidence_owner: "docs/evidence/"
+  decision_owner: "docs/decisions/"
+  governance_owner: "docs/governance/"
 
 shared_contracts:
   adr: "docs/decisions/0003-wave1-cross-module-contract-freeze.md"
@@ -103,15 +93,8 @@ skill_routes:
       - "docs/README.md"
       - "docs/project/README.md"
       - "docs/project/architecture/"
-      - "docs/project/product/"
-      - "docs/project/domain/"
-      - "docs/project/agents/"
-      - "docs/project/knowledge/"
-      - "docs/project/services/"
-      - "docs/project/data/"
-      - "docs/project/security/"
-      - "docs/project/eval/"
-      - "docs/project/deployment/"
+      - "docs/project/history/"
+      - "docs/project/status/"
       - "docs/decisions/"
       - "docs/governance/"
       - ".agent/system.yaml"
@@ -211,11 +194,9 @@ skill_routes:
       paths:
         - "src/backend/zuno/agent/**"
     docs_sync:
-      - "docs/project/agents/agent-platform.md"
-      - "docs/project/agents/multi-agent-runtime.md"
-      - "docs/project/domain/"
-      - "docs/project/services/service-architecture.md"
-      - "docs/project/data/data-ownership-and-recovery.md"
+      - "docs/project/architecture/architecture.md"
+      - "docs/project/status/"
+      - "docs/evidence/"
 
   - name: "knowledge-and-evidence"
     match:
@@ -225,9 +206,9 @@ skill_routes:
         - "src/backend/zuno/platform/services/rag/**"
         - "src/backend/zuno/platform/services/graphrag/**"
     docs_sync:
-      - "docs/project/knowledge/knowledge-evidence-architecture.md"
-      - "docs/project/domain/legal-domain-model.md"
-      - "docs/project/eval/legal-eval-and-benchmark.md"
+      - "docs/project/architecture/architecture.md"
+      - "docs/project/status/"
+      - "docs/evidence/"
 
   - name: "service-and-tool-boundary"
     match:
@@ -237,10 +218,10 @@ skill_routes:
         - "src/backend/zuno/platform/**"
         - "infra/docker/**"
     docs_sync:
-      - "docs/project/services/service-architecture.md"
-      - "docs/project/security/security-architecture.md"
-      - "docs/project/data/data-ownership-and-recovery.md"
-      - "docs/project/deployment/microservice-deployment.md"
+      - "docs/project/architecture/architecture.md"
+      - "docs/project/status/"
+      - "docs/governance/"
+      - "docs/evidence/"
 
 stop_conditions:
   - "public API field rename"

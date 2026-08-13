@@ -8,7 +8,7 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 VERIFIER = REPO_ROOT / "tools/scripts/verify_product_surface_target_protocols.py"
-FORMAL = REPO_ROOT / "docs/project/modules/01-product-surface.md"
+FORMAL = REPO_ROOT / "docs/history/superseded-document-taxonomy/project-modules/01-product-surface.md"
 
 
 def _load_verifier():

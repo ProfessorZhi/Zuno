@@ -269,17 +269,6 @@ def verify_round(session: Path) -> list[str]:
 
     for canonical in (
         ROOT / "docs/project/architecture/architecture.md",
-        ROOT / "docs/project/product/product-architecture.md",
-        ROOT / "docs/project/domain/legal-domain-model.md",
-        ROOT / "docs/project/domain/domain-state-lifecycle.md",
-        ROOT / "docs/project/agents/agent-platform.md",
-        ROOT / "docs/project/agents/multi-agent-runtime.md",
-        ROOT / "docs/project/knowledge/knowledge-evidence-architecture.md",
-        ROOT / "docs/project/services/service-architecture.md",
-        ROOT / "docs/project/data/data-ownership-and-recovery.md",
-        ROOT / "docs/project/security/security-architecture.md",
-        ROOT / "docs/project/eval/legal-eval-and-benchmark.md",
-        ROOT / "docs/project/deployment/microservice-deployment.md",
     ):
         canonical_text = text(canonical)
         if "## Part A — Architecture Narrative" not in canonical_text or "## Part B — Detailed Architecture Specification" not in canonical_text:

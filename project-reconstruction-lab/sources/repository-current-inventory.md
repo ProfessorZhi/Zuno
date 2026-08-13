@@ -11,7 +11,7 @@ scope: `src/backend/zuno`, `tests`, `tools/evals/zuno`, `pyproject.toml`, formal
 - Knowledge storage 已有 `DocumentVersion`、parse/index/quality/review/task/artifact 等通用记录；retrieval 代码有 Claim/Evidence 相关结构。
 - 在 `src/backend/zuno` 中，本轮针对 `Matter`、`Case`、`Party`、`Fact`、`Event`、`Conflict`、`Dispute`、`LegalIssue`、`StatuteVersion`、`LegalElement`、`ApplicableLaw`、`SimilarCase`、`HumanDecision`、`WorkProduct` 的类/表/Owner 闭环未找到可证明完整实现。
 - Agent Core 有通用 AgentRun、Plan/Step、checkpoint/控制语义的 Target 与实现表面；没有法律 Domain State 与其 Runtime 对账的 E2E Trace。
-- `docs/status/production-readiness.md` 为 `NOT_ESTABLISHED`；当前 Eval 文档保持 `MEASUREMENT_BLOCKED`/未证明边界。
+- `docs/project/status/production-readiness.md` 为 `NOT_ESTABLISHED`；当前 Eval 文档保持 `MEASUREMENT_BLOCKED`/未证明边界。
 
 ## 可复现检索
 
@@ -22,4 +22,4 @@ rg -n "Matter|Case|Party|Fact|Event|Conflict|Dispute|LegalIssue|StatuteVersion|L
 rg -n "DocumentVersion|Claim|Evidence|AgentRun|Checkpoint|ReviewTask|ReviewDecision" src/backend/zuno
 ```
 
-第二条命令可以定位通用 Document/Claim/Evidence/Agent 结构；第一条命令没有形成法律 Domain Kernel 的可运行 schema、mutation authority、staleness/dependency 和 review/audit 闭环证据。正式状态仍以代码、Migration、测试、Trace、Eval 和 `docs/status/` 为准。
+第二条命令可以定位通用 Document/Claim/Evidence/Agent 结构；第一条命令没有形成法律 Domain Kernel 的可运行 schema、mutation authority、staleness/dependency 和 review/audit 闭环证据。正式状态仍以代码、Migration、测试、Trace、Eval 和 `docs/project/status/` 为准。

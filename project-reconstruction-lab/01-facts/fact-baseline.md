@@ -4,7 +4,7 @@
 
 当前哪些历史事实已经足够稳定，哪些必须继续保持未知？
 
-正式历史事实以 [`docs/project/facts/`](../../docs/project/facts/README.md) 为准。本页是 Lab 的导航和审计摘要，不复制第二套事实正文。
+正式历史事实以 [`docs/project/history/`](../../docs/project/history/README.md) 为准。本页是 Lab 的导航和审计摘要，不复制第二套事实正文。
 
 ## 当前已确认锚点
 
@@ -24,4 +24,4 @@
 
 ## 操作规则
 
-每个新 Claim 先进入 `evidence-ledger.md`，再决定是否更新 `docs/project/facts/`。无法关闭的 Claim 进入 `open-questions.md` 或 `contradictions.md`。
+每个新 Claim 先进入 `evidence-ledger.md`，再决定是否更新 `docs/project/history/`。无法关闭的 Claim 进入 `open-questions.md` 或 `contradictions.md`。

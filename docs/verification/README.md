@@ -4,12 +4,13 @@
 
 正式事实源仍然是：
 
-- docs/project/architecture/
-- docs/project/modules/
-- docs/decisions/
-- docs/governance/
+- `docs/project/architecture/`
+- `docs/project/history/`
+- `docs/project/status/`
+- `docs/decisions/`
+- `docs/governance/`
 
-如果验证材料与正式架构冲突，以正式架构为准；如果验证暴露 Gap，应先修改正式事实源，再重新生成验证结果。
+如果验证材料与正式架构冲突，以正式架构为准；如果验证暴露 Gap，应先修改正式事实源，再重新生成验证结果。旧专题和模块原稿在 `docs/history/superseded-document-taxonomy/`，不再是验证入口。
 
 - [Architecture Red Team QA](./interview-qa/README.md)
 - [Project Reconstruction & Architecture Lab](../../project-reconstruction-lab/README.md)

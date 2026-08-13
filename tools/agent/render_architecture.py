@@ -26,19 +26,6 @@ EXPECTED_VIEWS = [
     "A/B/C Eval View",
     "Security Verification View",
 ]
-CANONICAL_TAXONOMY = [
-    "docs/project/product/product-architecture.md",
-    "docs/project/domain/legal-domain-model.md",
-    "docs/project/domain/domain-state-lifecycle.md",
-    "docs/project/agents/agent-platform.md",
-    "docs/project/agents/multi-agent-runtime.md",
-    "docs/project/knowledge/knowledge-evidence-architecture.md",
-    "docs/project/services/service-architecture.md",
-    "docs/project/data/data-ownership-and-recovery.md",
-    "docs/project/security/security-architecture.md",
-    "docs/project/eval/legal-eval-and-benchmark.md",
-    "docs/project/deployment/microservice-deployment.md",
-]
 CANONICAL_ARCHITECTURE_FILES = {"README.md", "architecture.md", "architecture-views.md", "architecture.html"}
 MERMAID_MODULE_URL = "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs"
 STALE_OUTPUTS = [
@@ -86,10 +73,9 @@ def validate_design(content: str) -> list[str]:
     for marker in required_sections + required_terms:
         if marker not in content:
             errors.append(f"architecture.md missing required marker: {marker}")
-    for path in CANONICAL_TAXONOMY:
-        marker = path.split("docs/project/", 1)[-1]
-        if marker not in content and Path(path).name not in content:
-            errors.append(f"architecture.md does not route to canonical document: {path}")
+    for marker in ("docs/project/history/", "docs/project/status/", "docs/project/architecture/"):
+        if marker not in content:
+            errors.append(f"architecture.md does not route to canonical project layer: {marker}")
     if "11 Logical Modules + 1 Architecture" not in content or "History" not in content:
         errors.append("architecture.md must record the old 11-module taxonomy as History")
     if "五个候选服务角色，不是冻结的服务数量，也不是 Current" not in content:
@@ -127,8 +113,8 @@ def validate_source(content: str) -> list[str]:
 def validate_html(content: str) -> list[str]:
     required = [
         "Zuno Target Architecture", '<script type="module">', 'fetch("./architecture-views.md")',
-        MERMAID_MODULE_URL, "../product/product-architecture.md", "../services/service-architecture.md",
-        "../../status/production-readiness.md", "diagram-dialog", "Mermaid source",
+        MERMAID_MODULE_URL, "../history/README.md", "../status/target-status.md",
+        "../../evidence/README.md", "../status/production-readiness.md", "diagram-dialog", "Mermaid source",
     ]
     errors = [f"architecture.html missing marker: {marker}" for marker in required if marker not in content]
     if "offline-svg" in content or "offline-diagram" in content:
@@ -149,14 +135,19 @@ def _directory_errors(root: Path) -> list[str]:
 
 def validate_taxonomy() -> list[str]:
     errors: list[str] = []
-    for relative_path in CANONICAL_TAXONOMY:
-        path = REPO_ROOT / relative_path
-        if not path.exists():
-            errors.append(f"missing canonical taxonomy document: {relative_path}")
-    for path in (REPO_ROOT / "docs/project/modules").glob("[0-9][0-9]-*.md"):
-        content = path.read_text(encoding="utf-8")
-        if "status: superseded-legacy-reference" not in content:
-            errors.append(f"legacy module lacks superseded status: {path.relative_to(REPO_ROOT)}")
+    for relative_path in (
+        "docs/project/README.md",
+        "docs/project/history/README.md",
+        "docs/project/status/README.md",
+        "docs/project/status/current-reality.md",
+        "docs/project/status/target-status.md",
+        "docs/project/status/production-readiness.md",
+    ):
+        if not (REPO_ROOT / relative_path).exists():
+            errors.append(f"missing canonical project entrypoint: {relative_path}")
+    archive = REPO_ROOT / "docs/history/superseded-document-taxonomy/README.md"
+    if not archive.exists():
+        errors.append("missing Superseded document taxonomy archive README")
     return errors
 
 

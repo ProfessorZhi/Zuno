@@ -15,7 +15,7 @@
 - interview_probability: HIGH
 - resume_trigger: TaskUnderstandingSnapshot、Memory、Agent Core
 - architecture_refs:
-  - docs/project/modules/06-agent-core-planning-control.md — § 1.5.1 用户到底想完成什么：TaskUnderstandingSnapshot
+  - docs/history/superseded-document-taxonomy/project-modules/06-agent-core-planning-control.md — § 1.5.1 用户到底想完成什么：TaskUnderstandingSnapshot
 - initial_coverage_status: FULL
 - coverage_status: FULL
 - gap_id: None
@@ -44,7 +44,7 @@
 
 ### Architecture Evidence
 
-- docs/project/modules/06-agent-core-planning-control.md — § 1.5.1 用户到底想完成什么：TaskUnderstandingSnapshot
+- docs/history/superseded-document-taxonomy/project-modules/06-agent-core-planning-control.md — § 1.5.1 用户到底想完成什么：TaskUnderstandingSnapshot
 
 ### 当前文档是否足够回答
 
@@ -63,7 +63,7 @@ None。
 - interview_probability: HIGH
 - resume_trigger: Task Contract、Context Need、Risk
 - architecture_refs:
-  - docs/project/modules/06-agent-core-planning-control.md — § 1.5.1 用户到底想完成什么：TaskUnderstandingSnapshot
+  - docs/history/superseded-document-taxonomy/project-modules/06-agent-core-planning-control.md — § 1.5.1 用户到底想完成什么：TaskUnderstandingSnapshot
 - initial_coverage_status: FULL
 - coverage_status: FULL
 - gap_id: None
@@ -92,7 +92,7 @@ TaskUnderstandingSnapshot 至少描述什么？
 
 ### Architecture Evidence
 
-- docs/project/modules/06-agent-core-planning-control.md — § 1.5.1 用户到底想完成什么：TaskUnderstandingSnapshot
+- docs/history/superseded-document-taxonomy/project-modules/06-agent-core-planning-control.md — § 1.5.1 用户到底想完成什么：TaskUnderstandingSnapshot
 
 ### 当前文档是否足够回答
 
@@ -111,7 +111,7 @@ None。
 - interview_probability: HIGH
 - resume_trigger: Proposal、Deterministic Validation、Owner
 - architecture_refs:
-  - docs/project/modules/06-agent-core-planning-control.md — § 1.5.1 用户到底想完成什么：TaskUnderstandingSnapshot
+  - docs/history/superseded-document-taxonomy/project-modules/06-agent-core-planning-control.md — § 1.5.1 用户到底想完成什么：TaskUnderstandingSnapshot
 - initial_coverage_status: FULL
 - coverage_status: FULL
 - gap_id: None
@@ -140,7 +140,7 @@ Proposal 不能直接驱动计划或扩大权限；歧义未解决时应 Clarify
 
 ### Architecture Evidence
 
-- docs/project/modules/06-agent-core-planning-control.md — § 1.5.1 用户到底想完成什么：TaskUnderstandingSnapshot
+- docs/history/superseded-document-taxonomy/project-modules/06-agent-core-planning-control.md — § 1.5.1 用户到底想完成什么：TaskUnderstandingSnapshot
 
 ### 当前文档是否足够回答
 
@@ -159,7 +159,7 @@ None。
 - interview_probability: HIGH
 - resume_trigger: Legal Reference Resolution、Review、Redline
 - architecture_refs:
-  - docs/project/modules/06-agent-core-planning-control.md — § 1.5.1 用户到底想完成什么：TaskUnderstandingSnapshot
+  - docs/history/superseded-document-taxonomy/project-modules/06-agent-core-planning-control.md — § 1.5.1 用户到底想完成什么：TaskUnderstandingSnapshot
   - docs/project/architecture/architecture.md — § State、Version 与 Recovery Contract
 - initial_coverage_status: FULL
 - coverage_status: FULL
@@ -189,7 +189,7 @@ Matter、Contract、Tenant、Workspace 和 Epoch 由各自 Owner 确认；模型
 
 ### Architecture Evidence
 
-- docs/project/modules/06-agent-core-planning-control.md — § 1.5.1 用户到底想完成什么：TaskUnderstandingSnapshot
+- docs/history/superseded-document-taxonomy/project-modules/06-agent-core-planning-control.md — § 1.5.1 用户到底想完成什么：TaskUnderstandingSnapshot
 - docs/project/architecture/architecture.md — § State、Version 与 Recovery Contract
 
 ### 当前文档是否足够回答
@@ -209,7 +209,7 @@ None。
 - interview_probability: HIGH
 - resume_trigger: Ambiguity、Clarification、User Input
 - architecture_refs:
-  - docs/project/modules/06-agent-core-planning-control.md — § 1.5.1 用户到底想完成什么：TaskUnderstandingSnapshot
+  - docs/history/superseded-document-taxonomy/project-modules/06-agent-core-planning-control.md — § 1.5.1 用户到底想完成什么：TaskUnderstandingSnapshot
 - initial_coverage_status: FULL
 - coverage_status: FULL
 - gap_id: None
@@ -238,7 +238,7 @@ None。
 
 ### Architecture Evidence
 
-- docs/project/modules/06-agent-core-planning-control.md — § 1.5.1 用户到底想完成什么：TaskUnderstandingSnapshot
+- docs/history/superseded-document-taxonomy/project-modules/06-agent-core-planning-control.md — § 1.5.1 用户到底想完成什么：TaskUnderstandingSnapshot
 
 ### 当前文档是否足够回答
 
@@ -257,7 +257,7 @@ None。
 - interview_probability: HIGH
 - resume_trigger: Information Extraction、Memory Write、Governance
 - architecture_refs:
-  - docs/project/modules/05-memory-context.md — § 5.2 为什么抽取出一个事实后不能直接写进长期记忆？
+  - docs/history/superseded-document-taxonomy/project-modules/05-memory-context.md — § 5.2 为什么抽取出一个事实后不能直接写进长期记忆？
 - initial_coverage_status: FULL
 - coverage_status: FULL
 - gap_id: None
@@ -286,7 +286,7 @@ None。
 
 ### Architecture Evidence
 
-- docs/project/modules/05-memory-context.md — § 5.2 为什么抽取出一个事实后不能直接写进长期记忆？
+- docs/history/superseded-document-taxonomy/project-modules/05-memory-context.md — § 5.2 为什么抽取出一个事实后不能直接写进长期记忆？
 
 ### 当前文档是否足够回答
 
@@ -305,7 +305,7 @@ None。
 - interview_probability: HIGH
 - resume_trigger: StructuredObservation、Session、Candidate
 - architecture_refs:
-  - docs/project/modules/05-memory-context.md — § 5.3 结构化观察：写入前的中间事实层
+  - docs/history/superseded-document-taxonomy/project-modules/05-memory-context.md — § 5.3 结构化观察：写入前的中间事实层
 - initial_coverage_status: FULL
 - coverage_status: FULL
 - gap_id: None
@@ -334,7 +334,7 @@ StructuredObservation 是什么？
 
 ### Architecture Evidence
 
-- docs/project/modules/05-memory-context.md — § 5.3 结构化观察：写入前的中间事实层
+- docs/history/superseded-document-taxonomy/project-modules/05-memory-context.md — § 5.3 结构化观察：写入前的中间事实层
 
 ### 当前文档是否足够回答
 
@@ -353,7 +353,7 @@ None。
 - interview_probability: HIGH
 - resume_trigger: Observation Schema、Event、Opinion、Correction
 - architecture_refs:
-  - docs/project/modules/05-memory-context.md — § 5.3 结构化观察：写入前的中间事实层
+  - docs/history/superseded-document-taxonomy/project-modules/05-memory-context.md — § 5.3 结构化观察：写入前的中间事实层
 - initial_coverage_status: FULL
 - coverage_status: FULL
 - gap_id: None
@@ -382,7 +382,7 @@ StructuredObservation 支持哪些类型？
 
 ### Architecture Evidence
 
-- docs/project/modules/05-memory-context.md — § 5.3 结构化观察：写入前的中间事实层
+- docs/history/superseded-document-taxonomy/project-modules/05-memory-context.md — § 5.3 结构化观察：写入前的中间事实层
 
 ### 当前文档是否足够回答
 
@@ -401,7 +401,7 @@ None。
 - interview_probability: HIGH
 - resume_trigger: Extraction Pipeline、Provenance、Temporal
 - architecture_refs:
-  - docs/project/modules/05-memory-context.md — § 5.2 为什么抽取出一个事实后不能直接写进长期记忆？
+  - docs/history/superseded-document-taxonomy/project-modules/05-memory-context.md — § 5.2 为什么抽取出一个事实后不能直接写进长期记忆？
 - initial_coverage_status: FULL
 - coverage_status: FULL
 - gap_id: None
@@ -430,7 +430,7 @@ Source Fact 经 Source Range/Version Pin 和 Security Pre-filter 后，经过 Ex
 
 ### Architecture Evidence
 
-- docs/project/modules/05-memory-context.md — § 5.2 为什么抽取出一个事实后不能直接写进长期记忆？
+- docs/history/superseded-document-taxonomy/project-modules/05-memory-context.md — § 5.2 为什么抽取出一个事实后不能直接写进长期记忆？
 
 ### 当前文档是否足够回答
 
@@ -449,7 +449,7 @@ None。
 - interview_probability: MEDIUM
 - resume_trigger: Model Role、Cost、Extraction
 - architecture_refs:
-  - docs/project/modules/05-memory-context.md — § 10.2 记忆抽取的三个实现层次
+  - docs/history/superseded-document-taxonomy/project-modules/05-memory-context.md — § 10.2 记忆抽取的三个实现层次
 - initial_coverage_status: FULL
 - coverage_status: FULL
 - gap_id: None
@@ -478,7 +478,7 @@ None。
 
 ### Architecture Evidence
 
-- docs/project/modules/05-memory-context.md — § 10.2 记忆抽取的三个实现层次
+- docs/history/superseded-document-taxonomy/project-modules/05-memory-context.md — § 10.2 记忆抽取的三个实现层次
 
 ### 当前文档是否足够回答
 
@@ -497,7 +497,7 @@ None。
 - interview_probability: HIGH
 - resume_trigger: Deterministic Component、Hash、Scope
 - architecture_refs:
-  - docs/project/modules/05-memory-context.md — § 5.2 为什么抽取出一个事实后不能直接写进长期记忆？
+  - docs/history/superseded-document-taxonomy/project-modules/05-memory-context.md — § 5.2 为什么抽取出一个事实后不能直接写进长期记忆？
 - initial_coverage_status: FULL
 - coverage_status: FULL
 - gap_id: None
@@ -526,7 +526,7 @@ Schema、日期、ID、Scope、Hash、Source Binding、Permission、Dedup 和状
 
 ### Architecture Evidence
 
-- docs/project/modules/05-memory-context.md — § 5.2 为什么抽取出一个事实后不能直接写进长期记忆？
+- docs/history/superseded-document-taxonomy/project-modules/05-memory-context.md — § 5.2 为什么抽取出一个事实后不能直接写进长期记忆？
 
 ### 当前文档是否足够回答
 
@@ -545,8 +545,8 @@ None。
 - interview_probability: HIGH
 - resume_trigger: Ownership、Ingestion、Knowledge、Memory
 - architecture_refs:
-  - docs/project/modules/05-memory-context.md — § 5.2 为什么抽取出一个事实后不能直接写进长期记忆？
-  - docs/project/modules/03-knowledge-agentic-graphrag.md — § Knowledge 与 Memory 为什么不能互相冒充
+  - docs/history/superseded-document-taxonomy/project-modules/05-memory-context.md — § 5.2 为什么抽取出一个事实后不能直接写进长期记忆？
+  - docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § Knowledge 与 Memory 为什么不能互相冒充
 - initial_coverage_status: FULL
 - coverage_status: FULL
 - gap_id: None
@@ -575,8 +575,8 @@ None。
 
 ### Architecture Evidence
 
-- docs/project/modules/05-memory-context.md — § 5.2 为什么抽取出一个事实后不能直接写进长期记忆？
-- docs/project/modules/03-knowledge-agentic-graphrag.md — § Knowledge 与 Memory 为什么不能互相冒充
+- docs/history/superseded-document-taxonomy/project-modules/05-memory-context.md — § 5.2 为什么抽取出一个事实后不能直接写进长期记忆？
+- docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § Knowledge 与 Memory 为什么不能互相冒充
 
 ### 当前文档是否足够回答
 
@@ -595,7 +595,7 @@ None。
 - interview_probability: HIGH
 - resume_trigger: Temporal Semantics、Event、Observation
 - architecture_refs:
-  - docs/project/modules/05-memory-context.md — § 5.4 Event、Semantic Fact 和时间不是同一个概念
+  - docs/history/superseded-document-taxonomy/project-modules/05-memory-context.md — § 5.4 Event、Semantic Fact 和时间不是同一个概念
 - initial_coverage_status: FULL
 - coverage_status: FULL
 - gap_id: None
@@ -624,7 +624,7 @@ occurred_at 是事件实际发生时间，observed_at 是系统获知时间，re
 
 ### Architecture Evidence
 
-- docs/project/modules/05-memory-context.md — § 5.4 Event、Semantic Fact 和时间不是同一个概念
+- docs/history/superseded-document-taxonomy/project-modules/05-memory-context.md — § 5.4 Event、Semantic Fact 和时间不是同一个概念
 
 ### 当前文档是否足够回答
 
@@ -643,7 +643,7 @@ None。
 - interview_probability: HIGH
 - resume_trigger: Event、Semantic Memory、Validity
 - architecture_refs:
-  - docs/project/modules/05-memory-context.md — § 5.4 Event、Semantic Fact 和时间不是同一个概念
+  - docs/history/superseded-document-taxonomy/project-modules/05-memory-context.md — § 5.4 Event、Semantic Fact 和时间不是同一个概念
 - initial_coverage_status: FULL
 - coverage_status: FULL
 - gap_id: None
@@ -672,7 +672,7 @@ Event 不等于 Episodic Memory，事件经历也必须经过 Capture 和 Govern
 
 ### Architecture Evidence
 
-- docs/project/modules/05-memory-context.md — § 5.4 Event、Semantic Fact 和时间不是同一个概念
+- docs/history/superseded-document-taxonomy/project-modules/05-memory-context.md — § 5.4 Event、Semantic Fact 和时间不是同一个概念
 
 ### 当前文档是否足够回答
 
@@ -691,8 +691,8 @@ None。
 - interview_probability: HIGH
 - resume_trigger: Temporal Succession、Supersede、Employer
 - architecture_refs:
-  - docs/project/modules/05-memory-context.md — § 5.4 Event、Semantic Fact 和时间不是同一个概念
-  - docs/project/modules/05-memory-context.md — § 27.2 MemoryVersion 的失效与处置状态必须区分
+  - docs/history/superseded-document-taxonomy/project-modules/05-memory-context.md — § 5.4 Event、Semantic Fact 和时间不是同一个概念
+  - docs/history/superseded-document-taxonomy/project-modules/05-memory-context.md — § 27.2 MemoryVersion 的失效与处置状态必须区分
 - initial_coverage_status: FULL
 - coverage_status: FULL
 - gap_id: None
@@ -721,8 +721,8 @@ None。
 
 ### Architecture Evidence
 
-- docs/project/modules/05-memory-context.md — § 5.4 Event、Semantic Fact 和时间不是同一个概念
-- docs/project/modules/05-memory-context.md — § 27.2 MemoryVersion 的失效与处置状态必须区分
+- docs/history/superseded-document-taxonomy/project-modules/05-memory-context.md — § 5.4 Event、Semantic Fact 和时间不是同一个概念
+- docs/history/superseded-document-taxonomy/project-modules/05-memory-context.md — § 27.2 MemoryVersion 的失效与处置状态必须区分
 
 ### 当前文档是否足够回答
 
@@ -741,7 +741,7 @@ None。
 - interview_probability: HIGH
 - resume_trigger: Capture Policy、Utility、Sensitivity
 - architecture_refs:
-  - docs/project/modules/05-memory-context.md — § 5.5 Memory Capture Policy 决定观察的去向
+  - docs/history/superseded-document-taxonomy/project-modules/05-memory-context.md — § 5.5 Memory Capture Policy 决定观察的去向
 - initial_coverage_status: FULL
 - coverage_status: FULL
 - gap_id: None
@@ -770,7 +770,7 @@ Memory Capture Policy 看哪些因素？
 
 ### Architecture Evidence
 
-- docs/project/modules/05-memory-context.md — § 5.5 Memory Capture Policy 决定观察的去向
+- docs/history/superseded-document-taxonomy/project-modules/05-memory-context.md — § 5.5 Memory Capture Policy 决定观察的去向
 
 ### 当前文档是否足够回答
 
@@ -789,7 +789,7 @@ None。
 - interview_probability: HIGH
 - resume_trigger: KEEP_SESSION_ONLY、CREATE_CANDIDATE、Security
 - architecture_refs:
-  - docs/project/modules/05-memory-context.md — § 5.5 Memory Capture Policy 决定观察的去向
+  - docs/history/superseded-document-taxonomy/project-modules/05-memory-context.md — § 5.5 Memory Capture Policy 决定观察的去向
 - initial_coverage_status: FULL
 - coverage_status: FULL
 - gap_id: None
@@ -818,7 +818,7 @@ CREATE_CANDIDATE 仍要经过写入门、治理和版本提交，不等于已有
 
 ### Architecture Evidence
 
-- docs/project/modules/05-memory-context.md — § 5.5 Memory Capture Policy 决定观察的去向
+- docs/history/superseded-document-taxonomy/project-modules/05-memory-context.md — § 5.5 Memory Capture Policy 决定观察的去向
 
 ### 当前文档是否足够回答
 
@@ -837,8 +837,8 @@ None。
 - interview_probability: HIGH
 - resume_trigger: Explicit User Request、Consent、Security
 - architecture_refs:
-  - docs/project/modules/05-memory-context.md — § 5.5 Memory Capture Policy 决定观察的去向
-  - docs/project/modules/09-security.md — § 26.1 Memory Scope、Poisoning 与来源撤销
+  - docs/history/superseded-document-taxonomy/project-modules/05-memory-context.md — § 5.5 Memory Capture Policy 决定观察的去向
+  - docs/history/superseded-document-taxonomy/project-modules/09-security.md — § 26.1 Memory Scope、Poisoning 与来源撤销
 - initial_coverage_status: FULL
 - coverage_status: FULL
 - gap_id: None
@@ -867,8 +867,8 @@ None。
 
 ### Architecture Evidence
 
-- docs/project/modules/05-memory-context.md — § 5.5 Memory Capture Policy 决定观察的去向
-- docs/project/modules/09-security.md — § 26.1 Memory Scope、Poisoning 与来源撤销
+- docs/history/superseded-document-taxonomy/project-modules/05-memory-context.md — § 5.5 Memory Capture Policy 决定观察的去向
+- docs/history/superseded-document-taxonomy/project-modules/09-security.md — § 26.1 Memory Scope、Poisoning 与来源撤销
 
 ### 当前文档是否足够回答
 
@@ -887,7 +887,7 @@ None。
 - interview_probability: HIGH
 - resume_trigger: Memory Kinds、Event、Procedural
 - architecture_refs:
-  - docs/project/modules/05-memory-context.md — § 5.4 Event、Semantic Fact 和时间不是同一个概念
+  - docs/history/superseded-document-taxonomy/project-modules/05-memory-context.md — § 5.4 Event、Semantic Fact 和时间不是同一个概念
 - initial_coverage_status: FULL
 - coverage_status: FULL
 - gap_id: None
@@ -916,7 +916,7 @@ Event 本身不等于长期 Memory；三种长期类型都须经过 Candidate、
 
 ### Architecture Evidence
 
-- docs/project/modules/05-memory-context.md — § 5.4 Event、Semantic Fact 和时间不是同一个概念
+- docs/history/superseded-document-taxonomy/project-modules/05-memory-context.md — § 5.4 Event、Semantic Fact 和时间不是同一个概念
 
 ### 当前文档是否足够回答
 
@@ -935,7 +935,7 @@ None。
 - interview_probability: HIGH
 - resume_trigger: MemoryWriteDecision、Governance、Version
 - architecture_refs:
-  - docs/project/modules/05-memory-context.md — § 27.1 MemoryWriteDecision：Governance 到 Version 的正式门
+  - docs/history/superseded-document-taxonomy/project-modules/05-memory-context.md — § 27.1 MemoryWriteDecision：Governance 到 Version 的正式门
 - initial_coverage_status: FULL
 - coverage_status: FULL
 - gap_id: None
@@ -964,7 +964,7 @@ CREATE_VERSION 只允许创建不可变 Version，不代表 Projection、Activat
 
 ### Architecture Evidence
 
-- docs/project/modules/05-memory-context.md — § 27.1 MemoryWriteDecision：Governance 到 Version 的正式门
+- docs/history/superseded-document-taxonomy/project-modules/05-memory-context.md — § 27.1 MemoryWriteDecision：Governance 到 Version 的正式门
 
 ### 当前文档是否足够回答
 
@@ -983,7 +983,7 @@ None。
 - interview_probability: HIGH
 - resume_trigger: Decision Record、Epoch、Conflict
 - architecture_refs:
-  - docs/project/modules/05-memory-context.md — § 27.1 MemoryWriteDecision：Governance 到 Version 的正式门
+  - docs/history/superseded-document-taxonomy/project-modules/05-memory-context.md — § 27.1 MemoryWriteDecision：Governance 到 Version 的正式门
 - initial_coverage_status: FULL
 - coverage_status: FULL
 - gap_id: None
@@ -1012,7 +1012,7 @@ MemoryWriteDecision 必须记录哪些证据？
 
 ### Architecture Evidence
 
-- docs/project/modules/05-memory-context.md — § 27.1 MemoryWriteDecision：Governance 到 Version 的正式门
+- docs/history/superseded-document-taxonomy/project-modules/05-memory-context.md — § 27.1 MemoryWriteDecision：Governance 到 Version 的正式门
 
 ### 当前文档是否足够回答
 
@@ -1031,7 +1031,7 @@ None。
 - interview_probability: HIGH
 - resume_trigger: Conflict、Dedup、Temporal
 - architecture_refs:
-  - docs/project/modules/05-memory-context.md — § 24.1 Conflict 不是覆盖
+  - docs/history/superseded-document-taxonomy/project-modules/05-memory-context.md — § 24.1 Conflict 不是覆盖
 - initial_coverage_status: FULL
 - coverage_status: FULL
 - gap_id: None
@@ -1060,7 +1060,7 @@ Exact Duplicate 可 Dedup，Temporal Succession 可新版本接替，Authority/S
 
 ### Architecture Evidence
 
-- docs/project/modules/05-memory-context.md — § 24.1 Conflict 不是覆盖
+- docs/history/superseded-document-taxonomy/project-modules/05-memory-context.md — § 24.1 Conflict 不是覆盖
 
 ### 当前文档是否足够回答
 
@@ -1079,8 +1079,8 @@ None。
 - interview_probability: HIGH
 - resume_trigger: Authority、Knowledge、Memory
 - architecture_refs:
-  - docs/project/modules/03-knowledge-agentic-graphrag.md — § Knowledge 与 Memory 为什么不能互相冒充
-  - docs/project/modules/05-memory-context.md — § 24.1 Conflict 不是覆盖
+  - docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § Knowledge 与 Memory 为什么不能互相冒充
+  - docs/history/superseded-document-taxonomy/project-modules/05-memory-context.md — § 24.1 Conflict 不是覆盖
 - initial_coverage_status: FULL
 - coverage_status: FULL
 - gap_id: None
@@ -1109,8 +1109,8 @@ Knowledge、Memory 和 User Input 有不同 Authority、Freshness、Applicabilit
 
 ### Architecture Evidence
 
-- docs/project/modules/03-knowledge-agentic-graphrag.md — § Knowledge 与 Memory 为什么不能互相冒充
-- docs/project/modules/05-memory-context.md — § 24.1 Conflict 不是覆盖
+- docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § Knowledge 与 Memory 为什么不能互相冒充
+- docs/history/superseded-document-taxonomy/project-modules/05-memory-context.md — § 24.1 Conflict 不是覆盖
 
 ### 当前文档是否足够回答
 
@@ -1129,7 +1129,7 @@ None。
 - interview_probability: HIGH
 - resume_trigger: Stale、Supersede、Validity
 - architecture_refs:
-  - docs/project/modules/05-memory-context.md — § 27.2 MemoryVersion 的失效与处置状态必须区分
+  - docs/history/superseded-document-taxonomy/project-modules/05-memory-context.md — § 27.2 MemoryVersion 的失效与处置状态必须区分
 - initial_coverage_status: FULL
 - coverage_status: FULL
 - gap_id: None
@@ -1158,7 +1158,7 @@ STALE 表示需要重新验证、保留历史价值；SUPERSEDED 表示已有明
 
 ### Architecture Evidence
 
-- docs/project/modules/05-memory-context.md — § 27.2 MemoryVersion 的失效与处置状态必须区分
+- docs/history/superseded-document-taxonomy/project-modules/05-memory-context.md — § 27.2 MemoryVersion 的失效与处置状态必须区分
 
 ### 当前文档是否足够回答
 
@@ -1177,7 +1177,7 @@ None。
 - interview_probability: HIGH
 - resume_trigger: Dormant、Utility、Privacy Delete
 - architecture_refs:
-  - docs/project/modules/05-memory-context.md — § 27.2 MemoryVersion 的失效与处置状态必须区分
+  - docs/history/superseded-document-taxonomy/project-modules/05-memory-context.md — § 27.2 MemoryVersion 的失效与处置状态必须区分
 - initial_coverage_status: FULL
 - coverage_status: FULL
 - gap_id: None
@@ -1206,7 +1206,7 @@ DORMANT 可重新评估 Utility；DELETED 必须传播到 Canonical Row、Projec
 
 ### Architecture Evidence
 
-- docs/project/modules/05-memory-context.md — § 27.2 MemoryVersion 的失效与处置状态必须区分
+- docs/history/superseded-document-taxonomy/project-modules/05-memory-context.md — § 27.2 MemoryVersion 的失效与处置状态必须区分
 
 ### 当前文档是否足够回答
 
@@ -1225,8 +1225,8 @@ None。
 - interview_probability: HIGH
 - resume_trigger: Quarantine、Conflict、Security
 - architecture_refs:
-  - docs/project/modules/05-memory-context.md — § 27.2 MemoryVersion 的失效与处置状态必须区分
-  - docs/project/modules/09-security.md — § 26.1 Memory Scope、Poisoning 与来源撤销
+  - docs/history/superseded-document-taxonomy/project-modules/05-memory-context.md — § 27.2 MemoryVersion 的失效与处置状态必须区分
+  - docs/history/superseded-document-taxonomy/project-modules/09-security.md — § 26.1 Memory Scope、Poisoning 与来源撤销
 - initial_coverage_status: FULL
 - coverage_status: FULL
 - gap_id: None
@@ -1255,8 +1255,8 @@ Quarantine 保留调查和审计所需 Provenance，但不代表事实有效，�
 
 ### Architecture Evidence
 
-- docs/project/modules/05-memory-context.md — § 27.2 MemoryVersion 的失效与处置状态必须区分
-- docs/project/modules/09-security.md — § 26.1 Memory Scope、Poisoning 与来源撤销
+- docs/history/superseded-document-taxonomy/project-modules/05-memory-context.md — § 27.2 MemoryVersion 的失效与处置状态必须区分
+- docs/history/superseded-document-taxonomy/project-modules/09-security.md — § 26.1 Memory Scope、Poisoning 与来源撤销
 
 ### 当前文档是否足够回答
 
@@ -1275,8 +1275,8 @@ None。
 - interview_probability: HIGH
 - resume_trigger: Revocation、Delete、Consent
 - architecture_refs:
-  - docs/project/modules/05-memory-context.md — § 41.1 Memory Provenance 与来源失效传播
-  - docs/project/modules/09-security.md — § 26.1 Memory Scope、Poisoning 与来源撤销
+  - docs/history/superseded-document-taxonomy/project-modules/05-memory-context.md — § 41.1 Memory Provenance 与来源失效传播
+  - docs/history/superseded-document-taxonomy/project-modules/09-security.md — § 26.1 Memory Scope、Poisoning 与来源撤销
 - initial_coverage_status: FULL
 - coverage_status: FULL
 - gap_id: None
@@ -1305,8 +1305,8 @@ REVOKED 表示权限、Consent 或 Policy 不再允许使用；DELETED 表示执
 
 ### Architecture Evidence
 
-- docs/project/modules/05-memory-context.md — § 41.1 Memory Provenance 与来源失效传播
-- docs/project/modules/09-security.md — § 26.1 Memory Scope、Poisoning 与来源撤销
+- docs/history/superseded-document-taxonomy/project-modules/05-memory-context.md — § 41.1 Memory Provenance 与来源失效传播
+- docs/history/superseded-document-taxonomy/project-modules/09-security.md — § 26.1 Memory Scope、Poisoning 与来源撤销
 
 ### 当前文档是否足够回答
 
@@ -1325,7 +1325,7 @@ None。
 - interview_probability: HIGH
 - resume_trigger: Provenance、SourceFactRef、Hash
 - architecture_refs:
-  - docs/project/modules/05-memory-context.md — § 41.1 Memory Provenance 与来源失效传播
+  - docs/history/superseded-document-taxonomy/project-modules/05-memory-context.md — § 41.1 Memory Provenance 与来源失效传播
 - initial_coverage_status: FULL
 - coverage_status: FULL
 - gap_id: None
@@ -1354,7 +1354,7 @@ MemoryVersion → MemoryCandidate → StructuredObservation → SourceFactRef，
 
 ### Architecture Evidence
 
-- docs/project/modules/05-memory-context.md — § 41.1 Memory Provenance 与来源失效传播
+- docs/history/superseded-document-taxonomy/project-modules/05-memory-context.md — § 41.1 Memory Provenance 与来源失效传播
 
 ### 当前文档是否足够回答
 
@@ -1373,7 +1373,7 @@ None。
 - interview_probability: HIGH
 - resume_trigger: Revalidation、Delete Derived、Privacy
 - architecture_refs:
-  - docs/project/modules/05-memory-context.md — § 41.1 Memory Provenance 与来源失效传播
+  - docs/history/superseded-document-taxonomy/project-modules/05-memory-context.md — § 41.1 Memory Provenance 与来源失效传播
 - initial_coverage_status: FULL
 - coverage_status: FULL
 - gap_id: None
@@ -1402,7 +1402,7 @@ Privacy Delete 不能只删 Canonical Row，还要处理 Vector、Graph、Lexica
 
 ### Architecture Evidence
 
-- docs/project/modules/05-memory-context.md — § 41.1 Memory Provenance 与来源失效传播
+- docs/history/superseded-document-taxonomy/project-modules/05-memory-context.md — § 41.1 Memory Provenance 与来源失效传播
 
 ### 当前文档是否足够回答
 
@@ -1421,7 +1421,7 @@ None。
 - interview_probability: HIGH
 - resume_trigger: Knowledge、Memory、Authority
 - architecture_refs:
-  - docs/project/modules/03-knowledge-agentic-graphrag.md — § Knowledge 与 Memory 为什么不能互相冒充
+  - docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § Knowledge 与 Memory 为什么不能互相冒充
 - initial_coverage_status: FULL
 - coverage_status: FULL
 - gap_id: None
@@ -1450,7 +1450,7 @@ Knowledge 拥有企业权威内容、版本和 Evidence；Memory 拥有用户、
 
 ### Architecture Evidence
 
-- docs/project/modules/03-knowledge-agentic-graphrag.md — § Knowledge 与 Memory 为什么不能互相冒充
+- docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § Knowledge 与 Memory 为什么不能互相冒充
 
 ### 当前文档是否足够回答
 
@@ -1469,7 +1469,7 @@ None。
 - interview_probability: HIGH
 - resume_trigger: knowledge_evidence_ref、Snapshot、Revalidation
 - architecture_refs:
-  - docs/project/modules/03-knowledge-agentic-graphrag.md — § Knowledge 与 Memory 为什么不能互相冒充
+  - docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § Knowledge 与 Memory 为什么不能互相冒充
 - initial_coverage_status: FULL
 - coverage_status: FULL
 - gap_id: None
@@ -1498,7 +1498,7 @@ Evidence 被替代、撤销、删除或 Scope 改变时，引用会触发 Memory
 
 ### Architecture Evidence
 
-- docs/project/modules/03-knowledge-agentic-graphrag.md — § Knowledge 与 Memory 为什么不能互相冒充
+- docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § Knowledge 与 Memory 为什么不能互相冒充
 
 ### 当前文档是否足够回答
 
@@ -1517,7 +1517,7 @@ None。
 - interview_probability: HIGH
 - resume_trigger: Recall、ContextPack、MemoryUseTrace
 - architecture_refs:
-  - docs/project/modules/05-memory-context.md — § 11.4 为什么 Memory Retrieval 不能直接等于 Context Injection？
+  - docs/history/superseded-document-taxonomy/project-modules/05-memory-context.md — § 11.4 为什么 Memory Retrieval 不能直接等于 Context Injection？
 - initial_coverage_status: FULL
 - coverage_status: FULL
 - gap_id: None
@@ -1546,7 +1546,7 @@ None。
 
 ### Architecture Evidence
 
-- docs/project/modules/05-memory-context.md — § 11.4 为什么 Memory Retrieval 不能直接等于 Context Injection？
+- docs/history/superseded-document-taxonomy/project-modules/05-memory-context.md — § 11.4 为什么 Memory Retrieval 不能直接等于 Context Injection？
 
 ### 当前文档是否足够回答
 
@@ -1565,7 +1565,7 @@ None。
 - interview_probability: HIGH
 - resume_trigger: Scope、Tenant、Matter、Epoch
 - architecture_refs:
-  - docs/project/modules/09-security.md — § 26.1 Memory Scope、Poisoning 与来源撤销
+  - docs/history/superseded-document-taxonomy/project-modules/09-security.md — § 26.1 Memory Scope、Poisoning 与来源撤销
 - initial_coverage_status: FULL
 - coverage_status: FULL
 - gap_id: None
@@ -1594,7 +1594,7 @@ Effective Memory Scope 如何计算？
 
 ### Architecture Evidence
 
-- docs/project/modules/09-security.md — § 26.1 Memory Scope、Poisoning 与来源撤销
+- docs/history/superseded-document-taxonomy/project-modules/09-security.md — § 26.1 Memory Scope、Poisoning 与来源撤销
 
 ### 当前文档是否足够回答
 
@@ -1613,8 +1613,8 @@ None。
 - interview_probability: HIGH
 - resume_trigger: Memory Poisoning、Instruction Trust、Tool Recipient
 - architecture_refs:
-  - docs/project/modules/09-security.md — § 26.1 Memory Scope、Poisoning 与来源撤销
-  - docs/project/modules/05-memory-context.md — § 55. Prompt Injection 与记忆污染
+  - docs/history/superseded-document-taxonomy/project-modules/09-security.md — § 26.1 Memory Scope、Poisoning 与来源撤销
+  - docs/history/superseded-document-taxonomy/project-modules/05-memory-context.md — § 55. Prompt Injection 与记忆污染
 - initial_coverage_status: FULL
 - coverage_status: FULL
 - gap_id: None
@@ -1643,8 +1643,8 @@ Security 先做 Instruction Trust、Source Scope 和 Memory Write Gate；未经�
 
 ### Architecture Evidence
 
-- docs/project/modules/09-security.md — § 26.1 Memory Scope、Poisoning 与来源撤销
-- docs/project/modules/05-memory-context.md — § 55. Prompt Injection 与记忆污染
+- docs/history/superseded-document-taxonomy/project-modules/09-security.md — § 26.1 Memory Scope、Poisoning 与来源撤销
+- docs/history/superseded-document-taxonomy/project-modules/05-memory-context.md — § 55. Prompt Injection 与记忆污染
 
 ### 当前文档是否足够回答
 
@@ -1663,7 +1663,7 @@ None。
 - interview_probability: HIGH
 - resume_trigger: Extraction Eval、Memory Eval、Deletion Propagation
 - architecture_refs:
-  - docs/project/modules/10-observability-eval.md — § 27.1 Memory 与 Information Extraction 的质量闭环
+  - docs/history/superseded-document-taxonomy/project-modules/10-observability-eval.md — § 27.1 Memory 与 Information Extraction 的质量闭环
 - initial_coverage_status: FULL
 - coverage_status: FULL
 - gap_id: None
@@ -1692,7 +1692,7 @@ None。
 
 ### Architecture Evidence
 
-- docs/project/modules/10-observability-eval.md — § 26.1 Memory 与 Information Extraction 的质量闭环
+- docs/history/superseded-document-taxonomy/project-modules/10-observability-eval.md — § 26.1 Memory 与 Information Extraction 的质量闭环
 
 ### 当前文档是否足够回答
 

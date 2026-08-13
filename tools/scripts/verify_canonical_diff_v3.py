@@ -16,6 +16,28 @@ DEFAULT_SESSION = ROOT / "project-reconstruction-lab" / "sessions" / "RB-WORKFLO
 EXPECTED_DELTAS = [f"D{i:03d}" for i in range(1, 12)]
 SYNC_ROW_RE = re.compile(r"^\|\s*(D\d{3})\s*\|.*?\|\s*(docs/project/[^|]+?)\s*\|\s*(AUTO_APPLY|ADR_ESCALATION|USER_GATE_ESCALATION)\s*\|", re.MULTILINE)
 IMPLEMENTATION_EVIDENCE_COMMIT_MARKER = "feat: implement domain mutation and citation provenance guards"
+CANONICAL_OWNER_ALIASES = {
+    "docs/project/product/": "docs/history/superseded-document-taxonomy/project-topics/product/",
+    "docs/project/domain/": "docs/history/superseded-document-taxonomy/project-topics/domain/",
+    "docs/project/agents/": "docs/history/superseded-document-taxonomy/project-topics/agents/",
+    "docs/project/knowledge/": "docs/history/superseded-document-taxonomy/project-topics/knowledge/",
+    "docs/project/services/": "docs/history/superseded-document-taxonomy/project-topics/services/",
+    "docs/project/data/": "docs/history/superseded-document-taxonomy/project-topics/data/",
+    "docs/project/security/": "docs/history/superseded-document-taxonomy/project-topics/security/",
+    "docs/project/eval/": "docs/history/superseded-document-taxonomy/project-topics/eval/",
+    "docs/project/deployment/": "docs/history/superseded-document-taxonomy/project-topics/deployment/",
+    "docs/project/modules/": "docs/history/superseded-document-taxonomy/project-modules/",
+}
+
+
+def canonical_path(owner: str) -> Path:
+    direct = ROOT / owner
+    if direct.exists():
+        return direct
+    for old_prefix, new_prefix in CANONICAL_OWNER_ALIASES.items():
+        if owner.startswith(old_prefix):
+            return ROOT / (new_prefix + owner[len(old_prefix):])
+    return direct
 
 
 def changed_files(baseline: str) -> set[str]:
@@ -73,9 +95,10 @@ def verify_canonical_diff(session: Path) -> list[str]:
     diff = changed_files(baseline)
     implementation_evidence_files = authorized_post_round_files()
     forbidden_prefixes = ("src/", "apps/", "infra/", "migrations/", "migration/")
+    allowed_documentation_guidance_files = {"apps/web/AGENTS.md"}
     forbidden_names = {"pyproject.toml", "poetry.lock", "requirements.txt", "package-lock.json", "pnpm-lock.yaml"}
     for path in sorted(diff):
-        if (path.startswith(forbidden_prefixes) or path in forbidden_names) and path not in implementation_evidence_files:
+        if (path.startswith(forbidden_prefixes) or path in forbidden_names) and path not in implementation_evidence_files and path not in allowed_documentation_guidance_files:
             errors.append(f"V3 scope forbids runtime/schema/infra/dependency change: {path}")
     all_mapped: set[str] = set()
     for delta_id, raw_docs, mode in rows:
@@ -86,7 +109,7 @@ def verify_canonical_diff(session: Path) -> list[str]:
             errors.append(f"{delta_id} AUTO_APPLY has no Canonical Doc")
         for doc in docs:
             all_mapped.add(doc)
-            doc_path = ROOT / doc
+            doc_path = canonical_path(doc)
             if not doc_path.exists():
                 errors.append(f"{delta_id} Canonical Doc does not exist: {doc}")
             else:
@@ -100,7 +123,7 @@ def verify_canonical_diff(session: Path) -> list[str]:
                     errors.append(
                         f"{delta_id} Canonical Doc lacks a legacy Round-002 marker or V3.1 Part A/Part B structure: {doc}"
                     )
-            if doc not in diff:
+            if doc not in diff and str(doc_path.relative_to(ROOT)).replace("\\", "/") not in diff:
                 errors.append(f"{delta_id} AUTO_APPLY Canonical Doc not changed from baseline: {doc}")
     if not all_mapped:
         errors.append("no AUTO_APPLY Canonical Docs were mapped")

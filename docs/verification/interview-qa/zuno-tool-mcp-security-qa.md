@@ -15,8 +15,8 @@
 - interview_probability: HIGH
 - resume_trigger: Tool Runtime、MCP、Permission、Effect、flow
 - architecture_refs:
-  - docs/project/modules/08-tool-runtime.md — § 9. 唯一 Tool Invocation Boundary
-  - docs/project/modules/08-tool-runtime.md — § 46. 固定执行顺序
+  - docs/history/superseded-document-taxonomy/project-modules/08-tool-runtime.md — § 9. 唯一 Tool Invocation Boundary
+  - docs/history/superseded-document-taxonomy/project-modules/08-tool-runtime.md — § 46. 固定执行顺序
 - initial_coverage_status: PARTIAL
 - coverage_status: FULL
 - gap_id: CLOSED-GAP-08-001
@@ -48,8 +48,8 @@ Function Calling 到真实代码执行之间发生了什么？
 
 ### Architecture Evidence
 
-- docs/project/modules/08-tool-runtime.md — § 9. 唯一 Tool Invocation Boundary
-- docs/project/modules/08-tool-runtime.md — § 46. 固定执行顺序
+- docs/history/superseded-document-taxonomy/project-modules/08-tool-runtime.md — § 9. 唯一 Tool Invocation Boundary
+- docs/history/superseded-document-taxonomy/project-modules/08-tool-runtime.md — § 46. 固定执行顺序
 
 ### 当前文档是否足够回答
 
@@ -68,8 +68,8 @@ None。第一轮记录的缺口已写回canonical architecture；本QA不新增�
 - interview_probability: HIGH
 - resume_trigger: Tool Runtime、MCP、Permission、Effect、boundary
 - architecture_refs:
-  - docs/project/modules/08-tool-runtime.md — § 4. Capability、Skill、Tool、API、SDK 和 MCP
-  - docs/project/modules/08-tool-runtime.md — § 7. Cross-module Ownership
+  - docs/history/superseded-document-taxonomy/project-modules/08-tool-runtime.md — § 4. Capability、Skill、Tool、API、SDK 和 MCP
+  - docs/history/superseded-document-taxonomy/project-modules/08-tool-runtime.md — § 7. Cross-module Ownership
 - initial_coverage_status: PARTIAL
 - coverage_status: FULL
 - gap_id: CLOSED-GAP-08-002
@@ -101,8 +101,8 @@ Capability描述系统能做什么，Skill描述如何完成任务，Tool Runtim
 
 ### Architecture Evidence
 
-- docs/project/modules/08-tool-runtime.md — § 4. Capability、Skill、Tool、API、SDK 和 MCP
-- docs/project/modules/08-tool-runtime.md — § 7. Cross-module Ownership
+- docs/history/superseded-document-taxonomy/project-modules/08-tool-runtime.md — § 4. Capability、Skill、Tool、API、SDK 和 MCP
+- docs/history/superseded-document-taxonomy/project-modules/08-tool-runtime.md — § 7. Cross-module Ownership
 
 ### 当前文档是否足够回答
 
@@ -121,8 +121,8 @@ None。第一轮记录的缺口已写回canonical architecture；本QA不新增�
 - interview_probability: HIGH
 - resume_trigger: Tool Runtime、MCP、Permission、Effect、flow
 - architecture_refs:
-  - docs/project/modules/08-tool-runtime.md — § 9. 唯一 Tool Invocation Boundary
-  - docs/project/modules/08-tool-runtime.md — § 46. 固定执行顺序
+  - docs/history/superseded-document-taxonomy/project-modules/08-tool-runtime.md — § 9. 唯一 Tool Invocation Boundary
+  - docs/history/superseded-document-taxonomy/project-modules/08-tool-runtime.md — § 46. 固定执行顺序
 - initial_coverage_status: FULL
 - coverage_status: FULL
 - gap_id: None
@@ -154,8 +154,8 @@ Capability/Skill层通过版本化 Capability Snapshot 和 Conformance 过滤暴
 
 ### Architecture Evidence
 
-- docs/project/modules/08-tool-runtime.md — § 9. 唯一 Tool Invocation Boundary
-- docs/project/modules/08-tool-runtime.md — § 46. 固定执行顺序
+- docs/history/superseded-document-taxonomy/project-modules/08-tool-runtime.md — § 9. 唯一 Tool Invocation Boundary
+- docs/history/superseded-document-taxonomy/project-modules/08-tool-runtime.md — § 46. 固定执行顺序
 
 ### 当前文档是否足够回答
 
@@ -174,8 +174,8 @@ None。第一轮记录的缺口已写回canonical architecture；本QA不新增�
 - interview_probability: HIGH
 - resume_trigger: Tool Runtime、MCP、Permission、Effect、version
 - architecture_refs:
-  - docs/project/modules/08-tool-runtime.md — § 24. ToolDefinition、ToolVersion 与 ToolOperation
-  - docs/project/modules/08-tool-runtime.md — § 40. Definition / Version / Installation 生命周期
+  - docs/history/superseded-document-taxonomy/project-modules/08-tool-runtime.md — § 24. ToolDefinition、ToolVersion 与 ToolOperation
+  - docs/history/superseded-document-taxonomy/project-modules/08-tool-runtime.md — § 40. Definition / Version / Installation 生命周期
 - initial_coverage_status: FULL
 - coverage_status: FULL
 - gap_id: None
@@ -207,8 +207,8 @@ Definition是工具语义，Version固定schema和实现语义，Operation是具
 
 ### Architecture Evidence
 
-- docs/project/modules/08-tool-runtime.md — § 24. ToolDefinition、ToolVersion 与 ToolOperation
-- docs/project/modules/08-tool-runtime.md — § 40. Definition / Version / Installation 生命周期
+- docs/history/superseded-document-taxonomy/project-modules/08-tool-runtime.md — § 24. ToolDefinition、ToolVersion 与 ToolOperation
+- docs/history/superseded-document-taxonomy/project-modules/08-tool-runtime.md — § 40. Definition / Version / Installation 生命周期
 
 ### 当前文档是否足够回答
 
@@ -227,8 +227,8 @@ None。第一轮记录的缺口已写回canonical architecture；本QA不新增�
 - interview_probability: HIGH
 - resume_trigger: Tool Runtime、MCP、Permission、Effect、prepared
 - architecture_refs:
-  - docs/project/modules/08-tool-runtime.md — § 30. PreparedToolAction
-  - docs/project/modules/08-tool-runtime.md — § 53. 两阶段 Security Gate
+  - docs/history/superseded-document-taxonomy/project-modules/08-tool-runtime.md — § 30. PreparedToolAction
+  - docs/history/superseded-document-taxonomy/project-modules/08-tool-runtime.md — § 53. 两阶段 Security Gate
 - initial_coverage_status: PARTIAL
 - coverage_status: FULL
 - gap_id: CLOSED-GAP-08-005
@@ -260,8 +260,8 @@ None。第一轮记录的缺口已写回canonical architecture；本QA不新增�
 
 ### Architecture Evidence
 
-- docs/project/modules/08-tool-runtime.md — § 30. PreparedToolAction
-- docs/project/modules/08-tool-runtime.md — § 53. 两阶段 Security Gate
+- docs/history/superseded-document-taxonomy/project-modules/08-tool-runtime.md — § 30. PreparedToolAction
+- docs/history/superseded-document-taxonomy/project-modules/08-tool-runtime.md — § 53. 两阶段 Security Gate
 
 ### 当前文档是否足够回答
 
@@ -280,8 +280,8 @@ None。第一轮记录的缺口已写回canonical architecture；本QA不新增�
 - interview_probability: HIGH
 - resume_trigger: Tool Runtime、MCP、Permission、Effect、prepared
 - architecture_refs:
-  - docs/project/modules/08-tool-runtime.md — § 30. PreparedToolAction
-  - docs/project/modules/08-tool-runtime.md — § 53. 两阶段 Security Gate
+  - docs/history/superseded-document-taxonomy/project-modules/08-tool-runtime.md — § 30. PreparedToolAction
+  - docs/history/superseded-document-taxonomy/project-modules/08-tool-runtime.md — § 53. 两阶段 Security Gate
 - initial_coverage_status: FULL
 - coverage_status: FULL
 - gap_id: None
@@ -313,8 +313,8 @@ canonical arguments 为什么重要？
 
 ### Architecture Evidence
 
-- docs/project/modules/08-tool-runtime.md — § 30. PreparedToolAction
-- docs/project/modules/08-tool-runtime.md — § 53. 两阶段 Security Gate
+- docs/history/superseded-document-taxonomy/project-modules/08-tool-runtime.md — § 30. PreparedToolAction
+- docs/history/superseded-document-taxonomy/project-modules/08-tool-runtime.md — § 53. 两阶段 Security Gate
 
 ### 当前文档是否足够回答
 
@@ -333,8 +333,8 @@ None。第一轮记录的缺口已写回canonical architecture；本QA不新增�
 - interview_probability: HIGH
 - resume_trigger: Tool Runtime、MCP、Permission、Effect、prepared
 - architecture_refs:
-  - docs/project/modules/08-tool-runtime.md — § 30. PreparedToolAction
-  - docs/project/modules/08-tool-runtime.md — § 53. 两阶段 Security Gate
+  - docs/history/superseded-document-taxonomy/project-modules/08-tool-runtime.md — § 30. PreparedToolAction
+  - docs/history/superseded-document-taxonomy/project-modules/08-tool-runtime.md — § 53. 两阶段 Security Gate
 - initial_coverage_status: FULL
 - coverage_status: FULL
 - gap_id: None
@@ -366,8 +366,8 @@ TargetResourceSet 要绑定什么？
 
 ### Architecture Evidence
 
-- docs/project/modules/08-tool-runtime.md — § 30. PreparedToolAction
-- docs/project/modules/08-tool-runtime.md — § 53. 两阶段 Security Gate
+- docs/history/superseded-document-taxonomy/project-modules/08-tool-runtime.md — § 30. PreparedToolAction
+- docs/history/superseded-document-taxonomy/project-modules/08-tool-runtime.md — § 53. 两阶段 Security Gate
 
 ### 当前文档是否足够回答
 
@@ -386,8 +386,8 @@ None。第一轮记录的缺口已写回canonical architecture；本QA不新增�
 - interview_probability: HIGH
 - resume_trigger: Tool Runtime、MCP、Permission、Effect、permission
 - architecture_refs:
-  - docs/project/modules/09-security.md — § 12. Agent、Task、Session 与用户权限交集
-  - docs/project/modules/09-security.md — § 15. Authorization 算法与 Decision Explanation
+  - docs/history/superseded-document-taxonomy/project-modules/09-security.md — § 12. Agent、Task、Session 与用户权限交集
+  - docs/history/superseded-document-taxonomy/project-modules/09-security.md — § 15. Authorization 算法与 Decision Explanation
 - initial_coverage_status: PARTIAL
 - coverage_status: FULL
 - gap_id: CLOSED-GAP-08-008
@@ -419,8 +419,8 @@ None。第一轮记录的缺口已写回canonical architecture；本QA不新增�
 
 ### Architecture Evidence
 
-- docs/project/modules/09-security.md — § 12. Agent、Task、Session 与用户权限交集
-- docs/project/modules/09-security.md — § 15. Authorization 算法与 Decision Explanation
+- docs/history/superseded-document-taxonomy/project-modules/09-security.md — § 12. Agent、Task、Session 与用户权限交集
+- docs/history/superseded-document-taxonomy/project-modules/09-security.md — § 15. Authorization 算法与 Decision Explanation
 
 ### 当前文档是否足够回答
 
@@ -439,8 +439,8 @@ None。第一轮记录的缺口已写回canonical architecture；本QA不新增�
 - interview_probability: HIGH
 - resume_trigger: Tool Runtime、MCP、Permission、Effect、permission
 - architecture_refs:
-  - docs/project/modules/09-security.md — § 12. Agent、Task、Session 与用户权限交集
-  - docs/project/modules/09-security.md — § 15. Authorization 算法与 Decision Explanation
+  - docs/history/superseded-document-taxonomy/project-modules/09-security.md — § 12. Agent、Task、Session 与用户权限交集
+  - docs/history/superseded-document-taxonomy/project-modules/09-security.md — § 15. Authorization 算法与 Decision Explanation
 - initial_coverage_status: FULL
 - coverage_status: FULL
 - gap_id: None
@@ -472,8 +472,8 @@ None。第一轮记录的缺口已写回canonical architecture；本QA不新增�
 
 ### Architecture Evidence
 
-- docs/project/modules/09-security.md — § 12. Agent、Task、Session 与用户权限交集
-- docs/project/modules/09-security.md — § 15. Authorization 算法与 Decision Explanation
+- docs/history/superseded-document-taxonomy/project-modules/09-security.md — § 12. Agent、Task、Session 与用户权限交集
+- docs/history/superseded-document-taxonomy/project-modules/09-security.md — § 15. Authorization 算法与 Decision Explanation
 
 ### 当前文档是否足够回答
 
@@ -492,8 +492,8 @@ None。第一轮记录的缺口已写回canonical architecture；本QA不新增�
 - interview_probability: HIGH
 - resume_trigger: Tool Runtime、MCP、Permission、Effect、permission
 - architecture_refs:
-  - docs/project/modules/09-security.md — § 12. Agent、Task、Session 与用户权限交集
-  - docs/project/modules/09-security.md — § 15. Authorization 算法与 Decision Explanation
+  - docs/history/superseded-document-taxonomy/project-modules/09-security.md — § 12. Agent、Task、Session 与用户权限交集
+  - docs/history/superseded-document-taxonomy/project-modules/09-security.md — § 15. Authorization 算法与 Decision Explanation
 - initial_coverage_status: FULL
 - coverage_status: FULL
 - gap_id: None
@@ -525,8 +525,8 @@ AgentVersion Capability Ceiling 解决什么问题？
 
 ### Architecture Evidence
 
-- docs/project/modules/09-security.md — § 12. Agent、Task、Session 与用户权限交集
-- docs/project/modules/09-security.md — § 15. Authorization 算法与 Decision Explanation
+- docs/history/superseded-document-taxonomy/project-modules/09-security.md — § 12. Agent、Task、Session 与用户权限交集
+- docs/history/superseded-document-taxonomy/project-modules/09-security.md — § 15. Authorization 算法与 Decision Explanation
 
 ### 当前文档是否足够回答
 
@@ -545,8 +545,8 @@ None。第一轮记录的缺口已写回canonical architecture；本QA不新增�
 - interview_probability: HIGH
 - resume_trigger: Tool Runtime、MCP、Permission、Effect、permission
 - architecture_refs:
-  - docs/project/modules/09-security.md — § 12. Agent、Task、Session 与用户权限交集
-  - docs/project/modules/09-security.md — § 15. Authorization 算法与 Decision Explanation
+  - docs/history/superseded-document-taxonomy/project-modules/09-security.md — § 12. Agent、Task、Session 与用户权限交集
+  - docs/history/superseded-document-taxonomy/project-modules/09-security.md — § 15. Authorization 算法与 Decision Explanation
 - initial_coverage_status: FULL
 - coverage_status: FULL
 - gap_id: None
@@ -578,8 +578,8 @@ Task Downscope 是什么？
 
 ### Architecture Evidence
 
-- docs/project/modules/09-security.md — § 12. Agent、Task、Session 与用户权限交集
-- docs/project/modules/09-security.md — § 15. Authorization 算法与 Decision Explanation
+- docs/history/superseded-document-taxonomy/project-modules/09-security.md — § 12. Agent、Task、Session 与用户权限交集
+- docs/history/superseded-document-taxonomy/project-modules/09-security.md — § 15. Authorization 算法与 Decision Explanation
 
 ### 当前文档是否足够回答
 
@@ -602,8 +602,8 @@ None。第一轮记录的缺口已写回canonical architecture；本QA不新增�
 - interview_probability: HIGH
 - resume_trigger: Tool Runtime、MCP、Permission、Effect、permission
 - architecture_refs:
-  - docs/project/modules/09-security.md — § 12. Agent、Task、Session 与用户权限交集
-  - docs/project/modules/09-security.md — § 15. Authorization 算法与 Decision Explanation
+  - docs/history/superseded-document-taxonomy/project-modules/09-security.md — § 12. Agent、Task、Session 与用户权限交集
+  - docs/history/superseded-document-taxonomy/project-modules/09-security.md — § 15. Authorization 算法与 Decision Explanation
 - initial_coverage_status: PARTIAL
 - coverage_status: FULL
 - gap_id: CLOSED-GAP-08-012
@@ -635,8 +635,8 @@ Epoch是撤销和策略变更的版本事实；执行前必须检查最新Epoch�
 
 ### Architecture Evidence
 
-- docs/project/modules/09-security.md — § 12. Agent、Task、Session 与用户权限交集
-- docs/project/modules/09-security.md — § 15. Authorization 算法与 Decision Explanation
+- docs/history/superseded-document-taxonomy/project-modules/09-security.md — § 12. Agent、Task、Session 与用户权限交集
+- docs/history/superseded-document-taxonomy/project-modules/09-security.md — § 15. Authorization 算法与 Decision Explanation
 
 ### 当前文档是否足够回答
 
@@ -655,8 +655,8 @@ None。第一轮记录的缺口已写回canonical architecture；本QA不新增�
 - interview_probability: HIGH
 - resume_trigger: Tool Runtime、MCP、Permission、Effect、approval
 - architecture_refs:
-  - docs/project/modules/08-tool-runtime.md — § 12. 需要审批的副作用
-  - docs/project/modules/09-security.md — § 29. PreparedToolAction 与 Approval
+  - docs/history/superseded-document-taxonomy/project-modules/08-tool-runtime.md — § 12. 需要审批的副作用
+  - docs/history/superseded-document-taxonomy/project-modules/09-security.md — § 29. PreparedToolAction 与 Approval
 - initial_coverage_status: PARTIAL
 - coverage_status: FULL
 - gap_id: CLOSED-GAP-08-013
@@ -688,8 +688,8 @@ Approval 需要绑定哪些事实？
 
 ### Architecture Evidence
 
-- docs/project/modules/08-tool-runtime.md — § 12. 需要审批的副作用
-- docs/project/modules/09-security.md — § 29. PreparedToolAction 与 Approval
+- docs/history/superseded-document-taxonomy/project-modules/08-tool-runtime.md — § 12. 需要审批的副作用
+- docs/history/superseded-document-taxonomy/project-modules/09-security.md — § 29. PreparedToolAction 与 Approval
 
 ### 当前文档是否足够回答
 
@@ -708,8 +708,8 @@ None。第一轮记录的缺口已写回canonical architecture；本QA不新增�
 - interview_probability: HIGH
 - resume_trigger: Tool Runtime、MCP、Permission、Effect、approval
 - architecture_refs:
-  - docs/project/modules/08-tool-runtime.md — § 12. 需要审批的副作用
-  - docs/project/modules/09-security.md — § 29. PreparedToolAction 与 Approval
+  - docs/history/superseded-document-taxonomy/project-modules/08-tool-runtime.md — § 12. 需要审批的副作用
+  - docs/history/superseded-document-taxonomy/project-modules/09-security.md — § 29. PreparedToolAction 与 Approval
 - initial_coverage_status: FULL
 - coverage_status: FULL
 - gap_id: None
@@ -741,8 +741,8 @@ None。第一轮记录的缺口已写回canonical architecture；本QA不新增�
 
 ### Architecture Evidence
 
-- docs/project/modules/08-tool-runtime.md — § 12. 需要审批的副作用
-- docs/project/modules/09-security.md — § 29. PreparedToolAction 与 Approval
+- docs/history/superseded-document-taxonomy/project-modules/08-tool-runtime.md — § 12. 需要审批的副作用
+- docs/history/superseded-document-taxonomy/project-modules/09-security.md — § 29. PreparedToolAction 与 Approval
 
 ### 当前文档是否足够回答
 
@@ -761,8 +761,8 @@ None。第一轮记录的缺口已写回canonical architecture；本QA不新增�
 - interview_probability: HIGH
 - resume_trigger: Tool Runtime、MCP、Permission、Effect、approval
 - architecture_refs:
-  - docs/project/modules/08-tool-runtime.md — § 12. 需要审批的副作用
-  - docs/project/modules/09-security.md — § 29. PreparedToolAction 与 Approval
+  - docs/history/superseded-document-taxonomy/project-modules/08-tool-runtime.md — § 12. 需要审批的副作用
+  - docs/history/superseded-document-taxonomy/project-modules/09-security.md — § 29. PreparedToolAction 与 Approval
 - initial_coverage_status: FULL
 - coverage_status: FULL
 - gap_id: None
@@ -794,8 +794,8 @@ Approval replay 怎么防？
 
 ### Architecture Evidence
 
-- docs/project/modules/08-tool-runtime.md — § 12. 需要审批的副作用
-- docs/project/modules/09-security.md — § 29. PreparedToolAction 与 Approval
+- docs/history/superseded-document-taxonomy/project-modules/08-tool-runtime.md — § 12. 需要审批的副作用
+- docs/history/superseded-document-taxonomy/project-modules/09-security.md — § 29. PreparedToolAction 与 Approval
 
 ### 当前文档是否足够回答
 
@@ -814,8 +814,8 @@ None。第一轮记录的缺口已写回canonical architecture；本QA不新增�
 - interview_probability: HIGH
 - resume_trigger: Tool Runtime、MCP、Permission、Effect、approval
 - architecture_refs:
-  - docs/project/modules/08-tool-runtime.md — § 12. 需要审批的副作用
-  - docs/project/modules/09-security.md — § 29. PreparedToolAction 与 Approval
+  - docs/history/superseded-document-taxonomy/project-modules/08-tool-runtime.md — § 12. 需要审批的副作用
+  - docs/history/superseded-document-taxonomy/project-modules/09-security.md — § 29. PreparedToolAction 与 Approval
 - initial_coverage_status: PARTIAL
 - coverage_status: FULL
 - gap_id: CLOSED-GAP-08-016
@@ -847,8 +847,8 @@ Security Epoch变化使Pending Approval失效，Tool Runtime重新Prepare/Author
 
 ### Architecture Evidence
 
-- docs/project/modules/08-tool-runtime.md — § 12. 需要审批的副作用
-- docs/project/modules/09-security.md — § 29. PreparedToolAction 与 Approval
+- docs/history/superseded-document-taxonomy/project-modules/08-tool-runtime.md — § 12. 需要审批的副作用
+- docs/history/superseded-document-taxonomy/project-modules/09-security.md — § 29. PreparedToolAction 与 Approval
 
 ### 当前文档是否足够回答
 
@@ -867,8 +867,8 @@ None。第一轮记录的缺口已写回canonical architecture；本QA不新增�
 - interview_probability: HIGH
 - resume_trigger: Tool Runtime、MCP、Permission、Effect、high-risk
 - architecture_refs:
-  - docs/project/modules/08-tool-runtime.md — § 9. 唯一 Tool Invocation Boundary
-  - docs/project/modules/08-tool-runtime.md — § 46. 固定执行顺序
+  - docs/history/superseded-document-taxonomy/project-modules/08-tool-runtime.md — § 9. 唯一 Tool Invocation Boundary
+  - docs/history/superseded-document-taxonomy/project-modules/08-tool-runtime.md — § 46. 固定执行顺序
 - initial_coverage_status: PARTIAL
 - coverage_status: FULL
 - gap_id: CLOSED-GAP-08-017
@@ -900,8 +900,8 @@ Agent只能提出Action或Simulation/Dry-run结果；真实Effect必须经过Pre
 
 ### Architecture Evidence
 
-- docs/project/modules/08-tool-runtime.md — § 9. 唯一 Tool Invocation Boundary
-- docs/project/modules/08-tool-runtime.md — § 46. 固定执行顺序
+- docs/history/superseded-document-taxonomy/project-modules/08-tool-runtime.md — § 9. 唯一 Tool Invocation Boundary
+- docs/history/superseded-document-taxonomy/project-modules/08-tool-runtime.md — § 46. 固定执行顺序
 
 ### 当前文档是否足够回答
 
@@ -920,8 +920,8 @@ None。第一轮记录的缺口已写回canonical architecture；本QA不新增�
 - interview_probability: HIGH
 - resume_trigger: Tool Runtime、MCP、Permission、Effect、high-risk
 - architecture_refs:
-  - docs/project/modules/08-tool-runtime.md — § 9. 唯一 Tool Invocation Boundary
-  - docs/project/modules/08-tool-runtime.md — § 46. 固定执行顺序
+  - docs/history/superseded-document-taxonomy/project-modules/08-tool-runtime.md — § 9. 唯一 Tool Invocation Boundary
+  - docs/history/superseded-document-taxonomy/project-modules/08-tool-runtime.md — § 46. 固定执行顺序
 - initial_coverage_status: FULL
 - coverage_status: FULL
 - gap_id: None
@@ -953,8 +953,8 @@ Dry-run只能返回计划、权限和可能影响的预览，不产生外部Effe
 
 ### Architecture Evidence
 
-- docs/project/modules/08-tool-runtime.md — § 9. 唯一 Tool Invocation Boundary
-- docs/project/modules/08-tool-runtime.md — § 46. 固定执行顺序
+- docs/history/superseded-document-taxonomy/project-modules/08-tool-runtime.md — § 9. 唯一 Tool Invocation Boundary
+- docs/history/superseded-document-taxonomy/project-modules/08-tool-runtime.md — § 46. 固定执行顺序
 
 ### 当前文档是否足够回答
 
@@ -973,8 +973,8 @@ None。第一轮记录的缺口已写回canonical architecture；本QA不新增�
 - interview_probability: HIGH
 - resume_trigger: Tool Runtime、MCP、Permission、Effect、mcp
 - architecture_refs:
-  - docs/project/modules/08-tool-runtime.md — § 16. MCP Tool
-  - docs/project/modules/08-tool-runtime.md — § 38. MCP 领域对象
+  - docs/history/superseded-document-taxonomy/project-modules/08-tool-runtime.md — § 16. MCP Tool
+  - docs/history/superseded-document-taxonomy/project-modules/08-tool-runtime.md — § 38. MCP 领域对象
 - initial_coverage_status: PARTIAL
 - coverage_status: FULL
 - gap_id: CLOSED-GAP-08-019
@@ -1006,8 +1006,8 @@ Function Calling是模型输出Tool Proposal的接口形态；MCP是Provider/Ser
 
 ### Architecture Evidence
 
-- docs/project/modules/08-tool-runtime.md — § 16. MCP Tool
-- docs/project/modules/08-tool-runtime.md — § 38. MCP 领域对象
+- docs/history/superseded-document-taxonomy/project-modules/08-tool-runtime.md — § 16. MCP Tool
+- docs/history/superseded-document-taxonomy/project-modules/08-tool-runtime.md — § 38. MCP 领域对象
 
 ### 当前文档是否足够回答
 
@@ -1026,8 +1026,8 @@ None。第一轮记录的缺口已写回canonical architecture；本QA不新增�
 - interview_probability: HIGH
 - resume_trigger: Tool Runtime、MCP、Permission、Effect、mcp
 - architecture_refs:
-  - docs/project/modules/08-tool-runtime.md — § 16. MCP Tool
-  - docs/project/modules/08-tool-runtime.md — § 38. MCP 领域对象
+  - docs/history/superseded-document-taxonomy/project-modules/08-tool-runtime.md — § 16. MCP Tool
+  - docs/history/superseded-document-taxonomy/project-modules/08-tool-runtime.md — § 38. MCP 领域对象
 - initial_coverage_status: FULL
 - coverage_status: FULL
 - gap_id: None
@@ -1059,8 +1059,8 @@ MCP Tool 和本地 Tool 的执行Owner相同吗？
 
 ### Architecture Evidence
 
-- docs/project/modules/08-tool-runtime.md — § 16. MCP Tool
-- docs/project/modules/08-tool-runtime.md — § 38. MCP 领域对象
+- docs/history/superseded-document-taxonomy/project-modules/08-tool-runtime.md — § 16. MCP Tool
+- docs/history/superseded-document-taxonomy/project-modules/08-tool-runtime.md — § 38. MCP 领域对象
 
 ### 当前文档是否足够回答
 
@@ -1079,8 +1079,8 @@ None。第一轮记录的缺口已写回canonical architecture；本QA不新增�
 - interview_probability: HIGH
 - resume_trigger: Tool Runtime、MCP、Permission、Effect、mcp
 - architecture_refs:
-  - docs/project/modules/08-tool-runtime.md — § 16. MCP Tool
-  - docs/project/modules/08-tool-runtime.md — § 38. MCP 领域对象
+  - docs/history/superseded-document-taxonomy/project-modules/08-tool-runtime.md — § 16. MCP Tool
+  - docs/history/superseded-document-taxonomy/project-modules/08-tool-runtime.md — § 38. MCP 领域对象
 - initial_coverage_status: PARTIAL
 - coverage_status: FULL
 - gap_id: CLOSED-GAP-08-021
@@ -1112,8 +1112,8 @@ MCP Protocol Version、Server Version、Capability Snapshot、Zuno ToolVersion�
 
 ### Architecture Evidence
 
-- docs/project/modules/08-tool-runtime.md — § 16. MCP Tool
-- docs/project/modules/08-tool-runtime.md — § 38. MCP 领域对象
+- docs/history/superseded-document-taxonomy/project-modules/08-tool-runtime.md — § 16. MCP Tool
+- docs/history/superseded-document-taxonomy/project-modules/08-tool-runtime.md — § 38. MCP 领域对象
 
 ### 当前文档是否足够回答
 
@@ -1132,8 +1132,8 @@ None。第一轮记录的缺口已写回canonical architecture；本QA不新增�
 - interview_probability: HIGH
 - resume_trigger: Tool Runtime、MCP、Permission、Effect、mcp
 - architecture_refs:
-  - docs/project/modules/08-tool-runtime.md — § 16. MCP Tool
-  - docs/project/modules/08-tool-runtime.md — § 38. MCP 领域对象
+  - docs/history/superseded-document-taxonomy/project-modules/08-tool-runtime.md — § 16. MCP Tool
+  - docs/history/superseded-document-taxonomy/project-modules/08-tool-runtime.md — § 38. MCP 领域对象
 - initial_coverage_status: FULL
 - coverage_status: FULL
 - gap_id: None
@@ -1165,8 +1165,8 @@ tools/list 的结果应该怎样进入 Agent？
 
 ### Architecture Evidence
 
-- docs/project/modules/08-tool-runtime.md — § 16. MCP Tool
-- docs/project/modules/08-tool-runtime.md — § 38. MCP 领域对象
+- docs/history/superseded-document-taxonomy/project-modules/08-tool-runtime.md — § 16. MCP Tool
+- docs/history/superseded-document-taxonomy/project-modules/08-tool-runtime.md — § 38. MCP 领域对象
 
 ### 当前文档是否足够回答
 
@@ -1189,8 +1189,8 @@ None。第一轮记录的缺口已写回canonical architecture；本QA不新增�
 - interview_probability: HIGH
 - resume_trigger: Tool Runtime、MCP、Permission、Effect、mcp
 - architecture_refs:
-  - docs/project/modules/08-tool-runtime.md — § 16. MCP Tool
-  - docs/project/modules/08-tool-runtime.md — § 38. MCP 领域对象
+  - docs/history/superseded-document-taxonomy/project-modules/08-tool-runtime.md — § 16. MCP Tool
+  - docs/history/superseded-document-taxonomy/project-modules/08-tool-runtime.md — § 38. MCP 领域对象
 - initial_coverage_status: PARTIAL
 - coverage_status: FULL
 - gap_id: CLOSED-GAP-08-023
@@ -1222,8 +1222,8 @@ list_changed 到来后发生什么？
 
 ### Architecture Evidence
 
-- docs/project/modules/08-tool-runtime.md — § 16. MCP Tool
-- docs/project/modules/08-tool-runtime.md — § 38. MCP 领域对象
+- docs/history/superseded-document-taxonomy/project-modules/08-tool-runtime.md — § 16. MCP Tool
+- docs/history/superseded-document-taxonomy/project-modules/08-tool-runtime.md — § 38. MCP 领域对象
 
 ### 当前文档是否足够回答
 
@@ -1242,8 +1242,8 @@ None。第一轮记录的缺口已写回canonical architecture；本QA不新增�
 - interview_probability: HIGH
 - resume_trigger: Tool Runtime、MCP、Permission、Effect、mcp
 - architecture_refs:
-  - docs/project/modules/08-tool-runtime.md — § 16. MCP Tool
-  - docs/project/modules/08-tool-runtime.md — § 38. MCP 领域对象
+  - docs/history/superseded-document-taxonomy/project-modules/08-tool-runtime.md — § 16. MCP Tool
+  - docs/history/superseded-document-taxonomy/project-modules/08-tool-runtime.md — § 38. MCP 领域对象
 - initial_coverage_status: FULL
 - coverage_status: FULL
 - gap_id: None
@@ -1275,8 +1275,8 @@ MCP schema 在审批后、Dispatch前改变怎么办？
 
 ### Architecture Evidence
 
-- docs/project/modules/08-tool-runtime.md — § 16. MCP Tool
-- docs/project/modules/08-tool-runtime.md — § 38. MCP 领域对象
+- docs/history/superseded-document-taxonomy/project-modules/08-tool-runtime.md — § 16. MCP Tool
+- docs/history/superseded-document-taxonomy/project-modules/08-tool-runtime.md — § 38. MCP 领域对象
 
 ### 当前文档是否足够回答
 
@@ -1295,8 +1295,8 @@ None。第一轮记录的缺口已写回canonical architecture；本QA不新增�
 - interview_probability: HIGH
 - resume_trigger: Tool Runtime、MCP、Permission、Effect、mcp
 - architecture_refs:
-  - docs/project/modules/08-tool-runtime.md — § 16. MCP Tool
-  - docs/project/modules/08-tool-runtime.md — § 38. MCP 领域对象
+  - docs/history/superseded-document-taxonomy/project-modules/08-tool-runtime.md — § 16. MCP Tool
+  - docs/history/superseded-document-taxonomy/project-modules/08-tool-runtime.md — § 38. MCP 领域对象
 - initial_coverage_status: FULL
 - coverage_status: FULL
 - gap_id: None
@@ -1328,8 +1328,8 @@ MCP schema 在已经Dispatch后改变怎么办？
 
 ### Architecture Evidence
 
-- docs/project/modules/08-tool-runtime.md — § 16. MCP Tool
-- docs/project/modules/08-tool-runtime.md — § 38. MCP 领域对象
+- docs/history/superseded-document-taxonomy/project-modules/08-tool-runtime.md — § 16. MCP Tool
+- docs/history/superseded-document-taxonomy/project-modules/08-tool-runtime.md — § 38. MCP 领域对象
 
 ### 当前文档是否足够回答
 
@@ -1348,8 +1348,8 @@ None。第一轮记录的缺口已写回canonical architecture；本QA不新增�
 - interview_probability: HIGH
 - resume_trigger: Tool Runtime、MCP、Permission、Effect、mcp
 - architecture_refs:
-  - docs/project/modules/08-tool-runtime.md — § 16. MCP Tool
-  - docs/project/modules/08-tool-runtime.md — § 38. MCP 领域对象
+  - docs/history/superseded-document-taxonomy/project-modules/08-tool-runtime.md — § 16. MCP Tool
+  - docs/history/superseded-document-taxonomy/project-modules/08-tool-runtime.md — § 38. MCP 领域对象
 - initial_coverage_status: FULL
 - coverage_status: FULL
 - gap_id: None
@@ -1381,8 +1381,8 @@ Tool 被删除或改名怎么办？
 
 ### Architecture Evidence
 
-- docs/project/modules/08-tool-runtime.md — § 16. MCP Tool
-- docs/project/modules/08-tool-runtime.md — § 38. MCP 领域对象
+- docs/history/superseded-document-taxonomy/project-modules/08-tool-runtime.md — § 16. MCP Tool
+- docs/history/superseded-document-taxonomy/project-modules/08-tool-runtime.md — § 38. MCP 领域对象
 
 ### 当前文档是否足够回答
 
@@ -1401,8 +1401,8 @@ None。第一轮记录的缺口已写回canonical architecture；本QA不新增�
 - interview_probability: HIGH
 - resume_trigger: Tool Runtime、MCP、Permission、Effect、mcp
 - architecture_refs:
-  - docs/project/modules/08-tool-runtime.md — § 16. MCP Tool
-  - docs/project/modules/08-tool-runtime.md — § 38. MCP 领域对象
+  - docs/history/superseded-document-taxonomy/project-modules/08-tool-runtime.md — § 16. MCP Tool
+  - docs/history/superseded-document-taxonomy/project-modules/08-tool-runtime.md — § 38. MCP 领域对象
 - initial_coverage_status: FULL
 - coverage_status: FULL
 - gap_id: None
@@ -1434,8 +1434,8 @@ Zuno 能否 rollback 外部 MCP Server？
 
 ### Architecture Evidence
 
-- docs/project/modules/08-tool-runtime.md — § 16. MCP Tool
-- docs/project/modules/08-tool-runtime.md — § 38. MCP 领域对象
+- docs/history/superseded-document-taxonomy/project-modules/08-tool-runtime.md — § 16. MCP Tool
+- docs/history/superseded-document-taxonomy/project-modules/08-tool-runtime.md — § 38. MCP 领域对象
 
 ### 当前文档是否足够回答
 
@@ -1454,8 +1454,8 @@ None。第一轮记录的缺口已写回canonical architecture；本QA不新增�
 - interview_probability: HIGH
 - resume_trigger: Tool Runtime、MCP、Permission、Effect、effect
 - architecture_refs:
-  - docs/project/modules/08-tool-runtime.md — § 20. UNKNOWN Effect 与 Reconciliation
-  - docs/project/modules/08-tool-runtime.md — § 36. EffectReconciliation
+  - docs/history/superseded-document-taxonomy/project-modules/08-tool-runtime.md — § 20. UNKNOWN Effect 与 Reconciliation
+  - docs/history/superseded-document-taxonomy/project-modules/08-tool-runtime.md — § 36. EffectReconciliation
 - initial_coverage_status: PARTIAL
 - coverage_status: FULL
 - gap_id: CLOSED-GAP-08-028
@@ -1487,8 +1487,8 @@ Dispatch前可确定未发送并按规则Retry；Dispatch后可能已产生Effec
 
 ### Architecture Evidence
 
-- docs/project/modules/08-tool-runtime.md — § 20. UNKNOWN Effect 与 Reconciliation
-- docs/project/modules/08-tool-runtime.md — § 36. EffectReconciliation
+- docs/history/superseded-document-taxonomy/project-modules/08-tool-runtime.md — § 20. UNKNOWN Effect 与 Reconciliation
+- docs/history/superseded-document-taxonomy/project-modules/08-tool-runtime.md — § 36. EffectReconciliation
 
 ### 当前文档是否足够回答
 
@@ -1507,8 +1507,8 @@ None。第一轮记录的缺口已写回canonical architecture；本QA不新增�
 - interview_probability: HIGH
 - resume_trigger: Tool Runtime、MCP、Permission、Effect、effect
 - architecture_refs:
-  - docs/project/modules/08-tool-runtime.md — § 20. UNKNOWN Effect 与 Reconciliation
-  - docs/project/modules/08-tool-runtime.md — § 36. EffectReconciliation
+  - docs/history/superseded-document-taxonomy/project-modules/08-tool-runtime.md — § 20. UNKNOWN Effect 与 Reconciliation
+  - docs/history/superseded-document-taxonomy/project-modules/08-tool-runtime.md — § 36. EffectReconciliation
 - initial_coverage_status: FULL
 - coverage_status: FULL
 - gap_id: None
@@ -1540,8 +1540,8 @@ Provider返回2xx是否等于Effect成功？
 
 ### Architecture Evidence
 
-- docs/project/modules/08-tool-runtime.md — § 20. UNKNOWN Effect 与 Reconciliation
-- docs/project/modules/08-tool-runtime.md — § 36. EffectReconciliation
+- docs/history/superseded-document-taxonomy/project-modules/08-tool-runtime.md — § 20. UNKNOWN Effect 与 Reconciliation
+- docs/history/superseded-document-taxonomy/project-modules/08-tool-runtime.md — § 36. EffectReconciliation
 
 ### 当前文档是否足够回答
 
@@ -1560,8 +1560,8 @@ None。第一轮记录的缺口已写回canonical architecture；本QA不新增�
 - interview_probability: HIGH
 - resume_trigger: Tool Runtime、MCP、Permission、Effect、effect
 - architecture_refs:
-  - docs/project/modules/08-tool-runtime.md — § 20. UNKNOWN Effect 与 Reconciliation
-  - docs/project/modules/08-tool-runtime.md — § 36. EffectReconciliation
+  - docs/history/superseded-document-taxonomy/project-modules/08-tool-runtime.md — § 20. UNKNOWN Effect 与 Reconciliation
+  - docs/history/superseded-document-taxonomy/project-modules/08-tool-runtime.md — § 36. EffectReconciliation
 - initial_coverage_status: PARTIAL
 - coverage_status: FULL
 - gap_id: CLOSED-GAP-08-030
@@ -1593,8 +1593,8 @@ Effect UNKNOWN 为什么禁止盲目Retry？
 
 ### Architecture Evidence
 
-- docs/project/modules/08-tool-runtime.md — § 20. UNKNOWN Effect 与 Reconciliation
-- docs/project/modules/08-tool-runtime.md — § 36. EffectReconciliation
+- docs/history/superseded-document-taxonomy/project-modules/08-tool-runtime.md — § 20. UNKNOWN Effect 与 Reconciliation
+- docs/history/superseded-document-taxonomy/project-modules/08-tool-runtime.md — § 36. EffectReconciliation
 
 ### 当前文档是否足够回答
 
@@ -1613,8 +1613,8 @@ None。第一轮记录的缺口已写回canonical architecture；本QA不新增�
 - interview_probability: HIGH
 - resume_trigger: Tool Runtime、MCP、Permission、Effect、idempotency
 - architecture_refs:
-  - docs/project/modules/08-tool-runtime.md — § 47. 幂等和 Effect Assurance
-  - docs/project/modules/11-infrastructure.md — § 44. 一致性与幂等原则
+  - docs/history/superseded-document-taxonomy/project-modules/08-tool-runtime.md — § 47. 幂等和 Effect Assurance
+  - docs/history/superseded-document-taxonomy/project-modules/11-infrastructure.md — § 44. 一致性与幂等原则
 - initial_coverage_status: FULL
 - coverage_status: FULL
 - gap_id: None
@@ -1646,8 +1646,8 @@ Idempotency Key 防什么？
 
 ### Architecture Evidence
 
-- docs/project/modules/08-tool-runtime.md — § 47. 幂等和 Effect Assurance
-- docs/project/modules/11-infrastructure.md — § 44. 一致性与幂等原则
+- docs/history/superseded-document-taxonomy/project-modules/08-tool-runtime.md — § 47. 幂等和 Effect Assurance
+- docs/history/superseded-document-taxonomy/project-modules/11-infrastructure.md — § 44. 一致性与幂等原则
 
 ### 当前文档是否足够回答
 
@@ -1666,8 +1666,8 @@ None。第一轮记录的缺口已写回canonical architecture；本QA不新增�
 - interview_probability: HIGH
 - resume_trigger: Tool Runtime、MCP、Permission、Effect、idempotency
 - architecture_refs:
-  - docs/project/modules/08-tool-runtime.md — § 47. 幂等和 Effect Assurance
-  - docs/project/modules/11-infrastructure.md — § 44. 一致性与幂等原则
+  - docs/history/superseded-document-taxonomy/project-modules/08-tool-runtime.md — § 47. 幂等和 Effect Assurance
+  - docs/history/superseded-document-taxonomy/project-modules/11-infrastructure.md — § 44. 一致性与幂等原则
 - initial_coverage_status: FULL
 - coverage_status: FULL
 - gap_id: None
@@ -1699,8 +1699,8 @@ None。第一轮记录的缺口已写回canonical architecture；本QA不新增�
 
 ### Architecture Evidence
 
-- docs/project/modules/08-tool-runtime.md — § 47. 幂等和 Effect Assurance
-- docs/project/modules/11-infrastructure.md — § 44. 一致性与幂等原则
+- docs/history/superseded-document-taxonomy/project-modules/08-tool-runtime.md — § 47. 幂等和 Effect Assurance
+- docs/history/superseded-document-taxonomy/project-modules/11-infrastructure.md — § 44. 一致性与幂等原则
 
 ### 当前文档是否足够回答
 
@@ -1719,8 +1719,8 @@ None。第一轮记录的缺口已写回canonical architecture；本QA不新增�
 - interview_probability: HIGH
 - resume_trigger: Tool Runtime、MCP、Permission、Effect、effect
 - architecture_refs:
-  - docs/project/modules/08-tool-runtime.md — § 20. UNKNOWN Effect 与 Reconciliation
-  - docs/project/modules/08-tool-runtime.md — § 36. EffectReconciliation
+  - docs/history/superseded-document-taxonomy/project-modules/08-tool-runtime.md — § 20. UNKNOWN Effect 与 Reconciliation
+  - docs/history/superseded-document-taxonomy/project-modules/08-tool-runtime.md — § 36. EffectReconciliation
 - initial_coverage_status: FULL
 - coverage_status: FULL
 - gap_id: None
@@ -1752,8 +1752,8 @@ EffectReceipt 记录什么？
 
 ### Architecture Evidence
 
-- docs/project/modules/08-tool-runtime.md — § 20. UNKNOWN Effect 与 Reconciliation
-- docs/project/modules/08-tool-runtime.md — § 36. EffectReconciliation
+- docs/history/superseded-document-taxonomy/project-modules/08-tool-runtime.md — § 20. UNKNOWN Effect 与 Reconciliation
+- docs/history/superseded-document-taxonomy/project-modules/08-tool-runtime.md — § 36. EffectReconciliation
 
 ### 当前文档是否足够回答
 
@@ -1776,8 +1776,8 @@ None。第一轮记录的缺口已写回canonical architecture；本QA不新增�
 - interview_probability: HIGH
 - resume_trigger: Tool Runtime、MCP、Permission、Effect、effect
 - architecture_refs:
-  - docs/project/modules/08-tool-runtime.md — § 20. UNKNOWN Effect 与 Reconciliation
-  - docs/project/modules/08-tool-runtime.md — § 36. EffectReconciliation
+  - docs/history/superseded-document-taxonomy/project-modules/08-tool-runtime.md — § 20. UNKNOWN Effect 与 Reconciliation
+  - docs/history/superseded-document-taxonomy/project-modules/08-tool-runtime.md — § 36. EffectReconciliation
 - initial_coverage_status: FULL
 - coverage_status: FULL
 - gap_id: None
@@ -1809,8 +1809,8 @@ EffectReconciliation 的状态目标是什么？
 
 ### Architecture Evidence
 
-- docs/project/modules/08-tool-runtime.md — § 20. UNKNOWN Effect 与 Reconciliation
-- docs/project/modules/08-tool-runtime.md — § 36. EffectReconciliation
+- docs/history/superseded-document-taxonomy/project-modules/08-tool-runtime.md — § 20. UNKNOWN Effect 与 Reconciliation
+- docs/history/superseded-document-taxonomy/project-modules/08-tool-runtime.md — § 36. EffectReconciliation
 
 ### 当前文档是否足够回答
 
@@ -1829,8 +1829,8 @@ None。第一轮记录的缺口已写回canonical architecture；本QA不新增�
 - interview_probability: HIGH
 - resume_trigger: Tool Runtime、MCP、Permission、Effect、effect
 - architecture_refs:
-  - docs/project/modules/08-tool-runtime.md — § 20. UNKNOWN Effect 与 Reconciliation
-  - docs/project/modules/08-tool-runtime.md — § 36. EffectReconciliation
+  - docs/history/superseded-document-taxonomy/project-modules/08-tool-runtime.md — § 20. UNKNOWN Effect 与 Reconciliation
+  - docs/history/superseded-document-taxonomy/project-modules/08-tool-runtime.md — § 36. EffectReconciliation
 - initial_coverage_status: FULL
 - coverage_status: FULL
 - gap_id: None
@@ -1862,8 +1862,8 @@ Compensation是新的ActionProposal和受治理副作用，不是自动回滚承
 
 ### Architecture Evidence
 
-- docs/project/modules/08-tool-runtime.md — § 20. UNKNOWN Effect 与 Reconciliation
-- docs/project/modules/08-tool-runtime.md — § 36. EffectReconciliation
+- docs/history/superseded-document-taxonomy/project-modules/08-tool-runtime.md — § 20. UNKNOWN Effect 与 Reconciliation
+- docs/history/superseded-document-taxonomy/project-modules/08-tool-runtime.md — § 36. EffectReconciliation
 
 ### 当前文档是否足够回答
 
@@ -1882,8 +1882,8 @@ None。第一轮记录的缺口已写回canonical architecture；本QA不新增�
 - interview_probability: HIGH
 - resume_trigger: Tool Runtime、MCP、Permission、Effect、effect
 - architecture_refs:
-  - docs/project/modules/08-tool-runtime.md — § 20. UNKNOWN Effect 与 Reconciliation
-  - docs/project/modules/08-tool-runtime.md — § 36. EffectReconciliation
+  - docs/history/superseded-document-taxonomy/project-modules/08-tool-runtime.md — § 20. UNKNOWN Effect 与 Reconciliation
+  - docs/history/superseded-document-taxonomy/project-modules/08-tool-runtime.md — § 36. EffectReconciliation
 - initial_coverage_status: FULL
 - coverage_status: FULL
 - gap_id: None
@@ -1915,8 +1915,8 @@ Cancellation 遇到不可中断副作用怎么办？
 
 ### Architecture Evidence
 
-- docs/project/modules/08-tool-runtime.md — § 20. UNKNOWN Effect 与 Reconciliation
-- docs/project/modules/08-tool-runtime.md — § 36. EffectReconciliation
+- docs/history/superseded-document-taxonomy/project-modules/08-tool-runtime.md — § 20. UNKNOWN Effect 与 Reconciliation
+- docs/history/superseded-document-taxonomy/project-modules/08-tool-runtime.md — § 36. EffectReconciliation
 
 ### 当前文档是否足够回答
 
@@ -1935,8 +1935,8 @@ None。第一轮记录的缺口已写回canonical architecture；本QA不新增�
 - interview_probability: HIGH
 - resume_trigger: Tool Runtime、MCP、Permission、Effect、secret
 - architecture_refs:
-  - docs/project/modules/08-tool-runtime.md — § 55. Secret 与 Credential
-  - docs/project/modules/09-security.md — § 31. Secret 与 Credential Lease
+  - docs/history/superseded-document-taxonomy/project-modules/08-tool-runtime.md — § 55. Secret 与 Credential
+  - docs/history/superseded-document-taxonomy/project-modules/09-security.md — § 31. Secret 与 Credential Lease
 - initial_coverage_status: PARTIAL
 - coverage_status: FULL
 - gap_id: CLOSED-GAP-08-037
@@ -1968,8 +1968,8 @@ Secret由受控Lease按Tool和Scope短期注入Adapter/Sandbox，模型只看到
 
 ### Architecture Evidence
 
-- docs/project/modules/08-tool-runtime.md — § 55. Secret 与 Credential
-- docs/project/modules/09-security.md — § 31. Secret 与 Credential Lease
+- docs/history/superseded-document-taxonomy/project-modules/08-tool-runtime.md — § 55. Secret 与 Credential
+- docs/history/superseded-document-taxonomy/project-modules/09-security.md — § 31. Secret 与 Credential Lease
 
 ### 当前文档是否足够回答
 
@@ -1988,8 +1988,8 @@ None。第一轮记录的缺口已写回canonical architecture；本QA不新增�
 - interview_probability: HIGH
 - resume_trigger: Tool Runtime、MCP、Permission、Effect、security
 - architecture_refs:
-  - docs/project/modules/08-tool-runtime.md — § 57. Tool Input 和 Output Firewall
-  - docs/project/modules/09-security.md — § 21. Prompt Injection 与 Memory Poisoning 防御
+  - docs/history/superseded-document-taxonomy/project-modules/08-tool-runtime.md — § 57. Tool Input 和 Output Firewall
+  - docs/history/superseded-document-taxonomy/project-modules/09-security.md — § 21. Prompt Injection 与 Memory Poisoning 防御
 - initial_coverage_status: FULL
 - coverage_status: FULL
 - gap_id: None
@@ -2021,8 +2021,8 @@ Tool Output 是可信指令吗？
 
 ### Architecture Evidence
 
-- docs/project/modules/08-tool-runtime.md — § 57. Tool Input 和 Output Firewall
-- docs/project/modules/09-security.md — § 21. Prompt Injection 与 Memory Poisoning 防御
+- docs/history/superseded-document-taxonomy/project-modules/08-tool-runtime.md — § 57. Tool Input 和 Output Firewall
+- docs/history/superseded-document-taxonomy/project-modules/09-security.md — § 21. Prompt Injection 与 Memory Poisoning 防御
 
 ### 当前文档是否足够回答
 
@@ -2041,8 +2041,8 @@ None。第一轮记录的缺口已写回canonical architecture；本QA不新增�
 - interview_probability: HIGH
 - resume_trigger: Tool Runtime、MCP、Permission、Effect、security
 - architecture_refs:
-  - docs/project/modules/08-tool-runtime.md — § 57. Tool Input 和 Output Firewall
-  - docs/project/modules/09-security.md — § 21. Prompt Injection 与 Memory Poisoning 防御
+  - docs/history/superseded-document-taxonomy/project-modules/08-tool-runtime.md — § 57. Tool Input 和 Output Firewall
+  - docs/history/superseded-document-taxonomy/project-modules/09-security.md — § 21. Prompt Injection 与 Memory Poisoning 防御
 - initial_coverage_status: FULL
 - coverage_status: FULL
 - gap_id: None
@@ -2074,8 +2074,8 @@ None。第一轮记录的缺口已写回canonical architecture；本QA不新增�
 
 ### Architecture Evidence
 
-- docs/project/modules/08-tool-runtime.md — § 57. Tool Input 和 Output Firewall
-- docs/project/modules/09-security.md — § 21. Prompt Injection 与 Memory Poisoning 防御
+- docs/history/superseded-document-taxonomy/project-modules/08-tool-runtime.md — § 57. Tool Input 和 Output Firewall
+- docs/history/superseded-document-taxonomy/project-modules/09-security.md — § 21. Prompt Injection 与 Memory Poisoning 防御
 
 ### 当前文档是否足够回答
 
@@ -2094,8 +2094,8 @@ None。第一轮记录的缺口已写回canonical architecture；本QA不新增�
 - interview_probability: HIGH
 - resume_trigger: Tool Runtime、MCP、Permission、Effect、security
 - architecture_refs:
-  - docs/project/modules/08-tool-runtime.md — § 57. Tool Input 和 Output Firewall
-  - docs/project/modules/09-security.md — § 21. Prompt Injection 与 Memory Poisoning 防御
+  - docs/history/superseded-document-taxonomy/project-modules/08-tool-runtime.md — § 57. Tool Input 和 Output Firewall
+  - docs/history/superseded-document-taxonomy/project-modules/09-security.md — § 21. Prompt Injection 与 Memory Poisoning 防御
 - initial_coverage_status: FULL
 - coverage_status: FULL
 - gap_id: None
@@ -2127,8 +2127,8 @@ Tool Runtime提供执行隔离，Security提供Resource/Network Policy和PEP；A
 
 ### Architecture Evidence
 
-- docs/project/modules/08-tool-runtime.md — § 57. Tool Input 和 Output Firewall
-- docs/project/modules/09-security.md — § 21. Prompt Injection 与 Memory Poisoning 防御
+- docs/history/superseded-document-taxonomy/project-modules/08-tool-runtime.md — § 57. Tool Input 和 Output Firewall
+- docs/history/superseded-document-taxonomy/project-modules/09-security.md — § 21. Prompt Injection 与 Memory Poisoning 防御
 
 ### 当前文档是否足够回答
 
@@ -2141,14 +2141,14 @@ None。第一轮记录的缺口已写回canonical architecture；本QA不新增�
 ## Q106 SSRF如何纳入Tool安全？
 
 - source_type: ARCHITECTURE_STRESS
-- source_ref: zuno-target: docs/project/modules/08-tool-runtime.md — § 57. Tool Input 和 Output Firewall
+- source_ref: zuno-target: docs/history/superseded-document-taxonomy/project-modules/08-tool-runtime.md — § 57. Tool Input 和 Output Firewall
 - primary_domain: tool
 - difficulty: L2
 - interview_probability: HIGH
 - resume_trigger: Tool Runtime、MCP、Permission、Effect、security
 - architecture_refs:
-  - docs/project/modules/08-tool-runtime.md — § 57. Tool Input 和 Output Firewall
-  - docs/project/modules/09-security.md — § 21. Prompt Injection 与 Memory Poisoning 防御
+  - docs/history/superseded-document-taxonomy/project-modules/08-tool-runtime.md — § 57. Tool Input 和 Output Firewall
+  - docs/history/superseded-document-taxonomy/project-modules/09-security.md — § 21. Prompt Injection 与 Memory Poisoning 防御
 - initial_coverage_status: FULL
 - coverage_status: FULL
 - gap_id: None
@@ -2180,8 +2180,8 @@ URL/目标资源先被规范化并由Resource/Network Policy校验，禁止把�
 
 ### Architecture Evidence
 
-- docs/project/modules/08-tool-runtime.md — § 57. Tool Input 和 Output Firewall
-- docs/project/modules/09-security.md — § 21. Prompt Injection 与 Memory Poisoning 防御
+- docs/history/superseded-document-taxonomy/project-modules/08-tool-runtime.md — § 57. Tool Input 和 Output Firewall
+- docs/history/superseded-document-taxonomy/project-modules/09-security.md — § 21. Prompt Injection 与 Memory Poisoning 防御
 
 ### 当前文档是否足够回答
 
@@ -2194,14 +2194,14 @@ None。第一轮记录的缺口已写回canonical architecture；本QA不新增�
 ## Q107 Tool Output 写入Memory前要经过什么？
 
 - source_type: ARCHITECTURE_STRESS
-- source_ref: zuno-target: docs/project/modules/08-tool-runtime.md — § 57. Tool Input 和 Output Firewall
+- source_ref: zuno-target: docs/history/superseded-document-taxonomy/project-modules/08-tool-runtime.md — § 57. Tool Input 和 Output Firewall
 - primary_domain: tool
 - difficulty: L3
 - interview_probability: HIGH
 - resume_trigger: Tool Runtime、MCP、Permission、Effect、security
 - architecture_refs:
-  - docs/project/modules/08-tool-runtime.md — § 57. Tool Input 和 Output Firewall
-  - docs/project/modules/09-security.md — § 21. Prompt Injection 与 Memory Poisoning 防御
+  - docs/history/superseded-document-taxonomy/project-modules/08-tool-runtime.md — § 57. Tool Input 和 Output Firewall
+  - docs/history/superseded-document-taxonomy/project-modules/09-security.md — § 21. Prompt Injection 与 Memory Poisoning 防御
 - initial_coverage_status: FULL
 - coverage_status: FULL
 - gap_id: None
@@ -2233,8 +2233,8 @@ Tool Output 写入Memory前要经过什么？
 
 ### Architecture Evidence
 
-- docs/project/modules/08-tool-runtime.md — § 57. Tool Input 和 Output Firewall
-- docs/project/modules/09-security.md — § 21. Prompt Injection 与 Memory Poisoning 防御
+- docs/history/superseded-document-taxonomy/project-modules/08-tool-runtime.md — § 57. Tool Input 和 Output Firewall
+- docs/history/superseded-document-taxonomy/project-modules/09-security.md — § 21. Prompt Injection 与 Memory Poisoning 防御
 
 ### 当前文档是否足够回答
 
@@ -2247,14 +2247,14 @@ None。第一轮记录的缺口已写回canonical architecture；本QA不新增�
 ## Q108 Tool Output 作为Knowledge Evidence有什么限制？
 
 - source_type: ARCHITECTURE_STRESS
-- source_ref: zuno-target: docs/project/modules/08-tool-runtime.md — § 57. Tool Input 和 Output Firewall
+- source_ref: zuno-target: docs/history/superseded-document-taxonomy/project-modules/08-tool-runtime.md — § 57. Tool Input 和 Output Firewall
 - primary_domain: tool
 - difficulty: L4
 - interview_probability: HIGH
 - resume_trigger: Tool Runtime、MCP、Permission、Effect、security
 - architecture_refs:
-  - docs/project/modules/08-tool-runtime.md — § 57. Tool Input 和 Output Firewall
-  - docs/project/modules/09-security.md — § 21. Prompt Injection 与 Memory Poisoning 防御
+  - docs/history/superseded-document-taxonomy/project-modules/08-tool-runtime.md — § 57. Tool Input 和 Output Firewall
+  - docs/history/superseded-document-taxonomy/project-modules/09-security.md — § 21. Prompt Injection 与 Memory Poisoning 防御
 - initial_coverage_status: FULL
 - coverage_status: FULL
 - gap_id: None
@@ -2286,8 +2286,8 @@ Tool Output 作为Knowledge Evidence有什么限制？
 
 ### Architecture Evidence
 
-- docs/project/modules/08-tool-runtime.md — § 57. Tool Input 和 Output Firewall
-- docs/project/modules/09-security.md — § 21. Prompt Injection 与 Memory Poisoning 防御
+- docs/history/superseded-document-taxonomy/project-modules/08-tool-runtime.md — § 57. Tool Input 和 Output Firewall
+- docs/history/superseded-document-taxonomy/project-modules/09-security.md — § 21. Prompt Injection 与 Memory Poisoning 防御
 
 ### 当前文档是否足够回答
 
@@ -2300,14 +2300,14 @@ None。第一轮记录的缺口已写回canonical architecture；本QA不新增�
 ## Q109 并发Tool调用什么时候不允许？
 
 - source_type: ARCHITECTURE_STRESS
-- source_ref: zuno-target: docs/project/modules/08-tool-runtime.md — § 22. 并行与资源冲突
+- source_ref: zuno-target: docs/history/superseded-document-taxonomy/project-modules/08-tool-runtime.md — § 22. 并行与资源冲突
 - primary_domain: tool
 - difficulty: L5
 - interview_probability: HIGH
 - resume_trigger: Tool Runtime、MCP、Permission、Effect、concurrency
 - architecture_refs:
-  - docs/project/modules/08-tool-runtime.md — § 22. 并行与资源冲突
-  - docs/project/modules/09-security.md — § 51. 时间、并发与 TOCTOU
+  - docs/history/superseded-document-taxonomy/project-modules/08-tool-runtime.md — § 22. 并行与资源冲突
+  - docs/history/superseded-document-taxonomy/project-modules/09-security.md — § 51. 时间、并发与 TOCTOU
 - initial_coverage_status: FULL
 - coverage_status: FULL
 - gap_id: None
@@ -2339,8 +2339,8 @@ None。第一轮记录的缺口已写回canonical architecture；本QA不新增�
 
 ### Architecture Evidence
 
-- docs/project/modules/08-tool-runtime.md — § 22. 并行与资源冲突
-- docs/project/modules/09-security.md — § 51. 时间、并发与 TOCTOU
+- docs/history/superseded-document-taxonomy/project-modules/08-tool-runtime.md — § 22. 并行与资源冲突
+- docs/history/superseded-document-taxonomy/project-modules/09-security.md — § 51. 时间、并发与 TOCTOU
 
 ### 当前文档是否足够回答
 
@@ -2357,14 +2357,14 @@ None。第一轮记录的缺口已写回canonical architecture；本QA不新增�
 ## Q110 两个Tool写同一个资源如何处理？
 
 - source_type: ARCHITECTURE_STRESS
-- source_ref: zuno-target: docs/project/modules/08-tool-runtime.md — § 22. 并行与资源冲突
+- source_ref: zuno-target: docs/history/superseded-document-taxonomy/project-modules/08-tool-runtime.md — § 22. 并行与资源冲突
 - primary_domain: tool
 - difficulty: L6
 - interview_probability: HIGH
 - resume_trigger: Tool Runtime、MCP、Permission、Effect、concurrency
 - architecture_refs:
-  - docs/project/modules/08-tool-runtime.md — § 22. 并行与资源冲突
-  - docs/project/modules/09-security.md — § 51. 时间、并发与 TOCTOU
+  - docs/history/superseded-document-taxonomy/project-modules/08-tool-runtime.md — § 22. 并行与资源冲突
+  - docs/history/superseded-document-taxonomy/project-modules/09-security.md — § 51. 时间、并发与 TOCTOU
 - initial_coverage_status: FULL
 - coverage_status: FULL
 - gap_id: None
@@ -2396,8 +2396,8 @@ None。第一轮记录的缺口已写回canonical architecture；本QA不新增�
 
 ### Architecture Evidence
 
-- docs/project/modules/08-tool-runtime.md — § 22. 并行与资源冲突
-- docs/project/modules/09-security.md — § 51. 时间、并发与 TOCTOU
+- docs/history/superseded-document-taxonomy/project-modules/08-tool-runtime.md — § 22. 并行与资源冲突
+- docs/history/superseded-document-taxonomy/project-modules/09-security.md — § 51. 时间、并发与 TOCTOU
 
 ### 当前文档是否足够回答
 
@@ -2410,14 +2410,14 @@ None。第一轮记录的缺口已写回canonical architecture；本QA不新增�
 ## Q111 Dispatch进程Crash后如何恢复？
 
 - source_type: ARCHITECTURE_STRESS
-- source_ref: zuno-target: docs/project/modules/08-tool-runtime.md — § 51. Crash Cut Points
+- source_ref: zuno-target: docs/history/superseded-document-taxonomy/project-modules/08-tool-runtime.md — § 51. Crash Cut Points
 - primary_domain: tool
 - difficulty: L7
 - interview_probability: HIGH
 - resume_trigger: Tool Runtime、MCP、Permission、Effect、recovery
 - architecture_refs:
-  - docs/project/modules/08-tool-runtime.md — § 51. Crash Cut Points
-  - docs/project/modules/08-tool-runtime.md — § 48. Retry、Reconciliation 与 Replan
+  - docs/history/superseded-document-taxonomy/project-modules/08-tool-runtime.md — § 51. Crash Cut Points
+  - docs/history/superseded-document-taxonomy/project-modules/08-tool-runtime.md — § 48. Retry、Reconciliation 与 Replan
 - initial_coverage_status: FULL
 - coverage_status: FULL
 - gap_id: None
@@ -2449,8 +2449,8 @@ Dispatch进程Crash后如何恢复？
 
 ### Architecture Evidence
 
-- docs/project/modules/08-tool-runtime.md — § 51. Crash Cut Points
-- docs/project/modules/08-tool-runtime.md — § 48. Retry、Reconciliation 与 Replan
+- docs/history/superseded-document-taxonomy/project-modules/08-tool-runtime.md — § 51. Crash Cut Points
+- docs/history/superseded-document-taxonomy/project-modules/08-tool-runtime.md — § 48. Retry、Reconciliation 与 Replan
 
 ### 当前文档是否足够回答
 
@@ -2463,14 +2463,14 @@ None。第一轮记录的缺口已写回canonical architecture；本QA不新增�
 ## Q112 AuditPersistenceReceipt、AuditEvent和Effect成功有什么区别？
 
 - source_type: ARCHITECTURE_STRESS
-- source_ref: zuno-target: docs/project/modules/08-tool-runtime.md — § 58. Mandatory Audit
+- source_ref: zuno-target: docs/history/superseded-document-taxonomy/project-modules/08-tool-runtime.md — § 58. Mandatory Audit
 - primary_domain: tool
 - difficulty: L8
 - interview_probability: HIGH
 - resume_trigger: Tool Runtime、MCP、Permission、Effect、audit
 - architecture_refs:
-  - docs/project/modules/08-tool-runtime.md — § 58. Mandatory Audit
-  - docs/project/modules/09-security.md — § 44. Audit、Trace 与 Evidence
+  - docs/history/superseded-document-taxonomy/project-modules/08-tool-runtime.md — § 58. Mandatory Audit
+  - docs/history/superseded-document-taxonomy/project-modules/09-security.md — § 44. Audit、Trace 与 Evidence
 - initial_coverage_status: FULL
 - coverage_status: FULL
 - gap_id: None
@@ -2502,8 +2502,8 @@ Receipt证明安全审计已耐久化，AuditEvent是可查询事实，EffectRec
 
 ### Architecture Evidence
 
-- docs/project/modules/08-tool-runtime.md — § 58. Mandatory Audit
-- docs/project/modules/09-security.md — § 44. Audit、Trace 与 Evidence
+- docs/history/superseded-document-taxonomy/project-modules/08-tool-runtime.md — § 58. Mandatory Audit
+- docs/history/superseded-document-taxonomy/project-modules/09-security.md — § 44. Audit、Trace 与 Evidence
 
 ### 当前文档是否足够回答
 
@@ -2516,14 +2516,14 @@ None。第一轮记录的缺口已写回canonical architecture；本QA不新增�
 ## Q113 如何评测Tool成功率而不把2xx当成功？
 
 - source_type: ARCHITECTURE_STRESS
-- source_ref: zuno-target: docs/project/modules/08-tool-runtime.md — § 63. Observability 与 SLO
+- source_ref: zuno-target: docs/history/superseded-document-taxonomy/project-modules/08-tool-runtime.md — § 63. Observability 与 SLO
 - primary_domain: tool
 - difficulty: L1
 - interview_probability: HIGH
 - resume_trigger: Tool Runtime、MCP、Permission、Effect、eval
 - architecture_refs:
-  - docs/project/modules/08-tool-runtime.md — § 63. Observability 与 SLO
-  - docs/project/modules/09-security.md — § 61. Security Eval 与 Release Gate
+  - docs/history/superseded-document-taxonomy/project-modules/08-tool-runtime.md — § 63. Observability 与 SLO
+  - docs/history/superseded-document-taxonomy/project-modules/09-security.md — § 61. Security Eval 与 Release Gate
 - initial_coverage_status: FULL
 - coverage_status: FULL
 - gap_id: None
@@ -2555,8 +2555,8 @@ None。第一轮记录的缺口已写回canonical architecture；本QA不新增�
 
 ### Architecture Evidence
 
-- docs/project/modules/08-tool-runtime.md — § 63. Observability 与 SLO
-- docs/project/modules/09-security.md — § 61. Security Eval 与 Release Gate
+- docs/history/superseded-document-taxonomy/project-modules/08-tool-runtime.md — § 63. Observability 与 SLO
+- docs/history/superseded-document-taxonomy/project-modules/09-security.md — § 61. Security Eval 与 Release Gate
 
 ### 当前文档是否足够回答
 
@@ -2569,14 +2569,14 @@ None。第一轮记录的缺口已写回canonical architecture；本QA不新增�
 ## Q114 只读Tool是否需要Approval？
 
 - source_type: ARCHITECTURE_STRESS
-- source_ref: zuno-target: docs/project/modules/08-tool-runtime.md — § 12. 需要审批的副作用
+- source_ref: zuno-target: docs/history/superseded-document-taxonomy/project-modules/08-tool-runtime.md — § 12. 需要审批的副作用
 - primary_domain: tool
 - difficulty: L2
 - interview_probability: HIGH
 - resume_trigger: Tool Runtime、MCP、Permission、Effect、approval
 - architecture_refs:
-  - docs/project/modules/08-tool-runtime.md — § 12. 需要审批的副作用
-  - docs/project/modules/09-security.md — § 29. PreparedToolAction 与 Approval
+  - docs/history/superseded-document-taxonomy/project-modules/08-tool-runtime.md — § 12. 需要审批的副作用
+  - docs/history/superseded-document-taxonomy/project-modules/09-security.md — § 29. PreparedToolAction 与 Approval
 - initial_coverage_status: FULL
 - coverage_status: FULL
 - gap_id: None
@@ -2608,8 +2608,8 @@ None。第一轮记录的缺口已写回canonical architecture；本QA不新增�
 
 ### Architecture Evidence
 
-- docs/project/modules/08-tool-runtime.md — § 12. 需要审批的副作用
-- docs/project/modules/09-security.md — § 29. PreparedToolAction 与 Approval
+- docs/history/superseded-document-taxonomy/project-modules/08-tool-runtime.md — § 12. 需要审批的副作用
+- docs/history/superseded-document-taxonomy/project-modules/09-security.md — § 29. PreparedToolAction 与 Approval
 
 ### 当前文档是否足够回答
 
@@ -2622,14 +2622,14 @@ None。第一轮记录的缺口已写回canonical architecture；本QA不新增�
 ## Q115 Tool、API和MCP Adapter为什么不能各自执行？
 
 - source_type: ARCHITECTURE_STRESS
-- source_ref: zuno-target: docs/project/modules/08-tool-runtime.md — § 9. 唯一 Tool Invocation Boundary
+- source_ref: zuno-target: docs/history/superseded-document-taxonomy/project-modules/08-tool-runtime.md — § 9. 唯一 Tool Invocation Boundary
 - primary_domain: tool
 - difficulty: L3
 - interview_probability: HIGH
 - resume_trigger: Tool Runtime、MCP、Permission、Effect、flow
 - architecture_refs:
-  - docs/project/modules/08-tool-runtime.md — § 9. 唯一 Tool Invocation Boundary
-  - docs/project/modules/08-tool-runtime.md — § 46. 固定执行顺序
+  - docs/history/superseded-document-taxonomy/project-modules/08-tool-runtime.md — § 9. 唯一 Tool Invocation Boundary
+  - docs/history/superseded-document-taxonomy/project-modules/08-tool-runtime.md — § 46. 固定执行顺序
 - initial_coverage_status: FULL
 - coverage_status: FULL
 - gap_id: None
@@ -2661,8 +2661,8 @@ Tool、API和MCP Adapter为什么不能各自执行？
 
 ### Architecture Evidence
 
-- docs/project/modules/08-tool-runtime.md — § 9. 唯一 Tool Invocation Boundary
-- docs/project/modules/08-tool-runtime.md — § 46. 固定执行顺序
+- docs/history/superseded-document-taxonomy/project-modules/08-tool-runtime.md — § 9. 唯一 Tool Invocation Boundary
+- docs/history/superseded-document-taxonomy/project-modules/08-tool-runtime.md — § 46. 固定执行顺序
 
 ### 当前文档是否足够回答
 
@@ -2675,14 +2675,14 @@ None。第一轮记录的缺口已写回canonical architecture；本QA不新增�
 ## Q116 Tool Execution Failure Namespace有什么价值？
 
 - source_type: ARCHITECTURE_STRESS
-- source_ref: zuno-target: docs/project/modules/08-tool-runtime.md — § 49. Failure Namespace
+- source_ref: zuno-target: docs/history/superseded-document-taxonomy/project-modules/08-tool-runtime.md — § 49. Failure Namespace
 - primary_domain: tool
 - difficulty: L4
 - interview_probability: HIGH
 - resume_trigger: Tool Runtime、MCP、Permission、Effect、failure
 - architecture_refs:
-  - docs/project/modules/08-tool-runtime.md — § 49. Failure Namespace
-  - docs/project/modules/08-tool-runtime.md — § 48. Retry、Reconciliation 与 Replan
+  - docs/history/superseded-document-taxonomy/project-modules/08-tool-runtime.md — § 49. Failure Namespace
+  - docs/history/superseded-document-taxonomy/project-modules/08-tool-runtime.md — § 48. Retry、Reconciliation 与 Replan
 - initial_coverage_status: FULL
 - coverage_status: FULL
 - gap_id: None
@@ -2714,8 +2714,8 @@ Tool Execution Failure Namespace有什么价值？
 
 ### Architecture Evidence
 
-- docs/project/modules/08-tool-runtime.md — § 49. Failure Namespace
-- docs/project/modules/08-tool-runtime.md — § 48. Retry、Reconciliation 与 Replan
+- docs/history/superseded-document-taxonomy/project-modules/08-tool-runtime.md — § 49. Failure Namespace
+- docs/history/superseded-document-taxonomy/project-modules/08-tool-runtime.md — § 48. Retry、Reconciliation 与 Replan
 
 ### 当前文档是否足够回答
 
@@ -2728,14 +2728,14 @@ None。第一轮记录的缺口已写回canonical architecture；本QA不新增�
 ## Q117 高并发下Tool Runtime如何保护Provider？
 
 - source_type: ARCHITECTURE_STRESS
-- source_ref: zuno-target: docs/project/modules/08-tool-runtime.md — § 22. 并行与资源冲突
+- source_ref: zuno-target: docs/history/superseded-document-taxonomy/project-modules/08-tool-runtime.md — § 22. 并行与资源冲突
 - primary_domain: tool
 - difficulty: L5
 - interview_probability: HIGH
 - resume_trigger: Tool Runtime、MCP、Permission、Effect、concurrency
 - architecture_refs:
-  - docs/project/modules/08-tool-runtime.md — § 22. 并行与资源冲突
-  - docs/project/modules/09-security.md — § 51. 时间、并发与 TOCTOU
+  - docs/history/superseded-document-taxonomy/project-modules/08-tool-runtime.md — § 22. 并行与资源冲突
+  - docs/history/superseded-document-taxonomy/project-modules/09-security.md — § 51. 时间、并发与 TOCTOU
 - initial_coverage_status: FULL
 - coverage_status: FULL
 - gap_id: None
@@ -2767,8 +2767,8 @@ None。第一轮记录的缺口已写回canonical architecture；本QA不新增�
 
 ### Architecture Evidence
 
-- docs/project/modules/08-tool-runtime.md — § 22. 并行与资源冲突
-- docs/project/modules/09-security.md — § 51. 时间、并发与 TOCTOU
+- docs/history/superseded-document-taxonomy/project-modules/08-tool-runtime.md — § 22. 并行与资源冲突
+- docs/history/superseded-document-taxonomy/project-modules/09-security.md — § 51. 时间、并发与 TOCTOU
 
 ### 当前文档是否足够回答
 
@@ -2781,14 +2781,14 @@ None。第一轮记录的缺口已写回canonical architecture；本QA不新增�
 ## Q118 多Approver场景如何防止权限放大？
 
 - source_type: ARCHITECTURE_STRESS
-- source_ref: zuno-target: docs/project/modules/08-tool-runtime.md — § 12. 需要审批的副作用
+- source_ref: zuno-target: docs/history/superseded-document-taxonomy/project-modules/08-tool-runtime.md — § 12. 需要审批的副作用
 - primary_domain: tool
 - difficulty: L6
 - interview_probability: HIGH
 - resume_trigger: Tool Runtime、MCP、Permission、Effect、approval
 - architecture_refs:
-  - docs/project/modules/08-tool-runtime.md — § 12. 需要审批的副作用
-  - docs/project/modules/09-security.md — § 29. PreparedToolAction 与 Approval
+  - docs/history/superseded-document-taxonomy/project-modules/08-tool-runtime.md — § 12. 需要审批的副作用
+  - docs/history/superseded-document-taxonomy/project-modules/09-security.md — § 29. PreparedToolAction 与 Approval
 - initial_coverage_status: FULL
 - coverage_status: FULL
 - gap_id: None
@@ -2820,8 +2820,8 @@ None。第一轮记录的缺口已写回canonical architecture；本QA不新增�
 
 ### Architecture Evidence
 
-- docs/project/modules/08-tool-runtime.md — § 12. 需要审批的副作用
-- docs/project/modules/09-security.md — § 29. PreparedToolAction 与 Approval
+- docs/history/superseded-document-taxonomy/project-modules/08-tool-runtime.md — § 12. 需要审批的副作用
+- docs/history/superseded-document-taxonomy/project-modules/09-security.md — § 29. PreparedToolAction 与 Approval
 
 ### 当前文档是否足够回答
 
@@ -2834,14 +2834,14 @@ None。第一轮记录的缺口已写回canonical architecture；本QA不新增�
 ## Q119 Tool Version变化是否必然触发Agent Replan？
 
 - source_type: ARCHITECTURE_STRESS
-- source_ref: zuno-target: docs/project/modules/08-tool-runtime.md — § 24. ToolDefinition、ToolVersion 与 ToolOperation
+- source_ref: zuno-target: docs/history/superseded-document-taxonomy/project-modules/08-tool-runtime.md — § 24. ToolDefinition、ToolVersion 与 ToolOperation
 - primary_domain: tool
 - difficulty: L7
 - interview_probability: HIGH
 - resume_trigger: Tool Runtime、MCP、Permission、Effect、version
 - architecture_refs:
-  - docs/project/modules/08-tool-runtime.md — § 24. ToolDefinition、ToolVersion 与 ToolOperation
-  - docs/project/modules/08-tool-runtime.md — § 40. Definition / Version / Installation 生命周期
+  - docs/history/superseded-document-taxonomy/project-modules/08-tool-runtime.md — § 24. ToolDefinition、ToolVersion 与 ToolOperation
+  - docs/history/superseded-document-taxonomy/project-modules/08-tool-runtime.md — § 40. Definition / Version / Installation 生命周期
 - initial_coverage_status: FULL
 - coverage_status: FULL
 - gap_id: None
@@ -2873,8 +2873,8 @@ Tool Version变化是否必然触发Agent Replan？
 
 ### Architecture Evidence
 
-- docs/project/modules/08-tool-runtime.md — § 24. ToolDefinition、ToolVersion 与 ToolOperation
-- docs/project/modules/08-tool-runtime.md — § 40. Definition / Version / Installation 生命周期
+- docs/history/superseded-document-taxonomy/project-modules/08-tool-runtime.md — § 24. ToolDefinition、ToolVersion 与 ToolOperation
+- docs/history/superseded-document-taxonomy/project-modules/08-tool-runtime.md — § 40. Definition / Version / Installation 生命周期
 
 ### 当前文档是否足够回答
 
@@ -2887,14 +2887,14 @@ None。第一轮记录的缺口已写回canonical architecture；本QA不新增�
 ## Q120 如何证明Tool安全边界有效？
 
 - source_type: ARCHITECTURE_STRESS
-- source_ref: zuno-target: docs/project/modules/08-tool-runtime.md — § 63. Observability 与 SLO
+- source_ref: zuno-target: docs/history/superseded-document-taxonomy/project-modules/08-tool-runtime.md — § 63. Observability 与 SLO
 - primary_domain: tool
 - difficulty: L8
 - interview_probability: HIGH
 - resume_trigger: Tool Runtime、MCP、Permission、Effect、eval
 - architecture_refs:
-  - docs/project/modules/08-tool-runtime.md — § 63. Observability 与 SLO
-  - docs/project/modules/09-security.md — § 61. Security Eval 与 Release Gate
+  - docs/history/superseded-document-taxonomy/project-modules/08-tool-runtime.md — § 63. Observability 与 SLO
+  - docs/history/superseded-document-taxonomy/project-modules/09-security.md — § 61. Security Eval 与 Release Gate
 - initial_coverage_status: FULL
 - coverage_status: FULL
 - gap_id: None
@@ -2926,8 +2926,8 @@ None。第一轮记录的缺口已写回canonical architecture；本QA不新增�
 
 ### Architecture Evidence
 
-- docs/project/modules/08-tool-runtime.md — § 63. Observability 与 SLO
-- docs/project/modules/09-security.md — § 61. Security Eval 与 Release Gate
+- docs/history/superseded-document-taxonomy/project-modules/08-tool-runtime.md — § 63. Observability 与 SLO
+- docs/history/superseded-document-taxonomy/project-modules/09-security.md — § 61. Security Eval 与 Release Gate
 
 ### 当前文档是否足够回答
 
@@ -2944,14 +2944,14 @@ None。第一轮记录的缺口已写回canonical architecture；本QA不新增�
 ## Q121 哪些Tool事实是Current，哪些只是Target？
 
 - source_type: ARCHITECTURE_STRESS
-- source_ref: zuno-target: docs/project/modules/08-tool-runtime.md — § 68. Current 证据
+- source_ref: zuno-target: docs/history/superseded-document-taxonomy/project-modules/08-tool-runtime.md — § 68. Current 证据
 - primary_domain: tool
 - difficulty: L1
 - interview_probability: HIGH
 - resume_trigger: Tool Runtime、MCP、Permission、Effect、current
 - architecture_refs:
-  - docs/project/modules/08-tool-runtime.md — § 68. Current 证据
-  - docs/project/modules/08-tool-runtime.md — § 75. 完成证据
+  - docs/history/superseded-document-taxonomy/project-modules/08-tool-runtime.md — § 68. Current 证据
+  - docs/history/superseded-document-taxonomy/project-modules/08-tool-runtime.md — § 75. 完成证据
 - initial_coverage_status: FULL
 - coverage_status: FULL
 - gap_id: None
@@ -2983,8 +2983,8 @@ PreparedAction、MCP Snapshot、Effect/Reconciliation等在文档中是Target Co
 
 ### Architecture Evidence
 
-- docs/project/modules/08-tool-runtime.md — § 68. Current 证据
-- docs/project/modules/08-tool-runtime.md — § 75. 完成证据
+- docs/history/superseded-document-taxonomy/project-modules/08-tool-runtime.md — § 68. Current 证据
+- docs/history/superseded-document-taxonomy/project-modules/08-tool-runtime.md — § 75. 完成证据
 
 ### 当前文档是否足够回答
 
@@ -2997,14 +2997,14 @@ None。第一轮记录的缺口已写回canonical architecture；本QA不新增�
 ## Q122 Tool Runtime 与 Security 的唯一边界是什么？
 
 - source_type: ARCHITECTURE_STRESS
-- source_ref: zuno-target: docs/project/modules/08-tool-runtime.md — § 4. Capability、Skill、Tool、API、SDK 和 MCP
+- source_ref: zuno-target: docs/history/superseded-document-taxonomy/project-modules/08-tool-runtime.md — § 4. Capability、Skill、Tool、API、SDK 和 MCP
 - primary_domain: tool
 - difficulty: L2
 - interview_probability: HIGH
 - resume_trigger: Tool Runtime、MCP、Permission、Effect、boundary
 - architecture_refs:
-  - docs/project/modules/08-tool-runtime.md — § 4. Capability、Skill、Tool、API、SDK 和 MCP
-  - docs/project/modules/08-tool-runtime.md — § 7. Cross-module Ownership
+  - docs/history/superseded-document-taxonomy/project-modules/08-tool-runtime.md — § 4. Capability、Skill、Tool、API、SDK 和 MCP
+  - docs/history/superseded-document-taxonomy/project-modules/08-tool-runtime.md — § 7. Cross-module Ownership
 - initial_coverage_status: FULL
 - coverage_status: FULL
 - gap_id: None
@@ -3036,8 +3036,8 @@ Tool Runtime 与 Security 的唯一边界是什么？
 
 ### Architecture Evidence
 
-- docs/project/modules/08-tool-runtime.md — § 4. Capability、Skill、Tool、API、SDK 和 MCP
-- docs/project/modules/08-tool-runtime.md — § 7. Cross-module Ownership
+- docs/history/superseded-document-taxonomy/project-modules/08-tool-runtime.md — § 4. Capability、Skill、Tool、API、SDK 和 MCP
+- docs/history/superseded-document-taxonomy/project-modules/08-tool-runtime.md — § 7. Cross-module Ownership
 
 ### 当前文档是否足够回答
 
@@ -3050,14 +3050,14 @@ None。第一轮记录的缺口已写回canonical architecture；本QA不新增�
 ## Q123 用户批准后收件人改变还能执行吗？
 
 - source_type: ARCHITECTURE_STRESS
-- source_ref: zuno-target: docs/project/modules/08-tool-runtime.md — § 12. 需要审批的副作用
+- source_ref: zuno-target: docs/history/superseded-document-taxonomy/project-modules/08-tool-runtime.md — § 12. 需要审批的副作用
 - primary_domain: tool
 - difficulty: L3
 - interview_probability: HIGH
 - resume_trigger: Tool Runtime、MCP、Permission、Effect、approval
 - architecture_refs:
-  - docs/project/modules/08-tool-runtime.md — § 12. 需要审批的副作用
-  - docs/project/modules/09-security.md — § 29. PreparedToolAction 与 Approval
+  - docs/history/superseded-document-taxonomy/project-modules/08-tool-runtime.md — § 12. 需要审批的副作用
+  - docs/history/superseded-document-taxonomy/project-modules/09-security.md — § 29. PreparedToolAction 与 Approval
 - initial_coverage_status: FULL
 - coverage_status: FULL
 - gap_id: None
@@ -3089,8 +3089,8 @@ None。第一轮记录的缺口已写回canonical architecture；本QA不新增�
 
 ### Architecture Evidence
 
-- docs/project/modules/08-tool-runtime.md — § 12. 需要审批的副作用
-- docs/project/modules/09-security.md — § 29. PreparedToolAction 与 Approval
+- docs/history/superseded-document-taxonomy/project-modules/08-tool-runtime.md — § 12. 需要审批的副作用
+- docs/history/superseded-document-taxonomy/project-modules/09-security.md — § 29. PreparedToolAction 与 Approval
 
 ### 当前文档是否足够回答
 

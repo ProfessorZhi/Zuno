@@ -1,6 +1,6 @@
 # Historical Team and Ownership
 
-正式个人贡献以 [`docs/project/facts/team-and-ownership.md`](../../docs/project/facts/team-and-ownership.md) 为准。
+正式个人贡献以 [`docs/project/history/team-and-ownership.md`](../../docs/project/history/team-and-ownership.md) 为准。
 
 ## 可使用的最小叙事
 

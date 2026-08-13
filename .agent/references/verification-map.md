@@ -47,7 +47,7 @@ project-reconstruction-lab/08-decisions/
 project-reconstruction-lab/09-implementation/
 ```
 
-该工作区负责项目事实采集和红蓝互动；`docs/verification/interview-qa/` 负责架构攻击题和 Coverage。两者都不拥有 Canonical Architecture，正式变更必须回到 `docs/project/architecture/`、`docs/project/<topic>/`、`docs/decisions/`、`docs/status/` 或 `docs/evidence/` 的正确 Owner。
+该工作区负责项目事实采集和红蓝互动；`docs/verification/interview-qa/` 负责架构攻击题和 Coverage。两者都不拥有 Canonical Architecture，正式变更必须回到 `docs/project/architecture/`、`docs/project/history/`、`docs/project/status/`、`docs/decisions/`、`docs/governance/` 或 `docs/evidence/` 的正确 Owner。
 
 ## 架构与模块
 

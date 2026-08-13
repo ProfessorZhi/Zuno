@@ -15,8 +15,8 @@
 - interview_probability: HIGH
 - resume_trigger: Agent Core、Plan、ReAct、control
 - architecture_refs:
-  - docs/project/modules/06-agent-core-planning-control.md — § 1. 控制权模型
-  - docs/project/modules/06-agent-core-planning-control.md — § 16. Cross-module Ownership
+  - docs/history/superseded-document-taxonomy/project-modules/06-agent-core-planning-control.md — § 1. 控制权模型
+  - docs/history/superseded-document-taxonomy/project-modules/06-agent-core-planning-control.md — § 16. Cross-module Ownership
 - initial_coverage_status: PARTIAL
 - coverage_status: FULL
 - gap_id: CLOSED-GAP-06-001
@@ -48,8 +48,8 @@ Single Controller统一Run、Plan、Policy、Budget和最终控制；工程上�
 
 ### Architecture Evidence
 
-- docs/project/modules/06-agent-core-planning-control.md — § 1. 控制权模型
-- docs/project/modules/06-agent-core-planning-control.md — § 16. Cross-module Ownership
+- docs/history/superseded-document-taxonomy/project-modules/06-agent-core-planning-control.md — § 1. 控制权模型
+- docs/history/superseded-document-taxonomy/project-modules/06-agent-core-planning-control.md — § 16. Cross-module Ownership
 
 ### 当前文档是否足够回答
 
@@ -67,8 +67,8 @@ None。第一轮记录的缺口已写回 canonical architecture；本 QA 不新�
 - interview_probability: HIGH
 - resume_trigger: Agent Core、Plan、ReAct、control
 - architecture_refs:
-  - docs/project/modules/06-agent-core-planning-control.md — § 1. 控制权模型
-  - docs/project/modules/06-agent-core-planning-control.md — § 16. Cross-module Ownership
+  - docs/history/superseded-document-taxonomy/project-modules/06-agent-core-planning-control.md — § 1. 控制权模型
+  - docs/history/superseded-document-taxonomy/project-modules/06-agent-core-planning-control.md — § 16. Cross-module Ownership
 - initial_coverage_status: FULL
 - coverage_status: FULL
 - gap_id: None
@@ -100,8 +100,8 @@ None。第一轮记录的缺口已写回 canonical architecture；本 QA 不新�
 
 ### Architecture Evidence
 
-- docs/project/modules/06-agent-core-planning-control.md — § 1. 控制权模型
-- docs/project/modules/06-agent-core-planning-control.md — § 16. Cross-module Ownership
+- docs/history/superseded-document-taxonomy/project-modules/06-agent-core-planning-control.md — § 1. 控制权模型
+- docs/history/superseded-document-taxonomy/project-modules/06-agent-core-planning-control.md — § 16. Cross-module Ownership
 
 ### 当前文档是否足够回答
 
@@ -120,8 +120,8 @@ None。第一轮记录的缺口已写回 canonical architecture；本 QA 不新�
 - interview_probability: HIGH
 - resume_trigger: Agent Core、Plan、ReAct、graph
 - architecture_refs:
-  - docs/project/modules/06-agent-core-planning-control.md — § 10. AgentRunGraph
-  - docs/project/modules/06-agent-core-planning-control.md — § 11. StepExecutionGraph
+  - docs/history/superseded-document-taxonomy/project-modules/06-agent-core-planning-control.md — § 10. AgentRunGraph
+  - docs/history/superseded-document-taxonomy/project-modules/06-agent-core-planning-control.md — § 11. StepExecutionGraph
 - initial_coverage_status: FULL
 - coverage_status: FULL
 - gap_id: None
@@ -153,8 +153,8 @@ None。第一轮记录的缺口已写回 canonical architecture；本 QA 不新�
 
 ### Architecture Evidence
 
-- docs/project/modules/06-agent-core-planning-control.md — § 10. AgentRunGraph
-- docs/project/modules/06-agent-core-planning-control.md — § 11. StepExecutionGraph
+- docs/history/superseded-document-taxonomy/project-modules/06-agent-core-planning-control.md — § 10. AgentRunGraph
+- docs/history/superseded-document-taxonomy/project-modules/06-agent-core-planning-control.md — § 11. StepExecutionGraph
 
 ### 当前文档是否足够回答
 
@@ -173,8 +173,8 @@ None。第一轮记录的缺口已写回 canonical architecture；本 QA 不新�
 - interview_probability: HIGH
 - resume_trigger: Agent Core、Plan、ReAct、plan
 - architecture_refs:
-  - docs/project/modules/06-agent-core-planning-control.md — § 6. 所有任务都必须有 Plan
-  - docs/project/modules/06-agent-core-planning-control.md — § 9. Plan DAG
+  - docs/history/superseded-document-taxonomy/project-modules/06-agent-core-planning-control.md — § 6. 所有任务都必须有 Plan
+  - docs/history/superseded-document-taxonomy/project-modules/06-agent-core-planning-control.md — § 9. Plan DAG
 - initial_coverage_status: PARTIAL
 - coverage_status: FULL
 - gap_id: CLOSED-GAP-06-004
@@ -206,8 +206,8 @@ None。第一轮记录的缺口已写回 canonical architecture；本 QA 不新�
 
 ### Architecture Evidence
 
-- docs/project/modules/06-agent-core-planning-control.md — § 6. 所有任务都必须有 Plan
-- docs/project/modules/06-agent-core-planning-control.md — § 9. Plan DAG
+- docs/history/superseded-document-taxonomy/project-modules/06-agent-core-planning-control.md — § 6. 所有任务都必须有 Plan
+- docs/history/superseded-document-taxonomy/project-modules/06-agent-core-planning-control.md — § 9. Plan DAG
 
 ### 当前文档是否足够回答
 
@@ -226,8 +226,8 @@ None。第一轮记录的缺口已写回 canonical architecture；本 QA 不新�
 - interview_probability: HIGH
 - resume_trigger: Agent Core、Plan、ReAct、graph
 - architecture_refs:
-  - docs/project/modules/06-agent-core-planning-control.md — § 10. AgentRunGraph
-  - docs/project/modules/06-agent-core-planning-control.md — § 11. StepExecutionGraph
+  - docs/history/superseded-document-taxonomy/project-modules/06-agent-core-planning-control.md — § 10. AgentRunGraph
+  - docs/history/superseded-document-taxonomy/project-modules/06-agent-core-planning-control.md — § 11. StepExecutionGraph
 - initial_coverage_status: FULL
 - coverage_status: FULL
 - gap_id: None
@@ -259,8 +259,8 @@ None。第一轮记录的缺口已写回 canonical architecture；本 QA 不新�
 
 ### Architecture Evidence
 
-- docs/project/modules/06-agent-core-planning-control.md — § 10. AgentRunGraph
-- docs/project/modules/06-agent-core-planning-control.md — § 11. StepExecutionGraph
+- docs/history/superseded-document-taxonomy/project-modules/06-agent-core-planning-control.md — § 10. AgentRunGraph
+- docs/history/superseded-document-taxonomy/project-modules/06-agent-core-planning-control.md — § 11. StepExecutionGraph
 
 ### 当前文档是否足够回答
 
@@ -279,8 +279,8 @@ None。第一轮记录的缺口已写回 canonical architecture；本 QA 不新�
 - interview_probability: HIGH
 - resume_trigger: Agent Core、Plan、ReAct、mechanisms
 - architecture_refs:
-  - docs/project/modules/06-agent-core-planning-control.md — § 5. 五种机制
-  - docs/project/modules/06-agent-core-planning-control.md — § 13. Reflection、Retry 与 Replan
+  - docs/history/superseded-document-taxonomy/project-modules/06-agent-core-planning-control.md — § 5. 五种机制
+  - docs/history/superseded-document-taxonomy/project-modules/06-agent-core-planning-control.md — § 13. Reflection、Retry 与 Replan
 - initial_coverage_status: PARTIAL
 - coverage_status: FULL
 - gap_id: CLOSED-GAP-06-006
@@ -312,8 +312,8 @@ Plan-and-Execute、ReAct、Reflection、Replan、Reflexion为何不是五选一�
 
 ### Architecture Evidence
 
-- docs/project/modules/06-agent-core-planning-control.md — § 5. 五种机制
-- docs/project/modules/06-agent-core-planning-control.md — § 13. Reflection、Retry 与 Replan
+- docs/history/superseded-document-taxonomy/project-modules/06-agent-core-planning-control.md — § 5. 五种机制
+- docs/history/superseded-document-taxonomy/project-modules/06-agent-core-planning-control.md — § 13. Reflection、Retry 与 Replan
 
 ### 当前文档是否足够回答
 
@@ -332,8 +332,8 @@ None。第一轮记录的缺口已写回 canonical architecture；本 QA 不新�
 - interview_probability: HIGH
 - resume_trigger: Agent Core、Plan、ReAct、plan
 - architecture_refs:
-  - docs/project/modules/06-agent-core-planning-control.md — § 6. 所有任务都必须有 Plan
-  - docs/project/modules/06-agent-core-planning-control.md — § 9. Plan DAG
+  - docs/history/superseded-document-taxonomy/project-modules/06-agent-core-planning-control.md — § 6. 所有任务都必须有 Plan
+  - docs/history/superseded-document-taxonomy/project-modules/06-agent-core-planning-control.md — § 9. Plan DAG
 - initial_coverage_status: FULL
 - coverage_status: FULL
 - gap_id: None
@@ -365,8 +365,8 @@ None。第一轮记录的缺口已写回 canonical architecture；本 QA 不新�
 
 ### Architecture Evidence
 
-- docs/project/modules/06-agent-core-planning-control.md — § 6. 所有任务都必须有 Plan
-- docs/project/modules/06-agent-core-planning-control.md — § 9. Plan DAG
+- docs/history/superseded-document-taxonomy/project-modules/06-agent-core-planning-control.md — § 6. 所有任务都必须有 Plan
+- docs/history/superseded-document-taxonomy/project-modules/06-agent-core-planning-control.md — § 9. Plan DAG
 
 ### 当前文档是否足够回答
 
@@ -385,8 +385,8 @@ None。第一轮记录的缺口已写回 canonical architecture；本 QA 不新�
 - interview_probability: HIGH
 - resume_trigger: Agent Core、Plan、ReAct、plan
 - architecture_refs:
-  - docs/project/modules/06-agent-core-planning-control.md — § 6. 所有任务都必须有 Plan
-  - docs/project/modules/06-agent-core-planning-control.md — § 9. Plan DAG
+  - docs/history/superseded-document-taxonomy/project-modules/06-agent-core-planning-control.md — § 6. 所有任务都必须有 Plan
+  - docs/history/superseded-document-taxonomy/project-modules/06-agent-core-planning-control.md — § 9. Plan DAG
 - initial_coverage_status: FULL
 - coverage_status: FULL
 - gap_id: None
@@ -418,8 +418,8 @@ None。第一轮记录的缺口已写回 canonical architecture；本 QA 不新�
 
 ### Architecture Evidence
 
-- docs/project/modules/06-agent-core-planning-control.md — § 6. 所有任务都必须有 Plan
-- docs/project/modules/06-agent-core-planning-control.md — § 9. Plan DAG
+- docs/history/superseded-document-taxonomy/project-modules/06-agent-core-planning-control.md — § 6. 所有任务都必须有 Plan
+- docs/history/superseded-document-taxonomy/project-modules/06-agent-core-planning-control.md — § 9. Plan DAG
 
 ### 当前文档是否足够回答
 
@@ -438,8 +438,8 @@ None。第一轮记录的缺口已写回 canonical architecture；本 QA 不新�
 - interview_probability: HIGH
 - resume_trigger: Agent Core、Plan、ReAct、react
 - architecture_refs:
-  - docs/project/modules/06-agent-core-planning-control.md — § 11. StepExecutionGraph
-  - docs/project/modules/06-agent-core-planning-control.md — § 31. Action 生命周期与对账结果
+  - docs/history/superseded-document-taxonomy/project-modules/06-agent-core-planning-control.md — § 11. StepExecutionGraph
+  - docs/history/superseded-document-taxonomy/project-modules/06-agent-core-planning-control.md — § 31. Action 生命周期与对账结果
 - initial_coverage_status: PARTIAL
 - coverage_status: FULL
 - gap_id: CLOSED-GAP-06-009
@@ -471,8 +471,8 @@ Agent提出ActionProposal，Tool/Knowledge返回Observation，Action Evaluation�
 
 ### Architecture Evidence
 
-- docs/project/modules/06-agent-core-planning-control.md — § 11. StepExecutionGraph
-- docs/project/modules/06-agent-core-planning-control.md — § 31. Action 生命周期与对账结果
+- docs/history/superseded-document-taxonomy/project-modules/06-agent-core-planning-control.md — § 11. StepExecutionGraph
+- docs/history/superseded-document-taxonomy/project-modules/06-agent-core-planning-control.md — § 31. Action 生命周期与对账结果
 
 ### 当前文档是否足够回答
 
@@ -495,8 +495,8 @@ None。第一轮记录的缺口已写回 canonical architecture；本 QA 不新�
 - interview_probability: HIGH
 - resume_trigger: Agent Core、Plan、ReAct、react
 - architecture_refs:
-  - docs/project/modules/06-agent-core-planning-control.md — § 11. StepExecutionGraph
-  - docs/project/modules/06-agent-core-planning-control.md — § 31. Action 生命周期与对账结果
+  - docs/history/superseded-document-taxonomy/project-modules/06-agent-core-planning-control.md — § 11. StepExecutionGraph
+  - docs/history/superseded-document-taxonomy/project-modules/06-agent-core-planning-control.md — § 31. Action 生命周期与对账结果
 - initial_coverage_status: FULL
 - coverage_status: FULL
 - gap_id: None
@@ -528,8 +528,8 @@ None。第一轮记录的缺口已写回 canonical architecture；本 QA 不新�
 
 ### Architecture Evidence
 
-- docs/project/modules/06-agent-core-planning-control.md — § 11. StepExecutionGraph
-- docs/project/modules/06-agent-core-planning-control.md — § 31. Action 生命周期与对账结果
+- docs/history/superseded-document-taxonomy/project-modules/06-agent-core-planning-control.md — § 11. StepExecutionGraph
+- docs/history/superseded-document-taxonomy/project-modules/06-agent-core-planning-control.md — § 31. Action 生命周期与对账结果
 
 ### 当前文档是否足够回答
 
@@ -548,8 +548,8 @@ None。第一轮记录的缺口已写回 canonical architecture；本 QA 不新�
 - interview_probability: HIGH
 - resume_trigger: Agent Core、Plan、ReAct、evaluation
 - architecture_refs:
-  - docs/project/modules/06-agent-core-planning-control.md — § 40. Final Gate 路由与 RunOutcome Contract
-  - docs/project/modules/06-agent-core-planning-control.md — § 35. Failure Decision Matrix
+  - docs/history/superseded-document-taxonomy/project-modules/06-agent-core-planning-control.md — § 40. Final Gate 路由与 RunOutcome Contract
+  - docs/history/superseded-document-taxonomy/project-modules/06-agent-core-planning-control.md — § 35. Failure Decision Matrix
 - initial_coverage_status: FULL
 - coverage_status: FULL
 - gap_id: None
@@ -581,8 +581,8 @@ Action Evaluation判断一次动作结果；Step Acceptance判断整个Step是�
 
 ### Architecture Evidence
 
-- docs/project/modules/06-agent-core-planning-control.md — § 40. Final Gate 路由与 RunOutcome Contract
-- docs/project/modules/06-agent-core-planning-control.md — § 35. Failure Decision Matrix
+- docs/history/superseded-document-taxonomy/project-modules/06-agent-core-planning-control.md — § 40. Final Gate 路由与 RunOutcome Contract
+- docs/history/superseded-document-taxonomy/project-modules/06-agent-core-planning-control.md — § 35. Failure Decision Matrix
 
 ### 当前文档是否足够回答
 
@@ -601,8 +601,8 @@ None。第一轮记录的缺口已写回 canonical architecture；本 QA 不新�
 - interview_probability: HIGH
 - resume_trigger: Agent Core、Plan、ReAct、reflection
 - architecture_refs:
-  - docs/project/modules/06-agent-core-planning-control.md — § 13. Reflection、Retry 与 Replan
-  - docs/project/modules/06-agent-core-planning-control.md — § 14. Finalization 与 Publication
+  - docs/history/superseded-document-taxonomy/project-modules/06-agent-core-planning-control.md — § 13. Reflection、Retry 与 Replan
+  - docs/history/superseded-document-taxonomy/project-modules/06-agent-core-planning-control.md — § 14. Finalization 与 Publication
 - initial_coverage_status: PARTIAL
 - coverage_status: FULL
 - gap_id: CLOSED-GAP-06-012
@@ -634,8 +634,8 @@ Reflection 什么时候触发？
 
 ### Architecture Evidence
 
-- docs/project/modules/06-agent-core-planning-control.md — § 13. Reflection、Retry 与 Replan
-- docs/project/modules/06-agent-core-planning-control.md — § 14. Finalization 与 Publication
+- docs/history/superseded-document-taxonomy/project-modules/06-agent-core-planning-control.md — § 13. Reflection、Retry 与 Replan
+- docs/history/superseded-document-taxonomy/project-modules/06-agent-core-planning-control.md — § 14. Finalization 与 Publication
 
 ### 当前文档是否足够回答
 
@@ -654,8 +654,8 @@ None。第一轮记录的缺口已写回 canonical architecture；本 QA 不新�
 - interview_probability: HIGH
 - resume_trigger: Agent Core、Plan、ReAct、reflection
 - architecture_refs:
-  - docs/project/modules/06-agent-core-planning-control.md — § 13. Reflection、Retry 与 Replan
-  - docs/project/modules/06-agent-core-planning-control.md — § 14. Finalization 与 Publication
+  - docs/history/superseded-document-taxonomy/project-modules/06-agent-core-planning-control.md — § 13. Reflection、Retry 与 Replan
+  - docs/history/superseded-document-taxonomy/project-modules/06-agent-core-planning-control.md — § 14. Finalization 与 Publication
 - initial_coverage_status: FULL
 - coverage_status: FULL
 - gap_id: None
@@ -687,8 +687,8 @@ None。第一轮记录的缺口已写回 canonical architecture；本 QA 不新�
 
 ### Architecture Evidence
 
-- docs/project/modules/06-agent-core-planning-control.md — § 13. Reflection、Retry 与 Replan
-- docs/project/modules/06-agent-core-planning-control.md — § 14. Finalization 与 Publication
+- docs/history/superseded-document-taxonomy/project-modules/06-agent-core-planning-control.md — § 13. Reflection、Retry 与 Replan
+- docs/history/superseded-document-taxonomy/project-modules/06-agent-core-planning-control.md — § 14. Finalization 与 Publication
 
 ### 当前文档是否足够回答
 
@@ -707,8 +707,8 @@ None。第一轮记录的缺口已写回 canonical architecture；本 QA 不新�
 - interview_probability: HIGH
 - resume_trigger: Agent Core、Plan、ReAct、repair
 - architecture_refs:
-  - docs/project/modules/06-agent-core-planning-control.md — § 14. Retry、Repair、Fallback 与 Replan
-  - docs/project/modules/06-agent-core-planning-control.md — § 35. Failure Decision Matrix
+  - docs/history/superseded-document-taxonomy/project-modules/06-agent-core-planning-control.md — § 14. Retry、Repair、Fallback 与 Replan
+  - docs/history/superseded-document-taxonomy/project-modules/06-agent-core-planning-control.md — § 35. Failure Decision Matrix
 - initial_coverage_status: PARTIAL
 - coverage_status: FULL
 - gap_id: CLOSED-GAP-06-014
@@ -740,8 +740,8 @@ Retry重做同动作，Repair改变参数，Fallback换兼容能力，Escalation
 
 ### Architecture Evidence
 
-- docs/project/modules/06-agent-core-planning-control.md — § 14. Retry、Repair、Fallback 与 Replan
-- docs/project/modules/06-agent-core-planning-control.md — § 35. Failure Decision Matrix
+- docs/history/superseded-document-taxonomy/project-modules/06-agent-core-planning-control.md — § 14. Retry、Repair、Fallback 与 Replan
+- docs/history/superseded-document-taxonomy/project-modules/06-agent-core-planning-control.md — § 35. Failure Decision Matrix
 
 ### 当前文档是否足够回答
 
@@ -760,8 +760,8 @@ None。第一轮记录的缺口已写回 canonical architecture；本 QA 不新�
 - interview_probability: HIGH
 - resume_trigger: Agent Core、Plan、ReAct、replan
 - architecture_refs:
-  - docs/project/modules/06-agent-core-planning-control.md — § 9. Replan Barrier
-  - docs/project/modules/06-agent-core-planning-control.md — § 14. Retry、Repair、Fallback 与 Replan
+  - docs/history/superseded-document-taxonomy/project-modules/06-agent-core-planning-control.md — § 9. Replan Barrier
+  - docs/history/superseded-document-taxonomy/project-modules/06-agent-core-planning-control.md — § 14. Retry、Repair、Fallback 与 Replan
 - initial_coverage_status: PARTIAL
 - coverage_status: FULL
 - gap_id: CLOSED-GAP-06-015
@@ -793,8 +793,8 @@ Step仍然合法且目标/依赖未变时Repair；目标、计划依赖、能力
 
 ### Architecture Evidence
 
-- docs/project/modules/06-agent-core-planning-control.md — § 9. Replan Barrier
-- docs/project/modules/06-agent-core-planning-control.md — § 14. Retry、Repair、Fallback 与 Replan
+- docs/history/superseded-document-taxonomy/project-modules/06-agent-core-planning-control.md — § 9. Replan Barrier
+- docs/history/superseded-document-taxonomy/project-modules/06-agent-core-planning-control.md — § 14. Retry、Repair、Fallback 与 Replan
 
 ### 当前文档是否足够回答
 
@@ -813,8 +813,8 @@ None。第一轮记录的缺口已写回 canonical architecture；本 QA 不新�
 - interview_probability: HIGH
 - resume_trigger: Agent Core、Plan、ReAct、version
 - architecture_refs:
-  - docs/project/modules/06-agent-core-planning-control.md — § 4. PlanVersion 状态机
-  - docs/project/modules/06-agent-core-planning-control.md — § 17. Contract Versioning
+  - docs/history/superseded-document-taxonomy/project-modules/06-agent-core-planning-control.md — § 4. PlanVersion 状态机
+  - docs/history/superseded-document-taxonomy/project-modules/06-agent-core-planning-control.md — § 17. Contract Versioning
 - initial_coverage_status: FULL
 - coverage_status: FULL
 - gap_id: None
@@ -846,8 +846,8 @@ PlanVersion 为什么 immutable？
 
 ### Architecture Evidence
 
-- docs/project/modules/06-agent-core-planning-control.md — § 4. PlanVersion 状态机
-- docs/project/modules/06-agent-core-planning-control.md — § 17. Contract Versioning
+- docs/history/superseded-document-taxonomy/project-modules/06-agent-core-planning-control.md — § 4. PlanVersion 状态机
+- docs/history/superseded-document-taxonomy/project-modules/06-agent-core-planning-control.md — § 17. Contract Versioning
 
 ### 当前文档是否足够回答
 
@@ -866,8 +866,8 @@ None。第一轮记录的缺口已写回 canonical architecture；本 QA 不新�
 - interview_probability: HIGH
 - resume_trigger: Agent Core、Plan、ReAct、replan
 - architecture_refs:
-  - docs/project/modules/06-agent-core-planning-control.md — § 9. Replan Barrier
-  - docs/project/modules/06-agent-core-planning-control.md — § 14. Retry、Repair、Fallback 与 Replan
+  - docs/history/superseded-document-taxonomy/project-modules/06-agent-core-planning-control.md — § 9. Replan Barrier
+  - docs/history/superseded-document-taxonomy/project-modules/06-agent-core-planning-control.md — § 14. Retry、Repair、Fallback 与 Replan
 - initial_coverage_status: PARTIAL
 - coverage_status: FULL
 - gap_id: CLOSED-GAP-06-017
@@ -899,8 +899,8 @@ Replan Barrier 做什么？
 
 ### Architecture Evidence
 
-- docs/project/modules/06-agent-core-planning-control.md — § 9. Replan Barrier
-- docs/project/modules/06-agent-core-planning-control.md — § 14. Retry、Repair、Fallback 与 Replan
+- docs/history/superseded-document-taxonomy/project-modules/06-agent-core-planning-control.md — § 9. Replan Barrier
+- docs/history/superseded-document-taxonomy/project-modules/06-agent-core-planning-control.md — § 14. Retry、Repair、Fallback 与 Replan
 
 ### 当前文档是否足够回答
 
@@ -919,8 +919,8 @@ None。第一轮记录的缺口已写回 canonical architecture；本 QA 不新�
 - interview_probability: HIGH
 - resume_trigger: Agent Core、Plan、ReAct、parallel
 - architecture_refs:
-  - docs/project/modules/06-agent-core-planning-control.md — § 7. ReadySet、Liveness 与 Join
-  - docs/project/modules/06-agent-core-planning-control.md — § 43. Resource Conflict Matrix
+  - docs/history/superseded-document-taxonomy/project-modules/06-agent-core-planning-control.md — § 7. ReadySet、Liveness 与 Join
+  - docs/history/superseded-document-taxonomy/project-modules/06-agent-core-planning-control.md — § 43. Resource Conflict Matrix
 - initial_coverage_status: FULL
 - coverage_status: FULL
 - gap_id: None
@@ -952,8 +952,8 @@ Ready只说明依赖满足，还要检查输入、Capability、Security、Budget
 
 ### Architecture Evidence
 
-- docs/project/modules/06-agent-core-planning-control.md — § 7. ReadySet、Liveness 与 Join
-- docs/project/modules/06-agent-core-planning-control.md — § 43. Resource Conflict Matrix
+- docs/history/superseded-document-taxonomy/project-modules/06-agent-core-planning-control.md — § 7. ReadySet、Liveness 与 Join
+- docs/history/superseded-document-taxonomy/project-modules/06-agent-core-planning-control.md — § 43. Resource Conflict Matrix
 
 ### 当前文档是否足够回答
 
@@ -976,8 +976,8 @@ None。第一轮记录的缺口已写回 canonical architecture；本 QA 不新�
 - interview_probability: HIGH
 - resume_trigger: Agent Core、Plan、ReAct、parallel
 - architecture_refs:
-  - docs/project/modules/06-agent-core-planning-control.md — § 7. ReadySet、Liveness 与 Join
-  - docs/project/modules/06-agent-core-planning-control.md — § 43. Resource Conflict Matrix
+  - docs/history/superseded-document-taxonomy/project-modules/06-agent-core-planning-control.md — § 7. ReadySet、Liveness 与 Join
+  - docs/history/superseded-document-taxonomy/project-modules/06-agent-core-planning-control.md — § 43. Resource Conflict Matrix
 - initial_coverage_status: FULL
 - coverage_status: FULL
 - gap_id: None
@@ -1009,8 +1009,8 @@ ResourceClaim和互斥/写冲突矩阵在Dispatch前确定性拒绝或串行化�
 
 ### Architecture Evidence
 
-- docs/project/modules/06-agent-core-planning-control.md — § 7. ReadySet、Liveness 与 Join
-- docs/project/modules/06-agent-core-planning-control.md — § 43. Resource Conflict Matrix
+- docs/history/superseded-document-taxonomy/project-modules/06-agent-core-planning-control.md — § 7. ReadySet、Liveness 与 Join
+- docs/history/superseded-document-taxonomy/project-modules/06-agent-core-planning-control.md — § 43. Resource Conflict Matrix
 
 ### 当前文档是否足够回答
 
@@ -1029,8 +1029,8 @@ None。第一轮记录的缺口已写回 canonical architecture；本 QA 不新�
 - interview_probability: HIGH
 - resume_trigger: Agent Core、Plan、ReAct、parallel
 - architecture_refs:
-  - docs/project/modules/06-agent-core-planning-control.md — § 7. ReadySet、Liveness 与 Join
-  - docs/project/modules/06-agent-core-planning-control.md — § 43. Resource Conflict Matrix
+  - docs/history/superseded-document-taxonomy/project-modules/06-agent-core-planning-control.md — § 7. ReadySet、Liveness 与 Join
+  - docs/history/superseded-document-taxonomy/project-modules/06-agent-core-planning-control.md — § 43. Resource Conflict Matrix
 - initial_coverage_status: FULL
 - coverage_status: FULL
 - gap_id: None
@@ -1062,8 +1062,8 @@ None。第一轮记录的缺口已写回 canonical architecture；本 QA 不新�
 
 ### Architecture Evidence
 
-- docs/project/modules/06-agent-core-planning-control.md — § 7. ReadySet、Liveness 与 Join
-- docs/project/modules/06-agent-core-planning-control.md — § 43. Resource Conflict Matrix
+- docs/history/superseded-document-taxonomy/project-modules/06-agent-core-planning-control.md — § 7. ReadySet、Liveness 与 Join
+- docs/history/superseded-document-taxonomy/project-modules/06-agent-core-planning-control.md — § 43. Resource Conflict Matrix
 
 ### 当前文档是否足够回答
 
@@ -1082,8 +1082,8 @@ None。第一轮记录的缺口已写回 canonical architecture；本 QA 不新�
 - interview_probability: HIGH
 - resume_trigger: Agent Core、Plan、ReAct、langgraph
 - architecture_refs:
-  - docs/project/modules/06-agent-core-planning-control.md — § 41. LangGraph Adapter Contract
-  - docs/project/modules/06-agent-core-planning-control.md — § 8. Dispatch、Fencing 与 Reducer
+  - docs/history/superseded-document-taxonomy/project-modules/06-agent-core-planning-control.md — § 41. LangGraph Adapter Contract
+  - docs/history/superseded-document-taxonomy/project-modules/06-agent-core-planning-control.md — § 8. Dispatch、Fencing 与 Reducer
 - initial_coverage_status: FULL
 - coverage_status: FULL
 - gap_id: None
@@ -1115,8 +1115,8 @@ LangGraph Send 在架构中是什么？
 
 ### Architecture Evidence
 
-- docs/project/modules/06-agent-core-planning-control.md — § 41. LangGraph Adapter Contract
-- docs/project/modules/06-agent-core-planning-control.md — § 8. Dispatch、Fencing 与 Reducer
+- docs/history/superseded-document-taxonomy/project-modules/06-agent-core-planning-control.md — § 41. LangGraph Adapter Contract
+- docs/history/superseded-document-taxonomy/project-modules/06-agent-core-planning-control.md — § 8. Dispatch、Fencing 与 Reducer
 
 ### 当前文档是否足够回答
 
@@ -1135,8 +1135,8 @@ None。第一轮记录的缺口已写回 canonical architecture；本 QA 不新�
 - interview_probability: HIGH
 - resume_trigger: Agent Core、Plan、ReAct、dispatch
 - architecture_refs:
-  - docs/project/modules/06-agent-core-planning-control.md — § 8. Dispatch、Fencing 与 Reducer
-  - docs/project/modules/06-agent-core-planning-control.md — § 11. Side Effect Protocol
+  - docs/history/superseded-document-taxonomy/project-modules/06-agent-core-planning-control.md — § 8. Dispatch、Fencing 与 Reducer
+  - docs/history/superseded-document-taxonomy/project-modules/06-agent-core-planning-control.md — § 11. Side Effect Protocol
 - initial_coverage_status: PARTIAL
 - coverage_status: FULL
 - gap_id: CLOSED-GAP-06-022
@@ -1168,8 +1168,8 @@ None。第一轮记录的缺口已写回 canonical architecture；本 QA 不新�
 
 ### Architecture Evidence
 
-- docs/project/modules/06-agent-core-planning-control.md — § 8. Dispatch、Fencing 与 Reducer
-- docs/project/modules/06-agent-core-planning-control.md — § 11. Side Effect Protocol
+- docs/history/superseded-document-taxonomy/project-modules/06-agent-core-planning-control.md — § 8. Dispatch、Fencing 与 Reducer
+- docs/history/superseded-document-taxonomy/project-modules/06-agent-core-planning-control.md — § 11. Side Effect Protocol
 
 ### 当前文档是否足够回答
 
@@ -1188,8 +1188,8 @@ None。第一轮记录的缺口已写回 canonical architecture；本 QA 不新�
 - interview_probability: HIGH
 - resume_trigger: Agent Core、Plan、ReAct、join
 - architecture_refs:
-  - docs/project/modules/06-agent-core-planning-control.md — § 7. ReadySet、Liveness 与 Join
-  - docs/project/modules/06-agent-core-planning-control.md — § 6. DAG、Condition 与 Disposition
+  - docs/history/superseded-document-taxonomy/project-modules/06-agent-core-planning-control.md — § 7. ReadySet、Liveness 与 Join
+  - docs/history/superseded-document-taxonomy/project-modules/06-agent-core-planning-control.md — § 6. DAG、Condition 与 Disposition
 - initial_coverage_status: FULL
 - coverage_status: FULL
 - gap_id: None
@@ -1221,8 +1221,8 @@ BranchResultRef 为什么不直接写共享State？
 
 ### Architecture Evidence
 
-- docs/project/modules/06-agent-core-planning-control.md — § 7. ReadySet、Liveness 与 Join
-- docs/project/modules/06-agent-core-planning-control.md — § 6. DAG、Condition 与 Disposition
+- docs/history/superseded-document-taxonomy/project-modules/06-agent-core-planning-control.md — § 7. ReadySet、Liveness 与 Join
+- docs/history/superseded-document-taxonomy/project-modules/06-agent-core-planning-control.md — § 6. DAG、Condition 与 Disposition
 
 ### 当前文档是否足够回答
 
@@ -1241,8 +1241,8 @@ None。第一轮记录的缺口已写回 canonical architecture；本 QA 不新�
 - interview_probability: HIGH
 - resume_trigger: Agent Core、Plan、ReAct、join
 - architecture_refs:
-  - docs/project/modules/06-agent-core-planning-control.md — § 7. ReadySet、Liveness 与 Join
-  - docs/project/modules/06-agent-core-planning-control.md — § 6. DAG、Condition 与 Disposition
+  - docs/history/superseded-document-taxonomy/project-modules/06-agent-core-planning-control.md — § 7. ReadySet、Liveness 与 Join
+  - docs/history/superseded-document-taxonomy/project-modules/06-agent-core-planning-control.md — § 6. DAG、Condition 与 Disposition
 - initial_coverage_status: FULL
 - coverage_status: FULL
 - gap_id: None
@@ -1274,8 +1274,8 @@ ALL_REQUIRED、BEST_EFFORT、QUORUM、FIRST_VALID有什么差异？
 
 ### Architecture Evidence
 
-- docs/project/modules/06-agent-core-planning-control.md — § 7. ReadySet、Liveness 与 Join
-- docs/project/modules/06-agent-core-planning-control.md — § 6. DAG、Condition 与 Disposition
+- docs/history/superseded-document-taxonomy/project-modules/06-agent-core-planning-control.md — § 7. ReadySet、Liveness 与 Join
+- docs/history/superseded-document-taxonomy/project-modules/06-agent-core-planning-control.md — § 6. DAG、Condition 与 Disposition
 
 ### 当前文档是否足够回答
 
@@ -1294,8 +1294,8 @@ None。第一轮记录的缺口已写回 canonical architecture；本 QA 不新�
 - interview_probability: HIGH
 - resume_trigger: Agent Core、Plan、ReAct、join
 - architecture_refs:
-  - docs/project/modules/06-agent-core-planning-control.md — § 7. ReadySet、Liveness 与 Join
-  - docs/project/modules/06-agent-core-planning-control.md — § 6. DAG、Condition 与 Disposition
+  - docs/history/superseded-document-taxonomy/project-modules/06-agent-core-planning-control.md — § 7. ReadySet、Liveness 与 Join
+  - docs/history/superseded-document-taxonomy/project-modules/06-agent-core-planning-control.md — § 6. DAG、Condition 与 Disposition
 - initial_coverage_status: FULL
 - coverage_status: FULL
 - gap_id: None
@@ -1327,8 +1327,8 @@ None。第一轮记录的缺口已写回 canonical architecture；本 QA 不新�
 
 ### Architecture Evidence
 
-- docs/project/modules/06-agent-core-planning-control.md — § 7. ReadySet、Liveness 与 Join
-- docs/project/modules/06-agent-core-planning-control.md — § 6. DAG、Condition 与 Disposition
+- docs/history/superseded-document-taxonomy/project-modules/06-agent-core-planning-control.md — § 7. ReadySet、Liveness 与 Join
+- docs/history/superseded-document-taxonomy/project-modules/06-agent-core-planning-control.md — § 6. DAG、Condition 与 Disposition
 
 ### 当前文档是否足够回答
 
@@ -1347,8 +1347,8 @@ None。第一轮记录的缺口已写回 canonical architecture；本 QA 不新�
 - interview_probability: HIGH
 - resume_trigger: Agent Core、Plan、ReAct、join
 - architecture_refs:
-  - docs/project/modules/06-agent-core-planning-control.md — § 7. ReadySet、Liveness 与 Join
-  - docs/project/modules/06-agent-core-planning-control.md — § 6. DAG、Condition 与 Disposition
+  - docs/history/superseded-document-taxonomy/project-modules/06-agent-core-planning-control.md — § 7. ReadySet、Liveness 与 Join
+  - docs/history/superseded-document-taxonomy/project-modules/06-agent-core-planning-control.md — § 6. DAG、Condition 与 Disposition
 - initial_coverage_status: PARTIAL
 - coverage_status: FULL
 - gap_id: CLOSED-GAP-06-026
@@ -1380,8 +1380,8 @@ None。第一轮记录的缺口已写回 canonical architecture；本 QA 不新�
 
 ### Architecture Evidence
 
-- docs/project/modules/06-agent-core-planning-control.md — § 7. ReadySet、Liveness 与 Join
-- docs/project/modules/06-agent-core-planning-control.md — § 6. DAG、Condition 与 Disposition
+- docs/history/superseded-document-taxonomy/project-modules/06-agent-core-planning-control.md — § 7. ReadySet、Liveness 与 Join
+- docs/history/superseded-document-taxonomy/project-modules/06-agent-core-planning-control.md — § 6. DAG、Condition 与 Disposition
 
 ### 当前文档是否足够回答
 
@@ -1400,8 +1400,8 @@ None。第一轮记录的缺口已写回 canonical architecture；本 QA 不新�
 - interview_probability: HIGH
 - resume_trigger: Agent Core、Plan、ReAct、interrupt
 - architecture_refs:
-  - docs/project/modules/06-agent-core-planning-control.md — § 10. Interrupt 与 Signal
-  - docs/project/modules/06-agent-core-planning-control.md — § 15. Cancellation 与控制命令
+  - docs/history/superseded-document-taxonomy/project-modules/06-agent-core-planning-control.md — § 10. Interrupt 与 Signal
+  - docs/history/superseded-document-taxonomy/project-modules/06-agent-core-planning-control.md — § 15. Cancellation 与控制命令
 - initial_coverage_status: FULL
 - coverage_status: FULL
 - gap_id: None
@@ -1433,8 +1433,8 @@ Interrupt 适合哪些场景？
 
 ### Architecture Evidence
 
-- docs/project/modules/06-agent-core-planning-control.md — § 10. Interrupt 与 Signal
-- docs/project/modules/06-agent-core-planning-control.md — § 15. Cancellation 与控制命令
+- docs/history/superseded-document-taxonomy/project-modules/06-agent-core-planning-control.md — § 10. Interrupt 与 Signal
+- docs/history/superseded-document-taxonomy/project-modules/06-agent-core-planning-control.md — § 15. Cancellation 与控制命令
 
 ### 当前文档是否足够回答
 
@@ -1457,8 +1457,8 @@ None。第一轮记录的缺口已写回 canonical architecture；本 QA 不新�
 - interview_probability: HIGH
 - resume_trigger: Agent Core、Plan、ReAct、interrupt
 - architecture_refs:
-  - docs/project/modules/06-agent-core-planning-control.md — § 10. Interrupt 与 Signal
-  - docs/project/modules/06-agent-core-planning-control.md — § 15. Cancellation 与控制命令
+  - docs/history/superseded-document-taxonomy/project-modules/06-agent-core-planning-control.md — § 10. Interrupt 与 Signal
+  - docs/history/superseded-document-taxonomy/project-modules/06-agent-core-planning-control.md — § 15. Cancellation 与控制命令
 - initial_coverage_status: PARTIAL
 - coverage_status: FULL
 - gap_id: CLOSED-GAP-06-028
@@ -1490,8 +1490,8 @@ Approval wait 后如何 Resume？
 
 ### Architecture Evidence
 
-- docs/project/modules/06-agent-core-planning-control.md — § 10. Interrupt 与 Signal
-- docs/project/modules/06-agent-core-planning-control.md — § 15. Cancellation 与控制命令
+- docs/history/superseded-document-taxonomy/project-modules/06-agent-core-planning-control.md — § 10. Interrupt 与 Signal
+- docs/history/superseded-document-taxonomy/project-modules/06-agent-core-planning-control.md — § 15. Cancellation 与控制命令
 
 ### 当前文档是否足够回答
 
@@ -1510,8 +1510,8 @@ None。第一轮记录的缺口已写回 canonical architecture；本 QA 不新�
 - interview_probability: HIGH
 - resume_trigger: Agent Core、Plan、ReAct、interrupt
 - architecture_refs:
-  - docs/project/modules/06-agent-core-planning-control.md — § 10. Interrupt 与 Signal
-  - docs/project/modules/06-agent-core-planning-control.md — § 15. Cancellation 与控制命令
+  - docs/history/superseded-document-taxonomy/project-modules/06-agent-core-planning-control.md — § 10. Interrupt 与 Signal
+  - docs/history/superseded-document-taxonomy/project-modules/06-agent-core-planning-control.md — § 15. Cancellation 与控制命令
 - initial_coverage_status: FULL
 - coverage_status: FULL
 - gap_id: None
@@ -1543,8 +1543,8 @@ Cancellation 能否取消已经发出的Tool Effect？
 
 ### Architecture Evidence
 
-- docs/project/modules/06-agent-core-planning-control.md — § 10. Interrupt 与 Signal
-- docs/project/modules/06-agent-core-planning-control.md — § 15. Cancellation 与控制命令
+- docs/history/superseded-document-taxonomy/project-modules/06-agent-core-planning-control.md — § 10. Interrupt 与 Signal
+- docs/history/superseded-document-taxonomy/project-modules/06-agent-core-planning-control.md — § 15. Cancellation 与控制命令
 
 ### 当前文档是否足够回答
 
@@ -1563,8 +1563,8 @@ None。第一轮记录的缺口已写回 canonical architecture；本 QA 不新�
 - interview_probability: HIGH
 - resume_trigger: Agent Core、Plan、ReAct、budget
 - architecture_refs:
-  - docs/project/modules/06-agent-core-planning-control.md — § 15. Budget、Admission 与 No-progress
-  - docs/project/modules/06-agent-core-planning-control.md — § 36. Budget Ledger
+  - docs/history/superseded-document-taxonomy/project-modules/06-agent-core-planning-control.md — § 15. Budget、Admission 与 No-progress
+  - docs/history/superseded-document-taxonomy/project-modules/06-agent-core-planning-control.md — § 36. Budget Ledger
 - initial_coverage_status: FULL
 - coverage_status: FULL
 - gap_id: None
@@ -1596,8 +1596,8 @@ Agent Core拥有Run/Step预算仲裁，模块报告实际Usage/Cost；任何Retr
 
 ### Architecture Evidence
 
-- docs/project/modules/06-agent-core-planning-control.md — § 15. Budget、Admission 与 No-progress
-- docs/project/modules/06-agent-core-planning-control.md — § 36. Budget Ledger
+- docs/history/superseded-document-taxonomy/project-modules/06-agent-core-planning-control.md — § 15. Budget、Admission 与 No-progress
+- docs/history/superseded-document-taxonomy/project-modules/06-agent-core-planning-control.md — § 36. Budget Ledger
 
 ### 当前文档是否足够回答
 
@@ -1616,8 +1616,8 @@ None。第一轮记录的缺口已写回 canonical architecture；本 QA 不新�
 - interview_probability: HIGH
 - resume_trigger: Agent Core、Plan、ReAct、persistence
 - architecture_refs:
-  - docs/project/modules/06-agent-core-planning-control.md — § 18. Checkpoint、Domain Fact 与 Object Payload
-  - docs/project/modules/06-agent-core-planning-control.md — § 3. Domain Store 与 LangGraph Checkpoint 一致性
+  - docs/history/superseded-document-taxonomy/project-modules/06-agent-core-planning-control.md — § 18. Checkpoint、Domain Fact 与 Object Payload
+  - docs/history/superseded-document-taxonomy/project-modules/06-agent-core-planning-control.md — § 3. Domain Store 与 LangGraph Checkpoint 一致性
 - initial_coverage_status: PARTIAL
 - coverage_status: FULL
 - gap_id: CLOSED-GAP-06-031
@@ -1649,8 +1649,8 @@ PostgreSQL保存权威Domain事实、Version、Outbox和可查询Receipt；Check
 
 ### Architecture Evidence
 
-- docs/project/modules/06-agent-core-planning-control.md — § 18. Checkpoint、Domain Fact 与 Object Payload
-- docs/project/modules/06-agent-core-planning-control.md — § 3. Domain Store 与 LangGraph Checkpoint 一致性
+- docs/history/superseded-document-taxonomy/project-modules/06-agent-core-planning-control.md — § 18. Checkpoint、Domain Fact 与 Object Payload
+- docs/history/superseded-document-taxonomy/project-modules/06-agent-core-planning-control.md — § 3. Domain Store 与 LangGraph Checkpoint 一致性
 
 ### 当前文档是否足够回答
 
@@ -1669,8 +1669,8 @@ None。第一轮记录的缺口已写回 canonical architecture；本 QA 不新�
 - interview_probability: HIGH
 - resume_trigger: Agent Core、Plan、ReAct、persistence
 - architecture_refs:
-  - docs/project/modules/06-agent-core-planning-control.md — § 18. Checkpoint、Domain Fact 与 Object Payload
-  - docs/project/modules/06-agent-core-planning-control.md — § 3. Domain Store 与 LangGraph Checkpoint 一致性
+  - docs/history/superseded-document-taxonomy/project-modules/06-agent-core-planning-control.md — § 18. Checkpoint、Domain Fact 与 Object Payload
+  - docs/history/superseded-document-taxonomy/project-modules/06-agent-core-planning-control.md — § 3. Domain Store 与 LangGraph Checkpoint 一致性
 - initial_coverage_status: PARTIAL
 - coverage_status: FULL
 - gap_id: CLOSED-GAP-06-032
@@ -1702,8 +1702,8 @@ Crash 后 Checkpoint 比 Domain 新怎么办？
 
 ### Architecture Evidence
 
-- docs/project/modules/06-agent-core-planning-control.md — § 18. Checkpoint、Domain Fact 与 Object Payload
-- docs/project/modules/06-agent-core-planning-control.md — § 3. Domain Store 与 LangGraph Checkpoint 一致性
+- docs/history/superseded-document-taxonomy/project-modules/06-agent-core-planning-control.md — § 18. Checkpoint、Domain Fact 与 Object Payload
+- docs/history/superseded-document-taxonomy/project-modules/06-agent-core-planning-control.md — § 3. Domain Store 与 LangGraph Checkpoint 一致性
 
 ### 当前文档是否足够回答
 
@@ -1722,8 +1722,8 @@ None。第一轮记录的缺口已写回 canonical architecture；本 QA 不新�
 - interview_probability: HIGH
 - resume_trigger: Agent Core、Plan、ReAct、persistence
 - architecture_refs:
-  - docs/project/modules/06-agent-core-planning-control.md — § 18. Checkpoint、Domain Fact 与 Object Payload
-  - docs/project/modules/06-agent-core-planning-control.md — § 3. Domain Store 与 LangGraph Checkpoint 一致性
+  - docs/history/superseded-document-taxonomy/project-modules/06-agent-core-planning-control.md — § 18. Checkpoint、Domain Fact 与 Object Payload
+  - docs/history/superseded-document-taxonomy/project-modules/06-agent-core-planning-control.md — § 3. Domain Store 与 LangGraph Checkpoint 一致性
 - initial_coverage_status: FULL
 - coverage_status: FULL
 - gap_id: None
@@ -1755,8 +1755,8 @@ Checkpoint 比 Domain 旧怎么办？
 
 ### Architecture Evidence
 
-- docs/project/modules/06-agent-core-planning-control.md — § 18. Checkpoint、Domain Fact 与 Object Payload
-- docs/project/modules/06-agent-core-planning-control.md — § 3. Domain Store 与 LangGraph Checkpoint 一致性
+- docs/history/superseded-document-taxonomy/project-modules/06-agent-core-planning-control.md — § 18. Checkpoint、Domain Fact 与 Object Payload
+- docs/history/superseded-document-taxonomy/project-modules/06-agent-core-planning-control.md — § 3. Domain Store 与 LangGraph Checkpoint 一致性
 
 ### 当前文档是否足够回答
 
@@ -1775,8 +1775,8 @@ None。第一轮记录的缺口已写回 canonical architecture；本 QA 不新�
 - interview_probability: HIGH
 - resume_trigger: Agent Core、Plan、ReAct、final
 - architecture_refs:
-  - docs/project/modules/06-agent-core-planning-control.md — § 12. AnswerPolicy、Final Gate 与 Publication
-  - docs/project/modules/06-agent-core-planning-control.md — § 40. Final Gate 路由与 RunOutcome Contract
+  - docs/history/superseded-document-taxonomy/project-modules/06-agent-core-planning-control.md — § 12. AnswerPolicy、Final Gate 与 Publication
+  - docs/history/superseded-document-taxonomy/project-modules/06-agent-core-planning-control.md — § 40. Final Gate 路由与 RunOutcome Contract
 - initial_coverage_status: PARTIAL
 - coverage_status: FULL
 - gap_id: CLOSED-GAP-06-034
@@ -1808,8 +1808,8 @@ Final Gate 在输出前检查什么？
 
 ### Architecture Evidence
 
-- docs/project/modules/06-agent-core-planning-control.md — § 12. AnswerPolicy、Final Gate 与 Publication
-- docs/project/modules/06-agent-core-planning-control.md — § 40. Final Gate 路由与 RunOutcome Contract
+- docs/history/superseded-document-taxonomy/project-modules/06-agent-core-planning-control.md — § 12. AnswerPolicy、Final Gate 与 Publication
+- docs/history/superseded-document-taxonomy/project-modules/06-agent-core-planning-control.md — § 40. Final Gate 路由与 RunOutcome Contract
 
 ### 当前文档是否足够回答
 
@@ -1822,14 +1822,14 @@ None。第一轮记录的缺口已写回 canonical architecture；本 QA 不新�
 ## Q202 Final Reflection 与普通 Reflection 有什么区别？
 
 - source_type: ARCHITECTURE_STRESS
-- source_ref: zuno-target: docs/project/modules/06-agent-core-planning-control.md — § 12. AnswerPolicy、Final Gate 与 Publication
+- source_ref: zuno-target: docs/history/superseded-document-taxonomy/project-modules/06-agent-core-planning-control.md — § 12. AnswerPolicy、Final Gate 与 Publication
 - primary_domain: agent
 - difficulty: L2
 - interview_probability: HIGH
 - resume_trigger: Agent Core、Plan、ReAct、final
 - architecture_refs:
-  - docs/project/modules/06-agent-core-planning-control.md — § 12. AnswerPolicy、Final Gate 与 Publication
-  - docs/project/modules/06-agent-core-planning-control.md — § 40. Final Gate 路由与 RunOutcome Contract
+  - docs/history/superseded-document-taxonomy/project-modules/06-agent-core-planning-control.md — § 12. AnswerPolicy、Final Gate 与 Publication
+  - docs/history/superseded-document-taxonomy/project-modules/06-agent-core-planning-control.md — § 40. Final Gate 路由与 RunOutcome Contract
 - initial_coverage_status: FULL
 - coverage_status: FULL
 - gap_id: None
@@ -1861,8 +1861,8 @@ Final Reflection 与普通 Reflection 有什么区别？
 
 ### Architecture Evidence
 
-- docs/project/modules/06-agent-core-planning-control.md — § 12. AnswerPolicy、Final Gate 与 Publication
-- docs/project/modules/06-agent-core-planning-control.md — § 40. Final Gate 路由与 RunOutcome Contract
+- docs/history/superseded-document-taxonomy/project-modules/06-agent-core-planning-control.md — § 12. AnswerPolicy、Final Gate 与 Publication
+- docs/history/superseded-document-taxonomy/project-modules/06-agent-core-planning-control.md — § 40. Final Gate 路由与 RunOutcome Contract
 
 ### 当前文档是否足够回答
 
@@ -1875,14 +1875,14 @@ None。第一轮记录的缺口已写回 canonical architecture；本 QA 不新�
 ## Q203 RunOutcome 应包含什么？
 
 - source_type: ARCHITECTURE_STRESS
-- source_ref: zuno-target: docs/project/modules/06-agent-core-planning-control.md — § 12. AnswerPolicy、Final Gate 与 Publication
+- source_ref: zuno-target: docs/history/superseded-document-taxonomy/project-modules/06-agent-core-planning-control.md — § 12. AnswerPolicy、Final Gate 与 Publication
 - primary_domain: agent
 - difficulty: L3
 - interview_probability: HIGH
 - resume_trigger: Agent Core、Plan、ReAct、final
 - architecture_refs:
-  - docs/project/modules/06-agent-core-planning-control.md — § 12. AnswerPolicy、Final Gate 与 Publication
-  - docs/project/modules/06-agent-core-planning-control.md — § 40. Final Gate 路由与 RunOutcome Contract
+  - docs/history/superseded-document-taxonomy/project-modules/06-agent-core-planning-control.md — § 12. AnswerPolicy、Final Gate 与 Publication
+  - docs/history/superseded-document-taxonomy/project-modules/06-agent-core-planning-control.md — § 40. Final Gate 路由与 RunOutcome Contract
 - initial_coverage_status: FULL
 - coverage_status: FULL
 - gap_id: None
@@ -1914,8 +1914,8 @@ RunOutcome 应包含什么？
 
 ### Architecture Evidence
 
-- docs/project/modules/06-agent-core-planning-control.md — § 12. AnswerPolicy、Final Gate 与 Publication
-- docs/project/modules/06-agent-core-planning-control.md — § 40. Final Gate 路由与 RunOutcome Contract
+- docs/history/superseded-document-taxonomy/project-modules/06-agent-core-planning-control.md — § 12. AnswerPolicy、Final Gate 与 Publication
+- docs/history/superseded-document-taxonomy/project-modules/06-agent-core-planning-control.md — § 40. Final Gate 路由与 RunOutcome Contract
 
 ### 当前文档是否足够回答
 
@@ -1932,14 +1932,14 @@ None。第一轮记录的缺口已写回 canonical architecture；本 QA 不新�
 ## Q204 Reflexion 如何进入 Memory？
 
 - source_type: ARCHITECTURE_STRESS
-- source_ref: zuno-target: docs/project/modules/06-agent-core-planning-control.md — § 16. Cross-module Ownership
+- source_ref: zuno-target: docs/history/superseded-document-taxonomy/project-modules/06-agent-core-planning-control.md — § 16. Cross-module Ownership
 - primary_domain: agent
 - difficulty: L4
 - interview_probability: HIGH
 - resume_trigger: Agent Core、Plan、ReAct、memory
 - architecture_refs:
-  - docs/project/modules/06-agent-core-planning-control.md — § 16. Cross-module Ownership
-  - docs/project/modules/05-memory-context.md — § 23. Reflexion 流程
+  - docs/history/superseded-document-taxonomy/project-modules/06-agent-core-planning-control.md — § 16. Cross-module Ownership
+  - docs/history/superseded-document-taxonomy/project-modules/05-memory-context.md — § 23. Reflexion 流程
 - initial_coverage_status: FULL
 - coverage_status: FULL
 - gap_id: None
@@ -1971,8 +1971,8 @@ Run结束产生ReflexionCandidate或MemoryCandidate，交给Memory Governance；
 
 ### Architecture Evidence
 
-- docs/project/modules/06-agent-core-planning-control.md — § 16. Cross-module Ownership
-- docs/project/modules/05-memory-context.md — § 23. Reflexion 流程
+- docs/history/superseded-document-taxonomy/project-modules/06-agent-core-planning-control.md — § 16. Cross-module Ownership
+- docs/history/superseded-document-taxonomy/project-modules/05-memory-context.md — § 23. Reflexion 流程
 
 ### 当前文档是否足够回答
 
@@ -1985,14 +1985,14 @@ None。第一轮记录的缺口已写回 canonical architecture；本 QA 不新�
 ## Q205 模型在 Agent Core 中可以决定什么？
 
 - source_type: ARCHITECTURE_STRESS
-- source_ref: zuno-target: docs/project/modules/06-agent-core-planning-control.md — § 8. Planner Pipeline
+- source_ref: zuno-target: docs/history/superseded-document-taxonomy/project-modules/06-agent-core-planning-control.md — § 8. Planner Pipeline
 - primary_domain: agent
 - difficulty: L5
 - interview_probability: HIGH
 - resume_trigger: Agent Core、Plan、ReAct、model
 - architecture_refs:
-  - docs/project/modules/06-agent-core-planning-control.md — § 8. Planner Pipeline
-  - docs/project/modules/06-agent-core-planning-control.md — § 42. ModelCapabilityProfile 与 StepFeasibility
+  - docs/history/superseded-document-taxonomy/project-modules/06-agent-core-planning-control.md — § 8. Planner Pipeline
+  - docs/history/superseded-document-taxonomy/project-modules/06-agent-core-planning-control.md — § 42. ModelCapabilityProfile 与 StepFeasibility
 - initial_coverage_status: FULL
 - coverage_status: FULL
 - gap_id: None
@@ -2024,8 +2024,8 @@ None。第一轮记录的缺口已写回 canonical architecture；本 QA 不新�
 
 ### Architecture Evidence
 
-- docs/project/modules/06-agent-core-planning-control.md — § 8. Planner Pipeline
-- docs/project/modules/06-agent-core-planning-control.md — § 42. ModelCapabilityProfile 与 StepFeasibility
+- docs/history/superseded-document-taxonomy/project-modules/06-agent-core-planning-control.md — § 8. Planner Pipeline
+- docs/history/superseded-document-taxonomy/project-modules/06-agent-core-planning-control.md — § 42. ModelCapabilityProfile 与 StepFeasibility
 
 ### 当前文档是否足够回答
 
@@ -2038,14 +2038,14 @@ None。第一轮记录的缺口已写回 canonical architecture；本 QA 不新�
 ## Q206 为什么 Plan 必须包含 AcceptancePolicy？
 
 - source_type: ARCHITECTURE_STRESS
-- source_ref: zuno-target: docs/project/modules/06-agent-core-planning-control.md — § 40. Final Gate 路由与 RunOutcome Contract
+- source_ref: zuno-target: docs/history/superseded-document-taxonomy/project-modules/06-agent-core-planning-control.md — § 40. Final Gate 路由与 RunOutcome Contract
 - primary_domain: agent
 - difficulty: L6
 - interview_probability: HIGH
 - resume_trigger: Agent Core、Plan、ReAct、evaluation
 - architecture_refs:
-  - docs/project/modules/06-agent-core-planning-control.md — § 40. Final Gate 路由与 RunOutcome Contract
-  - docs/project/modules/06-agent-core-planning-control.md — § 35. Failure Decision Matrix
+  - docs/history/superseded-document-taxonomy/project-modules/06-agent-core-planning-control.md — § 40. Final Gate 路由与 RunOutcome Contract
+  - docs/history/superseded-document-taxonomy/project-modules/06-agent-core-planning-control.md — § 35. Failure Decision Matrix
 - initial_coverage_status: FULL
 - coverage_status: FULL
 - gap_id: None
@@ -2077,8 +2077,8 @@ None。第一轮记录的缺口已写回 canonical architecture；本 QA 不新�
 
 ### Architecture Evidence
 
-- docs/project/modules/06-agent-core-planning-control.md — § 40. Final Gate 路由与 RunOutcome Contract
-- docs/project/modules/06-agent-core-planning-control.md — § 35. Failure Decision Matrix
+- docs/history/superseded-document-taxonomy/project-modules/06-agent-core-planning-control.md — § 40. Final Gate 路由与 RunOutcome Contract
+- docs/history/superseded-document-taxonomy/project-modules/06-agent-core-planning-control.md — § 35. Failure Decision Matrix
 
 ### 当前文档是否足够回答
 
@@ -2091,14 +2091,14 @@ None。第一轮记录的缺口已写回 canonical architecture；本 QA 不新�
 ## Q207 Replan 期间正在运行的副作用分支怎么办？
 
 - source_type: ARCHITECTURE_STRESS
-- source_ref: zuno-target: docs/project/modules/06-agent-core-planning-control.md — § 9. Replan Barrier
+- source_ref: zuno-target: docs/history/superseded-document-taxonomy/project-modules/06-agent-core-planning-control.md — § 9. Replan Barrier
 - primary_domain: agent
 - difficulty: L7
 - interview_probability: HIGH
 - resume_trigger: Agent Core、Plan、ReAct、replan
 - architecture_refs:
-  - docs/project/modules/06-agent-core-planning-control.md — § 9. Replan Barrier
-  - docs/project/modules/06-agent-core-planning-control.md — § 14. Retry、Repair、Fallback 与 Replan
+  - docs/history/superseded-document-taxonomy/project-modules/06-agent-core-planning-control.md — § 9. Replan Barrier
+  - docs/history/superseded-document-taxonomy/project-modules/06-agent-core-planning-control.md — § 14. Retry、Repair、Fallback 与 Replan
 - initial_coverage_status: PARTIAL
 - coverage_status: FULL
 - gap_id: CLOSED-GAP-06-040
@@ -2130,8 +2130,8 @@ Replan 期间正在运行的副作用分支怎么办？
 
 ### Architecture Evidence
 
-- docs/project/modules/06-agent-core-planning-control.md — § 9. Replan Barrier
-- docs/project/modules/06-agent-core-planning-control.md — § 14. Retry、Repair、Fallback 与 Replan
+- docs/history/superseded-document-taxonomy/project-modules/06-agent-core-planning-control.md — § 9. Replan Barrier
+- docs/history/superseded-document-taxonomy/project-modules/06-agent-core-planning-control.md — § 14. Retry、Repair、Fallback 与 Replan
 
 ### 当前文档是否足够回答
 
@@ -2144,14 +2144,14 @@ None。第一轮记录的缺口已写回 canonical architecture；本 QA 不新�
 ## Q208 模型升级是否一定要Replan？
 
 - source_type: ARCHITECTURE_STRESS
-- source_ref: zuno-target: docs/project/modules/06-agent-core-planning-control.md — § 14. Retry、Repair、Fallback 与 Replan
+- source_ref: zuno-target: docs/history/superseded-document-taxonomy/project-modules/06-agent-core-planning-control.md — § 14. Retry、Repair、Fallback 与 Replan
 - primary_domain: agent
 - difficulty: L8
 - interview_probability: HIGH
 - resume_trigger: Agent Core、Plan、ReAct、repair
 - architecture_refs:
-  - docs/project/modules/06-agent-core-planning-control.md — § 14. Retry、Repair、Fallback 与 Replan
-  - docs/project/modules/06-agent-core-planning-control.md — § 35. Failure Decision Matrix
+  - docs/history/superseded-document-taxonomy/project-modules/06-agent-core-planning-control.md — § 14. Retry、Repair、Fallback 与 Replan
+  - docs/history/superseded-document-taxonomy/project-modules/06-agent-core-planning-control.md — § 35. Failure Decision Matrix
 - initial_coverage_status: FULL
 - coverage_status: FULL
 - gap_id: None
@@ -2183,8 +2183,8 @@ None。第一轮记录的缺口已写回 canonical architecture；本 QA 不新�
 
 ### Architecture Evidence
 
-- docs/project/modules/06-agent-core-planning-control.md — § 14. Retry、Repair、Fallback 与 Replan
-- docs/project/modules/06-agent-core-planning-control.md — § 35. Failure Decision Matrix
+- docs/history/superseded-document-taxonomy/project-modules/06-agent-core-planning-control.md — § 14. Retry、Repair、Fallback 与 Replan
+- docs/history/superseded-document-taxonomy/project-modules/06-agent-core-planning-control.md — § 35. Failure Decision Matrix
 
 ### 当前文档是否足够回答
 
@@ -2197,14 +2197,14 @@ None。第一轮记录的缺口已写回 canonical architecture；本 QA 不新�
 ## Q209 如何测试 Agent Core 的No-progress保护？
 
 - source_type: ARCHITECTURE_STRESS
-- source_ref: zuno-target: docs/project/modules/06-agent-core-planning-control.md — § 20. 验证与完成证据
+- source_ref: zuno-target: docs/history/superseded-document-taxonomy/project-modules/06-agent-core-planning-control.md — § 20. 验证与完成证据
 - primary_domain: agent
 - difficulty: L1
 - interview_probability: HIGH
 - resume_trigger: Agent Core、Plan、ReAct、eval
 - architecture_refs:
-  - docs/project/modules/06-agent-core-planning-control.md — § 20. 验证与完成证据
-  - docs/project/modules/06-agent-core-planning-control.md — § 29. Target 测试矩阵
+  - docs/history/superseded-document-taxonomy/project-modules/06-agent-core-planning-control.md — § 20. 验证与完成证据
+  - docs/history/superseded-document-taxonomy/project-modules/06-agent-core-planning-control.md — § 29. Target 测试矩阵
 - initial_coverage_status: FULL
 - coverage_status: FULL
 - gap_id: None
@@ -2236,8 +2236,8 @@ None。第一轮记录的缺口已写回 canonical architecture；本 QA 不新�
 
 ### Architecture Evidence
 
-- docs/project/modules/06-agent-core-planning-control.md — § 20. 验证与完成证据
-- docs/project/modules/06-agent-core-planning-control.md — § 29. Target 测试矩阵
+- docs/history/superseded-document-taxonomy/project-modules/06-agent-core-planning-control.md — § 20. 验证与完成证据
+- docs/history/superseded-document-taxonomy/project-modules/06-agent-core-planning-control.md — § 29. Target 测试矩阵
 
 ### 当前文档是否足够回答
 
@@ -2250,14 +2250,14 @@ None。第一轮记录的缺口已写回 canonical architecture；本 QA 不新�
 ## Q210 怎样判断一个ControlDecision没有被旧Epoch污染？
 
 - source_type: ARCHITECTURE_STRESS
-- source_ref: zuno-target: docs/project/modules/06-agent-core-planning-control.md — § 17. Contract Versioning
+- source_ref: zuno-target: docs/history/superseded-document-taxonomy/project-modules/06-agent-core-planning-control.md — § 17. Contract Versioning
 - primary_domain: agent
 - difficulty: L2
 - interview_probability: HIGH
 - resume_trigger: Agent Core、Plan、ReAct、consistency
 - architecture_refs:
-  - docs/project/modules/06-agent-core-planning-control.md — § 17. Contract Versioning
-  - docs/project/modules/06-agent-core-planning-control.md — § 45. Graph、State 与长运行版本升级
+  - docs/history/superseded-document-taxonomy/project-modules/06-agent-core-planning-control.md — § 17. Contract Versioning
+  - docs/history/superseded-document-taxonomy/project-modules/06-agent-core-planning-control.md — § 45. Graph、State 与长运行版本升级
 - initial_coverage_status: FULL
 - coverage_status: FULL
 - gap_id: None
@@ -2289,8 +2289,8 @@ None。第一轮记录的缺口已写回 canonical architecture；本 QA 不新�
 
 ### Architecture Evidence
 
-- docs/project/modules/06-agent-core-planning-control.md — § 17. Contract Versioning
-- docs/project/modules/06-agent-core-planning-control.md — § 45. Graph、State 与长运行版本升级
+- docs/history/superseded-document-taxonomy/project-modules/06-agent-core-planning-control.md — § 17. Contract Versioning
+- docs/history/superseded-document-taxonomy/project-modules/06-agent-core-planning-control.md — § 45. Graph、State 与长运行版本升级
 
 ### 当前文档是否足够回答
 
@@ -2303,14 +2303,14 @@ None。第一轮记录的缺口已写回 canonical architecture；本 QA 不新�
 ## Q211 Agent Core 文档哪些是Current，哪些是Target？
 
 - source_type: ARCHITECTURE_STRESS
-- source_ref: zuno-target: docs/project/modules/06-agent-core-planning-control.md — § 47. 架构完成与 Program 入口门槛
+- source_ref: zuno-target: docs/history/superseded-document-taxonomy/project-modules/06-agent-core-planning-control.md — § 47. 架构完成与 Program 入口门槛
 - primary_domain: agent
 - difficulty: L3
 - interview_probability: HIGH
 - resume_trigger: Agent Core、Plan、ReAct、current
 - architecture_refs:
-  - docs/project/modules/06-agent-core-planning-control.md — § 47. 架构完成与 Program 入口门槛
-  - docs/status/production-readiness.md — § Production Readiness
+  - docs/history/superseded-document-taxonomy/project-modules/06-agent-core-planning-control.md — § 47. 架构完成与 Program 入口门槛
+  - docs/project/status/production-readiness.md — § Production Readiness
 - initial_coverage_status: FULL
 - coverage_status: FULL
 - gap_id: None
@@ -2342,8 +2342,8 @@ Single Controller、Plan mandatory、状态/Contract是Target设计事实；impl
 
 ### Architecture Evidence
 
-- docs/project/modules/06-agent-core-planning-control.md — § 47. 架构完成与 Program 入口门槛
-- docs/status/production-readiness.md — § Production Readiness
+- docs/history/superseded-document-taxonomy/project-modules/06-agent-core-planning-control.md — § 47. 架构完成与 Program 入口门槛
+- docs/project/status/production-readiness.md — § Production Readiness
 
 ### 当前文档是否足够回答
 
@@ -2356,14 +2356,14 @@ None。第一轮记录的缺口已写回 canonical architecture；本 QA 不新�
 ## Q212 为什么 Final Gate 不能只看模型自信度？
 
 - source_type: ARCHITECTURE_STRESS
-- source_ref: zuno-target: docs/project/modules/06-agent-core-planning-control.md — § 12. AnswerPolicy、Final Gate 与 Publication
+- source_ref: zuno-target: docs/history/superseded-document-taxonomy/project-modules/06-agent-core-planning-control.md — § 12. AnswerPolicy、Final Gate 与 Publication
 - primary_domain: agent
 - difficulty: L4
 - interview_probability: HIGH
 - resume_trigger: Agent Core、Plan、ReAct、final
 - architecture_refs:
-  - docs/project/modules/06-agent-core-planning-control.md — § 12. AnswerPolicy、Final Gate 与 Publication
-  - docs/project/modules/06-agent-core-planning-control.md — § 40. Final Gate 路由与 RunOutcome Contract
+  - docs/history/superseded-document-taxonomy/project-modules/06-agent-core-planning-control.md — § 12. AnswerPolicy、Final Gate 与 Publication
+  - docs/history/superseded-document-taxonomy/project-modules/06-agent-core-planning-control.md — § 40. Final Gate 路由与 RunOutcome Contract
 - initial_coverage_status: FULL
 - coverage_status: FULL
 - gap_id: None
@@ -2395,8 +2395,8 @@ None。第一轮记录的缺口已写回 canonical architecture；本 QA 不新�
 
 ### Architecture Evidence
 
-- docs/project/modules/06-agent-core-planning-control.md — § 12. AnswerPolicy、Final Gate 与 Publication
-- docs/project/modules/06-agent-core-planning-control.md — § 40. Final Gate 路由与 RunOutcome Contract
+- docs/history/superseded-document-taxonomy/project-modules/06-agent-core-planning-control.md — § 12. AnswerPolicy、Final Gate 与 Publication
+- docs/history/superseded-document-taxonomy/project-modules/06-agent-core-planning-control.md — § 40. Final Gate 路由与 RunOutcome Contract
 
 ### 当前文档是否足够回答
 

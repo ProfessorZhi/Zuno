@@ -11,17 +11,17 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 CANONICAL = [
     ROOT / "docs/project/architecture/architecture.md",
-    ROOT / "docs/project/product/product-architecture.md",
-    ROOT / "docs/project/domain/legal-domain-model.md",
-    ROOT / "docs/project/domain/domain-state-lifecycle.md",
-    ROOT / "docs/project/agents/agent-platform.md",
-    ROOT / "docs/project/agents/multi-agent-runtime.md",
-    ROOT / "docs/project/knowledge/knowledge-evidence-architecture.md",
-    ROOT / "docs/project/services/service-architecture.md",
-    ROOT / "docs/project/data/data-ownership-and-recovery.md",
-    ROOT / "docs/project/security/security-architecture.md",
-    ROOT / "docs/project/eval/legal-eval-and-benchmark.md",
-    ROOT / "docs/project/deployment/microservice-deployment.md",
+    ROOT / "docs/history/superseded-document-taxonomy/project-topics/product/product-architecture.md",
+    ROOT / "docs/history/superseded-document-taxonomy/project-topics/domain/legal-domain-model.md",
+    ROOT / "docs/history/superseded-document-taxonomy/project-topics/domain/domain-state-lifecycle.md",
+    ROOT / "docs/history/superseded-document-taxonomy/project-topics/agents/agent-platform.md",
+    ROOT / "docs/history/superseded-document-taxonomy/project-topics/agents/multi-agent-runtime.md",
+    ROOT / "docs/history/superseded-document-taxonomy/project-topics/knowledge/knowledge-evidence-architecture.md",
+    ROOT / "docs/history/superseded-document-taxonomy/project-topics/services/service-architecture.md",
+    ROOT / "docs/history/superseded-document-taxonomy/project-topics/data/data-ownership-and-recovery.md",
+    ROOT / "docs/history/superseded-document-taxonomy/project-topics/security/security-architecture.md",
+    ROOT / "docs/history/superseded-document-taxonomy/project-topics/eval/legal-eval-and-benchmark.md",
+    ROOT / "docs/history/superseded-document-taxonomy/project-topics/deployment/microservice-deployment.md",
 ]
 PART_A = "## Part A — Architecture Narrative"
 PART_B = "## Part B — Detailed Architecture Specification"

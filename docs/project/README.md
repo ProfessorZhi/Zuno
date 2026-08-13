@@ -1,65 +1,69 @@
 # Zuno Project Knowledge Canonical Set
 
-`docs/project/` 是项目知识唯一正式入口。它把历史事实、跨领域架构和专题设计分开；Target 不能证明 Current，旧架构不能与新架构并列成为 Canonical Source。
+`docs/project/` 是项目知识唯一正式入口。本轮重构不再维护“11 个模块必须永久存在”的前提，也不把历史事实、当前仓库证据和 Target 架构混在同一层。
 
-## 三层入口
+Active canonical project layers are `docs/project/history/`, `docs/project/status/`, and `docs/project/architecture/`.
 
-| 层 | 回答的问题 | Canonical 内容 |
-|---|---|---|
-| `facts/` | What actually happened? | 背景、团队、开发、交付、技术现实和 UNKNOWN |
-| `architecture/` | How do the layers fit? | 总体集成、跨层关系、四个展示文件 |
-| 专题目录 | How does one concern work? | Product、Domain、Agents、Knowledge、Services、Data、Security、Eval、Deployment |
+## Canonical Questions
 
-## New Architecture Taxonomy
+| 区域 | 唯一问题 | Owner |
+| --- | --- | --- |
+| [`docs/project/history/`](history/README.md) | 历史项目发生了什么，哪些仍未知？ | Project History Owner |
+| [`docs/project/status/`](status/README.md) | 当前仓库、Target 和 Production Readiness 分别被什么证明？ | Status / Evidence Owner |
+| [`docs/project/architecture/`](architecture/README.md) | Product、Domain、Logical Capability、Physical Service/Deployment 如何形成一个跨层闭环？ | Cross-cutting Architecture Owner |
+
+ADR、治理和可复现证据分别由 `docs/decisions/`、`docs/governance/` 和 `docs/evidence/` 负责。`project-reconstruction-lab/` 维护调查、记忆恢复、Red/Blue、候选和会话材料，不拥有正式 Canonical Truth。
+
+## 新入口结构
 
 ```text
 docs/project/
-├─ facts/
-├─ architecture/
+├─ README.md
+├─ history/
 │  ├─ README.md
-│  ├─ architecture.md
-│  ├─ architecture-views.md
-│  └─ architecture.html
-├─ product/product-architecture.md
-├─ domain/legal-domain-model.md
-├─ domain/domain-state-lifecycle.md
-├─ agents/agent-platform.md
-├─ agents/multi-agent-runtime.md
-├─ knowledge/knowledge-evidence-architecture.md
-├─ services/service-architecture.md
-├─ data/data-ownership-and-recovery.md
-├─ security/security-architecture.md
-├─ eval/legal-eval-and-benchmark.md
-└─ deployment/microservice-deployment.md
+│  ├─ project-background.md
+│  ├─ requirements-and-workflows.md
+│  ├─ team-and-ownership.md
+│  ├─ development-history.md
+│  ├─ incidents-and-improvements.md
+│  ├─ delivery-and-usage.md
+│  └─ technology-history.md
+├─ status/
+│  ├─ README.md
+│  ├─ current-reality.md
+│  ├─ target-status.md
+│  └─ production-readiness.md
+└─ architecture/
+   ├─ README.md
+   ├─ architecture.md
+   ├─ architecture-views.md
+   └─ architecture.html
 ```
 
-每份专题文档必须声明 `canonical_question`、`owner`、`replaces`、Current/Target/Gap/Future 和验证入口。专题文档只拥有自己的事实；跨域关系由 `architecture/architecture.md` 组合。逻辑能力、服务、进程、容器、数据库和团队不是一一对应关系。
+最终服务数量、逻辑能力数量和未来专题拆分本轮都不冻结：`FINAL_MODULE_COUNT: NOT_DECIDED`。这里的目录分层回答阅读问题，不把目录、服务、进程、容器、数据库和团队强制一一对应。
 
 ## Reading paths
 
 ```text
-Product:  docs/README.md → architecture/architecture.md → product → domain
-Agent:    architecture → domain → agents → services → data/security
-Knowledge: domain → knowledge → agents → eval
-Backend:  domain → services → data → security → deployment
-SRE:      services → data → deployment → eval
+Product reader: history/background → architecture → status/target → evidence
+Agent engineer: architecture → decisions/governance → status → code/evidence
+Knowledge engineer: history/requirements → architecture → status → eval evidence
+Backend/SRE: architecture → status/current → governance → evidence → deployment decisions
+Interviewer: history/team → history/development → current-reality → architecture → incidents
 ```
 
-## Current / Target / History
+## 状态模型
 
-- Current 只由代码、Migration、Test、Trace、Eval、`docs/status/` 和 `docs/evidence/` 证明。
-- Target 由 accepted ADR、专题 Canonical 文档和共享 Contract 定义；Python-only/Microservice 是本轮 Target Constraint。
-- `architecture_state: ACCEPTED_TARGET` 表示用户已接受下一阶段 Canonical Part-A 设计；它不表示
-  `IMPLEMENTED`、`VERIFIED`、`MEASURED` 或 `PRODUCTION_PROVEN`。
-- Hypothesis 必须通过 Benchmark、Spike、Security Evidence 或 User Validation 关闭；没有关闭前不能提升为 Current。
-- Future 只记录长期可选方向，例如 Persistent Agent Team、物理数据库拆分、Kubernetes 或 Event Sourcing；它们不是本轮服务成立的前置条件。
-- History 保留旧 11 Module 架构的摘要和可追溯迁移材料；旧模块不再是新 Target 的事实源。
+- `Current`：代码、Migration、Test、Trace、Eval 或真实运行证据已证明。
+- `Target`：已接受的设计方向，不表示实现完成。
+- `Hypothesis`：需要 Benchmark、Spike、Security Evidence 或 User Validation。
+- `Future`：长期可选，不是当前 Blocker。
+- `History`：历史项目事实、UNKNOWN 和被替换的组织方式。
 
-入口和服务边界决策见：
+历史文档中的用户确认、部分回忆、仓库局部证据和公开背景必须保留其证据边界。当前仓库不是完整历史项目；论文公开成果也不能自动升级为产品实现。
 
-- [`ADR-0008`](../decisions/0008-legal-domain-kernel-and-host-boundary.md)
-- [`ADR-0009`](../decisions/0009-python-only-backend.md)
-- [`ADR-0010`](../decisions/0010-microservice-target-and-service-boundaries.md)
-- [`ADR-0011`](../decisions/0011-architecture-document-taxonomy.md)
+## 与旧结构的关系
 
-项目事实目录仍是历史真相源；项目重建与红蓝过程记录在 `project-reconstruction-lab/`，不覆盖正式事实。
+`11 Logical Modules + 1 Architecture` 是上一阶段的 History/Superseded 组织方式。旧事实、专题和模块原稿保存在 [`../history/superseded-document-taxonomy/README.md`](../history/superseded-document-taxonomy/README.md)，只用于审计和考古，不是当前路由。后续若要重建专题或改变架构，必须经过新的 Red/Blue 和明确的 Canonical Decision。
+
+当前入口不改变 Python-only / Microservice 等既有 Owner Target Constraint，也不证明 Native Runtime、Graph、Memory Provider、Multi-Agent 或具体服务数量已经带来收益。相关命题仍需 A/B/C Benchmark、Kill Test、失败恢复和安全证据。

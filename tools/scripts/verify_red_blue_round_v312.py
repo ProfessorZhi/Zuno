@@ -29,6 +29,29 @@ LENSES = {
 }
 TABLE_LINE = re.compile(r"^\|\s*(Q\d{3})\s*\|(.+)\|\s*$")
 
+CANONICAL_OWNER_ALIASES = {
+    "docs/project/product/": "docs/history/superseded-document-taxonomy/project-topics/product/",
+    "docs/project/domain/": "docs/history/superseded-document-taxonomy/project-topics/domain/",
+    "docs/project/agents/": "docs/history/superseded-document-taxonomy/project-topics/agents/",
+    "docs/project/knowledge/": "docs/history/superseded-document-taxonomy/project-topics/knowledge/",
+    "docs/project/services/": "docs/history/superseded-document-taxonomy/project-topics/services/",
+    "docs/project/data/": "docs/history/superseded-document-taxonomy/project-topics/data/",
+    "docs/project/security/": "docs/history/superseded-document-taxonomy/project-topics/security/",
+    "docs/project/eval/": "docs/history/superseded-document-taxonomy/project-topics/eval/",
+    "docs/project/deployment/": "docs/history/superseded-document-taxonomy/project-topics/deployment/",
+    "docs/project/modules/": "docs/history/superseded-document-taxonomy/project-modules/",
+}
+
+
+def canonical_owner_exists(owner: str) -> bool:
+    path = ROOT / owner
+    if path.exists():
+        return True
+    for old_prefix, new_prefix in CANONICAL_OWNER_ALIASES.items():
+        if owner.startswith(old_prefix):
+            return (ROOT / (new_prefix + owner[len(old_prefix):])).exists()
+    return False
+
 
 def rows(path: Path) -> list[list[str]]:
     result: list[list[str]] = []
@@ -122,7 +145,7 @@ def verify() -> list[str]:
                 errors.append(f"{row[0]} has unknown lens")
             else:
                 lens_counts[lens] += 1
-            if not (owner.startswith("docs/project/") and (ROOT / owner).exists()):
+            if not (owner.startswith("docs/project/") and canonical_owner_exists(owner)):
                 errors.append(f"{row[0]} has invalid canonical owner: {owner}")
             if not row[4] or not row[5] or not row[6] or not row[7] or not row[8]:
                 errors.append(f"{row[0]} must include scenario, question, intent, evidence and kill condition")

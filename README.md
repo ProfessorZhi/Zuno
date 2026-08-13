@@ -53,7 +53,7 @@ README 同时展示 Current 和 Target，但二者不能混为一谈。
 | Evidence-Driven Agentic GraphRAG v2 | `accepted-target`，设计可用；Claim-level Evidence Deliberation、Evidence Reasoning Graph 和 Targeted Probe 尚不能声明为 Current |
 | Eval 与发布质量 | 工程收口已完成；固定测量仍为 blocked，quality not yet proven，production readiness not established |
 
-正式状态事实以 [`docs/status/production-readiness.md`](./docs/status/production-readiness.md)、最新代码、Migration、测试、Trace、Eval 和 Evidence 为准。README、类名、表名、Phase 名称或架构图本身都不能证明 Target 已实现。
+正式状态事实以 [`docs/project/status/production-readiness.md`](./docs/project/status/production-readiness.md)、最新代码、Migration、测试、Trace、Eval 和 Evidence 为准。README、类名、表名、Phase 名称或架构图本身都不能证明 Target 已实现。
 
 ## 四组架构总览
 
@@ -479,8 +479,10 @@ Object upload success != Artifact published
 - [Zuno 项目知识入口](./docs/project/README.md)
 - [总体 Target 架构](./docs/project/architecture/architecture.md)
 - [架构视图 HTML](./docs/project/architecture/architecture.html)
-- [十一逻辑模块设计](./docs/project/modules/README.md)
-- [Production Readiness 状态](./docs/status/production-readiness.md)
+- [历史项目入口](./docs/project/history/README.md)
+- [Current Repository Reality](./docs/project/status/current-reality.md)
+- [Target Status](./docs/project/status/target-status.md)
+- [Production Readiness 状态](./docs/project/status/production-readiness.md)
 - [Evidence-Driven Agentic GraphRAG ADR](./docs/decisions/0006-evidence-driven-agentic-graphrag.md)
 - [架构决策](./docs/decisions/README.md)
 - [Repository Ownership Matrix](./docs/governance/repo-ownership-matrix.md)
@@ -488,19 +490,7 @@ Object upload success != Artifact published
 - [当前证据入口](./docs/evidence/README.md)
 - [历史归档入口](./docs/history/README.md)
 
-十一模块：
-
-- [01 Product Surface](./docs/project/modules/01-product-surface.md)
-- [02 Input / Document Ingestion](./docs/project/modules/02-input-document-ingestion.md)
-- [03 Knowledge / Agentic GraphRAG](./docs/project/modules/03-knowledge-agentic-graphrag.md)
-- [04 Model Gateway](./docs/project/modules/04-model-gateway.md)
-- [05 Memory & Context](./docs/project/modules/05-memory-context.md)
-- [06 Agent Core / Planning & Control](./docs/project/modules/06-agent-core-planning-control.md)
-- [07 Capability / Skill](./docs/project/modules/07-capability-skill.md)
-- [08 Tool Runtime](./docs/project/modules/08-tool-runtime.md)
-- [09 Security](./docs/project/modules/09-security.md)
-- [10 Observability & Eval](./docs/project/modules/10-observability-eval.md)
-- [11 Infrastructure](./docs/project/modules/11-infrastructure.md)
+旧的 11 Logical Modules 已迁入 [`docs/history/superseded-document-taxonomy/`](./docs/history/superseded-document-taxonomy/README.md)，仅供历史审计，不代表当前模块数、服务数或 Runtime 边界。
 
 ## Program 状态
 

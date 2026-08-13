@@ -44,4 +44,4 @@ Production          = NO
 
 ## 证据路由
 
-当前仓库的运行和测试证据进入 [`../../evidence/`](../../evidence/README.md)；生产 readiness 进入 [`../../status/production-readiness.md`](../../status/production-readiness.md)。本文件只维护项目历史状态，不把当前 Compose 或目标部署拓扑当作历史交付证明。
+当前仓库的运行和测试证据进入 [`../../evidence/`](../../evidence/README.md)；生产 readiness 进入 [`../status/production-readiness.md`](../status/production-readiness.md)。本文件只维护项目历史状态，不把当前 Compose 或目标部署拓扑当作历史交付证明。

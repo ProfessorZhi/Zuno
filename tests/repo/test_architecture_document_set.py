@@ -22,9 +22,8 @@ def test_architecture_document_set_is_canonical() -> None:
 
 
 def test_legacy_design_material_is_not_canonical() -> None:
-    module_docs = sorted((REPO_ROOT / "docs/project/modules").glob("[0-9][0-9]-*.md"))
-    assert len(module_docs) == 11
-    assert all("status: superseded-legacy-reference" in path.read_text(encoding="utf-8") for path in module_docs)
+    assert not (REPO_ROOT / "docs/project/modules").exists()
+    assert (REPO_ROOT / "docs/history/superseded-document-taxonomy/project-modules/11-infrastructure.md").exists()
     assert (REPO_ROOT / "docs/project/architecture/architecture.md").exists()
     assert (REPO_ROOT / "docs/project/architecture/architecture.html").exists()
 

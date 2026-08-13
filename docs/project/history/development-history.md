@@ -54,7 +54,7 @@ clone 已有代码，并开始参与 Agent 开发与 LangGraph / GraphRAG 学习
 
 ## 尚未恢复的开发过程
 
-以下均为 `[UNKNOWN]`：第一条任务、第一次提交、第一次联调 endpoint、本地启动命令、代码 Review 方式、发布/回滚流程、客户反馈的具体根因，以及回答质量改进究竟归因于 Prompt、Retrieval、Rerank、Context、Memory、Tool、Citation 还是其他因素。
+以下均为 `[UNKNOWN]`：第一条任务、第一次提交、第一次联调 endpoint、本地启动命令、代码 Review 方式、发布/回滚流程、客户反馈的具体根因，以及回答质量改进究竟归因于 Prompt、Retrieval、Rerank、Context、Memory、Tool、Citation 还是其他因素。历史技术矩阵见 [`technology-history.md`](technology-history.md)。
 
 ## 历史架构边界
 
@@ -62,4 +62,4 @@ Python-only Microservice Architecture、新服务边界、Domain Kernel、Domain
 
 ## 事实 Owner
 
-本文件负责时间、加入、里程碑和反馈演进；交付状态进入 [`delivery-and-usage.md`](delivery-and-usage.md)，技术矩阵进入 [`technology-reality.md`](technology-reality.md)。
+本文件负责时间、加入、里程碑和反馈演进；交付状态进入 [`delivery-and-usage.md`](delivery-and-usage.md)，技术矩阵进入 [`technology-history.md`](technology-history.md)。

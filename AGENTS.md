@@ -97,32 +97,26 @@ docs/project/architecture/
 
 禁止把模块设计、Production Readiness、ADR、Program、Ownership Matrix 或实施计划放入 architecture 目录。
 
-### Canonical 专题设计
+### Canonical 项目知识
 
-- `docs/project/README.md`：Product/Domain/Agents/Knowledge/Services/Data/Security/Eval/Deployment 入口。
-- `docs/project/<topic>/*.md`：每份文档声明 Canonical Question、Owner、依赖、替代关系和状态边界。
-- `docs/project/modules/`：上一阶段 11 模块的 Superseded 迁移材料，不再是新 Target 事实源。
-
-专题规范优先级：全局原则 → 对应专题 Owner 文档 → ADR/共享 Contract → Program → 代码与 Migration。
-
-### 项目事实
-
-- `docs/project/README.md`：项目知识总入口和事实、架构、模块的路由规则。
-- `docs/project/facts/README.md`：事实文档写作、状态标签和证据边界。
-- `docs/project/facts/`：项目背景、团队与 Ownership、开发演进、交付使用、技术现实；未知信息必须明确标记，不得由红蓝工作区的候选假设直接升级为正式事实。
+- `docs/project/README.md`：项目知识总入口。
+- `docs/project/history/`：历史项目背景、需求、团队、开发、事件、交付和技术现实；未知信息必须明确标记，不得由红蓝工作区候选直接升级为事实。
+- `docs/project/status/`：Current Repository Reality、Target Status 和 Production Readiness。
+- `docs/project/architecture/`：跨 Product、Domain、Logical Capability、Physical Service/Deployment 的总体架构四文件。
+- 旧 `docs/project/facts/`、专题目录和 `modules/` 已迁入 `docs/history/superseded-document-taxonomy/`，只保留为历史原稿。
 
 模块文档可以很详细，但必须服从总架构的 Owner 边界，不得把 Target 冒充为 Current。Agent Core Target 文档不承载 Current Baseline、实现 Phase、Cutover 或具体迁移计划；这些内容必须进入 `.agent/programs/`。
 
 ### 状态、决策和治理
 
-- `docs/status/production-readiness.md`：Current、Gap、Measurement Blocked、Completed、Future Optional。
+- `docs/project/status/production-readiness.md`：Current、Gap、Measurement Blocked、Completed、Future Optional。
 - `docs/decisions/`：正式 ADR。
 - `docs/governance/`：Repository Ownership、文档治理和工程边界。
 - `docs/evidence/`：代码、测试、Trace、Eval 和可复现运行证据。
 
 ### 架构同步
 
-架构文档的统一信息架构和写作规则见 `docs/governance/architecture-document-writing-standard.md`。它是文档治理规范，不是新的架构事实源；总架构和专题正文分别由 `docs/project/architecture/` 与 `docs/project/<topic>/` 持有。
+架构文档的统一信息架构和写作规则见 `docs/governance/architecture-document-writing-standard.md`。它是文档治理规范，不是新的架构事实源；总体架构由 `docs/project/architecture/` 持有，历史和状态分别由 `docs/project/history/`、`docs/project/status/` 持有。
 
 设计含义变化时：
 
@@ -139,7 +133,7 @@ docs/project/architecture/
 
 1. 更新对应 `docs/project/<topic>/<document>.md`；
 2. `docs/` 是架构和模块的唯一正式事实源，不维护 `.agent` 镜像；
-3. 更新 `docs/status/production-readiness.md` 只能写已经由实现和证据证明的 Current 变化；
+3. 更新 `docs/project/status/production-readiness.md` 只能写已经由实现和证据证明的 Current 变化；
 4. 更新测试和验证器；
 5. Agent Core 变更运行 `python tools/scripts/verify_agent_core_target_protocols.py`。
 
@@ -161,13 +155,13 @@ docs/project/architecture/
 架构、重构、新功能或工作流任务先读：
 
 1. `docs/project/README.md`
-2. 与任务对应的 `docs/project/facts/*.md`
+2. 与任务对应的 `docs/project/history/*.md` 或 `docs/project/status/*.md`
 3. `docs/project/architecture/architecture.md`
 4. `docs/project/architecture/architecture-views.md`
 5. `docs/project/architecture/architecture.html`
-6. `docs/project/README.md` 的 Canonical Taxonomy（例如 `docs/project/product/product-architecture.md`）
-7. 与任务对应的 `docs/project/<topic>/<document>.md`
-8. `docs/status/production-readiness.md`
+6. `docs/project/README.md` 的 Canonical Questions
+7. `docs/project/architecture/`、`docs/project/history/` 或 `docs/project/status/`
+8. `docs/project/status/production-readiness.md`
 9. `.agent/README.md`
 10. `.agent/system.yaml`
 11. `.agent/references/current-program.md`
@@ -181,7 +175,7 @@ docs/project/architecture/
 
 `architecture-views.md` 与 `architecture.html` 只在需要查看或维护架构图时作为一个整体打开；它们不是必读的文字事实源。
 
-Agent Runtime 任务必须读取 `docs/project/agents/agent-platform.md`、`docs/project/agents/multi-agent-runtime.md`、`docs/project/domain/`、`docs/project/services/` 和 `docs/project/data/` 的相关文档。
+Agent Runtime 任务必须读取 `docs/project/architecture/architecture.md`、`docs/project/status/`、相关 ADR、`docs/evidence/` 和代码；归档专题只用于历史对照。
 
 实现任务在读完相关文档后再读代码。不要只凭文档推断 Runtime 行为。
 
@@ -192,10 +186,10 @@ Agent Runtime 任务必须读取 `docs/project/agents/agent-platform.md`、`docs
 - 项目事实、历史恢复、落地真实性、个人贡献或架构红蓝队 → `project-reconstruction-lab/README.md` 的项目重建工作流。
 - 目录移动、删除、归档、忽略规则和缓存清理 → 仓库卫生流程。
 - `apps/web` → `apps/web/AGENTS.md` 和 `.agent/references/code-map.md`。
-- `src/backend/zuno/agent/**` → `docs/project/agents/`、Domain、Services、Data。
-- `src/backend/zuno/knowledge/**` → `docs/project/knowledge/`、Domain、Eval。
-- `src/backend/zuno/memory/**` → `docs/project/agents/agent-platform.md` 与 Domain boundary。
-- `src/backend/zuno/capability/**` → `docs/project/agents/agent-platform.md`、Services、Security。
+- `src/backend/zuno/agent/**` → `docs/project/architecture/architecture.md`、status、ADR、evidence。
+- `src/backend/zuno/knowledge/**` → `docs/project/architecture/architecture.md`、status、evidence。
+- `src/backend/zuno/memory/**` → `docs/project/architecture/architecture.md` 与 history/status boundary。
+- `src/backend/zuno/capability/**` → `docs/project/architecture/architecture.md`、status、security governance。
 - API、DTO、请求/响应、前后端契约 → Code Map 和 Product Surface 边界。
 - Eval 工具、数据集、指标和报告 → `tools/evals/zuno/AGENTS.md` 和 Verification Map。
 
@@ -262,8 +256,7 @@ pytest -q tests/repo/test_docs_entrypoints.py tests/repo/test_agent_core_target_
 - `.agent/templates/*`
 - `.agent/programs/*`
 - `docs/project/architecture/*`
-- `docs/project/product/*`, `domain/*`, `agents/*`, `knowledge/*`, `services/*`, `data/*`, `security/*`, `eval/*`, `deployment/*`
-- `docs/status/*`
+- `docs/project/history/*`, `docs/project/status/*`, `docs/project/architecture/*`
 - 对应 Verifier 和 Tests
 
 一次性用户指令不必沉淀；可复用规则、架构治理规则、Codex 执行规则和文档模板规则必须进入相应事实源。

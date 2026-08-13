@@ -24,10 +24,41 @@ def main() -> int:
         "docs/evidence/current-test-baseline.md",
         "docs/evidence/current-eval-baseline.md",
     }
-    if _files(ROOT / "docs/history") != expected_history:
-        errors.append("docs/history must contain only the three approved files")
+    history_front = {
+        path.relative_to(ROOT).as_posix()
+        for path in (ROOT / "docs/history").iterdir()
+        if path.is_file()
+    }
+    if history_front != expected_history:
+        errors.append("docs/history front must contain only the three approved files")
     if _files(ROOT / "docs/evidence") != expected_evidence:
         errors.append("docs/evidence must contain only current evidence entries")
+
+    expected_project_history = {
+        "docs/project/history/README.md",
+        "docs/project/history/project-background.md",
+        "docs/project/history/requirements-and-workflows.md",
+        "docs/project/history/team-and-ownership.md",
+        "docs/project/history/development-history.md",
+        "docs/project/history/incidents-and-improvements.md",
+        "docs/project/history/delivery-and-usage.md",
+        "docs/project/history/technology-history.md",
+    }
+    expected_project_status = {
+        "docs/project/status/README.md",
+        "docs/project/status/current-reality.md",
+        "docs/project/status/target-status.md",
+        "docs/project/status/production-readiness.md",
+    }
+    if _files(ROOT / "docs/project/history") != expected_project_history:
+        errors.append("docs/project/history must contain the approved history entrypoints")
+    if _files(ROOT / "docs/project/status") != expected_project_status:
+        errors.append("docs/project/status must contain the approved status entrypoints")
+    if (ROOT / "docs/project/facts").exists() or (ROOT / "docs/project/modules").exists():
+        errors.append("old docs/project/facts or docs/project/modules active paths must be absent")
+    for directory in ("product", "domain", "agents", "knowledge", "services", "data", "security", "eval", "deployment"):
+        if (ROOT / "docs/project" / directory).exists():
+            errors.append(f"old docs/project/{directory} topic path must be absent")
 
     program_root = ROOT / ".agent" / "programs"
     if {path.name for path in program_root.glob("*.md")} != {"README.md", "current.md"}:

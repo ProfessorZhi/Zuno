@@ -10,28 +10,6 @@ DOCUMENT_REQUIREMENTS = {
         "Product / Domain", "Logical Capability Architecture", "Physical Service / Deployment Architecture",
         "Python-only", "FastAPI", "LangGraph", "Reconciliation", "Current", "Target", "History",
     ),
-    "docs/project/domain/legal-domain-model.md": (
-        "Matter", "DocumentVersion", "Evidence", "Finding", "Proposal", "provenance", "write rule",
-    ),
-    "docs/project/domain/domain-state-lifecycle.md": (
-        "stale", "dependency", "Human Review", "New Evidence", "reconciliation", "PostgreSQL",
-    ),
-    "docs/project/agents/multi-agent-runtime.md": (
-        "Single Agent", "Role Pipeline", "Ephemeral", "Specialized", "Persistent", "Domain Kernel",
-    ),
-    "docs/project/knowledge/knowledge-evidence-architecture.md": (
-        "Scopes", "hybrid", "GraphRAG", "conditional", "EvidenceRequirement", "Citation",
-    ),
-    "docs/project/services/service-architecture.md": (
-        "edge-api", "platform-domain-service", "agent-runtime-service", "knowledge-service", "tool-sandbox-service",
-        "Why not 11 services", "library/worker/provider", "failure", "scaling",
-    ),
-    "docs/project/data/data-ownership-and-recovery.md": (
-        "Platform Domain", "Agent Runtime", "checkpoint", "idempotency", "EffectReceipt", "UNKNOWN",
-    ),
-    "docs/project/eval/legal-eval-and-benchmark.md": (
-        "A/B/C", "Evidence Sufficiency", "Unsupported Claim Rate", "latency", "cost",
-    ),
 }
 
 

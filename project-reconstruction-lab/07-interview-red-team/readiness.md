@@ -28,4 +28,4 @@ Runtime Evidence
 Production Evidence
 ```
 
-这些仍由 `docs/status/`、`docs/evidence/` 和实际运行证据决定。
+这些仍由 `docs/project/status/`、`docs/evidence/` 和实际运行证据决定。

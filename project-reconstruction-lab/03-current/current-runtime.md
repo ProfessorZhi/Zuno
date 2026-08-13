@@ -1,6 +1,6 @@
 # Current Runtime Reality
 
-当前仓库的运行状态以 `docs/evidence/` 和 `docs/status/` 为准；Target 文档不能替代运行证据。
+当前仓库的运行状态以 `docs/evidence/` 和 `docs/project/status/` 为准；Target 文档不能替代运行证据。
 
 需要分别核验：
 

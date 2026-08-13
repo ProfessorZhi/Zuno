@@ -7,7 +7,12 @@ from pathlib import Path
 from urllib.parse import unquote
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
-EXCLUDED_PREFIXES = ("tests/fixtures/",)
+EXCLUDED_PREFIXES = (
+    "tests/fixtures/",
+    # Superseded raw documents are retained for audit; their historical links
+    # may intentionally point to paths that no longer exist as active sources.
+    "docs/history/superseded-document-taxonomy/",
+)
 MARKDOWN_LINK = re.compile(
     r"!?\[[^\]]*\]\(\s*(?P<target><[^>]*>|[^\s)]+)(?:\s+[^)]*)?\s*\)"
 )

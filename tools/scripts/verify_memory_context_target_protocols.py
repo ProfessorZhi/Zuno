@@ -1,4 +1,4 @@
-from __future__ import annotations
+﻿from __future__ import annotations
 
 import re
 import sys
@@ -6,8 +6,8 @@ from pathlib import Path
 
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
-FORMAL = REPO_ROOT / "docs/project/modules/05-memory-context.md"
-DOCS_INDEX = REPO_ROOT / "docs/project/modules/README.md"
+FORMAL = REPO_ROOT / "docs/history/superseded-document-taxonomy/project-modules/05-memory-context.md"
+DOCS_INDEX = REPO_ROOT / "docs/history/superseded-document-taxonomy/project-modules/README.md"
 
 REQUIRED_PARTS = [
     "# Part I：定位、术语与概念架构",
@@ -178,7 +178,7 @@ def verify() -> list[str]:
         if transition_group not in formal:
             errors.append(f"Memory & Context document missing state machine: {transition_group}")
 
-    for index_name, content in {"docs/project/modules/README.md": _read(DOCS_INDEX)}.items():
+    for index_name, content in {"docs/history/superseded-document-taxonomy/project-modules/README.md": _read(DOCS_INDEX)}.items():
         for term in [
             "05-memory-context.md",
             "verify_memory_context_target_protocols.py",

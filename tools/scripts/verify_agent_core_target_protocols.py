@@ -1,4 +1,4 @@
-from __future__ import annotations
+﻿from __future__ import annotations
 
 import re
 import sys
@@ -6,8 +6,8 @@ from pathlib import Path
 
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
-FORMAL = REPO_ROOT / "docs/project/modules/06-agent-core-planning-control.md"
-DOCS_INDEX = REPO_ROOT / "docs/project/modules/README.md"
+FORMAL = REPO_ROOT / "docs/history/superseded-document-taxonomy/project-modules/06-agent-core-planning-control.md"
+DOCS_INDEX = REPO_ROOT / "docs/history/superseded-document-taxonomy/project-modules/README.md"
 AGENTS = REPO_ROOT / "AGENTS.md"
 SYSTEM_YAML = REPO_ROOT / ".agent/system.yaml"
 
@@ -239,7 +239,7 @@ def verify() -> list[str]:
             errors.append(f"LangGraph Adapter Contract missing: {adapter_term}")
 
     for index_name, content in {
-        "docs/project/modules/README.md": _read(DOCS_INDEX),
+        "docs/history/superseded-document-taxonomy/project-modules/README.md": _read(DOCS_INDEX),
         "AGENTS.md": _read(AGENTS),
         ".agent/system.yaml": _read(SYSTEM_YAML),
     }.items():

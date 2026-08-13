@@ -27,15 +27,14 @@ Fake Production Evidence Generator
 
 ## Canonical Truth 边界
 
-Lab 可以保留冲突、候选、攻击和未决问题；最终事实与正式架构只能写回：
+Lab 可以保留冲突、候选、攻击和未决问题；最终事实、状态与正式架构只能写回：
 
 ```text
-docs/project/facts/
+docs/project/history/
+docs/project/status/
 docs/project/architecture/
-docs/project/<topic>/
 docs/decisions/
 docs/governance/
-docs/status/
 docs/evidence/
 ```
 
@@ -137,7 +136,7 @@ verification/emulator records、5 项 V3 current/narrow records；Red accepted �
 Retest 未运行，12 个原始 P0 仍保持 OPEN。Q039 被追踪为 Q039-C Critical Invariant 与
 Q039-B V5 Benchmark Gap，原始 Q039 不删除。
 
-每个专题只回答自己的问题。`02-history/` 与 `03-current/` 是工作视图，不替代 `docs/project/facts/`；`06-architecture/` 不替代 `docs/project/architecture/`。
+每个工作视图只回答自己的问题。`02-history/` 与 `03-current/` 是调查工作材料，不替代 `docs/project/history/` 与 `docs/project/status/`；`06-architecture/` 不替代 `docs/project/architecture/`。旧事实、专题和模块原稿见 `docs/history/superseded-document-taxonomy/`，不得被 Lab 重新当作 active Canonical。
 
 ## Continuous Reconstruction Loop
 

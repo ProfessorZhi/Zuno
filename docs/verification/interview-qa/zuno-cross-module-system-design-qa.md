@@ -16,7 +16,7 @@
 - resume_trigger: Zuno统一端到端案例、case
 - architecture_refs:
   - docs/project/architecture/architecture.md — § Part A — Architecture Narrative
-  - docs/project/modules/06-agent-core-planning-control.md — § 4.1 Deep Dive 04：统一端到端控制案例
+  - docs/history/superseded-document-taxonomy/project-modules/06-agent-core-planning-control.md — § 4.1 Deep Dive 04：统一端到端控制案例
 - initial_coverage_status: PARTIAL
 - coverage_status: FULL
 - gap_id: CLOSED-GAP-X-001
@@ -49,7 +49,7 @@ Agent Core创建Plan和Acceptance，Knowledge满足EvidenceRequirement，Memory�
 ### Architecture Evidence
 
 - docs/project/architecture/architecture.md — § Part A — Architecture Narrative
-- docs/project/modules/06-agent-core-planning-control.md — § 4.1 Deep Dive 04：统一端到端控制案例
+- docs/history/superseded-document-taxonomy/project-modules/06-agent-core-planning-control.md — § 4.1 Deep Dive 04：统一端到端控制案例
 
 ### 当前文档是否足够回答
 
@@ -68,8 +68,8 @@ None。第一轮记录的缺口已写回 canonical architecture；本 QA 不新�
 - interview_probability: HIGH
 - resume_trigger: Zuno统一端到端案例、replan
 - architecture_refs:
-  - docs/project/modules/03-knowledge-agentic-graphrag.md — § 18. Retry、Corrective Retrieval 与 Replan
-  - docs/project/modules/06-agent-core-planning-control.md — § 9. Replan Barrier
+  - docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 18. Retry、Corrective Retrieval 与 Replan
+  - docs/history/superseded-document-taxonomy/project-modules/06-agent-core-planning-control.md — § 9. Replan Barrier
 - initial_coverage_status: PARTIAL
 - coverage_status: FULL
 - gap_id: CLOSED-GAP-X-002
@@ -101,8 +101,8 @@ Knowledge在目标/Plan前提仍成立时创建新RetrievalRound；若目标、�
 
 ### Architecture Evidence
 
-- docs/project/modules/03-knowledge-agentic-graphrag.md — § 18. Retry、Corrective Retrieval 与 Replan
-- docs/project/modules/06-agent-core-planning-control.md — § 9. Replan Barrier
+- docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 18. Retry、Corrective Retrieval 与 Replan
+- docs/history/superseded-document-taxonomy/project-modules/06-agent-core-planning-control.md — § 9. Replan Barrier
 
 ### 当前文档是否足够回答
 
@@ -121,8 +121,8 @@ None。第一轮记录的缺口已写回 canonical architecture；本 QA 不新�
 - interview_probability: HIGH
 - resume_trigger: Zuno统一端到端案例、graph
 - architecture_refs:
-  - docs/project/modules/03-knowledge-agentic-graphrag.md — § 12. Graph 路由
-  - docs/project/modules/03-knowledge-agentic-graphrag.md — § 45. Failure Decision Matrix
+  - docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 12. Graph 路由
+  - docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 45. Failure Decision Matrix
 - initial_coverage_status: FULL
 - coverage_status: FULL
 - gap_id: None
@@ -154,8 +154,8 @@ Knowledge保留mandatory缺口，按Snapshot和Assurance Policy等待或治理�
 
 ### Architecture Evidence
 
-- docs/project/modules/03-knowledge-agentic-graphrag.md — § 12. Graph 路由
-- docs/project/modules/03-knowledge-agentic-graphrag.md — § 45. Failure Decision Matrix
+- docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 12. Graph 路由
+- docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 45. Failure Decision Matrix
 
 ### 当前文档是否足够回答
 
@@ -174,8 +174,8 @@ None。第一轮记录的缺口已写回 canonical architecture；本 QA 不新�
 - interview_probability: HIGH
 - resume_trigger: Zuno统一端到端案例、mcp
 - architecture_refs:
-  - docs/project/modules/08-tool-runtime.md — § 16. MCP Tool
-  - docs/project/modules/09-security.md — § 29. PreparedToolAction 与 Approval
+  - docs/history/superseded-document-taxonomy/project-modules/08-tool-runtime.md — § 16. MCP Tool
+  - docs/history/superseded-document-taxonomy/project-modules/09-security.md — § 29. PreparedToolAction 与 Approval
 - initial_coverage_status: PARTIAL
 - coverage_status: FULL
 - gap_id: CLOSED-GAP-X-004
@@ -207,8 +207,8 @@ Capability Snapshot变化使未Dispatch的PreparedToolAction和Approval失效，
 
 ### Architecture Evidence
 
-- docs/project/modules/08-tool-runtime.md — § 16. MCP Tool
-- docs/project/modules/09-security.md — § 29. PreparedToolAction 与 Approval
+- docs/history/superseded-document-taxonomy/project-modules/08-tool-runtime.md — § 16. MCP Tool
+- docs/history/superseded-document-taxonomy/project-modules/09-security.md — § 29. PreparedToolAction 与 Approval
 
 ### 当前文档是否足够回答
 
@@ -227,8 +227,8 @@ None。第一轮记录的缺口已写回 canonical architecture；本 QA 不新�
 - interview_probability: HIGH
 - resume_trigger: Zuno统一端到端案例、effect
 - architecture_refs:
-  - docs/project/modules/08-tool-runtime.md — § 20. UNKNOWN Effect 与 Reconciliation
-  - docs/project/modules/06-agent-core-planning-control.md — § 11. Side Effect Protocol
+  - docs/history/superseded-document-taxonomy/project-modules/08-tool-runtime.md — § 20. UNKNOWN Effect 与 Reconciliation
+  - docs/history/superseded-document-taxonomy/project-modules/06-agent-core-planning-control.md — § 11. Side Effect Protocol
 - initial_coverage_status: PARTIAL
 - coverage_status: FULL
 - gap_id: CLOSED-GAP-X-005
@@ -260,8 +260,8 @@ Tool Runtime进入Reconciliation并保留业务幂等键，Agent Core暂停普�
 
 ### Architecture Evidence
 
-- docs/project/modules/08-tool-runtime.md — § 20. UNKNOWN Effect 与 Reconciliation
-- docs/project/modules/06-agent-core-planning-control.md — § 11. Side Effect Protocol
+- docs/history/superseded-document-taxonomy/project-modules/08-tool-runtime.md — § 20. UNKNOWN Effect 与 Reconciliation
+- docs/history/superseded-document-taxonomy/project-modules/06-agent-core-planning-control.md — § 11. Side Effect Protocol
 
 ### 当前文档是否足够回答
 
@@ -280,8 +280,8 @@ None。第一轮记录的缺口已写回 canonical architecture；本 QA 不新�
 - interview_probability: HIGH
 - resume_trigger: Zuno统一端到端案例、memory
 - architecture_refs:
-  - docs/project/modules/05-memory-context.md — § 3. Context、Memory、Knowledge 和 Checkpoint 的边界
-  - docs/project/modules/05-memory-context.md — § 54. Security 与 Privacy
+  - docs/history/superseded-document-taxonomy/project-modules/05-memory-context.md — § 3. Context、Memory、Knowledge 和 Checkpoint 的边界
+  - docs/history/superseded-document-taxonomy/project-modules/05-memory-context.md — § 54. Security 与 Privacy
 - initial_coverage_status: FULL
 - coverage_status: FULL
 - gap_id: None
@@ -313,8 +313,8 @@ Memory 偏好和当前 User instruction 冲突怎么办？
 
 ### Architecture Evidence
 
-- docs/project/modules/05-memory-context.md — § 3. Context、Memory、Knowledge 和 Checkpoint 的边界
-- docs/project/modules/05-memory-context.md — § 54. Security 与 Privacy
+- docs/history/superseded-document-taxonomy/project-modules/05-memory-context.md — § 3. Context、Memory、Knowledge 和 Checkpoint 的边界
+- docs/history/superseded-document-taxonomy/project-modules/05-memory-context.md — § 54. Security 与 Privacy
 
 ### 当前文档是否足够回答
 
@@ -333,8 +333,8 @@ None。第一轮记录的缺口已写回 canonical architecture；本 QA 不新�
 - interview_probability: HIGH
 - resume_trigger: Zuno统一端到端案例、epoch
 - architecture_refs:
-  - docs/project/modules/09-security.md — § 16. Decision Cache、一致性与 Epoch
-  - docs/project/modules/09-security.md — § 50. Retry、Recovery、Idempotency 与 Reconcile
+  - docs/history/superseded-document-taxonomy/project-modules/09-security.md — § 16. Decision Cache、一致性与 Epoch
+  - docs/history/superseded-document-taxonomy/project-modules/09-security.md — § 50. Retry、Recovery、Idempotency 与 Reconcile
 - initial_coverage_status: PARTIAL
 - coverage_status: FULL
 - gap_id: CLOSED-GAP-X-007
@@ -366,8 +366,8 @@ None。第一轮记录的缺口已写回 canonical architecture；本 QA 不新�
 
 ### Architecture Evidence
 
-- docs/project/modules/09-security.md — § 16. Decision Cache、一致性与 Epoch
-- docs/project/modules/09-security.md — § 50. Retry、Recovery、Idempotency 与 Reconcile
+- docs/history/superseded-document-taxonomy/project-modules/09-security.md — § 16. Decision Cache、一致性与 Epoch
+- docs/history/superseded-document-taxonomy/project-modules/09-security.md — § 50. Retry、Recovery、Idempotency 与 Reconcile
 
 ### 当前文档是否足够回答
 
@@ -386,8 +386,8 @@ None。第一轮记录的缺口已写回 canonical architecture；本 QA 不新�
 - interview_probability: HIGH
 - resume_trigger: Zuno统一端到端案例、snapshot
 - architecture_refs:
-  - docs/project/modules/03-knowledge-agentic-graphrag.md — § 20. 领域状态与 Checkpointer 边界
-  - docs/project/modules/03-knowledge-agentic-graphrag.md — § 47. 关键数据库约束
+  - docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 20. 领域状态与 Checkpointer 边界
+  - docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 47. 关键数据库约束
 - initial_coverage_status: PARTIAL
 - coverage_status: FULL
 - gap_id: CLOSED-GAP-X-008
@@ -419,8 +419,8 @@ Run只接受与Snapshot lineage兼容的Index；不一致则标记Unavailable/In
 
 ### Architecture Evidence
 
-- docs/project/modules/03-knowledge-agentic-graphrag.md — § 20. 领域状态与 Checkpointer 边界
-- docs/project/modules/03-knowledge-agentic-graphrag.md — § 47. 关键数据库约束
+- docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 20. 领域状态与 Checkpointer 边界
+- docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 47. 关键数据库约束
 
 ### 当前文档是否足够回答
 
@@ -439,8 +439,8 @@ None。第一轮记录的缺口已写回 canonical architecture；本 QA 不新�
 - interview_probability: HIGH
 - resume_trigger: Zuno统一端到端案例、eval
 - architecture_refs:
-  - docs/project/modules/03-knowledge-agentic-graphrag.md — § 34. Agentic GraphRAG Eval
-  - docs/project/modules/10-observability-eval.md — § 29. AgenticGraphRAGTrace
+  - docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 34. Agentic GraphRAG Eval
+  - docs/history/superseded-document-taxonomy/project-modules/10-observability-eval.md — § 29. AgenticGraphRAGTrace
 - initial_coverage_status: FULL
 - coverage_status: FULL
 - gap_id: None
@@ -472,8 +472,8 @@ None。第一轮记录的缺口已写回 canonical architecture；本 QA 不新�
 
 ### Architecture Evidence
 
-- docs/project/modules/03-knowledge-agentic-graphrag.md — § 34. Agentic GraphRAG Eval
-- docs/project/modules/10-observability-eval.md — § 29. AgenticGraphRAGTrace
+- docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 34. Agentic GraphRAG Eval
+- docs/history/superseded-document-taxonomy/project-modules/10-observability-eval.md — § 29. AgenticGraphRAGTrace
 
 ### 当前文档是否足够回答
 
@@ -492,8 +492,8 @@ None。第一轮记录的缺口已写回 canonical architecture；本 QA 不新�
 - interview_probability: HIGH
 - resume_trigger: Zuno统一端到端案例、evidence
 - architecture_refs:
-  - docs/status/production-readiness.md — § Production Readiness
-  - docs/project/modules/06-agent-core-planning-control.md — § 47. 架构完成与 Program 入口门槛
+  - docs/project/status/production-readiness.md — § Production Readiness
+  - docs/history/superseded-document-taxonomy/project-modules/06-agent-core-planning-control.md — § 47. 架构完成与 Program 入口门槛
 - initial_coverage_status: FULL
 - coverage_status: FULL
 - gap_id: None
@@ -525,8 +525,8 @@ None。第一轮记录的缺口已写回 canonical architecture；本 QA 不新�
 
 ### Architecture Evidence
 
-- docs/status/production-readiness.md — § Production Readiness
-- docs/project/modules/06-agent-core-planning-control.md — § 47. 架构完成与 Program 入口门槛
+- docs/project/status/production-readiness.md — § Production Readiness
+- docs/history/superseded-document-taxonomy/project-modules/06-agent-core-planning-control.md — § 47. 架构完成与 Program 入口门槛
 
 ### 当前文档是否足够回答
 
@@ -549,8 +549,8 @@ None。第一轮记录的缺口已写回 canonical architecture；本 QA 不新�
 - interview_probability: HIGH
 - resume_trigger: Zuno统一端到端案例、output
 - architecture_refs:
-  - docs/project/modules/08-tool-runtime.md — § 57. Tool Input 和 Output Firewall
-  - docs/project/modules/05-memory-context.md — § 38. MemoryCandidate
+  - docs/history/superseded-document-taxonomy/project-modules/08-tool-runtime.md — § 57. Tool Input 和 Output Firewall
+  - docs/history/superseded-document-taxonomy/project-modules/05-memory-context.md — § 38. MemoryCandidate
 - initial_coverage_status: FULL
 - coverage_status: FULL
 - gap_id: None
@@ -582,8 +582,8 @@ Tool Output 同时想进入 Knowledge 和 Memory，谁先判定？
 
 ### Architecture Evidence
 
-- docs/project/modules/08-tool-runtime.md — § 57. Tool Input 和 Output Firewall
-- docs/project/modules/05-memory-context.md — § 38. MemoryCandidate
+- docs/history/superseded-document-taxonomy/project-modules/08-tool-runtime.md — § 57. Tool Input 和 Output Firewall
+- docs/history/superseded-document-taxonomy/project-modules/05-memory-context.md — § 38. MemoryCandidate
 
 ### 当前文档是否足够回答
 
@@ -602,8 +602,8 @@ None。第一轮记录的缺口已写回 canonical architecture；本 QA 不新�
 - interview_probability: HIGH
 - resume_trigger: Zuno统一端到端案例、final
 - architecture_refs:
-  - docs/project/modules/06-agent-core-planning-control.md — § 12. AnswerPolicy、Final Gate 与 Publication
-  - docs/project/modules/09-security.md — § 41. Final、Citation 与 Publication
+  - docs/history/superseded-document-taxonomy/project-modules/06-agent-core-planning-control.md — § 12. AnswerPolicy、Final Gate 与 Publication
+  - docs/history/superseded-document-taxonomy/project-modules/09-security.md — § 41. Final、Citation 与 Publication
 - initial_coverage_status: FULL
 - coverage_status: FULL
 - gap_id: None
@@ -635,8 +635,8 @@ Final Gate 前 SourceSpan 被 Security recheck 过滤怎么办？
 
 ### Architecture Evidence
 
-- docs/project/modules/06-agent-core-planning-control.md — § 12. AnswerPolicy、Final Gate 与 Publication
-- docs/project/modules/09-security.md — § 41. Final、Citation 与 Publication
+- docs/history/superseded-document-taxonomy/project-modules/06-agent-core-planning-control.md — § 12. AnswerPolicy、Final Gate 与 Publication
+- docs/history/superseded-document-taxonomy/project-modules/09-security.md — § 41. Final、Citation 与 Publication
 
 ### 当前文档是否足够回答
 
@@ -655,8 +655,8 @@ None。第一轮记录的缺口已写回 canonical architecture；本 QA 不新�
 - interview_probability: HIGH
 - resume_trigger: Zuno统一端到端案例、version
 - architecture_refs:
-  - docs/project/modules/08-tool-runtime.md — § 24. ToolDefinition、ToolVersion 与 ToolOperation
-  - docs/project/modules/06-agent-core-planning-control.md — § 4. PlanVersion 状态机
+  - docs/history/superseded-document-taxonomy/project-modules/08-tool-runtime.md — § 24. ToolDefinition、ToolVersion 与 ToolOperation
+  - docs/history/superseded-document-taxonomy/project-modules/06-agent-core-planning-control.md — § 4. PlanVersion 状态机
 - initial_coverage_status: FULL
 - coverage_status: FULL
 - gap_id: None
@@ -688,8 +688,8 @@ Tool Runtime先处理工具契约变化并重Prepare；只有Step能力、输出
 
 ### Architecture Evidence
 
-- docs/project/modules/08-tool-runtime.md — § 24. ToolDefinition、ToolVersion 与 ToolOperation
-- docs/project/modules/06-agent-core-planning-control.md — § 4. PlanVersion 状态机
+- docs/history/superseded-document-taxonomy/project-modules/08-tool-runtime.md — § 24. ToolDefinition、ToolVersion 与 ToolOperation
+- docs/history/superseded-document-taxonomy/project-modules/06-agent-core-planning-control.md — § 4. PlanVersion 状态机
 
 ### 当前文档是否足够回答
 
@@ -708,8 +708,8 @@ None。第一轮记录的缺口已写回 canonical architecture；本 QA 不新�
 - interview_probability: HIGH
 - resume_trigger: Zuno统一端到端案例、longrun
 - architecture_refs:
-  - docs/project/modules/11-infrastructure.md — § 20. CheckpointRecord 与 Domain Boundary
-  - docs/project/modules/06-agent-core-planning-control.md — § 3. Domain Store 与 LangGraph Checkpoint 一致性
+  - docs/history/superseded-document-taxonomy/project-modules/11-infrastructure.md — § 20. CheckpointRecord 与 Domain Boundary
+  - docs/history/superseded-document-taxonomy/project-modules/06-agent-core-planning-control.md — § 3. Domain Store 与 LangGraph Checkpoint 一致性
 - initial_coverage_status: FULL
 - coverage_status: FULL
 - gap_id: None
@@ -741,8 +741,8 @@ None。第一轮记录的缺口已写回 canonical architecture；本 QA 不新�
 
 ### Architecture Evidence
 
-- docs/project/modules/11-infrastructure.md — § 20. CheckpointRecord 与 Domain Boundary
-- docs/project/modules/06-agent-core-planning-control.md — § 3. Domain Store 与 LangGraph Checkpoint 一致性
+- docs/history/superseded-document-taxonomy/project-modules/11-infrastructure.md — § 20. CheckpointRecord 与 Domain Boundary
+- docs/history/superseded-document-taxonomy/project-modules/06-agent-core-planning-control.md — § 3. Domain Store 与 LangGraph Checkpoint 一致性
 
 ### 当前文档是否足够回答
 
@@ -761,8 +761,8 @@ None。第一轮记录的缺口已写回 canonical architecture；本 QA 不新�
 - interview_probability: HIGH
 - resume_trigger: Zuno统一端到端案例、failure
 - architecture_refs:
-  - docs/project/modules/03-knowledge-agentic-graphrag.md — § 45. Failure Decision Matrix
-  - docs/project/modules/06-agent-core-planning-control.md — § 35. Failure Decision Matrix
+  - docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 45. Failure Decision Matrix
+  - docs/history/superseded-document-taxonomy/project-modules/06-agent-core-planning-control.md — § 35. Failure Decision Matrix
 - initial_coverage_status: FULL
 - coverage_status: FULL
 - gap_id: None
@@ -794,8 +794,8 @@ BM25、Vector、Graph、PostgreSQL和Object Store部分失败时如何收口？
 
 ### Architecture Evidence
 
-- docs/project/modules/03-knowledge-agentic-graphrag.md — § 45. Failure Decision Matrix
-- docs/project/modules/06-agent-core-planning-control.md — § 35. Failure Decision Matrix
+- docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 45. Failure Decision Matrix
+- docs/history/superseded-document-taxonomy/project-modules/06-agent-core-planning-control.md — § 35. Failure Decision Matrix
 
 ### 当前文档是否足够回答
 
@@ -808,14 +808,14 @@ None。第一轮记录的缺口已写回 canonical architecture；本 QA 不新�
 ## Q228 用户批准后 Agent 崩溃，如何避免重复发送？
 
 - source_type: ARCHITECTURE_STRESS
-- source_ref: zuno-target: docs/project/modules/08-tool-runtime.md — § 51. Crash Cut Points
+- source_ref: zuno-target: docs/history/superseded-document-taxonomy/project-modules/08-tool-runtime.md — § 51. Crash Cut Points
 - primary_domain: cross-module
 - difficulty: L4
 - interview_probability: HIGH
 - resume_trigger: Zuno统一端到端案例、crash
 - architecture_refs:
-  - docs/project/modules/08-tool-runtime.md — § 51. Crash Cut Points
-  - docs/project/modules/11-infrastructure.md — § 44. 一致性与幂等原则
+  - docs/history/superseded-document-taxonomy/project-modules/08-tool-runtime.md — § 51. Crash Cut Points
+  - docs/history/superseded-document-taxonomy/project-modules/11-infrastructure.md — § 44. 一致性与幂等原则
 - initial_coverage_status: FULL
 - coverage_status: FULL
 - gap_id: None
@@ -847,8 +847,8 @@ None。第一轮记录的缺口已写回 canonical architecture；本 QA 不新�
 
 ### Architecture Evidence
 
-- docs/project/modules/08-tool-runtime.md — § 51. Crash Cut Points
-- docs/project/modules/11-infrastructure.md — § 44. 一致性与幂等原则
+- docs/history/superseded-document-taxonomy/project-modules/08-tool-runtime.md — § 51. Crash Cut Points
+- docs/history/superseded-document-taxonomy/project-modules/11-infrastructure.md — § 44. 一致性与幂等原则
 
 ### 当前文档是否足够回答
 
@@ -861,14 +861,14 @@ None。第一轮记录的缺口已写回 canonical architecture；本 QA 不新�
 ## Q229 Memory Procedural Hint 建议某Tool，但当前Task Scope禁止怎么办？
 
 - source_type: ARCHITECTURE_STRESS
-- source_ref: zuno-target: docs/project/modules/05-memory-context.md — § 3. Context、Memory、Knowledge 和 Checkpoint 的边界
+- source_ref: zuno-target: docs/history/superseded-document-taxonomy/project-modules/05-memory-context.md — § 3. Context、Memory、Knowledge 和 Checkpoint 的边界
 - primary_domain: cross-module
 - difficulty: L5
 - interview_probability: HIGH
 - resume_trigger: Zuno统一端到端案例、memory
 - architecture_refs:
-  - docs/project/modules/05-memory-context.md — § 3. Context、Memory、Knowledge 和 Checkpoint 的边界
-  - docs/project/modules/05-memory-context.md — § 54. Security 与 Privacy
+  - docs/history/superseded-document-taxonomy/project-modules/05-memory-context.md — § 3. Context、Memory、Knowledge 和 Checkpoint 的边界
+  - docs/history/superseded-document-taxonomy/project-modules/05-memory-context.md — § 54. Security 与 Privacy
 - initial_coverage_status: FULL
 - coverage_status: FULL
 - gap_id: None
@@ -900,8 +900,8 @@ Procedural只能是策略提示，Security Effective Scope和Task Downscope优�
 
 ### Architecture Evidence
 
-- docs/project/modules/05-memory-context.md — § 3. Context、Memory、Knowledge 和 Checkpoint 的边界
-- docs/project/modules/05-memory-context.md — § 54. Security 与 Privacy
+- docs/history/superseded-document-taxonomy/project-modules/05-memory-context.md — § 3. Context、Memory、Knowledge 和 Checkpoint 的边界
+- docs/history/superseded-document-taxonomy/project-modules/05-memory-context.md — § 54. Security 与 Privacy
 
 ### 当前文档是否足够回答
 
@@ -921,7 +921,7 @@ None。第一轮记录的缺口已写回 canonical architecture；本 QA 不新�
 - resume_trigger: Zuno统一端到端案例、ownership
 - architecture_refs:
   - docs/project/architecture/architecture.md — § Part A — Architecture Narrative
-  - docs/project/modules/03-knowledge-agentic-graphrag.md — § 42. KnowledgeControlProposal
+  - docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 42. KnowledgeControlProposal
 - initial_coverage_status: FULL
 - coverage_status: FULL
 - gap_id: None
@@ -954,7 +954,7 @@ Knowledge先记录EvidenceFrontier和ControlProposal；Agent Core判断是否需
 ### Architecture Evidence
 
 - docs/project/architecture/architecture.md — § Part A — Architecture Narrative
-- docs/project/modules/03-knowledge-agentic-graphrag.md — § 42. KnowledgeControlProposal
+- docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 42. KnowledgeControlProposal
 
 ### 当前文档是否足够回答
 
@@ -967,14 +967,14 @@ None。第一轮记录的缺口已写回 canonical architecture；本 QA 不新�
 ## Q231 如何在最终输出中同时保证Citation、权限和Effect一致？
 
 - source_type: ARCHITECTURE_STRESS
-- source_ref: zuno-target: docs/project/modules/06-agent-core-planning-control.md — § 12. AnswerPolicy、Final Gate 与 Publication
+- source_ref: zuno-target: docs/history/superseded-document-taxonomy/project-modules/06-agent-core-planning-control.md — § 12. AnswerPolicy、Final Gate 与 Publication
 - primary_domain: cross-module
 - difficulty: L7
 - interview_probability: HIGH
 - resume_trigger: Zuno统一端到端案例、final
 - architecture_refs:
-  - docs/project/modules/06-agent-core-planning-control.md — § 12. AnswerPolicy、Final Gate 与 Publication
-  - docs/project/modules/09-security.md — § 41. Final、Citation 与 Publication
+  - docs/history/superseded-document-taxonomy/project-modules/06-agent-core-planning-control.md — § 12. AnswerPolicy、Final Gate 与 Publication
+  - docs/history/superseded-document-taxonomy/project-modules/09-security.md — § 41. Final、Citation 与 Publication
 - initial_coverage_status: FULL
 - coverage_status: FULL
 - gap_id: None
@@ -1006,8 +1006,8 @@ Final Gate检查Claim-Evidence绑定、当前Security Scope、Artifact和EffectR
 
 ### Architecture Evidence
 
-- docs/project/modules/06-agent-core-planning-control.md — § 12. AnswerPolicy、Final Gate 与 Publication
-- docs/project/modules/09-security.md — § 41. Final、Citation 与 Publication
+- docs/history/superseded-document-taxonomy/project-modules/06-agent-core-planning-control.md — § 12. AnswerPolicy、Final Gate 与 Publication
+- docs/history/superseded-document-taxonomy/project-modules/09-security.md — § 41. Final、Citation 与 Publication
 
 ### 当前文档是否足够回答
 
@@ -1020,14 +1020,14 @@ None。第一轮记录的缺口已写回 canonical architecture；本 QA 不新�
 ## Q232 未来代码审查如何把这些QA升级为实现证据？
 
 - source_type: ARCHITECTURE_STRESS
-- source_ref: zuno-target: docs/status/production-readiness.md — § Production Readiness
+- source_ref: zuno-target: docs/project/status/production-readiness.md — § Production Readiness
 - primary_domain: cross-module
 - difficulty: L8
 - interview_probability: HIGH
 - resume_trigger: Zuno统一端到端案例、future
 - architecture_refs:
-  - docs/status/production-readiness.md — § Production Readiness
-  - docs/project/modules/06-agent-core-planning-control.md — § 47. 架构完成与 Program 入口门槛
+  - docs/project/status/production-readiness.md — § Production Readiness
+  - docs/history/superseded-document-taxonomy/project-modules/06-agent-core-planning-control.md — § 47. 架构完成与 Program 入口门槛
 - initial_coverage_status: FULL
 - coverage_status: FULL
 - gap_id: None
@@ -1059,8 +1059,8 @@ None。第一轮记录的缺口已写回 canonical architecture；本 QA 不新�
 
 ### Architecture Evidence
 
-- docs/status/production-readiness.md — § Production Readiness
-- docs/project/modules/06-agent-core-planning-control.md — § 47. 架构完成与 Program 入口门槛
+- docs/project/status/production-readiness.md — § Production Readiness
+- docs/history/superseded-document-taxonomy/project-modules/06-agent-core-planning-control.md — § 47. 架构完成与 Program 入口门槛
 
 ### 当前文档是否足够回答
 

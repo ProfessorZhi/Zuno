@@ -15,8 +15,8 @@
 - interview_probability: HIGH
 - resume_trigger: Agentic GraphRAG、Evidence Retrieval
 - architecture_refs:
-  - docs/project/modules/03-knowledge-agentic-graphrag.md — § 1. 为什么需要 Agentic GraphRAG
-  - docs/project/modules/03-knowledge-agentic-graphrag.md — § 2. 普通 GraphRAG 与 Agentic GraphRAG
+  - docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 1. 为什么需要 Agentic GraphRAG
+  - docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 2. 普通 GraphRAG 与 Agentic GraphRAG
 - initial_coverage_status: PARTIAL
 - coverage_status: FULL
 - gap_id: CLOSED-GAP-03-001
@@ -48,8 +48,8 @@
 
 ### Architecture Evidence
 
-- docs/project/modules/03-knowledge-agentic-graphrag.md — § 1. 为什么需要 Agentic GraphRAG
-- docs/project/modules/03-knowledge-agentic-graphrag.md — § 2. 普通 GraphRAG 与 Agentic GraphRAG
+- docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 1. 为什么需要 Agentic GraphRAG
+- docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 2. 普通 GraphRAG 与 Agentic GraphRAG
 
 ### 当前文档是否足够回答
 
@@ -68,8 +68,8 @@ None。第一轮记录的缺口已写回canonical architecture；本QA不新增�
 - interview_probability: HIGH
 - resume_trigger: Agentic GraphRAG、Evidence Retrieval
 - architecture_refs:
-  - docs/project/modules/03-knowledge-agentic-graphrag.md — § 1. 为什么需要 Agentic GraphRAG
-  - docs/project/modules/03-knowledge-agentic-graphrag.md — § 2. 普通 GraphRAG 与 Agentic GraphRAG
+  - docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 1. 为什么需要 Agentic GraphRAG
+  - docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 2. 普通 GraphRAG 与 Agentic GraphRAG
 - initial_coverage_status: PARTIAL
 - coverage_status: FULL
 - gap_id: CLOSED-GAP-03-002
@@ -101,8 +101,8 @@ None。第一轮记录的缺口已写回canonical architecture；本QA不新增�
 
 ### Architecture Evidence
 
-- docs/project/modules/03-knowledge-agentic-graphrag.md — § 1. 为什么需要 Agentic GraphRAG
-- docs/project/modules/03-knowledge-agentic-graphrag.md — § 2. 普通 GraphRAG 与 Agentic GraphRAG
+- docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 1. 为什么需要 Agentic GraphRAG
+- docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 2. 普通 GraphRAG 与 Agentic GraphRAG
 
 ### 当前文档是否足够回答
 
@@ -121,8 +121,8 @@ None。第一轮记录的缺口已写回canonical architecture；本QA不新增�
 - interview_probability: HIGH
 - resume_trigger: Agentic GraphRAG、Evidence Retrieval
 - architecture_refs:
-  - docs/project/modules/03-knowledge-agentic-graphrag.md — § 1. 为什么需要 Agentic GraphRAG
-  - docs/project/modules/03-knowledge-agentic-graphrag.md — § 2. 普通 GraphRAG 与 Agentic GraphRAG
+  - docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 1. 为什么需要 Agentic GraphRAG
+  - docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 2. 普通 GraphRAG 与 Agentic GraphRAG
 - initial_coverage_status: PARTIAL
 - coverage_status: FULL
 - gap_id: CLOSED-GAP-03-003
@@ -154,8 +154,8 @@ None。第一轮记录的缺口已写回canonical architecture；本QA不新增�
 
 ### Architecture Evidence
 
-- docs/project/modules/03-knowledge-agentic-graphrag.md — § 1. 为什么需要 Agentic GraphRAG
-- docs/project/modules/03-knowledge-agentic-graphrag.md — § 2. 普通 GraphRAG 与 Agentic GraphRAG
+- docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 1. 为什么需要 Agentic GraphRAG
+- docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 2. 普通 GraphRAG 与 Agentic GraphRAG
 
 ### 当前文档是否足够回答
 
@@ -174,8 +174,8 @@ None。第一轮记录的缺口已写回canonical architecture；本QA不新增�
 - interview_probability: HIGH
 - resume_trigger: Agentic GraphRAG、Evidence Retrieval
 - architecture_refs:
-  - docs/project/modules/03-knowledge-agentic-graphrag.md — § 1. 为什么需要 Agentic GraphRAG
-  - docs/project/modules/03-knowledge-agentic-graphrag.md — § 2. 普通 GraphRAG 与 Agentic GraphRAG
+  - docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 1. 为什么需要 Agentic GraphRAG
+  - docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 2. 普通 GraphRAG 与 Agentic GraphRAG
 - initial_coverage_status: FULL
 - coverage_status: FULL
 - gap_id: None
@@ -207,8 +207,8 @@ Control Plane决定为什么搜、搜什么、是否足够和下一步；Data Pl
 
 ### Architecture Evidence
 
-- docs/project/modules/03-knowledge-agentic-graphrag.md — § 1. 为什么需要 Agentic GraphRAG
-- docs/project/modules/03-knowledge-agentic-graphrag.md — § 2. 普通 GraphRAG 与 Agentic GraphRAG
+- docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 1. 为什么需要 Agentic GraphRAG
+- docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 2. 普通 GraphRAG 与 Agentic GraphRAG
 
 ### 当前文档是否足够回答
 
@@ -227,8 +227,8 @@ None。第一轮记录的缺口已写回canonical architecture；本QA不新增�
 - interview_probability: HIGH
 - resume_trigger: Agentic GraphRAG、Evidence Retrieval
 - architecture_refs:
-  - docs/project/modules/03-knowledge-agentic-graphrag.md — § 10. STANDARD 完整流程
-  - docs/project/modules/03-knowledge-agentic-graphrag.md — § 15.1 Recall、RRF、Rerank 与 Evidence Evaluation 的分工
+  - docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 10. STANDARD 完整流程
+  - docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 15.1 Recall、RRF、Rerank 与 Evidence Evaluation 的分工
 - initial_coverage_status: FULL
 - coverage_status: FULL
 - gap_id: None
@@ -260,8 +260,8 @@ BM25擅长条款号、专名、版本和精确术语，提供 lexical recall，�
 
 ### Architecture Evidence
 
-- docs/project/modules/03-knowledge-agentic-graphrag.md — § 10. STANDARD 完整流程
-- docs/project/modules/03-knowledge-agentic-graphrag.md — § 15.1 Recall、RRF、Rerank 与 Evidence Evaluation 的分工
+- docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 10. STANDARD 完整流程
+- docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 15.1 Recall、RRF、Rerank 与 Evidence Evaluation 的分工
 
 ### 当前文档是否足够回答
 
@@ -280,8 +280,8 @@ None。第一轮记录的缺口已写回canonical architecture；本QA不新增�
 - interview_probability: HIGH
 - resume_trigger: Agentic GraphRAG、Evidence Retrieval
 - architecture_refs:
-  - docs/project/modules/03-knowledge-agentic-graphrag.md — § 10. STANDARD 完整流程
-  - docs/project/modules/03-knowledge-agentic-graphrag.md — § 15.1 Recall、RRF、Rerank 与 Evidence Evaluation 的分工
+  - docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 10. STANDARD 完整流程
+  - docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 15.1 Recall、RRF、Rerank 与 Evidence Evaluation 的分工
 - initial_coverage_status: FULL
 - coverage_status: FULL
 - gap_id: None
@@ -313,8 +313,8 @@ Vector擅长同义表达和语义改写，提供 semantic recall，但不等于�
 
 ### Architecture Evidence
 
-- docs/project/modules/03-knowledge-agentic-graphrag.md — § 10. STANDARD 完整流程
-- docs/project/modules/03-knowledge-agentic-graphrag.md — § 15.1 Recall、RRF、Rerank 与 Evidence Evaluation 的分工
+- docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 10. STANDARD 完整流程
+- docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 15.1 Recall、RRF、Rerank 与 Evidence Evaluation 的分工
 
 ### 当前文档是否足够回答
 
@@ -333,8 +333,8 @@ None。第一轮记录的缺口已写回canonical architecture；本QA不新增�
 - interview_probability: HIGH
 - resume_trigger: Agentic GraphRAG、Evidence Retrieval
 - architecture_refs:
-  - docs/project/modules/03-knowledge-agentic-graphrag.md — § 10. STANDARD 完整流程
-  - docs/project/modules/03-knowledge-agentic-graphrag.md — § 15.1 Recall、RRF、Rerank 与 Evidence Evaluation 的分工
+  - docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 10. STANDARD 完整流程
+  - docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 15.1 Recall、RRF、Rerank 与 Evidence Evaluation 的分工
 - initial_coverage_status: PARTIAL
 - coverage_status: FULL
 - gap_id: CLOSED-GAP-03-007
@@ -366,8 +366,8 @@ BM25 和 Vector 返回的是什么粒度？
 
 ### Architecture Evidence
 
-- docs/project/modules/03-knowledge-agentic-graphrag.md — § 10. STANDARD 完整流程
-- docs/project/modules/03-knowledge-agentic-graphrag.md — § 15.1 Recall、RRF、Rerank 与 Evidence Evaluation 的分工
+- docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 10. STANDARD 完整流程
+- docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 15.1 Recall、RRF、Rerank 与 Evidence Evaluation 的分工
 
 ### 当前文档是否足够回答
 
@@ -386,8 +386,8 @@ None。第一轮记录的缺口已写回canonical architecture；本QA不新增�
 - interview_probability: HIGH
 - resume_trigger: Agentic GraphRAG、Evidence Retrieval
 - architecture_refs:
-  - docs/project/modules/03-knowledge-agentic-graphrag.md — § 10. STANDARD 完整流程
-  - docs/project/modules/03-knowledge-agentic-graphrag.md — § 15.1 Recall、RRF、Rerank 与 Evidence Evaluation 的分工
+  - docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 10. STANDARD 完整流程
+  - docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 15.1 Recall、RRF、Rerank 与 Evidence Evaluation 的分工
 - initial_coverage_status: PARTIAL
 - coverage_status: FULL
 - gap_id: CLOSED-GAP-03-008
@@ -419,8 +419,8 @@ None。第一轮记录的缺口已写回canonical architecture；本QA不新增�
 
 ### Architecture Evidence
 
-- docs/project/modules/03-knowledge-agentic-graphrag.md — § 10. STANDARD 完整流程
-- docs/project/modules/03-knowledge-agentic-graphrag.md — § 15.1 Recall、RRF、Rerank 与 Evidence Evaluation 的分工
+- docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 10. STANDARD 完整流程
+- docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 15.1 Recall、RRF、Rerank 与 Evidence Evaluation 的分工
 
 ### 当前文档是否足够回答
 
@@ -439,8 +439,8 @@ None。第一轮记录的缺口已写回canonical architecture；本QA不新增�
 - interview_probability: HIGH
 - resume_trigger: Agentic GraphRAG、Evidence Retrieval
 - architecture_refs:
-  - docs/project/modules/03-knowledge-agentic-graphrag.md — § 15. Fusion、Rerank 与 Selection
-  - docs/project/modules/03-knowledge-agentic-graphrag.md — § 15.1 Recall、RRF、Rerank 与 Evidence Evaluation 的分工
+  - docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 15. Fusion、Rerank 与 Selection
+  - docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 15.1 Recall、RRF、Rerank 与 Evidence Evaluation 的分工
 - initial_coverage_status: PARTIAL
 - coverage_status: FULL
 - gap_id: CLOSED-GAP-03-009
@@ -472,8 +472,8 @@ RRF只融合多个 ranked list的 rank，输出候选排序，不比较raw score
 
 ### Architecture Evidence
 
-- docs/project/modules/03-knowledge-agentic-graphrag.md — § 15. Fusion、Rerank 与 Selection
-- docs/project/modules/03-knowledge-agentic-graphrag.md — § 15.1 Recall、RRF、Rerank 与 Evidence Evaluation 的分工
+- docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 15. Fusion、Rerank 与 Selection
+- docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 15.1 Recall、RRF、Rerank 与 Evidence Evaluation 的分工
 
 ### 当前文档是否足够回答
 
@@ -492,8 +492,8 @@ None。第一轮记录的缺口已写回canonical architecture；本QA不新增�
 - interview_probability: HIGH
 - resume_trigger: Agentic GraphRAG、Evidence Retrieval
 - architecture_refs:
-  - docs/project/modules/03-knowledge-agentic-graphrag.md — § 15. Fusion、Rerank 与 Selection
-  - docs/project/modules/03-knowledge-agentic-graphrag.md — § 15.1 Recall、RRF、Rerank 与 Evidence Evaluation 的分工
+  - docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 15. Fusion、Rerank 与 Selection
+  - docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 15.1 Recall、RRF、Rerank 与 Evidence Evaluation 的分工
 - initial_coverage_status: PARTIAL
 - coverage_status: FULL
 - gap_id: CLOSED-GAP-03-010
@@ -525,8 +525,8 @@ RRF提高融合稳定性，但候选可能缺定义、法域或引用跨度，�
 
 ### Architecture Evidence
 
-- docs/project/modules/03-knowledge-agentic-graphrag.md — § 15. Fusion、Rerank 与 Selection
-- docs/project/modules/03-knowledge-agentic-graphrag.md — § 15.1 Recall、RRF、Rerank 与 Evidence Evaluation 的分工
+- docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 15. Fusion、Rerank 与 Selection
+- docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 15.1 Recall、RRF、Rerank 与 Evidence Evaluation 的分工
 
 ### 当前文档是否足够回答
 
@@ -545,8 +545,8 @@ None。第一轮记录的缺口已写回canonical architecture；本QA不新增�
 - interview_probability: HIGH
 - resume_trigger: Agentic GraphRAG、Evidence Retrieval
 - architecture_refs:
-  - docs/project/modules/03-knowledge-agentic-graphrag.md — § 15. Fusion、Rerank 与 Selection
-  - docs/project/modules/03-knowledge-agentic-graphrag.md — § 15.1 Recall、RRF、Rerank 与 Evidence Evaluation 的分工
+  - docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 15. Fusion、Rerank 与 Selection
+  - docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 15.1 Recall、RRF、Rerank 与 Evidence Evaluation 的分工
 - initial_coverage_status: FULL
 - coverage_status: FULL
 - gap_id: None
@@ -578,8 +578,8 @@ Recall Stage 为什么宁可多找一些？
 
 ### Architecture Evidence
 
-- docs/project/modules/03-knowledge-agentic-graphrag.md — § 15. Fusion、Rerank 与 Selection
-- docs/project/modules/03-knowledge-agentic-graphrag.md — § 15.1 Recall、RRF、Rerank 与 Evidence Evaluation 的分工
+- docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 15. Fusion、Rerank 与 Selection
+- docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 15.1 Recall、RRF、Rerank 与 Evidence Evaluation 的分工
 
 ### 当前文档是否足够回答
 
@@ -598,8 +598,8 @@ None。第一轮记录的缺口已写回canonical architecture；本QA不新增�
 - interview_probability: HIGH
 - resume_trigger: Agentic GraphRAG、Evidence Retrieval
 - architecture_refs:
-  - docs/project/modules/03-knowledge-agentic-graphrag.md — § 15. Fusion、Rerank 与 Selection
-  - docs/project/modules/03-knowledge-agentic-graphrag.md — § 15.1 Recall、RRF、Rerank 与 Evidence Evaluation 的分工
+  - docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 15. Fusion、Rerank 与 Selection
+  - docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 15.1 Recall、RRF、Rerank 与 Evidence Evaluation 的分工
 - initial_coverage_status: FULL
 - coverage_status: FULL
 - gap_id: None
@@ -631,8 +631,8 @@ Retriever N、fusion cap、rerank K和evidence budget处在不同阶段，服务
 
 ### Architecture Evidence
 
-- docs/project/modules/03-knowledge-agentic-graphrag.md — § 15. Fusion、Rerank 与 Selection
-- docs/project/modules/03-knowledge-agentic-graphrag.md — § 15.1 Recall、RRF、Rerank 与 Evidence Evaluation 的分工
+- docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 15. Fusion、Rerank 与 Selection
+- docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 15.1 Recall、RRF、Rerank 与 Evidence Evaluation 的分工
 
 ### 当前文档是否足够回答
 
@@ -655,8 +655,8 @@ None。第一轮记录的缺口已写回canonical architecture；本QA不新增�
 - interview_probability: HIGH
 - resume_trigger: Agentic GraphRAG、Evidence Retrieval
 - architecture_refs:
-  - docs/project/modules/03-knowledge-agentic-graphrag.md — § 15. Fusion、Rerank 与 Selection
-  - docs/project/modules/03-knowledge-agentic-graphrag.md — § 15.1 Recall、RRF、Rerank 与 Evidence Evaluation 的分工
+  - docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 15. Fusion、Rerank 与 Selection
+  - docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 15.1 Recall、RRF、Rerank 与 Evidence Evaluation 的分工
 - initial_coverage_status: FULL
 - coverage_status: FULL
 - gap_id: None
@@ -688,8 +688,8 @@ Rerank问候选谁更相关；Evidence Evaluation问候选集合是否足以支�
 
 ### Architecture Evidence
 
-- docs/project/modules/03-knowledge-agentic-graphrag.md — § 15. Fusion、Rerank 与 Selection
-- docs/project/modules/03-knowledge-agentic-graphrag.md — § 15.1 Recall、RRF、Rerank 与 Evidence Evaluation 的分工
+- docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 15. Fusion、Rerank 与 Selection
+- docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 15.1 Recall、RRF、Rerank 与 Evidence Evaluation 的分工
 
 ### 当前文档是否足够回答
 
@@ -708,8 +708,8 @@ None。第一轮记录的缺口已写回canonical architecture；本QA不新增�
 - interview_probability: HIGH
 - resume_trigger: Agentic GraphRAG、Evidence Retrieval
 - architecture_refs:
-  - docs/project/modules/03-knowledge-agentic-graphrag.md — § 15. Fusion、Rerank 与 Selection
-  - docs/project/modules/03-knowledge-agentic-graphrag.md — § 15.1 Recall、RRF、Rerank 与 Evidence Evaluation 的分工
+  - docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 15. Fusion、Rerank 与 Selection
+  - docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 15.1 Recall、RRF、Rerank 与 Evidence Evaluation 的分工
 - initial_coverage_status: PARTIAL
 - coverage_status: FULL
 - gap_id: CLOSED-GAP-03-014
@@ -741,8 +741,8 @@ First-pass Rerank 和 Unified Evidence Rerank 是否是两个架构步骤？
 
 ### Architecture Evidence
 
-- docs/project/modules/03-knowledge-agentic-graphrag.md — § 15. Fusion、Rerank 与 Selection
-- docs/project/modules/03-knowledge-agentic-graphrag.md — § 15.1 Recall、RRF、Rerank 与 Evidence Evaluation 的分工
+- docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 15. Fusion、Rerank 与 Selection
+- docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 15.1 Recall、RRF、Rerank 与 Evidence Evaluation 的分工
 
 ### 当前文档是否足够回答
 
@@ -761,8 +761,8 @@ None。第一轮记录的缺口已写回canonical architecture；本QA不新增�
 - interview_probability: HIGH
 - resume_trigger: Agentic GraphRAG、Evidence Retrieval
 - architecture_refs:
-  - docs/project/modules/03-knowledge-agentic-graphrag.md — § 7.2 三种检索粒度
-  - docs/project/modules/03-knowledge-agentic-graphrag.md — § 38. EvidenceRecord
+  - docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 7.2 三种检索粒度
+  - docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 38. EvidenceRecord
 - initial_coverage_status: PARTIAL
 - coverage_status: FULL
 - gap_id: CLOSED-GAP-03-015
@@ -794,8 +794,8 @@ CitationChunk是给检索、排序、Context和Citation消费的文本单元，�
 
 ### Architecture Evidence
 
-- docs/project/modules/03-knowledge-agentic-graphrag.md — § 7.2 三种检索粒度
-- docs/project/modules/03-knowledge-agentic-graphrag.md — § 38. EvidenceRecord
+- docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 7.2 三种检索粒度
+- docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 38. EvidenceRecord
 
 ### 当前文档是否足够回答
 
@@ -814,8 +814,8 @@ None。第一轮记录的缺口已写回canonical architecture；本QA不新增�
 - interview_probability: HIGH
 - resume_trigger: Agentic GraphRAG、Evidence Retrieval
 - architecture_refs:
-  - docs/project/modules/03-knowledge-agentic-graphrag.md — § 7.2 三种检索粒度
-  - docs/project/modules/03-knowledge-agentic-graphrag.md — § 38. EvidenceRecord
+  - docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 7.2 三种检索粒度
+  - docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 38. EvidenceRecord
 - initial_coverage_status: PARTIAL
 - coverage_status: FULL
 - gap_id: CLOSED-GAP-03-016
@@ -847,8 +847,8 @@ SourceSpan是DocumentVersion中的精确定位、provenance、content hash和审
 
 ### Architecture Evidence
 
-- docs/project/modules/03-knowledge-agentic-graphrag.md — § 7.2 三种检索粒度
-- docs/project/modules/03-knowledge-agentic-graphrag.md — § 38. EvidenceRecord
+- docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 7.2 三种检索粒度
+- docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 38. EvidenceRecord
 
 ### 当前文档是否足够回答
 
@@ -867,8 +867,8 @@ None。第一轮记录的缺口已写回canonical architecture；本QA不新增�
 - interview_probability: HIGH
 - resume_trigger: Agentic GraphRAG、Evidence Retrieval
 - architecture_refs:
-  - docs/project/modules/03-knowledge-agentic-graphrag.md — § 7.2 三种检索粒度
-  - docs/project/modules/03-knowledge-agentic-graphrag.md — § 38. EvidenceRecord
+  - docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 7.2 三种检索粒度
+  - docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 38. EvidenceRecord
 - initial_coverage_status: PARTIAL
 - coverage_status: FULL
 - gap_id: CLOSED-GAP-03-017
@@ -900,8 +900,8 @@ CitationChunk 和 SourceSpan 是一对一吗？
 
 ### Architecture Evidence
 
-- docs/project/modules/03-knowledge-agentic-graphrag.md — § 7.2 三种检索粒度
-- docs/project/modules/03-knowledge-agentic-graphrag.md — § 38. EvidenceRecord
+- docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 7.2 三种检索粒度
+- docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 38. EvidenceRecord
 
 ### 当前文档是否足够回答
 
@@ -920,8 +920,8 @@ None。第一轮记录的缺口已写回canonical architecture；本QA不新增�
 - interview_probability: HIGH
 - resume_trigger: Agentic GraphRAG、Evidence Retrieval
 - architecture_refs:
-  - docs/project/modules/03-knowledge-agentic-graphrag.md — § 7.2 三种检索粒度
-  - docs/project/modules/03-knowledge-agentic-graphrag.md — § 38. EvidenceRecord
+  - docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 7.2 三种检索粒度
+  - docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 38. EvidenceRecord
 - initial_coverage_status: PARTIAL
 - coverage_status: FULL
 - gap_id: CLOSED-GAP-03-018
@@ -953,8 +953,8 @@ Chunk本身不能证明版本、位置、hash、权限和审计；没有SourceSp
 
 ### Architecture Evidence
 
-- docs/project/modules/03-knowledge-agentic-graphrag.md — § 7.2 三种检索粒度
-- docs/project/modules/03-knowledge-agentic-graphrag.md — § 38. EvidenceRecord
+- docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 7.2 三种检索粒度
+- docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 38. EvidenceRecord
 
 ### 当前文档是否足够回答
 
@@ -973,8 +973,8 @@ None。第一轮记录的缺口已写回canonical architecture；本QA不新增�
 - interview_probability: HIGH
 - resume_trigger: Agentic GraphRAG、Evidence Retrieval
 - architecture_refs:
-  - docs/project/modules/03-knowledge-agentic-graphrag.md — § 7.2 三种检索粒度
-  - docs/project/modules/03-knowledge-agentic-graphrag.md — § 38. EvidenceRecord
+  - docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 7.2 三种检索粒度
+  - docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 38. EvidenceRecord
 - initial_coverage_status: PARTIAL
 - coverage_status: FULL
 - gap_id: CLOSED-GAP-03-019
@@ -1006,8 +1006,8 @@ EvidenceCandidate 到 SourceObject 的完整 lineage 是什么？
 
 ### Architecture Evidence
 
-- docs/project/modules/03-knowledge-agentic-graphrag.md — § 7.2 三种检索粒度
-- docs/project/modules/03-knowledge-agentic-graphrag.md — § 38. EvidenceRecord
+- docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 7.2 三种检索粒度
+- docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 38. EvidenceRecord
 
 ### 当前文档是否足够回答
 
@@ -1026,8 +1026,8 @@ None。第一轮记录的缺口已写回canonical architecture；本QA不新增�
 - interview_probability: HIGH
 - resume_trigger: Agentic GraphRAG、Evidence Retrieval
 - architecture_refs:
-  - docs/project/modules/03-knowledge-agentic-graphrag.md — § 7.2 三种检索粒度
-  - docs/project/modules/03-knowledge-agentic-graphrag.md — § 38. EvidenceRecord
+  - docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 7.2 三种检索粒度
+  - docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 38. EvidenceRecord
 - initial_coverage_status: PARTIAL
 - coverage_status: FULL
 - gap_id: CLOSED-GAP-03-020
@@ -1059,8 +1059,8 @@ None。第一轮记录的缺口已写回canonical architecture；本QA不新增�
 
 ### Architecture Evidence
 
-- docs/project/modules/03-knowledge-agentic-graphrag.md — § 7.2 三种检索粒度
-- docs/project/modules/03-knowledge-agentic-graphrag.md — § 38. EvidenceRecord
+- docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 7.2 三种检索粒度
+- docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 38. EvidenceRecord
 
 ### 当前文档是否足够回答
 
@@ -1079,8 +1079,8 @@ None。第一轮记录的缺口已写回canonical architecture；本QA不新增�
 - interview_probability: HIGH
 - resume_trigger: Agentic GraphRAG、Evidence Retrieval
 - architecture_refs:
-  - docs/project/modules/03-knowledge-agentic-graphrag.md — § 7.2 三种检索粒度
-  - docs/project/modules/03-knowledge-agentic-graphrag.md — § 38. EvidenceRecord
+  - docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 7.2 三种检索粒度
+  - docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 38. EvidenceRecord
 - initial_coverage_status: PARTIAL
 - coverage_status: FULL
 - gap_id: CLOSED-GAP-03-021
@@ -1112,8 +1112,8 @@ Chunking Policy 改变后旧 Citation 怎么办？
 
 ### Architecture Evidence
 
-- docs/project/modules/03-knowledge-agentic-graphrag.md — § 7.2 三种检索粒度
-- docs/project/modules/03-knowledge-agentic-graphrag.md — § 38. EvidenceRecord
+- docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 7.2 三种检索粒度
+- docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 38. EvidenceRecord
 
 ### 当前文档是否足够回答
 
@@ -1132,8 +1132,8 @@ None。第一轮记录的缺口已写回canonical architecture；本QA不新增�
 - interview_probability: HIGH
 - resume_trigger: Agentic GraphRAG、Evidence Retrieval
 - architecture_refs:
-  - docs/project/modules/03-knowledge-agentic-graphrag.md — § 14.1 SearchAction 层级
-  - docs/project/modules/03-knowledge-agentic-graphrag.md — § 36. RetrieverAction
+  - docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 14.1 SearchAction 层级
+  - docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 36. RetrieverAction
 - initial_coverage_status: FULL
 - coverage_status: FULL
 - gap_id: None
@@ -1165,8 +1165,8 @@ Requirement是证据目标，SearchAction是解决目标的检索路线，一个
 
 ### Architecture Evidence
 
-- docs/project/modules/03-knowledge-agentic-graphrag.md — § 14.1 SearchAction 层级
-- docs/project/modules/03-knowledge-agentic-graphrag.md — § 36. RetrieverAction
+- docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 14.1 SearchAction 层级
+- docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 36. RetrieverAction
 
 ### 当前文档是否足够回答
 
@@ -1185,8 +1185,8 @@ None。第一轮记录的缺口已写回canonical architecture；本QA不新增�
 - interview_probability: HIGH
 - resume_trigger: Agentic GraphRAG、Evidence Retrieval
 - architecture_refs:
-  - docs/project/modules/03-knowledge-agentic-graphrag.md — § 14.1 SearchAction 层级
-  - docs/project/modules/03-knowledge-agentic-graphrag.md — § 36. RetrieverAction
+  - docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 14.1 SearchAction 层级
+  - docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 36. RetrieverAction
 - initial_coverage_status: FULL
 - coverage_status: FULL
 - gap_id: None
@@ -1218,8 +1218,8 @@ None。第一轮记录的缺口已写回canonical architecture；本QA不新增�
 
 ### Architecture Evidence
 
-- docs/project/modules/03-knowledge-agentic-graphrag.md — § 14.1 SearchAction 层级
-- docs/project/modules/03-knowledge-agentic-graphrag.md — § 36. RetrieverAction
+- docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 14.1 SearchAction 层级
+- docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 36. RetrieverAction
 
 ### 当前文档是否足够回答
 
@@ -1238,8 +1238,8 @@ None。第一轮记录的缺口已写回canonical architecture；本QA不新增�
 - interview_probability: HIGH
 - resume_trigger: Agentic GraphRAG、Evidence Retrieval
 - architecture_refs:
-  - docs/project/modules/03-knowledge-agentic-graphrag.md — § 14.1 SearchAction 层级
-  - docs/project/modules/03-knowledge-agentic-graphrag.md — § 36. RetrieverAction
+  - docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 14.1 SearchAction 层级
+  - docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 36. RetrieverAction
 - initial_coverage_status: PARTIAL
 - coverage_status: FULL
 - gap_id: CLOSED-GAP-03-024
@@ -1271,8 +1271,8 @@ HYBRID是逻辑Action，内部并行BM25和Vector；具体operator attempt由Ret
 
 ### Architecture Evidence
 
-- docs/project/modules/03-knowledge-agentic-graphrag.md — § 14.1 SearchAction 层级
-- docs/project/modules/03-knowledge-agentic-graphrag.md — § 36. RetrieverAction
+- docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 14.1 SearchAction 层级
+- docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 36. RetrieverAction
 
 ### 当前文档是否足够回答
 
@@ -1295,8 +1295,8 @@ None。第一轮记录的缺口已写回canonical architecture；本QA不新增�
 - interview_probability: HIGH
 - resume_trigger: Agentic GraphRAG、Evidence Retrieval
 - architecture_refs:
-  - docs/project/modules/03-knowledge-agentic-graphrag.md — § 14.1 SearchAction 层级
-  - docs/project/modules/03-knowledge-agentic-graphrag.md — § 36. RetrieverAction
+  - docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 14.1 SearchAction 层级
+  - docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 36. RetrieverAction
 - initial_coverage_status: FULL
 - coverage_status: FULL
 - gap_id: None
@@ -1328,8 +1328,8 @@ None。第一轮记录的缺口已写回canonical architecture；本QA不新增�
 
 ### Architecture Evidence
 
-- docs/project/modules/03-knowledge-agentic-graphrag.md — § 14.1 SearchAction 层级
-- docs/project/modules/03-knowledge-agentic-graphrag.md — § 36. RetrieverAction
+- docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 14.1 SearchAction 层级
+- docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 36. RetrieverAction
 
 ### 当前文档是否足够回答
 
@@ -1348,8 +1348,8 @@ None。第一轮记录的缺口已写回canonical architecture；本QA不新增�
 - interview_probability: HIGH
 - resume_trigger: Agentic GraphRAG、Evidence Retrieval
 - architecture_refs:
-  - docs/project/modules/03-knowledge-agentic-graphrag.md — § 12. Graph 路由
-  - docs/project/modules/03-knowledge-agentic-graphrag.md — § 15.2 Candidate Materialization 与 Canonical Dedup
+  - docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 12. Graph 路由
+  - docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 15.2 Candidate Materialization 与 Canonical Dedup
 - initial_coverage_status: FULL
 - coverage_status: FULL
 - gap_id: None
@@ -1381,8 +1381,8 @@ Local seed优先来自已授权文本命中、高置信实体解析或显式实�
 
 ### Architecture Evidence
 
-- docs/project/modules/03-knowledge-agentic-graphrag.md — § 12. Graph 路由
-- docs/project/modules/03-knowledge-agentic-graphrag.md — § 15.2 Candidate Materialization 与 Canonical Dedup
+- docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 12. Graph 路由
+- docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 15.2 Candidate Materialization 与 Canonical Dedup
 
 ### 当前文档是否足够回答
 
@@ -1401,8 +1401,8 @@ None。第一轮记录的缺口已写回canonical architecture；本QA不新增�
 - interview_probability: HIGH
 - resume_trigger: Agentic GraphRAG、Evidence Retrieval
 - architecture_refs:
-  - docs/project/modules/03-knowledge-agentic-graphrag.md — § 12. Graph 路由
-  - docs/project/modules/03-knowledge-agentic-graphrag.md — § 15.2 Candidate Materialization 与 Canonical Dedup
+  - docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 12. Graph 路由
+  - docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 15.2 Candidate Materialization 与 Canonical Dedup
 - initial_coverage_status: FULL
 - coverage_status: FULL
 - gap_id: None
@@ -1434,8 +1434,8 @@ Entity Linking 错了会怎样？
 
 ### Architecture Evidence
 
-- docs/project/modules/03-knowledge-agentic-graphrag.md — § 12. Graph 路由
-- docs/project/modules/03-knowledge-agentic-graphrag.md — § 15.2 Candidate Materialization 与 Canonical Dedup
+- docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 12. Graph 路由
+- docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 15.2 Candidate Materialization 与 Canonical Dedup
 
 ### 当前文档是否足够回答
 
@@ -1454,8 +1454,8 @@ None。第一轮记录的缺口已写回canonical architecture；本QA不新增�
 - interview_probability: HIGH
 - resume_trigger: Agentic GraphRAG、Evidence Retrieval
 - architecture_refs:
-  - docs/project/modules/03-knowledge-agentic-graphrag.md — § 12. Graph 路由
-  - docs/project/modules/03-knowledge-agentic-graphrag.md — § 15.2 Candidate Materialization 与 Canonical Dedup
+  - docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 12. Graph 路由
+  - docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 15.2 Candidate Materialization 与 Canonical Dedup
 - initial_coverage_status: FULL
 - coverage_status: FULL
 - gap_id: None
@@ -1487,8 +1487,8 @@ None。第一轮记录的缺口已写回canonical architecture；本QA不新增�
 
 ### Architecture Evidence
 
-- docs/project/modules/03-knowledge-agentic-graphrag.md — § 12. Graph 路由
-- docs/project/modules/03-knowledge-agentic-graphrag.md — § 15.2 Candidate Materialization 与 Canonical Dedup
+- docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 12. Graph 路由
+- docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 15.2 Candidate Materialization 与 Canonical Dedup
 
 ### 当前文档是否足够回答
 
@@ -1507,8 +1507,8 @@ None。第一轮记录的缺口已写回canonical architecture；本QA不新增�
 - interview_probability: HIGH
 - resume_trigger: Agentic GraphRAG、Evidence Retrieval
 - architecture_refs:
-  - docs/project/modules/03-knowledge-agentic-graphrag.md — § 12. Graph 路由
-  - docs/project/modules/03-knowledge-agentic-graphrag.md — § 15.2 Candidate Materialization 与 Canonical Dedup
+  - docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 12. Graph 路由
+  - docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 15.2 Candidate Materialization 与 Canonical Dedup
 - initial_coverage_status: FULL
 - coverage_status: FULL
 - gap_id: None
@@ -1540,8 +1540,8 @@ Graph constraints按relation type、方向、scope、jurisdiction和时间筛选
 
 ### Architecture Evidence
 
-- docs/project/modules/03-knowledge-agentic-graphrag.md — § 12. Graph 路由
-- docs/project/modules/03-knowledge-agentic-graphrag.md — § 15.2 Candidate Materialization 与 Canonical Dedup
+- docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 12. Graph 路由
+- docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 15.2 Candidate Materialization 与 Canonical Dedup
 
 ### 当前文档是否足够回答
 
@@ -1560,8 +1560,8 @@ None。第一轮记录的缺口已写回canonical architecture；本QA不新增�
 - interview_probability: HIGH
 - resume_trigger: Agentic GraphRAG、Evidence Retrieval
 - architecture_refs:
-  - docs/project/modules/03-knowledge-agentic-graphrag.md — § 12. Graph 路由
-  - docs/project/modules/03-knowledge-agentic-graphrag.md — § 15.2 Candidate Materialization 与 Canonical Dedup
+  - docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 12. Graph 路由
+  - docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 15.2 Candidate Materialization 与 Canonical Dedup
 - initial_coverage_status: PARTIAL
 - coverage_status: FULL
 - gap_id: CLOSED-GAP-03-030
@@ -1593,8 +1593,8 @@ Graph原生结果可以是Entity、Relation和GraphPath；必须Materialization�
 
 ### Architecture Evidence
 
-- docs/project/modules/03-knowledge-agentic-graphrag.md — § 12. Graph 路由
-- docs/project/modules/03-knowledge-agentic-graphrag.md — § 15.2 Candidate Materialization 与 Canonical Dedup
+- docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 12. Graph 路由
+- docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 15.2 Candidate Materialization 与 Canonical Dedup
 
 ### 当前文档是否足够回答
 
@@ -1613,8 +1613,8 @@ None。第一轮记录的缺口已写回canonical architecture；本QA不新增�
 - interview_probability: HIGH
 - resume_trigger: Agentic GraphRAG、Evidence Retrieval
 - architecture_refs:
-  - docs/project/modules/03-knowledge-agentic-graphrag.md — § 12. Graph 路由
-  - docs/project/modules/03-knowledge-agentic-graphrag.md — § 15.2 Candidate Materialization 与 Canonical Dedup
+  - docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 12. Graph 路由
+  - docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 15.2 Candidate Materialization 与 Canonical Dedup
 - initial_coverage_status: PARTIAL
 - coverage_status: FULL
 - gap_id: CLOSED-GAP-03-031
@@ -1646,8 +1646,8 @@ GraphPath是provenance、structural relevance和trace，strict Citation仍须绑
 
 ### Architecture Evidence
 
-- docs/project/modules/03-knowledge-agentic-graphrag.md — § 12. Graph 路由
-- docs/project/modules/03-knowledge-agentic-graphrag.md — § 15.2 Candidate Materialization 与 Canonical Dedup
+- docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 12. Graph 路由
+- docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 15.2 Candidate Materialization 与 Canonical Dedup
 
 ### 当前文档是否足够回答
 
@@ -1666,8 +1666,8 @@ None。第一轮记录的缺口已写回canonical architecture；本QA不新增�
 - interview_probability: HIGH
 - resume_trigger: Agentic GraphRAG、Evidence Retrieval
 - architecture_refs:
-  - docs/project/modules/03-knowledge-agentic-graphrag.md — § 12. Graph 路由
-  - docs/project/modules/03-knowledge-agentic-graphrag.md — § 15.2 Candidate Materialization 与 Canonical Dedup
+  - docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 12. Graph 路由
+  - docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 15.2 Candidate Materialization 与 Canonical Dedup
 - initial_coverage_status: PARTIAL
 - coverage_status: FULL
 - gap_id: CLOSED-GAP-03-032
@@ -1699,8 +1699,8 @@ Materialization把结构发现转为带SourceSpan、版本、权限和引用资�
 
 ### Architecture Evidence
 
-- docs/project/modules/03-knowledge-agentic-graphrag.md — § 12. Graph 路由
-- docs/project/modules/03-knowledge-agentic-graphrag.md — § 15.2 Candidate Materialization 与 Canonical Dedup
+- docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 12. Graph 路由
+- docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 15.2 Candidate Materialization 与 Canonical Dedup
 
 ### 当前文档是否足够回答
 
@@ -1719,8 +1719,8 @@ None。第一轮记录的缺口已写回canonical architecture；本QA不新增�
 - interview_probability: HIGH
 - resume_trigger: Agentic GraphRAG、Evidence Retrieval
 - architecture_refs:
-  - docs/project/modules/03-knowledge-agentic-graphrag.md — § 1. 为什么需要 Agentic GraphRAG
-  - docs/project/modules/03-knowledge-agentic-graphrag.md — § 2. 普通 GraphRAG 与 Agentic GraphRAG
+  - docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 1. 为什么需要 Agentic GraphRAG
+  - docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 2. 普通 GraphRAG 与 Agentic GraphRAG
 - initial_coverage_status: PARTIAL
 - coverage_status: FULL
 - gap_id: CLOSED-GAP-03-033
@@ -1752,8 +1752,8 @@ None。第一轮记录的缺口已写回canonical architecture；本QA不新增�
 
 ### Architecture Evidence
 
-- docs/project/modules/03-knowledge-agentic-graphrag.md — § 1. 为什么需要 Agentic GraphRAG
-- docs/project/modules/03-knowledge-agentic-graphrag.md — § 2. 普通 GraphRAG 与 Agentic GraphRAG
+- docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 1. 为什么需要 Agentic GraphRAG
+- docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 2. 普通 GraphRAG 与 Agentic GraphRAG
 
 ### 当前文档是否足够回答
 
@@ -1772,8 +1772,8 @@ None。第一轮记录的缺口已写回canonical architecture；本QA不新增�
 - interview_probability: HIGH
 - resume_trigger: Agentic GraphRAG、Evidence Retrieval
 - architecture_refs:
-  - docs/project/modules/03-knowledge-agentic-graphrag.md — § 12. Graph 路由
-  - docs/project/modules/03-knowledge-agentic-graphrag.md — § 16. Evidence Quality Gates
+  - docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 12. Graph 路由
+  - docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 16. Evidence Quality Gates
 - initial_coverage_status: PARTIAL
 - coverage_status: FULL
 - gap_id: CLOSED-GAP-03-034
@@ -1805,8 +1805,8 @@ Community Report是派生摘要，score量纲不同，必须先转为derived can
 
 ### Architecture Evidence
 
-- docs/project/modules/03-knowledge-agentic-graphrag.md — § 12. Graph 路由
-- docs/project/modules/03-knowledge-agentic-graphrag.md — § 16. Evidence Quality Gates
+- docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 12. Graph 路由
+- docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 16. Evidence Quality Gates
 
 ### 当前文档是否足够回答
 
@@ -1825,8 +1825,8 @@ None。第一轮记录的缺口已写回canonical architecture；本QA不新增�
 - interview_probability: HIGH
 - resume_trigger: Agentic GraphRAG、Evidence Retrieval
 - architecture_refs:
-  - docs/project/modules/03-knowledge-agentic-graphrag.md — § 12. Graph 路由
-  - docs/project/modules/03-knowledge-agentic-graphrag.md — § 16. Evidence Quality Gates
+  - docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 12. Graph 路由
+  - docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 16. Evidence Quality Gates
 - initial_coverage_status: FULL
 - coverage_status: FULL
 - gap_id: None
@@ -1858,8 +1858,8 @@ Community用于corpus-level coverage和导航，不是atomic strict citation。 
 
 ### Architecture Evidence
 
-- docs/project/modules/03-knowledge-agentic-graphrag.md — § 12. Graph 路由
-- docs/project/modules/03-knowledge-agentic-graphrag.md — § 16. Evidence Quality Gates
+- docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 12. Graph 路由
+- docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 16. Evidence Quality Gates
 
 ### 当前文档是否足够回答
 
@@ -1878,8 +1878,8 @@ None。第一轮记录的缺口已写回canonical architecture；本QA不新增�
 - interview_probability: HIGH
 - resume_trigger: Agentic GraphRAG、Evidence Retrieval
 - architecture_refs:
-  - docs/project/modules/03-knowledge-agentic-graphrag.md — § 12. Graph 路由
-  - docs/project/modules/03-knowledge-agentic-graphrag.md — § 16. Evidence Quality Gates
+  - docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 12. Graph 路由
+  - docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 16. Evidence Quality Gates
 - initial_coverage_status: FULL
 - coverage_status: FULL
 - gap_id: None
@@ -1911,8 +1911,8 @@ Community Report 能直接证明法律结论吗？
 
 ### Architecture Evidence
 
-- docs/project/modules/03-knowledge-agentic-graphrag.md — § 12. Graph 路由
-- docs/project/modules/03-knowledge-agentic-graphrag.md — § 16. Evidence Quality Gates
+- docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 12. Graph 路由
+- docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 16. Evidence Quality Gates
 
 ### 当前文档是否足够回答
 
@@ -1935,8 +1935,8 @@ None。第一轮记录的缺口已写回canonical architecture；本QA不新增�
 - interview_probability: HIGH
 - resume_trigger: Agentic GraphRAG、Evidence Retrieval
 - architecture_refs:
-  - docs/project/modules/03-knowledge-agentic-graphrag.md — § 12. Graph 路由
-  - docs/project/modules/03-knowledge-agentic-graphrag.md — § 16. Evidence Quality Gates
+  - docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 12. Graph 路由
+  - docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 16. Evidence Quality Gates
 - initial_coverage_status: FULL
 - coverage_status: FULL
 - gap_id: None
@@ -1968,8 +1968,8 @@ None。第一轮记录的缺口已写回canonical architecture；本QA不新增�
 
 ### Architecture Evidence
 
-- docs/project/modules/03-knowledge-agentic-graphrag.md — § 12. Graph 路由
-- docs/project/modules/03-knowledge-agentic-graphrag.md — § 16. Evidence Quality Gates
+- docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 12. Graph 路由
+- docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 16. Evidence Quality Gates
 
 ### 当前文档是否足够回答
 
@@ -1988,8 +1988,8 @@ None。第一轮记录的缺口已写回canonical architecture；本QA不新增�
 - interview_probability: HIGH
 - resume_trigger: Agentic GraphRAG、Evidence Retrieval
 - architecture_refs:
-  - docs/project/modules/03-knowledge-agentic-graphrag.md — § 12. Graph 路由
-  - docs/project/modules/03-knowledge-agentic-graphrag.md — § 16. Evidence Quality Gates
+  - docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 12. Graph 路由
+  - docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 16. Evidence Quality Gates
 - initial_coverage_status: FULL
 - coverage_status: FULL
 - gap_id: None
@@ -2021,8 +2021,8 @@ Global 太贵或社区版本过旧怎么办？
 
 ### Architecture Evidence
 
-- docs/project/modules/03-knowledge-agentic-graphrag.md — § 12. Graph 路由
-- docs/project/modules/03-knowledge-agentic-graphrag.md — § 16. Evidence Quality Gates
+- docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 12. Graph 路由
+- docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 16. Evidence Quality Gates
 
 ### 当前文档是否足够回答
 
@@ -2041,8 +2041,8 @@ None。第一轮记录的缺口已写回canonical architecture；本QA不新增�
 - interview_probability: HIGH
 - resume_trigger: Agentic GraphRAG、Evidence Retrieval
 - architecture_refs:
-  - docs/project/modules/03-knowledge-agentic-graphrag.md — § 12. Graph 路由
-  - docs/project/modules/03-knowledge-agentic-graphrag.md — § 19. 停止与控制输出
+  - docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 12. Graph 路由
+  - docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 19. 停止与控制输出
 - initial_coverage_status: FULL
 - coverage_status: FULL
 - gap_id: None
@@ -2074,8 +2074,8 @@ Local围绕已知实体有界扩展，DRIFT从seed观察frontier并提出有界p
 
 ### Architecture Evidence
 
-- docs/project/modules/03-knowledge-agentic-graphrag.md — § 12. Graph 路由
-- docs/project/modules/03-knowledge-agentic-graphrag.md — § 19. 停止与控制输出
+- docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 12. Graph 路由
+- docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 19. 停止与控制输出
 
 ### 当前文档是否足够回答
 
@@ -2094,8 +2094,8 @@ None。第一轮记录的缺口已写回canonical architecture；本QA不新增�
 - interview_probability: HIGH
 - resume_trigger: Agentic GraphRAG、Evidence Retrieval
 - architecture_refs:
-  - docs/project/modules/03-knowledge-agentic-graphrag.md — § 12. Graph 路由
-  - docs/project/modules/03-knowledge-agentic-graphrag.md — § 19. 停止与控制输出
+  - docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 12. Graph 路由
+  - docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 19. 停止与控制输出
 - initial_coverage_status: FULL
 - coverage_status: FULL
 - gap_id: None
@@ -2127,8 +2127,8 @@ DRIFT不是无限游走，每次扩展都绑定Requirement、novelty、hop、tok
 
 ### Architecture Evidence
 
-- docs/project/modules/03-knowledge-agentic-graphrag.md — § 12. Graph 路由
-- docs/project/modules/03-knowledge-agentic-graphrag.md — § 19. 停止与控制输出
+- docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 12. Graph 路由
+- docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 19. 停止与控制输出
 
 ### 当前文档是否足够回答
 
@@ -2147,8 +2147,8 @@ None。第一轮记录的缺口已写回canonical architecture；本QA不新增�
 - interview_probability: HIGH
 - resume_trigger: Agentic GraphRAG、Evidence Retrieval
 - architecture_refs:
-  - docs/project/modules/03-knowledge-agentic-graphrag.md — § 12. Graph 路由
-  - docs/project/modules/03-knowledge-agentic-graphrag.md — § 19. 停止与控制输出
+  - docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 12. Graph 路由
+  - docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 19. 停止与控制输出
 - initial_coverage_status: FULL
 - coverage_status: FULL
 - gap_id: None
@@ -2180,8 +2180,8 @@ None。第一轮记录的缺口已写回canonical architecture；本QA不新增�
 
 ### Architecture Evidence
 
-- docs/project/modules/03-knowledge-agentic-graphrag.md — § 12. Graph 路由
-- docs/project/modules/03-knowledge-agentic-graphrag.md — § 19. 停止与控制输出
+- docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 12. Graph 路由
+- docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 19. 停止与控制输出
 
 ### 当前文档是否足够回答
 
@@ -2200,8 +2200,8 @@ None。第一轮记录的缺口已写回canonical architecture；本QA不新增�
 - interview_probability: HIGH
 - resume_trigger: Agentic GraphRAG、Evidence Retrieval
 - architecture_refs:
-  - docs/project/modules/03-knowledge-agentic-graphrag.md — § 12. Graph 路由
-  - docs/project/modules/03-knowledge-agentic-graphrag.md — § 19. 停止与控制输出
+  - docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 12. Graph 路由
+  - docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 19. 停止与控制输出
 - initial_coverage_status: FULL
 - coverage_status: FULL
 - gap_id: None
@@ -2233,8 +2233,8 @@ None。第一轮记录的缺口已写回canonical architecture；本QA不新增�
 
 ### Architecture Evidence
 
-- docs/project/modules/03-knowledge-agentic-graphrag.md — § 12. Graph 路由
-- docs/project/modules/03-knowledge-agentic-graphrag.md — § 19. 停止与控制输出
+- docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 12. Graph 路由
+- docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 19. 停止与控制输出
 
 ### 当前文档是否足够回答
 
@@ -2253,8 +2253,8 @@ None。第一轮记录的缺口已写回canonical architecture；本QA不新增�
 - interview_probability: HIGH
 - resume_trigger: Agentic GraphRAG、Evidence Retrieval
 - architecture_refs:
-  - docs/project/modules/03-knowledge-agentic-graphrag.md — § 12. Graph 路由
-  - docs/project/modules/03-knowledge-agentic-graphrag.md — § 19. 停止与控制输出
+  - docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 12. Graph 路由
+  - docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 19. 停止与控制输出
 - initial_coverage_status: FULL
 - coverage_status: FULL
 - gap_id: None
@@ -2286,8 +2286,8 @@ DRIFT结果必须Materialization和SourceSpan backfill，缺strict span只能par
 
 ### Architecture Evidence
 
-- docs/project/modules/03-knowledge-agentic-graphrag.md — § 12. Graph 路由
-- docs/project/modules/03-knowledge-agentic-graphrag.md — § 19. 停止与控制输出
+- docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 12. Graph 路由
+- docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 19. 停止与控制输出
 
 ### 当前文档是否足够回答
 
@@ -2306,8 +2306,8 @@ None。第一轮记录的缺口已写回canonical architecture；本QA不新增�
 - interview_probability: HIGH
 - resume_trigger: Agentic GraphRAG、Evidence Retrieval
 - architecture_refs:
-  - docs/project/modules/03-knowledge-agentic-graphrag.md — § 14. Evidence Requirement 与 Evidence Frontier
-  - docs/project/modules/03-knowledge-agentic-graphrag.md — § 35. QueryStrategyDecision
+  - docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 14. Evidence Requirement 与 Evidence Frontier
+  - docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 35. QueryStrategyDecision
 - initial_coverage_status: FULL
 - coverage_status: FULL
 - gap_id: None
@@ -2339,8 +2339,8 @@ Claim是待输出判断，Requirement是证明它所需证据，QuerySpec是一�
 
 ### Architecture Evidence
 
-- docs/project/modules/03-knowledge-agentic-graphrag.md — § 14. Evidence Requirement 与 Evidence Frontier
-- docs/project/modules/03-knowledge-agentic-graphrag.md — § 35. QueryStrategyDecision
+- docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 14. Evidence Requirement 与 Evidence Frontier
+- docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 35. QueryStrategyDecision
 
 ### 当前文档是否足够回答
 
@@ -2359,8 +2359,8 @@ None。第一轮记录的缺口已写回canonical architecture；本QA不新增�
 - interview_probability: HIGH
 - resume_trigger: Agentic GraphRAG、Evidence Retrieval
 - architecture_refs:
-  - docs/project/modules/03-knowledge-agentic-graphrag.md — § 14. Evidence Requirement 与 Evidence Frontier
-  - docs/project/modules/03-knowledge-agentic-graphrag.md — § 35. QueryStrategyDecision
+  - docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 14. Evidence Requirement 与 Evidence Frontier
+  - docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 35. QueryStrategyDecision
 - initial_coverage_status: FULL
 - coverage_status: FULL
 - gap_id: None
@@ -2392,8 +2392,8 @@ Planner或模型可提出QuerySpec，确定性Admission检查Scope、Snapshot、
 
 ### Architecture Evidence
 
-- docs/project/modules/03-knowledge-agentic-graphrag.md — § 14. Evidence Requirement 与 Evidence Frontier
-- docs/project/modules/03-knowledge-agentic-graphrag.md — § 35. QueryStrategyDecision
+- docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 14. Evidence Requirement 与 Evidence Frontier
+- docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 35. QueryStrategyDecision
 
 ### 当前文档是否足够回答
 
@@ -2406,14 +2406,14 @@ None。第一轮记录的缺口已写回canonical architecture；本QA不新增�
 ## Q046 Requery 和 Replan 是一回事吗？
 
 - source_type: ARCHITECTURE_STRESS
-- source_ref: zuno-target: docs/project/modules/03-knowledge-agentic-graphrag.md — § 14. Evidence Requirement 与 Evidence Frontier
+- source_ref: zuno-target: docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 14. Evidence Requirement 与 Evidence Frontier
 - primary_domain: knowledge
 - difficulty: L6
 - interview_probability: HIGH
 - resume_trigger: Agentic GraphRAG、Evidence Retrieval
 - architecture_refs:
-  - docs/project/modules/03-knowledge-agentic-graphrag.md — § 14. Evidence Requirement 与 Evidence Frontier
-  - docs/project/modules/03-knowledge-agentic-graphrag.md — § 35. QueryStrategyDecision
+  - docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 14. Evidence Requirement 与 Evidence Frontier
+  - docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 35. QueryStrategyDecision
 - initial_coverage_status: FULL
 - coverage_status: FULL
 - gap_id: None
@@ -2445,8 +2445,8 @@ Requery只创建新的Knowledge RetrievalRound；Replan改变任务前提，必�
 
 ### Architecture Evidence
 
-- docs/project/modules/03-knowledge-agentic-graphrag.md — § 14. Evidence Requirement 与 Evidence Frontier
-- docs/project/modules/03-knowledge-agentic-graphrag.md — § 35. QueryStrategyDecision
+- docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 14. Evidence Requirement 与 Evidence Frontier
+- docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 35. QueryStrategyDecision
 
 ### 当前文档是否足够回答
 
@@ -2459,14 +2459,14 @@ None。第一轮记录的缺口已写回canonical architecture；本QA不新增�
 ## Q047 EvidenceLedger 保存什么？
 
 - source_type: ARCHITECTURE_STRESS
-- source_ref: zuno-target: docs/project/modules/03-knowledge-agentic-graphrag.md — § 16. Evidence Quality Gates
+- source_ref: zuno-target: docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 16. Evidence Quality Gates
 - primary_domain: knowledge
 - difficulty: L7
 - interview_probability: HIGH
 - resume_trigger: Agentic GraphRAG、Evidence Retrieval
 - architecture_refs:
-  - docs/project/modules/03-knowledge-agentic-graphrag.md — § 16. Evidence Quality Gates
-  - docs/project/modules/03-knowledge-agentic-graphrag.md — § 39. EvidenceVerdict
+  - docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 16. Evidence Quality Gates
+  - docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 39. EvidenceVerdict
 - initial_coverage_status: FULL
 - coverage_status: FULL
 - gap_id: None
@@ -2498,8 +2498,8 @@ Ledger append-only记录候选、来源、coverage、冲突、引用资格、选
 
 ### Architecture Evidence
 
-- docs/project/modules/03-knowledge-agentic-graphrag.md — § 16. Evidence Quality Gates
-- docs/project/modules/03-knowledge-agentic-graphrag.md — § 39. EvidenceVerdict
+- docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 16. Evidence Quality Gates
+- docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 39. EvidenceVerdict
 
 ### 当前文档是否足够回答
 
@@ -2512,14 +2512,14 @@ None。第一轮记录的缺口已写回canonical architecture；本QA不新增�
 ## Q048 Evidence Evaluation 至少看哪些维度？
 
 - source_type: ARCHITECTURE_STRESS
-- source_ref: zuno-target: docs/project/modules/03-knowledge-agentic-graphrag.md — § 16. Evidence Quality Gates
+- source_ref: zuno-target: docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 16. Evidence Quality Gates
 - primary_domain: knowledge
 - difficulty: L8
 - interview_probability: HIGH
 - resume_trigger: Agentic GraphRAG、Evidence Retrieval
 - architecture_refs:
-  - docs/project/modules/03-knowledge-agentic-graphrag.md — § 16. Evidence Quality Gates
-  - docs/project/modules/03-knowledge-agentic-graphrag.md — § 39. EvidenceVerdict
+  - docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 16. Evidence Quality Gates
+  - docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 39. EvidenceVerdict
 - initial_coverage_status: FULL
 - coverage_status: FULL
 - gap_id: None
@@ -2551,8 +2551,8 @@ Evaluation至少检查coverage、claim support、citation integrity、authority�
 
 ### Architecture Evidence
 
-- docs/project/modules/03-knowledge-agentic-graphrag.md — § 16. Evidence Quality Gates
-- docs/project/modules/03-knowledge-agentic-graphrag.md — § 39. EvidenceVerdict
+- docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 16. Evidence Quality Gates
+- docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 39. EvidenceVerdict
 
 ### 当前文档是否足够回答
 
@@ -2569,14 +2569,14 @@ None。第一轮记录的缺口已写回canonical architecture；本QA不新增�
 ## Q049 为什么高 relevance 不等于 evidence sufficient？
 
 - source_type: ARCHITECTURE_STRESS
-- source_ref: zuno-target: docs/project/modules/03-knowledge-agentic-graphrag.md — § 16. Evidence Quality Gates
+- source_ref: zuno-target: docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 16. Evidence Quality Gates
 - primary_domain: knowledge
 - difficulty: L1
 - interview_probability: HIGH
 - resume_trigger: Agentic GraphRAG、Evidence Retrieval
 - architecture_refs:
-  - docs/project/modules/03-knowledge-agentic-graphrag.md — § 16. Evidence Quality Gates
-  - docs/project/modules/03-knowledge-agentic-graphrag.md — § 39. EvidenceVerdict
+  - docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 16. Evidence Quality Gates
+  - docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 39. EvidenceVerdict
 - initial_coverage_status: FULL
 - coverage_status: FULL
 - gap_id: None
@@ -2608,8 +2608,8 @@ None。第一轮记录的缺口已写回canonical architecture；本QA不新增�
 
 ### Architecture Evidence
 
-- docs/project/modules/03-knowledge-agentic-graphrag.md — § 16. Evidence Quality Gates
-- docs/project/modules/03-knowledge-agentic-graphrag.md — § 39. EvidenceVerdict
+- docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 16. Evidence Quality Gates
+- docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 39. EvidenceVerdict
 
 ### 当前文档是否足够回答
 
@@ -2622,14 +2622,14 @@ None。第一轮记录的缺口已写回canonical architecture；本QA不新增�
 ## Q050 Failure Diagnosis 的作用是什么？
 
 - source_type: ARCHITECTURE_STRESS
-- source_ref: zuno-target: docs/project/modules/03-knowledge-agentic-graphrag.md — § 44. Failure Taxonomy
+- source_ref: zuno-target: docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 44. Failure Taxonomy
 - primary_domain: knowledge
 - difficulty: L2
 - interview_probability: HIGH
 - resume_trigger: Agentic GraphRAG、Evidence Retrieval
 - architecture_refs:
-  - docs/project/modules/03-knowledge-agentic-graphrag.md — § 44. Failure Taxonomy
-  - docs/project/modules/03-knowledge-agentic-graphrag.md — § 45. Failure Decision Matrix
+  - docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 44. Failure Taxonomy
+  - docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 45. Failure Decision Matrix
 - initial_coverage_status: FULL
 - coverage_status: FULL
 - gap_id: None
@@ -2661,8 +2661,8 @@ Failure Diagnosis把漏召、错召、定义/引用缺失、法域未知、权�
 
 ### Architecture Evidence
 
-- docs/project/modules/03-knowledge-agentic-graphrag.md — § 44. Failure Taxonomy
-- docs/project/modules/03-knowledge-agentic-graphrag.md — § 45. Failure Decision Matrix
+- docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 44. Failure Taxonomy
+- docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 45. Failure Decision Matrix
 
 ### 当前文档是否足够回答
 
@@ -2675,14 +2675,14 @@ None。第一轮记录的缺口已写回canonical architecture；本QA不新增�
 ## Q051 CITATION_SPAN_MISSING 怎么处理？
 
 - source_type: ARCHITECTURE_STRESS
-- source_ref: zuno-target: docs/project/modules/03-knowledge-agentic-graphrag.md — § 44. Failure Taxonomy
+- source_ref: zuno-target: docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 44. Failure Taxonomy
 - primary_domain: knowledge
 - difficulty: L3
 - interview_probability: HIGH
 - resume_trigger: Agentic GraphRAG、Evidence Retrieval
 - architecture_refs:
-  - docs/project/modules/03-knowledge-agentic-graphrag.md — § 44. Failure Taxonomy
-  - docs/project/modules/03-knowledge-agentic-graphrag.md — § 45. Failure Decision Matrix
+  - docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 44. Failure Taxonomy
+  - docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 45. Failure Decision Matrix
 - initial_coverage_status: FULL
 - coverage_status: FULL
 - gap_id: None
@@ -2714,8 +2714,8 @@ CITATION_SPAN_MISSING走focused backfill；仍无定位来源就Partial/Abstain�
 
 ### Architecture Evidence
 
-- docs/project/modules/03-knowledge-agentic-graphrag.md — § 44. Failure Taxonomy
-- docs/project/modules/03-knowledge-agentic-graphrag.md — § 45. Failure Decision Matrix
+- docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 44. Failure Taxonomy
+- docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 45. Failure Decision Matrix
 
 ### 当前文档是否足够回答
 
@@ -2728,14 +2728,14 @@ None。第一轮记录的缺口已写回canonical architecture；本QA不新增�
 ## Q052 Graph 不可用但 Requirement mandatory 怎么处理？
 
 - source_type: ARCHITECTURE_STRESS
-- source_ref: zuno-target: docs/project/modules/03-knowledge-agentic-graphrag.md — § 44. Failure Taxonomy
+- source_ref: zuno-target: docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 44. Failure Taxonomy
 - primary_domain: knowledge
 - difficulty: L4
 - interview_probability: HIGH
 - resume_trigger: Agentic GraphRAG、Evidence Retrieval
 - architecture_refs:
-  - docs/project/modules/03-knowledge-agentic-graphrag.md — § 44. Failure Taxonomy
-  - docs/project/modules/03-knowledge-agentic-graphrag.md — § 45. Failure Decision Matrix
+  - docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 44. Failure Taxonomy
+  - docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 45. Failure Decision Matrix
 - initial_coverage_status: FULL
 - coverage_status: FULL
 - gap_id: None
@@ -2767,8 +2767,8 @@ Graph mandatory不可用时按Assurance Policy等待、治理降级或输出cont
 
 ### Architecture Evidence
 
-- docs/project/modules/03-knowledge-agentic-graphrag.md — § 44. Failure Taxonomy
-- docs/project/modules/03-knowledge-agentic-graphrag.md — § 45. Failure Decision Matrix
+- docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 44. Failure Taxonomy
+- docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 45. Failure Decision Matrix
 
 ### 当前文档是否足够回答
 
@@ -2781,14 +2781,14 @@ None。第一轮记录的缺口已写回canonical architecture；本QA不新增�
 ## Q053 权限过滤导致证据不足怎么办？
 
 - source_type: ARCHITECTURE_STRESS
-- source_ref: zuno-target: docs/project/modules/03-knowledge-agentic-graphrag.md — § 44. Failure Taxonomy
+- source_ref: zuno-target: docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 44. Failure Taxonomy
 - primary_domain: knowledge
 - difficulty: L5
 - interview_probability: HIGH
 - resume_trigger: Agentic GraphRAG、Evidence Retrieval
 - architecture_refs:
-  - docs/project/modules/03-knowledge-agentic-graphrag.md — § 44. Failure Taxonomy
-  - docs/project/modules/03-knowledge-agentic-graphrag.md — § 45. Failure Decision Matrix
+  - docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 44. Failure Taxonomy
+  - docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 45. Failure Decision Matrix
 - initial_coverage_status: FULL
 - coverage_status: FULL
 - gap_id: None
@@ -2820,8 +2820,8 @@ None。第一轮记录的缺口已写回canonical architecture；本QA不新增�
 
 ### Architecture Evidence
 
-- docs/project/modules/03-knowledge-agentic-graphrag.md — § 44. Failure Taxonomy
-- docs/project/modules/03-knowledge-agentic-graphrag.md — § 45. Failure Decision Matrix
+- docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 44. Failure Taxonomy
+- docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 45. Failure Decision Matrix
 
 ### 当前文档是否足够回答
 
@@ -2834,14 +2834,14 @@ None。第一轮记录的缺口已写回canonical architecture；本QA不新增�
 ## Q054 Retriever timeout 能不能直接重试？
 
 - source_type: ARCHITECTURE_STRESS
-- source_ref: zuno-target: docs/project/modules/03-knowledge-agentic-graphrag.md — § 44. Failure Taxonomy
+- source_ref: zuno-target: docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 44. Failure Taxonomy
 - primary_domain: knowledge
 - difficulty: L6
 - interview_probability: HIGH
 - resume_trigger: Agentic GraphRAG、Evidence Retrieval
 - architecture_refs:
-  - docs/project/modules/03-knowledge-agentic-graphrag.md — § 44. Failure Taxonomy
-  - docs/project/modules/03-knowledge-agentic-graphrag.md — § 45. Failure Decision Matrix
+  - docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 44. Failure Taxonomy
+  - docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 45. Failure Decision Matrix
 - initial_coverage_status: FULL
 - coverage_status: FULL
 - gap_id: None
@@ -2873,8 +2873,8 @@ Retriever timeout 能不能直接重试？
 
 ### Architecture Evidence
 
-- docs/project/modules/03-knowledge-agentic-graphrag.md — § 44. Failure Taxonomy
-- docs/project/modules/03-knowledge-agentic-graphrag.md — § 45. Failure Decision Matrix
+- docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 44. Failure Taxonomy
+- docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 45. Failure Decision Matrix
 
 ### 当前文档是否足够回答
 
@@ -2887,14 +2887,14 @@ None。第一轮记录的缺口已写回canonical architecture；本QA不新增�
 ## Q055 Retry、Corrective Retrieval、Retrieval Replan 有什么区别？
 
 - source_type: ARCHITECTURE_STRESS
-- source_ref: zuno-target: docs/project/modules/03-knowledge-agentic-graphrag.md — § 44. Failure Taxonomy
+- source_ref: zuno-target: docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 44. Failure Taxonomy
 - primary_domain: knowledge
 - difficulty: L7
 - interview_probability: HIGH
 - resume_trigger: Agentic GraphRAG、Evidence Retrieval
 - architecture_refs:
-  - docs/project/modules/03-knowledge-agentic-graphrag.md — § 44. Failure Taxonomy
-  - docs/project/modules/03-knowledge-agentic-graphrag.md — § 45. Failure Decision Matrix
+  - docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 44. Failure Taxonomy
+  - docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 45. Failure Decision Matrix
 - initial_coverage_status: PARTIAL
 - coverage_status: FULL
 - gap_id: CLOSED-GAP-03-055
@@ -2926,8 +2926,8 @@ Retry重做同一动作，Corrective改变获取方法，Retrieval Replan重排K
 
 ### Architecture Evidence
 
-- docs/project/modules/03-knowledge-agentic-graphrag.md — § 44. Failure Taxonomy
-- docs/project/modules/03-knowledge-agentic-graphrag.md — § 45. Failure Decision Matrix
+- docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 44. Failure Taxonomy
+- docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 45. Failure Decision Matrix
 
 ### 当前文档是否足够回答
 
@@ -2940,14 +2940,14 @@ None。第一轮记录的缺口已写回canonical architecture；本QA不新增�
 ## Q056 新交叉引用为什么可能触发 Retrieval Replan？
 
 - source_type: ARCHITECTURE_STRESS
-- source_ref: zuno-target: docs/project/modules/03-knowledge-agentic-graphrag.md — § 18. Retry、Corrective Retrieval 与 Replan
+- source_ref: zuno-target: docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 18. Retry、Corrective Retrieval 与 Replan
 - primary_domain: knowledge
 - difficulty: L8
 - interview_probability: HIGH
 - resume_trigger: Agentic GraphRAG、Evidence Retrieval
 - architecture_refs:
-  - docs/project/modules/03-knowledge-agentic-graphrag.md — § 18. Retry、Corrective Retrieval 与 Replan
-  - docs/project/modules/03-knowledge-agentic-graphrag.md — § 42. KnowledgeControlProposal
+  - docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 18. Retry、Corrective Retrieval 与 Replan
+  - docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 42. KnowledgeControlProposal
 - initial_coverage_status: FULL
 - coverage_status: FULL
 - gap_id: None
@@ -2979,8 +2979,8 @@ None。第一轮记录的缺口已写回canonical architecture；本QA不新增�
 
 ### Architecture Evidence
 
-- docs/project/modules/03-knowledge-agentic-graphrag.md — § 18. Retry、Corrective Retrieval 与 Replan
-- docs/project/modules/03-knowledge-agentic-graphrag.md — § 42. KnowledgeControlProposal
+- docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 18. Retry、Corrective Retrieval 与 Replan
+- docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 42. KnowledgeControlProposal
 
 ### 当前文档是否足够回答
 
@@ -2993,14 +2993,14 @@ None。第一轮记录的缺口已写回canonical architecture；本QA不新增�
 ## Q057 什么情况下必须交给 Agent Core Replan？
 
 - source_type: ARCHITECTURE_STRESS
-- source_ref: zuno-target: docs/project/modules/03-knowledge-agentic-graphrag.md — § 18. Retry、Corrective Retrieval 与 Replan
+- source_ref: zuno-target: docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 18. Retry、Corrective Retrieval 与 Replan
 - primary_domain: knowledge
 - difficulty: L1
 - interview_probability: HIGH
 - resume_trigger: Agentic GraphRAG、Evidence Retrieval
 - architecture_refs:
-  - docs/project/modules/03-knowledge-agentic-graphrag.md — § 18. Retry、Corrective Retrieval 与 Replan
-  - docs/project/modules/03-knowledge-agentic-graphrag.md — § 42. KnowledgeControlProposal
+  - docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 18. Retry、Corrective Retrieval 与 Replan
+  - docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 42. KnowledgeControlProposal
 - initial_coverage_status: FULL
 - coverage_status: FULL
 - gap_id: None
@@ -3032,8 +3032,8 @@ None。第一轮记录的缺口已写回canonical architecture；本QA不新增�
 
 ### Architecture Evidence
 
-- docs/project/modules/03-knowledge-agentic-graphrag.md — § 18. Retry、Corrective Retrieval 与 Replan
-- docs/project/modules/03-knowledge-agentic-graphrag.md — § 42. KnowledgeControlProposal
+- docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 18. Retry、Corrective Retrieval 与 Replan
+- docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 42. KnowledgeControlProposal
 
 ### 当前文档是否足够回答
 
@@ -3046,14 +3046,14 @@ None。第一轮记录的缺口已写回canonical architecture；本QA不新增�
 ## Q058 检索最多几轮？
 
 - source_type: ARCHITECTURE_STRESS
-- source_ref: zuno-target: docs/project/modules/03-knowledge-agentic-graphrag.md — § 26. Budget
+- source_ref: zuno-target: docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 26. Budget
 - primary_domain: knowledge
 - difficulty: L2
 - interview_probability: HIGH
 - resume_trigger: Agentic GraphRAG、Evidence Retrieval
 - architecture_refs:
-  - docs/project/modules/03-knowledge-agentic-graphrag.md — § 26. Budget
-  - docs/project/modules/03-knowledge-agentic-graphrag.md — § 55. Test Matrix
+  - docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 26. Budget
+  - docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 55. Test Matrix
 - initial_coverage_status: FULL
 - coverage_status: FULL
 - gap_id: None
@@ -3085,8 +3085,8 @@ None。第一轮记录的缺口已写回canonical architecture；本QA不新增�
 
 ### Architecture Evidence
 
-- docs/project/modules/03-knowledge-agentic-graphrag.md — § 26. Budget
-- docs/project/modules/03-knowledge-agentic-graphrag.md — § 55. Test Matrix
+- docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 26. Budget
+- docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 55. Test Matrix
 
 ### 当前文档是否足够回答
 
@@ -3099,14 +3099,14 @@ None。第一轮记录的缺口已写回canonical architecture；本QA不新增�
 ## Q059 Marginal Evidence Gain 如何帮助停止？
 
 - source_type: ARCHITECTURE_STRESS
-- source_ref: zuno-target: docs/project/modules/03-knowledge-agentic-graphrag.md — § 19. 停止与控制输出
+- source_ref: zuno-target: docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 19. 停止与控制输出
 - primary_domain: knowledge
 - difficulty: L3
 - interview_probability: HIGH
 - resume_trigger: Agentic GraphRAG、Evidence Retrieval
 - architecture_refs:
-  - docs/project/modules/03-knowledge-agentic-graphrag.md — § 19. 停止与控制输出
-  - docs/project/modules/03-knowledge-agentic-graphrag.md — § 40. SelectedEvidenceBundle
+  - docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 19. 停止与控制输出
+  - docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 40. SelectedEvidenceBundle
 - initial_coverage_status: FULL
 - coverage_status: FULL
 - gap_id: None
@@ -3138,8 +3138,8 @@ Marginal Evidence Gain比较新增候选对未解决Requirement、Claim Support�
 
 ### Architecture Evidence
 
-- docs/project/modules/03-knowledge-agentic-graphrag.md — § 19. 停止与控制输出
-- docs/project/modules/03-knowledge-agentic-graphrag.md — § 40. SelectedEvidenceBundle
+- docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 19. 停止与控制输出
+- docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 40. SelectedEvidenceBundle
 
 ### 当前文档是否足够回答
 
@@ -3152,14 +3152,14 @@ None。第一轮记录的缺口已写回canonical architecture；本QA不新增�
 ## Q060 什么条件下 Stop Controller 可以结束检索？
 
 - source_type: ARCHITECTURE_STRESS
-- source_ref: zuno-target: docs/project/modules/03-knowledge-agentic-graphrag.md — § 19. 停止与控制输出
+- source_ref: zuno-target: docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 19. 停止与控制输出
 - primary_domain: knowledge
 - difficulty: L4
 - interview_probability: HIGH
 - resume_trigger: Agentic GraphRAG、Evidence Retrieval
 - architecture_refs:
-  - docs/project/modules/03-knowledge-agentic-graphrag.md — § 19. 停止与控制输出
-  - docs/project/modules/03-knowledge-agentic-graphrag.md — § 40. SelectedEvidenceBundle
+  - docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 19. 停止与控制输出
+  - docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 40. SelectedEvidenceBundle
 - initial_coverage_status: FULL
 - coverage_status: FULL
 - gap_id: None
@@ -3191,8 +3191,8 @@ None。第一轮记录的缺口已写回canonical architecture；本QA不新增�
 
 ### Architecture Evidence
 
-- docs/project/modules/03-knowledge-agentic-graphrag.md — § 19. 停止与控制输出
-- docs/project/modules/03-knowledge-agentic-graphrag.md — § 40. SelectedEvidenceBundle
+- docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 19. 停止与控制输出
+- docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 40. SelectedEvidenceBundle
 
 ### 当前文档是否足够回答
 
@@ -3209,14 +3209,14 @@ None。第一轮记录的缺口已写回canonical architecture；本QA不新增�
 ## Q061 没有证据为什么不能强答？
 
 - source_type: ARCHITECTURE_STRESS
-- source_ref: zuno-target: docs/project/modules/03-knowledge-agentic-graphrag.md — § 19. 停止与控制输出
+- source_ref: zuno-target: docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 19. 停止与控制输出
 - primary_domain: knowledge
 - difficulty: L5
 - interview_probability: HIGH
 - resume_trigger: Agentic GraphRAG、Evidence Retrieval
 - architecture_refs:
-  - docs/project/modules/03-knowledge-agentic-graphrag.md — § 19. 停止与控制输出
-  - docs/project/modules/03-knowledge-agentic-graphrag.md — § 40. SelectedEvidenceBundle
+  - docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 19. 停止与控制输出
+  - docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 40. SelectedEvidenceBundle
 - initial_coverage_status: FULL
 - coverage_status: FULL
 - gap_id: None
@@ -3248,8 +3248,8 @@ None。第一轮记录的缺口已写回canonical architecture；本QA不新增�
 
 ### Architecture Evidence
 
-- docs/project/modules/03-knowledge-agentic-graphrag.md — § 19. 停止与控制输出
-- docs/project/modules/03-knowledge-agentic-graphrag.md — § 40. SelectedEvidenceBundle
+- docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 19. 停止与控制输出
+- docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 40. SelectedEvidenceBundle
 
 ### 当前文档是否足够回答
 
@@ -3262,14 +3262,14 @@ None。第一轮记录的缺口已写回canonical architecture；本QA不新增�
 ## Q062 BM25、Vector、Graph 版本如何保持一致？
 
 - source_type: ARCHITECTURE_STRESS
-- source_ref: zuno-target: docs/project/modules/03-knowledge-agentic-graphrag.md — § 20. 领域状态与 Checkpointer 边界
+- source_ref: zuno-target: docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 20. 领域状态与 Checkpointer 边界
 - primary_domain: knowledge
 - difficulty: L6
 - interview_probability: HIGH
 - resume_trigger: Agentic GraphRAG、Evidence Retrieval
 - architecture_refs:
-  - docs/project/modules/03-knowledge-agentic-graphrag.md — § 20. 领域状态与 Checkpointer 边界
-  - docs/project/modules/03-knowledge-agentic-graphrag.md — § 28. Recovery 与 Reconciliation
+  - docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 20. 领域状态与 Checkpointer 边界
+  - docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 28. Recovery 与 Reconciliation
 - initial_coverage_status: FULL
 - coverage_status: FULL
 - gap_id: None
@@ -3301,8 +3301,8 @@ BM25、Vector、Graph 版本如何保持一致？
 
 ### Architecture Evidence
 
-- docs/project/modules/03-knowledge-agentic-graphrag.md — § 20. 领域状态与 Checkpointer 边界
-- docs/project/modules/03-knowledge-agentic-graphrag.md — § 28. Recovery 与 Reconciliation
+- docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 20. 领域状态与 Checkpointer 边界
+- docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 28. Recovery 与 Reconciliation
 
 ### 当前文档是否足够回答
 
@@ -3315,14 +3315,14 @@ None。第一轮记录的缺口已写回canonical architecture；本QA不新增�
 ## Q063 同一次 RetrievalRun 中索引正在更新怎么办？
 
 - source_type: ARCHITECTURE_STRESS
-- source_ref: zuno-target: docs/project/modules/03-knowledge-agentic-graphrag.md — § 20. 领域状态与 Checkpointer 边界
+- source_ref: zuno-target: docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 20. 领域状态与 Checkpointer 边界
 - primary_domain: knowledge
 - difficulty: L7
 - interview_probability: HIGH
 - resume_trigger: Agentic GraphRAG、Evidence Retrieval
 - architecture_refs:
-  - docs/project/modules/03-knowledge-agentic-graphrag.md — § 20. 领域状态与 Checkpointer 边界
-  - docs/project/modules/03-knowledge-agentic-graphrag.md — § 28. Recovery 与 Reconciliation
+  - docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 20. 领域状态与 Checkpointer 边界
+  - docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 28. Recovery 与 Reconciliation
 - initial_coverage_status: FULL
 - coverage_status: FULL
 - gap_id: None
@@ -3354,8 +3354,8 @@ None。第一轮记录的缺口已写回canonical architecture；本QA不新增�
 
 ### Architecture Evidence
 
-- docs/project/modules/03-knowledge-agentic-graphrag.md — § 20. 领域状态与 Checkpointer 边界
-- docs/project/modules/03-knowledge-agentic-graphrag.md — § 28. Recovery 与 Reconciliation
+- docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 20. 领域状态与 Checkpointer 边界
+- docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 28. Recovery 与 Reconciliation
 
 ### 当前文档是否足够回答
 
@@ -3368,14 +3368,14 @@ None。第一轮记录的缺口已写回canonical architecture；本QA不新增�
 ## Q064 如何证明 Agentic GraphRAG 比固定 Hybrid+Graph 更好？
 
 - source_type: ARCHITECTURE_STRESS
-- source_ref: zuno-target: docs/project/modules/03-knowledge-agentic-graphrag.md — § 34. Agentic GraphRAG Eval
+- source_ref: zuno-target: docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 34. Agentic GraphRAG Eval
 - primary_domain: knowledge
 - difficulty: L8
 - interview_probability: HIGH
 - resume_trigger: Agentic GraphRAG、Evidence Retrieval
 - architecture_refs:
-  - docs/project/modules/03-knowledge-agentic-graphrag.md — § 34. Agentic GraphRAG Eval
-  - docs/project/modules/03-knowledge-agentic-graphrag.md — § 55. Test Matrix
+  - docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 34. Agentic GraphRAG Eval
+  - docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 55. Test Matrix
 - initial_coverage_status: FULL
 - coverage_status: FULL
 - gap_id: None
@@ -3407,8 +3407,8 @@ None。第一轮记录的缺口已写回canonical architecture；本QA不新增�
 
 ### Architecture Evidence
 
-- docs/project/modules/03-knowledge-agentic-graphrag.md — § 34. Agentic GraphRAG Eval
-- docs/project/modules/03-knowledge-agentic-graphrag.md — § 55. Test Matrix
+- docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 34. Agentic GraphRAG Eval
+- docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 55. Test Matrix
 
 ### 当前文档是否足够回答
 
@@ -3421,14 +3421,14 @@ None。第一轮记录的缺口已写回canonical architecture；本QA不新增�
 ## Q065 如何评测 Route Accuracy？
 
 - source_type: ARCHITECTURE_STRESS
-- source_ref: zuno-target: docs/project/modules/03-knowledge-agentic-graphrag.md — § 34. Agentic GraphRAG Eval
+- source_ref: zuno-target: docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 34. Agentic GraphRAG Eval
 - primary_domain: knowledge
 - difficulty: L1
 - interview_probability: HIGH
 - resume_trigger: Agentic GraphRAG、Evidence Retrieval
 - architecture_refs:
-  - docs/project/modules/03-knowledge-agentic-graphrag.md — § 34. Agentic GraphRAG Eval
-  - docs/project/modules/03-knowledge-agentic-graphrag.md — § 55. Test Matrix
+  - docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 34. Agentic GraphRAG Eval
+  - docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 55. Test Matrix
 - initial_coverage_status: FULL
 - coverage_status: FULL
 - gap_id: None
@@ -3460,8 +3460,8 @@ None。第一轮记录的缺口已写回canonical architecture；本QA不新增�
 
 ### Architecture Evidence
 
-- docs/project/modules/03-knowledge-agentic-graphrag.md — § 34. Agentic GraphRAG Eval
-- docs/project/modules/03-knowledge-agentic-graphrag.md — § 55. Test Matrix
+- docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 34. Agentic GraphRAG Eval
+- docs/history/superseded-document-taxonomy/project-modules/03-knowledge-agentic-graphrag.md — § 55. Test Matrix
 
 ### 当前文档是否足够回答
 

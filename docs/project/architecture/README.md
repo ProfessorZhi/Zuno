@@ -1,4 +1,4 @@
-# Zuno 架构文档
+# Zuno 总体架构文档
 
 `docs/project/architecture/` 是唯一正式总体架构目录，只能保留四个文件：
 
@@ -9,35 +9,32 @@ architecture-views.md
 architecture.html
 ```
 
-## 职责
+## Canonical Question
 
-- `architecture.md`：Product、Domain、Logical Capability、Physical Service/Deployment 的跨层关系、全局边界、读取顺序和 Current/Target/History。
-- `architecture-views.md` + `architecture.html`：不可拆分的 Mermaid 展示配对，不拥有独立事实。
-- `README.md`：维护规则和入口，不承载专题 Contract。
+Product、Domain、Logical Capability、Physical Service/Deployment、Data、Security 和 Eval 如何形成一个可恢复、可验证、可被简化或替换的跨层目标闭环？
 
-专题设计必须放在 `docs/project/<topic>/`，不能重新塞回 architecture 目录。当前 Canonical Taxonomy 和服务边界由 `docs/decisions/` 下的 [`ADR-0011`](../../decisions/0011-architecture-document-taxonomy.md)、[`ADR-0010`](../../decisions/0010-microservice-target-and-service-boundaries.md) 维护。
+## 文件职责
 
-## Priority
+- `architecture.md`：跨层架构正文、全局边界、状态/失败/恢复语义和 Current/Target/History 解释。
+- `architecture-views.md` + `architecture.html`：不可拆分的图源与展示配对，不拥有第二套架构事实。
+- `README.md`：目录边界、阅读入口和维护规则，不承载专题 Contract。
 
-```text
-Accepted ADR / Shared Contract
-→ Domain / Owner专题文档
-→ architecture.md 跨域组合
-→ architecture-views.md + architecture.html 展示
-```
+## 重要边界
 
-Current 状态必须回到 `docs/status/`、`docs/evidence/` 和最新代码；Target 文档不能证明部署或生产就绪。
+- 本目录不记录历史项目事实；历史事实在 `../history/`。
+- 本目录不记录当前运行证据；当前证据在 `../status/` 和 `../../evidence/`。
+- 本目录不记录实施计划、Program、Ownership Matrix 或 ADR；这些分别进入 `.agent/programs/`、`docs/governance/` 和 `docs/decisions/`。
+- 旧专题和 11 模块不再作为平行 Canonical；归档位置见 [`../../history/superseded-document-taxonomy/README.md`](../../history/superseded-document-taxonomy/README.md)。
 
-## Maintenance
+## 维护
 
-含义变化时先修改对应专题 Owner 文档，再同步总架构和图源；图形关系变化时运行：
+跨层含义变化时修改 `architecture.md`；图形关系变化时同步 `architecture-views.md` 与 `architecture.html`，然后运行：
 
 ```powershell
-python tools/agent/render_architecture.py --write
 python tools/agent/render_architecture.py --check
 python tools/scripts/verify_architecture_document_set.py
 python tools/scripts/verify_docs_entrypoints.py
 python tools/scripts/verify_markdown_internal_links.py
 ```
 
-禁止创建第五个文件、`.agent/architecture/` 镜像或第二套 Service/Domain/State 清单。
+不得创建第五个文件、`.agent/architecture/` 镜像或第二套 Domain/Runtime/Service/State registry。

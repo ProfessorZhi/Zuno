@@ -7,11 +7,11 @@ canonical_question: Product、Domain、Logical Capability、Service、Data、Sec
 owner: Cross-cutting Architecture Owner
 acceptance_scope: Canonical Target；实现、测量和外部资格仍未完成
 document_role: cross-cutting integration source
-canonical_taxonomy: docs/project/product/、domain/、agents/、knowledge/、services/、data/、security/、eval/、deployment/
-current_state_source: docs/status/production-readiness.md and docs/evidence/
+canonical_taxonomy: docs/project/architecture/ (four-file cross-layer surface); history/status are adjacent project knowledge layers
+current_state_source: docs/project/status/ and docs/evidence/
 decision_sources: docs/decisions/0008-legal-domain-kernel-and-host-boundary.md、0009-python-only-backend.md、0010-microservice-target-and-service-boundaries.md、0011-architecture-document-taxonomy.md
 
-> 本文只回答跨领域集成问题。各专题的唯一 Contract、Owner 和状态由对应专题文档持有，本文不创建第二套 Domain State Machine。
+> 本文只回答跨领域集成问题。历史事实由 `docs/project/history/` 持有，Current/Target/Production 状态由 `docs/project/status/` 持有；本正文不创建第二套 Domain State Machine，也不把旧专题归档材料当作当前 Canonical。
 
 ## Part A — Architecture Narrative
 
@@ -104,4 +104,4 @@ DomainVersion 是业务事实版本；PlanVersion 激活后不可变；Step 必�
 
 Current 只由代码、测试、Trace、Migration 或真实运行证据证明；Target 记录 Python-only、Domain/Runtime 分离和候选服务边界；Hypothesis 包括 Native Runtime、Graph、Memory、服务数量和安全可验证性收益；Gap 包括 Court QA、A/B/C、负载、故障注入、HA、备份恢复和外部资格。History 只保存被替换的 11+1 组织方式和旧过程材料。
 
-专题路由：`product-architecture.md`、`legal-domain-model.md`、`domain-state-lifecycle.md`、`agent-platform.md`、`multi-agent-runtime.md`、`knowledge-evidence-architecture.md`、`service-architecture.md`、`data-ownership-and-recovery.md`、`security-architecture.md`、`legal-eval-and-benchmark.md`、`microservice-deployment.md`。这些专题各自拥有一个 Canonical Question；总架构只负责跨层关系，不复制专题状态机。
+旧专题文档已经迁入 `docs/history/superseded-document-taxonomy/project-topics/`，只作为历史设计输入。当前总体架构的唯一正式表面是本目录四文件；任何未来专题拆分必须先经过 Red/Blue、Owner 审查和明确的文档治理变更。本轮不冻结最终模块或服务数量。

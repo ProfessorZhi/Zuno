@@ -32,22 +32,19 @@ Public review evidence 不能替代固定 benchmark 的实际测量。Quality �
 
 ## Evidence
 
-- [Current Runtime Baseline](../evidence/current-runtime-baseline.md)
-- [Current Test Baseline](../evidence/current-test-baseline.md)
-- [Current Eval Baseline](../evidence/current-eval-baseline.md)
-- [Repository Closure](../evidence/repository-closure.md)
-- [Local Workspace Closure](../evidence/local-workspace-closure.md)
+- [Current Runtime Baseline](../../evidence/current-runtime-baseline.md)
+- [Current Test Baseline](../../evidence/current-test-baseline.md)
+- [Current Eval Baseline](../../evidence/current-eval-baseline.md)
+- [Repository Closure](../../evidence/repository-closure.md)
+- [Local Workspace Closure](../../evidence/local-workspace-closure.md)
 
 ## Next Boundary
 
 ```text
-PROJECT-ARCHITECTURE-RECONSTRUCTION-V1
-  → Fact Depth Recovery
-  → Product / Architecture Red-Blue Review
-  → User Architecture Gate
-  → Canonical Part-A Sync
-  → define (but do not auto-start) implementation tasks
+当前 Program                  no-active
+Round-006 closure             COMPLETE / ABORTED_OPERATIONAL_PILOT
+V4.2 batch profile            COMPLETE / ACCEPTED_WITH_DEBT
+Round-007                     READY_FOR_BATCH_ADVERSARIAL_PILOT / NOT_STARTED
 ```
 
-当前 Program 只推进事实深度和设计审查，不改变 Production Readiness。不要恢复旧 Program，
-不要把设计 Program 写成 implementation，未经用户 Gate 不扩张业务 Runtime。
+本状态文档只记录 Current 与生产证据。Round-007 尚未启动；没有新的 Session、Candidate、架构修改或实现授权。后续任何事实深挖或 Architecture Red/Blue 都必须由用户显式激活新的工作流，不恢复已关闭 Program。

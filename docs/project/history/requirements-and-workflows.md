@@ -52,6 +52,6 @@ Requirement、Agent Runtime 或 GraphRAG 不能反向证明历史流程。
 
 ## Owner 边界
 
-本文件负责历史需求和人工流程；产品 Target 进入 [`../product/product-architecture.md`](../product/product-architecture.md)，
-法律 Domain Target 进入 [`../domain/legal-domain-model.md`](../domain/legal-domain-model.md)，
+本文件负责历史需求和人工流程；跨层 Product / Domain Target 进入 [`../architecture/architecture.md`](../architecture/architecture.md)，
+当前状态进入 [`../status/README.md`](../status/README.md)，
 候选恢复问题进入 [`../../../project-reconstruction-lab/01-facts/open-questions.md`](../../../project-reconstruction-lab/01-facts/open-questions.md)。

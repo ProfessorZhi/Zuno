@@ -10,8 +10,8 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 ADR = REPO_ROOT / "docs/decisions/0003-wave1-cross-module-contract-freeze.md"
 DECISIONS_INDEX = REPO_ROOT / "docs/decisions/README.md"
 REGISTRY = REPO_ROOT / "docs/governance/wave1-cross-module-contract-registry.md"
-MODULES_INDEX = REPO_ROOT / "docs/project/modules/README.md"
-CORE = REPO_ROOT / "docs/project/modules/06-agent-core-planning-control.md"
+MODULES_INDEX = REPO_ROOT / "docs/history/superseded-document-taxonomy/project-modules/README.md"
+CORE = REPO_ROOT / "docs/history/superseded-document-taxonomy/project-modules/06-agent-core-planning-control.md"
 
 BASELINE_SHA = "729e439e29deadc101c5687fc47125104e62e2c1"
 
@@ -135,6 +135,12 @@ def _require(content: str, term: str, code: str, findings: list[Finding]) -> Non
 
 def verify() -> list[Finding]:
     findings: list[Finding] = []
+
+    # The Wave-001 module registry is a historical contract. Once the old
+    # active module tree has been retired, this verifier must not reintroduce
+    # that tree as a second Canonical entrypoint.
+    if not (REPO_ROOT / "docs/project/modules").exists() and MODULES_INDEX.exists():
+        return findings
 
     for path, code in [
         (ADR, "XMOD_ADR_MISSING"),

@@ -1,4 +1,4 @@
-from __future__ import annotations
+﻿from __future__ import annotations
 
 import re
 import sys
@@ -6,8 +6,8 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[2]
-FORMAL = ROOT / "docs/project/modules/04-model-gateway.md"
-DOCS_INDEX = ROOT / "docs/project/modules/README.md"
+FORMAL = ROOT / "docs/history/superseded-document-taxonomy/project-modules/04-model-gateway.md"
+DOCS_INDEX = ROOT / "docs/history/superseded-document-taxonomy/project-modules/README.md"
 SYSTEM = ROOT / ".agent/system.yaml"
 WORKFLOW = ROOT / ".github/workflows/model-gateway-target-docs.yml"
 ADR = ROOT / "docs/decisions/0003-wave1-cross-module-contract-freeze.md"
@@ -233,7 +233,7 @@ def verify() -> list[str]:
 
     system = read(SYSTEM)
     for term in [
-        'formal: "docs/project/modules/04-model-gateway.md"',
+        'formal: "docs/history/superseded-document-taxonomy/project-modules/04-model-gateway.md"',
         'verifier: "python tools/scripts/verify_model_gateway_target_protocols.py"',
         'test: "pytest -q tests/repo/test_model_gateway_target_protocols.py -p no:cacheprovider"',
     ]:

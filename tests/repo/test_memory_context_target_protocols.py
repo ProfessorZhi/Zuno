@@ -8,7 +8,7 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 VERIFIER_PATH = REPO_ROOT / "tools/scripts/verify_memory_context_target_protocols.py"
-FORMAL = REPO_ROOT / "docs/project/modules/05-memory-context.md"
+FORMAL = REPO_ROOT / "docs/history/superseded-document-taxonomy/project-modules/05-memory-context.md"
 
 
 def _load_verifier():

@@ -20,7 +20,7 @@ def verify() -> list[str]:
         "Product / Domain",
         "Logical Capability Architecture",
         "Physical Service / Deployment Architecture",
-        "Current / Target / History",
+        "History 只保存",
     ]
     positions = [architecture.find(marker) for marker in precedence]
     for marker, position in zip(precedence, positions):
@@ -33,7 +33,7 @@ def verify() -> list[str]:
         "Python-only", "Microservice", "FastAPI", "LangGraph", "PostgreSQL",
         "Checkpoint", "Reconciliation", "edge-api", "platform-domain-service",
         "agent-runtime-service", "knowledge-service", "tool-sandbox-service",
-        "Target Candidate", "not Current",
+        "Target", "不是 Current",
     ]:
         if marker not in architecture and not (marker == "not Current" and "不是 Current" in architecture):
             errors.append(f"architecture integration semantics missing: {marker}")
@@ -51,7 +51,7 @@ def verify() -> list[str]:
             errors.append(f"architecture retains forbidden shortcut: {forbidden}")
     if 'fetch("./architecture-views.md")' not in html:
         errors.append("architecture.html must render canonical Mermaid source")
-    if "../product/product-architecture.md" not in html or "../services/service-architecture.md" not in html:
+    if "../history/README.md" not in html or "../status/target-status.md" not in html:
         errors.append("architecture.html must expose new taxonomy entrypoints")
     if views.count("```mermaid") != 14:
         errors.append("architecture-views.md must contain exactly 14 canonical diagrams")

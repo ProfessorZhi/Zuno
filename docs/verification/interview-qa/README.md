@@ -1,6 +1,6 @@
 # Zuno Architecture Red Team QA
 
-本目录是 Zuno 的**Architecture Red Team / 架构红队攻击工具**唯一维护入口。它不是面试 FAQ、背题题库，也不是第二套架构；QA 是测试用例，`docs/project/architecture/` 和 `docs/project/modules/` 才是被测试的架构对象。它模拟面试官沿着一条机制不断深挖，检查 Part A 是否能解释：
+本目录是 Zuno 的**Architecture Red Team / 架构红队攻击工具**唯一维护入口。它不是面试 FAQ、背题题库，也不是第二套架构；QA 是测试用例，`docs/project/architecture/` 才是当前被测试的跨层架构对象，旧模块材料仅作为历史引用。它模拟面试官沿着一条机制不断深挖，检查 Part A 是否能解释：
 
 ```text
 为什么这样设计
@@ -11,7 +11,7 @@
 → 如何用 Test / Trace / Eval 证明
 ```
 
-QA 是架构消费者。正式事实仍由 `docs/project/architecture/`、`docs/project/modules/`、`docs/decisions/` 和 `docs/governance/` 负责；QA 只能验证、压缩和引用这些事实，不能为了让答案完整而新增 Runtime 语义。
+QA 是架构消费者。正式事实仍由 `docs/project/architecture/`、`docs/project/history/`、`docs/project/status/`、`docs/decisions/` 和 `docs/governance/` 负责；QA 只能验证、压缩和引用这些事实，不能为了让答案完整而新增 Runtime 语义。
 
 如果任务还包含项目背景、用户规模、团队协作、WorkBuddy/开源替代、交付过程或落地真实性，先进入 [`../../../project-reconstruction-lab/README.md`](../../../project-reconstruction-lab/README.md)。本目录继续只维护架构攻击题、Deep Dive Chain 和 Coverage；上层 Lab 调用这里的题库，不复制或另建第二套 QA 事实源。
 
@@ -51,7 +51,7 @@ docs/verification/interview-qa/
 
 ## Canonical Truth
 
-正式事实源：`docs/project/architecture/`、`docs/project/modules/`、`docs/decisions/`、`docs/governance/`。
+正式事实源：`docs/project/architecture/`、`docs/project/history/`、`docs/project/status/`、`docs/decisions/`、`docs/governance/`。
 
 QA 与正式架构冲突时，正式架构优先。QA 中的 Expected Answer 只允许复述或压缩 canonical docs，不得创造新的 Runtime、Current、Benchmark 或 Production 事实。
 
@@ -141,7 +141,7 @@ pytest -q tests/repo/test_architecture_interview_qa.py -p no:cacheprovider
 python tools/scripts/verify_markdown_internal_links.py
 ```
 
-Coverage `FULL` 只表示正式文档能够回答该题，不表示 Runtime 已实现、质量已经证明或系统已经达到生产就绪。Current 状态必须回到 `docs/status/production-readiness.md` 和 `docs/evidence/`。
+Coverage `FULL` 只表示正式文档能够回答该题，不表示 Runtime 已实现、质量已经证明或系统已经达到生产就绪。Current 状态必须回到 `docs/project/status/production-readiness.md` 和 `docs/evidence/`。
 
 ## 三种使用模式
 
@@ -151,7 +151,7 @@ Coverage `FULL` 只表示正式文档能够回答该题，不表示 Runtime 已�
 
 ### 模式 B：Architecture Audit
 
-只打开 docs/project/architecture/、对应 docs/project/modules/、docs/decisions/ 和 docs/governance/，攻击一条 Chain，检查 Part A 能否独立回答；coverage_status=FULL 只代表文档覆盖，不代表 Runtime 已实现。
+只打开 `docs/project/architecture/`、`docs/project/status/`、`docs/decisions/` 和 `docs/governance/`，攻击一条 Chain，检查 Part A 能否独立回答；coverage_status=FULL 只代表文档覆盖，不代表 Runtime 已实现。
 
 ### 模式 C：未来代码审查
 
@@ -170,7 +170,7 @@ Architecture Interview QA Structure = PASS 仅表示：题目结构、Canonical 
 
 真正的架构成熟度要看四维诊断和 Gap 是否闭环；如果未来 Part A 暴露真正的架构 Gap，应记录到 Gap / ADR，而不是为了让 QA 变成 FULL 虚构实现证据。
 
-它不表示 implementation available、quality proven 或 production ready。Current / Target / Future 状态仍以 docs/status/production-readiness.md 为准。
+它不表示 implementation available、quality proven 或 production ready。Current / Target / Future 状态仍以 `docs/project/status/production-readiness.md` 为准。
 
 验证命令：
 

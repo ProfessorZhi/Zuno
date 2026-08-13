@@ -1,6 +1,6 @@
 # Historical Technology History
 
-历史技术矩阵以 [`docs/project/facts/technology-reality.md`](../../docs/project/facts/technology-reality.md) 为准。
+历史技术矩阵以 [`docs/project/history/technology-history.md`](../../docs/project/history/technology-history.md) 为准。
 
 ## 当前可安全使用的粒度
 

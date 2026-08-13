@@ -12,4 +12,4 @@ Current GitHub Repository ≠ Complete Historical Project Repository
 
 当前仓库组件不能反推历史使用，团队能力不能反推个人贡献，Target Architecture 不能反推历史实现。
 
-正式事实详见 [`docs/project/facts/`](../../docs/project/facts/README.md)。
+正式历史事实详见 [`docs/project/history/`](../../docs/project/history/README.md)。

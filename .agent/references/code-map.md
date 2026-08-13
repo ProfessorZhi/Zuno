@@ -39,4 +39,4 @@ Product command 只有 `SUBMIT_USER_GOAL` 语义。不要新增 shadow、canary�
 - Agent Core 不反向依赖 API；模型只能提交 proposal。
 - Tool Effect 必须经过 Capability、Security、Approval、Budget 和 Idempotency。
 - 前端不得直接访问数据库或 provider；所有事实通过 Product/API projection 获取。
-- 需要修改 runtime 时先读 `docs/project/architecture/architecture.md`、`docs/project/domain/` 和 `docs/project/agents/`；修改服务或数据时继续读 `services/`、`data/`、`security/`。
+- 需要修改 runtime 时先读 `docs/project/architecture/architecture.md`、`docs/project/status/`、ADR 和 `docs/evidence/`；不要把已归档的专题目录当作当前 Owner 文档。

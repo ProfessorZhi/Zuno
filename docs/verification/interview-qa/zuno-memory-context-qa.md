@@ -15,8 +15,8 @@
 - interview_probability: HIGH
 - resume_trigger: Memory、ContextPack、layers
 - architecture_refs:
-  - docs/project/modules/05-memory-context.md — § 2. 三个正交维度
-  - docs/project/modules/05-memory-context.md — § 4. 模块职责
+  - docs/history/superseded-document-taxonomy/project-modules/05-memory-context.md — § 2. 三个正交维度
+  - docs/history/superseded-document-taxonomy/project-modules/05-memory-context.md — § 4. 模块职责
 - initial_coverage_status: PARTIAL
 - coverage_status: FULL
 - gap_id: CLOSED-GAP-05-001
@@ -48,8 +48,8 @@ Working、Session、Long-term Memory分别解决什么？
 
 ### Architecture Evidence
 
-- docs/project/modules/05-memory-context.md — § 2. 三个正交维度
-- docs/project/modules/05-memory-context.md — § 4. 模块职责
+- docs/history/superseded-document-taxonomy/project-modules/05-memory-context.md — § 2. 三个正交维度
+- docs/history/superseded-document-taxonomy/project-modules/05-memory-context.md — § 4. 模块职责
 
 ### 当前文档是否足够回答
 
@@ -68,8 +68,8 @@ None。第一轮记录的缺口已写回 canonical architecture；本 QA 不新�
 - interview_probability: HIGH
 - resume_trigger: Memory、ContextPack、layers
 - architecture_refs:
-  - docs/project/modules/05-memory-context.md — § 2. 三个正交维度
-  - docs/project/modules/05-memory-context.md — § 4. 模块职责
+  - docs/history/superseded-document-taxonomy/project-modules/05-memory-context.md — § 2. 三个正交维度
+  - docs/history/superseded-document-taxonomy/project-modules/05-memory-context.md — § 4. 模块职责
 - initial_coverage_status: PARTIAL
 - coverage_status: FULL
 - gap_id: CLOSED-GAP-05-002
@@ -101,8 +101,8 @@ Working/Session/Long-term回答存活时间，Episodic/Semantic/Procedural回答
 
 ### Architecture Evidence
 
-- docs/project/modules/05-memory-context.md — § 2. 三个正交维度
-- docs/project/modules/05-memory-context.md — § 4. 模块职责
+- docs/history/superseded-document-taxonomy/project-modules/05-memory-context.md — § 2. 三个正交维度
+- docs/history/superseded-document-taxonomy/project-modules/05-memory-context.md — § 4. 模块职责
 
 ### 当前文档是否足够回答
 
@@ -121,8 +121,8 @@ None。第一轮记录的缺口已写回 canonical architecture；本 QA 不新�
 - interview_probability: HIGH
 - resume_trigger: Memory、ContextPack、boundary
 - architecture_refs:
-  - docs/project/modules/05-memory-context.md — § 3. Context、Memory、Knowledge 和 Checkpoint 的边界
-  - docs/project/modules/05-memory-context.md — § 5. Cross-module Ownership
+  - docs/history/superseded-document-taxonomy/project-modules/05-memory-context.md — § 3. Context、Memory、Knowledge 和 Checkpoint 的边界
+  - docs/history/superseded-document-taxonomy/project-modules/05-memory-context.md — § 5. Cross-module Ownership
 - initial_coverage_status: PARTIAL
 - coverage_status: FULL
 - gap_id: CLOSED-GAP-05-003
@@ -154,8 +154,8 @@ Knowledge拥有企业文档事实和SourceSpan，Memory拥有可复用的用户/
 
 ### Architecture Evidence
 
-- docs/project/modules/05-memory-context.md — § 3. Context、Memory、Knowledge 和 Checkpoint 的边界
-- docs/project/modules/05-memory-context.md — § 5. Cross-module Ownership
+- docs/history/superseded-document-taxonomy/project-modules/05-memory-context.md — § 3. Context、Memory、Knowledge 和 Checkpoint 的边界
+- docs/history/superseded-document-taxonomy/project-modules/05-memory-context.md — § 5. Cross-module Ownership
 
 ### 当前文档是否足够回答
 
@@ -174,8 +174,8 @@ None。第一轮记录的缺口已写回 canonical architecture；本 QA 不新�
 - interview_probability: HIGH
 - resume_trigger: Memory、ContextPack、boundary
 - architecture_refs:
-  - docs/project/modules/05-memory-context.md — § 3. Context、Memory、Knowledge 和 Checkpoint 的边界
-  - docs/project/modules/05-memory-context.md — § 5. Cross-module Ownership
+  - docs/history/superseded-document-taxonomy/project-modules/05-memory-context.md — § 3. Context、Memory、Knowledge 和 Checkpoint 的边界
+  - docs/history/superseded-document-taxonomy/project-modules/05-memory-context.md — § 5. Cross-module Ownership
 - initial_coverage_status: FULL
 - coverage_status: FULL
 - gap_id: None
@@ -207,8 +207,8 @@ Agent Core拥有Run、Goal、Plan和Working控制语义；Memory模块只提供�
 
 ### Architecture Evidence
 
-- docs/project/modules/05-memory-context.md — § 3. Context、Memory、Knowledge 和 Checkpoint 的边界
-- docs/project/modules/05-memory-context.md — § 5. Cross-module Ownership
+- docs/history/superseded-document-taxonomy/project-modules/05-memory-context.md — § 3. Context、Memory、Knowledge 和 Checkpoint 的边界
+- docs/history/superseded-document-taxonomy/project-modules/05-memory-context.md — § 5. Cross-module Ownership
 
 ### 当前文档是否足够回答
 
@@ -227,8 +227,8 @@ None。第一轮记录的缺口已写回 canonical architecture；本 QA 不新�
 - interview_probability: HIGH
 - resume_trigger: Memory、ContextPack、consolidation
 - architecture_refs:
-  - docs/project/modules/05-memory-context.md — § 9. Working Memory 如何进入 Session Memory
-  - docs/project/modules/05-memory-context.md — § 10. Session Memory 如何进入 Long-term Memory
+  - docs/history/superseded-document-taxonomy/project-modules/05-memory-context.md — § 9. Working Memory 如何进入 Session Memory
+  - docs/history/superseded-document-taxonomy/project-modules/05-memory-context.md — § 10. Session Memory 如何进入 Long-term Memory
 - initial_coverage_status: PARTIAL
 - coverage_status: FULL
 - gap_id: CLOSED-GAP-05-005
@@ -260,8 +260,8 @@ Run结束或阶段性compact在策略触发时形成SessionSummaryVersion，保�
 
 ### Architecture Evidence
 
-- docs/project/modules/05-memory-context.md — § 9. Working Memory 如何进入 Session Memory
-- docs/project/modules/05-memory-context.md — § 10. Session Memory 如何进入 Long-term Memory
+- docs/history/superseded-document-taxonomy/project-modules/05-memory-context.md — § 9. Working Memory 如何进入 Session Memory
+- docs/history/superseded-document-taxonomy/project-modules/05-memory-context.md — § 10. Session Memory 如何进入 Long-term Memory
 
 ### 当前文档是否足够回答
 
@@ -280,8 +280,8 @@ None。第一轮记录的缺口已写回 canonical architecture；本 QA 不新�
 - interview_probability: HIGH
 - resume_trigger: Memory、ContextPack、consolidation
 - architecture_refs:
-  - docs/project/modules/05-memory-context.md — § 9. Working Memory 如何进入 Session Memory
-  - docs/project/modules/05-memory-context.md — § 10. Session Memory 如何进入 Long-term Memory
+  - docs/history/superseded-document-taxonomy/project-modules/05-memory-context.md — § 9. Working Memory 如何进入 Session Memory
+  - docs/history/superseded-document-taxonomy/project-modules/05-memory-context.md — § 10. Session Memory 如何进入 Long-term Memory
 - initial_coverage_status: FULL
 - coverage_status: FULL
 - gap_id: None
@@ -313,8 +313,8 @@ Session Summary Version 为什么要版本化？
 
 ### Architecture Evidence
 
-- docs/project/modules/05-memory-context.md — § 9. Working Memory 如何进入 Session Memory
-- docs/project/modules/05-memory-context.md — § 10. Session Memory 如何进入 Long-term Memory
+- docs/history/superseded-document-taxonomy/project-modules/05-memory-context.md — § 9. Working Memory 如何进入 Session Memory
+- docs/history/superseded-document-taxonomy/project-modules/05-memory-context.md — § 10. Session Memory 如何进入 Long-term Memory
 
 ### 当前文档是否足够回答
 
@@ -333,8 +333,8 @@ None。第一轮记录的缺口已写回 canonical architecture；本 QA 不新�
 - interview_probability: HIGH
 - resume_trigger: Memory、ContextPack、compression
 - architecture_refs:
-  - docs/project/modules/05-memory-context.md — § 16. 四类压缩如何交互
-  - docs/project/modules/05-memory-context.md — § 19. Protected Set 与预算
+  - docs/history/superseded-document-taxonomy/project-modules/05-memory-context.md — § 16. 四类压缩如何交互
+  - docs/history/superseded-document-taxonomy/project-modules/05-memory-context.md — § 19. Protected Set 与预算
 - initial_coverage_status: FULL
 - coverage_status: FULL
 - gap_id: None
@@ -366,8 +366,8 @@ Recent Raw Tail 为什么不能总被压缩？
 
 ### Architecture Evidence
 
-- docs/project/modules/05-memory-context.md — § 16. 四类压缩如何交互
-- docs/project/modules/05-memory-context.md — § 19. Protected Set 与预算
+- docs/history/superseded-document-taxonomy/project-modules/05-memory-context.md — § 16. 四类压缩如何交互
+- docs/history/superseded-document-taxonomy/project-modules/05-memory-context.md — § 19. Protected Set 与预算
 
 ### 当前文档是否足够回答
 
@@ -386,8 +386,8 @@ None。第一轮记录的缺口已写回 canonical architecture；本 QA 不新�
 - interview_probability: HIGH
 - resume_trigger: Memory、ContextPack、compression
 - architecture_refs:
-  - docs/project/modules/05-memory-context.md — § 16. 四类压缩如何交互
-  - docs/project/modules/05-memory-context.md — § 19. Protected Set 与预算
+  - docs/history/superseded-document-taxonomy/project-modules/05-memory-context.md — § 16. 四类压缩如何交互
+  - docs/history/superseded-document-taxonomy/project-modules/05-memory-context.md — § 19. Protected Set 与预算
 - initial_coverage_status: PARTIAL
 - coverage_status: FULL
 - gap_id: CLOSED-GAP-05-008
@@ -419,8 +419,8 @@ None。第一轮记录的缺口已写回 canonical architecture；本 QA 不新�
 
 ### Architecture Evidence
 
-- docs/project/modules/05-memory-context.md — § 16. 四类压缩如何交互
-- docs/project/modules/05-memory-context.md — § 19. Protected Set 与预算
+- docs/history/superseded-document-taxonomy/project-modules/05-memory-context.md — § 16. 四类压缩如何交互
+- docs/history/superseded-document-taxonomy/project-modules/05-memory-context.md — § 19. Protected Set 与预算
 
 ### 当前文档是否足够回答
 
@@ -439,8 +439,8 @@ None。第一轮记录的缺口已写回 canonical architecture；本 QA 不新�
 - interview_probability: HIGH
 - resume_trigger: Memory、ContextPack、compression
 - architecture_refs:
-  - docs/project/modules/05-memory-context.md — § 16. 四类压缩如何交互
-  - docs/project/modules/05-memory-context.md — § 19. Protected Set 与预算
+  - docs/history/superseded-document-taxonomy/project-modules/05-memory-context.md — § 16. 四类压缩如何交互
+  - docs/history/superseded-document-taxonomy/project-modules/05-memory-context.md — § 19. Protected Set 与预算
 - initial_coverage_status: PARTIAL
 - coverage_status: FULL
 - gap_id: CLOSED-GAP-05-009
@@ -472,8 +472,8 @@ Token占用不是价值；必须结合来源、任务相关性、未完成动作
 
 ### Architecture Evidence
 
-- docs/project/modules/05-memory-context.md — § 16. 四类压缩如何交互
-- docs/project/modules/05-memory-context.md — § 19. Protected Set 与预算
+- docs/history/superseded-document-taxonomy/project-modules/05-memory-context.md — § 16. 四类压缩如何交互
+- docs/history/superseded-document-taxonomy/project-modules/05-memory-context.md — § 19. Protected Set 与预算
 
 ### 当前文档是否足够回答
 
@@ -496,8 +496,8 @@ None。第一轮记录的缺口已写回 canonical architecture；本 QA 不新�
 - interview_probability: HIGH
 - resume_trigger: Memory、ContextPack、compression
 - architecture_refs:
-  - docs/project/modules/05-memory-context.md — § 16. 四类压缩如何交互
-  - docs/project/modules/05-memory-context.md — § 19. Protected Set 与预算
+  - docs/history/superseded-document-taxonomy/project-modules/05-memory-context.md — § 16. 四类压缩如何交互
+  - docs/history/superseded-document-taxonomy/project-modules/05-memory-context.md — § 19. Protected Set 与预算
 - initial_coverage_status: FULL
 - coverage_status: FULL
 - gap_id: None
@@ -529,8 +529,8 @@ None。第一轮记录的缺口已写回 canonical architecture；本 QA 不新�
 
 ### Architecture Evidence
 
-- docs/project/modules/05-memory-context.md — § 16. 四类压缩如何交互
-- docs/project/modules/05-memory-context.md — § 19. Protected Set 与预算
+- docs/history/superseded-document-taxonomy/project-modules/05-memory-context.md — § 16. 四类压缩如何交互
+- docs/history/superseded-document-taxonomy/project-modules/05-memory-context.md — § 19. Protected Set 与预算
 
 ### 当前文档是否足够回答
 
@@ -549,8 +549,8 @@ None。第一轮记录的缺口已写回 canonical architecture；本 QA 不新�
 - interview_probability: HIGH
 - resume_trigger: Memory、ContextPack、compression
 - architecture_refs:
-  - docs/project/modules/05-memory-context.md — § 16. 四类压缩如何交互
-  - docs/project/modules/05-memory-context.md — § 19. Protected Set 与预算
+  - docs/history/superseded-document-taxonomy/project-modules/05-memory-context.md — § 16. 四类压缩如何交互
+  - docs/history/superseded-document-taxonomy/project-modules/05-memory-context.md — § 19. Protected Set 与预算
 - initial_coverage_status: FULL
 - coverage_status: FULL
 - gap_id: None
@@ -582,8 +582,8 @@ Tool Result 怎么压缩？
 
 ### Architecture Evidence
 
-- docs/project/modules/05-memory-context.md — § 16. 四类压缩如何交互
-- docs/project/modules/05-memory-context.md — § 19. Protected Set 与预算
+- docs/history/superseded-document-taxonomy/project-modules/05-memory-context.md — § 16. 四类压缩如何交互
+- docs/history/superseded-document-taxonomy/project-modules/05-memory-context.md — § 19. Protected Set 与预算
 
 ### 当前文档是否足够回答
 
@@ -602,8 +602,8 @@ None。第一轮记录的缺口已写回 canonical architecture；本 QA 不新�
 - interview_probability: HIGH
 - resume_trigger: Memory、ContextPack、context
 - architecture_refs:
-  - docs/project/modules/05-memory-context.md — § 13. Context 构建完整流程
-  - docs/project/modules/05-memory-context.md — § 47. ContextPackVersion
+  - docs/history/superseded-document-taxonomy/project-modules/05-memory-context.md — § 13. Context 构建完整流程
+  - docs/history/superseded-document-taxonomy/project-modules/05-memory-context.md — § 47. ContextPackVersion
 - initial_coverage_status: PARTIAL
 - coverage_status: FULL
 - gap_id: CLOSED-GAP-05-012
@@ -635,8 +635,8 @@ ContextPackVersion是一次模型调用/Step的不可变、预算化、只读上
 
 ### Architecture Evidence
 
-- docs/project/modules/05-memory-context.md — § 13. Context 构建完整流程
-- docs/project/modules/05-memory-context.md — § 47. ContextPackVersion
+- docs/history/superseded-document-taxonomy/project-modules/05-memory-context.md — § 13. Context 构建完整流程
+- docs/history/superseded-document-taxonomy/project-modules/05-memory-context.md — § 47. ContextPackVersion
 
 ### 当前文档是否足够回答
 
@@ -655,8 +655,8 @@ None。第一轮记录的缺口已写回 canonical architecture；本 QA 不新�
 - interview_probability: HIGH
 - resume_trigger: Memory、ContextPack、context
 - architecture_refs:
-  - docs/project/modules/05-memory-context.md — § 13. Context 构建完整流程
-  - docs/project/modules/05-memory-context.md — § 47. ContextPackVersion
+  - docs/history/superseded-document-taxonomy/project-modules/05-memory-context.md — § 13. Context 构建完整流程
+  - docs/history/superseded-document-taxonomy/project-modules/05-memory-context.md — § 47. ContextPackVersion
 - initial_coverage_status: FULL
 - coverage_status: FULL
 - gap_id: None
@@ -688,8 +688,8 @@ Context Budget 如何分配？
 
 ### Architecture Evidence
 
-- docs/project/modules/05-memory-context.md — § 13. Context 构建完整流程
-- docs/project/modules/05-memory-context.md — § 47. ContextPackVersion
+- docs/history/superseded-document-taxonomy/project-modules/05-memory-context.md — § 13. Context 构建完整流程
+- docs/history/superseded-document-taxonomy/project-modules/05-memory-context.md — § 47. ContextPackVersion
 
 ### 当前文档是否足够回答
 
@@ -708,8 +708,8 @@ None。第一轮记录的缺口已写回 canonical architecture；本 QA 不新�
 - interview_probability: HIGH
 - resume_trigger: Memory、ContextPack、context
 - architecture_refs:
-  - docs/project/modules/05-memory-context.md — § 13. Context 构建完整流程
-  - docs/project/modules/05-memory-context.md — § 47. ContextPackVersion
+  - docs/history/superseded-document-taxonomy/project-modules/05-memory-context.md — § 13. Context 构建完整流程
+  - docs/history/superseded-document-taxonomy/project-modules/05-memory-context.md — § 47. ContextPackVersion
 - initial_coverage_status: FULL
 - coverage_status: FULL
 - gap_id: None
@@ -741,8 +741,8 @@ Atomic Group 为什么重要？
 
 ### Architecture Evidence
 
-- docs/project/modules/05-memory-context.md — § 13. Context 构建完整流程
-- docs/project/modules/05-memory-context.md — § 47. ContextPackVersion
+- docs/history/superseded-document-taxonomy/project-modules/05-memory-context.md — § 13. Context 构建完整流程
+- docs/history/superseded-document-taxonomy/project-modules/05-memory-context.md — § 47. ContextPackVersion
 
 ### 当前文档是否足够回答
 
@@ -761,8 +761,8 @@ None。第一轮记录的缺口已写回 canonical architecture；本 QA 不新�
 - interview_probability: HIGH
 - resume_trigger: Memory、ContextPack、types
 - architecture_refs:
-  - docs/project/modules/05-memory-context.md — § 2. 三个正交维度
-  - docs/project/modules/05-memory-context.md — § 39. Typed Payload
+  - docs/history/superseded-document-taxonomy/project-modules/05-memory-context.md — § 2. 三个正交维度
+  - docs/history/superseded-document-taxonomy/project-modules/05-memory-context.md — § 39. Typed Payload
 - initial_coverage_status: PARTIAL
 - coverage_status: FULL
 - gap_id: CLOSED-GAP-05-015
@@ -794,8 +794,8 @@ Episodic记发生过什么，Semantic记经过治理的相对稳定事实，Proc
 
 ### Architecture Evidence
 
-- docs/project/modules/05-memory-context.md — § 2. 三个正交维度
-- docs/project/modules/05-memory-context.md — § 39. Typed Payload
+- docs/history/superseded-document-taxonomy/project-modules/05-memory-context.md — § 2. 三个正交维度
+- docs/history/superseded-document-taxonomy/project-modules/05-memory-context.md — § 39. Typed Payload
 
 ### 当前文档是否足够回答
 
@@ -814,8 +814,8 @@ None。第一轮记录的缺口已写回 canonical architecture；本 QA 不新�
 - interview_probability: HIGH
 - resume_trigger: Memory、ContextPack、types
 - architecture_refs:
-  - docs/project/modules/05-memory-context.md — § 2. 三个正交维度
-  - docs/project/modules/05-memory-context.md — § 39. Typed Payload
+  - docs/history/superseded-document-taxonomy/project-modules/05-memory-context.md — § 2. 三个正交维度
+  - docs/history/superseded-document-taxonomy/project-modules/05-memory-context.md — § 39. Typed Payload
 - initial_coverage_status: FULL
 - coverage_status: FULL
 - gap_id: None
@@ -847,8 +847,8 @@ Entity是Semantic Projection或索引形态，不是独立生命周期/内容类
 
 ### Architecture Evidence
 
-- docs/project/modules/05-memory-context.md — § 2. 三个正交维度
-- docs/project/modules/05-memory-context.md — § 39. Typed Payload
+- docs/history/superseded-document-taxonomy/project-modules/05-memory-context.md — § 2. 三个正交维度
+- docs/history/superseded-document-taxonomy/project-modules/05-memory-context.md — § 39. Typed Payload
 
 ### 当前文档是否足够回答
 
@@ -867,8 +867,8 @@ None。第一轮记录的缺口已写回 canonical architecture；本 QA 不新�
 - interview_probability: HIGH
 - resume_trigger: Memory、ContextPack、types
 - architecture_refs:
-  - docs/project/modules/05-memory-context.md — § 2. 三个正交维度
-  - docs/project/modules/05-memory-context.md — § 39. Typed Payload
+  - docs/history/superseded-document-taxonomy/project-modules/05-memory-context.md — § 2. 三个正交维度
+  - docs/history/superseded-document-taxonomy/project-modules/05-memory-context.md — § 39. Typed Payload
 - initial_coverage_status: PARTIAL
 - coverage_status: FULL
 - gap_id: CLOSED-GAP-05-017
@@ -900,8 +900,8 @@ None。第一轮记录的缺口已写回 canonical architecture；本 QA 不新�
 
 ### Architecture Evidence
 
-- docs/project/modules/05-memory-context.md — § 2. 三个正交维度
-- docs/project/modules/05-memory-context.md — § 39. Typed Payload
+- docs/history/superseded-document-taxonomy/project-modules/05-memory-context.md — § 2. 三个正交维度
+- docs/history/superseded-document-taxonomy/project-modules/05-memory-context.md — § 39. Typed Payload
 
 ### 当前文档是否足够回答
 
@@ -920,8 +920,8 @@ None。第一轮记录的缺口已写回 canonical architecture；本 QA 不新�
 - interview_probability: HIGH
 - resume_trigger: Memory、ContextPack、types
 - architecture_refs:
-  - docs/project/modules/05-memory-context.md — § 2. 三个正交维度
-  - docs/project/modules/05-memory-context.md — § 39. Typed Payload
+  - docs/history/superseded-document-taxonomy/project-modules/05-memory-context.md — § 2. 三个正交维度
+  - docs/history/superseded-document-taxonomy/project-modules/05-memory-context.md — § 39. Typed Payload
 - initial_coverage_status: FULL
 - coverage_status: FULL
 - gap_id: None
@@ -953,8 +953,8 @@ Reflexion生成经验候选，可能提出Procedural Candidate，但必须经过
 
 ### Architecture Evidence
 
-- docs/project/modules/05-memory-context.md — § 2. 三个正交维度
-- docs/project/modules/05-memory-context.md — § 39. Typed Payload
+- docs/history/superseded-document-taxonomy/project-modules/05-memory-context.md — § 2. 三个正交维度
+- docs/history/superseded-document-taxonomy/project-modules/05-memory-context.md — § 39. Typed Payload
 
 ### 当前文档是否足够回答
 
@@ -977,8 +977,8 @@ None。第一轮记录的缺口已写回 canonical architecture；本 QA 不新�
 - interview_probability: HIGH
 - resume_trigger: Memory、ContextPack、candidate
 - architecture_refs:
-  - docs/project/modules/05-memory-context.md — § 26. MemoryCandidate 状态机
-  - docs/project/modules/05-memory-context.md — § 38. MemoryCandidate
+  - docs/history/superseded-document-taxonomy/project-modules/05-memory-context.md — § 26. MemoryCandidate 状态机
+  - docs/history/superseded-document-taxonomy/project-modules/05-memory-context.md — § 38. MemoryCandidate
 - initial_coverage_status: PARTIAL
 - coverage_status: FULL
 - gap_id: CLOSED-GAP-05-019
@@ -1010,8 +1010,8 @@ MemoryCandidate 为什么存在？
 
 ### Architecture Evidence
 
-- docs/project/modules/05-memory-context.md — § 26. MemoryCandidate 状态机
-- docs/project/modules/05-memory-context.md — § 38. MemoryCandidate
+- docs/history/superseded-document-taxonomy/project-modules/05-memory-context.md — § 26. MemoryCandidate 状态机
+- docs/history/superseded-document-taxonomy/project-modules/05-memory-context.md — § 38. MemoryCandidate
 
 ### 当前文档是否足够回答
 
@@ -1030,8 +1030,8 @@ None。第一轮记录的缺口已写回 canonical architecture；本 QA 不新�
 - interview_probability: HIGH
 - resume_trigger: Memory、ContextPack、candidate
 - architecture_refs:
-  - docs/project/modules/05-memory-context.md — § 26. MemoryCandidate 状态机
-  - docs/project/modules/05-memory-context.md — § 38. MemoryCandidate
+  - docs/history/superseded-document-taxonomy/project-modules/05-memory-context.md — § 26. MemoryCandidate 状态机
+  - docs/history/superseded-document-taxonomy/project-modules/05-memory-context.md — § 38. MemoryCandidate
 - initial_coverage_status: PARTIAL
 - coverage_status: FULL
 - gap_id: CLOSED-GAP-05-020
@@ -1063,8 +1063,8 @@ None。第一轮记录的缺口已写回 canonical architecture；本 QA 不新�
 
 ### Architecture Evidence
 
-- docs/project/modules/05-memory-context.md — § 26. MemoryCandidate 状态机
-- docs/project/modules/05-memory-context.md — § 38. MemoryCandidate
+- docs/history/superseded-document-taxonomy/project-modules/05-memory-context.md — § 26. MemoryCandidate 状态机
+- docs/history/superseded-document-taxonomy/project-modules/05-memory-context.md — § 38. MemoryCandidate
 
 ### 当前文档是否足够回答
 
@@ -1083,8 +1083,8 @@ None。第一轮记录的缺口已写回 canonical architecture；本 QA 不新�
 - interview_probability: HIGH
 - resume_trigger: Memory、ContextPack、version
 - architecture_refs:
-  - docs/project/modules/05-memory-context.md — § 27. MemoryVersion 状态机
-  - docs/project/modules/05-memory-context.md — § 41. MemoryRecord 与 MemoryVersion
+  - docs/history/superseded-document-taxonomy/project-modules/05-memory-context.md — § 27. MemoryVersion 状态机
+  - docs/history/superseded-document-taxonomy/project-modules/05-memory-context.md — § 41. MemoryRecord 与 MemoryVersion
 - initial_coverage_status: FULL
 - coverage_status: FULL
 - gap_id: None
@@ -1116,8 +1116,8 @@ MemoryVersion 为什么不可变？
 
 ### Architecture Evidence
 
-- docs/project/modules/05-memory-context.md — § 27. MemoryVersion 状态机
-- docs/project/modules/05-memory-context.md — § 41. MemoryRecord 与 MemoryVersion
+- docs/history/superseded-document-taxonomy/project-modules/05-memory-context.md — § 27. MemoryVersion 状态机
+- docs/history/superseded-document-taxonomy/project-modules/05-memory-context.md — § 41. MemoryRecord 与 MemoryVersion
 
 ### 当前文档是否足够回答
 
@@ -1136,8 +1136,8 @@ None。第一轮记录的缺口已写回 canonical architecture；本 QA 不新�
 - interview_probability: HIGH
 - resume_trigger: Memory、ContextPack、states
 - architecture_refs:
-  - docs/project/modules/05-memory-context.md — § 27. MemoryVersion 状态机
-  - docs/project/modules/05-memory-context.md — § 55. Prompt Injection 与记忆污染
+  - docs/history/superseded-document-taxonomy/project-modules/05-memory-context.md — § 27. MemoryVersion 状态机
+  - docs/history/superseded-document-taxonomy/project-modules/05-memory-context.md — § 55. Prompt Injection 与记忆污染
 - initial_coverage_status: FULL
 - coverage_status: FULL
 - gap_id: None
@@ -1169,8 +1169,8 @@ SUPERSEDED表示有新的显式版本替代；STALE表示时间或事实有效�
 
 ### Architecture Evidence
 
-- docs/project/modules/05-memory-context.md — § 27. MemoryVersion 状态机
-- docs/project/modules/05-memory-context.md — § 55. Prompt Injection 与记忆污染
+- docs/history/superseded-document-taxonomy/project-modules/05-memory-context.md — § 27. MemoryVersion 状态机
+- docs/history/superseded-document-taxonomy/project-modules/05-memory-context.md — § 55. Prompt Injection 与记忆污染
 
 ### 当前文档是否足够回答
 
@@ -1189,8 +1189,8 @@ None。第一轮记录的缺口已写回 canonical architecture；本 QA 不新�
 - interview_probability: HIGH
 - resume_trigger: Memory、ContextPack、states
 - architecture_refs:
-  - docs/project/modules/05-memory-context.md — § 27. MemoryVersion 状态机
-  - docs/project/modules/05-memory-context.md — § 55. Prompt Injection 与记忆污染
+  - docs/history/superseded-document-taxonomy/project-modules/05-memory-context.md — § 27. MemoryVersion 状态机
+  - docs/history/superseded-document-taxonomy/project-modules/05-memory-context.md — § 55. Prompt Injection 与记忆污染
 - initial_coverage_status: FULL
 - coverage_status: FULL
 - gap_id: None
@@ -1222,8 +1222,8 @@ Memory仍可恢复但长期Utility低或暂不适合默认召回时进入Dormant
 
 ### Architecture Evidence
 
-- docs/project/modules/05-memory-context.md — § 27. MemoryVersion 状态机
-- docs/project/modules/05-memory-context.md — § 55. Prompt Injection 与记忆污染
+- docs/history/superseded-document-taxonomy/project-modules/05-memory-context.md — § 27. MemoryVersion 状态机
+- docs/history/superseded-document-taxonomy/project-modules/05-memory-context.md — § 55. Prompt Injection 与记忆污染
 
 ### 当前文档是否足够回答
 
@@ -1242,8 +1242,8 @@ None。第一轮记录的缺口已写回 canonical architecture；本 QA 不新�
 - interview_probability: HIGH
 - resume_trigger: Memory、ContextPack、states
 - architecture_refs:
-  - docs/project/modules/05-memory-context.md — § 27. MemoryVersion 状态机
-  - docs/project/modules/05-memory-context.md — § 55. Prompt Injection 与记忆污染
+  - docs/history/superseded-document-taxonomy/project-modules/05-memory-context.md — § 27. MemoryVersion 状态机
+  - docs/history/superseded-document-taxonomy/project-modules/05-memory-context.md — § 55. Prompt Injection 与记忆污染
 - initial_coverage_status: PARTIAL
 - coverage_status: FULL
 - gap_id: CLOSED-GAP-05-024
@@ -1275,8 +1275,8 @@ QUARANTINED 处理什么？
 
 ### Architecture Evidence
 
-- docs/project/modules/05-memory-context.md — § 27. MemoryVersion 状态机
-- docs/project/modules/05-memory-context.md — § 55. Prompt Injection 与记忆污染
+- docs/history/superseded-document-taxonomy/project-modules/05-memory-context.md — § 27. MemoryVersion 状态机
+- docs/history/superseded-document-taxonomy/project-modules/05-memory-context.md — § 55. Prompt Injection 与记忆污染
 
 ### 当前文档是否足够回答
 
@@ -1295,8 +1295,8 @@ None。第一轮记录的缺口已写回 canonical architecture；本 QA 不新�
 - interview_probability: HIGH
 - resume_trigger: Memory、ContextPack、states
 - architecture_refs:
-  - docs/project/modules/05-memory-context.md — § 27. MemoryVersion 状态机
-  - docs/project/modules/05-memory-context.md — § 55. Prompt Injection 与记忆污染
+  - docs/history/superseded-document-taxonomy/project-modules/05-memory-context.md — § 27. MemoryVersion 状态机
+  - docs/history/superseded-document-taxonomy/project-modules/05-memory-context.md — § 55. Prompt Injection 与记忆污染
 - initial_coverage_status: FULL
 - coverage_status: FULL
 - gap_id: None
@@ -1328,8 +1328,8 @@ Revoked表示不可继续使用但保留必要审计/法务事实；Deleted是�
 
 ### Architecture Evidence
 
-- docs/project/modules/05-memory-context.md — § 27. MemoryVersion 状态机
-- docs/project/modules/05-memory-context.md — § 55. Prompt Injection 与记忆污染
+- docs/history/superseded-document-taxonomy/project-modules/05-memory-context.md — § 27. MemoryVersion 状态机
+- docs/history/superseded-document-taxonomy/project-modules/05-memory-context.md — § 55. Prompt Injection 与记忆污染
 
 ### 当前文档是否足够回答
 
@@ -1348,8 +1348,8 @@ None。第一轮记录的缺口已写回 canonical architecture；本 QA 不新�
 - interview_probability: HIGH
 - resume_trigger: Memory、ContextPack、poison
 - architecture_refs:
-  - docs/project/modules/05-memory-context.md — § 55. Prompt Injection 与记忆污染
-  - docs/project/modules/05-memory-context.md — § 56. Freshness 与 Verify-before-use
+  - docs/history/superseded-document-taxonomy/project-modules/05-memory-context.md — § 55. Prompt Injection 与记忆污染
+  - docs/history/superseded-document-taxonomy/project-modules/05-memory-context.md — § 56. Freshness 与 Verify-before-use
 - initial_coverage_status: PARTIAL
 - coverage_status: FULL
 - gap_id: CLOSED-GAP-05-026
@@ -1381,8 +1381,8 @@ Memory Poisoning 可能怎样发生？
 
 ### Architecture Evidence
 
-- docs/project/modules/05-memory-context.md — § 55. Prompt Injection 与记忆污染
-- docs/project/modules/05-memory-context.md — § 56. Freshness 与 Verify-before-use
+- docs/history/superseded-document-taxonomy/project-modules/05-memory-context.md — § 55. Prompt Injection 与记忆污染
+- docs/history/superseded-document-taxonomy/project-modules/05-memory-context.md — § 56. Freshness 与 Verify-before-use
 
 ### 当前文档是否足够回答
 
@@ -1401,8 +1401,8 @@ None。第一轮记录的缺口已写回 canonical architecture；本 QA 不新�
 - interview_probability: HIGH
 - resume_trigger: Memory、ContextPack、poison
 - architecture_refs:
-  - docs/project/modules/05-memory-context.md — § 55. Prompt Injection 与记忆污染
-  - docs/project/modules/05-memory-context.md — § 56. Freshness 与 Verify-before-use
+  - docs/history/superseded-document-taxonomy/project-modules/05-memory-context.md — § 55. Prompt Injection 与记忆污染
+  - docs/history/superseded-document-taxonomy/project-modules/05-memory-context.md — § 56. Freshness 与 Verify-before-use
 - initial_coverage_status: FULL
 - coverage_status: FULL
 - gap_id: None
@@ -1434,8 +1434,8 @@ None。第一轮记录的缺口已写回 canonical architecture；本 QA 不新�
 
 ### Architecture Evidence
 
-- docs/project/modules/05-memory-context.md — § 55. Prompt Injection 与记忆污染
-- docs/project/modules/05-memory-context.md — § 56. Freshness 与 Verify-before-use
+- docs/history/superseded-document-taxonomy/project-modules/05-memory-context.md — § 55. Prompt Injection 与记忆污染
+- docs/history/superseded-document-taxonomy/project-modules/05-memory-context.md — § 56. Freshness 与 Verify-before-use
 
 ### 当前文档是否足够回答
 
@@ -1458,8 +1458,8 @@ None。第一轮记录的缺口已写回 canonical architecture；本 QA 不新�
 - interview_probability: HIGH
 - resume_trigger: Memory、ContextPack、conflict
 - architecture_refs:
-  - docs/project/modules/05-memory-context.md — § 3. Context、Memory、Knowledge 和 Checkpoint 的边界
-  - docs/project/modules/05-memory-context.md — § 54. Security 与 Privacy
+  - docs/history/superseded-document-taxonomy/project-modules/05-memory-context.md — § 3. Context、Memory、Knowledge 和 Checkpoint 的边界
+  - docs/history/superseded-document-taxonomy/project-modules/05-memory-context.md — § 54. Security 与 Privacy
 - initial_coverage_status: PARTIAL
 - coverage_status: FULL
 - gap_id: CLOSED-GAP-05-028
@@ -1491,8 +1491,8 @@ User Prompt 与旧 Memory 冲突怎么办？
 
 ### Architecture Evidence
 
-- docs/project/modules/05-memory-context.md — § 3. Context、Memory、Knowledge 和 Checkpoint 的边界
-- docs/project/modules/05-memory-context.md — § 54. Security 与 Privacy
+- docs/history/superseded-document-taxonomy/project-modules/05-memory-context.md — § 3. Context、Memory、Knowledge 和 Checkpoint 的边界
+- docs/history/superseded-document-taxonomy/project-modules/05-memory-context.md — § 54. Security 与 Privacy
 
 ### 当前文档是否足够回答
 
@@ -1511,8 +1511,8 @@ None。第一轮记录的缺口已写回 canonical architecture；本 QA 不新�
 - interview_probability: HIGH
 - resume_trigger: Memory、ContextPack、conflict
 - architecture_refs:
-  - docs/project/modules/05-memory-context.md — § 3. Context、Memory、Knowledge 和 Checkpoint 的边界
-  - docs/project/modules/05-memory-context.md — § 54. Security 与 Privacy
+  - docs/history/superseded-document-taxonomy/project-modules/05-memory-context.md — § 3. Context、Memory、Knowledge 和 Checkpoint 的边界
+  - docs/history/superseded-document-taxonomy/project-modules/05-memory-context.md — § 54. Security 与 Privacy
 - initial_coverage_status: PARTIAL
 - coverage_status: FULL
 - gap_id: CLOSED-GAP-05-029
@@ -1544,8 +1544,8 @@ User Assertion 与 Knowledge 冲突怎么办？
 
 ### Architecture Evidence
 
-- docs/project/modules/05-memory-context.md — § 3. Context、Memory、Knowledge 和 Checkpoint 的边界
-- docs/project/modules/05-memory-context.md — § 54. Security 与 Privacy
+- docs/history/superseded-document-taxonomy/project-modules/05-memory-context.md — § 3. Context、Memory、Knowledge 和 Checkpoint 的边界
+- docs/history/superseded-document-taxonomy/project-modules/05-memory-context.md — § 54. Security 与 Privacy
 
 ### 当前文档是否足够回答
 
@@ -1564,8 +1564,8 @@ None。第一轮记录的缺口已写回 canonical architecture；本 QA 不新�
 - interview_probability: HIGH
 - resume_trigger: Memory、ContextPack、conflict
 - architecture_refs:
-  - docs/project/modules/05-memory-context.md — § 3. Context、Memory、Knowledge 和 Checkpoint 的边界
-  - docs/project/modules/05-memory-context.md — § 54. Security 与 Privacy
+  - docs/history/superseded-document-taxonomy/project-modules/05-memory-context.md — § 3. Context、Memory、Knowledge 和 Checkpoint 的边界
+  - docs/history/superseded-document-taxonomy/project-modules/05-memory-context.md — § 54. Security 与 Privacy
 - initial_coverage_status: FULL
 - coverage_status: FULL
 - gap_id: None
@@ -1597,8 +1597,8 @@ Knowledge拥有企业事实，Memory拥有可复用上下文；按事实类型�
 
 ### Architecture Evidence
 
-- docs/project/modules/05-memory-context.md — § 3. Context、Memory、Knowledge 和 Checkpoint 的边界
-- docs/project/modules/05-memory-context.md — § 54. Security 与 Privacy
+- docs/history/superseded-document-taxonomy/project-modules/05-memory-context.md — § 3. Context、Memory、Knowledge 和 Checkpoint 的边界
+- docs/history/superseded-document-taxonomy/project-modules/05-memory-context.md — § 54. Security 与 Privacy
 
 ### 当前文档是否足够回答
 
@@ -1617,8 +1617,8 @@ None。第一轮记录的缺口已写回 canonical architecture；本 QA 不新�
 - interview_probability: HIGH
 - resume_trigger: Memory、ContextPack、conflict
 - architecture_refs:
-  - docs/project/modules/05-memory-context.md — § 3. Context、Memory、Knowledge 和 Checkpoint 的边界
-  - docs/project/modules/05-memory-context.md — § 54. Security 与 Privacy
+  - docs/history/superseded-document-taxonomy/project-modules/05-memory-context.md — § 3. Context、Memory、Knowledge 和 Checkpoint 的边界
+  - docs/history/superseded-document-taxonomy/project-modules/05-memory-context.md — § 54. Security 与 Privacy
 - initial_coverage_status: FULL
 - coverage_status: FULL
 - gap_id: None
@@ -1650,8 +1650,8 @@ Security优先；Memory只能在当前授权Scope和Epoch内被召回，任何�
 
 ### Architecture Evidence
 
-- docs/project/modules/05-memory-context.md — § 3. Context、Memory、Knowledge 和 Checkpoint 的边界
-- docs/project/modules/05-memory-context.md — § 54. Security 与 Privacy
+- docs/history/superseded-document-taxonomy/project-modules/05-memory-context.md — § 3. Context、Memory、Knowledge 和 Checkpoint 的边界
+- docs/history/superseded-document-taxonomy/project-modules/05-memory-context.md — § 54. Security 与 Privacy
 
 ### 当前文档是否足够回答
 
@@ -1670,8 +1670,8 @@ None。第一轮记录的缺口已写回 canonical architecture；本 QA 不新�
 - interview_probability: HIGH
 - resume_trigger: Memory、ContextPack、security
 - architecture_refs:
-  - docs/project/modules/05-memory-context.md — § 54. Security 与 Privacy
-  - docs/project/modules/05-memory-context.md — § 57. Procedural Memory 安全边界
+  - docs/history/superseded-document-taxonomy/project-modules/05-memory-context.md — § 54. Security 与 Privacy
+  - docs/history/superseded-document-taxonomy/project-modules/05-memory-context.md — § 57. Procedural Memory 安全边界
 - initial_coverage_status: FULL
 - coverage_status: FULL
 - gap_id: None
@@ -1703,8 +1703,8 @@ Canonical MemoryVersion、ContextPack、Projection和Recall都携带Tenant/Works
 
 ### Architecture Evidence
 
-- docs/project/modules/05-memory-context.md — § 54. Security 与 Privacy
-- docs/project/modules/05-memory-context.md — § 57. Procedural Memory 安全边界
+- docs/history/superseded-document-taxonomy/project-modules/05-memory-context.md — § 54. Security 与 Privacy
+- docs/history/superseded-document-taxonomy/project-modules/05-memory-context.md — § 57. Procedural Memory 安全边界
 
 ### 当前文档是否足够回答
 
@@ -1723,8 +1723,8 @@ None。第一轮记录的缺口已写回 canonical architecture；本 QA 不新�
 - interview_probability: HIGH
 - resume_trigger: Memory、ContextPack、privacy
 - architecture_refs:
-  - docs/project/modules/05-memory-context.md — § 25. Privacy Delete、Revoke 与 Legal Hold
-  - docs/project/modules/05-memory-context.md — § 64. Index 与 Projection
+  - docs/history/superseded-document-taxonomy/project-modules/05-memory-context.md — § 25. Privacy Delete、Revoke 与 Legal Hold
+  - docs/history/superseded-document-taxonomy/project-modules/05-memory-context.md — § 64. Index 与 Projection
 - initial_coverage_status: FULL
 - coverage_status: FULL
 - gap_id: None
@@ -1756,8 +1756,8 @@ Privacy Delete 如何影响Projection？
 
 ### Architecture Evidence
 
-- docs/project/modules/05-memory-context.md — § 25. Privacy Delete、Revoke 与 Legal Hold
-- docs/project/modules/05-memory-context.md — § 64. Index 与 Projection
+- docs/history/superseded-document-taxonomy/project-modules/05-memory-context.md — § 25. Privacy Delete、Revoke 与 Legal Hold
+- docs/history/superseded-document-taxonomy/project-modules/05-memory-context.md — § 64. Index 与 Projection
 
 ### 当前文档是否足够回答
 
@@ -1776,8 +1776,8 @@ None。第一轮记录的缺口已写回 canonical architecture；本 QA 不新�
 - interview_probability: HIGH
 - resume_trigger: Memory、ContextPack、forgetting
 - architecture_refs:
-  - docs/project/modules/05-memory-context.md — § 24. Consolidation
-  - docs/project/modules/05-memory-context.md — § 70. Compression Decision Matrix
+  - docs/history/superseded-document-taxonomy/project-modules/05-memory-context.md — § 24. Consolidation
+  - docs/history/superseded-document-taxonomy/project-modules/05-memory-context.md — § 70. Compression Decision Matrix
 - initial_coverage_status: FULL
 - coverage_status: FULL
 - gap_id: None
@@ -1809,8 +1809,8 @@ None。第一轮记录的缺口已写回 canonical architecture；本 QA 不新�
 
 ### Architecture Evidence
 
-- docs/project/modules/05-memory-context.md — § 24. Consolidation
-- docs/project/modules/05-memory-context.md — § 70. Compression Decision Matrix
+- docs/history/superseded-document-taxonomy/project-modules/05-memory-context.md — § 24. Consolidation
+- docs/history/superseded-document-taxonomy/project-modules/05-memory-context.md — § 70. Compression Decision Matrix
 
 ### 当前文档是否足够回答
 
@@ -1823,14 +1823,14 @@ None。第一轮记录的缺口已写回 canonical architecture；本 QA 不新�
 ## Q158 Memory Utility 如何评估？
 
 - source_type: ARCHITECTURE_STRESS
-- source_ref: zuno-target: docs/project/modules/05-memory-context.md — § 48. MemoryUseTrace 与 MemoryUtilityProjection
+- source_ref: zuno-target: docs/history/superseded-document-taxonomy/project-modules/05-memory-context.md — § 48. MemoryUseTrace 与 MemoryUtilityProjection
 - primary_domain: memory
 - difficulty: L6
 - interview_probability: HIGH
 - resume_trigger: Memory、ContextPack、utility
 - architecture_refs:
-  - docs/project/modules/05-memory-context.md — § 48. MemoryUseTrace 与 MemoryUtilityProjection
-  - docs/project/modules/05-memory-context.md — § 77. Eval Gate
+  - docs/history/superseded-document-taxonomy/project-modules/05-memory-context.md — § 48. MemoryUseTrace 与 MemoryUtilityProjection
+  - docs/history/superseded-document-taxonomy/project-modules/05-memory-context.md — § 77. Eval Gate
 - initial_coverage_status: FULL
 - coverage_status: FULL
 - gap_id: None
@@ -1862,8 +1862,8 @@ Memory Utility 如何评估？
 
 ### Architecture Evidence
 
-- docs/project/modules/05-memory-context.md — § 48. MemoryUseTrace 与 MemoryUtilityProjection
-- docs/project/modules/05-memory-context.md — § 77. Eval Gate
+- docs/history/superseded-document-taxonomy/project-modules/05-memory-context.md — § 48. MemoryUseTrace 与 MemoryUtilityProjection
+- docs/history/superseded-document-taxonomy/project-modules/05-memory-context.md — § 77. Eval Gate
 
 ### 当前文档是否足够回答
 
@@ -1876,14 +1876,14 @@ None。第一轮记录的缺口已写回 canonical architecture；本 QA 不新�
 ## Q159 negative transfer 是什么？
 
 - source_type: ARCHITECTURE_STRESS
-- source_ref: zuno-target: docs/project/modules/05-memory-context.md — § 48. MemoryUseTrace 与 MemoryUtilityProjection
+- source_ref: zuno-target: docs/history/superseded-document-taxonomy/project-modules/05-memory-context.md — § 48. MemoryUseTrace 与 MemoryUtilityProjection
 - primary_domain: memory
 - difficulty: L7
 - interview_probability: HIGH
 - resume_trigger: Memory、ContextPack、utility
 - architecture_refs:
-  - docs/project/modules/05-memory-context.md — § 48. MemoryUseTrace 与 MemoryUtilityProjection
-  - docs/project/modules/05-memory-context.md — § 77. Eval Gate
+  - docs/history/superseded-document-taxonomy/project-modules/05-memory-context.md — § 48. MemoryUseTrace 与 MemoryUtilityProjection
+  - docs/history/superseded-document-taxonomy/project-modules/05-memory-context.md — § 77. Eval Gate
 - initial_coverage_status: FULL
 - coverage_status: FULL
 - gap_id: None
@@ -1915,8 +1915,8 @@ negative transfer 是什么？
 
 ### Architecture Evidence
 
-- docs/project/modules/05-memory-context.md — § 48. MemoryUseTrace 与 MemoryUtilityProjection
-- docs/project/modules/05-memory-context.md — § 77. Eval Gate
+- docs/history/superseded-document-taxonomy/project-modules/05-memory-context.md — § 48. MemoryUseTrace 与 MemoryUtilityProjection
+- docs/history/superseded-document-taxonomy/project-modules/05-memory-context.md — § 77. Eval Gate
 
 ### 当前文档是否足够回答
 
@@ -1933,14 +1933,14 @@ None。第一轮记录的缺口已写回 canonical architecture；本 QA 不新�
 ## Q160 长期 Memory 如何召回？
 
 - source_type: ARCHITECTURE_STRESS
-- source_ref: zuno-target: docs/project/modules/05-memory-context.md — § 11. Long-term Memory 如何重新进入 Working Context
+- source_ref: zuno-target: docs/history/superseded-document-taxonomy/project-modules/05-memory-context.md — § 11. Long-term Memory 如何重新进入 Working Context
 - primary_domain: memory
 - difficulty: L8
 - interview_probability: HIGH
 - resume_trigger: Memory、ContextPack、recall
 - architecture_refs:
-  - docs/project/modules/05-memory-context.md — § 11. Long-term Memory 如何重新进入 Working Context
-  - docs/project/modules/05-memory-context.md — § 64. Index 与 Projection
+  - docs/history/superseded-document-taxonomy/project-modules/05-memory-context.md — § 11. Long-term Memory 如何重新进入 Working Context
+  - docs/history/superseded-document-taxonomy/project-modules/05-memory-context.md — § 64. Index 与 Projection
 - initial_coverage_status: FULL
 - coverage_status: FULL
 - gap_id: None
@@ -1972,8 +1972,8 @@ None。第一轮记录的缺口已写回 canonical architecture；本 QA 不新�
 
 ### Architecture Evidence
 
-- docs/project/modules/05-memory-context.md — § 11. Long-term Memory 如何重新进入 Working Context
-- docs/project/modules/05-memory-context.md — § 64. Index 与 Projection
+- docs/history/superseded-document-taxonomy/project-modules/05-memory-context.md — § 11. Long-term Memory 如何重新进入 Working Context
+- docs/history/superseded-document-taxonomy/project-modules/05-memory-context.md — § 64. Index 与 Projection
 
 ### 当前文档是否足够回答
 
@@ -1986,14 +1986,14 @@ None。第一轮记录的缺口已写回 canonical architecture；本 QA 不新�
 ## Q161 Vector DB 是不是 Memory 事实源？
 
 - source_type: ARCHITECTURE_STRESS
-- source_ref: zuno-target: docs/project/modules/05-memory-context.md — § 11. Long-term Memory 如何重新进入 Working Context
+- source_ref: zuno-target: docs/history/superseded-document-taxonomy/project-modules/05-memory-context.md — § 11. Long-term Memory 如何重新进入 Working Context
 - primary_domain: memory
 - difficulty: L1
 - interview_probability: HIGH
 - resume_trigger: Memory、ContextPack、recall
 - architecture_refs:
-  - docs/project/modules/05-memory-context.md — § 11. Long-term Memory 如何重新进入 Working Context
-  - docs/project/modules/05-memory-context.md — § 64. Index 与 Projection
+  - docs/history/superseded-document-taxonomy/project-modules/05-memory-context.md — § 11. Long-term Memory 如何重新进入 Working Context
+  - docs/history/superseded-document-taxonomy/project-modules/05-memory-context.md — § 64. Index 与 Projection
 - initial_coverage_status: PARTIAL
 - coverage_status: FULL
 - gap_id: CLOSED-GAP-05-038
@@ -2025,8 +2025,8 @@ Vector DB 是不是 Memory 事实源？
 
 ### Architecture Evidence
 
-- docs/project/modules/05-memory-context.md — § 11. Long-term Memory 如何重新进入 Working Context
-- docs/project/modules/05-memory-context.md — § 64. Index 与 Projection
+- docs/history/superseded-document-taxonomy/project-modules/05-memory-context.md — § 11. Long-term Memory 如何重新进入 Working Context
+- docs/history/superseded-document-taxonomy/project-modules/05-memory-context.md — § 64. Index 与 Projection
 
 ### 当前文档是否足够回答
 
@@ -2039,14 +2039,14 @@ None。第一轮记录的缺口已写回 canonical architecture；本 QA 不新�
 ## Q162 压缩错误怎么办？
 
 - source_type: ARCHITECTURE_STRESS
-- source_ref: zuno-target: docs/project/modules/05-memory-context.md — § 36. 恢复与 Reconciliation
+- source_ref: zuno-target: docs/history/superseded-document-taxonomy/project-modules/05-memory-context.md — § 36. 恢复与 Reconciliation
 - primary_domain: memory
 - difficulty: L2
 - interview_probability: HIGH
 - resume_trigger: Memory、ContextPack、recovery
 - architecture_refs:
-  - docs/project/modules/05-memory-context.md — § 36. 恢复与 Reconciliation
-  - docs/project/modules/05-memory-context.md — § 29. ContextPackBuild 状态机
+  - docs/history/superseded-document-taxonomy/project-modules/05-memory-context.md — § 36. 恢复与 Reconciliation
+  - docs/history/superseded-document-taxonomy/project-modules/05-memory-context.md — § 29. ContextPackBuild 状态机
 - initial_coverage_status: FULL
 - coverage_status: FULL
 - gap_id: None
@@ -2078,8 +2078,8 @@ None。第一轮记录的缺口已写回 canonical architecture；本 QA 不新�
 
 ### Architecture Evidence
 
-- docs/project/modules/05-memory-context.md — § 36. 恢复与 Reconciliation
-- docs/project/modules/05-memory-context.md — § 29. ContextPackBuild 状态机
+- docs/history/superseded-document-taxonomy/project-modules/05-memory-context.md — § 36. 恢复与 Reconciliation
+- docs/history/superseded-document-taxonomy/project-modules/05-memory-context.md — § 29. ContextPackBuild 状态机
 
 ### 当前文档是否足够回答
 
@@ -2092,14 +2092,14 @@ None。第一轮记录的缺口已写回 canonical architecture；本 QA 不新�
 ## Q163 用户反复纠正某条记忆怎么办？
 
 - source_type: ARCHITECTURE_STRESS
-- source_ref: zuno-target: docs/project/modules/05-memory-context.md — § 3. Context、Memory、Knowledge 和 Checkpoint 的边界
+- source_ref: zuno-target: docs/history/superseded-document-taxonomy/project-modules/05-memory-context.md — § 3. Context、Memory、Knowledge 和 Checkpoint 的边界
 - primary_domain: memory
 - difficulty: L3
 - interview_probability: HIGH
 - resume_trigger: Memory、ContextPack、conflict
 - architecture_refs:
-  - docs/project/modules/05-memory-context.md — § 3. Context、Memory、Knowledge 和 Checkpoint 的边界
-  - docs/project/modules/05-memory-context.md — § 54. Security 与 Privacy
+  - docs/history/superseded-document-taxonomy/project-modules/05-memory-context.md — § 3. Context、Memory、Knowledge 和 Checkpoint 的边界
+  - docs/history/superseded-document-taxonomy/project-modules/05-memory-context.md — § 54. Security 与 Privacy
 - initial_coverage_status: FULL
 - coverage_status: FULL
 - gap_id: None
@@ -2131,8 +2131,8 @@ None。第一轮记录的缺口已写回 canonical architecture；本 QA 不新�
 
 ### Architecture Evidence
 
-- docs/project/modules/05-memory-context.md — § 3. Context、Memory、Knowledge 和 Checkpoint 的边界
-- docs/project/modules/05-memory-context.md — § 54. Security 与 Privacy
+- docs/history/superseded-document-taxonomy/project-modules/05-memory-context.md — § 3. Context、Memory、Knowledge 和 Checkpoint 的边界
+- docs/history/superseded-document-taxonomy/project-modules/05-memory-context.md — § 54. Security 与 Privacy
 
 ### 当前文档是否足够回答
 
@@ -2145,14 +2145,14 @@ None。第一轮记录的缺口已写回 canonical architecture；本 QA 不新�
 ## Q164 Procedural Hint 建议的策略与当前Task不一致怎么办？
 
 - source_type: ARCHITECTURE_STRESS
-- source_ref: zuno-target: docs/project/modules/05-memory-context.md — § 54. Security 与 Privacy
+- source_ref: zuno-target: docs/history/superseded-document-taxonomy/project-modules/05-memory-context.md — § 54. Security 与 Privacy
 - primary_domain: memory
 - difficulty: L4
 - interview_probability: HIGH
 - resume_trigger: Memory、ContextPack、security
 - architecture_refs:
-  - docs/project/modules/05-memory-context.md — § 54. Security 与 Privacy
-  - docs/project/modules/05-memory-context.md — § 57. Procedural Memory 安全边界
+  - docs/history/superseded-document-taxonomy/project-modules/05-memory-context.md — § 54. Security 与 Privacy
+  - docs/history/superseded-document-taxonomy/project-modules/05-memory-context.md — § 57. Procedural Memory 安全边界
 - initial_coverage_status: FULL
 - coverage_status: FULL
 - gap_id: None
@@ -2184,8 +2184,8 @@ Procedural Hint 建议的策略与当前Task不一致怎么办？
 
 ### Architecture Evidence
 
-- docs/project/modules/05-memory-context.md — § 54. Security 与 Privacy
-- docs/project/modules/05-memory-context.md — § 57. Procedural Memory 安全边界
+- docs/history/superseded-document-taxonomy/project-modules/05-memory-context.md — § 54. Security 与 Privacy
+- docs/history/superseded-document-taxonomy/project-modules/05-memory-context.md — § 57. Procedural Memory 安全边界
 
 ### 当前文档是否足够回答
 
@@ -2198,14 +2198,14 @@ None。第一轮记录的缺口已写回 canonical architecture；本 QA 不新�
 ## Q165 如何评测 Memory 是否有价值？
 
 - source_type: ARCHITECTURE_STRESS
-- source_ref: zuno-target: docs/project/modules/05-memory-context.md — § 80. 设计依据与取舍
+- source_ref: zuno-target: docs/history/superseded-document-taxonomy/project-modules/05-memory-context.md — § 80. 设计依据与取舍
 - primary_domain: memory
 - difficulty: L5
 - interview_probability: HIGH
 - resume_trigger: Memory、ContextPack、eval
 - architecture_refs:
-  - docs/project/modules/05-memory-context.md — § 80. 设计依据与取舍
-  - docs/project/modules/05-memory-context.md — § 77. Eval Gate
+  - docs/history/superseded-document-taxonomy/project-modules/05-memory-context.md — § 80. 设计依据与取舍
+  - docs/history/superseded-document-taxonomy/project-modules/05-memory-context.md — § 77. Eval Gate
 - initial_coverage_status: FULL
 - coverage_status: FULL
 - gap_id: None
@@ -2237,8 +2237,8 @@ None。第一轮记录的缺口已写回 canonical architecture；本 QA 不新�
 
 ### Architecture Evidence
 
-- docs/project/modules/05-memory-context.md — § 80. 设计依据与取舍
-- docs/project/modules/05-memory-context.md — § 77. Eval Gate
+- docs/history/superseded-document-taxonomy/project-modules/05-memory-context.md — § 80. 设计依据与取舍
+- docs/history/superseded-document-taxonomy/project-modules/05-memory-context.md — § 77. Eval Gate
 
 ### 当前文档是否足够回答
 
@@ -2251,14 +2251,14 @@ None。第一轮记录的缺口已写回 canonical architecture；本 QA 不新�
 ## Q166 Memory 文档哪些是Current，哪些是Target？
 
 - source_type: ARCHITECTURE_STRESS
-- source_ref: zuno-target: docs/project/modules/05-memory-context.md — § 78. 完成证据
+- source_ref: zuno-target: docs/history/superseded-document-taxonomy/project-modules/05-memory-context.md — § 78. 完成证据
 - primary_domain: memory
 - difficulty: L6
 - interview_probability: HIGH
 - resume_trigger: Memory、ContextPack、current
 - architecture_refs:
-  - docs/project/modules/05-memory-context.md — § 78. 完成证据
-  - docs/project/modules/05-memory-context.md — § 80. 设计依据与取舍
+  - docs/history/superseded-document-taxonomy/project-modules/05-memory-context.md — § 78. 完成证据
+  - docs/history/superseded-document-taxonomy/project-modules/05-memory-context.md — § 80. 设计依据与取舍
 - initial_coverage_status: FULL
 - coverage_status: FULL
 - gap_id: None
@@ -2290,8 +2290,8 @@ Memory 文档哪些是Current，哪些是Target？
 
 ### Architecture Evidence
 
-- docs/project/modules/05-memory-context.md — § 78. 完成证据
-- docs/project/modules/05-memory-context.md — § 80. 设计依据与取舍
+- docs/history/superseded-document-taxonomy/project-modules/05-memory-context.md — § 78. 完成证据
+- docs/history/superseded-document-taxonomy/project-modules/05-memory-context.md — § 80. 设计依据与取舍
 
 ### 当前文档是否足够回答
 
@@ -2304,14 +2304,14 @@ None。第一轮记录的缺口已写回 canonical architecture；本 QA 不新�
 ## Q167 Checkpoint 和 MemoryVersion 如何避免互相冒充？
 
 - source_type: ARCHITECTURE_STRESS
-- source_ref: zuno-target: docs/project/modules/05-memory-context.md — § 3. Context、Memory、Knowledge 和 Checkpoint 的边界
+- source_ref: zuno-target: docs/history/superseded-document-taxonomy/project-modules/05-memory-context.md — § 3. Context、Memory、Knowledge 和 Checkpoint 的边界
 - primary_domain: memory
 - difficulty: L7
 - interview_probability: HIGH
 - resume_trigger: Memory、ContextPack、boundary
 - architecture_refs:
-  - docs/project/modules/05-memory-context.md — § 3. Context、Memory、Knowledge 和 Checkpoint 的边界
-  - docs/project/modules/05-memory-context.md — § 5. Cross-module Ownership
+  - docs/history/superseded-document-taxonomy/project-modules/05-memory-context.md — § 3. Context、Memory、Knowledge 和 Checkpoint 的边界
+  - docs/history/superseded-document-taxonomy/project-modules/05-memory-context.md — § 5. Cross-module Ownership
 - initial_coverage_status: FULL
 - coverage_status: FULL
 - gap_id: None
@@ -2343,8 +2343,8 @@ Checkpoint只恢复控制状态和已提交Generation，MemoryVersion是独立�
 
 ### Architecture Evidence
 
-- docs/project/modules/05-memory-context.md — § 3. Context、Memory、Knowledge 和 Checkpoint 的边界
-- docs/project/modules/05-memory-context.md — § 5. Cross-module Ownership
+- docs/history/superseded-document-taxonomy/project-modules/05-memory-context.md — § 3. Context、Memory、Knowledge 和 Checkpoint 的边界
+- docs/history/superseded-document-taxonomy/project-modules/05-memory-context.md — § 5. Cross-module Ownership
 
 ### 当前文档是否足够回答
 

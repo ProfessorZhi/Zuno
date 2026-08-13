@@ -20,9 +20,10 @@ project_fact_version
 允许读取的事实源由 Session manifest 指定，通常包括：
 
 - `docs/project/architecture/`；
-- `docs/project/modules/`；
+- `docs/project/status/`；
+- `docs/project/history/`；
 - `docs/decisions/`；
-- `docs/status/`；
+- `docs/project/status/`；
 - `docs/evidence/`；
 - `project-reconstruction-lab/01-facts/fact-baseline.md`；
 - 已确认 Project Facts、Resume / Project Material。
@@ -32,8 +33,8 @@ project_fact_version
 - `project-reconstruction-lab/04-product/`：产品、用户、痛点、竞品和项目因果链；
 - `project-reconstruction-lab/02-history/team-and-ownership.md`：团队与个人 Ownership；
 - `project-reconstruction-lab/02-history/development-timeline.md`：开发过程和版本演进；
-- `docs/status/`、`docs/evidence/`：上线、用户、Benchmark、Trace 和运行证据；
-- 对应模块文档：模型、RAG、Memory、Agent、Tool、Infra 和 Security。
+- `docs/project/status/`、`docs/evidence/`：上线、用户、Benchmark、Trace 和运行证据；
+- `docs/history/superseded-document-taxonomy/` 中的旧模块文档只可作为历史对照，不是当前 Canonical。
 
 如果问题涉及外部项目，但当前正式材料没有最终 Build-vs-Buy 结论，不能在回答过程中临时研究并伪造一个已存在的项目决策。应记录“当前正式材料尚未形成最终决策”，把研究交给 Workflow 03。
 

@@ -2,7 +2,7 @@
 
 updated: 2026-08-13
 status: active-document-governance
-scope: `docs/project/architecture/` 与 `docs/project/<topic>/`
+scope: `docs/project/architecture/`、`docs/project/history/` 与 `docs/project/status/`
 
 ## 0. 这份标准解决什么问题
 
@@ -21,21 +21,15 @@ scope: `docs/project/architecture/` 与 `docs/project/<topic>/`
 
 ## 1. Canonical taxonomy 与事实源
 
-正式架构事实按问题路由到唯一专题文档：
+正式项目知识按三个问题层路由：
 
 | 目录 | Canonical Question |
 | --- | --- |
-| `product/` | 用户任务、产品表面和外部 Host 是什么？ |
-| `domain/` | 法律业务世界的事实、版本和生命周期是什么？ |
-| `agents/` | Agent 如何计划、协作、恢复和使用能力？ |
-| `knowledge/` | 信息如何摄取、检索、引用和形成证据？ |
-| `services/` | 哪些逻辑能力形成独立部署边界？ |
-| `data/` | 谁拥有数据，分布式失败如何对账？ |
-| `security/` | 谁可以做什么，如何产生可验证安全证据？ |
-| `eval/` | 如何证明质量、效率和复杂度收益？ |
-| `deployment/` | 服务如何运行、扩缩容和隔离？ |
+| `docs/project/history/` | 历史项目发生了什么，哪些仍未知？ |
+| `docs/project/status/` | 当前仓库、Target 和 Production Readiness 分别被什么证明？ |
+| `docs/project/architecture/` | Product、Domain、Logical Capability、Physical Service/Deployment 如何形成跨层闭环？ |
 
-`docs/project/architecture/architecture.md` 只回答跨层集成；`architecture-views.md` 与 `architecture.html` 是展示配对；`docs/project/modules/` 只保存上一阶段 11 模块的 Superseded 迁移材料。
+`docs/project/architecture/architecture.md` 只回答跨层集成；`architecture-views.md` 与 `architecture.html` 是展示配对。旧 Product/Domain/Agents/Knowledge/Services/Data/Security/Eval/Deployment 专题和 11 模块原稿位于 `docs/history/superseded-document-taxonomy/`，不再是当前 Canonical 入口。
 
 ## 2. 每份 Canonical Owner 文档的强制双层协议
 
@@ -51,7 +45,7 @@ replaces: ...
 
 `architecture_state` 与 `status` 正交：`ACCEPTED_TARGET` 只表示用户已经接受该设计作为
 下一阶段 Canonical Target，不表示代码已实现、验证、测量或具备生产资格。实现、证据和外部
-资格仍分别由 `Current / Target / Gap`、ADR、Program 和 `docs/status/` 记录。
+资格仍分别由 `Current / Target / Gap`、ADR、Program 和 `docs/project/status/` 记录。
 
 每份 Canonical Owner 文档必须严格、且只能在同一文件中包含以下两个顶层正文部分，顺序固定：
 

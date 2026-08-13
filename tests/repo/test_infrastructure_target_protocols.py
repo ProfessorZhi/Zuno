@@ -7,10 +7,10 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 VERIFIER_PATH = REPO_ROOT / "tools/scripts/verify_infrastructure_target_protocols.py"
-FORMAL = REPO_ROOT / "docs/project/modules/11-infrastructure.md"
+FORMAL = REPO_ROOT / "docs/history/superseded-document-taxonomy/project-modules/11-infrastructure.md"
 RETIRED_APPENDICES = [
-    REPO_ROOT / "docs/project/modules/11-infrastructure-data-services.md",
-    REPO_ROOT / "docs/project/modules/11-infrastructure-consistency-lifecycle.md",
+    REPO_ROOT / "docs/history/superseded-document-taxonomy/project-modules/11-infrastructure-data-services.md",
+    REPO_ROOT / "docs/history/superseded-document-taxonomy/project-modules/11-infrastructure-consistency-lifecycle.md",
 ]
 
 
