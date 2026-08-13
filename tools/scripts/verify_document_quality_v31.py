@@ -10,6 +10,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from verify_architecture_human_readability import verify as verify_human_readability
+from verify_document_normalization_v311 import verify as verify_normalization
 
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -22,7 +23,7 @@ ROW_RE = re.compile(
 
 
 def verify_quality(session: Path) -> list[str]:
-    errors = verify_human_readability()
+    errors = verify_human_readability() + verify_normalization()
     scorecard = session / "document-quality-scorecard.md"
     if not scorecard.exists():
         errors.append("missing document-quality-scorecard.md")
@@ -32,8 +33,8 @@ def verify_quality(session: Path) -> list[str]:
     if len(rows) != CANONICAL_COUNT:
         errors.append(f"document quality scorecard must contain {CANONICAL_COUNT} PASS rows, got {len(rows)}")
     for index, (before_a, after_a, before_b, after_b) in enumerate(rows, start=1):
-        if int(after_a) < 80:
-            errors.append(f"scorecard row {index} Part A after score is below 80")
+        if int(after_a) < 85:
+            errors.append(f"scorecard row {index} Part A after score is below 85")
         if int(after_b) < 85:
             errors.append(f"scorecard row {index} Part B after score is below 85")
         if int(before_a) > int(after_a) or int(before_b) > int(after_b):

@@ -1,291 +1,103 @@
 # Zuno 总体 Target 架构
 
 updated: 2026-08-13
-status: normative-target-architecture-reframe-v1
+status: normative-target
 architecture_state: ACCEPTED_TARGET
-canonical_question: Product、Domain、Logical Capability、Service、Data、Security、Eval 和 Deployment 如何形成一个可恢复的目标闭环？
+canonical_question: Product、Domain、Logical Capability、Service、Data、Security、Eval 和 Deployment 如何形成可恢复的目标闭环？
 owner: Cross-cutting Architecture Owner
-acceptance_scope: Canonical Part-A Target; implementation, measurement and external qualification remain open
+acceptance_scope: Canonical Target；实现、测量和外部资格仍未完成
 document_role: cross-cutting integration source
-canonical_taxonomy: `docs/project/product/`, `domain/`, `agents/`, `knowledge/`, `services/`, `data/`, `security/`, `eval/`, `deployment/`
-current_state_source: `docs/status/production-readiness.md` and `docs/evidence/`
-decision_sources: `docs/decisions/0008-legal-domain-kernel-and-host-boundary.md`, `0009-python-only-backend.md`, `0010-microservice-target-and-service-boundaries.md`, `0011-architecture-document-taxonomy.md`
+canonical_taxonomy: docs/project/product/、domain/、agents/、knowledge/、services/、data/、security/、eval/、deployment/
+current_state_source: docs/status/production-readiness.md and docs/evidence/
+decision_sources: docs/decisions/0008-legal-domain-kernel-and-host-boundary.md、0009-python-only-backend.md、0010-microservice-target-and-service-boundaries.md、0011-architecture-document-taxonomy.md
 
-> 本文只回答跨领域问题：产品、Domain、Agent、Knowledge、Service、Data、Security、Eval 和 Deployment 如何连成一个目标系统。每个专题的 Canonical Question、Owner、Contract 和详细状态只在对应专题文档定义；本文不创建第二套状态机。
-
-## 0. 这次重构改变了什么
-
-上一阶段的 `11 Logical Modules + 1 Architecture` 是历史 Target 组织方式，不是 Zuno 的永久边界。本轮固定 Python-only 后端和 Microservice Deployment Target，但重新攻击服务数量、物理部署、Multi-Agent、运行时和文档 taxonomy。
-
-新架构采用三层：
-
-```text
-Product / Domain
-    ↓ 业务语义、Canonical State、Review 和 Human Decision
-Logical Capability Architecture
-    ↓ Agent、Knowledge、Capability、Tool、Security、Eval
-Physical Service / Deployment Architecture
-    ↓ Python services、workers、databases、queue、object/index providers
-```
-
-Logical capability 不等于 service，service 不等于 process，process 不等于 container，container 不等于 team。任何物理拆分都必须回答 `Why service? Why not library? Why not worker? Who owns state? How does it recover?`。
-
-### Acceptance boundary
-
-本文件和对应专题处于 `ACCEPTED_TARGET`，但这只表示目标架构边界已经被接受，不表示实现、测量、
-安全资格或生产就绪。所有 Current 结论仍以 `docs/status/`、`docs/evidence/` 和代码/测试证据为准。
+> 本文只回答跨领域集成问题。各专题的唯一 Contract、Owner 和状态由对应专题文档持有，本文不创建第二套 Domain State Machine。
 
 ## Part A — Architecture Narrative
 
-Zuno 解决的不是“再做一个能调用模型的聊天入口”，而是让法律专业人员能够把一组案件材料变成
-可复核的工作成果。系统必须同时处理业务事实、证据来源、长期运行的 Agent 计划和可能影响外部
-世界的工具动作；如果这些状态被混在同一份上下文或同一个框架 checkpoint 里，用户无法判断回答
-究竟基于哪一版材料，也无法在新证据到来后解释旧结论为何失效。
+### 这套架构要解决的业务问题
 
-以复杂案件分析为例，用户创建 Matter、上传材料，系统先形成带来源的 DocumentVersion，再进行
-检索和专业能力分析。Agent 可以并行寻找证据、识别争议并提出事实或 Finding，但这些输出仍是
-Proposal；Domain Owner 经过证据、权限和必要人工复核后才提交 Canonical State。最终 WorkProduct
-引用已接受的版本，外部工具动作则经过独立授权并留下 EffectReceipt。这个路径说明为什么 Product、
-Domain、Knowledge、Runtime 和 Tool 必须协作，却不能互相拥有对方的事实。
+Zuno 的目标不是增加一个聊天入口，而是帮助司法或专业法律人员把分散的案件材料转化为可追溯、可复核的工作成果。这个任务同时包含业务事实、证据来源、长期执行、人工判断和可能改变外部世界的工具动作。若把它们都压缩进聊天上下文或某个 Agent Checkpoint，用户就无法判断结论基于哪一版材料，也无法解释新证据到来后旧结论为何失效。
 
-架构的关键取舍是：业务语义保持稳定，计算 Provider 可以替换，Agent profile 可以组合。FastAPI
-提供应用入口，Runtime 负责长任务控制，Knowledge 负责可引用检索，PostgreSQL 保存业务事实和
-版本；它们之间用 Proposal、Snapshot、Reference 和 Receipt 传递边界，而不是共享隐式状态。最小
-替代方案仍然是 WorkBuddy/普通 Host + Legal Backend；只有 Domain State、证据门禁、失效传播和
-恢复对账在公平 Benchmark 中带来可重复收益，才保留 Native Domain-aware Runtime。
+### 一个完整的案件分析场景
 
-主要失败故事是“Domain 已提交、checkpoint 却停在副作用之前”或“新证据使旧 Finding 失效”。
-系统必须按 Domain Owner 的已提交版本对账，禁止重复副作用或继续发布 stale 结论。若更简单的
-Host、Library 或 Worker 能以相同质量、安全和恢复语义完成同一场景，服务、Graph、Memory Provider
-或 Native Runtime 都应降级或删除。当前代码只证明部分 Python/FastAPI/Worker 表面，Target 的
-服务数量、质量收益、生产安全和部署能力仍未被证明。
+这是 Target Scenario，不是历史事实：
+
+用户创建 Matter 并上传材料；系统生成带 hash、来源和权限的 DocumentVersion，Knowledge 层解析 SourceSpan 并提供 EvidenceCandidate。Agent Runtime 根据任务形成 Plan，协调证据、争议和法律研究工作，Legal Capability 产生 FactProposal、ConflictProposal 或 FindingProposal。Domain Owner 在证据、版本、权限和必要人工复核通过后提交 Canonical Domain Version；Review 产生 HumanDecision，最终形成 WorkProduct。若需要外部动作，Tool/Security 边界只执行已授权 PreparedAction 并返回 EffectReceipt。
+
+这条路径的关键不是组件数量，而是每一步都知道自己在处理什么类型的对象，以及哪个 Owner 可以把候选提升为正式事实。
+
+### 业务语义、逻辑能力与物理部署
+
+Zuno 的三层关系是：
+
+Product / Domain：定义 Matter、Evidence、Finding、Review 和 WorkProduct 等业务语义；
+Logical Capability：定义检索、法律智能、规划、工具、安全和评测等可替换能力；
+Physical Service / Deployment：承载 API、长任务、重型 Worker、对象存储和索引 Provider。
+
+本文将第二层称为 Logical Capability Architecture，将第三层称为 Physical Service / Deployment Architecture。上一阶段的 11 Logical Modules + 1 Architecture 只属于 History，不是当前物理服务清单。
+
+业务语义需要稳定，计算 Provider 可以替换，Agent Profile 可以组合。Logical Capability 不等于 Service，Service 不等于 Process，Process 不等于 Container，也不等于团队。这个分离使 WorkBuddy 等外部 Host 可以调用 Legal Backend，也使 Native Runtime 能在公平评测中被保留或删除。
+
+### 责任边界与不拥有的事实
+
+Platform/Domain Owner 拥有 Canonical Business State；Agent Runtime 拥有 Run、Plan、Step、Checkpoint 等控制状态；Knowledge Owner 拥有解析、索引、检索投影和证据候选；Tool Owner 拥有 EffectReceipt 和对账；Security Owner 拥有授权、Approval 和 SecurityEpoch；Eval Owner 拥有数据集、结果和 Release Decision。
+
+任何 Provider、Queue、Checkpoint、Memory 或 Graph 都不能直接声称法律事实。它们不负责创建 FindingVersion、HumanDecision 或 WorkProduct。跨边界只传 Proposal、Candidate、Reference、Snapshot、Receipt 或明确版本的 Query Result。
+
+### 为什么需要这些边界
+
+最小替代方案是 WorkBuddy 或其他 Host 加 Legal Backend；另一个替代方案是模块化 Python 服务加独立 Worker。Zuno 只有在复杂案件中证明 Domain State、Evidence Gate、Staleness、Human Review 或恢复对账带来可重复收益时，才有理由保留更强的 Native Runtime。Python-only 是目标约束，但 CPU-heavy OCR、Embedding、Graph Build 和 Eval 必须离开 API 请求线程；Microservice 是部署目标，但服务数量仍由独立扩缩容、故障、安全、资源和生命周期证据决定。每个候选都要回答 Why service? Why not library? Why not worker?。
+
+### 最危险的失败与恢复
+
+最危险的情况是 Domain Commit 已经成功，而 Runtime Checkpoint 仍停在执行前；或者 Tool 已经执行，Queue 又重复投递，Agent 误以为副作用未发生。另一类危险是新 Evidence 使旧 Fact、Conflict 或 Finding stale，但旧 WorkProduct 仍被展示为最终答案。恢复必须以 Domain Owner 的已提交版本和 EffectReceipt 为依据，对账后再 Resume、Retry、Replan 或请求 Human Review，不能把 HTTP 200、Queue ACK 或 Checkpoint 当成业务成功。
+
+### 取舍与反转条件
+
+这套架构付出的成本是版本、跨服务序列化、可观测性、恢复测试和部署运维复杂度。它换取的是业务状态不被 Runtime Provider 污染、证据链可追溯、外部动作可审计和服务资源可以隔离。若 A/B/C Benchmark 显示 C 与 B 没有稳定增益，应缩减 Native Runtime；若 Hybrid RAG 已经覆盖 Graph 任务，应让 Graph 退为条件 Provider；若模块化服务加 Worker 已满足同样的隔离和恢复语义，应合并服务。当前代码只证明部分 Python/FastAPI/Worker 表面；服务收益、质量收益、安全证明和生产状态仍属于 Current、Target、Hypothesis、Future 或 History 边界中的 Gap。
 
 ## Part B — Detailed Architecture Specification
 
-### Cross-layer contract registry
+### Cross-layer Contract Registry
 
-| Contract | Input / output | Owner | Failure and verification |
-|---|---|---|---|
-| Domain admission | versioned Proposal + Evidence → Canonical Version or review_required | Domain Owner | CAS/version conflict、provenance failure；contract and failure replay |
-| Runtime execution | PlanVersion + Domain Snapshot → Step/Branch/Receipt | Runtime Owner | checkpoint/domain divergence；reconciliation and resume test |
-| Retrieval evidence | QueryClass + Scope + Claim → EvidenceCandidate/CitationLineage | Knowledge Owner | stale index、wrong span、ACL leak；citation and Graph ablation |
-| External effect | PreparedAction + current policy → EffectReceipt or outcome_unknown | Tool/Security Owner | timeout/unknown effect；idempotency and authorization fault test |
+| Contract | 输入 | 输出 | 唯一 Owner | 失败与验证 |
+|---|---|---|---|---|
+| Domain Admission | 带 DomainVersion 的 Proposal、Evidence Reference、权限上下文 | Canonical Version、review_required 或 rejected | Platform/Domain | CAS 冲突、来源不足；Admission Contract Test |
+| Runtime Execution | PlanVersion、Domain Snapshot、Budget | Step/Branch Result、Checkpoint、RunOutcome | Agent Runtime | Checkpoint 与 Domain Generation 不一致；Recovery Replay |
+| Evidence Retrieval | QueryClass、Claim、Scope、DocumentVersion | EvidenceCandidate、CitationLineage、RetrievalReceipt | Knowledge | 索引 stale、ACL 泄漏、引用错 span；Citation/Graph Ablation |
+| External Effect | PreparedAction、SecurityEpoch、Approval | EffectReceipt、outcome_unknown 或 rejected | Tool/Security | 超时、重复副作用；Idempotency/Fault Injection |
+| Evaluation | DatasetVersion、Variant、预算、Trace | RawResult、Metric、Comparison、ReleaseDecision | Eval | 分母变化、不可比、阻塞；Reproducible Eval |
 
-Queue ACK、HTTP 2xx、checkpoint 和 Provider result 只证明各自边界；它们不能替换 Domain commit。
-跨层发布必须带版本、权限/策略 epoch、幂等键和可追溯 receipt。没有实现、测量或外部资格证据时，
-以下规范仍属于 Target/Gap，不升级为 Current。
+### Service、通信与队列边界
 
-## 1. 产品与领域核心
+Edge/API 负责认证、路由、上传、Review 和 Run 接口；Platform/Domain 负责事务型业务状态；Agent Runtime 负责长任务和控制状态；Knowledge 负责摄取、检索和投影；Tool/Sandbox 负责高风险动作。候选物理角色是 edge-api、platform-domain-service、agent-runtime-service、knowledge-service 和 tool-sandbox-service；五个角色不是冻结的服务数量，也不是 Current。五个候选服务角色，不是冻结的服务数量，也不是 Current。Eval 可以是独立批处理 Worker，不因存在评测目录就成为同步 CRUD 服务。
 
-Zuno Target Product 是面向司法与专业法律工作的 **Legal Case Intelligence & Agent Platform**。核心原则是：
+CRUD、小命令和外部互操作默认使用 HTTP/API；Agent Run、Ingestion、Embedding、Graph Build、Sandbox 和 Eval 使用带 JobId、Attempt、Timeout、Cancellation、Retry、DLQ 和 Backpressure 的队列。高吞吐内部 gRPC 只是 Candidate。Queue ACK、Index Write、Checkpoint Commit 和 HTTP 2xx 各自只能证明本边界。
 
-```text
-Business Semantics Stable
-Computation Pluggable
-Agents Composable
-```
+FastAPI 是 Application / HTTP Interface；LangGraph 若被保留，只承担 Agent orchestration、Checkpoint 和 Resume，不承载普通 CRUD。PostgreSQL 保存 Canonical Domain State；LangGraph Checkpoint 保存 Graph Control State。Checkpoint、DomainVersion 与 Reconciliation 必须分开验证，不能把 Runtime State 当作法律事实。
 
-本架构对 Domain 与 Runtime 的关系采用以下原则：
+### State、Version 与 Recovery Contract
 
-```text
-业务语义强集成
-技术实现松耦合
-```
+DomainVersion 是业务事实版本；PlanVersion 激活后不可变；Step 必须记录输入 DomainVersion/Snapshot。提交时版本不一致只能进入 conflict、retry、replan、review_required 或 rejected。Runtime Checkpoint 保存控制位置，不保存 Canonical Case Fact。Recovery 先读取最后合法 DomainGeneration，再检查 EffectReceipt、Provider Operation ID、Outbox/Inbox 和当前权限，最后决定 Resume、Retry、Replan 或人工介入。
 
-Legal Domain State 是 Planner、Retrieval、Legal Capability、Evidence Gate、Finding
-和 Human Review 的一等 Contract 输入/输出；但 Domain Owner 不依赖 LangGraph、某个模型、
-某个 Host 或某种服务拓扑。Runtime Provider 可以替换，Domain Contract、版本、来源、
-权限、失效和审查语义不能随 Provider 自由漂移。
+### Owner Registry
 
-这是一条 Target 设计原则，不是已测得的质量结论。`H2 — Runtime–Domain Integration
-Advantage` 仍需 A/B/C Benchmark 证明；如果 Native Runtime 与 Host + Legal Backend
-没有可重复的质量或效率差异，应删除 Native Runtime 复杂度。
-
-产品流程以复杂案件分析为例：
-
-```text
-Create Matter
-  → Upload Evidence / DocumentVersion
-  → Knowledge ingestion and evidence retrieval
-  → Agent Runtime Coordinator
-  → Research / Evidence / Dispute role profiles
-  → Legal Capability Provider proposals
-  → Domain Owner validation and version commit
-  → Finding / HumanDecision
-  → WorkProduct
-  → optional Tool Effect + Audit
-```
-
-Domain State 表示法律业务世界的权威状态；Runtime State 表示一次执行进行到哪里；Knowledge Projection 表示如何找到证据；Memory 表示可复用上下文；Tool Effect 表示外部世界发生了什么。五者不能互相冒充。
-
-阅读产品与领域规范：
-
-- [`product-architecture.md`](../product/product-architecture.md)：用户任务、Host、Review 和 WorkProduct。
-- [`legal-domain-model.md`](../domain/legal-domain-model.md)：Domain Object、Canonical Owner 和 Proposal 边界。
-- [`domain-state-lifecycle.md`](../domain/domain-state-lifecycle.md)：版本、stale、依赖、审批和恢复。
-
-## 2. Python-only Target
-
-Python-only 是 Target Constraint，不是 Current 生产证明。理由是工作负载和边界的一致性：
-
-- FastAPI/Pydantic、SQLAlchemy/SQLModel、LangGraph、PyTorch、Transformers、RAG/NLP Providers 共用 Python Contract、类型和测试工具；
-- 控制层通常是 IO-bound 或 external-service-bound，网络、数据库、模型 API 和索引引擎承担主要等待；
-- CPU-heavy OCR、解析、embedding、rerank、graph build 和 batch eval 不得占用 FastAPI request thread，必须进入独立 worker 或 native-backed engine；
-- 外部 Java/Spring 系统通过 HTTP、gRPC candidate、MCP/API 或消息 Contract 集成，不把第二后端语言引入 Zuno；
-- Python-only 的成本是 GIL、CPU 任务、依赖体积、运行时类型约束和长期维护，需要 Worker、Pydantic schema、静态检查、故障注入和 workload benchmark 约束。
-
-Java/Spring 的企业生态、强类型、JVM 并发和人才池是有效反对理由，但不足以单独改变 Target；只有跨语言 RPC、组织维护、性能和安全证据显示 Python-only 的总成本更高，才进入逆转评审。
-
-## 3. Target Network-facing Service Boundary Candidates
-
-```text
-External surfaces / WorkBuddy / Firm systems / Court systems / MCP clients
-                              ↓
-                         edge-api
-                              ↓
-     ┌────────────────────────┼────────────────────────┐
-     ↓                        ↓                        ↓
-platform-domain        agent-runtime              knowledge
-     │                        │                        │
-     └───────────────┬────────┴───────────────┬────────┘
-                     ↓                        ↓
-              tool-sandbox              worker profiles
-```
-
-| 服务 | 独立理由 | Canonical Owner | 不负责 |
-|---|---|---|---|
-| `edge-api` | 外部认证、路由、SSE、限流和协议适配；生产入口可独立扩缩容 | API delivery/correlation receipt | Domain、Runtime、Tool 和 Eval 事实 |
-| `platform-domain-service` | 事务型业务状态、授权事实和 Review，与长任务和重计算有不同 failure/availability/security | Tenant/User/Workspace/Matter/DocumentVersion、accepted Claim/Evidence/Finding、HumanDecision/WorkProduct、Review、authorization facts | LangGraph、OCR、Sandbox、检索算法 |
-| `agent-runtime-service` | 长运行、checkpoint/resume、HITL、replan、budget、parallel branch 和 model calls 有独立生命周期 | AgentRun、Plan、Step、Runtime Control、Checkpoint、Delegation Proposal | 普通 CRUD、最终 Domain Commit、Tool Effect |
-| `knowledge-service` | OCR/parse/index/embed/rerank/graph build 与 retrieval API 资源异构 | Source/ingestion、Index/Projection、RetrievalRound、EvidenceCandidate、Citation Lineage | accepted Finding、权限事实和人工决定 |
-| `tool-sandbox-service` | Secret、filesystem/network policy、Sandbox 和 external effect 需要强 security/resource/failure isolation | ToolAttempt、EffectReceipt、Provider Operation ID、Reconciliation | Agent Plan、Domain Fact、模型编排 |
-
-这是五个候选服务角色，不是冻结的服务数量，也不是 Current。服务可由同一个 Python 镜像构建，
-但服务 Contract、配置、资源池、队列和部署边界必须独立可测试。后续可合并、拆分或把某个角色
-降级为 Worker；只有独立扩缩容、失败隔离、安全/资源隔离、独立部署、可用性、数据 Ownership
-或 Operational Lifecycle 证据才能改变边界。
-
-## 4. 逻辑能力如何落到服务
-
-以下能力不自动变成服务：
-
-| 逻辑能力 | V1 物理形态 | 拆成服务的证据 |
+| Owner | Canonical State | 允许跨边界输出 |
 |---|---|---|
-| Legal Intelligence | Agent/Knowledge worker 中的 Capability Provider；本地算法、LLM、fine-tuned model、OSS、API、MCP 可替换 | 独立 GPU/模型、许可证、SLA、权限或发布生命周期 |
-| Model Gateway | Agent Runtime/Knowledge provider layer | 多产品共享 quota/secret、独立模型 serving、路由 SLA 或成本边界 |
-| Memory | Domain/Runtime 的上下文策略和存储投影 | 独立租户隔离、召回规模、删除生命周期或扩缩容证据 |
-| Multi-Agent | Agent Runtime 内的 Coordinator、profiles、ephemeral workers | 独立 Agent 的 SLA、security boundary、resource pool 或发布周期 |
-| Eval / Observability | Eval batch worker、trace/audit sink 和 release gate storage | 独立离线吞吐与生命周期；不要求同步 CRUD service |
-| GraphRAG | Knowledge provider + graph/index worker | Query-class Kill Test 和独立 graph build/serve 资源边界 |
+| Domain | Matter、DocumentVersion、Fact、Evidence、Conflict、Finding、HumanDecision、WorkProduct | Proposal、Version、Reference |
+| Runtime | AgentRun、Plan、Step、Branch、Reducer、Interrupt、Checkpoint、Budget | Snapshot、RunOutcome、Control Receipt |
+| Knowledge | Source、Parse、Chunk、Index、Retrieval、CitationLineage、Projection | Candidate、Reference、Retrieval Receipt |
+| Security | Principal、Grant、Approval、SecurityEpoch、Policy Decision | Authorization Decision |
+| Tool | PreparedAction、ToolAttempt、EffectReceipt、Reconciliation | Receipt、Outcome |
+| Eval | DatasetVersion、EvaluationRun、Metric、Comparison、ReleaseDecision | Evidence Report |
 
-更详细的 Agent 和 Knowledge 边界见 [`agent-platform.md`](../agents/agent-platform.md)、[`multi-agent-runtime.md`](../agents/multi-agent-runtime.md) 和 [`knowledge-evidence-architecture.md`](../knowledge/knowledge-evidence-architecture.md)。
+### Security、Deployment 与验证要求
 
-## 5. FastAPI 与 LangGraph 的硬边界
+每个跨边界操作绑定 Tenant、Matter、Scope、Policy Epoch、Idempotency Key 和 Trace。不可逆 Effect 必须 execute-time 授权和 Approval；不可信文档不能改写策略。Developer、Staging、Production 是不同证据等级，不因 Compose、Kubernetes、容器或配置文件存在而声称生产就绪。验证必须覆盖质量、效率、失败恢复、No-egress、租户隔离、工具副作用和替换成本。
 
-```text
-FastAPI / HTTP Application Interface
-  Auth, Matter/Review CRUD, Upload, Agent Config,
-  Run Submit, Run Status, Control Command, SSE/WebSocket
+### Implementation / Measurement / External Gaps
 
-LangGraph / Runtime Orchestration Provider
-  Agent Run, long-running workflow, checkpoint,
-  resume, HITL interrupt, dynamic branch, reducer, replan
-```
+Current 只由代码、测试、Trace、Migration 或真实运行证据证明；Target 记录 Python-only、Domain/Runtime 分离和候选服务边界；Hypothesis 包括 Native Runtime、Graph、Memory、服务数量和安全可验证性收益；Gap 包括 Court QA、A/B/C、负载、故障注入、HA、备份恢复和外部资格。History 只保存被替换的 11+1 组织方式和旧过程材料。
 
-LangGraph 只进入 `agent-runtime-service`。它不创建 Case、不更新 Permission、不列出 User、不直接写 Domain Store。Plain Python workflow、state machine、Pi 或 Host Runtime 仍可替换 LangGraph；保留 Runtime Contract，不把框架类型扩散到 Domain/Service API。
-
-## 6. 同步、异步与队列
-
-| 场景 | 默认通信 | 原因 |
-|---|---|---|
-| CRUD、查询、小型命令 | HTTP/JSON Contract | 可观测、易调试、外部互操作 |
-| Agent Run、Ingestion、Graph Build、Embedding、Eval、Sandbox Job | durable queue | 长运行、重资源、取消、重试、backpressure 和 DLQ |
-| 外部 Host/WorkBuddy/企业系统 | MCP/API/HTTP | 兼容边界和部署主权 |
-| 高吞吐内部调用 | gRPC candidate | 只有 latency/serialization evidence 成立才采用 |
-
-Queue 不是 Business Truth。每个 Job 必须有 Job Identity、Idempotency Key、Attempt、Timeout、Cancellation、Retry Policy、Dead-letter、Backpressure 和 Reconciliation；RabbitMQ/Redis/Kafka 都是 Provider 候选，不由架构文字锁死。
-
-## 7. Domain State 与 Runtime State
-
-```text
-platform-domain PostgreSQL
-  Matter / DocumentVersion / Claim / Fact / Evidence /
-  Conflict / Dispute / Finding / HumanDecision / WorkProduct /
-  Approval / authorization facts / version / provenance / audit reference
-
-agent-runtime store / LangGraph Checkpointer
-  Node / Branch / Pending Work / Reducer / Interrupt /
-  Checkpoint / Resume Position / Runtime Generation
-```
-
-恢复必须处理 partial failure：
-
-1. Domain DB 已提交 Effect Success，Checkpoint 停在执行前：读取 EffectReceipt/Idempotency，禁止重复副作用。
-2. Checkpoint 显示 Node 完成，Domain Transaction 未提交：回退到最后合法 DomainGeneration，不能假装业务完成。
-3. Knowledge 返回 EvidenceCandidate，Domain Owner 未接受：只能进入 Proposal/Review，不能生成 FindingVersion。
-4. HumanDecision 改变 Canonical State：旧 Finding/Plan 依据版本重新验证，必要时创建新 Run。
-
-数据和一致性规范见 [`data-ownership-and-recovery.md`](../data/data-ownership-and-recovery.md)。
-
-### 7.1 Version、Mutation 与 Staleness Contract
-
-`DomainVersion` 是业务事实版本；`PlanVersion` 在激活后不可变，重新规划必须创建新的
-`PlanVersion`。每个 Step 必须记录其输入的 DomainVersion/Snapshot；若提交时版本已变化，必须
-进入冲突、重试、重新规划或拒答/请求更多证据，不能静默覆盖。新 Evidence 到来后按依赖边界把
-受影响的 Fact、Conflict、Dispute、ApplicableLaw、Finding 标记为 `STALE` 或
-`REVIEW_REQUIRED`，再决定 bounded re-evaluation 或新的 Agent Run。
-
-### 7.2 Canonical Owner Registry
-
-| Owner | 唯一拥有的事实 | 边界输出 |
-|---|---|---|
-| Domain Owner | Tenant、Workspace、Matter、DocumentVersion、Fact、Claim、Evidence、Conflict、Dispute、LegalIssue、Finding、HumanDecision、WorkProduct、Review、DomainVersion、Provenance 的正式版本 | 只由 Domain Owner 提交 Canonical Domain State；Provider 只能提交 Proposal/Candidate/Reference/Observation/Receipt |
-| Runtime Owner | AgentRun、PlanVersion、StepRun、DispatchGroup/Item、Branch、Reducer、Interrupt、Checkpoint、Resume、Generation、Budget | 只拥有 Graph Control/Execution State，不拥有法律事实 |
-| Knowledge Owner | Source、Parse、Chunk、Embedding、Index、Graph、Retrieval、Evidence Candidate、Citation Lineage 及 Projection Version | 只能提供可追溯候选和投影，不能提交 Finding/HumanDecision |
-| Memory Policy Owner | Working/Session/Matter Context、Recall/Write/Promotion Policy | Memory 可过期、压缩、删除、召回；不是 Case Fact/Evidence/Finding |
-| Tool Owner | ToolAttempt、PreparedAction、EffectReceipt、ProviderOperationId、Reconciliation | Tool Effect 必须经过权限、预算、Approval 和 execute-time Auth |
-| Security Owner | Authorization、Approval、SecurityEpoch、Secret Scope、Capability Permission、Policy Decision | 负责决策与执行约束，不能被 Agent 或 Provider 自行提升 |
-| Eval Owner | DatasetVersion、EvaluationRun、Metric、RawResult、Comparison、ReleaseDecision | 负责可复现评测事实，不把结果写成 Domain Finding |
-
-## 8. Deployment Profiles
-
-```text
-Developer:   Compose；同镜像可运行五服务和最小 worker，重依赖可按 profile 启用
-Staging:     多服务、多 worker、真实队列/对象存储/索引，验证合同、故障和观测
-Production:  HA/滚动升级/独立扩缩容/安全隔离；是否 Kubernetes 由证据决定
-```
-
-Microservice Target 不自动要求 Kubernetes、Kafka、service mesh、Database-per-service、Event Sourcing 或 Saga Framework。共享 PostgreSQL Cluster 可以作为 V1 物理基础设施，但按 schema/table ownership 隔离，禁止跨服务 JOIN 私有表；物理数据库拆分需要独立 availability、scaling、security 或 lifecycle 证据。
-
-## 9. Acceptance、Reversal 与 Current / Target / History
-
-接受的 Target 必须保留删除出口：A/B/C 中 `C≈B>A` 时保留 Legal Backend 并缩减 Native
-Runtime；`C≈B≈A` 时删除无测量收益的 Native 复杂度；Graph、OpenViking、Dedicated Tool
-Runtime、Dedicated Model Gateway、Multiple Datastore 和更细服务边界都同样受 Kill Test、
-成本、恢复和安全证据约束。没有独立责任、故障域或测量收益的复杂度不得因为已写入 Target
-就继续存在。
-
-## 10. Current / Target / History
-
-| 状态 | 事实 |
-|---|---|
-| Current | `pyproject.toml` 为 Python 3.12；Docker 使用 Python 3.12；`zuno.main:app` 是 FastAPI 入口；Compose 有 backend、worker、frontend 应用容器与基础设施；存在 PostgreSQL migrations；仓库没有 Java/Spring 匹配证据 |
-| Target | Python-only、候选 network-facing service roles、独立 worker profiles、Domain/Runtime State 分离、HTTP/queue/MCP 分层、Developer/Staging/Production profiles |
-| Hypothesis | Python 总成本、每个服务的扩缩容/失败/安全收益、Multi-Agent 质量/效率、Kubernetes、物理 DB split 和 service count |
-| Future | Persistent Agent Team、物理 Database-per-service、Kubernetes、Event Sourcing、Saga 或更细粒度 Provider Service；只有新的证据和 ADR 才能进入 Target |
-| History | 旧 `docs/project/modules/01..11` 作为上一阶段设计材料；被新 taxonomy 标记 Superseded，不再是 Canonical Target |
-| UNKNOWN | 实际线上服务数、真实用户/容量、SLO、团队 Ownership、Java 外部系统、生产部署和当前质量 |
-
-## 11. Canonical Reading Order
-
-```text
-Product reader:   docs/README.md → architecture.md → product → domain
-Agent engineer:   architecture → domain → agents → services → data/security
-Knowledge engineer: domain → knowledge → agents → eval
-Backend engineer: domain → services → data → security → deployment
-SRE:              services → data → deployment → eval/observability
-```
-
-Canonical 专题入口：[`service-architecture.md`](../services/service-architecture.md)、[`security-architecture.md`](../security/security-architecture.md)、[`legal-eval-and-benchmark.md`](../eval/legal-eval-and-benchmark.md)、[`microservice-deployment.md`](../deployment/microservice-deployment.md)。完整 taxonomy 还包括 [`product-architecture.md`](../product/product-architecture.md)、[`legal-domain-model.md`](../domain/legal-domain-model.md)、[`domain-state-lifecycle.md`](../domain/domain-state-lifecycle.md)、[`agent-platform.md`](../agents/agent-platform.md)、[`multi-agent-runtime.md`](../agents/multi-agent-runtime.md)、[`knowledge-evidence-architecture.md`](../knowledge/knowledge-evidence-architecture.md) 和 [`data-ownership-and-recovery.md`](../data/data-ownership-and-recovery.md)。
-
-新 taxonomy 的唯一入口和迁移规则见 [`docs/project/README.md`](../README.md)、[`docs/decisions/0011-architecture-document-taxonomy.md`](../../decisions/0011-architecture-document-taxonomy.md)。`architecture-views.md` 与 `architecture.html` 只展示本架构，不拥有第二套事实。
+专题路由：`product-architecture.md`、`legal-domain-model.md`、`domain-state-lifecycle.md`、`agent-platform.md`、`multi-agent-runtime.md`、`knowledge-evidence-architecture.md`、`service-architecture.md`、`data-ownership-and-recovery.md`、`security-architecture.md`、`legal-eval-and-benchmark.md`、`microservice-deployment.md`。这些专题各自拥有一个 Canonical Question；总架构只负责跨层关系，不复制专题状态机。

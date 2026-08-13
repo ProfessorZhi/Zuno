@@ -48,7 +48,7 @@ def test_architecture_markdown_is_integration_first() -> None:
     design = (REPO_ROOT / "docs/project/architecture/architecture.md").read_text(encoding="utf-8")
     assert renderer.validate_design(design) == []
     assert design.count("```mermaid") == 0
-    for marker in ["product-architecture.md", "legal-domain-model.md", "service-architecture.md", "microservice-deployment.md"]:
+    for marker in ["product-architecture.md", "legal-domain-model.md", "service-architecture.md", "microservice-deployment.md", "Part A — Architecture Narrative", "Part B — Detailed Architecture Specification"]:
         assert marker in design
 
 

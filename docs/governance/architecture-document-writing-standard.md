@@ -37,7 +37,7 @@ scope: `docs/project/architecture/` 与 `docs/project/<topic>/`
 
 `docs/project/architecture/architecture.md` 只回答跨层集成；`architecture-views.md` 与 `architecture.html` 是展示配对；`docs/project/modules/` 只保存上一阶段 11 模块的 Superseded 迁移材料。
 
-## 2. 每份 Canonical 专题文档的最小协议
+## 2. 每份 Canonical Owner 文档的强制双层协议
 
 每个专题必须在头部声明：
 
@@ -53,16 +53,22 @@ replaces: ...
 下一阶段 Canonical Target，不表示代码已实现、验证、测量或具备生产资格。实现、证据和外部
 资格仍分别由 `Current / Target / Gap`、ADR、Program 和 `docs/status/` 记录。
 
-正文至少回答：
+每份 Canonical Owner 文档必须严格、且只能在同一文件中包含以下两个顶层正文部分，顺序固定：
 
-- 为什么存在，典型业务案例是什么；
-- Responsibilities / Non-responsibilities 和唯一 Owner；
-- Current 证据、Target 设计、Hypothesis、Gap 与 Future；
-- 正常路径、失败路径、重试、恢复、幂等和人工介入；
-- Security、Audit、Observability、Test/Evidence 和替换条件；
-- 与相邻专题的依赖，而不是复制它们的 Canonical State。
+1. `Part A — Architecture Narrative`：回答 WHY、WHAT 和 BIG PICTURE；说明 Problem/Motivation、
+   Concrete Target Scenario、Architectural Drivers、Responsibilities、Non-responsibilities、
+   Upstream/Downstream、Core Concepts、Conceptual Boundary、Happy Path、Canonical Ownership、
+   Major Failure Story、Architecture Reasoning、Simpler/OSS Alternative、Tradeoff、Reversal/Kill
+   Condition 和 Current/Target/Gap。
+2. `Part B — Detailed Architecture Specification`：回答 HOW EXACTLY；说明 Contract、Input/Output、
+   State/Version、Concurrency/CAS、Failure Propagation、Retry/Recovery、Idempotency、Security、
+   Approval、Audit、Observability、Data Ownership、Storage、Scaling、Compatibility、Testing、
+   Fault Injection、Benchmark、Evidence Requirement 和 Implementation Gap。
 
-专题可以采用 Part A/Part B，也可以按问题分节；Part A 与规范内容必须在同一文件中，不能创建 `*-human.md`、`*-spec.md` 或 `.agent` 镜像。
+Required Concerns 不是 Required Headings。不同专题可以用不同的叙事顺序和小标题；禁止复制同一
+模板、Checklist 或 Round Summary。Part A 与 Part B 必须合并旧正文中的对应内容，不能在 Part B
+之后继续出现第三套 Legacy Main Body、Part-A subsection、旧 Contract 或重复 State Machine。
+不能创建 `*-human.md`、`*-spec.md` 或 `.agent` 镜像。
 
 ## 3. Logical 与 Physical 的写作边界
 
@@ -101,7 +107,15 @@ python tools/scripts/verify_markdown_internal_links.py
 
 图只用于解释关系，不取代文字 Canonical Owner；HTML 不得创造图源不存在的新事实。`docs/verification/` 是 QA/验证语料，不是架构事实源。
 
-## 6. 评审完成条件
+## 6. Canonical Rewrite 与过程痕迹边界
+
+Canonical Sync 默认使用 `SECTION_REWRITE`；影响核心概念、服务边界、Owner、Runtime、Security、
+Memory、Graph 或 Eval 的 Delta 使用 `FULL_PART_REWRITE`。`APPEND` 不是允许的同步模式。同步过程
+必须先定位 Owner 和 `document_impact`，重写受影响部分，删除 superseded wording，再检查 Narrative
+与 Contract 一致性。Round、Dxxx、Qxxx、Score、Red Finding、Blue Decision 和 Target Refinement
+等过程痕迹只能进入 Lab Session、Decision Trace、ADR 或 History，不得进入 Canonical 正文。
+
+## 7. 评审完成条件
 
 每轮 Red / Blue 必须经过：
 

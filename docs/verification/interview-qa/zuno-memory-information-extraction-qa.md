@@ -160,7 +160,7 @@ None。
 - resume_trigger: Legal Reference Resolution、Review、Redline
 - architecture_refs:
   - docs/project/modules/06-agent-core-planning-control.md — § 1.5.1 用户到底想完成什么：TaskUnderstandingSnapshot
-  - docs/project/architecture/architecture.md — § 7. Domain State 与 Runtime State
+  - docs/project/architecture/architecture.md — § State、Version 与 Recovery Contract
 - initial_coverage_status: FULL
 - coverage_status: FULL
 - gap_id: None
@@ -190,7 +190,7 @@ Matter、Contract、Tenant、Workspace 和 Epoch 由各自 Owner 确认；模型
 ### Architecture Evidence
 
 - docs/project/modules/06-agent-core-planning-control.md — § 1.5.1 用户到底想完成什么：TaskUnderstandingSnapshot
-- docs/project/architecture/architecture.md — § 7. Domain State 与 Runtime State
+- docs/project/architecture/architecture.md — § State、Version 与 Recovery Contract
 
 ### 当前文档是否足够回答
 

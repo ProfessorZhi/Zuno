@@ -2,68 +2,67 @@
 
 status: normative-target
 architecture_state: ACCEPTED_TARGET
-canonical_question: 哪些能力值得独立部署，哪些应该是 library/worker/provider？
-owner: Service Architecture / Infrastructure
-replaces: old 11-module physical interpretation and `docs/project/modules/11-infrastructure.md` (Superseded)
+canonical_question: 哪些逻辑能力值得形成独立部署和故障边界？
+owner: Service Boundary Owner
+replaces: old 11-module physical interpretation and docs/project/modules/11-infrastructure.md（Superseded）
 
 ## Part A — Architecture Narrative
 
-服务边界来自不同 workload 和 failure/security domain，而不是来自旧的 11 个逻辑模块或用户数量。
-一次案件分析会同时产生短事务（Matter/Review）、长任务（Agent Run）、CPU/GPU/IO 重活（OCR、索引、
-Graph Build）和受保护副作用（Sandbox）。把它们都塞进一个进程会让资源竞争、故障恢复和安全审计
-互相干扰；把每个逻辑名词都拆成服务又会带来网络延迟、schema 漂移和分布式故障。
-这里要解决的问题是如何用最少的部署边界隔离这些差异，而不是把“微服务”当成默认答案。
+### 服务边界从工作负载开始
 
-因此当前 Target 只保留候选五类 network-facing role，并允许能力以 library、worker 或 Provider
-存在。Domain Service 是 Canonical State 的唯一写者，Agent Runtime 只拥有控制状态，Knowledge
-只产生候选，Tool/Sandbox 只拥有 EffectReceipt。Service count、Model Gateway、Memory 和 Eval
-是否独立，必须由独立扩缩容、失败隔离、安全边界、生命周期或可测收益证明。
+Microservice 是 Target Constraint，但服务数量不是预先决定的。法律任务同时包含短事务 API、LLM-bound 长运行、OCR/Embedding/Graph 的 CPU/GPU/IO 工作、Sandbox 安全隔离和 Eval 批处理。不同资源、故障、权限和生命周期才是服务边界的理由，用户数量本身不是理由。
 
-典型失败是服务 A 已提交本地事务但队列或服务 B 超时；系统不能用重试风暴或跨服务 JOIN 掩盖未知
-结果，而应通过 idempotency、Outbox/Inbox（如必要）和 reconciliation 收口。若一个模块化单体
-加独立 worker 已经满足相同的资源和安全边界，就应合并服务。
+它要解决的问题是异构工作负载互相抢占资源、失败互相扩散，以及高风险工具需要独立安全边界；如果这些问题不存在，服务化的网络成本就没有理由。
+
+### Target Scenario：复杂案件跨边界运行
+
+这是 Target Scenario，不是历史事实：
+
+Edge/API 接收 Matter 或 Run 请求；Platform/Domain 提交事务型业务状态；Knowledge Worker 解析和检索；Agent Runtime Coordinator 执行长任务；Tool/Sandbox 执行高风险动作；Eval Worker 在离线环境比较结果。每个边界只发布自己的 Receipt、Reference、Snapshot 或 Proposal，最终 Domain Commit 仍由 Domain Owner 完成。
+
+### 候选服务与逻辑能力
+
+候选网络服务角色是 Edge/API、Platform/Domain、Agent Runtime、Knowledge 和 Tool/Sandbox。Eval/Observability 初期更适合作为批处理 Worker 与 Trace Sink。Legal Capability、Model Gateway、Memory、Graph 和 Multi-Agent Profile 默认是逻辑能力、Provider 或 Worker，不自动成为服务。
+
+### Why service 与 Why not service
+
+只有 Independent Scaling、Failure Isolation、Security/Resource Isolation、Independent Deployment、Distinct Availability、Data Ownership 或 Operational Lifecycle 之一有实证，才值得拆服务。若能力只是纯函数、模型调用适配、同一资源池中的批处理或小型策略，它更适合 Python Library、Worker 或 Provider Adapter。每个服务必须拥有清晰状态，不能只是把一次函数调用包成网络跳转。
+
+### 失败、取舍与反转
+
+服务化会增加序列化、网络延迟、Schema 版本、部分失败、重试风暴、分布式追踪、部署协调和本地开发成本。典型失败是 Domain Commit 成功但消息发布失败，或 Knowledge Worker 重试导致重复 Index/Effect。若模块化单体加独立 Worker 已能提供相同的隔离、扩缩容、安全和恢复语义，应合并服务；若独立服务没有真实资源或故障差异，应删除。
+
+### Current / Target / Gap
+
+Current 以仓库进程、Compose、代码和测试证据为准；Target 是 Python Microservice + independently scalable workers；Hypothesis 是异构 workload 和 Security Boundary 足以证明候选服务；Gap 是服务数、SLO、容量、故障注入、部署、团队 Ownership 和生产运行证据。
 
 ## Part B — Detailed Architecture Specification
 
-### Service admission contract
+### Service Admission Contract
 
-服务候选必须声明 API/schema version、state owner、resource profile、failure domain、security boundary、
-retry/idempotency、trace correlation 和 replacement path。HTTP 适合 CRUD/query/small command，
-durable queue 适合长任务，MCP/API 适合外部互操作；gRPC 只有在 serialization/latency benchmark
-通过后才采用。服务不得读取其他服务的私有表或通过网络重建第二套 Domain 状态机。
-Transient delivery failure 才允许 bounded retry；命令和 Job 依靠幂等键收敛，unknown outcome
-必须进入 reconciliation，不能用重复投递掩盖失败。
+每个服务候选必须记录 ServiceId、Canonical Owner、owned state、API/Queue Contract、resource profile、failure domain、security boundary、scaling trigger、deployment lifecycle、observability、retry/recovery、alternative 和 reversal evidence。没有这些字段只能保留为 Logical Capability 或 Worker。
 
-## Service set
+Why not 11 services? 11 logical modules are not a physical decomposition。每个候选都必须证明为什么不是 library、worker 或 external provider；也要明确它是否应当留在 library/worker/provider 层，而不是升级成 Service。当前 Target role identifiers 是 `edge-api`、`platform-domain-service`、`agent-runtime-service`、`knowledge-service` 和 `tool-sandbox-service`，但它们是可审计的候选边界，不是 Current 数量承诺。
 
-Target candidate is five network-facing Python service roles; the count is revisable:
+### Target deployment roles
 
-| Service | API | state/contract owner | heavy workers |
+| Role | Owns | Does not own | First independent reason |
 |---|---|---|---|
-| `edge-api` | FastAPI external ingress, auth, SSE, routing | delivery correlation only | none |
-| `platform-domain-service` | Matter, Review, Domain command/query, authorization | Canonical Domain State | domain outbox/reconcile worker |
-| `agent-runtime-service` | Run submit/status/control, stream | Runtime Control State | agent runner, profile workers |
-| `knowledge-service` | upload/ingestion/retrieval/evidence query | Knowledge projections and candidates | parse, embed, index, graph workers |
-| `tool-sandbox-service` | prepared action, sandbox, MCP/API adapters | Tool Attempt/Effect Receipt | sandbox/effect/reconcile workers |
+| `edge-api` | auth handoff、routing、correlation、SSE | Domain、Runtime、Tool effect | external protocol and low-latency |
+| `platform-domain-service` | transaction business state and review references | OCR、Agent control、Sandbox | consistency and ownership |
+| `agent-runtime-service` | Run、Plan、Step、Checkpoint、Budget | Canonical Fact and normal CRUD | long-running control |
+| `knowledge-service` | ingestion、index、retrieval、citation projection | Domain admission and permission truth | CPU/GPU/IO heterogeneity |
+| `tool-sandbox-service` | ToolAttempt、EffectReceipt、reconciliation | Agent Plan、Domain Fact | security/resource isolation |
+| Eval Worker | Dataset、EvaluationRun、RawResult、ReleaseDecision | Product business state | offline batch lifecycle |
 
-Eval/Observability is an independently deployable batch/trace worker, not a V1 synchronous business service. Legal Intelligence、Model Gateway、Memory 和 Agent profiles remain providers/libraries/workers until service evidence appears.
+### Communication and queue
 
-## Why not 11 services
+HTTP/API 默认用于 CRUD、Query 和小命令；Queue 用于 Agent Run、Ingestion、Embedding、Graph Build、Sandbox 和 Eval；MCP/API 用于外部互操作；gRPC 只有在 latency/serialization benchmark 支持时采用。Job 必须有 JobId、Idempotency Key、Attempt、Lease、Timeout、Cancellation、Retry、DLQ、Backpressure 和 Reconciliation。
 
-11 is a logical ownership history. A service is allowed only for independent scaling, failure, security/resource isolation, deployment, availability, data ownership or lifecycle. A shared Python image, package or database does not remove a service boundary; conversely a logical capability does not create one.
+### Data and security boundary
 
-## Contract rules
+服务通过 API、Event、Reference、Snapshot 或 Receipt 读取其他 Owner 的状态，禁止跨服务 JOIN 私有表。每个请求绑定 Tenant、Matter、Scope、Policy Epoch 和 Trace；不可逆 Effect 必须通过 Tool/Security。Shared PostgreSQL Cluster 可以作为物理基础设施，Database-per-service 不是默认要求。
 
-- Service API carries versioned commands, queries, proposals, references, snapshots and receipts.
-- No service reads another service's private tables or performs cross-service SQL JOIN.
-- Domain Service is the only writer of accepted business state.
-- Runtime never writes Domain final state directly.
-- Knowledge never writes Finding directly.
-- Tool never writes Agent Plan or legal fact.
-- Security decisions are owned by the security policy authority and enforced by every relevant service.
+### Testing and reversal
 
-## Current / Target / Gap
-
-- Current：Compose has one backend application container, one worker application container and one frontend; infrastructure dependencies are not business services.
-- Target：candidate network-facing service roles plus independently scaled workers；服务数量不因本表冻结。
-- Gap：service images, API contracts, schema ownership, fault injection, tracing, deployment and on-call evidence。
+服务拆分前测试模块化替代、Worker 替代和 Provider 替代；拆分后测试部分失败、重复消息、Schema Compatibility、Retry Storm、网络延迟、部署回滚和跨服务 Trace。没有独立收益的服务必须合并；服务数量仍是 Target/Hypothesis，不是 Current。

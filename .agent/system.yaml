@@ -131,6 +131,7 @@ skill_routes:
       - "python tools/scripts/verify_canonical_diff_v3.py"
       - "python tools/scripts/verify_red_blue_round_v31.py"
       - "python tools/scripts/verify_document_quality_v31.py"
+      - "python tools/scripts/verify_document_normalization_v311.py"
       - "python tools/scripts/verify_red_blue_repair_v1.py"
       - "python tools/scripts/verify_red_blue_evidence_closure_v1.py"
       - "python tools/scripts/verify_red_blue_p0_v4_execution_v1.py"

@@ -108,8 +108,9 @@ Architecture Red/Blue            READY / IN_PROGRESS
 Architecture Red/Blue Round-002   COMPLETE (V3, 100Q, 80 NOVEL / 20 REGRESSION)
 Architecture Red/Blue Round-003   COMPLETE (V3.1, 100Q, 85 NOVEL / 15 REGRESSION)
 Interview Red Team               READY
-Canonical Architecture Sync      APPLIED / ACCEPTED_TARGET (Round-002 refinements)
-Document Quality V3.1             COMPLETE (Part A >= 80 / Part B >= 85)
+Canonical Architecture Sync      APPLIED / ACCEPTED_TARGET (V3.1.1 full-part rewrite)
+Document Quality V3.1             COMPLETE (historical Part A >= 80 / Part B >= 85)
+Document Normalization V3.1.1      COMPLETE (Part A >= 85 / Part B >= 85)
 Implementation Program           READY_FOR_TASK_DEFINITION (not active)
 ```
 
@@ -189,6 +190,18 @@ Round-004                       READY_NOT_STARTED
 Round-003 只修复 Canonical 文档的同文件 Part A/Part B 可读性与 Contract 表达，删除过程性
 Round trace；没有改变 Facts、Runtime、Schema/Migration、依赖、生产状态或既有 ADR 原则。完整
 记录位于 `project-reconstruction-lab/sessions/RB-WORKFLOW-V3-ROUND-003/`。
+
+## V3.1.1 normalization status
+
+```text
+Session                         RB-DOCUMENT-NORMALIZATION-V3.1.1
+Canonical Docs                  12 audited / 12 full-part rewritten
+Part A target / strong          85 / 90
+Part B target                   85
+Sync mode                       FULL_PART_REWRITE; APPEND forbidden
+Facts / Runtime / ADR           NONE / NONE / NONE
+Round-004                       READY_NOT_STARTED
+```
 
 ## Evidence Closure status
 

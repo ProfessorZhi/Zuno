@@ -2,102 +2,66 @@
 
 status: normative-target
 architecture_state: ACCEPTED_TARGET
-canonical_question: 如何公平测量法律质量、效率、安全和服务复杂度收益？
-owner: Eval / Observability
-replaces: `docs/project/modules/10-observability-eval.md`（Superseded）
+canonical_question: 如何公平测量法律质量、效率和架构复杂度收益？
+owner: Eval / Observability Owner
+replaces: docs/project/modules/10-observability-eval.md（Superseded）
 
 ## Part A — Architecture Narrative
 
-法律系统不能用一个 LLM Judge 分数回答“是否做得对”。法院或律师真正关心的是证据是否充分、
-引用是否落到正确材料、冲突是否被发现、结论是否适用、人工是否愿意接受，以及系统是否在预算
-和时间内完成。更重要的是，评测必须把 Legal Capability 的价值与 Native Runtime 的额外价值
-分开，否则一个更好的模型或 Prompt 会被误认为是 Domain-aware Runtime 的收益。
+### 我们到底要证明什么
 
-因此先用同模型、同语料、同工具和同预算比较 A Generic Host、B Host + Zuno Legal Capabilities、
-C Zuno Runtime + first-class Domain State。再按 QueryClass、缺证、冲突、法条版本变化和 stale
-行为做功能性测试。评测结果只能说明指定数据切片和协议下的表现，不能自动升级历史事实、Current
-质量或 Production Readiness。
+评测不是为架构已经正确寻找分数，而是要区分六个可被证伪的命题：Legal Capability 是否有价值，Legal Backend 是否比 Generic Host 更有价值，Native Runtime 是否带来额外收益，Graph 是否比 Hybrid 更有效，Multi-Agent 是否比更简单拓扑更好，Service Boundary 是否改善隔离或吞吐。一个 LLM Judge 分数不能同时回答这些问题。
 
-主要失败是分母变化、随机切片不一致、引用正确但证据不足、只测最终文本不测恢复和成本，或把
-blocked/unavailable 当作零分。Eval Worker 负责保留原始结果、trace、reviewer protocol 和 release
-gate；如果 C 与 B 无稳定差异，就应收缩 Native Runtime；如果 Graph 与 Hybrid 无收益，Graph
-默认路径也应被删除。
+### Target Scenario：控制变量比较
+
+这是 Target Scenario，不是历史事实：
+
+同一批案件材料、同一基础模型、同一外部工具、相近 Prompt/Skill、同一 Token/Time Budget 下，运行 A Generic Host、B Host + Zuno Legal Capabilities、C Zuno Native Runtime。每个 Variant 处理相同 QueryClass，保留 Evidence、Citation、Conflict、Applicability、Reviewer Decision、Latency、Token、Cost 和 Trace。只有这样，C 相对 B 的收益才可能归因于 Domain State、EvidenceRequirement、Staleness 或 Review 对账。
+
+### 任务质量和工程效率
+
+法律用户关心 Evidence Sufficiency、Citation Correctness、Unsupported Claim、Conflict/Dispute、Fact–Article、Applicability、Reviewer Acceptance 和 Task Completion。工程上还要看 Latency、Token、Cost、Model Calls、Retrieval Rounds、Tool Calls、Retry/Recovery 和 Domain State Reuse。Quality、Efficiency、Security 和 Complexity 必须同时报告，不能用一个综合分隐藏失败。
+
+评测边界是：固定输入与预算，改变一个架构变量，记录结果、失败和成本，再把结论限制在该数据切片和协议内；评测不拥有产品或 Domain 状态。
+
+Happy Path 是：冻结 DatasetVersion → 运行 Variant → 保存 RawResult/Trace → Reviewer/Metric → Comparison → Release Decision。
+
+### 责任和非责任
+
+Eval Owner 拥有 DatasetVersion、CaseSetHash、EvaluationRun、RawResult、Metric、Comparison、FailureClass 和 ReleaseDecision。评测不拥有 Domain Finding，不把历史 Demo 当成数据集，不把 LLM Judge 当作唯一裁判，也不把 blocked、unavailable 或 incomparable 折成零分。
+
+### 失败、取舍与反转
+
+数据切片、分母、Reviewer 标准或模型预算不一致会让比较失真；只测最终文本会漏掉引用错误、恢复失败和成本上升。评测基础设施和人工标注成本很高，但没有它就无法证明复杂度值得存在。若 C≈B>A，应保留 Legal Backend、缩减 Native Runtime；若 C≈B≈A，删除未证明的复杂度；若 Graph、Multi-Agent 或服务拆分无增益，分别退回更简单方案。
+
+### Current / Target / Gap
+
+Current 只有已执行的 Eval、Trace 和报告才成立；Target 是可复现 A/B/C、Graph Kill、Multi-Agent Ablation 和 Service Evidence；Hypothesis 是 Domain/Evidence/Runtime 的因果链可测；Gap 是 Court QA、Reviewer Protocol、重复运行、统计不确定性、成本和真实部署指标。
 
 ## Part B — Detailed Architecture Specification
 
-### Evaluation run contract
+### Evaluation Run Contract
 
-每个 EvaluationRun 固定 DatasetVersion、CaseSetHash、Variant、Model/Prompt/Skill、Tool/Provider、
-Token/Time budget、QueryClass、随机种子、retrieval rounds、reviewer protocol 和 trace。RawResult、
-Metric、FailureClass、Comparison 和 ReleaseDecision 分开保存；BLOCKED、UNAVAILABLE、INCOMPARABLE
-不能折算为零或 PASS。A/B/C、Graph-vs-Hybrid 和 L0-L4 都必须使用同一切片和可复现分母，并同时
-报告质量、效率、安全和复杂度指标。
+EvaluationRun 固定 DatasetVersion、CaseSetHash、Variant、Model、Prompt/Skill、Capability、Tool/Provider、Token/Time Budget、QueryClass、Random Seed、Retrieval Rounds 和 Reviewer Protocol。RawResult、Metric、FailureClass、Comparison、Artifact 和 ReleaseDecision 分开保存；每条结果引用 Trace 和 Evidence Lineage。
 
-## A/B/C
+### A/B/C and ablation
 
-| Variant | fixed | variable |
+| Variant | 固定项 | 变化项 |
 |---|---|---|
-| A | same base model, raw corpus, tools, legal prompt/skills, token/time budget | WorkBuddy Generic Legal Agent |
-| B | same as A | WorkBuddy + Zuno Legal Capabilities via MCP/API |
-| C | same as A/B and same capabilities | Zuno Native Runtime + first-class Domain State/staleness/HITL |
+| A | Model、Raw Corpus、Tools、Prompt/Skill、预算 | Generic Host |
+| B | A 的全部固定项 | Host + Zuno Legal Capabilities |
+| C | A/B 的全部固定项和同一能力 | Native Runtime + first-class Domain State |
 
-Interpretation: `C > B > A` supports Legal Intelligence and Runtime; `C ≈ B > A` supports Legal Backend, not Native Runtime; `C ≈ B ≈ A` deletes unmeasured complexity.
+Graph Ablation 比较 Fixed Vector、Fixed Hybrid、Always Graph、Agentic RAG 和 Conditional Graph；Multi-Agent Ablation 比较 Single Agent、Role Pipeline、Ephemeral Worker 和 Specialized Agent；Service Ablation 比较模块化 Worker 与独立服务的隔离、吞吐和运维代价。
 
-## Metrics
+### Metrics and denominator
 
-- Quality：Evidence Sufficiency、Citation Correctness、Unsupported Claim Rate、Conflict/Dispute F1、Fact–Article F1、Applicability Accuracy、Reviewer Acceptance、Task Completion。
-- Efficiency：Latency、Token、Cost、Model Calls、Retrieval Rounds、Tool Calls、re-plan/retry rate、Domain State Reuse Rate。
-- Service：queue lag、CPU/GPU、memory、failure isolation、retry storm、deployment rollback、cross-service trace completeness。
-- Security：no-egress、allowlist、secret leakage、cross-tenant、prompt injection/tool、sandbox escape、revoked permission、stale credential、duplicate effect、SBOM/signature。
+Quality 包括 Evidence Sufficiency、Citation Correctness、Unsupported Claim Rate、Conflict/Dispute F1、Fact–Article F1、Applicability Accuracy、Reviewer Acceptance 和 Task Completion。Efficiency 包括 Latency、Token、Cost、Model Calls、Retrieval Rounds、Tool Calls、Retry、Recovery、State Reuse。BLOCKED、UNAVAILABLE、INCOMPARABLE 必须单独报告，不能变成零分或 PASS。
 
-不得只报告 LLM Judge；每个结果要绑定 dataset/version/model/provider/service profile、trace 和 evidence。
+### Reviewer、统计与发布门
 
-## Legal Evaluation Layers
+数据集版本、分层切片、参考答案、Reviewer Agreement、重复运行和置信区间必须可追溯。Release Gate 至少检查数据完整、引用正确、Unsupported Claim、严重失败、安全证据、预算和可复现性；Gate 通过也只证明指定协议，不等于 Production Ready。
 
-研究背景只提供 PUBLIC_CONTEXT，不是 Zuno Current，也不证明 Zuno 已复现论文结果。它为
-评测分层提供了可借鉴的方向：LawBench 将中文法律能力拆成 20 个任务和记忆、理解、应用
-三个认知层级；LJPCheck 说明总体 Accuracy/F1 不能替代针对公平性、鲁棒性和边界行为的
-功能测试；JIA 以事件抽取、事件对齐和冲突检测显式构造案件中间结构；Fact–Article
-Correspondence 说明细粒度事实—法条关系可以作为独立任务测量；InternLM-Law 同时报告
-自动任务、人工法律咨询和长文本评测。详见
-[`legal-ai-capability-matrix.md`](../../../project-reconstruction-lab/sources/legal-ai-capability-matrix.md)。
+### Evidence and implementation gap
 
-据此，Zuno Target Eval 分为：
-
-| 层级 | 测量对象 | 不能推出的结论 |
-|---|---|---|
-| L1 Domain Capability | Event、Fact、Fact–Article、Conflict、Evidence Retrieval 等能力 Contract | 不能推出 Runtime 或产品整体更好 |
-| L2 Legal Cognition | 法律知识记忆、理解、应用/推理 | 不能替代真实案件任务 |
-| L3 Functional Behavior | 缺证、冲突、无关属性变化、法条版本变化、应拒答/应过期等行为 | 不能只用平均 Accuracy 概括 |
-| L4 Real Task Outcome | 法院/法律 QA、证据充分性、引用正确性、人工接受率、完整性、耗时 | 不能把历史 Demo 当作测量结果 |
-| L5 Agent System | Task Completion、Recovery、Domain State Reuse、Tool/Model/Retrieval 成本与延迟 | 不能归因于 Domain-aware Runtime 而不做 B 对照 |
-
-### H2 — Runtime–Domain Integration Advantage
-
-A/B/C 的主要目的，是把 Legal Intelligence 的价值与 Native Runtime 的额外价值拆开：
-
-```text
-A Generic Host
-  < B Generic Host + Zuno Legal Capabilities
-  < C Zuno Runtime + first-class Domain State
-```
-
-只有在相同模型、语料、工具、能力、Prompt/Skill 质量、Token/时间预算和独立数据切片
-下，C 相对 B 的收益仍然可重复，并能归因于 Domain State、EvidenceRequirement、
-staleness/dependency 或 Review 对账，才可以支持 Native Runtime 的保留。否则应将结论
-收敛为 `C ≈ B > A`，保留 Legal Backend、删除或缩减 Native Runtime。
-
-## Worker boundary
-
-Eval/benchmark runs are asynchronous batch jobs. Product API submits a job and returns receipt; Eval Worker owns dataset/run/result/release gate facts. It不能提升 Domain Finding、质量或 Production Readiness，除非有通过的证据协议。
-
-`A/B/C` 是 Target Contract，不是已执行结果。相同模型、语料、工具、预算和评测集下，只有
-`C >> B >> A` 且收益可归因于 first-class Domain State、EvidenceRequirement、staleness/dependency
-或 Review 对账，才允许 Native Runtime 继续存在；`C ≈ B >> A` 应收缩为 Legal Backend；
-`C ≈ B ≈ A` 必须删除无证据复杂度。
-
-## Current / Target / Gap
-
-- Current：仓库有 eval tooling、trace structures and blocked/not-measured status；没有公平 A/B/C 运行结果。
-- Target：独立 Eval/Trace Worker 与可复现 release gate。
-- Gap：法律真实数据、标注、reviewer protocol、重复运行、成本/延迟和 service-level evidence。
+公开论文和官方代码只作为 PUBLIC_CONTEXT，不能推出 Zuno 已集成或复现。真实 Court QA、标注、Reviewer、A/B/C 结果、故障和成本证据缺失时，Runtime、Graph、Multi-Agent 和服务收益都保持 Hypothesis。

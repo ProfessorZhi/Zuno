@@ -2,84 +2,74 @@
 
 status: normative-target
 architecture_state: ACCEPTED_TARGET
-canonical_question: 哪些对象是法律业务世界的 Canonical State，谁可以改变它？
-owner: Platform / Domain Service
-replaces: `docs/project/modules/01-product-surface.md`、`03-knowledge-agentic-graphrag.md` 中的重复领域描述（Superseded）
+canonical_question: 哪些对象和版本代表法律业务世界中的正式事实？
+owner: Legal Domain Owner
+replaces: docs/project/modules/01-product-surface.md、03-knowledge-agentic-graphrag.md 中重复的领域描述（Superseded）
 
 ## Part A — Architecture Narrative
 
-法律系统需要表示的不是“模型记住了什么”，而是案件世界中哪些内容在当前证据和审查规则下被
-认为成立。Matter 给出工作范围，DocumentVersion 给出来源，Claim 和 Evidence 连接需要证明的
-主张与材料，Finding 和 WorkProduct 表示可交付的分析结果。每个重要对象都需要稳定身份、版本、
-来源、权限、依赖和审查语义，否则同一案件在不同 Run 中会被重复解释，用户也无法知道结论是否
-仍然有效。
+### 什么才算法律业务事实
 
-例如一次争议识别可以从文档中抽取 Event、Fact 或 ConflictProposal；这些结果可能很合理，但
-它们没有因此成为业务真相。Knowledge、Legal Capability 或 Agent 只能提出 Proposal，Domain
-Owner 结合 Evidence、权限、Schema 和 Review 决定是否提交 Canonical Version。新证据到来时，
-依赖它的 Fact、Conflict 或 Finding 可能 stale，系统应重新评价或请求人工确认，而不是静默覆盖。
+Legal Domain Model 不是 LLM、Prompt、Knowledge Base、Memory、Skill、Tool、Graph 或 LangGraph State。它是系统对 Matter 中业务对象、来源、版本、依赖、权限和人工判断的正式表示。Fact、Evidence 或 Finding 是否成立，不由模型置信度单独决定，而由 Canonical Owner 按来源、版本、权限和审查规则决定。
 
-Domain Model 因此与 LLM、Prompt、Knowledge、Memory、Skill、Tool、Graph 和 LangGraph State
-分离。最小替代方案是 JSON + PostgreSQL；只有当 identity/version/provenance/dependency/review
-和审计门禁能解决真实跨文档任务问题时，才保留更正式的对象边界。对象数量必须由跨运行复用和
-权限/审查需要证明，不能由名词数量推动。
+### Target Scenario：从证据到 Finding
+
+这是 Target Scenario，不是历史事实：
+
+新的 EvidenceVersion 被接收后，解析和法律能力产生 FactProposal、ConflictProposal 或 FindingProposal。Proposal 带 EvidenceReference、SourceSpan、Provider、算法版本和输入 DomainVersion，先进入 Domain Admission。Domain Owner 验证 Schema、Provenance、Permission、Dependency 和 Version/CAS；需要人工判断时进入 Review。只有通过 Admission 的对象才能形成 FactVersion、ConflictVersion 或 FindingVersion，之后才能被 WorkProduct 引用。
+
+### 最小对象和概念边界
+
+Matter、Case、Party、DocumentVersion、Claim、Fact、Event、Evidence、Conflict、Dispute、LegalIssue、StatuteVersion、LegalElement、ApplicableLaw、SimilarCase、Finding、HumanDecision 和 WorkProduct 是候选业务对象。Canonical 只保留能拥有 identity、version、provenance、state、dependency、review 或 audit 责任的对象；检索命中、Graph Path、Embedding、Memory Entry 和 Agent Step 是 Projection、Context 或 Runtime Object，不应膨胀成业务事实。
+
+### 责任与非责任
+
+Domain Owner 负责正式对象、版本、依赖、stale 传播和 Mutation Authority；Knowledge 负责 Source、Index、Citation 和 Candidate；Legal Capability Provider 负责 Observation/Proposal；Runtime 负责执行位置和预算；Security 负责授权；Review 负责必要的 HumanDecision。Domain Model 不负责选择模型、保存 Checkpoint、拥有 Graph、直接执行 Tool 或复制 Memory 系统。
+
+### 为什么需要正式 Domain Model
+
+普通 JSON 加 PostgreSQL 可以作为实现起点，但如果没有稳定 Owner 和 Admission Contract，任何 Agent 或 Tool 都可能把自由文本写成事实，版本变化也无法传播。Formal Model 的成本是 Schema、CAS、Provenance、Review 和迁移；它只有在跨文档分析、证据链、stale 和人工责任确实需要时才成立。若简单 JSON 加单一事务边界能通过同样的质量、恢复和审计测试，应缩减对象数量和 Domain Kernel。
+
+### 失败、替代与反转
+
+错误来源、过期材料、权限变更、重复 Proposal 或版本冲突都必须阻止静默提升。WorkBuddy + Zuno Backend 可以消费这些 Contract，不要求 WorkBuddy 持有 Canonical State。若外部 Host 通过普通 JSON Tool 已经能保持相同的版本、证据、审查和审计语义，Native Domain Runtime 不应继续存在。当前正式对象仍是 Target 设计，仓库模型不等于历史项目或生产事实。
+
+### Current / Target / Gap
+
+Current 以代码、Migration、测试和 Trace 为准；Target 是最小法律 Domain Kernel 和 Provider Proposal 边界；Hypothesis 是结构化 Domain State 对复杂任务质量、复用和恢复的贡献；Gap 是对象收敛、用户验证、Admission Test、stale 传播和真实法律评测。
 
 ## Part B — Detailed Architecture Specification
 
-### Canonical admission contract
+### Minimum Canonical Objects
 
-Provider 输入为带 `input_domain_version`、`capability_version`、provenance、Evidence lineage 和
-权限范围的 Proposal；输出只能是 `Proposal`、`Candidate`、`Observation`、`Reference` 或 `Receipt`。
-Domain Owner 依次执行 Schema、identity、provenance、dependency、permission、version/CAS、state
-transition 和必要 Human Review，成功后提交新的 Canonical Version；失败进入 rejected、stale、
-review_required 或 reconciliation，不静默重试或覆盖。
-
-每个 Canonical Object 的持久化都必须能回答 identity、version、owner、mutation authority、source、
-dependency、review、audit 和 staleness。若对象只在单次检索或单个 Provider 中存在，则保持 derived
-view/proposal，不新增 Domain 表。
-Canonical mutation 以稳定 identity 与幂等键收敛重复提交；发生版本冲突时返回 stale 或
-review_required，而不是产生第二个业务版本。
-
-## Definition
-
-Domain Model 不是 LLM Model、Prompt、Knowledge Base、Memory、Skill、Tool、GraphRAG 或 LangGraph State。它是系统对 Matter 中可审计业务状态的正式表示，包含 identity、version、provenance、state、ownership、mutation authority、staleness、dependency、review 和 audit。
-
-## Minimum Canonical Objects
-
-| Object | Meaning | Owner / write rule |
+| 对象 | 必要字段语义 | Mutation Authority |
 |---|---|---|
-| `Matter` | 一项法律工作及租户/权限边界 | Domain Service 创建和版本化 |
-| `DocumentVersion` | 一个可追溯的来源文档版本 | Domain/Ingestion contract；内容 provenance 不可伪造 |
-| `Claim` | 需要证据支持的主张 | Agent/Capability proposal；Domain owner 接受 |
-| `Evidence` | 已接受、可引用、带来源和权限的证据 | Domain owner commit；Knowledge 只产生 candidate |
-| `Finding` | 基于版本化 Claim/Evidence 的工作结论 | Domain owner + policy/Human Review |
-| `HumanDecision` | 人工接受、拒绝、修订或发布决定 | Reviewer authority |
-| `WorkProduct` | 面向用户/系统的版本化交付物 | Domain/Product publication gate |
+| Matter/Case | identity、tenant、scope、status、owner | Domain |
+| DocumentVersion | content hash、source、version、ACL、parser reference | Domain/Knowledge handoff |
+| Evidence/Fact/Event | version、provenance、dependency、state、review | Domain |
+| Conflict/Dispute/LegalIssue | related objects、reason、version、review state | Domain |
+| StatuteVersion/LegalElement | jurisdiction、effective period、source | Legal Knowledge/Domain admission |
+| Finding | claim、supporting evidence、applicability、version、review | Domain |
+| HumanDecision/WorkProduct | reviewer、decision、source versions、delivery | Domain/Product |
 
-`Case` 默认是 Matter 的法律 Profile/别名；`Party`、`Fact`、`Event`、`Conflict`、`Dispute`、`LegalIssue`、`StatuteVersion`、`LegalElement`、`ApplicableLaw`、`SimilarCase` 先作为 typed proposal、derived view 或 capability output。只有跨运行身份、版本、权限、依赖和审查需求被证明，才升级为 Canonical object。
+### Canonical Admission Contract
 
-## Provider rule
+Proposal 输入必须包含 proposal_id、matter_id、object_type、payload、source_references、input_domain_version、provider、provider_version、confidence/explanation、permission_context 和 idempotency_key。输出只能是 accepted_version、review_required、rejected、conflict 或 stale。Provider 不能直接写 FactVersion、FindingVersion 或 HumanDecision。
 
-Agent、Legal Intelligence、Knowledge、LLM、OSS、API 和 MCP Provider 只能返回 `Proposal`、`Candidate`、`Observation`、`Reference` 或 `Receipt`，不能直接写 `FactVersion`、`ConflictVersion` 或 `FindingVersion`。
+The write rule is simple: Provider produces Proposal; only Domain Owner writes Canonical Version。换言之，专业算法、模型和外部 Provider 都只能提交候选，不能绕过 Schema、Provenance、Permission、Version 和 Review 直接改变业务事实。
 
-## Part-A owner and mutation boundary
+### Version、CAS 与 Staleness
 
-Domain Owner 的责任范围包括 Tenant、Workspace、Matter、DocumentVersion、Fact、Claim、Evidence、
-Conflict、Dispute、LegalIssue、Finding、HumanDecision、WorkProduct、Review、DomainVersion 和
-Provenance 的正式版本。这个 Owner 清单不等于每个名称都必须立即新增一张表：`Fact`、`Event`、
-`Conflict`、`Dispute`、`LegalIssue`、`ApplicableLaw` 等仍须先满足 identity、version、dependency、
-review 和 audit 的必要性条件，才从 typed proposal/derived view 升级为独立 Canonical Object。
+每个 Canonical Object 使用 identity 加版本；Admission 通过 compare-and-set 检查 input_domain_version。新 EvidenceVersion 按 dependency graph 使受影响 Fact、Conflict、Dispute、ApplicableLaw 和 Finding 标记 stale 或 review_required。重新评价可以由 bounded Agent Run 触发，但触发本身不等于新事实提交。
 
-只有 Domain Owner 能执行 Canonical mutation。任何 Provider 输出都必须经过 Schema、Provenance、
-Evidence、Permission、Version、State transition 和必要 Human Review；业务语义不随 Runtime、
-Memory Provider 或模型拓扑漂移。
+### Storage、Security 与 Audit
 
-## Scope boundary
+PostgreSQL 是 Target System of Record；检索、Graph、Memory 和 Runtime 只能保存 Projection/Context/Control State。所有 Mutation 绑定 Tenant、Matter、Scope、Principal、Policy Epoch、Provenance 和 Trace。Audit 保留旧版本、来源、Admission Decision、Reviewer 和原因；法律保留或删除规则不得删除必要的审计链。
 
-Knowledge owns retrieval data and EvidenceCandidate；Agent owns plan/control；Memory owns reusable context；Tool owns external effects；Security owns decision/policy facts；Eval owns evaluation facts。它们可以引用 Domain State，但不能复制最终状态机。
+### Failure、Retry 与 Recovery
 
-## Current / Target / Gap
+Admission failure、version_conflict、provenance_missing 和 permission_denied 必须作为 typed failure 返回；只有相同 Proposal 且幂等键不变的 transient validation 才能 bounded retry。恢复时重新读取 DomainVersion 和来源，不能把失败的 Proposal 直接提升为 Canonical Version。
 
-- Current：仓库已有通用 DocumentVersion、Claim/Evidence 和 Product/Agent tables；未证明完整 Legal Domain Kernel。
-- Target：最小 Canonical Domain Model 与 Proposal → Validation → Version → Review 闭环。
-- Gap：Matter/Fact/Finding identity、dependency invalidation、human review 和跨服务 write trace 未实现证明。
+### Testing and Evidence
+
+必须测试重复 Proposal、错误来源、跨租户引用、CAS 冲突、新证据 stale、权限撤回、Review 驳回和恢复重放。Current 证据由实现和测试提供；Domain Quality、Legal Capability 增益和 Native Runtime 价值必须通过 A/B/C 或对象级 Benchmark 证明。

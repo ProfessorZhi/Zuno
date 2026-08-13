@@ -134,6 +134,10 @@ V3.1 Round-003 在同一套 `sessions/` 记录中增加 `baseline-audit.md`、Pa
 Scorecard、`document_impact`、12 个 Delta、Review Package 和专用 verifier；Round-specific
 changelog 只留在 Session，不写回 Canonical 文档。
 
+V3.1.1 进一步要求 Canonical Sync 使用 `SECTION_REWRITE` 或 `FULL_PART_REWRITE`，禁止通过
+`APPEND` 在旧正文后累积架构修订；Part A 目标为 85，90 以上标记为 STRONG。结构归一化可以
+独立于新的 100Q Round 执行。
+
 Blue Repair 使用同一个 `sessions/` 根目录，Repair Session 以独立协议记录根因聚类、Part-A
 修复、五指标、Counter Retest 和 Closure Report，例如：
 

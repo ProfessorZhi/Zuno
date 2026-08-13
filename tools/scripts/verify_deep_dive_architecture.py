@@ -8,7 +8,7 @@ COMMON_CASE = "复杂案件分析"
 DOCUMENT_REQUIREMENTS = {
     "docs/project/architecture/architecture.md": (
         "Product / Domain", "Logical Capability Architecture", "Physical Service / Deployment Architecture",
-        "Python-only", "FastAPI", "LangGraph", "Reconciliation", "Current / Target / History",
+        "Python-only", "FastAPI", "LangGraph", "Reconciliation", "Current", "Target", "History",
     ),
     "docs/project/domain/legal-domain-model.md": (
         "Matter", "DocumentVersion", "Evidence", "Finding", "Proposal", "provenance", "write rule",

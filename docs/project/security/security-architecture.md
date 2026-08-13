@@ -4,65 +4,58 @@ status: normative-target
 architecture_state: ACCEPTED_TARGET
 canonical_question: 身份、权限、Secret、Sandbox、网络和副作用如何形成可验证边界？
 owner: Security Decision Owner
-replaces: `docs/project/modules/09-security.md`（Superseded）
+replaces: docs/project/modules/09-security.md（Superseded）
 
 ## Part A — Architecture Narrative
 
-法律场景的安全目标不是拥有最多的安全名词，而是让每一次读取、模型调用和外部动作都能说明
-谁在什么 Matter/Scope 下、以哪一版权限、对哪个对象做了什么。Prompt Injection 属于不可信内容，
-不能改变 Grant；Agent 可以提出 Action，但不能自己扩展 Tool 权限、读取 plaintext Secret 或批准
-不可逆副作用。
+### 安全要保护的对象
 
-以“案件文档诱导 Agent 调用外部 API”为例，系统先把任务和权限 downscope，生成绑定参数和范围
-的 PreparedAction，执行前按当前 SecurityEpoch 重新授权，必要时等待人工 Approval，最后由 Sandbox
-执行并记录 EffectReceipt。撤权、参数、ToolVersion 或 Secret 变化会使旧批准失效。timeout 不能
-直接视为失败或安全重试，因为 provider 可能已经执行。
+法律场景的安全目标不是堆叠最多的安全功能，而是让每次读取、模型调用和外部动作都能说明谁在什么 Tenant、Matter 和 Scope 下，以哪一版权限，访问了什么对象，产生了什么结果。安全边界必须同时保护材料机密性、租户隔离、工具副作用和审计可追溯性。
 
-这条链会增加授权检查和审计成本，但比“模型输出一段调用参数，服务直接执行”更可验证。安全
-差异的目标是 Source Audit、Build Reproducibility、No-egress、Secret Trace、Sandbox Boundary
-和 Cross-tenant Evidence；在这些证据出现前，不能宣称当前系统已经安全或生产合规。
+### Threat Scenario：恶意文档诱导外部动作
+
+这是 Target Scenario，不是历史事实：
+
+Matter 文档中包含 Prompt Injection，诱导 Agent 把案件内容发送到外部 API。Agent 可以提出 PreparedAction，但不可信内容不能改写 Grant、SecurityEpoch、Secret Scope 或 Approval。执行前 Security Owner 重新授权，必要时由 Human Approval 放行，Sandbox 执行并生成 EffectReceipt。若撤权、参数、ToolVersion 或 Secret 变化，旧授权失效。
+
+安全的 Happy Path 是：识别主体与 Matter → downscope → 校验 PreparedAction → 当前 Epoch 授权 → 必要时人工批准 → Sandbox 执行 → Receipt 与 Audit；任何一步失败都不能静默执行。
+
+### 责任边界
+
+Security Owner 负责 Principal、Tenant、Grant、Policy、SecurityEpoch、Approval、Secret Scope 和 Audit Authority；Platform/Domain 保存业务权限引用；Runtime 负责执行时携带上下文；Tool/Sandbox 负责强制网络、文件、Secret 和 Effect 边界。Security 不拥有 Finding 或 Agent Plan，也不允许 Agent、Provider 或文档内容自行提升权限。
+
+### 为什么需要执行时授权
+
+只在 Plan 创建时授权无法处理长任务中的角色变更、撤权、Secret rotation、Tool version 和参数变化。执行时授权和 Receipt 增加延迟、审计和策略复杂度，但能把“计划想做什么”和“当前允许做什么”分开。若外部 Host 能提供同等的 Epoch、Approval、No-egress、Secret Trace 和副作用对账证据，Zuno 不应重复建设安全执行层。
+
+### 失败、取舍与反转
+
+Prompt Injection、跨租户查询、过期凭据、Sandbox escape、Tool timeout 和 duplicate effect 都必须 fail closed 或进入未知结果对账。开源不天然安全，闭源也不天然不安全；Zuno 的候选差异是 Security Verifiability 和 Deployment Sovereignty。若真实测试不能证明安全边界，不能把安全目标写成 Current 或 Production 事实。
+
+### Current / Target / Gap
+
+Current 只由实现、配置、测试、Trace 或 Attestation 证明；Target 是逐服务执行策略、Sandbox 隔离、最小权限和可审计 Effect；Hypothesis 是自托管可验证性降低审计不确定性；Gap 是 no-egress、Secret、跨租户、撤权、Sandbox 和制品证明。
 
 ## Part B — Detailed Architecture Specification
 
-### Authorization and effect contract
+### Authorization and Effect Contract
 
-`PreparedAction` 必须绑定 canonical action hash、Subject、Tenant、Scope、ToolVersion、Arguments、
-EffectScope、SecurityEpoch、Approval 和 Expiry。执行前重新授权，执行后写 EffectReceipt、provider
-operation ID 和 durable audit。任何 revoke、参数/版本/Secret 变化都使旧批准失效；timeout 进入
-outcome_unknown/reconciling/manual_review，不直接 retry 不可逆动作。所有服务和 worker 都执行同一
-策略，Prompt Injection 永远不能改变 policy decision。
+PreparedAction 必须绑定 action hash、Subject、Tenant、Matter、Scope、ToolVersion、Arguments、EffectScope、SecurityEpoch、Approval 和 Expiry。执行前重新计算授权，执行后写 ToolAttempt、EffectReceipt、ProviderOperationId 和 Audit Record。Read-only、reversible、irreversible Effect 使用不同 Approval、Retry 和 Reconciliation 策略。
 
-## Boundary
+### Effect State and unknown outcome
 
-Security owns Principal/Tenant/Workspace/Grant/Policy/SecurityEpoch/Approval decisions and audit authority. Platform Domain stores business authorization references; Tool/Sandbox enforces action gates; Agent Runtime cannot mint permission or access plaintext Secret.
+Effect 状态包括 proposed、validated、authorized、approval_required、ready、executing、succeeded、failed_known、outcome_unknown、reconciling 和 manual_review。Timeout 不能直接等于 failed；不可逆动作的 outcome_unknown 必须先依据 ProviderOperationId 对账，禁止盲目 Retry。
 
-## Required gates
+每次 Execute 使用稳定 Idempotency Key；重复请求必须返回同一 EffectReceipt 或明确的 reconciliation 状态，不能依靠模型记忆去重。
 
-```text
-Principal / Tenant / Scope
-  → Agent / Task downscope
-  → PreparedAction canonical hash
-  → Security decision + current epoch
-  → optional human approval
-  → Sandbox / Network / Secret enforcement
-  → EffectReceipt + durable audit
-```
+### Secrets、Sandbox 与 Network
 
-Read-only/reversible/irreversible effects have different policy. Unknown effect is not success and not safe retry. Prompt injection is untrusted data; it cannot expand tool grants or bypass approval.
+Secret 只以 scoped lease 提供，不写入 Prompt、Trace 或普通日志；Network Allowlist、No-egress Profile、Filesystem Scope 和资源限制由 Sandbox 强制。工具参数来自不可信内容时必须经过 Schema、Policy 和 Approval，Prompt Injection 不能改变 Policy Decision。
 
-Approval 必须绑定 Subject、Tenant、Tool、ToolVersion、Arguments、Effect Scope、SecurityEpoch 和
-Expiry。任何 revoke、Secret revoke、Tool version、Arguments 或 SecurityEpoch 变化都必须重新授权。
-Tool/Sandbox 的 Target Effect 状态包括 `proposed`、`validated`、`authorized`、
-`approval_required`、`ready`、`executing`、`succeeded`、`failed_known`、`outcome_unknown`、
-`reconciling` 和 `manual_review`；timeout 不等于 failed，未知结果必须先对账。
+### Audit、revocation 与 observability
 
-## Verifiability target
+每次 authorization、model invocation、tool execution、Domain Decision 和 Human Decision 记录 Principal、Tenant、Matter、Scope、PolicyEpoch、Trace、版本、结果和失败类型。撤权、Secret revoke、ToolVersion、Arguments 或 SecurityEpoch 变化使旧 Approval 失效。安全证据必须包括 SBOM、签名制品、Egress Audit、Secret Leakage、Cross-tenant、Prompt Injection、Sandbox Escape 和 Duplicate Effect Test。
 
-不声称开源天然安全或外部 Host 天然不安全。Target/Hypothesis 是可提供 Source Audit、Build Reproducibility、SBOM、Signed Artifact、No-egress/Allowlist evidence、Secret/Model/Tool/Domain/Human trace、Sandbox boundary test 和 cross-tenant proof。
+### Testing and qualification gap
 
-## Current / Target / Gap
-
-- Current：repository has security modules, grants/epochs/audit target and Docker controls；完整多服务安全证据未建立。
-- Target：security decision authority + enforcement in every service and worker；保留独立 Sandbox
-  Boundary，但 Docker/Deno 或其他执行 Provider 仍待外部资格测试。
-- Gap：offline egress、secret leakage、tenant isolation、revocation、sandbox escape、duplicate side effect、artifact attestation。
+Target Contract 需要单元、集成、故障注入和部署级测试；Repository 中的安全模块或配置不等于实测安全。生产或合规结论必须等真实运行、Attestation、HA、备份和外部资格证据。

@@ -61,24 +61,26 @@ def _section(content: str, title: str) -> str:
 def validate_design(content: str) -> list[str]:
     required_sections = [
         "# Zuno 总体 Target 架构",
-        "## 0. 这次重构改变了什么",
-        "## 1. 产品与领域核心",
-        "## 2. Python-only Target",
-        "## 3. Target Network-facing Service Boundary Candidates",
-        "## 4. 逻辑能力如何落到服务",
-        "## 5. FastAPI 与 LangGraph 的硬边界",
-        "## 6. 同步、异步与队列",
-        "## 7. Domain State 与 Runtime State",
-        "## 8. Deployment Profiles",
-        "## 9. Acceptance、Reversal 与 Current / Target / History",
-        "## 10. Current / Target / History",
-        "## 11. Canonical Reading Order",
+        "## Part A — Architecture Narrative",
+        "## Part B — Detailed Architecture Specification",
+        "### 这套架构要解决的业务问题",
+        "### 一个完整的案件分析场景",
+        "### 责任边界与不拥有的事实",
+        "### 最危险的失败与恢复",
+        "### 取舍与反转条件",
+        "### Cross-layer Contract Registry",
+        "### Service、通信与队列边界",
+        "### State、Version 与 Recovery Contract",
+        "### Owner Registry",
+        "### Security、Deployment 与验证要求",
+        "### Implementation / Measurement / External Gaps",
     ]
     required_terms = [
         "Python-only", "Microservice", "edge-api", "platform-domain-service",
         "agent-runtime-service", "knowledge-service", "tool-sandbox-service",
         "FastAPI", "LangGraph", "PostgreSQL", "Checkpoint", "Reconciliation",
         "Current", "Target", "History", "Why service?", "Why not library?",
+        "Logical Capability Architecture", "Physical Service / Deployment Architecture",
     ]
     errors: list[str] = []
     for marker in required_sections + required_terms:
@@ -88,7 +90,7 @@ def validate_design(content: str) -> list[str]:
         marker = path.split("docs/project/", 1)[-1]
         if marker not in content and Path(path).name not in content:
             errors.append(f"architecture.md does not route to canonical document: {path}")
-    if "11 Logical Modules + 1 Architecture" not in content:
+    if "11 Logical Modules + 1 Architecture" not in content or "History" not in content:
         errors.append("architecture.md must record the old 11-module taxonomy as History")
     if "五个候选服务角色，不是冻结的服务数量，也不是 Current" not in content:
         errors.append("architecture.md must distinguish candidate service roles from Current and fixed count")

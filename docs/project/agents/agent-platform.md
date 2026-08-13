@@ -2,101 +2,60 @@
 
 status: normative-target
 architecture_state: ACCEPTED_TARGET
-canonical_question: Agent 如何把任务、计划、能力、权限和结果连接起来？
-owner: Agent Runtime Service
-replaces: `docs/project/modules/06-agent-core-planning-control.md`、`07-capability-skill.md`（Superseded）
+canonical_question: Agent 如何在单一控制权下计划、并行执行、恢复、复核并提交领域 Proposal？
+owner: Agent Runtime Owner
+replaces: docs/project/modules/06-agent-core-planning-control.md、07-capability-skill.md（Superseded）
 
 ## Part A — Architecture Narrative
 
-Agent Runtime 的价值不在于把每个任务都变成自治 Agent，而在于把一个复杂法律任务拆成可观察、
-可暂停、可恢复的执行过程。用户提交案件分析后，Coordinator 读取任务、权限、Domain Snapshot
-和 EvidenceRequirement，选择一个 Plan；独立的 Evidence、Research 或 Dispute profile 可以并行
-工作，Join 阶段再检查证据是否足够，最后由 Domain Owner 决定哪些 Proposal 可以提交。
+### 为什么需要 Agent Runtime
 
-Runtime State 记录 Run、Plan、Step、Branch、Interrupt 和 checkpoint，Domain State 记录 Matter、
-Fact、Evidence、Finding 等业务世界。二者分离使 Runtime Provider 可以从 LangGraph 换成普通状态机、
-Pi 或 Host Runtime，而不改变法律语义。Memory 只是可复用上下文，Capability 是可替换能力，
-Tool 是执行通道；它们都不能直接批准 Domain mutation。
+复杂法律任务不是一次 Retrieve → Model → Answer。系统可能需要拆分证据要求、并行检索、识别冲突、调用法律能力、等待人工决定，并在材料或权限变化后重新规划。Runtime 的价值是控制这些步骤的顺序、预算、恢复和最终 Gate；它不因为调用了模型就拥有法律事实。
 
-主要失败是 Plan 运行期间新证据到来、权限被撤销或一个外部 Tool 返回未知结果。此时 Retry 不等于
-Replan，旧 Plan 不能静默继续；系统必须创建新的 PlanVersion、重新授权、对账 Receipt 或请求
-人工复核。若 WorkBuddy + Zuno Legal Backend 已经能完成同样的 Domain Condition、Evidence Gate
-和恢复语义，Native Runtime 应缩减而不是凭概念保留。
+### Target Scenario：一次复杂任务的生命周期
+
+这是 Target Scenario，不是历史事实：
+
+Coordinator 接收 Matter Snapshot 和任务，创建不可变 PlanVersion。Plan Activation 先确认权限、预算和 EvidenceRequirement，再调度并行 Step Execution：Evidence Step、Dispute Step 和 Legal Research Step。各分支返回 BranchResultRef；Reducer/Join 检查是否满足证据门，必要时触发 Reflection 或 Replan，随后生成 FactProposal、ConflictProposal 或 FindingProposal。Domain Owner 决定是否 Admission，Review 结束后 Runtime 只记录 RunOutcome。
+
+### Single Controller 的含义
+
+Single Controller 不等于 Single-thread，也不等于没有并行。它表示只有一个 Control Authority 负责 Plan Activation、Budget、Approval、Replan、Final Gate 和 RunOutcome；并行发生在 Step Execution 和受控 Worker 中。这样可以避免多个 Coordinator 争夺同一个 Run 的 authority，同时仍允许独立检索和法律研究并行。
+
+### 三层执行模型
+
+Fixed AgentRunGraph 提供可观测的运行骨架；Dynamic Plan DAG 表达任务依赖、EvidenceRequirement 和 Replan；Fixed StepExecutionGraph 约束单个 Step 的 Action → Observation → Decision 循环。三层分开后，Graph 控制可以替换，业务 Domain State 仍由 Domain Owner 保存。
+
+### 五种机制各自解决不同问题
+
+Plan-and-Execute 处理任务分解和依赖；ReAct 处理一个 Step 内的 Action/Observation；Reflection 判断结果是否满足质量或证据门；Replan 改变任务结构或前提；Reflexion 只产生可审查的事后经验候选。Retry 是对同一输入的受控重试，Replan 是输入、依赖或假设改变后的新 Plan，二者不能混写。
+
+### 失败、取舍与反转
+
+模型超时、工具 outcome_unknown、Evidence 不足、DomainVersion 改变或预算耗尽都可能阻止 Run。Runtime 必须让失败显式传播，不能将空答案视为成功。LangGraph 可以提供 Durable Execution，但 Plain Python、State Machine、Pi 或其他 Provider 也可以实现同一 Contract。若 A/B/C 证明 WorkBuddy + Legal Backend 已经获得同样的质量、恢复和效率，Native Runtime 应被缩减或删除。
+
+### Current / Target / Gap
+
+Current 只由仓库代码、测试、Trace 或实际运行证明；Target 是 Python Agent Runtime、Single Controller、可组合 Profile 和可替换 Orchestration Provider；Hypothesis 是 Domain-aware Planning、State Reuse 和 Evidence Gate 带来额外收益；Gap 是恢复、预算、并发、模型调用、人工暂停和 Native Runtime Benchmark。
 
 ## Part B — Detailed Architecture Specification
 
-### Runtime contract
+### Runtime Contract
 
-`RunSubmit` 接收 Task、PolicySnapshot、DomainVersion、EvidenceRequirement 和预算；Coordinator 产生
-不可变 `PlanVersion`，每个 Step 记录输入快照、Capability/Tool binding、权限 epoch、attempt 和
-output receipt。Step 失败区分 transient、blocked、stale、unknown_effect 和 invalid；Retry 只适用
-幂等瞬态故障，输入或业务条件变化必须 Replan。Join/Final Gate 未通过时，Run 只能等待、部分完成、
-拒答或进入 Human Review，不能直接发布 Finding。
+输入是 RunId、MatterId、Task、DomainSnapshot、PlanVersion、SecurityEpoch、Budget、Capability Binding 和 Knowledge Scope；输出是 StepResult、Proposal Reference、RunOutcome、Checkpoint Reference 或 typed failure。Runtime 不直接写 FactVersion、FindingVersion、HumanDecision 或 WorkProduct。
 
-## Boundary
+### State and control
 
-FastAPI 是 Application/API Interface；Agent Runtime 是长运行控制平面。Runtime owns `AgentRun`、`Plan`、`Step`、budget、delegation、checkpoint、interrupt、replan 和 control outcome；不拥有 Matter、Fact、Evidence、Finding、Permission 或 Tool Effect。
+AgentRun、PlanVersion、StepRun、DispatchGroup、Branch、Reducer、Interrupt、BudgetLedger、Checkpoint 和 ResumePosition 属于 Runtime Owner。PlanVersion 激活后不可变；Replan 创建新版本并记录原因；Checkpoint 只保存控制状态、可恢复输入引用和 Provider Receipt，不保存隐藏思维链或 Canonical Fact。
 
-## Flow
+### Failure propagation and retry
 
-```text
-Run Submit
- → Task / Goal / Policy Snapshot
- → Coordinator creates Plan
- → Domain Snapshot / EvidenceRequirement / stale dependencies
- → capability and Knowledge actions
- → Proposal / Observation / Receipt
- → acceptance / replan / HITL
- → Domain Owner commit
- → RunOutcome / WorkProduct reference
-```
+Failure 分类至少包括 transient_provider、timeout_unknown、version_conflict、permission_revoked、evidence_insufficient、budget_exceeded、cancelled 和 unrecoverable。只有同一输入、无外部副作用或已有幂等保证的 transient work 才可 retry；version、evidence 或 permission 改变时必须 replan、review 或 fail closed。
 
-## Domain-aware Runtime Contract
+### HITL、security and observability
 
-Native Domain-aware Runtime 的候选差异不是“能调用法律 API”，而是 Runtime 在计划和完成
-判断时能消费版本化的 Domain Contract，例如：
+Interrupt 绑定 Run、PlanVersion、DomainVersion、SecurityEpoch、review request 和 expiry。Resume 前重新读取 Domain、权限和 Evidence；审计保存可见决策、步骤、版本、receipt、错误和人工决定，不保存隐藏思维链。每个 Step 关联 Trace、Model/Capability Provider、Tool Call、Token/Time Budget 和结果引用。
 
-- 当前缺少哪个 `Fact`、`Evidence` 或 `EvidenceRequirement`；
-- 哪个 `Claim`、`Dispute` 或 `Finding` 因新证据而 `STALE`；
-- 哪个 `EvidenceRef` 支持当前主张，哪些关系仍需验证；
-- 哪个 Domain Condition 满足后才允许完成当前 Step 或提交 Review。
+### Provider boundary and testing
 
-Agent 仍然只能返回 Proposal、Candidate、Observation 或 Receipt；Domain Owner 才能
-提交正式版本。业务语义与 Runtime 深度集成，但实现保持松耦合：WorkBuddy/Dify/Pi、
-普通 Workflow 或 LangGraph 都可以作为 Host/Runtime Provider，前提是遵守同一 Contract。
-
-这是 `ACCEPTED_TARGET + H2`，不是 Current 质量证据。若 WorkBuddy + Zuno Legal Backend
-已经实现同样的 Domain Conditions、staleness、Evidence Gate 和恢复对账，则 Native
-Runtime 不获得额外保留理由。
-
-所有外部动作需要 Security/Approval/Idempotency/Effect Receipt。Model 只能提出计划、查询、Proposal 或 Action；不能批准 Domain commit、拿 secret 或发布不可逆副作用。
-
-## Runtime provider
-
-LangGraph、Plain Python workflow、State Machine、Pi 或 Host Runtime 都是 provider。LangGraph 只在 Agent Runtime Service 内负责 orchestration/durable workflow；Checkpoint 是 control state，不是 Domain State。
-
-## Part-A execution model
-
-默认执行模型是 `Single Controller + Plan`：简单任务使用确定性单步 Plan，复杂任务使用动态
-Plan DAG；固定的 AgentRunGraph 负责生命周期，Plan DAG 负责业务步骤，StepExecutionGraph
-负责执行、重试和汇合。可组合能力包括 Plan-and-Execute、ReAct、Reflection、Replan 和 Reflexion，
-但 Retry 不等于 Replan，也不是每个 Step 都自动触发模型 Reflection。
-
-每个 Step 都经过适用的 Action Evaluation、Step Acceptance/Reflection、Join Evaluation/Reflection、
-Final Gate 和 Final Reflection。Reflection 是受策略、预算和 Eval 控制的能力，不是隐藏思维链的
-持久化协议。
-
-## Capability and Skill
-
-Skill 是 HOW；Capability 是 WHAT；Tool 是 HOW executed；Knowledge 是可检索信息；Memory 是可复用上下文；Domain State 是业务世界当前状态。法律能力 Contract 不嵌入每个 Agent，Provider 通过统一 Proposal boundary 接入。
-
-Zuno 只拥有 Memory 的 Scope、Write Gate、Recall Gate、Promotion Gate 和 Context Contract。
-OpenViking 或其他 Memory/Context 实现是可替换 Provider，不是 Canonical Domain Store，也不是
-所有部署都必须存在的 Runtime 组件；历史项目中用户参与过 OpenViking 接入这一事实仍由
-`docs/project/facts/` 单独维护。
-
-## Current / Target / Gap
-
-- Current：仓库有 Agent runtime/graph/checkpoint 和 FastAPI run surfaces，但是单 backend image；没有独立 Agent Runtime Service evidence。
-- Target：Python Agent Runtime Service + coordinator + profile/worker pools。
-- Gap：multi-agent profile benchmark、service contract、独立 scaling/failure 和 runtime/domain reconciliation trace。
+LangGraph 只作为 Runtime orchestration Provider；它不能承载普通 CRUD 或 Canonical Domain Fact。替换测试需要比较 resume、interrupt、parallel join、replan、idempotency、recovery 和 observability。Target 的质量、效率和成本收益必须由匹配预算的 A/B/C 评测证明。
