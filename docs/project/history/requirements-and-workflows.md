@@ -1,57 +1,66 @@
-# Requirements and Workflows
+# 历史需求与业务流程恢复
 
 status: canonical-history
-canonical_question: 真实业务需求、人工流程和产品痛点是什么？
-owner: Project Facts / Business Context
-replaces: 无；从 `project-background.md` 中拆出业务需求与流程问题
+canonical_question: 历史项目真实面对什么业务问题和人工流程？
+owner: Project History Owner / Business Context
+replaces: 旧事实目录中的需求与流程候选
 
-## 事实边界
+> 本文件把历史事实、架构重建候选和未知事项分开。当前 Target 的 Domain Model、Evidence Requirement、Agent Runtime 或 GraphRAG 不能反向证明历史甲方当时提出过同样的要求。
 
-本文件只记录历史项目实际面对的业务问题和工作流程。Target 的 Domain Model、Evidence
-Requirement、Agent Runtime 或 GraphRAG 不能反向证明历史流程。
+## CONFIRMED：已经确认的历史锚点
 
-## 已确认锚点
+目前能够直接写入历史叙事的业务锚点有限，但很重要：
 
-| Claim | 状态 | Evidence | Strength | 边界 |
-|---|---|---|---|---|
-| 产品属于智慧法院项目体系中的一个产品 | `[USER_CONFIRMED]` | E-USER-001 | E1 | 不等于完整项目需求已恢复 |
-| 法院侧真实人员参与过测试 | `[USER_CONFIRMED]` | E-USER-002 | E1 | 测试任务、角色和数量 UNKNOWN |
-| 客户反馈回答质量需要继续提高 | `[USER_CONFIRMED]` | E-USER-002 | E1 | 具体质量问题和人工流程位置 UNKNOWN |
+- 产品属于智慧法院相关体系中的一个产品；
+- 法院侧真实人员参与过测试；
+- 客户 Demo 后明确反馈回答质量仍需提高；
+- 项目进入过 Pilot Validation，但尚未正式生产部署。
 
-## 业务流程恢复状态
+这些事实说明项目确实面向真实业务侧进行过阶段性验证，也说明回答质量是客户关注的结果边界；它们不能推出完整的人工流程、标准数据集或质量提升指标。
 
-下列链路是待验证的历史候选，不是 Zuno 已确认事实：
+## RECONSTRUCTED：基于背景的业务问题候选
+
+结合智慧司法公开研究和当前产品方向，可以把下列链路作为 `RECONSTRUCTED_CANDIDATE`，用于下一轮事实恢复和架构 Red Team：
 
 ```text
-案件材料进入
-  → 法官/助理阅读材料
-  → 提取关键事实或事件
-  → 对照双方陈述和证据
-  → 识别冲突与争议焦点
-  → 查找法条、类案或其他依据
-  → 形成可引用的分析结果
+法律 / 案件相关材料进入
+  → 人工阅读和定位关键信息
+  → 提取事实或事件
+  → 对照不同当事人的陈述与证据
+  → 发现冲突并形成争议焦点
+  → 查找法律依据或类案
+  → 形成带来源的分析结果
   → 人工复核或交付
 ```
 
-状态：`[RECONSTRUCTED_CANDIDATE]`。JIA 等公开研究说明这种法律任务链具有公开研究背景，
-但不能替代 Zuno 自己的需求记录、页面、QA 或用户回忆。
+这条链路是“法律任务可能需要什么”的工程重建，不是已经确认的 Zuno 历史 SOP。公开论文可以作为研究背景和 Research Transfer，不能作为 Zuno 的产品实现证明。
 
-## 仍为 UNKNOWN 的关键事实
+## TARGET_PROBLEM_MODEL：现在架构要验证的问题
 
-- 谁提出了第一版需求，以及业务方使用的原始术语；
-- 人工流程中最耗时或最容易出错的具体步骤；
-- 是否确实存在跨文档事实核对、证据引用、法条/类案检索等固定操作；
-- 产品解决的是法院内部司法辅助、法律问答、案件分析还是其他子场景；
-- 业务方如何定义“回答质量”；
-- 哪些流程必须人工批准，哪些可以自动化。
+Target 需要验证的不是“是否堆更多 Agent”，而是高风险法律任务是否需要同时处理：
 
-## 事实恢复入口
+- 多源材料与跨文档证据；
+- 事实、事件、陈述和冲突之间的依赖；
+- 法律依据的版本、适用性和引用来源；
+- 结果是否足够支持一个结论；
+- 新证据到来后旧结论是否 stale；
+- 哪些结果必须由 Domain Owner 或人复核；
+- 外部 Tool 动作是否需要审批、幂等和审计。
 
-优先寻找需求文档、客户演示材料、法院 QA、页面截图、会议记录和用户的具体场景回忆。
-若只能确认“类似流程”，保持 `[RECONSTRUCTED_CANDIDATE]`，不得升级为 `[USER_CONFIRMED]`。
+这些是 `TARGET_PROBLEM_MODEL`，不能写成“历史甲方已经明确要求全部能力”。每项能力都需要通过真实 QA、Benchmark、User Validation 或故障证据确认是否值得保留。
 
-## Owner 边界
+## UNKNOWN：仍未恢复的历史事实
 
-本文件负责历史需求和人工流程；跨层 Product / Domain Target 进入 [`../architecture/architecture.md`](../architecture/architecture.md)，
-当前状态进入 [`../status/README.md`](../status/README.md)，
-候选恢复问题进入 [`../../../project-reconstruction-lab/01-facts/open-questions.md`](../../../project-reconstruction-lab/01-facts/open-questions.md)。
+- 谁提出了第一版需求，业务方当时使用什么原始术语；
+- 人工处理什么具体材料，原始输入是卷宗、判决书、法规还是其他资料；
+- 人工流程中最耗时、最容易出错的具体步骤；
+- 是否存在固定的跨文档核对、证据引用、法条或类案检索流程；
+- “回答质量”的正式定义、评分人和验收门槛；
+- 法院测试的问题数量、参考答案、参考材料和评价协议；
+- 真实 Bad Case，以及后续修改是否真的带来可测量收益。
+
+## 下一步证据入口
+
+优先寻找法院 QA、客户演示材料、页面截图、会议记录、任务记录和真实失败案例。若只能确认“类似流程”，保持 `RECONSTRUCTED_CANDIDATE`；不要因为架构文档已经定义了 Matter、Evidence 或 Finding，就把这些对象倒灌成历史需求。
+
+Target 产品问题和 A/B/C Kill Test 由 [`../architecture/architecture.md`](../architecture/architecture.md) 负责；当前代码证据由 [`../status/current-reality.md`](../status/current-reality.md) 和 [`../../evidence/README.md`](../../evidence/README.md) 负责。

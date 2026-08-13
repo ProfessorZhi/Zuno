@@ -1,47 +1,51 @@
-# Delivery and Usage
+# 交付与使用阶段
 
-## 已确认的交付状态
+status: canonical-history
+canonical_question: 历史项目实际验证和交付到了什么阶段？
+owner: Project History Owner
+replaces: 旧 delivery-and-usage 表格式入口
 
-| 事实 | 状态 | 当前表述 |
-|---|---|---|
-| 内部 Demo | `[USER_CONFIRMED]` | 存在内部 Demo |
-| 面向智慧法院项目组/客户侧的 Demo | `[USER_CONFIRMED]` | 存在客户侧 Demo |
-| 法院侧真实人员参与测试 | `[USER_CONFIRMED]` | 有法院侧人员参与测试；数量和身份未知 |
-| 历史阶段 | `[USER_CONFIRMED]` | Pilot Validation / 试点验证 |
-| 正式生产部署 | `[USER_CONFIRMED]` | 尚未正式生产部署 |
-| 生产流量 | `[UNKNOWN]` | 未建立生产流量证据 |
+## 一条保守的交付叙事
 
-## 交付状态边界
+当前可以确认的阶段顺序不是精确日期，而是：项目存在内部 Demo，也面向智慧法院项目组 / 客户侧做过 Demo；客户反馈回答质量仍需提高；随后团队继续迭代，并有法院侧真实人员参与测试；项目进入 Pilot Validation，但尚未正式生产部署。
 
 ```text
-Internal Demo       = YES
-Customer Demo       = YES
-Court-side Testing  = YES
-Pilot Validation    = YES
-Production          = NO
+Internal Demo
+  → Customer / Smart Court Project Demo
+  → 回答质量反馈
+  → Further Iteration
+  → Court-side Testing
+  → Pilot Validation
+  → Production = NO
 ```
 
-上述状态不代表已经有正式验收、稳定 SLA 或可公开的客户规模。
+## 状态表
 
-| 未知事实 | 状态 | 需要的直接证据 |
+| 阶段 | 历史状态 | 边界 |
 |---|---|---|
-| 实际部署位置和 endpoint | `[UNKNOWN]` | 环境、部署记录或访问地址 |
-| 真实用户数量和访问范围 | `[UNKNOWN]` | 用户清单、日志或客户确认 |
-| 具体法院与试点法院 | `[UNKNOWN]` | 项目材料或客户反馈 |
-| 正式验收结果 | `[UNKNOWN]` | 验收文档或明确用户确认 |
-| 上线时间、QPS、延迟、Token 和成本 | `[UNKNOWN]` | Trace、指标、账单或 Benchmark |
-| 运维责任、SLA、On-call 和灾备 | `[UNKNOWN]` | Runbook、告警和值班记录 |
+| Internal Demo | `USER_CONFIRMED` | 有内部演示，时间、内容和参与者未知 |
+| Customer-side Demo | `USER_CONFIRMED` | 有项目组 / 客户侧演示，不等于正式验收 |
+| Court-side Testing | `USER_CONFIRMED` | 有法院侧人员参与，身份、人数和题目未知 |
+| Pilot Validation | `USER_CONFIRMED` | 进入试点验证阶段，不等于生产 |
+| Production | `USER_CONFIRMED: NO` | 尚未正式生产部署 |
 
-## 质量反馈
+Pilot 与 Production 必须分开：Pilot 只能说明在有限范围内进行验证或试用，不能推出正式全量部署、稳定 SLA、正式用户规模、QPS 或长期运维承诺。
 
-| Claim | 状态 | 边界 |
-|---|---|---|
-| 客户 Demo 后提出回答质量需要进一步提高 | `[USER_CONFIRMED]` | 反馈已确认，具体问题归因和指标未知 |
-| 已经证明回答质量提升 | `[UNKNOWN]` | 没有统一可复现的前后对照指标 |
-| 已经达到 production ready | `[CONTRADICTED]` | 尚未正式生产部署，不能使用该表述 |
+## 客户质量反馈
 
-不能把“有 Demo”“有法院侧人员测试”写成生产上线，也不能把试点验证写成正式交付完成。
+客户 Demo 后明确提出回答质量需要继续提高，这是目前最可靠的业务反馈锚点。我们还不知道它具体对应事实错误、漏召回、引用不准、上下文不足、答案不完整，还是其他问题；也没有恢复出 Cause → Fix → Metric 的闭环。因此：
 
-## 证据路由
+- `客户提出质量问题`：`USER_CONFIRMED`；
+- `问题根因`：`UNKNOWN`；
+- `团队修改带来质量提升`：`UNKNOWN`；
+- `已经达到 Production Ready`：`CONTRADICTED` / 不允许使用。
 
-当前仓库的运行和测试证据进入 [`../../evidence/`](../../evidence/README.md)；生产 readiness 进入 [`../status/production-readiness.md`](../status/production-readiness.md)。本文件只维护项目历史状态，不把当前 Compose 或目标部署拓扑当作历史交付证明。
+## 仍然未知
+
+- Pilot 部署位置、Endpoint 和环境归属；
+- 具体试点法院、测试人员人数和职位；
+- 是否有固定 Court QA、参考答案和评分人；
+- 正式验收、用户规模、SLA、QPS、延迟、Token、成本和灾备；
+- 质量改进前后的可复现指标。
+
+当前仓库的测试和运行证据进入 [`../../evidence/README.md`](../../evidence/README.md)；生产状态由 [`../status/production-readiness.md`](../status/production-readiness.md) 维护。本文件不把 Compose、Target 部署图或代码目录当成历史客户部署证明。

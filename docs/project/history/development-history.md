@@ -1,65 +1,59 @@
-# Development Evolution
+# 开发演进史
 
-本文件记录可恢复的历史过程。时间顺序不确定的内容明确标注，不把当前 Target 或仓库结构倒灌到历史。
+status: canonical-history
+canonical_question: 用户加入后，项目如何从已有产品走向 Demo、反馈、测试和 Pilot？
+owner: Project History Owner
+replaces: 旧 `development-evolution.md` 的表格化时间线
 
-## 已确认的时间与加入事实
+> 本文恢复的是工程演进故事，不是 Git Commit Log。已确认事实、用户部分回忆和候选顺序必须分开；没有 Artifact 支持时不创造精确日期。
 
-| Claim | 状态 | 边界 |
-|---|---|---|
-| 用户约在 2026 年 3 月加入该产品研发 | `[USER_CONFIRMED]`（近似） | 这是用户加入时间，不是项目立项时间 |
-| 2026 年期间项目持续推进 | `[USER_CONFIRMED]` | 不能推出正式结束时间或生产部署 |
-| 该研发是长期持续型项目 | `[USER_CONFIRMED]` | 不等于持续提供生产 SLA |
-| 用户加入时项目已经存在代码 | `[USER_CONFIRMED]` | 用户加入后 clone 了已有项目代码并参与开发 |
-| 用户加入时已有简易自研前端页面 | `[USER_CONFIRMED]` | 页面具体功能和版本未知 |
-| 加入后同时开发并学习 LangGraph / GraphRAG | `[USER_CONFIRMED]` | 学习不等于产品主链路已采用 |
+## 1. 加入之前：项目已经存在
 
-项目最早立项时间、历史正式产品名第一次出现时间、第一次提交和第一次任务仍为 `[UNKNOWN]`。当前 GitHub 的创建时间不能代替横向项目立项时间。
+用户加入时，项目已经有代码和一个比较简易的自研前端，因此不是从零搭建产品。项目的最早立项时间、历史正式产品名、第一条需求和第一条提交目前都没有恢复。当前 GitHub 仓库也不能替代完整历史项目档案。
 
-## 已确认里程碑
+## 2. 约 2026 年 3 月：加入并进入 Agent 方向
 
-| 里程碑 | 状态 | 说明 |
-|---|---|---|
-| 内部 Demo | `[USER_CONFIRMED]` | 存在，但具体时间和内容未知 |
-| 面向智慧法院项目组/客户侧 Demo | `[USER_CONFIRMED]` | 存在，但具体展示路径未知 |
-| 客户反馈回答质量需要继续提高 | `[USER_CONFIRMED]` | 这是重要反馈锚点；问题根因尚未确定 |
-| 法院侧真实人员参与测试 | `[USER_CONFIRMED]` | 人员身份、数量和测试任务未知 |
-| 试点验证 | `[USER_CONFIRMED]` | 只能说明阶段，不等于生产部署 |
-| 正式生产部署 | `[USER_CONFIRMED]` | 尚未发生 |
+用户大约在 2026 年 3 月由一名承担主要技术负责人角色的学硕学长带入项目，身份是研究生工程参与者。加入后参与 Agent 开发，Memory 是第一批重要工作之一；同时在开发过程中学习 LangGraph 和 GraphRAG。
 
-## 保守时间线
+这里的“学习”与“实现”必须分开：用户确认学习过 LangGraph / GraphRAG，但这不能推出历史产品完整采用了 LangGraph Runtime，也不能推出 GraphRAG 已经是正式生产主链路。
 
-下列顺序中，加入、已有代码/前端、客户反馈和未生产是明确事实；技术任务与各类 Demo 的精确相对顺序仍需恢复：
+## 3. Agent、Memory 和工具调用的阶段性工作
+
+用户参与了 OpenViking 在 Memory / Context 区域的接入，也参与了 Tool Calling Strategy。可以确认这些是用户实际参与过的方向，但还不能恢复出精确的 Adapter、接口、表结构、调用链或第一次提交。
+
+比较可靠的阶段性叙事是：项目在已有 Agent 产品基础上继续处理上下文组织和工具调用问题，用户在其中承担了部分工程开发和联调工作。至于某一次回答质量问题是否直接导致 OpenViking 接入，或某个具体改动是否带来指标提升，目前都没有证据，继续保持 `UNKNOWN`。
+
+## 4. Demo、反馈和进一步迭代
+
+项目做过内部 Demo，也做过面向智慧法院项目组 / 客户侧的 Demo。用户确认客户明确反馈过“回答质量还需要提高”。在此之后团队继续开发和优化，随后有法院侧真实人员参与测试，并进入 Pilot Validation。
+
+目前只能恢复这条阶段性关系：
 
 ```text
-约 2026-03 加入
-  ↓
-clone 已有代码，并开始参与 Agent 开发与 LangGraph / GraphRAG 学习
-  ↓
-参与 Memory / OpenViking 接入
-  ↓
-参与 Tool Calling Strategy
-  ↓
-内部 Demo / 客户 Demo（精确先后 UNKNOWN）
-  ↓
-客户反馈：回答质量需要进一步提高
-  ↓
-继续开发和优化
-  ↓
-法院侧人员测试与 Pilot Validation（精确先后 UNKNOWN）
-  ↓
-截至当前尚未正式生产部署
+已有代码与前端
+  → 用户加入并参与 Agent / Memory
+  → OpenViking Memory / Context 接入与 Tool Calling Strategy（具体顺序 UNKNOWN）
+  → 内部 Demo / 客户 Demo（具体顺序 UNKNOWN）
+  → 客户反馈回答质量仍需提升
+  → 团队继续迭代
+  → 法院侧人员测试
+  → Pilot Validation
 ```
 
-早期 Demo 是否展示检索过程目前只有 `[USER_PARTIAL_RECALL]`：用户隐约记得可能展示过检索，但具体页面、Trace、引用和呈现方式未知。
+早期 Demo 是否展示检索过程只有 `USER_PARTIAL_RECALL`：用户隐约记得可能展示过检索，但页面、Trace、Citation 和呈现方式没有可靠恢复。
 
-## 尚未恢复的开发过程
+## 5. 目前不能恢复的开发细节
 
-以下均为 `[UNKNOWN]`：第一条任务、第一次提交、第一次联调 endpoint、本地启动命令、代码 Review 方式、发布/回滚流程、客户反馈的具体根因，以及回答质量改进究竟归因于 Prompt、Retrieval、Rerank、Context、Memory、Tool、Citation 还是其他因素。历史技术矩阵见 [`technology-history.md`](technology-history.md)。
+以下内容继续保持 `UNKNOWN`：
 
-## 历史架构边界
+- 第一条具体任务、第一次提交和第一次 Review；
+- 本地启动方式、联调 Endpoint、发布和回滚方式；
+- 用户实际改动的文件、API Contract 和测试用例；
+- 客户回答质量问题的具体 Bad Case；
+- 团队采取的具体 Cause → Fix → Metric；
+- 法院侧测试的人员、题目、参考答案和评价协议；
+- Pilot 的部署环境、用户规模、SLA、QPS、成本和正式验收结果。
 
-Python-only Microservice Architecture、新服务边界、Domain Kernel、Domain-aware Runtime 和新 Multi-Agent 设计均为 `[TARGET_ONLY]`。不能用当前 Target 反推历史项目已经是微服务，也不能把当前仓库的逻辑包直接当作历史服务。
+## 6. 历史与 Target 的边界
 
-## 事实 Owner
-
-本文件负责时间、加入、里程碑和反馈演进；交付状态进入 [`delivery-and-usage.md`](delivery-and-usage.md)，技术矩阵进入 [`technology-history.md`](technology-history.md)。
+当前仓库和新的 Target Architecture 可以帮助规划下一步重构，但不能反推历史项目已经是 Python-only 微服务、完整 Multi-Agent、Agentic GraphRAG 或 Domain-aware Runtime。历史技术矩阵见 [`technology-history.md`](technology-history.md)；新的产品问题与架构假设见 [`../architecture/architecture.md`](../architecture/architecture.md)。
