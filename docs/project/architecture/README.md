@@ -13,6 +13,8 @@ architecture.html
 
 Product、Domain、Logical Capability、Physical Service/Deployment、Data、Security 和 Eval 如何形成一个可恢复、可验证、可被简化或替换的跨层目标闭环？
 
+总体架构先回答“为什么做这个系统”，再说明五层责任视图、WorkBuddy / Dify 竞争假设、A/B/C Kill Test 和 State / Failure / Recovery 边界；五层不是最终模块或服务数量。
+
 ## 文件职责
 
 - `architecture.md`：跨层架构正文、全局边界、状态/失败/恢复语义和 Current/Target/History 解释。

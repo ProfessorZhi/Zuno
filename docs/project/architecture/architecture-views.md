@@ -10,6 +10,18 @@ canonical_taxonomy_source: `docs/project/README.md` and `docs/decisions/0011-arc
 
 本文件是总体架构的展示图源。服务、数据、状态和 Owner 事实以 `architecture.md` 与专题 Canonical 文档为准；本文件不创建第二套 Contract。
 
+## 五层责任视图
+
+下面五层用于帮助读者理解责任，不代表最终五个模块、五个服务或五个团队：
+
+1. **Legal Work Surface**：案件分析、合同审查、法律研究、报告和 Human Review；
+2. **Legal Domain & Intelligence**：Evidence、Fact / Event、Conflict、Finding、Version 和 Staleness；
+3. **Agentic Knowledge & Context**：Ingestion、Hybrid Retrieval、条件 Graph、Citation 和 Memory；
+4. **Agent Runtime & Execution**：Single Controller、Plan、受控 Worker、Model、Skill 和 Tool；
+5. **Trust & Platform Engineering**：Permission、Approval、Sandbox、Audit、Observability、Eval 和 Infrastructure。
+
+`FINAL_MODULE_COUNT: NOT_DECIDED`。Logical Capability、Physical Service、Worker、Process、Container、Database 和 Team 不做一一映射。
+
 ## Product Context
 
 ### Product Context View
