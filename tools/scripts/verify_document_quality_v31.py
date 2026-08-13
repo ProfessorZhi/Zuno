@@ -11,6 +11,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from verify_architecture_human_readability import verify as verify_human_readability
 from verify_document_normalization_v311 import verify as verify_normalization
+from verify_document_normalization_v311 import _contains_process_trace
 
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -56,7 +57,7 @@ def verify_quality(session: Path) -> list[str]:
         ROOT / "docs/history/superseded-document-taxonomy/project-topics/deployment/microservice-deployment.md",
     ):
         content = path.read_text(encoding="utf-8")
-        if re.search(r"(?im)Round-\d+|\bD\d{3}\b|\bQ\d{3}\b", content):
+        if _contains_process_trace(content):
             errors.append(f"{path.relative_to(ROOT)} contains Round/D/Q process trace")
     return errors
 

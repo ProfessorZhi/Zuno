@@ -50,24 +50,25 @@ def validate_design(content: str) -> list[str]:
         "# Zuno 总体 Target 架构",
         "## Part A — Architecture Narrative",
         "## Part B — Detailed Architecture Specification",
-        "### 这套架构要解决的业务问题",
-        "### 一个完整的案件分析场景",
-        "### 责任边界与不拥有的事实",
-        "### 最危险的失败与恢复",
-        "### 取舍与反转条件",
+        "### 1. 为什么做这个系统",
+        "### 3. 一个 Target 场景",
+        "### 4. 五层责任视图，不是五个最终模块",
+        "### 5. Legal Domain、Knowledge、Intelligence 和 Memory 的边界",
+        "### 10. 最危险的失败与恢复",
+        "### 12. 取舍与反转条件",
         "### Cross-layer Contract Registry",
         "### Service、通信与队列边界",
-        "### State、Version 与 Recovery Contract",
+        "### Domain State、Runtime State 与 Memory",
         "### Owner Registry",
         "### Security、Deployment 与验证要求",
-        "### Implementation / Measurement / External Gaps",
+        "### Implementation、Measurement 与 External Gaps",
     ]
     required_terms = [
-        "Python-only", "Microservice", "edge-api", "platform-domain-service",
-        "agent-runtime-service", "knowledge-service", "tool-sandbox-service",
+        "Python-only", "Microservice", "Legal Work Surface", "Legal Domain & Intelligence",
+        "Agentic Knowledge & Context", "Agent Runtime & Execution", "Trust & Platform Engineering",
         "FastAPI", "LangGraph", "PostgreSQL", "Checkpoint", "Reconciliation",
         "Current", "Target", "History", "Why service?", "Why not library?",
-        "Logical Capability Architecture", "Physical Service / Deployment Architecture",
+        "Logical Capability", "Physical Service / Deployment",
     ]
     errors: list[str] = []
     for marker in required_sections + required_terms:
@@ -78,7 +79,7 @@ def validate_design(content: str) -> list[str]:
             errors.append(f"architecture.md does not route to canonical project layer: {marker}")
     if "11 Logical Modules + 1 Architecture" not in content or "History" not in content:
         errors.append("architecture.md must record the old 11-module taxonomy as History")
-    if "五个候选服务角色，不是冻结的服务数量，也不是 Current" not in content:
+    if "候选物理角色" not in content or "FINAL_MODULE_COUNT: NOT_DECIDED" not in content:
         errors.append("architecture.md must distinguish candidate service roles from Current and fixed count")
     if "architecture_state: ACCEPTED_TARGET" not in content:
         errors.append("architecture.md must record ACCEPTED_TARGET")

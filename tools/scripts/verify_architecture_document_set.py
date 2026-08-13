@@ -51,6 +51,18 @@ def verify() -> list[str]:
             errors.append(f"architecture README missing boundary marker: {marker}")
     if "11 Logical Modules + 1 Architecture" not in design or "History" not in design:
         errors.append("architecture.md must record the former 11+1 arrangement as History")
+    for marker in (
+        "为什么做这个系统",
+        "TARGET PRODUCT THESIS",
+        "五层责任视图",
+        "WorkBuddy / Dify",
+        "A/B/C Kill Test",
+        "FINAL_MODULE_COUNT: NOT_DECIDED",
+        "Agentic Knowledge & Context",
+        "Domain State、Runtime State 与 Memory",
+    ):
+        if marker not in design:
+            errors.append(f"architecture.md missing current narrative marker: {marker}")
     if "Current" not in index or "Target" not in index or "Hypothesis" not in index:
         errors.append("project README must explain Current/Target/Hypothesis")
     return errors

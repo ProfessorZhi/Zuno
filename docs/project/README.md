@@ -52,6 +52,23 @@ Backend/SRE: architecture → status/current → governance → evidence → dep
 Interviewer: history/team → history/development → current-reality → architecture → incidents
 ```
 
+## 三条需要保持分开的项目故事
+
+```text
+HISTORY
+    智慧司法背景 → 已有产品 → 用户加入 → Agent / Memory / OpenViking / Tool Calling
+    → Demo → 回答质量反馈 → 法院侧测试 → Pilot → 尚未 Production。
+
+CURRENT
+    当前 main 真正被代码、Migration、Test、Config、Trace 或 Eval 证明的内容。
+
+TARGET
+    Evidence-driven Legal Agent Platform：Legal Work Surface、Domain & Intelligence、
+    Agentic Knowledge & Context、Agent Runtime、Trust & Platform Engineering。
+```
+
+WorkBuddy / Dify 的比较只作为 `TARGET PRODUCT THESIS` 和 A/B/C Benchmark 假设，不是市场结论；论文与研究成果只作为 `PUBLIC_CONTEXT` / `RESEARCH_TRANSFER`，不倒灌为历史实现。
+
 ## 状态模型
 
 - `Current`：代码、Migration、Test、Trace、Eval 或真实运行证据已证明。

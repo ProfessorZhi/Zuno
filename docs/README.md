@@ -59,4 +59,21 @@ History
 工程/架构读者：architecture → decisions/governance → status → evidence → current Program
 ```
 
+## 三条必须分开的项目故事
+
+```text
+HISTORY
+    智慧司法背景 → 已有产品 → 用户加入 → Agent / Memory / OpenViking / Tool Calling
+    → Demo → 回答质量反馈 → 法院侧测试 → Pilot → 尚未 Production。
+
+CURRENT
+    当前 main 真正被代码、Migration、Test、Config、Trace 或 Eval 证明的内容。
+
+TARGET
+    Evidence-driven Legal Agent Platform；五层责任视图、A/B/C Kill Test 和最终服务数量
+    都不把目标能力伪装成历史事实或已测量收益。
+```
+
+WorkBuddy / Dify 的比较是 `TARGET PRODUCT THESIS` 和 Benchmark 假设，不是营销结论；公开论文和研究成果是 `PUBLIC_CONTEXT` / `RESEARCH_TRANSFER`，不能倒灌为历史 Zuno 实现。
+
 项目事实不确定时保留 `UNKNOWN`、`USER_PARTIAL_RECALL` 或候选状态；Target 架构不能替代历史事实。

@@ -17,23 +17,23 @@ def verify() -> list[str]:
     html = HTML.read_text(encoding="utf-8")
 
     precedence = [
-        "Product / Domain",
-        "Logical Capability Architecture",
-        "Physical Service / Deployment Architecture",
-        "History 只保存",
+        "Legal Work Surface",
+        "Legal Domain & Intelligence",
+        "Agentic Knowledge & Context",
+        "Agent Runtime & Execution",
+        "Trust & Platform Engineering",
     ]
     positions = [architecture.find(marker) for marker in precedence]
     for marker, position in zip(precedence, positions):
         if position < 0:
             errors.append(f"architecture precedence missing: {marker}")
     if all(position >= 0 for position in positions) and positions != sorted(positions):
-        errors.append("architecture layers are not ordered Product/Domain → Logical → Physical → status")
+        errors.append("architecture responsibility layers are not ordered Work Surface → Domain → Knowledge → Runtime → Trust")
 
     for marker in [
         "Python-only", "Microservice", "FastAPI", "LangGraph", "PostgreSQL",
-        "Checkpoint", "Reconciliation", "edge-api", "platform-domain-service",
-        "agent-runtime-service", "knowledge-service", "tool-sandbox-service",
-        "Target", "不是 Current",
+        "Checkpoint", "Reconciliation", "候选物理角色", "FINAL_MODULE_COUNT: NOT_DECIDED",
+        "Target", "不是 Current", "A/B/C Kill Test",
     ]:
         if marker not in architecture and not (marker == "not Current" and "不是 Current" in architecture):
             errors.append(f"architecture integration semantics missing: {marker}")

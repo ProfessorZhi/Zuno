@@ -28,6 +28,16 @@ PART_B = "## Part B — Detailed Architecture Specification"
 PROCESS_MARKERS = re.compile(
     r"(?im)Round-\d+|\bD\d{3}\b|\bQ\d{3}\b|Target Refinement|Red Finding|Blue Decision|Score\s+\d+/\d+"
 )
+
+
+def _contains_process_trace(text: str) -> bool:
+    """Reject recorded round artifacts, but allow current governance boundaries."""
+    for line in text.splitlines():
+        if "不启动 Red/Blue" in line or "不启动 Round-" in line:
+            continue
+        if PROCESS_MARKERS.search(line):
+            return True
+    return False
 LEGACY_TOP_LEVEL = {
     "Scope", "Target flow", "Canonical / non-canonical", "Part-A acceptance boundary",
     "Definition", "Minimum Canonical Objects", "Provider rule", "Part-A owner and mutation boundary",
@@ -71,7 +81,7 @@ def split_parts(text: str) -> tuple[str, str, list[str]]:
     for match in re.finditer(r"(?m)^##\s+(.+?)\s*$", part_b):
         if match.group(1).strip() in LEGACY_TOP_LEVEL:
             errors.append(f"legacy top-level section remains after Part B: {match.group(1).strip()}")
-    if PROCESS_MARKERS.search(text):
+    if _contains_process_trace(text):
         errors.append("Canonical document contains Round/Delta/Question or Red/Blue process trace")
     if re.search(r"(?im)^##\s+Part-A\b", text):
         errors.append("legacy Part-A subsection heading remains")

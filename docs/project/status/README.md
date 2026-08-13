@@ -11,3 +11,5 @@
 Current 需要代码、Migration、Test、Trace、Eval 或真实运行证据；Target 需要 accepted ADR 和架构文档；Hypothesis 需要 Benchmark、Spike、Security Evidence 或 User Validation；没有证据时保持 `UNKNOWN` / `NOT_ESTABLISHED`。
 
 此目录不拥有业务 Domain State、Runtime Checkpoint 或架构 Contract；这些跨层关系由 [`../architecture/architecture.md`](../architecture/architecture.md) 说明。
+
+状态值的使用边界：`ACCEPTED_TARGET` 只表示目标方向已被治理接受；`PROPOSED` 表示仍在设计；`DEFERRED` 表示先不锁定 Provider 或物理实现；`HYPOTHESIS` 表示必须做 Benchmark / Spike / User Validation；`MEASUREMENT_BLOCKED` 表示需要外部或运行证据。它们都不等于 `CURRENT` 或 `PRODUCTION_PROVEN`。

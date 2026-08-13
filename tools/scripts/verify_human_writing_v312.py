@@ -29,6 +29,16 @@ CANONICAL = [
 PART_A = "## Part A — Architecture Narrative"
 PART_B = "## Part B — Detailed Architecture Specification"
 PROCESS = re.compile(r"(?im)\b(?:Round-\d+|D\d{3}|Q\d{3})\b")
+
+
+def _contains_process_trace(text: str) -> bool:
+    """Allow a Canonical boundary to say a round is not being started."""
+    for line in text.splitlines():
+        if "不启动 Red/Blue" in line or "不启动 Round-" in line:
+            continue
+        if PROCESS.search(line):
+            return True
+    return False
 TEMPLATE_PHRASES = (
     "不是……而是",
     "主要失败是",
@@ -88,7 +98,7 @@ def verify() -> tuple[list[str], list[str], list[dict[str, int | str]]]:
         if not part_a or not part_b:
             errors.append(f"{label}: missing Part A or Part B")
             continue
-        if PROCESS.search(text):
+        if _contains_process_trace(text):
             errors.append(f"{label}: process trace leaked into Canonical document")
         row = metrics(path)
         rows.append(row)

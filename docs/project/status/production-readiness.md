@@ -30,6 +30,8 @@
 Public review evidence 不能替代固定 benchmark 的实际测量。Quality 仍为
 `not_yet_proven`，Production Readiness 仍为 `NOT_ESTABLISHED`。
 
+历史 `Pilot Validation` 不等于 Production；当前仓库的代码、Compose、Migration、目录、Target 文档或测试通过也不会自动建立生产证明。尚未建立的证据包括真实运行规模、法院 QA、端到端质量、HA、故障恢复、安全资格、No-egress、Sandbox、备份恢复和正式外部验收。
+
 ## Evidence
 
 - [Current Runtime Baseline](../../evidence/current-runtime-baseline.md)
