@@ -67,3 +67,16 @@ Round/Dxxx/Qxxx 追踪只保留在 Lab Session、Delta 和 Review Package，不�
 ## V3.1.3 Review Contract
 
 每题独立判断 Severity 和 Primary Closure Class：先排除架构矛盾，再判断实现、测量和外部资格；不能把“代码还没写”自动归为 `I`。记录 `secondary_gaps` 与一句 `closure_class_rationale`，Round 末生成 A/I/E/X 分布审计；任一类别超过 80% 时至少人工抽查 20 题。Part A 同步采用 Human Continuity Pass，从第一段读到最后一段，禁止把 Delta 逐条追加到结尾。
+
+## V4 Fresh Context / Dual Thread
+
+Round-006 以后，Architecture Review 必须由两个全新的逻辑 Session 执行：Red Challenger/Judge
+与 Blue Canonical Writer。两者从同一个 `canonical-snapshot.yaml` 开始，只通过仓库 Artifact
+交接；Red 只读且不能写 Canonical，Blue 不能改 Red Questions、Facts 或 Score。Red Questions
+冻结后才能启动 Blue，Blue Sync 后 Red 才能读取 Judge Packet 进行 Counter Review。
+
+Round 在用户提供 ChatGPT External Verdict 前保持 `WAITING_FOR_CHATGPT_REVIEW`；Skill 不能代签
+`ACCEPT`，也不能把 Architecture Score 当作 `IMPLEMENTED` 或 `MEASURED`。本 Skill 可生成
+Prompt、Context Packet、Manifest、Review Package 和 Manual Launch 指引，但当前没有可靠
+Codex Thread API 时不得伪造 Session 已启动。Architecture Evolution 与 Implementation Evidence
+是并行 Track，后者未完成不自动阻塞前者。

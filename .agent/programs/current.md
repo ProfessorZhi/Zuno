@@ -1,24 +1,26 @@
 # Current Program
 
-state: `active-implementation-evidence-program`
-active_program: `IMPLEMENTATION-EVIDENCE-CYCLE-001`
+state: `active-design-program`
+active_program: `ZUNO-RED-BLUE-WORKFLOW-V4`
 queued_program: `none`
-program_class: `bounded-implementation-and-verification`
-baseline_sha: `a402683f245e1e4b31c3b2c31b4d352eb9f9a23f`
+program_class: `workflow-governance-bootstrap`
+baseline_sha: `bdaa029b0ae88a1a75a1b1be3efac22efcd30f3a`
 
-本 Program 是用户明确启动的 Wave-001 implementation/evidence cycle。它只实现
-TASK-001 Canonical Domain Mutation / Version 与 TASK-003 Citation Provenance Guard，
-并把每个 Claim 映射到代码、测试和已观察结果。上一阶段的 Architecture Reconstruction
-是本 Program 的输入，不在本轮重新设计。
+本 Program 只重构 ZUNO-RED-BLUE-WORKFLOW-V4 的工作流、治理、Session Contract、Prompt、
+Context Packet、Artifact Handoff、Verifier、Routing 和 Docs Tests。它不启动 Round-006，
+不修改业务 Runtime、Facts、ADR、Schema、Migration、UI、Dependencies 或 Production Infra。
+
+`IMPLEMENTATION-EVIDENCE-CYCLE-001` 是独立的 Track B；它已有自己的代码、测试和 Evidence
+Package，本轮不重写其真实状态，也不再把它作为 Architecture Review 的自动前置 Gate。
 
 ## Scope
 
 ```text
-允许：Domain Mutation/Version、Citation Provenance、必要 Migration、Domain/Knowledge
-focused tests、fault evidence 和 implementation review package。
-禁止：重构整个 backend、Agent Planner、完整 Multi-Agent、Tool Runtime、Provider 替换、
-微服务拆分、Kafka、Event Sourcing、2PC、Saga、Security 重写、关闭原始 P0。
-禁止：把实现代码或本地测试升级为 Production Ready。
+允许：Workflow/Protocol、Governance、Lab、Prompt/Context、Session Manifest、V4 verifier、
+docs-related tests 和 Bootstrap review package。
+禁止：启动 Round-006、伪造 Codex Session、重构 backend、修改 Agent/Domain/Citation Runtime、
+Facts、ADR、Schema/Migration、UI、Dependencies、Production Infra，或把任何 Target/测试升级为
+Current、Measured 或 Production Ready。
 ```
 
 Microservice 和 Python-only 是当前 Owner Target Constraint；本 Program 仍攻击服务数量、
@@ -117,8 +119,10 @@ Human Writing V3.1.2              COMPLETE (warning report + human review packag
 Architecture Red/Blue Round-004   COMPLETE (100Q consistency/failure review; immutable)
 Architecture Red/Blue Round-005   COMPLETE (100Q deep failure/recovery review; V3.1.3)
 Closure Semantic Audit V3.1.3.1   COMPLETE (derived classification; Round-005 immutable)
-Implementation Evidence Wave-001 COMPLETE (TASK-001 / TASK-003)
-Round-006                         WAITING_FOR_WAVE_001_EVIDENCE_REVIEW
+Implementation Evidence Wave-001 COMPLETE (TASK-001 / TASK-003; independent Track B)
+V4 Workflow Bootstrap             READY_FOR_EXTERNAL_CHATGPT_REVIEW
+Architecture Round-006            READY_FOR_FRESH_RED_THREAD / NOT_STARTED
+Round-006                         NOT_STARTED
 ```
 
 ## V2 Round status
@@ -269,8 +273,8 @@ Implementation Task Candidate 仍不能自动激活或写成 Current；必须另
 
 ## Implementation Wave-001 exit condition
 
-本 Wave 已完成窄实现、focused tests 和 evidence package；PostgreSQL 真实环境、进程级故障、
-法院 QA、HA、Security Qualification 和 Production 仍未证明。Round-006 必须等待 Wave-001
-Evidence Review，不得自动启动 100Q。
+Wave-001 已完成窄实现、focused tests 和 evidence package；PostgreSQL 真实环境、进程级故障、
+法院 QA、HA、Security Qualification 和 Production 仍未证明。它保持
+`WAITING_FOR_RED_COUNTER_RETEST`，但不阻塞 V4 Architecture Round-006 的 Fresh Red 启动。
 
 旧 Program1 已 `SUPERSEDED / RETIRED`，不得恢复或重新激活。

@@ -11,11 +11,16 @@ python tools/scripts/verify_markdown_internal_links.py
 python tools/scripts/verify_repo_structure.py
 python tools/scripts/verify_red_blue_session.py
 python tools/scripts/verify_red_blue_gate_realignment_v1.py
+python tools/scripts/verify_red_blue_workflow_v4.py --bootstrap project-reconstruction-lab/sessions/RB-WORKFLOW-V4-BOOTSTRAP
 python .agent/scripts/verify_agent_system.py
 python .agent/scripts/verify_doc_boundaries.py
 ```
 
 红蓝 Campaign Session 的公开记录一致性由 `python tools/scripts/verify_red_blue_session.py` 负责；它只验证已落盘的 YAML/Markdown 记录，不运行红队、蓝队或架构同步 Runtime。
+
+Round-006 以后使用 `verify_red_blue_workflow_v4.py` 验证 Fresh Context、Dual Thread、相同
+Snapshot、问题冻结、Blue-only Canonical Writer、外部 ChatGPT Gate 和双轨状态。它不创建
+Session、不启动 Round、不修改 Canonical，也不代签 Verdict。
 
 `RB-GATE-REALIGNMENT-001` 使用专用 Gate verifier，检查 Closure Class、无环 Gate 依赖、
 用户决策包、原始 P0 记录保持 OPEN，以及 Canonical Sync 未应用。

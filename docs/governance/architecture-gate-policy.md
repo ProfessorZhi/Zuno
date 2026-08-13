@@ -114,3 +114,16 @@ User Architecture Gate
 - 把 `E-P0` 的计划写成 `MEASURED`；
 - 把 `X-P0` 的环境阻塞写成安全或生产通过；
 - 用本 Policy 代替用户 Gate 或 Canonical Owner。
+
+## V4 Review Track 与 Implementation Track 分离
+
+从 Round-006 起，Architecture Review 使用 `ZUNO-RED-BLUE-WORKFLOW-V4` 的 Fresh Context / Dual
+Thread 协议。它由独立 Red Challenger/Judge、独立 Blue Canonical Writer 和外部 ChatGPT Auditor
+组成；Red Questions、Blue Answers、Canonical Delta、Counter Review 和外部 Verdict 通过
+Artifact 交接。没有用户提供的 ChatGPT Verdict，Round 只能保持
+`WAITING_FOR_CHATGPT_REVIEW`，不得由 Codex 或 verifier 代签。
+
+Architecture Evolution 与 Implementation Evidence 是并行 Track：实现未完成不能自动阻塞
+架构讨论，架构分数也不能升级 `IMPLEMENTED`、`VERIFIED`、`MEASURED` 或 `PRODUCTION_PROVEN`。
+实现反例应作为 Architecture Feedback Finding 进入下一轮 Red；架构 Delta 稳定后才生成
+Implementation Gap。Fresh-context comprehension 是 Canonical 质量信号，而不是实现证据。

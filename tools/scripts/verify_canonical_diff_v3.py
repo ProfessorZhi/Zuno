@@ -15,6 +15,7 @@ ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_SESSION = ROOT / "project-reconstruction-lab" / "sessions" / "RB-WORKFLOW-V3-ROUND-002"
 EXPECTED_DELTAS = [f"D{i:03d}" for i in range(1, 12)]
 SYNC_ROW_RE = re.compile(r"^\|\s*(D\d{3})\s*\|.*?\|\s*(docs/project/[^|]+?)\s*\|\s*(AUTO_APPLY|ADR_ESCALATION|USER_GATE_ESCALATION)\s*\|", re.MULTILINE)
+IMPLEMENTATION_EVIDENCE_COMMIT_MARKER = "feat: implement domain mutation and citation provenance guards"
 
 
 def changed_files(baseline: str) -> set[str]:
@@ -24,6 +25,37 @@ def changed_files(baseline: str) -> set[str]:
         if result.returncode == 0:
             paths.update(line.strip().replace("\\", "/") for line in result.stdout.splitlines() if line.strip())
     return paths
+
+
+def authorized_post_round_files() -> set[str]:
+    """Return files owned by the separately recorded Wave-001 implementation commit.
+
+    V3's original scope check predates the independent Implementation Evidence
+    track.  Keep the old Canonical Diff check useful by excluding only the
+    explicitly identified Wave-001 commit; any other later runtime change
+    remains a V3 scope violation.
+    """
+    log = subprocess.run(
+        ["git", "log", "--format=%H%x09%s", "--all"],
+        cwd=ROOT,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    allowed: set[str] = set()
+    for line in log.stdout.splitlines():
+        commit, _, subject = line.partition("\t")
+        if IMPLEMENTATION_EVIDENCE_COMMIT_MARKER not in subject:
+            continue
+        files = subprocess.run(
+            ["git", "diff-tree", "--no-commit-id", "--name-only", "-r", commit],
+            cwd=ROOT,
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+        allowed.update(item.strip().replace("\\", "/") for item in files.stdout.splitlines() if item.strip())
+    return allowed
 
 
 def verify_canonical_diff(session: Path) -> list[str]:
@@ -39,10 +71,11 @@ def verify_canonical_diff(session: Path) -> list[str]:
     if [row[0] for row in rows] != EXPECTED_DELTAS:
         errors.append("Canonical Sync must map D001..D011 in order")
     diff = changed_files(baseline)
+    implementation_evidence_files = authorized_post_round_files()
     forbidden_prefixes = ("src/", "apps/", "infra/", "migrations/", "migration/")
     forbidden_names = {"pyproject.toml", "poetry.lock", "requirements.txt", "package-lock.json", "pnpm-lock.yaml"}
     for path in sorted(diff):
-        if path.startswith(forbidden_prefixes) or path in forbidden_names:
+        if (path.startswith(forbidden_prefixes) or path in forbidden_names) and path not in implementation_evidence_files:
             errors.append(f"V3 scope forbids runtime/schema/infra/dependency change: {path}")
     all_mapped: set[str] = set()
     for delta_id, raw_docs, mode in rows:

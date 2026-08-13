@@ -1,11 +1,11 @@
 # Current Program Reference
 
-state: `active-implementation-evidence-program`
-active_program: `IMPLEMENTATION-EVIDENCE-CYCLE-001`
+state: `active-design-program`
+active_program: `ZUNO-RED-BLUE-WORKFLOW-V4`
 queued_program: `none`
-program_class: `bounded-implementation-and-verification`
+program_class: `workflow-governance-bootstrap`
 
-当前 active 的是 Wave-001 implementation/evidence Program。详细执行契约见
+当前 active 的是 V4 workflow-governance Program。详细执行契约见
 `.agent/programs/current.md`；项目级工作流和实施证据见
 `project-reconstruction-lab/README.md`。
 
@@ -15,10 +15,11 @@ program_class: `bounded-implementation-and-verification`
 - Track A 继续恢复事实深度，但不把候选记忆直接写成事实；
 - Track B 从真实问题重新攻击 Product、Domain、Runtime、Knowledge、Service、Data、Security 和 Eval；
 - Python-only 与 Microservice 是 Owner Target Constraint，但具体服务数量和边界仍在审查；
-- 本 Wave 只修改 Domain Mutation / Version、Citation Provenance、必要 Migration、focused
-  tests 和 evidence package；不实现 Agent Planner、Multi-Agent、Tool Runtime 或微服务拆分；
-- User Architecture Gate 已批准 Part-A Target；本 Wave 的实现不改变 Canonical Architecture、
-  Facts 或 ADR。
+- 本 V4 Bootstrap 只修改 Workflow、Governance、Lab Protocol、Session Contract、Prompt、
+  Context Packet、Verifier、Routing 和 Docs Tests；不启动 Round-006，也不修改 Runtime、
+  Facts、ADR、Schema、Migration、UI、Dependencies 或 Production Infra；
+- Architecture Review Track 与 Implementation Evidence Track 并行；Wave-001 不再是 Round-006
+  的自动前置 Gate，Architecture Score 也不能替代实现证据。
 - `ZUNO-RED-BLUE-WORKFLOW-V2 / ROUND-001` 已生成并完成 100 题记录；其原始 P0/Critical
   Closure 仍保持 OPEN，但经 Gate Realignment 后 Part-A Target 已被批准并完成 Canonical Sync。
 - `RB-BLUE-REPAIR-001` 已完成 Root-Cause Clustering、Part-A Repair 和 Counter Retest；
@@ -45,8 +46,10 @@ Fact Depth Recovery                 IN_PROGRESS
 Product / Architecture Reconstruction IN_PROGRESS
 Red / Blue / Interview Review       READY / IN_PROGRESS
 Canonical Architecture Sync         APPLIED / ACCEPTED_TARGET (V3.1.3 Round-005 review)
-Implementation Evidence Wave-001   COMPLETE (TASK-001 / TASK-003)
-V3 Round-003                       COMPLETE; V3.1.1 normalization COMPLETE; V3.1.2 Round-004 COMPLETE; V3.1.3 Round-005 COMPLETE; V3.1.3.1 Semantic Audit COMPLETE; Round-006 WAITING_FOR_WAVE_001_EVIDENCE_REVIEW
+Implementation Evidence Wave-001   COMPLETE (TASK-001 / TASK-003; independent Track B)
+V3 Round-003                       COMPLETE; V3.1.1 normalization COMPLETE; V3.1.2 Round-004 COMPLETE; V3.1.3 Round-005 COMPLETE; V3.1.3.1 Semantic Audit COMPLETE
+V4 Workflow Bootstrap              READY_FOR_EXTERNAL_CHATGPT_REVIEW
+Round-006                         READY_FOR_FRESH_RED_THREAD / NOT_STARTED
 ```
 
 Canonical Runtime Program V1 已完成并归档。可读历史摘要位于：

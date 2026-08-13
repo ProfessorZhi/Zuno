@@ -51,7 +51,12 @@ Discovery
 ## V3.1 百问与文档质量协议
 
 `ZUNO-RED-BLUE-WORKFLOW-V3.1` 是历史 Round-003 的 Part A Narrative / Part B Specification 质量门；
-当前 Human Writing、Closure Classification 与 Round-005 的完整契约见 [`round-protocol-v3.1.3.md`](round-protocol-v3.1.3.md)。
+Round-001 至 Round-005 的 Human Writing、Closure Classification 与历史执行契约见
+[`round-protocol-v3.1.3.md`](round-protocol-v3.1.3.md)。Round-006 以后使用
+[`round-protocol-v4.md`](round-protocol-v4.md)，重新建立 Fresh Context、Dual Thread、Artifact
+Handoff 和 ChatGPT External Audit。
+
+V4 Bootstrap 位于 `sessions/RB-WORKFLOW-V4-BOOTSTRAP/`，只验证工作流，不启动 Round-006。
 
 ```text
 Fact Baseline
@@ -194,6 +199,7 @@ python tools/scripts/verify_red_blue_evidence_closure_v1.py
 python tools/scripts/verify_red_blue_p0_v4_execution_v1.py
 python tools/scripts/verify_red_blue_round_v313.py
 python tools/scripts/verify_closure_semantic_audit_v3131.py
+python tools/scripts/verify_red_blue_workflow_v4.py --bootstrap project-reconstruction-lab/sessions/RB-WORKFLOW-V4-BOOTSTRAP
 ```
 
 V2 Round-001 的历史 Gate 规则继续约束其自身记录；V3 Round 的 AUTO_APPLY 只允许协议定义的

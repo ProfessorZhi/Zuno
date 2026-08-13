@@ -51,3 +51,8 @@ active implementation program NONE
 说明：`active implementation program NONE` 不排斥一个 active design/review Program。
 当前设计 Program 为 `PROJECT-ARCHITECTURE-RECONSTRUCTION-V1`；只有通过用户 Architecture
 Gate 后，才可以生成 implementation Program。
+
+当前 `IMPLEMENTATION-EVIDENCE-CYCLE-001` 是已经存在的独立 Evidence Track，不是 Architecture
+Review 的自动前置条件。Round-006 以后 Architecture Review 必须遵守
+`project-reconstruction-lab/05-red-blue/round-protocol-v4.md`：两个 Fresh Session、Artifact
+Handoff、Blue-only Canonical Sync 和 ChatGPT External Verdict。

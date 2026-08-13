@@ -33,10 +33,18 @@ ALLOWED_SYNC_STATUS = {"NOT_APPLIED", "APPLIED", "PARTIAL", "REJECTED"}
 ALLOWED_USER_GATE = {"PENDING", "APPROVED", "REJECTED"}
 ALLOWED_RETEST_RESULTS = {"PASS", "REOPEN", "NOT_STARTED", "WAITING_FOR_CANONICAL_SYNC"}
 SPECIALIZED_PROTOCOLS = {
+    "ZUNO-RED-BLUE-WORKFLOW-V3",
+    "ZUNO-RED-BLUE-WORKFLOW-V3.1",
+    "ZUNO-RED-BLUE-WORKFLOW-V3.1.1",
+    "ZUNO-RED-BLUE-WORKFLOW-V3.1.2",
+    "ZUNO-RED-BLUE-WORKFLOW-V3.1.3",
     "ZUNO-BLUE-REPAIR-V1",
     "ZUNO-EVIDENCE-CLOSURE-V1",
     "ZUNO-P0-V4-EXECUTION-V1",
     "ZUNO-GATE-REALIGNMENT-V1",
+    "ZUNO-RED-BLUE-WORKFLOW-V4",
+    "IMPLEMENTATION-EVIDENCE-CYCLE-001",
+    "RB-CLOSURE-SEMANTIC-AUDIT-V3.1.3.1",
 }
 
 
@@ -447,13 +455,20 @@ def _session_dirs(root: Path) -> list[Path]:
     for path in root.iterdir():
         if not path.is_dir() or path.name == "TEMPLATE" or path.name.startswith("_"):
             continue
+        if path.name == "IMPLEMENTATION-EVIDENCE-CYCLE-001":
+            # The implementation evidence track has its own README/review-package contract.
+            continue
         manifest_path = path / "manifest.yaml"
         if manifest_path.exists():
             try:
                 manifest = yaml.safe_load(_text(manifest_path)) or {}
             except yaml.YAMLError:
                 manifest = {}
-            if isinstance(manifest, dict) and manifest.get("protocol_version") in SPECIALIZED_PROTOCOLS:
+            if isinstance(manifest, dict) and (
+                manifest.get("protocol_version") in SPECIALIZED_PROTOCOLS
+                or manifest.get("workflow_id") in SPECIALIZED_PROTOCOLS
+                or manifest.get("audit_protocol") in SPECIALIZED_PROTOCOLS
+            ):
                 # Specialized sessions have their own verifier and contract.
                 continue
         sessions.append(path)

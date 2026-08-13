@@ -42,3 +42,11 @@ Gap 或 Fact Gap，不用架构术语掩盖历史未知。
 ## V3.1.3 Challenge Depth
 
 面试反事实问题优先采用“状态已改变、某个 Worker 崩溃、权限被撤回、版本不一致或副作用未知”的具体场景。答不上时分别记录 Architecture Gap、Implementation Gap、Evidence/Measurement Gap、External Qualification Gap 或 Fact Gap；不得因为面试需要而把它们统一写成“系统会重试”。审查 Canonical Part A 时还要做 Human Continuity Review，防止用一串新增 Contract 名词掩盖叙事断裂。
+
+## V4 Context Independence
+
+面试攻击可以引用 V4 Round Artifact，但只能读取明确落盘的 Snapshot、Facts、Answers、Decision、
+Canonical Diff 和 Counter Review，不能把旧 Session 的 reasoning 当作事实。重点追问一个没有
+参加历史会议的高级工程师能否仅凭 Canonical 理解系统；若不能，记录
+`CANONICAL_DOCUMENTATION_GAP`，不要替用户补造经历。Architecture Track 与 Implementation
+Evidence Track 的差异也必须分别记录，不能因回答得好就声称代码、测量或生产已证明。

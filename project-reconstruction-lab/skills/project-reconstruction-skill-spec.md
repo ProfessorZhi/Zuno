@@ -55,3 +55,12 @@ Fact Baseline、Evidence Ledger、Open Questions、History、Current Audit、Cha
 ## V3.1.3 Extensions
 
 在 Architecture Red/Blue 阶段共享 Closure Class Integrity、Distribution Audit 和 Human Continuity。Fact Recovery 仍然不能被架构题库反向填空；`A/I/E/X` 只描述当前 Claim 的主要阻塞 Gate，不改变历史事实状态。Canonical Sync 前必须完成整篇 Part A 阅读，并把复杂度收益、实现缺口、测量缺口和外部资格缺口分开记录。
+
+## V4 orchestration
+
+完整重建流程在 Architecture Review 阶段遵循 `ZUNO-RED-BLUE-WORKFLOW-V4`：每轮创建两个
+Fresh Context Session，使用同一 Snapshot，通过 Artifact Handoff 连接 Red、Blue、Judge 和
+外部 ChatGPT Auditor。历史 Facts、Current Repository Reality、Target Architecture 和
+Implementation Evidence 仍分开；Architecture Track 不等待 Implementation Track 完成。
+如果无法创建真实 Codex Thread，Orchestrator 只生成 Prompt/Manifest/Context Packet/Manual
+Launch，不声称 Session 已启动。Round-006 在 V4 Bootstrap 后仍为 `NOT_STARTED`。
