@@ -14,6 +14,7 @@ python tools/scripts/verify_red_blue_gate_realignment_v1.py
 python tools/scripts/verify_red_blue_workflow_v4.py --bootstrap project-reconstruction-lab/sessions/RB-WORKFLOW-V4-BOOTSTRAP
 python tools/scripts/verify_red_blue_workflow_v42.py --bootstrap project-reconstruction-lab/sessions/RB-WORKFLOW-V4.2-BOOTSTRAP
 python tools/scripts/verify_red_blue_round006_closure.py --round project-reconstruction-lab/sessions/RB-WORKFLOW-V4.2-ROUND-006
+python tools/scripts/verify_red_blue_workflow_v42.py --profile batch_adversarial --round project-reconstruction-lab/sessions/<batch-round-id>
 python .agent/scripts/verify_agent_system.py
 python .agent/scripts/verify_doc_boundaries.py
 ```

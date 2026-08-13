@@ -127,6 +127,9 @@ V4.1 Workflow Bootstrap           HISTORICAL / IMMUTABLE
 V4.2 Workflow Bootstrap           ACCEPTED_WITH_DEBT / EXTERNAL_VERDICT_PROVIDED
 Architecture Round-006            ABORTED_OPERATIONAL_PILOT / WORKFLOW_EXECUTION_BLOCKER
 Round-006                         3 LIVE TURNS; ARCHITECTURE SCORE INVALID; CANDIDATE NONE
+V4.2 default profile              BATCH_ADVERSARIAL
+V4.2 experimental profile         LIVE_ADAPTIVE
+Round-007                         READY_FOR_BATCH_ADVERSARIAL_PILOT / NOT_STARTED
 ```
 
 V4.2 Addendum：每次只冻结一个 Question、一个 Answer 和一个 Chain Decision。Red 读取
@@ -134,6 +137,11 @@ V4.2 Addendum：每次只冻结一个 Question、一个 Answer 和一个 Chain D
 whole-round question freeze。Blue 不读取 calibration，且只在 `LIVE_ATTACK_COMPLETE` 后写 Candidate。
 `INTERVIEW_DEPTH` 与
 `INTERVIEW_EXPLAINABILITY` 属于问题质量和文档可解释性信号，不是实现或生产证据。
+
+V4.2 Profile：默认 `BATCH_ADVERSARIAL` 使用独立的 Attack、Defense、Counter、Counter Defense、
+Synthesis 和 Judge Session；实验性 `LIVE_ADAPTIVE` 才使用逐题 Answer-triggered Handoff。两种
+Profile 都要求 Blue 在 Defense 阶段不修改 Candidate，且必须经过 ChatGPT External Verdict 才能
+Merge。Round-007 只登记为 Ready，不在本 Program 中启动。
 
 ## V2 Round status
 

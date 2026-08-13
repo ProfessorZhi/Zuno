@@ -8,7 +8,10 @@ Round 的对攻方式，不重解释历史结果，不启动 Round-006，也不�
 ```text
 workflow: ZUNO-RED-BLUE-WORKFLOW-V4.2
 review_mode: QUESTION_BY_QUESTION_ADAPTIVE_INTERROGATION
-round_006: READY_FOR_ADAPTIVE_RED_BLUE_PILOT / NOT_STARTED
+round_006: ABORTED_OPERATIONAL_PILOT / WORKFLOW_EXECUTION_BLOCKER / SCORE_INVALID
+round_007: READY_FOR_BATCH_ADVERSARIAL_PILOT / NOT_STARTED
+default_execution_profile: BATCH_ADVERSARIAL
+experimental_execution_profile: LIVE_ADAPTIVE
 architecture_track: independent
 implementation_track: independent
 canonical_part_a: BASE_SNAPSHOT_KNOWLEDGE_SOURCE
@@ -234,15 +237,49 @@ Blue 只能在 `candidate_branch != main_branch` 工作，Red 只读，ChatGPT �
 `artifact_base_sha`、`artifact_content_state`、`external_reviewed_sha`，不得要求 Commit 自己
 写入自己的 Final SHA。
 
-## 12. V4.2 Operational Pilot Boundary
+## 12. V4.2 Execution Profiles
 
-V4.2 Bootstrap 只证明 `WORKFLOW_CONTRACT_AVAILABLE`，不证明 Thread 真实创建、Context 真正
-隔离、Calibration 真正 Red-only 或 Main Merge Gate 已运行。这些必须由未来 Round-006
-Operational Pilot 提供证据。本 Bootstrap 结束状态为：
+V4.2 保留同一套 Fresh Context、Part-A Cold-Start、Role Boundary、Candidate Branch 和外部
+Merge Gate 契约，但执行 Profile 不再混用：
+
+| Profile | 状态 | 用途 | 问题生成方式 |
+|---|---|---|---|
+| `BATCH_ADVERSARIAL` | 默认 | 稳定的跨角色架构审查 | Red 可在独立 Attack Session 中生成完整 100Q；Blue、Counter、Synthesis、Judge 分别使用新的角色 Session |
+| `LIVE_ADAPTIVE` | 实验性 | 验证 Answer-triggered Follow-up 与逐 Turn Handoff | 每次只冻结一个 Question；下一题必须由上一 Answer 触发；禁止预生成整轮题单 |
+
+`BATCH_ADVERSARIAL` 不是把旧的静态题库重新命名。它要求完整 Question/Answer 覆盖、每个
+Counter Question 引用真实 Blue Answer、Synthesis 晚于 Counter、Judge 使用新 Session，并由
+`verify_red_blue_workflow_v42.py --profile batch_adversarial` 验证。默认 Batch 的角色链为：
 
 ```text
-V4.2_WORKFLOW_READY_FOR_CHATGPT_REVIEW
-ROUND-006 READY_FOR_ADAPTIVE_RED_BLUE_PILOT / NOT_STARTED
+Fresh Red Attack
+→ Fresh Blue Defense
+→ Fresh Red Counter
+→ Fresh Blue Counter Defense
+→ Fresh Blue Synthesis
+→ Fresh Red Judge
+→ ChatGPT External Merge Gate
+```
+
+`LIVE_ADAPTIVE` 只作为实验性 Profile 保留。Round-006 已完成三个真实短距离 Turn，但在
+`WF-API-001` 后以 `ABORTED_OPERATIONAL_PILOT` 收口；这证明了短距离 Follow-up，不证明长距离
+Session Handoff 稳定。因此 Round-007 的默认状态是
+`READY_FOR_BATCH_ADVERSARIAL_PILOT / NOT_STARTED`，本协议不会自动启动它。
+
+## 13. V4.2 Operational Pilot Boundary
+
+V4.2 Bootstrap 只证明 `WORKFLOW_CONTRACT_AVAILABLE`，外部 Verdict 为
+`ACCEPT_WITH_DEBT`，不证明 Thread 真实创建、Context 真正隔离、Calibration 真正 Red-only 或
+Main Merge Gate 已运行。Round-006 的 Operational Pilot 已以 Workflow Execution Blocker 中止，
+其 Architecture Score 无效。未来 Round-007 才能在默认 Batch Profile 下提供新的运行证据，本
+Bootstrap 和 Round-006 都不会自动启动它。
+
+当前工作流状态为：
+
+```text
+V4.2_WORKFLOW_ACCEPTED_WITH_DEBT
+ROUND-006 ABORTED_OPERATIONAL_PILOT / SCORE_INVALID
+ROUND-007 READY_FOR_BATCH_ADVERSARIAL_PILOT / NOT_STARTED
 ```
 
 ## 验证入口
@@ -250,6 +287,8 @@ ROUND-006 READY_FOR_ADAPTIVE_RED_BLUE_PILOT / NOT_STARTED
 ```powershell
 python tools/scripts/verify_red_blue_workflow_v42.py --bootstrap project-reconstruction-lab/sessions/RB-WORKFLOW-V4.2-BOOTSTRAP
 python tools/scripts/verify_red_blue_workflow_v42.py --round project-reconstruction-lab/sessions/<round-id>
+python tools/scripts/verify_red_blue_workflow_v42.py --profile batch_adversarial --round project-reconstruction-lab/sessions/<batch-round-id>
+python tools/scripts/verify_red_blue_round006_closure.py --round project-reconstruction-lab/sessions/RB-WORKFLOW-V4.2-ROUND-006
 ```
 
 Verifier 只验证落盘 Artifact 的时序、hash、权限和状态不变量；不创建 Thread、不启动 Round、不

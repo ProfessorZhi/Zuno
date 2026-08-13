@@ -29,3 +29,10 @@
 
 只预声明：`chain_id`、`root_claim`、`primary_concept`、`attack_intent`、
 `possible_pressure_axes`。不得写问题、Question ID 或预生成题单。
+
+## Execution Profile
+
+V4.2 默认使用 `BATCH_ADVERSARIAL`。Batch 的 Red Attack Session 可以在同一 BASE Snapshot
+下生成完整 100Q，但必须把题目交给 Main 的 Batch artifact，而不是直接交给 Blue；Counter
+必须在新的 Red Counter Session 中引用真实 Blue Answer。`LIVE_ADAPTIVE` 才执行上面的逐题
+冻结规则，且禁止预生成整轮题单。

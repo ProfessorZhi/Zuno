@@ -52,6 +52,9 @@ V3 Round-003                       COMPLETE; V3.1.1 normalization COMPLETE; V3.1
 V4.1 Workflow Bootstrap            HISTORICAL / IMMUTABLE
 V4.2 Workflow Bootstrap            ACCEPTED_WITH_DEBT / EXTERNAL_VERDICT_PROVIDED
 Round-006                         ABORTED_OPERATIONAL_PILOT / WORKFLOW_EXECUTION_BLOCKER; 3 LIVE TURNS; SCORE INVALID; CANDIDATE NONE
+V4.2 default profile              BATCH_ADVERSARIAL
+V4.2 experimental profile         LIVE_ADAPTIVE
+Round-007                         READY_FOR_BATCH_ADVERSARIAL_PILOT / NOT_STARTED
 ```
 
 Canonical Runtime Program V1 已完成并归档。可读历史摘要位于：
