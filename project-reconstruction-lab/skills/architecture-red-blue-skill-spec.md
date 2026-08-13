@@ -80,3 +80,15 @@ Round 在用户提供 ChatGPT External Verdict 前保持 `WAITING_FOR_CHATGPT_RE
 Prompt、Context Packet、Manifest、Review Package 和 Manual Launch 指引，但当前没有可靠
 Codex Thread API 时不得伪造 Session 已启动。Architecture Evolution 与 Implementation Evidence
 是并行 Track，后者未完成不自动阻塞前者。
+
+## V4.1 Interview-Calibrated Red Extension
+
+Red 读取 Main Thread 为本轮生成的 `interview-calibration-packet.md`，但只把它当作提问行为
+校准。默认使用 `Architecture Interviewer` 主画像，必要时加入 Open-source Skeptic 与
+Failure/Counterfactual 交叉画像；不得把外部面经的答案、候选人话术或事实注入 Blue。
+
+100Q 组织为 12–18 条 Deep-Dive Attack Chain。每条链从 Claim 连续追到必要性、边界、Owner、
+失败、成本、替代和反转，并记录 `questioning_pattern_source`、至少一个压力类型和一个约束。
+每条链的 `INTERVIEW_DEPTH: 0–5` 只用于问题质量，不进入 Architecture Score；问题质量不足时
+输出 `QUESTION_QUALITY_BLOCKED`。Blue 不读取 calibration packet，仍按 Part-A Cold-Start 完成
+概念防守；Red Judge 另记录 `INTERVIEW_EXPLAINABILITY: CLEAR | DENSE | TERM_DEPENDENT | MISSING`。

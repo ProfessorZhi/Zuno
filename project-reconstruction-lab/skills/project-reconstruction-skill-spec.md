@@ -63,4 +63,13 @@ Fresh Context Session，使用同一 Snapshot，通过 Artifact Handoff 连接 R
 外部 ChatGPT Auditor。历史 Facts、Current Repository Reality、Target Architecture 和
 Implementation Evidence 仍分开；Architecture Track 不等待 Implementation Track 完成。
 如果无法创建真实 Codex Thread，Orchestrator 只生成 Prompt/Manifest/Context Packet/Manual
-Launch，不声称 Session 已启动。Round-006 在 V4 Bootstrap 后仍为 `NOT_STARTED`。
+Launch，不声称 Session 已启动。Round-006 在 V4.1 Bootstrap 后仍为 `NOT_STARTED`。
+
+## V4.1 Addendum
+
+Architecture Red/Blue 仍不是历史事实恢复的替代品。Main Thread 每轮从外部面试来源生成只含
+提问行为的 calibration packet；Red 可用它构造 12–18 条连续 Deep-Dive Chain，Blue 禁止读取。
+Chain 只帮助发现 Product/Domain/Runtime 的概念缺口，不得把面试答案升级为 Facts，也不得把
+个人 Ownership、指标或生产状态倒推出来。若 Part A 无法让 Fresh Blue 用普通语言解释架构，
+优先记录 `CANONICAL_PART_A_GAP` 与 `INTERVIEW_EXPLAINABILITY`，再回到 Canonical 文档或事实
+恢复，而不是补写一套面试话术。

@@ -53,10 +53,15 @@ Discovery
 `ZUNO-RED-BLUE-WORKFLOW-V3.1` 是历史 Round-003 的 Part A Narrative / Part B Specification 质量门；
 Round-001 至 Round-005 的 Human Writing、Closure Classification 与历史执行契约见
 [`round-protocol-v3.1.3.md`](round-protocol-v3.1.3.md)。Round-006 以后使用
-[`round-protocol-v4.md`](round-protocol-v4.md)，重新建立 Fresh Context、Dual Thread、Artifact
-Handoff 和 ChatGPT External Audit。
+[`round-protocol-v4.1.md`](round-protocol-v4.1.md)，在 Fresh Context、Dual Thread、Artifact
+Handoff 和 ChatGPT External Audit 之外，要求 Conceptual Architecture Review、Part-A Cold-Start
+和 Interview-Calibrated Deep-Dive Chain。V4 仅作为历史工作流基线。
 
-V4 Bootstrap 位于 `sessions/RB-WORKFLOW-V4-BOOTSTRAP/`，只验证工作流，不启动 Round-006。
+V4.1 Bootstrap 位于 `sessions/RB-WORKFLOW-V4.1-BOOTSTRAP/`，只验证工作流，不启动 Round-006。
+
+Red 每轮读取会话级 `interview-calibration-packet.md`，只获取提问行为摘要；Blue 不读取该文件，
+不能根据面试题库定向准备答案。默认 12–18 条 Chain 总计 100Q；不足时进入
+`QUESTION_QUALITY_BLOCKED`。
 
 ```text
 Fact Baseline

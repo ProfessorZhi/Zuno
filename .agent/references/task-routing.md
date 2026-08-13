@@ -8,7 +8,7 @@
 | --- | --- | --- |
 | 范围不清、只读盘点 | `AGENTS.md`、`docs-map.md`、`code-map.md` | 只读审计 |
 | `docs/`、`.agent/`、history、README | `workflow.md`、`docs-map.md`、`verification-map.md` | 文档治理 |
-| 项目重建、Red/Blue、Round Protocol | `project-reconstruction-lab/README.md`、`05-red-blue/round-protocol-v4.md`、`current-program.md` | Architecture Workflow Owner |
+| 项目重建、Red/Blue、Round Protocol | `project-reconstruction-lab/README.md`、`05-red-blue/round-protocol-v4.1.md`、`current-program.md` | Architecture Workflow Owner |
 | `apps/web` | `apps/web/AGENTS.md`、`code-map.md` | Product client / UI |
 | `src/backend/zuno` | `code-map.md`、`debugging.md` | 对应模块 owner |
 | API / DTO / 前后端契约 | `code-map.md`、Product Surface module doc | Product Surface |

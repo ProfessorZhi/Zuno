@@ -113,9 +113,10 @@ project-reconstruction-lab/
 
 V2 Red/Blue Round 的历史执行契约见 `05-red-blue/round-protocol-v2.md`；Round-001 至 Round-005
 继续按各自 V2/V3/V3.1.3 协议保持 immutable。Round-006 以后使用
-`05-red-blue/round-protocol-v4.md`：Fresh Context、Dual Thread、Artifact Handoff 和外部
-ChatGPT Audit。V4 不 retroactively 改写历史 Round，也不把 Implementation Evidence 当作
-Architecture Review 的前置 Gate。
+`05-red-blue/round-protocol-v4.1.md`：Fresh Context、Dual Thread、Conceptual Architecture、
+Artifact Handoff、Interview-Calibrated Deep-Dive Chain 和外部 ChatGPT Audit。V4 作为历史工作流
+基线保留，不 retroactively 改写历史 Round，也不把 Implementation Evidence 当作 Architecture
+Review 的前置 Gate。
 Round-001 的完整 100 题记录位于 `sessions/RB-WORKFLOW-V2-001/`，保持 immutable history；
 Round-002 位于 `sessions/RB-WORKFLOW-V3-ROUND-002/`，按 V3 完成 Question → Answer → Score
 → Decision → Delta → Canonical Sync。Round-003 使用 V3.1，额外审查 Canonical Part A / Part B
@@ -167,7 +168,7 @@ V3.1.2 Round-004 以 Human Writing、Architecture Consistency、Failure Semantic
 V3.1.3 Round-005 进一步审查 Deep Failure、Recovery、Concurrency 和 Closure Classification Integrity；它新增 A/I/E/X 分布审计与 Part A 连续阅读规则，但不重写 Round-004，也不把分类结果当作 Runtime 或生产证据。
 V3.1.3.1 作为 Round-005 关闭后的 Derived Semantic Audit，重新判断 attack-time/post-round Closure Class 和 finding state；它不修改 Round-005 原件，也不改变 Facts、Runtime 或 Production 状态。
 
-## 当前 Program：ZUNO-RED-BLUE-WORKFLOW-V4 / RB-WORKFLOW-V4-BOOTSTRAP
+## 当前 Program：ZUNO-RED-BLUE-WORKFLOW-V4.1 / RB-WORKFLOW-V4.1-BOOTSTRAP
 
 Canonical Facts Framework V1 已形成。本 Program 不再扩张事实目录，而是把事实深度恢复
 与架构重构并行推进：
@@ -221,10 +222,15 @@ GraphRAG、Memory、OpenViking、Legal Domain Kernel 和 Native Domain-aware Run
 Schema/Migration、依赖和生产 Infra 不在本轮修改范围内；Implementation Task Candidate 可以
 在 Lab 中记录，但必须等用户通过 Architecture Gate 后才能激活 implementation Program。
 
-V4 Bootstrap 只改工作流和治理。Architecture Evolution Track 当前为
+V4.1 Bootstrap 只改工作流和治理。Architecture Evolution Track 当前为
 `ROUND-006 READY_FOR_FRESH_RED_THREAD / NOT_STARTED`；Implementation Evidence Track 保留
 `IMPLEMENTATION-EVIDENCE-CYCLE-001` 的真实状态，当前为 `WAITING_FOR_RED_COUNTER_RETEST`。
 两条 Track 通过 Canonical Architecture 和 Architecture Delta 反馈，但互不作为对方的自动 Gate。
+
+V4.1 Addendum 规定：Main Thread 每轮生成只含提问行为的
+`interview-calibration-packet.md`；它只进入 Red Context，Blue Context 必须禁止读取。Red 将
+100Q 组织为 12–18 条连续 Deep-Dive Attack Chain，并记录替代、反事实、失败、约束、深度和反转
+条件；如果高质量 Novel Chain 不足，记录 `QUESTION_QUALITY_BLOCKED`，不得用同义题凑数。
 
 ## Reader Paths
 

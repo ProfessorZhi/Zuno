@@ -141,6 +141,7 @@ skill_routes:
       - "python tools/scripts/verify_red_blue_p0_v4_execution_v1.py"
       - "python tools/scripts/verify_red_blue_gate_realignment_v1.py"
       - "python tools/scripts/verify_red_blue_workflow_v4.py --bootstrap project-reconstruction-lab/sessions/RB-WORKFLOW-V4-BOOTSTRAP"
+      - "python tools/scripts/verify_red_blue_workflow_v41.py --bootstrap project-reconstruction-lab/sessions/RB-WORKFLOW-V4.1-BOOTSTRAP"
 
   - name: "architecture-red-blue-v4-workflow"
     match:
@@ -157,6 +158,25 @@ skill_routes:
       - "git diff --check"
       - "python tools/scripts/verify_red_blue_workflow_v4.py --bootstrap project-reconstruction-lab/sessions/RB-WORKFLOW-V4-BOOTSTRAP"
       - "pytest -q tests/repo/test_red_blue_workflow_v4.py -p no:cacheprovider"
+
+  - name: "architecture-red-blue-v41-workflow"
+    match:
+      paths:
+        - "project-reconstruction-lab/05-red-blue/**"
+        - "project-reconstruction-lab/sessions/RB-WORKFLOW-V4.1-BOOTSTRAP/**"
+        - "tests/repo/test_red_blue_workflow_v41.py"
+        - "tools/scripts/verify_red_blue_workflow_v41.py"
+    docs_sync:
+      - "project-reconstruction-lab/05-red-blue/"
+      - "project-reconstruction-lab/sessions/RB-WORKFLOW-V4.1-BOOTSTRAP/"
+      - ".agent/programs/current.md"
+      - ".agent/references/current-program.md"
+      - ".agent/references/workflow.md"
+      - "docs/governance/architecture-gate-policy.md"
+    verify:
+      - "git diff --check"
+      - "python tools/scripts/verify_red_blue_workflow_v41.py --bootstrap project-reconstruction-lab/sessions/RB-WORKFLOW-V4.1-BOOTSTRAP"
+      - "pytest -q tests/repo/test_red_blue_workflow_v41.py -p no:cacheprovider"
 
   - name: "backend-agent-runtime"
     match:

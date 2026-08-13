@@ -50,3 +50,12 @@ Canonical Diff 和 Counter Review，不能把旧 Session 的 reasoning 当作事
 参加历史会议的高级工程师能否仅凭 Canonical 理解系统；若不能，记录
 `CANONICAL_DOCUMENTATION_GAP`，不要替用户补造经历。Architecture Track 与 Implementation
 Evidence Track 的差异也必须分别记录，不能因回答得好就声称代码、测量或生产已证明。
+
+## V4.1 Calibration Boundary
+
+本 Skill 的真实面试材料只用于生成 `interview-calibration-packet.md` 的提问行为摘要；它不
+向 Zuno Red/Blue 注入标准答案、包装话术或项目事实。V4.1 Architecture Red 的主画像是
+Architecture Interviewer，问题从随机题改为 12–18 条连续 Deep-Dive Chain，总计 100Q，覆盖
+Why/Why-Not、替代、反事实、失败、约束、取舍和反转。记录 `INTERVIEW_DEPTH: 0–5` 与
+`INTERVIEW_EXPLAINABILITY: CLEAR | DENSE | TERM_DEPENDENT | MISSING`，但不把它们当作实现或
+生产证据；Blue 仍只能依赖 Canonical Part A、Facts、ADR、Governance 和通用架构知识。

@@ -155,3 +155,16 @@ Red Attack → Blue Response → Counter Attack
 ```
 
 没有满足证据门的复杂度进入 `DEFER` 或 `HYPOTHESIS`；验证器只能检查确定性结构，不能把文档存在误报成 Runtime、质量或 Production Ready。
+
+### V4.1 Interview Explainability
+
+Canonical Part A 还必须通过 Fresh-Context 的概念可解释性审查：读者不看业务实现代码，只看
+Part A、必要 Facts、ADR、Governance 和自身通用架构知识，应能先用普通软件工程语言讲清问题、
+边界、Owner、流程、失败、Retry/Replan/Recovery、替代、代价和反转条件，再使用必要术语。
+`Concept First → Term Second → Contract Last` 不是术语词典规则，而是避免 Part A 被内部英文名词
+统治的叙事顺序。
+
+V4.1 Red 可以使用会话级 `interview-calibration-packet.md` 生成连续 Deep-Dive Chain，但该
+packet 只包含提问行为，不包含答案、包装话术或候选人事实；Blue 不读取它。Red Judge 的
+`INTERVIEW_EXPLAINABILITY`（`CLEAR | DENSE | TERM_DEPENDENT | MISSING`）和 Human Writing Review
+均需人工判断，确定性 verifier 只能提供 warning，不能宣称人工 PASS。

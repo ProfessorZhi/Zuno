@@ -115,10 +115,11 @@ User Architecture Gate
 - 把 `X-P0` 的环境阻塞写成安全或生产通过；
 - 用本 Policy 代替用户 Gate 或 Canonical Owner。
 
-## V4 Review Track 与 Implementation Track 分离
+## V4.1 Review Track 与 Implementation Track 分离
 
-从 Round-006 起，Architecture Review 使用 `ZUNO-RED-BLUE-WORKFLOW-V4` 的 Fresh Context / Dual
-Thread 协议。它由独立 Red Challenger/Judge、独立 Blue Canonical Writer 和外部 ChatGPT Auditor
+从 Round-006 起，Architecture Review 使用 `ZUNO-RED-BLUE-WORKFLOW-V4.1` 的 Fresh Context / Dual
+Thread、Part-A Cold-Start 和 Interview-Calibrated Deep-Dive Chain 协议。它由独立 Red
+Challenger/Judge、独立 Blue Canonical Writer 和外部 ChatGPT Auditor
 组成；Red Questions、Blue Answers、Canonical Delta、Counter Review 和外部 Verdict 通过
 Artifact 交接。没有用户提供的 ChatGPT Verdict，Round 只能保持
 `WAITING_FOR_CHATGPT_REVIEW`，不得由 Codex 或 verifier 代签。
@@ -127,3 +128,23 @@ Architecture Evolution 与 Implementation Evidence 是并行 Track：实现未�
 架构讨论，架构分数也不能升级 `IMPLEMENTED`、`VERIFIED`、`MEASURED` 或 `PRODUCTION_PROVEN`。
 实现反例应作为 Architecture Feedback Finding 进入下一轮 Red；架构 Delta 稳定后才生成
 Implementation Gap。Fresh-context comprehension 是 Canonical 质量信号，而不是实现证据。
+
+## V4.1 Interview-Calibrated Conceptual Review
+
+V4.1 把 Architecture Review 与连续项目深挖的提问方法结合，但只借用
+`QUESTIONING METHOD`，不把面试答案、候选人包装或外部面经推断写入 Zuno 事实。Main Thread
+每轮生成会话级 `interview-calibration-packet.md`，按 `REAL_SELF_INTERVIEW`、
+`HIGH_SIGNAL_PUBLIC_INTERVIEW`、`GENERAL_PUBLIC_INTERVIEW` 和 `GENERAL_ARCHITECTURE` 标注来源
+权重；该 packet 只进入 Red Context，Blue Context 必须禁止读取。
+
+Red 的默认质量单位从随机独立问题改为 12–18 条 `Deep-Dive Attack Chain`，总预算仍恰好 100Q。
+每条链应从一个 Claim 连续追到必要性、设计理由、边界、Owner、失败、成本、替代和反转，且至少
+注入一个反事实/替代/失败/反转条件与一个成本、时延、权限、版本、Provider、取消、并发或
+副作用约束。无法提出足够高质量 Novel Chain 时，报告 `QUESTION_QUALITY_BLOCKED`，不得用同义
+问题填数。`INTERVIEW_DEPTH: 0–5` 只衡量提问链质量，不改变 Architecture Defense Score。
+
+Red 必须先把 `DomainVersion`、`EffectReceipt`、`Replan Barrier` 等内部术语还原为普通工程
+问题；Blue 若只能依赖项目术语，Red Judge 记录 `CONCEPT_NOT_CLEAR` 或
+`INTERVIEW_EXPLAINABILITY: TERM_DEPENDENT`。Part-A first pass 还需判断 Fresh Blue 能否在
+30–90 秒内用普通语言解释概念，状态为 `CLEAR | DENSE | TERM_DEPENDENT | MISSING`。这项判断与
+Human Writing Verifier 分离：Verifier 只能 warning，不能自动给人工写作或面试可解释性 PASS。

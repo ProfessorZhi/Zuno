@@ -35,9 +35,9 @@ SRE:      services → data → deployment → eval
 工程实现/审查继续读取 ADR、共享 Contract、Status/Evidence 和 active Program。`Current` 必须有代码、Migration、Test、Trace 或 Eval 证据；Target/Hypothesis 不得偷换成 Current。
 
 项目重建与 Architecture Red/Blue 任务另读 `project-reconstruction-lab/README.md` 和
-`project-reconstruction-lab/05-red-blue/round-protocol-v4.md`。Round-006 以后必须使用 Fresh
-Context / Dual Thread / Artifact Handoff；`sessions/RB-WORKFLOW-V4-BOOTSTRAP/` 只保存工作流
-Bootstrap，不是 Round-006。
+`project-reconstruction-lab/05-red-blue/round-protocol-v4.1.md`。Round-006 以后必须使用 Fresh
+Context / Dual Thread / Part-A Cold-Start / Interview-Calibrated Deep-Dive Chain / Artifact
+Handoff；`sessions/RB-WORKFLOW-V4.1-BOOTSTRAP/` 只保存工作流 Bootstrap，不是 Round-006。
 
 ## Canonical taxonomy 路由
 
