@@ -30,6 +30,7 @@ POST_LIVE_STATES = {
     "CHATGPT_REPAIR_REQUIRED",
     "CLOSED",
 }
+CLOSURE_STATES = {"ABORTED_OPERATIONAL_PILOT"}
 VALID_SUPPORT = {"SUFFICIENT", "PARTIAL", "GAP"}
 VALID_SOURCES = {"PART_A", "PART_A_PLUS_GENERAL_KNOWLEDGE", "GENERAL_ARCHITECTURE_REASONING"}
 VALID_DECISIONS = {"CONTINUE_CHAIN", "CLOSE_CHAIN", "ESCALATE_FINDING"}
@@ -44,6 +45,7 @@ VALID_STATES = {
     "CHAIN_CLOSED",
     "LIVE_ATTACK_COMPLETE",
     *POST_LIVE_STATES,
+    *CLOSURE_STATES,
     "BLOCKED_BY_USER_GATE",
 }
 VALID_FOLLOWUP_REASONS = {
@@ -180,18 +182,26 @@ def verify_bootstrap(directory: Path) -> list[str]:
         errors.append("self-referential final_sha is forbidden; use external_reviewed_sha")
     if manifest.get("artifact_content_state") != "WORKFLOW_CONTRACT_AVAILABLE":
         errors.append("artifact_content_state must be WORKFLOW_CONTRACT_AVAILABLE")
-    if manifest.get("external_reviewed_sha") != "NOT_PROVIDED":
-        errors.append("bootstrap external_reviewed_sha must be NOT_PROVIDED")
+    reviewed_sha = str(manifest.get("external_reviewed_sha", ""))
+    if not (reviewed_sha == "NOT_PROVIDED" or SHA40.fullmatch(reviewed_sha)):
+        errors.append("external_reviewed_sha must be NOT_PROVIDED or a 40-character SHA")
+    if reviewed_sha != "NOT_PROVIDED":
+        if manifest.get("chatgpt_verdict") not in {"ACCEPT", "ACCEPT_WITH_DEBT"}:
+            errors.append("provided external review requires ACCEPT or ACCEPT_WITH_DEBT")
+        if manifest.get("blocking_findings") != "NONE":
+            errors.append("provided external review must declare blocking_findings: NONE")
     if manifest.get("historical_rounds_immutable") is not True:
         errors.append("historical_rounds_immutable must be true")
     if manifest.get("round_006_status") != "READY_FOR_ADAPTIVE_RED_BLUE_PILOT":
         errors.append("round_006_status must be READY_FOR_ADAPTIVE_RED_BLUE_PILOT")
     if manifest.get("round_006_started") is not False:
         errors.append("round_006_started must be false")
-    if manifest.get("chatgpt_review_status") != "WAITING_FOR_CHATGPT_REVIEW":
-        errors.append("bootstrap must wait for ChatGPT review")
-    if manifest.get("round_status") != "V4.2_WORKFLOW_READY_FOR_CHATGPT_REVIEW":
-        errors.append("round_status must be V4.2_WORKFLOW_READY_FOR_CHATGPT_REVIEW")
+    expected_review_status = "VERDICT_PROVIDED" if reviewed_sha != "NOT_PROVIDED" else "WAITING_FOR_CHATGPT_REVIEW"
+    if manifest.get("chatgpt_review_status") != expected_review_status:
+        errors.append(f"bootstrap chatgpt_review_status must be {expected_review_status}")
+    expected_round_status = "V4.2_WORKFLOW_ACCEPTED_WITH_DEBT" if manifest.get("chatgpt_verdict") == "ACCEPT_WITH_DEBT" else "V4.2_WORKFLOW_READY_FOR_CHATGPT_REVIEW"
+    if manifest.get("round_status") != expected_round_status:
+        errors.append(f"round_status must be {expected_round_status}")
     for key in ("facts_changed", "runtime_changed", "schema_changed", "migration_changed", "adr_changed", "canonical_content_changed"):
         if manifest.get(key) != "NONE":
             errors.append(f"bootstrap must keep {key} as NONE")
@@ -223,10 +233,12 @@ def verify_bootstrap(directory: Path) -> list[str]:
     for name in ("README.md", "review-package.md", "manual-launch-instructions.md", "chatgpt-verdict.md"):
         _require(directory / name, errors)
     package = directory / "review-package.md"
-    for marker in ("WORKFLOW_CONTRACT_AVAILABLE", "READY_FOR_ADAPTIVE_RED_BLUE_PILOT", "NOT_STARTED", "external_reviewed_sha: NOT_PROVIDED"):
+    package_markers = ("WORKFLOW_CONTRACT_AVAILABLE", "READY_FOR_ADAPTIVE_RED_BLUE_PILOT")
+    package_markers += (("NOT_STARTED", "external_reviewed_sha: NOT_PROVIDED") if reviewed_sha == "NOT_PROVIDED" else ("ACCEPT_WITH_DEBT", "blocking_findings: NONE", "external_reviewed_sha:"))
+    for marker in package_markers:
         _marker(package, marker, errors)
     verdict = directory / "chatgpt-verdict.md"
-    _marker(verdict, "NOT_PROVIDED", errors)
+    _marker(verdict, "NOT_PROVIDED" if reviewed_sha == "NOT_PROVIDED" else "ACCEPT_WITH_DEBT", errors)
     return errors
 
 
@@ -416,14 +428,17 @@ def _verify_ledger(directory: Path, manifest: dict[str, Any], state: str, errors
         errors.append("manifest rolling_ledger_hash does not match ledger")
     if manifest.get("question_count") != len(question_events):
         errors.append("manifest question_count does not match ledger")
-    if state in POST_LIVE_STATES:
+    if state in POST_LIVE_STATES or state in CLOSURE_STATES:
         for qid in questions:
             if qid not in answers or qid not in decisions:
                 errors.append(f"post-live ledger is incomplete for {qid}")
     count = len(question_events)
     if count > 100:
         errors.append("question count cannot exceed 100")
-    if count < 80 and manifest.get("question_budget_stop_reason") not in {"USER_GATE", "ARCHITECTURE_BLOCKER"}:
+    allowed_insufficient_reasons = {"USER_GATE", "ARCHITECTURE_BLOCKER"}
+    if state in CLOSURE_STATES:
+        allowed_insufficient_reasons.add("WORKFLOW_EXECUTION_BLOCKER")
+    if count < 80 and manifest.get("question_budget_stop_reason") not in allowed_insufficient_reasons:
         errors.append("QUESTION_COVERAGE_INSUFFICIENT: fewer than 80 questions require a blocking reason")
     if 80 <= count < 100 and manifest.get("question_budget_stop_reason") not in {"NO_NEW_ARCHITECTURE_INFORMATION", "ALL_PRIORITY_CHAINS_CLOSED"}:
         errors.append("80-99 questions require a valid question_budget_stop_reason")
@@ -461,7 +476,7 @@ def _verify_ledger(directory: Path, manifest: dict[str, Any], state: str, errors
 def _verify_transcript(directory: Path, question_count: int, state: str, errors: list[str]) -> None:
     path = directory / "live-interrogation.md"
     _require(path, errors)
-    if not path.exists() or state not in POST_LIVE_STATES:
+    if not path.exists() or state not in POST_LIVE_STATES and state not in CLOSURE_STATES:
         return
     markers = re.findall(r"(?im)^\s*(RED Q\d{3}|BLUE A\d{3}|RED CHAIN DECISION)\b", _read(path))
     expected: list[str] = []
@@ -504,6 +519,19 @@ def _verify_phase(directory: Path, manifest: dict[str, Any], state: str, last_ev
             errors.append("candidate_branch must be distinct from main")
         if manifest.get("candidate_created_after_live_attack") is not True:
             errors.append("candidate must be created after LIVE_ATTACK_COMPLETE")
+    elif state in CLOSURE_STATES:
+        if manifest.get("candidate") != "NONE":
+            errors.append("aborted operational pilot must have candidate: NONE")
+        if manifest.get("candidate_branch") not in (None, ""):
+            errors.append("aborted operational pilot must not have a candidate branch")
+        if manifest.get("main_merge") != "NOT_ATTEMPTED":
+            errors.append("aborted operational pilot must not attempt main merge")
+        if manifest.get("architecture_score") != "INVALID":
+            errors.append("aborted operational pilot architecture_score must be INVALID")
+        if manifest.get("architecture_blocker") != "NONE_ESTABLISHED":
+            errors.append("aborted operational pilot architecture_blocker must be NONE_ESTABLISHED")
+        if manifest.get("user_gate") != "NOT_TRIGGERED":
+            errors.append("aborted operational pilot user_gate must be NOT_TRIGGERED")
 
 
 def _verify_post_live_artifacts(directory: Path, manifest: dict[str, Any], state: str, errors: list[str]) -> None:

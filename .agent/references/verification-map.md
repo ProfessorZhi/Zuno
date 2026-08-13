@@ -13,6 +13,7 @@ python tools/scripts/verify_red_blue_session.py
 python tools/scripts/verify_red_blue_gate_realignment_v1.py
 python tools/scripts/verify_red_blue_workflow_v4.py --bootstrap project-reconstruction-lab/sessions/RB-WORKFLOW-V4-BOOTSTRAP
 python tools/scripts/verify_red_blue_workflow_v42.py --bootstrap project-reconstruction-lab/sessions/RB-WORKFLOW-V4.2-BOOTSTRAP
+python tools/scripts/verify_red_blue_round006_closure.py --round project-reconstruction-lab/sessions/RB-WORKFLOW-V4.2-ROUND-006
 python .agent/scripts/verify_agent_system.py
 python .agent/scripts/verify_doc_boundaries.py
 ```
@@ -23,6 +24,10 @@ Round-006 以后使用 `verify_red_blue_workflow_v42.py` 验证 Fresh Context、
 Snapshot、Part-A Cold-Start、Red-only interview calibration、Deep-Dive Chain、问题冻结、
 Blue-only Canonical Writer、外部 ChatGPT Gate 和双轨状态。它不创建 Session、不启动 Round、
 不修改 Canonical，也不代签 Verdict。
+
+Round-006 的中止收口还必须通过 `verify_red_blue_round006_closure.py`；该验证器只确认
+`WORKFLOW_EXECUTION_BLOCKER` 与 `ARCHITECTURE_SCORE: INVALID` 的语义，不把工作流失败升级为
+架构失败，也不产生 Candidate 或 Merge 证据。
 
 `RB-GATE-REALIGNMENT-001` 使用专用 Gate verifier，检查 Closure Class、无环 Gate 依赖、
 用户决策包、原始 P0 记录保持 OPEN，以及 Canonical Sync 未应用。

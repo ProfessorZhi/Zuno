@@ -1,7 +1,17 @@
 workflow_id: ZUNO-RED-BLUE-WORKFLOW-V4.2
 round_id: RB-WORKFLOW-V4.2-ROUND-006
-state: BLOCKED_BY_USER_GATE
-round_status: WORKFLOW_OPERATIONAL_BLOCKER
+execution_profile: LIVE_ADAPTIVE
+state: ABORTED_OPERATIONAL_PILOT
+round_status: ABORTED_OPERATIONAL_PILOT
+workflow_status: BLOCKED
+stop_reason: WORKFLOW_EXECUTION_BLOCKER
+operational_finding: WF-API-001
+architecture_score: INVALID
+architecture_blocker: NONE_ESTABLISHED
+user_gate: NOT_TRIGGERED
+candidate: NONE
+canonical_sync: NOT_STARTED
+main_merge: NOT_ATTEMPTED
 artifact_base_sha: 55510d236bcc039ca255f59d07ea61b36e04143a
 external_reviewed_sha: NOT_PROVIDED
 red_session_id: 019ffa12-bdb2-7520-8ceb-9527ad76e080
@@ -20,7 +30,7 @@ chain_count: 1
 novel_question_count: 3
 regression_question_count: 0
 adaptive_followup_ratio: 0.6666666667
-question_budget_stop_reason: ARCHITECTURE_BLOCKER
+question_budget_stop_reason: WORKFLOW_EXECUTION_BLOCKER
 chain_stop_summary: C01_CLOSED; Q004_NOT_FROZEN
 part_a_support_distribution:
   SUFFICIENT: 2
@@ -134,4 +144,3 @@ chain_specs:
     primary_concept: Human review value
     attack_intent: test workflow usefulness
     possible_pressure_axes: [acceptance, review, reversal]
-

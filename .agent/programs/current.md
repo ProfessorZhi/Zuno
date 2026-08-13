@@ -1,16 +1,16 @@
 # Current Program
 
 state: `active-design-program`
-active_program: `RB-WORKFLOW-V4.2-ROUND-006`
+active_program: `RB-R006-CLOSURE-AND-V42-BATCH-PROFILE`
 queued_program: `none`
 program_class: `operational-pilot`
-baseline_sha: `4612d9d119a9fefd5b9de01b40606636e80409c0`
+baseline_sha: `55510d236bcc039ca255f59d07ea61b36e04143a`
 
-本 Program 执行 ZUNO-RED-BLUE-WORKFLOW-V4.2-ROUND-006 Operational Pilot，并维护其 Workflow
-证据。它不修改 Canonical Architecture、Facts、ADR、Runtime、Schema、Migration、UI、Dependencies
+本 Program 收口 ZUNO-RED-BLUE-WORKFLOW-V4.2-ROUND-006 Operational Pilot，并维护 V4.2 的
+Execution Profile 与 Workflow 证据。它不修改 Canonical Architecture、Facts、ADR、Runtime、Schema、Migration、UI、Dependencies
 或 Production Infra。Bootstrap 阶段只重构 V4.2 的工作流、治理、Session Contract、Prompt、
 Context Packet、Artifact Handoff、Verifier、Routing 和 Docs Tests。Round-006 已按 Operational Pilot
-启动并在 Workflow Blocker 后停止，当前不再继续运行，
+启动并在 Workflow Execution Blocker 后中止收口，当前不再继续运行，
 不修改业务 Runtime、Facts、ADR、Schema、Migration、UI、Dependencies 或 Production Infra。
 
 `IMPLEMENTATION-EVIDENCE-CYCLE-001` 是独立的 Track B；它已有自己的代码、测试和 Evidence
@@ -125,8 +125,8 @@ Closure Semantic Audit V3.1.3.1   COMPLETE (derived classification; Round-005 im
 Implementation Evidence Wave-001 COMPLETE (TASK-001 / TASK-003; independent Track B)
 V4.1 Workflow Bootstrap           HISTORICAL / IMMUTABLE
 V4.2 Workflow Bootstrap           ACCEPTED_WITH_DEBT / EXTERNAL_VERDICT_PROVIDED
-Architecture Round-006            BLOCKED_BY_USER_GATE / ARCHITECTURE_BLOCKER
-Round-006                         3 LIVE TURNS; ARCHITECTURE SCORE INVALID
+Architecture Round-006            ABORTED_OPERATIONAL_PILOT / WORKFLOW_EXECUTION_BLOCKER
+Round-006                         3 LIVE TURNS; ARCHITECTURE SCORE INVALID; CANDIDATE NONE
 ```
 
 V4.2 Addendum：每次只冻结一个 Question、一个 Answer 和一个 Chain Decision。Red 读取
@@ -285,7 +285,7 @@ Implementation Task Candidate 仍不能自动激活或写成 Current；必须另
 
 Wave-001 已完成窄实现、focused tests 和 evidence package；PostgreSQL 真实环境、进程级故障、
 法院 QA、HA、Security Qualification 和 Production 仍未证明。它保持
-`WAITING_FOR_RED_COUNTER_RETEST`；Round-006 当前因 `WF-API-001` 的 Workflow Blocker 停止，不能
+`WAITING_FOR_RED_COUNTER_RETEST`；Round-006 当前因 `WF-API-001` 的 Workflow Execution Blocker 中止收口，不能
 在修复 Turn Handoff 之前重放或继续。
 
 旧 Program1 已 `SUPERSEDED / RETIRED`，不得恢复或重新激活。

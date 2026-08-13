@@ -2,7 +2,15 @@
 
 ## Adaptive Red/Blue Operational Pilot
 
-状态：`BLOCKED_BY_USER_GATE`
+状态：`ABORTED_OPERATIONAL_PILOT`
+
+Workflow 状态：`BLOCKED`
+
+停止原因：`WORKFLOW_EXECUTION_BLOCKER`
+
+Architecture Blocker：`NONE_ESTABLISHED`
+
+User Gate：`NOT_TRIGGERED`
 
 本 Round 真实创建了两个独立的 `multi_agent` Session，并完成了 3 个 Question → Answer →
 Chain Decision Turn。Q001–Q003 形成了真实的 Answer-triggered follow-up；C01 在 Q003 后关闭。
@@ -18,6 +26,7 @@ Chain Decision Turn。Q001–Q003 形成了真实的 Answer-triggered follow-up�
 - 进入新 Chain 后的 Turn Handoff / Resume 语义未证明；
 - Question Coverage 不足，Architecture Score 无效；
 - 没有 Blue Synthesis、Candidate Branch、Red Judge 或 Main Merge。
+- 这不是 Zuno Architecture Failure，也不是 Architecture A-class Blocker。
 
 详细证据见：
 
@@ -26,6 +35,7 @@ Chain Decision Turn。Q001–Q003 形成了真实的 Answer-triggered follow-up�
 - `question-answer-ledger.jsonl`
 - `live-interrogation.md`
 - `part-a-gap-register.md`
+- `round-closure.md`
 
 验证：
 

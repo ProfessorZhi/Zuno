@@ -23,7 +23,12 @@ candidate_first_write_after_live: NOT_APPLICABLE
 candidate_branch: NOT_CREATED
 candidate_sha: NOT_PROVIDED
 main_unchanged_before_chatgpt: PROVEN
-workflow_operational_status: BLOCKED
+workflow_status: BLOCKED
+stop_reason: WORKFLOW_EXECUTION_BLOCKER
+operational_finding: WF-API-001
+architecture_blocker: NONE_ESTABLISHED
+user_gate: NOT_TRIGGERED
+round_status: ABORTED_OPERATIONAL_PILOT
 architecture_score_valid: false
 ```
 
@@ -34,7 +39,8 @@ Turn Handoff 中返回旧的已完成消息；直接 `send_input` 也出现先�
 当前 API 响应中证明新 Question、Answer 和 `previous_turn_ref` 的唯一对应关系。
 
 因此没有继续写入 Q004，也没有把重复响应当作答案。该现象是 `WF-API-001`，属于
-`ARCHITECTURE_BLOCKER`，不是架构 Finding，也不是用户架构 Gate 的结论。
+`WORKFLOW_EXECUTION_BLOCKER`，不是架构 Finding、不是 Architecture Blocker，也不是用户
+架构 Gate 的结论。
 
 ## 未证明项目
 
