@@ -8,31 +8,31 @@ replaces: docs/project/modules/11-infrastructure.md（Superseded）
 
 ## Part A — Architecture Narrative
 
-### 部署首先解决工作负载异构
+### 部署先处理资源竞争
 
-用户数量不能单独证明微服务。一次法律任务同时包含短 API 请求、LLM-bound 长运行、OCR/Embedding/Graph 的 CPU/GPU/IO 批处理、Sandbox 的强安全隔离和 Eval 的离线批处理。它们的资源曲线、超时、取消、backpressure、failure domain 和升级生命周期不同，这才是独立 Worker 或 Service 的候选理由。
+这里要解决的问题不是把服务数量做大，而是隔离不同工作负载的资源和失败影响。
 
-### Target Scenario：资源竞争与隔离
+用户数量不是部署边界。短 API、等待模型的长 Agent Run、OCR/Embedding/Graph 批处理、Sandbox 隔离和 Eval 批量任务会以完全不同的方式消耗 CPU、GPU、网络和队列。部署层的工作，是让一种任务的拥塞不会把另一种任务拖垮，同时让每个运行单元的失败、升级和回滚都能被看见。
 
-这是 Target Scenario，不是历史事实：
+### 一个滚动升级中的目标场景
 
-Agent Worker 正在等待模型响应时，Knowledge Worker 需要 GPU/CPU 构建索引；如果两者共享请求线程，短查询会被拖慢。另一个 Sandbox Job 因网络策略违规被隔离；Eval Job 需要批量运行但不能抢占在线事务。Deployment 通过 resource profile、queue、独立健康检查和失败域隔离这些工作负载，仍让 Domain State 由唯一 Owner 保存。
+以下是 Target Scenario，不是历史事实。Agent Worker 正在等待模型响应，Knowledge Worker 同时需要 GPU 构建索引；此时发布新版本，旧 Worker 仍可能持有一个长 Run 的 Checkpoint。Deployment 必须先排空可取消的队列、保留兼容的 Checkpoint 读取能力，再逐步替换 Worker。若 Sandbox Job 违反网络策略，应只隔离该 Job，不能让在线事务和 Eval 队列一起停摆。
 
-### 运行形态如何从逻辑能力推导
+### 逻辑能力如何落成物理单元
 
-Edge/API、Platform/Domain、Agent Runtime、Knowledge 和 Tool/Sandbox 是候选网络服务角色；OCR、Embedding、Graph Build、Sandbox 和 Eval 更可能是 Worker Profile。一个 Knowledge Logical Domain 可以有 Ingestion Worker 和 Retrieval API，多个物理单元不意味着多个业务 Owner。Developer、Staging 和 Production 是不同证据等级，而不是三种都已完成的事实。
+Edge/API、Platform/Domain、Agent Runtime、Knowledge 和 Tool/Sandbox 是服务候选；OCR、Embedding、Graph Build、Sandbox 和 Eval 更像可独立扩缩容的 Worker Profile。一个 Knowledge Logical Domain 可以同时有 Ingestion Worker 和 Retrieval API，这不改变 Knowledge 对投影的 Ownership。Developer、Staging 和 Production 是不同证据等级，不是仓库里出现三个配置文件就都完成了。
 
-### 责任与非责任
+### 失败路径比启动命令更重要
 
-Deployment 负责运行单元、资源、网络、健康、升级、回滚、备份和隔离；不定义 Fact、Plan、Tool Permission、Citation 或评测指标。Kubernetes、Kafka、gRPC、service mesh 和 Database-per-service 不是默认答案，必须由 HA、autoscaling、rolling update、operator cost 或真实 workload 证据推动。
+重复消费可能造成双重 Effect，旧 Schema 可能无法读取新 Checkpoint，滚动升级可能把长 Run 留在“看似成功、实际无人继续”的状态。队列 drain、兼容窗口、幂等和恢复检查必须在部署设计里有位置。Kubernetes、Kafka、gRPC、Service Mesh 和 Database-per-service 都有运营成本；如果 Docker/Compose 加独立 Worker 已能满足资源和安全隔离，就不应为了规模想象引入它们。
 
-### 主要失败、取舍与反转
+Target 是 Python-only Service/Worker Profiles 和三种部署 Profile；Docker、Compose、进程和测试只能证明 Current 的局部表面。容量、SLO、HA、回滚、备份、on-call、配置漂移和真实部署证据仍是 Gap，Production Ready 没有被本轮文字更新证明。
 
-长任务占满短请求资源、重复消费触发双重 Effect、旧 Schema 与 Checkpoint 不兼容、滚动升级中断任务，都是部署层需要处理的失败。微服务增加网络延迟、序列化、追踪、配置和本地开发成本；若模块化单体加独立 Worker 能达到相同隔离和扩容，服务拆分应合并。若规模、SLO 或安全证据支持独立边界，再逐步拆分。
+部署的核心问题因此不是“能否启动更多容器”，而是长任务、短请求和高风险动作在失败与升级时能否各自恢复。
 
-### Current / Target / Gap
+运行单元的健康状态需要和业务状态分开报告，容器存活不能被解释成 Run 已经完成。
 
-Current 由 Docker、Compose、进程、测试和运行证据证明；Target 是 Python-only Service/Worker Profiles 与三种部署 Profile；Hypothesis 是 workload/failure/resource/security isolation 能带来收益；Gap 是容量、SLO、HA、回滚、备份、on-call、配置和真实部署证据。
+这也是 Deployment 文档不拥有 Domain Fact 的原因。
 
 ## Part B — Detailed Architecture Specification
 

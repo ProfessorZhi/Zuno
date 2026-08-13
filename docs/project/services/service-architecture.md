@@ -8,33 +8,29 @@ replaces: old 11-module physical interpretation and docs/project/modules/11-infr
 
 ## Part A — Architecture Narrative
 
-### 服务边界从工作负载开始
+### 先看哪种工作会互相拖垮
 
-Microservice 是 Target Constraint，但服务数量不是预先决定的。法律任务同时包含短事务 API、LLM-bound 长运行、OCR/Embedding/Graph 的 CPU/GPU/IO 工作、Sandbox 安全隔离和 Eval 批处理。不同资源、故障、权限和生命周期才是服务边界的理由，用户数量本身不是理由。
+服务边界不是把旧的逻辑模块换成网络地址。一次案件分析同时包含短事务请求、等待模型的长任务、OCR/Embedding/Graph 的重计算、需要强隔离的 Sandbox，以及不应抢占在线资源的离线评测。它们的资源曲线和失败方式不同，才构成拆分的候选理由；几千个用户本身不够。
 
-它要解决的问题是异构工作负载互相抢占资源、失败互相扩散，以及高风险工具需要独立安全边界；如果这些问题不存在，服务化的网络成本就没有理由。
+### 一个跨边界的目标场景
 
-### Target Scenario：复杂案件跨边界运行
+以下是 Target Scenario，不是历史事实。Edge/API 接收 Matter 或 Run；Platform/Domain 记录事务型业务状态；Knowledge Worker 解析材料并建立检索投影；Agent Runtime 负责长任务；Tool/Sandbox 在自己的网络和 Secret 边界内执行动作；Eval Worker 离线比较结果。每个边界只发布自己的 Receipt、Reference、Snapshot 或 Proposal，真正的 Domain Commit 仍回到唯一 Owner。
 
-这是 Target Scenario，不是历史事实：
+### 为什么有些能力不该成为服务
 
-Edge/API 接收 Matter 或 Run 请求；Platform/Domain 提交事务型业务状态；Knowledge Worker 解析和检索；Agent Runtime Coordinator 执行长任务；Tool/Sandbox 执行高风险动作；Eval Worker 在离线环境比较结果。每个边界只发布自己的 Receipt、Reference、Snapshot 或 Proposal，最终 Domain Commit 仍由 Domain Owner 完成。
+直觉上可以把 Legal Capability、Model Gateway、Memory 或 Graph 都拆成服务，但网络跳转并不会自动产生边界。只有独立扩缩容、失败隔离、安全/资源隔离、独立发布、不同可用性、数据 Ownership 或独立运维生命周期中至少一项得到证据，才值得承担服务化成本。纯函数、模型适配和同一资源池内的批处理更适合 library、worker 或 provider adapter。
 
-### 候选服务与逻辑能力
+### 真正麻烦的是部分失败
 
-候选网络服务角色是 Edge/API、Platform/Domain、Agent Runtime、Knowledge 和 Tool/Sandbox。Eval/Observability 初期更适合作为批处理 Worker 与 Trace Sink。Legal Capability、Model Gateway、Memory、Graph 和 Multi-Agent Profile 默认是逻辑能力、Provider 或 Worker，不自动成为服务。
+考虑 Domain Transaction 已提交 Finding，但 Outbox 发布失败；Worker 重试后又收到同一 Job，或者 Knowledge 索引已经写入而 ACK 丢失。服务不能用“消息重试成功”覆盖业务事实，必须依赖幂等键、版本和对账。服务化带来序列化、延迟、Schema 兼容、追踪和本地开发成本；如果模块化单体加独立 Worker 能给出同样的隔离与恢复语义，边界就应该合并。
 
-### Why service 与 Why not service
+Python Microservice + independently scalable workers 是 Target；仓库当前只能证明部分进程和 Compose 表面。服务数量、SLO、容量、故障注入和生产运行证据仍是 Gap，五个候选角色不是已实现的 Current 清单。
 
-只有 Independent Scaling、Failure Isolation、Security/Resource Isolation、Independent Deployment、Distinct Availability、Data Ownership 或 Operational Lifecycle 之一有实证，才值得拆服务。若能力只是纯函数、模型调用适配、同一资源池中的批处理或小型策略，它更适合 Python Library、Worker 或 Provider Adapter。每个服务必须拥有清晰状态，不能只是把一次函数调用包成网络跳转。
+若这些工作负载在实际测量中没有互相影响，服务边界就不值得保留；这项设计从一开始就接受合并回 Worker 的结果。
 
-### 失败、取舍与反转
+服务 Owner 还必须能解释自己的状态、重试和健康信号，否则它只是一个被网络包装的函数。
 
-服务化会增加序列化、网络延迟、Schema 版本、部分失败、重试风暴、分布式追踪、部署协调和本地开发成本。典型失败是 Domain Commit 成功但消息发布失败，或 Knowledge Worker 重试导致重复 Index/Effect。若模块化单体加独立 Worker 已能提供相同的隔离、扩缩容、安全和恢复语义，应合并服务；若独立服务没有真实资源或故障差异，应删除。
-
-### Current / Target / Gap
-
-Current 以仓库进程、Compose、代码和测试证据为准；Target 是 Python Microservice + independently scalable workers；Hypothesis 是异构 workload 和 Security Boundary 足以证明候选服务；Gap 是服务数、SLO、容量、故障注入、部署、团队 Ownership 和生产运行证据。
+这条准入标准会把看似“企业级”的拆分挡在正式部署之前。
 
 ## Part B — Detailed Architecture Specification
 

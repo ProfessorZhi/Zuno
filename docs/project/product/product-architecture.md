@@ -8,35 +8,29 @@ replaces: docs/project/modules/01-product-surface.md（Superseded）
 
 ## Part A — Architecture Narrative
 
-### 产品要完成的工作
+### 用户真正要交付的是什么
 
-用户购买的不是一个 Agent Run，而是案件材料处理、证据组织、法律分析、人工复核和可交付 WorkProduct。Agent 是完成工作的一种执行方式；Matter、Review、HumanDecision 和 WorkProduct 才是用户能理解并负责的产品对象。Zuno 的产品边界因此围绕法律工作成果，而不是围绕聊天消息或模型调用次数。
+一名法律工作人员打开案件，不是为了“拥有一个 Agent”，而是要把一堆材料变成可以复核、引用和交付的工作成果。产品因此把 Matter、材料版本、证据缺口、待审核结论和 WorkProduct 放在同一条工作线上。Agent 只是其中一种执行方式；如果它换成 WorkBuddy、一个后台任务或人工录入，案件的责任边界也不应跟着消失。
 
-### Target Scenario
+### 一个目标工作场景
 
-这是 Target Scenario，不是历史事实：
+以下是 Target Scenario，不是历史项目事实。用户创建 Matter，上传合同、诉状和证据。系统先确认材料版本和可见范围，再显示哪些内容已经解析、哪些证据仍缺失。分析过程中，检索结果和专业能力只形成候选；用户进入 Review 后，能看到 Finding 的来源、冲突和所依赖的材料版本，随后作出 HumanDecision，最后确认 WorkProduct。交付可以从 Zuno UI 发出，也可以由 WorkBuddy 或组织系统作为 Host 发起，但 Host 不能跳过 Domain Admission。
 
-用户创建 Matter，上传合同、诉状或证据，等待系统完成解析和分析。系统在 Matter 中显示材料版本、证据来源、待补证据和分析进度；Agent 可以执行检索和法律能力，但中间候选不会伪装成最终事实。用户进入 Review，查看 Finding、引用和冲突，做出 HumanDecision，最后确认 WorkProduct 并通过 Zuno UI 或外部 Host 交付。
+这个顺序很重要：若界面只展示一段流畅的答案，用户无法知道答案是否基于最新材料，也无法区分“模型建议”和“已经审核的业务结论”。产品层要负责解释这些状态，而不是替 Domain、Knowledge 或 Runtime 重新实现它们。
 
-### 产品概念之间的关系
+### 为什么不把它做成聊天页
 
-Matter 是法律工作的边界和权限容器；DocumentVersion 是 Matter 中可追溯的材料版本；AgentRun 是一次执行记录；Review 是对候选和结论进行核验的产品任务；HumanDecision 是业务人员的正式判断；WorkProduct 是可以交付、引用和审计的结果。Host 可以是 Zuno UI、WorkBuddy 或组织系统，但 Host 不能绕过 Domain Owner 直接写 Finding 或 HumanDecision。
+聊天页适合一次性问答，却不擅长表示版本、复核责任和可交付结果。比如用户上传一份新证据后，刚刚审核过的 Finding 可能只对旧版本成立；如果产品仍把旧答案留在对话末尾，用户很容易误以为它仍然有效。Matter-centric 视图和 Review 流程确实增加了状态和界面成本，但它们把“谁看过、依据什么、现在是否还能交付”变成可解释的产品事实。
 
-### 责任和非责任
+### 失败时用户应该看见什么
 
-产品层负责用户可见的工作流、状态解释、Review 入口、交付和审计可见性；不负责重新定义法律事实、复制 Retrieval 状态机、决定模型 Provider 或执行未经授权的外部动作。Domain、Knowledge、Runtime、Security 和 Tool 是相邻 Owner；产品层只通过稳定 Contract 呈现它们的结果。
+考虑上传成功、解析任务却在中途失败的情况。产品不能用空白页面掩盖失败，也不能让 Agent 继续把未完成的材料当作完整输入；它需要显示 Processing Failure、受影响的 DocumentVersion 和可重试入口。另一种更危险的情况是新材料使已审核 Finding 变 stale，此时旧 WorkProduct 应被标记为需要复核，而不是继续显示为当前结论。显式状态会牺牲一些界面简洁性，换来专业人员可以承担的责任边界。
 
-### 为什么不能只是聊天页面
+普通 Host 加 Legal Backend 仍然是产品设计的竞争方案。如果用户只是偶尔提问，没有版本、复核或交付要求，Host + Tool 更简单，也更合适。只有真实任务证明 Review、Evidence Sufficiency 和 WorkProduct 能改善人工接受率，才值得保留完整产品状态。
 
-聊天页面能承载回答，却很难表达一个材料版本变更后哪些结论 stale、哪些证据缺失、谁已经审核以及 WorkProduct 是否仍可交付。普通 Host + Legal Backend 仍是优先替代方案；只有当 Matter-centric Review、Evidence Sufficiency、HumanDecision 和交付审计在复杂任务中产生可测收益，才保留更强的产品状态模型。
+仓库和测试目前只能证明部分接口与设计表面；Matter-centric Legal Case Intelligence 是 Target，Review 和 WorkProduct 带来增益是 Hypothesis。真实用户流程、法院 QA、交付协议和可用性仍是 Gap，不能写成 Current 或 Production 事实。
 
-### 失败、取舍与反转
-
-若上传成功但解析失败，用户必须看到可恢复的 Processing Failure，而不是一个空白答案；若新材料使已审核 Finding stale，系统必须阻止旧 WorkProduct 被误当成当前结论。显式 Review 和版本可见性增加了界面和状态复杂度，但换来专业人员可解释的责任边界。若用户只需要一次性问答且没有版本、复核和交付需求，应降级为 Host + Tool；若用户测试不接受 Domain State 视图，应重新检查产品边界，而不是增加更多 Agent。
-
-### Current / Target / Gap
-
-Current 只接受仓库代码、测试和实际运行证据；Target 是 Matter-centric Legal Case Intelligence 产品和可替换 Host；Hypothesis 是 Review、WorkProduct 和 Domain-aware UX 能改善任务完成与人工接受率；Gap 是真实用户流程、法院 QA、交付协议、可用性和效果测量。
+这条边界也保留了回退路径：当业务只需要一次低风险检索时，可以直接使用外部 Host，而不必启动完整的案件工作台。
 
 ## Part B — Detailed Architecture Specification
 

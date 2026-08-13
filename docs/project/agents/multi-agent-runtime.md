@@ -8,33 +8,31 @@ replaces: docs/project/modules/06-agent-core-planning-control.md 中的多 Agent
 
 ## Part A — Architecture Narrative
 
-### Multi-Agent 的真实定位
+### 为什么一个 Agent 有时不够
 
-Multi-Agent 不是默认的自治社会，也不是每个角色一套法律业务代码。它是一种受 Coordinator、Plan、Budget、Permission、Review 和 Eval 约束的执行拓扑。角色的差异来自 Role、Skill、Knowledge Scope、Capability Binding、Tool Permission、Memory Policy 和 Model Policy；Domain Kernel 与专业 Capability Contract 仍然共享。
+复杂案件的证据整理、争议识别和法律检索往往可以并行，但并行不等于把三个“聪明角色”放在一起自由对话。真正需要解决的是：这些工作能否使用各自的资料范围和工具权限，又能否在同一个案件版本上汇合。若每个角色都能修改事实或重新规划整个 Run，协调本身会比分析更难。
 
-它解决的问题是：一个复杂案件既需要独立的证据、争议和法律研究视角，又不能让多个控制者争夺同一个 Run 或让每个角色复制一套法律事实逻辑。
+### 一个受控并行的目标场景
 
-### Target Scenario：受控并行协作
+以下是 Target Scenario，不是历史事实。Coordinator 为一个 Matter 建立 Plan，把证据整理、争议识别和法律研究分派给三个短生命周期 Worker。每个 Worker 使用自己的 Knowledge Scope 和 Capability Binding，返回候选证据、EvidenceRequirement 或 ReplanRequest。Join 等待必需分支，先检查它们是否基于同一个 DomainVersion，再决定合并、局部重跑还是重新规划。即使三个分支都成功，最终也只能提交 Proposal；共享的 Domain Kernel 仍由 Domain Owner Admission 形成 Canonical State。
 
-这是 Target Scenario，不是历史事实：
+这里保留单一 Coordinator 是一种克制。若两个控制者都能激活 Plan、决定 Replan 或结束 Run，我们还要设计控制者之间的一致性协议，把任务执行升级成分布式共识问题。当前没有这样的产品需求，所以并行只发生在受控 Step 和 Worker 层，Run Control Authority 仍然只有一个。
 
-Coordinator 根据一个复杂 Matter 创建 Plan，先分派 Evidence Worker、Dispute Worker 和 Legal Research Worker。每个 Worker 使用自己的 Scope 和能力绑定，返回 BranchResultRef、EvidenceRequirement 或 ReplanRequest。Reducer/Join 等待必需分支，检查 DomainVersion 是否一致，再根据冲突或证据缺口触发 Reflection/Join Review。最后只生成 Proposal，交给 Domain Owner Admission；Coordinator 仍然是唯一的 Run Control Authority。
+### 选择等级，而不是追求更多 Agent
 
-### Levels 与选择边界
+L0 Single Agent、L1 Role Pipeline 和 L2 Ephemeral Worker 应覆盖大多数任务。L3 Specialized Domain Agent 只有在角色、权限和能力边界稳定后才有意义；L4 Persistent Agent Team 还需要独立 SLA、资源池、发布生命周期和安全证据。我们不把更高自治等级当作默认 Future，因为它们会放大记忆污染、授权和恢复成本。
 
-目标等级只定义 L0 Single Agent、L1 Role Pipeline、L2 Ephemeral Worker、L3 Specialized Domain Agent、L4 Persistent Agent Team。L0-L2 应优先覆盖大多数场景；L3 需要稳定角色、权限和专业能力边界；L4 需要独立 SLA、资源池、发布生命周期和安全证据。设计不设更高自治等级，也不把 Agent Society 作为目标或默认 Future。
+### 失败路径决定是否保留并行
 
-### 责任和非责任
+如果 Evidence Worker 超时，Join 不能只等到一个时间点再把空结果当成功；它要知道该分支是必需还是可选。如果某个分支发现新的证据要求，Coordinator 可能需要补一个 Step；如果两个分支分别基于 DomainVersion V12 和 V13，它们不能直接拼成一个 Finding。重试也不是无条件的：已经请求外部工具的分支必须先经过 Tool/Security 对账。一个强 Agent 加 parallel tools 或 L1 Pipeline 可能更便宜，只有受控并行确实改善证据充分性、时延或复核质量，才值得保留更高等级。
 
-Coordinator 拥有 Dispatch、Join、Budget、Replan 和最终 RunOutcome；Worker 只拥有自己的 Step Result 和 Proposal；Domain Owner 拥有 Canonical State；Knowledge、Security、Tool 和 Eval 维持各自边界。Multi-Agent 不负责复制法律算法、直接写 Domain、共享未经授权的 Memory 或自行扩张权限。
+仓库和测试能够证明的只是部分执行表面；Current 并没有证明一个完整的生产 Agent Team。同一 Runtime Service 中的 Profile/Worker 是 Target，L0-L2 是优先路径。并行带来收益是 Hypothesis，Join 正确性、共享 DomainVersion、恢复、成本和独立 SLA 仍是 Gap。
 
-### 失败故事与简单替代
+这也是为什么我们把更高等级留在可逆的设计空间，而不是把它当成默认部署形态。
 
-Evidence Worker 超时，Join 必须区分可选分支和必需分支；分支发现新 EvidenceRequirement，Coordinator 需决定补充 Step 或 Replan；两个分支基于不同 DomainVersion，则不能直接合并；分支请求外部 Tool，必须回到 Security/Tool Gate。一个强 Agent 加 parallel tools 或 L1 Role Pipeline 可能已足够，只有受控并行能改善证据充分性、时延或复核质量才保留更高等级。
+Runtime 仍然需要记录每个 Worker 的输入版本和权限上下文，才能在恢复时说明哪个结果可以继续使用。
 
-### Current / Target / Gap
-
-Current 只由代码、测试和运行证据证明；Target 是同一 Runtime Service 中的 Profile/Worker 模型，优先 L0-L2，必要时支持 L3-L4；Hypothesis 是受控并行可改善复杂案件任务；Gap 是角色消融、Join 正确性、共享 DomainVersion、成本、恢复和独立 SLA 证据。
+这项约束属于 Target Contract；仓库当前没有因此产生 Production Evidence。
 
 ## Part B — Detailed Architecture Specification
 

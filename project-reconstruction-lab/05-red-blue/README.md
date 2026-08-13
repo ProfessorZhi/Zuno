@@ -50,8 +50,8 @@ Discovery
 
 ## V3.1 百问与文档质量协议
 
-`ZUNO-RED-BLUE-WORKFLOW-V3.1` 在 V3 的可回放、可同步 Round 上增加同文件 Part A Narrative /
-Part B Specification 质量门。完整契约见 [`round-protocol-v3.1.md`](round-protocol-v3.1.md)。
+`ZUNO-RED-BLUE-WORKFLOW-V3.1` 是历史 Round-003 的 Part A Narrative / Part B Specification 质量门；
+当前 Human Writing 与 Round-004 的完整契约见 [`round-protocol-v3.1.2.md`](round-protocol-v3.1.2.md)。
 
 ```text
 Fact Baseline
@@ -137,6 +137,11 @@ changelog 只留在 Session，不写回 Canonical 文档。
 V3.1.1 进一步要求 Canonical Sync 使用 `SECTION_REWRITE` 或 `FULL_PART_REWRITE`，禁止通过
 `APPEND` 在旧正文后累积架构修订；Part A 目标为 85，90 以上标记为 STRONG。结构归一化可以
 独立于新的 100Q Round 执行。
+
+V3.1.2 在此基础上加入 Human Writing Contract：Part A 必须 prose-led、scenario-driven、
+technically precise、non-template、human-reviewable；确定性 verifier 只能输出 warning，不能
+把机器检查冒充人工审查。Round-004 使用具体时序和失败场景审查 Architecture Consistency、
+Failure Semantics 与 Component Survival，完整协议见 [`round-protocol-v3.1.2.md`](round-protocol-v3.1.2.md)。
 
 Blue Repair 使用同一个 `sessions/` 根目录，Repair Session 以独立协议记录根因聚类、Part-A
 修复、五指标、Counter Retest 和 Closure Report，例如：

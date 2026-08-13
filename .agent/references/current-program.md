@@ -44,9 +44,9 @@ Canonical Facts Taxonomy V1         DONE
 Fact Depth Recovery                 IN_PROGRESS
 Product / Architecture Reconstruction IN_PROGRESS
 Red / Blue / Interview Review       READY / IN_PROGRESS
-Canonical Architecture Sync         APPLIED / ACCEPTED_TARGET (V3.1.1 full-part rewrite)
+Canonical Architecture Sync         APPLIED / ACCEPTED_TARGET (V3.1.2 Round-004 review)
 Implementation Program              READY_FOR_TASK_DEFINITION (not active)
-V3 Round-003                       COMPLETE; V3.1.1 normalization COMPLETE; Round-004 READY_NOT_STARTED
+V3 Round-003                       COMPLETE; V3.1.1 normalization COMPLETE; V3.1.2 Round-004 COMPLETE; Round-005 READY_NOT_STARTED
 ```
 
 Canonical Runtime Program V1 已完成并归档。可读历史摘要位于：

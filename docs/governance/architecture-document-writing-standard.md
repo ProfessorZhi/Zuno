@@ -70,6 +70,24 @@ Required Concerns 不是 Required Headings。不同专题可以用不同的叙�
 之后继续出现第三套 Legacy Main Body、Part-A subsection、旧 Contract 或重复 State Machine。
 不能创建 `*-human.md`、`*-spec.md` 或 `.agent` 镜像。
 
+### Human Writing Contract V3.1.2
+
+Part A 是写给参与系统设计的高级工程师看的解释性正文。它应从一个具体业务或失败场景开始，
+逐步说明问题、边界、责任、取舍和反转条件，再引出必要的技术术语。`Owner`、`Contract`、
+`State`、`Provider`、`Receipt` 等词不能代替推导；重要术语首次出现时要用中文解释其作用，
+后文保持叫法稳定。Part A 可以使用“我们不希望……”或“直觉上可以……但……”这样的工程判断，
+但不能添加未被 Facts 支持的历史故事，也不能把 Target Scenario 写成 Current。
+
+Part A 至少要让读者看见一条完整路径和一条具体失败路径：发生了什么、谁拥有决定权、状态如何
+变化、为什么不能直接重试、如何恢复，以及该设计带来的成本。替代方案应在取舍讨论中自然出现，
+不要求每篇文档使用相同小标题。Part A 以 prose 为主；Part B 继续保持精确的 Contract、表格、
+状态和测试定义。Required Concerns are not Required Paragraphs；Architecture consistency takes
+precedence over template consistency。
+
+`HUMAN_WRITING_REVIEW` 与 Part A 数值评分分开。Verifier 只报告模板短语、标题密度、列表/表格
+占比、英文术语密度和场景/失败/取舍标记等确定性 warning，不自动宣称 Human Writing PASS。最终
+结论必须由 Blue self-review、Red documentation review 和 ChatGPT review 共同给出。
+
 ## 3. Logical 与 Physical 的写作边界
 
 ```text

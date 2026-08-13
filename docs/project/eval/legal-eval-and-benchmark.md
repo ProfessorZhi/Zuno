@@ -8,35 +8,29 @@ replaces: docs/project/modules/10-observability-eval.md（Superseded）
 
 ## Part A — Architecture Narrative
 
-### 我们到底要证明什么
+### 评测要回答哪一个问题
 
-评测不是为架构已经正确寻找分数，而是要区分六个可被证伪的命题：Legal Capability 是否有价值，Legal Backend 是否比 Generic Host 更有价值，Native Runtime 是否带来额外收益，Graph 是否比 Hybrid 更有效，Multi-Agent 是否比更简单拓扑更好，Service Boundary 是否改善隔离或吞吐。一个 LLM Judge 分数不能同时回答这些问题。
+评测最容易犯的错误，是把一个总分当成架构证明。我们真正想知道的是：Legal Capability 是否有增益，Legal Backend 是否比 Generic Host 更好，Native Runtime 是否比 Host + Backend 多带来价值，Graph、Multi-Agent 和服务拆分是否值得它们的成本。这些是不同的假设，必须有不同的对照和失败解释。
 
-### Target Scenario：控制变量比较
+### 一个可复现的目标比较
 
-这是 Target Scenario，不是历史事实：
+以下是 Target Scenario，不是历史事实。用同一批案件材料、基础模型、外部工具、相近 Prompt/Skill 和 Token/Time Budget，运行 A Generic Host、B Host + Zuno Legal Capabilities、C Zuno Native Runtime。三者处理同一 QueryClass，留下证据、引用、冲突、适用性、Reviewer Decision、Latency、Token、Cost 和 Trace。只有在这些变量被控制后，C 相对 B 的差异才可能归因于 Domain State、EvidenceRequirement 或 Staleness，而不是更大的预算。
 
-同一批案件材料、同一基础模型、同一外部工具、相近 Prompt/Skill、同一 Token/Time Budget 下，运行 A Generic Host、B Host + Zuno Legal Capabilities、C Zuno Native Runtime。每个 Variant 处理相同 QueryClass，保留 Evidence、Citation、Conflict、Applicability、Reviewer Decision、Latency、Token、Cost 和 Trace。只有这样，C 相对 B 的收益才可能归因于 Domain State、EvidenceRequirement、Staleness 或 Review 对账。
+### 结果怎么被解释
 
-### 任务质量和工程效率
+法律质量至少要看 Evidence Sufficiency、Citation Correctness、Unsupported Claim、Conflict/Dispute、Fact–Article、Applicability、Reviewer Acceptance 和 Task Completion；工程成本还包括 Latency、Token、Model Calls、Retrieval Rounds、Tool Calls、Retry/Recovery 和 Domain State Reuse。某个变体如果因为服务不可用而没有结果，不能把它折成零分再宣称质量差；它应该保留为 blocked 或 incomparable。
 
-法律用户关心 Evidence Sufficiency、Citation Correctness、Unsupported Claim、Conflict/Dispute、Fact–Article、Applicability、Reviewer Acceptance 和 Task Completion。工程上还要看 Latency、Token、Cost、Model Calls、Retrieval Rounds、Tool Calls、Retry/Recovery 和 Domain State Reuse。Quality、Efficiency、Security 和 Complexity 必须同时报告，不能用一个综合分隐藏失败。
+评测的正常路径是冻结 DatasetVersion，运行变体，保存 RawResult 和 Trace，再由 Reviewer 与 Metric 形成 Comparison。Eval Owner 拥有这些评测事实，但不拥有产品 Finding，也不把历史 Demo 自动当作数据集。人工标注和重复运行确实昂贵，却是判断复杂度是否值得保留的必要成本。
 
-评测边界是：固定输入与预算，改变一个架构变量，记录结果、失败和成本，再把结论限制在该数据切片和协议内；评测不拥有产品或 Domain 状态。
+失败时，最危险的不是一次分数偏低，而是比较条件悄悄变化：数据切片不同、Reviewer 标准不同、模型预算不同，或者只看最终文本而漏掉引用和恢复错误。若 C≈B>A，应保留 Legal Backend 并缩减 Native Runtime；若 C≈B≈A，就删除未经证明的复杂度。Graph、Multi-Agent 和 Service Boundary 也必须接受各自的消融测试。
 
-Happy Path 是：冻结 DatasetVersion → 运行 Variant → 保存 RawResult/Trace → Reviewer/Metric → Comparison → Release Decision。
+已执行的 Eval、Trace 和报告才构成 Current；可复现 A/B/C、Graph Kill、Multi-Agent Ablation 和 Service Evidence 是 Target。因果链能否测出增益是 Hypothesis，Court QA、Reviewer Protocol、重复运行、统计不确定性、成本和真实部署指标仍是 Gap。
 
-### 责任和非责任
+评测结论只对协议覆盖的任务切片负责；它不会替项目或 Domain Owner 代替业务决策。
 
-Eval Owner 拥有 DatasetVersion、CaseSetHash、EvaluationRun、RawResult、Metric、Comparison、FailureClass 和 ReleaseDecision。评测不拥有 Domain Finding，不把历史 Demo 当成数据集，不把 LLM Judge 当作唯一裁判，也不把 blocked、unavailable 或 incomparable 折成零分。
+每次比较都应保留原始输入、失败分类和预算记录，使后来的人能够复核我们究竟比较了什么。
 
-### 失败、取舍与反转
-
-数据切片、分母、Reviewer 标准或模型预算不一致会让比较失真；只测最终文本会漏掉引用错误、恢复失败和成本上升。评测基础设施和人工标注成本很高，但没有它就无法证明复杂度值得存在。若 C≈B>A，应保留 Legal Backend、缩减 Native Runtime；若 C≈B≈A，删除未证明的复杂度；若 Graph、Multi-Agent 或服务拆分无增益，分别退回更简单方案。
-
-### Current / Target / Gap
-
-Current 只有已执行的 Eval、Trace 和报告才成立；Target 是可复现 A/B/C、Graph Kill、Multi-Agent Ablation 和 Service Evidence；Hypothesis 是 Domain/Evidence/Runtime 的因果链可测；Gap 是 Court QA、Reviewer Protocol、重复运行、统计不确定性、成本和真实部署指标。
+没有这些记录，分数再高也只能算一次不可复现的观察。
 
 ## Part B — Detailed Architecture Specification
 

@@ -1,0 +1,45 @@
+protocol_version: ZUNO-RED-BLUE-WORKFLOW-V3.1.2
+session_id: RB-WORKFLOW-V3-ROUND-004
+round_id: RB-WORKFLOW-V3-ROUND-004
+baseline_sha: 166a54d51aba0a822c3b5c539d1c43435f8c203f
+final_sha: recorded in final handoff
+source_canonical_state: ACCEPTED_TARGET
+question_budget: 100
+actual_question_count: 100
+answer_count: 100
+score_count: 100
+decision_count: 100
+novel_question_count: 80
+regression_question_count: 20
+novelty_threshold_percent: 80
+regression_max_percent: 20
+theme: Architecture Consistency / Failure Semantics / Component Survival
+human_writing_review: WARNING
+architecture_integrity: PASS
+part_a_quality_gate: PASS
+part_b_quality_gate: PASS
+canonical_sync_status: APPLIED
+round_status: COMPLETE
+new_a_p0: 0
+round_005_status: READY_NOT_STARTED
+facts_changed: NONE
+runtime_changed: NONE
+schema_or_migration_changed: NONE
+dependencies_changed: NONE
+production_infra_changed: NONE
+adr_escalation_count: 0
+user_gate_escalation_count: 0
+implementation_program: READY_FOR_TASK_DEFINITION
+category_distribution:
+  "00 Overall Architecture": 12
+  "01 Product Surface": 6
+  "02 Input / Document Ingestion": 7
+  "03 Knowledge / Agentic GraphRAG": 11
+  "04 Model Gateway": 6
+  "05 Memory & Context": 8
+  "06 Agent Core / Planning & Control": 14
+  "07 Capability / Skill": 6
+  "08 Tool Runtime": 10
+  "09 Security": 8
+  "10 Observability & Eval": 6
+  "11 Infrastructure": 6
