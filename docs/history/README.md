@@ -7,9 +7,9 @@ Git 提交历史考古，不在当前树维护第二套 Canonical 入口。
 
 ## 当前保留
 
-唯一保留的文档入口是 [Red / Blue Round Archive](red-blue/README.md)。其中 Round-001 至
-Round-006 的原始归档及其元数据保持不变；它们是流程证据，不是下一代 Active Protocol、事实源
-或架构决策。
+唯一保留的文档入口是 [Red / Blue Round Archive](red-blue/README.md)。其中 Manual Round 01
+保留完整记录，旧自动化程序压缩为一个带来源和处置的历史摘要；Round-001 至 Round-006 的原始
+过程仍可从 Git history 追溯。它们都是流程证据，不是下一代 Active Protocol、事实源或架构决策。
 
 `interview-qa/` 和 `superseded-document-taxonomy/` 已退出当前目录。它们的历史内容由 Git
 历史承担，不能被新读者默认遍历，也不能继续成为 verifier 的必需输入。

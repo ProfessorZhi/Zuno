@@ -20,10 +20,11 @@ def test_lightweight_architecture_interview_program():
 
 def test_archive_execution_mode_is_strict():
     module = _module()
-    archive = ROOT / "docs/history/red-blue/automated-round-002-architecture-v3.md"
+    archive = ROOT / "docs/history/red-blue/manual-round-01-overall-architecture.md"
     metadata = module._metadata(archive)
-    assert metadata["execution_mode"] == "AUTOMATED"
-    assert module._metadata(ROOT / "docs/history/red-blue/manual-round-01-overall-architecture.md")["execution_mode"] == "MANUAL"
+    assert metadata["execution_mode"] == "MANUAL"
+    assert (ROOT / "docs/history/red-blue/legacy-automated-rounds.md").exists()
+    assert not list((ROOT / "docs/history/red-blue").glob("automated-*.md"))
 
 
 def test_local_skills_are_explicit_only_and_manual_workflow_owns_judgment():

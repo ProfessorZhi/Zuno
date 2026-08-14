@@ -141,7 +141,7 @@ Interview Ready 不等于 Production Ready。生产结论仍需要真实运行�
 
 ## 归档契约
 
-正式 Round 归档在 `docs/history/red-blue/`，至少标明：
+正式 Round 归档在 `docs/history/red-blue/`。Manual Round 使用完整归档，并至少标明：
 
 ```text
 series
@@ -153,5 +153,7 @@ archive_commit
 architecture_revision_commit
 ```
 
-中止的 Round 保留真实中止状态，不补造不存在的后半轮。旧 Protocol、Bootstrap、Reset 和
-Workflow Engineering 的演进通过 Git history 追溯，不在当前 Lab 重新建立历史目录。
+旧 Automated Program 不再逐轮保留当前树文件，而由唯一 Legacy Summary 保存来源、原始状态、
+基线和处置；其完整原始包通过 Git history 追溯。中止的 Round 保留真实中止状态，不补造不存在的
+后半轮。除非用户明确重新启动 Automated Program，未来默认使用 `manual-round-NN-<theme>.md`。
+旧 Protocol、Bootstrap、Reset 和 Workflow Engineering 的演进不在当前 Lab 重新建立历史目录。

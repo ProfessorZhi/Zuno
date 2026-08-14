@@ -9,13 +9,13 @@
 本目录只保留：
 
 - [`WORKFLOW.md`](WORKFLOW.md)：唯一当前 Architecture Interview / Red-Blue 工作流；
-- [`archive-map.md`](archive-map.md)：正式历史 Round 的导航；完整 Round Archive 由
-  [`docs/history/red-blue/`](../docs/history/red-blue/README.md) 持有；
+- [`archive-map.md`](archive-map.md)：正式历史 Round 的导航；Manual Round 保留完整记录，旧自动化
+  程序由 [`docs/history/red-blue/`](../docs/history/red-blue/README.md) 的单一 Legacy Summary 持有；
 - [`skills/`](skills/README.md)：三个仓库内、仅显式调用的本地 Skill。
 
 旧的事实恢复、候选架构、流程版本、Bootstrap、Reset、Closure、Prompt、Session Template 和
 实验工程材料不再作为当前 Lab 树保存。Git history 仍可用于考古；正式 Round 不从当前 Lab
-重复维护。
+重复维护。默认未来只新增 `manual-round-NN-<theme>.md`，除非用户明确重新启动自动化程序。
 
 ## 读取顺序
 

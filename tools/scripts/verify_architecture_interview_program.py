@@ -105,22 +105,41 @@ def verify(root: Path = ROOT) -> list[str]:
                 errors.append(f"{name}/SKILL.md missing governance marker: {marker}")
 
     archive = root / "docs/history/red-blue"
-    archive_files = sorted(archive.glob("*.md"))
+    archive_files = sorted(path for path in archive.glob("*.md"))
     if not (archive / "README.md").exists():
         errors.append("missing docs/history/red-blue/README.md")
-    if len(archive_files) < 10:
-        errors.append(f"expected at least 10 formal Round archives, got {len(archive_files)}")
+    if not (archive / "legacy-automated-rounds.md").exists():
+        errors.append("missing docs/history/red-blue/legacy-automated-rounds.md")
+
+    allowed = {"README.md", "legacy-automated-rounds.md"}
+    manual_files: list[Path] = []
     for path in archive_files:
-        if path.name == "README.md":
-            continue
+        if path.name.startswith("manual-round-") and path.suffix == ".md":
+            manual_files.append(path)
+            allowed.add(path.name)
+        elif path.name not in allowed:
+            errors.append(f"unexpected Red/Blue archive file: {path.relative_to(root)}")
+
+    if not manual_files:
+        errors.append("missing manual Red/Blue Round archive")
+
+    for path in manual_files:
         metadata = _metadata(path)
         missing = ARCHIVE_FIELDS - metadata.keys()
         if missing:
             errors.append(f"{path.relative_to(root)} missing metadata: {sorted(missing)}")
-        if metadata.get("execution_mode") not in {"MANUAL", "AUTOMATED"}:
-            errors.append(f"{path.relative_to(root)} has invalid execution_mode")
+        if metadata.get("execution_mode") != "MANUAL":
+            errors.append(f"{path.relative_to(root)} must have execution_mode: MANUAL")
         if not metadata.get("base_sha"):
             errors.append(f"{path.relative_to(root)} has empty base_sha")
+
+    legacy_summary = archive / "legacy-automated-rounds.md"
+    if legacy_summary.exists():
+        legacy_content = legacy_summary.read_text(encoding="utf-8")
+        if "ABORTED_OPERATIONAL_PILOT" not in legacy_content or "architecture_score: INVALID" not in legacy_content:
+            errors.append("legacy summary must preserve Round-006 aborted and invalid-score semantics")
+        if "score_validity: INVALID" not in legacy_content:
+            errors.append("legacy summary must declare Round-006 score_validity: INVALID")
 
     active_routes = [
         root / "AGENTS.md",
