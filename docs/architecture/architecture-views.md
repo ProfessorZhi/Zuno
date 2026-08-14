@@ -1,6 +1,6 @@
 # Zuno Architecture Visual Atlas Source
 
-本图源展示 Python-only Target、模块化 Backend + Worker 默认起点、Evidence-gated Physical Service Split、Research → Capability → Domain Result、Native / Embedded Product Mode、FastAPI Application Interface、LangGraph orchestration provider、EvidenceRequirement、ConflictProposal、PostgreSQL Domain State 和 Runtime Checkpoint 的边界；这些图不把 Target 伪装成 Current。
+本图源展示 Python-only Target、10 个逻辑模块候选、模块化 Backend + Worker 默认起点、Evidence-gated Physical Service Split、Research → Capability → Domain Result、Native / Embedded Product Mode、FastAPI Application Interface、LangGraph orchestration provider、OTel-compatible Observability Contract、EvidenceRequirement、ConflictProposal、PostgreSQL Domain State 和 Runtime Checkpoint 的边界；这些图不把 Target 伪装成 Current。
 
 updated: 2026-08-14
 status: normative-target-visual-source
@@ -10,9 +10,9 @@ canonical_taxonomy_source: `docs/README.md` and `docs/architecture/README.md`
 
 本文件是总体架构的展示图源。服务、数据、状态和 Owner 事实以 `architecture.md` 与专题 Canonical 文档为准；本文件不创建第二套 Contract。
 
-## 五层责任视图
+## Responsibility Lens 与 10 个候选模块
 
-下面五层用于帮助读者理解责任，不代表最终五个模块、五个服务或五个团队：
+下面五层用于帮助读者理解跨层责任，不代表最终五个模块、五个服务或五个团队。10 个模块图也是 Candidate Map，不是冻结后的模块或服务清单：
 
 1. **Legal Work Surface**：案件分析、合同审查、法律研究、报告和 Human Review；
 2. **Legal Domain & Intelligence**：Evidence、Fact / Event、Conflict、Finding、Version 和 Staleness；
@@ -20,7 +20,7 @@ canonical_taxonomy_source: `docs/README.md` and `docs/architecture/README.md`
 4. **Agent Runtime & Execution**：Single Controller、Plan、受控 Worker、Model、Skill 和 Tool；
 5. **Trust & Platform Engineering**：Permission、Approval、Sandbox、Audit、Observability、Eval 和 Infrastructure。
 
-`FINAL_MODULE_COUNT: NOT_DECIDED`。Logical Capability、Physical Service、Worker、Process、Container、Database 和 Team 不做一一映射。
+`NEW_10_MODULE_SET: CANDIDATE_ONLY`、`FINAL_MODULE_COUNT: NOT_FROZEN`、`MODULE_DECOMPOSITION_GATE: NOT_OPEN`。Logical Capability、Physical Service、Worker、Process、Container、Database 和 Team 不做一一映射。
 
 ## Product Context
 
@@ -37,16 +37,28 @@ flowchart LR
 ### Business Flow View
 
 ```mermaid
-flowchart LR
-  M[Create Matter] --> D[Upload DocumentVersion]
-  D --> S[Domain Snapshot / DomainVersion]
-  S --> A[Agent Coordinator + PlanVersion]
-  A --> G[Evidence / Security / Budget Gate]
-  G --> K[Retrieval / Memory / Capability / Tool Proposal]
-  K --> P[Domain Proposal + Evidence lineage]
-  P --> V[Domain Owner validation/version]
-  V --> F[Finding + Human Review]
-  F --> W[WorkProduct / Response]
+flowchart TB
+  subgraph A[FLOW A — Simple Grounded QA]
+    AQ[Question / Scope] --> AR[Authorization + Knowledge Readiness]
+    AR --> AE[Retrieve Evidence / Citation]
+    AE --> AG[Deterministic Final Gate]
+    AG --> AO[Response]
+  end
+  subgraph B[FLOW B — Complex Legal Analysis]
+    BM[Matter / Version Set] --> BR[Readiness + Continuous Authorization]
+    BR --> BP[Dynamic DAG Plan]
+    BP --> BC[Retrieval / Capability / optional Specialist]
+    BC --> BJ[Join / Evaluation / Synthesis]
+    BJ --> BD[Domain Admission / Human Review]
+    BD --> BW[Versioned WorkProduct]
+  end
+  subgraph C[FLOW C — Controlled External Effect]
+    CT[Tool Proposal] --> CP[PreparedAction]
+    CP --> CG[Security / Approval Gate]
+    CG --> CE[Execute / EffectReceipt]
+    CE --> CR[Reconcile if Unknown]
+    CR --> CF[Final Gate / Domain Result]
+  end
 ```
 
 ## Logical Architecture
@@ -55,32 +67,39 @@ flowchart LR
 
 ```mermaid
 flowchart TB
-  PRODUCT[Product Surface]
-  DOMAIN[Legal Domain Kernel]
-  AGENT[Composable Agent Runtime]
-  KNOW[Evidence-driven Knowledge]
-  TOOL[Tool / Sandbox]
-  SECURITY[Security Decision + Enforcement]
-  EVAL[Legal Eval + Observability]
-  PRODUCT --> DOMAIN
-  PRODUCT --> AGENT
-  AGENT --> KNOW
-  AGENT --> TOOL
-  AGENT --> DOMAIN
-  SECURITY -.-> PRODUCT & DOMAIN & AGENT & KNOW & TOOL
-  EVAL -.-> DOMAIN & AGENT & KNOW & TOOL
+  P[01 Product Surface & Agent Portfolio]
+  D[02 Legal Domain & Work Product]
+  K[03 Knowledge & Evidence]
+  A[04 Agent Runtime & Multi-Agent]
+  CT[05 Capability / Skill & Tool Runtime]
+  M[06 Model Gateway]
+  X[07 Memory & Context]
+  S[08 Security & Governance]
+  O[09 Observability & Evaluation]
+  I[10 Infrastructure & Persistence]
+  P --> D & A
+  A --> K & CT & M & X
+  CT --> D
+  K --> D
+  M --> A
+  S -.-> P & D & K & A & CT & M & X
+  O -.-> P & D & K & A & CT & M & X & S
+  I -.-> D & K & A & CT & M & X & O
 ```
 
 ### Provider Boundary View
 
 ```mermaid
 flowchart LR
-  RESEARCH[Research Artifact] --> CAP[Domain Capability]
-  CAP --> CONTRACT[Canonical Contract]
-  PROVIDER[Local / LLM / OSS / API / MCP Provider]
-  PROPOSAL[Proposal / Candidate / Observation / Reference / Receipt]
-  OWNER[Canonical Owner]
-  CONTRACT --> PROVIDER --> PROPOSAL --> OWNER
+  RESEARCH[Research Artifact] --> CAP[Capability Contract]
+  CAP --> CP[Provider Conformance / Evaluation]
+  CP --> PROPOSAL[Proposal / Candidate / Observation]
+  PROVIDER[Algorithm / LLM / OSS / API Provider]
+  PROVIDER --> CP
+  TOOL[Tool / MCP / External Action] --> PREP[PreparedAction]
+  PREP --> GATE[Security / Approval Gate]
+  GATE --> EFFECT[EffectReceipt / Reconcile]
+  PROPOSAL --> OWNER[Domain Owner]
   OWNER --> VERSION[Versioned Business State]
 ```
 
@@ -116,28 +135,34 @@ flowchart LR
 
 ```mermaid
 flowchart TB
-  SUBMIT[FastAPI Run Submit] --> COORD[Single Controller]
+  PORTFOLIO[Agent Portfolio] --> SUBMIT[Agent Invocation]
+  SUBMIT --> COORD[Single Controller]
   COORD --> PLAN[PlanVersion / Budget / Policy]
-  PLAN --> ROLE[Role Profiles / Dynamic Plan DAG]
-  ROLE --> WORKER[Ephemeral Workers / Parallel Tools]
-  WORKER --> GATE[Evidence / Security / Budget Gate]
-  GATE --> OBS[Observation / Proposal / Receipt]
-  OBS --> COORD
-  COORD --> HITL[HITL / Replan / Finalize]
-  HITL --> DOMAIN[Domain Owner Commit]
+  PLAN --> DAG[Fixed Graph + Dynamic Plan DAG]
+  DAG --> STEP[Step / Capability / Tool]
+  DAG --> SPEC[Specialist Agent only with independent boundary]
+  STEP --> JOIN[Join / Evaluation]
+  SPEC --> JOIN
+  JOIN --> COORD
+  COORD --> HITL[Reflection / Replan / Human Review]
+  HITL --> DOMAIN[Domain Admission]
 ```
 
 ### Runtime and Domain State View
 
 ```mermaid
-flowchart LR
-  RUNTIME[AgentRun / Plan / Step / Checkpoint]
-  DOMAIN[PostgreSQL Domain State]
-  RUNTIME -->|versioned input/output| DOMAIN
-  DOMAIN -->|generation / dependency / policy| RUNTIME
+flowchart TB
+  DOMAIN[DOMAIN STATE<br/>Matter / FactVersion / FindingVersion / HumanDecision / WorkProduct]
+  RUNTIME[RUNTIME STATE<br/>Run / PlanVersion / Step / Branch / Checkpoint]
+  MEMORY[MEMORY STATE<br/>Summary / Preference / Experience / Context]
+  KNOW[KNOWLEDGE PROJECTION<br/>Index / Graph / Knowledge View / Generation]
+  DOMAIN -->|Snapshot / Version / Dependency| RUNTIME
+  RUNTIME -->|Proposal / Admission Input| DOMAIN
+  MEMORY -->|Policy-scoped context| RUNTIME
+  KNOW -->|Evidence / Readiness / Citation| RUNTIME
+  KNOW -.->|not Domain Truth| DOMAIN
   EFFECT[EffectReceipt] --> RECON[Reconciliation]
-  RECON --> RUNTIME
-  RECON --> DOMAIN
+  RECON --> RUNTIME & DOMAIN
 ```
 
 ## Physical Deployment and Service Split
@@ -174,12 +199,17 @@ flowchart LR
 
 ```mermaid
 flowchart TB
-  PLATFORM[Platform Domain Owner] --> PDB[(Domain PostgreSQL)]
-  RUNTIME[Runtime Owner] --> CDB[(Checkpoint / Runtime Store)]
-  KNOW[Knowledge Owner] --> OBJ[(Object + Index + Graph Projections)]
-  TOOL[Tool Owner] --> EFFECT[(Effect Receipt / Reconcile)]
-  EVAL[Eval Owner] --> METRIC[(Trace / Eval / Release Gate)]
-  PDB -. API/Event/Reference .-> CDB & OBJ & EFFECT & METRIC
+  DOMAIN[Legal Domain Owner] --> PDB[(PostgreSQL Canonical Domain State)]
+  RUNTIME[Agent Runtime Owner] --> CDB[(LangGraph Checkpoint / Runtime Store)]
+  KNOW[Knowledge & Evidence Owner] --> OBJ[(Object + Index + Graph Projections)]
+  MEMORY[Memory Owner] --> MEM[(Memory Provider / Context Store)]
+  MODEL[Model Gateway Owner] --> USAGE[(Usage / Cost Receipt)]
+  TOOL[Capability / Tool Owner] --> EFFECT[(Effect Receipt / Reconcile)]
+  SEC[Security Owner] --> POLICY[(Policy / Security Epoch)]
+  OBS[Observability & Eval Owner] --> TELEMETRY[(OTel-compatible Trace / Eval / Release Gate)]
+  INF[Infrastructure Owner] --> INFRA[(Queue / Worker / Backup / DR)]
+  PDB -. Reference / Snapshot .-> CDB & OBJ & EFFECT & TELEMETRY
+  POLICY -. Current Authorization .-> DOMAIN & RUNTIME & KNOW & MEMORY & MODEL & TOOL
 ```
 
 ### Failure and Recovery View

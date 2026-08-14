@@ -13,7 +13,7 @@ architecture.html
 
 Product、Domain、Logical Capability、Physical Service/Deployment、Data、Security 和 Eval 如何形成一个可恢复、可验证、可被简化或替换的跨层目标闭环？
 
-总体架构先回答“为什么做这个系统”，再说明五层责任视图、WorkBuddy / Dify 竞争假设、A/B/C Kill Test 和 State / Failure / Recovery 边界；五层不是最终模块或服务数量。当前文档处于 `READABILITY_BASELINE_REFOUNDED`；下一轮 Red/Blue 前必须通过可读性门。
+总体架构先回答“为什么做这个系统”，再说明五层责任视图、10 个逻辑模块候选、WorkBuddy / Dify 竞争假设、三条 E2E Flow、A/B/C Kill Test 和 State / Failure / Recovery 边界。五层与 10 个候选都不是最终服务数量；模块仍需 Freeze Red / Blue。当前文档处于 `REFINED_BASELINE_READY_FOR_FREEZE_REVIEW`，`MODULE_DECOMPOSITION_GATE` 仍未打开。
 
 ## 阅读顺序
 
