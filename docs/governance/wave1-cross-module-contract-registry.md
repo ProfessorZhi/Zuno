@@ -14,6 +14,8 @@ merged_wave1_prs:
 canonical_adr: `docs/decisions/0003-wave1-cross-module-contract-freeze.md`
 
 > 本文件已合并到 `main`，是 Wave 1 跨模块共享 Contract 的 `CONFIRMED_TARGET` Registry。它冻结字段、Owner、Failure Namespace 和恢复责任，但仍不代表 Runtime 已实现或成为 Current。
+>
+> 由于当前源码 `validate_cross_module_runtime_batch_from_repo()` 仍按本路径读取，本文件暂保留为机器兼容输入。它不是新的项目故事、总体架构或事实 Owner；长期 Contract 以 ADR-0003 为准。
 
 ## 1. 状态与生效规则
 
@@ -493,4 +495,4 @@ quality not yet proven
 production ready not established
 ```
 
-本 Registry 已随 Wave 1 合并确认为 `CONFIRMED_TARGET`。它是后续模块设计和 Codex 实现的正式 Target 事实源，但仍不是 Runtime Current、实现证据或生产可用声明。
+本 Registry 已随 Wave 1 合并确认为 `CONFIRMED_TARGET`。它是后续模块设计和实现的正式 Target 输入，但仍不是 Runtime Current、实现证据或生产可用声明。

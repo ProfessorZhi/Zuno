@@ -47,7 +47,8 @@ def test_agent_entrypoint_routes_to_current_sources() -> None:
     agents = (REPO_ROOT / "AGENTS.md").read_text(encoding="utf-8")
     for path in (
         "docs/architecture/architecture.md",
-        "docs/history/",
+        "docs/project/",
+        "docs/history/red-blue/",
         "docs/evidence/README.md",
         ".agent/system.yaml",
         ".agent/references/current-program.md",

@@ -1,101 +1,23 @@
-# Zuno Local Agent Skill System
+# Zuno Local Agent System
 
-`.agent/` 是 Zuno 的本地 Agent Skill System，不是正式架构真相本身。正式结论放在 `docs/`；这里沉淀“在 Zuno 里怎么正确做事”的 skills、lessons、playbooks、当前执行计划和模板。
+`.agent/` 只保存 Agent 如何在 Zuno 中正确工作的路由、规则、Program、模板和验证入口；不保存项目故事、架构正文或模块镜像。
 
-## 和 AGENTS.md 的关系
+## 先读什么
 
-```text
-AGENTS.md              仓库唯一入口：规则、边界、阅读顺序、任务路由
-.agent/system.yaml     机器可读路由：路径 -> skills -> templates -> verify
-.agent/references/     当前项目 skills、任务路由、代码地图、验证地图和已知坑
-.agent/programs/       当前可执行 Agent program；可有 active design program，implementation program 仍需单独 Gate
-.agent/templates/      skill 执行模板和报告骨架
-.agent/scripts/        过渡期验证器；长期自动化目标位置是 tools/agent 与 tools/verify
-```
+先读根目录 `AGENTS.md`，再读 `docs/README.md` 和与任务相关的 `docs/project/`、`docs/architecture/`、`docs/evidence/`、ADR 或 `docs/history/red-blue/` 指定记录。机器可读路由见 `system.yaml`。
 
-执行时先按 `AGENTS.md` 路由，再进入 `.agent/references/task-routing.md` 和 `.agent/references/workflow.md`，然后按对应参考和验证命令执行。
-
-复杂任务先判断工作模式：挂机模式由主线程作为真正的 Codex UI 目标模式一路执行到底；多线程模式由主线程作为真正的 Codex UI 目标模式 coordinator，给粗粒度子线程准备目标模式提示词、分支边界和验收闸门，再由用户在 UI 里手动创建真正的目标模式子线程。提示词目标模式不等于 Codex UI 目标模式。线程内可按范围开启多 agent 模式；这里的多 agent 是执行协作方式，不自动改变 Zuno runtime 的产品边界。
-
-## 语言规则
-
-- 新写或重写的 Agent 文档默认使用中文。
-- 英文术语可以保留，但要配中文解释。
-- `docs/history/` 只保留经过批准的历史摘要；raw construction materials 可按 AGENTS.md 的授权、摘要和 Git 可追溯规则退出 current tree。
-
-## 跟踪结构
+## 目录
 
 ```text
 .agent/
-  README.md
-  system.yaml
-  references/
-    task-routing.md
-    workflow.md
-  programs/
-  templates/
-  scripts/
+├── README.md
+├── system.yaml
+├── references/       路由、工作流、代码地图、验证地图和已知坑
+├── programs/         当前 active / queued 执行状态
+├── templates/        通用任务模板
+└── scripts/          Agent 与文档边界验证器
 ```
 
-本地临时目录由 `.gitignore` 忽略：
+Red / Blue 不是当前 Agent 的默认上下文。只有任务明确要求复盘架构演进或历史攻击时，才读取 `docs/history/red-blue/` 的相关 Round。它们不是 Canonical Architecture，也不会自动授权实现。
 
-```text
-.agent/local/
-.agent/local/notes/
-.agent/local/tmp/
-.agent/local/logs/
-.agent/local/secrets/
-```
-
-不要在 local-only 目录里保留 tracked placeholder。
-
-## 各目录作用
-
-- `.agent/` 不保存总架构或模块镜像；架构与模块文档统一从 `docs/` 读取。
-- `.agent/references/`：当前 skill library。这里放任务路由、统一工作流、文档地图、代码地图、验证地图、debugging 和 known pitfalls。
-- `.agent/programs/`：执行计划。只保存 active/queued 状态；历史原始 Program 不复制回当前树。设计审查 Program 与 implementation Program 分开登记。
-- `.agent/templates/`：skill 执行骨架，只放格式，不沉淀项目知识。
-- `.agent/scripts/`：过渡期验证器。新自动化优先放 `tools/agent/` 或 `tools/verify/`，防回归测试放 `tests/agent_system/`。
-
-正式文档位置：
-
-```text
-docs/            Zuno 项目知识唯一正式入口
-docs/facts/       今天仍然有效的项目上下文与 Current 状态
-docs/architecture/ 总架构四个 canonical 文件，唯一正式架构事实源
-docs/modules/     模块设计占位，边界尚未冻结
-docs/decisions/           ADR
-docs/governance/          工程治理
-docs/evidence/            可复现 Current 证据
-docs/history/             历史归档
-```
-
-## 操作规则
-
-- 先从 `docs/README.md` 读取项目知识路由；涉及当前事实先读 `docs/facts/`，涉及历史回顾再读 `docs/history/`，涉及设计再读 `docs/architecture/`。
-- `.agent/system.yaml` 只写路由规则，不写长知识。
-- `.agent/references/` 承载可复用项目 skill，不写一次性调查流水账。
-- `.agent/programs/` 只承载当前状态，不保存旧施工文件。
-- 不在 `.agent/` 下重新创建架构或模块目录作为并行事实源。
-- 新的 implementation program 必须在架构评审和用户 Gate 后由用户明确激活；active design program 不等于实现已开始，旧施工文件不回到当前树。
-- 大任务默认多用目标模式；共享文件多或风险集中时使用挂机模式，由主线程执行到底。
-- 可并行时使用多线程模式：主线程拆成粗粒度线程，每个线程都必须带目标、范围、禁止范围、验收闸门和验证命令。
-- 多线程模式下，主线程先盘点可复用 Codex 线程和 git worktree；有合适可复用线程就复用，没有合适线程才创建新线程。
-- 主线程必须先完成线程盘点，再生成或投递线程提示词；完整子线程提示词写入 `.agent/programs/thread-prompts/`，不要直接贴在主对话里。
-- 复用或新建线程后必须改线程标题；每个子线程提示词默认要求线程内开启多 agent 模式。
-- 多线程模式要求用户在 UI 里手动创建真正的目标模式子线程；提示词目标模式不等于 Codex UI 目标模式。
-- 多线程默认允许线程内多 agent 协作，但主线程负责审查 diff、合并冲突、跑集成验证和最终提交。
-- 修改任务必须验证、commit、push，除非被阻塞。
-- 只读侦察不 commit、不 push。
-
-## 知识提升规则
-
-```text
-临时发现 -> .agent/local/notes/    ignored
-单次调查证据 -> 外部结果目录或 docs/history/
-可复用经验 -> .agent/references/<domain-skill>.md 或 known-pitfalls.md
-稳定操作流程 -> .agent/references/workflow.md
-任务触发路由 -> .agent/references/task-routing.md
-所有任务通用规则 -> AGENTS.md
-已实现、已验证、面向人的事实 -> docs/
-```
+修改任务必须先确认工作树和用户未提交文件，完成后运行 focused validation、Commit 和 Push。不要把一次性聊天、旧施工材料或目标方案复制为新的 `.agent` 事实源。

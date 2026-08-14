@@ -10,47 +10,30 @@ def _relative_files(directory: Path) -> set[str]:
 
 def main() -> int:
     errors: list[str] = []
-    expected_history_front = {"docs/history/README.md"}
-    expected_evidence = {
-        "docs/evidence/README.md",
-        "docs/evidence/current-runtime-baseline.md",
-        "docs/evidence/current-test-baseline.md",
-        "docs/evidence/current-eval-baseline.md",
-        "docs/evidence/implementation-wave-001.md",
-    }
-    actual_history_front = {
-        path.relative_to(ROOT).as_posix()
-        for path in (ROOT / "docs/history").iterdir()
-        if path.is_file()
-    }
-    actual_evidence = _relative_files(ROOT / "docs/evidence")
-    if actual_history_front != expected_history_front:
-        errors.append(f"history boundary mismatch: {sorted(actual_history_front)}")
-    if actual_evidence != expected_evidence:
-        errors.append(f"evidence boundary mismatch: {sorted(actual_evidence)}")
-
-    expected_facts = {
-        "docs/facts/README.md",
-        "docs/facts/project-background.md",
-        "docs/facts/requirements-and-workflows.md",
-        "docs/facts/development-and-evolution.md",
-        "docs/facts/team-and-ownership.md",
-        "docs/facts/delivery-and-feedback.md",
-        "docs/facts/technology-reality.md",
-        "docs/facts/confirmation-ledger.md",
-    }
-    expected_modules = {"docs/modules/README.md"}
-    if _relative_files(ROOT / "docs/facts") != expected_facts:
-        errors.append("facts boundary mismatch")
-    if _relative_files(ROOT / "docs/modules") != expected_modules:
+    if _relative_files(ROOT / "docs/project") != {
+        "docs/project/project-background.md", "docs/project/development-process.md"
+    }:
+        errors.append("project boundary mismatch")
+    if _relative_files(ROOT / "docs/history") != {
+        "docs/history/README.md", "docs/history/red-blue/README.md",
+        "docs/history/red-blue/manual-round-01-overall-architecture.md",
+        "docs/history/red-blue/legacy-automated-rounds.md",
+    }:
+        errors.append("history boundary mismatch")
+    if _relative_files(ROOT / "docs/modules") != {"docs/modules/README.md"}:
         errors.append("modules boundary mismatch")
-
-    architecture = ROOT / "docs" / "architecture"
-    expected_architecture = {"README.md", "architecture.md", "architecture-views.md", "architecture.html"}
-    actual_architecture = {path.name for path in architecture.iterdir() if path.is_file()}
-    if actual_architecture != expected_architecture:
-        errors.append(f"architecture boundary mismatch: {sorted(actual_architecture)}")
-
+    if {path.name for path in (ROOT / "docs/architecture").iterdir() if path.is_file()} != {
+        "README.md", "architecture.md", "architecture-views.md", "architecture.html"
+    }:
+        errors.append("architecture boundary mismatch")
+    if _relative_files(ROOT / "docs/governance") != {
+        "docs/governance/wave1-cross-module-contract-registry.md",
+        "docs/governance/repo-ownership-matrix.md",
+    }:
+        errors.append("governance compatibility boundary mismatch")
+    for obsolete in (ROOT / "docs/facts", ROOT / "project-reconstruction-lab"):
+        if obsolete.exists():
+            errors.append(f"obsolete boundary still exists: {obsolete.relative_to(ROOT)}")
     if errors:
         print("DOC_BOUNDARIES_INVALID")
         for error in errors:

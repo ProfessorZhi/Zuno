@@ -6,7 +6,7 @@ updated: 2026-08-14
 status: normative-target-visual-source
 architecture_state: ACCEPTED_TARGET
 text_design_source: `docs/architecture/architecture.md`
-canonical_taxonomy_source: `docs/README.md` and `docs/decisions/0011-architecture-document-taxonomy.md`
+canonical_taxonomy_source: `docs/README.md` and `docs/architecture/README.md`
 
 本文件是总体架构的展示图源。服务、数据、状态和 Owner 事实以 `architecture.md` 与专题 Canonical 文档为准；本文件不创建第二套 Contract。
 

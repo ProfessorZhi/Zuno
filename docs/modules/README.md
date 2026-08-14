@@ -23,4 +23,4 @@ MODULE_DOCUMENTS = NONE
 - 如何由代码、测试、Trace、Eval 或运行证据证明；
 - 何时可以合并、替换、外置或删除。
 
-总体跨层关系仍由 [`../architecture/architecture.md`](../architecture/architecture.md) 负责；模块文档不得在这里创建第二套全局架构事实。模块的 Current / Gap 对照必须引用 [`../facts/README.md`](../facts/README.md) 和 [`../evidence/`](../evidence/README.md)，不得把 Target 当作 Current。
+总体跨层关系仍由 [`../architecture/architecture.md`](../architecture/architecture.md) 负责；模块文档不得在这里创建第二套全局架构事实。模块的 Current / Gap 对照必须引用 [`../project/development-process.md`](../project/development-process.md) 和 [`../evidence/`](../evidence/README.md)，不得把 Target 当作 Current。

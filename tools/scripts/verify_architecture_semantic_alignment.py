@@ -110,7 +110,7 @@ def verify() -> list[str]:
 
     if 'fetch("./architecture-views.md")' not in html:
         errors.append("architecture.html must render canonical Mermaid source")
-    if "../facts/README.md" not in html or "./architecture.md#target-status-boundary" not in html:
+    if "../project/project-background.md" not in html or "./architecture.md#target-status-boundary" not in html:
         errors.append("architecture.html must expose canonical taxonomy entrypoints")
     if views.count("```mermaid") != 14:
         errors.append("architecture-views.md must contain exactly 14 canonical diagrams")

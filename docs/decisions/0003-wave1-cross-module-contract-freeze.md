@@ -1,7 +1,7 @@
 # ADR 0003：Wave 1 跨模块 Contract 与 Infrastructure 物理边界冻结
 
 status: accepted-target
-taxonomy_status: partially-superseded-by-ADR-0011
+taxonomy_status: retained-contract; document workspace now uses docs/project and one overall architecture
 updated: 2026-07-13
 baseline_main_sha: `729e439e29deadc101c5687fc47125104e62e2c1`
 confirmed_wave1_main_sha: `849820d2c52d36abebee8c3d4a974bf035524e0a`
@@ -10,7 +10,7 @@ reviewed_and_merged_prs: `#18 Model Gateway`、`#19 Security`、`#17 Infrastruct
 
 > 本 ADR 已合并到 `main`，是 Wave 1 的正式共享 Target Contract；它仍不是 Current、实现证据、质量证明或 production readiness 声明。
 
-> 维护边界：本 ADR 仍约束共享 Contract 和物理基础设施 Owner，但其中“11 模块”的目录/服务组织方式已被 ADR 0011 替换；新文档 taxonomy 和 service boundary 以 ADR 0009–0011 及对应专题 Owner 为准。
+> 维护边界：本 ADR 仍约束共享 Contract 和物理基础设施 Owner；旧“11 模块”组织方式不再是当前文档入口，项目故事由 `docs/project/`、总体架构由 `docs/architecture/`、服务拆分由 ADR-0012 负责。
 
 ## 1. 背景
 
@@ -84,7 +84,7 @@ platform/model_gateway/**
 
 Infrastructure Port 可以位于 `platform/**`，领域模块通过 typed Contract 使用，不能导入 SQLAlchemy Session、RabbitMQ Channel、Milvus Client、Neo4j Driver、Redis Client、Provider SDK 或 Secret Material。
 
-任何未来新增 `platform/*` 目录必须在实现 Program 中同步更新 `docs/governance/repo-ownership-matrix.md`、结构验证器和 import guard。本文冻结目标 Ownership，不声称目录已经存在。
+任何未来新增 `platform/*` 目录必须在实现 Program 中同步更新 Agent 路由、结构验证器和 import guard。本文冻结目标 Ownership，不声称目录已经存在。
 
 ## 3. 决议二：共享 Envelope v1
 

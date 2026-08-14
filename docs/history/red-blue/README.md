@@ -1,34 +1,34 @@
-# Red / Blue History Owner
+# Red / Blue Architecture Review History
 
-本目录只保存 Red / Blue 的历史过程证据，不拥有今天的事实、Target Architecture、ADR 或实现授权。
-当前历史治理已经冻结；下一轮如果重新开始，必须先由用户明确激活新的工作流。
+本目录是 Zuno 的 Architecture Review Process Record。Red / Blue 是对总体架构或稳定责任边界的压力测试，用来记录问题、回答、反驳和 Main Judgment，帮助回看某个架构选择为什么被接受、收窄、否决或留作假设。
 
-## Current formal archive
+它不是：
 
-- [Manual Round 01 — Overall Architecture](manual-round-01-overall-architecture.md)：保留完整的
-  Questions、Answers、Review/Score、Red/Blue/Main Judgment 和历史元数据，不得压缩或改写正文。
-- Future Manual Round 02/03：按需新增 `manual-round-NN-<theme>.md`，每轮由 ChatGPT 手工协调并完整归档。
+- Canonical Project Fact；
+- Current Implementation Evidence；
+- Current Overall Architecture；
+- ADR；
+- 自动实施授权。
 
-## Legacy automated archive
+正式关系是：
 
-- [Legacy Automated Red/Blue Program Summary](legacy-automated-rounds.md)：只保留旧自动化程序的
-  可审计摘要、原始状态、基线 SHA、主要发现和最终处置，不复制旧题目、回答或评分全文。
-- 被压缩的旧自动化包由 Git history 保留；当前树不再维护一组平行的旧单轮文件。
+```text
+Architecture Baseline
+  → Red Attack
+  → Blue Defense
+  → Main Judgment
+  → Architecture Revision / ADR
+```
 
-Round-006 必须保持 `ABORTED_OPERATIONAL_PILOT` / `WORKFLOW_EXECUTION_BLOCKER`，其架构分数
-为 `INVALID`，不能被摘要写成已完成的架构 Round。
+因此，当前架构始终以 [`docs/architecture/architecture.md`](../../architecture/architecture.md) 为准；项目事实以 [`docs/project/`](../../project/project-background.md) 为准；长期决定以 [`docs/decisions/`](../../decisions/README.md) 为准。Red / Blue 中出现的 `FACT GAP` 不能自动升级为项目事实，必须经过用户确认后单独更新项目文档。
 
-## Archive boundary
+## 当前记录
 
-Manual archive = 完整对攻记录和 Main Judgment。Legacy summary = 历史程序索引和处置摘要。
-两者都只是 `HISTORY`，不能反向升级为 Current Facts 或当前架构决策。正式事实回到
-[`../../facts/`](../../facts/README.md)，正式 Target 回到 [`../../architecture/`](../../architecture/README.md)，
-正式长期决定回到 [`../../decisions/`](../../decisions/README.md)。当前工作流见
-[`../../../project-reconstruction-lab/WORKFLOW.md`](../../../project-reconstruction-lab/WORKFLOW.md)，
-导航见 [`../../../project-reconstruction-lab/archive-map.md`](../../../project-reconstruction-lab/archive-map.md)。
+- [Manual Round 01 — Overall Architecture](manual-round-01-overall-architecture.md)：手动协调三个 ChatGPT 线程完成的第一轮完整对抗记录，保留原始 Questions、Answers、Review、Reflection 和 Main Judgment。
+- [Legacy Automated Red / Blue Summary](legacy-automated-rounds.md)：旧自动化架构审查程序的压缩摘要，只保留仍有复盘价值的状态、发现和处置；不构成当前 Protocol。
 
-## Future archive rule
+## 新 Round 归档规则
 
-默认采用 `manual-round-NN-<theme>.md`。除非用户明确重新启动 Automated Program，否则不再创建新的
-自动化单轮归档文件。Bootstrap、Reset、Repair、Evidence Closure、P0 Execution、Gate Realignment、
-Normalization、Semantic Audit 和 Workflow Test 不属于正式 Round。
+只有正式 Architecture Review 才进入本目录。每份 Round Archive 至少记录 Round Scope、Architecture Baseline SHA、Red Questions、Blue Answers、Red Review、Main Judgment、Accepted/Rejected Changes、Open Questions 和 Architecture Revision Commit SHA（如已发生）。临时聊天、重复 Prompt、无结论 brainstorming 和 Codex 中间输出不归档。
+
+每一轮保留原始对抗内容，不把 Archive 改写成标准答案；但一旦 Main 接受架构变化，正式结果必须写回 `docs/architecture/` 或 `docs/decisions/`，不能只停留在 Round 文件。

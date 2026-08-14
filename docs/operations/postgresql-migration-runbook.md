@@ -2,7 +2,7 @@
 
 status: current
 owner: Infrastructure
-applies_to: PHASE04 及后续服务器产品迁移
+applies_to: Zuno server product migrations
 
 ## 目标与边界
 
@@ -54,7 +54,7 @@ Base revision `20260417_01` 已冻结为 31 张领域表的显式 DDL。任何 r
 
 回填必须登记 `BackfillSpec`，使用 chunk id、payload hash、source watermark、durable cursor、lease generation 和 verification hash。Pause/Resume、重复 chunk、hash conflict、stale generation 与 forward-fix lineage 由 `PostgresBackfillController` 管理。
 
-只有 backfill state 为 `completed` 且 verification hash 与 Data Owner 复核一致，PHASE02 Cutover Controller 才能推进读写切换。
+只有 backfill state 为 `completed` 且 verification hash 与 Data Owner 复核一致，Cutover Controller 才能推进读写切换。
 
 ## 失败恢复
 

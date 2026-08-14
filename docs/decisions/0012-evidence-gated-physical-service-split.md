@@ -2,7 +2,7 @@
 
 - 状态：`accepted-target`
 - 日期：2026-08-14
-- 决策来源：`docs/history/red-blue/manual-round-01-overall-architecture.md`，Manual Red/Blue Round 01 Main Judgment
+- 决策来源：总体架构评审；相关 Manual Red / Blue Round 01 原始记录见 `docs/history/red-blue/manual-round-01-overall-architecture.md`
 - 取代：ADR-0010；旧 ADR 不再属于 active current tree，完整内容由 Git history 保留
 - 适用：Physical Service、Worker、Deployment、Cross-host Contract、Operational Ownership
 

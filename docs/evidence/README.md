@@ -32,5 +32,5 @@ SLA、QPS、HA、No-egress、Sandbox 资格或正式外部验收。历史 Pilot 
 
 - 先看对应 Evidence 的 scope、command、result 和 known gaps；
 - 只把明确覆盖的结论称为 Current；
-- 外部数据、客户材料和历史记忆必须回到 `docs/facts/` 或项目重建实验室；
+- 外部数据、客户材料和历史记忆必须回到 `docs/project/`；Red / Blue 讨论只回到 `docs/history/red-blue/`，不作为 Evidence；
 - Architecture Target 和 ADR 的语义不由本目录拥有。

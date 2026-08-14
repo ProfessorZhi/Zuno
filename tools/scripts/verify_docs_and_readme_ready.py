@@ -14,13 +14,9 @@ EXPECTED_GROUP_PATHS = {
     "docs/architecture/architecture-views.md",
     "docs/architecture/architecture.html",
     "docs/history/README.md",
-    "docs/facts/README.md",
-    "docs/facts/project-background.md",
-    "docs/facts/requirements-and-workflows.md",
-    "docs/facts/development-and-evolution.md",
-    "docs/facts/team-and-ownership.md",
-    "docs/facts/delivery-and-feedback.md",
-    "docs/facts/technology-reality.md",
+    "docs/history/red-blue/README.md",
+    "docs/project/project-background.md",
+    "docs/project/development-process.md",
     "docs/evidence/README.md",
     "docs/evidence/current-runtime-baseline.md",
     "docs/evidence/current-test-baseline.md",
@@ -28,7 +24,7 @@ EXPECTED_GROUP_PATHS = {
 }
 EXCLUDED_LOCAL_PATHS = {
     "docs/superpowers/",
-    "docs/history/prototypes/",
+    "docs/history/red-blue/",
     "apps/web/AGENTS.md",
 }
 
@@ -102,7 +98,7 @@ def main() -> int:
     errors: list[str] = []
     # Deleted historical paths are expected during the reset and must not be
     # treated as public-surface leaks. Validate the boundary of the group,
-    # while allowing current docs/governance files to evolve without another
+    # while allowing current project and operations files to evolve without another
     # hard-coded archive manifest.
     allowed_prefixes = ("README.md", "docs/")
     unexpected_preview = sorted(

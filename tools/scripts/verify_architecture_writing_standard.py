@@ -5,7 +5,6 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[2]
-STANDARD = ROOT / "docs/governance/architecture-document-writing-standard.md"
 ARCH = ROOT / "docs/architecture/architecture.md"
 VIEWS = ROOT / "docs/architecture/architecture-views.md"
 HTML = ROOT / "docs/architecture/architecture.html"
@@ -13,21 +12,18 @@ HTML = ROOT / "docs/architecture/architecture.html"
 
 def verify() -> list[str]:
     errors: list[str] = []
-    if not STANDARD.exists():
-        return ["missing architecture writing standard"]
-    standard = STANDARD.read_text(encoding="utf-8")
-    for marker in ("Canonical taxonomy", "Logical 与 Physical", "Current", "Target", "Hypothesis", "History", "Why service?", "Red Attack"):
-        if marker not in standard:
-            errors.append(f"writing standard missing marker: {marker}")
-    for path in [ARCH, VIEWS, HTML]:
+    for path in (ARCH, VIEWS, HTML):
         if not path.exists():
             errors.append(f"missing canonical architecture document: {path.relative_to(ROOT)}")
-            continue
-        text = path.read_text(encoding="utf-8")
+    if not ARCH.exists():
+        return errors
+    design = ARCH.read_text(encoding="utf-8")
     for marker in ("Python-only", "Microservice", "Current", "Target", "History", "Why service?", "Reconciliation"):
-        if marker not in ARCH.read_text(encoding="utf-8"):
+        if marker not in design:
             errors.append(f"architecture.md missing writing marker: {marker}")
-    if 'fetch("./architecture-views.md")' not in HTML.read_text(encoding="utf-8"):
+    if VIEWS.exists() and "```mermaid" not in VIEWS.read_text(encoding="utf-8"):
+        errors.append("architecture-views.md must remain a Mermaid source")
+    if HTML.exists() and 'fetch("./architecture-views.md")' not in HTML.read_text(encoding="utf-8"):
         errors.append("architecture.html must consume architecture-views.md")
     for mirror in (ROOT / ".agent/architecture", ROOT / ".agent/modules"):
         if mirror.exists():

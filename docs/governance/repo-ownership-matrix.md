@@ -1,8 +1,10 @@
-# Repository Ownership Matrix
+# Repository Ownership Matrix（兼容输入）
 
-状态：`current`（物理代码）；物理 Service Split 为 `evidence-gated target`
+status: current-compatibility-reference
+owner: Repository / Architecture Coordinator
+human_entrypoint: AGENTS.md and docs/architecture/architecture.md
 
-本文件只记录当前物理 owner 和 Target logical owner；具体 Network Service 只有通过 Evidence Gate 后才拥有物理部署语义，不记录已经删除的迁移路径或未批准的阶段计划。
+> 本文件保留给 `src/backend/zuno/**` 中尚未迁移的边界说明和工具读取路径。它不是新的项目故事、架构正文或 ADR Owner；人类阅读入口是根目录 `AGENTS.md`、总体架构和 `docs/operations/`。物理 Service Split 仍由证据门控。
 
 | Surface | Current code owner | Target logical owner / optional physical boundary | Evidence boundary |
 | --- | --- | --- | --- |
@@ -18,14 +20,8 @@
 ## Rules
 
 - API routes depend on application owners, not provider or database internals.
-- Logical capability, service, process, container and team are separate concepts;
-  one Python image may host multiple logical responsibilities without creating a
-  pre-committed Network Service topology.
-- Physical Service Split must record Why Service? Why not Library? Why not Worker?
-  Independent Scaling, Failure, Security, Availability, Lifecycle, Cross-host
-  Contract or Data / Operational Ownership evidence is required.
-- A shared runtime engine may implement mechanics, but it is not an API facade or
-  a second Domain execution path.
-- Unknown external effects enter reconciliation; they are never silently retried
-  as success.
+- Logical capability, service, process, container and team are separate concepts; one Python image may host multiple logical responsibilities without creating a pre-committed Network Service topology.
+- Physical Service Split must record Why Service? Why not Library? Why not Worker? Independent Scaling, Failure, Security, Availability, Lifecycle, Cross-host Contract or Data / Operational Ownership evidence is required.
+- A shared runtime engine may implement mechanics, but it is not an API facade or a second Domain execution path.
+- Unknown external effects enter reconciliation; they are never silently retried as success.
 - Current/Target/Not measured must remain distinct in code, tests and docs.

@@ -28,6 +28,7 @@ def _tracked_markdown_files() -> list[Path]:
         REPO_ROOT / path
         for path in tracked
         if not path.replace("\\", "/").startswith(EXCLUDED_PREFIXES)
+        and (REPO_ROOT / path).exists()
     ]
 
 

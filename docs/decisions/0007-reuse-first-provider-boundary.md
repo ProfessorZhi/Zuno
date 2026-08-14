@@ -3,7 +3,7 @@
 status: accepted-target
 decision_date: 2026-08-12
 scope: Zuno 全局架构、Canonical Taxonomy、Build-vs-Buy 评审和后续 Provider 适配
-taxonomy_note: 旧 11 模块仅作为 History；目录和服务边界以 ADR 0011 为准。
+taxonomy_note: 旧 11 模块不再是当前文档入口；目录和服务边界以总体架构与本 ADR/ADR-0012 为准。
 
 ## Context
 
@@ -104,6 +104,6 @@ G4 必须记录许可证、版本、部署模型、数据出口、升级责任�
 
 ## Verification
 
-本 ADR 的文档一致性由架构文档集、语义对齐、内部链接、红蓝会话和 Repository Verifier 检查；具体候选的 G1–G5 必须由 `project-reconstruction-lab/legacy/numbered/09-open-source-review.md` 与当前 `05-red-blue/` 记录官方资料、源码、测试、License、Spike 和 Benchmark 证据后，才可升级决策状态。
+本 ADR 的文档一致性由架构文档集、语义对齐、内部链接和 Repository Verifier 检查；具体候选的 G1–G5 必须由官方资料、源码、测试、License、Spike 和 Benchmark 证据支持后，才可升级决策状态。Red / Blue 记录只提供审查过程，不是 Provider 事实源。
 
 本 ADR 是 `accepted-target`，不是 Current、实现证明或 Production Readiness 证明。

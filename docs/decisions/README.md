@@ -1,38 +1,19 @@
-# 架构决策记录
+# Active Architecture Decisions
 
-这里只保留仍然影响当前主线的正式 ADR。
+本目录只保留仍然影响 Zuno 长期设计的 ADR。它们记录 durable decision，不是项目故事、当前运行证据或 Red / Blue 原始讨论。架构审查过程见 [`docs/history/red-blue/`](../history/red-blue/README.md)，当前总体结果见 [`docs/architecture/architecture.md`](../architecture/architecture.md)。
 
-当前有效决策：
+## 当前有效 ADR
 
-- [ADR 0002：退休 compat namespace](0002-retire-compat-namespace.md)
-- [ADR 0004：补登记既有 QueueClient 旁路](0004-corrective-queue-bypass-registration.md)
-  - 当前状态：`accepted`；只纠正 PHASE01 遗漏的 pre-existing bypass，不授权新增 caller 或延长 removal deadline。
+- [ADR 0003：共享跨层 Contract](0003-wave1-cross-module-contract-freeze.md)：冻结跨层 Envelope、Owner、Provenance、Version 和基础设施访问边界。
+- [ADR 0005：LangGraph PostgreSQL Checkpointer](0005-official-langgraph-postgres-checkpointer.md)：Runtime Checkpoint 复用 LangGraph/PostgreSQL 能力，并与 Domain State 分离。
+- [ADR 0006：Evidence-Driven Agentic GraphRAG](0006-evidence-driven-agentic-graphrag.md)：Graph / Agentic Retrieval 作为有证据门控的能力，不因名称自动成为 Kernel。
+- [ADR 0007：Reuse-First Provider Boundary](0007-reuse-first-provider-boundary.md)：通用 Host、Provider 和基础设施优先复用，Zuno 维护法律业务 Contract 与 Domain 深度。
+- [ADR 0008：Legal Domain Kernel and Host Boundary](0008-legal-domain-kernel-and-host-boundary.md)：Generic Host + Legal Backend 是默认最小边界，Native Runtime 需通过测量证明。
+- [ADR 0009：Python-only Backend](0009-python-only-backend.md)：Python 是当前后端 Target 约束，具体物理服务仍需证据门控。
+- [ADR 0012：Evidence-Gated Physical Service Split](0012-evidence-gated-physical-service-split.md)：模块化 Backend + Worker 是默认物理起点，独立 Network Service 只能由 Scaling、Failure、Security、Availability 或 Lifecycle 证据触发。
 
-正式 Target 决议：
+## 维护规则
 
-- [ADR 0003：Wave 1 跨模块 Contract 与 Infrastructure 物理边界冻结](0003-wave1-cross-module-contract-freeze.md)
-  - 当前状态：`accepted-target`；已合并到 `main`，是正式共享 Target Contract，但不是 Current 或实现证据。
-  - 冻结范围：服务端权威产品边界、`zuno/platform/**` 物理 Ownership、共享 Envelope、Security Epoch、Secret/Credential、Audit、Model Gateway、派生索引、PreparedToolAction、Failure Code 与 Retry/Recovery Owner。
-- [ADR 0006：Evidence-Driven Conditional Retrieval Decision Architecture](0006-evidence-driven-agentic-graphrag.md)
-  - 当前状态：`accepted-target`；定义 Architecture v2 的 Broad Evidence Discovery、Evidence Deliberation、Evidence Reasoning Graph、ClaimEvidenceState、Targeted Probe 与安全停止。
-  - 不修改现有 Program 与 PHASE01–PHASE22，不构成代码、Migration、质量或生产就绪证据。
-- [ADR 0007：Reuse-first 与可替换能力 Provider 边界](0007-reuse-first-provider-boundary.md)
-  - 当前状态：`accepted-target`；确立 Zuno Domain / Control Plane 与可替换能力 Provider 的边界，以及 `Reuse First, Build Requires Evidence` 的 G1–G5 评审闸门。
-  - 不把 RAGFlow、OpenViking、Onyx、Coze 或其他候选标记为最终 Adopt；不授权本轮实现 Adapter、Runtime、Migration 或 Production Benchmark。
-- [ADR 0008：Legal Domain Kernel 与 Host Boundary](0008-legal-domain-kernel-and-host-boundary.md)
-  - 当前状态：`accepted-target`；定义最小法律 Domain Kernel、Proposal/Owner Commit、Host + Backend 最小方案和 Native Runtime 的验证门。
-- [ADR 0009：Python-only Backend](0009-python-only-backend.md)
-  - 当前状态：`accepted-target`；Python-only 是目标约束，Java/Spring 仅通过外部协议集成。
-- [ADR 0011：Architecture Document Taxonomy](0011-architecture-document-taxonomy.md)
-  - 当前状态：`accepted-target`；以 Product/Domain/Agents/Knowledge/Services/Data/Security/Eval/Deployment 重建专题文档体系，旧 11 模块降为 Superseded。
-- [ADR 0012：证据门控的物理服务拆分](0012-evidence-gated-physical-service-split.md)
-  - 当前状态：`accepted-target`；默认模块化 Backend + Worker，独立 Network Service / Microservice 只有在可重复的 Scaling、Failure、Security、Availability、Lifecycle、Cross-host Contract 或 Data / Operational Ownership 证据成立后才拆分。
+新 ADR 只在决策具有长期、跨边界和非局部反转成本时创建。一次性实施记录、临时方案、旧过程契约和被替换的 taxonomy 不在当前目录保留；Git history 是考古来源。
 
-已被替换的决策不再伪造一个当前树目录；需要考古时使用 Git history，或在
-`docs/history/` 的批准摘要中读取结论。
-
-新增 ADR 时优先记录：
-
-- 会长期影响 runtime 边界的决策。
-- 会长期影响 retrieval / evidence contract 的决策。
-- 会影响目录结构、服务边界或公开 API 的决策。
+ADR 不自动授权实现。实现仍需读取项目文档、总体架构、Evidence 和当前 Program，并通过相应验证。

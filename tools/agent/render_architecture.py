@@ -74,7 +74,7 @@ def validate_design(content: str) -> list[str]:
     for marker in required_sections + required_terms:
         if marker not in content:
             errors.append(f"architecture.md missing required marker: {marker}")
-    for marker in ("docs/facts/", "docs/architecture/"):
+    for marker in ("docs/project/", "docs/architecture/"):
         if marker not in content:
             errors.append(f"architecture.md does not route to canonical project layer: {marker}")
     if "11 Logical Modules + 1 Architecture" not in content or "History" not in content:
@@ -114,7 +114,7 @@ def validate_source(content: str) -> list[str]:
 def validate_html(content: str) -> list[str]:
     required = [
         "Zuno Target Architecture", '<script type="module">', 'fetch("./architecture-views.md")',
-        MERMAID_MODULE_URL, "../facts/README.md", "./architecture.md#target-status-boundary",
+        MERMAID_MODULE_URL, "../project/project-background.md", "./architecture.md#target-status-boundary",
         "../evidence/README.md", "diagram-dialog", "Mermaid source",
     ]
     errors = [f"architecture.html missing marker: {marker}" for marker in required if marker not in content]
@@ -138,7 +138,7 @@ def validate_taxonomy() -> list[str]:
     errors: list[str] = []
     for relative_path in (
         "docs/README.md",
-        "docs/facts/README.md",
+        "docs/project/project-background.md",
         "docs/architecture/architecture.md",
         "docs/evidence/README.md",
     ):

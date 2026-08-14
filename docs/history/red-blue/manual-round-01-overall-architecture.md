@@ -7,7 +7,7 @@ base_sha: b00f5bb3fb0bad9168a1dce96d9e4817a60d9773
 archive_commit: RECORDED_IN_FINAL_HANDOFF
 architecture_revision_commit: NOT_CHANGED_IN_THIS_TASK
 round_format: LEGACY_PACKET
-source_session: docs/history/red-blue/round-01-overall-architecture.md
+source_session: manually coordinated across three ChatGPT threads; archived in this file
 
 # Red / Blue Round 01 — Overall Architecture Narrative
 
@@ -20,7 +20,7 @@ round_owner: Main Architecture Coordinator
 archive_role: historical adversarial architecture record
 round_sequence: first Red / Blue adversarial round
 execution_mode: manually coordinated across three ChatGPT threads
-canonical_fact_source: docs/facts/
+canonical_fact_source: docs/project/
 canonical_target_source: docs/architecture/
 canonical_decision_source: docs/decisions/
 

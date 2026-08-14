@@ -16,7 +16,7 @@
 1. `.agent/programs/`
 2. 当前正式设计文档
 3. 规格、ADR 或审计
-4. `docs/history/`
+4. 相关的 `docs/history/red-blue/` Review Record（只有需要理解架构演进时）
 5. `docs/architecture/README.md`
 6. `docs/architecture/architecture.md`
 7. `docs/architecture/architecture.md`
@@ -32,6 +32,6 @@
 
 - 正式事实变化时，正式文档已更新。
 - 工作流变化时，Agent 工作流文件已更新。
-- 被替换材料移动到 history，没有直接删除。
+- 被替换材料按价值进入 `docs/history/red-blue/` 或由 Git history 保留，不创建重复事实源。
 - 验证命令：
 - 提交和推送结果：

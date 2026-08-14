@@ -1,182 +1,73 @@
-version: 3
+version: "2026-08-14"
+system_identity: "Zuno Local Agent System"
 
-purpose: "Route Zuno work to consolidated facts, architecture, modules, decisions, governance, evidence, history, and the lightweight interview lab."
+runtime_boundary:
+  agent_role: "repository_workflow_and_documentation_coordinator"
+  product_runtime_is_not_agent_collaboration: true
+  source_of_truth: "docs/"
+  project_story_root: "docs/project"
+  architecture_root: "docs/architecture"
+  evidence_root: "docs/evidence"
+  review_history_root: "docs/history/red-blue"
 
-system_identity:
-  name: "Zuno Local Agent Skill System"
-  bootloader: "AGENTS.md"
-  local_skills_root: ".agent/references"
-  project_skill_root: "project-reconstruction-lab/skills"
-  template_root: ".agent/templates"
-  active_program_root: ".agent/programs"
-  formal_truth_root: "docs"
-  formal_project_root: "docs"
-  formal_project_facts_root: "docs/facts"
-  formal_architecture_root: "docs/architecture"
-  formal_modules_root: "docs/modules"
-  history_root: "docs/history"
+program_rules:
+  current_program_owner: ".agent/programs/current.md"
+  implementation_requires_explicit_user_gate: true
+  target_does_not_equal_current: true
+  history_is_git_archaeology_except_review_records: true
+  replaced_program_policy: "remove obsolete workspace copies after approved disposition; Git history remains the archive of record"
+  preserve_uncommitted_user_files: true
 
 local_skill_registry:
   mode: "REPOSITORY_LOCAL_EXPLICIT_ONLY"
   discovery: "EXPLICIT_ONLY"
-  instruction: "只有用户或上层 Coordinator 明确指定 Skill 名称时才读取对应 SKILL.md；不根据普通任务路径或关键词自动加载。"
-  architecture_decision_authority: "CHATGPT_MAIN_ONLY"
-  skills:
-    - name: "red-team-interviewer"
-      path: "project-reconstruction-lab/skills/red-team-interviewer/SKILL.md"
-      trigger: "项目真实性、个人贡献、代码链路或大厂面试深挖"
-    - name: "architecture-red-blue-loop"
-      path: "project-reconstruction-lab/skills/architecture-red-blue-loop/SKILL.md"
-      trigger: "架构必要性、替代方案、Red/Blue 攻防或复杂度收敛"
-    - name: "jd-enterprise-project"
-      path: "project-reconstruction-lab/skills/jd-enterprise-project/SKILL.md"
-      trigger: "根据 JD、目标岗位或项目约束推导可实现项目"
+  note: "当前仓库没有 active local skill workspace；需要 Red/Blue 或项目恢复时按 AGENTS.md 和 docs/history/red-blue/ 的规则人工协调。"
 
-runtime_boundary:
-  product_runtime_target: "Python-only modular backend with evidence-gated physical service split"
-  product_runtime_current: "FastAPI backend + RabbitMQ worker in current Compose evidence; physical service split not established"
-  agent_runtime: "Composable Agent Runtime provider; Native Runtime is DEFERRED / HYPOTHESIS; profiles/workers are not automatically services"
-  language_policy: "Python-only backend; external Java/Spring systems integrate through versioned protocols"
-  engineering_parallelism: "parallel agents are engineering workflow helpers and do not change product runtime architecture"
-
-program_rules:
-  current_program_root: ".agent/programs"
-  phase_filename_pattern: "retired-do-not-create"
-  new_program_first_phase: "architecture-review-required"
-  replaced_program_policy: "compress approved history into docs/history summaries; do not keep raw phase materials or competing active truth"
-
-work_modes:
-  branch_prefix: "codex/"
-  task_isolation_unit: "worktree + branch"
-  main_thread_can_self_execute: true
-  main_thread_can_delegate: true
-  coordinator_role: "scope, contract freeze, conflict resolution, integrated verification, merge, and evidence reporting"
-  require_disjoint_write_scope_for_parallel_tasks: true
-  require_commit_and_push_before_merge: true
-
-architecture_directory_contract:
-  formal_files:
-    - "docs/architecture/README.md"
-    - "docs/architecture/architecture.md"
-    - "docs/architecture/architecture-views.md"
-    - "docs/architecture/architecture.html"
-  canonical_project_layers:
-    - "docs/facts/"
-    - "docs/architecture/"
-    - "docs/modules/"
-  legacy_taxonomy: "Former interview, topic and 11-module materials are owned by Git history; no legacy taxonomy is an active route"
-  no_mirror_rule: "do not create a second Service/Domain/State registry in .agent or the Lab"
-
-canonical_ownership:
-  project_facts_owner: "docs/facts/"
-  current_reality_owner: "docs/evidence/README.md"
-  target_status_owner: "docs/architecture/architecture.md"
-  production_readiness_owner: "docs/evidence/README.md"
-  cross_layer_architecture_owner: "docs/architecture/architecture.md"
-  architecture_views_owner: "docs/architecture/architecture-views.md and architecture.html"
-  evidence_owner: "docs/evidence/"
-  decision_owner: "docs/decisions/"
-  governance_owner: "docs/governance/"
-  formal_round_archive_owner: "docs/history/red-blue/"
-  interview_lab_owner: "project-reconstruction-lab/"
-
-shared_contracts:
-  adr: "docs/decisions/0003-wave1-cross-module-contract-freeze.md"
-  state_boundary_adr: "docs/decisions/0008-legal-domain-kernel-and-host-boundary.md"
-  language_adr: "docs/decisions/0009-python-only-backend.md"
-  service_adr: "docs/decisions/0012-evidence-gated-physical-service-split.md"
-  taxonomy_adr: "docs/decisions/0011-architecture-document-taxonomy.md"
+canonical_owners:
+  project_background: "docs/project/project-background.md"
+  development_process: "docs/project/development-process.md"
+  overall_architecture: "docs/architecture/architecture.md"
+  architecture_views: "docs/architecture/architecture-views.md + docs/architecture/architecture.html"
+  modules: "docs/modules/README.md"
+  decisions: "docs/decisions/"
+  evidence: "docs/evidence/"
+  review_history: "docs/history/red-blue/"
+  operations: "docs/operations/"
+  terminology: "docs/terminology.md"
 
 skill_routes:
-  - name: "architecture-and-document-governance"
-    match:
-      paths:
-        - "README.md"
-        - "docs/**"
-        - "AGENTS.md"
-        - ".agent/**"
-    docs_sync:
-      - "docs/README.md"
-      - "docs/architecture/"
-      - "docs/facts/"
-      - "docs/modules/README.md"
-      - "docs/decisions/"
-      - "docs/governance/"
-      - ".agent/system.yaml"
-    verify:
-      - "git diff --check"
-      - "python tools/scripts/verify_docs_entrypoints.py"
-      - "python tools/scripts/verify_markdown_internal_links.py"
-      - "python tools/scripts/verify_architecture_document_set.py"
-      - "python tools/scripts/verify_architecture_writing_standard.py"
-      - "python tools/scripts/verify_architecture_human_readability.py"
-      - "python .agent/scripts/verify_agent_system.py"
-      - "python .agent/scripts/verify_doc_boundaries.py"
-
-  - name: "project-reconstruction-and-interview-lab"
-    match:
-      paths:
-        - "project-reconstruction-lab/**"
-        - "docs/history/red-blue/**"
-        - "tools/scripts/verify_architecture_interview_program.py"
-        - "tests/repo/test_architecture_interview_program.py"
-    docs_sync:
-      - "project-reconstruction-lab/README.md"
-      - "project-reconstruction-lab/WORKFLOW.md"
-      - "project-reconstruction-lab/archive-map.md"
-      - "project-reconstruction-lab/skills/"
-      - "docs/history/red-blue/"
-      - "docs/history/README.md"
+  documentation:
+    read_first:
       - "AGENTS.md"
-      - ".agent/references/"
-    verify:
-      - "git diff --check"
-      - "python tools/scripts/verify_architecture_interview_program.py"
-      - "python tools/scripts/verify_docs_entrypoints.py"
-      - "python tools/scripts/verify_markdown_internal_links.py"
-      - "python .agent/scripts/verify_agent_system.py"
-      - "python .agent/scripts/verify_doc_boundaries.py"
-      - "pytest -q tests/repo/test_architecture_interview_program.py -p no:cacheprovider"
-
-  - name: "backend-agent-runtime"
-    match:
-      paths:
-        - "src/backend/zuno/agent/**"
-    docs_sync:
+      - "docs/README.md"
+      - "docs/project/project-background.md"
+      - "docs/project/development-process.md"
+      - ".agent/references/workflow.md"
+  architecture:
+    read_first:
       - "docs/architecture/architecture.md"
-      - "docs/facts/"
-      - "docs/evidence/"
-
-  - name: "knowledge-and-evidence"
-    match:
-      paths:
-        - "src/backend/zuno/knowledge/**"
-        - "src/backend/zuno/memory/**"
-        - "src/backend/zuno/platform/services/rag/**"
-        - "src/backend/zuno/platform/services/graphrag/**"
-    docs_sync:
+      - "docs/decisions/README.md"
+      - "docs/evidence/README.md"
+  architecture_review:
+    read_first:
       - "docs/architecture/architecture.md"
-      - "docs/facts/"
-      - "docs/evidence/"
-
-  - name: "service-and-tool-boundary"
-    match:
-      paths:
-        - "src/backend/zuno/api/**"
-        - "src/backend/zuno/capability/**"
-        - "src/backend/zuno/platform/**"
-        - "infra/docker/**"
-    docs_sync:
+      - "docs/history/red-blue/README.md"
+      - "docs/history/red-blue/"
+  runtime:
+    read_first:
       - "docs/architecture/architecture.md"
-      - "docs/facts/"
-      - "docs/governance/"
-      - "docs/evidence/"
+      - "docs/project/development-process.md"
+      - "docs/evidence/README.md"
+      - ".agent/references/code-map.md"
+  verification:
+    read_first:
+      - ".agent/references/verification-map.md"
+      - "docs/evidence/README.md"
 
-stop_conditions:
-  - "public API field rename"
-  - "database schema change"
-  - "dependency upgrade"
-  - "security boundary change"
-  - "Target behavior promoted to Current without evidence"
-  - "architecture taxonomy changed without ADR and entrypoint migration"
-  - "formal Round archive changed without an explicit archive disposition"
+verification:
+  docs_entrypoints: "python tools/scripts/verify_docs_entrypoints.py"
+  markdown_links: "python tools/scripts/verify_markdown_internal_links.py"
+  repo_structure: "python tools/scripts/verify_repo_structure.py"
+  agent_system: "python .agent/scripts/verify_agent_system.py"
+  doc_boundaries: "python .agent/scripts/verify_doc_boundaries.py"
+  architecture_set: "python tools/scripts/verify_architecture_document_set.py"

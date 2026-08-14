@@ -11,11 +11,11 @@ acceptance_scope: Target Architecture baseline；实现、测量和外部资格�
 readability_state: READABILITY_BASELINE_REFOUNDED
 readability_gate: REQUIRED_BEFORE_NEXT_RED_BLUE_PROTOCOL
 document_role: cross-cutting integration source
-canonical_taxonomy: docs/architecture/ 仅保存总体架构四文件；Current Facts 由 docs/facts/ 负责
-current_state_source: docs/facts/ 和 docs/evidence/
-decision_sources: docs/decisions/0008-legal-domain-kernel-and-host-boundary.md、0009-python-only-backend.md、0011-architecture-document-taxonomy.md、0012-evidence-gated-physical-service-split.md
+canonical_taxonomy: docs/architecture/ 仅保存总体架构四文件；项目背景与开发事实由 docs/project/ 负责
+current_state_source: docs/project/ 和 docs/evidence/
+decision_sources: docs/decisions/0003-wave1-cross-module-contract-freeze.md、0005-official-langgraph-postgres-checkpointer.md、0006-evidence-driven-agentic-graphrag.md、0007-reuse-first-provider-boundary.md、0008-legal-domain-kernel-and-host-boundary.md、0009-python-only-backend.md、0012-evidence-gated-physical-service-split.md
 
-> 本文先说明问题和产品动机，再说明 Target 责任边界，最后给出 Contract。项目上下文和当前仓库事实由 `docs/facts/` 负责；当前证据由 `docs/evidence/` 负责。本正文不创建第二套事实状态机，也不把 Target 写成 Current。
+> 本文先说明问题和产品动机，再说明 Target 责任边界，最后给出 Contract。项目上下文和开发事实由 `docs/project/` 负责；当前代码与运行证据由 `docs/evidence/` 负责；Red / Blue History 只解释架构演进理由。本正文不创建第二套事实状态机，也不把 Target 写成 Current。
 
 ## Part A — Architecture Narrative
 
@@ -51,11 +51,11 @@ Zuno Target 假设要解决的不是抽象的“企业需要 AI”，而是专�
 6. 单项论文算法进入法院业务系统时，还要解决输入输出 Contract、版本、权限、Fallback、Eval 和运行治理；
 7. 法院已有信息系统，甲方通常更需要可嵌入的领域能力，而不是为了一个 AI 功能推倒重建现有平台。
 
-这些是 `TARGET_ONLY` 的领域问题模型，受到 [`docs/facts/requirements-and-workflows.md`](../facts/requirements-and-workflows.md) 中公开研究上下文的启发，不是历史客户原始需求或 Zuno 已测量的用户痛点。
+这些是 `TARGET_ONLY` 的领域问题模型，受到 [`docs/project/project-background.md`](../project/project-background.md) 中公开研究上下文的启发，不是历史客户原始需求或 Zuno 已测量的用户痛点。
 
 ### 2. 历史事实、当前仓库和 Target 不是一条时间线
 
-历史项目来自智慧司法研发背景，曾有内部 Demo、客户侧 Demo、法院侧测试和 Pilot Validation，但尚未正式生产；客户明确反馈过回答质量需要提高。今天仍用于理解产品边界的上下文见 [`../facts/project-background.md`](../facts/project-background.md)，完整历史过程进入 [`../history/`](../history/README.md)。
+历史项目来自智慧司法研发背景，曾有内部 Demo、客户侧 Demo、法院侧测试和 Pilot Validation，但尚未正式生产；客户明确反馈过回答质量需要提高。今天仍用于理解项目边界的背景见 [`../project/project-background.md`](../project/project-background.md)，开发过程见 [`../project/development-process.md`](../project/development-process.md)，架构审查过程见 [`../history/red-blue/`](../history/red-blue/README.md)。
 
 当前 main 能证明 Python / FastAPI、PostgreSQL Migration、Compose、Agent / Knowledge / Memory / Tool 等代码或配置表面，但不能证明这些组件曾在历史客户环境同时运行，也不能证明用户本人负责全部能力，详见 [`../evidence/README.md`](../evidence/README.md)。
 
@@ -119,7 +119,7 @@ Target 用五层 Architecture Responsibility Layers 解释系统职责，但不�
 4. **Agent Runtime & Execution**：Single Controller、Plan DAG、Step、ReAct、Reflection、Replan、受控 Worker、Model、Skill 和 Tool；
 5. **Trust & Platform Engineering**：Permission、Approval、Sandbox、Audit、Observability、Eval 和 Infrastructure。
 
-逻辑能力（Logical Capability Architecture）、物理服务与部署（Physical Service / Deployment Architecture）、Worker、Process、Container、Database 和 Team 不做一一映射。上一阶段的 `11 Logical Modules + 1 Architecture` 只是 History / Superseded 文档组织方式；`FINAL_MODULE_COUNT: NOT_DECIDED`。历史材料统一从 [`docs/history/`](../history/README.md) 查阅，当前上下文和仓库状态统一从 [`docs/facts/`](../facts/README.md) 查阅。
+逻辑能力（Logical Capability Architecture）、物理服务与部署（Physical Service / Deployment Architecture）、Worker、Process、Container、Database 和 Team 不做一一映射。上一阶段的 `11 Logical Modules + 1 Architecture` 只是被替换的文档组织方式；`FINAL_MODULE_COUNT: NOT_DECIDED`。架构审查过程从 [`docs/history/red-blue/`](../history/red-blue/README.md) 查阅，项目背景和开发过程从 [`docs/project/`](../project/project-background.md) 查阅。
 
 ### 5. Legal Domain、Knowledge、Intelligence 和 Memory 的边界
 
@@ -280,7 +280,7 @@ C — Zuno Native Runtime + First-class Legal Domain State
 
 ## Target Status Boundary
 
-本节是 Target 设计状态，不是 `docs/facts/` 的 Current 事实。`ACCEPTED_TARGET` 只表示方向已被治理接受；它不表示代码已实现、收益已测量或外部生产资格已获得。
+本节是 Target 设计状态，不是 `docs/project/` 的历史事实或 `docs/evidence/` 的 Current 证据。`ACCEPTED_TARGET` 只表示方向已被治理接受；它不表示代码已实现、收益已测量或外部生产资格已获得。
 
 | Target 能力 / 边界 | 状态 | 关闭或反转条件 |
 | --- | --- | --- |

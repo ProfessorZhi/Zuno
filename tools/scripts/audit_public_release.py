@@ -16,9 +16,9 @@ FORBIDDEN_PUBLIC_DOC_LINKS = [
 PUBLIC_DOC_FILES = [
     REPO_ROOT / "README.md",
     REPO_ROOT / "docs" / "README.md",
-    REPO_ROOT / "docs" / "facts" / "README.md",
-    REPO_ROOT / "docs" / "facts" / "project-background.md",
-    REPO_ROOT / "docs" / "facts" / "README.md",
+    REPO_ROOT / "docs" / "project" / "project-background.md",
+    REPO_ROOT / "docs" / "project" / "development-process.md",
+    REPO_ROOT / "docs" / "history" / "red-blue" / "README.md",
     REPO_ROOT / "docs" / "architecture" / "architecture.md",
     REPO_ROOT / "docs" / "evidence" / "README.md",
     REPO_ROOT / "docs" / "evidence" / "current-eval-baseline.md",

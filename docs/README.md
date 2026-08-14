@@ -1,52 +1,55 @@
-# Zuno 文档入口
+# Zuno 项目文档
 
-`docs/` 按读者问题分配事实、证据、设计、决策、历史和治理。判断标准是“谁拥有这类
-语义、谁能更新它”，不是文件原来放在哪里。
-
-## 目录
+`docs/` 是 Zuno 的正式项目知识入口。为了让项目故事、架构和当前证据不再分散，当前树只保留少数稳定入口：
 
 ```text
 docs/
-├─ facts/        已恢复且今天仍然有效的项目事实
-├─ architecture/整体 Target Architecture 与跨层契约
-├─ modules/     稳定后各责任域的详细设计，目前尚未冻结
-├─ decisions/   仍然有效的架构决策（ADR）
-├─ history/     已替代、已结束或只用于考古的材料（当前只保留 Red/Blue 历史入口）
-├─ evidence/    支撑 Current 判断的可复现证据
-└─ governance/  Owner、文档规则和工程治理
+├── README.md
+├── project/
+│   ├── project-background.md
+│   └── development-process.md
+├── architecture/
+│   ├── README.md
+│   ├── architecture.md
+│   ├── architecture-views.md
+│   └── architecture.html
+├── modules/
+│   └── README.md
+├── decisions/
+│   ├── README.md
+│   └── active ADRs
+├── evidence/
+│   └── 当前可复现证据
+├── history/
+│   ├── README.md
+│   └── red-blue/              架构审查过程记录
+├── operations/
+│   └── 当前运维 Runbook / profile
+└── terminology.md
 ```
 
-另外，[`terminology.md`](terminology.md) 是轻量术语表，不再单独设置 `reference/`；图片等附件放在所属文档目录下，不再设置独立 `assets/` 根目录。
+## 阅读顺序
 
-## 首读路径
+按项目阅读或面试准备，依次阅读：
 
-- [项目事实](facts/README.md)：按 [项目背景](facts/project-background.md) → [历史需求与流程](facts/requirements-and-workflows.md) → [开发演进](facts/development-and-evolution.md) → [团队 Ownership](facts/team-and-ownership.md) 阅读
-- [总体架构](architecture/architecture.md)：回答系统为什么这样设计、跨层如何闭环
-- [模块入口](modules/README.md)：回答模块文档何时建立以及如何服从总架构
-- [有效决策](decisions/README.md)
-- [可复现证据](evidence/README.md)
-- [Red/Blue 历史归档](history/README.md)
-- [治理规则](governance/repo-ownership-matrix.md)
+1. [项目背景](./project/project-background.md)：项目为什么存在、来自什么研究和业务背景、哪些历史事实仍未知。
+2. [开发过程](./project/development-process.md)：项目如何从已有产品发展到 Agent、Memory/Context、工具调用、Demo、法院测试和 Pilot，以及用户实际参与边界。
+3. [总体架构](./architecture/architecture.md)：跨 Product、Domain、Capability、Runtime、Data、Security、Eval 和部署为什么这样组织。
+4. [架构视图](./architecture/architecture-views.md) 和 [HTML 展示](./architecture/architecture.html)：总体架构的图形配对，不拥有第二套事实。
+5. [模块边界](./modules/README.md)：当前只说明模块尚未冻结，不提前制造编号模块。
+6. [有效 ADR](./decisions/README.md)：仍然影响长期设计的架构决策。
+7. [Current Evidence](./evidence/README.md)：代码、测试、运行和评测到底证明了什么。
+8. [Red / Blue 审查历史](./history/red-blue/README.md)：只在需要理解架构演进理由时阅读。
+9. [术语表](./terminology.md)：跨文档统一术语。
 
-## 四条边界
+## 文档边界
 
-```text
-FACTS        今天理解 Zuno 必须相信什么
-ARCHITECTURE 当前接受的 Target 设计为什么这样工作
-MODULES      各责任域怎样工作（边界稳定后再展开）
-HISTORY      以前发生过什么，但不再决定今天怎么设计
-```
+- `project/` 是项目故事的唯一正式入口。后续用户确认历史事实时，直接更新这两个文件，不再恢复第二套 `facts/` 或确认台账。
+- `architecture/` 是唯一总体 Target Architecture。它说明设计原则，不证明实现或生产部署。
+- `modules/` 只有边界占位；模块数量和边界稳定后才新增模块正文。
+- `decisions/` 只保留仍然有长期约束力的 ADR，不保存一次性施工记录。
+- `evidence/` 只记录当前代码、测试、Trace、Eval 和可复现运行证据。
+- `operations/` 只保存当前仍需执行的运维 Runbook 或恢复 profile。
+- `history/red-blue/` 只保存有长期复盘价值的原始架构审查记录；它不是架构、事实、证据或 ADR 的 Owner。接受的结果只能进入总体架构或 ADR。
 
-`evidence/` 和 `governance/` 是支撑层，不与项目知识争夺同一事实入口：前者证明 Current，
-后者约束文档和工程协作。Target、目录、类名、Mock 或面试材料都不能反向证明 Current 或
-Production。当前 `PRODUCTION_READINESS` 为 `NOT_ESTABLISHED`。
-
-## 状态边界
-
-```text
-CURRENT     代码、Migration、Test、Trace、Eval 或真实运行证据已证明
-TARGET      已接受的目标设计，不代表实现
-HYPOTHESIS  等待 Benchmark、Spike、Security Evidence 或 User Validation
-UNKNOWN     证据不足，必须保留未知
-HISTORY     已结束、已替换或只用于回顾的材料
-```
+`Current`、`Target`、`Future` 和 `Unknown` 必须保持区分。当前代码有某个目录或类名，不代表历史项目使用过它；Target Architecture 有某项设计，也不代表已经生产完成。

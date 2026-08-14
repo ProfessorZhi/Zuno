@@ -1,15 +1,26 @@
-# 历史归档入口
+# Architecture Review History
 
-`docs/history/` 只保存不再决定当前设计的过去材料。项目事实已经归属
-[`../facts/`](../facts/README.md)，当前实现证据归属 [`../evidence/`](../evidence/README.md)，
-Target 设计归属 [`../architecture/`](../architecture/README.md)。被迁移或删除的旧文档仍可从
-Git 提交历史考古，不在当前树维护第二套 Canonical 入口。
+`docs/history/` 不保存 Current Project Facts、Current Implementation Evidence、Canonical Architecture 或长期 ADR。当前事实、架构和证据分别由：
 
-## 当前保留
+- [项目文档](../project/project-background.md)；
+- [总体架构](../architecture/architecture.md)；
+- [Current Evidence](../evidence/README.md)；
+- [有效 ADR](../decisions/README.md)
 
-唯一保留的文档入口是 [Red / Blue Round Archive](red-blue/README.md)。其中 Manual Round 01
-保留完整记录，旧自动化程序压缩为一个带来源和处置的历史摘要；Round-001 至 Round-006 的原始
-过程仍可从 Git history 追溯。它们都是流程证据，不是下一代 Active Protocol、事实源或架构决策。
+本目录只保留具有长期复盘价值的 Architecture Review Records。普通文件演进、临时讨论和已删除工作区由 Git history 承担，不再在当前树维护第二套历史垃圾场。
 
-`interview-qa/` 和 `superseded-document-taxonomy/` 已退出当前目录。它们的历史内容由 Git
-历史承担，不能被新读者默认遍历，也不能继续成为 verifier 的必需输入。
+## Red / Blue 架构审查记录
+
+进入 [Red / Blue Archive](./red-blue/README.md) 可以查看第一轮完整的 Red Questions、Blue Answers、Red Review、Blue Reflection 和 Main Judgment。
+
+记录关系是：
+
+```text
+Architecture Baseline
+  → Red Attack
+  → Blue Defense
+  → Main Judgment
+  → Accepted Architecture / ADR Revision
+```
+
+Archive 解释“为什么后来这样设计”，不决定“当前系统是什么”。如果历史记录与 `docs/architecture/architecture.md` 冲突，以当前架构正文为准。

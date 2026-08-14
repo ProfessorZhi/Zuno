@@ -9,11 +9,7 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 ARCHITECTURE_FILES = {"README.md", "architecture.md", "architecture-views.md", "architecture.html"}
 
 
-def read(path: str) -> str:
-    return (REPO_ROOT / path).read_text(encoding="utf-8")
-
-
-def load_links():
+def _load_links():
     path = REPO_ROOT / "tools/scripts/verify_markdown_internal_links.py"
     spec = importlib.util.spec_from_file_location("verify_markdown_internal_links", path)
     if spec is None or spec.loader is None:
@@ -25,17 +21,18 @@ def load_links():
 
 
 def verify() -> list[str]:
-    errors = list(load_links().verify())
+    errors = list(_load_links().verify())
     required = [
-        "README.md", "docs/README.md", "docs/facts/README.md",
-        "docs/facts/project-background.md", "docs/facts/requirements-and-workflows.md",
-        "docs/facts/development-and-evolution.md", "docs/facts/team-and-ownership.md",
-        "docs/facts/delivery-and-feedback.md", "docs/facts/technology-reality.md",
+        "README.md", "docs/README.md",
+        "docs/project/project-background.md", "docs/project/development-process.md",
         "docs/evidence/README.md", "docs/modules/README.md", "docs/history/README.md",
-        "docs/history/red-blue/README.md", "docs/architecture/README.md",
-        "docs/architecture/architecture.md", "docs/architecture/architecture-views.md",
-        "docs/architecture/architecture.html", "docs/decisions/README.md",
-        "docs/governance/repo-ownership-matrix.md", ".agent/references/docs-map.md", ".agent/system.yaml",
+        "docs/history/red-blue/README.md", "docs/history/red-blue/manual-round-01-overall-architecture.md",
+        "docs/architecture/README.md", "docs/architecture/architecture.md",
+        "docs/architecture/architecture-views.md", "docs/architecture/architecture.html",
+        "docs/decisions/README.md", "docs/terminology.md",
+        "docs/operations/postgresql-migration-runbook.md",
+        "docs/operations/infrastructure-dr-profile.yaml",
+        ".agent/references/docs-map.md", ".agent/system.yaml",
     ]
     for path in required:
         if not (REPO_ROOT / path).exists():
@@ -48,9 +45,11 @@ def verify() -> list[str]:
     for mirror in (REPO_ROOT / ".agent/architecture", REPO_ROOT / ".agent/modules"):
         if mirror.exists():
             errors.append(f"documentation mirror must not exist: {mirror.relative_to(REPO_ROOT)}")
-
-    index = read("docs/README.md")
-    for marker in ("Current", "Target", "HYPOTHESIS", "HISTORY", "facts/", "architecture/", "evidence/"):
+    for forbidden in (REPO_ROOT / "docs/facts", REPO_ROOT / "project-reconstruction-lab"):
+        if forbidden.exists():
+            errors.append(f"obsolete documentation workspace must be absent: {forbidden.relative_to(REPO_ROOT)}")
+    index = (REPO_ROOT / "docs/README.md").read_text(encoding="utf-8")
+    for marker in ("Current", "Target", "Unknown", "project/", "architecture/", "evidence/", "history/red-blue/"):
         if marker not in index:
             errors.append(f"docs/README.md missing status/architecture marker: {marker}")
     return errors
