@@ -10,7 +10,8 @@ source_boundary: 只记录待用户逐项确认的问题，不替代 `docs/facts
 
 | ID | Topic | Current Status | Current Statement | Question To User | User Answer | Evidence | Final Status |
 |---|---|---|---|---|---|---|---|
-| R-001 | Research inventory | `USER_CONFIRMATION_REQUIRED` | 已确认项目融合葛季栋团队此前多项法律智能研究成果，但具体清单未知 | 请逐项列出论文、专利、算法或原型；分别说明加入你之前、加入你之后、只停留在 Research Prototype、成为 Product Capability / Tool / Knowledge Pipeline 或未进入产品的内容 |  | 用户当前明确确认 |  |
+| R-001 | Research inventory | `USER_CONFIRMATION_REQUIRED` | 已确认项目融合葛季栋团队此前多项法律智能研究成果，但具体清单未知 | 请逐项列出论文、专利、算法或原型；分别说明加入你之前、加入你之后、只停留在 Research Prototype、成为 Product Capability / Tool / Knowledge Pipeline 或未进入产品的内容 |  | 用户当前明确确认；葛季栋官方主页 |  |
+| R-002 | Research transfer intent | `USER_CONFIRMATION_REQUIRED` | 已确认存在研究成果向项目集成，但“历史立项时是否明确以科研成果工程化为目标”仍未知 | 当时立项或需求中是否明确提出“把课题组研究成果工程化 / 产品化”？这是原始目标，还是后续演进形成的方向？ |  | 用户当前确认集成事实，但未确认原始立项目标 |  |
 
 ## 原始业务与需求
 

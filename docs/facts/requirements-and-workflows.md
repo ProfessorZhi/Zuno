@@ -35,6 +35,54 @@ source_boundary: 已确认历史锚点与重建候选严格分离
 
 这条链路是“法律任务可能需要什么”的工程重建，不是已经确认的 Zuno 历史 SOP。公开论文可以作为研究背景和 Research Transfer，不能作为 Zuno 的产品实现证明。
 
+## PUBLIC_DOMAIN_PAIN_CONTEXT：公开领域痛点
+
+以下内容来自公开法律 AI / 司法智能研究，只用于说明领域中值得验证的问题，不是历史客户需求、Zuno 历史指标或用户已确认的 Bad Case。它们不能替代法院 QA、客户记录或真实 Pilot 证据。
+
+### 1. 大量案件材料带来人工阅读成本
+
+JIA 论文围绕中国离婚案件材料中的焦点事件抽取、事件对齐和冲突检测展开，研究动机显示，专业人员需要从大量文本材料中人工阅读、定位和比对关键信息，过程耗时并依赖业务经验与细致程度。由此可以提出一个 `PUBLIC_DOMAIN_PAIN_CONTEXT`：
+
+```text
+大量非结构化案件材料
+  → 人工阅读和定位事件 / 事实
+  → 比对不同陈述
+  → 识别冲突
+  → 认知成本和复核成本上升
+```
+
+来源：[JIA 论文 DOI 10.1111/exsy.13540](https://doi.org/10.1111/exsy.13540)。这不能证明 Zuno 历史项目当时解决的就是这条流程。
+
+### 2. Generic Summary 不等于专业效率提升
+
+Nielsen 等人在 2024 年法律任务实验中比较了 AI 生成摘要和文本高亮：实验报告显示，AI 高亮使任务完成时间降低约 30%，且测得质量指标没有下降；AI 摘要单独使用则没有带来相同的性能变化。该结果来自特定法律任务和受试者实验，不能写成 Zuno 指标。
+
+它提供的领域启发是：法律 AI 不能只把产品定义成“上传 PDF → 摘要 → Chat”，还需要验证面向具体专业任务的辅助能力。
+
+来源：[Nielsen et al., *Building a better lawyer*, DOI 10.1111/jels.12396](https://doi.org/10.1111/jels.12396)。
+
+### 3. RAG 不能自动保证法律正确性
+
+Magesh 等人对多个商业法律研究工具进行评估，结果表明，即使系统采用 RAG，仍可能出现幻觉、错误或不完整回答；公开分析还区分了检索质量不足、引用不适用法律权威和法律推理错误等问题。因此领域问题不能停留在“检索到了相关文本”，还要区分：
+
+```text
+Relevance                 != Legal Applicability
+Citation Exists           != Citation Supports Claim
+Retrieved Authority       != Applicable Authority
+```
+
+来源：[Magesh et al., *Hallucination-Free?*, DOI 10.1111/jels.12413](https://doi.org/10.1111/jels.12413)。这些是公开领域证据，不是 Zuno 的历史失败归因。
+
+### 4. 专业 AI 需要专家真值和真实验证
+
+法律先例检索综述指出，现有方法尚不存在天然最优解，进一步验证需要具有统计意义的样本和专家提供的 Ground Truth。这个结论支持一个谨慎原则：法律 Capability 不能因为论文 Accuracy 较高就直接获得正式业务资格，还需要 Provider Conformance、Domain Evaluation 和用户 / 专家验证。
+
+来源：[Mentzingen et al., *Automation of Legal Precedents Retrieval*, DOI 10.1155/2023/6660983](https://doi.org/10.1155/2023/6660983)。它不证明 Zuno 历史上已经建立过对应评测流程。
+
+### 公开痛点与历史事实的边界
+
+上述四类痛点只能作为后续 Target Scenario、Benchmark 和用户访谈的候选输入。历史项目的第一版需求、人工 SOP、真实用户、真实 Bad Case 和质量 Cause → Fix → Metric 仍保持 `UNKNOWN`。
+
 ## TARGET_ONLY：现在架构要验证的问题
 
 Target 需要验证的不是“是否堆更多 Agent”，而是高风险法律任务是否需要同时处理：

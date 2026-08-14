@@ -85,6 +85,21 @@ source_boundary: 用户确认、公开背景和明确的 UNKNOWN；不替代 Tar
 
 `PUBLIC_RESEARCH_CONTEXT`：Zhang, Y., Li, C., Sheng, Y., Ge, J., & Luo, B. (2024). *Judicial intelligent assistant system: Extracting events from Chinese divorce cases to detect disputes for the judge*. **Expert Systems**, 41(7), e13540. [DOI: 10.1111/exsy.13540](https://doi.org/10.1111/exsy.13540)。Wiley 论文页面说明，该研究实现了 JIA 系统，用于从中国离婚案件材料中抽取焦点事件、对齐事件并检测当事人陈述之间的冲突。它只能证明相关智慧司法研究成果和能力链存在，不能证明历史 Zuno 一定实现了 JIA，也不能把论文实验指标写成 Zuno 产品指标。
 
-`PUBLIC_RESEARCH_CONTEXT` 允许我们记录 Event Extraction、Event Alignment、Conflict Detection 和 Dispute Identification 这类研究能力；`USER_CONFIRMED` 只确认项目融合了团队此前多项法律智能研究成果。具体融合了哪些论文、专利、算法、Prototype、Product Capability、Tool 或 Knowledge Pipeline，进入 [`confirmation-ledger.md`](confirmation-ledger.md) 等待逐项确认。
+### 7.1 葛季栋官方 Research Inventory
+
+葛季栋官方主页公开列出以下研究和成果背景，均属于 `PUBLIC_RESEARCH_CONTEXT`，不是 Historical Product Feature：
+
+- 国家重点研发计划课题“多源多态证据链构建和裁判文书说理关键技术研究”，编号 `2016YFC0800803`，执行期 2016.7—2020.6；
+- 面向裁判文书的证据链关系模型构建方法；
+- 基于主题模型的裁判文书相似度分析方法；
+- 面向裁判文书的文本信息抽取方法；
+- 面向裁判文书的法条名称规范化和案由—法条关联统计方法；
+- 基于 LDA 主题模型的法条推荐方法；
+- 基于 PageRank 和信息熵的裁判文书文本分词方法；
+- `LawBench: Benchmarking Legal Knowledge of Large Language Models`，官方主页列为 EMNLP 2024 研究成果。
+
+来源：[`葛季栋官方主页`](https://software.nju.edu.cn/gjd/)。该页面支持“研究团队曾开展这些方向的研究或成果申报”，但不能证明这些成果全部进入 Zuno、进入同一历史版本，或成为用户参与时期的产品 API、Tool、Agent Capability 或 Knowledge Pipeline。
+
+`PUBLIC_RESEARCH_CONTEXT` 允许我们记录 Event Extraction、Event Alignment、Conflict Detection、Dispute Identification、Evidence Chain、Legal Element Extraction、Fact–Article Mapping、Statute Recommendation 和 Legal LLM Evaluation 等研究上下文；`USER_CONFIRMED` 只确认项目融合了团队此前多项法律智能研究成果。具体融合了哪些论文、专利、算法、Prototype、Product Capability、Tool 或 Knowledge Pipeline，进入 [`confirmation-ledger.md`](confirmation-ledger.md) 等待逐项确认。
 
 历史事实、当前仓库证据和 Target 设计分别由本目录、[`../evidence/README.md`](../evidence/README.md) 和 [`../architecture/architecture.md`](../architecture/architecture.md) 维护。三者不得互相倒灌。
