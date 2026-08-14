@@ -34,6 +34,13 @@ def verify_system_yaml(root: Path) -> list[str]:
     for relative in ("AGENTS.md", ".agent/programs/current.md", "docs/README.md"):
         if not (root / relative).exists():
             errors.append(f"system.yaml route target missing: {relative}")
+    registry = re.search(r"local_skill_registry:\n(?P<body>.*?)(?=\n\S|\Z)", content, re.DOTALL)
+    if not registry:
+        errors.append("system.yaml missing local_skill_registry")
+    else:
+        for skill_path in re.findall(r"^\s+path:\s+\"([^\"]+)\"$", registry.group("body"), re.MULTILINE):
+            if not (root / skill_path).exists():
+                errors.append(f"local skill route target missing: {skill_path}")
     return errors
 
 

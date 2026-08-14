@@ -6,6 +6,7 @@ system_identity:
   name: "Zuno Local Agent Skill System"
   bootloader: "AGENTS.md"
   local_skills_root: ".agent/references"
+  project_skill_root: "project-reconstruction-lab/skills"
   template_root: ".agent/templates"
   active_program_root: ".agent/programs"
   formal_truth_root: "docs"
@@ -14,6 +15,21 @@ system_identity:
   formal_architecture_root: "docs/architecture"
   formal_modules_root: "docs/modules"
   history_root: "docs/history"
+
+local_skill_registry:
+  mode: "REPOSITORY_LOCAL_NOT_EXPORTED"
+  discovery: "PATH_TRIGGERED"
+  instruction: "匹配项目重建或架构面试任务后，读取对应 SKILL.md；不要求安装到全局 Skill 目录。"
+  skills:
+    - name: "red-team-interviewer"
+      path: "project-reconstruction-lab/skills/red-team-interviewer/SKILL.md"
+      trigger: "项目真实性、个人贡献、代码链路或大厂面试深挖"
+    - name: "architecture-red-blue-loop"
+      path: "project-reconstruction-lab/skills/architecture-red-blue-loop/SKILL.md"
+      trigger: "架构必要性、替代方案、Red/Blue 攻防或复杂度收敛"
+    - name: "jd-enterprise-project"
+      path: "project-reconstruction-lab/skills/jd-enterprise-project/SKILL.md"
+      trigger: "根据 JD、目标岗位或项目约束推导可实现项目"
 
 runtime_boundary:
   product_runtime_target: "Python-only Microservice Architecture"

@@ -22,7 +22,7 @@
 - 目标会改变业务 API、数据库 Schema、依赖、安全边界或 Target→Current 语义时，先停在设计和验证。
 - 发现未提交资产、未进入 main 的 Commit 或未归属文件时，默认保留，不用数量或磁盘占用作为删除理由。
 - 需要旧兼容入口才能通过测试时，迁移调用方或重写测试，不恢复旧 Canonical facade。
-- 当前 Lab 只有 `WORKFLOW.md` 和三个可导出 Skill；没有 active Round。未得到用户明确授权前，不得创建 Session、Question Set、Candidate Branch 或新的架构修改。
+- 当前 Lab 只有 `WORKFLOW.md` 和三个仓库内本地 Skill；它们通过 `.agent/system.yaml` 注册，任务匹配时直接读取，不自动导出。没有 active Round。未得到用户明确授权前，不得创建 Session、Question Set、Candidate Branch 或新的架构修改。
 
 ## 基本流程
 

@@ -55,4 +55,5 @@ READY 状态自动启动。只有通过用户 Architecture Gate 后，才可以�
 当前 `IMPLEMENTATION-EVIDENCE-CYCLE-001` 是独立 Evidence Track，不是 Architecture Review 的自动
 前置条件。Red/Blue 当前只读取 `project-reconstruction-lab/WORKFLOW.md`；历史 Round 读取
 `docs/history/red-blue/README.md`，旧协议通过 Git history 追溯。没有用户明确授权前，不创建 Session、
-题集或 Candidate。
+题集或 Candidate。任务匹配时，按 `.agent/system.yaml` 的 `local_skill_registry` 直接读取
+`project-reconstruction-lab/skills/*/SKILL.md`；这一步不需要全局安装或导出。

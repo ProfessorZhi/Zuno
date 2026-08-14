@@ -67,6 +67,16 @@ def verify(root: Path = ROOT) -> list[str]:
                 if section not in content:
                     errors.append(f"{name}/SKILL.md missing {section}")
 
+    system_yaml = root / ".agent/system.yaml"
+    if system_yaml.exists():
+        system_content = system_yaml.read_text(encoding="utf-8")
+        if "mode: \"REPOSITORY_LOCAL_NOT_EXPORTED\"" not in system_content:
+            errors.append("system.yaml must declare repository-local, non-exported Skill mode")
+        for name in SKILLS:
+            expected = f"project-reconstruction-lab/skills/{name}/SKILL.md"
+            if expected not in system_content:
+                errors.append(f"system.yaml missing local Skill registration: {name}")
+
     archive = root / "docs/history/red-blue"
     archive_files = sorted(archive.glob("*.md"))
     if not (archive / "README.md").exists():
