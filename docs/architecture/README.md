@@ -37,7 +37,7 @@ Security 和验证要求。最后按问题进入 `../facts/`、`../modules/`、A
 - 本目录不记录项目事实和状态；这些内容统一在 `../facts/`。
 - 本目录不记录当前运行证据；可复现证据在 `../evidence/`。
 - 本目录不记录实施计划、Program、Ownership Matrix 或 ADR；这些分别进入 `.agent/programs/`、`docs/governance/` 和 `docs/decisions/`。
-- 旧专题和 11 模块不再作为平行 Canonical；归档位置见 [`../history/superseded-document-taxonomy/README.md`](../history/superseded-document-taxonomy/README.md)。
+- 旧专题和 11 模块不再作为平行 Canonical；Red/Blue 过程归档见 [`../history/red-blue/README.md`](../history/red-blue/README.md)，旧材料由 Git 历史保留。
 
 ## 维护
 

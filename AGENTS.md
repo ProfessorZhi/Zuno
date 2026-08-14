@@ -89,17 +89,17 @@ docs/architecture/
 ### Canonical 项目知识
 
 - `docs/README.md`：项目知识总入口。
-- `docs/facts/`：今天仍然有效的项目上下文和 Current 状态；它不承载 Target。历史背景、团队、开发、事件、交付和技术演进材料进入 `docs/history/`；未知信息必须明确标记，不得由红蓝工作区候选直接升级为事实。
+- `docs/facts/`：已恢复且今天仍然有效的项目背景、需求、开发、团队、交付和技术现实；它不承载 Target。未知信息必须明确标记，不得由红蓝工作区候选直接升级为事实。
 - `docs/architecture/`：跨 Product、Domain、Logical Capability、Physical Service/Deployment 的总体架构四文件。
 - `docs/modules/`：当前仅保留 README，不能把旧 11 模块目录自动恢复为当前模块设计。
-- `docs/history/interview-qa/`：旧一轮面试和红队验证的派生材料，不拥有新的事实或架构语义。
-- 旧专题和旧 11 模块原稿位于 `docs/history/superseded-document-taxonomy/`，只保留为历史材料。
+- `docs/history/red-blue/`：正式 Red/Blue Round 的不可变历史归档；不作为 Active Protocol 或架构事实源。
+- 旧 interview QA、专题和 11 模块原稿已退出 current tree，由 Git 历史保留，不是 active route。
 
 模块文档可以很详细，但必须服从总架构的 Owner 边界，不得把 Target 冒充为 Current。Agent Core Target 文档不承载 Current Baseline、实现 Phase、Cutover 或具体迁移计划；这些内容必须进入 `.agent/programs/`。
 
 ### 状态、决策和治理
 
-- `docs/facts/current-state.md`：Current、Gap、Measurement Blocked 和 Production Readiness；Target 由 `docs/architecture/` 负责。
+- `docs/facts/`：项目事实、UNKNOWN 和历史边界；Current 运行与 Production Readiness 由 `docs/evidence/` 负责，Target 由 `docs/architecture/` 负责。
 - `docs/decisions/`：正式 ADR。
 - `docs/governance/`：Repository Ownership、文档治理和工程边界。
 - `docs/evidence/`：代码、测试、Trace、Eval 和可复现运行证据。
@@ -123,9 +123,9 @@ docs/architecture/
 
 1. 更新对应 `docs/architecture/`、`docs/modules/` 或其他明确 Owner 文档；
 2. `docs/` 是架构和模块的唯一正式事实源，不维护 `.agent` 镜像；
-3. 更新 `docs/facts/current-state.md` 只能写已经由实现和证据证明的 Current 变化；
+3. 更新 `docs/evidence/` 只能写已经由实现和证据证明的 Current 变化；
 4. 更新测试和验证器；
-5. Agent Core 变更运行 `python tools/scripts/verify_agent_core_target_protocols.py`。
+5. Agent Core 变更运行对应的 Runtime/Contract verifier；已退出 current tree 的旧专题 Target verifier 不再恢复。
 
 总架构 Markdown 必须比展示配对更充实；展示配对只用于图形理解。图数量由读者问题决定，不以旧模块数量或固定图数证明完整性。
 
@@ -151,7 +151,7 @@ docs/architecture/
 5. `docs/architecture/architecture.html`
 6. `docs/README.md` 的 Canonical Questions
 7. `docs/architecture/`、`docs/facts/` 或 `docs/modules/`
-8. `docs/facts/current-state.md`
+8. `docs/evidence/README.md`
 9. `.agent/README.md`
 10. `.agent/system.yaml`
 11. `.agent/references/current-program.md`
@@ -173,7 +173,7 @@ Agent Runtime 任务必须读取 `docs/architecture/architecture.md`、`docs/fac
 
 - 范围不清楚 → `.agent/references/task-routing.md` 的只读审计路由。
 - 文档、`.agent`、History、README → `.agent/references/workflow.md` 的文档维护流程。
-  - 项目事实、历史恢复、落地真实性、个人贡献或架构红蓝队 → `project-reconstruction-lab/README.md`、`WORKFLOW.md`；只有用户或上层 Coordinator 明确指定 Skill 名称时，才读取对应 `skills/*/SKILL.md`。正式 Round 读取 `docs/history/red-blue/`。
+  - 项目事实、历史恢复、落地真实性、个人贡献或架构红蓝队 → `docs/facts/`、`project-reconstruction-lab/README.md`、`WORKFLOW.md`；只有用户或上层 Coordinator 明确指定 Skill 名称时，才读取对应 `skills/*/SKILL.md`。正式 Round 读取 `docs/history/red-blue/`。
 - 目录移动、删除、归档、忽略规则和缓存清理 → 仓库卫生流程。
 - `apps/web` → `apps/web/AGENTS.md` 和 `.agent/references/code-map.md`。
 - `src/backend/zuno/agent/**` → `docs/architecture/architecture.md`、facts、ADR、evidence。
@@ -227,13 +227,11 @@ git diff --check
 python tools/agent/render_architecture.py --check
 python tools/scripts/verify_docs_entrypoints.py
 python tools/scripts/verify_deep_dive_architecture.py
-python tools/scripts/verify_architecture_interview_qa.py
 python tools/scripts/verify_markdown_internal_links.py
 python tools/scripts/verify_repo_structure.py
-python tools/scripts/verify_agent_core_target_protocols.py
 python .agent/scripts/verify_agent_system.py
 python .agent/scripts/verify_doc_boundaries.py
-pytest -q tests/repo/test_docs_entrypoints.py tests/repo/test_agent_core_target_protocols.py -p no:cacheprovider
+pytest -q tests/repo/test_docs_entrypoints.py -p no:cacheprovider
 ```
 
 ## Agent Workflow Self-Maintenance
@@ -246,7 +244,7 @@ pytest -q tests/repo/test_docs_entrypoints.py tests/repo/test_agent_core_target_
 - `.agent/templates/*`
 - `.agent/programs/*`
 - `docs/architecture/*`
-- `docs/facts/*`, `docs/architecture/*`, `docs/modules/*`, `docs/history/interview-qa/*`
+- `docs/facts/*`, `docs/architecture/*`, `docs/modules/*`, `docs/evidence/*`, `docs/history/red-blue/*`
 - 对应 Verifier 和 Tests
 
 一次性用户指令不必沉淀；可复用规则、架构治理规则、Codex 执行规则和文档模板规则必须进入相应事实源。

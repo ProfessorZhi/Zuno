@@ -11,23 +11,9 @@ def _files(directory: Path) -> set[str]:
 
 def main() -> int:
     errors: list[str] = []
-    expected_history_front = {
-        "docs/history/README.md",
-        "docs/history/architecture-evolution.md",
-        "docs/history/program-history.md",
-        "docs/history/project-background-history.md",
-        "docs/history/requirements-and-workflows-history.md",
-        "docs/history/team-and-ownership-history.md",
-        "docs/history/development-history.md",
-        "docs/history/incidents-and-improvements.md",
-        "docs/history/delivery-and-usage.md",
-        "docs/history/technology-history.md",
-        "docs/history/production-readiness-baseline.md",
-    }
+    expected_history_front = {"docs/history/README.md"}
     expected_evidence = {
         "docs/evidence/README.md",
-        "docs/evidence/repository-closure.md",
-        "docs/evidence/local-workspace-closure.md",
         "docs/evidence/current-runtime-baseline.md",
         "docs/evidence/current-test-baseline.md",
         "docs/evidence/current-eval-baseline.md",
@@ -45,30 +31,21 @@ def main() -> int:
 
     expected_facts = {
         "docs/facts/README.md",
-        "docs/facts/project-context.md",
-        "docs/facts/current-state.md",
-        "docs/facts/assets/zuno-banner.svg",
+        "docs/facts/project-background.md",
+        "docs/facts/requirements-and-workflows.md",
+        "docs/facts/development-and-evolution.md",
+        "docs/facts/team-and-ownership.md",
+        "docs/facts/delivery-and-feedback.md",
+        "docs/facts/technology-reality.md",
     }
     if _files(ROOT / "docs/facts") != expected_facts:
         errors.append("docs/facts must contain only current fact entrypoints and local assets")
     if _files(ROOT / "docs/modules") != {"docs/modules/README.md"}:
         errors.append("docs/modules must contain only its boundary README")
-    expected_history_interview = {
-        "docs/history/interview-qa/README.md",
-        "docs/history/interview-qa/architecture-coverage-matrix.md",
-        "docs/history/interview-qa/architecture-gap-report.md",
-        "docs/history/interview-qa/deep-dive-chains.md",
-        "docs/history/interview-qa/question-taxonomy.md",
-        "docs/history/interview-qa/source-audit.md",
-        "docs/history/interview-qa/zuno-agent-core-qa.md",
-        "docs/history/interview-qa/zuno-agentic-graphrag-qa.md",
-        "docs/history/interview-qa/zuno-cross-module-system-design-qa.md",
-        "docs/history/interview-qa/zuno-memory-context-qa.md",
-        "docs/history/interview-qa/zuno-memory-information-extraction-qa.md",
-        "docs/history/interview-qa/zuno-tool-mcp-security-qa.md",
-    }
-    if _files(ROOT / "docs/history/interview-qa") != expected_history_interview:
-        errors.append("docs/history/interview-qa must contain the approved historical interview files")
+    if (ROOT / "docs/history/interview-qa").exists():
+        errors.append("docs/history/interview-qa must be absent; Git history owns retired interview material")
+    if (ROOT / "docs/history/superseded-document-taxonomy").exists():
+        errors.append("docs/history/superseded-document-taxonomy must be absent; no active taxonomy archive")
     for directory in ("product", "domain", "agents", "knowledge", "services", "data", "security", "eval", "deployment"):
         if (ROOT / "docs" / directory).exists():
             errors.append(f"old docs/{directory} topic path must be absent")

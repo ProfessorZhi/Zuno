@@ -31,10 +31,14 @@ def test_architecture_directories_only_contain_support_files() -> None:
 
 
 def test_legacy_documents_are_archived_and_not_active() -> None:
-    assert (REPO_ROOT / "docs/facts/project-context.md").exists()
-    assert (REPO_ROOT / "docs/facts/current-state.md").exists()
+    assert (REPO_ROOT / "docs/facts/project-background.md").exists()
+    assert (REPO_ROOT / "docs/facts/requirements-and-workflows.md").exists()
+    assert (REPO_ROOT / "docs/facts/development-and-evolution.md").exists()
+    assert (REPO_ROOT / "docs/facts/team-and-ownership.md").exists()
+    assert (REPO_ROOT / "docs/facts/delivery-and-feedback.md").exists()
+    assert (REPO_ROOT / "docs/facts/technology-reality.md").exists()
     assert (REPO_ROOT / "docs/modules/README.md").exists()
-    assert (REPO_ROOT / "docs/history/superseded-document-taxonomy/README.md").exists()
+    assert (REPO_ROOT / "docs/history/red-blue/README.md").exists()
     assert (REPO_ROOT / "docs/architecture/architecture.md").exists()
     assert (REPO_ROOT / "docs/architecture/architecture.html").exists()
 
@@ -65,7 +69,7 @@ def test_architecture_html_routes_to_text_taxonomy_and_status() -> None:
     renderer = _load_render_architecture()
     html = (REPO_ROOT / "docs/architecture/architecture.html").read_text(encoding="utf-8")
     assert renderer.validate_html(html) == []
-    for phrase in ["./architecture.md", "../history/README.md", "./architecture.md#target-status-boundary", "../evidence/README.md", "../facts/current-state.md", "./architecture-views.md"]:
+    for phrase in ["./architecture.md", "../history/README.md", "./architecture.md#target-status-boundary", "../evidence/README.md", "./architecture-views.md"]:
         assert phrase in html
 
 

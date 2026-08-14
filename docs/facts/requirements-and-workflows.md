@@ -1,9 +1,9 @@
 # 历史需求与业务流程恢复
 
-status: canonical-history
+status: current-fact
 canonical_question: 历史项目真实面对什么业务问题和人工流程？
-owner: Project History Owner / Business Context
-replaces: 旧事实目录中的需求与流程候选
+owner: Project Facts Owner / Business Context
+source_boundary: 已确认历史锚点与重建候选严格分离
 
 > 本文件把历史事实、架构重建候选和未知事项分开。当前 Target 的 Domain Model、Evidence Requirement、Agent Runtime 或 GraphRAG 不能反向证明历史甲方当时提出过同样的要求。
 
@@ -63,4 +63,4 @@ Target 需要验证的不是“是否堆更多 Agent”，而是高风险法律�
 
 优先寻找法院 QA、客户演示材料、页面截图、会议记录、任务记录和真实失败案例。若只能确认“类似流程”，保持 `RECONSTRUCTED_CANDIDATE`；不要因为架构文档已经定义了 Matter、Evidence 或 Finding，就把这些对象倒灌成历史需求。
 
-Target 产品问题和 A/B/C Kill Test 由 [`../architecture/architecture.md`](../architecture/architecture.md) 负责；当前代码证据由 [`../facts/current-state.md`](../facts/current-state.md) 和 [`../evidence/README.md`](../evidence/README.md) 负责。
+Target 产品问题和 A/B/C Kill Test 由 [`../architecture/architecture.md`](../architecture/architecture.md) 负责；当前代码证据由 [`../evidence/README.md`](../evidence/README.md) 负责。

@@ -48,7 +48,7 @@ def test_agent_entrypoint_routes_to_current_sources() -> None:
     for path in (
         "docs/architecture/architecture.md",
         "docs/history/",
-        "docs/facts/current-state.md",
+        "docs/evidence/README.md",
         ".agent/system.yaml",
         ".agent/references/current-program.md",
         ".agent/references/workflow.md",

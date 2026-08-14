@@ -64,14 +64,14 @@ architecture_directory_contract:
     - "docs/facts/"
     - "docs/architecture/"
     - "docs/modules/"
-  legacy_taxonomy: "docs/history/superseded-document-taxonomy/ contains former facts, topic and module materials; it is not an active route"
+  legacy_taxonomy: "Former interview, topic and 11-module materials are owned by Git history; no legacy taxonomy is an active route"
   no_mirror_rule: "do not create a second Service/Domain/State registry in .agent or the Lab"
 
 canonical_ownership:
   project_facts_owner: "docs/facts/"
-  current_reality_owner: "docs/facts/current-state.md"
+  current_reality_owner: "docs/evidence/README.md"
   target_status_owner: "docs/architecture/architecture.md"
-  production_readiness_owner: "docs/facts/current-state.md"
+  production_readiness_owner: "docs/evidence/README.md"
   cross_layer_architecture_owner: "docs/architecture/architecture.md"
   architecture_views_owner: "docs/architecture/architecture-views.md and architecture.html"
   evidence_owner: "docs/evidence/"

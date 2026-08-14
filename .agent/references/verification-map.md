@@ -6,7 +6,6 @@
 git diff --check
 python tools/scripts/verify_docs_entrypoints.py
 python tools/scripts/verify_deep_dive_architecture.py
-python tools/scripts/verify_architecture_interview_qa.py
 python tools/scripts/verify_markdown_internal_links.py
 python tools/scripts/verify_repo_structure.py
 python tools/scripts/verify_architecture_interview_program.py
@@ -32,7 +31,6 @@ python tools/agent/render_architecture.py --check
 python tools/scripts/verify_architecture_document_set.py
 python tools/scripts/verify_architecture_writing_standard.py
 python tools/scripts/verify_architecture_human_readability.py
-python tools/scripts/verify_agent_core_target_protocols.py
 ```
 
 专题变更再运行对应专题 verifier；旧 11 模块 verifier 不得把 Superseded 文档重新升级为 Canonical。验证器只检查架构不变量，不把目标文档存在当作完成证据。
@@ -48,7 +46,6 @@ python -m compileall -q src/backend/zuno
 
 ```powershell
 pytest -q tests/api/test_product_artifact_service.py tests/api/test_product_runtime_batch.py -p no:cacheprovider
-python tools/scripts/verify_product_surface_target_protocols.py
 python tools/scripts/verify_product_runtime_batch.py
 ```
 

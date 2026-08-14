@@ -1,5 +1,10 @@
 # Technology Reality
 
+status: current-fact
+canonical_question: 历史项目和当前仓库分别能证明哪些技术事实？
+owner: Project Facts Owner / Technology Reality
+source_boundary: 历史使用、用户参与、仓库证据和 Target-only 内容分开
+
 本文件回答：历史项目实际使用了什么？必须把用户个人参与、团队使用、框架提供、当前仓库表面和新 Target 分开。
 
 ## Historical Technology Reality Matrix
@@ -65,4 +70,4 @@ Domain-aware Runtime
 
 ## 事实 Owner
 
-本文件负责历史技术矩阵和证据边界；具体实现证据进入 [`../evidence/`](../evidence/README.md)，候选解释和下一轮问题进入 [`../../project-reconstruction-lab/WORKFLOW.md`](../../project-reconstruction-lab/WORKFLOW.md) 或由用户另行确认。
+本文件负责历史技术矩阵和证据边界；具体实现证据进入 [`../evidence/`](../evidence/README.md)，候选解释和下一轮问题进入 [`../../project-reconstruction-lab/README.md`](../../project-reconstruction-lab/README.md) 或由用户另行确认。

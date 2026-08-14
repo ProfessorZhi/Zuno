@@ -28,7 +28,7 @@ scope: `docs/architecture/`、`docs/facts/` 与 `docs/modules/`
 | `docs/facts/` | 今天仍然有效的项目上下文和 Current / Production Readiness 有什么证据？ |
 | `docs/architecture/` | Product、Domain、Logical Capability、Physical Service/Deployment 如何形成跨层闭环？ |
 
-`docs/architecture/architecture.md` 只回答跨层集成；`architecture-views.md` 与 `architecture.html` 是展示配对。旧 Product/Domain/Agents/Knowledge/Services/Data/Security/Eval/Deployment 专题和 11 模块原稿位于 `docs/history/superseded-document-taxonomy/`，不再是当前 Canonical 入口。历史上下文和开发过程位于 `docs/history/`，不因它们描述过去就自动成为 Current。
+`docs/architecture/architecture.md` 只回答跨层集成；`architecture-views.md` 与 `architecture.html` 是展示配对。旧 Product/Domain/Agents/Knowledge/Services/Data/Security/Eval/Deployment 专题和 11 模块原稿不再是当前 Canonical 入口；Red/Blue 过程只从 `docs/history/red-blue/` 按需读取。历史上下文和开发过程位于 `docs/facts/`，不因它们描述过去就自动成为 Current。
 
 ## 2. 每份 Canonical Owner 文档的强制双层协议
 
@@ -44,7 +44,7 @@ replaces: ...
 
 `architecture_state` 与 `status` 正交：`ACCEPTED_TARGET` 只表示用户已经接受该设计作为
 下一阶段 Canonical Target，不表示代码已实现、验证、测量或具备生产资格。实现、证据和外部
-资格仍分别由 `Current / Target / Gap`、ADR、Program 和 `docs/facts/current-state.md` 记录。
+资格仍分别由 `Current / Target / Gap`、ADR、Program 和 `docs/evidence/README.md` 记录。
 
 每份 Canonical Owner 文档必须严格、且只能在同一文件中包含以下两个顶层正文部分，顺序固定：
 
@@ -127,7 +127,7 @@ python tools/scripts/verify_docs_entrypoints.py
 python tools/scripts/verify_markdown_internal_links.py
 ```
 
-图只用于解释关系，不取代文字 Canonical Owner；HTML 不得创造图源不存在的新事实。`docs/history/interview-qa/` 是历史 QA/验证语料，不是架构事实源。
+图只用于解释关系，不取代文字 Canonical Owner；HTML 不得创造图源不存在的新事实。历史 QA/验证材料不属于当前架构事实源，应从 Git 历史或项目重建实验室按需查阅。
 
 ## 6. Canonical Rewrite 与过程痕迹边界
 

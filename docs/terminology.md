@@ -2,7 +2,7 @@
 
 ## 用途
 
-保持公开架构术语稳定、简短。详细 Target Contract 放在当前 `docs/architecture/` 正式文档；历史专题和 11 模块原稿位于 `docs/history/superseded-document-taxonomy/`，只作迁移材料。
+保持公开架构术语稳定、简短。详细 Target Contract 放在当前 `docs/architecture/` 正式文档；旧专题和 11 模块原稿已退出当前树，历史 Red/Blue 过程只从 `docs/history/red-blue/` 查阅。
 
 ## 状态标签
 

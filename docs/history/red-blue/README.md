@@ -41,4 +41,4 @@ Semantic Audit 和 Workflow Test 不属于正式 Round，不在这里伪装成 R
 Blue Proposal 不等于 Architecture Decision，Red Finding 不等于已证实事实。正式事实回到
 [`../../facts/`](../../facts/README.md)，正式 Target 回到 [`../../architecture/`](../../architecture/README.md)，
 正式长期架构决定回到 [`../../decisions/`](../../decisions/README.md)。当前工作流和归档导航见
-[`../../../project-reconstruction-lab/WORKFLOW.md`](../../../project-reconstruction-lab/WORKFLOW.md)。
+[`../../../project-reconstruction-lab/README.md`](../../../project-reconstruction-lab/README.md)。

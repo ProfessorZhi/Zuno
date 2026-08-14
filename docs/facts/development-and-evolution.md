@@ -1,9 +1,9 @@
 # 开发演进史
 
-status: canonical-history
+status: current-fact
 canonical_question: 用户加入后，项目如何从已有产品走向 Demo、反馈、测试和 Pilot？
-owner: Project History Owner
-replaces: 旧 `development-evolution.md` 的表格化时间线
+owner: Project Facts Owner
+source_boundary: 用户回忆和项目史锚点；不是 Git Commit Log
 
 > 本文恢复的是工程演进故事，不是 Git Commit Log。已确认事实、用户部分回忆和候选顺序必须分开；没有 Artifact 支持时不创造精确日期。
 
@@ -56,4 +56,4 @@ replaces: 旧 `development-evolution.md` 的表格化时间线
 
 ## 6. 历史与 Target 的边界
 
-当前仓库和新的 Target Architecture 可以帮助规划下一步重构，但不能反推历史项目已经是 Python-only 微服务、完整 Multi-Agent、Agentic GraphRAG 或 Domain-aware Runtime。历史技术矩阵见 [`technology-history.md`](technology-history.md)；新的产品问题与架构假设见 [`../architecture/architecture.md`](../architecture/architecture.md)。
+当前仓库和新的 Target Architecture 可以帮助规划下一步重构，但不能反推历史项目已经是 Python-only 微服务、完整 Multi-Agent、Agentic GraphRAG 或 Domain-aware Runtime。历史技术矩阵见 [`technology-reality.md`](technology-reality.md)；新的产品问题与架构假设见 [`../architecture/architecture.md`](../architecture/architecture.md)。

@@ -1,21 +1,15 @@
-# 历史摘要入口
+# 历史归档入口
 
-这里保存已经发生、已经结束、已经替换或只用于考古的项目材料。它们不能作为当前系统应该如何工作的唯一依据；当前事实以 [`../facts/`](../facts/README.md) 为准，Target 设计以 [`../architecture/`](../architecture/README.md) 为准。
+`docs/history/` 只保存不再决定当前设计的过去材料。项目事实已经归属
+[`../facts/`](../facts/README.md)，当前实现证据归属 [`../evidence/`](../evidence/README.md)，
+Target 设计归属 [`../architecture/`](../architecture/README.md)。被迁移或删除的旧文档仍可从
+Git 提交历史考古，不在当前树维护第二套 Canonical 入口。
 
-- [Architecture Evolution](architecture-evolution.md)
-- [Program History](program-history.md)
-- [Project Background History](project-background-history.md)
-- [Development History](development-history.md)
-- [Requirements and Workflows History](requirements-and-workflows-history.md)
-- [Team and Ownership History](team-and-ownership-history.md)
-- [Incidents and Improvements](incidents-and-improvements.md)
-- [Delivery and Usage](delivery-and-usage.md)
-- [Technology History](technology-history.md)
-- [Production Readiness Baseline](production-readiness-baseline.md)
-- [Interview and Red-Team QA](interview-qa/README.md)
-- [Red / Blue Architecture Rounds](red-blue/README.md)
-- [Superseded Document Taxonomy](superseded-document-taxonomy/README.md)
+## 当前保留
 
-历史摘要不是 Current 运行事实，也不是新的实施授权。它们用于理解演进、审计旧决策和恢复上下文。
-正式 Red / Blue Round 的单文件归档统一由 [`red-blue/`](red-blue/README.md) 持有；项目实验室只
-保留导航和当前 Workflow，不再保存第二份完整 Round。
+唯一保留的文档入口是 [Red / Blue Round Archive](red-blue/README.md)。其中 Round-001 至
+Round-006 的原始归档及其元数据保持不变；它们是流程证据，不是下一代 Active Protocol、事实源
+或架构决策。
+
+`interview-qa/` 和 `superseded-document-taxonomy/` 已退出当前目录。它们的历史内容由 Git
+历史承担，不能被新读者默认遍历，也不能继续成为 verifier 的必需输入。

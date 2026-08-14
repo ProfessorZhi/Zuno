@@ -9,7 +9,7 @@
 如果任务涉及前后端契约迁移、页面边界或仓库布局，还要读：
 
 - `docs/architecture/architecture.html`
-- `docs/facts/current-state.md`
+- `docs/evidence/README.md`
 
 ## Product Surface 规则
 

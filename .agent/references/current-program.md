@@ -62,9 +62,5 @@ Architecture Readability Gate    IN_PROGRESS
 Next Red/Blue Protocol            NOT_DESIGNED
 ```
 
-Canonical Runtime Program V1 已完成并归档。可读历史摘要位于：
-
-- `docs/history/architecture-evolution.md`
-- `docs/history/program-history.md`
-
-完整原始材料不在当前树；需要考古时使用 GitHub commit history。
+Canonical Runtime Program V1 已完成并归档。可读当前状态由 `docs/evidence/README.md` 和
+`.agent/programs/` 维护；旧施工摘要已退出 current tree，需要考古时使用 Git history。

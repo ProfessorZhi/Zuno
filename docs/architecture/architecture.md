@@ -39,9 +39,9 @@ Retry、Recovery、Security 和 Eval。理解顺序由架构问题决定，而�
 
 ### 2. 历史事实、当前仓库和 Target 不是一条时间线
 
-历史项目来自智慧司法研发背景，曾有内部 Demo、客户侧 Demo、法院侧测试和 Pilot Validation，但尚未正式生产；客户明确反馈过回答质量需要提高。今天仍用于理解产品边界的上下文见 [`../facts/project-context.md`](../facts/project-context.md)，完整历史过程进入 [`../history/`](../history/README.md)。
+历史项目来自智慧司法研发背景，曾有内部 Demo、客户侧 Demo、法院侧测试和 Pilot Validation，但尚未正式生产；客户明确反馈过回答质量需要提高。今天仍用于理解产品边界的上下文见 [`../facts/project-background.md`](../facts/project-background.md)，完整历史过程进入 [`../history/`](../history/README.md)。
 
-当前 main 能证明 Python / FastAPI、PostgreSQL Migration、Compose、Agent / Knowledge / Memory / Tool 等代码或配置表面，但不能证明这些组件曾在历史客户环境同时运行，也不能证明用户本人负责全部能力，详见 [`../facts/current-state.md`](../facts/current-state.md)。
+当前 main 能证明 Python / FastAPI、PostgreSQL Migration、Compose、Agent / Knowledge / Memory / Tool 等代码或配置表面，但不能证明这些组件曾在历史客户环境同时运行，也不能证明用户本人负责全部能力，详见 [`../evidence/README.md`](../evidence/README.md)。
 
 本文以下内容都是 Target 或待测假设，不是历史项目回溯。
 

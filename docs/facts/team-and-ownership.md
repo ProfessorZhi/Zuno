@@ -1,9 +1,9 @@
 # 团队与个人 Ownership
 
-status: canonical-history
+status: current-fact
 canonical_question: 历史项目由谁参与，用户本人实际做了什么？
-owner: Project History Owner
-replaces: 旧 team-and-ownership 表格入口
+owner: Project Facts Owner
+source_boundary: 用户确认的个人与团队边界；未知细节不补写
 
 ## 团队事实
 

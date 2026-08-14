@@ -9,10 +9,10 @@
 
 - Owner：Architecture Governance Owner。
 - 依赖：[Project Reconstruction Lab](../../project-reconstruction-lab/README.md)、
-  `docs/architecture/`、`docs/facts/current-state.md` 和相关 ADR。
+  `docs/architecture/`、`docs/evidence/README.md` 和相关 ADR。
 - 本文拥有 Gate 语义；不拥有 Domain、Runtime、Service、Security 或 Eval 的第二套状态机。
-- `docs/history/program-history.md` 保存本次 Gate Realignment 的历史摘要与用户
-  决策包；它不是 Canonical Architecture。
+- `docs/history/red-blue/` 保存正式 Red/Blue Round 的历史摘要；它不是 Canonical
+  Architecture。
 
 ## Severity 与 Closure Class 分离
 

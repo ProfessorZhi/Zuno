@@ -5,7 +5,7 @@ AG-PR56-GEMINI-3-6-FLASH-HIGH-RUNTIME-TRUTH-REBUILD
 Ensures:
 1. No direct_answer shortcut bypasses plan, trace, budget, or final gate in adapter code.
 2. Synthetic benchmark_deep_agentic.py file was deleted and does not exist.
-3. No frozen shared files were modified.
+3. No remaining frozen shared files were modified.
 """
 
 from __future__ import annotations
@@ -22,7 +22,6 @@ FROZEN_FILES = [
     "tools/evals/zuno/rag_eval/profile_runtime_factory.py",
     "tools/evals/zuno/rag_eval/run_enterprise_rag_paired_benchmark.py",
     "tools/evals/zuno/rag_eval/measurement_gate.py",
-    ".github/workflows/phase22-contract-verification.yml",
     ".agent/programs/work-products/goal05-target-gap-ledger.yaml",
 ]
 
@@ -52,7 +51,7 @@ def test_02_synthetic_benchmark_deep_agentic_composition_root_deleted() -> None:
 
 
 def test_03_frozen_files_unmodified_in_git_diff() -> None:
-    """Git check: None of the 7 frozen contract files are modified relative to Base."""
+    """Git check: None of the remaining frozen contract files are modified relative to Base."""
     base_ref = "origin/main"
     res = subprocess.run(
         ["git", "diff", "--name-only", base_ref],

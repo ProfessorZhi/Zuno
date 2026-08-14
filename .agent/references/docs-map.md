@@ -1,58 +1,40 @@
-# 文档同步 Skill
+# Zuno 文档地图
 
-当任务触碰 `docs/`、`.agent/`、`AGENTS.md`、README、架构、状态、ADR、治理或术语边界时使用。
+本文只提供导航，不拥有架构或事实语义。项目文档按 Owner 和问题分层；不要把目录结构当成
+服务、模块或团队的一一映射。
 
-## 唯一正式入口
-
-```text
-docs/architecture/ = 总体架构四文件
-docs/facts/      = 今天仍然有效的项目上下文、Current、UNKNOWN 与 Production Readiness
-docs/modules/    = 模块设计占位，边界尚未冻结
-docs/decisions/            = ADR
-docs/governance/           = Owner、写作和门禁治理
-docs/evidence/             = 可复现 Current 证据
-docs/history/              = 批准历史和 Superseded 原稿
-```
-
-旧专题和旧 11 模块原稿已迁入 `docs/history/superseded-document-taxonomy/`，不再是 active route。`project-reconstruction-lab/` 只保留轻量 Workflow、三个 Skill 和 Round 导航，不拥有正式架构事实；正式 Round 由 `docs/history/red-blue/` 持有。
-
-## 正式阅读顺序
+## 正式层
 
 ```text
-项目介绍： docs/facts/project-context.md → docs/history/（需要回顾时）
-架构：     docs/architecture/architecture.md → ADR/governance → facts/evidence
-工程：     architecture → facts/current-state.md → code/evidence
-面试：     facts/project-context.md → history/团队与开发材料 → architecture
+docs/facts/           项目背景、需求、开发、团队、交付和技术现实
+docs/evidence/        当前代码、测试、运行和评测证据
+docs/architecture/    总体 Target Architecture 四文件
+docs/modules/         当前仅有边界 README，模块设计尚未冻结
+docs/decisions/       ADR
+docs/governance/      Owner、写作和工程治理
+docs/history/red-blue/不可变 Red/Blue Round 归档
 ```
 
-`Current` 必须有代码、Migration、Test、Trace 或 Eval 证据；Target/Hypothesis 不得偷换成 Current。逻辑能力、服务、Worker、进程、容器、数据库和团队不做一一映射。
+## 阅读路径
+
+```text
+项目现实：facts/README → project-background → requirements-and-workflows
+          → development-and-evolution → team-and-ownership
+架构：    facts/ → evidence/ → architecture/ → decisions/governance
+当前实现：evidence/ → 代码、Migration、测试和可复现运行材料
+历史攻防：history/red-blue/（按需；不默认遍历）
+```
 
 ## Canonical ownership
 
 | 问题 | Owner |
 | --- | --- |
-| 今天仍然有效的项目上下文 | `docs/facts/project-context.md` |
-| 历史项目发生了什么 | `docs/history/` |
-| 当前仓库被什么证明 | `docs/facts/current-state.md` |
-| Target 处于什么状态 | `docs/architecture/architecture.md` |
-| 生产是否已证明 | `docs/facts/current-state.md` |
-| 跨层架构为什么这样设计 | `docs/architecture/architecture.md` |
-| 图形如何展示 | `architecture-views.md` + `architecture.html` |
-| 可复现证据 | `docs/evidence/` |
+| 项目从哪里来、需求和开发如何恢复 | `docs/facts/` |
+| 当前仓库和交付状态被什么证明 | `docs/evidence/` |
+| Target 为什么这样设计 | `docs/architecture/architecture.md` |
+| 图形如何展示 | `docs/architecture/architecture-views.md` + `architecture.html` |
+| 长期设计决策 | `docs/decisions/` |
+| Red/Blue 历史过程 | `docs/history/red-blue/` |
+| Agent 导航和执行规则 | `.agent/` |
 
-## Focused verification
-
-```powershell
-git diff --check
-python tools/scripts/verify_architecture_document_set.py
-python tools/agent/render_architecture.py --check
-python tools/scripts/verify_docs_entrypoints.py
-python tools/scripts/verify_markdown_internal_links.py
-python tools/scripts/verify_repo_structure.py
-python tools/scripts/verify_architecture_writing_standard.py
-python tools/scripts/verify_architecture_human_readability.py
-python .agent/scripts/verify_agent_system.py
-python .agent/scripts/verify_doc_boundaries.py
-```
-
-项目重建与 Red/Blue 任务另读 `project-reconstruction-lab/README.md` 和 `WORKFLOW.md`；只有显式调用时才读取对应 Skill。历史 Round 按需读取 `docs/history/red-blue/`，不再读取 Lab Session 目录。
+历史删除的 interview QA、旧专题和 11 模块原稿不再是 active route；需要考古时使用 Git history。

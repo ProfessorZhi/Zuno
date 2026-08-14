@@ -53,7 +53,7 @@ README 同时展示 Current 和 Target，但二者不能混为一谈。
 | Evidence-Driven Agentic GraphRAG v2 | `accepted-target`，设计可用；Claim-level Evidence Deliberation、Evidence Reasoning Graph 和 Targeted Probe 尚不能声明为 Current |
 | Eval 与发布质量 | 工程收口已完成；固定测量仍为 blocked，quality not yet proven，production readiness not established |
 
-正式状态事实以 [`docs/facts/current-state.md`](./docs/facts/current-state.md)、最新代码、Migration、测试、Trace、Eval 和 Evidence 为准。README、类名、表名、Phase 名称或架构图本身都不能证明 Target 已实现。
+正式状态事实以 [`docs/evidence/README.md`](./docs/evidence/README.md)、最新代码、Migration、测试、Trace、Eval 和 Evidence 为准；项目历史背景以 [`docs/facts/README.md`](./docs/facts/README.md) 为准。README、类名、表名、Phase 名称或架构图本身都不能证明 Target 已实现。
 
 ## 四组架构总览
 
@@ -480,9 +480,9 @@ Object upload success != Artifact published
 - [总体 Target 架构](./docs/architecture/architecture.md)
 - [架构视图 HTML](./docs/architecture/architecture.html)
 - [历史项目入口](./docs/facts/README.md)
-- [Current Repository Reality](./docs/facts/current-state.md)
+- [Current Repository Reality](./docs/evidence/README.md)
 - [Target Status](./docs/architecture/architecture.md)
-- [Production Readiness 状态](./docs/facts/current-state.md)
+- [Production Readiness 状态](./docs/evidence/README.md)
 - [Evidence-Driven Agentic GraphRAG ADR](./docs/decisions/0006-evidence-driven-agentic-graphrag.md)
 - [架构决策](./docs/decisions/README.md)
 - [Repository Ownership Matrix](./docs/governance/repo-ownership-matrix.md)
@@ -490,7 +490,7 @@ Object upload success != Artifact published
 - [当前证据入口](./docs/evidence/README.md)
 - [历史归档入口](./docs/history/README.md)
 
-旧的 11 Logical Modules 已迁入 [`docs/history/superseded-document-taxonomy/`](./docs/history/superseded-document-taxonomy/README.md)，仅供历史审计，不代表当前模块数、服务数或 Runtime 边界。
+旧的 11 Logical Modules 不再是当前文档入口；历史 Red/Blue 过程见 [`docs/history/red-blue/`](./docs/history/red-blue/README.md)，不代表当前模块数、服务数或 Runtime 边界。
 
 ## Program 状态
 

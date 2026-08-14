@@ -115,7 +115,7 @@ def validate_html(content: str) -> list[str]:
     required = [
         "Zuno Target Architecture", '<script type="module">', 'fetch("./architecture-views.md")',
         MERMAID_MODULE_URL, "../facts/README.md", "./architecture.md#target-status-boundary",
-        "../evidence/README.md", "../facts/current-state.md", "diagram-dialog", "Mermaid source",
+        "../evidence/README.md", "diagram-dialog", "Mermaid source",
     ]
     errors = [f"architecture.html missing marker: {marker}" for marker in required if marker not in content]
     if "offline-svg" in content or "offline-diagram" in content:
@@ -139,15 +139,14 @@ def validate_taxonomy() -> list[str]:
     for relative_path in (
         "docs/README.md",
         "docs/facts/README.md",
-        "docs/facts/current-state.md",
         "docs/architecture/architecture.md",
-        "docs/facts/current-state.md",
+        "docs/evidence/README.md",
     ):
         if not (REPO_ROOT / relative_path).exists():
             errors.append(f"missing canonical project entrypoint: {relative_path}")
-    archive = REPO_ROOT / "docs/history/superseded-document-taxonomy/README.md"
+    archive = REPO_ROOT / "docs/history/red-blue/README.md"
     if not archive.exists():
-        errors.append("missing Superseded document taxonomy archive README")
+        errors.append("missing Red/Blue history archive README")
     return errors
 
 

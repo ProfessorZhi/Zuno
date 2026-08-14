@@ -28,11 +28,13 @@ def verify() -> list[str]:
     errors = list(load_links().verify())
     required = [
         "README.md", "docs/README.md", "docs/facts/README.md",
-        "docs/facts/project-context.md", "docs/facts/current-state.md",
-        "docs/modules/README.md", "docs/history/README.md",
-        "docs/history/superseded-document-taxonomy/README.md",
-        "docs/architecture/README.md", "docs/architecture/architecture.md",
-        "docs/architecture/architecture-views.md", "docs/architecture/architecture.html", "docs/decisions/README.md",
+        "docs/facts/project-background.md", "docs/facts/requirements-and-workflows.md",
+        "docs/facts/development-and-evolution.md", "docs/facts/team-and-ownership.md",
+        "docs/facts/delivery-and-feedback.md", "docs/facts/technology-reality.md",
+        "docs/evidence/README.md", "docs/modules/README.md", "docs/history/README.md",
+        "docs/history/red-blue/README.md", "docs/architecture/README.md",
+        "docs/architecture/architecture.md", "docs/architecture/architecture-views.md",
+        "docs/architecture/architecture.html", "docs/decisions/README.md",
         "docs/governance/repo-ownership-matrix.md", ".agent/references/docs-map.md", ".agent/system.yaml",
     ]
     for path in required:
@@ -48,9 +50,7 @@ def verify() -> list[str]:
             errors.append(f"documentation mirror must not exist: {mirror.relative_to(REPO_ROOT)}")
 
     index = read("docs/README.md")
-    docs_readme = read("docs/README.md")
-    system = read(".agent/system.yaml")
-    for marker in ("Current", "Target", "HYPOTHESIS", "HISTORY", "facts/", "architecture/"):
+    for marker in ("Current", "Target", "HYPOTHESIS", "HISTORY", "facts/", "architecture/", "evidence/"):
         if marker not in index:
             errors.append(f"docs/README.md missing status/architecture marker: {marker}")
     return errors
