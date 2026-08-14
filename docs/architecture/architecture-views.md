@@ -1,6 +1,6 @@
 # Zuno Architecture Visual Atlas Source
 
-本图源展示 Python-only Target、模块化 Backend + Worker 默认起点、Evidence-gated Physical Service Split、FastAPI Application Interface、LangGraph orchestration provider、EvidenceRequirement、ConflictProposal、PostgreSQL Domain State 和 Runtime Checkpoint 的边界；这些图不把 Target 伪装成 Current。
+本图源展示 Python-only Target、模块化 Backend + Worker 默认起点、Evidence-gated Physical Service Split、Research → Capability → Domain Result、Native / Embedded Product Mode、FastAPI Application Interface、LangGraph orchestration provider、EvidenceRequirement、ConflictProposal、PostgreSQL Domain State 和 Runtime Checkpoint 的边界；这些图不把 Target 伪装成 Current。
 
 updated: 2026-08-14
 status: normative-target-visual-source
@@ -28,7 +28,7 @@ canonical_taxonomy_source: `docs/README.md` and `docs/decisions/0011-architectur
 
 ```mermaid
 flowchart LR
-  USER[律师 / 法官 / 专业用户] --> SURFACE[Zuno Web / Desktop / WorkBuddy / MCP Client]
+  USER[律师 / 法官 / 专业用户] --> SURFACE[Zuno Workbench / WorkBuddy / Dify / Court Host]
   SURFACE --> EDGE[Host / API Boundary]
   EDGE --> DOMAIN[Zuno Legal Backend / Domain Owner]
   DOMAIN --> WORK[Review / Finding / WorkProduct]
@@ -75,7 +75,8 @@ flowchart TB
 
 ```mermaid
 flowchart LR
-  CONTRACT[Canonical Contract]
+  RESEARCH[Research Artifact] --> CAP[Domain Capability]
+  CAP --> CONTRACT[Canonical Contract]
   PROVIDER[Local / LLM / OSS / API / MCP Provider]
   PROPOSAL[Proposal / Candidate / Observation / Reference / Receipt]
   OWNER[Canonical Owner]

@@ -3,6 +3,8 @@
 updated: 2026-08-14
 status: normative-target
 architecture_state: ACCEPTED_TARGET_WITH_OPEN_EVIDENCE
+target_product_thesis_state: TARGET_HYPOTHESIS_PENDING_RED_TEAM
+competitor_baseline_as_of: 2026-08
 canonical_question: Zuno 为什么存在，Target Product、Domain、Capability、Runtime、Service、Data、Security 和 Eval 如何形成可反转的闭环？
 owner: Cross-cutting Architecture Owner
 acceptance_scope: Target Architecture baseline；实现、测量和外部资格尚未完成
@@ -35,7 +37,21 @@ Retry、Recovery、Security 和 Eval。理解顺序由架构问题决定，而�
 
 > 在高风险法律任务中，Legal Domain State、Evidence Dependency、Versioned Finding、Citation、Human Decision、Staleness、Controlled Side Effect 和 Legal Evaluation，是否会比通用 Host 单独编排产生可测量的质量、效率或可验证性收益？
 
-如果 A/B/C Benchmark 不能证明收益，对应自研复杂度就不应保留。
+当前状态是 `TARGET_HYPOTHESIS_PENDING_RED_TEAM`，不是 `PROVEN_DIFFERENTIATION`、`PRODUCTION_READY` 或 `MEASURED_ADVANTAGE`。如果 A/B/C Benchmark、Generic Host Integration Spike、真实专家验证和领域 Eval 不能证明收益，对应自研复杂度就不应保留。
+
+### 1.1 Target User Pain Model
+
+Zuno Target 假设要解决的不是抽象的“企业需要 AI”，而是专业人员在高风险法律任务中反复遇到的具体问题：
+
+1. 案件和司法材料数量大，阅读、定位和核对成本高；
+2. 关键事实散落在多份材料中，普通摘要可能遗漏跨文档关系；
+3. 不同当事人的陈述可能表达同一事件，但内容存在冲突，需要事件对齐而不是普通相似度；
+4. 法律检索不仅要判断文本是否相关，还要判断 jurisdiction、version、authority 和 applicability；
+5. LLM / RAG 仍可能产生错误引用、错误适用和推理错误，专业人员必须能够检查依据；
+6. 单项论文算法进入法院业务系统时，还要解决输入输出 Contract、版本、权限、Fallback、Eval 和运行治理；
+7. 法院已有信息系统，甲方通常更需要可嵌入的领域能力，而不是为了一个 AI 功能推倒重建现有平台。
+
+这些是 `TARGET_ONLY` 的领域问题模型，受到 [`docs/facts/requirements-and-workflows.md`](../facts/requirements-and-workflows.md) 中公开研究上下文的启发，不是历史客户原始需求或 Zuno 已测量的用户痛点。
 
 ### 2. 历史事实、当前仓库和 Target 不是一条时间线
 
@@ -71,6 +87,26 @@ User / Generic Host submits task
 
 这条流程把“任务范围”“材料是否可用”“找到材料”“理解法律结构”“结果能否正式提交”分开。上传文档只建立输入，不自动建立可供 Formal Run 使用的完整 Knowledge View。Knowledge 负责材料与证据候选；Legal Intelligence、Memory 和 Tool 只能提供受约束的 Proposal、Context、Observation 或 Effect Receipt；Domain Admission 决定什么可以成为正式业务状态；Runtime 负责执行控制而不是拥有法律事实。`Result Is Eligible for Formal Business Use` 是独立于 `Execution Can Continue` 的资格判断。
 
+#### Target Scenario：案件争议焦点辅助分析
+
+`TARGET SCENARIO`、`INSPIRED BY PUBLIC RESEARCH`、`NOT HISTORICAL SOP`：
+
+```text
+Plaintiff / Defendant materials
+  → Document Version + Knowledge Readiness
+  → Event Extraction Capability
+  → Event Alignment Capability
+  → Conflict Detection Capability
+  → Dispute Candidate
+  → Applicable Law / Similar Case Retrieval
+  → Evidence Sufficiency / Applicability Check
+  → Finding Proposal
+  → Human Review
+  → Versioned WorkProduct
+```
+
+如果新材料改变了依赖关系，系统应将受影响 Finding 标记为 `stale` 或 `review_required`，再启动有边界的重新评估，而不是继续把旧聊天答案当作最新结论。这个场景用于设计和 Benchmark，不能证明历史 Zuno 曾按此流程运行。
+
 `Document Uploaded != Knowledge Ready`。Formal Run 必须知道声明覆盖的材料 Scope、绑定的 Document Version，以及当前 Knowledge View 是否足够覆盖该 Scope。必要材料未 Ready 时，默认等待或拒绝 Formal Run；若产品允许 Partial Run，必须显式缩小 Scope，Partial Knowledge View 不得静默获得 Full Scope Formal Result 的资格。
 
 ### 4. 五层责任视图，不是五个最终模块
@@ -98,19 +134,98 @@ Target 用五层 Architecture Responsibility Layers 解释系统职责，但不�
 
 ### 6. WorkBuddy / Dify 的竞争边界
 
-WorkBuddy、Dify 等通用平台应被视为 Generic Agent Host / Workflow Platform：它们可以负责 Conversation、Agent UI、Model Access、一般 Workflow、Knowledge、Skill、Tool、MCP 和通用编排。本文不声称它们缺少这些能力，也不声称闭源或开源天然更安全。
+截至 2026-08，公开官方资料已经显示 WorkBuddy / CodeBuddy 企业智能体覆盖 Agent Runtime / Session、模型和 System Prompt、Skill、Expert / Expert Team、MCP、Memory、Knowledge Base / RAG、Subagent、沙箱、凭据和 Manifest 等能力；Expert Team 还支持多角色拆解、并行执行和整合交付。见 [WorkBuddy 企业智能体](https://www.workbuddy.cn/docs/workbuddy/From-Beginner-to-Expert-Guide/Function-Description/CloudAgent)、[WorkBuddy 专家中心](https://www.workbuddy.cn/docs/workbuddy/From-Beginner-to-Expert-Guide/Function-Description/Expert-Center) 和 [WorkBuddy MCP 指南](https://www.workbuddy.ai/docs/zh/workbuddy/From-Beginner-to-Expert-Guide/Function-Description/MCP-Guide)。
 
-Zuno Target 要验证的是更窄、更高风险的领域纵深：业务状态是否有唯一 Owner，证据是否足够支撑结论，Finding 是否能随依赖变化而 stale，Human Decision 是否可追溯，外部副作用是否可审计。WorkBuddy 可以作为 Zuno Host；如果 `WorkBuddy + Zuno Legal Backend` 已经达到目标质量和恢复边界，就没有理由为了“拥有平台”保留 Native Runtime。
+Dify 官方文档也已经覆盖 Visual Workflow / 应用编排、Knowledge / Datasource、Agent Strategy、Model、Tool、Extension / HTTP Endpoint、Trigger、Application API 和 Monitoring 等扩展或运营边界；其插件选择文档明确区分 Tool、Model、Agent Strategy、Extension、Datasource 和 Trigger。见 [Dify 插件类型选择](https://docs.dify.ai/en/develop-plugin/getting-started/choose-plugin-type)、[Dify 知识库检索](https://docs.dify.ai/guides/knowledge-base/retrieval) 和 [Dify 产品介绍](https://docs.dify.ai/versions/3-7-x/zh/user-guide/introduction)。上述资料是截至当前检查时间的外部 Baseline，具体版本和部署能力仍需在 Benchmark 前重新核对。
 
-### 7. 四层可验证的 Target Differentiation
+因此，下列能力不能单独作为 Zuno 的核心 Differentiation，而是 `TABLE_STAKES`：
 
-**Evidence Depth**：不仅检索相关文本，还要判断证据是否足够、来源和版本是否可追溯。基础是 BM25 / Dense / Hybrid；Graph 和 Agentic Retrieval 只在 Query Class 和 Evidence Requirement 表明值得时启用。
+```text
+Agent / Multi-Agent
+Knowledge Base / RAG
+Skill / Tool / MCP
+Memory
+Workflow
+Model switching
+通用 Agent UI、Session 和基础编排
+```
 
-**Legal Intelligence**：模型和 Provider 只能产生 Proposal / Candidate / Observation / Reference / Receipt，不能直接提交 FindingVersion。事件对齐、冲突检测、事实—法条对应和适用性分析都必须可替换、可评测。
+Zuno 不需要证明 WorkBuddy / Dify “做不到”这些能力，也不以通用 Host Feature 作为主要竞争维度。Zuno Target 要验证的是更窄、更高风险的 Domain Depth：业务状态是否有唯一 Owner，证据是否足够支撑结论，Finding 是否能随依赖变化而 stale，Human Decision 是否可追溯，外部副作用是否可审计。WorkBuddy 或 Dify 可以作为 Zuno Host；如果 `Generic Host + Zuno Legal Backend` 已经达到目标质量和恢复边界，就没有理由为了“拥有平台”保留 Native Runtime。
 
-**Long-lived Domain State**：法律任务不是一次 Conversation。若 Finding V3 依赖 Evidence A/B/C，新 Evidence D 使依赖冲突，V3 应变为 stale 或 review_required，再产生 Finding V4，而不是继续展示旧结论。
+#### 面向关键追问的 Build / Buy 答案
 
-**Enterprise Trust**：谁能看哪些材料、调用什么 Tool、批准什么动作，必须由 Permission、Security Gate、Approval、Sandbox、Effect Receipt、Audit 和 Human Decision 共同约束。安全优势只有在 Source Audit、No-egress、权限、隔离和副作用测试后才可称为 Evidence。
+- **为什么不是 Dify？** 如果任务只是通用 Workflow、RAG 或 Tool，优先复用 Dify；Zuno 只保留被验证有必要的 Legal Capability、Legal Domain State、Evidence / Applicability、Human Review、Legal Eval 和特殊恢复 / 审计。
+- **为什么不是 WorkBuddy？** WorkBuddy 已覆盖通用 Agent、Expert、Skill、MCP、Memory、Knowledge 和 Subagent；它可以成为 Host。Zuno 的问题不是再造通用 Agent Surface，而是提供 Domain Capability Contract、Legal Evidence Semantics、Persistent Legal State、Domain Admission 和 Legal Evaluation。
+- **为什么要 Agent？** 固定任务如果 Workflow 足够，就使用 Workflow；只有 Evidence 会改变后续步骤、需要动态补证据、能力选择或 Replan 时，才引入受控 Agent Runtime。
+- **为什么 Multi-Agent？** 默认不需要。优先使用 Single Controller + Capability + Step；只有角色真正拥有独立 Context、Permission、Lifecycle、Resource 或并行调查边界时，才升级为 Specialist Agent。
+- **为什么不直接把论文模型包装成 API？** API 只解决“能调用”，真实产品还要解决版本、适用任务、权限、输入输出 Contract、可用性、Fallback、Eval、Trace、Evidence 和 Human Review，因此需要 Capability Governance。
+
+### 7. 六个可验证的 Target Differentiation
+
+这些不是已经证明的产品优势，而是 `TARGET_HYPOTHESIS_PENDING_RED_TEAM` 下需要由真实任务、专家验证和 A/B/C Benchmark 证伪或收敛的六个候选方向。
+
+#### A. RESEARCH-TO-CAPABILITY
+
+科研成果不是论文列表，而是候选能力的来源：
+
+```text
+Research Artifact
+  → Domain Capability
+  → Versioned Provider
+  → Provider Conformance / Legal Eval
+  → Agent / Skill Availability
+```
+
+候选能力可以包括 Event Extraction、Event Alignment、Conflict Detection、Dispute Identification、Evidence Chain、Legal Element Extraction、Fact–Article Mapping、Statute Recommendation 和 Similar Case Retrieval。具体 Provider 必须可替换；论文、专利和 Research Prototype 不是 Runtime Object，也不能直接成为 Canonical Domain State。
+
+#### B. LEGAL EVIDENCE & APPLICABILITY
+
+普通 RAG 主要回答“有没有相关文本”。Zuno Target 还要验证：Evidence 来源是什么、属于哪个 Document Version、是否支持具体 Claim、Authority 的 jurisdiction / version / scope 是什么、是否适用于当前事实、是否存在冲突、证据是否足够。目标概念包括 `Evidence Sufficiency`、`Legal Applicability`、`Citation Lineage` 和 `Authority Version / Scope`，但不在本层预先设计数据库表。
+
+#### C. PERSISTENT DOMAIN STATE
+
+普通 Agent Output 是一段 Answer 或 Artifact；Zuno Target 把 Matter、Evidence、Fact、Event、Conflict、Dispute、Legal Issue、Finding、Human Decision 和 WorkProduct 作为可能长期存在、版本化和可追溯的业务对象。`Chat Answer != Canonical Legal Result`，`Runtime Checkpoint != Domain State`。新 Evidence 到来时，旧 Finding 可以成为 `stale`、`review_required` 或 `superseded`，不能继续作为永远正确的聊天历史。
+
+#### D. HUMAN-VERIFIABLE PROFESSIONAL WORK
+
+AI 可以承担 reading、retrieval、extraction、alignment、comparison、candidate reasoning 和 drafting；专业人员负责 review、legal judgment、approval 和 formal adoption。正式交付应允许查看 Evidence、Citation、Conflict、Proposal 和 Human Decision，而不是只展示一段不可复核的聊天答案。
+
+#### E. LEGAL EVAL / RELEASE GATE
+
+法律 AI 不能以“感觉回答不错”作为发布标准。Target 逐步需要 Task Dataset、Failure Taxonomy、Retrieval Eval、Citation Eval、Applicability Eval、Fact / Event Eval、Conflict Eval、Grounded Answer Eval 和 Human Review Eval。Provider 或 Agent Version 只有通过对应 Eval Gate，才获得相应的 Usage Eligibility；这些能力目前都不是 Current 证明。
+
+#### F. NATIVE + EMBEDDED PRODUCT MODE
+
+Zuno 不要求甲方替换现有系统。Native 模式可以是：
+
+```text
+Zuno Judicial Workbench
+  → Zuno Agent
+  → Domain Capability
+  → Versioned Domain Result
+```
+
+Embedded 模式可以是：
+
+```text
+Court Existing System / WorkBuddy / Dify / Other Agent Host
+  → API / MCP / Versioned Contract
+  → Zuno Domain Capability / Agent
+  → Domain Result / Eval
+```
+
+产品策略是“能合作就合作，只自研 Generic Host 无法替代且被验证有价值的 Domain Depth”。
+
+四条需要保持的概念边界是：
+
+```text
+Research Artifact → Domain Capability
+Business Process   → Skill / Task Template / Policy
+Business Fact      → Domain State
+Execution          → Runtime
+```
+
+这四条是 Conceptual Target，不是历史项目事实，也不冻结最终模块数量。
 
 ### 8. Runtime 不是业务后端
 
@@ -169,6 +284,8 @@ C — Zuno Native Runtime + First-class Legal Domain State
 
 | Target 能力 / 边界 | 状态 | 关闭或反转条件 |
 | --- | --- | --- |
+| Target Product Thesis | `TARGET_HYPOTHESIS_PENDING_RED_TEAM` | 尚未完成 WorkBuddy / Dify 对比、法院真实 A/B 或 Domain Layer 收益验证；不得写成 Proven Differentiation |
+| Research-to-Capability Governance | `TARGET_ONLY` / `PROPOSED` | 需要 Provider Conformance、Capability Evaluation 和真实任务证明研究成果工程化链路有收益 |
 | Python-only Backend | `ACCEPTED_TARGET` | Owner 工程约束；不证明历史或生产链路 |
 | Physical Service Split | `EVIDENCE-GATED` | 默认模块化 Backend + Worker；只有独立扩缩容、故障、安全、可用性、生命周期、跨主机 Contract 或独立数据/运营 Owner 证据成立才拆分 |
 | Legal Domain State | `ACCEPTED_TARGET` | 需要复杂法律任务 Benchmark 证明收益 |
@@ -184,6 +301,7 @@ C — Zuno Native Runtime + First-class Legal Domain State
 | Result Eligibility / Domain Admission | `ACCEPTED_TARGET` | 降级上下文必须重新检查证据、质量、安全和人审要求 |
 | Continuous Authorization | `ACCEPTED_TARGET` | 每次新的受保护访问都按当前 Policy 决定；具体撤权后内存处理策略仍开放 |
 | Tool Capability Compatibility | `ACCEPTED_TARGET` | 兼容则继续，瞬时失败 Retry，假设失效 Replan，无安全路径 Stop / Review |
+| Native + Embedded Product Mode | `TARGET_ONLY` / `PROPOSED` | 需要 Integration Spike 证明 Host Contract、Domain Capability 和结果回传边界可行 |
 | Production Readiness | `NOT_ESTABLISHED` | 由独立运行、安全、HA、Eval 和外部资格证据证明 |
 
 ## Product Thesis 与 A/B/C Kill Test
@@ -215,6 +333,22 @@ C — Zuno Native Runtime + First-class Domain State
 | Legal Capability | Evidence / Fact Candidate、Capability Contract、Provider Policy | Proposal、Observation、Reference 或 Receipt | Legal Intelligence Owner | Provider 不可用、版本不兼容；Provider Replacement Test |
 | External Effect | PreparedAction、SecurityEpoch、Approval、Idempotency Key | EffectReceipt、outcome_unknown 或 rejected | Tool / Security Owner | 超时、重复副作用；Fault Injection / Reconciliation |
 | Evaluation | DatasetVersion、Variant、预算、Trace | RawResult、Metric、Comparison、ReleaseDecision | Eval Owner | 分母变化、不可比、阻塞；Reproducible Eval |
+
+### Capability Governance Contract Skeleton
+
+以下是 Research → Capability 的最小 Contract Skeleton，只冻结概念边界，不提前设计表、类或最终模块：
+
+| Concept | 作用 | 不能替代 |
+|---|---|---|
+| `DomainCapability` | 面向一个专业任务的稳定能力契约、输入输出和适用范围 | 论文、Prompt 或 Runtime Step |
+| `CapabilityRequirement` | 任务对输入材料、权限、质量和运行条件的要求 | 用户随口提出的未验证需求 |
+| `CapabilityProvider` | 实现 Capability 的模型、算法、服务、Tool 或外部 Provider | Canonical Domain Owner |
+| `CapabilityVersion` | 可选择、可回滚、可比较的能力版本 | Document Version 或 Domain Version |
+| `ProviderConformance` | 检查 Provider 是否满足 Contract、权限和输入输出约束 | 业务结果审批 |
+| `CapabilityEvaluation` | 记录针对任务类别的质量、成本、延迟和失败证据 | 单次 Demo 的主观印象 |
+| `CapabilityAvailability` | 表达某能力版本在当前租户、任务、权限和环境下是否可用 | 模型自行决定是否可以调用 |
+
+研究论文 / 专利不是 Runtime Object。研究成果只有经过 Engineering Provider、Conformance 和 Evaluation，才可能获得某个受控的 Capability Availability；模型和算法仍然只能产生 Proposal、Candidate、Score、Observation 或 Reference，不能直接提交 Canonical Domain State。
 
 ### Knowledge View Readiness Contract
 
