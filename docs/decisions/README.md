@@ -23,10 +23,10 @@
   - 当前状态：`accepted-target`；定义最小法律 Domain Kernel、Proposal/Owner Commit、Host + Backend 最小方案和 Native Runtime 的验证门。
 - [ADR 0009：Python-only Backend](0009-python-only-backend.md)
   - 当前状态：`accepted-target`；Python-only 是目标约束，Java/Spring 仅通过外部协议集成。
-- [ADR 0010：Microservice Target 与 Service Boundaries](0010-microservice-target-and-service-boundaries.md)
-  - 当前状态：`accepted-target`；固定微服务目标，服务数量、边界和 Worker 形态由独立扩缩容、失败和安全证据约束。
 - [ADR 0011：Architecture Document Taxonomy](0011-architecture-document-taxonomy.md)
   - 当前状态：`accepted-target`；以 Product/Domain/Agents/Knowledge/Services/Data/Security/Eval/Deployment 重建专题文档体系，旧 11 模块降为 Superseded。
+- [ADR 0012：证据门控的物理服务拆分](0012-evidence-gated-physical-service-split.md)
+  - 当前状态：`accepted-target`；默认模块化 Backend + Worker，独立 Network Service / Microservice 只有在可重复的 Scaling、Failure、Security、Availability、Lifecycle、Cross-host Contract 或 Data / Operational Ownership 证据成立后才拆分。
 
 已被替换的决策不再伪造一个当前树目录；需要考古时使用 Git history，或在
 `docs/history/` 的批准摘要中读取结论。

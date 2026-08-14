@@ -7,7 +7,7 @@
 
 ## Context
 
-`11 Logical Modules + 1 Architecture` 将 Product、Domain、Capability、Service、Data、Deployment 和 Team 阅读层混在编号模块中。它适合作为上一阶段的组织方式，但在 Python-only Microservice、Multi-Agent 和独立 Worker 目标下，会诱导三种错误：模块等于服务、模块等于目录、模块等于 Owner。
+`11 Logical Modules + 1 Architecture` 将 Product、Domain、Capability、Service、Data、Deployment 和 Team 阅读层混在编号模块中。它适合作为上一阶段的组织方式，但在 Python-only、证据门控的物理服务拆分、Multi-Agent 和独立 Worker 目标下，会诱导三种错误：模块等于服务、模块等于目录、模块等于 Owner。
 
 ## Decision
 
@@ -62,7 +62,7 @@ docs/
 
 正面：读者按问题定位事实；Product/Domain/Logical Capability/Physical Service/Deployment 分离；可以从 8 个逻辑领域形成 5 个服务和多个 worker，不制造重复 Canonical State。
 
-负面：需要更新 README、AGENTS、`.agent/system.yaml`、verifier、tests、QA links、old module status 和所有内部引用；迁移期间旧路径只能作为明确的 Superseded reference。
+负面：需要更新 README、AGENTS、`.agent/system.yaml`、verifier、tests、QA links、old module status 和所有内部引用；迁移期间旧路径只能作为明确的 Superseded reference，物理 Service Split 不能由 Taxonomy 预先决定。
 
 ## Verification
 

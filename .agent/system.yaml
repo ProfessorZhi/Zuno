@@ -33,9 +33,9 @@ local_skill_registry:
       trigger: "根据 JD、目标岗位或项目约束推导可实现项目"
 
 runtime_boundary:
-  product_runtime_target: "Python-only Microservice Architecture"
-  product_runtime_current: "FastAPI backend + RabbitMQ worker in current Compose evidence; not yet target microservice evidence"
-  agent_runtime: "Composable Multi-Agent Runtime Service; profiles/workers are not automatically services"
+  product_runtime_target: "Python-only modular backend with evidence-gated physical service split"
+  product_runtime_current: "FastAPI backend + RabbitMQ worker in current Compose evidence; physical service split not established"
+  agent_runtime: "Composable Agent Runtime provider; Native Runtime is DEFERRED / HYPOTHESIS; profiles/workers are not automatically services"
   language_policy: "Python-only backend; external Java/Spring systems integrate through versioned protocols"
   engineering_parallelism: "parallel agents are engineering workflow helpers and do not change product runtime architecture"
 
@@ -84,7 +84,7 @@ shared_contracts:
   adr: "docs/decisions/0003-wave1-cross-module-contract-freeze.md"
   state_boundary_adr: "docs/decisions/0008-legal-domain-kernel-and-host-boundary.md"
   language_adr: "docs/decisions/0009-python-only-backend.md"
-  service_adr: "docs/decisions/0010-microservice-target-and-service-boundaries.md"
+  service_adr: "docs/decisions/0012-evidence-gated-physical-service-split.md"
   taxonomy_adr: "docs/decisions/0011-architecture-document-taxonomy.md"
 
 skill_routes:

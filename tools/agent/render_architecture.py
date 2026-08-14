@@ -19,7 +19,7 @@ EXPECTED_VIEWS = [
     "Staleness and Review View",
     "Agent Runtime View",
     "Runtime and Domain State View",
-    "Microservice View",
+    "Physical Deployment Decision View",
     "Deployment Profiles View",
     "Data Ownership View",
     "Failure and Recovery View",
@@ -101,10 +101,10 @@ def validate_source(content: str) -> list[str]:
             f"architecture visual source must contain exactly {len(EXPECTED_VIEWS)} Mermaid diagrams"
         )
     for term in [
-        "Python-only", "edge-api", "platform-domain-service", "agent-runtime-service",
-        "knowledge-service", "tool-sandbox-service", "FastAPI", "LangGraph",
-        "PostgreSQL", "Checkpoint", "Reconciliation", "EvidenceRequirement",
-        "ConflictProposal", "EffectReceipt", "A/B/C",
+        "Python-only", "Modular Backend", "Independent Workers", "Evidence Gate",
+        "Physical Deployment Decision", "FastAPI", "LangGraph", "PostgreSQL",
+        "Checkpoint", "Reconciliation", "EvidenceRequirement", "ConflictProposal",
+        "EffectReceipt", "A/B/C",
     ]:
         if term.lower() not in content.lower():
             errors.append(f"architecture-views.md missing visual term: {term}")

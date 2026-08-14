@@ -7,7 +7,7 @@
   `command_service.py` 拥有 Product command，`ingestion_service.py` 拥有文件与
   ingestion，`artifact_service.py` 拥有 artifact，`observability_service.py` 拥有
   projection query；`runtime_engine.py` 仅提供内部 mechanics，不是 HTTP owner。
-- `src/backend/zuno/agent/`：当前 Agent control/runtime code；Target 由 `agent-runtime-service` 承担，Multi-Agent profiles 不自动拆服务。
+- `src/backend/zuno/agent/`：当前 Agent control/runtime code；Target Owner 是 Agent Runtime，物理 Worker / Service 只有通过 Evidence Gate 才拆分，Multi-Agent profiles 不自动拆服务。
 - `src/backend/zuno/capability/`：Capability / Skill 语义、选择和 Tool Runtime 请求。
 - `src/backend/zuno/knowledge/`：Document ingestion、Index、GraphRAG、Evidence、Citation。
 - `src/backend/zuno/memory/`：Memory 与 Context。

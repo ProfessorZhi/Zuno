@@ -1,6 +1,6 @@
 # Zuno 总体 Target 架构
 
-updated: 2026-08-13
+updated: 2026-08-14
 status: normative-target
 architecture_state: ACCEPTED_TARGET_WITH_OPEN_EVIDENCE
 canonical_question: Zuno 为什么存在，Target Product、Domain、Capability、Runtime、Service、Data、Security 和 Eval 如何形成可反转的闭环？
@@ -11,7 +11,7 @@ readability_gate: REQUIRED_BEFORE_NEXT_RED_BLUE_PROTOCOL
 document_role: cross-cutting integration source
 canonical_taxonomy: docs/architecture/ 仅保存总体架构四文件；Current Facts 由 docs/facts/ 负责
 current_state_source: docs/facts/ 和 docs/evidence/
-decision_sources: docs/decisions/0008-legal-domain-kernel-and-host-boundary.md、0009-python-only-backend.md、0010-microservice-target-and-service-boundaries.md、0011-architecture-document-taxonomy.md
+decision_sources: docs/decisions/0008-legal-domain-kernel-and-host-boundary.md、0009-python-only-backend.md、0011-architecture-document-taxonomy.md、0012-evidence-gated-physical-service-split.md
 
 > 本文先说明问题和产品动机，再说明 Target 责任边界，最后给出 Contract。项目上下文和当前仓库事实由 `docs/facts/` 负责；当前证据由 `docs/evidence/` 负责。本正文不创建第二套事实状态机，也不把 Target 写成 Current。
 
@@ -50,18 +50,28 @@ Retry、Recovery、Security 和 Eval。理解顺序由架构问题决定，而�
 这是一个用于架构推理和 Benchmark 的 Target Scenario，不是历史确认的法院 SOP：
 
 ```text
-用户提出复杂法律任务
-  → 系统识别 Claim 与 Evidence Requirement
-  → Knowledge 根据 Scope、Query Class 和成本选择检索方式
-  → Legal Intelligence 生成 Fact / Event / Conflict / Finding Proposal
-  → Agent Runtime 组织有限的计划、并行研究和补证据
-  → Domain Owner 校验来源、版本、权限和依赖
-  → 必要时进入 Human Review
-  → 提交新的版本化 Finding / WorkProduct
-  → 新证据到来时标记依赖对象 stale，并重新评估
+User / Generic Host submits task
+  → establish Task / Document Scope
+  → bind Document Versions
+  → Knowledge Readiness Gate
+  → authorize protected access
+  → Task Analysis
+  → deterministic simple Plan or dynamic bounded Plan
+  → Evidence Retrieval
+  → optional Legal Capability / Memory / Tool
+  → Proposal
+  → Evaluation / Reflection when required
+  → Synthesis
+  → Result Eligibility / Domain Admission
+  → Human Review when required
+  → Canonical Domain Commit
+  → Response / WorkProduct
+  → later Evidence may invalidate dependencies
 ```
 
-这条流程把“找到材料”“理解法律结构”“提交正式业务状态”分开。Knowledge 负责材料与证据候选；Legal Intelligence 负责候选结构；Domain Owner 决定什么可以成为正式业务状态；Runtime 负责执行控制而不是拥有法律事实。
+这条流程把“任务范围”“材料是否可用”“找到材料”“理解法律结构”“结果能否正式提交”分开。上传文档只建立输入，不自动建立可供 Formal Run 使用的完整 Knowledge View。Knowledge 负责材料与证据候选；Legal Intelligence、Memory 和 Tool 只能提供受约束的 Proposal、Context、Observation 或 Effect Receipt；Domain Admission 决定什么可以成为正式业务状态；Runtime 负责执行控制而不是拥有法律事实。`Result Is Eligible for Formal Business Use` 是独立于 `Execution Can Continue` 的资格判断。
+
+`Document Uploaded != Knowledge Ready`。Formal Run 必须知道声明覆盖的材料 Scope、绑定的 Document Version，以及当前 Knowledge View 是否足够覆盖该 Scope。必要材料未 Ready 时，默认等待或拒绝 Formal Run；若产品允许 Partial Run，必须显式缩小 Scope，Partial Knowledge View 不得静默获得 Full Scope Formal Result 的资格。
 
 ### 4. 五层责任视图，不是五个最终模块
 
@@ -112,15 +122,21 @@ Single Controller 是默认起点。复杂任务可以派生 Ephemeral Worker �
 
 Python-only 是 Owner Target Constraint，理由是当前 AI / NLP / PyTorch / LangGraph 生态与团队复杂度；这不是“Python 性能够用”的空泛结论。LLM、Embedding、Vector DB、Graph DB、PostgreSQL、Object Storage 和外部 API 多数是 I/O 或外部服务边界，OCR、Parsing、Embedding、Graph Build 和 Eval 等 CPU / GPU 重任务应进入独立 Worker，不阻塞 FastAPI 请求线程。
 
-Microservice 是部署方向，但服务数量不由用户数量自动决定。只有当 Platform / Domain 的事务工作、Agent Runtime 的长任务、Knowledge 的 CPU / GPU / I/O 工作、Tool / Sandbox 的安全边界或 Eval 的离线批处理确实需要独立扩缩容、故障隔离、安全隔离、部署生命周期或可用性时，才拆物理服务。每个候选都要回答：**Why service? Why not library? Why not worker?**
+Microservice 不是预先承诺的终局 Target，而是 `EVIDENCE-GATED DEPLOYMENT REFINEMENT`。默认物理起点是 `Modular Python Backend` 加上有理由的独立 Worker。只有当某个边界出现可重复证据，证明它需要 Independent Scaling、Failure Isolation、Security / Secret Isolation、Distinct Availability、Independent Deployment Lifecycle、Stable Cross-host API 或 Distinct Data / Operational Ownership 时，才拆成独立 Network Service。每个候选都要回答：**Why service? Why not library? Why not worker?**
 
 网络延迟、序列化、Schema version、Partial Failure、Retry Storm、Tracing、Secret Distribution 和本地开发复杂度都是实际代价。默认可以从模块化 Python 服务加独立 Worker 开始；Service Count、Database physical split、Queue technology、Model Gateway 和 Graph Provider 都保持可反转。
 
 ### 10. 最危险的失败与恢复
 
-需要优先解决的不是“哪个框架更潮”，而是状态不一致：Domain Commit 已成功但 Runtime Checkpoint 仍停在执行前；Tool 已执行但消息重复投递；新证据使 Fact / Conflict / Finding stale；权限在等待期间被撤销；Provider 返回 unknown outcome。
+需要优先解决的不是“哪个框架更潮”，而是状态不一致：Domain Commit 已成功但 Runtime Checkpoint 仍停在执行前；Tool 已执行但消息重复投递；新证据使 Fact / Conflict / Finding stale；权限在等待期间被撤销；Provider 返回 unknown outcome。系统还能继续生成结果，不等于结果仍然有资格作为正式业务使用。
 
 恢复时先读取 Domain Owner 的最后合法版本，再比较 Runtime Control State、Knowledge Projection、EffectReceipt、Provider Operation ID 和当前权限。只有完成对账，才能选择 Resume、Retry、Replan 或 Human Review。HTTP 200、Queue ACK、Index Write 或 Checkpoint Commit 只能证明各自边界，不代表业务事实已完成。
+
+Provider 降级以后必须重新判断 Evidence Requirement、Quality Requirement、Security Requirement 和 Human Review Requirement。结果可以继续执行，但可能只能进入正常 Formal Admission、`review_required`、非 Canonical Draft 或 `Abstain / Reject`；不能只靠 UI Warning 表达质量变化，也不创建第二套 Degradation State Machine。
+
+Run Start Authorization 不是 Run Lifetime Permanent Lease。长任务每一次新的 Document Read、Retrieval、Secret Access、Model Egress、Tool Call、External Effect 和 Formal Commit 都必须依据当前有效 Policy。权限撤销至少阻止新的未授权访问；已经载入内存的数据在撤权后的 CPU-only 处理策略留给 Security Part B 冻结。
+
+长任务也不能假定 Tool / MCP / Capability 从 Plan 创建到真正执行期间永久不变。调用前必须重新确认当前能力仍满足 Plan / Step 的 Capability Assumption；瞬时执行失败才 Retry，能力、Schema、语义或权限变化导致原计划假设失效时进行 `Capability Re-resolution` 并必要时 Replan，没有安全兼容路径就 Stop / Human Review。Agent 不得看到新 Schema 后自行猜参数继续执行，Unknown External Effect 必须先 Reconcile，不能盲目 Retry。
 
 ### 11. A/B/C Kill Test
 
@@ -154,7 +170,7 @@ C — Zuno Native Runtime + First-class Legal Domain State
 | Target 能力 / 边界 | 状态 | 关闭或反转条件 |
 | --- | --- | --- |
 | Python-only Backend | `ACCEPTED_TARGET` | Owner 工程约束；不证明历史或生产链路 |
-| Microservice Direction | `ACCEPTED_TARGET` | 服务数量和边界仍需扩缩容、故障、安全和生命周期证据 |
+| Physical Service Split | `EVIDENCE-GATED` | 默认模块化 Backend + Worker；只有独立扩缩容、故障、安全、可用性、生命周期、跨主机 Contract 或独立数据/运营 Owner 证据成立才拆分 |
 | Legal Domain State | `ACCEPTED_TARGET` | 需要复杂法律任务 Benchmark 证明收益 |
 | Evidence / Citation Provenance | `ACCEPTED_TARGET` | 需要真实 QA 证明来源和引用闭环 |
 | Legal Intelligence Provider Boundary | `ACCEPTED_TARGET` | Provider 输出必须可替换、可评测，不能直接提交 Domain Fact |
@@ -163,7 +179,11 @@ C — Zuno Native Runtime + First-class Legal Domain State
 | Memory / Context | `PROPOSED` / `DEFERRED` | 不能成为 Canonical Legal Fact；需要替换和质量证据 |
 | Single Controller / Controlled Multi-Agent | `ACCEPTED_TARGET` / `PROPOSED` | 与更简单的单 Agent + 并行工具比较 |
 | Tool / MCP / Security / Human Review | `ACCEPTED_TARGET` | 需要授权、审批、幂等、Receipt、对账和真实 Review 证据 |
-| Physical Service Count | `MEASUREMENT_BLOCKED` | `FINAL_MODULE_COUNT: NOT_DECIDED`；按 Workload / Failure / Security / Scaling 收敛 |
+| Physical Service Count | `NOT_DECIDED` / `EVIDENCE-GATED` | `FINAL_MODULE_COUNT: NOT_DECIDED`；不预先承诺 Network Service 数量 |
+| Knowledge Readiness | `ACCEPTED_TARGET` | 必要 Scope、Version Set 和 Knowledge View 未 Ready 时等待、拒绝或显式缩小 Scope |
+| Result Eligibility / Domain Admission | `ACCEPTED_TARGET` | 降级上下文必须重新检查证据、质量、安全和人审要求 |
+| Continuous Authorization | `ACCEPTED_TARGET` | 每次新的受保护访问都按当前 Policy 决定；具体撤权后内存处理策略仍开放 |
+| Tool Capability Compatibility | `ACCEPTED_TARGET` | 兼容则继续，瞬时失败 Retry，假设失效 Replan，无安全路径 Stop / Review |
 | Production Readiness | `NOT_ESTABLISHED` | 由独立运行、安全、HA、Eval 和外部资格证据证明 |
 
 ## Product Thesis 与 A/B/C Kill Test
@@ -189,16 +209,38 @@ C — Zuno Native Runtime + First-class Domain State
 
 | Contract | 输入 | 输出 | 唯一 Owner | 失败与验证 |
 |---|---|---|---|---|
-| Domain Admission | Proposal、Evidence Reference、权限上下文、DomainVersion | Canonical Version、review_required 或 rejected | Domain Owner | CAS 冲突、来源不足；Admission Contract Test |
+| Domain Admission | Proposal、Evidence Reference、权限上下文、DomainVersion、Degradation Context、Quality / Security Decision | Canonical Version、review_required 或 rejected | Domain Owner | CAS 冲突、来源不足、降级后不合格；Admission Contract Test |
 | Runtime Execution | PlanVersion、Domain Snapshot、Budget、Policy | Step / Branch Result、Checkpoint、RunOutcome | Agent Runtime | Domain Generation 不一致；Recovery Replay |
-| Evidence Retrieval | QueryClass、Claim、Scope、DocumentVersion | EvidenceCandidate、CitationLineage、RetrievalReceipt | Knowledge | 索引 stale、ACL 泄漏、引用错 span；Citation / Graph Ablation |
+| Evidence Retrieval | QueryClass、Claim、Declared Scope、DocumentVersion Set、Knowledge View | EvidenceCandidate、CitationLineage、RetrievalReceipt | Knowledge | PARTIAL、STALE、MISSING_REQUIRED_SOURCE、VERSION_MISMATCH、ACL 泄漏、引用错 span；Readiness / Citation / Graph Ablation |
 | Legal Capability | Evidence / Fact Candidate、Capability Contract、Provider Policy | Proposal、Observation、Reference 或 Receipt | Legal Intelligence Owner | Provider 不可用、版本不兼容；Provider Replacement Test |
 | External Effect | PreparedAction、SecurityEpoch、Approval、Idempotency Key | EffectReceipt、outcome_unknown 或 rejected | Tool / Security Owner | 超时、重复副作用；Fault Injection / Reconciliation |
 | Evaluation | DatasetVersion、Variant、预算、Trace | RawResult、Metric、Comparison、ReleaseDecision | Eval Owner | 分母变化、不可比、阻塞；Reproducible Eval |
 
+### Knowledge View Readiness Contract
+
+Formal Run 必须绑定四类概念：Declared Scope、Document Version Set、Knowledge View / Generation 和 Readiness Receipt。它们是跨层 Contract，不等于必须新增数据库表或 Readiness Service。Readiness Receipt 只能说明当前 Knowledge View 对声明 Scope 的覆盖状态，不能把未声明材料静默纳入结果。
+
+最低失败语义是：`PARTIAL` 表示声明 Scope 尚未完全可用；`STALE` 表示 View 与绑定版本不再一致；`MISSING_REQUIRED_SOURCE` 表示必要来源缺失；`VERSION_MISMATCH` 表示检索视图与 Run 绑定版本不一致。默认情况下这些状态阻止 Formal Run；若允许 Partial Run，必须显式缩小 Scope，结果不能直接取得 Full Scope Formal Admission。
+
+### Result Eligibility 与 Domain Admission Contract
+
+`Execution Can Continue` 与 `Result Is Eligible for Formal Business Use` 是两个不同判断。Graph、Memory、Model、Retrieval 或 Capability Provider 降级后，Answer Policy 必须把 Degradation Context 传给 Domain Admission；Admission 重新检查 Evidence Sufficiency、Quality Evaluation、Security Decision 和 Human Review Requirement。结果只能进入现有的 Canonical Version、`review_required` 或 `rejected` 语义；Draft 如果保留，只表示尚未 Canonical Admission 的输出，不是新的正式 Domain State。
+
+### Continuous Authorization Contract
+
+Security Owner 拥有 Authorization Decision。每一次新的 Read、Retrieval、Model Egress、Secret、Tool、Effect 和 Commit 都依据当前 Policy Epoch / Current Authorization；Domain、Runtime、Knowledge 和 Tool 只能消费该决定，不能自行扩大权限。Resume、Retry、Replan 后不得沿用已经失效的旧 Authorization Decision。撤权后至少阻止新的未授权访问，已经加载内容是否允许继续 CPU-only processing 留给 Security Part B / Module，不在本轮冻结。
+
+### Capability Compatibility Contract
+
+Plan / Step 可以依赖一个 Capability Assumption，但不预设全局 Schema Registry。真正调用前重新解析当前 Tool / MCP / Capability；兼容则继续，Capability 语义未变的瞬时执行失败才 Retry，原假设失效则 Capability Re-resolution 后 Replan。Capability 消失、权限变化或 Schema / semantics 没有安全兼容路径时 Stop / Human Review。`Retry != Replan`。External Effect Outcome Unknown 先 Reconcile；Agent / Model 不得猜新参数继续执行。
+
 ### Service、通信与队列边界
 
-候选物理角色可以包括 Edge / API、Platform / Domain、Agent Runtime、Knowledge、Tool / Sandbox 和 Eval Worker，但它们不是最终服务清单，也不是 Current。是否拆分必须由独立 Scaling、Failure、Security、Availability、Lifecycle 或 Team Ownership 证据支持。
+Logical Responsibility 不等于 Physical Service。候选物理角色可以包括 Edge / API、Platform / Domain、Agent Runtime、Knowledge、Tool / Sandbox 和 Eval Worker，但它们不是最终服务清单，也不是 Current。默认保持模块化 Backend + Worker；是否拆分必须由独立 Scaling、Failure、Security、Availability、Lifecycle、Stable Cross-host API 或独立 Data / Operational Ownership 证据支持。
+
+### Physical Deployment Gate
+
+服务拆分是证据闸门，而不是服务清单。每个候选边界至少要说明 Scaling、Failure、Security、Availability、Lifecycle、Cross-host Contract 或 Operational / Data Ownership 中的可重复证据，并明确 Why Service、Why not Library、Why not Worker。Service Count、Database-per-service、Kafka、Kubernetes、Service Mesh、2PC 和 Saga Framework 均不在本总体架构中预冻结。
 
 CRUD、小命令和外部互操作默认使用 HTTP / API；长运行 Agent Run、Ingestion、Embedding、Graph Build、Sandbox 和 Eval 才进入带 JobId、Attempt、Timeout、Cancellation、Retry、Dead Letter 和 Backpressure 的异步队列。高吞吐内部 gRPC 只是候选，不默认所有服务都使用 gRPC，也不默认所有交互都用 Event。
 
@@ -206,9 +248,9 @@ FastAPI 只拥有 Application / HTTP Interface；LangGraph 只拥有 Agent Contr
 
 ### State、Version 与 Recovery Contract
 
-本节先给出跨 Domain、Runtime 和 Memory 的共同恢复原则：版本化业务事实由 Domain Owner
+本节先给出跨 Domain、Runtime、Knowledge 和 Memory 的共同恢复原则：版本化业务事实由 Domain Owner
 管理；Runtime 只保存执行控制；Memory 只保存可按策略复用的上下文。任何新输入都必须比较
-依赖、版本、权限和副作用状态，再决定继续、重试、重规划或人工复核。
+依赖、版本、Knowledge Generation / Readiness、权限和副作用状态，再决定继续、重试、重规划或人工复核。
 
 ### Domain State、Runtime State 与 Memory
 
@@ -230,7 +272,7 @@ New Evidence 到来时，系统通过 Dependency 发现受影响的 Fact / Confl
 
 ### Security、Deployment 与验证要求
 
-每个跨边界操作绑定 Tenant、Matter、Scope、Policy Epoch、Idempotency Key 和 Trace。不可逆 Effect 必须执行时重新授权并经过 Approval；不可信文档不能改变策略。Sandbox 的 Target 边界包括 Filesystem、Network Egress、Secret、Resource Limit、Cleanup 和 Audit。
+每个跨边界操作绑定 Tenant、Matter、Scope、Policy Epoch、Idempotency Key 和 Trace。每一次新的受保护访问都必须重新使用当前 Authorization Decision；不可逆 Effect 必须执行时重新授权并经过 Approval；不可信文档不能改变策略。Sandbox 的 Target 边界包括 Filesystem、Network Egress、Secret、Resource Limit、Cleanup 和 Audit。
 
 Developer、Staging、Production 是不同证据等级；Compose、Kubernetes、容器或配置文件存在不等于 Production Ready。验证需要覆盖 No-egress、Allowlist、Secret Leakage、Cross-tenant、Prompt Injection + Tool、Sandbox Escape、Revoked Permission、Stale Credential、Duplicate Side Effect、SBOM、签名 Artifact、质量、效率、恢复和替换成本。
 

@@ -15,7 +15,7 @@ consolidation 保持为历史完成记录。
 - 当前事实入口已收敛到 `docs/facts/`；历史背景和开发过程统一归档到 `docs/history/`，本轮不继续增加事实分类；
 - Track A 继续恢复事实深度，但不把候选记忆直接写成事实；
 - Track B 从真实问题重新攻击 Product、Domain、Runtime、Knowledge、Service、Data、Security 和 Eval；
-- Python-only 与 Microservice 是 Owner Target Constraint，但具体服务数量和边界仍在审查；
+- Python-only 是 Owner Target Constraint；Physical Service Split 采用 evidence-gated refinement，具体服务数量和边界仍未决定；
 - 本 V4.2 Bootstrap 只修改 Workflow、Governance、Lab Protocol、Session Contract、Prompt、
   Context Packet、Verifier、Routing 和 Docs Tests；Round-006 已在 3 个 Live Turn 后因 Workflow
   Execution Blocker 中止收口，不再继续运行，也不修改 Runtime、

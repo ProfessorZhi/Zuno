@@ -1,8 +1,8 @@
 # Zuno Architecture Visual Atlas Source
 
-本图源展示 Python-only Target、FastAPI Application Interface、LangGraph orchestration provider、EvidenceRequirement、ConflictProposal、PostgreSQL Domain State 和 Runtime Checkpoint 的边界；这些图不把 Target 伪装成 Current。
+本图源展示 Python-only Target、模块化 Backend + Worker 默认起点、Evidence-gated Physical Service Split、FastAPI Application Interface、LangGraph orchestration provider、EvidenceRequirement、ConflictProposal、PostgreSQL Domain State 和 Runtime Checkpoint 的边界；这些图不把 Target 伪装成 Current。
 
-updated: 2026-08-13
+updated: 2026-08-14
 status: normative-target-visual-source
 architecture_state: ACCEPTED_TARGET
 text_design_source: `docs/architecture/architecture.md`
@@ -29,8 +29,8 @@ canonical_taxonomy_source: `docs/README.md` and `docs/decisions/0011-architectur
 ```mermaid
 flowchart LR
   USER[律师 / 法官 / 专业用户] --> SURFACE[Zuno Web / Desktop / WorkBuddy / MCP Client]
-  SURFACE --> EDGE[edge-api]
-  EDGE --> DOMAIN[platform-domain-service]
+  SURFACE --> EDGE[Host / API Boundary]
+  EDGE --> DOMAIN[Zuno Legal Backend / Domain Owner]
   DOMAIN --> WORK[Review / Finding / WorkProduct]
 ```
 
@@ -139,32 +139,32 @@ flowchart LR
   RECON --> DOMAIN
 ```
 
-## Microservice and Deployment
+## Physical Deployment and Service Split
 
-### Microservice View
+### Physical Deployment Decision View
 
 ```mermaid
 flowchart TB
-  CLIENT[External surfaces / WorkBuddy / MCP] --> EDGE[edge-api]
-  EDGE --> PLATFORM[platform-domain-service]
-  EDGE --> AGENT[agent-runtime-service]
-  EDGE --> KNOW[knowledge-service]
-  AGENT --> TOOL[tool-sandbox-service]
-  KNOW --> WK[Knowledge workers]
-  AGENT --> AW[Agent workers]
-  TOOL --> SW[Sandbox workers]
-  PLATFORM --> DB[(PostgreSQL logical schemas)]
-  NOTE[Candidate boundary; count remains revisable] -.-> EDGE
+  START[Modular Backend + Independent Workers] --> GATE{Evidence Gate}
+  GATE -->|No independent boundary evidence| KEEP[Keep together / Library / Worker]
+  GATE -->|Independent Scaling| SPLIT[Split specific boundary]
+  GATE -->|Failure Isolation| SPLIT
+  GATE -->|Security / Secret Isolation| SPLIT
+  GATE -->|Distinct Availability| SPLIT
+  GATE -->|Independent Deployment Lifecycle| SPLIT
+  GATE -->|Stable Cross-host API + distinct ownership| SPLIT
+  SPLIT --> CONTRACT[Versioned Contract + Operational Owner]
 ```
 
 ### Deployment Profiles View
 
 ```mermaid
 flowchart LR
-  DEV[Developer Compose] --> STAGE[Staging Multi-service]
-  STAGE --> PROD[Production HA / scalable profile]
-  PROD --> SCALE[Independent service/worker scaling]
-  PROD --> ISOLATE[Failure + security isolation]
+  DEV[Developer Compose] --> BASE[Modular Backend + Workers]
+  BASE --> GATE{Evidence Gate}
+  GATE -->|No split evidence| KEEP[Keep together]
+  GATE -->|Validated boundary| DEPLOY[Separate deployment profile]
+  DEPLOY --> SCALE[Independent scaling / failure / security / lifecycle as justified]
 ```
 
 ## Data and Recovery

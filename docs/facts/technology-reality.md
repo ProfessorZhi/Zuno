@@ -60,7 +60,7 @@ source_boundary: 历史使用、用户参与、仓库证据和 Target-only 内�
 
 ```text
 Python-only backend
-Microservice Architecture
+Evidence-gated physical service split
 Legal Domain Kernel
 Domain-aware Runtime
 新的 Multi-Agent 服务模型

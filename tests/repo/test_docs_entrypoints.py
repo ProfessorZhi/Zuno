@@ -8,7 +8,7 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 EXPECTED_VIEWS = [
     "Product Context View", "Business Flow View", "Logical Capability View", "Provider Boundary View",
     "Domain State View", "Staleness and Review View", "Agent Runtime View", "Runtime and Domain State View",
-    "Microservice View", "Deployment Profiles View", "Data Ownership View", "Failure and Recovery View",
+    "Physical Deployment Decision View", "Deployment Profiles View", "Data Ownership View", "Failure and Recovery View",
     "A/B/C Eval View", "Security Verification View",
 ]
 CANONICAL_ARCHITECTURE_FILES = {"README.md", "architecture.md", "architecture-views.md", "architecture.html"}
