@@ -22,7 +22,7 @@ AGENTS.md
      scripts/       过渡期验证器
 
 project-reconstruction-lab/
-  -> 项目级 Red/Blue Lab：事实采集、项目模型、红队攻击、蓝队提案和 Skill 契约；不拥有正式架构事实。
+  -> 轻量项目重建与架构面试 Lab：唯一当前 Workflow、三个可导出 Skill 和正式 Round 导航；不拥有正式事实或架构。正式 Round 由 docs/history/red-blue/ 持有。
 
 docs/
   facts/            今天仍然有效的项目事实与当前状态
@@ -50,8 +50,7 @@ docs/
 - `docs/`：正式人类文档真相。
 - `AGENTS.md`：仓库级 Agent 入口和工作流契约。
 - `.agent/`：本地 Agent Skill System、Reference、Program 和模板；不保存架构或模块正文镜像。
-- `project-reconstruction-lab/`：项目级项目重建与架构实验室，维护事实恢复、证据、攻击协议、Gap、面试挑战和会话摘要；不替代 `docs/` 的正式事实源。
-  Red/Blue 当前处于 RESET/PAUSED：`project-reconstruction-lab/05-red-blue/` 只保留稳定原则、当前状态和历史入口。V2–V4.2 协议与 Round-001–Round-006 是 immutable history，Round-007 在启动前取消。下一代 Protocol 尚未设计；必须先通过 Canonical Architecture Readability Gate，再由用户明确激活新的 Red/Blue 工作流。
+- `project-reconstruction-lab/`：轻量项目重建与架构面试实验室；不替代 `docs/` 的正式事实源。唯一当前 Workflow 是 `WORKFLOW.md`，正式 Round 统一归档到 `docs/history/red-blue/`，旧协议通过 Git history 追溯。
 - `docs/history/`：历史归档。
 
 正式结论必须进入 `docs/`。只给 Agent 使用的导航、可复用提示和辅助脚本放在 `.agent/`。
@@ -174,7 +173,7 @@ Agent Runtime 任务必须读取 `docs/architecture/architecture.md`、`docs/fac
 
 - 范围不清楚 → `.agent/references/task-routing.md` 的只读审计路由。
 - 文档、`.agent`、History、README → `.agent/references/workflow.md` 的文档维护流程。
-- 项目事实、历史恢复、落地真实性、个人贡献或架构红蓝队 → `project-reconstruction-lab/README.md` 的项目重建工作流。
+- 项目事实、历史恢复、落地真实性、个人贡献或架构红蓝队 → `project-reconstruction-lab/README.md`、`WORKFLOW.md` 和三个 Skill；正式 Round 读取 `docs/history/red-blue/`。
 - 目录移动、删除、归档、忽略规则和缓存清理 → 仓库卫生流程。
 - `apps/web` → `apps/web/AGENTS.md` 和 `.agent/references/code-map.md`。
 - `src/backend/zuno/agent/**` → `docs/architecture/architecture.md`、facts、ADR、evidence。

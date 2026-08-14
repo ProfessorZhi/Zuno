@@ -52,8 +52,7 @@ active implementation program NONE
 active design/review Program。下一次设计或实现工作必须由用户明确激活，不能从 Round-007 的
 READY 状态自动启动。只有通过用户 Architecture Gate 后，才可以生成 implementation Program。
 
-当前 `IMPLEMENTATION-EVIDENCE-CYCLE-001` 是已经存在的独立 Evidence Track，不是 Architecture
-Review 的自动前置条件。Red/Blue 当前由
-`project-reconstruction-lab/05-red-blue/README.md` 进入 RESET/PAUSED；稳定原则见
-`principles.md`，历史 V2–V4.2 协议见 `history/`，没有 active Protocol。Canonical Architecture
-Readability Gate 完成且用户明确激活下一代 Protocol 前，不创建 Session、题集或 Candidate。
+当前 `IMPLEMENTATION-EVIDENCE-CYCLE-001` 是独立 Evidence Track，不是 Architecture Review 的自动
+前置条件。Red/Blue 当前只读取 `project-reconstruction-lab/WORKFLOW.md`；历史 Round 读取
+`docs/history/red-blue/README.md`，旧协议通过 Git history 追溯。没有用户明确授权前，不创建 Session、
+题集或 Candidate。

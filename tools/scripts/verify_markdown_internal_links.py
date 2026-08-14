@@ -12,9 +12,6 @@ EXCLUDED_PREFIXES = (
     # Superseded raw documents are retained for audit; their historical links
     # may intentionally point to paths that no longer exist as active sources.
     "docs/history/superseded-document-taxonomy/",
-    # Red/Blue protocol and prompt archives preserve the paths and vocabulary
-    # of their original execution context; active routing must not read them.
-    "project-reconstruction-lab/05-red-blue/history/",
 )
 MARKDOWN_LINK = re.compile(
     r"!?\[[^\]]*\]\(\s*(?P<target><[^>]*>|[^\s)]+)(?:\s+[^)]*)?\s*\)"

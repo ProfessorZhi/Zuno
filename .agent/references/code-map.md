@@ -14,7 +14,7 @@
 - `src/backend/zuno/platform/`：数据库、Security、Model Gateway、Observability、Storage、Queue。
 - `apps/web/src/product/`：Product command、projection、action、artifact 和 stream client。
 - `apps/web/src/apis/workspace.ts`：工作区配置/session API 与 Product ingestion client；不再声明 task runtime owner。
-- `tools/scripts/`：repository、taxonomy、service-boundary 和 red-blue verifiers；旧 module verifier 只用于迁移兼容检查。
+- `tools/scripts/`：repository、taxonomy、service-boundary 和当前 Lab verifier；旧 Red/Blue Protocol verifier 已从 active tree 移除，历史输出由 Git history 和 Round Archive 追溯。
 - `docs/`：正式人类文档和当前证据。
 
 ## Product Runtime 调用链

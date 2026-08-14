@@ -4,299 +4,44 @@ state: `no-active`
 active_program: `none`
 queued_program: `none`
 
-最近完成的 Program 已收口 Round-006 Operational Pilot 与 V4.2 profile；本次 Workspace Reset
-将上一代 Red/Blue 协议归档，并把 active 入口置为 RESET/PAUSED。它不修改 Canonical Architecture、
-Facts、ADR、Runtime、Schema、Migration、UI、Dependencies 或 Production Infra。
+最近完成的 Program 已收口 Round-006 Operational Pilot 与 V4.2 profile；当前 Lab 已完成轻量化
+重建。上一代协议、Bootstrap、Reset 和工程辅助材料不再是 active tree；正式 Round 统一归档在
+`docs/history/red-blue/`，当前唯一 Workflow 是 `project-reconstruction-lab/WORKFLOW.md`。
 
-该 Program 已 `COMPLETED / CLOSED`；当前没有 active 或 queued Program。
-
-`IMPLEMENTATION-EVIDENCE-CYCLE-001` 是独立的 Track B；它已有自己的代码、测试和 Evidence
-Package，本轮不重写其真实状态，也不再把它作为 Architecture Review 的自动前置 Gate。
+当前没有 active 或 queued Program；下一代 Red/Blue Protocol 和 Architecture Revision 都没有自动启动。
 
 ## Scope
 
-```text
-允许：Workflow/Protocol、Governance、Lab、Prompt/Context、Session Manifest、V4 verifier、
-docs-related tests 和 Bootstrap review package。
-禁止：继续运行未修复的 Round-006、伪造 Codex Session、重构 backend、修改 Agent/Domain/Citation Runtime、
-Facts、ADR、Schema/Migration、UI、Dependencies、Production Infra，或把任何 Target/测试升级为
-Current、Measured 或 Production Ready。
-```
+本文件只描述当前执行状态，不保存历史施工材料。当前允许：
 
-Microservice 和 Python-only 是当前 Owner Target Constraint；该已完成 Program 攻击了服务数量、
-服务边界、Worker 形态、Runtime Provider、Multi-Agent、Graph、Memory 和自研能力是否
-值得保留。五个服务不是预先批准的最终答案。
+- 读取 `docs/facts/`、`docs/architecture/`、ADR、治理、Evidence 和指定历史归档；
+- 使用 `project-reconstruction-lab/WORKFLOW.md` 和三个可导出 Skill 做用户明确授权的设计审查；
+- 为新的审查建立单独 Program，但必须先通过架构审查和用户 Gate。
 
-## Inputs
+当前禁止：
 
-- `docs/facts/` 的当前项目上下文、Current 与 UNKNOWN；本轮不新增新的事实分类；
-- `docs/architecture/` 的 Target 边界，以及 `docs/facts/current-state.md` 的 Production Readiness；
-- `project-reconstruction-lab/01-facts/` 的事实恢复、证据台账和未决问题；
-- `project-reconstruction-lab/04-product/` 的问题模型与产品命题候选；
-- `docs/architecture/`、ADR 0008–0011 和 `docs/facts/`；旧专题只作为 Superseded 迁移材料；
-- 当前代码、测试、配置、Compose、Migration 和可复现验证结果；
-- 已完成 Red/Blue 会话，仅作为输入和可追溯历史，不自动继承其结论。
+- 自动创建新的 Round、Session、Question Set、Candidate Branch 或 Architecture Revision；
+- 把历史 Round、Target 文档、Mock、测试或目录存在写成 Current、Measured 或 Production Ready；
+- 修改业务 Runtime、Facts、ADR、Schema、Migration、UI、Dependencies 或 Production Infra，除非另有明确任务。
 
-## Two-track execution
-
-### Track A — Fact Depth Recovery
-
-围绕现有十类 Facts 深挖六个高价值断点：真实法院工作流与痛点、个人代码级 Ownership、
-Court QA/Evaluation 协议、真实 Incident、团队协作链、Reuse/Build/Research Transfer。
-事实 Gate 采用：
+## Current handoff
 
 ```text
-为什么做 → 谁在用 → 团队怎么做 → 我做了什么 → 请求怎么跑
-→ 遇到什么问题 → 怎么改 → 怎么测 → 客户怎样反馈 → 为什么改架构
+Repository Closure                  CLOSED
+Local Workspace Closure             CLOSED
+Canonical Facts Taxonomy             DONE
+Canonical Architecture               ACCEPTED_TARGET / NOT_CHANGED_IN_THIS_TASK
+Implementation Evidence Track        INDEPENDENT / NOT_AN_ARCHITECTURE_GATE
+Red/Blue Lab                         LIGHTWEIGHT_RECONSTRUCTION
+Active Workflow                      project-reconstruction-lab/WORKFLOW.md
+Formal Round Owner                   docs/history/red-blue/
+Active Round                         NONE
+Round-007                            CANCELLED_BEFORE_START
+Production Readiness                 NOT_ESTABLISHED
 ```
 
-缺少证据时保留 `UNKNOWN`、`USER_PARTIAL_RECALL` 或 `RECONSTRUCTED_CANDIDATE`。
-
-### Track B — Architecture Reconstruction
-
-从已确认或明确标注范围的事实出发，依次审查：
-
-```text
-Historical Problem
-→ Product Capability
-→ Domain Contract
-→ Runtime Contract
-→ Knowledge / Evidence
-→ Logical Capability
-→ Physical Service / Worker
-→ Data Ownership / Recovery
-→ Security / Eval / Deployment
-```
-
-每一项复杂度都必须回答：为什么存在、为什么不是 Library/Worker/Host/已有 OSS、谁拥有
-状态、失败如何重试和恢复、如何幂等、如何授权和观测、怎样测试、怎样替换或删除。
-
-## Review gates
-
-```text
-Evidence Intake
-→ Fact Readiness Gate
-→ Product Problem Gate
-→ Red Attack
-→ Blue Response
-→ Counter Attack
-→ Interview Red Team
-→ KEEP / SIMPLIFY / EXTERNALIZE / DEFER / DELETE
-→ ADR Candidate
-→ User Architecture Gate
-→ Canonical Docs Sync
-```
-
-在 `User Architecture Gate` 之前，只能写 Lab 候选、Spike、Benchmark 或 Gap；可以记录
-带边界的 `Codex Implementation Task Candidate`，但不能激活 Runtime implementation task
-或 implementation Program。`Microservice Target` 不等于五个服务已实现，`Domain-aware
-Runtime` 也不等于已证明优于 Host + Legal Backend。
-
-## Expected outputs
-
-1. 历史问题模型和 Fact Readiness 结论；
-2. Domain / Runtime / Knowledge / Service / Data / Security / Eval 的候选与攻击记录；
-3. WorkBuddy Host、Legal Backend、Native Runtime 等简化方案的 Kill Test 结果；
-4. Big Tech Interview Challenge Log 与事实/架构回流项；
-5. `Architecture-to-Code Gap`，只记录迁移与证据需求，不直接改代码；
-6. 经过反击的 ADR 候选与 Canonical Docs 更新清单；
-7. 如果证据不足，明确留下 Open Evidence Gaps，而不是强行收敛。
-
-## Current phase
-
-```text
-Fact Taxonomy V1                 DONE
-Fact Depth Recovery              OPEN EVIDENCE GAP / NO ACTIVE PROGRAM
-Product Problem Reconstruction   OPEN CANDIDATE / NO ACTIVE PROGRAM
-Architecture Red/Blue            RESET / NO ACTIVE PROTOCOL
-Architecture Red/Blue Round-002   COMPLETE (V3, 100Q, 80 NOVEL / 20 REGRESSION)
-Architecture Red/Blue Round-003   COMPLETE (V3.1, 100Q, 85 NOVEL / 15 REGRESSION)
-Interview Red Team               READY
-Canonical Architecture Sync      APPLIED / ACCEPTED_TARGET (V3.1.3 Round-005 review)
-Document Quality V3.1             COMPLETE (historical Part A >= 80 / Part B >= 85)
-Document Normalization V3.1.1      COMPLETE (Part A >= 85 / Part B >= 85)
-Human Writing V3.1.2              COMPLETE (warning report + human review package)
-Architecture Red/Blue Round-004   COMPLETE (100Q consistency/failure review; immutable)
-Architecture Red/Blue Round-005   COMPLETE (100Q deep failure/recovery review; V3.1.3)
-Closure Semantic Audit V3.1.3.1   COMPLETE (derived classification; Round-005 immutable)
-Implementation Evidence Wave-001 COMPLETE (TASK-001 / TASK-003; independent Track B)
-V4.1 Workflow Bootstrap           HISTORICAL / IMMUTABLE
-V4.2 Workflow Bootstrap           ACCEPTED_WITH_DEBT / EXTERNAL_VERDICT_PROVIDED
-Architecture Round-006            ABORTED_OPERATIONAL_PILOT / WORKFLOW_EXECUTION_BLOCKER
-Round-006                         3 LIVE TURNS; ARCHITECTURE SCORE INVALID; CANDIDATE NONE
-V4.2 default profile              BATCH_ADVERSARIAL
-V4.2 experimental profile         LIVE_ADAPTIVE
-Round-007                         CANCELLED_BEFORE_START
-Round-006 closure                 COMPLETE
-V4.2 batch profile consolidation  COMPLETE / HISTORY
-Architecture Readability Gate    IN_PROGRESS
-Next Red/Blue Protocol            NOT_DESIGNED
-```
-
-历史 V4.2 Addendum：`LIVE_ADAPTIVE` 每次只冻结一个 Question、一个 Answer 和一个 Chain Decision。
-Red 读取上一 Answer 后动态选择 follow-up 或关闭 Chain；`question-answer-ledger.jsonl` append-only，
-禁止 whole-round question freeze（仅限 `LIVE_ADAPTIVE`）。`BATCH_ADVERSARIAL` 允许 Red Attack 一次形成完整 100Q，
-但 `RED_COUNTER` 必须基于 Blue Answers 动态攻击。Blue 不读取 calibration，且只在
-`LIVE_ATTACK_COMPLETE` 后写 Candidate。
-`INTERVIEW_DEPTH` 与
-`INTERVIEW_EXPLAINABILITY` 属于问题质量和文档可解释性信号，不是实现或生产证据。
-
-历史 V4.2 Profile：默认 `BATCH_ADVERSARIAL` 使用独立的 Attack、Defense、Counter、Counter Defense、
-Synthesis 和 Judge Session；实验性 `LIVE_ADAPTIVE` 才使用逐题 Answer-triggered Handoff。两种
-Profile 都要求 Blue 在 Defense 阶段不修改 Candidate，且必须经过 ChatGPT External Verdict 才能
-Merge。Round-007 已在启动前取消，不在当前 Program 中启动。
-
-## V2 Round status
-
-```text
-Protocol                         ZUNO-RED-BLUE-WORKFLOW-V2
-Round                            ROUND-001 / 100 independent questions
-Question distribution            A10 B10 C15 D15 E10 F10 G10 H8 I7 J5
-Answer raw score                 361/500 (72.2)
-Architecture fitness raw score  457/500 (91.4)
-Critical Gate                    OPEN
-P0 / P1                          58 / 42
-Canonical Docs Sync              APPLIED (after Gate Realignment)
-User Architecture Gate          APPROVED (Part-A Target only)
-Round decision                   DESIGN_ACCEPTED_TARGET; P0 CLOSURE OPEN
-```
-
-Round-001 的完整记录、Gap、Blue Change Set 和 Counter Retest 位于
-`project-reconstruction-lab/sessions/RB-WORKFLOW-V2-001/`。这些结果只能指导下一轮 Fact
-Recovery、Benchmark 和 Architecture Review，不能把 Target 候选升级为 Current，也不能生成
-Runtime implementation task。
-
-## Blue Repair status
-
-```text
-Repair                         RB-BLUE-REPAIR-001
-Root-cause clusters             10
-Final severity                 P0=12 P1=46 P2=32 P3=10
-Final P0 closed                0/12
-Evidence Coverage              0% closure-grade
-Complexity Justification       10/10 structural, 0/10 measured
-Counter Retest                 9 REOPEN + 1 WAITING_FOR_EVIDENCE
-Round-001 closure              NOT_CLOSED
-V3 Round-002                   COMPLETE
-Canonical Docs Sync             APPLIED
-User Architecture Gate         APPROVED
-```
-
-Repair 只写入 Lab，不修改业务 Runtime、UI、Schema/Migration 或正式 Canonical Architecture。
-
-## V3 Round-002 status
-
-```text
-Protocol                         ZUNO-RED-BLUE-WORKFLOW-V3
-Round                            RB-WORKFLOW-V3-ROUND-002
-Questions / Answers / Scores     100 / 100 / 100
-Novel / Regression               80 / 20
-Raw / Normalized Score           371/500 / 74.20
-Grade                            Architecture Requires Significant Repair
-P0 / P1 / P2 / P3                8 / 23 / 69 / 0
-A / I / E / X                    0 / 5 / 3 / 0
-New A-P0                         0
-Canonical Sync                   APPLIED (Target refinements only)
-Round-003                       COMPLETE (V3.1 documentation quality)
-```
-
-V3 Round-002 没有关闭原始 P0，也没有改变 Current、Facts、Runtime、Schema/Migration、生产或
-依赖状态。其完整记录位于 `project-reconstruction-lab/sessions/RB-WORKFLOW-V3-ROUND-002/`；
-Round 文件关闭后按 immutable archive 处理。
-
-## V3.1 Round-003 status
-
-```text
-Protocol                         ZUNO-RED-BLUE-WORKFLOW-V3.1
-Round                            RB-WORKFLOW-V3-ROUND-003
-Questions / Answers / Scores     100 / 100 / 100
-Novel / Regression               85 / 15
-Raw / Normalized Score           392/500 / 78.40
-Part A / Part B Quality Gate     PASS / PASS
-Document Quality                 DOC_QUALITY_COMPLETE
-New A-P0                         0
-Canonical Sync                   APPLIED (documentation Target refinement only)
-Round-004                       COMPLETE (V3.1.2)
-```
-
-Round-003 只修复 Canonical 文档的同文件 Part A/Part B 可读性与 Contract 表达，删除过程性
-Round trace；没有改变 Facts、Runtime、Schema/Migration、依赖、生产状态或既有 ADR 原则。完整
-记录位于 `project-reconstruction-lab/sessions/RB-WORKFLOW-V3-ROUND-003/`。
-
-## V3.1.1 normalization status
-
-```text
-Session                         RB-DOCUMENT-NORMALIZATION-V3.1.1
-Canonical Docs                  12 audited / 12 full-part rewritten
-Part A target / strong          85 / 90
-Part B target                   85
-Sync mode                       FULL_PART_REWRITE; APPEND forbidden
-Facts / Runtime / ADR           NONE / NONE / NONE
-Round-004                       COMPLETE (V3.1.2)
-```
-
-## Evidence Closure status
-
-```text
-Campaign                       RB-EVIDENCE-CLOSURE-001
-Baseline SHA                   e0e67ede267025f5203ff8b06bc6c185b8a96000
-Final P0                       12
-Executed focused evidence      10/12 (V3 narrow claims)
-Closure-grade evidence         0/12 = 0%
-P0 closed                      0/12
-Red Evidence Review            completed; no closure accepted
-Counter Retest                 NOT_RUN
-Canonical Docs Sync            NOT_APPLIED
-V3 Round-002                   COMPLETE; this evidence campaign remains OPEN
-```
-
-Evidence Closure 不是第二轮百问，也不是 Runtime implementation。它只登记实际证据、证据范围、
-反驳意见和下一步验证；所有最终 P0 仍保持 OPEN。
-
-## P0 V4 Execution status
-
-```text
-Campaign                       RB-P0-V4-EXECUTION-001
-Original P0                    12
-Scope Split                   1 (Q039-C / Q039-B)
-V4 executed records            6/12
-V3 current/narrow records      5/12
-V4 accepted by Red             0/12
-Counter Retest                 NOT_RUN
-P0 closed                      0/12
-Implementation-dependent       4
-External-blocked               1 (Q066)
-V5 benchmark gaps              1 (Q039-B)
-Critical Closure               0%
-V3 Round-002                   COMPLETE; this execution campaign remains OPEN
-Canonical Docs Sync            NOT_APPLIED
-```
-
-本轮使用 verification-only harness 和 loopback Provider emulator；它们不能证明 Current Domain
-Persistence、第三方 Provider、真实 Sandbox、法院质量或 Production。Q039 的 Scope Split 不
-删除原始 P0，Q039-B 继续保持 V5 Benchmark Gap。
-
-## Gate Realignment status
-
-```text
-Campaign                       RB-GATE-REALIGNMENT-001
-Original P0                    12
-Derived closure records        13 (Q039-C / Q039-B)
-A-P0 / I-P0 / E-P0 / X-P0     0 / 11 / 1 / 1
-Original P0 closed             0 / 12
-User Architecture Gate         APPROVED
-Canonical Sync                  APPLIED / ACCEPTED_TARGET
-Implementation Program          READY_FOR_TASK_DEFINITION (not active)
-```
-
-Closure Class 只决定阻塞面，不改变历史 Severity 或 P0 Closure。用户 Gate 已批准后，
-Implementation Task Candidate 仍不能自动激活或写成 Current；必须另行定义并启动实现 Program。
-
-## Implementation Wave-001 exit condition
-
-Wave-001 已完成窄实现、focused tests 和 evidence package；PostgreSQL 真实环境、进程级故障、
-法院 QA、HA、Security Qualification 和 Production 仍未证明。它保持
-`WAITING_FOR_RED_COUNTER_RETEST`；Round-006 当前因 `WF-API-001` 的 Workflow Execution Blocker 中止收口，不能
-在修复 Turn Handoff 之前重放或继续。
+`IMPLEMENTATION-EVIDENCE-CYCLE-001` 是独立 Evidence Track，不是 Architecture Review 的自动前置
+条件。正式 Round 只从 `docs/history/red-blue/README.md` 读取；旧协议和流程工程通过 Git history
+追溯。用户没有明确授权前，不创建新的 Session、题集或 Candidate。
 
 旧 Program1 已 `SUPERSEDED / RETIRED`，不得恢复或重新激活。

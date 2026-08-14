@@ -1,0 +1,101 @@
+# Architecture Interview / Red-Blue Workflow
+
+这是 `project-reconstruction-lab/` 唯一当前工作流。它用于在正式架构清晰后进行一次可收口的
+架构面试和 Red/Blue 审查；它不负责生成事实、不直接修改 Runtime，也不把一轮问题自动变成十个
+新组件。
+
+## 一轮怎么走
+
+```text
+Main Round Brief
+  → Red Questions
+  → Blue Answers
+  → Red Review
+  → Main Quick Judgment
+  → Archive First
+  → Archive Commit
+  → Main Architecture Review
+  → Optional Architecture Revision Commit
+  → Next Round
+```
+
+每一步的含义：
+
+1. Main 先固定本轮主题、基线和阅读范围；
+2. Red 选择最强的必要性、边界、失败、恢复、安全、成本或替代方案攻击；
+3. Blue 只能基于基线事实、正式架构、ADR 和通用工程知识回答，并明确未知；
+4. Red Review 记录回答暴露的缺口，不替 Blue 写推荐答案；
+5. Main 判断是 `ACCEPT`、`REJECT`、`DEFER`、`MEASUREMENT`、`FACT_GAP` 还是 `NO_CHANGE`；
+6. 先把问题、回答和判断归档，确保“发生了什么”不会被后续架构编辑覆盖；
+7. 只有 Main 明确授权，才单独创建 Architecture Revision Commit。
+
+## 必须追问的内容
+
+每个被保留的复杂度至少要回答：
+
+- 为什么存在，真实问题是什么；
+- 为什么普通 Library、Worker、模块化单体或成熟 OSS 不够；
+- 谁拥有状态和最终决定；
+- 失败、重试、重复执行和恢复怎样处理；
+- 权限、审计、观测和验证怎样成立；
+- 代价是什么，什么证据会触发删除、简化或外部化。
+
+Red 可以给出反例和更简单替代，但只作为攻击。Blue 必须先用普通工程语言解释，再补精确
+术语。不能把“企业级”“最佳实践”“未来扩展”当作证明。
+
+## 决策原则
+
+```text
+DELETE → SIMPLIFY → REUSE → EXTERNALIZE → MEASURE → BUILD
+```
+
+Red Finding 不等于 Architecture Gap；Blue 回答差也不等于需要新增机制。若事实缺口阻止判断，
+返回 `FACT_GAP`；若收益没有证据，返回 `MEASUREMENT`；若已有工具足够，返回 `REUSE` 或
+`EXTERNALIZE`。
+
+连续 Overall Architecture 稳定后，才可以单独讨论模块或服务拆分。不要预设 11 个模块、固定
+题量、固定服务数、GraphRAG、Multi-Agent、微服务或某个 Provider 必须存在。
+
+## 状态边界
+
+```text
+CURRENT    由代码、Test、Trace、Eval 或真实运行证据支持
+HISTORY    已发生并被归档的 Round 或项目材料
+TARGET     已接受但尚未实现的目标设计
+HYPOTHESIS 等待 Benchmark、Spike、用户或安全验证
+UNKNOWN    当前没有足够证据
+```
+
+Round Archive 只保存历史记录，不拥有今天的 Facts 或 Target。Architecture Revision 必须回到
+`docs/architecture/`、ADR 或正确的治理 Owner；本 Workflow 不创建第二套 Canonical 文档。
+
+## 停止条件
+
+在以下任一情况停止本轮并报告原因：
+
+- 无法证明当前基线或阅读范围；
+- Red 需要读取不在允许范围内的业务代码或私有材料；
+- Blue 只能靠猜测补历史事实；
+- 问题已经没有新的 Architecture Information；
+- 需要修改 API、Schema、Dependency、安全边界或生产系统；
+- 用户尚未授权进入 Architecture Revision 或新的 Round。
+
+Interview Ready 不等于 Production Ready。生产结论仍需要真实运行、负载、故障、安全、恢复和
+外部验收证据。
+
+## 归档契约
+
+正式 Round 归档在 `docs/history/red-blue/`，至少标明：
+
+```text
+series
+round_id
+execution_mode: MANUAL | AUTOMATED
+status
+base_sha
+archive_commit
+architecture_revision_commit
+```
+
+中止的 Round 保留真实中止状态，不补造不存在的后半轮。旧 Protocol、Bootstrap、Reset 和
+Workflow Engineering 的演进通过 Git history 追溯，不在当前 Lab 重新建立历史目录。

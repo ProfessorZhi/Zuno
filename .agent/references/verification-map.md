@@ -9,49 +9,21 @@ python tools/scripts/verify_deep_dive_architecture.py
 python tools/scripts/verify_architecture_interview_qa.py
 python tools/scripts/verify_markdown_internal_links.py
 python tools/scripts/verify_repo_structure.py
-python tools/scripts/verify_red_blue_session.py
-python tools/scripts/verify_red_blue_gate_realignment_v1.py
-python tools/scripts/verify_red_blue_workflow_v4.py --bootstrap project-reconstruction-lab/sessions/RB-WORKFLOW-V4-BOOTSTRAP
-python tools/scripts/verify_red_blue_workflow_v42.py --bootstrap project-reconstruction-lab/sessions/RB-WORKFLOW-V4.2-BOOTSTRAP
-python tools/scripts/verify_red_blue_round006_closure.py --round project-reconstruction-lab/sessions/RB-WORKFLOW-V4.2-ROUND-006
-python tools/scripts/verify_red_blue_workflow_v42.py --profile batch_adversarial --round project-reconstruction-lab/sessions/<batch-round-id>
+python tools/scripts/verify_architecture_interview_program.py
 python .agent/scripts/verify_agent_system.py
 python .agent/scripts/verify_doc_boundaries.py
 ```
 
-当前 RESET 边界由 `python tools/scripts/verify_red_blue_reset.py` 负责；它不创建 Session、不运行红队或蓝队。
-红蓝 Campaign Session 的公开记录一致性由 `python tools/scripts/verify_red_blue_session.py` 负责；它只验证已落盘的 YAML/Markdown 记录，不运行红队、蓝队或架构同步 Runtime。
+当前轻量 Lab 边界由 `python tools/scripts/verify_architecture_interview_program.py` 负责；它不创建 Session、不运行红队或蓝队。正式 Round Archive 只验证元数据和 Owner，不重新运行历史 Protocol。
 
-历史 V4.2 使用 `verify_red_blue_workflow_v42.py` 验证 Fresh Context、Dual Thread、相同
-Snapshot、Part-A Cold-Start、Red-only interview calibration、Deep-Dive Chain、问题冻结、
-Blue-only Canonical Writer、外部 ChatGPT Gate 和双轨状态。它不创建 Session、不启动 Round、
-不修改 Canonical，也不代签 Verdict。
+历史 V2–V4.2 Protocol、Round-006 Operational Pilot 和 Gate Realignment 的验证输出属于 Git
+历史与 `docs/history/red-blue/` 的考古材料；当前不重新运行旧验证器，也不把历史结果当成当前
+工作流能力证明。
 
-Round-006 的中止收口还必须通过 `verify_red_blue_round006_closure.py`；该验证器只确认
-`WORKFLOW_EXECUTION_BLOCKER` 与 `ARCHITECTURE_SCORE: INVALID` 的语义，不把工作流失败升级为
-架构失败，也不产生 Candidate 或 Merge 证据。
+当前架构 Red/Blue 任务先读取 `project-reconstruction-lab/WORKFLOW.md`、三个 Skill、
+`docs/architecture/` 和 Facts；需要考古时再读取 `docs/history/red-blue/` 的指定归档。
 
-`RB-GATE-REALIGNMENT-001` 使用专用 Gate verifier，检查 Closure Class、无环 Gate 依赖、
-用户决策包、原始 P0 记录保持 OPEN，以及 Canonical Sync 未应用。
-
-当前架构 Red/Blue 任务先读取 `project-reconstruction-lab/05-red-blue/README.md`、
-`principles.md` 和 `workflow-status.md`；需要考古时再读取 `history/` 和指定 Session。
-
-架构红蓝队历史材料先读取：
-
-```text
-project-reconstruction-lab/README.md
-project-reconstruction-lab/00-charter/
-project-reconstruction-lab/01-facts/
-project-reconstruction-lab/02-history/
-project-reconstruction-lab/03-current/
-project-reconstruction-lab/05-red-blue/
-project-reconstruction-lab/07-interview-red-team/
-project-reconstruction-lab/08-decisions/
-project-reconstruction-lab/09-implementation/
-```
-
-该工作区负责项目事实采集和红蓝互动；`docs/history/interview-qa/` 负责架构攻击题和 Coverage。两者都不拥有 Canonical Architecture，正式变更必须回到 `docs/architecture/`、`docs/facts/`、`docs/decisions/`、`docs/governance/` 或 `docs/evidence/` 的正确 Owner。
+历史 Round 统一由 `docs/history/red-blue/` 持有；该历史归档不拥有 Canonical Architecture，正式变更必须回到 `docs/architecture/`、`docs/facts/`、`docs/decisions/`、`docs/governance/` 或 `docs/evidence/` 的正确 Owner。
 
 ## 架构与模块
 

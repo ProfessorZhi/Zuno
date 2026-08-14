@@ -14,7 +14,7 @@ docs/evidence/             = 可复现 Current 证据
 docs/history/              = 批准历史和 Superseded 原稿
 ```
 
-旧专题和旧 11 模块原稿已迁入 `docs/history/superseded-document-taxonomy/`，不再是 active route。`project-reconstruction-lab/` 是调查、恢复和 Red/Blue 工作区，不拥有正式架构事实。
+旧专题和旧 11 模块原稿已迁入 `docs/history/superseded-document-taxonomy/`，不再是 active route。`project-reconstruction-lab/` 只保留轻量 Workflow、三个 Skill 和 Round 导航，不拥有正式架构事实；正式 Round 由 `docs/history/red-blue/` 持有。
 
 ## 正式阅读顺序
 
@@ -55,4 +55,4 @@ python .agent/scripts/verify_agent_system.py
 python .agent/scripts/verify_doc_boundaries.py
 ```
 
-项目重建与 Red/Blue 任务另读 `project-reconstruction-lab/README.md` 以及对应 Session；Round-006 immutable evidence 不得修改，Round-007 只有 `READY / NOT_STARTED` 状态。
+项目重建与 Red/Blue 任务另读 `project-reconstruction-lab/README.md`、`WORKFLOW.md` 和三个 Skill；历史 Round 按需读取 `docs/history/red-blue/`，不再读取 Lab Session 目录。

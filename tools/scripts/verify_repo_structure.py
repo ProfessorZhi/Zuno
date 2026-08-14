@@ -31,6 +31,7 @@ def main() -> int:
         "docs/evidence/current-runtime-baseline.md",
         "docs/evidence/current-test-baseline.md",
         "docs/evidence/current-eval-baseline.md",
+        "docs/evidence/implementation-wave-001.md",
     }
     history_front = {
         path.relative_to(ROOT).as_posix()

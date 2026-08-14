@@ -1,6 +1,6 @@
 version: 3
 
-purpose: "Route Zuno work to the consolidated facts, architecture, modules, decisions, governance, evidence, Programs, and history surfaces."
+purpose: "Route Zuno work to consolidated facts, architecture, modules, decisions, governance, evidence, history, and the lightweight interview lab."
 
 system_identity:
   name: "Zuno Local Agent Skill System"
@@ -47,20 +47,8 @@ architecture_directory_contract:
     - "docs/facts/"
     - "docs/architecture/"
     - "docs/modules/"
-  legacy_taxonomy: "docs/history/superseded-document-taxonomy/ contains the former facts, topic and 11-module materials; it is not an active route"
-  presentation_pair:
-    - "docs/architecture/architecture-views.md"
-    - "docs/architecture/architecture.html"
-  visual_source_role: "architecture-views.md and architecture.html are one paired diagram presentation surface; neither is an independent architecture fact source"
-  reading_protocol:
-    human_question: "read facts first, then architecture.md for cross-layer design"
-    implementation_or_review: "read architecture.md, relevant facts, ADR/governance, evidence, code, and active Program if any"
-    no_mirror_rule: "do not create human/spec mirrors or a second Service/Domain/State registry"
-  forbidden_content:
-    - "module-specific second architecture documents in architecture/"
-    - "production readiness claims without evidence"
-    - "Program plan in architecture/"
-    - "repo ownership matrix in architecture/"
+  legacy_taxonomy: "docs/history/superseded-document-taxonomy/ contains former facts, topic and module materials; it is not an active route"
+  no_mirror_rule: "do not create a second Service/Domain/State registry in .agent or the Lab"
 
 canonical_ownership:
   project_facts_owner: "docs/facts/"
@@ -72,10 +60,11 @@ canonical_ownership:
   evidence_owner: "docs/evidence/"
   decision_owner: "docs/decisions/"
   governance_owner: "docs/governance/"
+  formal_round_archive_owner: "docs/history/red-blue/"
+  interview_lab_owner: "project-reconstruction-lab/"
 
 shared_contracts:
   adr: "docs/decisions/0003-wave1-cross-module-contract-freeze.md"
-  registry: "docs/governance/wave1-cross-module-contract-registry.md"
   state_boundary_adr: "docs/decisions/0008-legal-domain-kernel-and-host-boundary.md"
   language_adr: "docs/decisions/0009-python-only-backend.md"
   service_adr: "docs/decisions/0010-microservice-target-and-service-boundaries.md"
@@ -99,121 +88,38 @@ skill_routes:
       - ".agent/system.yaml"
     verify:
       - "git diff --check"
-      - "python tools/scripts/verify_architecture_document_set.py"
-      - "python tools/agent/render_architecture.py --check"
       - "python tools/scripts/verify_docs_entrypoints.py"
       - "python tools/scripts/verify_markdown_internal_links.py"
+      - "python tools/scripts/verify_architecture_document_set.py"
       - "python tools/scripts/verify_architecture_writing_standard.py"
       - "python tools/scripts/verify_architecture_human_readability.py"
       - "python .agent/scripts/verify_agent_system.py"
       - "python .agent/scripts/verify_doc_boundaries.py"
-      - "python tools/scripts/verify_red_blue_round_v2.py"
-      - "python tools/scripts/verify_red_blue_round_v3.py"
-      - "python tools/scripts/verify_red_blue_score_v3.py"
-      - "python tools/scripts/verify_canonical_diff_v3.py"
-      - "python tools/scripts/verify_red_blue_round_v31.py"
-      - "python tools/scripts/verify_document_quality_v31.py"
-      - "python tools/scripts/verify_document_normalization_v311.py"
-      - "python tools/scripts/verify_human_writing_v312.py"
-      - "python tools/scripts/verify_red_blue_round_v312.py"
-      - "python tools/scripts/verify_red_blue_round_v313.py"
-      - "python tools/scripts/verify_closure_semantic_audit_v3131.py"
-      - "python tools/scripts/verify_red_blue_repair_v1.py"
-      - "python tools/scripts/verify_red_blue_evidence_closure_v1.py"
-      - "python tools/scripts/verify_red_blue_p0_v4_execution_v1.py"
-      - "python tools/scripts/verify_red_blue_gate_realignment_v1.py"
-      - "python tools/scripts/verify_red_blue_workflow_v4.py --bootstrap project-reconstruction-lab/sessions/RB-WORKFLOW-V4-BOOTSTRAP"
-      - "python tools/scripts/verify_red_blue_workflow_v41.py --bootstrap project-reconstruction-lab/sessions/RB-WORKFLOW-V4.1-BOOTSTRAP"
-      - "python tools/scripts/verify_red_blue_workflow_v42.py --bootstrap project-reconstruction-lab/sessions/RB-WORKFLOW-V4.2-BOOTSTRAP"
-      - "python tools/scripts/verify_red_blue_round006_closure.py --round project-reconstruction-lab/sessions/RB-WORKFLOW-V4.2-ROUND-006"
 
-  - name: "architecture-red-blue-v4-workflow"
+  - name: "project-reconstruction-and-interview-lab"
     match:
       paths:
-        - "project-reconstruction-lab/05-red-blue/history/protocols/round-protocol-v4.md"
-        - "project-reconstruction-lab/05-red-blue/history/protocols/v4/**"
+        - "project-reconstruction-lab/**"
+        - "docs/history/red-blue/**"
+        - "tools/scripts/verify_architecture_interview_program.py"
+        - "tests/repo/test_architecture_interview_program.py"
     docs_sync:
       - "project-reconstruction-lab/README.md"
-      - "project-reconstruction-lab/05-red-blue/"
-      - "project-reconstruction-lab/sessions/RB-WORKFLOW-V4-BOOTSTRAP/"
-      - ".agent/references/current-program.md"
-      - ".agent/references/workflow.md"
-      - "docs/governance/architecture-gate-policy.md"
+      - "project-reconstruction-lab/WORKFLOW.md"
+      - "project-reconstruction-lab/archive-map.md"
+      - "project-reconstruction-lab/skills/"
+      - "docs/history/red-blue/"
+      - "docs/history/README.md"
+      - "AGENTS.md"
+      - ".agent/references/"
     verify:
       - "git diff --check"
-      - "python tools/scripts/verify_red_blue_workflow_v4.py --bootstrap project-reconstruction-lab/sessions/RB-WORKFLOW-V4-BOOTSTRAP"
-      - "pytest -q tests/repo/test_red_blue_workflow_v4.py -p no:cacheprovider"
-
-  - name: "architecture-red-blue-v41-workflow"
-    match:
-      paths:
-        - "project-reconstruction-lab/05-red-blue/history/protocols/round-protocol-v4.1.md"
-        - "project-reconstruction-lab/05-red-blue/history/protocols/v4.1/**"
-        - "project-reconstruction-lab/sessions/RB-WORKFLOW-V4.1-BOOTSTRAP/**"
-        - "tests/repo/test_red_blue_workflow_v41.py"
-        - "tools/scripts/verify_red_blue_workflow_v41.py"
-    docs_sync:
-      - "project-reconstruction-lab/05-red-blue/"
-      - "project-reconstruction-lab/sessions/RB-WORKFLOW-V4.1-BOOTSTRAP/"
-      - ".agent/programs/current.md"
-      - ".agent/references/current-program.md"
-      - ".agent/references/workflow.md"
-      - "docs/governance/architecture-gate-policy.md"
-    verify:
-      - "git diff --check"
-      - "python tools/scripts/verify_red_blue_workflow_v41.py --bootstrap project-reconstruction-lab/sessions/RB-WORKFLOW-V4.1-BOOTSTRAP"
-      - "pytest -q tests/repo/test_red_blue_workflow_v41.py -p no:cacheprovider"
-
-  - name: "architecture-red-blue-v42-workflow"
-    match:
-      paths:
-        - "project-reconstruction-lab/05-red-blue/history/protocols/round-protocol-v4.2.md"
-        - "project-reconstruction-lab/05-red-blue/history/protocols/v4.2/**"
-        - "project-reconstruction-lab/sessions/RB-WORKFLOW-V4.2-BOOTSTRAP/**"
-        - "project-reconstruction-lab/sessions/RB-WORKFLOW-V4.2-ROUND-006/**"
-        - "tests/repo/test_red_blue_workflow_v42.py"
-        - "tests/repo/test_red_blue_workflow_v42_batch_profile.py"
-        - "tools/scripts/verify_red_blue_workflow_v42.py"
-        - "tools/scripts/verify_red_blue_round006_closure.py"
-    docs_sync:
-      - "project-reconstruction-lab/05-red-blue/"
-      - "project-reconstruction-lab/sessions/RB-WORKFLOW-V4.2-BOOTSTRAP/"
-      - ".agent/programs/current.md"
-      - ".agent/references/current-program.md"
-      - ".agent/references/workflow.md"
-      - "docs/governance/architecture-gate-policy.md"
-    verify:
-      - "git diff --check"
-      - "python tools/scripts/verify_red_blue_workflow_v42.py --bootstrap project-reconstruction-lab/sessions/RB-WORKFLOW-V4.2-BOOTSTRAP"
-      - "python tools/scripts/verify_red_blue_workflow_v42.py --round project-reconstruction-lab/sessions/RB-WORKFLOW-V4.2-ROUND-006"
-      - "python tools/scripts/verify_red_blue_workflow_v42.py --profile batch_adversarial --round project-reconstruction-lab/sessions/<batch-round-id>"
-      - "pytest -q tests/repo/test_red_blue_workflow_v42.py -p no:cacheprovider"
-      - "pytest -q tests/repo/test_red_blue_workflow_v42_batch_profile.py tests/repo/test_red_blue_round006_closure.py -p no:cacheprovider"
-
-  - name: "red-blue-reset-readability"
-    match:
-      paths:
-        - "project-reconstruction-lab/05-red-blue/README.md"
-        - "project-reconstruction-lab/05-red-blue/principles.md"
-        - "project-reconstruction-lab/05-red-blue/workflow-status.md"
-        - "project-reconstruction-lab/05-red-blue/history/**"
-        - "project-reconstruction-lab/sessions/RB-RESET-001/**"
-        - "tools/scripts/verify_red_blue_reset.py"
-        - "tests/repo/test_red_blue_reset.py"
-    docs_sync:
-      - "project-reconstruction-lab/05-red-blue/"
-      - "project-reconstruction-lab/sessions/RB-RESET-001/"
-      - "docs/architecture/"
-      - ".agent/programs/current.md"
-      - ".agent/references/current-program.md"
-      - ".agent/references/task-routing.md"
-      - ".agent/references/verification-map.md"
-    verify:
-      - "git diff --check"
-      - "python tools/scripts/verify_red_blue_reset.py"
+      - "python tools/scripts/verify_architecture_interview_program.py"
       - "python tools/scripts/verify_docs_entrypoints.py"
       - "python tools/scripts/verify_markdown_internal_links.py"
-      - "python tools/agent/render_architecture.py --check"
+      - "python .agent/scripts/verify_agent_system.py"
+      - "python .agent/scripts/verify_doc_boundaries.py"
+      - "pytest -q tests/repo/test_architecture_interview_program.py -p no:cacheprovider"
 
   - name: "backend-agent-runtime"
     match:
@@ -256,3 +162,4 @@ stop_conditions:
   - "security boundary change"
   - "Target behavior promoted to Current without evidence"
   - "architecture taxonomy changed without ADR and entrypoint migration"
+  - "formal Round archive changed without an explicit archive disposition"

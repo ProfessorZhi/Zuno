@@ -1,278 +1,60 @@
-# Project Reconstruction & Architecture Lab
+# Project Reconstruction Lab
 
-## 定位
+`project-reconstruction-lab/` 是项目事实恢复、架构面试和 Red/Blue 决策实验室。它不是
+`docs/` 的第二套事实源，也不是简历生成器。今天的正式事实、Target Architecture、ADR 和可复现
+证据分别由 `docs/facts/`、`docs/architecture/`、`docs/decisions/` 和 `docs/evidence/` 持有。
 
-本目录是 Zuno 的项目重建与架构实验室，不是 Canonical Architecture，也不是简历生成器。它同时承载：
+## 当前边界
 
-- 历史项目事实恢复；
-- 模糊记忆的场景化恢复；
-- 当前仓库证据审计；
-- 开发过程和交付过程还原；
-- Architecture Red Team / Blue Team / Counter Attack；
-- 大厂面试官级项目深挖；
-- Target Architecture consolidation；
-- Architecture-to-Code gap 和 Codex task 规划；
-- 可复用 Skill 的设计规范。
+本目录只保留：
 
-它明确不做：
+- [`WORKFLOW.md`](WORKFLOW.md)：唯一当前 Architecture Interview / Red-Blue 工作流；
+- [`archive-map.md`](archive-map.md)：正式历史 Round 的导航；完整 Round Archive 由
+  [`docs/history/red-blue/`](../docs/history/red-blue/README.md) 持有；
+- [`skills/`](skills/README.md)：三个可以复制到其他项目的独立 Skill。
 
-```text
-Resume Fabrication Tool
-Architecture Decoration Tool
-Buzzword Generator
-Fake Production Evidence Generator
-```
+旧的事实恢复、候选架构、流程版本、Bootstrap、Reset、Closure、Prompt、Session Template 和
+实验工程材料不再作为当前 Lab 树保存。Git history 仍可用于考古；正式 Round 不从当前 Lab
+重复维护。
 
-当前 GitHub / 本地仓库不等于完整历史项目，只能作为 `PARTIAL_REPOSITORY_EVIDENCE`。历史现实、当前仓库、重建候选、Target Architecture 和 Future 必须分开。
-
-## Canonical Truth 边界
-
-Lab 可以保留冲突、候选、攻击和未决问题；最终事实、状态与正式架构只能写回：
+## 读取顺序
 
 ```text
-docs/history/
 docs/facts/
-docs/architecture/
-docs/decisions/
-docs/governance/
-docs/evidence/
+  → docs/architecture/
+  → docs/decisions/
+  → project-reconstruction-lab/WORKFLOW.md
+  → 按需读取 docs/history/red-blue/
 ```
 
-Lab 不拥有第二套长期架构事实源。
+使用场景：
 
-## 新 Taxonomy
+- 项目事实或个人贡献：先读 `docs/facts/` 和 `docs/history/`；
+- 架构攻防：读 `WORKFLOW.md`，再读目标架构和对应事实；
+- 大厂深挖：使用 `skills/red-team-interviewer/SKILL.md`；
+- 自动化架构优化：使用 `skills/architecture-red-blue-loop/SKILL.md`；
+- JD 到项目设计：使用 `skills/jd-enterprise-project/SKILL.md`。
+
+## 不允许的推断
+
+当前仓库不等于完整历史项目。不得把代码目录、依赖、Compose、Target 文档、论文或面试题
+反向升级为历史事实、个人 Ownership、生产部署或质量指标。所有输出必须区分 `CURRENT`、
+`HISTORY`、`TARGET`、`HYPOTHESIS` 和 `UNKNOWN`。
+
+Lab 的输出只有在经过对应 Owner 审查后，才可以写回 `docs/`。Red Finding 不自动成为
+Architecture Gap，Blue Proposal 不自动成为 ADR；先归档“发生了什么”，再由 Main 决定“是否
+改变正式架构”。
+
+## 当前状态
 
 ```text
-project-reconstruction-lab/
-├─ README.md
-├─ migration-map.md
-├─ 00-charter/
-│  ├─ mission.md
-│  ├─ evidence-rules.md
-│  └─ state-model.md
-├─ 01-facts/
-│  ├─ fact-baseline.md
-│  ├─ open-questions.md
-│  ├─ evidence-ledger.md
-│  ├─ memory-recovery.md
-│  └─ contradictions.md
-├─ 02-history/
-│  ├─ project-background.md
-│  ├─ development-timeline.md
-│  ├─ team-and-ownership.md
-│  ├─ delivery-history.md
-│  └─ technology-history.md
-├─ 03-current/
-│  ├─ repository-reality.md
-│  ├─ current-runtime.md
-│  └─ current-gaps.md
-├─ 04-product/
-│  ├─ product-thesis.md
-│  ├─ users-and-workflows.md
-│  └─ problem-model.md
-├─ 05-red-blue/
-│  ├─ README.md                 # 当前 RESET/PAUSED 入口
-│  ├─ principles.md             # 跨协议稳定原则
-│  ├─ workflow-status.md        # 当前状态和可读性门
-│  └─ history/                  # 旧 Protocol、Prompt 和操作指南
-├─ 06-architecture/
-│  ├─ architecture-candidates.md
-│  ├─ consolidation-workflow.md
-│  └─ mentor-review-package.md
-├─ 07-interview-red-team/
-│  ├─ interviewer-charter.md
-│  ├─ question-bank.md
-│  ├─ challenge-log.md
-│  └─ readiness.md
-├─ 08-decisions/
-│  ├─ decision-candidates.md
-│  ├─ adr-backlog.md
-│  └─ survive-delete-defer.md
-├─ 09-implementation/
-│  ├─ architecture-to-code-gap.md
-│  ├─ architecture-to-code-workflow.md
-│  ├─ migration-strategy.md
-│  └─ codex-task-backlog.md
-├─ 10-reports/
-│  ├─ fact-audit-report.md
-│  ├─ architecture-review-report.md
-│  ├─ interview-readiness-report.md
-│  └─ migration-map.md
-├─ skills/
-│  ├─ README.md
-│  ├─ project-reconstruction-skill-spec.md
-│  ├─ architecture-red-blue-skill-spec.md
-│  └─ big-tech-interviewer-red-team-skill-spec.md
-├─ sessions/       # 已完成的可审计会话
-├─ sources/        # 外部资料与仓库侦察快照
-├─ workflows/      # 历史可复用执行材料
-└─ legacy/         # 旧编号文档和旧 Skill Spec，可追溯但不再是主入口
+LAB_STATE: LIGHTWEIGHT_RECONSTRUCTION
+ACTIVE_WORKFLOW: WORKFLOW.md
+ACTIVE_ROUND: NONE
+FORMAL_ROUND_OWNER: docs/history/red-blue/
+ARCHITECTURE_REVISION: NOT_PART_OF_THIS_CLEANUP
+PRODUCTION_READINESS: NOT_ESTABLISHED
 ```
 
-Red/Blue 当前入口是 `05-red-blue/README.md`，状态为 RESET/PAUSED，active Protocol 为 NONE。
-V2–V4.2 的历史执行契约、Prompt 和操作指南见 `05-red-blue/history/`；Round-001 至 Round-006
-继续按原协议保持 immutable。归档材料解释历史流程，不自动成为下一代 Protocol，也不把
-Implementation Evidence 当作 Architecture Review 的前置 Gate。
-Round-001 的完整 100 题记录位于 `sessions/RB-WORKFLOW-V2-001/`，保持 immutable history；
-Round-002 位于 `sessions/RB-WORKFLOW-V3-ROUND-002/`，按 V3 完成 Question → Answer → Score
-→ Decision → Delta → Canonical Sync。Round-003 使用 V3.1，额外审查 Canonical Part A / Part B
-质量和每题 `document_impact`；V3.1.1 归一化会话 `sessions/RB-DOCUMENT-NORMALIZATION-V3.1.1/`
-负责移除旧正文混排，并要求 SECTION_REWRITE/FULL_PART_REWRITE。
-
-Round-001 后的 Blue Repair 记录位于 `sessions/RB-BLUE-REPAIR-001/`。它负责根因聚类、Part-A
-修复、Severity Reclassification、P0 Burn-down 和 Counter Retest；它不是第二轮 100Q，也不
-改变 Round-001 的原始记录。Round-002 通过 V3 重新检验了这些变化。
-
-Final P0 的证据战役记录位于 `sessions/RB-EVIDENCE-CLOSURE-001/`。它不重开 100Q，而是逐项
-记录 Evidence ID、Closure Condition、实际 Artifact、Red Evidence Review 和 Counter Retest。
-当前 12 个 Final P0 均未闭合，已有 10 项 V3 窄证据，Closure-grade evidence 为 `0/12`。
-
-随后执行的 `sessions/RB-P0-V4-EXECUTION-001/` 只验证可安全执行的 V4 候选：6 项 V4
-verification/emulator records、5 项 V3 current/narrow records；Red accepted 为 0，Counter
-Retest 未运行，12 个原始 P0 仍保持 OPEN。Q039 被追踪为 Q039-C Critical Invariant 与
-Q039-B V5 Benchmark Gap，原始 Q039 不删除。
-
-每个工作视图只回答自己的问题。`02-history/` 与 `03-current/` 是调查工作材料，不替代 `docs/history/` 与 `docs/facts/`；`06-architecture/` 不替代 `docs/architecture/`。旧事实、专题和模块原稿见 `docs/history/superseded-document-taxonomy/`，不得被 Lab 重新当作 active Canonical。
-
-## Continuous Reconstruction Loop
-
-```text
-Workspace Bootstrap
-  → Evidence Intake
-  → Fact Recovery
-  → Memory Recovery
-  → Historical Timeline
-  → Current Repository Audit
-  → Product Reconstruction
-  → Architecture Red Attack
-  → Blue Reconstruction
-  → Counter Attack
-  → Big Tech Interview Attack
-  → Gap Repair
-  → Architecture Consolidation
-  → Closure Class / User Architecture Gate
-  → ADR Preparation
-  → Canonical Docs Sync
-  → Architecture-to-Code Gap
-  → Codex Task Candidate
-  → User-approved Implementation Program
-  → Implementation Review
-  ↺ 新证据回到 Fact Recovery / Architecture Red Team
-```
-
-V3.1.2 Round-004 以 Human Writing、Architecture Consistency、Failure Semantics 和 Component Survival 为主题，保持 immutable。
-V3.1.3 Round-005 进一步审查 Deep Failure、Recovery、Concurrency 和 Closure Classification Integrity；它新增 A/I/E/X 分布审计与 Part A 连续阅读规则，但不重写 Round-004，也不把分类结果当作 Runtime 或生产证据。
-V3.1.3.1 作为 Round-005 关闭后的 Derived Semantic Audit，重新判断 attack-time/post-round Closure Class 和 finding state；它不修改 Round-005 原件，也不改变 Facts、Runtime 或 Production 状态。
-
-## 最近完成 Program：RB-R006-CLOSURE-AND-V42-BATCH-PROFILE
-
-Canonical Facts Framework V1 已形成。该已完成 Program 不再扩张事实目录，而是把事实深度恢复
-与架构重构并行推进：
-
-| Track | 目标 | 当前输出边界 |
-|---|---|---|
-| Track A — Fact Depth Recovery | 恢复真实法院工作流、个人代码 Ownership、Court QA、Incident、协作和复用/研究转化 | 只进入 Facts、Evidence Ledger、Open Questions 或候选，不创造未知细节 |
-| Track B — Architecture Reconstruction | 从真实问题推导 Product、Domain、Runtime、Knowledge、Service、Data、Security 和 Eval | V3 允许受 Gate 规则约束的 refinement AUTO_APPLY；重大原则变化仍只进入 Escalation |
-
-## Fact Readiness Gate
-
-事实层不追求 `UNKNOWN = 0`。当下面主链能够逐段回答，且每段都标注事实状态与 Evidence
-ID 时，即可在事实未完全闭合的情况下开始架构重构：
-
-```text
-为什么做
-  → 谁在用
-  → 团队怎么做
-  → 我做了什么
-  → 一个请求怎么跑
-  → 真实遇到什么问题
-  → 怎么改
-  → 怎么测试
-  → 客户怎么反馈
-  → 为什么后来要改架构
-```
-
-正式产品名、合同甲方、精确法院名单、历史中间件、用户规模、SLA 和指标如果没有证据，
-继续保持 `UNKNOWN`，不成为架构启动阻塞项。
-
-## Architecture Review Gate
-
-该已完成 Program 的目标不是把已有 Target 文档重新排版，而是对每项复杂度执行：
-
-```text
-Historical Problem
-→ Candidate Design
-→ Red Attack
-→ Blue Response
-→ Counter Attack
-→ Benchmark / Spike / Evidence
-→ KEEP / SIMPLIFY / EXTERNALIZE / DEFER / DELETE
-```
-
-Python-only 和 Microservice 是 Owner 给定的 Target Constraint；Red Team 仍必须攻击第二
-语言、服务数量、服务边界、Worker/Library 替代、通信与数据成本。Multi-Agent、LangGraph、
-GraphRAG、Memory、OpenViking、Legal Domain Kernel 和 Native Domain-aware Runtime 都不是
-因为当前文档出现就自动保留。
-
-该已完成 Program 不是 implementation program。业务 Runtime、UI、
-Schema/Migration、依赖和生产 Infra 不在本轮修改范围内；Implementation Task Candidate 可以
-在 Lab 中记录，但必须等用户通过 Architecture Gate 后才能激活 implementation Program。
-
-V4.2 Bootstrap 只改工作流和治理。它及 Round-006 当前属于
-`ROUND-006 ABORTED_OPERATIONAL_PILOT / WORKFLOW_EXECUTION_BLOCKER`；已完成 3 个真实 Live Turn，但因 Session
-Handoff API 返回旧 completed response 而中止，Architecture Score 无效。相关协议和 Profile 仅是
-历史材料；Round-007 已在启动前取消。Implementation Evidence Track 保留
-`IMPLEMENTATION-EVIDENCE-CYCLE-001` 的真实状态，当前为 `WAITING_FOR_RED_COUNTER_RETEST`。
-两条 Track 通过 Canonical Architecture 和 Architecture Delta 反馈，但互不作为对方的自动 Gate。
-
-历史 V4.2 规则按 Profile 解释：`BATCH_ADVERSARIAL` 允许 Fresh Red Attack 生成完整 100Q 和
-12–18 条 Deep-Dive Chain，但 `RED_COUNTER` 必须读取 Blue Answer 后动态攻击；`LIVE_ADAPTIVE`
-才要求 Main 每次只冻结一个 Question、一个 Answer 和一个 Chain Decision，使用 append-only
-`question-answer-ledger.jsonl`，并禁止 `questions_frozen_sha`、`red-questions.md` 和 Q001–Q100
-预生成题单。两种 Profile 都要求 Interview calibration 只进入 Red Context，Blue Context 禁止读取，
-且只有 `LIVE_ATTACK_COMPLETE` 后 Blue 才能进行 Candidate Canonical Rewrite。
-
-历史默认 Batch Profile 允许 Red Attack 预先生成完整 100Q，但不允许把这份题单直接交给 Blue。
-Blue Defense、Red Counter、Blue Counter Defense、Blue Synthesis 与 Red Judge 都必须使用独立
-角色 Session，且通过 manifest 与 artifact 记录同一 BASE Snapshot、Answer 覆盖、Counter 引用、
-阶段顺序和外部 Merge Gate。Live Adaptive 保留逐题 append-only ledger 的严格规则。
-
-## Reader Paths
-
-| Reader | 路径 |
-|---|---|
-| 用户：我到底做过什么？ | `01-facts/` → `02-history/` → `07-interview-red-team/personal-contribution` |
-| 导师 / 架构师：设计是否成立？ | `01-facts/` → `04-product/` → `05-red-blue/README.md` → `06-architecture/` |
-| 面试官：是否真的做过？ | `01-facts/` → `03-current/` → `07-interview-red-team/` |
-| 工程实现者：下一步改什么？ | `06-architecture/` → `09-implementation/` → `docs/` / ADR |
-
-## 统一原则
-
-1. 先证据，后叙事；先最小事实，后候选解释。
-2. 用户确认、仓库证据、Artifact、公开背景和模型推断不能混标签。
-3. Red 不负责守住旧架构；Blue 必须证明复杂度；Counter Attack 必须真实发生。
-4. Interview Ready 不等于 Production Ready。
-5. 任何复杂度都必须能回答：为什么存在、为什么不是 Library/Worker/已有 OSS、如何失败、如何删除。
-
-## 验证入口
-
-```powershell
-git diff --check
-python tools/scripts/verify_docs_entrypoints.py
-python tools/scripts/verify_markdown_internal_links.py
-python .agent/scripts/verify_agent_system.py
-python .agent/scripts/verify_doc_boundaries.py
-python tools/scripts/verify_red_blue_session.py
-python tools/scripts/verify_red_blue_round_v2.py
-python tools/scripts/verify_red_blue_round_v3.py
-python tools/scripts/verify_red_blue_score_v3.py
-python tools/scripts/verify_canonical_diff_v3.py
-python tools/scripts/verify_red_blue_round_v31.py
-python tools/scripts/verify_document_quality_v31.py
-python tools/scripts/verify_document_normalization_v311.py
-python tools/scripts/verify_human_writing_v312.py
-python tools/scripts/verify_red_blue_round_v312.py
-python tools/scripts/verify_red_blue_workflow_v4.py --bootstrap project-reconstruction-lab/sessions/RB-WORKFLOW-V4-BOOTSTRAP
-```
-
-完整 CI 未运行时，不得写 `CI PASS`。
+本次轻量化重建不启动新的 Round，不生成题集，不修改 Canonical Architecture、Facts、ADR 或
+业务 Runtime。

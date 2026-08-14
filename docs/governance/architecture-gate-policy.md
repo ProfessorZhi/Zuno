@@ -11,7 +11,7 @@
 - 依赖：[Project Reconstruction Lab](../../project-reconstruction-lab/README.md)、
   `docs/architecture/`、`docs/facts/current-state.md` 和相关 ADR。
 - 本文拥有 Gate 语义；不拥有 Domain、Runtime、Service、Security 或 Eval 的第二套状态机。
-- `project-reconstruction-lab/sessions/RB-GATE-REALIGNMENT-001/` 保存本次可回放的分类与用户
+- `docs/history/program-history.md` 保存本次 Gate Realignment 的历史摘要与用户
   决策包；它不是 Canonical Architecture。
 
 ## Severity 与 Closure Class 分离

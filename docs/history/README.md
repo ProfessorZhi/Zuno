@@ -17,3 +17,5 @@
 - [Superseded Document Taxonomy](superseded-document-taxonomy/README.md)
 
 历史摘要不是 Current 运行事实，也不是新的实施授权。它们用于理解演进、审计旧决策和恢复上下文。
+正式 Red / Blue Round 的单文件归档统一由 [`red-blue/`](red-blue/README.md) 持有；项目实验室只
+保留导航和当前 Workflow，不再保存第二份完整 Round。
