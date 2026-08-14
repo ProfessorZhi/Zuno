@@ -37,6 +37,7 @@ def main() -> int:
         "docs/facts/team-and-ownership.md",
         "docs/facts/delivery-and-feedback.md",
         "docs/facts/technology-reality.md",
+        "docs/facts/confirmation-ledger.md",
     }
     if _files(ROOT / "docs/facts") != expected_facts:
         errors.append("docs/facts must contain only current fact entrypoints and local assets")
