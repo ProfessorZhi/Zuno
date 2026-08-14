@@ -17,9 +17,10 @@ system_identity:
   history_root: "docs/history"
 
 local_skill_registry:
-  mode: "REPOSITORY_LOCAL_NOT_EXPORTED"
-  discovery: "PATH_TRIGGERED"
-  instruction: "匹配项目重建或架构面试任务后，读取对应 SKILL.md；不要求安装到全局 Skill 目录。"
+  mode: "REPOSITORY_LOCAL_EXPLICIT_ONLY"
+  discovery: "EXPLICIT_ONLY"
+  instruction: "只有用户或上层 Coordinator 明确指定 Skill 名称时才读取对应 SKILL.md；不根据普通任务路径或关键词自动加载。"
+  architecture_decision_authority: "CHATGPT_MAIN_ONLY"
   skills:
     - name: "red-team-interviewer"
       path: "project-reconstruction-lab/skills/red-team-interviewer/SKILL.md"

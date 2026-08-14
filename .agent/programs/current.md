@@ -15,7 +15,7 @@ queued_program: `none`
 本文件只描述当前执行状态，不保存历史施工材料。当前允许：
 
 - 读取 `docs/facts/`、`docs/architecture/`、ADR、治理、Evidence 和指定历史归档；
-- 使用 `project-reconstruction-lab/WORKFLOW.md` 和三个可导出 Skill 做用户明确授权的设计审查；
++ 使用 `project-reconstruction-lab/WORKFLOW.md` 做默认手动审查；只有用户或上层 Coordinator 明确指定名称时，才读取三个本地 Skill；
 - 为新的审查建立单独 Program，但必须先通过架构审查和用户 Gate。
 
 当前禁止：

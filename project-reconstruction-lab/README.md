@@ -11,7 +11,7 @@
 - [`WORKFLOW.md`](WORKFLOW.md)：唯一当前 Architecture Interview / Red-Blue 工作流；
 - [`archive-map.md`](archive-map.md)：正式历史 Round 的导航；完整 Round Archive 由
   [`docs/history/red-blue/`](../docs/history/red-blue/README.md) 持有；
-- [`skills/`](skills/README.md)：三个仓库内可直接读取的本地 Skill。
+- [`skills/`](skills/README.md)：三个仓库内、仅显式调用的本地 Skill。
 
 旧的事实恢复、候选架构、流程版本、Bootstrap、Reset、Closure、Prompt、Session Template 和
 实验工程材料不再作为当前 Lab 树保存。Git history 仍可用于考古；正式 Round 不从当前 Lab
@@ -31,13 +31,13 @@ docs/facts/
 
 - 项目事实或个人贡献：先读 `docs/facts/` 和 `docs/history/`；
 - 架构攻防：读 `WORKFLOW.md`，再读目标架构和对应事实；
-- 大厂深挖：读取 `skills/red-team-interviewer/SKILL.md`；
-- 自动化架构优化：读取 `skills/architecture-red-blue-loop/SKILL.md`；
-- JD 到项目设计：读取 `skills/jd-enterprise-project/SKILL.md`。
+- 大厂深挖：用户明确指定后，读取 `skills/red-team-interviewer/SKILL.md`；
+- 自动化架构优化：用户明确指定后，读取 `skills/architecture-red-blue-loop/SKILL.md`；
+- JD 到项目设计：用户明确指定后，读取 `skills/jd-enterprise-project/SKILL.md`。
 
 这些 Skill 通过 `.agent/system.yaml` 的 `local_skill_registry` 注册为
-`REPOSITORY_LOCAL_NOT_EXPORTED`。匹配任务后，Agent 可以直接读取对应路径；它们不会自动安装到
-全局 Skill 目录，也不会在没有任务匹配时强行加载。
+`REPOSITORY_LOCAL_EXPLICIT_ONLY`。它们不会根据普通任务自动加载，也不会安装到全局 Skill 目录；
+只有用户或上层 Coordinator 明确说出 Skill 名称时，Agent 才读取对应路径。
 
 ## 不允许的推断
 

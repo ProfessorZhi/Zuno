@@ -24,3 +24,15 @@ def test_archive_execution_mode_is_strict():
     metadata = module._metadata(archive)
     assert metadata["execution_mode"] == "AUTOMATED"
     assert module._metadata(ROOT / "docs/history/red-blue/manual-round-01-overall-architecture.md")["execution_mode"] == "MANUAL"
+
+
+def test_local_skills_are_explicit_only_and_manual_workflow_owns_judgment():
+    system = (ROOT / ".agent/system.yaml").read_text(encoding="utf-8")
+    workflow = (ROOT / "project-reconstruction-lab/WORKFLOW.md").read_text(encoding="utf-8")
+    skills_readme = (ROOT / "project-reconstruction-lab/skills/README.md").read_text(encoding="utf-8")
+    assert "discovery: \"EXPLICIT_ONLY\"" in system
+    assert "PATH_TRIGGERED" not in system
+    assert "DEFAULT_MODE: MANUAL_CHATGPT" in workflow
+    assert "Architecture Decision Owner" in workflow
+    assert "Codex 不负责" in workflow
+    assert "NOT AUTO-EXECUTED" in skills_readme

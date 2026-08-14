@@ -20,7 +20,7 @@ python .agent/scripts/verify_doc_boundaries.py
 历史与 `docs/history/red-blue/` 的考古材料；当前不重新运行旧验证器，也不把历史结果当成当前
 工作流能力证明。
 
-当前架构 Red/Blue 任务先读取 `project-reconstruction-lab/WORKFLOW.md`、三个 Skill、
+当前架构 Red/Blue 任务先读取 `project-reconstruction-lab/WORKFLOW.md`；只有显式调用时才读取对应 Skill、
 `docs/architecture/` 和 Facts；需要考古时再读取 `docs/history/red-blue/` 的指定归档。
 
 历史 Round 统一由 `docs/history/red-blue/` 持有；该历史归档不拥有 Canonical Architecture，正式变更必须回到 `docs/architecture/`、`docs/facts/`、`docs/decisions/`、`docs/governance/` 或 `docs/evidence/` 的正确 Owner。

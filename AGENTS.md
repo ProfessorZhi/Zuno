@@ -22,7 +22,7 @@ AGENTS.md
      scripts/       过渡期验证器
 
 project-reconstruction-lab/
-  -> 轻量项目重建与架构面试 Lab：唯一当前 Workflow、三个可导出 Skill 和正式 Round 导航；不拥有正式事实或架构。正式 Round 由 docs/history/red-blue/ 持有。
+  -> 轻量项目重建与架构面试 Lab：当前手动 Workflow、三个显式调用的本地 Skill 和正式 Round 导航；不拥有正式事实或架构。正式 Round 由 docs/history/red-blue/ 持有。
 
 docs/
   facts/            今天仍然有效的项目事实与当前状态
@@ -173,7 +173,7 @@ Agent Runtime 任务必须读取 `docs/architecture/architecture.md`、`docs/fac
 
 - 范围不清楚 → `.agent/references/task-routing.md` 的只读审计路由。
 - 文档、`.agent`、History、README → `.agent/references/workflow.md` 的文档维护流程。
-- 项目事实、历史恢复、落地真实性、个人贡献或架构红蓝队 → `project-reconstruction-lab/README.md`、`WORKFLOW.md` 和三个 Skill；正式 Round 读取 `docs/history/red-blue/`。
+  - 项目事实、历史恢复、落地真实性、个人贡献或架构红蓝队 → `project-reconstruction-lab/README.md`、`WORKFLOW.md`；只有用户或上层 Coordinator 明确指定 Skill 名称时，才读取对应 `skills/*/SKILL.md`。正式 Round 读取 `docs/history/red-blue/`。
 - 目录移动、删除、归档、忽略规则和缓存清理 → 仓库卫生流程。
 - `apps/web` → `apps/web/AGENTS.md` 和 `.agent/references/code-map.md`。
 - `src/backend/zuno/agent/**` → `docs/architecture/architecture.md`、facts、ADR、evidence。

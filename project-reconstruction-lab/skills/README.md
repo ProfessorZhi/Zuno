@@ -1,13 +1,22 @@
 # 仓库内本地 Skill
 
-这里的三个目录各自包含一个可由仓库 Agent 直接读取的 `SKILL.md`。它们共享同一组边界：证据先于叙事，
+这里的三个目录各自包含一个仓库内、仅显式调用的 `SKILL.md`。它们共享同一组边界：证据先于叙事，
 `CURRENT / HISTORY / TARGET / HYPOTHESIS / UNKNOWN` 不混用，复杂度必须可以被删除或替换。
+
+统一定位：
+
+```text
+REPOSITORY LOCAL
+EXPLICIT INVOCATION
+PORTABLE
+NOT CANONICAL
+NOT AUTO-EXECUTED
+```
 
 ## 使用方式
 
-这些 Skill 不是全局安装包。任务匹配时，Agent 按 `.agent/system.yaml` 的本地注册读取对应
-`SKILL.md`；也可以在提示中明确给出相对路径。完成一次任务后，Skill 文件仍留在本仓库，
-不写入用户的全局 Skill 目录。
+这些 Skill 不是当前 Zuno Manual Workflow 的自动 Runtime，也不是全局安装包。只有用户或上层
+Coordinator 明确指定名称或路径时，Agent 才读取对应 `SKILL.md`；完成任务后仍留在本仓库。
 
 | Skill | 作用 |
 | --- | --- |

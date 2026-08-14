@@ -55,4 +55,4 @@ python .agent/scripts/verify_agent_system.py
 python .agent/scripts/verify_doc_boundaries.py
 ```
 
-项目重建与 Red/Blue 任务另读 `project-reconstruction-lab/README.md`、`WORKFLOW.md` 和三个 Skill；历史 Round 按需读取 `docs/history/red-blue/`，不再读取 Lab Session 目录。
+项目重建与 Red/Blue 任务另读 `project-reconstruction-lab/README.md` 和 `WORKFLOW.md`；只有显式调用时才读取对应 Skill。历史 Round 按需读取 `docs/history/red-blue/`，不再读取 Lab Session 目录。

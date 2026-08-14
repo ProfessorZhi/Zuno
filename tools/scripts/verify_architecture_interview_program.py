@@ -14,6 +14,11 @@ SKILLS = {
     "architecture-red-blue-loop",
     "jd-enterprise-project",
 }
+SKILL_MARKERS = {
+    "red-team-interviewer": ("ACTIVATION: EXPLICIT_ONLY", "MODES: QUESTION | REVIEW", "DEFAULT_OUTPUT: QUESTIONS_ONLY"),
+    "architecture-red-blue-loop": ("DEFAULT ACTIVATION: EXPLICIT_ONLY", "MANUAL_MAIN", "AUTOMATED_MAIN", "PROPOSED_MAIN_JUDGMENT"),
+    "jd-enterprise-project": ("ACTIVATION: EXPLICIT_ONLY", "COMPOSITION: EXPLICIT_ONLY", "CURRENT", "TARGET", "GAP", "EVIDENCE_REQUIRED"),
+}
 ARCHIVE_FIELDS = {
     "series",
     "round_id",
@@ -70,12 +75,34 @@ def verify(root: Path = ROOT) -> list[str]:
     system_yaml = root / ".agent/system.yaml"
     if system_yaml.exists():
         system_content = system_yaml.read_text(encoding="utf-8")
-        if "mode: \"REPOSITORY_LOCAL_NOT_EXPORTED\"" not in system_content:
-            errors.append("system.yaml must declare repository-local, non-exported Skill mode")
+        if "mode: \"REPOSITORY_LOCAL_EXPLICIT_ONLY\"" not in system_content:
+            errors.append("system.yaml must declare repository-local explicit-only Skill mode")
+        if "discovery: \"EXPLICIT_ONLY\"" not in system_content:
+            errors.append("system.yaml must declare EXPLICIT_ONLY Skill discovery")
+        if "PATH_TRIGGERED" in system_content:
+            errors.append("system.yaml must not contain PATH_TRIGGERED")
         for name in SKILLS:
             expected = f"project-reconstruction-lab/skills/{name}/SKILL.md"
             if expected not in system_content:
                 errors.append(f"system.yaml missing local Skill registration: {name}")
+
+    workflow = lab / "WORKFLOW.md"
+    workflow_content = workflow.read_text(encoding="utf-8") if workflow.exists() else ""
+    for marker in ("DEFAULT_MODE: MANUAL_CHATGPT", "## Actor Ownership", "### ChatGPT Main Coordinator", "### ChatGPT Red", "### ChatGPT Blue", "### Codex", "Architecture Decision Owner", "Codex 不负责"):
+        if marker not in workflow_content:
+            errors.append(f"WORKFLOW.md missing ownership marker: {marker}")
+
+    skills_readme = skills / "README.md"
+    skills_readme_content = skills_readme.read_text(encoding="utf-8") if skills_readme.exists() else ""
+    for marker in ("REPOSITORY LOCAL", "EXPLICIT INVOCATION", "NOT CANONICAL", "NOT AUTO-EXECUTED"):
+        if marker not in skills_readme_content:
+            errors.append(f"skills/README.md missing local Skill marker: {marker}")
+    for name, markers in SKILL_MARKERS.items():
+        skill_path = skills / name / "SKILL.md"
+        content = skill_path.read_text(encoding="utf-8") if skill_path.exists() else ""
+        for marker in markers:
+            if marker not in content:
+                errors.append(f"{name}/SKILL.md missing governance marker: {marker}")
 
     archive = root / "docs/history/red-blue"
     archive_files = sorted(archive.glob("*.md"))
@@ -103,10 +130,11 @@ def verify(root: Path = ROOT) -> list[str]:
         root / ".agent/references/task-routing.md",
         root / ".agent/references/workflow.md",
         root / ".agent/references/verification-map.md",
-        lab / "README.md",
-        lab / "WORKFLOW.md",
-        lab / "archive-map.md",
-        archive / "README.md",
+       lab / "README.md",
+       lab / "WORKFLOW.md",
+       lab / "archive-map.md",
+        lab / "skills/README.md",
+       archive / "README.md",
     ]
     for path in active_routes:
         if not path.exists():

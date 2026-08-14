@@ -4,6 +4,62 @@
 架构面试和 Red/Blue 审查；它不负责生成事实、不直接修改 Runtime，也不把一轮问题自动变成十个
 新组件。
 
+## Actor Ownership
+
+本 Lab 的默认执行模式是：
+
+```text
+DEFAULT_MODE: MANUAL_CHATGPT
+```
+
+默认链路由 ChatGPT Main Coordinator 驱动：
+
+```text
+ChatGPT Main Round Brief
+  → ChatGPT Red Questions
+  → ChatGPT Blue Answers
+  → ChatGPT Red Review
+  → ChatGPT Main Quick Judgment
+  → Codex Archive
+  → Archive Commit
+  → ChatGPT Main Architecture Review
+  → Optional Codex Architecture Revision
+  → Revision Commit
+  → ChatGPT Review
+  → Next Round
+```
+
+### ChatGPT Main Coordinator
+
+ChatGPT Main 是 Architecture Decision Owner，负责读取 latest main、选择 Round Theme、判断
+是否继续 Overall Architecture 或进入 Module、形成 Round Brief、审查 Red/Blue/Review、分类
+ANSWER ISSUE、FACT GAP、PART A GAP、PART B / MODULE GAP、ARCHITECTURE GAP、MEASUREMENT、
+NO CHANGE，并作出 ACCEPT、REJECT、DEFER、MEASURE 或 NO_CHANGE。Main 还负责形成 Architecture
+Revision Specification 和 Codex Task，并审查 Codex 结果是否与 Architecture 一致。
+
+### ChatGPT Red
+
+ChatGPT Red 负责提问、Counter Attack、必要性、Alternative / Build-Buy、Failure / Recovery、
+Ownership、Evidence 和 Complexity Kill Test。Red 不拥有 Architecture Decision。
+
+### ChatGPT Blue
+
+ChatGPT Blue 作为候选人回答，基于允许的事实源解释设计，并明确 Current / Target / History /
+Unknown，暴露无法回答的问题。Blue 不修改 Canonical Architecture。
+
+### Codex
+
+Codex 只执行上层已明确裁决的任务：
+
+- Archive Executor：读取 latest main，保存完整 Q/A/Review 和 Main Summary，更新 History 导航，
+  验证、Commit、Push；
+- Architecture / Engineering Executor：严格按已冻结 Scope 修改文档或代码，更新必要入口、
+  verifier 和测试，Commit、Push 并报告证据。
+
+Codex 不负责自己生成 Red Questions、扮演 Blue、进行 Main Judgment、因 Red Finding 自行修改
+Architecture、改变冻结原则或自动启动下一 Round。三个本地 Skill 不参与这条默认手动链路，只有
+用户或上层 Coordinator 明确指定名称时才读取。
+
 ## 一轮怎么走
 
 ```text
