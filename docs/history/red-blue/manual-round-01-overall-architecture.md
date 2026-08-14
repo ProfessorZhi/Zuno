@@ -5,7 +5,11 @@ execution_mode: MANUAL
 status: ARCHIVED
 base_sha: b00f5bb3fb0bad9168a1dce96d9e4817a60d9773
 archive_commit: RECORDED_IN_FINAL_HANDOFF
-architecture_revision_commit: NOT_CHANGED_IN_THIS_TASK
+architecture_revision_commit: 391e9f16e4d0cf12998e9b310470c454d2c92b50
+architecture_revision_message: docs: revise overall architecture after round 01
+revision_outcome: TARGETED_REVISION_COMPLETED
+architecture_gate: OVERALL_ARCHITECTURE_BASELINE_SURVIVED_ROUND_01
+module_decomposition_gate: NOT_OPEN
 round_format: LEGACY_PACKET
 source_session: manually coordinated across three ChatGPT threads; archived in this file
 

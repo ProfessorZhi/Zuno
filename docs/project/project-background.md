@@ -9,9 +9,9 @@ source_boundary: 用户确认、公开研究背景和明确未知事项；不把
 
 ## 一句话说明
 
-Zuno 是一个来自智慧司法研发与工程化背景的法律智能 Agent 平台，尝试把法律知识、专业智能能力、上下文/Memory、模型和受控工具协作组织成面向专业人员的工作流。它不是整个智慧法院项目，也不能被简化成某一篇论文的 Demo 或一个普通企业 RAG 的别名。
+Zuno 的原始产品方向，是面向天津法院智慧平台场景建设一个法律智能平台，以多个专业 Agent 组织和执行法律任务，并把法律知识、专业智能能力、上下文/Memory、模型、Skill / Tool 与法院业务系统能力组合进完整工作流。它不是整个智慧法院项目，也不能被简化成某一篇论文的 Demo 或一个普通企业 RAG 的别名。
 
-这里的“平台”是当前已形成的项目叙事和产品形态判断；历史上是否已经具备完整的统一 Agent Platform、多个 Agent、能力包或 Agent Studio，仍需用户继续确认，不能由这句话推断历史实现细节。
+这里需要区分两层：法律智能平台、多专业 Agent 和研究成果产品化属于已经确认的原始产品意图；历史实现中到底完成了几个 Agent、哪些组合能力和多 Agent 协作机制，仍然是 `PARTIALLY_KNOWN` 或 `UNKNOWN`。产品目标明确，不等于历史实现已经完整。
 
 ## 项目来源与合作背景
 
@@ -33,9 +33,13 @@ Zuno 是一个来自智慧司法研发与工程化背景的法律智能 Agent �
 
 这些资料属于 `PUBLIC_RESEARCH_CONTEXT`：它们证明相关研究能力链存在，包括 Event Extraction、Event Alignment、Conflict Detection、Dispute Identification、Evidence Chain、裁判文书信息抽取、Case Similarity、Statute Recommendation 和 Legal Text Processing；它们不能证明历史 Zuno 一定实现了 JIA、使用了某个论文模型或达到了论文 Benchmark 指标。具体 Research Inventory → Product Capability 的映射仍待逐项恢复。
 
-## 为什么做成法律智能 Agent 平台
+## 为什么立项为法律智能 Agent 平台
 
-项目的业务方向已经可以确认是智慧法院 / 法律智能，但第一版需求和原始人工 SOP 尚未恢复。因此，下面是今天对产品边界最稳定的解释，不冒充历史需求原话：专业人员需要围绕法律材料、事实、事件、证据、法律依据和已有业务上下文完成检索、比对、分析、复核和结果交付；单一问答接口或单篇算法 Demo 难以表达整个任务链，于是项目逐步形成了把 Knowledge、Legal Intelligence、Agent、Context/Memory、Model 和受控 Tool 组织在一起的产品方向。
+项目立项存在两个同时成立的驱动力：天津法院侧智慧平台 / 智慧法院建设存在法律智能化产品需求；南京大学软件学院葛季栋 / LIPLAB 已经积累长期智慧司法科研成果，并有将这些成果进一步工程化、产品化的目标。因此，`Court-side Product Need + Research Engineering / Productization` 共同构成项目背景。
+
+从立项目标上，Zuno 就是法律智能平台、多专业 Agent 与可组合法律专业能力的产品方向，不是先做普通 RAG、后来才临时升级成 Agent Platform。第一版需求原话和原始人工 SOP 尚未恢复，所以不能补写具体客户流程；但不能再把“是否从一开始就是 Agent Platform”列为未知。仍然未知的是历史实现成熟度：当时实际有几个 Agent、是否支持 Agent-to-Agent、是否有 Coordinator / Catalog / Studio、能力包如何组成，以及各项研究能力以何种形式接入。
+
+在这个既定产品方向下，系统希望组织专业人员围绕法律材料、事实、事件、证据、法律依据和已有业务上下文完成检索、比对、分析、复核和结果交付；Knowledge、Legal Intelligence、Agent、Context/Memory、Model、Skill / Tool 与法院业务系统能力属于产品目标中的能力边界，不是历史实现清单。
 
 公开司法研究可以解释为什么这些问题值得验证：大量案件文本会增加人工阅读、定位和比对成本，事件与陈述之间可能存在冲突，检索到相关文字也不自动等于法律适用或结论可复核。它们是领域上下文，不是 Zuno 的历史 Bad Case、历史 SOP 或产品指标。
 
@@ -60,7 +64,9 @@ Zuno 是一个来自智慧司法研发与工程化背景的法律智能 Agent �
 - 历史正式产品名称、合同甲方、项目编号、子课题和具体法院名单；
 - 第一版需求、原始人工流程、主要用户和具体任务材料；
 - 研究成果进入哪个版本、以算法、Tool、Skill、Knowledge Pipeline 还是其他形式进入；
-- 项目是否从一开始就是统一 Agent Platform，是否有多个 Agent、Coordinator、Agent Catalog、Agent Studio 或能力包；
+- 历史实现中实际完成了几个 Agent、每个 Agent 的正式名称和配置维度；
+- 是否已经支持 Agent-to-Agent、Coordinator、Agent Catalog、Agent Studio 或“Agent 集群”；
+- Skill / 能力包的准确组成、组合方式和历史正式名称；
 - Knowledge / RAG 历史链路是否实际使用了 Chunk、Embedding、BM25、Vector、Hybrid、Reranker、Citation、Milvus、Elasticsearch、Neo4j、GraphRAG、Knowledge Graph 或 Similar Case Retrieval；
 - Pilot 的参与法院、用户、任务、时长、环境、验收、SLA、Latency、Cost、HA 和 DR；
 - “回答质量需要提高”的真实 Cause → Fix → Metric。

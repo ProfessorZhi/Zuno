@@ -24,7 +24,7 @@ Architecture Baseline
 
 ## 当前记录
 
-- [Manual Round 01 — Overall Architecture](manual-round-01-overall-architecture.md)：手动协调三个 ChatGPT 线程完成的第一轮完整对抗记录，保留原始 Questions、Answers、Review、Reflection 和 Main Judgment。
+- [Manual Round 01 — Overall Architecture](manual-round-01-overall-architecture.md)：手动协调三个 ChatGPT 线程完成的第一轮完整对抗记录，保留原始 Questions、Answers、Review、Reflection 和 Main Judgment；其目标架构修订已在 `391e9f16e4d0cf12998e9b310470c454d2c92b50`（`docs: revise overall architecture after round 01`）完成，模块闸门仍未打开。
 - [Legacy Automated Red / Blue Summary](legacy-automated-rounds.md)：旧自动化架构审查程序的压缩摘要，只保留仍有复盘价值的状态、发现和处置；不构成当前 Protocol。
 
 ## 新 Round 归档规则

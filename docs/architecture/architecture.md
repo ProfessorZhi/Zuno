@@ -59,7 +59,7 @@ Zuno Target 假设要解决的不是抽象的“企业需要 AI”，而是专�
 
 当前 main 能证明 Python / FastAPI、PostgreSQL Migration、Compose、Agent / Knowledge / Memory / Tool 等代码或配置表面，但不能证明这些组件曾在历史客户环境同时运行，也不能证明用户本人负责全部能力，详见 [`../evidence/README.md`](../evidence/README.md)。
 
-本文以下内容都是 Target 或待测假设，不是历史项目回溯。
+本文以下关于 Domain State、Evidence Dependency、Knowledge Readiness、Result Eligibility、Continuous Authorization、Capability Governance 和物理服务拆分的完整机制，都是 Target 或待测假设，不是历史实现回溯。但这不表示“法律智能平台 + 多专业 Agent + 科研成果产品化”是后来重新发明的故事；该原始产品意图属于 `docs/project/` 的项目事实。当前架构文档是在这一产品方向之上形成的 Target formalization，不证明历史版本已经实现全部机制。
 
 ### 3. 一个 Target 场景
 
