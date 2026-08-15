@@ -5,7 +5,7 @@
 ```text
 docs/project/                 人类可读的项目说明、背景、团队与开发过程
 docs/architecture/            总体 Target Architecture 四文件
-docs/modules/                 模块边界占位
+docs/modules/                 已冻结 Target 责任域的模块设计入口（当前仍只有 README）
 docs/decisions/               有效 ADR
 docs/evidence/                当前可复现证据
 docs/history/red-blue/        架构审查过程记录

@@ -13,7 +13,7 @@ architecture.html
 
 Product、Domain、Logical Capability、Physical Service/Deployment、Data、Security 和 Eval 如何形成一个可恢复、可验证、可被简化或替换的跨层目标闭环？
 
-Round 02 Main Judgment 已完成，Canonical Architecture 已按该 Judgment 修订。总体架构现在说明九个 Logical Responsibility Modules、Platform / Infrastructure Responsibility Layer、Optional Context Provider、三条 E2E Flow、A/B/C Kill Test 和 State / Failure / Recovery 边界。九个责任域不是九个进程或服务；Architecture Freeze 仍等待 Main Review，`MODULE_DECOMPOSITION_GATE` 仍未打开。
+Round 02 已完成，Canonical Revision 已通过 Review，总体 Target Architecture 已冻结。总体架构现在说明九个 Logical Responsibility Modules、Platform / Infrastructure Responsibility Layer、Optional Context Provider、三条 E2E Flow、A/B/C Kill Test 和 State / Failure / Recovery 边界。九个责任域不是九个进程或服务；Module Decomposition Gate 已打开，但只授权逐个 Module Design，不自动授权实现。
 
 ## 阅读顺序
 

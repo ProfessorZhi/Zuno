@@ -32,9 +32,9 @@ Round 01 的目标架构修订已经记录在提交 `391e9f16e4d0cf12998e9b31047
 
 第二轮从“总体架构是否讲得通”进一步进入“候选责任边界是否精确到可以冻结”。Q1–Q38 的 Q/A/R 已全部完成，并追加了 Red Final Findings；讨论了简单回答的调用权、正式引用和 WorkProduct 的权威、Memory 删除、Domain Commit 与 Checkpoint 恢复、发布结果失效、关键审计重建，以及 Capability / Tool、Memory、Product Surface 和 Infrastructure 是否真的应当成为独立模块。
 
-这一轮已经明确暴露出若干 Freeze Blocker。Red Final Findings 已将本轮标记为 `READY_FOR_MAIN_JUDGMENT`，随后 Main Judgment 将结果记录为 `ACCEPTED_WITH_REQUIRED_ARCHITECTURE_REVISION`。这不表示架构已经完成修订或整体冻结；Canonical Architecture Revision 尚未开始，未解决项涉及 Simple Answer / Invocation Ownership、Historical Citation Authority、Memory Delete Across Copies、Domain Commit / Checkpoint Recovery、Published Result Invalidation 和 Reconstruction Boundary。
+这一轮已经明确暴露出若干 Freeze Blocker。Red Final Findings 已将本轮标记为 `READY_FOR_MAIN_JUDGMENT`，随后 Main Judgment 将结果记录为 `ACCEPTED_WITH_REQUIRED_ARCHITECTURE_REVISION`，Canonical Revision 已在 `7ce987f5d747395d4926622f42ac4f0013bc53ed` 完成并通过 Review。Freeze Result 现已追加到 Round Archive：Overall Target Architecture 已冻结，Module Decomposition Gate 已打开；未决的 Measurement、Implementation 和 Production Readiness 仍保持独立状态。
 
-因此 Round 02 的 Q/A/R 归档和 Main Judgment 记录已经完成，Outcome 为 `ACCEPTED_WITH_REQUIRED_ARCHITECTURE_REVISION`；Canonical Architecture Revision 尚未开始，Overall Architecture Freeze 仍为 not yet，Module Decomposition Gate 仍未打开。不要把这轮的 Red Concern 或 Blue Proposal 当作已经落实的架构正文。
+因此 Round 02 的 Q/A/R 归档、Main Judgment、Canonical Architecture Revision 和 Freeze Result 均已记录，Overall Target Architecture 为 frozen，Module Decomposition Gate 为 open for design only。不要把这轮的 Red Concern 或 Blue Proposal 当作独立的架构正文；当前冻结结果以 Canonical Architecture 和 ADR-0013/0014 为准。
 
 完整记录见 [Round 02 Archive](./manual-round-02-overall-architecture-freeze-review.md)。
 

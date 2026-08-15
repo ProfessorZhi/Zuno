@@ -10,13 +10,15 @@ Zuno 面向智慧司法场景，尝试把法律材料、专业分析能力和可
 updated: 2026-08-15
 status: normative-target
 architecture_state: ACCEPTED_TARGET
-architecture_revision: ROUND_02_REVISION_IMPLEMENTED
-overall_architecture_state: ROUND_02_REVISED_PENDING_FREEZE_REVIEW
+architecture_revision: COMPLETED
+architecture_revision_sha: 7ce987f5d747395d4926622f42ac4f0013bc53ed
+canonical_revision_gate: PASS
+overall_architecture_state: ROUND_02_FROZEN
 target_logical_module_count: 9
-final_module_count: NOT_FROZEN
+final_module_count: 9
 platform_infrastructure: RESPONSIBILITY_LAYER
 context_provider: OPTIONAL
-module_decomposition_gate: NOT_OPEN
+module_decomposition_gate: OPEN
 observability_architecture: OTEL_COMPATIBLE
 langsmith_role: PREFERRED_AGENT_TRACE_AND_EVAL_PROVIDER
 canonical_question: Zuno 如何把法律领域状态、证据、执行控制、安全和可验证交付组合成可恢复且可替换的 Target？
@@ -155,7 +157,7 @@ Physical Service / Deployment 也不提前承诺 Microservice。默认从 Modula
 - Legal Backend 的 Domain State 和 Evidence Binding 是否比简单 Host 方案更有价值；
 - 安全、恢复、评测和外部部署是否达到 Production 资格。
 
-当前模块分解闸门仍关闭，详细 `docs/modules/*.md` 尚未建立。总体架构已完成 Round 02 Revision，但仍等待 Main Architecture Freeze Review；这不是 Production Ready，也不是 Module Freeze。
+当前模块分解闸门已打开，详细 `docs/modules/*.md` 尚未建立。总体架构已完成 Round 02 Revision 并冻结为 Target；这不是 Production Ready，也不意味着模块正文已经创建或实现已经授权。
 
 ## Target Status Boundary
 
@@ -163,8 +165,8 @@ Physical Service / Deployment 也不提前承诺 Microservice。默认从 Modula
 
 | 项目 | 当前状态 |
 | --- | --- |
-| Canonical Revision | `ROUND_02_REVISION_IMPLEMENTED` |
-| Overall Architecture | `ROUND_02_REVISED_PENDING_FREEZE_REVIEW` |
+| Canonical Revision | `COMPLETED` |
+| Overall Architecture | `ROUND_02_FROZEN` |
 | Logical Responsibility | 9 个 Target Logical Modules |
 | Platform / Infrastructure | Responsibility Layer，不是第 10 个逻辑业务模块 |
 | Context Provider | Optional，不是一级逻辑模块 |
@@ -172,7 +174,7 @@ Physical Service / Deployment 也不提前承诺 Microservice。默认从 Modula
 | Long-term Memory | Optional / Measurement-gated |
 | GraphRAG | Query-class / Evidence-gated |
 | Production Readiness | Not established |
-| Module Decomposition Gate | Not open |
+| Module Decomposition Gate | Open for design only |
 
 ## Part B — Detailed Architecture Specification
 
@@ -458,8 +460,8 @@ Architecture Revision 本身不是这些实验的结果。当前仓库中存在�
 
 本次 Revision 不实现 AdmissionReceipt、Lifecycle Engine、Invalidation Outbox、Tool Runtime、Migration、SQLAlchemy Model、Kafka、Kubernetes、Event Sourcing、2PC 或新的 API。本文件不冻结字段、表、ORM、服务数量或最终部署拓扑。
 
-实现任务必须先读取 Part A、Part B、相关 ADR、Evidence 和 Governance，并单独经过实现授权、测试和审查。`docs/modules/` 仍只有 README；模块正文要等 Main Architecture Freeze Review 明确打开 Module Decomposition Gate 后再建立。
+实现任务必须先读取 Part A、Part B、相关 ADR、Evidence 和 Governance，并单独经过实现授权、测试和审查。`docs/modules/` 仍只有 README；模块正文现在可以在独立的 Module Design 任务中逐个建立，但 Module Design 不自动授权实现。
 
 ## Architecture Freeze Boundary
 
-本次状态是 `ROUND_02_REVISED_PENDING_FREEZE_REVIEW`。Canonical Revision 已完成，但不能在本任务中宣布 `OVERALL_ARCHITECTURE_FROZEN`，也不能打开 `MODULE_DECOMPOSITION_GATE`。后续 Main Review 应确认本文件忠实实现 Round 02 Main Judgment，再决定是否冻结总体架构和开始模块设计。
+本次状态是 `ROUND_02_FROZEN`。Overall Target Architecture 已冻结，Module Decomposition Gate 已打开。后续工作可以进入逐个 Module Design，但实现、Measurement 和 Production Readiness 仍需独立任务与证据；本文件不因此宣布这些阶段完成。

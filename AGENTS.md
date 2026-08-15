@@ -7,7 +7,7 @@
 ```text
 docs/project/                         人类可读的项目故事入口（README、背景、团队、开发过程）
 docs/architecture/                    总体 Target Architecture，固定四文件
-docs/modules/                         模块边界占位；边界未稳定前不建模块正文
+docs/modules/                         九个冻结 Target 责任域的模块设计入口；仍需逐个建立正文
 docs/decisions/                       仍然有效的长期 ADR
 docs/evidence/                        当前代码、测试、Trace、Eval 和运行证据
 docs/governance/project-fact-provenance.md  项目事实来源与表述边界
@@ -62,7 +62,7 @@ architecture.html
 
 跨层含义变化时修改 `architecture.md`；图形变化时同步图源和 HTML，再运行 `python tools/agent/render_architecture.py --write`、`--check` 以及文档验证。不要创建 `.agent/architecture/` 或模块镜像。
 
-模块数量和边界尚未冻结。不要因为旧目录、论文、Red / Blue Proposal 或当前实现存在就自动创建模块正文。
+Round 02 已冻结九个 Target 责任域并打开 Module Decomposition Gate。可以在独立 Module Design 任务中逐个创建模块正文，但不要因为 Gate Open 就自动实现全部模块，也不要把逻辑模块直接当作服务或数据库。
 
 ## Red / Blue 规则
 

@@ -9,6 +9,7 @@
 | 文档结构、README、Agent 路由 | `workflow.md`、`docs-map.md`、验证地图 | Documentation |
 | 阅读架构、理解系统 | `docs/architecture/README.md`、`architecture.md` Part A | Architecture |
 | 总体架构或跨层设计 | `docs/architecture/architecture.md` Part A + Part B、有效 ADR、Evidence、Governance | Architecture |
+| Module Design | 已冻结总体架构、`docs/modules/README.md`、相关 ADR、Evidence 和 Governance | Module Design；不自动授权实现 |
 | 实现、测试、Migration、Recovery、Contract、Security | `architecture.md` Part A + Part B、有效 ADR、Evidence、Governance | Architecture / Runtime |
 | 架构为什么发生变化 | 当前架构 + `docs/history/red-blue/` 指定 Round | Architecture Review |
 | 当前运行、部署、生产准备度 | `docs/evidence/`、`docs/operations/`、代码和测试 | Evidence / Operations |

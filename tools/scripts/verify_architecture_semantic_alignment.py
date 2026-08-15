@@ -77,7 +77,8 @@ def verify() -> list[str]:
     for marker in (
         "FastAPI", "LangGraph", "PostgreSQL", "Checkpoint", "Reconciliation",
         "target_logical_module_count: 9", "Current", "Target", "History",
-        "A/B/C", "ROUND_02_REVISION_IMPLEMENTED", "MODULE_DECOMPOSITION_GATE",
+        "A/B/C", "architecture_revision: COMPLETED", "overall_architecture_state: ROUND_02_FROZEN",
+        "module_decomposition_gate: OPEN",
     ):
         if marker not in architecture:
             errors.append(f"architecture integration semantics missing: {marker}")
@@ -101,6 +102,9 @@ def verify() -> list[str]:
         "NEW_10_MODULE_SET",
         "REFINED_BASELINE_READY_FOR_FREEZE_REVIEW",
         "TARGET_HYPOTHESIS_PENDING_RED_TEAM",
+        "ROUND_02_REVISED_PENDING_FREEZE_REVIEW",
+        "final_module_count: NOT_FROZEN",
+        "module_decomposition_gate: NOT_OPEN",
     ):
         if forbidden in architecture or forbidden in views:
             errors.append(f"active architecture retains superseded taxonomy: {forbidden}")

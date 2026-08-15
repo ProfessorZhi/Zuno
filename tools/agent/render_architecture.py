@@ -86,8 +86,13 @@ def validate_design(content: str) -> list[str]:
             errors.append(f"architecture.md does not route to canonical project layer: {marker}")
     if "9 个 Target Logical Modules" not in content or "Round 02" not in content:
         errors.append("architecture.md must record the revised nine-module target and its source")
-    if "Platform / Infrastructure Responsibility Layer" not in content or "final_module_count: NOT_FROZEN" not in content:
-        errors.append("architecture.md must distinguish the platform layer from the still-unfrozen module gate")
+    if (
+        "Platform / Infrastructure Responsibility Layer" not in content
+        or "final_module_count: 9" not in content
+        or "overall_architecture_state: ROUND_02_FROZEN" not in content
+        or "module_decomposition_gate: OPEN" not in content
+    ):
+        errors.append("architecture.md must record the frozen nine-module Target and open design gate")
     if "architecture_state: ACCEPTED_TARGET" not in content:
         errors.append("architecture.md must record ACCEPTED_TARGET")
     if content.count("```mermaid") > 8:

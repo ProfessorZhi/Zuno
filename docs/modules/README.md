@@ -1,6 +1,6 @@
 # Zuno 模块设计
 
-Round 02 Main Judgment 已接受新的 Target Responsibility Direction，但总体 Architecture 仍等待 Main Architecture Freeze Review。因此，本目录暂时只保留模块入口，不创建详细模块正文。
+Round 02 已完成，Canonical Target Architecture 已冻结，Module Decomposition Gate 已打开。本目录仍只保留模块入口；本任务不创建详细模块正文，后续模块必须逐个经过独立的 Module Design 与 Review。
 
 ## 当前状态
 
@@ -9,7 +9,7 @@ Target Logical Responsibility Modules: 9
 Platform / Infrastructure: Responsibility Layer
 Optional Context Provider: yes
 详细模块文档：尚未创建
-MODULE_DECOMPOSITION_GATE: NOT_OPEN
+MODULE_DECOMPOSITION_GATE: OPEN
 ```
 
 九个 Target Logical Modules 是：
@@ -30,9 +30,9 @@ Platform / Infrastructure Responsibility Layer 提供 PostgreSQL、对象存储�
 
 ## 为什么还没有模块正文
 
-模块正文只有在总体架构冻结并打开模块分解闸门后才建立。每个模块必须先证明自己拥有独立问题域、长期状态或事实、稳定 Contract、失败与恢复语义、安全边界和可验证证据；否则它可能只是 Library、Provider、Worker 或 Cross-cutting Concern。
+模块分解闸门现在允许开始设计九个 Module，但不意味着九个 Module 同时实现。每个模块必须先经过 Problem、Scenario、Boundary、State、Failure、Contract、Recovery、Security、Evidence 和 Implementation Spec 的设计与 Review；否则它可能只是 Library、Provider、Worker 或 Cross-cutting Concern。
 
-因此当前不会创建 `01-*.md` 到 `09-*.md`，也不会把本 README 的责任域列表当成已经冻结的最终代码目录。详细设计仍需链接总体架构、项目事实、ADR 和 Evidence，而不是复制它们。
+因此当前仍不会创建 `01-*.md` 到 `09-*.md`。后续可以在独立任务中逐个创建模块正文，但不能把 Gate Open 理解为 Codex 可以自行实现全部模块；详细设计仍需链接总体架构、项目事实、ADR 和 Evidence，而不是复制它们。
 
 ## 相关入口
 
