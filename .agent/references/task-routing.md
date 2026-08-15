@@ -5,7 +5,7 @@
 | 任务 | 先读 | 主要 Owner |
 | --- | --- | --- |
 | 范围不清、只读盘点 | `AGENTS.md`、`docs-map.md`、`code-map.md` | 只读审计 |
-| 项目背景、历史事实、个人贡献 | `docs/project/project-background.md`、`development-process.md` | Project Documentation |
+| 项目背景、历史事实、个人贡献 | `docs/project/README.md`、`project-background.md`、`team-and-contributions.md`、`development-process.md` | Project Documentation |
 | 文档结构、README、Agent 路由 | `workflow.md`、`docs-map.md`、验证地图 | Documentation |
 | 总体架构或跨层设计 | `docs/architecture/architecture.md`、有效 ADR、Evidence | Architecture |
 | 架构为什么发生变化 | 当前架构 + `docs/history/red-blue/` 指定 Round | Architecture Review |

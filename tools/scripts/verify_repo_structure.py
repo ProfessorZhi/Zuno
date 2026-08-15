@@ -11,9 +11,10 @@ def _files(directory: Path) -> set[str]:
 def main() -> int:
     errors: list[str] = []
     if _files(ROOT / "docs/project") != {
-        "docs/project/project-background.md", "docs/project/development-process.md"
+        "docs/project/README.md", "docs/project/project-background.md",
+        "docs/project/team-and-contributions.md", "docs/project/development-process.md",
     }:
-        errors.append("docs/project must contain exactly the two canonical project documents")
+        errors.append("docs/project must contain exactly its four canonical project documents")
     if _files(ROOT / "docs/evidence") != {
         "docs/evidence/README.md", "docs/evidence/current-runtime-baseline.md",
         "docs/evidence/current-test-baseline.md", "docs/evidence/current-eval-baseline.md",
@@ -28,6 +29,7 @@ def main() -> int:
     if _files(ROOT / "docs/governance") != {
         "docs/governance/wave1-cross-module-contract-registry.md",
         "docs/governance/repo-ownership-matrix.md",
+        "docs/governance/project-fact-provenance.md",
     }:
         errors.append("docs/governance may contain only source-compatible current boundary inputs")
     if _files(ROOT / "docs/modules") != {"docs/modules/README.md"}:

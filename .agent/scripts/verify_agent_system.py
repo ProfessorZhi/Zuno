@@ -117,8 +117,11 @@ def main() -> int:
         ".agent/README.md",
         ".agent/scripts/verify_doc_boundaries.py",
         ".agent/scripts/verify_repo_hygiene.py",
+        "docs/project/README.md",
         "docs/project/project-background.md",
+        "docs/project/team-and-contributions.md",
         "docs/project/development-process.md",
+        "docs/governance/project-fact-provenance.md",
         "docs/history/README.md",
         "docs/evidence/README.md",
     ):

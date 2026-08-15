@@ -24,8 +24,11 @@ local_skill_registry:
   note: "当前仓库没有 active local skill workspace；需要 Red/Blue 或项目恢复时按 AGENTS.md 和 docs/history/red-blue/ 的规则人工协调。"
 
 canonical_owners:
+  project_readme: "docs/project/README.md"
   project_background: "docs/project/project-background.md"
+  team_and_contributions: "docs/project/team-and-contributions.md"
   development_process: "docs/project/development-process.md"
+  project_fact_provenance: "docs/governance/project-fact-provenance.md"
   overall_architecture: "docs/architecture/architecture.md"
   architecture_views: "docs/architecture/architecture-views.md + docs/architecture/architecture.html"
   modules: "docs/modules/README.md"
@@ -40,7 +43,9 @@ skill_routes:
     read_first:
       - "AGENTS.md"
       - "docs/README.md"
+      - "docs/project/README.md"
       - "docs/project/project-background.md"
+      - "docs/project/team-and-contributions.md"
       - "docs/project/development-process.md"
       - ".agent/references/workflow.md"
   architecture:

@@ -5,11 +5,12 @@
 ## 正式文档 Owner
 
 ```text
-docs/project/                         项目背景与开发过程的唯一故事入口
+docs/project/                         人类可读的项目故事入口（README、背景、团队、开发过程）
 docs/architecture/                    总体 Target Architecture，固定四文件
 docs/modules/                         模块边界占位；边界未稳定前不建模块正文
 docs/decisions/                       仍然有效的长期 ADR
 docs/evidence/                        当前代码、测试、Trace、Eval 和运行证据
+docs/governance/project-fact-provenance.md  项目事实来源与表述边界
 docs/history/red-blue/                Red / Blue 架构审查过程记录，不是事实或架构源
 docs/operations/                      当前仍需执行的运维 Runbook / recovery profile
 docs/terminology.md                   跨文档术语
@@ -20,8 +21,11 @@ Git history 是普通文件演进和已删除工作区材料的考古来源。�
 
 ## 文档边界
 
-- `docs/project/project-background.md` 回答项目为什么存在、研究与法院背景、用户问题、产品故事和未恢复事实。
-- `docs/project/development-process.md` 回答项目如何从已有代码发展到 Agent、Memory/Context、Tool Calling、Demo、法院测试和 Pilot，以及用户的已知参与边界。
+- `docs/project/README.md` 是第一次进入项目故事时的简短导航。
+- `docs/project/project-background.md` 回答项目为什么存在、研究与法院背景、用户问题、产品故事和仍未恢复的事实。
+- `docs/project/team-and-contributions.md` 回答团队规模、用户何时加入、实际参与方向和个人职责边界。
+- `docs/project/development-process.md` 回答项目如何从已有代码发展到 Agent、Memory/Context、Tool Calling、Demo、法院测试和 Pilot。
+- `docs/governance/project-fact-provenance.md` 保存给 Reviewer / Agent 使用的项目事实来源边界；它不替代 Project 故事。
 - `docs/architecture/architecture.md` 是唯一总体架构正文；`architecture-views.md` 与 `architecture.html` 是展示配对，不能拥有第二套架构事实。
 - Red / Blue Archive 记录为什么质疑和怎样判断，不等于 Architecture Truth、Current Evidence、ADR 或实施授权。接受的结果必须写回 `docs/architecture/` 或 `docs/decisions/`。
 - `Current` 由代码、测试和 Evidence 证明；`Target` 是设计；`Future` 是可选方向；`History` 只解释过去。`Pilot` 不等于 `Production`。
@@ -31,9 +35,11 @@ Git history 是普通文件演进和已删除工作区材料的考古来源。�
 一般项目、架构或文档任务：
 
 1. `docs/README.md`
-2. `docs/project/project-background.md`
-3. `docs/project/development-process.md`
-4. `docs/architecture/architecture.md`
+2. `docs/project/README.md`
+3. `docs/project/project-background.md`
+4. `docs/project/team-and-contributions.md`
+5. `docs/project/development-process.md`
+6. `docs/architecture/architecture.md`
 5. 需要看图时同时读 `architecture-views.md` 与 `architecture.html`
 6. `docs/modules/README.md`、相关 ADR、`docs/evidence/README.md`
 7. `.agent/README.md`、`.agent/system.yaml`、`.agent/references/`

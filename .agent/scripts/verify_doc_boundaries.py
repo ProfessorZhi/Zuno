@@ -11,7 +11,8 @@ def _relative_files(directory: Path) -> set[str]:
 def main() -> int:
     errors: list[str] = []
     if _relative_files(ROOT / "docs/project") != {
-        "docs/project/project-background.md", "docs/project/development-process.md"
+        "docs/project/README.md", "docs/project/project-background.md",
+        "docs/project/team-and-contributions.md", "docs/project/development-process.md",
     }:
         errors.append("project boundary mismatch")
     if _relative_files(ROOT / "docs/history") != {
@@ -30,6 +31,7 @@ def main() -> int:
     if _relative_files(ROOT / "docs/governance") != {
         "docs/governance/wave1-cross-module-contract-registry.md",
         "docs/governance/repo-ownership-matrix.md",
+        "docs/governance/project-fact-provenance.md",
     }:
         errors.append("governance compatibility boundary mismatch")
     for obsolete in (ROOT / "docs/facts", ROOT / "project-reconstruction-lab"):

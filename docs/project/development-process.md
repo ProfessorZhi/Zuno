@@ -1,77 +1,57 @@
-# Zuno 开发过程
-
+<!--
 status: canonical-development-process
 canonical_question: 项目如何在既定法律智能 Agent 平台方向下发展、交付并接受法院侧验证？
 owner: Project Documentation Owner
 source_boundary: 用户回忆、项目阶段事实和当前仓库证据；不是 Git Commit Log，也不把当前代码反写成历史个人贡献
+-->
 
-本文讲“项目怎样发展”和“用户实际参与到什么程度”。精确日期、提交、文件、Bug 和指标没有证据时保留 UNKNOWN。当前仓库事实与历史项目事实分开描述。
+# Zuno 开发过程
 
-## 立项方向与加入时的产品状态
+## 1. 我加入时项目已经有什么
 
-项目立项时已经明确面向法律智能平台、多专业 Agent 和法律专业能力组合；其背景同时来自天津法院侧智慧平台需求与 LIPLAB 研究成果工程化 / 产品化目标。不能把项目叙述成“先做普通 RAG，后来才发展成 Agent Platform”。这里确认的是原始产品意图，不是对历史实现成熟度的夸大。
+项目在用户加入前已经存在代码和一个比较简单的自研前端，因此不是 Greenfield 项目。用户约在 2026 年 3 月加入，由一名学硕学长带入；当时项目已经处在继续开发和产品迭代阶段，而不是从零开始立项。
 
-用户加入时，产品已经有代码和一个比较简易的自研前端，不是从零立项开发。历史最早的提交、第一版产品名称、第一条需求和当时完整技术栈尚未恢复；当前 GitHub 仓库只能证明今天的实现，不能替代历史项目档案。项目是否已经完成了目标中的全部 Agent、能力组合和协作机制，仍属于历史实现细节 UNKNOWN。
+历史最早的提交、第一版产品名称、第一条需求和当时完整技术栈尚未恢复。当前 GitHub 仓库只能说明今天的实现，不能替代历史项目档案，也不能自动说明某段当前代码是谁在历史项目中编写的。
 
-用户确认，核心研发规模约 7–8 人；一名学硕学长承担主要技术负责人角色并把用户带入项目。这里不把该学长写成 CTO、总架构师或合同负责人，也不把用户写成整个项目负责人、总架构负责人或 Production Owner。
+## 2. 在已有产品上继续开发
 
-## 用户加入与实际参与方向
+在已有产品基础上，团队继续围绕 Agent、Memory / Context、Tool Calling，以及法律智能能力和 Knowledge / Retrieval 做开发与联调。用户实际参与的方向单独记录在[团队与开发分工](./team-and-contributions.md)，这里不重复扩展个人职责。
 
-用户约在 2026 年 3 月加入，身份是研究生工程参与者。用户确认参与过以下方向：
+项目整体还涉及后端、前端、测试和部署等工作方向，但正式人员分工、人数、Title、Owner、会议方式、分支策略、Code Review、Issue / Task 管理和部署流程都没有可靠历史记录。因此，不能把常见的 Scrum、双周 Sprint、PR Review 或 CI/CD 自动写成当时的开发方法。
 
-- 部分 Agent 开发；
-- Memory 相关的第一批重要工作；
-- OpenViking 在 Memory / Context 区域的接入；
-- Tool Calling Strategy 相关开发；
-- 进入数据库查看或调试数据。
+## 3. Internal Demo
 
-用户在开发期间学习或接触过 LangGraph 和 GraphRAG，但 `LEARNED_ONLY` 不等于 `PRODUCT_IMPLEMENTED`，更不等于用户实现了完整 Runtime、全部 GraphRAG、全部 RAG、全部 Backend、数据库、法律算法、前端、部署或整体架构。
+Internal Demo 是目前能够恢复的第一个重要阶段。它说明已有产品和相关能力曾经被项目组用于内部演示和迭代验证，但具体日期、参与者、环境、演示材料和每项能力的完成程度还没有恢复。
 
-目前能够诚实说明的是“参与过哪些方向”，还不能恢复任务级 Ownership：第一项任务、输入输出、修改过的逻辑、真实 Tool、OpenViking 的 SDK/API/Adapter 形态、Memory 写入/召回时机、具体 SQL、Bug、定位、修复和验证方式都为 UNKNOWN。当前代码中能找到的实现也不能自动证明是用户当时写的。
+## 4. 客户侧 Demo 与反馈
 
-## 工程工作如何展开
+之后项目进行过客户侧或智慧法院项目组 Demo。已经能够确认的反馈是“回答质量还需要提高”。目前没有足够资料判断当时具体问题来自 Prompt、检索、模型、Memory、Tool、引用、数据处理还是其他环节，因此开发历史只保留反馈本身，不替它补写根因或修复故事。
 
-在已有产品基础上，项目继续围绕 Agent、Context/Memory 和 Tool Calling 做开发与联调；团队还涉及法律智能能力、Knowledge / Retrieval、后端、前端、测试和部署等方向，但每个方向的正式人数、姓名、Title、Owner 和协作流程没有可靠记录。
+## 5. 后续迭代与法院侧测试
 
-一个与已确认经历相容的阶段叙事是：在既定法律智能 Agent 平台方向和已有产品基础上，继续补充或完善 Agent、Context/Memory、Tool Calling，以及团队已有的 Knowledge / Legal Capability 接入；经过内部 Demo 和客户侧 Demo 获取反馈，随后继续迭代并接受法院侧人员测试，最后进入 Pilot Validation。这个顺序是当前可恢复的项目阶段故事，不是逐提交的 Git 时间线，也不证明每项目标能力在每个阶段都已完整实现。
+在客户反馈之后，项目继续迭代，随后进入法院侧人员测试。这个阶段说明产品曾经被放到真实业务侧进行验证，但测试题数量、参与法院、参与人员职位、参考答案、Reviewer、评价协议、运行环境和性能数据都没有恢复。
 
-分支策略、Code Review、周会、Issue / Task 管理、接口协作、测试协议和部署流程仍然 UNKNOWN。不得把常见的 GitHub PR、双周 Sprint 或标准 Scrum 当作历史事实。
+## 6. Pilot Validation
 
-## 演示、反馈与测试
+项目后来进入 Pilot Validation。这里的 Pilot 是阶段性验证，不等于正式 Production；目前也没有资料支持用户规模、运行时长、部署 Endpoint、正式验收、SLA、QPS、Latency、Token、Cost、HA 或 DR。
 
-已确认的交付链是：
+## 7. 一条目前能够恢复的开发主线
 
 ```text
-已有代码和产品
+已有产品
+  → Agent / Memory / Tool 等方向继续开发
   → Internal Demo
   → Customer / Smart Court Project Demo
-  → 客户反馈：回答质量需要提高
-  → Further Iteration
+  → 回答质量反馈
+  → 继续迭代
   → Court-side Testing
   → Pilot Validation
-  → Production：NO
 ```
 
-这个链条是项目开发过程中的事实锚点。客户反馈目前只能记录为 `INC-HIST-001`：
+这条主线是目前可恢复的项目阶段故事，不是逐提交的 Git 时间线，也不代表每个目标能力在每个阶段都已经完整实现。更细的 Git Timeline、PR、Sprint、Task Ownership、Bug、测试题和性能数据，需要以后从历史材料或用户回忆中逐项补充。
 
-| 字段 | 当前状态 |
-| --- | --- |
-| Symptom | 回答质量需要提高 |
-| Root Cause | UNKNOWN |
-| Investigation | UNKNOWN |
-| Change | UNKNOWN |
-| Result / Metric | UNKNOWN |
+## 8. 历史技术信息与当前仓库
 
-不得自行把根因归为 Prompt、RAG、Memory、Model、Tool 或 Context，也不能把当前架构建议写成当时已经完成的修复。Demo 时间、地点、操作者、法院、测试题、参考答案、Reviewer、Pilot 用户数、环境、时长、验收、SLA、QPS、Latency、Token、Cost、HA 和 DR 均未恢复。
+目前可以确认用户参与过 Agent development、OpenViking、Tool Calling Strategy 和数据库访问；LangGraph、GraphRAG 属于开发期间学习和接触过的方向。历史技术栈尚未逐项确认：Python、FastAPI、PostgreSQL、Redis、RabbitMQ、MinIO、Milvus、Neo4j、Elasticsearch、MCP、Pytest、Docker、历史 LLM、Embedding Model 和 Reranker 是否在历史项目中使用，都需要单独证据。
 
-## 当前仓库能证明什么
-
-当前 main 可以单独证明仓库中存在相应的 Python 后端、Web/API、Agent、Knowledge/Retrieval、Memory、Capability/Tool、数据库和测试入口；`docs/evidence/` 负责记录可复现的当前代码、测试、运行与评测证据。目录、类名、依赖声明、Mock Test 或 Target 文档都不能证明这些组件在历史项目的哪个版本中由谁使用，也不能证明它们曾经在 Pilot 或 Production 中运行。
-
-历史技术矩阵应保持保守：Agent development、OpenViking、Tool Calling Strategy 和数据库访问属于用户确认的参与方向；LangGraph、GraphRAG 属于学习/接触事实；Python、FastAPI、PostgreSQL、Redis、RabbitMQ、MinIO、Milvus、Neo4j、Elasticsearch、MCP、Pytest、Docker、历史 LLM、Embedding 和 Reranker 等是否在历史项目中使用，逐项 UNKNOWN，除非有新的用户回忆或历史证据。
-
-## 开发过程的事实边界
-
-项目故事可以说明“已有研究与工程背景 → 已有产品 → Agent/Memory/Tool 方向开发 → Demo → 质量反馈 → 法院测试 → Pilot”，但不能把缺失的过程细节补成完整 SOP。后续用户确认应直接更新本文和[项目背景](./project-background.md)，不再恢复一个平行的 Fact Ledger。
-
-总体架构只回答跨层 Target 为什么这样设计；模块目录目前只保留边界占位；Evidence 只记录当前可复现证据。三者都不能替代本文件中的历史事实。
+当前 main 可以证明仓库中存在 Python 后端、Web/API、Agent、Knowledge / Retrieval、Memory、Capability / Tool、数据库和测试入口。这些是当前工程事实；目录、类名、依赖、Mock Test 或 Target 文档都不能反推出历史项目在哪个版本由谁使用过这些组件，也不能证明它们曾经运行在 Pilot 或 Production 环境。具体当前实现请阅读[Evidence](../evidence/README.md)。
