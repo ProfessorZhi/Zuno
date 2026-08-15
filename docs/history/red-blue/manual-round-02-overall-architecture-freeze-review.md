@@ -9,8 +9,10 @@ qar_complete_through: Q38
 follow_up_status: COMPLETE
 red_findings_status: FINAL
 qar_packet_complete: YES
-main_judgment: PENDING_POST_ARCHIVE_DISCUSSION
-architecture_revision: NOT_STARTED
+main_judgment: COMPLETED
+main_judgment_outcome: ACCEPTED_WITH_REQUIRED_ARCHITECTURE_REVISION
+architecture_revision: REQUIRED_NOT_STARTED
+overall_architecture_freeze: NOT_YET
 module_decomposition_gate: NOT_OPEN
 source_boundary: manually coordinated Red / Blue / Main workflow
 
@@ -35,8 +37,10 @@ qar_complete_through: Q38
 follow_up_status: COMPLETE
 red_findings_status: FINAL
 qar_packet_complete: YES
-main_judgment: PENDING_POST_ARCHIVE_DISCUSSION
-architecture_revision: NOT_STARTED
+main_judgment: COMPLETED
+main_judgment_outcome: ACCEPTED_WITH_REQUIRED_ARCHITECTURE_REVISION
+architecture_revision: REQUIRED_NOT_STARTED
+overall_architecture_freeze: NOT_YET
 module_decomposition_gate: NOT_OPEN
 ```
 
@@ -2439,3 +2443,1585 @@ NO
 
 **RED_QAR_STATUS:**
 COMPLETE
+
+# MAIN JUDGMENT — ROUND 02
+
+
+正式结论：
+
+ROUND_OUTCOME:
+ACCEPTED_WITH_REQUIRED_ARCHITECTURE_REVISION
+
+
+QAR_STATUS:
+COMPLETE
+
+
+RED_FINDINGS:
+ACCEPTED_AS_REVIEW_INPUT
+
+
+OVERALL_ARCHITECTURE_FREEZE:
+NOT_YET
+
+
+ARCHITECTURE_REVISION_REQUIRED:
+YES
+
+
+MODULE_BOUNDARY_DECISION:
+TARGET_DIRECTION_ACCEPTED_PENDING_CANONICAL_REVISION
+
+
+MODULE_DECOMPOSITION_GATE:
+NOT_OPEN
+
+
+原因：
+
+Round 02 没有推翻 Zuno 的核心产品与架构方向，
+但证明当前 canonical architecture
+仍缺少若干跨边界 Ownership、
+Durable Recovery Invariant
+以及稳定 Module Taxonomy。
+
+这些问题已经不需要继续 Q39+，
+而应由 Main Judgment 做架构裁决，
+再通过单独的 Canonical Architecture Revision
+落实。
+
+
+==================================================
+五、Main Judgment — Accepted Principles
+==================================================
+
+正式接受以下经 Round 02 保留下来的原则。
+
+
+1. Domain State 与 Runtime State 分离
+
+PostgreSQL 中的 Canonical Domain State
+和 LangGraph Checkpoint / Runtime Control State
+是不同事实。
+
+Checkpoint 不能证明 Domain Commit。
+
+
+2. Proposal != Canonical Fact
+
+LLM、Specialist、Knowledge、
+Capability Provider、Tool Observation
+只能产生：
+
+Proposal
+Candidate
+Observation
+Reference
+Receipt
+
+不能直接提交 Canonical Legal Result。
+
+
+3. Retry != Replan != Reconcile
+
+执行方式仍正确、只是瞬时失败：
+
+Retry。
+
+计划依赖、假设或 Capability 已失效：
+
+Replan。
+
+现实世界 Effect 是否发生未知：
+
+Reconcile。
+
+
+4. Unknown External Effect 禁止 Blind Retry。
+
+
+5. Single Controller 表示：
+
+每个 Run 只有一个有效逻辑控制权，
+
+不是：
+
+全系统只有一个进程。
+
+
+6. LangGraph 原生：
+
+Checkpoint
+Subgraph
+Pending Writes
+Parallel Execution
+Reducer
+
+优先复用。
+
+Zuno 不重复建设框架已经可靠提供的控制能力。
+
+
+7. Security Decision Authority
+与 Resource-side Enforcement 分离。
+
+
+8. Telemetry / LangSmith / OTel
+不等于 Durable Audit。
+
+
+9. Offline Release Eval
+不等于 Runtime Result Eligibility。
+
+
+10. Contract 必须存在
+不代表 Zuno 必须自建对应：
+
+Module
+Runtime
+Provider
+Network Service。
+
+
+==================================================
+六、Architecture Decision 01
+Simple QA / Invocation / Publication
+==================================================
+
+ACCEPTED。
+
+
+旧原则：
+
+“任何任务都不能绕过
+Plan / Trace / Budget / AnswerPolicy / RunOutcome”
+
+必须在下一次 canonical revision 中收窄。
+
+
+新原则：
+
+只有进入：
+
+Zuno Native Agent Runtime
+
+的任务，
+
+才必须满足 Native Runtime 的：
+
+Plan
+Budget
+AnswerPolicy
+RunOutcome
+Runtime Trace / Control requirements。
+
+
+Host-owned Simple QA：
+
+可以完全不进入 Zuno Native Runtime。
+
+
+Simple QA 可以采用：
+
+Question
+→ Scope / Authorization
+→ Knowledge Readiness
+→ Retrieval
+→ Grounded Answer
+→ Answer Eligibility
+→ Response
+
+
+不默认需要：
+
+Dynamic Plan
+Multi-Agent
+Reflection
+Long-term Memory
+GraphRAG。
+
+
+--------------------------------------------------
+Final Decision Authority
+--------------------------------------------------
+
+“是否允许执行请求”
+
+和：
+
+“是否允许发布普通答案”
+
+是两个不同决定。
+
+
+最终组合 Decision
+属于：
+
+Application / Integration Boundary。
+
+
+它消费各 Canonical Owner 的 typed decisions：
+
+Security
+→ Authorization Decision
+
+Knowledge
+→ Readiness / Evidence Decision
+
+Capability
+→ Capability Eligibility
+
+Model Gateway
+→ Provider / Model Eligibility
+
+Runtime when applicable
+→ Budget / Run Control State
+
+
+Application / Integration
+只拥有：
+
+composition decision。
+
+
+它不得重新拥有或重新计算：
+
+Security Fact
+Knowledge Fact
+Model Fact
+Domain Fact。
+
+
+--------------------------------------------------
+Publication Authority
+--------------------------------------------------
+
+最终发布答案的边界
+拥有 publication authority。
+
+
+如果 Zuno 发布：
+
+Zuno Application / Integration Boundary
+拥有最终 Answer Publication Decision。
+
+
+如果 Generic Host 发布：
+
+Host 拥有最终 UI / Response Publication。
+
+
+Zuno 只能提供：
+
+typed result
+eligibility evidence
+citation
+policy refs
+
+
+不能宣称控制外部 Host
+最终显示了什么。
+
+
+==================================================
+七、Architecture Decision 02
+Canonical Legal Domain Kernel
+==================================================
+
+ACCEPTED。
+
+
+ADR-0008 的 Minimal Domain Kernel
+作为 canonical direction。
+
+
+第一阶段 Canonical Domain Kernel：
+
+Matter
+DocumentVersion
+Claim
+Evidence
+Finding
+HumanDecision
+WorkProduct
+
+
+以下对象默认不是新的 Canonical Aggregate：
+
+Fact
+Event
+Conflict
+Dispute
+LegalIssue
+StatuteVersion
+LegalElement
+ApplicableLaw
+SimilarCase
+
+
+它们默认属于：
+
+Typed Proposal
+Projection
+Derived View
+Capability Provider Output。
+
+
+只有未来证明具有独立：
+
+Identity
+Version
+Provenance
+Ownership
+Mutation Authority
+Dependency
+Staleness
+Review
+Audit
+
+才允许升级为 Canonical Domain Object。
+
+
+下一次 canonical architecture revision
+必须消除当前 Architecture
+与 ADR-0008 的冲突。
+
+
+==================================================
+八、Architecture Decision 03
+Historical Citation Authority
+==================================================
+
+ACCEPTED。
+
+
+正式 WorkProduct
+不得把当前 Knowledge Projection
+作为历史引用唯一依赖。
+
+
+冻结两个不同概念：
+
+
+Knowledge-owned:
+
+CitationLineage
+
+
+回答：
+
+系统当时如何：
+
+retrieve
+rerank
+select
+form citation。
+
+
+Domain-owned:
+
+Historical Citation Binding
+
+
+回答：
+
+某个已经正式 Admission 的
+WorkProductVersion
+
+究竟引用了：
+
+哪一个 DocumentVersion
+哪一个 immutable source
+哪一个 stable source span。
+
+
+Formal WorkProduct Admission
+必须保留足够稳定的历史 Citation Binding。
+
+
+至少语义上绑定：
+
+DocumentVersion
+
+immutable source reference / hash
+
+stable source location / span
+
+source representation identity / hash
+
+必要 citation evidence hash
+
+
+Knowledge CitationLineage：
+
+可以作为 provenance reference，
+
+但不能成为：
+
+Historical WorkProduct 唯一生存依赖。
+
+
+禁止：
+
+Chunk ID
+Vector ID
+Graph Node ID
+
+成为长期唯一 Citation Authority。
+
+
+==================================================
+九、Architecture Decision 04
+Global Data Lifecycle Policy
+==================================================
+
+ACCEPTED。
+
+
+Delete Memory
+
+不等于：
+
+Global Physical Erasure。
+
+
+冻结：
+
+Security & Governance
+
+拥有跨存储：
+
+Retention
+Deletion
+Legal Hold
+Compliance Exception
+
+的最终：
+
+Effective Lifecycle Policy Decision。
+
+
+各 Store：
+
+Memory
+Runtime
+Domain
+Audit
+Observability
+Infrastructure
+
+是：
+
+Enforcement Owner。
+
+
+不是：
+
+最高 Policy Authority。
+
+
+重要不变量：
+
+Retention
+does not imply
+Recall Eligibility。
+
+
+Memory Delete 后：
+
+Future Memory Recall
+必须被禁止。
+
+
+但：
+
+Runtime History
+Audit
+Domain History
+
+是否必须继续保留，
+
+由当前有效的：
+
+Retention
+Legal Hold
+Audit
+Compliance Policy
+
+决定。
+
+
+保留下来的历史副本
+不得因此重新成为：
+
+Recallable Memory。
+
+
+下一次 canonical revision
+需要将 ADR-0003 已有 Audit-specific：
+
+retention_policy_ref
+legal_hold_policy_ref
+
+提升为统一 lifecycle policy boundary，
+
+但本任务不要修改 ADR。
+
+
+==================================================
+十、Architecture Decision 05
+Formal Admission Causation Invariant
+==================================================
+
+ACCEPTED。
+
+
+冻结全局不变量：
+
+如果一个 Step 的完成条件包含
+Formal Domain Admission，
+
+那么：
+
+没有 durable Admission Causation Fact，
+
+Runtime 就不能宣布：
+
+Step = COMPLETED。
+
+
+推荐 canonical concept：
+
+AdmissionReceipt
+
+但具体 Contract 名称
+由后续 canonical revision / ADR
+正式冻结。
+
+
+语义必须证明：
+
+Step
+→ Proposal
+→ Domain Admission
+→ resulting Domain Version
+
+
+至少必须能够关联：
+
+run identity
+
+plan version
+
+step run identity
+
+proposal / admission identity
+
+idempotency identity
+
+expected prior domain version
+
+resulting domain version。
+
+
+--------------------------------------------------
+Atomicity Boundary
+--------------------------------------------------
+
+Domain mutation
+
+和：
+
+证明该 Domain mutation 的 Admission Receipt
+
+必须在：
+
+同一个 Domain transactional durability boundary
+
+内提交。
+
+
+不要求：
+
+PostgreSQL
+↔
+LangGraph Checkpointer
+
+之间建立 2PC。
+
+
+--------------------------------------------------
+Recovery
+--------------------------------------------------
+
+如果：
+
+Domain Commit 成功
+Receipt 成功
+Checkpoint 失败
+
+Runtime 恢复后：
+
+读取 Receipt
+并修复自己的 Control State。
+
+
+如果：
+
+Checkpoint 显示成功
+但不存在匹配 Admission Receipt
+
+不能推断 Domain Admission 已完成。
+
+
+如果数据库存在更高 DomainVersion：
+
+但 causation identity 不匹配，
+
+也不能认作当前 Step 的结果。
+
+
+这正式取代模糊的：
+
+“Domain wins”
+
+作为完整 Recovery 判断。
+
+
+==================================================
+十一、Architecture Decision 06
+Published Result Invalidation
+==================================================
+
+ACCEPTED。
+
+
+必须区分三个不同事实：
+
+
+A. Domain Invalidation Truth
+
+例如：
+
+WorkProduct V3 = STALE
+
+
+Canonical Owner:
+
+Legal Domain。
+
+
+Consumer 是否在线
+不影响该事实成立。
+
+
+B. Invalidation Delivery Fact
+
+例如：
+
+PENDING
+SENT
+FAILED
+RETRYING
+
+
+Owner:
+
+Application / Integration。
+
+
+C. Consumer Acknowledgement Observation
+
+例如：
+
+ACKNOWLEDGED
+NO_ACK
+UNKNOWN
+
+
+Owner:
+
+Application / Integration。
+
+
+它表示：
+
+Zuno 观察到远端 Consumer
+是否返回 acknowledgement。
+
+
+它不是：
+
+Consumer 内部世界的绝对事实。
+
+
+禁止把三者压成：
+
+WorkProduct.status = stale
+
+
+一个字段。
+
+
+--------------------------------------------------
+Delivery Model
+--------------------------------------------------
+
+Target 支持：
+
+push invalidation
+
++
+
+pull current-validity query。
+
+
+Consumer 离线：
+
+不得阻塞 Domain staleness 成立。
+
+
+恢复在线后：
+
+可以：
+
+接收 retry delivery
+
+或：
+
+主动查询 WorkProduct 当前有效状态。
+
+
+==================================================
+十二、Architecture Decision 07
+Critical Reconstruction Boundary
+==================================================
+
+ACCEPTED。
+
+
+不创建一个新的万能：
+
+CriticalReconstructionBundle
+
+作为默认 architecture object。
+
+
+冻结的是：
+
+Durable Reconstruction Chain Invariant。
+
+
+高风险 Tool / External Effect
+必须能够通过 Durable Facts
+重建至少四个问题：
+
+
+做了什么？
+
+为什么允许？
+
+谁批准？
+
+现实世界发生了什么？
+
+
+权威事实来自：
+
+
+Prepared Action / Tool Attempt facts
+
+Security Authorization Decision
+
+Approval Decision when required
+
+Mandatory Audit Persistence
+
+Effect Receipt
+
+Reconciliation Receipt when needed
+
+Domain Admission Receipt when applicable。
+
+
+这些通过稳定：
+
+action identity
+action hash
+run / step causation
+idempotency identity
+
+关联。
+
+
+LangSmith / OpenTelemetry：
+
+只能是：
+
+Diagnostic View
+Trace Projection
+Correlation
+Evaluation Input
+Visualization
+
+
+不能成为：
+
+Canonical Reconstruction Source。
+
+
+如果 Durable Audit 丢失，
+
+完整 LangSmith Trace
+
+不能自动升级为：
+
+同等级 Audit Authority。
+
+
+Secret Material
+不得为了 Reconstruction
+而写入 Trace / Audit / ordinary DB。
+
+
+可以持久保存：
+
+credential version reference
+action hash
+canonical non-secret arguments
+tool definition version
+operation identity。
+
+
+==================================================
+十三、Module Boundary Decision
+==================================================
+
+Main Judgment 接受：
+
+当前 10 Candidate
+不作为 Final Module Map。
+
+
+Target 方向收敛为：
+
+9 个 Logical Responsibility Modules
+
++
+
+1 个 Platform / Infrastructure Responsibility Layer
+
++
+
+Optional Context Provider Boundary。
+
+
+--------------------------------------------------
+Target 9 Logical Modules
+--------------------------------------------------
+
+01 Application & Integration
+
+02 Legal Domain & Work Product
+
+03 Knowledge & Evidence
+
+04 Agent Runtime & Control
+
+05 Capability & Skill
+
+06 Tool Runtime & Effects
+
+07 Model Gateway
+
+08 Security & Governance
+
+09 Observability & Evaluation
+
+
+注意：
+
+这是：
+
+TARGET MODULE DIRECTION
+
+已由 Main Judgment 接受。
+
+
+但是：
+
+Canonical Architecture 还未 Revision。
+
+
+所以：
+
+MODULE_DECOMPOSITION_GATE
+继续：
+
+NOT_OPEN。
+
+
+只有 canonical architecture
+完成相应 Revision + Verification 后，
+
+才允许打开 Gate。
+
+
+==================================================
+十四、Module Decision — Application & Integration
+==================================================
+
+原候选：
+
+Product Surface & Agent Portfolio
+
+
+不直接保留。
+
+
+重构为：
+
+Application & Integration。
+
+
+它负责稳定的：
+
+External Task Intake
+
+Agent Definition / Agent Version surface
+
+Invocation Decision Composition
+
+Response Publication
+
+Generic Host / Court Integration
+
+WorkProduct Delivery
+
+Invalidation Delivery
+
+Consumer Ack Observation。
+
+
+UI
+Session
+Conversation
+Login
+Workbench
+
+不是这个逻辑模块必须自行拥有的能力。
+
+
+它们可以：
+
+由 Zuno 实现
+
+或：
+
+由 Generic Host / Court System 提供。
+
+
+Embedded Mode
+因此成为 first-class deployment / integration mode。
+
+
+==================================================
+十五、Module Decision — Legal Domain
+==================================================
+
+保留：
+
+Legal Domain & Work Product。
+
+
+它是：
+
+Canonical Legal Business State
+的唯一 Owner。
+
+
+但按照 ADR-0008
+收缩 Canonical Kernel。
+
+
+它同时拥有：
+
+Historical WorkProduct Citation Binding
+
+Domain Invalidation Truth
+
+Formal Admission durability fact。
+
+
+==================================================
+十六、Module Decision — Knowledge
+==================================================
+
+保留：
+
+Knowledge & Evidence。
+
+
+Ingestion + Retrieval
+继续作为同一 Logical Responsibility。
+
+
+原因：
+
+共同拥有：
+
+DocumentVersion input interpretation
+KnowledgeGeneration
+Scope-sensitive Readiness
+Retrieval
+Evidence Candidate
+CitationLineage。
+
+
+OCR
+Embedding
+Graph Build
+Vector Store
+
+可以是不同 Worker / Provider。
+
+
+逻辑模块
+不等于物理服务。
+
+
+==================================================
+十七、Module Decision — Runtime
+==================================================
+
+原：
+
+Agent Runtime & Multi-Agent Orchestration
+
+
+改为：
+
+Agent Runtime & Control。
+
+
+核心责任：
+
+Single Controller
+
+Plan DAG
+
+Step Execution
+
+Budget
+
+Parallel Dispatch
+
+Join
+
+Retry
+
+Replan
+
+Reconcile
+
+Interrupt
+
+Checkpoint / Recovery Control。
+
+
+Specialist / Multi-Agent：
+
+只是可选执行方式。
+
+
+不再作为：
+
+模块存在的核心理由。
+
+
+Native Runtime 仍然：
+
+CONDITIONAL
+MEASUREMENT-GATED。
+
+
+Host-owned Simple QA
+不需要进入该模块。
+
+
+==================================================
+十八、Module Decision — Capability / Tool Split
+==================================================
+
+ACCEPTED。
+
+
+当前：
+
+Capability / Skill & Tool Runtime
+
+必须拆成两个逻辑责任。
+
+
+05 Capability & Skill
+
+
+回答：
+
+系统能够完成什么专业分析能力。
+
+
+典型：
+
+EVENT_EXTRACTION
+EVENT_ALIGNMENT
+CONFLICT_DETECTION
+FACT_ARTICLE_MAPPING
+LEGAL_APPLICABILITY
+SIMILAR_CASE_RETRIEVAL
+EVIDENCE_REASONING
+
+
+主要输出：
+
+Proposal
+Candidate
+Observation
+Reference。
+
+
+06 Tool Runtime & Effects
+
+
+回答：
+
+系统如何安全执行
+可能改变外部世界的操作。
+
+
+主要责任：
+
+Tool Definition
+
+Prepared Action
+
+Approval Binding
+
+Tool Attempt
+
+Idempotency
+
+Effect Receipt
+
+OUTCOME_UNKNOWN
+
+Reconciliation。
+
+
+核心理由：
+
+Capability failure
+
+与：
+
+External Effect uncertainty
+
+拥有不同：
+
+success semantics
+failure semantics
+retry semantics
+recovery semantics
+security semantics。
+
+
+因此不再冻结为同一个模块。
+
+
+==================================================
+十九、Module Decision — Memory
+==================================================
+
+ACCEPTED。
+
+
+Memory & Context
+
+不再作为：
+
+first-class logical module。
+
+
+降级为：
+
+Optional Context Provider Boundary。
+
+
+Working Context
+Session Context
+
+优先由：
+
+Runtime / Host
+
+管理。
+
+
+Long-term Memory：
+
+只有 Ablation / Eval
+证明真实收益后
+才允许提升复杂度。
+
+
+Provider 可以是：
+
+OpenViking
+Generic Host
+External Memory Provider
+Zuno Adapter。
+
+
+Memory Contract 可以存在，
+
+不代表 Memory 必须成为一级模块。
+
+
+==================================================
+二十、Module Decision — Infrastructure
+==================================================
+
+ACCEPTED。
+
+
+Infrastructure & Persistence
+
+不再与：
+
+Legal Domain
+Knowledge
+Runtime
+
+以同一种意义称为：
+
+Logical Business Module。
+
+
+改为：
+
+Platform / Infrastructure Responsibility Layer。
+
+
+提供：
+
+PostgreSQL primitives
+
+Object Store
+
+Queue / Worker primitives
+
+Checkpoint adapter
+
+CAS
+Lease
+Fencing
+Clock
+
+Vector / Graph / Lexical physical adapters
+
+Cache
+
+Backup / Restore
+
+Network
+
+Secret delivery
+
+Release primitives。
+
+
+上层逻辑模块：
+
+通过 typed ports 使用 Platform。
+
+
+Platform 不拥有：
+
+Domain success
+
+Knowledge success
+
+Runtime success
+
+Tool effect success。
+
+
+--------------------------------------------------
+ADR Conflict
+--------------------------------------------------
+
+ADR-0003 当前写有：
+
+“Infrastructure 是逻辑模块”
+
+因此后续 canonical revision
+必须通过新的 ADR 或明确 superseding decision：
+
+只 supersede ADR-0003
+关于 Infrastructure taxonomy 的部分。
+
+
+ADR-0003 中有效的：
+
+Cross-module Contracts
+Security Epoch
+Audit durability
+Receipt boundaries
+Model Gateway contracts
+Infrastructure primitives
+
+继续保留。
+
+
+本任务：
+
+不得修改 ADR-0003。
+
+
+==================================================
+二十一、Module Decision — Model / Security / Observability
+==================================================
+
+以下保留一级逻辑责任：
+
+
+Model Gateway
+
+
+Security & Governance
+
+
+Observability & Evaluation
+
+
+但 Observability：
+
+不得拥有：
+
+Canonical Domain
+Security Decision
+Effect Truth
+Mandatory Audit durability fact。
+
+
+它消费并投影这些事实。
+
+
+==================================================
+二十二、Physical Deployment
+==================================================
+
+继续保留 ADR-0012。
+
+
+Target 默认：
+
+Python Modular Backend
+
++
+
+Independent Workers where justified。
+
+
+Logical Module：
+
+不自动等于：
+
+Process
+Container
+Database
+Network Service
+Microservice
+Team。
+
+
+Network Service 拆分继续：
+
+EVIDENCE-GATED。
+
+
+不得因为新的 9-module map
+
+生成：
+
+9 个微服务。
+
+
+==================================================
+二十三、Measurement Gaps
+==================================================
+
+以下不因为 Main Judgment
+而变成已证明能力。
+
+
+继续保留 Measurement Gap：
+
+
+1. Generic Host
+
+vs
+
+Generic Host + Zuno Legal Backend
+
+vs
+
+Zuno Native Runtime
+
+
+A/B/C Benchmark。
+
+
+2. Long-term Memory Ablation。
+
+
+3. Specialist / Multi-Agent
+
+vs
+
+Parallel Step / LangGraph Subgraph
+
+增益验证。
+
+
+4. Runtime HA / fencing / takeover
+Current Evidence。
+
+
+这些 Measurement Gap：
+
+不阻止 Target Responsibility Boundary
+被定义，
+
+但阻止：
+
+production ready
+measured advantage
+runtime necessity
+
+等结论。
+
+
+==================================================
+二十四、Rejected / Not Accepted
+==================================================
+
+Main Judgment 明确不接受：
+
+
+1. 当前 10 Candidate
+直接冻结为最终模块。
+
+
+2. 所有请求都必须启动 Native Runtime。
+
+
+3. 所有法律抽取对象
+自动成为 Canonical Domain Entity。
+
+
+4. Chunk / Index / CitationLineage ID
+作为 WorkProduct 长期唯一引用依据。
+
+
+5. Memory Delete
+等于所有历史副本立即物理删除。
+
+
+6. DomainVersion 存在
+就证明某 Step 已完成。
+
+
+7. WorkProduct.status=STALE
+同时代表：
+
+Domain invalidation
+delivery
+consumer awareness。
+
+
+8. LangSmith / OTel Trace
+作为 Durable Audit 的替代事实源。
+
+
+9. Capability 与 Side-effecting Tool Runtime
+继续因为“都能被 Agent 调用”而合并。
+
+
+10. Memory 因为存在 Contract
+就必须是一级 Module。
+
+
+11. Infrastructure 因为重要
+就必须是与 Domain 同类的 Logical Module。
+
+
+12. 9 Logical Modules
+自动对应 9 Microservices。
+
+
+==================================================
+二十五、Main Judgment 后状态
+==================================================
+
+Round 02 History metadata
+更新为等价状态：
+
+
+status: ARCHIVED
+
+qar_complete_through: Q38
+
+qar_packet_complete: YES
+
+follow_up_status: COMPLETE
+
+red_findings_status: FINAL
+
+main_judgment: COMPLETED
+
+main_judgment_outcome:
+ACCEPTED_WITH_REQUIRED_ARCHITECTURE_REVISION
+
+architecture_revision:
+REQUIRED_NOT_STARTED
+
+overall_architecture_freeze:
+NOT_YET
+
+module_decomposition_gate:
+NOT_OPEN
+
+
+Architecture Baseline：
+
+继续保持：
+
+a9fa3834c1dd95bdc13caa85b7188d49fc55b1b5
+
+
+Archive Task Base：
+
+不要覆盖历史值。
+
+
+可以增加：
+
+main_judgment_recorded_at
+main_judgment_recording_base_sha
+
+如果当前 History Governance
+已有同类字段。
+
+
+不要发明不必要 schema。
