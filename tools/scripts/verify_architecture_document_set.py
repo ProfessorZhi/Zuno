@@ -51,14 +51,14 @@ def verify() -> list[str]:
     if "9 个 Target Logical Modules" not in design or "Round 02" not in design:
         errors.append("architecture.md must record the revised nine-module Target and Round 02 source")
     for marker in (
-        "Zuno 是什么",
-        "为什么 Generic Host 有时不够",
-        "Simple QA",
+        "面向智慧司法和法律专业工作的法律智能能力平台",
+        "不是所有法律任务都需要同样复杂的系统",
+        "简单问答",
         "WorkBuddy",
         "A/B/C",
-        "Platform / Infrastructure Responsibility Layer",
-        "Optional Context Provider",
-        "Runtime Control State",
+        "平台与基础设施责任层",
+        "可选上下文边界",
+        "运行控制状态",
         "AdmissionReceipt",
     ):
         if marker not in design:

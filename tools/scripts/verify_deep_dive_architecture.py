@@ -9,7 +9,7 @@ DOCUMENT_REQUIREMENTS = {
     "docs/architecture/architecture.md": (
         "Application & Integration", "Legal Domain & Work Product", "Knowledge & Evidence",
         "Agent Runtime & Control", "Tool Runtime & Effects", "Security & Governance",
-        "Python-only", "FastAPI", "LangGraph", "Reconciliation", "Current", "Target", "History",
+        "模块化 Python 后端", "FastAPI", "LangGraph", "Reconciliation", "Current", "Target", "History",
     ),
 }
 

@@ -70,11 +70,11 @@ def validate_design(content: str) -> list[str]:
         "### B13 Evidence / Verification",
     ]
     required_terms = [
-        "Modular Python Backend", "Microservice", "Application & Integration",
+        "模块化 Python 后端", "独立网络服务", "Application & Integration",
         "Legal Domain & Work Product", "Knowledge & Evidence", "Agent Runtime & Control",
-        "Capability & Skill", "Tool Runtime & Effects", "Platform / Infrastructure Responsibility Layer",
-        "Optional Context Provider", "FastAPI", "LangGraph", "PostgreSQL", "Checkpoint",
-        "Reconciliation", "Current", "Target", "History", "Why service?", "Why not library?",
+        "Capability & Skill", "Tool Runtime & Effects", "平台与基础设施责任层",
+        "可选上下文边界", "FastAPI", "LangGraph", "PostgreSQL", "Checkpoint",
+        "Reconciliation", "Current", "Target", "History", "为什么必须独立服务", "不是库或 Worker",
         "Logical Responsibility", "Target Status Boundary",
     ]
     errors: list[str] = []
@@ -87,7 +87,7 @@ def validate_design(content: str) -> list[str]:
     if "9 个 Target Logical Modules" not in content or "Round 02" not in content:
         errors.append("architecture.md must record the revised nine-module target and its source")
     if (
-        "Platform / Infrastructure Responsibility Layer" not in content
+        "平台与基础设施责任层" not in content
         or "final_module_count: 9" not in content
         or "overall_architecture_state: ROUND_02_FROZEN" not in content
         or "module_decomposition_gate: OPEN" not in content

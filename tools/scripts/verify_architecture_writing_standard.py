@@ -36,7 +36,7 @@ def verify() -> list[str]:
     if not ARCH.exists():
         return errors
     design = ARCH.read_text(encoding="utf-8")
-    for marker in ("Python-only", "Microservice", "Current", "Target", "History", "Why service?", "Reconciliation"):
+    for marker in ("模块化 Python 后端", "独立网络服务", "Current", "Target", "History", "为什么必须独立服务", "Reconciliation"):
         if marker not in design:
             errors.append(f"architecture.md missing writing marker: {marker}")
     if VIEWS.exists() and "```mermaid" not in VIEWS.read_text(encoding="utf-8"):

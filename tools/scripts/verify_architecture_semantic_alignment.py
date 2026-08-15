@@ -49,12 +49,12 @@ def verify() -> list[str]:
         part_b = architecture.split(part_b_marker, 1)[1]
 
     part_a_groups = {
-        "simple qa": ("一个简单问题怎样完成", "Simple QA", "Generic Host 完成"),
-        "complex legal flow": ("一个复杂法律分析怎样完成", "Finding Proposal", "WorkProduct"),
-        "controlled effect": ("外部动作必须单独处理", "Effect Receipt", "Reconciliation"),
-        "responsibility taxonomy": ("九个逻辑责任域", "Platform / Infrastructure Responsibility Layer", "Optional Context Provider"),
-        "admission recovery": ("任务失败以后怎样恢复", "AdmissionReceipt", "Checkpoint"),
-        "build buy": ("Build / Buy / Reuse", "Why service?", "Why not library?"),
+        "simple qa": ("简单问答", "材料范围", "通用宿主"),
+        "complex legal flow": ("一次复杂法律任务怎样完整运行", "候选分析", "工作成果"),
+        "controlled effect": ("外部动作为什么需要另一套处理方式", "执行回执", "对账恢复"),
+        "responsibility taxonomy": ("谁来负责这些不同事实", "九个逻辑责任域", "可选上下文边界"),
+        "admission recovery": ("一次系统故障以后怎样恢复", "正式准入回执", "运行检查点"),
+        "build buy": ("哪些能力应该自己建设，哪些能力应该复用", "为什么必须独立服务", "不是库或 Worker"),
     }
     for name, markers in part_a_groups.items():
         missing = _missing(part_a, markers)
