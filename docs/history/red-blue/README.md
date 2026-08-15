@@ -30,11 +30,11 @@ Round 01 的目标架构修订已经记录在提交 `391e9f16e4d0cf12998e9b31047
 
 ## Round 02 — Overall Architecture Freeze Review
 
-第二轮从“总体架构是否讲得通”进一步进入“候选责任边界是否精确到可以冻结”。Q1–Q32 已完成，讨论了简单回答的调用权、正式引用和 WorkProduct 的权威、Memory 删除、Domain Commit 与 Checkpoint 恢复、发布结果失效、关键审计重建，以及 Capability / Tool、Memory、Product Surface 和 Infrastructure 是否真的应当成为独立模块。
+第二轮从“总体架构是否讲得通”进一步进入“候选责任边界是否精确到可以冻结”。Q1–Q38 的 Q/A/R 已全部完成，并追加了 Red Final Findings；讨论了简单回答的调用权、正式引用和 WorkProduct 的权威、Memory 删除、Domain Commit 与 Checkpoint 恢复、发布结果失效、关键审计重建，以及 Capability / Tool、Memory、Product Surface 和 Infrastructure 是否真的应当成为独立模块。
 
-这一轮已经明确暴露出若干 Freeze Blocker，但还没有形成 Main Judgment。Q33–Q38 仍是待回答的 Follow-up，涉及 Simple Answer / Invocation Ownership、Historical Citation Authority、Memory Delete Across Copies、Domain Commit / Checkpoint Recovery、Published Result Invalidation 和 Reconstruction Boundary。
+这一轮已经明确暴露出若干 Freeze Blocker。Red Final Findings 已将本轮标记为 `READY_FOR_MAIN_JUDGMENT`，但这不表示架构已经接受或冻结；Main Judgment 仍待讨论。未解决项涉及 Simple Answer / Invocation Ownership、Historical Citation Authority、Memory Delete Across Copies、Domain Commit / Checkpoint Recovery、Published Result Invalidation 和 Reconstruction Boundary。
 
-因此 Round 02 目前仍是 interim archive：Main Judgment pending，Canonical Architecture Revision 尚未开始，Module Decomposition Gate 仍未打开。不要把这轮的 Red Concern 或 Blue Proposal 当作已接受的架构决定。
+因此 Round 02 的 Q/A/R 归档已经完成，但 Main Judgment 仍 pending，Canonical Architecture Revision 尚未开始，Module Decomposition Gate 仍未打开。不要把这轮的 Red Concern 或 Blue Proposal 当作已接受的架构决定。
 
 完整记录见 [Round 02 Archive](./manual-round-02-overall-architecture-freeze-review.md)。
 

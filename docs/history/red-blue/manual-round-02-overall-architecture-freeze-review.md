@@ -2,12 +2,13 @@ series: ARCHITECTURE_INTERVIEW
 round_id: 02
 round_name: Overall Architecture Freeze Review
 execution_mode: MANUAL
-status: ARCHIVED_INTERIM
+status: ARCHIVED
 architecture_baseline_sha: a9fa3834c1dd95bdc13caa85b7188d49fc55b1b5
-archive_task_base_sha: a9fa3834c1dd95bdc13caa85b7188d49fc55b1b5
-qar_complete_through: Q32
-follow_up_status: Q33_Q38_PENDING
-red_findings_status: INTERIM
+archive_task_base_sha: b287d6c3d2c9f5051d37e6d66e29f61633126a3c
+qar_complete_through: Q38
+follow_up_status: COMPLETE
+red_findings_status: FINAL
+qar_packet_complete: YES
 main_judgment: PENDING_POST_ARCHIVE_DISCUSSION
 architecture_revision: NOT_STARTED
 module_decomposition_gate: NOT_OPEN
@@ -15,29 +16,31 @@ source_boundary: manually coordinated Red / Blue / Main workflow
 
 ---
 
-> This file is an append-only historical Red / Blue Q/A/R archive. Q1–Q32 preserve the supplied source; Q33–Q38 are pending questions only.
+> This file is an append-only historical Red / Blue Q/A/R archive. Q1–Q38 preserve the supplied source, including the completed follow-up round.
 > It is not a Current Fact, Canonical Target Architecture, ADR, or implementation authorization. Main Judgment remains pending post-archive discussion.
 
 ---
 
-# Zuno Architecture Interview — Round 02 Interim Q/A/R Packet
+# Zuno Architecture Interview — Round 02 Formal Q/A/R Packet
 
 ```yaml
 series: ARCHITECTURE_INTERVIEW
 round_id: 02
 round_name: Overall Architecture Freeze Review
 execution_mode: MANUAL
-status: ARCHIVED_INTERIM_SOURCE_PACKET
+status: ARCHIVED
 architecture_baseline_sha: a9fa3834c1dd95bdc13caa85b7188d49fc55b1b5
-qar_complete_through: Q32
-follow_up_status: Q33_Q38_PENDING
-red_findings_status: INTERIM
+archive_task_base_sha: b287d6c3d2c9f5051d37e6d66e29f61633126a3c
+qar_complete_through: Q38
+follow_up_status: COMPLETE
+red_findings_status: FINAL
+qar_packet_complete: YES
 main_judgment: PENDING_POST_ARCHIVE_DISCUSSION
 architecture_revision: NOT_STARTED
 module_decomposition_gate: NOT_OPEN
 ```
 
-> Source note: This packet reorganizes the Round 02 material already present in the conversation into strict Q/A/R order. Q33–Q38 are pending follow-up questions only.
+> Source note: This packet preserves the Round 02 material in strict Q/A/R order. Q33–Q38 and the Red Final Findings were supplied as the completed follow-up source packet.
 
 ---
 
@@ -1814,7 +1817,7 @@ Generic Host = 可以承担通用 Host / orchestration。
 
 # Pending Follow-up Questions
 
-## Q33 — Red Follow-up Question
+## Q33 — Red Question
 ### Simple Answer / Invocation Ownership
 
 把 Q2 和 Q9 合在一起。
@@ -1837,11 +1840,38 @@ Agent InvocationEligibility
 
 我要一个最终 decision authority，同时说明它为什么不会重新拥有 Security、Knowledge、Model 的原始事实。
 
-**Status:** A33 / R33 PENDING
+## A33 — Blue Answer
+
+当前架构**没有冻结**这两个组合决定的唯一 Owner。`CURRENT ARCHITECTURE DOES NOT FREEZE THIS YET.`
+
+先说明基线状态：实际 `main` 已前进到 `b287d6c3...`，但 Round 02 Archive 仍明确把 Architecture Baseline 固定为 `a9fa3834...`，Q1–Q32 已归档、Q33–Q38 Pending、Main Judgment Pending、Architecture Revision `NOT_STARTED`、Module Decomposition Gate `NOT_OPEN`。因此这里仍按 `a9fa3834...` 回答。
+
+Host-owned Simple QA 在 ADR 的 Host Boundary 里是成立的 Target 方向：Generic Host 可以负责交互、任务入口、一般编排，Native Runtime 本身还是 deferred/hypothesis。所以一个只调用 Zuno Knowledge / Legal Capability 的请求，**原则上可以完全不启动 Zuno Native Runtime**。但 Overall Architecture 同时又保留了“任何任务不能绕过 Plan / Trace / Budget / AnswerPolicy / RunOutcome”的表述，两者目前还没有正式收敛。
+
+“允许执行”和“允许返回”也不是同一个决定。前者回答的是：当前身份、权限、Scope、Knowledge Readiness、Capability/Model Availability 是否允许开始这次调用；后者回答的是：已经得到的 Answer 是否满足当前证据、Citation、Degradation 和 Answer Policy，可以交给用户。这两个阶段可能一个通过、另一个失败。
+
+目前能明确的是原始事实 Owner 没有歧义：Security 拥有 Authorization Decision；Knowledge 拥有 KnowledgeGeneration / Readiness / CitationLineage；Model Gateway 拥有 Provider Availability、Usage 等模型事实。这些 Owner 应该只输出自己的决定或 Receipt，而不是谁都能宣布最终综合结果。总体 Owner Matrix 对这些底层事实有定义，但没有为 `SimpleAnswer FinalGate` 和 `InvocationEligibility` 指定唯一的最终组合 Decision Authority。
+
+**THIS IS AN OVERALL ARCHITECTURE GAP.**
+
+**PROPOSED RESOLUTION：**可以让现有的请求/响应 Application Boundary 只做“组合裁决”：消费 Security、Knowledge、Model/Capability 的权威结果，自己不重新计算这些事实。它可以同时拥有“是否允许发起本次调用”和“是否允许返回本次普通答案”两个不同的最终决定。但这只是本轮可考虑的收敛方向，`a9fa3834...` 并没有把这个 Owner 冻结下来。
+
+## R33 — Red Review
+
+**STATUS:** ARCHITECTURE_CONCERN
+
+**REVIEW:**
+Blue 没有回答出一个已经存在的唯一 Decision Authority，而是明确确认当前 Architecture 尚未冻结 `InvocationEligibility` 和 `SimpleAnswer FinalGate` 的 Owner，这个判断可信。更严重的是，它再次确认 Generic Host 可以合法绕开 Native Runtime，而旧总体原则仍有“任何任务都不能绕过 Plan / Trace / Budget / AnswerPolicy / RunOutcome”的表述，所以这里同时存在 **Ownership Gap + Execution Boundary inconsistency**。
+
+Blue 提出的“Application Boundary 组合裁决”可以成为后续候选，但它现在只是 Proposal，不能拿来关闭问题。Freeze 时不能留下“原始事实 Owner 都清楚，但最终谁有权说 yes/no 不清楚”的状态。
+
+**FREEZE_IMPACT:** FREEZE_BLOCKER
+
+**FOLLOW_UP:** NONE
 
 ---
 
-## Q34 — Red Follow-up Question
+## Q34 — Red Question
 ### Historical Citation Authority
 
 昨天的 WorkProduct V3 保存了引用。
@@ -1862,11 +1892,42 @@ Agent InvocationEligibility
 
 那 Zuno 所谓长期可审计 WorkProduct 到底凭什么成立？
 
-**Status:** A34 / R34 PENDING
+## A34 — Blue Answer
+
+是，从 Zuno 当前“长期可审计 WorkProduct”的产品目标看，历史 V3 **不应该因为今天换掉 Knowledge Provider 就失去原文回溯能力**。但关键问题是：当前 Architecture 还没有冻结一个足以保证这件事的 Canonical Historical Citation Artifact。
+
+现在已经冻结的 Ownership 是两层：Knowledge 拥有 `EvidenceCandidate / CitationLineage`；Domain 拥有正式 `Evidence business reference / WorkProduct`。CitationLineage 描述检索和引用是如何形成的，它属于 Knowledge 事实；WorkProduct 则是长期业务版本。
+
+因此 CitationLineage 与“昨天已经正式发布的 WorkProduct 的历史引用绑定”并不能自动视为同一个东西。如果 WorkProduct V3 只保存一个 `citation_lineage_id`，而这个 ID 的唯一事实存储跟着旧 Knowledge Provider 一起迁掉，那么 Domain DB + 原始 Object Store **不一定足够**恢复 V3。Object Store 还能给你文件 bytes，但系统可能已经不知道 V3 当时引用的是文件里的哪一段。
+
+当前 ADR 对正式 Evidence 强调来源、版本和引用位置，对长期 Domain State 也强调版本和可审计性，这支持“历史引用需要稳定锚定”的方向；但 Owner Matrix 仍只明确了 CitationLineage 属于 Knowledge，没有另外冻结一个 Domain-owned Historical Citation Snapshot/Binding。
+
+所以答案是：
+
+**CURRENT ARCHITECTURE DOES NOT FREEZE THIS YET.**
+
+缺失的是一个明确的 **historical citation authority / immutable source anchor ownership**。也因此，现在不能声称“只留下 Domain DB + Object Store 就必然足以独立审计 V3”。
+
+**PROPOSED RESOLUTION：**正式 WorkProductVersion 在 Admission 时应固化足以独立回到 `DocumentVersion + immutable source object/hash + stable source location/span` 的历史证据锚点；Knowledge 的 CitationLineage 继续描述检索形成过程，而不是成为历史 WorkProduct 唯一的生存依赖。因为这个锚点证明的是已提交 WorkProduct 的历史内容，它若被采用，其最终 Ownership 应落在 Domain 一侧。这个归属目前仍是 Proposal，不是已经冻结的 Architecture。
+
+## R34 — Red Review
+
+**STATUS:** OPEN
+
+**REVIEW:**
+这个回答把问题说透了：`CitationLineage` 的生命周期和已经 Admission 的 `WorkProductVersion` 生命周期并不相同，而当前 Architecture 没有冻结一个在 Knowledge Provider 被替换后仍然存活的 Historical Citation Authority。
+
+这是长期可审计 WorkProduct 的核心，不是 Knowledge 模块内部怎么存 Chunk 的问题。只要历史正式结果仍可能依赖一个可以随着 Projection / Provider 被删除的 ID，就不能证明“版本化 WorkProduct 可长期复核”。
+
+Blue 提出的 Domain-owned immutable source anchor 是合理候选，但仍然只是 Proposal。
+
+**FREEZE_IMPACT:** FREEZE_BLOCKER
+
+**FOLLOW_UP:** NONE
 
 ---
 
-## Q35 — Red Follow-up Question
+## Q35 — Red Question
 ### Memory Delete Across Copies
 
 用户要求删除一条长期 Memory。
@@ -1889,11 +1950,42 @@ Delete Memory 是只删除“以后可召回的 Memory Fact”，还是要求传
 
 如果不同 Store 得到不同结论，最终是谁的 policy 生效？
 
-**Status:** A35 / R35 PENDING
+## A35 — Blue Answer
+
+当前 Architecture 可以明确的一点是：**Delete Memory 不等于把所有出现过这段内容的地方物理抹除。**
+
+Memory Fact、Runtime copy、Trace copy、Audit record 和 WorkProduct historical context 是不同 Owner 下的不同事实。Memory 已明确不能覆盖 Domain State，也不能把 Runtime Checkpoint 或 Audit 当成自己的存储。因此删除长期 Memory，至少意味着这条 Memory 不再作为可召回 Memory 参与未来 Context Assembly；它不能凭一个 Memory Delete 命令直接重写昨天的 WorkProduct、Runtime 历史或者合规 Audit。
+
+Runtime Checkpoint 中的副本属于 Runtime durable/control history；redacted Trace 属于 Observability；正式 WorkProduct 的历史上下文属于 Domain 历史；Audit 则还有更强的独立规则。ADR-0003 已经明确由 Security 拥有 `SecurityAuditRequirement`，其中包含 `retention_policy_ref` 和 `legal_hold_policy_ref`，Infrastructure 负责持久化执行，Observability 接收 AuditEvent。也就是说，Audit 数据至少已经存在“Policy Owner 与 Persistence/Telemetry Owner 分离”的边界。
+
+但这并没有解决整个系统的删除冲突。Memory 自己又拥有 Retention / Expiry / Deletion，而当前文档没有冻结一个**跨 Memory、Runtime、Trace、Audit、Domain 的最高级 Retention/Delete/Legal-Hold Policy Authority 及冲突优先级**。
+
+所以，如果不同 Store 对“必须删除”和“必须保留”得到不同结论，目前不能回答“最终一定听谁的”。
+
+**CURRENT ARCHITECTURE DOES NOT FREEZE THIS YET.**
+
+Store 也不应该因此成为全局 Policy Owner。它只能 Enforcement 自己收到的有效策略。例如 Audit Store 可以因 Legal Hold 保留历史记录，但这个保留副本不能因此重新获得“可作为长期 Memory 召回”的资格；Memory 删除之后，未来 Memory Retrieval 仍然必须看不到它。
+
+**PROPOSED RESOLUTION：**由现有 Security / Governance 责任统一裁决跨存储的 Retention、Deletion、Legal Hold 和合规例外，各事实 Store 只负责执行属于自己的决定；Memory 删除控制未来 Recall，而保留历史副本是否物理清除由其各自 retention/legal-hold 决定。这个全局 policy authority 在当前 baseline 尚未冻结。
+
+## R35 — Red Review
+
+**STATUS:** OPEN
+
+**REVIEW:**
+Blue 正确关闭了一半问题：删除 Memory 不应该自动重写 Domain History、Audit 或 Runtime History，而且“保留副本”也绝不能让旧数据重新获得 Memory Recall 资格。
+
+但真正的跨层 Owner 仍然不存在：当 Memory deletion、Runtime retention、Trace retention、Audit legal hold、Domain history 的政策发生冲突时，谁拥有最终 Policy Authority，目前 Architecture 没有答案。
+
+这不是每个 Store 自己配置 TTL 就能解决的问题。既然系统声明支持 Governance、Retention、Deletion 和 Legal Hold，那么冲突决策权必须在总体层唯一。
+
+**FREEZE_IMPACT:** FREEZE_BLOCKER
+
+**FOLLOW_UP:** NONE
 
 ---
 
-## Q36 — Red Follow-up Question
+## Q36 — Red Question
 ### Domain Commit / Checkpoint Recovery Invariant
 
 把 Q24 和 Q25 合在一起。
@@ -1910,11 +2002,54 @@ Delete Memory 是只删除“以后可召回的 Memory Fact”，还是要求传
 
 这里如果仍然只能回答“Domain wins”，就还没有过。
 
-**Status:** A36 / R36 PENDING
+## A36 — Blue Answer
+
+最简单的不变量应该是：
+
+> **一个要求 Formal Admission 的 Step，只有在“该 Step 导致的正式 Domain Commit”已经 durable 并且可以证明两者的因果绑定后，Runtime 才能把它宣布为真正完成。**
+
+但我要马上区分：前半部分“Checkpoint 不能冒充 Domain Truth、Domain Commit 成功后以 Domain State 为准”已经是当前架构原则；后半部分这个**完整 causation invariant 还没有被冻结**。
+
+Domain Version 本身不够。恢复时看到 `FindingVersion V7`，只能证明 V7 存在，不能证明它就是这个 `run_id / step_run_id` 的 Admission 结果；V7 完全可能是另一个并发 Run 提交的。
+
+Runtime Checkpoint 也不够。Checkpoint 只能说明执行控制认为走到了哪里；Architecture 明确规定 Checkpoint 不是 Canonical Domain Fact。
+
+现有跨模块 Envelope 已经提供了 `run_id、step_run_id、correlation_id、causation_id、idempotency_key、aggregate_id/version` 这些建立因果链所需要的字段，这是重要基础。 但“这些字段存在”并不等于 Architecture 已经冻结了：
+
+`Step → Formal Admission → resulting DomainVersion`
+
+这一条 durable proof。
+
+当前文档写了 `Domain State wins` 和恢复时读取 Domain State、Receipt、Checkpoint 对账，但没有明确冻结一个 **Domain-owned Admission/Commit Receipt**，也没有规定 Runtime 只有拿到这个因果证明之后才能进入 terminal success。
+
+因此：
+
+**CURRENT ARCHITECTURE DOES NOT FREEZE THIS YET.**
+
+**PROPOSED RESOLUTION：**如果采用一个 durable Admission/Commit fact，它必须由 Domain Owner 拥有，因为它证明的是“Domain 接受并提交了什么”，而不是 Infrastructure 或 Runtime 的成功。它至少需要把调用方 Step 的 causation identity 与最终 Domain Version 绑定。恢复时 Runtime 用自己的 Step identity 去查询这个事实：匹配则修正落后的 Checkpoint；找不到则不能因为“数据库里恰好有一个更新版本”就宣告完成，而要继续 Reconcile；若发现 Domain Snapshot 已被其他 Run 改变，则再进入现有 Replan 语义。这个 Receipt/Invariant 目前仍属于 proposed resolution。
+
+## R36 — Red Review
+
+**STATUS:** OPEN
+
+**REVIEW:**
+这是本轮最明确的 Recovery Freeze Blocker 之一。
+
+Blue 给出的不变量是对的：
+
+> Formal Admission 是 Step 完成条件时，只有 Domain Commit durable，并且能够 durable 证明 `Step → Admission → DomainVersion` 的因果绑定后，Runtime 才能宣告完成。
+
+但 Blue 同时确认当前 Architecture **并没有冻结这个因果证明**。现有 Envelope 有 `run_id / step_run_id / causation_id / idempotency_key` 只能说明“字段可用”，不能证明某个 Canonical Version 就是某个 Step 的 Admission 成果。
+
+因此当前的 `Domain State wins` 仍然不足以恢复。没有 Durable Causation Fact，Runtime 在 crash recovery 时只能猜，而这是不能接受的。
+
+**FREEZE_IMPACT:** FREEZE_BLOCKER
+
+**FOLLOW_UP:** NONE
 
 ---
 
-## Q37 — Red Follow-up Question
+## Q37 — Red Question
 ### Published Result Invalidation
 
 WorkProduct V3 已经通过 API 发给两个法院系统。
@@ -1933,11 +2068,50 @@ WorkProduct V3 已经通过 API 发给两个法院系统。
 
 这三个事实能不能被混成一个 WorkProduct.status = stale？
 
-**Status:** A37 / R37 PENDING
+## A37 — Blue Answer
+
+这三个事实不能混成一个 `WorkProduct.status = stale`。
+
+第一个事实——**V3 已经 stale**——当前边界是清楚的：这是 Domain Truth。新 Evidence 使 Finding / WorkProduct 的依赖失效后，Domain Owner 可以保存 V3 历史版本，同时把它标记 stale、review_required 或 superseded。Consumer 是否在线不影响这个事实成立。
+
+第二个事实——**失效通知有没有被发出去、发送是否成功**——不是 Domain Staleness 本身。这属于外部集成/交付执行事实。当前 Product Surface 候选确实包含 Court / Generic Host Integration，但 `a9fa3834...` 并没有冻结“Published Result Invalidation Delivery”的唯一 Owner、Retry/Outbox/Delivery Receipt 语义。
+
+第三个事实——**Consumer 是否已经知道**——更不能从“Zuno 发过通知”推出。真正的远端状态属于法院系统；Zuno最多只能在对方协议返回 acknowledgement 时保存“我观察到对方确认了”的事实。法院 B 离线时，Zuno Domain 仍然可以确定 V3 stale；但对 B 来说只能说“尚未获得 Consumer acknowledgement”，不能把它写成“B 已经知道”。
+
+所以法院 A 和 B 可以同时满足：
+
+V3 在 Zuno Domain 中已经 stale；A 已经收到并确认；B 仍可能在用旧缓存。
+
+`WorkProduct.status = stale` 只覆盖第一件事，无法表达第二和第三件事。
+
+**CURRENT ARCHITECTURE DOES NOT FREEZE EXTERNAL CONSUMER INVALIDATION SEMANTICS YET.**
+
+缺失的是 propagation owner、delivery/retry fact，以及 acknowledgement/consumer-observation fact 的长期边界。
+
+**PROPOSED RESOLUTION：**继续让 Domain 只拥有 Invalidation Truth；现有 Host/Product Integration Responsibility 负责传播，而远端 acknowledgement 作为独立集成事实保存。Domain Truth 永远不等待 Consumer 上线。但这一传播与 acknowledgement 语义还没有进入当前 Architecture Freeze。
+
+## R37 — Red Review
+
+**STATUS:** OPEN
+
+**REVIEW:**
+回答正确地区分了三个事实：
+
+`Domain invalidation truth ≠ delivery attempt/success ≠ consumer acknowledgement`
+
+这正说明当前 Architecture 的 WorkProduct Lifecycle 还没有真正闭环。
+
+`WorkProduct.status = stale` 只能说明 Zuno 自己知道结果失效；它绝不能证明外部系统已经收到，更不能证明外部系统停止使用旧结果。对于 Embedded Product Mode，这个缺口尤其重要，因为 Zuno 明确允许法院已有系统成为消费者。
+
+Blue 已确认 propagation owner、delivery fact 和 acknowledgement fact 都还未冻结，所以这是总体跨系统状态语义，不是后续某个 webhook 类怎么实现的问题。
+
+**FREEZE_IMPACT:** FREEZE_BLOCKER
+
+**FOLLOW_UP:** NONE
 
 ---
 
-## Q38 — Red Follow-up Question
+## Q38 — Red Question
 ### Reconstruction Boundary
 
 最后收 Q28。
@@ -1956,17 +2130,312 @@ Domain、Runtime、Security Decision Store、Durable Audit、EffectReceipt 都�
 
 > Critical Reconstruction 的架构事实源到底是什么组合，Observability 在里面到底是事实源还是 Projection / Diagnostic View。
 
-**Status:** A38 / R38 PENDING
+## A38 — Blue Answer
+
+当前 Architecture 的基本方向很明确：**Critical Reconstruction 应建立在 Durable Fact Sources 上，而不是建立在 LangSmith / OTel Trace 上。Observability 是 Projection / Diagnostic View，不是业务事实主权。**
+
+Domain 提供正式业务世界发生了什么，例如哪个 WorkProduct / Finding Version 最终存在；Runtime durable state 提供 Run、PlanVersion、Step、Interrupt、控制决策和恢复位置，但不能替代 Domain Truth；Security Decision Store 提供当时的 Principal、Policy/Security Epoch、Authorization Decision 和 Approval，回答“谁批准、依据什么策略允许”；Durable Audit 提供高风险动作必须留存的不可变审计链及其持久化证明；EffectReceipt / Reconciliation 则回答 Tool Runtime 实际观察到的外部 Effect 是 Success、Unknown，还是后来通过 reconciliation 被确认。ADR-0003 明确把这些 Receipt 分开，并明确 `AuditPersistenceReceipt != Tool Effect Success`、`Checkpoint Commit != Domain Commit`。
+
+因此 LangSmith 和 OTel 后端全部丢失，**不应该自动破坏关键事实证明**。谁批准、为什么允许，可以从 Security Decision / Approval 恢复；最终是否发生 External Effect，要看 EffectReceipt / Reconciliation，而不是看一条 Trace 显示 Tool node “completed”。
+
+但“执行了什么”这里还有一个精度问题。ADR-0003 的 Tool 边界实际上还拥有 `PreparedToolAction / ToolAttempt`，Approval 绑定 action hash、tool definition、operation、canonical args hash。 如果 Q38 所说的持久数据把这些 Tool durable facts 也一起丢掉，只剩一个很薄的 EffectReceipt，那么当前 Architecture **不能保证还能恢复完整 canonical action payload**。Durable Audit 可能保存 action reference/hash，但 raw args 又可能因为 Secret/PII policy 本来就不能完整进入 Audit。因此当前并没有冻结一个名字叫“Critical Reconstruction Bundle”的完整最小集合。
+
+反过来，如果 Durable Audit 丢失，只剩完整 LangSmith Trace，**不能把 Trace 当成同等级替代品**。当前架构已经明确 LangSmith 只是 preferred Agent Trace/Eval Provider，OTel-compatible telemetry 可以 Sampling、redaction、delivery failure；Security 的 mandatory audit persistence 是另一条 durable path。外部 Trace 即使碰巧这次很完整，也不能 retroactively 获得 Canonical Audit Authority。
+
+所以现在能够冻结级别地说的是：
+
+**Durable Domain / Runtime / Security Decision / Tool Effect / Mandatory Audit facts 是 Reconstruction 的权威来源；LangSmith / OTel 是诊断、关联、评测和可视化层。**
+
+而“为了完整重建一次高风险 Tool Run，最小必须保留哪些 durable artifacts，以及这些 artifacts 的完整性条件”——**CURRENT ARCHITECTURE DOES NOT FREEZE THIS YET.** 这仍然是一个 Reconstruction Source Gap。
+
+## R38 — Red Review
+
+**STATUS:** PARTIAL
+
+**REVIEW:**
+核心边界已经回答清楚：
+
+**LangSmith / OTel Trace 不是 Critical Reconstruction 的权威事实源。**
+
+Domain、Runtime、Security Decision、Mandatory Audit、External Effect 等 Durable Facts 才是事实来源；Trace 是用于关联、诊断、评测和展示的 Projection。反过来，只有 LangSmith Trace、Durable Audit 已丢失时，也不能把 SaaS Trace 临时升级成同等级合规证明。这个原则我认可。
+
+没有关闭的是“执行了什么”这一项。Blue 正确指出，仅有薄 `EffectReceipt` 未必能够恢复 canonical action，而 raw args 又可能因为 PII / Secret policy 不能进入 Audit。因此 **高风险 Run 最低需要保留哪些 Durable Facts，才能完整证明 Action / Authorization / Effect**，当前总体架构还没有冻结。
+
+这不是 exporter 或 trace schema 的模块内部细节，它直接决定 Critical Reconstruction 是否成立。
+
+**FREEZE_IMPACT:** FREEZE_BLOCKER
+
+**FOLLOW_UP:** NONE
 
 ---
 
-# Interim Red Review Summary
+## Red Pre-Review Baseline Drift Note
 
-当前 Round 02 已经可以确认：
+**BASELINE_DRIFT**
 
-- Q1–Q32 / A1–A32 / R1–R32 已完整；
-- Q33–Q38 是必要 Follow-up；
-- 当前 10-MODULE CANDIDATE 不能原样 Freeze；
-- Module Decomposition Gate 仍不得打开；
-- Main Judgment 必须保持 `PENDING_POST_ARCHIVE_DISCUSSION`；
-- Canonical Architecture Revision 尚未开始。
+当前 `main` 实际 HEAD 已前进到 `b287d6c3d2c9f5051d37e6d66e29f61633126a3c`。
+
+但 Round 02 的归档文件明确冻结 `architecture_baseline_sha = a9fa3834c1dd95bdc13caa85b7188d49fc55b1b5`，并记录 `Q33_Q38_PENDING`、`architecture_revision = NOT_STARTED`、`module_decomposition_gate = NOT_OPEN`。因此下面 **只审查 A33–A38 相对于 Round 02 固定 Baseline 的充分性，不用新 HEAD 反向改写本轮判断**。
+
+# RED FINAL FINDINGS — ROUND 02
+
+**ROUND:**
+02 — Overall Architecture Freeze Review
+
+**BASELINE:**
+`a9fa3834c1dd95bdc13caa85b7188d49fc55b1b5`
+
+**QAR_COMPLETE:**
+YES
+
+## CLOSED AREAS
+
+1. **Canonical Domain State 与 Proposal/Candidate 的基本边界成立。**
+   `DocumentVersion / Finding / HumanDecision / WorkProduct` 等正式业务状态不能由模型、Knowledge、Specialist 或 Capability Provider 直接提交；模型和 Provider 只产生 Proposal / Candidate / Observation。
+   **来源：Q3 / R3，Q11 / R11**
+2. **Legal Domain 的核心不变量成立。**
+   Domain Admission 不应重新执行 Retrieval、Security、Eval 或模型判断，而应消费其他 Owner 的 typed decision/reference，只负责 Domain 自身的 Version、Dependency、Review、Supersede 等不变量。
+   **来源：Q11 / R11**
+3. **Ingestion 与 Retrieval 作为同一 Knowledge Responsibility 的理由经受住本轮攻击。**
+   共同责任不是“都与知识库有关”，而是 `DocumentVersion → KnowledgeGeneration → Scope-sensitive Readiness → Retrieval`。OCR、Embedding、Graph Build 可以是不同 Worker，不要求成为同一物理服务。
+   **来源：Q6 / R6**
+4. **Unknown External Effect 的恢复原则成立。**
+   外部 POST timeout 不能解释为失败；必须先 Reconcile。只有确认未执行时才能 Retry；无法查询且无幂等能力时必须停止自动执行并进入人工对账，而不能 Blind Retry。
+   **来源：Q7 / R7**
+5. **Approval 与执行时最新条件绑定的原则成立。**
+   Tool Schema、参数、资源、权限或 Security Epoch 改变以后，旧 PreparedAction / Approval 不能被 Runtime 静默复用；新 Action 需要重新满足当前授权及审批条件。
+   **来源：Q8 / R8**
+6. **Run Budget 与 Model Usage 的 Ownership 可以区分。**
+   Runtime 管理 Run Budget、Branch Reservation 和是否允许继续调度；Model Gateway 管理 Provider Attempt、Quota、Usage / Cost Receipt。后到的 Usage Correction 不会把过去合法执行的 Branch 事后改造成非法执行。
+   **来源：Q13 / R13**
+7. **Security 的 Model Egress Decision 与 Gateway Enforcement 可以区分。**
+   Security 决定哪些 Provider 合法；Gateway 只能在合法集合中 Routing/Fallback。Fallback 若破坏原 Step 的能力假设，则不再是普通 Retry。
+   **来源：Q14 / R14**
+8. **Security Decision Authority 与 Distributed Enforcement 的总体原则成立。**
+   Policy / Grant / SecurityEpoch / Authorization Decision 归 Security；Knowledge、Model、Tool、Domain 等资源 Owner 在自己的危险边界执行 Enforcement。
+   **来源：Q17 / R17**
+9. **Single Controller 已明确为逻辑控制权，而不是单进程。**
+   每个 Run 只能有一个有效 Controller Generation；Lease、CAS、Clock、Fencing 等可以作为底层 primitive 防止旧 Controller 恢复后继续写入。
+   **来源：Q18 / R18**
+10. **Replan Barrier 与 Late Branch Result 的总体语义成立。**
+    新 PlanVersion 激活后，旧 Branch Result 不能直接污染新 Plan；必须重新检查其 Domain Snapshot、Knowledge Generation、Security Scope 和失效假设后才可能复用。
+    **来源：Q19 / R19**
+11. **Specialist Agent 不应默认复制 LangGraph 已有的持久化能力。**
+    一次性 Specialist 可以优先使用 Subgraph / Parent Checkpointer；只有真正拥有跨父 Run 生命周期时才有理由引入独立持久控制状态。
+    **来源：Q20 / R20**
+12. **Join 的第一层必须是确定性且可幂等重放。**
+    LLM 可以参与语义冲突 Reflection，但不能把 `outcome_unknown` 判断成 success，也不能绕过 Formal Result Gate。
+    **来源：Q21 / R21**
+13. **并行 Branch 的 Security Cancel 与 Budget Cancel 不能丢失原因。**
+    二者都可能终止 Branch，但 Cause 不同，不能在 Join / RunOutcome 中合并成同一种 Failure。
+    **来源：Q22 / R22**
+14. **LangGraph 原生持久化、Subgraph、Pending Writes 等能力应优先复用。**
+    `DispatchGroup / DispatchItem / BranchResultRef` 等自定义机制没有独立价值时应该可删除；Zuno 自身只保留 Domain、Security、Budget、Effect 等框架不应拥有的语义。
+    **来源：Q23 / R23**
+15. **Retry / Replan / Reconcile 已经能够在具体故障中区分。**
+    503、Structured Output Invalid、Zero Evidence、Tool Schema Drift、Unknown POST Outcome、Permission Revocation 等案例没有被统一塞进 Retry。
+    **来源：Q27 / R27**
+16. **Telemetry 与 Durable Audit 的原则边界成立。**
+    Sampling / exporter failure 不得导致 Mandatory Audit 消失；高风险 Effect 可以要求 durable audit receipt 后才能执行。
+    **来源：Q29 / R29，Q38 / R38**
+17. **Offline Release Eval 与单次 Runtime Result Eligibility 已分离。**
+    Offline Eval 可以决定版本是否允许 Release；某次 Run 的证据不足则决定该次 Result 是否能够 Admission。异步 Online Eval 不能事后伪装成已经发生过的同步 Final Gate。
+    **来源：Q30 / R30**
+
+---
+
+## ARCHITECTURE CONCERNS
+
+1. **Simple QA 的执行边界与旧“所有任务必须进入完整 Runtime 约束”的表述不一致。**
+   Generic Host-owned Simple QA 被 Blue 明确认可为合法路径，但当前 Baseline 尚未正式收敛这一点。
+   **来源：Q1 / R1，Q33 / R33**
+2. **Canonical Legal Object Set 自相矛盾。**
+   ADR 最小 Kernel 将 `Event / Conflict / Dispute / Fact / LegalIssue` 默认视为 Proposal / Derived View，而 Overall Architecture 又把其中部分直接列为 Domain State。
+   **来源：Q4 / R4**
+3. **AgentVersion 的“配置组合”与其他事实 Owner 的关系基本清楚，但最终 Invocation Eligibility Authority 尚未冻结。**
+   **来源：Q9 / R9，Q33 / R33**
+4. **Embedded Mode 对 Product Surface Candidate 的 Cohesion 构成实质挑战。**
+   Session、Conversation、UI、Login、Human Review Surface 等均可能由外部法院 Host 拥有，稳定留下的可能主要是 Integration Contract。
+   **来源：Q10 / R10**
+5. **Capability Governance 与 Side-effecting Tool Runtime 的模块合并缺少足够 Cohesion。**
+   两者 Failure、Success、State、Retry、Recovery 和 Security Semantics 明显不同，仅共享 Catalog / Resolution / Invocation Framework。
+   **来源：Q12 / R12**
+6. **Long-term Memory 的一级 Module 必要性未成立。**
+   Simple QA、Complex Legal Analysis、Ephemeral Specialist 在删除 Long-term Memory 后仍可成立；Memory 可能退化为可替换 Context Provider。
+   **来源：Q15 / R15**
+7. **Infrastructure & Persistence 的 Logical Module 身份受到挑战。**
+   PostgreSQL、Queue、Checkpoint、Object Store、Vector/Graph Store、Backup/DR 可以共享 Platform Ownership，却没有统一的业务状态机与恢复语义。
+   **来源：Q31 / R31**
+8. **当前 10-Module Candidate 将“Contract 必须存在”与“Zuno 必须拥有独立 Module”混在一起的风险尚未解除。**
+   Native Runtime、Long-term Memory、Persistent Multi-Agent、Generic Tool Execution 等本身仍属于 conditional / externalizable responsibility。
+   **来源：Q32 / R32**
+
+---
+
+## FREEZE BLOCKERS
+
+1. **Simple Answer / Invocation 的最终组合 Decision Authority 未冻结。**
+   Security、Knowledge、Capability、Model 等底层 Owner 虽然明确，但当前没有唯一 Owner 能正式宣布“请求允许执行”以及“普通答案允许返回”。这同时暴露 Generic Host Simple QA 与 Native Runtime 强制约束之间的不一致。
+   **来源：Q2 / R2，Q9 / R9，Q33 / R33**
+2. **Canonical Domain Object Set 尚未收敛。**
+   `Event / Conflict / Dispute / Fact / LegalIssue` 到底只是 Proposal / Derived View，还是可以成为 Canonical Domain State，目前 Baseline 内存在冲突。该差异直接影响 Admission、Version、Persistence、Dependency 与 Staleness。
+   **来源：Q4 / R4**
+3. **Historical Citation Authority 未冻结。**
+   已 Admission 的 WorkProduct 不能因为 Knowledge Provider、Chunk、Index 或 CitationLineage Store 被替换就失去原文回溯能力，但当前没有冻结一个可以跨 Knowledge 生命周期长期存活的 Canonical Historical Citation Artifact / Authority。
+   **来源：Q5 / R5，Q34 / R34**
+4. **Cross-store Retention / Delete / Legal Hold 的最终 Policy Authority 未冻结。**
+   Memory Delete、Runtime History、Trace Retention、Durable Audit、Domain History 发生策略冲突时，目前不能回答最终哪一个 Policy Authority 生效。
+   **来源：Q16 / R16，Q35 / R35**
+5. **Formal Admission 与 Runtime Step Completion 之间缺少 Durable Causation Invariant。**
+   `FindingVersion V7` 的存在不能证明它就是 `Run R / Step S / Proposal P` 的结果；现有 Envelope 字段不足以自动构成这种证明。没有 durable `Step → Admission → DomainVersion` 因果事实，就无法安全处理 Domain Commit / Checkpoint 双写故障。
+   **来源：Q24 / R24，Q25 / R25，Q36 / R36**
+6. **Published WorkProduct 的失效传播链未闭合。**
+   当前只能明确 Domain 中“V3 已 stale”；尚未冻结“失效通知是否已发送”“Consumer 是否确认知晓”的长期事实 Owner、传播责任和 acknowledgement 语义。
+   **来源：Q26 / R26，Q37 / R37**
+7. **Critical Reconstruction 的最小 Durable Fact Set 未冻结。**
+   已经明确 Trace 不能替代 Durable Facts，但当前仍无法完整说明高风险 Tool Run 至少必须保留哪些 Action、Authorization、Approval、Audit、Effect 等 durable artifacts，才能在 Telemetry 全丢失后重建“执行了什么、为什么允许、现实世界发生了什么”。
+   **来源：Q28 / R28，Q38 / R38**
+8. **Product Surface & Agent Portfolio 作为独立 Logical Module 尚未通过 Freeze Test。**
+   Embedded Mode 下大部分 Product Surface 可以由 Generic Host 承担，当前稳定剩余责任与独立 Module 的 Cohesion 尚未证明。
+   **来源：Q10 / R10**
+9. **Capability / Skill 与 Side-effecting Tool Runtime 当前合并边界未通过 Freeze Test。**
+   两者没有共享足够强的状态、失败与恢复不变量来证明应当冻结为一个 Logical Module。
+   **来源：Q12 / R12**
+10. **Memory & Context 作为一级 Logical Module 的必要性尚未成立。**
+    本轮已经证明核心 E2E 可以在无长期 Memory 情况下成立，而长期 Memory 仍可能完全由 Provider/Host 提供。
+    **来源：Q15 / R15**
+11. **Infrastructure & Persistence 作为与 Domain/Knowledge 对等的 Logical Module 尚未通过 Cohesion Test。**
+    当前更明确的是 Platform / Physical Responsibility，而非共享一套业务状态与 Failure Boundary 的模块。
+    **来源：Q31 / R31**
+12. **因此当前 10-Module Candidate 本身还不是稳定的 Final Module Map。**
+    本轮仍在讨论“这个 Candidate 到底是不是 Module”“两个 Candidate 为什么合在一起”“哪些责任可以完全外置”，说明 `MODULE_DECOMPOSITION_GATE` 所要求的总体边界尚未稳定。
+    **来源：Q32 / R32，以及 Q10 / R10、Q12 / R12、Q15 / R15、Q31 / R31**
+
+---
+
+## FACT GAPS
+
+1. **Single Controller HA / takeover / fencing 的 Current 实现与运行证据尚不能由 Target 回答。**
+   本轮已经关闭其目标架构原则，但是否当前仓库已完整实现并通过 failover/fencing 验证属于 Current Evidence 问题，不属于新的 Target Architecture Gap。
+   **来源：Q18 / A18 / R18**
+2. **本轮没有发现需要依赖历史项目事实才能决定上述 Freeze Blocker 的新问题。**
+   当前主要阻塞来自 Target Ownership、Boundary 和 Recovery Contract，而不是“历史 Pilot 到底怎么实现”的事实缺失。
+
+---
+
+## MEASUREMENT GAPS
+
+1. **Native Runtime 相对 Generic Host + Zuno Legal Backend 的额外价值仍需 A/B/C Benchmark 或 Integration Spike 验证。**
+   本轮只证明 Runtime 应保留哪些不可外包 Contract，没有证明 Zuno 必须拥有完整 Native Runtime。
+   **来源：Q1 / R1，Q23 / R23，Q32 / R32**
+2. **Long-term Memory 对法律任务的增益仍需 Ablation / Eval。**
+   Architecture 可以在没有长期 Memory 时成立，因此是否保留其额外复杂度属于 Measurement Gap。
+   **来源：Q15 / R15**
+3. **Specialist / Multi-Agent 相对普通 Parallel Step / LangGraph Subgraph 的额外收益仍需测量。**
+   本轮保留了受控 Specialist 的语义可能性，但没有提供它相对更简单执行模型的质量、成本或恢复收益证明。
+   **来源：Q20 / R20，Q23 / R23，Q32 / R32**
+
+这些 Measurement Gap **不是**当前 Ownership / Recovery Freeze Blocker 的替代解释。
+
+---
+
+## MODULE BOUNDARY CONCERNS
+
+### Product Surface
+
+Embedded Mode 显著压缩其稳定责任。Session、Conversation、UI、Login、Review Surface 等均可能由 Host 承担；同时 `InvocationEligibility` 与 Simple Answer Final Decision 的最终 Authority 尚未冻结。
+**来源：Q9 / R9，Q10 / R10，Q33 / R33**
+
+### Legal Domain
+
+Legal Domain 的“唯一 Canonical Commit Authority”原则经受住攻击，但当前 Canonical Object Set 尚有 ADR / Architecture 冲突；Historical Citation、Admission Causation 和 Published Result Invalidation 也尚未形成完整长期事实边界。
+**来源：Q4 / R4，Q11 / R11，Q34 / R34，Q36 / R36，Q37 / R37**
+
+### Knowledge
+
+`Ingestion + Retrieval` 的责任 Cohesion 本轮成立；但 Knowledge-owned CitationLineage 与 Domain-owned historical WorkProduct citation authority 的长期边界仍未闭合。
+**来源：Q6 / R6，Q34 / R34**
+
+### Agent Runtime
+
+Single Controller、Replan Barrier、Join、Retry/Replan/Reconcile 与 LangGraph reuse 原则基本稳定；但 Simple QA 不一定进入 Native Runtime，且 Formal Admission Step 的 durable completion causation 尚未闭合。Native Runtime 本身的必要性仍需验证。
+**来源：Q18–Q23 / R18–R23，Q36 / R36，Q32 / R32**
+
+### Capability / Tool
+
+这是本轮受到最强 Cohesion 挑战的候选之一。Capability Proposal 与 External Effect 拥有不同成功定义、状态机、Security、Retry、Recovery 和 Reconciliation 需求，目前共享 Provider Framework 不足以证明共同 Logical Module。
+**来源：Q12 / R12**
+
+### Memory
+
+作为“非权威、可遗忘、跨 Run context”的概念仍成立，但独立一级 Module 的必要性没有成立；同时跨 Store Delete / Retention / Legal Hold Authority 尚未闭合。
+**来源：Q15 / R15，Q16 / R16，Q35 / R35**
+
+### Security
+
+Policy Decision Authority + Distributed Enforcement 原则经受住攻击。但跨 Memory / Runtime / Trace / Audit / Domain 的 Retention、Deletion 与 Legal Hold 冲突尚缺最终治理 Authority。
+**来源：Q17 / R17，Q35 / R35**
+
+### Observability
+
+OTel / LangSmith 作为可替换 Telemetry / Eval Provider 的边界成立，`Telemetry != Durable Audit` 也成立；但 Critical Reconstruction 的最小权威 Durable Fact Set 尚未完全冻结。
+**来源：Q28–Q30 / R28–R30，Q38 / R38**
+
+### Infrastructure
+
+作为 Platform / Physical Responsibility 的价值没有被否定；受到攻击的是它是否应该与 Domain、Knowledge 等以同样含义被冻结为一个 Logical Module。其内部各 primitive 并不存在统一业务状态机。
+**来源：Q31 / R31**
+
+---
+
+## PRESERVED PRINCIPLES
+
+- **Single Controller = 每个 Run 的单一逻辑控制权，不等于单进程。**
+  **Q18 / R18**
+- **Domain State != Runtime Checkpoint。** Checkpoint 不能证明 Canonical Business Commit。
+  **Q24–Q25 / R24–R25，Q36 / R36**
+- **LLM / Specialist / Capability 输出 Proposal，不得直接 Canonical Commit。**
+  **Q3 / R3，Q11 / R11，Q21 / R21**
+- **Retry != Replan != Reconcile。**
+  执行瞬时失败、计划假设失效和外部现实状态未知必须分别处理。
+  **Q7 / R7，Q14 / R14，Q27 / R27**
+- **Unknown External Effect 不允许 Blind Retry。**
+  **Q7 / R7**
+- **Approval 不能脱离当前 Action Version、参数、资源与 Security 条件永久有效。**
+  **Q8 / R8**
+- **Security Decision 与资源侧 Enforcement 分离。**
+  **Q14 / R14，Q17 / R17**
+- **Replan 后旧 Branch Result 不能直接污染新 PlanVersion。**
+  **Q19 / R19**
+- **Join 首层优先 deterministic / idempotent reducer；LLM Reflection 不能修改客观 Effect State。**
+  **Q21 / R21**
+- **LangGraph 已提供的 Checkpoint / Subgraph / Pending-write Recovery 能力优先复用，不重复自研。**
+  **Q20 / R20，Q23 / R23**
+- **Run Budget 与 Provider Usage Receipt 是不同 Ownership。**
+  **Q13 / R13**
+- **Knowledge Readiness 必须绑定 Scope / Query Requirement / Generation，而不是单个“知识库完成百分比”。**
+  **Q6 / R6**
+- **Telemetry / LangSmith Trace != Durable Audit。**
+  Trace 可以 Sampling、Redaction、Delivery Failure；Mandatory Audit 不能依赖它成为事实源。
+  **Q29 / R29，Q38 / R38**
+- **Offline Release Eval != 单次 Runtime Result Admission Gate。**
+  **Q30 / R30**
+- **Contract 必须存在 != Zuno 必须自建对应 Runtime / Module。**
+  Reuse、Externalize 和 Delete 仍然是有效选择。
+  **Q23 / R23，Q32 / R32**
+
+---
+
+## RED RECOMMENDATION
+
+**READY_FOR_MAIN_JUDGMENT**
+
+Round 02 的 Red Q/A/R 已经穷尽到足以形成判断材料。现有未解决项中有多个真实 Freeze Blocker，但它们已经被明确识别并定位，不再需要通过新增 Q39+ 才能确认其性质。
+
+`READY_FOR_MAIN_JUDGMENT` **不表示 Architecture Accepted，也不表示 Overall Architecture Frozen。**
+
+**FOLLOW_UP_REQUIRED:**
+NO
+
+**RED_QAR_STATUS:**
+COMPLETE
