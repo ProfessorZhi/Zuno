@@ -13,7 +13,7 @@ architecture.html
 
 Product、Domain、Logical Capability、Physical Service/Deployment、Data、Security 和 Eval 如何形成一个可恢复、可验证、可被简化或替换的跨层目标闭环？
 
-总体架构先回答“为什么做这个系统”，再说明五层责任视图、10 个逻辑模块候选、WorkBuddy / Dify 竞争假设、三条 E2E Flow、A/B/C Kill Test 和 State / Failure / Recovery 边界。五层与 10 个候选都不是最终服务数量；模块仍需 Freeze Red / Blue。当前文档处于 `REFINED_BASELINE_READY_FOR_FREEZE_REVIEW`，`MODULE_DECOMPOSITION_GATE` 仍未打开。
+Round 02 Main Judgment 已完成，Canonical Architecture 已按该 Judgment 修订。总体架构现在说明九个 Logical Responsibility Modules、Platform / Infrastructure Responsibility Layer、Optional Context Provider、三条 E2E Flow、A/B/C Kill Test 和 State / Failure / Recovery 边界。九个责任域不是九个进程或服务；Architecture Freeze 仍等待 Main Review，`MODULE_DECOMPOSITION_GATE` 仍未打开。
 
 ## 阅读顺序
 
@@ -28,7 +28,7 @@ Security 和验证要求。最后按问题进入 `../project/`、`../modules/`�
 
 ## 文件职责
 
-- `architecture.md`：跨层架构正文、全局边界、状态/失败/恢复语义和 Current/Target/History 解释。
+- `architecture.md`：跨层架构正文、九个责任域、全局边界、状态/失败/恢复语义和 Current/Target/History 解释。
 - `architecture-views.md` + `architecture.html`：不可拆分的图源与展示配对，不拥有第二套架构事实。
 - `README.md`：目录边界、阅读入口和维护规则，不承载专题 Contract。
 
@@ -38,6 +38,7 @@ Security 和验证要求。最后按问题进入 `../project/`、`../modules/`�
 - 本目录不记录当前运行证据；可复现证据在 `../evidence/`。
 - 本目录不记录实施计划、运维 Runbook 或 ADR；这些分别进入 `.agent/programs/`、`docs/operations/` 和 `docs/decisions/`。
 - 旧专题和 11 模块不再作为平行 Canonical；Red/Blue 过程归档见 [`../history/red-blue/README.md`](../history/red-blue/README.md)，旧材料由 Git 历史保留。
+- 长期责任分类和跨边界恢复决定见 [ADR-0013](../decisions/0013-round-02-responsibility-taxonomy.md) 与 [ADR-0014](../decisions/0014-round-02-cross-boundary-authority-and-recovery.md)。
 
 ## 维护
 

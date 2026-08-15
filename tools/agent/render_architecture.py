@@ -50,25 +50,32 @@ def validate_design(content: str) -> list[str]:
         "# Zuno 总体 Target 架构",
         "## Part A — Architecture Narrative",
         "## Part B — Detailed Architecture Specification",
-        "### 1. 为什么做这个系统",
-        "### 3. 一个 Target 场景",
-        "### 4. 五层责任视图，不是五个最终模块",
-        "### 5. Legal Domain、Knowledge、Intelligence 和 Memory 的边界",
-        "### 10. 最危险的失败与恢复",
-        "### 12. 取舍与反转条件",
-        "### Cross-layer Contract Registry",
-        "### Service、通信与队列边界",
-        "### Domain State、Runtime State 与 Memory",
-        "### Owner Registry",
-        "### Security、Deployment 与验证要求",
-        "### Implementation、Measurement 与 External Gaps",
+        "### 1. Zuno 是什么",
+        "### 3. 一个简单问题怎样完成",
+        "### 4. 一个复杂法律分析怎样完成",
+        "### 7. 九个逻辑责任域如何合作",
+        "### 8. 任务失败以后怎样恢复",
+        "### 11. 当前还没有证明什么",
+        "### B1 Scope and Global Invariants",
+        "### B3 Cross-boundary Contracts",
+        "### B9 Recovery and Idempotency",
+        "### B12 Current / Target / Gap",
+        "### B2 Responsibility / Ownership Map",
+        "### B5 State Machines",
+        "### B6 Retry / Replan / Reconcile",
+        "### B7 Failure Semantics",
+        "### B8 Security / Approval / Audit",
+        "### B10 Persistence Boundaries",
+        "### B11 Observability / Evaluation",
+        "### B13 Evidence / Verification",
     ]
     required_terms = [
-        "Python-only", "Microservice", "Legal Work Surface", "Legal Domain & Intelligence",
-        "Agentic Knowledge & Context", "Agent Runtime & Execution", "Trust & Platform Engineering",
-        "FastAPI", "LangGraph", "PostgreSQL", "Checkpoint", "Reconciliation",
-        "Current", "Target", "History", "Why service?", "Why not library?",
-        "Logical Capability", "Physical Service / Deployment",
+        "Modular Python Backend", "Microservice", "Application & Integration",
+        "Legal Domain & Work Product", "Knowledge & Evidence", "Agent Runtime & Control",
+        "Capability & Skill", "Tool Runtime & Effects", "Platform / Infrastructure Responsibility Layer",
+        "Optional Context Provider", "FastAPI", "LangGraph", "PostgreSQL", "Checkpoint",
+        "Reconciliation", "Current", "Target", "History", "Why service?", "Why not library?",
+        "Logical Responsibility", "Physical Service / Deployment",
     ]
     errors: list[str] = []
     for marker in required_sections + required_terms:
@@ -77,10 +84,10 @@ def validate_design(content: str) -> list[str]:
     for marker in ("docs/project/", "docs/architecture/"):
         if marker not in content:
             errors.append(f"architecture.md does not route to canonical project layer: {marker}")
-    if "11 Logical Modules + 1 Architecture" not in content or "History" not in content:
-        errors.append("architecture.md must record the old 11-module taxonomy as History")
-    if "候选物理角色" not in content or "FINAL_MODULE_COUNT: NOT_DECIDED" not in content:
-        errors.append("architecture.md must distinguish candidate service roles from Current and fixed count")
+    if "9 个 Target Logical Modules" not in content or "Round 02" not in content:
+        errors.append("architecture.md must record the revised nine-module target and its source")
+    if "Platform / Infrastructure Responsibility Layer" not in content or "final_module_count: NOT_FROZEN" not in content:
+        errors.append("architecture.md must distinguish the platform layer from the still-unfrozen module gate")
     if "architecture_state: ACCEPTED_TARGET" not in content:
         errors.append("architecture.md must record ACCEPTED_TARGET")
     if content.count("```mermaid") > 8:
@@ -101,10 +108,9 @@ def validate_source(content: str) -> list[str]:
             f"architecture visual source must contain exactly {len(EXPECTED_VIEWS)} Mermaid diagrams"
         )
     for term in [
-        "Python-only", "Modular Backend", "Independent Workers", "Evidence Gate",
-        "Physical Deployment Decision", "FastAPI", "LangGraph", "PostgreSQL",
-        "Checkpoint", "Reconciliation", "EvidenceRequirement", "ConflictProposal",
-        "EffectReceipt", "A/B/C",
+        "Python-only", "Modular Python Backend", "Independent Workers", "Evidence Gate",
+        "Physical Deployment Decision", "EffectReceipt", "AdmissionReceipt", "A/B/C",
+        "Optional Context Provider",
     ]:
         if term.lower() not in content.lower():
             errors.append(f"architecture-views.md missing visual term: {term}")

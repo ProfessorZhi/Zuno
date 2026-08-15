@@ -11,6 +11,8 @@
 - [ADR 0008：Legal Domain Kernel and Host Boundary](0008-legal-domain-kernel-and-host-boundary.md)：Generic Host + Legal Backend 是默认最小边界，Native Runtime 需通过测量证明。
 - [ADR 0009：Python-only Backend](0009-python-only-backend.md)：Python 是当前后端 Target 约束，具体物理服务仍需证据门控。
 - [ADR 0012：Evidence-Gated Physical Service Split](0012-evidence-gated-physical-service-split.md)：模块化 Backend + Worker 是默认物理起点，独立 Network Service 只能由 Scaling、Failure、Security、Availability 或 Lifecycle 证据触发。
+- [ADR 0013：Round 02 Responsibility Taxonomy](0013-round-02-responsibility-taxonomy.md)：以九个 Logical Responsibility Modules、Platform / Infrastructure Responsibility Layer 和 Optional Context Provider 替代旧的 10-module taxonomy；只部分 supersede ADR-0003 的分类部分。
+- [ADR 0014：Round 02 Cross-boundary Authority and Recovery](0014-round-02-cross-boundary-authority-and-recovery.md)：冻结 Invocation/Publication Authority、Historical Citation Binding、Lifecycle Policy、AdmissionReceipt、Invalidation 分离和 Critical Reconstruction。
 
 ## 维护规则
 

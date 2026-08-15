@@ -48,17 +48,18 @@ def verify() -> list[str]:
     for marker in ("architecture.md", "architecture-views.md", "architecture.html", "docs/", "project/", "ADR"):
         if marker not in arch_index:
             errors.append(f"architecture README missing boundary marker: {marker}")
-    if "11 Logical Modules + 1 Architecture" not in design or "History" not in design:
-        errors.append("architecture.md must record the former 11+1 arrangement as History")
+    if "9 个 Target Logical Modules" not in design or "Round 02" not in design:
+        errors.append("architecture.md must record the revised nine-module Target and Round 02 source")
     for marker in (
-        "为什么做这个系统",
-        "TARGET PRODUCT THESIS",
-        "五层责任视图",
-        "WorkBuddy / Dify",
-        "A/B/C Kill Test",
-        "FINAL_MODULE_COUNT: NOT_DECIDED",
-        "Agentic Knowledge & Context",
-        "Domain State、Runtime State 与 Memory",
+        "Zuno 是什么",
+        "为什么 Generic Host 有时不够",
+        "Simple QA",
+        "WorkBuddy",
+        "A/B/C",
+        "Platform / Infrastructure Responsibility Layer",
+        "Optional Context Provider",
+        "Runtime Control State",
+        "AdmissionReceipt",
     ):
         if marker not in design:
             errors.append(f"architecture.md missing current narrative marker: {marker}")

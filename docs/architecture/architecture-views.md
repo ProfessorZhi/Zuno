@@ -1,196 +1,170 @@
 # Zuno Architecture Visual Atlas Source
 
-本图源展示 Python-only Target、10 个逻辑模块候选、模块化 Backend + Worker 默认起点、Evidence-gated Physical Service Split、Research → Capability → Domain Result、Native / Embedded Product Mode、FastAPI Application Interface、LangGraph orchestration provider、OTel-compatible Observability Contract、EvidenceRequirement、ConflictProposal、PostgreSQL Domain State 和 Runtime Checkpoint 的边界；这些图不把 Target 伪装成 Current。
+本文件是 `docs/architecture/architecture.md` 的图源配对。它把九个逻辑责任域、Platform / Infrastructure Responsibility Layer、Optional Context Provider 和三条代表性业务流画出来；它不拥有第二套架构事实，也不把 Target 伪装成 Current。图源对应 Python-only Target、FastAPI Application Interface、LangGraph Control Provider、PostgreSQL Domain Store、Independent Workers 和 OTel-compatible Evaluation boundary。
 
-updated: 2026-08-14
+updated: 2026-08-15
 status: normative-target-visual-source
 architecture_state: ACCEPTED_TARGET
 text_design_source: `docs/architecture/architecture.md`
-canonical_taxonomy_source: `docs/README.md` and `docs/architecture/README.md`
+canonical_taxonomy_source: `docs/architecture/README.md` and `docs/decisions/0013-round-02-responsibility-taxonomy.md`
 
-本文件是总体架构的展示图源。服务、数据、状态和 Owner 事实以 `architecture.md` 与专题 Canonical 文档为准；本文件不创建第二套 Contract。
-
-## Responsibility Lens 与 10 个候选模块
-
-下面五层用于帮助读者理解跨层责任，不代表最终五个模块、五个服务或五个团队。10 个模块图也是 Candidate Map，不是冻结后的模块或服务清单：
-
-1. **Legal Work Surface**：案件分析、合同审查、法律研究、报告和 Human Review；
-2. **Legal Domain & Intelligence**：Evidence、Fact / Event、Conflict、Finding、Version 和 Staleness；
-3. **Agentic Knowledge & Context**：Ingestion、Hybrid Retrieval、条件 Graph、Citation 和 Memory；
-4. **Agent Runtime & Execution**：Single Controller、Plan、受控 Worker、Model、Skill 和 Tool；
-5. **Trust & Platform Engineering**：Permission、Approval、Sandbox、Audit、Observability、Eval 和 Infrastructure。
-
-`NEW_10_MODULE_SET: CANDIDATE_ONLY`、`FINAL_MODULE_COUNT: NOT_FROZEN`、`MODULE_DECOMPOSITION_GATE: NOT_OPEN`。Logical Capability、Physical Service、Worker、Process、Container、Database 和 Team 不做一一映射。
-
-## Product Context
+## Product and Business Flows
 
 ### Product Context View
 
 ```mermaid
 flowchart LR
-  USER[律师 / 法官 / 专业用户] --> SURFACE[Zuno Workbench / WorkBuddy / Dify / Court Host]
-  SURFACE --> EDGE[Host / API Boundary]
-  EDGE --> DOMAIN[Zuno Legal Backend / Domain Owner]
-  DOMAIN --> WORK[Review / Finding / WorkProduct]
+  USER[专业用户 / 法院系统] --> HOST[Generic Host / Zuno Entry]
+  HOST --> APP[01 Application & Integration]
+  APP --> DOMAIN[02 Legal Domain & Work Product]
+  APP --> CAP[Legal Capability / Typed Result]
+  DOMAIN --> RESULT[Versioned WorkProduct / Publication]
 ```
 
 ### Business Flow View
 
 ```mermaid
 flowchart TB
-  subgraph A[FLOW A — Simple Grounded QA]
-    AQ[Question / Scope] --> AR[Authorization + Knowledge Readiness]
-    AR --> AE[Retrieve Evidence / Citation]
-    AE --> AG[Deterministic Final Gate]
-    AG --> AO[Response]
+  subgraph A[Simple QA — Host-owned path is allowed]
+    AQ[Question + material scope] --> AR[Authorization + Readiness]
+    AR --> AE[Source retrieval + citation]
+    AE --> AF[Answer eligibility / publication]
   end
-  subgraph B[FLOW B — Complex Legal Analysis]
-    BM[Matter / Version Set] --> BR[Readiness + Continuous Authorization]
-    BR --> BP[Dynamic DAG Plan]
-    BP --> BC[Retrieval / Capability / optional Specialist]
-    BC --> BJ[Join / Evaluation / Synthesis]
-    BJ --> BD[Domain Admission / Human Review]
-    BD --> BW[Versioned WorkProduct]
+  subgraph B[Complex Legal Analysis]
+    BM[Matter + document versions] --> BP[Bounded plan / capability]
+    BP --> BE[Evidence + proposal]
+    BE --> BA[Admission + WorkProduct]
   end
-  subgraph C[FLOW C — Controlled External Effect]
-    CT[Tool Proposal] --> CP[PreparedAction]
-    CP --> CG[Security / Approval Gate]
-    CG --> CE[Execute / EffectReceipt]
-    CE --> CR[Reconcile if Unknown]
-    CR --> CF[Final Gate / Domain Result]
+  subgraph C[Controlled External Effect]
+    CT[Tool proposal] --> CP[PreparedAction + approval]
+    CP --> CE[Execute + EffectReceipt]
+    CE --> CR[Reconcile unknown outcome]
   end
 ```
 
-## Logical Architecture
+## Responsibility Taxonomy
 
 ### Logical Capability View
 
 ```mermaid
 flowchart TB
-  P[01 Product Surface & Agent Portfolio]
-  D[02 Legal Domain & Work Product]
-  K[03 Knowledge & Evidence]
-  A[04 Agent Runtime & Multi-Agent]
-  CT[05 Capability / Skill & Tool Runtime]
-  M[06 Model Gateway]
-  X[07 Memory & Context]
-  S[08 Security & Governance]
-  O[09 Observability & Evaluation]
-  I[10 Infrastructure & Persistence]
-  P --> D & A
-  A --> K & CT & M & X
-  CT --> D
-  K --> D
-  M --> A
-  S -.-> P & D & K & A & CT & M & X
-  O -.-> P & D & K & A & CT & M & X & S
-  I -.-> D & K & A & CT & M & X & O
+  APP[01 Application & Integration]
+  DOMAIN[02 Legal Domain & Work Product]
+  KNOW[03 Knowledge & Evidence]
+  RUN[04 Agent Runtime & Control]
+  CAP[05 Capability & Skill]
+  TOOL[06 Tool Runtime & Effects]
+  MODEL[07 Model Gateway]
+  SEC[08 Security & Governance]
+  OBS[09 Observability & Evaluation]
+  PLATFORM[Platform / Infrastructure Layer]
+  CONTEXT[Optional Context Provider]
+  APP --> DOMAIN & RUN
+  RUN --> KNOW & CAP & TOOL & MODEL
+  KNOW --> DOMAIN
+  CAP --> DOMAIN
+  TOOL --> DOMAIN
+  SEC -. policy .-> APP & DOMAIN & KNOW & RUN & CAP & TOOL & MODEL
+  OBS -. projection .-> APP & DOMAIN & KNOW & RUN & TOOL & SEC
+  PLATFORM -. primitives .-> DOMAIN & KNOW & RUN & TOOL & MODEL & OBS
+  CONTEXT -. policy-scoped context .-> RUN
 ```
 
 ### Provider Boundary View
 
 ```mermaid
 flowchart LR
-  RESEARCH[Research Artifact] --> CAP[Capability Contract]
-  CAP --> CP[Provider Conformance / Evaluation]
-  CP --> PROPOSAL[Proposal / Candidate / Observation]
-  PROVIDER[Algorithm / LLM / OSS / API Provider]
-  PROVIDER --> CP
-  TOOL[Tool / MCP / External Action] --> PREP[PreparedAction]
-  PREP --> GATE[Security / Approval Gate]
-  GATE --> EFFECT[EffectReceipt / Reconcile]
-  PROPOSAL --> OWNER[Domain Owner]
-  OWNER --> VERSION[Versioned Business State]
+  RESEARCH[Research artifact] --> CAPABILITY[Capability contract]
+  PROVIDER[Algorithm / LLM / API / OSS] --> CONFORM[Conformance + evaluation]
+  CAPABILITY --> CONFORM --> PROPOSAL[Proposal / candidate / observation]
+  PROPOSAL --> DOMAIN[Domain owner]
+  TOOLDEF[Tool / MCP definition] --> ACTION[PreparedAction]
+  ACTION --> GATE[Authorization + approval]
+  GATE --> EFFECT[EffectReceipt / reconciliation]
 ```
 
-## Legal Domain
+## Domain and Control State
 
 ### Domain State View
 
 ```mermaid
 flowchart LR
   MATTER[Matter] --> DOC[DocumentVersion]
-  DOC --> EVIDENCE[Evidence]
-  EVIDENCE --> CLAIM[Claim / Fact / Event proposal]
-  CLAIM --> FINDING[Finding]
-  FINDING --> DECISION[HumanDecision]
-  DECISION --> PRODUCT[WorkProduct]
+  DOC --> CLAIM[Claim]
+  CLAIM --> EVIDENCE[Evidence]
+  EVIDENCE --> FINDING[Finding]
+  FINDING --> HUMAN[HumanDecision]
+  HUMAN --> PRODUCT[WorkProduct]
 ```
 
 ### Staleness and Review View
 
 ```mermaid
 flowchart LR
-  NEW[New EvidenceVersion] --> DEP[Dependency lookup]
-  DEP --> STALE[Fact/Finding STALE or REVIEW_REQUIRED]
-  STALE --> RUN[Bounded re-evaluation Run]
-  RUN --> PROPOSAL[New Proposal]
-  PROPOSAL --> OWNER[Domain Owner + Human Review]
-  OWNER --> COMMIT[New Canonical Version]
+  NEW[New Evidence / version] --> DEP[Dependency lookup]
+  DEP --> STALE[WorkProduct invalidation truth]
+  STALE --> RUN[Bounded reevaluation]
+  RUN --> PROPOSAL[Finding proposal]
+  PROPOSAL --> ADMIT[Domain admission]
+  ADMIT --> VERSION[New WorkProduct version]
 ```
 
-## Multi-Agent Runtime
+## Agent Runtime and Control
 
 ### Agent Runtime View
 
 ```mermaid
 flowchart TB
-  PORTFOLIO[Agent Portfolio] --> SUBMIT[Agent Invocation]
-  SUBMIT --> COORD[Single Controller]
-  COORD --> PLAN[PlanVersion / Budget / Policy]
-  PLAN --> DAG[Fixed Graph + Dynamic Plan DAG]
-  DAG --> STEP[Step / Capability / Tool]
-  DAG --> SPEC[Specialist Agent only with independent boundary]
-  STEP --> JOIN[Join / Evaluation]
-  SPEC --> JOIN
-  JOIN --> COORD
-  COORD --> HITL[Reflection / Replan / Human Review]
-  HITL --> DOMAIN[Domain Admission]
+  INTAKE[InvocationDecision] --> CTRL[Single Controller]
+  CTRL --> PLAN[PlanVersion + budget]
+  PLAN --> STEP[Step / Capability / Tool]
+  STEP --> JOIN[Join + evaluation]
+  JOIN --> CTRL
+  CTRL --> REPLAN[Retry / Replan / Human review]
+  REPLAN --> ADMISSION[Domain admission when required]
 ```
 
 ### Runtime and Domain State View
 
 ```mermaid
 flowchart TB
-  DOMAIN[DOMAIN STATE<br/>Matter / FactVersion / FindingVersion / HumanDecision / WorkProduct]
-  RUNTIME[RUNTIME STATE<br/>Run / PlanVersion / Step / Branch / Checkpoint]
-  MEMORY[MEMORY STATE<br/>Summary / Preference / Experience / Context]
-  KNOW[KNOWLEDGE PROJECTION<br/>Index / Graph / Knowledge View / Generation]
-  DOMAIN -->|Snapshot / Version / Dependency| RUNTIME
-  RUNTIME -->|Proposal / Admission Input| DOMAIN
-  MEMORY -->|Policy-scoped context| RUNTIME
-  KNOW -->|Evidence / Readiness / Citation| RUNTIME
-  KNOW -.->|not Domain Truth| DOMAIN
-  EFFECT[EffectReceipt] --> RECON[Reconciliation]
-  RECON --> RUNTIME & DOMAIN
+  DOMAIN[Domain State<br/>Matter / Evidence / Finding / WorkProduct]
+  RUNTIME[Runtime Control<br/>Run / Plan / Step / Checkpoint]
+  KNOW[Knowledge Projection<br/>View / Generation / Readiness]
+  CONTEXT[Optional Context Provider]
+  EFFECT[External Effect State<br/>Attempt / Receipt / Reconcile]
+  AUDIT[Security / Audit Facts]
+  TELEMETRY[Telemetry Projection]
+  DOMAIN -->|snapshot + version| RUNTIME
+  KNOW -->|evidence + readiness| RUNTIME
+  CONTEXT -->|policy-scoped context| RUNTIME
+  RUNTIME -->|proposal + admission input| DOMAIN
+  EFFECT -->|effect truth / reconciliation| RUNTIME & DOMAIN
+  AUDIT -. current policy .-> RUNTIME & DOMAIN & EFFECT
+  TELEMETRY -. projection only .-> RUNTIME & DOMAIN & EFFECT
 ```
 
-## Physical Deployment and Service Split
+## Deployment
 
 ### Physical Deployment Decision View
 
 ```mermaid
 flowchart TB
-  START[Modular Backend + Independent Workers] --> GATE{Evidence Gate}
-  GATE -->|No independent boundary evidence| KEEP[Keep together / Library / Worker]
-  GATE -->|Independent Scaling| SPLIT[Split specific boundary]
-  GATE -->|Failure Isolation| SPLIT
-  GATE -->|Security / Secret Isolation| SPLIT
-  GATE -->|Distinct Availability| SPLIT
-  GATE -->|Independent Deployment Lifecycle| SPLIT
-  GATE -->|Stable Cross-host API + distinct ownership| SPLIT
-  SPLIT --> CONTRACT[Versioned Contract + Operational Owner]
+  START[Modular Python Backend + Workers] --> GATE{Evidence Gate}
+  GATE -->|No independent boundary evidence| KEEP[Keep together / library / worker]
+  GATE -->|Scaling / failure / security / availability / lifecycle evidence| SPLIT[Split specific boundary]
+  SPLIT --> CONTRACT[Stable cross-host contract + owner]
 ```
 
 ### Deployment Profiles View
 
 ```mermaid
 flowchart LR
-  DEV[Developer Compose] --> BASE[Modular Backend + Workers]
-  BASE --> GATE{Evidence Gate}
-  GATE -->|No split evidence| KEEP[Keep together]
-  GATE -->|Validated boundary| DEPLOY[Separate deployment profile]
-  DEPLOY --> SCALE[Independent scaling / failure / security / lifecycle as justified]
+  HOST[Generic Host / Embedded Mode] --> API[Application & Integration]
+  API --> BACKEND[Modular Backend]
+  BACKEND --> WORKER[Independent Workers: Ingestion / Model / Eval]
+  BACKEND --> STORE[Platform persistence primitives]
+  BACKEND -. evidence gate .-> SERVICE[Optional independent service]
 ```
 
 ## Data and Recovery
@@ -199,17 +173,13 @@ flowchart LR
 
 ```mermaid
 flowchart TB
-  DOMAIN[Legal Domain Owner] --> PDB[(PostgreSQL Canonical Domain State)]
-  RUNTIME[Agent Runtime Owner] --> CDB[(LangGraph Checkpoint / Runtime Store)]
-  KNOW[Knowledge & Evidence Owner] --> OBJ[(Object + Index + Graph Projections)]
-  MEMORY[Memory Owner] --> MEM[(Memory Provider / Context Store)]
-  MODEL[Model Gateway Owner] --> USAGE[(Usage / Cost Receipt)]
-  TOOL[Capability / Tool Owner] --> EFFECT[(Effect Receipt / Reconcile)]
-  SEC[Security Owner] --> POLICY[(Policy / Security Epoch)]
-  OBS[Observability & Eval Owner] --> TELEMETRY[(OTel-compatible Trace / Eval / Release Gate)]
-  INF[Infrastructure Owner] --> INFRA[(Queue / Worker / Backup / DR)]
-  PDB -. Reference / Snapshot .-> CDB & OBJ & EFFECT & TELEMETRY
-  POLICY -. Current Authorization .-> DOMAIN & RUNTIME & KNOW & MEMORY & MODEL & TOOL
+  D[Legal Domain] --> DSTORE[(Domain Store)]
+  R[Agent Runtime] --> RSTORE[(Runtime Checkpoint)]
+  K[Knowledge & Evidence] --> KSTORE[(Object / Index / Graph View)]
+  T[Tool Runtime] --> TSTORE[(Attempt / Effect Receipt)]
+  S[Security & Governance] --> SSTORE[(Policy / Audit Fact)]
+  O[Observability & Evaluation] --> OSTORE[(Trace / Eval Projection)]
+  P[Platform Layer] -. provides durability .-> DSTORE & RSTORE & KSTORE & TSTORE & SSTORE & OSTORE
 ```
 
 ### Failure and Recovery View
@@ -217,17 +187,14 @@ flowchart TB
 ```mermaid
 sequenceDiagram
   participant R as Runtime
-  participant D as Domain DB
-  participant T as Tool/Sandbox
-  participant C as Checkpointer
-  R->>T: PreparedAction + IdempotencyKey
-  T-->>R: EffectReceipt or UNKNOWN_EFFECT
-  R->>D: Commit business effect reference
-  R->>C: Save control checkpoint
-  Note over R,C: crash / duplicate delivery
-  R->>D: Read DomainGeneration + Receipt
-  R->>T: Reconcile ProviderOperationId
-  R->>C: Resume only after domain/control agreement
+  participant D as Domain
+  participant C as Checkpoint
+  R->>D: Proposal + Formal Admission
+  D-->>R: Domain version + AdmissionReceipt
+  R->>C: Control checkpoint
+  Note over R,C: checkpoint may fail after domain commit
+  R->>D: query matching causation receipt
+  D-->>R: repair control state or require review
 ```
 
 ## Quality and Security
@@ -236,22 +203,27 @@ sequenceDiagram
 
 ```mermaid
 flowchart LR
-  A[WorkBuddy Generic Legal Agent] --> METRIC[Legal + efficiency metrics]
-  B[WorkBuddy + Zuno Capabilities] --> METRIC
-  C[Zuno Native Runtime] --> METRIC
-  METRIC --> GATE{C>B?}
-  GATE -->|yes, repeatable and attributable| KEEP[Runtime Target may survive]
-  GATE -->|no / C≈B| DELETE[Delete or shrink extra runtime complexity]
+  A[Generic Host + Legal Skills] --> METRIC[Quality / cost / recovery metrics]
+  B[Generic Host + Zuno Legal Backend] --> METRIC
+  C[Zuno Native Runtime + Domain State] --> METRIC
+  METRIC --> DECIDE{Repeatable attributable gain?}
+  DECIDE -->|No| SHRINK[Keep simpler boundary]
+  DECIDE -->|Yes| MEASURED[Candidate survives measurement gate]
 ```
 
 ### Security Verification View
 
 ```mermaid
 flowchart TB
-  ARTIFACT[Source / Build / SBOM / Signed Artifact]
-  NETWORK[No-egress / Allowlist]
-  ACCESS[Secret / Tenant / Permission]
-  EXEC[Prompt Injection / Sandbox / Side Effect]
-  TRACE[Domain / Tool / Model / Human Trace]
-  ARTIFACT & NETWORK & ACCESS & EXEC & TRACE --> ATTEST[Security Evidence / Attestation]
+  ACCESS[Current authorization / policy epoch]
+  APPROVAL[Approval when required]
+  AUDIT[Durable audit fact]
+  EFFECT[Tool effect + reconciliation]
+  DATA[Redaction / no-egress / tenant isolation]
+  ACCESS --> APPROVAL --> AUDIT --> EFFECT
+  DATA --> AUDIT
 ```
+
+## 图源边界
+
+每张图只表达一个主要关系，通常保持在 5–12 个节点。具体 Contract、状态枚举和证据要求以 `architecture.md` Part B 与 ADR 为准；`architecture.html` 由本图源动态展示，不维护第二套 Mermaid 内容。
