@@ -35,6 +35,7 @@ def main() -> int:
     if _files(ROOT / "docs/history") != {
         "docs/history/README.md", "docs/history/red-blue/README.md",
         "docs/history/red-blue/manual-round-01-overall-architecture.md",
+        "docs/history/red-blue/manual-round-02-overall-architecture-freeze-review.md",
         "docs/history/red-blue/legacy-automated-rounds.md",
     }:
         errors.append("docs/history must contain only high-value Red/Blue review records")
