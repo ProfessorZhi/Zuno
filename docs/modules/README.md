@@ -69,6 +69,8 @@ Round 02 还没有 Main Judgment，下面内容都是 Review Questions / Open Co
 
 需要实现或验证时，再进入 Contracts、State Machine、Retry / Replan / Reconcile、Security、Persistence、Observability、Current / Target / Gap 和 Tests / Evidence 等工程参考部分。详细模块文档建立后，必须链接总体架构、项目事实和当前 Evidence，而不是复制它们。
 
+模块闸门打开后，正式模块文档沿用两层写法：Part A 先用人类语言解释问题、场景、职责和取舍，Part B 再记录 Contract、State、Recovery、Security 与 Evidence。当前 README 只说明这个标准，不提前创建模块正文；模板见 [Human-first 文档标准](../governance/human-first-documentation-standard.md)。
+
 ## 相关入口
 
 - [总体架构](../architecture/architecture.md)：解释整个系统为什么这样组合。

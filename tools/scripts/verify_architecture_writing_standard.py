@@ -8,10 +8,28 @@ ROOT = Path(__file__).resolve().parents[2]
 ARCH = ROOT / "docs/architecture/architecture.md"
 VIEWS = ROOT / "docs/architecture/architecture-views.md"
 HTML = ROOT / "docs/architecture/architecture.html"
+STANDARD = ROOT / "docs/governance/human-first-documentation-standard.md"
 
 
 def verify() -> list[str]:
     errors: list[str] = []
+    if not STANDARD.exists():
+        errors.append("missing human-first documentation standard")
+    else:
+        standard = STANDARD.read_text(encoding="utf-8")
+        for marker in (
+            "Part A / Part B Model",
+            "Part A — Human Narrative",
+            "Part B — Engineering / Agent Reference",
+            "A → B Semantic Mapping",
+            "Architecture Document Template",
+            "Module Document Template",
+            "B3 Cross-boundary Contract Format",
+            "Human Review Checklist",
+            "Part B Review Checklist",
+        ):
+            if marker not in standard:
+                errors.append(f"human-first standard missing model marker: {marker}")
     for path in (ARCH, VIEWS, HTML):
         if not path.exists():
             errors.append(f"missing canonical architecture document: {path.relative_to(ROOT)}")

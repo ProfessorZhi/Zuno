@@ -57,6 +57,6 @@ docs/
 - `evidence/` 只记录当前代码、测试、Trace、Eval 和可复现运行证据。
 - `operations/` 只保存当前仍需执行的运维 Runbook 或恢复 profile。
 - `history/red-blue/` 只保存有长期复盘价值的原始架构审查记录；它不是架构、事实、证据或 ADR 的 Owner。接受的结果只能进入总体架构或 ADR。
-- `governance/project-fact-provenance.md` 只保存项目文档的来源与表述边界，服务于 Reviewer 和 Agent，不替代 Project 故事。
+- `governance/project-fact-provenance.md` 只保存项目文档的来源与表述边界，服务于 Reviewer 和 Agent，不替代 Project 故事；`governance/human-first-documentation-standard.md` 规定 Project、Architecture 和未来 Module 文档的人类叙事与工程参考如何分层。
 
 `Current`、`Target`、`Future` 和 `Unknown` 必须保持区分。当前代码有某个目录或类名，不代表历史项目使用过它；Target Architecture 有某项设计，也不代表已经生产完成。

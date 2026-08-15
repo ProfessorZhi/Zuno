@@ -12,13 +12,14 @@ docs/history/red-blue/        架构审查过程记录
 docs/operations/              当前运维 Runbook / recovery profile
 docs/terminology.md           术语
 docs/governance/project-fact-provenance.md  项目事实来源边界
+docs/governance/human-first-documentation-standard.md  人类文档与工程参考的写作模型
 ```
 
 ## 阅读路径
 
 普通项目阅读：`docs/project/README.md` → `project-background.md` → `team-and-contributions.md` → `development-process.md` → `docs/architecture/` → `docs/modules/` → `docs/decisions/` → `docs/evidence/`。
 
-架构复盘：先读当前 `docs/architecture/`，再按问题读取 `docs/history/red-blue/` 指定 Round。不要为了理解当前系统而默认加载全部历史对抗记录。
+架构阅读：先读 `docs/architecture/README.md` 和 `architecture.md` 的 Part A；需要实现、测试或审查工程细节时，再读 Part B、ADR、Evidence 和 Governance。架构复盘再按问题读取 `docs/history/red-blue/` 指定 Round；不要为了理解当前系统而默认加载全部历史对抗记录。
 
 ## Canonical ownership
 

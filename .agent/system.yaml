@@ -51,9 +51,21 @@ skill_routes:
       - ".agent/references/workflow.md"
   architecture:
     read_first:
+      - "docs/architecture/README.md"
       - "docs/architecture/architecture.md"
       - "docs/decisions/README.md"
       - "docs/evidence/README.md"
+  architecture_human_reading:
+    read_first:
+      - "docs/architecture/README.md"
+      - "docs/architecture/architecture.md"
+  architecture_implementation:
+    read_first:
+      - "docs/architecture/README.md"
+      - "docs/architecture/architecture.md"
+      - "docs/decisions/README.md"
+      - "docs/evidence/README.md"
+      - "docs/governance/human-first-documentation-standard.md"
   architecture_review:
     read_first:
       - "docs/architecture/architecture.md"
@@ -61,9 +73,11 @@ skill_routes:
       - "docs/history/red-blue/"
   runtime:
     read_first:
+      - "docs/architecture/README.md"
       - "docs/architecture/architecture.md"
       - "docs/project/development-process.md"
       - "docs/evidence/README.md"
+      - "docs/governance/human-first-documentation-standard.md"
       - ".agent/references/code-map.md"
   verification:
     read_first:

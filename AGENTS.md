@@ -40,14 +40,14 @@ Git history 是普通文件演进和已删除工作区材料的考古来源。�
 3. `docs/project/project-background.md`
 4. `docs/project/team-and-contributions.md`
 5. `docs/project/development-process.md`
-6. `docs/architecture/architecture.md`
-5. 需要看图时同时读 `architecture-views.md` 与 `architecture.html`
-6. `docs/modules/README.md`、相关 ADR、`docs/evidence/README.md`
-7. `.agent/README.md`、`.agent/system.yaml`、`.agent/references/`
+6. `docs/architecture/architecture.md`：理解系统时先读 Part A；实现、测试、Migration、Recovery、Contract 或 Security 时再读 Part B。
+7. 需要看图时同时读 `architecture-views.md` 与 `architecture.html`
+8. `docs/modules/README.md`、相关 ADR、`docs/evidence/README.md` 和 `docs/governance/human-first-documentation-standard.md`
+9. `.agent/README.md`、`.agent/system.yaml`、`.agent/references/`
 
 只有任务明确询问架构为什么这样演进、历史攻击或上一轮判断时，才读取 `docs/history/red-blue/` 的指定 Round，不默认加载全部原始记录。
 
-实现任务必须在读完文档后再读代码。不要把类名、目录、依赖、Mock、目标文档或测试存在当成生产证据。
+实现任务必须在读完 Part A、Part B、相关 ADR、Evidence 和 Governance 规则后再读代码。不要把类名、目录、依赖、Mock、目标文档或测试存在当成生产证据；不能只依据 Part A 实施工程细节。
 
 ## 架构文档治理
 

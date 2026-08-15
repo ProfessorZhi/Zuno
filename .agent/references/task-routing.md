@@ -7,7 +7,9 @@
 | 范围不清、只读盘点 | `AGENTS.md`、`docs-map.md`、`code-map.md` | 只读审计 |
 | 项目背景、历史事实、个人贡献 | `docs/project/README.md`、`project-background.md`、`team-and-contributions.md`、`development-process.md` | Project Documentation |
 | 文档结构、README、Agent 路由 | `workflow.md`、`docs-map.md`、验证地图 | Documentation |
-| 总体架构或跨层设计 | `docs/architecture/architecture.md`、有效 ADR、Evidence | Architecture |
+| 阅读架构、理解系统 | `docs/architecture/README.md`、`architecture.md` Part A | Architecture |
+| 总体架构或跨层设计 | `docs/architecture/architecture.md` Part A + Part B、有效 ADR、Evidence、Governance | Architecture |
+| 实现、测试、Migration、Recovery、Contract、Security | `architecture.md` Part A + Part B、有效 ADR、Evidence、Governance | Architecture / Runtime |
 | 架构为什么发生变化 | 当前架构 + `docs/history/red-blue/` 指定 Round | Architecture Review |
 | 当前运行、部署、生产准备度 | `docs/evidence/`、`docs/operations/`、代码和测试 | Evidence / Operations |
 | `apps/web` | `apps/web/AGENTS.md`、`code-map.md` | Product client |
