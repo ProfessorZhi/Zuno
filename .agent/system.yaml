@@ -29,6 +29,7 @@ canonical_owners:
   team_and_contributions: "docs/project/team-and-contributions.md"
   development_process: "docs/project/development-process.md"
   project_fact_provenance: "docs/governance/project-fact-provenance.md"
+  human_first_documentation_standard: "docs/governance/human-first-documentation-standard.md"
   overall_architecture: "docs/architecture/architecture.md"
   architecture_views: "docs/architecture/architecture-views.md + docs/architecture/architecture.html"
   modules: "docs/modules/README.md"

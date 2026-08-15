@@ -27,6 +27,7 @@ def verify() -> list[str]:
         "docs/project/README.md", "docs/project/project-background.md",
         "docs/project/team-and-contributions.md", "docs/project/development-process.md",
         "docs/governance/project-fact-provenance.md",
+        "docs/governance/human-first-documentation-standard.md",
         "docs/evidence/README.md", "docs/modules/README.md", "docs/history/README.md",
         "docs/history/red-blue/README.md",
         "docs/history/red-blue/manual-round-01-overall-architecture.md",

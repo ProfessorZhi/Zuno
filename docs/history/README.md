@@ -1,26 +1,20 @@
-# Architecture Review History
+# Zuno 架构与项目演进历史
 
-`docs/history/` 不保存 Current Project Facts、Current Implementation Evidence、Canonical Architecture 或长期 ADR。当前事实、架构和证据分别由：
+`docs/history/` 记录已经发生的设计讨论、架构审查和仍有复盘价值的历史材料。它回答的是：
 
-- [项目文档](../project/project-background.md)；
-- [总体架构](../architecture/architecture.md)；
-- [Current Evidence](../evidence/README.md)；
-- [有效 ADR](../decisions/README.md)
+> 为什么今天的设计会变成这样？
 
-本目录只保留具有长期复盘价值的 Architecture Review Records。普通文件演进、临时讨论和已删除工作区由 Git history 承担，不再在当前树维护第二套历史垃圾场。
+它不回答今天系统应该如何实现。当前项目故事看 [Project](../project/README.md)，当前 Target 看[总体架构](../architecture/architecture.md)，当前代码和运行证据看 [Evidence](../evidence/README.md)，长期决定看[有效 ADR](../decisions/README.md)。
 
-## Red / Blue 架构审查记录
+## 怎么读 History
 
-进入 [Red / Blue Archive](./red-blue/README.md) 可以查看第一轮完整的 Red Questions、Blue Answers、Red Review、Blue Reflection 和 Main Judgment。
+如果只是想快速理解架构为什么变化，先读 [Red / Blue 架构审查入口](./red-blue/README.md)。它提供每一轮的背景、主要发现和当前状态。
 
-记录关系是：
+如果需要审计当时到底问了什么、怎样回答、哪些问题被追问，再打开对应的完整 Round Archive。完整记录保留原始问答，不应被当作标准答案或当前架构。
 
-```text
-Architecture Baseline
-  → Red Attack
-  → Blue Defense
-  → Main Judgment
-  → Accepted Architecture / ADR Revision
-```
+## 当前保留的主要历史
 
-Archive 解释“为什么后来这样设计”，不决定“当前系统是什么”。如果历史记录与 `docs/architecture/architecture.md` 冲突，以当前架构正文为准。
+- [Red / Blue Architecture Reviews](./red-blue/README.md)：总体架构和候选责任边界的对抗式审查。
+- [Legacy Automated Red / Blue Summary](./red-blue/legacy-automated-rounds.md)：旧自动化审查程序的压缩摘要，只保留仍有复盘价值的内容。
+
+普通文件演进和已删除工作区材料由 Git history 承担；本目录不维护第二套项目事实、架构正文或证据台账。

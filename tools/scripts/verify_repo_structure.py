@@ -27,6 +27,7 @@ def main() -> int:
     }:
         errors.append("docs/operations must contain only current operational entries")
     if _files(ROOT / "docs/governance") != {
+        "docs/governance/human-first-documentation-standard.md",
         "docs/governance/wave1-cross-module-contract-registry.md",
         "docs/governance/repo-ownership-matrix.md",
         "docs/governance/project-fact-provenance.md",

@@ -11,6 +11,7 @@ docs/modules/                         模块边界占位；边界未稳定前不
 docs/decisions/                       仍然有效的长期 ADR
 docs/evidence/                        当前代码、测试、Trace、Eval 和运行证据
 docs/governance/project-fact-provenance.md  项目事实来源与表述边界
+docs/governance/human-first-documentation-standard.md  Human-first 文档写作与分工规则
 docs/history/red-blue/                Red / Blue 架构审查过程记录，不是事实或架构源
 docs/operations/                      当前仍需执行的运维 Runbook / recovery profile
 docs/terminology.md                   跨文档术语

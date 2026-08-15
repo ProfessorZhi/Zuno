@@ -1,35 +1,47 @@
-# Red / Blue Architecture Review History
+# Red / Blue 架构审查历史
 
-本目录是 Zuno 的 Architecture Review Process Record。Red / Blue 是对总体架构或稳定责任边界的压力测试，用来记录问题、回答、反驳和 Main Judgment，帮助回看某个架构选择为什么被接受、收窄、否决或留作假设。
+## 这是什么
 
-它不是：
+Red / Blue 是 Zuno 用来压力测试架构的人工审查过程。Red Team 专门从真实任务、故障、边界冲突和替代方案出发提问；Blue Team 根据当时的架构和事实进行答辩；Main Coordinator 再判断哪些问题需要修改架构、哪些只是事实缺口或待测假设。
 
-- Canonical Project Fact；
-- Current Implementation Evidence；
-- Current Overall Architecture；
-- ADR；
-- 自动实施授权。
+原始 Q/A/R 会永久保留在各轮 Archive 中，方便审计当时发生了什么。这个 README 提供人类阅读摘要，但不拥有当前事实、Target Architecture、ADR 或实施授权。
 
-正式关系是：
+正式架构始终以[总体架构](../../architecture/architecture.md)为准，项目背景以 [Project](../../project/README.md) 为准，当前实现以 [Evidence](../../evidence/README.md) 为准，长期决定以 [有效 ADR](../../decisions/README.md) 为准。
+
+## 阅读顺序
+
+建议按下面顺序阅读：
 
 ```text
-Architecture Baseline
-  → Red Attack
-  → Blue Defense
-  → Main Judgment
-  → Architecture Revision / ADR
+Round 01 — Overall Architecture Narrative
+  → Round 02 — Overall Architecture Freeze Review
+  → 后续 Round
 ```
 
-因此，当前架构始终以 [`docs/architecture/architecture.md`](../../architecture/architecture.md) 为准；项目事实以 [`docs/project/`](../../project/project-background.md) 为准；长期决定以 [`docs/decisions/`](../../decisions/README.md) 为准。Red / Blue 中出现的 `FACT GAP` 不能自动升级为项目事实，必须经过用户确认后单独更新项目文档。
+先看本页的摘要；只有需要完整审计时，再打开具体 Round 的原始记录。
 
-## 当前记录
+## Round 01 — Overall Architecture Narrative
 
-- [Manual Round 01 — Overall Architecture](manual-round-01-overall-architecture.md)：手动协调三个 ChatGPT 线程完成的第一轮完整对抗记录，保留原始 Questions、Answers、Review、Reflection 和 Main Judgment；其目标架构修订已在 `391e9f16e4d0cf12998e9b310470c454d2c92b50`（`docs: revise overall architecture after round 01`）完成，模块闸门仍未打开。
-- [Manual Round 02 — Overall Architecture Freeze Review](manual-round-02-overall-architecture-freeze-review.md)：手动协调的第二轮 interim Q/A/R 归档，Q1–Q32 已完成，Q33–Q38 为 pending follow-up；Main Judgment pending，未启动 Architecture Revision。
-- [Legacy Automated Red / Blue Summary](legacy-automated-rounds.md)：旧自动化架构审查程序的压缩摘要，只保留仍有复盘价值的状态、发现和处置；不构成当前 Protocol。
+第一轮主要检查 Zuno 是否真的需要成为一个复杂 Agent 平台，以及哪些能力应该自己拥有、哪些能力可以交给 Generic Host、LangGraph、Memory Provider、Graph Provider 或其他外部能力。它还让一条复杂法律任务从材料进入一直走到检索、工具调用、人工复核、正式结果和故障恢复。
 
-## 新 Round 归档规则
+这一轮的总体架构主线经受住了审查，但没有把所有高级能力提升为核心。Generic Host + Legal Backend 被保留为更可信的最小形态；Native Runtime、GraphRAG、长期 Memory 和 Persistent Multi-Agent 都继续接受可删除性检验。审查还要求补清 Knowledge Readiness、降级结果是否仍有正式资格、长任务持续授权和 Tool Capability Drift，并重新收敛 Microservice 的证据门槛。
 
-只有正式 Architecture Review 才进入本目录。每份 Round Archive 至少记录 Round Scope、Architecture Baseline SHA、Red Questions、Blue Answers、Red Review、Main Judgment、Accepted/Rejected Changes、Open Questions 和 Architecture Revision Commit SHA（如已发生）。临时聊天、重复 Prompt、无结论 brainstorming 和 Codex 中间输出不归档。
+Round 01 的目标架构修订已经记录在提交 `391e9f16e4d0cf12998e9b310470c454d2c92b50` 中，但模块分解闸门当时仍未打开。完整记录见 [Round 01 Archive](./manual-round-01-overall-architecture.md)。
 
-每一轮保留原始对抗内容，不把 Archive 改写成标准答案；但一旦 Main 接受架构变化，正式结果必须写回 `docs/architecture/` 或 `docs/decisions/`，不能只停留在 Round 文件。
+## Round 02 — Overall Architecture Freeze Review
+
+第二轮从“总体架构是否讲得通”进一步进入“候选责任边界是否精确到可以冻结”。Q1–Q32 已完成，讨论了简单回答的调用权、正式引用和 WorkProduct 的权威、Memory 删除、Domain Commit 与 Checkpoint 恢复、发布结果失效、关键审计重建，以及 Capability / Tool、Memory、Product Surface 和 Infrastructure 是否真的应当成为独立模块。
+
+这一轮已经明确暴露出若干 Freeze Blocker，但还没有形成 Main Judgment。Q33–Q38 仍是待回答的 Follow-up，涉及 Simple Answer / Invocation Ownership、Historical Citation Authority、Memory Delete Across Copies、Domain Commit / Checkpoint Recovery、Published Result Invalidation 和 Reconstruction Boundary。
+
+因此 Round 02 目前仍是 interim archive：Main Judgment pending，Canonical Architecture Revision 尚未开始，Module Decomposition Gate 仍未打开。不要把这轮的 Red Concern 或 Blue Proposal 当作已接受的架构决定。
+
+完整记录见 [Round 02 Archive](./manual-round-02-overall-architecture-freeze-review.md)。
+
+## Full Records
+
+- [Round 01 — Overall Architecture Narrative](./manual-round-01-overall-architecture.md)
+- [Round 02 — Overall Architecture Freeze Review](./manual-round-02-overall-architecture-freeze-review.md)
+- [Legacy Automated Rounds](./legacy-automated-rounds.md)
+
+原始 Round Archive 是审计记录，不是标准答案。只有在 Main Judgment 被明确接受、并完成独立的 Architecture 或 ADR 修改后，结果才会进入对应的正式文档。

@@ -122,6 +122,7 @@ def main() -> int:
         "docs/project/team-and-contributions.md",
         "docs/project/development-process.md",
         "docs/governance/project-fact-provenance.md",
+        "docs/governance/human-first-documentation-standard.md",
         "docs/history/README.md",
         "docs/evidence/README.md",
     ):
