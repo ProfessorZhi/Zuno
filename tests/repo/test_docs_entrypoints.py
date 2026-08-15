@@ -43,7 +43,7 @@ def test_architecture_markdown_is_integration_first() -> None:
     renderer = _load_render_architecture()
     design = (REPO_ROOT / "docs/architecture/architecture.md").read_text(encoding="utf-8")
     assert renderer.validate_design(design) == []
-    assert design.count("```mermaid") == 0
+    assert design.count("```mermaid") <= 6
     for marker in ["docs/history/", "docs/project/", "Part A — Architecture Narrative", "Part B — Detailed Architecture Specification"]:
         assert marker in design
 

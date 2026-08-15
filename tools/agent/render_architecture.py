@@ -50,12 +50,12 @@ def validate_design(content: str) -> list[str]:
         "# Zuno 总体 Target 架构",
         "## Part A — Architecture Narrative",
         "## Part B — Detailed Architecture Specification",
-        "### 1. Zuno 是什么",
-        "### 3. 一个简单问题怎样完成",
-        "### 4. 一个复杂法律分析怎样完成",
-        "### 7. 九个逻辑责任域如何合作",
-        "### 8. 任务失败以后怎样恢复",
-        "### 11. 当前还没有证明什么",
+        "### 1. Zuno 要解决的到底是什么问题",
+        "### 2. 不是所有法律任务都需要同样复杂的系统",
+        "### 4. 一次复杂法律任务怎样完整运行",
+        "### 7. 为什么系统里的状态不能全部放在一起",
+        "### 9. 一次系统故障以后怎样恢复",
+        "### 12. 当前哪些能力仍然没有证明",
         "### B1 Scope and Global Invariants",
         "### B3 Cross-boundary Contracts",
         "### B9 Recovery and Idempotency",
@@ -75,7 +75,7 @@ def validate_design(content: str) -> list[str]:
         "Capability & Skill", "Tool Runtime & Effects", "Platform / Infrastructure Responsibility Layer",
         "Optional Context Provider", "FastAPI", "LangGraph", "PostgreSQL", "Checkpoint",
         "Reconciliation", "Current", "Target", "History", "Why service?", "Why not library?",
-        "Logical Responsibility", "Physical Service / Deployment",
+        "Logical Responsibility", "Target Status Boundary",
     ]
     errors: list[str] = []
     for marker in required_sections + required_terms:
