@@ -13,19 +13,20 @@ ADR 会随着架构演进发生 supersede / refine（取代 / 细化）。读取
 5. 模块文档只能细化这些 accepted decision，不能自行重新分配跨模块 Owner；
 6. 如果两个 active ADR 真正无法通过明确的 supersession / refinement 解释，应记录 Architecture Gap，而不是让代码或某篇模块文档自行选边。
 
-当前最重要的例子是：ADR-0008 决定最小 Legal Domain Kernel、Generic Host 边界和 Native Runtime 的测量门；ADR-0013 后来冻结九个逻辑责任域；ADR-0014 再明确 Authorization / Approval / Lifecycle policy、Formal Admission、Historical Citation、Invalidation、Delivery 和 Recovery 的权威 Owner。ADR-0008 中早期宽泛的 permission / audit 文字必须按后两份 ADR 解释，但它的最小 Domain Kernel 和 Host / Runtime 取舍仍然有效。
+当前最重要的例子是：ADR-0008 决定最小 Legal Domain Kernel、Generic Host 边界和 Native Runtime 的测量门；ADR-0013 后来冻结九个逻辑责任域；ADR-0014 再明确 Authorization / Approval / Lifecycle policy、Formal Admission、Historical Citation、Invalidation、Delivery 和 Recovery 的权威 Owner；ADR-0015 在不改变这些 Owner 的前提下，进一步冻结“研究算法怎样进入 Capability、Adaptive Retrieval、Typed Memory、Plan Quality 和 Tool Propose–Verify”的跨模块算法组织方式。较早 ADR 中出现的旧模块编号必须按 ADR-0013 的当前九模块解释。
 
 ## 当前有效 ADR
 
 - [ADR 0003：共享跨层 Contract](0003-wave1-cross-module-contract-freeze.md)：冻结跨层 Envelope、Owner、Provenance、Version 和基础设施访问边界；其中与九模块 taxonomy 冲突的分类部分已经由 ADR-0013 supersede，其余兼容 Contract 继续有效。
 - [ADR 0005：LangGraph PostgreSQL Checkpointer](0005-official-langgraph-postgres-checkpointer.md)：Runtime Checkpoint 复用 LangGraph / PostgreSQL 能力，并与 Domain State 分离。
-- [ADR 0006：Evidence-Driven Agentic GraphRAG](0006-evidence-driven-agentic-graphrag.md)：Graph / Agentic Retrieval 作为有证据门控的能力，不因名称自动成为 Kernel；当前总体架构进一步限定为 query-class / evidence-gated。
-- [ADR 0007：Reuse-First Provider Boundary](0007-reuse-first-provider-boundary.md)：通用 Host、Provider 和基础设施优先复用，Zuno 维护法律业务 Contract 与 Domain 深度。
+- [ADR 0006：Evidence-Driven Conditional Retrieval](0006-evidence-driven-agentic-graphrag.md)：03 采用 query-class / evidence-gated 的 Adaptive Multi-Route Retrieval；lexical / dense / structured / graph 按需组合，多文档问题允许依赖感知分解，EvidenceGain / Sufficiency 决定继续或停止；Graph 不是 Always-On Kernel。
+- [ADR 0007：Reuse-First Provider Boundary](0007-reuse-first-provider-boundary.md)：通用 Host、Provider 和基础设施优先复用；Memory / Context 作为 Optional Provider Boundary，由 Zuno 拥有 typed policy / recall eligibility，OpenViking / Graphiti / Mem0 / LangMem 等只作为条件候选。
 - [ADR 0008：Legal Domain Kernel and Host Boundary](0008-legal-domain-kernel-and-host-boundary.md)：冻结七对象最小 Domain Kernel、Generic Host + Legal Backend 的默认最小边界，以及 Native Runtime / Graph / Memory / Multi-Agent 的测量门；Ownership 细节按 ADR-0013 / 0014 后续细化。
 - [ADR 0009：Python-only Backend](0009-python-only-backend.md)：Python 是当前后端 Target 约束，具体物理服务仍需证据门控。
 - [ADR 0012：Evidence-Gated Physical Service Split](0012-evidence-gated-physical-service-split.md)：模块化 Backend + Worker 是默认物理起点，独立 Network Service 只能由 Scaling、Failure、Security、Availability、Lifecycle 或稳定跨主机 Contract 等证据触发。
 - [ADR 0013：Round 02 Responsibility Taxonomy](0013-round-02-responsibility-taxonomy.md)：冻结九个 Logical Responsibility Modules、Platform / Infrastructure Responsibility Layer 和 Optional Context Provider；显式 supersede 旧分类中与其冲突的部分。
 - [ADR 0014：Round 02 Cross-boundary Authority and Recovery](0014-round-02-cross-boundary-authority-and-recovery.md)：冻结 Invocation / Publication Authority、Historical Citation Binding、Effective Lifecycle Policy、AdmissionReceipt、Invalidation / Delivery / Ack 分离和 Critical Reconstruction / Recovery 语义。
+- [ADR 0015：Research-Native Adaptive Intelligence](0015-research-native-adaptive-intelligence.md)：把 LIPLAB / 葛季栋等研究成果以及 Retrieval、Memory、Planning、Tool Use 论文机制纳入 Research-to-Capability、Adaptive Retrieval、Typed Memory、Plan Quality Gate、Propose–Verify 和 Eval / Kill Test；算法、论文和 OSS 都不能绕过 Owner / Provider 边界。
 
 ## 维护规则
 

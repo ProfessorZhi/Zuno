@@ -23,6 +23,35 @@ Round 02 已冻结总体 Target Architecture 与九个 Logical Responsibility Mo
 
 因此简单问答不强制进入 Native Runtime；Native Runtime、GraphRAG、Long-term Memory、Specialist / Multi-Agent 和物理服务拆分都继续受 Measurement / Evidence Gate。设计差异不等于已证明优势，实际收益必须由 09 的对照测量证明。
 
+## 研究成果和先进算法怎样进入 Architecture
+
+Zuno 不把“用了最新论文 / 最新开源组件”本身当成架构质量。2026-08-16 接受的 [ADR-0015](../decisions/0015-research-native-adaptive-intelligence.md) 把研究资产进入产品的路径固定为：
+
+```text
+Research Artifact
+→ Source Verification / Reproduction
+→ Capability Semantics
+→ Versioned Provider
+→ Conformance
+→ Domain Eval
+→ Eligibility
+→ Runtime use
+→ Proposal / Candidate
+→ Owner Admission when required
+```
+
+因此，葛季栋 / LIPLAB 的 JIA / TRL 事件抽取、事件对齐、冲突 / 争议识别可以变成 05 的专业 Capability family；现代 LLM、encoder、规则和旧论文算法可以作为不同 Provider 做可比 Eval。论文结果不能直接写成 Current，也不能因为某算法来自课题组就越过 02 Formal Admission。
+
+同一 ADR 进一步吸收各领域先进论文的机制，而不是复制完整论文系统：
+
+- 03 使用 Adaptive Multi-Route Retrieval：lexical / BM25、dense、metadata / source-scoped、entity / fact、graph / multi-hop 按 QueryClass 组合，RRF / calibrated fusion 后 rerank；复杂多文档允许依赖感知的迭代分解；EvidenceGain / Sufficiency 决定继续、focused probe 或停止。
+- Optional Memory 使用 Typed Memory Control Plane：Working / Episodic / Semantic / Procedural / Context Archive 分开；模型只能提出 MemoryCandidate，长期写入由 scope、source、security、freshness、conflict / dedup 和 lifecycle policy 决定；OpenViking、Graphiti、Mem0、LangMem 等只是条件 Provider candidate。
+- 04 在 Planner 与 PlanVersion activation 之间增加 Structure → Feasibility → Usefulness 三层 Plan Quality Gate，并用真实 Owner fact / execution feedback 驱动 Retry / Replan，而不是 open-loop 盲跑。
+- 06 使用 Propose–Verify–Execute–Observe：PreparedAction 在现实执行前经过 schema、semantic constraint、side-effect、idempotency / reconciliation、Authorization / Approval freshness 和 audit guard；模型不能批准自己提出的动作。
+- 09 对每种复杂机制保留 baseline / ablation / kill test。Graph、Memory、Reflection、强模型和复杂 Planner 没有稳定边际收益时必须允许删除或缩小。
+
+这些是 Target refinement，不是新增第十模块，也不改变 ADR-0013 / 0014 冻结的九模块 Owner、七对象 Legal Domain Kernel、Single Controller、Formal Admission、Retry / Replan / Reconcile 或安全门禁。
+
 ## 当前设计状态
 
 九篇模块已经完成 Deep Design V2 / Cross-Module Consistency，并且 **9/9 全部进入 Detail Design Candidate V1**。每篇继续保持：
@@ -51,12 +80,13 @@ cross_module_consistency: AVAILABLE_V1
 module_human_narrative: DEEPENED
 module_detail_design_candidate: AVAILABLE_V1
 module_detail_design_candidate_coverage: 9/9
+research_native_adaptive_intelligence: ACCEPTED_TARGET
 module_detail_freeze: NOT_YET
 implementation_authorization: NO
 production_readiness: NOT_ESTABLISHED
 ```
 
-这一步没有改变 `architecture.md` 的 Round 02 冻结语义。Detail Candidate 只能细化既有 Owner / Contract / recovery 规则；如果字段级设计要求新增 / 删除逻辑模块、扩大七对象 Canonical Legal Kernel、改变 Formal Admission、Knowledge / Domain authority、Effect / Security / Lifecycle Owner，必须升级 Architecture Gap。
+这一步没有改变 `architecture.md` 的 Round 02 冻结语义。Detail Candidate 和 ADR-0015 只能细化既有 Owner / Contract / recovery 规则；如果算法设计要求新增 / 删除逻辑模块、扩大七对象 Canonical Legal Kernel、改变 Formal Admission、Knowledge / Domain authority、Effect / Security / Lifecycle Owner，必须升级 Architecture Gap。
 
 ## Detail Design Candidate 到底细化了什么
 
@@ -72,7 +102,7 @@ production_readiness: NOT_ESTABLISHED
 - 08：Authorization / Approval、SecurityEpoch、Secret Lease、Mandatory Audit、Lifecycle / per-store enforcement；
 - 09：TelemetryEnvelope、Correlation、Redaction / Sampling、Dataset / EvalRun / Judge、ReleaseEvidence、Complexity Kill Test。
 
-这些全部是 Target Candidate，不是 Current implementation。真实 PostgreSQL race、Serving cutover、Tool remote idempotency、Provider qualification、Policy Engine、full-chain observability、formal benchmark 等仍要看 Evidence。
+ADR-0015 的算法 refinement 在 Detail Freeze Review 中还需要继续下沉为 owner-specific Contract：03 的 RetrievalIntent / Route / EvidenceGain，04 的 Plan Quality Gate，05 的法律 Capability family，06 的 Action Validator，以及 Optional Memory 的 MemoryCandidate / MemoryWriteDecision / ContextCandidate。没有字段、状态、Crash / late-result 和 Eval 规格前，不应把这些概念写成实现任务。
 
 ## 面对横向系统设计问题
 
@@ -95,11 +125,15 @@ production_readiness: NOT_ESTABLISHED
 
 进入模块实现级审查时，再读 `architecture.md` Part B、目标模块 Part B / Part C，尤其 B14.1–B14.8，以及 ADR、Evidence 和 Governance。
 
+如果问题涉及“为什么把论文 / Open Source / Provider 融进来但不直接绑定”，先读 ADR-0007；涉及多路检索 / Agentic RAG 先读 ADR-0006；涉及研究成果、Memory、Planning、Tool safety 的整体算法组合先读 ADR-0015。
+
 如果问“为什么这样设计”，看 Architecture / Module；如果问“当前真的实现了吗”，看 `../evidence/`；如果问历史争议，按需读取 `../history/red-blue/`。
 
 ## 下一道门不是直接实现
 
-9/9 Candidate 完成以后，下一道门是 **Module Detail Freeze Review**。需要逐模块检查：字段 / identity / version 是否闭合；状态 Guard 是否足够；幂等 namespace 是否分离；Owner Store 的事务 / CAS 是否合理；Crash Window 是否有 durable recovery anchor；Migration 是否保护历史；权限变化、Cancel、Late Result 是否一致；Failure Injection 是否足够；是否引入没有证据支持的微服务、锁或状态机。
+9/9 Candidate 完成以后，下一道门仍然是 **Module Detail Freeze Review**。需要逐模块检查：字段 / identity / version 是否闭合；状态 Guard 是否足够；幂等 namespace 是否分离；Owner Store 的事务 / CAS 是否合理；Crash Window 是否有 durable recovery anchor；Migration 是否保护历史；权限变化、Cancel、Late Result 是否一致；Failure Injection 是否足够；是否引入没有证据支持的微服务、锁或状态机。
+
+对 ADR-0015 新引入的 Target refinement，还要额外检查：算法的 trigger / stop condition 是否明确；论文指标和 Zuno Eval 是否分开；Provider 是否可退出；复杂路线是否有 simpler baseline；Memory 是否可能污染正式事实；Graph / Reflection / strong model 是否有 kill test；Tool Validator 是否仍然服从 08，而不是产生第二套 Authorization。
 
 只有通过冻结审查，具体模块才可以进入 Detail Freeze；即使冻结，也不自动产生 Implementation Authorization。Codex 业务实现仍需要独立明确授权和任务规格。
 
@@ -111,7 +145,7 @@ production_readiness: NOT_ESTABLISHED
 - `README.md`：状态、边界和阅读入口。
 - `../project/project.md`：项目级 Human-first 主叙事。
 - `../modules/`：九个责任域的 Deep Design V2 + Detail Design Candidate V1。
-- `../decisions/`：仍有效的长期 ADR。
+- `../decisions/`：仍有效的长期 ADR；ADR-0006 / 0007 / 0015 是当前 Retrieval / Provider / Research-native algorithm refinement 的主要入口。
 - `../evidence/`：Current 代码、Migration、Test、Trace、Eval 和运行证据。
 - `../history/red-blue/`：审查历史，不拥有当前 Target。
 
@@ -119,7 +153,7 @@ production_readiness: NOT_ESTABLISHED
 
 总体架构是当前 Target 的整合表达。模块只能细化它，不能局部重写九模块 Owner、Canonical Kernel、Formal Admission、Knowledge / Domain authority、Retry / Replan / Reconcile、安全政策或 Effect truth。
 
-跨层含义变化才修改 `architecture.md`；模块内部细节进 `../modules/`；项目历史和定位进 `../project/`；图形变化同步 `architecture-views.md` 与 `architecture.html`。
+跨层含义变化才修改 `architecture.md` 或创建 / 更新相应长期 ADR；模块内部细节进 `../modules/`；项目历史和定位进 `../project/`；图形变化同步 `architecture-views.md` 与 `architecture.html`。
 
 常用验证：
 
