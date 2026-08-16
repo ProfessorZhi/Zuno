@@ -30,7 +30,7 @@ def verify_system_yaml(root: Path) -> list[str]:
     content = path.read_text(encoding="utf-8")
     for marker in (
         "version:", "system_identity:", "runtime_boundary:", "program_rules:", "skill_routes:",
-        "product_positioning_and_value:", "review_question_map:", 'module_design_state: "deep-design-v2"',
+        "project_narrative:", 'module_design_state: "deep-design-v2"',
     ):
         if marker not in content:
             errors.append(f"system.yaml missing section/route: {marker}")
@@ -38,8 +38,8 @@ def verify_system_yaml(root: Path) -> list[str]:
         "AGENTS.md",
         ".agent/programs/current.md",
         "docs/README.md",
-        "docs/project/product-positioning-and-value.md",
-        "docs/project/review-question-map.md",
+        "docs/project/README.md",
+        "docs/project/project.md",
     ):
         if not (root / relative).exists():
             errors.append(f"system.yaml route target missing: {relative}")
@@ -127,11 +127,7 @@ def main() -> int:
         ".agent/scripts/verify_doc_boundaries.py",
         ".agent/scripts/verify_repo_hygiene.py",
         "docs/project/README.md",
-        "docs/project/project-background.md",
-        "docs/project/product-positioning-and-value.md",
-        "docs/project/team-and-contributions.md",
-        "docs/project/development-process.md",
-        "docs/project/review-question-map.md",
+        "docs/project/project.md",
         "docs/governance/project-fact-provenance.md",
         "docs/governance/human-first-documentation-standard.md",
         "docs/history/README.md",
