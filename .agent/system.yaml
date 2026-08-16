@@ -1,4 +1,4 @@
-version: "2026-08-14"
+version: "2026-08-16"
 system_identity: "Zuno Local Agent System"
 
 runtime_boundary:
@@ -7,6 +7,7 @@ runtime_boundary:
   source_of_truth: "docs/"
   project_story_root: "docs/project"
   architecture_root: "docs/architecture"
+  module_design_root: "docs/modules"
   evidence_root: "docs/evidence"
   review_history_root: "docs/history/red-blue"
 
@@ -32,7 +33,7 @@ canonical_owners:
   human_first_documentation_standard: "docs/governance/human-first-documentation-standard.md"
   overall_architecture: "docs/architecture/architecture.md"
   architecture_views: "docs/architecture/architecture-views.md + docs/architecture/architecture.html"
-  modules: "docs/modules/README.md"
+  modules: "docs/modules/README.md + docs/modules/01-*.md through 09-*.md"
   decisions: "docs/decisions/"
   evidence: "docs/evidence/"
   review_history: "docs/history/red-blue/"
@@ -45,24 +46,31 @@ skill_routes:
       - "AGENTS.md"
       - "docs/README.md"
       - "docs/project/README.md"
-      - "docs/project/project-background.md"
-      - "docs/project/team-and-contributions.md"
-      - "docs/project/development-process.md"
       - ".agent/references/workflow.md"
   architecture:
     read_first:
       - "docs/architecture/README.md"
       - "docs/architecture/architecture.md"
+      - "docs/modules/README.md"
       - "docs/decisions/README.md"
       - "docs/evidence/README.md"
   architecture_human_reading:
     read_first:
       - "docs/architecture/README.md"
       - "docs/architecture/architecture.md"
+      - "docs/modules/README.md"
+  module_design:
+    read_first:
+      - "docs/architecture/architecture.md"
+      - "docs/modules/README.md"
+      - "docs/decisions/README.md"
+      - "docs/evidence/README.md"
+      - "docs/governance/human-first-documentation-standard.md"
   architecture_implementation:
     read_first:
       - "docs/architecture/README.md"
       - "docs/architecture/architecture.md"
+      - "docs/modules/README.md"
       - "docs/decisions/README.md"
       - "docs/evidence/README.md"
       - "docs/governance/human-first-documentation-standard.md"
@@ -75,7 +83,7 @@ skill_routes:
     read_first:
       - "docs/architecture/README.md"
       - "docs/architecture/architecture.md"
-      - "docs/project/development-process.md"
+      - "docs/modules/README.md"
       - "docs/evidence/README.md"
       - "docs/governance/human-first-documentation-standard.md"
       - ".agent/references/code-map.md"

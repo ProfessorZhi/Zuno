@@ -7,6 +7,18 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 ARCHITECTURE_FILES = {"README.md", "architecture.md", "architecture-views.md", "architecture.html"}
+MODULE_FILES = [
+    "docs/modules/README.md",
+    "docs/modules/01-application-integration.md",
+    "docs/modules/02-legal-domain-work-product.md",
+    "docs/modules/03-knowledge-evidence.md",
+    "docs/modules/04-agent-runtime-control.md",
+    "docs/modules/05-capability-skill.md",
+    "docs/modules/06-tool-runtime-effects.md",
+    "docs/modules/07-model-gateway.md",
+    "docs/modules/08-security-governance.md",
+    "docs/modules/09-observability-evaluation.md",
+]
 
 
 def _load_links():
@@ -28,7 +40,7 @@ def verify() -> list[str]:
         "docs/project/team-and-contributions.md", "docs/project/development-process.md",
         "docs/governance/project-fact-provenance.md",
         "docs/governance/human-first-documentation-standard.md",
-        "docs/evidence/README.md", "docs/modules/README.md", "docs/history/README.md",
+        "docs/evidence/README.md", *MODULE_FILES, "docs/history/README.md",
         "docs/history/red-blue/README.md",
         "docs/history/red-blue/manual-round-01-overall-architecture.md",
         "docs/history/red-blue/manual-round-02-overall-architecture-freeze-review.md",
@@ -54,9 +66,13 @@ def verify() -> list[str]:
         if forbidden.exists():
             errors.append(f"obsolete documentation workspace must be absent: {forbidden.relative_to(REPO_ROOT)}")
     index = (REPO_ROOT / "docs/README.md").read_text(encoding="utf-8")
-    for marker in ("Current", "Target", "Unknown", "project/", "architecture/", "evidence/", "history/red-blue/"):
+    for marker in ("Current", "Target", "Unknown", "project/", "architecture/", "modules/", "evidence/", "history/red-blue/"):
         if marker not in index:
             errors.append(f"docs/README.md missing status/architecture marker: {marker}")
+    modules = (REPO_ROOT / "docs/modules/README.md").read_text(encoding="utf-8")
+    for marker in ("01-application-integration.md", "09-observability-evaluation.md", "design skeleton", "implementation_authorization"):
+        if marker not in modules:
+            errors.append(f"docs/modules/README.md missing module design marker: {marker}")
     return errors
 
 

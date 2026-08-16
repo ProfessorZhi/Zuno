@@ -1,0 +1,85 @@
+# 03 Knowledge & Evidence（知识与证据）
+
+<!-- status: design-skeleton; implementation: not-authorized -->
+
+## Part A — Human Narrative
+
+### 上传成功为什么不等于可以回答
+
+用户上传了一百份材料，接口返回 200，并不意味着系统已经有资格基于这一百份材料形成正式分析。PDF 可能仍在解析，扫描件可能 OCR 失败，附件可能缺失，索引也可能还对应上一版材料。
+
+知识与证据模块首先解决的不是“选哪个向量库”，而是更基本的问题：**在某个明确的材料版本和任务范围下，哪些内容现在真的可以被使用，系统能从中恢复出什么证据和引用？**
+
+### 一份材料怎样变成可用知识
+
+应用入口接收文件后，材料身份和正式版本仍由法律领域拥有。知识与证据围绕这个版本进行解析、切分、索引、图或关键词视图等处理，并形成自己的知识生成版本。
+
+只有当当前任务要求的材料范围达到约定就绪条件，系统才允许把它当作完整范围进入正式分析。部分材料可用时，可以明确缩小 Scope 返回临时结果，但不能静默把“40/100 已处理”包装成“100/100 已覆盖”。
+
+### 检索的目标不是找最相似的句子
+
+检索可以组合关键词、向量、重排、图视图或其他策略，但实现细节不是长期架构边界。长期需要保留的是：检索针对哪个材料版本和权限范围、返回了哪些 Evidence Candidate（证据候选）、来源位置是什么、当时用的是哪一代知识视图。
+
+CitationLineage（检索引用链）记录“系统当时怎样找到这个候选”。如果候选最终进入正式工作成果，真正长期保存的历史引用由法律领域重新绑定到不可变材料版本和稳定位置。
+
+### 索引为什么可以替换
+
+向量库、图存储、关键词引擎和切分算法都可能变化。它们应该被视为可重建的知识派生视图，而不是业务真相。索引写成功只证明物理写入，不自动证明新 Knowledge Generation 已被接受和激活。
+
+这使得 Zuno 可以以后从 Milvus 换到其他向量方案、删除某个图实现或调整切分算法，而不改写已经发布工作成果的历史依据。
+
+### 出问题以后怎么办
+
+解析失败、索引部分完成、来源无法稳定绑定、知识版本落后、权限变化或检索证据不足，都必须显式暴露。完整范围任务应等待、拒绝或缩小范围；旧知识版本不能静默冒充新 DocumentVersion 的知识视图。
+
+如果只是一个可重建索引损坏，恢复重点是重新生成和校验；如果是正式领域引用缺失，则不能靠“重新检索一次差不多的内容”补成历史事实。
+
+### 为什么值得独立成一个责任域
+
+把知识投影放进法律领域，会让领域状态被向量库和切分策略污染；把它完全交给运行时，又会丢失版本、就绪和来源治理。独立知识边界既允许底层替换，也给上层提供稳定的证据和就绪语义。
+
+### 当前、目标与缺口
+
+Current Evidence 已能证明部分 Citation Provenance Guard、stale/scope 检查以及产品 ingestion 的持久化入口；但真实数据库 lineage lookup、完整 Knowledge Readiness、全量 ingestion fault recovery、GraphRAG query-class 收益和生产索引切换都没有被完整证明。
+
+## Part B — Engineering / Agent Reference
+
+### B1 Scope / Ownership
+
+**Owns**：material processing projection、KnowledgeGeneration / KnowledgeView、Readiness、EvidenceCandidate、RetrievalResult、CitationLineage、IndexManifest 的知识语义。
+
+**Does not own**：DocumentVersion canonical identity、Finding / WorkProduct、historical WorkProduct citation authority、Security policy、physical index success semantics。
+
+### B2 Inputs / Outputs
+
+输入：DocumentVersion reference、任务 Scope、当前 Authorization / Security Epoch、查询或检索要求、索引物理回执。
+
+输出：ReadinessDecision、EvidenceCandidate、CitationLineage、Knowledge Generation / Manifest references、检索质量信号。
+
+### B3 Cross-boundary Contracts
+
+沿用总体架构中的 Readiness、Evidence/Citation reference，以及现有 Registry 中 Index Spec / Manifest / Write Receipt / Serving Watermark 等边界。Chunk / Vector / Graph identity 不升级为长期 Citation Authority。
+
+### B4 State / Lifecycle
+
+材料处理从接收版本引用开始，经过解析/派生视图构建，到“当前任务可用、部分可用或失败”等就绪结果。具体 enum、阈值和生成激活状态在模块深设计时冻结；版本切换必须能区分旧 generation 与当前 serving generation。
+
+### B5 Failure / Recovery / Idempotency
+
+- parsing / OCR failure：记录材料级失败，不伪装成完整就绪。
+- partial index write：不自动激活新 generation。
+- stale generation：拒绝作为新 DocumentVersion 的完整知识视图。
+- scope / authorization invalid：不返回越权候选。
+- index corruption：从源版本重建并重新验证，不改变 Domain 历史引用。
+
+### B6 Security / Persistence / Observability
+
+所有检索和派生视图按 tenant / scope / current security decision 约束。原始材料和索引的物理存储可由 Platform 提供；知识模块拥有“是否接受/激活”的语义。Telemetry 记录 generation、latency、recall/eval 引用，不泄露 Secret 或不必要全文。
+
+### B7 Current / Target / Gap
+
+Current 见 [`current-runtime-baseline.md`](../evidence/current-runtime-baseline.md) 与 [`implementation-wave-001.md`](../evidence/implementation-wave-001.md)。Target 是可版本化、可恢复、可测量的 Knowledge Readiness + Evidence/Citation 边界。Gap 是真实数据规模、跨版本 ingestion、索引切换、GraphRAG 对照测量和完整 fault injection。
+
+### B8 Code / Database / Migration Constraints
+
+先冻结 generation、readiness、evidence identity 和 citation lineage，再决定 index schema。不得用某个向量库的内部 ID 反向定义领域模型。

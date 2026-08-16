@@ -2,6 +2,18 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[2]
+MODULE_FILES = {
+    "docs/modules/README.md",
+    "docs/modules/01-application-integration.md",
+    "docs/modules/02-legal-domain-work-product.md",
+    "docs/modules/03-knowledge-evidence.md",
+    "docs/modules/04-agent-runtime-control.md",
+    "docs/modules/05-capability-skill.md",
+    "docs/modules/06-tool-runtime-effects.md",
+    "docs/modules/07-model-gateway.md",
+    "docs/modules/08-security-governance.md",
+    "docs/modules/09-observability-evaluation.md",
+}
 
 
 def _files(directory: Path) -> set[str]:
@@ -33,8 +45,8 @@ def main() -> int:
         "docs/governance/project-fact-provenance.md",
     }:
         errors.append("docs/governance may contain only source-compatible current boundary inputs")
-    if _files(ROOT / "docs/modules") != {"docs/modules/README.md"}:
-        errors.append("docs/modules must contain only its boundary README")
+    if _files(ROOT / "docs/modules") != MODULE_FILES:
+        errors.append("docs/modules must contain README plus the nine canonical module design documents")
     if _files(ROOT / "docs/history") != {
         "docs/history/README.md", "docs/history/red-blue/README.md",
         "docs/history/red-blue/manual-round-01-overall-architecture.md",
