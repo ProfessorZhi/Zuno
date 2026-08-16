@@ -28,10 +28,19 @@ def verify_system_yaml(root: Path) -> list[str]:
     if not path.exists():
         return ["missing .agent/system.yaml"]
     content = path.read_text(encoding="utf-8")
-    for marker in ("version:", "system_identity:", "runtime_boundary:", "program_rules:", "skill_routes:"):
+    for marker in (
+        "version:", "system_identity:", "runtime_boundary:", "program_rules:", "skill_routes:",
+        "product_positioning_and_value:", "review_question_map:", 'module_design_state: "deep-design-v2"',
+    ):
         if marker not in content:
-            errors.append(f"system.yaml missing section: {marker}")
-    for relative in ("AGENTS.md", ".agent/programs/current.md", "docs/README.md"):
+            errors.append(f"system.yaml missing section/route: {marker}")
+    for relative in (
+        "AGENTS.md",
+        ".agent/programs/current.md",
+        "docs/README.md",
+        "docs/project/product-positioning-and-value.md",
+        "docs/project/review-question-map.md",
+    ):
         if not (root / relative).exists():
             errors.append(f"system.yaml route target missing: {relative}")
     registry = re.search(r"local_skill_registry:\n(?P<body>.*?)(?=\n\S|\Z)", content, re.DOTALL)
@@ -119,8 +128,10 @@ def main() -> int:
         ".agent/scripts/verify_repo_hygiene.py",
         "docs/project/README.md",
         "docs/project/project-background.md",
+        "docs/project/product-positioning-and-value.md",
         "docs/project/team-and-contributions.md",
         "docs/project/development-process.md",
+        "docs/project/review-question-map.md",
         "docs/governance/project-fact-provenance.md",
         "docs/governance/human-first-documentation-standard.md",
         "docs/history/README.md",
