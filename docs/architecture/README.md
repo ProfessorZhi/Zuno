@@ -57,6 +57,14 @@ production_readiness: NOT_ESTABLISHED
 
 下一道门不再是“把九篇文档继续写长”，而是进入字段级 Contract、状态转换 guard、并发 / 版本条件、幂等 namespace、事务边界、Crash Window、Schema Evolution 和 Failure Injection Matrix，再逐模块判断是否达到 Module Detail Freeze Candidate。
 
+## 面对大厂系统设计追问时，Architecture 应该怎样回答
+
+系统设计面试经常不会按模块顺序提问，而会直接问：“QPS 上来怎么办”“为什么不用微服务”“队列积压怎么办”“缓存放哪里”“为什么不用 2PC”“PostgreSQL 和 Checkpointer 为什么分开”“多租户怎么隔离”“HA / DR 怎么做”。这些问题仍然必须遵守同一条原则：**先找事实 Owner，再讨论物理实现。**
+
+总体架构负责解释为什么逻辑责任和物理部署要分离、为什么 Owner 内部可以强一致而跨 Owner 通过 receipt / version / causation 恢复收敛、为什么 Worker / Queue / Cache 都不能成为新的业务 Truth Owner。具体的横向系统设计矩阵已经放在 [`../modules/README.md`](../modules/README.md)；需要回答具体实现和状态条件时，再进入对应模块 Part B / Part C。
+
+当前可以解释 Target 上的扩容、背压、一致性、缓存、异步长任务、成本和恢复策略；但如果被问“实际支撑多少 QPS、多少文件、什么 RPO / RTO”，必须切换到 Evidence。没有正式负载、生产环境和 DR 演练时，不能从架构图反推出生产数字。
+
 ## 阅读顺序
 
 如果第一次接触 Zuno，建议：
@@ -72,6 +80,8 @@ production_readiness: NOT_ESTABLISHED
 一个不了解 Zuno 的高级工程师只读 `architecture.md` Part A，应该能够解释：为什么简单问答保持简单；复杂法律分析怎样形成正式工作成果；新证据怎样使旧结果失效；外部 POST 超时为什么不能盲重试；Domain Commit 和 Runtime Checkpoint 不一致时怎样恢复；九个责任域为什么这样分。
 
 如果面试官或 Reviewer 进一步追问“为什么不直接用通用平台、为什么项目可以立项、这些差异是否真的带来优势”，回到 [`../project/product-positioning-and-value.md`](../project/product-positioning-and-value.md)。如果开始按具体问题连续盘问，可使用 [`../project/review-question-map.md`](../project/review-question-map.md) 定位到 Project / Architecture / Module / Evidence 的正确 Owner。
+
+如果追问进入并发、缓存、Backpressure（背压）、一致性、容量、HA / DR、成本或数据库恢复，先读 [`../modules/README.md`](../modules/README.md) 的“横向系统设计问题”，再进入 01 / 02 / 03 / 04 / 07 / 08 / 09 的 Part B / Part C。这里的设计回答仍属于 Target；实际容量和生产资格只从 Evidence 回答。
 
 需要实现、测试或审查工程细节时，再读 `architecture.md` Part B、模块 Part B / Part C、相关 ADR 和 Evidence。
 
