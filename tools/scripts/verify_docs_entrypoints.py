@@ -9,11 +9,7 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 ARCHITECTURE_FILES = {"README.md", "architecture.md", "architecture-views.md", "architecture.html"}
 PROJECT_FILES = [
     "docs/project/README.md",
-    "docs/project/project-background.md",
-    "docs/project/product-positioning-and-value.md",
-    "docs/project/team-and-contributions.md",
-    "docs/project/development-process.md",
-    "docs/project/review-question-map.md",
+    "docs/project/project.md",
 ]
 MODULE_FILES = [
     "docs/modules/README.md",
@@ -92,26 +88,30 @@ def verify() -> list[str]:
 
     index = (REPO_ROOT / "docs/README.md").read_text(encoding="utf-8")
     for marker in (
-        "Current", "Target", "Unknown", "project/", "architecture/", "modules/", "evidence/", "history/red-blue/",
-        "product-positioning-and-value.md", "review-question-map.md", "module_deep_design",
+        "Current", "Target", "Unknown", "project/", "project.md", "architecture/", "modules/", "evidence/", "history/red-blue/",
+        "module_deep_design",
     ):
         if marker not in index:
             errors.append(f"docs/README.md missing status/architecture marker: {marker}")
 
-    project = (REPO_ROOT / "docs/project/README.md").read_text(encoding="utf-8")
-    for marker in ("product-positioning-and-value.md", "review-question-map.md", "project-fact-provenance.md"):
-        if marker not in project:
+    project_readme = (REPO_ROOT / "docs/project/README.md").read_text(encoding="utf-8")
+    for marker in ("project.md", "project-fact-provenance.md", "Project 文档入口"):
+        if marker not in project_readme:
             errors.append(f"docs/project/README.md missing project navigation marker: {marker}")
 
-    positioning = (REPO_ROOT / "docs/project/product-positioning-and-value.md").read_text(encoding="utf-8")
-    for marker in ("通用 Agent 宿主", "差异化设计", "Current", "Target", "待证明"):
-        if marker not in positioning:
-            errors.append(f"product positioning missing boundary marker: {marker}")
-
-    review_map = (REPO_ROOT / "docs/project/review-question-map.md").read_text(encoding="utf-8")
-    for marker in ("产品与立项", "Knowledge / RAG / GraphRAG", "Agent Runtime / LangGraph", "Current 工程事实", "团队与个人贡献"):
-        if marker not in review_map:
-            errors.append(f"review question map missing coverage marker: {marker}")
+    project = (REPO_ROOT / "docs/project/project.md").read_text(encoding="utf-8")
+    for marker in (
+        "为什么不直接用 Dify、Coze",
+        "项目是怎样发展到今天的",
+        "团队是什么形态，我在里面做了什么",
+        "相比通用方案，我们今天到底证明了什么",
+        "如果我是大厂面试官，我会继续追问什么",
+        "Current",
+        "Target",
+        "Unknown",
+    ):
+        if marker not in project:
+            errors.append(f"project.md missing coverage marker: {marker}")
 
     provenance = (REPO_ROOT / "docs/governance/project-fact-provenance.md").read_text(encoding="utf-8")
     for marker in ("PF-001", "PF-020", "PF-024", "PF-028", "Target / 产品价值假设", "Unknown / 未恢复"):
