@@ -1,106 +1,62 @@
 # 05 Capability & Skill（专业能力与技能）
 
-<!-- status: design-baseline-v1; implementation: not-authorized; deepening: cross-module-consistency-v2 -->
+<!-- status: design-baseline-v1; implementation: not-authorized; deepening: cross-module-consistency-v2; detail-design: candidate-v1 -->
 
 ## Part A — Human Narrative
 
-### 这个模块解决的不是“怎么多接几个 Tool”，而是研究成果怎样变成可靠的专业能力
+### 这个模块保护的是“专业语义”，不是函数名
 
-Zuno 的法律能力可能来自论文算法、规则系统、Prompt、大模型、微调模型、知识图谱、外部 API、MCP 或若干步骤的组合。真正需要稳定的不是某个 Python 函数名字，也不是某个模型供应商，而是：**这项能力到底承诺完成什么专业任务、接受什么输入、返回什么结果、依赖什么证据、在哪些条件下可信、失败时怎样表达，以及换 Provider 以后语义有没有改变。**
+法律智能系统里，一个函数能被调用并不代表它构成稳定能力。今天叫 `extract_events()`，明天换成另一个模型或规则引擎，如果输入要求、输出含义、证据要求、失败方式和不确定性都改变，上层仍按旧语义使用，就会产生比 API 报错更危险的“静默语义漂移”。
 
-如果这层边界不存在，研究代码很容易直接散落在 Agent Prompt、Tool wrapper 和业务服务里。Planner 只看到一堆名字，却不知道执行器真正能做什么；测试也很难区分“模型挂了”“能力退化”“检索证据不足”“计划写错了”到底是哪一种问题。
+因此 05 的核心是：**Capability = 稳定专业语义**。它定义“这项能力解决什么问题、需要什么输入和证据、输出能被怎样解释、失败时是什么含义”，再允许一个或多个 Provider / Skill 实现这个语义。
 
-专业能力与技能模块就是研究成果进入工程系统的稳定出口。
+### 为什么研究成果不能直接变成生产 Skill
 
-### 用“冲突检测能力”理解 Research-to-Capability（研究成果工程化）
+研究代码通常为了验证方法，输入假设、数据格式、容错、版本、权限和异常语义都不完整。把一个 notebook、脚本或 Prompt 文件直接注册成“能力”，Planner 就会开始依赖它，却没有办法知道它在哪些材料、任务和风险条件下可靠。
 
-假设团队有一个研究算法，可以从原告陈述、被告陈述和证据中识别时间或金额冲突。Notebook 上的 Demo 能跑，并不等于它已经可以进入产品。
+更稳妥的路径是 Research Artifact → Capability Contract → Versioned Provider → Conformance → Evaluation → Eligibility。研究成果可以很快进入实验，但只有 Contract、测试和质量证据都足够时才成为可被 Runtime 规划依赖的能力。
 
-第一步要先定义专业语义：输入需要哪些材料和证据；输出是哪些冲突候选；是否返回来源位置和不确定性；它只识别文本层冲突，还是可以判断法律上的矛盾；缺少关键材料时应该返回 `insufficient evidence` 还是猜一个答案。
+### 为什么 Capability 和 Provider 必须分开
 
-第二步才是把具体实现绑定到这份定义。实现可能是规则 + 模型，也可能是外部服务。Provider 必须通过 Conformance（契约一致性验证），证明输入输出、错误类型和边界行为都符合 Capability Contract。
+“事件抽取”是专业语义；某个大模型 Prompt、规则引擎、微调模型或外部服务只是实现方式。Provider 可以替换，但 CapabilityVersion 的语义不能因为实现换了就悄悄变化。
 
-第三步是通过法律任务评测和适用范围判断当前 Eligibility（可用资格）。只有被证明适合某类任务的 Provider，才进入 Runtime 可选集合。
+这让 Planner 面对的是稳定边界：它需要“输入一组材料，返回带来源和不确定性的事件候选”，而不是“调用某个厂商模型”。当 Provider 改版时，05 先验证它是否仍满足同一个 Capability Contract。
 
-```mermaid
-flowchart LR
-  R[Research Artifact（研究成果）] --> C[Capability Definition（能力定义）]
-  C --> V[Capability Version（能力版本）]
-  V --> P[Provider Binding（实现绑定）]
-  P --> T[Conformance（契约验证）]
-  T --> E[Evaluation（质量评测）]
-  E --> Q[Eligibility（可用资格）]
-  Q --> X[Runtime / Host 调用]
-```
+### Conformance 为什么不是质量证明
 
-这条链把“论文里有算法”和“产品里可依赖的能力”明确分开。
+Provider Conformance 主要证明结构和最低行为契约成立，例如输入 schema、输出 schema、必填 provenance、错误分类、确定性 guard 和安全边界没有被破坏。
 
-### Capability（专业能力）、Skill（技能）和 Provider（实现提供方）到底是什么关系
+但 **Provider Conformance != task quality**。一个 Provider 可以 100% 返回合法 JSON，却在真实法律材料上经常漏事件、错配主体或错误判断适用性。质量由 09 的 Eval、人工 Reviewer 和真实任务证据证明。
 
-Capability 描述稳定的专业语义，例如事件抽取、事件对齐、冲突检测、事实—法条对应、证据充分性判断、类案检索或法律适用性分析。它回答“这项能力承诺完成什么专业任务”。
+### Planner 为什么必须知道能力边界
 
-Skill 更接近可复用的实现或组合包装。例如，一个“冲突检测 Skill”可能先做实体 / 事件抽取，再调用规则比较，再用模型解释冲突原因。Skill 可以被重构、拆分或替换；如果它没有独立业务生命周期，就不应该因为仓库里有一个 `skills/` 目录而升级成新的 Canonical Domain Object（正式领域对象）。
+如果 Planner 只看到一个“万能分析工具”，很容易生成一个巨大 Step：“阅读全部 300 份材料、抽取事件、判断争议、找法条、写最终意见”。这样的 Step 无法局部验收、无法并行，也无法知道失败应该 Retry 还是 Replan。
 
-Provider 是某个 Capability Version 的具体实现来源。一个 Capability 可以同时绑定多个 Provider，用于不同成本、时延、质量或部署条件。
+05 要向 04 暴露 task class、输入规模边界、所需 Evidence / Readiness、side-effect declaration、成本 / 时延类别和限制，让 Planner 把复杂任务拆成执行器真正能完成和验收的 Step。
 
-因此：
+### Evidence requirement 为什么属于 Capability Contract
 
-```text
-Capability = 稳定专业语义
-Skill      = 可复用实现 / 组合方式
-Provider   = 具体实现来源
-```
+专业能力不是只看文本参数。事实—证据对齐、冲突检测、法条适用性等能力，都可能要求特定 DocumentVersion、EvidenceCandidate、CitationLineage 或 Knowledge Readiness。
 
-三者不能简单等同。
+所以 Capability Contract 必须说明最低 evidence requirement。输入数据不足时返回 `INSUFFICIENT_EVIDENCE`，而不是让模型“尽量回答”。需要扩大检索范围时由 04 / 03 形成新的任务条件，而不是 05 偷偷读取更多材料。
 
-### 为什么 Capability 的输出只能是 Proposal（候选）
+### 输出为什么只能是 Proposal / Candidate / Observation / Reference
 
-专业能力可以提出：“材料 A 和 B 在付款时间上存在冲突”“这段文字可能支持主张 C”“这些法条可能适用”。它不能直接写入正式 Finding、Evidence 或 WorkProduct。
+Capability 可以提出 Finding Proposal、Conflict Candidate、ApplicableLaw Candidate 或结构化 Observation，但不能因为专业算法“很确定”就直接写 Canonical Domain State。
 
-原因不是不信任算法，而是专业能力只看到自己负责的一部分上下文。正式业务结果还需要材料版本、来源稳定性、当前权限、必要人工决定、并发版本和正式准入语义。
+02 是正式业务准入边界。05 的输出携带 CapabilityVersion、ProviderVersion、输入与 evidence refs、不确定性和失败信号，供 04 Step Acceptance 和 02 Formal Admission 判断。
 
-所以 Capability 输出的是 Proposal / Candidate / Observation / Reference（候选、观察、引用），02 法律领域再决定其中哪些最终成为正式业务事实。
+### Skill 为什么不是新的业务对象
 
-### EvidenceCandidate（证据候选）来自知识，Capability 不能重新发明一套证据真相
+Skill 更像实现 / 组合方式：一个 Capability 可以由多个 Skills、模型调用、规则函数和检索步骤组成；一个 Skill 也可能服务多个 Capability。把每个 Skill 都升级成正式业务实体会让数据库跟代码目录一起膨胀。
 
-03 知识与证据负责从已就绪材料中检索 `EvidenceCandidate（证据候选）` 和 `CitationLineage（检索引用链）`。05 可以消费这些候选并进行专业分析，但不能把自己的中间结果重新命名成“正式证据”。
+因此 Skill identity 用于实现、部署和 provenance，不自动进入七对象 Canonical Legal Kernel。只有真正拥有长期业务身份和生命周期的概念才进入 02。
 
-例如，冲突检测能力可以输出：
+### Provider failure 和 semantic drift 为什么不能混在一起
 
-```text
-conflict_candidate
-+ supporting EvidenceCandidate refs
-+ capability version
-+ uncertainty / reason
-```
+临时 503、超时、限流说明“这次实现没跑起来”，计划可能仍然正确，可以 Retry 或切换经过验证的等价 Provider。
 
-然后由 02 决定是否接纳相关材料为正式 Evidence、是否形成 Finding。
-
-这条边界避免每个专业算法都发明自己的“事实表”。
-
-### Planner 为什么必须知道能力边界，而不是只看到一个函数名
-
-如果 Planner 只知道有一个 `legal_analysis()`，它可能生成一个巨大 Step：“读取所有材料、识别事实、寻找法条、判断争议、生成结论并提交结果”。这种 Step 无法可靠验收，也无法判断失败究竟发生在哪里。
-
-Capability Definition 应向 04 运行控制暴露足够的信息：适用任务、前置条件、输入类型、输出类型、证据要求、是否需要某种 Knowledge Readiness、成本 / 时延级别、是否允许并行、当前资格和已知限制。
-
-Planner 不需要知道 Provider 内部 prompt 或算法，但必须知道：**这项能力现在能不能完成这一步，结果怎样验收。**
-
-### 能力版本为什么不能静默覆盖
-
-假设冲突检测 V1 只识别“文字层明显矛盾”，V2 增加“时间区间推理”，V3 又改成“只返回高置信冲突”。如果 Provider 直接覆盖旧版本，上层计划和历史结果就无法知道当时到底使用了什么语义。
-
-因此 Capability Version 需要不可变身份；Provider 升级后重新做与变化风险相匹配的 Conformance / Eval。旧运行继续引用原版本；新运行根据当前 eligibility 选择新版本。
-
-版本弃用也不能等同删除历史。已经形成正式结果时，02 只需要保存足够的 capability / provider reference 解释当时来源，不要求旧 Provider 永久在线。
-
-### Provider 临时故障和 Capability 语义变化为什么不是同一种失败
-
-如果 Provider 503、限流或短时不可用，而 Capability Contract、输入和证据要求都没有变化，可以在预算和安全允许时 Retry（重试）或切换到已经验证等价的 Provider。
-
-如果输入 schema、输出含义、适用范围、证据要求或副作用声明发生变化，原计划依赖的能力假设就失效。这时应该通知 04 Replan（重规划），而不是猜新参数或静默换成语义不同的 Provider。
-
-所以能力层必须区分：
+语义漂移则说明实现不再满足原 Capability Contract，例如输出字段含义改变、适用范围缩小、证据 requirement 变化。此时：
 
 ```text
 provider execution failure
@@ -108,257 +64,173 @@ provider execution failure
 capability semantic drift
 ```
 
-### 它和 Model Gateway（模型网关）为什么不能合并
+后者应暂停 Eligibility，通知 04 re-resolve / Replan，而不是简单重试同一个 Step。
 
-07 回答“怎样安全、统一地调用一个模型角色”；05 回答“怎样完成一个专业任务”。
+### Fallback 为什么必须经过等价性证明
 
-一个事件抽取 Capability 可以由大模型实现，也可以由微调模型、规则或传统算法实现。如果把 Capability identity 直接绑定某个模型名，替换模型就等于改变业务 Contract。
+“模型 A 挂了，切模型 B”只有在 Provider B 对当前 CapabilityVersion 的 Conformance、质量下限、安全资格和输入能力都满足时才是 fallback。否则只是换成一个语义不同的实现。
 
-因此 Capability 可以调用 Model Gateway，但 Model Gateway 不定义法律专业语义。
+如果替代 Provider 只能完成较弱任务，必须显式改变 task requirement / Plan；不能在 Gateway 或 Capability Adapter 内部静默降级，再把结果包装成原能力成功。
 
-### 它和 Tool Runtime（工具运行）为什么不能合并
+### Capability Eligibility 为什么是动态事实
 
-专业能力回答“怎样分析、应该提出什么候选”；06 回答“一个现实动作如何安全发生”。
+一个 Provider 曾经通过测试，不代表永远可用。模型版本升级、Prompt 改动、数据政策变化、质量回归、供应商下线或某类输入事故都可能使它从 ELIGIBLE 变成 RESTRICTED / SUSPENDED。
 
-Capability 的成功可能只是“得到可信冲突候选”；Tool Effect 的成功意味着“现实世界的动作已经被确认”。前者通常允许重新计算，后者可能需要幂等和对账。
+Eligibility 绑定 CapabilityVersion、ProviderVersion、支持的 task / scope、质量证据和必要 Security 条件。历史输出仍保留当时 provenance，未来调用按当前资格选择。
 
-如果某个 Capability 内部确实需要有现实副作用的 Tool，必须通过 06 执行并消费 EffectReceipt，不能因为调用发生在 Skill 内部就绕开 Tool Runtime。
+### 为什么 Capability cache 很容易制造旧事实
 
-### 研究成果什么时候值得进入一级 Capability Registry（能力注册表）
+昂贵专业调用可以缓存，但 cache key 如果只用 input text，就可能把旧 DocumentVersion、旧 KnowledgeGeneration、旧 CapabilityVersion 或旧 Security scope 的结果带进新任务。
 
-不是每个 helper、Prompt、规则函数都值得注册。
+缓存必须绑定真正影响专业语义的版本：CapabilityVersion、ProviderVersion、规范化 input refs、Evidence / DocumentVersion / KnowledgeGeneration refs、必要配置与安全范围。结果晚到或缓存命中后，消费者仍要检查当前 Plan 和 Domain freshness。
 
-至少当某项能力需要被多个 Agent / Step 复用、需要独立版本、需要 Provider 替换、需要独立质量评测、需要 Planner 感知、需要弃用 / 回滚或需要明确安全前置条件时，才值得形成稳定 Capability identity。
+### 内部模型和内部 Tool 为什么仍然属于别的 Owner
 
-如果只是一个局部实现细节，就继续留在 Skill / code 内部。这样可以防止 Registry 变成“所有函数的目录”。
+一个 Capability 可以内部调用 07 模型，也可以需要 06 Tool。但“包在 Capability 里”不能让它绕过模型外发、预算、外部 Effect、审批或 Reconciliation。
 
-### 一份 Capability Contract 为什么远远不只是输入输出 Schema
+05 只组合专业语义。模型调用事实仍归 07，现实 Effect 仍归 06，Authorization / Approval 仍归 08。Capability output 通过 refs 关联这些事实。
 
-输入输出结构只能证明“数据长什么样”，不能证明“这项专业能力在什么条件下有资格使用”。例如同一个冲突检测接口都返回 `conflicts[]`，但一种实现要求双方材料都齐全，另一种只做单方文本内部矛盾检测；如果上层只看 JSON schema，就会把两种完全不同的专业含义当成等价 Provider。
+### Research-to-Capability 为什么需要可回滚版本
 
-因此能力契约还要说明前置条件、最低证据要求、允许的材料范围、结果的不确定性如何表达、哪些情况必须返回证据不足、是否可能触发工具副作用、成本和时延大致属于什么级别、哪些数据类别允许进入该实现，以及结果应该怎样被 Step Acceptance 验收。
+研究迭代很快，新的算法未必比旧的稳定。CapabilityVersion 激活后不应该被原地覆盖；升级创建新 version，Provider binding 和 Eligibility 可以逐步切换。
 
-这些信息不是为了把 Capability Registry 写成一本说明书，而是为了让 Planner 能够做正确选择，也让替换 Provider 时知道“什么变化属于实现替换，什么变化其实已经改变了专业语义”。
+如果评测发现回归，可以停止新版本 Eligibility 并恢复旧的已验证 Provider，而不修改已经由旧版本产生的历史输出和正式 Domain 结果。
 
-### 组合 Skill 为什么不能把内部依赖藏起来
+### 专业失败为什么必须是 typed failure
 
-一个 Skill 可能同时调用检索、两个模型角色、一个规则引擎和一个外部工具。从使用者角度，它仍然可以表现成一个 Capability；但从恢复、安全和版本追溯角度，内部关键依赖不能消失。
+`UNSUPPORTED_INPUT`、`INSUFFICIENT_EVIDENCE`、`PROVIDER_FAILURE`、`SCHEMA_MISMATCH`、`SEMANTIC_DRIFT`、`QUALITY_RESTRICTED` 对 Runtime 的含义完全不同。把它们都抛成 Exception，会逼 04 猜 Retry / Replan。
 
-例如冲突检测内部先调用 03 取得 EvidenceCandidate，再调用 07 做结构化抽取，最后调用 06 查询一个外部只读业务状态。最终候选至少要能追溯到本次 CapabilityVersion、输入证据版本和关键子调用引用。否则 Provider 更换、模型降级或外部接口漂移以后，系统只知道“Skill 成功”，却无法解释为什么同一能力前后行为不同。
+05 应返回稳定 failure class 与必要 reason refs，让 04 能按计划假设判断局部 Retry、扩大检索、Replan、Abstain 或 Human Review。
 
-透明不等于把内部所有函数暴露给 Planner。Planner 只需要稳定的能力边界；真正影响正确性、安全、费用或恢复的下游依赖通过引用保留下来即可。
+### 为什么不能每个能力都做成一个微服务
 
-### Conformance、Evaluation、Eligibility 和 Availability 是四层不同的问题
+专业能力很多，但逻辑边界不等于部署边界。默认可在同一 Python backend / worker pool 中通过 typed ports 和 versioned registry 组合；只有独立扩缩容、依赖隔离、安全边界或部署生命周期形成证据时，才按 ADR-0012 考虑物理拆分。
 
-这四个词很容易被压成一个“可用”状态，但它们回答的其实不同。
-
-Conformance（契约一致性）回答 Provider 是否遵守当前 CapabilityVersion 的输入输出和失败语义；Evaluation（质量评测）回答它在代表性任务上做得怎么样；Eligibility（使用资格）回答在某类任务、环境和政策下是否允许把它放进候选集合；Availability（当前可调用性）则是此刻 Provider 是否在线、配额是否可用、依赖是否健康。
-
-一个 Provider 可以契约一致但质量不够，所以没有资格；也可以质量和资格都满足，但今天服务暂时 503；还可以曾经有资格，后来因为质量回归被暂停。把这些状态拆开以后，上层才能决定是 Retry、切等价 Provider、Replan，还是根本不应该继续。
-
-### “证据不足”“输入不支持”和“Provider 故障”为什么必须返回不同结果
-
-专业能力最怕把所有失败都包装成空列表或 `success=false`。没有检测到冲突，可能是真的没有冲突，也可能是关键附件缺失；一个日期解析失败，可能是 Provider 临时异常，也可能是当前输入格式根本不在能力适用范围内。
-
-因此能力层需要 typed failure（类型化失败）：证据不足时让 04 或 03 决定补证据；输入不支持时让 Planner 调整步骤或能力选择；Provider 短暂故障才考虑有界重试；质量门不满足时应拒绝把结果当成合格专业输出；语义漂移则直接使当前能力解析失效并触发重规划。
-
-这种区分会让失败路径看起来更复杂，却能避免最危险的一种“假成功”：系统返回一个格式正确的空结果，上层误以为专业分析已经完成。
-
-### 能力弃用、回滚和历史结果怎样同时成立
-
-CapabilityVersion 被弃用，只意味着未来默认不再选择它，或者需要额外资格才能继续使用，不代表历史上由它参与生成的正式结果需要被重写。
-
-如果 V3 发生质量回归，可以暂停 V3 的新调用并把当前选择回滚到仍然有资格的 V2；已经完成的 V3 调用是否影响某些正式 WorkProduct，要由 09 的质量证据、02 的正式依赖和人工复核决定，而不是 Registry 一键“撤回历史”。
-
-历史 provenance 只需要保留足够的 CapabilityVersion / ProviderVersion /关键输入引用，让人知道当时用了什么；不要求把每个已经弃用的 Provider 永久运行，也不允许为了方便回滚把旧版本原地改成新实现。
-
-### 论文、专利或 Notebook Demo 什么时候仍然只是研究成果
-
-研究成果进入仓库、论文指标很好、甚至 Demo 能成功演示，都只能证明“这个方法值得继续工程化”，不能证明它已经是可被 Agent 依赖的 Runtime Capability。
-
-只有当专业任务边界被写清、CapabilityVersion 有稳定身份、Provider 可以按契约调用、Conformance 和代表性 Eval 有结果、当前任务范围存在明确 Eligibility，而且失败与安全语义已经接入系统，才算真正完成 Research-to-Capability 的工程转化。
-
-这条门槛尤其适合 Zuno 这种希望把科研成果转成专业能力的平台：研究创新可以快速进入候选区，但正式运行时只依赖经过工程化证明的能力，而不是直接把实验代码接进 Planner。
-
-### 从一项新研究进入项目开始，工程团队真正要做哪些事
-
-假设课题组刚完成一个新的“类案适用性判断”方法。最容易的接入方式，是把 Notebook 包成 HTTP 接口，然后在 Agent Prompt 里写一句“需要类案时调用它”。这种方式 Demo 很快，但一旦进入真实项目，问题会立刻出现：它需要什么案件事实作为输入？候选类案从哪里来？输出是“相似”还是“法律上可参考”？证据不足时怎么表示？某个模型版本更换以后历史结果怎样解释？
-
-能力工程化首先应该把研究结论翻译成可审查的专业承诺，再决定实现。团队需要和领域人员确认适用范围，准备代表性测试集，定义输出中哪些只是建议、哪些来源必须保留，明确成本和数据外发限制，再用一个或多个 Provider 实现同一 CapabilityVersion。只有这些条件完成以后，Planner 才能把“类案适用性判断”作为一个可规划、可验收的 Step，而不是把研究代码当成黑盒魔法。
-
-这条过程看起来比直接接 API 慢，但它把未来最昂贵的问题提前暴露出来：专业语义有没有说清，Provider 能不能替换，失败能不能区分，质量怎么回归，历史结果怎么解释。Research-to-Capability 的价值就在于把“科研成果有价值”变成“工程系统可以长期依赖它”。
-
-### 能力失败时，先判断失败的是专业前提、实现还是质量
-
-在真实任务里，一个 Capability 没有给出可用结果，并不意味着“再调用一次就好”。例如冲突检测没有产出，可能因为双方材料不完整，这是专业前提不满足；可能因为 Provider 暂时超时，这是实现故障；也可能因为 Provider 返回了结果但 09 发现质量回归，这是资格问题。三种情况需要完全不同的控制动作。
-
-专业前提不满足时，05 应把缺失条件明确返回，让 03 补证据或 04 改计划；Provider 短时故障且存在经验证的等价实现时，才适合 Retry 或 fallback；质量或语义已经不再满足 CapabilityVersion 时，应暂停 Eligibility 并让当前计划重新解析能力。把这些失败都压成 `tool_error`，会让 Runtime 要么无限重试，要么错误降级。
-
-这也是为什么 05 既不是“工具目录”也不是“模型路由层”。它真正拥有的是专业语义与当前资格，让上层知道**什么工作目前可以被谁以什么质量承诺完成**。
+研究团队需要的是可替换和可验证，不是服务数量。
 
 ### 当前、目标与缺口
 
-Current 代码中已经存在能力、工具、模型 Provider、Skill 和跨模块 Contract 相关实现，但当前证据还不能证明完整 Capability Registry、Provider Conformance、Eligibility、版本兼容和 Planner Awareness 已经成为生产 Current。
+Current 仓库已有 capability / skill / tool / model provider 与跨模块 Contract 基础，但完整 Capability Registry、Conformance suite、Eligibility lifecycle 和法律质量证据尚未由专项 Current Evidence 证明。
 
-Target 是 Research Artifact → Versioned Capability → Provider Binding → Conformance / Eval → Eligibility → Runtime / Host 调用的完整工程链。
-
-Gap 包括 Capability Registry、法律任务级 Conformance / Eval、Provider 等价性、版本升级 / 回滚、Planner capability awareness、研究成果到 Capability 的 E2E、能力级成本 / 时延测量，以及哪些“Skill”真的需要独立生命周期的证据。
+Target 是稳定 Capability semantic contract + immutable version + Provider binding + Conformance + Eval + Eligibility + Planner Awareness。Gap 包括 Registry、版本兼容、provider equivalence、法律 Eval、Planner resolution、deprecation / rollback、Research Artifact → Capability E2E 和 measurement evidence。
 
 ## Part B — Engineering / Agent Reference
 
 ### B1 Scope / Global Invariants
 
-1. Capability Contract 与 Provider 实现分离；Provider 更换不得静默改变专业语义。
-2. Capability 输出只允许 Proposal / Candidate / Observation / Reference，不直接提交 Canonical Domain State。
-3. EvidenceCandidate / CitationLineage 由 03 提供；正式 Evidence / Finding / WorkProduct 由 02 准入。
-4. Planner 必须基于当前 Capability boundary 生成可验收 Step，不能假设万能执行器。
-5. Capability Version 有稳定身份；激活使用中的语义不能被 Provider 原地覆盖。
-6. Provider Conformance != task quality；通过 schema 验证不等于法律质量达标。
-7. 临时 Provider failure 可 Retry；semantic / schema / applicability drift 触发 capability re-resolution / Replan。
-8. Capability 不直接执行未经 06 / 08 控制的现实副作用。
-9. Skill 默认是实现 / 组合层概念，不自动升级为 Canonical Domain Object。
-10. Capability 是否值得长期保留必须接受 09 的质量 / 成本测量。
+1. Capability = 稳定专业语义；Provider / Skill 是实现。
+2. CapabilityVersion 激活后语义不可原地修改。
+3. Provider Conformance != task quality。
+4. 输出只产生 Proposal / Candidate / Observation / Reference，不直接提交 Domain。
+5. Planner 必须知道 supported task class、preconditions、evidence requirement、规模与 side-effect 边界。
+6. EvidenceCandidate / CitationLineage 由 03 提供；正式 Evidence / Finding / WorkProduct 由 02 准入。
+7. Provider transient failure 可 Retry；semantic / schema / applicability drift 触发 re-resolution / Replan。
+8. Provider fallback 必须经过当前 CapabilityVersion 的等价性 /资格证明。
+9. 05 内部模型 / Tool 仍受 07 / 06 / 08 控制。
+10. Skill 不自动升级为 Canonical Domain Object。
+11. Capability 复杂度和质量接受 09 测量。
 
 ### B2 Responsibility / Ownership
 
-**Owns**：Capability identity / version、semantic purpose、input / output contract、preconditions、evidence requirement、uncertainty / failure semantics、Skill / provider binding、provider conformance、capability eligibility、deprecation / compatibility policy、专业 Proposal / Candidate / Observation / Reference。
+**Owns**：CapabilityDefinition / CapabilityVersion、semantic purpose、supported task class、input/output contract、preconditions、evidence requirement、uncertainty / failure semantics、ProviderBinding、ConformanceResult、EligibilityDecision、compatibility / deprecation、InvocationIdentity、typed professional outputs。
 
-**Does not own**：02 的 Domain Admission；03 的 Knowledge Readiness / CitationLineage authority；04 的 Plan；06 的 Tool Effect truth；07 的 model routing；08 的 Authorization / Approval；01 的 publication。
+**Does not own**：Domain Admission、Knowledge Readiness、Plan、Tool Effect、Model routing / usage、Authorization / Approval、Publication。
 
 ### B3 Upstream / Downstream
 
-上游：
+上游：03 DocumentVersion / EvidenceCandidate / CitationLineage / Readiness refs；04 StepRequirement / budget / causation；08 scope / provider / tool security；07 model result；06 controlled tool result。
 
-- 03 提供 DocumentVersion / EvidenceCandidate / CitationLineage / Readiness refs；
-- 04 提供 Step requirement、预算和调用上下文；
-- 08 提供数据 Scope / provider / tool 安全决定；
-- 07 提供模型调用结果；
-- 06 提供必要的只读或受控 Effect result。
-
-下游：
-
-- 向 04 返回 capability metadata、eligibility 和 typed professional output；
-- 向 02 返回可以进入正式准入判断的 Proposal / evidence refs；
-- 向 09 输出 conformance / quality / cost signals。
+下游：04 capability metadata / eligibility / typed output；02 Proposal / evidence refs；09 conformance / quality / cost signals。
 
 ### B4 Authoritative Facts / Core Objects
 
-核心对象族：CapabilityDefinition、CapabilityVersion、CapabilityRequirement、ProviderBinding / ProviderVersion、ConformanceResult、EligibilityDecision / EligibilityReference、SkillCompositionRef、InvocationIdentity、TypedProposal / Candidate / Observation / Reference、Deprecation / Compatibility metadata。
-
-具体 Registry 表结构、API 与存储尚未冻结。
+CapabilityDefinition、CapabilityVersion、CapabilityRequirement、ProviderBinding、ProviderVersionRef、ConformanceProfile / Result、EligibilityDecision、SkillCompositionRef、CapabilityInvocation、TypedProposal / Candidate / Observation / Reference、CompatibilityPolicy、DeprecationFact。
 
 ### B5 Cross-boundary Contracts
 
-#### Capability Definition / Version
+#### CapabilityVersion
 
-至少表达：identity、version、semantic purpose、supported task class、input / output schema、preconditions、required evidence / readiness、uncertainty contract、failure taxonomy、side-effect declaration、cost / latency class、security requirements、compatibility policy。
+至少表达 identity、semantic version、purpose、supported task classes、input/output schema refs、preconditions、evidence requirement、uncertainty contract、failure taxonomy、side-effect declaration、cost / latency class、security requirements、compatibility policy。
 
-#### Provider Binding / Conformance
+#### ProviderBinding / Conformance
 
-绑定 capability version 与具体 implementation / provider version；Conformance 至少验证 schema、required semantics、deterministic guards、known failure behavior 和 version compatibility。
+绑定 CapabilityVersion 与 ProviderVersion / SkillComposition；Conformance 验证 schema、required semantics、deterministic guards、known failures、side-effect declaration 与兼容范围。
 
-#### Capability Eligibility
+#### EligibilityDecision
 
-表达某个 capability/provider 组合在指定 scope / task class / environment 下当前是否可使用。Eligibility 不等于一次 invocation 已成功。
+说明某 CapabilityVersion + ProviderBinding 在指定 environment / task class / scope / quality profile 下当前是 ELIGIBLE / RESTRICTED / INELIGIBLE / SUSPENDED。它不证明某次 Invocation 已成功。
 
-#### Capability Output
+#### CapabilityOutput
 
-只输出 Proposal / Candidate / Observation / Reference，并携带 capability version、provider ref、input / evidence refs、uncertainty / failure signal 和必要 provenance。
+绑定 invocation、capability/provider version、normalized input refs、evidence refs、typed payload ref、uncertainty、failure / insufficiency signal、provenance refs。
 
 ### B6 Normal Flow
 
 ```text
 Research Artifact
-→ define Capability semantic contract
+→ define Capability Contract
 → create immutable CapabilityVersion
-→ bind Provider / Skill implementation
-→ run Conformance tests
-→ run task / legal Evaluation
-→ issue Eligibility for supported scope
-→ Planner resolves current Capability
-→ Runtime invokes provider
-→ typed Proposal / Candidate / Observation / Reference
-→ downstream Step Acceptance / Domain Admission when applicable
-→ collect quality / cost evidence
-→ deprecate / upgrade only through new version
+→ bind Provider / Skill composition
+→ Conformance suite
+→ legal/task Evaluation
+→ EligibilityDecision
+→ 04 resolves capability for StepRequirement
+→ CapabilityInvocation
+→ internal 03 / 07 / 06 calls through owned boundaries
+→ typed output
+→ 04 Step Acceptance
+→ optional 02 Formal Admission
+→ 09 quality/cost evidence
 ```
 
 ### B7 State / Lifecycle
 
-最终 enum 未冻结，但至少需要表达：
-
 ```text
-Capability Definition:
-DRAFT → REGISTERED → VERSIONED
-
-Provider Binding:
-BOUND → CONFORMANCE_PENDING → PASSED / FAILED
-
-Eligibility:
-NOT_EVALUATED → ELIGIBLE / RESTRICTED / INELIGIBLE
-ELIGIBLE → DEPRECATED / SUSPENDED when evidence or policy changes
-
-Invocation Result:
-SUCCEEDED
-/ INSUFFICIENT_EVIDENCE
-/ UNSUPPORTED_INPUT
-/ QUALITY_NOT_ESTABLISHED
-/ PROVIDER_FAILURE
+CapabilityVersion: DRAFT → REGISTERED → ACTIVE → DEPRECATED / RETIRED
+ProviderBinding: BOUND → CONFORMANCE_PENDING → CONFORMANT / NON_CONFORMANT
+Eligibility: UNKNOWN → ELIGIBLE / RESTRICTED / INELIGIBLE; ELIGIBLE → SUSPENDED / SUPERSEDED
+Invocation: CREATED → RUNNING → SUCCEEDED / INSUFFICIENT_EVIDENCE / UNSUPPORTED_INPUT / PROVIDER_FAILURE / SEMANTIC_FAILURE
 ```
 
-CapabilityVersion 语义不可原地修改；新语义创建新 version。
+最终 enum 名称可调整，但不同语义不得压成同一个 `FAILED`。
 
 ### B8 Failure Taxonomy
 
-| 失败 | 责任判断 | 默认处理 | 是否影响 Plan |
+| 失败 | Owner | 默认动作 | Runtime 含义 |
 | --- | --- | --- | --- |
-| Provider timeout / 503 | 05 provider adapter / 07 if model-backed | Retry / equivalent provider | 通常否 |
-| schema mismatch | 05 | Reject provider result | 可能，需要 re-resolution |
-| semantic drift | 05 | Suspend eligibility | 是，Replan |
-| unsupported input | 05 | Return unsupported | 是，Planner 需调整 |
-| insufficient evidence | 05 + 03 refs | Return typed insufficiency | 可能扩大 retrieval / review |
-| quality regression | 05 + 09 | Restrict / revoke eligibility | 后续运行需 Replan / provider change |
-| provider unavailable | 05 | approved equivalent fallback / stop | 视等价性 |
-| planner request 超出边界 | 04 + 05 | reject oversized / invalid requirement | 是 |
-| internal model failure | 07 + 05 | model retry / provider fallback | 通常先局部处理 |
-| internal Tool effect unknown | 06 | Reconcile | 05 不自行重试 Tool |
-| security scope denied | 08 | deny / review | 是或终止 |
+| Provider timeout / 503 | 05 adapter / 07 if model | bounded Retry / equivalent fallback | Plan 通常仍有效 |
+| schema mismatch | 05 | reject result | re-resolution / Retry if safe |
+| semantic drift | 05 | suspend eligibility | Replan |
+| unsupported input | 05 | typed unsupported | Planner 调整 |
+| insufficient evidence | 05 + 03 refs | typed insufficiency | more retrieval / Human / Replan |
+| quality regression | 05 + 09 | restrict/suspend | future Replan/provider change |
+| planner oversized request | 04 + 05 | reject requirement | split / Replan |
+| internal Tool unknown | 06 | Reconcile | 05 不重试 Tool |
+| security denied | 08 | deny | Replan / stop |
 
 ### B9 Retry / Replan / Reconcile / Recovery / Idempotency
 
-**Retry**：Provider 临时失败且 capability semantic contract、输入、证据、当前资格和安全条件均未变化。
+Retry 只适用于 semantic contract、输入、Evidence、Eligibility 和 Security 都未变化的 transient execution failure。Replan 用于 capability availability / semantics / preconditions / evidence assumption 失效。
 
-**Replan**：schema / semantics / preconditions / capability availability / task assumptions 改变，导致原计划不能继续。
+05 不拥有现实 Effect Reconcile；内部 Tool 交 06。恢复依赖 CapabilityVersion + ProviderBinding + InvocationIdentity + input/evidence refs + Eligibility / child receipts，不凭同名函数重放。
 
-**Reconcile**：05 本身不拥有现实 Effect Reconcile；内部副作用工具必须经过 06。
-
-**Recovery**：按 capability version、provider version、invocation identity、input / evidence refs 和 conformance / eligibility 恢复调用上下文，不能只凭“同名 Skill”重放。
-
-确定性或昂贵调用可以使用 stable invocation identity 做缓存 / duplicate suppression，但缓存键必须绑定 capability version、relevant input / evidence versions 和 security scope，避免把旧结果静默用于新材料。
+缓存和 duplicate suppression 使用独立 capability-invocation namespace，不能与 StepRun、ModelAttempt、ToolAction、Admission 共用 idempotency key。
 
 ### B10 Security / Approval / Audit
 
-Capability definition 可以声明所需数据类别、模型外发、工具权限和其他前置条件，但 Authorization truth 由 08 决定。
-
-Capability Provider 不长期持有 Secret；通过 07 / 06 / Platform 的受控引用使用。
-
-如果 Skill 需要高风险 Tool Effect，必须经过 08 Authorization / Approval / Audit gates 和 06 Effect control；不能因为它被包在 Capability 内部而绕过。
-
-专业输出进入普通 Trace 时遵守数据分类和脱敏；正式业务依据仍由 02 / 03 的 durable facts 保护。
+CapabilityDefinition 声明 security / egress / tool requirements，08 决定当前授权。Provider 不长期持有 Secret。内部高风险 Tool 必须经过 08 + 06；被 Capability 包装不能形成安全旁路。
 
 ### B11 Persistence / Transaction Boundaries
 
-是否建立 Capability Registry PostgreSQL 表，取决于是否需要跨进程统一 version / eligibility / deprecation。第一原则先冻结 identity、version、contract、conformance 和 eligibility 语义。
+是否落 PostgreSQL Registry 取决于是否需要跨进程一致 version / binding / eligibility；无论物理实现如何，immutable version、binding history、eligibility evidence ref 和 invocation causation 必须可恢复。
 
-大型中间产物、模型 chain-of-thought 或临时 provider payload 不默认进入领域数据库。正式 Domain state 只由 02 Admission 创建。
-
-Capability Registry 与 Runtime Checkpoint、Domain Store、Model usage store 不做默认 2PC；通过 version / invocation / evidence refs 关联。
+Registry 不与 Runtime Checkpoint、Domain Store、Model usage、Tool effect 做 2PC。大模型原始 payload、chain-of-thought 和大型中间对象不默认持久化到 Capability Registry。
 
 ### B12 Observability / Evaluation
 
-至少观测：capability identity / version、provider ref、input / output schema hash、precondition outcome、evidence sufficiency、latency、cost、failure class、quality signal、downstream Step Acceptance、Human Review / Domain Admission outcome（仅引用）。
+至少观测 capability/version、provider ref、schema / contract hash、precondition outcome、evidence sufficiency、latency、cost、failure class、quality signal、fallback、downstream Step Acceptance / Human Review / Domain Admission refs。
 
-评测必须区分：
+评测明确区分：
 
 ```text
 Provider 调用成功
@@ -370,64 +242,112 @@ Capability contract 满足
 正式业务结果被接受
 ```
 
-支持同一 Capability 的 Provider A/B、版本回归、成本 / 时延 / 质量 Pareto 比较和 Research-to-Capability 验证。
-
 ### B13 Current / Target / Gap / Evidence
 
-**Current**：仓库已有 capability / skill / tool / model provider 和跨模块 Contract 基础，但完整 module-level Capability Registry / Conformance / Eligibility 尚未由专项证据证明。
+**Current**：存在 capability / skill / provider / tool / model 的实现表面和 Contract 基础；完整 Registry / Conformance / Eligibility 与质量证明仍是 Gap，具体以 `docs/evidence/` 和代码测试为准。
 
-**Target**：稳定专业语义 + 版本化 Provider + Conformance + Evaluation + Eligibility + Planner Awareness。
+**Target**：versioned semantic Capability + Provider Conformance + Evaluation + Eligibility + Planner Awareness。
 
-**Gap**：Registry、version compatibility、provider conformance suites、法律 Eval、Planner capability resolution、deprecation / rollback、Research Artifact → Capability E2E、provider equivalence 和 measurement evidence。
+**Gap**：Registry schema、provider equivalence、compatibility / deprecation、legal Eval、Planner resolution、rollback、Research-to-Capability E2E、真实质量 / 成本测量。
 
-**状态**：design available；implementation available 与 quality proven 需另行证据。
+**状态**：detail design candidate available；implementation / quality proven not established。
 
 ### B14 Code / Database / Migration Constraints
 
-- 不为每个研究算法创建独立微服务。
-- 不让 Provider SDK / 模型 SDK 直接暴露给所有上层；通过 Capability / Gateway typed ports。
-- 不把厂商模型名或某个 Skill 文件路径作为 Capability identity。
-- 不因为存在 `skills/` 目录就建立新的业务实体和状态机。
-- 先冻结 capability identity / version / contract / eligibility，再设计 registry schema 与 Migration。
-- Provider fallback 必须是经过验证的等价路径，禁止静默语义降级。
-- 物理拆分继续受 ADR-0012 Evidence Gate 约束。
+- 不为每个算法建微服务。
+- Provider SDK / 模型 SDK / Tool SDK 不直接暴露给所有上层。
+- 厂商模型名、函数名、Skill 路径不作为 Capability identity。
+- 不因为存在 `skills/` 目录就创建新领域实体。
+- Provider fallback 必须是验证过的等价路径。
+- 物理拆分继续受 ADR-0012 Evidence Gate。
+
+#### B14.1 Detail Freeze Candidate：CapabilityVersion 字段组
+
+至少包含：`capability_id`、`capability_version`、`semantic_contract_version`、`purpose`、`supported_task_classes`、`input_schema_ref/hash`、`output_schema_ref/hash`、`precondition_spec_ref`、`evidence_requirement_ref`、`uncertainty_contract_ref`、`failure_taxonomy_version`、`side_effect_declaration`、`cost_class`、`latency_class`、`security_requirement_ref`、`compatibility_policy_ref`、`created_at`。
+
+CapabilityVersion 语义不可修改；文字说明修订如果影响 Contract，需要新 version，而不是只改数据库备注。
+
+#### B14.2 Detail Freeze Candidate：ProviderBinding / Conformance 字段组
+
+ProviderBinding 至少包含 `binding_id`、`capability_version_ref`、`provider_type`、`provider_version_ref`、`skill_composition_ref`、`config_version_ref`、`conformance_profile_version`、`bound_at`、`supersedes_binding_ref?`。
+
+ConformanceResult 至少包含 `result_id`、`binding_id`、`suite_version`、`schema_result`、`semantic_guard_results`、`failure_behavior_results`、`side_effect_result`、`tested_at`、`artifact / evidence refs`、`outcome`。
+
+#### B14.3 Detail Freeze Candidate：Eligibility 字段组与 Guard
+
+EligibilityDecision 至少绑定 `eligibility_id`、CapabilityVersion、Binding、environment/profile、task class / scope、required quality floor、ConformanceResult ref、Eval evidence ref、Security / provider qualification refs、outcome、reason、issued_at、expires / review_after。
+
+Guard：Conformance 未通过不能 ELIGIBLE；需要质量门的 Capability 没有匹配 Eval evidence 只能 UNKNOWN / RESTRICTED；ProviderVersion 或 semantic config 变化后旧 Eligibility 不自动继承。
+
+#### B14.4 Detail Freeze Candidate：Invocation / Output 字段组
+
+`CapabilityInvocation` 至少包含 `invocation_id`、CapabilityVersion、Binding、normalized input identity/hash、DocumentVersion / KnowledgeGeneration / EvidenceCandidate refs、run / PlanVersion / StepRun、SecurityEpoch ref、deadline / budget class、started_at / completed_at、result_class。
+
+输出至少绑定 `output_ref`、invocation、typed schema version、payload hash/ref、evidence / provenance refs、uncertainty、failure / insufficiency reason、child ModelCall / ToolEffect refs。输出不可直接携带“domain_admitted=true”。
+
+#### B14.5 Detail Freeze Candidate：Planner Resolution / Fallback
+
+04 提交 CapabilityRequirement：task class、required semantics、input scale、evidence requirement、quality floor、deadline / cost class、side-effect allowance。05 返回一个当前 eligible CapabilityVersion + Binding 或 typed `NO_ELIGIBLE_PROVIDER`。
+
+Fallback 只有在新 Binding 对同一 CapabilityVersion、同一 task requirement 和当前安全约束仍满足时成立；否则返回 requirement unsatisfied 让 04 Replan。05 不把“更弱 Provider”包装成成功。
+
+#### B14.6 Detail Freeze Candidate：Cache / Late Result / Cancellation
+
+Cache key 至少绑定 CapabilityVersion、Binding / ProviderVersion、normalized input hash、relevant DocumentVersion / KnowledgeGeneration / Evidence refs、semantic config version、Security scope freshness class。安全决定本身不一定作为永久 key，但继续使用时重新验收当前授权。
+
+Cancel 只停止后续可取消计算；内部 Model Usage / Tool Effect 按 07 / 06 结算。Late result 交给 04 / 02 前重新检查 PlanVersion、input versions、Capability / Binding Eligibility、Evidence freshness 和当前 Security。
+
+#### B14.7 Detail Freeze Candidate：Schema Evolution / Version Migration
+
+1. Capability semantic change 创建新 CapabilityVersion；禁止原地改 Contract。
+2. Provider Binding change 创建新 binding / config version；旧 Invocation 保留历史 refs。
+3. Schema 新增 required 字段采用兼容读取 + staged rollout；旧历史输出不能伪造默认专业语义。
+4. Eligibility evidence schema 升级保留旧 decision 可解释性。
+5. Registry unique constraints 上线前扫描重复 identity / version。
+6. Skill / Provider 路径迁移不得改变 Capability identity。
+7. 下线旧 Provider 前处理仍在运行 / paused 的 invocation，并保留可读历史。
+
+#### B14.8 Detail Freeze Candidate：Failure Injection / Freeze Evidence
+
+| 场景 | 必须证明 |
+| --- | --- |
+| Provider transient 503 | 同 semantic contract 下 bounded Retry |
+| Provider schema mismatch | result 不进入 Step Acceptance |
+| semantic drift | Eligibility suspend + 04 Replan |
+| fallback Provider 非等价 | 拒绝静默降级 |
+| insufficient evidence | typed insufficiency，不模型补齐 |
+| old DocumentVersion result late | freshness check 拒绝当前使用 |
+| SecurityEpoch changed | 新受保护使用重新门禁 |
+| internal Tool outcome unknown | 05 不自行 Retry Tool |
+| same invocation key but CapabilityVersion/input changed | 不复用旧结果 |
+| quality regression | future Eligibility 限制，不改写历史 Domain |
+| CapabilityVersion upgrade while paused Run exists | old run 可解释，resume 明确兼容或 Replan |
+| provider rollback | 不修改历史 Invocation provenance |
 
 ## Part C — Cross-Module Consistency（跨模块一致性）
 
 ### C1 Completion Proof / Non-proof（完成证明与非证明）
 
-05 的完成证明分为三个层级：Provider 调用完成、Capability Contract 满足、当前 Eligibility 允许该结果被本次 Step 使用。即使三者都成立，也只证明得到了合格的专业 Proposal / Candidate / Observation / Reference，不证明 04 Step 已最终验收，更不证明 02 已正式准入。
-
-Conformance PASS 只能证明 Provider 符合 Capability Contract；09 Eval 达标才提供质量证据；02 AdmissionReceipt 才证明候选成为正式业务事实。任何一个层级都不能互相冒充。
+05 的完成证明分层：Provider 调用完成、Capability Contract 满足、当前 Eligibility 允许本次使用。即使三者成立，也只得到合格 Proposal / Candidate / Observation / Reference；04 Step Acceptance 和 02 Admission 仍是独立事实。
 
 ### C2 Causation / Version / Freshness Bindings（因果、版本与新鲜度绑定）
 
-一次 Capability invocation 至少绑定：CapabilityVersion、ProviderVersion / SkillCompositionRef、InvocationIdentity、input identity、相关 DocumentVersion / EvidenceCandidate / KnowledgeGeneration refs、当前 eligibility、SecurityEpoch，以及调用它的 run / PlanVersion / StepRun（如存在）。
-
-缓存 / 重放必须把这些会影响语义的版本纳入 key。Provider 同名、函数名相同或 input 文本相同，都不足以证明旧结果适用于新材料或新安全范围。
-
-Capability invocation identity 不与 ModelCallAttempt、Tool Effect、StepRun、Admission 的幂等 identity 共用；内部模型 / 工具调用通过 refs 关联。
+Invocation 至少绑定 CapabilityVersion、ProviderBinding、input identity、DocumentVersion / EvidenceCandidate / KnowledgeGeneration refs、Eligibility / SecurityEpoch、run / PlanVersion / StepRun。Capability invocation identity 与 ModelAttempt、ToolAction、StepRun、Admission identity 分开。
 
 ### C3 Cancellation / Late Result / Staleness Rules（取消、晚到结果与失效规则）
 
-Capability invocation 被取消，只阻止后续可取消计算；已经发生的内部 Model Usage 由 07 结算，已经进入 06 的外部 Effect 不因 05 cancel 而自动撤销。
-
-晚到的 Provider 结果在交给 04 / 02 前必须重新验证：调用所属 PlanVersion 是否仍可接受、CapabilityVersion / Provider binding 是否仍有效、输入 / Evidence refs 是否仍是当前 Step 预期、当前安全条件是否允许继续使用。语义漂移后晚到的“成功响应”默认不能作为当前合格结果。
-
-Capability 被 SUSPENDED / DEPRECATED 不删除历史 provenance；它影响未来 eligibility 和当前尚未接受的调用结果，不重写已经正式形成的 Domain 历史。
+Cancel 不撤销内部已产生 Model Usage / Tool Effect。晚到结果在 04 / 02 接受前重新校验 Plan、Capability / Provider、输入、Evidence 和 Security。Capability SUSPENDED / DEPRECATED 影响未来资格和未接受晚到结果，不修改历史 Domain fact。
 
 ### C4 Recovery Order / Consistency Tests（恢复顺序与一致性验证）
-
-恢复先按稳定能力语义找回上下文：
 
 ```text
 CapabilityVersion / ProviderBinding
 → Conformance / current Eligibility
 → input / evidence / security refs
-→ existing Invocation result if safe to reuse
-→ 07 model / 06 effect child receipts when applicable
+→ safe existing Invocation result if reusable
+→ child 07 model / 06 effect facts
 → 04 Step Acceptance / Replan
-→ 02 Admission only after revalidation
+→ optional 02 Admission
 ```
 
-至少验证：Provider 503 后等价 fallback；fallback 非等价时拒绝；Capability schema / semantic drift 触发 Replan；旧 EvidenceCandidate 被新 DocumentVersion 取代后结果晚到；SecurityEpoch 改变；内部 Tool outcome unknown 时 05 不重试；相同 invocation key 在 CapabilityVersion 或输入版本变化时拒绝复用；quality regression 使 eligibility suspend 但不改写历史 Domain fact。
+一致性测试至少覆盖 transient failure、非等价 fallback、semantic drift、Evidence freshness、SecurityEpoch change、Tool outcome unknown、versioned cache、quality suspension 和 paused-run compatibility。
