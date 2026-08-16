@@ -238,6 +238,22 @@ Final Gate 再检查格式、引用、预算、AnswerPolicy 和必要安全 /业
 
 如果通用宿主加法律后端已经满足持久执行和恢复，Zuno 就应该缩小自有运行时，而不是为了架构完整保留它。
 
+### 从一次“中途变卦”的任务看运行时真正负责什么
+
+假设一个复杂分析已经跑到一半：原被告材料分析都完成了，法条检索还没开始，这时用户补充了一份关键材料。03 判断旧知识 generation 已不再适用于新的材料集合，02 还没有把旧候选正式准入。这个时候最危险的做法，是让旧计划继续跑完，再在最后用一句“已考虑新材料”去包装。
+
+运行时应该先判断新材料是否破坏原计划假设。如果只是一个独立可补充的 Step，可以在明确依赖下扩展剩余计划；如果它影响前面已经接受的分析，就进入 Replan Barrier，停止继续派发旧计划的新工作，保留已经发生的事实和可复用结果，再创建新的 PlanVersion。旧分支即使后来返回，也只能作为带旧因果身份的晚到结果重新验收。
+
+这个场景说明 04 的核心不是“会调用多少工具”，而是**在事实不断变化时仍然知道下一步是否安全、哪些结果还有效、怎样继续而不伪造历史**。
+
+### Runtime 为什么不能把“恢复”理解成重新跑一遍
+
+很多简单工作流发生故障以后，从头重跑确实最省事；复杂法律任务却不一定。某些模型调用已经花费高额预算，某个专业人员已经做过人工判断，领域事务可能已经提交，外部工具也可能已经产生不可逆效果。重新跑既浪费，也可能造成重复事实或副作用。
+
+真正的恢复要先区分哪些东西是纯计算、哪些已经形成耐久事实。纯派生 Step 可以在幂等条件下重新执行；已经正式准入的结果要读取 AdmissionReceipt；现实 Effect 要读取 EffectReceipt / ReconciliationReceipt；权限要重新消费当前 Security 决定。Runtime 负责把这些外部权威事实重新装配成可继续的 Control State，而不是试图用 Checkpoint 覆盖它们。
+
+因此“可恢复 Agent”不是“Checkpointer 打开了”这么简单。Checkpointer 只解决控制状态的一部分，跨模块因果和幂等才决定恢复后会不会重复做错事。
+
 ### 当前、目标与缺口
 
 Current Runtime Baseline 已证明 `AgentRunApplicationService → AgentRuntimeService → AgentRunStore / checkpoint → Agent Core graph` 的主路径，以及持久化失败、approval interrupt、duplicate claim、cancel、restart、unknown effect reconcile 等有限语义。

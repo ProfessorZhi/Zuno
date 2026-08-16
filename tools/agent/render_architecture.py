@@ -52,9 +52,12 @@ def validate_design(content: str) -> list[str]:
         "## Part B — Detailed Architecture Specification",
         "### 1. Zuno 要解决的到底是什么问题",
         "### 2. 不是所有法律任务都需要同样复杂的系统",
+        "### 3.1 为什么按“事实谁负责”切架构，而不是按技术栈切",
         "### 4. 一次复杂法律任务怎样完整运行",
         "### 7. 为什么系统里的状态不能全部放在一起",
+        "### 8.1 九个责任域不是九段必须依次经过的流水线",
         "### 9. 一次系统故障以后怎样恢复",
+        "### 11.1 一项复杂机制什么时候应该主动删除",
         "### 12. 当前哪些能力仍然没有证明",
         "### B1 Scope and Global Invariants",
         "### B2 Responsibility / Ownership Map",
@@ -106,7 +109,7 @@ def validate_design(content: str) -> list[str]:
         if marker not in content:
             errors.append(f"architecture.md missing required marker: {marker}")
 
-    for marker in ("docs/project/", "docs/architecture/"):
+    for marker in ("docs/project/project.md", "docs/architecture/"):
         if marker not in content:
             errors.append(f"architecture.md does not route to canonical project layer: {marker}")
 
@@ -118,6 +121,8 @@ def validate_design(content: str) -> list[str]:
         "overall_architecture_state: ROUND_02_FROZEN",
         "module_decomposition_gate: OPEN",
         "module_design_baseline: AVAILABLE_V1",
+        "module_deep_design: AVAILABLE_V2",
+        "module_deep_design_coverage: 9/9",
         "module_detail_freeze: NOT_YET",
         "implementation_authorization: NO",
         "architecture_state: ACCEPTED_TARGET",
@@ -166,7 +171,7 @@ def validate_html(content: str) -> list[str]:
         '<script type="module">',
         'fetch("./architecture-views.md")',
         MERMAID_MODULE_URL,
-        "../project/project-background.md",
+        "../project/project.md",
         "./architecture.md#target-status-boundary",
         "../evidence/README.md",
         "diagram-dialog",
@@ -196,7 +201,7 @@ def validate_taxonomy() -> list[str]:
     errors: list[str] = []
     for relative_path in (
         "docs/README.md",
-        "docs/project/project-background.md",
+        "docs/project/project.md",
         "docs/architecture/architecture.md",
         "docs/modules/README.md",
         "docs/evidence/README.md",

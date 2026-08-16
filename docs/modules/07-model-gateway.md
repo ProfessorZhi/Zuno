@@ -200,6 +200,22 @@ Gateway 统一调用，并不等于它应该负责 Prompt Registry、Capability 
 
 所以 fallback 的目标是“找到仍满足当前约束的替代路径”，不是单纯“找到一个还能返回文本的 API”。
 
+### 从一次真实模型调用看，网关其实在保护多少边界
+
+假设 04 要用 `PLANNER` 处理一组受保护案件材料。调用到达 07 时，事情远不止“选择一个模型然后发 Prompt”：先要确认 08 允许这类数据发往哪些 Provider；再从有资格的模型里找满足上下文、结构化输出和质量要求的候选；检查当前预算与 deadline；绑定 Provider / Model 版本；发起 Attempt；处理限流、超时或取消；最后把 Usage、Cost 和结果引用交回上层。
+
+如果第一次调用超时后切到另一 Provider，第二次也必须重新满足数据外发和质量约束，前一次成本仍然存在。即使第二次成功返回 JSON，04 仍要做 Step Acceptance，05 仍可能判断专业语义不满足。网关完成的是“可靠模型调用”，不是“可靠法律结论”。
+
+把这条调用链看清以后，07 的存在就不再像一个 SDK wrapper。它真正防止的是每个模块自己持有 Credential、自己定义 fallback、自己忽略成本和自己把 Provider success 当业务 success。
+
+### 模型升级为什么不能偷偷改变上层业务语义
+
+一个模型从 V1 升到 V2，可能结构化输出能力更强、推理方式不同，也可能在同一 Prompt 下更倾向给出确定性结论。即使 API 完全兼容，这种行为变化仍可能让 `PLANNER` 生成不同 Step 粒度、让 `EXTRACTOR` 漏掉某类字段，或者让 `FINAL_CRITIC` 的拒答阈值发生漂移。
+
+所以模型替换不能只通过“SDK 调通”验收。07 负责记录版本和资格变化，09 负责在关键角色上跑回归评测；如果行为变化使原 Capability 或 Runtime 假设不再成立，上层应调整对应 Prompt / Contract / Plan，而不是由 Gateway 偷偷做输出修补把变化隐藏起来。
+
+历史 Attempt 继续保留当时的 Provider / Model ref。模型升级影响未来路由，不修改过去事实。这样遇到质量回归时，团队才能回答“从哪个模型版本开始、哪些角色受影响、哪些正式结果可能需要复核”，而不是只知道“最近答案感觉不一样”。
+
 ### 当前、目标与缺口
 
 Current 代码和 Wave 1 Contract 已存在 ModelRoutingDecision、ModelCallAttempt、Quota / Usage / Cancellation 等基础，也有模型网关相关实现和测试。但正式 Provider credentials、四 Profile runtime、Provider qualification、真实 fallback、budget / quota fault test、cancellation race 和角色级质量测量并未完整证明。

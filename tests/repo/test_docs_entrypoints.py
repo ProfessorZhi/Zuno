@@ -13,14 +13,7 @@ EXPECTED_VIEWS = [
     "A/B/C Eval View", "Security Verification View",
 ]
 CANONICAL_ARCHITECTURE_FILES = {"README.md", "architecture.md", "architecture-views.md", "architecture.html"}
-CANONICAL_PROJECT_FILES = {
-    "README.md",
-    "project-background.md",
-    "product-positioning-and-value.md",
-    "team-and-contributions.md",
-    "development-process.md",
-    "review-question-map.md",
-}
+CANONICAL_PROJECT_FILES = {"README.md", "project.md"}
 CANONICAL_MODULE_FILES = {
     "README.md",
     "01-application-integration.md",
@@ -68,7 +61,7 @@ def _load_render_architecture():
     return module
 
 
-def test_project_documentation_is_canonical() -> None:
+def test_project_documentation_is_consolidated_and_canonical() -> None:
     root = REPO_ROOT / "docs/project"
     assert {p.name for p in root.iterdir() if p.is_file()} == CANONICAL_PROJECT_FILES
     assert not (REPO_ROOT / "docs/facts").exists()
@@ -76,22 +69,21 @@ def test_project_documentation_is_canonical() -> None:
     assert (REPO_ROOT / "docs/history/red-blue/manual-round-01-overall-architecture.md").exists()
 
     readme = (root / "README.md").read_text(encoding="utf-8")
+    assert "project.md" in readme
+    assert "project-fact-provenance.md" in readme
+
+    project = (root / "project.md").read_text(encoding="utf-8")
     for marker in (
-        "product-positioning-and-value.md",
-        "review-question-map.md",
-        "为什么已经有通用大模型平台",
-        "事实，再说设计，再说证据和缺口",
+        "为什么会有这个项目",
+        "为什么不直接用 Dify、Coze",
+        "项目是怎样发展到今天的",
+        "团队是什么形态，我在里面做了什么",
+        "相比通用方案，我们今天到底证明了什么",
+        "如果我是大厂面试官，我会继续追问什么",
     ):
-        assert marker in readme
-
-    positioning = (root / "product-positioning-and-value.md").read_text(encoding="utf-8")
-    assert "差异化设计" in positioning
-    assert "已证明优势" in positioning
-    assert "Generic Host（通用 Agent 宿主）" in positioning
-
-    review_map = (root / "review-question-map.md").read_text(encoding="utf-8")
-    for marker in ("产品与立项", "Knowledge / RAG / GraphRAG", "Agent Runtime / LangGraph", "团队与个人贡献"):
-        assert marker in review_map
+        assert marker in project
+    assert "Generic Host（通用 Agent 宿主）" in project
+    assert "Current" in project and "Target" in project and "Unknown" in project
 
 
 def test_architecture_directories_only_contain_support_files() -> None:
@@ -145,7 +137,7 @@ def test_architecture_html_routes_to_current_project_and_history() -> None:
     renderer = _load_render_architecture()
     html = (REPO_ROOT / "docs/architecture/architecture.html").read_text(encoding="utf-8")
     assert renderer.validate_html(html) == []
-    for phrase in ["./architecture.md", "../project/project-background.md", "../history/README.md", "./architecture.md#target-status-boundary", "../evidence/README.md", "./architecture-views.md"]:
+    for phrase in ["./architecture.md", "../project/project.md", "../history/README.md", "./architecture.md#target-status-boundary", "../evidence/README.md", "./architecture-views.md"]:
         assert phrase in html
 
 

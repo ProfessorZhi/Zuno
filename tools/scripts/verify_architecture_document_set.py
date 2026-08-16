@@ -24,8 +24,8 @@ def verify() -> list[str]:
 
     for path in (
         REPO_ROOT / "docs/README.md",
-        REPO_ROOT / "docs/project/project-background.md",
-        REPO_ROOT / "docs/project/development-process.md",
+        REPO_ROOT / "docs/project/README.md",
+        REPO_ROOT / "docs/project/project.md",
         REPO_ROOT / "docs/architecture/architecture.md",
         REPO_ROOT / "docs/modules/README.md",
         REPO_ROOT / "docs/history/red-blue/README.md",
@@ -39,12 +39,15 @@ def verify() -> list[str]:
 
     design = read("docs/architecture/architecture.md")
     index = read("docs/README.md")
+    project = read("docs/project/project.md")
     arch_index = read("docs/architecture/README.md")
     modules_index = read("docs/modules/README.md")
     system = read(".agent/system.yaml")
 
     if "project/" not in index or "architecture/" not in index:
-        errors.append("project README must route to project and architecture")
+        errors.append("docs README must route to project and architecture")
+    if "project.md" not in index:
+        errors.append("docs README must route to consolidated project.md")
     if "docs/architecture/" not in system:
         errors.append("system.yaml must route to architecture surface")
 
@@ -52,7 +55,7 @@ def verify() -> list[str]:
         "architecture.md",
         "architecture-views.md",
         "architecture.html",
-        "../project/",
+        "../project/project.md",
         "../modules/",
         "../decisions/",
         "../evidence/",
@@ -61,12 +64,25 @@ def verify() -> list[str]:
         if marker not in arch_index:
             errors.append(f"architecture README missing boundary marker: {marker}")
 
+    for marker in (
+        "为什么会有这个项目",
+        "为什么不直接用 Dify、Coze",
+        "项目是怎样发展到今天的",
+        "团队是什么形态，我在里面做了什么",
+        "相比通用方案，我们今天到底证明了什么",
+    ):
+        if marker not in project:
+            errors.append(f"project.md missing human narrative marker: {marker}")
+
     if "9 个 Target Logical Modules" not in design or "Round 02" not in design:
         errors.append("architecture.md must record the frozen nine-module Target and Round 02 source")
 
     narrative_markers = (
         "Zuno 面向智慧司法和法律专业工作",
         "不是所有法律任务都需要同样复杂的系统",
+        "为什么按“事实谁负责”切架构",
+        "九个责任域不是九段必须依次经过的流水线",
+        "一项复杂机制什么时候应该主动删除",
         "简单问答",
         "Generic Host（通用 Agent 宿主）",
         "A/B/C",
@@ -85,6 +101,9 @@ def verify() -> list[str]:
 
     for marker in (
         "module_design_baseline: AVAILABLE_V1",
+        "module_deep_design: AVAILABLE_V2",
+        "module_deep_design_coverage: 9/9",
+        "cross_module_consistency: AVAILABLE_V1",
         "module_detail_freeze: NOT_YET",
         "implementation_authorization: NO",
     ):
@@ -115,7 +134,7 @@ def verify() -> list[str]:
             errors.append(f"modules README missing current design marker: {marker}")
 
     if "Current" not in index or "Target" not in index or "Unknown" not in index:
-        errors.append("project README must explain Current/Target/Unknown")
+        errors.append("docs README must explain Current/Target/Unknown")
     return errors
 
 

@@ -13,7 +13,7 @@ architecture.html
 
 总体架构回答的是：Zuno 怎样把法律领域状态、知识与证据、执行控制、安全、外部效果和可验证交付组合成一套可以恢复、替换和简化的目标架构。
 
-它**不单独回答“为什么项目值得立项”**。这个问题先读 [`../project/product-positioning-and-value.md`](../project/product-positioning-and-value.md)：那里解释法院侧需求、研究成果工程化、通用 Agent 宿主已经能解决什么，以及 Zuno 为什么仍要拥有一部分法律业务语义。Architecture 从这个产品边界继续往下回答“既然这些语义必须由 Zuno 负责，系统应该怎样组织”。
+它**不单独回答“为什么项目值得立项”**。这个问题先读 [`../project/project.md`](../project/project.md)：那里把项目历史、法院侧需求、研究成果工程化、通用 Agent 宿主边界、项目发展和参与事实组织成一条连续叙事。Architecture 从这个产品边界继续往下回答“既然这些语义必须由 Zuno 负责，系统应该怎样组织”。
 
 Round 02 已完成，总体 Target Architecture（目标架构）和九个 Logical Responsibility Modules（逻辑责任域）已经冻结。九个责任域是事实和职责边界，不是九个进程、九个数据库或九个微服务。Platform / Infrastructure（平台与基础设施）继续是责任层，Memory / Context（记忆与上下文）继续是可选 Provider 边界。
 
@@ -62,16 +62,15 @@ production_readiness: NOT_ESTABLISHED
 如果第一次接触 Zuno，建议：
 
 ```text
-项目背景
-→ 产品定位 / 立项逻辑
+../project/project.md
 → architecture.md Part A
-→ modules/README.md
+→ ../modules/README.md
 → 目标模块 Part A
 ```
 
 一个不了解 Zuno 的高级工程师只读 `architecture.md` Part A，应该能够解释：为什么简单问答保持简单；复杂法律分析怎样形成正式工作成果；新证据怎样使旧结果失效；外部 POST 超时为什么不能盲重试；Domain Commit 和 Runtime Checkpoint 不一致时怎样恢复；九个责任域为什么这样分。
 
-如果面试官或 Reviewer 进一步追问“为什么不直接用通用平台、为什么项目可以立项、这些差异是否真的带来优势”，回到 [`../project/product-positioning-and-value.md`](../project/product-positioning-and-value.md)。如果开始按具体问题连续盘问，可使用 [`../project/review-question-map.md`](../project/review-question-map.md) 定位到 Project / Architecture / Module / Evidence 的正确 Owner。
+如果 Reviewer 进一步追问“为什么项目可以立项、为什么不直接用通用平台、项目走过什么阶段、参与者做过什么、这些差异是否真的已经形成优势”，回到 [`../project/project.md`](../project/project.md)。如果开始追问具体模块的状态、Contract、并行、失败或恢复，则进入对应 Module；如果问“现在真的实现了吗”，直接进入 Evidence。
 
 需要实现、测试或审查工程细节时，再读 `architecture.md` Part B、模块 Part B / Part C、相关 ADR 和 Evidence。
 
@@ -83,7 +82,7 @@ Part A 采用中文优先：普通概念能用中文清楚表达时不用多余�
 - `architecture-views.md`：总体架构的 Mermaid 图源，只做图形表达，不拥有第二套架构事实。
 - `architecture.html`：图源展示入口，不维护平行语义。
 - `README.md`：目录边界、状态和阅读入口。
-- `../project/`：项目为什么存在、产品定位、开发背景和团队故事，不拥有 Target 架构。
+- `../project/project.md`：项目为什么存在、为什么值得做、开发背景、团队与参与事实；不拥有 Target 架构。
 - `../modules/`：九个责任域的 Deep Design V2、Human-first Part A 和跨模块一致性设计。
 - `../decisions/`：长期有效且具有反转成本的 ADR。
 - `../evidence/`：Current 的代码、测试、Migration、Trace、Eval 和运行证据。
@@ -93,13 +92,13 @@ Part A 采用中文优先：普通概念能用中文清楚表达时不用多余�
 
 总体架构是当前 Target 的整合表达；模块文档只能细化它，不能局部改写九模块 Owner、Canonical Kernel、Formal Admission、Knowledge / Domain authority、Retry / Replan / Reconcile 或安全政策 Owner。较早 ADR 的宽泛措辞如果已被后续 ADR 明确 supersede / refine（取代 / 细化），按后续决定解释。
 
-Project 文档可以解释“为什么值得这样做”，但不能反过来修改 Architecture Truth。产品差异化如果需要新增模块、扩大 Canonical Domain Kernel 或改变跨模块 Owner，必须重新进入正式架构决策流程。
+Project 可以解释“为什么值得这样做”，但不能反过来修改 Architecture Truth。产品差异化如果需要新增模块、扩大 Canonical Domain Kernel 或改变跨模块 Owner，必须重新进入正式架构决策流程。
 
 如果模块深化发现必须改变跨层语义，应停止局部设计并记录 Architecture Gap，而不是把新决定藏进 Part B、数据库字段或代码实现。
 
 ## 维护与验证
 
-跨层含义变化时修改 `architecture.md`；模块内部设计进入 `../modules/`；产品来源和定位进入 `../project/`；图形关系变化时同步 `architecture-views.md` 与 `architecture.html`。
+跨层含义变化时修改 `architecture.md`；模块内部设计进入 `../modules/`；项目来源、定位和历史叙事进入 `../project/project.md`；图形关系变化时同步 `architecture-views.md` 与 `architecture.html`。
 
 当前常用验证：
 

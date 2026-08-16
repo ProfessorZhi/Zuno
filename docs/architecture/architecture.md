@@ -4,7 +4,7 @@ Zuno 面向智慧司法和法律专业工作，目标是把材料、证据、专
 
 简单问题应该保持简单。对“合同第 8 条写了什么”这类任务，通用宿主加受控检索完全可能已经足够；只有当多材料版本、长期领域状态、人工复核、恢复或现实副作用确实带来额外要求时，Zuno 才引入更重的领域和运行机制。复杂度必须由任务和测量证明，而不是由架构图证明。
 
-本文记录 **Target（目标架构）**，不把文档中的对象、Contract（契约）或状态自动写成 Current（当前实现），也不把 Pilot 写成 Production。Part A 面向人类读者解释问题、流程、边界和失败；Part B 面向实现、测试和审查给出精确 Ownership（事实所有权）、Contract、状态、恢复和持久化规则。项目故事见 [`docs/project/`](../project/)，Current 证据见 [`docs/evidence/`](../evidence/)，模块详细设计见 [`docs/modules/`](../modules/README.md)，架构审查历史见 [`docs/history/red-blue/`](../history/red-blue/README.md)。History 解释架构如何演进，但不重新拥有当前 Target 或 Current。
+本文记录 **Target（目标架构）**，不把文档中的对象、Contract（契约）或状态自动写成 Current（当前实现），也不把 Pilot 写成 Production。Part A 面向人类读者解释问题、流程、边界和失败；Part B 面向实现、测试和审查给出精确 Ownership（事实所有权）、Contract、状态、恢复和持久化规则。项目故事见 [`docs/project/project.md`](../project/project.md)，Current 证据见 [`docs/evidence/`](../evidence/)，模块详细设计见 [`docs/modules/`](../modules/README.md)，架构审查历史见 [`docs/history/red-blue/`](../history/red-blue/README.md)。History 解释架构如何演进，但不重新拥有当前 Target 或 Current。
 
 <!--
 updated: 2026-08-16
@@ -20,16 +20,20 @@ platform_infrastructure: RESPONSIBILITY_LAYER
 context_provider: OPTIONAL
 module_decomposition_gate: OPEN
 module_design_baseline: AVAILABLE_V1
+module_deep_design: AVAILABLE_V2
+module_deep_design_coverage: 9/9
+cross_module_consistency: AVAILABLE_V1
+module_human_narrative: DEEPENED
 module_detail_freeze: NOT_YET
 implementation_authorization: NO
 observability_architecture: OTEL_COMPATIBLE
 langsmith_role: PREFERRED_AGENT_TRACE_AND_EVAL_PROVIDER
 canonical_question: Zuno 如何把法律领域状态、证据、执行控制、安全和可验证交付组合成可恢复且可替换的 Target？
 owner: Cross-cutting Architecture Owner
-acceptance_scope: Round 02 Main Judgment 的 Canonical Revision；模块 Design Baseline V1 已建立，字段级细节、实现、测量和外部资格尚未完成
+acceptance_scope: Round 02 Main Judgment 的 Canonical Revision；九模块已达到 Deep Design V2 / Cross-Module Consistency，并完成 Human-first 叙事深化；字段级 Detail Freeze、实现、测量和外部资格尚未完成
 readability_state: HUMAN_FIRST_PART_A_AND_PART_B
 canonical_taxonomy: docs/architecture/ 仅保存总体架构四文件；模块设计由 docs/modules/ 负责；项目事实由 docs/project/ 负责
-current_state_source: docs/project/ 和 docs/evidence/
+current_state_source: docs/project/project.md 和 docs/evidence/
 review_history_source: docs/history/red-blue/
 decision_sources: docs/decisions/0003-wave1-cross-module-contract-freeze.md、0005-official-langgraph-postgres-checkpointer.md、0007-reuse-first-provider-boundary.md、0008-legal-domain-kernel-and-host-boundary.md、0012-evidence-gated-physical-service-split.md、0013-round-02-responsibility-taxonomy.md、0014-round-02-cross-boundary-authority-and-recovery.md
 -->
@@ -94,6 +98,14 @@ flowchart LR
 5. **Retry（重试）、Replan（重规划）和 Reconcile（对账）是三种不同问题。** 执行暂时失败才重试；计划假设失效要重规划；外部现实结果未知必须对账。
 6. **安全是持续门禁。** 新读取、模型外发、秘密使用、工具执行和正式准入都消费当前安全决定，不能无限复用任务开始时的一次授权。
 7. **复杂度必须由证据证明。** Native Runtime（原生运行时）、Long-term Memory（长期记忆）、GraphRAG（图增强检索）、专业 Multi-Agent（多智能体）和独立网络服务都属于可删除或可替换能力，只有测量收益才能扩大使用范围。
+
+### 3.1 为什么按“事实谁负责”切架构，而不是按技术栈切
+
+很多系统图习惯按照 FastAPI、PostgreSQL、LangGraph、Milvus、Neo4j、LLM、Worker 来分块。这种图适合解释“用了什么技术”，却不容易回答故障发生以后谁说了算。例如同样落在 PostgreSQL 里，DomainVersion 和 Runtime Checkpoint 仍然不是同一种事实；同样由模型产生，Finding Proposal 和 AuthorizationDecision 也不能拥有相同权威。
+
+Zuno 的九个责任域因此优先按照长期事实和失败恢复来切。谁能创建一个事实，谁能修改、使其失效、删除或恢复；什么 Receipt 能证明成功；崩溃以后先相信哪个 Store——这些问题比“代码放在哪个 package”更稳定。技术框架可以替换，只要这些 Authority（权威）和 Contract 没有漂移，架构仍然成立。
+
+这种切法也解释了为什么九模块不是九个微服务。Application、Domain、Knowledge、Runtime、Capability、Tool、Model、Security、Observability 首先是九种责任。它们可以暂时共处一个模块化 Python 后端，也可以因为独立扩缩容、安全隔离或故障半径在未来部分拆开。物理部署是后一层决策，不反过来定义事实所有权。
 
 ### 4. 一次复杂法律任务怎样完整运行
 
@@ -308,6 +320,14 @@ Retrieval、Tool execution、Schema Validation、Citation Check、Test、Securit
 
 另外两类边界不重新变成第十、第十一个逻辑模块：Platform / Infrastructure（平台与基础设施）只是责任层，提供 PostgreSQL、对象存储、Queue / Worker、CAS、Lease、Fencing、Checkpoint Adapter、Index Adapter、Network、Secret Delivery、Backup / Restore 等物理原语；Memory / Context 是可选上下文边界，长期记忆只有在消融评测证明收益后才启用。
 
+### 8.1 九个责任域不是九段必须依次经过的流水线
+
+把九个模块按编号列出来以后，很容易产生一个错觉：每次请求都要从 01 一直调用到 09。实际并不是这样。简单问答可能只涉及 01、08、03、07 和必要的 09；一个纯知识构建任务主要发生在 02 的材料身份、03 的知识加工和 08 的安全边界；只有复杂多步任务才需要 04，而有现实副作用时才必须进入 06。
+
+同一模块也不一定只在流程里出现一次。08 的安全决定会在读取材料、模型外发、工具执行和正式准入等多个边界反复被消费；09 则横跨全过程做观测和评测，但不进入业务 Authority；02 的领域事实既可能是任务开始时的输入，也可能在任务结束时成为新的正式结果。
+
+所以九模块描述的是“不同事实归谁负责”，而不是固定调用顺序。理解这点以后，系统才能既允许简单路径保持简单，又保证复杂路径在需要时获得足够控制，而不把所有任务都塞进一条重量级总流程。
+
 ### 9. 一次系统故障以后怎样恢复
 
 恢复首先判断“失败的是哪一类事实”，再决定动作。
@@ -362,9 +382,17 @@ Zuno 真正需要长期保护的是法律领域状态、材料和证据版本、
 
 每次 Service Split（服务拆分）都要回答：为什么必须独立服务，为什么**不是库或 Worker**即可解决。未来用户变多本身不是微服务证据。
 
+### 11.1 一项复杂机制什么时候应该主动删除
+
+架构深化不能只回答“还能加什么”，还要不断回答“什么可以删”。如果一个机制只是让系统更像先进 Agent 平台，却没有改善真实法律任务质量、恢复、安全或成本，它就不应该因为已经写了代码而获得永久存在权。
+
+Native Runtime 要和 Generic Host + Legal Backend 做对照；GraphRAG 要按具体 Query Class 与更简单的 Hybrid Retrieval 比；Long-term Memory 要做消融；Specialist / Multi-Agent 要与 Single Controller + 并行 Step / Subgraph 比。物理微服务也要证明独立扩缩容、隔离或运营价值，而不是因为逻辑模块已经分开就自动拆服务。
+
+删除并不意味着否定前面的设计。一个机制在探索期可能有价值，测量以后发现收益不足，最健康的结果就是缩小、外置或移除。09 的评测因此不仅是 Release Gate，也承担“复杂度淘汰”的责任。
+
 ### 12. 当前哪些能力仍然没有证明
 
-Round 02 已经冻结 Overall Target Architecture（总体目标架构）和九个逻辑责任域。九篇模块正文也已经形成 Design Baseline V1（设计基线 V1）；当前正在按依赖逐步深化，先从 02 法律领域与工作成果 + 03 知识与证据开始。**这不等于 Module Detail Freeze，也不等于实现授权。**
+Round 02 已经冻结 Overall Target Architecture（总体目标架构）和九个逻辑责任域。九篇模块正文已经完成 **Deep Design V2 / Cross-Module Consistency**，并完成了一轮更充分的 Human-first Part A 深化。**这仍然不等于 Module Detail Freeze，也不等于实现授权。**
 
 当前仍需要真实工程和测量回答：
 
@@ -377,7 +405,7 @@ Round 02 已经冻结 Overall Target Architecture（总体目标架构）和九�
 - GraphRAG 是否只在特定 Query Class 值得启用；
 - Security、Audit、Tool Effect Reconciliation、HA、DR 和实际部署是否达到 Production Readiness。
 
-这些实验既可能保留能力，也可能删除能力。当前最诚实的状态是：总体架构和九模块责任边界已稳定，模块 Design Baseline 可用于继续 Deep Design（详细设计）；implementation available、quality proven 和 production ready 都需要另行证据。
+这些实验既可能保留能力，也可能删除能力。当前最诚实的状态是：总体架构和九模块责任边界已稳定，模块 Deep Design V2 可用于继续字段级 Detail Design 和审查；implementation available、quality proven 和 production ready 都需要另行证据。
 
 ## Target Status Boundary
 
@@ -389,6 +417,9 @@ Round 02 已经冻结 Overall Target Architecture（总体目标架构）和九�
 | Overall Architecture | `ROUND_02_FROZEN` |
 | Logical Responsibility | 9 个 Target Logical Modules，已冻结 |
 | Module Design Baseline | `AVAILABLE_V1` |
+| Module Deep Design | `AVAILABLE_V2`，9/9 |
+| Cross-Module Consistency | `AVAILABLE_V1` |
+| Human-first Module Narrative | `DEEPENED` |
 | Module Detail Freeze | `NOT_YET` |
 | Implementation Authorization | `NO` |
 | Platform / Infrastructure | Responsibility Layer，不是第 10 个逻辑业务模块 |
@@ -776,6 +807,7 @@ Offline Release Eval 不等于单次任务 Formal Admission 或 Answer Publicati
 | --- | --- | --- |
 | 9-module Responsibility Taxonomy | `FROZEN TARGET` | Round 02 已冻结；不等于九模块都已完整实现 |
 | 9 Module Design Baseline V1 | `AVAILABLE` | 九篇模块正文已建立；字段级 Detail Freeze 仍 `NOT_YET` |
+| 9 Module Deep Design V2 | `AVAILABLE` | 9/9 完成；Cross-Module Consistency V1 与 Human-first 叙事已深化，仍不等于实现 |
 | Legal Domain minimal kernel | `ACCEPTED TARGET` | Current 只有有限 mutation / provenance evidence |
 | AdmissionReceipt | `ACCEPTED TARGET` | 语义已冻结；完整 DB / fault-recovery 仍未证明 |
 | WorkProductCitationBinding | `ACCEPTED TARGET` | 与 Index identity 分离；完整历史替换测试待补 |
@@ -788,7 +820,7 @@ Offline Release Eval 不等于单次任务 Formal Admission 或 Answer Publicati
 | Security / Tool Effect / Audit full closure | `TARGET WITH PARTIAL CURRENT FOUNDATION` | 需故障注入、E2E 和资格证明 |
 | Production Readiness | `NOT ESTABLISHED` | 正式 Benchmark、生产负载、DR / HA / security / operational attestation 未闭合 |
 
-模块 Design Baseline 的存在意味着可以继续逐模块 Deep Design；它不授权 Codex 自动实现所有 Target。
+模块 Deep Design 的存在意味着可以继续字段级 Detail Design 与逐模块 Freeze Review；它不授权 Codex 自动实现所有 Target。
 
 ### B13 Evidence / Verification
 
@@ -814,12 +846,12 @@ Architecture Revision 或 Module Design 本身都不是这些实验的结果。
 
 ### B14 Code / Database / Migration Constraints
 
-当前总体架构和九模块 Design Baseline 已建立，但 **implementation_authorization: NO**。本阶段不因为文档深化自动授权新增 AdmissionReceipt table、完整 Lifecycle Engine、Invalidation Outbox、Tool Runtime 重构、数据库大迁移、Kafka、Kubernetes、Event Sourcing、跨 Store 2PC 或九个网络服务。
+当前总体架构和九模块 Deep Design 已建立，但 **implementation_authorization: NO**。本阶段不因为文档深化自动授权新增 AdmissionReceipt table、完整 Lifecycle Engine、Invalidation Outbox、Tool Runtime 重构、数据库大迁移、Kafka、Kubernetes、Event Sourcing、跨 Store 2PC 或九个网络服务。
 
-`docs/modules/01-*.md` 到 `09-*.md` 已经是当前模块设计正文；后续实现必须读取总体 Part A / B、目标模块 Part A / B、相关 ADR 和 Current Evidence。模块 Deep Design 可以进一步冻结字段、enum、transaction、API / schema 和 Migration 约束，但这些冻结必须先通过模块审查，不能从已有类名或数据库表反向推导。
+`docs/modules/01-*.md` 到 `09-*.md` 已经是当前模块设计正文；后续实现必须读取总体 Part A / B、目标模块 Part A / B / C、相关 ADR 和 Current Evidence。模块 Detail Design 可以进一步冻结字段、enum、transaction、API / schema 和 Migration 约束，但这些冻结必须先通过模块审查，不能从已有类名或数据库表反向推导。
 
 如果模块深化发现必须改变九模块 Owner、Canonical Kernel、Formal Admission causation、Knowledge / Domain authority、Retry / Replan / Reconcile、安全政策 Owner 或物理拆分原则，应停止局部设计并记录 Architecture Gap，而不是在模块文档或代码里悄悄改变 Overall Architecture。
 
 ## Architecture Freeze Boundary
 
-当前状态仍是 `ROUND_02_FROZEN`：Overall Target Architecture 和九个 Logical Responsibility Modules 已冻结；Module Decomposition Gate 已打开，九模块 Design Baseline V1 已存在，Module Detail Freeze 仍未完成。实现、Measurement 和 Production Readiness 需要独立授权与证据。
+当前状态仍是 `ROUND_02_FROZEN`：Overall Target Architecture 和九个 Logical Responsibility Modules 已冻结；Module Decomposition Gate 已打开，九模块 Design Baseline V1 与 Deep Design V2 / Cross-Module Consistency V1 已存在，Human-first Part A 已深化，Module Detail Freeze 仍未完成。实现、Measurement 和 Production Readiness 需要独立授权与证据。
