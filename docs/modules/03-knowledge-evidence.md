@@ -1,6 +1,6 @@
 # 03 Knowledge & Evidence（知识与证据）
 
-<!-- status: design-baseline-v1; implementation: not-authorized; deepening: cross-module-consistency-v2 -->
+<!-- status: design-baseline-v1; implementation: not-authorized; deepening: cross-module-consistency-v2; detail_design: candidate-v1 -->
 
 ## Part A — Human Narrative
 
@@ -484,6 +484,181 @@ GraphRAG 必须按 query class 对比简单 retrieval baseline，在同模型、
 不得用向量库、图数据库或 chunker 的内部 ID 反向定义正式领域模型。Provider 更换和 index migration 必须能在不改写已发布 WorkProductCitationBinding 的前提下完成。
 
 本 Design Baseline 不默认建立独立 Knowledge 微服务，不要求 always-on GraphRAG，不授权全量索引重构。实现应优先使用 adapter / worker / modular backend，物理拆分继续受 ADR-0012 的证据门控。
+
+#### B14.1 Detail Freeze Candidate：KnowledgeGeneration / ProcessingSpec / Manifest 字段组
+
+下面只冻结 Target 的语义字段组，不冻结最终表名、ORM class、索引 Provider collection schema 或消息队列 payload。
+
+**KnowledgeGeneration candidate** 至少需要：
+
+```text
+tenant_id / matter_id
+generation_id
+document_version_set_ref 或稳定 document_version_set_hash
+processing_spec_id / processing_spec_hash
+required_view_profile
+lifecycle_state
+created_at
+```
+
+`processing_spec` 必须能解释这一代知识采用的 parser / OCR / normalization / chunking / embedding / optional graph 构建等会影响语义或可重建性的规格。它不是一个随意的“配置 JSON”；发生语义改变时必须能够区分新旧 generation。
+
+**ProcessingItem identity** 至少绑定：
+
+```text
+generation_id
+document_version_ref
+item_kind
+item_locator
+processing_spec_hash
+```
+
+`item_locator` 可以表示 document/page/table/view partition 等可恢复工作单元。重复 Worker delivery 必须落回同一个稳定 item identity；不能因为一次队列 delivery_id 不同就生成第二份逻辑处理结果。
+
+**IndexManifest candidate** 至少描述：generation、DocumentVersion set / hash、processing spec hash、required view profile、各类 ProcessingItem 完成 / 失败覆盖、Provider receipt refs、view descriptors、source lineage digest、manifest hash、validation result 和 validated_at。
+
+**ServingPointer candidate** 是 03 的小型权威元数据，不是向量库 alias 本身。逻辑上至少按 `(tenant, matter, knowledge_profile)` 选择当前可服务 generation，并保存 current generation、previous generation / rollback ref、activation version 和 activated_at。具体是否使用单表、CAS 行或其他存储由实现任务确定。
+
+#### B14.2 Detail Freeze Candidate：Readiness / Retrieval / EvidenceCandidate Contract
+
+一次 `ReadinessDecision` 不能只保存 `READY`。输入指纹至少绑定：
+
+```text
+requested DocumentVersion set / set hash
+task scope / scope hash
+minimum processing capabilities
+retrieval requirement / quality profile when applicable
+selected serving generation
+AuthorizationDecision ref / SecurityEpoch
+```
+
+输出 candidate 至少包含：
+
+```text
+readiness_decision_id
+input_fingerprint
+generation_id
+READY | PARTIAL | BLOCKED 类语义
+covered_scope / covered_document_refs
+missing_requirements / missing_sources / reason codes
+security_epoch_ref
+evaluated_at
+```
+
+PARTIAL 只有在“覆盖了什么、缺了什么”都可解释时才有意义。调用方缩小 Scope 后产生新的 input fingerprint 和新的 ReadinessDecision；禁止原地把旧 PARTIAL 改成 READY。
+
+一次 RetrievalRequest 至少绑定 `retrieval_id + readiness_decision_id + query/query_hash + generation_id + scope + retrieval_strategy_version + current security refs`。Query Rewrite 可以改变检索表达，但不得修改原始允许 Scope。
+
+EvidenceCandidate candidate 至少保存或可稳定恢复：candidate identity、source DocumentVersion、stable source location、source representation hash、candidate/excerpt hash、generation、retrieval identity、CitationLineage ref，以及非权威 ranking / score metadata。相似度分数不是 Evidence identity，也不能决定正式准入。
+
+#### B14.3 Detail Freeze Candidate：Generation / Serving / Readiness 状态 Guard
+
+KnowledgeGeneration 的状态变更至少服从：
+
+```text
+DECLARED
+  → PROCESSING
+  → STAGED
+  → SERVING
+  → STALE / SUPERSEDED
+
+PROCESSING / STAGED → FAILED / PARTIAL_BUILD when applicable
+```
+
+关键 Guard：
+
+1. `PROCESSING → STAGED`：所要求的处理项已经达到可验证终态，manifest 可生成且来源集合匹配；
+2. `STAGED → SERVING`：manifest validation 通过，DocumentVersion set / processing spec 没漂移，required view profile 满足，当前 lifecycle / security policy 没禁止服务，并且 serving activation version 条件匹配；
+3. `SERVING → STALE`：源材料版本集合、processing eligibility、生命周期政策或 provider integrity 发生使该 generation 不再适合当前服务的变化；
+4. 新 generation SERVING 后，旧 generation 可以变为 SUPERSEDED 并按政策保留用于恢复 / 历史 provenance；不能直接覆盖其 metadata；
+5. FAILED / PARTIAL_BUILD generation 不因“多数 item 成功”自动获得 Serving 资格。
+
+ReadinessDecision 是一次判断结果，不是长生命周期实体的状态机。其输入任一关键 version / scope / security 条件改变后，必须重新计算；旧 READY 不被“更新”为新 READY。
+
+#### B14.4 Detail Freeze Candidate：Persistence 与 Serving Activation 事务候选
+
+第一阶段把三类耐久事实分开：
+
+- 原始材料字节：Platform Object Store primitive，业务身份仍由 02 DocumentVersion 拥有；
+- generation / processing / manifest / serving metadata：03 的 durable metadata store；
+- BM25 / vector / graph 等派生内容：Provider-specific derived stores，可重建。
+
+Provider 写入可能跨多个系统，因此不使用跨所有 Index Provider 的 2PC。目标流程是：
+
+```text
+build provider projections
+→ collect receipts / descriptors
+→ persist and validate complete manifest
+→ short metadata transaction / CAS:
+     compare expected activation version
+     point serving profile to validated generation
+     record activation fact / version
+→ expose to new Readiness decisions
+```
+
+Serving 切换必须是一个可恢复发布点。若 Provider 已写成功但 metadata / manifest 没完成，这些数据只是 orphan / staged derivative，不获得服务资格；后台清理可以后做，正确性不能依赖立即物理删除。
+
+并发构建两个 generation 时允许两者都 STAGED，但同一个 serving profile 的切换通过 `expected_activation_version` 或等价 CAS 条件序列化。失败者重新读取当前 pointer 后再决定是否仍值得激活，而不是 last-write-wins。
+
+#### B14.5 Detail Freeze Candidate：Worker、Backpressure、Cache 与并发规则
+
+Ingestion / rebuild Worker 默认按 **at-least-once 可重放** 思路设计：Queue 只负责调度，不证明处理完成。稳定 ProcessingItem identity + generation/spec/content fingerprint 负责去重；同 identity 不同 processing spec 必须冲突或进入新的 generation。
+
+长耗时 OCR / embedding / graph 构建可以并行，但必须受 tenant quota、Provider quota、Worker capacity 和资源预算约束。Queue backlog 达到门限时，03 应显式限制新的 build / rebuild 接收或降低调度速率；不能因为排队过长就在 Readiness 中假装任务已经覆盖。
+
+如果实现需要 Lease / Fencing，由 Platform 提供原语，03 定义业务验收条件：晚到 Worker 结果只有在 generation、processing spec、item identity 和当前 lease/fencing 条件仍匹配时才可进入 manifest；失效 Worker 的成功回执不能污染新 generation。
+
+缓存分三类看待：解析 / embedding 等内容寻址缓存、retrieval cache、readiness 辅助 cache。Cache key 必须包含真正影响语义的新鲜度，例如 source/content hash、processing spec、generation、scope、retrieval strategy 和必要 SecurityEpoch。默认不得跨 tenant 共享带业务内容的 cache entry；如果未来做共享内容缓存，需要独立的去标识化 / 权限证明。
+
+Cache 永远只是 Projection 优化。缓存丢失只应该降低性能，不得丢失 Serving truth、Readiness authority 或正式 Citation history。
+
+#### B14.6 Detail Freeze Candidate：Crash Window 与恢复矩阵
+
+| Crash Window | 当前可以相信什么 | 恢复动作 | 禁止动作 |
+| --- | --- | --- | --- |
+| Provider write 成功、ProcessingItem metadata 未写 | 只有 provider physical data | 按 item identity 查询 / 重做并收敛 metadata | 直接计入 manifest complete |
+| manifest 已保存，validation / activation 前崩溃 | generation 仍是 STAGED / non-serving | 重新校验 manifest 后 Retry activation | 查询自动看到新 generation |
+| serving pointer 已切换但响应丢失 | 当前 pointer / activation version 是 03 truth | 重读 pointer，返回既有 activation | 再次无条件覆盖 pointer |
+| 两个 STAGED generation 同时激活 | 只有一个满足 activation CAS | 失败方重读并重新决策 | last-write-wins |
+| build 被取消且已有部分 provider 写入 | 部分派生可能物理存在 | 标记非 serving；后续清理或重建 | 因“已经算完很多”强制激活 |
+| Readiness 后、Retrieval 前权限撤销 | 旧 decision 的 allow 已过期 | Retrieval 前重新消费当前 SecurityEpoch / authorization | 复用旧 READY 绕过权限 |
+| Readiness 后新 DocumentVersion 进入目标 Scope | 旧 decision 只绑定旧 version set | 新任务 / 新 scope 重新选择 generation 与 Readiness | 把旧 READY 静默扩到新材料 |
+| retrieval 结果晚到时 generation 已 superseded | 结果仍是旧 generation 的历史候选 | 消费者按 version/scope/freshness 判断丢弃或复核 | 自动挂到当前 generation |
+
+#### B14.7 Detail Freeze Candidate：Schema / Provider Evolution 规则
+
+Parser、OCR、normalizer、chunker、Embedding、Graph extraction 或 retrieval processing spec 的变化，需要先判断是否改变可重建语义。如果改变了 source representation、chunk boundary、embedding space、graph schema 或 manifest requirement，就应形成新的 processing spec / generation，而不是原地重写当前 SERVING generation。
+
+Provider migration 推荐 `build new generation → validate → switch serving pointer → observe → retire old provider data by lifecycle policy`。这使 Milvus / pgvector / graph store 迁移保持在知识投影层，不改写 02 的 DocumentVersion / WorkProductCitationBinding。
+
+Metadata schema 迁移遵循 additive-first：新增字段 → backfill / reconstruct from durable refs → verify → 收紧约束。generation / manifest identity 算法如升级必须带 algorithm/version，旧 generation 继续可解释。
+
+删除与 Legal Hold 继续遵守 08 的 Effective Lifecycle Policy。禁止未来 Retrieval 与物理 purge 完成是两个事实：某 generation 已不可召回，不代表其对象存储 / 索引副本已经全部擦除；反过来也不能因旧 bytes 尚存而继续提供检索资格。
+
+大规模索引重建、online migration、dual-read / dual-write 是否必要，必须由真实数据规模、切换窗口和 rollback 需求决定；本文不预设 Kafka、CDC 或复杂双写架构。
+
+#### B14.8 Detail Freeze Candidate：Failure Injection / Freeze Evidence
+
+03 只有在以下矩阵形成实现和验证证据后，才进入 Module Detail Freeze Review：
+
+| 场景 | 必须证明 |
+| --- | --- |
+| parse / OCR / embedding 单项失败 | 失败范围可定位；未完成 generation 不冒充 Ready |
+| partial index write | manifest / Serving 不激活 |
+| build cancel | 已写派生不获得 Serving 资格 |
+| manifest source/spec mismatch | validation fail closed |
+| same generation identity + different spec | 明确拒绝，不混写 |
+| concurrent serving activation | CAS / 等价条件保证唯一 current pointer |
+| crash before / after pointer switch | 能从 manifest + activation version 恢复正确 current generation |
+| late Worker result | 旧 generation/spec/lease 结果不污染新 manifest |
+| new DocumentVersion after old Readiness | 旧 decision 不自动覆盖新 version set |
+| SecurityEpoch changes after Readiness | Retrieval 新受保护访问重新门禁 |
+| retrieval cache stale | version/scope/security mismatch 不命中 |
+| GraphRAG provider unavailable | 只有满足相同 task requirement 的 fallback 才继续，否则 PARTIAL/BLOCKED/Replan |
+| provider index corruption | 可从 immutable DocumentVersion + processing spec rebuild |
+| full reindex / chunk migration | 已发布 WorkProductCitationBinding 仍定位原 DocumentVersion / stable source location |
+
+Freeze Review 还需要 representative corpus ingestion、object store / metadata store / provider integration、并发 activation、故障注入、security revocation、retrieval eval、GraphRAG query-class 对照和 rebuild evidence。设计字段写完不等于 Knowledge 实现完成。
 
 ## Part C — Cross-Module Consistency（跨模块一致性）
 
