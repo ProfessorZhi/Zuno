@@ -50,12 +50,26 @@ module_deep_design: AVAILABLE_V2
 module_deep_design_coverage: 9/9
 cross_module_consistency: AVAILABLE_V1
 module_human_narrative: DEEPENED
+module_detail_design_candidate: AVAILABLE_V1
+module_detail_design_candidate_coverage: 2/9
 module_detail_freeze: NOT_YET
 implementation_authorization: NO
 production_readiness: NOT_ESTABLISHED
 ```
 
-下一道门不再是“把九篇文档继续写长”，而是进入字段级 Contract、状态转换 guard、并发 / 版本条件、幂等 namespace、事务边界、Crash Window、Schema Evolution 和 Failure Injection Matrix，再逐模块判断是否达到 Module Detail Freeze Candidate。
+下一道门已经从“把九篇文档继续写长”进入字段级 Contract、状态转换 guard、并发 / 版本条件、幂等 namespace、事务边界、Crash Window、Schema Evolution 和 Failure Injection Matrix。第一批只覆盖 02 法律领域与工作成果 + 03 知识与证据，它们达到 **Detail Design Candidate V1**；其余七模块仍保持 Deep Design V2。
+
+这一步仍然没有改变 `architecture.md` 的 Round 02 冻结语义。Detail Candidate 只能细化已接受的 Owner / Contract / recovery 规则；如果字段级设计要求改变九模块、扩大七对象内核或修改跨模块 Authority，就必须升级 Architecture Gap，而不是在 B14 里偷偷改总体架构。
+
+## 第一批 Detail Design Candidate 到底细化了什么
+
+02 和 03 的 Part A 仍然保持人类技术叙事，B1–B13 仍然负责模块级工程语义；新增加的细化集中在 B14.1–B14.8。因此阅读时不需要一上来背字段，可以先理解业务问题，再进入冻结前的工程约束。
+
+02 当前进一步钉住：AdmissionCommand / AdmissionReceipt 的语义字段组、Matter / DocumentVersion / Claim / Evidence / Finding / HumanDecision / WorkProduct 的 identity / version、正式依赖与 WorkProductCitationBinding、状态转换 Guard、Matter-level PostgreSQL 并发候选、Crash Window、Schema Evolution 和 Failure Injection 门槛。
+
+03 当前进一步钉住：KnowledgeGeneration / ProcessingSpec / IndexManifest / ServingPointer、Readiness / Retrieval / EvidenceCandidate 字段组、Generation / Serving Guard、Serving Activation 的 CAS / 可恢复发布点、Worker / Backpressure / Cache 新鲜度、Crash Window、Provider / Schema Evolution 和 Failure Injection 门槛。
+
+这里的“PostgreSQL 并发候选”“Serving CAS 候选”都是 Target 详细设计，不是 Current 生产证明。当前 Evidence 仍只支持有限 Domain mutation / CAS / idempotency / citation provenance 等窄范围能力；真实 PostgreSQL race、完整 AdmissionReceipt、真实 Serving 切换和大规模索引恢复仍需工程证据。
 
 ## 面对横向系统设计追问时怎样回答
 
@@ -84,6 +98,8 @@ production_readiness: NOT_ESTABLISHED
 
 如果追问进一步进入并发、缓存、背压、一致性、容量、HA / DR、成本或数据库恢复，先读 [`../modules/README.md`](../modules/README.md) 的横向系统设计章节，再进入 01 / 02 / 03 / 04 / 06 / 07 / 08 / 09 的 Part B / Part C。目标设计可以解释机制，实际容量和生产资格仍只从 Evidence 回答。
 
+如果任务已经进入 02 / 03 的 Detail Freeze Review，则继续读它们的 B14.1–B14.8。这里才讨论字段组、事务短窗口、CAS / version 条件、Crash Window、Migration 和 Failure Injection；不要把这些 Target Candidate 反写成当前数据库已经具备的能力。
+
 需要实现、测试或审查工程细节时，再读 `architecture.md` Part B、模块 Part B / Part C、相关 ADR 和 Evidence。
 
 Part A 采用中文优先：普通概念能用中文清楚表达时不用多余英文；确实需要代码、框架或正式 Contract 名称时，第一次出现使用 `English（中文）`，后续优先用中文或正式标识。
@@ -95,7 +111,7 @@ Part A 采用中文优先：普通概念能用中文清楚表达时不用多余�
 - `architecture.html`：图源展示入口，不维护平行语义。
 - `README.md`：目录边界、状态和阅读入口。
 - `../project/project.md`：项目为什么存在、为什么值得做、开发背景、团队与参与事实；不拥有 Target 架构。
-- `../modules/`：九个责任域的 Deep Design V2、Human-first Part A 和跨模块一致性设计。
+- `../modules/`：九个责任域的 Deep Design V2、Human-first Part A 和跨模块一致性设计；02 / 03 进一步保存第一批 Detail Design Candidate V1。
 - `../decisions/`：长期有效且具有反转成本的 ADR。
 - `../evidence/`：Current 的代码、测试、Migration、Trace、Eval 和运行证据。
 - `../history/red-blue/`：架构质询和裁决历史，只解释“为什么”，不拥有当前 Target。
