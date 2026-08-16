@@ -213,6 +213,22 @@ Provider 或索引损坏时，可以根据 DocumentVersion + processing spec（�
 
 这样即使 chunking 算法升级、向量库迁移、Graph 节点重建，新的检索实现仍然可以找到同一原始位置；而已经正式采用的历史 WorkProductCitationBinding 也不会因为索引身份变化而失去解释能力。
 
+### 从一批材料的一生看，知识模块怎样避免“今天能搜、明天说不清”
+
+一份材料进入系统以后，真正可靠的知识链不是“上传 → 向量化 → 完成”，而是先固定业务上的 DocumentVersion，再形成明确 KnowledgeGeneration，记录这一代采用了怎样的处理规格、哪些处理项完成、哪些失败、最终哪一代被激活为 Serving。随后每次检索都能回到“我基于哪一代知识、哪个材料版本、哪个 Scope 得到这些候选”。
+
+几个月以后，即使 Embedding 模型、chunk 规则、向量库或图算法已经升级，旧 generation 仍然可以作为当时检索环境的 provenance reference 被解释；新的 generation 可以重建和替换 Serving，却不能把过去正式工作成果的历史依据改写成今天新索引的结果。
+
+这条时间线让知识系统不只是“实时搜得到”，还具备升级、重建、故障恢复和历史复核的基础。对于法律场景，这种可解释的演进能力往往比单次 Top-K 命中更重要。
+
+### 为什么“检索质量差”不能自动等于“知识没准备好”
+
+Readiness 和 Retrieval Quality（检索质量）很相关，但不是同一个问题。100 份材料都已经完整解析、当前 generation 也合法 Serving，任务可能已经 READY；此时某个具体 query 的召回仍然可能很差，这是检索策略、Query Rewrite、Embedding、Reranker 或图路径的问题。
+
+反过来，一个查询偶然命中了正确段落，也不能证明当前任务 Ready。如果关键附件仍未处理，系统只是“在不完整知识里碰巧找对了一处”，不能把这次命中升级成全范围资格。
+
+把两者分开以后，定位问题会清楚很多：Readiness 失败时优先补处理和覆盖；Retrieval quality 失败时做检索评测、参数或 Provider 调整。否则团队很容易用换模型、调 top-k 去掩盖材料其实没有完整进入知识系统的问题。
+
 ### 当前、目标与缺口
 
 Current Evidence（当前证据）已经证明部分 Citation Provenance Guard（引用来源校验）、stale / scope 检查和产品 ingestion 持久化入口；仓库也存在索引和 GraphRAG 相关实现表面。
