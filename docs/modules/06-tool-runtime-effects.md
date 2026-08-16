@@ -100,6 +100,24 @@ Replan 以后旧分支可能收到远端响应。对于纯计算结果，Runtime
 
 是否拆独立服务、是否建立集中 Registry，要由独立扩缩容、安全隔离和部署生命周期证据决定，而不是因为“Tool 很多”就自动微服务化。
 
+### exactly-once 为什么不是本模块可以单方面承诺的属性
+
+工程讨论里经常会问“这个 Tool 能不能做到 exactly-once”。只看 Zuno 本地数据库，答案很容易被说成“有唯一键就可以”；但只要动作跨过网络边界，本地唯一约束最多保证不创建第二个逻辑 PreparedAction，不能阻止第一次请求已经到达远端却在响应回来前丢失。如果远端既没有幂等键，也没有稳定业务唯一键或可查询状态，本地系统没有办法从物理世界中证明“只发生一次”。
+
+因此 06 的目标不是宣称 exactly-once，而是组合可验证的 weaker guarantees：同一 action identity 不被本地重复创建；same key + different action hash 明确冲突；已知未发送才允许普通 Retry；远端支持幂等时复用同一业务动作身份；结果未知进入 Reconciliation；无法自动判断就显式交人工。这样系统不会把无法证明的分布式语义包装成营销式保证。未来如果某个具体外围系统能够提供原子幂等提交和查询，ToolDefinition 可以记录更强能力，但那是该 integration 的 Evidence，不是整个 Tool Runtime 的默认属性。
+
+### 补偿动作为什么必须是新的 Effect，而不是修改旧 Receipt
+
+某些外部副作用可以“撤销”，例如已经创建的临时记录可以删除、已经提交的草稿可以发起撤回。但这种撤销本身也是新的现实动作，有自己的权限、审批、失败和对账风险。把原 `EffectReceipt=EXECUTED` 改写成 `NOT_EXECUTED`，会破坏历史：现实里第一步确实发生过，只是后来又发生了一个反向动作。
+
+所以 Compensation（补偿）如果存在，应创建新的 PreparedAction，引用原 Effect 作为 causation，重新计算 action hash、Authorization、Approval、AuditRequirement 和 idempotency，再形成自己的 EffectReceipt。两个 Receipt 组合后才能说明当前外部状态“可能已经恢复到业务上等价的结果”。如果补偿失败或 outcome unknown，也独立 Reconcile。这样审计、恢复和人工复核能看到完整历史，而不是通过修改旧记录制造一个从未发生过的世界。
+
+### 远端幂等为什么仍然不能替代 Reconciliation
+
+远端支持 idempotency key 可以显著降低重复提交风险，但它只回答“相同 key 的重复请求如何处理”，不一定回答“第一次请求最终产生了什么业务效果”。例如远端可能接受 key，却返回 `PENDING`；也可能把请求去重到一个后来被业务规则拒绝的 operation；查询 idempotency status 还可能暂时不可用。
+
+因此 ToolDefinition 仍需要 ReconciliationCapability：怎样通过 operation id、业务唯一键或 query API 取得最终状态，什么结果算 confirmed executed，什么算 confirmed not executed，什么只能继续 unknown。远端幂等让安全 Retry 的条件更强，但不能把所有 timeout 直接降级成“重发就好”。这也是 EffectReceipt 与 transport / idempotency receipt 分离的原因。
+
 ### 当前、目标与缺口
 
 Current Runtime Baseline 已证明 unknown external effect → `RECONCILE`、禁止 blind retry，以及 tool gateway / side-effect contract 的有限行为；当前测试基线也保留未知外部效果 reconciliation、duplicate command / tool claim 等行为。它们仍不是完整外围系统 E2E。
