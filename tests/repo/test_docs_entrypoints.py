@@ -41,6 +41,13 @@ MODULE_BASELINE_HEADINGS = [
     "### B13 Current / Target / Gap / Evidence",
     "### B14 Code / Database / Migration Constraints",
 ]
+MODULE_CONSISTENCY_HEADINGS = [
+    "## Part C — Cross-Module Consistency（跨模块一致性）",
+    "### C1 Completion Proof / Non-proof（完成证明与非证明）",
+    "### C2 Causation / Version / Freshness Bindings（因果、版本与新鲜度绑定）",
+    "### C3 Cancellation / Late Result / Staleness Rules（取消、晚到结果与失效规则）",
+    "### C4 Recovery Order / Consistency Tests（恢复顺序与一致性验证）",
+]
 
 
 def _load_render_architecture():
@@ -72,8 +79,9 @@ def test_module_design_baseline_is_canonical_human_first_and_complete() -> None:
     assert {p.name for p in root.iterdir() if p.is_file()} == CANONICAL_MODULE_FILES
     readme = (root / "README.md").read_text(encoding="utf-8")
     assert "module_design_baseline: AVAILABLE_V1" in readme
-    assert "module_deep_design: AVAILABLE_V1" in readme
+    assert "module_deep_design: AVAILABLE_V2" in readme
     assert "module_deep_design_coverage: 9/9" in readme
+    assert "cross_module_consistency: AVAILABLE_V1" in readme
     assert "implementation_authorization: NO" in readme
     assert "简单法律问答" in readme and "复杂法律分析" in readme and "现实副作用" in readme
 
@@ -82,9 +90,10 @@ def test_module_design_baseline_is_canonical_human_first_and_complete() -> None:
         assert content.startswith("# ")
         assert "status: design-baseline-v1" in content
         assert "implementation: not-authorized" in content
+        assert "deepening: cross-module-consistency-v2" in content
         assert "## Part A — Human Narrative" in content
         assert "## Part B — Engineering / Agent Reference" in content
-        for heading in MODULE_BASELINE_HEADINGS:
+        for heading in MODULE_BASELINE_HEADINGS + MODULE_CONSISTENCY_HEADINGS:
             assert heading in content, f"{name} missing {heading}"
         assert "Current" in content and "Target" in content and "Gap" in content
 

@@ -91,13 +91,11 @@ def verify() -> list[str]:
         if marker not in design:
             errors.append(f"architecture.md missing module governance marker: {marker}")
 
-    # The module index owns module-design progress. Once the first deep-design pass
-    # covers all nine modules, validation should check that canonical state rather
-    # than preserve the earlier 02+03-only sequencing sentence.
     for marker in (
         "module_design_baseline: AVAILABLE_V1",
-        "module_deep_design: AVAILABLE_V1",
+        "module_deep_design: AVAILABLE_V2",
         "module_deep_design_coverage: 9/9",
+        "cross_module_consistency: AVAILABLE_V1",
         "module_detail_freeze: NOT_YET",
         "implementation_authorization: NO",
         "01 应用与集成",
@@ -109,6 +107,9 @@ def verify() -> list[str]:
         "07 模型网关",
         "08 安全治理",
         "09 可观测性评测",
+        "Part C  Cross-Module Consistency",
+        "Cancellation（取消）是停止未来工作，不是全局回滚",
+        "Idempotency（幂等）不是一个全局 key",
     ):
         if marker not in modules_index:
             errors.append(f"modules README missing current design marker: {marker}")

@@ -1,6 +1,6 @@
 # 06 Tool Runtime & Effects（工具运行与外部效果）
 
-<!-- status: design-baseline-v1; implementation: not-authorized; deepening: all-modules-v1 -->
+<!-- status: design-baseline-v1; implementation: not-authorized; deepening: cross-module-consistency-v2 -->
 
 ## Part A — Human Narrative
 
@@ -317,3 +317,46 @@ Telemetry 只引用脱敏 action / receipt identities，不能替代 EffectRecei
 - 不为每个 Tool 发明独立状态机 / 数据库体系。
 - 不使用 Checkpoint completed 代替 EffectReceipt。
 - 物理服务拆分继续受 ADR-0012 证据门控。
+
+## Part C — Cross-Module Consistency（跨模块一致性）
+
+### C1 Completion Proof / Non-proof（完成证明与非证明）
+
+06 的“完成”只由 effect 语义证明。ToolAttempt finished、HTTP 2xx、SDK success、Runtime Step accepted、Trace exported 都不能单独证明现实效果已经成立。
+
+- `EffectReceipt` 证明 Zuno 已可靠确认某个动作的效果；
+- `ReconciliationReceipt` 证明 Outcome Unknown 后通过远端查询 / 业务标识 / 人工对账得到了什么结论；
+- `KNOWN_NOT_EXECUTED` 才允许在其余门禁仍成立时考虑安全 Retry；
+- 如果远端结果还要成为法律业务事实，仍由 02 Formal Admission 决定。
+
+### C2 Causation / Version / Freshness Bindings（因果、版本与新鲜度绑定）
+
+PreparedAction 必须稳定绑定：action identity / action hash、ToolDefinition / ToolVersion、规范化非敏感参数摘要、target resource、effect class、idempotency identity、run / PlanVersion / StepRun causation、当前 Authorization / Approval / Audit refs，以及必要 CredentialVersionRef。
+
+任何会改变安全或现实语义的内容变化——工具版本、目标、参数、effect class、action hash、policy epoch——都不能复用旧 Approval 或旧“可安全重试”结论。
+
+Action idempotency、ToolAttempt identity、Reconciliation identity 分开；同一个 ToolAttempt 不等于逻辑 action，同一个 action 也可能有多个 Attempt。
+
+### C3 Cancellation / Late Result / Staleness Rules（取消、晚到结果与失效规则）
+
+取消 Runtime / request 后，如果外部调用尚未发出，可以阻止新的 Attempt；如果已发出但结果未知，取消不能把状态写成“未执行”，必须进入或继续 Reconcile。
+
+远端迟到响应必须按 action identity / Attempt / external operation correlation 归属。旧 Plan 的结果晚到，如果 action 本身已经确认发生，则 EffectReceipt 仍是真实 effect fact；04 可以拒绝它参与当前 Plan，但不能通过“分支过期”否认现实世界已经发生的动作。
+
+Tool schema / semantic drift 不改写既有 EffectReceipt 历史，只影响未来 PreparedAction 以及尚未执行动作的 eligibility / Replan。
+
+### C4 Recovery Order / Consistency Tests（恢复顺序与一致性验证）
+
+外部效果恢复必须从本地耐久动作身份和远端可查询事实收敛：
+
+```text
+PreparedAction / action hash / idempotency identity
+→ durable ToolAttempt / external correlation
+→ existing EffectReceipt / ReconciliationReceipt
+→ 若仍未知则查询远端 / 人工对账
+→ 刷新 08 当前授权 / Approval eligibility before any new attempt
+→ 返回 typed effect fact 给 04 / 02 / 01
+→ 09 补 telemetry
+```
+
+至少验证：cancel while request in flight；远端成功后本地 receipt 前崩溃；同 key 不同 action hash；审批后参数变化；SecurityEpoch / Secret lease 在执行前变化；旧 Plan action 响应晚到；远端 query API 不可用；manual reconciliation；mandatory audit persistence failure；Tool semantic drift 时禁止猜参数或盲重试。

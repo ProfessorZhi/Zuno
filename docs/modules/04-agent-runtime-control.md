@@ -1,6 +1,6 @@
 # 04 Agent Runtime & Control（智能体运行与控制）
 
-<!-- status: design-baseline-v1; implementation: not-authorized; native-runtime: measurement-gated; deepening: all-modules-v1 -->
+<!-- status: design-baseline-v1; implementation: not-authorized; native-runtime: measurement-gated; deepening: cross-module-consistency-v2 -->
 
 ## Part A — Human Narrative
 
@@ -374,3 +374,61 @@ Trace 至少关联 run_id、plan_version、step_run_id、branch / join、action 
 - 不把 Runtime 状态表设计成第二套 Domain database。
 - Plan / Step / Branch 字段级 schema、Migration 和 physical service 只有在模块 detail freeze 后确定。
 - Native Runtime 物理独立服务仍受 ADR-0012 Evidence Gate 和 A/B/C measurement 约束。
+
+## Part C — Cross-Module Consistency（跨模块一致性）
+
+### C1 Completion Proof / Non-proof（完成证明与非证明）
+
+04 只能证明运行控制事实。`StepRun=ACCEPTED`、`AgentRun=COMPLETED` 或 Checkpoint 中存在 completed 状态，并不自动证明 02 Formal Admission、06 Effect 或 01 Publication 成功。
+
+Formal Admission-required Step 的完成证明必须包含 matching AdmissionReceipt；现实副作用步骤必须消费 EffectReceipt / ReconciliationReceipt；普通专业分析步骤的完成还要满足 05 capability output contract 与 Step Acceptance。RunOutcome 是这些事实的受控汇总 / 引用，不获得它们的所有权。
+
+LangGraph pending writes 可以避免同一 super-step 中已经成功节点在恢复时被无谓重跑，但这只是运行持久化优化；它不能把一个外部 Effect、Domain Admission 或安全决定升级成 Runtime 自己的 truth。
+
+### C2 Causation / Version / Freshness Bindings（因果、版本与新鲜度绑定）
+
+每个派发 / 接收必须能沿以下控制链定位：
+
+```text
+run_id
+→ PlanVersion
+→ StepRun / Branch causation
+→ input-version set
+→ CapabilityVersion / KnowledgeGeneration / ToolVersion / Model refs
+→ SecurityEpoch / Authorization refs
+→ output / receipt refs
+```
+
+Ready 判定和 Join Acceptance 都必须检查与该 Step 相关的版本和资格仍成立。Replan 后，新 PlanVersion 不能复用旧分支的“成功”标签而跳过输入 / 安全 /能力新鲜度校验。
+
+PlanVersion、StepRun、ActionAttempt 等 Runtime identity 与 Domain admission idempotency、Tool effect idempotency、Model attempt、Delivery identity 分属不同 namespace；Runtime 负责关联，不能用一个全局幂等 key 混合不同语义。
+
+### C3 Cancellation / Late Result / Staleness Rules（取消、晚到结果与失效规则）
+
+`AgentRun=CANCELLED` 的最小含义是停止未来可取消的派发 / 控制工作，不表示已经发生的外部事实被撤销。
+
+- 已经提交的 AdmissionReceipt 仍然成立；
+- 已经确认的 EffectReceipt 仍然成立；
+- in-flight Effect 的结果未知时必须等待 06 Reconcile；
+- 已经产生费用的 ModelCallAttempt 仍由 07 对账 Usage；
+- late branch 必须校验 PlanVersion、input versions、SecurityEpoch 和下游资格，默认不能写当前 Plan state；
+- 新 Evidence / DomainVersion 使旧 Plan 假设失效时，旧分支即使“成功返回”也可能只能触发 Replan / Review。
+
+LangGraph `interrupt()` 恢复会从节点开头重新执行；因此 interrupt 前的副作用必须幂等或移到可恢复 task / 06 Effect 边界。对于并行 super-step，Checkpointer 的 pending writes 可保存已经成功 sibling 的写入，恢复逻辑应利用这一原语而不是自建重复执行假设。
+
+### C4 Recovery Order / Consistency Tests（恢复顺序与一致性验证）
+
+Runtime 恢复先恢复控制快照，再按当前控制位置查询必要 Owner fact，不能反过来用 Checkpoint覆盖权威事实：
+
+```text
+load checkpoint / pending writes
+→ validate current PlanVersion / lease / fencing when applicable
+→ query matching 02 AdmissionReceipt for admission-required steps
+→ query 06 Effect / Reconciliation facts for side-effecting steps
+→ refresh 08 Authorization when next protected access occurs
+→ revalidate 03 / 05 / 07 eligibility and versions before new dispatch
+→ repair Runtime Control State
+→ emit 09 telemetry
+```
+
+至少验证：interrupt 前代码重执行；同 super-step 一分支失败时成功 sibling 不重复产生副作用；cancel while effect in flight；Domain commit/checkpoint fail；checkpoint completed/receipt absent；Replan 后旧分支晚到；Security Epoch 在等待期间变化；Capability / Tool semantic drift；controller takeover + stale lease / fencing；Specialist per-invocation 与 per-thread persistence 不被混用。

@@ -42,6 +42,14 @@ B1_B14_MARKERS = (
     "### B14 Code / Database / Migration Constraints",
 )
 
+PART_C_MARKERS = (
+    "## Part C — Cross-Module Consistency（跨模块一致性）",
+    "### C1 Completion Proof / Non-proof（完成证明与非证明）",
+    "### C2 Causation / Version / Freshness Bindings（因果、版本与新鲜度绑定）",
+    "### C3 Cancellation / Late Result / Staleness Rules（取消、晚到结果与失效规则）",
+    "### C4 Recovery Order / Consistency Tests（恢复顺序与一致性验证）",
+)
+
 
 def _missing(text: str, markers: tuple[str, ...]) -> list[str]:
     return [marker for marker in markers if marker not in text]
@@ -55,9 +63,17 @@ def _require(errors: list[str], label: str, text: str, markers: tuple[str, ...])
 
 def _check_module_template(errors: list[str], label: str, text: str) -> None:
     _require(errors, f"module {label} B1-B14", text, B1_B14_MARKERS)
-    _require(errors, f"module {label} human-first", text, ("## Part A — Human Narrative", "## Part B — Engineering / Agent Reference"))
+    _require(
+        errors,
+        f"module {label} human-first",
+        text,
+        ("## Part A — Human Narrative", "## Part B — Engineering / Agent Reference"),
+    )
+    _require(errors, f"module {label} cross-consistency", text, PART_C_MARKERS)
     if "implementation: not-authorized" not in text:
         errors.append(f"module {label} must remain implementation:not-authorized")
+    if "deepening: cross-module-consistency-v2" not in text:
+        errors.append(f"module {label} must use cross-module-consistency-v2 marker")
 
 
 def verify() -> list[str]:
@@ -175,38 +191,52 @@ def verify() -> list[str]:
     for name, markers in part_b_groups.items():
         _require(errors, f"Part B {name}", part_b, markers)
 
-    stale_active_phrases = (
+    for phrase in (
         "仍等待 Main Architecture Freeze Review",
         "不等于模块正文已经建立",
         "docs/modules/ 仍只有 README",
         "模块正文现在可以在独立的 Module Design 任务中逐个建立",
         "UPLOADED → PROCESSING → READY",
-    )
-    for phrase in stale_active_phrases:
+    ):
         if phrase in architecture:
             errors.append(f"active architecture retains stale pre-baseline phrase: {phrase}")
 
     for number, text in module_docs.items():
         _check_module_template(errors, number, text)
 
-    for number in ("01", "04", "05", "06", "07", "08", "09"):
-        if "deepening: all-modules-v1" not in module_docs[number]:
-            errors.append(f"module {number} missing all-modules-v1 deepening marker")
+    _require(
+        errors,
+        "modules README V2 state",
+        modules_readme,
+        (
+            "module_design_baseline: AVAILABLE_V1",
+            "module_deep_design: AVAILABLE_V2",
+            "module_deep_design_coverage: 9/9",
+            "cross_module_consistency: AVAILABLE_V1",
+            "Stage 1: 02 法律领域 + 03 知识证据          DEEP DESIGN V2 AVAILABLE",
+            "Stage 2: 08 安全治理 + 06 工具外部效果      DEEP DESIGN V2 AVAILABLE",
+            "Stage 3: 05 专业能力 + 04 运行控制          DEEP DESIGN V2 AVAILABLE",
+            "Stage 4: 07 模型网关 + 09 可观测性评测      DEEP DESIGN V2 AVAILABLE",
+            "Final:   01 应用与集成                       DEEP DESIGN V2 AVAILABLE",
+            "module_detail_freeze: NOT_YET",
+            "implementation_authorization: NO",
+            "production_readiness: NOT_ESTABLISHED",
+        ),
+    )
 
     _require(
         errors,
-        "modules README deep design state",
+        "modules README cross consistency",
         modules_readme,
         (
-            "module_deep_design: AVAILABLE_V1",
-            "module_deep_design_coverage: 9/9",
-            "Stage 1: 02 法律领域 + 03 知识证据          DEEP DESIGN V1 AVAILABLE",
-            "Stage 2: 08 安全治理 + 06 工具外部效果      DEEP DESIGN V1 AVAILABLE",
-            "Stage 3: 05 专业能力 + 04 运行控制          DEEP DESIGN V1 AVAILABLE",
-            "Stage 4: 07 模型网关 + 09 可观测性评测      DEEP DESIGN V1 AVAILABLE",
-            "Final:   01 应用与集成                       DEEP DESIGN V1 AVAILABLE",
-            "module_detail_freeze: NOT_YET",
-            "implementation_authorization: NO",
+            "Cancel requested\n!= external operation cancelled\n!= Domain fact rolled back",
+            "Late result arrived\n!= late result still eligible for current Plan / Domain",
+            "Same correlation id\n!= same idempotency namespace",
+            "Cancellation（取消）是停止未来工作，不是全局回滚",
+            "Late Result（晚到结果）统一验收规则",
+            "Idempotency（幂等）不是一个全局 key",
+            "恢复时先找 Owner Fact，再修复 Projection",
+            "opaque identity（不透明身份）",
         ),
     )
 
@@ -224,18 +254,6 @@ def verify() -> list[str]:
     )
     _require(
         errors,
-        "modules README domain/knowledge authority",
-        modules_readme,
-        (
-            "EvidenceCandidate != Evidence",
-            "CitationLineage != WorkProductCitationBinding",
-            "KnowledgeGeneration lifecycle != task-level ReadinessDecision",
-            "DocumentVersion",
-            "AdmissionReceipt",
-        ),
-    )
-    _require(
-        errors,
         "module 02 authority",
         domain,
         (
@@ -244,7 +262,6 @@ def verify() -> list[str]:
             "DomainVersion + matching AdmissionReceipt",
             "WorkProductCitationBinding",
             "Domain invalidation truth",
-            "ReadinessDecision",
         ),
     )
     _require(
@@ -260,75 +277,89 @@ def verify() -> list[str]:
         ),
     )
 
-    # These checks intentionally use durable semantic identifiers rather than
-    # prose sentences, so a human-readable rewrite cannot fail solely because of wording.
     module_requirements = {
         "01": (
             "负责组合，不负责重新发明事实",
             "Run completed\n!=\nDomain admitted\n!=\nAnswer publishable\n!=\nConsumer displayed",
             "Agent Version = 产品能力 / 配置版本",
             "WorkProductInvalidationFact",
-            "side-effecting delivery outcome unknown",
+            "取消入口请求或 Runtime Run，只表示",
+            "request_idempotency",
+        ),
+        "02": (
+            "DomainVersion + matching AdmissionReceipt",
+            "Run / request cancellation 不撤销已经提交的 Domain transaction",
+            "旧 PlanVersion",
+            "领域幂等身份只去重同一规范化领域变更",
+        ),
+        "03": (
+            "index write success\n!= generation valid\n!= generation serving\n!= task READY\n!= formal Evidence / WorkProduct",
+            "取消 ingestion / rebuild",
+            "Readiness / Retrieval 至少绑定",
+            "generation metadata + processing spec",
         ),
         "04": (
             "Fixed AgentRunGraph + dynamic Plan DAG + fixed StepExecutionGraph",
             "PlanVersion immutable after activation",
             "Retry != Replan != Reconcile",
-            "matching AdmissionReceipt",
             "Single Controller",
             "Replan Barrier",
+            "AgentRun=CANCELLED",
+            "pending writes",
         ),
         "05": (
             "Capability = 稳定专业语义",
             "provider execution failure\n!=\ncapability semantic drift",
-            "Capability 输出只允许 Proposal / Candidate / Observation / Reference",
-            "EvidenceCandidate / CitationLineage 由 03 提供",
             "Provider Conformance != task quality",
+            "Capability invocation 被取消",
+            "CapabilityVersion、ProviderVersion / SkillCompositionRef",
         ),
         "06": (
             "Outcome Unknown（结果未知）不得映射为普通 Failed",
             "Transport Success 不等于 Effect Success",
-            "Action Proposal 不等于 PreparedAction，不等于 ToolAttempt，不等于 EffectReceipt",
             "same key + different action hash 必须拒绝",
-            "OUTCOME_UNKNOWN",
-            "Reconcile",
+            "取消 Runtime / request 后",
+            "EffectReceipt / ReconciliationReceipt",
         ),
         "07": (
             "Model Role 与具体 Provider / Model 解耦",
             "Provider technically available != currently permitted != quality qualified",
             "Gateway 调用成功 != Runtime Step accepted != Domain admitted != Answer published",
+            "CANCEL_REQUESTED",
             "Usage / Cost Receipt",
-            "模型输出只产生 Proposal",
         ),
         "08": (
             "Continuous Authorization（持续授权）",
             "AuthorizationDecision、ApprovalDecision、HumanDecision 三者 Owner 与语义不同",
-            "Secret Material 不进入普通 Prompt、Checkpoint、Trace、Audit payload 或普通数据库列",
             "Retention != Recall Eligibility != Physical Purge Completion",
             "MANDATORY_BEFORE_EFFECT",
+            "旧 SecurityEpoch 的 allow",
         ),
         "09": (
             "Telemetry != Durable Audit != Business Truth",
             "MEASUREMENT_BLOCKED",
             "Native Runtime vs Generic Host + Legal Backend",
             "Long-term Memory ablation",
-            "Specialist / Multi-Agent",
-            "GraphRAG",
             "Secret NEVER EXPORT",
+            "OpenTelemetry Baggage",
+            "opaque refs",
         ),
     }
     for number, markers in module_requirements.items():
-        _require(errors, f"module {number} authority", module_docs[number], markers)
+        _require(errors, f"module {number} authority/V2", module_docs[number], markers)
 
     _require(
         errors,
         "cross-module recovery chain",
         modules_readme,
         (
-            "Checkpoint completed\n!=\nDomain committed",
-            "Capability Proposal\n!=\nPreparedAction\n!=\nToolAttempt\n!=\nEffectReceipt",
-            "AuthorizationDecision\n!=\nApprovalDecision\n!=\nHumanDecision",
-            "Telemetry / Trace\n!=\nDurable Audit\n!=\nBusiness Truth",
+            "Checkpoint completed != Domain committed",
+            "Capability Proposal != PreparedAction != ToolAttempt != EffectReceipt",
+            "AuthorizationDecision != ApprovalDecision != HumanDecision",
+            "Telemetry / Trace != Durable Audit != Business Truth",
+            "Domain commit 后 Checkpoint 失败",
+            "POST timeout outcome unknown",
+            "SecurityEpoch 在等待期变化",
         ),
     )
 

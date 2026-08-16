@@ -1,34 +1,35 @@
 # Zuno 模块架构
 
-总体架构已经冻结九个逻辑责任域，模块分解闸门已经打开。本目录现在完成了九个模块的第一轮 **Deep Design V1（深化设计 V1）**：每篇都以 Human-first Part A 解释真实问题、完整流程、异常路径和边界，再用 Part B 的 B1–B14 固定工程责任、状态、失败、恢复、安全、持久化、评测和实现约束。
+总体架构已经冻结九个逻辑责任域。本目录在 Deep Design V1（深化设计 V1）的基础上继续完成 **Cross-Module Consistency V2（跨模块一致性深化 V2）**：九篇模块文档继续保留 Human-first Part A 和 B1–B14 Engineering Reference，并统一增加 Part C，用同一组问题检查完成证明、因果与版本、新鲜度、取消、晚到结果、恢复顺序和跨模块故障一致性。
 
-这仍然不是 Module Detail Freeze（模块细节冻结），也不是 Implementation Authorization（实现授权）。字段级 Contract、最终状态枚举、数据库表、Migration、API 和物理服务只有在后续逐模块 Review 和工程证据充分后才能冻结。
+这仍然不是 Module Detail Freeze（模块细节冻结），也不是 Implementation Authorization（实现授权）。V2 的含义是“九个模块之间的 Target 语义进一步对齐并可机器检查”，不是字段级 Contract、数据库表、Migration、API、物理服务或生产资格已经冻结。
 
 ```text
 module_taxonomy: FROZEN
 module_design_baseline: AVAILABLE_V1
-module_deep_design: AVAILABLE_V1
+module_deep_design: AVAILABLE_V2
 module_deep_design_coverage: 9/9
+cross_module_consistency: AVAILABLE_V1
 module_detail_freeze: NOT_YET
 implementation_authorization: NO
 production_readiness: NOT_ESTABLISHED
 ```
 
-## 九个模块已经完成第一轮深化
+## 九个模块与当前深化重点
 
-| 编号 | 模块 | 深化后首先回答的问题 | 文档 |
-| --- | --- | --- | --- |
-| 01 | Application & Integration（应用与集成） | 请求怎样进入 Zuno，简单任务为什么可以保持简单，结果由谁发布、交付、失效通知和对接 Host？ | [01](01-application-integration.md) |
-| 02 | Legal Domain & Work Product（法律领域与工作成果） | 什么才是正式、长期、可审计的法律业务事实，候选怎样经过准入成为工作成果？ | [02](02-legal-domain-work-product.md) |
-| 03 | Knowledge & Evidence（知识与证据） | 哪一版材料现在真的可用于这个任务，知识生成、证据候选和引用怎样构建与恢复？ | [03](03-knowledge-evidence.md) |
-| 04 | Agent Runtime & Control（智能体运行与控制） | 复杂任务怎样计划、并行、验收、暂停、重试、重规划、对账和恢复？ | [04](04-agent-runtime-control.md) |
-| 05 | Capability & Skill（专业能力与技能） | 论文算法、Prompt、模型和规则怎样成为版本化、可替换、可评测的专业能力？ | [05](05-capability-skill.md) |
-| 06 | Tool Runtime & Effects（工具运行与外部效果） | 一个现实动作怎样准备、授权、审批、执行、去重，并在结果未知时对账？ | [06](06-tool-runtime-effects.md) |
-| 07 | Model Gateway（模型网关） | 模型怎样按角色、资格、安全、预算和质量统一路由，而不把模型输出变成业务事实？ | [07](07-model-gateway.md) |
-| 08 | Security & Governance（安全与治理） | 长任务中谁现在可以做什么、怎样持续授权、审批、使用 Secret、审计和治理数据生命周期？ | [08](08-security-governance.md) |
-| 09 | Observability & Evaluation（可观测性与评测） | 系统发生了什么、关键事实怎样关联、复杂度是否真的值得保留、发布质量怎样被证明？ | [09](09-observability-evaluation.md) |
+| 编号 | 模块 | 首先回答的问题 | V2 一致性重点 | 文档 |
+| --- | --- | --- | --- | --- |
+| 01 | Application & Integration（应用与集成） | 请求怎样进入 Zuno，结果由谁发布、交付和失效通知？ | Publication / Delivery 不是 Domain / Consumer truth；取消和晚到 Ack | [01](01-application-integration.md) |
+| 02 | Legal Domain & Work Product（法律领域与工作成果） | 什么才是正式、长期、可审计的法律业务事实？ | matching AdmissionReceipt、历史引用、新证据失效、晚到 Proposal | [02](02-legal-domain-work-product.md) |
+| 03 | Knowledge & Evidence（知识与证据） | 哪一版材料现在真的可用于这次任务？ | generation / serving / readiness 分层、build cancel、late retrieval | [03](03-knowledge-evidence.md) |
+| 04 | Agent Runtime & Control（智能体运行与控制） | 复杂任务怎样计划、并行、暂停、重试、重规划和恢复？ | control proof 不替代业务 proof、Replan 后 late branch、cancel + receipt recovery | [04](04-agent-runtime-control.md) |
+| 05 | Capability & Skill（专业能力与技能） | 专业算法怎样成为版本化、可替换、可评测能力？ | Conformance / Eligibility / Quality / Admission 分层、provider drift | [05](05-capability-skill.md) |
+| 06 | Tool Runtime & Effects（工具运行与外部效果） | 现实动作怎样准备、执行、确认、去重和对账？ | EffectReceipt、cancel-in-flight、action hash、outcome unknown | [06](06-tool-runtime-effects.md) |
+| 07 | Model Gateway（模型网关） | 模型怎样按角色、安全、预算和资格统一调用？ | call / usage truth 与 Step / Domain truth 分离、cancel / billing settlement | [07](07-model-gateway.md) |
+| 08 | Security & Governance（安全与治理） | 长任务中谁现在仍被允许做什么？ | Decision 不是 execution truth、SecurityEpoch freshness、approval hash、lifecycle enforcement | [08](08-security-governance.md) |
+| 09 | Observability & Evaluation（可观测性与评测） | 系统发生了什么，复杂度是否值得保留？ | Telemetry / Eval 不替代 Owner truth；opaque correlation；BLOCKED 不伪装 PASS | [09](09-observability-evaluation.md) |
 
-02 / 03 是第一组深挖的事实边界；01 / 04 / 05 / 06 / 07 / 08 / 09 在本轮补齐到同一深度标准。**九篇的“深化完成”只表示设计材料达到可审查状态，不表示实现、测量或生产资格完成。**
+**九篇“深化完成”只表示 Target Design 达到可审查状态，不表示实现、测量、Qualification 或 Production Readiness 已经完成。**
 
 ## 先从三条真实任务主线理解九个模块
 
@@ -36,7 +37,7 @@ production_readiness: NOT_ESTABLISHED
 
 ### 主线一：简单法律问答
 
-例如用户问“合同第 8 条写了什么”。应用与集成先明确事项和材料范围，安全与治理给出当前授权，知识与证据确认对应材料对这个任务已经就绪并返回来源，模型网关完成受控生成，应用与集成检查答案资格并发布。
+例如用户问“合同第 8 条写了什么”。应用与集成明确事项和材料范围，安全与治理给出当前授权，知识与证据确认对应材料对本次任务已经就绪并返回来源，模型网关完成受控生成，应用与集成检查答案资格并发布。
 
 ```text
 01 请求 / Scope
@@ -46,11 +47,9 @@ production_readiness: NOT_ESTABLISHED
 → 01 Answer Publication
 ```
 
-这条路径不默认需要 Dynamic Plan、多智能体、长期 Memory 或 GraphRAG。Generic Host（通用 Agent 宿主）只要能遵守同一安全、知识和发布 Contract，也可以承担它。
+这条路径不默认需要 Dynamic Plan、多智能体、长期 Memory 或 GraphRAG。Generic Host（通用 Agent 宿主）只要遵守同一安全、知识和发布 Contract，也可以承担它。
 
 ### 主线二：复杂法律分析
-
-复杂事项包含多版材料、证据依赖、专业分析、并行步骤、人工复核和正式 WorkProduct（工作成果）。
 
 ```text
 01 请求 / Scope
@@ -60,15 +59,13 @@ production_readiness: NOT_ESTABLISHED
 ↔ 05 专业 Capability
 ↔ 07 模型角色调用
 → 02 Finding Proposal / HumanDecision / Formal Admission
-→ AdmissionReceipt + WorkProduct Version
+→ AdmissionReceipt + WorkProductVersion
 → 01 Publication / Delivery
 ```
 
-这里必须保持：Runtime 负责“这次执行怎样继续”，Capability 负责“怎样做专业分析”，Domain 负责“什么最终成为正式法律业务事实”。
+Runtime 负责“这次执行怎样继续”，Capability 负责“怎样做专业分析”，Domain 负责“什么最终成为正式法律业务事实”。
 
 ### 主线三：带现实副作用的任务
-
-当任务需要向外围法院系统提交、更新或通知，动作候选不能直接执行。
 
 ```text
 04 / 05 Action Proposal
@@ -81,7 +78,7 @@ production_readiness: NOT_ESTABLISHED
 → 01 Delivery / Notification
 ```
 
-现实结果未知时禁止 Blind Retry（盲重试）。这是和普通模型失败最重要的区别之一。
+现实结果未知时禁止 Blind Retry（盲重试）。
 
 ## 九模块之间最重要的事实所有权
 
@@ -89,84 +86,161 @@ production_readiness: NOT_ESTABLISHED
 
 | 事实 / 决定 | 权威责任域 | 其他模块最多能做什么 |
 | --- | --- | --- |
-| Matter、DocumentVersion、Claim、Evidence、Finding、HumanDecision、WorkProduct | 02 法律领域 | 读取引用、提出候选，不直接改正式状态 |
-| Formal Admission、AdmissionReceipt、WorkProductCitationBinding、Domain invalidation truth | 02 法律领域 | 04 用回执恢复；01 做发布和失效交付 |
-| KnowledgeGeneration、task-level ReadinessDecision、EvidenceCandidate、CitationLineage | 03 知识与证据 | 02 可以接纳候选为正式 Evidence / 引用 |
-| AgentRun、PlanVersion、StepRun、Branch / Join、Budget、Checkpoint、RunOutcome | 04 运行与控制 | 其他模块返回事实 / receipt，不接管计划状态 |
-| Capability identity / version、Provider Conformance、Eligibility、专业 Proposal | 05 专业能力 | 04 调度；02 决定是否正式接纳 |
-| PreparedAction、ToolAttempt、EffectReceipt、ReconciliationReceipt | 06 工具运行 | 08 决定是否允许；外部系统拥有其内部最终事实 |
-| Model role mapping、ModelRoutingDecision、ModelCallAttempt、Quota、Usage / Cost | 07 模型网关 | 09 评测；08 决定外发 / Credential policy |
-| AuthorizationDecision、Security Epoch、ApprovalDecision、EffectiveLifecycleDecision、Audit Requirement | 08 安全与治理 | 各 Store / 执行边界负责自己的 enforcement fact |
-| Trace、Metric、Eval Dataset / Result、Experiment、Release Evaluation Evidence | 09 可观测性与评测 | 各模块提供脱敏事实引用；09 不接管业务真相 |
-| External Task Intake、InvocationDecision、AnswerPublicationDecision、Delivery、Invalidation Delivery、Consumer Ack Observation | 01 应用与集成 | 外部 Host 仍拥有自己的最终 UI / 展示事实 |
+| Matter、DocumentVersion、Claim、Evidence、Finding、HumanDecision、WorkProduct | 02 | 读取引用、提出候选，不直接改正式状态 |
+| Formal Admission、AdmissionReceipt、WorkProductCitationBinding、Domain invalidation truth | 02 | 04 用回执恢复；01 做发布 / 失效交付 |
+| KnowledgeGeneration、ReadinessDecision、EvidenceCandidate、CitationLineage | 03 | 02 可接纳候选为正式 Evidence / 正式引用 |
+| AgentRun、PlanVersion、StepRun、Branch / Join、Budget、Checkpoint、RunOutcome | 04 | 其他模块返回 facts / receipts，不接管计划状态 |
+| Capability identity / version、Conformance、Eligibility、专业 Proposal | 05 | 04 调度；02 决定是否正式接纳 |
+| PreparedAction、ToolAttempt、EffectReceipt、ReconciliationReceipt | 06 | 08 决定是否允许；外部系统拥有其内部最终事实 |
+| Model role mapping、ModelRoutingDecision、ModelCallAttempt、Quota、Usage / Cost | 07 | 09 评测；08 决定外发 / Credential policy |
+| AuthorizationDecision、SecurityEpoch、ApprovalDecision、EffectiveLifecycleDecision、AuditRequirement | 08 | 各执行边界 / Store 负责自己的执行事实 |
+| Trace、Metric、Eval Dataset / Result、Experiment、ReleaseEvaluationEvidence | 09 | 只做投影 / 测量，不接管业务 truth |
+| External Task Intake、InvocationDecision、AnswerPublicationDecision、Delivery、InvalidationDelivery、Consumer Ack Observation | 01 | 外部 Host 拥有自己的最终 UI / 内部采用事实 |
 
 ## 几组绝对不能再次混淆的边界
 
-第一组是 **正式事实与知识派生**：
-
 ```text
-DocumentVersion canonical identity → 02
-KnowledgeGeneration lifecycle      → 03
-
 EvidenceCandidate != Evidence
 CitationLineage != WorkProductCitationBinding
 KnowledgeGeneration lifecycle != task-level ReadinessDecision
-```
 
-知识模块说明“系统加工了哪版材料、现在能检索出什么、候选怎样被找到”；领域模块说明“业务最终接纳了什么、正式成果当时实际引用了什么”。
+Checkpoint completed != Domain committed
+Formal Admission-required Step 必须有 matching AdmissionReceipt
 
-第二组是 **执行控制与业务提交**：
+Capability Proposal != PreparedAction != ToolAttempt != EffectReceipt
 
-```text
-Checkpoint completed
-!=
-Domain committed
+AuthorizationDecision != ApprovalDecision != HumanDecision
 
-Formal Admission-required Step
-必须有 matching AdmissionReceipt
-```
-
-第三组是 **专业分析与现实动作**：
-
-```text
-Capability Proposal
-!=
-PreparedAction
-!=
-ToolAttempt
-!=
-EffectReceipt
-```
-
-第四组是 **安全决定与执行事实**：
-
-```text
-AuthorizationDecision
-!=
-ApprovalDecision
-!=
-HumanDecision
-```
-
-08 决定“能不能做 / 是否需要批准”，06 / 03 / 07 / 02 等模块证明“是否真的执行”，HumanDecision 是 02 的专业业务决定。
-
-第五组是 **领域失效与外部传播**：
-
-```text
 WorkProduct invalidated → 02
 Invalidation delivered  → 01
-Consumer acknowledged   → 01 的 observation
+Consumer acknowledged   → 01 observation
+
+Telemetry / Trace != Durable Audit != Business Truth
 ```
 
-第六组是 **观测与审计**：
+V2 再增加四组不能混淆的边界：
 
 ```text
-Telemetry / Trace
-!=
-Durable Audit
-!=
-Business Truth
+Provider / index write success
+!= owner-level completion proof
+
+Cancel requested
+!= external operation cancelled
+!= Domain fact rolled back
+
+Late result arrived
+!= late result still eligible for current Plan / Domain
+
+Same correlation id
+!= same idempotency namespace
 ```
+
+## 跨模块因果主干
+
+不同模块不共享一张“万能状态表”，但一次任务必须能通过稳定 identity / refs 串起来。目标上的因果主干是：
+
+```text
+ExternalRequestIdentity / InvocationIdentity
+→ AgentDefinitionVersion
+→ [RunId → PlanVersion → StepRun / Branch]
+→ KnowledgeGeneration / ReadinessDecision / EvidenceCandidate refs
+→ CapabilityVersion / Invocation refs
+→ ModelRoutingDecision / ModelCallAttempt refs
+→ PreparedAction / ToolAttempt / EffectReceipt refs
+→ AuthorizationDecision / ApprovalDecision / SecurityEpoch refs
+→ DomainVersion / AdmissionReceipt / WorkProductVersion
+→ PublicationIdentity / DeliveryIdentity
+→ Telemetry / Eval correlation refs
+```
+
+这里的箭头表示“可追溯关联”，不是把所有对象放进一张表，也不表示每个任务一定经过全部节点。
+
+## 每个模块都必须明确“什么才算完成”
+
+| 模块 | 本模块权威完成证明 | 明确不是完成证明的东西 |
+| --- | --- | --- |
+| 01 | Publication / Delivery 自己的 durable fact | Run complete、DomainVersion、Consumer display |
+| 02 | matching DomainVersion + AdmissionReceipt；必要历史引用绑定 | Checkpoint、Telemetry、更高但因果不匹配的 DomainVersion |
+| 03 | validated manifest / serving fact；task-level ReadinessDecision | 单个 index / OCR / embedding success |
+| 04 | Runtime control state / Step Acceptance / RunOutcome | Domain Admission、Tool Effect、Publication truth |
+| 05 | Capability Contract + Conformance / Eligibility 下的 typed output | Provider 2xx；正式 Domain acceptance |
+| 06 | EffectReceipt / ReconciliationReceipt | HTTP 2xx、ToolAttempt finished、Checkpoint |
+| 07 | Routing / Attempt / Usage facts | Step Acceptance、Capability quality、Domain Admission |
+| 08 | Authorization / Approval / Policy decision | 实际读取、模型调用、Effect、purge completion |
+| 09 | Telemetry projection；版本化 Eval / Release Evidence | Domain / Security / Effect truth；Production Readiness 本身 |
+
+任何模块都不得用自己最容易获得的 `success` 替代相邻模块更强的完成证明。
+
+## Cancellation（取消）是停止未来工作，不是全局回滚
+
+跨模块统一取消语义：
+
+1. 01 取消请求或 04 取消 Run，只阻止后续可以停止的调度 / 计算；
+2. 已经提交的 02 Domain transaction 不因 Run 取消而消失；
+3. 已经确认的 06 EffectReceipt 不因 Run 取消而撤销；
+4. 06 已发出但结果未知的外部动作必须继续 Reconcile；
+5. 07 的 model cancel 可能仍存在 Usage / Billing ambiguity，需要独立结算；
+6. 03 未完成 generation 被取消后不能静默激活 Serving；
+7. 01 已经发送到远端的 Delivery 不能因为本地 cancel 就声称“消费者未收到”；
+8. 09 可以记录 cancel 后晚到 telemetry，但不能用晚到 span 改业务状态。
+
+真正需要“撤销现实效果”时，应有明确补偿 / 反向业务动作；不能把本地 cancel flag 当成回滚协议。
+
+## Late Result（晚到结果）统一验收规则
+
+晚到结果不是自动丢弃，也不是自动接受。消费者必须检查与自己相关的当前条件：
+
+```text
+causation identity still matches?
+PlanVersion / input versions still valid?
+DocumentVersion / KnowledgeGeneration still applicable?
+Capability / Tool / Model version still eligible?
+SecurityEpoch / Authorization still sufficient for the next protected use?
+Domain expected prior version still matches?
+side effect already happened even if branch is stale?
+```
+
+对纯计算结果，如果任一关键假设已经失效，通常丢弃、重评、Review 或 Replan。对现实 Effect，即使旧 Plan 已过期，也不能因为“分支过期”否认已经发生的现实事实；仍以 06 Receipt 为准。
+
+## Idempotency（幂等）不是一个全局 key
+
+不同语义边界必须拥有不同幂等 namespace：
+
+```text
+request / invocation idempotency          → 01
+knowledge generation / processing item    → 03
+step / action execution identity           → 04
+capability invocation identity             → 05
+prepared action / external effect          → 06
+model attempt / usage settlement           → 07
+security decision / approval identity      → 08
+formal admission idempotency               → 02
+publication / delivery identity            → 01
+eval run / experiment identity             → 09
+```
+
+跨模块通过 causation refs 关联这些 identity，而不是把一个 key 复用于多个语义边界。尤其 `same key + different action hash`、`same admission key + different canonical input` 必须拒绝。
+
+## 恢复时先找 Owner Fact，再修复 Projection
+
+不存在一句无条件的“Domain wins”。恢复必须先问当前故障涉及哪个事实 Owner，再使用相应 durable proof：
+
+| 故障 | 第一恢复锚点 | 后续修复 |
+| --- | --- | --- |
+| Domain commit 后 Checkpoint 失败 | 02 matching AdmissionReceipt | 04 Runtime Control State |
+| Checkpoint completed 但 AdmissionReceipt 缺失 | 02 causation query | 04 撤销 formal-complete 推断 / Review |
+| POST timeout outcome unknown | 06 action / attempt / external correlation | Reconcile 后修复 04 / 01 |
+| Knowledge build partial write | 03 generation / manifest / serving pointer | 重建 / Retry processing，不改 Domain |
+| SecurityEpoch 在等待期变化 | 08 current decision | 目标模块在下次受保护访问重新门禁 |
+| Consumer offline while WorkProduct stale | 02 invalidation truth | 01 Delivery 重试；Pull validity 仍返回 stale |
+| Telemetry provider outage | 各 Owner durable facts | 09 后续恢复诊断投影 |
+| Model cancel / billing unknown | 07 Attempt / provider usage refs | settlement；04 Budget 累计修复 |
+
+恢复和对账都不能以普通 Trace 作为唯一依据。
+
+## Correlation（关联）也必须遵守安全边界
+
+跨模块 Trace 需要稳定关联，但 correlation context 默认只传播不含业务含义的 opaque identity（不透明身份）。tenant、用户身份、案件名称、材料正文、Secret 或授权正文不能为了“查日志方便”直接放进 OpenTelemetry Baggage（上下文行李）。Baggage 只在策略明确允许时传播最小 opaque ref，接收端在可信边界内回查真实事实。
 
 ## 全模块共同遵守的架构不变量
 
@@ -181,48 +255,59 @@ Business Truth
 9. **可观测性不是业务真相。** OTel / LangSmith 等只提供 Projection、diagnosis 和 Eval；关键恢复依赖 Owner facts / receipts。
 10. **复杂度必须被测量。** Native Runtime、Long-term Memory、Specialist / Multi-Agent、GraphRAG 都是 measurement-gated / evidence-gated。
 11. **逻辑模块不等于微服务。** 默认物理起点仍是 Modular Python Backend + Workers where justified。
-12. **Platform / Infrastructure 不是第十个业务模块。** 它提供 PostgreSQL、Object Store、Queue / Worker、Checkpointer adapter、CAS、Lease、Fencing、Clock、Network、Secret Delivery 等原语，但不拥有业务成功事实。
+12. **Platform / Infrastructure 不是第十个业务模块。** 它只提供 physical primitives，不拥有业务成功事实。
 13. **Memory / Context 不是一级模块。** 它是 Optional Provider Boundary，不能覆盖 Domain truth 或安全策略。
 14. **Current / Target / Gap 必须分开。** 文档写得完整不证明代码已经实现。
+15. **Cancellation 不是全局回滚。** 已成立的 Domain / Effect / Usage / Delivery facts 继续按各自 Owner 解释。
+16. **Late result 必须重新验收。** 计算成功发生在过去，不代表当前仍有资格进入 Plan / Domain。
+17. **Idempotency namespace 分离。** 不使用一个全局 key 混合 request、step、effect、admission、delivery 等语义。
+18. **Correlation 不携带权威和敏感语义。** Trace refs 只帮助定位，不成为 Authorization / Business Truth。
 
-## 每篇模块文档现在采用同一 B1–B14 工程模板
+## 九篇模块文档采用统一 A / B / C 结构
 
 ```text
-B1  Scope / Global Invariants
-B2  Responsibility / Ownership
-B3  Upstream / Downstream
-B4  Authoritative Facts / Core Objects
-B5  Cross-boundary Contracts
-B6  Normal Flow
-B7  State / Lifecycle
-B8  Failure Taxonomy
-B9  Retry / Replan / Reconcile / Recovery / Idempotency
-B10 Security / Approval / Audit
-B11 Persistence / Transaction Boundaries
-B12 Observability / Evaluation
-B13 Current / Target / Gap / Evidence
-B14 Code / Database / Migration Constraints
+Part A  Human Narrative
+
+Part B  Engineering / Agent Reference
+  B1  Scope / Global Invariants
+  B2  Responsibility / Ownership
+  B3  Upstream / Downstream
+  B4  Authoritative Facts / Core Objects
+  B5  Cross-boundary Contracts
+  B6  Normal Flow
+  B7  State / Lifecycle
+  B8  Failure Taxonomy
+  B9  Retry / Replan / Reconcile / Recovery / Idempotency
+  B10 Security / Approval / Audit
+  B11 Persistence / Transaction Boundaries
+  B12 Observability / Evaluation
+  B13 Current / Target / Gap / Evidence
+  B14 Code / Database / Migration Constraints
+
+Part C  Cross-Module Consistency
+  C1 Completion Proof / Non-proof
+  C2 Causation / Version / Freshness Bindings
+  C3 Cancellation / Late Result / Staleness Rules
+  C4 Recovery Order / Consistency Tests
 ```
 
-Part A 必须先让人理解“为什么需要这个模块、任务怎样经过它、异常以后发生什么”；Part B 才把同一事实写成可供实现、测试和 Agent 消费的精确规格。Part A 和 Part B 如果无法保持一致，应该暴露 Architecture Gap，而不是分别维护两套事实。
+Part A 先让人理解问题和流程；Part B 固定模块内部工程语义；Part C 强制回答“这个模块放进九模块整体以后，会不会和别人对同一个事实说出两套答案”。三部分不一致时必须暴露 Architecture Gap，而不是分别维护三套事实。
 
 ## 推荐的设计依赖顺序与当前进度
 
-设计依赖仍然建议按“先确定真相，再确定可信执行，再确定智能执行，最后组合入口”理解：
-
 ```text
-Stage 1: 02 法律领域 + 03 知识证据          DEEP DESIGN V1 AVAILABLE
-Stage 2: 08 安全治理 + 06 工具外部效果      DEEP DESIGN V1 AVAILABLE
-Stage 3: 05 专业能力 + 04 运行控制          DEEP DESIGN V1 AVAILABLE
-Stage 4: 07 模型网关 + 09 可观测性评测      DEEP DESIGN V1 AVAILABLE
-Final:   01 应用与集成                       DEEP DESIGN V1 AVAILABLE
+Stage 1: 02 法律领域 + 03 知识证据          DEEP DESIGN V2 AVAILABLE
+Stage 2: 08 安全治理 + 06 工具外部效果      DEEP DESIGN V2 AVAILABLE
+Stage 3: 05 专业能力 + 04 运行控制          DEEP DESIGN V2 AVAILABLE
+Stage 4: 07 模型网关 + 09 可观测性评测      DEEP DESIGN V2 AVAILABLE
+Final:   01 应用与集成                       DEEP DESIGN V2 AVAILABLE
 ```
 
-这个顺序是**设计依赖**，不是运行时调用顺序。九篇现在都已经完成第一轮深化，下一步不应再机械扩写，而应进入 Cross-Module Consistency Review（跨模块一致性审查）、场景盘问和字段级模块 Review。
+这个顺序是设计依赖，不是运行时固定调用顺序。
 
-## 下一道门不是“立即实现全部模块”
+## 下一道门仍然不是“立即实现全部模块”
 
-九模块 Deep Design V1 完成后，仍然保持：
+九模块 V2 完成后仍保持：
 
 ```text
 module_detail_freeze: NOT_YET
@@ -231,18 +316,18 @@ quality_proven: NO
 production_readiness: NOT_ESTABLISHED
 ```
 
-下一步应针对完整 E2E 场景和异常路径盘问：每个事实到底谁创建、谁修改、谁使其失效、谁删除、谁恢复；跨边界 Contract 是否足以支持崩溃恢复；安全和预算能否被旁路；是否存在两个模块都声称拥有同一状态；是否存在同一词在不同文档表达不同含义。
+下一步应该继续用完整 E2E 与故障注入场景盘问：字段级 Contract 是否足够表达 V2 的 identity / version / freshness / cancellation / receipt；哪个 Store 持久化哪些 durable fact；数据库与 Migration 是否能支持幂等、因果与历史；哪些目标其实可以继续删除或外置。
 
 只有具体模块完成字段级 Contract、状态转换、错误语义、持久化、Migration、测试与工程证据 Review 后，才考虑 Module Detail Freeze 或生成对应 Codex 实现任务。
 
 ## Platform / Infrastructure 与 Optional Context
 
-Platform / Infrastructure（平台与基础设施）继续是责任层，不是第十个逻辑模块。它提供物理耐久、网络、队列、Worker、检查点、CAS、Lease、Fencing、Secret Delivery、Backup / Restore 等原语；各逻辑模块拥有这些原语承载的业务成功语义。
+Platform / Infrastructure（平台与基础设施）继续是责任层，不是第十个逻辑模块。它提供 PostgreSQL、Object Store、Queue / Worker、Checkpointer adapter、CAS、Lease、Fencing、Clock、Network、Secret Delivery、Backup / Restore 等原语；各逻辑模块拥有这些原语承载的业务成功语义。
 
 Memory / Context（记忆与上下文）继续是可选 Provider 边界。Working / Session Context 可以由 Host 或 Runtime 管理；Long-term Memory 只有在消融评测证明收益后才启用，可以由 OpenViking、通用 Host 或其他 Provider 提供。Memory Entry 不能成为 Matter / Evidence / Finding / WorkProduct 的替代真相。
 
 ## 状态总结
 
-九个模块的第一轮 Deep Design 已经可用于架构 Review、Codex 任务准备和跨模块盘问；但它们仍属于 Target Design。
+九个模块现在达到 **Deep Design V2 / Cross-Module Consistency available**：完成证明、因果版本、新鲜度、取消、晚到结果、幂等 namespace、恢复锚点和观测关联已经在九篇中用同一结构表达并准备接受机器校验。
 
 `design available` 不等于 `implementation available`；`implementation available` 不等于 `quality proven`；`quality proven` 也不自动等于 `production ready`。
