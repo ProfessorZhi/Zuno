@@ -57,44 +57,74 @@ def validate_design(content: str) -> list[str]:
         "### 9. 一次系统故障以后怎样恢复",
         "### 12. 当前哪些能力仍然没有证明",
         "### B1 Scope and Global Invariants",
-        "### B3 Cross-boundary Contracts",
-        "### B9 Recovery and Idempotency",
-        "### B12 Current / Target / Gap",
         "### B2 Responsibility / Ownership Map",
+        "### B3 Cross-boundary Contracts",
         "### B5 State Machines",
         "### B6 Retry / Replan / Reconcile",
         "### B7 Failure Semantics",
         "### B8 Security / Approval / Audit",
+        "### B9 Recovery and Idempotency",
         "### B10 Persistence Boundaries",
         "### B11 Observability / Evaluation",
+        "### B12 Current / Target / Gap",
         "### B13 Evidence / Verification",
+        "### B14 Code / Database / Migration Constraints",
     ]
     required_terms = [
-        "模块化 Python 后端", "独立网络服务", "Application & Integration",
-        "Legal Domain & Work Product", "Knowledge & Evidence", "Agent Runtime & Control",
-        "Capability & Skill", "Tool Runtime & Effects", "平台与基础设施责任层",
-        "可选上下文边界", "FastAPI", "LangGraph", "PostgreSQL", "Checkpoint",
-        "Reconciliation", "Current", "Target", "History", "为什么必须独立服务", "不是库或 Worker",
-        "Logical Responsibility", "Target Status Boundary",
+        "模块化 Python 后端",
+        "独立网络服务",
+        "Application & Integration",
+        "Legal Domain & Work Product",
+        "Knowledge & Evidence",
+        "Agent Runtime & Control",
+        "Capability & Skill",
+        "Tool Runtime & Effects",
+        "Model Gateway",
+        "Security & Governance",
+        "Observability & Evaluation",
+        "Platform / Infrastructure",
+        "责任层",
+        "可选上下文边界",
+        "FastAPI",
+        "LangGraph",
+        "PostgreSQL",
+        "Checkpoint",
+        "Reconciliation",
+        "Current",
+        "Target",
+        "History",
+        "为什么必须独立服务",
+        "不是库或 Worker",
+        "Logical Responsibility",
+        "Target Status Boundary",
+        "KnowledgeGeneration lifecycle != task-level ReadinessDecision",
+        "EvidenceCandidate != Evidence",
+        "CitationLineage != WorkProductCitationBinding",
     ]
     errors: list[str] = []
     for marker in required_sections + required_terms:
         if marker not in content:
             errors.append(f"architecture.md missing required marker: {marker}")
+
     for marker in ("docs/project/", "docs/architecture/"):
         if marker not in content:
             errors.append(f"architecture.md does not route to canonical project layer: {marker}")
+
     if "9 个 Target Logical Modules" not in content or "Round 02" not in content:
-        errors.append("architecture.md must record the revised nine-module target and its source")
-    if (
-        "平台与基础设施责任层" not in content
-        or "final_module_count: 9" not in content
-        or "overall_architecture_state: ROUND_02_FROZEN" not in content
-        or "module_decomposition_gate: OPEN" not in content
+        errors.append("architecture.md must record the frozen nine-module target and its Round 02 source")
+
+    for marker in (
+        "final_module_count: 9",
+        "overall_architecture_state: ROUND_02_FROZEN",
+        "module_decomposition_gate: OPEN",
+        "module_design_baseline: AVAILABLE_V1",
+        "module_detail_freeze: NOT_YET",
+        "implementation_authorization: NO",
+        "architecture_state: ACCEPTED_TARGET",
     ):
-        errors.append("architecture.md must record the frozen nine-module Target and open design gate")
-    if "architecture_state: ACCEPTED_TARGET" not in content:
-        errors.append("architecture.md must record ACCEPTED_TARGET")
+        if marker not in content:
+            errors.append(f"architecture.md missing governance marker: {marker}")
+
     if content.count("```mermaid") > 8:
         errors.append("architecture.md must remain text-first with at most eight diagrams")
     return errors
@@ -108,15 +138,23 @@ def validate_source(content: str) -> list[str]:
             errors.append(f"missing canonical architecture view: {title}")
         elif section.count("```mermaid") < 1:
             errors.append(f"canonical view has no Mermaid diagram: {title}")
+
     if content.count("```mermaid") != len(EXPECTED_VIEWS):
         errors.append(
             f"architecture visual source must contain exactly {len(EXPECTED_VIEWS)} Mermaid diagrams"
         )
-    for term in [
-        "Python-only", "Modular Python Backend", "Independent Workers", "Evidence Gate",
-        "Physical Deployment Decision", "EffectReceipt", "AdmissionReceipt", "A/B/C",
+
+    for term in (
+        "Python-only",
+        "Modular Python Backend",
+        "Independent Workers",
+        "Evidence Gate",
+        "Physical Deployment Decision",
+        "EffectReceipt",
+        "AdmissionReceipt",
+        "A/B/C",
         "Optional Context Provider",
-    ]:
+    ):
         if term.lower() not in content.lower():
             errors.append(f"architecture-views.md missing visual term: {term}")
     return errors
@@ -124,9 +162,15 @@ def validate_source(content: str) -> list[str]:
 
 def validate_html(content: str) -> list[str]:
     required = [
-        "Zuno Target Architecture", '<script type="module">', 'fetch("./architecture-views.md")',
-        MERMAID_MODULE_URL, "../project/project-background.md", "./architecture.md#target-status-boundary",
-        "../evidence/README.md", "diagram-dialog", "Mermaid source",
+        "Zuno Target Architecture",
+        '<script type="module">',
+        'fetch("./architecture-views.md")',
+        MERMAID_MODULE_URL,
+        "../project/project-background.md",
+        "./architecture.md#target-status-boundary",
+        "../evidence/README.md",
+        "diagram-dialog",
+        "Mermaid source",
     ]
     errors = [f"architecture.html missing marker: {marker}" for marker in required if marker not in content]
     if "offline-svg" in content or "offline-diagram" in content:
@@ -139,7 +183,10 @@ def _directory_errors(root: Path) -> list[str]:
     directories = [path.name for path in root.iterdir() if path.is_dir()]
     errors: list[str] = []
     if files != CANONICAL_ARCHITECTURE_FILES:
-        errors.append(f"{root.relative_to(REPO_ROOT)} must contain exactly {sorted(CANONICAL_ARCHITECTURE_FILES)}, got {sorted(files)}")
+        errors.append(
+            f"{root.relative_to(REPO_ROOT)} must contain exactly "
+            f"{sorted(CANONICAL_ARCHITECTURE_FILES)}, got {sorted(files)}"
+        )
     if directories:
         errors.append(f"{root.relative_to(REPO_ROOT)} must not contain subdirectories: {directories}")
     return errors
@@ -151,12 +198,12 @@ def validate_taxonomy() -> list[str]:
         "docs/README.md",
         "docs/project/project-background.md",
         "docs/architecture/architecture.md",
+        "docs/modules/README.md",
         "docs/evidence/README.md",
     ):
         if not (REPO_ROOT / relative_path).exists():
             errors.append(f"missing canonical project entrypoint: {relative_path}")
-    archive = REPO_ROOT / "docs/history/red-blue/README.md"
-    if not archive.exists():
+    if not (REPO_ROOT / "docs/history/red-blue/README.md").exists():
         errors.append("missing Red/Blue history archive README")
     return errors
 
