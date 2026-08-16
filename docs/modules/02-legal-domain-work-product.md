@@ -1,6 +1,6 @@
 # 02 Legal Domain & Work Product（法律领域与工作成果）
 
-<!-- status: design-baseline-v1; implementation: not-authorized; deepening: cross-module-consistency-v2 -->
+<!-- status: design-baseline-v1; implementation: not-authorized; deepening: cross-module-consistency-v2; detail_design: candidate-v1 -->
 
 ## Part A — Human Narrative
 
@@ -440,6 +440,197 @@ Telemetry 需要关联 Matter、DocumentVersion、DomainVersion、Claim / Eviden
 不得因为现有数据库字段、模型抽取结果或某个 Provider 返回结构存在，就把 Proposal 自动升级为 Canonical Object。Migration 必须保留历史版本和已发布成果的依据，不能通过 destructive rewrite 抹掉旧 WorkProductVersion 的来源。
 
 本 Design Baseline 不授权新增 God Domain Service，不要求独立 Domain 微服务，不授权 Event Sourcing、跨 Store 2PC 或完整数据库重构。实现授权需要独立任务和验收标准。
+
+#### B14.1 Detail Freeze Candidate：正式准入输入与回执字段组
+
+下面冻结的是 **Target 语义字段组**，不是最终 ORM class、表名或 API JSON。字段名允许在实现评审时调整，但语义、唯一性和绑定关系不得在 Codex 实现阶段自行改变。
+
+**AdmissionCommand candidate** 至少包含：
+
+| 字段组 | 必需语义 |
+| --- | --- |
+| Scope | `tenant_id`、`matter_id`、`scope_ref` |
+| Admission identity | `admission_id`、`idempotency_key`、`canonical_input_hash` |
+| Concurrency | `expected_domain_version` |
+| Causation | `proposal_ref`；Runtime 驱动时带 `run_id`、`plan_version`、`step_run_id` |
+| Mutation | `mutation_type`、规范化 canonical payload / refs |
+| Dependencies | `DocumentVersion`、既有 `Evidence / Claim / Finding / WorkProduct` version refs |
+| Human authority | 需要人工业务判断时带 `human_decision_refs` |
+| Security | `authorization_decision_ref`、`security_epoch_ref`、`principal_ref` |
+| Provenance | 必要 `KnowledgeGeneration / CitationLineage / CapabilityVersion` refs，仅作来源，不升级为 Domain identity |
+
+**AdmissionReceipt candidate** 至少包含：
+
+```text
+admission_id
+idempotency_key
+canonical_input_hash
+tenant_id / matter_id
+expected_domain_version
+prior_domain_version
+resulting_domain_version
+admitted_object_version_refs
+human_decision_refs when required
+citation_binding_refs when required
+run_id / plan_version / step_run_id when runtime-driven
+proposal_ref
+authorization_decision_ref / security_epoch_ref
+committed_at
+```
+
+Receipt 不保存模型隐藏推理、Secret 或大段原始材料。正式成果正文、证据、引用和 HumanDecision 各自进入对应领域事实；Receipt 只证明“哪组输入以什么因果导致了哪次提交”。
+
+逻辑幂等 namespace 至少按 `(tenant, matter, idempotency_key)` 隔离。同 key + 同 `canonical_input_hash` 重放返回既有合法结果；同 key + 不同 hash 必须冲突。当前 Wave-001 已有相近的 mutation 语义，但完整 AdmissionReceipt 仍是 Target，不得把当前 mutation record 直接宣称为最终 Receipt。
+
+#### B14.2 Detail Freeze Candidate：七对象的 Identity / Version 规则
+
+为避免“表里有一行就是业务身份”，第一阶段按以下语义实现：
+
+- `Matter`：稳定 `matter_id` 是聚合根身份；每次正式变更推进该 Matter 的 `DomainVersion`。
+- `DocumentVersion`：版本本身不可变，必须能绑定 source artifact identity、source representation hash / content hash 和业务可解释来源元数据；修订材料创建新 DocumentVersion，而不是覆盖旧版本。
+- `Claim / Evidence / Finding / WorkProduct`：拥有稳定 logical identity，并以 immutable version record 表达历史；更新产生新 object version，不原地改写已经被 WorkProduct / Receipt 引用的旧版本。
+- `HumanDecision`：默认是不可变业务决定记录；如果专业人员改变决定，创建新的决定事实并通过后续 Admission 改变当前业务结果，不回写旧决定。
+- `DomainVersion`：对 `(tenant, matter)` 单调推进，只表达正式领域提交顺序，不代表 Runtime Step、Tool Effect 或 Publication 顺序。
+
+第一阶段不要求每个对象独立维护一套全局序列。只要 logical identity、object version 与 Matter-level DomainVersion 能稳定关联，就足以支持历史和因果；不要为了“版本化完整”提前引入 Event Sourcing。
+
+#### B14.3 Detail Freeze Candidate：依赖、引用与失效字段组
+
+正式依赖至少需要表达：
+
+```text
+source_object_version_ref
+→ dependent_object_version_ref
+dependency_type
+created_by_admission_id
+created_at
+```
+
+`dependency_type` 只表达业务上确实影响有效性的关系，例如 Evidence supports / contradicts Claim、Finding depends on Evidence / Claim、WorkProduct includes / relies on Finding。检索相似度、模型 attention、向量邻居不自动成为正式依赖。
+
+`WorkProductCitationBinding` 至少绑定：
+
+```text
+work_product_version_ref
+evidence_ref when applicable
+document_version_ref
+stable_source_location
+source_artifact_ref / source_representation_hash
+excerpt_hash or evidence_hash when required
+optional citation_lineage_ref
+binding_identity
+```
+
+Stable location 可以按 PDF page/span、结构化 section/row/cell 等格式化表示；具体 locator schema 在文档格式详细设计中确定，但禁止只保存 Chunk ID / Vector ID / Graph Node ID。
+
+失效事实至少绑定 `affected_object_version_ref + cause_object_version_ref + cause_type + invalidation_identity + created_at`。同一 cause 对同一版本必须幂等。01 的通知重试不能新增第二个 Domain invalidation fact。
+
+#### B14.4 Detail Freeze Candidate：状态转换 Guard
+
+本模块不把所有对象压成一个状态 enum，但正式版本至少遵守以下 Guard：
+
+```text
+proposal / candidate（领域外）
+  --[版本匹配 + 来源有效 + 安全有效 + 人审满足 + 幂等合法]-->
+admitted/current
+
+admitted/current
+  --[新的正式依赖变化且影响成立]-->
+review-required 或 stale
+
+review-required
+  --[新的 HumanDecision / re-evaluation + 新 Admission]-->
+新的 admitted version 或确认仍有效的新的 revalidation fact
+
+admitted/current 或 stale
+  --[新的 admitted version 成为当前版本]-->
+superseded（历史仍保留）
+```
+
+禁止通过直接修改 `status='CURRENT'` 清除曾经发生的失效。若人工复核认为旧结论仍成立，也要保存新的决定 / revalidation 因果，而不是抹掉过去的 invalidation。
+
+Formal Admission Guard 至少同时检查：
+
+1. `expected_domain_version == current_domain_version`；
+2. `canonical_input_hash` 与该 idempotency identity 已有记录一致；
+3. 所有 admission-critical DocumentVersion / object version refs 仍存在且未被不允许的生命周期政策排除；
+4. 需要正式来源的 Evidence / WorkProduct 已拥有可验证稳定引用；
+5. 需要 HumanDecision 的规则已满足；
+6. 当前受保护操作仍消费有效的 AuthorizationDecision / SecurityEpoch；
+7. late proposal 的 causation 仍适用于当前业务版本。
+
+任一 Guard 失败都不能靠“SQL 再试一次”转成成功。
+
+#### B14.5 Detail Freeze Candidate：PostgreSQL 并发与事务候选
+
+第一实现候选采用 **Matter-level serialized admission**：同一 `(tenant, matter)` 的正式 Admission 在短事务内串行化，不同 Matter 仍可并行。当前 `SqlAlchemyCanonicalDomainStore` 在 PostgreSQL 方言下已经使用 aggregate head `SELECT ... FOR UPDATE`，但真实 PostgreSQL race 尚未验证；本节只是把这一思路提升为 Target candidate，而不是把现有实现升级成 Production Evidence。
+
+候选事务顺序：
+
+```text
+BEGIN
+→ establish tenant / security execution context
+→ read idempotency record by admission namespace
+→ same key + same hash: return existing receipt
+→ same key + different hash: reject
+→ lock / compare Matter aggregate head
+→ verify expected DomainVersion
+→ validate admission-critical dependency refs
+→ insert new immutable object versions / dependencies / citation bindings
+→ advance Matter aggregate head
+→ insert matching AdmissionReceipt
+COMMIT
+```
+
+事务中禁止等待模型、远端 Tool、人工输入、LangGraph interrupt/resume 或外部 Consumer ACK。所有高延迟工作在进入 Domain transaction 前完成；提交窗口只做确定性校验和持久化。
+
+PostgreSQL deadlock / serialization abort 属于数据库事务失败，只有在重新读取当前 DomainVersion、授权和依赖仍满足后才能重试。业务版本冲突则不是数据库 transient error，返回 `VERSION_CONFLICT` 类语义给调用方重新判断。
+
+如果未来证明“同一 Matter 高频并发正式写”成为真实瓶颈，再评估更细粒度锁、optimistic concurrency 或分区；在没有 Load Evidence 前不为理论吞吐放弃简单、可证明的单聚合写顺序。
+
+#### B14.6 Detail Freeze Candidate：Crash Window 与恢复矩阵
+
+| Crash Window | Durable truth | 恢复动作 | 禁止动作 |
+| --- | --- | --- | --- |
+| 事务提交前进程退出 | 无 matching Receipt / DomainVersion 不推进 | 同 idempotency identity 重新校验后 Retry | 猜测“可能写了一半”并推进 Runtime |
+| COMMIT 成功但响应丢失 | DomainVersion + matching Receipt 已存在 | 重放查询 Receipt，返回 ALREADY_APPLIED / committed result | 产生第二个版本 |
+| Domain commit 成功、Checkpoint 失败 | 02 Receipt 是准入真相 | 04 读取 matching Receipt 修复 Step / Run control | 回滚领域或再次 Admission |
+| Checkpoint 显示 completed、Receipt 缺失 | Formal Admission 未被证明 | 04 取消 formal-complete 推断并进入 causation check / review | 用更高 DomainVersion 冒充本 Step 结果 |
+| Invalidation commit 成功、通知失败 | 02 invalidation truth 已成立 | 01 重试 Delivery；Pull validity 返回 stale | 因 Consumer 离线恢复为 current |
+| proposal 计算完成后新 Evidence 先提交 | current DomainVersion / dependencies 已变化 | Admission Guard 拒绝旧 expected version；04 Replan / Human | 自动把旧 proposal 合并进新版本 |
+
+#### B14.7 Detail Freeze Candidate：Schema Evolution / Migration 规则
+
+具体表名仍由 Codex 任务设计，但 Migration 必须遵守以下约束：
+
+1. 历史 `DocumentVersion / WorkProductVersion / HumanDecision / AdmissionReceipt / CitationBinding` 不做 destructive rewrite；旧版本必须继续可解释。
+2. 新增 admission-critical 字段采用“新增 → backfill / verify → 约束收紧”的阶段式迁移；不能先加不可满足的强约束再临时伪造默认值。
+3. 新的唯一性 / foreign-key / validation 约束上线前先检查历史冲突；发现冲突必须形成数据修复或显式 blocked migration，不静默丢数据。
+4. `canonical_input_hash` 的规范化算法需要版本标识；未来算法变化时旧 Receipt 继续按原 hash algorithm/version 解释，不能重算后覆盖。
+5. Citation locator / source representation schema 升级必须提供向后读取；不能因为新解析器上线就使旧 WorkProductCitationBinding 不可解析。
+6. DomainVersion 不重新编号；Matter 合并、拆分或 tenant 迁移如果未来出现，必须单独 ADR / Migration 设计，不能在普通 schema cleanup 中处理。
+7. 大表索引、约束和 backfill 的在线策略必须在实现任务里给出锁影响、回滚方案和实际数据库验证；本文不宣称零停机迁移已经成立。
+
+#### B14.8 Detail Freeze Candidate：Failure Injection / Freeze Evidence
+
+02 只有在以下最小矩阵通过后，才有资格从 `detail_design: candidate-v1` 进入 Module Detail Freeze Review：
+
+| 场景 | 必须证明 |
+| --- | --- |
+| same idempotency key + same hash 重放 | 只返回同一 committed result，不新增版本 |
+| same key + different hash | fail closed，不覆盖历史 |
+| 两个 Admission 同时基于 D0 | 最多一个提交到 D1；另一个明确 VERSION_CONFLICT 或等价结果 |
+| DB error / process crash before commit | DomainVersion 与 Receipt 均不推进 |
+| response lost after commit | 重试能够通过 Receipt 恢复，不产生 D2 |
+| Domain commit 后 Checkpoint 失败 | Runtime 从 matching Receipt 修复 |
+| 新 Evidence 在旧 proposal Admission 前提交 | 旧 proposal 被 freshness / version Guard 拒绝或进入人工复核 |
+| 缺失 required HumanDecision | 不创建正式 Finding / WorkProduct |
+| SecurityEpoch 已变化 | 新 Admission 不使用旧 allow |
+| Citation binding wrong-document / wrong-span | 正式成果准入失败 |
+| WorkProduct stale 时 Consumer offline | Domain stale 不回滚；01 可独立重试通知 |
+| 索引 / chunk 重建 | 历史 WorkProductCitationBinding 仍指向原 DocumentVersion / stable location |
+
+Freeze Review 还需要真实 PostgreSQL integration、Migration apply / rollback 或等价安全验证、并发测试、故障注入和 Current Evidence 更新。只补完本节字段表不构成 implementation available。
 
 ## Part C — Cross-Module Consistency（跨模块一致性）
 

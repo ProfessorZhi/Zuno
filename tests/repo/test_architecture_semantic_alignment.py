@@ -43,6 +43,18 @@ C_SECTIONS = (
     "### C4 Recovery Order / Consistency Tests（恢复顺序与一致性验证）",
 )
 
+DETAIL_CANDIDATE_MARKERS = (
+    "detail_design: candidate-v1",
+    "#### B14.1 Detail Freeze Candidate",
+    "#### B14.2 Detail Freeze Candidate",
+    "#### B14.3 Detail Freeze Candidate",
+    "#### B14.4 Detail Freeze Candidate",
+    "#### B14.5 Detail Freeze Candidate",
+    "#### B14.6 Detail Freeze Candidate",
+    "#### B14.7 Detail Freeze Candidate",
+    "#### B14.8 Detail Freeze Candidate",
+)
+
 
 def _load():
     path = REPO_ROOT / "tools/scripts/verify_architecture_semantic_alignment.py"
@@ -114,8 +126,46 @@ def test_all_nine_modules_have_human_first_b1_b14_and_part_c_v2() -> None:
     assert "module_deep_design: AVAILABLE_V2" in readme
     assert "module_deep_design_coverage: 9/9" in readme
     assert "cross_module_consistency: AVAILABLE_V1" in readme
+    assert "module_detail_design_candidate: AVAILABLE_V1" in readme
+    assert "module_detail_design_candidate_coverage: 2/9" in readme
     assert "module_detail_freeze: NOT_YET" in readme
     assert "implementation_authorization: NO" in readme
+
+
+def test_domain_and_knowledge_have_detail_freeze_candidate_v1_only() -> None:
+    docs = {
+        number: (REPO_ROOT / "docs/modules" / filename).read_text(encoding="utf-8")
+        for number, filename in MODULES.items()
+    }
+    for number in ("02", "03"):
+        for marker in DETAIL_CANDIDATE_MARKERS:
+            assert marker in docs[number], f"{number}: {marker}"
+
+    for number in ("01", "04", "05", "06", "07", "08", "09"):
+        assert "detail_design: candidate-v1" not in docs[number], number
+
+    domain = docs["02"]
+    for marker in (
+        "AdmissionCommand candidate",
+        "AdmissionReceipt candidate",
+        "Matter-level serialized admission",
+        "expected_activation_version",
+    ):
+        if marker == "expected_activation_version":
+            continue
+        assert marker in domain
+    assert "Crash Window 与恢复矩阵" in domain
+    assert "Failure Injection / Freeze Evidence" in domain
+
+    knowledge = docs["03"]
+    for marker in (
+        "KnowledgeGeneration / ProcessingSpec / Manifest 字段组",
+        "ServingPointer candidate",
+        "expected_activation_version",
+        "Worker、Backpressure、Cache 与并发规则",
+        "Failure Injection / Freeze Evidence",
+    ):
+        assert marker in knowledge
 
 
 def test_cross_module_authority_invariants_are_explicit() -> None:
