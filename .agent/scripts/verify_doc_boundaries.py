@@ -2,6 +2,14 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[2]
+PROJECT_FILES = {
+    "docs/project/README.md",
+    "docs/project/project-background.md",
+    "docs/project/product-positioning-and-value.md",
+    "docs/project/team-and-contributions.md",
+    "docs/project/development-process.md",
+    "docs/project/review-question-map.md",
+}
 MODULE_FILES = {
     "docs/modules/README.md",
     "docs/modules/01-application-integration.md",
@@ -22,10 +30,7 @@ def _relative_files(directory: Path) -> set[str]:
 
 def main() -> int:
     errors: list[str] = []
-    if _relative_files(ROOT / "docs/project") != {
-        "docs/project/README.md", "docs/project/project-background.md",
-        "docs/project/team-and-contributions.md", "docs/project/development-process.md",
-    }:
+    if _relative_files(ROOT / "docs/project") != PROJECT_FILES:
         errors.append("project boundary mismatch")
     if _relative_files(ROOT / "docs/history") != {
         "docs/history/README.md", "docs/history/red-blue/README.md",
