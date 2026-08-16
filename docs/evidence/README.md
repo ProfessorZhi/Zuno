@@ -28,7 +28,7 @@ COURT QA: UNKNOWN / NOT AVAILABLE
 
 ## 评审或技术面试时怎样使用 Evidence
 
-当问题是“为什么这样设计”，先回 `docs/architecture/` 或目标 `docs/modules/`；当问题变成“这个设计现在落地了吗”，才切到 Evidence。
+当问题是“为什么这个项目存在、为什么不只用通用平台、项目历史和参与是什么”，先读 [`docs/project/project.md`](../project/project.md)；当问题是“为什么这样设计”，回 `docs/architecture/` 或目标 `docs/modules/`；当问题变成“这个设计现在落地了吗”，才切到 Evidence。
 
 几个常见边界：
 
@@ -57,7 +57,7 @@ C. Zuno Native Runtime + First-class Domain State
 
 - 先看对应 Evidence 的 scope、command、result 和 known gaps；
 - 只把明确覆盖的结论称为 Current；
-- 外部数据、客户材料和历史记忆必须回到 `docs/project/`；Red / Blue 讨论只回到 `docs/history/red-blue/`，不作为 Evidence；
+- 项目历史、用户回忆和产品定位回到 [`docs/project/project.md`](../project/project.md)；更严格的一句话能否采用，再核对 [`project-fact-provenance.md`](../governance/project-fact-provenance.md)；
+- Red / Blue 讨论只回到 `docs/history/red-blue/`，不作为 Evidence；
 - Architecture Target 和 ADR 的语义不由本目录拥有；
-- 项目来源、产品定位和个人贡献从 [`docs/project/`](../project/README.md) 读取；一句历史表述能否采用，从 [`project-fact-provenance.md`](../governance/project-fact-provenance.md) 核对；
-- 面向 Reviewer 的问题路由见 [`docs/project/review-question-map.md`](../project/review-question-map.md)。
+- 技术面试的项目级问题从 `project.md` 的 Reviewer 章节进入；具体架构、模块或实现问题再按 Owner 继续深入。
