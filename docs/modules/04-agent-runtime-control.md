@@ -1,146 +1,376 @@
 # 04 Agent Runtime & Control（智能体运行与控制）
 
-<!-- status: design-baseline-v1; implementation: not-authorized; native-runtime: measurement-gated -->
+<!-- status: design-baseline-v1; implementation: not-authorized; native-runtime: measurement-gated; deepening: all-modules-v1 -->
 
 ## Part A — Human Narrative
 
-### 为什么复杂任务才需要运行控制
+### 这个模块不是为了让所有问题都“Agent 化”
 
-简单问答没有必要启动一套复杂 Agent Runtime：确认材料和权限、检索原文、生成带依据答案并检查即可。运行控制真正有价值的场景，是任务需要跨多个步骤、等待人工、并行调用能力、在失败后继续，或者因为材料、能力和假设变化而调整剩余计划。
+简单法律问答不需要先造一个复杂运行时。用户问“合同第 8 条写了什么”，只要范围、权限和材料就绪，检索到原文，生成有据回答并通过发布资格检查即可。
 
-这个模块解决的是“这次任务现在应该做什么、做到哪里、失败以后怎样继续”，不是“法律业务世界最终承认什么”。如果简单路径已经足够，就不应该为了架构统一强迫它进入复杂运行时。
+运行控制真正有价值的任务，是那些需要多个步骤、依赖关系、并行处理、人工等待、预算控制、失败恢复或中途修改剩余计划的复杂任务。它回答的是：**这次任务应该先做什么、哪些步骤可以同时做、执行到哪里、失败后继续还是改计划、暂停以后怎样恢复，以及最终能不能形成一个可信 RunOutcome（运行结果）。**
 
-### 进入原生运行时的任务一定有计划
+它不回答“法律业务世界最终承认什么”。那是 02 法律领域与工作成果的责任。
 
-只要任务进入 Zuno Native Agent Runtime（原生智能体运行时），就必须有 Plan（计划）。简单但仍需要运行时能力的任务使用 Deterministic Single-Step Plan（确定性单步计划）；复杂任务使用 Dynamic DAG Plan（动态有向无环计划）。
+### 什么时候进入 Zuno 原生运行时，什么时候不进入
 
-这意味着不能通过 `direct_answer` 或类似旁路绕过 Plan、Trace、Budget、AnswerPolicy 和 RunOutcome。简单任务可以有简单计划，但不能在已经进入原生运行时后突然失去控制、预算和可审计边界。
+总体架构允许两条路径共存。
 
-### 固定运行图和动态计划各负责什么
+普通 `Generic Host（通用 Agent 宿主）` 可以承担简单问答和简单工作流，只要它遵守安全、知识就绪、证据和发布边界。只有任务需要 Zuno 自己提供更强的持久控制、复杂计划、并行、人工中断、重规划或恢复时，才进入 `Zuno Native Agent Runtime（Zuno 原生智能体运行时）`。
 
-总体形态保持为：固定 AgentRunGraph 管整次运行，动态 Plan DAG 表达任务目标、依赖和可并行关系，固定 StepExecutionGraph 管单个步骤怎样执行。Plan-and-Execute 负责“先做什么、后做什么、哪些可以一起做”；ReAct 只负责一个 Step 内部的 Action 与 Observation；Reflection 负责质量判断和控制决策；Replan 在原计划结构或假设失效时修改剩余计划；任务结束后的 Reflexion 只能产生长期经验候选，不能直接提交长期记忆。
+一旦进入原生运行时，就必须有 Plan（计划）：简单但需要运行时能力的任务使用 `Deterministic Single-Step Plan（确定性单步计划）`；复杂任务使用 `Dynamic DAG Plan（动态有向无环计划）`。
 
-Planner 必须知道执行器和 Capability 的真实能力边界，不能把一个超大、不可验收的任务塞成单个 Step。Step 应该小到能够明确输入、输出、证据、预算和接受条件，又不需要为了追求“原子化”把每个普通函数调用都变成图节点。
+不能进入运行时以后再通过 `direct_answer` 之类的旁路绕过 Plan、Trace、Budget、AnswerPolicy 和 RunOutcome。保持简单的方式是“不进入重运行时”或使用真正单步计划，而不是进入以后失去控制边界。
 
-### 并行的目标是安全吞吐，不是并行数量
+### 固定运行图、动态计划和单步执行图各负责什么
 
-Ready Step 只有在依赖、输入、资源冲突、副作用、预算、配额和安全门禁都允许时才并行。数据依赖、写同一资源、不可逆副作用、排他资源、Replan 和 Final Synthesis 默认串行。
+目标结构保持三层：
 
-优先使用 LangGraph 自带的动态分发和状态归并原语，例如 `Send`、Reducer、Subgraph 和 Checkpointer；只有实际证据证明这些原语不足时，才引入自定义 DispatchGroup、复杂锁或额外分布式调度。逻辑上的九个模块也不意味着要为运行时先建设一个独立分布式调度平台。
+```text
+固定 AgentRunGraph（整次运行控制）
++
+动态 Plan DAG（这次任务要做哪些步骤、依赖和并行关系）
++
+固定 StepExecutionGraph（一个步骤内部怎样执行）
+```
 
-### 质量控制不是“每一步都再问一次大模型”
+AgentRunGraph 负责运行生命周期、计划激活、调度、预算、中断、恢复和最终结果。
 
-每个 Action 都要有 Evaluation（行动评估），每个 Step 都要有 Acceptance（步骤验收），但不是每个 Step 都调用模型 Reflection。确定性 Schema 校验、Citation Check、测试、预算、安全门禁等能由代码完成时，优先使用确定性能力。
+Plan DAG 只描述当前任务的目标、Step、依赖和可并行关系。它不是一份长期业务流程配置，也不是 Product Agent Definition。
 
-Acceptance 失败、证据冲突、关键决策、重复失败或高风险时，才触发 Step Reflection；并行结果部分失败或互相冲突时触发 Join Reflection；简单任务默认使用确定性 Final Gate；复杂任务和严格有据回答才使用模型级 Final Reflection。这样把“质量控制”从“每一步多调用一次模型”变成明确的触发式机制。
+StepExecutionGraph 管单个 Step 内部的执行循环，包括 ReAct（推理—行动—观察）、动作评估、步骤验收和必要 Reflection（反思）。
 
-### 重试、重规划和对账为什么必须分开
+这种结构允许“运行框架稳定、每次任务的计划不同”，避免为了动态计划去动态拼一整套不可维护的 Graph topology。
 
-模型服务 503 但任务结构仍正确，是 Retry（重试）；Capability / Tool 语义变化导致原来的参数、依赖或假设失效，是 Replan（重规划）；外部请求已经发出但现实结果未知，是 Reconcile（对账恢复）。
+### Planner（规划器）怎样决定 Step 粒度
 
-把三者混在一起很危险：把计划错误当临时故障会无限重试，把外部未知结果当失败重试可能重复产生副作用。运行控制拥有“下一步应该采取哪种控制动作”的决定，但现实副作用的最终确认仍由工具运行与外部效果负责。
+Planner 必须知道 05 Capability（专业能力）和 Executor（执行器）的真实边界，不能把“分析全案、找证据、适用法律、形成结论、提交系统”塞成一个巨大 Step。
 
-### PlanVersion 为什么激活以后不能原地改
+一个可执行 Step 至少应该能明确：输入是什么、依赖什么、输出是什么、怎样验收、需要哪些证据、预算是多少、有没有副作用、允许不允许并行。
 
-复杂任务运行到一半可能需要重规划。如果直接修改正在运行的 Plan，已经派出去的并行分支就无法知道自己属于旧假设还是新假设。
+同时也不需要把每个普通函数调用都拆成图节点。Step 的边界应该围绕“可独立验收和恢复的工作单元”，而不是追求节点数量。
 
-因此 PlanVersion 激活后不可变；重规划创建新版本。并行环境里进入 Replan 前需要 Replan Barrier：停止继续基于旧版本派发新工作，等待或标记旧分支，再激活新计划。晚到的旧分支结果必须携带原 PlanVersion 和 causation identity，不能污染新计划。
+### 一个复杂任务怎样从计划走到可执行步骤
 
-### 运行状态和领域状态怎样分开
+假设任务要比较原被告两组材料、识别争议、检索法条并形成工作成果。
 
-AgentRun、PlanVersion、StepRun、Branch / Join、Budget、Interrupt、ControlDecision 和 Checkpoint 属于运行控制状态。正式 Matter、Finding、HumanDecision 和 WorkProduct 属于法律领域。
+Planner 创建 PlanVersion V1：先确认材料和知识就绪；随后两个材料分析 Step 可以并行；Join 后做冲突判断；再检索法律依据；最后形成 Finding Proposal，进入人工复核和 02 正式准入。
 
-如果某个 Step 的完成条件要求 Formal Admission（正式准入），没有匹配的正式准入回执，运行时不能宣布该 Step 正式完成。PostgreSQL 保存领域事实，LangGraph Checkpointer 保存图控制状态，两者通过耐久回执对账，而不是共享一个“总状态”或做跨存储 2PC。
+```mermaid
+flowchart LR
+  P[PlanVersion V1] --> R[材料 / 知识就绪]
+  R --> A[原告材料分析]
+  R --> B[被告材料分析]
+  A --> J[Join]
+  B --> J
+  J --> C[冲突 / 争议判断]
+  C --> L[法律依据检索]
+  L --> F[Finding Proposal]
+  F --> H[必要人工复核]
+  H --> D[02 正式准入]
+```
 
-### 人工中断为什么要求副作用幂等
+运行控制负责这条执行关系，但 A / B 产出的专业候选仍由 05，证据由 03，正式结果由 02，权限由 08 各自拥有。
 
-LangGraph 的 `interrupt()` 可以暂停图并在外部输入后恢复，但当前官方语义是恢复时会从发生 interrupt 的 node 起点重新执行，而不是从 Python 代码的那一行继续。因此 interrupt 之前发生的现实副作用必须幂等，或者放进可被 Checkpoint 正确复用的任务边界；否则一次人工审批恢复可能意外重复发送外部请求。
+### 并行的目标是“安全吞吐”，不是同时启动越多越好
 
-这也是 Zuno 把外部副作用交给工具运行与效果回执管理、而不是直接写在任意 graph node 里的原因。
+一个 Step 依赖已经满足，并不代表它就可以立即并行。
 
-### Single Controller 和多智能体怎样共存
+Ready Step 还要检查：输入版本是否确定、是否会写同一资源、是否争用排他资源、是否有不可逆副作用、预算 / 配额是否足够、当前 Security Gate（安全门禁）是否允许。
 
-Zuno 采用 Single Controller（单控制器）作为产品运行时原则，不默认建设自治 Multi-Agent Runtime。Specialist Agent（专家智能体）或子图可以作为某个计划步骤的执行方式，也可以在安全条件允许时并行，但它们只能返回候选、证据、观察或建议，不能直接提交领域事实、批准权限、绕过预算或执行未审批副作用。
+默认串行的情况包括：存在数据依赖、写同一业务资源、不可逆副作用、排他资源、Replan、Final Synthesis（最终综合）。
 
-一次性专家通常继承父图的 Checkpointer / subgraph persistence 即可；只有专家需要独立于父任务跨调用维持生命周期时，才有理由设计独立 thread / checkpoint。不能为了“多 Agent”先建设一套产品级 Agent Society。
+在安全前提成立时才最大化并行。实现优先复用 LangGraph 的 `Send`、Reducer（归并器）、Subgraph（子图）和 Checkpointer（检查点）等原语，而不是预先自建分布式调度系统。
 
-### 为什么原生运行时仍然是条件能力
+### 并行分支回来以后为什么还需要 Join
 
-模块边界已经清楚，但原生运行时是否比“通用宿主 + 法律后端”真正更有价值仍要通过 A/B/C 对照测量。若真实任务证明普通 Host 加后端就能满足持久执行、HITL、领域准入和恢复要求，就应该缩小甚至删除自有运行时，而不是为了架构完整保留它。
+并行只解决“可以同时算”，不能解决“结果能否一起使用”。
+
+两个分支都成功返回，也可能引用不同材料版本；一个分支可能证据不足；两个分支可能在关键事实判断上冲突；还有旧 Plan 的分支可能在 Replan 后晚到。
+
+Join 需要先检查 causation（因果身份）、PlanVersion、输入版本、结果资格和冲突情况，再决定是否接受全部、接受部分、触发 Join Reflection（汇合反思）、扩大检索、Replan 或交人工。
+
+因此 Reducer 只是状态合并机制，不等于业务上的 Join Acceptance（汇合验收）。
+
+### 质量控制为什么不是每一步都再调用一次大模型
+
+每个 Action（行动）都必须有 Evaluation（评估），每个 Step 都必须有 Acceptance（验收），但“有评估”不等于“再调用一个 Critic 模型”。
+
+Schema 校验、Citation Check、权限检查、预算、单元测试、确定性规则等能由代码完成时，优先使用确定性能力。
+
+只有 Acceptance 失败、证据冲突、关键决策、重复失败、高风险或部分并行结果冲突时，才触发模型级 Reflection。
+
+简单任务默认只执行 Deterministic Final Gate（确定性最终门）；复杂任务和 Strict Grounded Answer（严格有据回答）才执行模型级 Final Reflection。
+
+这让质量控制成为“触发式决策系统”，而不是“每一步都多花一次模型调用”。
+
+### Retry（重试）、Replan（重规划）和 Reconcile（对账恢复）为什么必须严格区分
+
+这三种控制处理的是三个完全不同的问题。
+
+模型 Provider 503，但输入、能力、依赖和计划仍然正确，是 Retry。
+
+当前 Tool / Capability 的 schema、语义、材料前提或依赖发生变化，原计划假设失效，是 Replan。
+
+外部 POST 已经发出，但现实世界是否执行未知，是 Reconcile；04 不自己猜结果，而是等待 06 的 Effect / Reconciliation facts。
+
+```text
+执行暂时失败 + 计划仍正确
+→ Retry
+
+计划结构 / 依赖 / 能力 / 事实假设失效
+→ Replan
+
+外部现实结果未知
+→ Reconcile
+```
+
+把三者混在一起，会导致无限重试、错误计划持续执行或重复现实副作用。
+
+### PlanVersion 为什么激活以后不可原地修改
+
+复杂任务运行中可能出现新证据、能力版本变化或分支失败，需要修改剩余计划。
+
+如果直接修改正在执行的计划，已经派出的分支无法知道自己属于旧假设还是新假设。因此 PlanVersion 激活后不可变；Replan 创建 V2、V3……新的版本。
+
+并行环境进入 Replan 前必须经过 Replan Barrier（重规划屏障）：停止继续从旧 Plan 派发新 Step，收集 / 取消 / 标记仍在飞行的旧分支，建立新计划后再继续。
+
+晚到的旧分支必须带原 PlanVersion 和 causation identity。它可以被丢弃、重新评估或作为信息输入，但不能直接写入当前计划状态或正式领域状态。
+
+### Human-in-the-loop（人在回路）暂停以后为什么副作用必须幂等
+
+LangGraph 当前官方 `interrupt()` 语义是：图通过 Checkpointer 保存状态，使用同一 thread id 恢复；恢复时会从触发 interrupt 的 node 起点重新执行，因此 interrupt 之前的 node 内代码可能再次运行。
+
+这意味着不能在同一个 node 里先发送一个不可幂等外部请求，再 `interrupt()` 等人批准，然后期待恢复时从那一行以后继续。
+
+外部副作用应放进 06 Tool Runtime & Effects 的受控边界，或者设计成可以安全重复 / 通过持久任务结果复用的任务。人工中断不是绕过幂等设计的理由。
+
+### 领域提交成功、Checkpoint 失败以后怎么恢复
+
+假设一个 Step 的完成条件是“Finding Proposal 已经正式准入”。02 在 PostgreSQL 事务里成功写入新的 Domain Version 和匹配 `AdmissionReceipt（正式准入回执）`，但 04 还没来得及更新 LangGraph Checkpoint 就崩溃。
+
+恢复时先读取领域的 AdmissionReceipt，确认当前 run / PlanVersion / StepRun / proposal / idempotency identity 对应的业务提交已经发生，再修复 Runtime Control State。不能因为 Checkpoint 落后而重复提交。
+
+反过来，如果 Checkpoint 显示 Step completed，但没有匹配 AdmissionReceipt，就不能宣布 Formal Admission（正式准入）成功。
+
+```mermaid
+sequenceDiagram
+  participant R as Runtime
+  participant D as Domain
+  R->>D: Admission request(run/plan/step/proposal)
+  D-->>D: Domain mutation + AdmissionReceipt 同事务提交
+  D-->>R: Receipt
+  Note over R: Checkpoint 更新前崩溃
+  R->>D: Recovery query by causation identity
+  D-->>R: Matching AdmissionReceipt
+  R-->>R: Repair Runtime Control State
+```
+
+这条因果恢复链比“DomainVersion 变大了”更强，因为更高版本可能来自别的运行。
+
+### Single Controller（单控制器）和 Specialist Agent（专家智能体）怎样共存
+
+Zuno 默认采用 Single Controller，不建设产品级自治 Multi-Agent Runtime。
+
+Specialist Agent 或 Subgraph 可以作为某个 Step 的执行方式，也可以在安全条件允许时并行。它们输出 Proposal、BranchResult、Evidence refs、Observation 或 Recommendation，不得直接提交 Canonical Domain State、批准权限、激活 PlanVersion、绕过 Budget、执行未审批 Effect 或提交长期 Memory。
+
+一次性 Specialist 通常继承父运行的 checkpointer / subgraph persistence 即可。只有确实需要独立于父任务跨多次调用维持生命周期时，才考虑独立 thread / checkpoint。
+
+### Checkpointer 是控制状态，不是业务数据库
+
+LangGraph Checkpointer 保存 graph state、interrupt / resume 和故障恢复需要的 Runtime Control State。它不能因为底层也使用 PostgreSQL，就和 02 的 Domain Store 混成同一种事实。
+
+`PostgreSQL（领域持久化）` 保存 Canonical Domain facts / AdmissionReceipt；`LangGraph Checkpointer（运行检查点）` 保存执行控制。两者通过 stable identity / receipt 对账，不默认做跨 Store 2PC。
+
+### 原生运行时为什么仍然是 Measurement-gated（测量门控）
+
+模块边界设计完整，不代表自有运行时已经证明必要。
+
+必须通过 A/B/C 对照回答：Generic Host + Legal Skills、Generic Host + Zuno Legal Backend、Zuno Native Runtime + First-class Domain State，在真实复杂任务的质量、恢复、人工介入、成本、时延和开发复杂度上分别表现怎样。
+
+如果通用宿主加法律后端已经满足持久执行和恢复，Zuno 就应该缩小自有运行时，而不是为了架构完整保留它。
 
 ### 当前、目标与缺口
 
-Current Runtime Baseline 已证明 AgentRunApplicationService → AgentRuntimeService → AgentRunStore / checkpoint → Agent Core graph 的主路径，以及持久化失败、approval interrupt、duplicate claim、cancel、restart、unknown effect reconcile 等有限语义。正式四 Profile runtime、复杂 DAG 并行故障测试、真实 HA / fencing / takeover、完整 A/B/C benchmark、formal admission recovery E2E 和生产恢复仍未建立。
+Current Runtime Baseline 已证明 `AgentRunApplicationService → AgentRuntimeService → AgentRunStore / checkpoint → Agent Core graph` 的主路径，以及持久化失败、approval interrupt、duplicate claim、cancel、restart、unknown effect reconcile 等有限语义。
+
+Target 是 Single Controller + fixed AgentRunGraph + dynamic Plan DAG + fixed StepExecutionGraph，配合 safe parallelism、triggered reflection、immutable PlanVersion、AdmissionReceipt recovery 和明确 Retry / Replan / Reconcile。
+
+Gap 包括真实复杂 DAG 故障注入、并行 late branch、Replan Barrier、正式四 Profile runtime、HA / fencing / takeover、AdmissionReceipt recovery E2E、Security Epoch drift、Specialist benefit measurement 和 A/B/C benchmark。没有这些证据不能宣称 production-ready runtime。
 
 ## Part B — Engineering / Agent Reference
 
 ### B1 Scope / Global Invariants
 
-**Owns** Single Controller 与任务控制，不拥有业务真相。Native Runtime entrant always has a Plan；Simple = deterministic single-step；Complex = dynamic DAG。PlanVersion immutable after activation；Retry != Replan != Reconcile；Formal Admission-required Step 必须消费 matching AdmissionReceipt；direct-answer bypass 不允许绕过 Plan / Trace / Budget / AnswerPolicy / RunOutcome。
+1. Native Runtime entrant always has a Plan：simple = deterministic single-step；complex = dynamic DAG。
+2. 不允许 `direct_answer` 绕过 Plan / Trace / Budget / AnswerPolicy / RunOutcome。
+3. Fixed AgentRunGraph + dynamic Plan DAG + fixed StepExecutionGraph。
+4. PlanVersion immutable after activation；Replan 创建新版本。
+5. Ready Step 只有在 dependency / input / resource / side-effect / budget / quota / security gates 全部允许时才并行。
+6. Action always evaluated；Step always accepted；model Reflection triggered, not universal。
+7. Retry != Replan != Reconcile。
+8. Formal Admission-required Step 没有 matching AdmissionReceipt 不得完成。
+9. Runtime Checkpoint != Domain Commit != Tool Effect truth。
+10. Single Controller 是默认；Specialist / Multi-Agent 是可选执行模式，不能获得更高权限。
+11. Resume / Retry / Replan 发生新受保护访问时重新授权。
+12. Native Runtime remains conditional / measurement-gated。
 
 ### B2 Responsibility / Ownership
 
-**Owns**：AgentRun、Plan / PlanVersion、Step / StepRun、Branch / Join、Budget control、parallel dispatch、Action / Step control evaluation、Retry / Replan / Reconcile control decision、Interrupt / Resume、Checkpoint-based control recovery、RunOutcome。
+**Owns**：AgentRun、Plan / PlanVersion、Step / StepRun、Branch / Join control、Dispatch decision、Budget control、parallel scheduling、Action Evaluation control、Step Acceptance control、Reflection trigger、Retry / Replan / Reconcile control decision、Interrupt / Resume、Checkpoint-based recovery、RunOutcome。
 
-**Does not own**：Canonical Domain State、Authorization / Approval、Tool Effect truth、Capability semantics、Model provider policy、long-term Memory truth、final external UI publication。
+**Does not own**：02 Canonical Domain State / AdmissionReceipt；03 Knowledge Readiness / EvidenceCandidate；05 Capability semantics；06 Effect truth；07 provider / usage truth；08 Authorization / Approval；01 publication；long-term Memory truth。
 
 ### B3 Upstream / Downstream
 
-上游主要接收 01 的 task goal / scope、02 的 domain refs、03 的 readiness / evidence、05 的 capability metadata、07 的 model eligibility、08 的 security decisions 和 budget constraints。下游调度 05 / 07 / 06，必要时向 02 请求正式准入，并向 01 返回 RunOutcome 和类型化结果。
+上游主要接收：01 task goal / scope / product Agent version refs；02 domain version / formal receipt refs；03 Readiness / Evidence refs；05 capability metadata / eligibility；07 model role result / usage refs；08 security / budget-related decisions；06 effect / reconciliation receipts。
+
+下游：调度 03 / 05 / 07 / 06，必要时向 02 提交 Formal Admission request，向 01 返回 typed RunOutcome / result / publication inputs，向 09 输出脱敏 runtime telemetry。
 
 ### B4 Authoritative Facts / Core Objects
 
-核心控制对象族：AgentRun、PlanVersion、Step / StepRun、Branch / Join state、Dispatch / control references、Budget state、Interrupt、ControlDecision、Checkpoint、RunOutcome。Plan DAG 是某次运行的控制事实，不是产品 Agent Definition，也不是法律领域状态。
+核心控制对象族：AgentRun、PlanVersion、StepDefinition / StepRun、Dependency / Ready relation、Branch / Join control、Dispatch ref、BudgetState、Interrupt、ControlDecision、RetryAttempt、ReplanBarrier、CheckpointRef、RunOutcome、Specialist / Subgraph execution ref。
+
+Plan DAG 是某次运行的控制事实，不是 Agent Definition，也不是 Canonical Domain graph。
 
 ### B5 Cross-boundary Contracts
 
-核心引用包括 task / scope、Readiness / Evidence refs、Capability eligibility、Model routing / usage refs、Authorization / Approval refs、PreparedAction / Effect receipts、AdmissionReceipt 和 HumanDecision refs。Runtime 只保存必要引用，不复制其他模块的权威对象。
+Runtime 跨边界主要消费 / 产生已有权威 Contract：
+
+- Task / Scope / AgentVersion refs from 01；
+- ReadinessDecision / EvidenceCandidate / Citation refs from 03；
+- CapabilityVersion / Eligibility / typed proposal from 05；
+- ModelRouting / ModelResult / Usage refs from 07；
+- AuthorizationDecision / ApprovalDecision / SecurityEpoch refs from 08；
+- PreparedAction / EffectReceipt / ReconciliationReceipt from 06；
+- AdmissionReceipt / DomainVersion / HumanDecision refs from 02；
+- RunOutcome to 01。
+
+Runtime 只持有必要引用，不复制这些模块的权威状态。
 
 ### B6 Normal Flow
 
-task analyze → create deterministic or dynamic PlanVersion → activate immutable plan → calculate Ready Steps → security / budget / resource gate → dispatch StepExecutionGraph → ReAct actions → Action Evaluation → Step Acceptance → conditional Reflection → join / conflict evaluation → Retry or Replan when needed → Final Synthesis → Final Gate / optional Final Reflection → consume AdmissionReceipt where required → RunOutcome。
+```text
+Task Analyze
+→ choose deterministic single-step or Dynamic DAG
+→ create immutable PlanVersion
+→ activate plan
+→ calculate Ready Steps
+→ dependency / input / resource / side-effect / budget / quota / security gates
+→ dispatch StepExecutionGraph
+→ ReAct Action / Observation
+→ Action Evaluation
+→ Step Acceptance
+→ conditional Step Reflection
+→ Join Evaluation / Join Reflection when needed
+→ Retry or Replan or wait for Reconcile
+→ Final Synthesis
+→ deterministic Final Gate or model Final Reflection
+→ Formal Admission when required
+→ verify AdmissionReceipt
+→ RunOutcome
+```
 
 ### B7 State / Lifecycle
 
-至少覆盖 Run lifecycle、active PlanVersion、StepRun attempt、Branch / Join、Interrupt / Resume、Budget consumption、ControlDecision、Retry attempt、Replan barrier、reconciliation wait、late / stale branch 和 terminal RunOutcome。具体 enum 后续冻结，但必须能表达“当前激活计划”和“旧分支结果不可再写入当前控制状态”。
+最终 enum 后续冻结，但至少覆盖：
+
+```text
+AgentRun:
+CREATED → PLANNING → RUNNING
+→ WAITING_INPUT / WAITING_APPROVAL / WAITING_RECONCILIATION
+→ COMPLETED / FAILED / CANCELLED / ABSTAINED
+
+PlanVersion:
+DRAFT → ACTIVATED → SUPERSEDED
+ACTIVATED is immutable
+
+StepRun:
+PENDING → READY → DISPATCHED → RUNNING
+→ ACCEPTED / RETRYABLE_FAILURE / REPLAN_REQUIRED / WAITING / TERMINAL_FAILURE
+
+Replan:
+TRIGGERED → BARRIER → NEW_PLAN_CREATED → ACTIVATED
+
+Branch:
+IN_FLIGHT → ARRIVED → ACCEPTED / REJECTED_STALE / REEVALUATION_REQUIRED
+```
+
+状态名是设计语义，不是数据库 enum 冻结。
 
 ### B8 Failure Taxonomy
 
-主要失败包括 transient model / provider failure、step validation failure、evidence conflict、capability drift、budget / quota exhausted、security revoked、parallel partial failure、late branch、checkpoint failure、domain admission mismatch、external effect unknown 和 controller crash / takeover ambiguity。
+| 失败 | Detection owner | Runtime control | Recovery anchor |
+| --- | --- | --- | --- |
+| model 503 / rate limit | 07 / 04 | Retry within budget | ModelCallAttempt / StepRun |
+| Step schema / acceptance failure | 04 / 05 | parameter repair / Retry / Reflection | Step input/output + acceptance evidence |
+| evidence conflict | 03 / 05 / 04 | Join Reflection / more retrieval / Replan | Evidence refs + PlanVersion |
+| capability semantic drift | 05 | Replan | CapabilityVersion / eligibility |
+| tool schema drift | 06 | Replan | ToolVersion / PreparedAction failure |
+| budget / quota exhausted | 04 / 07 | stop / replan to cheaper path / abstain | BudgetState / Usage refs |
+| security revoked | 08 | pause / stop / replan permitted path | SecurityEpoch / AuthorizationDecision |
+| partial parallel failure | 04 | Join policy / selective Retry | Branch causation + StepRun |
+| late old-plan branch | 04 | reject / re-evaluate | PlanVersion + causation identity |
+| checkpoint write failure | 04 / Platform | recover from previous checkpoint + durable external receipts | CheckpointRef + receipts |
+| Domain commit succeeded / checkpoint failed | 02 + 04 | repair runtime from AdmissionReceipt | matching AdmissionReceipt |
+| checkpoint says complete / no AdmissionReceipt | 04 + 02 | formal completion denied | Domain query by causation |
+| external effect unknown | 06 | wait Reconcile | Effect / Reconciliation receipts |
+| controller crash / takeover ambiguity | 04 / Platform | fencing / recovery protocol | checkpoint + lease/fencing + receipts |
 
 ### B9 Retry / Replan / Reconcile / Recovery / Idempotency
 
-Retry：计划仍成立，仅执行失败；同一 StepRun / action identity 的重试必须保持幂等边界和预算累计。
+**Retry**：计划、依赖、能力语义、输入和安全条件仍成立，仅一次执行失败。同一 action / Step attempt 使用稳定 identity，预算继续累计。
 
-Replan：依赖、能力、材料、假设或结构失效；创建新 PlanVersion，经过 Replan Barrier 后激活。
+**Replan**：任务结构、依赖、材料、能力、工具、安全可行性或关键事实假设失效。创建新 immutable PlanVersion，并通过 Replan Barrier。
 
-Reconcile：外部现实结果未知；Runtime 等待 06 的确认结果，不自己猜测。
+**Reconcile**：外部 Effect 结果未知。04 进入等待控制状态，06 查询现实事实；04 不自行重发动作。
 
-Restart：从 Checkpointer 恢复控制状态，再用 Domain / Effect / Audit receipts 对账。Late branch 必须携带原 PlanVersion / causation identity。
+**Recovery**：从 Checkpointer 恢复 graph control state，再用 Domain / Effect / Security / Audit durable receipts 对账。外部权威 receipt 优先于过期 Runtime 推断。
+
+**Idempotency**：PlanVersion、StepRun、Action、Admission、Effect 均通过稳定 causation / idempotency identities 关联。Late branch 必须校验 PlanVersion / input version 后才能参与 Join。
 
 ### B10 Security / Approval / Audit
 
-受保护材料读取、模型外发、秘密使用、工具执行和正式准入前消费当前安全决定。Resume / Retry / Replan 不复用过期授权。Budget 和 AnswerPolicy 不能被模型输出绕过。高风险 effect 的强制审计要求由 08 决定，06 / 对应持久化边界证明是否完成。
+受保护读取、模型外发、Secret 使用、Tool Effect 和 Formal Admission 前消费当前 08 决定。Resume / Retry / Replan 不自动继承过期授权。
+
+Budget / AnswerPolicy / Security Gate / Approval Gate 都不能被模型输出绕过。
+
+高风险 Effect 的 mandatory audit 由 08 定义，06 / audit persistence boundary 提供 durable proof。Runtime 只消费结果。
+
+Specialist / Subgraph 继承父任务的 scope / budget / security constraints，不能形成权限升级通道。
 
 ### B11 Persistence / Transaction Boundaries
 
-LangGraph Checkpointer 保存图控制状态；PostgreSQL Domain Store 保存业务事实；06 保存 Effect / Reconciliation receipts；08 / durable audit boundary 保存关键安全与审计事实。默认不做跨 Store 2PC，通过稳定 causation / idempotency identity 和 receipts 恢复。
+LangGraph Checkpointer 保存 Runtime Control State；02 Domain Store 保存 Canonical Business State + AdmissionReceipt；06 保存 Effect / Reconciliation facts；08 / audit boundary 保存关键安全与审计 facts。
+
+默认不做 Domain PostgreSQL 与 LangGraph Checkpointer 的 2PC。恢复链依赖 stable identity + durable receipts。
+
+Plan / checkpoint schema 演进必须考虑已有 paused threads 的兼容性。官方 LangGraph 文档指出，重命名 / 删除暂停线程将恢复到的 node 或收紧 state schema 可能破坏旧 checkpoint 的恢复，因此运行时版本升级要有 checkpoint compatibility / drain / migration 策略。
 
 ### B12 Observability / Evaluation
 
-Trace 至少关联 run、plan version、step run、action、model call、retrieval、tool attempt、admission 和 budget。评测关注 task completion、step acceptance、replan frequency、retry amplification、parallel efficiency、stale branch rejection、recovery correctness、latency / token / cost，并和通用 Host + Legal Backend 做 A/B/C 对照。
+Trace 至少关联 run_id、plan_version、step_run_id、branch / join、action identity、capability version、model call、knowledge generation、tool attempt、security epoch、admission receipt ref、budget / usage 和 final outcome。
+
+关键指标：task completion、Step acceptance、Retry amplification、Replan frequency、parallel efficiency、Join conflict、late-branch rejection、interrupt duration、recovery correctness、checkpoint repair、latency、token / cost、model / retrieval / tool calls。
+
+09 组织 A/B/C 测量，比较 Generic Host + Legal Skills、Generic Host + Zuno Legal Backend、Native Runtime + first-class domain control。没有收益时原生运行时应缩小。
 
 ### B13 Current / Target / Gap / Evidence
 
-Current 见 [`current-runtime-baseline.md`](../evidence/current-runtime-baseline.md)。Target 是 Single Controller + fixed AgentRunGraph + dynamic Plan DAG + fixed StepExecutionGraph。Gap：A/B/C benchmark、复杂并行 fault injection、HA / fencing / takeover、真实四 Profile runtime、AdmissionReceipt recovery E2E、security epoch drift 和 Specialist benefit measurement。
+**Current**：主运行链、checkpoint、interrupt、cancel / restart、duplicate claim、unknown effect reconcile 等已有有限代码 / 测试证据，见 `docs/evidence/current-runtime-baseline.md`。
+
+**Target**：Single Controller + fixed AgentRunGraph + dynamic Plan DAG + fixed StepExecutionGraph + safe parallelism + triggered reflection + durable cross-store recovery。
+
+**Gap**：复杂 DAG fault injection、Replan Barrier、late branch、HA / fencing / takeover、四 Profile runtime、AdmissionReceipt recovery E2E、Security Epoch drift、checkpoint schema upgrade、Specialist benefit 和 A/B/C benchmark。
+
+**状态**：design available；runtime necessity / production readiness not established。
 
 ### B14 Code / Database / Migration Constraints
 
-优先使用 LangGraph 原生 persistence、interrupt、`Send`、Reducer 和 Subgraph 机制，不默认新建自定义调度器、分布式锁或 Agent Runtime 服务。当前 LangGraph 官方文档明确：`Send` 支持动态 map-reduce 分发；subgraph 默认可继承父 checkpointer 以支持单次调用的持久执行；`interrupt()` 恢复会重新执行 node，因此 interrupt 前副作用必须幂等。实现时应以当前官方文档再次验证版本语义：
-
-- https://docs.langchain.com/oss/python/langgraph/graph-api
-- https://docs.langchain.com/oss/python/langgraph/persistence
-- https://docs.langchain.com/oss/python/langgraph/interrupts
-- https://docs.langchain.com/oss/python/langgraph/use-subgraphs
-
-本设计不冻结 LangGraph node 名称、数据库表或服务数量；只有详细设计和测量证据才能继续下沉。
+- 优先使用 LangGraph 原生 `Send`、Reducer、Subgraph、Checkpointer、`interrupt()` / `Command(resume=...)`，没有证据不自建分布式调度器。
+- 当前官方 LangGraph 文档确认：`Send` 用于动态 map-reduce 分发；持久化 Checkpointer 支持 HITL / fault recovery；`interrupt()` 恢复会从触发 interrupt 的 node 起点重新执行；parent graph 的 checkpointer 默认可以传播到 subgraphs。实现必须据此设计幂等与恢复边界。
+- 参考官方文档：<https://docs.langchain.com/oss/python/langgraph/graph-api>、<https://docs.langchain.com/oss/python/langgraph/interrupts>、<https://docs.langchain.com/oss/python/langgraph/persistence>、<https://docs.langchain.com/oss/python/langgraph/use-subgraphs>。
+- 不默认引入 Kafka、Kubernetes、分布式锁、自定义 Multi-Agent Runtime 或 checkpoint 2PC。
+- 不把 Runtime 状态表设计成第二套 Domain database。
+- Plan / Step / Branch 字段级 schema、Migration 和 physical service 只有在模块 detail freeze 后确定。
+- Native Runtime 物理独立服务仍受 ADR-0012 Evidence Gate 和 A/B/C measurement 约束。
