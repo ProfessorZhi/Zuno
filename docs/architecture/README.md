@@ -46,7 +46,7 @@ production_readiness: NOT_ESTABLISHED
 
 第一次阅读只读 [`architecture.md`](./architecture.md) Part A。一个不了解 Zuno 的高级工程师应当能够只靠 Part A 解释：为什么需要这套架构；简单问答为什么应该保持简单；复杂法律分析怎样形成正式工作成果；新证据怎样使旧结果失效；外部 POST 超时为什么不能盲目重试；Domain Commit 和 Runtime Checkpoint 不一致时怎样恢复；九个责任域为什么这样分。
 
-需要实现、测试或审查时，再读 Part B。总体架构读懂以后进入 [`../modules/README.md`](../modules/README.md)，再读对应模块 Part A / Part B、相关 ADR 和 [`../evidence/`](../evidence/README.md)。
+如果还不了解项目为什么存在，先读 [`../project/`](../project/README.md)。需要实现、测试或审查时，再读 Part B。总体架构读懂以后进入 [`../modules/README.md`](../modules/README.md)，再读对应模块 Part A / Part B、相关 [`../decisions/`](../decisions/README.md) ADR 和 [`../evidence/`](../evidence/README.md)。
 
 Part A 采用中文优先：普通概念能用中文清楚表达时不用多余英文；确实需要代码、框架或正式 Contract 名称时，第一次出现使用 `English（中文）`，后续优先用中文或正式标识。
 
@@ -56,6 +56,7 @@ Part A 采用中文优先：普通概念能用中文清楚表达时不用多余�
 - `architecture-views.md`：总体架构的 Mermaid 图源，只做图形表达，不拥有第二套架构事实。
 - `architecture.html`：图源展示入口，不维护平行语义。
 - `README.md`：目录边界、状态和阅读入口。
+- `../project/`：项目为什么存在、开发背景和团队故事，不拥有 Target 架构。
 - `../modules/`：九个责任域的模块 Design Baseline V1 和后续 Deep Design。
 - `../decisions/`：长期有效且具有反转成本的 ADR。
 - `../evidence/`：Current 的代码、测试、Migration、Trace、Eval 和运行证据。
