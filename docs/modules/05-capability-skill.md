@@ -108,6 +108,24 @@ Eligibility 绑定 CapabilityVersion、ProviderVersion、支持的 task / scope�
 
 研究团队需要的是可替换和可验证，不是服务数量。
 
+### Capability Contract 为什么不能退化成一份 JSON Schema
+
+JSON Schema 能证明字段长什么样，却回答不了专业能力最关键的问题：这项能力在什么业务问题上成立、输入需要哪些前置条件、证据最低要覆盖到什么程度、输出里的“不确定”如何解释、什么失败意味着可以 Retry、什么失败意味着原任务假设已经失效。一个事件抽取 Provider 即使返回完全合法的 `events[]`，如果它把“推测发生时间”和“材料明确记载时间”混成同一种字段，上层仍会得到结构正确但语义错误的结果。
+
+因此 Capability Contract 至少要同时描述 purpose、supported task class、preconditions、evidence requirement、input/output semantic schema、uncertainty contract、failure taxonomy、side-effect declaration 和 security requirement。结构 schema 只是其中一层。Conformance 也要验证这些最低语义，例如要求每个冲突候选都能回到两个可定位来源、要求 `INSUFFICIENT_EVIDENCE` 在关键材料缺失时显式返回，而不是用一个看似完整的空数组掩盖。如果这些行为只能靠调用方“经验上知道”，Capability 还没有形成可依赖的架构边界。
+
+### 什么变化应该产生新的 CapabilityVersion，什么只需要新的 ProviderBinding
+
+版本设计的关键不是数字格式，而是区分“专业承诺变了”还是“实现换了”。如果同一事件抽取能力仍然接受相同输入、产生同义输出、保持相同证据和失败语义，只是从模型 A 切换到模型 B，通常是新的 ProviderBinding / ProviderVersion；历史 CapabilityVersion 不必变化。反过来，如果输出把时间从单值改成区间、允许没有来源的推断事件、扩大支持任务类别，或者改变 `INSUFFICIENT_EVIDENCE` 的判定，这已经改变上层可以依赖的语义，应创建新的 CapabilityVersion。
+
+这条边界能避免两个极端：一是每次 Prompt 微调都把产品版本号炸开，二是专业语义已经变化却仍用同一版本蒙混。Provider / config 的小改动虽然不一定升 CapabilityVersion，仍然要形成新的 binding/config ref，并重新经过 Conformance 和必要质量回归；否则“语义没变”只是未经验证的假设。
+
+### 专业质量下降为什么不能被 Provider Success 掩盖
+
+Provider health、Schema success 和质量趋势属于不同层。一个模型可以连续几周 99.99% 可用，却因为供应商静默升级而让事实—证据对齐准确率明显下降；如果 05 只把“调用成功”当 Eligibility 依据，Runtime 会稳定地产生错误但格式完美的 Proposal。
+
+因此 Eligibility 需要引用当前适用的 Eval evidence / reviewer evidence。09 可以按 task class 监测 acceptance、modification、rejection、unsupported claim、evidence sufficiency 等指标；当关键质量指标越过限制，05 应把后续 ProviderBinding 标为 RESTRICTED / SUSPENDED，并让 04 选择已验证替代路径、Replan 或转人工。这个动作只影响未来和尚未被接受的结果，不会倒写已经形成的历史 Domain fact。真正要判断历史 WorkProduct 是否失效，仍回到 02 的正式依赖与新证据机制，而不是让一条质量告警跨权威边界修改业务历史。
+
 ### 当前、目标与缺口
 
 Current 仓库已有 capability / skill / tool / model provider 与跨模块 Contract 基础，但完整 Capability Registry、Conformance suite、Eligibility lifecycle 和法律质量证据尚未由专项 Current Evidence 证明。
