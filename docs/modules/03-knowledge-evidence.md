@@ -1,92 +1,125 @@
 # 03 Knowledge & Evidence（知识与证据）
 
-<!-- status: design-skeleton; implementation: not-authorized -->
+<!-- status: design-baseline-v1; implementation: not-authorized -->
 
 ## Part A — Human Narrative
 
 ### 上传成功为什么不等于可以回答
 
-用户上传了一百份材料，接口返回 200，并不意味着系统已经有资格基于这一百份材料形成正式分析。PDF 可能仍在解析，扫描件可能 OCR 失败，附件可能缺失，索引也可能还对应上一版材料。
+用户上传一百份材料，接口返回 200，并不意味着系统已经有资格基于这一百份材料形成正式分析。PDF 可能仍在解析，扫描件可能 OCR 失败，附件可能缺失，索引也可能还对应上一版材料。
 
-知识与证据首先解决的不是“选哪个向量库”，而是更基本的问题：**在某个明确的材料版本和任务范围下，哪些内容现在真的可以被使用，系统能从中恢复出什么证据和引用？**
+知识与证据首先解决的不是“选哪个向量库”，而是更基本的问题：**在某个明确的材料版本、任务范围和最低能力要求下，哪些内容现在真的可以被使用，系统能够从中恢复出什么证据和引用？**
+
+### Knowledge Readiness 不是一个永久布尔值
+
+同一份材料对于不同任务，是否“就绪”可能不同。只回答“合同第 8 条写了什么”，文本解析完成也许已经足够；如果任务要求跨附件对齐金额、读取扫描表格并建立多文档关系，仅有正文向量索引就不能视为完整就绪。
+
+因此 Knowledge Readiness（知识就绪状态）至少要绑定材料版本、知识生成版本、任务 Scope 和当前任务要求。它回答的是“当前这次任务能否基于这组知识派生结果安全工作”，而不是给文件打一个永远不变的 `ready=true`。
 
 ### 一份材料怎样变成可用知识
 
-应用入口接收文件后，材料身份和正式版本仍由法律领域拥有。知识与证据围绕这个不可变版本执行解析、OCR、结构化、切分和索引，必要时建立关键词、向量或图等派生视图，并形成自己的知识生成版本。
+应用入口接收文件后，正式材料身份和 DocumentVersion 仍由法律领域拥有。知识与证据围绕这个版本进行解析、OCR、切分、关键词 / 向量 / 图等派生处理，并形成自己的 `KnowledgeGeneration`（知识生成版本）。
 
-物理写入完成还不够。系统需要知道对应视图是否可见、是否通过基本校验、是否仍对应当前材料版本，最终才能对某个任务范围给出“已经完整可用、只能部分使用、仍需等待或不可用”的判断。
+新生成版本不能因为某个索引写入成功就自动成为 Serving 版本。系统需要知道这一代生成覆盖了哪些材料、采用什么处理规格、哪些子任务失败、是否通过必要完整性和来源检查，再决定它是否可以服务某类任务。
 
-### 就绪不是一个文件上的全局布尔值
-
-同一份材料可能已经完成文本解析，但图谱仍在重建；某个简单问答只需要条款原文，另一个复杂任务可能要求附件、表格和跨文档关系全部可用。因此 Knowledge Readiness（知识就绪状态）应围绕**材料版本集合、当前知识生成、任务范围和最低能力要求**来判断，而不是给文件挂一个永久 `ready=true`。
-
-如果产品允许先看部分结果，就必须显式缩小 Scope，并把输出标成对应范围的草稿或临时分析。不能把“40/100 已处理”包装成“100/100 已覆盖”。
+部分材料可用时，可以明确缩小任务范围返回局部结果，但不能静默把“40/100 已处理”包装成“100/100 已覆盖”。完整范围任务要等待、拒绝或明确降级。
 
 ### 检索的目标不是找最相似的句子
 
-检索可以组合关键词、向量、重排、图视图或其他策略，但这些实现不是长期业务权威。上层真正需要的是：检索针对哪个材料版本和权限范围、返回了哪些证据候选、来源位置是什么、当时用的是哪一代知识视图，以及证据是否足以支持当前任务。
+检索可以组合关键词、向量、重排、图视图或其他策略，但底层算法不是长期架构边界。长期要保留的是：检索针对哪一版材料、哪一代知识视图和哪个权限范围，返回了哪些 `EvidenceCandidate`（证据候选），来源位置是什么，以及当时如何得到这些候选。
 
-CitationLineage（检索引用链）记录“系统当时怎样找到和筛选这个候选”。如果候选最终进入正式工作成果，真正长期保存的历史引用由法律领域重新绑定到不可变材料版本和稳定位置。
+`CitationLineage`（检索引用链）记录“系统当时怎样找到和排序这个候选”。如果候选最终进入正式工作成果，领域模块再把实际采用的材料版本和稳定位置绑定成长期历史引用。这样索引可以重建，已发布工作成果过去真正依赖的材料不会跟着索引漂移。
+
+### GraphRAG 为什么不能默认常开
+
+图结构适合表达某些跨文档实体、事件和关系，但不是所有法律问题都需要图。简单条文定位、明确关键词和局部问答可能使用 BM25 / 向量 / 重排已经足够；如果强制所有任务先构图，不仅增加生成和维护成本，也扩大 stale、重建和故障面。
+
+因此 GraphRAG 仍是按 Query Class（问题类别）启用的条件能力。只有在固定语料、同模型和可比预算下证明某类问题稳定获益，才把图路径保留下来。
 
 ### 索引为什么可以替换
 
-向量库、图存储、关键词引擎和切分算法都可能变化。它们应该被视为可重建的知识派生视图，而不是业务真相。索引写成功只证明物理写入，不自动证明新知识生成已经被接受和激活。
+Milvus、pgvector、图存储、关键词引擎和切分算法都属于可替换的物理实现。它们应该被视为可重建的知识派生视图，而不是业务真相。
 
-这使得 Zuno 可以以后从 Milvus 换到其他向量方案、删除某个图实现或调整切分算法，而不改写已经发布工作成果的历史依据。GraphRAG 也只是特定查询类别下可能有收益的 Provider / 策略，不是所有请求的默认必经路径。
+当索引损坏时，恢复重点是从不可变材料版本和知识生成规格重新构建；当正式历史引用缺失时，则不能靠“重新检索一次相似内容”补成过去发生过的事实。这两个恢复问题不能混在一起。
 
-### 出问题以后怎么办
+### 权限为什么也会影响知识结果
 
-解析失败、索引部分完成、来源无法稳定绑定、知识版本落后、权限变化或检索证据不足，都必须显式暴露。完整范围任务应等待、拒绝或缩小范围；旧知识版本不能静默冒充新 DocumentVersion 的知识视图。
+知识处理和检索都必须尊重当前租户、事项、材料范围和安全决定。授权变化后，旧缓存和旧检索结果不能继续被当成可用证据；同一 KnowledgeGeneration 可以物理存在，但针对当前请求的 Readiness / Retrieval 仍必须重新经过有效范围判断。
 
-如果只是可重建索引损坏，恢复重点是从不可变源版本重新生成并校验；如果是正式领域引用缺失，则不能靠“重新检索一次差不多的内容”补成历史事实。
+安全与治理拥有“是否允许访问”的决定，知识模块负责在自己的处理、检索和 Serving 边界执行这个决定，不能用“索引里已经有了”作为越权理由。
+
+### 出问题以后怎样恢复
+
+解析失败要精确到材料或页面层级，不把失败吞成一个空字符串；部分索引写入不能自动激活新 generation；旧 generation 不能冒充新 DocumentVersion；来源无法稳定绑定时，候选不能进入正式引用链；索引损坏可以重建，但重建后仍要重新验证完整性和 Serving 资格。
+
+如果当前任务只依赖未受影响的材料，可以在显式缩小 Scope 后继续；如果缺失内容影响完整性，则必须等待、拒绝或返回明确不完整结果。
 
 ### 为什么值得独立成一个责任域
 
-把知识投影放进法律领域，会让领域状态被向量库和切分策略污染；把它完全交给运行时，又会丢失版本、就绪和来源治理。独立知识边界既允许底层替换，也给上层提供稳定的证据、就绪和来源语义。
+把知识派生放进法律领域，会让领域状态被向量库、切分算法和图实现污染；把它完全塞进运行时，又会丢失版本、就绪、来源和索引切换的长期治理。
+
+独立知识边界让上层只依赖“哪些材料可用、找到了什么证据、引用怎样恢复”这些稳定语义，而不用知道底层到底是 BM25、向量、GraphRAG 还是未来的其他 Provider。
 
 ### 当前、目标与缺口
 
-Current Evidence 已能证明部分 Citation Provenance Guard、stale/scope 检查以及产品 ingestion 的持久化入口；但真实数据库 lineage lookup、完整 Knowledge Readiness、全量 ingestion fault recovery、GraphRAG query-class 收益和生产索引切换都没有被完整证明。
+Current Evidence 已能证明部分 Citation Provenance Guard、stale / scope 检查以及产品 ingestion 的持久化入口；仓库也已有索引和 GraphRAG 相关实现表面。但真实数据库 lineage lookup、完整 Knowledge Readiness、跨版本 ingestion、原子 Serving 切换、全量 fault recovery、GraphRAG query-class 收益和生产索引迁移仍未完整证明。
 
 ## Part B — Engineering / Agent Reference
 
-### B1 Scope / Ownership
+### B1 Scope / Global Invariants
 
-**Owns**：material processing projection、KnowledgeGeneration / KnowledgeView、Readiness、EvidenceCandidate、RetrievalResult、CitationLineage、IndexManifest 的知识语义。
+本模块拥有可重建知识派生的语义，不拥有正式材料身份和法律业务结果。`Document Uploaded != Knowledge Ready`；Readiness 不是文件级永久布尔值；物理索引写成功不等于 generation 已激活；Chunk / Vector / Graph ID 不成为长期 Citation Authority。
 
-**Does not own**：DocumentVersion canonical identity、Finding / WorkProduct、historical WorkProduct citation authority、Security policy、physical index success semantics。
+### B2 Responsibility / Ownership
 
-### B2 Inputs / Outputs
+**Owns**：material processing projection、KnowledgeGeneration / KnowledgeView、ReadinessDecision、EvidenceCandidate、RetrievalResult、CitationLineage、IndexManifest / Serving Watermark 的知识语义。
 
-输入：DocumentVersion reference/set、任务 Scope、当前 Authorization / Security Epoch、查询或检索要求、索引物理回执。
+**Does not own**：DocumentVersion canonical identity、Finding / WorkProduct、formal Evidence admission、historical WorkProduct citation authority、Security policy、底层存储本身的业务成功语义。
 
-输出：ReadinessDecision、EvidenceCandidate、CitationLineage、Knowledge Generation / Manifest references、检索质量和 evidence sufficiency signal。
+### B3 Upstream / Downstream
 
-### B3 Cross-boundary Contracts
+上游主要接收 02 的 DocumentVersion reference、08 的 Authorization / Security Epoch、01 / 04 的 task Scope 与 retrieval requirement，以及 Platform 返回的物理处理 / 索引回执。下游向 01 / 04 返回 ReadinessDecision，向 04 / 05 / 02 返回证据候选与检索引用链，向 09 输出检索与 ingestion 评测引用。
 
-沿用总体架构中的 Readiness、Evidence/Citation reference，以及现有 Registry 中 Index Spec / Manifest / Write Receipt / Serving Watermark 等边界。Chunk / Vector / Graph identity 不升级为长期 Citation Authority。
+### B4 Authoritative Facts / Core Objects
 
-### B4 State / Lifecycle
+核心对象族包括 KnowledgeGeneration、processing item / projection、IndexManifest、Serving Watermark、ReadinessDecision、EvidenceCandidate、RetrievalResult、CitationLineage。具体数据库形态未冻结；关键是每个结果能绑定 source DocumentVersion、generation、scope 和处理规格。
 
-材料处理从接收不可变 DocumentVersion 引用开始，经过解析/派生视图构建、可见性和验证，到针对具体 Scope 的可用性判断。具体 enum、阈值和生成激活状态在模块深设计时冻结；版本切换必须能区分旧 generation 与当前 serving generation。
+### B5 Cross-boundary Contracts
 
-### B5 Failure / Recovery / Idempotency
+沿用总体架构中的 Readiness、Evidence / Citation reference，以及现有 Registry 的 Index Spec / Manifest / Write Receipt / Serving Watermark 边界。正式 WorkProduct 只保存必要的 CitationLineage reference，长期引用权威由 02 的 `WorkProductCitationBinding` 负责。
 
-- parsing / OCR failure：记录材料级失败，不伪装成完整就绪。
-- partial index write：不自动激活新 generation。
-- stale generation：拒绝作为新 DocumentVersion 的完整知识视图。
-- scope / authorization invalid：不返回越权候选。
-- evidence insufficient：返回不足/拒绝正式回答，不让生成层补写不存在的依据。
-- index corruption：从源版本重建并重新验证，不改变 Domain 历史引用。
+### B6 Normal Flow
 
-### B6 Security / Persistence / Observability
+DocumentVersion ref → processing spec / generation identity → parse / OCR / normalize → build derived views → collect per-item receipts → validate completeness / lineage → stage manifest → activate serving generation → evaluate readiness for task scope → retrieve / rerank / optional graph path → EvidenceCandidate + CitationLineage。
 
-所有检索和派生视图按 tenant / scope / current security decision 约束。原始材料和索引的物理存储可由 Platform 提供；知识模块拥有“是否接受/激活、对当前 Scope 是否就绪”的语义。Telemetry 记录 generation、latency、retrieval/eval 引用，不泄露 Secret 或不必要全文。
+### B7 State / Lifecycle
 
-### B7 Current / Target / Gap
+详细 enum 未冻结，但至少区分：未处理 / 处理中、部分成功、生成已构建但未激活、Serving generation、stale generation、失败 / 需重建，以及针对具体任务的 ready / partial / blocked 结果。Generation 生命周期和 task-level Readiness 必须分开。
 
-Current 见 [`current-runtime-baseline.md`](../evidence/current-runtime-baseline.md) 与 [`implementation-wave-001.md`](../evidence/implementation-wave-001.md)。Target 是可版本化、可恢复、可测量的 Knowledge Readiness + Evidence/Citation 边界。Gap 是真实数据规模、跨版本 ingestion、索引切换、GraphRAG 对照测量和完整 fault injection。
+### B8 Failure Taxonomy
 
-### B8 Code / Database / Migration Constraints
+主要失败包括 parsing / OCR failure、附件缺失、partial index write、manifest 不完整、来源位置不稳定、stale generation、serving watermark 漂移、authorization / scope 失效、检索证据不足、图构建失败、index corruption 和 provider outage。
 
-先冻结 generation、readiness、evidence identity 和 citation lineage，再决定 index schema。不得用某个向量库的内部 ID 反向定义领域模型，也不得把“索引写成功”直接映射成 Knowledge Ready。
+### B9 Retry / Replan / Reconcile / Recovery / Idempotency
+
+纯处理失败在同一 DocumentVersion + processing spec 下可以幂等重试；同一 generation identity 不得混入不同处理规格。部分索引写入后不激活 Serving。能力或数据假设变化导致当前 plan 不再成立时，由 04 重规划。知识模块没有外部副作用对账主权；物理 Provider 回执只用于决定是否接受 / 激活 generation。
+
+### B10 Security / Approval / Audit
+
+所有处理、检索和派生视图按 tenant / matter / scope / current security decision 约束。对受保护材料的模型外发还需消费 08 的 egress policy。缓存、索引和 Graph 不能绕过删除 / legal hold / recall policy。
+
+### B11 Persistence / Transaction Boundaries
+
+原始材料和正式 DocumentVersion 归 02 / Platform 的相应持久化边界；知识模块持久化 generation metadata、manifest、lineage、processing status 和必要 serving pointer。索引激活应通过稳定 manifest / watermark 形成可恢复切换，避免半写 generation 被误当成 Current Serving。
+
+### B12 Observability / Evaluation
+
+至少记录 processing coverage、parse / OCR error、generation build latency、activation result、retrieval latency、candidate count、citation lineage completeness、recall / precision / rerank 指标、stale-hit 和 scope rejection。GraphRAG 必须按 query class 做有对照的质量 / 成本测量，而不是只报告总体平均分。
+
+### B13 Current / Target / Gap / Evidence
+
+Current 见 [`current-runtime-baseline.md`](../evidence/current-runtime-baseline.md) 与 [`implementation-wave-001.md`](../evidence/implementation-wave-001.md)。Target 是可版本化、可恢复、可测量的 Knowledge Generation + Readiness + Evidence / Citation 边界。Gap 包括真实数据规模、跨版本 ingestion、manifest / serving 切换、lineage lookup、GraphRAG 对照测量、security revocation 和完整 fault injection。
+
+### B14 Code / Database / Migration Constraints
+
+先冻结 generation identity、processing spec、readiness semantics、evidence identity、citation lineage 和 serving activation，再决定 index schema。不得用某个向量库的内部 ID 反向定义领域模型，也不默认建立独立 Knowledge 微服务。底层 Provider 更换必须通过 adapter / manifest 迁移，不改写已经发布 WorkProduct 的历史引用。

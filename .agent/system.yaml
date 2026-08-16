@@ -8,6 +8,8 @@ runtime_boundary:
   project_story_root: "docs/project"
   architecture_root: "docs/architecture"
   module_design_root: "docs/modules"
+  module_design_state: "design-baseline-v1"
+  module_detail_freeze: false
   evidence_root: "docs/evidence"
   review_history_root: "docs/history/red-blue"
 

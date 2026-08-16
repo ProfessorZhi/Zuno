@@ -1,102 +1,131 @@
 # 02 Legal Domain & Work Product（法律领域与工作成果）
 
-<!-- status: design-skeleton; implementation: not-authorized -->
+<!-- status: design-baseline-v1; implementation: not-authorized -->
 
 ## Part A — Human Narrative
 
 ### 什么东西才值得成为长期业务事实
 
-模型可以在一分钟里生成很多“事实”“争议点”和“适用法条”，但法律专业工作不能把每次模型输出都当成正式结果。真正需要长期保存的是：这次工作处理的是哪个事项、使用了哪一版材料、哪些主张和证据被正式接受、形成了什么结论、谁做了人工业务决定，以及最终交付了哪一版工作成果。
+模型可以在一分钟里生成很多“事实”“争议点”“法条”和“结论”，但法律专业工作不能把每次模型输出都当成正式结果。真正需要长期保存的是：这次工作处理的是哪个事项、使用了哪一版材料、哪些主张和证据被正式接受、形成了什么结论、谁做了人工业务判断，以及最终交付了哪一版工作成果。
 
-因此这个模块不是一个“LLM 输出数据库”，也不是试图一次性建立完整法律本体，而是法律业务世界的权威状态边界。
+法律领域与工作成果模块因此不是一个“LLM 输出数据库”，而是 Zuno 对法律业务世界的权威状态边界。运行时可以重启，向量库可以重建，模型可以替换；正式业务事实不能因此失去身份、版本和来源。
 
-### 最小领域内核为什么要保持小
+### 七对象最小内核不是完整法律本体
 
-第一阶段只把七类对象当作 Canonical（正式领域对象）：Matter（事项）、DocumentVersion（材料版本）、Claim（主张）、Evidence（证据）、Finding（结论）、HumanDecision（人工决定）和 WorkProduct（工作成果）。
+第一阶段只把七类对象当作 Canonical（正式领域对象）：Matter（事项）、DocumentVersion（材料版本）、Claim（主张）、Evidence（证据）、Finding（结论）、HumanDecision（人工业务决定）和 WorkProduct（工作成果）。
 
-Event、Conflict、Dispute、LegalIssue、ApplicableLaw、SimilarCase 等仍然可以很重要，但默认先作为候选、派生视图或专业能力输出。只有未来证明它们需要独立身份、版本、来源、权限、依赖、失效、审核和审计，才值得升级为新的正式领域对象。
+Event、Conflict、Dispute、LegalIssue、ApplicableLaw、SimilarCase 等仍然可以很重要，但默认先作为候选、派生视图或专业能力输出。只有未来证明某类对象需要独立身份、版本、权限、依赖、失效、审核和审计，才值得升级为新的正式领域对象。
 
-这样做的目的不是把法律问题简化，而是避免模型每多抽出一个概念，数据库就多一套长期状态机。
+这条约束是为了防止“因为模型能抽取，所以数据库就要建表”的对象膨胀。领域内核只保存真正需要长期业务权威的东西，而不是把所有中间推理都永久化。
+
+### Evidence 为什么既来自知识模块，又属于正式领域对象
+
+知识与证据可以返回 `EvidenceCandidate`（证据候选）和检索引用链，表示“系统在当前材料范围里找到了什么”。但证据候选是否被正式接纳为某个事项、主张或结论的业务证据，是领域决定。
+
+因此检索结果不能直接成为正式 Evidence。正式 Evidence 至少要绑定明确的材料版本、稳定来源位置、必要的权限和来源信息，并在准入后进入领域版本关系。知识模块保留“怎么找到的”，领域模块保留“最终正式采用了什么”。
 
 ### 候选结果怎样变成正式结果
 
-复杂分析通常先得到结论候选。领域模块检查它关联的材料版本、证据、当前权限、必要的人审和预期前置领域版本；条件成立后才进行正式准入。
+复杂分析通常先得到结论候选。领域模块不会因为模型“置信度高”就自动提交，而是检查材料版本、证据、当前授权、必要人工复核、幂等身份和预期前置领域版本。条件成立后才执行 Formal Admission（正式准入）。
 
-正式提交不能只留下“数据库里多了一行”。它还要同时留下 AdmissionReceipt（正式准入回执），证明是哪次运行、哪一版计划、哪个步骤和哪个候选结果导致了哪个新的领域版本。领域变更与这份回执必须处在同一个 PostgreSQL 事务耐久边界中。
+正式提交不能只留下“数据库里多了一行”。它必须同时留下 `AdmissionReceipt`（正式准入回执），证明是哪次运行、哪一版计划、哪个步骤、哪个候选结果和哪个幂等身份导致了哪个新的领域版本。领域变更和回执必须位于同一个 PostgreSQL 事务耐久边界。
 
-### 人工业务决定和安全审批为什么不同
+### HumanDecision 和安全审批不是同一件事
 
-HumanDecision（人工业务决定）表示专业人员对法律结果的确认、修改或拒绝，是领域事实的一部分。ApprovalDecision（安全审批决定）回答某个高风险动作当前是否获准执行，属于安全与治理。
+HumanDecision 表示专业人员对法律业务结果的确认、修改、拒绝或其他正式判断，属于领域事实。`ApprovalDecision`（审批决定）则回答“某个高风险动作是否允许执行”，属于安全与治理。
 
-同一个人可能在界面上连续点击“审核通过”和“允许提交”，但系统仍要保存两个不同的事实：前者改变法律业务结果的权威状态，后者只允许某个动作发生。
+一个人可能在同一界面里先审查法律结论、再批准外部提交，但这两个点击背后的语义完全不同。前者改变业务世界承认什么，后者改变某个动作是否允许发生，不能因为都由“人”完成就共用一个状态。
 
 ### 为什么检查点不能替代领域事实
 
-智能体运行时可能在“领域提交成功、检查点还没更新”时崩溃。恢复时应读取已经提交的领域版本和正式准入回执，再修复运行控制状态。反过来，如果检查点写着 completed，但找不到匹配的正式准入回执，就不能宣布正式业务提交已经发生。
+运行时可能在“领域提交和正式准入回执已经成功，但检查点还没更新”时崩溃。恢复时应读取已经提交的领域版本和匹配回执，再修复运行控制状态。反过来，如果检查点写着 completed，但找不到匹配回执，就不能宣布正式业务提交已经发生。
 
-这条规则避免了两个系统互相猜测对方是否成功，也不需要在 PostgreSQL 与 LangGraph Checkpointer 之间引入跨存储两阶段提交。
+更高的领域版本也不自动证明当前 Step 成功，因为它可能来自另一次运行。恢复必须匹配 run、plan version、step run、proposal / admission 和 idempotency 等因果身份，而不是只比较“版本号变大了没有”。
 
-### 历史引用为什么也归领域
+### 历史引用为什么归领域
 
-知识与证据负责说明“当时怎样检索到这段材料”，但一份正式工作成果发布以后，它过去真正引用的是哪一版材料、哪个稳定位置，不能随着索引重建而改变。因此正式成果的 Historical Citation Binding（历史引用绑定）由领域侧持久化；向量 ID、Chunk ID、Graph Node ID 不能成为长期引用权威。
+知识与证据负责说明“当时怎样检索到这段材料”，但一份正式工作成果发布以后，它过去真正引用的是哪一版材料、哪个稳定位置，不能随着索引重建而变化。因此正式成果的 Historical Citation Binding（历史引用绑定）由领域侧持久化。
 
-### 新证据怎样影响旧结果
+长期引用应能回到不可变 DocumentVersion、稳定 source location / span、来源表示或 hash，以及必要的 excerpt / evidence hash。Chunk ID、Vector ID、Graph Node ID 和当前索引 identity 都可以重建或变化，不能成为长期引用权威。
 
-新材料或新证据进入后，系统根据正式依赖关系找到受影响的结论和工作成果，把它们标记为失效或需要复核，并只对受影响部分重新分析。新的分析仍然先形成候选，再经过准入产生新版本；不能直接覆盖旧版本，让过去发生过的专业判断失去历史可解释性。
+### 新证据出现以后为什么不能覆盖旧结果
 
-法律领域拥有“某个工作成果版本已经失效”的事实，但不负责外部通知是否已经送达；通知状态属于应用与集成。
+昨天 Evidence V1 可能支持 Finding V3 和 WorkProduct V5。今天出现 Evidence V2 后，系统需要沿正式依赖关系找到受影响的结论和工作成果，把旧版本标记为失效或需要复核，再对受影响部分进行 bounded re-evaluation（有界重新评估）。
+
+V5 仍然是历史上真实存在并曾经交付过的版本，不能被新版本静默覆盖。领域模块拥有“哪个版本当前有效、哪个版本已经失效”的事实；应用与集成负责把失效通知送出去，消费者是否确认又是另一个事实。
 
 ### 为什么值得独立成一个责任域
 
-如果领域事实放进运行时，任务结束后业务真相就和某个框架的 checkpoint 绑死；如果放进知识库，检索索引就会获得它不该拥有的业务权威。独立领域边界让模型、检索、Agent Runtime 和 Host 都可以被替换，而正式法律工作仍有稳定语义。
+如果领域事实放进运行时，任务结束后业务真相就和某个框架的 checkpoint 绑死；如果放进知识库，检索索引会获得不该拥有的业务权威；如果让模型直接写库，则不确定性会穿过所有门禁直接污染长期事实。
+
+独立领域边界让模型、检索、Agent Runtime、Host 和底层数据库实现都可以演进，而正式法律工作仍保留稳定的身份、版本、来源、人工判断和恢复语义。
 
 ### 当前、目标与缺口
 
-Current Evidence 已证明有限的 Canonical Domain Mutation：领域准入边界、CAS 版本冲突、幂等 mutation、事务失败不推进版本，以及 SQLAlchemy 持久化路径；Citation Provenance Guard 也能验证 Claim→Evidence→SourceSpan→DocumentVersion 的部分关系。真实 PostgreSQL 并发、完整 AdmissionReceipt、工作成果版本生命周期、跨运行失效传播和正式 HumanDecision E2E 仍未完整证明。
+Current Evidence 已证明有限的 Canonical Domain Mutation：领域准入边界、CAS 版本冲突、幂等 mutation、事务失败不推进版本，以及 SQLAlchemy 持久化路径；Citation Provenance Guard 还能验证 Claim→Evidence→SourceSpan→DocumentVersion 的部分关系。真实 PostgreSQL 并发、完整 AdmissionReceipt、HumanDecision E2E、WorkProduct 生命周期、跨运行失效传播和新证据局部重评仍未完整证明。
 
 ## Part B — Engineering / Agent Reference
 
-### B1 Scope / Ownership
+### B1 Scope / Global Invariants
+
+本模块是正式法律业务状态唯一权威边界。七对象最小内核不自动扩张；模型 / 检索 / Capability / Specialist 只产生候选；正式准入需要领域校验和耐久因果；历史版本不得被覆盖；领域事实不依赖 Runtime Checkpoint 存活。
+
+### B2 Responsibility / Ownership
 
 **Canonical kernel**：Matter、DocumentVersion、Claim、Evidence、Finding、HumanDecision、WorkProduct。
 
-**Owns**：Domain Version、Formal Admission、AdmissionReceipt、WorkProduct historical citation binding、domain invalidation truth、正式依赖与失效语义。
+**Owns**：Domain Version、Formal Admission、AdmissionReceipt、正式 Evidence / Finding / WorkProduct 依赖、WorkProduct historical citation binding、domain invalidation truth、正式人工业务决定。
 
-**Does not own**：CitationLineage、Runtime Checkpoint、Authorization / Approval policy、Tool Effect truth、Delivery/Ack state。
+**Does not own**：CitationLineage、Runtime Checkpoint / Plan、Authorization / Approval policy、Tool Effect truth、Delivery / Ack state、Knowledge Generation。
 
-### B2 Inputs / Outputs
+### B3 Upstream / Downstream
 
-输入：候选结果、Evidence / Citation references、Authorization refs、必要 HumanDecision、run / plan / step causation、expected prior domain version、idempotency identity。
+上游主要接收 03 的证据候选和引用、05 的专业候选、04 的 run / plan / step 因果、08 的授权 / 审批引用、必要的人工业务决定。下游向 04 返回 AdmissionReceipt，向 01 返回正式 WorkProduct / invalidation fact，向 09 暴露脱敏领域版本与评测引用。
 
-输出：新的 Canonical Version、AdmissionReceipt、historical citation binding、domain invalidation fact、typed domain snapshot/reference。
+### B4 Authoritative Facts / Core Objects
 
-### B3 Cross-boundary Contracts
+每个正式对象至少需要可解释的 Identity、Version、Provenance、State、Ownership、Mutation Authority、Dependency、Staleness、Review 和 Audit 语义。具体字段后续冻结，但“独立身份和值得长期业务权威”是进入 Canonical Kernel 的前提。
 
-沿用 `AdmissionReceipt`、`WorkProductCitationBinding`、`WorkProductInvalidationFact` 以及 Security / Knowledge / Runtime 已拥有的引用。本骨架不新增 Canonical Object。
+`WorkProductVersion` 优先作为 WorkProduct 的版本化表达或子结构，而不是为了版本号单独增加新聚合；只有独立生命周期证据出现才扩大聚合边界。
 
-### B4 State / Lifecycle
+### B5 Cross-boundary Contracts
 
-领域对象必须支持身份、不可变历史版本或受控版本演进、来源、依赖、人工业务决定、失效和审核。具体 enum 在模块深设计时冻结；不得为了方便把所有 Proposal 自动升级为正式对象。
+核心跨边界 Contract：`AdmissionReceipt`、`WorkProductCitationBinding`、`WorkProductInvalidationFact`，以及对 Authorization / Approval、Evidence / Citation、run / plan / step causation 的引用。领域不复制这些上游事实，只保存必要的稳定引用和 admission evidence。
 
-WorkProduct 新版本不得静默覆写旧版本；Finding/WorkProduct 的 staleness / review requirement 必须能追溯到新的 Evidence/DocumentVersion 依赖变化。
+### B6 Normal Flow
 
-### B5 Failure / Recovery / Idempotency
+proposal / evidence refs → validate material versions and provenance → validate current authorization / required HumanDecision → compare expected prior DomainVersion → idempotency check → atomic domain mutation + AdmissionReceipt → publish new domain version → emit invalidation facts for affected older results when applicable。
 
-- expected DomainVersion 不匹配：版本冲突，不覆盖写。
-- 同一 idempotency identity + 同一输入：返回既有结果。
-- 同 key 不同输入：拒绝。
-- 缺证据、缺必要 HumanDecision 或授权失效：不准入。
-- Domain commit + Receipt 成功、Checkpoint 失败：Receipt 驱动控制状态修复。
-- Checkpoint 完成、Receipt 缺失：不得声明 Formal Admission 成功。
+### B7 State / Lifecycle
 
-### B6 Security / Persistence / Observability
+详细 enum 尚未冻结，但至少要表达：版本创建、正式有效、需要复核、失效 / stale、被新版本替代但仍保留历史、人工接受 / 修改 / 拒绝等业务语义。新证据不会物理删除旧版本，而是通过依赖和有效性关系形成新的正式版本。
 
-PostgreSQL 保存 Canonical Domain State 和正式准入因果；默认不引入 Event Sourcing。生命周期政策由 Security & Governance 决定，领域存储负责执行自身部分并留下执行状态/回执。Telemetry 可引用 Domain Version / Receipt，但不能替代它们。
+### B8 Failure Taxonomy
 
-### B7 Current / Target / Gap
+主要失败包括：expected DomainVersion 冲突、材料版本不匹配、证据不足、来源无法稳定绑定、授权失效、缺少必要 HumanDecision、同一幂等键输入冲突、事务失败、历史引用不完整、依赖失效无法安全局部重评。
 
-Current 见 [`implementation-wave-001.md`](../evidence/implementation-wave-001.md)。Target 是完整七对象领域内核、正式准入、历史引用和失效传播。Gap 包括真实 PostgreSQL 集成/并发、HumanDecision E2E、WorkProductVersion、Admission causation fault injection 和新证据局部重评。
+### B9 Retry / Replan / Reconcile / Recovery / Idempotency
 
-### B8 Code / Database / Migration Constraints
+同一 idempotency identity + 同一输入返回既有结果；同 key 不同输入拒绝。版本冲突不覆盖写，由调用方重新读取当前领域版本后决定重规划或人工处理。Domain commit + Receipt 成功、Checkpoint 失败时由 Receipt 驱动 Runtime 修复；Checkpoint 完成但 Receipt 缺失时不得声明正式准入成功。
 
-后续设计必须先冻结对象身份、版本、依赖、准入和失效语义，再讨论 ORM、表和 Migration。不得仅因为数据库已有字段就把 Proposal 概念升级为 Canonical，也不得仅因为某个法律概念在 Prompt 中常见就新增正式聚合根。
+领域自身不负责外部 Effect Reconcile；如果正式结果依赖外部动作事实，只消费 06 已确认的 Effect / Reconciliation receipt。
+
+### B10 Security / Approval / Audit
+
+正式准入消费当前授权和必要审批 / HumanDecision 引用。HumanDecision 属于领域，ApprovalDecision 属于 08。生命周期政策由 08 决定，领域 Store 执行自身 retention / legal hold / deletion obligations，并保存执行状态或回执。
+
+### B11 Persistence / Transaction Boundaries
+
+PostgreSQL 保存 Canonical Domain State、不可变 / 受控版本、依赖、HumanDecision、历史引用和 AdmissionReceipt。Domain mutation 与匹配 Receipt 必须同事务提交。默认不引入 Event Sourcing，也不在 PostgreSQL 与 LangGraph Checkpointer 之间做 2PC。
+
+### B12 Observability / Evaluation
+
+Telemetry 至少关联 Matter、DocumentVersion、DomainVersion、Finding / WorkProduct refs、AdmissionReceipt、staleness event 和 human review outcome，但默认不导出敏感正文。评测关注 provenance completeness、citation binding correctness、unsupported admission、review acceptance、stale propagation correctness 和 recovery correctness。
+
+### B13 Current / Target / Gap / Evidence
+
+Current 见 [`implementation-wave-001.md`](../evidence/implementation-wave-001.md)。Target 是完整七对象领域内核、正式准入、历史引用、版本化失效和人审闭环。Gap 包括真实 PostgreSQL 集成 / 并发、Admission causation fault injection、HumanDecision E2E、WorkProduct version lifecycle、新证据 bounded re-evaluation 和 lifecycle enforcement。
+
+### B14 Code / Database / Migration Constraints
+
+后续必须先冻结对象身份、版本、依赖、准入、历史引用和失效语义，再讨论 ORM、表、索引和 Migration。不得因为数据库已有字段或模型能抽取某概念，就把 Proposal 自动升级为 Canonical。所有 Migration 必须保留旧版本可追溯性，不能通过 destructive rewrite 破坏已发布成果历史依据。
