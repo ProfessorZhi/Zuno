@@ -12,8 +12,31 @@ MODULES_ROOT = ROOT / "docs/modules"
 ROUND_01 = ROOT / "docs/history/red-blue/manual-round-01-overall-architecture.md"
 ROUND_02 = ROOT / "docs/history/red-blue/manual-round-02-overall-architecture-freeze-review.md"
 
+MODULE_FILES = (
+    "01-application-integration.md",
+    "02-legal-domain-work-product.md",
+    "03-knowledge-evidence.md",
+    "04-agent-runtime-control.md",
+    "05-capability-skill.md",
+    "06-tool-runtime-effects.md",
+    "07-model-gateway.md",
+    "08-security-governance.md",
+    "09-observability-evaluation.md",
+)
+
 PART_A_HEADING = "## Part A — Architecture Narrative"
 PART_B_HEADING = "## Part B — Detailed Architecture Specification"
+MODULE_PART_A_HEADING = "## Part A — Human Narrative"
+MODULE_PART_B_HEADING = "## Part B — Engineering / Agent Reference"
+MODULE_PART_C_HEADING = "## Part C — Cross-Module Consistency"
+
+# These are regression guards, not a prose-quality score. They prevent a future edit from
+# shrinking a module Part A back into a one-page responsibility card or filling it mostly
+# with tables/status blocks. Human review remains mandatory.
+MODULE_PART_A_MIN_NONSPACE_CHARS = 4500
+MODULE_PART_A_MIN_SUBSECTIONS = 12
+MODULE_PART_A_MIN_PROSE_PARAGRAPHS = 12
+
 _MACHINE_TOKEN_RE = re.compile(
     r"(?:\b(?:TARGET|CURRENT|MODULE|NOT|UNKNOWN)_[A-Z0-9_]+\b|"
     r"\bUNKNOWN\b|"
@@ -34,7 +57,7 @@ _ENGINEERING_ANCHORS = (
 
 
 def _split_layers(text: str) -> tuple[str, str] | None:
-    """Return Part A and Part B bodies when both headings are present and ordered."""
+    """Return overall-architecture Part A and Part B bodies when ordered."""
     if PART_A_HEADING not in text or PART_B_HEADING not in text:
         return None
     part_a_start = text.index(PART_A_HEADING) + len(PART_A_HEADING)
@@ -44,49 +67,70 @@ def _split_layers(text: str) -> tuple[str, str] | None:
     return text[part_a_start:part_b_start], text[part_b_start + len(PART_B_HEADING) :]
 
 
-def _has_narrative_prose(text: str) -> bool:
-    """Detect at least one ordinary explanatory paragraph, not only metadata or lists."""
-    text = re.sub(r"<!--.*?-->", "", text, flags=re.DOTALL)
-    in_fence = False
-    paragraph: list[str] = []
+def _split_module_layers(text: str) -> tuple[str, str, str] | None:
+    """Return module Part A, B and C bodies when all three coordinated views are ordered."""
+    if any(
+        heading not in text
+        for heading in (MODULE_PART_A_HEADING, MODULE_PART_B_HEADING, MODULE_PART_C_HEADING)
+    ):
+        return None
+    a_start = text.index(MODULE_PART_A_HEADING) + len(MODULE_PART_A_HEADING)
+    b_pos = text.index(MODULE_PART_B_HEADING)
+    c_pos = text.index(MODULE_PART_C_HEADING)
+    if not (a_start <= b_pos < c_pos):
+        return None
+    b_start = b_pos + len(MODULE_PART_B_HEADING)
+    c_start = c_pos + len(MODULE_PART_C_HEADING)
+    return text[a_start:b_pos], text[b_start:c_pos], text[c_start:]
 
-    def is_prose(lines: list[str]) -> bool:
-        if not lines:
-            return False
-        value = " ".join(line.strip() for line in lines).strip()
-        if not value or value.startswith(("#", "|", "- ", "* ", "> ")):
-            return False
-        if value.endswith(":") and len(value) < 120:
-            return False
-        if re.match(r"^[A-Za-z_][A-Za-z0-9_ -]*:\s*\S+$", value):
-            return False
-        return len(value) >= 25
+
+def _strip_non_prose_blocks(text: str) -> str:
+    text = re.sub(r"<!--.*?-->", "", text, flags=re.DOTALL)
+    text = re.sub(r"```.*?```", "", text, flags=re.DOTALL)
+    return text
+
+
+def _prose_paragraphs(text: str) -> list[str]:
+    """Return ordinary explanatory paragraphs, excluding headings, tables, lists and fences."""
+    text = _strip_non_prose_blocks(text)
+    paragraphs: list[str] = []
+    current: list[str] = []
+
+    def flush() -> None:
+        if not current:
+            return
+        value = " ".join(line.strip() for line in current).strip()
+        current.clear()
+        if len(value) >= 40:
+            paragraphs.append(value)
 
     for line in text.splitlines() + [""]:
         stripped = line.strip()
-        if stripped.startswith("```"):
-            in_fence = not in_fence
-            if paragraph and not in_fence:
-                if is_prose(paragraph):
-                    return True
-                paragraph = []
-            continue
-        if in_fence or not stripped:
-            if paragraph and is_prose(paragraph):
-                return True
-            paragraph = []
+        if not stripped:
+            flush()
             continue
         if stripped.startswith(("#", "|", "- ", "* ", "> ")):
-            if paragraph and is_prose(paragraph):
-                return True
-            paragraph = []
+            flush()
             continue
-        paragraph.append(line)
-    return False
+        if re.match(r"^\d+\.\s", stripped):
+            flush()
+            continue
+        current.append(line)
+    return paragraphs
+
+
+def _has_narrative_prose(text: str) -> bool:
+    """Detect at least one ordinary explanatory paragraph, not only metadata or lists."""
+    return bool(_prose_paragraphs(text))
+
+
+def _nonspace_chars(text: str) -> int:
+    visible = _strip_non_prose_blocks(text)
+    return len(re.sub(r"\s+", "", visible))
 
 
 def verify_text(text: str) -> list[str]:
-    """Check the stable writing-model contract without judging prose quality."""
+    """Check the stable overall-architecture writing-model contract."""
     errors: list[str] = []
     if PART_A_HEADING not in text:
         errors.append("missing Part A — Architecture Narrative")
@@ -117,12 +161,55 @@ def verify_text(text: str) -> list[str]:
     return errors
 
 
-def warnings_for_text(text: str) -> list[str]:
-    """Report machine-oriented language in Part A without making it a validation failure."""
-    layers = _split_layers(text)
+def verify_module_text(text: str, filename: str) -> list[str]:
+    """Guard substantial, human-first module narratives without pretending to score prose quality."""
+    errors: list[str] = []
+    layers = _split_module_layers(text)
     if layers is None:
+        return [
+            f"{filename}: module must contain ordered Part A Human Narrative, "
+            "Part B Engineering Reference and Part C Cross-Module Consistency"
+        ]
+
+    part_a, part_b, part_c = layers
+    nonspace_chars = _nonspace_chars(part_a)
+    subsection_count = len(re.findall(r"(?m)^###\s+", part_a))
+    prose_paragraph_count = len(_prose_paragraphs(part_a))
+
+    if nonspace_chars < MODULE_PART_A_MIN_NONSPACE_CHARS:
+        errors.append(
+            f"{filename}: Part A is too thin for the current human-first baseline "
+            f"({nonspace_chars} non-space chars < {MODULE_PART_A_MIN_NONSPACE_CHARS})"
+        )
+    if subsection_count < MODULE_PART_A_MIN_SUBSECTIONS:
+        errors.append(
+            f"{filename}: Part A needs broader narrative coverage "
+            f"({subsection_count} subsections < {MODULE_PART_A_MIN_SUBSECTIONS})"
+        )
+    if prose_paragraph_count < MODULE_PART_A_MIN_PROSE_PARAGRAPHS:
+        errors.append(
+            f"{filename}: Part A must contain substantial explanatory prose, not mainly tables/lists "
+            f"({prose_paragraph_count} prose paragraphs < {MODULE_PART_A_MIN_PROSE_PARAGRAPHS})"
+        )
+    if "### 当前、目标与缺口" not in part_a:
+        errors.append(f"{filename}: Part A must close with an explicit Current / Target / Gap narrative")
+    if not part_b.strip():
+        errors.append(f"{filename}: Part B must not be empty")
+    if not part_c.strip():
+        errors.append(f"{filename}: Part C must not be empty")
+    return errors
+
+
+def warnings_for_text(text: str, part_a_heading: str = PART_A_HEADING, part_b_heading: str = PART_B_HEADING) -> list[str]:
+    """Report machine-oriented language in a Part A without making it a validation failure."""
+    if part_a_heading not in text or part_b_heading not in text:
         return []
-    matches = _MACHINE_TOKEN_RE.findall(layers[0])
+    a_start = text.index(part_a_heading) + len(part_a_heading)
+    b_pos = text.index(part_b_heading)
+    if b_pos < a_start:
+        return []
+    part_a = text[a_start:b_pos]
+    matches = _MACHINE_TOKEN_RE.findall(part_a)
     if len(matches) < 3:
         return []
     unique = sorted(set(matches), key=str.casefold)
@@ -191,6 +278,13 @@ def verify() -> list[str]:
             for error in verify_text(path.read_text(encoding="utf-8"))
         )
 
+    for filename in MODULE_FILES:
+        path = MODULES_ROOT / filename
+        if not path.exists():
+            errors.append(f"missing canonical module narrative: {path.relative_to(ROOT)}")
+            continue
+        errors.extend(verify_module_text(path.read_text(encoding="utf-8"), filename))
+
     _verify_supporting_boundaries(errors)
     views = ROOT / "docs/architecture/architecture-views.md"
     html = ROOT / "docs/architecture/architecture.html"
@@ -211,13 +305,26 @@ def main() -> int:
         for error in errors:
             print(f"ERROR: {error}", file=sys.stderr)
         return 1
+
     warnings: list[str] = []
     for path in CANONICAL:
         if path.exists():
             warnings.extend(warnings_for_text(path.read_text(encoding="utf-8")))
+    for filename in MODULE_FILES:
+        path = MODULES_ROOT / filename
+        if path.exists():
+            warnings.extend(
+                f"{filename}: {warning}"
+                for warning in warnings_for_text(
+                    path.read_text(encoding="utf-8"),
+                    MODULE_PART_A_HEADING,
+                    MODULE_PART_B_HEADING,
+                )
+            )
     for warning in warnings:
         print(warning)
-    print("architecture human readability structural verification passed.")
+
+    print("architecture and module human readability structural verification passed.")
     return 0
 
 

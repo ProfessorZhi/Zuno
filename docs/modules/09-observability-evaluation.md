@@ -187,6 +187,82 @@ C. Zuno Native Runtime + First-class Domain State
 
 因此法院生产部署可以使用 LangSmith，也可以使用私有 Collector / backend，但核心业务语义不依赖特定 SaaS 在线。
 
+### 三条时间线为什么要同时保留，但不能互相冒充
+
+一次复杂任务可以同时存在三条时间线。
+
+第一条是 Owner durable facts（权威耐久事实）：什么时候正式准入了 WorkProduct、什么时候确认了 Tool Effect、哪一版 Security Decision 当时有效。这条线用于业务恢复和审计。
+
+第二条是 operational telemetry（运行遥测）：某个 Step 几点开始、模型用了多久、哪里发生重试、某个 span 为什么丢了。这条线用于诊断和性能分析，允许采样和延迟。
+
+第三条是 evaluation evidence（评测证据）：某个 commit 在某版数据集和配置下跑了哪些样本、结果怎样、失败集中在哪里。这条线用于比较版本和决定能否发布。
+
+三条线通过稳定引用相互关联，但谁也不能替代谁。尤其是“Trace 很完整”不能证明业务提交，“Eval 分数很好”不能证明某次真实运行已经安全完成。
+
+### 长任务 Trace 中断以后，为什么业务仍然必须能恢复
+
+真实生产中 Collector 会重启、网络会短暂断开、Sampling 可能让部分 span 不落盘。一个运行跨越几十分钟甚至人工等待几个小时，Trace 连续性很难保证 100%。
+
+因此 correlation break 应被明确标成 partial（部分观测），而不是尝试用猜测补成一条完美链。业务恢复从 02 / 04 / 06 / 08 等 Owner 的 durable facts 开始，Telemetry 恢复以后再尽可能补充新的诊断事件。
+
+这种设计允许“观测暂时不完整，但业务事实仍正确”。反过来，如果一个恢复流程必须先把 Trace 拼完整才能知道 Tool 是否执行，那说明真正的 effect receipt / causation 设计还没有闭合。
+
+### 指标体系为什么既要看结果，也要看控制成本
+
+Agent 复杂度往往不是直接从最终准确率里暴露出来的。一个方案可能准确率略高，却把 Retry 放大十倍、P95 时延翻三倍、每个任务调用模型二十次；另一个方案平均分相似，但恢复更稳定、人工介入更少。
+
+因此除了法律质量指标，还要持续观察 readiness delay、retrieval rounds、Step acceptance、Retry amplification、Replan rate、Reconciliation duration、invalidaton delivery lag、consumer ack lag、model / tool call count、token / cost、人工等待时间和恢复耗时。
+
+这些指标不是越少越好。例如合理 Replan 比错误地坚持旧计划更健康。真正需要的是把指标和 failure taxonomy、task class、版本及最终结果一起看，而不是用一个“Agent 成功率”概括所有行为。
+
+### Eval Dataset（评测数据集）为什么本身也要治理
+
+数据集不是一个随手追加样本的 JSON 文件。每个 EvalCase 应知道任务类别、输入材料或稳定引用、预期证据 / 标签、标注来源、数据使用政策和所属 split。标签被修正、case 集合发生变化或数据清洗规则改变，都应该形成新的 DatasetVersion。
+
+训练 / prompt tuning 用过的数据不能在不说明的情况下继续冒充独立评测集；测试集里如果大量是合成的简单样例，也不能据此推断真实法院材料的表现。对涉及敏感材料的数据集，还要受 08 的访问、保留和外发政策约束。
+
+数据集治理的目标不是追求“大”，而是让每一个分数都能回答“在哪些样本、什么版本、什么政策下得到的”。没有这层版本，长期回归曲线很容易比较的是两个根本不同的数据集。
+
+### LLM Judge（模型评审）为什么需要校准
+
+模型 Judge 很适合评估开放式回答，但它自己也会偏差、漂移和受 Prompt 影响。对引用是否存在、Schema 是否满足、action hash 是否一致这类问题，应优先使用确定性检查；对复杂法律适用性或表达质量，可以使用 Judge，但要与人工标注和已知案例做校准。
+
+Judge Provider / Model / Prompt Version 也必须进入 Eval Run 配置。升级 Judge 后如果评分体系发生变化，不能直接把新分数和旧分数画在同一条趋势线上而不说明。
+
+对于关键指标，可以保留一组人工金标准样本，定期检查 Judge 与专业 Reviewer 的一致性。Judge 失效时应把相关评测标成 blocked / unreliable，而不是为了保持流水线绿色继续产出数字。
+
+### Release Evidence 为什么更适合 PASS / FAIL / BLOCKED 三类，而不是“尽量给个分”
+
+`PASS` 表示在当前冻结数据集、配置、样本数和关键门槛下满足发布评测要求；`FAIL` 表示评测已经有效执行，但关键质量或安全阈值未达标；`BLOCKED` 表示缺数据、缺凭证、样本为零、基线不可比或评测基础设施不足，根本没有资格做判断。
+
+BLOCKED 不是一种较轻的 FAIL，也不是“暂时算通过”。它保护的是测量诚信：没有测到，就明确说没有测到。
+
+同时某些 critical failure 应拥有一票否决权，例如越权访问、重复高风险副作用、正式引用无法回溯、stale 结果被错误发布。平均分很高不能抵消这类架构级失败。
+
+### 事故发生以后，调查顺序为什么应该从耐久事实开始
+
+例如用户报告“系统好像重复提交了两次”。调查人员可以用 Trace 快速定位两次请求，但最终判断不能停在“Dashboard 看起来有两个 span”。应先查 06 的 PreparedAction / ToolAttempt / EffectReceipt / ReconciliationReceipt，确认到底有几个逻辑动作、几个执行尝试、现实效果是什么，再用 04、08、01 的关联事实解释为什么出现这些尝试。
+
+同样，怀疑某份正式 WorkProduct 被错误覆盖时，先查 02 的 DomainVersion / AdmissionReceipt / Citation Binding，再看 Trace 找到导致它的运行路径。
+
+这种“Owner fact first，Telemetry second”的调查方式既适用于自动恢复，也适用于人工事故复盘。
+
+### 成本为什么也需要沿因果链归属，而不是只看 Provider 总账
+
+月底看到一个模型账单总额，只能说明花了多少钱，不能解释钱花在哪里。为了真正优化系统，需要能把成本关联到 request / run / step / capability / model attempt，必要时再关联到工具或人工等待带来的间接成本。
+
+这样才能回答：GraphRAG 是否把某类任务的 token 成本降低了，Reflection 是否因为触发过于频繁变贵，某个 Capability 是不是 90% 成本都来自备用模型，或者 Runtime 相比简单 Host 路径到底多付出了多少控制开销。
+
+成本归因仍然是观测 /评测视图，不会因为“某个 Step 很贵”就自动改变 Budget Policy；04 / 07 根据既定预算做控制，09 提供长期证据支持后续架构决策。
+
+### Sampling（采样）为什么只能影响遥测，不能影响业务证明
+
+高吞吐场景不可能永久保留所有普通 span，Sampling 是合理成本控制。可以只保留部分成功请求、全量保留错误请求，或者按任务类型调整采样率。
+
+但 AdmissionReceipt、EffectReceipt、Authorization / Approval 等真正用于业务恢复和审计的耐久事实不属于“为了省 Trace 成本可以随机丢弃”的数据。强制审计也不能因为 telemetry sampling 关闭就消失。
+
+因此采样策略只决定观测视图的细节密度。任何必须证明业务已经发生、权限为何允许、现实效果是什么的事实，都应在自己的 Owner 边界按相应保留政策持久化。
+
 ### 当前、目标与缺口
 
 Current 是 unified trace / eval contract foundation + adapters / schemas / tests，正式 benchmark 仍为 `MEASUREMENT_BLOCKED`。

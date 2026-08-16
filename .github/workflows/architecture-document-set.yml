@@ -24,6 +24,7 @@ on:
       - "tests/repo/test_architecture_document_set.py"
       - "tests/repo/test_architecture_semantic_alignment.py"
       - "tests/repo/test_architecture_writing_standard.py"
+      - "tests/repo/test_architecture_human_readability.py"
       - "tests/repo/test_docs_entrypoints.py"
       - "AGENTS.md"
       - ".agent/system.yaml"
@@ -52,6 +53,7 @@ on:
       - "tests/repo/test_architecture_document_set.py"
       - "tests/repo/test_architecture_semantic_alignment.py"
       - "tests/repo/test_architecture_writing_standard.py"
+      - "tests/repo/test_architecture_human_readability.py"
       - "tests/repo/test_docs_entrypoints.py"
       - "AGENTS.md"
       - ".agent/system.yaml"
@@ -92,6 +94,7 @@ jobs:
             tests/repo/test_architecture_document_set.py \
             tests/repo/test_architecture_semantic_alignment.py \
             tests/repo/test_architecture_writing_standard.py \
+            tests/repo/test_architecture_human_readability.py \
             tests/repo/test_docs_entrypoints.py \
             2>&1 | tee architecture-validation-logs/compile.log
       - name: Verify canonical architecture document set
@@ -100,7 +103,7 @@ jobs:
         run: set -o pipefail; python tools/scripts/verify_architecture_semantic_alignment.py 2>&1 | tee architecture-validation-logs/semantic-alignment.log
       - name: Verify architecture writing standard
         run: set -o pipefail; python tools/scripts/verify_architecture_writing_standard.py 2>&1 | tee architecture-validation-logs/writing-standard.log
-      - name: Verify architecture human readability structure
+      - name: Verify architecture and module human readability structure
         run: set -o pipefail; python tools/scripts/verify_architecture_human_readability.py 2>&1 | tee architecture-validation-logs/human-readability.log
       - name: Verify architecture rendering and mirrors
         run: set -o pipefail; python tools/agent/render_architecture.py --check 2>&1 | tee architecture-validation-logs/render.log
@@ -121,6 +124,7 @@ jobs:
             tests/repo/test_architecture_document_set.py \
             tests/repo/test_architecture_semantic_alignment.py \
             tests/repo/test_architecture_writing_standard.py \
+            tests/repo/test_architecture_human_readability.py \
             tests/repo/test_docs_entrypoints.py \
             -p no:cacheprovider \
             2>&1 | tee architecture-validation-logs/pytest.log

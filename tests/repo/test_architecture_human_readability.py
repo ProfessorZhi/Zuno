@@ -16,7 +16,7 @@ def _load():
     return module
 
 
-def test_canonical_markdown_has_human_and_normative_layers() -> None:
+def test_canonical_markdown_and_modules_have_human_and_normative_layers() -> None:
     assert _load().verify() == []
 
 
@@ -73,3 +73,16 @@ def test_machine_markers_warn_without_blocking() -> None:
     )
     assert module.verify_text(document) == []
     assert module.warnings_for_text(document)
+
+
+def test_all_nine_module_part_a_sections_meet_current_depth_floor() -> None:
+    verifier = _load()
+    for filename in verifier.MODULE_FILES:
+        text = (REPO_ROOT / "docs/modules" / filename).read_text(encoding="utf-8")
+        layers = verifier._split_module_layers(text)
+        assert layers is not None, filename
+        part_a, _part_b, _part_c = layers
+        assert verifier._nonspace_chars(part_a) >= verifier.MODULE_PART_A_MIN_NONSPACE_CHARS, filename
+        assert len(verifier._prose_paragraphs(part_a)) >= verifier.MODULE_PART_A_MIN_PROSE_PARAGRAPHS, filename
+        assert len(__import__("re").findall(r"(?m)^###\s+", part_a)) >= verifier.MODULE_PART_A_MIN_SUBSECTIONS, filename
+        assert "### 当前、目标与缺口" in part_a, filename
