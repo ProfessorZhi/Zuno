@@ -57,6 +57,16 @@ production_readiness: NOT_ESTABLISHED
 
 下一道门不再是“把九篇文档继续写长”，而是进入字段级 Contract、状态转换 guard、并发 / 版本条件、幂等 namespace、事务边界、Crash Window、Schema Evolution 和 Failure Injection Matrix，再逐模块判断是否达到 Module Detail Freeze Candidate。
 
+## 面对横向系统设计追问时怎样回答
+
+高级系统设计面试通常不会按九个模块从 01 问到 09，而会直接问：“QPS 上来怎么办”“为什么不用微服务”“队列积压怎么办”“缓存放哪里”“为什么不用 2PC”“PostgreSQL 和 Checkpointer 为什么分开”“多租户怎么隔离”“HA / DR 怎么做”。这些问题仍然遵守同一个顺序：**先确认哪一类事实由谁拥有，再讨论用什么物理原语承载。**
+
+因此，扩容不按“九个模块”机械拆成九个服务，而先按工作负载区分入口请求、知识构建、模型调用、专业能力、外部 Tool、Eval 等类型；缓存只优化可重建 Projection，不成为新的 Truth Owner；Owner 内部在需要时使用事务 / CAS / 幂等保证自己的完成事实，跨 Owner 不追求一个全局 2PC，而通过 receipt、version、causation ref 和恢复流程收敛；Queue、Worker、Checkpoint、Object Store 都是物理原语，不能因为“写成功”就替业务 Owner 宣布完成。
+
+这组横向问题的详细责任矩阵放在 [`../modules/README.md`](../modules/README.md) 的“横向系统设计问题”章节。真正进入实现时，再回到相应模块 Part B / Part C 看字段级 Contract、状态转换、事务边界和失败测试。
+
+这里也必须区分 Target 和 Current：文档可以说明目标上如何做 Backpressure（背压）、缓存新鲜度、并发控制、故障恢复和物理扩容，但没有 Load Test、真实 Provider 配额、RPO / RTO 和灾备演练，就不能从架构图推导“支持多少 QPS”“支持多少文件”或“已经高可用”。这些数字只能由 Evidence 证明。
+
 ## 阅读顺序
 
 如果第一次接触 Zuno，建议：
@@ -71,6 +81,8 @@ production_readiness: NOT_ESTABLISHED
 一个不了解 Zuno 的高级工程师只读 `architecture.md` Part A，应该能够解释：为什么简单问答保持简单；复杂法律分析怎样形成正式工作成果；新证据怎样使旧结果失效；外部 POST 超时为什么不能盲重试；Domain Commit 和 Runtime Checkpoint 不一致时怎样恢复；九个责任域为什么这样分。
 
 如果 Reviewer 进一步追问“为什么项目可以立项、为什么不直接用通用平台、项目走过什么阶段、参与者做过什么、这些差异是否真的已经形成优势”，回到 [`../project/project.md`](../project/project.md)。如果开始追问具体模块的状态、Contract、并行、失败或恢复，则进入对应 Module；如果问“现在真的实现了吗”，直接进入 Evidence。
+
+如果追问进一步进入并发、缓存、背压、一致性、容量、HA / DR、成本或数据库恢复，先读 [`../modules/README.md`](../modules/README.md) 的横向系统设计章节，再进入 01 / 02 / 03 / 04 / 06 / 07 / 08 / 09 的 Part B / Part C。目标设计可以解释机制，实际容量和生产资格仍只从 Evidence 回答。
 
 需要实现、测试或审查工程细节时，再读 `architecture.md` Part B、模块 Part B / Part C、相关 ADR 和 Evidence。
 
