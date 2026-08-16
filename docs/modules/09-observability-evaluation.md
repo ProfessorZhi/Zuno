@@ -8,39 +8,49 @@
 
 一个复杂 Agent 任务可以产生非常漂亮的 Trace，但如果系统无法回答“这条结论为什么被正式准入”“谁批准了外部动作”“现实世界是否真的执行成功”，Trace 再完整也不能成为业务真相。
 
-可观测性与评测模块负责帮助团队理解系统怎样运行、哪里变差、复杂度是否值得保留；它不拥有领域事实、安全决定或外部效果。
+可观测性与评测解决两个不同但相关的问题：**系统刚才发生了什么**，以及**这样的系统到底好不好、复杂度值不值得保留**。它不拥有领域事实、安全决定或外部效果。
 
 ### 一次运行应该怎样被观察
 
-所有责任域通过统一、可脱敏的遥测契约输出 run / step / model / retrieval / tool / admission 等关联信息。OpenTelemetry 可以作为与具体供应商无关的基础遥测契约，LangSmith 可以作为 Agent / LLM Trace 与 Eval 的一种 Provider；系统级指标则可以进入常规监控栈。
+所有责任域通过统一、可脱敏的遥测契约输出运行、步骤、模型、检索、工具和正式准入等关联信息。OpenTelemetry 可以作为与具体供应商无关的基础遥测契约，LangSmith 可以作为 Agent / LLM Trace 与 Eval 的一种 Provider；系统级指标则可以进入常规监控栈。
 
-Provider 可以替换，但 trace / metric / eval identity、correlation 和 redaction 语义不能散落在各模块自己定义。
+Provider 可以替换，但 trace / metric / eval identity、correlation 和 redaction 语义不能散落在各模块自己定义。Court / on-prem 场景也不能因为使用 LangSmith 就变成必须依赖其 Cloud 才能运行。
 
 ### 评测真正要回答什么
 
 评测不是只问“LLM Judge 给了几分”。Zuno 需要知道：证据是否充分、引用是否正确、有没有无依据主张、冲突/争议抽取是否准确、法条适用是否正确、人工 Reviewer 是否接受、任务是否完成，以及质量提升换来了多少时延、Token、模型调用和工具调用。
 
-同样重要的是消融：GraphRAG 是否只对某类问题有收益，长期记忆是否真的改善结果，多智能体是否优于单控制器加并行步骤，原生运行时是否比“通用宿主 + 法律后端”有稳定增益。没有测量收益的复杂度应当删除或外置。
+同样重要的是消融和对照：GraphRAG 是否只对某类问题有收益，长期记忆是否真的改善结果，多智能体是否优于单控制器加并行步骤，原生运行时是否比“通用宿主 + 法律后端”有稳定增益。没有测量收益的复杂度应当删除、缩小或外置。
+
+### 评测和“发布资格”是什么关系
+
+评测可以形成 Provider / Capability / AgentVersion 的资格证据，也可以支持 Release Gate，但它不能凭一次实验就宣布整个系统 Production Ready。数据集、样本数、配置、Commit SHA、指标和失败分类必须能复现；缺关键输入时保持 blocked，而不是用空样本或 Mock 把状态写成通过。
+
+线上某次结果是否能够发布，仍要消费当时任务的证据、权限和业务资格；离线评测结果只是重要输入，不是单次业务发布决定的替代品。
 
 ### 为什么耐久审计不能放在这里
 
 Observability 可以接收 Audit Event 或引用 AuditPersistenceReceipt，但“高风险动作前必须先落盘”的要求由 Security 决定，实际持久化边界证明它是否成功。Telemetry 丢失应该降低诊断能力，而不能让已经发生的正式领域提交或外部效果失去事实依据。
 
+关键重建优先依赖 Domain / Runtime / Security Decision / Durable Audit / Effect Receipt 等耐久事实；Trace 是关联和诊断层。
+
 ### 当前、目标与缺口
 
-当前仓库保留正式 Eval 执行路径，但固定 benchmark 因外部实际数据不可用而处于 `MEASUREMENT_BLOCKED`，不能宣称质量优势或生产就绪。Current Runtime / Wave-1 已有部分观测 Contract 和 Adapter 基础；全链路生产 trace、法律评测数据集、release gate、真实 A/B/C benchmark 仍是缺口。
+当前代码已经有 ObservabilityTracePort、Noop/InMemory/LangSmith Trace Adapter、OTel/LangSmith-compatible span schema、redacted export、eval dataset schema 和 release baseline contract 等基础；但代码自己的 README 仍把它定义为 `contract-foundation`，并明确列出 AgentRunGraph、StepExecutionGraph、Retrieval、Tool Gateway、Final Gate 全链路接线和 LangSmith Experiment 等 Target 缺口。
+
+同时，正式 Eval 执行路径因为固定 benchmark 缺少外部实际数据仍处于 `MEASUREMENT_BLOCKED`。因此当前可以称为“观测与评测契约基础存在”，不能称为全链路可观测、质量已证明或生产就绪。
 
 ## Part B — Engineering / Agent Reference
 
 ### B1 Scope / Ownership
 
-**Owns**：Telemetry contract / projection、Trace、Metric、Evaluation Dataset、Evaluation Result、measurement experiment、release evaluation evidence。
+**Owns**：Telemetry contract / projection、Trace、Metric、Evaluation Dataset、Evaluation Result、measurement experiment、release evaluation evidence、accepted observability/eval projections。
 
-**Does not own**：Canonical Domain fact、Authorization / Approval truth、Tool Effect truth、mandatory audit durability、production readiness declaration without evidence。
+**Does not own**：Canonical Domain fact、Authorization / Approval truth、Tool Effect truth、mandatory audit durability、single-request publication truth、production readiness declaration without evidence。
 
 ### B2 Telemetry Boundary
 
-推荐 provider-neutral OTel-compatible envelope / span semantics；LangSmith 可作为 Agent/LLM trace/eval provider。敏感内容默认脱敏，Secret 不进入 telemetry。
+推荐 provider-neutral OTel-compatible envelope / span semantics；LangSmith 可作为 Agent/LLM trace/eval provider。敏感内容默认脱敏，Secret 不进入 telemetry。Court/on-prem runtime 不得硬依赖 LangSmith Cloud。
 
 ### B3 Evaluation Families
 
@@ -50,13 +60,15 @@ Observability 可以接收 Audit Event 或引用 AuditPersistenceReceipt，但�
 
 需要持续保留对照的能力：Native Runtime vs Generic Host + Legal Backend；Long-term Memory ablation；Specialist/Multi-Agent vs parallel steps/subgraphs；GraphRAG query-class evaluation。测量结果可以删除复杂度，不以架构既有存在为保留理由。
 
+Provider / Capability / AgentVersion eligibility 可以消费 Eval evidence，但具体发布与正式准入仍由各自 Owner 决定。
+
 ### B5 Failure / Recovery
 
-Telemetry sink 不可用时普通诊断可降级；MANDATORY audit 不能因为 telemetry 降级而被视为成功。Eval run 必须记录 dataset、sample count、metric、commit SHA、provider/config 和 blocked reason；缺关键输入时状态保持 blocked。
+Telemetry sink 不可用时普通诊断可以降级并记录 delivery gap；MANDATORY audit 不能因为 telemetry 降级而被视为成功。Eval run 必须记录 dataset、sample count、metric、commit SHA、provider/config 和 blocked reason；缺关键输入时状态保持 blocked。
 
 ### B6 Current / Target / Gap
 
-Current 见 [`current-eval-baseline.md`](../evidence/current-eval-baseline.md)：`MEASUREMENT_BLOCKED`。Target 是 provider-neutral telemetry + 可复现 legal eval/release gate。Gap：正式数据集、真实样本、外部 credentials、全链路 trace、生产 SLO/DR 观测和公开可复现 benchmark。
+Current foundation 见 `src/backend/zuno/platform/observability/README.md` 和 [`current-eval-baseline.md`](../evidence/current-eval-baseline.md)。当前状态是 contract foundation + adapters/tests，Eval 为 `MEASUREMENT_BLOCKED`。Target 是 provider-neutral telemetry + 全链路 Agent/Knowledge/Tool spans + 可复现 legal eval/release gate。Gap：正式数据集、真实样本、外部 credentials、全链路 trace、生产 SLO/DR 观测和可复现 benchmark。
 
 ### B7 Code / Database / Migration Constraints
 
