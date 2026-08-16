@@ -3,6 +3,17 @@ import re
 
 
 ROOT = Path(__file__).resolve().parents[2]
+MODULE_FILES = (
+    "docs/modules/01-application-integration.md",
+    "docs/modules/02-legal-domain-work-product.md",
+    "docs/modules/03-knowledge-evidence.md",
+    "docs/modules/04-agent-runtime-control.md",
+    "docs/modules/05-capability-skill.md",
+    "docs/modules/06-tool-runtime-effects.md",
+    "docs/modules/07-model-gateway.md",
+    "docs/modules/08-security-governance.md",
+    "docs/modules/09-observability-evaluation.md",
+)
 
 
 def verify_programs_flat(root: Path) -> list[str]:
@@ -32,7 +43,9 @@ def verify_system_yaml(root: Path) -> list[str]:
         "version:", "system_identity:", "runtime_boundary:", "program_rules:", "skill_routes:",
         "project_narrative:", 'module_design_state: "deep-design-v2"',
         'module_detail_design_candidate: "candidate-v1"',
-        'module_detail_design_candidate_modules: ["02", "03"]',
+        'module_detail_design_candidate_modules: ["01", "02", "03", "04", "05", "06", "07", "08", "09"]',
+        "detail_candidate_does_not_equal_freeze: true",
+        "module_freeze_precedes_implementation_planning: true",
         "detail_design_candidates:", "detail_design_review:",
     ):
         if marker not in content:
@@ -43,8 +56,7 @@ def verify_system_yaml(root: Path) -> list[str]:
         "docs/README.md",
         "docs/project/README.md",
         "docs/project/project.md",
-        "docs/modules/02-legal-domain-work-product.md",
-        "docs/modules/03-knowledge-evidence.md",
+        *MODULE_FILES,
     ):
         if not (root / relative).exists():
             errors.append(f"system.yaml route target missing: {relative}")
@@ -137,6 +149,7 @@ def main() -> int:
         "docs/governance/human-first-documentation-standard.md",
         "docs/history/README.md",
         "docs/evidence/README.md",
+        *MODULE_FILES,
     ):
         if not (ROOT / relative).exists():
             errors.append(f"missing required path: {relative}")

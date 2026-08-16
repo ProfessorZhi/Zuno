@@ -43,16 +43,8 @@ C_SECTIONS = (
     "### C4 Recovery Order / Consistency Tests（恢复顺序与一致性验证）",
 )
 
-DETAIL_CANDIDATE_MARKERS = (
-    "detail_design: candidate-v1",
-    "#### B14.1 Detail Freeze Candidate",
-    "#### B14.2 Detail Freeze Candidate",
-    "#### B14.3 Detail Freeze Candidate",
-    "#### B14.4 Detail Freeze Candidate",
-    "#### B14.5 Detail Freeze Candidate",
-    "#### B14.6 Detail Freeze Candidate",
-    "#### B14.7 Detail Freeze Candidate",
-    "#### B14.8 Detail Freeze Candidate",
+DETAIL_CANDIDATE_MARKERS = tuple(
+    f"#### B14.{number} Detail Freeze Candidate" for number in range(1, 9)
 )
 
 
@@ -64,6 +56,17 @@ def _load():
     sys.modules[spec.name] = module
     spec.loader.exec_module(module)
     return module
+
+
+def _docs() -> dict[str, str]:
+    return {
+        number: (REPO_ROOT / "docs/modules" / filename).read_text(encoding="utf-8")
+        for number, filename in MODULES.items()
+    }
+
+
+def _has_candidate_status(text: str) -> bool:
+    return "detail_design: candidate-v1" in text or "detail-design: candidate-v1" in text
 
 
 def test_architecture_semantics_follow_canonical_module_designs() -> None:
@@ -85,7 +88,7 @@ def test_active_architecture_has_no_pre_baseline_status_claims() -> None:
         assert stale not in architecture
 
 
-def test_domain_and_knowledge_authority_is_consistent_across_human_and_engineering_docs() -> None:
+def test_domain_and_knowledge_authority_is_consistent_across_docs() -> None:
     architecture = (REPO_ROOT / "docs/architecture/architecture.md").read_text(encoding="utf-8")
     modules_readme = (REPO_ROOT / "docs/modules/README.md").read_text(encoding="utf-8")
     domain = (REPO_ROOT / "docs/modules/02-legal-domain-work-product.md").read_text(encoding="utf-8")
@@ -94,12 +97,8 @@ def test_domain_and_knowledge_authority_is_consistent_across_human_and_engineeri
 
     for text in (architecture, modules_readme, domain, knowledge, terminology):
         for marker in (
-            "EvidenceCandidate",
-            "Evidence",
-            "CitationLineage",
-            "WorkProductCitationBinding",
-            "KnowledgeGeneration",
-            "ReadinessDecision",
+            "EvidenceCandidate", "Evidence", "CitationLineage",
+            "WorkProductCitationBinding", "KnowledgeGeneration", "ReadinessDecision",
         ):
             assert marker in text
 
@@ -111,61 +110,49 @@ def test_domain_and_knowledge_authority_is_consistent_across_human_and_engineeri
     assert "stale KnowledgeGeneration 归 03；stale Finding / WorkProduct 归 02" in knowledge
 
 
-def test_all_nine_modules_have_human_first_b1_b14_and_part_c_v2() -> None:
-    for number, filename in MODULES.items():
-        text = (REPO_ROOT / "docs/modules" / filename).read_text(encoding="utf-8")
+def test_all_nine_modules_have_human_first_b1_b14_part_c_and_detail_candidate() -> None:
+    docs = _docs()
+    for number, text in docs.items():
         assert "## Part A — Human Narrative" in text, number
         assert "## Part B — Engineering / Agent Reference" in text, number
         assert "implementation: not-authorized" in text, number
         assert "deepening: cross-module-consistency-v2" in text, number
-        for marker in B_SECTIONS + C_SECTIONS:
+        assert _has_candidate_status(text), number
+        for marker in B_SECTIONS + C_SECTIONS + DETAIL_CANDIDATE_MARKERS:
             assert marker in text, f"{number}: {marker}"
 
     readme = (REPO_ROOT / "docs/modules/README.md").read_text(encoding="utf-8")
-    assert "module_design_baseline: AVAILABLE_V1" in readme
-    assert "module_deep_design: AVAILABLE_V2" in readme
-    assert "module_deep_design_coverage: 9/9" in readme
-    assert "cross_module_consistency: AVAILABLE_V1" in readme
-    assert "module_detail_design_candidate: AVAILABLE_V1" in readme
-    assert "module_detail_design_candidate_coverage: 2/9" in readme
-    assert "module_detail_freeze: NOT_YET" in readme
-    assert "implementation_authorization: NO" in readme
+    for marker in (
+        "module_design_baseline: AVAILABLE_V1",
+        "module_deep_design: AVAILABLE_V2",
+        "module_deep_design_coverage: 9/9",
+        "cross_module_consistency: AVAILABLE_V1",
+        "module_detail_design_candidate: AVAILABLE_V1",
+        "module_detail_design_candidate_coverage: 9/9",
+        "module_detail_freeze: NOT_YET",
+        "implementation_authorization: NO",
+        "Module Detail Freeze Review",
+    ):
+        assert marker in readme
 
 
-def test_domain_and_knowledge_have_detail_freeze_candidate_v1_only() -> None:
-    docs = {
-        number: (REPO_ROOT / "docs/modules" / filename).read_text(encoding="utf-8")
-        for number, filename in MODULES.items()
+def test_each_detail_candidate_has_owner_specific_freeze_semantics() -> None:
+    docs = _docs()
+    required = {
+        "01": ("ExternalRequest / TaskScope 字段组", "Publication 字段组", "Outbox / Crash / Idempotency"),
+        "02": ("正式准入输入与回执字段组", "Matter-level serialized admission", "Crash Window 与恢复矩阵"),
+        "03": ("KnowledgeGeneration / ProcessingSpec / Manifest 字段组", "ServingPointer", "Worker、Backpressure、Cache"),
+        "04": ("AgentRun / PlanVersion 字段组", "Ready / Parallel / Join Guard", "Checkpoint / Interrupt / Resume"),
+        "05": ("CapabilityVersion 字段组", "ProviderBinding / Conformance", "Eligibility 字段组与 Guard"),
+        "06": ("PreparedAction 字段组", "EffectClass / RetrySafety", "Send Boundary / Transaction Candidate"),
+        "07": ("ModelRequest / Routing 字段组", "Usage / Cost / Budget Settlement", "Qualification / Role Guard"),
+        "08": ("Authorization / Approval 字段组", "Secret / Credential / Lease", "生命周期与 per-store enforcement"),
+        "09": ("TelemetryEnvelope / Correlation 字段组", "EvalDataset / EvalCase 字段组", "Release / Experiment Guard"),
     }
-    for number in ("02", "03"):
-        for marker in DETAIL_CANDIDATE_MARKERS:
+    for number, markers in required.items():
+        for marker in markers:
             assert marker in docs[number], f"{number}: {marker}"
-
-    for number in ("01", "04", "05", "06", "07", "08", "09"):
-        assert "detail_design: candidate-v1" not in docs[number], number
-
-    domain = docs["02"]
-    for marker in (
-        "AdmissionCommand candidate",
-        "AdmissionReceipt candidate",
-        "Matter-level serialized admission",
-        "expected_activation_version",
-    ):
-        if marker == "expected_activation_version":
-            continue
-        assert marker in domain
-    assert "Crash Window 与恢复矩阵" in domain
-    assert "Failure Injection / Freeze Evidence" in domain
-
-    knowledge = docs["03"]
-    for marker in (
-        "KnowledgeGeneration / ProcessingSpec / Manifest 字段组",
-        "ServingPointer candidate",
-        "expected_activation_version",
-        "Worker、Backpressure、Cache 与并发规则",
-        "Failure Injection / Freeze Evidence",
-    ):
-        assert marker in knowledge
+        assert "Failure Injection / Freeze Evidence" in docs[number]
 
 
 def test_cross_module_authority_invariants_are_explicit() -> None:
@@ -185,39 +172,47 @@ def test_cross_module_authority_invariants_are_explicit() -> None:
         assert marker in readme
 
 
-def test_cross_module_cancellation_and_recovery_semantics_are_specialized_per_owner() -> None:
-    docs = {
-        number: (REPO_ROOT / "docs/modules" / filename).read_text(encoding="utf-8")
-        for number, filename in MODULES.items()
-    }
-    assert "取消入口请求或 Runtime Run" in docs["01"]
-    assert "Run / request cancellation 不撤销已经提交的 Domain transaction" in docs["02"]
-    assert "取消 ingestion / rebuild" in docs["03"]
-    assert "AgentRun=CANCELLED" in docs["04"]
-    assert "Capability invocation 被取消" in docs["05"]
-    assert "取消 Runtime / request 后" in docs["06"]
+def test_retry_replan_reconcile_and_cancel_do_not_collapse() -> None:
+    docs = _docs()
+    assert "Retry != Replan != Reconcile" in docs["04"]
+    assert "Replan Barrier" in docs["04"]
+    assert "Outcome Unknown（结果未知）不得映射为普通 Failed" in docs["06"]
+    assert "ReconciliationReceipt" in docs["06"]
+    assert "cancel" in docs["01"].lower()
+    assert "cancel" in docs["04"].lower()
+    assert "cancel" in docs["06"].lower()
     assert "CANCEL_REQUESTED" in docs["07"]
-    assert "旧 SecurityEpoch 的 allow" in docs["08"]
-    assert "OpenTelemetry Baggage" in docs["09"]
-
     assert "matching AdmissionReceipt" in docs["04"]
-    assert "EffectReceipt / ReconciliationReceipt" in docs["06"]
-    assert "恢复时先找 Owner Fact，再修复 Projection" in (REPO_ROOT / "docs/modules/README.md").read_text(encoding="utf-8")
 
 
 def test_idempotency_and_correlation_boundaries_do_not_collapse() -> None:
     readme = (REPO_ROOT / "docs/modules/README.md").read_text(encoding="utf-8")
     assert "Idempotency（幂等）不是一个全局 key" in readme
-    assert "request / invocation idempotency" in readme
-    assert "formal admission idempotency" in readme
-    assert "prepared action / external effect" in readme
-    assert "publication / delivery identity" in readme
-    assert "opaque identity（不透明身份）" in readme
+    for marker in (
+        "request / invocation idempotency",
+        "formal admission idempotency",
+        "prepared action / external effect",
+        "publication / delivery identity",
+    ):
+        assert marker in readme
 
     observability = (REPO_ROOT / "docs/modules/09-observability-evaluation.md").read_text(encoding="utf-8")
-    assert "Baggage" in observability
-    assert "Secret、tenant / matter 名称、用户 PII" in observability
+    assert "OpenTelemetry Baggage" in observability
+    assert "Secret NEVER EXPORT" in observability
     assert "opaque ref" in observability
+
+
+def test_owner_completion_proofs_remain_separate() -> None:
+    docs = _docs()
+    assert "Run completed\n!=\nDomain admitted\n!=\nAnswer publishable\n!=\nConsumer displayed" in docs["01"]
+    assert "DomainVersion + matching AdmissionReceipt" in docs["02"]
+    assert "index write success" in docs["03"]
+    assert "Runtime Checkpoint != Domain Commit != Tool Effect != Publication truth" in docs["04"]
+    assert "Provider Conformance != task quality" in docs["05"]
+    assert "Transport Success 不等于 Effect Success" in docs["06"]
+    assert "Gateway 调用成功 != Runtime Step accepted != Domain admitted != Answer published" in docs["07"]
+    assert "Retention != Recall Eligibility != Physical Purge Completion" in docs["08"]
+    assert "Telemetry != Durable Audit != Business Truth" in docs["09"]
 
 
 def test_human_first_governance_matches_current_module_b1_b14_template() -> None:

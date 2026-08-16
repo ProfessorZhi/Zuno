@@ -39,6 +39,9 @@ MODULE_BASELINE_HEADINGS = [
     "### B13 Current / Target / Gap / Evidence",
     "### B14 Code / Database / Migration Constraints",
 ]
+DETAIL_CANDIDATE_HEADINGS = [
+    f"#### B14.{number} Detail Freeze Candidate" for number in range(1, 9)
+]
 
 
 def _load_links():
@@ -50,6 +53,10 @@ def _load_links():
     sys.modules[spec.name] = module
     spec.loader.exec_module(module)
     return module
+
+
+def _has_candidate_status(content: str) -> bool:
+    return "detail_design: candidate-v1" in content or "detail-design: candidate-v1" in content
 
 
 def verify() -> list[str]:
@@ -89,7 +96,7 @@ def verify() -> list[str]:
     index = (REPO_ROOT / "docs/README.md").read_text(encoding="utf-8")
     for marker in (
         "Current", "Target", "Unknown", "project/", "project.md", "architecture/", "modules/", "evidence/", "history/red-blue/",
-        "module_deep_design",
+        "module_deep_design", "module_detail_design_candidate", "module_detail_design_candidate_coverage: 9/9",
     ):
         if marker not in index:
             errors.append(f"docs/README.md missing status/architecture marker: {marker}")
@@ -106,9 +113,7 @@ def verify() -> list[str]:
         "团队是什么形态，我在里面做了什么",
         "相比通用方案，我们今天到底证明了什么",
         "如果我是大厂面试官，我会继续追问什么",
-        "Current",
-        "Target",
-        "Unknown",
+        "Current", "Target", "Unknown",
     ):
         if marker not in project:
             errors.append(f"project.md missing coverage marker: {marker}")
@@ -119,7 +124,11 @@ def verify() -> list[str]:
             errors.append(f"project fact provenance missing ledger marker: {marker}")
 
     modules = (REPO_ROOT / "docs/modules/README.md").read_text(encoding="utf-8")
-    for marker in ("01-application-integration.md", "09-observability-evaluation.md", "module_design_baseline", "implementation_authorization"):
+    for marker in (
+        "01-application-integration.md", "09-observability-evaluation.md", "module_design_baseline",
+        "module_detail_design_candidate: AVAILABLE_V1", "module_detail_design_candidate_coverage: 9/9",
+        "module_detail_freeze: NOT_YET", "implementation_authorization: NO",
+    ):
         if marker not in modules:
             errors.append(f"docs/modules/README.md missing module design marker: {marker}")
 
@@ -133,9 +142,11 @@ def verify() -> list[str]:
         ):
             if marker not in content:
                 errors.append(f"{module_path} missing module baseline marker: {marker}")
-        for heading in MODULE_BASELINE_HEADINGS:
+        if not _has_candidate_status(content):
+            errors.append(f"{module_path} missing detail candidate status")
+        for heading in MODULE_BASELINE_HEADINGS + DETAIL_CANDIDATE_HEADINGS:
             if heading not in content:
-                errors.append(f"{module_path} missing baseline heading: {heading}")
+                errors.append(f"{module_path} missing required heading: {heading}")
         if not all(status in content for status in ("Current", "Target", "Gap")):
             errors.append(f"{module_path} must distinguish Current / Target / Gap")
 
