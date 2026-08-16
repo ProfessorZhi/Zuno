@@ -9,6 +9,8 @@ runtime_boundary:
   architecture_root: "docs/architecture"
   module_design_root: "docs/modules"
   module_design_state: "deep-design-v2"
+  module_detail_design_candidate: "candidate-v1"
+  module_detail_design_candidate_modules: ["02", "03"]
   module_detail_freeze: false
   evidence_root: "docs/evidence"
   review_history_root: "docs/history/red-blue"
@@ -34,6 +36,7 @@ canonical_owners:
   overall_architecture: "docs/architecture/architecture.md"
   architecture_views: "docs/architecture/architecture-views.md + docs/architecture/architecture.html"
   modules: "docs/modules/README.md + docs/modules/01-*.md through 09-*.md"
+  detail_design_candidates: "docs/modules/02-legal-domain-work-product.md + docs/modules/03-knowledge-evidence.md B14.1-B14.8"
   decisions: "docs/decisions/"
   evidence: "docs/evidence/"
   review_history: "docs/history/red-blue/"
@@ -77,6 +80,16 @@ skill_routes:
       - "docs/architecture/architecture.md"
       - "docs/modules/README.md"
       - "docs/decisions/README.md"
+      - "docs/evidence/README.md"
+      - "docs/governance/human-first-documentation-standard.md"
+  detail_design_review:
+    read_first:
+      - "docs/architecture/architecture.md"
+      - "docs/modules/README.md"
+      - "docs/modules/02-legal-domain-work-product.md"
+      - "docs/modules/03-knowledge-evidence.md"
+      - "docs/decisions/0008-legal-domain-kernel-and-host-boundary.md"
+      - "docs/decisions/0014-round-02-cross-boundary-authority-and-recovery.md"
       - "docs/evidence/README.md"
       - "docs/governance/human-first-documentation-standard.md"
   architecture_implementation:
