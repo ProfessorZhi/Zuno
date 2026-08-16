@@ -1,6 +1,6 @@
 # 08 Security & Governance（安全与治理）
 
-<!-- status: design-baseline-v1; implementation: not-authorized; deepening: all-modules-v1 -->
+<!-- status: design-baseline-v1; implementation: not-authorized; deepening: cross-module-consistency-v2 -->
 
 ## Part A — Human Narrative
 
@@ -299,3 +299,42 @@ Telemetry 至少关联：decision identity、security epoch、resource / action 
 - 不把每个 Store 的生命周期执行状态集中伪造成一条全局 `deleted=true`。
 - 数据库表、Policy DSL、缓存、租约结构和 Migration 只有在字段级详细设计后冻结。
 - 物理服务拆分继续受 ADR-0012 证据门控；“安全很重要”本身不等于必须单独微服务。
+
+## Part C — Cross-Module Consistency（跨模块一致性）
+
+### C1 Completion Proof / Non-proof（完成证明与非证明）
+
+08 的 Decision 证明政策判断，不证明目标动作已经执行。`AuthorizationDecision=ALLOW` 不证明材料已读取、模型已调用、工具已执行或 Domain 已准入；`ApprovalDecision=GRANTED` 也只证明特定 action hash 的审批成立。
+
+`AuditRequirement` 不等于审计已经持久化；当要求 `MANDATORY_BEFORE_EFFECT` 时，只有 committed `AuditPersistenceReceipt` 才能成为 06 Ready-to-Execute 的必要证明。`EffectiveLifecycleDecision=PURGE_REQUIRED` 不等于所有 Store 已 purge；Store enforcement fact 才能证明各自执行完成。
+
+### C2 Causation / Version / Freshness Bindings（因果、版本与新鲜度绑定）
+
+Authorization / Approval / Egress / Secret / Lifecycle 决定必须绑定能解释其有效范围的 identity：principal、tenant / matter / resource、requested action、SecurityEpoch / PolicyVersion、decision identity、expiry / refresh requirement；Approval 额外绑定 action identity / hash / ToolVersion 等。
+
+任何新的受保护访问都要判断旧 Decision 是否仍覆盖当前 resource/action/version。旧 SecurityEpoch 的 allow 不能因为保存在 Runtime Checkpoint、Capability cache、PreparedAction 或 ModelRoutingDecision 中而自动延长有效期。
+
+不同安全事实具有不同 identity namespace：AuthorizationDecision、ApprovalDecision、Secret Lease、AuditPersistenceReceipt、LifecycleDecision 不能合并成一个“security token”。
+
+### C3 Cancellation / Late Result / Staleness Rules（取消、晚到结果与失效规则）
+
+撤权、PolicyVersion 更新或 Approval 失效只约束新的受保护访问和尚未执行的动作；它不重写过去合法完成的历史事实。但已在内存 / cache 中的敏感数据是否可继续用于纯计算，必须由显式政策决定，不能由 04 / 05 自行假设。
+
+晚到结果在被下游接受前，如果需要新的受保护使用、发布、外发、Tool Effect 或 Formal Admission，必须重新消费当前安全决定。旧 Plan 的 late branch 即使携带过去的 allow，也不能把旧权限带进新的领域提交。
+
+取消任务不等于撤销既有 Effect / Admission。安全侧可以阻止下一步，但现实世界和领域历史仍由 06 / 02 各自事实说明。
+
+### C4 Recovery Order / Consistency Tests（恢复顺序与一致性验证）
+
+安全恢复先恢复 policy / decision truth，再让目标模块恢复执行：
+
+```text
+current SecurityEpoch / PolicyVersion
+→ historical decision refs needed for audit
+→ current Authorization / Approval / Egress / Secret eligibility for next protected action
+→ durable AuditPersistenceReceipt when required
+→ target module executes / resumes and records its own fact
+→ 09 records redacted correlation only
+```
+
+至少验证：授权在 Runtime interrupt 期间被撤销；检索后模型外发前撤权；Approval 后 action hash / ToolVersion 改变；Secret lease 过期；Policy Engine outage fail-closed；Mandatory Audit 写入失败；Legal Hold 与 No-Recall 同时存在；Store purge 部分失败；旧授权被 cache / checkpoint 错误复用；Prompt Injection 产生高风险 Action Proposal 仍被全部门禁阻断。
