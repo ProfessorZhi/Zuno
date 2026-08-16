@@ -1,6 +1,6 @@
 # 项目事实来源说明
 
-本文是 Zuno **项目事实层的来源登记和表述边界**。`docs/project/` 负责用自然语言讲项目为什么存在、怎样发展和怎样定位；本文回答更严格的问题：某句话从哪里来、今天能说到什么程度、哪些说法会越过证据，以及以后拿到什么材料才能把一个 Unknown 升级成可确认事实。
+本文是 Zuno **项目事实层的来源登记和表述边界**。[`docs/project/project.md`](../project/project.md) 负责用自然语言讲项目为什么存在、怎样发展、为什么值得建设以及怎样定位；本文回答更严格的问题：某句话从哪里来、今天能说到什么程度、哪些说法会越过证据，以及以后拿到什么材料才能把一个 Unknown 升级成可确认事实。
 
 它不是另一份项目故事，也不拥有 Target Architecture。当前代码、Migration、Test、Trace、Eval 和运行结果仍由 `docs/evidence/` 证明；架构设计由 `docs/architecture/` 和 `docs/modules/` 拥有。
 
@@ -8,7 +8,7 @@
 
 ### 已确认历史事实
 
-来自用户明确回忆、仍可核对项目材料或双方一致确认的历史事实。可以进入 `docs/project/` 正文，但仍要保留适当范围。例如“项目经历过 Pilot Validation”不等于“项目已经正式生产上线”。
+来自用户明确回忆、仍可核对项目材料或双方一致确认的历史事实。可以进入 `docs/project/project.md` 正文，但仍要保留适当范围。例如“项目经历过 Pilot Validation”不等于“项目已经正式生产上线”。
 
 ### 公开背景佐证
 
@@ -76,7 +76,7 @@
 
 > Zuno 的差异化设计把通用宿主通常需要项目自行补充的法律业务语义，提升为一等架构责任；这些差异是否形成实际质量、恢复性和成本优势，仍要通过正式 A/B、故障测试和真实任务测量证明。
 
-这也是 [`docs/project/product-positioning-and-value.md`](../project/product-positioning-and-value.md) 使用的统一口径。
+这也是 [`docs/project/project.md`](../project/project.md) 使用的统一口径。
 
 ## 4. 历史、Current 和 Target 冲突时怎么处理
 
@@ -103,12 +103,12 @@
 
 ## 6. Reviewer / Agent 使用规则
 
-1. 讲项目故事时优先读 `docs/project/`，不要把本台账直接念给用户。
+1. 讲项目故事时优先读 `docs/project/project.md`，不要把本台账直接念给用户。
 2. 需要判断一句历史表述能否采用时，再回到本表检查允许范围。
 3. 讨论“为什么这样设计”时进入 `docs/architecture/` 和 `docs/modules/`，不要把 Target 说成历史客户原话。
 4. 讨论“现在实现了吗”时进入 `docs/evidence/`，不要用项目回忆或设计文档证明 Current。
 5. 遇到 Unknown 时直接保留 Unknown，并记录下一步最有价值的取证材料。
-6. 新证据到来后，优先更新对应事实行和项目正文，再同步入口 / Validator；不要在多个位置分别维护互相独立的版本。
+6. 新证据到来后，优先更新对应事实行和 Project 主文档，再同步入口 / Validator；不要在多个位置分别维护互相独立的版本。
 
 ## 7. 当前最值得继续恢复的事实
 
