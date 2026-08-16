@@ -128,6 +128,18 @@ Provider 月账单只能说明总花费。真正优化需要把 Usage / Cost 关
 
 09 可以提供 ReleaseEvaluationEvidence，但不能单独宣布整个系统 production ready。
 
+### SLO 为什么不能只盯一个 API 的 P95 延迟
+
+Zuno 的复杂任务可能几秒返回简单问答，也可能因为知识构建、人工审批或外部 Reconciliation 持续很久。如果只定义“HTTP endpoint P95 < 2s”，系统很容易通过异步受理把延迟藏到 Queue 里，却无法说明用户真正多久拿到可用结果。09 因此需要把入口受理延迟、queue wait、Step execution、model / retrieval latency、approval wait、reconcile duration、publication / delivery lag 分层观测，再由产品场景定义 end-to-end SLO。
+
+同样，恢复能力需要自己的 SLI：例如 crash 后到 Run 可继续的时间、Outcome Unknown 到确认的时间、stale WorkProduct 到 invalidation delivery 的时间。它们不应该和普通 request latency 混成一个数字。Target 可以定义这些测量结构，但没有真实 workload、RPO / RTO 目标和故障演练就不能宣称“系统满足某 SLO”。09 的职责是让以后每个可靠性承诺都能对应明确 measurement，而不是用单一 Dashboard 绿色状态代替系统行为。
+
+### 多个 Reviewer 对同一法律样本意见不一致时怎么办
+
+法律任务的 ground truth 并不总是天然唯一。两名专业 Reviewer 可能对争议点重要性、法条适用性或答案表达给出不同判断。如果数据集强行把第一次标注写成唯一 label，Eval 会把合理分歧误判成模型错误；反过来，如果“有分歧就都算对”，评测又失去约束力。
+
+DatasetVersion 应保存 annotation provenance、Reviewer identity ref、rubric version、分歧和 adjudication（裁决）过程。可以对明确事实使用 deterministic label，对开放判断保存允许集合、等级评分或由第三位 Reviewer adjudicate。没有完成必要 adjudication 的 case 可以标记 uncertain / excluded from release-critical metric，而不是偷偷取平均。Judge calibration 也要使用这些人工样本验证一致性。这样“质量分”不仅可复现，还能解释它到底代表专业共识、确定事实还是仍有争议的判断。
+
 ### 当前、目标与缺口
 
 Current 是 `contract-foundation`：`ObservabilityTracePort`、`NoopTraceAdapter`、`InMemoryTraceAdapter`、修正后的 `LangSmithTraceAdapter`、LangSmith-compatible metadata、OTel / LangSmith-compatible span schema、redacted export adapter、eval dataset schema、release baseline contract 和 sandbox audit span bridge 已存在。代码 README 仍明确 Target 待完成 AgentRunGraph、StepExecutionGraph、Retrieval Round、Tool Gateway、Final Gate span wiring 和 LangSmith Experiment integration。
