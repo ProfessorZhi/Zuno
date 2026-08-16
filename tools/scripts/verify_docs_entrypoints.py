@@ -7,6 +7,34 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 ARCHITECTURE_FILES = {"README.md", "architecture.md", "architecture-views.md", "architecture.html"}
+MODULE_FILES = [
+    "docs/modules/README.md",
+    "docs/modules/01-application-integration.md",
+    "docs/modules/02-legal-domain-work-product.md",
+    "docs/modules/03-knowledge-evidence.md",
+    "docs/modules/04-agent-runtime-control.md",
+    "docs/modules/05-capability-skill.md",
+    "docs/modules/06-tool-runtime-effects.md",
+    "docs/modules/07-model-gateway.md",
+    "docs/modules/08-security-governance.md",
+    "docs/modules/09-observability-evaluation.md",
+]
+MODULE_BASELINE_HEADINGS = [
+    "### B1 Scope / Global Invariants",
+    "### B2 Responsibility / Ownership",
+    "### B3 Upstream / Downstream",
+    "### B4 Authoritative Facts / Core Objects",
+    "### B5 Cross-boundary Contracts",
+    "### B6 Normal Flow",
+    "### B7 State / Lifecycle",
+    "### B8 Failure Taxonomy",
+    "### B9 Retry / Replan / Reconcile / Recovery / Idempotency",
+    "### B10 Security / Approval / Audit",
+    "### B11 Persistence / Transaction Boundaries",
+    "### B12 Observability / Evaluation",
+    "### B13 Current / Target / Gap / Evidence",
+    "### B14 Code / Database / Migration Constraints",
+]
 
 
 def _load_links():
@@ -28,7 +56,7 @@ def verify() -> list[str]:
         "docs/project/team-and-contributions.md", "docs/project/development-process.md",
         "docs/governance/project-fact-provenance.md",
         "docs/governance/human-first-documentation-standard.md",
-        "docs/evidence/README.md", "docs/modules/README.md", "docs/history/README.md",
+        "docs/evidence/README.md", *MODULE_FILES, "docs/history/README.md",
         "docs/history/red-blue/README.md",
         "docs/history/red-blue/manual-round-01-overall-architecture.md",
         "docs/history/red-blue/manual-round-02-overall-architecture-freeze-review.md",
@@ -42,21 +70,46 @@ def verify() -> list[str]:
     for path in required:
         if not (REPO_ROOT / path).exists():
             errors.append(f"missing documentation entrypoint: {path}")
+
     root = REPO_ROOT / "docs/architecture"
     if {path.name for path in root.iterdir() if path.is_file()} != ARCHITECTURE_FILES:
         errors.append("docs/architecture must contain exactly four files")
     if any(path.is_dir() for path in root.iterdir()):
         errors.append("docs/architecture must not contain subdirectories")
+
     for mirror in (REPO_ROOT / ".agent/architecture", REPO_ROOT / ".agent/modules"):
         if mirror.exists():
             errors.append(f"documentation mirror must not exist: {mirror.relative_to(REPO_ROOT)}")
     for forbidden in (REPO_ROOT / "docs/facts", REPO_ROOT / "project-reconstruction-lab"):
         if forbidden.exists():
             errors.append(f"obsolete documentation workspace must be absent: {forbidden.relative_to(REPO_ROOT)}")
+
     index = (REPO_ROOT / "docs/README.md").read_text(encoding="utf-8")
-    for marker in ("Current", "Target", "Unknown", "project/", "architecture/", "evidence/", "history/red-blue/"):
+    for marker in ("Current", "Target", "Unknown", "project/", "architecture/", "modules/", "evidence/", "history/red-blue/"):
         if marker not in index:
             errors.append(f"docs/README.md missing status/architecture marker: {marker}")
+
+    modules = (REPO_ROOT / "docs/modules/README.md").read_text(encoding="utf-8")
+    for marker in ("01-application-integration.md", "09-observability-evaluation.md", "module_design_baseline", "implementation_authorization"):
+        if marker not in modules:
+            errors.append(f"docs/modules/README.md missing module design marker: {marker}")
+
+    for module_path in MODULE_FILES[1:]:
+        content = (REPO_ROOT / module_path).read_text(encoding="utf-8")
+        for marker in (
+            "status: design-baseline-v1",
+            "implementation: not-authorized",
+            "## Part A — Human Narrative",
+            "## Part B — Engineering / Agent Reference",
+        ):
+            if marker not in content:
+                errors.append(f"{module_path} missing module baseline marker: {marker}")
+        for heading in MODULE_BASELINE_HEADINGS:
+            if heading not in content:
+                errors.append(f"{module_path} missing baseline heading: {heading}")
+        if not all(status in content for status in ("Current", "Target", "Gap")):
+            errors.append(f"{module_path} must distinguish Current / Target / Gap")
+
     return errors
 
 

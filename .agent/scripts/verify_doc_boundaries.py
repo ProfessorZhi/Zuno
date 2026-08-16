@@ -2,6 +2,18 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[2]
+MODULE_FILES = {
+    "docs/modules/README.md",
+    "docs/modules/01-application-integration.md",
+    "docs/modules/02-legal-domain-work-product.md",
+    "docs/modules/03-knowledge-evidence.md",
+    "docs/modules/04-agent-runtime-control.md",
+    "docs/modules/05-capability-skill.md",
+    "docs/modules/06-tool-runtime-effects.md",
+    "docs/modules/07-model-gateway.md",
+    "docs/modules/08-security-governance.md",
+    "docs/modules/09-observability-evaluation.md",
+}
 
 
 def _relative_files(directory: Path) -> set[str]:
@@ -22,7 +34,7 @@ def main() -> int:
         "docs/history/red-blue/legacy-automated-rounds.md",
     }:
         errors.append("history boundary mismatch")
-    if _relative_files(ROOT / "docs/modules") != {"docs/modules/README.md"}:
+    if _relative_files(ROOT / "docs/modules") != MODULE_FILES:
         errors.append("modules boundary mismatch")
     if {path.name for path in (ROOT / "docs/architecture").iterdir() if path.is_file()} != {
         "README.md", "architecture.md", "architecture-views.md", "architecture.html"

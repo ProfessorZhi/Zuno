@@ -5,7 +5,7 @@
 ```text
 docs/project/                 人类可读的项目说明、背景、团队与开发过程
 docs/architecture/            总体 Target Architecture 四文件
-docs/modules/                 已冻结 Target 责任域的模块设计入口（当前仍只有 README）
+docs/modules/                 九个 Target 责任域的 Design Baseline V1 与模块入口
 docs/decisions/               有效 ADR
 docs/evidence/                当前可复现证据
 docs/history/red-blue/        架构审查过程记录
@@ -17,9 +17,15 @@ docs/governance/human-first-documentation-standard.md  人类文档与工程参�
 
 ## 阅读路径
 
-普通项目阅读：`docs/project/README.md` → `project-background.md` → `team-and-contributions.md` → `development-process.md` → `docs/architecture/` → `docs/modules/` → `docs/decisions/` → `docs/evidence/`。
+普通项目阅读：`docs/project/README.md` → `docs/architecture/architecture.md` Part A → `docs/modules/README.md` → 需要的模块 Part A → ADR / Evidence。
 
-架构阅读：先读 `docs/architecture/README.md` 和 `architecture.md` 的 Part A；需要实现、测试或审查工程细节时，再读 Part B、ADR、Evidence 和 Governance。架构复盘再按问题读取 `docs/history/red-blue/` 指定 Round；不要为了理解当前系统而默认加载全部历史对抗记录。
+总体架构阅读：先读 `docs/architecture/README.md` 和 `architecture.md` 的 Part A；需要实现、测试或审查工程细节时，再读 Part B、ADR、Evidence 和 Governance。
+
+模块设计阅读：先读 `docs/modules/README.md` 的三条任务主线、共同不变量和 Ownership，再读目标模块 Part A；进入 Deep Design、Codex Task 或 Review 前再读该模块 Part B 的 B1–B14、相关 ADR、Current Evidence 和总体 Architecture Part B。
+
+当前模块文档状态是 `design-baseline-v1`：主要边界与工程方向已可作为详细设计基线，但字段级 Contract、状态枚举、数据库和服务拓扑尚未冻结，也没有自动 Implementation Authorization。
+
+架构复盘再按问题读取 `docs/history/red-blue/` 指定 Round；不要为了理解当前系统而默认加载全部历史对抗记录。
 
 ## Canonical ownership
 
@@ -30,6 +36,7 @@ docs/governance/human-first-documentation-standard.md  人类文档与工程参�
 | 项目怎样开发和交付 | `docs/project/development-process.md` |
 | 项目事实的来源和表述边界 | `docs/governance/project-fact-provenance.md` |
 | 当前目标架构为什么这样设计 | `docs/architecture/architecture.md` |
+| 九个责任域内部怎样工作 | `docs/modules/01-*.md` … `docs/modules/09-*.md` |
 | 具体长期设计决策 | `docs/decisions/` |
 | 当前仓库和运行状态有什么证据 | `docs/evidence/` |
 | 架构曾怎样被质疑和判断 | `docs/history/red-blue/` |
