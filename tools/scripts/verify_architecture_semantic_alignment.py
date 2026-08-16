@@ -51,16 +51,8 @@ PART_C_MARKERS = (
     "### C4 Recovery Order / Consistency Tests（恢复顺序与一致性验证）",
 )
 
-DETAIL_CANDIDATE_MARKERS = (
-    "detail_design: candidate-v1",
-    "#### B14.1 Detail Freeze Candidate",
-    "#### B14.2 Detail Freeze Candidate",
-    "#### B14.3 Detail Freeze Candidate",
-    "#### B14.4 Detail Freeze Candidate",
-    "#### B14.5 Detail Freeze Candidate",
-    "#### B14.6 Detail Freeze Candidate",
-    "#### B14.7 Detail Freeze Candidate",
-    "#### B14.8 Detail Freeze Candidate",
+DETAIL_CANDIDATE_MARKERS = tuple(
+    f"#### B14.{number} Detail Freeze Candidate" for number in range(1, 9)
 )
 
 
@@ -68,6 +60,10 @@ def _require(errors: list[str], label: str, text: str, markers: tuple[str, ...])
     missing = [marker for marker in markers if marker not in text]
     if missing:
         errors.append(f"{label} missing: {', '.join(missing)}")
+
+
+def _has_detail_candidate_status(text: str) -> bool:
+    return "detail_design: candidate-v1" in text or "detail-design: candidate-v1" in text
 
 
 def verify() -> list[str]:
@@ -163,12 +159,9 @@ def verify() -> list[str]:
                 "### 当前、目标与缺口",
             ),
         )
-
-    for number in ("02", "03"):
-        _require(errors, f"module {number} detail candidate", modules[number], DETAIL_CANDIDATE_MARKERS)
-    for number in ("01", "04", "05", "06", "07", "08", "09"):
-        if "detail_design: candidate-v1" in modules[number]:
-            errors.append(f"module {number} must not claim the 02/03 detail-design candidate gate")
+        if not _has_detail_candidate_status(text):
+            errors.append(f"module {number} missing detail design candidate-v1 status marker")
+        _require(errors, f"module {number} detail candidate", text, DETAIL_CANDIDATE_MARKERS)
 
     module_invariants = {
         "01": (
@@ -236,13 +229,14 @@ def verify() -> list[str]:
             "module_deep_design_coverage: 9/9",
             "cross_module_consistency: AVAILABLE_V1",
             "module_detail_design_candidate: AVAILABLE_V1",
-            "module_detail_design_candidate_coverage: 2/9",
+            "module_detail_design_candidate_coverage: 9/9",
             "module_detail_freeze: NOT_YET",
             "implementation_authorization: NO",
             "Cancellation（取消）是停止未来工作，不是全局回滚",
             "Idempotency（幂等）不是一个全局 key",
             "恢复时先找 Owner Fact，再修复 Projection",
             "DETAIL DESIGN CANDIDATE V1 AVAILABLE",
+            "Module Detail Freeze Review",
         ),
     )
 
