@@ -1,6 +1,6 @@
 # 09 Observability & Evaluation（可观测性与评测）
 
-<!-- status: design-baseline-v1; implementation: not-authorized; quality: not-established; deepening: all-modules-v1 -->
+<!-- status: design-baseline-v1; implementation: not-authorized; quality: not-established; deepening: cross-module-consistency-v2 -->
 
 ## Part A — Human Narrative
 
@@ -99,6 +99,8 @@ Mandatory audit persistence failure
 Zuno 的统一遥测契约需要先定义：默认记录哪些 identity / metadata，哪些 payload 只记录 hash / reference，哪些正文必须 policy opt-in，Secret 永远不能导出。
 
 Redaction（脱敏）发生在 export 之前，不能先把 Secret 发给 SaaS 再指望 Dashboard 隐藏。
+
+跨服务关联也不能反过来成为泄密通道。Correlation ID 应优先使用不含业务含义的 opaque identity（不透明身份）。OpenTelemetry Baggage 会随网络请求传播，官方文档明确提醒其中的内容可能被下游继续传播到非预期第三方，而且 Baggage 自身没有内置完整性校验。因此 tenant、用户、案件名称、Secret、原文片段等敏感信息默认不得直接放进 Baggage；如果确实需要传播关联信息，应使用最小化的不透明 ID，并在接收端回查受控事实。
 
 ### Current 现在究竟能证明什么
 
@@ -207,6 +209,7 @@ Gap 包括正式数据集、真实 case samples、production trace wiring、OTLP
 8. 复杂能力必须接受 A/B / ablation / kill test。
 9. Measurement evidence 不能反向把 Target 自动写成 Current；实现与质量证明分开。
 10. 法院核心业务不硬依赖外部 SaaS observability。
+11. 跨边界 correlation 默认使用 opaque identity；敏感业务信息不进入 OpenTelemetry Baggage。
 
 ### B2 Responsibility / Ownership
 
@@ -231,6 +234,8 @@ Gap 包括正式数据集、真实 case samples、production trace wiring、OTLP
 #### Telemetry Envelope
 
 至少支持 module / operation、trace / correlation identity、request / run / plan / step / action refs、domain / knowledge / security refs、provider refs、timing、status / error class、sampling、redaction metadata。不是每条事件携带所有字段，但跨边界必须可关联。
+
+Correlation value 默认是无业务含义的 opaque identifier。OpenTelemetry Baggage 不用于携带 Secret、tenant / matter 名称、用户 PII、法律材料正文或授权决定正文；如确需跨进程传播最小关联，只传播受控 opaque ref，并在可信边界内回查实际事实。
 
 #### Eval Dataset / DatasetVersion
 
@@ -299,6 +304,7 @@ NOT_EVALUATED → ELIGIBLE / NOT_ELIGIBLE / BLOCKED
 | baseline incomparable | 无法比较 | BLOCKED / redesign experiment | 是 |
 | release threshold not met | 质量不足 | NOT_ELIGIBLE | 是 |
 | mandatory audit persistence failure | 08 / audit boundary truth | 由安全策略 fail closed | 09 不自行降级 |
+| sensitive Baggage / correlation payload | 数据泄露与伪造风险 | block / sanitize propagation | 不得继续泄露 |
 
 ### B9 Retry / Replan / Reconcile / Recovery / Idempotency
 
@@ -315,6 +321,8 @@ Eval Run 使用 stable run identity 和 dataset / config / commit fingerprint �
 默认 data minimization + redaction。Secret never export。
 
 受保护 Prompt / Response / Evidence 只有在 08 policy 显式允许且满足脱敏 / 存储要求时才进入 trace payload。默认优先保存 refs / hashes / metadata。
+
+跨服务传播的 correlation context 同样执行最小化；Baggage 默认只允许 opaque refs，不能作为授权凭据或可信安全输入，因为其跨网络传播范围可能超出预期且本身没有内置完整性保证。
 
 09 不拥有 Mandatory Audit Requirement 或 AuditPersistenceReceipt；可以关联 receipt identity 用于诊断 / evaluation。
 
@@ -363,8 +371,45 @@ Telemetry backend、metric store、eval store 与 Domain / Runtime / Effect tran
 
 - 不把 LangSmith、Grafana、Langfuse 或某个 SaaS 变成不可替换架构依赖。
 - 上层 instrumentation 依赖 provider-neutral ports / envelopes；Provider adapter 处理具体 SDK。
-- 参考官方 OpenTelemetry：<https://opentelemetry.io/docs/>、<https://opentelemetry.io/docs/specs/otlp/>、<https://opentelemetry.io/docs/collector/>。
+- 参考官方 OpenTelemetry：<https://opentelemetry.io/docs/>、<https://opentelemetry.io/docs/specs/otlp/>、<https://opentelemetry.io/docs/collector/>、<https://opentelemetry.io/docs/concepts/signals/baggage/>。
 - 不把 telemetry table 作为 Domain / Security / Effect receipt 替代品。
 - 不让 “trace export success” 成为普通业务成功前置条件；Mandatory Audit 除外且由 08 policy 明确定义。
 - 不为 Eval 数据集和运行结果建立不可追溯的可变记录；必须有 dataset / config / commit identity。
 - 具体 backend、Collector topology、retention、sampling、storage schema 和独立服务拆分在测量 / 安全 / 运维需求明确后决定。
+
+## Part C — Cross-Module Consistency（跨模块一致性）
+
+### C1 Completion Proof / Non-proof（完成证明与非证明）
+
+09 的 Trace / Metric 只证明“系统观测到了什么”；EvalResult / ReleaseEvaluationEvidence 只证明“在绑定的数据集、commit、配置、样本和阈值下测到了什么”。它们都不能成为 02 Admission、06 Effect、08 Authorization / Audit、04 Runtime completion 或 01 Publication 的替代 truth。
+
+Release Evidence=ELIGIBLE 也不等于 Production Ready；如果生产 runtime、credentials、security qualification、load / DR 等证据缺失，生产资格仍然未建立。Eval `BLOCKED`、zero sample 或不可比较不得转换为 PASS。
+
+### C2 Causation / Version / Freshness Bindings（因果、版本与新鲜度绑定）
+
+跨模块 correlation 以稳定、无业务含义的 opaque refs 串联 request、run / PlanVersion / StepRun、KnowledgeGeneration、CapabilityVersion、ModelAttempt、PreparedAction / EffectReceipt、SecurityEpoch / Decision、DomainVersion / AdmissionReceipt、Publication / Delivery。
+
+Telemetry 不复制这些对象的完整权威 payload；Eval 则必须绑定 immutable DatasetVersion、commit SHA、runtime/profile、model/provider、prompt/capability/tool / policy configuration 和 sample set。配置变化后不能把旧 EvalResult 当成新版本质量证明。
+
+Telemetry event identity、EvalRun identity、Experiment identity 与各业务模块 idempotency namespace 分开。
+
+### C3 Cancellation / Late Result / Staleness Rules（取消、晚到结果与失效规则）
+
+业务 Run 被取消后，Telemetry 仍可以接收晚到 span；这些 span 只是诊断投影，不能让 cancelled Runtime 重新变成 completed，也不能改变已发生的 Effect / Admission。
+
+Eval Run 被取消或 Provider 失败时，必须保存 cancelled / failed / blocked 和实际 sample count，不能把部分结果覆盖成完整基线。晚到 judge / model 结果只有在同一 EvalRun identity、DatasetVersion 和 config fingerprint 仍匹配时才能合并。
+
+旧 Trace、旧 Dashboard 或旧 Release Evidence 不能证明当前 WorkProduct / SecurityDecision / Capability eligibility 仍然新鲜；当前事实始终回到 Owner。
+
+### C4 Recovery Order / Consistency Tests（恢复顺序与一致性验证）
+
+观测系统故障时，恢复顺序是“业务先由 Owner fact 恢复，遥测后补”：
+
+```text
+02 / 06 / 08 / 04 / 03 等 Owner durable facts
+→ 01 / Runtime projection repair
+→ Telemetry pipeline recover / replay as policy allows
+→ Eval / diagnosis rebuild from versioned inputs
+```
+
+至少验证：telemetry sink outage 不破坏普通业务恢复；Mandatory Audit outage 仍由 08/06 fail-closed；correlation break 被标 partial 而非伪装完整；sensitive Baggage 被拒绝 / 脱敏；同一 span 重放不重复计数；Eval zero sample 保持 BLOCKED；cancelled Eval 的晚到结果不污染新 EvalRun；Domain commit/checkpoint fail、Outcome Unknown、Security revocation、late branch、knowledge partial publish 等场景能从 Owner receipts 重建，而不是依赖 Trace。
