@@ -1,122 +1,321 @@
 # 07 Model Gateway（模型网关）
 
-<!-- status: design-baseline-v1; implementation: not-authorized -->
+<!-- status: design-baseline-v1; implementation: not-authorized; deepening: all-modules-v1 -->
 
 ## Part A — Human Narrative
 
-### 为什么模型调用不能散落在每个模块里
+### 这个模块解决的是“怎样可靠使用模型”，不是“模型说了什么就算什么”
 
-Zuno 会同时需要强推理模型、快速模型、抽取模型、重写模型和评测模型。如果每个业务模块自己选择 Provider、处理凭证、配额、重试、降级和成本，系统很快会出现不同的安全规则、预算口径和失败语义。
+Zuno 会使用不同模型完成规划、执行、抽取、改写、批判、综合和最终反思。如果每个模块都直接依赖厂商 SDK，自行处理凭证、限流、降级、预算、重试和模型选择，很快就会出现同一任务里几套互相不一致的安全规则和成本口径。
 
-模型网关把“怎样安全、可控、可替换地调用模型”集中起来，但不把模型输出升级为业务事实。业务模块表达的是“我需要一个什么角色、什么质量要求、什么预算和数据边界的模型能力”，而不是直接写死厂商和模型名。
+模型网关因此把“模型怎样被安全、可控、可替换地调用”集中起来。上层只表达需要什么 Model Role（模型角色）、最低质量、预算、时限和数据边界；07 再在当前允许的 Provider / Model 集合中完成路由。
 
-### 模型角色为什么比模型名字稳定
+但模型网关只拥有调用事实，不拥有法律业务事实。一个模型返回 `success`，只说明某次调用得到一个结果，不代表 Step 已验收、Finding 已成立、Tool 已执行或答案可以发布。
 
-复杂规划、Plan Repair、关键 Reflection 和 Final Reflection 更适合强推理模型；Query Rewrite、提取、分类、格式转换和普通 ReAct 更适合成本较低的快速模型。目标角色包括 TASK_ANALYZER、PLANNER、PLAN_REPAIR、EXECUTOR_FAST、EXECUTOR_REASONING、QUERY_REWRITER、EXTRACTOR、CRITIC、SYNTHESIZER 和 FINAL_CRITIC。
+### 为什么模型角色比模型名字更稳定
 
-这些角色描述的是能力要求，不和某个厂商模型永久绑定。模型供应商、版本和价格会变化，但 Planner 对“需要规划模型还是抽取模型”的判断应该保持稳定。
+Zuno 的目标角色至少包括：
 
-### 模型不应该承担能由确定性代码完成的事情
+- `TASK_ANALYZER（任务分析器）`
+- `PLANNER（规划器）`
+- `PLAN_REPAIR（计划修复器）`
+- `EXECUTOR_FAST（快速执行器）`
+- `EXECUTOR_REASONING（推理执行器）`
+- `QUERY_REWRITER（查询改写器）`
+- `EXTRACTOR（抽取器）`
+- `CRITIC（批判器）`
+- `SYNTHESIZER（综合器）`
+- `FINAL_CRITIC（最终批判器）`
 
-Retrieval Execution（检索执行）、Tool Execution（工具执行）、Schema Validation（结构校验）、Citation Check（引用检查）、测试、安全门禁和审批门禁，只要可以可靠地用确定性代码完成，就不应该默认交给大模型决定。
+这些名字描述任务需要的能力层级，不描述供应商。今天 `PLANNER` 可以绑定一个强推理模型，明天也可以切换到另一家通过资格验证的模型，只要上层 Contract 不变。
 
-模型擅长的是分析、生成、重写、分类和复杂判断，不应该变成系统所有 if-else 的替代品。把确定性门禁交回代码，不仅更便宜，也让失败更容易复现和审计。
+如果把某个模型名写进 Plan、Domain Object 或 Capability identity，模型升级就会变成业务语义变更，这会把 Provider 波动扩散到全系统。
 
-### 一次模型调用怎样被约束
+### 强模型和弱模型为什么要按角色使用
 
-调用方提交模型角色、任务操作、输入引用、最低质量要求、deadline、预算和当前安全决定。安全与治理先决定当前数据能否发给某类 Provider、允许使用哪一版 Credential、是否存在地域或数据分类限制；模型网关再选择具体 Provider / Model、预留配额、执行调用并记录尝试、取消和使用量。
+复杂规划、Plan Repair、关键 Reflection 和 Final Reflection 需要更强推理能力；Query Rewrite、抽取、分类、格式转换和普通 ReAct 通常可以优先使用更快、更便宜的模型。
 
-网关负责 Provider-specific formatting、SDK 适配和路由，但不应该拥有法律专业 Prompt 的业务语义。专业 Prompt 可以属于 Capability 或 Runtime 的任务定义；Gateway 只负责把已经批准的请求可靠地送给具体 Provider。
+这里的原则不是“弱模型永远负责简单任务、强模型永远负责复杂任务”，而是：**先按角色和质量门选择最小充分模型，再根据实际失败升级。**
 
-### 弱模型失败以后怎样升级
-
-默认升级方向保持：
+默认升级链保持：
 
 ```text
 EXECUTOR_FAST
-→ 调整参数重试
+→ 调整参数 / 有界 Retry
 → EXECUTOR_REASONING
 → Critic 判断 Retry / Replan / Abstain
 ```
 
-升级不是“失败就自动换最贵模型”。每一步都要满足当前安全、预算、质量和任务语义；如果替代 Provider 不符合数据外发政策，或强模型也不能满足最低证据要求，就应该停止、降级为草稿或交人工。
+升级不能绕过预算、安全和数据外发政策。强模型如果不在当前允许集合里，就不能因为“质量更高”而自动使用。
 
-### 为什么模型不能直接更新最终状态
+### 能由确定性代码完成的事情，不应该默认交给模型
 
-模型只产生 Proposal（候选建议）。它不能直接修改 Canonical Domain State、批准权限、执行未审批副作用、激活 PlanVersion、绕过 Budget 或提交长期 Memory。
+Retrieval Execution（检索执行）、Tool Execution（工具执行）、Schema Validation（结构校验）、Citation Check（引用检查）、单元 / 规则测试、Security Gate（安全门禁）和 Approval Gate（审批门禁），只要可以可靠地由确定性代码完成，就优先交给代码。
 
-这样模型供应商可以替换，业务权威仍然稳定。即便某个模型“自称完成”，真正的步骤验收、正式准入和外部 Effect 都必须由各自责任域决定。
+模型擅长开放式分析、生成、归纳和判断，不应该成为所有 if-else 的替代品。
 
-### 模型调用失败和现实副作用失败有什么不同
+这条边界会直接影响系统可靠性：如果授权判断、工具参数校验和 Citation Check 都交给模型，“模型认为没问题”就会被误读成系统事实，后续故障也无法稳定复现。
 
-大多数模型调用属于计算型依赖。超时、503、限流通常意味着“这一轮没有拿到结果”，可以在预算和安全条件允许时重试或换 Provider；它们通常不会像外部提交接口那样产生不可确认的现实副作用。
+### 一次模型调用从请求到结果应该经过什么
 
-但模型调用仍可能产生费用、配额消耗和取消竞态，所以 CallAttempt、Usage / Cost、Cancellation 等需要可审计。不能因为生成内容丢了，就假装 Provider 没收费或没占用配额。
+调用方提交 Model Role、operation、输入引用、最低质量要求、deadline、预算 / quota 约束和当前 Security Decision（安全决定）。
 
-### 为什么值得独立成一个责任域
+08 先决定这些数据是否允许发送给某类 Provider、是否有地域 / 数据分类限制、当前可以使用哪个 CredentialVersionRef。07 在允许范围内检查 Provider / Model Qualification（资格），预留预算或 quota，再创建 ModelRoutingDecision（模型路由决定）和 ModelCallAttempt（模型调用尝试）。
 
-如果模型选择散落在每个 Capability 和 Agent 节点里，就无法统一安全外发、预算、Provider 资格和成本核算，也很难替换供应商。独立模型网关让上层依赖“模型角色和最低要求”，而不是依赖具体 SDK。
+```mermaid
+flowchart LR
+  R[Role / Operation Request] --> S[08 外发 / Credential Decision]
+  S --> Q[Provider / Model Qualification]
+  Q --> B[Budget / Quota Reservation]
+  B --> D[ModelRoutingDecision]
+  D --> A[ModelCallAttempt]
+  A --> V[Transport / Schema Validation]
+  V --> U[Usage / Cost Receipt]
+  V --> O[Typed Model Result]
+```
+
+Gateway 负责 Provider-specific formatting（供应商格式适配）和 SDK 差异，但业务 Prompt 的专业语义属于 Runtime / Capability 等调用方。07 不能因为统一了 SDK，就变成“所有 Prompt 的 Owner”。
+
+### Provider Qualification（提供方资格）为什么和一次调用成功不同
+
+某个模型 API 能返回文本，不代表它适合某类法律任务，也不代表它允许处理当前数据。
+
+Provider / Model Qualification 至少需要回答：这个模型是否支持当前角色需要的上下文、结构化输出、工具能力或其他最低特性；当前部署 / 凭证是否可用；安全策略是否允许；是否有足够的质量评测证据。
+
+07 可以拥有技术调用资格与 routing eligibility 的事实，但法律任务质量是否达到目标，仍由 09 的 Eval（评测）提供证据，最终业务接受仍由 04 / 02 / 01 各自决定。
+
+### 模型外发为什么必须由 08 控制
+
+模型网关知道“哪个 Provider 技术上可用”，但不知道“某份法院材料现在是否允许发给它”。
+
+08 Security & Governance（安全与治理）根据主体、事项、数据分类、Provider、地域、用途和 Security Epoch 做外发决定。07 只能在当前允许集合中路由。
+
+因此：
+
+```text
+Provider technically available
+!=
+Provider permitted for this data now
+```
+
+Retry / fallback 也必须重新满足这个约束。
+
+### 模型调用失败时什么时候 Retry，什么时候升级，什么时候应该停止
+
+Provider 503、限流、连接超时或短暂错误，在任务输入、角色、质量要求和安全条件都未变化时，可以有界 Retry。
+
+快速模型生成结构错误，可以先调整参数或重试；仍然不满足时升级到 `EXECUTOR_REASONING`。如果更强模型仍然无法满足证据 / 质量要求，Critic 可以返回 Abstain（拒答 / 放弃）或要求 Runtime Replan。
+
+不能把 fallback 设计成“Provider A 失败就随便换 Provider B”。替代 Provider 必须满足当前角色、质量、安全和数据边界；否则结果只能进入 review / draft / abstain。
+
+### 模型调用通常没有业务副作用，但仍然有费用和配额事实
+
+多数模型调用属于计算依赖，不像 06 的外部提交那样改变业务世界。但它仍然可能消耗 Token、产生费用、占用 quota，并存在取消竞态。
+
+所以一次 ModelCallAttempt 即使没有最终内容，也不能被当作“什么都没发生”。Usage / Cost Receipt（用量 / 成本回执）需要累计到 Budget；重试不能把前一次成本清零。
+
+如果本地发出 cancel，但 Provider 是否已经完成计费未知，需要做调用 / usage 层面的 settlement（结算对账）。这不是 06 的现实业务 Effect Reconcile，但同样不能凭本地状态猜 Provider 账单。
+
+### 模型输出为什么只能是 Proposal（候选）
+
+模型可以产生 Plan Proposal、Action Proposal、Extraction Candidate、Critique、Synthesis Draft，但不能直接：
+
+- 更新 Canonical Domain State；
+- 批准权限；
+- 执行未审批 Tool Effect；
+- 激活 PlanVersion；
+- 绕过 Budget；
+- 提交长期 Memory；
+- 宣布最终 WorkProduct 正式有效。
+
+这不是额外保守，而是让模型可替换。即使 Provider 出错或被 Prompt Injection 影响，权威状态仍在各自责任域门禁之后。
+
+### Provider fallback（提供方切换）为什么要保留调用因果
+
+如果第一次调用 Model A 超时，第二次切到 Model B，最终结果来自 B，但成本可能同时包含 A 和 B。Trace 和预算也需要知道为什么发生切换。
+
+因此 RoutingDecision、CallAttempt、provider / model ref、fallback reason、usage / cost 都要可关联。上层最终只消费 typed result 和必要 refs，不需要依赖厂商 SDK 对象。
+
+### 为什么模型网关不应该变成“一个万能 AI 服务”
+
+Gateway 统一调用，并不等于它应该负责 Prompt Registry、Capability Registry、Agent Planning、Tool Calling、业务发布和 Eval。
+
+这些责任如果全部塞进 07，就会形成一个新的 God Service：上层什么都不知道，Gateway 既选模型又定义业务语义又判断结果是否正确。这样的边界既难测试，也会把 Provider 变化与业务变化绑死。
+
+07 的职责应该保持窄：**模型资格、路由、调用、quota / budget usage、取消和 Provider compatibility。**
 
 ### 当前、目标与缺口
 
-Wave 1 Contract Registry 已确认 ModelRoutingDecision、ModelCallAttempt、Quota / Usage / Cancellation 等 Target Contract；当前仓库也存在模型网关实现和测试基础，但本设计不把它提升为完整生产 Current。正式 Provider 凭证、四 Profile runtime、provider qualification、预算 / 安全资格、真实模型故障和 fallback 质量测量仍是缺口。
+Current 代码和 Wave 1 Contract 已存在 ModelRoutingDecision、ModelCallAttempt、Quota / Usage / Cancellation 等基础，也有模型网关相关实现和测试。但正式 Provider credentials、四 Profile runtime、Provider qualification、真实 fallback、budget / quota fault test、cancellation race 和角色级质量测量并未完整证明。
+
+Target 是角色驱动、Policy-bound（策略约束）、Provider-neutral（提供方可替换）的统一模型调用边界。
+
+Gap 包括正式资格矩阵、角色—模型映射的质量证据、用量结算、fallback equivalence、模型外发 E2E、真实限流 / 超时 / 取消故障、成本预算门和 production credentials / runtime attestation。
 
 ## Part B — Engineering / Agent Reference
 
 ### B1 Scope / Global Invariants
 
-模型角色与具体 Provider 解耦；Provider failover 不绕过安全、质量和预算；模型输出只产生候选；上层模块不得绕过 Gateway 持有长期 Provider 凭证；能由确定性代码完成的执行和门禁不默认交给模型。
+1. Model Role 与具体 Provider / Model 解耦。
+2. Provider failover 不得绕过 Security、quality floor、Budget / Quota 或 data-egress restrictions。
+3. 模型输出只产生 Proposal / Candidate / Draft / Critique，不产生最终权威业务状态。
+4. 上层模块不得绕过 Gateway 长期持有 Provider credentials。
+5. 能由 deterministic code 完成的 Retrieval / Tool execution / schema validation / citation / security / approval gates 不默认交给模型。
+6. Retry / fallback 的成本必须累计，不能重置 Usage truth。
+7. Provider technically available != currently permitted != quality qualified。
+8. Gateway 调用成功 != Runtime Step accepted != Domain admitted != Answer published。
+9. Model role request 必须携带预算、deadline、quality 与 security constraints。
+10. Gateway 不拥有专业 Capability semantics 或业务 Prompt ownership。
 
 ### B2 Responsibility / Ownership
 
-**Owns**：model role mapping、provider / model routing、ModelRoutingDecision、ModelCallAttempt、quota semantics、Usage / Cost Receipt、cancellation、approved provider failover、provider/model reference 和调用层兼容语义。
+**Owns**：ModelRole mapping、Provider / Model qualification reference、ModelRoutingDecision、ModelCallAttempt、provider-specific adapter compatibility、quota reservation / consumption、Usage / Cost Receipt、cancellation / timeout state、approved failover / fallback execution、provider / model reference。
 
-**Does not own**：business eligibility、Authorization policy、Runtime Plan、Canonical Domain State、Tool Effect、Capability professional semantics、final answer publication。
+**Does not own**：08 Authorization / Egress policy；04 Plan / Step Acceptance；05 professional Capability semantics；02 Canonical Domain；06 Tool Effect；09 legal task Eval ownership；01 final publication。
 
 ### B3 Upstream / Downstream
 
-上游主要接收 04 / 05 / 03 / 09 的 model role request、prompt / input refs、budget / deadline / quality profile，以及 08 的 egress / credential decision。下游向调用者返回 model result / failure、routing decision、usage / cost、cancellation status，并向 09 输出脱敏 model telemetry。
+上游主要来自 04 / 05 / 03 / 09 的 role request、operation、prompt / input refs、quality profile、budget / quota、deadline，以及 08 的 egress / provider / credential decisions。
+
+下游向调用方返回 typed model result / failure、routing decision ref、attempt ref、usage / cost、cancellation outcome；向 09 输出脱敏 model telemetry；向 04 提供预算和 fallback 结果用于控制决策。
 
 ### B4 Authoritative Facts / Core Objects
 
-核心对象族包括 ModelRole、Provider / Model Qualification Reference、ModelRoutingDecision、ModelCallAttempt、Quota reservation / consumption、Usage / Cost Receipt、Cancellation / timeout state、Provider capability / version ref。业务 Prompt 本体和领域结果不属于 Gateway 权威状态。
+核心对象族：ModelRole、ProviderRef / ProviderVersion、ModelRef / ModelVersion、QualificationRef、ModelRoutingDecision、ModelCallAttempt、QuotaReservation、Usage / Cost Receipt、CancellationState、FallbackReason、ProviderErrorClass。
+
+业务 Prompt 本体、Capability identity、Finding、PlanVersion 不属于 Model Gateway 权威对象。
 
 ### B5 Cross-boundary Contracts
 
-调用至少携带 role、operation、deadline、budget / quota、required quality profile、security decision / credential ref 和 input / prompt refs。输出至少能区分 routing decision、attempt/result、usage/cost、cancellation / timeout 和 provider/model reference。
+#### Model Request
+
+至少包含 role、operation、prompt / input refs、required quality profile、deadline、budget / quota、security decision / credential ref、structured-output requirements 和 trace / causation refs。
+
+#### ModelRoutingDecision
+
+记录在当前安全、资格、预算约束下选择了哪个 Provider / Model，以及主要 reason / fallback context。它不是法律质量证明。
+
+#### ModelCallAttempt
+
+表示一次 provider-level 调用尝试，绑定 routing decision、attempt identity、provider/model version、deadline / timeout、request schema ref 和结果 / error class。
+
+#### Usage / Cost Receipt
+
+表达 provider 返回或系统结算后的 token / usage / cost facts，并能够关联到 attempt / run / budget。估算值和最终 settled value 必须可区分。
+
+#### Cancellation State
+
+至少区分 cancel requested、provider-confirmed cancelled、completed-before-cancel、cancellation / billing unknown 等语义，避免本地 cancel flag 被误当成 Provider 最终事实。
 
 ### B6 Normal Flow
 
-role request → validate current security / egress decision → check provider qualification → reserve quota / budget → select provider/model → prepare provider-specific request → execute ModelCallAttempt → validate transport / schema → record usage / cost → return typed result → caller performs business acceptance。若失败，按批准 fallback chain 选择 retry / stronger model / abstain。
+```text
+ModelRole request
+→ consume current Security / Egress / Credential decision
+→ resolve qualified provider/model set
+→ check capability / quality requirements
+→ reserve Budget / Quota
+→ create ModelRoutingDecision
+→ create ModelCallAttempt
+→ format provider-specific request
+→ execute SDK / API call
+→ validate transport / structured schema
+→ record Usage / Cost
+→ return typed result
+→ caller performs Step / Capability / Domain acceptance
+
+failure:
+→ policy-bounded Retry
+→ qualified fallback / stronger model
+→ Critic / Runtime chooses Retry / Replan / Abstain
+```
 
 ### B7 State / Lifecycle
 
-至少区分 provider/model qualified / restricted / disabled、routing selected、quota reserved、attempt in-flight、completed、failed、cancel requested / cancelled / cancellation unknown、usage settled / pending。具体 enum 后续冻结。
+最终 enum 未冻结，但至少需要表达：
+
+```text
+Provider / Model Qualification:
+QUALIFIED / RESTRICTED / DISABLED / UNKNOWN
+
+Routing:
+REQUESTED → SELECTED / REJECTED
+
+Attempt:
+CREATED → IN_FLIGHT → COMPLETED / FAILED / TIMED_OUT
+                         ↘ CANCEL_REQUESTED → CANCELLED / CANCEL_UNKNOWN
+
+Usage:
+RESERVED → ESTIMATED → SETTLED / DISPUTED / UNKNOWN
+```
+
+模型版本升级不修改历史 Attempt 的 provider / model ref。
 
 ### B8 Failure Taxonomy
 
-主要失败包括 provider unavailable、rate limit、timeout、invalid response schema、quality floor not met、security egress denied、credential unavailable、quota / budget exhausted、fallback provider not equivalent、cancellation ambiguity、usage settlement mismatch。
+| 失败 | Detection owner | 默认处理 | 可能升级到 |
+| --- | --- | --- | --- |
+| provider unavailable / 503 | 07 | bounded Retry / fallback | 04 Replan if no equivalent path |
+| rate limit | 07 | backoff / alternate qualified provider | budget / deadline failure |
+| timeout | 07 | Retry under policy | stronger model / abstain |
+| invalid response schema | 07 + caller | repair / retry / stronger role | 04 / 05 acceptance failure |
+| quality floor not met | 05 / 09 / 04 | stronger model / review / abstain | Replan |
+| model egress denied | 08 | choose allowed provider or stop | no bypass |
+| credential unavailable | 08 / Platform + 07 | wait / allowed alternative | stop |
+| quota / budget exhausted | 07 + 04 | deny / cheaper route / stop | Replan / abstain |
+| fallback provider not equivalent | 07 + qualification / eval evidence | reject fallback | review / stop |
+| cancellation ambiguous | 07 | settle provider state / usage | usage dispute |
+| usage settlement mismatch | 07 | reconciliation with provider billing facts | finance / ops review |
 
 ### B9 Retry / Replan / Reconcile / Recovery / Idempotency
 
-同一模型调用在 Runtime 层可重试，但必须保留 attempt identity、预算累计和 usage truth，不能让重试“重置成本”。Provider temporary failure 可按策略重试或 failover；若角色能力不足或任务假设变化，由 04 决定 Replan。模型调用通常不使用 06 的现实 Effect Reconcile，但 cancellation / billing ambiguity 需要自己的 attempt / usage 对账。
+**Retry**：Provider transient failure、schema transport issue 等，前提是 role、prompt / input refs、security decision、quality floor 和 plan assumption 仍成立。每次 Retry 创建新 Attempt，但 Budget / Usage 累计。
+
+**Replan**：模型角色无法满足、所有合规 Provider 不可用、quality assumption 失效或 deadline / budget 迫使任务结构改变时，由 04 决定。
+
+**Reconcile**：普通模型计算不使用 06 的现实 Effect Reconcile；但 Cancellation / Billing / Usage Unknown 需要 provider-level settlement / usage reconciliation。
+
+**Recovery**：用 routing decision + attempt + provider/model version + usage refs 恢复，不依赖某个 SDK session object。重复请求是否可缓存取决于 operation determinism、input identity、model version 和 caller policy；不能默认所有 LLM call 幂等。
 
 ### B10 Security / Approval / Audit
 
-08 决定 provider/model allowlist、数据分类、地域 / 模型外发、credential scope 和 secret policy。Gateway 只消费这些决定并执行。Secret Material 不进入 Prompt / Trace；Prompt / response 的可观测内容按数据分类和 redaction policy 处理。
+08 是 provider/model allowlist、data classification、region / egress、credential scope 和 Secret policy Owner。07 执行这些决定，不自行放宽。
+
+Secret Material 不进入 Prompt / Trace。Prompt / Response telemetry 按数据分类和 redaction policy 处理；敏感正文默认不作为普通 trace payload。
+
+模型调用通常不需要 06 Approval / Effect semantics，但高敏感数据外发可能有额外 Security / Human approval policy，仍由 08 决定。
 
 ### B11 Persistence / Transaction Boundaries
 
-RoutingDecision、Attempt、Usage / Cost 和必要 Cancellation state 需要达到预算、审计和恢复要求的持久化程度，但不要求与 Runtime Checkpoint 或领域事务做 2PC。高吞吐明细可以物理外置，权威 usage / billing 仍需可对账。
+RoutingDecision、Attempt、Usage / Cost 和必要 Cancellation state 要达到预算、审计和恢复要求的耐久程度。具体数据库 / event store 后续决定。
+
+不与 Runtime Checkpoint、Domain Store 做默认 2PC。调用成功后本地 receipt 写失败时，需要使用 attempt identity / provider request id / usage API 做恢复，而不是把模型输出写成 Domain fact。
+
+高吞吐 token / telemetry 明细可以外置，但 authoritative budget / usage aggregation 必须可对账。
 
 ### B12 Observability / Evaluation
 
-至少观测 provider/model、role、latency、TTFT / completion latency（如果可得）、token / cost、retry / failover、quota rejection、schema failure、quality eval reference 和 cancellation outcome。09 负责跨模型实验和质量证明，Gateway 不因为 SDK 调用成功就宣称模型适合某类法律任务。
+至少观测：role、provider/model/version、routing reason、latency、TTFT / completion latency（可得时）、input/output token、cost、retry / fallback、quota rejection、schema failure、cancellation outcome、quality eval reference、security denial reason ref。
+
+09 负责跨模型质量实验，07 不因为 SDK success 宣称某模型适合某类法律任务。
+
+需要支持：role-level quality / cost benchmark、fallback regression、provider outage simulation、budget / quota fault test、cancellation race、usage reconciliation 和 no-egress verification。
 
 ### B13 Current / Target / Gap / Evidence
 
-Target Contract 见 [`wave1-cross-module-contract-registry.md`](../governance/wave1-cross-module-contract-registry.md)。Current 需要进一步按代码、Provider 和真实运行审计。Gap 包括正式凭证、provider qualification、usage settlement、fallback eval、budget / quota fault test、cancellation race 和不同角色的稳定质量门。
+**Current**：Wave 1 Contract Registry 与现有代码包含 ModelRoutingDecision、ModelCallAttempt、Quota / Usage / Cancellation 等基础；完整 Current 仍以代码 / 测试 / `docs/evidence/` 为准。
+
+**Target**：role-driven、security-bound、budget-aware、provider-neutral model invocation boundary。
+
+**Gap**：正式 provider qualification、production credentials、role-quality evidence、fallback equivalence、usage settlement、budget / quota fault tests、cancellation race、real provider outage、四 Profile runtime 与 production attestation。
+
+**状态**：design available；quality / production readiness not established。
 
 ### B14 Code / Database / Migration Constraints
 
-模型 SDK 和 Provider adapter 是可替换实现；上层模块只依赖 Gateway Contract。不得把厂商模型名写进领域对象或 Capability identity。表结构、缓存、batching 和独立服务拆分在详细设计与测量后决定；需要高吞吐时可以 Worker 化，但不因模块名默认变成 Model Service。
+- Provider SDK / model name 只能存在于 Gateway adapter / configuration 边界，不写入 Domain identity 或 Capability semantic identity。
+- 上层只依赖 role / request / routing / result / usage typed contracts。
+- 不在 Model Gateway 内建立第二套 Planner、Capability Registry、Tool Runtime 或 Release Gate。
+- Prompt template ownership 留在具体 Capability / Runtime / product use case，不因 SDK 集中而全部迁移到 Gateway。
+- 不默认把模型网关拆成独立网络服务；高吞吐、Secret isolation、独立扩缩容或部署生命周期出现证据时按 ADR-0012 评估。
+- 表结构、缓存、batching、streaming、provider pool 和 Migration 在字段级 detail freeze 后确定。
