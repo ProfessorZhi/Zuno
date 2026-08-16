@@ -9,58 +9,77 @@ architecture-views.md
 architecture.html
 ```
 
-## Canonical Question
+## 总体架构回答什么
 
-Product、Domain、Logical Capability、Physical Service / Deployment、Data、Security 和 Eval 如何形成一个可恢复、可验证、可被简化或替换的跨层目标闭环？
+总体架构回答的是：Zuno 怎样把法律领域状态、知识与证据、执行控制、安全、外部效果和可验证交付组合成一套可以恢复、替换和简化的目标架构。
 
-Round 02 已完成，Canonical Revision 已通过 Review，总体 Target Architecture 已冻结。总体架构说明九个 Logical Responsibility Modules、Platform / Infrastructure Responsibility Layer、Optional Context Provider、三条 E2E Flow、A/B/C Kill Test 和 State / Failure / Recovery 边界。九个责任域不是九个进程或服务；Module Decomposition Gate 已打开，但只授权 Module Design，不自动授权实现。
+Round 02 已完成，总体 Target Architecture（目标架构）和九个 Logical Responsibility Modules（逻辑责任域）已经冻结。九个责任域是事实和职责边界，不是九个进程、九个数据库或九个微服务。Platform / Infrastructure（平台与基础设施）继续是责任层，Memory / Context（记忆与上下文）继续是可选 Provider 边界。
+
+## 现在进行到哪里
+
+总体架构冻结后，九篇模块正文已经形成 **Design Baseline V1（设计基线 V1）**。这表示模块的主要问题、Owner、跨模块 Contract、状态族、失败、恢复、安全和持久化边界已经可以作为详细设计的共同起点，但还没有冻结所有字段、enum、数据库表、API 或 Migration。
+
+当前按照依赖逐步深化：
+
+```text
+当前：02 法律领域与工作成果 + 03 知识与证据
+下一步：08 安全与治理 + 06 工具运行与外部效果
+随后：05 专业能力与技能 + 04 智能体运行与控制
+再后：07 模型网关 + 09 可观测性与评测
+最后：01 应用与集成
+```
+
+这个顺序先把“什么是正式业务事实、什么只是可重建知识”讲清楚，再进入安全副作用和智能执行。它是设计依赖，不是运行时调用顺序，也不是部署拓扑。
+
+当前治理状态：
+
+```text
+overall_architecture: ROUND_02_FROZEN
+module_taxonomy: FROZEN
+module_design_baseline: AVAILABLE_V1
+module_detail_freeze: NOT_YET
+implementation_authorization: NO
+production_readiness: NOT_ESTABLISHED
+```
 
 ## 阅读顺序
 
-第一次阅读只读 `architecture.md` 的 Part A：先理解产品问题、责任分层、状态 Owner、失败恢复和替代方案。第二次再读 Part B 的 Contract、State、Retry、Security 和验证要求。
+第一次阅读只读 [`architecture.md`](./architecture.md) Part A。一个不了解 Zuno 的高级工程师应当能够只靠 Part A 解释：为什么需要这套架构；简单问答为什么应该保持简单；复杂法律分析怎样形成正式工作成果；新证据怎样使旧结果失效；外部 POST 超时为什么不能盲目重试；Domain Commit 和 Runtime Checkpoint 不一致时怎样恢复；九个责任域为什么这样分。
 
-总体架构读懂以后，再进入 [`../modules/README.md`](../modules/README.md)。模块文档现在已经形成 **Design Baseline V1（设计基线 V1）**：每个责任域不仅解释“为什么存在”，还给出上下游、权威事实、主要 Contract、正常流、状态族、失败分类、恢复、持久化、安全、可观测性和 Current / Target / Gap。它们仍然不是九份微服务说明书，也不表示字段、数据库、API 和实现已经冻结。
+如果还不了解项目为什么存在，先读 [`../project/`](../project/README.md)。需要实现、测试或审查时，再读 Part B。总体架构读懂以后进入 [`../modules/README.md`](../modules/README.md)，再读对应模块 Part A / Part B、相关 [`../decisions/`](../decisions/README.md) ADR 和 [`../evidence/`](../evidence/README.md)。
 
-推荐的模块详细设计顺序不是机械的 01→09，而是：
-
-```text
-02 法律领域与工作成果 + 03 知识与证据
-→ 08 安全与治理 + 06 工具运行与外部效果
-→ 05 专业能力与技能 + 04 智能体运行与控制
-→ 07 模型网关 + 09 可观测性与评测
-→ 01 应用与集成
-```
-
-这个顺序先确定业务事实和证据，再确定可信执行，最后确定智能执行、Provider 和产品组合；它是设计顺序，不是部署或调用顺序。
-
-可读性门的最低问题是：一个不了解 Zuno 的高级工程师，能否不用代码和 Part B 解释“为什么存在、谁拥有状态、失败如何恢复、什么时候应该保持简单或删除复杂度”。工程门的最低问题则是：读完模块 Part B 后，能否知道哪些事实不可旁路、恢复锚点是什么、实现还不能自行决定什么。
+Part A 采用中文优先：普通概念能用中文清楚表达时不用多余英文；确实需要代码、框架或正式 Contract 名称时，第一次出现使用 `English（中文）`，后续优先用中文或正式标识。
 
 ## 文件职责
 
-- `architecture.md`：跨层架构正文、九个责任域、全局边界、状态 / 失败 / 恢复语义和 Current / Target / History 解释。
-- `architecture-views.md` + `architecture.html`：不可拆分的图源与展示配对，不拥有第二套架构事实。
-- `README.md`：目录边界、阅读入口和维护规则，不承载专题 Contract。
-- `../modules/`：九个责任域的模块级 Design Baseline V1；字段级 Contract、完整状态枚举、数据库和实现仍需逐模块 Review。
+- `architecture.md`：跨层 Target、九个责任域、全局不变量、跨模块 Contract、状态、失败和恢复。
+- `architecture-views.md`：总体架构的 Mermaid 图源，只做图形表达，不拥有第二套架构事实。
+- `architecture.html`：图源展示入口，不维护平行语义。
+- `README.md`：目录边界、状态和阅读入口。
+- `../project/`：项目为什么存在、开发背景和团队故事，不拥有 Target 架构。
+- `../modules/`：九个责任域的模块 Design Baseline V1 和后续 Deep Design。
+- `../decisions/`：长期有效且具有反转成本的 ADR。
+- `../evidence/`：Current 的代码、测试、Migration、Trace、Eval 和运行证据。
+- `../history/red-blue/`：架构质询和裁决历史，只解释“为什么”，不拥有当前 Target。
 
-## 重要边界
+## 一致性规则
 
-- 本目录不记录项目故事；这些内容统一在 `../project/`。
-- 本目录不记录当前运行证据；可复现证据在 `../evidence/`。
-- 本目录不记录实施计划、运维 Runbook 或 ADR；这些分别进入 `.agent/programs/`、`docs/operations/` 和 `docs/decisions/`。
-- 旧专题和 11 模块不再作为平行 Canonical；Red / Blue 过程归档见 [`../history/red-blue/README.md`](../history/red-blue/README.md)，旧材料由 Git 历史保留。
-- 长期责任分类和跨边界恢复决定见 [ADR-0013](../decisions/0013-round-02-responsibility-taxonomy.md) 与 [ADR-0014](../decisions/0014-round-02-cross-boundary-authority-and-recovery.md)。
-- 物理服务拆分继续受 [ADR-0012](../decisions/0012-evidence-gated-physical-service-split.md) 约束；九个逻辑模块不能自动推导九个网络服务。
+总体架构是当前 Target 的整合表达；模块文档只能细化它，不能局部改写九模块 Owner、Canonical Kernel、Formal Admission、Knowledge / Domain authority、Retry / Replan / Reconcile 或安全政策 Owner。较早 ADR 的宽泛措辞如果已被后续 ADR 明确 supersede / refine（取代 / 细化），按后续决定解释。
 
-## 维护
+如果模块深化发现必须改变这些跨层语义，应停止局部设计并记录 Architecture Gap，而不是把新决定藏进 Part B、数据库字段或代码实现。
 
-跨层含义变化时修改 `architecture.md`；模块内部设计进入 `../modules/`；图形变化时同步图源和 HTML，再运行：
+## 维护与验证
+
+跨层含义变化时修改 `architecture.md`；模块内部设计进入 `../modules/`；图形关系变化时同步 `architecture-views.md` 与 `architecture.html`。当前常用验证：
 
 ```powershell
 python tools/agent/render_architecture.py --check
 python tools/scripts/verify_architecture_document_set.py
+python tools/scripts/verify_architecture_semantic_alignment.py
 python tools/scripts/verify_docs_entrypoints.py
 python tools/scripts/verify_markdown_internal_links.py
 python tools/scripts/verify_repo_structure.py
+python .agent/scripts/verify_agent_system.py
 python .agent/scripts/verify_doc_boundaries.py
 ```
 
