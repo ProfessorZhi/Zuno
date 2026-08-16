@@ -164,6 +164,20 @@ ApprovalDecision（安全审批决定）回答的是：“这个高风险动作�
 
 所以生命周期治理要同时维护“历史上发生过什么”和“现在还允许怎样使用”，而不是让删除语义反过来破坏版本与因果。
 
+### 一份正式成果半年以后还要能回答“当时为什么这样判”
+
+真正考验领域设计的，不是结果生成出来的那一刻，而是几个月以后。模型版本已经升级，原来的向量索引已经重建，某些材料后来出了新版本，甚至当时负责审核的人已经不在项目里，这时如果 Reviewer 再打开旧 WorkProduct，系统仍然应该能够说明：它属于哪个 Matter、当时采用了哪些 DocumentVersion、哪些 Evidence 被正式接纳、哪些 HumanDecision 改变了候选，以及最后是哪一次 Formal Admission 让这个版本成为正式成果。
+
+这也是为什么领域层不保存一份“最终 JSON”就结束。历史可解释性依赖一组稳定业务身份和因果关系，而不是依赖当年的 Prompt、某个 Chunk ID 或一条已经找不到上下文的 Trace。Trace 能帮助重建执行过程，但真正长期负责“业务上发生了什么”的仍然是正式领域事实。
+
+### 为什么领域模块不能长成一个包办所有业务的 God Domain
+
+一旦团队发现领域对象很重要，很容易走向另一个极端：把检索状态、模型调用、审批、工具结果、交付状态和观测指标都塞进 Domain，认为“放在一起最一致”。这种做法短期查询方便，长期却会让任何 Provider、运行框架或外部系统的变化都变成领域 Migration。
+
+02 只应该保存法律业务必须长期负责的事实，以及正式准入所必需的因果与历史引用。KnowledgeGeneration 可以重建，所以留在 03；PlanVersion 是执行控制，所以留在 04；EffectReceipt 是现实动作证明，所以留在 06；AuthorizationDecision 是政策事实，所以留在 08；Delivery / Ack 是集成事实，所以留在 01。边界越清楚，领域内核反而越稳定。
+
+判断一个新字段或对象是否应该进入 02，可以先问三个问题：它是否拥有长期业务身份？它是否会影响正式结果的版本、有效性或审计？如果把对应 Provider 换掉，这个事实是否仍然必须保留？三个问题都答不上来时，更可能是 Projection、运行状态或集成状态，而不是新的 Canonical Domain State。
+
 ### 当前、目标与缺口
 
 Current Evidence（当前证据）已经证明有限的 Canonical Domain Mutation（正式领域变更）能力：领域准入边界、CAS 版本冲突、幂等 mutation、事务失败不推进版本和 SQLAlchemy 持久化路径；Citation Provenance Guard（引用来源校验）还验证了 Claim→Evidence→SourceSpan→DocumentVersion 的部分关系。
