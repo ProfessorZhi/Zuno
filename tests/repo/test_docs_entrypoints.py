@@ -72,8 +72,10 @@ def test_module_design_baseline_is_canonical_human_first_and_complete() -> None:
     assert {p.name for p in root.iterdir() if p.is_file()} == CANONICAL_MODULE_FILES
     readme = (root / "README.md").read_text(encoding="utf-8")
     assert "module_design_baseline: AVAILABLE_V1" in readme
+    assert "module_deep_design: AVAILABLE_V1" in readme
+    assert "module_deep_design_coverage: 9/9" in readme
     assert "implementation_authorization: NO" in readme
-    assert "简单问答" in readme and "复杂法律分析" in readme and "现实副作用" in readme
+    assert "简单法律问答" in readme and "复杂法律分析" in readme and "现实副作用" in readme
 
     for name in sorted(CANONICAL_MODULE_FILES - {"README.md"}):
         content = (root / name).read_text(encoding="utf-8")
