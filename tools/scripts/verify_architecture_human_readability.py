@@ -8,6 +8,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 CANONICAL = [ROOT / "docs/architecture/architecture.md"]
 ARCHITECTURE_README = ROOT / "docs/architecture/README.md"
+PROJECT_ROOT = ROOT / "docs/project"
 MODULES_ROOT = ROOT / "docs/modules"
 ROUND_01 = ROOT / "docs/history/red-blue/manual-round-01-overall-architecture.md"
 ROUND_02 = ROOT / "docs/history/red-blue/manual-round-02-overall-architecture-freeze-review.md"
@@ -23,6 +24,16 @@ MODULE_FILES = (
     "08-security-governance.md",
     "09-observability-evaluation.md",
 )
+
+# Project documents have different purposes, so their regression floors are intentionally
+# different. These numbers only prevent a future rewrite from collapsing the human narrative
+# into metadata, one-line bullets, or a thin responsibility card. They do not score writing.
+PROJECT_NARRATIVE_BASELINES = {
+    "project-background.md": (3000, 6, 8),
+    "product-positioning-and-value.md": (6000, 8, 12),
+    "development-process.md": (1800, 6, 6),
+    "team-and-contributions.md": (1200, 4, 5),
+}
 
 PART_A_HEADING = "## Part A — Architecture Narrative"
 PART_B_HEADING = "## Part B — Detailed Architecture Specification"
@@ -161,6 +172,36 @@ def verify_text(text: str) -> list[str]:
     return errors
 
 
+def verify_project_text(text: str, filename: str) -> list[str]:
+    """Protect project human narratives without forcing every project file into one template."""
+    errors: list[str] = []
+    baseline = PROJECT_NARRATIVE_BASELINES.get(filename)
+    if baseline is None:
+        return errors
+
+    min_chars, min_sections, min_paragraphs = baseline
+    nonspace_chars = _nonspace_chars(text)
+    subsection_count = len(re.findall(r"(?m)^##+\s+", _strip_non_prose_blocks(text)))
+    prose_paragraph_count = len(_prose_paragraphs(text))
+
+    if nonspace_chars < min_chars:
+        errors.append(
+            f"{filename}: project narrative is too thin for its current human-first baseline "
+            f"({nonspace_chars} non-space chars < {min_chars})"
+        )
+    if subsection_count < min_sections:
+        errors.append(
+            f"{filename}: project narrative needs broader question coverage "
+            f"({subsection_count} sections < {min_sections})"
+        )
+    if prose_paragraph_count < min_paragraphs:
+        errors.append(
+            f"{filename}: project narrative must contain explanatory prose, not mainly tables/lists "
+            f"({prose_paragraph_count} prose paragraphs < {min_paragraphs})"
+        )
+    return errors
+
+
 def verify_module_text(text: str, filename: str) -> list[str]:
     """Guard substantial, human-first module narratives without pretending to score prose quality."""
     errors: list[str] = []
@@ -222,6 +263,22 @@ def warnings_for_text(text: str, part_a_heading: str = PART_A_HEADING, part_b_he
     ]
 
 
+def warnings_for_project_text(text: str) -> list[str]:
+    """Warn about project prose that starts to look like a machine ledger; never auto-score prose quality."""
+    visible = _strip_non_prose_blocks(text)
+    matches = _MACHINE_TOKEN_RE.findall(visible)
+    if len(matches) < 6:
+        return []
+    unique = sorted(set(matches), key=str.casefold)
+    preview = ", ".join(unique[:8])
+    if len(unique) > 8:
+        preview += ", …"
+    return [
+        "READABILITY_WARNING: project narrative contains many machine-oriented markers "
+        f"({preview}); human review is still required."
+    ]
+
+
 def _verify_supporting_boundaries(errors: list[str]) -> None:
     if not ARCHITECTURE_README.exists():
         errors.append("missing docs/architecture/README.md")
@@ -278,6 +335,13 @@ def verify() -> list[str]:
             for error in verify_text(path.read_text(encoding="utf-8"))
         )
 
+    for filename in PROJECT_NARRATIVE_BASELINES:
+        path = PROJECT_ROOT / filename
+        if not path.exists():
+            errors.append(f"missing canonical project narrative: {path.relative_to(ROOT)}")
+            continue
+        errors.extend(verify_project_text(path.read_text(encoding="utf-8"), filename))
+
     for filename in MODULE_FILES:
         path = MODULES_ROOT / filename
         if not path.exists():
@@ -310,6 +374,13 @@ def main() -> int:
     for path in CANONICAL:
         if path.exists():
             warnings.extend(warnings_for_text(path.read_text(encoding="utf-8")))
+    for filename in PROJECT_NARRATIVE_BASELINES:
+        path = PROJECT_ROOT / filename
+        if path.exists():
+            warnings.extend(
+                f"{filename}: {warning}"
+                for warning in warnings_for_project_text(path.read_text(encoding="utf-8"))
+            )
     for filename in MODULE_FILES:
         path = MODULES_ROOT / filename
         if path.exists():
@@ -324,7 +395,7 @@ def main() -> int:
     for warning in warnings:
         print(warning)
 
-    print("architecture and module human readability structural verification passed.")
+    print("project, architecture and module human readability structural verification passed.")
     return 0
 
 
