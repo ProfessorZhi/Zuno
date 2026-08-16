@@ -1,6 +1,6 @@
 # 01 Application & Integration（应用与集成）
 
-<!-- status: design-baseline-v1; implementation: not-authorized; deepening: all-modules-v1 -->
+<!-- status: design-baseline-v1; implementation: not-authorized; deepening: cross-module-consistency-v2 -->
 
 ## Part A — Human Narrative
 
@@ -392,3 +392,60 @@ E2E Eval 至少覆盖：Simple QA、Complex WorkProduct、new-evidence invalidat
 - Outbox / delivery queue 只有在交付恢复需要时引入，且不能成为第二套 Domain truth。
 - Host adapter 只处理 transport / payload compatibility，不修改内部业务语义。
 - 数据库表、API path、outbox schema、delivery retry policy 和独立 Integration Service 在 detail freeze 后决定；物理拆分受 ADR-0012 证据门控。
+
+## Part C — Cross-Module Consistency（跨模块一致性）
+
+### C1 Completion Proof / Non-proof（完成证明与非证明）
+
+01 对自己能够负责的“完成”必须逐层区分：
+
+- `InvocationDecision` 只证明入口组合决定已经形成，不证明底层 Authorization、Readiness 或 Provider 事实由 01 重新计算过；
+- `AnswerPublicationDecision=PUBLISHED` 只证明 Zuno 侧已经完成发布决定，不证明正式 WorkProduct 已准入；
+- `Delivery=SENT` 只证明 01 所拥有的交付语义成立，不证明外部消费者已经展示、采用或理解；
+- `ConsumerAcknowledgementObservation=ACKNOWLEDGED` 只证明收到远端确认，不获得远端内部业务状态所有权；
+- 正式工作成果资格必须回到 02 的 WorkProductVersion + matching AdmissionReceipt；现实副作用必须回到 06 的 Effect / Reconciliation facts。
+
+因此 01 的任何状态都不得替代 02、03、04、06、07、08 的权威完成证明。
+
+### C2 Causation / Version / Freshness Bindings（因果、版本与新鲜度绑定）
+
+一次可恢复调用至少沿以下身份链关联，而不是依赖自然语言描述：
+
+```text
+ExternalRequestIdentity
+→ InvocationIdentity
+→ AgentDefinitionVersion
+→ [RunId / PlanVersion / StepRun when routed to 04]
+→ DomainVersion / WorkProductVersion or direct-answer result
+→ PublicationIdentity
+→ DeliveryIdentity
+```
+
+跨模块消费的 ReadinessDecision、AuthorizationDecision、Capability / Model eligibility、RunOutcome、AdmissionReceipt、EffectReceipt 都必须携带或可解析到其有效版本 / policy epoch / scope。01 不得把旧授权、旧 Readiness、旧 WorkProduct 有效性或旧 Host Contract 结果作为“缓存命中”静默带入新的受保护调用。
+
+Idempotency namespace 必须分开：`request_idempotency`、`invocation_idempotency`、`delivery_idempotency` 不能与 Admission、Tool Effect、Model Attempt 等其他模块的幂等身份混用。
+
+### C3 Cancellation / Late Result / Staleness Rules（取消、晚到结果与失效规则）
+
+取消入口请求或 Runtime Run，只表示“不再继续新的应用层工作”；它不自动撤销已经成立的 Domain Admission、已经确认的 Tool Effect 或远端已经收到的 Delivery。
+
+- Run 取消后才晚到的 Runtime / Model / Capability 结果，只有在 run / PlanVersion、输入版本、当前授权和结果资格仍可证明时才可被消费；否则丢弃或转 Review；
+- 已经正式准入的 WorkProduct 不因调用取消而从历史中消失，后续有效性由 02 决定；
+- side-effecting Delivery 已经进入 06 执行边界后，取消不能等同“远端未执行”，结果未知时仍需 Reconcile；
+- Domain invalidation 已成立时，即使旧 Delivery / Ack 晚到，也不能恢复旧 WorkProduct 的当前有效性；
+- Host 返回的迟到 Ack 必须按 delivery identity 归属，不能错误更新新一版 WorkProduct 的交付状态。
+
+### C4 Recovery Order / Consistency Tests（恢复顺序与一致性验证）
+
+恢复不从“最后一条 Trace”开始，而从相应 Owner 的 durable fact 开始。01 的典型恢复顺序是：
+
+```text
+读取当前 08 安全决定 / policy epoch
+→ 读取 02 当前 WorkProduct / invalidation truth
+→ 需要时读取 04 RunOutcome + matching 02 AdmissionReceipt
+→ side-effecting delivery 读取 06 Effect / Reconciliation facts
+→ 恢复 01 Publication / Delivery projection
+→ 最后补齐 09 telemetry / diagnosis
+```
+
+必须至少验证以下跨模块场景：运行取消但 Domain 已提交；WorkProduct 失效而 Consumer 离线；旧 Delivery Ack 晚到；Host Contract 升级后重复请求；授权撤销发生在检索后、发布前；副作用交付超时且结果未知；相同 delivery key 对应不同 WorkProduct / payload hash 时拒绝。
