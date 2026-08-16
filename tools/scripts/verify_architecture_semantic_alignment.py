@@ -78,7 +78,6 @@ def verify() -> list[str]:
     adr0008 = (DECISIONS / "0008-legal-domain-kernel-and-host-boundary.md").read_text(encoding="utf-8")
     adr0013 = (DECISIONS / "0013-round-02-responsibility-taxonomy.md").read_text(encoding="utf-8")
 
-    # Check the actual responsibility section order, not arbitrary earlier mentions.
     responsibility_headings = (
         "#### 01 Application & Integration（应用与集成）",
         "#### 02 Legal Domain & Work Product（法律领域与工作成果）",
@@ -187,7 +186,6 @@ def verify() -> list[str]:
         if phrase in architecture:
             errors.append(f"active architecture retains stale pre-baseline phrase: {phrase}")
 
-    # All nine module documents must share the current human-first engineering structure.
     for number, text in module_docs.items():
         _check_module_template(errors, number, text)
 
@@ -212,7 +210,6 @@ def verify() -> list[str]:
         ),
     )
 
-    # 02/03 authority remains the canonical domain/knowledge boundary.
     _require(
         errors,
         "architecture domain/knowledge authority",
@@ -263,13 +260,14 @@ def verify() -> list[str]:
         ),
     )
 
-    # Remaining module boundaries are now checked explicitly so future edits cannot silently reassign authority.
+    # These checks intentionally use durable semantic identifiers rather than
+    # prose sentences, so a human-readable rewrite cannot fail solely because of wording.
     module_requirements = {
         "01": (
             "负责组合，不负责重新发明事实",
             "Run completed\n!=\nDomain admitted\n!=\nAnswer publishable\n!=\nConsumer displayed",
             "Agent Version = 产品能力 / 配置版本",
-            "WorkProduct invalidated → 02",
+            "WorkProductInvalidationFact",
             "side-effecting delivery outcome unknown",
         ),
         "04": (
@@ -292,7 +290,8 @@ def verify() -> list[str]:
             "Transport Success 不等于 Effect Success",
             "Action Proposal 不等于 PreparedAction，不等于 ToolAttempt，不等于 EffectReceipt",
             "same key + different action hash 必须拒绝",
-            "outcome unknown 必须 Reconcile",
+            "OUTCOME_UNKNOWN",
+            "Reconcile",
         ),
         "07": (
             "Model Role 与具体 Provider / Model 解耦",
