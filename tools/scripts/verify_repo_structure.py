@@ -4,11 +4,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 PROJECT_FILES = {
     "docs/project/README.md",
-    "docs/project/project-background.md",
-    "docs/project/product-positioning-and-value.md",
-    "docs/project/team-and-contributions.md",
-    "docs/project/development-process.md",
-    "docs/project/review-question-map.md",
+    "docs/project/project.md",
 }
 MODULE_FILES = {
     "docs/modules/README.md",
@@ -31,7 +27,7 @@ def _files(directory: Path) -> set[str]:
 def main() -> int:
     errors: list[str] = []
     if _files(ROOT / "docs/project") != PROJECT_FILES:
-        errors.append("docs/project must contain exactly its six canonical project documents")
+        errors.append("docs/project must contain exactly README.md and project.md")
     if _files(ROOT / "docs/evidence") != {
         "docs/evidence/README.md", "docs/evidence/current-runtime-baseline.md",
         "docs/evidence/current-test-baseline.md", "docs/evidence/current-eval-baseline.md",
