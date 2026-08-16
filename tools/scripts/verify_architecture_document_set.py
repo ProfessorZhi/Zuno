@@ -77,33 +77,57 @@ def verify() -> list[str]:
     if "9 个 Target Logical Modules" not in design or "Round 02" not in design:
         errors.append("architecture.md must record the frozen nine-module Target and Round 02 source")
 
-    narrative_markers = (
-        "Zuno 面向智慧司法和法律专业工作",
-        "不是所有法律任务都需要同样复杂的系统",
-        "为什么按“事实谁负责”切架构",
-        "九个责任域不是九段必须依次经过的流水线",
-        "一项复杂机制什么时候应该主动删除",
-        "简单问答",
-        "Generic Host（通用 Agent 宿主）",
-        "A/B/C",
-        "Platform / Infrastructure",
-        "可选上下文边界",
-        "Runtime Control State（运行控制状态）",
-        "AdmissionReceipt（正式准入回执）",
-        "KnowledgeGeneration 生命周期",
-        "ReadinessDecision（知识就绪判断）",
-        "EvidenceCandidate != Evidence",
-        "CitationLineage != WorkProductCitationBinding",
-    )
-    for marker in narrative_markers:
-        if marker not in design:
-            errors.append(f"architecture.md missing current narrative marker: {marker}")
+    # Human-first narrative validation deliberately checks semantic topics instead of
+    # pinning one historical sentence. Exact prose markers made the validator resist
+    # editorial improvements and encouraged architecture.md to read like a spec sheet.
+    narrative_topics = {
+        "project positioning": (
+            "LIPLAB",
+            "智慧司法",
+            "法律智能 Agent 平台",
+        ),
+        "task complexity": (
+            "不是所有法律任务都需要同样复杂的系统",
+            "复杂度跟着任务走",
+        ),
+        "ownership over technology stack": (
+            "为什么按“事实谁负责”切架构",
+            "事实所有权",
+        ),
+        "non-pipeline module model": (
+            "九个责任域不是九段必须依次经过的流水线",
+            "不是请求的固定执行顺序",
+        ),
+        "complexity deletion": (
+            "一项复杂机制什么时候应该主动删除",
+            "复杂度淘汰",
+        ),
+        "simple QA": ("简单问答",),
+        "generic host boundary": ("Generic Host（通用 Agent 宿主）",),
+        "runtime comparison": ("A/B/C", "Generic Host + Legal Backend"),
+        "platform responsibility layer": ("Platform / Infrastructure", "平台与基础设施"),
+        "optional context boundary": ("可选上下文边界", "Context / Memory", "Optional Context"),
+        "runtime control state": ("Runtime Control State", "运行控制状态"),
+        "formal admission receipt": ("AdmissionReceipt（正式准入回执）",),
+        "knowledge generation lifecycle": ("KnowledgeGeneration 生命周期", "KnowledgeGeneration（知识生成版本）"),
+        "task readiness": ("ReadinessDecision（知识就绪判断）", "task-level ReadinessDecision（任务级知识就绪判断）"),
+        "candidate vs evidence": ("EvidenceCandidate != Evidence",),
+        "retrieval lineage vs formal citation": ("CitationLineage != WorkProductCitationBinding",),
+    }
+    for topic, alternatives in narrative_topics.items():
+        if not any(marker in design for marker in alternatives):
+            errors.append(
+                f"architecture.md missing current narrative topic: {topic}; "
+                f"expected one of {alternatives}"
+            )
 
     for marker in (
         "module_design_baseline: AVAILABLE_V1",
         "module_deep_design: AVAILABLE_V2",
         "module_deep_design_coverage: 9/9",
         "cross_module_consistency: AVAILABLE_V1",
+        "module_detail_design_candidate: AVAILABLE_V1",
+        "module_detail_design_candidate_coverage: 9/9",
         "module_detail_freeze: NOT_YET",
         "implementation_authorization: NO",
     ):
@@ -115,6 +139,8 @@ def verify() -> list[str]:
         "module_deep_design: AVAILABLE_V2",
         "module_deep_design_coverage: 9/9",
         "cross_module_consistency: AVAILABLE_V1",
+        "module_detail_design_candidate: AVAILABLE_V1",
+        "module_detail_design_candidate_coverage: 9/9",
         "module_detail_freeze: NOT_YET",
         "implementation_authorization: NO",
         "01 应用与集成",
