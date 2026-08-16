@@ -1,6 +1,6 @@
 # 03 Knowledge & Evidence（知识与证据）
 
-<!-- status: design-baseline-v1; implementation: not-authorized; deepening: domain-knowledge-v1 -->
+<!-- status: design-baseline-v1; implementation: not-authorized; deepening: cross-module-consistency-v2 -->
 
 ## Part A — Human Narrative
 
@@ -424,3 +424,54 @@ GraphRAG 必须按 query class 对比简单 retrieval baseline，在同模型、
 不得用向量库、图数据库或 chunker 的内部 ID 反向定义正式领域模型。Provider 更换和 index migration 必须能在不改写已发布 WorkProductCitationBinding 的前提下完成。
 
 本 Design Baseline 不默认建立独立 Knowledge 微服务，不要求 always-on GraphRAG，不授权全量索引重构。实现应优先使用 adapter / worker / modular backend，物理拆分继续受 ADR-0012 的证据门控。
+
+## Part C — Cross-Module Consistency（跨模块一致性）
+
+### C1 Completion Proof / Non-proof（完成证明与非证明）
+
+知识构建完成必须按层次证明：Provider 写入成功只证明物理动作；validated manifest 证明 generation 的声明内容与来源一致；serving pointer / watermark 证明当前 generation 已被知识边界激活；ReadinessDecision 才证明某个具体 task scope 在当前 requirement 与安全条件下可使用。
+
+因此：
+
+```text
+index write success
+!= generation valid
+!= generation serving
+!= task READY
+!= formal Evidence / WorkProduct
+```
+
+03 的 EvidenceCandidate / CitationLineage 也不是 02 的正式 Evidence / WorkProductCitationBinding。
+
+### C2 Causation / Version / Freshness Bindings（因果、版本与新鲜度绑定）
+
+Readiness / Retrieval 至少绑定：DocumentVersion set、KnowledgeGeneration、processing spec / serving generation、task Scope、minimum requirements、AuthorizationDecision / SecurityEpoch 和 retrieval identity。任何关键绑定变化后，旧 Readiness 不能静默复用。
+
+KnowledgeGeneration identity、ProcessingItem identity、ReadinessDecision identity、Retrieval identity 分属不同幂等 / 因果 namespace；不能使用一个“document job id”同时代表处理、激活、检索和任务资格。
+
+向 02 / 04 / 05 输出晚到候选时，必须保留其 source DocumentVersion、generation 和 scope，供消费者判断它是否仍适用于当前 PlanVersion / DomainVersion。
+
+### C3 Cancellation / Late Result / Staleness Rules（取消、晚到结果与失效规则）
+
+取消 ingestion / rebuild 只能停止后续派生工作；未通过完整性校验的 generation 不得因为“多数 item 已完成”而进入 serving。已经 serving 的旧 generation 是否继续服务，由当前 source / policy / activation 状态决定，不因新 build 被取消而自动消失。
+
+晚到的 OCR、embedding、graph 或 retrieval 结果必须校验 generation / processing spec / DocumentVersion / security scope；属于旧 generation 或旧权限的结果不能写入当前 manifest，也不能参与新的 task Readiness。
+
+03 的 stale 只描述知识派生新鲜度。新 DocumentVersion 到来后，03 可以把旧 generation 标成不适用于新 source set，但正式 Finding / WorkProduct 是否 stale 仍由 02 依据正式依赖判断。
+
+### C4 Recovery Order / Consistency Tests（恢复顺序与一致性验证）
+
+知识恢复顺序优先使用不可变源与自己的 durable metadata：
+
+```text
+02 DocumentVersion / source identity
+→ 03 generation metadata + processing spec
+→ per-item / provider receipts
+→ validated manifest
+→ serving pointer / watermark
+→ current 08 security input
+→ recompute task Readiness
+→ 09 补 telemetry
+```
+
+至少验证：partial write 不激活；build 取消后 generation 非 serving；serving pointer 写入前 / 后崩溃；新 DocumentVersion 到来时旧 retrieval 晚到；权限撤销发生在 Readiness 后、retrieval 前；同 generation identity 混入不同 processing spec 时拒绝；GraphRAG provider 失败仅在同一 requirement 可满足时回退；索引重建后历史 WorkProduct 引用不漂移。
