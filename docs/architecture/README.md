@@ -11,33 +11,32 @@ architecture.html
 
 ## 总体架构回答什么
 
-总体架构回答的是：Zuno 怎样把法律领域状态、知识与证据、执行控制、安全、外部效果和可验证交付组合成一套可以恢复、替换和简化的目标架构。
+总体架构回答：Zuno 怎样把法律领域状态、知识与证据、执行控制、专业能力、模型、安全、现实副作用和可验证交付组合成一套可恢复、可替换、可简化的目标架构。
 
-它**不单独回答“为什么项目值得立项”**。这个问题先读 [`../project/project.md`](../project/project.md)：那里把项目历史、法院侧需求、研究成果工程化、通用 Agent 宿主边界、项目发展和参与事实组织成一条连续叙事。Architecture 从这个产品边界继续往下回答“既然这些语义必须由 Zuno 负责，系统应该怎样组织”。
+项目为什么存在、为什么值得立项、为什么不只使用通用平台，先读 [`../project/project.md`](../project/project.md)。Architecture 从产品边界继续回答“既然这些语义需要由 Zuno 负责，系统应该怎样组织”。
 
-Round 02 已完成，总体 Target Architecture（目标架构）和九个 Logical Responsibility Modules（逻辑责任域）已经冻结。九个责任域是事实和职责边界，不是九个进程、九个数据库或九个微服务。Platform / Infrastructure（平台与基础设施）继续是责任层，Memory / Context（记忆与上下文）继续是可选 Provider 边界。
+Round 02 已冻结总体 Target Architecture 与九个 Logical Responsibility Modules（逻辑责任域）。九个责任域是 Ownership / Contract 边界，不是九个进程、数据库或微服务。Platform / Infrastructure 仍是责任层，Memory / Context 仍是可选 Provider Boundary。
 
-## 为什么总体架构没有把 Zuno 设计成另一个通用平台
+## 为什么没有把 Zuno 设计成另一个通用平台
 
-Zuno 当前有意保留一个明确的 Build / Buy / Reuse 边界：通用宿主可以继续负责入口、会话、基础工作流、普通模型调用、基础 RAG 和 UI；Zuno 只有在复杂法律任务需要材料版本、知识就绪、正式 Evidence / Finding / WorkProduct、人工决定、失效传播、外部 Effect Recovery、持续授权或法律 Eval 时，才承担相应专业语义。
+通用 Host 可以继续负责入口、会话、基础工作流、普通模型调用、基础 RAG 和 UI。Zuno 只在复杂法律任务需要 DocumentVersion、Knowledge Readiness、正式 Evidence / Finding / WorkProduct、HumanDecision、失效传播、Effect Recovery、持续授权和法律 Eval 等专业语义时承担责任。
 
-这也是为什么简单问答允许留在 Generic Host（通用 Agent 宿主）中，而不是所有请求都强制进入原生 Agent Runtime。Native Runtime、GraphRAG、Long-term Memory、Specialist / Multi-Agent 和物理服务拆分都继续受测量或证据门控制。
+因此简单问答不强制进入 Native Runtime；Native Runtime、GraphRAG、Long-term Memory、Specialist / Multi-Agent 和物理服务拆分都继续受 Measurement / Evidence Gate。设计差异不等于已证明优势，实际收益必须由 09 的对照测量证明。
 
-因此“Zuno 与通用平台相比有什么优势”不能只在架构图上回答。总体架构能够说明**设计差异**，09 Observability & Evaluation（可观测性与评测）才负责把这些差异通过 A/B、消融、故障和真实任务测量升级为或否定为实际优势。
+## 当前设计状态
 
-## 现在进行到哪里
-
-总体架构冻结以后，九篇模块已经从 Design Baseline V1 继续深化到 **Deep Design V2 / Cross-Module Consistency**，并进一步扩充 Human-first Part A。当前每篇模块都包含：
+九篇模块已经完成 Deep Design V2 / Cross-Module Consistency，并且 **9/9 全部进入 Detail Design Candidate V1**。每篇继续保持：
 
 ```text
 Part A — Human Narrative
-  真实问题、正常流程、失败、取舍、当前 / 目标 / 缺口
+  问题、业务流程、异常、取舍、Current / Target / Gap
 
 Part B — Engineering / Agent Reference
   B1–B14 Owner / Contract / State / Failure / Recovery / Persistence / Evidence
+  B14.1–B14.8 Detail Freeze Candidate
 
 Part C — Cross-Module Consistency
-  完成证明、因果版本、新鲜度、取消、晚到结果、恢复顺序和一致性测试
+  Completion Proof、因果版本、新鲜度、取消、晚到、恢复和一致性测试
 ```
 
 当前治理状态：
@@ -51,39 +50,41 @@ module_deep_design_coverage: 9/9
 cross_module_consistency: AVAILABLE_V1
 module_human_narrative: DEEPENED
 module_detail_design_candidate: AVAILABLE_V1
-module_detail_design_candidate_coverage: 2/9
+module_detail_design_candidate_coverage: 9/9
 module_detail_freeze: NOT_YET
 implementation_authorization: NO
 production_readiness: NOT_ESTABLISHED
 ```
 
-下一道门已经从“把九篇文档继续写长”进入字段级 Contract、状态转换 guard、并发 / 版本条件、幂等 namespace、事务边界、Crash Window、Schema Evolution 和 Failure Injection Matrix。第一批只覆盖 02 法律领域与工作成果 + 03 知识与证据，它们达到 **Detail Design Candidate V1**；其余七模块仍保持 Deep Design V2。
+这一步没有改变 `architecture.md` 的 Round 02 冻结语义。Detail Candidate 只能细化既有 Owner / Contract / recovery 规则；如果字段级设计要求新增 / 删除逻辑模块、扩大七对象 Canonical Legal Kernel、改变 Formal Admission、Knowledge / Domain authority、Effect / Security / Lifecycle Owner，必须升级 Architecture Gap。
 
-这一步仍然没有改变 `architecture.md` 的 Round 02 冻结语义。Detail Candidate 只能细化已接受的 Owner / Contract / recovery 规则；如果字段级设计要求改变九模块、扩大七对象内核或修改跨模块 Authority，就必须升级 Architecture Gap，而不是在 B14 里偷偷改总体架构。
+## Detail Design Candidate 到底细化了什么
 
-## 第一批 Detail Design Candidate 到底细化了什么
+九个模块已经不只回答“做什么”，还把实现前必须盘问的问题落到冻结前候选：
 
-02 和 03 的 Part A 仍然保持人类技术叙事，B1–B13 仍然负责模块级工程语义；新增加的细化集中在 B14.1–B14.8。因此阅读时不需要一上来背字段，可以先理解业务问题，再进入冻结前的工程约束。
+- 01：ExternalRequest / Scope / Invocation、AgentVersion、Publication、Delivery / Invalidation / Ack、Outbox、HostContract 和交付 Crash Window；
+- 02：AdmissionCommand / AdmissionReceipt、七对象 Identity / Version、依赖 / CitationBinding、Matter-level PostgreSQL 并发、Invalidation；
+- 03：KnowledgeGeneration / ProcessingSpec / Manifest / ServingPointer、Readiness / Retrieval、Worker / Cache / Serving CAS；
+- 04：AgentRun / PlanVersion / StepRun、Ready / Join Guard、Replan Barrier、Interrupt / Resume、Checkpoint、Takeover / Fencing；
+- 05：CapabilityVersion、ProviderBinding、Conformance、Eligibility、Invocation、Fallback / Cache；
+- 06：PreparedAction、ActionHash、ToolAttempt、EffectReceipt、Reconciliation、RetrySafety、Send Boundary；
+- 07：ModelRequest、Routing、Attempt、Qualification、Usage / Cost、Cancellation、Fallback；
+- 08：Authorization / Approval、SecurityEpoch、Secret Lease、Mandatory Audit、Lifecycle / per-store enforcement；
+- 09：TelemetryEnvelope、Correlation、Redaction / Sampling、Dataset / EvalRun / Judge、ReleaseEvidence、Complexity Kill Test。
 
-02 当前进一步钉住：AdmissionCommand / AdmissionReceipt 的语义字段组、Matter / DocumentVersion / Claim / Evidence / Finding / HumanDecision / WorkProduct 的 identity / version、正式依赖与 WorkProductCitationBinding、状态转换 Guard、Matter-level PostgreSQL 并发候选、Crash Window、Schema Evolution 和 Failure Injection 门槛。
+这些全部是 Target Candidate，不是 Current implementation。真实 PostgreSQL race、Serving cutover、Tool remote idempotency、Provider qualification、Policy Engine、full-chain observability、formal benchmark 等仍要看 Evidence。
 
-03 当前进一步钉住：KnowledgeGeneration / ProcessingSpec / IndexManifest / ServingPointer、Readiness / Retrieval / EvidenceCandidate 字段组、Generation / Serving Guard、Serving Activation 的 CAS / 可恢复发布点、Worker / Backpressure / Cache 新鲜度、Crash Window、Provider / Schema Evolution 和 Failure Injection 门槛。
+## 面对横向系统设计问题
 
-这里的“PostgreSQL 并发候选”“Serving CAS 候选”都是 Target 详细设计，不是 Current 生产证明。当前 Evidence 仍只支持有限 Domain mutation / CAS / idempotency / citation provenance 等窄范围能力；真实 PostgreSQL race、完整 AdmissionReceipt、真实 Serving 切换和大规模索引恢复仍需工程证据。
+高级系统设计问题应先问“哪类事实由谁拥有”，再讨论物理原语。QPS、Queue、Cache、事务、2PC、租户隔离、HA / DR、成本和数据库恢复的责任矩阵在 [`../modules/README.md`](../modules/README.md)。
 
-## 面对横向系统设计追问时怎样回答
+默认扩容按工作负载而不是九模块拆服务；Cache 只优化 Projection；Owner 内部使用事务 / CAS / 幂等保证自己的完成事实；跨 Owner 通过 receipt、version、causation ref 和恢复收敛，不追求一个覆盖所有 Store 的 2PC。Queue、Worker、Checkpointer、Object Store 都不能因为物理写入成功就替业务 Owner 宣布完成。
 
-高级系统设计面试通常不会按九个模块从 01 问到 09，而会直接问：“QPS 上来怎么办”“为什么不用微服务”“队列积压怎么办”“缓存放哪里”“为什么不用 2PC”“PostgreSQL 和 Checkpointer 为什么分开”“多租户怎么隔离”“HA / DR 怎么做”。这些问题仍然遵守同一个顺序：**先确认哪一类事实由谁拥有，再讨论用什么物理原语承载。**
-
-因此，扩容不按“九个模块”机械拆成九个服务，而先按工作负载区分入口请求、知识构建、模型调用、专业能力、外部 Tool、Eval 等类型；缓存只优化可重建 Projection，不成为新的 Truth Owner；Owner 内部在需要时使用事务 / CAS / 幂等保证自己的完成事实，跨 Owner 不追求一个全局 2PC，而通过 receipt、version、causation ref 和恢复流程收敛；Queue、Worker、Checkpoint、Object Store 都是物理原语，不能因为“写成功”就替业务 Owner 宣布完成。
-
-这组横向问题的详细责任矩阵放在 [`../modules/README.md`](../modules/README.md) 的“横向系统设计问题”章节。真正进入实现时，再回到相应模块 Part B / Part C 看字段级 Contract、状态转换、事务边界和失败测试。
-
-这里也必须区分 Target 和 Current：文档可以说明目标上如何做 Backpressure（背压）、缓存新鲜度、并发控制、故障恢复和物理扩容，但没有 Load Test、真实 Provider 配额、RPO / RTO 和灾备演练，就不能从架构图推导“支持多少 QPS”“支持多少文件”或“已经高可用”。这些数字只能由 Evidence 证明。
+没有 Load Test、真实 Provider 配额、RPO / RTO 和 DR 演练，就不能从 Target Architecture 推导“支持多少 QPS”“支持多少文件”或“已经高可用”。
 
 ## 阅读顺序
 
-如果第一次接触 Zuno，建议：
+第一次理解 Zuno：
 
 ```text
 ../project/project.md
@@ -92,43 +93,35 @@ production_readiness: NOT_ESTABLISHED
 → 目标模块 Part A
 ```
 
-一个不了解 Zuno 的高级工程师只读 `architecture.md` Part A，应该能够解释：为什么简单问答保持简单；复杂法律分析怎样形成正式工作成果；新证据怎样使旧结果失效；外部 POST 超时为什么不能盲重试；Domain Commit 和 Runtime Checkpoint 不一致时怎样恢复；九个责任域为什么这样分。
+进入模块实现级审查时，再读 `architecture.md` Part B、目标模块 Part B / Part C，尤其 B14.1–B14.8，以及 ADR、Evidence 和 Governance。
 
-如果 Reviewer 进一步追问“为什么项目可以立项、为什么不直接用通用平台、项目走过什么阶段、参与者做过什么、这些差异是否真的已经形成优势”，回到 [`../project/project.md`](../project/project.md)。如果开始追问具体模块的状态、Contract、并行、失败或恢复，则进入对应 Module；如果问“现在真的实现了吗”，直接进入 Evidence。
+如果问“为什么这样设计”，看 Architecture / Module；如果问“当前真的实现了吗”，看 `../evidence/`；如果问历史争议，按需读取 `../history/red-blue/`。
 
-如果追问进一步进入并发、缓存、背压、一致性、容量、HA / DR、成本或数据库恢复，先读 [`../modules/README.md`](../modules/README.md) 的横向系统设计章节，再进入 01 / 02 / 03 / 04 / 06 / 07 / 08 / 09 的 Part B / Part C。目标设计可以解释机制，实际容量和生产资格仍只从 Evidence 回答。
+## 下一道门不是直接实现
 
-如果任务已经进入 02 / 03 的 Detail Freeze Review，则继续读它们的 B14.1–B14.8。这里才讨论字段组、事务短窗口、CAS / version 条件、Crash Window、Migration 和 Failure Injection；不要把这些 Target Candidate 反写成当前数据库已经具备的能力。
+9/9 Candidate 完成以后，下一道门是 **Module Detail Freeze Review**。需要逐模块检查：字段 / identity / version 是否闭合；状态 Guard 是否足够；幂等 namespace 是否分离；Owner Store 的事务 / CAS 是否合理；Crash Window 是否有 durable recovery anchor；Migration 是否保护历史；权限变化、Cancel、Late Result 是否一致；Failure Injection 是否足够；是否引入没有证据支持的微服务、锁或状态机。
 
-需要实现、测试或审查工程细节时，再读 `architecture.md` Part B、模块 Part B / Part C、相关 ADR 和 Evidence。
-
-Part A 采用中文优先：普通概念能用中文清楚表达时不用多余英文；确实需要代码、框架或正式 Contract 名称时，第一次出现使用 `English（中文）`，后续优先用中文或正式标识。
+只有通过冻结审查，具体模块才可以进入 Detail Freeze；即使冻结，也不自动产生 Implementation Authorization。Codex 业务实现仍需要独立明确授权和任务规格。
 
 ## 文件职责
 
-- `architecture.md`：跨层 Target、九个责任域、全局不变量、跨模块 Contract、状态、失败和恢复。
-- `architecture-views.md`：总体架构的 Mermaid 图源，只做图形表达，不拥有第二套架构事实。
-- `architecture.html`：图源展示入口，不维护平行语义。
-- `README.md`：目录边界、状态和阅读入口。
-- `../project/project.md`：项目为什么存在、为什么值得做、开发背景、团队与参与事实；不拥有 Target 架构。
-- `../modules/`：九个责任域的 Deep Design V2、Human-first Part A 和跨模块一致性设计；02 / 03 进一步保存第一批 Detail Design Candidate V1。
-- `../decisions/`：长期有效且具有反转成本的 ADR。
-- `../evidence/`：Current 的代码、测试、Migration、Trace、Eval 和运行证据。
-- `../history/red-blue/`：架构质询和裁决历史，只解释“为什么”，不拥有当前 Target。
+- `architecture.md`：唯一总体 Target Architecture 正文。
+- `architecture-views.md`：总体 Mermaid 图源，不拥有第二套事实。
+- `architecture.html`：图源展示，不维护平行语义。
+- `README.md`：状态、边界和阅读入口。
+- `../project/project.md`：项目级 Human-first 主叙事。
+- `../modules/`：九个责任域的 Deep Design V2 + Detail Design Candidate V1。
+- `../decisions/`：仍有效的长期 ADR。
+- `../evidence/`：Current 代码、Migration、Test、Trace、Eval 和运行证据。
+- `../history/red-blue/`：审查历史，不拥有当前 Target。
 
-## 一致性规则
+## 一致性与维护
 
-总体架构是当前 Target 的整合表达；模块文档只能细化它，不能局部改写九模块 Owner、Canonical Kernel、Formal Admission、Knowledge / Domain authority、Retry / Replan / Reconcile 或安全政策 Owner。较早 ADR 的宽泛措辞如果已被后续 ADR 明确 supersede / refine（取代 / 细化），按后续决定解释。
+总体架构是当前 Target 的整合表达。模块只能细化它，不能局部重写九模块 Owner、Canonical Kernel、Formal Admission、Knowledge / Domain authority、Retry / Replan / Reconcile、安全政策或 Effect truth。
 
-Project 可以解释“为什么值得这样做”，但不能反过来修改 Architecture Truth。产品差异化如果需要新增模块、扩大 Canonical Domain Kernel 或改变跨模块 Owner，必须重新进入正式架构决策流程。
+跨层含义变化才修改 `architecture.md`；模块内部细节进 `../modules/`；项目历史和定位进 `../project/`；图形变化同步 `architecture-views.md` 与 `architecture.html`。
 
-如果模块深化发现必须改变跨层语义，应停止局部设计并记录 Architecture Gap，而不是把新决定藏进 Part B、数据库字段或代码实现。
-
-## 维护与验证
-
-跨层含义变化时修改 `architecture.md`；模块内部设计进入 `../modules/`；项目来源、定位和历史叙事进入 `../project/project.md`；图形关系变化时同步 `architecture-views.md` 与 `architecture.html`。
-
-当前常用验证：
+常用验证：
 
 ```powershell
 python tools/agent/render_architecture.py --check
