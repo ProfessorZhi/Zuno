@@ -31,6 +31,9 @@ def verify_system_yaml(root: Path) -> list[str]:
     for marker in (
         "version:", "system_identity:", "runtime_boundary:", "program_rules:", "skill_routes:",
         "project_narrative:", 'module_design_state: "deep-design-v2"',
+        'module_detail_design_candidate: "candidate-v1"',
+        'module_detail_design_candidate_modules: ["02", "03"]',
+        "detail_design_candidates:", "detail_design_review:",
     ):
         if marker not in content:
             errors.append(f"system.yaml missing section/route: {marker}")
@@ -40,6 +43,8 @@ def verify_system_yaml(root: Path) -> list[str]:
         "docs/README.md",
         "docs/project/README.md",
         "docs/project/project.md",
+        "docs/modules/02-legal-domain-work-product.md",
+        "docs/modules/03-knowledge-evidence.md",
     ):
         if not (root / relative).exists():
             errors.append(f"system.yaml route target missing: {relative}")
