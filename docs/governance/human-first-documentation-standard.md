@@ -1,15 +1,17 @@
 # Human-first 文档标准
 
-本文约束 Zuno 的文档写作方式，不改变项目事实、Target Architecture（目标架构）、模块边界或历史记录。目标是让人类读者先理解系统为什么这样设计，再让工程人员和 Agent 从同一套设计中读取精确 Contract（契约）、状态、失败和恢复规则。
+本文约束 Zuno 的文档写作方式，不改变项目事实、Target Architecture（目标架构）、九个责任域、ADR 或历史记录。目标是让人类读者先理解系统为什么这样设计，再让工程人员和 Agent 从同一套设计中读取精确 Contract（契约）、状态、失败和恢复规则，并用跨模块一致性视角检查相邻责任域有没有对同一个事实给出两套答案。
 
-核心原则只有一句：
+核心原则是：
 
 ```text
 ONE DESIGN
-TWO REPRESENTATIONS
+THREE COORDINATED VIEWS
 ```
 
-同一套设计有两种表达：Part A 面向人解释“为什么和怎样工作”，Part B 面向实现和审查精确说明“谁拥有、什么状态、怎样失败、怎样恢复”。两部分不能各自发展成两套架构。
+对九篇模块文档，同一套设计现在有三个协调视角：Part A 面向人解释“为什么和怎样工作”；Part B 面向实现和审查精确说明“谁拥有、什么状态、怎样失败、怎样恢复”；Part C 不创造第三套架构，只检查这个模块放回九模块整体以后，完成证明、因果版本、新鲜度、取消、晚到结果和恢复顺序是否仍然与相邻模块一致。
+
+总体 `docs/architecture/architecture.md` 继续使用自身的 Part A + Part B 总体架构结构；Part C 是当前九篇模块文档的跨模块一致性层，不要求把总体架构机械改成同样版式。
 
 ## 文档体系的分工
 
@@ -17,7 +19,7 @@ Human-first（人类优先）文档：
 
 - `docs/project/`：项目从哪里来、谁参与、怎样发展；
 - `docs/architecture/`：总体 Target 架构今天为什么这样组织；
-- `docs/modules/`：九个已冻结责任域内部怎样工作；
+- `docs/modules/`：九个已冻结责任域内部怎样工作，以及放回整体以后怎样保持一致；
 - `docs/history/red-blue/`：架构曾被怎样质疑、回答和裁决。
 
 Engineering / Agent-first（工程 / Agent 优先）文档：
@@ -38,7 +40,7 @@ Engineering / Agent-first（工程 / Agent 优先）文档：
 - **History**：被替换的旧设计、Red / Blue 原始记录或考古信息。
 - **Unknown / Gap**：当前没有充分证据或尚未闭合的事实与设计问题。
 
-文档写得完整不等于模块实现完成；模块 Design Baseline（设计基线）也不等于 Module Detail Freeze（模块细节冻结）或 Implementation Authorization（实现授权）。Pilot 不等于 Production。
+文档写得完整不等于模块实现完成；Module Design Baseline（模块设计基线）和 Deep Design（深化设计）也不等于 Module Detail Freeze（模块细节冻结）或 Implementation Authorization（实现授权）。Pilot 不等于 Production。
 
 ## Part A — Human Narrative（人类技术叙事）
 
@@ -80,7 +82,7 @@ Part A 首先是一篇中文技术架构文档，而不是英文架构名词清�
 
 1. 普通概念如果用中文没有信息损失，直接使用中文。
 2. 确实需要保留代码名、论文名、框架名或正式 Contract 名时，第一次出现使用 `English（中文）`。
-3. 第一次解释以后，正文优先使用中文；正式标识只在需要和 Part B 对齐时再次出现。
+3. 第一次解释以后，正文优先使用中文；正式标识只在需要和 Part B / Part C 对齐时再次出现。
 4. 不写一串没有必要的 “scope / state / owner / lifecycle / provider” 来代替中文解释。
 5. 标题优先中文；模块正式名称可以保留 `English（中文）` 形式。
 
@@ -149,7 +151,7 @@ B13 Current / Target / Gap / Evidence
 B14 Code / Database / Migration Constraints
 ```
 
-这套结构是当前 Module Design Baseline V1（模块设计基线 V1）的正式模板。治理文档、Validator 和模块 README 必须使用同一套编号，不能一处把 Cross-boundary Contracts 写成 B3，另一处又写成 B5。
+这套结构仍是 Module Design Baseline V1（模块设计基线 V1）的正式 B1–B14 模板；当前九篇模块已在这套模板上继续达到 Deep Design V2 / Cross-Module Consistency。治理文档、Validator 和模块 README 必须使用同一套编号。
 
 ### B5 Cross-boundary Contract Format
 
@@ -175,9 +177,51 @@ Evidence
 
 某项确实不适用时可以写 `N/A` 并说明原因。字段级 schema 只有在模块详细设计明确需要时才冻结。
 
-### A → B Semantic Mapping
+## Part C — Cross-Module Consistency（跨模块一致性）
 
-Part A 解释 Why 和 Behavior，Part B 精确化 Owner、State、Contract、Transition、Failure 和 Recovery。两者描述的是同一个设计。
+Part C 是九篇模块文档当前新增的**一致性审查视角**。它不拥有新的业务事实，不新增第十个模块，不替代总体架构和 ADR，也不把未接受的新 Contract 偷偷写进模块正文。
+
+它只强制每个模块回答四类跨边界问题：
+
+```text
+C1 Completion Proof / Non-proof
+   这个模块什么事实才真正证明“完成”？哪些邻近模块 success 明确不能替代？
+
+C2 Causation / Version / Freshness Bindings
+   这个事实绑定哪些 run / plan / document / capability / tool / policy / domain 版本？
+   哪些变化以后旧结果不得静默复用？
+
+C3 Cancellation / Late Result / Staleness Rules
+   cancel 到底停止什么、不撤销什么？
+   晚到结果在什么条件下可接受、丢弃、复核或触发 Replan / Reconcile？
+
+C4 Recovery Order / Consistency Tests
+   崩溃以后先读哪个 Owner 的 durable fact，再修复哪些 projection？
+   哪些 fault-injection / E2E 场景能证明相邻模块没有互相冒充事实？
+```
+
+Part C 关注的是**同一个设计在跨模块故障下还能否自洽**。如果 C1–C4 暴露出两个模块都声称拥有同一事实、同一个 `completed` 被解释成两种业务含义、取消语义互相冲突、恢复顺序形成循环依赖，必须记录 Architecture Gap 并回到总体架构 / ADR / 模块设计解决；不能通过改 Validator 字符串掩盖。
+
+### Part C 的几个固定审查原则
+
+1. **Completion proof 必须按 Owner 分层。** `HTTP 200`、`Checkpoint completed`、`Provider success`、`Trace exported` 不能自动升级成相邻模块的更强业务成功。
+2. **Cancellation 不是全局回滚。** Run cancel 不撤销已经提交的 Domain transaction、已经确认的现实 Effect 或已经产生的 Model Usage。
+3. **Late result 必须重新验收。** 旧 Plan / 旧材料 / 旧权限下计算成功，不代表当前仍然有资格进入新 Plan 或 Domain。
+4. **Idempotency namespace 分离。** request、step、capability invocation、effect、admission、delivery、eval run 等使用各自语义身份，通过 causation refs 关联，不能用一个万能 key。
+5. **恢复先找 Authoritative Owner Fact。** Checkpoint、cache、trace、dashboard 和 projection 都不能覆盖 AdmissionReceipt、EffectReceipt、AuthorizationDecision 等更强 durable fact。
+6. **Correlation 不成为安全或业务权威。** 跨模块只传播最小 opaque identity（不透明身份）；敏感业务字段和 Secret 不为了日志方便进入普通 Trace context / Baggage。
+
+### Part C 不应该写什么
+
+- 不重复整篇 Part B；
+- 不新增尚未在总体架构 / ADR 接受的一级对象、模块或状态机；
+- 不把测试计划伪装成 Current；
+- 不因为一致性检查需要一个字段，就提前冻结数据库 schema；
+- 不把“所有模块都带同一个 correlation id”写成分布式事务或全局幂等机制。
+
+## A → B → C Semantic Mapping
+
+Part A 解释 Why 和 Behavior；Part B 精确化 Owner、State、Contract、Transition、Failure 和 Recovery；Part C 检查这些语义跨越模块以后，完成证明、版本、新鲜度、取消和恢复是否仍然成立。三者描述的是同一个设计。
 
 示例一：
 
@@ -192,6 +236,8 @@ ToolAttempt = OUTCOME_UNKNOWN
 Blind Retry: FORBIDDEN
 ```
 
+Part C：Runtime 即使已经取消旧 Plan，也不能把已发出的未知 Effect 当作“未执行”；06 仍要按 action identity / external correlation 完成 Reconcile，04 再根据 Receipt 修复控制状态。
+
 示例二：
 
 Part A：检索找到的一段材料只是证据候选，只有经过正式领域准入以后才成为长期业务 Evidence。
@@ -202,6 +248,8 @@ Part B：
 EvidenceCandidate   owner = 03 Knowledge & Evidence
 Evidence            owner = 02 Legal Domain & Work Product
 ```
+
+Part C：旧 KnowledgeGeneration 的 EvidenceCandidate 晚到时，即使检索本身成功，也要重新校验 DocumentVersion / Scope / Security / expected DomainVersion；不能因为旧候选“已经算完”就直接 Formal Admit。
 
 示例三：
 
@@ -215,7 +263,9 @@ KnowledgeGeneration lifecycle
 task-level ReadinessDecision
 ```
 
-如果 Part A 和 Part B 无法保持一致，应停止实现或 Reference 深化，先解决 Architecture Gap。
+Part C：ingestion 被取消或部分 index write 成功时，03 不能把 generation 静默激活；即使 generation 已 serving，SecurityEpoch 或 task requirement 变化后也必须重新计算 Readiness。
+
+如果 Part A 和 Part B 无法保持一致，应停止实现或 Reference 深化，先解决 Architecture Gap；如果 Part B 和 Part C 暴露出跨模块语义冲突，同样先解决 Architecture Gap。
 
 ## 模块文档模板
 
@@ -236,6 +286,12 @@ task-level ReadinessDecision
 
 ## Part B — Engineering / Agent Reference
   B1–B14 当前统一结构
+
+## Part C — Cross-Module Consistency
+  C1 Completion Proof / Non-proof
+  C2 Causation / Version / Freshness Bindings
+  C3 Cancellation / Late Result / Staleness Rules
+  C4 Recovery Order / Consistency Tests
 ```
 
 逻辑模块不自动等于进程、容器、数据库、Worker、Network Service 或 Team。是否拆服务由 ADR-0012 的证据门控制。
@@ -257,9 +313,12 @@ task-level ReadinessDecision
 - DocumentVersion / formal Evidence / Finding / WorkProduct → 02；
 - KnowledgeGeneration / ReadinessDecision / EvidenceCandidate / CitationLineage → 03；
 - PlanVersion / StepRun / Checkpoint → 04；
+- Capability identity / Eligibility / professional Proposal → 05；
 - Tool Effect / ReconciliationReceipt → 06；
+- ModelRoutingDecision / ModelCallAttempt / Usage → 07；
 - Authorization / Approval / Effective Lifecycle Policy → 08；
-- Telemetry / Eval projection → 09。
+- Telemetry / Eval projection → 09；
+- Publication / Delivery / Consumer Ack Observation → 01。
 
 ## Human Review Checklist
 
@@ -297,8 +356,23 @@ Part B 发布前至少确认：
 11. 是否没有用类名、目录或 Target 文档冒充实现证据；
 12. 是否没有因为九个逻辑模块而默认建立九个微服务。
 
+## Part C Review Checklist
+
+Part C 发布前至少确认：
+
+1. 是否明确本模块真正的 completion proof，以及哪些 success 明确不是证明；
+2. 每个关键跨边界结果是否能追到 causation / version / freshness refs；
+3. Cancel 是否只停止它有权停止的未来工作，没有伪造全局 rollback；
+4. Late result 是否有重新验收条件，而不是一律接受或一律丢弃；
+5. 不同模块的 idempotency identity 是否分开；
+6. Recovery 是否先读取对应 Owner durable fact，再修复 Runtime / Delivery / Telemetry projection；
+7. SecurityEpoch / Authorization / Approval 等安全新鲜度是否在新的受保护操作前重新检查；
+8. 现实 Effect 即使来自旧 Plan，也没有因为 branch stale 被错误否认；
+9. Trace / correlation 是否只用于定位，没有成为业务成功、安全许可或幂等权威；
+10. Consistency Tests 是否至少覆盖一个崩溃窗口、一个版本漂移、一个取消 / 晚到和一个权限变化场景。
+
 ## History 保护
 
 Red / Blue Archive 的 Question、Answer、Review、Reflection 和 Main Judgment 是历史审计记录。为了可读性可以完善 README 和摘要，但不得回头重写原始 Q/A/R 来让今天的架构显得更一致。
 
-当前 Target 的一致性通过总体架构、ADR supersession、模块设计、术语表和 Validator 来维护；History 只保留过程。
+当前 Target 的一致性通过总体架构、ADR supersession、模块设计、Part C 一致性审查、术语表和 Validator 来维护；History 只保留过程。
