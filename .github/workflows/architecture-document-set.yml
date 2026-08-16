@@ -14,6 +14,8 @@ on:
       - "tools/agent/render_architecture.py"
       - "tools/scripts/verify_architecture_document_set.py"
       - "tools/scripts/verify_architecture_semantic_alignment.py"
+      - "tools/scripts/verify_docs_entrypoints.py"
+      - "tools/scripts/verify_repo_structure.py"
       - "tests/repo/test_architecture_document_set.py"
       - "tests/repo/test_architecture_semantic_alignment.py"
       - "tests/repo/test_docs_entrypoints.py"
@@ -34,6 +36,8 @@ on:
       - "tools/agent/render_architecture.py"
       - "tools/scripts/verify_architecture_document_set.py"
       - "tools/scripts/verify_architecture_semantic_alignment.py"
+      - "tools/scripts/verify_docs_entrypoints.py"
+      - "tools/scripts/verify_repo_structure.py"
       - "tests/repo/test_architecture_document_set.py"
       - "tests/repo/test_architecture_semantic_alignment.py"
       - "tests/repo/test_docs_entrypoints.py"
@@ -67,7 +71,10 @@ jobs:
             tools/agent/render_architecture.py \
             tools/scripts/verify_architecture_document_set.py \
             tools/scripts/verify_architecture_semantic_alignment.py \
-            tools/scripts/verify_red_blue_session.py \
+            tools/scripts/verify_docs_entrypoints.py \
+            tools/scripts/verify_repo_structure.py \
+            .agent/scripts/verify_agent_system.py \
+            .agent/scripts/verify_doc_boundaries.py \
             tests/repo/test_architecture_document_set.py \
             tests/repo/test_architecture_semantic_alignment.py \
             tests/repo/test_docs_entrypoints.py \
@@ -83,9 +90,10 @@ jobs:
           set -o pipefail
           {
             python tools/scripts/verify_docs_entrypoints.py
+            python tools/scripts/verify_markdown_internal_links.py
+            python tools/scripts/verify_repo_structure.py
             python .agent/scripts/verify_agent_system.py
             python .agent/scripts/verify_doc_boundaries.py
-            python tools/scripts/verify_red_blue_session.py
           } 2>&1 | tee architecture-validation-logs/entrypoints.log
       - name: Run architecture and module focused tests
         run: |
@@ -94,7 +102,6 @@ jobs:
             tests/repo/test_architecture_document_set.py \
             tests/repo/test_architecture_semantic_alignment.py \
             tests/repo/test_docs_entrypoints.py \
-            tests/repo/test_red_blue_session.py \
             -p no:cacheprovider \
             2>&1 | tee architecture-validation-logs/pytest.log
       - name: Upload architecture validation logs

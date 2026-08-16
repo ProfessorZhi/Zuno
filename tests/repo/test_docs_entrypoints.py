@@ -13,6 +13,18 @@ EXPECTED_VIEWS = [
     "A/B/C Eval View", "Security Verification View",
 ]
 CANONICAL_ARCHITECTURE_FILES = {"README.md", "architecture.md", "architecture-views.md", "architecture.html"}
+CANONICAL_MODULE_FILES = {
+    "README.md",
+    "01-application-integration.md",
+    "02-legal-domain-work-product.md",
+    "03-knowledge-evidence.md",
+    "04-agent-runtime-control.md",
+    "05-capability-skill.md",
+    "06-tool-runtime-effects.md",
+    "07-model-gateway.md",
+    "08-security-governance.md",
+    "09-observability-evaluation.md",
+}
 
 
 def _load_render_architecture():
@@ -37,6 +49,18 @@ def test_architecture_directories_only_contain_support_files() -> None:
     root = REPO_ROOT / "docs/architecture"
     assert {p.name for p in root.iterdir() if p.is_file()} == CANONICAL_ARCHITECTURE_FILES
     assert not [p for p in root.iterdir() if p.is_dir()]
+
+
+def test_module_design_skeletons_are_canonical_and_human_first() -> None:
+    root = REPO_ROOT / "docs/modules"
+    assert {p.name for p in root.iterdir() if p.is_file()} == CANONICAL_MODULE_FILES
+    for name in sorted(CANONICAL_MODULE_FILES - {"README.md"}):
+        content = (root / name).read_text(encoding="utf-8")
+        assert content.startswith("# ")
+        assert "## Part A — Human Narrative" in content
+        assert "## Part B — Engineering / Agent Reference" in content
+        assert "Current" in content and "Target" in content and "Gap" in content
+        assert "implementation: not-authorized" in content
 
 
 def test_architecture_markdown_is_integration_first() -> None:
