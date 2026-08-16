@@ -31,6 +31,8 @@ source_boundary: 本文只做问题路由和回答边界，不创建新的项目
 | Zuno 和 Dify / Coze / 通用工作流平台的关系是什么？ | 不做无依据“平台做不到”比较；简单任务可直接复用，复杂法律状态和专业后端由 Zuno 承担 | [产品定位与立项逻辑](./product-positioning-and-value.md) |
 | 你们真正的差异化是什么？ | Domain State、材料版本 / Readiness、Formal Admission、历史引用、失效传播、Effect Recovery、Research-to-Capability、Legal Eval | [产品定位](./product-positioning-and-value.md) + [模块入口](../modules/README.md) |
 | 这些差异已经证明是优势了吗？ | 设计差异已形成；真实质量 / 成本 / 生产优势尚未充分测量 | [Current Evidence](../evidence/README.md) + [09](../modules/09-observability-evaluation.md) |
+| 立项以后靠什么判断还值得继续投入？ | 看专业质量、人的效率、工程风险、交付效率和经济性，而不是 Demo 数和框架数量 | [产品定位](./product-positioning-and-value.md) + [09](../modules/09-observability-evaluation.md) |
+| 真正可能形成长期优势的是什么？ | 领域 Contract、可复用专业能力、历史引用 / 正式结果、法律 Eval 和恢复经验形成的闭环；不是 LangGraph 本身 | [产品定位](./product-positioning-and-value.md) |
 | 什么时候反而不应该用完整 Zuno？ | 一次性简单问答、无长期领域状态 / 高风险 Effect 时，通用宿主可能更合适 | [产品定位](./product-positioning-and-value.md) |
 | 项目发展到了什么阶段？ | Internal Demo → 客户侧 Demo → 反馈 → Court-side Testing → Pilot Validation；Production 未建立 | [开发过程](./development-process.md) |
 | 真实客户规模、SLA、QPS 是多少？ | 当前没有可靠历史资料，不编造；Pilot 不等于 Production | [事实来源说明](../governance/project-fact-provenance.md) + [Evidence](../evidence/README.md) |
@@ -156,7 +158,36 @@ source_boundary: 本文只做问题路由和回答边界，不创建新的项目
 | Production Ready 了吗？ | 没有；当前明确 NOT_ESTABLISHED | [Evidence README](../evidence/README.md) |
 | GraphRAG / Memory / Multi-Agent 值不值得？ | 全部要做消融 / A-B / complexity kill test | [09](../modules/09-observability-evaluation.md) |
 
-## 11. Current 工程事实与实现深度
+## 11. 系统设计：数据、性能、扩展和可靠性
+
+这一组问题是高级后端 / Agent 工程岗位最容易继续追问的地方。回答时要先说 Target 设计，再明确 Current 是否已有负载或生产证据。
+
+| 常见追问 | 回答主线 | 权威阅读入口 |
+| --- | --- | --- |
+| QPS 上来以后首先扩哪里？ | 不按九模块机械拆服务；先识别 HTTP、知识构建、模型、Eval、Tool 等不同工作类型，再独立扩热点 Worker / Provider capacity | [模块入口：横向系统设计](../modules/README.md) + [总体架构](../architecture/architecture.md) |
+| 为什么不是一开始就微服务？ | 同进程边界已经能保 Ownership；只有独立扩缩容、故障 / 安全隔离、可用性或部署生命周期证据才拆网络服务 | [总体架构](../architecture/architecture.md) + ADR-0012 |
+| 长任务为什么不能一直占 HTTP 连接？ | 受理、执行、发布是不同事实；复杂任务应支持异步 invocation / status / result，而断开客户端不等于取消 Run | [01](../modules/01-application-integration.md) + [04](../modules/04-agent-runtime-control.md) |
+| 队列积压怎么办？ | 显式 Backpressure；限制新工作、暂停 Ready Step、尊重 Provider quota；不能让队列 success 代替业务 success | [模块入口](../modules/README.md) + [04](../modules/04-agent-runtime-control.md) |
+| 模型限流或 Provider 容量不足怎么办？ | 07 根据 role / quota / budget / security 做等待、fallback 或升级；fallback 仍需满足角色资格 | [07](../modules/07-model-gateway.md) |
+| 哪些地方可以缓存？ | 只缓存可重建 Projection / read optimization；缓存必须受 version / freshness 约束，不能成为 Admission / Approval / Effect truth | [模块入口](../modules/README.md) |
+| 缓存命中能不能跳过鉴权？ | 不能；新的受保护使用仍需满足当前 SecurityEpoch / policy | [08](../modules/08-security-governance.md) |
+| PostgreSQL 为什么适合保存 Domain State？ | Target 需要事务、版本、幂等和因果回执；具体容量 / schema / index 仍要以模块 B11/B14 和 Migration 设计证明 | [02](../modules/02-legal-domain-work-product.md) |
+| 为什么 Checkpoint 不也放进 Domain 表？ | Runtime control 与业务正式事实的完成证明、恢复语义和生命周期不同；可以同一物理 PostgreSQL，但不能同一语义 Owner | [02](../modules/02-legal-domain-work-product.md) + [04](../modules/04-agent-runtime-control.md) |
+| 为什么不用跨数据库 2PC？ | Owner 内部用自己的事务给 durable proof；跨 Owner 通过 receipt / version / causation + recovery 收敛，避免全局事务耦合 | [模块入口](../modules/README.md) + ADR-0014 |
+| Domain 已提交但 Checkpoint 未写，这算不一致吗？ | 是可预期短暂不一致；matching AdmissionReceipt 是恢复锚点，不重复 Domain commit | [02](../modules/02-legal-domain-work-product.md) + [04](../modules/04-agent-runtime-control.md) |
+| 并发两个用户同时改同一事项怎么办？ | expected prior DomainVersion / CAS 等并发条件拒绝静默覆盖；失败后重读最新事实再决定 Retry / Review | [02](../modules/02-legal-domain-work-product.md) |
+| 知识索引怎么扩容？ | generation 内 ingestion / OCR / embedding / index item 可并行；Serving pointer 只切到完整校验的一代 | [03](../modules/03-knowledge-evidence.md) |
+| 向量库挂了能不能直接返回旧结果？ | 只有旧 generation 仍在允许的 serving / freshness / security 条件下才可显式降级；不能无条件返回 stale projection | [03](../modules/03-knowledge-evidence.md) |
+| 如何做多租户 / 案件隔离？ | Security & Governance 拥有授权和数据外发边界；各 Store / retrieval / model / tool 执行边界必须按当前 scope enforcement | [08](../modules/08-security-governance.md) |
+| Trace 里可以放 tenant / 案件名方便查吗？ | 默认只传播 opaque correlation ref；敏感业务语义和 Secret 不因为可观测性方便就放进 baggage | [模块入口](../modules/README.md) + [09](../modules/09-observability-evaluation.md) |
+| 怎么做限流和预算？ | 入口 admission / 04 调度 Budget / 07 model quota / 06 external quota 各自负责，不能只靠 API Gateway 一个全局 QPS | [01](../modules/01-application-integration.md) + [04](../modules/04-agent-runtime-control.md) + [07](../modules/07-model-gateway.md) |
+| P95 很高先优化什么？ | 先用 09 分解 retrieval、model、tool、queue、human wait 等阶段，再按任务类别优化；不要先上缓存或微服务 | [09](../modules/09-observability-evaluation.md) + [模块入口](../modules/README.md) |
+| Token 成本怎么控制？ | Model Role、最小充分模型、Budget、并行 / Reflection 触发、Context / Retrieval 控制和复杂度消融共同决定 | [07](../modules/07-model-gateway.md) + [04](../modules/04-agent-runtime-control.md) + [09](../modules/09-observability-evaluation.md) |
+| HA 怎么做？ | 目标需定义 DB / object / checkpoint / worker takeover / fencing / effect recovery；当前没有证据支持已完成 HA | [模块入口](../modules/README.md) + [Evidence](../evidence/README.md) |
+| DR 的 RPO / RTO 是多少？ | 当前未建立，不编造；Production Readiness 前必须通过明确 profile 和演练证据证明 | [Evidence](../evidence/README.md) + [Operations](../operations/) |
+| 你能支撑多少并发 / 多少文件？ | 没有正式负载数据时不能从架构推算生产数字；给出测量方案和瓶颈分解，而不是编一个 QPS | [Current Eval](../evidence/current-eval-baseline.md) + [09](../modules/09-observability-evaluation.md) |
+
+## 12. Current 工程事实与实现深度
 
 | 常见追问 | 回答主线 | 权威阅读入口 |
 | --- | --- | --- |
@@ -167,7 +198,7 @@ source_boundary: 本文只做问题路由和回答边界，不创建新的项目
 | 为什么文档比实现更完整？ | 当前阶段先冻结边界和 Contract，再授权 Codex 实现；设计完成不等于模块完成 | [Human-first 标准](../governance/human-first-documentation-standard.md) |
 | 全 CI 通过了吗？ | 只有实际完整 CI 跑过才能这么说；文档 PR 只报告实际 focused 验证 | [Evidence](../evidence/README.md) |
 
-## 12. 团队与个人贡献
+## 13. 团队与个人贡献
 
 | 常见追问 | 回答主线 | 权威阅读入口 |
 | --- | --- | --- |
@@ -179,13 +210,15 @@ source_boundary: 本文只做问题路由和回答边界，不创建新的项目
 | 你能讲一个具体 Bug / 性能优化吗？ | 现有历史资料还没有恢复到任务级 Cause → Fix → Metric；不能编造 | [团队与开发分工](./team-and-contributions.md) |
 | 客户反馈后你们怎么优化的？ | 能确认“回答质量需要提高”和后续迭代，但根因 / 修复 / 指标尚未恢复 | [开发过程](./development-process.md) |
 
-## 13. 回答深度怎样逐层升级
+## 14. 回答深度怎样逐层升级
 
 如果只是 30 秒项目介绍，读 [项目说明](./README.md) 和 [产品定位](./product-positioning-and-value.md) 前半部分。
 
 如果是 3–5 分钟系统设计追问，读 [总体架构 Part A](../architecture/architecture.md) 和 [模块 README](../modules/README.md)。
 
 如果面试官开始问“谁拥有这个状态、崩溃在哪里恢复、重复请求怎么去重、权限中途变化怎么办”，进入对应模块 Part B / Part C。
+
+如果面试官开始问“QPS 上来怎么办、缓存怎么做、为什么不用 2PC、HA / DR 怎么办、P95 和成本怎么压”，先读 [模块 README 的横向系统设计](../modules/README.md)，再进入对应 01 / 02 / 03 / 04 / 07 / 08 / 09 模块。
 
 如果面试官问“你说这个实现了，证据呢”，立即切到 [`docs/evidence/`](../evidence/README.md)。
 
