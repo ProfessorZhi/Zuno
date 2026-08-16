@@ -21,6 +21,14 @@ Zuno 是智慧法院相关体系中的一个具体产品，不是整个智慧法
 
 用户回忆显示，项目与天津法院侧存在合作背景，产品涉及 22 家法院体系中的部分法院。这里的“部分”不能扩展成全部 22 家法院均使用或正式部署；具体参与法院、直接合同甲方、合同或子课题编号仍未恢复。
 
+### 历史起点和“为什么今天仍值得做”不是同一个问题
+
+本节只记录项目为什么历史上出现。至于今天面对已经成熟的通用大模型平台、RAG 框架和 Agent 宿主，Zuno 为什么仍然值得作为独立产品继续建设，需要结合当前已经接受的 Target Architecture 来回答。
+
+这部分单独放在[产品定位、立项逻辑与差异化](./product-positioning-and-value.md)，因为它包含一部分今天的产品与架构判断：通用宿主已经能够承担会话、基础工作流、模型、RAG 和工具，Zuno 真正需要自己长期负责的是法律领域状态、材料版本、正式证据、人工决定、工作成果、失效传播、现实副作用恢复和法律评测等专业语义。
+
+这种区分避免把“今天我们认为合理的架构理由”倒写成“历史客户当时就是这样提出需求的”。
+
 ## 3. 原始产品方向
 
 从立项方向上，Zuno 就是法律智能平台、多专业 Agent 和可组合法律专业能力的产品方向，并不是先做一个普通 RAG、后来才把它包装成 Agent Platform。这个判断描述的是原始产品意图，不代表历史版本已经完成了全部目标。
@@ -29,11 +37,13 @@ Zuno 是智慧法院相关体系中的一个具体产品，不是整个智慧法
 
 ## 4. 研究如何走向产品
 
-项目不是完全脱离课题组研究成果重新开发，而是有意融合葛季栋团队此前积累的多项法律智能研究成果。葛季栋公开主页列出的研究背景涉及多源多态证据链与裁判文书说理、裁判文书文本抽取、相似度分析、法条规范化和案由—法条关联、法条推荐、文本分词以及 LawBench 等法律语言模型评测方向。[葛季栋官方主页](https://software.nju.edu.cn/gjd/)
+项目不是完全脱离课题组研究成果重新开发，而是有意融合葛季栋团队此前积累的多项法律智能研究成果。葛季栋公开主页列出的研究背景涉及多源多态证据链与裁判文书说理、裁判文书文本抽取、相似度分析和法条规范化和案由—法条关联、法条推荐、文本分词以及 LawBench 等法律语言模型评测方向。[葛季栋官方主页](https://software.nju.edu.cn/gjd/)
 
 一个代表性研究例子是 Zhang、Li、Sheng、Ge 与 Luo 的 2024 年论文 *Judicial intelligent assistant system: Extracting events from Chinese divorce cases to detect disputes for the judge*。论文描述了面向中国离婚案件的焦点事件抽取、事件对齐和冲突检测系统。[论文 DOI](https://doi.org/10.1111/exsy.13540)
 
 这些公开材料能够帮助理解 LIPLAB 为什么具备 Event Extraction、Event Alignment、Conflict Detection、Dispute Identification、Evidence Chain、Case Similarity 和 Statute Recommendation 等研究背景，但不能证明历史 Zuno 一定实现了 JIA、使用了某个论文模型，或达到论文中的 Benchmark 指标。具体哪些研究成果进入了哪个产品版本、以算法、Tool、Skill 还是 Knowledge Pipeline 形式进入，目前还没有逐项映射。
+
+今天的 05 Capability & Skill（专业能力与技能）把 Research Artifact → Capability → Provider → Conformance → Eval → Eligibility 设计成目标工程路径，就是为了未来能够回答“某项研究究竟怎样成为可运行产品能力”。这个 Target 设计不能反过来证明历史版本已经按该路径完成工程化。
 
 ## 5. 面向什么人和什么工作
 
@@ -74,11 +84,15 @@ Zuno 是智慧法院相关体系中的一个具体产品，不是整个智慧法
 - Pilot 的参与人员、数据规模、环境、运行时长、评价协议、验收结果和运维指标；
 - “回答质量需要提高”的真实原因、调查过程、修改内容和 Cause → Fix → Metric 链路。
 
+这些 Unknown 是后续提高项目可信度最有价值的取证方向。尤其在技术面试里，能够恢复一条真实的 Bad Case → Root Cause → Fix → Metric，以及一项个人任务从需求到验证的完整链路，比继续增加架构术语更有价值。
+
 ## 8. 去哪里继续读
 
+- [产品定位、立项逻辑与差异化](./product-positioning-and-value.md)：为什么已经有通用平台仍值得做 Zuno，以及哪些差异仍需测量证明。
 - [团队与开发分工](./team-and-contributions.md)：团队规模、用户加入时间和实际参与方向。
 - [开发过程](./development-process.md)：从已有产品到 Demo、法院侧测试和 Pilot 的阶段叙事。
+- [项目与架构审查问题地图](./review-question-map.md)：Reviewer / 技术面试高频问题应该回到哪个文档回答。
 - [总体架构](../architecture/architecture.md)：后续形成的 Target Architecture。
 - [当前工程证据](../evidence/README.md)：当前代码、测试、运行和评测能证明什么。
 - [Red / Blue 历史](../history/red-blue/README.md)：架构为什么曾经被质疑和调整。
-- [项目事实来源说明](../governance/project-fact-provenance.md)：上述表述的来源与使用边界。
+- [项目事实来源说明](../governance/project-fact-provenance.md)：上述表述的来源、事实台账与使用边界。
