@@ -49,6 +49,9 @@ MODULE_CONSISTENCY_HEADINGS = [
     "### C3 Cancellation / Late Result / Staleness Rules（取消、晚到结果与失效规则）",
     "### C4 Recovery Order / Consistency Tests（恢复顺序与一致性验证）",
 ]
+DETAIL_CANDIDATE_HEADINGS = [
+    f"#### B14.{number} Detail Freeze Candidate" for number in range(1, 9)
+]
 
 
 def _load_render_architecture():
@@ -59,6 +62,10 @@ def _load_render_architecture():
     sys.modules[spec.name] = module
     spec.loader.exec_module(module)
     return module
+
+
+def _has_candidate_status(content: str) -> bool:
+    return "detail_design: candidate-v1" in content or "detail-design: candidate-v1" in content
 
 
 def test_project_documentation_is_consolidated_and_canonical() -> None:
@@ -92,15 +99,22 @@ def test_architecture_directories_only_contain_support_files() -> None:
     assert not [p for p in root.iterdir() if p.is_dir()]
 
 
-def test_module_design_baseline_is_canonical_human_first_and_complete() -> None:
+def test_module_design_is_human_first_complete_and_detail_candidate_9_of_9() -> None:
     root = REPO_ROOT / "docs/modules"
     assert {p.name for p in root.iterdir() if p.is_file()} == CANONICAL_MODULE_FILES
     readme = (root / "README.md").read_text(encoding="utf-8")
-    assert "module_design_baseline: AVAILABLE_V1" in readme
-    assert "module_deep_design: AVAILABLE_V2" in readme
-    assert "module_deep_design_coverage: 9/9" in readme
-    assert "cross_module_consistency: AVAILABLE_V1" in readme
-    assert "implementation_authorization: NO" in readme
+    for marker in (
+        "module_design_baseline: AVAILABLE_V1",
+        "module_deep_design: AVAILABLE_V2",
+        "module_deep_design_coverage: 9/9",
+        "cross_module_consistency: AVAILABLE_V1",
+        "module_detail_design_candidate: AVAILABLE_V1",
+        "module_detail_design_candidate_coverage: 9/9",
+        "module_detail_freeze: NOT_YET",
+        "implementation_authorization: NO",
+        "Module Detail Freeze Review",
+    ):
+        assert marker in readme
     assert "简单法律问答" in readme and "复杂法律分析" in readme and "现实副作用" in readme
 
     for name in sorted(CANONICAL_MODULE_FILES - {"README.md"}):
@@ -109,11 +123,13 @@ def test_module_design_baseline_is_canonical_human_first_and_complete() -> None:
         assert "status: design-baseline-v1" in content
         assert "implementation: not-authorized" in content
         assert "deepening: cross-module-consistency-v2" in content
+        assert _has_candidate_status(content)
         assert "## Part A — Human Narrative" in content
         assert "## Part B — Engineering / Agent Reference" in content
-        for heading in MODULE_BASELINE_HEADINGS + MODULE_CONSISTENCY_HEADINGS:
+        for heading in MODULE_BASELINE_HEADINGS + DETAIL_CANDIDATE_HEADINGS + MODULE_CONSISTENCY_HEADINGS:
             assert heading in content, f"{name} missing {heading}"
         assert "Current" in content and "Target" in content and "Gap" in content
+        assert "Failure Injection / Freeze Evidence" in content
 
 
 def test_architecture_markdown_is_integration_first() -> None:
@@ -137,7 +153,10 @@ def test_architecture_html_routes_to_current_project_and_history() -> None:
     renderer = _load_render_architecture()
     html = (REPO_ROOT / "docs/architecture/architecture.html").read_text(encoding="utf-8")
     assert renderer.validate_html(html) == []
-    for phrase in ["./architecture.md", "../project/project.md", "../history/README.md", "./architecture.md#target-status-boundary", "../evidence/README.md", "./architecture-views.md"]:
+    for phrase in [
+        "./architecture.md", "../project/project.md", "../history/README.md",
+        "./architecture.md#target-status-boundary", "../evidence/README.md", "./architecture-views.md",
+    ]:
         assert phrase in html
 
 
