@@ -70,7 +70,7 @@ def verify() -> list[str]:
         if marker not in index:
             errors.append(f"docs/README.md missing status/architecture marker: {marker}")
     modules = (REPO_ROOT / "docs/modules/README.md").read_text(encoding="utf-8")
-    for marker in ("01-application-integration.md", "09-observability-evaluation.md", "design skeleton", "implementation_authorization"):
+    for marker in ("01-application-integration.md", "09-observability-evaluation.md", "module_design_skeleton", "implementation_authorization"):
         if marker not in modules:
             errors.append(f"docs/modules/README.md missing module design marker: {marker}")
     return errors
