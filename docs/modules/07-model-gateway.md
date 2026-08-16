@@ -1,6 +1,6 @@
 # 07 Model Gateway（模型网关）
 
-<!-- status: design-baseline-v1; implementation: not-authorized; deepening: all-modules-v1 -->
+<!-- status: design-baseline-v1; implementation: not-authorized; deepening: cross-module-consistency-v2 -->
 
 ## Part A — Human Narrative
 
@@ -319,3 +319,43 @@ RoutingDecision、Attempt、Usage / Cost 和必要 Cancellation state 要达到�
 - Prompt template ownership 留在具体 Capability / Runtime / product use case，不因 SDK 集中而全部迁移到 Gateway。
 - 不默认把模型网关拆成独立网络服务；高吞吐、Secret isolation、独立扩缩容或部署生命周期出现证据时按 ADR-0012 评估。
 - 表结构、缓存、batching、streaming、provider pool 和 Migration 在字段级 detail freeze 后确定。
+
+## Part C — Cross-Module Consistency（跨模块一致性）
+
+### C1 Completion Proof / Non-proof（完成证明与非证明）
+
+07 只能证明模型调用与用量事实。`ModelCallAttempt=COMPLETED` 或返回了合法 JSON，只能说明 Provider 调用完成并通过相应传输 / schema 校验；它不证明 05 Capability Contract 已满足、04 Step 已验收、02 Domain 已准入或 01 Answer 可以发布。
+
+`Usage / Cost Receipt` 只证明计量 / 结算事实，不证明模型结果被采用。`Provider Qualification` 证明当前技术 / 资格基线，不等于当前数据允许外发，也不等于该次法律任务质量已经通过。
+
+### C2 Causation / Version / Freshness Bindings（因果、版本与新鲜度绑定）
+
+Model Request / Routing / Attempt 至少绑定：ModelRole、operation、input / prompt refs、Provider / Model version、QualificationRef、current model-egress / Credential decision、Budget / Quota、deadline、run / PlanVersion / StepRun 或 Capability invocation causation。
+
+Retry / fallback 前必须重新确认与该次调用相关的 Security Decision、quality floor、deadline 和 budget 仍有效。不能因为 Provider B“也能调用”就复用 Provider A 的资格 /外发判断。
+
+RoutingDecision、ModelCallAttempt、Usage settlement 各有独立 identity；它们与 Runtime Step、Capability invocation、Tool action、Domain admission 幂等 namespace 分开。
+
+### C3 Cancellation / Late Result / Staleness Rules（取消、晚到结果与失效规则）
+
+`CANCEL_REQUESTED` 不能被解释成 Provider 已停止或费用为零。只有 provider-confirmed cancellation 或后续 usage settlement 才能收敛计量事实。
+
+模型结果在 cancel / timeout / Replan 后晚到时，调用方必须检查所属 PlanVersion / Capability invocation、输入版本、当前资格和安全条件。07 可以保存 late Provider result / Usage fact，但不能自行决定它还能不能进入当前 Step。
+
+模型版本 / Provider 资格后续改变不修改历史 Attempt；它影响未来 Routing 和尚未被下游接受的晚到结果。外部 Effect cancel 仍归 06，不因模型工具调用由模型发起就变成普通 Model cancellation。
+
+### C4 Recovery Order / Consistency Tests（恢复顺序与一致性验证）
+
+模型调用恢复应沿调用事实而不是 SDK session 恢复：
+
+```text
+ModelRoutingDecision / Attempt identity
+→ provider request / model version refs
+→ current / settled Usage facts
+→ 08 current egress / Credential decision before any new call
+→ 07 qualification / fallback eligibility
+→ 04 / 05 decide whether result can still be accepted
+→ 09 telemetry / eval correlation
+```
+
+至少验证：cancel requested 但 Provider 已完成；timeout 后原 Provider 响应晚到且 fallback 已启动；A / B 双 Provider 成本均累计；SecurityEpoch / egress policy 在 retry 前变化；fallback 非等价时拒绝；模型版本变化后缓存不误复用；Budget exhausted 时不因 retry reset；schema success 但 Capability acceptance 失败；Usage settlement mismatch 不污染 Domain / Runtime truth。
