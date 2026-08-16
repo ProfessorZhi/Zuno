@@ -8,6 +8,8 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 EXPECTED_GROUP_PATHS = {
     "README.md",
     "docs/README.md",
+    "docs/project/README.md",
+    "docs/project/project.md",
     "docs/architecture/",
     "docs/architecture/README.md",
     "docs/architecture/architecture.md",
@@ -15,8 +17,6 @@ EXPECTED_GROUP_PATHS = {
     "docs/architecture/architecture.html",
     "docs/history/README.md",
     "docs/history/red-blue/README.md",
-    "docs/project/project-background.md",
-    "docs/project/development-process.md",
     "docs/evidence/README.md",
     "docs/evidence/current-runtime-baseline.md",
     "docs/evidence/current-test-baseline.md",
@@ -96,10 +96,9 @@ def main() -> int:
     dry_run_paths = _strip_excluded_local(_extract_stage_dry_run_paths(dry_run.stdout))
 
     errors: list[str] = []
-    # Deleted historical paths are expected during the reset and must not be
-    # treated as public-surface leaks. Validate the boundary of the group,
-    # while allowing current project and operations files to evolve without another
-    # hard-coded archive manifest.
+    # Deleted historical paths are expected during documentation consolidation and must not be
+    # treated as public-surface leaks. Validate the boundary of the group while allowing current
+    # project and operations files to evolve without another hard-coded archive manifest.
     allowed_prefixes = ("README.md", "docs/")
     unexpected_preview = sorted(
         path for path in preview_paths
