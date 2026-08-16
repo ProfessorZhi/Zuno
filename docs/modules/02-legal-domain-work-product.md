@@ -1,6 +1,6 @@
 # 02 Legal Domain & Work Product（法律领域与工作成果）
 
-<!-- status: design-baseline-v1; implementation: not-authorized; deepening: domain-knowledge-v1 -->
+<!-- status: design-baseline-v1; implementation: not-authorized; deepening: cross-module-consistency-v2 -->
 
 ## Part A — Human Narrative
 
@@ -394,3 +394,52 @@ Telemetry 需要关联 Matter、DocumentVersion、DomainVersion、Claim / Eviden
 不得因为现有数据库字段、模型抽取结果或某个 Provider 返回结构存在，就把 Proposal 自动升级为 Canonical Object。Migration 必须保留历史版本和已发布成果的依据，不能通过 destructive rewrite 抹掉旧 WorkProductVersion 的来源。
 
 本 Design Baseline 不授权新增 God Domain Service，不要求独立 Domain 微服务，不授权 Event Sourcing、跨 Store 2PC 或完整数据库重构。实现授权需要独立任务和验收标准。
+
+## Part C — Cross-Module Consistency（跨模块一致性）
+
+### C1 Completion Proof / Non-proof（完成证明与非证明）
+
+02 唯一能够证明正式准入成功的锚点，是**匹配当前因果身份的 DomainVersion + AdmissionReceipt**，并满足本次准入要求的引用绑定和依赖事实。以下都不是正式准入证明：Runtime Checkpoint、RunOutcome、Model success、Capability success、Knowledge Retrieval、HTTP 2xx、Queue ACK、Telemetry span 或“发现了更高 DomainVersion”。
+
+`WorkProductCitationBinding` 证明正式成果当时采用的历史来源；`WorkProductInvalidationFact` 证明某个正式版本已经失效 / 需复核。01 的 Delivery / Ack、09 的 Trace 都不能改变这两个领域事实。
+
+### C2 Causation / Version / Freshness Bindings（因果、版本与新鲜度绑定）
+
+正式 Admission 至少可追到：
+
+```text
+Matter / expected prior DomainVersion
++ DocumentVersion / admitted Evidence dependencies
++ run_id / PlanVersion / StepRun when runtime-driven
++ proposal / admission identity
++ domain idempotency identity
++ current AuthorizationDecision / SecurityEpoch refs
+→ resulting DomainVersion + AdmissionReceipt
+```
+
+对 CapabilityVersion、Model / Provider、KnowledgeGeneration 等非领域版本只保存必要 provenance ref，不把它们升级成 Domain identity。准入时必须检查与业务正确性相关的来源版本仍然有效；不能把旧 Readiness、旧授权或旧 proposal 静默用于新的 DomainVersion。
+
+领域幂等身份只去重同一规范化领域变更，不与 Step、Tool Effect、Delivery、Model Attempt 等幂等 namespace 共用。
+
+### C3 Cancellation / Late Result / Staleness Rules（取消、晚到结果与失效规则）
+
+Run / request cancellation 不撤销已经提交的 Domain transaction。已经正式存在的历史版本继续存在，是否 current / stale / superseded 由领域生命周期决定。
+
+旧 PlanVersion、旧 Capability / Model invocation 或晚到并行分支产生的 Proposal，在进入 Admission 前必须重新校验 causation、DocumentVersion、expected prior DomainVersion、当前授权和必要 evidence / human-decision 条件；任何一个关键绑定过期，都不能因“计算已经完成”而直接准入。
+
+新 Evidence / DocumentVersion 只在经过领域接纳以后触发依赖失效。03 的 stale KnowledgeGeneration、09 的质量告警或一次新的检索排序变化，本身不能直接把 WorkProduct 改成 stale；它们可以触发复核请求或新的候选输入。
+
+### C4 Recovery Order / Consistency Tests（恢复顺序与一致性验证）
+
+02 恢复正式业务事实时先读自己的 durable store，再帮助其他模块修复投影：
+
+```text
+Domain objects / versions
+→ matching AdmissionReceipt / historical citation / dependency facts
+→ current 08 lifecycle / authorization policy when继续受保护操作
+→ 04 修复 Runtime Control State
+→ 01 修复 publication / delivery projection
+→ 09 补诊断视图
+```
+
+必须至少覆盖：Domain commit 后 checkpoint 失败；checkpoint completed 但 receipt 缺失；同 admission key 不同规范化输入；新证据在旧 Plan 并行分支运行期间到达；取消 Run 后 Admission 已经提交；旧 proposal 晚到；WorkProduct 已 stale 但旧 Delivery Ack 晚到；历史索引重建后 WorkProductCitationBinding 仍能回到原始 DocumentVersion。
