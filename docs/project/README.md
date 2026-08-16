@@ -18,11 +18,13 @@ project.md
 → 需要工程细节时再读 Part B / Part C、ADR、Evidence
 ```
 
+如果 Reviewer 从项目层继续追问到“QPS 上来怎么办、缓存怎么放、为什么不用 2PC、队列积压怎么办、如何做多租户、HA / DR 怎么设计”，不要在 Project 层编一套独立答案。先进入 [`../modules/README.md`](../modules/README.md) 的横向系统设计章节定位事实 Owner，再进入对应模块 Part B / Part C；如果问题变成“实际支持多少并发、RPO / RTO 是多少”，直接进入 Evidence，缺测量就明确尚未建立。
+
 文档职责保持不变：
 
 - Project：为什么有项目、为什么值得做、项目经历与参与事实；
 - Architecture：为什么系统这样设计；
-- Modules：九个责任域怎样工作、失败和恢复；
+- Modules：九个责任域怎样工作、失败和恢复，以及跨模块的规模、性能、一致性和可靠性问题如何落到正确 Owner；
 - Evidence：今天的代码、测试和运行到底证明了什么。
 
 不要用 Target Architecture 反写历史，也不要用 Pilot、Mock Test 或“架构设计完整”推导 Production Ready。
