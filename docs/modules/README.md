@@ -215,7 +215,7 @@ prepared action / external effect          → 06
 model attempt / usage settlement           → 07
 security decision / approval identity      → 08
 formal admission idempotency               → 02
-publication / delivery identity            → 01
+publication / delivery identity             → 01
 eval run / experiment identity             → 09
 ```
 
@@ -241,6 +241,52 @@ eval run / experiment identity             → 09
 ## Correlation（关联）也必须遵守安全边界
 
 跨模块 Trace 需要稳定关联，但 correlation context 默认只传播不含业务含义的 opaque identity（不透明身份）。tenant、用户身份、案件名称、材料正文、Secret 或授权正文不能为了“查日志方便”直接放进 OpenTelemetry Baggage（上下文行李）。Baggage 只在策略明确允许时传播最小 opaque ref，接收端在可信边界内回查真实事实。
+
+## 横向系统设计问题：规模、性能、一致性和可靠性落到哪里
+
+高级系统设计追问通常不会按九模块逐个问，而会横向追问“并发上来了怎么办、哪里能扩容、哪里必须强一致、缓存会不会读脏、队列积压怎么办、服务挂了怎么恢复”。这些问题不能重新创造一个“平台模块”统一接管，而要回到事实 Owner。
+
+| 横向问题 | 首要责任域 | Target 原则 |
+| --- | --- | --- |
+| 重复 HTTP 请求、异步长任务、交付重试 | 01 | 请求 / invocation / delivery 身份分离；已受理不等于已完成 |
+| 正式领域并发写、版本冲突、事务提交 | 02 | 单个领域提交在 Owner Store 内保证事务；expected prior version / 幂等身份防覆盖 |
+| OCR / embedding / index 构建吞吐 | 03 + Platform | generation 内可并行处理；Serving 只切到完整验证的一代；队列成功不等于 Ready |
+| 动态 DAG 并发、资源冲突、积压和取消 | 04 | Ready Step 受依赖、资源、副作用、Budget、Quota、Security Gate 约束；过载时显式背压 |
+| 专业 Provider 与模型 Provider 容量 | 05 / 07 | eligibility、quota、timeout、fallback 与质量 / 安全边界共同决定，不以“有备用模型”替代能力契约 |
+| 外部系统限流、超时和结果未知 | 06 | 已知未执行才 Retry；未知先 Reconcile；现实 Effect 不被本地队列状态覆盖 |
+| 租户 / 案件隔离、数据外发、Secret | 08 | 每次受保护访问消费当前安全事实；租户标识不是 Trace 中可随意传播的业务文本 |
+| 延迟、吞吐、错误率、Token、成本 | 09 | 统一测量但不接管业务完成事实；容量结论必须有 Benchmark / Load Evidence |
+| PostgreSQL、对象存储、Queue、Worker、Checkpoint、Backup | Platform / Infrastructure Responsibility Layer | 只提供物理原语；逻辑模块仍拥有业务完成和恢复语义 |
+
+### 扩容先按“工作类型”而不是按“模块数量”
+
+入口 HTTP、知识构建、模型调用、Eval、外部 Tool 等负载特性不同。默认物理形态仍可以是模块化 Python Backend 加必要 Worker，但耗时和可并行的工作应能够从请求线程中解耦，通过 Worker Pool、Provider 并发限制和 Queue 做受控调度。
+
+扩容顺序优先考虑：先减少不必要工作和重复调用，再优化批处理 / 缓存 / Provider 路由，再独立扩展真正的热点 Worker；只有当独立扩缩容、故障隔离、安全边界、可用性目标或部署生命周期反复出现时，才把某个边界拆成网络服务。九个逻辑模块绝不自动对应九组 Deployment。
+
+### Backpressure（背压）必须显式，而不是让系统慢到超时
+
+队列积压、模型限流、数据库连接耗尽或下游法院系统变慢时，系统需要把“当前不能继续”变成可观测的控制事实：01 可以拒绝或延迟受理，04 可以暂停新的 Ready Step，07 可以执行配额 / 预算路由，06 可以尊重外部限流，03 可以限制新的知识构建任务。
+
+背压不能静默降级成错误业务结果。知识不完整就返回 PARTIAL / BLOCKED 类资格，预算不足就不能假装完整执行，Tool outcome unknown 就不能用 Retry 掩盖。
+
+### Cache（缓存）只能加速 Projection，不能成为新的 Truth Owner
+
+检索结果、模型路由信息、Provider metadata、权限辅助索引和页面结果都可能缓存，但缓存必须携带足够的版本 / freshness 条件。缓存命中不能跳过 SecurityEpoch、DocumentVersion、KnowledgeGeneration、CapabilityVersion 或 DomainVersion 的适用性检查。
+
+对正式领域提交、EffectReceipt、Approval、AdmissionReceipt 等恢复锚点，缓存最多用于读优化，不能成为唯一耐久证明。缓存丢失应该影响性能，不应该改变系统对业务事实的判断。
+
+### 一致性按 Owner 边界设计，不追求跨所有 Store 的全局强一致
+
+02 的领域事务、06 的 Effect 记录、08 的安全决定、04 的 Checkpoint、03 的知识 Serving 都有不同事务边界。Target 不使用跨所有 Store 的 2PC 来制造“全系统一次提交”。Owner 内部需要能够给出自己的 durable proof，跨 Owner 通过 receipt、version、causation ref 和恢复流程收敛。
+
+这意味着系统允许“Domain 已提交但 Runtime Checkpoint 尚未更新”这样的短暂不一致，但必须有 AdmissionReceipt 等恢复锚点使它可识别、可修复；允许“新 WorkProduct 已 stale 但外部消费者暂时离线”，但 02 的 invalidation truth 不能因此回滚。
+
+### HA / DR 和大规模容量仍是待证明工程能力
+
+文档已经定义恢复方向，不代表已经完成高可用、灾备或大规模容量验证。真正声称 HA / DR，需要明确 RPO / RTO、故障域、数据库和对象存储恢复、Checkpointer 恢复、Worker takeover / fencing、外部 Effect 重建以及演练证据；真正声称可支撑某个 QPS / 并发，也需要真实负载、数据规模和 Provider 配额下的测量。
+
+因此面试中可以解释“目标上怎么扩、怎么保持一致、怎么恢复”，但不能把架构原则直接换算成已经测出的生产容量。
 
 ## 全模块共同遵守的架构不变量
 
