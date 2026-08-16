@@ -1,6 +1,6 @@
 # 05 Capability & Skill（专业能力与技能）
 
-<!-- status: design-baseline-v1; implementation: not-authorized; deepening: all-modules-v1 -->
+<!-- status: design-baseline-v1; implementation: not-authorized; deepening: cross-module-consistency-v2 -->
 
 ## Part A — Human Narrative
 
@@ -327,3 +327,43 @@ Capability contract 满足
 - 先冻结 capability identity / version / contract / eligibility，再设计 registry schema 与 Migration。
 - Provider fallback 必须是经过验证的等价路径，禁止静默语义降级。
 - 物理拆分继续受 ADR-0012 Evidence Gate 约束。
+
+## Part C — Cross-Module Consistency（跨模块一致性）
+
+### C1 Completion Proof / Non-proof（完成证明与非证明）
+
+05 的完成证明分为三个层级：Provider 调用完成、Capability Contract 满足、当前 Eligibility 允许该结果被本次 Step 使用。即使三者都成立，也只证明得到了合格的专业 Proposal / Candidate / Observation / Reference，不证明 04 Step 已最终验收，更不证明 02 已正式准入。
+
+Conformance PASS 只能证明 Provider 符合 Capability Contract；09 Eval 达标才提供质量证据；02 AdmissionReceipt 才证明候选成为正式业务事实。任何一个层级都不能互相冒充。
+
+### C2 Causation / Version / Freshness Bindings（因果、版本与新鲜度绑定）
+
+一次 Capability invocation 至少绑定：CapabilityVersion、ProviderVersion / SkillCompositionRef、InvocationIdentity、input identity、相关 DocumentVersion / EvidenceCandidate / KnowledgeGeneration refs、当前 eligibility、SecurityEpoch，以及调用它的 run / PlanVersion / StepRun（如存在）。
+
+缓存 / 重放必须把这些会影响语义的版本纳入 key。Provider 同名、函数名相同或 input 文本相同，都不足以证明旧结果适用于新材料或新安全范围。
+
+Capability invocation identity 不与 ModelCallAttempt、Tool Effect、StepRun、Admission 的幂等 identity 共用；内部模型 / 工具调用通过 refs 关联。
+
+### C3 Cancellation / Late Result / Staleness Rules（取消、晚到结果与失效规则）
+
+Capability invocation 被取消，只阻止后续可取消计算；已经发生的内部 Model Usage 由 07 结算，已经进入 06 的外部 Effect 不因 05 cancel 而自动撤销。
+
+晚到的 Provider 结果在交给 04 / 02 前必须重新验证：调用所属 PlanVersion 是否仍可接受、CapabilityVersion / Provider binding 是否仍有效、输入 / Evidence refs 是否仍是当前 Step 预期、当前安全条件是否允许继续使用。语义漂移后晚到的“成功响应”默认不能作为当前合格结果。
+
+Capability 被 SUSPENDED / DEPRECATED 不删除历史 provenance；它影响未来 eligibility 和当前尚未接受的调用结果，不重写已经正式形成的 Domain 历史。
+
+### C4 Recovery Order / Consistency Tests（恢复顺序与一致性验证）
+
+恢复先按稳定能力语义找回上下文：
+
+```text
+CapabilityVersion / ProviderBinding
+→ Conformance / current Eligibility
+→ input / evidence / security refs
+→ existing Invocation result if safe to reuse
+→ 07 model / 06 effect child receipts when applicable
+→ 04 Step Acceptance / Replan
+→ 02 Admission only after revalidation
+```
+
+至少验证：Provider 503 后等价 fallback；fallback 非等价时拒绝；Capability schema / semantic drift 触发 Replan；旧 EvidenceCandidate 被新 DocumentVersion 取代后结果晚到；SecurityEpoch 改变；内部 Tool outcome unknown 时 05 不重试；相同 invocation key 在 CapabilityVersion 或输入版本变化时拒绝复用；quality regression 使 eligibility suspend 但不改写历史 Domain fact。
