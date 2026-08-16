@@ -118,6 +118,18 @@ Cancel 的最小语义是停止未来还能停止的派发和计算。已经提�
 
 如果业务真的需要撤销现实动作，要创建新的补偿动作，并重新经过安全和 Effect Control，而不是修改旧 Receipt。
 
+### Budget 为什么是 Runtime 控制状态，而不只是模型网关的一张账单
+
+07 可以准确记录一次模型调用用了多少 Token、多少钱，也可以做 Provider quota reservation，但“这次任务还剩多少执行空间、下一条 Ready Step 还能不能派发、失败以后应该继续重试还是缩小计划”属于 04 的控制问题。BudgetState 因此必须聚合已经发生的 Model Usage、Tool / Capability 成本、剩余 Step 的估算，以及当前任务自己的预算和 deadline，而不是每次调用前只问模型网关“余额够不够”。
+
+这也意味着 Retry、fallback 和 Reflection 都不能获得一份新的隐藏预算。第一次快速模型失败、第二次推理模型成功，两次真实 Usage 都计入同一 Run；并行分支同时消耗预算时，Controller 要在派发前做 reservation 或等价控制，防止每个分支都看到“余额还够”而合计超支。预算不足时可以选择更便宜的已合格路径、缩小尚未承诺的计划、请求人工确认或 Abstain，但不能把已经发生的成本重置，也不能为了“跑完 Plan”绕过安全或质量门禁。
+
+### Controller Takeover 为什么需要 Lease / Fencing，却不意味着先建设分布式锁平台
+
+单 Controller 是逻辑不变量，但生产环境中的进程仍可能崩溃。如果未来需要另一个 Worker 接管同一个 AgentRun，仅靠“看到旧 Controller 心跳没了”并不足够：旧进程可能只是网络分区，恢复后继续 dispatch，于是两个 Controller 同时派发同一个 Step。Target 因此保留 Lease / Fencing（租约 / 栅栏）候选，让每次新的控制权都拥有单调可验证的 takeover identity，旧持有者即使恢复也不能继续产生新的有效 dispatch。
+
+这里要避免把“需要防双派发”扩张成全系统分布式锁。Lease / Fencing 是 Platform 提供给 04 的局部物理原语，只保护真正需要单写者语义的 Run / Dispatch；Domain 并发仍由 02 的事务和版本条件处理，Tool Effect 仍由 06 的幂等与 Reconciliation 处理。当前仓库也没有 HA / takeover 的工程证据，因此这仍是 Detail Candidate：必须先通过进程崩溃、租约过期、旧 Controller 复活和网络分区类 Failure Injection，才能把它升级成 Current，更不能仅凭架构描述宣称高可用。
+
 ### Final Synthesis 为什么默认串行
 
 并行分支可以分别分析争议点，但 Final Synthesis 要把已经接受的结果组织成一致输出，因此默认串行。它不能为了“答案更完整”重新发明没有 Evidence 的事实。
