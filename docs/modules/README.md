@@ -2,7 +2,7 @@
 
 总体架构已经冻结九个逻辑责任域。本目录在 Deep Design V1（深化设计 V1）的基础上继续完成 **Cross-Module Consistency V2（跨模块一致性深化 V2）**：九篇模块文档继续保留 Human-first Part A 和 B1–B14 Engineering Reference，并统一增加 Part C，用同一组问题检查完成证明、因果与版本、新鲜度、取消、晚到结果、恢复顺序和跨模块故障一致性。
 
-这仍然不是 Module Detail Freeze（模块细节冻结），也不是 Implementation Authorization（实现授权）。V2 的含义是“九个模块之间的 Target 语义进一步对齐并可机器检查”，不是字段级 Contract、数据库表、Migration、API、物理服务或生产资格已经冻结。
+现在开始进入下一层 Detail Design（详细设计）。第一批只深化 **02 Legal Domain & Work Product + 03 Knowledge & Evidence**：在既有 B14 下增加 B14.1–B14.8 Detail Freeze Candidate，把字段语义、版本条件、事务 / Serving 发布点、Crash Window、Schema Evolution 和 Failure Injection 进一步钉死。它仍然不是 Module Detail Freeze（模块细节冻结），更不是 Implementation Authorization（实现授权）。
 
 ```text
 module_taxonomy: FROZEN
@@ -10,6 +10,8 @@ module_design_baseline: AVAILABLE_V1
 module_deep_design: AVAILABLE_V2
 module_deep_design_coverage: 9/9
 cross_module_consistency: AVAILABLE_V1
+module_detail_design_candidate: AVAILABLE_V1
+module_detail_design_candidate_coverage: 2/9
 module_detail_freeze: NOT_YET
 implementation_authorization: NO
 production_readiness: NOT_ESTABLISHED
@@ -17,19 +19,19 @@ production_readiness: NOT_ESTABLISHED
 
 ## 九个模块与当前深化重点
 
-| 编号 | 模块 | 首先回答的问题 | V2 一致性重点 | 文档 |
+| 编号 | 模块 | 首先回答的问题 | 当前深化重点 | 文档 |
 | --- | --- | --- | --- | --- |
-| 01 | Application & Integration（应用与集成） | 请求怎样进入 Zuno，结果由谁发布、交付和失效通知？ | Publication / Delivery 不是 Domain / Consumer truth；取消和晚到 Ack | [01](01-application-integration.md) |
-| 02 | Legal Domain & Work Product（法律领域与工作成果） | 什么才是正式、长期、可审计的法律业务事实？ | matching AdmissionReceipt、历史引用、新证据失效、晚到 Proposal | [02](02-legal-domain-work-product.md) |
-| 03 | Knowledge & Evidence（知识与证据） | 哪一版材料现在真的可用于这次任务？ | generation / serving / readiness 分层、build cancel、late retrieval | [03](03-knowledge-evidence.md) |
-| 04 | Agent Runtime & Control（智能体运行与控制） | 复杂任务怎样计划、并行、暂停、重试、重规划和恢复？ | control proof 不替代业务 proof、Replan 后 late branch、cancel + receipt recovery | [04](04-agent-runtime-control.md) |
-| 05 | Capability & Skill（专业能力与技能） | 专业算法怎样成为版本化、可替换、可评测能力？ | Conformance / Eligibility / Quality / Admission 分层、provider drift | [05](05-capability-skill.md) |
-| 06 | Tool Runtime & Effects（工具运行与外部效果） | 现实动作怎样准备、执行、确认、去重和对账？ | EffectReceipt、cancel-in-flight、action hash、outcome unknown | [06](06-tool-runtime-effects.md) |
-| 07 | Model Gateway（模型网关） | 模型怎样按角色、安全、预算和资格统一调用？ | call / usage truth 与 Step / Domain truth 分离、cancel / billing settlement | [07](07-model-gateway.md) |
-| 08 | Security & Governance（安全与治理） | 长任务中谁现在仍被允许做什么？ | Decision 不是 execution truth、SecurityEpoch freshness、approval hash、lifecycle enforcement | [08](08-security-governance.md) |
-| 09 | Observability & Evaluation（可观测性与评测） | 系统发生了什么，复杂度是否值得保留？ | Telemetry / Eval 不替代 Owner truth；opaque correlation；BLOCKED 不伪装 PASS | [09](09-observability-evaluation.md) |
+| 01 | Application & Integration（应用与集成） | 请求怎样进入 Zuno，结果由谁发布、交付和失效通知？ | Deep Design V2；Publication / Delivery 不是 Domain / Consumer truth | [01](01-application-integration.md) |
+| 02 | Legal Domain & Work Product（法律领域与工作成果） | 什么才是正式、长期、可审计的法律业务事实？ | **Detail Design Candidate V1**：Admission / Version / Dependency / PostgreSQL / Crash Window | [02](02-legal-domain-work-product.md) |
+| 03 | Knowledge & Evidence（知识与证据） | 哪一版材料现在真的可用于这次任务？ | **Detail Design Candidate V1**：Generation / Manifest / Serving / Readiness / Worker / Cache | [03](03-knowledge-evidence.md) |
+| 04 | Agent Runtime & Control（智能体运行与控制） | 复杂任务怎样计划、并行、暂停、重试、重规划和恢复？ | Deep Design V2；control proof 不替代业务 proof | [04](04-agent-runtime-control.md) |
+| 05 | Capability & Skill（专业能力与技能） | 专业算法怎样成为版本化、可替换、可评测能力？ | Deep Design V2；Conformance / Eligibility / Quality / Admission 分层 | [05](05-capability-skill.md) |
+| 06 | Tool Runtime & Effects（工具运行与外部效果） | 现实动作怎样准备、执行、确认、去重和对账？ | Deep Design V2；EffectReceipt、cancel-in-flight、outcome unknown | [06](06-tool-runtime-effects.md) |
+| 07 | Model Gateway（模型网关） | 模型怎样按角色、安全、预算和资格统一调用？ | Deep Design V2；call / usage truth 与 Step / Domain truth 分离 | [07](07-model-gateway.md) |
+| 08 | Security & Governance（安全与治理） | 长任务中谁现在仍被允许做什么？ | Deep Design V2；SecurityEpoch freshness、approval hash、lifecycle enforcement | [08](08-security-governance.md) |
+| 09 | Observability & Evaluation（可观测性与评测） | 系统发生了什么，复杂度是否值得保留？ | Deep Design V2；Telemetry / Eval 不替代 Owner truth | [09](09-observability-evaluation.md) |
 
-**九篇“深化完成”只表示 Target Design 达到可审查状态，不表示实现、测量、Qualification 或 Production Readiness 已经完成。**
+**02 / 03 达到 Detail Design Candidate 只表示字段和失败语义已经进入冻结前审查，不表示对应代码、Migration、真实 PostgreSQL / Index 集成或质量测量已经完成。**
 
 ## 先从三条真实任务主线理解九个模块
 
@@ -215,7 +217,7 @@ prepared action / external effect          → 06
 model attempt / usage settlement           → 07
 security decision / approval identity      → 08
 formal admission idempotency               → 02
-publication / delivery identity            → 01
+publication / delivery identity             → 01
 eval run / experiment identity             → 09
 ```
 
@@ -288,6 +290,16 @@ eval run / experiment identity             → 09
 
 因此面试中可以解释“目标上怎么扩、怎么保持一致、怎么恢复”，但不能把架构原则直接换算成已经测出的生产容量。
 
+## 02 / 03 第一批 Detail Design Candidate 怎样阅读
+
+这一轮没有新增 Part D，也没有把两篇文档改成数据库说明书。Human-first Part A 继续解释业务问题；Part B 的 B1–B13 继续描述模块语义；只有 B14 进一步细化到“实现前必须钉死什么”。
+
+02 的 B14.1–B14.8 当前覆盖：正式准入输入 / Receipt 字段组、七对象 Identity / Version、正式依赖和历史引用、状态 Guard、Matter-level PostgreSQL 并发候选、Crash Window、Schema Evolution 和 Failure Injection。
+
+03 的 B14.1–B14.8 当前覆盖：KnowledgeGeneration / ProcessingSpec / Manifest、Readiness / Retrieval / EvidenceCandidate、Serving Guard、Serving Activation 事务候选、Worker / Backpressure / Cache、Crash Window、Provider / Schema Evolution 和 Failure Injection。
+
+这些内容是 **Detail Freeze Candidate**，目的是让后续架构审查可以明确指出“哪个字段、哪个 Guard、哪个 Crash Window 还没闭合”。在真实 PostgreSQL、对象存储 / Index Provider、Migration、并发和故障测试形成证据之前，它们不能升级成 Current，更不能因为写出了候选表结构语义就自动生成大规模实现任务。
+
 ## 全模块共同遵守的架构不变量
 
 1. **模型只产生 Proposal。** 模型、Capability、Retrieval、Memory、Specialist Agent 都不能直接提交 Canonical Domain State。
@@ -329,6 +341,7 @@ Part B  Engineering / Agent Reference
   B12 Observability / Evaluation
   B13 Current / Target / Gap / Evidence
   B14 Code / Database / Migration Constraints
+      02 / 03 additionally: B14.1–B14.8 Detail Freeze Candidate
 
 Part C  Cross-Module Consistency
   C1 Completion Proof / Non-proof
@@ -342,7 +355,7 @@ Part A 先让人理解问题和流程；Part B 固定模块内部工程语义；
 ## 推荐的设计依赖顺序与当前进度
 
 ```text
-Stage 1: 02 法律领域 + 03 知识证据          DEEP DESIGN V2 AVAILABLE
+Stage 1: 02 法律领域 + 03 知识证据          DETAIL DESIGN CANDIDATE V1 AVAILABLE
 Stage 2: 08 安全治理 + 06 工具外部效果      DEEP DESIGN V2 AVAILABLE
 Stage 3: 05 专业能力 + 04 运行控制          DEEP DESIGN V2 AVAILABLE
 Stage 4: 07 模型网关 + 09 可观测性评测      DEEP DESIGN V2 AVAILABLE
@@ -353,18 +366,20 @@ Final:   01 应用与集成                       DEEP DESIGN V2 AVAILABLE
 
 ## 下一道门仍然不是“立即实现全部模块”
 
-九模块 V2 完成后仍保持：
+当前仍保持：
 
 ```text
+module_detail_design_candidate: AVAILABLE_V1
+module_detail_design_candidate_coverage: 2/9
 module_detail_freeze: NOT_YET
 implementation_authorization: NO
 quality_proven: NO
 production_readiness: NOT_ESTABLISHED
 ```
 
-下一步应该继续用完整 E2E 与故障注入场景盘问：字段级 Contract 是否足够表达 V2 的 identity / version / freshness / cancellation / receipt；哪个 Store 持久化哪些 durable fact；数据库与 Migration 是否能支持幂等、因果与历史；哪些目标其实可以继续删除或外置。
+Stage 1 下一步是对 02 / 03 的 B14.1–B14.8 做独立 Detail Freeze Review：检查字段语义是否足以支持 identity / version / freshness / cancellation / receipt；PostgreSQL / metadata store 的事务与 CAS 是否闭合；Crash Window 是否都有耐久恢复锚点；Migration 是否保护历史；Failure Injection 是否覆盖并发、权限变化和晚到结果。
 
-只有具体模块完成字段级 Contract、状态转换、错误语义、持久化、Migration、测试与工程证据 Review 后，才考虑 Module Detail Freeze 或生成对应 Codex 实现任务。
+只有具体模块完成字段级 Contract、状态转换、错误语义、持久化、Migration、测试与工程证据 Review 后，才考虑 Module Detail Freeze 或生成对应 Codex 实现任务。其余七模块还没有进入这一层，不能因为 02 / 03 先细化就自动套用其字段模型。
 
 ## Platform / Infrastructure 与 Optional Context
 
@@ -374,6 +389,6 @@ Memory / Context（记忆与上下文）继续是可选 Provider 边界。Workin
 
 ## 状态总结
 
-九个模块现在达到 **Deep Design V2 / Cross-Module Consistency available**：完成证明、因果版本、新鲜度、取消、晚到结果、幂等 namespace、恢复锚点和观测关联已经在九篇中用同一结构表达并准备接受机器校验。
+九个模块继续保持 **Deep Design V2 / Cross-Module Consistency available**；其中 02 / 03 进一步达到 **Detail Design Candidate V1**。这意味着第一批模块已经把完成证明、字段语义、版本条件、事务 / Serving 发布点、Crash Window、Schema Evolution 和 Failure Injection 写到可以接受冻结前盘问的粒度。
 
-`design available` 不等于 `implementation available`；`implementation available` 不等于 `quality proven`；`quality proven` 也不自动等于 `production ready`。
+`detail design candidate` 不等于 `module detail frozen`；`design available` 不等于 `implementation available`；`implementation available` 不等于 `quality proven`；`quality proven` 也不自动等于 `production ready`。
