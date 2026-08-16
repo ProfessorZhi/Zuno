@@ -118,6 +118,24 @@ Provider SDK 集中并不自动要求网络服务。默认可以在模块化 bac
 
 逻辑统一比服务数量更重要。
 
+### Streaming 输出为什么需要单独处理“部分结果、取消和计费”
+
+流式模型调用会让“调用完成”变得更细。Provider 可能已经返回前几百个 token，随后连接中断；用户也可能在流式输出中途取消。此时前端已经看到一段文本，不代表它通过了完整 structured validation、Capability Acceptance 或 Final Gate，更不能因为“看起来像答案”就自动进入 Domain 或 Publication。普通 UI 可以显示明确标记的 transient stream，但正式结果只能使用达到 caller completion contract 的完整 result。
+
+与此同时，流式中断仍可能产生真实 Usage。Provider 可能按已生成 token 计费，取消也可能晚于 provider completion。因此 07 需要把 partial delivery、Attempt terminal state、result eligibility 和 Usage settlement 分开：部分 token 可以作为诊断 / UX 事件，但不是完整模型结果；Usage 则按 provider 报告或 settlement 进入预算。这样“用户没看到完整答案”不会被错误解释为“没有产生费用”，也不会让一段半截输出进入 04 / 05 的成功路径。
+
+### 模型调用为什么只能做到“可追溯”，不能承诺字节级可复现
+
+为了复盘，07 应记录 Provider / ModelVersion、PromptTemplateVersion、输入 hash / refs、generation config、structured schema、时间、必要 seed 和 routing / qualification。这样可以解释“当时调用了什么条件”，并在 Eval 中尽量重现环境。
+
+但多数远端模型的后端部署、采样实现和服务版本可能继续变化，即使请求参数相同，也不能据此承诺未来得到完全相同的 token 序列。因此历史正确性不能依赖“以后再调用一次模型重建原答案”。需要长期负责的业务结果由 02 保存正式版本和依据；07 保存的是调用 provenance 和资源事实。测试中可以对 deterministic adapter / fixed fixtures 做严格 replay，对真实 LLM 更适合验证 schema、关键语义、quality distribution 和 owner invariants，而不是把逐字一致当生产契约。
+
+### Quota Reservation 为什么要和最终 Usage Settlement 分开
+
+并行 Runtime 在派发多个模型 Step 前需要知道预算和 Provider quota 是否还有空间，所以 07 可能先做 reservation；但 reservation 只是“预留最多可以消耗多少”，不是实际发生的 Usage。调用成功后按真实 tokens / pricing 结算，多余 reservation 释放；调用未发出则释放；请求已经发送但 billing outcome 不清楚时，reservation 不能立即当作零，而应进入 settlement / disputed / unknown 路径。
+
+这个分层对并发尤其重要。如果三个分支都只读取同一个旧余额，再分别启动大模型，很容易合计超限；reservation 可以帮助控制并发上限，而 04 最终仍以 settled / authoritative usage refs 修复 BudgetState。Provider 晚报 Usage 时，预算事实可以向上修正，却不能修改已经发生的历史 Attempt；如果修正导致剩余预算不足，影响的是后续 dispatch / Replan，而不是伪造过去“其实没调用”。
+
 ### 当前、目标与缺口
 
 Current 代码 / Wave 1 Contract 已有 ModelRoutingDecision、ModelCallAttempt、Quota / Usage / Cancellation 等基础表面，但正式 credentials、四 Profile runtime、Provider qualification、真实 fallback、budget / quota fault test、cancellation race 和角色级质量测量并未完整证明。
