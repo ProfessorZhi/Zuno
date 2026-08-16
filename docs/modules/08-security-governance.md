@@ -119,6 +119,24 @@ Telemetry 用于诊断和评测，可以采样、异步导出、切换 Provider�
 
 这不意味着把 tenant 名称暴露进所有 Trace；运行时可以传播 opaque scope ref，在可信边界内解析。隔离是业务与安全事实，Correlation 只负责定位。
 
+### Decision Cache 为什么不能变成永久 Capability Token
+
+高频检索和模型调用如果每一步都访问远端 Policy Engine，团队自然会考虑缓存 AuthorizationDecision。缓存本身没有问题，危险的是把一次 `ALLOW` 当成“拿到以后一直能做这件事”的 capability token。资源版本、Matter scope、purpose、SecurityEpoch、数据分类和策略都可能变化；一个只按 user id 缓存的 allow 很容易在权限撤销后继续放行后台 Worker。
+
+因此安全缓存只能缩短评估成本，不能延长授权寿命。cache key 必须包含真正影响语义的 principal / tenant / matter / resource version / action / purpose / policy epoch 等条件，TTL 不得超过 Decision 自身 expiry；新的受保护访问还要判断当前 epoch 是否已经变化。历史 Decision ref 可以继续存在用于解释“当时为什么允许”，却不能在新请求中被当作 bearer token。对撤权敏感的动作甚至可以要求每次重新评估，而不是依赖 TTL。性能优化只能发生在安全语义内部。
+
+### Audit Provider 故障和普通 Telemetry 故障为什么传播方向不同
+
+如果普通 Trace exporter 暂时不可用，低风险业务可以继续，只要各 Owner 的 durable facts 仍然存在；09 记录 export failure，后续恢复诊断投影即可。可是当 08 对某个高风险 Effect 给出 `MANDATORY_BEFORE_EFFECT`，Audit persistence 就已经成为执行前置条件：没有 matching committed AuditPersistenceReceipt，06 必须阻断发送。
+
+两种故障看起来都像“日志写不出去”，传播语义却完全不同。前者影响可观测性质量，不能反过来让已提交 Domain 失败；后者说明法规 / policy 要求的安全条件尚未满足，不能为了可用性 fail open。把两者分离还能避免一个常见反模式：为了让 tracing 不阻塞业务，把真正 Mandatory Audit 也放进异步 best-effort pipeline，最终得到“图上显示有审计，崩溃窗口里却没有耐久记录”的假安全。
+
+### 新策略怎样上线，才能避免一次配置发布让全部长任务同时失效
+
+SecurityEpoch 需要准确反映 active policy，但并不意味着每条新规则都必须瞬间影响全部环境。风险较高的策略修改可以先进行 shadow evaluation：对真实请求计算“如果新策略生效会怎样”，只记录差异，不改变执行决定；再在受控 tenant / profile 做 canary，确认误拒绝、漏放行和性能影响，最后激活为新的 PolicyVersion / SecurityEpoch。
+
+Shadow / canary 结果属于治理和评测输入，不得偷偷变成生产 allow。正式激活以后，新受保护访问消费新 epoch；已经发生的历史动作仍按旧 decision 解释，paused Runtime 在恢复时重新门禁。这样策略演进既不会靠原地覆盖历史记录获得“整洁”，也不会为了兼容旧长任务继续无限延长旧权限。真正的 rollout 机制和策略引擎仍是 Target，需要通过撤权传播、双版本比较和恢复测试后才能称为 Current。
+
 ### 当前、目标与缺口
 
 Current Evidence 证明了有限 Security fail-closed、approval binding、tenant isolation、Secret / Credential / Audit / lifecycle Contract 基础，但没有证明完整生产安全体系。当前测试基线明确保留 Security fail-closed、approval binding、artifact authorization、tenant isolation 等行为，同时 Full CI、法院 QA 和 Production Readiness 都未建立。
