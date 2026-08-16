@@ -37,7 +37,7 @@ def _base_doc(part_a: str, part_b: str) -> str:
 
 def _rich_part_a(prefix: str = "") -> str:
     paragraphs: list[str] = []
-    for index in range(1, 14):
+    for index in range(1, 26):
         paragraphs.append(f"### Narrative topic {index}\n")
         paragraphs.append(
             (prefix if index == 1 else "")
