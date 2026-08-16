@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import importlib.util
+import re
 from pathlib import Path
 
 
@@ -16,7 +17,7 @@ def _load():
     return module
 
 
-def test_canonical_markdown_and_modules_have_human_and_normative_layers() -> None:
+def test_project_architecture_and_modules_meet_human_readability_contracts() -> None:
     assert _load().verify() == []
 
 
@@ -75,6 +76,15 @@ def test_machine_markers_warn_without_blocking() -> None:
     assert module.warnings_for_text(document)
 
 
+def test_project_narratives_meet_current_depth_floors() -> None:
+    verifier = _load()
+    for filename, (min_chars, min_sections, min_paragraphs) in verifier.PROJECT_NARRATIVE_BASELINES.items():
+        text = (REPO_ROOT / "docs/project" / filename).read_text(encoding="utf-8")
+        assert verifier._nonspace_chars(text) >= min_chars, filename
+        assert len(re.findall(r"(?m)^##+\s+", verifier._strip_non_prose_blocks(text))) >= min_sections, filename
+        assert len(verifier._prose_paragraphs(text)) >= min_paragraphs, filename
+
+
 def test_all_nine_module_part_a_sections_meet_current_depth_floor() -> None:
     verifier = _load()
     for filename in verifier.MODULE_FILES:
@@ -84,5 +94,5 @@ def test_all_nine_module_part_a_sections_meet_current_depth_floor() -> None:
         part_a, _part_b, _part_c = layers
         assert verifier._nonspace_chars(part_a) >= verifier.MODULE_PART_A_MIN_NONSPACE_CHARS, filename
         assert len(verifier._prose_paragraphs(part_a)) >= verifier.MODULE_PART_A_MIN_PROSE_PARAGRAPHS, filename
-        assert len(__import__("re").findall(r"(?m)^###\s+", part_a)) >= verifier.MODULE_PART_A_MIN_SUBSECTIONS, filename
+        assert len(re.findall(r"(?m)^###\s+", part_a)) >= verifier.MODULE_PART_A_MIN_SUBSECTIONS, filename
         assert "### 当前、目标与缺口" in part_a, filename

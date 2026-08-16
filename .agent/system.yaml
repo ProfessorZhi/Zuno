@@ -8,7 +8,7 @@ runtime_boundary:
   project_story_root: "docs/project"
   architecture_root: "docs/architecture"
   module_design_root: "docs/modules"
-  module_design_state: "design-baseline-v1"
+  module_design_state: "deep-design-v2"
   module_detail_freeze: false
   evidence_root: "docs/evidence"
   review_history_root: "docs/history/red-blue"
@@ -29,8 +29,10 @@ local_skill_registry:
 canonical_owners:
   project_readme: "docs/project/README.md"
   project_background: "docs/project/project-background.md"
+  product_positioning_and_value: "docs/project/product-positioning-and-value.md"
   team_and_contributions: "docs/project/team-and-contributions.md"
   development_process: "docs/project/development-process.md"
+  review_question_map: "docs/project/review-question-map.md"
   project_fact_provenance: "docs/governance/project-fact-provenance.md"
   human_first_documentation_standard: "docs/governance/human-first-documentation-standard.md"
   overall_architecture: "docs/architecture/architecture.md"
@@ -49,8 +51,17 @@ skill_routes:
       - "docs/README.md"
       - "docs/project/README.md"
       - ".agent/references/workflow.md"
+  project_understanding:
+    read_first:
+      - "docs/project/README.md"
+      - "docs/project/project-background.md"
+      - "docs/project/product-positioning-and-value.md"
+      - "docs/project/development-process.md"
+      - "docs/project/team-and-contributions.md"
+      - "docs/governance/project-fact-provenance.md"
   architecture:
     read_first:
+      - "docs/project/product-positioning-and-value.md"
       - "docs/architecture/README.md"
       - "docs/architecture/architecture.md"
       - "docs/modules/README.md"
@@ -58,9 +69,18 @@ skill_routes:
       - "docs/evidence/README.md"
   architecture_human_reading:
     read_first:
+      - "docs/project/product-positioning-and-value.md"
       - "docs/architecture/README.md"
       - "docs/architecture/architecture.md"
       - "docs/modules/README.md"
+  architecture_review:
+    read_first:
+      - "docs/project/review-question-map.md"
+      - "docs/project/product-positioning-and-value.md"
+      - "docs/architecture/architecture.md"
+      - "docs/modules/README.md"
+      - "docs/evidence/README.md"
+      - "docs/history/red-blue/README.md"
   module_design:
     read_first:
       - "docs/architecture/architecture.md"
@@ -76,11 +96,6 @@ skill_routes:
       - "docs/decisions/README.md"
       - "docs/evidence/README.md"
       - "docs/governance/human-first-documentation-standard.md"
-  architecture_review:
-    read_first:
-      - "docs/architecture/architecture.md"
-      - "docs/history/red-blue/README.md"
-      - "docs/history/red-blue/"
   runtime:
     read_first:
       - "docs/architecture/README.md"

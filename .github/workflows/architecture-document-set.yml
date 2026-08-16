@@ -103,7 +103,7 @@ jobs:
         run: set -o pipefail; python tools/scripts/verify_architecture_semantic_alignment.py 2>&1 | tee architecture-validation-logs/semantic-alignment.log
       - name: Verify architecture writing standard
         run: set -o pipefail; python tools/scripts/verify_architecture_writing_standard.py 2>&1 | tee architecture-validation-logs/writing-standard.log
-      - name: Verify architecture and module human readability structure
+      - name: Verify project, architecture and module human readability structure
         run: set -o pipefail; python tools/scripts/verify_architecture_human_readability.py 2>&1 | tee architecture-validation-logs/human-readability.log
       - name: Verify architecture rendering and mirrors
         run: set -o pipefail; python tools/agent/render_architecture.py --check 2>&1 | tee architecture-validation-logs/render.log
@@ -117,7 +117,7 @@ jobs:
             python .agent/scripts/verify_agent_system.py
             python .agent/scripts/verify_doc_boundaries.py
           } 2>&1 | tee architecture-validation-logs/entrypoints.log
-      - name: Run architecture and module focused tests
+      - name: Run project, architecture and module focused tests
         run: |
           set -o pipefail
           pytest -q \

@@ -13,6 +13,14 @@ EXPECTED_VIEWS = [
     "A/B/C Eval View", "Security Verification View",
 ]
 CANONICAL_ARCHITECTURE_FILES = {"README.md", "architecture.md", "architecture-views.md", "architecture.html"}
+CANONICAL_PROJECT_FILES = {
+    "README.md",
+    "project-background.md",
+    "product-positioning-and-value.md",
+    "team-and-contributions.md",
+    "development-process.md",
+    "review-question-map.md",
+}
 CANONICAL_MODULE_FILES = {
     "README.md",
     "01-application-integration.md",
@@ -61,11 +69,29 @@ def _load_render_architecture():
 
 
 def test_project_documentation_is_canonical() -> None:
-    assert (REPO_ROOT / "docs/project/project-background.md").exists()
-    assert (REPO_ROOT / "docs/project/development-process.md").exists()
+    root = REPO_ROOT / "docs/project"
+    assert {p.name for p in root.iterdir() if p.is_file()} == CANONICAL_PROJECT_FILES
     assert not (REPO_ROOT / "docs/facts").exists()
     assert (REPO_ROOT / "docs/history/red-blue/README.md").exists()
     assert (REPO_ROOT / "docs/history/red-blue/manual-round-01-overall-architecture.md").exists()
+
+    readme = (root / "README.md").read_text(encoding="utf-8")
+    for marker in (
+        "product-positioning-and-value.md",
+        "review-question-map.md",
+        "为什么已经有通用大模型平台",
+        "事实，再说设计，再说证据和缺口",
+    ):
+        assert marker in readme
+
+    positioning = (root / "product-positioning-and-value.md").read_text(encoding="utf-8")
+    assert "差异化设计" in positioning
+    assert "已证明优势" in positioning
+    assert "Generic Host（通用 Agent 宿主）" in positioning
+
+    review_map = (root / "review-question-map.md").read_text(encoding="utf-8")
+    for marker in ("产品与立项", "Knowledge / RAG / GraphRAG", "Agent Runtime / LangGraph", "团队与个人贡献"):
+        assert marker in review_map
 
 
 def test_architecture_directories_only_contain_support_files() -> None:

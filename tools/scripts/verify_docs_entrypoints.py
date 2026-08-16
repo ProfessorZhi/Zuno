@@ -7,6 +7,14 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 ARCHITECTURE_FILES = {"README.md", "architecture.md", "architecture-views.md", "architecture.html"}
+PROJECT_FILES = [
+    "docs/project/README.md",
+    "docs/project/project-background.md",
+    "docs/project/product-positioning-and-value.md",
+    "docs/project/team-and-contributions.md",
+    "docs/project/development-process.md",
+    "docs/project/review-question-map.md",
+]
 MODULE_FILES = [
     "docs/modules/README.md",
     "docs/modules/01-application-integration.md",
@@ -51,9 +59,7 @@ def _load_links():
 def verify() -> list[str]:
     errors = list(_load_links().verify())
     required = [
-        "README.md", "docs/README.md",
-        "docs/project/README.md", "docs/project/project-background.md",
-        "docs/project/team-and-contributions.md", "docs/project/development-process.md",
+        "README.md", "docs/README.md", *PROJECT_FILES,
         "docs/governance/project-fact-provenance.md",
         "docs/governance/human-first-documentation-standard.md",
         "docs/evidence/README.md", *MODULE_FILES, "docs/history/README.md",
@@ -85,9 +91,32 @@ def verify() -> list[str]:
             errors.append(f"obsolete documentation workspace must be absent: {forbidden.relative_to(REPO_ROOT)}")
 
     index = (REPO_ROOT / "docs/README.md").read_text(encoding="utf-8")
-    for marker in ("Current", "Target", "Unknown", "project/", "architecture/", "modules/", "evidence/", "history/red-blue/"):
+    for marker in (
+        "Current", "Target", "Unknown", "project/", "architecture/", "modules/", "evidence/", "history/red-blue/",
+        "product-positioning-and-value.md", "review-question-map.md", "module_deep_design",
+    ):
         if marker not in index:
             errors.append(f"docs/README.md missing status/architecture marker: {marker}")
+
+    project = (REPO_ROOT / "docs/project/README.md").read_text(encoding="utf-8")
+    for marker in ("product-positioning-and-value.md", "review-question-map.md", "project-fact-provenance.md"):
+        if marker not in project:
+            errors.append(f"docs/project/README.md missing project navigation marker: {marker}")
+
+    positioning = (REPO_ROOT / "docs/project/product-positioning-and-value.md").read_text(encoding="utf-8")
+    for marker in ("通用 Agent 宿主", "差异化设计", "Current", "Target", "待证明"):
+        if marker not in positioning:
+            errors.append(f"product positioning missing boundary marker: {marker}")
+
+    review_map = (REPO_ROOT / "docs/project/review-question-map.md").read_text(encoding="utf-8")
+    for marker in ("产品与立项", "Knowledge / RAG / GraphRAG", "Agent Runtime / LangGraph", "Current 工程事实", "团队与个人贡献"):
+        if marker not in review_map:
+            errors.append(f"review question map missing coverage marker: {marker}")
+
+    provenance = (REPO_ROOT / "docs/governance/project-fact-provenance.md").read_text(encoding="utf-8")
+    for marker in ("PF-001", "PF-020", "PF-024", "PF-028", "Target / 产品价值假设", "Unknown / 未恢复"):
+        if marker not in provenance:
+            errors.append(f"project fact provenance missing ledger marker: {marker}")
 
     modules = (REPO_ROOT / "docs/modules/README.md").read_text(encoding="utf-8")
     for marker in ("01-application-integration.md", "09-observability-evaluation.md", "module_design_baseline", "implementation_authorization"):
