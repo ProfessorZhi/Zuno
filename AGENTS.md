@@ -7,7 +7,7 @@
 ```text
 docs/project/                         项目级 Human-first 叙事；只保留 README.md + project.md
 docs/architecture/                    总体 Target Architecture，固定四文件
-docs/modules/                         九个冻结 Target 责任域的 Deep Design V2 正文与入口
+docs/modules/                         九个冻结 Target 责任域的 Deep Design V2 正文与入口；02 / 03 含 Detail Design Candidate V1
 docs/decisions/                       仍然有效的长期 ADR
 docs/evidence/                        当前代码、测试、Trace、Eval 和运行证据
 docs/governance/project-fact-provenance.md  项目事实来源、事实台账与表述边界
@@ -26,7 +26,7 @@ Git history 是普通文件演进和已删除工作区材料的考古来源。�
 - `docs/project/project.md` 是唯一项目级 Human-first 主文档，集中回答项目为什么出现、为什么值得立项、为什么不只用通用平台、项目怎样发展、团队和个人参与、哪些差异已经证明以及项目级 Reviewer / 技术面试追问。
 - `docs/governance/project-fact-provenance.md` 保存项目事实来源、允许表述、禁止扩张和下一步取证要求；它是事实账本，不替代 Project 叙事。
 - `docs/architecture/architecture.md` 是唯一总体架构正文；`architecture-views.md` 与 `architecture.html` 是展示配对，不能拥有第二套架构事实。
-- `docs/modules/README.md` 是模块导航、任务主线和跨模块 Ownership 入口；`01-*.md` 到 `09-*.md` 当前达到 Deep Design V2 / Cross-Module Consistency，并拥有扩充后的 Human-first Part A，但仍不是 Current Evidence、独立服务清单或默认实现授权。
+- `docs/modules/README.md` 是模块导航、任务主线和跨模块 Ownership 入口；`01-*.md` 到 `09-*.md` 当前达到 Deep Design V2 / Cross-Module Consistency，并拥有扩充后的 Human-first Part A。02 / 03 进一步在 B14.1–B14.8 进入 Detail Design Candidate V1，但仍不是 Current Evidence、独立服务清单或默认实现授权。
 - Red / Blue Archive 记录为什么质疑和怎样判断，不等于 Architecture Truth、Current Evidence、ADR 或实施授权。
 - `Current` 由代码、测试和 Evidence 证明；`Target` 是设计；`Future` 是可选方向；`History` 只解释过去。`Pilot` 不等于 `Production`。
 
@@ -39,7 +39,8 @@ Git history 是普通文件演进和已删除工作区材料的考古来源。�
 3. `docs/architecture/architecture.md`：理解系统时先读 Part A；实现、测试、Migration、Recovery、Contract 或 Security 时再读 Part B。
 4. 需要看图时同时读 `architecture-views.md` 与 `architecture.html`。
 5. `docs/modules/README.md`；若任务属于某个责任域，再读对应 `docs/modules/0X-*.md`。先读 Part A 理解问题和业务流程，再读 Part B 的 B1–B14、Part C 一致性、相关 ADR、`docs/evidence/README.md` 和 Human-first 标准。
-6. `.agent/README.md`、`.agent/system.yaml`、`.agent/references/`。
+6. 02 / 03 的字段级设计、DB / Manifest、并发、Migration 或 Failure Injection 任务还必须继续读各自 B14.1–B14.8；这些章节是 Detail Freeze Candidate，不得跳过 B1–B13 和 Part C 单独实现。
+7. `.agent/README.md`、`.agent/system.yaml`、`.agent/references/`。
 
 实现任务必须在读完 Project 必要上下文、总体架构 Part A / B、相关模块 Part A / B / C、ADR、Evidence 和 Governance 后再读代码。不要把类名、目录、依赖、Mock、目标文档或测试存在当成生产证据。
 
@@ -72,11 +73,15 @@ module_deep_design: AVAILABLE_V2
 module_deep_design_coverage: 9/9
 cross_module_consistency: AVAILABLE_V1
 module_human_narrative: DEEPENED
+module_detail_design_candidate: AVAILABLE_V1
+module_detail_design_candidate_coverage: 2/9
 module_detail_freeze: NOT_YET
 implementation_authorization: NO
 ```
 
-这表示主要边界、Owner、跨模块 Contract、状态族、失败、恢复、安全、持久化、取消 / 晚到和一致性语义已经可以接受详细审查；不表示字段级 Contract、最终 enum、数据库表、Migration 或实现已经冻结。
+这表示主要边界、Owner、跨模块 Contract、状态族、失败、恢复、安全、持久化、取消 / 晚到和一致性语义已经可以接受详细审查；02 / 03 还进一步把字段语义、并发 / 版本 Guard、事务 / Serving 发布点、Crash Window、Schema Evolution 和 Failure Injection 写到冻结前候选粒度。它仍不表示最终 enum、数据库表、Migration 或实现已经冻结。
+
+对 02 / 03 的实现任务，Codex 不得自行改变以下已经确认的架构原则：七对象最小领域内核；EvidenceCandidate / Evidence 与 CitationLineage / WorkProductCitationBinding 分离；Domain mutation + matching AdmissionReceipt 同领域事务；PostgreSQL Domain fact 与 LangGraph Checkpointer 控制状态分离；KnowledgeGeneration / task-level Readiness 分离；Serving 只有 validated manifest 才可激活；跨 Store 默认无 2PC；安全由 08 持续门禁。
 
 如果模块详细设计发现必须新增 / 删除逻辑模块、改变总体 Owner、扩大 Canonical Legal Kernel、改变 AdmissionReceipt / invalidation / lifecycle / security 等跨模块不变量，必须停止并升级为 Architecture Gap，不能在模块文件中偷偷改总体架构。
 
