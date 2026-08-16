@@ -263,6 +263,22 @@ BLOCKED 不是一种较轻的 FAIL，也不是“暂时算通过”。它保护�
 
 因此采样策略只决定观测视图的细节密度。任何必须证明业务已经发生、权限为何允许、现实效果是什么的事实，都应在自己的 Owner 边界按相应保留政策持久化。
 
+### 从一次真实事故看，为什么三条时间线必须一起看
+
+假设用户报告“昨天下午一份工作成果被重复提交，而且第二次提交发生在权限已经撤销以后”。单看 Trace，可能看到两个 Tool span 和一次 Runtime retry；单看 Domain，只能确认 WorkProduct 有哪些版本；单看 Security，又只能看到 15:04 权限被撤销。
+
+真正的调查需要把三条线对齐：先从 06 查两个 ToolAttempt 是否属于同一个 PreparedAction、有没有两个 EffectReceipt；从 08 查两次 Attempt 各自绑定哪一个 SecurityEpoch 和 Approval；从 04 看为什么产生第二次派发；再用 09 的 Trace 重建时间顺序和延迟。最后，09 的 fault eval 可以把这次事故转成回归案例，确保未来“权限撤销 + timeout + retry”组合不会再次造成重复 Effect。
+
+这说明 Observability 的价值不是拥有所有事实，而是让不同 Owner 的事实能够在同一时间线上被理解；Evaluation 的价值则是把一次事故变成可重复验证，而不是写完复盘以后继续靠人记住。
+
+### Eval 怎样真正帮助删除复杂度，而不是给已有复杂度打分背书
+
+复杂系统很容易出现一种“评测偏见”：团队已经花时间实现 GraphRAG、Multi-Agent 或 Reflection，于是评测只问“这个机制自己的分数是多少”，却不问“把它删掉以后结果会不会更差”。这样评测只会成为复杂度的宣传材料。
+
+09 更应该设计 removal-oriented experiment（面向删除的对照实验）。例如关闭 GraphRAG 只保留 Hybrid Retrieval；把 Specialist Agent 换成普通并行 Step；关闭 Long-term Memory；把 Native Runtime 换成 Generic Host + Legal Backend。在尽量相同的数据集、模型和预算下比较质量、恢复、时延、成本和人工介入。
+
+如果删除以后质量几乎不变，成本和故障面反而显著下降，正确结论就是缩小或移除复杂机制。Eval 的角色不是证明架构永远正确，而是持续告诉架构哪些部分已经没有继续存在的理由。
+
 ### 当前、目标与缺口
 
 Current 是 unified trace / eval contract foundation + adapters / schemas / tests，正式 benchmark 仍为 `MEASUREMENT_BLOCKED`。
