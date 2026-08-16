@@ -37,22 +37,23 @@ def verify() -> list[str]:
     decisions_readme = (DECISIONS / "README.md").read_text(encoding="utf-8")
     adr0008 = (DECISIONS / "0008-legal-domain-kernel-and-host-boundary.md").read_text(encoding="utf-8")
 
-    responsibility_order = (
-        "Application & Integration",
-        "Legal Domain & Work Product",
-        "Knowledge & Evidence",
-        "Agent Runtime & Control",
-        "Capability & Skill",
-        "Tool Runtime & Effects",
-        "Model Gateway",
-        "Security & Governance",
-        "Observability & Evaluation",
+    # Check the actual responsibility section order, not arbitrary earlier mentions.
+    responsibility_headings = (
+        "#### 01 Application & Integration（应用与集成）",
+        "#### 02 Legal Domain & Work Product（法律领域与工作成果）",
+        "#### 03 Knowledge & Evidence（知识与证据）",
+        "#### 04 Agent Runtime & Control（智能体运行与控制）",
+        "#### 05 Capability & Skill（专业能力与技能）",
+        "#### 06 Tool Runtime & Effects（工具运行与外部效果）",
+        "#### 07 Model Gateway（模型网关）",
+        "#### 08 Security & Governance（安全与治理）",
+        "#### 09 Observability & Evaluation（可观测性与评测）",
     )
-    positions = [architecture.find(marker) for marker in responsibility_order]
+    positions = [architecture.find(marker) for marker in responsibility_headings]
     if any(position < 0 for position in positions):
-        errors.append("architecture is missing one or more canonical responsibility domains")
+        errors.append("architecture is missing one or more canonical responsibility headings")
     elif positions != sorted(positions):
-        errors.append("canonical responsibility domains are not ordered 01 through 09")
+        errors.append("canonical responsibility headings are not ordered 01 through 09")
 
     part_a_marker = "## Part A — Architecture Narrative"
     part_b_marker = "## Part B — Detailed Architecture Specification"
@@ -65,7 +66,7 @@ def verify() -> list[str]:
         part_b = architecture.split(part_b_marker, 1)[1]
 
     part_a_groups = {
-        "simple qa": ("简单问答", "材料范围", "通用 Agent 宿主"),
+        "simple qa": ("简单问答", "材料范围", "Generic Host（通用 Agent 宿主）"),
         "complex legal flow": ("一次复杂法律任务怎样完整运行", "EvidenceCandidate（证据候选）", "正式准入"),
         "domain knowledge boundary": (
             "KnowledgeGeneration 生命周期",
@@ -134,7 +135,6 @@ def verify() -> list[str]:
     for name, markers in part_b_groups.items():
         _require(errors, f"Part B {name}", part_b, markers)
 
-    # The active overall architecture must not retain pre-freeze / pre-module-baseline prose.
     stale_active_phrases = (
         "仍等待 Main Architecture Freeze Review",
         "不等于模块正文已经建立",
@@ -146,41 +146,47 @@ def verify() -> list[str]:
         if phrase in architecture:
             errors.append(f"active architecture retains stale pre-baseline phrase: {phrase}")
 
-    # Domain / knowledge authority must tell the same story in architecture, module index,
-    # both module documents, governance standard and terminology.
-    shared_domain_knowledge_markers = (
-        "EvidenceCandidate != Evidence",
-        "CitationLineage != WorkProductCitationBinding",
-        "KnowledgeGeneration lifecycle",
-        "ReadinessDecision",
-        "AdmissionReceipt",
-        "WorkProductCitationBinding",
-    )
-    for label, text in (
-        ("architecture", architecture),
-        ("modules README", modules_readme),
-        ("module 02", domain),
-        ("module 03", knowledge),
-        ("governance", governance),
-        ("terminology", terminology),
-    ):
-        _require(errors, f"{label} domain/knowledge alignment", text, shared_domain_knowledge_markers)
-
+    # 02/03 authority is checked by ownership, not by forcing every document to repeat every identifier.
     _require(
         errors,
-        "module 02 ownership",
-        domain,
+        "architecture domain/knowledge authority",
+        architecture,
         (
-            "DocumentVersion identity",
-            "EvidenceCandidate / CitationLineage 归 03；正式 Evidence 归 02",
-            "DomainVersion + matching AdmissionReceipt",
+            "EvidenceCandidate != Evidence",
+            "CitationLineage != WorkProductCitationBinding",
+            "KnowledgeGeneration lifecycle != task-level ReadinessDecision",
             "WorkProductCitationBinding",
-            "Domain invalidation truth",
+            "AdmissionReceipt",
         ),
     )
     _require(
         errors,
-        "module 03 ownership",
+        "modules README domain/knowledge authority",
+        modules_readme,
+        (
+            "EvidenceCandidate != Evidence",
+            "CitationLineage != WorkProductCitationBinding",
+            "KnowledgeGeneration lifecycle != task-level ReadinessDecision",
+            "DocumentVersion",
+            "AdmissionReceipt",
+        ),
+    )
+    _require(
+        errors,
+        "module 02 authority",
+        domain,
+        (
+            "Matter / DocumentVersion identity",
+            "EvidenceCandidate / CitationLineage 归 03；正式 Evidence 归 02",
+            "DomainVersion + matching AdmissionReceipt",
+            "WorkProductCitationBinding",
+            "Domain invalidation truth",
+            "ReadinessDecision",
+        ),
+    )
+    _require(
+        errors,
+        "module 03 authority",
         knowledge,
         (
             "DocumentVersion canonical identity 归 02",
@@ -190,8 +196,22 @@ def verify() -> list[str]:
             "stale KnowledgeGeneration 归 03；stale Finding / WorkProduct 归 02",
         ),
     )
+    _require(
+        errors,
+        "terminology authority",
+        terminology,
+        (
+            "DocumentVersion（材料版本）",
+            "EvidenceCandidate（证据候选）",
+            "Evidence（正式证据）",
+            "CitationLineage（检索引用链）",
+            "WorkProductCitationBinding（工作成果历史引用绑定）",
+            "KnowledgeGeneration（知识生成版本）",
+            "ReadinessDecision（知识就绪判断）",
+            "AdmissionReceipt（正式准入回执）",
+        ),
+    )
 
-    # Governance must describe the template actually used by module validators/docs.
     _require(
         errors,
         "human-first governance",
@@ -202,10 +222,12 @@ def verify() -> list[str]:
             "B14 Code / Database / Migration Constraints",
             "中文优先规则",
             "如果 Part A 和 Part B 无法保持一致",
+            "EvidenceCandidate   owner = 03 Knowledge & Evidence",
+            "Evidence            owner = 02 Legal Domain & Work Product",
+            "KnowledgeGeneration lifecycle",
         ),
     )
 
-    # ADR precedence prevents older broad wording from becoming a second owner registry.
     _require(
         errors,
         "ADR precedence",
