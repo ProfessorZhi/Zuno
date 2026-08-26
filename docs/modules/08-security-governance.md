@@ -4,144 +4,167 @@
 
 ## Part A — Human Narrative
 
-### 这个模块保护的不是登录，而是“下一步现在还允许吗”
+### 这个模块保护的不是“用户是否登录”，而是“下一步现在还能不能做”
 
-法律智能系统里的安全不会在用户登录后结束。一个复杂任务可能持续几十分钟，中途等待人工、调用多个模型、检索不同材料、重规划，最后还可能向法院外围系统产生现实副作用。期间用户权限、事项归属、材料密级、模型外发政策、审批状态、凭证版本和法律保全规则都可能变化。
+复杂法律任务可能持续几十分钟，中间等待人工、检索多批材料、调用多个模型、重规划并执行外部动作。期间用户权限、事项归属、数据密级、模型外发政策、审批状态和凭证版本都可能变化。
 
-因此安全与治理模块真正回答的是：**当前主体能否在当前时刻，对当前资源执行当前动作；需要什么审批；什么数据允许外发；什么凭证可被使用；什么数据必须保留、禁止召回或最终清除。** 这是一条持续门禁，而不是入口处的一次 `allowed=true`。
+如果安全只在请求入口做一次 `allowed=true`，后台 Worker 会把这次结果当成永久通行证。08 因此拥有持续安全判断：当前主体在当前时刻，针对当前资源和用途，是否还能执行下一次受保护动作。
 
-### 用一条长任务理解 Continuous Authorization（持续授权）
+### 最简单的“登录 + RBAC”为什么覆盖不了长任务
 
-假设用户开始分析事项 A 时拥有全部材料权限。运行十分钟后，管理员撤销了其中一份敏感附件的访问权。此前已经合法完成的动作仍然是历史事实，但下一次读取附件、从索引恢复正文、把内容发送给模型、继续调用依赖该内容的专业能力、执行外部动作或正式提交结果时，都必须重新消费当前安全事实。
+登录和基础角色控制非常重要，但它们只能确认一个会话和粗粒度权限。任务开始后，资源版本、Matter scope、purpose、政策和审批都可能变化。
 
-这就是 Continuous Authorization（持续授权）：不是不停轮询一个布尔值，而是在每一个新的受保护边界上，用当前 SecurityEpoch（安全策略纪元）和当前策略判断下一步还能不能继续。
+例如用户开始时能读附件 A，十分钟后管理员撤销权限。已经合法完成的历史读取仍然发生过，但下一次从索引恢复正文、向模型外发或执行依赖 A 的 Tool 时，都必须重新检查当前条件。
 
-```mermaid
-flowchart LR
-  I[任务进入] --> A[当前授权]
-  A --> K[材料读取 / 检索]
-  K --> M[模型 / 专业能力]
-  M --> T[外部 Tool]
-  T --> D[正式准入]
-  P[权限 / 策略变化] -.重新门禁.-> K
-  P -.重新门禁.-> M
-  P -.重新门禁.-> T
-  P -.重新门禁.-> D
-```
+### Continuous Authorization（持续授权）到底意味着什么
 
-### 三种“人点同意”为什么不能合并
+`Continuous Authorization（持续授权）` 不是不停轮询一个布尔值，而是在新的受保护边界到来时重新消费当前安全事实。材料读取、模型外发、Secret 使用、现实 Tool Effect 和 Formal Admission 都是典型门点。
 
-AuthorizationDecision（授权决定）回答“这个主体现在有没有权做这件事”；ApprovalDecision（审批决定）回答“这个具体高风险动作是否得到规定的人批准”；HumanDecision（人工业务决定）回答“专业人员是否接受、修改或拒绝法律业务结果”。第三种属于 02 法律领域与工作成果。
+这样权限变化控制未来动作，不试图改写过去。系统也不需要为每个 token 做远端鉴权，只需要在真正产生新的安全风险时有明确检查点。
 
-因此 **AuthorizationDecision、ApprovalDecision、HumanDecision 三者 Owner 与语义不同**。一个法官可以认可某个 Finding，却不同意把它发送到外部系统；也可以允许某个系统动作，却不代表模型候选已经成为正式法律事实。
+### 为什么三种“人点同意”必须拆开
 
-### 为什么审批必须绑定动作，而不是绑定 Step 编号
+有没有权限执行某动作，是 Authorization；一个具体高风险动作是否得到规定人员批准，是 Approval；专业人员是否接受、修改或拒绝法律业务结论，是 HumanDecision。
 
-如果高风险动作只记录“Step 17 已审批”，Replan 后 Step 17 的参数、目标、ToolVersion 甚至 EffectClass 都可能变化。此时继续复用旧审批等于“人批准 A，系统执行 B”。
+所以保持 `AuthorizationDecision、ApprovalDecision、HumanDecision 三者 Owner 与语义不同`。同一个 UI 可以呈现三种按钮，但架构不能因为交互相似就让它们拥有相同后果。
 
-所以 Approval 必须绑定稳定 action identity / action hash、目标资源、关键非敏感参数摘要、ToolVersion / operation 以及 SecurityEpoch。只要这些会改变现实或安全语义的内容变化，旧 Approval 就失效，必须重新审批。
+### Approval 为什么必须绑定具体动作而不是 Step 编号
 
-### 模型外发为什么由安全策略决定，而不是模型网关决定
+如果只记录“Step 17 已批准”，Replan 后 Step 17 的目标、参数、ToolVersion 或 EffectClass 可能已经改变。继续复用旧批准就会变成“人批准 A，系统执行 B”。
 
-07 模型网关可以判断某个 Provider 技术上可用、某个模型满足角色需要，却不能自行判断某份法律材料是否允许发送到该 Provider。数据分类、事项范围、地域、Provider 资格、合同限制和当前用途共同决定是否允许外发。
+Approval 应绑定稳定 action identity / hash、目标、关键参数摘要、版本和 SecurityEpoch。会影响现实或安全语义的内容变化后，旧 Approval 失效并重新申请。
 
-因此“Provider 可调用”和“这份数据允许发给它”必须分开。08 形成 ModelEgressDecision；07 只能在允许集合里做路由、配额与质量选择，不能以 fallback 为理由绕过数据政策。
+### 模型外发为什么由安全策略决定，不由 Model Gateway 决定
 
-### Secret 为什么只能通过引用和短期租约使用
+07 能判断 Provider 技术可用、模型质量合格和当前预算允许，却不能自己决定一份法律材料是否可以发往某个 Provider / region。
 
-模型和 Tool 可能需要 API Key、数据库凭证、法院系统访问令牌等 Secret。为了恢复方便把明文 Secret 写进 Prompt、Checkpoint、普通日志或业务表，会把一次受控使用变成长期泄露面。
+数据分类、事项范围、用途、地域和合同政策由 08 形成 egress decision。07 只能在允许集合里路由；fallback 不能成为绕过数据政策的理由。
 
-目标架构只跨边界传递 CredentialVersionRef / SecretRef / LeaseRef。Platform 可以提供 Secret Delivery、轮换和 Lease 原语；06 / 07 在用途和有效期内消费。恢复保存的是“使用了哪一个受控引用、针对什么动作、哪个策略版本允许”，不是秘密内容本身。
+### Secret 为什么只传引用和短期 Lease
 
-### 强制审计为什么必须在高风险 Effect 前留下耐久证明
+API Key、数据库凭证和外部法院系统令牌如果为了恢复方便写进 Prompt、Checkpoint 或普通日志，会把一次受控使用变成长期泄露面。
 
-某些现实副作用在执行前必须证明谁发起、基于什么授权、谁批准、准备执行什么动作。普通 Trace 即使完整，也可能被采样、丢失或晚到，不能承担这种合规证明。
+Target 让执行模块消费 SecretRef / CredentialVersionRef / LeaseRef 一类受控引用。恢复保存“当时使用了哪个受控凭证版本和用途”，不保存秘密明文。
 
-08 拥有 AuditRequirement；真正的审计持久化边界成功后返回 AuditPersistenceReceipt。如果要求 `MANDATORY_BEFORE_EFFECT`，而该回执没有可靠落盘，06 就不能继续执行高风险副作用。事后补一条 LangSmith 或 OTel span 不能倒推当时已经满足审计要求。
+### Mandatory Audit 为什么和普通 Trace 不是一回事
 
-### Prompt Injection 为什么不能靠“更安全的模型”解决
+某些高风险现实动作要求在执行前就证明谁发起、基于什么授权、谁批准、准备执行什么。普通 Trace 可能被采样、网络失败或晚到，不能承担这种前置合规证明。
 
-材料正文可能包含恶意指令，例如要求忽略系统规则、泄露文件或调用高权限工具。模型可能被诱导提出危险 Action Proposal，但 Proposal 仍不是执行许可。
+如果策略要求 `MANDATORY_BEFORE_EFFECT`，必须先获得耐久 `AuditPersistenceReceipt`，06 才能继续发送。事后补一个 OTel / LangSmith span 不能倒推当时已经满足强制审计。
 
-03 限制可读数据和来源，05 把材料当数据而不是系统指令，07 执行模型外发政策，04 不允许模型绕过 Plan / Budget / Gate，08 决定授权和审批，06 在真实 Effect 前再次校验动作与审计。安全依赖的是多层确定性门禁，而不是模型“自觉听话”。
+### Prompt Injection 为什么不能靠“更聪明的模型”解决
 
-### 数据生命周期为什么不能只有 `deleted=true`
+材料正文可能包含恶意指令，模型也可能生成越权 Action Proposal。安全不能依赖模型“自己知道不能做”。
 
-Retention（保留）、Recall Eligibility（召回资格）、Physical Purge Completion（物理清除完成）和 Legal Hold（法律保全）是不同事实。用户请求删除以后，可以先禁止未来召回，但因为有效 Legal Hold，底层字节仍然依法保留；反过来，政策要求清除也不等于每个 Store 已经真的完成 purge。
+03 控制可读材料，07 控制模型外发，04 不允许模型绕过 Plan / Budget，08 决定授权与审批，06 在真实副作用前再次验证动作。多层确定性门禁使模型输出保持 Proposal，而不是权限来源。
 
-所以必须保持：**Retention != Recall Eligibility != Physical Purge Completion**。08 拥有 EffectiveLifecycleDecision，各 Store 执行自己的义务并产生 enforcement fact / receipt。任何一个 Store 的“还没删完”不能伪装成政策仍允许召回，也不能由 08 直接宣称物理清除已经完成。
+### 数据生命周期为什么不能只有 deleted=true
 
-### 安全服务故障时为什么默认 fail closed
+法律数据可能同时受到用户删除请求、Retention、Legal Hold、索引召回限制和物理清除流程影响。“不能再被检索”与“底层所有字节已经物理删除”不是同一个事实。
 
-授权引擎不可用、SecurityEpoch 无法确认、审批记录不可验证、Secret Lease 无法取得或 Mandatory Audit 无法持久化时，高风险路径不能“先继续以后补”。对受保护材料、模型外发、Secret、Tool Effect 和 Formal Admission，缺少必要安全事实时默认 fail closed（失败关闭）或进入人工复核。
+所以保持 `Retention != Recall Eligibility != Physical Purge Completion`。08 决定当前生命周期政策，各 Store 执行自己的义务并产生 enforcement fact；任何单个 Store 都不能替整个系统宣布全局删除完成。
 
-低风险诊断功能是否允许降级必须由显式策略定义；不能由 01、04、06、07 各自为了可用性临时改成 fail open。
+### 为什么跨 Store 删除不应该追求一个巨大 2PC
 
-### 可信身份为什么不能来自用户自己提交的 tenant / role 字段
+领域库、索引、对象存储、缓存、Checkpointer 和外部 Provider 不在同一事务系统里。强行做全局原子删除不仅成本高，也无法让外部系统真正参与本地 2PC。
 
-前端请求可以携带 tenant、role、matter，但这些字段只是输入，不是身份事实。可信 principal、tenant membership 和 role 必须来自经过验证的身份上下文、受控目录或可信 Host assertion。
+更合理的方式是政策先确定，各 Store 按自己的事务边界执行并记录结果，治理层根据这些事实收敛。局部失败保持可见并重试，而不是用一个 `deleted=true` 掩盖未完成部分。
 
-01 可以负责把已验证 identity assertion 绑定到请求；08 负责决定它能做什么。Prompt、材料正文、模型输出和 Tool 参数都没有权限把自己提升成管理员。
+### 安全服务不可用时为什么高风险路径默认 fail closed
 
-### 撤权发生在不同时间点，结果为什么不同
+授权引擎不可用、SecurityEpoch 无法确认、Approval 不可验证、Secret Lease 获取失败或强制审计不能落盘时，高风险动作缺少必要前提。
 
-如果撤权发生在 ToolAttempt 或模型调用之前，后续受保护动作应被阻断；如果请求已经发出，撤权不能把已经外发的数据从 Provider 里“撤回”，也不能把已经发生的现实 Effect 写成“未执行”。晚到结果在继续被使用、发布或正式准入前，仍需重新检查当前安全条件。
+因此受保护材料、模型外发、Secret、Tool Effect 和 Formal Admission 默认 fail closed 或进入人工复核。低风险诊断是否允许降级必须由显式策略定义，不能由每个模块临时选择 fail open。
 
-如果 Effect 正处于 outcome unknown，06 继续 Reconcile；如果 Domain 已经提交，02 的历史事实继续存在。持续授权控制未来受保护使用，不修改过去真实发生的事情。
+### 撤权发生在不同时间点为什么结果不同
 
-### Approval 自己也有生命周期
+如果撤权发生在模型或 Tool 发送前，后续动作应被阻断；如果请求已经发出，撤权不能把已经外发的数据“收回来”，也不能把已经发生的现实 Effect 改写成未发生。
 
-审批需要区分 required、pending、granted、denied、expired、revoked 和 invalidated。批准后 action hash 变化、ToolVersion 变化、策略升级或有效期结束，都可能使它失效。
+晚到结果在继续使用、发布或正式准入前仍要重新检查当前条件。持续授权控制未来使用，不修改过去已经真实发生的历史。
 
-这不是为了把审批做成复杂工作流，而是避免“曾经有人点过同意”成为永久通行证。对高风险动作，Approval 的适用范围必须始终可以被解释和重新验证。
+### SecurityEpoch 为什么是新鲜度边界
 
-### SecurityEpoch 为什么是新鲜度边界，而不是一个展示版本号
+策略决定需要知道自己基于哪一版安全规则。SecurityEpoch 让消费者识别旧 allow 是否仍适用于新的受保护动作。
 
-SecurityEpoch / PolicyVersion 的价值是让消费者知道旧决定依据的是哪一版政策。当策略发生会影响授权语义的变化时，新受保护访问不得静默复用旧 epoch 的 allow。
-
-Epoch 不要求全系统共享一个巨大的配置事务。08 只需要能够把决策稳定绑定到政策版本，并让 01 / 02 / 03 / 04 / 05 / 06 / 07 在新的受保护边界判断该决定是否仍适用。
-
-### 生命周期执行为什么不能建立一个全局“删除成功”事务
-
-领域库、索引、对象存储、缓存、Checkpointer 和外部 Provider 的数据生命周期并不在一个数据库里。为了追求一个全局 `deleted=true` 而使用跨所有 Store 的 2PC，会增加故障面，也不能解决外部系统不可事务参与的问题。
-
-目标做法是：08 产生有效生命周期决定，各 Store 按自己的事务边界执行并记录 enforcement state / receipt，治理层根据这些事实收敛整体状态。局部失败保持可见并重试，而不是伪造全局原子删除。
-
-### 审计与 Telemetry 为什么必须分开
-
-Telemetry 用于诊断和评测，可以采样、异步导出、切换 Provider；安全审计中需要耐久保存的事实则不能依赖采样成功。09 可以观察 decision / receipt refs，但不拥有安全决定，也不成为审计唯一载体。
-
-这样即使 LangSmith、OTLP Collector 或网络暂时不可用，安全边界仍能知道某次授权为什么成立、审批绑定了什么动作、Mandatory Audit 是否真正落盘。
-
-### 多租户隔离为什么必须进入每个受保护资源引用
-
-仅在登录会话里保存 tenant 不够。材料、KnowledgeGeneration、Domain object、PreparedAction、Model request、Delivery 等跨边界引用都要能够证明它属于哪个 tenant / matter scope。否则缓存 key、后台 Worker 或异步恢复很容易在脱离原 HTTP 上下文后失去隔离信息。
-
-这不意味着把 tenant 名称暴露进所有 Trace；运行时可以传播 opaque scope ref，在可信边界内解析。隔离是业务与安全事实，Correlation 只负责定位。
+它不要求全系统共享一个巨大配置事务，只要求安全决定稳定绑定政策版本，并让新的门点能判断语义相关的政策是否已经变化。
 
 ### Decision Cache 为什么不能变成永久 Capability Token
 
-高频检索和模型调用如果每一步都访问远端 Policy Engine，团队自然会考虑缓存 AuthorizationDecision。缓存本身没有问题，危险的是把一次 `ALLOW` 当成“拿到以后一直能做这件事”的 capability token。资源版本、Matter scope、purpose、SecurityEpoch、数据分类和策略都可能变化；一个只按 user id 缓存的 allow 很容易在权限撤销后继续放行后台 Worker。
+高频访问为了性能可以缓存 AuthorizationDecision，但 cache 只能降低评估成本，不能延长权限寿命。只按 user id 缓存 allow，很容易在 Matter、resource version 或策略变化后继续误放行后台任务。
 
-因此安全缓存只能缩短评估成本，不能延长授权寿命。cache key 必须包含真正影响语义的 principal / tenant / matter / resource version / action / purpose / policy epoch 等条件，TTL 不得超过 Decision 自身 expiry；新的受保护访问还要判断当前 epoch 是否已经变化。历史 Decision ref 可以继续存在用于解释“当时为什么允许”，却不能在新请求中被当作 bearer token。对撤权敏感的动作甚至可以要求每次重新评估，而不是依赖 TTL。性能优化只能发生在安全语义内部。
+cache key 和 expiry 必须覆盖真正影响安全语义的条件，并受 SecurityEpoch 约束。新的受保护动作仍然要判断缓存决定是否仍适用。
 
-### Audit Provider 故障和普通 Telemetry 故障为什么传播方向不同
+### 多租户隔离为什么必须跟着资源引用走
 
-如果普通 Trace exporter 暂时不可用，低风险业务可以继续，只要各 Owner 的 durable facts 仍然存在；09 记录 export failure，后续恢复诊断投影即可。可是当 08 对某个高风险 Effect 给出 `MANDATORY_BEFORE_EFFECT`，Audit persistence 就已经成为执行前置条件：没有 matching committed AuditPersistenceReceipt，06 必须阻断发送。
+只在 HTTP session 保存 tenant 不够，因为后台 Worker、异步恢复和 Cache 经常脱离原请求上下文。材料、Domain object、PreparedAction、Model request 和 Delivery 都要能证明属于哪个受保护 Scope。
 
-两种故障看起来都像“日志写不出去”，传播语义却完全不同。前者影响可观测性质量，不能反过来让已提交 Domain 失败；后者说明法规 / policy 要求的安全条件尚未满足，不能为了可用性 fail open。把两者分离还能避免一个常见反模式：为了让 tracing 不阻塞业务，把真正 Mandatory Audit 也放进异步 best-effort pipeline，最终得到“图上显示有审计，崩溃窗口里却没有耐久记录”的假安全。
+可以跨模块传播 opaque scope ref，避免把敏感 tenant / matter 名称塞进普通 Trace。隔离是业务和安全事实，不是日志标签。
 
-### 新策略怎样上线，才能避免一次配置发布让全部长任务同时失效
+### 什么时候 08 应该更简单
 
-SecurityEpoch 需要准确反映 active policy，但并不意味着每条新规则都必须瞬间影响全部环境。风险较高的策略修改可以先进行 shadow evaluation：对真实请求计算“如果新策略生效会怎样”，只记录差异，不改变执行决定；再在受控 tenant / profile 做 canary，确认误拒绝、漏放行和性能影响，最后激活为新的 PolicyVersion / SecurityEpoch。
+低风险内部工具如果没有多租户、敏感外发、现实副作用和复杂数据生命周期，安全层可以主要复用成熟身份系统、RBAC 和 Secret Manager，不需要自造完整 Policy Platform。
 
-Shadow / canary 结果属于治理和评测输入，不得偷偷变成生产 allow。正式激活以后，新受保护访问消费新 epoch；已经发生的历史动作仍按旧 decision 解释，paused Runtime 在恢复时重新门禁。这样策略演进既不会靠原地覆盖历史记录获得“整洁”，也不会为了兼容旧长任务继续无限延长旧权限。真正的 rollout 机制和策略引擎仍是 Target，需要通过撤权传播、双版本比较和恢复测试后才能称为 Current。
+Zuno 只应保留法律业务真正需要的持续授权、动作审批、外发政策和生命周期语义。Policy Engine、Secret infrastructure 和身份目录能买就买，08 负责的是权威边界，不是重复实现基础设施。
+
+### Policy Decision 和 Policy Enforcement 为什么必须分开
+
+08 可以计算“当前允许/拒绝/需要审批”的安全决定，但真正读取文件的是 03，调用 Provider 的是 07，执行 Effect 的是 06，提交 Domain 的是 02。只有 Decision 没有 Enforcement，安全仍然只是纸面规则。
+
+因此每个受保护边界既要知道去哪里取得权威 Decision，也要在自己的真实执行点 fail closed。08 不需要亲自代理所有 I/O，但要让消费者无法用“我已经拿到数据了”绕过当前政策。
+
+这种分离也避免建立一个所有业务流量都必须穿过的巨大 Security Proxy；策略 Authority 集中，执行门分布在真正产生风险的位置。
+
+### Security Freshness 为什么不等于把 TTL 设得极短
+
+把授权缓存 TTL 设成一秒看似“持续”，却会制造大量远端 Policy 请求，同时仍不能精确表达策略何时变化。更有意义的是让 Decision 绑定 SecurityEpoch / resource version / purpose，并在新的受保护边界判断这些前提是否仍成立。
+
+TTL 可以作为性能和最坏撤权延迟的一部分，但不是唯一正确性机制。关键政策变化可以推进 epoch，使旧 allow 立即失去复用资格；不相关配置变化则不必让所有缓存同时失效。
+
+新鲜度设计最终应该能回答撤权传播上限，而不是只展示一个很小的缓存数字。
+
+### 可信身份为什么不能来自调用方自己提交的字段
+
+前端或 Host 可以携带 tenant、role、matter 等字段，但这些值只是输入声明，不是权限事实。如果后台 Worker 直接相信请求里的 `role=admin` 或 tenant id，攻击者就可以通过修改参数提升权限，异步恢复也会失去可信身份来源。
+
+可信 principal、tenant membership 和 role 必须来自经过验证的身份上下文、受控目录或可信 Host assertion。01 可以负责认证协议和上下文绑定，08 决定这个主体当前能做什么；Prompt、材料正文、模型输出和 Tool 参数都不能把自己升级成权限来源。
+
+这个边界也解释了为什么多租户 Scope 要随着资源引用传播：离开原 HTTP 请求以后，系统仍然要知道当前动作依赖哪个可信身份和事项范围，而不是从普通业务字段重新猜。
+
+### Approval 为什么自己也有生命周期
+
+一次批准不是永久通行证。动作参数、目标资源、ToolVersion、SecurityEpoch、有效期或审批策略发生语义相关变化后，旧 Approval 可能已经不再适用；被撤销或过期的批准也不能因为某个 Runtime Checkpoint 仍写着 granted 就继续使用。
+
+因此 Approval 需要区分 pending、granted、denied、expired、revoked、invalidated 等足以支持当前门禁的状态，并始终绑定它实际批准的动作。这里的重点不是制造复杂审批工作流，而是确保“曾经有人点过同意”不会被误解成未来任意版本动作的权限证明。
+
+### Audit 数据本身为什么也需要最小化和生命周期
+
+审计必须足够解释谁在什么条件下做了什么，但不意味着把完整 Prompt、材料正文和 Secret 全量复制进审计库。过度记录会创造新的高敏感数据仓库。
+
+Audit record 应优先保存身份引用、动作 hash、资源版本、Decision / Approval refs 和必要非敏感摘要，需要查看正文时回到受控 Owner store。审计自身同样受 Retention、Legal Hold 和访问控制约束。
+
+这样耐久性和数据最小化可以同时成立，而不是“为了审计所以什么都永久保存”。
+
+### 安全平台哪些应该 Buy，哪些必须由 Zuno 定义
+
+身份 Provider、Secret Manager、KMS、Policy Engine 和标准审计存储都可以优先复用成熟产品。Zuno 不需要重新实现密码学、OIDC 或 Vault。
+
+但“什么动作属于高风险法律 Effect”“什么材料允许发给哪个模型”“Approval 应绑定什么 action identity”“Formal Admission 前需要什么当前安全事实”是业务语义，不能期待通用产品自动知道。
+
+所以 08 的自有价值在 policy model 和跨模块 Authority contract，而不是基础设施数量。成熟组件越多，Zuno 自己的安全代码反而应该越薄、越聚焦。
+
+### 安全拒绝为什么也需要可解释，而不是只返回 403
+
+高风险系统必须 fail closed，但如果拒绝只有一个通用 `DENY`，工程师和业务人员无法判断是权限不足、数据外发限制、Approval 缺失、SecurityEpoch 过期、Secret 不可用还是 Legal Hold 导致。结果往往是调用方为了“修复可用性”绕开门禁。
+
+08 因此应该返回最小但可解释的 decision reason / requirement：告诉消费者下一步是禁止、等待审批、重新获取当前决定、切换允许 Provider，还是必须人工处理。敏感策略细节不必暴露给不可信客户端，但可信内部模块需要足够信息选择正确恢复路径。
+
+可解释拒绝并不意味着上层可以修改安全判断。01 可以把原因翻译成用户行动，04 可以等待或 Replan，07 可以换到允许的 Provider，但只有 08 能在条件变化后形成新的 Authorization / Approval 事实。
 
 ### 当前、目标与缺口
 
-Current Evidence 证明了有限 Security fail-closed、approval binding、tenant isolation、Secret / Credential / Audit / lifecycle Contract 基础，但没有证明完整生产安全体系。当前测试基线明确保留 Security fail-closed、approval binding、artifact authorization、tenant isolation 等行为，同时 Full CI、法院 QA 和 Production Readiness 都未建立。
+Current 是否已有 Policy Engine、SecurityEpoch、Approval binding、Secret Lease、durable audit 和 per-store lifecycle enforcement，必须由代码和安全测试证明；Target 设计不能冒充实施完成。
 
-Target 是持续授权、动作绑定审批、模型外发治理、Secret 最小暴露、Mandatory Audit、生命周期治理和多租户隔离的一致安全边界。Gap 仍包括正式 Policy Engine、撤权传播 E2E、no-egress、credential rotation / lease、prompt-injection-to-tool、legal hold / purge 执行、审计恢复、法院部署资格和安全运行证据。
+Target 已明确持续授权、Authorization/Approval/HumanDecision 分离、强制审计前置、外发决策和生命周期语义。Gap 包括策略语言、真实身份集成、撤权延迟、Decision Cache 性能、安全 fault injection、Legal Hold / purge 实现和生产合规证据。
 
 ## Part B — Engineering / Agent Reference
 

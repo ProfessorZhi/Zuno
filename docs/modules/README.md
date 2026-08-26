@@ -1,8 +1,54 @@
 # Zuno 模块架构
 
-总体架构已经冻结九个逻辑责任域。九篇模块文档均保留 Human-first Part A、B1–B14 Engineering Reference 和 Part C Cross-Module Consistency；在 Deep Design V2 的基础上，**九个模块现在全部进入 Detail Design Candidate V1**。每篇 B14 下都继续细化 B14.1–B14.8，把字段语义、版本与新鲜度 Guard、幂等 namespace、事务 / 持久化边界、Crash Window、Schema Evolution 和 Failure Injection 推到冻结前可盘问粒度。
+九个模块首先是一张**责任地图**：当一次法律任务跨越材料、模型、专业分析、正式结果、现实副作用和外部交付时，哪一类事实由谁最终负责，失败以后先相信谁。它们不是九段固定流水线，也不是九个微服务。
 
-这仍然不是 Module Detail Freeze（模块细节冻结），也不是 Implementation Authorization（实现授权）。Candidate 的含义是“已经形成可逐字段、逐故障窗口审查的 Target 候选”，不是 ORM、最终 enum、数据库表、Migration、API、物理服务或生产资格已经冻结。
+第一次阅读本目录，不需要先记 `AdmissionReceipt`、`PlanVersion`、`PreparedAction` 等内部对象。先理解三条任务路径和九个责任域为什么存在；真正实施时再进入每篇 Part B / Part C 查精确 Contract、状态和 Crash Window。
+
+## 先用三条任务路径建立 mental model
+
+### 简单法律问答
+
+用户问“合同第 8 条写了什么”时，最短合理路径是：明确 Scope，检查当前授权，确认所需材料已经就绪，检索原文和稳定引用，受控调用模型，最后检查答案是否可以发布。
+
+这条路径不默认需要 Native Runtime、Dynamic DAG、Multi-Agent、Long-term Memory 或 GraphRAG。通用 Host 如果遵守同样的安全、知识和发布边界，也完全可以承担会话和 UI。
+
+### 复杂法律分析
+
+多材料争议分析开始需要显式控制：系统先确认材料版本和知识覆盖，再由 Runtime 组织多步依赖、并行专业能力和必要人工复核。检索和模型产生的内容仍然只是候选，只有需要成为长期法律业务事实的结果才进入 02 Formal Admission。
+
+这里最重要的不是“经过多少 Agent”，而是运行控制、专业计算和正式业务事实始终保持三个边界。Runtime 可以完成任务，但不能替 Domain 宣布正式结果。
+
+### 带现实副作用的任务
+
+如果系统要向外围法院系统提交结果，问题从“算得对不对”增加到“现实世界到底发生了什么”。动作发送前要重新确认授权、必要审批、幂等和强制审计；发送后 timeout 时先对账，禁止因为本地没有响应就盲重试。
+
+06 负责现实 Effect truth，01 负责产品交付语义，08 负责当前是否允许。三个模块协作，但互不冒充对方的完成事实。
+
+## 九个责任域分别为什么存在
+
+| 编号 | 责任域 | 用一句人话说明它保护什么 | 文档 |
+| --- | --- | --- | --- |
+| 01 | Application & Integration | 把内部权威事实组合成稳定请求、发布、交付和失效传播语义 | [01](01-application-integration.md) |
+| 02 | Legal Domain & Work Product | 决定什么最终成为正式、长期、可审计的法律业务事实 | [02](02-legal-domain-work-product.md) |
+| 03 | Knowledge & Evidence | 区分正式材料、可重建知识派生、任务就绪和检索候选 | [03](03-knowledge-evidence.md) |
+| 04 | Agent Runtime & Control | 控制长任务怎样计划、并行、暂停、重规划和恢复 | [04](04-agent-runtime-control.md) |
+| 05 | Capability & Skill | 把研究算法和 Provider 变成稳定、版本化、可替换的专业能力 | [05](05-capability-skill.md) |
+| 06 | Tool Runtime & Effects | 在现实副作用发生前后保护动作身份、结果确认和对账 | [06](06-tool-runtime-effects.md) |
+| 07 | Model Gateway | 把模型调用变成受质量、安全、预算和用量约束的依赖 | [07](07-model-gateway.md) |
+| 08 | Security & Governance | 持续回答下一次受保护动作现在是否仍被允许 | [08](08-security-governance.md) |
+| 09 | Observability & Evaluation | 解释系统发生了什么，并验证复杂度是否值得保留 | [09](09-observability-evaluation.md) |
+
+这些责任域按事实 Ownership 切分，不按技术栈切分。默认可以共处模块化 Python 后端；只有吞吐、安全隔离、故障半径或部署生命周期出现证据时才拆物理服务。
+
+## Part A、Part B、Part C 应该怎么读
+
+Part A 可以很长，它负责把概念设计讲透：问题是什么、最简单方案为什么不够、边界如何推导、典型失败怎样恢复、替代方案和删除条件是什么。长度应该来自推理，而不是名词密度。
+
+Part B 把已经理解的设计精确化成 Owner、Contract、状态、事务、幂等、持久化和 Detail Freeze Candidate；Part C 再检查这些语义跨模块以后，完成证明、版本、新鲜度、取消、晚到和恢复是否仍然一致。
+
+如果一个对象名必须先读 Part B 才知道它为什么存在，Part A 应补概念解释；反过来，如果 Part A 开始连续枚举字段、enum 和 crash-window 表格，则应该下沉到 Part B。
+
+## 当前模块设计状态
 
 ```text
 module_taxonomy: FROZEN
@@ -17,68 +63,11 @@ implementation_authorization: NO
 production_readiness: NOT_ESTABLISHED
 ```
 
-## 九个模块与 Detail Design Candidate 重点
+**9/9 Detail Design Candidate 只表示 Target Design 已达到冻结前可审查粒度。** Current、实现、质量和生产资格继续回到 `docs/evidence/`；`DETAIL DESIGN CANDIDATE V1 AVAILABLE` 不等于 `Module Detail Freeze Review` 已通过。
 
-| 编号 | 模块 | 首先回答的问题 | Detail Design Candidate V1 重点 | 文档 |
-| --- | --- | --- | --- | --- |
-| 01 | Application & Integration（应用与集成） | 请求怎样进入，结果由谁发布、交付和失效通知？ | Request / Scope / Invocation / AgentVersion / Publication / Delivery / Outbox / Host Contract | [01](01-application-integration.md) |
-| 02 | Legal Domain & Work Product（法律领域与工作成果） | 什么才是正式、长期、可审计的法律业务事实？ | Admission / Receipt / Canonical Object Version / Dependency / PostgreSQL / Invalidation | [02](02-legal-domain-work-product.md) |
-| 03 | Knowledge & Evidence（知识与证据） | 哪一版材料现在真的可用于这次任务？ | Generation / ProcessingSpec / Manifest / Serving / Readiness / Retrieval / Worker / Cache | [03](03-knowledge-evidence.md) |
-| 04 | Agent Runtime & Control（智能体运行与控制） | 多步任务怎样计划、并行、暂停、重规划和恢复？ | AgentRun / PlanVersion / StepRun / Ready Guard / Replan Barrier / Checkpoint / Takeover | [04](04-agent-runtime-control.md) |
-| 05 | Capability & Skill（专业能力与技能） | 专业算法怎样成为版本化、可替换、可评测能力？ | CapabilityVersion / ProviderBinding / Conformance / Eligibility / Invocation / Fallback | [05](05-capability-skill.md) |
-| 06 | Tool Runtime & Effects（工具运行与外部效果） | 现实动作怎样准备、确认、去重和对账？ | PreparedAction / Attempt / EffectReceipt / Reconciliation / RetrySafety / Send Boundary | [06](06-tool-runtime-effects.md) |
-| 07 | Model Gateway（模型网关） | 模型怎样按角色、安全、预算和资格统一调用？ | Request / Routing / Attempt / Qualification / Usage / Cost / Cancellation / Fallback | [07](07-model-gateway.md) |
-| 08 | Security & Governance（安全与治理） | 长任务中谁现在仍被允许做什么？ | Authorization / Approval / SecurityEpoch / Secret Lease / Audit / Lifecycle Enforcement | [08](08-security-governance.md) |
-| 09 | Observability & Evaluation（可观测性与评测） | 系统发生了什么，复杂度是否值得保留？ | TelemetryEnvelope / Redaction / Sampling / Dataset / EvalRun / Release Evidence / Kill Test | [09](09-observability-evaluation.md) |
+## 为什么下面还保留大量 Reference
 
-**9/9 Detail Design Candidate 只表示 Target Design 达到冻结前审查粒度。Current、实现、质量和生产资格仍必须回 `docs/evidence/`。**
-
-## 先从三条真实任务主线理解九个模块
-
-九个模块不是固定流水线。任务越简单，路径越短；只有长期状态、风险、恢复或现实副作用需要时，才引入相应责任域。
-
-### 主线一：简单法律问答
-
-```text
-01 Request / Scope
-→ 08 current Authorization
-→ 03 task-level Readiness + Retrieval
-→ 07 controlled Model call
-→ 01 AnswerPublicationDecision
-```
-
-这条路径不默认需要 Native Runtime、Dynamic DAG、Multi-Agent、Long-term Memory 或 GraphRAG。只要通用 Host 遵守同一安全、知识和发布边界，也可以承担入口 / 会话 / UI。
-
-### 主线二：复杂法律分析
-
-```text
-01 Request / Scope
-→ 08 Authorization
-→ 03 Readiness / EvidenceCandidate
-→ 04 Plan / Step / Parallel / Join
-↔ 05 Capability
-↔ 07 Model roles
-→ 02 Finding Proposal / HumanDecision / Formal Admission
-→ AdmissionReceipt + WorkProductVersion
-→ 01 Publication / Delivery
-```
-
-04 负责“怎样继续执行”，05 负责“怎样完成专业语义”，02 负责“什么最终成为正式业务事实”。
-
-### 主线三：带现实副作用的任务
-
-```text
-04 / 05 Action Proposal
-→ 06 PreparedAction
-→ 08 Authorization / Approval / AuditRequirement
-→ 06 ToolAttempt
-→ EffectReceipt
-→ OUTCOME_UNKNOWN 时 Reconciliation
-→ 02 必要时 Formal Admission
-→ 01 Delivery / Notification
-```
-
-现实结果未知时禁止 Blind Retry。
+从下一节开始，本 README 转入跨模块 Reference：事实 Ownership、Completion Proof、Cancellation、Late Result、Idempotency、Recovery 和横向系统设计。它们用于整体一致性审查，不要求第一次阅读全部记住。
 
 ## 九模块最重要的事实所有权
 

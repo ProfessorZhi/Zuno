@@ -4,21 +4,51 @@
 
 ## Part A — Human Narrative
 
-### 这个模块解决的是“Zuno 怎样进入真实产品”，不是再造一个万能业务层
+### 这个模块首先解决“外部产品看到什么”，而不是“谁离用户近谁就拥有一切”
 
-Zuno 既可能被自有 Web 页面调用，也可能被法院已有系统、通用 Agent Host、批处理任务或 API 客户端调用。外部系统只关心“我提交的是什么任务、现在进展到哪里、返回的是什么结果、这个结果当前还能不能用”，不应该理解内部九个责任域的全部实现细节。
+Zuno 可以被自己的 Web 页面、法院已有系统、通用 Agent Host、批处理任务或 API 客户端调用。外部调用方真正需要的是稳定产品语义：我提交了什么任务、当前能不能执行、结果是否可发布、正式成果是否仍有效、交付有没有完成。它没有必要理解九个责任域内部的所有状态机。
 
-01 Application & Integration（应用与集成）的职责，就是把这些内部权威事实组合成稳定的产品语义。它负责请求进入、Scope 归一化、调用路径选择、普通答案发布、正式工作成果交付、失效通知和 Host 兼容；但它不能因为最靠近用户，就顺手拥有授权、知识就绪、Domain、Runtime 或 Effect 的真相。
+最容易出现的设计错误，是因为 Application 最靠近用户，就把授权、知识、Runtime、Domain 和外部 Effect 的状态全部复制成本地 `status`。短期看调用方便，长期却会出现两个模块都声称自己知道“真正状态”。所以 01 的价值不是成为万能业务层，而是把其他 Owner 已经成立的事实组合成对外一致的产品行为。
 
-### 为什么 01 必须“负责组合，不负责重新发明事实”
+### 最简单的入口层为什么很快会遇到边界问题
 
-01 会同时看到 08 的 AuthorizationDecision、03 的 ReadinessDecision、04 的 RunOutcome、02 的 AdmissionReceipt、06 的 EffectReceipt 和 07 的模型调用结果。如果 Application Service 为了调用方便，把这些事实各自复制成一套本地 `status`，很快就会出现两个来源互相打架。
+最简单实现可以是一个 Controller：收到请求，调用几个服务，最后返回 `success=true`。简单同步问答完全可以这样工作。
 
-因此这个模块的核心约束是：**负责组合，不负责重新发明事实**。它可以形成 InvocationDecision（调用决定）或 AnswerPublicationDecision（答案发布决定），但必须保留所消费的权威 refs，不能自己把“知识 PARTIAL”改成“可以完整回答”，也不能因为 Runtime completed 就推断 WorkProduct 已正式准入。
+当任务变成长流程以后，同一个 `success` 会同时混入“请求受理”“运行结束”“正式结果提交”“结果允许发布”“外部消费者已经看到”等不同含义。网络重试还可能重复启动任务，权限变化可能让旧结果失去发布资格，外部系统离线又会让交付状态与业务有效性分离。入口层如果不承认这些差异，就会把内部复杂性藏进一组越来越不可解释的布尔字段。
 
-### 三种“已经完成”为什么必须分开
+### 负责组合，不负责重新发明事实
 
-外部产品最容易把不同层的完成压成一个 `success=true`。Zuno 必须明确：
+01 的核心约束是：**负责组合，不负责重新发明事实**。它可以形成产品层的调用决定和发布决定，但这些决定必须引用当前授权、知识就绪、运行结果、正式准入或 Effect 回执，而不是重新计算另一套安全或业务真相。
+
+例如，03 判断当前 Scope 只有部分关键材料可用，01 可以据此提示用户缩小范围、等待或拒绝完整分析；它不能为了“用户体验”把 PARTIAL 改写成 READY。04 表示 Run completed 时，01 也不能顺手推断正式 WorkProduct 已经存在。
+
+### Scope 为什么必须先于 Agent 和模型
+
+“帮我分析这个案件”不是一个足够稳定的系统输入。系统至少要知道事项、材料范围、目标结果和可信调用主体，否则后续授权、知识就绪、检索和正式准入都无法解释自己的适用范围。
+
+01 因此先把外部输入归一化为稳定任务上下文。Scope 不足时应该请求补充，不让模型猜“用户大概指哪些材料”。如果用户后来扩大或缩小范围，这不是一个 UI 小变化，而是新的任务条件，下游 Readiness 和 Authorization 需要按新范围重新判断。
+
+### 外部身份声明为什么不能直接升级成权限
+
+Host 可以传 user id、tenant、role 或 matter，但这些字段只是 assertion。可信 principal 必须来自受验证会话、可信 Host assertion 或受控目录，再由 08 判断这个主体当前能做什么。
+
+Application Adapter 可以负责认证协议和字段映射，却不能因为某个 Header 写着 `role=admin` 就提高权限。把“谁在请求”和“他现在能做什么”分开，才能让系统在多 Host、后台 Worker 和长任务恢复时仍保持一致安全语义。
+
+### 简单问答为什么应该保持短路径
+
+用户问“合同第 8 条写了什么”，如果 Scope 清楚、当前授权允许、所需材料已经就绪，系统只需要检索稳定原文、受控调用模型、校验引用和当前发布资格。
+
+这类路径没有必要为了统一技术栈先构造动态 DAG。01 可以直接组合 08 的授权、03 的知识与引用、07 的模型结果，再形成 Zuno 侧普通答案发布决定。架构拥有 Runtime，不代表每个请求都必须使用 Runtime。
+
+### 复杂任务为什么需要显式 Invocation，而不是一个巨大 if/else
+
+复杂任务可能需要等待知识、进入 Native Runtime、调用专业能力、等待人工或最终产生正式 WorkProduct。入口层需要把这些条件组合成稳定的调用生命周期，让重复请求、取消、查询状态和结果交付都能引用同一次逻辑调用。
+
+工程上可以把这个产品层决定表达为 InvocationDecision，但关键概念不是名字，而是：01 只决定“这次请求应走哪条产品路径”，不能替 03 重新判断知识资格，也不能替 08 判断授权，更不能替 02 正式准入。
+
+### 四种“完成”为什么必须明确分开
+
+外部 API 最容易把多个层次压成一个成功值，但 Zuno 必须保持：
 
 ```text
 Run completed
@@ -30,151 +60,117 @@ Answer publishable
 Consumer displayed
 ```
 
-Runtime completed 说明控制流程结束；Domain admitted 说明正式法律业务事实成立；Answer publishable 说明 Zuno 当前允许发布这个普通答案；Consumer displayed 则属于外部 Host 自己的最终 UI / 采用事实。四者可以相关，但不能互相替代。
+Runtime 完成说明控制流程结束；Domain admitted 说明正式法律业务事实成立；Answer publishable 说明 Zuno 当前允许把普通答案发布出去；Consumer displayed 则是外部 Host 自己的 UI 或采用事实。01 可以把这些事实组合给调用方，但不能让一个层次的完成替代另一个层次。
 
-### 简单问答为什么不应该被统一入口强制塞进 Native Runtime
+### 普通答案和正式 WorkProduct 为什么不能共用同一条发布权威
 
-用户问“合同第 8 条写了什么”，如果当前 Scope 明确、08 授权允许、03 对对应 DocumentVersion 已 READY，并能返回稳定 CitationLineage，07 完成受控生成，那么 01 可以直接做答案资格检查并返回。
+普通问答通常不需要进入正式领域状态。只要当前授权、材料就绪、引用和 AnswerPolicy 满足要求，01 可以形成普通答案发布决定。
 
-```text
-01 Intake / Scope
-→ 08 Authorization
-→ 03 Readiness + Retrieval
-→ 07 Model
-→ 01 AnswerPublicationDecision
-```
+正式 WorkProduct 不一样。它代表长期业务成果，必须先由 02 完成 Formal Admission，并拥有匹配的领域版本和准入证明。01 负责把正式版本发布或交付，但不能把 Runtime Draft 或模型文本包装成正式成果。
 
-这条路径不因为“平台有 Runtime”就必须生成动态 DAG。只有需要多步依赖、并行、暂停、重规划、外部 Effect 或正式复杂 WorkProduct 时才路由到 04。保持简单路径短，是删除不必要复杂度的一部分。
+### Agent Version = 产品能力 / 配置版本
 
-### 复杂任务为什么需要 InvocationDecision，而不是一个 if/else 路由
+产品需要知道“当前这个 Agent 产品表面提供什么能力和默认配置”，这与某一次运行内部的计划版本不是同一个概念。Agent Version 可以绑定产品能力、Prompt / policy profile、默认 Runtime 策略和支持的任务类型。
 
-复杂任务进入前，01 要组合任务目标、Scope、AgentVersion、当前 Authorization、Knowledge Readiness、必要 Capability / Model eligibility，以及任务是否需要 Native Runtime / Formal Admission 等条件。
+PlanVersion 则属于 04 某一次具体运行。Agent 产品升级后，新请求可以使用新 Agent Version，正在运行的旧任务仍按自己已经绑定的版本解释；不能因为产品升级就在后台把旧 Plan 原地改掉。
 
-InvocationDecision 只是对这些权威事实的产品层组合：允许简单执行、路由 Native Runtime、等待知识就绪、要求补充 Scope、进入人工 Review 或拒绝。它不能重新计算下游的安全、知识、模型或能力资格。
+### 新证据出现以后，为什么“失效”和“通知成功”必须分开
 
-### Scope 为什么必须在任务一开始显式化
+假设 WorkProduct V5 已经交付给法院系统，下午新 Evidence 进入后，02 判断 V5 需要复核。这个业务失效事实应该立即成立，不应等待外部系统在线。
 
-“帮我分析这个案件”如果没有 Matter、DocumentVersion 范围、用户期望结果和数据边界，后续任何 Readiness、检索、授权和正式准入都无法解释。
+01 的责任是把失效事实可靠地传播给已经接收 V5 的消费者，并提供 pull validity 查询。外部通知失败只表示传播仍在重试，不会把 Domain 中的 stale 重新变成 current。这样业务有效性不会被网络可用性绑架。
 
-01 负责把外部输入归一化成明确 Task / Scope Context，并绑定可信 principal / tenant / matter refs。Scope 不足时应请求补充，而不是让模型根据上下文猜“用户大概想分析哪些材料”。后续如果用户明确缩小或扩大 Scope，应形成新的任务条件并重新消费相应 Readiness / Authorization。
+### 为什么 Push 和 Pull 都有价值
 
-### 外部请求里的身份为什么不能直接成为安全事实
+Push 能降低失效传播延迟，但消费者可能离线、队列可能积压、网络可能失败。如果系统只依赖 Push，就无法保证外部在真正使用成果时知道当前有效性。
 
-Host 可以传入 user id、tenant id、role，但这些都是 assertion（声明），不是天然可信事实。01 可以接受经过验证的 Host identity assertion、会话身份或受控目录结果，并把稳定 principal / tenant refs 传给 08。
+因此 Target 同时保留 Pull validity。使用正式成果前，消费者可以查询当前版本状态。Push 负责尽快通知，Pull 负责最终可检查性，两者都只是传播机制，不改变 02 的业务真相。
 
-是否有权访问某 Matter、是否允许模型外发或交付，仍由 08 决定。Application Adapter 不能因为某个 Header 写着 `role=admin` 就提高权限。
+### Delivery 为什么需要独立身份
 
-### Agent Version 和 PlanVersion 为什么不是一回事
+同一个 WorkProduct 可以交付给多个外部系统，同一个目标也可能因为网络错误重复发送。如果只拿 WorkProduct id 当幂等 key，就无法区分“给 A”和“给 B”，也无法判断一次重试是否仍然是同一个逻辑交付。
 
-**Agent Version = 产品能力 / 配置版本**。它表示这个产品 Agent 当前声明了哪些默认能力、Prompt / policy / runtime profile / supported task class 等配置，是 01 产品表面需要稳定暴露的版本。
+01 因此需要稳定 Delivery identity，把目标、业务对象版本和 payload / contract 版本绑定起来。它保护的是产品交付语义，不意味着所有 Delivery 都由 01 自己执行现实副作用。
 
-PlanVersion 是 04 某一次运行里的控制事实，由 Planner 针对具体任务创建，激活后不可变。AgentVersion 升级不会把已经运行中的 PlanVersion 原地改掉；新请求可以选择新 AgentVersion，既有 Run 继续按自己绑定的版本和兼容策略解释。
+### 为什么有副作用的 Delivery 要交给 06
 
-### 普通 Answer Publication 和正式 WorkProduct Publication 为什么不同
+返回一个 HTTP response 和“在远端创建一条正式记录”不是同一种交付。后者会改变现实世界，一旦 timeout 就可能出现结果未知。
 
-简单问答可以只需要当前授权、Readiness、Citation / AnswerPolicy 等资格，由 01 做 Zuno 侧 AnswerPublicationDecision。
+01 仍然拥有产品侧 Delivery 生命周期，但具体副作用要通过 06 的 Effect Control。01 消费 06 的执行和对账事实更新交付 observation，而不是自己写一个无限 retry loop 去猜远端到底发生了什么。
 
-正式 WorkProduct 则必须先由 02 完成 Formal Admission，拥有 matching AdmissionReceipt、版本和必要历史引用。01 可以负责把这个正式版本发布 / 交付出去，却不能自己把一个 Runtime Draft 提升成正式 WorkProduct。
+### Consumer Ack 为什么只能叫 Observation
 
-因此同一个“发布按钮”背后也有两条权威链：普通答案资格归 01 组合；正式成果资格来自 02，01 只消费。
+远端返回 `ack=true` 最多证明 Zuno 观察到对方接收了请求或消息。它不一定证明远端内部业务流程已经最终采用，也不代表对方 UI 已经展示。
 
-### 外部 Host 最终显示为什么仍不是 Zuno 的真相
+所以 01 可以保存 acknowledgement observation 和 remote correlation，却不能把外部系统内部 adoption truth 收编成本地事实。边界清楚以后，集成协议可以演进，而 Zuno 不需要控制远端实现才能保持自身一致。
 
-如果 Zuno 被 Generic Host 或法院门户嵌入，Zuno 可以返回答案、资格、引用、WorkProductVersion 和 current validity，但 Host 最终是否显示、如何排序、是否被内部流程采用，是 Host 自己的产品事实。
+### 重复请求为什么不应该启动第二个复杂 Run
 
-Zuno 不需要控制外部 UI 才能保持架构完整。关键是明确自己对 Zuno-side publication 和 delivery 负责，而不把“远端页面显示了”伪装成本地可证明事实。
+浏览器重试、移动网络抖动和 API Gateway timeout 都可能让同一个逻辑请求重复到达。入口如果每次都新建 Run，会把一个用户动作放大成多个 Agent 运行，甚至重复正式交付。
 
-### 新证据让 WorkProduct 失效以后，三条状态怎样分开
+request identity、logical invocation 和下游 Run identity 应分开。相同幂等身份和相同 canonical task input 可以返回已有 invocation；相同 key 却对应不同 task hash 应明确冲突。这样客户端在“提交成功但响应丢失”后可以安全重试。
 
-02 发现新的正式 Evidence 使 WorkProduct V5 stale，这个 Domain invalidation truth 立即成立。01 负责把失效事实推送给已经接收 V5 的外部消费者，并提供 pull validity 查询。
+### 取消为什么只是停止还能停止的未来工作
 
-因此必须分开：
+用户点击取消时，01 可以请求 04 停止未来计划工作，也可以停止尚未发出的 Delivery。但已经提交的 Domain transaction、已经确认的现实 Effect 或已经发送的外部消息不会因为本地 flag 自动消失。
 
-```text
-WorkProduct invalidated     → 02
-Invalidation delivered      → 01
-Consumer acknowledged       → 01 对外部响应的 observation
-```
+因此取消响应要表达真实边界，例如“停止请求已接受，但已有不可撤销事实仍然存在”。如果业务需要补偿，补偿应该作为新的受控动作执行，而不是回写旧历史伪装成从未发生。
 
-外部系统离线不能阻止 V5 在 Domain 中变 stale，也不能让 01 把 stale 恢复成 current。通知可以重试，业务有效性不能倒退。
+### Host Adapter、Backpressure 和 Contract Version 为什么属于产品边界
 
-### 为什么失效既需要 Push，也需要 Pull
+不同 Host 的字段、认证和同步 / 异步协议可以由 Adapter 转换，但 Adapter 只能解决兼容，不得改变 READY / PARTIAL、Draft / Formal、Authorization / Approval 等业务含义。
 
-Push 可以尽快告诉外部系统“你之前拿到的 V5 已失效”，但远端可能离线、网络失败或通知队列积压。仅靠 Push 无法保证消费者在任何时刻都知道最新有效性。
+当 Runtime queue、知识构建、模型配额或外围系统过载时，01 也应该把背压显式暴露为 queued、deferred、rate-limited 等产品语义，而不是无限受理后统一超时。外部 Contract 需要版本化，使旧消费者不会把新状态按旧含义解析。
 
-因此 Target 同时保留 Pull validity：外部系统在使用正式成果前可以查询当前版本是否仍有效。Push 降低传播延迟，Pull 提供最终可检查性，两者都不改变 02 的 Domain truth。
+### 什么时候这个模块应该更简单
 
-### Delivery 为什么需要自己的 identity
+如果 Zuno 只作为内部库被一个单体应用调用，没有多 Host、异步交付、失效传播或复杂任务受理，那么 01 完全可以保持成很薄的 application layer。稳定产品语义不要求独立微服务，也不要求大型 Integration Platform。
 
-一个 WorkProductVersion 可能要交付给多个外部系统，也可能因为网络失败重试。只用 WorkProduct id 无法区分“同一个成果给系统 A”和“给系统 B”，也无法安全去重。
+只有外部协议、交付可靠性、Host 生命周期或吞吐隔离出现明确需求时，才值得增加 Adapter、Outbox、Queue 或独立部署。复杂度由集成问题驱动，不由“Application 模块应该很完整”驱动。
 
-01 需要稳定 DeliveryIdentity，绑定目标系统、payload schema/version、业务对象版本和 idempotency key。普通明确未发送的 delivery 可以按同 identity Retry；具有现实副作用且 outcome unknown 的交付要交 06 Effect Control / Reconcile。
+### 同步 API 和异步任务为什么要共享业务语义，而不是共享传输形态
 
-### 为什么 side-effecting Delivery 必须和 06 协作
+同一个法律任务可能从 Web 同步请求进入，也可能由法院 Host 异步提交、随后轮询或接收回调。传输协议不同，不应该导致 READY、PARTIAL、Formal、Stale 等业务概念出现两套解释。
 
-有些“交付”只是返回 HTTP response；有些却意味着远端创建记录、正式提交材料或触发业务流程。后者本质上是现实 Effect。
+01 因此把协议适配和产品语义分开：Adapter 可以把 REST、消息或 Host SDK 统一成 canonical request；后续状态仍由相同 Owner facts 驱动。这样未来新增一个 Host 主要增加协议映射，而不是复制一套领域和安全规则。
 
-01 仍拥有产品上的 Delivery 状态，但不能自己猜远端是否执行。它把具体外部动作交给 06，消费 PreparedAction / EffectReceipt / ReconciliationReceipt，再更新自己的交付 observation。这样 Delivery 语义和 Effect truth 不会被混在一个 retry loop 里。
+同步接口也不应因为 HTTP 生命周期短就强迫复杂任务同步完成。真正需要长时间运行时，01 返回稳定 invocation identity，让客户端查询或订阅；简单问答仍可以直接返回。产品契约根据任务特征选择交互方式，而不是让传输机制反向决定内部架构。
 
-### Consumer Ack 为什么只是 Observation
+### 发布决定为什么也需要新鲜度，而不能只在生成结束时判断一次
 
-远端返回 `ack=true` 能证明 Zuno 观察到一个响应，但不能证明远端内部所有业务流程已经采用该结果。尤其在异步外围系统里，ACK 可能只代表消息已接收。
+一个答案在生成完成时满足材料和安全要求，不代表几分钟后仍然允许发布。权限可能撤销，新 Evidence 可能让正式成果 stale，或者当前 consumer 的 Scope 已变化。
 
-所以 ConsumerAcknowledgementObservation 归 01，保存观察到的 ack / no-ack / remote correlation；外部系统内部最终 adoption truth 仍归外部系统。Zuno 不越权定义它。
+所以发布不是“生成完成后的固定副作用”，而是一个需要消费当前事实的边界。普通答案发布前重新确认当前安全和来源资格；正式 WorkProduct 则读取 02 的当前版本有效性。已经交付的历史不被改写，但新的下载、展示或继续使用可以被当前规则阻断。
 
-### 重复请求为什么不能启动第二个复杂 Run
+这使 Application 层能够正确处理“结果存在但现在不该展示”的情况，而不是通过删除数据库结果来模拟权限变化。
 
-移动网络、浏览器重试、API Gateway 超时都会造成同一个请求重复到达。01 需要把 ExternalRequestIdentity、request idempotency 和 InvocationIdentity 分开：重复 transport request 如果 canonical task input 相同，可以返回已经受理的 invocation / result；同 key 不同 task hash 则冲突。
+### 为什么产品状态应该面向用户行动，而不是暴露内部状态机全集
 
-这样客户端在“提交成功但响应丢失”后重试，不会启动第二个 AgentRun 或重复正式交付。
+内部可能同时存在 Run waiting、Knowledge partial、Approval pending、Delivery retrying 等状态。把这些原样全暴露给外部 Host，会让客户端绑定内部实现，未来任何模块演进都变成 API breaking change。
 
-### 请求取消为什么不能撤销已经发生的事
+01 更适合组合成用户可行动的产品状态：等待材料、等待审批、正在处理、结果可查看、结果需复核、交付待确认等，同时保留诊断引用供受控排障。产品状态不是隐藏真实错误，而是把多个 Owner facts 翻译成稳定的消费者语义。
 
-用户取消一个长任务时，01 可以向 04 请求停止未来运行工作，也可以停止尚未发送的 Delivery。但已经提交的 02 Domain transaction、已经确认的 06 Effect、已经发送到远端的 Delivery 都不会因为本地 cancel flag 消失。
+当调用方确实需要工程细节时，可以通过专门诊断接口查看 correlation 和 owner state，而不是让普通业务接口承担整个内部 observability schema。
 
-01 的 cancel response 必须反映“取消请求已接受 / 控制停止中 / 已存在不可撤销事实”等真实语义，而不是简单返回 `cancelled=true` 让用户误以为现实已回滚。
+### 多 Host 场景下为什么不能把一个消费者的确认当成全局完成
 
-### Host Adapter 为什么只能处理兼容，不能改业务语义
+同一 WorkProduct 可能同时被 Web、法院业务系统和第三方归档服务消费。A 已经成功接收，并不能说明 B 也接收；B 离线也不应该让已经成立的 Domain WorkProduct 变回未完成。
 
-不同法院系统可能字段命名、认证方式、同步 / 异步协议不同。Host Adapter 可以做 payload mapping、protocol version、transport error mapping、签名和 endpoint compatibility。
+因此 Delivery identity 与 consumer scope 一一绑定，01 记录每个目标的交付 observation，再按产品需求汇总。业务正式状态、发布资格和各消费者交付状态保持分层，才能支持“成果已成立，但某个下游仍在重试”的正常情况。
 
-但 Adapter 不能把 `PARTIAL` 改成 `READY`，不能把 Draft 标成正式 WorkProduct，也不能为了兼容旧 Host 而跳过 Approval / Security / Effect Control。协议兼容层不能成为架构后门。
+这也是为什么应用层的可靠性重点是可重复查询和可恢复传播，而不是制造一个跨所有消费者的全局提交事务。
 
-### 为什么 Outbox 可以有，但不能成为第二套 Domain Truth
+### 01 的复杂度预算应该花在哪里
 
-正式 WorkProduct 已准入以后，01 可以使用 Outbox / Queue 做可靠交付。Outbox 记录“有一条 Delivery 工作要执行”，不是 WorkProduct 当前有效性的权威。
+Application 层最容易膨胀，因为任何跨模块问题都可以被包装成“用户需要”。真正值得留在 01 的复杂度只应服务产品边界：稳定 request identity、Scope、对外状态、发布、交付和失效传播。
 
-Domain invalidation 发生后，即使旧 Delivery message 还在队列，发送前也应重新检查 payload / current validity / delivery policy；不能因为队列里已有消息就继续向外发布 stale 正式成果。
-
-### Backpressure 为什么必须在入口暴露
-
-当 Runtime queue、知识构建、模型配额或外围系统已经过载，01 不应继续无限受理然后让所有请求在内部超时。对于异步任务可以返回明确 accepted / queued / deferred；对于无法保证资源的同步请求可以限流或拒绝。
-
-背压是产品语义，不是把超时包装成“处理中”。它也不能通过降低授权、Readiness 或正式结果质量门槛换取吞吐。
-
-### API / Host Contract 为什么需要版本
-
-外部系统升级节奏可能慢于 Zuno。一个字段从“可选”变“必填”，或一个状态被拆成两个，如果没有 HostContractVersion，就可能让旧消费者错误解释新响应。
-
-01 需要版本化外部 Contract，优先 additive compatibility；语义变化创建新版本并提供明确迁移 / 兼容窗口。Adapter 能兼容 transport schema，但不能同时维护两套互相冲突的业务 truth。
-
-### 从一个完整工作日看 01 的真实责任
-
-上午用户通过 Zuno UI 做简单条文问答；中午法院系统通过 API 发起复杂分析，Runtime 产生 WorkProduct V3；下午新 Evidence 让 V3 stale，01 向法院系统发送 invalidation；晚上外部系统离线，通知仍 pending，但 pull validity 已能返回 stale。
-
-四个阶段使用不同入口和传输，却共享同一个 Matter、Domain truth、Security policy 和 Knowledge facts。01 的价值就是把这些事实稳定地组合成外部可以理解的产品生命周期，而不是把所有底层逻辑搬到 API 层。
-
-### 什么时候应该让 01 保持“无聊”
-
-Application 层最容易成为 God Service：缺字段就在这里补、状态难查就在这里缓存、外部失败就在 Adapter 里无限重试。健康的 01 反而应尽量“无聊”：明确读取 Owner facts，做归一化、组合、路由、发布、交付和兼容。
-
-需要准入找 02，需要 Readiness 找 03，需要复杂运行找 04，需要专业能力找 05，需要 Effect 找 06，需要模型调用找 07，需要安全找 08，需要测量找 09。边界稳定，外部产品才不会把内部偶然实现变成长期 API 负担。
+如果某段逻辑需要理解 Evidence 如何准入，应该回 02；如果需要理解索引覆盖，回 03；如果需要判断 Plan 是否可继续，回 04；如果需要确认外部 Effect，回 06；如果需要计算授权，回 08。把判断送回 Owner 看似多了一次调用，却避免 Application 成为第二套所有模块的影子实现。
 
 ### 当前、目标与缺口
 
-Current Evidence 已证明 Product API 有分离的 Application Owner：`ProductService`、`ProductIngestionService`、`AgentRunApplicationService`、`ProductArtifactService` 等，当前 Runtime Baseline 也明确 Product API 不再依赖一个全能 Runtime Facade。
+Current 只能回到 `docs/evidence/` 判断；这篇文档完整描述产品边界并不代表 Request ledger、Delivery store、Outbox、Host adapter 或 AgentVersion registry 已经实现。
 
-Target 是完整 External Task Intake、TaskScope、AgentDefinition / AgentVersion、InvocationDecision、AnswerPublicationDecision、WorkProduct Delivery、Invalidation Delivery、Consumer Ack Observation、current-validity query 和多 Host compatibility。Gap 仍包括 Simple QA Host E2E、publication qualification、可靠 delivery / outbox、push + pull invalidation、Consumer offline fault、Host contract versioning、AgentVersion / PlanVersion compatibility 和 side-effect delivery handoff。
+Target 是让 01 稳定承担请求归一化、产品路径组合、普通答案发布、正式成果交付和失效传播，同时坚持消费其他 Owner facts 而不重新发明它们。Gap 仍包括字段级 Contract、实现、真实 Host 行为、吞吐与交付可靠性测量，以及哪些场景真正需要独立部署。
 
 ## Part B — Engineering / Agent Reference
 
