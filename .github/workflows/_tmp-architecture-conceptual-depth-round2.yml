@@ -1,0 +1,73 @@
+name: Temporary architecture conceptual depth round 2
+
+on:
+  push:
+    branches:
+      - docs/architecture-conceptual-depth-round2
+
+permissions:
+  contents: write
+
+jobs:
+  deepen:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: docs/architecture-conceptual-depth-round2
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Deepen conceptual narratives
+        run: python tools/scripts/_tmp_deepen_architecture_round2.py
+      - name: Remove temporary workflow
+        run: rm .github/workflows/_tmp-architecture-conceptual-depth-round2.yml
+      - name: Check change scope
+        shell: bash
+        run: |
+          python - <<'PY'
+          import subprocess
+          allowed = {
+              'docs/architecture/README.md',
+              'docs/architecture/architecture.md',
+              'docs/modules/README.md',
+              'docs/modules/01-application-integration.md',
+              'docs/modules/02-legal-domain-work-product.md',
+              'docs/modules/03-knowledge-evidence.md',
+              'docs/modules/04-agent-runtime-control.md',
+              'docs/modules/05-capability-skill.md',
+              'docs/modules/06-tool-runtime-effects.md',
+              'docs/modules/07-model-gateway.md',
+              'docs/modules/08-security-governance.md',
+              'docs/modules/09-observability-evaluation.md',
+              'tools/scripts/_tmp_deepen_architecture_round2.py',
+              '.github/workflows/_tmp-architecture-conceptual-depth-round2.yml',
+          }
+          changed = set(subprocess.check_output(['git','status','--short'], text=True).splitlines())
+          paths = {line[3:] for line in changed if len(line) >= 4}
+          unexpected = paths - allowed
+          if unexpected:
+              raise SystemExit(f'unexpected changed paths: {sorted(unexpected)}')
+          print('change scope:', sorted(paths))
+          PY
+      - name: Validate architecture document set
+        run: |
+          python tools/agent/render_architecture.py --check
+          python tools/scripts/verify_architecture_document_set.py
+          python tools/scripts/verify_architecture_semantic_alignment.py
+          python tools/scripts/verify_architecture_writing_standard.py
+          python tools/scripts/verify_architecture_human_readability.py
+          python tools/scripts/verify_docs_entrypoints.py
+          python tools/scripts/verify_markdown_internal_links.py
+          python tools/scripts/verify_repo_structure.py
+          python .agent/scripts/verify_agent_system.py
+          python .agent/scripts/verify_doc_boundaries.py
+      - name: Commit document deepening
+        shell: bash
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add docs/architecture/README.md docs/architecture/architecture.md docs/modules/README.md docs/modules/0*-*.md tools/scripts/_tmp_deepen_architecture_round2.py .github/workflows/_tmp-architecture-conceptual-depth-round2.yml
+          git commit -m 'docs: deepen architecture conceptual reasoning round 2'
+          git push origin HEAD:docs/architecture-conceptual-depth-round2
