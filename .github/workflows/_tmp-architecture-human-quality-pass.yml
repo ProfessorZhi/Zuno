@@ -28,6 +28,9 @@ jobs:
       - name: Align prose validators with non-rigid governance
         run: python tools/scripts/_tmp_relax_prose_template_markers.py
 
+      - name: Patch remaining semantic compatibility markers
+        run: python tools/scripts/_tmp_narrative_compatibility_patch.py
+
       - name: Remove temporary workflow
         run: rm .github/workflows/_tmp-architecture-human-quality-pass.yml
 
