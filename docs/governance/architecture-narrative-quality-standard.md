@@ -1,0 +1,325 @@
+# Architecture Narrative Quality Standard（架构叙事质量标准）
+
+本文补充 [`human-first-documentation-standard.md`](human-first-documentation-standard.md)，专门约束 `docs/architecture/` 与 `docs/modules/` 的 Human-first 内容质量。
+
+它不新增架构事实，不改变九个责任域、Owner、Contract、ADR、Current / Target 或实现状态。它只回答一个问题：**已经成立的设计，应该怎样被写成一篇真正解释设计的架构文档，而不是术语目录、字段说明或模板作文。**
+
+本标准的目标不是让所有文档长得一样，而是防止两种退化：
+
+1. 为了“可读”把 Part A 压成浅薄摘要；
+2. 为了“专业”把 Part A 写成 Object / State / Contract 名词堆叠。
+
+---
+
+## 1. Part A 可以很长，但长度必须来自概念设计
+
+Part A 不是 Executive Summary，也不是 Part B 的缩写版。复杂模块允许、也通常需要长篇叙事。
+
+长篇内容应该主要来自：
+
+- 真实问题与业务约束；
+- 最简单方案为什么看起来足够；
+- 最简单方案在哪个具体场景失败；
+- 因此必须建立什么概念边界；
+- 这个边界如何改变正常流程；
+- 一个关键失败发生后怎样恢复；
+- 为什么不能采用看似更直接的替代方案；
+- 当前设计增加了什么复杂度和成本；
+- 什么条件下应该简化、外置、替换或删除这层设计。
+
+因此：
+
+```text
+Part A Depth
+≈ Conceptual Depth
++ Causal Reasoning
++ Failure / Recovery Reasoning
++ Alternatives / Trade-off
+```
+
+而不是：
+
+```text
+Part A Depth
+≈ Number of Objects
++ Number of States
++ Number of Contract Names
++ Number of Framework Terms
+```
+
+**禁止把“缩短 Part A”本身作为质量目标。** 如果为了讲清一个重要边界需要更多场景、反例或推导，可以写得更长。
+
+---
+
+## 2. Part A 负责设计思想，Part B 负责设计精度
+
+Part A 与 Part B 的分界不是“简单 / 复杂”，也不是“非技术 / 技术”。
+
+一个很深的系统设计问题，只要它主要回答“为什么”，就应该允许留在 Part A。例如：
+
+- 为什么 Domain State 与 Runtime State 必须分开；
+- 为什么外部副作用不能默认承诺 exactly-once；
+- 为什么 Outcome Unknown 必须 Reconcile；
+- 为什么授权要在长任务中持续重新判断；
+- 为什么 Single Controller 比默认自治 Multi-Agent 更容易保护控制权；
+- 为什么 GraphRAG、Memory、Reflection 或独立微服务必须受收益证据约束。
+
+Part B 负责把这些已经理解的设计精确化，例如：
+
+- field / enum / schema；
+- identity namespace；
+- transaction / CAS guard；
+- exact state transition；
+- cache key composition；
+- crash window；
+- failure code；
+- persistence layout；
+- migration constraint。
+
+判断一段内容应该放在哪里时，优先问：
+
+> **这段主要是在解释为什么这样设计，还是在规定实现必须怎样精确落地？**
+
+不要仅因为它“技术很深”就把它从 Part A 移走；也不要仅因为它“很重要”就把字段级 Reference 提前塞进 Part A。
+
+---
+
+## 3. 概念先于术语：Terminology is compression, not explanation
+
+术语的作用是压缩已经理解的概念，不是代替解释。
+
+错误的行文方式：
+
+```text
+通过 AdmissionCommand、AdmissionReceipt、DomainVersion、CausationRef 和
+IdempotencyIdentity 保证 Formal Admission 的一致性。
+```
+
+即使语义正确，第一次阅读也要求读者先记住多个内部对象，再倒推系统解决了什么问题。
+
+更好的方式：
+
+> 正式业务提交必须留下一个耐久证明。否则领域事务已经成功、运行时检查点却还没更新时，系统重启后无法可靠判断这次业务结果是否已经提交，容易重复写入。工程上把这个正式提交证明表达为 `AdmissionReceipt（正式准入回执）`。
+
+原则：
+
+1. 先解释现实问题和失败后果；
+2. 再解释需要什么概念；
+3. 最后给这个概念正式名字；
+4. 后文只有在精确区分时才重复正式标识。
+
+如果删除一串英文对象名以后，段落的设计含义几乎不变，就应该优先删除或下沉这些对象名。
+
+---
+
+## 4. 推荐的是推理链，不是固定模板
+
+重要设计通常应该能形成下面这类推理链：
+
+```text
+问题
+→ 业务 / 工程约束
+→ 最简单方案
+→ 最简单方案在哪里失败
+→ 需要什么新的概念边界
+→ 当前设计怎样工作
+→ 一个正常场景
+→ 一个失败 / 恢复场景
+→ 替代方案
+→ Trade-off / Cost
+→ 简化或删除条件
+→ Current / Target / Gap
+```
+
+**这不是强制标题模板，也不是固定章节顺序。**
+
+不同模块可以从最能解释它的地方开始：
+
+- Knowledge 可以从“一百份材料上传成功仍不等于任务可用”开始；
+- Tool Effects 可以从“HTTP timeout 无法证明现实动作是否发生”开始；
+- Security 可以从“长任务中权限会变化”开始；
+- Runtime 可以从“计划执行期间事实和外部世界会变化”开始。
+
+只要整篇最终能让读者还原设计因果，就不要求每篇出现同样的标题、同样数量的小节或同样的段落长度。
+
+**禁止为了满足检查器而机械增加空洞章节。** 一个没有新推理内容的“为什么”“Trade-off”“异常”标题，比没有这个标题更差。
+
+---
+
+## 5. 每一段都应该推动一个设计判断
+
+Part A 的自然段通常至少完成一种工作：
+
+- 建立问题；
+- 给出约束；
+- 解释一个失败模式；
+- 排除一个错误直觉；
+- 推导一个边界；
+- 解释一个正常行为；
+- 解释一个恢复行为；
+- 比较替代方案；
+- 说明复杂度成本；
+- 明确 Current / Target / Unknown。
+
+需要警惕的段落包括：
+
+- 连续列出大量对象名但没有新的因果判断；
+- 连续列状态但不解释状态为什么需要分开；
+- 连续列技术栈但不解释技术选择保护什么不变量；
+- 把 `must / should / forbidden` 写了一串，却没有说明为什么；
+- 只是把 Part B 的表格改写成完整句子。
+
+高质量 Part A 读完以后，读者应该记住**几个设计原则和边界**，而不是几十个内部名词。
+
+---
+
+## 6. 场景、反例和恢复不是装饰
+
+场景的作用是证明设计边界真的有必要。
+
+好的场景应让读者看到：如果没有这条设计，系统会在哪一步产生错误判断。
+
+推荐使用：
+
+```text
+场景
+→ 发生了什么
+→ 最直觉的处理为什么危险
+→ 当前设计怎样判断
+→ 依赖哪个 Owner fact
+→ 系统怎样收敛或恢复
+```
+
+例如，外部 POST timeout 的重点不是“Tool 有 RECONCILE 状态”，而是：远端可能已经执行；盲 Retry 可能重复提交；本地 Failed 也可能掩盖真实成功；因此系统必须保留逻辑动作身份，并通过远端查询、业务唯一键或人工方式确认现实结果。
+
+场景必须服务概念。不要为了“每节都有案例”机械加入和设计无关的故事。
+
+---
+
+## 7. Alternatives 和删除条件属于架构质量
+
+Part A 不应该只解释“当前设计为什么合理”，还要说明：
+
+- 更简单的方案是什么；
+- 为什么当前约束下不够；
+- 哪些现成框架 / Provider 可以复用；
+- 当前方案新增了什么状态、成本、故障面或治理负担；
+- 业务量、风险或能力要求下降到什么程度时应该合并、外置或删除。
+
+特别禁止下面这类论证：
+
+```text
+因为业界常用 X，所以 Zuno 也需要 X。
+因为框架支持 Y，所以架构里应该有 Y。
+因为已经实现了 Z，所以 Z 必须长期保留。
+```
+
+设计必须从问题和约束推导，而不是从技术库存反推需求。
+
+---
+
+## 8. README、总体架构和模块 Part A 的信息层级不同
+
+Human-first 不等于每一层重复完整解释同一件事。
+
+- `docs/architecture/README.md`：帮助读者进入正确文档和理解当前文档体系；
+- `architecture.md` Part A：解释总体系统为什么这样组织，以及关键跨域边界；
+- `docs/modules/README.md`：提供九个责任域的地图、任务主线和阅读导航；
+- 单模块 Part A：深入解释这个责任域自身的概念设计。
+
+同一不变量可以在多处简短出现，但完整推导应该有主要 Owner 文档。其他文档只保留当前上下文所需解释并指向主要位置，避免整段复制。
+
+---
+
+## 9. 机器校验只负责防退化，不负责给内容质量打分
+
+文档质量不能可靠地通过关键词数量、固定标题数量或英文术语比例证明。
+
+Validator 的职责分三层：
+
+### Hard failure：可以机械证明的错误
+
+例如：
+
+- Canonical 文档缺失；
+- Part A / B / C 层次丢失；
+- Current / Target 边界违反已经存在的治理规则；
+- 架构镜像 / 第二套 Canonical 文档出现；
+- 必需链接或语义标记丢失；
+- 冻结架构不变量发生未经批准的漂移。
+
+### Regression floor：只防止明显退化
+
+例如 Part A 完全退化成几百字索引、几乎没有自然语言、主要由表格 / 列表组成。
+
+这些阈值只能说明“太薄”，不能说明“够好”。达到阈值不等于通过内容质量审查。
+
+### Warning / Human review：不能稳定机器判断的问题
+
+例如：
+
+- 术语进入过早；
+- 一个段落名词密度很高；
+- 推理链断裂；
+- 替代方案只是形式存在；
+- 场景没有真正证明设计必要性；
+- 标题齐全但内容空洞；
+- 看似可读但把 Target 写得像 Current。
+
+**禁止为了自动化方便，把这些软性质量问题转成关键词配额或统一模板 hard fail。**
+
+任何新增 readability validator 都必须回答：它是在发现可机械证明的退化，还是在假装自动评分技术写作？如果是后者，应降级为 warning 或人工 checklist。
+
+---
+
+## 10. Anti-gaming：不能“为了过治理检查”写文档
+
+下面行为视为治理失败，即使脚本全绿：
+
+- 为满足小节数量而拆出空洞标题；
+- 为满足关键字检查而插入不参与叙事的标准词；
+- 为满足“有 Trade-off”而写一句泛泛的“复杂度会增加”；
+- 为满足“有场景”而加入不能证明设计边界的例子；
+- 为降低术语密度，把必要精确概念换成模糊中文；
+- 为提高自然段数量，把一个完整论证强行切碎；
+- 为保持 Part A 很长，重复相同设计结论。
+
+治理的目标是提高读者对设计的理解，不是提高文档对 Validator 的适配度。
+
+---
+
+## 11. Human Conceptual Review Checklist
+
+修改 `architecture.md` Part A 或任一模块 Part A 后，人类 Reviewer 至少回答：
+
+1. 不认识 Zuno 内部对象名的人，能否理解这个模块为什么存在？
+2. 每个重要设计是否先出现真实问题 / 约束，而不是突然出现解决方案？
+3. 是否解释了最简单方案，以及它在什么具体条件下失败？
+4. 术语第一次出现以前，对应概念是否已经能用自然语言理解？
+5. 技术深度主要来自因果推导，还是来自 vocabulary density？
+6. 有没有连续列 Object / State / Contract，却没有推动新的设计判断？
+7. 正常路径是否说明设计如何工作，而不只是列流程节点？
+8. 至少一个关键失败是否说明“为什么不能用更直觉的恢复方式”？
+9. 是否解释主要替代方案，而不是设置一个稻草人方案？
+10. 是否诚实说明当前设计增加的复杂度、成本和故障面？
+11. 是否说明什么时候应该简化、复用外部方案或删除这层复杂度？
+12. 是否有实现精度内容应该下沉 Part B，而不损失 Part A 的概念深度？
+13. 是否为了统一格式出现没有信息增益的标题、段落或关键词？
+14. Current / Target / Future / History / Unknown 是否仍然严格分离？
+15. 读完以后，Reviewer 能复述的是几个设计原则，还是只能复述一串内部名词？
+
+如果第 15 条答案主要是内部名词，即使文档很长、格式完整、Validator 全绿，也应判定 Human Narrative 仍需重写。
+
+---
+
+## 12. 与现有治理的关系
+
+本标准只补充 Human-first 写作质量，不替代：
+
+- [`human-first-documentation-standard.md`](human-first-documentation-standard.md) 的 Part A / B / C 分层；
+- [`project-fact-provenance.md`](project-fact-provenance.md) 的事实来源约束；
+- ADR 对长期架构决策的约束；
+- `docs/evidence/` 对 Current 的证明；
+- Architecture / Module 自身的 Owner、Failure、Recovery 和 Cross-Module Consistency。
+
+发生冲突时，不允许为了“写得更顺”改变架构事实。先修正 Narrative；只有确实暴露 Owner 冲突、恢复断链、Contract 不成立或安全权威不清时，才升级为 Architecture Gap。

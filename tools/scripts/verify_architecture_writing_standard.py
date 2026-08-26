@@ -9,6 +9,7 @@ ARCH = ROOT / "docs/architecture/architecture.md"
 VIEWS = ROOT / "docs/architecture/architecture-views.md"
 HTML = ROOT / "docs/architecture/architecture.html"
 STANDARD = ROOT / "docs/governance/human-first-documentation-standard.md"
+QUALITY_STANDARD = ROOT / "docs/governance/architecture-narrative-quality-standard.md"
 MODULES = ROOT / "docs/modules"
 
 MODULE_FILES = (
@@ -51,6 +52,25 @@ def verify() -> list[str]:
         ):
             if marker not in standard:
                 errors.append(f"human-first standard missing model marker: {marker}")
+
+    if not QUALITY_STANDARD.exists():
+        errors.append("missing architecture narrative quality standard")
+    else:
+        quality_standard = QUALITY_STANDARD.read_text(encoding="utf-8")
+        # These markers verify that the governance layer preserves the intended principles.
+        # They deliberately do not score architecture prose or force identical module templates.
+        for marker in (
+            "Part A 可以很长，但长度必须来自概念设计",
+            "Part A 负责设计思想，Part B 负责设计精度",
+            "Terminology is compression, not explanation",
+            "推荐的是推理链，不是固定模板",
+            "机器校验只负责防退化，不负责给内容质量打分",
+            "Anti-gaming：不能“为了过治理检查”写文档",
+            "Human Conceptual Review Checklist",
+            "禁止为了自动化方便，把这些软性质量问题转成关键词配额或统一模板 hard fail",
+        ):
+            if marker not in quality_standard:
+                errors.append(f"architecture narrative quality standard missing principle: {marker}")
 
     for path in (ARCH, VIEWS, HTML):
         if not path.exists():
