@@ -166,6 +166,30 @@ Application 层最容易膨胀，因为任何跨模块问题都可以被包装�
 
 如果某段逻辑需要理解 Evidence 如何准入，应该回 02；如果需要理解索引覆盖，回 03；如果需要判断 Plan 是否可继续，回 04；如果需要确认外部 Effect，回 06；如果需要计算授权，回 08。把判断送回 Owner 看似多了一次调用，却避免 Application 成为第二套所有模块的影子实现。
 
+### Application Projection 为什么可以缓存，但不能成为新的业务真相
+
+产品为了快速展示，往往需要把多个 Owner 的状态组合成一个 read model：当前任务是否等待材料、结果是否可查看、哪个消费者还在重试。这样的 Projection 很有价值，但它本质上是可重建视图。
+
+如果 Projection 落后，而 02 已经把 WorkProduct 标成 stale，01 不能继续因为本地 `status=READY` 就发布；如果 06 已经确认 Effect 成功，而 Delivery read model 还在 retrying，也应该由 owner fact 修复 Projection。性能优化可以让普通查询先读缓存，但在会产生新的受保护动作或强业务结论时，必须知道什么时候回查更强事实。
+
+这给 01 一个重要恢复原则：自己的 read model 可以丢、可以重建、可以最终一致；真正不能丢的是 request / publication / delivery 中由 01 自己拥有的产品事实，以及它们引用的上游 Authority。
+
+### API 兼容为什么不仅是字段能不能解析
+
+新增一个 optional field 往往是 schema-compatible，但语义未必兼容。旧客户端如果把新的 `PARTIAL` 当成过去的 `READY`，或者把“交付已受理”理解成“远端已经采用”，即使 JSON 解析完全成功，业务仍然错误。
+
+因此 Host Contract versioning 应保护状态含义、完成条件、错误分类和幂等语义，而不仅是字段形状。新增状态时要问旧消费者会怎样解释未知值；改变默认路径时要问重复请求是否仍指向同一 logical invocation；交付协议升级时要保留旧版本的可恢复性。
+
+真正需要 breaking version 的，是消费者必须改变行为才能继续正确工作的语义变化。内部对象重命名或增加诊断字段则不应轻易升级成产品级 breaking change。
+
+### 入口过载时为什么要拒绝、排队或降级，而不是无限接受
+
+一个入口层如果只追求“请求都收到了”，很容易把容量问题转移成更难恢复的长队列。知识构建堵塞、模型 quota 耗尽、Runtime backlog 或外部法院系统不可用时，继续无界创建 Invocation 只会增加超时、重复请求和取消风暴。
+
+01 应把 admission control 当成产品语义的一部分：哪些请求可以立即处理，哪些可以排队，哪些应该让客户端稍后重试，哪些简单任务可以走更短路径。不同 tenant / task class 还可能需要公平性和配额，避免一个批量任务耗尽所有交互式容量。
+
+这里不要求 01 自研完整流量平台。成熟 Gateway、Queue 和限流器都可以复用；Zuno 自己需要定义的是过载时哪些业务承诺仍然成立，以及拒绝/排队不能绕过幂等、授权和 Scope 语义。
+
 ### 当前、目标与缺口
 
 Current 只能回到 `docs/evidence/` 判断；这篇文档完整描述产品边界并不代表 Request ledger、Delivery store、Outbox、Host adapter 或 AgentVersion registry 已经实现。

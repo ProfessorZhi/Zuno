@@ -160,6 +160,38 @@ Audit record 应优先保存身份引用、动作 hash、资源版本、Decision
 
 可解释拒绝并不意味着上层可以修改安全判断。01 可以把原因翻译成用户行动，04 可以等待或 Replan，07 可以换到允许的 Provider，但只有 08 能在条件变化后形成新的 Authorization / Approval 事实。
 
+### Authorization 到真正执行之间为什么还存在 TOCTOU 风险
+
+即使 08 在某一时刻返回 ALLOW，执行模块真正读取文件、发送模型请求或越过 Tool send boundary 之前仍可能经过排队、重试和人工等待。期间 SecurityEpoch、资源版本或 Approval 都可能变化，这就是典型的 time-of-check / time-of-use 问题。
+
+解决方式不是把所有动作塞进一个巨大安全事务，而是让 Decision 绑定关键前提，并在真正产生风险的边界尽量晚地验证当前适用性。已经发生的历史动作不回滚，尚未发生的新动作则不能拿旧 allow 当永久票据。
+
+因此“拿到 AuthorizationDecision”只是满足门禁的一部分，消费者还必须确认它仍匹配当前资源、动作和 policy epoch。
+
+### 后台 Worker 为什么不能继承用户的全部长期权限
+
+异步任务离开 HTTP 请求以后，如果直接保存一个长期用户 token 或管理员 Secret，任何后续 Step 都可能拥有超过自己需要的权限，凭证泄露的影响面也会被放大。
+
+更合理的是传播稳定 principal / scope refs，在每个受保护边界获得当前 Decision，并让 Secret 通过受用途和时间限制的 lease 使用。Specialist、Subgraph 或 Tool Worker 的权限上限不能高于触发它的合法 Scope，也不能因为它是“系统内部服务”就自动绕过政策。
+
+这是一种 least-privilege delegation：长期保存的是身份和因果，不是无限期可执行所有动作的能力。
+
+### “允许执行”为什么不等于“这个动作业务上是正确的”
+
+08 可以证明当前主体有权执行某个动作、数据允许外发、审批满足政策，但它不负责判断模型结论是否正确、Evidence 是否充分、Tool 参数是否符合专业语义。安全 Authority 也不能变成新的 God Validator。
+
+例如一个动作完全有权限，却引用了错误案件版本；这应该由 01/02/03/05/06 的业务与执行语义拦截。反过来，一个专业结果再正确，如果当前没有授权，也不能越过 08。
+
+把 permission 与 correctness 分开，可以防止“Security 已经 allow，所以后面无需校验”的危险推断。
+
+### Policy 版本升级为什么也需要兼容和可回溯
+
+安全策略会演进：某类模型 Provider 可能被禁止，Approval 门槛可能提高，数据生命周期规则也可能变化。如果只覆盖一份全局配置，事后很难解释历史动作为什么当时被允许，也无法区分旧决定是“当时合法”还是“现在仍适用”。
+
+SecurityEpoch / PolicyVersion 的价值就是把历史 Decision 绑定到当时规则，同时让新动作识别政策已经变化。策略发布机制可以复用成熟 Policy Engine，但 Zuno 需要保留足够版本和 reason，支持回溯、撤权传播和安全回归测试。
+
+策略升级的目标不是让过去瞬间变非法，而是让未来受保护动作按新规则收敛，并能解释这个边界发生在什么时候。
+
 ### 当前、目标与缺口
 
 Current 是否已有 Policy Engine、SecurityEpoch、Approval binding、Secret Lease、durable audit 和 per-store lifecycle enforcement，必须由代码和安全测试证明；Target 设计不能冒充实施完成。
