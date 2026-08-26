@@ -1,0 +1,45 @@
+name: Temporary architecture-neutral cleanup
+
+on:
+  push:
+    branches:
+      - docs/architecture-human-quality-pass
+
+permissions:
+  contents: write
+
+jobs:
+  cleanup:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: docs/architecture-human-quality-pass
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Remove nonessential security example
+        run: python tools/scripts/_tmp_remove_nonessential_security_example.py
+      - name: Remove temporary workflow
+        run: rm .github/workflows/_tmp-remove-nonessential-security-example.yml
+      - name: Validate document set
+        run: |
+          python tools/agent/render_architecture.py --check
+          python tools/scripts/verify_architecture_document_set.py
+          python tools/scripts/verify_architecture_semantic_alignment.py
+          python tools/scripts/verify_architecture_writing_standard.py
+          python tools/scripts/verify_architecture_human_readability.py
+          python tools/scripts/verify_docs_entrypoints.py
+          python tools/scripts/verify_markdown_internal_links.py
+          python tools/scripts/verify_repo_structure.py
+          python .agent/scripts/verify_agent_system.py
+          python .agent/scripts/verify_doc_boundaries.py
+      - name: Commit cleanup
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "docs: keep security narrative architecture-neutral"
+          git push origin HEAD:docs/architecture-human-quality-pass
