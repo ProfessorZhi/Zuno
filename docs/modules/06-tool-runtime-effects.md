@@ -164,7 +164,7 @@ SDK 或 Adapter 常常会把底层异常统一成一个漂亮的 `ToolError`。�
 
 Action identity 可以防止同一个逻辑动作因为网络重试被执行两次，但它不能阻止两个不同请求对同一远端资源产生冲突。例如两个 Run 分别认为自己应该提交不同版本，二者都有不同且合法的 idempotency key，仍可能在远端互相覆盖。
 
-是否需要 resource version、业务唯一约束、串行化或远端 CAS，要由具体 Tool 语义决定。06 至少必须让 ToolDefinition 表达这种并发前提，而不能把“我们有 idempotency key”误写成“所有并发都安全”。
+是否需要 resource version、业务唯一约束、串行化或远端 CAS，要由具体 Tool 语义决定。06 至少要在 Tool 语义中明确这种并发前提是否存在；具体由哪个字段或 Contract 表达留到 Detail Design，而不能把“我们有 idempotency key”误写成“所有并发都安全”。
 
 这再次说明幂等是重复执行问题的一部分，不是分布式正确性的万能答案。
 

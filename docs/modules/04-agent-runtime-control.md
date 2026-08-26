@@ -156,11 +156,11 @@ Planner 可以生成结构漂亮但实际上不可执行的 DAG：依赖循环�
 
 这不是要求构建万能静态证明器，而是把明显错误挡在派发前。越能在激活前确定的条件，越不应该留给运行中靠 Retry 猜。
 
-### Runtime Admission Control 为什么和 Step 并行度是两个问题
+### Runtime 负载准入为什么和 Step 并行度是两个问题
 
 即使单个 Run 内并行度受控，系统仍可能同时启动成千上万个复杂 Run，把 Checkpointer、模型 quota 和 Worker pool 压垮。入口 01 可以做产品级限流，04 仍需要知道自己当前能承载多少 active / waiting / runnable 工作。
 
-运行时 admission control 可以按 task class、priority、budget 和资源 profile 决定立即激活、排队或拒绝；已经激活的 Run 再由 scheduler 决定哪些 Ready Step 现在派发。两层分开，避免“每个 Run 都守规矩，但所有 Run 加起来把系统打满”。
+运行时负载准入可以按 task class、priority、budget 和资源 profile 决定立即激活、排队或拒绝；已经激活的 Run 再由 scheduler 决定哪些 Ready Step 现在派发。两层分开，避免“每个 Run 都守规矩，但所有 Run 加起来把系统打满”。
 
 具体 Queue / scheduler 可以复用成熟基础设施，04 自己需要保护的是控制语义和公平性，而不是自研通用集群调度器。
 
