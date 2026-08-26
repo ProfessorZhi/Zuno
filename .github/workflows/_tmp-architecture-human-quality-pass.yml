@@ -25,6 +25,9 @@ jobs:
       - name: Rewrite Human-first architecture narratives
         run: python tools/scripts/_tmp_architecture_human_quality_pass.py
 
+      - name: Align prose validators with non-rigid governance
+        run: python tools/scripts/_tmp_relax_prose_template_markers.py
+
       - name: Remove temporary workflow
         run: rm .github/workflows/_tmp-architecture-human-quality-pass.yml
 
