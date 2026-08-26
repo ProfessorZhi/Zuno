@@ -1,0 +1,45 @@
+name: Temporary conceptual terminology cleanup
+
+on:
+  push:
+    branches:
+      - docs/architecture-conceptual-depth-round2
+
+permissions:
+  contents: write
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: docs/architecture-conceptual-depth-round2
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Apply cleanup
+        run: python tools/scripts/_tmp_round2_conceptual_cleanup.py
+      - name: Remove temporary workflow
+        run: rm .github/workflows/_tmp-round2-conceptual-cleanup.yml
+      - name: Validate architecture document set
+        run: |
+          python tools/agent/render_architecture.py --check
+          python tools/scripts/verify_architecture_document_set.py
+          python tools/scripts/verify_architecture_semantic_alignment.py
+          python tools/scripts/verify_architecture_writing_standard.py
+          python tools/scripts/verify_architecture_human_readability.py
+          python tools/scripts/verify_docs_entrypoints.py
+          python tools/scripts/verify_markdown_internal_links.py
+          python tools/scripts/verify_repo_structure.py
+          python .agent/scripts/verify_agent_system.py
+          python .agent/scripts/verify_doc_boundaries.py
+      - name: Commit cleanup
+        shell: bash
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add docs/modules/01-application-integration.md docs/modules/04-agent-runtime-control.md docs/modules/06-tool-runtime-effects.md tools/scripts/_tmp_round2_conceptual_cleanup.py .github/workflows/_tmp-round2-conceptual-cleanup.yml
+          git commit -m 'docs: tighten conceptual terminology boundaries'
+          git push origin HEAD:docs/architecture-conceptual-depth-round2
