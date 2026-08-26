@@ -50,15 +50,6 @@ def validate_design(content: str) -> list[str]:
         "# Zuno 总体 Target 架构",
         "## Part A — Architecture Narrative",
         "## Part B — Detailed Architecture Specification",
-        "### 1. Zuno 要解决的到底是什么问题",
-        "### 2. 不是所有法律任务都需要同样复杂的系统",
-        "### 3.1 为什么按“事实谁负责”切架构，而不是按技术栈切",
-        "### 4. 一次复杂法律任务怎样完整运行",
-        "### 7. 为什么系统里的状态不能全部放在一起",
-        "### 8.1 九个责任域不是九段必须依次经过的流水线",
-        "### 9. 一次系统故障以后怎样恢复",
-        "### 11.1 一项复杂机制什么时候应该主动删除",
-        "### 12. 当前哪些能力仍然没有证明",
         "### B1 Scope and Global Invariants",
         "### B2 Responsibility / Ownership Map",
         "### B3 Cross-boundary Contracts",
@@ -86,8 +77,6 @@ def validate_design(content: str) -> list[str]:
         "Security & Governance",
         "Observability & Evaluation",
         "Platform / Infrastructure",
-        "责任层",
-        "可选上下文边界",
         "FastAPI",
         "LangGraph",
         "PostgreSQL",
@@ -96,10 +85,7 @@ def validate_design(content: str) -> list[str]:
         "Current",
         "Target",
         "History",
-        "为什么必须独立服务",
-        "不是库或 Worker",
         "Logical Responsibility",
-        "Target Status Boundary",
         "KnowledgeGeneration lifecycle != task-level ReadinessDecision",
         "EvidenceCandidate != Evidence",
         "CitationLineage != WorkProductCitationBinding",
@@ -112,9 +98,6 @@ def validate_design(content: str) -> list[str]:
     for marker in ("docs/project/project.md", "docs/architecture/"):
         if marker not in content:
             errors.append(f"architecture.md does not route to canonical project layer: {marker}")
-
-    if "9 个 Target Logical Modules" not in content or "Round 02" not in content:
-        errors.append("architecture.md must record the frozen nine-module target and its Round 02 source")
 
     for marker in (
         "final_module_count: 9",

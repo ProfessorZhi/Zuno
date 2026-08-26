@@ -4,59 +4,39 @@
 
 ## Part A — Human Narrative
 
-### 这个模块保护的是“专业语义”，不是函数名
+### 这个模块解决的是“专业能力怎样成为产品契约”，不是“把所有算法包装成 Tool”
 
-法律智能系统里，一个函数能被调用并不代表它构成稳定能力。今天叫 `extract_events()`，明天换成另一个模型或规则引擎，如果输入要求、输出含义、证据要求、失败方式和不确定性都改变，上层仍按旧语义使用，就会产生比 API 报错更危险的“静默语义漂移”。
+Zuno 会使用事件抽取、事件对齐、争议识别、证据分析、类案检索、法条推荐和其他法律算法。这些能力可能来自课题组研究、规则代码、传统模型、新 LLM 或外部服务。直接让 Runtime 依赖某个脚本或 Provider，短期最省事，长期却会把业务语义和实现版本绑死。
 
-因此 05 的核心是：**Capability = 稳定专业语义**。它定义“这项能力解决什么问题、需要什么输入和证据、输出能被怎样解释、失败时是什么含义”，再允许一个或多个 Provider / Skill 实现这个语义。
+05 的职责是把“能完成什么专业任务”稳定下来，再允许不同 Provider 去实现。Runtime 调用的是专业能力语义，Eval 判断当前实现是否合格，Domain 决定输出能否成为正式事实。
 
-### 为什么研究成果不能直接变成生产 Skill
+### 最简单的 provider.call() 为什么会慢慢失去边界
 
-研究代码通常为了验证方法，输入假设、数据格式、容错、版本、权限和异常语义都不完整。把一个 notebook、脚本或 Prompt 文件直接注册成“能力”，Planner 就会开始依赖它，却没有办法知道它在哪些材料、任务和风险条件下可靠。
+一个研究模型刚接入时，最简单方案是写一个 Python wrapper：传入文本，返回 JSON。只要 Demo 跑通，看起来已经是 Skill。
 
-更稳妥的路径是 Research Artifact → Capability Contract → Versioned Provider → Conformance → Evaluation → Eligibility。研究成果可以很快进入实验，但只有 Contract、测试和质量证据都足够时才成为可被 Runtime 规划依赖的能力。
+随着模型升级、输入材料类型变化、多个 Provider 共存，问题就出现了：不同实现对“事件”定义是否一致；失败返回空数组是“没有事件”还是“模型故障”；新版字段是否兼容旧调用方；某个 Provider 技术可调用是否意味着质量足够。没有稳定能力语义，Runtime 只能不断理解每个实现的特殊情况。
 
-### 为什么 Capability 和 Provider 必须分开
+### Capability = 稳定专业语义
 
-“事件抽取”是专业语义；某个大模型 Prompt、规则引擎、微调模型或外部服务只是实现方式。Provider 可以替换，但 CapabilityVersion 的语义不能因为实现换了就悄悄变化。
+Capability 的核心不是类名，而是一份专业承诺：输入是什么业务含义，输出表达什么，哪些情况算成功、拒绝、不可判定或需要 Review，以及结果可以被哪些后续流程消费。
 
-这让 Planner 面对的是稳定边界：它需要“输入一组材料，返回带来源和不确定性的事件候选”，而不是“调用某个厂商模型”。当 Provider 改版时，05 先验证它是否仍满足同一个 Capability Contract。
+实现可以变化，但同一 CapabilityVersion 下的语义必须稳定。真正改变专业含义时创建新版本，而不是在旧接口后面偷偷改变“同一个字段是什么意思”。
 
-### Conformance 为什么不是质量证明
+### Provider 为什么必须和 Capability 分开
 
-Provider Conformance 主要证明结构和最低行为契约成立，例如输入 schema、输出 schema、必填 provenance、错误分类、确定性 guard 和安全边界没有被破坏。
+一个 Capability 可以由课题组旧模型、现代 LLM、规则系统或外部服务实现。把 Provider identity 从能力语义中分离，Runtime 才能根据当前资格选择实现，而不把业务代码绑定到某个框架或模型家族。
 
-但 **Provider Conformance != task quality**。一个 Provider 可以 100% 返回合法 JSON，却在真实法律材料上经常漏事件、错配主体或错误判断适用性。质量由 09 的 Eval、人工 Reviewer 和真实任务证据证明。
+Provider 变化可以是部署、性能或模型升级；Capability 版本变化则表示专业契约变化。两类版本分开以后，回放和 Eval 才能解释质量变化来自哪里。
 
-### Planner 为什么必须知道能力边界
+### Provider Conformance != task quality
 
-如果 Planner 只看到一个“万能分析工具”，很容易生成一个巨大 Step：“阅读全部 300 份材料、抽取事件、判断争议、找法条、写最终意见”。这样的 Step 无法局部验收、无法并行，也无法知道失败应该 Retry 还是 Replan。
+Conformance 回答“这个 Provider 是否遵守 Capability 契约”：字段、错误语义、版本、必要来源和行为边界是否一致。它是接入门槛，不是专业质量证明。
 
-05 要向 04 暴露 task class、输入规模边界、所需 Evidence / Readiness、side-effect declaration、成本 / 时延类别和限制，让 Planner 把复杂任务拆成执行器真正能完成和验收的 Step。
+所以必须保持 `Provider Conformance != task quality`。一个 Provider 可以完全符合 schema，却在复杂案件上准确率很差；反过来，一个研究脚本可能某项 benchmark 很强，却没有稳定错误语义，不适合直接进入生产调用路径。
 
-### Evidence requirement 为什么属于 Capability Contract
+### provider execution failure 和 capability semantic drift 为什么是两类故障
 
-专业能力不是只看文本参数。事实—证据对齐、冲突检测、法条适用性等能力，都可能要求特定 DocumentVersion、EvidenceCandidate、CitationLineage 或 Knowledge Readiness。
-
-所以 Capability Contract 必须说明最低 evidence requirement。输入数据不足时返回 `INSUFFICIENT_EVIDENCE`，而不是让模型“尽量回答”。需要扩大检索范围时由 04 / 03 形成新的任务条件，而不是 05 偷偷读取更多材料。
-
-### 输出为什么只能是 Proposal / Candidate / Observation / Reference
-
-Capability 可以提出 Finding Proposal、Conflict Candidate、ApplicableLaw Candidate 或结构化 Observation，但不能因为专业算法“很确定”就直接写 Canonical Domain State。
-
-02 是正式业务准入边界。05 的输出携带 CapabilityVersion、ProviderVersion、输入与 evidence refs、不确定性和失败信号，供 04 Step Acceptance 和 02 Formal Admission 判断。
-
-### Skill 为什么不是新的业务对象
-
-Skill 更像实现 / 组合方式：一个 Capability 可以由多个 Skills、模型调用、规则函数和检索步骤组成；一个 Skill 也可能服务多个 Capability。把每个 Skill 都升级成正式业务实体会让数据库跟代码目录一起膨胀。
-
-因此 Skill identity 用于实现、部署和 provenance，不自动进入七对象 Canonical Legal Kernel。只有真正拥有长期业务身份和生命周期的概念才进入 02。
-
-### Provider failure 和 semantic drift 为什么不能混在一起
-
-临时 503、超时、限流说明“这次实现没跑起来”，计划可能仍然正确，可以 Retry 或切换经过验证的等价 Provider。
-
-语义漂移则说明实现不再满足原 Capability Contract，例如输出字段含义改变、适用范围缩小、证据 requirement 变化。此时：
+Provider 超时、依赖 503、GPU 不可用，属于实现执行失败；如果同一个版本突然改变事件边界、字段含义或输出约束，则属于能力语义漂移，不能通过普通 Retry 掩盖。
 
 ```text
 provider execution failure
@@ -64,73 +44,119 @@ provider execution failure
 capability semantic drift
 ```
 
-后者应暂停 Eligibility，通知 04 re-resolve / Replan，而不是简单重试同一个 Step。
+前者可以 fallback 或 retry，后者应该阻断资格、触发版本升级或重新验证。把两类失败都叫“调用失败”，会让系统在语义已经不可信时继续切换重试。
 
-### Fallback 为什么必须经过等价性证明
+### Eligibility 为什么不是“服务健康”
 
-“模型 A 挂了，切模型 B”只有在 Provider B 对当前 CapabilityVersion 的 Conformance、质量下限、安全资格和输入能力都满足时才是 fallback。否则只是换成一个语义不同的实现。
+Provider 健康只说明技术上能调用。某次任务能否使用，还取决于 CapabilityVersion、Conformance、质量基线、数据限制、当前材料类型和任务风险。
 
-如果替代 Provider 只能完成较弱任务，必须显式改变 task requirement / Plan；不能在 Gateway 或 Capability Adapter 内部静默降级，再把结果包装成原能力成功。
+Eligibility 是这些条件的任务级组合。它防止“API 是绿的”被误解成“这个实现适合当前法律任务”。Runtime 可以消费资格，却不应该自己重新实现专业评测逻辑。
 
-### Capability Eligibility 为什么是动态事实
+### Invocation 为什么需要绑定版本和输入身份
 
-一个 Provider 曾经通过测试，不代表永远可用。模型版本升级、Prompt 改动、数据政策变化、质量回归、供应商下线或某类输入事故都可能使它从 ELIGIBLE 变成 RESTRICTED / SUSPENDED。
+专业输出需要能解释“由哪个 CapabilityVersion、哪个 ProviderVersion、基于哪些材料和参数产生”。否则模型升级后出现质量变化，系统无法重放或归因。
 
-Eligibility 绑定 CapabilityVersion、ProviderVersion、支持的 task / scope、质量证据和必要 Security 条件。历史输出仍保留当时 provenance，未来调用按当前资格选择。
+Invocation identity 还帮助处理重复执行和 cache。它不应该和 Runtime Step id 合并，因为同一个 Step 可能多次尝试不同 Provider，而同一 Capability 也可能被不同 Run 调用。
 
-### 为什么 Capability cache 很容易制造旧事实
+### Fallback 为什么必须保护专业语义
 
-昂贵专业调用可以缓存，但 cache key 如果只用 input text，就可能把旧 DocumentVersion、旧 KnowledgeGeneration、旧 CapabilityVersion 或旧 Security scope 的结果带进新任务。
+Provider A 不可用时切到 B 看起来只是可用性优化，但 B 必须满足同一 Capability 的最低语义和质量要求。否则“fallback 成功”可能只是换成了一个会返回 JSON、却不适合当前任务的实现。
 
-缓存必须绑定真正影响专业语义的版本：CapabilityVersion、ProviderVersion、规范化 input refs、Evidence / DocumentVersion / KnowledgeGeneration refs、必要配置与安全范围。结果晚到或缓存命中后，消费者仍要检查当前 Plan 和 Domain freshness。
+因此 fallback 候选来自当前资格集合，而不是所有技术兼容 Provider。没有合格实现时，正确结果可能是让 Runtime Replan、进入 Review 或明确 abstain，而不是无限降低标准。
 
-### 内部模型和内部 Tool 为什么仍然属于别的 Owner
+### Cache 为什么不能把专业输出变成永久事实
 
-一个 Capability 可以内部调用 07 模型，也可以需要 06 Tool。但“包在 Capability 里”不能让它绕过模型外发、预算、外部 Effect、审批或 Reconciliation。
+某些确定性或高重复能力可以缓存，但 cache identity 需要绑定输入版本、Capability / Provider 版本、配置和必要安全 Scope。材料或专业语义变化后，旧结果不能静默复用。
 
-05 只组合专业语义。模型调用事实仍归 07，现实 Effect 仍归 06，Authorization / Approval 仍归 08。Capability output 通过 refs 关联这些事实。
+更重要的是，缓存命中只表示“可以复用一次专业计算结果”，仍然不等于 Domain 正式接受。Formal Admission 的业务资格继续由 02 判断。
 
-### Research-to-Capability 为什么需要可回滚版本
+### Capability、Model 和 Tool 为什么不能混成一个抽象
 
-研究迭代很快，新的算法未必比旧的稳定。CapabilityVersion 激活后不应该被原地覆盖；升级创建新 version，Provider binding 和 Eligibility 可以逐步切换。
+LLM 是一种计算 Provider，Tool 可能产生现实副作用，Capability 则是专业业务语义。三者有交集，但失败和权威不同。
 
-如果评测发现回归，可以停止新版本 Eligibility 并恢复旧的已验证 Provider，而不修改已经由旧版本产生的历史输出和正式 Domain 结果。
+一个专业能力可以内部调用模型，也可以产生一个 Action Proposal；模型调用事实由 07 记录，现实执行由 06 控制，05 只保证专业输出满足自己的契约。把三者统一成万能 Tool，会让预算、安全、Effect 和专业质量边界互相污染。
 
-### 专业失败为什么必须是 typed failure
+### 研究成果怎样进入 Capability，而不是直接进入架构
 
-`UNSUPPORTED_INPUT`、`INSUFFICIENT_EVIDENCE`、`PROVIDER_FAILURE`、`SCHEMA_MISMATCH`、`SEMANTIC_DRIFT`、`QUALITY_RESTRICTED` 对 Runtime 的含义完全不同。把它们都抛成 Exception，会逼 04 猜 Retry / Replan。
+研究论文或课题组算法首先证明某个局部问题可能可解，不自动证明它已经是稳定产品能力。进入 Zuno 前，需要明确语义、版本、来源、Provider 接口、Conformance 和 Eval。
 
-05 应返回稳定 failure class 与必要 reason refs，让 04 能按计划假设判断局部 Retry、扩大检索、Replan、Abstain 或 Human Review。
+这样事件抽取、事件对齐、冲突识别等研究资产可以保留学术价值，又不会因为“是我们自己的模型”就跳过产品化门槛。新的 LLM Provider 也可以在同一专业语义下与旧模型公平比较。
 
-### 为什么不能每个能力都做成一个微服务
+### 为什么强模型不能成为所有 Capability 的默认答案
 
-专业能力很多，但逻辑边界不等于部署边界。默认可在同一 Python backend / worker pool 中通过 typed ports 和 versioned registry 组合；只有独立扩缩容、依赖隔离、安全边界或部署生命周期形成证据时，才按 ADR-0012 考虑物理拆分。
+LLM 可以快速覆盖很多专业任务，但成本、延迟、可复现性和结构化稳定性并不总优于专门模型、规则或检索算法。能力层应该允许不同实现按任务价值竞争。
 
-研究团队需要的是可替换和可验证，不是服务数量。
+复杂开放判断可能值得更强推理模型，稳定抽取可能更适合小模型或规则。选择依据应该是 Eval 和业务约束，而不是“最新模型能力更强”的抽象印象。
 
-### Capability Contract 为什么不能退化成一份 JSON Schema
+### Provider 退出为什么必须是正常路径
 
-JSON Schema 能证明字段长什么样，却回答不了专业能力最关键的问题：这项能力在什么业务问题上成立、输入需要哪些前置条件、证据最低要覆盖到什么程度、输出里的“不确定”如何解释、什么失败意味着可以 Retry、什么失败意味着原任务假设已经失效。一个事件抽取 Provider 即使返回完全合法的 `events[]`，如果它把“推测发生时间”和“材料明确记载时间”混成同一种字段，上层仍会得到结构正确但语义错误的结果。
+如果某个外部服务停服、研究模型不再维护或质量下降，系统应该能撤销它的 Eligibility，而不要求重写 Runtime 和 Domain。Provider exit 是可替换架构真正成立的测试。
 
-因此 Capability Contract 至少要同时描述 purpose、supported task class、preconditions、evidence requirement、input/output semantic schema、uncertainty contract、failure taxonomy、side-effect declaration 和 security requirement。结构 schema 只是其中一层。Conformance 也要验证这些最低语义，例如要求每个冲突候选都能回到两个可定位来源、要求 `INSUFFICIENT_EVIDENCE` 在关键材料缺失时显式返回，而不是用一个看似完整的空数组掩盖。如果这些行为只能靠调用方“经验上知道”，Capability 还没有形成可依赖的架构边界。
+同样，加入新 Provider 也不应该自动获得资格。先证明 Conformance，再证明相应任务质量，最后进入可用集合。
 
-### 什么变化应该产生新的 CapabilityVersion，什么只需要新的 ProviderBinding
+### 什么时候 05 应该更简单
 
-版本设计的关键不是数字格式，而是区分“专业承诺变了”还是“实现换了”。如果同一事件抽取能力仍然接受相同输入、产生同义输出、保持相同证据和失败语义，只是从模型 A 切换到模型 B，通常是新的 ProviderBinding / ProviderVersion；历史 CapabilityVersion 不必变化。反过来，如果输出把时间从单值改成区间、允许没有来源的推断事件、扩大支持任务类别，或者改变 `INSUFFICIENT_EVIDENCE` 的判定，这已经改变上层可以依赖的语义，应创建新的 CapabilityVersion。
+如果系统只有少量稳定内部函数，没有多个实现、版本演进和独立质量门槛，那么 Capability 层可以非常薄，甚至只是清晰的 Python Protocol 和测试集合。
 
-这条边界能避免两个极端：一是每次 Prompt 微调都把产品版本号炸开，二是专业语义已经变化却仍用同一版本蒙混。Provider / config 的小改动虽然不一定升 CapabilityVersion，仍然要形成新的 binding/config ref，并重新经过 Conformance 和必要质量回归；否则“语义没变”只是未经验证的假设。
+只有研究资产多、Provider 经常变化、需要独立评测和跨 Runtime 复用时，才值得增加 registry、eligibility 和更完整生命周期。能力管理不能为了“平台化”而自我膨胀。
 
-### 专业质量下降为什么不能被 Provider Success 掩盖
+### Capability Version 什么时候应该变，Provider Version 什么时候应该变
 
-Provider health、Schema success 和质量趋势属于不同层。一个模型可以连续几周 99.99% 可用，却因为供应商静默升级而让事实—证据对齐准确率明显下降；如果 05 只把“调用成功”当 Eligibility 依据，Runtime 会稳定地产生错误但格式完美的 Proposal。
+如果只是模型权重、部署地址或运行优化改变，而专业输入输出语义保持兼容，通常属于 ProviderVersion 演进；如果“事件”的业务定义、字段含义、错误语义或可接受输出发生变化，则需要新的 CapabilityVersion。
 
-因此 Eligibility 需要引用当前适用的 Eval evidence / reviewer evidence。09 可以按 task class 监测 acceptance、modification、rejection、unsupported claim、evidence sufficiency 等指标；当关键质量指标越过限制，05 应把后续 ProviderBinding 标为 RESTRICTED / SUSPENDED，并让 04 选择已验证替代路径、Replan 或转人工。这个动作只影响未来和尚未被接受的结果，不会倒写已经形成的历史 Domain fact。真正要判断历史 WorkProduct 是否失效，仍回到 02 的正式依赖与新证据机制，而不是让一条质量告警跨权威边界修改业务历史。
+这个区分让上层能够判断兼容性。Runtime 可以在同一 CapabilityVersion 下替换合格 Provider，而不重新理解业务；能力语义真正变化时，上层则明确选择是否迁移，而不是被隐藏升级影响。
+
+版本规则不能只靠 semver 名字，关键是变化是否改变消费者必须理解的专业承诺。
+
+### Deterministic Capability 和 Generative Capability 为什么可以共享能力边界
+
+某些专业任务最适合规则或传统模型，另一些需要 LLM 开放推理。Capability 层不应该预设“专业能力就是 Agent”或“就是模型”。
+
+只要输入输出和失败语义相同，deterministic provider、ML provider 和 LLM provider 可以竞争同一能力资格。这样团队可以用更便宜、更稳定的实现替换昂贵模型，也可以在规则覆盖不足时引入 LLM，而不改变 Runtime 的业务调用方式。
+
+这也是研究工程化的重要价值：比较的是解决同一专业问题的方案，而不是比较框架品牌。
+
+### Qualification 为什么要和 Release 生命周期绑定
+
+一个 Provider 在 Dataset V3 上通过，不代表未来模型、Prompt、ProcessingSpec 或数据分布变化后永久合格。Qualification 需要绑定可复现配置和时间/版本范围，并在重大变化后重新评测。
+
+同时不能把 Eval 服务临时不可用解释成 Provider 自动失败或自动通过。已有 qualification 是否仍在有效期、当前安全政策是否允许、任务是否落在已覆盖 profile，都需要分别判断。
+
+这使 Eligibility 成为“当前任务现在能不能用”的组合，而不是 registry 中一个永远绿色的开关。
+
+### Build / Buy 对专业能力意味着什么
+
+课题组拥有研究成果，不等于所有能力都应该自研。成熟 OCR、通用 embedding、基础分类和模型 Provider 可以优先采购或复用；真正体现法律专业资产的语义、Eval 数据和特定算法可以自有。
+
+判断标准是差异是否长期重要、是否有可维护 Evidence，以及替代成本。如果外部能力已经稳定满足专业契约，自研实现没有明显质量、隐私、成本或可控性收益，就不应为了“技术含量”重复建设。
+
+Capability abstraction 的价值之一正是允许 Buy 和 Build 共存，而不是把所有 Provider 都吸收到一套自研框架里。
+
+### 05 为什么不应该变成中央 Prompt / Plugin 市场
+
+能力注册表很容易膨胀成所有 Prompt、Tool、MCP server 和插件元数据的统一市场。这样做看似平台化，却会把专业契约、模型调用、现实副作用和安全边界混在一个配置中心。
+
+05 只拥有专业 Capability identity、版本、Provider conformance 与资格。Prompt 的具体业务语义跟随使用场景，Tool effect 由 06，模型 transport 由 07，安全策略由 08。保持这个窄边界，才能让能力层真正稳定。
+
+### Capability 的失败语义为什么要允许“不会做”，而不是强迫每个 Provider 给答案
+
+专业系统容易把 Provider success rate 当成目标，于是实现会倾向于任何输入都返回一个结构完整的结果。但某个 Capability 可能只支持特定材料类型、语言、案件阶段或风险等级；超出已验证范围时，最安全的行为是明确 unsupported / insufficient / review required。
+
+这种“有边界的不会做”必须进入 Capability 语义，否则 Runtime 无法区分“任务本来不适用”和“Provider 临时坏了”。前者可能需要换 Capability、Replan 或人工，后者才适合 retry / fallback。同样，Eval 也应该惩罚在未知范围里自信输出，而不是只奖励覆盖率。
+
+Capability 越能精确声明自己的适用范围，上层越不需要依赖模型自报 confidence 来猜是否可信。专业能力的成熟度不在于永远返回答案，而在于知道自己的资格边界。
+
+### 专业能力的组合为什么不应该产生隐藏的“超级 Capability”
+
+一个复杂法律分析可能组合事件抽取、证据比较、法条检索和综合判断。为了调用方便，把整条链包装成一个巨大 Capability 看起来很省事，但会重新隐藏每一步的版本、失败和质量责任。某个子能力升级后，团队也无法判断最终变化来自哪里。
+
+更合理的是只在业务上确实形成稳定整体语义时才提供组合能力，并继续保留关键子能力的 causation。Runtime 可以编排多个 Capability，05 负责每个专业边界的契约和资格；不要因为“一个接口更简单”就牺牲可替换性和可评测性。组合层如果没有独立专业语义，应留在 Runtime Plan，而不是升级成新的长期能力类型。
 
 ### 当前、目标与缺口
 
-Current 仓库已有 capability / skill / tool / model provider 与跨模块 Contract 基础，但完整 Capability Registry、Conformance suite、Eligibility lifecycle 和法律质量证据尚未由专项 Current Evidence 证明。
+Current 已有哪些 Capability、Provider、Conformance test 和真实 Eval，必须回到代码和证据；Target 中列出的研究能力 family 不等于它们全部已经产品化或达到质量门槛。
 
-Target 是稳定 Capability semantic contract + immutable version + Provider binding + Conformance + Eval + Eligibility + Planner Awareness。Gap 包括 Registry、版本兼容、provider equivalence、法律 Eval、Planner resolution、deprecation / rollback、Research Artifact → Capability E2E 和 measurement evidence。
+Target 已明确专业语义与 Provider 解耦、Conformance 与质量分开、fallback 受资格约束，以及 Capability 输出仍是 Proposal。Gap 包括字段级版本策略、真实 Provider 兼容、任务级 Eval、cache/fallback 故障测试和哪些研究资产真正值得长期维护。
 
 ## Part B — Engineering / Agent Reference
 

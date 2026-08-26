@@ -40,395 +40,265 @@ decision_sources: docs/decisions/0003-wave1-cross-module-contract-freeze.md、00
 
 ## Part A — Architecture Narrative
 
-### 1. Zuno 要解决的到底是什么问题
+### 1. Zuno 真正要保护的不是一次回答，而是一条长期可解释的法律工作链
 
-简单的法律问答并不一定需要一套复杂系统。用户问“合同第 8 条规定了什么违约责任”时，只要确认材料和权限、找到正确原文、给出有依据的回答，往往已经解决了问题。
+简单法律问答的目标通常很直接：确认用户能看哪些材料，找到相关原文，再生成一个有引用的回答。如果任务到这里就结束，那么受控检索、模型调用和普通应用服务已经足够，继续引入复杂运行时、长期状态和多种恢复机制反而会增加成本。
 
-真正困难的是另一类工作：同一事项包含多份甚至多版材料；模型提出的事实和结论需要证据支持；专业人员可能修改或拒绝模型建议；成果已经发布以后还会出现新证据；任务可能运行很久，中间发生权限变化或服务崩溃；有时系统还要把结果提交到外围法院系统，现实动作是否发生不能只看一次 HTTP 返回。
+Zuno 面对的更难问题出现在工作持续更久、参与者更多、结果会被正式采用以后。同一个事项可能同时存在多版合同、扫描件、补充材料和后续证据；模型可以提出事实和结论，但专业人员可能接受、修改或拒绝；成果已经交付后还会出现新证据；任务可能运行几十分钟，中途发生权限变化、模型失败、服务崩溃或外部系统超时。此时系统不能只回答“模型最后说了什么”，还必须回答“依据哪一版材料、什么已经正式成立、什么只是候选、谁批准了什么、失败以后应该从哪个事实恢复”。
 
-在这些任务里，系统必须长期回答：
+因此 Zuno 的总体设计从一个核心判断出发：**对简单任务保持简单；只有当长期事实、专业责任、失败恢复或现实副作用真正出现时，才引入相应复杂度。** 架构的目标不是让所有请求走最长路径，而是让每类任务只承担它实际需要的责任。
 
-- 当前分析依据的是哪一版材料；
-- 检索到的内容只是候选，还是已经成为正式证据；
-- 某个结论依赖哪些证据和人工判断；
-- 新材料出现以后，哪些旧结果需要复核或失效；
-- 运行检查点和正式业务提交不一致时，以什么事实恢复；
-- 外部调用超时时，是否已经产生现实副作用；
-- 权限、审批和审计怎样贯穿长任务，而不是只在入口检查一次。
+当前总体 Target 已由 Round 02 冻结为 **9 个 Target Logical Modules**。这里的九个模块是逻辑责任与事实 Ownership 边界，不是九个必须独立部署的物理服务。
 
-Zuno 的价值假设，就是为这些复杂法律工作保护稳定的业务状态、证据关系和恢复边界。这个假设仍需要通过真实任务证明；如果一个更简单的宿主加法律后端已经足够，就应保留更简单的形态，而不是为了“平台完整”继续堆复杂度。
+### 2. 最简单的方案是什么，以及它为什么在复杂任务里开始失效
 
-### 2. 不是所有法律任务都需要同样复杂的系统
+最简单的方案是一个通用 Agent Host 加法律知识库：Host 负责会话和工作流，知识库负责检索，模型负责生成，必要时再调用几个 Tool。对大量低风险、短生命周期任务，这个方案完全合理，而且 Zuno 不应该因为自己拥有更多模块就否认它的价值。
 
-复杂度应该跟着任务走。总体上可以先把任务理解为三类。
+问题出在几个边界一旦同时出现，通用“消息 + Workflow 状态”不再足够。文件上传成功不能证明关键附件已经 OCR；检索命中不能证明候选内容已经成为正式证据；Workflow completed 不能证明领域事务已经提交；HTTP timeout 不能证明外部动作没有发生；用户十分钟前拥有权限也不能证明下一次模型外发仍然允许。把这些差异都压成一个 `success` 或一张共享状态表，会让恢复和审计失去可靠依据。
 
-#### 简单问答
+所以 Zuno 不是从“需要九个模块”开始设计，而是从这些无法被一个通用状态统一表达的问题，逐步推导出不同事实必须拥有不同权威边界。
 
-例如“合同第 8 条写了什么”。系统确认材料范围和当前权限，确认所需材料已经达到当前任务的知识就绪条件，检索原文和稳定位置，生成带依据的回答，再检查引用和发布资格。
+### 3. 先区分四种经常被误写成同一个“成功”的事实
 
-这条路径可以由 Generic Host（通用 Agent 宿主）承担，也可以由 Zuno 的直接问答路径承担。它**不需要为了形式统一而进入 Zuno 原生 Agent Runtime（智能体运行时）**。
+第一种是**计算成功**：检索、模型或专业算法产生了一个结果。第二种是**运行成功**：一次受控执行已经完成当前 Step 或 Run。第三种是**业务正式成立**：法律领域 Owner 已经接受结果并留下耐久版本。第四种是**现实动作已经发生**：外围系统确实产生了副作用。
 
-#### 复杂法律分析
+这四种成功可以处在同一条因果链里，但不能互相冒充。一个模型返回 200 可能仍被专业语义拒绝；一个 Runtime Step completed 可能仍缺少正式提交证明；一个 POST timeout 可能对应远端已经成功；一个 WorkProduct 已经正式存在，也可能因为新证据而不再适合继续发布。
 
-例如同时分析原告材料、被告材料、补充协议和沟通记录。系统需要绑定材料版本，检索证据候选，调用专业能力，形成候选结论，必要时做多步计划、并行分析和人工复核，最后把满足条件的结果正式准入为新的领域版本和工作成果版本。
+架构的第一层深度不是增加更多状态，而是承认这些事实的权威来源不同，并让恢复逻辑始终回到最强的 Owner fact。
 
-如果这类任务进入 Zuno 原生运行时，它始终有 Plan（计划）：简单运行使用 Deterministic Single-Step Plan（确定性单步计划），复杂任务使用 Dynamic DAG Plan（动态有向无环图计划）。原生运行时中不存在通过 `direct_answer` 绕过 Plan、Trace、Budget、AnswerPolicy 和 RunOutcome 的路径。
+### 4. 模型、检索和专业能力为什么都先产生候选
 
-#### 带现实副作用的任务
+机器产生的信息天然有不确定性：材料可能过期，检索可能只覆盖部分范围，模型可能理解错误，专业算法可能只适用于某类案件。把“算出来了”直接写成正式业务事实，会让后续的人机复核、版本演进和责任追踪全部失去边界。
 
-例如把工作成果提交到外围法院系统。除了分析正确性，还要在执行前绑定当前参数、授权、必要审批、幂等身份和强制审计要求；执行后保存效果回执。请求超时而结果未知时，必须先对账，不能盲目重试。
+因此 Zuno 先把机器结果看成候选。检索可以产生证据候选，专业能力可以产生结论建议，模型可以产生计划或动作建议；只有相应业务 Owner 在满足证据、版本、安全和人工要求以后，才允许更强事实成立。工程术语只是对这个概念的压缩：`EvidenceCandidate != Evidence`。
 
-```mermaid
-flowchart LR
-  SIMPLE[简单问答] --> SIMPLE_FLOW[材料就绪 → 检索 → 引用回答 → 发布]
-  COMPLEX[复杂分析] --> COMPLEX_FLOW[版本材料 → 证据候选 → 计划 / 专业分析 → 复核 → 正式结果]
-  EFFECT[现实动作] --> EFFECT_FLOW[准备动作 → 授权审批 → 执行 → 回执 / 对账]
-```
+同样，检索阶段的引用解释“为什么当前命中了这段材料”，正式工作成果保存的引用则解释“当时正式采用了哪一版材料和稳定位置”。两者生命周期不同，所以保持 `CitationLineage != WorkProductCitationBinding`。
 
-三类任务可以共享材料、模型和专业能力，但不应被迫共享同样重的控制路径。
+### 5. 为什么按“事实谁负责”切架构，而不是按技术栈切
 
-### 3. Zuno 的核心设计思想
+如果按 FastAPI、PostgreSQL、LangGraph、Milvus、Neo4j、LLM、Worker 来画系统，很容易知道组件在哪里，却很难在故障时回答“谁说了算”。同样存进 PostgreSQL 的两行数据，可能一个是正式领域版本，另一个只是运行检查点；同样由模型产生的两个结果，可能一个只是 Proposal，另一个经过人工和领域事务后已经成为正式事实。
 
-整个架构可以用七条原则理解。
+Zuno 因此优先按照 Authority（权威）和 Ownership（事实所有权）拆责任：谁可以创建事实，谁可以让它失效，谁能证明它完成，崩溃以后应该先读谁的耐久记录。技术栈是实现选择，事实权威才是长期架构边界。
 
-1. **模型只提出候选，不直接成为正式事实。** 模型、检索、专业能力和 Specialist（专家执行单元）都只能产生 Proposal（候选方案）、Candidate（候选结果）、Observation（观察）或 Reference（引用）。
-2. **正式结果必须能回到材料、证据和人工判断。** 工作成果不能只保存一段最终文字，而要能解释自己依赖哪些不可变材料版本和正式证据。
-3. **领域状态和运行状态分开。** Domain State（领域状态）回答业务世界正式承认什么；Runtime Control State（运行控制状态）回答一次任务执行到了哪里。Checkpoint（检查点）不能替代正式领域提交。
-4. **知识派生和正式业务事实分开。** OCR、切分、向量、图和 KnowledgeGeneration（知识生成版本）可以重建；正式 Evidence（证据）、Finding（结论）和 WorkProduct（工作成果）不能随着索引重建而漂移。
-5. **Retry（重试）、Replan（重规划）和 Reconcile（对账）是三种不同问题。** 执行暂时失败才重试；计划假设失效要重规划；外部现实结果未知必须对账。
-6. **安全是持续门禁。** 新读取、模型外发、秘密使用、工具执行和正式准入都消费当前安全决定，不能无限复用任务开始时的一次授权。
-7. **复杂度必须由证据证明。** Native Runtime（原生运行时）、Long-term Memory（长期记忆）、GraphRAG（图增强检索）、专业 Multi-Agent（多智能体）和独立网络服务都属于可删除或可替换能力，只有测量收益才能扩大使用范围。
+这也意味着九个逻辑责任域不等于九个进程。它们可以先共处模块化 Python 后端，只有独立扩缩容、安全隔离、部署生命周期或故障半径出现明确证据时才拆物理服务。架构不能因为“微服务看起来更专业”就提前制造网络边界。
 
-### 3.1 为什么按“事实谁负责”切架构，而不是按技术栈切
+### 6. 材料、知识派生和正式业务事实为什么必须分三层
 
-很多系统图习惯按照 FastAPI、PostgreSQL、LangGraph、Milvus、Neo4j、LLM、Worker 来分块。这种图适合解释“用了什么技术”，却不容易回答故障发生以后谁说了算。例如同样落在 PostgreSQL 里，DomainVersion 和 Runtime Checkpoint 仍然不是同一种事实；同样由模型产生，Finding Proposal 和 AuthorizationDecision 也不能拥有相同权威。
+一份正式材料首先需要稳定版本身份。随后系统可以围绕这份材料生成 OCR、切分、向量、图结构和其他检索视图。这些派生数据可以因为算法升级而重建，但历史业务结果不能跟着索引重建而改变。
 
-Zuno 的九个责任域因此优先按照长期事实和失败恢复来切。谁能创建一个事实，谁能修改、使其失效、删除或恢复；什么 Receipt 能证明成功；崩溃以后先相信哪个 Store——这些问题比“代码放在哪个 package”更稳定。技术框架可以替换，只要这些 Authority（权威）和 Contract 没有漂移，架构仍然成立。
+更重要的是，“这一代知识已经构建完成”和“当前任务可以安全使用它”仍然不是一回事。某一代索引可能总体构建成功，但当前任务要求的关键附件缺失；也可能材料齐全，但当前权限或用途不允许读取。因此必须保持 `KnowledgeGeneration lifecycle != task-level ReadinessDecision`。
 
-这种切法也解释了为什么九模块不是九个微服务。Application、Domain、Knowledge、Runtime、Capability、Tool、Model、Security、Observability 首先是九种责任。它们可以暂时共处一个模块化 Python 后端，也可以因为独立扩缩容、安全隔离或故障半径在未来部分拆开。物理部署是后一层决策，不反过来定义事实所有权。
+这个边界使系统可以大胆重建可派生知识，同时保护正式 DocumentVersion、Evidence 和 WorkProduct 的长期身份。它也让“知识库健康”不再被错误解释为“任何任务都已经 READY”。
 
-### 4. 一次复杂法律任务怎样完整运行
+### 7. 领域状态和运行状态为什么不能合成一张万能状态表
 
-以“基于多份合同及沟通材料分析一个付款争议”为例，可以看到整体责任怎样协作。下面是目标架构说明，不是对过去项目历史流程的断言。
+Runtime Control State（运行控制状态）需要知道计划执行到哪里、哪些 Step 完成、哪些分支仍在等待；Domain State（领域状态）则需要知道哪些法律事实和工作成果已经正式成立。这两套状态会互相引用，但它们回答的是不同问题。
 
-```mermaid
-flowchart TB
-  START[用户提交目标和材料范围] --> SCOPE[确定 Matter 和 DocumentVersion]
-  SCOPE --> READY[03 判断当前任务知识是否就绪]
-  READY --> EVIDENCE[03 检索 EvidenceCandidate + CitationLineage]
-  EVIDENCE --> PLAN[04 受控计划 / 执行]
-  PLAN --> CAP[05 专业能力产生候选分析]
-  CAP --> CHECK[证据 / 质量 / 安全资格检查]
-  CHECK --> HUMAN[必要的 HumanDecision]
-  HUMAN --> ADMIT[02 Formal Admission]
-  ADMIT --> PRODUCT[版本化 WorkProduct + 历史引用]
-  PRODUCT --> PUBLISH[01 发布 / 交付]
-```
+最关键的故障窗口发生在领域事务已经提交，而 Runtime Checkpoint 还没来得及更新。此时如果恢复只相信 Checkpoint，系统可能再次提交同一正式结果；反过来，Checkpoint 标成 completed 也不能凭空证明领域事务真的成功。
 
-#### 4.1 先确定正在处理什么
+所以正式提交必须留下独立的耐久证明。工程上把这类证明表达为 `AdmissionReceipt`。恢复时先确认 Domain 是否已经完成，再修复 Runtime projection，而不是让控制状态覆盖业务事实。
 
-入口先明确 Matter（事项）、任务目标、材料范围以及希望使用的 DocumentVersion（材料版本）。材料版本是正式业务身份，不由向量库、文件名或当前索引 ID 代替。
+### 8. 一次任务为什么需要受控计划，但计划不能成为新的业务权威
 
-范围不清时，系统应要求补充，而不是让模型猜。进入原生运行时后，每个候选结果还要能回到 run、PlanVersion、StepRun 和对应的材料 / 领域版本。
+复杂任务需要显式表示依赖、并行和等待，否则“模型接下来想做什么”会变成无法恢复的隐式状态。Zuno 原生 Runtime 因此使用受控 Plan；简单原生运行仍可以是确定性单步计划，复杂运行再使用动态 DAG。
 
-#### 4.2 材料上传成功不等于当前任务可以使用
+但 Plan 只拥有控制语义。它可以决定下一步执行哪个专业能力、什么时候等待、什么时候重规划，却不能自己宣布 Evidence 正式成立，也不能批准安全动作。计划版本一旦激活保持不可变，是为了让已经派发的工作有稳定因果归属，而不是为了把 Runtime 设计成第二个 Domain。
 
-03 Knowledge & Evidence（知识与证据）围绕正式 DocumentVersion 建立 KnowledgeGeneration（知识生成版本），包括解析、OCR、切分和各类检索派生视图。
+控制权集中在 `Single Controller`，专业执行可以并行，但最终的计划激活、Step acceptance、Budget、Replan 和 cancel 由一个控制面收敛。这样 Specialist 可以扩展能力，而不会各自修改全局计划形成多写者竞态。
 
-这里必须区分两件事：
+### 9. Retry、Replan 和 Reconcile 为什么必须是三个词
 
-- **KnowledgeGeneration 生命周期**：这一代派生知识是否正在处理、已构建、已激活 Serving（提供检索服务）或已经陈旧；
-- **ReadinessDecision（知识就绪判断）**：在当前材料版本、当前 Serving generation、任务 Scope、最低能力要求和安全条件下，这一次任务究竟是 READY、PARTIAL 还是 BLOCKED 类语义。
+很多 Agent 系统把失败统一处理成“再试一次”。这对纯计算的暂时故障有用，却会在计划假设失效或现实结果未知时制造错误。
 
-所以一个 generation 构建完成，不代表所有任务都 Ready。100 份材料中只完成 40 份时，可以显式缩小 Scope 做局部任务，但不能继续沿用 100 份材料的完整范围并伪装成完整结论。
+`Retry != Replan != Reconcile`。模型临时 503，而输入和计划仍然有效，可以 Retry；Tool schema、材料版本或任务假设已经改变，应该 Replan；外部 POST 已经发出但超时，现实世界可能成功也可能失败，必须 Reconcile。三者分别解决“同一动作再执行”“换一个动作计划”“先确认过去到底发生了什么”。
 
-#### 4.3 从可用材料中寻找“证据候选”，而不是直接产生正式证据
+这个区分是恢复闭环的核心。如果架构只保留一个通用 retry loop，就无法同时保护计算正确性和现实副作用安全。
 
-知识模块输出 EvidenceCandidate（证据候选）、RetrievalResult（检索结果）和 CitationLineage（检索引用链）。CitationLineage 解释候选是怎样从当前材料和知识版本中被找到的。
+### 10. 权限为什么不是请求入口的一次布尔判断
 
-这些结果还不是正式 Evidence。02 Legal Domain & Work Product（法律领域与工作成果）才决定某个候选是否被业务正式接纳为 Evidence，并建立它与 Claim（主张）、Finding 和 WorkProduct 的长期关系。
+长任务可能运行几十分钟，中途等待人工、切换材料、调用多个模型和 Tool。期间用户权限、事项归属、数据密级、Provider 外发政策、审批状态和凭证版本都可能变化。
 
-因此两个不等式必须长期成立：
+所以安全判断发生在每一个新的受保护边界：再次读取材料、向模型外发、获取 Secret、执行高风险 Tool、正式准入结果。早先合法发生的动作保持历史事实，但旧的 allow 不能自动成为未来动作的永久通行证。
 
-```text
-EvidenceCandidate != Evidence
-CitationLineage != WorkProductCitationBinding
-```
+这也是为什么 Authorization、Approval 和 HumanDecision 必须分开：有没有权执行、某个高风险动作是否被批准、专业人员是否接受法律业务结果，是三种不同责任。
 
-后者中的 WorkProductCitationBinding（工作成果历史引用绑定）回答“正式成果当时实际采用了哪一版材料的哪一处”，不能随着索引重建变化。
+### 11. 现实副作用为什么需要比普通函数调用更强的模型
 
-#### 4.4 专业能力只产生可以审查的候选
+纯计算失败通常可以重新执行，但现实动作可能无法撤回。向外围法院系统创建记录、提交材料或触发流程时，本地网络错误不能告诉我们远端是否已经执行。
 
-05 Capability & Skill（专业能力与技能）可以提供事件抽取、事件对齐、冲突检测、事实—法条对应、法律适用性、类案检索等能力。具体实现可以是确定性算法、模型、外部 API 或其他 Provider（提供方）。
+因此执行前先形成稳定动作身份和待执行内容，工程上称为 `PreparedAction`；执行后保存能够证明现实效果的 `EffectReceipt`。如果发送后结果未知，就沿稳定动作身份查询远端、使用业务唯一键确认或进入人工对账，而不是把 timeout 简化成 Failed 后盲目 Retry。
 
-它们的输出首先是候选，不自动增加 Canonical Domain Object（正式领域对象）。Event、Conflict、Dispute、LegalIssue、ApplicableLaw 和 SimilarCase 等只有未来证明需要独立身份、版本、依赖、失效和审核生命周期时，才考虑升级为正式领域对象。
+高风险动作还可能要求在执行前留下耐久审计证明。普通 Trace 可以丢失或采样，所以需要独立的 `AuditPersistenceReceipt` 来证明强制审计边界真的落盘。Telemetry 解释发生了什么，但不能倒推当时满足了安全前置条件。
 
-#### 4.5 运行控制负责“怎样继续”，不负责“业务上已经成立”
+### 12. 九个责任域不是九段必须依次经过的流水线
 
-04 Agent Runtime & Control（智能体运行与控制）采用 Single Controller（单控制器）。复杂任务总体使用固定 AgentRunGraph（运行图）+ 动态 Plan DAG（计划图）+ 固定 StepExecutionGraph（步骤执行图）。Plan-and-Execute 管理目标、依赖和并行；ReAct 管理单个步骤中的动作与观察；Reflection（反思）只在质量或风险触发时使用；Replan 修改剩余计划；Reflexion（长期经验反思）只能产生长期经验候选，不能直接提交 Memory（记忆）或 Domain State。
+九个责任域描述的是“某类事实最终由谁负责”，不是要求每个请求都走完九站。简单问答可以跳过 Runtime、Tool Effect 和 Formal Admission；复杂分析才逐步引入计划、专业能力和领域准入；现实副作用任务才需要 Effect Control 与更强审批。
 
-并行只在依赖、输入、资源冲突、副作用、预算、配额和 Security Gate（安全门禁）都允许时发生。数据依赖、同一资源写、不可逆副作用、排他资源、Replan 和 Final Synthesis（最终综合）默认串行。
-
-运行控制可以决定 Retry、Replan、暂停、继续和 Join（汇合），但不能因为某个 StepRun 标记完成就宣布正式领域结果已经提交。
-
-#### 4.6 候选结论怎样成为正式结果
-
-候选 Finding 需要检查材料版本、证据充分性、引用稳定性、当前授权以及必要 HumanDecision（人工业务决定）。满足条件后，02 执行 Formal Admission（正式准入）。
-
-正式准入必须留下 AdmissionReceipt（正式准入回执），证明是哪次运行、哪版计划、哪个步骤、哪个候选和哪个幂等身份导致了哪个新的 DomainVersion（领域版本）。领域变更和匹配回执位于同一个 PostgreSQL 事务耐久边界。
-
-如果正式工作成果要求历史引用，那么对应 WorkProductCitationBinding 也必须在成果获得正式资格时已经存在并可验证，不能先把成果标为正式，再异步“以后补引用”。
-
-#### 4.7 发布、正式准入和外部展示是三件不同的事
-
-模型生成文字，不等于领域已经准入；领域已经准入，不等于用户已经看到；Zuno 已经完成交付，也不等于外部系统确认收到。
-
-01 Application & Integration（应用与集成）拥有 Zuno 侧普通答案发布、WorkProduct 交付、失效通知和 Consumer acknowledgement observation（消费者确认观测）。如果最终展示发生在外部 Generic Host 中，外部宿主仍拥有最终 UI / 展示决定，Zuno 只能提供带资格、引用和策略依据的类型化结果。
-
-### 5. 新证据出现以后，旧结果为什么会失效
-
-假设昨天 Evidence V1 支持 Finding V3，并形成 WorkProduct V5。今天新的 DocumentVersion 或 Evidence V2 被正式接纳，它可能改变 V3 的依据。
-
-02 根据正式依赖关系找到受影响的 Finding 和 WorkProduct，把旧版本标记为 review-required / stale 类业务语义，再只对可安全确定的影响范围执行 bounded re-evaluation（有界重新评估）。依赖关系不完整或影响范围不清时，应扩大复核范围或交人工，而不是假装局部影响已经确定。
-
-新的分析再次形成 Proposal，经过必要 HumanDecision 和 Formal Admission 后产生新版本。V5 仍作为历史上真实存在并可能已经交付过的版本保留，只是不再冒充当前有效结果。
-
-同时必须区分三种事实：
-
-1. **Domain invalidation truth（领域失效事实）**：哪个正式 WorkProductVersion 已经失效或需要复核，Owner 是 02；
-2. **Invalidation delivery fact（失效通知交付事实）**：通知是否待发送、已发送、失败或重试，Owner 是 01；
-3. **Consumer acknowledgement observation（消费者确认观测）**：是否观察到外部消费者确认，Owner 也是 01，但它不能声称掌握远端内部认知状态。
-
-外部系统离线不能阻止领域失效成立。
-
-### 6. 外部动作为什么需要另一套处理方式
-
-假设用户要求把工作成果提交到外围法院系统。Zuno 发出 POST 后超时，至少有三种可能：请求根本没有执行；外部系统已经执行但响应丢失；外部状态暂时无法确认。
-
-这三种情况不能都写成 FAILED 然后直接 Retry。06 Tool Runtime & Effects（工具运行与外部效果）先形成 PreparedAction（准备动作），绑定操作身份、参数、工具版本、当前授权、必要 ApprovalDecision（审批决定）、幂等身份和高风险审计要求；随后记录 ToolAttempt（工具尝试）。
-
-如果结果明确，保存 EffectReceipt（效果回执）；如果 Outcome Unknown（结果未知），进入 Reconciliation（对账恢复），通过操作编号、幂等键、回执或外部状态确认事实。无法安全确认时进入人工处理。
-
-```mermaid
-sequenceDiagram
-  participant R as Runtime
-  participant S as Security
-  participant T as Tool Runtime
-  participant X as 外部系统
-  R->>T: 候选动作
-  T->>S: 当前授权 / 必要审批 / 审计要求
-  S-->>T: 决定与策略引用
-  T->>X: 执行动作
-  X-->>T: 成功 / 失败 / 响应丢失
-  T->>X: 结果未知时按稳定身份查询
-  T-->>R: EffectReceipt / ReconciliationReceipt
-```
-
-专业能力负责“建议做什么”，工具运行负责“现实动作怎样安全发生”。两者即使物理上共用进程，也不能共享成功语义。
-
-### 7. 为什么系统里的状态不能全部放在一起
-
-一次复杂任务同时存在多种事实，不能压成一个 `task.status`。
-
-- **Domain State（领域状态）**：业务世界正式承认什么。Owner：02。
-- **Runtime Control State（运行控制状态）**：一次运行执行到哪里。Owner：04 / Runtime Provider。
-- **Knowledge Projection（知识派生视图）**：围绕正式材料形成的可重建知识。Owner：03。
-- **Optional Context（可选上下文）**：会话摘要、工作上下文、长期记忆等可替换辅助信息，不是业务权威。
-- **External Effect State（外部效果状态）**：现实动作的准备、尝试、回执和对账。Owner：06。
-- **Security / Audit Facts（安全与审计事实）**：为什么允许访问 / 执行，以及哪些事实必须耐久保存。政策 Owner：08；各耐久边界保存自己的执行事实。
-- **Telemetry Projection（遥测派生视图）**：Trace、Metric、日志和 Eval 投影。Owner：09；它不能替代业务或安全事实。
-
-尤其要再区分知识内部两类状态：KnowledgeGeneration 生命周期描述“一代知识派生处理到哪里”，ReadinessDecision 描述“某次任务现在能不能安全使用它”。它们不是同一个状态机。
-
-```mermaid
-flowchart TB
-  DOMAIN[领域状态：正式承认什么]
-  RUNTIME[运行控制：执行到哪里]
-  KNOW[知识派生：可检索视图和 generation]
-  READY[任务级 ReadinessDecision]
-  CONTEXT[可选上下文]
-  EFFECT[外部效果]
-  AUDIT[安全 / 审计事实]
-  TELEMETRY[遥测投影]
-  KNOW --> READY --> RUNTIME
-  RUNTIME -->|候选与准入输入| DOMAIN
-  CONTEXT -->|受策略约束| RUNTIME
-  EFFECT -->|回执 / 对账| RUNTIME
-  AUDIT -.当前策略.-> READY & RUNTIME & DOMAIN & EFFECT
-  TELEMETRY -.投影 only.-> RUNTIME & DOMAIN & EFFECT
-```
-
-因此：Checkpoint 完成不能证明 Domain Commit；索引写成功不能证明任务 Ready；Memory 不能成为 Domain Fact；Trace 不能替代强制审计事实。
-
-### 8. 谁来负责这些不同事实
-
-九个冻结的 Logical Responsibility（逻辑责任域）描述“谁对哪类事实负责”，不是九个必须单独部署的网络服务。一个 Python 进程可以暂时承载多个责任域，只要 Owner 和跨域 Contract 保持清楚。
+这种设计让简单路径保持短，同时让复杂路径在需要时拥有恢复闭环。下面九个责任域只概括长期职责，具体状态和 Contract 下沉到模块 Part B。
 
 #### 01 Application & Integration（应用与集成）
 
-负责外部任务入口、Agent Definition / Version 产品表面、调用决定组合、Zuno 侧普通答案发布、WorkProduct 交付、失效通知、消费者确认观测，以及 Generic Host / 法院系统集成。它消费 Security、Knowledge、Model、Capability 和 Runtime 已经做出的决定，不重新计算它们。
-
-它不拥有正式 Domain Admission，也不拥有外部 Host 最终 UI 展示事实。
+把外部请求、Scope、结果发布和交付组织成稳定产品语义。它消费其他 Owner 的权威事实，但不能因为离用户最近就重新定义安全、知识或 Domain truth。
 
 #### 02 Legal Domain & Work Product（法律领域与工作成果）
 
-拥有第一阶段七对象最小正式内核：Matter、DocumentVersion、Claim、Evidence、Finding、HumanDecision、WorkProduct，以及 Formal Admission、AdmissionReceipt、正式依赖、WorkProduct 历史引用绑定和 Domain invalidation truth。
-
-它不拥有 KnowledgeGeneration、CitationLineage、Runtime Checkpoint、Security policy、Tool effect 或 Delivery / Ack state。
+拥有正式、长期、可审计的法律业务事实和工作成果。机器候选、运行完成或外部 ACK 都不能替代它的正式准入。
 
 #### 03 Knowledge & Evidence（知识与证据）
 
-拥有 KnowledgeGeneration、processing projection、manifest / serving 语义、任务级 ReadinessDecision、EvidenceCandidate、RetrievalResult 和 CitationLineage。
-
-它读取 02 的 DocumentVersion，不重新定义正式材料身份；它产生 EvidenceCandidate，但不把候选直接升级成正式 Evidence；它可以判定 generation stale，但不能直接把正式 WorkProduct 写成 stale。
+围绕正式材料版本维护可重建知识派生、任务级知识就绪和检索候选。它帮助系统找到依据，但不把候选直接升级为正式证据。
 
 #### 04 Agent Runtime & Control（智能体运行与控制）
 
-拥有 Single Controller、AgentRun、PlanVersion、StepRun、Budget、Dispatch / Join、Retry、Replan、Reconcile 控制、Interrupt、Resume、Checkpoint 和 RunOutcome。进入 Zuno Native Agent Runtime 的任务始终有 Plan。
-
-它不拥有 Domain commit、Authorization approval 或现实 Tool effect truth。Native Runtime 仍然是 Conditional / Measurement-gated（条件启用 / 测量门控）。
+拥有一次复杂任务怎样继续执行：计划、Step、并行、等待、预算、取消、重规划和检查点。它控制过程，不接管正式业务事实。
 
 #### 05 Capability & Skill（专业能力与技能）
 
-拥有专业 Capability Contract（能力契约）、版本、Provider Conformance（提供方一致性）和专业候选输出。长期工程化链是 Research Artifact（研究成果）→ Domain Capability（领域能力）→ Versioned Provider（版本化提供方）→ Conformance / Eval → Eligibility（可用资格）。
-
-Capability 不能直接提交 Canonical Domain State，也不拥有现实副作用。
+把研究模型、算法、规则和外部 Provider 整理成稳定、版本化、可替换的专业能力语义，使 Runtime 依赖“能做什么”而不是绑定“由哪个实现做”。
 
 #### 06 Tool Runtime & Effects（工具运行与外部效果）
 
-拥有 PreparedAction、ToolAttempt、EffectReceipt、ReconciliationReceipt、工具调用幂等和现实副作用恢复语义。只读工具、可安全重试调用和不可逆副作用必须有不同失败策略。
-
-它不扩大权限；Security 决定是否允许，外部系统拥有其内部最终事实。
+保护现实副作用：动作准备、执行尝试、结果确认、幂等和对账。它负责 Zuno 能证明的 Effect truth，但不冒充远端系统内部最终业务状态。
 
 #### 07 Model Gateway（模型网关）
 
-拥有模型角色到 Provider / Model 的路由、调用尝试、配额、Usage / Cost 和允许范围内的模型升级 / 降级。强模型用于复杂规划、Plan Repair、关键 Reflection 和 Final Reflection；弱模型用于 Query Rewrite、提取、分类、普通 ReAct 等。
-
-Retrieval、Tool execution、Schema Validation、Citation Check、Test、Security Gate 和 Approval Gate 能确定性完成时，不默认交给模型。模型只产生 Proposal。
+把模型调用集中为受控依赖：按角色、质量资格、数据政策、预算和 Provider 状态路由，并记录真实调用和用量，而不是成为所有 Prompt 和业务语义的 God Layer。
 
 #### 08 Security & Governance（安全与治理）
 
-拥有 AuthorizationDecision、Security Epoch、ApprovalDecision、模型外发政策、工具权限、Secret / Credential policy、Effective Lifecycle Policy（有效生命周期政策）和 Audit Requirement（审计要求）。
-
-安全决定与执行事实分开：08 决定政策，各 Domain / Knowledge / Tool / Store 边界执行并保存各自的 enforcement fact（执行事实）。HumanDecision 是 02 的业务事实，不等于 ApprovalDecision。
+持续回答“当前主体现在还能不能执行下一步”，并拥有授权、审批、安全策略、Secret 使用、强制审计要求和生命周期决策。
 
 #### 09 Observability & Evaluation（可观测性与评测）
 
-拥有 OTel-compatible Telemetry Contract（OpenTelemetry 兼容遥测契约）、Trace / Metric 投影、Eval Dataset、Evaluation Result 和 Release Evaluation input。LangSmith 可以作为首选 Agent Trace / Eval Provider，但不是架构事实源。
+一方面帮助解释系统刚才发生了什么，另一方面用可复现实验判断复杂机制是否真的值得保留。它测量 Owner facts，不替代 Owner facts。
 
-09 帮助回答“系统发生了什么”和“复杂度值不值得保留”，但不拥有 Domain Truth、Security Truth、Tool Effect Truth 或 Mandatory Audit durability。
+### 13. 三条任务路径怎样使用同一套边界而不共享同样复杂度
 
-另外两类边界不重新变成第十、第十一个逻辑模块：Platform / Infrastructure（平台与基础设施）只是责任层，提供 PostgreSQL、对象存储、Queue / Worker、CAS、Lease、Fencing、Checkpoint Adapter、Index Adapter、Network、Secret Delivery、Backup / Restore 等物理原语；Memory / Context 是可选上下文边界，长期记忆只有在消融评测证明收益后才启用。
+简单问答从请求和 Scope 开始，检查当前授权与知识就绪，检索材料，调用模型生成并校验引用，然后由应用层决定是否发布。它不需要为了“统一架构”强制进入动态规划。
 
-### 8.1 九个责任域不是九段必须依次经过的流水线
+复杂分析在同样的入口和材料基础上增加显式 Plan、专业 Capability、并行与人工复核；只有最终需要成为正式法律工作成果的内容才进入 Domain Admission。机器中间结果可以大量产生，但正式事实的入口保持窄而可审计。
 
-把九个模块按编号列出来以后，很容易产生一个错觉：每次请求都要从 01 一直调用到 09。实际并不是这样。简单问答可能只涉及 01、08、03、07 和必要的 09；一个纯知识构建任务主要发生在 02 的材料身份、03 的知识加工和 08 的安全边界；只有复杂多步任务才需要 04，而有现实副作用时才必须进入 06。
+现实动作则在分析之外增加 Effect Control。模型或 Capability 可以提出 Action Proposal，但不能直接发送；动作必须经过安全、审批、审计和幂等准备，再由 Tool Runtime 记录实际尝试与结果。三条路径共享事实边界，却按风险逐级增加机制。
 
-同一模块也不一定只在流程里出现一次。08 的安全决定会在读取材料、模型外发、工具执行和正式准入等多个边界反复被消费；09 则横跨全过程做观测和评测，但不进入业务 Authority；02 的领域事实既可能是任务开始时的输入，也可能在任务结束时成为新的正式结果。
+### 14. 一个最关键的崩溃窗口怎样恢复
 
-所以九模块描述的是“不同事实归谁负责”，而不是固定调用顺序。理解这点以后，系统才能既允许简单路径保持简单，又保证复杂路径在需要时获得足够控制，而不把所有任务都塞进一条重量级总流程。
+假设复杂分析已经生成正式 WorkProduct，Domain transaction 成功提交，但 Runtime 在写下一次 Checkpoint 前进程崩溃。重启后仅看 Checkpoint 会误以为 Step 尚未完成，直接重跑可能重复提交。
 
-### 9. 一次系统故障以后怎样恢复
+正确恢复顺序是先查询 Domain Owner 的匹配 `AdmissionReceipt` 和版本事实。如果正式提交已经存在，就把它作为更强事实，再修复 Runtime 的 Step acceptance / Checkpoint；如果只有 Checkpoint completed 却找不到正式 Receipt，则 Runtime 不能把自己标记成业务完成。
 
-恢复首先判断“失败的是哪一类事实”，再决定动作。
+这个例子解释了 Zuno 为什么反复强调“Owner fact first, projection second”。Cache、Trace、Checkpoint、Dashboard 都可以帮助定位，但不能覆盖拥有更强业务语义的耐久事实。
 
-**模型暂时 503。** 如果计划、输入、能力、安全和质量要求都未变化，这是执行暂时失败，可以 Retry，并保留预算和幂等身份。
+### 15. 新证据为什么会让历史结果“需要复核”，而不是把历史改写掉
 
-**能力或 Tool Schema 已变化。** 原计划依赖的语义已经失效，不能继续猜参数；重新解析能力，必要时创建新的不可变 PlanVersion 并 Replan。
+法律工作不是静态问答。新材料进入以后，旧 Finding 或 WorkProduct 可能不再适合继续使用，但它们作为“当时基于那些材料产生过的历史版本”仍然存在。
 
-**外部 POST 超时。** 现实结果未知，先读取 ToolAttempt、幂等身份、EffectReceipt 和外部状态；确认未执行后才允许在重新授权下再次执行，无法确认时 Reconcile 或人工处理。
+因此 Zuno 不删除过去来伪装一致，而是保留依赖关系并形成新的失效事实。Domain 负责判断正式成果是否 stale，Application 负责把失效通知交付给消费者；外部消费者离线不会阻止 Domain truth 立即变化。
 
-**Domain commit + AdmissionReceipt 成功，但 Runtime Checkpoint 失败。** 读取匹配的 AdmissionReceipt 修复运行状态，不重复正式提交。
+这种设计让历史可审计、当前有效性可查询，也避免每次新增材料都全量重跑所有结果。未来是否重评应沿依赖范围有界传播。
 
-**Checkpoint 显示完成，但 AdmissionReceipt 缺失。** 不能宣称 Formal Admission 成功；检查 DomainVersion 和因果身份，必要时进入 Review。
+### 16. 研究算法和开源框架为什么只能作为 Provider 或可删除机制进入
 
-**Knowledge index 部分写入。** 不移动 Serving generation；修复或重建同一 generation，再完成 manifest / serving 校验。Index write 不是 Knowledge Ready。
+Zuno 来自智慧司法研究背景，因此会使用事件抽取、冲突识别、类案检索、GraphRAG、Memory、Reflection 等能力。但“论文里有效”“框架支持”都不能直接推出“Zuno 必须永久拥有”。
 
-**新 DocumentVersion 已正式进入领域，但任务仍引用旧 generation。** 03 返回 stale / blocked knowledge eligibility，04 重新判断计划；02 只有在正式依赖变化成立后才改变 Finding / WorkProduct 的业务有效性。
+研究成果先被整理成稳定专业语义，再由一个或多个版本化 Provider 实现，通过 Conformance 与任务级 Eval 决定当前资格。这样旧论文算法、新 LLM、规则实现和外部服务可以在同一 Capability 语义下比较，而 Runtime 不需要绑定某个具体实现。
 
-**长任务中权限被撤销。** 后续新的受保护读取、检索、模型外发、工具执行和 Formal Admission 使用当前 Security Epoch 重新判断；不能沿用旧授权。
+Graph、长期 Memory、复杂 Planner、强模型路由和 Specialist 都应保留 simpler baseline。收益不稳定时应该缩小或删除，而不是因为已经实现就获得永久架构地位。
 
-**并行旧分支晚到。** 结果必须带原 PlanVersion、材料版本和因果身份回来；它不能覆盖新计划或绕过当前 DomainVersion / Admission gate。
+### 17. 物理部署为什么必须晚于逻辑 Ownership
 
-```mermaid
-flowchart LR
-  TEMP[执行暂时失败] --> RETRY[计划仍正确 → Retry]
-  ASSUME[计划 / 能力假设失效] --> REPLAN[新 PlanVersion → Replan]
-  UNKNOWN[外部效果未知] --> RECON[Reconcile / 人工]
-  KNOW[知识派生损坏] --> REBUILD[从 DocumentVersion + generation spec 重建]
-  COMMIT[Domain 已提交] --> RECEIPT[读取 AdmissionReceipt]
-  RECEIPT --> REPAIR[修复 Runtime Control State]
-```
+九个责任域首先解决“谁拥有事实”，不是“部署几个服务”。默认实现可以是模块化后端加按工作负载拆分的 Worker：知识构建、模型调用、Tool 执行和 Eval 的扩缩容需求不同，但不要求每个逻辑 Owner 都拥有独立进程和数据库。
 
-### 10. 安全、审批、人工复核和审计如何贯穿任务
+判断一个逻辑责任域**为什么必须独立服务**，必须回到 Secret isolation、独立吞吐、故障半径、网络出口、合规边界或部署生命周期等证据。只有这些条件形成明确收益时，才值得把某个边界提升为独立网络服务；服务拆分是一种成本很高的优化，需要被问题证明。
 
-安全不是任务入口的一次性开关。读取受保护材料、执行检索、向外部模型发送内容、读取 Secret、调用工具、Resume / Retry / Replan 后继续访问、正式准入和发布，都需要消费当前适用的安全决定。
+跨 Owner 的一致性也不通过“把所有东西放进同一分布式事务”解决。每个 Owner 在自己的事务边界内保证事实，跨 Owner 通过版本、Receipt、幂等身份和恢复顺序收敛。
 
-HumanDecision（人工业务决定）与 ApprovalDecision（安全审批决定）必须分开：前者改变业务上承认什么，后者只决定某个高风险动作是否允许发生。
+### 18. 一项复杂机制什么时候应该主动删除
 
-Retention（保留）、Deletion（删除）、Legal Hold（法律保全）和 Compliance Exception（合规例外）的有效政策由 08 拥有，各 Store 执行。数据因为 Legal Hold 继续保留字节，不代表它还具有未来 Recall / Retrieval 资格；删除某个 Memory 副本也不代表所有依法保留的审计副本都立即物理消失。
+如果简单 RAG 已经满足目标任务，就不需要 Native Runtime；如果 Hybrid Retrieval 已经覆盖某类 query，就不需要 GraphRAG；如果通用 Host + Zuno Legal Backend 已经能够保护正式状态和恢复，就不需要复制一套完整宿主；如果一个模块没有独立扩缩容或安全隔离证据，也不需要拆成微服务。
 
-高风险 Effect 前如果策略要求 `MANDATORY_BEFORE_EFFECT` 类强制审计，则对应 Audit Fact 必须先耐久化并获得 AuditPersistenceReceipt（审计持久化回执）。OpenTelemetry、LangSmith、普通日志和 Trace 可以做诊断和关联，但不能事后补出不存在的批准、正式准入或现实效果。
+删除条件不是架构的附录，而是架构质量的一部分。每增加一个状态机、Provider、缓存、图存储、Agent 层或服务边界，都应该能回答它保护了什么约束、增加了什么故障面、测量不到收益时怎么退回更简单方案。
 
-### 11. 哪些能力应该自己建设，哪些能力应该复用
+09 的 Evaluation 因此不仅用于证明“功能有效”，还应该主动做 ablation 和 kill test，帮助团队决定哪些复杂度不值得长期维护。
 
-Generic Host（通用 Agent 宿主）可以负责 UI、会话、普通工作流、简单问答、一般模型编排和通用工具接入。Zuno 不应因为要讲“完整平台”就重新建设所有通用能力。
+### 19. 架构真正困难的是“时间”，不是把模块框画出来
 
-Zuno 真正需要长期保护的是法律领域状态、材料和证据版本、正式准入、历史引用、结果失效、人工业务决定、受控外部效果以及这些事实的恢复契约。只要外部宿主能够安全承载入口和简单执行，就可以复用它。
+很多系统图在静态时刻都看起来合理：材料在知识库里，Agent 在运行，结果最后进入数据库。真正让边界暴露价值的是时间。材料版本会变化，权限会撤销，模型和 Capability 会升级，旧 Plan 的并行结果会晚到，外部 Effect 会在本地不知道的时候已经发生。系统如果只描述“现在有哪些对象”，而不描述“一个事实在什么条件下还能继续被使用”，架构仍然是不完整的。
 
-具体复用边界包括：LangGraph 提供持久执行、Checkpoint、interrupt / resume、Send / reducer 等运行原语；MCP 提供工具互操作；OpenViking 可以作为可选 Context Provider；PostgreSQL 提供领域事务耐久原语；LangSmith 可以作为 Agent Trace / Eval Provider；OpenTelemetry 提供 Provider-neutral 遥测契约；向量库、图数据库和关键词引擎都是可替换的知识 Provider。
+因此 Zuno 的多个版本号并不是为了追求形式化。DocumentVersion 保护材料身份，KnowledgeGeneration 保护可重建派生，PlanVersion 保护运行因果，Capability / Model version 保护计算语义，SecurityEpoch 保护授权新鲜度，DomainVersion 保护正式业务演进。它们不是一个全局大版本，因为这些事实变化的原因和 Owner 不同；强行统一版本反而会制造不必要耦合。
 
-物理部署默认从**模块化 Python 后端**和确有必要的 Independent Workers（独立 Worker）开始，FastAPI 可以作为应用层 HTTP 接口。只有重复出现独立扩缩容、故障隔离、安全 / Secret 隔离、不同可用性目标、独立部署生命周期、稳定跨主机 Contract 或独立运营责任时，才拆成**独立网络服务**。
+一个结果能否被继续使用，本质上取决于它的 causation 还是否成立。旧模型结果并不因为“旧”就必然无效；如果输入材料、专业语义和当前安全条件都没有改变，它可能仍可接受。反过来，一个刚算完的结果，如果依据的 Plan 或权限已经失效，也可能马上没有资格进入当前路径。时间新鲜度因此是按语义判断，不是简单比较 timestamp。
 
-每次 Service Split（服务拆分）都要回答：为什么必须独立服务，为什么**不是库或 Worker**即可解决。未来用户变多本身不是微服务证据。
+### 20. 跨模块一致性为什么不用一个超级事务解决
 
-### 11.1 一项复杂机制什么时候应该主动删除
+面对多个 Owner，最直觉的做法是希望“所有状态一次原子提交”，这样看起来不会不一致。但 Zuno 横跨数据库、索引、模型 Provider、外围法院系统和观测系统，其中很多参与者根本不能加入同一个数据库事务。为了追求全局原子性引入分布式 2PC，也不能让已经发出的外部 POST 回滚。
 
-架构深化不能只回答“还能加什么”，还要不断回答“什么可以删”。如果一个机制只是让系统更像先进 Agent 平台，却没有改善真实法律任务质量、恢复、安全或成本，它就不应该因为已经写了代码而获得永久存在权。
+更可实现的策略是让每个 Owner 在自己的事务边界内保存足够强的事实，再通过 Receipt、版本和幂等身份形成可恢复因果。跨边界短暂不一致允许存在，但必须知道哪一个事实更权威、怎样最终收敛。例如 Domain 已提交而 Checkpoint 落后时，以 Domain Receipt 修复 Runtime；Effect 已确认而 Delivery projection 落后时，以 Effect truth 修复交付状态。
 
-Native Runtime 要和 Generic Host + Legal Backend 做对照；GraphRAG 要按具体 Query Class 与更简单的 Hybrid Retrieval 比；Long-term Memory 要做消融；Specialist / Multi-Agent 要与 Single Controller + 并行 Step / Subgraph 比。物理微服务也要证明独立扩缩容、隔离或运营价值，而不是因为逻辑模块已经分开就自动拆服务。
+这是一种“可恢复一致性”而不是“所有东西永远同步一致”。代价是系统必须认真设计 recovery order；收益是故障不会因为一处 projection 失败就迫使已经成立的业务事实回滚，也不会依赖所有外部系统同时在线。
 
-删除并不意味着否定前面的设计。一个机制在探索期可能有价值，测量以后发现收益不足，最健康的结果就是缩小、外置或移除。09 的评测因此不仅是 Release Gate，也承担“复杂度淘汰”的责任。
+### 21. 为什么每个边界都要回答 Non-proof，而不只回答 Success
 
-### 12. 当前哪些能力仍然没有证明
+架构文档通常喜欢定义成功条件，却较少明确“什么看起来像成功，但其实不能证明更强事实”。Zuno 特别强调 Non-proof，是因为跨层误判经常发生在这里：Provider 200 不是专业质量证明，Capability success 不是 Domain admission，Checkpoint completed 不是正式提交，HTTP 200 不是所有远端业务流程完成，Trace exported 也不是强制审计已经满足。
 
-Round 02 已经冻结 Overall Target Architecture（总体目标架构）和九个逻辑责任域。九篇模块正文已经完成 **Deep Design V2 / Cross-Module Consistency**，并完成了一轮更充分的 Human-first Part A 深化。**这仍然不等于 Module Detail Freeze，也不等于实现授权。**
+把 Non-proof 写清楚，可以防止相邻模块为了方便不断升级自己的状态语义。每个 Owner 只承诺自己真正能证明的事情，上层需要更强结论时必须消费对应更强 Receipt / Decision。这种克制看起来增加了一些查询和对象，却大幅降低“一个 success 被整个系统误用”的风险。
 
-当前仍需要真实工程和测量回答：
+同理，失败也不能统一成一个 ERROR。计算失败、输入过期、计划失效、安全拒绝、结果未知和人工待处理需要不同恢复方式。分类的目的不是做一张漂亮 taxonomy，而是决定系统下一步是否允许自动行动。
 
-- Formal Admission + AdmissionReceipt 的完整 PostgreSQL 并发和故障恢复是否成立；
-- KnowledgeGeneration 的 manifest / Serving 切换和任务级 ReadinessDecision 是否能在真实数据规模可靠工作；
-- 新证据失效、局部重评和 HumanDecision 是否能形成完整 E2E；
-- Native Runtime 是否比“Generic Host + Zuno Legal Backend”有可重复优势；
-- Long-term Memory 是否改善法律任务；
-- Specialist / Multi-Agent 是否优于单控制器 + 并行步骤 / Subgraph；
-- GraphRAG 是否只在特定 Query Class 值得启用；
-- Security、Audit、Tool Effect Reconciliation、HA、DR 和实际部署是否达到 Production Readiness。
+### 22. 性能优化为什么必须服从 Authority，而不是反过来
 
-这些实验既可能保留能力，也可能删除能力。当前最诚实的状态是：总体架构和九模块责任边界已稳定，模块 Deep Design V2 可用于继续字段级 Detail Design 和审查；implementation available、quality proven 和 production ready 都需要另行证据。
+缓存、异步 Worker、批处理、并行、预取和多级索引都能提高性能，但它们经常把请求从原始 HTTP 上下文中分离。如果架构只在入口保存 tenant、权限或版本，后台优化越多，越容易丢掉原本保护正确性的上下文。
 
-## Target Status Boundary
+所以性能机制只能优化已有语义：Cache 可以加速派生结果，但不能延长授权寿命；并行可以提高 Capability 吞吐，但不能产生多个 Controller；异步 Delivery 可以解耦外部系统，但不能推迟 Domain invalidation；Read Replica 可以扩展查询，但不能让旧 projection 覆盖 Owner write truth。
 
-以下状态只说明 Target 治理，不证明实现或生产资格。
+这条原则给性能优化一个清楚边界：先证明优化不改变 Authority 和 causation，再讨论吞吐和延迟。必要时宁愿多一次当前安全检查或 Owner query，也不把一次旧决定变成永久 token。
 
-| 项目 | 当前状态 |
-| --- | --- |
-| Canonical Revision | `COMPLETED` |
-| Overall Architecture | `ROUND_02_FROZEN` |
-| Logical Responsibility | 9 个 Target Logical Modules，已冻结 |
-| Module Design Baseline | `AVAILABLE_V1` |
-| Module Deep Design | `AVAILABLE_V2`，9/9 |
-| Cross-Module Consistency | `AVAILABLE_V1` |
-| Human-first Module Narrative | `DEEPENED` |
-| Module Detail Freeze | `NOT_YET` |
-| Implementation Authorization | `NO` |
-| Platform / Infrastructure | Responsibility Layer，不是第 10 个逻辑业务模块 |
-| Context Provider | Optional，不是一级逻辑模块 |
-| Native Runtime | Conditional / Measurement-gated |
-| Long-term Memory | Optional / Measurement-gated |
-| GraphRAG | Query-class / Evidence-gated |
-| Production Readiness | Not established |
-| Module Decomposition Gate | Open for design only |
+### 23. Build / Buy / Extend / Defer 为什么要逐层判断
+
+Zuno 不应该因为是研究型项目就默认自研所有基础设施。身份认证、Secret Manager、PostgreSQL、OpenTelemetry、通用 Checkpointer、消息队列和模型 SDK 都应优先复用成熟能力。项目真正需要自己拥有的是法律业务语义以及这些通用组件之间无法替代的 Authority 边界。
+
+判断是否自研时先问最简单成熟方案能不能满足约束。如果能，Buy / Adopt；如果只缺一个法律语义薄层，Extend；如果当前没有真实需求或 Evidence，Defer。只有现成方案在正式状态、恢复、隔离或专业质量上存在明确缺口，而且这个缺口长期属于 Zuno 责任，才值得 Build。
+
+这个原则同样适用于 Agent 框架。LangGraph 可以承担执行原语，但不自动拥有 Formal Admission；通用 Host 可以承担会话和 UI，但不自动拥有法律 Domain；Graph database 可以实现一种 Projection，但不自动证明 GraphRAG 值得保留。框架是能力来源，不是架构因果来源。
+
+### 24. 降级为什么不能只有“换弱模型继续回答”
+
+高可用并不意味着任何情况下都必须给出完整答案。真正合理的降级取决于缺失的是什么。如果强模型不可用但当前任务允许低成本模型且质量基线仍满足，可以路由降级；如果 Graph 路径不可用而 Hybrid Retrieval 对当前 query class 足够，可以退回简单检索。
+
+但关键材料缺失时，正确降级可能是缩小 Scope；权限无法确认时是 fail closed；现实 Effect outcome unknown 时是等待 Reconcile；Judge 不可用时是 Evaluation BLOCKED。把所有降级都实现成“尽量生成一段文本”会把可用性优化变成正确性破坏。
+
+因此每个模块都应定义自己能够安全降低的能力和不能越过的 floor。系统的韧性来自知道什么时候可以少做，而不是永远假装什么都能做。
+
+### 25. 为什么 Evidence 不只是测试通过，还要能影响架构删除决定
+
+代码测试可以证明某个 Contract 当前按预期工作，却不能证明这个 Contract 值得长期存在。复杂机制的保留需要另一类 Evidence：它是否在目标任务上改善了质量、恢复、延迟、成本或人工负担，并且收益是否超过维护复杂度。
+
+例如 GraphRAG 的正确实现只能证明图检索“能工作”；只有对照实验才能证明它比更简单的 Hybrid Retrieval 有边际价值。Native Runtime 的 crash recovery 测试证明机制正确，但还需要和 Generic Host + Legal Backend 比较，才能知道是否值得承担长期自研宿主成本。
+
+因此 Zuno 的架构不是单向“不断建设”。09 的评测应能够导致保留、缩小、替换或删除。一个设计能主动定义自己的退出条件，通常比“永远有理由继续加功能”更成熟。
+
+### 26. 一个架构边界是否成立，最终要看它能不能减少错误的“推断”
+
+复杂系统最危险的 bug 往往不是某个函数算错，而是 A 模块看到 B 模块的一个状态后，推断出了它其实没有资格知道的结论：看到索引构建完成就推断任务 READY，看到 Step completed 就推断 Domain 已提交，看到 HTTP timeout 就推断 Effect 失败，看到旧 Authorization allow 就推断未来仍允许。
+
+因此 Zuno 的边界设计可以用一个很朴素的问题验收：**这个模块对外暴露的事实，是否足够让消费者做正确判断，同时又没有诱导它推断更强事实？** 如果一个 Contract 经常需要消费者“顺便猜一下”，说明 Owner 或 completion proof 仍然不够清楚；如果每个消费者都复制同样判断逻辑，则应该把判断收回真正的 Authority。
+
+这也是为什么文档质量本身属于架构质量。读者如果必须依赖内部名词和隐含惯例才能知道谁说了算，工程实现更容易重复同样误判。Human Narrative 先把因果讲清，Engineering Reference 再冻结精确语义，两层共同减少错误推断，而不是让术语数量成为复杂度的遮羞布。
+
+另一个验收方法是做“删除测试”：暂时拿掉某个边界，看看错误推断是否重新出现。如果删除独立 Domain authority 后 Runtime completed 就被迫承担正式业务含义，说明该边界确有必要；如果拿掉某个额外层后所有重要不变量仍然能被更简单组件保护，就应该质疑这层复杂度。边界的价值必须表现为减少真实歧义、故障或责任冲突，而不是让架构图更对称。
+
+### 19. Current、Target、Evidence 和 Unknown 必须始终分开
+
+本文描述的是 Target Architecture。九模块 Responsibility Taxonomy、Formal Admission、Single Controller、Knowledge / Domain 权威、Effect recovery 和安全门禁已经作为目标设计接受，但这不等于对应代码、表、Migration、Provider、HA 或生产流程已经存在。
+
+Current 只能由代码、测试、Migration、Trace、Eval 或真实运行证据证明。Pilot Validation 也不等于 Production；没有容量、DR、安全资格和运行证据，就不能从完整设计反推出生产成熟度。
+
+项目为什么存在以及历史上做过什么，回到 `docs/project/project.md`；当前实现证据回到 `docs/evidence/`；精确模块 Contract、状态和 crash window 回到 Part B / Part C。Unknown 应保持 Unknown，不用更漂亮的架构文字填补证据空缺。
+
+### 20. 读完整体架构后应该留下什么
+
+如果只记住九个模块名，这篇架构文档就失败了。更重要的是记住几个设计判断：简单任务保持简单；机器结果先是候选；正式业务事实、运行控制、知识派生和现实效果分别由对应 Owner 负责；失败恢复先找最强耐久事实；权限在新的受保护动作前重新判断；复杂机制必须能被测量，也必须能被删除。
+
+这些原则决定了 Zuno 如何在法律专业性、Agent 灵活性和工程可恢复性之间划边界。具体对象名、字段、枚举和事务细节可以继续演进，只要它们没有破坏这些已经接受的 Authority 与因果关系。
 
 ## Part B — Detailed Architecture Specification
 

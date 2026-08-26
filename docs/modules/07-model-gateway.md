@@ -4,143 +4,167 @@
 
 ## Part A — Human Narrative
 
-### 这个模块解决的是“怎样受控使用模型”，不是“所有 AI 都放这里”
+### 这个模块解决的是“模型怎样成为受控依赖”，不是“所有 AI 逻辑都放到网关”
 
-Zuno 会在规划、执行、改写、抽取、批评和综合等不同位置调用模型。把每个 Provider SDK 直接散落到 Runtime、Capability 和 Knowledge 里，短期开发很快，长期却无法统一回答：这次为什么选这个模型、数据能不能外发、失败以后能不能切换、花了多少预算、取消后有没有继续计费。
+Zuno 会在规划、改写、抽取、专业分析、批评和综合等位置调用模型。如果每个模块直接使用不同 Provider SDK，短期最方便，长期却无法统一解释为什么选这个模型、当前数据能不能外发、失败以后能不能切换、实际花了多少预算，以及取消后是否仍产生费用。
 
-07 的职责是把模型调用变成一个稳定受控边界：**上层表达 ModelRole（模型角色）和质量 / 预算 / 安全要求，Gateway 选择当前合格 Provider / Model，记录 Attempt 和 Usage，再把 typed result 返回给上层验收。**
+07 因此统一的是调用边界和事实：上层表达自己需要哪类模型能力和约束，Gateway 选择当前合格 Provider / Model，记录真实 Attempt 与 Usage，再把 typed result 返回调用方。具体业务 Prompt 和专业语义仍属于使用它的模块。
 
-### 为什么 Model Role 与具体 Provider / Model 解耦
+### 最简单的“每个模块自己调 SDK”为什么会失控
 
-Planner 需要的是“复杂规划能力”，Query Rewriter 需要的是“快速改写”，Extractor 需要结构化抽取。它们不应该在业务代码里直接依赖某个厂商模型名。
+Provider SDK 接入通常只有几十行代码，所以一开始分散调用看起来没有问题。随着模型数量增加，每个模块都会自己实现 timeout、fallback、token 统计、地域限制和 Secret 处理，最后相同问题出现多套答案。
 
-因此 **Model Role 与具体 Provider / Model 解耦**。TASK_ANALYZER、PLANNER、PLAN_REPAIR、EXECUTOR_FAST、EXECUTOR_REASONING、QUERY_REWRITER、EXTRACTOR、CRITIC、SYNTHESIZER、FINAL_CRITIC 是语义角色；实际 Provider / Model 由当前资格、数据政策、预算和任务需要决定。
+更危险的是业务代码开始直接写某个模型名。模型升级或 Provider 下线时，Planner、Extractor 和 Query Rewriter 都要一起改，模型能力和业务语义产生不必要耦合。
 
-### 强模型和弱模型为什么要按任务价值分配
+### Model Role 与具体 Provider / Model 解耦
 
-复杂规划、Plan Repair、关键 Reflection 和 Final Reflection 更值得使用强推理模型；Query Rewrite、提取、分类、格式转换和普通 ReAct 通常可以使用更快更便宜的模型。
+Planner 需要复杂规划能力，Query Rewriter 更关心速度和成本，Extractor 关心结构化输出。上层真正依赖的是任务角色，而不是某个厂商的 SKU。
 
-这种区分不是固定“强模型永远好”，而是控制边际成本。09 应通过角色级 Eval 证明哪些任务值得升级；没有质量收益时不应因为模型更贵就默认使用。
+因此保持 `Model Role 与具体 Provider / Model 解耦`。Role 是稳定语义，实际 Provider / Model 由当前资格、数据政策、预算、延迟和质量要求选择。这样模型供应变化不会迫使业务代码重新定义自己的职责。
 
-### 为什么 deterministic 能力不应该被 Gateway 模型化
+### Provider technically available 为什么远远不等于当前能用
 
-Retrieval execution、Tool execution、schema validation、citation check、测试、安全门禁和 Approval Gate 能通过确定性机制可靠完成时，就不应该转成“问模型是否通过”。
+API health 绿色只证明技术可调用。当前材料可能因为地域、合同或数据分类禁止外发；某个模型可能没通过当前 Role 的质量基线；预算或配额也可能已经不足。
 
-模型适合产生 Proposal、判断、摘要和 Critique；系统事实和安全事实尽量使用 deterministic owner。这样模型升级不会改变“权限是否允许”“引用是否存在”这类本应稳定的结果。
-
-### Provider technically available 为什么不等于能用
-
-一个 Provider API 返回健康，只证明技术可调用。它可能因为地域、数据分类或合同政策不允许接收当前材料；也可能没有通过当前 Role 的质量基线；还可能预算超限。
-
-所以：
+所以必须保持：
 
 ```text
 Provider technically available != currently permitted != quality qualified
 ```
 
-07 先消费 08 的 egress / credential 决定，再结合 Qualification、Role requirement、Budget / Quota 形成 RoutingDecision。
+07 只能在安全允许和质量合格的集合中做路由。Fallback 也不能以“API 兼容”为理由越过这些门槛。
 
-### 为什么模型输出永远只是 Proposal
+### 为什么模型输出永远先是 Proposal
 
-模型即使给出很高置信度，也不能直接修改 Canonical Domain、批准权限、执行未经审批的 Tool、激活 PlanVersion、绕过 Budget 或写长期 Memory。
+模型即使结构正确、置信度很高，也不能自己修改 Domain、批准权限、激活高风险 Tool 或把长期 Memory 写成正式事实。模型适合产生建议、抽取、判断和 Critique，不拥有这些更强业务权威。
 
-07 只负责“模型调用发生了什么、输出了什么 typed result”。05 / 04 判断 Capability / Step 是否接受，02 判断是否 Formal Admission，01 判断是否发布。
+07 只证明“这次模型调用发生了什么、返回了什么”。结果是否满足专业语义由 05 / 04 验收，是否进入正式 Domain 由 02 决定，是否允许现实执行由 08 / 06 决定。
 
-### 为什么调用成功还远远不够
+### 为什么调用成功要和上层成功保持距离
 
-Provider 返回 200、JSON schema 合法，只说明 ModelCallAttempt 技术完成。专业 Capability 可能认为结果不满足语义，Runtime Step 可能拒绝，Domain 更可能因为 Evidence / HumanDecision 不足而不准入。
+Provider 返回 200 和合法 JSON，只说明 transport / model attempt 成功。Capability 可能认为内容不满足专业契约，Runtime Step 可能拒绝，Domain 更可能因为证据不足不准入。
 
-因此必须显式保持：**Gateway 调用成功 != Runtime Step accepted != Domain admitted != Answer published**。
+所以保持：`Gateway 调用成功 != Runtime Step accepted != Domain admitted != Answer published`。07 越是稳定地记录自己的事实，越不需要假装拥有更强成功。
 
-### 弱模型失败后的升级链为什么要有边界
+### 强模型和弱模型为什么应该按任务价值分配
 
-普通执行可以先用 EXECUTOR_FAST。失败后不是无限重试，而是先调整参数 / 格式做有限 Retry；仍不满足时升级 EXECUTOR_REASONING；之后由 Critic 或 Runtime 判断 Retry / Replan / Abstain。
+复杂规划、关键 Reflection 或高风险综合可能从更强推理模型获益；Query Rewrite、分类、格式转换和简单抽取通常更适合快而便宜的模型。
 
-升级链要受 Budget、deadline、quality floor 和 Security 约束。不能为了“总能给答案”把高成本模型当无限 fallback。
+这不是固定的“模型等级表”。09 应通过 Role 级 Eval 证明升级是否带来足够收益；如果质量没有明显改善，贵模型不应因为品牌或参数规模自动成为默认。
 
-### Fallback 为什么不能只看 API 兼容
+### Routing 为什么要同时看质量、安全、预算和延迟
 
-Provider B 即使实现了相同 Chat Completion API，也不代表它对某个 Role 等价。Structured output、上下文、工具调用、语言、法律任务质量和安全地域都可能不同。
+单纯按价格最低路由会牺牲质量，单纯按 benchmark 最高路由会忽略数据政策和成本。Gateway 的路由是多约束选择：当前 Role 需要什么、哪些 Provider 被允许、哪些已经通过资格、预算和 deadline 是否还能承担。
 
-只有当前 Qualification / Eval 证明 B 满足该 Role 的最低质量和行为要求，并且 08 允许当前数据外发，07 才能把它作为 fallback。否则通知 04 / 05 当前路径不可用，由上层 Replan / Review。
+RoutingDecision 只是对这些约束的调用层组合。08 仍然拥有数据外发和 Credential policy，09 仍然拥有长期 Eval，07 不应重新发明它们。
 
-### Budget / Quota 为什么必须跟 Retry 一起累计
+### Retry 和 Fallback 为什么必须有边界
 
-如果每次 Retry 或 fallback 都重新拿一份预算，失败链会把一次任务的成本放大而不被发现。07 记录 reservation、estimate、settled usage；04 的 BudgetState 消费这些事实。
+模型 503、连接抖动或格式暂时错误，可以做有限 Retry；某个 Provider 长时间不可用时，可以切换到当前同样合格的 fallback。
 
-两家 Provider 都实际被调用时，两边费用都要累计，即使最终只采用一个结果。Usage 是发生过的资源事实，不因 Step 后来失败而消失。
+但 fallback 不是无限降低质量的逃生通道。没有满足 Role 最低要求的替代模型时，正确结果可能是让上层 Replan、Review 或 abstain。Budget、deadline 和安全约束始终限制失败链的放大。
 
-### Cancellation 为什么不是本地 flag
+### Budget / Quota 为什么要累计整个失败链
 
-调用方请求取消后，Provider 可能已经完成、可能正在生成、也可能不支持可靠取消。`CANCEL_REQUESTED` 只说明本地意图，不能推断费用为零或 Provider 停止。
+如果每次 Retry 或 fallback 都重新拿一份预算，一次坏请求可以悄悄消耗多倍 token 和费用。实际发生过的 Provider 调用都应该计入 Usage，即使最终结果没有被采用。
 
-07 至少要区分 provider-confirmed cancelled、completed-before-cancel、cancel unknown 和 billing / usage unknown，并在必要时做 provider-level settlement。
+07 记录 reservation / estimate / settled usage，04 用这些事实更新 Run Budget。成本事实不会因为 Step 后来失败而消失。
 
-### Timeout 后 fallback 为什么会产生竞态
+### Cancellation 为什么不能只记录一个本地 flag
 
-Provider A timeout 后启动 Provider B，A 的响应可能晚到。如果不保留 Attempt identity，上层会误以为只有一次调用；如果只记最终采用结果，又会漏掉 A 的 Usage。
+调用方请求取消时，Provider 可能已经完成、正在生成，也可能根本不支持可靠取消。`CANCEL_REQUESTED` 只说明本地意图，不能推断费用为零或远端停止。
 
-07 保存两个独立 Attempt 和各自 Usage。04 / 05 判断晚到 A 是否仍有资格被接受，07 只保证历史调用事实不被覆盖。
+Gateway 应区分 provider-confirmed cancelled、completed-before-cancel 和 cancel / billing unknown，并在需要时继续 settlement。取消控制未来等待，不改写已经发生的资源事实。
 
-### 模型升级为什么不能偷偷改变上层语义
+### Timeout 后启动 fallback 为什么会产生竞态
 
-V1 → V2 即使 API 完全兼容，Planner 可能生成更大的 Step，Extractor 可能改变字段倾向，Critic 阈值也可能漂移。模型升级必须形成新的 ModelVersion / Qualification evidence，并在关键 Role 上做回归。
+Provider A timeout 后启动 B，A 的响应可能稍后到达。如果系统只保存“最终模型结果”，就会丢失 A 的真实调用和费用，也无法解释两个结果谁先产生。
 
-如果行为变化使 Capability / Runtime 假设失效，上层调整 Contract / Prompt / Plan；Gateway 不应该用隐藏后处理把变化伪装成旧模型。
+每次实际调用保持独立 Attempt identity 和 Usage。04 / 05 决定晚到结果当前是否仍有资格被接受，07 只保证调用历史不被覆盖。
 
 ### Prompt ownership 为什么不应该全部归 Gateway
 
-Gateway 统一模型调用，但具体 Prompt 的业务语义属于使用场景：Capability 的抽取 Prompt 属于 05 的专业实现，Runtime Planner Prompt 属于 04，产品回答 Prompt 可能属于对应产品 / Capability。
+Gateway 统一 transport、provider formatting、通用 safety wrapper 和 request schema，但 Planner Prompt 的业务语义属于 04，专业抽取 Prompt 属于 05，对外回答 Prompt 可能属于产品或相应 Capability。
 
-07 可以管理 provider formatting、system safety wrapper 和通用 request schema，但不成为所有 Prompt 的 God Repository。
+把所有 Prompt 收进 Gateway 会让它成为 God Repository，也让业务语义和 Provider adapter 混在一起。统一调用不等于统一拥有所有 Prompt。
 
 ### Structured output 为什么需要两层校验
 
-07 可以检查 JSON / schema / transport-level structured output；05 / 04 还要检查专业语义和 Step Acceptance。字段齐全不代表内容正确。
+07 可以检查 JSON、schema 和 Provider structured-output 协议是否满足；但字段完整不代表专业内容正确。05 / 04 还需要做语义验收。
 
-把 schema success 与 semantic success 分开后，Gateway 可以稳定处理 Provider 兼容问题，而不把法律质量逻辑塞进 SDK Adapter。
+把 transport/schema success 与 semantic success 分开以后，Gateway 可以稳定解决 Provider 差异，而不会把法律专业规则塞进 SDK Adapter。
 
-### Cache 为什么默认不能假设 LLM 调用幂等
+### Cache 为什么默认不能假设模型调用幂等
 
-同一 prompt 在模型版本、temperature、seed、provider backend 或时间变化时可能返回不同结果。只有 caller 明确允许且操作具有可接受确定性时，才能缓存 / duplicate suppress。
+同一 prompt 在模型版本、temperature、provider backend 或时间变化时可能返回不同结果。只有调用方明确允许、任务对差异可接受时，才适合缓存或 duplicate suppression。
 
-Cache identity 需要绑定 ModelRole、Provider / ModelVersion、prompt/input hash、generation config、structured schema 和必要 security / tenant scope。缓存结果被重新使用时，仍由调用方做当前业务新鲜度判断。
+cache identity 需要绑定 Role、模型版本、prompt/input hash、generation config、schema 和必要安全 Scope。缓存复用后，上层仍然要做当前业务新鲜度判断。
 
-### Secret 和数据外发为什么分别治理
+### Secret 和业务数据为什么是两种不同治理问题
 
-API Key 属于 Secret；Prompt 中的案件材料属于受保护业务数据。两者风险不同。07 从 08 / Platform 得到 Credential ref / Lease，同时消费 ModelEgressDecision 决定哪些数据允许发给哪个 Provider / region。
+API Key 是 Secret，Prompt 中的案件材料是受保护业务数据。Secret 应通过受控引用和短期 Lease 使用，不能进入 Prompt、普通日志或 Checkpoint；业务数据能否外发则由 08 的数据政策决定。
 
-Secret 不进 Prompt / Trace；敏感 Prompt / Response 是否能进入 Telemetry 由数据分类和 redaction policy 决定。
+07 消费 Credential ref 和 egress decision，执行允许的模型调用。它不能因为 Provider fallback 方便就扩大外发范围。
 
-### 为什么 Model Gateway 不需要默认成为独立微服务
+### 为什么 Model Gateway 默认不需要独立微服务
 
-Provider SDK 集中并不自动要求网络服务。默认可以在模块化 backend / worker 中通过 adapter 实现；只有 Secret isolation、独立吞吐扩缩、Provider 网络出口或部署生命周期出现明确证据时，再按 ADR-0012 拆分。
+把 Provider SDK 集中到一个逻辑边界，不自动要求增加一次网络跳转。默认可以作为模块化 backend / worker 中的 adapter 和 service 实现。
 
-逻辑统一比服务数量更重要。
+只有 Secret isolation、独立吞吐扩缩、网络出口、合规边界或部署生命周期出现明确证据时，才值得拆成服务。逻辑统一比服务数量更重要。
 
-### Streaming 输出为什么需要单独处理“部分结果、取消和计费”
+### 模型版本漂移为什么即使 API 不变也值得治理
 
-流式模型调用会让“调用完成”变得更细。Provider 可能已经返回前几百个 token，随后连接中断；用户也可能在流式输出中途取消。此时前端已经看到一段文本，不代表它通过了完整 structured validation、Capability Acceptance 或 Final Gate，更不能因为“看起来像答案”就自动进入 Domain 或 Publication。普通 UI 可以显示明确标记的 transient stream，但正式结果只能使用达到 caller completion contract 的完整 result。
+Provider 可以保持同一个 REST schema，却在底层模型升级后改变规划长度、抽取偏好、工具调用方式或拒答行为。对上层来说，这种 behavioral drift 可能比 API breaking change 更危险，因为它不一定触发编译错误。
 
-与此同时，流式中断仍可能产生真实 Usage。Provider 可能按已生成 token 计费，取消也可能晚于 provider completion。因此 07 需要把 partial delivery、Attempt terminal state、result eligibility 和 Usage settlement 分开：部分 token 可以作为诊断 / UX 事件，但不是完整模型结果；Usage 则按 provider 报告或 settlement 进入预算。这样“用户没看到完整答案”不会被错误解释为“没有产生费用”，也不会让一段半截输出进入 04 / 05 的成功路径。
+因此 ModelVersion / qualification 要能标识真正影响行为的版本，关键 Role 在升级前后做回归。若 Provider 不提供稳定模型快照，系统至少记录可获得的版本标识和调用时间，并通过 Eval 监控漂移，而不是假设相同 model name 永远等价。
 
-### 模型调用为什么只能做到“可追溯”，不能承诺字节级可复现
+Gateway 不应该用隐蔽后处理强行把新行为伪装成旧行为；上层假设失效时应明确调整 Prompt、Capability 或 Plan。
 
-为了复盘，07 应记录 Provider / ModelVersion、PromptTemplateVersion、输入 hash / refs、generation config、structured schema、时间、必要 seed 和 routing / qualification。这样可以解释“当时调用了什么条件”，并在 Eval 中尽量重现环境。
+### 路由稳定性为什么有时比每次选“当前最优”更重要
 
-但多数远端模型的后端部署、采样实现和服务版本可能继续变化，即使请求参数相同，也不能据此承诺未来得到完全相同的 token 序列。因此历史正确性不能依赖“以后再调用一次模型重建原答案”。需要长期负责的业务结果由 02 保存正式版本和依据；07 保存的是调用 provenance 和资源事实。测试中可以对 deterministic adapter / fixed fixtures 做严格 replay，对真实 LLM 更适合验证 schema、关键语义、quality distribution 和 owner invariants，而不是把逐字一致当生产契约。
+如果每个请求都根据瞬时价格、延迟或 benchmark 在多个模型间频繁切换，同一任务不同 Step 的行为可能不可预测，排障和评测也难以重现。
 
-### Quota Reservation 为什么要和最终 Usage Settlement 分开
+对需要一致性的长 Run，可以在开始时绑定允许的 routing profile / model family，在明确故障或 Replan 时再切换。对普通独立请求则可以更灵活地动态路由。稳定性和优化程度需要按任务权衡。
 
-并行 Runtime 在派发多个模型 Step 前需要知道预算和 Provider quota 是否还有空间，所以 07 可能先做 reservation；但 reservation 只是“预留最多可以消耗多少”，不是实际发生的 Usage。调用成功后按真实 tokens / pricing 结算，多余 reservation 释放；调用未发出则释放；请求已经发送但 billing outcome 不清楚时，reservation 不能立即当作零，而应进入 settlement / disputed / unknown 路径。
+这说明路由目标不是单一最优函数，而是在质量、安全、成本、延迟和可复现性之间选择可解释策略。
 
-这个分层对并发尤其重要。如果三个分支都只读取同一个旧余额，再分别启动大模型，很容易合计超限；reservation 可以帮助控制并发上限，而 04 最终仍以 settled / authoritative usage refs 修复 BudgetState。Provider 晚报 Usage 时，预算事实可以向上修正，却不能修改已经发生的历史 Attempt；如果修正导致剩余预算不足，影响的是后续 dispatch / Replan，而不是伪造过去“其实没调用”。
+### Deadline 为什么和 Budget 一样属于路由约束
+
+一个强模型可能质量最好，但预计响应时间已经超过用户 deadline；一个便宜模型虽然快，却不满足最低质量。Gateway 需要把可用候选限制在同时满足 quality floor、security、quota 和时间预算的集合。
+
+如果没有任何候选满足，正确结果不是一定找个模型调用，而是向上层报告不可满足，让 Runtime 调整计划、缩小任务或进入人工处理。路由层不应该通过偷偷放宽质量和安全条件来提高“成功率”。
+
+### Provider outage 的降级为什么要区分 Role
+
+Query rewrite Provider 故障时，可以直接使用原 query 或更简单 deterministic 规则；Planner 强模型故障时，简单任务也许退回固定 Plan；关键 legal synthesis 如果没有合格 fallback，则可能必须等待或 Review。
+
+因此 degraded mode 与 Role 绑定，而不是 Gateway 统一写“主模型失败就用备用模型”。这种差异让系统可以安全少做，而不是在关键任务上无条件降质。
+
+### Model Gateway 的缓存为什么要谨慎对待上下文安全
+
+即使 prompt hash 相同，不同 tenant、matter、SecurityEpoch 或数据生命周期可能不允许共享响应。跨用户全局 cache 可以非常省钱，也可能成为数据泄露通道。
+
+只有输入可公开共享、调用方明确允许且安全 Scope 相容时才适合复用。敏感法律任务默认把 tenant / matter / policy scope 纳入 identity，或者直接关闭响应缓存。成本优化不能扩大数据可见范围。
+
+### Model Usage 为什么既是成本事实，也是恢复事实
+
+模型调用已经发出后，即使上层后来取消 Run、拒绝结果或 Replan，Provider 仍可能已经消耗 token 并产生费用。只在“最终采用结果”上记成本，会系统性低估失败链和 fallback 的真实代价。
+
+因此每个 Attempt 的 Usage 应独立 settlement，再沿 causation 归因到 Run / Step。这样 04 可以看见当前 Budget 还剩多少，09 也能回答一次 Reflection、Planner retry 或 Provider fallback 到底放大了多少成本。
+
+Usage 同时帮助解释取消边界：本地 cancel 并不撤销已经发生的远端计算。系统可以停止等待或阻止后续调用，但不能为了让 Run 状态好看而把已发生资源事实删除。
+
+### Provider abstraction 为什么不能追求“所有模型行为完全一样”
+
+统一 API 能屏蔽认证、请求格式和基础 structured output 差异，但不同模型在上下文窗口、tool calling、推理延迟、语言表现和拒答策略上天然不同。如果 Gateway 试图用越来越多隐藏转换把它们伪装成完全等价，上层最终会依赖一套没人能解释的后处理。
+
+更合理的是统一真正稳定的调用 contract，同时让 Role qualification 显式表达差异。上层依赖“这个模型满足当前 Role 的最低行为要求”，而不是相信所有 Provider 是可无损替换的同一种函数。抽象应减少偶然差异，不能抹掉决定质量的真实差异。
 
 ### 当前、目标与缺口
 
-Current 代码 / Wave 1 Contract 已有 ModelRoutingDecision、ModelCallAttempt、Quota / Usage / Cancellation 等基础表面，但正式 credentials、四 Profile runtime、Provider qualification、真实 fallback、budget / quota fault test、cancellation race 和角色级质量测量并未完整证明。
+Current 到底有哪些 Provider、Role routing、usage settlement、cancel semantics 和 qualification evidence，需要回到代码、配置和 Eval；Target 中的完整机制不代表已经实现。
 
-Target 是 role-driven、security-bound、budget-aware、provider-neutral 的统一模型边界。Gap 包括正式 Qualification Matrix、role-quality evidence、usage settlement、fallback equivalence、no-egress E2E、真实限流 / timeout / cancel 故障和 production attestation。
+Target 已明确 Role/Provider 解耦、安全与质量双门、受控 fallback、真实 Usage 和 proposal-only 边界。Gap 包括字段级路由策略、Provider 行为测试、真实成本/延迟数据、质量 qualification、取消结算和是否存在独立服务拆分证据。
 
 ## Part B — Engineering / Agent Reference
 
