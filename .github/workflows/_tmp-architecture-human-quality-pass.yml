@@ -1,0 +1,50 @@
+name: Temporary architecture human quality pass
+
+on:
+  push:
+    branches:
+      - docs/architecture-human-quality-pass
+
+permissions:
+  contents: write
+
+jobs:
+  rewrite:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: docs/architecture-human-quality-pass
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Rewrite Human-first architecture narratives
+        run: python tools/scripts/_tmp_architecture_human_quality_pass.py
+
+      - name: Remove temporary workflow
+        run: rm .github/workflows/_tmp-architecture-human-quality-pass.yml
+
+      - name: Validate rewritten document set
+        run: |
+          python tools/agent/render_architecture.py --check
+          python tools/scripts/verify_architecture_document_set.py
+          python tools/scripts/verify_architecture_semantic_alignment.py
+          python tools/scripts/verify_architecture_writing_standard.py
+          python tools/scripts/verify_architecture_human_readability.py
+          python tools/scripts/verify_docs_entrypoints.py
+          python tools/scripts/verify_markdown_internal_links.py
+          python tools/scripts/verify_repo_structure.py
+          python .agent/scripts/verify_agent_system.py
+          python .agent/scripts/verify_doc_boundaries.py
+
+      - name: Commit rewritten documents
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "docs: improve architecture conceptual narratives"
+          git push origin HEAD:docs/architecture-human-quality-pass
