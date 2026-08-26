@@ -140,6 +140,38 @@ Controller 可以按 task priority、budget 和 provider capacity 做调度，�
 
 这也是 04 最重要的删除条件：如果 B 方案——Generic Host + Zuno Legal Backend——已经提供同等正确性和更低维护成本，就应缩小 C 方案，而不是把“自研运行时”当项目身份的一部分。
 
+### “等待”为什么有时是正确进展，而不是 Runtime 卡死
+
+长任务不一定一直有可执行 Step。关键材料未就绪、Approval pending、Effect outcome unknown、预算不足或人工 Review 都可能让 Run 暂时没有合法下一步。为了让 Dashboard 看起来有进展而强行 Replan 或继续调用模型，反而会绕过真实门禁。
+
+因此 Controller 需要区分 deadlock / bug 和有明确 Owner 条件的合法等待。后者应该保存等待原因和唤醒条件，在对应事实变化后重新判断 freshness；前者才需要超时、告警或人工介入。
+
+一个成熟 Runtime 的表现不是“永远在执行”，而是知道什么时候必须停止自动行动。
+
+### Plan 激活前为什么要证明它至少可执行，而不是只看 LLM 输出像不像计划
+
+Planner 可以生成结构漂亮但实际上不可执行的 DAG：依赖循环、引用不存在的 Capability、预算明显超限、要求当前 Scope 不允许的材料，或者计划了无法安全恢复的 Effect。等运行到一半才发现这些问题，会放大成本和失败面。
+
+因此计划进入 active 状态前，应该先做尽可能确定性的结构与可行性检查，再判断它是否真的比简单路线有用。模型可以负责提出语义方案，Controller / Capability / Security / Budget facts 负责证明当前世界允许它执行。
+
+这不是要求构建万能静态证明器，而是把明显错误挡在派发前。越能在激活前确定的条件，越不应该留给运行中靠 Retry 猜。
+
+### Runtime 负载准入为什么和 Step 并行度是两个问题
+
+即使单个 Run 内并行度受控，系统仍可能同时启动成千上万个复杂 Run，把 Checkpointer、模型 quota 和 Worker pool 压垮。入口 01 可以做产品级限流，04 仍需要知道自己当前能承载多少 active / waiting / runnable 工作。
+
+运行时负载准入可以按 task class、priority、budget 和资源 profile 决定立即激活、排队或拒绝；已经激活的 Run 再由 scheduler 决定哪些 Ready Step 现在派发。两层分开，避免“每个 Run 都守规矩，但所有 Run 加起来把系统打满”。
+
+具体 Queue / scheduler 可以复用成熟基础设施，04 自己需要保护的是控制语义和公平性，而不是自研通用集群调度器。
+
+### Checkpoint 为什么不应该无限长成完整事件仓库
+
+长 Run 可能产生大量尝试、模型输出和中间结果。如果为了恢复把所有历史都复制进每个 Checkpoint，状态会不断膨胀，恢复延迟和存储成本也会随运行时间增长。
+
+Checkpoint 应保存继续控制所需的最小稳定状态和 Owner refs；不可变的 Domain / Effect / Usage / Audit 历史留在各自 Owner，诊断细节由 09 关联。必要时可以做 checkpoint compaction / snapshot，但不能因为压缩而丢掉 PlanVersion、causation 和尚未收敛的等待条件。
+
+这让 Runtime state 保持“可继续执行”，而不是变成第二套业务历史数据库。
+
 ### 当前、目标与缺口
 
 Current 是否已有完整 PlanVersion、parallel join、Replan Barrier、interrupt freshness、lease/fencing 和 crash recovery，需要回到代码与测试证据判断；文档中的 Target 不能当成实现清单。

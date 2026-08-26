@@ -152,6 +152,38 @@ Capability 越能精确声明自己的适用范围，上层越不需要依赖模
 
 更合理的是只在业务上确实形成稳定整体语义时才提供组合能力，并继续保留关键子能力的 causation。Runtime 可以编排多个 Capability，05 负责每个专业边界的契约和资格；不要因为“一个接口更简单”就牺牲可替换性和可评测性。组合层如果没有独立专业语义，应留在 Runtime Plan，而不是升级成新的长期能力类型。
 
+### Schema 兼容为什么不等于 Capability 语义兼容
+
+两个 Provider 都返回同样的 JSON，不代表它们真的实现同一个专业能力。一个事件抽取器可能把“付款发生日”解释为到账日，另一个解释为合同约定日；字段名完全一致，业务含义却已经不同。
+
+因此 Conformance 除了 schema，还要覆盖关键语义样例、边界条件和 failure behavior。CapabilityVersion 是否兼容，最终看消费者能否在不改变专业理解的情况下继续使用，而不是看 Pydantic 能不能 parse。
+
+这也是 Provider adapter 不应该做过度“修复”的原因：如果必须靠大量隐藏规则把一个 Provider 的输出猜成目标语义，更可能说明它没有真正 Conform，而不是 adapter 还不够聪明。
+
+### 资格为什么应该绑定已验证范围，而不是给 Provider 一个全局绿色勾
+
+一个模型在中文合同事件抽取上表现很好，不代表它对扫描 OCR 噪声、英文材料、超长案件或高风险正式结论同样合格。全局 `qualified=true` 会把局部 Evidence 放大成所有场景资格。
+
+更合理的是让资格能够说明它覆盖的 task class、输入 profile、风险等级和版本。任务落在未验证范围时，可以选择更保守 Provider、降级、Review 或明确 insufficient，而不是让模型 confidence 自己决定是否“应该能做”。
+
+资格越具体，05 越能支持真实 Build / Buy 比较：外部 Provider 也可以只在它真正有优势的范围内被采用，不需要赢得整个 Capability。
+
+### Provider 退役为什么要考虑正在运行和历史结果
+
+发现新 Provider 更好以后，直接删除旧版本会让正在运行的 Plan 失去自己绑定的实现，也让历史 Eval 无法解释。新请求可以逐步切到新 Provider，但已激活 Run 是否继续旧版本，要看兼容和风险；必要时由 04 明确 Replan，而不是 05 在后台热替换。
+
+旧 Provider 即使不再可调用，它的 version identity、qualification 和历史 invocation refs 仍可能需要保留，用于解释过去 WorkProduct 或 Eval。退役的是“未来可选资格”，不是把历史事实从系统里抹掉。
+
+这使 Capability 生命周期拥有清楚的 migration 语义：新增、限制、降级、停止新流量、最终移除执行能力，都不需要改写过去。
+
+### 研究结果进入 Capability 为什么必须能被复现，而不是只引用论文结论
+
+研究论文、实验 notebook 或一次 Demo 可以证明方向值得探索，但 Provider qualification 需要知道实际使用的代码、模型/规则版本、数据处理方式和 Eval 条件。否则团队无法判断后续质量变化来自算法、数据还是运行环境。
+
+Zuno 不需要把研究工程变成沉重 MLOps 平台，但至少要把影响专业语义和质量的 artefact/version refs 与 Eval 绑定。论文是来源证据，能够复现实验并在当前任务上通过资格门，才是工程 Provider 的 Evidence。
+
+这样研究资产可以持续进入产品，又不会因为“这是我们自己的论文算法”获得永久豁免。
+
 ### 当前、目标与缺口
 
 Current 已有哪些 Capability、Provider、Conformance test 和真实 Eval，必须回到代码和证据；Target 中列出的研究能力 family 不等于它们全部已经产品化或达到质量门槛。

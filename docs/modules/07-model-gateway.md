@@ -160,6 +160,38 @@ Usage 同时帮助解释取消边界：本地 cancel 并不撤销已经发生的
 
 更合理的是统一真正稳定的调用 contract，同时让 Role qualification 显式表达差异。上层依赖“这个模型满足当前 Role 的最低行为要求”，而不是相信所有 Provider 是可无损替换的同一种函数。抽象应减少偶然差异，不能抹掉决定质量的真实差异。
 
+### 模型调用的“可复现”为什么只能是有边界的可复现
+
+即使记录了同一个 ModelVersion、Prompt 和 temperature，外部模型服务仍可能因为底层实现、并行采样或未公开升级返回不同文本。工程上不能承诺“未来重放一定逐 token 相同”。
+
+真正可要求的是可解释重放：知道当时使用的 Role、Provider/Model version、Prompt / input refs、generation config、时间和安全范围，并能在同一资格条件下比较行为。需要强确定性的步骤应该优先用 deterministic checker / rule，而不是把法律正确性建立在模型逐字复现上。
+
+这让历史审计关注“当时基于什么受控输入和模型资格得到这个候选”，而不是追求一个现实上无法保证的随机过程完全重现。
+
+### Model Gateway 为什么不应该决定“哪些证据放进 Prompt”
+
+Gateway 最容易因为拥有 token window 和 Provider API，逐渐把 context packing、证据选择和业务 Prompt 都收进自己。这样模型层就会悄悄开始决定法律材料范围，绕过 03 的 Readiness / Retrieval 和 05 的专业语义。
+
+07 可以负责 token limit、transport format、provider-specific encoding 和调用约束，但“哪些业务事实应进入这次推理”由上游 task / Capability / Knowledge 语义决定，08 再决定哪些内容允许外发。Gateway 可以报告输入过大并要求上层缩减，不能自己随意丢掉它认为不重要的 Evidence。
+
+这种边界让换模型时不会顺便改变案件证据选择，也让 context 优化仍然可被专业 Eval 检查。
+
+### Quota 紧张时为什么要保护任务级公平，而不是谁先重试谁占满
+
+Provider 限流或成本预算紧张时，多个 Run 可能同时 Retry / fallback。如果每个调用方独立指数重试，容易形成 thundering herd，也可能让一个大任务耗尽整个 tenant 或系统 quota。
+
+07 可以提供 reservation / consumption facts 和当前 quota signal，04 再按 Run Budget 调度；必要时按 tenant、Role 或风险等级做公平限制。目标不是让 Gateway 变成通用 scheduler，而是让资源事实可见，避免“技术上还能发请求”被误解成“这个任务仍有预算资格”。
+
+过载时正确行为可能是排队、换已合格的低成本模型、缩小任务或明确无法满足，而不是用无限 fallback 把 Provider 故障放大成账单故障。
+
+### 价格变化为什么也可能让原来的路由策略失效
+
+模型行为没变，Provider 调价或计费单位变化也可能让一个原本合理的 fallback 变得不可接受。只把质量 qualification 版本化，却把成本常量硬编码在代码里，会让 Budget 判断长期漂移。
+
+07 应把实际 Usage / Cost settlement 与路由时的预算假设分开：路由根据当前可获得价格和 quota 做决定，事后以真实账单事实结算；09 再观察长期 cost/quality trade-off。成本变化通常不改变 Capability 语义，但可以改变某个模型在特定 profile 下是否值得选。
+
+这样“更便宜/更贵”影响优化策略，不会偷偷改变正式业务正确性。
+
 ### 当前、目标与缺口
 
 Current 到底有哪些 Provider、Role routing、usage settlement、cancel semantics 和 qualification evidence，需要回到代码、配置和 Eval；Target 中的完整机制不代表已经实现。

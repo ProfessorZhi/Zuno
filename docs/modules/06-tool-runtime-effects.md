@@ -160,6 +160,38 @@ SDK 或 Adapter 常常会把底层异常统一成一个漂亮的 `ToolError`。�
 
 人工确认应该针对同一个稳定 action identity，记录查询到的远端证据、确认人、时间和结论，再形成可被 Runtime / Delivery 消费的结构化 reconciliation fact。人工只是替代机器完成“确认现实结果”这一动作，不改变 06 的 Effect truth 边界，也不能顺便批准新的副作用。这样即使自动化能力不足，恢复链仍然闭环而可解释。
 
+### 幂等为什么解决不了两个“不同但冲突”的动作
+
+Action identity 可以防止同一个逻辑动作因为网络重试被执行两次，但它不能阻止两个不同请求对同一远端资源产生冲突。例如两个 Run 分别认为自己应该提交不同版本，二者都有不同且合法的 idempotency key，仍可能在远端互相覆盖。
+
+是否需要 resource version、业务唯一约束、串行化或远端 CAS，要由具体 Tool 语义决定。06 至少要在 Tool 语义中明确这种并发前提是否存在；具体由哪个字段或 Contract 表达留到 Detail Design，而不能把“我们有 idempotency key”误写成“所有并发都安全”。
+
+这再次说明幂等是重复执行问题的一部分，不是分布式正确性的万能答案。
+
+### Outcome Unknown 积压为什么本身就是一种运行风险
+
+单个未知效果可以进入 Reconcile；如果外围系统长期故障，成百上千个 action 都停在 unknown，系统会积累大量“现实世界可能已经发生、也可能没有发生”的债务。此时继续产生新的冲突动作，会让后续对账越来越难。
+
+因此 Reconciliation backlog 应影响新的执行决策：同一资源或同类高风险操作存在未收敛 effect 时，可以暂停冲突动作、降低自动化程度或升级人工。重点不是给 unknown 设置一个漂亮状态，而是限制不确定性继续扩散。
+
+09 可以测量 unknown 数量、持续时间和人工负担；这些指标也能反过来判断某个外部系统是否适合继续自动化集成。
+
+### 远端 API schema 没变，Effect 语义也可能已经漂移
+
+外部 Provider 可能仍返回相同 JSON，却改变幂等窗口、异步处理方式、业务唯一键、错误码含义或“accepted”之后的真实流程。普通 contract test 可能全部通过，恢复假设却已经失效。
+
+因此高风险 Tool 的 qualification 需要包含真正影响 retry / reconcile / confirmation 的行为，而不只检查 OpenAPI schema。发生语义漂移时，04 可能需要暂停相关 Plan，06 重新评估 RetrySafety，而不是靠 Adapter 把新错误翻译成旧枚举继续运行。
+
+ToolVersion 的意义就在这里：版本保护的是现实动作语义和恢复假设，不只是 SDK 版本号。
+
+### 自动化边界为什么应该受“可确认性”约束
+
+一个 Tool 也许技术上能 POST，但如果执行后没有幂等键、查询 API、业务唯一标识，也没有可靠人工确认渠道，那么高风险动作自动化程度应该非常有限。能调用不等于能安全恢复。
+
+因此在决定“要不要让 Agent 自动执行”之前，先问发生 timeout 后怎样确认；答案如果只能是“希望不会超时”，说明执行链还没有闭环。某些场景最成熟的设计反而是只生成 PreparedAction，让人或受控外部流程完成最终执行。
+
+自动化价值应该和可恢复性一起衡量，而不是只比较操作节省了多少点击。
+
 ### 当前、目标与缺口
 
 Current 是否已经实现 durable PreparedAction、send boundary、action hash、remote reconciliation 和强制审计集成，必须由代码和 fault-injection 证明；Target 文字不能代替运行证据。

@@ -138,6 +138,38 @@ Task Readiness 因此应结合 task class / required capability 和当前 Scope�
 
 这种分层使安全语义先收敛，昂贵的数据清理随后可恢复执行。
 
+### “没检索到”为什么不能直接解释成“材料里没有”
+
+Retrieval 是概率性和覆盖受限的。一次 Top-K 没找到某条信息，可能因为 OCR 失败、query 表达不佳、索引路线不合适、reranker 漏排或当前 Scope 没覆盖相关材料。把 retrieval miss 直接写成“没有证据”会把搜索能力边界伪装成法律事实。
+
+因此否定性结论需要更强证据：至少知道任务要求的材料范围是否 READY、相关 query class 是否使用了足够路线、关键来源是否真正被处理。无法证明覆盖时，正确结果可以是“当前没有找到”或“证据不足”，而不是“事实不存在”。
+
+这个边界也让 09 的 Eval 更真实：不仅测命中什么，还要测系统在找不到时是否诚实表达 coverage 和 uncertainty。
+
+### 检索结果为什么要保留来源多样性，而不是只追求相似度最高
+
+法律分析里，Top-10 全部来自同一份文件的相邻 chunk，可能拥有很高相关分，却无法代表多材料事项的证据覆盖。相反，一条支持材料、一条反驳材料和一条关键时间线来源，可能对专业判断更有价值。
+
+所以融合和 rerank 的目标不能只有单点相似度，还要考虑 source diversity、版本、冲突材料和任务所需 coverage。具体算法可以变化，但系统应该避免把重复片段数量误当成证据数量。
+
+这也是 Graph / entity 路线可能有价值的地方之一：帮助发现跨文档关系；但如果简单 source-aware Hybrid 已经达到同样覆盖，就没有理由为“多样性”永久保留更复杂图路径。
+
+### 新一代知识构建失败时，为什么旧 Serving 不应该一起被拖垮
+
+后台正在构建 KnowledgeGeneration V8 时，V7 可能仍然是最后一个经过完整校验的 serving 版本。某个新 embedding Provider 故障或 graph projection 失败，不应该原地破坏 V7，让所有在线查询同时不可用。
+
+更稳妥的做法是把构建和 serving 隔离：V8 在独立 generation 中完成、验证后再切换。失败时继续服务 V7，只能覆盖 V7 已经声明包含的 DocumentVersion 和能力；如果用户任务明确要求 V8 才包含的新材料，Readiness 就应该 BLOCKED / PARTIAL，而不是假装旧索引已经包含新事实。
+
+这同时解决可用性和正确性的冲突：旧 verified generation 可以保住已有能力，但不能借“降级”名义隐瞒新材料缺失。
+
+### Ingestion 和 Retrieval 为什么需要不同的资源隔离
+
+OCR、解析、embedding 和 graph build 是重 CPU / GPU / I/O 的批处理，在线 Retrieval 更关注低延迟。如果两者无界共享同一个 Worker / connection pool，大批材料导入可能把已经就绪的在线查询一起拖死。
+
+第一步通常不是拆微服务，而是区分 queue、并发、quota 和 backpressure，让 serving 有稳定资源下限，批处理按容量排队。只有当负载、故障半径或部署生命周期长期不同，才需要进一步物理拆分。
+
+资源隔离的目标是保护“已验证知识仍可被使用”，而不是为了架构对称把每个 processing stage 都服务化。
+
 ### 当前、目标与缺口
 
 Current 是否已有完整 generation、serving pointer、readiness、multi-route retrieval 或 graph path，必须回到代码、测试和 Eval 证据判断；Target 文档不能把设计写成已实现。
