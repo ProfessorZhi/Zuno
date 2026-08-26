@@ -28,8 +28,14 @@ def main() -> None:
     if old_runtime not in text:
         raise RuntimeError("runtime control terminology insertion point not found")
     text = text.replace(old_runtime, new_runtime, 1)
-    architecture.write_text(text, encoding="utf-8")
 
+    service_anchor = "只有 Secret isolation、独立吞吐、故障半径、网络出口、合规边界或部署生命周期形成明确证据时，才值得把某个边界提升为独立网络服务。服务拆分是一种成本很高的优化，需要被问题证明。"
+    service_replacement = "判断一个逻辑责任域**为什么必须独立服务**，必须回到 Secret isolation、独立吞吐、故障半径、网络出口、合规边界或部署生命周期等证据。只有这些条件形成明确收益时，才值得把某个边界提升为独立网络服务；服务拆分是一种成本很高的优化，需要被问题证明。"
+    if service_anchor not in text:
+        raise RuntimeError("physical service wording insertion point not found")
+    text = text.replace(service_anchor, service_replacement, 1)
+
+    architecture.write_text(text, encoding="utf-8")
     Path(__file__).unlink()
 
 
