@@ -34,6 +34,9 @@ jobs:
       - name: Deepen Part A conceptual narratives
         run: python tools/scripts/_tmp_expand_part_a_conceptual_depth.py
 
+      - name: Complete remaining Part A depth
+        run: python tools/scripts/_tmp_complete_part_a_depth.py
+
       - name: Remove temporary workflow
         run: rm .github/workflows/_tmp-architecture-human-quality-pass.yml
 
