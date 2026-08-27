@@ -1,0 +1,232 @@
+name: Narrative editing pass v2
+
+on:
+  push:
+    branches:
+      - docs/narrative-editing-pass-v1
+    paths:
+      - .github/workflows/narrative-editing-pass-v2.yml
+
+permissions:
+  contents: write
+
+jobs:
+  edit:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: docs/narrative-editing-pass-v1
+          fetch-depth: 0
+
+      - name: Apply narrative-only edits
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          def replace_once(path, old, new):
+              p = Path(path)
+              text = p.read_text(encoding='utf-8')
+              count = text.count(old)
+              if count != 1:
+                  raise SystemExit(f'{path}: expected 1 match, got {count}: {old[:100]!r}')
+              p.write_text(text.replace(old, new, 1), encoding='utf-8')
+
+          def before(path, heading, paragraph):
+              replace_once(path, heading, paragraph.rstrip() + '\n\n' + heading)
+
+          project = 'docs/project/project.md'
+          replace_once(
+              project,
+              "它**不是**当前实现清单，也不是总体架构规格。要判断“现在代码到底实现了什么”，必须看 [`docs/evidence/`](../evidence/README.md)；要判断“系统为什么按九个责任域设计”，看 [`docs/architecture/architecture.md`](../architecture/architecture.md)；要追到某一个责任域内部的状态、失败和恢复，再进入 [`docs/modules/`](../modules/README.md)。\n\n---",
+              "它**不是**当前实现清单，也不是总体架构规格。要判断“现在代码到底实现了什么”，必须看 [`docs/evidence/`](../evidence/README.md)；要判断“系统为什么按九个责任域设计”，看 [`docs/architecture/architecture.md`](../architecture/architecture.md)；要追到某一个责任域内部的状态、失败和恢复，再进入 [`docs/modules/`](../modules/README.md)。\n\n> **第一次阅读只抓一条主线。** 先看研究能力为什么需要工程化，再看普通 RAG 和通用 Agent 平台已经解决了什么；随后只追问那些仍然需要 Zuno 自己承担的专业语义、正式事实和恢复责任。理解了这条设计因果以后，再切回真实项目历史、个人 Ownership、Current / Target / Unknown。这样不会把“今天的 Target 设计”误读成“当年项目就是按今天的九模块一步步实现”。\n\n---"
+          )
+          before(
+              project,
+              '## 4. 为什么不直接用 Dify、Coze 或其他通用 Agent 平台',
+              '---\n\n**到这里，第一个问题已经回答完：不是所有法律任务都需要复杂 Agent。接下来真正要划的是平台边界。** 普通 RAG 能解决检索问答，通用 Agent Host 也能解决大量会话、Workflow、Tool Calling 和运行原语；只有在这些 baseline 之上仍然存在的长期专业责任，才有资格成为 Zuno 自己的边界。'
+          )
+          before(
+              project,
+              '## 6. 一次复杂法律任务，从业务视角到底怎样走',
+              '---\n\n**前面讨论的是“为什么需要这些责任”，现在把抽象放回一条任务链。** 如果这些边界只能在架构图上成立，却不能解释一次真实任务怎样从材料进入、形成候选、被人工复核、正式提交、失效、恢复和交付，那么前面的设计仍然只是概念列表。'
+          )
+          before(
+              project,
+              '## 9. 项目是怎样发展到今天的',
+              '---\n\n**从这一节开始，叙事从“设计因果”切回“历史因果”。** 上面的边界解释今天为什么这样设计，不代表历史版本真的按同样顺序演进。下面只写能够由项目回忆、仓库、公开背景或 Evidence 支持的历史；恢复不了的地方保持 Unknown，不用 Target 反写过去。'
+          )
+
+          arch = 'docs/architecture/architecture.md'
+          replace_once(
+              arch,
+              '## Part A — Architecture Narrative\n\n### 1. Zuno 真正要保护的不是一次回答，而是一条长期可解释的法律工作链',
+              '## Part A — Architecture Narrative\n\n**先抓住整篇的主线，而不是先记九个模块。** Zuno 的架构成长可以压缩成七步：从普通 RAG / Generic Host 出发；发现机器计算结果不能直接成为业务事实；把材料版本、知识派生和正式领域状态分开；让长任务拥有可恢复控制；让权限在长任务中持续生效；让现实副作用拥有独立 Effect truth；最后用 Evaluation 决定 GraphRAG、Memory、Reflection、Native Runtime 等复杂度是否值得保留。九个责任域只是这些矛盾最后稳定下来的 Ownership 边界。\n\n### 1. Zuno 真正要保护的不是一次回答，而是一条长期可解释的法律工作链'
+          )
+          before(
+              arch,
+              '### 4. 模型、检索和专业能力为什么都先产生候选',
+              '---\n\n**阶段二：从“系统算出了什么”转向“业务世界承认什么”。** 前三节只说明通用状态为什么不够；真正让系统开始拥有专业边界的，是承认计算成功、运行成功、正式业务成立和现实效果发生不是同一种事实。'
+          )
+          before(
+              arch,
+              '### 6. 材料、知识派生和正式业务事实为什么必须分三层',
+              '---\n\n**阶段三：一旦候选和正式事实分开，就必须回答“这些事实分别由谁负责”。** 这一步不再讨论某个模型或数据库，而是开始建立材料、知识、领域和控制状态之间的 Authority 边界。'
+          )
+          before(
+              arch,
+              '### 8. 一次任务为什么需要受控计划，但计划不能成为新的业务权威',
+              '---\n\n**阶段四：事实边界稳定以后，问题才轮到“任务怎样跑很久还能继续”。** Runtime 负责把工作推进下去，但不能因为自己拥有 Plan 和 Checkpoint，就顺手升级成 Domain、Security 或 Effect 的权威。'
+          )
+          before(
+              arch,
+              '### 10. 权限为什么不是请求入口的一次布尔判断',
+              '---\n\n**阶段五：长任务还会跨越时间，因此“开始时允许”不能变成永久通行证。** 材料访问、模型外发、Secret、正式提交和现实动作都必须在真正产生新风险的门点重新消费当前安全事实。'
+          )
+          before(
+              arch,
+              '### 11. 现实副作用为什么需要比普通函数调用更强的模型',
+              '---\n\n**阶段六：当执行越过进程边界进入现实世界，恢复问题发生了质变。** 内部计算失败可以重算，外部动作 timeout 却可能已经成功；从这里开始，架构必须区分控制进度和现实 Effect truth。'
+          )
+          before(
+              arch,
+              '### 18. 一项复杂机制什么时候应该主动删除',
+              '---\n\n**阶段七：最后一个问题不是“还能再加什么机制”，而是“哪些复杂度值得活下来”。** 到这里架构已经能表达长期事实、恢复和安全，但 GraphRAG、Memory、Reflection、Multi-Agent 或 Native Runtime 仍然只能通过可比较 Evidence 获得长期资格。'
+          )
+
+          mod05 = 'docs/modules/05-capability-skill.md'
+          before(
+              mod05,
+              '### 最简单的 provider.call() 为什么会慢慢失去边界',
+              '**贯穿这一篇的例子可以只看“事件抽取”这一项能力。** 早期它可能由课题组研究模型实现，后来也可能出现规则版本、LLM Provider 或外部服务。如果 Runtime 直接依赖 `PaperAExtractor()`，每次换实现都会把 Workflow、失败语义和质量假设一起带着改；真正需要稳定下来的，是“事件抽取这项专业能力到底承诺什么”，而不是某个算法名字。下面的 Capability / Provider / Conformance / Qualification 都围绕这个问题展开。'
+          )
+
+          mod01 = 'docs/modules/01-application-integration.md'
+          before(
+              mod01,
+              '### 最简单的入口层为什么很快会遇到边界问题',
+              '**可以用一条法院 Host 集成链贯穿这一篇。** 外部系统提交一次复杂分析，先拿到受理结果；任务运行很久后形成正式 WorkProduct；随后新证据让它失效，而目标系统此时可能离线；如果最终还要把结果写回外围系统，网络 timeout 又会带来现实结果未知。01 的所有设计都应该帮助外部产品正确理解这些变化，而不是把内部九个 Owner 压成一个 `status`。'
+          )
+          before(
+              mod01,
+              '### 新证据出现以后，为什么“失效”和“通知成功”必须分开',
+              '---\n\n**前半篇解决了“请求怎样进入、结果什么时候可以发布”；接下来进入产品生命周期。** 一旦正式结果已经离开当前请求，新的问题不再是返回什么 JSON，而是结果变旧以后怎样让外部世界尽快知道，同时又不把网络送达状态冒充成业务有效性。'
+          )
+          before(
+              mod01,
+              '### 为什么有副作用的 Delivery 要交给 06',
+              '---\n\n**当 Delivery 开始改变外围系统时，01 的边界到这里必须主动停下来。** 产品层知道“应该交付什么”，但现实世界“到底发生了什么”已经属于 Effect 问题；继续在 Application 里写 retry loop，只会让产品语义和副作用恢复重新混在一起。'
+          )
+          before(
+              mod01,
+              '### 什么时候这个模块应该更简单',
+              '---\n\n**最后回到删除条件。** 如果没有多 Host、异步交付、失效传播和复杂任务受理，前面很多产品生命周期语义都应该缩回去；Application 的成熟不是功能最多，而是只保留外部消费者真正需要的稳定语义。'
+          )
+
+          mod07 = 'docs/modules/07-model-gateway.md'
+          before(
+              mod07,
+              '### 最简单的“每个模块自己调 SDK”为什么会失控',
+              '**贯穿这一篇的不是“怎么做一个通用 Model Gateway”，而是一条法律任务中的模型选择链。** Planner 可能需要强推理，Query Rewrite 更重视速度，结构化抽取可能适合小模型；同一份案件材料又可能只允许发给特定地域或特定 Provider。07 的价值，就是让这些调用在不泄漏业务 Authority 的前提下，仍然能解释为什么选这个模型、花了多少、失败后能否切换，以及切换以后还是否合格。'
+          )
+          before(
+              mod07,
+              '### Routing 为什么要同时看质量、安全、预算和延迟',
+              '---\n\n**前面先把 Role、Provider 和上层业务语义拆开；现在才进入真正的路由问题。** 路由不是“选当前最强模型”，而是在当前允许集合里做一个可解释的质量 / 安全 / 预算 / deadline 决定。'
+          )
+          before(
+              mod07,
+              '### Secret 和业务数据为什么是两种不同治理问题',
+              '---\n\n**模型路由一旦稳定，下一层风险来自“调用本身携带了什么”。** API Key 和案件材料都敏感，但前者是 Credential，后者受数据外发政策约束；把两者混成一个 Gateway 配置问题，会让 fallback 变成绕过安全边界的捷径。'
+          )
+          before(
+              mod07,
+              '### 为什么 Model Gateway 默认不需要独立微服务',
+              '---\n\n**最后回到边界本身。** 逻辑上统一模型调用，不等于物理上必须多一次网络跳；如果没有 Secret isolation、独立吞吐、网络出口或部署生命周期证据，07 应继续是薄的模块边界，而不是为了“AI Infra 完整”自造平台。'
+          )
+
+          mod08 = 'docs/modules/08-security-governance.md'
+          before(
+              mod08,
+              '### 最简单的“登录 + RBAC”为什么覆盖不了长任务',
+              '**可以用一个持续三十分钟的法律任务贯穿全文。** 用户在开始时有权读取一组材料，任务随后等待知识构建、调用模型、进入人工审批并准备执行外部动作；这期间权限、Matter 归属、数据外发政策、Approval 和 Credential 都可能变化。08 要保护的不是“入口鉴权成功”，而是每一次新的受保护动作在真正发生前都能回答：现在还允许吗？'
+          )
+          before(
+              mod08,
+              '### Continuous Authorization（持续授权）到底意味着什么',
+              '---\n\n**因此安全的第一层不是增加更多角色，而是承认时间会改变权限前提。** 长任务中的 allow 必须有作用域和新鲜度，历史上合法做过的事与未来还能不能继续做必须分开。'
+          )
+          before(
+              mod08,
+              '### 模型外发为什么由安全策略决定，不由 Model Gateway 决定',
+              '---\n\n**授权语义建立以后，再看模型和 Tool 这些真正产生风险的门点。** 07 可以知道模型质量和预算，06 可以知道动作怎样恢复，但“这份数据现在能不能出去、这个动作现在能不能发生”仍然必须回到 08 的当前安全事实。'
+          )
+          before(
+              mod08,
+              '### 数据生命周期为什么不能只有 deleted=true',
+              '---\n\n**执行安全解决的是“下一步能不能做”，数据生命周期解决的是“以后还能不能继续存在或被召回”。** 两者都受政策驱动，但后者跨越多个 Store 和更长时间，不能压成一张表上的 `deleted=true`。'
+          )
+          before(
+              mod08,
+              '### 什么时候 08 应该更简单',
+              '---\n\n**最后回到 Build / Buy。** 身份目录、Secret Manager、Policy Engine 等基础设施能复用就复用；08 值得自己拥有的只是 Zuno 必须长期解释的安全 Authority、新鲜度、审批和数据用途语义。'
+          )
+
+          mod09 = 'docs/modules/09-observability-evaluation.md'
+          before(
+              mod09,
+              '### 最简单的“Trace 里有完整链路，所以 Trace 就是真相”为什么危险',
+              '**贯穿这一篇只问一个决策问题：GraphRAG、Reflection、强模型、Specialist 或 Native Runtime 到底值不值得留下。** 要回答它，团队既要知道一次真实请求发生了什么，也要能把同一 task class 放进可复现实验，与更简单 baseline 比质量、恢复、时延和成本。Observability 提供因果线索，Evaluation 提供决策证据；两者都不能越权成为业务 Truth。'
+          )
+          before(
+              mod09,
+              '### Eval Dataset 为什么必须版本化',
+              '---\n\n**先把“发生了什么”讲清以后，才有资格比较“哪种设计更好”。** 评测不是在 Dashboard 上挑一个数字，而是先冻结 Dataset、版本、暴露关系和 Judge，再让结果真正可比较。'
+          )
+          before(
+              mod09,
+              '### Evaluation 为什么应该主动帮助删除复杂度',
+              '---\n\n**评测真正进入架构决策，是从敢做反事实开始。** 如果只证明整套系统能跑，任何已经实现的复杂机制都会因为沉没成本永久存在；只有 baseline、ablation 和 kill test 才能回答某一层复杂度是否真的贡献了价值。'
+          )
+          before(
+              mod09,
+              '### Release Evidence 为什么不等于 Production Readiness',
+              '---\n\n**最后必须限制 Evidence 自己的权力。** 一组 Eval PASS 可以证明特定 Dataset / config / profile 达标，却不能替容量、HA / DR、安全 qualification、真实外围系统和运维证据宣布 Production Ready。测量越严格，越要说清它没有证明什么。'
+          )
+
+          gov = 'docs/governance/architecture-narrative-quality-standard.md'
+          before(
+              gov,
+              '## 5. 每一段都应该推动一个设计判断',
+              '### 篇章级连续性：小节都正确，整篇仍然可能不好读\n\nPart A 还需要通过一个更高层次的检查：读者能否始终知道自己处在整篇故事的哪个阶段。连续二十个“为什么 X”“为什么 Y”的小节，即使每一节单独都成立，也可能退化成知识卡片集合。\n\n因此长篇 Part A 应有少量清晰的**宏观故事阶段**，并在阶段切换时解释：前一阶段已经解决了什么、还留下什么问题、为什么下一阶段现在必须出现。宏观阶段可以通过自然过渡、场景推进或少量章节标记表达，不要求统一标题格式。\n\n一个简单判断是：只看相邻两到三节，读者当然能理解局部；但如果跳到文章中段，他仍然应该能回答“前面为什么把我带到这里，后面准备解决什么”。这属于篇章编辑，不应该通过标题数量或固定模板硬编码进 Validator。'
+          )
+
+          protected = {
+              arch: ['ROUND_02_FROZEN', 'target_logical_module_count: 9', 'implementation_authorization: NO'],
+              mod01: ['implementation: not-authorized'],
+              mod05: ['implementation: not-authorized'],
+              mod07: ['implementation: not-authorized'],
+              mod08: ['implementation: not-authorized'],
+              mod09: ['implementation: not-authorized'],
+          }
+          for path, markers in protected.items():
+              text = Path(path).read_text(encoding='utf-8')
+              for marker in markers:
+                  if marker not in text:
+                      raise SystemExit(f'{path}: protected marker disappeared: {marker}')
+
+          print('Narrative editing pass v2 applied successfully.')
+          PY
+
+      - name: Commit docs and remove temporary workflows
+        shell: bash
+        run: |
+          rm .github/workflows/narrative-editing-pass.yml
+          rm .github/workflows/narrative-editing-pass-v2.yml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add docs .github/workflows/narrative-editing-pass.yml .github/workflows/narrative-editing-pass-v2.yml
+          git commit -m "docs: strengthen narrative continuity"
+          git push origin HEAD:docs/narrative-editing-pass-v1
