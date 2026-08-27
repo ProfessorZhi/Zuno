@@ -1,6 +1,6 @@
 # Zuno Maintenance Plane
 
-`docs/maintenance/` 保存**如何维护 Zuno**的运行、Agent 协作和历史审查材料。它不拥有项目故事、Target Architecture、Module 设计或 Current Evidence。
+`docs/maintenance/` 保存**如何维护 Zuno**的运行、Agent 协作、Red / Blue Interview Harness 流程和历史审查材料。它不拥有项目故事、Target Architecture、Module 设计或 Current Evidence。
 
 维护资料回答的是：
 
@@ -12,9 +12,10 @@
 docs/maintenance/
 ├── README.md
 ├── operations/                 当前仍需执行的 Runbook / recovery profile
-├── agent-workflow/             人类可读的 ChatGPT / Claude Code / GitHub 工作协议
+├── agent-workflow/             人类可读的 ChatGPT / Claude Code / GitHub 通用工作协议
+├── red-blue/                   人类可读的 Red / Blue Interview Harness 工作流
 └── history/                    已发生的架构审查与历史记录
-    └── red-blue/               Red / Blue Architecture Review Archive
+    └── red-blue/               Closed Red / Blue Round Archive
 ```
 
 ## 与其他一级目录的边界
@@ -27,9 +28,9 @@ docs/maintenance/
 - `evidence/`：代码、Migration、Test、Trace、Eval 和运行证据。
 - `governance/`：事实来源、Owner、文档标准与兼容 Contract 规则。
 
-`maintenance/` 不能把历史讨论升级成当前事实，也不能因为某个操作手册存在就证明对应 Production 能力已经建立。
+`maintenance/` 不能把历史讨论升级成当前事实，也不能因为某个操作手册或 Interview Harness 存在就证明对应 Production 能力已经建立。
 
-## 三类维护材料
+## 四类维护材料
 
 ### Operations
 
@@ -37,11 +38,15 @@ docs/maintenance/
 
 ### Agent workflow
 
-[`agent-workflow/`](./agent-workflow/) 是给人看的仓库协作协议：ChatGPT、Claude Code、GitHub、Red / Blue、PR 与 post-merge review 怎样协作。机器可执行路由仍在仓库根目录 [`/.agent/`](../../.agent/)；这里不复制 `.agent/system.yaml`、Program 或脚本。
+[`agent-workflow/`](./agent-workflow/) 是给人看的仓库协作协议：ChatGPT、Claude Code、GitHub、PR 与 post-merge review 怎样协作。机器可执行路由仍在仓库根目录 [`/.agent/`](../../.agent/)；这里不复制 `.agent/system.yaml`、Program 或脚本。
+
+### Red / Blue workflow
+
+[`red-blue/`](./red-blue/) 是给人看的 Interview / Architecture Stress-Test 流程。机器协议、Red 攻击模型、Blue Closed-book 规则、Judge 和 active Round state 属于 [`/.agent/red-blue/`](../../.agent/red-blue/)；已结束的 Round 不留在 active harness，而进入历史归档。
 
 ### History
 
-[`history/`](./history/) 保存已经发生的设计讨论和 Red / Blue Archive。历史材料解释“当时为什么这样判断”，但不拥有当前 Architecture Truth；正式接受的结果必须另行写入 Architecture / Module / ADR。
+[`history/`](./history/) 保存已经发生的设计讨论和 Red / Blue Archive。历史材料解释“当时为什么这样判断”，但不拥有当前 Architecture Truth；正式接受的结果必须另行写入 Project / Architecture / Module / ADR / Evidence 或 Resume。
 
 ## 维护原则
 
@@ -49,3 +54,4 @@ docs/maintenance/
 2. Current / Target / History / Unknown 必须继续分离。
 3. 一次 GitHub 修改必须以明确 base SHA 开始，以 PR CI、merge 后 main HEAD 和 post-merge reread 结束。
 4. Research、历史 Round、外部平台能力都可能过期；进入正文前必须回到对应 Canonical Owner。
+5. Red / Blue Round 只产生 Judgment / Gap；不得在同一 Round 自动把答案、架构或简历改成“通过”。
