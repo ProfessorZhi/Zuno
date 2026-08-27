@@ -4,7 +4,7 @@ Zuno 面向智慧司法和法律专业工作，目标是把材料、证据、专
 
 简单问题应该保持简单。对“合同第 8 条写了什么”这类任务，通用宿主加受控检索完全可能已经足够；只有当多材料版本、长期领域状态、人工复核、恢复或现实副作用确实带来额外要求时，Zuno 才引入更重的领域和运行机制。复杂度必须由任务和测量证明，而不是由架构图证明。
 
-本文记录 **Target（目标架构）**，不把文档中的对象、Contract（契约）或状态自动写成 Current（当前实现），也不把 Pilot 写成 Production。Part A 面向人类读者解释问题、流程、边界和失败；Part B 面向实现、测试和审查给出精确 Ownership（事实所有权）、Contract、状态、恢复和持久化规则。项目故事见 [`docs/project/project.md`](../project/project.md)，Current 证据见 [`docs/evidence/`](../evidence/)，模块详细设计见 [`docs/modules/`](../modules/README.md)，架构审查历史见 [`docs/history/red-blue/`](../history/red-blue/README.md)。History 解释架构如何演进，但不重新拥有当前 Target 或 Current。
+本文记录 **Target（目标架构）**，不把文档中的对象、Contract（契约）或状态自动写成 Current（当前实现），也不把 Pilot 写成 Production。Part A 面向人类读者解释问题、流程、边界和失败；Part B 面向实现、测试和审查给出精确 Ownership（事实所有权）、Contract、状态、恢复和持久化规则。项目故事见 [`docs/project/project.md`](../project/project.md)，Current 证据见 [`docs/evidence/`](../evidence/)，模块详细设计见 [`docs/modules/`](../modules/README.md)，架构审查历史见 [`docs/history/red-blue/`](../maintenance/history/red-blue/README.md)。History 解释架构如何演进，但不重新拥有当前 Target 或 Current。
 
 <!--
 updated: 2026-08-16

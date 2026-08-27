@@ -103,5 +103,6 @@ production_readiness: NOT_ESTABLISHED
 - `evidence/`：只记录 Current 代码、Migration、Test、Trace、Eval 和运行证据。
 - `governance/`：事实来源、Owner、兼容 Contract、Human-first 与验收规则。
 - `maintenance/`：当前 Runbook、Agent/GitHub 工作流与历史审查；不拥有当前架构真相。
+  - Red / Blue archive route: `maintenance/history/red-blue/`。
 
 `Current`、`Target`、`Future`、`History` 和 `Unknown` 必须区分。文档写得完整不证明实现可用；Current 只能由代码、Migration、Test、Trace、Eval 或真实运行结果证明。
