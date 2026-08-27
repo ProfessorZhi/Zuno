@@ -1,4 +1,4 @@
-version: "2026-08-16"
+version: "2026-08-27"
 system_identity: "Zuno Local Agent System"
 
 runtime_boundary:
@@ -6,6 +6,7 @@ runtime_boundary:
   product_runtime_is_not_agent_collaboration: true
   source_of_truth: "docs/"
   project_story_root: "docs/project"
+  research_root: "docs/research"
   architecture_root: "docs/architecture"
   module_design_root: "docs/modules"
   module_design_state: "deep-design-v2"
@@ -13,12 +14,16 @@ runtime_boundary:
   module_detail_design_candidate_modules: ["01", "02", "03", "04", "05", "06", "07", "08", "09"]
   module_detail_freeze: false
   evidence_root: "docs/evidence"
-  review_history_root: "docs/history/red-blue"
+  governance_root: "docs/governance"
+  maintenance_root: "docs/maintenance"
+  review_history_root: "docs/maintenance/history/red-blue"
+  operations_root: "docs/maintenance/operations"
 
 program_rules:
   current_program_owner: ".agent/programs/current.md"
   implementation_requires_explicit_user_gate: true
   target_does_not_equal_current: true
+  research_does_not_equal_canonical_truth: true
   detail_candidate_does_not_equal_freeze: true
   module_freeze_precedes_implementation_planning: true
   history_is_git_archaeology_except_review_records: true
@@ -28,11 +33,12 @@ program_rules:
 local_skill_registry:
   mode: "REPOSITORY_LOCAL_EXPLICIT_ONLY"
   discovery: "EXPLICIT_ONLY"
-  note: "当前仓库没有 active local skill workspace；需要 Red/Blue 或项目恢复时按 AGENTS.md 和 docs/history/red-blue/ 的规则人工协调。"
+  note: "当前仓库没有 active local skill workspace；需要 Red/Blue 或项目恢复时按 AGENTS.md 和 docs/maintenance/history/red-blue/ 的规则人工协调。"
 
 canonical_owners:
   project_readme: "docs/project/README.md"
   project_narrative: "docs/project/project.md"
+  research_knowledge: "docs/research/README.md + research references; upstream evidence only, not Current/Target truth"
   project_fact_provenance: "docs/governance/project-fact-provenance.md"
   human_first_documentation_standard: "docs/governance/human-first-documentation-standard.md"
   overall_architecture: "docs/architecture/architecture.md"
@@ -41,8 +47,10 @@ canonical_owners:
   detail_design_candidates: "docs/modules/01-*.md through 09-*.md B14.1-B14.8"
   decisions: "docs/decisions/"
   evidence: "docs/evidence/"
-  review_history: "docs/history/red-blue/"
-  operations: "docs/operations/"
+  governance: "docs/governance/"
+  review_history: "docs/maintenance/history/red-blue/"
+  operations: "docs/maintenance/operations/"
+  human_agent_workflow: "docs/maintenance/agent-workflow/README.md"
   terminology: "docs/terminology.md"
 
 skill_routes:
@@ -56,9 +64,15 @@ skill_routes:
     read_first:
       - "docs/project/project.md"
       - "docs/governance/project-fact-provenance.md"
+  research:
+    read_first:
+      - "docs/research/README.md"
+      - "docs/research/research-to-engineering-traceability.md"
+      - "docs/research/agent-platform-baseline.md"
   architecture:
     read_first:
       - "docs/project/project.md"
+      - "docs/research/README.md"
       - "docs/architecture/README.md"
       - "docs/architecture/architecture.md"
       - "docs/modules/README.md"
@@ -67,6 +81,7 @@ skill_routes:
   architecture_human_reading:
     read_first:
       - "docs/project/project.md"
+      - "docs/research/documentation-narrative-blueprint.md"
       - "docs/architecture/README.md"
       - "docs/architecture/architecture.md"
       - "docs/modules/README.md"
@@ -76,7 +91,7 @@ skill_routes:
       - "docs/architecture/architecture.md"
       - "docs/modules/README.md"
       - "docs/evidence/README.md"
-      - "docs/history/red-blue/README.md"
+      - "docs/maintenance/history/red-blue/README.md"
   module_design:
     read_first:
       - "docs/architecture/architecture.md"
@@ -120,6 +135,11 @@ skill_routes:
     read_first:
       - ".agent/references/verification-map.md"
       - "docs/evidence/README.md"
+  maintenance:
+    read_first:
+      - "docs/maintenance/README.md"
+      - "docs/maintenance/agent-workflow/README.md"
+      - ".agent/references/workflow.md"
 
 verification:
   docs_entrypoints: "python tools/scripts/verify_docs_entrypoints.py"
