@@ -13,9 +13,13 @@ docs/modules/                 九个 Target 责任域：Deep Design V2 + Detail 
 docs/decisions/               有效 ADR
 docs/evidence/                当前可复现证据
 docs/governance/              Provenance、Owner、Contract、Human-first 与验收规则
-docs/maintenance/             Operations、Agent workflow、History / Red-Blue
+docs/maintenance/             Operations、通用 Agent workflow、Red/Blue workflow、History
 
 docs/terminology.md           术语
+
+# Machine Workflow
+.agent/programs/              一般 implementation / design Program
+.agent/red-blue/              Red / Blue Interview Harness：协议、攻击模型、Judge、active Round state
 ```
 
 ## 阅读路径
@@ -29,6 +33,8 @@ docs/terminology.md           术语
 九个模块全部包含 B14.1–B14.8 `Detail Freeze Candidate`。字段、事务 / CAS、Serving / Checkpoint / Registry、Migration、Crash Window 或 Failure Injection 任务必须继续读这些小节，但仍要回到 Evidence 判断 Current；不能把 Candidate 当作数据库或 Runtime 已经实现。
 
 架构评审 / 技术面试：项目级问题先读 `docs/project/project.md`；“为什么不是 WorkBuddy / 普通 RAG”“研究成果怎样进入工程”先读 `docs/research/`；RAG、Runtime、Domain、Tool、Security、Eval 等进入对应 Module；“现在实现了吗”进入 Evidence。
+
+Red / Blue Interview Stress Test：先固定精确 resume snapshot、Zuno base SHA、岗位 / JD / 面试轮次，再读 `.agent/red-blue/README.md`、`protocol.md`、`attack-model.md` 和 `judge.md`。Red 可读取批准的真实面试语料校准 pressure model；Blue 只读同一 resume snapshot 和允许的 canonical docs，优先从 Project / Architecture / Module Part A 回答。人类运行说明见 `docs/maintenance/red-blue/README.md`。
 
 架构复盘按问题读取 `docs/maintenance/history/red-blue/` 指定 Round，不默认加载全部历史记录。
 
@@ -45,6 +51,7 @@ docs/terminology.md           术语
 | 具体长期设计决策 | `docs/decisions/` |
 | 当前仓库和运行状态有什么证据 | `docs/evidence/` |
 | 文档、事实与 Contract 怎样治理 | `docs/governance/` |
+| 人与 Agent 怎样维护仓库 | `docs/maintenance/agent-workflow/` + `.agent/` |
+| Red / Blue 怎样运行 | `.agent/red-blue/`（机器 Harness）+ `docs/maintenance/red-blue/`（人类流程） |
 | 架构曾怎样被质疑和判断 | `docs/maintenance/history/red-blue/` |
 | 当前运维如何执行 | `docs/maintenance/operations/` |
-| 人与 Agent 怎样维护仓库 | `docs/maintenance/agent-workflow/` + `.agent/` |
