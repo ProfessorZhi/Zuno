@@ -27,20 +27,26 @@ docs/
 
 这不是严格流水线。最重要的边界是：`research/` 可以解释和挑战 Project / Architecture，但不能覆盖 Canonical Truth；`maintenance/` 可以解释怎样运行和维护仓库，但不拥有 Project、Architecture 或 Current Evidence。
 
-## 推荐阅读顺序
+## 推荐阅读路径
 
-第一次理解项目或准备技术面试：
+第一次理解 Zuno，不建议把整个 `docs/` 当成一条必须从 1 读到 10 的流水线。更好的方式是先拿到最短的项目 / 架构主线，再按目的进入研究、工程精度或维护材料。
 
-1. [Project 主文档](./project/project.md)：这个项目从哪里来、为什么值得做、团队和个人做了什么、Current / Target / Unknown 到哪里。
-2. [Research Knowledge Base](./research/README.md)：葛季栋/LIPLAB 研究谱系怎样形成 Research Artifacts，通用 Agent 平台已经解决什么，以及这些研究怎样进入 Engineering Capability。
-3. [总体架构](./architecture/architecture.md)：基于这些约束，为什么会逐步出现不同 Authority / Ownership 边界。
-4. [模块架构](./modules/README.md)：从总体故事进入九个责任域；先读 Part A，需要工程精度时再读 Part B / Part C / B14.1–B14.8。
-5. [有效 ADR](./decisions/README.md)：哪些长期设计选择被正式接受以及为什么。
-6. [Current Evidence](./evidence/README.md)：代码、Migration、Test、Trace、Eval 和运行到底证明了什么。
-7. [Governance](./governance/)：事实来源、文档标准、Owner 与跨模块 Contract 规则。
-8. [Maintenance](./maintenance/README.md)：Runbook、通用 Agent/GitHub 工作流、Red / Blue Interview Harness 和历史。
-9. [Red / Blue Workflow](./maintenance/red-blue/README.md)：需要模拟面试或做 Architecture Stress Test 时，怎样固定简历、运行 Red/Blue/Judge、保持 Blue Closed-book 并归档结果。
-10. [术语表](./terminology.md)：跨文档统一术语。
+### 核心路径：先建立 Zuno 的 mental model
+
+1. [Project 主文档](./project/project.md)：先理解项目从哪里来、为什么普通 RAG / Generic Host 不足以覆盖全部目标，以及 Zuno 应该长期 Own 什么；如果暂时不关心历史与个人 Ownership，读到“完整 Zuno 什么时候不值得使用”以后即可先进入总体架构。
+2. [总体架构](./architecture/architecture.md)：第一次只抓 Part A 的主故事。1–18 节已经完成从 baseline、Authority、恢复、安全到复杂度淘汰的核心推导；19 节以后属于横向 Stress Tests，可以二刷。
+3. [模块架构](./modules/README.md)：先读三条任务路径、九个责任域和 Part A / B / C 的阅读方法；随后只选择与你当前问题最相关的一个或两个 Module Part A，不要求顺序读完九篇。
+4. [Current Evidence](./evidence/README.md)：最后回到代码、Migration、Test、Trace、Eval 和运行证据，检查刚才理解的 Target 到底哪些已经 Current。
+
+这条路径的目标不是“读完所有文档”，而是让第一次进入仓库的人尽快回答四个问题：Zuno 为什么存在、为什么不能只看通用平台 Feature List、哪些事实必须由谁负责、今天真正实现和证明到了哪里。
+
+### 研究 / 架构深挖
+
+当你要追问“这些能力从哪里来、为什么不用 WorkBuddy / Dify / Coze / LangGraph 直接承载、某个边界为什么被正式接受”时，再进入 [Research Knowledge Base](./research/README.md)、[有效 ADR](./decisions/README.md) 和对应 Module 的 Part B / Part C / B14.1–B14.8。`research/` 是解释和挑战架构的上游材料，不是第一次阅读必须经过的中转站。
+
+### 维护 / 审查路径
+
+当目标变成修改文档、审查架构、运行 Red / Blue 或维护仓库时，优先读 [Governance](./governance/)、[Current Evidence](./evidence/README.md) 和 [Maintenance](./maintenance/README.md)；需要 Interview Harness 时再进入 [Red / Blue Workflow](./maintenance/red-blue/README.md)。[术语表](./terminology.md) 用于跨文档消歧，不要求预先背诵。
 
 `docs/project/README.md` 只是导航。项目事实来源、允许表述和 Unknown 由 [`governance/project-fact-provenance.md`](./governance/project-fact-provenance.md) 管理。
 
