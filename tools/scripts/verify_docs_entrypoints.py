@@ -76,6 +76,7 @@ def verify() -> list[str]:
         "docs/evidence/README.md", *MODULE_FILES,
         "docs/maintenance/README.md",
         "docs/maintenance/agent-workflow/README.md",
+        "docs/maintenance/red-blue/README.md",
         "docs/maintenance/history/README.md",
         "docs/maintenance/history/red-blue/README.md",
         "docs/maintenance/history/red-blue/manual-round-01-overall-architecture.md",
@@ -87,6 +88,8 @@ def verify() -> list[str]:
         "docs/maintenance/operations/postgresql-migration-runbook.md",
         "docs/maintenance/operations/infrastructure-dr-profile.yaml",
         ".agent/references/docs-map.md", ".agent/system.yaml",
+        ".agent/red-blue/README.md", ".agent/red-blue/current.md",
+        ".agent/red-blue/protocol.md", ".agent/red-blue/attack-model.md", ".agent/red-blue/judge.md",
     ]
     for path in required:
         if not (REPO_ROOT / path).exists():
@@ -113,7 +116,7 @@ def verify() -> list[str]:
     index = (REPO_ROOT / "docs/README.md").read_text(encoding="utf-8")
     for marker in (
         "Current", "Target", "Unknown", "project/", "research/", "architecture/", "modules/",
-        "evidence/", "maintenance/", "maintenance/history/red-blue/",
+        "evidence/", "maintenance/", "maintenance/red-blue/", "maintenance/history/red-blue/",
         "module_deep_design", "module_detail_design_candidate", "module_detail_design_candidate_coverage: 9/9",
     ):
         if marker not in index:
@@ -127,6 +130,14 @@ def verify() -> list[str]:
     ):
         if marker not in research:
             errors.append(f"docs/research/README.md missing research boundary marker: {marker}")
+
+    red_blue = (REPO_ROOT / "docs/maintenance/red-blue/README.md").read_text(encoding="utf-8")
+    for marker in (
+        ".agent/red-blue/", "Closed-book", "Part A", "chatgpt-duel", "autonomous-agent",
+        "ProfessorZhi/internship-work", "ProfessorZhi/interview-notes",
+    ):
+        if marker not in red_blue:
+            errors.append(f"docs/maintenance/red-blue/README.md missing workflow marker: {marker}")
 
     project_readme = (REPO_ROOT / "docs/project/README.md").read_text(encoding="utf-8")
     for marker in ("project.md", "project-fact-provenance.md", "Project 文档入口"):
