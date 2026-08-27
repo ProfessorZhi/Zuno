@@ -6,7 +6,7 @@ Red / Blue 是 Zuno 用来压力测试架构的人工审查过程。Red Team 专
 
 原始 Q/A/R 会永久保留在各轮 Archive 中，方便审计当时发生了什么。这个 README 提供人类阅读摘要，但不拥有当前事实、Target Architecture、ADR 或实施授权。
 
-正式架构始终以[总体架构](../../architecture/architecture.md)为准，项目背景以 [Project](../../project/README.md) 为准，当前实现以 [Evidence](../../evidence/README.md) 为准，长期决定以 [有效 ADR](../../decisions/README.md) 为准。
+正式架构始终以[总体架构](../../../architecture/architecture.md)为准，项目背景以 [Project](../../../project/README.md) 为准，当前实现以 [Evidence](../../../evidence/README.md) 为准，长期决定以 [有效 ADR](../../../decisions/README.md) 为准。
 
 ## 阅读顺序
 
