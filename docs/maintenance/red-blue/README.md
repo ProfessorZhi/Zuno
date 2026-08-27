@@ -154,7 +154,7 @@ Red = ChatGPT，Blue = 用户本人。
 
 Red 一次只问一个主问题，不提示答案。用户回答后继续追。用户说“结束 / 复盘”后再让 Judge 汇总。
 
-### ChatGPT Red / Blue 对攻
+### ChatGPT Red / Blue 对攻（chatgpt-duel）
 
 同一个 ChatGPT Controller 依次模拟：
 
@@ -164,7 +164,7 @@ Red → Blue → Judge → Red follow-up
 
 为了避免答案泄漏，Red hidden intent / 面经校准内容不进入 Blue 可见上下文。单个聊天中的这种隔离属于程序性隔离；如果把结果当正式文档验收，建议用独立子 Agent / context。
 
-## 7. Autonomous Agent 怎么跑
+## 7. Autonomous Agent 怎么跑（autonomous-agent）
 
 Autonomous 模式让 Controller 创建独立 Red、Blue、Judge context，并严格使用 `.agent/red-blue/protocol.md` 的 allowlist。
 
