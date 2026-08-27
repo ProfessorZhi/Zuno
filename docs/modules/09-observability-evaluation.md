@@ -10,6 +10,8 @@
 
 Observability 负责解释系统发生了什么，Evaluation 负责判断结果好不好、复杂度是否值得保留。两者共享版本、关联和数据治理，但不能因为都“看数据”就混成一个 Dashboard。
 
+**贯穿这一篇只问一个决策问题：GraphRAG、Reflection、强模型、Specialist 或 Native Runtime 到底值不值得留下。** 要回答它，团队既要知道一次真实请求发生了什么，也要能把同一 task class 放进可复现实验，与更简单 baseline 比质量、恢复、时延和成本。Observability 提供因果线索，Evaluation 提供决策证据；两者都不能越权成为业务 Truth。
+
 ### 最简单的“Trace 里有完整链路，所以 Trace 就是真相”为什么危险
 
 Trace 非常适合关联调用，但它可能被采样、Exporter 失败、网络中断或 redaction 删除内容。如果恢复和业务判断依赖 Trace，观测系统故障会反过来破坏业务正确性。
@@ -45,6 +47,10 @@ Baggage 会跨进程广泛传播，如果把 tenant 名称、案件名称、用�
 高吞吐系统不可能永久保存每一个成功 span，Sampling 是合理成本控制。可以提高 error / high-risk task 采样率，降低普通成功请求采样。
 
 但 Sampling 不能决定 Domain、Effect、Authorization 或 Mandatory Audit 是否存在。关闭 tracing 不能让系统失去恢复能力，也不能让安全证明消失。
+
+---
+
+**先把“发生了什么”讲清以后，才有资格比较“哪种设计更好”。** 评测不是在 Dashboard 上挑一个数字，而是先冻结 Dataset、版本、暴露关系和 Judge，再让结果真正可比较。
 
 ### Eval Dataset 为什么必须版本化
 
@@ -88,6 +94,10 @@ Agent 复杂度常常在最终准确率以外付出代价：Retry 放大、P95 �
 
 每个 EvalCase 应绑定 task class、difficulty / risk profile 和实际执行路径。这样才能回答 GraphRAG 是否只对某类 query 有价值，Native Runtime 是否只在长任务恢复上有收益。
 
+---
+
+**评测真正进入架构决策，是从敢做反事实开始。** 如果只证明整套系统能跑，任何已经实现的复杂机制都会因为沉没成本永久存在；只有 baseline、ablation 和 kill test 才能回答某一层复杂度是否真的贡献了价值。
+
 ### Evaluation 为什么应该主动帮助删除复杂度
 
 团队已经实现的功能很容易获得沉没成本保护：有 GraphRAG 就只展示 GraphRAG 的分数，有 Reflection 就只证明它“能跑”。
@@ -105,6 +115,10 @@ Target 采用 OpenTelemetry / OTLP-compatible contract，让 LangSmith 可以作
 如果 Trace exporter 故障，09 可以 buffer / retry 或丢弃低优先级 telemetry；02 / 06 / 08 的耐久事实继续成立，普通业务不应因为 Dashboard 暂时不可用就全部停止。
 
 只有安全策略明确要求的 Mandatory Audit 走独立 durable boundary。Tracing 可用性和合规审计可用性必须分开。
+
+---
+
+**在继续讨论更多观测和评测细节前，先限制 Evidence 自己的权力。** 一组 Eval PASS 可以证明特定 Dataset / config / profile 达标，却不能替容量、HA / DR、安全 qualification、真实外围系统和运维证据宣布 Production Ready。测量越严格，越要说清它没有证明什么。
 
 ### Release Evidence 为什么不等于 Production Readiness
 

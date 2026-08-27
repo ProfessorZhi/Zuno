@@ -10,6 +10,8 @@ Zuno 会使用事件抽取、事件对齐、争议识别、证据分析、类案
 
 05 的职责是把“能完成什么专业任务”稳定下来，再允许不同 Provider 去实现。Runtime 调用的是专业能力语义，Eval 判断当前实现是否合格，Domain 决定输出能否成为正式事实。
 
+**贯穿这一篇的例子可以只看“事件抽取”这一项能力。** 早期它可能由课题组研究模型实现，后来也可能出现规则版本、LLM Provider 或外部服务。如果 Runtime 直接依赖 `PaperAExtractor()`，每次换实现都会把 Workflow、失败语义和质量假设一起带着改；真正需要稳定下来的，是“事件抽取这项专业能力到底承诺什么”，而不是某个算法名字。下面的 Capability / Provider / Conformance / Qualification 都围绕这个问题展开。
+
 ### 最简单的 provider.call() 为什么会慢慢失去边界
 
 一个研究模型刚接入时，最简单方案是写一个 Python wrapper：传入文本，返回 JSON。只要 Demo 跑通，看起来已经是 Skill。

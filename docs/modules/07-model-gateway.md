@@ -10,6 +10,8 @@ Zuno 会在规划、改写、抽取、专业分析、批评和综合等位置调
 
 07 因此统一的是调用边界和事实：上层表达自己需要哪类模型能力和约束，Gateway 选择当前合格 Provider / Model，记录真实 Attempt 与 Usage，再把 typed result 返回调用方。具体业务 Prompt 和专业语义仍属于使用它的模块。
 
+**贯穿这一篇的不是“怎么做一个通用 Model Gateway”，而是一条法律任务中的模型选择链。** Planner 可能需要强推理，Query Rewrite 更重视速度，结构化抽取可能适合小模型；同一份案件材料又可能只允许发给特定地域或特定 Provider。07 的价值，就是让这些调用在不泄漏业务 Authority 的前提下，仍然能解释为什么选这个模型、花了多少、失败后能否切换，以及切换以后还是否合格。
+
 ### 最简单的“每个模块自己调 SDK”为什么会失控
 
 Provider SDK 接入通常只有几十行代码，所以一开始分散调用看起来没有问题。随着模型数量增加，每个模块都会自己实现 timeout、fallback、token 统计、地域限制和 Secret 处理，最后相同问题出现多套答案。
@@ -51,6 +53,10 @@ Provider 返回 200 和合法 JSON，只说明 transport / model attempt 成功�
 复杂规划、关键 Reflection 或高风险综合可能从更强推理模型获益；Query Rewrite、分类、格式转换和简单抽取通常更适合快而便宜的模型。
 
 这不是固定的“模型等级表”。09 应通过 Role 级 Eval 证明升级是否带来足够收益；如果质量没有明显改善，贵模型不应因为品牌或参数规模自动成为默认。
+
+---
+
+**前面先把 Role、Provider 和上层业务语义拆开；现在才进入真正的路由问题。** 路由不是“选当前最强模型”，而是在当前允许集合里做一个可解释的质量 / 安全 / 预算 / deadline 决定。
 
 ### Routing 为什么要同时看质量、安全、预算和延迟
 
@@ -100,11 +106,19 @@ Gateway 统一 transport、provider formatting、通用 safety wrapper 和 reque
 
 cache identity 需要绑定 Role、模型版本、prompt/input hash、generation config、schema 和必要安全 Scope。缓存复用后，上层仍然要做当前业务新鲜度判断。
 
+---
+
+**模型路由一旦稳定，下一层风险来自“调用本身携带了什么”。** API Key 和案件材料都敏感，但前者是 Credential，后者受数据外发政策约束；把两者混成一个 Gateway 配置问题，会让 fallback 变成绕过安全边界的捷径。
+
 ### Secret 和业务数据为什么是两种不同治理问题
 
 API Key 是 Secret，Prompt 中的案件材料是受保护业务数据。Secret 应通过受控引用和短期 Lease 使用，不能进入 Prompt、普通日志或 Checkpoint；业务数据能否外发则由 08 的数据政策决定。
 
 07 消费 Credential ref 和 egress decision，执行允许的模型调用。它不能因为 Provider fallback 方便就扩大外发范围。
+
+---
+
+**到这里先收束一次边界本身。** 逻辑上统一模型调用，不等于物理上必须多一次网络跳；如果没有 Secret isolation、独立吞吐、网络出口或部署生命周期证据，07 应继续是薄的模块边界，而不是为了“AI Infra 完整”自造平台。
 
 ### 为什么 Model Gateway 默认不需要独立微服务
 
