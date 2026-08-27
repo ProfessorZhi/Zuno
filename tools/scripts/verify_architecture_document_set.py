@@ -28,7 +28,7 @@ def verify() -> list[str]:
         REPO_ROOT / "docs/project/project.md",
         REPO_ROOT / "docs/architecture/architecture.md",
         REPO_ROOT / "docs/modules/README.md",
-        REPO_ROOT / "docs/history/red-blue/README.md",
+        REPO_ROOT / "docs/maintenance/history/red-blue/README.md",
     ):
         if not path.exists():
             errors.append(f"missing canonical project entrypoint: {path.relative_to(REPO_ROOT)}")

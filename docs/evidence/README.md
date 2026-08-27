@@ -58,6 +58,6 @@ C. Zuno Native Runtime + First-class Domain State
 - 先看对应 Evidence 的 scope、command、result 和 known gaps；
 - 只把明确覆盖的结论称为 Current；
 - 项目历史、用户回忆和产品定位回到 [`docs/project/project.md`](../project/project.md)；更严格的一句话能否采用，再核对 [`project-fact-provenance.md`](../governance/project-fact-provenance.md)；
-- Red / Blue 讨论只回到 `docs/history/red-blue/`，不作为 Evidence；
+- Red / Blue 讨论只回到 [`docs/maintenance/history/red-blue/`](../maintenance/history/red-blue/README.md)，不作为 Evidence；
 - Architecture Target 和 ADR 的语义不由本目录拥有；
 - 技术面试的项目级问题从 `project.md` 的 Reviewer 章节进入；具体架构、模块或实现问题再按 Owner 继续深入。

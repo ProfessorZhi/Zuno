@@ -26,7 +26,6 @@ def verify_programs_flat(root: Path) -> list[str]:
     queued = program_root / "queued-programs"
     if {path.name for path in queued.glob("*.md")} != {"README.md"}:
         errors.append("queued program directory must contain only its README")
-
     current = program_root / "current.md"
     if not current.exists():
         errors.append("missing current program")
@@ -41,9 +40,11 @@ def verify_system_yaml(root: Path) -> list[str]:
     content = path.read_text(encoding="utf-8")
     for marker in (
         "version:", "system_identity:", "runtime_boundary:", "program_rules:", "skill_routes:",
-        "project_narrative:", 'module_design_state: "deep-design-v2"',
+        "project_narrative:", "research_root:", "maintenance_root:",
+        'module_design_state: "deep-design-v2"',
         'module_detail_design_candidate: "candidate-v1"',
         'module_detail_design_candidate_modules: ["01", "02", "03", "04", "05", "06", "07", "08", "09"]',
+        "research_does_not_equal_canonical_truth: true",
         "detail_candidate_does_not_equal_freeze: true",
         "module_freeze_precedes_implementation_planning: true",
         "detail_design_candidates:", "detail_design_review:",
@@ -56,6 +57,10 @@ def verify_system_yaml(root: Path) -> list[str]:
         "docs/README.md",
         "docs/project/README.md",
         "docs/project/project.md",
+        "docs/research/README.md",
+        "docs/maintenance/README.md",
+        "docs/maintenance/agent-workflow/README.md",
+        "docs/maintenance/history/README.md",
         *MODULE_FILES,
     ):
         if not (root / relative).exists():
@@ -104,15 +109,8 @@ def main() -> int:
     errors: list[str] = []
     references = ROOT / ".agent" / "references"
     expected_references = {
-        "README.md",
-        "current-program.md",
-        "docs-map.md",
-        "code-map.md",
-        "task-routing.md",
-        "workflow.md",
-        "verification-map.md",
-        "debugging.md",
-        "known-pitfalls.md",
+        "README.md", "current-program.md", "docs-map.md", "code-map.md", "task-routing.md",
+        "workflow.md", "verification-map.md", "debugging.md", "known-pitfalls.md",
     }
     actual_references = {path.name for path in references.glob("*.md")}
     if actual_references != expected_references:
@@ -138,17 +136,13 @@ def main() -> int:
             errors.append(f"current program missing: {phrase}")
 
     for relative in (
-        "AGENTS.md",
-        ".agent/system.yaml",
-        ".agent/README.md",
-        ".agent/scripts/verify_doc_boundaries.py",
-        ".agent/scripts/verify_repo_hygiene.py",
-        "docs/project/README.md",
-        "docs/project/project.md",
+        "AGENTS.md", ".agent/system.yaml", ".agent/README.md",
+        ".agent/scripts/verify_doc_boundaries.py", ".agent/scripts/verify_repo_hygiene.py",
+        "docs/project/README.md", "docs/project/project.md", "docs/research/README.md",
         "docs/governance/project-fact-provenance.md",
         "docs/governance/human-first-documentation-standard.md",
-        "docs/history/README.md",
-        "docs/evidence/README.md",
+        "docs/maintenance/README.md", "docs/maintenance/agent-workflow/README.md",
+        "docs/maintenance/history/README.md", "docs/evidence/README.md",
         *MODULE_FILES,
     ):
         if not (ROOT / relative).exists():

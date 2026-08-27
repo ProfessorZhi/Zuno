@@ -1,6 +1,6 @@
 # Active Architecture Decisions
 
-本目录只保留仍然影响 Zuno 长期设计的 ADR。ADR 记录 durable decision（长期设计决定），不是项目故事、Current 运行证据或 Red / Blue 原始讨论。当前总体 Target 的整合表达见 [`docs/architecture/architecture.md`](../architecture/architecture.md)，模块内部细化见 [`docs/modules/`](../modules/README.md)，架构审查过程见 [`docs/history/red-blue/`](../history/red-blue/README.md)。
+本目录只保留仍然影响 Zuno 长期设计的 ADR。ADR 记录 durable decision（长期设计决定），不是项目故事、Current 运行证据或 Red / Blue 原始讨论。当前总体 Target 的整合表达见 [`docs/architecture/architecture.md`](../architecture/architecture.md)，模块内部细化见 [`docs/modules/`](../modules/README.md)，架构审查过程见 [`docs/maintenance/history/red-blue/`](../maintenance/history/red-blue/README.md)。
 
 ## 怎样处理 ADR 之间的先后关系
 

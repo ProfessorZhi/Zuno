@@ -11,6 +11,14 @@ PROJECT_FILES = [
     "docs/project/README.md",
     "docs/project/project.md",
 ]
+RESEARCH_FILES = [
+    "docs/research/README.md",
+    "docs/research/deep-research-report-2026-08-27.md",
+    "docs/research/jidong-ge-liplab-lineage.md",
+    "docs/research/research-to-engineering-traceability.md",
+    "docs/research/agent-platform-baseline.md",
+    "docs/research/documentation-narrative-blueprint.md",
+]
 MODULE_FILES = [
     "docs/modules/README.md",
     "docs/modules/01-application-integration.md",
@@ -62,18 +70,22 @@ def _has_candidate_status(content: str) -> bool:
 def verify() -> list[str]:
     errors = list(_load_links().verify())
     required = [
-        "README.md", "docs/README.md", *PROJECT_FILES,
+        "README.md", "docs/README.md", *PROJECT_FILES, *RESEARCH_FILES,
         "docs/governance/project-fact-provenance.md",
         "docs/governance/human-first-documentation-standard.md",
-        "docs/evidence/README.md", *MODULE_FILES, "docs/history/README.md",
-        "docs/history/red-blue/README.md",
-        "docs/history/red-blue/manual-round-01-overall-architecture.md",
-        "docs/history/red-blue/manual-round-02-overall-architecture-freeze-review.md",
+        "docs/evidence/README.md", *MODULE_FILES,
+        "docs/maintenance/README.md",
+        "docs/maintenance/agent-workflow/README.md",
+        "docs/maintenance/history/README.md",
+        "docs/maintenance/history/red-blue/README.md",
+        "docs/maintenance/history/red-blue/manual-round-01-overall-architecture.md",
+        "docs/maintenance/history/red-blue/manual-round-02-overall-architecture-freeze-review.md",
+        "docs/maintenance/history/red-blue/legacy-automated-rounds.md",
         "docs/architecture/README.md", "docs/architecture/architecture.md",
         "docs/architecture/architecture-views.md", "docs/architecture/architecture.html",
         "docs/decisions/README.md", "docs/terminology.md",
-        "docs/operations/postgresql-migration-runbook.md",
-        "docs/operations/infrastructure-dr-profile.yaml",
+        "docs/maintenance/operations/postgresql-migration-runbook.md",
+        "docs/maintenance/operations/infrastructure-dr-profile.yaml",
         ".agent/references/docs-map.md", ".agent/system.yaml",
     ]
     for path in required:
@@ -89,17 +101,32 @@ def verify() -> list[str]:
     for mirror in (REPO_ROOT / ".agent/architecture", REPO_ROOT / ".agent/modules"):
         if mirror.exists():
             errors.append(f"documentation mirror must not exist: {mirror.relative_to(REPO_ROOT)}")
-    for forbidden in (REPO_ROOT / "docs/facts", REPO_ROOT / "project-reconstruction-lab"):
+    for forbidden in (
+        REPO_ROOT / "docs/facts",
+        REPO_ROOT / "docs/history",
+        REPO_ROOT / "docs/operations",
+        REPO_ROOT / "project-reconstruction-lab",
+    ):
         if forbidden.exists():
             errors.append(f"obsolete documentation workspace must be absent: {forbidden.relative_to(REPO_ROOT)}")
 
     index = (REPO_ROOT / "docs/README.md").read_text(encoding="utf-8")
     for marker in (
-        "Current", "Target", "Unknown", "project/", "project.md", "architecture/", "modules/", "evidence/", "history/red-blue/",
+        "Current", "Target", "Unknown", "project/", "research/", "architecture/", "modules/",
+        "evidence/", "maintenance/", "maintenance/history/red-blue/",
         "module_deep_design", "module_detail_design_candidate", "module_detail_design_candidate_coverage: 9/9",
     ):
         if marker not in index:
             errors.append(f"docs/README.md missing status/architecture marker: {marker}")
+
+    research = (REPO_ROOT / "docs/research/README.md").read_text(encoding="utf-8")
+    for marker in (
+        "DIRECT_LINEAGE", "CAPABILITY_LINEAGE", "CONCEPTUAL_LINEAGE", "BACKGROUND_ONLY", "UNVERIFIED",
+        "Paper != Capability != Provider != Qualified Provider != Formal Business Fact",
+        "last_verified",
+    ):
+        if marker not in research:
+            errors.append(f"docs/research/README.md missing research boundary marker: {marker}")
 
     project_readme = (REPO_ROOT / "docs/project/README.md").read_text(encoding="utf-8")
     for marker in ("project.md", "project-fact-provenance.md", "Project 文档入口"):

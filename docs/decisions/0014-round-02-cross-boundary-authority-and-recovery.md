@@ -2,7 +2,7 @@
 
 - 状态：`accepted-target`
 - 日期：2026-08-15
-- 决策来源：Round 02 Main Judgment，记录见 [`docs/history/red-blue/manual-round-02-overall-architecture-freeze-review.md`](../history/red-blue/manual-round-02-overall-architecture-freeze-review.md)
+- 决策来源：Round 02 Main Judgment，记录见 [`docs/history/red-blue/manual-round-02-overall-architecture-freeze-review.md`](../maintenance/history/red-blue/manual-round-02-overall-architecture-freeze-review.md)
 - 适用：调用准入、答案发布、历史引用、生命周期、正式 Admission、失效交付和关键恢复
 - 不包含：数据库表、Migration、ORM class、物理服务拆分或实现任务
 

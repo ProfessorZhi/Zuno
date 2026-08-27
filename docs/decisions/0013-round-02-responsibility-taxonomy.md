@@ -2,7 +2,7 @@
 
 - 状态：`accepted-target`
 - 日期：2026-08-15
-- 决策来源：Round 02 Main Judgment，记录见 [`docs/history/red-blue/manual-round-02-overall-architecture-freeze-review.md`](../history/red-blue/manual-round-02-overall-architecture-freeze-review.md)
+- 决策来源：Round 02 Main Judgment，记录见 [`docs/history/red-blue/manual-round-02-overall-architecture-freeze-review.md`](../maintenance/history/red-blue/manual-round-02-overall-architecture-freeze-review.md)
 - 取代：ADR-0003 中关于 Infrastructure 作为逻辑模块的 taxonomy 部分，以及与本责任分类直接冲突的旧分类
 - 适用：总体责任域、模块入口和后续模块分解
 

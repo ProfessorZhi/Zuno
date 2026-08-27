@@ -10,8 +10,8 @@ CANONICAL = [ROOT / "docs/architecture/architecture.md"]
 ARCHITECTURE_README = ROOT / "docs/architecture/README.md"
 PROJECT_ROOT = ROOT / "docs/project"
 MODULES_ROOT = ROOT / "docs/modules"
-ROUND_01 = ROOT / "docs/history/red-blue/manual-round-01-overall-architecture.md"
-ROUND_02 = ROOT / "docs/history/red-blue/manual-round-02-overall-architecture-freeze-review.md"
+ROUND_01 = ROOT / "docs/maintenance/history/red-blue/manual-round-01-overall-architecture.md"
+ROUND_02 = ROOT / "docs/maintenance/history/red-blue/manual-round-02-overall-architecture-freeze-review.md"
 
 MODULE_FILES = (
     "01-application-integration.md",

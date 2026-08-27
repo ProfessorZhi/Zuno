@@ -191,7 +191,7 @@ def validate_taxonomy() -> list[str]:
     ):
         if not (REPO_ROOT / relative_path).exists():
             errors.append(f"missing canonical project entrypoint: {relative_path}")
-    if not (REPO_ROOT / "docs/history/red-blue/README.md").exists():
+    if not (REPO_ROOT / "docs/maintenance/history/red-blue/README.md").exists():
         errors.append("missing Red/Blue history archive README")
     return errors
 

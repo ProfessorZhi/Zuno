@@ -1,58 +1,77 @@
 # Zuno 项目文档
 
-`docs/` 是 Zuno 的正式项目知识入口。当前文档按“为什么有项目 → 为什么这样设计 → 每个责任域怎样工作 → 今天到底证明了什么”组织：
+`docs/` 是 Zuno 的正式知识入口。一级目录现在分成两个 plane：前四个帮助人理解 **Zuno 是什么、从哪里来、为什么这样设计**；后四个负责 **这些事实怎样被决定、证明、治理和维护**。
 
 ```text
 docs/
 ├── README.md
-├── project/                    项目级 Human-first 叙事：README + project.md
-├── architecture/               总体 Target Architecture（固定四文件）
-├── modules/                    九个 Target 责任域：Deep Design V2 + Detail Design Candidate V1（9/9）
-│   ├── README.md
-│   ├── 01-application-integration.md
-│   ├── 02-legal-domain-work-product.md
-│   ├── 03-knowledge-evidence.md
-│   ├── 04-agent-runtime-control.md
-│   ├── 05-capability-skill.md
-│   ├── 06-tool-runtime-effects.md
-│   ├── 07-model-gateway.md
-│   ├── 08-security-governance.md
-│   └── 09-observability-evaluation.md
-├── decisions/                  有效 ADR
-├── governance/                 来源、Ownership、Contract 与文档规则
-├── evidence/                   当前可复现证据
-├── history/red-blue/           架构审查过程记录
-├── operations/                 当前运维 Runbook / profile
+│
+│   # Zuno Knowledge Plane
+├── project/                    真实项目来源、发展、团队/个人 Ownership 与项目级叙事
+├── research/                   葛季栋/LIPLAB 研究谱系、Research→Engineering、平台基线与写作研究
+├── architecture/               唯一总体 Target Architecture（固定四文件）
+├── modules/                    九个 Target 责任域：Human Part A + Engineering Part B/C
+│
+│   # Zuno Control & Maintenance Plane
+├── decisions/                  仍有长期约束力的 ADR
+├── evidence/                   Current Code/Test/Trace/Eval/Runtime Evidence
+├── governance/                 Provenance、Ownership、Contract、文档与验收规则
+├── maintenance/                Operations、Agent workflow 与历史审查资料
+│   ├── operations/
+│   ├── agent-workflow/
+│   └── history/red-blue/
+│
 └── terminology.md
 ```
+
+这不是严格流水线。最重要的边界是：`research/` 可以解释和挑战 Project / Architecture，但不能覆盖 Canonical Truth；`maintenance/` 可以解释怎样运行和维护仓库，但不拥有 Project、Architecture 或 Current Evidence。
 
 ## 推荐阅读顺序
 
 第一次理解项目或准备技术面试：
 
-1. [Project 主文档](./project/project.md)：项目是什么、为什么立项、为什么不只用通用平台、项目怎样发展、团队和参与事实、哪些差异已经证明。
-2. [总体架构](./architecture/architecture.md)：跨 Product、Domain、Knowledge、Capability、Runtime、Tool、Model、Security、Eval 为什么这样组织。
-3. [模块架构](./modules/README.md)：先通过真实任务主线理解九个责任域，再读目标模块 Part A；实现级审查继续读 Part B / Part C，字段、事务、Crash Window、Migration 和 Failure Injection 读 B14.1–B14.8。
-4. [有效 ADR](./decisions/README.md)：仍然影响长期设计的决策。
-5. [Current Evidence](./evidence/README.md)：代码、测试、运行和评测到底证明了什么。
-6. [Red / Blue 审查历史](./history/red-blue/README.md)：需要理解架构如何被质疑、如何收敛时再读。
-7. [术语表](./terminology.md)：跨文档统一术语。
+1. [Project 主文档](./project/project.md)：这个项目从哪里来、为什么值得做、团队和个人做了什么、Current / Target / Unknown 到哪里。
+2. [Research Knowledge Base](./research/README.md)：葛季栋/LIPLAB 研究谱系怎样形成 Research Artifacts，通用 Agent 平台已经解决什么，以及这些研究怎样进入 Engineering Capability。
+3. [总体架构](./architecture/architecture.md)：基于这些约束，为什么会逐步出现不同 Authority / Ownership 边界。
+4. [模块架构](./modules/README.md)：从总体故事进入九个责任域；先读 Part A，需要工程精度时再读 Part B / Part C / B14.1–B14.8。
+5. [有效 ADR](./decisions/README.md)：哪些长期设计选择被正式接受以及为什么。
+6. [Current Evidence](./evidence/README.md)：代码、Migration、Test、Trace、Eval 和运行到底证明了什么。
+7. [Governance](./governance/)：事实来源、文档标准、Owner 与跨模块 Contract 规则。
+8. [Maintenance](./maintenance/README.md)：Runbook、Agent/GitHub 工作流和 Red / Blue 历史。
+9. [术语表](./terminology.md)：跨文档统一术语。
 
 `docs/project/README.md` 只是导航。项目事实来源、允许表述和 Unknown 由 [`governance/project-fact-provenance.md`](./governance/project-fact-provenance.md) 管理。
 
 ## 一套回答问题的方法
 
 ```text
-为什么会有这个项目、为什么值得做？      → project/project.md
-为什么今天这样设计？                  → architecture/
-每个责任域内部怎样工作和恢复？        → modules/
-字段、Guard、事务、Crash/Migration？   → 对应 module B14.1–B14.8
-现在到底实现和验证到了什么程度？      → evidence/
-长期决策为什么被接受？                → decisions/
-历史事实来源是什么？                  → governance/project-fact-provenance.md
+这个真实项目为什么存在、谁参与？          → project/
+葛季栋/LIPLAB 哪些研究与 Zuno 有什么关系？ → research/
+为什么不是普通 RAG / WorkBuddy + Tools？   → project/ + research/ + architecture/
+为什么今天按这些责任边界设计？            → architecture/
+每个责任域内部怎样工作和恢复？            → modules/
+字段、Guard、事务、Crash/Migration？       → 对应 module B14.1–B14.8
+长期决策为什么被接受？                    → decisions/
+现在到底实现和验证到了什么程度？          → evidence/
+事实和文档如何被治理？                    → governance/
+仓库怎样运行、修改、审查和追溯？          → maintenance/
 ```
 
-一个完整技术回答应覆盖“现实问题、设计原因、正常与失败流程、当前证据和仍未证明的部分”，而不是只背技术栈或数据库表。
+一个完整技术回答应覆盖“现实问题、简单 baseline、失败、设计原因、替代方案、恢复、当前证据和仍未证明的部分”，而不是只背技术栈或数据库表。
+
+## Research 的特殊边界
+
+`research/` 新增的是上游研究知识，不是第二套 Project / Architecture：
+
+- 论文提出 ≠ Zuno 已实现；
+- 导师/课题组成果 ≠ 用户本人实现；
+- Research Artifact ≠ Engineering Capability；
+- Capability ≠ Provider；
+- Provider 可调用 ≠ Provider Qualified；
+- Provider 成功 ≠ Formal Business Fact；
+- 外部平台 Feature Matrix 会过期，必须带 `last_verified` 并重新核验。
+
+成熟研究结论进入 Zuno 正文时，仍需修改对应 Canonical Owner；Current claim 仍只能由 `evidence/` 支持。
 
 ## 当前文档状态
 
@@ -72,19 +91,18 @@ quality_proven: NO
 production_readiness: NOT_ESTABLISHED
 ```
 
-九篇模块都已经有 Human-first Part A、B1–B14 Engineering Reference、Part C Cross-Module Consistency，并进一步拥有 B14.1–B14.8 Detail Freeze Candidate：核心字段、Identity / Version、新鲜度、幂等、事务 / 持久化、并发、Crash Window、Schema Evolution 和 Failure Injection 都已经进入冻结前审查。
+九篇模块都已经有 Human-first Part A、B1–B14 Engineering Reference、Part C Cross-Module Consistency，并进一步拥有 B14.1–B14.8 Detail Freeze Candidate。这仍然不等于最终 enum、数据库 Schema、Migration、API 或服务拓扑被冻结，更不等于代码已经实现。
 
-这仍然不等于最终 enum、数据库 Schema、Migration、API 或服务拓扑被冻结，更不等于代码已经实现。下一道门是 Module Detail Freeze Review；实现仍需要独立明确授权。
+## 八个一级目录的 Owner 边界
 
-## 文档边界
-
-- `project/` 只保留 `README.md` 和 `project.md`；项目故事不证明 Target 已实现。
-- `architecture/` 是唯一总体 Target Architecture，固定四文件。
-- `modules/` 展开九个冻结责任域；当前 9/9 为 Detail Design Candidate V1，但 `module_detail_freeze: NOT_YET`。
-- `decisions/` 只保留仍有长期约束力的 ADR。
-- `evidence/` 只记录 Current 代码、Migration、Test、Trace、Eval 和运行证据。
-- `operations/` 保存当前 Runbook / recovery profile。
-- `history/red-blue/` 保存架构审查历史，不拥有当前事实或 Target。
-- `governance/` 保存来源、Owner、兼容 Contract 和文档规则，不替代 Human-first 正文。
+- `project/`：项目级 Human-first Truth；当前只保留 `README.md` + `project.md`。
+- `research/`：经核验的研究谱系、外部平台 baseline 与研究→工程推导；不拥有 Current/Target。
+- `architecture/`：唯一总体 Target Architecture，固定四文件。
+- `modules/`：九个冻结逻辑责任域及其 Deep / Detail Candidate。
+- `decisions/`：仍有长期约束力的 ADR。
+- `evidence/`：只记录 Current 代码、Migration、Test、Trace、Eval 和运行证据。
+- `governance/`：事实来源、Owner、兼容 Contract、Human-first 与验收规则。
+- `maintenance/`：当前 Runbook、Agent/GitHub 工作流与历史审查；不拥有当前架构真相。
+  - Red / Blue archive route: `maintenance/history/red-blue/`。
 
 `Current`、`Target`、`Future`、`History` 和 `Unknown` 必须区分。文档写得完整不证明实现可用；Current 只能由代码、Migration、Test、Trace、Eval 或真实运行结果证明。
