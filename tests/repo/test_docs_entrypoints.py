@@ -26,6 +26,10 @@ CANONICAL_MODULE_FILES = {
     "08-security-governance.md",
     "09-observability-evaluation.md",
 }
+CANONICAL_RED_BLUE_FILES = {
+    "README.md", "current.md", "protocol.md", "attack-model.md", "judge.md",
+    "templates/round.md", "templates/turn.md",
+}
 MODULE_BASELINE_HEADINGS = [
     "### B1 Scope / Global Invariants",
     "### B2 Responsibility / Ownership",
@@ -91,6 +95,35 @@ def test_project_documentation_is_consolidated_and_canonical() -> None:
         assert marker in project
     assert "Generic Host（通用 Agent 宿主）" in project
     assert "Current" in project and "Target" in project and "Unknown" in project
+
+
+def test_red_blue_harness_is_dedicated_and_closed_book() -> None:
+    root = REPO_ROOT / ".agent/red-blue"
+    actual = {p.relative_to(root).as_posix() for p in root.rglob("*") if p.is_file()}
+    assert actual == CANONICAL_RED_BLUE_FILES
+
+    current = (root / "current.md").read_text(encoding="utf-8")
+    assert "state: `no-active`" in current
+    assert "active_round: `none`" in current
+
+    protocol = (root / "protocol.md").read_text(encoding="utf-8")
+    for marker in ("Context Firewall", "ChatGPT Duel", "Autonomous Agent", "Closed-book"):
+        assert marker in protocol
+
+    attack = (root / "attack-model.md").read_text(encoding="utf-8")
+    for marker in ("Ownership Claim", "Build / Buy", "面经校准", "一次只"):
+        assert marker in attack
+
+    judge = (root / "judge.md").read_text(encoding="utf-8")
+    for marker in ("UNSUPPORTED_CLAIM", "NARRATIVE_GAP", "ARCHITECTURE_GAP", "OWNERSHIP_GAP"):
+        assert marker in judge
+
+    workflow = (REPO_ROOT / "docs/maintenance/red-blue/README.md").read_text(encoding="utf-8")
+    for marker in (
+        "ProfessorZhi/internship-work", "ProfessorZhi/interview-notes", "Part A",
+        "Closed-book", "ChatGPT Red / Blue 对攻", "Autonomous Agent",
+    ):
+        assert marker in workflow
 
 
 def test_architecture_directories_only_contain_support_files() -> None:
