@@ -14,6 +14,19 @@ MODULE_FILES = (
     "docs/modules/08-security-governance.md",
     "docs/modules/09-observability-evaluation.md",
 )
+RED_BLUE_FILES = {
+    ".agent/red-blue/README.md",
+    ".agent/red-blue/current.md",
+    ".agent/red-blue/protocol.md",
+    ".agent/red-blue/attack-model.md",
+    ".agent/red-blue/judge.md",
+    ".agent/red-blue/templates/round.md",
+    ".agent/red-blue/templates/turn.md",
+}
+
+
+def _relative_files(root: Path, directory: Path) -> set[str]:
+    return {path.relative_to(root).as_posix() for path in directory.rglob("*") if path.is_file()}
 
 
 def verify_programs_flat(root: Path) -> list[str]:
@@ -32,6 +45,45 @@ def verify_programs_flat(root: Path) -> list[str]:
     return errors
 
 
+def verify_red_blue_harness(root: Path) -> list[str]:
+    errors: list[str] = []
+    red_blue_root = root / ".agent" / "red-blue"
+    if not red_blue_root.exists():
+        return ["missing .agent/red-blue harness"]
+
+    actual_files = _relative_files(root, red_blue_root)
+    if actual_files != RED_BLUE_FILES:
+        errors.append(
+            f"red-blue harness mismatch: expected {sorted(RED_BLUE_FILES)}, got {sorted(actual_files)}"
+        )
+        return errors
+
+    current = (red_blue_root / "current.md").read_text(encoding="utf-8")
+    inactive = all(phrase in current for phrase in ("state: `no-active`", "active_round: `none`"))
+    active = "state: `active-red-blue`" in current and re.search(
+        r"active_round: `(?!none`)[^`]+`", current
+    ) is not None
+    if not (inactive or active):
+        errors.append("red-blue current state is neither recognized inactive nor active-red-blue")
+
+    protocol = (red_blue_root / "protocol.md").read_text(encoding="utf-8")
+    for marker in ("Context Firewall", "ChatGPT Duel", "Autonomous Agent", "Closed-book"):
+        if marker not in protocol:
+            errors.append(f"red-blue protocol missing required execution marker: {marker}")
+
+    attack_model = (red_blue_root / "attack-model.md").read_text(encoding="utf-8")
+    for marker in ("Ownership Claim", "Build / Buy", "面经校准", "一次只"):
+        if marker not in attack_model:
+            errors.append(f"red-blue attack model missing required marker: {marker}")
+
+    judge = (red_blue_root / "judge.md").read_text(encoding="utf-8")
+    for marker in ("UNSUPPORTED_CLAIM", "NARRATIVE_GAP", "ARCHITECTURE_GAP", "OWNERSHIP_GAP"):
+        if marker not in judge:
+            errors.append(f"red-blue judge missing required marker: {marker}")
+
+    return errors
+
+
 def verify_system_yaml(root: Path) -> list[str]:
     errors: list[str] = []
     path = root / ".agent" / "system.yaml"
@@ -41,6 +93,12 @@ def verify_system_yaml(root: Path) -> list[str]:
     for marker in (
         "version:", "system_identity:", "runtime_boundary:", "program_rules:", "skill_routes:",
         "project_narrative:", "research_root:", "maintenance_root:",
+        'red_blue_runtime_root: ".agent/red-blue"',
+        'red_blue_workflow_root: "docs/maintenance/red-blue"',
+        'red_blue_current_owner: ".agent/red-blue/current.md"',
+        "red_blue_requires_explicit_activation: true",
+        "blue_closed_book: true",
+        "red_blue_harness:", "red_blue_workflow:", "red_blue_interview:",
         'module_design_state: "deep-design-v2"',
         'module_detail_design_candidate: "candidate-v1"',
         'module_detail_design_candidate_modules: ["01", "02", "03", "04", "05", "06", "07", "08", "09"]',
@@ -54,12 +112,18 @@ def verify_system_yaml(root: Path) -> list[str]:
     for relative in (
         "AGENTS.md",
         ".agent/programs/current.md",
+        ".agent/red-blue/README.md",
+        ".agent/red-blue/current.md",
+        ".agent/red-blue/protocol.md",
+        ".agent/red-blue/attack-model.md",
+        ".agent/red-blue/judge.md",
         "docs/README.md",
         "docs/project/README.md",
         "docs/project/project.md",
         "docs/research/README.md",
         "docs/maintenance/README.md",
         "docs/maintenance/agent-workflow/README.md",
+        "docs/maintenance/red-blue/README.md",
         "docs/maintenance/history/README.md",
         *MODULE_FILES,
     ):
@@ -93,15 +157,16 @@ def verify_skill_links(root: Path) -> list[str]:
 
 def verify_templates_have_required_sections(root: Path) -> list[str]:
     errors: list[str] = []
-    template_root = root / ".agent" / "templates"
-    for path in template_root.glob("*.md"):
-        if path.name == "README.md":
-            continue
-        content = path.read_text(encoding="utf-8")
-        if not content.lstrip().startswith("#"):
-            errors.append(f"template missing title: {path.relative_to(root)}")
-        if "##" not in content:
-            errors.append(f"template missing section: {path.relative_to(root)}")
+    template_roots = (root / ".agent" / "templates", root / ".agent" / "red-blue" / "templates")
+    for template_root in template_roots:
+        for path in template_root.glob("*.md"):
+            if path.name == "README.md":
+                continue
+            content = path.read_text(encoding="utf-8")
+            if not content.lstrip().startswith("#"):
+                errors.append(f"template missing title: {path.relative_to(root)}")
+            if "##" not in content:
+                errors.append(f"template missing section: {path.relative_to(root)}")
     return errors
 
 
@@ -117,6 +182,7 @@ def main() -> int:
         errors.append(f"references mismatch: expected {sorted(expected_references)}, got {sorted(actual_references)}")
 
     errors.extend(verify_programs_flat(ROOT))
+    errors.extend(verify_red_blue_harness(ROOT))
     errors.extend(verify_system_yaml(ROOT))
     errors.extend(verify_skill_links(ROOT))
     errors.extend(verify_templates_have_required_sections(ROOT))
@@ -138,11 +204,14 @@ def main() -> int:
     for relative in (
         "AGENTS.md", ".agent/system.yaml", ".agent/README.md",
         ".agent/scripts/verify_doc_boundaries.py", ".agent/scripts/verify_repo_hygiene.py",
+        ".agent/red-blue/README.md", ".agent/red-blue/current.md", ".agent/red-blue/protocol.md",
+        ".agent/red-blue/attack-model.md", ".agent/red-blue/judge.md",
         "docs/project/README.md", "docs/project/project.md", "docs/research/README.md",
         "docs/governance/project-fact-provenance.md",
         "docs/governance/human-first-documentation-standard.md",
         "docs/maintenance/README.md", "docs/maintenance/agent-workflow/README.md",
-        "docs/maintenance/history/README.md", "docs/evidence/README.md",
+        "docs/maintenance/red-blue/README.md", "docs/maintenance/history/README.md",
+        "docs/evidence/README.md",
         *MODULE_FILES,
     ):
         if not (ROOT / relative).exists():
