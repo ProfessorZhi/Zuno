@@ -23,7 +23,7 @@ def test_architecture_document_set_is_canonical() -> None:
 
 def test_legacy_design_material_is_not_canonical() -> None:
     assert (REPO_ROOT / "docs/modules/README.md").exists()
-    assert (REPO_ROOT / "docs/history/red-blue/README.md").exists()
+    assert (REPO_ROOT / "docs/maintenance/history/red-blue/README.md").exists()
     assert not (REPO_ROOT / "docs/facts").exists()
     assert not (REPO_ROOT / "project-reconstruction-lab").exists()
     assert (REPO_ROOT / "docs/architecture/architecture.md").exists()
