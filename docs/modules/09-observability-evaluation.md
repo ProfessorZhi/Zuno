@@ -118,7 +118,7 @@ Target 采用 OpenTelemetry / OTLP-compatible contract，让 LangSmith 可以作
 
 ---
 
-**最后必须限制 Evidence 自己的权力。** 一组 Eval PASS 可以证明特定 Dataset / config / profile 达标，却不能替容量、HA / DR、安全 qualification、真实外围系统和运维证据宣布 Production Ready。测量越严格，越要说清它没有证明什么。
+**在继续讨论更多观测和评测细节前，先限制 Evidence 自己的权力。** 一组 Eval PASS 可以证明特定 Dataset / config / profile 达标，却不能替容量、HA / DR、安全 qualification、真实外围系统和运维证据宣布 Production Ready。测量越严格，越要说清它没有证明什么。
 
 ### Release Evidence 为什么不等于 Production Readiness
 

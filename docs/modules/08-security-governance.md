@@ -116,7 +116,7 @@ cache key 和 expiry 必须覆盖真正影响安全语义的条件，并受 Secu
 
 ---
 
-**最后回到 Build / Buy。** 身份目录、Secret Manager、Policy Engine 等基础设施能复用就复用；08 值得自己拥有的只是 Zuno 必须长期解释的安全 Authority、新鲜度、审批和数据用途语义。
+**到这里先回到 Build / Buy。** 身份目录、Secret Manager、Policy Engine 等基础设施能复用就复用；08 值得自己拥有的只是 Zuno 必须长期解释的安全 Authority、新鲜度、审批和数据用途语义。
 
 ### 什么时候 08 应该更简单
 

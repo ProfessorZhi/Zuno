@@ -236,7 +236,7 @@ Graph、长期 Memory、复杂 Planner、强模型路由和 Specialist 都应保
 
 ---
 
-**阶段七：最后一个问题不是“还能再加什么机制”，而是“哪些复杂度值得活下来”。** 到这里架构已经能表达长期事实、恢复和安全，但 GraphRAG、Memory、Reflection、Multi-Agent 或 Native Runtime 仍然只能通过可比较 Evidence 获得长期资格。
+**阶段七的主问题不是“还能再加什么机制”，而是“哪些复杂度值得活下来”。** 到这里架构已经能表达长期事实、恢复和安全，但 GraphRAG、Memory、Reflection、Multi-Agent 或 Native Runtime 仍然只能通过可比较 Evidence 获得长期资格。
 
 ### 18. 一项复杂机制什么时候应该主动删除
 
