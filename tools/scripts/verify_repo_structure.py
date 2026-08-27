@@ -33,6 +33,7 @@ MODULE_FILES = {
 MAINTENANCE_FILES = {
     "docs/maintenance/README.md",
     "docs/maintenance/agent-workflow/README.md",
+    "docs/maintenance/red-blue/README.md",
     "docs/maintenance/operations/postgresql-migration-runbook.md",
     "docs/maintenance/operations/infrastructure-dr-profile.yaml",
     "docs/maintenance/history/README.md",
@@ -40,6 +41,15 @@ MAINTENANCE_FILES = {
     "docs/maintenance/history/red-blue/manual-round-01-overall-architecture.md",
     "docs/maintenance/history/red-blue/manual-round-02-overall-architecture-freeze-review.md",
     "docs/maintenance/history/red-blue/legacy-automated-rounds.md",
+}
+RED_BLUE_FILES = {
+    ".agent/red-blue/README.md",
+    ".agent/red-blue/current.md",
+    ".agent/red-blue/protocol.md",
+    ".agent/red-blue/attack-model.md",
+    ".agent/red-blue/judge.md",
+    ".agent/red-blue/templates/round.md",
+    ".agent/red-blue/templates/turn.md",
 }
 
 
@@ -75,7 +85,7 @@ def main() -> int:
     if _files(ROOT / "docs/modules") != MODULE_FILES:
         errors.append("docs/modules must contain README plus the nine canonical module design documents")
     if _files(ROOT / "docs/maintenance") != MAINTENANCE_FILES:
-        errors.append("docs/maintenance must contain only current operations, human agent workflow and high-value history")
+        errors.append("docs/maintenance must contain only operations, human workflows and high-value history")
 
     for obsolete in (
         ROOT / "docs/facts",
@@ -97,6 +107,16 @@ def main() -> int:
         errors.append("current program has no recognized inactive state")
     if "SUPERSEDED / RETIRED" not in current:
         errors.append("current program missing SUPERSEDED / RETIRED")
+
+    red_blue_root = ROOT / ".agent" / "red-blue"
+    if not red_blue_root.exists() or _files(red_blue_root) != RED_BLUE_FILES:
+        errors.append(".agent/red-blue must contain only the canonical Red/Blue harness files")
+    else:
+        red_blue_current = (red_blue_root / "current.md").read_text(encoding="utf-8")
+        inactive = "state: `no-active`" in red_blue_current and "active_round: `none`" in red_blue_current
+        active = "state: `active-red-blue`" in red_blue_current
+        if not (inactive or active):
+            errors.append("Red/Blue current state is neither recognized inactive nor active-red-blue")
 
     if {path.name for path in (ROOT / "docs/architecture").iterdir() if path.is_file()} != {
         "README.md", "architecture.md", "architecture-views.md", "architecture.html"
