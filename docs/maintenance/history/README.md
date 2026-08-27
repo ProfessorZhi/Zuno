@@ -1,10 +1,10 @@
 # Zuno 架构与项目演进历史
 
-`docs/history/` 记录已经发生的设计讨论、架构审查和仍有复盘价值的历史材料。它回答的是：
+`docs/maintenance/history/` 记录已经发生的设计讨论、架构审查和仍有复盘价值的历史材料。它回答的是：
 
 > 为什么今天的设计会变成这样？
 
-它不回答今天系统应该如何实现。当前项目故事看 [Project](../project/README.md)，当前 Target 看[总体架构](../architecture/architecture.md)，当前代码和运行证据看 [Evidence](../evidence/README.md)，长期决定看[有效 ADR](../decisions/README.md)。
+它不回答今天系统应该如何实现。当前项目故事看 [Project](../../project/README.md)，当前 Target 看[总体架构](../../architecture/architecture.md)，当前代码和运行证据看 [Evidence](../../evidence/README.md)，长期决定看[有效 ADR](../../decisions/README.md)。
 
 ## 怎么读 History
 
