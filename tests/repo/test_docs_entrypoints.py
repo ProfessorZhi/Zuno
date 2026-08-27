@@ -72,8 +72,8 @@ def test_project_documentation_is_consolidated_and_canonical() -> None:
     root = REPO_ROOT / "docs/project"
     assert {p.name for p in root.iterdir() if p.is_file()} == CANONICAL_PROJECT_FILES
     assert not (REPO_ROOT / "docs/facts").exists()
-    assert (REPO_ROOT / "docs/history/red-blue/README.md").exists()
-    assert (REPO_ROOT / "docs/history/red-blue/manual-round-01-overall-architecture.md").exists()
+    assert (REPO_ROOT / "docs/maintenance/history/red-blue/README.md").exists()
+    assert (REPO_ROOT / "docs/maintenance/history/red-blue/manual-round-01-overall-architecture.md").exists()
 
     readme = (root / "README.md").read_text(encoding="utf-8")
     assert "project.md" in readme
@@ -137,7 +137,7 @@ def test_architecture_markdown_is_integration_first() -> None:
     design = (REPO_ROOT / "docs/architecture/architecture.md").read_text(encoding="utf-8")
     assert renderer.validate_design(design) == []
     assert design.count("```mermaid") <= 6
-    for marker in ["docs/history/", "docs/project/", "Part A — Architecture Narrative", "Part B — Detailed Architecture Specification"]:
+    for marker in ["docs/maintenance/history/", "docs/project/", "Part A — Architecture Narrative", "Part B — Detailed Architecture Specification"]:
         assert marker in design
 
 
@@ -154,7 +154,7 @@ def test_architecture_html_routes_to_current_project_and_history() -> None:
     html = (REPO_ROOT / "docs/architecture/architecture.html").read_text(encoding="utf-8")
     assert renderer.validate_html(html) == []
     for phrase in [
-        "./architecture.md", "../project/project.md", "../history/README.md",
+        "./architecture.md", "../project/project.md", "../maintenance/history/README.md",
         "./architecture.md#target-status-boundary", "../evidence/README.md", "./architecture-views.md",
     ]:
         assert phrase in html
