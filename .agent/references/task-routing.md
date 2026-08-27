@@ -10,6 +10,7 @@
 | WorkBuddy / Dify / Coze / LangGraph 比较、Build/Buy | `docs/research/agent-platform-baseline.md` + 当前官方资料 | Research + Architecture；平台 baseline 需重新核验 |
 | 文档故事化 / Part A Rewrite | `docs/research/documentation-narrative-blueprint.md` + Project/Architecture/目标 Module | Documentation；先判断 Writing Gap vs Architecture Gap |
 | 技术面试 / 架构 Reviewer 连续追问 | Project 主线，再按问题进入 Research / Architecture / Module / Evidence | 对应事实 Owner |
+| Red / Blue 面试对攻与压力测试 | `.agent/red-blue/README.md`、`protocol.md`、`attack-model.md`、`judge.md`、`docs/maintenance/red-blue/README.md` | Red/Blue Harness；Blue Closed-book |
 | 个人贡献 | `docs/project/project.md`、project fact provenance、历史任务级证据 | Project Documentation；不得由 Target 或导师成果反推 |
 | 文档结构、README、Agent 路由 | `docs/maintenance/agent-workflow/README.md`、`workflow.md`、`docs-map.md`、验证地图 | Documentation |
 | 阅读总体架构、理解系统 | `docs/project/project.md`、必要 Research、`docs/architecture/README.md`、Architecture Part A | Architecture |
@@ -30,6 +31,7 @@
 
 - 目标会改变业务 API、数据库 Schema、依赖、安全边界或 Target→Current 语义时，先停在设计和验证。
 - Research 发现新论文/平台能力时，不直接改 Architecture；先确定 lineage、来源可靠性以及它是否只是 Writing / Evidence Gap。
+- Red / Blue 发现 Gap 时先停在 Judgment / Report；不得在同一 Round 用外部标准答案补 Blue，也不得自动修改简历、Architecture 或 Runtime。
 - Project 如果发现必须新增 / 删除九个逻辑模块、扩大 Canonical Legal Kernel 或改变跨模块 Owner，必须升级 Architecture Gap。
 - 模块 Deep Design / Detail Candidate / Freeze Review 如果需要改变总体 Owner、扩大 Canonical Kernel 或修改 Admission / Invalidation / Lifecycle / Security / Effect 等跨模块不变量，停止局部设计并升级 Architecture Gap。
 - 九个模块 B14.1–B14.8 都只是冻结前候选。没有 Module Detail Freeze 和明确 Implementation Authorization 时，不创建大规模业务表、Migration 或 Runtime 实现。
@@ -55,4 +57,16 @@ read project / current truth
   → focused verify / CI as required
   → PR + merge
   → reread exact main HEAD
+```
+
+Red / Blue 任务走独立流程：
+
+```text
+pin Zuno SHA + exact resume snapshot + target role
+  → .agent/red-blue/
+  → Red claim mining / optional calibration
+  → Blue closed-book Part A-first answer
+  → Judge / Gap
+  → archive
+  → independent fix / retest if requested
 ```
