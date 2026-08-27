@@ -16,10 +16,11 @@ docs/
 ├── decisions/                  仍有长期约束力的 ADR
 ├── evidence/                   Current Code/Test/Trace/Eval/Runtime Evidence
 ├── governance/                 Provenance、Ownership、Contract、文档与验收规则
-├── maintenance/                Operations、Agent workflow 与历史审查资料
+├── maintenance/                Operations、Agent workflow、Red/Blue workflow 与历史审查资料
 │   ├── operations/
 │   ├── agent-workflow/
-│   └── history/red-blue/
+│   ├── red-blue/               人类可读的 Interview Harness 工作流
+│   └── history/red-blue/       已结束 Round 的历史归档
 │
 └── terminology.md
 ```
@@ -37,8 +38,9 @@ docs/
 5. [有效 ADR](./decisions/README.md)：哪些长期设计选择被正式接受以及为什么。
 6. [Current Evidence](./evidence/README.md)：代码、Migration、Test、Trace、Eval 和运行到底证明了什么。
 7. [Governance](./governance/)：事实来源、文档标准、Owner 与跨模块 Contract 规则。
-8. [Maintenance](./maintenance/README.md)：Runbook、Agent/GitHub 工作流和 Red / Blue 历史。
-9. [术语表](./terminology.md)：跨文档统一术语。
+8. [Maintenance](./maintenance/README.md)：Runbook、通用 Agent/GitHub 工作流、Red / Blue Interview Harness 和历史。
+9. [Red / Blue Workflow](./maintenance/red-blue/README.md)：需要模拟面试或做 Architecture Stress Test 时，怎样固定简历、运行 Red/Blue/Judge、保持 Blue Closed-book 并归档结果。
+10. [术语表](./terminology.md)：跨文档统一术语。
 
 `docs/project/README.md` 只是导航。项目事实来源、允许表述和 Unknown 由 [`governance/project-fact-provenance.md`](./governance/project-fact-provenance.md) 管理。
 
@@ -55,6 +57,7 @@ docs/
 现在到底实现和验证到了什么程度？          → evidence/
 事实和文档如何被治理？                    → governance/
 仓库怎样运行、修改、审查和追溯？          → maintenance/
+怎样用真实面试方式压力测试简历与 Part A？  → maintenance/red-blue/ + .agent/red-blue/
 ```
 
 一个完整技术回答应覆盖“现实问题、简单 baseline、失败、设计原因、替代方案、恢复、当前证据和仍未证明的部分”，而不是只背技术栈或数据库表。
@@ -72,6 +75,18 @@ docs/
 - 外部平台 Feature Matrix 会过期，必须带 `last_verified` 并重新核验。
 
 成熟研究结论进入 Zuno 正文时，仍需修改对应 Canonical Owner；Current claim 仍只能由 `evidence/` 支持。
+
+## Red / Blue 的特殊边界
+
+Red / Blue 是面试与架构压力测试 Harness，不是另一套架构文档：
+
+```text
+.agent/red-blue/                         Machine protocol / active Round state
+docs/maintenance/red-blue/              Human workflow
+docs/maintenance/history/red-blue/      Closed Round history
+```
+
+Red 以精确简历 Claim 和 interviewer kernel 为起点，可以用真实面经校准“面试官会验证什么、怎样连续追”；Blue 使用同一份简历快照和允许的 Zuno canonical docs，项目 / 架构回答优先从 Part A 组织，禁止临时读取面经、八股、外部标准答案或 Red hidden intent。Judge 只记录 Gap，不替 Blue 补答案。
 
 ## 当前文档状态
 
@@ -102,7 +117,8 @@ production_readiness: NOT_ESTABLISHED
 - `decisions/`：仍有长期约束力的 ADR。
 - `evidence/`：只记录 Current 代码、Migration、Test、Trace、Eval 和运行证据。
 - `governance/`：事实来源、Owner、兼容 Contract、Human-first 与验收规则。
-- `maintenance/`：当前 Runbook、Agent/GitHub 工作流与历史审查；不拥有当前架构真相。
+- `maintenance/`：当前 Runbook、通用 Agent/GitHub 工作流、Red / Blue 工作流与历史审查；不拥有当前架构真相。
+  - Red / Blue human workflow: `maintenance/red-blue/`。
   - Red / Blue archive route: `maintenance/history/red-blue/`。
 
 `Current`、`Target`、`Future`、`History` 和 `Unknown` 必须区分。文档写得完整不证明实现可用；Current 只能由代码、Migration、Test、Trace、Eval 或真实运行结果证明。

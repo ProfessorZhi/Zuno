@@ -9,6 +9,7 @@ AGENTS.md
 .agent/system.yaml
 .agent/references/
 .agent/programs/
+.agent/red-blue/
 .agent/templates/
 .agent/scripts/
 ```
@@ -93,40 +94,15 @@ Part A 的质量由因果连续性、场景、失败、替代方案和 Trade-off
 
 ## Red / Blue
 
-Red / Blue 是 Architecture Stress Test，不是默认开发流程。Red 可以读取真实面试和外部资料；正式 Closed-book Blue 只读允许的 Zuno canonical docs。Blue 答不出来应记录 Gap，不临时用外部答案补齐。
-
-### 工作空间分层
-
-Red / Blue 不使用一个永久的“万能工作目录”。当前约定分四层：
+Red / Blue 已从通用 Program 流程中拆成专用 Interview / Architecture Stress-Test Harness：
 
 ```text
-.agent/programs/                           运行态 workspace；只有明确启动 Round 时才激活
-.agent/system.yaml + .agent/references/    机器路由、读取顺序和执行约束
-docs/maintenance/agent-workflow/          人类可读的工作流与维护说明
-docs/maintenance/history/red-blue/        Round 结束后的原始历史归档
+.agent/red-blue/                         machine protocol + active Round state
+docs/maintenance/red-blue/              human Red / Blue workflow
+docs/maintenance/history/red-blue/      closed Round history
 ```
 
-当前 `.agent/programs/current.md` 的状态是 `no-active`，因此现在没有正在运行的 Red / Blue Round，也不应为了“预留空间”自动创建新的 Session / Question Set / Candidate Branch。
-
-一次正式 Red / Blue 的推荐闭环是：
-
-```text
-explicit user activation
-  → read latest main + canonical Project / Architecture / Modules
-  → Red may read approved external interview/research sources
-  → Blue closed-book reads only allowed canonical Zuno docs
-  → ask one primary question at a time
-  → record answer + counterexample + judgment
-  → classify gaps: DOC / NARRATIVE / ARCHITECTURE / TRADEOFF / EVIDENCE /
-                  IMPLEMENTATION / OWNERSHIP / MEASUREMENT
-  → do not repair answers from external sources during Blue
-  → close the Round
-  → archive raw record in docs/maintenance/history/red-blue/
-  → accepted design changes enter Architecture / Module / ADR in a separate change
-  → Current claims still require Evidence
-```
-
-原始历史进入 `docs/maintenance/history/red-blue/`；被接受的结论必须单独进入 Architecture / Module / ADR，历史 Round 本身永远不是实施授权。
+完整的简历固定、Red 面经校准、Blue Closed-book、Judge、ChatGPT duel、autonomous Agent 和 Round closure 规则见 [`../red-blue/README.md`](../red-blue/README.md)。本文件只保留跨仓库维护边界：Red / Blue 产生的是 Judgment / Gap，不是自动修改授权；修复必须另开 bounded GitHub task，merge 后再用不同问法 Retest。
 
 ## 后续可导出的 Skills
 
@@ -134,12 +110,12 @@ explicit user activation
 
 优先级建议：
 
-1. **Red/Blue Architecture Interview Harness**：最适合优先导出。封装 interviewer persona、单问题连续追问、反例注入、Closed-book Blue、Gap taxonomy、Round closure；仓库内容仍在运行时读取。
+1. **Red/Blue Architecture Interview Harness**：优先导出 `.agent/red-blue/protocol.md`、`attack-model.md`、`judge.md` 和 templates。运行时重新读取精确简历 snapshot 与目标仓库，不把历史 Round 或 Zuno Truth 打包进去。
 2. **Research → Architecture Traceability**：封装作者/论文身份核验、lineage 分类、Research → Capability → Provider → Qualification → Canonical decision 的证据链，以及 Writing Gap / Architecture Gap / Evidence Gap 判断。
 3. **GitHub Architecture Review Closure**：封装 latest `main` → bounded branch → validator / CI → PR → merge → reread exact `main` HEAD 的闭环，适合文档治理和 Architecture Review PR。
 4. **Human-first Architecture Documentation Review**：封装 Part A 的因果叙事检查、术语密度告警、Current / Target 边界和“复杂度什么时候应该删除”的人工 Review checklist。
 
-不建议把 `docs/maintenance/history/red-blue/` 直接导出为 Skill；那是项目历史数据，不是可复用方法。也不建议把 `.agent/programs/current.md` 打包进 Skill；它是当前仓库的运行态指针。
+不建议把 `docs/maintenance/history/red-blue/` 直接导出为 Skill；那是项目历史数据，不是可复用方法。也不建议把 `.agent/red-blue/current.md` 打包进 Skill；它是当前仓库的运行态指针。
 
 ## Current / Target 铁律
 

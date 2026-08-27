@@ -29,6 +29,7 @@ MODULE_FILES = {
 MAINTENANCE_FILES = {
     "docs/maintenance/README.md",
     "docs/maintenance/agent-workflow/README.md",
+    "docs/maintenance/red-blue/README.md",
     "docs/maintenance/operations/postgresql-migration-runbook.md",
     "docs/maintenance/operations/infrastructure-dr-profile.yaml",
     "docs/maintenance/history/README.md",

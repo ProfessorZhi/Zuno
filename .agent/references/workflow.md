@@ -16,7 +16,7 @@ decisions / evidence / governance / maintenance
 
 其中 `research/` 只提供上游研究依据，`maintenance/` 只提供运行/协作/历史材料；两者都不能覆盖 Project、Architecture 或 Evidence。
 
-给人看的完整 ChatGPT / Claude Code / GitHub 协作说明见 `docs/maintenance/agent-workflow/README.md`；本文件保持机器路由所需的简洁版本。
+给人看的完整 ChatGPT / Claude Code / GitHub 协作说明见 `docs/maintenance/agent-workflow/README.md`；Red / Blue Interview Harness 的人类流程见 `docs/maintenance/red-blue/README.md`。本文件保持机器路由所需的简洁版本。
 
 ## 文档修改
 
@@ -47,7 +47,17 @@ paper / interview / platform / external research
 
 ## Red / Blue
 
-Red / Blue 是人工协调的 Architecture Review。原始记录进入 `docs/maintenance/history/red-blue/`，但不成为事实源或架构源。Main Judgment 只有在明确接受且单独完成 Architecture/ADR 修改后才进入 canonical 文档；Round 本身不自动触发实现。
+Red / Blue 使用专用 `.agent/red-blue/`，不再混在一般 `.agent/programs/` 中。它是 Interview / Architecture Stress-Test Harness：
+
+```text
+.agent/red-blue/                         machine protocol + active Round state
+docs/maintenance/red-blue/              human workflow
+docs/maintenance/history/red-blue/      closed Round archive
+```
+
+Red 从精确简历 Claim 出发，可以读取批准的真实面试语料校准 interviewer pressure；Blue 使用同一份简历快照和允许的 Zuno canonical docs，尤其优先从 Project / Architecture / Module Part A 组织回答。面经、八股、用户过去 QA、Red hidden intent 和 Judge 评语不得进入 Blue Closed-book context。
+
+支持 `human-candidate`、`chatgpt-duel` 和 `autonomous-agent`。正式 Agent Round 应隔离 Red / Blue / Judge contexts；Judge 只判 Gap，不给 Blue 补标准答案。原始记录进入 `docs/maintenance/history/red-blue/`，但不成为事实源或架构源。Main Judgment 只有在明确接受且单独完成 Architecture/ADR/Docs/Evidence 修改后才进入 canonical owner；Round 本身不自动触发实现。
 
 ## 清理与收尾
 

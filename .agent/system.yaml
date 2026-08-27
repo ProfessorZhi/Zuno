@@ -16,12 +16,17 @@ runtime_boundary:
   evidence_root: "docs/evidence"
   governance_root: "docs/governance"
   maintenance_root: "docs/maintenance"
+  red_blue_runtime_root: ".agent/red-blue"
+  red_blue_workflow_root: "docs/maintenance/red-blue"
   review_history_root: "docs/maintenance/history/red-blue"
   operations_root: "docs/maintenance/operations"
 
 program_rules:
   current_program_owner: ".agent/programs/current.md"
+  red_blue_current_owner: ".agent/red-blue/current.md"
   implementation_requires_explicit_user_gate: true
+  red_blue_requires_explicit_activation: true
+  blue_closed_book: true
   target_does_not_equal_current: true
   research_does_not_equal_canonical_truth: true
   detail_candidate_does_not_equal_freeze: true
@@ -33,7 +38,7 @@ program_rules:
 local_skill_registry:
   mode: "REPOSITORY_LOCAL_EXPLICIT_ONLY"
   discovery: "EXPLICIT_ONLY"
-  note: "当前仓库没有 active local skill workspace；需要 Red/Blue 或项目恢复时按 AGENTS.md 和 docs/maintenance/history/red-blue/ 的规则人工协调。"
+  note: "当前仓库没有 active local skill workspace；Red/Blue 使用 .agent/red-blue/，其方法稳定后可导出为通用 Skill，但运行时仍读取目标仓库和精确简历快照。"
 
 canonical_owners:
   project_readme: "docs/project/README.md"
@@ -48,6 +53,8 @@ canonical_owners:
   decisions: "docs/decisions/"
   evidence: "docs/evidence/"
   governance: "docs/governance/"
+  red_blue_harness: ".agent/red-blue/"
+  red_blue_workflow: "docs/maintenance/red-blue/README.md"
   review_history: "docs/maintenance/history/red-blue/"
   operations: "docs/maintenance/operations/"
   human_agent_workflow: "docs/maintenance/agent-workflow/README.md"
@@ -92,6 +99,14 @@ skill_routes:
       - "docs/modules/README.md"
       - "docs/evidence/README.md"
       - "docs/maintenance/history/red-blue/README.md"
+  red_blue_interview:
+    read_first:
+      - ".agent/red-blue/README.md"
+      - ".agent/red-blue/current.md"
+      - ".agent/red-blue/protocol.md"
+      - ".agent/red-blue/attack-model.md"
+      - ".agent/red-blue/judge.md"
+      - "docs/maintenance/red-blue/README.md"
   module_design:
     read_first:
       - "docs/architecture/architecture.md"
@@ -139,6 +154,7 @@ skill_routes:
     read_first:
       - "docs/maintenance/README.md"
       - "docs/maintenance/agent-workflow/README.md"
+      - "docs/maintenance/red-blue/README.md"
       - ".agent/references/workflow.md"
 
 verification:
