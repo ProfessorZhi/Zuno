@@ -48,6 +48,8 @@ Part B 把已经理解的设计精确化成 Owner、Contract、状态、事务�
 
 如果一个对象名必须先读 Part B 才知道它为什么存在，Part A 应补概念解释；反过来，如果 Part A 开始连续枚举字段、enum 和 crash-window 表格，则应该下沉到 Part B。
 
+> **第一次阅读到这里可以停。** 你现在只需要能说清三条任务路径的复杂度差异、九个责任域分别保护什么，以及什么时候读 Part A / B / C。下一步应按问题选择一到两个 Module Part A，而不是继续顺序背下面的 Ownership 表、Completion Proof、Cancellation、Late Result 和 Recovery Reference。下面开始更偏向架构维护者和跨模块审查。
+
 ## 修改一个模块时，先定位事实，不要先画调用链
 
 跨模块设计最容易被“谁调用谁”带偏。A 调 B，并不表示 A 拥有 B 的结果；异步消息也不天然比同步 RPC 更解耦。先问当前变化涉及的事实是什么、由谁最终证明、消费者最多能做什么，再决定它通过函数调用、Queue、Event、数据库查询还是缓存传播。
