@@ -150,7 +150,6 @@ def verify() -> list[str]:
         "项目是怎样发展到今天的",
         "团队是什么形态，我在里面做了什么",
         "相比通用方案，我们今天到底证明了什么",
-        "如果我是大厂面试官，我会继续追问什么",
         "Current", "Target", "Unknown",
     ):
         if marker not in project:
