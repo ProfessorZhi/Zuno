@@ -1,0 +1,85 @@
+name: Temporary textbook validator sync
+
+on:
+  push:
+    branches:
+      - docs/textbook-style-rewrite-v1
+
+permissions:
+  contents: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: docs/textbook-style-rewrite-v1
+
+      - name: Update narrative validators without weakening architecture semantics
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          def replace_once(path: str, old: str, new: str) -> None:
+              p = Path(path)
+              text = p.read_text(encoding='utf-8')
+              count = text.count(old)
+              if count != 1:
+                  raise SystemExit(f'{path}: expected exactly one match, got {count}: {old!r}')
+              p.write_text(text.replace(old, new, 1), encoding='utf-8')
+
+          replace_once(
+              'tools/scripts/verify_architecture_document_set.py',
+              'if "9 个 Target Logical Modules" not in design or "Round 02" not in design:',
+              'if "target_logical_module_count: 9" not in design or "overall_architecture_state: ROUND_02_FROZEN" not in design:',
+          )
+          for old, new in (
+              ('"Zuno 面向智慧司法和法律专业工作",', '"Zuno 的总体架构围绕一个问题展开",'),
+              ('"为什么按“事实谁负责”切架构",', '"按事实权威划分责任",'),
+              ('"九个责任域不是九段必须依次经过的流水线",', '"九个逻辑责任域",'),
+              ('"一项复杂机制什么时候应该主动删除",', '"复杂度的退出机制",'),
+              ('"Runtime Control State（运行控制状态）",', '"Runtime Control State",'),
+          ):
+              replace_once('tools/scripts/verify_architecture_document_set.py', old, new)
+
+          replace_once(
+              'tools/scripts/verify_architecture_semantic_alignment.py',
+              '            "如果我是大厂面试官，我会继续追问什么",\n',
+              '',
+          )
+          for old, new in (
+              ('            "为什么按“事实谁负责”切架构",\n', '            "按事实权威划分责任",\n'),
+              ('            "九个责任域不是九段必须依次经过的流水线",\n', '            "九个逻辑责任域",\n'),
+              ('            "一项复杂机制什么时候应该主动删除",\n', '            "复杂度的退出机制",\n'),
+          ):
+              replace_once('tools/scripts/verify_architecture_semantic_alignment.py', old, new)
+
+          replace_once(
+              'tools/scripts/verify_docs_entrypoints.py',
+              '        "如果我是大厂面试官，我会继续追问什么",\n',
+              '',
+          )
+
+          replace_once(
+              'tests/repo/test_docs_entrypoints.py',
+              '        "如果我是大厂面试官，我会继续追问什么",\n',
+              '',
+          )
+          replace_once(
+              'tests/repo/test_docs_entrypoints.py',
+              '    assert "Generic Host（通用 Agent 宿主）" in project\n',
+              '    assert "通用宿主" in project and "Zuno Legal Backend" in project\n',
+          )
+          PY
+
+      - name: Commit validator synchronization
+        shell: bash
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git rm .github/workflows/tmp-textbook-validator-sync.yml
+          git add tools/scripts/verify_architecture_document_set.py tools/scripts/verify_architecture_semantic_alignment.py tools/scripts/verify_docs_entrypoints.py tests/repo/test_docs_entrypoints.py
+          git commit -m 'test: validate textbook narrative by semantics'
+          git push origin HEAD:docs/textbook-style-rewrite-v1
