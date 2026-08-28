@@ -129,20 +129,23 @@ def verify() -> list[str]:
         ),
     )
 
-    responsibility_headings = (
-        "#### 01 Application & Integration（应用与集成）",
-        "#### 02 Legal Domain & Work Product（法律领域与工作成果）",
-        "#### 03 Knowledge & Evidence（知识与证据）",
-        "#### 04 Agent Runtime & Control（智能体运行与控制）",
-        "#### 05 Capability & Skill（专业能力与技能）",
-        "#### 06 Tool Runtime & Effects（工具运行与外部效果）",
-        "#### 07 Model Gateway（模型网关）",
-        "#### 08 Security & Governance（安全与治理）",
-        "#### 09 Observability & Evaluation（可观测性与评测）",
+    # Preserve the canonical 01-09 responsibility order without freezing a particular
+    # Markdown heading level. Textbook prose may present these responsibilities as
+    # headings, bold terms, or another readable form as long as all nine remain ordered.
+    responsibility_markers = (
+        "01 Application & Integration",
+        "02 Legal Domain & Work Product",
+        "03 Knowledge & Evidence",
+        "04 Agent Runtime & Control",
+        "05 Capability & Skill",
+        "06 Tool Runtime & Effects",
+        "07 Model Gateway",
+        "08 Security & Governance",
+        "09 Observability & Evaluation",
     )
-    positions = [architecture.find(marker) for marker in responsibility_headings]
+    positions = [architecture.find(marker) for marker in responsibility_markers]
     if any(position < 0 for position in positions) or positions != sorted(positions):
-        errors.append("architecture responsibility headings must exist in canonical 01-09 order")
+        errors.append("architecture responsibilities must exist in canonical 01-09 order")
 
     for number, text in modules.items():
         _require(errors, f"module {number} template", text, B1_B14_MARKERS + PART_C_MARKERS)
