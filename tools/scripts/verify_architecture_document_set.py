@@ -77,6 +77,9 @@ def verify() -> list[str]:
     if "target_logical_module_count: 9" not in design or "overall_architecture_state: ROUND_02_FROZEN" not in design:
         errors.append("architecture.md must record the frozen nine-module Target and Round 02 source")
 
+    # These markers protect architectural meaning, not one frozen set of natural-language headings.
+    # Human-facing prose may be rewritten as long as the same ownership, recovery and complexity
+    # boundaries remain explicit and the machine-readable freeze metadata is unchanged.
     narrative_markers = (
         "Zuno 的总体架构围绕一个问题展开",
         "简单问答",
