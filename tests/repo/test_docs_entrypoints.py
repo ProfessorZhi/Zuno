@@ -90,10 +90,9 @@ def test_project_documentation_is_consolidated_and_canonical() -> None:
         "项目是怎样发展到今天的",
         "团队是什么形态，我在里面做了什么",
         "相比通用方案，我们今天到底证明了什么",
-        "如果我是大厂面试官，我会继续追问什么",
     ):
         assert marker in project
-    assert "Generic Host（通用 Agent 宿主）" in project
+    assert "通用宿主" in project and "Zuno Legal Backend" in project
     assert "Current" in project and "Target" in project and "Unknown" in project
 
 

@@ -74,17 +74,17 @@ def verify() -> list[str]:
         if marker not in project:
             errors.append(f"project.md missing human narrative marker: {marker}")
 
-    if "9 个 Target Logical Modules" not in design or "Round 02" not in design:
+    if "target_logical_module_count: 9" not in design or "overall_architecture_state: ROUND_02_FROZEN" not in design:
         errors.append("architecture.md must record the frozen nine-module Target and Round 02 source")
 
     narrative_markers = (
-        "Zuno 面向智慧司法和法律专业工作",
+        "Zuno 的总体架构围绕一个问题展开",
         "简单问答",
-        "为什么按“事实谁负责”切架构",
-        "九个责任域不是九段必须依次经过的流水线",
-        "一项复杂机制什么时候应该主动删除",
+        "按事实权威划分责任",
+        "九个逻辑责任域",
+        "复杂度的退出机制",
         "Single Controller",
-        "Runtime Control State（运行控制状态）",
+        "Runtime Control State",
         "AdmissionReceipt",
         "KnowledgeGeneration lifecycle != task-level ReadinessDecision",
         "EvidenceCandidate != Evidence",
