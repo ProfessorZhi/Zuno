@@ -79,13 +79,15 @@ def verify() -> list[str]:
         return errors
 
     design = ARCH.read_text(encoding="utf-8")
+    # Validate durable writing semantics rather than historical FAQ-style wording.
+    # The prose may use Chinese textbook language while preserving the same boundaries.
     for marker in (
         "模块化 Python 后端",
         "独立网络服务",
         "Current",
         "Target",
-        "History",
-        "为什么必须独立服务",
+        "历史",
+        "逻辑边界与物理部署",
         "Reconciliation",
     ):
         if marker not in design:
