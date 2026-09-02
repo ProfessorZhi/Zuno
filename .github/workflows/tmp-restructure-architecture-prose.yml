@@ -1,0 +1,27 @@
+name: Temp restructure architecture prose
+
+on:
+  push:
+    branches:
+      - docs/humanize-architecture-v2
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: docs/humanize-architecture-v2
+          fetch-depth: 0
+      - run: python tools/tmp_restructure_architecture_prose.py
+      - run: |
+          rm tools/tmp_restructure_architecture_prose.py
+          rm .github/workflows/tmp-restructure-architecture-prose.yml
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add -A
+          git commit -m "docs: consolidate architecture prose into chapters"
+          git push origin HEAD:docs/humanize-architecture-v2
