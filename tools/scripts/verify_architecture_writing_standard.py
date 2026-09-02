@@ -57,8 +57,6 @@ def verify() -> list[str]:
         errors.append("missing architecture narrative quality standard")
     else:
         quality_standard = QUALITY_STANDARD.read_text(encoding="utf-8")
-        # These markers verify that the governance layer preserves the intended principles.
-        # They deliberately do not score architecture prose or force identical module templates.
         for marker in (
             "Part A 可以很长，但长度必须来自概念设计",
             "Part A 负责设计思想，Part B 负责设计精度",
@@ -79,19 +77,22 @@ def verify() -> list[str]:
         return errors
 
     design = ARCH.read_text(encoding="utf-8")
-    # Validate durable writing semantics rather than historical FAQ-style wording.
-    # The prose may use Chinese textbook language while preserving the same boundaries.
     for marker in (
+        "# Zuno 目标架构",
+        "从法律问答到法律工作",
+        "事实、版本与权威",
+        "长任务的控制与恢复",
+        "部署与基础设施",
+        "观测、评测与架构演进",
         "模块化 Python 后端",
         "独立网络服务",
-        "Current",
-        "Target",
-        "历史",
-        "逻辑边界与物理部署",
-        "Reconciliation",
+        "Reconcile",
+        "Target Architecture",
     ):
         if marker not in design:
             errors.append(f"architecture.md missing writing marker: {marker}")
+    if "## Part B" in design:
+        errors.append("overall architecture must stay conceptual; detailed Part B belongs to module/ADR documents")
 
     for filename in MODULE_FILES:
         path = MODULES / filename
