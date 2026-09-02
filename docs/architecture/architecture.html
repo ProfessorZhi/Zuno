@@ -9,32 +9,29 @@
     * { box-sizing:border-box; }
     body { margin:0; background:var(--bg); color:var(--ink); font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif; line-height:1.55; }
     a { color:var(--accent); }
-    .layout { display:grid; grid-template-columns:300px minmax(0,1fr); min-height:100vh; }
+    .layout { display:grid; grid-template-columns:280px minmax(0,1fr); min-height:100vh; }
     aside { position:sticky; top:0; height:100vh; overflow:auto; padding:22px 18px; border-right:1px solid var(--line); background:#fafbfc; }
     aside h1 { margin:0 0 6px; font-size:20px; }
     aside p { margin:0 0 14px; color:var(--muted); font-size:13px; }
     .links { display:grid; gap:7px; margin:14px 0; }
     .links a, nav a { display:block; padding:8px 10px; border-radius:8px; text-decoration:none; }
     .links a { border:1px solid var(--line); background:var(--paper); font-size:13px; }
-    nav .group { margin-top:14px; color:var(--muted); font-size:12px; font-weight:700; }
     nav a { color:var(--ink); font-size:13px; }
     nav a:hover { background:var(--soft); color:var(--accent); }
     main { min-width:0; padding:32px 38px 70px; }
     .hero, .diagram-card { background:var(--paper); border:1px solid var(--line); border-radius:14px; box-shadow:0 8px 24px rgba(20,35,50,.07); }
     .hero { padding:24px 26px; }
     .hero h1 { margin:0 0 8px; font-size:clamp(28px,4vw,42px); }
-    .hero p { color:var(--muted); max-width:980px; }
+    .hero p { color:var(--muted); max-width:900px; }
     .facts { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:10px; margin-top:16px; }
     .facts div { padding:11px; background:var(--soft); border-radius:9px; font-size:13px; }
-    .view { margin-top:42px; scroll-margin-top:16px; }
+    .view { margin-top:36px; scroll-margin-top:16px; }
     .view h2 { border-bottom:2px solid var(--line); padding-bottom:9px; }
-    .grid { display:grid; gap:20px; }
     .diagram-card { overflow:hidden; }
     .diagram-head { display:flex; justify-content:space-between; gap:12px; align-items:center; padding:13px 16px; border-bottom:1px solid var(--line); background:#fbfcfd; }
-    .diagram-head h3 { margin:0; font-size:16px; }
-    button { border:1px solid var(--line); border-radius:8px; background:white; padding:6px 9px; cursor:pointer; }
-    .stage { overflow:auto; min-height:210px; padding:22px; }
+    .stage { overflow:auto; min-height:220px; padding:22px; }
     .mermaid { min-width:max-content; text-align:center; }
+    button { border:1px solid var(--line); border-radius:8px; background:white; padding:6px 9px; cursor:pointer; }
     details { border-top:1px solid var(--line); padding:10px 15px 13px; background:#fafbfc; }
     pre { white-space:pre-wrap; word-break:break-word; background:#111827; color:#e5e7eb; padding:13px; border-radius:8px; font-size:12px; }
     dialog { width:min(96vw,1700px); height:94vh; border:0; border-radius:14px; padding:0; }
@@ -49,27 +46,25 @@
 <div class="layout">
   <aside>
     <h1>Zuno Architecture</h1>
-    <p>九个逻辑责任域、Platform / Infrastructure Layer 和 Optional Context Provider 的可视化入口。</p>
+    <p>总体 Target Architecture 的视觉补充。正文负责概念，图只帮助建立整体关系。</p>
     <div class="links">
-      <a href="./architecture.md">阅读文字总架构</a>
-      <a href="../project/project.md">阅读 Project 主文档</a>
+      <a href="./architecture.md">阅读目标架构正文</a>
+      <a href="../project/project.md">阅读项目背景</a>
+      <a href="../modules/README.md">进入模块设计</a>
+      <a href="../evidence/README.md">查看 Current / Evidence</a>
       <a href="../maintenance/history/README.md">查看历史归档</a>
-      <a href="./architecture.md#target-status-boundary">阅读 Target 状态</a>
-      <a href="../evidence/README.md">查看可复现证据</a>
-      <a href="../evidence/README.md">查看 Current / Readiness</a>
-      <a href="./architecture-views.md">查看 Mermaid 图源</a>
-      <a href="../README.md">查看项目文档边界</a>
+      <a href="./architecture-views.md">查看 Mermaid source</a>
     </div>
     <nav id="nav"></nav>
   </aside>
   <main>
     <section class="hero">
       <h1>Zuno Target Architecture</h1>
-      <p>本页展示跨领域、逻辑能力、数据和部署决策视图。专题 Canonical 文档拥有各自问题和事实；本页与 Mermaid 只作展示。</p>
+      <p>六张图分别展示系统上下文、责任域、任务流、事实权威、故障恢复以及部署与演进。它们与 <code>architecture.md</code> 共享同一套 Target，不维护独立的架构真相。</p>
       <div class="facts">
-        <div><strong>责任图：</strong>9 Logical Modules + Platform Layer + Optional Context Provider。</div>
-        <div><strong>Target：</strong>Python-only 模块化后端、必要的独立 Worker、证据门控的物理 Service Split。</div>
-        <div><strong>状态：</strong>Round 02 Overall Architecture 已冻结；9/9 模块达到 Deep Design V2，Module Detail Freeze 仍未完成。</div>
+        <div><strong>设计对象：</strong>9 个逻辑责任域 + Platform / Infrastructure + Optional Context Provider。</div>
+        <div><strong>物理起点：</strong>模块化 Python 后端与按工作负载拆分的 Worker。</div>
+        <div><strong>实施原则：</strong>先稳定事实 Ownership 与恢复语义，再决定数据库、框架和服务拆分。</div>
       </div>
     </section>
     <div id="content"></div>
@@ -84,51 +79,65 @@
 <script type="module">
   import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
   mermaid.initialize({ startOnLoad:false, securityLevel:"strict", theme:"base", flowchart:{curve:"basis",useMaxWidth:false}, sequence:{useMaxWidth:false} });
+
   const slug = value => value.toLowerCase().replace(/[^a-z0-9\u4e00-\u9fff]+/g,"-").replace(/^-|-$/g,"");
+
   function parse(markdown) {
-    const groups=[]; let group=null, view=null, diagram=null, inCode=false, source=[];
-    for (const line of markdown.split(/\r?\n/)) {
-      if (!inCode && line.startsWith("## ")) { group={title:line.slice(3).trim(),views:[]}; groups.push(group); view=null; continue; }
-      if (!inCode && line.startsWith("### ")) { if (!group) continue; view={title:line.slice(4).trim(),diagrams:[]}; group.views.push(view); continue; }
-      if (!inCode && line.startsWith("#### ")) { if (!view) continue; diagram={subtitle:line.slice(5).trim(),source:""}; view.diagrams.push(diagram); continue; }
-      if (!inCode && line.trim()==="```mermaid") { inCode=true; source=[]; continue; }
-      if (inCode && line.trim()==="```") { inCode=false; if (diagram) diagram.source=source.join("\n"); continue; }
+    const views=[];
+    const lines=markdown.split(/\r?\n/);
+    let title=null, inCode=false, source=[];
+    for (const line of lines) {
+      if (!inCode && line.startsWith("## ")) {
+        title=line.slice(3).trim();
+        continue;
+      }
+      if (!inCode && line.trim()==="```mermaid") {
+        inCode=true;
+        source=[];
+        continue;
+      }
+      if (inCode && line.trim()==="```") {
+        inCode=false;
+        if (title) views.push({title,source:source.join("\n")});
+        source=[];
+        continue;
+      }
       if (inCode) source.push(line);
     }
-    return groups;
+    return views;
   }
-  function build(groups) {
+
+  function build(views) {
     const nav=document.querySelector("#nav"), content=document.querySelector("#content");
-    for (const group of groups) {
-      const label=document.createElement("div"); label.className="group"; label.textContent=group.title; nav.appendChild(label);
-      for (const view of group.views) {
-        const id=slug(view.title), link=document.createElement("a"); link.href=`#${id}`; link.textContent=view.title; nav.appendChild(link);
-        const section=document.createElement("section"); section.className="view"; section.id=id;
-        section.innerHTML=`<h2>${view.title}</h2><div class="grid"></div>`;
-        const grid=section.querySelector(".grid");
-        for (const diagram of view.diagrams) {
-          const card=document.createElement("article"); card.className="diagram-card";
-          card.innerHTML=`<div class="diagram-head"><h3>${diagram.subtitle}</h3><button type="button">放大</button></div><div class="stage"><div class="mermaid">${diagram.source}</div></div><details><summary>Mermaid source</summary><pre></pre></details>`;
-          card.querySelector("pre").textContent=diagram.source;
-          card.querySelector("button").addEventListener("click",()=>openDialog(view.title,diagram));
-          grid.appendChild(card);
-        }
-        content.appendChild(section);
-      }
+    for (const view of views) {
+      const id=slug(view.title);
+      const link=document.createElement("a");
+      link.href=`#${id}`;
+      link.textContent=view.title;
+      nav.appendChild(link);
+
+      const section=document.createElement("section");
+      section.className="view";
+      section.id=id;
+      section.innerHTML=`<h2>${view.title}</h2><article class="diagram-card"><div class="diagram-head"><span>Target view</span><button type="button">放大</button></div><div class="stage"><div class="mermaid">${view.source}</div></div><details><summary>Mermaid source</summary><pre></pre></details></article>`;
+      section.querySelector("pre").textContent=view.source;
+      section.querySelector("button").addEventListener("click",()=>openDialog(view));
+      content.appendChild(section);
     }
   }
-  function openDialog(viewTitle,diagram) {
+
+  function openDialog(view) {
     const dialog=document.querySelector("#diagram-dialog"), body=document.querySelector("#dialog-body");
-    document.querySelector("#dialog-title").textContent=`${viewTitle} — ${diagram.subtitle}`;
-    body.innerHTML=`<div class="mermaid">${diagram.source}</div>`;
+    document.querySelector("#dialog-title").textContent=view.title;
+    body.innerHTML=`<div class="mermaid">${view.source}</div>`;
     mermaid.run({nodes:body.querySelectorAll(".mermaid")});
     dialog.showModal();
   }
+
   document.querySelector("#dialog-close").addEventListener("click",()=>document.querySelector("#diagram-dialog").close());
   const response=await fetch("./architecture-views.md");
   if (!response.ok) throw new Error(`Cannot load architecture views: ${response.status}`);
-  const groups=parse(await response.text());
-  build(groups);
+  build(parse(await response.text()));
   await mermaid.run({querySelector:".mermaid"});
 </script>
 </body>
