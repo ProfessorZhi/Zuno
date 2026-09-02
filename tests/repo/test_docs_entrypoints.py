@@ -166,25 +166,32 @@ def test_module_design_is_human_first_complete_and_detail_candidate_9_of_9() -> 
         assert "Failure Injection / Freeze Evidence" in content
 
 
-def test_architecture_markdown_is_conceptual_target_design() -> None:
+def test_architecture_markdown_has_coordinated_human_and_agent_views() -> None:
     renderer = _load_render_architecture()
     design = (REPO_ROOT / "docs/architecture/architecture.md").read_text(encoding="utf-8")
     assert renderer.validate_design(design) == []
     assert design.count("```mermaid") <= 2
     for marker in [
         "# Zuno 目标架构",
-        "## 2. 一件案件里的五种事实",
-        "## 3. 四次跨边界决定系统是否可信",
-        "## 4. 九个责任域如何从这些边界产生",
-        "## 5. 故障以后，先找事实再恢复控制",
-        "## 6. 研究成果怎样变成工程能力",
+        "## Part A — Human Narrative（人类技术叙事）",
+        "### A2. 一件案件里的五种事实",
+        "### A3. 四次跨边界决定系统是否可信",
+        "### A4. 九个责任域如何从这些边界产生",
+        "### A5. 故障以后，先找事实再恢复控制",
+        "### A6. 研究成果怎样变成工程能力",
+        "## Part B — Engineering / Agent Reference（工程 / Agent 参考）",
+        "### B2. Authority / Ownership Matrix",
+        "### B3. Cross-boundary Contract Map",
+        "### B6. Completion Proof / Non-proof",
+        "### B7. Failure Taxonomy / Recovery Order",
+        "### B14. Machine Navigation / Source Precedence",
         "docs/modules/",
         "docs/decisions/",
         "docs/evidence/",
         "docs/research/",
     ]:
         assert marker in design
-    assert "## Part B" not in design
+    assert design.index("## Part A — Human Narrative") < design.index("## Part B — Engineering / Agent Reference")
 
 
 def test_visual_source_matches_canonical_architecture_views() -> None:

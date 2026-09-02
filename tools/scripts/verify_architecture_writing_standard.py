@@ -78,12 +78,11 @@ def verify() -> list[str]:
 
     design = ARCH.read_text(encoding="utf-8")
 
-    # The writing gate protects the presence of an intelligible engineering argument,
-    # not one fixed chapter wording.  The narrative must contain a concrete scenario,
-    # a fact-authority thesis, real failure windows, a simple baseline and a way to
-    # remove unnecessary complexity.
+    # Part A must remain an intelligible engineering argument. Part B is required as
+    # the machine/Agent reference and is validated for cross-module reference coverage.
     for marker in (
         "# Zuno 目标架构",
+        "## Part A — Human Narrative（人类技术叙事）",
         "合同争议事项",
         "不同种类的事实",
         "一件案件里的五种事实",
@@ -98,11 +97,21 @@ def verify() -> list[str]:
         "独立网络服务",
         "Reconcile",
         "Target Architecture",
+        "## Part B — Engineering / Agent Reference（工程 / Agent 参考）",
+        "### B2. Authority / Ownership Matrix",
+        "### B3. Cross-boundary Contract Map",
+        "### B6. Completion Proof / Non-proof",
+        "### B7. Failure Taxonomy / Recovery Order",
+        "### B13. Current / Target / Evidence / Unknown",
+        "### B14. Machine Navigation / Source Precedence",
     ):
         if marker not in design:
             errors.append(f"architecture.md missing writing marker: {marker}")
-    if "## Part B" in design:
-        errors.append("overall architecture must stay conceptual; detailed Part B belongs to module/ADR documents")
+
+    part_a = design.find("## Part A — Human Narrative（人类技术叙事）")
+    part_b = design.find("## Part B — Engineering / Agent Reference（工程 / Agent 参考）")
+    if part_a < 0 or part_b < 0 or part_a >= part_b:
+        errors.append("overall architecture must keep Part A before Part B")
 
     for filename in MODULE_FILES:
         path = MODULES / filename

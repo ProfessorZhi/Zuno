@@ -31,9 +31,11 @@ PROJECT_NARRATIVE_BASELINES = {
     "project.md": (9000, 10, 24),
 }
 
-ARCHITECTURE_MIN_NONSPACE_CHARS = 8000
-ARCHITECTURE_MIN_SECTIONS = 10
-ARCHITECTURE_MIN_PROSE_PARAGRAPHS = 28
+ARCHITECTURE_PART_A_HEADING = "## Part A — Human Narrative"
+ARCHITECTURE_PART_B_HEADING = "## Part B — Engineering / Agent Reference"
+ARCHITECTURE_PART_A_MIN_NONSPACE_CHARS = 8000
+ARCHITECTURE_PART_A_MIN_SUBSECTIONS = 10
+ARCHITECTURE_PART_A_MIN_PROSE_PARAGRAPHS = 28
 
 MODULE_PART_A_HEADING = "## Part A — Human Narrative"
 MODULE_PART_B_HEADING = "## Part B — Engineering / Agent Reference"
@@ -49,6 +51,17 @@ _MACHINE_TOKEN_RE = re.compile(
     r"\b(?:requirement_id|source_boundary|canonical_[a-z_]+)\b)",
     re.IGNORECASE,
 )
+
+
+def _split_architecture_layers(text: str) -> tuple[str, str] | None:
+    if ARCHITECTURE_PART_A_HEADING not in text or ARCHITECTURE_PART_B_HEADING not in text:
+        return None
+    a_start = text.index(ARCHITECTURE_PART_A_HEADING) + len(ARCHITECTURE_PART_A_HEADING)
+    b_pos = text.index(ARCHITECTURE_PART_B_HEADING)
+    if a_start > b_pos:
+        return None
+    b_start = b_pos + len(ARCHITECTURE_PART_B_HEADING)
+    return text[a_start:b_pos], text[b_start:]
 
 
 def _split_module_layers(text: str) -> tuple[str, str, str] | None:
@@ -115,29 +128,40 @@ def verify_text(text: str) -> list[str]:
     if "# Zuno 目标架构" not in text:
         errors.append("missing Zuno target architecture title")
         return errors
-    if "## Part B" in text:
-        errors.append("overall architecture must remain conceptual; detailed Part B belongs to modules/ADR")
-    if not _has_narrative_prose(text):
-        errors.append("architecture must contain explanatory prose")
+
+    layers = _split_architecture_layers(text)
+    if layers is None:
+        return [
+            "overall architecture must contain ordered Part A Human Narrative and "
+            "Part B Engineering / Agent Reference"
+        ]
+    part_a, part_b = layers
+    if not part_b.strip():
+        errors.append("overall architecture Part B must not be empty")
+
+    # Human readability is deliberately measured on Part A only. Part B is expected to
+    # be dense and machine-oriented; semantic validators check its engineering coverage.
+    if not _has_narrative_prose(part_a):
+        errors.append("architecture Part A must contain explanatory prose")
         return errors
 
-    nonspace_chars = _nonspace_chars(text)
-    section_count = len(re.findall(r"(?m)^##\s+", _strip_non_prose_blocks(text)))
-    prose_paragraph_count = len(_prose_paragraphs(text))
-    if nonspace_chars < ARCHITECTURE_MIN_NONSPACE_CHARS:
+    nonspace_chars = _nonspace_chars(part_a)
+    subsection_count = len(re.findall(r"(?m)^###\s+", _strip_non_prose_blocks(part_a)))
+    prose_paragraph_count = len(_prose_paragraphs(part_a))
+    if nonspace_chars < ARCHITECTURE_PART_A_MIN_NONSPACE_CHARS:
         errors.append(
-            "architecture narrative is too thin for the conceptual design baseline "
-            f"({nonspace_chars} non-space chars < {ARCHITECTURE_MIN_NONSPACE_CHARS})"
+            "architecture Part A is too thin for the conceptual design baseline "
+            f"({nonspace_chars} non-space chars < {ARCHITECTURE_PART_A_MIN_NONSPACE_CHARS})"
         )
-    if section_count < ARCHITECTURE_MIN_SECTIONS:
+    if subsection_count < ARCHITECTURE_PART_A_MIN_SUBSECTIONS:
         errors.append(
-            "architecture needs broader conceptual coverage "
-            f"({section_count} sections < {ARCHITECTURE_MIN_SECTIONS})"
+            "architecture Part A needs broader conceptual coverage "
+            f"({subsection_count} subsections < {ARCHITECTURE_PART_A_MIN_SUBSECTIONS})"
         )
-    if prose_paragraph_count < ARCHITECTURE_MIN_PROSE_PARAGRAPHS:
+    if prose_paragraph_count < ARCHITECTURE_PART_A_MIN_PROSE_PARAGRAPHS:
         errors.append(
-            "architecture must contain substantial explanatory prose "
-            f"({prose_paragraph_count} paragraphs < {ARCHITECTURE_MIN_PROSE_PARAGRAPHS})"
+            "architecture Part A must contain substantial explanatory prose "
+            f"({prose_paragraph_count} paragraphs < {ARCHITECTURE_PART_A_MIN_PROSE_PARAGRAPHS})"
         )
     return errors
 
@@ -219,7 +243,8 @@ def verify_module_text(text: str, filename: str) -> list[str]:
 
 
 def warnings_for_text(text: str) -> list[str]:
-    visible = _strip_non_prose_blocks(text)
+    layers = _split_architecture_layers(text)
+    visible = _strip_non_prose_blocks(layers[0] if layers is not None else text)
     matches = _MACHINE_TOKEN_RE.findall(visible)
     if len(matches) < 6:
         return []
@@ -228,7 +253,7 @@ def warnings_for_text(text: str) -> list[str]:
     if len(unique) > 8:
         preview += ", …"
     return [
-        "READABILITY_WARNING: architecture narrative contains many machine-oriented markers "
+        "READABILITY_WARNING: architecture Part A contains many machine-oriented markers "
         f"({preview}); human review is still required."
     ]
 
@@ -253,9 +278,15 @@ def _verify_supporting_boundaries(errors: list[str]) -> None:
         errors.append("missing docs/architecture/README.md")
     else:
         readme = ARCHITECTURE_README.read_text(encoding="utf-8")
-        for filename in ("architecture.md", "architecture-views.md", "architecture.html"):
-            if filename not in readme:
-                errors.append(f"architecture README missing entry: {filename}")
+        for marker in (
+            "architecture.md",
+            "architecture-views.md",
+            "architecture.html",
+            "Part A — Human Narrative",
+            "Part B — Engineering / Agent Reference",
+        ):
+            if marker not in readme:
+                errors.append(f"architecture README missing entry or layer marker: {marker}")
 
     architecture = CANONICAL[0]
     if architecture.exists():
@@ -350,6 +381,8 @@ def main() -> int:
                 f"{filename}: {warning}"
                 for warning in warnings_for_project_text(path.read_text(encoding="utf-8"))
             )
+    for warning in warnings:
+        print(warning, file=sys.stderr)
     print("project, architecture and module human readability structural verification passed.")
     return 0
 
