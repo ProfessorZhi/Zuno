@@ -59,12 +59,19 @@ def test_writing_model_rejects_embedded_part_b_specification() -> None:
 def test_writing_model_rejects_thin_architecture() -> None:
     document = "# Zuno 目标架构\n\n## 1. Design\n\nA short explanation of the system.\n"
     errors = _load().verify_text(document)
-    assert any("too thin" in error or "broader conceptual coverage" in error for error in errors)
+    assert any(
+        "too thin" in error
+        or "broader conceptual coverage" in error
+        or "explanatory prose" in error
+        for error in errors
+    )
 
 
 def test_machine_markers_warn_without_blocking_when_narrative_is_substantial() -> None:
     module = _load()
-    document = _rich_architecture("TARGET_ONLY UNKNOWN requirement_id canonical_question values remain hidden from the reader. ")
+    document = _rich_architecture(
+        "TARGET_ONLY CURRENT_STATE MODULE_STATE NOT_READY UNKNOWN requirement_id canonical_question values remain hidden from the reader. "
+    )
     assert module.verify_text(document) == []
     assert module.warnings_for_text(document)
 
