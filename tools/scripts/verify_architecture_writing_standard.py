@@ -77,13 +77,23 @@ def verify() -> list[str]:
         return errors
 
     design = ARCH.read_text(encoding="utf-8")
+
+    # The writing gate protects the presence of an intelligible engineering argument,
+    # not one fixed chapter wording.  The narrative must contain a concrete scenario,
+    # a fact-authority thesis, real failure windows, a simple baseline and a way to
+    # remove unnecessary complexity.
     for marker in (
         "# Zuno 目标架构",
-        "从法律问答到法律工作",
-        "事实、版本与权威",
-        "长任务的控制与恢复",
-        "部署与基础设施",
-        "观测、评测与架构演进",
+        "合同争议事项",
+        "不同种类的事实",
+        "一件案件里的五种事实",
+        "四次跨边界决定系统是否可信",
+        "Domain commit",
+        "Checkpoint",
+        "Outcome Unknown",
+        "Research Artifact -> Capability -> Provider -> Qualified Provider -> Candidate -> Formal Business Fact",
+        "简单法律问答的 baseline",
+        "复杂度必须在测量中证明收益",
         "模块化 Python 后端",
         "独立网络服务",
         "Reconcile",
