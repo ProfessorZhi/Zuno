@@ -74,12 +74,13 @@ def verify() -> list[str]:
         if marker not in project:
             errors.append(f"project.md missing human narrative marker: {marker}")
 
-    # Protect semantic coverage and governance state, not one fixed natural-language outline.
+    # Protect semantic coverage and the dual-view documentation model, not one prose template.
     for marker in (
         "target_logical_module_count: 9",
         "overall_architecture_state: ROUND_02_FROZEN",
         "implementation_authorization: NO",
         "# Zuno 目标架构",
+        "## Part A — Human Narrative（人类技术叙事）",
         "法律智能真正变难的时刻",
         "一件案件里的五种事实",
         "四次跨边界决定系统是否可信",
@@ -87,6 +88,15 @@ def verify() -> list[str]:
         "故障以后，先找事实再恢复控制",
         "研究成果怎样变成工程能力",
         "复杂度必须在测量中证明收益",
+        "## Part B — Engineering / Agent Reference（工程 / Agent 参考）",
+        "### B1. Scope / Global Invariants",
+        "### B2. Authority / Ownership Matrix",
+        "### B3. Cross-boundary Contract Map",
+        "### B6. Completion Proof / Non-proof",
+        "### B7. Failure Taxonomy / Recovery Order",
+        "### B10. Security / Approval / Human Authority",
+        "### B13. Current / Target / Evidence / Unknown",
+        "### B14. Machine Navigation / Source Precedence",
         "Single Controller",
         "AdmissionReceipt",
         "KnowledgeGeneration lifecycle != task-level ReadinessDecision",
@@ -99,8 +109,10 @@ def verify() -> list[str]:
         if marker not in design:
             errors.append(f"architecture.md missing target architecture marker: {marker}")
 
-    if "## Part B" in design:
-        errors.append("architecture.md must remain conceptual and must not embed a detailed Part B specification")
+    part_a = design.find("## Part A — Human Narrative（人类技术叙事）")
+    part_b = design.find("## Part B — Engineering / Agent Reference（工程 / Agent 参考）")
+    if part_a < 0 or part_b < 0 or part_a >= part_b:
+        errors.append("architecture.md must keep ordered Part A Human Narrative and Part B Engineering / Agent Reference")
 
     for marker in (
         "module_design_baseline: AVAILABLE_V1",
