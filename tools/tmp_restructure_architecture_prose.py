@@ -1,7 +1,8 @@
 from pathlib import Path
 
 ARCH = Path("docs/architecture/architecture.md")
-text = ARCH.read_text(encoding="utf-8")na = text.index("## Part A — Architecture Narrative")
+text = ARCH.read_text(encoding="utf-8")
+a = text.index("## Part A — Architecture Narrative")
 b = text.index("## Part B — Detailed Architecture Specification")
 prefix, part_a, part_b = text[:a], text[a:b], text[b:]
 
