@@ -25,21 +25,19 @@ MODULE_FILES = (
     "09-observability-evaluation.md",
 )
 
-# Regression floors only. They prevent the human narratives from collapsing into a thin
-# index/spec sheet, but they deliberately do not pretend to score prose quality.
+# Regression floors only. They prevent human-facing documents from collapsing into thin
+# index/spec sheets. They intentionally do not reward padding or pretend to score prose quality.
 PROJECT_NARRATIVE_BASELINES = {
-    "project.md": (12000, 14, 28),
+    "project.md": (9000, 10, 24),
 }
 
-PART_A_HEADING = "## Part A — Architecture Narrative"
-PART_B_HEADING = "## Part B — Detailed Architecture Specification"
+ARCHITECTURE_MIN_NONSPACE_CHARS = 8000
+ARCHITECTURE_MIN_SECTIONS = 10
+ARCHITECTURE_MIN_PROSE_PARAGRAPHS = 28
+
 MODULE_PART_A_HEADING = "## Part A — Human Narrative"
 MODULE_PART_B_HEADING = "## Part B — Engineering / Agent Reference"
 MODULE_PART_C_HEADING = "## Part C — Cross-Module Consistency"
-
-ARCHITECTURE_PART_A_MIN_NONSPACE_CHARS = 12000
-ARCHITECTURE_PART_A_MIN_SUBSECTIONS = 12
-ARCHITECTURE_PART_A_MIN_PROSE_PARAGRAPHS = 28
 MODULE_PART_A_MIN_NONSPACE_CHARS = 5500
 MODULE_PART_A_MIN_SUBSECTIONS = 14
 MODULE_PART_A_MIN_PROSE_PARAGRAPHS = 18
@@ -51,26 +49,6 @@ _MACHINE_TOKEN_RE = re.compile(
     r"\b(?:requirement_id|source_boundary|canonical_[a-z_]+)\b)",
     re.IGNORECASE,
 )
-_ENGINEERING_ANCHORS = (
-    "Contract",
-    "State",
-    "Recovery",
-    "Ownership",
-    "Engineering",
-    "Evidence",
-    "Persistence",
-    "Security",
-)
-
-
-def _split_layers(text: str) -> tuple[str, str] | None:
-    if PART_A_HEADING not in text or PART_B_HEADING not in text:
-        return None
-    part_a_start = text.index(PART_A_HEADING) + len(PART_A_HEADING)
-    part_b_start = text.index(PART_B_HEADING)
-    if part_b_start < part_a_start:
-        return None
-    return text[part_a_start:part_b_start], text[part_b_start + len(PART_B_HEADING) :]
 
 
 def _split_module_layers(text: str) -> tuple[str, str, str] | None:
@@ -134,51 +112,33 @@ def _nonspace_chars(text: str) -> int:
 
 def verify_text(text: str) -> list[str]:
     errors: list[str] = []
-    if PART_A_HEADING not in text:
-        errors.append("missing Part A — Architecture Narrative")
-    if PART_B_HEADING not in text:
-        errors.append("missing Part B — Detailed Architecture Specification")
-    if errors:
+    if "# Zuno 目标架构" not in text:
+        errors.append("missing Zuno target architecture title")
+        return errors
+    if "## Part B" in text:
+        errors.append("overall architecture must remain conceptual; detailed Part B belongs to modules/ADR")
+    if not _has_narrative_prose(text):
+        errors.append("architecture must contain explanatory prose")
         return errors
 
-    part_a_position = text.index(PART_A_HEADING)
-    part_b_position = text.index(PART_B_HEADING)
-    if part_b_position < part_a_position:
-        errors.append("Part B must follow Part A")
-        return errors
-
-    layers = _split_layers(text)
-    if layers is None:
-        errors.append("Part A and Part B could not be split in the required order")
-        return errors
-    part_a, part_b = layers
-    if not part_a.strip():
-        errors.append("Part A must not be empty")
-    elif not _has_narrative_prose(part_a):
-        errors.append("Part A must contain explanatory prose")
-    else:
-        nonspace_chars = _nonspace_chars(part_a)
-        subsection_count = len(re.findall(r"(?m)^###\s+", part_a))
-        prose_paragraph_count = len(_prose_paragraphs(part_a))
-        if nonspace_chars < ARCHITECTURE_PART_A_MIN_NONSPACE_CHARS:
-            errors.append(
-                "architecture Part A is too thin for the current human-first baseline "
-                f"({nonspace_chars} non-space chars < {ARCHITECTURE_PART_A_MIN_NONSPACE_CHARS})"
-            )
-        if subsection_count < ARCHITECTURE_PART_A_MIN_SUBSECTIONS:
-            errors.append(
-                "architecture Part A needs broader narrative coverage "
-                f"({subsection_count} subsections < {ARCHITECTURE_PART_A_MIN_SUBSECTIONS})"
-            )
-        if prose_paragraph_count < ARCHITECTURE_PART_A_MIN_PROSE_PARAGRAPHS:
-            errors.append(
-                "architecture Part A must contain substantial explanatory prose "
-                f"({prose_paragraph_count} paragraphs < {ARCHITECTURE_PART_A_MIN_PROSE_PARAGRAPHS})"
-            )
-    if not part_b.strip():
-        errors.append("Part B must not be empty")
-    elif not any(anchor in part_b for anchor in _ENGINEERING_ANCHORS):
-        errors.append("Part B must contain an engineering reference anchor")
+    nonspace_chars = _nonspace_chars(text)
+    section_count = len(re.findall(r"(?m)^##\s+", _strip_non_prose_blocks(text)))
+    prose_paragraph_count = len(_prose_paragraphs(text))
+    if nonspace_chars < ARCHITECTURE_MIN_NONSPACE_CHARS:
+        errors.append(
+            "architecture narrative is too thin for the conceptual design baseline "
+            f"({nonspace_chars} non-space chars < {ARCHITECTURE_MIN_NONSPACE_CHARS})"
+        )
+    if section_count < ARCHITECTURE_MIN_SECTIONS:
+        errors.append(
+            "architecture needs broader conceptual coverage "
+            f"({section_count} sections < {ARCHITECTURE_MIN_SECTIONS})"
+        )
+    if prose_paragraph_count < ARCHITECTURE_MIN_PROSE_PARAGRAPHS:
+        errors.append(
+            "architecture must contain substantial explanatory prose "
+            f"({prose_paragraph_count} paragraphs < {ARCHITECTURE_MIN_PROSE_PARAGRAPHS})"
+        )
     return errors
 
 
@@ -195,12 +155,12 @@ def verify_project_text(text: str, filename: str) -> list[str]:
 
     if nonspace_chars < min_chars:
         errors.append(
-            f"{filename}: project narrative is too thin for its current human-first baseline "
+            f"{filename}: project narrative is too thin for its regression baseline "
             f"({nonspace_chars} non-space chars < {min_chars})"
         )
     if subsection_count < min_sections:
         errors.append(
-            f"{filename}: project narrative needs broader question coverage "
+            f"{filename}: project narrative needs broader coverage "
             f"({subsection_count} sections < {min_sections})"
         )
     if prose_paragraph_count < min_paragraphs:
@@ -247,7 +207,7 @@ def verify_module_text(text: str, filename: str) -> list[str]:
     if prose_paragraph_count < MODULE_PART_A_MIN_PROSE_PARAGRAPHS:
         errors.append(
             f"{filename}: Part A must contain substantial explanatory prose, not mainly tables/lists "
-            f"({prose_paragraph_count} prose paragraphs < {MODULE_PART_A_MIN_PROSE_PARAGRAPHS})"
+            f"({prose_paragraph_count} paragraphs < {MODULE_PART_A_MIN_PROSE_PARAGRAPHS})"
         )
     if "### 当前、目标与缺口" not in part_a:
         errors.append(f"{filename}: Part A must close with an explicit Current / Target / Gap narrative")
@@ -258,23 +218,17 @@ def verify_module_text(text: str, filename: str) -> list[str]:
     return errors
 
 
-def warnings_for_text(text: str, part_a_heading: str = PART_A_HEADING, part_b_heading: str = PART_B_HEADING) -> list[str]:
-    if part_a_heading not in text or part_b_heading not in text:
-        return []
-    a_start = text.index(part_a_heading) + len(part_a_heading)
-    b_pos = text.index(part_b_heading)
-    if b_pos < a_start:
-        return []
-    part_a = text[a_start:b_pos]
-    matches = _MACHINE_TOKEN_RE.findall(part_a)
-    if len(matches) < 3:
+def warnings_for_text(text: str) -> list[str]:
+    visible = _strip_non_prose_blocks(text)
+    matches = _MACHINE_TOKEN_RE.findall(visible)
+    if len(matches) < 6:
         return []
     unique = sorted(set(matches), key=str.casefold)
     preview = ", ".join(unique[:8])
     if len(unique) > 8:
         preview += ", …"
     return [
-        "READABILITY_WARNING: Part A contains machine-oriented markers "
+        "READABILITY_WARNING: architecture narrative contains many machine-oriented markers "
         f"({preview}); human review is still required."
     ]
 
@@ -396,20 +350,6 @@ def main() -> int:
                 f"{filename}: {warning}"
                 for warning in warnings_for_project_text(path.read_text(encoding="utf-8"))
             )
-    for filename in MODULE_FILES:
-        path = MODULES_ROOT / filename
-        if path.exists():
-            warnings.extend(
-                f"{filename}: {warning}"
-                for warning in warnings_for_text(
-                    path.read_text(encoding="utf-8"),
-                    MODULE_PART_A_HEADING,
-                    MODULE_PART_B_HEADING,
-                )
-            )
-    for warning in warnings:
-        print(warning)
-
     print("project, architecture and module human readability structural verification passed.")
     return 0
 
