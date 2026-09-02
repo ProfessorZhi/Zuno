@@ -58,8 +58,8 @@ def verify() -> list[str]:
         "../project/project.md",
         "../modules/",
         "../decisions/",
+        "../research/",
         "../evidence/",
-        "ADR",
     ):
         if marker not in arch_index:
             errors.append(f"architecture README missing boundary marker: {marker}")
@@ -74,42 +74,30 @@ def verify() -> list[str]:
         if marker not in project:
             errors.append(f"project.md missing human narrative marker: {marker}")
 
-    if "target_logical_module_count: 9" not in design or "overall_architecture_state: ROUND_02_FROZEN" not in design:
-        errors.append("architecture.md must record the frozen nine-module Target and Round 02 source")
-
-    # These markers protect architectural meaning, not one frozen set of natural-language headings.
-    # Human-facing prose may be rewritten as long as the same ownership, recovery and complexity
-    # boundaries remain explicit and the machine-readable freeze metadata is unchanged.
-    narrative_markers = (
-        "Zuno 的总体架构围绕一个问题展开",
-        "简单问答",
-        "按事实权威划分责任",
-        "九个逻辑责任域",
-        "复杂度的退出机制",
+    for marker in (
+        "target_logical_module_count: 9",
+        "overall_architecture_state: ROUND_02_FROZEN",
+        "implementation_authorization: NO",
+        "# Zuno 目标架构",
+        "## 2. 总体模型",
+        "## 4. 九个逻辑责任域",
+        "## 5. 事实、版本与权威",
+        "## 6. 长任务的控制与恢复",
+        "## 9. 部署与基础设施",
+        "## 10. 观测、评测与架构演进",
         "Single Controller",
-        "Runtime Control State",
         "AdmissionReceipt",
         "KnowledgeGeneration lifecycle != task-level ReadinessDecision",
         "EvidenceCandidate != Evidence",
         "CitationLineage != WorkProductCitationBinding",
         "Retry != Replan != Reconcile",
         "EffectReceipt",
-        "AuditPersistenceReceipt",
-    )
-    for marker in narrative_markers:
-        if marker not in design:
-            errors.append(f"architecture.md missing current narrative marker: {marker}")
-
-    for marker in (
-        "module_design_baseline: AVAILABLE_V1",
-        "module_deep_design: AVAILABLE_V2",
-        "module_deep_design_coverage: 9/9",
-        "cross_module_consistency: AVAILABLE_V1",
-        "module_detail_freeze: NOT_YET",
-        "implementation_authorization: NO",
     ):
         if marker not in design:
-            errors.append(f"architecture.md missing module governance marker: {marker}")
+            errors.append(f"architecture.md missing target architecture marker: {marker}")
+
+    if "## Part B" in design:
+        errors.append("architecture.md must remain conceptual and must not embed a detailed Part B specification")
 
     for marker in (
         "module_design_baseline: AVAILABLE_V1",
