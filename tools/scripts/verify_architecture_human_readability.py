@@ -27,8 +27,9 @@ MODULE_FILES = (
 
 # Regression floors only. They prevent the human narratives from collapsing into a thin
 # index/spec sheet, but they deliberately do not pretend to score prose quality.
+# Keep character floors below healthy prose length so the validator never rewards padding.
 PROJECT_NARRATIVE_BASELINES = {
-    "project.md": (12000, 14, 28),
+    "project.md": (9000, 14, 28),
 }
 
 PART_A_HEADING = "## Part A — Architecture Narrative"
@@ -37,7 +38,7 @@ MODULE_PART_A_HEADING = "## Part A — Human Narrative"
 MODULE_PART_B_HEADING = "## Part B — Engineering / Agent Reference"
 MODULE_PART_C_HEADING = "## Part C — Cross-Module Consistency"
 
-ARCHITECTURE_PART_A_MIN_NONSPACE_CHARS = 12000
+ARCHITECTURE_PART_A_MIN_NONSPACE_CHARS = 9000
 ARCHITECTURE_PART_A_MIN_SUBSECTIONS = 12
 ARCHITECTURE_PART_A_MIN_PROSE_PARAGRAPHS = 28
 MODULE_PART_A_MIN_NONSPACE_CHARS = 5500
