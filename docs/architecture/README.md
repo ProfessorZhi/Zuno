@@ -4,7 +4,9 @@
 
 这套总体架构不从九个模块开始，也不从 LangGraph、RAG 或数据库开始。它围绕一条更稳定的主线展开：**一个法律任务会同时产生材料与知识事实、机器候选、正式法律事实、运行控制事实和现实副作用；每一种事实都需要自己的权威来源，跨越边界时要留下可用于恢复和审计的因果凭据。** 九个责任域是这些约束长期稳定以后形成的 Ownership 结果。
 
-这里不证明今天已经实现了什么，也不展开数据库字段、ORM、API 枚举和逐模块状态机。总体架构先把业务约束、事实权威、跨边界转换、故障恢复、安全和演进关系讲清楚；实施时再进入模块文档、ADR 和 Evidence。
+`architecture.md` 同时维护两种协调视图。**Part A — Human Narrative** 给人连续阅读，解释问题、失败场景、设计因果和取舍；**Part B — Engineering / Agent Reference** 给 Agent、Reviewer 和实现任务快速定位跨模块 Authority、Contract、Completion Proof、Recovery、Version、Security 与 Current/Target 边界。两部分维护同一套架构事实，只是信息密度和组织方式不同。
+
+Part B 不复制九个模块的局部字段、完整状态机、API 或 Migration 规格。总体 Part B 负责跨模块规范和机器导航；需要模块内部精度时继续进入对应 Module 的 Part B / Part C、ADR 和 Evidence。
 
 ## 文档结构
 
@@ -17,7 +19,7 @@ architecture-views.md
 architecture.html
 ```
 
-- [`architecture.md`](architecture.md)：Zuno 唯一的总体 Target Architecture 正文。用一项持续演进的法律任务解释事实、边界、Owner 和恢复。
+- [`architecture.md`](architecture.md)：Zuno 唯一的总体 Target Architecture 正文，包含 Part A Human Narrative 与 Part B Engineering / Agent Reference。
 - [`architecture-views.md`](architecture-views.md)：与正文配套的 Mermaid 图源。图帮助理解，不维护第二套架构事实。
 - [`architecture.html`](architecture.html)：图形阅读入口，直接加载同一份 Mermaid 图源。
 - `README.md`：说明文档边界和阅读顺序。
@@ -25,7 +27,7 @@ architecture.html
 总体架构之外的精度分别放在其他知识面：
 
 - [`../project/project.md`](../project/project.md)：项目为什么存在、历史背景和业务约束。
-- [`../modules/`](../modules/README.md)：九个责任域内部的 Contract、State、Failure、Recovery 和实施设计。
+- [`../modules/`](../modules/README.md)：九个责任域内部的 Contract、State、Failure、Recovery、Cross-Module Consistency 和实施设计。
 - [`../decisions/`](../decisions/README.md)：已经接受的重要架构决策及其理由。
 - [`../research/`](../research/README.md)：论文、框架和外部研究如何影响设计方向。
 - [`../evidence/`](../evidence/README.md)：代码、测试、Eval、性能和生产资格等 Current 证据。
@@ -58,25 +60,27 @@ Platform / Infrastructure 作为底层责任层提供数据库、对象存储、
 
 ## 推荐阅读顺序
 
-理解 Zuno 时，先从项目问题进入，再沿着事实权威和故障恢复读总体架构：
+第一次作为人理解 Zuno：
 
 ```text
 ../project/project.md
-→ architecture.md
+→ architecture.md Part A
 → architecture-views.md
 → ../modules/README.md
-→ 目标模块文档
+→ 目标 Module Part A
 ```
 
-开始实施某一部分时：
+Agent、Architecture Reviewer 或实现任务定位精确边界：
 
 ```text
-目标模块
+architecture.md Part B
+→ 目标 Module Part B / Part C
 → 相关 ADR
-→ 数据模型 / API / Migration / Worker 设计
-→ 测试与故障注入
 → docs/evidence/
+→ 必要时再进入代码 / Schema / Migration
 ```
+
+Part A 回答“为什么”，Part B 回答“谁拥有、跨什么边界、怎样证明、失败后先查什么”。如果问题是“今天是否已经实现”，任何 Target 文档都不能替代 Evidence。
 
 Research 用来提出和校准方案，Evidence 用来决定方案是否真的成立。论文、框架或设计文档本身都不能证明 Zuno 已经具备对应能力。
 
@@ -93,4 +97,4 @@ Research 用来提出和校准方案，Evidence 用来决定方案是否真的�
 
 Provider、SDK、ORM 字段、Queue、Cache、索引实现和部署参数变化，如果没有改变上述语义，就属于模块或实现层调整。
 
-目标是让 `architecture.md` 始终像一篇能够连续阅读的系统设计文档：读者先理解一个事实为什么可信，再理解哪个模块负责它；而不是从模块名称倒推系统的问题。
+Part A 可以为了更好的阅读体验调整叙事顺序，Part B 可以为了机器检索调整索引结构；两边的 Owner、Authority、Completion Proof、Recovery、Security 和 Current/Target 不得出现两套答案。Human readability 校验只约束 Part A 的叙事质量，机器语义校验同时要求 Part B 存在并覆盖跨模块工程边界。
