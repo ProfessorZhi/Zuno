@@ -40,15 +40,25 @@ def _section(content: str, title: str) -> str:
 def validate_design(content: str) -> list[str]:
     required_sections = [
         "# Zuno 目标架构",
-        "## 1. 法律智能真正变难的时刻",
-        "## 2. 一件案件里的五种事实",
-        "## 3. 四次跨边界决定系统是否可信",
-        "## 4. 九个责任域如何从这些边界产生",
-        "## 5. 故障以后，先找事实再恢复控制",
-        "## 6. 研究成果怎样变成工程能力",
-        "## 7. 安全、人和时间",
-        "## 8. 复杂度必须在测量中证明收益",
-        "## 9. 从目标架构进入实施",
+        "## Part A — Human Narrative（人类技术叙事）",
+        "### A1. 法律智能真正变难的时刻",
+        "### A2. 一件案件里的五种事实",
+        "### A3. 四次跨边界决定系统是否可信",
+        "### A4. 九个责任域如何从这些边界产生",
+        "### A5. 故障以后，先找事实再恢复控制",
+        "### A6. 研究成果怎样变成工程能力",
+        "### A7. 安全、人和时间",
+        "### A8. 复杂度必须在测量中证明收益",
+        "### A9. 从目标架构进入实施",
+        "## Part B — Engineering / Agent Reference（工程 / Agent 参考）",
+        "### B1. Scope / Global Invariants",
+        "### B2. Authority / Ownership Matrix",
+        "### B3. Cross-boundary Contract Map",
+        "### B6. Completion Proof / Non-proof",
+        "### B7. Failure Taxonomy / Recovery Order",
+        "### B10. Security / Approval / Human Authority",
+        "### B13. Current / Target / Evidence / Unknown",
+        "### B14. Machine Navigation / Source Precedence",
     ]
     required_terms = [
         "Application & Integration",
@@ -102,10 +112,12 @@ def validate_design(content: str) -> list[str]:
         if marker not in content:
             errors.append(f"architecture.md missing governance marker: {marker}")
 
-    if "## Part B" in content or "### B1 " in content:
-        errors.append("overall architecture must remain conceptual; detailed Part B specifications belong to modules/ADR")
+    part_a = content.find("## Part A — Human Narrative（人类技术叙事）")
+    part_b = content.find("## Part B — Engineering / Agent Reference（工程 / Agent 参考）")
+    if part_a < 0 or part_b < 0 or part_a >= part_b:
+        errors.append("overall architecture must contain ordered Part A Human Narrative and Part B Engineering / Agent Reference")
     if content.count("```mermaid") > 2:
-        errors.append("architecture.md should remain prose-first; diagrams belong in architecture-views.md")
+        errors.append("architecture.md should remain prose/reference-first; diagrams belong in architecture-views.md")
     return errors
 
 
