@@ -26,10 +26,13 @@ def test_presentation_pair_remains_intact() -> None:
     assert (REPO_ROOT / "docs/architecture/architecture.html").exists()
 
 
-def _rich_architecture(prefix: str = "") -> str:
-    parts = ["# Zuno 目标架构\n\n"]
+def _rich_architecture(prefix: str = "", part_b: str | None = None) -> str:
+    parts = [
+        "# Zuno 目标架构\n\n",
+        "## Part A — Human Narrative（人类技术叙事）\n\n",
+    ]
     for index in range(1, 13):
-        parts.append(f"## {index}. Architecture concept {index}\n\n")
+        parts.append(f"### A{index}. Architecture concept {index}\n\n")
         for paragraph in range(3):
             lead = prefix if index == 1 and paragraph == 0 else ""
             parts.append(
@@ -37,27 +40,57 @@ def _rich_architecture(prefix: str = "") -> str:
                 + "A conceptual target architecture explains a concrete system problem, the durable fact that must be protected, "
                 "the owner responsible for that fact, the normal flow, realistic failure consequences, recovery choices and trade-offs. "
                 "The prose is intentionally complete enough that an engineer can understand why the boundary exists before reading module contracts. "
-                "A simpler design remains valid whenever the stronger mechanism has no demonstrated need, and implementation details stay outside the overall architecture.\n\n"
+                "A simpler design remains valid whenever the stronger mechanism has no demonstrated need, and implementation detail stays outside Part A.\n\n"
             )
+    parts.extend(
+        [
+            "## Part B — Engineering / Agent Reference（工程 / Agent 参考）\n\n",
+            part_b
+            or (
+                "### B1. Scope / Global Invariants\n\n"
+                "Owner, Authority, Completion Proof, Recovery and Current/Target are indexed here for machine consumption.\n"
+            ),
+        ]
+    )
     return "".join(parts)
 
 
-def test_writing_model_accepts_substantial_conceptual_architecture() -> None:
+def test_writing_model_accepts_substantial_dual_view_architecture() -> None:
     assert _load().verify_text(_rich_architecture()) == []
 
 
 def test_writing_model_rejects_missing_target_architecture_title() -> None:
-    errors = _load().verify_text("## 1. Design\nThe system serves a concrete user need.")
+    errors = _load().verify_text(
+        "## Part A — Human Narrative\nA concrete user need.\n\n"
+        "## Part B — Engineering / Agent Reference\nOwner.\n"
+    )
     assert any("missing Zuno target architecture title" in error for error in errors)
 
 
-def test_writing_model_rejects_embedded_part_b_specification() -> None:
-    document = _rich_architecture() + "\n## Part B — Detailed Architecture Specification\nContract\n"
-    assert any("must remain conceptual" in error for error in _load().verify_text(document))
+def test_writing_model_rejects_missing_part_b_reference() -> None:
+    document = _rich_architecture().split("## Part B — Engineering / Agent Reference", 1)[0]
+    assert any("Part B Engineering / Agent Reference" in error for error in _load().verify_text(document))
 
 
-def test_writing_model_rejects_thin_architecture() -> None:
-    document = "# Zuno 目标架构\n\n## 1. Design\n\nA short explanation of the system.\n"
+def test_machine_dense_part_b_does_not_reduce_part_a_readability() -> None:
+    machine_reference = (
+        "### B1. Scope / Global Invariants\n\n"
+        "TARGET_ONLY CURRENT_STATE MODULE_STATE NOT_READY UNKNOWN requirement_id canonical_question.\n"
+        "### B2. Authority / Ownership Matrix\n\nOwner -> Authority -> Receipt -> Recovery.\n"
+    )
+    document = _rich_architecture(part_b=machine_reference)
+    assert _load().verify_text(document) == []
+    assert _load().warnings_for_text(document) == []
+
+
+def test_writing_model_rejects_thin_architecture_part_a() -> None:
+    document = (
+        "# Zuno 目标架构\n\n"
+        "## Part A — Human Narrative（人类技术叙事）\n\n"
+        "### A1. Design\n\nA short explanation of the system.\n\n"
+        "## Part B — Engineering / Agent Reference（工程 / Agent 参考）\n\n"
+        "### B1. Scope / Global Invariants\n\nOwner facts.\n"
+    )
     errors = _load().verify_text(document)
     assert any(
         "too thin" in error
@@ -67,7 +100,7 @@ def test_writing_model_rejects_thin_architecture() -> None:
     )
 
 
-def test_machine_markers_warn_without_blocking_when_narrative_is_substantial() -> None:
+def test_machine_markers_warn_without_blocking_when_part_a_is_substantial() -> None:
     module = _load()
     document = _rich_architecture(
         "TARGET_ONLY CURRENT_STATE MODULE_STATE NOT_READY UNKNOWN requirement_id canonical_question values remain hidden from the reader. "
@@ -85,12 +118,16 @@ def test_project_narrative_meets_regression_floor() -> None:
         assert len(verifier._prose_paragraphs(text)) >= min_paragraphs, filename
 
 
-def test_architecture_meets_conceptual_depth_floor() -> None:
+def test_architecture_part_a_meets_conceptual_depth_floor() -> None:
     verifier = _load()
     text = (REPO_ROOT / "docs/architecture/architecture.md").read_text(encoding="utf-8")
-    assert verifier._nonspace_chars(text) >= verifier.ARCHITECTURE_MIN_NONSPACE_CHARS
-    assert len(verifier._prose_paragraphs(text)) >= verifier.ARCHITECTURE_MIN_PROSE_PARAGRAPHS
-    assert len(re.findall(r"(?m)^##\s+", verifier._strip_non_prose_blocks(text))) >= verifier.ARCHITECTURE_MIN_SECTIONS
+    layers = verifier._split_architecture_layers(text)
+    assert layers is not None
+    part_a, part_b = layers
+    assert part_b.strip()
+    assert verifier._nonspace_chars(part_a) >= verifier.ARCHITECTURE_PART_A_MIN_NONSPACE_CHARS
+    assert len(verifier._prose_paragraphs(part_a)) >= verifier.ARCHITECTURE_PART_A_MIN_PROSE_PARAGRAPHS
+    assert len(re.findall(r"(?m)^###\s+", part_a)) >= verifier.ARCHITECTURE_PART_A_MIN_SUBSECTIONS
 
 
 def test_all_nine_module_part_a_sections_meet_current_depth_floor() -> None:
