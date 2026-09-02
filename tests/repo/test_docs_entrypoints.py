@@ -7,10 +7,12 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 EXPECTED_VIEWS = [
-    "Product Context View", "Business Flow View", "Logical Capability View", "Provider Boundary View",
-    "Domain State View", "Staleness and Review View", "Agent Runtime View", "Runtime and Domain State View",
-    "Physical Deployment Decision View", "Deployment Profiles View", "Data Ownership View", "Failure and Recovery View",
-    "A/B/C Eval View", "Security Verification View",
+    "System Context View",
+    "Responsibility View",
+    "Task Flow View",
+    "Authority and State View",
+    "Recovery View",
+    "Deployment and Evolution View",
 ]
 CANONICAL_ARCHITECTURE_FILES = {"README.md", "architecture.md", "architecture-views.md", "architecture.html"}
 CANONICAL_PROJECT_FILES = {"README.md", "project.md"}
@@ -164,13 +166,23 @@ def test_module_design_is_human_first_complete_and_detail_candidate_9_of_9() -> 
         assert "Failure Injection / Freeze Evidence" in content
 
 
-def test_architecture_markdown_is_integration_first() -> None:
+def test_architecture_markdown_is_conceptual_target_design() -> None:
     renderer = _load_render_architecture()
     design = (REPO_ROOT / "docs/architecture/architecture.md").read_text(encoding="utf-8")
     assert renderer.validate_design(design) == []
-    assert design.count("```mermaid") <= 6
-    for marker in ["docs/maintenance/history/", "docs/project/", "Part A — Architecture Narrative", "Part B — Detailed Architecture Specification"]:
+    assert design.count("```mermaid") <= 2
+    for marker in [
+        "# Zuno 目标架构",
+        "## 2. 总体模型",
+        "## 4. 九个逻辑责任域",
+        "## 6. 长任务的控制与恢复",
+        "docs/modules/",
+        "docs/decisions/",
+        "docs/evidence/",
+        "docs/research/",
+    ]:
         assert marker in design
+    assert "## Part B" not in design
 
 
 def test_visual_source_matches_canonical_architecture_views() -> None:
@@ -181,15 +193,16 @@ def test_visual_source_matches_canonical_architecture_views() -> None:
     assert views.count("```mermaid") == len(EXPECTED_VIEWS)
 
 
-def test_architecture_html_routes_to_current_project_and_history() -> None:
+def test_architecture_html_routes_to_current_architecture_sources() -> None:
     renderer = _load_render_architecture()
     html = (REPO_ROOT / "docs/architecture/architecture.html").read_text(encoding="utf-8")
     assert renderer.validate_html(html) == []
     for phrase in [
         "./architecture.md", "../project/project.md", "../maintenance/history/README.md",
-        "./architecture.md#target-status-boundary", "../evidence/README.md", "./architecture-views.md",
+        "../evidence/README.md", "./architecture-views.md",
     ]:
         assert phrase in html
+    assert "./architecture.md#target-status-boundary" not in html
 
 
 def test_renderer_checks_formal_architecture_surface() -> None:
