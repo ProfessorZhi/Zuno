@@ -11,10 +11,10 @@ VIEWS_PATH = REPO_ROOT / "docs/architecture/architecture-views.md"
 HTML_PATH = REPO_ROOT / "docs/architecture/architecture.html"
 
 EXPECTED_VIEWS = [
-    "System Context View",
+    "Case Timeline View",
+    "Fact Authority View",
+    "Boundary Transition View",
     "Responsibility View",
-    "Task Flow View",
-    "Authority and State View",
     "Recovery View",
     "Deployment and Evolution View",
 ]
@@ -40,18 +40,15 @@ def _section(content: str, title: str) -> str:
 def validate_design(content: str) -> list[str]:
     required_sections = [
         "# Zuno 目标架构",
-        "## 1. 从法律问答到法律工作",
-        "## 2. 总体模型",
-        "## 3. 一项任务怎样穿过系统",
-        "## 4. 九个逻辑责任域",
-        "## 5. 事实、版本与权威",
-        "## 6. 长任务的控制与恢复",
-        "## 7. 知识、能力与模型",
-        "## 8. 安全、人工判断与现实副作用",
-        "## 9. 部署与基础设施",
-        "## 10. 观测、评测与架构演进",
-        "## 11. 实施时必须保持的架构不变量",
-        "## 12. 从架构进入实施",
+        "## 1. 法律智能真正变难的时刻",
+        "## 2. 一件案件里的五种事实",
+        "## 3. 四次跨边界决定系统是否可信",
+        "## 4. 九个责任域如何从这些边界产生",
+        "## 5. 故障以后，先找事实再恢复控制",
+        "## 6. 研究成果怎样变成工程能力",
+        "## 7. 安全、人和时间",
+        "## 8. 复杂度必须在测量中证明收益",
+        "## 9. 从目标架构进入实施",
     ]
     required_terms = [
         "Application & Integration",
@@ -70,6 +67,7 @@ def validate_design(content: str) -> list[str]:
         "EvidenceCandidate != Evidence",
         "CitationLineage != WorkProductCitationBinding",
         "Retry != Replan != Reconcile",
+        "PreparedAction",
         "EffectReceipt",
         "Reconcile",
         "模块化 Python 后端",
