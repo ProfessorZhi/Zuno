@@ -74,23 +74,26 @@ def verify() -> list[str]:
         if marker not in project:
             errors.append(f"project.md missing human narrative marker: {marker}")
 
+    # Protect semantic coverage and governance state, not one fixed natural-language outline.
     for marker in (
         "target_logical_module_count: 9",
         "overall_architecture_state: ROUND_02_FROZEN",
         "implementation_authorization: NO",
         "# Zuno 目标架构",
-        "## 2. 总体模型",
-        "## 4. 九个逻辑责任域",
-        "## 5. 事实、版本与权威",
-        "## 6. 长任务的控制与恢复",
-        "## 9. 部署与基础设施",
-        "## 10. 观测、评测与架构演进",
+        "法律智能真正变难的时刻",
+        "一件案件里的五种事实",
+        "四次跨边界决定系统是否可信",
+        "九个责任域如何从这些边界产生",
+        "故障以后，先找事实再恢复控制",
+        "研究成果怎样变成工程能力",
+        "复杂度必须在测量中证明收益",
         "Single Controller",
         "AdmissionReceipt",
         "KnowledgeGeneration lifecycle != task-level ReadinessDecision",
         "EvidenceCandidate != Evidence",
         "CitationLineage != WorkProductCitationBinding",
         "Retry != Replan != Reconcile",
+        "PreparedAction",
         "EffectReceipt",
     ):
         if marker not in design:
