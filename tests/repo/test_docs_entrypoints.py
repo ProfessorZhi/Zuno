@@ -7,10 +7,10 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 EXPECTED_VIEWS = [
-    "System Context View",
+    "Case Timeline View",
+    "Fact Authority View",
+    "Boundary Transition View",
     "Responsibility View",
-    "Task Flow View",
-    "Authority and State View",
     "Recovery View",
     "Deployment and Evolution View",
 ]
@@ -173,9 +173,11 @@ def test_architecture_markdown_is_conceptual_target_design() -> None:
     assert design.count("```mermaid") <= 2
     for marker in [
         "# Zuno 目标架构",
-        "## 2. 总体模型",
-        "## 4. 九个逻辑责任域",
-        "## 6. 长任务的控制与恢复",
+        "## 2. 一件案件里的五种事实",
+        "## 3. 四次跨边界决定系统是否可信",
+        "## 4. 九个责任域如何从这些边界产生",
+        "## 5. 故障以后，先找事实再恢复控制",
+        "## 6. 研究成果怎样变成工程能力",
         "docs/modules/",
         "docs/decisions/",
         "docs/evidence/",

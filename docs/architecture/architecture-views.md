@@ -6,195 +6,167 @@ updated: 2026-09-02
 status: normative-target-visual-source
 text_design_source: `docs/architecture/architecture.md`
 
-## System Context View
+## Case Timeline View
 
 ```mermaid
 flowchart LR
-  USER[专业用户 / 法院系统 / Generic Host]
-  APP[01 Application & Integration]
-  DOMAIN[02 Legal Domain & Work Product]
-  USER --> APP
-  APP --> DOMAIN
+  M1[合同 v3 / 起诉状 / 扫描附件]
+  K1[KnowledgeGeneration]
+  R1{ReadinessDecision}
+  C1[Candidate / Proposal]
+  A1[Human review + Domain Admission]
+  W1[WorkProduct v1 + AdmissionReceipt]
+  M2[新证据进入]
+  S1[旧结果需要复核]
+  W2[WorkProduct v2]
+  P1[PreparedAction]
+  E1[External Effect]
+  ER[EffectReceipt]
 
-  subgraph INTELLIGENCE[Knowledge & Intelligence]
-    KNOW[03 Knowledge & Evidence]
-    CAP[05 Capability & Skill]
-    MODEL[07 Model Gateway]
-  end
+  M1 --> K1 --> R1
+  R1 -->|当前问题可判断| C1 --> A1 --> W1
+  M2 --> S1 --> W2
+  W1 --> S1
+  W2 --> P1 --> E1 --> ER
+```
 
-  subgraph EXECUTION[Execution & Effects]
-    RUN[04 Agent Runtime & Control]
-    TOOL[06 Tool Runtime & Effects]
-  end
+## Fact Authority View
 
-  SEC[08 Security & Governance]
-  OBS[09 Observability & Evaluation]
-  PLATFORM[Platform / Infrastructure]
-  CONTEXT[Optional Context Provider]
+```mermaid
+flowchart TB
+  KNOW[材料与知识事实\nDocumentVersion / KnowledgeGeneration / ReadinessDecision]
+  CAND[机器候选\nEvidenceCandidate / Proposal]
+  DOMAIN[正式法律事实\nEvidence / Finding / WorkProduct / AdmissionReceipt]
+  RUN[运行控制事实\nRun / PlanVersion / Step / Checkpoint]
+  EFFECT[现实副作用事实\nPreparedAction / Attempt / EffectReceipt]
+  SEC[08 Security & Governance\nAuthorization / Approval]
+  OBS[09 Observability & Evaluation\nTelemetry / Eval]
 
-  APP --> RUN
-  RUN --> KNOW
-  RUN --> CAP
-  RUN --> MODEL
-  RUN --> TOOL
-  KNOW --> DOMAIN
-  CAP --> DOMAIN
-  TOOL --> DOMAIN
-  SEC -. current policy .-> APP
-  SEC -. current policy .-> RUN
-  SEC -. current policy .-> TOOL
-  OBS -. telemetry / evaluation .-> APP
-  OBS -. telemetry / evaluation .-> RUN
-  OBS -. telemetry / evaluation .-> DOMAIN
-  PLATFORM -. primitives .-> APP
-  PLATFORM -. primitives .-> DOMAIN
-  PLATFORM -. primitives .-> KNOW
-  PLATFORM -. primitives .-> RUN
-  PLATFORM -. primitives .-> TOOL
-  CONTEXT -. policy-scoped context .-> RUN
+  KNOW --> CAND --> DOMAIN
+  RUN --> CAND
+  RUN --> EFFECT
+  SEC -. permits transitions .-> CAND
+  SEC -. permits transitions .-> DOMAIN
+  SEC -. permits transitions .-> EFFECT
+  OBS -. observes only .-> KNOW
+  OBS -. observes only .-> RUN
+  OBS -. observes only .-> DOMAIN
+  OBS -. observes only .-> EFFECT
+```
+
+## Boundary Transition View
+
+```mermaid
+flowchart LR
+  DOC[DocumentVersion]
+  KG[KnowledgeGeneration]
+  READY[ReadinessDecision]
+  CAND[EvidenceCandidate / Proposal]
+  ADMIT[Formal Admission]
+  RECEIPT[AdmissionReceipt]
+  RUN[Runtime Checkpoint]
+  PREP[PreparedAction]
+  TRY[Tool Attempt]
+  UNKNOWN{Outcome known?}
+  EFFECT[EffectReceipt]
+  RECON[Reconcile]
+
+  DOC --> KG --> READY
+  READY --> CAND --> ADMIT --> RECEIPT
+  RUN -. control progress .-> CAND
+  RECEIPT -. repairs after crash .-> RUN
+  RUN --> PREP --> TRY --> UNKNOWN
+  UNKNOWN -->|Yes| EFFECT
+  UNKNOWN -->|No| RECON --> EFFECT
 ```
 
 ## Responsibility View
 
 ```mermaid
 flowchart TB
-  REQUEST[External request / task scope]
-  APP[01 Application & Integration\n产品入口与交付]
-  KNOW[03 Knowledge & Evidence\n材料版本、知识派生、任务就绪]
-  RUN[04 Agent Runtime & Control\n计划、步骤、等待、恢复]
-  CAP[05 Capability & Skill\n稳定专业能力]
-  MODEL[07 Model Gateway\n受控模型依赖]
+  APP[01 Application & Integration\n产品入口、Matter / Scope、发布与交付]
   DOMAIN[02 Legal Domain & Work Product\n正式法律事实]
+  KNOW[03 Knowledge & Evidence\n材料、知识派生、就绪与 lineage]
+  RUN[04 Agent Runtime & Control\n计划、步骤、等待与恢复]
+  CAP[05 Capability & Skill\n稳定专业能力]
   TOOL[06 Tool Runtime & Effects\n现实副作用]
+  MODEL[07 Model Gateway\n模型角色与 Provider]
   SEC[08 Security & Governance\n持续授权与审批]
   OBS[09 Observability & Evaluation\n观测与评测]
+  CONTEXT[Optional Context Provider]
 
-  REQUEST --> APP
-  APP --> KNOW
   APP --> RUN
+  APP --> DOMAIN
   RUN --> KNOW
   RUN --> CAP
   CAP --> MODEL
   KNOW --> DOMAIN
   CAP --> DOMAIN
   RUN --> TOOL
-  TOOL --> DOMAIN
-  SEC -. governs .-> APP
-  SEC -. governs .-> RUN
-  SEC -. governs .-> MODEL
-  SEC -. governs .-> TOOL
+  SEC -. current decisions .-> APP
+  SEC -. current decisions .-> RUN
+  SEC -. current decisions .-> TOOL
   OBS -. observes .-> APP
   OBS -. observes .-> RUN
   OBS -. observes .-> DOMAIN
-```
-
-## Task Flow View
-
-```mermaid
-flowchart TB
-  START[Request + Matter + Scope]
-  AUTH[Current authorization]
-  READY[Knowledge readiness]
-  SIMPLE{Simple QA?}
-  RETRIEVE[Retrieval + citation]
-  MODEL[Model / capability computation]
-  PLAN[PlanVersion + controlled steps]
-  PROPOSAL[Candidate / proposal]
-  ADMIT{Formal business fact needed?}
-  DOMAIN[Domain admission + versioned WorkProduct]
-  EFFECT{External effect needed?}
-  PREP[PreparedAction + approval / audit]
-  EXEC[Tool attempt]
-  CONFIRM[EffectReceipt or Reconciliation]
-  PUBLISH[Publication / delivery]
-
-  START --> AUTH --> READY --> SIMPLE
-  SIMPLE -->|Yes| RETRIEVE --> MODEL --> PUBLISH
-  SIMPLE -->|No| PLAN --> RETRIEVE --> MODEL --> PROPOSAL --> ADMIT
-  ADMIT -->|No| PUBLISH
-  ADMIT -->|Yes| DOMAIN --> EFFECT
-  EFFECT -->|No| PUBLISH
-  EFFECT -->|Yes| PREP --> EXEC --> CONFIRM --> PUBLISH
-```
-
-## Authority and State View
-
-```mermaid
-flowchart LR
-  DOC[DocumentVersion\n正式材料]
-  KG[KnowledgeGeneration\n可重建知识派生]
-  READY[ReadinessDecision\n任务可用性]
-  CAND[Candidate / Proposal\n机器结果]
-  DOMAIN[DomainVersion\n正式业务事实]
-  RUN[Run / Plan / Checkpoint\n运行控制]
-  EFFECT[EffectReceipt\n现实结果]
-  SEC[Authorization / Approval\n安全决定]
-  OBS[Trace / Metric / Eval\n观测投影]
-
-  DOC --> KG --> READY
-  READY --> CAND
-  CAND --> DOMAIN
-  RUN --> CAND
-  SEC -. permits .-> RUN
-  SEC -. permits .-> EFFECT
-  EFFECT --> DOMAIN
-  OBS -. observes only .-> RUN
-  OBS -. observes only .-> DOMAIN
-  OBS -. observes only .-> EFFECT
+  CONTEXT -. policy-scoped context .-> RUN
 ```
 
 ## Recovery View
 
 ```mermaid
 sequenceDiagram
-  participant R as Runtime
+  participant R as Agent Runtime
   participant D as Legal Domain
   participant C as Checkpoint
   participant T as Tool Runtime
   participant X as External System
 
-  R->>D: submit proposal for formal admission
+  R->>D: submit candidate for Formal Admission
   D-->>R: DomainVersion + AdmissionReceipt
-  Note over R,C: process may crash before checkpoint update
-  R->>D: query matching admission causation
+  Note over R,C: crash before next Checkpoint
+  R->>D: query by stable causation
   D-->>R: formal fact already exists
-  R->>C: repair control state
+  R->>C: repair control state, do not re-submit
 
-  R->>T: execute prepared external action
+  R->>T: execute PreparedAction
   T->>X: send operation
   X--xT: response lost / timeout
-  T->>X: reconcile by stable operation identity
+  Note over T,X: outcome is Unknown, not ordinary Failed
+  T->>X: Reconcile by stable operation identity
   X-->>T: actual outcome
-  T-->>R: EffectReceipt / ReconciliationReceipt
+  T-->>R: EffectReceipt / Reconciliation result
 ```
 
 ## Deployment and Evolution View
 
 ```mermaid
 flowchart TB
-  START[Modular Python Backend]
+  BACKEND[Modular Python Backend]
   WORKERS[Independent Workers\nKnowledge / Model / Tool / Eval]
-  PLATFORM[Platform primitives\nPostgreSQL / Object Store / Queue / Secret / Checkpointer]
-  GATE{Evidence Gate}
+  PLATFORM[Platform primitives\nPostgreSQL / Object Store / Queue / Checkpointer / Secret]
+  SPLIT{Evidence Gate for service split}
   SERVICE[Optional independent network service]
-  BASELINE[Simple baseline]
+  SIMPLE[Simple baseline\nRAG / Generic Host + Legal Backend]
   COMPLEX[GraphRAG / Memory / Specialist / Native Runtime]
   EVAL{Repeatable measured gain?}
-  KEEP[Keep complexity]
+  KEEP[Keep the added complexity]
   REMOVE[Stay with / return to simpler design]
 
-  START --> WORKERS
-  PLATFORM -. supports .-> START
+  PLATFORM -. supports .-> BACKEND
   PLATFORM -. supports .-> WORKERS
-  START --> GATE
-  GATE -->|Scaling / isolation / lifecycle evidence| SERVICE
-  GATE -->|No independent need| START
+  BACKEND --> WORKERS
+  BACKEND --> SPLIT
+  SPLIT -->|scaling / isolation / lifecycle evidence| SERVICE
+  SPLIT -->|no independent need| BACKEND
 
-  BASELINE --> COMPLEX --> EVAL
+  SIMPLE --> COMPLEX --> EVAL
   EVAL -->|Yes| KEEP
   EVAL -->|No| REMOVE
 ```
 
 ## 图的阅读边界
 
-这些图只表达总体关系。九个责任域的内部状态、Contract、事务、幂等和故障注入设计继续由 `docs/modules/` 与相关 ADR 负责；实现是否成立由 `docs/evidence/` 证明。
+六张图分别回答：一件案件怎样随时间变化；系统里有哪些不同事实；哪些跨边界转换需要更强证明；九个责任域为什么存在；两个关键故障窗口怎样恢复；复杂度和部署什么时候应该升级或退回。
+
+模块内部状态、Contract、事务、幂等和故障注入继续由 `docs/modules/` 与相关 ADR 负责；实现是否成立由 `docs/evidence/` 证明。
