@@ -102,15 +102,31 @@ def verify() -> list[str]:
         architecture,
         (
             "# Zuno 目标架构",
-            "## 1. 法律智能真正变难的时刻",
-            "## 2. 一件案件里的五种事实",
-            "## 3. 四次跨边界决定系统是否可信",
-            "## 4. 九个责任域如何从这些边界产生",
-            "## 5. 故障以后，先找事实再恢复控制",
-            "## 6. 研究成果怎样变成工程能力",
-            "## 7. 安全、人和时间",
-            "## 8. 复杂度必须在测量中证明收益",
-            "## 9. 从目标架构进入实施",
+            "## Part A — Human Narrative（人类技术叙事）",
+            "### A1. 法律智能真正变难的时刻",
+            "### A2. 一件案件里的五种事实",
+            "### A3. 四次跨边界决定系统是否可信",
+            "### A4. 九个责任域如何从这些边界产生",
+            "### A5. 故障以后，先找事实再恢复控制",
+            "### A6. 研究成果怎样变成工程能力",
+            "### A7. 安全、人和时间",
+            "### A8. 复杂度必须在测量中证明收益",
+            "### A9. 从目标架构进入实施",
+            "## Part B — Engineering / Agent Reference（工程 / Agent 参考）",
+            "### B1. Scope / Global Invariants",
+            "### B2. Authority / Ownership Matrix",
+            "### B3. Cross-boundary Contract Map",
+            "### B4. Canonical Execution Profiles",
+            "### B5. State / Lifecycle Families",
+            "### B6. Completion Proof / Non-proof",
+            "### B7. Failure Taxonomy / Recovery Order",
+            "### B8. Retry / Replan / Reconcile / Idempotency",
+            "### B9. Version / Freshness / Causation Bindings",
+            "### B10. Security / Approval / Human Authority",
+            "### B11. Persistence / Transaction Boundaries",
+            "### B12. Build / Buy / Extend / Delete Conditions",
+            "### B13. Current / Target / Evidence / Unknown",
+            "### B14. Machine Navigation / Source Precedence",
             "overall_architecture_state: ROUND_02_FROZEN",
             "target_logical_module_count: 9",
             "module_design_baseline: AVAILABLE_V1",
@@ -127,6 +143,8 @@ def verify() -> list[str]:
             "PreparedAction",
             "EffectReceipt",
             "Single Controller",
+            "Runtime Checkpoint != Domain Commit != Tool Effect != Publication truth",
+            "AuthorizationDecision、ApprovalDecision、HumanDecision",
             "docs/modules/",
             "docs/decisions/",
             "docs/evidence/",
@@ -134,8 +152,10 @@ def verify() -> list[str]:
         ),
     )
 
-    if "## Part B" in architecture or "### B1 " in architecture:
-        errors.append("overall architecture must not duplicate module/ADR engineering specifications")
+    part_a = architecture.find("## Part A — Human Narrative（人类技术叙事）")
+    part_b = architecture.find("## Part B — Engineering / Agent Reference（工程 / Agent 参考）")
+    if part_a < 0 or part_b < 0 or part_a >= part_b:
+        errors.append("overall architecture must preserve ordered Part A human narrative and Part B machine reference")
 
     responsibility_markers = (
         "01 Application & Integration",
@@ -151,6 +171,19 @@ def verify() -> list[str]:
     positions = [architecture.find(marker) for marker in responsibility_markers]
     if any(position < 0 for position in positions) or positions != sorted(positions):
         errors.append("architecture responsibilities must exist in canonical 01-09 order")
+
+    # Overall Part B is a cross-module index. Module Part B/C remain the source of local detail.
+    for marker in (
+        "02 Legal Domain & Work Product | Matter / DocumentVersion canonical identity",
+        "03 Knowledge & Evidence | KnowledgeGeneration",
+        "Domain commit + matching `AdmissionReceipt`",
+        "`EffectReceipt` or conclusive `ReconciliationReceipt`",
+        "current matching Authorization/Approval/Audit/egress/secret facts",
+        "Current Code / Test / Runtime Evidence",
+        "> canonical docs/architecture + docs/modules",
+    ):
+        if marker not in architecture:
+            errors.append(f"overall architecture Part B missing cross-module reference invariant: {marker}")
 
     for number, text in modules.items():
         _require(errors, f"module {number} template", text, B1_B14_MARKERS + PART_C_MARKERS)
