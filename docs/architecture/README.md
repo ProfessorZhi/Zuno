@@ -1,10 +1,10 @@
-# Zuno 总体架构文档
+# Zuno 架构文档
 
-`docs/architecture/` 是 Zuno 唯一的总体架构入口。第一次阅读这里时，不需要先理解全部 Contract、状态机或内部对象；先回答三个问题：**Zuno 为什么需要比普通 RAG 多承担一些责任、这些责任为什么必须分开、系统失败以后靠什么事实恢复。**
+`docs/architecture/` 只负责一件事：说明 Zuno 理想状态下应该怎样设计。
 
-如果还不知道项目为什么存在，先读 [`../project/project.md`](../project/project.md)。如果已经理解项目背景，直接进入 [`architecture.md`](architecture.md) 的 Part A。要追某一个责任域，再进入 [`../modules/README.md`](../modules/README.md) 和对应模块 Part A。
+这里不证明今天已经实现了什么，也不展开数据库字段、ORM、API 枚举和逐模块状态机。总体架构先把业务约束、责任边界、正常流程、故障恢复、安全和演进关系讲清楚；实施时再进入模块文档、ADR 和 Evidence。
 
-## 四个文件分别负责什么
+## 文档结构
 
 `docs/architecture/` 只保留四个文件：
 
@@ -15,117 +15,80 @@ architecture-views.md
 architecture.html
 ```
 
-- `architecture.md`：唯一总体 Target Architecture 正文。Part A 解释概念设计和因果，Part B 保存跨模块精确工程约束。
-- `architecture-views.md`：总体 Mermaid 图源，用图帮助理解，不拥有第二套架构事实。
-- `architecture.html`：图形展示入口，消费同一份 Mermaid 源。
-- `README.md`：告诉读者从哪里开始、当前设计处在哪个治理阶段，以及怎样区分 Target 和 Current。
+- [`architecture.md`](architecture.md)：Zuno 唯一的总体 Target Architecture 正文。只讲概念设计和整体关系。
+- [`architecture-views.md`](architecture-views.md)：与正文配套的 Mermaid 图源。图帮助理解，不维护第二套架构事实。
+- [`architecture.html`](architecture.html)：图形阅读入口，直接加载同一份 Mermaid 图源。
+- `README.md`：说明文档边界和阅读顺序。
 
-不得创建第五个总体架构文件，也不得建立 `.agent/architecture/` 或 `.agent/modules/` 镜像。一个设计只保留一套 Canonical Truth。
+总体架构之外的精度分别放在其他知识面：
 
-## 先理解一个最重要的边界
+- [`../project/project.md`](../project/project.md)：项目为什么存在、历史背景和业务约束。
+- [`../modules/`](../modules/README.md)：九个责任域内部的 Contract、State、Failure、Recovery 和实施设计。
+- [`../decisions/`](../decisions/README.md)：已经接受的重要架构决策及其理由。
+- [`../research/`](../research/README.md)：论文、框架和外部研究如何影响设计方向。
+- [`../evidence/`](../evidence/README.md)：代码、测试、Eval、性能和生产资格等 Current 证据。
 
-Zuno 不是“把九个模块都串起来才算一次请求”。简单法律问答可以只做当前授权、知识就绪、检索、模型和发布；复杂分析才需要显式 Runtime、专业 Capability 和正式 Domain Admission；只有现实副作用任务才需要 Effect Control、Approval 和 Reconciliation。
+## 总体架构在设计阶段回答什么
 
-九个模块首先是**事实 Ownership 和失败恢复边界**，不是九个微服务。默认可以运行在模块化 Python 后端和按工作负载拆分的 Worker 中。只有独立吞吐、安全隔离、部署生命周期或故障半径有证据时，才按 ADR-0012 考虑物理拆分。
+总体架构不从技术栈开始。它先回答几个长期问题：
 
-## Part A 为什么允许很长
+一项法律任务依赖哪一版材料；知识索引与正式法律事实怎样分开；机器候选怎样进入人工和领域判断；长任务崩溃以后从什么事实恢复；外部请求超时以后怎样确认现实动作；权限变化以后哪些未来动作仍然允许；研究算法和模型怎样在不改变业务语义的前提下替换。
 
-Part A 不是 Executive Summary，也不是删掉几个字段后的 Part B。复杂架构要把问题、最简单方案、失败反例、概念边界、恢复、替代方案和 Trade-off 讲清楚，本来就可能需要较长篇幅。
+这些问题确定以后，FastAPI、LangGraph、PostgreSQL、模型 Provider、向量数据库和消息队列才成为实现选择。
 
-新的 [`../governance/architecture-narrative-quality-standard.md`](../governance/architecture-narrative-quality-standard.md) 明确要求：长度来自概念设计和因果推导，而不是 Object / State / Contract 名称数量。术语用于压缩已经理解的概念，不能代替解释；推荐推理链不是固定标题模板。
+## 九个责任域
 
-因此阅读 Part A 时，应该先记住“为什么这样设计”，再去 Part B 查 `AdmissionReceipt`、`PlanVersion`、`PreparedAction` 等精确对象。
+Target Architecture 使用九个逻辑责任域：
 
-## 当前 Target 的核心思想
+1. Application & Integration
+2. Legal Domain & Work Product
+3. Knowledge & Evidence
+4. Agent Runtime & Control
+5. Capability & Skill
+6. Tool Runtime & Effects
+7. Model Gateway
+8. Security & Governance
+9. Observability & Evaluation
 
-总体设计把机器候选、正式业务事实、知识派生、运行控制、现实副作用和安全决定分开，让每一种更强事实都拥有明确 Owner。恢复时先找最强 durable owner fact，再修复 Checkpoint、Cache、Delivery 或 Telemetry projection。
+它们是一张事实 Ownership 地图，不是九个微服务。默认物理形态可以是模块化 Python 后端和若干独立 Worker；只有吞吐、安全隔离、故障半径、网络出口或部署生命周期形成真实需求时，才把某个逻辑边界升级成独立网络服务。
 
-复杂度继续受 Evidence Gate。Native Runtime、GraphRAG、Long-term Memory、Specialist / Multi-Agent、强模型路由和物理服务拆分都不是“有了就永久保留”的能力；09 必须通过 baseline、ablation 和 kill test 证明边际收益。
-
-研究成果也按同样原则进入架构。ADR-0015 接受的是 Research Artifact → stable Capability semantics → versioned Provider → Conformance / Eval → Eligibility → Runtime use 的路径，而不是因为某篇论文、某个开源框架或某项课题组成果存在，就反向制造 Zuno 的业务需求。
-
-## Current、Target、Future 和 Evidence 怎么读
-
-`architecture.md` 与九篇模块主要描述 **Target**。Target 设计完整，不代表代码、数据库、Provider、HA / DR 或生产流程已经存在。
-
-判断 **Current** 必须回到 [`../evidence/`](../evidence/)。Pilot Validation 不等于 Production，设计差异也不等于已经测出优势。没有真实 Eval、容量、恢复演练或安全资格时，应保留 Unknown / Measurement Needed。
-
-历史 Red / Blue 记录解释设计怎样形成，但不重新拥有当前事实。当前阶段先做文档质量提升，不需要为了历史问题机械扩展架构。
-
-## 审查一次架构改动时，先问什么
-
-新增一个 Provider、字段、队列或缓存，通常还不算新的架构问题。真正需要回到总体架构审查的，是它改变了“谁拥有事实、什么算完成、失败以后先相信谁、旧版本怎样继续被解释”这些跨模块语义。
-
-一次改动至少先问五个问题：它解决的真实约束是什么；最简单方案为什么不够；它有没有改变 Owner 或 Authority；失败以后由哪个耐久事实恢复；如果收益没有被测出来，怎样回退或删除。五个问题答不清楚时，先不要用新对象和新服务把不确定性冻结进架构。
-
-反过来，如果只是 ORM 字段、SDK、Provider 地址、内部 Queue、Cache 或部署参数变化，而且既有 Owner、完成证明和恢复语义完全不变，它更可能是实现或 Detail Design 变化。这样可以防止总体架构随着每次工程调整不断抖动。
-
-## 架构稳定不等于实现冻结
-
-Zuno 希望稳定的是少数长期不变量：机器候选不能冒充正式事实；Runtime Checkpoint 不能冒充 Domain Commit；结果未知不能被盲 Retry；新的受保护动作要消费当前安全事实；复杂机制必须允许 simpler baseline 和删除条件。
-
-实现则应该允许持续替换。LangGraph、模型 Provider、索引实现、消息队列、缓存、数据库表和物理部署都可能演进。一个好的逻辑边界应该让这些替换发生时，不需要重新发明业务真相。
-
-因此阅读 Target 时，不要把“当前写了某个技术名词”理解为永久技术绑定。真正需要长期保护的是语义和恢复顺序；具体实现只有在 Evidence 证明其必要时才获得更强约束。
-
-## 九模块当前治理状态
-
-```text
-overall_architecture: ROUND_02_FROZEN
-module_taxonomy: FROZEN
-module_design_baseline: AVAILABLE_V1
-module_deep_design: AVAILABLE_V2
-module_deep_design_coverage: 9/9
-cross_module_consistency: AVAILABLE_V1
-module_detail_design_candidate: AVAILABLE_V1
-module_detail_design_candidate_coverage: 9/9
-module_detail_freeze: NOT_YET
-implementation_authorization: NO
-production_readiness: NOT_ESTABLISHED
-```
-
-`Detail Design Candidate V1` 表示模块已经有足够精度进入冻结前审查，不表示字段、表、enum、Migration、API、服务拆分或实现已经冻结。下一道架构门仍然是 Module Detail Freeze Review；冻结也不自动产生 Implementation Authorization。
+Platform / Infrastructure 作为底层责任层提供数据库、对象存储、Queue、Checkpointer、CAS、Lease、Clock、Backup/Restore、Network 和 Secret Delivery 等技术原语，不拥有 Domain、Runtime、Knowledge 或 Effect 的业务成功。
 
 ## 推荐阅读顺序
 
-第一次建立 mental model：
+第一次理解 Zuno：
 
 ```text
 ../project/project.md
-→ architecture.md Part A
+→ architecture.md
+→ architecture-views.md
 → ../modules/README.md
-→ 目标模块 Part A
+→ 目标模块文档
 ```
 
-需要实施或审查时，再结合 [`../decisions/`](../decisions/) 中的 ADR 进入：
+开始实施某一部分时：
 
 ```text
-architecture.md Part B
-→ 目标模块 Part B / Part C
+目标模块
 → 相关 ADR
+→ 数据模型 / API / Migration / Worker 设计
+→ 测试与故障注入
 → docs/evidence/
-→ docs/governance/
 ```
 
-如果读完 Part A 只能记住几十个内部名词，却说不清为什么需要这些边界，应该优先修正文档，而不是继续增加 Contract。
+Research 用来提出和校准方案，Evidence 用来决定方案是否真的成立。论文、框架或设计文档本身都不能证明 Zuno 已经具备对应能力。
 
 ## 维护原则
 
-总体架构负责跨模块 Authority 与 Target 整合；模块文档只能细化已接受边界，不能局部改变九模块 Owner、Canonical Legal Kernel、Formal Admission、Knowledge / Domain authority、Retry / Replan / Reconcile、安全政策或 Effect truth。
+总体架构只在跨模块语义发生变化时修改，例如：
 
-跨层语义变化才修改 `architecture.md` 或 ADR；模块内部精度下沉到 `../modules/`；Current 证据进入 `../evidence/`；项目历史和 Ownership 叙事进入 `../project/`。图形变化同步 `architecture-views.md` 与 `architecture.html`。
+- 某类正式事实更换 Owner；
+- 完成证明发生变化；
+- Runtime 与 Domain 的恢复顺序改变；
+- 外部 Effect 的 Unknown / Reconcile 语义改变；
+- Security Authority 改变；
+- 九模块责任划分发生变化。
 
-常用验证：
+Provider、SDK、ORM 字段、Queue、Cache、索引实现和部署参数变化，如果没有改变上述语义，就属于模块或实现层调整。
 
-```powershell
-python tools/agent/render_architecture.py --check
-python tools/scripts/verify_architecture_document_set.py
-python tools/scripts/verify_architecture_semantic_alignment.py
-python tools/scripts/verify_architecture_writing_standard.py
-python tools/scripts/verify_architecture_human_readability.py
-python tools/scripts/verify_docs_entrypoints.py
-python tools/scripts/verify_markdown_internal_links.py
-python tools/scripts/verify_repo_structure.py
-python .agent/scripts/verify_agent_system.py
-python .agent/scripts/verify_doc_boundaries.py
-```
+目标是让 `architecture.md` 始终像一篇能够连续阅读的系统设计文档，而不是随着实现细节增长成第二份代码规格。

@@ -11,7 +11,6 @@ HTML = ROOT / "docs/architecture/architecture.html"
 PROJECT = ROOT / "docs/project/project.md"
 MODULES = ROOT / "docs/modules"
 DECISIONS = ROOT / "docs/decisions"
-GOVERNANCE = ROOT / "docs/governance/human-first-documentation-standard.md"
 TERMINOLOGY = ROOT / "docs/terminology.md"
 
 MODULE_FILES = {
@@ -78,7 +77,6 @@ def verify() -> list[str]:
         for number, filename in MODULE_FILES.items()
     }
     terminology = TERMINOLOGY.read_text(encoding="utf-8")
-    governance = GOVERNANCE.read_text(encoding="utf-8")
 
     _require(
         errors,
@@ -103,8 +101,18 @@ def verify() -> list[str]:
         "overall architecture",
         architecture,
         (
-            "## Part A — Architecture Narrative",
-            "## Part B — Detailed Architecture Specification",
+            "# Zuno 目标架构",
+            "## 1. 从法律问答到法律工作",
+            "## 2. 总体模型",
+            "## 3. 一项任务怎样穿过系统",
+            "## 4. 九个逻辑责任域",
+            "## 5. 事实、版本与权威",
+            "## 6. 长任务的控制与恢复",
+            "## 7. 知识、能力与模型",
+            "## 8. 安全、人工判断与现实副作用",
+            "## 9. 部署与基础设施",
+            "## 10. 观测、评测与架构演进",
+            "## 11. 实施时必须保持的架构不变量",
             "overall_architecture_state: ROUND_02_FROZEN",
             "target_logical_module_count: 9",
             "module_design_baseline: AVAILABLE_V1",
@@ -113,25 +121,24 @@ def verify() -> list[str]:
             "cross_module_consistency: AVAILABLE_V1",
             "module_detail_freeze: NOT_YET",
             "implementation_authorization: NO",
+            "KnowledgeGeneration lifecycle != task-level ReadinessDecision",
             "EvidenceCandidate != Evidence",
             "CitationLineage != WorkProductCitationBinding",
-            "KnowledgeGeneration lifecycle != task-level ReadinessDecision",
             "Retry != Replan != Reconcile",
             "AdmissionReceipt",
             "PreparedAction",
             "EffectReceipt",
-            "AuditPersistenceReceipt",
             "Single Controller",
-            "按事实权威划分责任",
-            "九个逻辑责任域",
-            "复杂度的退出机制",
-            "docs/project/project.md",
+            "docs/modules/",
+            "docs/decisions/",
+            "docs/evidence/",
+            "docs/research/",
         ),
     )
 
-    # Preserve the canonical 01-09 responsibility order without freezing a particular
-    # Markdown heading level. Textbook prose may present these responsibilities as
-    # headings, bold terms, or another readable form as long as all nine remain ordered.
+    if "## Part B" in architecture or "### B1 " in architecture:
+        errors.append("overall architecture must not duplicate module/ADR engineering specifications")
+
     responsibility_markers = (
         "01 Application & Integration",
         "02 Legal Domain & Work Product",
@@ -258,19 +265,6 @@ def verify() -> list[str]:
         ),
     )
 
-    _require(
-        errors,
-        "human-first governance",
-        governance,
-        (
-            "中文优先规则",
-            "B1  Scope / Global Invariants",
-            "B5  Cross-boundary Contracts",
-            "B14 Code / Database / Migration Constraints",
-            "如果 Part A 和 Part B 无法保持一致",
-        ),
-    )
-
     decisions_readme = (DECISIONS / "README.md").read_text(encoding="utf-8")
     _require(
         errors,
@@ -299,11 +293,11 @@ def verify() -> list[str]:
         if forbidden in architecture or forbidden in views:
             errors.append(f"active architecture retains superseded semantics: {forbidden}")
 
-    if views.count("```mermaid") != 14:
-        errors.append("architecture-views.md must contain exactly 14 canonical diagrams")
+    if views.count("```mermaid") != 6:
+        errors.append("architecture-views.md must contain exactly 6 conceptual diagrams")
     if 'fetch("./architecture-views.md")' not in html:
         errors.append("architecture.html must render canonical Mermaid source")
-    if "../project/project.md" not in html or "./architecture.md#target-status-boundary" not in html:
+    if "../project/project.md" not in html or "./architecture.md" not in html:
         errors.append("architecture.html must expose current canonical entrypoints")
 
     return errors
