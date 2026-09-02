@@ -11,20 +11,12 @@ VIEWS_PATH = REPO_ROOT / "docs/architecture/architecture-views.md"
 HTML_PATH = REPO_ROOT / "docs/architecture/architecture.html"
 
 EXPECTED_VIEWS = [
-    "Product Context View",
-    "Business Flow View",
-    "Logical Capability View",
-    "Provider Boundary View",
-    "Domain State View",
-    "Staleness and Review View",
-    "Agent Runtime View",
-    "Runtime and Domain State View",
-    "Physical Deployment Decision View",
-    "Deployment Profiles View",
-    "Data Ownership View",
-    "Failure and Recovery View",
-    "A/B/C Eval View",
-    "Security Verification View",
+    "System Context View",
+    "Responsibility View",
+    "Task Flow View",
+    "Authority and State View",
+    "Recovery View",
+    "Deployment and Evolution View",
 ]
 CANONICAL_ARCHITECTURE_FILES = {"README.md", "architecture.md", "architecture-views.md", "architecture.html"}
 MERMAID_MODULE_URL = "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs"
@@ -36,37 +28,32 @@ STALE_OUTPUTS = [
 
 
 def _section(content: str, title: str) -> str:
-    marker = f"### {title}"
+    marker = f"## {title}"
     start = content.find(marker)
     if start < 0:
         return ""
-    next_positions = [content.find(f"### {item}", start + len(marker)) for item in EXPECTED_VIEWS]
+    next_positions = [content.find(f"## {item}", start + len(marker)) for item in EXPECTED_VIEWS]
     next_positions = [position for position in next_positions if position >= 0]
     return content[start : min(next_positions) if next_positions else len(content)]
 
 
 def validate_design(content: str) -> list[str]:
     required_sections = [
-        "# Zuno 总体 Target 架构",
-        "## Part A — Architecture Narrative",
-        "## Part B — Detailed Architecture Specification",
-        "### B1 Scope and Global Invariants",
-        "### B2 Responsibility / Ownership Map",
-        "### B3 Cross-boundary Contracts",
-        "### B5 State Machines",
-        "### B6 Retry / Replan / Reconcile",
-        "### B7 Failure Semantics",
-        "### B8 Security / Approval / Audit",
-        "### B9 Recovery and Idempotency",
-        "### B10 Persistence Boundaries",
-        "### B11 Observability / Evaluation",
-        "### B12 Current / Target / Gap",
-        "### B13 Evidence / Verification",
-        "### B14 Code / Database / Migration Constraints",
+        "# Zuno 目标架构",
+        "## 1. 从法律问答到法律工作",
+        "## 2. 总体模型",
+        "## 3. 一项任务怎样穿过系统",
+        "## 4. 九个逻辑责任域",
+        "## 5. 事实、版本与权威",
+        "## 6. 长任务的控制与恢复",
+        "## 7. 知识、能力与模型",
+        "## 8. 安全、人工判断与现实副作用",
+        "## 9. 部署与基础设施",
+        "## 10. 观测、评测与架构演进",
+        "## 11. 实施时必须保持的架构不变量",
+        "## 12. 从架构进入实施",
     ]
     required_terms = [
-        "模块化 Python 后端",
-        "独立网络服务",
         "Application & Integration",
         "Legal Domain & Work Product",
         "Knowledge & Evidence",
@@ -77,27 +64,31 @@ def validate_design(content: str) -> list[str]:
         "Security & Governance",
         "Observability & Evaluation",
         "Platform / Infrastructure",
-        "FastAPI",
-        "LangGraph",
-        "PostgreSQL",
-        "Checkpoint",
-        "Reconciliation",
-        "Current",
-        "Target",
-        "History",
-        "Logical Responsibility",
+        "Single Controller",
+        "AdmissionReceipt",
         "KnowledgeGeneration lifecycle != task-level ReadinessDecision",
         "EvidenceCandidate != Evidence",
         "CitationLineage != WorkProductCitationBinding",
+        "Retry != Replan != Reconcile",
+        "EffectReceipt",
+        "Reconcile",
+        "模块化 Python 后端",
+        "独立网络服务",
+        "Target Architecture",
     ]
     errors: list[str] = []
     for marker in required_sections + required_terms:
         if marker not in content:
             errors.append(f"architecture.md missing required marker: {marker}")
 
-    for marker in ("docs/project/project.md", "docs/architecture/"):
+    for marker in (
+        "docs/modules/",
+        "docs/decisions/",
+        "docs/evidence/",
+        "docs/research/",
+    ):
         if marker not in content:
-            errors.append(f"architecture.md does not route to canonical project layer: {marker}")
+            errors.append(f"architecture.md missing canonical route: {marker}")
 
     for marker in (
         "final_module_count: 9",
@@ -113,8 +104,10 @@ def validate_design(content: str) -> list[str]:
         if marker not in content:
             errors.append(f"architecture.md missing governance marker: {marker}")
 
-    if content.count("```mermaid") > 8:
-        errors.append("architecture.md must remain text-first with at most eight diagrams")
+    if "## Part B" in content or "### B1 " in content:
+        errors.append("overall architecture must remain conceptual; detailed Part B specifications belong to modules/ADR")
+    if content.count("```mermaid") > 2:
+        errors.append("architecture.md should remain prose-first; diagrams belong in architecture-views.md")
     return errors
 
 
@@ -133,15 +126,12 @@ def validate_source(content: str) -> list[str]:
         )
 
     for term in (
-        "Python-only",
         "Modular Python Backend",
         "Independent Workers",
-        "Evidence Gate",
-        "Physical Deployment Decision",
         "EffectReceipt",
         "AdmissionReceipt",
-        "A/B/C",
         "Optional Context Provider",
+        "Evidence Gate",
     ):
         if term.lower() not in content.lower():
             errors.append(f"architecture-views.md missing visual term: {term}")
@@ -155,7 +145,7 @@ def validate_html(content: str) -> list[str]:
         'fetch("./architecture-views.md")',
         MERMAID_MODULE_URL,
         "../project/project.md",
-        "./architecture.md#target-status-boundary",
+        "./architecture.md",
         "../evidence/README.md",
         "diagram-dialog",
         "Mermaid source",
@@ -227,7 +217,7 @@ def build_html() -> str:
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Validate Zuno cross-layer architecture and visual source.")
+    parser = argparse.ArgumentParser(description="Validate Zuno target architecture and visual source.")
     parser.add_argument("--write", action="store_true")
     parser.add_argument("--check", action="store_true")
     args = parser.parse_args()
