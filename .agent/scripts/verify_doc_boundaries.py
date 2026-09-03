@@ -5,6 +5,7 @@ ROOT = Path(__file__).resolve().parents[2]
 PROJECT_FILES = {
     "docs/project/README.md",
     "docs/project/project.md",
+    "docs/project/reference.md",
 }
 RESEARCH_FILES = {
     "docs/research/README.md",
@@ -16,6 +17,7 @@ RESEARCH_FILES = {
 }
 MODULE_FILES = {
     "docs/modules/README.md",
+    "docs/modules/reference.md",
     "docs/modules/01-application-integration.md",
     "docs/modules/02-legal-domain-work-product.md",
     "docs/modules/03-knowledge-evidence.md",
@@ -25,6 +27,22 @@ MODULE_FILES = {
     "docs/modules/07-model-gateway.md",
     "docs/modules/08-security-governance.md",
     "docs/modules/09-observability-evaluation.md",
+}
+ARCHITECTURE_FILES = {
+    "README.md",
+    "architecture.md",
+    "architecture-views.md",
+    "architecture.html",
+    "reference.md",
+}
+GOVERNANCE_FILES = {
+    "docs/governance/README.md",
+    "docs/governance/documentation-architecture.md",
+    "docs/governance/human-first-documentation-standard.md",
+    "docs/governance/architecture-narrative-quality-standard.md",
+    "docs/governance/wave1-cross-module-contract-registry.md",
+    "docs/governance/repo-ownership-matrix.md",
+    "docs/governance/project-fact-provenance.md",
 }
 MAINTENANCE_FILES = {
     "docs/maintenance/README.md",
@@ -47,25 +65,27 @@ def _relative_files(directory: Path) -> set[str]:
 def main() -> int:
     errors: list[str] = []
     if _relative_files(ROOT / "docs/project") != PROJECT_FILES:
-        errors.append("project boundary mismatch: expected README.md + project.md")
+        errors.append("project boundary mismatch: expected human narrative plus machine reference")
     if _relative_files(ROOT / "docs/research") != RESEARCH_FILES:
-        errors.append("research boundary mismatch")
+        errors.append("research compatibility boundary mismatch")
     if _relative_files(ROOT / "docs/modules") != MODULE_FILES:
-        errors.append("modules boundary mismatch")
-    if {path.name for path in (ROOT / "docs/architecture").iterdir() if path.is_file()} != {
-        "README.md", "architecture.md", "architecture-views.md", "architecture.html"
-    }:
-        errors.append("architecture boundary mismatch")
-    if _relative_files(ROOT / "docs/governance") != {
-        "docs/governance/human-first-documentation-standard.md",
-        "docs/governance/architecture-narrative-quality-standard.md",
-        "docs/governance/wave1-cross-module-contract-registry.md",
-        "docs/governance/repo-ownership-matrix.md",
-        "docs/governance/project-fact-provenance.md",
-    }:
-        errors.append("governance compatibility boundary mismatch")
+        errors.append("modules boundary mismatch: expected human entry, machine router and current Target module docs")
+    if {path.name for path in (ROOT / "docs/architecture").iterdir() if path.is_file()} != ARCHITECTURE_FILES:
+        errors.append("architecture boundary mismatch: expected human/visual/rendered entries plus machine reference")
+    if _relative_files(ROOT / "docs/governance") != GOVERNANCE_FILES:
+        errors.append("governance boundary mismatch")
     if _relative_files(ROOT / "docs/maintenance") != MAINTENANCE_FILES:
-        errors.append("maintenance boundary mismatch")
+        errors.append("maintenance compatibility boundary mismatch")
+
+    documentation_architecture = ROOT / "docs/governance/documentation-architecture.md"
+    if not documentation_architecture.exists():
+        errors.append("missing canonical documentation architecture")
+    else:
+        text = documentation_architecture.read_text(encoding="utf-8")
+        for marker in ("system_story", "knowledge_control", "Module decomposition", "Navigation contracts"):
+            if marker not in text:
+                errors.append(f"documentation architecture missing marker: {marker}")
+
     for obsolete in (
         ROOT / "docs/facts",
         ROOT / "docs/history",
