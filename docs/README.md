@@ -1,130 +1,100 @@
-# Zuno 项目文档
+# Zuno Documentation
 
-`docs/` 是 Zuno 的正式知识入口。一级目录现在分成两个 plane：前四个帮助人理解 **Zuno 是什么、从哪里来、为什么这样设计**；后四个负责 **这些事实怎样被决定、证明、治理和维护**。
-
-```text
-docs/
-├── README.md
-│
-│   # Zuno Knowledge Plane
-├── project/                    真实项目来源、发展、团队/个人 Ownership 与项目级叙事
-├── research/                   葛季栋/LIPLAB 研究谱系、Research→Engineering、平台基线与写作研究
-├── architecture/               唯一总体 Target Architecture（固定四文件）
-├── modules/                    九个 Target 责任域：Human Part A + Engineering Part B/C
-│
-│   # Zuno Control & Maintenance Plane
-├── decisions/                  仍有长期约束力的 ADR
-├── evidence/                   Current Code/Test/Trace/Eval/Runtime Evidence
-├── governance/                 Provenance、Ownership、Contract、文档与验收规则
-├── maintenance/                Operations、Agent workflow、Red/Blue workflow 与历史审查资料
-│   ├── operations/
-│   ├── agent-workflow/
-│   ├── red-blue/               人类可读的 Interview Harness 工作流
-│   └── history/red-blue/       已结束 Round 的历史归档
-│
-└── terminology.md
-```
-
-这不是严格流水线。最重要的边界是：`research/` 可以解释和挑战 Project / Architecture，但不能覆盖 Canonical Truth；`maintenance/` 可以解释怎样运行和维护仓库，但不拥有 Project、Architecture 或 Current Evidence。
-
-## 推荐阅读路径
-
-第一次理解 Zuno，不建议把整个 `docs/` 当成一条必须从 1 读到 10 的流水线。更好的方式是先拿到最短的项目 / 架构主线，再按目的进入研究、工程精度或维护材料。
-
-### 核心路径：先建立 Zuno 的 mental model
-
-1. [Project 主文档](./project/project.md)：先理解项目从哪里来、为什么普通 RAG / Generic Host 不足以覆盖全部目标，以及 Zuno 应该长期 Own 什么；如果暂时不关心历史与个人 Ownership，读到“完整 Zuno 什么时候不值得使用”以后即可先进入总体架构。
-2. [总体架构](./architecture/architecture.md)：第一次只抓 Part A 的主故事。1–18 节已经完成从 baseline、Authority、恢复、安全到复杂度淘汰的核心推导；19 节以后属于横向 Stress Tests，可以二刷。
-3. [模块架构](./modules/README.md)：先读三条任务路径、九个责任域和 Part A / B / C 的阅读方法；随后只选择与你当前问题最相关的一个或两个 Module Part A，不要求顺序读完九篇。
-4. [Current Evidence](./evidence/README.md)：最后回到代码、Migration、Test、Trace、Eval 和运行证据，检查刚才理解的 Target 到底哪些已经 Current。
-
-这条路径的目标不是“读完所有文档”，而是让第一次进入仓库的人尽快回答四个问题：Zuno 为什么存在、为什么不能只看通用平台 Feature List、哪些事实必须由谁负责、今天真正实现和证明到了哪里。
-
-### 研究 / 架构深挖
-
-当你要追问“这些能力从哪里来、为什么不用 WorkBuddy / Dify / Coze / LangGraph 直接承载、某个边界为什么被正式接受”时，再进入 [Research Knowledge Base](./research/README.md)、[有效 ADR](./decisions/README.md) 和对应 Module 的 Part B / Part C / B14.1–B14.8。`research/` 是解释和挑战架构的上游材料，不是第一次阅读必须经过的中转站。
-
-### 维护 / 审查路径
-
-当目标变成修改文档、审查架构、运行 Red / Blue 或维护仓库时，优先读 [Governance](./governance/)、[Current Evidence](./evidence/README.md) 和 [Maintenance](./maintenance/README.md)；需要 Interview Harness 时再进入 [Red / Blue Workflow](./maintenance/red-blue/README.md)。[术语表](./terminology.md) 用于跨文档消歧，不要求预先背诵。
-
-`docs/project/README.md` 只是导航。项目事实来源、允许表述和 Unknown 由 [`governance/project-fact-provenance.md`](./governance/project-fact-provenance.md) 管理。
-
-## 一套回答问题的方法
+Zuno 的主文档只围绕六个长期问题组织。前三个目录描述系统本身，后三个目录约束我们怎样决定、证明和维护这些描述。
 
 ```text
-这个真实项目为什么存在、谁参与？          → project/
-葛季栋/LIPLAB 哪些研究与 Zuno 有什么关系？ → research/
-为什么不是普通 RAG / WorkBuddy + Tools？   → project/ + research/ + architecture/
-为什么今天按这些责任边界设计？            → architecture/
-每个责任域内部怎样工作和恢复？            → modules/
-字段、Guard、事务、Crash/Migration？       → 对应 module B14.1–B14.8
-长期决策为什么被接受？                    → decisions/
-现在到底实现和验证到了什么程度？          → evidence/
-事实和文档如何被治理？                    → governance/
-仓库怎样运行、修改、审查和追溯？          → maintenance/
-怎样用真实面试方式压力测试简历与 Part A？  → maintenance/red-blue/ + .agent/red-blue/
+System Story
+project/        我们为什么来到这里：背景、历史、团队、个人参与、项目约束
+architecture/   理想的 Zuno 应该怎样工作：总体 Target Architecture
+modules/        总体架构怎样分解为具体责任单元，以及这些单元怎样协作
+
+Knowledge Control
+decisions/      为什么接受某个长期设计决定
+evidence/       今天到底实现、测试和证明到了哪里
+governance/     谁拥有事实、文档怎样维护、Agent 怎样读取和修改
 ```
 
-一个完整技术回答应覆盖“现实问题、简单 baseline、失败、设计原因、替代方案、恢复、当前证据和仍未证明的部分”，而不是只背技术栈或数据库表。
+> 根规则：**Project 解释现实，Architecture 描述目标，Modules 分解责任；Decisions 保存理由，Evidence 证明现实，Governance 保护真相。**
 
-## Research 的特殊边界
+## 第一次阅读：只走一条主线
 
-`research/` 新增的是上游研究知识，不是第二套 Project / Architecture：
+第一次理解 Zuno，不需要先读 Research、ADR、CI、Red/Blue 或大量 Contract。按下面顺序建立 mental model：
 
-- 论文提出 ≠ Zuno 已实现；
-- 导师/课题组成果 ≠ 用户本人实现；
-- Research Artifact ≠ Engineering Capability；
-- Capability ≠ Provider；
-- Provider 可调用 ≠ Provider Qualified；
-- Provider 成功 ≠ Formal Business Fact；
-- 外部平台 Feature Matrix 会过期，必须带 `last_verified` 并重新核验。
+1. [`project/project.md`](./project/project.md) —— 项目为什么出现、经历过什么、团队和个人实际做过什么。
+2. [`architecture/architecture.md`](./architecture/architecture.md) Part A —— 从简单法律问答开始，理解材料版本、候选、正式业务事实、长任务、恢复和现实副作用怎样推导出总体架构。
+3. [`modules/README.md`](./modules/README.md) —— 沿一项法律工作理解当前 Target decomposition，再选择相关模块 Part A 深入。
+4. [`evidence/README.md`](./evidence/README.md) —— 最后回到代码、测试、Trace、Eval 和运行事实，检查哪些 Target 今天已经 Current。
 
-成熟研究结论进入 Zuno 正文时，仍需修改对应 Canonical Owner；Current claim 仍只能由 `evidence/` 支持。
-
-## Red / Blue 的特殊边界
-
-Red / Blue 是面试与架构压力测试 Harness，不是另一套架构文档：
+这四步形成完整故事：
 
 ```text
-.agent/red-blue/                         Machine protocol / active Round state
-docs/maintenance/red-blue/              Human workflow
-docs/maintenance/history/red-blue/      Closed Round history
+真实项目
+→ 原始工程问题
+→ 理想总体架构
+→ 责任分解
+→ 当前证据
 ```
 
-Red 以精确简历 Claim 和 interviewer kernel 为起点，可以用真实面经校准“面试官会验证什么、怎样连续追”；Blue 使用同一份简历快照和允许的 Zuno canonical docs，项目 / 架构回答优先从 Part A 组织，禁止临时读取面经、八股、外部标准答案或 Red hidden intent。Judge 只记录 Gap，不替 Blue 补答案。
+面试也使用同一条主线：项目背景和个人角色从 Project 讲起，系统设计进入 Architecture，深挖某个问题时进入对应 Module；只有被追问“现在真的实现了吗”才切到 Evidence。不要为了面试单独维护第二套项目故事。
 
-## 当前文档状态
+## 两种阅读视图
+
+Zuno canonical docs 同时服务人和机器，但两者需要不同的信息密度。
+
+### Human View
+
+Part A 给人连续阅读。它负责解释现实场景、简单 baseline、为什么 baseline 开始失效、架构如何从约束中产生、典型故障如何恢复，以及什么时候可以删除复杂度。
+
+Part A 可以重排章节和改写语言，只要不改变事实层级、Owner、Authority、Recovery 和 Current/Target。
+
+### Engineering / Agent View
+
+机器入口以 `reference.md` 或现有文档的 Part B 为主。它负责稳定索引：Owner、Authoritative Fact、Contract、Version、Completion Proof、Retry/Replan/Reconcile、Persistence、Security、Failure 和 Source Map。
+
+机器不应从 Human Narrative 猜字段或实现状态。涉及实现时按以下顺序读取：
 
 ```text
-overall_architecture: ROUND_02_FROZEN
-module_taxonomy: FROZEN
-module_design_baseline: AVAILABLE_V1
-module_deep_design: AVAILABLE_V2
-module_deep_design_coverage: 9/9
-cross_module_consistency: AVAILABLE_V1
-module_human_narrative: DEEPENED
-module_detail_design_candidate: AVAILABLE_V1
-module_detail_design_candidate_coverage: 9/9
-module_detail_freeze: NOT_YET
-implementation_authorization: NO
-quality_proven: NO
-production_readiness: NOT_ESTABLISHED
+architecture/reference.md
+→ modules/reference.md
+→ 目标模块 Part B / Part C
+→ decisions/
+→ evidence/
+→ code / schema / migration / tests
 ```
 
-九篇模块都已经有 Human-first Part A、B1–B14 Engineering Reference、Part C Cross-Module Consistency，并进一步拥有 B14.1–B14.8 Detail Freeze Candidate。这仍然不等于最终 enum、数据库 Schema、Migration、API 或服务拓扑被冻结，更不等于代码已经实现。
+## 六个 canonical domain
 
-## 八个一级目录的 Owner 边界
+| Domain | Canonical question | Human entry | Machine / precise entry |
+| --- | --- | --- | --- |
+| `project/` | 这个项目为什么存在，历史和个人参与是什么？ | `project.md` | `reference.md` + governance provenance |
+| `architecture/` | 理想系统应该怎样工作？ | `architecture.md` Part A | `reference.md` + `architecture.md` Part B |
+| `modules/` | 总体设计分解成哪些责任，它们怎样工作？ | `README.md` + Module Part A | `reference.md` + Module Part B/C |
+| `decisions/` | 为什么接受某个长期约束？ | ADR 正文 | ADR metadata / decision record |
+| `evidence/` | 今天实际证明了什么？ | Evidence README | code/test/trace/eval references |
+| `governance/` | 哪份信息由谁拥有，怎样保持一致？ | `README.md` | `documentation-architecture.md` + provenance/ownership rules |
 
-- `project/`：项目级 Human-first Truth；当前只保留 `README.md` + `project.md`。
-- `research/`：经核验的研究谱系、外部平台 baseline 与研究→工程推导；不拥有 Current/Target。
-- `architecture/`：唯一总体 Target Architecture，固定四文件。
-- `modules/`：九个冻结逻辑责任域及其 Deep / Detail Candidate。
-- `decisions/`：仍有长期约束力的 ADR。
-- `evidence/`：只记录 Current 代码、Migration、Test、Trace、Eval 和运行证据。
-- `governance/`：事实来源、Owner、兼容 Contract、Human-first 与验收规则。
-- `maintenance/`：当前 Runbook、通用 Agent/GitHub 工作流、Red / Blue 工作流与历史审查；不拥有当前架构真相。
-  - Red / Blue human workflow: `maintenance/red-blue/`。
-  - Red / Blue archive route: `maintenance/history/red-blue/`。
+文档架构本身不冻结模块数量。当前 Target Architecture 仍可采用现有九个逻辑责任域，但“九个”是系统设计结果，不是 Documentation Architecture 的先验约束；未来责任合并或拆分必须由 Architecture / ADR 推导，而不是为了目录整齐。
 
-`Current`、`Target`、`Future`、`History` 和 `Unknown` 必须区分。文档写得完整不证明实现可用；Current 只能由代码、Migration、Test、Trace、Eval 或真实运行结果证明。
+## 支持材料与兼容目录
+
+当前仓库仍保留 `research/`、`maintenance/` 和根级 `terminology.md`，以避免一次迁移制造大面积断链。它们从现在起不再作为与六个 canonical domain 平级的 Truth Owner：
+
+- `research/` 是 Project / Architecture 的上游参考材料，只能提出和校准设计，不能覆盖 Target 或 Current；
+- `maintenance/` 是 Governance 的运行附件，保存 Agent workflow、Operations、Red/Blue 和历史记录；
+- `terminology.md` 是 Governance 管理的跨文档术语表。
+
+后续可以按链接成本逐步物理迁移，但迁移不能复制第二套事实。
+
+## Truth hierarchy
+
+出现冲突时按下面顺序处理：
+
+```text
+Current code / migration / test / trace / eval
+> canonical Project / Architecture / Module facts
+> accepted ADR
+> historical review / research
+> speculation
+```
+
+其中 Target 文档可以规定未来应该怎样实现，却不能证明今天已经实现；History 可以解释项目怎样走到今天，却不能证明当前代码仍然采用历史实现；团队成果和个人成果也必须严格分开。

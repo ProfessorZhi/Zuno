@@ -1,100 +1,55 @@
-# Zuno 架构文档
+# Architecture — 理想的 Zuno 应该怎样工作
 
-`docs/architecture/` 只负责一件事：说明 Zuno 理想状态下应该怎样设计。
+`docs/architecture/` 描述设计阶段接受的总体 Target Architecture。这里不讲个人历史，也不把代码目录当架构；它从真实业务约束出发，解释一个长期法律智能工作系统应该保护哪些事实、怎样跨边界、失败后先相信谁。
 
-这套总体架构不从九个模块开始，也不从 LangGraph、RAG 或数据库开始。它围绕一条更稳定的主线展开：**一个法律任务会同时产生材料与知识事实、机器候选、正式法律事实、运行控制事实和现实副作用；每一种事实都需要自己的权威来源，跨越边界时要留下可用于恢复和审计的因果凭据。** 九个责任域是这些约束长期稳定以后形成的 Ownership 结果。
+## Human View
 
-`architecture.md` 同时维护两种协调视图。**Part A — Human Narrative** 给人连续阅读，解释问题、失败场景、设计因果和取舍；**Part B — Engineering / Agent Reference** 给 Agent、Reviewer 和实现任务快速定位跨模块 Authority、Contract、Completion Proof、Recovery、Version、Security 与 Current/Target 边界。两部分维护同一套架构事实，只是信息密度和组织方式不同。
-
-Part B 不复制九个模块的局部字段、完整状态机、API 或 Migration 规格。总体 Part B 负责跨模块规范和机器导航；需要模块内部精度时继续进入对应 Module 的 Part B / Part C、ADR 和 Evidence。
-
-## 文档结构
-
-`docs/architecture/` 只保留四个文件：
+[`architecture.md`](architecture.md) Part A 是总体架构的主章节。第一次阅读沿同一个案件和故障场景往下走，不需要先背模块名：
 
 ```text
-README.md
-architecture.md
-architecture-views.md
-architecture.html
+简单法律问答
+→ 多材料、多版本、长期运行、正式结果和现实副作用出现
+→ 不同类型的事实需要不同 Authority
+→ 候选跨越边界成为更强语义
+→ 责任域由这些长期事实自然产生
+→ 正常任务流
+→ crash / late result / authorization change / external timeout
+→ recovery
+→ complexity kill test
 ```
 
-- [`architecture.md`](architecture.md)：Zuno 唯一的总体 Target Architecture 正文，包含 Part A Human Narrative 与 Part B Engineering / Agent Reference。
-- [`architecture-views.md`](architecture-views.md)：与正文配套的 Mermaid 图源。图帮助理解，不维护第二套架构事实。
-- [`architecture.html`](architecture.html)：图形阅读入口，直接加载同一份 Mermaid 图源。
-- `README.md`：说明文档边界和阅读顺序。
+Part A 的目标是建立 mental model，也应能直接支撑系统设计面试。它可以有强观点和具体失败场景，但不能为了讲得漂亮制造 Current、Production 或个人 Ownership。
 
-总体架构之外的精度分别放在其他知识面：
+## Engineering / Agent View
 
-- [`../project/project.md`](../project/project.md)：项目为什么存在、历史背景和业务约束。
-- [`../modules/`](../modules/README.md)：九个责任域内部的 Contract、State、Failure、Recovery、Cross-Module Consistency 和实施设计。
-- [`../decisions/`](../decisions/README.md)：已经接受的重要架构决策及其理由。
-- [`../research/`](../research/README.md)：论文、框架和外部研究如何影响设计方向。
-- [`../evidence/`](../evidence/README.md)：代码、测试、Eval、性能和生产资格等 Current 证据。
-
-## 总体架构在设计阶段回答什么
-
-总体架构关注的是一项法律工作怎样在时间中保持可信。
-
-一份新材料进入以后，系统要知道它是哪一版；OCR、索引和图结构完成以后，还要判断当前任务是否真的拥有足够材料。检索和模型产生的内容先是候选，只有经过领域规则和必要的人审以后才成为正式业务事实。任务崩溃时，Runtime Checkpoint 不能推翻已经提交的 Domain fact；外部请求超时时，系统也不能把“没有收到响应”直接解释成“现实动作没有发生”。
-
-这些关系确定以后，FastAPI、LangGraph、PostgreSQL、模型 Provider、向量数据库和消息队列才成为实现选择。
-
-## 九个责任域
-
-Target Architecture 使用九个逻辑责任域：
-
-1. Application & Integration
-2. Legal Domain & Work Product
-3. Knowledge & Evidence
-4. Agent Runtime & Control
-5. Capability & Skill
-6. Tool Runtime & Effects
-7. Model Gateway
-8. Security & Governance
-9. Observability & Evaluation
-
-它们是一张事实 Ownership 地图，不是九个微服务。默认物理形态可以是模块化 Python 后端和若干独立 Worker；只有吞吐、安全隔离、故障半径、网络出口或部署生命周期形成真实需求时，才把某个逻辑边界升级成独立网络服务。
-
-Platform / Infrastructure 作为底层责任层提供数据库、对象存储、Queue、Checkpointer、CAS、Lease、Clock、Backup/Restore、Network 和 Secret Delivery 等技术原语，不拥有 Domain、Runtime、Knowledge 或 Effect 的业务成功。
-
-## 推荐阅读顺序
-
-第一次作为人理解 Zuno：
+机器先读 [`reference.md`](reference.md)，再进入 `architecture.md` Part B。总体 Part B 只保存跨模块 Authority、Contract、Completion Proof、Recovery、Version/Freshness、Security 和 Source Map；局部字段、状态机、事务和 Crash Window 下沉到 Module Part B/C。
 
 ```text
-../project/project.md
-→ architecture.md Part A
-→ architecture-views.md
-→ ../modules/README.md
-→ 目标 Module Part A
+architecture/reference.md
+→ architecture.md Part B
+→ modules/reference.md
+→ target module B/C
+→ ADR
+→ Evidence
+→ code
 ```
 
-Agent、Architecture Reviewer 或实现任务定位精确边界：
+## 模块数量不是文档先验
 
-```text
-architecture.md Part B
-→ 目标 Module Part B / Part C
-→ 相关 ADR
-→ docs/evidence/
-→ 必要时再进入代码 / Schema / Migration
-```
+Documentation Architecture 不冻结“必须九个责任域”。当前 Target decomposition 可以继续使用现有九域作为已接受设计基线，但责任域数量必须由事实 Ownership、恢复边界、安全边界和演进成本推导。
 
-Part A 回答“为什么”，Part B 回答“谁拥有、跨什么边界、怎样证明、失败后先查什么”。如果问题是“今天是否已经实现”，任何 Target 文档都不能替代 Evidence。
+未来如果 Architecture 证明某些责任可以合并，或者新的独立 Authority 必须拆出，应通过 Architecture + ADR 改变 decomposition。不要为了维持 01–09 编号或目录美观保留无价值边界。
 
-Research 用来提出和校准方案，Evidence 用来决定方案是否真的成立。论文、框架或设计文档本身都不能证明 Zuno 已经具备对应能力。
+## 这里拥有和不拥有的事实
 
-## 维护原则
+Architecture 拥有 Target 的跨模块语义，例如：
 
-总体架构只在跨模块语义发生变化时修改，例如：
+- 哪类事实由谁最终证明；
+- Candidate 如何成为 Formal Business Fact；
+- Runtime progress 与 Domain commit 怎样区分；
+- External Effect Outcome Unknown 怎样进入 Reconcile；
+- Security Authority 何时重新判断；
+- Recovery 从哪一类 durable fact 开始；
+- 复杂机制在什么测量条件下应该删除。
 
-- 某类正式事实更换 Owner；
-- 完成证明发生变化；
-- Runtime 与 Domain 的恢复顺序改变；
-- 外部 Effect 的 Unknown / Reconcile 语义改变；
-- Security Authority 改变；
-- 九模块责任划分发生变化。
-
-Provider、SDK、ORM 字段、Queue、Cache、索引实现和部署参数变化，如果没有改变上述语义，就属于模块或实现层调整。
-
-Part A 可以为了更好的阅读体验调整叙事顺序，Part B 可以为了机器检索调整索引结构；两边的 Owner、Authority、Completion Proof、Recovery、Security 和 Current/Target 不得出现两套答案。Human readability 校验只约束 Part A 的叙事质量，机器语义校验同时要求 Part B 存在并覆盖跨模块工程边界。
+Architecture 不拥有 Current implementation truth。代码、Migration、Test、Trace、Eval、性能和 Production Readiness 只能由 `docs/evidence/` 证明。

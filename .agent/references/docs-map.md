@@ -2,56 +2,60 @@
 
 本文只导航，不拥有事实、架构或模块语义。
 
+## Canonical 3 + 3
+
 ```text
-# Knowledge Plane
-docs/project/                 项目级 Human-first Truth：README.md + project.md
-docs/research/                研究谱系、Research→Engineering、平台 baseline、Narrative Blueprint
-docs/architecture/            总体 Target Architecture 四文件
-docs/modules/                 九个 Target 责任域：Deep Design V2 + Detail Design Candidate V1（9/9）
+# System Story
+docs/project/                 History / project context / team and personal ownership
+docs/architecture/            Overall Target Architecture
+docs/modules/                 Target responsibility decomposition and module design
 
-# Control & Maintenance Plane
-docs/decisions/               有效 ADR
-docs/evidence/                当前可复现证据
-docs/governance/              Provenance、Owner、Contract、Human-first 与验收规则
-docs/maintenance/             Operations、通用 Agent workflow、Red/Blue workflow、History
-
-docs/terminology.md           术语
-
-# Machine Workflow
-.agent/programs/              一般 implementation / design Program
-.agent/red-blue/              Red / Blue Interview Harness：协议、攻击模型、Judge、active Round state
+# Knowledge Control
+docs/decisions/               accepted architectural rationale
+docs/evidence/                Current code/test/trace/eval/runtime evidence
+docs/governance/              provenance / owner / documentation / machine routing / validation
 ```
 
-## 阅读路径
+`docs/research/` 是上游参考，`docs/maintenance/` 是 Governance 的运行与历史附件，`docs/terminology.md` 是受 Governance 管理的术语表。它们保留兼容路径，但不拥有新的 canonical truth domain。
 
-普通项目阅读：`docs/project/project.md` → `docs/research/README.md`（涉及研究来源/平台比较时）→ `docs/architecture/architecture.md` Part A → `docs/modules/README.md` → 需要的模块 Part A → ADR / Evidence。
+## Human route
 
-总体架构阅读：先读 `project.md`，必要时读 Research-to-Engineering / platform baseline，再读 `docs/architecture/README.md` 和 `architecture.md` Part A。实现、测试或工程审查再读 Architecture Part B、ADR、Evidence 和 Governance。
+```text
+docs/README.md
+→ docs/project/project.md
+→ docs/architecture/architecture.md Part A
+→ docs/modules/README.md
+→ selected Module Part A
+→ docs/evidence/README.md
+```
 
-模块设计阅读：先读 `docs/modules/README.md` 的任务主线、共同不变量和 Ownership，再读目标模块 Part A；进入 Detail Design、Codex Task 或 Review 前再读该模块 B1–B14、Part C、相关 ADR、Current Evidence 和总体 Architecture Part B。
+这也是项目介绍和技术面试的默认主线。不要单独维护“面试版本”的第二套项目事实。
 
-九个模块全部包含 B14.1–B14.8 `Detail Freeze Candidate`。字段、事务 / CAS、Serving / Checkpoint / Registry、Migration、Crash Window 或 Failure Injection 任务必须继续读这些小节，但仍要回到 Evidence 判断 Current；不能把 Candidate 当作数据库或 Runtime 已经实现。
+## Agent implementation route
 
-架构评审 / 技术面试：项目级问题先读 `docs/project/project.md`；“为什么不是 WorkBuddy / 普通 RAG”“研究成果怎样进入工程”先读 `docs/research/`；RAG、Runtime、Domain、Tool、Security、Eval 等进入对应 Module；“现在实现了吗”进入 Evidence。
+```text
+docs/architecture/reference.md
+→ docs/architecture/architecture.md Part B
+→ docs/modules/reference.md
+→ selected Module Part B / Part C
+→ docs/decisions/
+→ docs/evidence/
+→ code / schema / migration / tests
+```
 
-Red / Blue Interview Stress Test：先固定精确 resume snapshot、Zuno base SHA、岗位 / JD / 面试轮次，再读 `.agent/red-blue/README.md`、`protocol.md`、`attack-model.md` 和 `judge.md`。Red 可读取批准的真实面试语料校准 pressure model；Blue 只读同一 resume snapshot 和允许的 canonical docs，优先从 Project / Architecture / Module Part A 回答。人类运行说明见 `docs/maintenance/red-blue/README.md`。
-
-架构复盘按问题读取 `docs/maintenance/history/red-blue/` 指定 Round，不默认加载全部历史记录。
+Project fact or resume-ownership task additionally reads `docs/project/reference.md` and `docs/governance/project-fact-provenance.md`.
 
 ## Canonical ownership
 
-| 问题 | Owner |
+| Question | Owner |
 | --- | --- |
-| 项目为什么存在、怎样发展、团队与个人参与 | `docs/project/project.md` |
-| 葛季栋/LIPLAB 研究谱系、外部平台基线、Research→Engineering | `docs/research/`（研究依据，不拥有 Current/Target） |
-| 项目事实来源和表述边界 | `docs/governance/project-fact-provenance.md` |
-| 当前目标架构为什么这样设计 | `docs/architecture/architecture.md` |
-| 九个责任域内部怎样工作 | `docs/modules/01-*.md` … `docs/modules/09-*.md` |
-| 九模块冻结前字段、事务、Crash / Migration 候选 | 对应模块 B14.1–B14.8；受 Architecture / ADR 约束 |
-| 具体长期设计决策 | `docs/decisions/` |
+| 项目为什么存在、怎样发展、团队与个人参与 | `docs/project/` |
+| 当前目标系统为什么这样设计 | `docs/architecture/` |
+| Target 怎样分解为具体责任与局部 Contract | `docs/modules/` |
+| 为什么接受某个长期设计决定 | `docs/decisions/` |
 | 当前仓库和运行状态有什么证据 | `docs/evidence/` |
-| 文档、事实与 Contract 怎样治理 | `docs/governance/` |
-| 人与 Agent 怎样维护仓库 | `docs/maintenance/agent-workflow/` + `.agent/` |
-| Red / Blue 怎样运行 | `.agent/red-blue/`（机器 Harness）+ `docs/maintenance/red-blue/`（人类流程） |
-| 架构曾怎样被质疑和判断 | `docs/maintenance/history/red-blue/` |
-| 当前运维如何执行 | `docs/maintenance/operations/` |
+| 文档、事实、Agent 路由怎样治理 | `docs/governance/` |
+| 外部研究与平台资料 | `docs/research/`，仅上游依据 |
+| Operations / Agent workflow / Red-Blue history | `docs/maintenance/`，治理附件 |
+
+Module count is not a documentation invariant. Current numbered modules are the accepted Target decomposition until Architecture / ADR changes them.

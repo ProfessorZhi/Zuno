@@ -1,30 +1,32 @@
-# Zuno Project 文档入口
+# Project — Zuno 为什么会出现
 
-`docs/project/` 只保留一个人类主文档和一个入口。
+`docs/project/` 只讲真实项目：背景、历史、团队、个人参与、业务约束，以及哪些事实今天可以相信。这里不负责定义理想系统的完整 Target Architecture，也不把今天的设计反写成历史实现。
 
-- [`project.md`](./project.md)：项目是什么、为什么立项、为什么不只使用通用平台、项目如何发展、团队与个人参与、当前能够确认到什么程度，以及高级技术评审常见追问应该进入哪一层。
+## Human View
 
-建议第一次阅读直接打开 `project.md`。它按连续叙事组织，不要求读者在背景、产品定位、开发过程、个人贡献和 Reviewer 问题表之间来回跳转。
+第一次阅读直接进入 [`project.md`](project.md)。它应当像项目章节，而不是项目档案表：先讲智慧司法与研究工程化背景，再讲 Zuno 为什么出现、我加入时系统已经是什么状态、团队怎样协作、我实际参与了什么、项目怎样经历 Demo / Court-side Testing / Pilot，最后把这些经历留下的工程问题交给总体 Architecture。
 
-项目事实的严格来源、允许表述和 Unknown 仍由 [`docs/governance/project-fact-provenance.md`](../governance/project-fact-provenance.md) 维护；它是事实账本，不属于人类主叙事。
+项目叙事必须自然包含个人角色，而不是把 Ownership 当成尾部免责声明。需要始终保持三个边界：
 
-继续深入时按下面的顺序阅读：
+- 项目不是 Greenfield 时，不能把已有产品和第一版系统写成个人从零实现；
+- 方向级参与不能升级成整个模块或整个平台的个人 Ownership；
+- 今天维护 Target Architecture，不能倒推成历史阶段就是整套架构 Owner。
+
+## Machine View
+
+Agent、Reviewer 或简历事实核对先读 [`reference.md`](reference.md)，再按需要进入 [`../governance/project-fact-provenance.md`](../governance/project-fact-provenance.md) 和 [`../evidence/`](../evidence/README.md)。
+
+`reference.md` 只压缩项目 identity、milestone、个人参与、允许/不允许的 Claim 和 Unknown，不重新发明项目历史。
+
+## Project 怎样交给 Architecture
+
+Project 的结尾只需要完成一个交接：
 
 ```text
-project.md
-→ ../architecture/architecture.md Part A
-→ ../modules/README.md
-→ 对应模块 Part A
-→ 需要工程细节时再读 Part B / Part C、ADR、Evidence
+真实项目经历
+→ 暴露长期工程问题
+→ 哪些问题不能靠简单 RAG / Generic Host 自动解决
+→ 进入 architecture/
 ```
 
-如果 Reviewer 从项目层继续追问到“QPS 上来怎么办、缓存怎么放、为什么不用 2PC、队列积压怎么办、如何做多租户、HA / DR 怎么设计”，不要在 Project 层编一套独立答案。先进入 [`../modules/README.md`](../modules/README.md) 的横向系统设计章节定位事实 Owner，再进入对应模块 Part B / Part C；如果问题变成“实际支持多少并发、RPO / RTO 是多少”，直接进入 Evidence，缺测量就明确尚未建立。
-
-文档职责保持不变：
-
-- Project：为什么有项目、为什么值得做、项目经历与参与事实；
-- Architecture：为什么系统这样设计；
-- Modules：九个责任域怎样工作、失败和恢复，以及跨模块的规模、性能、一致性和可靠性问题如何落到正确 Owner；
-- Evidence：今天的代码、测试和运行到底证明了什么。
-
-不要用 Target Architecture 反写历史，也不要用 Pilot、Mock Test 或“架构设计完整”推导 Production Ready。
+从 `architecture/` 开始讨论的是今天接受的理想 Target。History 与 Target 相互解释，但不相互冒充。
