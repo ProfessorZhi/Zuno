@@ -108,3 +108,38 @@ architecture/reference.md
 - terminology -> cross-document vocabulary governed by Governance.
 
 Physical migration is optional and must not duplicate facts.
+
+## 7. Architecture reasoning contract
+
+Documentation must preserve the reasoning that produced an architecture, not only the final decomposition.
+
+For an important Target design, the preferred reasoning chain is:
+
+```text
+stakeholder / business concern
+→ concrete scenario and failure consequence
+→ simplest viable baseline
+→ quality attribute or authority constraint exposed by the scenario
+→ candidate tactic / boundary / reuse option
+→ rejected alternatives
+→ chosen decision
+→ trade-off and new failure surface
+→ measurement / evidence needed
+→ revisit, merge or deletion condition
+```
+
+This is a reasoning contract, not a Markdown template. A document may use different headings and paragraph order as long as a reviewer can recover the chain.
+
+Architecture design must not be inferred from technology inventory. Framework capability, architectural pattern, module name, deployment topology, or an already-implemented mechanism is not sufficient justification by itself. The design must identify which concrete scenario or quality constraint it protects.
+
+Architecture Story and Architecture Design use the same scenarios for different purposes:
+
+- Human Narrative uses scenarios to preserve causality and help stakeholders build the correct mental model.
+- Architecture reasoning uses scenarios to make quality attributes, authority boundaries, tactics and trade-offs explicit.
+- Engineering Reference compresses the accepted result into Owner, Contract, State, Version, Recovery and Security semantics.
+- ADR preserves the durable rationale and rejected alternatives.
+- Evidence determines what is Current and what remains Target or Measurement Needed.
+
+Views and diagrams are concern-driven projections. No single diagram is expected to explain fact authority, runtime control, recovery, deployment and evolution simultaneously. A view should state the concern it helps answer and must not become a second source of Architecture Truth.
+
+Research supporting this governance direction is recorded in `docs/research/documentation-narrative-blueprint.md`. Research can justify the method used to reason about and communicate architecture; it cannot prove Zuno implementation status, production readiness, quality gains or personal ownership.
