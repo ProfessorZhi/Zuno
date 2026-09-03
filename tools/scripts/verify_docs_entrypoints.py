@@ -6,10 +6,17 @@ from pathlib import Path
 
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
-ARCHITECTURE_FILES = {"README.md", "architecture.md", "architecture-views.md", "architecture.html"}
+ARCHITECTURE_FILES = {
+    "README.md",
+    "architecture.md",
+    "architecture-views.md",
+    "architecture.html",
+    "reference.md",
+}
 PROJECT_FILES = [
     "docs/project/README.md",
     "docs/project/project.md",
+    "docs/project/reference.md",
 ]
 RESEARCH_FILES = [
     "docs/research/README.md",
@@ -71,9 +78,17 @@ def verify() -> list[str]:
     errors = list(_load_links().verify())
     required = [
         "README.md", "docs/README.md", *PROJECT_FILES, *RESEARCH_FILES,
+        "docs/architecture/README.md", "docs/architecture/architecture.md",
+        "docs/architecture/architecture-views.md", "docs/architecture/architecture.html",
+        "docs/architecture/reference.md",
+        "docs/modules/reference.md", *MODULE_FILES,
+        "docs/decisions/README.md",
+        "docs/evidence/README.md",
+        "docs/governance/README.md",
+        "docs/governance/documentation-architecture.md",
         "docs/governance/project-fact-provenance.md",
         "docs/governance/human-first-documentation-standard.md",
-        "docs/evidence/README.md", *MODULE_FILES,
+        "docs/terminology.md",
         "docs/maintenance/README.md",
         "docs/maintenance/agent-workflow/README.md",
         "docs/maintenance/red-blue/README.md",
@@ -82,12 +97,9 @@ def verify() -> list[str]:
         "docs/maintenance/history/red-blue/manual-round-01-overall-architecture.md",
         "docs/maintenance/history/red-blue/manual-round-02-overall-architecture-freeze-review.md",
         "docs/maintenance/history/red-blue/legacy-automated-rounds.md",
-        "docs/architecture/README.md", "docs/architecture/architecture.md",
-        "docs/architecture/architecture-views.md", "docs/architecture/architecture.html",
-        "docs/decisions/README.md", "docs/terminology.md",
         "docs/maintenance/operations/postgresql-migration-runbook.md",
         "docs/maintenance/operations/infrastructure-dr-profile.yaml",
-        ".agent/references/docs-map.md", ".agent/system.yaml",
+        ".agent/references/docs-map.md", ".agent/references/workflow.md", ".agent/system.yaml",
         ".agent/red-blue/README.md", ".agent/red-blue/current.md",
         ".agent/red-blue/protocol.md", ".agent/red-blue/attack-model.md", ".agent/red-blue/judge.md",
     ]
@@ -97,7 +109,7 @@ def verify() -> list[str]:
 
     root = REPO_ROOT / "docs/architecture"
     if {path.name for path in root.iterdir() if path.is_file()} != ARCHITECTURE_FILES:
-        errors.append("docs/architecture must contain exactly four files")
+        errors.append(f"docs/architecture file set mismatch: {sorted(path.name for path in root.iterdir() if path.is_file())}")
     if any(path.is_dir() for path in root.iterdir()):
         errors.append("docs/architecture must not contain subdirectories")
 
@@ -115,12 +127,16 @@ def verify() -> list[str]:
 
     index = (REPO_ROOT / "docs/README.md").read_text(encoding="utf-8")
     for marker in (
-        "Current", "Target", "Unknown", "project/", "research/", "architecture/", "modules/",
-        "evidence/", "maintenance/", "maintenance/red-blue/", "maintenance/history/red-blue/",
-        "module_deep_design", "module_detail_design_candidate", "module_detail_design_candidate_coverage: 9/9",
+        "System Story", "Knowledge Control",
+        "project/", "architecture/", "modules/",
+        "decisions/", "evidence/", "governance/",
+        "Human View", "Engineering / Agent View",
+        "Current", "Target", "Unknown",
+        "research/", "maintenance/",
+        "Project 解释现实",
     ):
         if marker not in index:
-            errors.append(f"docs/README.md missing status/architecture marker: {marker}")
+            errors.append(f"docs/README.md missing six-domain/navigation marker: {marker}")
 
     research = (REPO_ROOT / "docs/research/README.md").read_text(encoding="utf-8")
     for marker in (
@@ -140,9 +156,29 @@ def verify() -> list[str]:
             errors.append(f"docs/maintenance/red-blue/README.md missing workflow marker: {marker}")
 
     project_readme = (REPO_ROOT / "docs/project/README.md").read_text(encoding="utf-8")
-    for marker in ("project.md", "project-fact-provenance.md", "Project 文档入口"):
+    for marker in ("Project — Zuno 为什么会出现", "Human View", "Machine View", "project.md", "reference.md", "project-fact-provenance.md"):
         if marker not in project_readme:
             errors.append(f"docs/project/README.md missing project navigation marker: {marker}")
+
+    project_reference = (REPO_ROOT / "docs/project/reference.md").read_text(encoding="utf-8")
+    for marker in ("canonical-project-machine-index", "Historical baseline", "Confirmed personal participation", "Claim boundaries"):
+        if marker not in project_reference:
+            errors.append(f"docs/project/reference.md missing machine reference marker: {marker}")
+
+    architecture_reference = (REPO_ROOT / "docs/architecture/reference.md").read_text(encoding="utf-8")
+    for marker in ("canonical-architecture-machine-router", "Read order for implementation", "Cross-cutting facts that belong here", "Non-goals"):
+        if marker not in architecture_reference:
+            errors.append(f"docs/architecture/reference.md missing machine reference marker: {marker}")
+
+    modules_reference = (REPO_ROOT / "docs/modules/reference.md").read_text(encoding="utf-8")
+    for marker in ("canonical-module-router", "Documentation rule", "Current Target module routes", "For a module implementation task"):
+        if marker not in modules_reference:
+            errors.append(f"docs/modules/reference.md missing machine reference marker: {marker}")
+
+    documentation_architecture = (REPO_ROOT / "docs/governance/documentation-architecture.md").read_text(encoding="utf-8")
+    for marker in ("canonical-documentation-architecture", "system_story", "knowledge_control", "Human / Machine projection", "Module decomposition", "Navigation contracts"):
+        if marker not in documentation_architecture:
+            errors.append(f"docs/governance/documentation-architecture.md missing marker: {marker}")
 
     project = (REPO_ROOT / "docs/project/project.md").read_text(encoding="utf-8")
     for marker in (
@@ -167,7 +203,7 @@ def verify() -> list[str]:
         "module_detail_freeze: NOT_YET", "implementation_authorization: NO",
     ):
         if marker not in modules:
-            errors.append(f"docs/modules/README.md missing module design marker: {marker}")
+            errors.append(f"docs/modules/README.md missing current Target decomposition marker: {marker}")
 
     for module_path in MODULE_FILES[1:]:
         content = (REPO_ROOT / module_path).read_text(encoding="utf-8")
