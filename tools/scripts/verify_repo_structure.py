@@ -2,6 +2,9 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[2]
+# Physical compatibility paths still include research/ and maintenance/.  The
+# canonical documentation ownership model is the six-domain model documented in
+# docs/governance/documentation-architecture.md.
 DOC_DIRS = {
     "project", "research", "architecture", "modules",
     "decisions", "evidence", "governance", "maintenance",
@@ -9,6 +12,7 @@ DOC_DIRS = {
 PROJECT_FILES = {
     "docs/project/README.md",
     "docs/project/project.md",
+    "docs/project/reference.md",
 }
 RESEARCH_FILES = {
     "docs/research/README.md",
@@ -20,6 +24,7 @@ RESEARCH_FILES = {
 }
 MODULE_FILES = {
     "docs/modules/README.md",
+    "docs/modules/reference.md",
     "docs/modules/01-application-integration.md",
     "docs/modules/02-legal-domain-work-product.md",
     "docs/modules/03-knowledge-evidence.md",
@@ -29,6 +34,18 @@ MODULE_FILES = {
     "docs/modules/07-model-gateway.md",
     "docs/modules/08-security-governance.md",
     "docs/modules/09-observability-evaluation.md",
+}
+GOVERNANCE_FILES = {
+    "docs/governance/README.md",
+    "docs/governance/documentation-architecture.md",
+    "docs/governance/human-first-documentation-standard.md",
+    "docs/governance/architecture-narrative-quality-standard.md",
+    "docs/governance/wave1-cross-module-contract-registry.md",
+    "docs/governance/repo-ownership-matrix.md",
+    "docs/governance/project-fact-provenance.md",
+}
+ARCHITECTURE_FILES = {
+    "README.md", "architecture.md", "architecture-views.md", "architecture.html", "reference.md"
 }
 MAINTENANCE_FILES = {
     "docs/maintenance/README.md",
@@ -62,30 +79,27 @@ def main() -> int:
 
     actual_doc_dirs = {path.name for path in (ROOT / "docs").iterdir() if path.is_dir()}
     if actual_doc_dirs != DOC_DIRS:
-        errors.append(f"docs must contain exactly eight top-level domains: {sorted(DOC_DIRS)}; got {sorted(actual_doc_dirs)}")
+        errors.append(
+            "docs physical compatibility paths changed unexpectedly: "
+            f"expected {sorted(DOC_DIRS)}; got {sorted(actual_doc_dirs)}"
+        )
 
     if _files(ROOT / "docs/project") != PROJECT_FILES:
-        errors.append("docs/project must contain exactly README.md and project.md")
+        errors.append("docs/project must contain human narrative plus project machine reference")
     if _files(ROOT / "docs/research") != RESEARCH_FILES:
-        errors.append("docs/research must contain only the curated research knowledge set")
+        errors.append("docs/research must contain only the curated upstream research knowledge set")
     if _files(ROOT / "docs/evidence") != {
         "docs/evidence/README.md", "docs/evidence/current-runtime-baseline.md",
         "docs/evidence/current-test-baseline.md", "docs/evidence/current-eval-baseline.md",
         "docs/evidence/implementation-wave-001.md",
     }:
         errors.append("docs/evidence must contain only current evidence entries")
-    if _files(ROOT / "docs/governance") != {
-        "docs/governance/human-first-documentation-standard.md",
-        "docs/governance/architecture-narrative-quality-standard.md",
-        "docs/governance/wave1-cross-module-contract-registry.md",
-        "docs/governance/repo-ownership-matrix.md",
-        "docs/governance/project-fact-provenance.md",
-    }:
-        errors.append("docs/governance may contain only source-compatible current boundary inputs")
+    if _files(ROOT / "docs/governance") != GOVERNANCE_FILES:
+        errors.append("docs/governance must contain only canonical documentation/provenance/ownership governance inputs")
     if _files(ROOT / "docs/modules") != MODULE_FILES:
-        errors.append("docs/modules must contain README plus the nine canonical module design documents")
+        errors.append("docs/modules must contain the human entry, machine router, and current Target module documents")
     if _files(ROOT / "docs/maintenance") != MAINTENANCE_FILES:
-        errors.append("docs/maintenance must contain only operations, human workflows and high-value history")
+        errors.append("docs/maintenance must contain only governance-controlled operations, workflows and high-value history")
 
     for obsolete in (
         ROOT / "docs/facts",
@@ -118,10 +132,8 @@ def main() -> int:
         if not (inactive or active):
             errors.append("Red/Blue current state is neither recognized inactive nor active-red-blue")
 
-    if {path.name for path in (ROOT / "docs/architecture").iterdir() if path.is_file()} != {
-        "README.md", "architecture.md", "architecture-views.md", "architecture.html"
-    }:
-        errors.append("docs/architecture must contain its four canonical files")
+    if {path.name for path in (ROOT / "docs/architecture").iterdir() if path.is_file()} != ARCHITECTURE_FILES:
+        errors.append("docs/architecture must contain human/visual/rendered entries plus machine reference")
 
     if errors:
         print("REPO_STRUCTURE_INVALID")
