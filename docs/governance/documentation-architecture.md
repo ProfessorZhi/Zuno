@@ -143,3 +143,44 @@ Architecture Story and Architecture Design use the same scenarios for different 
 Views and diagrams are concern-driven projections. No single diagram is expected to explain fact authority, runtime control, recovery, deployment and evolution simultaneously. A view should state the concern it helps answer and must not become a second source of Architecture Truth.
 
 Research supporting this governance direction is recorded in `docs/research/documentation-narrative-blueprint.md`. Research can justify the method used to reason about and communicate architecture; it cannot prove Zuno implementation status, production readiness, quality gains or personal ownership.
+
+## 8. Scenario-driven architecture review contract
+
+Architecture review has two different jobs and should not collapse them into one late-stage checklist.
+
+Before a design is mature, review should discover and prioritize the scenarios that actually drive architecture. The useful output is not a generic list of qualities such as “reliable, secure, scalable”, but a small set of concrete situations in which a stakeholder can state the stimulus, current environment, required response and unacceptable failure consequence. Zuno can borrow the intent of Quality Attribute Workshop-style scenario discovery without adopting QAW as a mandatory ceremony.
+
+For example:
+
+```text
+new evidence arrives while a long analysis is running
+→ old plan assumptions may be stale
+→ the system must not silently admit a result based on superseded inputs
+→ version / freshness / replan semantics become architecture drivers
+```
+
+After a Target design exists, review changes purpose. It should examine how the proposed boundaries realize the important scenarios and identify sensitivity points, trade-offs and risks. Zuno can borrow the intent of ATAM-style analysis without turning every review into a formal ATAM workshop.
+
+A useful review trace is:
+
+```text
+prioritized scenario
+→ architectural response
+→ sensitivity point
+→ competing quality / authority concern
+→ risk or trade-off
+→ evidence needed
+→ accept, revise, simplify or defer
+```
+
+A sensitivity point is a design choice whose change materially affects an important quality or authority property. A trade-off point improves one concern while making another harder. These concepts should be expressed in Zuno's business language before architecture jargon.
+
+Examples include:
+
+- Single Controller simplifies PlanVersion causality and recovery, while concentrating global control into one logical writer. It should be revisited if measured control-plane throughput or availability becomes a real bottleneck rather than because distributed control is fashionable.
+- Independent services can improve isolation or independent scaling, while adding network failure, deployment and consistency surfaces. A logical module is not promoted to a service without a measured operational constraint.
+- Stronger Agentic mechanisms can improve coverage on some task classes, while increasing cost, latency and behavioral variance. They remain measurement-gated against simpler baselines.
+
+ADR capture follows the same economy. Decisions should preserve context, driver, considered alternatives, chosen direction, consequences, evidence needed and revisit criteria when those facts are important for future change. ADRs should not become a second full architecture specification or a transcript of every discussion. The purpose is to prevent rationale loss while keeping decision maintenance cheap enough that the record remains alive.
+
+The corresponding research basis is maintained in `docs/research/documentation-narrative-blueprint.md`. In particular, scenario-based QAW / ATAM literature supports early quality-scenario discovery and later sensitivity / trade-off analysis, while architectural-decision research supports preserving rationale and rejected alternatives. These methods inform Zuno review discipline; they do not raise any Target statement to Current evidence.
