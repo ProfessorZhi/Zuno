@@ -169,3 +169,152 @@ Part A 可以很长。长度必须来自 Context、Story、Causality、Failure�
 01 → 07 → Architecture Views → Reference consistency → Governance V2。
 
 目录和 Research Knowledge Base 建立完成前，不把这个 Blueprint 直接写成新的 canonical architecture。
+
+## 9. Academic Research Synthesis — Architecture Story and Architecture Design
+
+> research_date: 2026-09-03
+> source: SciSpace semantic search over software-architecture / software-engineering literature
+> evidence_scope: indexed metadata and abstracts; this is not a full-text systematic literature review
+
+这轮研究把“怎样讲好架构故事”和“怎样设计好架构”分成两条相互关联、但不能混为一谈的链路。
+
+### 9.1 架构文档的首要对象是 stakeholder concern，不是模块目录
+
+Smolander 与 Päivärinta 对三个软件组织的质性研究指出，不同 stakeholder 使用架构描述的理由并不相同。设计者强调后续设计与实现，其他 stakeholder 更强调沟通、解释与决策。这个结果直接支持 Zuno 当前的 Human / Machine 双视图：同一套架构事实可以有不同阅读路径，但不能维护两套相互竞争的 Architecture Truth。
+
+Clements、Bachmann、Bass、Garlan 等人的 Software Architecture Documentation / Views and Beyond 工作进一步把架构描述组织成多视图问题：先选择与 stakeholder concerns 相关的 view，再补充跨 view 才能表达的信息。对 Zuno 的直接含义是：不要期待一张总图同时解释事实权威、运行控制、失败恢复、部署和演进。`architecture-views.md` 应继续由不同 concern 驱动，而不是追求“一张图讲完”。
+
+Zuno 写作映射：
+
+```text
+Stakeholder concern
+→ 选择最小必要 view / 场景
+→ 解释该 view 能回答什么
+→ 明确它不能证明什么
+→ 回到 canonical Owner 文档
+```
+
+### 9.2 架构故事应保留因果和人的意义，但必须和 evidence / argument 绑定
+
+Rainer 在 human-centric software engineering 的 storytelling 研究中把故事视为对过度抽象的一种补偿方式，并明确指出 storytelling 可以和 evidence、argument 结合。对 Zuno 来说，这不意味着把技术文档小说化，而是要求每个抽象边界保留它出现时的业务因果。
+
+因此 Zuno 的“故事”应该主要由以下元素组成：
+
+```text
+Actor / system context
+→ concrete trigger
+→ current assumption
+→ failure or tension
+→ decision
+→ consequence
+→ remaining problem
+```
+
+法律案件时间线非常适合承担这条主线，因为材料进入、专业判断、长期运行、权限变化和外部副作用天然具有时间顺序。对象名和 Contract 应在读者已经理解矛盾以后再出现。
+
+Daniel 等人的 viewpoint-driven visual analysis 工作也支持同一原则：可视化应从 concern / viewpoint 出发选择，而不是先选一个通用图形再试图塞入全部信息。
+
+### 9.3 设计架构时先写 quality-attribute scenario，再选 tactic / pattern
+
+SEI 关于 architectural tactics 的工作把质量需求与设计决策联系起来：质量需求需要被写成足够具体的场景，再通过 tactic 连接到设计片段。Márquez 与 Astudillo 2023 年对 IT 专业人员的受控实验进一步显示，在 framework 选择中同时使用 pattern 与 tactic，比只使用 pattern 能更有效地收缩设计空间并得到更精确的选择。
+
+这给 Zuno 一个明确的设计纪律：
+
+```text
+Business / professional risk
+→ Quality Attribute Scenario
+→ Candidate Tactics
+→ Candidate Architecture Decisions
+→ Trade-off
+→ Chosen design
+→ Measurement / Evidence
+```
+
+禁止从下面这种链路开始：
+
+```text
+LangGraph 有 Checkpointer
+→ 所以 Zuno 需要 Checkpoint 模块
+
+GraphRAG 很先进
+→ 所以 Knowledge 必须 GraphRAG
+
+微服务是成熟架构
+→ 所以九个逻辑责任域应该部署成九个服务
+```
+
+### 9.4 Zuno 应把“质量属性”翻译成自己的业务风险语言
+
+传统 quality attributes 如 modifiability、performance、availability、security 仍然适用，但 Zuno 的 Architecture Story 还需要先用业务语言表达更贴近法律系统的风险。
+
+例如：
+
+| 业务场景 | 主要架构关注 | 可能的 tactic / boundary |
+| --- | --- | --- |
+| 新材料进入后旧结论仍被展示为当前有效 | freshness / correctness / traceability | version binding, invalidation, explicit validity state |
+| Domain 已正式提交但 Runtime 在 checkpoint 前崩溃 | recoverability / consistency | durable domain receipt, owner-first recovery |
+| 外部提交 timeout 后 blind retry | consistency / idempotency / recoverability | logical action identity, reconciliation |
+| 长任务执行期间权限被撤销 | security / authorization freshness | continuous authorization, fail-closed effect gate |
+| 两个 Provider 都返回相同 schema 但专业语义不同 | substitutability / professional quality | capability contract, qualification evidence |
+| GraphRAG / Reflection 增加复杂度但收益未知 | cost / modifiability / evolvability | measurement gate, deletion condition |
+
+这些场景先于 tactic 名称。只有一个设计选择能够明确回答“它改善哪个 scenario、代价是什么、如何测量”，才有资格进入 Target Architecture。
+
+### 9.5 Trade-off 不是文档末尾的礼貌性补充
+
+Bellomo、Gorton、Kazman 对 15 年 ATAM 数据的分析显示，真实项目长期面对多个 quality concerns，而不是单目标优化。对 Zuno 来说，Trade-off 应在设计选择发生的地方同步出现。
+
+例如 Single Controller：
+
+```text
+收益：控制状态收敛、PlanVersion authority、late-result 判断更简单
+代价：全局控制最终经过一个逻辑写者，吞吐和可用性策略受限
+继续使用条件：控制吞吐未成为真实瓶颈，且简化恢复的收益仍高于并行控制收益
+升级条件：有 measurement 证明 controller 成为主要瓶颈，再研究 partitioned control
+```
+
+这样 Trade-off 会直接约束演进，而不是在文档末尾补一句“增加了一些复杂度”。
+
+### 9.6 Architectural Decision 的对象不仅是结论，还包括 rationale 和 rejected alternatives
+
+Architectural decision documentation 的研究持续强调 rationale、alternatives 与后续可理解性。Zuno 的 ADR 不应只是“采用 X”，而应至少能恢复：
+
+```text
+Context / scenario
+→ Decision driver
+→ Considered alternatives
+→ Chosen decision
+→ Consequences
+→ Evidence or measurement needed
+→ Revisit / deletion condition
+```
+
+这和当前 `decisions / evidence / governance` 三个域的职责是一致的：ADR 保存长期理由，Evidence 证明 Current，Governance 负责事实边界。论文只能支持这种方法论，不证明任何 Zuno Target 已经实现。
+
+### 9.7 对下一轮正文重写的直接要求
+
+下一轮 `architecture.md` 和 Module Part A 不再只检查“有没有场景”，而检查场景是否真正驱动了设计：
+
+1. 每个重要机制能否追溯到一个具体 business / quality scenario；
+2. 该 scenario 的 stimulus、environment、response 和 failure consequence 是否足够清楚；
+3. 是否先讨论 simple baseline，再讨论 tactic / boundary；
+4. 是否说明至少一个 rejected alternative；
+5. 是否说明该设计改善什么，同时牺牲什么；
+6. 是否给出 measurement / evidence 或明确 `Measurement Needed`；
+7. View / Diagram 是否服务一个明确 concern，而不是把所有对象堆在一张图上；
+8. ADR 是否能恢复设计理由，而不仅是最终选择。
+
+这八条是 Human / Architecture Review 的推理要求，不应直接机械化成固定标题或关键词配额。
+
+### 9.8 本轮主要论文
+
+- Kari Smolander, Tero Päivärinta. **Describing and Communicating Software Architecture in Practice: Observations on Stakeholders and Rationale**. CAiSE, 2002. DOI: `10.1007/3-540-47961-9_11`.
+- Felix Bachmann, Len Bass, Jeromy Carriere, Paul Clements, David Garlan, James Ivers, Robert L. Nord, Reed Little. **Software Architecture Documentation in Practice: Documenting Architectural Layers**. SEI report, 2000. DOI: `10.21236/ADA377988`.
+- Paul C. Clements. **Comparing the SEI's Views and Beyond Approach for Documenting Software Architecture with ANSI-IEEE 1471-2000**. SEI technical note, 2005. DOI: `10.21236/ADA441291`.
+- Austen Rainer. **Storytelling in human-centric software engineering research**. EASE, 2021. DOI: `10.1145/3463274.3463803`.
+- Donny Thomas Daniel, Egon Wuchner, Michael Stal, Peter Liggesmeyer. **Towards Viewpoint-driven Visual Analysis for Effective Architecture Recovery**. VISSOFT, 2018. DOI: `10.1109/VISSOFT.2018.00024`.
+- Felix Bachmann. **Deriving Architectural Tactics: A Step Toward Methodical Architectural Design**. SEI report / repository record. DOI: `10.1184/r1/6573047`.
+- Gastón Márquez, Hernán Astudillo. **Selecting Application Frameworks Using Architectural Patterns and Tactics**. SCCC, 2023. DOI: `10.1109/SCCC59417.2023.10315698`.
+- Stephany Bellomo, Ian Gorton, Rick Kazman. **Toward Agile Architecture: Insights from 15 Years of ATAM Data**. IEEE Software, 2015. DOI: `10.1109/MS.2015.35`.
+
+这些来源支持“如何推理和表达架构”的方法论。它们不支持任何关于 Zuno 当前性能、Production Readiness、业务效果或个人实现范围的更强事实声明。
