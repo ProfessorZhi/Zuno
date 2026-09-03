@@ -6,7 +6,13 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 ARCH_ROOT = REPO_ROOT / "docs/architecture"
-ARCHITECTURE_FILES = {"README.md", "architecture.md", "architecture-views.md", "architecture.html"}
+ARCHITECTURE_FILES = {
+    "README.md",
+    "architecture.md",
+    "architecture-views.md",
+    "architecture.html",
+    "reference.md",
+}
 
 
 def read(path: str) -> str:
@@ -26,12 +32,20 @@ def verify() -> list[str]:
         REPO_ROOT / "docs/README.md",
         REPO_ROOT / "docs/project/README.md",
         REPO_ROOT / "docs/project/project.md",
+        REPO_ROOT / "docs/project/reference.md",
+        REPO_ROOT / "docs/architecture/README.md",
         REPO_ROOT / "docs/architecture/architecture.md",
+        REPO_ROOT / "docs/architecture/reference.md",
         REPO_ROOT / "docs/modules/README.md",
+        REPO_ROOT / "docs/modules/reference.md",
+        REPO_ROOT / "docs/decisions/README.md",
+        REPO_ROOT / "docs/evidence/README.md",
+        REPO_ROOT / "docs/governance/README.md",
+        REPO_ROOT / "docs/governance/documentation-architecture.md",
         REPO_ROOT / "docs/maintenance/history/red-blue/README.md",
     ):
         if not path.exists():
-            errors.append(f"missing canonical project entrypoint: {path.relative_to(REPO_ROOT)}")
+            errors.append(f"missing canonical documentation entrypoint: {path.relative_to(REPO_ROOT)}")
 
     for mirror in (REPO_ROOT / ".agent/architecture", REPO_ROOT / ".agent/modules"):
         if mirror.exists():
@@ -41,28 +55,79 @@ def verify() -> list[str]:
     index = read("docs/README.md")
     project = read("docs/project/project.md")
     arch_index = read("docs/architecture/README.md")
+    arch_reference = read("docs/architecture/reference.md")
     modules_index = read("docs/modules/README.md")
+    modules_reference = read("docs/modules/reference.md")
+    governance_index = read("docs/governance/README.md")
+    docs_architecture = read("docs/governance/documentation-architecture.md")
     system = read(".agent/system.yaml")
 
-    if "project/" not in index or "architecture/" not in index:
-        errors.append("docs README must route to project and architecture")
+    for marker in (
+        "project/",
+        "architecture/",
+        "modules/",
+        "decisions/",
+        "evidence/",
+        "governance/",
+        "System Story",
+        "Knowledge Control",
+        "Project 解释现实",
+    ):
+        if marker not in index:
+            errors.append(f"docs README missing six-domain marker: {marker}")
+
     if "project.md" not in index:
         errors.append("docs README must route to consolidated project.md")
     if "docs/architecture/" not in system:
         errors.append("system.yaml must route to architecture surface")
 
     for marker in (
-        "architecture.md",
-        "architecture-views.md",
-        "architecture.html",
-        "../project/project.md",
-        "../modules/",
-        "../decisions/",
-        "../research/",
-        "../evidence/",
+        "Human View",
+        "Engineering / Agent View",
+        "reference.md",
+        "模块数量不是文档先验",
+        "Evidence",
     ):
         if marker not in arch_index:
-            errors.append(f"architecture README missing boundary marker: {marker}")
+            errors.append(f"architecture README missing new documentation-boundary marker: {marker}")
+
+    for marker in (
+        "canonical-architecture-machine-router",
+        "Read order for implementation",
+        "Cross-cutting facts that belong here",
+        "Non-goals",
+    ):
+        if marker not in arch_reference:
+            errors.append(f"architecture reference missing machine-routing marker: {marker}")
+
+    for marker in (
+        "canonical-module-router",
+        "Documentation rule",
+        "Current Target module routes",
+        "For a module implementation task",
+    ):
+        if marker not in modules_reference:
+            errors.append(f"modules reference missing machine-routing marker: {marker}")
+
+    for marker in (
+        "六域文档模型",
+        "documentation-architecture.md",
+        "三个系统域",
+        "三个治理域",
+    ):
+        if marker not in governance_index:
+            errors.append(f"governance README missing documentation architecture marker: {marker}")
+
+    for marker in (
+        "canonical-documentation-architecture",
+        "system_story",
+        "knowledge_control",
+        "Human / Machine projection",
+        "Module decomposition",
+        "Navigation contracts",
+    ):
+        if marker not in docs_architecture:
+            errors.append(f"documentation architecture reference missing marker: {marker}")
 
     for marker in (
         "为什么会有这个项目",
@@ -137,8 +202,10 @@ def verify() -> list[str]:
         if marker not in modules_index:
             errors.append(f"modules README missing current design marker: {marker}")
 
-    if "Current" not in index or "Target" not in index or "Unknown" not in index:
-        errors.append("docs README must explain Current/Target/Unknown")
+    for marker in ("Current", "Target", "Unknown"):
+        if marker not in index:
+            errors.append(f"docs README must explain {marker}")
+
     return errors
 
 

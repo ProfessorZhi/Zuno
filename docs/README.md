@@ -75,6 +75,16 @@ architecture/reference.md
 
 文档架构本身不冻结模块数量。当前 Target Architecture 仍可采用现有九个逻辑责任域，但“九个”是系统设计结果，不是 Documentation Architecture 的先验约束；未来责任合并或拆分必须由 Architecture / ADR 推导，而不是为了目录整齐。
 
+## Current / Target / Unknown
+
+三种事实层级必须始终分开：
+
+- **Current**：今天只能由代码、Migration、Test、Trace、Eval 或真实运行结果证明；主要进入 `evidence/`。
+- **Target**：今天接受的理想设计；主要进入 `architecture/` 与 `modules/`，不能自动升级成已实现。
+- **Unknown**：当前证据不足的历史、个人任务、质量、Pilot 或生产事实；保持 Unknown，直到新的可靠证据出现。
+
+Project 还可以维护 **History**，但 History 不能覆盖 Current，也不能把今天的 Target 反写成过去已经采用的设计。
+
 ## 支持材料与兼容目录
 
 当前仓库仍保留 `research/`、`maintenance/` 和根级 `terminology.md`，以避免一次迁移制造大面积断链。它们从现在起不再作为与六个 canonical domain 平级的 Truth Owner：
