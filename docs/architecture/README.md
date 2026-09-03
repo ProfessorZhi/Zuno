@@ -2,9 +2,16 @@
 
 `docs/architecture/` 描述设计阶段接受的总体 Target Architecture。这里不讲个人历史，也不把代码目录当架构；它从真实业务约束出发，解释一个长期法律智能工作系统应该保护哪些事实、怎样跨边界、失败后先相信谁。
 
-## Human View
+这个目录提供四种入口：
 
-[`architecture.md`](architecture.md) Part A 是总体架构的主章节。第一次阅读沿同一个案件和故障场景往下走，不需要先背模块名：
+- [`architecture.md`](architecture.md) —— canonical 总体架构正文；
+- [`architecture-views.md`](architecture-views.md) —— 六张高信息量总体视图；
+- [`architecture.html`](architecture.html) —— 面向连续浏览的渲染版本；
+- [`reference.md`](reference.md) —— Agent / 实施任务的机器路由入口。
+
+## Human View — Part A — Human Narrative
+
+[`architecture.md`](architecture.md) 的 **Part A — Human Narrative（人类技术叙事）** 是总体架构的主章节。第一次阅读沿同一个案件和故障场景往下走，不需要先背模块名：
 
 ```text
 简单法律问答
@@ -20,9 +27,11 @@
 
 Part A 的目标是建立 mental model，也应能直接支撑系统设计面试。它可以有强观点和具体失败场景，但不能为了讲得漂亮制造 Current、Production 或个人 Ownership。
 
-## Engineering / Agent View
+需要先通过图建立整体结构时，可以并行阅读 [`architecture-views.md`](architecture-views.md)；需要连续浏览而不关心 Markdown 文件结构时，可以使用 [`architecture.html`](architecture.html)。图和 HTML 都是总体架构的投影，不拥有新的架构事实。
 
-机器先读 [`reference.md`](reference.md)，再进入 `architecture.md` Part B。总体 Part B 只保存跨模块 Authority、Contract、Completion Proof、Recovery、Version/Freshness、Security 和 Source Map；局部字段、状态机、事务和 Crash Window 下沉到 Module Part B/C。
+## Engineering / Agent View — Part B — Engineering / Agent Reference
+
+机器先读 [`reference.md`](reference.md)，再进入 `architecture.md` 的 **Part B — Engineering / Agent Reference（工程 / Agent 参考）**。总体 Part B 只保存跨模块 Authority、Contract、Completion Proof、Recovery、Version/Freshness、Security 和 Source Map；局部字段、状态机、事务和 Crash Window 下沉到 Module Part B/C。
 
 ```text
 architecture/reference.md
@@ -33,6 +42,8 @@ architecture/reference.md
 → Evidence
 → code
 ```
+
+总体架构的现实来源与上下游边界保持明确：项目背景来自 [`../project/project.md`](../project/project.md)；责任分解进入 [`../modules/`](../modules/)；长期设计理由进入 [`../decisions/`](../decisions/)；研究与外部方案只作为 [`../research/`](../research/) 上游依据；实现、测试和运行事实只能由 [`../evidence/`](../evidence/) 证明。
 
 ## 模块数量不是文档先验
 
