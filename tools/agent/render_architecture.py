@@ -18,7 +18,13 @@ EXPECTED_VIEWS = [
     "Recovery View",
     "Deployment and Evolution View",
 ]
-CANONICAL_ARCHITECTURE_FILES = {"README.md", "architecture.md", "architecture-views.md", "architecture.html"}
+CANONICAL_ARCHITECTURE_FILES = {
+    "README.md",
+    "architecture.md",
+    "architecture-views.md",
+    "architecture.html",
+    "reference.md",
+}
 MERMAID_MODULE_URL = "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs"
 STALE_OUTPUTS = [
     REPO_ROOT / "docs/architecture/overview.html",
