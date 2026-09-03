@@ -14,10 +14,13 @@ EXPECTED_VIEWS = [
     "Recovery View",
     "Deployment and Evolution View",
 ]
-CANONICAL_ARCHITECTURE_FILES = {"README.md", "architecture.md", "architecture-views.md", "architecture.html"}
-CANONICAL_PROJECT_FILES = {"README.md", "project.md"}
+CANONICAL_ARCHITECTURE_FILES = {
+    "README.md", "architecture.md", "architecture-views.md", "architecture.html", "reference.md"
+}
+CANONICAL_PROJECT_FILES = {"README.md", "project.md", "reference.md"}
 CANONICAL_MODULE_FILES = {
     "README.md",
+    "reference.md",
     "01-application-integration.md",
     "02-legal-domain-work-product.md",
     "03-knowledge-evidence.md",
@@ -28,6 +31,7 @@ CANONICAL_MODULE_FILES = {
     "08-security-governance.md",
     "09-observability-evaluation.md",
 }
+MODULE_DESIGN_FILES = CANONICAL_MODULE_FILES - {"README.md", "reference.md"}
 CANONICAL_RED_BLUE_FILES = {
     "README.md", "current.md", "protocol.md", "attack-model.md", "judge.md",
     "templates/round.md", "templates/turn.md",
@@ -84,6 +88,11 @@ def test_project_documentation_is_consolidated_and_canonical() -> None:
     readme = (root / "README.md").read_text(encoding="utf-8")
     assert "project.md" in readme
     assert "project-fact-provenance.md" in readme
+    assert "reference.md" in readme
+
+    reference = (root / "reference.md").read_text(encoding="utf-8")
+    assert "project.md" in reference
+    assert "project-fact-provenance.md" in reference
 
     project = (root / "project.md").read_text(encoding="utf-8")
     for marker in (
@@ -131,6 +140,8 @@ def test_architecture_directories_only_contain_support_files() -> None:
     root = REPO_ROOT / "docs/architecture"
     assert {p.name for p in root.iterdir() if p.is_file()} == CANONICAL_ARCHITECTURE_FILES
     assert not [p for p in root.iterdir() if p.is_dir()]
+    reference = (root / "reference.md").read_text(encoding="utf-8")
+    assert "architecture.md" in reference and "docs/modules/" in reference
 
 
 def test_module_design_is_human_first_complete_and_detail_candidate_9_of_9() -> None:
@@ -151,7 +162,11 @@ def test_module_design_is_human_first_complete_and_detail_candidate_9_of_9() -> 
         assert marker in readme
     assert "简单法律问答" in readme and "复杂法律分析" in readme and "现实副作用" in readme
 
-    for name in sorted(CANONICAL_MODULE_FILES - {"README.md"}):
+    reference = (root / "reference.md").read_text(encoding="utf-8")
+    assert "01-application-integration.md" in reference
+    assert "09-observability-evaluation.md" in reference
+
+    for name in sorted(MODULE_DESIGN_FILES):
         content = (root / name).read_text(encoding="utf-8")
         assert content.startswith("# ")
         assert "status: design-baseline-v1" in content
