@@ -1,6 +1,6 @@
 # Zuno Documentation
 
-Zuno 的文档现在只保留八个一级目录。它们不是为了凑成对称结构，而是对应八种长期不同的阅读责任。
+Zuno 的文档只保留八个一级目录。它们对应八种长期不同的阅读责任，不为了目录对称而重复事实。
 
 ```text
 System & Review
@@ -23,11 +23,11 @@ governance/     谁拥有事实、文档怎样写、Agent 怎样读取、修改�
 第一次接触 Zuno，只走一条主线：
 
 1. [`project/README.md`](./project/README.md) —— 从天津智慧司法与 LIPLAB 研究/工程背景进入，理解项目为什么存在、已有系统是什么、团队和个人实际参与到哪里。
-2. [`architecture/README.md`](./architecture/README.md) Part A —— 从最简单的 Generic Agent Host + Legal RAG + Research Capability baseline 开始，看材料版本、专业资格、正式业务事实、长任务、现实副作用和持续授权怎样逐步逼出新的事实边界。
-3. [`modules/README.md`](./modules/README.md) —— 沿同一个法律任务进入局部责任，再按 `application/`、`domain/`、`knowledge/`、`runtime/`、`capability/`、`effects/`、`model-gateway/`、`security/`、`evaluation/` 进入对应 Module Part A。
+2. [`architecture/README.md`](./architecture/README.md) —— 从最简单的 Generic Agent Host + Legal RAG + Research Capability baseline 开始，看材料版本、专业资格、正式业务事实、长任务、现实副作用和持续授权怎样逐步逼出新的事实边界。
+3. [`modules/README.md`](./modules/README.md) —— 沿同一个法律任务进入局部责任，再按 `application/`、`domain/`、`knowledge/`、`runtime/`、`capability/`、`effects/`、`model-gateway/`、`security/`、`evaluation/` 进入对应 Module `README.md`。
 4. [`evidence/README.md`](./evidence/README.md) —— 回到 Current，检查哪些 Target 今天已经由代码、测试或可复现运行证明。
 
-这条路径必须能够连续形成：
+这条路径形成：
 
 ```text
 司法与研究背景
@@ -41,23 +41,29 @@ governance/     谁拥有事实、文档怎样写、Agent 怎样读取、修改�
 
 Red / Blue 不属于第一次阅读路径。正文先达到可独立阅读的教材质量，再使用 [`red-blue/`](./red-blue/README.md) 找作者自己没有发现的 Narrative、Architecture、Evidence、Ownership 或 Simplification Gap。
 
-## Human View 与 Engineering View
+## Human View 与 Engineering Reference
 
-Human-facing 文档负责建立 mental model。Project、Architecture 与 Module 的 Part A 先描述现实场景、最简单方案、具体失败、设计如何产生、典型恢复和删除条件，再使用内部术语。
+Project 的 `README.md` 是项目叙事，`reference.md` 是事实索引。Architecture 和每个 Module 现在采用同一个物理规则：
 
-Engineering / Agent View 保存精确规则：Owner、Authority、Contract、Version、Completion Proof、Persistence、Retry / Replan / Reconcile、Security、Failure Matrix 和 Source Map。机器不应从叙事 prose 猜字段或 Current 状态。
+```text
+README.md      Human Narrative
+reference.md   Engineering / Agent Reference
+```
 
-实现或审查任务的默认下钻顺序是：
+Human Narrative 负责现实场景、最简单方案、具体失败、设计如何产生、正常流程、恢复、替代方案和删除条件。Engineering Reference 保存 Owner、Authority、Contract、Version、Completion Proof、Persistence、Retry / Replan / Reconcile、Security、Failure Matrix、Detail Candidate 和跨模块一致性。
+
+机器不应从 Human Narrative 猜字段、状态或 Current。实现或审查任务的默认下钻顺序是：
 
 ```text
 architecture/reference.md
-→ architecture/README.md Part B
 → modules/reference.md
-→ selected Module README.md Part B / Part C
+→ selected modules/<semantic-name>/reference.md
 → decisions/
 → evidence/
 → code / schema / migration / tests
 ```
+
+需要先理解原因时，再回对应 README。这样人类阅读和机器实施共享同一套事实，但不再挤在同一个超长文件里。
 
 ## 八个一级目录的边界
 
@@ -86,6 +92,6 @@ Pilot 不等于 Production。导师/课题组成果不等于个人成果。Frame
 
 ## 文档之外的运行入口
 
-`.agent/` 保存机器路由与临时运行状态，不保存第二套业务事实。Red / Blue 的方法和历史归 `docs/red-blue/`，机器 active state 仍可以放在 `.agent/red-blue/`；Agent/GitHub 协作规则与运维 Runbook 归 `docs/governance/workflows/` 和 `docs/governance/operations/`。
+`.agent/` 保存机器路由与临时运行状态，不保存第二套业务事实。Red / Blue 的方法和历史归 `docs/red-blue/`；Agent/GitHub 协作规则与运维 Runbook 归 `docs/governance/workflows/` 和 `docs/governance/operations/`。
 
-出现冲突时，不用目录层级机械裁决。先判断争议属于 History、Target、Decision、Current 还是 Rules，再回对应 Owner。详细规则见 [`governance/documentation-architecture.md`](./governance/documentation-architecture.md)。
+出现冲突时，先判断争议属于 History、Target、Decision、Current 还是 Rules，再回对应 Owner。详细规则见 [`governance/documentation-architecture.md`](./governance/documentation-architecture.md)。

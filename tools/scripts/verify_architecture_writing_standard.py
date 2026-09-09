@@ -5,23 +5,24 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[2]
-ARCH = ROOT / "docs/architecture/README.md"
+ARCH_HUMAN = ROOT / "docs/architecture/README.md"
+ARCH_REFERENCE = ROOT / "docs/architecture/reference.md"
 VIEWS = ROOT / "docs/architecture/architecture-views.md"
 HTML = ROOT / "docs/architecture/architecture.html"
 STANDARD = ROOT / "docs/governance/human-first-documentation-standard.md"
 QUALITY_STANDARD = ROOT / "docs/governance/architecture-narrative-quality-standard.md"
 MODULES = ROOT / "docs/modules"
 
-MODULE_FILES = (
-    "application/README.md",
-    "domain/README.md",
-    "knowledge/README.md",
-    "runtime/README.md",
-    "capability/README.md",
-    "effects/README.md",
-    "model-gateway/README.md",
-    "security/README.md",
-    "evaluation/README.md",
+MODULE_DIRS = (
+    "application",
+    "domain",
+    "knowledge",
+    "runtime",
+    "capability",
+    "effects",
+    "model-gateway",
+    "security",
+    "evaluation",
 )
 
 
@@ -70,16 +71,17 @@ def verify() -> list[str]:
             if marker not in quality_standard:
                 errors.append(f"architecture narrative quality standard missing principle: {marker}")
 
-    for path in (ARCH, VIEWS, HTML):
+    for path in (ARCH_HUMAN, ARCH_REFERENCE, VIEWS, HTML):
         if not path.exists():
             errors.append(f"missing canonical architecture document: {path.relative_to(ROOT)}")
-    if not ARCH.exists():
+    if not ARCH_HUMAN.exists() or not ARCH_REFERENCE.exists():
         return errors
 
-    design = ARCH.read_text(encoding="utf-8")
+    human = ARCH_HUMAN.read_text(encoding="utf-8")
+    reference = ARCH_REFERENCE.read_text(encoding="utf-8")
 
-    # Part A must remain an intelligible engineering argument. Part B is required as
-    # the machine/Agent reference and is validated for cross-module reference coverage.
+    # Human writing quality is evaluated on README only. Engineering reference is
+    # intentionally dense; it is checked for structural precision, not narrative style.
     for marker in (
         "# Zuno 目标架构",
         "## Part A — Human Narrative（人类技术叙事）",
@@ -97,6 +99,14 @@ def verify() -> list[str]:
         "独立网络服务",
         "Reconcile",
         "Target Architecture",
+        "reference.md",
+    ):
+        if marker not in human:
+            errors.append(f"architecture README missing human-writing marker: {marker}")
+    if "## Part B — Engineering / Agent Reference（工程 / Agent 参考）" in human:
+        errors.append("architecture README must remain Human Narrative only")
+
+    for marker in (
         "## Part B — Engineering / Agent Reference（工程 / Agent 参考）",
         "### B2. Authority / Ownership Matrix",
         "### B3. Cross-boundary Contract Map",
@@ -105,22 +115,28 @@ def verify() -> list[str]:
         "### B13. Current / Target / Evidence / Unknown",
         "### B14. Machine Navigation / Source Precedence",
     ):
-        if marker not in design:
-            errors.append(f"architecture.md missing writing marker: {marker}")
+        if marker not in reference:
+            errors.append(f"architecture reference missing writing-model marker: {marker}")
 
-    part_a = design.find("## Part A — Human Narrative（人类技术叙事）")
-    part_b = design.find("## Part B — Engineering / Agent Reference（工程 / Agent 参考）")
-    if part_a < 0 or part_b < 0 or part_a >= part_b:
-        errors.append("overall architecture must keep Part A before Part B")
-
-    for filename in MODULE_FILES:
-        path = MODULES / filename
-        if not path.exists():
-            errors.append(f"missing canonical module document: {path.relative_to(ROOT)}")
+    for directory in MODULE_DIRS:
+        human_path = MODULES / directory / "README.md"
+        reference_path = MODULES / directory / "reference.md"
+        for path in (human_path, reference_path):
+            if not path.exists():
+                errors.append(f"missing canonical module document: {path.relative_to(ROOT)}")
+        if not human_path.exists() or not reference_path.exists():
             continue
-        text = path.read_text(encoding="utf-8")
+
+        module_human = human_path.read_text(encoding="utf-8")
+        module_reference = reference_path.read_text(encoding="utf-8")
+        if "## Part A — Human Narrative" not in module_human:
+            errors.append(f"{directory}/README.md missing Human Narrative marker")
+        if "## Part B — Engineering / Agent Reference" in module_human:
+            errors.append(f"{directory}/README.md must not retain Part B")
+        if "reference.md" not in module_human:
+            errors.append(f"{directory}/README.md must route to engineering reference")
+
         for marker in (
-            "## Part A — Human Narrative",
             "## Part B — Engineering / Agent Reference",
             "## Part C — Cross-Module Consistency（跨模块一致性）",
             "### C1 Completion Proof / Non-proof（完成证明与非证明）",
@@ -128,8 +144,12 @@ def verify() -> list[str]:
             "### C3 Cancellation / Late Result / Staleness Rules（取消、晚到结果与失效规则）",
             "### C4 Recovery Order / Consistency Tests（恢复顺序与一致性验证）",
         ):
-            if marker not in text:
-                errors.append(f"{filename} missing writing-model marker: {marker}")
+            if marker not in module_reference:
+                errors.append(f"{directory}/reference.md missing writing-model marker: {marker}")
+        part_b = module_reference.find("## Part B — Engineering / Agent Reference")
+        part_c = module_reference.find("## Part C — Cross-Module Consistency（跨模块一致性）")
+        if part_b < 0 or part_c < 0 or part_b >= part_c:
+            errors.append(f"{directory}/reference.md must keep Part B before Part C")
 
     if VIEWS.exists() and "```mermaid" not in VIEWS.read_text(encoding="utf-8"):
         errors.append("architecture-views.md must remain a Mermaid source")

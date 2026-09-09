@@ -4,7 +4,6 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 PROJECT_FILES = {
     "docs/project/README.md",
-    "docs/project/README.md",
     "docs/project/reference.md",
 }
 RESEARCH_FILES = {
@@ -15,18 +14,25 @@ RESEARCH_FILES = {
     "docs/research/agent-platform-baseline.md",
     "docs/research/documentation-narrative-blueprint.md",
 }
+MODULE_NAMES = (
+    "application",
+    "domain",
+    "knowledge",
+    "runtime",
+    "capability",
+    "effects",
+    "model-gateway",
+    "security",
+    "evaluation",
+)
 MODULE_FILES = {
     "docs/modules/README.md",
     "docs/modules/reference.md",
-    "docs/modules/application/README.md",
-    "docs/modules/domain/README.md",
-    "docs/modules/knowledge/README.md",
-    "docs/modules/runtime/README.md",
-    "docs/modules/capability/README.md",
-    "docs/modules/effects/README.md",
-    "docs/modules/model-gateway/README.md",
-    "docs/modules/security/README.md",
-    "docs/modules/evaluation/README.md",
+    *{
+        f"docs/modules/{name}/{filename}"
+        for name in MODULE_NAMES
+        for filename in ("README.md", "reference.md")
+    },
 }
 ARCHITECTURE_FILES = {
     "README.md",
@@ -83,7 +89,7 @@ def main() -> int:
     if _relative_files(ROOT / "docs/research") != RESEARCH_FILES:
         errors.append("research boundary mismatch")
     if _relative_files(ROOT / "docs/modules") != MODULE_FILES:
-        errors.append("modules boundary mismatch: expected human entry, machine router and current Target module docs")
+        errors.append("modules boundary mismatch: expected root human/router plus README/reference pair for each current Target responsibility")
     if {path.name for path in (ROOT / "docs/architecture").iterdir() if path.is_file()} != ARCHITECTURE_FILES:
         errors.append("architecture boundary mismatch: expected human/visual/rendered entries plus machine reference")
 
@@ -105,6 +111,7 @@ def main() -> int:
         for marker in (
             "Physical layout",
             "Truth ownership",
+            "Human / Machine projection",
             "Default reading paths",
             "Research boundary",
             "Red / Blue boundary",
@@ -112,6 +119,12 @@ def main() -> int:
         ):
             if marker not in text:
                 errors.append(f"documentation architecture missing marker: {marker}")
+
+    for name in MODULE_NAMES:
+        readme = ROOT / "docs/modules" / name / "README.md"
+        reference = ROOT / "docs/modules" / name / "reference.md"
+        if not readme.exists() or not reference.exists():
+            errors.append(f"module boundary {name} must expose both README.md and reference.md")
 
     for obsolete in (
         ROOT / "docs/maintenance",

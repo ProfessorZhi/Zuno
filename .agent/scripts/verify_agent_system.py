@@ -3,16 +3,21 @@ import re
 
 
 ROOT = Path(__file__).resolve().parents[2]
-MODULE_FILES = (
-    "docs/modules/application/README.md",
-    "docs/modules/domain/README.md",
-    "docs/modules/knowledge/README.md",
-    "docs/modules/runtime/README.md",
-    "docs/modules/capability/README.md",
-    "docs/modules/effects/README.md",
-    "docs/modules/model-gateway/README.md",
-    "docs/modules/security/README.md",
-    "docs/modules/evaluation/README.md",
+MODULE_NAMES = (
+    "application",
+    "domain",
+    "knowledge",
+    "runtime",
+    "capability",
+    "effects",
+    "model-gateway",
+    "security",
+    "evaluation",
+)
+MODULE_FILES = tuple(
+    f"docs/modules/{name}/{filename}"
+    for name in MODULE_NAMES
+    for filename in ("README.md", "reference.md")
 )
 RED_BLUE_FILES = {
     ".agent/red-blue/README.md",
@@ -95,6 +100,10 @@ def verify_system_yaml(root: Path) -> list[str]:
         "system_identity:",
         "runtime_boundary:",
         "truth_rules:",
+        "view_rules:",
+        'human_filename: "README.md"',
+        'engineering_filename: "reference.md"',
+        "human_and_engineering_must_preserve_same_authority_semantics: true",
         "program_rules:",
         "module_rules:",
         "complexity_rules:",
@@ -131,9 +140,11 @@ def verify_system_yaml(root: Path) -> list[str]:
         ".agent/red-blue/judge.md",
         "docs/README.md",
         "docs/project/README.md",
-        "docs/project/README.md",
+        "docs/project/reference.md",
         "docs/architecture/README.md",
+        "docs/architecture/reference.md",
         "docs/modules/README.md",
+        "docs/modules/reference.md",
         "docs/red-blue/README.md",
         "docs/research/README.md",
         "docs/decisions/README.md",
@@ -146,6 +157,14 @@ def verify_system_yaml(root: Path) -> list[str]:
     ):
         if not (root / relative).exists():
             errors.append(f"system.yaml route target missing: {relative}")
+
+    for name in MODULE_NAMES:
+        human = f'human: "docs/modules/{name}/README.md"'
+        engineering = f'engineering: "docs/modules/{name}/reference.md"'
+        if human not in content:
+            errors.append(f"system.yaml missing human module route: {name}")
+        if engineering not in content:
+            errors.append(f"system.yaml missing engineering module route: {name}")
 
     for obsolete in ("docs/maintenance", "docs/terminology.md"):
         if (root / obsolete).exists():

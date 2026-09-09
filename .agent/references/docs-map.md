@@ -25,9 +25,9 @@ docs/governance/              provenance / owner / documentation / workflow / op
 ```text
 docs/README.md
 → docs/project/README.md
-→ docs/architecture/README.md Part A
+→ docs/architecture/README.md
 → docs/modules/README.md
-→ docs/modules/<semantic-name>/README.md Part A
+→ docs/modules/<semantic-name>/README.md
 → docs/evidence/README.md
 ```
 
@@ -37,13 +37,15 @@ Research 按需进入，不作为第一次阅读固定中转。Red / Blue 在正
 
 ```text
 docs/architecture/reference.md
-→ docs/architecture/README.md Part B
 → docs/modules/reference.md
-→ docs/modules/<semantic-name>/README.md Part B / Part C
+→ docs/modules/<semantic-name>/reference.md
+→ relevant neighboring module reference.md
 → docs/decisions/
 → docs/evidence/
 → code / schema / migration / tests
 ```
+
+需要理解“为什么存在”时，从 reference 回到同目录 README；不要从 README 猜字段、状态或 Current。
 
 当前语义模块目录：
 
@@ -57,6 +59,13 @@ effects/          06 Tool Runtime & Effects
 model-gateway/    07 Model Gateway
 security/         08 Security & Governance
 evaluation/       09 Observability & Evaluation
+```
+
+每个目录：
+
+```text
+README.md      Human Narrative
+reference.md   Part B Engineering Reference + Part C Cross-Module Consistency
 ```
 
 编号仍属于当前 Target decomposition；目录名表达责任语义，不把顺序冻结进文件系统。
