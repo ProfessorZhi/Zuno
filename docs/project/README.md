@@ -11,7 +11,7 @@ Zuno 是南京大学软件学院 LIPLAB 智慧司法研究与工程化背景下�
 
 理解 Zuno，需要把两件事分开。第一件事是项目为什么出现、经历过什么、参与者实际做过什么；第二件事是今天经过系统化整理以后，认为这类系统应该怎样设计。前者属于项目历史，后者属于目标架构。二者互相关联，却不能相互替代：今天的架构不能反写过去，历史上的 Pilot 也不能自动证明今天已经具备生产能力。
 
-本章先讲项目本身。当前实现证据由 [`docs/evidence/`](../evidence/README.md) 维护；跨模块的目标设计进入 [`docs/architecture/architecture.md`](../architecture/architecture.md)；某一个责任域内部的状态、失败和恢复，则继续进入 [`docs/modules/`](../modules/README.md)。
+本章先讲项目本身。当前实现证据由 [`docs/evidence/`](../evidence/README.md) 维护；跨模块的目标设计进入 [`docs/architecture/README.md`](../architecture/README.md)；某一个责任域内部的状态、失败和恢复，则继续进入 [`docs/modules/`](../modules/README.md)。
 
 ## 1. Zuno 是什么
 
@@ -244,6 +244,6 @@ Zuno 文档体系刻意把四类信息分开，因为它们回答的是不同问
 
 到这里，项目层已经完成了自己的任务：说明 Zuno 从哪里来，面对什么业务问题，为什么普通 RAG 和通用平台仍然留下专业工程责任，项目历史走到了哪里，以及今天哪些结论可以相信。
 
-下一层问题不再是“为什么立项”，而是“这些责任怎样组织成一个可以长期运行和恢复的系统”。这进入 [`docs/architecture/architecture.md`](../architecture/architecture.md)。总体架构负责解释跨模块的事实边界、正常流程和恢复原则；[`docs/modules/`](../modules/README.md) 再把这些原则落实到九个责任域；当问题变成“今天到底实现了多少”，则回到 [`docs/evidence/`](../evidence/README.md)。
+下一层问题不再是“为什么立项”，而是“这些责任怎样组织成一个可以长期运行和恢复的系统”。这进入 [`docs/architecture/README.md`](../architecture/README.md)。总体架构负责解释跨模块的事实边界、正常流程和恢复原则；[`docs/modules/`](../modules/README.md) 再把这些原则落实到九个责任域；当问题变成“今天到底实现了多少”，则回到 [`docs/evidence/`](../evidence/README.md)。
 
 这三层分别回答项目因果、目标设计和当前证据。把它们分开，才能既把系统讲完整，又不把尚未实现或尚未证明的内容写成事实。
