@@ -5,7 +5,7 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[2]
-ARCH_HUMAN = ROOT / "docs/architecture/README.md"
+ARCH_HUMAN = ROOT / "docs/architecture/architecture.md"
 ARCH_REFERENCE = ROOT / "docs/architecture/reference.md"
 VIEWS = ROOT / "docs/architecture/architecture-views.md"
 HTML = ROOT / "docs/architecture/architecture.html"
@@ -80,7 +80,7 @@ def verify() -> list[str]:
     human = ARCH_HUMAN.read_text(encoding="utf-8")
     reference = ARCH_REFERENCE.read_text(encoding="utf-8")
 
-    # Human writing quality is evaluated on README only. Engineering reference is
+    # Human writing quality is evaluated on architecture.md only. Engineering reference is
     # intentionally dense; it is checked for structural precision, not narrative style.
     for marker in (
         "# Zuno 目标架构",
@@ -88,9 +88,9 @@ def verify() -> list[str]:
         "reference.md",
     ):
         if marker not in human:
-            errors.append(f"architecture README missing human-writing marker: {marker}")
+            errors.append(f"architecture.md missing human-writing marker: {marker}")
     if "## Part B — Engineering / Agent Reference（工程 / Agent 参考）" in human:
-        errors.append("architecture README must remain Human Narrative only")
+        errors.append("architecture.md must remain Human Narrative only")
 
     for marker in (
         "## Part B — Engineering / Agent Reference（工程 / Agent 参考）",
