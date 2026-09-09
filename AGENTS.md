@@ -20,14 +20,25 @@ docs/governance/         provenance、ownership、写作、术语、workflow、o
 
 `.agent/` 是机器路由和临时运行状态，不拥有第二套业务事实。
 
+## Human / Engineering 物理边界
+
+Project、Architecture 与每个 Module 都避免让机器 Contract 挤进第一次阅读路径：
+
+```text
+README.md      人类叙事 / mental model
+reference.md   机器与工程精确参考
+```
+
+Project 的 `reference.md` 是历史与 Ownership 索引；Architecture 的 `reference.md` 保存总体 Part B；每个 Module 的 `reference.md` 保存该责任域 Part B 与 Part C。README 和 reference 共享同一套 Owner / Authority / Current-Target 语义，不能互相产生第二套事实。
+
 ## 事实边界
 
 - `docs/project/README.md` 是项目级 Human-facing 主文档。Project 解释为什么存在、真实演进、团队和个人参与；不拥有 Target Architecture 或 Current 实现证明。
-- `docs/governance/project-fact-provenance.md` 是项目事实账本。导师/团队成果、个人成果、Pilot、Court-side Testing、Production 必须按证据等级区分。
+- `docs/project/reference.md` 是 Project machine index；更严格的事实允许表述回到 `docs/governance/project-fact-provenance.md`。
 - `docs/research/` 是设计输入。论文提出不等于 Zuno 已实现；法院项目背景不等于 Zuno 已部署；Framework Feature 不等于 Zuno 自研。
-- `docs/architecture/README.md` 保存跨责任 Target Architecture；Part A 给人读，Part B 保存精确语义。Architecture Story 可以用概念演化解释设计，但不得伪造成真实项目历史。
-- `docs/modules/README.md` 是责任导航。模块正文按语义目录组织：`application/`、`domain/`、`knowledge/`、`runtime/`、`capability/`、`effects/`、`model-gateway/`、`security/`、`evaluation/`。当前 01–09 编号仍是现有 Target 的责任编号，但不再编码进文件路径。
-- 每个模块 `README.md` 当前仍同时包含 Part A / Part B / Part C；后续可以在不改变语义的前提下把 Engineering Reference 拆成独立 `reference.md`，但不能复制第二套事实。
+- `docs/architecture/README.md` 只承担总体架构 Human Narrative；`docs/architecture/reference.md` 保存跨责任 Authority、Contract、Completion Proof、Recovery、Security 和 Source Precedence。
+- `docs/modules/README.md` 是人类责任地图；`docs/modules/reference.md` 是跨模块工程入口。九个语义目录分别为 `application/`、`domain/`、`knowledge/`、`runtime/`、`capability/`、`effects/`、`model-gateway/`、`security/`、`evaluation/`。
+- 每个模块 `README.md` 只保留 Part A；同目录 `reference.md` 保存 Part B、B14 Detail Candidate 与 Part C。当前 01–09 编号仍是现有 Target 的责任编号，但不编码进文件路径。
 - `docs/decisions/` 保存长期接受的 Architecture Decision，不复制完整 Architecture Spec。
 - `docs/evidence/` 是 Current Authority。只有代码、Migration、Test、Trace、Eval 或可复现运行能把 Target 提升为 Current。
 - `docs/red-blue/` 只拥有评审方法、Transcript 和 Findings。Red Concern、Blue Proposal、AI 共识、旧 Round 都不能直接改变 Project / Architecture / Evidence。
@@ -40,31 +51,31 @@ docs/governance/         provenance、ownership、写作、术语、workflow、o
 ```text
 docs/README.md
 → docs/project/README.md
-→ docs/architecture/README.md Part A
+→ docs/architecture/README.md
 → docs/modules/README.md
-→ selected docs/modules/<semantic-name>/README.md Part A
+→ selected docs/modules/<semantic-name>/README.md
 → docs/evidence/README.md
 ```
 
-研究来源、法院背景、Build/Buy 或平台对比按需读取 `docs/research/`，不要插入第一次阅读主线。
+研究来源、法院背景、Build/Buy 或平台对比按需读取 `docs/research/`，不要插入第一次阅读固定主线。
 
 实现 / Review：
 
 ```text
 docs/architecture/reference.md
-→ docs/architecture/README.md Part B
 → docs/modules/reference.md
-→ selected docs/modules/<semantic-name>/README.md Part B / Part C
+→ selected docs/modules/<semantic-name>/reference.md
+→ relevant neighboring module reference.md
 → docs/decisions/
 → docs/evidence/
 → code / schema / migration / tests
 ```
 
-项目事实或简历 Ownership 任务额外读取 `docs/project/reference.md` 和 `docs/governance/project-fact-provenance.md`。
+需要理解为什么存在某个 Contract 时，再从对应 `reference.md` 回到同目录 `README.md`。项目事实或简历 Ownership 任务读取 `docs/project/reference.md` 和 `docs/governance/project-fact-provenance.md`。
 
-## Human-facing Part A
+## Human Narrative
 
-Part A 的目标是让第一次接触 Zuno 的高级工程师能够连续理解：
+README 的目标是让第一次接触 Zuno 的高级工程师能够连续理解：
 
 ```text
 现实背景
@@ -135,7 +146,7 @@ AGENT_AUTO
 
 用户可以中途干预，但没有第三种人工候选执行模式。
 
-启动 Red / Blue 前，Project / Architecture / 目标 Module Part A 必须先达到独立可读质量。Red 用业务场景、替代方案、故障窗口、Evidence 和 Ownership 施压；不要围绕内部名词做 trivia drill。Blue 保护项目目标，不保护当前架构，可以回答“简单方案已经足够”“应复用平台”“应删除该机制”“需要 Architecture Revision”或“证据不足”。
+启动 Red / Blue 前，Project / Architecture / 目标 Module README 必须先达到独立可读质量。Red 用业务场景、替代方案、故障窗口、Evidence 和 Ownership 施压；不要围绕内部名词做 trivia drill。Blue 保护项目目标，不保护当前架构，可以回答“简单方案已经足够”“应复用平台”“应删除该机制”“需要 Architecture Revision”或“证据不足”。
 
 CHATGPT_AUTO 是同一对话中的程序性角色隔离；重大 Finding 不能因同一模型 Red/Blue 同意就成立。AGENT_AUTO 使用独立上下文，适合正式 Closed-book retest。
 
@@ -148,6 +159,7 @@ Red / Blue 长期方法和历史在 `docs/red-blue/`；机器运行协议与 act
 - 不覆盖用户已有未提交修改；提交前检查 base SHA 与 main 漂移。
 - Documentation Migration 要同步更新导航、`.agent` 路由、validator 和链接，不保留永久平行入口。
 - Validator 锁 Owner、Authority、Source Precedence、Current/Target 和必要入口，不锁自然语言标题或固定篇幅。
+- README/reference 拆分后，validator 必须分别检查 Human Narrative 和 Engineering Reference；不能因为物理拆分而删除 B1–B14、Part C、Detail Candidate 或可读性门槛。
 - 文档改动至少检查 entrypoints、内部链接、repo structure、Agent system、doc boundaries 和相关 focused tests。
 - 不声称 `FULL CI PASSED`，除非完整 CI 确实执行并通过。
 
