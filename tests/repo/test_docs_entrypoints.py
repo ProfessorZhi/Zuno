@@ -15,7 +15,7 @@ EXPECTED_VIEWS = [
     "Deployment and Evolution View",
 ]
 CANONICAL_ARCHITECTURE_FILES = {
-    "README.md", "architecture-views.md", "architecture.html", "reference.md"
+    "README.md", "architecture.md", "architecture-views.md", "architecture.html", "reference.md"
 }
 CANONICAL_PROJECT_FILES = {"README.md", "reference.md"}
 MODULE_DIRS = (
@@ -136,9 +136,9 @@ def test_architecture_directories_only_contain_support_files() -> None:
     root = REPO_ROOT / "docs/architecture"
     assert {p.name for p in root.iterdir() if p.is_file()} == CANONICAL_ARCHITECTURE_FILES
     assert not [p for p in root.iterdir() if p.is_dir()]
-    assert not (root / "architecture.md").exists()
+    assert (root / "architecture.md").exists()
     reference = (root / "reference.md").read_text(encoding="utf-8")
-    assert "human_source: docs/architecture/README.md" in reference
+    assert "human_source: docs/architecture/architecture.md" in reference
     assert "module_router: docs/modules/reference.md" in reference
 
 
@@ -189,7 +189,7 @@ def test_module_design_is_human_first_complete_and_detail_candidate_9_of_9() -> 
 
 def test_architecture_markdown_has_coordinated_human_and_agent_views() -> None:
     renderer = _load_render_architecture()
-    human = (REPO_ROOT / "docs/architecture/README.md").read_text(encoding="utf-8")
+    human = (REPO_ROOT / "docs/architecture/architecture.md").read_text(encoding="utf-8")
     reference = (REPO_ROOT / "docs/architecture/reference.md").read_text(encoding="utf-8")
     combined = human + "\n" + reference
     assert renderer.validate_design(human, reference) == []
@@ -230,7 +230,7 @@ def test_architecture_html_routes_to_current_architecture_sources() -> None:
     html = (REPO_ROOT / "docs/architecture/architecture.html").read_text(encoding="utf-8")
     assert renderer.validate_html(html) == []
     for phrase in [
-        "./README.md", "../project/README.md", "../evidence/README.md", "./architecture-views.md",
+        "./architecture.md", "../project/README.md", "../evidence/README.md", "./architecture-views.md",
     ]:
         assert phrase in html
     assert "../maintenance/" not in html
