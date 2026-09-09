@@ -11,7 +11,7 @@ HTML = ROOT / "docs/architecture/architecture.html"
 PROJECT = ROOT / "docs/project/project.md"
 MODULES = ROOT / "docs/modules"
 DECISIONS = ROOT / "docs/decisions"
-TERMINOLOGY = ROOT / "docs/terminology.md"
+TERMINOLOGY = ROOT / "docs/governance/terminology.md"
 
 MODULE_FILES = {
     "01": "01-application-integration.md",
@@ -50,9 +50,7 @@ PART_C_MARKERS = (
     "### C4 Recovery Order / Consistency Tests（恢复顺序与一致性验证）",
 )
 
-DETAIL_CANDIDATE_MARKERS = tuple(
-    f"#### B14.{number} Detail Freeze Candidate" for number in range(1, 9)
-)
+DETAIL_CANDIDATE_MARKERS = tuple(f"#### B14.{number} Detail Freeze Candidate" for number in range(1, 9))
 
 
 def _require(errors: list[str], label: str, text: str, markers: tuple[str, ...]) -> None:
@@ -72,10 +70,7 @@ def verify() -> list[str]:
     views = VIEWS.read_text(encoding="utf-8")
     html = HTML.read_text(encoding="utf-8")
     modules_readme = (MODULES / "README.md").read_text(encoding="utf-8")
-    modules = {
-        number: (MODULES / filename).read_text(encoding="utf-8")
-        for number, filename in MODULE_FILES.items()
-    }
+    modules = {number: (MODULES / filename).read_text(encoding="utf-8") for number, filename in MODULE_FILES.items()}
     terminology = TERMINOLOGY.read_text(encoding="utf-8")
 
     _require(
@@ -172,7 +167,6 @@ def verify() -> list[str]:
     if any(position < 0 for position in positions) or positions != sorted(positions):
         errors.append("architecture responsibilities must exist in canonical 01-09 order")
 
-    # Overall Part B is a cross-module index. Module Part B/C remain the source of local detail.
     for marker in (
         "02 Legal Domain & Work Product | Matter / DocumentVersion canonical identity",
         "03 Knowledge & Evidence | KnowledgeGeneration",
@@ -204,57 +198,15 @@ def verify() -> list[str]:
         _require(errors, f"module {number} detail candidate", text, DETAIL_CANDIDATE_MARKERS)
 
     module_invariants = {
-        "01": (
-            "负责组合，不负责重新发明事实",
-            "Run completed\n!=\nDomain admitted\n!=\nAnswer publishable\n!=\nConsumer displayed",
-            "Agent Version = 产品能力 / 配置版本",
-        ),
-        "02": (
-            "EvidenceCandidate（证据候选）\n    ≠\nEvidence（正式证据）",
-            "DomainVersion + matching AdmissionReceipt",
-            "WorkProductCitationBinding",
-            "HumanDecision（人工业务决定）和 ApprovalDecision（安全审批决定）",
-        ),
-        "03": (
-            "KnowledgeGeneration lifecycle != task-level ReadinessDecision",
-            "EvidenceCandidate != formal Evidence",
-            "CitationLineage != WorkProductCitationBinding",
-            "stale KnowledgeGeneration 归 03；stale Finding / WorkProduct 归 02",
-        ),
-        "04": (
-            "Single Controller",
-            "Fixed AgentRunGraph + dynamic Plan DAG + fixed StepExecutionGraph",
-            "PlanVersion immutable after activation",
-            "Retry != Replan != Reconcile",
-            "Replan Barrier",
-        ),
-        "05": (
-            "Capability = 稳定专业语义",
-            "Provider Conformance != task quality",
-            "provider execution failure\n!=\ncapability semantic drift",
-        ),
-        "06": (
-            "Outcome Unknown（结果未知）不得映射为普通 Failed",
-            "Transport Success 不等于 Effect Success",
-            "same key + different action hash 必须拒绝",
-        ),
-        "07": (
-            "Model Role 与具体 Provider / Model 解耦",
-            "Provider technically available != currently permitted != quality qualified",
-            "Gateway 调用成功 != Runtime Step accepted != Domain admitted != Answer published",
-        ),
-        "08": (
-            "Continuous Authorization（持续授权）",
-            "AuthorizationDecision、ApprovalDecision、HumanDecision 三者 Owner 与语义不同",
-            "Retention != Recall Eligibility != Physical Purge Completion",
-            "MANDATORY_BEFORE_EFFECT",
-        ),
-        "09": (
-            "Telemetry != Durable Audit != Business Truth",
-            "MEASUREMENT_BLOCKED",
-            "Secret NEVER EXPORT",
-            "OpenTelemetry Baggage",
-        ),
+        "01": ("负责组合，不负责重新发明事实", "Run completed\n!=\nDomain admitted\n!=\nAnswer publishable\n!=\nConsumer displayed", "Agent Version = 产品能力 / 配置版本"),
+        "02": ("EvidenceCandidate（证据候选）\n    ≠\nEvidence（正式证据）", "DomainVersion + matching AdmissionReceipt", "WorkProductCitationBinding", "HumanDecision（人工业务决定）和 ApprovalDecision（安全审批决定）"),
+        "03": ("KnowledgeGeneration lifecycle != task-level ReadinessDecision", "EvidenceCandidate != formal Evidence", "CitationLineage != WorkProductCitationBinding", "stale KnowledgeGeneration 归 03；stale Finding / WorkProduct 归 02"),
+        "04": ("Single Controller", "Fixed AgentRunGraph + dynamic Plan DAG + fixed StepExecutionGraph", "PlanVersion immutable after activation", "Retry != Replan != Reconcile", "Replan Barrier"),
+        "05": ("Capability = 稳定专业语义", "Provider Conformance != task quality", "provider execution failure\n!=\ncapability semantic drift"),
+        "06": ("Outcome Unknown（结果未知）不得映射为普通 Failed", "Transport Success 不等于 Effect Success", "same key + different action hash 必须拒绝"),
+        "07": ("Model Role 与具体 Provider / Model 解耦", "Provider technically available != currently permitted != quality qualified", "Gateway 调用成功 != Runtime Step accepted != Domain admitted != Answer published"),
+        "08": ("Continuous Authorization（持续授权）", "AuthorizationDecision、ApprovalDecision、HumanDecision 三者 Owner 与语义不同", "Retention != Recall Eligibility != Physical Purge Completion", "MANDATORY_BEFORE_EFFECT"),
+        "09": ("Telemetry != Durable Audit != Business Truth", "MEASUREMENT_BLOCKED", "Secret NEVER EXPORT", "OpenTelemetry Baggage"),
     }
     for number, markers in module_invariants.items():
         _require(errors, f"module {number} invariant", modules[number], markers)
@@ -297,12 +249,7 @@ def verify() -> list[str]:
     )
 
     decisions_readme = (DECISIONS / "README.md").read_text(encoding="utf-8")
-    _require(
-        errors,
-        "ADR precedence",
-        decisions_readme,
-        ("supersede / refine（取代 / 细化）", "ADR-0008", "ADR-0013", "ADR-0014", "Architecture Gap"),
-    )
+    _require(errors, "ADR precedence", decisions_readme, ("supersede / refine（取代 / 细化）", "ADR-0008", "ADR-0013", "ADR-0014", "Architecture Gap"))
     for name in (
         "0008-legal-domain-kernel-and-host-boundary.md",
         "0012-evidence-gated-physical-service-split.md",
