@@ -18,20 +18,26 @@ CANONICAL_ARCHITECTURE_FILES = {
     "README.md", "architecture-views.md", "architecture.html", "reference.md"
 }
 CANONICAL_PROJECT_FILES = {"README.md", "reference.md"}
+MODULE_DIRS = (
+    "application",
+    "domain",
+    "knowledge",
+    "runtime",
+    "capability",
+    "effects",
+    "model-gateway",
+    "security",
+    "evaluation",
+)
 CANONICAL_MODULE_FILES = {
     "README.md",
     "reference.md",
-    "application/README.md",
-    "domain/README.md",
-    "knowledge/README.md",
-    "runtime/README.md",
-    "capability/README.md",
-    "effects/README.md",
-    "model-gateway/README.md",
-    "security/README.md",
-    "evaluation/README.md",
+    *{
+        f"{directory}/{filename}"
+        for directory in MODULE_DIRS
+        for filename in ("README.md", "reference.md")
+    },
 }
-MODULE_DESIGN_FILES = CANONICAL_MODULE_FILES - {"README.md", "reference.md"}
 CANONICAL_RED_BLUE_FILES = {
     "README.md", "current.md", "protocol.md", "attack-model.md", "judge.md",
     "templates/round.md", "templates/turn.md",
@@ -163,30 +169,41 @@ def test_module_design_is_human_first_complete_and_detail_candidate_9_of_9() -> 
         assert marker in readme
     assert "简单法律问答" in readme and "复杂法律分析" in readme and "现实副作用" in readme
 
-    reference = (root / "reference.md").read_text(encoding="utf-8")
-    assert "application/README.md" in reference
-    assert "evaluation/README.md" in reference
+    router = (root / "reference.md").read_text(encoding="utf-8")
+    assert "application/README.md" in router
+    assert "application/reference.md" in router
+    assert "evaluation/README.md" in router
+    assert "evaluation/reference.md" in router
 
-    for name in sorted(MODULE_DESIGN_FILES):
-        content = (root / name).read_text(encoding="utf-8")
-        assert content.startswith("# ")
-        assert "status: design-baseline-v1" in content
-        assert "implementation: not-authorized" in content
-        assert "deepening: cross-module-consistency-v2" in content
-        assert _has_candidate_status(content)
-        assert "## Part A — Human Narrative" in content
-        assert "## Part B — Engineering / Agent Reference" in content
+    for directory in MODULE_DIRS:
+        human = (root / directory / "README.md").read_text(encoding="utf-8")
+        reference = (root / directory / "reference.md").read_text(encoding="utf-8")
+
+        assert human.startswith("# ")
+        assert "status: design-baseline-v1" in human
+        assert "implementation: not-authorized" in human
+        assert "deepening: cross-module-consistency-v2" in human
+        assert "## Part A — Human Narrative" in human
+        assert "## Part B — Engineering / Agent Reference" not in human
+        assert "## Part C — Cross-Module Consistency" not in human
+        assert "reference.md" in human
+
+        assert reference.startswith("# ")
+        assert "## Part B — Engineering / Agent Reference" in reference
+        assert _has_candidate_status(reference)
         for heading in MODULE_BASELINE_HEADINGS + DETAIL_CANDIDATE_HEADINGS + MODULE_CONSISTENCY_HEADINGS:
-            assert heading in content, f"{name} missing {heading}"
-        assert "Current" in content and "Target" in content and "Gap" in content
-        assert "Failure Injection / Freeze Evidence" in content
+            assert heading in reference, f"{directory}/reference.md missing {heading}"
+        assert "Current" in reference and "Target" in reference and "Gap" in reference
+        assert "Failure Injection / Freeze Evidence" in reference
 
 
 def test_architecture_markdown_has_coordinated_human_and_agent_views() -> None:
     renderer = _load_render_architecture()
-    design = (REPO_ROOT / "docs/architecture/README.md").read_text(encoding="utf-8")
-    assert renderer.validate_design(design) == []
-    assert design.count("```mermaid") <= 2
+    human = (REPO_ROOT / "docs/architecture/README.md").read_text(encoding="utf-8")
+    reference = (REPO_ROOT / "docs/architecture/reference.md").read_text(encoding="utf-8")
+    assert renderer.validate_design(human, reference) == []
+    assert human.count("```mermaid") <= 2
+
     for marker in [
         "# Zuno 目标架构",
         "## Part A — Human Narrative（人类技术叙事）",
@@ -195,6 +212,12 @@ def test_architecture_markdown_has_coordinated_human_and_agent_views() -> None:
         "### A4. 九个责任域如何从这些边界产生",
         "### A5. 故障以后，先找事实再恢复控制",
         "### A6. 研究成果怎样变成工程能力",
+        "reference.md",
+    ]:
+        assert marker in human
+    assert "## Part B — Engineering / Agent Reference（工程 / Agent 参考）" not in human
+
+    for marker in [
         "## Part B — Engineering / Agent Reference（工程 / Agent 参考）",
         "### B2. Authority / Ownership Matrix",
         "### B3. Cross-boundary Contract Map",
@@ -206,8 +229,7 @@ def test_architecture_markdown_has_coordinated_human_and_agent_views() -> None:
         "docs/evidence/",
         "docs/research/",
     ]:
-        assert marker in design
-    assert design.index("## Part A — Human Narrative") < design.index("## Part B — Engineering / Agent Reference")
+        assert marker in reference
 
 
 def test_visual_source_matches_canonical_architecture_views() -> None:
