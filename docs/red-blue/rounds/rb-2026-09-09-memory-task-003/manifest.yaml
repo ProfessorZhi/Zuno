@@ -21,6 +21,7 @@ blue_allowlist:
   - docs/project/
   - docs/governance/project-fact-provenance.md
   - docs/evidence/
+  - program boot commit 0ee4288f28ea664b89ea6ca8164dc811c1a6b9a2
   - historical PR #8
   - historical commit f3c74338c042074ae6d912e80de5f2b31511b290
   - parent commit aae368b7466c1a71ffffbca7a1704b2634879029
