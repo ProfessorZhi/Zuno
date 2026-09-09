@@ -35,7 +35,7 @@ ARCHITECTURE_FILES = {
     "architecture.html",
     "reference.md",
 }
-GOVERNANCE_FILES = {
+GOVERNANCE_REQUIRED = {
     "docs/governance/README.md",
     "docs/governance/documentation-architecture.md",
     "docs/governance/human-first-documentation-standard.md",
@@ -43,18 +43,27 @@ GOVERNANCE_FILES = {
     "docs/governance/wave1-cross-module-contract-registry.md",
     "docs/governance/repo-ownership-matrix.md",
     "docs/governance/project-fact-provenance.md",
+    "docs/governance/terminology.md",
+    "docs/governance/workflows/agent-workflow.md",
+    "docs/governance/operations/postgresql-migration-runbook.md",
+    "docs/governance/operations/infrastructure-dr-profile.yaml",
 }
-MAINTENANCE_FILES = {
-    "docs/maintenance/README.md",
-    "docs/maintenance/agent-workflow/README.md",
-    "docs/maintenance/red-blue/README.md",
-    "docs/maintenance/operations/postgresql-migration-runbook.md",
-    "docs/maintenance/operations/infrastructure-dr-profile.yaml",
-    "docs/maintenance/history/README.md",
-    "docs/maintenance/history/red-blue/README.md",
-    "docs/maintenance/history/red-blue/manual-round-01-overall-architecture.md",
-    "docs/maintenance/history/red-blue/manual-round-02-overall-architecture-freeze-review.md",
-    "docs/maintenance/history/red-blue/legacy-automated-rounds.md",
+RED_BLUE_REQUIRED = {
+    "docs/red-blue/README.md",
+    "docs/red-blue/archive/legacy/README.md",
+    "docs/red-blue/archive/legacy/manual-round-01-overall-architecture.md",
+    "docs/red-blue/archive/legacy/manual-round-02-overall-architecture-freeze-review.md",
+    "docs/red-blue/archive/legacy/legacy-automated-rounds.md",
+}
+TOP_LEVEL_DIRS = {
+    "project",
+    "architecture",
+    "modules",
+    "red-blue",
+    "research",
+    "decisions",
+    "evidence",
+    "governance",
 }
 
 
@@ -64,29 +73,50 @@ def _relative_files(directory: Path) -> set[str]:
 
 def main() -> int:
     errors: list[str] = []
+
+    docs_root = ROOT / "docs"
+    actual_top = {path.name for path in docs_root.iterdir() if path.is_dir()}
+    if actual_top != TOP_LEVEL_DIRS:
+        errors.append(f"docs top-level boundary mismatch: expected {sorted(TOP_LEVEL_DIRS)}, got {sorted(actual_top)}")
+
     if _relative_files(ROOT / "docs/project") != PROJECT_FILES:
         errors.append("project boundary mismatch: expected human narrative plus machine reference")
     if _relative_files(ROOT / "docs/research") != RESEARCH_FILES:
-        errors.append("research compatibility boundary mismatch")
+        errors.append("research boundary mismatch")
     if _relative_files(ROOT / "docs/modules") != MODULE_FILES:
         errors.append("modules boundary mismatch: expected human entry, machine router and current Target module docs")
     if {path.name for path in (ROOT / "docs/architecture").iterdir() if path.is_file()} != ARCHITECTURE_FILES:
         errors.append("architecture boundary mismatch: expected human/visual/rendered entries plus machine reference")
-    if _relative_files(ROOT / "docs/governance") != GOVERNANCE_FILES:
-        errors.append("governance boundary mismatch")
-    if _relative_files(ROOT / "docs/maintenance") != MAINTENANCE_FILES:
-        errors.append("maintenance compatibility boundary mismatch")
+
+    governance_files = _relative_files(ROOT / "docs/governance")
+    missing_governance = GOVERNANCE_REQUIRED - governance_files
+    if missing_governance:
+        errors.append(f"governance boundary missing required files: {sorted(missing_governance)}")
+
+    red_blue_files = _relative_files(ROOT / "docs/red-blue")
+    missing_red_blue = RED_BLUE_REQUIRED - red_blue_files
+    if missing_red_blue:
+        errors.append(f"red-blue boundary missing required files: {sorted(missing_red_blue)}")
 
     documentation_architecture = ROOT / "docs/governance/documentation-architecture.md"
     if not documentation_architecture.exists():
         errors.append("missing canonical documentation architecture")
     else:
         text = documentation_architecture.read_text(encoding="utf-8")
-        for marker in ("system_story", "knowledge_control", "Module decomposition", "Navigation contracts"):
+        for marker in (
+            "Physical layout",
+            "Truth ownership",
+            "Default reading paths",
+            "Research boundary",
+            "Red / Blue boundary",
+            "Architecture reasoning contract",
+        ):
             if marker not in text:
                 errors.append(f"documentation architecture missing marker: {marker}")
 
     for obsolete in (
+        ROOT / "docs/maintenance",
+        ROOT / "docs/terminology.md",
         ROOT / "docs/facts",
         ROOT / "docs/history",
         ROOT / "docs/operations",
@@ -94,6 +124,7 @@ def main() -> int:
     ):
         if obsolete.exists():
             errors.append(f"obsolete boundary still exists: {obsolete.relative_to(ROOT)}")
+
     if errors:
         print("DOC_BOUNDARIES_INVALID")
         for error in errors:
