@@ -1,0 +1,28 @@
+round_id: rb-2026-09-09-resume-v4-005
+state: CLOSED
+mode: CHATGPT_AUTO
+zuno_base_sha: 7d7f682b0ce89d66ebc8c59abc7d208a6ccc5771
+resume_snapshot:
+  repository: ProfessorZhi/internship-work
+  commit_sha: a9dbceb75a6c93eda03bc27a70344b17c461eeb5
+  path: resume/00_resume_versions/Zuno_v3+CodingAgent+SFTDPO_简历/Agent开发工程师／AI应用工程师+Zuno／CodingAgent／SFTDPO_ToolCalling任务增强／可追问_简历草稿_v4.md
+target_role: Agent 开发工程师 / AI 应用工程师
+interview_stage: final-resume-retest
+red_calibration: resume-claim-first
+blue_profile: historical-task-evidence-first
+retest_of:
+  - rb-2026-09-09-memory-task-003
+  - rb-2026-09-09-tool-calling-task-004
+scenario_scope:
+  - exact wording across GeneralAgent and Workspace Tool Calling layers
+  - regression-test artifact vs historical execution wording
+  - active-voice personal ownership boundary
+  - historical implementation vs later Target architecture boundary
+max_turns: 4
+stop_condition: >-
+  Close when the exact v4 Zuno wording is either safe for resume use or exposes
+  a claim-strength / ownership / measurement / Current-Target conflict.
+result: PASS_WITH_S3_NARRATIVE_CLARIFICATION
+resume_claim_verdict: PASS
+finding_count: 1
+highest_severity: S3
