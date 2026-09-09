@@ -22,11 +22,12 @@ docs/governance/         provenance、ownership、写作、术语、workflow、o
 
 ## 事实边界
 
-- `docs/project/project.md` 是项目级 Human-facing 主文档。Project 解释为什么存在、真实演进、团队和个人参与；不拥有 Target Architecture 或 Current 实现证明。
+- `docs/project/README.md` 是项目级 Human-facing 主文档。Project 解释为什么存在、真实演进、团队和个人参与；不拥有 Target Architecture 或 Current 实现证明。
 - `docs/governance/project-fact-provenance.md` 是项目事实账本。导师/团队成果、个人成果、Pilot、Court-side Testing、Production 必须按证据等级区分。
 - `docs/research/` 是设计输入。论文提出不等于 Zuno 已实现；法院项目背景不等于 Zuno 已部署；Framework Feature 不等于 Zuno 自研。
-- `docs/architecture/architecture.md` 保存跨责任 Target Architecture；Part A 给人读，Part B 保存精确语义。Architecture Story 可以用概念演化解释设计，但不得伪造成真实项目历史。
-- `docs/modules/README.md` 与模块文档保存局部责任、Contract、State、Failure、Recovery。当前九个责任域仍是现有 Target 结果，但模块数量不是 Documentation Architecture invariant。
+- `docs/architecture/README.md` 保存跨责任 Target Architecture；Part A 给人读，Part B 保存精确语义。Architecture Story 可以用概念演化解释设计，但不得伪造成真实项目历史。
+- `docs/modules/README.md` 是责任导航。模块正文按语义目录组织：`application/`、`domain/`、`knowledge/`、`runtime/`、`capability/`、`effects/`、`model-gateway/`、`security/`、`evaluation/`。当前 01–09 编号仍是现有 Target 的责任编号，但不再编码进文件路径。
+- 每个模块 `README.md` 当前仍同时包含 Part A / Part B / Part C；后续可以在不改变语义的前提下把 Engineering Reference 拆成独立 `reference.md`，但不能复制第二套事实。
 - `docs/decisions/` 保存长期接受的 Architecture Decision，不复制完整 Architecture Spec。
 - `docs/evidence/` 是 Current Authority。只有代码、Migration、Test、Trace、Eval 或可复现运行能把 Target 提升为 Current。
 - `docs/red-blue/` 只拥有评审方法、Transcript 和 Findings。Red Concern、Blue Proposal、AI 共识、旧 Round 都不能直接改变 Project / Architecture / Evidence。
@@ -38,10 +39,10 @@ docs/governance/         provenance、ownership、写作、术语、workflow、o
 
 ```text
 docs/README.md
-→ docs/project/project.md
-→ docs/architecture/architecture.md Part A
+→ docs/project/README.md
+→ docs/architecture/README.md Part A
 → docs/modules/README.md
-→ selected Module Part A
+→ selected docs/modules/<semantic-name>/README.md Part A
 → docs/evidence/README.md
 ```
 
@@ -51,9 +52,9 @@ docs/README.md
 
 ```text
 docs/architecture/reference.md
-→ docs/architecture/architecture.md Part B
+→ docs/architecture/README.md Part B
 → docs/modules/reference.md
-→ selected Module Part B / Part C
+→ selected docs/modules/<semantic-name>/README.md Part B / Part C
 → docs/decisions/
 → docs/evidence/
 → code / schema / migration / tests
@@ -132,7 +133,7 @@ CHATGPT_AUTO
 AGENT_AUTO
 ```
 
-用户可以中途干预，但没有 `human-candidate` 第三模式。
+用户可以中途干预，但没有第三种人工候选执行模式。
 
 启动 Red / Blue 前，Project / Architecture / 目标 Module Part A 必须先达到独立可读质量。Red 用业务场景、替代方案、故障窗口、Evidence 和 Ownership 施压；不要围绕内部名词做 trivia drill。Blue 保护项目目标，不保护当前架构，可以回答“简单方案已经足够”“应复用平台”“应删除该机制”“需要 Architecture Revision”或“证据不足”。
 
