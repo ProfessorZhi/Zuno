@@ -177,10 +177,16 @@ Round 的成功标准不是 FAIL 越多越好，而是发现少量真正改变�
 ```text
 docs/red-blue/
 ├── README.md
+├── rounds/          新式 CHATGPT_AUTO / AGENT_AUTO Round
+│   ├── README.md
+│   └── <round-id>/
+│       ├── manifest.yaml
+│       ├── transcript.md
+│       └── findings.md
 └── archive/
     └── legacy/      旧的 manual / early automated Round，只供历史复盘
 ```
 
-正式机器运行协议和临时 active state 仍由 `.agent/red-blue/` 管理。新 Round 的长期归档后续应放 `docs/red-blue/rounds/<round-id>/`。
+正式机器运行协议和临时 active state 仍由 `.agent/red-blue/` 管理。新 Round 的长期归档位于 [`rounds/`](./rounds/README.md)。
 
 `archive/legacy/` 中的手工 Round 已退出正式模式。它们可以解释过去如何审查，但不能作为今天的 Architecture Truth 或面试标准答案。
