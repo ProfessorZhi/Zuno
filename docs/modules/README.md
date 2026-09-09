@@ -17,8 +17,8 @@ Zuno 当前的九个责任域是一张事实所有权地图。一次法律任务
 | 编号 | 责任域 | 用一句人话说明它保护什么 | 文档 |
 | --- | --- | --- | --- |
 | 01 | Application & Integration | 把内部权威事实组合成稳定请求、发布、交付和失效传播语义 | [application](application/README.md) |
-| 02 | Legal Domain & Work Product | 决定什么最终成为正式、长期、可审计的法律业务事实 | [domain](domain/README.md) |
-| 03 | Knowledge & Evidence | 区分正式材料、可重建知识派生、任务就绪和检索候选 | [knowledge](knowledge/README.md) |
+| 02 | Legal Domain & Work Product | 拥有 Matter / DocumentVersion canonical identity，并决定什么最终成为正式、长期、可审计的法律业务事实 | [domain](domain/README.md) |
+| 03 | Knowledge & Evidence | 围绕 02 的正式材料版本管理可重建知识派生、任务就绪和检索候选 | [knowledge](knowledge/README.md) |
 | 04 | Agent Runtime & Control | 控制长任务怎样计划、并行、暂停、重规划和恢复 | [runtime](runtime/README.md) |
 | 05 | Capability & Skill | 把研究算法和 Provider 变成稳定、版本化、可替换的专业能力 | [capability](capability/README.md) |
 | 06 | Tool Runtime & Effects | 在现实副作用发生前后保护动作身份、结果确认和对账 | [effects](effects/README.md) |

@@ -54,7 +54,7 @@ Zuno 的架构就是为这些问题服务。简单任务继续保持短路径；
 
 | 事实类型 | 典型内容 | 谁拥有最终解释权 | 失败以后应该相信什么 |
 |---|---|---|---|
-| 材料与知识事实 | `DocumentVersion`、`KnowledgeGeneration`、`ReadinessDecision`、检索 lineage | Knowledge & Evidence | 稳定材料版本、generation 状态和面向当前任务的就绪判断 |
+| 材料与知识事实 | `DocumentVersion`、`KnowledgeGeneration`、`ReadinessDecision`、检索 lineage | `DocumentVersion` canonical identity 归 Legal Domain & Work Product；`KnowledgeGeneration`、`ReadinessDecision` 与检索 lineage 归 Knowledge & Evidence | 正式材料版本读取 02 的领域事实；知识派生与任务就绪读取 03 的耐久事实 |
 | 机器候选 | `EvidenceCandidate`、Finding Proposal、模型或算法输出 | 产生候选的 Knowledge / Capability / Model 路径，没有正式业务权威 | 候选本身及其来源、版本、模型/能力调用记录 |
 | 正式法律事实 | Evidence、Finding、HumanDecision、WorkProduct、DomainVersion | Legal Domain & Work Product | Domain 的耐久提交和匹配的 `AdmissionReceipt` |
 | 运行控制事实 | AgentRun、PlanVersion、StepRun、Checkpoint、等待和取消 | Agent Runtime & Control | 当前有效计划、步骤状态和耐久 Checkpoint |
@@ -93,8 +93,8 @@ Security 在每一次受保护的跨越前重新判断当前权限、数据政�
 | 责任域 | 为什么存在 | 它拥有的权威 | 明确不拥有的事实 |
 |---|---|---|---|
 | **01 Application & Integration** | 给专业用户、法院系统和 Generic Host 一个稳定产品边界 | Matter / Scope 的产品组合、调用入口、发布和交付语义 | 不重新裁决 Domain、Knowledge 或 Security 的结论 |
-| **02 Legal Domain & Work Product** | 让正式法律结果拥有长期版本、接纳和失效语义 | Evidence、Finding、HumanDecision、WorkProduct、DomainVersion、Admission causation | 不把机器候选或 Runtime completed 当正式事实 |
-| **03 Knowledge & Evidence** | 让材料身份、可重建知识和任务就绪彼此独立 | DocumentVersion ref 上的 KnowledgeGeneration、ReadinessDecision、检索 lineage | 不拥有正式 Evidence / WorkProduct 的业务接纳；DocumentVersion canonical identity 归 02 |
+| **02 Legal Domain & Work Product** | 让 Matter、DocumentVersion 与正式法律结果拥有长期身份、版本、接纳和失效语义 | Matter、DocumentVersion、Evidence、Finding、HumanDecision、WorkProduct、DomainVersion、Admission causation | 不把机器候选或 Runtime completed 当正式事实 |
+| **03 Knowledge & Evidence** | 围绕正式 DocumentVersion 构建可重建知识、任务就绪和检索候选 | KnowledgeGeneration、ReadinessDecision、检索 lineage 及相关派生状态 | 不拥有 Matter / DocumentVersion canonical identity，也不拥有正式 Evidence / WorkProduct 的业务接纳 |
 | **04 Agent Runtime & Control** | 让长任务可以计划、等待、取消、并发和恢复 | AgentRun、PlanVersion、StepRun、Checkpoint、控制因果 | 不拥有 Domain commit 或外部 Effect truth |
 | **05 Capability & Skill** | 把研究算法和专业处理封装成稳定、可替换的能力 | Capability 语义、版本、Provider Conformance 与任务资格 | 不因为 Provider 返回成功就宣布业务结论成立 |
 | **06 Tool Runtime & Effects** | 让现实副作用拥有稳定动作身份和结果确认 | PreparedAction、Tool Attempt、EffectReceipt、Reconciliation | 不拥有正式法律结论，也不把网络失败直接等同业务失败 |
@@ -206,4 +206,4 @@ PostgreSQL、Object Store、Queue、Secret Manager、OpenTelemetry、Checkpointe
 
 ---
 
-工程 / Agent 精确参考见 [`reference.md`](reference.md)。
+单个责任域的 Human Narrative 继续进入 [`docs/modules/`](../modules/README.md)；总体 Architecture 的工程 / Agent 精确参考见 [`reference.md`](reference.md)。
