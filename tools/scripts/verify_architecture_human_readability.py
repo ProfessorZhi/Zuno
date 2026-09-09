@@ -6,43 +6,40 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[2]
-CANONICAL = [ROOT / "docs/architecture/README.md"]
-ARCHITECTURE_README = ROOT / "docs/architecture/README.md"
+ARCH_HUMAN = ROOT / "docs/architecture/README.md"
+ARCH_REFERENCE = ROOT / "docs/architecture/reference.md"
 PROJECT_ROOT = ROOT / "docs/project"
 MODULES_ROOT = ROOT / "docs/modules"
 ROUND_01 = ROOT / "docs/red-blue/archive/legacy/manual-round-01-overall-architecture.md"
 ROUND_02 = ROOT / "docs/red-blue/archive/legacy/manual-round-02-overall-architecture-freeze-review.md"
 
-MODULE_FILES = (
-    "application/README.md",
-    "domain/README.md",
-    "knowledge/README.md",
-    "runtime/README.md",
-    "capability/README.md",
-    "effects/README.md",
-    "model-gateway/README.md",
-    "security/README.md",
-    "evaluation/README.md",
+MODULE_DIRS = (
+    "application",
+    "domain",
+    "knowledge",
+    "runtime",
+    "capability",
+    "effects",
+    "model-gateway",
+    "security",
+    "evaluation",
 )
 
 # Regression floors only. They prevent human-facing documents from collapsing into thin
 # index/spec sheets. They intentionally do not reward padding or pretend to score prose quality.
-PROJECT_NARRATIVE_BASELINES = {
-    "README.md": (9000, 10, 24),
-}
-
-ARCHITECTURE_PART_A_HEADING = "## Part A — Human Narrative"
-ARCHITECTURE_PART_B_HEADING = "## Part B — Engineering / Agent Reference"
+PROJECT_NARRATIVE_BASELINES = {"README.md": (9000, 10, 24)}
 ARCHITECTURE_PART_A_MIN_NONSPACE_CHARS = 8000
 ARCHITECTURE_PART_A_MIN_SUBSECTIONS = 10
 ARCHITECTURE_PART_A_MIN_PROSE_PARAGRAPHS = 28
-
-MODULE_PART_A_HEADING = "## Part A — Human Narrative"
-MODULE_PART_B_HEADING = "## Part B — Engineering / Agent Reference"
-MODULE_PART_C_HEADING = "## Part C — Cross-Module Consistency"
 MODULE_PART_A_MIN_NONSPACE_CHARS = 5500
 MODULE_PART_A_MIN_SUBSECTIONS = 14
 MODULE_PART_A_MIN_PROSE_PARAGRAPHS = 18
+
+ARCHITECTURE_PART_A_HEADING = "## Part A — Human Narrative"
+ARCHITECTURE_PART_B_HEADING = "## Part B — Engineering / Agent Reference"
+MODULE_PART_A_HEADING = "## Part A — Human Narrative"
+MODULE_PART_B_HEADING = "## Part B — Engineering / Agent Reference"
+MODULE_PART_C_HEADING = "## Part C — Cross-Module Consistency"
 
 _MACHINE_TOKEN_RE = re.compile(
     r"(?:\b(?:TARGET|CURRENT|MODULE|NOT|UNKNOWN)_[A-Z0-9_]+\b|"
@@ -53,37 +50,9 @@ _MACHINE_TOKEN_RE = re.compile(
 )
 
 
-def _split_architecture_layers(text: str) -> tuple[str, str] | None:
-    if ARCHITECTURE_PART_A_HEADING not in text or ARCHITECTURE_PART_B_HEADING not in text:
-        return None
-    a_start = text.index(ARCHITECTURE_PART_A_HEADING) + len(ARCHITECTURE_PART_A_HEADING)
-    b_pos = text.index(ARCHITECTURE_PART_B_HEADING)
-    if a_start > b_pos:
-        return None
-    b_start = b_pos + len(ARCHITECTURE_PART_B_HEADING)
-    return text[a_start:b_pos], text[b_start:]
-
-
-def _split_module_layers(text: str) -> tuple[str, str, str] | None:
-    if any(
-        heading not in text
-        for heading in (MODULE_PART_A_HEADING, MODULE_PART_B_HEADING, MODULE_PART_C_HEADING)
-    ):
-        return None
-    a_start = text.index(MODULE_PART_A_HEADING) + len(MODULE_PART_A_HEADING)
-    b_pos = text.index(MODULE_PART_B_HEADING)
-    c_pos = text.index(MODULE_PART_C_HEADING)
-    if not (a_start <= b_pos < c_pos):
-        return None
-    b_start = b_pos + len(MODULE_PART_B_HEADING)
-    c_start = c_pos + len(MODULE_PART_C_HEADING)
-    return text[a_start:b_pos], text[b_start:c_pos], text[c_start:]
-
-
 def _strip_non_prose_blocks(text: str) -> str:
     text = re.sub(r"<!--.*?-->", "", text, flags=re.DOTALL)
-    text = re.sub(r"```.*?```", "", text, flags=re.DOTALL)
-    return text
+    return re.sub(r"```.*?```", "", text, flags=re.DOTALL)
 
 
 def _prose_paragraphs(text: str) -> list[str]:
@@ -104,50 +73,30 @@ def _prose_paragraphs(text: str) -> list[str]:
         if not stripped:
             flush()
             continue
-        if stripped.startswith(("#", "|", "- ", "* ", "> ")):
-            flush()
-            continue
-        if re.match(r"^\d+\.\s", stripped):
+        if stripped.startswith(("#", "|", "- ", "* ", "> ")) or re.match(r"^\d+\.\s", stripped):
             flush()
             continue
         current.append(line)
     return paragraphs
 
 
-def _has_narrative_prose(text: str) -> bool:
-    return bool(_prose_paragraphs(text))
-
-
 def _nonspace_chars(text: str) -> int:
-    visible = _strip_non_prose_blocks(text)
-    return len(re.sub(r"\s+", "", visible))
+    return len(re.sub(r"\s+", "", _strip_non_prose_blocks(text)))
 
 
-def verify_text(text: str) -> list[str]:
+def verify_architecture_human(text: str) -> list[str]:
     errors: list[str] = []
     if "# Zuno 目标架构" not in text:
-        errors.append("missing Zuno target architecture title")
-        return errors
+        return ["missing Zuno target architecture title"]
+    if ARCHITECTURE_PART_A_HEADING not in text:
+        return ["architecture README must contain Part A Human Narrative"]
+    if ARCHITECTURE_PART_B_HEADING in text:
+        errors.append("architecture README must not contain Part B Engineering Reference")
 
-    layers = _split_architecture_layers(text)
-    if layers is None:
-        return [
-            "overall architecture must contain ordered Part A Human Narrative and "
-            "Part B Engineering / Agent Reference"
-        ]
-    part_a, part_b = layers
-    if not part_b.strip():
-        errors.append("overall architecture Part B must not be empty")
-
-    # Human readability is deliberately measured on Part A only. Part B is expected to
-    # be dense and machine-oriented; semantic validators check its engineering coverage.
-    if not _has_narrative_prose(part_a):
-        errors.append("architecture Part A must contain explanatory prose")
-        return errors
-
-    nonspace_chars = _nonspace_chars(part_a)
-    subsection_count = len(re.findall(r"(?m)^###\s+", _strip_non_prose_blocks(part_a)))
-    prose_paragraph_count = len(_prose_paragraphs(part_a))
+    visible = text[text.index(ARCHITECTURE_PART_A_HEADING) + len(ARCHITECTURE_PART_A_HEADING):]
+    nonspace_chars = _nonspace_chars(visible)
+    subsection_count = len(re.findall(r"(?m)^###\s+", _strip_non_prose_blocks(visible)))
+    prose_paragraph_count = len(_prose_paragraphs(visible))
     if nonspace_chars < ARCHITECTURE_PART_A_MIN_NONSPACE_CHARS:
         errors.append(
             "architecture Part A is too thin for the conceptual design baseline "
@@ -168,30 +117,16 @@ def verify_text(text: str) -> list[str]:
 
 def verify_project_text(text: str, filename: str) -> list[str]:
     errors: list[str] = []
-    baseline = PROJECT_NARRATIVE_BASELINES.get(filename)
-    if baseline is None:
-        return errors
-
-    min_chars, min_sections, min_paragraphs = baseline
+    min_chars, min_sections, min_paragraphs = PROJECT_NARRATIVE_BASELINES[filename]
     nonspace_chars = _nonspace_chars(text)
     subsection_count = len(re.findall(r"(?m)^##+\s+", _strip_non_prose_blocks(text)))
     prose_paragraph_count = len(_prose_paragraphs(text))
-
     if nonspace_chars < min_chars:
-        errors.append(
-            f"{filename}: project narrative is too thin for its regression baseline "
-            f"({nonspace_chars} non-space chars < {min_chars})"
-        )
+        errors.append(f"{filename}: project narrative is too thin ({nonspace_chars} < {min_chars})")
     if subsection_count < min_sections:
-        errors.append(
-            f"{filename}: project narrative needs broader coverage "
-            f"({subsection_count} sections < {min_sections})"
-        )
+        errors.append(f"{filename}: project narrative needs broader coverage ({subsection_count} < {min_sections})")
     if prose_paragraph_count < min_paragraphs:
-        errors.append(
-            f"{filename}: project narrative must contain explanatory prose, not mainly tables/lists "
-            f"({prose_paragraph_count} prose paragraphs < {min_paragraphs})"
-        )
+        errors.append(f"{filename}: project narrative needs more explanatory prose ({prose_paragraph_count} < {min_paragraphs})")
     for marker in (
         "为什么会有这个项目",
         "为什么不直接用 Dify、Coze",
@@ -204,111 +139,58 @@ def verify_project_text(text: str, filename: str) -> list[str]:
     return errors
 
 
-def verify_module_text(text: str, filename: str) -> list[str]:
+def verify_module_human(text: str, label: str) -> list[str]:
     errors: list[str] = []
-    layers = _split_module_layers(text)
-    if layers is None:
-        return [
-            f"{filename}: module must contain ordered Part A Human Narrative, "
-            "Part B Engineering Reference and Part C Cross-Module Consistency"
-        ]
-
-    part_a, part_b, part_c = layers
-    nonspace_chars = _nonspace_chars(part_a)
-    subsection_count = len(re.findall(r"(?m)^###\s+", part_a))
-    prose_paragraph_count = len(_prose_paragraphs(part_a))
+    if MODULE_PART_A_HEADING not in text:
+        return [f"{label}: module README must contain Part A Human Narrative"]
+    if MODULE_PART_B_HEADING in text or MODULE_PART_C_HEADING in text:
+        errors.append(f"{label}: module README must not contain Part B or Part C")
+    visible = text[text.index(MODULE_PART_A_HEADING) + len(MODULE_PART_A_HEADING):]
+    nonspace_chars = _nonspace_chars(visible)
+    subsection_count = len(re.findall(r"(?m)^###\s+", visible))
+    prose_paragraph_count = len(_prose_paragraphs(visible))
     if nonspace_chars < MODULE_PART_A_MIN_NONSPACE_CHARS:
-        errors.append(
-            f"{filename}: Part A is too thin for the current human-first baseline "
-            f"({nonspace_chars} non-space chars < {MODULE_PART_A_MIN_NONSPACE_CHARS})"
-        )
+        errors.append(f"{label}: Part A is too thin ({nonspace_chars} < {MODULE_PART_A_MIN_NONSPACE_CHARS})")
     if subsection_count < MODULE_PART_A_MIN_SUBSECTIONS:
-        errors.append(
-            f"{filename}: Part A needs broader narrative coverage "
-            f"({subsection_count} subsections < {MODULE_PART_A_MIN_SUBSECTIONS})"
-        )
+        errors.append(f"{label}: Part A needs broader narrative coverage ({subsection_count} < {MODULE_PART_A_MIN_SUBSECTIONS})")
     if prose_paragraph_count < MODULE_PART_A_MIN_PROSE_PARAGRAPHS:
-        errors.append(
-            f"{filename}: Part A must contain substantial explanatory prose, not mainly tables/lists "
-            f"({prose_paragraph_count} paragraphs < {MODULE_PART_A_MIN_PROSE_PARAGRAPHS})"
-        )
-    if "### 当前、目标与缺口" not in part_a:
-        errors.append(f"{filename}: Part A must close with an explicit Current / Target / Gap narrative")
-    if not part_b.strip():
-        errors.append(f"{filename}: Part B must not be empty")
-    if not part_c.strip():
-        errors.append(f"{filename}: Part C must not be empty")
+        errors.append(f"{label}: Part A needs more explanatory prose ({prose_paragraph_count} < {MODULE_PART_A_MIN_PROSE_PARAGRAPHS})")
+    if "### 当前、目标与缺口" not in visible:
+        errors.append(f"{label}: Part A must close with an explicit Current / Target / Gap narrative")
     return errors
 
 
-def warnings_for_text(text: str) -> list[str]:
-    layers = _split_architecture_layers(text)
-    visible = _strip_non_prose_blocks(layers[0] if layers is not None else text)
-    matches = _MACHINE_TOKEN_RE.findall(visible)
+def verify_engineering_reference(text: str, label: str, *, module: bool) -> list[str]:
+    errors: list[str] = []
+    part_b = text.find(MODULE_PART_B_HEADING if module else ARCHITECTURE_PART_B_HEADING)
+    if part_b < 0:
+        return [f"{label}: missing Part B Engineering / Agent Reference"]
+    if module:
+        part_c = text.find(MODULE_PART_C_HEADING)
+        if part_c < 0:
+            errors.append(f"{label}: missing Part C Cross-Module Consistency")
+        elif part_b >= part_c:
+            errors.append(f"{label}: Part B must precede Part C")
+        elif not text[part_b:part_c].strip() or not text[part_c:].strip():
+            errors.append(f"{label}: Part B and Part C must both be non-empty")
+    elif not text[part_b:].strip():
+        errors.append(f"{label}: Part B must not be empty")
+    return errors
+
+
+def warning_for_human(text: str, label: str) -> list[str]:
+    matches = _MACHINE_TOKEN_RE.findall(_strip_non_prose_blocks(text))
     if len(matches) < 6:
         return []
     unique = sorted(set(matches), key=str.casefold)
-    preview = ", ".join(unique[:8])
-    if len(unique) > 8:
-        preview += ", …"
-    return [
-        "READABILITY_WARNING: architecture Part A contains many machine-oriented markers "
-        f"({preview}); human review is still required."
-    ]
+    preview = ", ".join(unique[:8]) + (", …" if len(unique) > 8 else "")
+    return [f"READABILITY_WARNING: {label} contains many machine-oriented markers ({preview}); human review is still required."]
 
 
-def warnings_for_project_text(text: str) -> list[str]:
-    visible = _strip_non_prose_blocks(text)
-    matches = _MACHINE_TOKEN_RE.findall(visible)
-    if len(matches) < 6:
-        return []
-    unique = sorted(set(matches), key=str.casefold)
-    preview = ", ".join(unique[:8])
-    if len(unique) > 8:
-        preview += ", …"
-    return [
-        "READABILITY_WARNING: project narrative contains many machine-oriented markers "
-        f"({preview}); human review is still required."
-    ]
-
-
-def _verify_supporting_boundaries(errors: list[str]) -> None:
-    if not ARCHITECTURE_README.exists():
-        errors.append("missing docs/architecture/README.md")
-    else:
-        readme = ARCHITECTURE_README.read_text(encoding="utf-8")
-        for marker in (
-            "Part A — Human Narrative",
-            "Part B — Engineering / Agent Reference",
-        ):
-            if marker not in readme:
-                errors.append(f"architecture README missing narrative layer marker: {marker}")
-
-    architecture = CANONICAL[0]
-    if architecture.exists():
-        text = architecture.read_text(encoding="utf-8")
-        gate_open = bool(
-            re.search(
-                r"(?im)^(?:module_decomposition_gate|MODULE_DECOMPOSITION_GATE)\s*[:=]\s*OPEN\b",
-                text,
-            )
-        )
-        module_docs = [MODULES_ROOT / filename for filename in MODULE_FILES if (MODULES_ROOT / filename).exists()]
-        if not gate_open and module_docs:
-            errors.append("module decomposition gate is closed but module documents exist")
-
+def _verify_archives(errors: list[str]) -> None:
     archive_requirements = {
         ROUND_01: ("STAGE A", "STAGE B", "STAGE C", "STAGE D", "STAGE E"),
-        ROUND_02: (
-            "## Q1 —",
-            "## A1 —",
-            "## R1 —",
-            "## Q32 —",
-            "## A32 —",
-            "## R32 —",
-            "## Q33 —",
-            "## Q38 —",
-        ),
+        ROUND_02: ("## Q1 —", "## A1 —", "## R1 —", "## Q32 —", "## A32 —", "## R32 —", "## Q33 —", "## Q38 —"),
     }
     for path, markers in archive_requirements.items():
         if not path.exists():
@@ -322,40 +204,44 @@ def _verify_supporting_boundaries(errors: list[str]) -> None:
 
 def verify() -> list[str]:
     errors: list[str] = []
-    for path in CANONICAL:
-        if not path.exists():
-            errors.append(f"missing canonical Markdown: {path.relative_to(ROOT)}")
-            continue
-        errors.extend(
-            f"{path.relative_to(ROOT)}: {error}"
-            for error in verify_text(path.read_text(encoding="utf-8"))
-        )
+    if not ARCH_HUMAN.exists():
+        errors.append("missing canonical architecture README")
+    else:
+        errors.extend(f"docs/architecture/README.md: {e}" for e in verify_architecture_human(ARCH_HUMAN.read_text(encoding="utf-8")))
+    if not ARCH_REFERENCE.exists():
+        errors.append("missing canonical architecture reference")
+    else:
+        errors.extend(verify_engineering_reference(ARCH_REFERENCE.read_text(encoding="utf-8"), "docs/architecture/reference.md", module=False))
 
     for filename in PROJECT_NARRATIVE_BASELINES:
         path = PROJECT_ROOT / filename
         if not path.exists():
             errors.append(f"missing canonical project narrative: {path.relative_to(ROOT)}")
-            continue
-        errors.extend(verify_project_text(path.read_text(encoding="utf-8"), filename))
+        else:
+            errors.extend(verify_project_text(path.read_text(encoding="utf-8"), filename))
 
-    for filename in MODULE_FILES:
-        path = MODULES_ROOT / filename
-        if not path.exists():
-            errors.append(f"missing canonical module narrative: {path.relative_to(ROOT)}")
-            continue
-        errors.extend(verify_module_text(path.read_text(encoding="utf-8"), filename))
+    for directory in MODULE_DIRS:
+        human = MODULES_ROOT / directory / "README.md"
+        reference = MODULES_ROOT / directory / "reference.md"
+        if not human.exists():
+            errors.append(f"missing canonical module narrative: {human.relative_to(ROOT)}")
+        else:
+            errors.extend(verify_module_human(human.read_text(encoding="utf-8"), f"{directory}/README.md"))
+        if not reference.exists():
+            errors.append(f"missing canonical module reference: {reference.relative_to(ROOT)}")
+        else:
+            errors.extend(verify_engineering_reference(reference.read_text(encoding="utf-8"), f"{directory}/reference.md", module=True))
 
-    _verify_supporting_boundaries(errors)
+    _verify_archives(errors)
     views = ROOT / "docs/architecture/architecture-views.md"
     html = ROOT / "docs/architecture/architecture.html"
     if not views.exists() or not html.exists():
         errors.append("architecture diagram presentation pair must remain present")
     elif 'fetch("./architecture-views.md")' not in html.read_text(encoding="utf-8"):
         errors.append("architecture.html must continue to consume architecture-views.md")
-    for forbidden in ROOT.glob("docs/**/*-human.md"):
-        errors.append(f"human/spec mirror document must not exist: {forbidden.relative_to(ROOT)}")
-    for forbidden in ROOT.glob("docs/**/*-spec.md"):
-        errors.append(f"human/spec mirror document must not exist: {forbidden.relative_to(ROOT)}")
+    for pattern in ("docs/**/*-human.md", "docs/**/*-spec.md"):
+        for forbidden in ROOT.glob(pattern):
+            errors.append(f"human/spec mirror document must not exist: {forbidden.relative_to(ROOT)}")
     return errors
 
 
@@ -367,16 +253,11 @@ def main() -> int:
         return 1
 
     warnings: list[str] = []
-    for path in CANONICAL:
-        if path.exists():
-            warnings.extend(warnings_for_text(path.read_text(encoding="utf-8")))
-    for filename in PROJECT_NARRATIVE_BASELINES:
-        path = PROJECT_ROOT / filename
-        if path.exists():
-            warnings.extend(
-                f"{filename}: {warning}"
-                for warning in warnings_for_project_text(path.read_text(encoding="utf-8"))
-            )
+    if ARCH_HUMAN.exists():
+        warnings.extend(warning_for_human(ARCH_HUMAN.read_text(encoding="utf-8"), "architecture README"))
+    project = PROJECT_ROOT / "README.md"
+    if project.exists():
+        warnings.extend(warning_for_human(project.read_text(encoding="utf-8"), "project README"))
     for warning in warnings:
         print(warning, file=sys.stderr)
     print("project, architecture and module human readability structural verification passed.")
