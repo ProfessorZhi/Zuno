@@ -1,0 +1,42 @@
+name: Consolidate module human headings
+
+on:
+  push:
+    branches: [docs/module-narrative-continuity-wave1]
+    paths:
+      - "tools/scripts/_consolidate_module_human_headings.py"
+      - ".github/workflows/consolidate-module-human-headings.yml"
+
+permissions:
+  contents: write
+
+jobs:
+  consolidate:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: docs/module-narrative-continuity-wave1
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Consolidate headings and validate semantics
+        run: |
+          python tools/scripts/_consolidate_module_human_headings.py
+          python tools/scripts/verify_architecture_human_readability.py
+          python tools/scripts/verify_architecture_semantic_alignment.py
+          python tools/scripts/verify_docs_entrypoints.py
+          python tools/scripts/verify_markdown_internal_links.py
+          git diff --check
+      - name: Commit narrative structure
+        run: |
+          if git diff --quiet; then
+            echo "No consolidation changes needed."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "docs: consolidate module human narrative stages"
+          git push origin HEAD:docs/module-narrative-continuity-wave1
