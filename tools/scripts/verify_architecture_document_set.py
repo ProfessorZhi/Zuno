@@ -30,9 +30,7 @@ def verify() -> list[str]:
     for path in (
         REPO_ROOT / "docs/README.md",
         REPO_ROOT / "docs/project/README.md",
-        REPO_ROOT / "docs/project/README.md",
         REPO_ROOT / "docs/project/reference.md",
-        REPO_ROOT / "docs/architecture/README.md",
         REPO_ROOT / "docs/architecture/README.md",
         REPO_ROOT / "docs/architecture/reference.md",
         REPO_ROOT / "docs/modules/README.md",
@@ -48,7 +46,12 @@ def verify() -> list[str]:
         if not path.exists():
             errors.append(f"missing canonical documentation entrypoint: {path.relative_to(REPO_ROOT)}")
 
-    for obsolete in (REPO_ROOT / "docs/maintenance", REPO_ROOT / "docs/terminology.md"):
+    for obsolete in (
+        REPO_ROOT / "docs/maintenance",
+        REPO_ROOT / "docs/terminology.md",
+        REPO_ROOT / "docs/project/project.md",
+        REPO_ROOT / "docs/architecture/architecture.md",
+    ):
         if obsolete.exists():
             errors.append(f"obsolete documentation path must be absent: {obsolete.relative_to(REPO_ROOT)}")
 
@@ -59,7 +62,6 @@ def verify() -> list[str]:
     design = read("docs/architecture/README.md")
     index = read("docs/README.md")
     project = read("docs/project/README.md")
-    arch_index = read("docs/architecture/README.md")
     arch_reference = read("docs/architecture/reference.md")
     modules_index = read("docs/modules/README.md")
     modules_reference = read("docs/modules/reference.md")
@@ -82,20 +84,20 @@ def verify() -> list[str]:
         if marker not in index:
             errors.append(f"docs README missing eight-domain marker: {marker}")
 
-    if "project.md" not in index:
-        errors.append("docs README must route to consolidated project.md")
+    for marker in ("project/README.md", "architecture/README.md", "modules/README.md"):
+        if marker not in index:
+            errors.append(f"docs README missing canonical human route: {marker}")
     if "docs/architecture" not in system:
         errors.append("system.yaml must route to architecture surface")
 
     for marker in (
-        "Human View",
-        "Engineering / Agent View",
-        "reference.md",
-        "模块数量不是文档先验",
-        "Evidence",
+        "## Part A — Human Narrative（人类技术叙事）",
+        "## Part B — Engineering / Agent Reference（工程 / Agent 参考）",
+        "../modules/",
+        "../evidence/",
     ):
-        if marker not in arch_index:
-            errors.append(f"architecture README missing documentation-boundary marker: {marker}")
+        if marker not in design:
+            errors.append(f"architecture README missing canonical reading-surface marker: {marker}")
 
     for marker in (
         "canonical-architecture-machine-router",
@@ -146,7 +148,7 @@ def verify() -> list[str]:
         "相比通用方案，我们今天到底证明了什么",
     ):
         if marker not in project:
-            errors.append(f"project.md missing human narrative marker: {marker}")
+            errors.append(f"project README missing human narrative marker: {marker}")
 
     # Protect accepted Architecture Truth and the dual-view model. The docs migration
     # must not weaken these semantic gates.
@@ -182,12 +184,12 @@ def verify() -> list[str]:
         "EffectReceipt",
     ):
         if marker not in design:
-            errors.append(f"architecture.md missing target architecture marker: {marker}")
+            errors.append(f"architecture README missing target architecture marker: {marker}")
 
     part_a = design.find("## Part A — Human Narrative（人类技术叙事）")
     part_b = design.find("## Part B — Engineering / Agent Reference（工程 / Agent 参考）")
     if part_a < 0 or part_b < 0 or part_a >= part_b:
-        errors.append("architecture.md must keep ordered Part A Human Narrative and Part B Engineering / Agent Reference")
+        errors.append("architecture README must keep ordered Part A Human Narrative and Part B Engineering / Agent Reference")
 
     for marker in (
         "module_design_baseline: AVAILABLE_V1",
