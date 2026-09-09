@@ -12,6 +12,17 @@ ARCHITECTURE_FILES = {
     "architecture.html",
     "reference.md",
 }
+MODULE_DIRS = (
+    "application",
+    "domain",
+    "knowledge",
+    "runtime",
+    "capability",
+    "effects",
+    "model-gateway",
+    "security",
+    "evaluation",
+)
 
 
 def read(path: str) -> str:
@@ -27,7 +38,7 @@ def verify() -> list[str]:
     if dirs:
         errors.append(f"architecture directory must not contain subdirectories: {dirs}")
 
-    for path in (
+    required_paths = [
         REPO_ROOT / "docs/README.md",
         REPO_ROOT / "docs/project/README.md",
         REPO_ROOT / "docs/project/reference.md",
@@ -42,7 +53,15 @@ def verify() -> list[str]:
         REPO_ROOT / "docs/governance/README.md",
         REPO_ROOT / "docs/governance/documentation-architecture.md",
         REPO_ROOT / "docs/red-blue/archive/legacy/README.md",
-    ):
+    ]
+    for name in MODULE_DIRS:
+        required_paths.extend(
+            [
+                REPO_ROOT / "docs/modules" / name / "README.md",
+                REPO_ROOT / "docs/modules" / name / "reference.md",
+            ]
+        )
+    for path in required_paths:
         if not path.exists():
             errors.append(f"missing canonical documentation entrypoint: {path.relative_to(REPO_ROOT)}")
 
@@ -59,9 +78,9 @@ def verify() -> list[str]:
         if mirror.exists():
             errors.append(f"documentation mirror must not exist: {mirror.relative_to(REPO_ROOT)}")
 
-    design = read("docs/architecture/README.md")
     index = read("docs/README.md")
     project = read("docs/project/README.md")
+    design = read("docs/architecture/README.md")
     arch_reference = read("docs/architecture/reference.md")
     modules_index = read("docs/modules/README.md")
     modules_reference = read("docs/modules/reference.md")
@@ -87,35 +106,93 @@ def verify() -> list[str]:
     for marker in ("project/README.md", "architecture/README.md", "modules/README.md"):
         if marker not in index:
             errors.append(f"docs README missing canonical human route: {marker}")
+    for marker in ("architecture/reference.md", "modules/reference.md", "reference.md"):
+        if marker not in index:
+            errors.append(f"docs README missing engineering-route marker: {marker}")
     if "docs/architecture" not in system:
         errors.append("system.yaml must route to architecture surface")
 
-    for marker in (
+    human_markers = (
+        "# Zuno 目标架构",
         "## Part A — Human Narrative（人类技术叙事）",
-        "## Part B — Engineering / Agent Reference（工程 / Agent 参考）",
-        "../modules/",
-        "../evidence/",
-    ):
+        "法律智能真正变难的时刻",
+        "一件案件里的五种事实",
+        "四次跨边界决定系统是否可信",
+        "九个责任域如何从这些边界产生",
+        "故障以后，先找事实再恢复控制",
+        "研究成果怎样变成工程能力",
+        "复杂度必须在测量中证明收益",
+        "target_logical_module_count: 9",
+        "overall_architecture_state: ROUND_02_FROZEN",
+        "implementation_authorization: NO",
+        "reference.md",
+    )
+    for marker in human_markers:
         if marker not in design:
-            errors.append(f"architecture README missing canonical reading-surface marker: {marker}")
+            errors.append(f"architecture README missing human/target marker: {marker}")
+    if "## Part B — Engineering / Agent Reference（工程 / Agent 参考）" in design:
+        errors.append("architecture README must not contain Part B after human/reference split")
 
-    for marker in (
-        "canonical-architecture-machine-router",
-        "Read order for implementation",
-        "Cross-cutting facts that belong here",
-        "Non-goals",
-    ):
+    engineering_markers = (
+        "status: canonical-architecture-engineering-reference",
+        "human_source: docs/architecture/README.md",
+        "module_router: docs/modules/reference.md",
+        "## Part B — Engineering / Agent Reference（工程 / Agent 参考）",
+        "### B1. Scope / Global Invariants",
+        "### B2. Authority / Ownership Matrix",
+        "### B3. Cross-boundary Contract Map",
+        "### B6. Completion Proof / Non-proof",
+        "### B7. Failure Taxonomy / Recovery Order",
+        "### B10. Security / Approval / Human Authority",
+        "### B13. Current / Target / Evidence / Unknown",
+        "### B14. Machine Navigation / Source Precedence",
+        "Single Controller",
+        "AdmissionReceipt",
+        "KnowledgeGeneration lifecycle != task-level ReadinessDecision",
+        "EvidenceCandidate != Evidence",
+        "CitationLineage != WorkProductCitationBinding",
+        "Retry != Replan != Reconcile",
+        "PreparedAction",
+        "EffectReceipt",
+    )
+    for marker in engineering_markers:
         if marker not in arch_reference:
-            errors.append(f"architecture reference missing machine-routing marker: {marker}")
+            errors.append(f"architecture reference missing engineering marker: {marker}")
 
     for marker in (
         "canonical-module-router",
         "Documentation rule",
         "Current Target module routes",
         "For a module implementation task",
+        "Part C  Cross-Module Consistency",
+        "Cancellation（取消）是停止未来工作，不是全局回滚",
+        "Idempotency（幂等）不是一个全局 key",
+        "恢复时先找 Owner Fact，再修复 Projection",
+        "Module Detail Freeze Review",
     ):
         if marker not in modules_reference:
-            errors.append(f"modules reference missing machine-routing marker: {marker}")
+            errors.append(f"modules reference missing engineering marker: {marker}")
+
+    for marker in (
+        "module_design_baseline: AVAILABLE_V1",
+        "module_deep_design: AVAILABLE_V2",
+        "module_deep_design_coverage: 9/9",
+        "cross_module_consistency: AVAILABLE_V1",
+        "module_detail_freeze: NOT_YET",
+        "implementation_authorization: NO",
+        "application/README.md",
+        "domain/README.md",
+        "knowledge/README.md",
+        "runtime/README.md",
+        "capability/README.md",
+        "effects/README.md",
+        "model-gateway/README.md",
+        "security/README.md",
+        "evaluation/README.md",
+        "reference.md",
+    ):
+        if marker not in modules_index:
+            errors.append(f"modules README missing human/current-design marker: {marker}")
 
     for marker in (
         "documentation-architecture.md",
@@ -136,6 +213,8 @@ def verify() -> list[str]:
         "Research boundary",
         "Red / Blue boundary",
         "Architecture reasoning contract",
+        "README.md      Human Narrative",
+        "reference.md   Engineering / Agent Reference",
     ):
         if marker not in docs_architecture:
             errors.append(f"documentation architecture reference missing marker: {marker}")
@@ -149,70 +228,6 @@ def verify() -> list[str]:
     ):
         if marker not in project:
             errors.append(f"project README missing human narrative marker: {marker}")
-
-    # Protect accepted Architecture Truth and the dual-view model. The docs migration
-    # must not weaken these semantic gates.
-    for marker in (
-        "target_logical_module_count: 9",
-        "overall_architecture_state: ROUND_02_FROZEN",
-        "implementation_authorization: NO",
-        "# Zuno 目标架构",
-        "## Part A — Human Narrative（人类技术叙事）",
-        "法律智能真正变难的时刻",
-        "一件案件里的五种事实",
-        "四次跨边界决定系统是否可信",
-        "九个责任域如何从这些边界产生",
-        "故障以后，先找事实再恢复控制",
-        "研究成果怎样变成工程能力",
-        "复杂度必须在测量中证明收益",
-        "## Part B — Engineering / Agent Reference（工程 / Agent 参考）",
-        "### B1. Scope / Global Invariants",
-        "### B2. Authority / Ownership Matrix",
-        "### B3. Cross-boundary Contract Map",
-        "### B6. Completion Proof / Non-proof",
-        "### B7. Failure Taxonomy / Recovery Order",
-        "### B10. Security / Approval / Human Authority",
-        "### B13. Current / Target / Evidence / Unknown",
-        "### B14. Machine Navigation / Source Precedence",
-        "Single Controller",
-        "AdmissionReceipt",
-        "KnowledgeGeneration lifecycle != task-level ReadinessDecision",
-        "EvidenceCandidate != Evidence",
-        "CitationLineage != WorkProductCitationBinding",
-        "Retry != Replan != Reconcile",
-        "PreparedAction",
-        "EffectReceipt",
-    ):
-        if marker not in design:
-            errors.append(f"architecture README missing target architecture marker: {marker}")
-
-    part_a = design.find("## Part A — Human Narrative（人类技术叙事）")
-    part_b = design.find("## Part B — Engineering / Agent Reference（工程 / Agent 参考）")
-    if part_a < 0 or part_b < 0 or part_a >= part_b:
-        errors.append("architecture README must keep ordered Part A Human Narrative and Part B Engineering / Agent Reference")
-
-    for marker in (
-        "module_design_baseline: AVAILABLE_V1",
-        "module_deep_design: AVAILABLE_V2",
-        "module_deep_design_coverage: 9/9",
-        "cross_module_consistency: AVAILABLE_V1",
-        "module_detail_freeze: NOT_YET",
-        "implementation_authorization: NO",
-        "application/README.md",
-        "domain/README.md",
-        "knowledge/README.md",
-        "runtime/README.md",
-        "capability/README.md",
-        "effects/README.md",
-        "model-gateway/README.md",
-        "security/README.md",
-        "evaluation/README.md",
-        "Part C  Cross-Module Consistency",
-        "Cancellation（取消）是停止未来工作，不是全局回滚",
-        "Idempotency（幂等）不是一个全局 key",
-    ):
-        if marker not in modules_index:
-            errors.append(f"modules README missing current design marker: {marker}")
 
     for marker in ("Current", "Target", "Unknown"):
         if marker not in index:
