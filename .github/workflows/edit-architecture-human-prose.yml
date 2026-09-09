@@ -1,0 +1,41 @@
+name: Edit architecture human prose
+
+on:
+  push:
+    branches:
+      - docs/architecture-editorial-pass
+    paths:
+      - tools/scripts/_edit_architecture_human_prose.py
+      - .github/workflows/edit-architecture-human-prose.yml
+
+permissions:
+  contents: write
+
+jobs:
+  edit:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: docs/architecture-editorial-pass
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Apply editorial pass and verify
+        run: |
+          python tools/scripts/_edit_architecture_human_prose.py
+          python tools/scripts/verify_architecture_human_readability.py
+          python tools/scripts/verify_architecture_semantic_alignment.py
+          python tools/scripts/verify_architecture_writing_standard.py
+          python tools/agent/render_architecture.py --check
+          python tools/scripts/verify_docs_entrypoints.py
+          python tools/scripts/verify_markdown_internal_links.py
+      - name: Commit editorial pass
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add docs/architecture/README.md
+          git diff --cached --quiet && exit 0
+          git commit -m 'docs: make architecture narrative more direct'
+          git push origin HEAD:docs/architecture-editorial-pass
