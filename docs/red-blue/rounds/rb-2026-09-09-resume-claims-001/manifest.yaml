@@ -1,0 +1,31 @@
+round_id: rb-2026-09-09-resume-claims-001
+state: CLOSED
+mode: CHATGPT_AUTO
+zuno_base_sha: 2dd908b7146f21b6be0e970ab4ef31f444920032
+resume_snapshot:
+  repository: ProfessorZhi/internship-work
+  commit_sha: 382189e19b64ad2d691f67ca7f3906be039a96f5
+  path: resume/00_resume_versions/Zuno_v3+CodingAgent+SFTDPO_简历/当前简历文案_三项目版.md
+target_role: AI Agent 开发工程师 / 大模型应用开发工程师
+interview_stage: project-deep-dive / architecture-follow-up
+red_calibration: kernel-only
+blue_profile: canonical-part-a-first
+scenario_scope:
+  - Build / Buy / reuse-first boundary
+  - personal vs team ownership
+  - project identity / historical reality
+  - Current vs Target evaluation claims
+blue_allowlist:
+  - docs/project/
+  - docs/architecture/
+  - docs/modules/
+  - docs/decisions/
+  - docs/evidence/
+  - allowed docs/governance/ facts
+max_turns: 3
+stop_condition: >-
+  Close when the same root cause is stable across Build/Buy, project-reality and
+  measurement attacks, or when allowed sources contain no further decision-changing evidence.
+result: CLOSED_WITH_FINDINGS
+finding_count: 3
+highest_severity: S0
