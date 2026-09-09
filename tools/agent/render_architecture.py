@@ -7,6 +7,7 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 DESIGN_PATH = REPO_ROOT / "docs/architecture/README.md"
+REFERENCE_PATH = REPO_ROOT / "docs/architecture/reference.md"
 VIEWS_PATH = REPO_ROOT / "docs/architecture/architecture-views.md"
 HTML_PATH = REPO_ROOT / "docs/architecture/architecture.html"
 
@@ -29,6 +30,7 @@ STALE_OUTPUTS = [
     REPO_ROOT / "docs/architecture/overview.html",
     REPO_ROOT / "docs/architecture.md",
     REPO_ROOT / "docs/architecture/overall-architecture.md",
+    REPO_ROOT / "docs/architecture/architecture.md",
 ]
 
 
@@ -42,8 +44,13 @@ def _section(content: str, title: str) -> str:
     return content[start : min(next_positions) if next_positions else len(content)]
 
 
-def validate_design(content: str) -> list[str]:
-    required_sections = [
+def validate_design(human: str, reference: str | None = None) -> list[str]:
+    if reference is None:
+        reference = REFERENCE_PATH.read_text(encoding="utf-8")
+    combined = human + "\n" + reference
+    errors: list[str] = []
+
+    for marker in (
         "# Zuno 目标架构",
         "## Part A — Human Narrative（人类技术叙事）",
         "### A1. 法律智能真正变难的时刻",
@@ -55,6 +62,14 @@ def validate_design(content: str) -> list[str]:
         "### A7. 安全、人和时间",
         "### A8. 复杂度必须在测量中证明收益",
         "### A9. 从目标架构进入实施",
+        "reference.md",
+    ):
+        if marker not in human:
+            errors.append(f"architecture README missing required marker: {marker}")
+    if "## Part B — Engineering / Agent Reference（工程 / Agent 参考）" in human:
+        errors.append("architecture README must not retain Part B")
+
+    for marker in (
         "## Part B — Engineering / Agent Reference（工程 / Agent 参考）",
         "### B1. Scope / Global Invariants",
         "### B2. Authority / Ownership Matrix",
@@ -64,8 +79,11 @@ def validate_design(content: str) -> list[str]:
         "### B10. Security / Approval / Human Authority",
         "### B13. Current / Target / Evidence / Unknown",
         "### B14. Machine Navigation / Source Precedence",
-    ]
-    required_terms = [
+    ):
+        if marker not in reference:
+            errors.append(f"architecture reference missing required marker: {marker}")
+
+    for marker in (
         "Application & Integration",
         "Legal Domain & Work Product",
         "Knowledge & Evidence",
@@ -88,20 +106,13 @@ def validate_design(content: str) -> list[str]:
         "模块化 Python 后端",
         "独立网络服务",
         "Target Architecture",
-    ]
-    errors: list[str] = []
-    for marker in required_sections + required_terms:
-        if marker not in content:
-            errors.append(f"architecture.md missing required marker: {marker}")
-
-    for marker in (
-        "docs/modules/",
-        "docs/decisions/",
-        "docs/evidence/",
-        "docs/research/",
     ):
-        if marker not in content:
-            errors.append(f"architecture.md missing canonical route: {marker}")
+        if marker not in combined:
+            errors.append(f"architecture split views missing required term: {marker}")
+
+    for marker in ("docs/modules/", "docs/decisions/", "docs/evidence/", "docs/research/"):
+        if marker not in combined:
+            errors.append(f"architecture split views missing canonical route: {marker}")
 
     for marker in (
         "final_module_count: 9",
@@ -114,15 +125,11 @@ def validate_design(content: str) -> list[str]:
         "implementation_authorization: NO",
         "architecture_state: ACCEPTED_TARGET",
     ):
-        if marker not in content:
-            errors.append(f"architecture.md missing governance marker: {marker}")
+        if marker not in human:
+            errors.append(f"architecture README missing governance marker: {marker}")
 
-    part_a = content.find("## Part A — Human Narrative（人类技术叙事）")
-    part_b = content.find("## Part B — Engineering / Agent Reference（工程 / Agent 参考）")
-    if part_a < 0 or part_b < 0 or part_a >= part_b:
-        errors.append("overall architecture must contain ordered Part A Human Narrative and Part B Engineering / Agent Reference")
-    if content.count("```mermaid") > 2:
-        errors.append("architecture.md should remain prose/reference-first; diagrams belong in architecture-views.md")
+    if human.count("```mermaid") > 2:
+        errors.append("architecture README should remain prose-first; diagrams belong in architecture-views.md")
     return errors
 
 
@@ -134,10 +141,8 @@ def validate_source(content: str) -> list[str]:
             errors.append(f"missing canonical architecture view: {title}")
         elif section.count("```mermaid") < 1:
             errors.append(f"canonical view has no Mermaid diagram: {title}")
-
     if content.count("```mermaid") != len(EXPECTED_VIEWS):
         errors.append(f"architecture visual source must contain exactly {len(EXPECTED_VIEWS)} Mermaid diagrams")
-
     for term in (
         "Modular Python Backend",
         "Independent Workers",
@@ -174,10 +179,7 @@ def _directory_errors(root: Path) -> list[str]:
     directories = [path.name for path in root.iterdir() if path.is_dir()]
     errors: list[str] = []
     if files != CANONICAL_ARCHITECTURE_FILES:
-        errors.append(
-            f"{root.relative_to(REPO_ROOT)} must contain exactly "
-            f"{sorted(CANONICAL_ARCHITECTURE_FILES)}, got {sorted(files)}"
-        )
+        errors.append(f"{root.relative_to(REPO_ROOT)} must contain exactly {sorted(CANONICAL_ARCHITECTURE_FILES)}, got {sorted(files)}")
     if directories:
         errors.append(f"{root.relative_to(REPO_ROOT)} must not contain subdirectories: {directories}")
     return errors
@@ -189,7 +191,9 @@ def validate_taxonomy() -> list[str]:
         "docs/README.md",
         "docs/project/README.md",
         "docs/architecture/README.md",
+        "docs/architecture/reference.md",
         "docs/modules/README.md",
+        "docs/modules/reference.md",
         "docs/evidence/README.md",
         "docs/red-blue/README.md",
     ):
@@ -203,7 +207,7 @@ def validate_taxonomy() -> list[str]:
 def write_outputs() -> None:
     errors = [
         *validate_taxonomy(),
-        *validate_design(DESIGN_PATH.read_text(encoding="utf-8")),
+        *validate_design(DESIGN_PATH.read_text(encoding="utf-8"), REFERENCE_PATH.read_text(encoding="utf-8")),
         *validate_source(VIEWS_PATH.read_text(encoding="utf-8")),
         *validate_html(HTML_PATH.read_text(encoding="utf-8")),
     ]
@@ -217,7 +221,7 @@ def check_outputs() -> list[str]:
     for mirror in (REPO_ROOT / ".agent/architecture", REPO_ROOT / ".agent/modules"):
         if mirror.exists():
             errors.append(f"documentation mirror must not exist: {mirror.relative_to(REPO_ROOT)}")
-    errors.extend(validate_design(DESIGN_PATH.read_text(encoding="utf-8")))
+    errors.extend(validate_design(DESIGN_PATH.read_text(encoding="utf-8"), REFERENCE_PATH.read_text(encoding="utf-8")))
     errors.extend(validate_source(VIEWS_PATH.read_text(encoding="utf-8")))
     errors.extend(validate_html(HTML_PATH.read_text(encoding="utf-8")))
     for path in STALE_OUTPUTS:
