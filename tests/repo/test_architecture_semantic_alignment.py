@@ -87,7 +87,7 @@ def test_architecture_semantics_follow_canonical_module_designs() -> None:
 
 
 def test_active_architecture_has_no_pre_baseline_status_claims() -> None:
-    architecture = (REPO_ROOT / "docs/architecture/README.md").read_text(encoding="utf-8")
+    architecture = (REPO_ROOT / "docs/architecture/architecture.md").read_text(encoding="utf-8")
     assert "module_design_baseline: AVAILABLE_V1" in architecture
     assert "module_detail_freeze: NOT_YET" in architecture
     assert "implementation_authorization: NO" in architecture
@@ -103,7 +103,7 @@ def test_active_architecture_has_no_pre_baseline_status_claims() -> None:
 
 def test_domain_and_knowledge_authority_is_consistent_across_docs() -> None:
     architecture = (
-        (REPO_ROOT / "docs/architecture/README.md").read_text(encoding="utf-8")
+        (REPO_ROOT / "docs/architecture/architecture.md").read_text(encoding="utf-8")
         + "\n"
         + (REPO_ROOT / "docs/architecture/reference.md").read_text(encoding="utf-8")
     )
