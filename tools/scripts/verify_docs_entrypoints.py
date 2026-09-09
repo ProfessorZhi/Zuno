@@ -6,16 +6,8 @@ from pathlib import Path
 
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
-ARCHITECTURE_FILES = {
-    "README.md",
-    "architecture-views.md",
-    "architecture.html",
-    "reference.md",
-}
-PROJECT_FILES = [
-    "docs/project/README.md",
-    "docs/project/reference.md",
-]
+ARCHITECTURE_FILES = {"README.md", "architecture-views.md", "architecture.html", "reference.md"}
+PROJECT_FILES = ["docs/project/README.md", "docs/project/reference.md"]
 RESEARCH_FILES = [
     "docs/research/README.md",
     "docs/research/deep-research-report-2026-08-27.md",
@@ -24,18 +16,19 @@ RESEARCH_FILES = [
     "docs/research/agent-platform-baseline.md",
     "docs/research/documentation-narrative-blueprint.md",
 ]
-MODULE_FILES = [
-    "docs/modules/README.md",
-    "docs/modules/application/README.md",
-    "docs/modules/domain/README.md",
-    "docs/modules/knowledge/README.md",
-    "docs/modules/runtime/README.md",
-    "docs/modules/capability/README.md",
-    "docs/modules/effects/README.md",
-    "docs/modules/model-gateway/README.md",
-    "docs/modules/security/README.md",
-    "docs/modules/evaluation/README.md",
-]
+MODULE_DIRS = (
+    "application",
+    "domain",
+    "knowledge",
+    "runtime",
+    "capability",
+    "effects",
+    "model-gateway",
+    "security",
+    "evaluation",
+)
+MODULE_HUMAN_FILES = [f"docs/modules/{name}/README.md" for name in MODULE_DIRS]
+MODULE_REFERENCE_FILES = [f"docs/modules/{name}/reference.md" for name in MODULE_DIRS]
 MODULE_BASELINE_HEADINGS = [
     "### B1 Scope / Global Invariants",
     "### B2 Responsibility / Ownership",
@@ -53,6 +46,13 @@ MODULE_BASELINE_HEADINGS = [
     "### B14 Code / Database / Migration Constraints",
 ]
 DETAIL_CANDIDATE_HEADINGS = [f"#### B14.{number} Detail Freeze Candidate" for number in range(1, 9)]
+PART_C_HEADINGS = [
+    "## Part C — Cross-Module Consistency（跨模块一致性）",
+    "### C1 Completion Proof / Non-proof（完成证明与非证明）",
+    "### C2 Causation / Version / Freshness Bindings（因果、版本与新鲜度绑定）",
+    "### C3 Cancellation / Late Result / Staleness Rules（取消、晚到结果与失效规则）",
+    "### C4 Recovery Order / Consistency Tests（恢复顺序与一致性验证）",
+]
 
 
 def _load_links():
@@ -82,8 +82,10 @@ def verify() -> list[str]:
         "docs/architecture/architecture-views.md",
         "docs/architecture/architecture.html",
         "docs/architecture/reference.md",
+        "docs/modules/README.md",
         "docs/modules/reference.md",
-        *MODULE_FILES,
+        *MODULE_HUMAN_FILES,
+        *MODULE_REFERENCE_FILES,
         "docs/red-blue/README.md",
         "docs/red-blue/archive/legacy/README.md",
         "docs/red-blue/archive/legacy/manual-round-01-overall-architecture.md",
@@ -115,6 +117,8 @@ def verify() -> list[str]:
     for obsolete in (
         "docs/maintenance",
         "docs/terminology.md",
+        "docs/project/project.md",
+        "docs/architecture/architecture.md",
         "docs/facts",
         "docs/history",
         "docs/operations",
@@ -124,27 +128,20 @@ def verify() -> list[str]:
         if path.exists():
             errors.append(f"obsolete documentation path must be absent: {obsolete}")
 
-    docs_root = REPO_ROOT / "docs"
     expected_top_level_dirs = {
-        "project",
-        "architecture",
-        "modules",
-        "red-blue",
-        "research",
-        "decisions",
-        "evidence",
-        "governance",
+        "project", "architecture", "modules", "red-blue",
+        "research", "decisions", "evidence", "governance",
     }
-    actual_top_level_dirs = {path.name for path in docs_root.iterdir() if path.is_dir()}
+    actual_top_level_dirs = {path.name for path in (REPO_ROOT / "docs").iterdir() if path.is_dir()}
     if actual_top_level_dirs != expected_top_level_dirs:
         errors.append(
             f"docs top-level directory set mismatch: expected={sorted(expected_top_level_dirs)} actual={sorted(actual_top_level_dirs)}"
         )
 
-    root = REPO_ROOT / "docs/architecture"
-    if {path.name for path in root.iterdir() if path.is_file()} != ARCHITECTURE_FILES:
-        errors.append(f"docs/architecture file set mismatch: {sorted(path.name for path in root.iterdir() if path.is_file())}")
-    if any(path.is_dir() for path in root.iterdir()):
+    arch_root = REPO_ROOT / "docs/architecture"
+    if {path.name for path in arch_root.iterdir() if path.is_file()} != ARCHITECTURE_FILES:
+        errors.append(f"docs/architecture file set mismatch: {sorted(path.name for path in arch_root.iterdir() if path.is_file())}")
+    if any(path.is_dir() for path in arch_root.iterdir()):
         errors.append("docs/architecture must not contain subdirectories")
 
     for mirror in (REPO_ROOT / ".agent/architecture", REPO_ROOT / ".agent/modules"):
@@ -153,47 +150,27 @@ def verify() -> list[str]:
 
     index = (REPO_ROOT / "docs/README.md").read_text(encoding="utf-8")
     for marker in (
-        "System & Review",
-        "Trust & Evolution",
-        "project/",
-        "architecture/",
-        "modules/",
-        "red-blue/",
-        "research/",
-        "decisions/",
-        "evidence/",
-        "governance/",
-        "Human View",
-        "Engineering View",
-        "Current",
-        "Target",
-        "Unknown",
+        "System & Review", "Trust & Evolution",
+        "project/", "architecture/", "modules/", "red-blue/",
+        "research/", "decisions/", "evidence/", "governance/",
+        "Human View", "Engineering Reference",
+        "Current", "Target", "Unknown",
     ):
         if marker not in index:
             errors.append(f"docs/README.md missing navigation marker: {marker}")
 
     research = (REPO_ROOT / "docs/research/README.md").read_text(encoding="utf-8")
     for marker in (
-        "DIRECT_LINEAGE",
-        "CAPABILITY_LINEAGE",
-        "CONCEPTUAL_LINEAGE",
-        "BACKGROUND_ONLY",
-        "UNVERIFIED",
-        "Paper != Capability != Provider != Qualified Provider != Formal Business Fact",
-        "last_verified",
+        "DIRECT_LINEAGE", "CAPABILITY_LINEAGE", "CONCEPTUAL_LINEAGE", "BACKGROUND_ONLY", "UNVERIFIED",
+        "Paper != Capability != Provider != Qualified Provider != Formal Business Fact", "last_verified",
     ):
         if marker not in research:
             errors.append(f"docs/research/README.md missing research boundary marker: {marker}")
 
     red_blue = (REPO_ROOT / "docs/red-blue/README.md").read_text(encoding="utf-8")
     for marker in (
-        "CHATGPT_AUTO",
-        "AGENT_AUTO",
-        "Scenario-first",
-        "Source trace",
-        "Decision impact",
-        "Independent acceptance",
-        "SIMPLIFICATION_OPPORTUNITY",
+        "CHATGPT_AUTO", "AGENT_AUTO", "Scenario-first", "Source trace",
+        "Decision impact", "Independent acceptance", "SIMPLIFICATION_OPPORTUNITY",
     ):
         if marker not in red_blue:
             errors.append(f"docs/red-blue/README.md missing review marker: {marker}")
@@ -201,108 +178,81 @@ def verify() -> list[str]:
     project_readme = (REPO_ROOT / "docs/project/README.md").read_text(encoding="utf-8")
     for marker in (
         "# Zuno 项目：从智慧司法研究到可验证的法律智能 Agent 平台",
-        "为什么会有这个项目",
-        "为什么不直接用 Dify、Coze",
-        "项目是怎样发展到今天的",
-        "团队是什么形态，我在里面做了什么",
-        "相比通用方案，我们今天到底证明了什么",
-        "project-fact-provenance.md",
+        "为什么会有这个项目", "为什么不直接用 Dify、Coze",
+        "项目是怎样发展到今天的", "团队是什么形态，我在里面做了什么",
+        "相比通用方案，我们今天到底证明了什么", "project-fact-provenance.md",
     ):
         if marker not in project_readme:
             errors.append(f"docs/project/README.md missing canonical project narrative marker: {marker}")
 
     project_reference = (REPO_ROOT / "docs/project/reference.md").read_text(encoding="utf-8")
-    for marker in (
-        "canonical-project-machine-index",
-        "Historical baseline",
-        "Confirmed personal participation",
-        "Claim boundaries",
-    ):
+    for marker in ("canonical-project-machine-index", "Historical baseline", "Confirmed personal participation", "Claim boundaries"):
         if marker not in project_reference:
             errors.append(f"docs/project/reference.md missing machine reference marker: {marker}")
 
     architecture_reference = (REPO_ROOT / "docs/architecture/reference.md").read_text(encoding="utf-8")
     for marker in (
-        "canonical-architecture-machine-router",
-        "Read order for implementation",
-        "Cross-cutting facts that belong here",
-        "Non-goals",
+        "canonical-architecture-engineering-reference",
+        "human_source: docs/architecture/README.md",
+        "## Part B — Engineering / Agent Reference（工程 / Agent 参考）",
+        "### B2. Authority / Ownership Matrix",
+        "### B7. Failure Taxonomy / Recovery Order",
+        "### B14. Machine Navigation / Source Precedence",
     ):
         if marker not in architecture_reference:
-            errors.append(f"docs/architecture/reference.md missing machine reference marker: {marker}")
+            errors.append(f"docs/architecture/reference.md missing engineering reference marker: {marker}")
 
     modules_reference = (REPO_ROOT / "docs/modules/reference.md").read_text(encoding="utf-8")
     for marker in (
-        "canonical-module-router",
-        "Documentation rule",
-        "Current Target module routes",
-        "For a module implementation task",
+        "canonical-module-router", "Documentation rule", "Current Target module routes",
+        "For a module implementation task", "Cross-module Engineering Reference",
     ):
         if marker not in modules_reference:
             errors.append(f"docs/modules/reference.md missing machine reference marker: {marker}")
 
     documentation_architecture = (REPO_ROOT / "docs/governance/documentation-architecture.md").read_text(encoding="utf-8")
     for marker in (
-        "canonical-documentation-architecture",
-        "Physical layout",
-        "Truth ownership",
-        "Human / Machine projection",
-        "Default reading paths",
-        "Research boundary",
-        "Red / Blue boundary",
-        "Architecture reasoning contract",
+        "canonical-documentation-architecture", "Physical layout", "Truth ownership",
+        "Human / Machine projection", "Default reading paths", "Research boundary",
+        "Red / Blue boundary", "Architecture reasoning contract",
+        "README.md      Human Narrative", "reference.md   Engineering / Agent Reference",
     ):
         if marker not in documentation_architecture:
             errors.append(f"docs/governance/documentation-architecture.md missing marker: {marker}")
 
-    project = (REPO_ROOT / "docs/project/README.md").read_text(encoding="utf-8")
+    modules = (REPO_ROOT / "docs/modules/README.md").read_text(encoding="utf-8")
     for marker in (
-        "为什么不直接用 Dify、Coze",
-        "项目是怎样发展到今天的",
-        "团队是什么形态，我在里面做了什么",
-        "相比通用方案，我们今天到底证明了什么",
-        "Current",
-        "Target",
-        "Unknown",
+        "application/README.md", "evaluation/README.md", "module_design_baseline",
+        "module_detail_design_candidate: AVAILABLE_V1", "module_detail_design_candidate_coverage: 9/9",
+        "module_detail_freeze: NOT_YET", "implementation_authorization: NO", "reference.md",
     ):
-        if marker not in project:
-            errors.append(f"project.md missing coverage marker: {marker}")
+        if marker not in modules:
+            errors.append(f"docs/modules/README.md missing current Target decomposition marker: {marker}")
+
+    for human_path, reference_path in zip(MODULE_HUMAN_FILES, MODULE_REFERENCE_FILES, strict=True):
+        human = (REPO_ROOT / human_path).read_text(encoding="utf-8")
+        reference = (REPO_ROOT / reference_path).read_text(encoding="utf-8")
+        for marker in (
+            "status: design-baseline-v1", "implementation: not-authorized",
+            "## Part A — Human Narrative", "### 当前、目标与缺口", "reference.md",
+        ):
+            if marker not in human:
+                errors.append(f"{human_path} missing human module marker: {marker}")
+        if "## Part B — Engineering / Agent Reference" in human:
+            errors.append(f"{human_path} must not retain Part B")
+        if not _has_candidate_status(human):
+            errors.append(f"{human_path} missing detail candidate status")
+
+        for marker in ("## Part B — Engineering / Agent Reference", *MODULE_BASELINE_HEADINGS, *DETAIL_CANDIDATE_HEADINGS, *PART_C_HEADINGS):
+            if marker not in reference:
+                errors.append(f"{reference_path} missing engineering heading: {marker}")
+        if not all(status in human + reference for status in ("Current", "Target", "Gap")):
+            errors.append(f"{human_path} + {reference_path} must distinguish Current / Target / Gap")
 
     provenance = (REPO_ROOT / "docs/governance/project-fact-provenance.md").read_text(encoding="utf-8")
     for marker in ("PF-001", "PF-020", "PF-024", "PF-028", "Target / 产品价值假设", "Unknown / 未恢复"):
         if marker not in provenance:
             errors.append(f"project fact provenance missing ledger marker: {marker}")
-
-    modules = (REPO_ROOT / "docs/modules/README.md").read_text(encoding="utf-8")
-    for marker in (
-        "application/README.md",
-        "evaluation/README.md",
-        "module_design_baseline",
-        "module_detail_design_candidate: AVAILABLE_V1",
-        "module_detail_design_candidate_coverage: 9/9",
-        "module_detail_freeze: NOT_YET",
-        "implementation_authorization: NO",
-    ):
-        if marker not in modules:
-            errors.append(f"docs/modules/README.md missing current Target decomposition marker: {marker}")
-
-    for module_path in MODULE_FILES[1:]:
-        content = (REPO_ROOT / module_path).read_text(encoding="utf-8")
-        for marker in (
-            "status: design-baseline-v1",
-            "implementation: not-authorized",
-            "## Part A — Human Narrative",
-            "## Part B — Engineering / Agent Reference",
-        ):
-            if marker not in content:
-                errors.append(f"{module_path} missing module baseline marker: {marker}")
-        if not _has_candidate_status(content):
-            errors.append(f"{module_path} missing detail candidate status")
-        for heading in MODULE_BASELINE_HEADINGS + DETAIL_CANDIDATE_HEADINGS:
-            if heading not in content:
-                errors.append(f"{module_path} missing required heading: {heading}")
-        if not all(status in content for status in ("Current", "Target", "Gap")):
-            errors.append(f"{module_path} must distinguish Current / Target / Gap")
 
     return errors
 
