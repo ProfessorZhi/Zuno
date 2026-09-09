@@ -24,7 +24,7 @@ red_calibration: `kernel-only | calibrated`
 blue_profile: `canonical-part-a-first`
 ```
 
-用户可以中途 intervention，但不存在 `human-candidate` 第三模式。
+只有上面两种自动执行模式属于正式 contract。用户可以中途 intervention，但 intervention 不改变 `mode`。
 
 Round manifest 必须固定 Zuno base SHA、精确简历 snapshot、目标岗位/面试阶段、scenario scope、Red calibration policy、Blue allowlist 和停止条件。缺少这些锚点时，Round 只能作为临时讨论，不进入正式归档。
 
