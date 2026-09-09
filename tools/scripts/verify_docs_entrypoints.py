@@ -14,7 +14,6 @@ ARCHITECTURE_FILES = {
 }
 PROJECT_FILES = [
     "docs/project/README.md",
-    "docs/project/README.md",
     "docs/project/reference.md",
 ]
 RESEARCH_FILES = [
@@ -79,7 +78,6 @@ def verify() -> list[str]:
         "docs/README.md",
         *PROJECT_FILES,
         *RESEARCH_FILES,
-        "docs/architecture/README.md",
         "docs/architecture/README.md",
         "docs/architecture/architecture-views.md",
         "docs/architecture/architecture.html",
@@ -202,15 +200,16 @@ def verify() -> list[str]:
 
     project_readme = (REPO_ROOT / "docs/project/README.md").read_text(encoding="utf-8")
     for marker in (
-        "Project — Zuno 为什么会出现",
-        "Human View",
-        "Machine View",
-        "project.md",
-        "reference.md",
+        "# Zuno 项目：从智慧司法研究到可验证的法律智能 Agent 平台",
+        "为什么会有这个项目",
+        "为什么不直接用 Dify、Coze",
+        "项目是怎样发展到今天的",
+        "团队是什么形态，我在里面做了什么",
+        "相比通用方案，我们今天到底证明了什么",
         "project-fact-provenance.md",
     ):
         if marker not in project_readme:
-            errors.append(f"docs/project/README.md missing project navigation marker: {marker}")
+            errors.append(f"docs/project/README.md missing canonical project narrative marker: {marker}")
 
     project_reference = (REPO_ROOT / "docs/project/reference.md").read_text(encoding="utf-8")
     for marker in (
