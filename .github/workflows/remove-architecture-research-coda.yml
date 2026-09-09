@@ -1,0 +1,42 @@
+name: Remove architecture research coda
+
+on:
+  push:
+    branches:
+      - docs/architecture-coda-cleanup
+    paths:
+      - tools/scripts/_remove_architecture_research_coda.py
+      - .github/workflows/remove-architecture-research-coda.yml
+
+permissions:
+  contents: write
+
+jobs:
+  cleanup:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: docs/architecture-coda-cleanup
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Remove duplicate coda and verify
+        run: |
+          python tools/scripts/_remove_architecture_research_coda.py
+          python tools/scripts/verify_architecture_document_set.py
+          python tools/scripts/verify_architecture_semantic_alignment.py
+          python tools/scripts/verify_architecture_writing_standard.py
+          python tools/scripts/verify_architecture_human_readability.py
+          python tools/agent/render_architecture.py --check
+          python tools/scripts/verify_docs_entrypoints.py
+          python tools/scripts/verify_markdown_internal_links.py
+      - name: Commit cleanup
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add docs/architecture/README.md
+          git diff --cached --quiet && exit 0
+          git commit -m 'docs: let architecture end at implementation handoff'
+          git push origin HEAD:docs/architecture-coda-cleanup
