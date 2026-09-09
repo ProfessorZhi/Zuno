@@ -38,14 +38,20 @@ def verify() -> list[str]:
         REPO_ROOT / "docs/architecture/reference.md",
         REPO_ROOT / "docs/modules/README.md",
         REPO_ROOT / "docs/modules/reference.md",
+        REPO_ROOT / "docs/red-blue/README.md",
+        REPO_ROOT / "docs/research/README.md",
         REPO_ROOT / "docs/decisions/README.md",
         REPO_ROOT / "docs/evidence/README.md",
         REPO_ROOT / "docs/governance/README.md",
         REPO_ROOT / "docs/governance/documentation-architecture.md",
-        REPO_ROOT / "docs/maintenance/history/red-blue/README.md",
+        REPO_ROOT / "docs/red-blue/archive/legacy/README.md",
     ):
         if not path.exists():
             errors.append(f"missing canonical documentation entrypoint: {path.relative_to(REPO_ROOT)}")
+
+    for obsolete in (REPO_ROOT / "docs/maintenance", REPO_ROOT / "docs/terminology.md"):
+        if obsolete.exists():
+            errors.append(f"obsolete documentation path must be absent: {obsolete.relative_to(REPO_ROOT)}")
 
     for mirror in (REPO_ROOT / ".agent/architecture", REPO_ROOT / ".agent/modules"):
         if mirror.exists():
@@ -66,19 +72,20 @@ def verify() -> list[str]:
         "project/",
         "architecture/",
         "modules/",
+        "red-blue/",
+        "research/",
         "decisions/",
         "evidence/",
         "governance/",
-        "System Story",
-        "Knowledge Control",
-        "Project 解释现实",
+        "System & Review",
+        "Trust & Evolution",
     ):
         if marker not in index:
-            errors.append(f"docs README missing six-domain marker: {marker}")
+            errors.append(f"docs README missing eight-domain marker: {marker}")
 
     if "project.md" not in index:
         errors.append("docs README must route to consolidated project.md")
-    if "docs/architecture/" not in system:
+    if "docs/architecture" not in system:
         errors.append("system.yaml must route to architecture surface")
 
     for marker in (
@@ -89,7 +96,7 @@ def verify() -> list[str]:
         "Evidence",
     ):
         if marker not in arch_index:
-            errors.append(f"architecture README missing new documentation-boundary marker: {marker}")
+            errors.append(f"architecture README missing documentation-boundary marker: {marker}")
 
     for marker in (
         "canonical-architecture-machine-router",
@@ -110,21 +117,24 @@ def verify() -> list[str]:
             errors.append(f"modules reference missing machine-routing marker: {marker}")
 
     for marker in (
-        "六域文档模型",
         "documentation-architecture.md",
-        "三个系统域",
-        "三个治理域",
+        "System & Review",
+        "Trust & Evolution",
+        "Governance 内部结构",
     ):
         if marker not in governance_index:
             errors.append(f"governance README missing documentation architecture marker: {marker}")
 
     for marker in (
         "canonical-documentation-architecture",
-        "system_story",
-        "knowledge_control",
+        "Physical layout",
+        "Truth ownership",
         "Human / Machine projection",
+        "Default reading paths",
         "Module decomposition",
-        "Navigation contracts",
+        "Research boundary",
+        "Red / Blue boundary",
+        "Architecture reasoning contract",
     ):
         if marker not in docs_architecture:
             errors.append(f"documentation architecture reference missing marker: {marker}")
@@ -139,7 +149,8 @@ def verify() -> list[str]:
         if marker not in project:
             errors.append(f"project.md missing human narrative marker: {marker}")
 
-    # Protect semantic coverage and the dual-view documentation model, not one prose template.
+    # Protect accepted Architecture Truth and the dual-view model. The docs migration
+    # must not weaken these semantic gates.
     for marker in (
         "target_logical_module_count: 9",
         "overall_architecture_state: ROUND_02_FROZEN",
