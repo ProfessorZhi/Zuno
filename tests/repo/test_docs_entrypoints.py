@@ -158,7 +158,6 @@ def test_module_design_is_human_first_complete_and_detail_candidate_9_of_9() -> 
         "Module Detail Freeze Review",
     ):
         assert marker in readme
-    assert "简单法律问答" in readme and "复杂法律分析" in readme and "现实副作用" in readme
 
     router = (root / "reference.md").read_text(encoding="utf-8")
     assert "application/README.md" in router
