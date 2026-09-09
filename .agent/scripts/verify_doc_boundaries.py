@@ -36,6 +36,7 @@ MODULE_FILES = {
 }
 ARCHITECTURE_FILES = {
     "README.md",
+    "architecture.md",
     "architecture-views.md",
     "architecture.html",
     "reference.md",
@@ -91,7 +92,7 @@ def main() -> int:
     if _relative_files(ROOT / "docs/modules") != MODULE_FILES:
         errors.append("modules boundary mismatch: expected root human/router plus README/reference pair for each current Target responsibility")
     if {path.name for path in (ROOT / "docs/architecture").iterdir() if path.is_file()} != ARCHITECTURE_FILES:
-        errors.append("architecture boundary mismatch: expected human/visual/rendered entries plus machine reference")
+        errors.append("architecture boundary mismatch: expected README entry, architecture.md human narrative, visual/rendered entries, and machine reference")
 
     governance_files = _relative_files(ROOT / "docs/governance")
     missing_governance = GOVERNANCE_REQUIRED - governance_files
@@ -116,6 +117,9 @@ def main() -> int:
             "Research boundary",
             "Red / Blue boundary",
             "Architecture reasoning contract",
+            "architecture/README.md",
+            "architecture/architecture.md",
+            "architecture/reference.md",
         ):
             if marker not in text:
                 errors.append(f"documentation architecture missing marker: {marker}")
