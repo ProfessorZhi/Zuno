@@ -1,8 +1,8 @@
 # Zuno Agent / Repository Workflow
 
-本目录解释**人和 Agent 怎样维护 Zuno**。它是 Human-readable process contract，不是机器路由，也不是 Product Runtime 设计。
+本文件解释人和 Agent 怎样维护 Zuno。它是 Human-readable process contract，不是机器路由，也不是 Product Runtime 设计。
 
-机器执行层仍然只有：
+机器执行入口仍然是：
 
 ```text
 AGENTS.md
@@ -20,47 +20,33 @@ AGENTS.md
 
 ### ChatGPT
 
-主要负责：
-
-- 从 GitHub 读取最新 canonical state；
-- 研究真实面试、论文、平台和工程资料；
-- 判断 Narrative / Architecture / Evidence / Ownership Gap；
-- 审查文档、架构与 PR；
-- 必要时运行 Red Team；
-- 给本地执行者形成边界明确的修改任务；
-- merge 后重新读取 `main`，不根据旧上下文宣布完成。
+主要负责读取最新 canonical state、研究公开资料、判断 Narrative / Architecture / Evidence / Ownership Gap、审查文档与 PR、运行 Red / Blue，以及在 merge 后重新读取 `main`。
 
 ### Claude Code / 本地工程执行者
 
-主要负责：
-
-- 读取本地完整代码、测试和 Git history；
-- 修改代码 / 文档 / Migration / Test；
-- 执行本地验证；
-- 返回 Commit SHA、修改清单、测试和未解决问题。
+主要负责读取完整本地代码和 Git history、修改代码/文档/Migration/Test、执行本地验证并返回 Commit SHA、测试结果和未解决问题。
 
 ### GitHub
 
-GitHub 是跨 Agent 的同步事实面。任何“已经完成”的结论都必须最终落到可读取的 Commit / PR / CI / main HEAD。
+GitHub 是跨 Agent 的同步事实面。任何“已经完成”的结论最终都必须落到可读取的 Commit / PR / CI / main HEAD。
 
 ## 标准 GitHub 修改闭环
 
 ```text
 read latest main
-  → define one bounded objective
-  → create branch
-  → edit only target scope
-  → run focused validation
-  → inspect diff
-  → open PR
-  → wait for required CI
-  → fix failures without weakening semantic gates
-  → merge (normally squash)
-  → reread exact main HEAD
-  → run post-merge consistency review
+→ define one bounded objective
+→ create branch
+→ edit only target scope
+→ run focused validation
+→ inspect diff
+→ open PR
+→ run required CI
+→ fix failures without weakening semantic gates
+→ merge
+→ reread exact main HEAD
 ```
 
-如果 PR CI 失败，不通过降低质量阈值、删除关键 validator 或把 Target 冒充 Current 来“修绿”。先判断失败暴露的是迁移遗漏、真实文档 Gap，还是 validator 本身仍绑定旧目录/旧表述。
+CI 失败时先判断是迁移遗漏、真实 Gap 还是 validator 仍绑定旧路径/旧表述。不要通过降低质量阈值、删除关键 validator 或把 Target 冒充 Current 来“修绿”。
 
 ## Research → Documentation
 
@@ -68,54 +54,59 @@ read latest main
 
 ```text
 Research / interview / platform / paper
-  → source verification
-  → research/ 中记录 lineage / baseline / hypothesis
-  → 判断 Writing Gap 还是 Architecture Gap
-  → 成熟结论进入 project / architecture / modules / ADR
-  → Current claim 仍需 evidence/
+→ source verification
+→ docs/research/ 记录 lineage / baseline / hypothesis
+→ 判断 Writing Gap / Architecture Gap / Evidence Gap
+→ 成熟结论进入 project / architecture / modules / decisions
+→ Current claim 仍需 evidence/
 ```
 
-研究论文与 Zuno 的关系至少区分：`DIRECT_LINEAGE`、`CAPABILITY_LINEAGE`、`CONCEPTUAL_LINEAGE`、`BACKGROUND_ONLY`、`UNVERIFIED`。平台能力基线必须带核验日期，因为 WorkBuddy、Dify、Coze、LangGraph 等能力会快速变化。
+研究关系至少区分 `DIRECT_LINEAGE`、`CAPABILITY_LINEAGE`、`CONCEPTUAL_LINEAGE`、`BACKGROUND_ONLY`、`UNVERIFIED`。平台 baseline 需要核验日期，因为 WorkBuddy、Dify、Coze、LangGraph 等能力会变化。
 
 ## Architecture / Documentation Review
 
-先问：
+审查顺序优先是：
 
-1. 真实问题是什么？
-2. 最简单方案是什么？
-3. 它在哪个具体场景失败？
-4. 谁真正拥有这个事实？
-5. Crash / timeout / late result / 权限变化时先相信谁？
-6. 哪些能力应该 Buy / Adopt / Extend，而不是自研？
-7. 哪些是 Current，哪些只是 Target / Hypothesis？
-8. 什么条件下应该删除这层复杂度？
+```text
+真实问题
+→ 最简单方案
+→ 哪个具体场景让它失效
+→ 谁拥有事实
+→ Crash / timeout / late result / 权限变化时信谁
+→ 什么应该复用成熟平台
+→ Current / Target / Unknown
+→ 什么条件下删除复杂度
+```
 
-Part A 的质量由因果连续性、场景、失败、替代方案和 Trade-off 判断，不由标题数量或术语密度判断。
+Part A 由因果连续性、场景、失败、替代方案和 Trade-off 判断，不由标题数量或术语密度判断。
 
 ## Red / Blue
 
-Red / Blue 已从通用 Program 流程中拆成专用 Interview / Architecture Stress-Test Harness：
+Red / Blue 有两层：
 
 ```text
-.agent/red-blue/                         machine protocol + active Round state
-docs/maintenance/red-blue/              human Red / Blue workflow
-docs/maintenance/history/red-blue/      closed Round history
+docs/red-blue/       长期方法、正式说明、Round archive
+.agent/red-blue/      machine protocol + temporary active state
 ```
 
-完整的简历固定、Red 面经校准、Blue Closed-book、Judge、ChatGPT duel、autonomous Agent 和 Round closure 规则见 [`../red-blue/README.md`](../red-blue/README.md)。本文件只保留跨仓库维护边界：Red / Blue 产生的是 Judgment / Gap，不是自动修改授权；修复必须另开 bounded GitHub task，merge 后再用不同问法 Retest。
+正式执行只保留 `CHATGPT_AUTO` 和 `AGENT_AUTO`。用户可以中途 intervention，但没有第三个 human-candidate mode。
 
-## 后续可导出的 Skills
+Red / Blue 产生的是 Findings，不是自动修改授权。重大 Architecture / Evidence / Ownership Finding 必须另开 bounded task，进入对应 Canonical Owner，merge 后再用不同场景或不同问法 Retest。
 
-这些流程可以在规则稳定以后抽成 Skill，但 Skill 只能封装**方法和执行流程**，不能携带一份与仓库竞争的 Zuno Canonical Truth。
+完整方法见 [`../../red-blue/README.md`](../../red-blue/README.md)。旧手工 Round 只保留在 [`../../red-blue/archive/legacy/`](../../red-blue/archive/legacy/) 复盘，不作为当前标准答案。
 
-优先级建议：
+## 可导出的 Skills
 
-1. **Red/Blue Architecture Interview Harness**：优先导出 `.agent/red-blue/protocol.md`、`attack-model.md`、`judge.md` 和 templates。运行时重新读取精确简历 snapshot 与目标仓库，不把历史 Round 或 Zuno Truth 打包进去。
-2. **Research → Architecture Traceability**：封装作者/论文身份核验、lineage 分类、Research → Capability → Provider → Qualification → Canonical decision 的证据链，以及 Writing Gap / Architecture Gap / Evidence Gap 判断。
-3. **GitHub Architecture Review Closure**：封装 latest `main` → bounded branch → validator / CI → PR → merge → reread exact `main` HEAD 的闭环，适合文档治理和 Architecture Review PR。
-4. **Human-first Architecture Documentation Review**：封装 Part A 的因果叙事检查、术语密度告警、Current / Target 边界和“复杂度什么时候应该删除”的人工 Review checklist。
+稳定以后可以抽方法为 Skill，但 Skill 不携带与仓库竞争的 Zuno Truth。
 
-不建议把 `docs/maintenance/history/red-blue/` 直接导出为 Skill；那是项目历史数据，不是可复用方法。也不建议把 `.agent/red-blue/current.md` 打包进 Skill；它是当前仓库的运行态指针。
+优先级：
+
+1. Red/Blue Architecture Review Harness；
+2. Research → Architecture Traceability；
+3. GitHub Architecture Review Closure；
+4. Human-first Architecture Documentation Review。
+
+Skill 运行时重新读取目标仓库、精确简历快照和当前 Evidence。不要把历史 Round、`.agent/red-blue/current.md` 或当前 Zuno Architecture 正文打包成通用 Skill。
 
 ## Current / Target 铁律
 
