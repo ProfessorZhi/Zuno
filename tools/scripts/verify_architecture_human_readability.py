@@ -6,7 +6,7 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[2]
-ARCH_HUMAN = ROOT / "docs/architecture/README.md"
+ARCH_HUMAN = ROOT / "docs/architecture/architecture.md"
 ARCH_REFERENCE = ROOT / "docs/architecture/reference.md"
 PROJECT_ROOT = ROOT / "docs/project"
 MODULES_ROOT = ROOT / "docs/modules"
@@ -87,9 +87,9 @@ def verify_architecture_human(text: str) -> list[str]:
     if "# Zuno 目标架构" not in text:
         return ["missing Zuno target architecture title"]
     if ARCHITECTURE_PART_A_HEADING not in text:
-        return ["architecture README must contain Part A Human Narrative"]
+        return ["architecture.md must contain Part A Human Narrative"]
     if ARCHITECTURE_PART_B_HEADING in text:
-        errors.append("architecture README must not contain Part B Engineering Reference")
+        errors.append("architecture.md must not contain Part B Engineering Reference")
 
     visible = text[text.index(ARCHITECTURE_PART_A_HEADING) + len(ARCHITECTURE_PART_A_HEADING):]
     nonspace_chars = _nonspace_chars(visible)
@@ -182,9 +182,9 @@ def _verify_archives(errors: list[str]) -> None:
 def verify() -> list[str]:
     errors: list[str] = []
     if not ARCH_HUMAN.exists():
-        errors.append("missing canonical architecture README")
+        errors.append("missing canonical architecture.md")
     else:
-        errors.extend(f"docs/architecture/README.md: {e}" for e in verify_architecture_human(ARCH_HUMAN.read_text(encoding="utf-8")))
+        errors.extend(f"docs/architecture/architecture.md: {e}" for e in verify_architecture_human(ARCH_HUMAN.read_text(encoding="utf-8")))
     if not ARCH_REFERENCE.exists():
         errors.append("missing canonical architecture reference")
     else:
@@ -231,7 +231,7 @@ def main() -> int:
 
     warnings: list[str] = []
     if ARCH_HUMAN.exists():
-        warnings.extend(warning_for_human(ARCH_HUMAN.read_text(encoding="utf-8"), "architecture README"))
+        warnings.extend(warning_for_human(ARCH_HUMAN.read_text(encoding="utf-8"), "architecture.md"))
     project = PROJECT_ROOT / "README.md"
     if project.exists():
         warnings.extend(warning_for_human(project.read_text(encoding="utf-8"), "project README"))
