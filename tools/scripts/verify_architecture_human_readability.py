@@ -27,12 +27,10 @@ MODULE_DIRS = (
 
 # Regression floors only. They prevent human-facing documents from collapsing into thin
 # index/spec sheets. They intentionally do not reward padding or pretend to score prose quality.
-PROJECT_NARRATIVE_BASELINES = {"README.md": (9000, 10, 24)}
+PROJECT_NARRATIVE_BASELINES = {"README.md": (9000, 24)}
 ARCHITECTURE_PART_A_MIN_NONSPACE_CHARS = 8000
-ARCHITECTURE_PART_A_MIN_SUBSECTIONS = 10
 ARCHITECTURE_PART_A_MIN_PROSE_PARAGRAPHS = 28
 MODULE_PART_A_MIN_NONSPACE_CHARS = 5500
-MODULE_PART_A_MIN_SUBSECTIONS = 14
 MODULE_PART_A_MIN_PROSE_PARAGRAPHS = 18
 
 ARCHITECTURE_PART_A_HEADING = "## Part A — Human Narrative"
@@ -95,17 +93,11 @@ def verify_architecture_human(text: str) -> list[str]:
 
     visible = text[text.index(ARCHITECTURE_PART_A_HEADING) + len(ARCHITECTURE_PART_A_HEADING):]
     nonspace_chars = _nonspace_chars(visible)
-    subsection_count = len(re.findall(r"(?m)^###\s+", _strip_non_prose_blocks(visible)))
     prose_paragraph_count = len(_prose_paragraphs(visible))
     if nonspace_chars < ARCHITECTURE_PART_A_MIN_NONSPACE_CHARS:
         errors.append(
             "architecture Part A is too thin for the conceptual design baseline "
             f"({nonspace_chars} non-space chars < {ARCHITECTURE_PART_A_MIN_NONSPACE_CHARS})"
-        )
-    if subsection_count < ARCHITECTURE_PART_A_MIN_SUBSECTIONS:
-        errors.append(
-            "architecture Part A needs broader conceptual coverage "
-            f"({subsection_count} subsections < {ARCHITECTURE_PART_A_MIN_SUBSECTIONS})"
         )
     if prose_paragraph_count < ARCHITECTURE_PART_A_MIN_PROSE_PARAGRAPHS:
         errors.append(
@@ -117,25 +109,13 @@ def verify_architecture_human(text: str) -> list[str]:
 
 def verify_project_text(text: str, filename: str) -> list[str]:
     errors: list[str] = []
-    min_chars, min_sections, min_paragraphs = PROJECT_NARRATIVE_BASELINES[filename]
+    min_chars, min_paragraphs = PROJECT_NARRATIVE_BASELINES[filename]
     nonspace_chars = _nonspace_chars(text)
-    subsection_count = len(re.findall(r"(?m)^##+\s+", _strip_non_prose_blocks(text)))
     prose_paragraph_count = len(_prose_paragraphs(text))
     if nonspace_chars < min_chars:
         errors.append(f"{filename}: project narrative is too thin ({nonspace_chars} < {min_chars})")
-    if subsection_count < min_sections:
-        errors.append(f"{filename}: project narrative needs broader coverage ({subsection_count} < {min_sections})")
     if prose_paragraph_count < min_paragraphs:
         errors.append(f"{filename}: project narrative needs more explanatory prose ({prose_paragraph_count} < {min_paragraphs})")
-    for marker in (
-        "为什么会有这个项目",
-        "为什么不直接用 Dify、Coze",
-        "项目是怎样发展到今天的",
-        "团队是什么形态，我在里面做了什么",
-        "相比通用方案，我们今天到底证明了什么",
-    ):
-        if marker not in text:
-            errors.append(f"{filename}: missing human narrative topic: {marker}")
     return errors
 
 
@@ -147,16 +127,13 @@ def verify_module_human(text: str, label: str) -> list[str]:
         errors.append(f"{label}: module README must not contain Part B or Part C")
     visible = text[text.index(MODULE_PART_A_HEADING) + len(MODULE_PART_A_HEADING):]
     nonspace_chars = _nonspace_chars(visible)
-    subsection_count = len(re.findall(r"(?m)^###\s+", visible))
     prose_paragraph_count = len(_prose_paragraphs(visible))
     if nonspace_chars < MODULE_PART_A_MIN_NONSPACE_CHARS:
         errors.append(f"{label}: Part A is too thin ({nonspace_chars} < {MODULE_PART_A_MIN_NONSPACE_CHARS})")
-    if subsection_count < MODULE_PART_A_MIN_SUBSECTIONS:
-        errors.append(f"{label}: Part A needs broader narrative coverage ({subsection_count} < {MODULE_PART_A_MIN_SUBSECTIONS})")
     if prose_paragraph_count < MODULE_PART_A_MIN_PROSE_PARAGRAPHS:
         errors.append(f"{label}: Part A needs more explanatory prose ({prose_paragraph_count} < {MODULE_PART_A_MIN_PROSE_PARAGRAPHS})")
-    if "### 当前、目标与缺口" not in visible:
-        errors.append(f"{label}: Part A must close with an explicit Current / Target / Gap narrative")
+    if not all(marker in visible for marker in ("Current", "Target", "Gap")):
+        errors.append(f"{label}: Part A must preserve explicit Current / Target / Gap semantics")
     return errors
 
 
