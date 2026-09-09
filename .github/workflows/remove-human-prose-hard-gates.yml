@@ -1,0 +1,47 @@
+name: Remove human prose hard gates
+
+on:
+  push:
+    branches: [docs/remove-heading-count-gate]
+    paths:
+      - "tools/scripts/_remove_human_prose_hard_gates.py"
+      - ".github/workflows/remove-human-prose-hard-gates.yml"
+
+permissions:
+  contents: write
+
+jobs:
+  migrate:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: docs/remove-heading-count-gate
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Remove prose-shape hard gates
+        run: |
+          python tools/scripts/_remove_human_prose_hard_gates.py
+          python -m py_compile \
+            tools/scripts/verify_architecture_human_readability.py \
+            tools/scripts/verify_architecture_document_set.py \
+            tools/scripts/verify_architecture_semantic_alignment.py \
+            tools/scripts/verify_architecture_writing_standard.py \
+            tools/scripts/verify_docs_entrypoints.py \
+            tools/agent/render_architecture.py \
+            tests/repo/test_architecture_human_readability.py \
+            tests/repo/test_docs_entrypoints.py
+          git diff --check
+      - name: Commit migration
+        run: |
+          if git diff --quiet; then
+            echo "No migration changes needed."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "ci: stop hard-coding human prose shape"
+          git push origin HEAD:docs/remove-heading-count-gate
