@@ -7,15 +7,15 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 MODULES = {
-    "01": "application/README.md",
-    "02": "domain/README.md",
-    "03": "knowledge/README.md",
-    "04": "runtime/README.md",
-    "05": "capability/README.md",
-    "06": "effects/README.md",
-    "07": "model-gateway/README.md",
-    "08": "security/README.md",
-    "09": "evaluation/README.md",
+    "01": "application",
+    "02": "domain",
+    "03": "knowledge",
+    "04": "runtime",
+    "05": "capability",
+    "06": "effects",
+    "07": "model-gateway",
+    "08": "security",
+    "09": "evaluation",
 }
 
 B_SECTIONS = (
@@ -58,11 +58,24 @@ def _load():
     return module
 
 
-def _docs() -> dict[str, str]:
+def _human_docs() -> dict[str, str]:
     return {
-        number: (REPO_ROOT / "docs/modules" / filename).read_text(encoding="utf-8")
-        for number, filename in MODULES.items()
+        number: (REPO_ROOT / "docs/modules" / directory / "README.md").read_text(encoding="utf-8")
+        for number, directory in MODULES.items()
     }
+
+
+def _reference_docs() -> dict[str, str]:
+    return {
+        number: (REPO_ROOT / "docs/modules" / directory / "reference.md").read_text(encoding="utf-8")
+        for number, directory in MODULES.items()
+    }
+
+
+def _docs() -> dict[str, str]:
+    human = _human_docs()
+    reference = _reference_docs()
+    return {number: human[number] + "\n" + reference[number] for number in MODULES}
 
 
 def _has_candidate_status(text: str) -> bool:
@@ -89,13 +102,22 @@ def test_active_architecture_has_no_pre_baseline_status_claims() -> None:
 
 
 def test_domain_and_knowledge_authority_is_consistent_across_docs() -> None:
-    architecture = (REPO_ROOT / "docs/architecture/README.md").read_text(encoding="utf-8")
-    modules_readme = (REPO_ROOT / "docs/modules/README.md").read_text(encoding="utf-8")
-    domain = (REPO_ROOT / "docs/modules/domain/README.md").read_text(encoding="utf-8")
-    knowledge = (REPO_ROOT / "docs/modules/knowledge/README.md").read_text(encoding="utf-8")
+    architecture = (
+        (REPO_ROOT / "docs/architecture/README.md").read_text(encoding="utf-8")
+        + "\n"
+        + (REPO_ROOT / "docs/architecture/reference.md").read_text(encoding="utf-8")
+    )
+    modules = (
+        (REPO_ROOT / "docs/modules/README.md").read_text(encoding="utf-8")
+        + "\n"
+        + (REPO_ROOT / "docs/modules/reference.md").read_text(encoding="utf-8")
+    )
+    docs = _docs()
+    domain = docs["02"]
+    knowledge = docs["03"]
     terminology = (REPO_ROOT / "docs/governance/terminology.md").read_text(encoding="utf-8")
 
-    for text in (architecture, modules_readme, domain, knowledge, terminology):
+    for text in (architecture, modules, domain, knowledge, terminology):
         for marker in (
             "EvidenceCandidate", "Evidence", "CitationLineage",
             "WorkProductCitationBinding", "KnowledgeGeneration", "ReadinessDecision",
@@ -111,15 +133,19 @@ def test_domain_and_knowledge_authority_is_consistent_across_docs() -> None:
 
 
 def test_all_nine_modules_have_human_first_b1_b14_part_c_and_detail_candidate() -> None:
-    docs = _docs()
-    for number, text in docs.items():
-        assert "## Part A — Human Narrative" in text, number
-        assert "## Part B — Engineering / Agent Reference" in text, number
-        assert "implementation: not-authorized" in text, number
-        assert "deepening: cross-module-consistency-v2" in text, number
-        assert _has_candidate_status(text), number
+    human = _human_docs()
+    engineering = _reference_docs()
+    for number in MODULES:
+        assert "## Part A — Human Narrative" in human[number], number
+        assert "## Part B — Engineering / Agent Reference" not in human[number], number
+        assert "## Part C — Cross-Module Consistency" not in human[number], number
+        assert "implementation: not-authorized" in human[number], number
+        assert "deepening: cross-module-consistency-v2" in human[number], number
+
+        assert "## Part B — Engineering / Agent Reference" in engineering[number], number
+        assert _has_candidate_status(engineering[number]), number
         for marker in B_SECTIONS + C_SECTIONS + DETAIL_CANDIDATE_MARKERS:
-            assert marker in text, f"{number}: {marker}"
+            assert marker in engineering[number], f"{number}: {marker}"
 
     readme = (REPO_ROOT / "docs/modules/README.md").read_text(encoding="utf-8")
     for marker in (
@@ -137,7 +163,7 @@ def test_all_nine_modules_have_human_first_b1_b14_part_c_and_detail_candidate() 
 
 
 def test_each_detail_candidate_has_owner_specific_freeze_semantics() -> None:
-    docs = _docs()
+    docs = _reference_docs()
     required = {
         "01": ("ExternalRequest / TaskScope 字段组", "Publication 字段组", "Outbox / Crash / Idempotency"),
         "02": ("正式准入输入与回执字段组", "Matter-level serialized admission", "Crash Window 与恢复矩阵"),
@@ -156,7 +182,7 @@ def test_each_detail_candidate_has_owner_specific_freeze_semantics() -> None:
 
 
 def test_cross_module_authority_invariants_are_explicit() -> None:
-    readme = (REPO_ROOT / "docs/modules/README.md").read_text(encoding="utf-8")
+    reference = (REPO_ROOT / "docs/modules/reference.md").read_text(encoding="utf-8")
     for marker in (
         "EvidenceCandidate != Evidence",
         "CitationLineage != WorkProductCitationBinding",
@@ -169,7 +195,7 @@ def test_cross_module_authority_invariants_are_explicit() -> None:
         "Late result arrived\n!= late result still eligible for current Plan / Domain",
         "Same correlation id\n!= same idempotency namespace",
     ):
-        assert marker in readme
+        assert marker in reference
 
 
 def test_retry_replan_reconcile_and_cancel_do_not_collapse() -> None:
@@ -186,17 +212,17 @@ def test_retry_replan_reconcile_and_cancel_do_not_collapse() -> None:
 
 
 def test_idempotency_and_correlation_boundaries_do_not_collapse() -> None:
-    readme = (REPO_ROOT / "docs/modules/README.md").read_text(encoding="utf-8")
-    assert "Idempotency（幂等）不是一个全局 key" in readme
+    reference = (REPO_ROOT / "docs/modules/reference.md").read_text(encoding="utf-8")
+    assert "Idempotency（幂等）不是一个全局 key" in reference
     for marker in (
         "request / invocation idempotency",
         "formal admission idempotency",
         "prepared action / external effect",
         "publication / delivery identity",
     ):
-        assert marker in readme
+        assert marker in reference
 
-    observability = (REPO_ROOT / "docs/modules/evaluation/README.md").read_text(encoding="utf-8")
+    observability = _docs()["09"]
     assert "OpenTelemetry Baggage" in observability
     assert "Secret NEVER EXPORT" in observability
     assert "opaque ref" in observability
