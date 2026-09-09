@@ -43,10 +43,10 @@
 | PF-011 | OpenViking | USER_CONFIRMED + PUBLIC_GIT_NOT_RECOVERED | 用户确认参与 OpenViking 在 Memory / Context 区域的接入；当前公开 Git 2026-04-15 根提交至 2026-04-29 快照未恢复对应 artifact | 已恢复具体 SDK / Adapter / 数据结构和生产使用方式；也不能用后续 V2 / PR #8 证据代替 OpenViking artifact | 代码提交、配置、运行记录、未推送 / 私有历史材料 |
 | PF-012 | Tool Calling Strategy | USER_CONFIRMED | 用户参与过 Tool Calling Strategy 相关开发 | 用户拥有全部 Tool Runtime / 外部副作用体系 | 任务、PR、故障测试、调用记录 |
 | PF-013 | 数据库参与 | USER_CONFIRMED | 用户进入数据库查看或调试过数据 | 用户负责数据库总体设计、Schema 或 Migration Owner | SQL / Issue / Migration / Review 记录 |
-| PF-014 | LangGraph / GraphRAG | USER_CONFIRMED_AS_LEARNING_CONTEXT | 开发期间学习和接触过 LangGraph、GraphRAG | 用户完整实现当前 Target Runtime 或 GraphRAG | 任务级实现证据 |
+| PF-014 | LangGraph / GraphRAG | USER_CONFIRMED_AS_LEARNING_CONTEXT | 开发期间学习和接触过 LangGraph、GraphRAG；公开历史中的具体 GraphRAG 质量优化实现另见 PF-031 | 用户完整实现当前 Target Runtime 或整个 GraphRAG 系统 | 任务级实现证据、正式 Eval / A/B |
 | PF-015 | Internal Demo | USER_CONFIRMED | 项目经历过内部 Demo | 已恢复正式验收或性能结果 | Demo 材料、日期、参与人、环境 |
 | PF-016 | 客户侧 Demo | USER_CONFIRMED | 项目进行过客户侧或智慧法院项目组 Demo | 已恢复完整客户名单和正式验收结论 | 会议纪要、反馈单、演示材料 |
-| PF-017 | 回答质量反馈 | USER_CONFIRMED | 客户曾反馈回答质量还需要提高 | 已知根因一定是 RAG / Prompt / Memory / Model 中某一项 | Bad Case、Issue、调试记录、前后指标 |
+| PF-017 | 回答质量反馈 | USER_CONFIRMED | 客户曾反馈回答质量还需要提高 | 已知根因一定是 RAG / Prompt / Memory / Model 中某一项；也不能用 PF-031 的 HotpotQA 研发 Eval 反向证明客户反馈根因 | 客户 Bad Case、Issue、调试记录、前后指标 |
 | PF-018 | Court-side Testing | USER_CONFIRMED | 项目进入过法院侧人员测试 | 已恢复测试规模、题集、参考答案和 Reviewer 协议 | 测试题、记录、评价表 |
 | PF-019 | Pilot Validation | USER_CONFIRMED | 项目进入过 Pilot Validation | 正式 Production、SLA 或全面法院部署 | Pilot 环境、用户、时长、验收材料 |
 | PF-020 | Production | NO EVIDENCE / NOT ESTABLISHED | 当前不能把历史项目描述成正式生产系统 | “已经生产上线”“稳定服务多少用户” | 生产 Endpoint、部署证明、SLA、运维 / 监控、正式验收 |
@@ -60,6 +60,7 @@
 | PF-028 | 当前质量 / Production Readiness | NOT_ESTABLISHED | 正式 benchmark / 生产资格尚未建立 | “架构完整所以 production ready” | 正式 runtime、credentials、数据集、load / DR / security qualification |
 | PF-029 | 2026-06-29 Context / Memory readback hardening | HISTORICAL_PR_COMMIT_TEST_CORROBORATED | 用户 GitHub 账号通过单提交 PR #8，在此前 V2 Context / Memory foundation 上进一步收口 pre-call readback：为 Context Pack 增加 policy / source-id trace，将同 scope task summary 和仅 `APPROVED` 的 structured memory 接入 `GeneralAgent.prepare_context()`，并补 review / provenance contract 与 focused tests | 这是 Context / Memory 工作起点、3 月第一批 Memory / OpenViking 接入；用户从零实现整个 Memory；已经完成 production-grade Memory DB、成熟长期检索 / consolidation 或完整 PostTurnPipeline | 真实产品 / 业务需求、Issue、Review 讨论、真实故障或运行结果，可进一步补足 Cause → Decision → Implementation → Result |
 | PF-030 | 2026-06-25/26 Context / Memory V2 foundation chain | HISTORICAL_COMMITS_TESTS_CORROBORATED | 用户 GitHub 账号在公开 main ancestry 上先记录 Context / Memory Target 计划，再连续落 typed Context contracts、scoped Memory contracts、`GeneralAgent` 最小 `prepare_context` / post-turn write integration 和 minimal `ContextOrchestrator`；对应提交为 `c4c52d9...`、`13dd929...`、`b1836dc...`、`d4e2fe2...`、`3d865e1...` | 这是 3 月第一批 Memory / OpenViking；已经恢复客户 / 法院需求或真实事故；已经完成成熟 / 生产级 Memory、长期检索 / consolidation 或质量收益 | 真实产品 / 业务需求或 Issue、原始本机设计源、Review、真实 Trace / Bad Case / runtime result |
+| PF-031 | 2026-06-20 GraphRAG retrieval quality optimization | HISTORICAL_COMMITS_TESTS_EVAL_AUDIT_CORROBORATED | 用户 GitHub 账号先在 Zuno retrieval-only `real_runtime` 的 HotpotQA `limit=5` smoke 中记录 local GraphRAG 的 sampled regression：baseline `Recall@5=1.00`、local `Recall@5=0.80`，两个样本可见 graph-added 文档挤出 baseline 已命中的 gold-like 文档；随后连续实现 baseline-preserving fusion、candidate-aware seed expansion、entity alias normalization 和 path-aware ranking；同日 committed rerun 记录 local `Recall@5=1.00`、`MRR@10=1.00`、`FullChainHit@5=1.00`、`fallback_count=1`，在该样本上不再低于 baseline | 这是 PF-017 客户质量反馈的已知根因 / 修复；正式 benchmark；GraphRAG 普遍优于 baseline；每个 commit 对指标提升的独立因果贡献；持久化 Neo4j eval path、生产质量或稳定历史性能已经证明 | gitignored raw runtime reports、冻结 runner / config、persisted benchmark ingestion、limit=10 / 多数据集 A/B / ablation、客户 Bad Case 或法院侧真实结果 |
 
 ### Memory / OpenViking 取证边界
 
@@ -74,6 +75,18 @@ V2 runtime integration 当时主要证明 pre-call Context Pack 构造、capabil
 6 月 25 日 Target 设计 commit 还引用了本机原始源 `C:\Users\Administrator\Downloads\zuno_ideal_architecture_with_context_memory.html`。当前连接设备上该精确路径不存在，对 `C:\Users` 的确切文件名前缀搜索也未恢复副本；这只表示该本机源当前 `NOT_RECOVERED`，不能扩大成“原文件从未存在”。同样，当前连接设备没有历史索引中记录的 `F:\internship-work\resume project\Zuno` 路径，因此无法继续检查该本地仓库的未推送 refs。
 
 上述 V2 / PR #8 证据都不能替代 PF-011 的 OpenViking artifact，也没有恢复真实客户 / 法院需求、真实生产事故或真实任务质量结果。它们证明的是一条可核对的工程演进链，以及每个阶段当时明确声明的 Current / Target 上限。
+
+### GraphRAG 研发质量取证边界
+
+2026-06-20 的公开历史恢复出一条独立于 PF-017 客户反馈的研发质量闭环。`7928df50e9b5f3035e576fa4ed47eaf31c93cc78` 先审计 HotpotQA `limit=5` 的 retrieval-only real-runtime smoke，记录 baseline `Recall@5=1.00`、`MRR@10=0.90`，local GraphRAG `Recall@5=0.80`、`MRR@10=0.80`、`fallback=1/5`。审计逐题指出两次 top5 regression：graph-side noise 把 baseline 已命中的 `Ed Wood` 和 `Shirley Temple` 挤出 top5，因此根因被定位为 ranking displacement，而不是“Graph route 完全没有激活”。
+
+随后的实现按同一 main history 连续收口：`5d9b719e66b563b0753f39f4ffb99ebb509ad6cc` 增加 baseline-preserving fusion 和针对 noisy graph eviction 的测试；`c781479313fd6244e25b07e65d60c2708613cf0d` 让 Graph seed 可以利用 baseline candidate title / file 等上下文并记录 seed source；`c17f737f3647014d84007665a7eee0e6ce543864` 加入 entity alias normalization；`762ffdc7b12397e5ebb5567f0ce73045eab4df83` 引入 path-aware ranking，使 comparison / bridge relation path 能压过 generic/noisy path。各实现提交都带有对应的针对性测试。
+
+`3da5d7425fe829900d180f21ade84c95ec3322eb` 的同日 rerun 报告记录 local GraphRAG 在该 5 样本上恢复到 `Recall@5=1.00`、`MRR@10=1.00`、`ChainRecall@5=1.00`、`FullChainHit@5=1.00`，并与 baseline 的 sampled metrics 对齐；仍有一个 question fallback。这个结果只能写成“该 smoke 的 sampled regression 在整条 fix chain 后消失”，不能把精确变化单独归因给某一个 commit。尤其 baseline 的 `MRR@10` 在 rerun 中也从 `0.90` 变为 `1.00`，因此不应制造精确的单机制收益百分比。
+
+这组 run 也有明确的基础设施上限。历史 audit 说明 raw runtime reports 位于 gitignored `reports/evals/multihop/real_runtime/`；`8a11c1930b6e7e3cf34e7708e5c967fdcc564292` 进一步记录当时 eval 使用从 corpus 临时重建、注入 runtime registry 的本地 graph retriever，run 后 registry 会清理，而 persisted benchmark ingestion 仍是 `not_implemented`。所以这里的 `real_runtime` 证明 Zuno retrieval runtime 的本地重建 GraphRAG 路径被真实执行，不证明持久化 Neo4j benchmark path、正式可复现 benchmark、生产质量或法院场景收益。
+
+PF-031 与 PF-017 必须保持独立。当前可以同时说“客户历史上曾反馈回答质量需要提高”和“公开历史恢复出一次 HotpotQA GraphRAG retrieval regression 的研发修复闭环”，但没有证据把两者连接成同一个 Cause → Fix → Customer Result 故事。
 
 ## 3. 产品定位中的“优势”怎样说才不越界
 
@@ -130,7 +143,8 @@ V2 runtime integration 当时主要证明 pre-call Context Pack 构造、capabil
 
 如果以后还要提高技术面试和项目复盘的可信度，最有价值的不是继续增加架构名词，而是恢复几条真正的 **Cause → Decision → Implementation → Metric** 链：
 
-- 客户说“回答质量需要提高”以后，到底抽取了哪些 Bad Case，根因是什么，改了什么，指标怎样变化；
+- PF-017 的客户质量反馈仍缺真正的客户 Bad Case、根因、修改和前后结果；PF-031 的 HotpotQA 研发闭环不能替代这条证据；
+- PF-031 已恢复 sampled regression → fusion / seed / alias / path fixes → rerun 的研发链，下一步高价值证据是 gitignored raw reports、冻结 runner/config、持久化 benchmark ingestion、limit=10 / 多数据集 A/B 与 ablation，而不是把 5 条 smoke 包装成正式 benchmark；
 - Context / Memory 已经从 6 月 25 日 Target plan、26 日 V2 foundation / minimal runtime，一直恢复到 29 日 PR #8 readback hardening；下一步最高价值不再是继续找同类实现提交，而是恢复真实产品 / 业务触发、对应 Issue / Review、真实 Bug / Trace 或 runtime outcome；
 - PF-010 / PF-011 对应的更早第一批 Memory / OpenViking artifact 仍未恢复，尤其 OpenViking 不能由 6 月 V2 / PR #8 反向证明；
 - Court-side Testing / Pilot 到底有多少题、多少用户、什么环境、怎样验收；
