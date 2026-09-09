@@ -1,0 +1,42 @@
+name: Edit module human meta prose
+
+on:
+  push:
+    branches: [docs/module-narrative-editorial-wave1]
+    paths:
+      - "tools/scripts/_edit_module_human_meta_prose.py"
+      - ".github/workflows/edit-module-human-meta-prose.yml"
+
+permissions:
+  contents: write
+
+jobs:
+  edit:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: docs/module-narrative-editorial-wave1
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Apply editorial pass and verify
+        run: |
+          python tools/scripts/_edit_module_human_meta_prose.py
+          python tools/scripts/verify_architecture_human_readability.py
+          python tools/scripts/verify_architecture_semantic_alignment.py
+          python tools/scripts/verify_docs_entrypoints.py
+          python tools/scripts/verify_markdown_internal_links.py
+          git diff --check
+      - name: Commit editorial pass
+        run: |
+          if git diff --quiet; then
+            echo "No editorial changes needed."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "docs: remove module narrative editing scaffolding"
+          git push origin HEAD:docs/module-narrative-editorial-wave1
