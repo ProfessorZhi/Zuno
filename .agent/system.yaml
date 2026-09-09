@@ -1,4 +1,4 @@
-version: "2026-09-09"
+version: "2026-09-10"
 system_identity: "Zuno Local Agent System"
 
 runtime_boundary:
@@ -34,8 +34,13 @@ truth_rules:
   framework_capability_does_not_equal_zuno_ownership: true
 
 view_rules:
-  human_filename: "README.md"
-  engineering_filename: "reference.md"
+  project_human: "docs/project/README.md"
+  project_engineering: "docs/project/reference.md"
+  architecture_directory_entry: "docs/architecture/README.md"
+  architecture_human: "docs/architecture/architecture.md"
+  architecture_engineering: "docs/architecture/reference.md"
+  module_human_filename: "README.md"
+  module_engineering_filename: "reference.md"
   engineering_reference_does_not_own_current: true
   human_and_engineering_must_preserve_same_authority_semantics: true
 
@@ -110,7 +115,7 @@ skill_routes:
   architecture_human_reading:
     read_first:
       - "docs/project/README.md"
-      - "docs/architecture/README.md"
+      - "docs/architecture/architecture.md"
       - "docs/modules/README.md"
       - "docs/evidence/README.md"
   architecture_implementation:
@@ -121,7 +126,7 @@ skill_routes:
       - "docs/evidence/README.md"
   module_design:
     read_first:
-      - "docs/architecture/README.md"
+      - "docs/architecture/architecture.md"
       - "docs/architecture/reference.md"
       - "docs/modules/README.md"
       - "docs/modules/reference.md"
