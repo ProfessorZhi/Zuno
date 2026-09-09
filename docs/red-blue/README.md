@@ -1,202 +1,149 @@
-# Zuno Red / Blue Interview Workflow
+# Zuno Red / Blue Architecture Review
 
-这里是 **给人看的 Red / Blue Interview Harness 使用说明**。真正的机器运行协议在 `/.agent/red-blue/`；已经结束的 Round 归档在 `../history/red-blue/`。
+`docs/red-blue/` 保存 Zuno 的对抗性评审方法和已经结束的 Round。它的目的不是生成更多架构术语，也不是让两个 AI 互相证明当前设计正确，而是发现 Project、Architecture 和 Module Part A 在正常写作与普通 Review 中没有暴露出来的缺口。
 
-这三层严格分开：
+Red / Blue 不拥有 Project History、Target Architecture、Module Truth 或 Current Evidence。它只能提出问题、反例和 Findings；正式修改仍要回到对应 Owner。
 
-```text
-.agent/red-blue/                         Machine harness / active runtime
-docs/maintenance/red-blue/              Human workflow / usage contract
-docs/maintenance/history/red-blue/      Closed Round archive / non-canonical history
-```
+## 为什么独立成一级目录
 
-Red / Blue 不拥有 Zuno Architecture Truth。它的工作是检验：**简历上的项目 Claim，是否能仅依赖真实项目文档和本人事实，经受大厂面试式连续深挖。**
+Red / Blue 已经有自己的输入、角色、上下文边界、Round 生命周期、停止条件和归档结果。把它塞进 `maintenance/` 会让读者误以为它只是仓库维护说明。
 
-## 1. 为什么单独做 Harness
-
-过去 Red / Blue 规则散在 `.agent/programs/`、`.agent/references/`、通用 Agent workflow 和历史目录里。这样虽然能运行，但第一次回来的人需要先知道这些隐含关系。
-
-现在专门收敛成：
-
-- `.agent/red-blue/`：角色、攻击模型、Judge、状态和模板；
-- 本目录：人怎样启动、观察和结束一轮；
-- `history/red-blue/`：过去发生了什么。
-
-`.agent/programs/` 继续服务一般 implementation / architecture design program，不再承担 Red / Blue runtime。
-
-## 2. Round 的真正输入：简历 + 岗位
-
-Red 不应该先拿着 500 道题随机问。正式 Round 必须先固定：
+它与主文档的关系是：
 
 ```text
-Resume = repository + commit SHA + exact path
-Target = role + JD + interview stage
-Zuno = exact main/base SHA
+Project / Architecture / Modules Part A
+        ↓
+先达到独立可读、完整、自洽
+        ↓
+Red / Blue adversarial review
+        ↓
+Narrative / Architecture / Evidence / Ownership / Simplification Findings
+        ↓
+独立修复任务
+        ↓
+回到对应 Canonical Owner
+        ↓
+换场景重新测试
 ```
 
-简历版本必须显式选择。`ProfessorZhi/internship-work` 的 resume index 中如果某版本标记为“待核验包装稿”，不得自动选择成主基线；只有用户明确指定才可以测试它。
+第一次阅读 Zuno 时不需要读这里。
 
-Red 先从这份简历抽取 3–5 条最危险 Claim，例如：
+## 两种正式模式
 
-- “主导 / 负责 / 从 0 到 1 / 自研”；
-- “高并发 / 生产级 / 企业级”；
-- “准确率提升 / 成本下降 / 延迟降低”；
-- RAG / GraphRAG / Multi-Agent / LangGraph / MCP / Memory；
-- 幂等 / 恢复 / 权限 / 队列 / 缓存 / 分布式；
-- 导师、课题组、团队成果与个人 Ownership 可能混淆的描述。
+只保留两种执行模式：
 
-然后才进入连续攻击。
+### CHATGPT_AUTO
 
-## 3. Red 从哪里学“真实面试官怎么问”
-
-Red 有自己的 interviewer kernel。正常 `kernel-only` 模式只需要：
+适合在一个 ChatGPT 对话中快速连续压力测试。
 
 ```text
-Red attack model
-+ exact resume snapshot
-+ role / JD / stage
+Controller
+→ Red 根据业务场景提出一个主问题
+→ Blue closed-book 回答
+→ Controller 检查来源和是否出现新信息
+→ Red 沿同一风险继续追问或换场景
+→ ...
+→ Round close
 ```
 
-需要更高保真时使用 `calibrated` 模式。校准源按优先级读取：
+同一对话只能做到程序性上下文隔离。Red 的 hidden attack intent、外部面经和校准材料不得作为 Blue 的回答依据；严重 Architecture / Evidence Finding 不因两个角色达成一致就自动成立。
 
-1. `ProfessorZhi/internship-work`：用户本人真实面试、原始对话、复盘、简历定制材料；
-2. `ProfessorZhi/interview-notes`：大量 Agent / RAG / Backend / AI Infra 等公开真实面经；
-3. `ProfessorZhi/onboard-anything`：真实面经、八股、高质量工程文章；
-4. `ProfessorZhi/xiaolin-interview-notes`：结构化 Agent / RAG / Tool Calling / 基础知识补充，并和上面去重；
-5. 模型自己的 interviewer knowledge。
+### AGENT_AUTO
 
-这些材料的作用不是生成“题库全集”，而是学习：
-
-- 面试官会从什么 Claim 进入；
-- 第一问和第二问怎样连接；
-- 什么回答会让面试官继续追；
-- Backend、Agent、AI Infra、System Design 面试分别最在意什么风险；
-- 如何从项目自然下钻到 Redis / MySQL / 网络 / OS / 分布式等基础知识。
-
-用户本人真实被问过的问题权重最高。
-
-## 4. Red 的攻击应该长什么样
-
-典型链不是固定清单，而是因果式深挖：
+适合正式 Closed-book 验收。Controller 为 Red 和 Blue 建立独立上下文，必要时使用独立 verifier/auditor 检查来源和 verdict，但 verifier 不参与架构辩论，也不为 Blue 补答案。
 
 ```text
-这个 Claim 具体是什么？
-→ 为什么需要？
-→ 最简单方案是什么？
-→ 具体在哪里失败？
-→ 为什么不是现成平台？
-→ 你本人负责什么？
-→ 谁拥有事实 / 状态？
-→ Crash 怎么办？
-→ Timeout 怎么办？
-→ 重复执行怎么办？
-→ 权限变化怎么办？
-→ Scale / Cost 呢？
-→ Evidence 呢？
-→ Current 还是 Target？
-→ 今天重做还会这样设计吗？
-→ 删掉一半复杂度会怎样？
+Red context
+  resume / role / JD
+  business scenarios
+  approved interview calibration
+  current public platform facts when testing Build/Buy
+
+Blue context
+  same resume snapshot
+  Project / Architecture / Modules
+  Decisions / Evidence
+  allowed Governance facts
+
+Verifier
+  question + answer + source trace
+  accepted canonical docs
 ```
 
-回答如果只有名词，Red 就落到 State / Owner / Interface；回答如果只有方案，Red 就回到 baseline / alternative / trade-off；回答如果说“我们”，Red 就进入 Ownership；回答如果说“自研”，Red 就进入 Build / Buy / Extend / Defer。
+AGENT_AUTO 适合复测 CHATGPT_AUTO 发现的高严重度问题，或做正式文档验收。
 
-详细规则见 `/.agent/red-blue/attack-model.md`。
+用户可以随时打断、修改范围或亲自回答，但这属于 intervention，不构成第三种 `human-candidate` 模式。
 
-## 5. Blue 为什么必须 Closed-book
+## Red 的工作：攻击业务假设，不攻击名词
 
-Blue 的目标不是代表 ChatGPT 的知识上限，而是验证：
+Red 一次只验证一个主要风险。问题应该来自真实任务或替代方案，而不是对象名词表。
 
-> **Zuno 的简历 + Project / Architecture / Modules 是否本身已经足够支持候选人在面试中回答。**
+优先场景包括：
 
-默认 Blue 只能读：
+- 100 份材料中关键扫描件仍未 OCR，但系统已经可以生成流畅答案；
+- 两个 Provider 都能返回相同 JSON，但专业语义、案件范围或资格不同；
+- 专业人员修改机器结果后，新证据又进入；
+- 新 Plan 已产生，旧分支随后返回高质量结果；
+- 外围法院系统 POST timeout，不知道现实动作是否发生；
+- 长任务开始时有权限，执行外发时权限已经撤销；
+- GraphRAG / Reflection / Multi-Agent / Native Runtime 可以加入，但没有 baseline 或 ablation 证明收益；
+- WorkBuddy / Dify / LangGraph 已经能承担通用能力，Zuno 是否仍在重复造基础设施；
+- 简历中的“主导、从零、自研、生产级、提升 X%”是否有真实个人证据。
+
+一个高价值 Red 问题应尽量包含：
 
 ```text
-exact resume snapshot
-AGENTS.md
-docs/project/
-docs/architecture/
-docs/modules/
-docs/decisions/
-docs/evidence/
-docs/governance/project-fact-provenance.md
+stakeholder goal
+→ concrete stimulus
+→ current environment
+→ expected response
+→ unacceptable failure consequence
+→ substitute / simpler baseline
+→ evidence needed
 ```
 
-项目 / 架构主问题优先从 Part A 回答。Part A 应让候选人自然讲出：
+如果追问只会增加字段、对象或状态名称，却不会改变任何设计决策，Red 应停止该链。
+
+## Blue 的工作：保护项目目标，不保护现有架构
+
+Blue 只能使用 Round manifest 允许的 Zuno 文档和同一份简历快照。它必须优先从 Part A 的因果故事回答；被追到 Contract、State、Recovery、Security、Persistence 或 Evidence 时才进入 Part B / Part C / ADR / Evidence。
+
+Blue 可以明确回答：
+
+- 简单 RAG 已经足够，不需要新增机制；
+- 某个 Framework Capability 应直接复用；
+- 当前 Target 能处理该场景；
+- 当前文档解释不清，属于 Narrative Gap；
+- 当前 Architecture 对反例没有闭环，需要 Architecture Revision；
+- 当前只有 Target，没有 Current Evidence；
+- 某个复杂机制应被关闭或删除；
+- 个人 Ownership 没有证据支持该说法。
+
+Blue 不应为了“赢”而使用模型常识补齐 Zuno 未记录的事实。
+
+## Round 输出
+
+新的 Round 不再保存三角色长篇自我辩论。每轮至少固定：
 
 ```text
-现实问题
-→ 最简单方案
-→ 失败场景
-→ 概念边界
-→ 为什么这样设计
-→ 典型故障 / 恢复
-→ alternative / trade-off
-→ Current / Target
+round_id
+zuno_base_sha
+resume_snapshot
+role / JD / interview stage
+mode: CHATGPT_AUTO | AGENT_AUTO
+scenario_scope
+blue_allowlist
+max_turns / stop condition
 ```
 
-Red 再追字段、事务、CAS、并发、Crash Window 时，Blue 才进入 Part B / Part C / ADR / Evidence。
-
-Blue **不能**临时打开真实面经、用户过去 QA、八股仓库、论文、Web 或 Red 的标准答案补知识。Blue 答不出来就说明文档、简历或架构存在 Gap。
-
-## 6. ChatGPT 怎么跑
-
-支持两种常见方式。
-
-### 真人模拟
-
-Red = ChatGPT，Blue = 用户本人。
-
-用户可以直接说：
+结束后只保留两个主要产物：
 
 ```text
-启动 Zuno Red Team，目标 Backend / Agent 二面，使用我指定的简历版本。
+transcript.md   实际问题与回答，保留 source trace
+findings.md     去重后的 Findings、severity、decision impact、证据需求和 retest scenario
 ```
 
-Red 一次只问一个主问题，不提示答案。用户回答后继续追。用户说“结束 / 复盘”后再让 Judge 汇总。
-
-### ChatGPT Red / Blue 对攻（chatgpt-duel）
-
-同一个 ChatGPT Controller 依次模拟：
-
-```text
-Red → Blue → Judge → Red follow-up
-```
-
-为了避免答案泄漏，Red hidden intent / 面经校准内容不进入 Blue 可见上下文。单个聊天中的这种隔离属于程序性隔离；如果把结果当正式文档验收，建议用独立子 Agent / context。
-
-## 7. Autonomous Agent 怎么跑（autonomous-agent）
-
-Autonomous 模式让 Controller 创建独立 Red、Blue、Judge context，并严格使用 `.agent/red-blue/protocol.md` 的 allowlist。
-
-建议状态机：
-
-```text
-INIT
-→ pin resume / Zuno SHA / role
-→ Red claim mining
-→ optional interview calibration
-→ ask
-→ Blue closed-book answer
-→ Judge
-→ continue same chain / next claim
-→ close
-→ archive
-```
-
-Agent 可以自主跑完整 Round，但**不能自主修改架构或简历**。它只产生 Gap Report。修复必须是后续独立任务。
-
-## 8. Judge 不负责“教会 Blue”
-
-Judge 只输出：
-
-- `PASS / PARTIAL / FAIL / UNSUPPORTED_CLAIM`；
-- Gap type；
-- severity；
-- source support；
-- 是否继续同一攻击链；
-- Round 结束后的修复优先级。
-
-特别区分：
+Finding 分类优先使用：
 
 ```text
 NARRATIVE_GAP
@@ -209,64 +156,31 @@ OWNERSHIP_GAP
 MEASUREMENT_GAP
 PROJECT_REALITY_GAP
 RESUME_CLAIM_RISK
+SIMPLIFICATION_OPPORTUNITY
 ```
 
-Blue 回答失败不等于架构失败。只有 Owner 冲突、状态语义冲突、Recovery 不闭环、Security Authority 不清、Contract 不成立、重要反例无法处理等，才优先升级 Architecture Gap。
+Red / Blue Round 本身不是 Current Evidence，也不是 Architecture Decision。
 
-## 9. Part A 是这套 Harness 的核心验收对象
+## 防止两个 AI 自嗨
 
-真正理想的结果是：面试官问出问题后，Blue 不是在几个文档中拼词，而是能从 Part A 的故事里自然截出回答。
+同一模型模拟 Red 和 Blue 存在共享偏差，所以采用四个约束：
 
-例如 Red 问：
+1. **Scenario-first**：问题必须绑定业务场景或具体失败，不以名词深度衡量质量。
+2. **Source trace**：Blue 的关键事实必须能回到允许来源；模型共识不能替代证据。
+3. **Decision impact**：Finding 必须说明它会改变什么决策；不会改变任何设计的 trivia 不进入修复队列。
+4. **Independent acceptance**：Architecture / Evidence / Ownership 的重大结论必须进入独立任务，必要时用 AGENT_AUTO、代码、测试或外部事实复核。
 
-> 为什么不用 WorkBuddy / Dify？
+Round 的成功标准不是 FAIL 越多越好，而是发现少量真正改变项目可信度、可读性、架构闭环或复杂度决策的问题。
 
-好的 Blue 不应背 Feature checklist，而应该能够从 Project / Architecture 的发展故事自然回答：哪些通用 orchestration 本来就应该复用，真正需要 Zuno 自己拥有的是什么专业 semantic authority、research capability、domain fact、effect recovery 或 evaluation responsibility。
-
-如果这个问题必须临时读外部平台文章才能回答，说明当前 Part A 仍有 Narrative / Documentation Gap。
-
-## 10. Round 结束与修复
-
-完整闭环：
+## 目录
 
 ```text
-Round
-→ Judge report
-→ archive raw record to docs/maintenance/history/red-blue/
-→ choose highest-value Gap
-→ Narrative / Docs / Architecture / Evidence / Resume fix
-→ PR + CI + merge
-→ reread main
-→ Red retest with different wording
+docs/red-blue/
+├── README.md
+└── archive/
+    └── legacy/      旧的 manual / early automated Round，只供历史复盘
 ```
 
-不要针对某一道题直接加一个 FAQ。修复目标应该是让同类问题都能从更好的项目 / 架构故事中自然得到回答。
+正式机器运行协议和临时 active state 仍由 `.agent/red-blue/` 管理。新 Round 的长期归档后续应放 `docs/red-blue/rounds/<round-id>/`。
 
-## 11. Skill 化
-
-这套 Harness 后续适合导出为通用 Skill：
-
-```text
-Red/Blue Architecture Interview Harness Skill
-```
-
-Skill 应带：
-
-- Role / context firewall；
-- Claim mining；
-- interviewer personas；
-- attack graph；
-- answer-shape triggers；
-- Closed-book Blue；
-- Judge / Gap taxonomy；
-- Round templates / closure。
-
-Skill 不应带：
-
-- Zuno 当前架构正文；
-- 某份个人简历正文；
-- 历史 Round；
-- 当前 `current.md`；
-- 固定“500 题标准答案”。
-
-这样 Skill 可以迁移到其他项目 / 候选人，而 Zuno 的事实仍在运行时从仓库读取。
+`archive/legacy/` 中的手工 Round 已退出正式模式。它们可以解释过去如何审查，但不能作为今天的 Architecture Truth 或面试标准答案。
