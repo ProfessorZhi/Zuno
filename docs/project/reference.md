@@ -2,7 +2,7 @@
 
 status: canonical-project-machine-index
 owner: Project Documentation Owner
-human_source: docs/project/project.md
+human_source: docs/project/README.md
 provenance_source: docs/governance/project-fact-provenance.md
 current_evidence_source: docs/evidence/
 
@@ -47,7 +47,7 @@ research lineage != user implementation
 
 ## Current / Target / Unknown routing
 
-- History and personal participation → `docs/project/project.md` + provenance.
+- History and personal participation → `docs/project/README.md` + provenance.
 - Ideal design → `docs/architecture/`.
 - Module-level Target → `docs/modules/`.
 - Current implementation / tests / eval / runtime facts → `docs/evidence/`.
