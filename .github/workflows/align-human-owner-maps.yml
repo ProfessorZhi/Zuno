@@ -1,0 +1,42 @@
+name: Align human owner maps
+
+on:
+  push:
+    branches:
+      - docs/owner-map-consistency
+    paths:
+      - tools/scripts/_align_human_owner_maps.py
+      - .github/workflows/align-human-owner-maps.yml
+
+permissions:
+  contents: write
+
+jobs:
+  align:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: docs/owner-map-consistency
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Align owner maps and verify
+        run: |
+          python tools/scripts/_align_human_owner_maps.py
+          python tools/scripts/verify_architecture_document_set.py
+          python tools/scripts/verify_architecture_semantic_alignment.py
+          python tools/scripts/verify_architecture_writing_standard.py
+          python tools/scripts/verify_architecture_human_readability.py
+          python tools/scripts/verify_docs_entrypoints.py
+          python tools/scripts/verify_markdown_internal_links.py
+          pytest -q tests/repo/test_architecture_semantic_alignment.py tests/repo/test_docs_entrypoints.py -p no:cacheprovider
+      - name: Commit alignment
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add docs/architecture/README.md docs/modules/README.md
+          git diff --cached --quiet && exit 0
+          git commit -m 'docs: align material and knowledge ownership maps'
+          git push origin HEAD:docs/owner-map-consistency
