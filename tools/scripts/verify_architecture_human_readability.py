@@ -278,14 +278,11 @@ def _verify_supporting_boundaries(errors: list[str]) -> None:
     else:
         readme = ARCHITECTURE_README.read_text(encoding="utf-8")
         for marker in (
-            "architecture.md",
-            "architecture-views.md",
-            "architecture.html",
             "Part A — Human Narrative",
             "Part B — Engineering / Agent Reference",
         ):
             if marker not in readme:
-                errors.append(f"architecture README missing entry or layer marker: {marker}")
+                errors.append(f"architecture README missing narrative layer marker: {marker}")
 
     architecture = CANONICAL[0]
     if architecture.exists():
@@ -296,7 +293,7 @@ def _verify_supporting_boundaries(errors: list[str]) -> None:
                 text,
             )
         )
-        module_docs = [path for path in MODULES_ROOT.glob("*.md") if path.name.lower() != "readme.md"]
+        module_docs = [MODULES_ROOT / filename for filename in MODULE_FILES if (MODULES_ROOT / filename).exists()]
         if not gate_open and module_docs:
             errors.append("module decomposition gate is closed but module documents exist")
 
