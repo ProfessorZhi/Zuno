@@ -223,12 +223,25 @@ def verify() -> list[str]:
         if not all(marker in combined for marker in ("Current", "Target", "Gap")):
             errors.append(f"module {number} split views must preserve Current / Target / Gap")
 
+    # Semantic gates should be anchored in the combined Human + Engineering views. Part A is
+    # free to explain the concept in natural prose; exact ownership/failure wording belongs in
+    # the Engineering Reference when the human story no longer benefits from symbolic slogans.
     module_invariants = {
         "01": ("负责组合，不负责重新发明事实", "Run completed\n!=\nDomain admitted\n!=\nAnswer publishable\n!=\nConsumer displayed", "Agent Version = 产品能力 / 配置版本"),
-        "02": ("EvidenceCandidate（证据候选）\n    ≠\nEvidence（正式证据）", "DomainVersion + matching AdmissionReceipt", "WorkProductCitationBinding", "HumanDecision（人工业务决定）和 ApprovalDecision（安全审批决定）"),
+        "02": (
+            "EvidenceCandidate（证据候选）\n    ≠\nEvidence（正式证据）",
+            "DomainVersion + matching AdmissionReceipt",
+            "WorkProductCitationBinding",
+            "| HumanDecision | 保存正式人工业务决定",
+            "08 Security & Governance | AuthorizationDecision、ApprovalDecision / policy refs",
+        ),
         "03": ("KnowledgeGeneration lifecycle != task-level ReadinessDecision", "EvidenceCandidate != formal Evidence", "CitationLineage != WorkProductCitationBinding", "stale KnowledgeGeneration 归 03；stale Finding / WorkProduct 归 02"),
         "04": ("Single Controller", "Fixed AgentRunGraph + dynamic Plan DAG + fixed StepExecutionGraph", "PlanVersion immutable after activation", "Retry != Replan != Reconcile", "Replan Barrier"),
-        "05": ("Capability = 稳定专业语义", "Provider Conformance != task quality", "provider execution failure\n!=\ncapability semantic drift"),
+        "05": (
+            "Capability = 稳定专业语义",
+            "Provider Conformance != task quality",
+            "Provider transient failure 可 Retry；semantic / schema / applicability drift 触发 re-resolution / Replan",
+        ),
         "06": ("Outcome Unknown（结果未知）不得映射为普通 Failed", "Transport Success 不等于 Effect Success", "same key + different action hash 必须拒绝"),
         "07": ("Model Role 与具体 Provider / Model 解耦", "Provider technically available != currently permitted != quality qualified", "Gateway 调用成功 != Runtime Step accepted != Domain admitted != Answer published"),
         "08": ("Continuous Authorization（持续授权）", "AuthorizationDecision、ApprovalDecision、HumanDecision 三者 Owner 与语义不同", "Retention != Recall Eligibility != Physical Purge Completion", "MANDATORY_BEFORE_EFFECT"),

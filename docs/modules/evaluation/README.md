@@ -4,199 +4,74 @@
 
 ## Part A — Human Narrative
 
-### Observability 解释发生了什么，Evaluation 判断设计是否值得保留
+### 当 GraphRAG 已经做出来，问题才真正开始
 
-系统出故障时，工程师需要沿一次请求找到相关 Run、检索、模型、Capability、Tool、Domain 和 Delivery；架构演进时，团队又需要判断 GraphRAG、Reflection、Native Runtime 或强模型是否真的提高质量。
+一条更复杂的检索路线已经实现，能够构图、扩展实体关系并做多跳召回。工程上它能跑，Demo 里也能展示更多中间过程。这个时候最容易犯的错误，是把“已经实现”当成“应该长期保留”。
 
-Observability 负责解释系统发生了什么，Evaluation 负责判断结果好不好、复杂度是否值得保留。两者共享版本、关联和数据治理，但不能因为都“看数据”就混成一个 Dashboard。
+真正需要回答的是：它在哪些问题上比更简单的 Hybrid Retrieval 找到更多有用证据，是否引入新的误召回，增加多少延迟和成本，失败以后是否更难恢复，以及这些收益能不能在固定数据和配置上重复出现。
 
-GraphRAG、Reflection、强模型、Specialist 或 Native Runtime 是否值得保留，是 09 必须持续回答的设计问题。团队既要知道一次真实请求发生了什么，也要把同一 task class 放进可复现实验，与更简单 baseline 比质量、恢复、时延和成本。Observability 提供因果线索，Evaluation 提供决策证据；两者都不拥有业务 Truth。
+Zuno 的历史里已经出现过一个很小但很说明问题的例子。2026-06-20 的 HotpotQA `limit=5` retrieval-only smoke 一开始记录到 local GraphRAG 的 sampled Recall@5 低于 baseline；连续修复 fusion、seed expansion、entity alias 和 ranking 后，同日 rerun 才恢复到与 baseline 对齐。这个结果只能说明**那一小批样本上的回退被消除**，不能证明 GraphRAG 普遍更好，更不能反推客户反馈的根因。详细边界记录在 [`project-fact-provenance.md`](../../governance/project-fact-provenance.md) 的 PF-031 与相关 eval 代码中。
 
-### Trace 只能解释过程，事故调查先回到 Owner Fact
+这正是 09 的出发点：Observability 帮助工程师解释一次执行发生了什么；Evaluation 判断结果是否足够好，以及多出来的复杂度是否值得留下。两个问题都需要数据，但它们服务的决策不同。
 
-Trace 非常适合关联调用，但它可能被采样、Exporter 失败、网络中断或 redaction 删除内容。如果恢复和业务判断依赖 Trace，观测系统故障会反过来破坏业务正确性。
+### 先回答发生了什么，再回答结果好不好
 
-因此保持：
+假设用户报告“系统把同一份材料提交了两次”。
 
-```text
-Telemetry != Durable Audit != Business Truth
-```
+Trace 里可能看到两个 HTTP span，也可能因为 sampling 只看到一个。单看 Observability 不能决定现实世界到底发生了几个 Effect。事故调查应该先回到 06 的 PreparedAction、Attempt、EffectReceipt 和 Reconciliation，确认哪个逻辑动作真正发生；再用 Runtime Plan、Security decision、Delivery 和 Trace 拼出为什么走到那里。
 
-02、06、08 等 Owner 保存自己的耐久事实，09 引用它们解释时间线。漂亮 span 不能替代 AdmissionReceipt、EffectReceipt 或安全审计证明。
+同样，Domain 是否正式提交，要查 DomainVersion 和 AdmissionReceipt；某次授权是否有效，要查 08 的耐久安全事实。Telemetry 非常适合关联和解释，但它不应该成为这些 Owner 的替代数据库。
 
+09 因此传播最小的 correlation identity，让工程师能够从 request 找到 run、step、retrieval、model、capability、tool 和 admission；这些 id 用于定位，不自动变成业务主键、幂等 key 或授权 token。
 
-用户报告“系统重复提交了两次”，第一步不是统计 Trace 里有几个 HTTP span，而是查询 06 的逻辑动作、Attempt、EffectReceipt 和 Reconciliation，确认现实世界到底发生了几个效果。
+OpenTelemetry / OTLP-compatible contract 是合适的通用边界，LangSmith 可以作为 Agent / LLM Trace 和 Eval 的 Provider，但业务恢复不能依赖某一个 tracing SaaS。Exporter 故障时，普通低优先级 telemetry 可以 buffer、retry 甚至丢弃；Domain、Effect 和 Security 的耐久事实仍然成立。
 
-随后再用 Runtime Plan、Security decision、Delivery 和 Trace 对齐时间线。Observability 的价值是帮助解释“为什么发生”，不是自己裁决“业务事实是什么”。
+敏感数据也不能为了“方便排障”进入所有 span。Baggage 和普通日志优先传播 opaque ref；材料正文、PII、Secret 和完整授权内容只有在策略允许且确有诊断价值时进入受控观测路径。尤其 Secret 不因为 trace 很方便就获得例外。
 
-### Correlation、OpenTelemetry Baggage 与 Sampling 只服务观测，不升级成业务权威
+### 一次分数没有可比上下文，就不能支持架构决策
 
-九个责任域各自拥有事实，如果没有稳定 correlation，就很难回答某次模型调用属于哪个 Step、产生哪个 Capability output、最后是否正式进入 Domain。
+Evaluation 需要把实验输入也当成版本化事实。
 
-系统可以传播 request / run / step / action / admission 等 opaque refs 做定位，但 correlation id 不能自动成为幂等 key、授权 token 或业务主键。关联帮助查询，不产生权威。
+今天一百个 case，明天改了二十个标签，如果两次分数直接放到同一张图上，团队无法判断变化来自模型还是数据集。DatasetVersion 因而需要稳定 case identity、材料引用、任务类别、标签或 expected evidence、标注来源和数据政策。
 
+模型、Prompt、Retrieval config、Capability / ProviderVersion、ProcessingSpec 和 Judge 同样会改变结果。一个“82 分”只有和这些配置一起保存，才是一条可以复现和比较的证据。
 
-Baggage 会跨进程广泛传播，如果把 tenant 名称、案件名称、用户 PII、材料正文或授权内容直接塞进去，诊断便利会扩大敏感数据暴露面。
+训练和调参暴露也要记录。已经被 Prompt tuning、few-shot 或模型训练看到的 case，不能在不说明的情况下继续充当独立 test。真实法院材料因为治理限制无法进入 Eval 时，也不能偷偷换成合成集以后仍宣称“法院质量已经验证”。
 
-默认只传播最小 opaque identity，在可信边界回查 Owner fact。尤其 `Secret NEVER EXPORT`。必要业务文本只有在策略允许、完成 redaction 且确实有诊断价值时才进入受控 Telemetry。
+能用 deterministic checker 的地方优先不用 LLM Judge。引用是否存在、JSON 是否合法、action hash 是否一致、是否产生重复 Effect，都有更稳定的程序化判断。开放式法律论证和表达质量才更适合 Judge；Judge 自己也需要版本、校准和人工金标准。
 
+当 Judge 不可用、样本不足、凭证缺失或 baseline 根本不可比时，评测没有资格给出 Pass 或 Fail。Target 用 BLOCKED / `MEASUREMENT_BLOCKED` 表达这种“还不能判断”，防止流水线为了有一个绿色数字而把未知写成成功。
 
-高吞吐系统不可能永久保存每一个成功 span，Sampling 是合理成本控制。可以提高 error / high-risk task 采样率，降低普通成功请求采样。
+### Release 需要看关键失败，不只看平均分
 
-但 Sampling 不能决定 Domain、Effect、Authorization 或 Mandatory Audit 是否存在。关闭 tracing 不能让系统失去恢复能力，也不能让安全证明消失。
+法律系统里的某些错误不能被高平均准确率抵消。
 
-可比较的 Eval 建立在可解释运行事实之上。Dataset、版本、训练暴露关系和 Judge 先被冻结，再比较不同设计；Dashboard 上的单一数字不足以支持架构选择。
+一次越权读取、一次重复高风险 Effect、正式引用无法回到材料版本、旧 WorkProduct 已经 stale 却继续发布，这些事件即使只发生一次，也可能比平均分高两点更重要。Release Evaluation 因此同时看 aggregate metrics 和 critical failure taxonomy。
 
-### Eval Dataset、Judge 与 PASS / FAIL / BLOCKED 需要版本化边界
+任务类别也必须拆开。简单条款定位、跨文档争议分析、长期 Agent 任务和带现实副作用的流程拥有不同目标。把它们混成一个“Agent Success Rate”，简单题数量很容易掩盖最需要架构保护的路径。
 
-今天一百个 case，明天修改二十个标签，如果两次分数直接比较，就无法判断变化来自模型还是数据集。Dataset 本身也是实验输入。
+复杂机制还会在准确率以外付出代价。Reflection 可能增加 token 和 P95；Multi-Agent 可能增加协调失败；GraphRAG 增加构建与查询成本；强模型可能提高费用并受地域策略限制；Native Runtime 增加状态和恢复面。
 
-DatasetVersion 需要稳定 case identity、材料 refs、任务类别、标签 / expected evidence、annotation provenance 和数据政策。数据集变化产生新版本，保证实验结果可解释。
+所以同一实验要尽量一起看 evidence sufficiency、citation correctness、unsupported claim、reviewer acceptance、recovery correctness、duplicate effect、latency、token、cost、Replan / reconcile 频率和人工介入。不是所有项目都需要同一套指标，但架构选择必须把主要收益和主要成本放在同一个可比上下文里。
 
+### Evaluation 还负责帮助删除复杂度
 
-Prompt tuning、few-shot、模型训练或人工调参如果已经看过某些 case，这些样本就不能在不说明的情况下继续充当独立 test。
+一个功能做出来以后，团队天然倾向于寻找证明它有价值的案例。09 需要主动做相反的事：设计 baseline、ablation 和 kill test。
 
-Eval 需要记录 split 和 exposure provenance。真实法院材料受数据政策限制时，也不能偷偷换成合成数据后仍然声称“真实法院质量已验证”；测量范围必须明确。
+GraphRAG 对比 Hybrid Retrieval；Memory on/off；Reflection on/off；更贵模型对比满足最低要求的便宜模型；Generic Host + Legal Backend 对比 Native Runtime。尽量固定语料、task class、模型和预算，只改变需要验证的机制，才能解释边际收益来自哪里。
 
+如果某个机制长期没有稳定收益，正确动作不是继续寻找更漂亮的 Dashboard，而是关闭它、缩小使用范围或回到 baseline。已经实现不构成架构永久保留权。
 
-引用是否存在、JSON 是否合法、action hash 是否一致、重复 Effect 是否发生，都应该优先使用 deterministic checker。开放式法律论证、适用性和表达质量才更适合 LLM Judge。
+Evaluation 也不能单独宣布整个系统 Production Ready。一组 Dataset 上的 PASS 只证明这组数据、配置、commit 和 profile 达到定义门槛。容量、HA / DR、安全 qualification、真实外部系统、故障恢复、运维和法院侧结果仍需要各自 Evidence。
 
-Judge 自身也有模型、Prompt 和漂移问题，因此 JudgeVersion 需要进入 Eval config，并用人工金标准校准。Judge 不可靠时结果应标记 blocked / unreliable，而不是为了持续产分数而假装可信。
+Observability 也不应该无限收集。设计前先列最需要回答的问题：一次结果为什么被拒绝，哪个版本导致质量回退，现实 Effect 是否重复，哪个步骤放大了成本，撤权以后是否仍有访问。然后只记录足以回答这些问题的事件和属性。日志越多并不自动让系统更可解释。
 
+### Current / Target / Gap
 
-PASS 表示在冻结 Dataset、配置、样本数和阈值下真正达标；FAIL 表示评测有效执行但结果不达标；BLOCKED 表示根本没有资格判断，例如没有样本、凭证缺失、Judge 不可用或 baseline 不可比。
+**Current：** 仓库已经有 RAG / GraphRAG eval、LLM judge、LangSmith trace verification 和 2026-06-20 的小样本 GraphRAG regression / rerun 证据。它们证明评测基础和局部研发迭代存在，不证明完整 Release Evaluation、生产级 Observability 或法院级 benchmark 已经建立。
 
-当前正式 benchmark 在证据不足时应明确 `MEASUREMENT_BLOCKED`。Blocked 不是较轻的 Fail，更不能默认为 Pass。
+**Target：** 09 提供稳定 correlation、Telemetry / Eval 数据模型、Dataset / Judge / Config 版本和可比较实验，让架构复杂度可以由 baseline、ablation 与 kill test 决定；业务 Truth、Mandatory Audit 和正式发布资格仍由对应 Owner 和治理条件共同决定。
 
-### 质量、恢复、延迟和成本必须按 Task Class 一起评估
-
-法律场景里，越权读取、重复高风险 Effect、正式引用无法回溯、stale WorkProduct 被错误发布等问题不能被高平均准确率抵消。
-
-Release Evaluation 因此既看 aggregate metrics，也看 critical failure taxonomy。平均分很好但触发定义中的关键安全/正确性违规，发布资格仍然可以 Fail。
-
-
-Agent 复杂度常常在最终准确率以外付出代价：Retry 放大、P95 延迟、人工介入、token 和 Provider 费用。一个方案提高一点准确率，却让成本和恢复失败面翻倍，未必值得保留。
-
-评测因此需要把 evidence sufficiency、citation correctness、unsupported claim、reviewer acceptance、recovery correctness、duplicate effect、Replan rate、reconcile duration、latency、token 和 cost 放在同一实验解释里。
-
-
-简单条文定位、跨文档争议分析、带现实副作用的任务目标不同。把它们混成一个“Agent Success Rate”，会让简单题数量掩盖复杂路径问题。
-
-每个 EvalCase 应绑定 task class、difficulty / risk profile 和实际执行路径。这样才能回答 GraphRAG 是否只对某类 query 有价值，Native Runtime 是否只在长任务恢复上有收益。
-
----
-
-**评测真正进入架构决策，是从敢做反事实开始。** 如果只证明整套系统能跑，任何已经实现的复杂机制都会因为沉没成本永久存在；只有 baseline、ablation 和 kill test 才能回答某一层复杂度是否真的贡献了价值。
-
-### Evaluation 的职责包括主动删除没有收益的复杂度
-
-团队已经实现的功能很容易获得沉没成本保护：有 GraphRAG 就只展示 GraphRAG 的分数，有 Reflection 就只证明它“能跑”。
-
-09 应主动设计 baseline、ablation 和 kill test：GraphRAG vs Hybrid Retrieval、Memory on/off、Reflection on/off、Generic Host + Legal Backend vs Native Runtime。在尽量相同语料、模型和预算下比较真实边际收益。
-
-
-Target 采用 OpenTelemetry / OTLP-compatible contract，让 LangSmith 可以作为 Agent / LLM Trace 与 Eval 的 preferred Provider，但核心运行和审计不能依赖单一 SaaS。
-
-更换 OTel backend 或未来其他观测 Provider 时，稳定 correlation、redaction 和 semantic convention 不应改变业务 Owner。Provider 可替换才说明观测层没有绑架运行架构。
-
-
-如果 Trace exporter 故障，09 可以 buffer / retry 或丢弃低优先级 telemetry；02 / 06 / 08 的耐久事实继续成立，普通业务不应因为 Dashboard 暂时不可用就全部停止。
-
-只有安全策略明确要求的 Mandatory Audit 走独立 durable boundary。Tracing 可用性和合规审计可用性必须分开。
-
----
-
-**在继续讨论更多观测和评测细节前，先限制 Evidence 自己的权力。** 一组 Eval PASS 可以证明特定 Dataset / config / profile 达标，却不能替容量、HA / DR、安全 qualification、真实外围系统和运维证据宣布 Production Ready。测量越严格，越要说清它没有证明什么。
-
-
-一组 Eval PASS 只能说明它覆盖的 Dataset、配置、commit 和 profile 达到门槛。生产成熟度还需要容量、HA / DR、安全 qualification、恢复演练、外部依赖和运维证据。
-
-09 可以形成 ReleaseEvaluationEvidence，但不能单独宣布整个系统 production ready。测量越严谨，越应该明确它没有覆盖什么。
-
-
-如果没有稳定 correlation 和 Owner fact，日志越多越可能只是噪音。观测设计应先列关键问题：一次结果为什么被拒绝、哪一步扩大了成本、现实 Effect 是否重复、哪个版本导致质量回退、权限撤销后是否仍有访问。
-
-然后为这些问题提供最小可关联事件、指标和 trace attributes。高基数字段、敏感正文和每个 token 的细节只有在确有诊断价值时才记录。Observability 的目标是缩短解释时间，不是最大化数据量。
-
-同样，Dashboard 只是 projection。事故裁决仍然回到 durable owner facts，避免“图上没有 span，所以事情没发生”的错误结论。
-
-### 先定义 Decision，再选 Metric；Ablation 与线上数据共同解释因果
-
-“我们要测准确率”不是完整评测目标。先要说清这次实验要决定什么：是否启用 GraphRAG、是否升级模型、是否保留 Reflection、是否允许某 Capability 进入高风险任务。不同 Decision 需要不同 case、指标和阈值。
-
-例如判断 GraphRAG 是否保留，需要在关系型 / multi-hop query class 上和 Hybrid baseline 比质量、延迟与成本；判断 Tool Runtime 是否安全，需要 fault injection 和 duplicate-effect 指标，而不是法律问答准确率。
-
-Metric 因 Decision 而存在，可以防止团队只展示最容易变绿的数字。
-
-
-复杂系统通常多项机制同时开启：更强模型、GraphRAG、Reflection、Memory、Specialist。最终分数提高时，很难知道到底谁贡献了收益。
-
-Ablation 在尽量相同条件下关闭一个机制，观察质量、成本和恢复变化。必要时做 factorial / 分层实验，至少保证关键架构选择有 simpler baseline。没有这种对照，团队只能证明“整套系统能跑”，不能证明每一层复杂度值得存在。
-
-这也是 Kill Test 的来源：如果关闭某机制几乎不影响目标指标，应该认真考虑删除，而不是寻找更多理由保留。
-
-
-离线 Dataset 可复现、适合版本比较，却可能覆盖不了真实分布和运维故障；线上 telemetry 反映真实流量，但缺少稳定 ground truth，且受用户行为和版本混杂影响。
-
-两者应互补：离线 Eval 做发布前质量和回归门，线上观测检查 drift、latency、cost、recovery 和真实失败分布，再把重要线上失败沉淀为新的 Eval cases。生产反馈进入数据集时还要遵守隐私和标注 provenance。
-
-只看线下分数会错过运行问题，只看线上成功率又无法公平比较模型和架构版本。
-
-
-工程团队常希望 CI 最终只有绿色或红色，但质量证据有时就是不完整：样本不足、Judge 不可用、数据政策禁止运行某 profile、baseline 版本不兼容。这时 BLOCKED 比假 Pass 或假 Fail 更准确。
-
-Release policy 可以规定某些关键 gate BLOCKED 就不能发布，也可以允许低风险 profile 在明确 exception 下继续，但必须记录是谁接受了未知风险。系统不能为了流水线顺畅把“没有测”解释成“没有问题”。
-
-Measurement honesty 是 Evaluation 的架构职责之一。
-
-
-总账单只能告诉团队花了多少钱，无法解释为什么。真正优化需要知道某个 task class、Plan、Step、Capability 或模型 fallback 消耗了多少，以及这些成本是否换来质量收益。
-
-07 提供模型 Usage，03/05/06 提供各自执行事实，09 沿 correlation 做归因和趋势。04 负责单次 Run 的预算控制，但长期“哪个机制值得删”由 09 的跨运行数据回答。
-
-只有成本和质量共享可比较的实验身份，团队才能判断一个额外 Reflection 或 Graph route 是投资还是浪费。
-
-
-SLO 更关注运行服务是否在承诺时间内可用、延迟和错误率是否受控；Eval 关注法律结果、证据、恢复和复杂机制的质量是否达到目标。一个系统可以 P99 很漂亮但引用质量很差，也可以离线准确率很高却经常因为外部 Effect unknown 无法完成真实任务。
-
-因此运行可靠性和结果质量需要分别定义，再按 task class 一起看。SLO 告诉团队“服务有没有稳定工作”，Eval 告诉团队“稳定工作出来的东西是否值得”。把二者压成一个总分，很容易让高流量简单请求掩盖低频高风险错误。
-
-09 可以把两类 Evidence 关联到同一版本和发布决策，但不能让一个维度自动替另一个维度通过。
-
-
-Trace 可以显示 GraphRAG 打开时某次请求更慢，也可以显示 Reflection 发生后结果最终通过，但这只是同一时间线上的相关性。要证明某机制导致质量提升，需要尽量控制其他变量的 A/B、ablation 或 counterfactual 比较。
-
-这就是 Observability 和 Evaluation 的互补：前者帮助找到假设，后者用实验验证假设。仅凭 Dashboard 上两个曲线同时变化，就决定永久增加一个架构组件，很容易把偶然相关写成设计因果。
-
-反过来，实验发现收益后仍要回到线上观察真实分布和故障面，避免离线环境的因果结论在生产条件下失效。
-
-
-一旦团队知道 release gate 只看某个数字，就会自然优化这个数字：检索器可能通过返回更多重复片段提高某种 recall，模型可能学会 Judge 偏好的表达，人工标注也可能逐渐适应系统输出。指标继续变绿，不代表真实法律工作更好。
-
-所以关键决策要保留多维指标、critical failure、holdout / exposure provenance 和人工抽查，并定期检查“这个 Metric 是否仍然代表原始目标”。尤其 LLM Judge 不能成为唯一自我循环的裁判。
-
-Evaluation 的职责不是制造一个永远上涨的分数，而是持续发现现有指标在哪些情况下会说谎。
-
-
-确定性 schema、引用、幂等和安全 Contract 可以在每次变更快速检查；小规模高价值案例适合常规回归；昂贵 LLM Judge、fault injection、长任务恢复和大样本 benchmark 可以按风险与发布阶段运行。把所有验证都放在同一层，要么 CI 慢到没人愿意跑，要么为了速度被迫把深度测试删掉。
-
-因此 Evaluation 可以形成测试金字塔：便宜、确定的 gate 高频运行；高成本专业 Eval 在影响相关能力时运行；更大规模 baseline / ablation 在架构或发布决策前执行。具体自动化频率是工程选择，原则是让证据成本与风险匹配。
-
-这也帮助保持 BLOCKED 的诚实语义：高成本条件暂时不具备时，可以明确哪些证据缺失，而不是用一组便宜测试冒充完整质量证明。
-
-
-把线上失败沉淀成回归 case 很有价值，但如果同一 case 立刻被 Prompt tuning、few-shot 或人工规则直接针对，随后又继续留在“独立测试集”，分数会越来越乐观。
-
-因此生产事故进入 Eval 后需要记录 exposure：它可以成为 regression set，验证同类错误不再出现；真正评估泛化能力仍要保留未暴露 holdout 或新的代表性样本。线上反馈、训练资产和测试证据不能因为都在一个仓库里就失去边界。
-
-这让“系统从事故中学习”和“我们仍然有可信的独立评测”可以同时成立。
-
-### 当前、目标与缺口
-
-Current 到底有哪些 Trace、Metric、Dataset、Judge、release gate 和真实 benchmark，必须回到证据；没有样本或 Provider 条件时保持 BLOCKED，而不是从 Target 推断质量。
-
-Target 已明确 Telemetry 与业务真相分离、Dataset / Eval 版本化、deterministic checker 优先、复杂度 kill test 和 provider-neutral observability。Gap 包括真实基准数据、Judge 校准、生产 telemetry 成本、隐私 redaction 验证、恢复与 Effect fault injection，以及复杂机制是否真正值得保留。
-
----
+**Gap：** 真实业务 task class 数据集、Judge 校准、critical failure 门槛、跨模块恢复 Eval、容量和成本基线、外部 Tool / Security 场景、真实法院人员评测以及完整 Production qualification 仍需要证据。没有测量时继续写 Unknown / BLOCKED，不制造数字。
 
 工程 / Agent 精确参考与跨模块一致性规则见 [`reference.md`](reference.md)。
