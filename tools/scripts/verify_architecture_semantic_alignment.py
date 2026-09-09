@@ -5,7 +5,8 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[2]
-ARCH = ROOT / "docs/architecture/README.md"
+ARCH_HUMAN = ROOT / "docs/architecture/README.md"
+ARCH_REFERENCE = ROOT / "docs/architecture/reference.md"
 VIEWS = ROOT / "docs/architecture/architecture-views.md"
 HTML = ROOT / "docs/architecture/architecture.html"
 PROJECT = ROOT / "docs/project/README.md"
@@ -13,16 +14,16 @@ MODULES = ROOT / "docs/modules"
 DECISIONS = ROOT / "docs/decisions"
 TERMINOLOGY = ROOT / "docs/governance/terminology.md"
 
-MODULE_FILES = {
-    "01": "application/README.md",
-    "02": "domain/README.md",
-    "03": "knowledge/README.md",
-    "04": "runtime/README.md",
-    "05": "capability/README.md",
-    "06": "effects/README.md",
-    "07": "model-gateway/README.md",
-    "08": "security/README.md",
-    "09": "evaluation/README.md",
+MODULE_DIRS = {
+    "01": "application",
+    "02": "domain",
+    "03": "knowledge",
+    "04": "runtime",
+    "05": "capability",
+    "06": "effects",
+    "07": "model-gateway",
+    "08": "security",
+    "09": "evaluation",
 }
 
 B1_B14_MARKERS = (
@@ -63,14 +64,29 @@ def _has_detail_candidate_status(text: str) -> bool:
     return "detail_design: candidate-v1" in text or "detail-design: candidate-v1" in text
 
 
+def _module_docs() -> tuple[dict[str, str], dict[str, str]]:
+    human = {
+        number: (MODULES / directory / "README.md").read_text(encoding="utf-8")
+        for number, directory in MODULE_DIRS.items()
+    }
+    reference = {
+        number: (MODULES / directory / "reference.md").read_text(encoding="utf-8")
+        for number, directory in MODULE_DIRS.items()
+    }
+    return human, reference
+
+
 def verify() -> list[str]:
     errors: list[str] = []
-    architecture = ARCH.read_text(encoding="utf-8")
+    architecture_human = ARCH_HUMAN.read_text(encoding="utf-8")
+    architecture_reference = ARCH_REFERENCE.read_text(encoding="utf-8")
+    architecture_all = architecture_human + "\n" + architecture_reference
     project = PROJECT.read_text(encoding="utf-8")
     views = VIEWS.read_text(encoding="utf-8")
     html = HTML.read_text(encoding="utf-8")
     modules_readme = (MODULES / "README.md").read_text(encoding="utf-8")
-    modules = {number: (MODULES / filename).read_text(encoding="utf-8") for number, filename in MODULE_FILES.items()}
+    modules_reference = (MODULES / "reference.md").read_text(encoding="utf-8")
+    module_human, module_reference = _module_docs()
     terminology = TERMINOLOGY.read_text(encoding="utf-8")
 
     _require(
@@ -93,8 +109,8 @@ def verify() -> list[str]:
 
     _require(
         errors,
-        "overall architecture",
-        architecture,
+        "overall architecture human narrative",
+        architecture_human,
         (
             "# Zuno 目标架构",
             "## Part A — Human Narrative（人类技术叙事）",
@@ -107,6 +123,29 @@ def verify() -> list[str]:
             "### A7. 安全、人和时间",
             "### A8. 复杂度必须在测量中证明收益",
             "### A9. 从目标架构进入实施",
+            "overall_architecture_state: ROUND_02_FROZEN",
+            "target_logical_module_count: 9",
+            "module_design_baseline: AVAILABLE_V1",
+            "module_deep_design: AVAILABLE_V2",
+            "module_deep_design_coverage: 9/9",
+            "cross_module_consistency: AVAILABLE_V1",
+            "module_detail_freeze: NOT_YET",
+            "implementation_authorization: NO",
+            "Single Controller",
+            "docs/modules/",
+            "docs/decisions/",
+            "docs/evidence/",
+            "docs/research/",
+        ),
+    )
+    if "## Part B — Engineering / Agent Reference（工程 / Agent 参考）" in architecture_human:
+        errors.append("overall architecture human README must not retain Part B")
+
+    _require(
+        errors,
+        "overall architecture engineering reference",
+        architecture_reference,
+        (
             "## Part B — Engineering / Agent Reference（工程 / Agent 参考）",
             "### B1. Scope / Global Invariants",
             "### B2. Authority / Ownership Matrix",
@@ -122,14 +161,6 @@ def verify() -> list[str]:
             "### B12. Build / Buy / Extend / Delete Conditions",
             "### B13. Current / Target / Evidence / Unknown",
             "### B14. Machine Navigation / Source Precedence",
-            "overall_architecture_state: ROUND_02_FROZEN",
-            "target_logical_module_count: 9",
-            "module_design_baseline: AVAILABLE_V1",
-            "module_deep_design: AVAILABLE_V2",
-            "module_deep_design_coverage: 9/9",
-            "cross_module_consistency: AVAILABLE_V1",
-            "module_detail_freeze: NOT_YET",
-            "implementation_authorization: NO",
             "KnowledgeGeneration lifecycle != task-level ReadinessDecision",
             "EvidenceCandidate != Evidence",
             "CitationLineage != WorkProductCitationBinding",
@@ -137,20 +168,10 @@ def verify() -> list[str]:
             "AdmissionReceipt",
             "PreparedAction",
             "EffectReceipt",
-            "Single Controller",
             "Runtime Checkpoint != Domain Commit != Tool Effect != Publication truth",
             "AuthorizationDecision、ApprovalDecision、HumanDecision",
-            "docs/modules/",
-            "docs/decisions/",
-            "docs/evidence/",
-            "docs/research/",
         ),
     )
-
-    part_a = architecture.find("## Part A — Human Narrative（人类技术叙事）")
-    part_b = architecture.find("## Part B — Engineering / Agent Reference（工程 / Agent 参考）")
-    if part_a < 0 or part_b < 0 or part_a >= part_b:
-        errors.append("overall architecture must preserve ordered Part A human narrative and Part B machine reference")
 
     responsibility_markers = (
         "01 Application & Integration",
@@ -163,9 +184,9 @@ def verify() -> list[str]:
         "08 Security & Governance",
         "09 Observability & Evaluation",
     )
-    positions = [architecture.find(marker) for marker in responsibility_markers]
+    positions = [architecture_human.find(marker) for marker in responsibility_markers]
     if any(position < 0 for position in positions) or positions != sorted(positions):
-        errors.append("architecture responsibilities must exist in canonical 01-09 order")
+        errors.append("architecture responsibilities must exist in canonical 01-09 order in the human narrative")
 
     for marker in (
         "02 Legal Domain & Work Product | Matter / DocumentVersion canonical identity",
@@ -176,26 +197,43 @@ def verify() -> list[str]:
         "Current Code / Test / Runtime Evidence",
         "> canonical docs/architecture + docs/modules",
     ):
-        if marker not in architecture:
+        if marker not in architecture_reference:
             errors.append(f"overall architecture Part B missing cross-module reference invariant: {marker}")
 
-    for number, text in modules.items():
-        _require(errors, f"module {number} template", text, B1_B14_MARKERS + PART_C_MARKERS)
+    for number in MODULE_DIRS:
+        human = module_human[number]
+        reference = module_reference[number]
+        combined = human + "\n" + reference
+
         _require(
             errors,
-            f"module {number} layers",
-            text,
+            f"module {number} human layer",
+            human,
             (
                 "## Part A — Human Narrative",
-                "## Part B — Engineering / Agent Reference",
                 "implementation: not-authorized",
                 "deepening: cross-module-consistency-v2",
                 "### 当前、目标与缺口",
+                "reference.md",
             ),
         )
-        if not _has_detail_candidate_status(text):
+        if "## Part B — Engineering / Agent Reference" in human:
+            errors.append(f"module {number} README must not retain Part B")
+        if not _has_detail_candidate_status(human):
             errors.append(f"module {number} missing detail design candidate-v1 status marker")
-        _require(errors, f"module {number} detail candidate", text, DETAIL_CANDIDATE_MARKERS)
+
+        _require(
+            errors,
+            f"module {number} engineering template",
+            reference,
+            ("## Part B — Engineering / Agent Reference",) + B1_B14_MARKERS + PART_C_MARKERS,
+        )
+        _require(errors, f"module {number} detail candidate", reference, DETAIL_CANDIDATE_MARKERS)
+        if not reference.index("## Part B — Engineering / Agent Reference") < reference.index("## Part C — Cross-Module Consistency"):
+            errors.append(f"module {number} reference must keep Part B before Part C")
+
+        if not all(marker in combined for marker in ("Current", "Target", "Gap")):
+            errors.append(f"module {number} split views must preserve Current / Target / Gap")
 
     module_invariants = {
         "01": ("负责组合，不负责重新发明事实", "Run completed\n!=\nDomain admitted\n!=\nAnswer publishable\n!=\nConsumer displayed", "Agent Version = 产品能力 / 配置版本"),
@@ -209,7 +247,7 @@ def verify() -> list[str]:
         "09": ("Telemetry != Durable Audit != Business Truth", "MEASUREMENT_BLOCKED", "Secret NEVER EXPORT", "OpenTelemetry Baggage"),
     }
     for number, markers in module_invariants.items():
-        _require(errors, f"module {number} invariant", modules[number], markers)
+        _require(errors, f"module {number} invariant", module_human[number] + "\n" + module_reference[number], markers)
 
     _require(
         errors,
@@ -224,6 +262,14 @@ def verify() -> list[str]:
             "module_detail_design_candidate_coverage: 9/9",
             "module_detail_freeze: NOT_YET",
             "implementation_authorization: NO",
+            "reference.md",
+        ),
+    )
+    _require(
+        errors,
+        "modules engineering reference",
+        modules_reference,
+        (
             "Cancellation（取消）是停止未来工作，不是全局回滚",
             "Idempotency（幂等）不是一个全局 key",
             "恢复时先找 Owner Fact，再修复 Projection",
@@ -268,7 +314,7 @@ def verify() -> list[str]:
         "module_decomposition_gate: NOT_OPEN",
         "docs/modules/ 仍只有 README",
     ):
-        if forbidden in architecture or forbidden in views:
+        if forbidden in architecture_all or forbidden in views:
             errors.append(f"active architecture retains superseded semantics: {forbidden}")
 
     if views.count("```mermaid") != 6:
