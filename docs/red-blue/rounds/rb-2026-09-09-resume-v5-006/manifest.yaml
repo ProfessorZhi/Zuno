@@ -1,0 +1,26 @@
+round_id: rb-2026-09-09-resume-v5-006
+state: CLOSED
+mode: CHATGPT_AUTO
+zuno_base_sha: 7b9cfa6bcd4fc02437617604ee035a1fb40ddd5b
+resume_snapshot:
+  repository: ProfessorZhi/internship-work
+  commit_sha: 6107321bdcaced8688c0e462d8b0a85b2744c4fe
+  path: resume/00_resume_versions/Zuno_v3+CodingAgent+SFTDPO_简历/Agent开发工程师／AI应用工程师+Zuno／CodingAgent／SFTDPO_ToolCalling层次澄清／可追问_简历草稿_v5.md
+target_role: Agent 开发工程师 / AI 应用工程师
+interview_stage: targeted-final-resume-retest
+red_calibration: wording-delta-only
+blue_profile: historical-task-evidence-first
+retest_of: rb-2026-09-09-resume-v4-005
+scenario_scope:
+  - GeneralAgent vs Workspace layer clarity after the v5 wording change
+  - claim-strength / ownership / evidence regression check
+max_turns: 2
+stop_condition: >-
+  Close when the one-clause v5 wording change either resolves the Round #005 S3
+  ambiguity without changing claim strength or creates a new resume claim risk.
+result: PASS_NO_OPEN_RESUME_CLAIM_GAPS
+resume_claim_verdict: PASS
+finding_count: 0
+highest_severity: NONE
+resolved_previous_findings:
+  - rb-2026-09-09-resume-v4-005 F1 GeneralAgent vs Workspace layer narrative ambiguity
