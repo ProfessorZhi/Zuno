@@ -24,18 +24,25 @@ RESEARCH_FILES = {
     "docs/research/agent-platform-baseline.md",
     "docs/research/documentation-narrative-blueprint.md",
 }
+MODULE_NAMES = (
+    "application",
+    "domain",
+    "knowledge",
+    "runtime",
+    "capability",
+    "effects",
+    "model-gateway",
+    "security",
+    "evaluation",
+)
 MODULE_FILES = {
     "docs/modules/README.md",
     "docs/modules/reference.md",
-    "docs/modules/application/README.md",
-    "docs/modules/domain/README.md",
-    "docs/modules/knowledge/README.md",
-    "docs/modules/runtime/README.md",
-    "docs/modules/capability/README.md",
-    "docs/modules/effects/README.md",
-    "docs/modules/model-gateway/README.md",
-    "docs/modules/security/README.md",
-    "docs/modules/evaluation/README.md",
+    *{
+        f"docs/modules/{name}/{filename}"
+        for name in MODULE_NAMES
+        for filename in ("README.md", "reference.md")
+    },
 }
 ARCHITECTURE_FILES = {
     "README.md",
@@ -98,7 +105,7 @@ def main() -> int:
     }:
         errors.append("docs/evidence must contain only current evidence entries")
     if _files(ROOT / "docs/modules") != MODULE_FILES:
-        errors.append("docs/modules must contain the human entry, machine router, and semantic Target module directories")
+        errors.append("docs/modules must contain the human entry, machine router, and README/reference pair for each semantic Target module")
     if {path.name for path in (ROOT / "docs/architecture").iterdir() if path.is_file()} != ARCHITECTURE_FILES:
         errors.append("docs/architecture must contain the canonical README target, visual/rendered entries, and machine reference")
 
