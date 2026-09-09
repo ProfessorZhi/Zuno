@@ -81,19 +81,14 @@ def _has_candidate_status(content: str) -> bool:
 def test_project_documentation_is_consolidated_and_canonical() -> None:
     root = REPO_ROOT / "docs/project"
     assert {p.name for p in root.iterdir() if p.is_file()} == CANONICAL_PROJECT_FILES
+    assert not (root / "project.md").exists()
     assert not (REPO_ROOT / "docs/facts").exists()
     assert not (REPO_ROOT / "docs/maintenance").exists()
     assert (REPO_ROOT / "docs/red-blue/archive/legacy/README.md").exists()
     assert (REPO_ROOT / "docs/red-blue/archive/legacy/manual-round-01-overall-architecture.md").exists()
 
-    readme = (root / "README.md").read_text(encoding="utf-8")
-    assert "project-fact-provenance.md" in readme
-    assert "reference.md" in readme
-
-    reference = (root / "reference.md").read_text(encoding="utf-8")
-    assert "project-fact-provenance.md" in reference
-
-    project = (root / "project.md").read_text(encoding="utf-8")
+    project = (root / "README.md").read_text(encoding="utf-8")
+    assert "project-fact-provenance.md" in project
     for marker in (
         "为什么会有这个项目",
         "为什么不直接用 Dify、Coze",
@@ -104,6 +99,10 @@ def test_project_documentation_is_consolidated_and_canonical() -> None:
         assert marker in project
     assert "通用宿主" in project and "Zuno Legal Backend" in project
     assert "Current" in project and "Target" in project and "Unknown" in project
+
+    reference = (root / "reference.md").read_text(encoding="utf-8")
+    assert "human_source: docs/project/README.md" in reference
+    assert "project-fact-provenance.md" in reference
 
 
 def test_red_blue_harness_is_dedicated_and_closed_book() -> None:
@@ -140,8 +139,10 @@ def test_architecture_directories_only_contain_support_files() -> None:
     root = REPO_ROOT / "docs/architecture"
     assert {p.name for p in root.iterdir() if p.is_file()} == CANONICAL_ARCHITECTURE_FILES
     assert not [p for p in root.iterdir() if p.is_dir()]
+    assert not (root / "architecture.md").exists()
     reference = (root / "reference.md").read_text(encoding="utf-8")
-    assert "architecture.md" in reference and "docs/modules/" in reference
+    assert "human_source: docs/architecture/README.md" in reference
+    assert "module_router: docs/modules/reference.md" in reference
 
 
 def test_module_design_is_human_first_complete_and_detail_candidate_9_of_9() -> None:
