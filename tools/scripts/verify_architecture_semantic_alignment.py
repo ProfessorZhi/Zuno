@@ -309,7 +309,7 @@ def verify() -> list[str]:
         errors.append("architecture-views.md must contain exactly 6 conceptual diagrams")
     if 'fetch("./architecture-views.md")' not in html:
         errors.append("architecture.html must render canonical Mermaid source")
-    if "../project/README.md" not in html or "./README.md" not in html:
+    if "../project/README.md" not in html or "./architecture.md" not in html:
         errors.append("architecture.html must expose current canonical entrypoints")
 
     return errors
