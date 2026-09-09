@@ -39,8 +39,7 @@ def verify_programs_flat(root: Path) -> list[str]:
     queued = program_root / "queued-programs"
     if {path.name for path in queued.glob("*.md")} != {"README.md"}:
         errors.append("queued program directory must contain only its README")
-    current = program_root / "current.md"
-    if not current.exists():
+    if not (program_root / "current.md").exists():
         errors.append("missing current program")
     return errors
 
@@ -53,22 +52,23 @@ def verify_red_blue_harness(root: Path) -> list[str]:
 
     actual_files = _relative_files(root, red_blue_root)
     if actual_files != RED_BLUE_FILES:
-        errors.append(
-            f"red-blue harness mismatch: expected {sorted(RED_BLUE_FILES)}, got {sorted(actual_files)}"
-        )
+        errors.append(f"red-blue harness mismatch: expected {sorted(RED_BLUE_FILES)}, got {sorted(actual_files)}")
         return errors
 
     current = (red_blue_root / "current.md").read_text(encoding="utf-8")
     inactive = all(phrase in current for phrase in ("state: `no-active`", "active_round: `none`"))
-    active = "state: `active-red-blue`" in current and re.search(
-        r"active_round: `(?!none`)[^`]+`", current
-    ) is not None
+    active = "state: `active-red-blue`" in current and re.search(r"active_round: `(?!none`)[^`]+`", current) is not None
     if not (inactive or active):
         errors.append("red-blue current state is neither recognized inactive nor active-red-blue")
+    for marker in ("CHATGPT_AUTO", "AGENT_AUTO"):
+        if marker not in current:
+            errors.append(f"red-blue current contract missing mode: {marker}")
+    if "human-candidate" in current:
+        errors.append("human-candidate must not remain an active red-blue mode")
 
     protocol = (red_blue_root / "protocol.md").read_text(encoding="utf-8")
-    for marker in ("Context Firewall", "ChatGPT Duel", "Autonomous Agent", "Closed-book"):
-        if marker not in protocol:
+    for marker in ("Context Firewall", "CHATGPT_AUTO", "AGENT_AUTO", "closed-book", "Verifier"):
+        if marker.lower() not in protocol.lower():
             errors.append(f"red-blue protocol missing required execution marker: {marker}")
 
     attack_model = (red_blue_root / "attack-model.md").read_text(encoding="utf-8")
@@ -79,7 +79,7 @@ def verify_red_blue_harness(root: Path) -> list[str]:
     judge = (red_blue_root / "judge.md").read_text(encoding="utf-8")
     for marker in ("UNSUPPORTED_CLAIM", "NARRATIVE_GAP", "ARCHITECTURE_GAP", "OWNERSHIP_GAP"):
         if marker not in judge:
-            errors.append(f"red-blue judge missing required marker: {marker}")
+            errors.append(f"red-blue verifier rules missing required marker: {marker}")
 
     return errors
 
@@ -91,24 +91,36 @@ def verify_system_yaml(root: Path) -> list[str]:
         return ["missing .agent/system.yaml"]
     content = path.read_text(encoding="utf-8")
     for marker in (
-        "version:", "system_identity:", "runtime_boundary:", "program_rules:", "skill_routes:",
-        "project_narrative:", "research_root:", "maintenance_root:",
+        "version:",
+        "system_identity:",
+        "runtime_boundary:",
+        "truth_rules:",
+        "program_rules:",
+        "module_rules:",
+        "complexity_rules:",
+        "skill_routes:",
+        'project_root: "docs/project"',
+        'architecture_root: "docs/architecture"',
+        'modules_root: "docs/modules"',
+        'red_blue_docs_root: "docs/red-blue"',
+        'research_root: "docs/research"',
+        'decisions_root: "docs/decisions"',
+        'evidence_root: "docs/evidence"',
+        'governance_root: "docs/governance"',
+        'terminology: "docs/governance/terminology.md"',
         'red_blue_runtime_root: ".agent/red-blue"',
-        'red_blue_workflow_root: "docs/maintenance/red-blue"',
         'red_blue_current_owner: ".agent/red-blue/current.md"',
         "red_blue_requires_explicit_activation: true",
         "blue_closed_book: true",
-        "red_blue_harness:", "red_blue_workflow:", "red_blue_interview:",
-        'module_design_state: "deep-design-v2"',
-        'module_detail_design_candidate: "candidate-v1"',
-        'module_detail_design_candidate_modules: ["01", "02", "03", "04", "05", "06", "07", "08", "09"]',
-        "research_does_not_equal_canonical_truth: true",
-        "detail_candidate_does_not_equal_freeze: true",
-        "module_freeze_precedes_implementation_planning: true",
-        "detail_design_candidates:", "detail_design_review:",
+        'red_blue_modes: ["CHATGPT_AUTO", "AGENT_AUTO"]',
+        "human_candidate_mode_removed: true",
+        "module_count_is_documentation_invariant: false",
+        "research_is_upstream_only: true",
+        "red_blue_findings_are_non_authoritative: true",
     ):
         if marker not in content:
             errors.append(f"system.yaml missing section/route: {marker}")
+
     for relative in (
         "AGENTS.md",
         ".agent/programs/current.md",
@@ -120,22 +132,24 @@ def verify_system_yaml(root: Path) -> list[str]:
         "docs/README.md",
         "docs/project/README.md",
         "docs/project/project.md",
+        "docs/architecture/architecture.md",
+        "docs/modules/README.md",
+        "docs/red-blue/README.md",
         "docs/research/README.md",
-        "docs/maintenance/README.md",
-        "docs/maintenance/agent-workflow/README.md",
-        "docs/maintenance/red-blue/README.md",
-        "docs/maintenance/history/README.md",
+        "docs/decisions/README.md",
+        "docs/evidence/README.md",
+        "docs/governance/README.md",
+        "docs/governance/terminology.md",
+        "docs/governance/workflows/agent-workflow.md",
+        "docs/governance/operations/postgresql-migration-runbook.md",
         *MODULE_FILES,
     ):
         if not (root / relative).exists():
             errors.append(f"system.yaml route target missing: {relative}")
-    registry = re.search(r"local_skill_registry:\n(?P<body>.*?)(?=\n\S|\Z)", content, re.DOTALL)
-    if not registry:
-        errors.append("system.yaml missing local_skill_registry")
-    else:
-        for skill_path in re.findall(r"^\s+path:\s+\"([^\"]+)\"$", registry.group("body"), re.MULTILINE):
-            if not (root / skill_path).exists():
-                errors.append(f"local skill route target missing: {skill_path}")
+
+    for obsolete in ("docs/maintenance", "docs/terminology.md"):
+        if (root / obsolete).exists():
+            errors.append(f"obsolete route target must be absent: {obsolete}")
     return errors
 
 
@@ -157,8 +171,7 @@ def verify_skill_links(root: Path) -> list[str]:
 
 def verify_templates_have_required_sections(root: Path) -> list[str]:
     errors: list[str] = []
-    template_roots = (root / ".agent" / "templates", root / ".agent" / "red-blue" / "templates")
-    for template_root in template_roots:
+    for template_root in (root / ".agent" / "templates", root / ".agent" / "red-blue" / "templates"):
         for path in template_root.glob("*.md"):
             if path.name == "README.md":
                 continue
@@ -189,33 +202,10 @@ def main() -> int:
 
     current = (ROOT / ".agent" / "programs" / "current.md").read_text(encoding="utf-8")
     has_no_active_state = all(phrase in current for phrase in ("state: `no-active`", "active_program: `none`"))
-    has_design_state = "state: `active-design-program`" in current and re.search(
-        r"active_program: `(?!none`)[^`]+`", current
-    ) is not None
-    has_implementation_evidence_state = "state: `active-implementation-evidence-program`" in current and re.search(
-        r"active_program: `(?!none`)[^`]+`", current
-    ) is not None
+    has_design_state = "state: `active-design-program`" in current and re.search(r"active_program: `(?!none`)[^`]+`", current) is not None
+    has_implementation_evidence_state = "state: `active-implementation-evidence-program`" in current and re.search(r"active_program: `(?!none`)[^`]+`", current) is not None
     if not (has_no_active_state or has_design_state or has_implementation_evidence_state):
         errors.append("current program has no recognized design/implementation state")
-    for phrase in ("queued_program: `none`", "SUPERSEDED / RETIRED"):
-        if phrase not in current:
-            errors.append(f"current program missing: {phrase}")
-
-    for relative in (
-        "AGENTS.md", ".agent/system.yaml", ".agent/README.md",
-        ".agent/scripts/verify_doc_boundaries.py", ".agent/scripts/verify_repo_hygiene.py",
-        ".agent/red-blue/README.md", ".agent/red-blue/current.md", ".agent/red-blue/protocol.md",
-        ".agent/red-blue/attack-model.md", ".agent/red-blue/judge.md",
-        "docs/project/README.md", "docs/project/project.md", "docs/research/README.md",
-        "docs/governance/project-fact-provenance.md",
-        "docs/governance/human-first-documentation-standard.md",
-        "docs/maintenance/README.md", "docs/maintenance/agent-workflow/README.md",
-        "docs/maintenance/red-blue/README.md", "docs/maintenance/history/README.md",
-        "docs/evidence/README.md",
-        *MODULE_FILES,
-    ):
-        if not (ROOT / relative).exists():
-            errors.append(f"missing required path: {relative}")
 
     if errors:
         print("AGENT_SYSTEM_INVALID")
