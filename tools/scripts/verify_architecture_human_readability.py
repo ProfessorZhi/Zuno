@@ -10,8 +10,8 @@ CANONICAL = [ROOT / "docs/architecture/architecture.md"]
 ARCHITECTURE_README = ROOT / "docs/architecture/README.md"
 PROJECT_ROOT = ROOT / "docs/project"
 MODULES_ROOT = ROOT / "docs/modules"
-ROUND_01 = ROOT / "docs/maintenance/history/red-blue/manual-round-01-overall-architecture.md"
-ROUND_02 = ROOT / "docs/maintenance/history/red-blue/manual-round-02-overall-architecture-freeze-review.md"
+ROUND_01 = ROOT / "docs/red-blue/archive/legacy/manual-round-01-overall-architecture.md"
+ROUND_02 = ROOT / "docs/red-blue/archive/legacy/manual-round-02-overall-architecture-freeze-review.md"
 
 MODULE_FILES = (
     "01-application-integration.md",
@@ -217,7 +217,6 @@ def verify_module_text(text: str, filename: str) -> list[str]:
     nonspace_chars = _nonspace_chars(part_a)
     subsection_count = len(re.findall(r"(?m)^###\s+", part_a))
     prose_paragraph_count = len(_prose_paragraphs(part_a))
-
     if nonspace_chars < MODULE_PART_A_MIN_NONSPACE_CHARS:
         errors.append(
             f"{filename}: Part A is too thin for the current human-first baseline "
