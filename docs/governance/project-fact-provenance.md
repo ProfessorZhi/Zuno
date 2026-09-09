@@ -39,8 +39,8 @@
 | PF-007 | 用户加入时间 | USER_CONFIRMED | 用户约 2026 年 3 月加入项目 | 从立项开始就是项目 Owner | 历史任务 / 入组记录 |
 | PF-008 | 加入时已有产品 | USER_CONFIRMED | 用户加入时项目已经有代码和一个比较简单的自研前端 | 用户从零完成产品立项和第一版系统 | 历史仓库、截图、早期 Release / Demo |
 | PF-009 | 用户参与 Agent | USER_CONFIRMED | 用户参与过部分 Agent 开发 | 完整 Agent Runtime / 全部 Agent 由用户独立实现 | 任务、PR、Commit、代码 Review |
-| PF-010 | 用户参与 Memory | USER_CONFIRMED | 用户参与过 Memory 相关第一批重要工作 | 用户拥有整个 Memory 架构 / 所有长期记忆实现 | 任务级提交、设计记录、测试 |
-| PF-011 | OpenViking | USER_CONFIRMED | 用户参与 OpenViking 在 Memory / Context 区域的接入 | 已恢复具体 SDK / Adapter / 数据结构和生产使用方式 | 代码提交、配置、运行记录 |
+| PF-010 | 用户参与 Memory | USER_CONFIRMED | 用户参与过 Memory 相关第一批重要工作 | 用户从零引入 Memory / 拥有整个 Memory 架构 / 所有长期记忆实现；公开根提交已经存在 Memory 子系统 | 任务级提交、设计记录、测试 |
+| PF-011 | OpenViking | USER_CONFIRMED + PUBLIC_GIT_NOT_RECOVERED | 用户确认参与 OpenViking 在 Memory / Context 区域的接入；当前公开 Git 2026-04-15 根提交至 2026-04-29 快照未恢复对应 artifact | 已恢复具体 SDK / Adapter / 数据结构和生产使用方式；也不能用后续 PR #8 代替 OpenViking 证据 | 代码提交、配置、运行记录、未推送 / 私有历史材料 |
 | PF-012 | Tool Calling Strategy | USER_CONFIRMED | 用户参与过 Tool Calling Strategy 相关开发 | 用户拥有全部 Tool Runtime / 外部副作用体系 | 任务、PR、故障测试、调用记录 |
 | PF-013 | 数据库参与 | USER_CONFIRMED | 用户进入数据库查看或调试过数据 | 用户负责数据库总体设计、Schema 或 Migration Owner | SQL / Issue / Migration / Review 记录 |
 | PF-014 | LangGraph / GraphRAG | USER_CONFIRMED_AS_LEARNING_CONTEXT | 开发期间学习和接触过 LangGraph、GraphRAG | 用户完整实现当前 Target Runtime 或 GraphRAG | 任务级实现证据 |
@@ -58,6 +58,15 @@
 | PF-026 | GraphRAG / Memory / Multi-Agent | TARGET_OPTIONAL / MEASUREMENT_GATED | 这些复杂能力按任务和测量决定是否启用 | 已证明必须默认开启 | 消融实验、query-class benchmark、长期运行数据 |
 | PF-027 | Current 工程实现 | CURRENT_EVIDENCE_ONLY | 当前仓库存在有限 Runtime、Knowledge、Tool、Model、Security、Observability 等实现 / 测试基础 | 模块文档写得完整就等于全部实现 | `docs/evidence/`、代码、Migration、Test、Trace / Eval |
 | PF-028 | 当前质量 / Production Readiness | NOT_ESTABLISHED | 正式 benchmark / 生产资格尚未建立 | “架构完整所以 production ready” | 正式 runtime、credentials、数据集、load / DR / security qualification |
+| PF-029 | 2026-06-29 Context / Memory foundation 任务 | HISTORICAL_PR_COMMIT_TEST_CORROBORATED | 用户 GitHub 账号通过单提交 PR #8 完成并合入一条有边界的 Context / Memory foundation slice：为 Context Pack 增加 policy / source-id trace，将同 scope task summary 和仅 `APPROVED` 的 structured memory 接入 `GeneralAgent.prepare_context()`，并补 review / provenance contract 与 focused tests | 这是 3 月第一批 Memory / OpenViking 接入；用户从零实现整个 Memory；已经完成 production-grade Memory DB、成熟长期检索 / consolidation 或完整 PostTurnPipeline | 原始需求 / Issue、Review 讨论、真实故障或运行记录，可进一步补足 Cause → Decision → Implementation → Result |
+
+### Memory / OpenViking 取证边界
+
+公开 Git 根提交 `eafeb1c2dfe9fbb70e4e2fc1f89b687e37f3dc8d`（2026-04-15）已经包含 `services/memory/`、Memory History DAO 和 Chroma / Milvus Vector Store；当时 `MemoryClient` 默认使用 Chroma。到 2026-04-29 的公开快照，`memory/client.py` 仍是同一 blob，完整 tree 也没有恢复 `viking` / `openviking` 路径。
+
+这组证据只收紧两个边界：用户加入的不是一个“还没有 Memory”的 Greenfield 系统；当前公开历史不足以证明 PF-011 的 OpenViking 接入细节。它不否定用户对 OpenViking 参与的明确回忆，因为接入可能存在于未推送、本地、私有分支或当前尚未恢复的其他材料中。
+
+PR #8 / commit `f3c74338c042074ae6d912e80de5f2b31511b290` 属于后续、独立的任务级证据。该 PR 只有一个实现提交；PR 描述记录了 focused tests `32 passed`、repo tests `66 passed`、legacy compatibility tests `11 passed`，以及三种 profile 的 contract eval `status: ok`。PR 同时明确限制为 foundation slice，不把 production-grade Memory DB、成熟 long-term retrieval / consolidation、structured extraction / deduplication / conflict resolution 或完整 PostTurnPipeline 写成已完成事实。
 
 ## 3. 产品定位中的“优势”怎样说才不越界
 
@@ -115,7 +124,7 @@
 如果以后还要提高技术面试和项目复盘的可信度，最有价值的不是继续增加架构名词，而是恢复几条真正的 **Cause → Decision → Implementation → Metric** 链：
 
 - 客户说“回答质量需要提高”以后，到底抽取了哪些 Bad Case，根因是什么，改了什么，指标怎样变化；
-- 用户实际参与的一项 Agent / Memory / OpenViking / Tool Calling 任务，从需求、代码、故障到验证的完整链路；
+- PR #8 已恢复 2026-06-29 Context / Memory 的实现与测试闭环；下一步补它的原始需求 / Issue、Review、真实 Bug / 运行结果，或继续恢复更早 PF-010 / PF-011 对应的第一批 Memory / OpenViking artifact；
 - Court-side Testing / Pilot 到底有多少题、多少用户、什么环境、怎样验收；
 - 历史 Knowledge / RAG 的真实技术栈、数据规模和检索策略；
 - 一次真实故障或性能问题怎样定位、修复和验证；
