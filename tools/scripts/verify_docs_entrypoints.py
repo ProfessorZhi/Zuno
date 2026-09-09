@@ -6,7 +6,7 @@ from pathlib import Path
 
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
-ARCHITECTURE_FILES = {"README.md", "architecture-views.md", "architecture.html", "reference.md"}
+ARCHITECTURE_FILES = {"README.md", "architecture.md", "architecture-views.md", "architecture.html", "reference.md"}
 PROJECT_FILES = ["docs/project/README.md", "docs/project/reference.md"]
 RESEARCH_FILES = [
     "docs/research/README.md",
@@ -79,6 +79,7 @@ def verify() -> list[str]:
         *PROJECT_FILES,
         *RESEARCH_FILES,
         "docs/architecture/README.md",
+        "docs/architecture/architecture.md",
         "docs/architecture/architecture-views.md",
         "docs/architecture/architecture.html",
         "docs/architecture/reference.md",
@@ -118,7 +119,6 @@ def verify() -> list[str]:
         "docs/maintenance",
         "docs/terminology.md",
         "docs/project/project.md",
-        "docs/architecture/architecture.md",
         "docs/facts",
         "docs/history",
         "docs/operations",
@@ -188,7 +188,7 @@ def verify() -> list[str]:
     architecture_reference = (REPO_ROOT / "docs/architecture/reference.md").read_text(encoding="utf-8")
     for marker in (
         "canonical-architecture-engineering-reference",
-        "human_source: docs/architecture/README.md",
+        "human_source: docs/architecture/architecture.md",
         "## Part B — Engineering / Agent Reference（工程 / Agent 参考）",
         "### B2. Authority / Ownership Matrix",
         "### B7. Failure Taxonomy / Recovery Order",
@@ -210,7 +210,7 @@ def verify() -> list[str]:
         "canonical-documentation-architecture", "Physical layout", "Truth ownership",
         "Human / Machine projection", "Default reading paths", "Research boundary",
         "Red / Blue boundary", "Architecture reasoning contract",
-        "README.md      Human Narrative", "reference.md   Engineering / Agent Reference",
+        "architecture/README.md", "architecture/architecture.md", "architecture/reference.md",
     ):
         if marker not in documentation_architecture:
             errors.append(f"docs/governance/documentation-architecture.md missing marker: {marker}")

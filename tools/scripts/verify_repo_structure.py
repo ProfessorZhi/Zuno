@@ -46,6 +46,7 @@ MODULE_FILES = {
 }
 ARCHITECTURE_FILES = {
     "README.md",
+    "architecture.md",
     "architecture-views.md",
     "architecture.html",
     "reference.md",
@@ -107,7 +108,7 @@ def main() -> int:
     if _files(ROOT / "docs/modules") != MODULE_FILES:
         errors.append("docs/modules must contain the human entry, machine router, and README/reference pair for each semantic Target module")
     if {path.name for path in (ROOT / "docs/architecture").iterdir() if path.is_file()} != ARCHITECTURE_FILES:
-        errors.append("docs/architecture must contain the canonical README target, visual/rendered entries, and machine reference")
+        errors.append("docs/architecture must contain README entry, architecture.md human narrative, visual/rendered entries, and machine reference")
 
     governance_files = _files(ROOT / "docs/governance")
     missing_governance = GOVERNANCE_REQUIRED - governance_files
@@ -123,7 +124,6 @@ def main() -> int:
         ROOT / "docs/maintenance",
         ROOT / "docs/terminology.md",
         ROOT / "docs/project/project.md",
-        ROOT / "docs/architecture/architecture.md",
         ROOT / "docs/facts",
         ROOT / "docs/history",
         ROOT / "docs/operations",

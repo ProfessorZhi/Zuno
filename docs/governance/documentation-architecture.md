@@ -50,20 +50,31 @@ Research and Red / Blue are canonical locations for their own artifacts but are 
 
 ## 3. Human / Machine projection
 
-Project、Architecture 和每个 Module 都采用稳定的双视图物理约定：
+Project、Architecture 和 Module 都区分 Human Narrative 与 Engineering Reference，但总体架构额外保留一个显式的正文文件名：
 
 ```text
-README.md      Human Narrative
-reference.md   Engineering / Agent Reference
+project/README.md                    Human Narrative
+project/reference.md                 Project fact / ownership reference
+
+architecture/README.md               directory entry only
+architecture/architecture.md         Overall Target Architecture Human Narrative
+architecture/reference.md            Architecture Engineering / Agent Reference
+
+modules/README.md                    Human responsibility map
+modules/reference.md                 Cross-module Engineering Reference
+modules/<semantic-name>/README.md    Module Human Narrative
+modules/<semantic-name>/reference.md Module Engineering Reference
 ```
+
+`architecture/README.md` 只负责把读者送到 `architecture.md`、`reference.md`、views 和 rendered output；它不复制 Target Architecture。显式的 `architecture.md` 让总体架构在文件系统里拥有清楚、可引用的 Canonical Human 文档，同时保留 GitHub 目录默认 README 的导航体验。
 
 Project reference 是历史事实与 Ownership 的机器索引。Architecture reference 保存跨模块 Part B。每个 Module reference 保存该责任域的 Part B、Detail Candidate 与 Part C Cross-Module Consistency。
 
-Human-facing README 建立 mental model，优先保存 scenario、baseline、failure、causality、normal flow、failure/recovery、alternative、trade-off 和 simplification condition。内部对象名应在概念已经被解释以后出现。
+Human-facing narrative 建立 mental model，优先保存 scenario、baseline、failure、causality、normal flow、failure/recovery、alternative、trade-off 和 simplification condition。内部对象名应在概念已经被解释以后出现。
 
 Engineering reference 压缩已经接受的语义：Owner、Authority、Contract、Version、Completion Proof、Idempotency、Persistence、Retry/Replan/Reconcile、Security、Failure Matrix、Detail Candidate 和 Source Map。
 
-两个视图共享同一 Truth Owner。物理拆分不能产生两套 Architecture、Module 或 Current 事实。Human prose 可以改变叙事结构，Engineering reference 可以提高检索密度；两者都不得静默改变 Architecture Owner、Authority、Contract semantics、Recovery semantics、Security Authority、Current/Target level、Evidence status 或 Personal Ownership。
+Human Narrative 与 Engineering reference 共享同一 Truth Owner。物理拆分不能产生两套 Architecture、Module 或 Current 事实。Human prose 可以改变叙事结构，Engineering reference 可以提高检索密度；两者都不得静默改变 Architecture Owner、Authority、Contract semantics、Recovery semantics、Security Authority、Current/Target level、Evidence status 或 Personal Ownership。
 
 ## 4. Default reading paths
 
@@ -72,7 +83,7 @@ Human default:
 ```text
 docs/README.md
 → project/README.md
-→ architecture/README.md
+→ architecture/architecture.md
 → modules/README.md
 → selected modules/<semantic-name>/README.md
 → evidence/README.md
@@ -92,7 +103,7 @@ architecture/reference.md
 → code/test/schema/migration
 ```
 
-When implementation reasoning loses causality, the agent returns from a reference to the corresponding README. It does not infer fields or Current status from the narrative. Project-fact or resume-ownership work additionally reads Project reference and Governance provenance.
+When implementation reasoning loses causality, the agent returns from `architecture/reference.md` to `architecture/architecture.md`, or from a Module reference to that Module README. It does not infer fields or Current status from the narrative. Project-fact or resume-ownership work additionally reads Project reference and Governance provenance.
 
 ## 5. Module decomposition
 
@@ -126,9 +137,9 @@ Red / Blue is a review system, not an architecture author.
 The normal sequence is:
 
 ```text
-Human README reaches independent readable quality
+Human Narrative reaches independent readable quality
 → Red attacks concrete business scenarios, substitutes and failure windows
-→ Blue answers closed-book from accepted README/reference/Evidence or concedes a gap
+→ Blue answers closed-book from accepted Human Narrative/reference/Evidence or concedes a gap
 → Round produces findings
 → findings are classified
 → independent Writing / Architecture / Evidence / Ownership / Simplification work
@@ -198,4 +209,4 @@ Operational migration and recovery runbooks live under `docs/governance/operatio
 
 Physical moves must not create duplicate truth. During migration, update repository navigation, `.agent` routing, validators and internal links in the same PR. Old compatibility paths should be removed once all supported routes are updated instead of being kept indefinitely as parallel entrypoints.
 
-A README/reference split must preserve semantic equivalence across the boundary: Part A remains human-facing, Part B/C remain engineering-facing, and no Owner/Authority/Recovery/Current-Target rule may disappear merely because it moved files.
+The Architecture directory entry / `architecture.md` / `reference.md` split and each Module README/reference split must preserve semantic equivalence across the boundary: Architecture Human Narrative remains in `architecture.md`; Module Part A remains human-facing in Module README; Part B/C remain engineering-facing; and no Owner/Authority/Recovery/Current-Target rule may disappear merely because it moved files.

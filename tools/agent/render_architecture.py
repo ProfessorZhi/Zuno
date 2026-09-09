@@ -6,7 +6,7 @@ from pathlib import Path
 
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
-DESIGN_PATH = REPO_ROOT / "docs/architecture/README.md"
+DESIGN_PATH = REPO_ROOT / "docs/architecture/architecture.md"
 REFERENCE_PATH = REPO_ROOT / "docs/architecture/reference.md"
 VIEWS_PATH = REPO_ROOT / "docs/architecture/architecture-views.md"
 HTML_PATH = REPO_ROOT / "docs/architecture/architecture.html"
@@ -21,6 +21,7 @@ EXPECTED_VIEWS = [
 ]
 CANONICAL_ARCHITECTURE_FILES = {
     "README.md",
+    "architecture.md",
     "architecture-views.md",
     "architecture.html",
     "reference.md",
@@ -30,7 +31,6 @@ STALE_OUTPUTS = [
     REPO_ROOT / "docs/architecture/overview.html",
     REPO_ROOT / "docs/architecture.md",
     REPO_ROOT / "docs/architecture/overall-architecture.md",
-    REPO_ROOT / "docs/architecture/architecture.md",
 ]
 
 
@@ -56,9 +56,9 @@ def validate_design(human: str, reference: str | None = None) -> list[str]:
         "reference.md",
     ):
         if marker not in human:
-            errors.append(f"architecture README missing required marker: {marker}")
+            errors.append(f"architecture.md missing required marker: {marker}")
     if "## Part B — Engineering / Agent Reference（工程 / Agent 参考）" in human:
-        errors.append("architecture README must not retain Part B")
+        errors.append("architecture.md must not retain Part B")
 
     for marker in (
         "## Part B — Engineering / Agent Reference（工程 / Agent 参考）",
@@ -117,10 +117,10 @@ def validate_design(human: str, reference: str | None = None) -> list[str]:
         "architecture_state: ACCEPTED_TARGET",
     ):
         if marker not in human:
-            errors.append(f"architecture README missing governance marker: {marker}")
+            errors.append(f"architecture.md missing governance marker: {marker}")
 
     if human.count("```mermaid") > 2:
-        errors.append("architecture README should remain prose-first; diagrams belong in architecture-views.md")
+        errors.append("architecture.md should remain prose-first; diagrams belong in architecture-views.md")
     return errors
 
 
@@ -154,7 +154,7 @@ def validate_html(content: str) -> list[str]:
         'fetch("./architecture-views.md")',
         MERMAID_MODULE_URL,
         "../project/README.md",
-        "./README.md",
+        "./architecture.md",
         "../evidence/README.md",
         "diagram-dialog",
         "Mermaid source",
@@ -182,6 +182,7 @@ def validate_taxonomy() -> list[str]:
         "docs/README.md",
         "docs/project/README.md",
         "docs/architecture/README.md",
+        "docs/architecture/architecture.md",
         "docs/architecture/reference.md",
         "docs/modules/README.md",
         "docs/modules/reference.md",

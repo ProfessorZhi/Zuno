@@ -23,7 +23,7 @@ governance/     谁拥有事实、文档怎样写、Agent 怎样读取、修改�
 第一次接触 Zuno，只走一条主线：
 
 1. [`project/README.md`](./project/README.md) —— 从天津智慧司法与 LIPLAB 研究/工程背景进入，理解项目为什么存在、已有系统是什么、团队和个人实际参与到哪里。
-2. [`architecture/README.md`](./architecture/README.md) —— 从最简单的 Generic Agent Host + Legal RAG + Research Capability baseline 开始，看材料版本、专业资格、正式业务事实、长任务、现实副作用和持续授权怎样逐步逼出新的事实边界。
+2. [`architecture/architecture.md`](./architecture/architecture.md) —— 从最简单的 Generic Agent Host + Legal RAG + Research Capability baseline 开始，看材料版本、专业资格、正式业务事实、长任务、现实副作用和持续授权怎样逐步逼出新的事实边界。
 3. [`modules/README.md`](./modules/README.md) —— 沿同一个法律任务进入局部责任，再按 `application/`、`domain/`、`knowledge/`、`runtime/`、`capability/`、`effects/`、`model-gateway/`、`security/`、`evaluation/` 进入对应 Module `README.md`。
 4. [`evidence/README.md`](./evidence/README.md) —— 回到 Current，检查哪些 Target 今天已经由代码、测试或可复现运行证明。
 
@@ -43,12 +43,23 @@ Red / Blue 不属于第一次阅读路径。正文先达到可独立阅读的教
 
 ## Human View 与 Engineering Reference
 
-Project 的 `README.md` 是项目叙事，`reference.md` 是事实索引。Architecture 和每个 Module 现在采用同一个物理规则：
+Project、Architecture、Modules 都区分 Human Narrative 与 Engineering Reference，但总体架构额外保留显式的 canonical 文件名：
 
 ```text
-README.md      Human Narrative
-reference.md   Engineering / Agent Reference
+project/README.md                   Project Human Narrative
+project/reference.md                Project fact / ownership reference
+
+architecture/README.md              Architecture directory entry
+architecture/architecture.md        Overall Target Architecture Human Narrative
+architecture/reference.md           Architecture Engineering / Agent Reference
+
+modules/README.md                   Human responsibility map
+modules/reference.md                Cross-module Engineering Reference
+modules/<semantic-name>/README.md   Module Human Narrative
+modules/<semantic-name>/reference.md Module Engineering Reference
 ```
+
+`architecture.md` 是总体 Target 的人类正文；`architecture/README.md` 只导航，不复制 Architecture Truth。这样读者可以直接找到“总体架构文档”，同时 GitHub 目录仍有自然入口。
 
 Human Narrative 负责现实场景、最简单方案、具体失败、设计如何产生、正常流程、恢复、替代方案和删除条件。Engineering Reference 保存 Owner、Authority、Contract、Version、Completion Proof、Persistence、Retry / Replan / Reconcile、Security、Failure Matrix、Detail Candidate 和跨模块一致性。
 
@@ -63,7 +74,7 @@ architecture/reference.md
 → code / schema / migration / tests
 ```
 
-需要先理解原因时，再回对应 README。这样人类阅读和机器实施共享同一套事实，但不再挤在同一个超长文件里。
+需要先理解原因时，再回 `architecture/architecture.md` 或对应 Module README。这样人类阅读和机器实施共享同一套事实，但不再挤在同一个超长文件里。
 
 ## 八个一级目录的边界
 

@@ -2,7 +2,7 @@
 
 status: canonical-architecture-engineering-reference
 owner: Cross-cutting Architecture Owner
-human_source: docs/architecture/README.md
+human_source: docs/architecture/architecture.md
 module_router: docs/modules/reference.md
 decision_source: docs/decisions/
 evidence_source: docs/evidence/
