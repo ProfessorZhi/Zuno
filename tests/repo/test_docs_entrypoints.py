@@ -82,8 +82,9 @@ def test_project_documentation_is_consolidated_and_canonical() -> None:
     root = REPO_ROOT / "docs/project"
     assert {p.name for p in root.iterdir() if p.is_file()} == CANONICAL_PROJECT_FILES
     assert not (REPO_ROOT / "docs/facts").exists()
-    assert (REPO_ROOT / "docs/maintenance/history/red-blue/README.md").exists()
-    assert (REPO_ROOT / "docs/maintenance/history/red-blue/manual-round-01-overall-architecture.md").exists()
+    assert not (REPO_ROOT / "docs/maintenance").exists()
+    assert (REPO_ROOT / "docs/red-blue/archive/legacy/README.md").exists()
+    assert (REPO_ROOT / "docs/red-blue/archive/legacy/manual-round-01-overall-architecture.md").exists()
 
     readme = (root / "README.md").read_text(encoding="utf-8")
     assert "project.md" in readme
@@ -115,10 +116,11 @@ def test_red_blue_harness_is_dedicated_and_closed_book() -> None:
     current = (root / "current.md").read_text(encoding="utf-8")
     assert "state: `no-active`" in current
     assert "active_round: `none`" in current
+    assert "CHATGPT_AUTO" in current and "AGENT_AUTO" in current
 
     protocol = (root / "protocol.md").read_text(encoding="utf-8")
-    for marker in ("Context Firewall", "ChatGPT Duel", "Autonomous Agent", "Closed-book"):
-        assert marker in protocol
+    for marker in ("Context Firewall", "CHATGPT_AUTO", "AGENT_AUTO", "closed-book", "Verifier"):
+        assert marker.lower() in protocol.lower()
 
     attack = (root / "attack-model.md").read_text(encoding="utf-8")
     for marker in ("Ownership Claim", "Build / Buy", "面经校准", "一次只"):
@@ -128,10 +130,10 @@ def test_red_blue_harness_is_dedicated_and_closed_book() -> None:
     for marker in ("UNSUPPORTED_CLAIM", "NARRATIVE_GAP", "ARCHITECTURE_GAP", "OWNERSHIP_GAP"):
         assert marker in judge
 
-    workflow = (REPO_ROOT / "docs/maintenance/red-blue/README.md").read_text(encoding="utf-8")
+    workflow = (REPO_ROOT / "docs/red-blue/README.md").read_text(encoding="utf-8")
     for marker in (
-        "ProfessorZhi/internship-work", "ProfessorZhi/interview-notes", "Part A",
-        "Closed-book", "ChatGPT Red / Blue 对攻", "Autonomous Agent",
+        "CHATGPT_AUTO", "AGENT_AUTO", "Scenario-first", "Source trace",
+        "Decision impact", "Independent acceptance", "Closed-book",
     ):
         assert marker in workflow
 
@@ -222,10 +224,10 @@ def test_architecture_html_routes_to_current_architecture_sources() -> None:
     html = (REPO_ROOT / "docs/architecture/architecture.html").read_text(encoding="utf-8")
     assert renderer.validate_html(html) == []
     for phrase in [
-        "./architecture.md", "../project/project.md", "../maintenance/history/README.md",
-        "../evidence/README.md", "./architecture-views.md",
+        "./architecture.md", "../project/project.md", "../evidence/README.md", "./architecture-views.md",
     ]:
         assert phrase in html
+    assert "../maintenance/" not in html
     assert "./architecture.md#target-status-boundary" not in html
 
 

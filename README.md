@@ -1,41 +1,45 @@
 # Zuno
 
-Zuno 是一个来自南京大学 LIPLAB 智慧司法研究与工程化背景的法律智能项目。当前仓库同时包含项目叙事、研究谱系、目标架构、模块设计、当前工程证据和维护/审查资料；这些来源职责不同，不能互相倒推。
+Zuno 是一个来自南京大学 LIPLAB 智慧司法研究与工程化背景的法律智能项目。仓库同时保存项目历史、研究来源、Target Architecture、模块设计、当前工程证据和对抗性审查材料；这些来源职责不同，不能互相倒推。
 
-## 先读什么
+## 第一次阅读
 
-第一次接触项目，建议沿这条主线阅读：
+第一次接触 Zuno，沿一条主线即可：
 
-1. [Project 主文档](./docs/project/project.md)：项目为什么存在、怎样发展、团队与个人参与、Current / Target / Unknown。
-2. [Research Knowledge Base](./docs/research/README.md)：葛季栋/LIPLAB 的研究谱系、Research Artifact 怎样进入 Engineering Capability，以及 WorkBuddy / Dify / Coze / LangGraph 等通用平台已经解决什么。
-3. [总体架构](./docs/architecture/architecture.md)：系统为什么按今天的责任边界和恢复语义设计。
-4. [九模块设计](./docs/modules/README.md)：每个责任域内部怎样工作、失败和恢复。
-5. [当前证据](./docs/evidence/README.md)：今天的代码、测试和运行到底证明到了什么程度。
-6. [有效 ADR](./docs/decisions/README.md)：长期架构取舍。
-7. [Maintenance](./docs/maintenance/README.md)：运维、Agent/GitHub 工作流和 Red / Blue 历史。
-8. [术语表](./docs/terminology.md)。
+1. [Project](./docs/project/project.md) — 项目为什么出现、真实演进、团队与个人参与；
+2. [Architecture](./docs/architecture/architecture.md) Part A — 从简单方案开始，看哪些真实约束逼出新的事实边界；
+3. [Modules](./docs/modules/README.md) — 总体设计怎样分解为局部责任、正常流程和故障恢复；
+4. [Evidence](./docs/evidence/README.md) — 今天的代码、测试和运行实际证明了什么。
+
+研究来源按需进入 [Research](./docs/research/README.md)。正文达到独立可读质量以后，再用 [Red / Blue](./docs/red-blue/README.md) 做场景驱动的架构与面试压力测试。
 
 完整文档路由见 [docs/README.md](./docs/README.md)。
 
 ## 八个一级文档域
 
 ```text
-理解 Zuno：
-project → research → architecture → modules
+System & Review
+project      真实项目背景、历史、团队与个人参与
+architecture 理想总体 Target Architecture
+modules      Target 责任分解与模块设计
+red-blue     对抗性评审方法与 Round 归档
 
-治理和维护 Zuno：
-decisions | evidence | governance | maintenance
+Trust & Evolution
+research     论文、算法、法院背景、通用平台 baseline
+decisions    长期接受的架构理由
+evidence     Current code/test/trace/eval/runtime evidence
+governance   provenance、ownership、writing、terminology、workflow、operations、validation
 ```
 
-这不是流水线。`research/` 是研究依据，不拥有 Project/Architecture Truth；`maintenance/` 是维护流程和历史，不拥有 Current Evidence。
+`research/` 和 `red-blue/` 对自己的材料有固定归档位置，但不拥有 Project、Target Architecture 或 Current Evidence。
 
 ## 事实边界
 
-项目历史、团队参与和开发过程必须回到[项目事实台账](./docs/governance/project-fact-provenance.md)。总体架构是 Target 设计；Evidence 只说明当前仓库、测试和可复现运行证据。不要把当前代码反写成历史个人贡献，也不要把 Target、Pilot 或 Mock Test 说成 Production。
+项目历史、团队参与和个人 Ownership 回到[项目事实台账](./docs/governance/project-fact-provenance.md)。总体架构是 Target；Evidence 只说明当前仓库、测试和可复现运行。Pilot、Mock、Court-side Test 和 Runbook 都不能自动升级成 Production。
 
-研究资料同样不能越权：论文提出不等于 Zuno 已实现，导师/课题组成果不等于个人实现，平台 Feature 也不能反向制造 Zuno 需求。研究关系和平台基线见 [`docs/research/`](./docs/research/README.md)。
+论文提出不等于 Zuno 已实现，导师/课题组成果不等于个人实现，Framework Feature 不等于 Zuno 自研。成熟 Agent Platform 已经提供的通用能力优先复用；Zuno 只在法律业务需要稳定专业语义、版本、资格、正式业务事实、恢复或专业 Evaluation 时 Own 领域语义。
 
-历史 Red / Blue 讨论保留在 [`docs/maintenance/history/red-blue/`](./docs/maintenance/history/red-blue/)，作为架构审查过程记录，不是当前架构或事实入口。正式接受的结果由维护者写入 `docs/architecture/`、`docs/modules/` 或 `docs/decisions/`。
+历史 Red / Blue 手工轮次保留在 [`docs/red-blue/archive/legacy/`](./docs/red-blue/archive/legacy/)，只用于复盘，不是当前 Architecture Truth 或面试标准答案。
 
 ## 当前工程入口
 
@@ -43,8 +47,9 @@ decisions | evidence | governance | maintenance
 - 前端代码：`apps/web/`
 - 数据库与迁移：`infra/db/`
 - 当前运行和测试证据：[docs/evidence/](./docs/evidence/README.md)
-- 运维 Runbook：[docs/maintenance/operations/](./docs/maintenance/operations/)
-- 人类可读 Agent/GitHub 工作流：[docs/maintenance/agent-workflow/](./docs/maintenance/agent-workflow/README.md)
+- 运维 Runbook：[docs/governance/operations/](./docs/governance/operations/)
+- Agent/GitHub 协作规则：[docs/governance/workflows/agent-workflow.md](./docs/governance/workflows/agent-workflow.md)
+- 跨文档术语：[docs/governance/terminology.md](./docs/governance/terminology.md)
 
 常用验证：
 
@@ -65,4 +70,4 @@ python tools/agent/render_architecture.py --write
 python tools/agent/render_architecture.py --check
 ```
 
-修改业务代码前请阅读根目录 [AGENTS.md](./AGENTS.md)。
+修改业务代码前请阅读 [AGENTS.md](./AGENTS.md)。

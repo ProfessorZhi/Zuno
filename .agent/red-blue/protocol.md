@@ -1,77 +1,68 @@
 # Red / Blue Execution Protocol
 
-本协议定义 Red、Blue、Judge 和 Controller 如何运行。它适用于 ChatGPT 对攻、候选人真人模拟，以及多个 Agent 自主运行。
+本协议定义 Zuno Red / Blue 的机器执行规则。长期方法说明见 `docs/red-blue/README.md`；本目录只负责运行状态、上下文防火墙和机器可执行约束。
 
 ## 目标
 
-Red / Blue 不是为了把答案“训练到看起来很完整”，而是验证：
+Red / Blue 验证两件事：
 
-> 候选人简历上的 Claim，是否能够仅依赖允许的项目文档和本人真实经历，经受真实大厂面试的连续追问。
+1. Zuno 的 Project / Architecture / Module Part A 是否能够在真实业务与大厂面试式追问下保持完整因果；
+2. 当前设计是否存在真正会改变 Architecture、Evidence、Ownership、Build/Buy 或 Simplification 决策的缺口。
 
-如果 Blue 失败，首先记录 Gap。只有在 Round 结束后，才进入独立的 Documentation / Architecture / Evidence / Resume 修复任务。
+它不负责把架构“辩得更复杂”。如果简单方案已经足够，Blue 应明确保留简单方案。
 
-## 四个角色
+## 角色
 
 ### Controller
 
-Controller 只负责：
-
-- 固定 Round manifest；
-- 创建角色隔离上下文；
-- 控制轮次顺序；
-- 保存 transcript / judgment；
-- 判断是否达到停止条件；
-- Round 结束后归档。
-
-Controller 不替 Red 想答案，也不替 Blue 搜资料。
+Controller 固定 Round manifest、切换上下文、推进状态、检查 source policy、保存 transcript/findings 和执行停止条件。Controller 不替 Red 设计答案，也不替 Blue 搜外部材料。
 
 ### Red
 
-Red 是 skeptical interviewer，不是老师。它的任务是：
+Red 从业务场景、简历 Claim、替代方案和故障窗口施压。一次只问一个主问题。优先验证：
 
-1. 从精确简历快照抽取 3–5 条高风险 Claim；
-2. 结合目标岗位和面试轮次选择 interviewer persona；
-3. 使用 `attack-model.md` 连续下钻；
-4. 必要时用真实面经语料校准“真实面试官会怎么追”，但不机械复述题库；
-5. 发现矛盾时停留在同一条攻击链，直到 Claim 被澄清、证伪或信息耗尽。
+- 业务目标与 baseline；
+- Material / Knowledge readiness；
+- Capability / Provider qualification；
+- Candidate / Formal Business Fact；
+- crash / late result / replan；
+- timeout / external effect；
+- continuous authorization；
+- Build / Buy / Extend / Delete；
+- Evidence / Measurement；
+- Team / Personal Ownership。
 
-Red 对候选人一次只展示一个主问题。内部 attack intent、expected evidence、counterexample 和 next drill 不向 Blue / 人类候选人展示。
+Red 不以内部对象名、字段数量或状态机复杂度衡量攻击深度。如果追问不会改变任何决策，只会增加术语，结束该链。
 
 ### Blue
 
-Blue 模拟候选人。它必须遵守 Closed-book：
+Blue closed-book。使用与 Red 相同的精确简历快照，只读取 manifest allowlist 内的 Zuno 文档。
 
-- 使用与 Red 相同的精确简历快照；
-- 只能读取 Round manifest 允许的 Zuno canonical docs；
-- 回答项目 / 架构问题时优先使用 Project / Architecture / Module **Part A 的自然故事**；
-- 当 Red 深挖 Contract、State、Concurrency、Recovery、Security、Persistence、Evidence 时，才继续使用 Part B / Part C / ADR / Evidence；
-- 不读取面经、八股、外部标准答案、用户过去 QA 或 Red hidden context。
+Blue 优先从 Part A 的自然故事回答；被追到 Contract、State、Recovery、Security、Persistence 或 Evidence 后再进入 Part B / Part C / ADR / Evidence。
 
-Blue 如果不知道，应明确说 Current / Target / Unknown 或“文档不足以支持”。禁止靠模型常识把 Zuno 未记录的事实补齐。
+Blue 可以回答：简单方案足够、平台能力应复用、某机制应删除、需要 Architecture Revision、当前只有 Target、或证据不足。禁止用模型常识补齐 Zuno 未记录事实。
 
-### Judge
+### Verifier
 
-Judge 不参与答题，只做审计：
+Verifier 是审计角色，不是第三个辩论方。它只检查：
 
-- 判断 Blue 是否回答了 Red 真正验证的风险；
-- 检查回答是否由简历和允许的 canonical docs 支持；
-- 判断是表达问题、文档问题还是架构 / 证据问题；
-- 决定 Red 应继续同链、换角度、还是结束该 Claim；
-- 输出 Gap，但不生成“正确答案”给 Blue。
+- Blue 的关键事实是否有允许来源；
+- 回答是否混淆 Current / Target / History / Unknown；
+- Finding 是否真的会改变决策；
+- Gap classification 是否合理；
+- 是否应该继续同一攻击链。
 
-详细标准见 `judge.md`。
+Verifier 不生成“正确答案”，也不向 Blue 回流诊断。
 
 ## Context Firewall
-
-正式模式必须维护以下逻辑隔离：
 
 ```text
 RED CONTEXT
   exact resume snapshot
-  target role / JD / stage
+  role / JD / interview stage
   attack-model.md
-  selected interview calibration material
-  public/platform research when the attack explicitly tests Build/Buy
+  approved interview calibration
+  current public platform facts when Build/Buy is under test
 
 BLUE CONTEXT
   exact same resume snapshot
@@ -81,160 +72,149 @@ BLUE CONTEXT
   docs/modules/
   docs/decisions/
   docs/evidence/
-  docs/governance/project-fact-provenance.md
+  allowed docs/governance/ facts
 
-JUDGE CONTEXT
-  exact resume snapshot
-  Red question + hidden attack intent
+VERIFIER CONTEXT
+  Red question + hidden intent
   Blue answer + source trace
-  same allowed canonical docs as Blue
-  judge.md
+  same canonical sources required to verify claims
+  judge.md / verification rules
 ```
 
-禁止信息流：
+禁止：
 
 ```text
 Red interview corpus ─X→ Blue
 Red hidden intent     ─X→ Blue
-Judge diagnosis       ─X→ Blue during the same chain
-Blue external search  ─X→ answer
-Historical ideal QA   ─X→ Blue
+Verifier diagnosis   ─X→ Blue during same chain
+Blue external search ─X→ answer
+Historical ideal QA  ─X→ Blue
+Legacy Round answer  ─X→ Blue
 ```
-
-单个 ChatGPT 对话无法提供密码学级上下文隔离，所以 `chatgpt-duel` 依赖程序性角色隔离；正式验收优先使用不同子 Agent / context window。
 
 ## Round 启动
 
-Round 开始前必须固定：
+开始前固定：
 
 1. Zuno base SHA；
-2. 精确 resume snapshot：repository + commit SHA + path；
-3. Target role / JD；
-4. Interview stage；
-5. Mode；
-6. Red calibration mode；
-7. Blue allowlist；
-8. 预期时长或最大 Turn；
-9. 主面试官画像和交叉画像。
+2. exact resume snapshot：repository + commit SHA + path；
+3. role / JD / interview stage；
+4. mode；
+5. Red calibration policy；
+6. Blue allowlist；
+7. scenario scope；
+8. max turns / stop condition。
 
-不要用“最新简历”这种漂移引用。简历索引里标记为“待核验包装稿”的版本不得自动成为 Round 基线。
-
-## Mode A — Human Candidate
+只允许：
 
 ```text
-Red Agent → 用户本人回答 → Red follow-up
-                         ↘ Judge（复盘时）
+CHATGPT_AUTO
+AGENT_AUTO
 ```
 
-模拟中默认不展示评分、标准答案或攻击意图。用户说“结束 / 复盘”后 Judge 才输出报告。
+用户可以中途 intervention，但没有 `human-candidate` 执行模式。
 
-## Mode B — ChatGPT Duel
+## CHATGPT_AUTO
 
-```text
-Controller
-  → Red asks one question
-  → Blue answers closed-book
-  → Judge evaluates silently
-  → Controller gives Judge decision only to Red
-  → Red asks next follow-up
-  → repeat
-```
-
-用户可以选择实时看到 Blue 答案，也可以只在 Round 结束后查看完整 transcript。Red 不应因为 Blue 第一次答到关键词就切题；要验证这个答案是否能承受下一层约束。
-
-## Mode C — Autonomous Agent
-
-至少维护三个独立角色上下文：Red、Blue、Judge。建议 Controller 使用状态机：
+单一 ChatGPT conversation 内按程序性角色隔离运行：
 
 ```text
 INIT
-→ CLAIM_MINING
-→ SELECT_ATTACK
+→ CLAIM_OR_SCENARIO_SELECTION
 → RED_ASK
 → BLUE_ANSWER
-→ JUDGE
-→ CONTINUE_CHAIN | NEXT_CLAIM | CLOSE
-→ ARCHIVE
+→ VERIFY_SOURCE_AND_DECISION_IMPACT
+→ CONTINUE_CHAIN | NEXT_SCENARIO | CLOSE
 ```
 
-Autonomous 模式允许 Red 在开始前检索批准的 interview corpus，并生成一个**私有的 pressure model**；这个中间物不得暴露给 Blue。
+同一 conversation 不是密码学隔离。CHATGPT_AUTO 适合快速发现 Gap；高严重度 Architecture / Evidence / Ownership Finding 不因 Red 与 Blue 同意就自动成立。
 
-Autonomous 模式不得自行：
+## AGENT_AUTO
+
+Controller 为 Red、Blue 和 Verifier 创建独立 context。适合正式 Closed-book 验收与高严重度 Finding retest。
+
+AGENT_AUTO 可以让 Red 在开始前读取批准的 interview corpus 或当前平台资料形成私有 pressure model。该内容不得进入 Blue。
+
+两种模式都不得自动：
 
 - 修改 Zuno Architecture；
 - 修改简历；
-- 创建实现 PR；
+- 创建业务实现；
 - 用外部材料补齐 Blue；
 - 把 Round Verdict 写成 Current Evidence。
 
-## 一次 Turn
+## Turn 记录
 
-每个 Turn 内部至少记录：
+每个 Turn 至少记录：
 
 ```text
 turn_id
-claim_under_test
+scenario_or_claim
 attack_angle
 red_question
 red_hidden_intent
 expected_evidence
 blue_answer
 blue_source_trace
-judge_verdict
-judge_gap_type
+verifier_result
+finding_type
 next_action
 ```
 
-对候选人只展示 `red_question`；是否展示 `blue_answer` 取决于 mode。
+## 连续追问
 
-## 连续追问原则
+Red 根据回答形状继续：
 
-Red 问完后先检查 Blue 的**回答形状**：
-
-- 只有名词，没有机制 → 追输入 / 状态 / Owner / 接口；
-- 有方案，没有原因 → 追约束 / baseline / alternative / cost；
-- 说“我们” → 追个人 Ownership；
-- 说“自研” → 追 Build / Buy / Extend / Defer；
-- 说“支持恢复” → 注入 crash / timeout / duplicate / late result；
-- 说“高并发 / 高性能” → 追负载模型、瓶颈、数据和测量；
-- 说“效果更好” → 追 baseline、dataset、metric、ablation、置信区间或失败样本；
-- 说“权限控制” → 追长期任务权限变化和 TOCTOU；
-- 说“重试” → 追幂等、重复副作用和 Unknown outcome；
-- Current / Target 混淆 → 要求重新分层。
-
-具体攻击图见 `attack-model.md`。
+- 只有名词 → 回到实际输入、动作、Owner、失败结果；
+- 有方案没有原因 → 追 baseline、约束、alternative、cost；
+- 说“我们” → 追 Personal Ownership；
+- 说“自研” → 追 Build / Buy / Extend；
+- 说“恢复” → 注入 crash / duplicate / late result；
+- 说“性能/高并发” → 追 workload、瓶颈和测量；
+- 说“效果更好” → 追 baseline、dataset、metric、ablation、failure case；
+- 说“权限” → 追长任务权限变化；
+- 说“重试” → 追 idempotency 和 Unknown external outcome；
+- Current / Target 混淆 → 要求重新分层；
+- 已证明简单方案足够 → 停止增加复杂度。
 
 ## 停止条件
 
-单个 Claim 在以下任一条件满足时结束：
+单链在以下情况结束：
 
-- Blue 能稳定回答事实、原因、机制、故障、Trade-off、Evidence 和 Ownership；
-- 已出现足够明确的 Gap，继续追问只会重复同一缺口；
-- 允许文档本身没有更多信息；
-- 问题已经越出目标岗位 / Round 范围。
+- Blue 已覆盖事实、原因、机制、故障、Trade-off、Evidence 与 Ownership；
+- 已形成明确 Finding，继续追问只重复同一缺口；
+- 允许文档没有更多信息；
+- 问题越出目标岗位或业务范围；
+- 后续追问只会产生 trivia 而不改变决策。
 
-整个 Round 在达到目标 Turn、时间预算、Claim 覆盖或连续两条高严重度 Gap 后可以结束。
+## Round 产物
 
-## Round 结束
-
-Round 结束后 Judge 输出：
-
-- 面试官 persona；
-- 被攻击的简历 Claim；
-- 每条攻击链；
-- PASS / PARTIAL / FAIL / UNSUPPORTED_CLAIM；
-- 最危险 Gap；
-- 30 秒 / 90 秒 / 3 分钟 interview extractability；
-- 哪些 Gap 属于 Resume、Narrative、Docs、Architecture、Evidence、Ownership 或 Measurement；
-- Retest 应使用的不同问法。
-
-然后：
+长期归档只要求：
 
 ```text
-raw Round → docs/maintenance/history/red-blue/
-accepted Gap → independent fix task
-fix merged → reread main
-Red Retest with different wording
+manifest.yaml
+transcript.md
+findings.md
 ```
 
-历史 Round 本身不拥有 Architecture Truth。
+`findings.md` 对重复问题去重，并记录 severity、decision impact、source support、evidence needed 和 retest scenario。
+
+Finding 典型分类：
+
+```text
+NARRATIVE_GAP
+DOC_GAP
+ARCHITECTURE_GAP
+TRADEOFF_GAP
+EVIDENCE_GAP
+IMPLEMENTATION_GAP
+OWNERSHIP_GAP
+MEASUREMENT_GAP
+PROJECT_REALITY_GAP
+RESUME_CLAIM_RISK
+SIMPLIFICATION_OPPORTUNITY
+```
+
+Round 完成后归档到 `docs/red-blue/rounds/<round-id>/`。旧手工/早期自动 Round 只在 `docs/red-blue/archive/legacy/` 保存。
+
+Findings 必须通过独立任务写回 Project / Architecture / Modules / Decisions / Evidence / Resume；历史 Round 本身不拥有 Architecture Truth。

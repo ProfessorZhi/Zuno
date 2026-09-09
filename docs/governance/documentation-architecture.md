@@ -3,78 +3,60 @@
 status: canonical-documentation-architecture
 owner: Documentation Governance Owner
 
-## 1. Canonical domains
+## 1. Physical layout
 
-```yaml
-system_story:
-  project:
-    owns: [history, project_context, team_context, personal_ownership, project_unknowns]
-  architecture:
-    owns: [target_cross_cutting_architecture, authority_model, recovery_model]
-  modules:
-    owns: [target_responsibility_decomposition, module_contracts, module_state_and_recovery]
-knowledge_control:
-  decisions:
-    owns: [accepted_design_rationale]
-  evidence:
-    owns: [current_code_test_trace_eval_runtime_evidence]
-  governance:
-    owns: [provenance, ownership_rules, documentation_rules, machine_routing, validation]
-```
-
-No seventh canonical domain may override these owners.
-
-## 2. Human / Machine projection
-
-```yaml
-human_view:
-  purpose: build_mental_model_and_support_interview_explanation
-  preferred_content:
-    - real_scenario
-    - baseline
-    - failure_of_baseline
-    - design_causality
-    - normal_flow
-    - failure_and_recovery
-    - tradeoff
-    - simplification_condition
-machine_view:
-  purpose: implementation_review_and_agent_navigation
-  preferred_content:
-    - owner
-    - authoritative_fact
-    - contract
-    - version
-    - completion_proof
-    - idempotency
-    - persistence
-    - retry_replan_reconcile
-    - security
-    - failure_matrix
-    - source_map
-```
-
-Human prose may change structure. Machine reference may change indexing. Neither may change Architecture Owner, Authority, Contract semantics, Recovery semantics, Security Authority, Current/Target or Evidence level without the corresponding canonical change.
-
-## 3. Truth layers
+`docs/` uses eight top-level directories because eight long-lived responsibilities need distinct navigation. Physical layout does not imply equal truth authority.
 
 ```text
-History  -> project/
-Target   -> architecture/ + modules/
-Decision -> decisions/
-Current  -> evidence/
-Rules    -> governance/
+System & Review
+project/        project history, context, team/personal participation
+architecture/   accepted Target cross-cutting architecture
+modules/        accepted Target responsibility decomposition
+red-blue/       adversarial review method and archived review rounds
+
+Trust & Evolution
+research/       upstream research, algorithms, court/project background, platform baselines
+decisions/      accepted architectural rationale
+evidence/       Current code/test/trace/eval/runtime evidence
+governance/     provenance, ownership, documentation rules, routing, workflow, operations
 ```
 
-Research is upstream input. Maintenance is workflow/history support. Neither becomes Current or Target by presence alone.
+There is no `maintenance/` top-level domain. Agent/GitHub workflow and operational runbooks are governance responsibilities. Red / Blue has its own top-level review domain because it has an independent lifecycle, source policy and archive, while remaining non-authoritative for Project, Architecture and Current Evidence.
 
-## 4. Module decomposition
+## 2. Truth ownership
 
-The Documentation Architecture does not freeze module count.
+```yaml
+history:
+  owner: docs/project/
+target_cross_cutting_architecture:
+  owner: docs/architecture/
+target_responsibility_decomposition:
+  owner: docs/modules/
+accepted_design_rationale:
+  owner: docs/decisions/
+current_evidence:
+  owner: docs/evidence/
+rules_and_provenance:
+  owner: docs/governance/
+upstream_research:
+  owner: docs/research/
+  authority_limit: cannot_raise_target_or_current
+adversarial_review:
+  owner: docs/red-blue/
+  authority_limit: findings_require_independent_acceptance
+```
 
-Current module numbering is a Target Architecture baseline, not a documentation invariant. A module should exist only when a durable responsibility boundary justifies it. Merge/split requires architecture rationale, migration impact and semantic-alignment review.
+Research and Red / Blue are canonical locations for their own artifacts but are not additional owners of system truth. A paper, external platform feature, Red concern, Blue proposal or archived Round cannot modify Target or Current by existing in the repository.
 
-## 5. Navigation contracts
+## 3. Human / Machine projection
+
+Human-facing Project, Architecture and Module Part A documents build the mental model. Their preferred content is scenario, baseline, failure, causality, normal flow, failure/recovery, alternative, trade-off and simplification condition. Internal object names appear after the concept has been explained.
+
+Engineering references compress accepted semantics into Owner, Authority, Contract, Version, Completion Proof, Idempotency, Persistence, Retry/Replan/Reconcile, Security, Failure Matrix and Source Map.
+
+Human prose may change structure. Machine references may change indexing. Neither may silently change Architecture Owner, Authority, Contract semantics, Recovery semantics, Security Authority, Current/Target level, Evidence status or Personal Ownership.
+
+## 4. Default reading paths
 
 Human default:
 
@@ -86,6 +68,8 @@ docs/README.md
 → selected Module Part A
 → evidence/README.md
 ```
+
+Research is pulled in only when a claim needs its lineage or an external baseline. Red / Blue is intentionally excluded from first reading: the book must stand on its own before adversarial review begins.
 
 Agent implementation default:
 
@@ -99,67 +83,85 @@ architecture/reference.md
 → code/test/schema/migration
 ```
 
-## 6. Current compatibility paths
+Project-fact or resume-ownership work additionally reads Project reference and Governance provenance.
 
-`docs/research/`, `docs/maintenance/`, and `docs/terminology.md` remain at their current paths during migration to avoid broad link churn. Their semantic ownership is subordinate to the six canonical domains:
+## 5. Module decomposition
 
-- research -> upstream reference for Project / Architecture;
-- maintenance -> operational appendix under Governance responsibility;
-- terminology -> cross-document vocabulary governed by Governance.
+Documentation Architecture does not freeze module count. Current numbering reflects the accepted Target decomposition at this point in architecture history. Merge/split requires an Architecture Revision or accepted ADR with migration impact and semantic-alignment review.
 
-Physical migration is optional and must not duplicate facts.
+A logical responsibility boundary is not automatically a Python package, worker, process, container or network service.
 
-## 7. Architecture reasoning contract
+## 6. Research boundary
 
-Documentation must preserve the reasoning that produced an architecture, not only the final decomposition.
+`research/` stores evidence and reasoning inputs such as LIPLAB/Jidong Ge research lineage, legal capability algorithms, court-project background, and current generic-agent-platform baselines.
 
-For an important Target design, the preferred reasoning chain is:
+The trace should be recoverable as:
+
+```text
+Research Problem
+→ Research Artifact
+→ input/output/scope/evaluation
+→ Engineering Gap
+→ stable Capability semantics or architecture concern
+→ Target responsibility
+→ Current/Target/Unknown
+→ Evidence
+```
+
+Missing links stay `UNVERIFIED`. Research cannot manufacture implementation status, production readiness, personal ownership or a requirement that does not exist in the business scenario.
+
+## 7. Red / Blue boundary
+
+Red / Blue is a review system, not an architecture author.
+
+The normal sequence is:
+
+```text
+Part A reaches independent readable quality
+→ Red attacks concrete business scenarios, substitutes and failure windows
+→ Blue answers closed-book from accepted docs/evidence or concedes a gap
+→ Round produces findings
+→ findings are classified
+→ independent Writing / Architecture / Evidence / Ownership / Simplification work
+→ accepted change enters the corresponding owner
+→ retest with different wording/scenario
+```
+
+Formal execution modes are only:
+
+```text
+CHATGPT_AUTO
+AGENT_AUTO
+```
+
+A user may interrupt either mode, but human participation is not a third execution mode.
+
+Red should maximize information gain, not question count. A useful attack connects a stakeholder goal to a concrete stimulus, environment, expected response, unacceptable consequence, current design response, substitute and evidence requirement. It should prefer business failures such as stale evidence, provider mismatch, late results, ambiguous external effects, authorization changes, cost/complexity or unsupported ownership claims over internal terminology trivia.
+
+Blue protects the project goal, not the current architecture. It may conclude that a generic platform is sufficient, a mechanism should be deleted, an Architecture Revision is needed, or available evidence is insufficient.
+
+LLM agreement is not evidence. Because Red and Blue may share model biases, high-severity findings require source traceability and, for formal acceptance, independent evidence or an isolated `AGENT_AUTO` retest where appropriate.
+
+## 8. Architecture reasoning contract
+
+Important Target decisions should preserve a recoverable chain:
 
 ```text
 stakeholder / business concern
 → concrete scenario and failure consequence
 → simplest viable baseline
-→ quality attribute or authority constraint exposed by the scenario
+→ constraint exposed by the scenario
 → candidate tactic / boundary / reuse option
-→ rejected alternatives
-→ chosen decision
+→ considered alternative
+→ chosen direction
 → trade-off and new failure surface
 → measurement / evidence needed
 → revisit, merge or deletion condition
 ```
 
-This is a reasoning contract, not a Markdown template. A document may use different headings and paragraph order as long as a reviewer can recover the chain.
+This is not a Markdown template. It is a test for whether the architecture can be explained causally without relying on internal nouns.
 
-Architecture design must not be inferred from technology inventory. Framework capability, architectural pattern, module name, deployment topology, or an already-implemented mechanism is not sufficient justification by itself. The design must identify which concrete scenario or quality constraint it protects.
-
-Architecture Story and Architecture Design use the same scenarios for different purposes:
-
-- Human Narrative uses scenarios to preserve causality and help stakeholders build the correct mental model.
-- Architecture reasoning uses scenarios to make quality attributes, authority boundaries, tactics and trade-offs explicit.
-- Engineering Reference compresses the accepted result into Owner, Contract, State, Version, Recovery and Security semantics.
-- ADR preserves the durable rationale and rejected alternatives.
-- Evidence determines what is Current and what remains Target or Measurement Needed.
-
-Views and diagrams are concern-driven projections. No single diagram is expected to explain fact authority, runtime control, recovery, deployment and evolution simultaneously. A view should state the concern it helps answer and must not become a second source of Architecture Truth.
-
-Research supporting this governance direction is recorded in `docs/research/documentation-narrative-blueprint.md`. Research can justify the method used to reason about and communicate architecture; it cannot prove Zuno implementation status, production readiness, quality gains or personal ownership.
-
-## 8. Scenario-driven architecture review contract
-
-Architecture review has two different jobs and should not collapse them into one late-stage checklist.
-
-Before a design is mature, review should discover and prioritize the scenarios that actually drive architecture. The useful output is not a generic list of qualities such as “reliable, secure, scalable”, but a small set of concrete situations in which a stakeholder can state the stimulus, current environment, required response and unacceptable failure consequence. Zuno can borrow the intent of Quality Attribute Workshop-style scenario discovery without adopting QAW as a mandatory ceremony.
-
-For example:
-
-```text
-new evidence arrives while a long analysis is running
-→ old plan assumptions may be stale
-→ the system must not silently admit a result based on superseded inputs
-→ version / freshness / replan semantics become architecture drivers
-```
-
-After a Target design exists, review changes purpose. It should examine how the proposed boundaries realize the important scenarios and identify sensitivity points, trade-offs and risks. Zuno can borrow the intent of ATAM-style analysis without turning every review into a formal ATAM workshop.
+Scenario-driven review can borrow the intent of QAW/ATAM: discover quality-driving scenarios early, then use a mature design to identify sensitivity points, trade-offs and risks. Zuno does not require formal QAW or ATAM ceremonies.
 
 A useful review trace is:
 
@@ -167,20 +169,22 @@ A useful review trace is:
 prioritized scenario
 → architectural response
 → sensitivity point
-→ competing quality / authority concern
+→ competing authority / quality concern
 → risk or trade-off
 → evidence needed
 → accept, revise, simplify or defer
 ```
 
-A sensitivity point is a design choice whose change materially affects an important quality or authority property. A trade-off point improves one concern while making another harder. These concepts should be expressed in Zuno's business language before architecture jargon.
+Single Controller, independent services, GraphRAG, Reflection, persistent Multi-Agent or Native Runtime remain examples of measurement-gated choices. Existing implementation does not grant permanence.
 
-Examples include:
+## 9. Governance-owned operational material
 
-- Single Controller simplifies PlanVersion causality and recovery, while concentrating global control into one logical writer. It should be revisited if measured control-plane throughput or availability becomes a real bottleneck rather than because distributed control is fashionable.
-- Independent services can improve isolation or independent scaling, while adding network failure, deployment and consistency surfaces. A logical module is not promoted to a service without a measured operational constraint.
-- Stronger Agentic mechanisms can improve coverage on some task classes, while increasing cost, latency and behavioral variance. They remain measurement-gated against simpler baselines.
+Cross-document terminology lives at `docs/governance/terminology.md`.
 
-ADR capture follows the same economy. Decisions should preserve context, driver, considered alternatives, chosen direction, consequences, evidence needed and revisit criteria when those facts are important for future change. ADRs should not become a second full architecture specification or a transcript of every discussion. The purpose is to prevent rationale loss while keeping decision maintenance cheap enough that the record remains alive.
+Human Agent/GitHub workflow lives under `docs/governance/workflows/`.
 
-The corresponding research basis is maintained in `docs/research/documentation-narrative-blueprint.md`. In particular, scenario-based QAW / ATAM literature supports early quality-scenario discovery and later sensitivity / trade-off analysis, while architectural-decision research supports preserving rationale and rejected alternatives. These methods inform Zuno review discipline; they do not raise any Target statement to Current evidence.
+Operational migration and recovery runbooks live under `docs/governance/operations/`. A runbook can describe how to operate a mechanism; its existence does not prove Production Readiness.
+
+## 10. Migration rule
+
+Physical moves must not create duplicate truth. During migration, update repository navigation, `.agent` routing, validators and internal links in the same PR. Old compatibility paths should be removed once all supported routes are updated instead of being kept indefinitely as parallel entrypoints.

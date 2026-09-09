@@ -137,9 +137,7 @@ def validate_source(content: str) -> list[str]:
             errors.append(f"canonical view has no Mermaid diagram: {title}")
 
     if content.count("```mermaid") != len(EXPECTED_VIEWS):
-        errors.append(
-            f"architecture visual source must contain exactly {len(EXPECTED_VIEWS)} Mermaid diagrams"
-        )
+        errors.append(f"architecture visual source must contain exactly {len(EXPECTED_VIEWS)} Mermaid diagrams")
 
     for term in (
         "Modular Python Backend",
@@ -194,11 +192,12 @@ def validate_taxonomy() -> list[str]:
         "docs/architecture/architecture.md",
         "docs/modules/README.md",
         "docs/evidence/README.md",
+        "docs/red-blue/README.md",
     ):
         if not (REPO_ROOT / relative_path).exists():
             errors.append(f"missing canonical project entrypoint: {relative_path}")
-    if not (REPO_ROOT / "docs/maintenance/history/red-blue/README.md").exists():
-        errors.append("missing Red/Blue history archive README")
+    if not (REPO_ROOT / "docs/red-blue/archive/legacy/README.md").exists():
+        errors.append("missing Red/Blue legacy archive README")
     return errors
 
 
