@@ -26,7 +26,7 @@ def test_presentation_pair_remains_intact() -> None:
     assert (REPO_ROOT / "docs/architecture/architecture.html").exists()
 
 
-def _rich_architecture(prefix: str = "", part_b: str | None = None) -> str:
+def _rich_human(prefix: str = "") -> str:
     parts = [
         "# Zuno 目标架构\n\n",
         "## Part A — Human Narrative（人类技术叙事）\n\n",
@@ -42,56 +42,72 @@ def _rich_architecture(prefix: str = "", part_b: str | None = None) -> str:
                 "The prose is intentionally complete enough that an engineer can understand why the boundary exists before reading module contracts. "
                 "A simpler design remains valid whenever the stronger mechanism has no demonstrated need, and implementation detail stays outside Part A.\n\n"
             )
-    parts.extend(
-        [
-            "## Part B — Engineering / Agent Reference（工程 / Agent 参考）\n\n",
-            part_b
-            or (
-                "### B1. Scope / Global Invariants\n\n"
-                "Owner, Authority, Completion Proof, Recovery and Current/Target are indexed here for machine consumption.\n"
-            ),
-        ]
-    )
+    parts.append("---\n\nEngineering reference: [`reference.md`](reference.md).\n")
     return "".join(parts)
 
 
-def test_writing_model_accepts_substantial_dual_view_architecture() -> None:
-    assert _load().verify_text(_rich_architecture()) == []
+def _rich_reference(body: str | None = None) -> str:
+    return (
+        "# Overall Architecture Engineering Reference\n\n"
+        "## Part B — Engineering / Agent Reference（工程 / Agent 参考）\n\n"
+        + (
+            body
+            or (
+                "### B1. Scope / Global Invariants\n\n"
+                "Owner, Authority, Completion Proof, Recovery and Current/Target are indexed here for machine consumption.\n"
+            )
+        )
+    )
+
+
+def test_writing_model_accepts_substantial_split_architecture() -> None:
+    verifier = _load()
+    assert verifier.verify_architecture_human(_rich_human()) == []
+    assert verifier.verify_engineering_reference(_rich_reference(), "architecture/reference.md", module=False) == []
 
 
 def test_writing_model_rejects_missing_target_architecture_title() -> None:
-    errors = _load().verify_text(
-        "## Part A — Human Narrative\nA concrete user need.\n\n"
-        "## Part B — Engineering / Agent Reference\nOwner.\n"
+    errors = _load().verify_architecture_human(
+        "## Part A — Human Narrative\nA concrete user need.\n"
     )
     assert any("missing Zuno target architecture title" in error for error in errors)
 
 
-def test_writing_model_rejects_missing_part_b_reference() -> None:
-    document = _rich_architecture().split("## Part B — Engineering / Agent Reference", 1)[0]
-    assert any("Part B Engineering / Agent Reference" in error for error in _load().verify_text(document))
+def test_writing_model_rejects_part_b_inside_human_readme() -> None:
+    document = _rich_human() + "\n## Part B — Engineering / Agent Reference\nOwner.\n"
+    errors = _load().verify_architecture_human(document)
+    assert any("must not contain Part B" in error for error in errors)
 
 
-def test_machine_dense_part_b_does_not_reduce_part_a_readability() -> None:
-    machine_reference = (
+def test_engineering_reference_requires_part_b() -> None:
+    errors = _load().verify_engineering_reference(
+        "# Engineering reference without the required section\n",
+        "architecture/reference.md",
+        module=False,
+    )
+    assert any("missing Part B Engineering / Agent Reference" in error for error in errors)
+
+
+def test_machine_dense_reference_does_not_reduce_part_a_readability() -> None:
+    verifier = _load()
+    human = _rich_human()
+    reference = _rich_reference(
         "### B1. Scope / Global Invariants\n\n"
         "TARGET_ONLY CURRENT_STATE MODULE_STATE NOT_READY UNKNOWN requirement_id canonical_question.\n"
         "### B2. Authority / Ownership Matrix\n\nOwner -> Authority -> Receipt -> Recovery.\n"
     )
-    document = _rich_architecture(part_b=machine_reference)
-    assert _load().verify_text(document) == []
-    assert _load().warnings_for_text(document) == []
+    assert verifier.verify_architecture_human(human) == []
+    assert verifier.verify_engineering_reference(reference, "architecture/reference.md", module=False) == []
+    assert verifier.warning_for_human(human, "architecture README") == []
 
 
 def test_writing_model_rejects_thin_architecture_part_a() -> None:
     document = (
         "# Zuno 目标架构\n\n"
         "## Part A — Human Narrative（人类技术叙事）\n\n"
-        "### A1. Design\n\nA short explanation of the system.\n\n"
-        "## Part B — Engineering / Agent Reference（工程 / Agent 参考）\n\n"
-        "### B1. Scope / Global Invariants\n\nOwner facts.\n"
+        "### A1. Design\n\nA short explanation of the system.\n"
     )
-    errors = _load().verify_text(document)
+    errors = _load().verify_architecture_human(document)
     assert any(
         "too thin" in error
         or "broader conceptual coverage" in error
@@ -101,12 +117,12 @@ def test_writing_model_rejects_thin_architecture_part_a() -> None:
 
 
 def test_machine_markers_warn_without_blocking_when_part_a_is_substantial() -> None:
-    module = _load()
-    document = _rich_architecture(
+    verifier = _load()
+    document = _rich_human(
         "TARGET_ONLY CURRENT_STATE MODULE_STATE NOT_READY UNKNOWN requirement_id canonical_question values remain hidden from the reader. "
     )
-    assert module.verify_text(document) == []
-    assert module.warnings_for_text(document)
+    assert verifier.verify_architecture_human(document) == []
+    assert verifier.warning_for_human(document, "architecture README")
 
 
 def test_project_narrative_meets_regression_floor() -> None:
@@ -121,23 +137,26 @@ def test_project_narrative_meets_regression_floor() -> None:
 def test_architecture_part_a_meets_conceptual_depth_floor() -> None:
     verifier = _load()
     text = (REPO_ROOT / "docs/architecture/README.md").read_text(encoding="utf-8")
-    layers = verifier._split_architecture_layers(text)
-    assert layers is not None
-    part_a, part_b = layers
-    assert part_b.strip()
+    assert verifier.verify_architecture_human(text) == []
+    part_a = text[text.index(verifier.ARCHITECTURE_PART_A_HEADING) + len(verifier.ARCHITECTURE_PART_A_HEADING):]
     assert verifier._nonspace_chars(part_a) >= verifier.ARCHITECTURE_PART_A_MIN_NONSPACE_CHARS
     assert len(verifier._prose_paragraphs(part_a)) >= verifier.ARCHITECTURE_PART_A_MIN_PROSE_PARAGRAPHS
     assert len(re.findall(r"(?m)^###\s+", part_a)) >= verifier.ARCHITECTURE_PART_A_MIN_SUBSECTIONS
 
+    reference = (REPO_ROOT / "docs/architecture/reference.md").read_text(encoding="utf-8")
+    assert verifier.verify_engineering_reference(reference, "docs/architecture/reference.md", module=False) == []
+
 
 def test_all_nine_module_part_a_sections_meet_current_depth_floor() -> None:
     verifier = _load()
-    for filename in verifier.MODULE_FILES:
-        text = (REPO_ROOT / "docs/modules" / filename).read_text(encoding="utf-8")
-        layers = verifier._split_module_layers(text)
-        assert layers is not None, filename
-        part_a, _part_b, _part_c = layers
-        assert verifier._nonspace_chars(part_a) >= verifier.MODULE_PART_A_MIN_NONSPACE_CHARS, filename
-        assert len(verifier._prose_paragraphs(part_a)) >= verifier.MODULE_PART_A_MIN_PROSE_PARAGRAPHS, filename
-        assert len(re.findall(r"(?m)^###\s+", part_a)) >= verifier.MODULE_PART_A_MIN_SUBSECTIONS, filename
-        assert "### 当前、目标与缺口" in part_a, filename
+    for directory in verifier.MODULE_DIRS:
+        human = (REPO_ROOT / "docs/modules" / directory / "README.md").read_text(encoding="utf-8")
+        reference = (REPO_ROOT / "docs/modules" / directory / "reference.md").read_text(encoding="utf-8")
+        assert verifier.verify_module_human(human, f"{directory}/README.md") == []
+        assert verifier.verify_engineering_reference(reference, f"{directory}/reference.md", module=True) == []
+
+        part_a = human[human.index(verifier.MODULE_PART_A_HEADING) + len(verifier.MODULE_PART_A_HEADING):]
+        assert verifier._nonspace_chars(part_a) >= verifier.MODULE_PART_A_MIN_NONSPACE_CHARS, directory
+        assert len(verifier._prose_paragraphs(part_a)) >= verifier.MODULE_PART_A_MIN_PROSE_PARAGRAPHS, directory
+        assert len(re.findall(r"(?m)^###\s+", part_a)) >= verifier.MODULE_PART_A_MIN_SUBSECTIONS, directory
+        assert "### 当前、目标与缺口" in part_a, directory
