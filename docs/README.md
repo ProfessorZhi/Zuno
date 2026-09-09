@@ -11,9 +11,9 @@ red-blue/       怎样用业务场景、替代方案和故障反例持续压力�
 
 Trust & Evolution
 research/       哪些论文、算法、平台能力和法院背景可以作为设计输入
- decisions/     哪些长期架构取舍已经正式接受，以及为什么接受
- evidence/      今天的代码、测试、Trace、Eval 和运行实际证明了什么
- governance/    谁拥有事实、文档怎样写、Agent 怎样读取、修改和验证
+decisions/      哪些长期架构取舍已经正式接受，以及为什么接受
+evidence/       今天的代码、测试、Trace、Eval 和运行实际证明了什么
+governance/     谁拥有事实、文档怎样写、Agent 怎样读取、修改和验证
 ```
 
 `red-blue/` 是评审系统，不是新的 Architecture Truth Owner。`research/` 是上游依据，也不拥有 Target 或 Current。Project、Architecture、Modules、Decisions、Evidence 和 Governance 继续保持各自唯一事实边界。
@@ -22,9 +22,9 @@ research/       哪些论文、算法、平台能力和法院背景可以作为�
 
 第一次接触 Zuno，只走一条主线：
 
-1. [`project/project.md`](./project/project.md) —— 从天津智慧司法与 LIPLAB 研究/工程背景进入，理解项目为什么存在、已有系统是什么、团队和个人实际参与到哪里。
-2. [`architecture/architecture.md`](./architecture/architecture.md) Part A —— 从最简单的 Generic Agent Host + Legal RAG + Research Capability baseline 开始，看材料版本、专业资格、正式业务事实、长任务、现实副作用和持续授权怎样逐步逼出新的事实边界。
-3. [`modules/README.md`](./modules/README.md) —— 沿同一个法律任务进入局部责任，选择相关 Module Part A 深入。
+1. [`project/README.md`](./project/README.md) —— 从天津智慧司法与 LIPLAB 研究/工程背景进入，理解项目为什么存在、已有系统是什么、团队和个人实际参与到哪里。
+2. [`architecture/README.md`](./architecture/README.md) Part A —— 从最简单的 Generic Agent Host + Legal RAG + Research Capability baseline 开始，看材料版本、专业资格、正式业务事实、长任务、现实副作用和持续授权怎样逐步逼出新的事实边界。
+3. [`modules/README.md`](./modules/README.md) —— 沿同一个法律任务进入局部责任，再按 `application/`、`domain/`、`knowledge/`、`runtime/`、`capability/`、`effects/`、`model-gateway/`、`security/`、`evaluation/` 进入对应 Module Part A。
 4. [`evidence/README.md`](./evidence/README.md) —— 回到 Current，检查哪些 Target 今天已经由代码、测试或可复现运行证明。
 
 这条路径必须能够连续形成：
@@ -51,9 +51,9 @@ Engineering / Agent View 保存精确规则：Owner、Authority、Contract、Ver
 
 ```text
 architecture/reference.md
-→ architecture.md Part B
+→ architecture/README.md Part B
 → modules/reference.md
-→ selected Module Part B / Part C
+→ selected Module README.md Part B / Part C
 → decisions/
 → evidence/
 → code / schema / migration / tests
@@ -72,7 +72,7 @@ architecture/reference.md
 | `evidence/` | 今天真正实现和测到了哪里 | Target 设计和历史 Ownership |
 | `governance/` | 来源、Owner、写作、术语、Agent workflow、Operations 和验证规则 | 业务 Target 本身 |
 
-文档架构不冻结模块数量。当前九个逻辑责任域仍是现有 Target Architecture 的设计结果；未来合并或拆分必须通过 Architecture Revision / ADR，而不是为了目录好看。
+模块目录名表达稳定责任语义，不编码永久顺序。当前 Architecture 仍将这些责任编号为 01–09，便于与 ADR、历史审查和现有术语对应；编号属于当前 Target decomposition，不属于文件系统 schema。未来合并或拆分必须通过 Architecture Revision / ADR，而不是为了目录好看。
 
 ## Current / Target / History / Unknown
 
