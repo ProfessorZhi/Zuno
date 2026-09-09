@@ -141,9 +141,9 @@ def test_all_nine_modules_have_human_first_b1_b14_part_c_and_detail_candidate() 
         assert "## Part C — Cross-Module Consistency" not in human[number], number
         assert "implementation: not-authorized" in human[number], number
         assert "deepening: cross-module-consistency-v2" in human[number], number
+        assert _has_candidate_status(human[number]), number
 
         assert "## Part B — Engineering / Agent Reference" in engineering[number], number
-        assert _has_candidate_status(engineering[number]), number
         for marker in B_SECTIONS + C_SECTIONS + DETAIL_CANDIDATE_MARKERS:
             assert marker in engineering[number], f"{number}: {marker}"
 
