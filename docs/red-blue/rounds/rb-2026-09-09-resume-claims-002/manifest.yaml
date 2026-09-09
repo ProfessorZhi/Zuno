@@ -1,0 +1,35 @@
+round_id: rb-2026-09-09-resume-claims-002
+state: CLOSED
+mode: CHATGPT_AUTO
+zuno_base_sha: 3c5e3ed414a59c94fd90818f6b359a5ac75df4a5
+resume_snapshot:
+  repository: ProfessorZhi/internship-work
+  commit_sha: 02fa954879dfdfb59f70b18ebd9d4b0e2b9b8033
+  path: resume/00_resume_versions/Zuno_v3+CodingAgent+SFTDPO_简历/Agent开发工程师／AI应用工程师+Zuno／CodingAgent／SFTDPO_事实对齐／可追问_简历草稿_v2.md
+target_role: Agent 开发工程师 / AI 应用工程师
+interview_stage: project-deep-dive / architecture-follow-up
+red_calibration: kernel-only
+blue_profile: canonical-part-a-first
+retest_of: rb-2026-09-09-resume-claims-001
+scenario_scope:
+  - personal ownership wording
+  - project identity / historical reality
+  - Current vs Target measurement wording
+blue_allowlist:
+  - docs/project/
+  - docs/architecture/
+  - docs/modules/
+  - docs/decisions/
+  - docs/evidence/
+  - allowed docs/governance/ facts
+max_turns: 3
+stop_condition: >-
+  Re-run the three prior decision-changing risks with the merged candidate resume.
+  Close when each previous finding has a stable resolved/remaining verdict.
+result: CLOSED_WITH_REMAINING_EVIDENCE_GAP
+finding_count: 1
+highest_severity: S2
+resolved_previous_findings:
+  - project identity resume risk
+  - measurement wording resume risk
+  - strong personal ownership wording risk
