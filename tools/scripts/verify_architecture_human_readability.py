@@ -111,12 +111,12 @@ def verify_architecture_human(text: str) -> list[str]:
     prose_paragraph_count = len(_prose_paragraphs(visible))
     if nonspace_chars < ARCHITECTURE_PART_A_MIN_NONSPACE_CHARS:
         errors.append(
-            "architecture Part A collapsed below the anti-index floor "
+            "architecture Part A is too thin and collapsed below the anti-index floor "
             f"({nonspace_chars} non-space chars < {ARCHITECTURE_PART_A_MIN_NONSPACE_CHARS})"
         )
     if prose_paragraph_count < ARCHITECTURE_PART_A_MIN_PROSE_PARAGRAPHS:
         errors.append(
-            "architecture Part A collapsed below the explanatory-prose floor "
+            "architecture Part A collapsed below the explanatory prose floor "
             f"({prose_paragraph_count} paragraphs < {ARCHITECTURE_PART_A_MIN_PROSE_PARAGRAPHS})"
         )
     return errors
@@ -144,9 +144,9 @@ def verify_module_human(text: str, label: str) -> list[str]:
     nonspace_chars = _nonspace_chars(visible)
     prose_paragraph_count = len(_prose_paragraphs(visible))
     if nonspace_chars < MODULE_PART_A_MIN_NONSPACE_CHARS:
-        errors.append(f"{label}: Part A collapsed below the anti-index floor ({nonspace_chars} < {MODULE_PART_A_MIN_NONSPACE_CHARS})")
+        errors.append(f"{label}: Part A is too thin and collapsed below the anti-index floor ({nonspace_chars} < {MODULE_PART_A_MIN_NONSPACE_CHARS})")
     if prose_paragraph_count < MODULE_PART_A_MIN_PROSE_PARAGRAPHS:
-        errors.append(f"{label}: Part A collapsed below the explanatory-prose floor ({prose_paragraph_count} < {MODULE_PART_A_MIN_PROSE_PARAGRAPHS})")
+        errors.append(f"{label}: Part A collapsed below the explanatory prose floor ({prose_paragraph_count} < {MODULE_PART_A_MIN_PROSE_PARAGRAPHS})")
     if not all(marker in visible for marker in ("Current", "Target", "Gap")):
         errors.append(f"{label}: Part A must preserve explicit Current / Target / Gap semantics")
     return errors
