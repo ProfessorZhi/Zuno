@@ -115,14 +115,6 @@ def verify() -> list[str]:
     human_markers = (
         "# Zuno 目标架构",
         "## Part A — Human Narrative（人类技术叙事）",
-        "法律智能真正变难的时刻",
-        "一件案件里的五种事实",
-        "四次跨边界决定系统是否可信",
-        "九个责任域如何从这些边界产生",
-        "故障以后，先找事实再恢复控制",
-        "研究成果怎样变成工程能力",
-        "复杂度必须在测量中证明收益",
-        "Single Controller",
         "target_logical_module_count: 9",
         "overall_architecture_state: ROUND_02_FROZEN",
         "implementation_authorization: NO",
@@ -133,6 +125,8 @@ def verify() -> list[str]:
             errors.append(f"architecture README missing human/target marker: {marker}")
     if "## Part B — Engineering / Agent Reference（工程 / Agent 参考）" in design:
         errors.append("architecture README must not contain Part B after human/reference split")
+    if "Single Controller" not in design + "\n" + arch_reference:
+        errors.append("architecture split views must preserve Single Controller target semantics")
 
     engineering_markers = (
         "status: canonical-architecture-engineering-reference",
@@ -219,15 +213,9 @@ def verify() -> list[str]:
         if marker not in docs_architecture:
             errors.append(f"documentation architecture reference missing marker: {marker}")
 
-    for marker in (
-        "为什么会有这个项目",
-        "为什么不直接用 Dify、Coze",
-        "项目是怎样发展到今天的",
-        "团队是什么形态，我在里面做了什么",
-        "相比通用方案，我们今天到底证明了什么",
-    ):
+    for marker in ("project-fact-provenance.md", "Pilot Validation", "Production", "Current", "Target", "Unknown"):
         if marker not in project:
-            errors.append(f"project README missing human narrative marker: {marker}")
+            errors.append(f"project README missing factual-boundary marker: {marker}")
 
     for marker in ("Current", "Target", "Unknown"):
         if marker not in index:

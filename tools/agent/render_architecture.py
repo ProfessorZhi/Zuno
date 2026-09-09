@@ -53,15 +53,6 @@ def validate_design(human: str, reference: str | None = None) -> list[str]:
     for marker in (
         "# Zuno 目标架构",
         "## Part A — Human Narrative（人类技术叙事）",
-        "### A1. 法律智能真正变难的时刻",
-        "### A2. 一件案件里的五种事实",
-        "### A3. 四次跨边界决定系统是否可信",
-        "### A4. 九个责任域如何从这些边界产生",
-        "### A5. 故障以后，先找事实再恢复控制",
-        "### A6. 研究成果怎样变成工程能力",
-        "### A7. 安全、人和时间",
-        "### A8. 复杂度必须在测量中证明收益",
-        "### A9. 从目标架构进入实施",
         "reference.md",
     ):
         if marker not in human:

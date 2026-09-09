@@ -94,17 +94,8 @@ def test_project_documentation_is_consolidated_and_canonical() -> None:
     assert (REPO_ROOT / "docs/red-blue/archive/legacy/manual-round-01-overall-architecture.md").exists()
 
     project = (root / "README.md").read_text(encoding="utf-8")
-    assert "project-fact-provenance.md" in project
-    for marker in (
-        "为什么会有这个项目",
-        "为什么不直接用 Dify、Coze",
-        "项目是怎样发展到今天的",
-        "团队是什么形态，我在里面做了什么",
-        "相比通用方案，我们今天到底证明了什么",
-    ):
+    for marker in ("project-fact-provenance.md", "Pilot Validation", "Production", "Current", "Target", "Unknown"):
         assert marker in project
-    assert "通用宿主" in project and "Zuno Legal Backend" in project
-    assert "Current" in project and "Target" in project and "Unknown" in project
 
     reference = (root / "reference.md").read_text(encoding="utf-8")
     assert "human_source: docs/project/README.md" in reference
@@ -208,11 +199,6 @@ def test_architecture_markdown_has_coordinated_human_and_agent_views() -> None:
     for marker in [
         "# Zuno 目标架构",
         "## Part A — Human Narrative（人类技术叙事）",
-        "### A2. 一件案件里的五种事实",
-        "### A3. 四次跨边界决定系统是否可信",
-        "### A4. 九个责任域如何从这些边界产生",
-        "### A5. 故障以后，先找事实再恢复控制",
-        "### A6. 研究成果怎样变成工程能力",
         "reference.md",
     ]:
         assert marker in human

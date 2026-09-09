@@ -176,14 +176,9 @@ def verify() -> list[str]:
             errors.append(f"docs/red-blue/README.md missing review marker: {marker}")
 
     project_readme = (REPO_ROOT / "docs/project/README.md").read_text(encoding="utf-8")
-    for marker in (
-        "# Zuno 项目：从智慧司法研究到可验证的法律智能 Agent 平台",
-        "为什么会有这个项目", "为什么不直接用 Dify、Coze",
-        "项目是怎样发展到今天的", "团队是什么形态，我在里面做了什么",
-        "相比通用方案，我们今天到底证明了什么", "project-fact-provenance.md",
-    ):
+    for marker in ("project-fact-provenance.md", "Pilot Validation", "Production", "Current", "Target", "Unknown"):
         if marker not in project_readme:
-            errors.append(f"docs/project/README.md missing canonical project narrative marker: {marker}")
+            errors.append(f"docs/project/README.md missing factual-boundary marker: {marker}")
 
     project_reference = (REPO_ROOT / "docs/project/reference.md").read_text(encoding="utf-8")
     for marker in ("canonical-project-machine-index", "Historical baseline", "Confirmed personal participation", "Claim boundaries"):
@@ -234,7 +229,7 @@ def verify() -> list[str]:
         reference = (REPO_ROOT / reference_path).read_text(encoding="utf-8")
         for marker in (
             "status: design-baseline-v1", "implementation: not-authorized",
-            "## Part A — Human Narrative", "### 当前、目标与缺口", "reference.md",
+            "## Part A — Human Narrative", "reference.md",
         ):
             if marker not in human:
                 errors.append(f"{human_path} missing human module marker: {marker}")

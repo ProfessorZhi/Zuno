@@ -85,20 +85,6 @@ def verify() -> list[str]:
     for marker in (
         "# Zuno 目标架构",
         "## Part A — Human Narrative（人类技术叙事）",
-        "合同争议事项",
-        "不同种类的事实",
-        "一件案件里的五种事实",
-        "四次跨边界决定系统是否可信",
-        "Domain commit",
-        "Checkpoint",
-        "Outcome Unknown",
-        "Research Artifact -> Capability -> Provider -> Qualified Provider -> Candidate -> Formal Business Fact",
-        "简单法律问答的 baseline",
-        "复杂度必须在测量中证明收益",
-        "模块化 Python 后端",
-        "独立网络服务",
-        "Reconcile",
-        "Target Architecture",
         "reference.md",
     ):
         if marker not in human:

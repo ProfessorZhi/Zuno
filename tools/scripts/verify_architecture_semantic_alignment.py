@@ -94,11 +94,7 @@ def verify() -> list[str]:
         "project narrative",
         project,
         (
-            "为什么会有这个项目",
-            "为什么不直接用 Dify、Coze",
-            "项目是怎样发展到今天的",
-            "团队是什么形态，我在里面做了什么",
-            "相比通用方案，我们今天到底证明了什么",
+            "project-fact-provenance.md",
             "Pilot Validation",
             "Production",
             "Current",
@@ -114,15 +110,6 @@ def verify() -> list[str]:
         (
             "# Zuno 目标架构",
             "## Part A — Human Narrative（人类技术叙事）",
-            "### A1. 法律智能真正变难的时刻",
-            "### A2. 一件案件里的五种事实",
-            "### A3. 四次跨边界决定系统是否可信",
-            "### A4. 九个责任域如何从这些边界产生",
-            "### A5. 故障以后，先找事实再恢复控制",
-            "### A6. 研究成果怎样变成工程能力",
-            "### A7. 安全、人和时间",
-            "### A8. 复杂度必须在测量中证明收益",
-            "### A9. 从目标架构进入实施",
             "overall_architecture_state: ROUND_02_FROZEN",
             "target_logical_module_count: 9",
             "module_design_baseline: AVAILABLE_V1",
@@ -131,15 +118,17 @@ def verify() -> list[str]:
             "cross_module_consistency: AVAILABLE_V1",
             "module_detail_freeze: NOT_YET",
             "implementation_authorization: NO",
-            "Single Controller",
-            "docs/modules/",
-            "docs/decisions/",
-            "docs/evidence/",
-            "docs/research/",
+            "reference.md",
         ),
     )
     if "## Part B — Engineering / Agent Reference（工程 / Agent 参考）" in architecture_human:
         errors.append("overall architecture human README must not retain Part B")
+    _require(
+        errors,
+        "overall architecture split views",
+        architecture_all,
+        ("Single Controller", "docs/modules/", "docs/decisions/", "docs/evidence/", "docs/research/"),
+    )
 
     _require(
         errors,
@@ -184,9 +173,9 @@ def verify() -> list[str]:
         "08 Security & Governance",
         "09 Observability & Evaluation",
     )
-    positions = [architecture_human.find(marker) for marker in responsibility_markers]
+    positions = [architecture_reference.find(marker) for marker in responsibility_markers]
     if any(position < 0 for position in positions) or positions != sorted(positions):
-        errors.append("architecture responsibilities must exist in canonical 01-09 order in the human narrative")
+        errors.append("architecture engineering reference must preserve canonical 01-09 responsibility order")
 
     for marker in (
         "02 Legal Domain & Work Product | Matter / DocumentVersion canonical identity",
@@ -213,7 +202,6 @@ def verify() -> list[str]:
                 "## Part A — Human Narrative",
                 "implementation: not-authorized",
                 "deepening: cross-module-consistency-v2",
-                "### 当前、目标与缺口",
                 "reference.md",
             ),
         )

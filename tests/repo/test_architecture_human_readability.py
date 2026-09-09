@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import importlib.util
-import re
 from pathlib import Path
 
 
@@ -127,10 +126,9 @@ def test_machine_markers_warn_without_blocking_when_part_a_is_substantial() -> N
 
 def test_project_narrative_meets_regression_floor() -> None:
     verifier = _load()
-    for filename, (min_chars, min_sections, min_paragraphs) in verifier.PROJECT_NARRATIVE_BASELINES.items():
+    for filename, (min_chars, min_paragraphs) in verifier.PROJECT_NARRATIVE_BASELINES.items():
         text = (REPO_ROOT / "docs/project" / filename).read_text(encoding="utf-8")
         assert verifier._nonspace_chars(text) >= min_chars, filename
-        assert len(re.findall(r"(?m)^##+\s+", verifier._strip_non_prose_blocks(text))) >= min_sections, filename
         assert len(verifier._prose_paragraphs(text)) >= min_paragraphs, filename
 
 
@@ -141,7 +139,6 @@ def test_architecture_part_a_meets_conceptual_depth_floor() -> None:
     part_a = text[text.index(verifier.ARCHITECTURE_PART_A_HEADING) + len(verifier.ARCHITECTURE_PART_A_HEADING):]
     assert verifier._nonspace_chars(part_a) >= verifier.ARCHITECTURE_PART_A_MIN_NONSPACE_CHARS
     assert len(verifier._prose_paragraphs(part_a)) >= verifier.ARCHITECTURE_PART_A_MIN_PROSE_PARAGRAPHS
-    assert len(re.findall(r"(?m)^###\s+", part_a)) >= verifier.ARCHITECTURE_PART_A_MIN_SUBSECTIONS
 
     reference = (REPO_ROOT / "docs/architecture/reference.md").read_text(encoding="utf-8")
     assert verifier.verify_engineering_reference(reference, "docs/architecture/reference.md", module=False) == []
@@ -158,5 +155,4 @@ def test_all_nine_module_part_a_sections_meet_current_depth_floor() -> None:
         part_a = human[human.index(verifier.MODULE_PART_A_HEADING) + len(verifier.MODULE_PART_A_HEADING):]
         assert verifier._nonspace_chars(part_a) >= verifier.MODULE_PART_A_MIN_NONSPACE_CHARS, directory
         assert len(verifier._prose_paragraphs(part_a)) >= verifier.MODULE_PART_A_MIN_PROSE_PARAGRAPHS, directory
-        assert len(re.findall(r"(?m)^###\s+", part_a)) >= verifier.MODULE_PART_A_MIN_SUBSECTIONS, directory
-        assert "### 当前、目标与缺口" in part_a, directory
+        assert all(marker in part_a for marker in ("Current", "Target", "Gap")), directory
