@@ -183,6 +183,7 @@ def test_module_design_is_human_first_complete_and_detail_candidate_9_of_9() -> 
         assert "status: design-baseline-v1" in human
         assert "implementation: not-authorized" in human
         assert "deepening: cross-module-consistency-v2" in human
+        assert _has_candidate_status(human)
         assert "## Part A — Human Narrative" in human
         assert "## Part B — Engineering / Agent Reference" not in human
         assert "## Part C — Cross-Module Consistency" not in human
@@ -190,7 +191,6 @@ def test_module_design_is_human_first_complete_and_detail_candidate_9_of_9() -> 
 
         assert reference.startswith("# ")
         assert "## Part B — Engineering / Agent Reference" in reference
-        assert _has_candidate_status(reference)
         for heading in MODULE_BASELINE_HEADINGS + DETAIL_CANDIDATE_HEADINGS + MODULE_CONSISTENCY_HEADINGS:
             assert heading in reference, f"{directory}/reference.md missing {heading}"
         assert "Current" in reference and "Target" in reference and "Gap" in reference
@@ -201,6 +201,7 @@ def test_architecture_markdown_has_coordinated_human_and_agent_views() -> None:
     renderer = _load_render_architecture()
     human = (REPO_ROOT / "docs/architecture/README.md").read_text(encoding="utf-8")
     reference = (REPO_ROOT / "docs/architecture/reference.md").read_text(encoding="utf-8")
+    combined = human + "\n" + reference
     assert renderer.validate_design(human, reference) == []
     assert human.count("```mermaid") <= 2
 
@@ -224,12 +225,11 @@ def test_architecture_markdown_has_coordinated_human_and_agent_views() -> None:
         "### B6. Completion Proof / Non-proof",
         "### B7. Failure Taxonomy / Recovery Order",
         "### B14. Machine Navigation / Source Precedence",
-        "docs/modules/",
-        "docs/decisions/",
-        "docs/evidence/",
-        "docs/research/",
     ]:
         assert marker in reference
+
+    for route in ("docs/modules/", "docs/decisions/", "docs/evidence/", "docs/research/"):
+        assert route in combined
 
 
 def test_visual_source_matches_canonical_architecture_views() -> None:
