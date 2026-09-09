@@ -1,4 +1,4 @@
-# Modules Machine Reference
+# Modules Engineering Reference
 
 status: canonical-module-router
 owner: Cross-module Architecture Owner
@@ -8,32 +8,42 @@ current_evidence: docs/evidence/
 
 ## Documentation rule
 
-`modules/` contains responsibility units produced by the Target Architecture. Documentation does not assume a permanent module count or permanent numbering in filesystem paths. The current accepted Target decomposition still uses responsibility numbers 01–09 in architecture prose and ADRs; the physical directories use stable semantic names. Future merge/split decisions require Architecture + ADR justification.
+`modules/` contains responsibility units produced by the Target Architecture. Documentation does not assume a permanent module count or permanent numbering in filesystem paths. The current accepted Target decomposition still uses responsibility numbers 01–09 in architecture prose and ADRs; physical directories use stable semantic names. Future merge/split decisions require Architecture + ADR justification.
+
+Each semantic module has two coordinated views:
+
+```text
+README.md      Human Narrative: why this responsibility exists and how it behaves
+reference.md   Part B Engineering Reference + Part C Cross-Module Consistency
+```
+
+The split changes information density, not ownership. A module reference may specify Target contracts and failure semantics, but `docs/evidence/` remains the authority for whether they are Current.
 
 ## Current Target module routes
 
-- `application/README.md` — 01 Application & Integration: product / integration boundary and delivery semantics.
-- `domain/README.md` — 02 Legal Domain & Work Product: formal legal business facts and work products.
-- `knowledge/README.md` — 03 Knowledge & Evidence: knowledge generation, readiness, retrieval lineage and candidates.
-- `runtime/README.md` — 04 Agent Runtime & Control: long-running task control, planning and recovery state.
-- `capability/README.md` — 05 Capability & Skill: stable professional capability and provider qualification.
-- `effects/README.md` — 06 Tool Runtime & Effects: prepared actions, external attempts, effect truth and reconcile.
-- `model-gateway/README.md` — 07 Model Gateway: model role, routing, attempts, quota and cost facts.
-- `security/README.md` — 08 Security & Governance: authorization, approval, security epoch and policy decisions.
-- `evaluation/README.md` — 09 Observability & Evaluation: telemetry, evaluation and complexity evidence.
+| Current Target | Human narrative | Engineering reference |
+| --- | --- | --- |
+| 01 Application & Integration | `application/README.md` | `application/reference.md` |
+| 02 Legal Domain & Work Product | `domain/README.md` | `domain/reference.md` |
+| 03 Knowledge & Evidence | `knowledge/README.md` | `knowledge/reference.md` |
+| 04 Agent Runtime & Control | `runtime/README.md` | `runtime/reference.md` |
+| 05 Capability & Skill | `capability/README.md` | `capability/reference.md` |
+| 06 Tool Runtime & Effects | `effects/README.md` | `effects/reference.md` |
+| 07 Model Gateway | `model-gateway/README.md` | `model-gateway/reference.md` |
+| 08 Security & Governance | `security/README.md` | `security/reference.md` |
+| 09 Observability & Evaluation | `evaluation/README.md` | `evaluation/reference.md` |
 
 ## For a module implementation task
 
 Read in this order:
 
 ```text
-overall architecture Part B
-→ target semantic module README Part B
-→ target module Part C
-→ relevant neighboring semantic module B/C
+overall architecture reference.md
+→ target semantic module reference.md
+→ relevant neighboring module reference.md
 → ADR
 → Evidence
 → code / migration / tests
 ```
 
-Part A is explanatory context and interview-ready narrative. Part B/C is the implementation contract. Evidence decides whether the contract is already Current.
+If the task requires reconstructing why a boundary exists, read the corresponding README before changing the reference. Do not alter Owner, Authority, Recovery, Security or Current/Target semantics merely to make the two views read more smoothly.
