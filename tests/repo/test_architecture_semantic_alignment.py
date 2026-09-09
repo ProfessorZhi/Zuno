@@ -93,7 +93,7 @@ def test_domain_and_knowledge_authority_is_consistent_across_docs() -> None:
     modules_readme = (REPO_ROOT / "docs/modules/README.md").read_text(encoding="utf-8")
     domain = (REPO_ROOT / "docs/modules/02-legal-domain-work-product.md").read_text(encoding="utf-8")
     knowledge = (REPO_ROOT / "docs/modules/03-knowledge-evidence.md").read_text(encoding="utf-8")
-    terminology = (REPO_ROOT / "docs/terminology.md").read_text(encoding="utf-8")
+    terminology = (REPO_ROOT / "docs/governance/terminology.md").read_text(encoding="utf-8")
 
     for text in (architecture, modules_readme, domain, knowledge, terminology):
         for marker in (
