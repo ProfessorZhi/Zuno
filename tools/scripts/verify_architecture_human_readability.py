@@ -26,12 +26,13 @@ MODULE_DIRS = (
 )
 
 # Regression floors only. They prevent human-facing documents from collapsing into thin
-# index/spec sheets. They intentionally do not reward padding or pretend to score prose quality.
+# index/spec sheets. They are deliberately low enough that authors can delete repetition
+# without refilling the document to satisfy CI. Narrative quality remains a human review.
 PROJECT_NARRATIVE_BASELINES = {"README.md": (9000, 24)}
-ARCHITECTURE_PART_A_MIN_NONSPACE_CHARS = 8000
-ARCHITECTURE_PART_A_MIN_PROSE_PARAGRAPHS = 28
-MODULE_PART_A_MIN_NONSPACE_CHARS = 5500
-MODULE_PART_A_MIN_PROSE_PARAGRAPHS = 18
+ARCHITECTURE_PART_A_MIN_NONSPACE_CHARS = 4200
+ARCHITECTURE_PART_A_MIN_PROSE_PARAGRAPHS = 14
+MODULE_PART_A_MIN_NONSPACE_CHARS = 2600
+MODULE_PART_A_MIN_PROSE_PARAGRAPHS = 9
 
 ARCHITECTURE_PART_A_HEADING = "## Part A — Human Narrative"
 ARCHITECTURE_PART_B_HEADING = "## Part B — Engineering / Agent Reference"
@@ -45,6 +46,10 @@ _MACHINE_TOKEN_RE = re.compile(
     r"\b(?:ARCH|RC|FACT)-[A-Z0-9_-]+\b|"
     r"\b(?:requirement_id|source_boundary|canonical_[a-z_]+)\b)",
     re.IGNORECASE,
+)
+_FAQ_HEADING_RE = re.compile(
+    r"^#{2,4}\s+(?:为什么|什么是|如何|风险|替代方案|Trade[- ]?off|总结|结论)",
+    re.IGNORECASE | re.MULTILINE,
 )
 
 
@@ -82,6 +87,16 @@ def _nonspace_chars(text: str) -> int:
     return len(re.sub(r"\s+", "", _strip_non_prose_blocks(text)))
 
 
+def _human_heading_count(text: str) -> int:
+    visible = _strip_non_prose_blocks(text)
+    return len(re.findall(r"^#{2,4}\s+", visible, flags=re.MULTILINE))
+
+
+def _symbolic_boundary_count(text: str) -> int:
+    visible = _strip_non_prose_blocks(text)
+    return visible.count("!=") + visible.count("≠")
+
+
 def verify_architecture_human(text: str) -> list[str]:
     errors: list[str] = []
     if "# Zuno 目标架构" not in text:
@@ -96,12 +111,12 @@ def verify_architecture_human(text: str) -> list[str]:
     prose_paragraph_count = len(_prose_paragraphs(visible))
     if nonspace_chars < ARCHITECTURE_PART_A_MIN_NONSPACE_CHARS:
         errors.append(
-            "architecture Part A is too thin for the conceptual design baseline "
+            "architecture Part A collapsed below the anti-index floor "
             f"({nonspace_chars} non-space chars < {ARCHITECTURE_PART_A_MIN_NONSPACE_CHARS})"
         )
     if prose_paragraph_count < ARCHITECTURE_PART_A_MIN_PROSE_PARAGRAPHS:
         errors.append(
-            "architecture Part A must contain substantial explanatory prose "
+            "architecture Part A collapsed below the explanatory-prose floor "
             f"({prose_paragraph_count} paragraphs < {ARCHITECTURE_PART_A_MIN_PROSE_PARAGRAPHS})"
         )
     return errors
@@ -129,9 +144,9 @@ def verify_module_human(text: str, label: str) -> list[str]:
     nonspace_chars = _nonspace_chars(visible)
     prose_paragraph_count = len(_prose_paragraphs(visible))
     if nonspace_chars < MODULE_PART_A_MIN_NONSPACE_CHARS:
-        errors.append(f"{label}: Part A is too thin ({nonspace_chars} < {MODULE_PART_A_MIN_NONSPACE_CHARS})")
+        errors.append(f"{label}: Part A collapsed below the anti-index floor ({nonspace_chars} < {MODULE_PART_A_MIN_NONSPACE_CHARS})")
     if prose_paragraph_count < MODULE_PART_A_MIN_PROSE_PARAGRAPHS:
-        errors.append(f"{label}: Part A needs more explanatory prose ({prose_paragraph_count} < {MODULE_PART_A_MIN_PROSE_PARAGRAPHS})")
+        errors.append(f"{label}: Part A collapsed below the explanatory-prose floor ({prose_paragraph_count} < {MODULE_PART_A_MIN_PROSE_PARAGRAPHS})")
     if not all(marker in visible for marker in ("Current", "Target", "Gap")):
         errors.append(f"{label}: Part A must preserve explicit Current / Target / Gap semantics")
     return errors
@@ -156,12 +171,37 @@ def verify_engineering_reference(text: str, label: str, *, module: bool) -> list
 
 
 def warning_for_human(text: str, label: str) -> list[str]:
-    matches = _MACHINE_TOKEN_RE.findall(_strip_non_prose_blocks(text))
-    if len(matches) < 6:
-        return []
-    unique = sorted(set(matches), key=str.casefold)
-    preview = ", ".join(unique[:8]) + (", …" if len(unique) > 8 else "")
-    return [f"READABILITY_WARNING: {label} contains many machine-oriented markers ({preview}); human review is still required."]
+    warnings: list[str] = []
+    stripped = _strip_non_prose_blocks(text)
+    paragraphs = _prose_paragraphs(text)
+    heading_count = _human_heading_count(text)
+    faq_heading_count = len(_FAQ_HEADING_RE.findall(stripped))
+    symbolic_boundaries = _symbolic_boundary_count(text)
+
+    matches = _MACHINE_TOKEN_RE.findall(stripped)
+    if len(matches) >= 6:
+        unique = sorted(set(matches), key=str.casefold)
+        preview = ", ".join(unique[:8]) + (", …" if len(unique) > 8 else "")
+        warnings.append(
+            f"READABILITY_WARNING: {label} contains many machine-oriented markers ({preview}); human review is still required."
+        )
+
+    # These are warnings, not prose scores. They surface the failure modes that previously
+    # slipped through length-only CI while leaving the final editorial judgment to reviewers.
+    if paragraphs and heading_count > max(8, len(paragraphs) // 2):
+        warnings.append(
+            f"READABILITY_WARNING: {label} has dense heading fragmentation "
+            f"({heading_count} headings / {len(paragraphs)} prose paragraphs); review for knowledge-card structure."
+        )
+    if faq_heading_count >= 4:
+        warnings.append(
+            f"READABILITY_WARNING: {label} contains {faq_heading_count} FAQ/checklist-like headings; review whether the document reads as one architecture story."
+        )
+    if symbolic_boundaries >= 4:
+        warnings.append(
+            f"READABILITY_WARNING: {label} contains {symbolic_boundaries} symbolic A/B boundary expressions; keep exact invariants in Engineering Reference unless the symbols materially help the story."
+        )
+    return warnings
 
 
 def _verify_archives(errors: list[str]) -> None:
@@ -235,6 +275,10 @@ def main() -> int:
     project = PROJECT_ROOT / "README.md"
     if project.exists():
         warnings.extend(warning_for_human(project.read_text(encoding="utf-8"), "project README"))
+    for directory in MODULE_DIRS:
+        human = MODULES_ROOT / directory / "README.md"
+        if human.exists():
+            warnings.extend(warning_for_human(human.read_text(encoding="utf-8"), f"{directory}/README.md"))
     for warning in warnings:
         print(warning, file=sys.stderr)
     print("project, architecture and module human readability structural verification passed.")
