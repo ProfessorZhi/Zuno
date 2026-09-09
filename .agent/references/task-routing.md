@@ -5,13 +5,13 @@
 | 任务 | 先读 | 主要 Owner |
 | --- | --- | --- |
 | 范围不清、只读盘点 | `AGENTS.md`、`docs-map.md`、`code-map.md` | 只读审计 |
-| 项目背景、历史事实、立项逻辑 | `docs/project/project.md`、`docs/governance/project-fact-provenance.md` | Project |
+| 项目背景、历史事实、立项逻辑 | `docs/project/README.md`、`docs/governance/project-fact-provenance.md` | Project |
 | 葛季栋/LIPLAB 研究谱系、论文/能力 lineage | `docs/research/README.md` + 对应 research 文件 | Research reference；不得覆盖 Project/Target/Current |
 | WorkBuddy / Dify / Coze / LangGraph 比较、Build/Buy | `docs/research/agent-platform-baseline.md` + 当前官方资料 | Research + Architecture |
 | 文档故事化 / Part A Rewrite | `docs/research/documentation-narrative-blueprint.md` + Project/Architecture/目标 Module | Documentation；先区分 Writing Gap 与 Architecture Gap |
 | 技术面试 / 架构 Reviewer 连续追问 | Project 主线，再按问题进入 Architecture / Module / Evidence | 对应事实 Owner |
 | Red / Blue 对攻与压力测试 | `docs/red-blue/README.md` + `.agent/red-blue/` | Red/Blue Review；Blue Closed-book |
-| 个人贡献 | `docs/project/project.md` + provenance + 历史任务级证据 | Project；不得由 Target 或导师成果反推 |
+| 个人贡献 | `docs/project/README.md` + provenance + 历史任务级证据 | Project；不得由 Target 或导师成果反推 |
 | 文档结构、README、Agent 路由 | `docs/governance/documentation-architecture.md`、`docs/governance/workflows/agent-workflow.md`、`docs-map.md` | Governance |
 | 阅读总体架构、理解系统 | Project → Architecture Part A → Modules README | Architecture |
 | 总体架构或跨层设计 | Architecture Part A+B、有效 ADR、Evidence、Governance；Research 仅作上游依据 | Architecture |

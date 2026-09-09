@@ -8,14 +8,13 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parents[2]
 ARCHITECTURE_FILES = {
     "README.md",
-    "architecture.md",
     "architecture-views.md",
     "architecture.html",
     "reference.md",
 }
 PROJECT_FILES = [
     "docs/project/README.md",
-    "docs/project/project.md",
+    "docs/project/README.md",
     "docs/project/reference.md",
 ]
 RESEARCH_FILES = [
@@ -28,15 +27,15 @@ RESEARCH_FILES = [
 ]
 MODULE_FILES = [
     "docs/modules/README.md",
-    "docs/modules/01-application-integration.md",
-    "docs/modules/02-legal-domain-work-product.md",
-    "docs/modules/03-knowledge-evidence.md",
-    "docs/modules/04-agent-runtime-control.md",
-    "docs/modules/05-capability-skill.md",
-    "docs/modules/06-tool-runtime-effects.md",
-    "docs/modules/07-model-gateway.md",
-    "docs/modules/08-security-governance.md",
-    "docs/modules/09-observability-evaluation.md",
+    "docs/modules/application/README.md",
+    "docs/modules/domain/README.md",
+    "docs/modules/knowledge/README.md",
+    "docs/modules/runtime/README.md",
+    "docs/modules/capability/README.md",
+    "docs/modules/effects/README.md",
+    "docs/modules/model-gateway/README.md",
+    "docs/modules/security/README.md",
+    "docs/modules/evaluation/README.md",
 ]
 MODULE_BASELINE_HEADINGS = [
     "### B1 Scope / Global Invariants",
@@ -81,7 +80,7 @@ def verify() -> list[str]:
         *PROJECT_FILES,
         *RESEARCH_FILES,
         "docs/architecture/README.md",
-        "docs/architecture/architecture.md",
+        "docs/architecture/README.md",
         "docs/architecture/architecture-views.md",
         "docs/architecture/architecture.html",
         "docs/architecture/reference.md",
@@ -257,7 +256,7 @@ def verify() -> list[str]:
         if marker not in documentation_architecture:
             errors.append(f"docs/governance/documentation-architecture.md missing marker: {marker}")
 
-    project = (REPO_ROOT / "docs/project/project.md").read_text(encoding="utf-8")
+    project = (REPO_ROOT / "docs/project/README.md").read_text(encoding="utf-8")
     for marker in (
         "为什么不直接用 Dify、Coze",
         "项目是怎样发展到今天的",
@@ -277,8 +276,8 @@ def verify() -> list[str]:
 
     modules = (REPO_ROOT / "docs/modules/README.md").read_text(encoding="utf-8")
     for marker in (
-        "01-application-integration.md",
-        "09-observability-evaluation.md",
+        "application/README.md",
+        "evaluation/README.md",
         "module_design_baseline",
         "module_detail_design_candidate: AVAILABLE_V1",
         "module_detail_design_candidate_coverage: 9/9",

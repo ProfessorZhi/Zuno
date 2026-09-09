@@ -2,7 +2,7 @@
 
 status: current-compatibility-reference
 owner: Repository / Architecture Coordinator
-human_entrypoint: AGENTS.md and docs/architecture/architecture.md
+human_entrypoint: AGENTS.md and docs/architecture/README.md
 
 > 本文件保留给 `src/backend/zuno/**` 中尚未迁移的边界说明和工具读取路径。它不是新的项目故事、研究结论、架构正文或 ADR Owner；人类阅读入口是根目录 `AGENTS.md`、总体架构和 `docs/governance/operations/`。物理 Service Split 仍由证据门控。
 

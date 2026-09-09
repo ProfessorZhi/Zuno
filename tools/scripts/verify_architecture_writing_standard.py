@@ -5,7 +5,7 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[2]
-ARCH = ROOT / "docs/architecture/architecture.md"
+ARCH = ROOT / "docs/architecture/README.md"
 VIEWS = ROOT / "docs/architecture/architecture-views.md"
 HTML = ROOT / "docs/architecture/architecture.html"
 STANDARD = ROOT / "docs/governance/human-first-documentation-standard.md"
@@ -13,15 +13,15 @@ QUALITY_STANDARD = ROOT / "docs/governance/architecture-narrative-quality-standa
 MODULES = ROOT / "docs/modules"
 
 MODULE_FILES = (
-    "01-application-integration.md",
-    "02-legal-domain-work-product.md",
-    "03-knowledge-evidence.md",
-    "04-agent-runtime-control.md",
-    "05-capability-skill.md",
-    "06-tool-runtime-effects.md",
-    "07-model-gateway.md",
-    "08-security-governance.md",
-    "09-observability-evaluation.md",
+    "application/README.md",
+    "domain/README.md",
+    "knowledge/README.md",
+    "runtime/README.md",
+    "capability/README.md",
+    "effects/README.md",
+    "model-gateway/README.md",
+    "security/README.md",
+    "evaluation/README.md",
 )
 
 

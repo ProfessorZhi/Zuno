@@ -2,7 +2,7 @@
 
 ## 用途
 
-本文只统一当前 Zuno 文档体系中的公开术语，不拥有第二套架构。总体 Target 以 [`docs/architecture/architecture.md`](../architecture/architecture.md) 为准，模块内部语义以 [`docs/modules/`](../modules/README.md) 为准，长期决策由 [`docs/decisions/`](../decisions/README.md) 约束，Current 事实由 [`docs/evidence/`](../evidence/README.md) 证明。
+本文只统一当前 Zuno 文档体系中的公开术语，不拥有第二套架构。总体 Target 以 [`docs/architecture/README.md`](../architecture/README.md) 为准，模块内部语义以 [`docs/modules/`](../modules/README.md) 为准，长期决策由 [`docs/decisions/`](../decisions/README.md) 约束，Current 事实由 [`docs/evidence/`](../evidence/README.md) 证明。
 
 旧 11 模块、旧专题和 Red / Blue 过程内容不从术语表恢复为当前架构。
 

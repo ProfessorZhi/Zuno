@@ -15,21 +15,21 @@ EXPECTED_VIEWS = [
     "Deployment and Evolution View",
 ]
 CANONICAL_ARCHITECTURE_FILES = {
-    "README.md", "architecture.md", "architecture-views.md", "architecture.html", "reference.md"
+    "README.md", "architecture-views.md", "architecture.html", "reference.md"
 }
-CANONICAL_PROJECT_FILES = {"README.md", "project.md", "reference.md"}
+CANONICAL_PROJECT_FILES = {"README.md", "reference.md"}
 CANONICAL_MODULE_FILES = {
     "README.md",
     "reference.md",
-    "01-application-integration.md",
-    "02-legal-domain-work-product.md",
-    "03-knowledge-evidence.md",
-    "04-agent-runtime-control.md",
-    "05-capability-skill.md",
-    "06-tool-runtime-effects.md",
-    "07-model-gateway.md",
-    "08-security-governance.md",
-    "09-observability-evaluation.md",
+    "application/README.md",
+    "domain/README.md",
+    "knowledge/README.md",
+    "runtime/README.md",
+    "capability/README.md",
+    "effects/README.md",
+    "model-gateway/README.md",
+    "security/README.md",
+    "evaluation/README.md",
 }
 MODULE_DESIGN_FILES = CANONICAL_MODULE_FILES - {"README.md", "reference.md"}
 CANONICAL_RED_BLUE_FILES = {
@@ -87,12 +87,10 @@ def test_project_documentation_is_consolidated_and_canonical() -> None:
     assert (REPO_ROOT / "docs/red-blue/archive/legacy/manual-round-01-overall-architecture.md").exists()
 
     readme = (root / "README.md").read_text(encoding="utf-8")
-    assert "project.md" in readme
     assert "project-fact-provenance.md" in readme
     assert "reference.md" in readme
 
     reference = (root / "reference.md").read_text(encoding="utf-8")
-    assert "project.md" in reference
     assert "project-fact-provenance.md" in reference
 
     project = (root / "project.md").read_text(encoding="utf-8")
@@ -148,7 +146,7 @@ def test_architecture_directories_only_contain_support_files() -> None:
 
 def test_module_design_is_human_first_complete_and_detail_candidate_9_of_9() -> None:
     root = REPO_ROOT / "docs/modules"
-    assert {p.name for p in root.iterdir() if p.is_file()} == CANONICAL_MODULE_FILES
+    assert {p.relative_to(root).as_posix() for p in root.rglob("*") if p.is_file()} == CANONICAL_MODULE_FILES
     readme = (root / "README.md").read_text(encoding="utf-8")
     for marker in (
         "module_design_baseline: AVAILABLE_V1",
@@ -165,8 +163,8 @@ def test_module_design_is_human_first_complete_and_detail_candidate_9_of_9() -> 
     assert "简单法律问答" in readme and "复杂法律分析" in readme and "现实副作用" in readme
 
     reference = (root / "reference.md").read_text(encoding="utf-8")
-    assert "01-application-integration.md" in reference
-    assert "09-observability-evaluation.md" in reference
+    assert "application/README.md" in reference
+    assert "evaluation/README.md" in reference
 
     for name in sorted(MODULE_DESIGN_FILES):
         content = (root / name).read_text(encoding="utf-8")
@@ -185,7 +183,7 @@ def test_module_design_is_human_first_complete_and_detail_candidate_9_of_9() -> 
 
 def test_architecture_markdown_has_coordinated_human_and_agent_views() -> None:
     renderer = _load_render_architecture()
-    design = (REPO_ROOT / "docs/architecture/architecture.md").read_text(encoding="utf-8")
+    design = (REPO_ROOT / "docs/architecture/README.md").read_text(encoding="utf-8")
     assert renderer.validate_design(design) == []
     assert design.count("```mermaid") <= 2
     for marker in [
@@ -224,11 +222,11 @@ def test_architecture_html_routes_to_current_architecture_sources() -> None:
     html = (REPO_ROOT / "docs/architecture/architecture.html").read_text(encoding="utf-8")
     assert renderer.validate_html(html) == []
     for phrase in [
-        "./architecture.md", "../project/project.md", "../evidence/README.md", "./architecture-views.md",
+        "./README.md", "../project/README.md", "../evidence/README.md", "./architecture-views.md",
     ]:
         assert phrase in html
     assert "../maintenance/" not in html
-    assert "./architecture.md#target-status-boundary" not in html
+    assert "./README.md#target-status-boundary" not in html
 
 
 def test_renderer_checks_formal_architecture_surface() -> None:

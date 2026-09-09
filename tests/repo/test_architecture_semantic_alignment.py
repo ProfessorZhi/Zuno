@@ -7,15 +7,15 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 MODULES = {
-    "01": "01-application-integration.md",
-    "02": "02-legal-domain-work-product.md",
-    "03": "03-knowledge-evidence.md",
-    "04": "04-agent-runtime-control.md",
-    "05": "05-capability-skill.md",
-    "06": "06-tool-runtime-effects.md",
-    "07": "07-model-gateway.md",
-    "08": "08-security-governance.md",
-    "09": "09-observability-evaluation.md",
+    "01": "application/README.md",
+    "02": "domain/README.md",
+    "03": "knowledge/README.md",
+    "04": "runtime/README.md",
+    "05": "capability/README.md",
+    "06": "effects/README.md",
+    "07": "model-gateway/README.md",
+    "08": "security/README.md",
+    "09": "evaluation/README.md",
 }
 
 B_SECTIONS = (
@@ -74,7 +74,7 @@ def test_architecture_semantics_follow_canonical_module_designs() -> None:
 
 
 def test_active_architecture_has_no_pre_baseline_status_claims() -> None:
-    architecture = (REPO_ROOT / "docs/architecture/architecture.md").read_text(encoding="utf-8")
+    architecture = (REPO_ROOT / "docs/architecture/README.md").read_text(encoding="utf-8")
     assert "module_design_baseline: AVAILABLE_V1" in architecture
     assert "module_detail_freeze: NOT_YET" in architecture
     assert "implementation_authorization: NO" in architecture
@@ -89,10 +89,10 @@ def test_active_architecture_has_no_pre_baseline_status_claims() -> None:
 
 
 def test_domain_and_knowledge_authority_is_consistent_across_docs() -> None:
-    architecture = (REPO_ROOT / "docs/architecture/architecture.md").read_text(encoding="utf-8")
+    architecture = (REPO_ROOT / "docs/architecture/README.md").read_text(encoding="utf-8")
     modules_readme = (REPO_ROOT / "docs/modules/README.md").read_text(encoding="utf-8")
-    domain = (REPO_ROOT / "docs/modules/02-legal-domain-work-product.md").read_text(encoding="utf-8")
-    knowledge = (REPO_ROOT / "docs/modules/03-knowledge-evidence.md").read_text(encoding="utf-8")
+    domain = (REPO_ROOT / "docs/modules/domain/README.md").read_text(encoding="utf-8")
+    knowledge = (REPO_ROOT / "docs/modules/knowledge/README.md").read_text(encoding="utf-8")
     terminology = (REPO_ROOT / "docs/governance/terminology.md").read_text(encoding="utf-8")
 
     for text in (architecture, modules_readme, domain, knowledge, terminology):
@@ -196,7 +196,7 @@ def test_idempotency_and_correlation_boundaries_do_not_collapse() -> None:
     ):
         assert marker in readme
 
-    observability = (REPO_ROOT / "docs/modules/09-observability-evaluation.md").read_text(encoding="utf-8")
+    observability = (REPO_ROOT / "docs/modules/evaluation/README.md").read_text(encoding="utf-8")
     assert "OpenTelemetry Baggage" in observability
     assert "Secret NEVER EXPORT" in observability
     assert "opaque ref" in observability

@@ -4,7 +4,7 @@
 
 updated: 2026-09-02
 status: normative-target-visual-source
-text_design_source: `docs/architecture/architecture.md`
+text_design_source: `docs/architecture/README.md`
 
 ## Case Timeline View
 

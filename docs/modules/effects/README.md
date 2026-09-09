@@ -347,7 +347,7 @@ Telemetry 不能替代 EffectReceipt。Failure Eval 必须覆盖 response loss�
 
 ### B13 Current / Target / Gap / Evidence
 
-**Current**：[`current-runtime-baseline.md`](../evidence/current-runtime-baseline.md) 明确保留 unknown external effect → `RECONCILE` / no blind retry；[`current-test-baseline.md`](../evidence/current-test-baseline.md) 保留 duplicate claim 与未知外部效果 reconciliation 等行为。真实外围系统 E2E、durable effect ledger 和 crash window 尚未证明。
+**Current**：[`current-runtime-baseline.md`](../../evidence/current-runtime-baseline.md) 明确保留 unknown external effect → `RECONCILE` / no blind retry；[`current-test-baseline.md`](../../evidence/current-test-baseline.md) 保留 duplicate claim 与未知外部效果 reconciliation 等行为。真实外围系统 E2E、durable effect ledger 和 crash window 尚未证明。
 
 **Target**：PreparedAction → Security / Approval / Audit → durable Attempt → EffectReceipt → Reconciliation 的完整 Effect Control。
 

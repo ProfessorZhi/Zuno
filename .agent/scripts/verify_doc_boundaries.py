@@ -4,7 +4,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 PROJECT_FILES = {
     "docs/project/README.md",
-    "docs/project/project.md",
+    "docs/project/README.md",
     "docs/project/reference.md",
 }
 RESEARCH_FILES = {
@@ -18,19 +18,18 @@ RESEARCH_FILES = {
 MODULE_FILES = {
     "docs/modules/README.md",
     "docs/modules/reference.md",
-    "docs/modules/01-application-integration.md",
-    "docs/modules/02-legal-domain-work-product.md",
-    "docs/modules/03-knowledge-evidence.md",
-    "docs/modules/04-agent-runtime-control.md",
-    "docs/modules/05-capability-skill.md",
-    "docs/modules/06-tool-runtime-effects.md",
-    "docs/modules/07-model-gateway.md",
-    "docs/modules/08-security-governance.md",
-    "docs/modules/09-observability-evaluation.md",
+    "docs/modules/application/README.md",
+    "docs/modules/domain/README.md",
+    "docs/modules/knowledge/README.md",
+    "docs/modules/runtime/README.md",
+    "docs/modules/capability/README.md",
+    "docs/modules/effects/README.md",
+    "docs/modules/model-gateway/README.md",
+    "docs/modules/security/README.md",
+    "docs/modules/evaluation/README.md",
 }
 ARCHITECTURE_FILES = {
     "README.md",
-    "architecture.md",
     "architecture-views.md",
     "architecture.html",
     "reference.md",

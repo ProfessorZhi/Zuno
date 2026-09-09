@@ -8,7 +8,6 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 ARCH_ROOT = REPO_ROOT / "docs/architecture"
 ARCHITECTURE_FILES = {
     "README.md",
-    "architecture.md",
     "architecture-views.md",
     "architecture.html",
     "reference.md",
@@ -31,10 +30,10 @@ def verify() -> list[str]:
     for path in (
         REPO_ROOT / "docs/README.md",
         REPO_ROOT / "docs/project/README.md",
-        REPO_ROOT / "docs/project/project.md",
+        REPO_ROOT / "docs/project/README.md",
         REPO_ROOT / "docs/project/reference.md",
         REPO_ROOT / "docs/architecture/README.md",
-        REPO_ROOT / "docs/architecture/architecture.md",
+        REPO_ROOT / "docs/architecture/README.md",
         REPO_ROOT / "docs/architecture/reference.md",
         REPO_ROOT / "docs/modules/README.md",
         REPO_ROOT / "docs/modules/reference.md",
@@ -57,9 +56,9 @@ def verify() -> list[str]:
         if mirror.exists():
             errors.append(f"documentation mirror must not exist: {mirror.relative_to(REPO_ROOT)}")
 
-    design = read("docs/architecture/architecture.md")
+    design = read("docs/architecture/README.md")
     index = read("docs/README.md")
-    project = read("docs/project/project.md")
+    project = read("docs/project/README.md")
     arch_index = read("docs/architecture/README.md")
     arch_reference = read("docs/architecture/reference.md")
     modules_index = read("docs/modules/README.md")
@@ -197,15 +196,15 @@ def verify() -> list[str]:
         "cross_module_consistency: AVAILABLE_V1",
         "module_detail_freeze: NOT_YET",
         "implementation_authorization: NO",
-        "01-application-integration.md",
-        "02-legal-domain-work-product.md",
-        "03-knowledge-evidence.md",
-        "04-agent-runtime-control.md",
-        "05-capability-skill.md",
-        "06-tool-runtime-effects.md",
-        "07-model-gateway.md",
-        "08-security-governance.md",
-        "09-observability-evaluation.md",
+        "application/README.md",
+        "domain/README.md",
+        "knowledge/README.md",
+        "runtime/README.md",
+        "capability/README.md",
+        "effects/README.md",
+        "model-gateway/README.md",
+        "security/README.md",
+        "evaluation/README.md",
         "Part C  Cross-Module Consistency",
         "Cancellation（取消）是停止未来工作，不是全局回滚",
         "Idempotency（幂等）不是一个全局 key",

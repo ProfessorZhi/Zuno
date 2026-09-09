@@ -238,9 +238,9 @@ Part A 的段落之间应保持：
 
 ### P0
 
-1. `docs/project/project.md`：把 LIPLAB / 智慧司法研究 → Research Artifacts → Generic Host baseline → Engineering Gap → Zuno 变成项目故事第一因。
-2. `docs/architecture/architecture.md` Part A：用一个连续法律任务讲“成功如何一步步分裂”，九模块最后出现。
-3. `docs/modules/05-capability-skill.md` Part A：成为 Research Artifact → Capability → Provider → Qualification 的核心 Architecture Essay。
+1. `docs/project/README.md`：把 LIPLAB / 智慧司法研究 → Research Artifacts → Generic Host baseline → Engineering Gap → Zuno 变成项目故事第一因。
+2. `docs/architecture/README.md` Part A：用一个连续法律任务讲“成功如何一步步分裂”，九模块最后出现。
+3. `docs/modules/capability/README.md` Part A：成为 Research Artifact → Capability → Provider → Qualification 的核心 Architecture Essay。
 4. 03 → 02 → 09：分别承接 Knowledge/Evidence、Formal Authority、Evaluation/Qualification。
 
 ### P1

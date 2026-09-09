@@ -347,7 +347,7 @@ E2E Eval：Simple QA、Complex WorkProduct、new-evidence invalidation、Consume
 
 ### B13 Current / Target / Gap / Evidence
 
-**Current**：[`current-runtime-baseline.md`](../evidence/current-runtime-baseline.md) 证明 Product Application Owner 已分离，主 Runtime path 不再由一个 Product God Facade 统一拥有；Current 仍不等于完整 publication/delivery/invalidation E2E。
+**Current**：[`current-runtime-baseline.md`](../../evidence/current-runtime-baseline.md) 证明 Product Application Owner 已分离，主 Runtime path 不再由一个 Product God Facade 统一拥有；Current 仍不等于完整 publication/delivery/invalidation E2E。
 
 **Target**：External Intake + Scope + AgentVersion + Invocation Composition + Publication + WorkProduct Delivery + Invalidation/Ack + Multi-Host Integration。
 

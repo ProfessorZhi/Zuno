@@ -11,7 +11,7 @@ THREE COORDINATED VIEWS
 
 对九篇模块文档，同一套设计现在有三个协调视角：Part A 面向人解释“为什么和怎样工作”；Part B 面向实现和审查精确说明“谁拥有、什么状态、怎样失败、怎样恢复”；Part C 不创造第三套架构，只检查这个模块放回九模块整体以后，完成证明、因果版本、新鲜度、取消、晚到结果和恢复顺序是否仍然与相邻模块一致。
 
-总体 `docs/architecture/architecture.md` 继续使用自身的 Part A + Part B 总体架构结构；Part C 是当前九篇模块文档的跨模块一致性层，不要求把总体架构机械改成同样版式。
+总体 `docs/architecture/README.md` 继续使用自身的 Part A + Part B 总体架构结构；Part C 是当前九篇模块文档的跨模块一致性层，不要求把总体架构机械改成同样版式。
 
 ## 文档体系的分工
 
@@ -128,7 +128,7 @@ Part B 可以使用英文正式标识，但不能偷偷增加 Part A 没解释�
 
 ### 总体架构 Part B
 
-总体 `docs/architecture/architecture.md` 当前采用跨层 B1–B14 结构，负责全局不变量、九个责任域、真正跨模块 Contract、跨 Store 恢复和总体 Current / Target / Gap。总体架构不冻结单模块内部字段、表和完整 enum。
+总体 `docs/architecture/README.md` 当前采用跨层 B1–B14 结构，负责全局不变量、九个责任域、真正跨模块 Contract、跨 Store 恢复和总体 Current / Target / Gap。总体架构不冻结单模块内部字段、表和完整 enum。
 
 ### 模块 Part B：当前统一结构
 
@@ -300,7 +300,7 @@ Part C：ingestion 被取消或部分 index write 成功时，03 不能把 gener
 
 整个架构文档体系必须遵守以下优先关系：
 
-1. `docs/architecture/architecture.md`：当前总体 Target 的整合表达；
+1. `docs/architecture/README.md`：当前总体 Target 的整合表达；
 2. 后续 accepted ADR：对具体长期决策提供约束和显式 supersession；
 3. `docs/modules/`：只能细化总体架构和 ADR 已接受的模块内语义；
 4. `docs/evidence/`：只证明 Current，不改变 Target；

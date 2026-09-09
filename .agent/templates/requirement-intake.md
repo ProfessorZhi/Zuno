@@ -18,8 +18,8 @@
 3. 规格、ADR 或审计
 4. 相关的 `docs/history/red-blue/` Review Record（只有需要理解架构演进时）
 5. `docs/architecture/README.md`
-6. `docs/architecture/architecture.md`
-7. `docs/architecture/architecture.md`
+6. `docs/architecture/README.md`
+7. `docs/architecture/README.md`
 8. `AGENTS.md`
 9. `.agent/references/current-program.md`
 10. `.agent/references/docs-map.md`

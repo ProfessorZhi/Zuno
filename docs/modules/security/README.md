@@ -349,7 +349,7 @@ Policy / SecurityEpoch、需要历史复核的 Authorization / Approval、Effect
 
 ### B13 Current / Target / Gap / Evidence
 
-**Current**：[`current-test-baseline.md`](../evidence/current-test-baseline.md) 证明当前测试入口保留 Security fail-closed、approval binding、artifact authorization、tenant isolation 等有限行为；`docs/evidence/` 仍明确 Full CI、法院 QA、production qualification 未建立。
+**Current**：[`current-test-baseline.md`](../../evidence/current-test-baseline.md) 证明当前测试入口保留 Security fail-closed、approval binding、artifact authorization、tenant isolation 等有限行为；`docs/evidence/` 仍明确 Full CI、法院 QA、production qualification 未建立。
 
 **Target**：Continuous Authorization + action-bound Approval + Model Egress + Secret Lease + Mandatory Audit + lifecycle governance + tenant isolation 的统一安全边界。
 
