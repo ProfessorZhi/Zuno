@@ -41,7 +41,7 @@
 | PF-009 | 用户参与 Agent | USER_CONFIRMED | 用户参与过部分 Agent 开发 | 完整 Agent Runtime / 全部 Agent 由用户独立实现 | 任务、PR、Commit、代码 Review |
 | PF-010 | 用户参与 Memory | USER_CONFIRMED | 用户参与过 Memory 相关第一批重要工作 | 用户从零引入 Memory / 拥有整个 Memory 架构 / 所有长期记忆实现；公开根提交已经存在 Memory 子系统 | 任务级提交、设计记录、测试 |
 | PF-011 | OpenViking | USER_CONFIRMED + PUBLIC_GIT_NOT_RECOVERED | 用户确认参与 OpenViking 在 Memory / Context 区域的接入；当前公开 Git 2026-04-15 根提交至 2026-04-29 快照未恢复对应 artifact | 已恢复具体 SDK / Adapter / 数据结构和生产使用方式；也不能用后续 V2 / PR #8 证据代替 OpenViking artifact | 代码提交、配置、运行记录、未推送 / 私有历史材料 |
-| PF-012 | Tool Calling Strategy | USER_CONFIRMED | 用户参与过 Tool Calling Strategy 相关开发 | 用户拥有全部 Tool Runtime / 外部副作用体系 | 任务、PR、故障测试、调用记录 |
+| PF-012 | Tool Calling Strategy | USER_CONFIRMED + HISTORICAL_COMMITS_TEST_ARTIFACT_CORROBORATED | 用户参与过 Tool Calling Strategy 相关开发；公开 main history 已恢复 2026-04-15 单 Agent 工具调用策略重构与 2026-04-28 Workspace MCP direct-route hardening，详见 PF-032 | 用户拥有全部 Tool Runtime / 当前外部副作用、Approval、Idempotency、Reconcile 体系；历史提交已证明生产稳定性或客户收益 | 原始需求 / Issue / Review、历史 test run / Trace、真实用户调用记录与结果 |
 | PF-013 | 数据库参与 | USER_CONFIRMED | 用户进入数据库查看或调试过数据 | 用户负责数据库总体设计、Schema 或 Migration Owner | SQL / Issue / Migration / Review 记录 |
 | PF-014 | LangGraph / GraphRAG | USER_CONFIRMED_AS_LEARNING_CONTEXT | 开发期间学习和接触过 LangGraph、GraphRAG；公开历史中的具体 GraphRAG 质量优化实现另见 PF-031 | 用户完整实现当前 Target Runtime 或整个 GraphRAG 系统 | 任务级实现证据、正式 Eval / A/B |
 | PF-015 | Internal Demo | USER_CONFIRMED | 项目经历过内部 Demo | 已恢复正式验收或性能结果 | Demo 材料、日期、参与人、环境 |
@@ -61,6 +61,7 @@
 | PF-029 | 2026-06-29 Context / Memory readback hardening | HISTORICAL_PR_COMMIT_TEST_CORROBORATED | 用户 GitHub 账号通过单提交 PR #8，在此前 V2 Context / Memory foundation 上进一步收口 pre-call readback：为 Context Pack 增加 policy / source-id trace，将同 scope task summary 和仅 `APPROVED` 的 structured memory 接入 `GeneralAgent.prepare_context()`，并补 review / provenance contract 与 focused tests | 这是 Context / Memory 工作起点、3 月第一批 Memory / OpenViking 接入；用户从零实现整个 Memory；已经完成 production-grade Memory DB、成熟长期检索 / consolidation 或完整 PostTurnPipeline | 真实产品 / 业务需求、Issue、Review 讨论、真实故障或运行结果，可进一步补足 Cause → Decision → Implementation → Result |
 | PF-030 | 2026-06-25/26 Context / Memory V2 foundation chain | HISTORICAL_COMMITS_TESTS_CORROBORATED | 用户 GitHub 账号在公开 main ancestry 上先记录 Context / Memory Target 计划，再连续落 typed Context contracts、scoped Memory contracts、`GeneralAgent` 最小 `prepare_context` / post-turn write integration 和 minimal `ContextOrchestrator`；对应提交为 `c4c52d9...`、`13dd929...`、`b1836dc...`、`d4e2fe2...`、`3d865e1...` | 这是 3 月第一批 Memory / OpenViking；已经恢复客户 / 法院需求或真实事故；已经完成成熟 / 生产级 Memory、长期检索 / consolidation 或质量收益 | 真实产品 / 业务需求或 Issue、原始本机设计源、Review、真实 Trace / Bad Case / runtime result |
 | PF-031 | 2026-06-20 GraphRAG retrieval quality optimization | HISTORICAL_COMMITS_TESTS_EVAL_AUDIT_CORROBORATED | 用户 GitHub 账号先在 Zuno retrieval-only `real_runtime` 的 HotpotQA `limit=5` smoke 中记录 local GraphRAG 的 sampled regression：baseline `Recall@5=1.00`、local `Recall@5=0.80`，两个样本可见 graph-added 文档挤出 baseline 已命中的 gold-like 文档；随后连续实现 baseline-preserving fusion、candidate-aware seed expansion、entity alias normalization 和 path-aware ranking；同日 committed rerun 记录 local `Recall@5=1.00`、`MRR@10=1.00`、`FullChainHit@5=1.00`、`fallback_count=1`，在该样本上不再低于 baseline | 这是 PF-017 客户质量反馈的已知根因 / 修复；正式 benchmark；GraphRAG 普遍优于 baseline；每个 commit 对指标提升的独立因果贡献；持久化 Neo4j eval path、生产质量或稳定历史性能已经证明 | gitignored raw runtime reports、冻结 runner / config、persisted benchmark ingestion、limit=10 / 多数据集 A/B / ablation、客户 Bad Case 或法院侧真实结果 |
+| PF-032 | 2026-04-15/28 Tool Calling strategy and MCP route hardening | HISTORICAL_COMMITS_TEST_ARTIFACT_CORROBORATED | 用户 GitHub 账号在 `77346758...` 中移除独立 `tool_invocation_model` / `available_tools` 选择脚手架以及 nested MCPAgent / SkillAgent-as-Tool 路径，使单一 `GeneralAgent` 直接绑定具体 MCP tools，并在 tool-call middleware 按 tool→server 映射注入用户 MCP 配置；`0b5fb350...` 随后在 Workspace Agent 上修复 custom MCP 名称自递归和高德天气自然句参数抽取，并新增 direct-route、config gate、structured-result 等 regression test artifact | 用户独立拥有全部 Agent / Tool Runtime；4 月 28 日大提交中的所有平台修改都属于 Tool Calling；这些 regression tests 当时已在 CI 执行通过；已恢复客户 / 法院事故、性能收益；当前 Tool Control Plane、Approval / Idempotency / Reconcile 已在当时实现 | 原始需求 / Issue / Review、历史 test run / CI、真实 Tool Trace / Bad Case、客户或 Pilot 结果，以及更小粒度的任务记录 |
 
 ### Memory / OpenViking 取证边界
 
@@ -75,6 +76,16 @@ V2 runtime integration 当时主要证明 pre-call Context Pack 构造、capabil
 6 月 25 日 Target 设计 commit 还引用了本机原始源 `C:\Users\Administrator\Downloads\zuno_ideal_architecture_with_context_memory.html`。当前连接设备上该精确路径不存在，对 `C:\Users` 的确切文件名前缀搜索也未恢复副本；这只表示该本机源当前 `NOT_RECOVERED`，不能扩大成“原文件从未存在”。同样，当前连接设备没有历史索引中记录的 `F:\internship-work\resume project\Zuno` 路径，因此无法继续检查该本地仓库的未推送 refs。
 
 上述 V2 / PR #8 证据都不能替代 PF-011 的 OpenViking artifact，也没有恢复真实客户 / 法院需求、真实生产事故或真实任务质量结果。它们证明的是一条可核对的工程演进链，以及每个阶段当时明确声明的 Current / Target 上限。
+
+### Tool Calling Strategy 取证边界
+
+公开 main history 现在可以把 PF-012 从方向级回忆收紧到两段具体工程行为。`773467580ee428a0536c7f594c0847c1510879ac`（2026-04-15）由用户 GitHub 账号 authored。父提交中的 `GeneralAgent` 仍保留独立 `tool_invocation_model`、`available_tools` / `LLMToolSelectorMiddleware` 选择脚手架，MCP Server 通过 `MCPAgent` 再包装成一个 Tool，Skill 也通过 `SkillAgent` 包装成 Tool。该提交移除这些 nested Agent / selector 脚手架，改为把实际 MCP tools 和 Skill guidance tools 直接绑定到同一个 `GeneralAgent`；MCP 调用前的 user config 注入进入 `EmitEventAgentMiddleware`，由 tool name 映射回 MCP server。这个证据能证明一次 Tool Calling strategy 的代码重构，但没有关联 PR、Review 或历史 status check，也没有恢复客户提出该策略的原始需求。
+
+`0b5fb35039711ab0b63dad6528df5e4705fbc93d`（2026-04-28）同样由用户 GitHub 账号 authored，但它是一个跨越工具、Knowledge、模型、Docker、脚本等多区域的大提交，因此不能把整个 commit 都归为 Tool Calling 个人任务。可安全提取的是 `WorkSpaceSimpleAgent` 中有明确前后差异和 regression test artifact 的几条路径。父版本的 `_canonical_mcp_target()` 对自定义 MCP server name 会再次递归调用自身；当 normalized query 就等于该 server name 时可以无限递归。4 月 28 日改成直接返回 normalized server name，并新增 `test_canonical_mcp_target_handles_custom_server_name_without_recursion`。父版本的高德天气 direct route 仅通过 `cleaned.replace("天气", "")` 生成 `city`；新版本增加 `_extract_gaode_weather_city()`，并用“请用高德地图查询南京今天天气，并简短回答。”固定 direct route 到 `maps_weather(city="南京")`。同一测试文件还覆盖 platform-ready MCP 无需 user config、direct structured result 最终呈现等行为。
+
+这些 regression tests 的源码能够证明作者当时明确锁定了哪些失败条件，但当前 GitHub 历史没有恢复这两个 SHA 的 PR-triggered Actions run，combined commit status 也没有 recorded status check。因此只能写“tests were added / test artifact exists”，不能写“历史 CI 已通过”或制造测试数量。custom MCP recursion 和天气参数错误属于从代码前后差异可以复现的历史实现缺陷；当前没有证据证明它们曾在法院、Pilot 或 Production 中形成真实事故。
+
+PF-032 也不能反向证明今天的 Tool Control Plane。当前 Target / 后续实现里的 PreparedAction、Authorization / Approval、Idempotency、EffectReceipt、Outcome Unknown → Reconcile 等属于后来更强的 Tool Runtime 语义；4 月材料只能证明当时的单 Agent Tool/MCP 调用策略、部分 direct-route / ReAct fallback 与具体 hardening。成熟 Provider 或 MCP SDK 仍然负责协议连接和具体工具执行能力，Zuno 当时的代码主要决定这些能力怎样被 Agent 暴露、选择、注参和呈现。
 
 ### GraphRAG 研发质量取证边界
 
@@ -146,6 +157,7 @@ PF-031 与 PF-017 必须保持独立。当前可以同时说“客户历史上�
 - PF-017 的客户质量反馈仍缺真正的客户 Bad Case、根因、修改和前后结果；PF-031 的 HotpotQA 研发闭环不能替代这条证据；
 - PF-031 已恢复 sampled regression → fusion / seed / alias / path fixes → rerun 的研发链，下一步高价值证据是 gitignored raw reports、冻结 runner/config、持久化 benchmark ingestion、limit=10 / 多数据集 A/B 与 ablation，而不是把 5 条 smoke 包装成正式 benchmark；
 - Context / Memory 已经从 6 月 25 日 Target plan、26 日 V2 foundation / minimal runtime，一直恢复到 29 日 PR #8 readback hardening；下一步最高价值不再是继续找同类实现提交，而是恢复真实产品 / 业务触发、对应 Issue / Review、真实 Bug / Trace 或 runtime outcome；
+- PF-012 已从方向级“参与 Tool Calling Strategy”恢复到 4 月 15 日单 Agent Tool/MCP strategy 重构和 4 月 28 日 Workspace route hardening / regression test artifact；下一步高价值证据是原始需求 / Issue / Review、历史 test run、真实 Tool Trace / Bad Case 和客户或 Pilot 结果，而不是用后来 Tool Control Plane 反向补历史；
 - PF-010 / PF-011 对应的更早第一批 Memory / OpenViking artifact 仍未恢复，尤其 OpenViking 不能由 6 月 V2 / PR #8 反向证明；
 - Court-side Testing / Pilot 到底有多少题、多少用户、什么环境、怎样验收；
 - 历史 Knowledge / RAG 的真实技术栈、数据规模和检索策略；
