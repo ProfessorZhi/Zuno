@@ -18,9 +18,7 @@ MODULES = {
 
 MODULE_READMES = [ROOT / "docs/modules" / value for value in MODULES.values()]
 TEXT_SUFFIXES = {".md", ".py", ".yaml", ".yml", ".html"}
-SKIP_PREFIXES = (
-    ROOT / "docs/red-blue/archive/legacy",
-)
+SKIP_PREFIXES = (ROOT / "docs/red-blue/archive/legacy",)
 
 
 def replace(path: Path, pairs: list[tuple[str, str]]) -> bool:
@@ -54,10 +52,10 @@ def migrate_module_readmes() -> None:
         ("../project/project.md", "../../project/README.md"),
         ("../project/README.md", "../../project/README.md"),
     ]
-    sibling = [(old, f"../{new}") for old, new in MODULES.items()]
     absolute = [(f"docs/modules/{old}", f"docs/modules/{new}") for old, new in MODULES.items()]
+    sibling = [(old, f"../{new}") for old, new in MODULES.items()]
     for path in MODULE_READMES:
-        replace(path, common + sibling + absolute)
+        replace(path, common + absolute + sibling)
 
 
 def migrate_active_text() -> None:
@@ -81,66 +79,47 @@ def migrate_active_text() -> None:
 
 
 def structural_fixes() -> None:
-    path = ROOT / "tools/scripts/verify_docs_entrypoints.py"
-    replace(path, [
+    replace(ROOT / "tools/scripts/verify_docs_entrypoints.py", [
         ('    "docs/project/project.md",\n', ''),
         ('    "architecture.md",\n', ''),
     ])
-
-    path = ROOT / "tools/scripts/verify_architecture_document_set.py"
-    replace(path, [('    "architecture.md",\n', '')])
-
-    path = ROOT / "tools/agent/render_architecture.py"
-    replace(path, [('    "architecture.md",\n', '')])
-
-    path = ROOT / ".agent/scripts/verify_doc_boundaries.py"
-    replace(path, [('    "docs/project/project.md",\n', ''), ('    "architecture.md",\n', '')])
-
-    path = ROOT / "tools/scripts/verify_repo_structure.py"
-    replace(path, [('    "docs/project/project.md",\n', ''), ('    "architecture.md", ', '')])
-
-    path = ROOT / "tools/scripts/verify_architecture_human_readability.py"
-    replace(path, [('    "project.md": (9000, 10, 24),', '    "README.md": (9000, 10, 24),')])
-
-    path = ROOT / "tests/repo/test_docs_entrypoints.py"
-    replace(path, [
+    replace(ROOT / "tools/scripts/verify_architecture_document_set.py", [
+        ('    "architecture.md",\n', ''),
+    ])
+    replace(ROOT / "tools/agent/render_architecture.py", [
+        ('    "architecture.md",\n', ''),
+    ])
+    replace(ROOT / ".agent/scripts/verify_doc_boundaries.py", [
+        ('    "docs/project/project.md",\n', ''),
+        ('    "architecture.md",\n', ''),
+    ])
+    replace(ROOT / "tools/scripts/verify_repo_structure.py", [
+        ('    "docs/project/project.md",\n', ''),
+        ('"README.md", "architecture.md", "architecture-views.md", "architecture.html", "reference.md"',
+         '"README.md", "architecture-views.md", "architecture.html", "reference.md"'),
+    ])
+    replace(ROOT / "tools/scripts/verify_architecture_human_readability.py", [
+        ('    "project.md": (9000, 10, 24),', '    "README.md": (9000, 10, 24),'),
+    ])
+    replace(ROOT / "tests/repo/test_docs_entrypoints.py", [
         ('CANONICAL_ARCHITECTURE_FILES = {\n    "README.md", "architecture.md", "architecture-views.md", "architecture.html", "reference.md"\n}',
          'CANONICAL_ARCHITECTURE_FILES = {\n    "README.md", "architecture-views.md", "architecture.html", "reference.md"\n}'),
         ('CANONICAL_PROJECT_FILES = {"README.md", "project.md", "reference.md"}',
          'CANONICAL_PROJECT_FILES = {"README.md", "reference.md"}'),
         ('assert {p.name for p in root.iterdir() if p.is_file()} == CANONICAL_MODULE_FILES',
          'assert {p.relative_to(root).as_posix() for p in root.rglob("*") if p.is_file()} == CANONICAL_MODULE_FILES'),
-        ('assert "project.md" in readme\n', ''),
-        ('assert "project.md" in reference\n', ''),
+        ('    assert "project.md" in readme\n', ''),
+        ('    assert "project.md" in reference\n', ''),
     ])
-
-    path = ROOT / "tests/repo/test_architecture_document_set.py"
-    replace(path, [])
-
-    path = ROOT / "tests/repo/test_architecture_human_readability.py"
-    replace(path, [('"project.md"', '"README.md"')])
-
-
-def remove_stale_path_assertions() -> None:
-    # The validators should reject the old physical schema rather than require it.
-    for relative in (
-        "tools/scripts/verify_docs_entrypoints.py",
-        "tools/scripts/verify_repo_structure.py",
-        ".agent/scripts/verify_doc_boundaries.py",
-    ):
-        path = ROOT / relative
-        if not path.exists():
-            continue
-        text = path.read_text(encoding="utf-8")
-        text = text.replace('ROOT / "docs/architecture.md",\n', 'ROOT / "docs/architecture.md",\n')
-        path.write_text(text, encoding="utf-8")
+    replace(ROOT / "tests/repo/test_architecture_human_readability.py", [
+        ('"project.md"', '"README.md"'),
+    ])
 
 
 def main() -> None:
     migrate_module_readmes()
     migrate_active_text()
     structural_fixes()
-    remove_stale_path_assertions()
 
 
 if __name__ == "__main__":
