@@ -97,7 +97,7 @@ def test_machine_dense_reference_does_not_reduce_part_a_readability() -> None:
     )
     assert verifier.verify_architecture_human(human) == []
     assert verifier.verify_engineering_reference(reference, "architecture/reference.md", module=False) == []
-    assert verifier.warning_for_human(human, "architecture README") == []
+    assert verifier.warning_for_human(human, "architecture.md") == []
 
 
 def test_writing_model_rejects_thin_architecture_part_a() -> None:
@@ -121,7 +121,7 @@ def test_machine_markers_warn_without_blocking_when_part_a_is_substantial() -> N
         "TARGET_ONLY CURRENT_STATE MODULE_STATE NOT_READY UNKNOWN requirement_id canonical_question values remain hidden from the reader. "
     )
     assert verifier.verify_architecture_human(document) == []
-    assert verifier.warning_for_human(document, "architecture README")
+    assert verifier.warning_for_human(document, "architecture.md")
 
 
 def test_project_narrative_meets_regression_floor() -> None:
@@ -134,7 +134,7 @@ def test_project_narrative_meets_regression_floor() -> None:
 
 def test_architecture_part_a_meets_conceptual_depth_floor() -> None:
     verifier = _load()
-    text = (REPO_ROOT / "docs/architecture/README.md").read_text(encoding="utf-8")
+    text = (REPO_ROOT / "docs/architecture/architecture.md").read_text(encoding="utf-8")
     assert verifier.verify_architecture_human(text) == []
     part_a = text[text.index(verifier.ARCHITECTURE_PART_A_HEADING) + len(verifier.ARCHITECTURE_PART_A_HEADING):]
     assert verifier._nonspace_chars(part_a) >= verifier.ARCHITECTURE_PART_A_MIN_NONSPACE_CHARS
