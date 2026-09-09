@@ -8,6 +8,7 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 ARCH_ROOT = REPO_ROOT / "docs/architecture"
 ARCHITECTURE_FILES = {
     "README.md",
+    "architecture.md",
     "architecture-views.md",
     "architecture.html",
     "reference.md",
@@ -43,6 +44,7 @@ def verify() -> list[str]:
         REPO_ROOT / "docs/project/README.md",
         REPO_ROOT / "docs/project/reference.md",
         REPO_ROOT / "docs/architecture/README.md",
+        REPO_ROOT / "docs/architecture/architecture.md",
         REPO_ROOT / "docs/architecture/reference.md",
         REPO_ROOT / "docs/modules/README.md",
         REPO_ROOT / "docs/modules/reference.md",
@@ -69,7 +71,6 @@ def verify() -> list[str]:
         REPO_ROOT / "docs/maintenance",
         REPO_ROOT / "docs/terminology.md",
         REPO_ROOT / "docs/project/project.md",
-        REPO_ROOT / "docs/architecture/architecture.md",
     ):
         if obsolete.exists():
             errors.append(f"obsolete documentation path must be absent: {obsolete.relative_to(REPO_ROOT)}")
@@ -80,7 +81,8 @@ def verify() -> list[str]:
 
     index = read("docs/README.md")
     project = read("docs/project/README.md")
-    design = read("docs/architecture/README.md")
+    architecture_entry = read("docs/architecture/README.md")
+    design = read("docs/architecture/architecture.md")
     arch_reference = read("docs/architecture/reference.md")
     modules_index = read("docs/modules/README.md")
     modules_reference = read("docs/modules/reference.md")
@@ -103,7 +105,7 @@ def verify() -> list[str]:
         if marker not in index:
             errors.append(f"docs README missing eight-domain marker: {marker}")
 
-    for marker in ("project/README.md", "architecture/README.md", "modules/README.md"):
+    for marker in ("project/README.md", "architecture/architecture.md", "modules/README.md"):
         if marker not in index:
             errors.append(f"docs README missing canonical human route: {marker}")
     for marker in ("architecture/reference.md", "modules/reference.md", "reference.md"):
@@ -111,6 +113,10 @@ def verify() -> list[str]:
             errors.append(f"docs README missing engineering-route marker: {marker}")
     if "docs/architecture" not in system:
         errors.append("system.yaml must route to architecture surface")
+
+    for marker in ("architecture.md", "reference.md", "architecture-views.md", "architecture.html"):
+        if marker not in architecture_entry:
+            errors.append(f"architecture README missing directory-entry marker: {marker}")
 
     human_markers = (
         "# Zuno 目标架构",
@@ -122,15 +128,15 @@ def verify() -> list[str]:
     )
     for marker in human_markers:
         if marker not in design:
-            errors.append(f"architecture README missing human/target marker: {marker}")
+            errors.append(f"architecture.md missing human/target marker: {marker}")
     if "## Part B — Engineering / Agent Reference（工程 / Agent 参考）" in design:
-        errors.append("architecture README must not contain Part B after human/reference split")
+        errors.append("architecture.md must not contain Part B after human/reference split")
     if "Single Controller" not in design + "\n" + arch_reference:
         errors.append("architecture split views must preserve Single Controller target semantics")
 
     engineering_markers = (
         "status: canonical-architecture-engineering-reference",
-        "human_source: docs/architecture/README.md",
+        "human_source: docs/architecture/architecture.md",
         "module_router: docs/modules/reference.md",
         "## Part B — Engineering / Agent Reference（工程 / Agent 参考）",
         "### B1. Scope / Global Invariants",
@@ -207,8 +213,8 @@ def verify() -> list[str]:
         "Research boundary",
         "Red / Blue boundary",
         "Architecture reasoning contract",
-        "README.md      Human Narrative",
-        "reference.md   Engineering / Agent Reference",
+        "architecture/architecture.md",
+        "architecture/reference.md",
     ):
         if marker not in docs_architecture:
             errors.append(f"documentation architecture reference missing marker: {marker}")
