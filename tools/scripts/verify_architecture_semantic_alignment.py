@@ -5,7 +5,7 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[2]
-ARCH_HUMAN = ROOT / "docs/architecture/README.md"
+ARCH_HUMAN = ROOT / "docs/architecture/architecture.md"
 ARCH_REFERENCE = ROOT / "docs/architecture/reference.md"
 VIEWS = ROOT / "docs/architecture/architecture-views.md"
 HTML = ROOT / "docs/architecture/architecture.html"
@@ -122,7 +122,7 @@ def verify() -> list[str]:
         ),
     )
     if "## Part B — Engineering / Agent Reference（工程 / Agent 参考）" in architecture_human:
-        errors.append("overall architecture human README must not retain Part B")
+        errors.append("overall architecture human document must not retain Part B")
     _require(
         errors,
         "overall architecture split views",
