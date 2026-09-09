@@ -25,11 +25,13 @@ docs/governance/              provenance / owner / documentation / workflow / op
 ```text
 docs/README.md
 → docs/project/README.md
-→ docs/architecture/README.md
+→ docs/architecture/architecture.md
 → docs/modules/README.md
 → docs/modules/<semantic-name>/README.md
 → docs/evidence/README.md
 ```
+
+`docs/architecture/README.md` 是目录入口；总体 Target Human Narrative 的 Canonical 文件是 `docs/architecture/architecture.md`。
 
 Research 按需进入，不作为第一次阅读固定中转。Red / Blue 在正文已经独立可读后才运行。
 
@@ -45,7 +47,7 @@ docs/architecture/reference.md
 → code / schema / migration / tests
 ```
 
-需要理解“为什么存在”时，从 reference 回到同目录 README；不要从 README 猜字段、状态或 Current。
+需要理解总体架构“为什么存在”时，从 Architecture reference 回到 `docs/architecture/architecture.md`；Module reference 则回到同目录 README。不要从 Human Narrative 猜字段、状态或 Current。
 
 当前语义模块目录：
 
@@ -61,7 +63,7 @@ security/         08 Security & Governance
 evaluation/       09 Observability & Evaluation
 ```
 
-每个目录：
+每个 Module 目录：
 
 ```text
 README.md      Human Narrative
@@ -77,7 +79,7 @@ Project fact / resume ownership 任务额外读取 `docs/project/reference.md` �
 | Question | Owner / source |
 | --- | --- |
 | 项目为什么存在、怎样发展、团队与个人参与 | `docs/project/` |
-| 当前 Target 为什么这样设计 | `docs/architecture/` |
+| 当前 Target 为什么这样设计 | `docs/architecture/architecture.md` + `docs/architecture/reference.md` |
 | Target 怎样分解为具体责任与局部 Contract | `docs/modules/` |
 | Red / Blue 方法、Transcript、Findings、旧 Round | `docs/red-blue/`，non-authoritative for system truth |
 | 外部研究、算法、天津法院/LIPLAB 背景、平台 baseline | `docs/research/`，upstream only |
