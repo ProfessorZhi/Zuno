@@ -10,7 +10,7 @@
 
 Observability 负责解释系统发生了什么，Evaluation 负责判断结果好不好、复杂度是否值得保留。两者共享版本、关联和数据治理，但不能因为都“看数据”就混成一个 Dashboard。
 
-**贯穿这一篇只问一个决策问题：GraphRAG、Reflection、强模型、Specialist 或 Native Runtime 到底值不值得留下。** 要回答它，团队既要知道一次真实请求发生了什么，也要能把同一 task class 放进可复现实验，与更简单 baseline 比质量、恢复、时延和成本。Observability 提供因果线索，Evaluation 提供决策证据；两者都不能越权成为业务 Truth。
+GraphRAG、Reflection、强模型、Specialist 或 Native Runtime 是否值得保留，是 09 必须持续回答的设计问题。团队既要知道一次真实请求发生了什么，也要把同一 task class 放进可复现实验，与更简单 baseline 比质量、恢复、时延和成本。Observability 提供因果线索，Evaluation 提供决策证据；两者都不拥有业务 Truth。
 
 ### Trace 只能解释过程，事故调查先回到 Owner Fact
 
@@ -45,9 +45,7 @@ Baggage 会跨进程广泛传播，如果把 tenant 名称、案件名称、用�
 
 但 Sampling 不能决定 Domain、Effect、Authorization 或 Mandatory Audit 是否存在。关闭 tracing 不能让系统失去恢复能力，也不能让安全证明消失。
 
----
-
-**先把“发生了什么”讲清以后，才有资格比较“哪种设计更好”。** 评测不是在 Dashboard 上挑一个数字，而是先冻结 Dataset、版本、暴露关系和 Judge，再让结果真正可比较。
+可比较的 Eval 建立在可解释运行事实之上。Dataset、版本、训练暴露关系和 Judge 先被冻结，再比较不同设计；Dashboard 上的单一数字不足以支持架构选择。
 
 ### Eval Dataset、Judge 与 PASS / FAIL / BLOCKED 需要版本化边界
 
