@@ -25,7 +25,7 @@ module_detail_freeze: NOT_YET
 implementation_authorization: NO
 owner: Cross-cutting Architecture Owner
 canonical_question: Zuno 作为一个长期法律智能工作系统，应该怎样划分事实权威、执行控制、知识能力、安全和现实副作用，使系统可以解释、恢复和演进？
-project_source: docs/project/project.md
+project_source: docs/project/README.md
 module_source: docs/modules/
 decision_source: docs/decisions/
 evidence_source: docs/evidence/
@@ -233,15 +233,15 @@ Part B 是总体架构的机器可消费索引。它压缩 Part A 已经解释�
 
 | Owner | Authoritative facts | Consumes but does not own | Canonical module |
 |---|---|---|---|
-| 01 Application & Integration | 产品入口、Matter/Scope 组合、Publication / Delivery 语义 | Domain、Knowledge、Security、RunOutcome、Effect refs | [`01`](../modules/01-application-integration.md) |
-| 02 Legal Domain & Work Product | Matter / DocumentVersion canonical identity、Claim、Evidence、Finding、HumanDecision、WorkProduct、DomainVersion、AdmissionReceipt、WorkProductCitationBinding | Candidate、Readiness、Runtime、Effect、Security refs | [`02`](../modules/02-legal-domain-work-product.md) |
-| 03 Knowledge & Evidence | KnowledgeGeneration、Serving eligibility、ReadinessDecision、EvidenceCandidate、RetrievalResult、CitationLineage | DocumentVersion canonical ref、Security decision | [`03`](../modules/03-knowledge-evidence.md) |
-| 04 Agent Runtime & Control | AgentRun、PlanVersion、StepRun、Checkpoint、Ready/Join/Barrier、Retry/Replan/Reconcile control、RunOutcome | Domain Receipt、Knowledge、Capability、Model、Effect、Security facts | [`04`](../modules/04-agent-runtime-control.md) |
-| 05 Capability & Skill | Capability semantics/version、Provider conformance、task qualification | Model/Knowledge inputs、Domain admission result | [`05`](../modules/05-capability-skill.md) |
-| 06 Tool Runtime & Effects | ToolVersion effect semantics、PreparedAction、ToolAttempt、EffectReceipt、ReconciliationReceipt、RetrySafety | Authorization/Approval、Plan、Domain refs | [`06`](../modules/06-tool-runtime-effects.md) |
-| 07 Model Gateway | Model role resolution、Provider eligibility、ModelAttempt、usage/cost truth | Capability quality、Security egress decision、Domain result | [`07`](../modules/07-model-gateway.md) |
-| 08 Security & Governance | SecurityEpoch / PolicyVersion、AuthorizationDecision、ApprovalDecision、ModelEgressDecision、AuditRequirement、lifecycle policy decision | Domain HumanDecision、Effect truth、Store enforcement facts | [`08`](../modules/08-security-governance.md) |
-| 09 Observability & Evaluation | Telemetry、Eval run、experiment result、quality evidence | 所有业务 Authority refs | [`09`](../modules/09-observability-evaluation.md) |
+| 01 Application & Integration | 产品入口、Matter/Scope 组合、Publication / Delivery 语义 | Domain、Knowledge、Security、RunOutcome、Effect refs | [`application`](../modules/application/README.md) |
+| 02 Legal Domain & Work Product | Matter / DocumentVersion canonical identity、Claim、Evidence、Finding、HumanDecision、WorkProduct、DomainVersion、AdmissionReceipt、WorkProductCitationBinding | Candidate、Readiness、Runtime、Effect、Security refs | [`domain`](../modules/domain/README.md) |
+| 03 Knowledge & Evidence | KnowledgeGeneration、Serving eligibility、ReadinessDecision、EvidenceCandidate、RetrievalResult、CitationLineage | DocumentVersion canonical ref、Security decision | [`knowledge`](../modules/knowledge/README.md) |
+| 04 Agent Runtime & Control | AgentRun、PlanVersion、StepRun、Checkpoint、Ready/Join/Barrier、Retry/Replan/Reconcile control、RunOutcome | Domain Receipt、Knowledge、Capability、Model、Effect、Security facts | [`runtime`](../modules/runtime/README.md) |
+| 05 Capability & Skill | Capability semantics/version、Provider conformance、task qualification | Model/Knowledge inputs、Domain admission result | [`capability`](../modules/capability/README.md) |
+| 06 Tool Runtime & Effects | ToolVersion effect semantics、PreparedAction、ToolAttempt、EffectReceipt、ReconciliationReceipt、RetrySafety | Authorization/Approval、Plan、Domain refs | [`effects`](../modules/effects/README.md) |
+| 07 Model Gateway | Model role resolution、Provider eligibility、ModelAttempt、usage/cost truth | Capability quality、Security egress decision、Domain result | [`model-gateway`](../modules/model-gateway/README.md) |
+| 08 Security & Governance | SecurityEpoch / PolicyVersion、AuthorizationDecision、ApprovalDecision、ModelEgressDecision、AuditRequirement、lifecycle policy decision | Domain HumanDecision、Effect truth、Store enforcement facts | [`security`](../modules/security/README.md) |
+| 09 Observability & Evaluation | Telemetry、Eval run、experiment result、quality evidence | 所有业务 Authority refs | [`evaluation`](../modules/evaluation/README.md) |
 | Platform / Infrastructure | DB/Object Store/Queue/Checkpointer/CAS/Lease/Fencing/Clock/Backup/Network/Secret Delivery 的物理原语事实 | 所有业务语义 | shared infrastructure |
 
 ### B3. Cross-boundary Contract Map
@@ -457,7 +457,7 @@ HumanDecision: 专业人员是否接受、修改或拒绝法律业务结论
 Current Code / Test / Runtime Evidence
 > canonical docs/architecture + docs/modules
 > accepted ADR
-> historical Red/Blue / maintenance history
+> historical Red/Blue archive
 > docs/research and external research
 > speculation
 ```
