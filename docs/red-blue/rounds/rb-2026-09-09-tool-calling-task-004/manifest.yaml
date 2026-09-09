@@ -1,0 +1,41 @@
+round_id: rb-2026-09-09-tool-calling-task-004
+state: CLOSED
+mode: CHATGPT_AUTO
+zuno_base_sha: 6df22fac74b852932bc97524a6c9aaf7836fdb42
+resume_snapshot:
+  repository: ProfessorZhi/internship-work
+  commit_sha: b57f28a5b0da0b84eaf77bc1bcee5d4c999394da
+  path: resume/00_resume_versions/Zuno_v3+CodingAgent+SFTDPO_简历/Agent开发工程师／AI应用工程师+Zuno／CodingAgent／SFTDPO_任务证据增强／可追问_简历草稿_v3.md
+target_role: Agent 开发工程师 / AI 应用工程师
+interview_stage: task-deep-dive / implementation-follow-up
+red_calibration: kernel-only
+blue_profile: historical-task-evidence-first
+scenario_scope:
+  - single-Agent Tool/MCP strategy decision and exact before/after boundary
+  - deterministic direct route vs ReAct fallback
+  - historical code defects vs real customer/production incidents
+  - MCP Build/Buy responsibility boundary
+  - personal ownership on broad historical commits
+  - test artifact vs historical test execution and runtime outcome
+blue_allowlist:
+  - docs/project/
+  - docs/governance/project-fact-provenance.md
+  - docs/evidence/
+  - historical commit 773467580ee428a0536c7f594c0847c1510879ac
+  - parent commit 2a68bab9b245c684b243537006957169a27b9db5
+  - historical commit 0b5fb35039711ab0b63dad6528df5e4705fbc93d
+  - parent commit 1fbd97389c1126c4215b9a2533f67f7842660c24
+  - historical test artifact src/backend/agentchat/test/test_workspace_simple_agent.py at 0b5fb35039711ab0b63dad6528df5e4705fbc93d
+max_turns: 6
+stop_condition: >-
+  Close when PF-032 can or cannot sustain a concrete Strategy, alternative,
+  failure, Build/Buy, ownership and evidence-limit deep dive without importing
+  later Tool Control Plane semantics or inventing customer/runtime results.
+result: CLOSED_WITH_INTERVIEWABLE_TOOL_CALLING_TASK_AND_EVIDENCE_LIMIT
+resume_claim_verdict: PASS_FOR_BOUNDED_V4_UPGRADE
+finding_count: 1
+highest_severity: S2
+resolved_findings:
+  - direction-level-only Tool Calling Strategy evidence gap in v3
+  - ambiguity between MCP protocol capability and Zuno Agent-side routing/config responsibility
+  - ambiguity between historical code defect and real production incident
