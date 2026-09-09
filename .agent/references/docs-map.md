@@ -24,10 +24,10 @@ docs/governance/              provenance / owner / documentation / workflow / op
 
 ```text
 docs/README.md
-→ docs/project/project.md
-→ docs/architecture/architecture.md Part A
+→ docs/project/README.md
+→ docs/architecture/README.md Part A
 → docs/modules/README.md
-→ selected Module Part A
+→ docs/modules/<semantic-name>/README.md Part A
 → docs/evidence/README.md
 ```
 
@@ -37,13 +37,29 @@ Research 按需进入，不作为第一次阅读固定中转。Red / Blue 在正
 
 ```text
 docs/architecture/reference.md
-→ docs/architecture/architecture.md Part B
+→ docs/architecture/README.md Part B
 → docs/modules/reference.md
-→ selected Module Part B / Part C
+→ docs/modules/<semantic-name>/README.md Part B / Part C
 → docs/decisions/
 → docs/evidence/
 → code / schema / migration / tests
 ```
+
+当前语义模块目录：
+
+```text
+application/      01 Application & Integration
+domain/           02 Legal Domain & Work Product
+knowledge/        03 Knowledge & Evidence
+runtime/          04 Agent Runtime & Control
+capability/       05 Capability & Skill
+effects/          06 Tool Runtime & Effects
+model-gateway/    07 Model Gateway
+security/         08 Security & Governance
+evaluation/       09 Observability & Evaluation
+```
+
+编号仍属于当前 Target decomposition；目录名表达责任语义，不把顺序冻结进文件系统。
 
 Project fact / resume ownership 任务额外读取 `docs/project/reference.md` 与 `docs/governance/project-fact-provenance.md`。
 

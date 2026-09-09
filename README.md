@@ -6,8 +6,8 @@ Zuno 是一个来自南京大学 LIPLAB 智慧司法研究与工程化背景的�
 
 第一次接触 Zuno，沿一条主线即可：
 
-1. [Project](./docs/project/project.md) — 项目为什么出现、真实演进、团队与个人参与；
-2. [Architecture](./docs/architecture/architecture.md) Part A — 从简单方案开始，看哪些真实约束逼出新的事实边界；
+1. [Project](./docs/project/README.md) — 项目为什么出现、真实演进、团队与个人参与；
+2. [Architecture](./docs/architecture/README.md) Part A — 从简单方案开始，看哪些真实约束逼出新的事实边界；
 3. [Modules](./docs/modules/README.md) — 总体设计怎样分解为局部责任、正常流程和故障恢复；
 4. [Evidence](./docs/evidence/README.md) — 今天的代码、测试和运行实际证明了什么。
 
@@ -63,7 +63,7 @@ python .agent/scripts/verify_doc_boundaries.py
 pytest -q tests/repo/test_docs_entrypoints.py tests/repo/test_architecture_document_set.py -p no:cacheprovider
 ```
 
-架构图需要更新时，先修改 `docs/architecture/architecture.md` 与图源，再运行：
+架构图需要更新时，先修改 `docs/architecture/README.md` 与图源，再运行：
 
 ```powershell
 python tools/agent/render_architecture.py --write

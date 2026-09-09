@@ -427,7 +427,7 @@ Telemetry 需要关联 Matter、DocumentVersion、DomainVersion、Claim / Eviden
 
 ### B13 Current / Target / Gap / Evidence
 
-**Current**：[`implementation-wave-001.md`](../evidence/implementation-wave-001.md) 证明有限 Domain mutation、CAS、幂等、事务失败保护和 Citation Provenance Guard；真实 PostgreSQL race、完整正式准入链仍未证明。
+**Current**：[`implementation-wave-001.md`](../../evidence/implementation-wave-001.md) 证明有限 Domain mutation、CAS、幂等、事务失败保护和 Citation Provenance Guard；真实 PostgreSQL race、完整正式准入链仍未证明。
 
 **Target**：完整七对象最小领域内核、Formal Admission + AdmissionReceipt、正式 Evidence、历史引用绑定、版本化 WorkProduct、HumanDecision、依赖失效和受控局部重评。
 

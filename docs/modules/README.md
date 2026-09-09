@@ -4,6 +4,8 @@
 
 第一次阅读本目录，不需要先记 `AdmissionReceipt`、`PlanVersion`、`PreparedAction` 等内部对象。先理解三条任务路径和九个责任域为什么存在；真正实施时再进入每篇 Part B / Part C 查精确 Contract、状态和 Crash Window。
 
+当前 Architecture 仍用 01–09 表示责任编号，便于与 ADR、历史审查和跨模块引用对应。物理目录不再把编号写进文件名：目录名表达长期责任语义，编号只属于当前 Target decomposition。
+
 ## 先用三条任务路径建立 mental model
 
 ### 简单法律问答
@@ -28,15 +30,15 @@
 
 | 编号 | 责任域 | 用一句人话说明它保护什么 | 文档 |
 | --- | --- | --- | --- |
-| 01 | Application & Integration | 把内部权威事实组合成稳定请求、发布、交付和失效传播语义 | [01](01-application-integration.md) |
-| 02 | Legal Domain & Work Product | 决定什么最终成为正式、长期、可审计的法律业务事实 | [02](02-legal-domain-work-product.md) |
-| 03 | Knowledge & Evidence | 区分正式材料、可重建知识派生、任务就绪和检索候选 | [03](03-knowledge-evidence.md) |
-| 04 | Agent Runtime & Control | 控制长任务怎样计划、并行、暂停、重规划和恢复 | [04](04-agent-runtime-control.md) |
-| 05 | Capability & Skill | 把研究算法和 Provider 变成稳定、版本化、可替换的专业能力 | [05](05-capability-skill.md) |
-| 06 | Tool Runtime & Effects | 在现实副作用发生前后保护动作身份、结果确认和对账 | [06](06-tool-runtime-effects.md) |
-| 07 | Model Gateway | 把模型调用变成受质量、安全、预算和用量约束的依赖 | [07](07-model-gateway.md) |
-| 08 | Security & Governance | 持续回答下一次受保护动作现在是否仍被允许 | [08](08-security-governance.md) |
-| 09 | Observability & Evaluation | 解释系统发生了什么，并验证复杂度是否值得保留 | [09](09-observability-evaluation.md) |
+| 01 | Application & Integration | 把内部权威事实组合成稳定请求、发布、交付和失效传播语义 | [application](application/README.md) |
+| 02 | Legal Domain & Work Product | 决定什么最终成为正式、长期、可审计的法律业务事实 | [domain](domain/README.md) |
+| 03 | Knowledge & Evidence | 区分正式材料、可重建知识派生、任务就绪和检索候选 | [knowledge](knowledge/README.md) |
+| 04 | Agent Runtime & Control | 控制长任务怎样计划、并行、暂停、重规划和恢复 | [runtime](runtime/README.md) |
+| 05 | Capability & Skill | 把研究算法和 Provider 变成稳定、版本化、可替换的专业能力 | [capability](capability/README.md) |
+| 06 | Tool Runtime & Effects | 在现实副作用发生前后保护动作身份、结果确认和对账 | [effects](effects/README.md) |
+| 07 | Model Gateway | 把模型调用变成受质量、安全、预算和用量约束的依赖 | [model-gateway](model-gateway/README.md) |
+| 08 | Security & Governance | 持续回答下一次受保护动作现在是否仍被允许 | [security](security/README.md) |
+| 09 | Observability & Evaluation | 解释系统发生了什么，并验证复杂度是否值得保留 | [evaluation](evaluation/README.md) |
 
 这些责任域按事实 Ownership 切分，不按技术栈切分。默认可以共处模块化 Python 后端；只有吞吐、安全隔离、故障半径或部署生命周期出现证据时才拆物理服务。
 
@@ -47,6 +49,8 @@ Part A 可以很长，它负责把概念设计讲透：问题是什么、最简�
 Part B 把已经理解的设计精确化成 Owner、Contract、状态、事务、幂等、持久化和 Detail Freeze Candidate；Part C 再检查这些语义跨模块以后，完成证明、版本、新鲜度、取消、晚到和恢复是否仍然一致。
 
 如果一个对象名必须先读 Part B 才知道它为什么存在，Part A 应补概念解释；反过来，如果 Part A 开始连续枚举字段、enum 和 crash-window 表格，则应该下沉到 Part B。
+
+当前每个语义目录只有一份 `README.md`，里面仍保留完整 Part A / Part B / Part C。这是迁移期的单一事实源。只有在下一轮能够机械验证拆分前后 Owner、Authority、Contract、Recovery 和 Current/Target 完全一致时，才把 Part B/C 物理拆成 `reference.md`；在那之前不复制第二份正文。
 
 > **第一次阅读到这里可以停。** 你现在只需要能说清三条任务路径的复杂度差异、九个责任域分别保护什么，以及什么时候读 Part A / B / C。下一步应按问题选择一到两个 Module Part A，而不是继续顺序背下面的 Ownership 表、Completion Proof、Cancellation、Late Result 和 Recovery Reference。下面开始更偏向架构维护者和跨模块审查。
 

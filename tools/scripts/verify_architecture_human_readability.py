@@ -6,7 +6,7 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[2]
-CANONICAL = [ROOT / "docs/architecture/architecture.md"]
+CANONICAL = [ROOT / "docs/architecture/README.md"]
 ARCHITECTURE_README = ROOT / "docs/architecture/README.md"
 PROJECT_ROOT = ROOT / "docs/project"
 MODULES_ROOT = ROOT / "docs/modules"
@@ -14,21 +14,21 @@ ROUND_01 = ROOT / "docs/red-blue/archive/legacy/manual-round-01-overall-architec
 ROUND_02 = ROOT / "docs/red-blue/archive/legacy/manual-round-02-overall-architecture-freeze-review.md"
 
 MODULE_FILES = (
-    "01-application-integration.md",
-    "02-legal-domain-work-product.md",
-    "03-knowledge-evidence.md",
-    "04-agent-runtime-control.md",
-    "05-capability-skill.md",
-    "06-tool-runtime-effects.md",
-    "07-model-gateway.md",
-    "08-security-governance.md",
-    "09-observability-evaluation.md",
+    "application/README.md",
+    "domain/README.md",
+    "knowledge/README.md",
+    "runtime/README.md",
+    "capability/README.md",
+    "effects/README.md",
+    "model-gateway/README.md",
+    "security/README.md",
+    "evaluation/README.md",
 )
 
 # Regression floors only. They prevent human-facing documents from collapsing into thin
 # index/spec sheets. They intentionally do not reward padding or pretend to score prose quality.
 PROJECT_NARRATIVE_BASELINES = {
-    "project.md": (9000, 10, 24),
+    "README.md": (9000, 10, 24),
 }
 
 ARCHITECTURE_PART_A_HEADING = "## Part A — Human Narrative"
@@ -278,14 +278,11 @@ def _verify_supporting_boundaries(errors: list[str]) -> None:
     else:
         readme = ARCHITECTURE_README.read_text(encoding="utf-8")
         for marker in (
-            "architecture.md",
-            "architecture-views.md",
-            "architecture.html",
             "Part A — Human Narrative",
             "Part B — Engineering / Agent Reference",
         ):
             if marker not in readme:
-                errors.append(f"architecture README missing entry or layer marker: {marker}")
+                errors.append(f"architecture README missing narrative layer marker: {marker}")
 
     architecture = CANONICAL[0]
     if architecture.exists():
@@ -296,7 +293,7 @@ def _verify_supporting_boundaries(errors: list[str]) -> None:
                 text,
             )
         )
-        module_docs = [path for path in MODULES_ROOT.glob("*.md") if path.name.lower() != "readme.md"]
+        module_docs = [MODULES_ROOT / filename for filename in MODULE_FILES if (MODULES_ROOT / filename).exists()]
         if not gate_open and module_docs:
             errors.append("module decomposition gate is closed but module documents exist")
 

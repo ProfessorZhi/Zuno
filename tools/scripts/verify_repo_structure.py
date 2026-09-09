@@ -14,7 +14,6 @@ DOC_DIRS = {
 }
 PROJECT_FILES = {
     "docs/project/README.md",
-    "docs/project/project.md",
     "docs/project/reference.md",
 }
 RESEARCH_FILES = {
@@ -28,19 +27,18 @@ RESEARCH_FILES = {
 MODULE_FILES = {
     "docs/modules/README.md",
     "docs/modules/reference.md",
-    "docs/modules/01-application-integration.md",
-    "docs/modules/02-legal-domain-work-product.md",
-    "docs/modules/03-knowledge-evidence.md",
-    "docs/modules/04-agent-runtime-control.md",
-    "docs/modules/05-capability-skill.md",
-    "docs/modules/06-tool-runtime-effects.md",
-    "docs/modules/07-model-gateway.md",
-    "docs/modules/08-security-governance.md",
-    "docs/modules/09-observability-evaluation.md",
+    "docs/modules/application/README.md",
+    "docs/modules/domain/README.md",
+    "docs/modules/knowledge/README.md",
+    "docs/modules/runtime/README.md",
+    "docs/modules/capability/README.md",
+    "docs/modules/effects/README.md",
+    "docs/modules/model-gateway/README.md",
+    "docs/modules/security/README.md",
+    "docs/modules/evaluation/README.md",
 }
 ARCHITECTURE_FILES = {
     "README.md",
-    "architecture.md",
     "architecture-views.md",
     "architecture.html",
     "reference.md",
@@ -88,7 +86,7 @@ def main() -> int:
         errors.append(f"docs top-level domains mismatch: expected {sorted(DOC_DIRS)}; got {sorted(actual_doc_dirs)}")
 
     if _files(ROOT / "docs/project") != PROJECT_FILES:
-        errors.append("docs/project must contain human narrative plus machine reference")
+        errors.append("docs/project must contain the canonical README narrative plus machine reference")
     if _files(ROOT / "docs/research") != RESEARCH_FILES:
         errors.append("docs/research must contain only the curated upstream research knowledge set")
     if _files(ROOT / "docs/evidence") != {
@@ -100,9 +98,9 @@ def main() -> int:
     }:
         errors.append("docs/evidence must contain only current evidence entries")
     if _files(ROOT / "docs/modules") != MODULE_FILES:
-        errors.append("docs/modules must contain the human entry, machine router, and current Target module documents")
+        errors.append("docs/modules must contain the human entry, machine router, and semantic Target module directories")
     if {path.name for path in (ROOT / "docs/architecture").iterdir() if path.is_file()} != ARCHITECTURE_FILES:
-        errors.append("docs/architecture must contain human/visual/rendered entries plus machine reference")
+        errors.append("docs/architecture must contain the canonical README target, visual/rendered entries, and machine reference")
 
     governance_files = _files(ROOT / "docs/governance")
     missing_governance = GOVERNANCE_REQUIRED - governance_files
@@ -117,6 +115,8 @@ def main() -> int:
     for obsolete in (
         ROOT / "docs/maintenance",
         ROOT / "docs/terminology.md",
+        ROOT / "docs/project/project.md",
+        ROOT / "docs/architecture/architecture.md",
         ROOT / "docs/facts",
         ROOT / "docs/history",
         ROOT / "docs/operations",

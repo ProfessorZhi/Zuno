@@ -120,7 +120,7 @@ def test_project_narrative_meets_regression_floor() -> None:
 
 def test_architecture_part_a_meets_conceptual_depth_floor() -> None:
     verifier = _load()
-    text = (REPO_ROOT / "docs/architecture/architecture.md").read_text(encoding="utf-8")
+    text = (REPO_ROOT / "docs/architecture/README.md").read_text(encoding="utf-8")
     layers = verifier._split_architecture_layers(text)
     assert layers is not None
     part_a, part_b = layers

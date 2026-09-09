@@ -2,7 +2,7 @@
 
 修改 `apps/web` 前先读：
 
-1. `docs/architecture/architecture.md`
+1. `docs/architecture/README.md`
 2. `.agent/references/code-map.md`
 3. `.agent/references/workflow.md`
 

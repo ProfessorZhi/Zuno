@@ -5,24 +5,24 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[2]
-ARCH = ROOT / "docs/architecture/architecture.md"
+ARCH = ROOT / "docs/architecture/README.md"
 VIEWS = ROOT / "docs/architecture/architecture-views.md"
 HTML = ROOT / "docs/architecture/architecture.html"
-PROJECT = ROOT / "docs/project/project.md"
+PROJECT = ROOT / "docs/project/README.md"
 MODULES = ROOT / "docs/modules"
 DECISIONS = ROOT / "docs/decisions"
 TERMINOLOGY = ROOT / "docs/governance/terminology.md"
 
 MODULE_FILES = {
-    "01": "01-application-integration.md",
-    "02": "02-legal-domain-work-product.md",
-    "03": "03-knowledge-evidence.md",
-    "04": "04-agent-runtime-control.md",
-    "05": "05-capability-skill.md",
-    "06": "06-tool-runtime-effects.md",
-    "07": "07-model-gateway.md",
-    "08": "08-security-governance.md",
-    "09": "09-observability-evaluation.md",
+    "01": "application/README.md",
+    "02": "domain/README.md",
+    "03": "knowledge/README.md",
+    "04": "runtime/README.md",
+    "05": "capability/README.md",
+    "06": "effects/README.md",
+    "07": "model-gateway/README.md",
+    "08": "security/README.md",
+    "09": "evaluation/README.md",
 }
 
 B1_B14_MARKERS = (
@@ -275,7 +275,7 @@ def verify() -> list[str]:
         errors.append("architecture-views.md must contain exactly 6 conceptual diagrams")
     if 'fetch("./architecture-views.md")' not in html:
         errors.append("architecture.html must render canonical Mermaid source")
-    if "../project/project.md" not in html or "./architecture.md" not in html:
+    if "../project/README.md" not in html or "./README.md" not in html:
         errors.append("architecture.html must expose current canonical entrypoints")
 
     return errors

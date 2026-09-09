@@ -49,6 +49,16 @@ module_rules:
   module_count_is_documentation_invariant: false
   module_split_merge_requires_architecture_revision: true
   logical_module_does_not_imply_service: true
+  semantic_paths:
+    application: "docs/modules/application/README.md"
+    domain: "docs/modules/domain/README.md"
+    knowledge: "docs/modules/knowledge/README.md"
+    runtime: "docs/modules/runtime/README.md"
+    capability: "docs/modules/capability/README.md"
+    effects: "docs/modules/effects/README.md"
+    model_gateway: "docs/modules/model-gateway/README.md"
+    security: "docs/modules/security/README.md"
+    evaluation: "docs/modules/evaluation/README.md"
 
 complexity_rules:
   generic_agent_platform_reuse_preferred: true
@@ -67,27 +77,27 @@ skill_routes:
       - "docs/governance/documentation-architecture.md"
   project_understanding:
     read_first:
-      - "docs/project/project.md"
+      - "docs/project/README.md"
       - "docs/governance/project-fact-provenance.md"
   research:
     read_first:
       - "docs/research/README.md"
   architecture_human_reading:
     read_first:
-      - "docs/project/project.md"
-      - "docs/architecture/architecture.md"
+      - "docs/project/README.md"
+      - "docs/architecture/README.md"
       - "docs/modules/README.md"
       - "docs/evidence/README.md"
   architecture_implementation:
     read_first:
       - "docs/architecture/reference.md"
-      - "docs/architecture/architecture.md"
+      - "docs/architecture/README.md"
       - "docs/modules/reference.md"
       - "docs/decisions/README.md"
       - "docs/evidence/README.md"
   module_design:
     read_first:
-      - "docs/architecture/architecture.md"
+      - "docs/architecture/README.md"
       - "docs/modules/README.md"
       - "docs/decisions/README.md"
       - "docs/evidence/README.md"

@@ -12,7 +12,7 @@ Round 02 发现旧的 10-module candidate 把不同性质的东西放在同一�
 
 Main Judgment 要求先统一总体责任分类，再进行 Main Architecture Freeze Review。分类必须支持 Generic Host + Legal Backend 的最小形态，允许 Simple QA 不进入 Native Runtime，同时保持 Platform 和 Optional Provider 可替换。
 
-> 状态说明：以上描述的是本 ADR 作出时的决策背景。Round 02 后续已经完成 Overall Architecture Freeze；当前总体状态和模块设计状态以 `docs/architecture/architecture.md` 与 `docs/modules/README.md` 为准。本 ADR 不重复维护第二套阶段状态。
+> 状态说明：以上描述的是本 ADR 作出时的决策背景。Round 02 后续已经完成 Overall Architecture Freeze；当前总体状态和模块设计状态以 `docs/architecture/README.md` 与 `docs/modules/README.md` 为准。本 ADR 不重复维护第二套阶段状态。
 
 ## Decision
 

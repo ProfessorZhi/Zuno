@@ -15,7 +15,7 @@ Zuno 文档当前最大的质量问题不是技术深度不足，而是：
 
 ## 2. Project Story
 
-`docs/project/project.md` 应承担真实项目故事，不伪造 Architecture Evolution 为真实历史。
+`docs/project/README.md` 应承担真实项目故事，不伪造 Architecture Evolution 为真实历史。
 
 建议叙事主线：
 
@@ -38,7 +38,7 @@ Project 文档应自然支撑 3–5 分钟项目介绍，而不是让面试者�
 
 ## 3. Architecture Story
 
-`docs/architecture/architecture.md` Part A 应讲一次**概念上的架构成长**。
+`docs/architecture/README.md` Part A 应讲一次**概念上的架构成长**。
 
 不要第一屏展示九模块表。先假设：
 

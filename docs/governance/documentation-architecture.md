@@ -62,8 +62,8 @@ Human default:
 
 ```text
 docs/README.md
-→ project/project.md
-→ architecture/architecture.md Part A
+→ project/README.md
+→ architecture/README.md Part A
 → modules/README.md
 → selected Module Part A
 → evidence/README.md

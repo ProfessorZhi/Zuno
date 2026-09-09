@@ -410,7 +410,7 @@ GraphRAG 必须按 query class 对比简单 retrieval baseline，在同模型、
 
 ### B13 Current / Target / Gap / Evidence
 
-**Current**：[`current-runtime-baseline.md`](../evidence/current-runtime-baseline.md) 与 [`implementation-wave-001.md`](../evidence/implementation-wave-001.md) 证明部分 ingestion owner、Citation Provenance Guard、stale / scope 校验和若干索引 / GraphRAG 实现表面。
+**Current**：[`current-runtime-baseline.md`](../../evidence/current-runtime-baseline.md) 与 [`implementation-wave-001.md`](../../evidence/implementation-wave-001.md) 证明部分 ingestion owner、Citation Provenance Guard、stale / scope 校验和若干索引 / GraphRAG 实现表面。
 
 **Target**：可版本化、可恢复的 KnowledgeGeneration + serving activation + task-level ReadinessDecision + EvidenceCandidate / CitationLineage 边界；底层 retrieval / graph provider 可替换。
 

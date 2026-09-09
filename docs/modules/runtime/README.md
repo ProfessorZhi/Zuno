@@ -302,7 +302,7 @@ Trace 至少关联 run、plan、step、branch/join、action、CapabilityVersion�
 
 ### B13 Current / Target / Gap / Evidence
 
-**Current**：[`current-runtime-baseline.md`](../evidence/current-runtime-baseline.md) 证明主运行链、checkpoint、interrupt、cancel/restart、duplicate claim、unknown Effect reconcile 等有限行为；[`current-test-baseline.md`](../evidence/current-test-baseline.md) 有 selected canonical tests，但 Full CI / benchmark 未运行。
+**Current**：[`current-runtime-baseline.md`](../../evidence/current-runtime-baseline.md) 证明主运行链、checkpoint、interrupt、cancel/restart、duplicate claim、unknown Effect reconcile 等有限行为；[`current-test-baseline.md`](../../evidence/current-test-baseline.md) 有 selected canonical tests，但 Full CI / benchmark 未运行。
 
 **Target**：Single Controller + fixed graph shells + dynamic Plan DAG + safe parallelism + triggered reflection + immutable PlanVersion + cross-owner recovery。
 

@@ -341,7 +341,7 @@ Telemetry store、Eval store 与 Domain / Runtime / Effect / Security stores 分
 
 ### B13 Current / Target / Gap / Evidence
 
-**Current**：[`src/backend/zuno/platform/observability/README.md`](../../src/backend/zuno/platform/observability/README.md) 明确 PHASE10 `contract-foundation` 与已有 adapters / schemas；[`current-eval-baseline.md`](../evidence/current-eval-baseline.md) 明确正式 Eval 为 `MEASUREMENT_BLOCKED`。
+**Current**：[`src/backend/zuno/platform/observability/README.md`](../../../src/backend/zuno/platform/observability/README.md) 明确 PHASE10 `contract-foundation` 与已有 adapters / schemas；[`current-eval-baseline.md`](../../evidence/current-eval-baseline.md) 明确正式 Eval 为 `MEASUREMENT_BLOCKED`。
 
 **Target**：provider-neutral full-chain telemetry + versioned legal Eval + recovery/security fault Eval + Release Evidence + complexity kill tests。
 

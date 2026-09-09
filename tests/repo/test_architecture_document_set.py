@@ -27,7 +27,7 @@ def test_legacy_design_material_is_not_canonical() -> None:
     assert not (REPO_ROOT / "docs/maintenance").exists()
     assert not (REPO_ROOT / "docs/facts").exists()
     assert not (REPO_ROOT / "project-reconstruction-lab").exists()
-    assert (REPO_ROOT / "docs/architecture/architecture.md").exists()
+    assert (REPO_ROOT / "docs/architecture/README.md").exists()
     assert (REPO_ROOT / "docs/architecture/architecture.html").exists()
 
 

@@ -6,7 +6,7 @@ from pathlib import Path
 
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
-DESIGN_PATH = REPO_ROOT / "docs/architecture/architecture.md"
+DESIGN_PATH = REPO_ROOT / "docs/architecture/README.md"
 VIEWS_PATH = REPO_ROOT / "docs/architecture/architecture-views.md"
 HTML_PATH = REPO_ROOT / "docs/architecture/architecture.html"
 
@@ -20,7 +20,6 @@ EXPECTED_VIEWS = [
 ]
 CANONICAL_ARCHITECTURE_FILES = {
     "README.md",
-    "architecture.md",
     "architecture-views.md",
     "architecture.html",
     "reference.md",
@@ -158,8 +157,8 @@ def validate_html(content: str) -> list[str]:
         '<script type="module">',
         'fetch("./architecture-views.md")',
         MERMAID_MODULE_URL,
-        "../project/project.md",
-        "./architecture.md",
+        "../project/README.md",
+        "./README.md",
         "../evidence/README.md",
         "diagram-dialog",
         "Mermaid source",
@@ -188,8 +187,8 @@ def validate_taxonomy() -> list[str]:
     errors: list[str] = []
     for relative_path in (
         "docs/README.md",
-        "docs/project/project.md",
-        "docs/architecture/architecture.md",
+        "docs/project/README.md",
+        "docs/architecture/README.md",
         "docs/modules/README.md",
         "docs/evidence/README.md",
         "docs/red-blue/README.md",
