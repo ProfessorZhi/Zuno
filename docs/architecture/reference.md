@@ -2,17 +2,17 @@
 
 status: canonical-architecture-machine-router
 owner: Cross-cutting Architecture Owner
-human_source: docs/architecture/architecture.md#part-a--human-narrative人类技术叙事
-engineering_source: docs/architecture/architecture.md#part-b--engineering--agent-reference机器--工程参考
+human_source: docs/architecture/README.md#part-a--human-narrative人类技术叙事
+engineering_source: docs/architecture/README.md#part-b--engineering--agent-reference机器--工程参考
 module_router: docs/modules/reference.md
 decision_source: docs/decisions/
 evidence_source: docs/evidence/
 
 ## Read order for implementation
 
-1. Read `architecture.md` Part B for cross-cutting Authority and recovery invariants.
-2. Read `modules/reference.md` to locate the current Target responsibility owner.
-3. Read the selected Module Part B / Part C.
+1. Read `README.md` Part B for cross-cutting Authority and recovery invariants.
+2. Read `../modules/reference.md` to locate the current Target responsibility owner.
+3. Read the selected semantic Module directory `README.md` Part B / Part C.
 4. Read relevant ADRs.
 5. Read Evidence before claiming anything is Current.
 6. Only then inspect code, schema, migrations and tests.
@@ -34,4 +34,4 @@ evidence_source: docs/evidence/
 
 ## Non-goals
 
-Do not duplicate module-local fields, enums, full state machines, API schemas or migration plans here. Do not infer Current from Target. Do not treat current module count as a Documentation Architecture invariant.
+Do not duplicate module-local fields, enums, full state machines, API schemas or migration plans here. Do not infer Current from Target. Do not treat current module count or 01–09 numbering as a Documentation Architecture invariant.
