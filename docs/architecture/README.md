@@ -8,7 +8,7 @@
 
 Zuno 的 Target Architecture 从一个很朴素的规则出发：**不同种类的事实，由不同的责任域证明；一个事实跨越边界以后，必须留下足以支持恢复和审计的因果记录。** Agent、RAG、GraphRAG、模型网关和工作流框架都服务于这条规则，而不是反过来决定系统边界。
 
-本文只描述设计阶段的目标系统。模块内部 Contract、状态机和事务细节进入 [`docs/modules/`](../modules/README.md)；长期架构决策进入 [`docs/decisions/`](../decisions/README.md)；代码、测试、性能和生产资格只有在 [`docs/evidence/`](../evidence/README.md) 出现真实证据以后，才属于 Current。研究和外部方案进入 [`docs/research/`](../research/README.md)，用于提出和校准设计，不构成实现证明。
+Target Architecture 只定义设计阶段的跨责任边界。模块内部 Contract、状态机和事务细节进入 [`docs/modules/`](../modules/README.md)；长期架构决策进入 [`docs/decisions/`](../decisions/README.md)；代码、测试、性能和生产资格只有在 [`docs/evidence/`](../evidence/README.md) 出现真实证据以后，才属于 Current。研究和外部方案进入 [`docs/research/`](../research/README.md)，用于提出和校准设计，不构成实现证明。
 
 <!--
 status: normative-target
@@ -34,9 +34,7 @@ research_source: docs/research/
 
 ## Part A — Human Narrative（人类技术叙事）
 
-Part A 解释设计为什么存在。第一次阅读只需要沿着案件、事实、跨边界动作和故障恢复往下读；内部 Contract 名称只在概念已经清楚以后出现。
-
-### A1. 法律智能真正变难的时刻
+### 简单法律问答保持短路径
 
 简单法律问答没有必要承担这套复杂度。用户询问“合同第 8 条约定了什么”，系统只需要确认访问范围，读取材料，完成检索和生成，再检查引用与发布条件。受控 RAG 加普通应用服务已经能够完成这类任务。
 
@@ -50,9 +48,9 @@ Part A 解释设计为什么存在。第一次阅读只需要沿着案件、事�
 
 Zuno 的架构就是为这些问题服务。简单任务继续保持短路径；只有材料版本、长期状态、正式接纳、人工决定或现实副作用真正出现时，系统才引入对应的复杂机制。
 
-### A2. 一件案件里的五种事实
+### 一项法律工作会同时留下五类事实
 
-理解 Zuno 最容易的方法，不是先背九个模块，而是先看一项法律工作同时留下哪些事实。
+这些事实的 Authority、生命周期和恢复依据彼此不同。
 
 | 事实类型 | 典型内容 | 谁拥有最终解释权 | 失败以后应该相信什么 |
 |---|---|---|---|
@@ -74,7 +72,7 @@ Security & Governance 横跨这些事实之间的转换。它判断某个受保�
 
 同样，一次模型调用成功、一个 Runtime Step 完成、一个 Domain 事务提交、一个外部 Effect 被确认，都是“成功”，但它们分别证明不同事情。恢复时最重要的不是寻找一个全局 `success=true`，而是先确定当前问题属于哪一种事实。
 
-### A3. 四次跨边界决定系统是否可信
+**四次跨边界动作让信息获得更强的业务语义。**
 
 Zuno 的主要工程边界都出现在“某种信息准备获得更强语义”的时刻。正常流程里这些边界几乎没有存在感；真正的价值体现在材料不完整、进程崩溃、权限变化和网络结果未知时。
 
@@ -88,7 +86,7 @@ Zuno 的主要工程边界都出现在“某种信息准备获得更强语义”
 
 Security 在每一次受保护的跨越前重新判断当前权限、数据政策、Approval 和 Secret 条件。这样控制成本集中在真正改变业务事实或现实状态的地方，而不是让每一次低风险计算都经过同样沉重的审批。
 
-### A4. 九个责任域如何从这些边界产生
+### 九个责任域来自事实 Authority
 
 九个责任域不是先画出来再寻找理由。前面的事实和边界稳定以后，系统自然需要这些长期 Owner。
 
@@ -110,7 +108,7 @@ Optional Context Provider 也遵循同样边界。它可以向 Runtime 提供经
 
 这九个责任域首先是逻辑 Ownership。它们可以落在同一个 Python 进程里，也可以按工作负载拆成 Worker；是否成为独立网络服务属于部署问题，而不是架构图上的模块数量问题。
 
-### A5. 故障以后，先找事实再恢复控制
+### 故障恢复先回到 Owner Fact
 
 长任务恢复最容易犯的错误，是把“离崩溃最近的状态”当成最可信的状态。Zuno 采用相反顺序：先找到当前问题对应的 Owner Fact，再修复 Runtime、Cache、Projection 或通知状态。
 
@@ -134,7 +132,7 @@ Tool Runtime 已经持久化 PreparedAction 并向外部系统发送请求，连
 
 取消也遵循事实边界。Cancellation 停止未来工作，不会神奇地回滚已经正式提交的 Domain fact 或已经发生的现实 Effect。晚到结果是否仍可接纳，由对应 Owner 根据版本、因果和当前状态判断。
 
-### A6. 研究成果怎样变成工程能力
+### 研究成果通过 Capability 与 Evaluation 进入工程
 
 Zuno 的另一个长期问题来自项目本身的研究背景。论文、实验模型和规则系统不断变化，业务系统却需要稳定依赖。把一个研究模型包一层 Python wrapper 只能证明 Demo 能跑，不能证明它已经成为长期工程能力。
 
@@ -150,7 +148,7 @@ Model Gateway 解决的是另一层变化。Capability 或 Runtime 提出模型�
 
 这也给 GraphRAG、Agentic RAG、Reflection、Memory 和 Specialist 一个明确位置。它们首先是可以被评测的实现机制或 Capability 组成方式，不因为研究热点或框架 Feature 就自动获得业务 Authority。机器最终产生的是 Candidate；跨入正式法律事实仍然需要 Domain Admission。
 
-### A7. 安全、人和时间
+### 时间让安全成为持续决策
 
 长任务把权限问题从“请求入口的一次校验”变成了持续状态。一个 AgentRun 可能运行几十分钟，期间用户角色、Matter 归属、材料密级、模型外发政策、Approval 和 Secret 版本都会变化。
 
@@ -162,7 +160,7 @@ AuthorizationDecision、ApprovalDecision 和 HumanDecision 分别解决三个不
 
 这种版本化比覆盖旧记录更重要。法律工作需要解释历史判断，而不是只保存今天最后一次计算结果。
 
-### A8. 复杂度必须在测量中证明收益
+### 复杂度只有在测量中证明收益才保留
 
 Zuno 的目标不是把所有任务都送进最强的 Agent Runtime。一个架构如果只能不断增加模块、Agent 和状态机，却没有能力退回简单方案，最终会把研究灵活性变成长期维护成本。
 
@@ -176,11 +174,11 @@ PostgreSQL、Object Store、Queue、Secret Manager、OpenTelemetry、Checkpointe
 
 架构因此必须允许自己缩小。某项复杂机制长期无法在 Evaluation 中证明收益时，关闭它、回到 baseline 或恢复共进程部署都属于正常演进，而不是架构失败。
 
-### A9. 从目标架构进入实施
+### 实施从 Authority、Completion Proof 和 Recovery 开始
 
 这份总体架构冻结的是事实 Authority、跨边界因果和恢复顺序，不冻结数据库、框架、SDK 或部署技术。实施一个责任域时，顺序应该先从“谁拥有事实、什么记录能够证明完成、故障后先相信谁”开始，再进入表结构、API、事务、队列和 Worker。
 
-下面这些关系构成实施不能破坏的骨架：
+实施必须保护这些关系：
 
 - 机器结果先作为候选，正式法律事实由 Legal Domain 接纳。
 - `KnowledgeGeneration lifecycle != task-level ReadinessDecision`。
@@ -200,7 +198,7 @@ PostgreSQL、Object Store、Queue、Secret Manager、OpenTelemetry、Checkpointe
 
 设计与实施之间保持这个方向：先说明系统应该保护什么，再选择最简单的实现；实现结果通过 Evidence 验证、缩小或修正 Target Architecture。已有代码目录、框架 Feature 或单次 Demo 都不能反过来成为新的事实 Authority。
 
-### A10. 研究校准
+**研究只用于校准设计方向。**
 
 外部研究只用于验证设计方向，不证明 Zuno 已经实现或验证了相应能力。与本架构关系最直接的研究主要集中在三类问题：Agentic RAG 的多步规划与动态检索，高风险 AI 的 provenance 与审计，以及 Human-in-the-loop 系统中机器建议和人类权威的边界。
 
