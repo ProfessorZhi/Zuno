@@ -9,7 +9,7 @@
 | Evidence | 保留理由 |
 | --- | --- |
 | [Current Runtime Baseline](current-runtime-baseline.md) | 当前 Runtime owner、状态和失败语义的证据入口 |
-| [Current Test Baseline](current-test-baseline.md) | 当前 GitHub selected code verification、PostgreSQL Domain probes、未运行项和质量边界 |
+| [Current Test Baseline](current-test-baseline.md) | 当前 GitHub selected code verification、PostgreSQL Domain / Wave-001 revision probes、未运行项和质量边界 |
 | [Current Eval Baseline](current-eval-baseline.md) | 当前评测与 Measurement Blocked 状态 |
 | [Implementation Wave-001](implementation-wave-001.md) | TASK-001 / TASK-003 的有限代码、测试和窄验证证据；不是 Program closure |
 
@@ -18,9 +18,10 @@
 ## 当前边界
 
 ```text
-SELECTED CODE VERIFICATION: AVAILABLE @ 5b51627e43b6abcd940ac63100048171fd7f460c
-SELECTED GITHUB RUN: 34498613045 / 192 passed
+SELECTED CODE VERIFICATION: AVAILABLE @ c817bd345c9025524c6380ef208a131277d164bd
+SELECTED GITHUB RUN: 34499552197 / 193 passed
 POSTGRESQL DOMAIN SELECTED PROBES: PASS
+WAVE-001 REVISION POSTGRESQL APPLY/DOWNGRADE/RE-APPLY: PASS
 TARGET ADMISSION RECEIPT: NOT IMPLEMENTATION-PROVEN
 PRODUCTION_READINESS: NOT_ESTABLISHED
 QUALITY: not_yet_proven
@@ -28,9 +29,9 @@ FULL CI: NOT RUN / NOT ESTABLISHED
 COURT QA: UNKNOWN / NOT AVAILABLE
 ```
 
-Selected verification 说明一组明确列出的 Domain、Citation、Application、Runtime、Knowledge、Capability、Tool、Model Gateway、Security、Observability、Retrieval 与 Eval 行为在同一个 main SHA 的 GitHub runner 上通过。当前 run 还使用 PostgreSQL 16 service 验证了 Wave-001 Domain mutation/version 的基本事务、并发冲突和幂等重放形状。
+Selected verification 说明一组明确列出的 Domain、Citation、Application、Runtime、Knowledge、Capability、Tool、Model Gateway、Security、Observability、Retrieval 与 Eval 行为在同一个 main SHA 的 GitHub runner 上通过。当前 run 还使用 PostgreSQL 16.15 service 验证了 Wave-001 Domain mutation/version 的基本事务、并发冲突、幂等重放，以及 revision `20260813_57` 自身的 `upgrade → downgrade → re-upgrade` DDL。
 
-这个范围不能扩写成“Zuno PostgreSQL 集成已完成”。Target `AdmissionReceipt`、02↔04 owner-first recovery、真实 Migration apply/rollback、其他平台 PostgreSQL 路径、Redis / RabbitMQ / Object Store、真实 Provider 和外部 Host 仍各自需要证据。详细命令、测试形状与剩余阻塞见 [`current-test-baseline.md`](current-test-baseline.md)。
+这个范围不能扩写成“Zuno PostgreSQL 集成已完成”或“完整 Alembic history 已验证”。Target `AdmissionReceipt`、02↔04 owner-first recovery、整条 migration chain、其他平台 PostgreSQL 路径、Redis / RabbitMQ / Object Store、真实 Provider 和外部 Host 仍各自需要证据。详细命令、测试形状与剩余阻塞见 [`current-test-baseline.md`](current-test-baseline.md)。
 
 当前仓库可以证明有限实现和验证范围，不能证明完整历史技术栈、真实法院质量、生产部署、用户规模、SLA、QPS、HA、No-egress、Sandbox 资格或正式外部验收。历史 Pilot 不等于 Production。
 
@@ -42,6 +43,7 @@ Selected verification 说明一组明确列出的 Domain、Citation、Applicatio
 
 - 模块 Part B 写了 `AdmissionReceipt`，只能证明 Target 语义已经设计清楚；当前 PostgreSQL mutation probe 也不能把 mutation record 直接升级成最终 Receipt。
 - `Current code selected verification` 通过只能证明 workflow 列出的行为，不等于 Full Project CI 通过。
+- revision `20260813_57` 能真实 apply/downgrade/re-apply，只证明该 revision 自身 DDL 可逆，不证明完整历史 Migration、真实数据 backfill 或零停机策略。
 - `ModelCallAttempt` 或 Tool contract 有单元测试，不等于真实 Provider / 真实外围法院系统已经完成 E2E。
 - Eval Dataset schema 存在，不等于正式 benchmark 已测；zero sample 或缺 credentials 时必须保持 BLOCKED。
 - Pilot 是历史项目阶段，不自动成为今天 main 的 Current runtime evidence。
