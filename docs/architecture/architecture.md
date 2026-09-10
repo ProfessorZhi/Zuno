@@ -150,7 +150,7 @@ Runtime 在执行过程中调用专业 Capability、检索和 Model Gateway。�
 
 如果语料规模小、文本干净、没有多版本和复杂 Scope，Knowledge 可以只保留一个版本化 Hybrid Retrieval，GraphRAG 没有存在的必要。如果专业能力只有几个稳定内部函数，没有多 Provider 和独立质量门槛，Capability 可以薄到 Python Protocol 加测试集合。任务不跨越等待、恢复和正式提交时，Runtime 可以退回普通 workflow 甚至同步调用。外围 Tool 都是只读或拥有强幂等协议时，完整 Effect 生命周期也可以缩小。
 
-Generic Host 已经提供成熟会话、UI、工作流和 Checkpoint 时应优先复用。Zuno 不需要为了架构图完整而复制这些通用能力。逻辑责任域只有在独立扩缩容、安全隔离、故障半径、合规或部署生命周期形成真实约束时，才进一步拆成独立服务。
+Generic Host 已经提供成熟会话、UI、工作流和 Checkpoint 时应优先复用。Zuno 不需要为了架构图完整而复制这些通用能力。逻辑责任域只有在独立扩缩容、安全隔离、故障半径、合规或部署生命周期形成真实约束时，才进一步拆成独立网络服务。
 
 GraphRAG、Memory、Reflection、Specialist、更贵模型和 Native Runtime 都要和更简单 baseline 做可比实验。已经实现只证明团队付出了实现成本，不赋予机制永久保留权。某个机制在同任务、同语料和可比预算下没有稳定收益时，Evaluation 应支持关闭它、缩小使用范围或回到更简单路径。
 
