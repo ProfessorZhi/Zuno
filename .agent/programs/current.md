@@ -18,9 +18,10 @@ Project Story                      docs/project/                              CA
 Overall Architecture               docs/architecture/                         CANONICAL TARGET
 Research Reference                 docs/research/                             NON-CANONICAL INPUT
 Implementation / Design Program    .agent/programs/                           ACTIVE ONLY WHEN EXPLICITLY STARTED
-Red / Blue Interview Harness       .agent/red-blue/                           SEPARATE RUNTIME
-Red / Blue Human Workflow          docs/maintenance/red-blue/                 HUMAN PROCESS
-Red / Blue History                 docs/maintenance/history/red-blue/         HISTORY / NON-CANONICAL
+Red / Blue Machine Harness         .agent/red-blue/                           SEPARATE RUNTIME
+Red / Blue Human Method            docs/red-blue/                             REVIEW PROCESS
+Red / Blue Rounds                  docs/red-blue/rounds/                      REVIEW HISTORY / NON-CANONICAL
+Legacy Red / Blue                  docs/red-blue/archive/legacy/              HISTORY / NON-CANONICAL
 Current Evidence                   docs/evidence/                             CURRENT EVIDENCE
 Production Readiness               NOT_ESTABLISHED
 Active Program                     NONE

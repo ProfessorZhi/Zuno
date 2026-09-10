@@ -37,7 +37,8 @@ operations / operational runbooks and recovery profiles
 - [`project-fact-provenance.md`](project-fact-provenance.md) — 项目事实来源、允许表述与 Unknown；
 - [`repo-ownership-matrix.md`](repo-ownership-matrix.md) — 仓库责任边界；
 - [`human-first-documentation-standard.md`](human-first-documentation-standard.md) — Part A 人类技术写作要求；
-- [`architecture-narrative-quality-standard.md`](architecture-narrative-quality-standard.md) — Architecture Narrative 质量标准；
+- [`architecture-narrative-quality-standard.md`](architecture-narrative-quality-standard.md) — Architecture Narrative 质量标准与 Narrative Acceptance Gate；
+- [`module-detail-freeze-readiness-review.md`](module-detail-freeze-readiness-review.md) — 九模块 Detail Freeze 前的证据 readiness 审查；不拥有 Target 或 Current；
 - [`wave1-cross-module-contract-registry.md`](wave1-cross-module-contract-registry.md) — 跨模块 Contract registry；
 - [`terminology.md`](terminology.md) — 跨文档术语；
 - [`workflows/agent-workflow.md`](workflows/agent-workflow.md) — 人类与 Agent / GitHub 的协作方式；
