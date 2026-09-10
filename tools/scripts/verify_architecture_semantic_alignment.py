@@ -229,7 +229,7 @@ def verify() -> list[str]:
     module_invariants = {
         "01": ("负责组合，不负责重新发明事实", "RunOutcome != Domain Admission != AnswerPublication != Consumer Display", "Agent Version = 产品能力 / 配置版本"),
         "02": (
-            "EvidenceCandidate（证据候选）\n    ≠\nEvidence（正式证据）",
+            "EvidenceCandidate / CitationLineage 归 03；正式 Evidence 归 02",
             "DomainVersion + matching AdmissionReceipt",
             "WorkProductCitationBinding",
             "| HumanDecision | 保存正式人工业务决定",
