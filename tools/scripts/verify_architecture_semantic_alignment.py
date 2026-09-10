@@ -227,7 +227,7 @@ def verify() -> list[str]:
     # free to explain the concept in natural prose; exact ownership/failure wording belongs in
     # the Engineering Reference when the human story no longer benefits from symbolic slogans.
     module_invariants = {
-        "01": ("负责组合，不负责重新发明事实", "Run completed\n!=\nDomain admitted\n!=\nAnswer publishable\n!=\nConsumer displayed", "Agent Version = 产品能力 / 配置版本"),
+        "01": ("负责组合，不负责重新发明事实", "RunOutcome != Domain Admission != AnswerPublication != Consumer Display", "Agent Version = 产品能力 / 配置版本"),
         "02": (
             "EvidenceCandidate（证据候选）\n    ≠\nEvidence（正式证据）",
             "DomainVersion + matching AdmissionReceipt",
