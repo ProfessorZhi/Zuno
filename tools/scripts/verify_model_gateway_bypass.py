@@ -48,9 +48,14 @@ def _provider_hits(path: Path) -> set[str]:
     if _is_allowed(relative):
         return set()
     try:
-        tree = ast.parse(path.read_text(encoding="utf-8"))
-    except SyntaxError as exc:
-        return {f"syntax-error:{exc.lineno}"}
+        # ``ast.parse`` receives a decoded string here, so a UTF-8 BOM would be
+        # treated as U+FEFF and reported as a syntax error even though Python can
+        # import the same source file normally. Decode with utf-8-sig so the
+        # repository gate reports provider bypasses rather than encoding trivia.
+        tree = ast.parse(path.read_text(encoding="utf-8-sig"))
+    except (SyntaxError, UnicodeError) as exc:
+        lineno = getattr(exc, "lineno", None) or 1
+        return {f"syntax-error:{lineno}"}
     hits: set[str] = set()
     for node in ast.walk(tree):
         if isinstance(node, ast.Import):
