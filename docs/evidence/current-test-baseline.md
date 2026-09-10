@@ -4,37 +4,41 @@
 
 ## 当前代码快照的 Selected Verification
 
-当前 GitHub-native **selected code verification** 已经同时覆盖基础代码行为和一组真实 PostgreSQL Domain probes。它绑定具体代码 commit、lockfile 依赖、测试集合、PostgreSQL service container 和 GitHub Actions run，可以作为这些被覆盖行为的 Current Evidence；它仍然不是 Full CI、完整 PostgreSQL integration、正式 benchmark 或 Production Qualification。
+当前 GitHub-native **selected code verification** 已经覆盖基础代码行为、真实 PostgreSQL Domain probes，以及 Wave-001 Domain revision 的真实 PostgreSQL DDL 可逆性。它绑定具体代码 commit、lockfile 依赖、测试集合、PostgreSQL service container 和 GitHub Actions run，可以作为这些被覆盖行为的 Current Evidence；它仍然不是 Full CI、完整 PostgreSQL integration、正式 benchmark 或 Production Qualification。
 
 ```text
-verified_code_snapshot: 5b51627e43b6abcd940ac63100048171fd7f460c
+verified_code_snapshot: c817bd345c9025524c6380ef208a131277d164bd
 workflow: Current code selected verification
-workflow_run: 34498613045
+workflow_run: 34499552197
 event: push / main
 runner: ubuntu-24.04
 python: 3.12.14
 dependency_source: poetry.lock
 postgresql_service: PostgreSQL 16.15 / healthy
-selected_suite: 192 passed
+selected_suite: 193 passed
 compileall: PASS
 model_gateway_strict_boundary: PASS
 postgresql_domain_selected_probes: PASS
+wave001_revision_postgresql_upgrade_downgrade_reupgrade: PASS
 full_ci: NOT_RUN / NOT_ESTABLISHED
 benchmark: BLOCKED_NOT_MEASURED
 quality: NOT_YET_PROVEN
 production_readiness: NOT_ESTABLISHED
-artifact_id: 10160905211
+artifact_id: 10161286870
 ```
 
-GitHub run `34498613045` checkout 的就是 `5b51627e43b6abcd940ac63100048171fd7f460c`。Selected pytest 在该 SHA 上得到 `192 passed in 17.78s`，没有 PostgreSQL skip。Workflow 启动 PostgreSQL 16 service，并通过 `ZUNO_TEST_DATABASE_URL` 让 Domain SQLAlchemy tests 进入真实 PostgreSQL 路径。
+GitHub run `34499552197` checkout 的就是 `c817bd345c9025524c6380ef208a131277d164bd`。Selected pytest 在该 SHA 上得到 `193 passed in 8.94s`。Workflow 使用 PostgreSQL 16.15 service，并通过 `ZUNO_TEST_DATABASE_URL` 让 Domain SQLAlchemy tests 和 Wave-001 revision probe 进入真实 PostgreSQL 路径。
 
-本次 PostgreSQL 证明严格限定为当前 Domain mutation/version surface 的三个 failure / concurrency shape：
+当前 PostgreSQL Domain 证明包括四类严格限定的 shape：
 
 - **commit 后调用方丢失响应**：D0→D1 已提交；新的 service instance 使用同一规范化输入与 idempotency identity 重放，只返回既有 committed result，不产生 D2；
 - **两个请求同时基于 D0**：并发进入同一 Matter，最多一个提交 D1，另一个读取新 head 后返回 `VERSION_CONFLICT`；
-- **commit 前故障**：在已有 `before_commit` fault hook 中抛错，事务不推进；新的 service instance 随后仍从 D0→D1 提交。
+- **commit 前故障**：已有 `before_commit` fault hook 抛错，事务不推进；新的 service instance 随后仍从 D0→D1 提交；
+- **Wave-001 revision 真实 DDL 可逆性**：在独立随机 PostgreSQL schema 中执行 revision `20260813_57` 的现有 Alembic `upgrade()`，验证三张 Wave-001 表与 `uq_domain_mutation_idempotency` / `uq_domain_state_version`；随后执行 `downgrade()` 验证 revision 表被移除，再次 `upgrade()` 后重新验证同一表与约束。
 
-这些结果支持当前 `SqlAlchemyCanonicalDomainStore` 的 PostgreSQL transaction、row-lock / expected-version 和 idempotent replay baseline。它们**不等于 Target Formal Admission 已实现**。当前 `src/backend/zuno/domain/` 仍只有 Wave-001 mutation / persistence surface；Target `AdmissionReceipt`、完整 WorkProduct admission transaction 以及 Runtime 读取 matching Receipt 修复 Checkpoint 尚没有 Current implementation evidence。
+最后一项只证明 **revision `20260813_57` 自身的 PostgreSQL DDL 可以 apply / downgrade / re-apply**。测试没有从最早 revision 顺序执行整个 Alembic history，也没有证明线上数据 backfill、锁影响、零停机迁移或生产回滚。因此不能把它写成“完整 migration chain 已验证”。
+
+这些结果支持当前 `SqlAlchemyCanonicalDomainStore` 的 PostgreSQL transaction、row-lock / expected-version、idempotent replay baseline，以及 Wave-001 revision-level DDL 可逆性。它们**不等于 Target Formal Admission 已实现**。当前 `src/backend/zuno/domain/` 仍只有 Wave-001 mutation / persistence surface；Target `AdmissionReceipt`、完整 WorkProduct admission transaction 以及 Runtime 读取 matching Receipt 修复 Checkpoint 尚没有 Current implementation evidence。
 
 同一 run 还完成：
 
@@ -52,11 +56,12 @@ GitHub run `34498613045` checkout 的就是 `5b51627e43b6abcd940ac63100048171fd7
 
 ### PostgreSQL 证据的边界
 
-这次 service container 不等于系统级 PostgreSQL qualification。Actions 日志里仍能看到部分其他 selected tests / import-time platform components 尝试默认 `postgres` 用户并被数据库拒绝；这些路径没有被本次 Domain probe 声称为成功。Current 可采用的结论是 **Domain selected PostgreSQL probes PASS**，而不是“Zuno 全部 PostgreSQL 集成通过”。
+这次 service container 不等于系统级 PostgreSQL qualification。Actions 日志仍能看到部分其他 selected tests / import-time platform components 尝试默认 `postgres` 用户并被数据库拒绝；这些路径没有被本次 Domain probes 声称为成功。Current 可采用的结论是 **显式 Domain PostgreSQL probes 与 Wave-001 revision probe PASS**，而不是“Zuno 全部 PostgreSQL 集成通过”。
 
 当前仍未证明：
 
-- Wave-001 Alembic migration 在真实 PostgreSQL 上的完整 upgrade / downgrade / rollback；
+- 整条 Alembic history 的真实 PostgreSQL upgrade / downgrade；
+- 真实业务数据的 backfill、约束收紧和在线迁移策略；
 - Target AdmissionReceipt 与 Domain mutation 同事务提交；
 - Domain commit 后 Runtime Checkpoint 丢失时的 owner-first E2E recovery；
 - Checkpoint 已标完成但 matching Receipt 缺失时的 formal-complete denial；
@@ -68,7 +73,7 @@ GitHub run `34498613045` checkout 的就是 `5b51627e43b6abcd940ac63100048171fd7
 当前仓库保留两类不同 GitHub gate：
 
 - `Architecture document set`：验证 Project / Architecture / Modules / Governance / Evidence 文档集合、语义一致性、Human Readability、entrypoints 和对应 repository tests；
-- `Current code selected verification`：验证 lockfile 可安装性、代码边界、runtime-batch contracts、selected behavior tests，以及当前这组 PostgreSQL Domain probes。
+- `Current code selected verification`：验证 lockfile 可安装性、代码边界、runtime-batch contracts、selected behavior tests、当前 Domain PostgreSQL probes，以及 Wave-001 revision-level DDL probe。
 
 两者组合后仍不等于 Full Project CI。Formal benchmark 继续 `BLOCKED_NOT_MEASURED`，法院 QA、capacity、SLA、HA / DR 与 Production Readiness 仍未建立。
 
@@ -84,8 +89,10 @@ benchmark: BLOCKED_NOT_MEASURED
 production_readiness: NOT_ESTABLISHED
 ```
 
-`4736cf4409658e43af6e129e34dadbd97a5866ad` 的 run `34497460461` 是恢复 GitHub-native selected gate 的上一份快照：`189 passed, 1 skipped`，其中 PostgreSQL 因未配置 URL 被 skip。当前判断优先使用上面的 `5b51627...` / run `34498613045`。
+`4736cf4409658e43af6e129e34dadbd97a5866ad` 的 run `34497460461` 恢复了 GitHub-native selected gate：`189 passed, 1 skipped`。`5b51627e43b6abcd940ac63100048171fd7f460c` 的 run `34498613045` 把真实 PostgreSQL Domain transaction / concurrency probes 接入后得到 `192 passed`。当前判断优先使用上面的 `c817bd3...` / run `34499552197`。
 
 ## 后续 Evidence Gate
 
-Module Detail Freeze 的下一道高价值验证仍是 **Slice B — Domain ↔ Runtime crash authority**。数据库基本 transaction / concurrency baseline 已经前进，但跨 Owner recovery 被一个更明确的 Implementation Gap 阻断：Target `AdmissionReceipt` 当前没有实现证明。任何为了补这个对象、事务或 Runtime consumer 而修改业务代码的工作，都需要独立明确的 Implementation Authorization。
+**Slice B — Domain ↔ Runtime crash authority** 在“不修改业务实现”的验证范围已经走到边界：当前 mutation transaction / concurrency / lost-response replay 与 Wave-001 revision-level PostgreSQL DDL 已有 GitHub evidence。剩余最关键的 Owner-first recovery 依赖 Target `AdmissionReceipt`、Formal Admission transaction 和 Runtime matching-Receipt consumer；这些当前没有实现证明，不能继续用更多 mutation tests 代替。
+
+下一阶段转入 [`../governance/module-detail-freeze-readiness-review.md`](../governance/module-detail-freeze-readiness-review.md) 的 **Slice C — Effects ↔ Security send boundary**，先判断现有代码能覆盖哪些 fault evidence；任何新增业务实现仍需独立明确的 Implementation Authorization。
