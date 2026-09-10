@@ -2,12 +2,12 @@
 
 状态：`CURRENT / SELECTED_VERIFICATION_AVAILABLE / QUALITY_NOT_ESTABLISHED`
 
-## 当前 HEAD 的 Selected Verification
+## 当前代码快照的 Selected Verification
 
-当前已经恢复一条 GitHub-native 的 **selected code verification**。它绑定具体 commit、lockfile 依赖、测试集合和 GitHub Actions run，可以作为当前代码中这些被覆盖行为的 Current Evidence；它仍然不是 Full CI、真实 PostgreSQL integration、正式 benchmark 或 Production Qualification。
+当前已经恢复一条 GitHub-native 的 **selected code verification**。它绑定具体代码 commit、lockfile 依赖、测试集合和 GitHub Actions run，可以作为这些被覆盖行为的 Current Evidence；它仍然不是 Full CI、真实 PostgreSQL integration、正式 benchmark 或 Production Qualification。
 
 ```text
-verified_head: 4736cf4409658e43af6e129e34dadbd97a5866ad
+verified_code_snapshot: 4736cf4409658e43af6e129e34dadbd97a5866ad
 workflow: Current code selected verification
 workflow_run: 34497460461
 event: push / main
@@ -25,6 +25,8 @@ production_readiness: NOT_ESTABLISHED
 ```
 
 GitHub run `34497460461` checkout 的就是 `4736cf4409658e43af6e129e34dadbd97a5866ad`，不是 PR synthetic merge ref。Selected pytest 在该 SHA 上得到 `189 passed, 1 skipped, 1 warning in 10.76s`；唯一已知 skip 来自 `tests/domain/test_domain_mutation_sqlalchemy.py` 中受 `ZUNO_TEST_DATABASE_URL` 控制的 PostgreSQL integration test。当前 workflow 没有配置真实 PostgreSQL service，因此不能把 SQLite / SQLAlchemy tests 或这条 skip 写成 PostgreSQL 已验证。
+
+后续只修改 Evidence / Governance 文档不会自动重新执行代码验证，也不会改变这份 run 所绑定的代码快照。若 `src/backend/`、`tests/`、相关 verifier、Migration 或 dependency files 再变化，workflow 会重新运行，Current Evidence 应改为引用新的已验证代码快照，而不是继续沿用本记录。
 
 同一 run 还完成：
 
@@ -58,7 +60,7 @@ Selected behavior suite 覆盖 Domain mutation / idempotency、Citation provenan
 
 ## 历史 selected verification
 
-下面结果仍是有效的历史工程记录，但它绑定的是旧快照，不能覆盖当前 HEAD：
+下面结果仍是有效的历史工程记录，但它绑定的是旧快照，不能覆盖当前代码：
 
 ```text
 historical_verified_head: 1ea56a5d61afa27ebda8f8745a6dbc6584796d05
