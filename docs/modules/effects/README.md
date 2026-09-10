@@ -1,182 +1,81 @@
 # 06 Tool Runtime & Effects（工具运行与外部效果）
 
-<!-- status: design-baseline-v1; implementation: not-authorized; deepening: cross-module-consistency-v2; detail-design: candidate-v1 -->
+<!-- status: design-baseline-v1; implementation: not-authorized; deepening: cross-module-consistency-v2; detail_design: candidate-v1 -->
 
 ## Part A — Human Narrative
 
-### 外部副作用的第一问题是现实世界发生了什么
+### timeout 之后，最重要的问题是远端到底做了什么
 
-调用一个纯函数 timeout，通常重新计算就行；调用外围法院系统创建记录、提交材料或触发流程时，timeout 只说明本地没有拿到确定响应。远端可能没执行，也可能已经执行成功，只是响应丢了。
+设想 Zuno 已经完成一份正式工作成果，现在要把它写入外围法院系统。请求从本地发出，远端在处理过程中创建了记录，但响应返回之前连接断开。Zuno 只看到一个 timeout。
 
-06 的存在，就是为了不把“网络调用状态”伪装成“现实效果状态”。它负责把一个准备执行的现实动作稳定下来，记录实际尝试，在结果未知时对账，并为上层提供能够证明当前 Effect truth 的耐久事实。
+最直觉的异常处理是再 POST 一次。这个做法对纯计算或天然幂等查询很常见，对现实副作用却可能直接制造第二条记录。第一次请求也许已经成功，只是本地没有收到证明；网络失败描述的是通信观察，不是远端业务世界。
 
+06 就从这个缝隙里产生。它不负责决定法律结论，也不负责决定产品是否应该交付；它负责在一个动作真正改变外部世界前后，保存足够稳定的身份和证据，使系统能够回答：我们原本准备做什么，实际发送过几次，现在能够确认远端发生了什么，结果不确定时怎样继续收敛。
 
-常见实现是 `try POST; except timeout: retry`。如果第一次请求其实已经在远端成功，第二次就可能重复创建、重复提交或重复通知。
+如果所有 Tool 都是只读 API、纯函数或远端已经提供强幂等和可靠查询能力，这一层完全可以很薄。普通 SDK、timeout 和 retry policy 已经足够。只有创建记录、提交材料、发送通知、触发流程等现实副作用出现以后，Effect 控制才值得承担额外状态。
 
-对只读、天然幂等操作这不是大问题；对高风险副作用，这是架构错误。系统必须先知道“这是不是同一个逻辑动作”“远端是否支持幂等”“第一次发送后是否可能已经生效”，再决定能不能重新执行。
+### 发送之前先固定“这次究竟想让世界发生什么”
 
-### Transport Success 不等于 Effect Success
+模型或 Capability 可能先提出“把这份成果提交给系统 A”。这个 Proposal 还不能直接变成 SDK 调用，因为真正执行前至少要确定目标、关键参数、Tool 版本、动作类别、当前授权、必要 Approval、审计要求以及恢复能力。
 
-HTTP 200 只证明传输层观察到了一个成功响应，不必然证明远端业务效果已经满足 Zuno 期待；HTTP timeout 也不证明业务失败。
+Target 在发送前把这些条件整理成一个稳定动作。工程参考把它称为 `PreparedAction`。这个对象的价值不是多一个 DTO，而是冻结本次逻辑意图：如果稍后进程重启，系统仍然知道自己准备发送哪一份成果、给哪个目标、使用哪些关键参数；如果 Replan 后目标或内容已经改变，就应形成新的逻辑动作，而不是继续借用旧的身份和旧审批。
 
-因此必须保持 `Transport Success 不等于 Effect Success`。06 记录尝试和远端证据，再把能够确认的现实效果表达成更强 Receipt，而不是让 status code 直接成为业务真相。
+稳定身份也是幂等能够工作的前提。只有一个随机 idempotency key 不够安全。如果调用方错误地复用同一个 key，却换了 payload 或目标，而 06 直接返回历史成功结果，就会把“两个不同动作共用了一个身份”伪装成幂等命中。Target 因而同时绑定规范化动作内容；相同逻辑动作可以重新查询或复用既有结果，相同 key 携带不同 action hash 时必须显式拒绝。
 
-### PreparedAction 和 Send Boundary 把意图与发送分开
+真正的风险边界是 send boundary。请求交给远端以前，本地仍能确认现实动作尚未发生；越过这一点以后，即使下一条本地日志都没写出来，远端也可能已经执行。因此高风险动作在发送前必须先耐久保存足够的 action / attempt identity，并完成当时所要求的授权、审批和强制审计条件。这样 Worker 即使在发送后一瞬间崩溃，恢复时也知道应该去确认哪一个动作，而不是猜测要不要新建一次调用。
 
-模型或 Capability 产生的 Action Proposal 还可能缺少稳定参数、当前授权、审批、幂等身份和审计要求。直接把模型输出传进 SDK，会让“模型建议”和“系统决定执行”没有清楚边界。
+### 结果未知是一种需要保留的事实
 
-Target 使用 Propose–Verify–Execute–Observe：先把动作规范化，校验目标、关键参数、ToolVersion、EffectClass、当前安全和恢复能力；通过后才形成稳定的 `PreparedAction`，随后进入真实 send boundary。
+回到开头的 timeout。此时把状态写成 Failed 很诱人，因为状态机看起来能够继续往下走。但这会丢失最关键的信息：Zuno 当前没有足够证据判断远端成功还是失败。
 
+Target 会保留这种 `Outcome Unknown`。它不是“失败的另一种名字”，而是自动化必须停下来的证据边界。只要过去的现实效果仍然未知，系统就不应该为了让流程变绿而创建一个新的同类副作用。
 
-PreparedAction 不是为了增加 DTO，而是冻结“系统这次究竟准备让现实世界发生什么”。如果 Replan 后参数或目标变化，就应该形成新的逻辑动作，而不是继续沿用旧审批和旧幂等身份。
+接下来的动作是 Reconcile，而不是重做。06 优先利用远端 idempotency key、业务唯一键、查询 API、回执号或 correlation 去查过去那次操作；如果远端没有可靠机器接口，就转入人工对账。确认已经执行后，系统形成能够证明现实效果的 `EffectReceipt`；确认根本没有执行，才可能在当前权限和计划仍然允许的前提下重新发送；长期无法确认时，就保持 unresolved 并升级人工。
 
-稳定 action identity 使系统能把多次网络 Attempt 识别为同一个现实意图，也让审批、审计和后续 Reconcile 都能绑定同一件事。
+这个区别也解释了为什么 Runtime 里的 Retry、Replan 和这里的 Reconcile不能合并。模型 503 时可以重试同一计算；计划前提变化时需要重规划；请求已经越过现实 send boundary 却没有结果时，必须回头确认过去。把三种动作都写成统一 retry loop，会把网络不确定性放大成业务重复。
 
+### 能不能自动重试，取决于 Tool 自己的现实语义
 
-只保存 idempotency key 会有一个危险漏洞：调用方误用同一个 key，却传入不同目标或参数，系统如果直接返回第一次结果，就会把业务冲突隐藏成成功。
+一个 GET 查询、一个可安全覆盖的 PUT、一个带远端幂等键的创建、一个可以查询结果的支付式动作，以及一个不可查询的高风险 POST，不能共享同一套“失败最多重试三次”规则。
 
-因此 `same key + different action hash 必须拒绝`。同一个逻辑动作可以安全重放查询或返回既有结果，不同动作复用同一身份必须显式冲突。
+06 因而需要知道 Tool operation 的 EffectClass 和远端能力。它关心这次操作是否改变现实状态、远端如何定义幂等、相同 key 的作用域和有效期有多长、参数冲突会怎样处理、超时以后能不能按业务身份查询。只有这些行为经过验证，系统才能判断某次重复发送是否安全。
 
+供应商文档写着“支持 idempotency”也不等于已经足够。假如 key 只保留十分钟，而 Zuno 的人工等待可能持续几小时，恢复后就不能继续把旧 key 当成强保证。Provider 的这些恢复能力应该跟随 ToolVersion 被 qualification；证据不足时，Effect 控制按更保守的假设处理。
 
-真正把请求交给远端之前，系统还能确定“现实动作尚未发生”；一旦越过 send boundary，进程崩溃或网络断开就可能失去确定结果。
+同样，HTTP 200 也只是一个传输观察。远端可能返回“请求已接收”，真正业务处理仍在异步进行；也可能返回一个结构合法的响应，却没有形成 Zuno 期待的业务效果。06 保存 Attempt 和远端证据，只有满足当前操作语义的结果才升级成更强的 Effect truth。上层再基于这份事实决定 Delivery 或后续计划。
 
-因此发送前需要先耐久保存足够的 PreparedAction / Attempt identity 和必要安全证明。这样即使进程在发送后立即崩溃，恢复也知道应该对账哪个现实动作，而不是只能猜要不要重试。
+### 安全和审计必须在现实动作之前收敛
 
-### Outcome Unknown（结果未知）不得映射为普通 Failed
+一份 PreparedAction 可能在队列里等待十分钟。等待期间用户权限变化、Approval 过期、SecurityEpoch 更新，甚至 Secret 版本已经轮换。模型当时提出动作、Controller 当时接受计划，都不能替执行时的安全判断。
 
-发送以后 timeout、连接断开或 Worker crash，都可能让本地无法判断远端结果。这种状态不是“失败”，而是证据不足。
+因此越过 send boundary 前，06 重新消费 08 的当前决定。需要人工审批的动作要确认 Approval 仍绑定当前 action identity；需要受控 Credential 的动作只取得 Secret 引用和短期使用权，不把明文秘密写进 Checkpoint；策略如果要求 `MANDATORY_BEFORE_EFFECT`，耐久审计证明必须先存在，之后才允许发送。
 
-所以 `Outcome Unknown（结果未知）不得映射为普通 Failed`。只要现实结果仍然未知，系统就不能自动开启一个全新的同类副作用；先进入 Reconciliation，确认 CONFIRMED、NOT_EXECUTED 或需要人工处理。
+这条边界也防止模型输出直接变成现实权限。模型可以提出动作，Capability 可以整理参数，Runtime 可以决定计划需要它，但目标是否合法、数据能否外发、审批是否有效、审计是否完成，仍然通过确定性门检查。Prompt Injection 即使诱导模型生成一个危险 Tool call，也不能绕过这些执行前条件。
 
-### Reconcile、Retry Safety 与 Compensation 收敛不确定结果
+### 补偿不会抹掉已经发生的历史
 
-Reconcile 的目标不是“再执行一次”，而是查询过去的动作。优先使用远端幂等键、业务唯一键、查询 API、回执号或外部 correlation 确认结果；没有可靠机器接口时进入人工对账。
+有些外部动作可以撤销。比如系统创建了一条记录，后来业务判断需要撤回。最简单的想法是把原 Effect 标成 cancelled，好像它从未存在过；这会破坏真实时间线，也让审计无法解释为什么外围系统曾经短暂看到那条记录。
 
-确认成功后形成 `EffectReceipt`；确认未执行后，才可能根据当前权限和计划决定是否再次执行；长期无法确认时保持未知并升级人工，而不是为了让流程结束强行选择成功或失败。
+补偿本身应该是一项新的现实动作。它有自己的授权、PreparedAction、Attempt、结果和可能的失败。原来的 EffectReceipt 仍然证明“第一次动作当时发生了”，新的补偿结果再说明后来怎样把现实状态改变回去。对于无法补偿的动作，系统更要在发送前提高审批和恢复要求，而不是事后用状态字段制造虚假的回滚。
 
+这也是 Zuno 不承诺跨外部系统绝对 exactly-once 的原因。远端法院系统、邮件和第三方 API 不参与本地数据库事务，请求和响应又都可能丢失。更可验证的目标是保持同一个逻辑意图的稳定身份，压缩本地重复，尽量利用远端幂等和查询能力，并在未知时通过 Reconcile 收敛。对于没有可查询性、没有幂等能力的高风险接口，自动化上限可能就是人工确认。
 
-GET、纯计算、远端原生幂等 PUT、带业务唯一键的创建、不可查询的高风险 POST，其安全重试条件完全不同。统一“最多重试三次”不能表达这些差异。
+对账本身也不能无限轮询。Target 会给自动 Reconcile 明确的 deadline、退避和升级路径。系统可以接受“这件事暂时无法自动确认”，但不能为了状态机完成度凭猜测写成成功或失败。人工对账也需要形成结构化结果和责任记录，才能让后续恢复继续使用。
 
-06 应根据 Tool operation 的 EffectClass、远端幂等能力、是否越过 send boundary 和当前结果证据决定 RetrySafe。这个分类属于 Tool/Effect 语义，不应该由通用 HTTP Client 猜。
+### Application 决定应该交付什么，Effects 证明现实世界发生了什么
 
+01 可能维护一项 Delivery：应该把 WorkProduct V5 送给某个外围 Host。06 不拥有这项产品承诺，它只执行其中真正会改变现实的动作，并返回当前 Effect truth。
 
-动作从 Proposal 到真正发送之间可能等待很久，期间权限、Approval 有效期、SecurityEpoch 或审计策略都可能变化。旧 allow 不能成为永久通行证。
+这样一来，远端 timeout 时 01 不需要自己实现一个猜测型 retry loop；06 对账后确认成功，01 再更新交付观察。反过来，即使 06 已经证明发送成功，外围 Host 是否最终采纳、展示或进入它自己的业务流程，仍然属于外部系统能够证明的范围，Zuno 不把未知事实收编成本地状态。
 
-执行前 06 消费 08 的当前安全决定。高风险动作如果要求 `MANDATORY_BEFORE_EFFECT`，必须先确认耐久审计回执存在；普通 Trace 写成功不能替代这个前置条件。
+逻辑边界也不意味着每个 Tool 都必须经过独立网络服务。Effect Control 可以先作为同一 backend 或 worker 中的模块存在。只有 Secret isolation、不同故障半径、独立吞吐、网络出口或合规边界出现真实证据以后，再考虑物理拆分。
 
+### Current / Target / Gap
 
-某些现实效果可以通过反向业务动作补偿，例如撤销一条可撤销记录。但补偿本身也是新的现实动作，可能失败、需要审批，也需要独立审计。
+**Target：** 06 拥有现实动作的 PreparedAction、实际 Attempt、结果确认、EffectReceipt 与 Reconciliation 事实；发送前固定逻辑意图并重新消费安全条件，发送后对 Outcome Unknown 先确认再决定是否继续。产品 Delivery、正式法律事实和授权策略仍由其他 Owner 管理。
 
-所以历史 EffectReceipt 保持“当时确实发生”，Compensation 形成新的 action / effect 因果链。修改旧历史来假装没发生，会破坏审计和恢复。
+**Current：** 完整 Effect lifecycle、远端能力 qualification、跨 crash window 的 PreparedAction / Attempt 耐久化、自动与人工 Reconcile、补偿链和强制审计前置都属于 Target 设计。现有 Tool Calling、MCP、SDK 或调用层代码能证明的只是相应 Current 实现范围，必须以 `docs/evidence/`、代码、测试和真实 Trace 为准。
 
-### Crash Window、幂等与远端语义共同决定恢复策略
-
-执行前 crash，可以根据已保存 PreparedAction 决定是否仍要发送；发送后未记结果 crash，需要 Reconcile；远端结果已确认但本地 Receipt 写失败，也要利用远端 correlation 恢复。
-
-这些窗口说明 06 的状态不是为了“状态机完整”，而是为了让每一个不可逆边界都有可恢复锚点。没有锚点的状态名称再多也没有意义。
-
-
-01 负责产品交付生命周期，但某些 Delivery 本质上会在远端产生副作用。这时 01 不应该自己猜发送结果，而是把现实动作交给 06。
-
-06 只返回 Effect truth 和对账事实，01 再更新 Delivery observation。这样“产品需要交付什么”和“现实世界实际发生什么”保持两个清楚 Owner。
-
-
-模型可以根据任务提出“应该调用某个 Tool”，但它不能决定自己是否有权限、审批是否有效或审计是否完成。否则 Prompt Injection 或模型错误会直接升级成现实副作用。
-
-确定性 Tool schema、semantic validator、安全策略、Approval 和 send boundary 共同构成执行门。模型能力越强，这些边界越需要保持独立。
-
-
-如果 Tool 全部是只读、纯计算或远端明确提供强幂等和可查询结果，Effect Control 可以非常简单，甚至主要复用现成 SDK 和 retry policy。
-
-只有不可逆副作用、结果未知、合规审批和外部系统弱一致性真正出现时，PreparedAction、Receipt 和 Reconciliation 才值得承担复杂度。不能因为“Tool Runtime 是模块”就给所有 GET 请求套完整 Saga。
-
-### Exactly-once 不作为承诺，自动化上限由可确认性决定
-
-在单数据库事务里可以通过唯一约束实现“只写一次”，但远端法院系统、邮件、第三方 API 等现实副作用通常没有和 Zuno 共享事务。请求可能重复、响应可能丢失、双方都可能崩溃，所以端到端绝对 exactly-once 很难证明。
-
-更诚实的目标是 logical exactly-once intent：同一个逻辑动作有稳定身份，本地重复提交被压缩，远端如果支持 idempotency key 就复用；结果不确定时通过 Reconcile 确认。最终系统能够证明“我们没有盲目创造第二个逻辑动作”，而不是宣称网络世界不会重复任何包。
-
-对不能提供幂等或查询能力的远端，高风险动作可能必须人工确认。这是外部约束带来的真实限制，不应该被一个漂亮的 SDK abstraction 隐藏。
-
-
-只读查询、可安全重放的更新、具有远端幂等键的创建、可补偿动作和不可逆高风险动作，其 retry / approval / audit 要求不同。如果全部走最强门禁，简单 Tool 成本过高；全部走最弱策略，高风险动作又不安全。
-
-Tool operation 因此需要表达足以决定恢复策略的 EffectClass。分类不是为了枚举完整，而是让系统在发送前知道：是否允许自动 Retry、是否必须 Approval、outcome unknown 时是否有机器 Reconcile 路径、是否需要强制审计。
-
-新增 Tool 时先声明这些行为，比先写 SDK wrapper 更重要。
-
-
-供应商说“支持 idempotency”仍需要确认 key 的作用域、有效期、参数冲突行为和查询能力。如果 key 只保存几分钟，而本地任务可能数小时后恢复，就不能把它当永久保证。
-
-06 应把远端能力作为 ToolVersion 的一部分 qualification：重复相同 key 是否返回同一效果，不同 payload 是否拒绝，超时后能否通过 key 查询。证据不足时按更保守的 EffectClass 处理。
-
-这样恢复策略建立在已验证行为上，而不是对 Provider 的乐观假设。
-
-
-无限轮询远端不是恢复。对账应有 deadline、退避、最大自动尝试和人工升级路径。远端最终返回明确结果时收敛；长期不可查询时保持 unresolved，并阻止可能冲突的新动作。
-
-人工对账也要留下结构化结果和责任人，而不是在聊天里说“应该成功了”然后手工改状态。最终 ReconciliationReceipt 表达系统通过什么证据把 unknown 收敛成什么结论。
-
-这使最坏情况依然有业务闭环：可能变慢、需要人工，但不会用猜测换取状态机绿色。
-
-
-补偿动作常常不能恢复原世界。例如已经发送通知后再发撤回通知，接收者仍然看到过第一次消息；外部记录删除也可能留下审计历史。
-
-所以 Saga / compensation 表达的是“采取新的业务动作减轻或纠正先前效果”，不是 ACID rollback。原 Effect 保持历史事实，补偿拥有自己的权限、Approval、Attempt 和 Receipt。
-
-只有把这个差异写清楚，系统才不会在 UI 上把 compensated 显示成 never happened，也不会在审计中丢失真实因果。
-
-
-06 能证明的是 Zuno 关心的现实动作结果，例如某个创建请求对应远端记录已经存在、某个提交动作被目标系统接收。它不一定拥有远端系统内部更后续的审批、展示、归档或人工采用状态。
-
-因此 EffectReceipt 需要清楚描述它证明的 Effect boundary，而不是使用含糊的 `SUCCESS` 让上层推断“对方全部处理完成”。如果产品还需要观察远端后续状态，应通过明确查询或 01 的 consumer observation 建模，而不是扩大 06 的权威范围。
-
-这个限制也保护集成可替换性：Zuno 只承诺自己能够用 API、业务唯一键或回执证明的现实事实，不因为缺少对远端数据库的直接控制就伪造更强一致性。
-
-
-SDK 或 Adapter 常常会把底层异常统一成一个漂亮的 `ToolError`。如果这个抽象把“请求尚未发送”“请求已发送但响应未知”“远端明确拒绝”全部合并，上层就失去了选择 Retry 或 Reconcile 所需的信息。
-
-因此 Adapter 应保留影响 Effect truth 的最小传输事实，06 再根据 Tool semantics 判断恢复。抽象的目标是隐藏无关协议细节，不是隐藏决定正确性的故障窗口。一个好的 Tool abstraction 应该让调用方更难误重试，而不是让所有错误看起来一样简单。
-
-
-有些外围系统没有稳定查询 API，自动 Reconcile 最终只能把案件交给人工确认。这里最危险的做法，是工程师在群里说“远端看起来成功了”，然后直接把本地状态手工改绿；这会让下一次恢复无法知道判断依据，也无法审计是谁确认了什么。
-
-人工确认应该针对同一个稳定 action identity，记录查询到的远端证据、确认人、时间和结论，再形成可被 Runtime / Delivery 消费的结构化 reconciliation fact。人工只是替代机器完成“确认现实结果”这一动作，不改变 06 的 Effect truth 边界，也不能顺便批准新的副作用。这样即使自动化能力不足，恢复链仍然闭环而可解释。
-
-
-Action identity 可以防止同一个逻辑动作因为网络重试被执行两次，但它不能阻止两个不同请求对同一远端资源产生冲突。例如两个 Run 分别认为自己应该提交不同版本，二者都有不同且合法的 idempotency key，仍可能在远端互相覆盖。
-
-是否需要 resource version、业务唯一约束、串行化或远端 CAS，要由具体 Tool 语义决定。06 至少要在 Tool 语义中明确这种并发前提是否存在；具体由哪个字段或 Contract 表达留到 Detail Design，而不能把“我们有 idempotency key”误写成“所有并发都安全”。
-
-这再次说明幂等是重复执行问题的一部分，不是分布式正确性的万能答案。
-
-
-单个未知效果可以进入 Reconcile；如果外围系统长期故障，成百上千个 action 都停在 unknown，系统会积累大量“现实世界可能已经发生、也可能没有发生”的债务。此时继续产生新的冲突动作，会让后续对账越来越难。
-
-因此 Reconciliation backlog 应影响新的执行决策：同一资源或同类高风险操作存在未收敛 effect 时，可以暂停冲突动作、降低自动化程度或升级人工。重点不是给 unknown 设置一个漂亮状态，而是限制不确定性继续扩散。
-
-09 可以测量 unknown 数量、持续时间和人工负担；这些指标也能反过来判断某个外部系统是否适合继续自动化集成。
-
-
-外部 Provider 可能仍返回相同 JSON，却改变幂等窗口、异步处理方式、业务唯一键、错误码含义或“accepted”之后的真实流程。普通 contract test 可能全部通过，恢复假设却已经失效。
-
-因此高风险 Tool 的 qualification 需要包含真正影响 retry / reconcile / confirmation 的行为，而不只检查 OpenAPI schema。发生语义漂移时，04 可能需要暂停相关 Plan，06 重新评估 RetrySafety，而不是靠 Adapter 把新错误翻译成旧枚举继续运行。
-
-ToolVersion 的意义就在这里：版本保护的是现实动作语义和恢复假设，不只是 SDK 版本号。
-
-
-一个 Tool 也许技术上能 POST，但如果执行后没有幂等键、查询 API、业务唯一标识，也没有可靠人工确认渠道，那么高风险动作自动化程度应该非常有限。能调用不等于能安全恢复。
-
-因此在决定“要不要让 Agent 自动执行”之前，先问发生 timeout 后怎样确认；答案如果只能是“希望不会超时”，说明执行链还没有闭环。某些场景最成熟的设计反而是只生成 PreparedAction，让人或受控外部流程完成最终执行。
-
-自动化价值应该和可恢复性一起衡量，而不是只比较操作节省了多少点击。
-
-### 当前、目标与缺口
-
-Current 是否已经实现 durable PreparedAction、send boundary、action hash、remote reconciliation 和强制审计集成，必须由代码和 fault-injection 证明；Target 文字不能代替运行证据。
-
-Target 已明确 Proposal/Effect 分离、结果未知不可盲重试、幂等身份绑定动作内容、现实结果通过 Receipt / Reconciliation 收敛。Gap 包括具体 Tool 分类、远端幂等能力证据、crash-window 测试、人工对账流程、补偿策略和真实外围系统行为。
-
----
+**Gap：** 仍缺真实外围系统的幂等行为验证、send-boundary 故障注入、timeout 后远端查询证据、重复 Effect 检测、人工 Reconcile 演练以及高风险动作的恢复时间数据。没有这些证据时，不宣称外部副作用已经达到 production-grade exactly-once 或自动恢复能力。
 
 工程 / Agent 精确参考与跨模块一致性规则见 [`reference.md`](reference.md)。
