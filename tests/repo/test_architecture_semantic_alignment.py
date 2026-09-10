@@ -230,7 +230,7 @@ def test_idempotency_and_correlation_boundaries_do_not_collapse() -> None:
 
 def test_owner_completion_proofs_remain_separate() -> None:
     docs = _docs()
-    assert "Run completed\n!=\nDomain admitted\n!=\nAnswer publishable\n!=\nConsumer displayed" in docs["01"]
+    assert "RunOutcome != Domain Admission != AnswerPublication != Consumer Display" in docs["01"]
     assert "DomainVersion + matching AdmissionReceipt" in docs["02"]
     assert "index write success" in docs["03"]
     assert "Runtime Checkpoint != Domain Commit != Tool Effect != Publication truth" in docs["04"]
