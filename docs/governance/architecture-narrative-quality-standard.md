@@ -300,7 +300,40 @@ Validator 的职责分三层：
 
 ---
 
-## 11. Human Conceptual Review Checklist
+## 11. Narrative Acceptance Gate：把“读起来不错”变成可重复验收
+
+Human Conceptual Review 用来发现问题，不应该成为唯一的验收终点。一次较大的 Part A 重写完成后，应沿同一条阅读路径逐步增加压力，而不是立即用 Red / Blue 驱动正文，也不是把软性判断翻译成新的字符串 Gate。
+
+推荐的验收顺序是：
+
+```text
+作者 / 编辑者完成独立重写
+→ 连续阅读完整 Human Narrative
+→ Closed-book reader 只凭 Human Part A 重建 mental model
+→ CHATGPT_AUTO 用少量真实场景做对抗压力测试
+→ Controller 只保留有 decision impact 的 Findings
+→ 每个 Finding 进入独立 bounded repair
+→ 用不同措辞或不同场景 retest
+→ 没有新的 decision-impact Finding 时停止继续“优化”
+```
+
+**连续阅读先于对抗评审。** 编辑者应按真实阅读路径连续读，而不是逐标题检查。总体架构至少要和 Project、模块责任地图连起来读；单模块改动也要放回相邻责任域和总体故事里读。如果仍然明显像 FAQ、Reviewer checklist 或 Part B 的中文展开版，先继续编辑正文，不要让 Red / Blue 通过“问一题补一节”替作者完成写作。
+
+**Closed-book 的目标是重建因果，不是背内部名词。** 读者只看 Human-facing 文档时，应能说清现实问题、最简单 baseline、baseline 在哪个具体场景失效、当前设计由谁做什么、正常流程怎样推进、至少一个关键故障怎样恢复、为什么不能由相邻责任域代替，以及什么条件下复杂度应该缩小。`AdmissionReceipt`、`PlanVersion` 或精确状态名记不住，不构成失败；如果只能靠这些名词才能解释系统，才说明 Part A 仍没有完成自己的工作。
+
+**Red / Blue 只在 Part A 已经独立成立以后开始。** `CHATGPT_AUTO` 适合快速压力测试真实业务场景和替代方案，Blue 使用 `canonical-part-a-first` 路径回答；被追到 Contract、Persistence、精确恢复或 Evidence 时再进入 Engineering Reference。Round 产生的是 Finding，不是 Architecture Truth。重大 `ARCHITECTURE_GAP`、`EVIDENCE_GAP` 或 `OWNERSHIP_GAP` 需要独立任务、代码 / 测试证据或必要时 `AGENT_AUTO` 复核，不能因为同一对话里的 Red 与 Blue 达成一致就直接修改 Canonical Truth。正式协议见 [`../red-blue/README.md`](../red-blue/README.md) 与 [`.agent/red-blue/protocol.md`](../../.agent/red-blue/protocol.md)。
+
+**修复必须与 Finding 的 decision impact 同尺度。** `NARRATIVE_GAP` 优先调整上下文、场景、顺序或术语出现时机；只有 Finding 真正暴露 Owner 冲突、恢复断链、Contract 失效、安全权威不清或事实证据不足，才升级到 Architecture / Evidence / Ownership 修改。禁止借一个局部 Finding 顺手新增模块、Receipt、状态机或通用章节。
+
+**复测必须换入口。** 原问题修完以后，不应把同一问题原样再问一次并把熟悉答案当成通过。使用不同角色、时间窗口、故障位置或替代方案重新施压，同时检查修复有没有制造新的 Authority、Current / Target 或复杂度问题。只有替代场景也能从允许来源得到一致答案，Finding 才关闭。
+
+这个 Gate 还有明确停止条件：当连续阅读与 Closed-book reader 都能形成正确 mental model，场景化 Red / Blue 又没有产生新的 decision-impact Finding，就停止继续为了“更像人”而改写。余下纯措辞偏好可以进入普通编辑任务，但不构成下一轮架构叙事重构的理由。
+
+这个流程不进入 `verify_architecture_human_readability.py` 的 hard failure。自动化仍然只保护结构、语义不变量和明显退化；Narrative Acceptance 依赖可审计的阅读与 Round 产物，而不是一个看似客观的 prose score。
+
+---
+
+## 12. Human Conceptual Review Checklist
 
 修改 `architecture.md` Part A 或任一模块 Part A 后，人类 Reviewer 至少回答：
 
@@ -324,7 +357,7 @@ Validator 的职责分三层：
 
 ---
 
-## 12. 与现有治理的关系
+## 13. 与现有治理的关系
 
 本标准只补充 Human-first 写作质量，不替代：
 
