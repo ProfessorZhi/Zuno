@@ -1,0 +1,37 @@
+round_id: rb-2026-09-10-architecture-part-a-007
+state: CLOSED
+mode: CHATGPT_AUTO
+created_at: 2026-09-10T13:13:00+08:00
+zuno_base_sha: a13ff27c9c4291ea70d81c41520917d2b75bcd86
+resume_snapshot:
+  repository: ProfessorZhi/internship-work
+  commit_sha: 6107321bdcaced8688c0e462d8b0a85b2744c4fe
+  path: resume/00_resume_versions/Zuno_v3+CodingAgent+SFTDPO_简历/Agent开发工程师／AI应用工程师+Zuno／CodingAgent／SFTDPO_ToolCalling层次澄清／可追问_简历草稿_v5.md
+  status: historical-user-selected-anchor
+target_role: Agent 开发工程师 / AI 应用工程师
+company_or_persona: senior system-design interviewer / architecture reviewer
+interview_stage: architecture-part-a-closed-book-stress-test
+jd_source: none
+red_calibration: kernel-only
+blue_profile: canonical-part-a-first
+scenario_scope:
+  - simple baseline and Generic Host replaceability
+  - task-specific Knowledge readiness and negative claims
+  - Domain commit / Runtime Checkpoint crash recovery
+  - external POST timeout with weak remote guarantees
+  - continuous authorization during a long task
+  - Build / Buy / Extend / Delete and responsibility-boundary derivation
+blue_allowlist:
+  - exact resume snapshot
+  - AGENTS.md
+  - docs/project/
+  - docs/architecture/
+  - docs/modules/
+  - docs/decisions/
+  - docs/evidence/
+  - selected docs/governance/ provenance facts
+max_turns: 6
+stop_condition: close after the six high-information scenario chains, or earlier if a stable decision-impact finding is established
+result: PASS_WITH_ONE_NARRATIVE_GAP
+finding_count: 1
+highest_severity: MEDIUM
