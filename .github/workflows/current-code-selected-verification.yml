@@ -28,6 +28,7 @@ permissions:
 
 env:
   PYTHONPATH: src/backend
+  ZUNO_TEST_DATABASE_URL: postgresql+psycopg://zuno:zuno@localhost:5432/zuno_test
 
 concurrency:
   group: current-code-selected-${{ github.event.pull_request.number || github.ref }}
@@ -37,6 +38,21 @@ jobs:
   selected-code-verification:
     runs-on: ubuntu-24.04
     timeout-minutes: 25
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: zuno
+          POSTGRES_PASSWORD: zuno
+          POSTGRES_DB: zuno_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U zuno -d zuno_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
 
     steps:
       - name: Checkout repository
