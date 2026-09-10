@@ -1,29 +1,66 @@
 # Current Test Baseline
 
-状态：`CURRENT / CURRENT_HEAD_VERIFICATION_NOT_ESTABLISHED / QUALITY_NOT_ESTABLISHED`
+状态：`CURRENT / SELECTED_VERIFICATION_AVAILABLE / QUALITY_NOT_ESTABLISHED`
 
-## 当前 HEAD 的证据状态
+## 当前代码快照的 Selected Verification
 
-本页不再把旧 selected-suite 结果描述为当前 HEAD 的 Final Verification。
-
-本次 Evidence review 绑定：
+当前已经恢复一条 GitHub-native 的 **selected code verification**。它绑定具体代码 commit、lockfile 依赖、测试集合和 GitHub Actions run，可以作为这些被覆盖行为的 Current Evidence；它仍然不是 Full CI、真实 PostgreSQL integration、正式 benchmark 或 Production Qualification。
 
 ```text
-review_snapshot: eca4a7ebcadbc1c964f174e3b2ce620f9ecbdf5e
-current_head_runtime_verification: NOT_ESTABLISHED_IN_GITHUB_CI
-full_ci: NOT_RUN / NO_CURRENT_RUNTIME_CI
+verified_code_snapshot: 4736cf4409658e43af6e129e34dadbd97a5866ad
+workflow: Current code selected verification
+workflow_run: 34497460461
+event: push / main
+runner: ubuntu-24.04
+python: 3.12.14
+dependency_source: poetry.lock
+selected_suite: 189 passed, 1 skipped, 1 warning
+compileall: PASS
+model_gateway_strict_boundary: PASS
+postgresql_integration: BLOCKED / SKIPPED
+full_ci: NOT_RUN / NOT_ESTABLISHED
 benchmark: BLOCKED_NOT_MEASURED
 quality: NOT_YET_PROVEN
 production_readiness: NOT_ESTABLISHED
 ```
 
-当前 GitHub Actions 只保留 `Architecture document set` workflow。它负责 Project / Architecture / Modules / Governance / Evidence 的文档集合、语义一致性、Human Readability、entrypoints 和对应 repository tests；它不运行完整 Product、Runtime、Domain、Knowledge、Capability、Effects、Model Gateway、Security 或真实外部集成测试。
+GitHub run `34497460461` checkout 的就是 `4736cf4409658e43af6e129e34dadbd97a5866ad`，不是 PR synthetic merge ref。Selected pytest 在该 SHA 上得到 `189 passed, 1 skipped, 1 warning in 10.76s`；唯一已知 skip 来自 `tests/domain/test_domain_mutation_sqlalchemy.py` 中受 `ZUNO_TEST_DATABASE_URL` 控制的 PostgreSQL integration test。当前 workflow 没有配置真实 PostgreSQL service，因此不能把 SQLite / SQLAlchemy tests 或这条 skip 写成 PostgreSQL 已验证。
 
-因此，Architecture document-set CI 通过只能证明文档与对应治理约束没有回归，不能升级成“当前 Runtime tests 已验证”或“Full CI 已通过”。
+后续只修改 Evidence / Governance 文档不会自动重新执行代码验证，也不会改变这份 run 所绑定的代码快照。若 `src/backend/`、`tests/`、相关 verifier、Migration 或 dependency files 再变化，workflow 会重新运行，Current Evidence 应改为引用新的已验证代码快照，而不是继续沿用本记录。
+
+同一 run 还完成：
+
+- `python -m compileall -q src/backend/zuno tests`；
+- strict Model Gateway provider-SDK bypass scan；
+- Model Gateway boundary verification；
+- Knowledge runtime batch：`ARCH-KNOW-001..030`；
+- Capability runtime batch：`ARCH-CAP-001..080`；
+- Tool runtime batch：`ARCH-TOOL-001..080`；
+- Model Gateway runtime batch：`ARCH-MODEL-001..088`；
+- Security runtime batch：`ARCH-SEC-001..060`。
+
+Selected behavior suite 覆盖 Domain mutation / idempotency、Citation provenance、Wave-001 migration contract、P0 recovery、Product Application boundary、Runtime plan / interrupt / restart / replan / tool idempotency / model roles、Knowledge / Capability / Tool / Security runtime contracts、Observability、Retrieval composition 与 Eval contract。具体文件集合由 [`.github/workflows/current-code-selected-verification.yml`](../../.github/workflows/current-code-selected-verification.yml) 固定。
+
+这份证明的正确读法是：**上述 selected behavior 在 `4736cf4...` 的 GitHub runner 上通过。** 它不证明没有被 selected suite 覆盖的代码，也不证明真实 Redis / RabbitMQ / MinIO / Model Provider / 外围法院系统、HA / DR、负载、法院质量或生产运维已经通过。
+
+## 当前仍未建立的验证
+
+当前仓库保留两类不同 GitHub gate：
+
+- `Architecture document set`：验证 Project / Architecture / Modules / Governance / Evidence 文档集合、语义一致性、Human Readability、entrypoints 和对应 repository tests；
+- `Current code selected verification`：验证 lockfile 可安装性、选定代码边界、runtime-batch contracts 与 selected behavior tests。
+
+两者组合后仍不等于 Full Project CI。尤其以下内容继续保持未证明：
+
+- 真实 PostgreSQL integration / race / migration apply-rollback；
+- Redis、RabbitMQ、Object Store 等真实依赖的系统级故障测试；
+- 外部 Model / Tool Provider 的 outage、timeout、billing、egress 和 reconciliation；
+- 全项目 test suite、前端/浏览器、真实 Host E2E；
+- 固定业务 Dataset benchmark、法院 QA、capacity、SLA、HA / DR 与 production qualification。
 
 ## 历史 selected verification
 
-下面结果仍是有效的历史工程记录，但它绑定的是旧快照：
+下面结果仍是有效的历史工程记录，但它绑定的是旧快照，不能覆盖当前代码：
 
 ```text
 historical_verified_head: 1ea56a5d61afa27ebda8f8745a6dbc6584796d05
@@ -37,22 +74,8 @@ quality: NOT_YET_PROVEN
 production_readiness: NOT_ESTABLISHED
 ```
 
-当时执行的 canonical checks 包括：
+当时的 selected checks 包括 Product Application / API layering、Agent Run runtime behavior、Retrieval composition、Multihop evaluator 和 compile。它们用于解释历史验证范围；当前判断优先使用上面的 `4736cf4...` GitHub run。
 
-- Product Application boundary：3 passed（组合运行共 39 passed）；
-- Product/API layering boundary：32 passed；
-- Agent Run runtime behavior：Graph、checkpoint、restart、approval interrupt、recovery、plan/replan、idempotency、tool fail-closed；
-- Retrieval canonical mode composition：29 passed；
-- Multihop evaluator public modes（`normal` / `enhanced` / `auto`）：12 passed；
-- Python compile：`python -m compileall -q src/backend/zuno tests`；
-- 当时的 docs/repository verifiers。
+## 后续 Evidence Gate
 
-这些数字只能回答“`1ea56a5...` 当时跑过什么”。它们不能自动覆盖后来加入或修改的 Domain mutation、Citation provenance、Runtime tests、文档体系和治理入口。
-
-## 当前仍应保护的行为
-
-后续 current-head verification 仍应覆盖：文件 hash / tenant boundary、durable ingestion handoff、Run submit、restart recovery、Security fail-closed、approval binding、cancel 幂等、artifact authorization、event streaming、retrieval observability、tenant isolation、persistence failure stop、duplicate command idempotency、未知外部效果 reconciliation，以及新增的 Domain / Citation / cross-owner recovery 行为。
-
-旧 phase-named 测试不应因为历史存在自动恢复成当前验收入口。若某个旧 verifier 已被当前 canonical gate 取代，应删除或现代化；若仍保护真实不变量，则应进入当前 verification map，并在同一 SHA 上获得可复现结果。
-
-下一步的 current-head verification 与 Module Detail Freeze readiness 见 [`../governance/module-detail-freeze-readiness-review.md`](../governance/module-detail-freeze-readiness-review.md)。
+下一道高价值验证不再是继续扩 selected unit-test 数量，而是补足 Module Detail Freeze 依赖的真实跨边界 evidence。优先级见 [`../governance/module-detail-freeze-readiness-review.md`](../governance/module-detail-freeze-readiness-review.md)：先进入 **Slice B — Domain ↔ Runtime crash authority**，其中真实 PostgreSQL transaction / concurrency 是当前最直接的 blocked 项之一。
