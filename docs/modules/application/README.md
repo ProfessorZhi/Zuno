@@ -1,6 +1,6 @@
 # 01 Application & Integration（应用与集成）
 
-<!-- status: design-baseline-v1; implementation: not-authorized; deepening: cross-module-consistency-v2; detail-design: candidate-v1 -->
+<!-- status: design-baseline-v1; implementation: not-authorized; deepening: cross-module-consistency-v2; detail_design: candidate-v1 -->
 
 ## Part A — Human Narrative
 
@@ -31,6 +31,8 @@ Application & Integration 存在于这里。它面对 Web、法院 Host、批处
 后台运行结束时，入口层最容易做的一件错事，是把 Runtime 的 completed 直接映射成“分析完成”。对用户来说这句话通常意味着结果已经可以使用，但 Runtime 只能证明自己的计划与步骤结束了。
 
 如果这次任务只产生普通答案，01 还需要确认当前材料范围、引用和发布条件仍然成立；如果任务目标是正式 WorkProduct，则必须等 02 的正式提交已经成立。一个模型成功返回、一条 Run 结束、一个正式结果被 Domain 接纳、一个页面允许展示，是一条链上的不同观察点。01 的角色是把这些观察点翻译成产品语义，而不是为了 API 简洁把它们压成一个布尔值。
+
+工程参考把这四个完成层次压缩成一条精确边界：Run completed != Domain admitted != Answer publishable != Consumer displayed。它是前面产品生命周期的记号，不是另起一套状态真相。
 
 这种边界也决定了产品版本和运行计划版本为什么不能混在一起。一个 Agent 产品可能升级默认 Prompt、可用能力或路由策略，新请求从此使用新的产品版本；已经运行中的任务仍然按照自己绑定的 PlanVersion 解释。入口可以知道“用户调用的是哪一版产品能力”，04 继续拥有“这次 Run 当前按哪一版计划执行”。产品发布不应该在后台把已经派发的计划原地改写。
 
