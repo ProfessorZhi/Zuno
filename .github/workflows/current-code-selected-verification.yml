@@ -1,0 +1,150 @@
+name: Current code selected verification
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "src/backend/**"
+      - "tests/**"
+      - "tools/scripts/**"
+      - "infra/db/alembic/**"
+      - "pyproject.toml"
+      - "poetry.lock"
+      - ".github/workflows/current-code-selected-verification.yml"
+  push:
+    branches: [main]
+    paths:
+      - "src/backend/**"
+      - "tests/**"
+      - "tools/scripts/**"
+      - "infra/db/alembic/**"
+      - "pyproject.toml"
+      - "poetry.lock"
+      - ".github/workflows/current-code-selected-verification.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  PYTHONPATH: src/backend
+
+concurrency:
+  group: current-code-selected-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  selected-code-verification:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python 3.12
+        id: setup-python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install Poetry
+        uses: snok/install-poetry@v1
+        with:
+          version: 1.8.3
+          virtualenvs-create: true
+          virtualenvs-in-project: true
+
+      - name: Load cached venv
+        uses: actions/cache@v4
+        with:
+          path: .venv
+          key: current-code-${{ runner.os }}-py${{ steps.setup-python.outputs.python-version }}-${{ hashFiles('poetry.lock') }}
+
+      - name: Install dependencies from lock file
+        run: |
+          poetry install --with test --sync --no-interaction --no-root
+          git diff --exit-code -- poetry.lock pyproject.toml
+
+      - name: Prepare verification artifacts
+        run: mkdir -p artifacts/current-code-verification
+
+      - name: Compile current code and tests
+        run: |
+          set -o pipefail
+          poetry run python -m compileall -q src/backend/zuno tests \
+            2>&1 | tee artifacts/current-code-verification/compile.log
+
+      - name: Verify current model boundary
+        run: |
+          set -o pipefail
+          {
+            poetry run python tools/scripts/verify_model_gateway_bypass.py --strict
+            poetry run python tools/scripts/verify_model_gateway_boundaries.py
+          } 2>&1 | tee artifacts/current-code-verification/model-boundary.log
+
+      - name: Run current runtime-batch contract verifiers
+        run: |
+          set -o pipefail
+          {
+            poetry run python tools/scripts/verify_knowledge_runtime_batch.py
+            poetry run python tools/scripts/verify_capability_runtime_batch.py
+            poetry run python tools/scripts/verify_tool_runtime_batch.py
+            poetry run python tools/scripts/verify_model_gateway_runtime_batch.py
+            poetry run python tools/scripts/verify_security_runtime_batch.py
+          } 2>&1 | tee artifacts/current-code-verification/runtime-batches.log
+
+      - name: Run selected current behavior tests
+        run: |
+          set -o pipefail
+          poetry run pytest -q \
+            tests/domain/test_domain_mutation.py \
+            tests/domain/test_domain_mutation_sqlalchemy.py \
+            tests/knowledge/test_citation_provenance.py \
+            tests/repo/test_wave001_domain_mutation_migration.py \
+            tests/architecture/test_p0_v4_execution.py \
+            tests/api/test_product_application_boundaries.py \
+            tests/agent/runtime/test_runtime_plan_execution.py \
+            tests/agent/runtime/test_runtime_interrupt_resume.py \
+            tests/agent/runtime/test_runtime_restart_persistence.py \
+            tests/agent/runtime/test_runtime_reflection_replan.py \
+            tests/agent/runtime/test_runtime_tool_idempotency.py \
+            tests/agent/runtime/test_runtime_model_roles.py \
+            tests/knowledge/test_knowledge_runtime_batch.py \
+            tests/capability/test_capability_runtime_batch.py \
+            tests/capability/test_tool_runtime_batch.py \
+            tests/security/test_security_governance_contract.py \
+            tests/security/test_security_runtime_batch.py \
+            tests/platform/test_observability_runtime_batch.py \
+            tests/retrieval/test_standard_retrieval_composition.py \
+            tests/retrieval/test_enhanced_retrieval_composition.py \
+            tests/retrieval/test_retrieval_mode_semantics.py \
+            tests/evals/test_model_gateway_cost_latency.py \
+            tests/evals/test_multihop_eval_metrics.py \
+            tests/evals/test_multihop_eval_route_policy.py \
+            tests/evals/test_runtime_evidence_binding.py \
+            --junitxml=artifacts/current-code-verification/pytest-results.xml \
+            -p no:cacheprovider \
+            2>&1 | tee artifacts/current-code-verification/pytest.log
+
+      - name: Record verification context
+        if: always()
+        run: |
+          {
+            echo "commit_sha=${GITHUB_SHA}"
+            echo "event=${GITHUB_EVENT_NAME}"
+            echo "python=3.12"
+            echo "dependency_source=poetry.lock"
+            echo "postgresql_integration=${ZUNO_TEST_DATABASE_URL:+configured}"
+          } > artifacts/current-code-verification/context.txt
+
+      - name: Upload current code verification artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: current-code-selected-verification
+          path: artifacts/current-code-verification
+          if-no-files-found: error
+          retention-days: 14
