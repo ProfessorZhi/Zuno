@@ -23,8 +23,18 @@ python tools/scripts/verify_architecture_human_readability.py
 
 需要理解架构演进时，优先读取 `docs/red-blue/rounds/` 的新式 Round；更早的手工/自动记录只在 `docs/red-blue/archive/legacy/`。这些 review 记录都不拥有当前架构，不作为生产证据。
 
-## Runtime
+## Current code selected verification
 
-Runtime 变更还需按代码 Owner 运行对应 focused pytest、compile、migration 或 integration 验证；文档验证不能替代 Runtime 验证，也不能据此声称 Full CI。
+当前 GitHub-native selected code gate 是 `.github/workflows/current-code-selected-verification.yml`。
 
-当前仓库没有一个可替代上述 Owner-specific verification 的全项目 Runtime GitHub CI。若需要把 selected-suite 结果升级成 Current Evidence，记录必须绑定同一 commit SHA、测试集合、依赖环境、pass/skip/fail 和 blocked reason。
+它从 `poetry.lock` 建立 Python 3.12 环境，执行 compile、Model Gateway strict boundary、Knowledge / Capability / Tool / Model Gateway / Security runtime-batch verifier，以及跨 Domain、Citation、Application、Runtime、Retrieval、Observability 和 Eval 的 selected behavior tests。每次 run 上传 JUnit、日志和 commit / environment context。
+
+它的证据含义严格限定为：**workflow 明确列出的行为在该 run 对应 SHA 上通过。** 它不是 Full CI，也不自动证明真实 PostgreSQL、Redis、RabbitMQ、Object Store、Model / Tool Provider、浏览器、外部 Host、benchmark、HA / DR 或 Production Readiness。
+
+当前可引用的 main push 记录见 `docs/evidence/current-test-baseline.md`。涉及 Current 主张时优先引用那个 Evidence，而不是只说“workflow 存在”。
+
+## Runtime / Owner-specific verification
+
+Runtime 或其他 Owner 的变更仍需要按对应 B14.8 / failure matrix 补 focused integration、fault injection、migration 或 benchmark。Selected code gate 只提供稳定的基础回归面，不替代这些模块级 Freeze Evidence。
+
+尤其真实数据库并发、跨 Owner crash window、Effect send boundary、Security revocation 和长期运行恢复仍应单独建立可复现证明；文档验证或 selected unit/integration tests 不能据此声称 Full CI。
