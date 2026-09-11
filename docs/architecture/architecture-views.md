@@ -72,29 +72,7 @@ flowchart LR
   W2 --> P1 --> E1 --> ER
 ```
 
-## Fact Authority View
-
-```mermaid
-flowchart TB
-  KNOW[材料与知识事实\nDocumentVersion / KnowledgeGeneration / ReadinessDecision]
-  CAND[机器候选\nEvidenceCandidate / Proposal]
-  DOMAIN[正式法律事实\nEvidence / Finding / WorkProduct / AdmissionReceipt]
-  RUN[运行控制事实\nRun / PlanVersion / Step / Checkpoint]
-  EFFECT[现实副作用事实\nPreparedAction / Attempt / EffectReceipt]
-  SEC[08 Security & Governance\nAuthorization / Approval]
-  OBS[09 Observability & Evaluation\nTelemetry / Eval]
-
-  KNOW --> CAND --> DOMAIN
-  RUN --> CAND
-  RUN --> EFFECT
-  SEC -. permits transitions .-> CAND
-  SEC -. permits transitions .-> DOMAIN
-  SEC -. permits transitions .-> EFFECT
-  OBS -. observes only .-> KNOW
-  OBS -. observes only .-> RUN
-  OBS -. observes only .-> DOMAIN
-  OBS -. observes only .-> EFFECT
-```
+时间线展示同一案件如何从材料进入、候选计算、正式业务结果、新证据失效一直走到现实副作用。它不是固定 workflow：简单任务可以在前面结束，复杂机制只在约束出现后进入。
 
 ## State / Persistence / Consistency View
 
@@ -126,65 +104,7 @@ flowchart TB
   EFFECT -. correlation only .-> OBS
 ```
 
-Owner 内部使用自己的事务、version / CAS 和完成证明保护强一致；跨 Owner 默认不做全局 2PC。Projection 可以落后并被修复，外部现实不确定时必须保留 Unknown 并 Reconcile。Knowledge index 可重建，不代表 serving pointer 可以指向半成品。
-
-## Boundary Transition View
-
-```mermaid
-flowchart LR
-  DOC[DocumentVersion]
-  KG[KnowledgeGeneration]
-  READY[ReadinessDecision]
-  CAND[EvidenceCandidate / Proposal]
-  ADMIT[Formal Admission]
-  RECEIPT[AdmissionReceipt]
-  RUN[Runtime Checkpoint]
-  PREP[PreparedAction]
-  TRY[Tool Attempt]
-  UNKNOWN{Outcome known?}
-  EFFECT[EffectReceipt]
-  RECON[Reconcile]
-
-  DOC --> KG --> READY
-  READY --> CAND --> ADMIT --> RECEIPT
-  RUN -. control progress .-> CAND
-  RECEIPT -. repairs after crash .-> RUN
-  RUN --> PREP --> TRY --> UNKNOWN
-  UNKNOWN -->|Yes| EFFECT
-  UNKNOWN -->|No| RECON --> EFFECT
-```
-
-## Responsibility View
-
-```mermaid
-flowchart TB
-  APP[01 Application & Integration\n产品入口、Matter / Scope、发布与交付]
-  DOMAIN[02 Legal Domain & Work Product\n正式法律事实]
-  KNOW[03 Knowledge & Evidence\n材料、知识派生、就绪与 lineage]
-  RUN[04 Agent Runtime & Control\n计划、步骤、等待与恢复]
-  CAP[05 Capability & Skill\n稳定专业能力]
-  TOOL[06 Tool Runtime & Effects\n现实副作用]
-  MODEL[07 Model Gateway\n模型角色与 Provider]
-  SEC[08 Security & Governance\n持续授权与审批]
-  OBS[09 Observability & Evaluation\n观测与评测]
-  CONTEXT[Optional Context Provider]
-
-  APP --> RUN
-  APP --> DOMAIN
-  RUN --> KNOW
-  RUN --> CAP
-  CAP --> MODEL
-  KNOW --> DOMAIN
-  CAP --> DOMAIN
-  RUN --> TOOL
-  SEC -. current decisions .-> APP
-  SEC -. current decisions .-> RUN
-  SEC -. current decisions .-> TOOL
-  OBS -. observes .-> APP
-  OBS -. observes .-> RUN
-  OBS -. observes .-> DOMAIN
-  CONTEXT -. policy-scoped context .-> RUN
-```
+这张图是总体一致性模型。Owner 内部使用自己的事务、version / CAS 和完成证明保护强一致；跨 Owner 默认不做全局 2PC。Projection 可以落后并被修复，外部现实不确定时必须保留 Unknown 并 Reconcile。Knowledge index 可重建，不代表 serving fact 可以指向半成品；Telemetry 可以解释时间线，不替代 Owner truth。
 
 ## Recovery View
 
@@ -211,6 +131,8 @@ sequenceDiagram
   X-->>T: actual outcome
   T-->>R: EffectReceipt / Reconciliation result
 ```
+
+恢复视图集中展示两类最危险的时间差：Owner 已经提交而 Runtime projection 尚未更新，以及外部世界可能已经变化而本地没有确认。两者共同说明恢复先查询更强的事实，再修控制状态；本地旧快照不能覆盖已经发生的业务世界。
 
 ## Deployment / Scale / Backpressure View
 
@@ -274,8 +196,10 @@ flowchart TB
   EVAL -->|No| REMOVE
 ```
 
+这张图描述架构如何随约束增长，而不是把 Target 当成所有部署的固定起点。物理服务拆分由真实隔离和扩缩容需求驱动；GraphRAG、Memory、Specialist 与 Native Runtime 则继续接受可比较 Evaluation，测不到稳定边际收益时回到更简单的形态。
+
 ## 图的阅读边界
 
-这些视图分别回答：Zuno 与外部世界的系统边界在哪里；一件案件怎样随时间变化；系统里有哪些不同事实；状态怎样落在不同耐久边界并在没有全局 2PC 的情况下收敛；哪些跨边界转换需要更强证明；九个责任域怎样协作；两个关键故障窗口怎样恢复；默认部署怎样按工作类型扩缩容并传播 Backpressure；复杂度和服务拆分什么时候应该升级或退回。
+六张视图分别回答：Zuno 与外部世界的系统边界在哪里；一件案件怎样随时间变化；不同状态怎样落在耐久边界并在没有全局 2PC 的情况下收敛；两个关键故障窗口怎样恢复；默认部署怎样按工作类型扩缩容并传播 Backpressure；复杂度和服务拆分什么时候应该升级或退回。
 
-模块内部状态、Contract、事务、幂等和故障注入继续由 `docs/modules/` 与相关 ADR 负责；实现是否成立由 `docs/evidence/` 证明。
+九个责任域的完整 Ownership 表已经由 `architecture.md` 与 `docs/modules/README.md` 负责，不在这里再画一张模块连接图。模块内部状态、Contract、事务、幂等和故障注入继续由 `docs/modules/` 与相关 ADR 负责；实现是否成立由 `docs/evidence/` 证明。
