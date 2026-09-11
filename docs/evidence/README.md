@@ -9,7 +9,7 @@
 | Evidence | 保留理由 |
 | --- | --- |
 | [Current Runtime Baseline](current-runtime-baseline.md) | 当前 Runtime owner、状态和失败语义的证据入口 |
-| [Current Test Baseline](current-test-baseline.md) | 当前 GitHub selected code verification、PostgreSQL Domain / Wave-001 revision probes，以及 Slice C Effect / Audit 负向证据和 Security / Secret pre-send 正向证据 |
+| [Current Test Baseline](current-test-baseline.md) | 当前 GitHub selected code verification、PostgreSQL Domain / Wave-001 revision probes，以及 Slice C Effect / Audit 负向证据、Reconciliation convergence gap 和 Security / Secret pre-send 正向证据 |
 | [Current Eval Baseline](current-eval-baseline.md) | 当前评测与 Measurement Blocked 状态 |
 | [Implementation Wave-001](implementation-wave-001.md) | TASK-001 / TASK-003 的有限代码、测试和窄验证证据；不是 Program closure |
 
@@ -24,6 +24,7 @@ POSTGRESQL DOMAIN SELECTED PROBES: PASS
 WAVE-001 REVISION POSTGRESQL APPLY/DOWNGRADE/RE-APPLY: PASS
 TARGET ADMISSION RECEIPT: NOT IMPLEMENTATION-PROVEN
 UNKNOWN EFFECT RESTART REPLAY: TARGET VIOLATION CONFIRMED ON DIAGNOSTIC BRANCH
+RECONCILIATION CONVERGENCE: NOT IMPLEMENTATION-PROVEN
 PRE-EFFECT SECURITY EPOCH REVOCATION: PASS ON DIAGNOSTIC BRANCH
 PRE-LEASE SECRET REVOCATION: PASS ON DIAGNOSTIC BRANCH
 MANDATORY AUDIT BEFORE EFFECT: TARGET VIOLATION CONFIRMED ON DIAGNOSTIC BRANCH
@@ -36,7 +37,9 @@ COURT QA: UNKNOWN / NOT AVAILABLE
 
 Main 的正向 selected verification 说明一组明确列出的 Domain、Citation、Application、Runtime、Knowledge、Capability、Tool、Model Gateway、Security、Observability、Retrieval 与 Eval 行为在同一个 main SHA 的 GitHub runner 上通过。对应 run 还使用 PostgreSQL 16.15 service 验证了 Wave-001 Domain mutation/version 的基本事务、并发冲突、幂等重放，以及 revision `20260813_57` 自身的 `upgrade → downgrade → re-upgrade` DDL。
 
-Current Evidence 同时记录失败和窄范围成功的诊断结果。PR #201 / run `34559517466` 复现了 06↔04 的外部 Effect 恢复缺陷：第一次 UNKNOWN Effect 能耐久写成 `UNKNOWN_EFFECT + OPEN/RECONCILE`，重启后同一 action identity 没有二次 dispatch，但 Runtime 把仍未完成 Reconciliation 的 replay 返回成 `completed`。
+Current Evidence 同时记录失败、实现缺口和窄范围成功的诊断结果。PR #201 / run `34559517466` 复现了 06↔04 的外部 Effect 恢复缺陷：第一次 UNKNOWN Effect 能耐久写成 `UNKNOWN_EFFECT + OPEN/RECONCILE`，重启后同一 action identity 没有二次 dispatch，但 Runtime 把仍未完成 Reconciliation 的 replay 返回成 `completed`。
+
+进一步的 Current source review 表明，06 目前能创建 OPEN Reconciliation、按时间 escalate，并记录授权人工 assessment；但没有找到消费 `reconciliation_query` 的 remote-query consumer、conclusive `ReconciliationReceipt` / `RESOLVED` writer，或 manual assessment 到 repaired Effect truth 的最终收敛路径。因此 durable Unknown ledger 存在不能扩写成“Reconcile 已闭环”。这个缺口需要实现，而不是更多同层单元测试。
 
 PR #203 / run `34560042535` 验证了 08 的一个具体时间窗口：动作在 prepare / Approval 时仍有有效 SecurityEpoch，随后该 epoch 在真正发送前变成 `revoked`。Current Gateway 在 provider dispatch 前重新读取安全事实并 fail closed；executor 没有被调用，Attempt / ExecutionReceipt 分别保持 `FAILED / NOT_DISPATCHED` 与 `FAILED / NO_EFFECT`，没有生成 EffectReceipt 或 Reconciliation。
 
@@ -46,7 +49,7 @@ PR #205 / run `34560692093` 又确认了另一条独立缺陷：Security 已经�
 
 四条 Slice C 诊断都需要测试进程临时兼容 `zuno.settings → zuno.platform.settings`，因为正式 Alembic `env.py` 仍引用已退休的 `zuno.settings`。完整 fresh-database migration chain 能在这个 test-only alias 下运行，不等于正式 Alembic entrypoint 已经 clean pass。
 
-这个范围不能扩写成“Zuno PostgreSQL 集成已完成”“完整 Effect recovery 已完成”“Security 已验证完成”“Secret rotation 已验证完成”“Mandatory Audit 已接入”或“完整 Alembic deployment path 已验证”。Target `AdmissionReceipt`、02↔04 owner-first recovery、unresolved Effect replay、Mandatory Audit durability gate、完整 Secret rotation/retry、其他 Approval / Policy drift、no-egress、其他平台 PostgreSQL 路径、Redis / RabbitMQ / Object Store、真实 Provider 和外部 Host仍各自需要证据。详细正负结果见 [`current-test-baseline.md`](current-test-baseline.md)。
+这个范围不能扩写成“Zuno PostgreSQL 集成已完成”“完整 Effect recovery 已完成”“Reconciliation 已闭环”“Security 已验证完成”“Secret rotation 已验证完成”“Mandatory Audit 已接入”或“完整 Alembic deployment path 已验证”。Target `AdmissionReceipt`、02↔04 owner-first recovery、unresolved Effect replay、Reconciliation convergence、Mandatory Audit durability gate、完整 Secret rotation/retry、其他 Approval / Policy drift、no-egress、其他平台 PostgreSQL 路径、Redis / RabbitMQ / Object Store、真实 Provider 和外部 Host仍各自需要证据。详细正负结果见 [`current-test-baseline.md`](current-test-baseline.md)。
 
 当前仓库可以证明有限实现和验证范围，也可以证明若干具体失败；不能证明完整历史技术栈、真实法院质量、生产部署、用户规模、SLA、QPS、HA、No-egress、Sandbox 资格或正式外部验收。历史 Pilot 不等于 Production。
 
@@ -60,7 +63,7 @@ PR #205 / run `34560692093` 又确认了另一条独立缺陷：Security 已经�
 - `Current code selected verification` 通过只能证明 workflow 列出的行为，不等于 Full Project CI 通过。
 - revision `20260813_57` 能真实 apply/downgrade/re-upgrade，只证明该 revision 自身 DDL 可逆，不证明真实数据 backfill 或零停机策略。
 - 诊断分支失败可以证明某条 Target invariant 当前不成立；诊断分支成功也只证明它实际注入并观察到的 fault window。
-- `Outcome Unknown` 的耐久记录存在，不等于 recovery 已正确闭环；当前已经观测到 restart replay 把 unresolved reconciliation 错误升级成 completed。
+- `Outcome Unknown` 的耐久记录存在，不等于 recovery 已正确闭环；当前已经观测到 restart replay 把 unresolved reconciliation 错误升级成 completed，并且 source review 尚未找到最终 Reconciliation convergence implementation。
 - pre-send SecurityEpoch revocation 与 pre-lease Secret revocation 已有正向 fault evidence，不代表完整 Secret rotation/retry、Approval hash drift、Policy Engine outage 或 no-egress 已经证明。
 - `security_audit_requirements` 存在，不代表 matching AuditPersistenceReceipt 已提交；#205 已证明当前 send path 会在 durable audit proof 缺失时继续 dispatch。
 - 正式 Alembic chain 在 test-only import alias 下能跑到 head，不等于正式 Alembic entrypoint 已修复。
@@ -87,6 +90,7 @@ C. Zuno Native Runtime + First-class Domain State
 
 - 先看对应 Evidence 的 scope、command、result 和 known gaps；
 - 正向与负向 Evidence 都必须绑定具体 SHA / run / test shape，不按印象扩写；
+- Source review 只能证明代码表面存在/缺失到搜索与人工核对的范围；不能把“没有搜到”泛化成仓库永远没有，只能据此保持 `NOT_IMPLEMENTATION_PROVEN`；
 - 只把明确覆盖的结论称为 Current；
 - 项目历史、用户回忆和产品定位回到 [`docs/project/README.md`](../project/README.md)；更严格的一句话能否采用，再核对 [`project-fact-provenance.md`](../governance/project-fact-provenance.md)；
 - Red / Blue 的旧讨论只回到 [`docs/red-blue/archive/legacy/`](../red-blue/archive/legacy/README.md)，不作为 Evidence；新的 Round Findings 同样不能自动升级 Current；

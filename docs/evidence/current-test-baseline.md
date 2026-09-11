@@ -1,6 +1,6 @@
 # Current Test Baseline
 
-状态：`CURRENT / SELECTED_VERIFICATION_AVAILABLE / EFFECT_RECOVERY_NEGATIVE_EVIDENCE / SECURITY_REVOCATION_POSITIVE_EVIDENCE / SECRET_REVOCATION_POSITIVE_EVIDENCE / MANDATORY_AUDIT_NEGATIVE_EVIDENCE / QUALITY_NOT_ESTABLISHED`
+状态：`CURRENT / SELECTED_VERIFICATION_AVAILABLE / EFFECT_RECOVERY_NEGATIVE_EVIDENCE / RECONCILIATION_CONVERGENCE_IMPLEMENTATION_GAP / SECURITY_REVOCATION_POSITIVE_EVIDENCE / SECRET_REVOCATION_POSITIVE_EVIDENCE / MANDATORY_AUDIT_NEGATIVE_EVIDENCE / QUALITY_NOT_ESTABLISHED`
 
 ## 当前代码快照的 Selected Verification
 
@@ -84,6 +84,23 @@ business_fix_applied: NO
 
 这里同时保留一个重要正向边界：**诊断中没有发生 duplicate dispatch。** 当前问题是 Effect certainty / lifecycle 被错误升级，不是这次测试观察到的二次外部发送。
 
+## Slice C Source Review：Current 尚未形成 Reconciliation 的最终收敛路径
+
+#201 证明 OPEN Reconciliation 可以被耐久保存，但“保存未知”只是 Reconcile 的起点。06 Target 要求能够通过远端 query / business key / idempotency status 或必要人工确认形成 `ReconciliationReceipt`，结论至少区分 `CONFIRMED_EXECUTED / CONFIRMED_NOT_EXECUTED / STILL_UNKNOWN / MANUAL_REQUIRED`，并据此修复 Effect state。
+
+对 Current 源码的 repo-wide review 显示：
+
+- `ToolInvocationGateway` 可以创建 `OPEN / RECONCILE` row；
+- `escalate_due_reconciliations()` 只能把过期的 `OPEN / WAITING_PROVIDER` 推到 `ESCALATED / MANUAL_ASSESSMENT`；
+- `record_manual_effect_assessment()` 可以要求授权人工 reviewer 并持久化人工结论；
+- schema 允许 `RESOLVED`，但没有发现 Current runtime/repository writer 把 reconciliation 更新成 `RESOLVED`；
+- 没有发现消费已保存 `reconciliation_query` 去调用远端查询接口的 Current consumer；
+- 没有发现 Current `ReconciliationReceipt` implementation surface 或“人工 assessment → repaired Effect truth”的收敛路径。
+
+搜索 `ReconciliationReceipt` 的 Current repo 命中集中在 Target / Architecture / Governance 文档；`WAITING_PROVIDER` 的实现命中集中在 schema 和 escalation 条件；`reconciliation_query` 的实现命中集中在创建/哈希保存，不形成查询执行链。
+
+因此这里不再把“remote query / manual reconciliation”描述成一个只差 fault test 的未知项。**Current 已有 durable unknown ledger 与 escalation/manual-assessment 记录能力，但最终 reconciliation convergence implementation 尚未建立证明。** 继续补测试无法凭空证明一个不存在的 resolver；实现 remote-query consumer、conclusive ReconciliationReceipt / resolved state writer 或人工结论到 Effect truth 的收敛，都属于新的业务实现工作，需要独立 Implementation Authorization。
+
 ## Slice C 正向证据：SecurityEpoch 在 send 前撤销会 fail closed
 
 PR #203 用另一条**未合并的 test-only 诊断分支**验证 08 Security 的时间边界。它不修改 Security 或 Tool 业务实现，只在两个现有 UnitOfWork 边界之间注入一次耐久事实变化：Security prepare / Approval 完成时 epoch 仍是 `active`；Infrastructure idempotency / fencing transaction 提交后，test seam 将同一个 `security_effective_epochs` row 改为 `revoked`；随后继续执行 Gateway 现有的 `_reauthorize_execute_epoch() → validate_pre_effect_authorization()`。
@@ -112,7 +129,7 @@ business_fix_applied: NO
 
 因此可以采用一个非常窄但重要的 Current 结论：**授权在 prepare / Approval 时成立，不会自动授权未来的外部发送；当 effective SecurityEpoch 在 send 前变成 revoked，当前 Gateway 会在真实 provider dispatch 前重新检查并 fail closed。**
 
-这条证据不代表 08 已冻结。它只关闭 `revocation-before-send` 这一种 fault window；Approval action-hash drift、Secret rotation、Mandatory Audit、Policy Engine outage、no-egress、Legal Hold / No-Recall / purge convergence、Prompt Injection 等仍需自己的证明。它也不会抵消上面已经确认的 06/04 Effect replay defect。
+这条证据不代表 08 已冻结。它只关闭 `revocation-before-send` 这一种 fault window；完整 Secret rotation/retry、Mandatory Audit、Policy Engine outage、no-egress、Legal Hold / No-Recall / purge convergence、Prompt Injection 等仍需自己的证明。它也不会抵消上面已经确认的 06/04 Effect replay defect。
 
 ## Slice C 正向证据：Secret 在 lease 校验前撤销会 fail closed
 
@@ -182,7 +199,7 @@ PR #201 的第二次诊断、PR #203、PR #205 和 PR #207 都只在**测试进�
 
 ## PostgreSQL 证据的边界
 
-GitHub service container 不等于系统级 PostgreSQL qualification。Actions 日志仍能看到部分其他 selected tests / import-time platform components 尝试默认 `postgres` 用户并被数据库拒绝；这些路径没有被 Domain probes 声称为成功。Current 可采用的正向结论是 **显式 Domain PostgreSQL probes、Wave-001 revision probe、#203 的 pre-effect SecurityEpoch revocation，以及 #207 的 pre-lease Secret revocation**；Current 负向结论包括 #201 的 Effect recovery defect 与 #205 的 Mandatory Audit gate defect。不能概括为“Zuno 全部 PostgreSQL 集成通过”。
+GitHub service container 不等于系统级 PostgreSQL qualification。Actions 日志仍能看到部分其他 selected tests / import-time platform components 尝试默认 `postgres` 用户并被数据库拒绝；这些路径没有被 Domain probes 声称为成功。Current 可采用的正向结论是 **显式 Domain PostgreSQL probes、Wave-001 revision probe、#203 的 pre-effect SecurityEpoch revocation，以及 #207 的 pre-lease Secret revocation**；Current 负向结论包括 #201 的 Effect recovery defect 与 #205 的 Mandatory Audit gate defect；source review 还确认 Reconciliation convergence implementation 尚未建立证明。不能概括为“Zuno 全部 PostgreSQL 集成通过”。
 
 当前仍未证明或已经明确阻塞的内容包括：
 
@@ -192,6 +209,7 @@ GitHub service container 不等于系统级 PostgreSQL qualification。Actions �
 - Domain commit 后 Runtime Checkpoint 丢失时的 owner-first E2E recovery；
 - Checkpoint 已标完成但 matching Receipt 缺失时的 formal-complete denial；
 - unresolved external Effect 在 restart replay 后保持 Unknown——#201 已证明这条路径**不满足 Target**；
+- remote query / manual assessment 最终形成 conclusive ReconciliationReceipt / repaired Effect state——Current source review 显示该收敛实现**尚未建立证明**；
 - `MANDATORY_BEFORE_EFFECT` 在没有 committed audit proof 时阻止现实发送——#205 已证明这条路径**不满足 Target**；
 - SecurityEpoch **pre-send revocation** 已由 #203 通过；SecretRef **pre-lease revocation** 已由 #207 通过；完整 Secret rotation/retry、Policy drift、no-egress 与其他治理 fault window 仍未证明；
 - Redis、RabbitMQ、Object Store、真实 Model / Tool Provider、外部 Host、HA / DR、负载和生产运维。
@@ -225,4 +243,4 @@ production_readiness: NOT_ESTABLISHED
 
 **Slice B — Domain ↔ Runtime crash authority** 在“不修改业务实现”的验证范围已经走到边界：当前 mutation transaction / concurrency / lost-response replay 与 Wave-001 revision-level PostgreSQL DDL 已有 GitHub evidence。剩余 Owner-first recovery 依赖 Target `AdmissionReceipt`、Formal Admission transaction 和 Runtime matching-Receipt consumer；这些当前没有实现证明。
 
-**Slice C — Effects ↔ Security send boundary** 仍是 `BLOCKED_BY_IMPLEMENTATION_DEFECT`，且有两条互相独立的硬 blocker：#201 证明 restart replay 会把 unresolved Reconciliation 错误升级成 completed；#205 证明没有 durable mandatory-audit proof 时 provider 仍会 dispatch。正向 fault evidence 现已覆盖 #203 的 pre-send SecurityEpoch revocation 与 #207 的 pre-lease Secret revocation。完整 Secret rotation/retry、no-egress、remote query/manual reconciliation、remote-success/local-crash、cancel-in-flight 和 compensation 仍可继续通过 test-only 缩小 uncertainty，但不会绕过已经确认的两个 Slice C implementation blocker。
+**Slice C — Effects ↔ Security send boundary** 仍是 `BLOCKED_BY_IMPLEMENTATION_DEFECT`。当前已经收敛出三类实施阻塞：#201 的 unresolved Reconciliation replay certainty escalation；#205 的 Mandatory Audit durability gate 缺失；以及 source review 确认的 Reconciliation 最终收敛实现缺口。正向 fault evidence 覆盖 #203 的 pre-send SecurityEpoch revocation 与 #207 的 pre-lease Secret revocation。继续 test-only 更适合验证 no-egress、remote-success/local-crash、cancel-in-flight、完整 Secret rotation/retry 等已存在 Current surface；它不能替代尚不存在的 reconciliation resolver，也不能绕过前述 blocker。
