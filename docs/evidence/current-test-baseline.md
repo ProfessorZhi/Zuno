@@ -1,6 +1,6 @@
 # Current Test Baseline
 
-状态：`CURRENT / SELECTED_VERIFICATION_AVAILABLE / QUALITY_NOT_ESTABLISHED`
+状态：`CURRENT / SELECTED_VERIFICATION_AVAILABLE / NEGATIVE_EFFECT_RECOVERY_EVIDENCE / QUALITY_NOT_ESTABLISHED`
 
 ## 当前代码快照的 Selected Verification
 
@@ -36,11 +36,11 @@ GitHub run `34499552197` checkout 的就是 `c817bd345c9025524c6380ef208a131277d
 - **commit 前故障**：已有 `before_commit` fault hook 抛错，事务不推进；新的 service instance 随后仍从 D0→D1 提交；
 - **Wave-001 revision 真实 DDL 可逆性**：在独立随机 PostgreSQL schema 中执行 revision `20260813_57` 的现有 Alembic `upgrade()`，验证三张 Wave-001 表与 `uq_domain_mutation_idempotency` / `uq_domain_state_version`；随后执行 `downgrade()` 验证 revision 表被移除，再次 `upgrade()` 后重新验证同一表与约束。
 
-最后一项只证明 **revision `20260813_57` 自身的 PostgreSQL DDL 可以 apply / downgrade / re-apply**。测试没有从最早 revision 顺序执行整个 Alembic history，也没有证明线上数据 backfill、锁影响、零停机迁移或生产回滚。因此不能把它写成“完整 migration chain 已验证”。
+最后一项只证明 **revision `20260813_57` 自身的 PostgreSQL DDL 可以 apply / downgrade / re-apply**。它不证明真实业务数据 backfill、锁影响、零停机迁移或生产回滚。
 
 这些结果支持当前 `SqlAlchemyCanonicalDomainStore` 的 PostgreSQL transaction、row-lock / expected-version、idempotent replay baseline，以及 Wave-001 revision-level DDL 可逆性。它们**不等于 Target Formal Admission 已实现**。当前 `src/backend/zuno/domain/` 仍只有 Wave-001 mutation / persistence surface；Target `AdmissionReceipt`、完整 WorkProduct admission transaction 以及 Runtime 读取 matching Receipt 修复 Checkpoint 尚没有 Current implementation evidence。
 
-同一 run 还完成：
+同一 main run 还完成：
 
 - `python -m compileall -q src/backend/zuno tests`；
 - strict Model Gateway provider-SDK bypass scan；
@@ -54,28 +54,67 @@ GitHub run `34499552197` checkout 的就是 `c817bd345c9025524c6380ef208a131277d
 
 具体文件集合由 [`.github/workflows/current-code-selected-verification.yml`](../../.github/workflows/current-code-selected-verification.yml) 固定。
 
-### PostgreSQL 证据的边界
+## Slice C 负向证据：UNKNOWN Effect 重启重放被错误升级成 completed
 
-这次 service container 不等于系统级 PostgreSQL qualification。Actions 日志仍能看到部分其他 selected tests / import-time platform components 尝试默认 `postgres` 用户并被数据库拒绝；这些路径没有被本次 Domain probes 声称为成功。Current 可采用的结论是 **显式 Domain PostgreSQL probes 与 Wave-001 revision probe PASS**，而不是“Zuno 全部 PostgreSQL 集成通过”。
+为了验证 06 Tool Runtime & Effects 与 04 Agent Runtime 的 send-boundary 恢复，PR #201 建立了一个**未合并的诊断分支**。它不改变 `src/backend`、Migration、依赖或 Target Contract，只增加 PostgreSQL fault probe。因为 probe 揭示 Current implementation defect，这个 PR 不进入 main；失败本身作为负向 Evidence 保留。
 
-当前仍未证明：
+诊断 run `34559517466` 使用 PostgreSQL 16.15，除新增 fault probe 外原 selected suite 仍通过，最终结果为：
 
-- 整条 Alembic history 的真实 PostgreSQL upgrade / downgrade；
+```text
+diagnostic_branch: ci/postgres-effect-security-boundary-probe
+diagnostic_run: 34559517466
+base_main: ebfb4637fa57e698c6ff83a3f53073ce3445fda6
+selected_result: 193 passed, 1 failed, 1 warning
+artifact_id: 10183819018
+failure_scope: UNKNOWN Effect restart replay
+business_fix_applied: NO
+```
+
+这个 probe 先走当前 `ToolControlPlaneRuntime → ToolInvocationGateway → ToolUnitOfWork / SecurityUnitOfWork / InfrastructureUnitOfWork`，让一个需要 Approval 的外部写动作越过 send boundary 后抛出 `ToolEffectUnknownError`。第一次执行的 Current 行为是正确的：
+
+- executor 只调用一次；
+- `ToolAttempt` 耐久记录为 `UNKNOWN / DISPATCHED`；
+- `ToolExecutionReceipt` 耐久记录为 `UNKNOWN / UNKNOWN_EFFECT`；
+- `tool_effect_reconciliations` 留下 `OPEN / RECONCILE`，并保存 provider effect identity；
+- Runtime 返回 `reconcile_required / UNKNOWN_EFFECT`。
+
+随后销毁 Runtime 对象、用同一 PostgreSQL 数据库新建 Runtime，并用同一 action / idempotency identity 重放。Current 实现没有再次调用 executor，说明 durable idempotency 能阻止重复外部发送；但返回状态变成了 **`completed`**。测试在 `replay.status == "reconcile_required"` 处失败。
+
+这说明当前恢复链存在一个明确语义缺陷：**未完成 Reconciliation 的外部 Effect 在重启后的幂等 replay 中被上层 Runtime 错误提升为完成。** Source review 与失败行为一致：当前 side-effect replay 只向上返回一个未携带类型/确定性的 `result_ref`，这个 ref 可能指向已确认 EffectReceipt，也可能指向仍然 OPEN 的 Reconciliation；上层 Runtime 对通用 `replayed` 状态采用完成语义。Target 要求 Outcome Unknown 在 06 完成 Reconcile 前继续保持 Unknown，因此这条路径阻塞 06/04 的 Freeze。
+
+这里同时保留一个重要正向边界：**诊断中没有发生 duplicate dispatch。** 当前问题是 Effect certainty / lifecycle 被错误升级，不是这次测试观察到的二次外部发送。
+
+## Alembic Current entrypoint 漂移
+
+PR #201 的第一次 run `34559357122` 还暴露出一个独立 Current 基础设施问题：`infra/db/alembic/env.py` 仍导入已经退休的 `zuno.settings`，而当前 settings module 位于 `zuno.platform.settings`。因此标准 `alembic upgrade head` 在进入 migration chain 前就因 `ModuleNotFoundError` 失败。
+
+第二次诊断 run 只在**测试进程内部**临时将 `zuno.settings` alias 到 `zuno.platform.settings`，没有修改正式 Alembic 文件。借助这个 test-only shim，fresh PostgreSQL database 确实顺序执行了从 `20260417_01` 到 `20260813_57` 的当前 migration chain；但这只能说明 migration bodies 在该 fresh-database 场景下可以继续运行，**不能写成正式 Alembic entrypoint 已通过**。部署入口仍有 stale import blocker，需要独立实现/维护授权处理。
+
+## PostgreSQL 证据的边界
+
+GitHub service container 不等于系统级 PostgreSQL qualification。Actions 日志仍能看到部分其他 selected tests / import-time platform components 尝试默认 `postgres` 用户并被数据库拒绝；这些路径没有被 Domain probes 声称为成功。Current 可采用的正向结论是 **显式 Domain PostgreSQL probes 与 Wave-001 revision probe PASS**，同时采用上面的 Slice C **negative evidence**；不能概括为“Zuno 全部 PostgreSQL 集成通过”。
+
+当前仍未证明或已经明确阻塞的内容包括：
+
+- 正式 Alembic entrypoint 无兼容 shim 的 clean upgrade；
 - 真实业务数据的 backfill、约束收紧和在线迁移策略；
 - Target AdmissionReceipt 与 Domain mutation 同事务提交；
 - Domain commit 后 Runtime Checkpoint 丢失时的 owner-first E2E recovery；
 - Checkpoint 已标完成但 matching Receipt 缺失时的 formal-complete denial；
-- SecurityEpoch 变化、正式 WorkProduct invalidation 和新 Evidence / late proposal 的完整 02↔04 integration；
+- unresolved external Effect 在 restart replay 后保持 Unknown——当前诊断已经证明这条路径**不满足 Target**；
+- SecurityEpoch revocation-during-run、Approval/Audit/Secret drift 的完整 send-boundary fault evidence；
 - Redis、RabbitMQ、Object Store、真实 Model / Tool Provider、外部 Host、HA / DR、负载和生产运维。
 
-## 两类 GitHub Gate
+## 两类 GitHub Gate 与诊断分支
 
-当前仓库保留两类不同 GitHub gate：
+当前仓库保留两类可合入主线的 GitHub gate：
 
 - `Architecture document set`：验证 Project / Architecture / Modules / Governance / Evidence 文档集合、语义一致性、Human Readability、entrypoints 和对应 repository tests；
 - `Current code selected verification`：验证 lockfile 可安装性、代码边界、runtime-batch contracts、selected behavior tests、当前 Domain PostgreSQL probes，以及 Wave-001 revision-level DDL probe。
 
-两者组合后仍不等于 Full Project CI。Formal benchmark 继续 `BLOCKED_NOT_MEASURED`，法院 QA、capacity、SLA、HA / DR 与 Production Readiness 仍未建立。
+失败的诊断 PR 不是第三类“绿色 gate”。它的用途是把 Target failure matrix 放到 Current 代码上，生成可复核的负向证据。PR #201 / run `34559517466` 证明当前 UNKNOWN Effect restart path 需要实现修复；它不会替代 main 的正向 baseline，也不会因为失败就被描述成“main CI 红”。
+
+两类 main gate 组合后仍不等于 Full Project CI。Formal benchmark 继续 `BLOCKED_NOT_MEASURED`，法院 QA、capacity、SLA、HA / DR 与 Production Readiness 仍未建立。
 
 ## 历史 selected verification
 
@@ -89,10 +128,10 @@ benchmark: BLOCKED_NOT_MEASURED
 production_readiness: NOT_ESTABLISHED
 ```
 
-`4736cf4409658e43af6e129e34dadbd97a5866ad` 的 run `34497460461` 恢复了 GitHub-native selected gate：`189 passed, 1 skipped`。`5b51627e43b6abcd940ac63100048171fd7f460c` 的 run `34498613045` 把真实 PostgreSQL Domain transaction / concurrency probes 接入后得到 `192 passed`。当前判断优先使用上面的 `c817bd3...` / run `34499552197`。
+`4736cf4409658e43af6e129e34dadbd97a5866ad` 的 run `34497460461` 恢复了 GitHub-native selected gate：`189 passed, 1 skipped`。`5b51627e43b6abcd940ac63100048171fd7f460c` 的 run `34498613045` 把真实 PostgreSQL Domain transaction / concurrency probes 接入后得到 `192 passed`。当前 main 正向判断优先使用上面的 `c817bd3...` / run `34499552197`；Slice C 的失败 run 只用于对应负向结论。
 
 ## 后续 Evidence Gate
 
-**Slice B — Domain ↔ Runtime crash authority** 在“不修改业务实现”的验证范围已经走到边界：当前 mutation transaction / concurrency / lost-response replay 与 Wave-001 revision-level PostgreSQL DDL 已有 GitHub evidence。剩余最关键的 Owner-first recovery 依赖 Target `AdmissionReceipt`、Formal Admission transaction 和 Runtime matching-Receipt consumer；这些当前没有实现证明，不能继续用更多 mutation tests 代替。
+**Slice B — Domain ↔ Runtime crash authority** 在“不修改业务实现”的验证范围已经走到边界：当前 mutation transaction / concurrency / lost-response replay 与 Wave-001 revision-level PostgreSQL DDL 已有 GitHub evidence。剩余 Owner-first recovery 依赖 Target `AdmissionReceipt`、Formal Admission transaction 和 Runtime matching-Receipt consumer；这些当前没有实现证明。
 
-下一阶段转入 [`../governance/module-detail-freeze-readiness-review.md`](../governance/module-detail-freeze-readiness-review.md) 的 **Slice C — Effects ↔ Security send boundary**，先判断现有代码能覆盖哪些 fault evidence；任何新增业务实现仍需独立明确的 Implementation Authorization。
+**Slice C — Effects ↔ Security send boundary** 已从 source review 进入 `BLOCKED_BY_IMPLEMENTATION_DEFECT`：Current durable Effect ledger 能保存 UNKNOWN 和 OPEN Reconciliation，也能阻止该测试中的 duplicate dispatch；但 restart replay 会把 unresolved reconciliation 错误升级成 completed。修复这条业务恢复语义需要独立 Implementation Authorization。08 的 pre-effect authorization surface 已存在，revocation-during-run 仍可继续作为独立 test-only probe，但不能绕开已经确认的 06/04 blocker。
