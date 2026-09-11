@@ -2,9 +2,51 @@
 
 本文件只提供 `architecture.md` 的视觉补充。图中的边界和箭头用于帮助理解整体关系，不引入第二套架构事实。
 
-updated: 2026-09-10
+updated: 2026-09-11
 status: normative-target-visual-source
 text_design_source: `docs/architecture/architecture.md`
+
+## System Context View
+
+```mermaid
+flowchart LR
+  USER[专业用户 / Web]
+  HOST[法院 Host / API Client]
+
+  subgraph ZUNO[Zuno logical system boundary]
+    APP[Application & Integration]
+    CORE[Domain / Knowledge / Runtime / Capability]
+    GATES[Security / Model Gateway / Effects]
+    OBS[Observability & Evaluation]
+  end
+
+  subgraph PLATFORM[Platform primitives]
+    PG[(PostgreSQL)]
+    OBJ[(Object Store)]
+    Q[Queue / Checkpointer]
+    SECRET[Secret / Identity / Policy]
+    OTEL[Telemetry backend]
+  end
+
+  MODELS[Model / Research Providers]
+  EXT[External Court / Tool Systems]
+
+  USER --> APP
+  HOST --> APP
+  APP --> CORE
+  CORE --> GATES
+  GATES --> MODELS
+  GATES --> EXT
+  CORE -. uses .-> PLATFORM
+  GATES -. uses .-> PLATFORM
+  OBS -. observes .-> CORE
+  OBS -. exports .-> OTEL
+
+  EXT -. owns its internal reality .-> GATES
+  MODELS -. returns computation, not business truth .-> GATES
+```
+
+Zuno 位于调用者、可替换计算 Provider、外围现实系统和平台基础设施之间。外部输入首先是 assertion / observation；模型结果不是正式业务事实，HTTP timeout 也不是远端现实失败证明。Platform 提供物理机制，不因此拥有法律业务完成语义。
 
 ## Case Timeline View
 
@@ -53,6 +95,38 @@ flowchart TB
   OBS -. observes only .-> DOMAIN
   OBS -. observes only .-> EFFECT
 ```
+
+## State / Persistence / Consistency View
+
+```mermaid
+flowchart TB
+  SOURCE[正式材料 / Source bytes\n长期保真]
+  DOMAIN[(Domain durable facts\nDomainVersion / AdmissionReceipt)]
+  KNOW[(Knowledge generation metadata\nManifest / serving fact)]
+  INDEX[(Rebuildable indexes\nBM25 / Vector / Graph)]
+  RUN[(Runtime control\nPlan / Step / Checkpoint)]
+  EFFECT[(Effect ledger\nAction / Attempt / Effect / Reconciliation)]
+  SEC[(Security / Approval / Audit facts)]
+  APP[(Application projections\nPublication / Delivery)]
+  OBS[(Telemetry / Eval)]
+  REMOTE[External reality]
+
+  SOURCE --> KNOW --> INDEX
+  SOURCE --> DOMAIN
+  DOMAIN -. completion proof .-> RUN
+  KNOW -. readiness / serving fact .-> RUN
+  SEC -. current eligibility .-> RUN
+  RUN --> EFFECT --> REMOTE
+  REMOTE -. reconcile by stable identity .-> EFFECT
+  DOMAIN -. projection source .-> APP
+  EFFECT -. projection source .-> APP
+  SEC -. publication gate .-> APP
+  DOMAIN -. correlation only .-> OBS
+  RUN -. correlation only .-> OBS
+  EFFECT -. correlation only .-> OBS
+```
+
+Owner 内部使用自己的事务、version / CAS 和完成证明保护强一致；跨 Owner 默认不做全局 2PC。Projection 可以落后并被修复，外部现实不确定时必须保留 Unknown 并 Reconcile。Knowledge index 可重建，不代表 serving pointer 可以指向半成品。
 
 ## Boundary Transition View
 
@@ -138,35 +212,70 @@ sequenceDiagram
   T-->>R: EffectReceipt / Reconciliation result
 ```
 
-## Deployment and Evolution View
+## Deployment / Scale / Backpressure View
 
 ```mermaid
 flowchart TB
-  BACKEND[Modular Python Backend]
-  WORKERS[Independent Workers\nKnowledge / Model / Tool / Eval]
-  PLATFORM[Platform primitives\nPostgreSQL / Object Store / Queue / Checkpointer / Secret]
-  SPLIT{Evidence Gate for service split}
+  CLIENTS[Web / Court Host / API Client]
+  APP[Modular Python Backend\nApplication + Domain + control responsibilities]
+  CTRL[Logical Runtime Controller]
+
+  subgraph WORKERS[Work-type Worker Pools]
+    INGEST[Ingestion / OCR / Parse]
+    KWORK[Knowledge rebuild / Retrieval]
+    MODEL[Model / Capability work]
+    TOOL[Effect execution / Reconcile]
+    EVAL[Eval / Batch analysis]
+  end
+
+  subgraph PLATFORM[Shared platform primitives]
+    PG[(PostgreSQL)]
+    OBJ[(Object Store)]
+    QUEUE[Queue / Checkpointer]
+    SECRET[Secret / Identity / Policy]
+  end
+
+  MP[Model Providers]
+  EXT[External Court / Tool Systems]
+
+  CLIENTS --> APP --> CTRL
+  CTRL --> WORKERS
+  WORKERS --> PLATFORM
+  APP --> PLATFORM
+  MODEL --> MP
+  TOOL --> EXT
+
+  INGEST -. scale by parse backlog .-> INGEST
+  KWORK -. scale by build/query load .-> KWORK
+  MODEL -. bounded by provider quota/budget .-> MODEL
+  TOOL -. bounded by target rate/effect safety .-> TOOL
+```
+
+默认不按九个责任域拆九个服务。扩容先看工作类型和真实瓶颈；`Single Controller` 是逻辑写者，不等于单机。入口、Runtime、Provider 和外部目标之间都需要显式 Backpressure，避免下游过载被放大成无界队列、费用或重复副作用。
+
+## Deployment Evolution View
+
+```mermaid
+flowchart TB
+  BASE[Simple baseline\nControlled RAG / Generic Host + Legal Backend]
+  MOD[Modular backend + justified workers]
+  SPLIT{Independent scaling / isolation / egress / lifecycle need?}
   SERVICE[Optional independent network service]
-  SIMPLE[Simple baseline\nRAG / Generic Host + Legal Backend]
   COMPLEX[GraphRAG / Memory / Specialist / Native Runtime]
   EVAL{Repeatable measured gain?}
-  KEEP[Keep the added complexity]
+  KEEP[Keep bounded complexity]
   REMOVE[Stay with / return to simpler design]
 
-  PLATFORM -. supports .-> BACKEND
-  PLATFORM -. supports .-> WORKERS
-  BACKEND --> WORKERS
-  BACKEND --> SPLIT
-  SPLIT -->|scaling / isolation / lifecycle evidence| SERVICE
-  SPLIT -->|no independent need| BACKEND
-
-  SIMPLE --> COMPLEX --> EVAL
+  BASE --> MOD --> SPLIT
+  SPLIT -->|Yes, evidenced| SERVICE
+  SPLIT -->|No| MOD
+  MOD --> COMPLEX --> EVAL
   EVAL -->|Yes| KEEP
   EVAL -->|No| REMOVE
 ```
 
 ## 图的阅读边界
 
-六张图分别回答：一件案件怎样随时间变化；系统里有哪些不同事实；哪些跨边界转换需要更强证明；九个责任域为什么存在；两个关键故障窗口怎样恢复；复杂度和部署什么时候应该升级或退回。
+这些视图分别回答：Zuno 与外部世界的系统边界在哪里；一件案件怎样随时间变化；系统里有哪些不同事实；状态怎样落在不同耐久边界并在没有全局 2PC 的情况下收敛；哪些跨边界转换需要更强证明；九个责任域怎样协作；两个关键故障窗口怎样恢复；默认部署怎样按工作类型扩缩容并传播 Backpressure；复杂度和服务拆分什么时候应该升级或退回。
 
 模块内部状态、Contract、事务、幂等和故障注入继续由 `docs/modules/` 与相关 ADR 负责；实现是否成立由 `docs/evidence/` 证明。
