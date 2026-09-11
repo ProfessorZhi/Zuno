@@ -10,9 +10,10 @@
 | --- | --- |
 | [Current Runtime Baseline](current-runtime-baseline.md) | 当前 Runtime owner、状态和失败语义的证据入口 |
 | [Current Test Baseline](current-test-baseline.md) | 当前 GitHub selected code verification、PostgreSQL Domain / Wave-001 revision probes，以及 Slice C 已确认的正负边界 |
-| [Effects ↔ Security Slice C](effect-security-slice-c.md) | 收拢现实副作用 send boundary 的 PostgreSQL fault evidence、confirmed defects、convergence / cancellation implementation gaps 与停止条件 |
 | [Current Eval Baseline](current-eval-baseline.md) | 当前评测与 Measurement Blocked 状态 |
 | [Implementation Wave-001](implementation-wave-001.md) | TASK-001 / TASK-003 的有限代码、测试和窄验证证据；不是 Program closure |
+
+Slice C 的 fault evidence 如何影响 Freeze readiness、哪些测试已经停止继续扩张，由 [`Effects ↔ Security Slice C Review`](../governance/effect-security-slice-c-review.md) 收拢。该文件属于 Governance review；底层 Current 事实仍由本目录的固定 Evidence 集合证明。
 
 已删除的 `local-workspace-closure.md` 和 `repository-closure.md` 只是已完成 Program / 工作区收口材料，不是今天需要维护的运行证据；其提交和原始材料仍由 Git 历史保留。
 
@@ -42,7 +43,7 @@ Main 的正向 selected verification 说明一组明确列出的 Domain、Citati
 
 Slice C 已经有足够证据停止继续穷举同类 fault window。PR #201 / run `34559517466` 证明 unresolved Reconciliation 在 restart replay 时会被错误升级成 completed；PR #205 / run `34560692093` 证明缺少 durable mandatory-audit proof 时当前 send path 仍会 dispatch。Source review 还把最终 Reconciliation convergence 与 cancel-in-flight orchestration 收敛成 `NOT_IMPLEMENTATION_PROVEN`，这些问题需要实现而不是更多同层测试。
 
-正向边界同样已经明确：PR #203 / run `34560042535` 证明 pre-send SecurityEpoch revocation fail closed；PR #207 / run `34566365522` 证明 pre-lease Secret revoke fail closed；PR #210 / run `34567699688` 证明 provider 已返回成功、但本地 EffectReceipt persistence 失败时，当前 Gateway 会留下 `UNKNOWN_EFFECT + OPEN/RECONCILE`，而不是直接宣布 completed。详细故障形状与证据边界见 [`effect-security-slice-c.md`](effect-security-slice-c.md)。
+正向边界同样已经明确：PR #203 / run `34560042535` 证明 pre-send SecurityEpoch revocation fail closed；PR #207 / run `34566365522` 证明 pre-lease Secret revoke fail closed；PR #210 / run `34567699688` 证明 provider 已返回成功、但本地 EffectReceipt persistence 失败时，当前 Gateway 会留下 `UNKNOWN_EFFECT + OPEN/RECONCILE`，而不是直接宣布 completed。故障形状与 Freeze 影响见 [`Effects ↔ Security Slice C Review`](../governance/effect-security-slice-c-review.md)。
 
 所有需要 fresh PostgreSQL migration chain 的 Slice C 诊断都依赖测试进程临时兼容 `zuno.settings → zuno.platform.settings`，因为正式 Alembic `env.py` 仍引用已退休的 `zuno.settings`。完整 fresh-database migration chain 能在这个 test-only alias 下运行，不等于正式 Alembic entrypoint 已经 clean pass。
 
