@@ -1,0 +1,22 @@
+round_id: rb-2026-09-11-architecture-proof-obligations-retest-012
+state: CLOSED
+mode: CHATGPT_AUTO
+created_at: 2026-09-11T15:55:00+08:00
+zuno_base_sha: 04c40dbb0e16dc3576473110e3c6f3c5d83ea77e
+target_role: Agent 开发工程师 / AI 应用工程师
+company_or_persona: principal architect / distributed-systems reviewer / legal-AI reviewer
+interview_stage: architecture-proof-obligation-alternate-scenario-retest
+red_calibration: kernel-only
+blue_profile: canonical-part-a-first
+retest_of: rb-2026-09-11-architecture-proof-obligations-011
+scenario_scope:
+  - committed Formal Admission plus lost response followed by cancellation during restart
+  - successful external effect from an old Plan after a newer Plan becomes active
+  - post-delivery invalidation or security revocation requiring real-world withdrawal/correction
+max_turns: 3
+stop_condition: close only if the Human Architecture preserves historical truth while allowing future eligibility/correction to change, without introducing a new global rollback mechanism
+result: PASS
+finding_count: 0
+highest_severity: NONE
+resolved_previous_findings:
+  - rb-2026-09-11-architecture-proof-obligations-011 F1 irreversible-boundary narrative
