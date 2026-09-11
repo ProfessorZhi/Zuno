@@ -131,6 +131,7 @@ jobs:
             tests/knowledge/test_knowledge_runtime_batch.py \
             tests/capability/test_capability_runtime_batch.py \
             tests/capability/test_tool_runtime_batch.py \
+            tests/capability/test_tool_effect_postgres_boundary.py \
             tests/security/test_security_governance_contract.py \
             tests/security/test_security_runtime_batch.py \
             tests/platform/test_observability_runtime_batch.py \
