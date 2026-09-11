@@ -119,6 +119,7 @@ jobs:
             tests/domain/test_domain_mutation.py \
             tests/domain/test_domain_mutation_sqlalchemy.py \
             tests/knowledge/test_citation_provenance.py \
+            tests/knowledge/test_index_generation_isolation.py \
             tests/repo/test_wave001_domain_mutation_migration.py \
             tests/architecture/test_p0_v4_execution.py \
             tests/api/test_product_application_boundaries.py \
