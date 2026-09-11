@@ -1,6 +1,6 @@
 # Current Test Baseline
 
-状态：`CURRENT / SELECTED_VERIFICATION_AVAILABLE / EFFECT_RECOVERY_NEGATIVE_EVIDENCE / SECURITY_REVOCATION_POSITIVE_EVIDENCE / MANDATORY_AUDIT_NEGATIVE_EVIDENCE / QUALITY_NOT_ESTABLISHED`
+状态：`CURRENT / SELECTED_VERIFICATION_AVAILABLE / EFFECT_RECOVERY_NEGATIVE_EVIDENCE / SECURITY_REVOCATION_POSITIVE_EVIDENCE / SECRET_REVOCATION_POSITIVE_EVIDENCE / MANDATORY_AUDIT_NEGATIVE_EVIDENCE / QUALITY_NOT_ESTABLISHED`
 
 ## 当前代码快照的 Selected Verification
 
@@ -114,6 +114,37 @@ business_fix_applied: NO
 
 这条证据不代表 08 已冻结。它只关闭 `revocation-before-send` 这一种 fault window；Approval action-hash drift、Secret rotation、Mandatory Audit、Policy Engine outage、no-egress、Legal Hold / No-Recall / purge convergence、Prompt Injection 等仍需自己的证明。它也不会抵消上面已经确认的 06/04 Effect replay defect。
 
+## Slice C 正向证据：Secret 在 lease 校验前撤销会 fail closed
+
+PR #207 使用另一条**未合并的 test-only PostgreSQL 诊断分支**验证 Credential 自身的时间边界。这个场景与 #203 不同：SecurityEpoch、Approval 和 send 前 re-authorization 都保持有效；fault seam 只在 Gateway 即将发放并校验本次外部 Effect 的短期 Secret Lease 之前，把同一个 `security_secret_refs` row 从 `active` 改成 `revoked`，随后继续执行现有 `_issue_secret_lease() → validate_secret_lease()`。
+
+GitHub run `34566365522` 的结果为：
+
+```text
+diagnostic_branch: ci/postgres-secret-revocation-boundary-probe
+diagnostic_run: 34566365522
+base_main: 5239689071099d4090bbdeee049b8822e1724782
+selected_result: 194 passed, 1 warning in 8.83s
+artifact_id: 10186164476
+fault_window: approval + epoch reauth pass -> SecretRef revoked before lease validation -> send
+business_fix_applied: NO
+```
+
+这个 fault window 的 Current 行为满足 Target 的 fail-closed 方向：
+
+- exact SecretRef 确实从 `active` 变成 `revoked`；
+- 当前 `validate_secret_lease()` 返回 `secret lease references a revoked secret`；
+- provider executor **0 次调用**；
+- `ToolAttempt` 耐久记录为 `FAILED / NOT_DISPATCHED`；
+- `ToolExecutionReceipt` 耐久记录为 `FAILED / NOT_DISPATCHED / NO_EFFECT`；
+- 没有生成 EffectReceipt；
+- 没有生成 Reconciliation；
+- Secret lease 的 issue + validate 位于同一 Security UOW，校验失败后事务回滚，因此没有留下 committed SecretLease。
+
+因此可以采用另一条严格限定的 Current 结论：**即使 Approval 和当前 SecurityEpoch 都仍有效，只要绑定的 Secret 在现实发送前已经 revoked，当前 Gateway 也不会把早先的授权或 Credential 引用继续当成可发送资格。**
+
+这不等于完整 Secret rotation / retry 已证明。当前 probe 没有验证 rotation 后如何选择新的 CredentialVersion、已有旧 Lease 的过期传播、Retry 是否取得新 Lease，也没有验证多 Provider / 多 audience 的 Credential qualification。它只关闭“pre-lease Secret revoke 是否会继续发送”这个 fault window。
+
 ## Slice C 负向证据：Mandatory Audit requirement 没有形成 send gate
 
 PR #205 把 Target `MANDATORY_BEFORE_EFFECT` 放进当前 PostgreSQL Tool/Security/Infrastructure 路径。Source review 已确认两个基础能力分别存在：08 的 Security persistence 会创建 `security_audit_requirements`，平台 Infrastructure 也实现了 `record_mandatory_audit()` 与 `assert_audit_durable_for_effect()`；后者在没有耐久 mandatory-audit fact 时本来能够 fail closed。但仓库调用链中没有证据表明当前 `ToolInvocationGateway` 在 provider dispatch 前调用了这些 Audit durability helper。
@@ -147,11 +178,11 @@ business_fix_applied: NO
 
 PR #201 的第一次 run `34559357122` 还暴露出一个独立 Current 基础设施问题：`infra/db/alembic/env.py` 仍导入已经退休的 `zuno.settings`，而当前 settings module 位于 `zuno.platform.settings`。因此标准 `alembic upgrade head` 在进入 migration chain 前就因 `ModuleNotFoundError` 失败。
 
-PR #201 的第二次诊断、PR #203 和 PR #205 都只在**测试进程内部**临时将 `zuno.settings` alias 到 `zuno.platform.settings`，没有修改正式 Alembic 文件。借助这个 test-only shim，fresh PostgreSQL database 能顺序执行当前 migration chain；但这只能说明 migration bodies 在该 fresh-database 场景下可以继续运行，**不能写成正式 Alembic entrypoint 已通过**。部署入口仍有 stale import blocker，需要独立实现/维护授权处理。
+PR #201 的第二次诊断、PR #203、PR #205 和 PR #207 都只在**测试进程内部**临时将 `zuno.settings` alias 到 `zuno.platform.settings`，没有修改正式 Alembic 文件。借助这个 test-only shim，fresh PostgreSQL database 能顺序执行当前 migration chain；但这只能说明 migration bodies 在该 fresh-database 场景下可以继续运行，**不能写成正式 Alembic entrypoint 已通过**。部署入口仍有 stale import blocker，需要独立实现/维护授权处理。
 
 ## PostgreSQL 证据的边界
 
-GitHub service container 不等于系统级 PostgreSQL qualification。Actions 日志仍能看到部分其他 selected tests / import-time platform components 尝试默认 `postgres` 用户并被数据库拒绝；这些路径没有被 Domain probes 声称为成功。Current 可采用的正向结论是 **显式 Domain PostgreSQL probes、Wave-001 revision probe、以及 #203 的 pre-effect revocation probe**；Current 负向结论包括 #201 的 Effect recovery defect 与 #205 的 Mandatory Audit gate defect。不能概括为“Zuno 全部 PostgreSQL 集成通过”。
+GitHub service container 不等于系统级 PostgreSQL qualification。Actions 日志仍能看到部分其他 selected tests / import-time platform components 尝试默认 `postgres` 用户并被数据库拒绝；这些路径没有被 Domain probes 声称为成功。Current 可采用的正向结论是 **显式 Domain PostgreSQL probes、Wave-001 revision probe、#203 的 pre-effect SecurityEpoch revocation，以及 #207 的 pre-lease Secret revocation**；Current 负向结论包括 #201 的 Effect recovery defect 与 #205 的 Mandatory Audit gate defect。不能概括为“Zuno 全部 PostgreSQL 集成通过”。
 
 当前仍未证明或已经明确阻塞的内容包括：
 
@@ -162,7 +193,7 @@ GitHub service container 不等于系统级 PostgreSQL qualification。Actions �
 - Checkpoint 已标完成但 matching Receipt 缺失时的 formal-complete denial；
 - unresolved external Effect 在 restart replay 后保持 Unknown——#201 已证明这条路径**不满足 Target**；
 - `MANDATORY_BEFORE_EFFECT` 在没有 committed audit proof 时阻止现实发送——#205 已证明这条路径**不满足 Target**；
-- SecurityEpoch **pre-send revocation** 已由 #203 通过；其他 Approval hash drift、Secret rotation、Policy drift 与 no-egress fault window 仍未证明；
+- SecurityEpoch **pre-send revocation** 已由 #203 通过；SecretRef **pre-lease revocation** 已由 #207 通过；完整 Secret rotation/retry、Policy drift、no-egress 与其他治理 fault window 仍未证明；
 - Redis、RabbitMQ、Object Store、真实 Model / Tool Provider、外部 Host、HA / DR、负载和生产运维。
 
 ## 两类 GitHub Gate 与诊断分支
@@ -172,7 +203,7 @@ GitHub service container 不等于系统级 PostgreSQL qualification。Actions �
 - `Architecture document set`：验证 Project / Architecture / Modules / Governance / Evidence 文档集合、语义一致性、Human Readability、entrypoints 和对应 repository tests；
 - `Current code selected verification`：验证 lockfile 可安装性、代码边界、runtime-batch contracts、selected behavior tests、当前 Domain PostgreSQL probes，以及 Wave-001 revision-level DDL probe。
 
-诊断 PR 不自动成为第三类 main gate。它们把 Target failure matrix 送进 Current 代码，并生成正负 evidence：PR #201 / run `34559517466` 证明 UNKNOWN Effect restart path 需要实现修复；PR #203 / run `34560042535` 证明 pre-send SecurityEpoch revocation fail closed；PR #205 / run `34560692093` 证明 Mandatory Audit requirement 在没有 durable audit proof 时仍允许 provider dispatch。三者都使用 test-only Alembic compatibility alias，因此不会替代 main 的正向 baseline，也不会被描述成 clean deployment qualification。
+诊断 PR 不自动成为第三类 main gate。它们把 Target failure matrix 送进 Current 代码，并生成正负 evidence：PR #201 / run `34559517466` 证明 UNKNOWN Effect restart path 需要实现修复；PR #203 / run `34560042535` 证明 pre-send SecurityEpoch revocation fail closed；PR #205 / run `34560692093` 证明 Mandatory Audit requirement 在没有 durable audit proof 时仍允许 provider dispatch；PR #207 / run `34566365522` 证明 pre-lease Secret revoke fail closed。四者都使用 test-only Alembic compatibility alias，因此不会替代 main 的正向 baseline，也不会被描述成 clean deployment qualification。
 
 两类 main gate 组合后仍不等于 Full Project CI。Formal benchmark 继续 `BLOCKED_NOT_MEASURED`，法院 QA、capacity、SLA、HA / DR 与 Production Readiness 仍未建立。
 
@@ -194,4 +225,4 @@ production_readiness: NOT_ESTABLISHED
 
 **Slice B — Domain ↔ Runtime crash authority** 在“不修改业务实现”的验证范围已经走到边界：当前 mutation transaction / concurrency / lost-response replay 与 Wave-001 revision-level PostgreSQL DDL 已有 GitHub evidence。剩余 Owner-first recovery 依赖 Target `AdmissionReceipt`、Formal Admission transaction 和 Runtime matching-Receipt consumer；这些当前没有实现证明。
 
-**Slice C — Effects ↔ Security send boundary** 仍是 `BLOCKED_BY_IMPLEMENTATION_DEFECT`，且现在有两条互相独立的硬 blocker：#201 证明 restart replay 会把 unresolved Reconciliation 错误升级成 completed；#205 证明没有 durable mandatory-audit proof 时 provider 仍会 dispatch。#203 则证明 pre-send SecurityEpoch revocation 这一条当前会 fail closed。下一步若继续 test-only，应优先验证 Approval action-hash drift、Secret rotation / revocation 或 no-egress；这些结果可以继续缩小 08/06 uncertainty，但不会绕过已经确认的两个 Slice C implementation blocker。
+**Slice C — Effects ↔ Security send boundary** 仍是 `BLOCKED_BY_IMPLEMENTATION_DEFECT`，且有两条互相独立的硬 blocker：#201 证明 restart replay 会把 unresolved Reconciliation 错误升级成 completed；#205 证明没有 durable mandatory-audit proof 时 provider 仍会 dispatch。正向 fault evidence 现已覆盖 #203 的 pre-send SecurityEpoch revocation 与 #207 的 pre-lease Secret revocation。完整 Secret rotation/retry、no-egress、remote query/manual reconciliation、remote-success/local-crash、cancel-in-flight 和 compensation 仍可继续通过 test-only 缩小 uncertainty，但不会绕过已经确认的两个 Slice C implementation blocker。
