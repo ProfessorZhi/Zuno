@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import os
 from pathlib import Path
+import sys
 from uuid import uuid4
 
 import pytest
@@ -24,6 +25,7 @@ from zuno.capability.tool_runtime import ToolEffectUnknownError
 from zuno.platform.database.foundation import InfrastructureUnitOfWork
 from zuno.platform.database.tool_runtime import ToolUnitOfWork
 from zuno.platform.security import SecurityUnitOfWork
+from zuno.platform import settings as platform_settings
 
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
@@ -55,7 +57,23 @@ def _migrated_database(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> tuple
     monkeypatch.setenv("ZUNO_CONFIG", str(config_path))
 
     alembic_config = Config(str(REPO_ROOT / "infra/db/alembic.ini"))
-    command.upgrade(alembic_config, "head")
+
+    # Current infra/db/alembic/env.py still imports the retired `zuno.settings`
+    # path. Keep that migration-entrypoint drift visible as a separate Current
+    # blocker, but do not let it prevent this test-only probe from reaching the
+    # Effect/Recovery behavior under review. This alias is deliberately local
+    # to the test process and is not evidence that the formal Alembic entrypoint
+    # works without compatibility help.
+    previous_legacy_settings = sys.modules.get("zuno.settings")
+    sys.modules["zuno.settings"] = platform_settings
+    try:
+        command.upgrade(alembic_config, "head")
+    finally:
+        if previous_legacy_settings is None:
+            sys.modules.pop("zuno.settings", None)
+        else:
+            sys.modules["zuno.settings"] = previous_legacy_settings
+
     return create_engine(database_url), admin_engine, database_name
 
 
