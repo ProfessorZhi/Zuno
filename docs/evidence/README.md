@@ -9,7 +9,7 @@
 | Evidence | 保留理由 |
 | --- | --- |
 | [Current Runtime Baseline](current-runtime-baseline.md) | 当前 Runtime owner、状态和失败语义的证据入口 |
-| [Current Test Baseline](current-test-baseline.md) | 当前 GitHub selected code verification、PostgreSQL Domain / Wave-001 revision probes，以及 Slice C Effect recovery 负向证据 |
+| [Current Test Baseline](current-test-baseline.md) | 当前 GitHub selected code verification、PostgreSQL Domain / Wave-001 revision probes，以及 Slice C Effect recovery 负向证据和 Security pre-send revocation 正向证据 |
 | [Current Eval Baseline](current-eval-baseline.md) | 当前评测与 Measurement Blocked 状态 |
 | [Implementation Wave-001](implementation-wave-001.md) | TASK-001 / TASK-003 的有限代码、测试和窄验证证据；不是 Program closure |
 
@@ -24,6 +24,7 @@ POSTGRESQL DOMAIN SELECTED PROBES: PASS
 WAVE-001 REVISION POSTGRESQL APPLY/DOWNGRADE/RE-APPLY: PASS
 TARGET ADMISSION RECEIPT: NOT IMPLEMENTATION-PROVEN
 UNKNOWN EFFECT RESTART REPLAY: TARGET VIOLATION CONFIRMED ON DIAGNOSTIC BRANCH
+PRE-EFFECT SECURITY EPOCH REVOCATION: PASS ON DIAGNOSTIC BRANCH
 FORMAL ALEMBIC ENTRYPOINT: STALE IMPORT BLOCKER
 PRODUCTION_READINESS: NOT_ESTABLISHED
 QUALITY: not_yet_proven
@@ -33,11 +34,13 @@ COURT QA: UNKNOWN / NOT AVAILABLE
 
 Main 的正向 selected verification 说明一组明确列出的 Domain、Citation、Application、Runtime、Knowledge、Capability、Tool、Model Gateway、Security、Observability、Retrieval 与 Eval 行为在同一个 main SHA 的 GitHub runner 上通过。对应 run 还使用 PostgreSQL 16.15 service 验证了 Wave-001 Domain mutation/version 的基本事务、并发冲突、幂等重放，以及 revision `20260813_57` 自身的 `upgrade → downgrade → re-upgrade` DDL。
 
-Current Evidence 同时允许记录**失败的诊断结果**。PR #201 / run `34559517466` 在未修改业务实现的情况下复现了 06↔04 的外部 Effect 恢复缺陷：第一次 UNKNOWN Effect 能耐久写成 `UNKNOWN_EFFECT + OPEN/RECONCILE`，重启后同一 action identity 也没有二次 dispatch，但 Runtime 把仍未完成 Reconciliation 的 replay 返回成 `completed`。这个失败不会把 main 的绿色 selected baseline 改写成“main CI 红”，却足以证明对应 Freeze invariant 尚未成立。
+Current Evidence 同时记录失败和窄范围成功的诊断结果。PR #201 / run `34559517466` 在未修改业务实现的情况下复现了 06↔04 的外部 Effect 恢复缺陷：第一次 UNKNOWN Effect 能耐久写成 `UNKNOWN_EFFECT + OPEN/RECONCILE`，重启后同一 action identity 也没有二次 dispatch，但 Runtime 把仍未完成 Reconciliation 的 replay 返回成 `completed`。这个失败不会把 main 的绿色 selected baseline 改写成“main CI 红”，却足以证明对应 Freeze invariant 尚未成立。
 
-同一诊断还发现正式 Alembic `env.py` 仍引用已退休的 `zuno.settings`。完整 fresh-database migration chain 只能在测试进程提供兼容 alias 后运行，因此不能声称正式 Alembic entrypoint clean pass。
+PR #203 / run `34560042535` 则验证了 08 的一个具体时间窗口：动作在 prepare / Approval 时仍有有效 SecurityEpoch，随后该 epoch 在真正发送前变成 `revoked`。Current Gateway 在 provider dispatch 前重新读取安全事实并 fail closed；executor 没有被调用，Attempt / ExecutionReceipt 分别保持 `FAILED / NOT_DISPATCHED` 与 `FAILED / NO_EFFECT`，没有生成 EffectReceipt 或 Reconciliation。这个结果支持“授权只控制未来动作，受保护边界重新检查”的 Current 实现，但只覆盖 pre-send revocation 这一种场景。
 
-这个范围不能扩写成“Zuno PostgreSQL 集成已完成”“完整 Effect recovery 已完成”或“完整 Alembic deployment path 已验证”。Target `AdmissionReceipt`、02↔04 owner-first recovery、unresolved Effect replay、Security revocation-during-run、其他平台 PostgreSQL 路径、Redis / RabbitMQ / Object Store、真实 Provider 和外部 Host仍各自需要证据。详细正负结果见 [`current-test-baseline.md`](current-test-baseline.md)。
+两条 Slice C 诊断都需要测试进程临时兼容 `zuno.settings → zuno.platform.settings`，因为正式 Alembic `env.py` 仍引用已退休的 `zuno.settings`。完整 fresh-database migration chain 能在这个 test-only alias 下运行，不等于正式 Alembic entrypoint 已经 clean pass。
+
+这个范围不能扩写成“Zuno PostgreSQL 集成已完成”“完整 Effect recovery 已完成”“Security 已验证完成”或“完整 Alembic deployment path 已验证”。Target `AdmissionReceipt`、02↔04 owner-first recovery、unresolved Effect replay、其他 Approval / Audit / Secret / Policy drift、no-egress、其他平台 PostgreSQL 路径、Redis / RabbitMQ / Object Store、真实 Provider 和外部 Host仍各自需要证据。详细正负结果见 [`current-test-baseline.md`](current-test-baseline.md)。
 
 当前仓库可以证明有限实现和验证范围，也可以证明若干具体失败；不能证明完整历史技术栈、真实法院质量、生产部署、用户规模、SLA、QPS、HA、No-egress、Sandbox 资格或正式外部验收。历史 Pilot 不等于 Production。
 
@@ -50,8 +53,9 @@ Current Evidence 同时允许记录**失败的诊断结果**。PR #201 / run `34
 - 模块 Part B 写了 `AdmissionReceipt`，只能证明 Target 语义已经设计清楚；当前 PostgreSQL mutation probe 也不能把 mutation record 直接升级成最终 Receipt。
 - `Current code selected verification` 通过只能证明 workflow 列出的行为，不等于 Full Project CI 通过。
 - revision `20260813_57` 能真实 apply/downgrade/re-apply，只证明该 revision 自身 DDL 可逆，不证明真实数据 backfill 或零停机策略。
-- 诊断分支失败可以证明某条 Target invariant 当前不成立，但不能反过来把未覆盖路径写成失败或把整个 main 写成失败。
+- 诊断分支失败可以证明某条 Target invariant 当前不成立；诊断分支成功也只证明它实际注入并观察到的 fault window。
 - `Outcome Unknown` 的耐久记录存在，不等于 recovery 已正确闭环；当前已经观测到 restart replay 把 unresolved reconciliation 错误升级成 completed。
+- pre-send SecurityEpoch revocation 已有正向 fault evidence，不代表 Secret rotation、Mandatory Audit failure、Approval hash drift、Policy Engine outage 或 no-egress 已经证明。
 - 正式 Alembic chain 在 test-only import alias 下能跑到 head，不等于正式 Alembic entrypoint 已修复。
 - `ModelCallAttempt` 或 Tool contract 有单元测试，不等于真实 Provider / 真实外围法院系统已经完成 E2E。
 - Eval Dataset schema 存在，不等于正式 benchmark 已测；zero sample 或缺 credentials 时必须保持 BLOCKED。
