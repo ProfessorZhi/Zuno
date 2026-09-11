@@ -4,7 +4,7 @@ Zuno 是一个面向法律工作的智能 Agent 平台。它要解决的不是�
 
 对一个第一次接触 Zuno 的人，可以先把它理解成一个**会处理材料、组织分析、等待人工确认、保存正式结果，并在失败以后继续恢复的法律工作后端**。简单问题仍然可以走普通 RAG；只有任务真的变长、材料会变化、结果需要长期保存，或者系统要影响外部世界时，Zuno 才引入更强的状态与恢复机制。
 
-下面描述的是 Zuno 当前接受的 **Target Architecture**。它解释系统应该怎样分工，不代表这些能力已经全部在 Current 代码或真实法院环境中验证。Current 做到哪里，只看 [`docs/evidence/`](../evidence/README.md) 中的代码、测试、Migration、Trace 和 Eval 证据。
+下面描述的是 Zuno 当前接受的 **Target Architecture**。它解释系统应该怎样分工，不代表这些能力已经全部在 Current 代码或真实法院环境中验证。Current 做到哪里，只看 [`docs/evidence/`](../evidence/README.md) 中的代码、数据库迁移、测试、运行追踪和评测证据。
 
 <!--
 status: normative-target
@@ -38,22 +38,26 @@ research_source: docs/research/
 
 ```mermaid
 flowchart LR
-    U[用户 / 法院 Host] --> A[Application & Integration\n接收请求、查询与交付]
-    A --> S[Security & Governance\n当前是否允许继续]
-    A --> K[Knowledge & Evidence\n材料处理、检索与证据候选]
-    K --> R[Agent Runtime & Control\n长任务计划、等待与恢复]
-    R --> C[Capability & Skill\n法律专业能力]
-    R --> M[Model Gateway\n模型选择与调用]
-    R --> D[Legal Domain & Work Product\n正式法律事实与工作成果]
-    D --> A
-    R --> E[Tool Runtime & Effects\n外部动作与结果确认]
-    E --> X[外部法院 / 第三方系统]
-    O[Observability & Evaluation\n追踪、评测、复杂度是否值得] -.-> A
-    O -.-> R
-    O -.-> D
+    U[用户 / 法院 Host] --> I[请求进入\n身份、任务范围、当前权限]
+    I --> K[材料准备\nOCR、解析、检索、证据候选]
+    K --> A[分析执行\n计划、专业能力、模型调用]
+    A --> H[专业人员复核\n修改、接受或拒绝]
+    H --> W[正式工作成果\n版本、引用、形成依据]
+    W --> P[发布与现实动作\n交付、外部系统调用]
+    P --> X[用户 / 法院 / 第三方系统]
+
+    S[Security & Governance\n每次受保护动作重新判断] -.-> I
+    S -.-> K
+    S -.-> A
+    S -.-> P
+    O[Observability & Evaluation\n追踪、质量、成本、复杂度收益] -.-> A
+    O -.-> W
+    O -.-> P
 ```
 
-这张图表示**逻辑责任**，不是九个微服务。默认实现可以是一个模块化 Python 后端，加少量按照工作类型划分的 Worker；只有吞吐、安全隔离、网络出口、故障半径或发布节奏真的要求时，某些部分才值得拆成独立网络服务。
+这条主链背后由九个逻辑责任域协作。Application 负责入口和交付，Knowledge 负责材料与证据，Runtime 联合 Capability 和 Model Gateway 组织分析，Legal Domain 保存正式结果，Effects 处理真正改变外部世界的动作；Security 和 Evaluation 横跨整条链。九个责任域表示**谁长期负责什么**，不是九个微服务。
+
+默认实现可以是一个模块化 Python 后端，加少量按照工作类型划分的 Worker；只有吞吐、安全隔离、网络出口、故障半径或发布节奏真的要求时，某些部分才值得拆成独立网络服务。
 
 ### 一个合同争议任务怎样跑完
 
@@ -67,9 +71,9 @@ Security 随后检查当前用户、Matter、材料范围和用途是否允许�
 
 Runtime 调用两类可替换能力。Capability 表示“事件抽取、冲突识别、类案检索”这类专业任务对上层承诺什么；具体实现可以是研究模型、规则、LLM 或外部服务。Model Gateway 则负责实际模型调用：在安全、质量、预算和可用性允许的范围里选择 Provider / Model，并记录真实调用和 Usage。这样更换模型或研究实现时，不需要让整个业务流程重新学习一遍专业语义。
 
-机器完成分析以后，结果仍然只是候选。专业人员可能修改事实、接受一部分判断、拒绝另一部分。如果这些内容要成为长期保存、可以交付和以后追责的工作成果，它们会进入 Legal Domain & Work Product，由法律业务规则和必要人审决定哪些内容正式成立。正式结果会保留自己的版本、引用和形成依据，而不是只保存“最后一次模型输出”。
+机器完成分析以后，结果仍然只是候选。专业人员可能修改事实、接受一部分判断、拒绝另一部分。如果这些内容要成为长期保存、可以交付和以后追责的正式工作成果，它们会进入 Legal Domain & Work Product，由法律业务规则和必要人审决定哪些内容正式成立。工程上把“候选结果正式进入长期业务历史”的提交边界称为 `Formal Admission`。正式形成的 `WorkProduct` 会保留自己的版本、引用和形成依据，而不是只保存“最后一次模型输出”。
 
-结果需要离开 Zuno 时，Application 负责“该向谁发布哪一版”，Tool Runtime & Effects 负责“现实世界到底发生了什么”。例如向外围法院系统提交一条记录，HTTP timeout 只能说明 Zuno 没拿到确定响应；远端可能没执行，也可能已经成功。系统必须先确认现实结果，再决定是否重试、结束或补偿，不能把网络错误直接变成第二次业务提交。
+结果需要离开 Zuno 时，Application 负责“该向谁发布哪一版”，Tool Runtime & Effects 负责“现实世界到底发生了什么”。这里把可能改变外部世界的动作及其结果统称为 `Effect`。例如向外围法院系统提交一条记录，HTTP timeout 只能说明 Zuno 没拿到确定响应；远端可能没执行，也可能已经成功。系统必须先确认现实结果，再决定是否重试、结束或补偿，不能把网络错误直接变成第二次业务提交。
 
 Observability & Evaluation 横跨整条链路。它记录 Trace、时延、成本和质量指标，也负责比较 GraphRAG、Reflection、Memory、Specialist 或更贵模型到底有没有稳定收益。但 Trace 只是解释执行发生过什么，不能替 Domain 宣布法律结果已经成立，也不能替 Effects 宣布外部动作已经发生。
 
@@ -91,17 +95,17 @@ Observability & Evaluation 横跨整条链路。它记录 Trace、时延、成�
 
 当这些问题同时出现以后，系统长期需要回答九类不同的问题。它们是责任边界，不是固定的部署边界。
 
-| 责任域 | 对陌生读者最直接的理解 |
-| --- | --- |
-| **01 Application & Integration** | 接收外部请求，把多个内部事实组合成用户能理解的查询、发布和交付状态 |
-| **02 Legal Domain & Work Product** | 保存正式法律业务事实、人工判断、WorkProduct 历史以及后续失效关系 |
-| **03 Knowledge & Evidence** | 把材料加工成可检索知识，判断当前任务是否准备好，产生证据候选与引用来源 |
-| **04 Agent Runtime & Control** | 管理长任务的计划、步骤、等待、取消、Replan 和恢复 |
-| **05 Capability & Skill** | 定义专业能力的稳定语义，并管理不同实现当前是否有资格提供它 |
-| **06 Tool Runtime & Effects** | 管理可能改变现实世界的动作、Attempt、结果未知和对账 |
-| **07 Model Gateway** | 在允许的模型中做路由，记录真实 Provider / Model 调用、失败和 Usage |
-| **08 Security & Governance** | 判断此刻能不能继续读取、外发、取 Secret、审批或执行受保护动作 |
-| **09 Observability & Evaluation** | 记录执行时间线，评价质量、成本和复杂机制是否值得保留 |
+| 责任域 | 在主链里的位置 | 对陌生读者最直接的理解 |
+| --- | --- | --- |
+| **01 Application & Integration** | 请求进入、查询、发布、交付 | 接收外部请求，把多个内部事实组合成用户能理解的产品状态 |
+| **02 Legal Domain & Work Product** | 人审后的正式结果 | 保存正式法律业务事实、人工判断、WorkProduct 历史以及后续失效关系 |
+| **03 Knowledge & Evidence** | 材料准备与证据 | 把材料加工成可检索知识，判断当前任务是否准备好，产生证据候选与引用来源 |
+| **04 Agent Runtime & Control** | 长任务分析 | 管理计划、步骤、等待、取消、Replan 和恢复 |
+| **05 Capability & Skill** | 长任务分析 | 定义专业能力的稳定语义，并管理不同实现当前是否有资格提供它 |
+| **06 Tool Runtime & Effects** | 发布后的现实动作 | 管理可能改变现实世界的动作、尝试、结果未知和对账 |
+| **07 Model Gateway** | 长任务分析 | 在允许的模型中做路由，记录真实 Provider / Model 调用、失败和 Usage |
+| **08 Security & Governance** | 横跨整条主链 | 判断此刻能不能继续读取、外发、取 Secret、审批或执行受保护动作 |
+| **09 Observability & Evaluation** | 横跨整条主链 | 记录执行时间线，评价质量、成本和复杂机制是否值得保留 |
 
 Platform / Infrastructure 不作为第十个业务模块。PostgreSQL、Object Store、Queue、Checkpointer、Secret Manager、身份系统、OpenTelemetry 和模型 SDK 都是可复用的工程基础设施。它们提供事务、存储、队列、身份和观测能力，但不会替 Zuno 决定“哪份法律结论正式成立”或“一个外部动作究竟发生了没有”。
 
@@ -109,9 +113,9 @@ Platform / Infrastructure 不作为第十个业务模块。PostgreSQL、Object S
 
 Zuno 会同时保存几类恢复价值完全不同的数据。
 
-最重要的是不能靠重算找回的业务历史：正式材料版本、人工判断、正式 Evidence、Finding、WorkProduct，以及证明一次正式提交已经发生的记录。这些内容构成长期业务历史，服务重启、索引重建或模型升级都不能把它们覆盖掉。
+最重要的是不能靠重算找回的业务历史：正式材料版本、人工判断、经过业务接纳的 Evidence / Finding（正式证据与事实判断）、WorkProduct，以及证明一次正式提交已经发生的记录。这些内容构成长期业务历史，服务重启、索引重建或模型升级都不能把它们覆盖掉。
 
-第二类是可以从原始材料重新生成的知识派生，例如 OCR 结果、chunk、Embedding、graph 和索引。它们可以随着算法升级而重建，但新的 generation 没有完整验证以前，不能把当前可服务版本替换成半成品。
+第二类是可以从原始材料重新生成的知识派生，例如 OCR 结果、chunk、Embedding、graph 和索引。它们可以随着算法升级而重建，但新的知识代次（generation）没有完整验证以前，不能把当前可服务版本替换成半成品。
 
 第三类是 Runtime 的控制状态：Plan、Step、等待、Checkpoint 等。它们让长任务可以恢复，但不是业务真相。如果 Runtime 的记录和更强的 Domain / Effect 事实冲突，恢复时先相信真正拥有事实的一方，再修 Runtime 投影。
 
@@ -125,7 +129,7 @@ Cache、UI projection 和大部分可重建观测数据放在更低层。它们�
 
 Zuno 的做法是把强一致缩到真正拥有事实的局部边界。Domain 在自己的事务里保证一次正式提交完整成立；Knowledge 只有在一代索引完整验证后才切换 serving；Runtime 只串行化自己的控制事实；Effects 在发送现实动作前固定动作身份；Security 保存当前授权和审批事实。
 
-跨这些边界以后，系统靠稳定 identity、version、causation 和可查询的完成证明收敛。也就是说，一个结果要进入更强状态，必须拿出对应 Owner 能证明它成立的事实。没有证明，就停在候选、等待、未知或拒绝，而不是为了让流程继续而猜一个 `success`。
+跨这些边界以后，系统靠稳定身份、版本、因果关联（causation）和可查询的完成证明收敛。也就是说，一个结果要进入更强状态，必须拿出对应 Owner 能证明它成立的事实。没有证明，就停在候选、等待、未知或拒绝，而不是为了让流程继续而猜一个 `success`。
 
 正式结果还有更严格的一层要求：它依赖的材料、知识、专业能力、人审和安全条件必须组成一个业务上仍然成立的因果链。每个引用单独存在，并不代表它们拼在一起就是一个合法结果。新材料、专业语义或安全条件真的改变了结论前提时，需要拒绝、复核、重新验收或 Replan，而不是把互相不兼容的版本硬拼成新的 WorkProduct。
 
@@ -133,9 +137,9 @@ Zuno 的做法是把强一致缩到真正拥有事实的局部边界。Domain �
 
 在正式提交之前，很多计算都可以推倒重来。候选分析可以重新生成，失败的知识构建可以丢弃，旧计划可以被新 PlanVersion 取代。
 
-Formal Admission 之后不一样。WorkProduct 已经正式成立，后来的 Cancel 或 Replan 只能影响未来工作，不能把历史改成“这件事从未发生”。如果新证据改变结论，系统形成新版本、失效或 supersession 关系，同时保留旧版本当时为什么成立。
+一旦完成正式业务接纳（Formal Admission），情况就不同。WorkProduct 已经正式成立，后来的 Cancel 或 Replan 只能影响未来工作，不能把历史改成“这件事从未发生”。如果新证据改变结论，系统形成新版本、失效或 supersession 关系，同时保留旧版本当时为什么成立。
 
-外部 Effect 更明显。一个动作一旦已经可能到达外围系统，后来的计划变化没有资格假装现实世界也一起回滚。结果未知时先 Reconcile；如果已经确认发生而业务又需要撤回，就发起一项新的受控动作或 Compensation。补偿本身也有新的授权、Attempt 和结果，它不是修改旧 Receipt 说“之前没发生”。
+外部 Effect 更明显。一个动作一旦已经可能到达外围系统，后来的计划变化没有资格假装现实世界也一起回滚。结果未知时先 Reconcile；如果已经确认发生而业务又需要撤回，就发起一项新的受控动作或 Compensation。补偿本身也有新的授权、执行尝试和结果，它不是修改旧记录说“之前没发生”。
 
 这也是 Zuno 区分**历史事实**和**当前资格**的原因。历史上发生过的提交、交付和外部动作通常只能继续追加新事实；“现在还能不能访问”“当前哪一版仍有效”“下一步是否允许执行”则可以随着新的证据或安全条件改变。
 
@@ -145,7 +149,7 @@ Formal Admission 之后不一样。WorkProduct 已经正式成立，后来的 Ca
 
 真正需要保存的是当时的决策依据：用了哪些材料和版本、哪一代知识与哪个专业能力参与了分析、实际调用了哪个 Provider / Model、模型当时返回了什么、专业人员修改和接受了什么、接纳时哪些条件成立，以及最终哪一版结果被正式保存和交付。
 
-如果某个 Provider 能提供不可变快照，并且执行足够确定，当然可以增加更强的 replay；没有这个条件时，后来的 rerun 只是新的计算，可用于回归评测或重新分析，不能覆盖历史上真实发生过的 Model Attempt、HumanDecision 和 Formal Admission。
+如果某个 Provider 能提供不可变快照，并且执行足够确定，当然可以增加更强的 replay；没有这个条件时，后来的 rerun 只是新的计算，可用于回归评测或重新分析，不能覆盖历史上真实发生过的模型调用、人工判断和正式业务接纳。
 
 ### 默认部署先保持简单，再按真实瓶颈拆
 
@@ -179,4 +183,4 @@ Application、Domain、Runtime 控制和相邻业务逻辑可以先共处同一�
 
 **Unknown：** 正式 Domain Admission、跨 Owner 的完整 crash recovery、外部 Effect 最终对账、完整持续授权、真实容量、Backpressure / fairness、RPO / RTO、HA / DR 和法院侧完整生产结果仍需要对应 Evidence。
 
-第一次阅读到这里，应该已经能够形成 Zuno 的整体心智模型。单个责任域的连续说明见 [`docs/modules/`](../modules/README.md)；需要精确查看 Authority、Contract、状态、完成证明和恢复规则时，再进入 [`reference.md`](reference.md)。长期设计理由在 [`docs/decisions/`](../decisions/README.md)，研究候选在 [`docs/research/`](../research/README.md)。
+单个责任域的连续说明见 [`docs/modules/`](../modules/README.md)；需要精确查看 Authority、Contract、状态、完成证明和恢复规则时，再进入 [`reference.md`](reference.md)。长期设计理由在 [`docs/decisions/`](../decisions/README.md)，研究候选在 [`docs/research/`](../research/README.md)。
