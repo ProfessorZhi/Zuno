@@ -37,7 +37,7 @@ Source review 确认 Current 不只有 `runtime_batch.py` 的 dataclass。当前
 
 Security 侧也已经有 send 前的再授权实现。`validate_pre_effect_authorization()` 会检查 prepared-action hash、SecurityEpoch 是否仍 active、DENY、Approval 状态与 deadline。因此“执行前重新消费当前安全事实”已经具备可测试 Current surface，不能再笼统写成只有 Target 设计。
 
-真正的 blocker 出现在 06↔04 的恢复消费语义。PR #201 使用 test-only PostgreSQL fault probe，把当前完整调用链跑到外部 send boundary：
+真正的第一个 blocker 出现在 06↔04 的恢复消费语义。PR #201 使用 test-only PostgreSQL fault probe，把当前完整调用链跑到外部 send boundary：
 
 1. 一个 `WRITE_EXTERNAL + APPROVAL_REQUIRED` 动作在批准后执行；
 2. executor 越过 send boundary 后抛 `ToolEffectUnknownError`；
@@ -69,11 +69,28 @@ GitHub diagnostic run `34560042535` 在 PostgreSQL 16.15 上得到 `194 passed, 
 
 这条结果支持一个严格限定的 Current 结论：**prepare / Approval 时成立的授权不会自动延续到未来的现实副作用；如果 effective SecurityEpoch 在真正发送前撤销，当前 Gateway 会重新检查并阻止 provider dispatch。** 它没有证明 08 的全部连续授权、Secret rotation、Mandatory Audit、Policy outage、no-egress 或其他治理语义，也不会消除 #201 已确认的 06↔04 replay defect。
 
+## Slice C 的第二个 blocker：Mandatory Audit requirement 没有闭合成现实发送门
+
+Target 中 `AuditPersistenceReceipt` 证明“某个被要求耐久化的 Audit Fact 已经成功进入对应耐久边界”。这个事实和 Security 的“本动作需要审计”是两件不同的事。Source review 已经确认 Current 两侧都存在基础设施：08 的 Security persistence 会创建 `security_audit_requirements`；Infrastructure 也实现了 `record_mandatory_audit()` 与 `assert_audit_durable_for_effect()`，后者在没有耐久 mandatory-audit row 时会拒绝 Effect。但当前 `ToolInvocationGateway` 的 production call path 没有发现对这两个 durability helper 的调用。
+
+PR #205 用 PostgreSQL fault probe验证了这不是单纯代码搜索遗漏。测试给一个批准完成、SecretRef 有效的外部 `mail.send` 动作保留 audit requirement，同时**刻意不创建**对应 `infra_mandatory_audit_events`。GitHub run `34560692093` 得到 `193 passed, 1 failed, 1 warning in 10.40s`，artifact `10184212936`。失败字典同时观察到：
+
+- `security_audit_requirement_count = 1`；
+- `durable_audit_receipt_count = 0`；
+- `executor_calls = 1`；
+- Gateway status=`completed`，result 非空；
+- `ToolAttempt = DISPATCHED / DISPATCHED`；
+- `effect_receipt_count = 1`。
+
+因此 Current 已经证明一个第二类 send-boundary 缺陷：**“要求审计”已经成为安全事实，但“审计已经耐久提交”没有成为 06 越过 provider send boundary 的必要证明。** Requirement 不能替代 AuditPersistenceReceipt。对应耐久 helper/表的存在也不能替代真正的 wiring。
+
+这个缺陷跨越责任边界：08 产生安全/治理要求；Audit fact 进入其对应耐久边界后才能形成可复核的 Persistence Receipt；06 在现实副作用发送前负责消费所需证明。#205 直接证明当前最后这条执行闭环没有成立。不能把它简单归成“Security 没做审计”，也不能因为 Infrastructure 已有 helper 就把 06 写成已满足 Target。
+
 ## 另一个 Current blocker：正式 Alembic entrypoint 的 stale import
 
 PR #201 第一次 run `34559357122` 在行为测试前就暴露出 `infra/db/alembic/env.py` 仍导入已退休 `zuno.settings`。当前 settings 位于 `zuno.platform.settings`，所以标准 Alembic entrypoint 直接 `ModuleNotFoundError`。
 
-PR #201 的第二次 run 与 PR #203 都没有修改 `env.py`，只在测试进程临时 alias 旧 module path。借助这个 test-only shim，fresh PostgreSQL database 能从 `20260417_01` 顺序升级到 `20260813_57`；这只能说明 migration bodies 在该 fresh-database / compatibility-shim 场景下能够执行到 head，**不能写成正式 entrypoint 已经通过**。
+PR #201 的第二次 run、PR #203 与 PR #205 都没有修改 `env.py`，只在测试进程临时 alias 旧 module path。借助这个 test-only shim，fresh PostgreSQL database 能顺序执行当前 migration chain；这只能说明 migration bodies 在该 fresh-database / compatibility-shim 场景下能够执行到 head，**不能写成正式 entrypoint 已经通过**。
 
 ## 九个责任域的 readiness 结论
 
@@ -84,16 +101,16 @@ PR #201 的第二次 run 与 PR #203 都没有修改 `env.py`，只在测试进�
 | **03 Knowledge & Evidence** | selected suite 已覆盖 Knowledge runtime-batch 与 retrieval composition 基础 | `KnowledgeGeneration → validated manifest → ServingPointer → task ReadinessDecision` Current 闭环、activation crash、security revocation、provider rebuild、representative corpus、GraphRAG query-class 对照 | `NOT_READY` |
 | **04 Agent Runtime & Control** | selected suite 已覆盖 plan、interrupt、restart、replan、tool idempotency、model roles 与 P0 recovery；Slice C 证明 restart replay 能阻止 duplicate dispatch | matching AdmissionReceipt consumer / repair；**unresolved Effect replay 当前被错误升级成 completed**；完整 late branch/Replan Barrier、fencing/takeover、SecurityEpoch drift、paused checkpoint/schema upgrade、Native Runtime necessity measurement | `NOT_READY` |
 | **05 Capability & Skill** | selected suite 已覆盖 Capability runtime-batch contract | CapabilityVersion / ProviderBinding 的真实生命周期、task-class Qualification / Eligibility 质量证据、semantic drift、non-equivalent fallback、Research-to-Capability E2E | `NOT_READY` |
-| **06 Tool Runtime & Effects** | Current execution path 已有 PostgreSQL-backed PreparedAction / Attempt / ExecutionReceipt / EffectReceipt / Reconciliation surface；UNKNOWN 首次写入与 restart idempotency 已由 diagnostic probe 到达；pre-send SecurityEpoch revocation 能阻止 dispatch | **OPEN Reconciliation replay 被错误提升成 completed**；真实 remote query/manual reconcile、send 后 remote success/local crash、cancel-in-flight、compensation、Approval/Secret/Audit 其余 drift；runtime-batch 旧 taxonomy metadata 仍需 compatibility 决策 | `NOT_READY` |
+| **06 Tool Runtime & Effects** | Current execution path 已有 PostgreSQL-backed PreparedAction / Attempt / ExecutionReceipt / EffectReceipt / Reconciliation surface；UNKNOWN 首次写入与 restart idempotency 已由 diagnostic probe 到达；pre-send SecurityEpoch revocation 能阻止 dispatch | **OPEN Reconciliation replay 被错误提升成 completed**；**缺少 durable AuditPersistenceReceipt 时仍会 dispatch 并写 EffectReceipt**；真实 remote query/manual reconcile、send 后 remote success/local crash、cancel-in-flight、compensation、Approval/Secret 其余 drift；runtime-batch 旧 taxonomy metadata 仍需 compatibility 决策 | `NOT_READY` |
 | **07 Model Gateway** | strict provider-SDK / boundary gate、runtime-batch、model-role 与 cost/latency selected tests 已通过 | Role qualification、真实 Provider outage/fallback equivalence、Usage settlement、cancel race、egress/credential qualification、production credential、行为漂移回归 | `NOT_READY` |
-| **08 Security & Governance** | selected suite 覆盖有限 fail-closed/approval contract；Current persistence 已实现 prepared-action hash、active epoch、Approval deadline 的 pre-effect validation；**PostgreSQL pre-send SecurityEpoch revocation fault probe PASS** | no-egress、Approval action-hash invalidation、Secret rotation、Mandatory Audit failure、Policy Engine outage、Legal Hold / No-Recall / purge convergence、Prompt Injection gate | `NOT_READY` |
-| **09 Observability & Evaluation** | selected suite 已覆盖 observability runtime contract 与部分 Eval contract | 正式 DatasetVersion、真实 task-class cases、Judge calibration、A/B/C baseline、critical failure release gate、cost/latency/recovery measurements、court telemetry policy；formal benchmark 仍 `MEASUREMENT_BLOCKED` | `NOT_READY` |
+| **08 Security & Governance** | selected suite 覆盖有限 fail-closed/approval contract；Current persistence 已实现 prepared-action hash、active epoch、Approval deadline 的 pre-effect validation；**PostgreSQL pre-send SecurityEpoch revocation fault probe PASS**；Current 能创建 audit requirement | no-egress、Approval action-hash invalidation、Secret rotation、**Mandatory Audit durability requirement 未被 06 send gate 消费**、Policy Engine outage、Legal Hold / No-Recall / purge convergence、Prompt Injection gate | `NOT_READY` |
+| **09 Observability & Evaluation** | selected suite 已覆盖 observability runtime contract 与部分 Eval contract；Current Infrastructure 存在 mandatory-audit durability helper/table surface | 正式 DatasetVersion、真实 task-class cases、Judge calibration、A/B/C baseline、critical failure release gate、cost/latency/recovery measurements、court telemetry policy；**不能把 audit helper 存在写成 Effect path 已接入 AuditPersistenceReceipt**；formal benchmark 仍 `MEASUREMENT_BLOCKED` | `NOT_READY` |
 
 ## Current compatibility drift 仍需单独处理
 
 当前 `src/backend/zuno/capability/tool_runtime/runtime_batch.py` 已经具有 `PreparedToolAction`、`ToolAttemptRecord`、`EffectReceipt`、`ReconciliationRecord`、SecurityEpoch ref 和 audit gate 等表面，但若干 metadata 仍使用上一代 decomposition 的 owner 编号，例如 `08 Tool Runtime`、`07 Capability / Skill`、`06 Agent Core / Planning & Control`、`04 Model Gateway`；现有 tests 还主动断言这些旧字符串。Security runtime-batch 中也可看到类似旧编号。
 
-这些旧字符串不能被当成当前 01–09 Target owner map 的证明。当前 Target 对应责任分别由 06 Effects、05 Capability、04 Runtime、07 Model Gateway、08 Security、09 Evaluation 等承担。这个问题目前更像 compatibility / nomenclature drift，没有证据表明它就是 #201 的 Effect certainty 缺陷；两者分开处理。因为修正 implementation-facing metadata 会修改 `src/backend`，本 review 不在 `implementation_authorization: NO` 下直接改。
+这些旧字符串不能被当成当前 01–09 Target owner map 的证明。当前 Target 对应责任分别由 06 Effects、05 Capability、04 Runtime、07 Model Gateway、08 Security、09 Evaluation 等承担。这个问题目前更像 compatibility / nomenclature drift，没有证据表明它就是 #201 或 #205 的运行缺陷；两者分开处理。因为修正 implementation-facing metadata 会修改 `src/backend`，本 review 不在 `implementation_authorization: NO` 下直接改。
 
 ## 后续 Evidence Slice
 
@@ -109,10 +126,11 @@ GitHub-native selected gate 已建立，后续 code/test/dependency/migration �
 ### Slice C — Effects ↔ Security send boundary — `BLOCKED_BY_IMPLEMENTATION_DEFECT`
 
 **已证明：** Current durable Effect surface 存在；第一次 send 后 Unknown 能落 PostgreSQL；OPEN Reconciliation 能跨 Runtime instance 保留；同一 action replay 在 #201 中没有再次 dispatch；#203 证明 effective SecurityEpoch 在 send 前撤销时，当前 pre-effect validation 会 fail closed、executor 0 次、持久化 `NO_EFFECT`。  
-**已失败：** unresolved Reconciliation 在 restart replay 时被 Runtime 返回为 `completed`，不满足 Outcome Unknown authority。  
+**已失败 1：** unresolved Reconciliation 在 restart replay 时被 Runtime 返回为 `completed`，不满足 Outcome Unknown authority。  
+**已失败 2：** audit requirement 已存在、matching durable mandatory-audit fact 缺失时，Current Gateway 仍越过 send boundary、调用 executor并写 EffectReceipt，不满足 `MANDATORY_BEFORE_EFFECT`。  
 **独立基础设施 blocker：** 正式 Alembic entrypoint 仍引用退休的 `zuno.settings`；完整 fresh-database chain 只在 test-only import alias 下执行到 head。  
-**还能纯验证：** Mandatory Audit failure、Approval action-hash drift、Secret rotation / revocation、no-egress 等 send-boundary 条件。  
-**实施阻塞：** 修复 replay result typing/certainty、Runtime consumption semantics 或正式 Alembic entrypoint 均需独立 Implementation Authorization。
+**还能纯验证：** Approval action-hash drift、Secret rotation / revocation、no-egress 等 send-boundary 条件。  
+**实施阻塞：** 修复 replay result typing/certainty、Runtime consumption semantics、Mandatory Audit durability wiring 或正式 Alembic entrypoint 均需独立 Implementation Authorization。
 
 ### Slice D — Knowledge generation / readiness
 
@@ -147,9 +165,10 @@ admission_receipt_current_implementation: NOT_ESTABLISHED
 slice_c: BLOCKED_BY_IMPLEMENTATION_DEFECT
 effect_unknown_restart_replay: FAILS_TARGET_INVARIANT @ diagnostic run 34559517466
 security_pre_effect_revocation: PASS @ diagnostic run 34560042535
+mandatory_audit_before_effect: FAILS_TARGET_INVARIANT @ diagnostic run 34560692093
 formal_alembic_entrypoint: STALE_IMPORT_BLOCKER
 formal_benchmark: MEASUREMENT_BLOCKED
 production_readiness: NOT_ESTABLISHED
 ```
 
-下一步若继续 test-only，应优先验证 Mandatory Audit failure、Approval action-hash drift 或 Secret rotation 等仍未闭环的 send-boundary 条件。它们可以继续缩小 08/06 的 uncertainty，但不会把 06/04 已确认的 replay defect 变成可冻结。任何业务 Runtime、Effect certainty、Alembic entrypoint、Security enforcement、数据库结构或其他 Target implementation 修改，仍需要独立明确的 Implementation Authorization。
+下一步若继续 test-only，应优先验证 Approval action-hash drift、Secret rotation / revocation 或 no-egress。它们可以继续缩小 08/06 的 uncertainty，但不会把已经确认的两个 Slice C blocker 变成可冻结。任何业务 Runtime、Effect certainty、Mandatory Audit wiring、Alembic entrypoint、Security enforcement、数据库结构或其他 Target implementation 修改，仍需要独立明确的 Implementation Authorization。
