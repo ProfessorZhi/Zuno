@@ -53,6 +53,24 @@ Source review 解释了这一故障的形状：当前 idempotency replay 向上�
 
 这次诊断同时证明了一部分值得保留的基础：PreparedAction / Attempt / ExecutionReceipt / Reconciliation 的 durable path 能工作，UNKNOWN 能被写入 PostgreSQL，restart replay 能命中 idempotency 并阻止该测试中的二次 dispatch。Freeze blocker 已经从“是否存在 durable Effect ledger”收敛成**恢复时如何解释耐久结果类型与 certainty**。
 
+## Slice C 的 Reconciliation 收敛实现仍缺失
+
+把 UNKNOWN 保存为 OPEN Reconciliation 只是 Reconcile 的起点。06 Target 要求优先使用 remote query / business key / idempotency status，必要时进入人工判断，并最终形成 conclusive `ReconciliationReceipt` 或保持明确 `STILL_UNKNOWN / MANUAL_REQUIRED`，使 Effect state 有可审计的收敛依据。
+
+Repo-wide Current source review 的结果是：
+
+- `ToolInvocationGateway` 可以创建 `OPEN / RECONCILE`；
+- `escalate_due_reconciliations()` 可以把超龄 `OPEN / WAITING_PROVIDER` 更新为 `ESCALATED / MANUAL_ASSESSMENT`；
+- `record_manual_effect_assessment()` 会检查 authorized manual reviewer，并持久化人工 assessment；
+- schema 允许 `RESOLVED`，但没有发现 runtime/repository writer 把 reconciliation 更新为 `RESOLVED`；
+- 没有发现消费持久化 `reconciliation_query` 并调用远端 query 的 Current consumer；
+- 没有发现 Current `ReconciliationReceipt` implementation surface；
+- manual assessment 目前只写 assessment row，没有观察到它修复 Reconciliation / EffectReceipt / ExecutionReceipt 成最终 Effect truth。
+
+`ReconciliationReceipt` 的 repo-wide 命中集中在 Architecture / Module / Governance Target 文档；`WAITING_PROVIDER` 的实现命中集中在 schema 与 escalation 条件；`reconciliation_query` 的实现命中集中在创建和 hash persistence。当前没有足够证据把这些结构写成“Reconcile 已闭环”。
+
+因此 `remote query / manual reconciliation` 从“还缺一个 fault test”升级为明确 **Implementation Gap**。继续测试已有代码不能证明一个尚未出现的 convergence writer/consumer。实现 remote query consumer、conclusive ReconciliationReceipt / resolved state writer，或人工 assessment 到 repaired Effect truth 的收敛路径，都属于新的业务实现，受 `implementation_authorization: NO` 约束。
+
 ## Slice C 的 Security 正向证据：撤权发生在 send 前时 fail closed
 
 PR #203 独立验证了 08 在同一 send boundary 上的时间语义。测试让 Security prepare / Approval 正常建立 active epoch，再在 Infrastructure idempotency / fencing transaction 已提交、Gateway 即将执行正式 send-before reauthorization 的窗口，把同一个 `security_effective_epochs` row 改成 `revoked`。测试没有 monkeypatch Security 校验逻辑，真正被执行的是当前 `_reauthorize_execute_epoch() → validate_pre_effect_authorization()` 路径。
@@ -67,7 +85,7 @@ GitHub diagnostic run `34560042535` 在 PostgreSQL 16.15 上得到 `194 passed, 
 - 没有生成 EffectReceipt；
 - 没有生成 Reconciliation。
 
-这条结果支持一个严格限定的 Current 结论：**prepare / Approval 时成立的授权不会自动延续到未来的现实副作用；如果 effective SecurityEpoch 在真正发送前撤销，当前 Gateway 会重新检查并阻止 provider dispatch。** 它没有证明 08 的全部连续授权、Secret rotation、Mandatory Audit、Policy outage、no-egress 或其他治理语义，也不会消除 #201 已确认的 06↔04 replay defect。
+这条结果支持一个严格限定的 Current 结论：**prepare / Approval 时成立的授权不会自动延续到未来的现实副作用；如果 effective SecurityEpoch 在真正发送前撤销，当前 Gateway 会重新检查并阻止 provider dispatch。** 它没有证明 08 的全部连续授权、完整 Secret rotation/retry、Mandatory Audit、Policy outage、no-egress 或其他治理语义，也不会消除 #201 已确认的 06↔04 replay defect。
 
 ## Slice C 的第二条 Security 正向证据：Secret 在 lease 校验前撤销会 fail closed
 
@@ -118,7 +136,7 @@ PR #201 的第二次 run、PR #203、PR #205 与 PR #207 都没有修改 `env.py
 | **03 Knowledge & Evidence** | selected suite 已覆盖 Knowledge runtime-batch 与 retrieval composition 基础 | `KnowledgeGeneration → validated manifest → ServingPointer → task ReadinessDecision` Current 闭环、activation crash、security revocation、provider rebuild、representative corpus、GraphRAG query-class 对照 | `NOT_READY` |
 | **04 Agent Runtime & Control** | selected suite 已覆盖 plan、interrupt、restart、replan、tool idempotency、model roles 与 P0 recovery；Slice C 证明 restart replay 能阻止 duplicate dispatch | matching AdmissionReceipt consumer / repair；**unresolved Effect replay 当前被错误升级成 completed**；完整 late branch/Replan Barrier、fencing/takeover、SecurityEpoch drift、paused checkpoint/schema upgrade、Native Runtime necessity measurement | `NOT_READY` |
 | **05 Capability & Skill** | selected suite 已覆盖 Capability runtime-batch contract | CapabilityVersion / ProviderBinding 的真实生命周期、task-class Qualification / Eligibility 质量证据、semantic drift、non-equivalent fallback、Research-to-Capability E2E | `NOT_READY` |
-| **06 Tool Runtime & Effects** | Current execution path 已有 PostgreSQL-backed PreparedAction / Attempt / ExecutionReceipt / EffectReceipt / Reconciliation surface；UNKNOWN 首次写入与 restart idempotency 已由 diagnostic probe 到达；pre-send SecurityEpoch revocation 与 pre-lease Secret revocation 均能阻止 dispatch | **OPEN Reconciliation replay 被错误提升成 completed**；**缺少 durable AuditPersistenceReceipt 时仍会 dispatch 并写 EffectReceipt**；真实 remote query/manual reconcile、send 后 remote success/local crash、cancel-in-flight、compensation、完整 Secret rotation/retry 与其他治理 drift；runtime-batch 旧 taxonomy metadata 仍需 compatibility 决策 | `NOT_READY` |
+| **06 Tool Runtime & Effects** | Current execution path 已有 PostgreSQL-backed PreparedAction / Attempt / ExecutionReceipt / EffectReceipt / Reconciliation surface；UNKNOWN 首次写入与 restart idempotency 已由 diagnostic probe 到达；pre-send SecurityEpoch revocation 与 pre-lease Secret revocation 均能阻止 dispatch；可 escalation / 记录 manual assessment | **OPEN Reconciliation replay 被错误提升成 completed**；**Current 没有证明 remote-query consumer / conclusive ReconciliationReceipt / RESOLVED writer 或 manual-assessment→Effect truth 收敛**；**缺少 durable AuditPersistenceReceipt 时仍会 dispatch 并写 EffectReceipt**；send 后 remote success/local crash、cancel-in-flight、compensation、完整 Secret rotation/retry 与其他治理 drift；runtime-batch 旧 taxonomy metadata 仍需 compatibility 决策 | `NOT_READY` |
 | **07 Model Gateway** | strict provider-SDK / boundary gate、runtime-batch、model-role 与 cost/latency selected tests 已通过 | Role qualification、真实 Provider outage/fallback equivalence、Usage settlement、cancel race、egress/credential qualification、production credential、行为漂移回归 | `NOT_READY` |
 | **08 Security & Governance** | selected suite 覆盖有限 fail-closed/approval contract；Current persistence 已实现 prepared-action hash、active epoch、Approval deadline 的 pre-effect validation；**PostgreSQL pre-send SecurityEpoch revocation PASS**；**pre-lease Secret revocation PASS**；Current 能创建 audit requirement | no-egress、完整 Secret rotation/retry、**Mandatory Audit durability requirement 未被 06 send gate 消费**、Policy Engine outage、Legal Hold / No-Recall / purge convergence、Prompt Injection gate | `NOT_READY` |
 | **09 Observability & Evaluation** | selected suite 已覆盖 observability runtime contract 与部分 Eval contract；Current Infrastructure 存在 mandatory-audit durability helper/table surface | 正式 DatasetVersion、真实 task-class cases、Judge calibration、A/B/C baseline、critical failure release gate、cost/latency/recovery measurements、court telemetry policy；**不能把 audit helper 存在写成 Effect path 已接入 AuditPersistenceReceipt**；formal benchmark 仍 `MEASUREMENT_BLOCKED` | `NOT_READY` |
@@ -142,12 +160,13 @@ GitHub-native selected gate 已建立，后续 code/test/dependency/migration �
 
 ### Slice C — Effects ↔ Security send boundary — `BLOCKED_BY_IMPLEMENTATION_DEFECT`
 
-**已证明：** Current durable Effect surface 存在；第一次 send 后 Unknown 能落 PostgreSQL；OPEN Reconciliation 能跨 Runtime instance 保留；同一 action replay 在 #201 中没有再次 dispatch；#203 证明 effective SecurityEpoch 在 send 前撤销时，当前 pre-effect validation 会 fail closed、executor 0 次、持久化 `NO_EFFECT`；#207 证明 Approval 与 epoch re-auth 已通过以后，如果 exact SecretRef 在 lease 校验前 revoked，Current Gateway 同样 fail closed、executor 0 次、无 EffectReceipt/Reconciliation。  
+**已证明：** Current durable Effect surface 存在；第一次 send 后 Unknown 能落 PostgreSQL；OPEN Reconciliation 能跨 Runtime instance 保留；同一 action replay 在 #201 中没有再次 dispatch；Current 能把过期 reconciliation escalate 并记录授权人工 assessment；#203 证明 effective SecurityEpoch 在 send 前撤销时，当前 pre-effect validation 会 fail closed、executor 0 次、持久化 `NO_EFFECT`；#207 证明 Approval 与 epoch re-auth 已通过以后，如果 exact SecretRef 在 lease 校验前 revoked，Current Gateway 同样 fail closed、executor 0 次、无 EffectReceipt/Reconciliation。  
 **已失败 1：** unresolved Reconciliation 在 restart replay 时被 Runtime 返回为 `completed`，不满足 Outcome Unknown authority。  
-**已失败 2：** audit requirement 已存在、matching durable mandatory-audit fact 缺失时，Current Gateway 仍越过 send boundary、调用 executor 并写 EffectReceipt，不满足 `MANDATORY_BEFORE_EFFECT`。  
+**实施缺口 2：** 没有证明 remote-query consumer、conclusive ReconciliationReceipt / `RESOLVED` writer 或 manual assessment 到 repaired Effect truth 的最终收敛路径。  
+**已失败 3：** audit requirement 已存在、matching durable mandatory-audit fact 缺失时，Current Gateway 仍越过 send boundary、调用 executor 并写 EffectReceipt，不满足 `MANDATORY_BEFORE_EFFECT`。  
 **独立基础设施 blocker：** 正式 Alembic entrypoint 仍引用退休的 `zuno.settings`；完整 fresh-database chain 只在 test-only import alias 下执行到 head。  
-**还能纯验证：** 完整 Secret rotation/retry、no-egress、remote query/manual reconciliation、remote-success/local-crash、cancel-in-flight、compensation 等边界。  
-**实施阻塞：** 修复 replay result typing/certainty、Runtime consumption semantics、Mandatory Audit durability wiring 或正式 Alembic entrypoint 均需独立 Implementation Authorization。
+**还能纯验证：** no-egress、remote-success/local-crash、cancel-in-flight、compensation、完整 Secret rotation/retry 等已经存在 Current surface 的边界。  
+**实施阻塞：** replay result typing/certainty、Reconciliation convergence、Runtime consumption semantics、Mandatory Audit durability wiring 或正式 Alembic entrypoint 的修复均需独立 Implementation Authorization。
 
 ### Slice D — Knowledge generation / readiness
 
@@ -181,6 +200,7 @@ slice_b: PARTIAL / VERIFICATION_ONLY_LIMIT_REACHED
 admission_receipt_current_implementation: NOT_ESTABLISHED
 slice_c: BLOCKED_BY_IMPLEMENTATION_DEFECT
 effect_unknown_restart_replay: FAILS_TARGET_INVARIANT @ diagnostic run 34559517466
+reconciliation_convergence_current_implementation: NOT_ESTABLISHED
 security_pre_effect_revocation: PASS @ diagnostic run 34560042535
 secret_pre_lease_revocation: PASS @ diagnostic run 34566365522
 mandatory_audit_before_effect: FAILS_TARGET_INVARIANT @ diagnostic run 34560692093
@@ -189,4 +209,4 @@ formal_benchmark: MEASUREMENT_BLOCKED
 production_readiness: NOT_ESTABLISHED
 ```
 
-下一步若继续 test-only，应优先验证 remote query / manual reconciliation、remote-success / local-crash、cancel-in-flight、完整 Secret rotation/retry 或 no-egress。它们可以继续缩小 08/06 的 uncertainty，但不会把已经确认的两个 Slice C blocker 变成可冻结。任何业务 Runtime、Effect certainty、Mandatory Audit wiring、Alembic entrypoint、Security enforcement、数据库结构或其他 Target implementation 修改，仍需要独立明确的 Implementation Authorization。
+下一步若继续 test-only，应优先验证 no-egress、remote-success/local-crash、cancel-in-flight、compensation 或完整 Secret rotation/retry；这些场景至少已有 Current surface 可以施压。remote query / manual reconciliation 已经不再是“只差测试”的项：在出现 Current convergence implementation 之前继续写 fault test不会增加证明力。任何业务 Runtime、Effect certainty、Reconciliation convergence、Mandatory Audit wiring、Alembic entrypoint、Security enforcement、数据库结构或其他 Target implementation 修改，仍需要独立明确的 Implementation Authorization。
