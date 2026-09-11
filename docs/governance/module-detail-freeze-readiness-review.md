@@ -49,15 +49,31 @@ Security 侧也已经有 send 前的再授权实现。`validate_pre_effect_autho
 
 GitHub diagnostic run `34559517466` 的结果是 `193 passed, 1 failed, 1 warning`，artifact `10183819018`。失败只来自这个新增 Effect recovery invariant；它不进入 main 的绿色 selected baseline，却是可采用的负向 Current Evidence。
 
-Source review解释了这一故障的形状：当前 idempotency replay 向上返回一个没有携带 receipt type / effect certainty 的 `result_ref`。这个 ref 可以指向已确认的 EffectReceipt，也可以指向仍 OPEN 的 Reconciliation；上层 Runtime 对通用 `replayed` 状态采用完成语义。于是“已经有耐久结果引用”被误当成“现实 Effect 已确认完成”。Target 06 要求 `Outcome Unknown` 在 Reconcile 前继续保持 Unknown，这条 Current 路径不满足该 Authority。
+Source review 解释了这一故障的形状：当前 idempotency replay 向上返回一个没有携带 receipt type / effect certainty 的 `result_ref`。这个 ref 可以指向已确认的 EffectReceipt，也可以指向仍 OPEN 的 Reconciliation；上层 Runtime 对通用 `replayed` 状态采用完成语义。于是“已经有耐久结果引用”被误当成“现实 Effect 已确认完成”。Target 06 要求 `Outcome Unknown` 在 Reconcile 前继续保持 Unknown，这条 Current 路径不满足该 Authority。
 
 这次诊断同时证明了一部分值得保留的基础：PreparedAction / Attempt / ExecutionReceipt / Reconciliation 的 durable path 能工作，UNKNOWN 能被写入 PostgreSQL，restart replay 能命中 idempotency 并阻止该测试中的二次 dispatch。Freeze blocker 已经从“是否存在 durable Effect ledger”收敛成**恢复时如何解释耐久结果类型与 certainty**。
+
+## Slice C 的 Security 正向证据：撤权发生在 send 前时 fail closed
+
+PR #203 独立验证了 08 在同一 send boundary 上的时间语义。测试让 Security prepare / Approval 正常建立 active epoch，再在 Infrastructure idempotency / fencing transaction 已提交、Gateway 即将执行正式 send-before reauthorization 的窗口，把同一个 `security_effective_epochs` row 改成 `revoked`。测试没有 monkeypatch Security 校验逻辑，真正被执行的是当前 `_reauthorize_execute_epoch() → validate_pre_effect_authorization()` 路径。
+
+GitHub diagnostic run `34560042535` 在 PostgreSQL 16.15 上得到 `194 passed, 1 warning in 10.68s`，artifact `10183996777`。这个 fault window 的结果是：
+
+- 目标 SecurityEpoch 确实从 `active` 变为 `revoked`；
+- pre-effect authorization 返回 `stale security epoch before effect`；
+- provider executor 调用次数为 **0**；
+- `ToolAttempt` 耐久状态是 `FAILED / NOT_DISPATCHED`；
+- `ToolExecutionReceipt` 耐久状态是 `FAILED / NO_EFFECT`；
+- 没有生成 EffectReceipt；
+- 没有生成 Reconciliation。
+
+这条结果支持一个严格限定的 Current 结论：**prepare / Approval 时成立的授权不会自动延续到未来的现实副作用；如果 effective SecurityEpoch 在真正发送前撤销，当前 Gateway 会重新检查并阻止 provider dispatch。** 它没有证明 08 的全部连续授权、Secret rotation、Mandatory Audit、Policy outage、no-egress 或其他治理语义，也不会消除 #201 已确认的 06↔04 replay defect。
 
 ## 另一个 Current blocker：正式 Alembic entrypoint 的 stale import
 
 PR #201 第一次 run `34559357122` 在行为测试前就暴露出 `infra/db/alembic/env.py` 仍导入已退休 `zuno.settings`。当前 settings 位于 `zuno.platform.settings`，所以标准 Alembic entrypoint 直接 `ModuleNotFoundError`。
 
-第二次 run 没有修改 `env.py`，只在测试进程临时 alias 旧 module path，然后 fresh PostgreSQL database 从 `20260417_01` 顺序升级到 `20260813_57`。这说明 migration bodies 在该 fresh-database / compatibility-shim 场景下能够执行到 head，但**正式 entrypoint 仍然是 Current blocker**。不能把 test-only alias 写成部署修复。
+PR #201 的第二次 run 与 PR #203 都没有修改 `env.py`，只在测试进程临时 alias 旧 module path。借助这个 test-only shim，fresh PostgreSQL database 能从 `20260417_01` 顺序升级到 `20260813_57`；这只能说明 migration bodies 在该 fresh-database / compatibility-shim 场景下能够执行到 head，**不能写成正式 entrypoint 已经通过**。
 
 ## 九个责任域的 readiness 结论
 
@@ -68,9 +84,9 @@ PR #201 第一次 run `34559357122` 在行为测试前就暴露出 `infra/db/ale
 | **03 Knowledge & Evidence** | selected suite 已覆盖 Knowledge runtime-batch 与 retrieval composition 基础 | `KnowledgeGeneration → validated manifest → ServingPointer → task ReadinessDecision` Current 闭环、activation crash、security revocation、provider rebuild、representative corpus、GraphRAG query-class 对照 | `NOT_READY` |
 | **04 Agent Runtime & Control** | selected suite 已覆盖 plan、interrupt、restart、replan、tool idempotency、model roles 与 P0 recovery；Slice C 证明 restart replay 能阻止 duplicate dispatch | matching AdmissionReceipt consumer / repair；**unresolved Effect replay 当前被错误升级成 completed**；完整 late branch/Replan Barrier、fencing/takeover、SecurityEpoch drift、paused checkpoint/schema upgrade、Native Runtime necessity measurement | `NOT_READY` |
 | **05 Capability & Skill** | selected suite 已覆盖 Capability runtime-batch contract | CapabilityVersion / ProviderBinding 的真实生命周期、task-class Qualification / Eligibility 质量证据、semantic drift、non-equivalent fallback、Research-to-Capability E2E | `NOT_READY` |
-| **06 Tool Runtime & Effects** | Current execution path 已有 PostgreSQL-backed PreparedAction / Attempt / ExecutionReceipt / EffectReceipt / Reconciliation surface；UNKNOWN 首次写入与 restart idempotency 已由 diagnostic probe 到达 | **OPEN Reconciliation replay 被错误提升成 completed**；真实 remote query/manual reconcile、send 后 remote success/local crash、cancel-in-flight、compensation、Approval/Secret/Audit drift；runtime-batch 旧 taxonomy metadata 仍需 compatibility 决策 | `NOT_READY` |
+| **06 Tool Runtime & Effects** | Current execution path 已有 PostgreSQL-backed PreparedAction / Attempt / ExecutionReceipt / EffectReceipt / Reconciliation surface；UNKNOWN 首次写入与 restart idempotency 已由 diagnostic probe 到达；pre-send SecurityEpoch revocation 能阻止 dispatch | **OPEN Reconciliation replay 被错误提升成 completed**；真实 remote query/manual reconcile、send 后 remote success/local crash、cancel-in-flight、compensation、Approval/Secret/Audit 其余 drift；runtime-batch 旧 taxonomy metadata 仍需 compatibility 决策 | `NOT_READY` |
 | **07 Model Gateway** | strict provider-SDK / boundary gate、runtime-batch、model-role 与 cost/latency selected tests 已通过 | Role qualification、真实 Provider outage/fallback equivalence、Usage settlement、cancel race、egress/credential qualification、production credential、行为漂移回归 | `NOT_READY` |
-| **08 Security & Governance** | selected suite 覆盖有限 fail-closed/approval contract；Current persistence 已实现 prepared-action hash、active epoch、Approval deadline 的 pre-effect validation | revocation-during-run E2E、no-egress、Approval action-hash invalidation、Secret rotation、Mandatory Audit failure、Policy Engine outage、Legal Hold / No-Recall / purge convergence、Prompt Injection gate | `NOT_READY` |
+| **08 Security & Governance** | selected suite 覆盖有限 fail-closed/approval contract；Current persistence 已实现 prepared-action hash、active epoch、Approval deadline 的 pre-effect validation；**PostgreSQL pre-send SecurityEpoch revocation fault probe PASS** | no-egress、Approval action-hash invalidation、Secret rotation、Mandatory Audit failure、Policy Engine outage、Legal Hold / No-Recall / purge convergence、Prompt Injection gate | `NOT_READY` |
 | **09 Observability & Evaluation** | selected suite 已覆盖 observability runtime contract 与部分 Eval contract | 正式 DatasetVersion、真实 task-class cases、Judge calibration、A/B/C baseline、critical failure release gate、cost/latency/recovery measurements、court telemetry policy；formal benchmark 仍 `MEASUREMENT_BLOCKED` | `NOT_READY` |
 
 ## Current compatibility drift 仍需单独处理
@@ -92,10 +108,10 @@ GitHub-native selected gate 已建立，后续 code/test/dependency/migration �
 
 ### Slice C — Effects ↔ Security send boundary — `BLOCKED_BY_IMPLEMENTATION_DEFECT`
 
-**已证明：** Current durable Effect surface 存在；第一次 send 后 Unknown 能落 PostgreSQL；OPEN Reconciliation 能跨 Runtime instance 保留；同一 action replay 在该诊断中没有再次 dispatch；Security pre-effect validation 具有 Current implementation surface。  
+**已证明：** Current durable Effect surface 存在；第一次 send 后 Unknown 能落 PostgreSQL；OPEN Reconciliation 能跨 Runtime instance 保留；同一 action replay 在 #201 中没有再次 dispatch；#203 证明 effective SecurityEpoch 在 send 前撤销时，当前 pre-effect validation 会 fail closed、executor 0 次、持久化 `NO_EFFECT`。  
 **已失败：** unresolved Reconciliation 在 restart replay 时被 Runtime 返回为 `completed`，不满足 Outcome Unknown authority。  
 **独立基础设施 blocker：** 正式 Alembic entrypoint 仍引用退休的 `zuno.settings`；完整 fresh-database chain 只在 test-only import alias 下执行到 head。  
-**还能纯验证：** 08 的 revocation-during-run / stale epoch fail-closed 可以继续做独立 fault probe；它不会消除已经确认的 06/04 blocker。  
+**还能纯验证：** Mandatory Audit failure、Approval action-hash drift、Secret rotation / revocation、no-egress 等 send-boundary 条件。  
 **实施阻塞：** 修复 replay result typing/certainty、Runtime consumption semantics 或正式 Alembic entrypoint 均需独立 Implementation Authorization。
 
 ### Slice D — Knowledge generation / readiness
@@ -130,9 +146,10 @@ slice_b: PARTIAL / VERIFICATION_ONLY_LIMIT_REACHED
 admission_receipt_current_implementation: NOT_ESTABLISHED
 slice_c: BLOCKED_BY_IMPLEMENTATION_DEFECT
 effect_unknown_restart_replay: FAILS_TARGET_INVARIANT @ diagnostic run 34559517466
+security_pre_effect_revocation: PASS @ diagnostic run 34560042535
 formal_alembic_entrypoint: STALE_IMPORT_BLOCKER
 formal_benchmark: MEASUREMENT_BLOCKED
 production_readiness: NOT_ESTABLISHED
 ```
 
-下一步可以继续做 08 的 test-only revocation-during-run probe，因为 Current pre-effect authorization 已有实现表面；但它只是继续缩小 Slice C 的 Security uncertainty，不会把 06/04 的已确认 replay defect 变成可冻结。任何业务 Runtime、Effect certainty、Alembic entrypoint、Security enforcement、数据库结构或其他 Target implementation 修改，仍需要独立明确的 Implementation Authorization。
+下一步若继续 test-only，应优先验证 Mandatory Audit failure、Approval action-hash drift 或 Secret rotation 等仍未闭环的 send-boundary 条件。它们可以继续缩小 08/06 的 uncertainty，但不会把 06/04 已确认的 replay defect 变成可冻结。任何业务 Runtime、Effect certainty、Alembic entrypoint、Security enforcement、数据库结构或其他 Target implementation 修改，仍需要独立明确的 Implementation Authorization。
