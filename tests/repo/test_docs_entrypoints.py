@@ -7,12 +7,12 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 EXPECTED_VIEWS = [
+    "System Context View",
     "Case Timeline View",
-    "Fact Authority View",
-    "Boundary Transition View",
-    "Responsibility View",
+    "State / Persistence / Consistency View",
     "Recovery View",
-    "Deployment and Evolution View",
+    "Deployment / Scale / Backpressure View",
+    "Deployment Evolution View",
 ]
 CANONICAL_ARCHITECTURE_FILES = {
     "README.md", "architecture.md", "architecture-views.md", "architecture.html", "reference.md"

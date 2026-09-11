@@ -12,12 +12,12 @@ VIEWS_PATH = REPO_ROOT / "docs/architecture/architecture-views.md"
 HTML_PATH = REPO_ROOT / "docs/architecture/architecture.html"
 
 EXPECTED_VIEWS = [
+    "System Context View",
     "Case Timeline View",
-    "Fact Authority View",
-    "Boundary Transition View",
-    "Responsibility View",
+    "State / Persistence / Consistency View",
     "Recovery View",
-    "Deployment and Evolution View",
+    "Deployment / Scale / Backpressure View",
+    "Deployment Evolution View",
 ]
 CANONICAL_ARCHITECTURE_FILES = {
     "README.md",
@@ -136,11 +136,13 @@ def validate_source(content: str) -> list[str]:
         errors.append(f"architecture visual source must contain exactly {len(EXPECTED_VIEWS)} Mermaid diagrams")
     for term in (
         "Modular Python Backend",
-        "Independent Workers",
+        "Work-type Worker Pools",
         "EffectReceipt",
         "AdmissionReceipt",
-        "Optional Context Provider",
-        "Evidence Gate",
+        "External Court / Tool Systems",
+        "Backpressure",
+        "PostgreSQL",
+        "Object Store",
     ):
         if term.lower() not in content.lower():
             errors.append(f"architecture-views.md missing visual term: {term}")
