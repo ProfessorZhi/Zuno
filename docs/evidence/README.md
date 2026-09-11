@@ -9,7 +9,7 @@
 | Evidence | 保留理由 |
 | --- | --- |
 | [Current Runtime Baseline](current-runtime-baseline.md) | 当前 Runtime owner、状态和失败语义的证据入口 |
-| [Current Test Baseline](current-test-baseline.md) | 当前 GitHub selected code verification、PostgreSQL Domain / Wave-001 revision probes，以及 Slice C Effect / Audit 负向证据和 Security pre-send revocation 正向证据 |
+| [Current Test Baseline](current-test-baseline.md) | 当前 GitHub selected code verification、PostgreSQL Domain / Wave-001 revision probes，以及 Slice C Effect / Audit 负向证据和 Security / Secret pre-send 正向证据 |
 | [Current Eval Baseline](current-eval-baseline.md) | 当前评测与 Measurement Blocked 状态 |
 | [Implementation Wave-001](implementation-wave-001.md) | TASK-001 / TASK-003 的有限代码、测试和窄验证证据；不是 Program closure |
 
@@ -25,6 +25,7 @@ WAVE-001 REVISION POSTGRESQL APPLY/DOWNGRADE/RE-APPLY: PASS
 TARGET ADMISSION RECEIPT: NOT IMPLEMENTATION-PROVEN
 UNKNOWN EFFECT RESTART REPLAY: TARGET VIOLATION CONFIRMED ON DIAGNOSTIC BRANCH
 PRE-EFFECT SECURITY EPOCH REVOCATION: PASS ON DIAGNOSTIC BRANCH
+PRE-LEASE SECRET REVOCATION: PASS ON DIAGNOSTIC BRANCH
 MANDATORY AUDIT BEFORE EFFECT: TARGET VIOLATION CONFIRMED ON DIAGNOSTIC BRANCH
 FORMAL ALEMBIC ENTRYPOINT: STALE IMPORT BLOCKER
 PRODUCTION_READINESS: NOT_ESTABLISHED
@@ -39,11 +40,13 @@ Current Evidence 同时记录失败和窄范围成功的诊断结果。PR #201 /
 
 PR #203 / run `34560042535` 验证了 08 的一个具体时间窗口：动作在 prepare / Approval 时仍有有效 SecurityEpoch，随后该 epoch 在真正发送前变成 `revoked`。Current Gateway 在 provider dispatch 前重新读取安全事实并 fail closed；executor 没有被调用，Attempt / ExecutionReceipt 分别保持 `FAILED / NOT_DISPATCHED` 与 `FAILED / NO_EFFECT`，没有生成 EffectReceipt 或 Reconciliation。
 
+PR #207 / run `34566365522` 验证了另一条独立的 Credential 时间窗口：Approval 与 send 前 SecurityEpoch re-authorization 都已经通过，但 exact SecretRef 在短期 Lease 发放/校验前被置为 `revoked`。Current Gateway 的真实 `validate_secret_lease()` 拒绝继续发送；executor 仍是 0 次，Attempt / ExecutionReceipt 保持 `FAILED / NOT_DISPATCHED` 与 `FAILED / NO_EFFECT`，没有 EffectReceipt、Reconciliation 或 committed SecretLease。这个结果只证明 **pre-lease Secret revoke fail closed**，不证明完整 Secret rotation / retry 会取得新的 CredentialVersion / Lease。
+
 PR #205 / run `34560692093` 又确认了另一条独立缺陷：Security 已经创建 audit requirement，但没有任何 matching durable mandatory-audit fact 时，Current Gateway 仍调用 provider executor、写入 EffectReceipt 并返回 `completed`。这说明“必须审计”的要求与“审计已经耐久提交”的证明没有在 06 send gate 闭合。Requirement 存在不能代替 AuditPersistenceReceipt。
 
-三条 Slice C 诊断都需要测试进程临时兼容 `zuno.settings → zuno.platform.settings`，因为正式 Alembic `env.py` 仍引用已退休的 `zuno.settings`。完整 fresh-database migration chain 能在这个 test-only alias 下运行，不等于正式 Alembic entrypoint 已经 clean pass。
+四条 Slice C 诊断都需要测试进程临时兼容 `zuno.settings → zuno.platform.settings`，因为正式 Alembic `env.py` 仍引用已退休的 `zuno.settings`。完整 fresh-database migration chain 能在这个 test-only alias 下运行，不等于正式 Alembic entrypoint 已经 clean pass。
 
-这个范围不能扩写成“Zuno PostgreSQL 集成已完成”“完整 Effect recovery 已完成”“Security 已验证完成”“Mandatory Audit 已接入”或“完整 Alembic deployment path 已验证”。Target `AdmissionReceipt`、02↔04 owner-first recovery、unresolved Effect replay、Mandatory Audit durability gate、其他 Approval / Secret / Policy drift、no-egress、其他平台 PostgreSQL 路径、Redis / RabbitMQ / Object Store、真实 Provider 和外部 Host仍各自需要证据。详细正负结果见 [`current-test-baseline.md`](current-test-baseline.md)。
+这个范围不能扩写成“Zuno PostgreSQL 集成已完成”“完整 Effect recovery 已完成”“Security 已验证完成”“Secret rotation 已验证完成”“Mandatory Audit 已接入”或“完整 Alembic deployment path 已验证”。Target `AdmissionReceipt`、02↔04 owner-first recovery、unresolved Effect replay、Mandatory Audit durability gate、完整 Secret rotation/retry、其他 Approval / Policy drift、no-egress、其他平台 PostgreSQL 路径、Redis / RabbitMQ / Object Store、真实 Provider 和外部 Host仍各自需要证据。详细正负结果见 [`current-test-baseline.md`](current-test-baseline.md)。
 
 当前仓库可以证明有限实现和验证范围，也可以证明若干具体失败；不能证明完整历史技术栈、真实法院质量、生产部署、用户规模、SLA、QPS、HA、No-egress、Sandbox 资格或正式外部验收。历史 Pilot 不等于 Production。
 
@@ -55,10 +58,10 @@ PR #205 / run `34560692093` 又确认了另一条独立缺陷：Security 已经�
 
 - 模块 Part B 写了 `AdmissionReceipt`，只能证明 Target 语义已经设计清楚；当前 PostgreSQL mutation probe 也不能把 mutation record 直接升级成最终 Receipt。
 - `Current code selected verification` 通过只能证明 workflow 列出的行为，不等于 Full Project CI 通过。
-- revision `20260813_57` 能真实 apply/downgrade/re-apply，只证明该 revision 自身 DDL 可逆，不证明真实数据 backfill 或零停机策略。
+- revision `20260813_57` 能真实 apply/downgrade/re-upgrade，只证明该 revision 自身 DDL 可逆，不证明真实数据 backfill 或零停机策略。
 - 诊断分支失败可以证明某条 Target invariant 当前不成立；诊断分支成功也只证明它实际注入并观察到的 fault window。
 - `Outcome Unknown` 的耐久记录存在，不等于 recovery 已正确闭环；当前已经观测到 restart replay 把 unresolved reconciliation 错误升级成 completed。
-- pre-send SecurityEpoch revocation 已有正向 fault evidence，不代表 Secret rotation、Approval hash drift、Policy Engine outage 或 no-egress 已经证明。
+- pre-send SecurityEpoch revocation 与 pre-lease Secret revocation 已有正向 fault evidence，不代表完整 Secret rotation/retry、Approval hash drift、Policy Engine outage 或 no-egress 已经证明。
 - `security_audit_requirements` 存在，不代表 matching AuditPersistenceReceipt 已提交；#205 已证明当前 send path 会在 durable audit proof 缺失时继续 dispatch。
 - 正式 Alembic chain 在 test-only import alias 下能跑到 head，不等于正式 Alembic entrypoint 已修复。
 - `ModelCallAttempt` 或 Tool contract 有单元测试，不等于真实 Provider / 真实外围法院系统已经完成 E2E。
