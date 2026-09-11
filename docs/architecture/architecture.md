@@ -222,6 +222,18 @@ Formal Admission 因而不能只检查“这些 ref 是否存在”。它要重�
 
 这种区分把 Provenance、Domain history 和 Evaluation 的职责分开了。Provenance 解释当时用了什么，Domain 保存当时正式接受了什么，Evaluation 判断今天重新运行是否仍满足质量要求；三者共同支持审计，却没有任何一个能够单独让一个非确定性模型变成可时间倒流的函数。
 
+### 越过不可逆边界以后，只能追加新的事实
+
+到这里可以把前面的多种恢复语义压成一条更基础的规则。候选结果、尚未激活的知识构建、还没有正式接纳的专业判断，都仍处在可替换区间；输入变化以后可以重新计算、拒绝、Retry 或 Replan。它们失败时，系统最多丢失一次计算，不会改写已经承担业务责任的历史，也不会改变外部世界。
+
+Formal Admission 和现实 Effect 则跨过了不同类型的不可逆边界。Domain transaction 一旦正式提交，后来的 Cancel 只能停止未来工作，不能让 AdmissionReceipt 和已经形成的 WorkProduct 像从未存在过一样消失。一个外部动作一旦越过 send boundary 并且可能已经发生，后来的 Replan 也没有资格把现实世界随着旧 Plan 一起丢弃；结果未知时先 Reconcile，已经确认的结果需要保留自己的 Effect history。
+
+不可逆不表示“永远有效”。新 Evidence 可以让旧 WorkProduct stale，新的 SecurityDecision 可以禁止未来访问，新的 generation 可以替换当前 serving。变化发生在**当前资格**上，而不是通过覆盖历史伪造“过去没有发生”。因此 Zuno 的历史事实通常通过新版本、新失效事实、新决定继续向前追加；当前可见性、可执行性和有效性则可以随着新的 Authority facts 被重新判断。
+
+这也决定了修正方式。边界之前的问题通常通过 Retry、Replan、重新计算或拒绝解决；正式业务已经成立以后用新版本、invalidation 或 supersession 表达变化；现实 Effect 已经可能发生以后用 Reconcile 确认过去，确实需要撤回或纠正时再发起一项新的受控 Effect 或 Compensation。补偿动作同样拥有自己的授权、Attempt 和结果，它不是把旧 Receipt 改成“没发生”。
+
+这条规则不要求把 Zuno 改造成一套全局 Event Sourcing 系统，也不需要增加新的 `IrreversibilityReceipt`。它只是要求恢复逻辑尊重已经跨过的 Authority 和现实边界：**控制状态可以修，当前资格可以撤销，历史事实不能通过工作流回滚被偷偷删除。**
+
 ### 一致性只在 Owner 边界内做强，跨边界靠完成证明和恢复收敛
 
 一项真实任务可能同时触及 PostgreSQL、Object Store、vector / graph index、Runtime Checkpointer、Queue、模型 Provider 和外围法院系统。要求这些组件共享一笔全局事务，既不现实，也会把系统可用性绑在最慢、最不可控的参与者上。尤其外部 Provider 和法院系统根本不会参加 Zuno 的本地 2PC。
@@ -290,7 +302,7 @@ Generic Host 已经提供成熟会话、UI、工作流和 Checkpoint 时应优�
 
 ### Current / Target / Evidence / Unknown
 
-**Target：** 当前接受的总体设计仍然是九个逻辑责任域，围绕事实 Authority、Owner 内局部一致性、跨 Owner 完成证明、因果一致性、显式不确定性和恢复顺序协作。默认部署不要求九服务；模块化后端、按工作类型划分的 Worker 与成熟 Platform primitives 是更简单的起点，服务拆分由真实扩缩容、安全、故障和发布约束驱动。
+**Target：** 当前接受的总体设计仍然是九个逻辑责任域，围绕事实 Authority、Owner 内局部一致性、跨 Owner 完成证明、因果一致性、显式不确定性、不可逆边界和恢复顺序协作。默认部署不要求九服务；模块化后端、按工作类型划分的 Worker 与成熟 Platform primitives 是更简单的起点，服务拆分由真实扩缩容、安全、故障和发布约束驱动。
 
 **Current：** 代码库中已经存在部分 Agent、Knowledge、Model Gateway、Tool、评测和基础设施实现，也有历史测试与 Eval 证据；这些实现覆盖到什么程度，不能从 Target 文档反推。Current 只由 [`docs/evidence/`](../evidence/README.md)、代码、Migration、Test、Trace 和可复现 Eval 证明。
 

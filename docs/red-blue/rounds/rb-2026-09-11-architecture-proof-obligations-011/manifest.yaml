@@ -1,0 +1,25 @@
+round_id: rb-2026-09-11-architecture-proof-obligations-011
+state: CLOSED
+mode: CHATGPT_AUTO
+created_at: 2026-09-11T15:45:00+08:00
+zuno_base_sha: 1229b34064f6290a9a2fe9e27c9b902a189d9b9b
+resume_snapshot_repo: ProfessorZhi/internship-work
+resume_snapshot_commit: 6107321bdcaced8688c0e462d8b0a85b2744c4fe
+resume_snapshot_path: resume/00_resume_versions/Zuno_v3+CodingAgent+SFTDPO_简历/Agent开发工程师／AI应用工程师+Zuno／CodingAgent／SFTDPO_ToolCalling层次澄清／可追问_简历草稿_v5.md
+target_role: Agent 开发工程师 / AI 应用工程师
+company_or_persona: principal architect / distributed-systems reviewer / legal-AI reviewer
+interview_stage: architecture-proof-obligation-stress-test
+red_calibration: kernel-only
+blue_profile: canonical-part-a-first
+scenario_scope:
+  - cancellation after Domain commit but before Runtime checkpoint
+  - replan after an external effect has already occurred
+  - post-delivery WorkProduct invalidation and compensation
+  - failed Knowledge rebuild versus last-good serving truth
+  - Security allow-to-deny transition versus historical lawful access
+  - minimum proof required to strengthen candidate/pending/unknown into stronger truth
+max_turns: 6
+stop_condition: retain only findings that change overall architecture understanding; owner-local implementation detail remains in module docs
+result: PASS_WITH_ONE_NARRATIVE_GAP
+finding_count: 1
+highest_severity: MEDIUM
