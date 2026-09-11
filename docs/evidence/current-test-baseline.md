@@ -1,6 +1,6 @@
 # Current Test Baseline
 
-状态：`CURRENT / SELECTED_VERIFICATION_AVAILABLE / EFFECT_RECOVERY_NEGATIVE_EVIDENCE / SECURITY_REVOCATION_POSITIVE_EVIDENCE / QUALITY_NOT_ESTABLISHED`
+状态：`CURRENT / SELECTED_VERIFICATION_AVAILABLE / EFFECT_RECOVERY_NEGATIVE_EVIDENCE / SECURITY_REVOCATION_POSITIVE_EVIDENCE / MANDATORY_AUDIT_NEGATIVE_EVIDENCE / QUALITY_NOT_ESTABLISHED`
 
 ## 当前代码快照的 Selected Verification
 
@@ -112,17 +112,46 @@ business_fix_applied: NO
 
 因此可以采用一个非常窄但重要的 Current 结论：**授权在 prepare / Approval 时成立，不会自动授权未来的外部发送；当 effective SecurityEpoch 在 send 前变成 revoked，当前 Gateway 会在真实 provider dispatch 前重新检查并 fail closed。**
 
-这条证据不代表 08 已冻结。它只关闭 `revocation-before-send` 这一种 fault window；Approval action-hash drift、Secret rotation、Mandatory Audit failure、Policy Engine outage、no-egress、Legal Hold / No-Recall / purge convergence、Prompt Injection 等仍需自己的证明。它也不会抵消上面已经确认的 06/04 Effect replay defect。
+这条证据不代表 08 已冻结。它只关闭 `revocation-before-send` 这一种 fault window；Approval action-hash drift、Secret rotation、Mandatory Audit、Policy Engine outage、no-egress、Legal Hold / No-Recall / purge convergence、Prompt Injection 等仍需自己的证明。它也不会抵消上面已经确认的 06/04 Effect replay defect。
+
+## Slice C 负向证据：Mandatory Audit requirement 没有形成 send gate
+
+PR #205 把 Target `MANDATORY_BEFORE_EFFECT` 放进当前 PostgreSQL Tool/Security/Infrastructure 路径。Source review 已确认两个基础能力分别存在：08 的 Security persistence 会创建 `security_audit_requirements`，平台 Infrastructure 也实现了 `record_mandatory_audit()` 与 `assert_audit_durable_for_effect()`；后者在没有耐久 mandatory-audit fact 时本来能够 fail closed。但仓库调用链中没有证据表明当前 `ToolInvocationGateway` 在 provider dispatch 前调用了这些 Audit durability helper。
+
+诊断 run `34560692093` 将这条 wiring suspicion 变成了可复核的 Current 结果：
+
+```text
+diagnostic_branch: ci/postgres-mandatory-audit-boundary-probe
+diagnostic_run: 34560692093
+base_main: d459b1875d8488cb63b14a84ded11f80a48c4053
+selected_result: 193 passed, 1 failed, 1 warning
+artifact_id: 10184212936
+failure_scope: MANDATORY_BEFORE_EFFECT durability gate
+business_fix_applied: NO
+```
+
+新增 probe 在一个已批准、SecretRef 有效的 `mail.send` 外部写动作上**刻意不创建** `infra_mandatory_audit_events`。失败字典同时确认：
+
+- `security_audit_requirement_count = 1`：08 的 audit requirement 确实存在；
+- `durable_audit_receipt_count = 0`：对应现实 Effect 没有耐久 mandatory-audit proof；
+- `executor_calls = 1`：provider dispatch 仍然发生；
+- Gateway 返回 `completed`，result 非空；
+- `ToolAttempt = DISPATCHED / DISPATCHED`；
+- `effect_receipt_count = 1`：现实 Effect 被写成已发生。
+
+这证明当前 send path 把“Security 要求审计”与“审计已经耐久提交”留成了两条没有闭合的事实链。Target 中 08 拥有安全/治理要求，09/平台负责可复核的 Audit persistence，06 在越过现实副作用 send boundary 前必须消费 matching committed Audit proof。**Requirement 存在不能代替 AuditPersistenceReceipt。** 当前实现没有建立这个执行门，因此 `MANDATORY_BEFORE_EFFECT` 不满足 Target，06 与 08 都不能据此 Freeze；09 的耐久审计能力也不能仅凭 helper 存在被宣称已接入 Effect path。
+
+这里的失败与 #201 不同：#201 是“Effect 已经 Unknown 后，恢复时错误升级 certainty”；#205 是“Effect 发送之前，本应存在的耐久审计前置事实没有被 Gate 消费”。两者分别位于 send boundary 的两侧，都属于 Slice C 的硬 blocker。
 
 ## Alembic Current entrypoint 漂移
 
 PR #201 的第一次 run `34559357122` 还暴露出一个独立 Current 基础设施问题：`infra/db/alembic/env.py` 仍导入已经退休的 `zuno.settings`，而当前 settings module 位于 `zuno.platform.settings`。因此标准 `alembic upgrade head` 在进入 migration chain 前就因 `ModuleNotFoundError` 失败。
 
-PR #201 的第二次诊断和 PR #203 都只在**测试进程内部**临时将 `zuno.settings` alias 到 `zuno.platform.settings`，没有修改正式 Alembic 文件。借助这个 test-only shim，fresh PostgreSQL database 确实顺序执行了从 `20260417_01` 到 `20260813_57` 的当前 migration chain；但这只能说明 migration bodies 在该 fresh-database 场景下可以继续运行，**不能写成正式 Alembic entrypoint 已通过**。部署入口仍有 stale import blocker，需要独立实现/维护授权处理。
+PR #201 的第二次诊断、PR #203 和 PR #205 都只在**测试进程内部**临时将 `zuno.settings` alias 到 `zuno.platform.settings`，没有修改正式 Alembic 文件。借助这个 test-only shim，fresh PostgreSQL database 能顺序执行当前 migration chain；但这只能说明 migration bodies 在该 fresh-database 场景下可以继续运行，**不能写成正式 Alembic entrypoint 已通过**。部署入口仍有 stale import blocker，需要独立实现/维护授权处理。
 
 ## PostgreSQL 证据的边界
 
-GitHub service container 不等于系统级 PostgreSQL qualification。Actions 日志仍能看到部分其他 selected tests / import-time platform components 尝试默认 `postgres` 用户并被数据库拒绝；这些路径没有被 Domain probes 声称为成功。Current 可采用的正向结论是 **显式 Domain PostgreSQL probes、Wave-001 revision probe、以及 #203 的 pre-effect revocation probe**，同时采用 #201 的 Effect recovery **negative evidence**；不能概括为“Zuno 全部 PostgreSQL 集成通过”。
+GitHub service container 不等于系统级 PostgreSQL qualification。Actions 日志仍能看到部分其他 selected tests / import-time platform components 尝试默认 `postgres` 用户并被数据库拒绝；这些路径没有被 Domain probes 声称为成功。Current 可采用的正向结论是 **显式 Domain PostgreSQL probes、Wave-001 revision probe、以及 #203 的 pre-effect revocation probe**；Current 负向结论包括 #201 的 Effect recovery defect 与 #205 的 Mandatory Audit gate defect。不能概括为“Zuno 全部 PostgreSQL 集成通过”。
 
 当前仍未证明或已经明确阻塞的内容包括：
 
@@ -131,8 +160,9 @@ GitHub service container 不等于系统级 PostgreSQL qualification。Actions �
 - Target AdmissionReceipt 与 Domain mutation 同事务提交；
 - Domain commit 后 Runtime Checkpoint 丢失时的 owner-first E2E recovery；
 - Checkpoint 已标完成但 matching Receipt 缺失时的 formal-complete denial；
-- unresolved external Effect 在 restart replay 后保持 Unknown——当前诊断已经证明这条路径**不满足 Target**；
-- SecurityEpoch **pre-send revocation** 这一条已经通过；其他 Approval/Audit/Secret/Policy drift 与 no-egress fault window 仍未证明；
+- unresolved external Effect 在 restart replay 后保持 Unknown——#201 已证明这条路径**不满足 Target**；
+- `MANDATORY_BEFORE_EFFECT` 在没有 committed audit proof 时阻止现实发送——#205 已证明这条路径**不满足 Target**；
+- SecurityEpoch **pre-send revocation** 已由 #203 通过；其他 Approval hash drift、Secret rotation、Policy drift 与 no-egress fault window 仍未证明；
 - Redis、RabbitMQ、Object Store、真实 Model / Tool Provider、外部 Host、HA / DR、负载和生产运维。
 
 ## 两类 GitHub Gate 与诊断分支
@@ -142,7 +172,7 @@ GitHub service container 不等于系统级 PostgreSQL qualification。Actions �
 - `Architecture document set`：验证 Project / Architecture / Modules / Governance / Evidence 文档集合、语义一致性、Human Readability、entrypoints 和对应 repository tests；
 - `Current code selected verification`：验证 lockfile 可安装性、代码边界、runtime-batch contracts、selected behavior tests、当前 Domain PostgreSQL probes，以及 Wave-001 revision-level DDL probe。
 
-诊断 PR 不自动成为第三类 main gate。它们把 Target failure matrix 送进 Current 代码，并分别生成负向或窄范围正向 evidence：PR #201 / run `34559517466` 证明 UNKNOWN Effect restart path 需要实现修复；PR #203 / run `34560042535` 证明 pre-send SecurityEpoch revocation 在当前 Gateway 上 fail closed。两者都使用 test-only Alembic compatibility alias，因此不会替代 main 的正向 baseline，也不会被描述成 clean deployment qualification。
+诊断 PR 不自动成为第三类 main gate。它们把 Target failure matrix 送进 Current 代码，并生成正负 evidence：PR #201 / run `34559517466` 证明 UNKNOWN Effect restart path 需要实现修复；PR #203 / run `34560042535` 证明 pre-send SecurityEpoch revocation fail closed；PR #205 / run `34560692093` 证明 Mandatory Audit requirement 在没有 durable audit proof 时仍允许 provider dispatch。三者都使用 test-only Alembic compatibility alias，因此不会替代 main 的正向 baseline，也不会被描述成 clean deployment qualification。
 
 两类 main gate 组合后仍不等于 Full Project CI。Formal benchmark 继续 `BLOCKED_NOT_MEASURED`，法院 QA、capacity、SLA、HA / DR 与 Production Readiness 仍未建立。
 
@@ -164,4 +194,4 @@ production_readiness: NOT_ESTABLISHED
 
 **Slice B — Domain ↔ Runtime crash authority** 在“不修改业务实现”的验证范围已经走到边界：当前 mutation transaction / concurrency / lost-response replay 与 Wave-001 revision-level PostgreSQL DDL 已有 GitHub evidence。剩余 Owner-first recovery 依赖 Target `AdmissionReceipt`、Formal Admission transaction 和 Runtime matching-Receipt consumer；这些当前没有实现证明。
 
-**Slice C — Effects ↔ Security send boundary** 仍是 `BLOCKED_BY_IMPLEMENTATION_DEFECT`：Current durable Effect ledger 能保存 UNKNOWN 和 OPEN Reconciliation，也能阻止 #201 场景中的 duplicate dispatch；但 restart replay 会把 unresolved reconciliation 错误升级成 completed。另一方面，#203 已证明 pre-send SecurityEpoch revocation 会阻止 provider dispatch并留下 `NO_EFFECT`。接下来若继续 test-only，应优先验证 Mandatory Audit failure、Approval action-hash drift 或 Secret rotation 等尚未闭环的 08/06 send-boundary条件；这些正向结果也不会绕过已经确认的 06/04 implementation blocker。
+**Slice C — Effects ↔ Security send boundary** 仍是 `BLOCKED_BY_IMPLEMENTATION_DEFECT`，且现在有两条互相独立的硬 blocker：#201 证明 restart replay 会把 unresolved Reconciliation 错误升级成 completed；#205 证明没有 durable mandatory-audit proof 时 provider 仍会 dispatch。#203 则证明 pre-send SecurityEpoch revocation 这一条当前会 fail closed。下一步若继续 test-only，应优先验证 Approval action-hash drift、Secret rotation / revocation 或 no-egress；这些结果可以继续缩小 08/06 uncertainty，但不会绕过已经确认的两个 Slice C implementation blocker。
