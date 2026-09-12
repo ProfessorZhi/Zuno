@@ -50,6 +50,16 @@
 
 冲突材料同样可以同时存在。两份证言可能都经过正式接纳，却互相矛盾。Domain 保存它们各自的来源和业务身份，后续 Finding 与 HumanDecision 再解释专业人员如何处理冲突。正式接纳表示系统愿意长期负责“这条记录存在、来自哪里、当时为何被采用”，并不宣称现实世界已经没有不确定性。
 
+### 专家修改是长期产品资产，但不能被自动解释成训练真值
+
+当专业人员连续使用系统时，02 会积累一类对后续研发非常有价值的信息：机器候选被接受了什么、修改了什么、拒绝了什么、为什么要求补证，以及哪些正式成果后来因为新证据失效。这些记录能够告诉团队“真实法律工作在哪些地方持续需要人工修正”，比一次离线 Demo 的印象更接近产品价值。
+
+但 Domain 的第一责任仍然是保存业务历史，不是替 09 构造训练集。一次人工修改可能来自新的材料、不同风险偏好、具体案件策略、表达习惯，甚至人工本身也可能后来被更正。把所有 `HumanDecision` 直接导出成 ground truth，会把业务语境和不确定性压成一个错误标签。
+
+更合理的路径是：02 保持原始业务语义和版本；09 只在权限、脱敏、用途和样本治理满足以后消费必要 projection，并结合原始候选、材料版本、Task Class、后续失效与 Reviewer protocol 判断它能否进入 Eval。某个修改如果只是措辞偏好，可以用于表达质量分析；如果它纠正了稳定事实错误，并经过适当复核，才可能成为功能回归样本。
+
+这种分工形成 Research–Product Loop 时仍然不改变 Authority。09 可以从真实 HumanDecision 中发现某类 Provider 经常漏事件，05 可以据此撤销资格或提出新的研究问题；后续模型修复也不会反过来改写旧 HumanDecision。历史上专家当时怎样判断，和今天新 Provider 能否通过 Eval，是两条可以关联但不能互相覆盖的事实线。
+
 ### 只有需要长期业务语义时，完整 Domain Kernel 才值得存在
 
 如果产品只做一次性问答，没有长期 WorkProduct、正式材料版本、人工专业决定和失效传播，一个轻量 answer record 已经足够。为了追求 DDD 形式完整而提前建立大量领域对象，只会增加 Migration、事务、版本和维护成本。
@@ -60,10 +70,10 @@
 
 ### Current / Target / Gap
 
-**Target：** 02 拥有正式法律业务状态、DomainVersion、Formal Admission、AdmissionReceipt、WorkProduct 历史引用和正式失效关系；机器候选、Runtime 控制状态、知识派生和外部 Effect 仍由各自 Owner 管理。
+**Target：** 02 拥有正式法律业务状态、DomainVersion、Formal Admission、AdmissionReceipt、WorkProduct 历史引用和正式失效关系；机器候选、Runtime 控制状态、知识派生和外部 Effect 仍由各自 Owner 管理。HumanDecision 可以为后续评测提供受治理的真实工作信号，但 Domain 不拥有 Eval dataset 或 Provider qualification。
 
-**Current：** 文档中的七对象 Kernel、完整 Admission transaction、版本冲突处理和失效传播属于 Target 设计，不能因为文档完整就视为已经实现。现有代码、Migration 和测试能证明到哪里，只以 `docs/evidence/` 和代码证据为准。
+**Current：** 文档中的七对象 Kernel、完整 Admission transaction、版本冲突处理、失效传播和真实 HumanDecision → Eval 闭环属于 Target 设计，不能因为文档完整就视为已经实现。现有代码、Migration 和测试能证明到哪里，只以 `docs/evidence/` 和代码证据为准。
 
-**Gap：** 字段级冻结、真实并发冲突、Domain commit / Checkpoint crash-window 故障注入、Migration 方案、跨对象失效传播和真实法院工作流成本仍需要独立验证。
+**Gap：** 字段级冻结、真实并发冲突、Domain commit / Checkpoint crash-window 故障注入、Migration 方案、跨对象失效传播、真实法院工作流成本，以及专业人员修改如何经过治理进入长期 Eval，都仍需要独立验证。
 
 工程 / Agent 精确参考与跨模块一致性规则见 [`reference.md`](reference.md)。
