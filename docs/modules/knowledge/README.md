@@ -38,6 +38,18 @@
 
 同理，今天的 CitationLineage 解释这次候选如何被找到；正式 WorkProduct 当时真正采用的材料和位置，由 02 在准入时保存成长期引用绑定。03 可以重建索引，不能让历史 WorkProduct 的引用跟着新索引漂移。
 
+### 知识层不仅服务搜索，也形成案件研究的专业中间结构
+
+如果 03 最终只输出 chunk 和 Top-K，葛季栋 / LIPLAB 已有的事件抽取、冲突识别、事实—法条关系等研究能力仍然只是检索插件。它们更有价值的用法，是把非结构化材料逐步转换成专业人员能够持续复核的案件结构。
+
+例如，事件抽取与事件对齐可以形成案件时间线的候选；双方材料中的不同陈述可以形成冲突线索；证据抽取可以把某个主张和支持或反驳材料连接起来；事实—法条对应与法条推荐可以形成“哪些事实可能关联哪些法律依据”的候选关系。Agent 后续做研究时，不必每一步都重新阅读全部原文，而可以先从这些结构发现缺口，再回到稳定引用核对原始材料。
+
+这些结构仍然属于**可重建的知识派生和机器候选**。它们绑定 DocumentVersion、KnowledgeGeneration、来源位置和产生它们的 Capability / Provider 条件；算法升级以后可以重新生成。03 不因为把信息整理成“事件时间线”或“Fact–Article Map”就获得正式法律 Authority，也不把某个研究模型的判断直接写成长期 Finding。专业人员最终采用了什么、修改了什么，仍由 02 的 HumanDecision 和正式 WorkProduct 记录。
+
+这个区分使案件工作空间能够随模型演进而保持稳定。底层事件抽取可以从论文模型换成更强 LLM，检索路线可以从 Hybrid 增加 Graph route，专业人员看到的仍然是同一类事件、冲突、证据关系和法律依据候选；Provider 的变化通过来源和版本被记录，而不是迫使产品界面围绕某个模型重做。
+
+这里也没有必要把每一种专业结构都升级成新的一级 Domain 对象。只要它主要服务检索、研究和候选分析，可以继续作为 Knowledge projection / structured artifact 存在。只有某项内容被业务长期采用、需要独立版本和正式有效性语义时，才进入 02 的业务边界。
+
 ### 复杂检索只在简单路线暴露缺口时出现
 
 很多问题不需要 GraphRAG。
@@ -74,10 +86,10 @@ Worker 可以至少一次执行，重复项由稳定 item identity、CAS 或幂�
 
 ### Current / Target / Gap
 
-**Target：** 03 围绕 02 的稳定 DocumentVersion 建立可重建 KnowledgeGeneration，按任务形成 ReadinessDecision，检索产生带来源的候选，并通过 generation activation 保护 serving 完整性。正式 Evidence / WorkProduct 仍由 02 负责。
+**Target：** 03 围绕 02 的稳定 DocumentVersion 建立可重建 KnowledgeGeneration，按任务形成 ReadinessDecision，检索和专业派生产生带来源的候选结构，并通过 generation activation 保护 serving 完整性。正式 Evidence / Finding / WorkProduct 仍由 02 负责。
 
-**Current：** 仓库历史已经有知识任务模型、RabbitMQ 异步流水线、Redis 进度、RAG / GraphRAG 路径和评测工作，但它们不能自动证明 Target 中完整的 generation lifecycle、task readiness、原子 serving switch 和跨 Store 生命周期治理已经落地。
+**Current：** 仓库历史已经有知识任务模型、RabbitMQ 异步流水线、Redis 进度、RAG / GraphRAG 路径和评测工作，但它们不能自动证明 Target 中完整的 generation lifecycle、task readiness、原子 serving switch、案件专业中间结构和跨 Store 生命周期治理已经落地。
 
-**Gap：** 真实多版本材料的 readiness 规则、generation activation、跨 Store purge、权限撤销后的召回收敛、负面证据条件、GraphRAG 按 query class 的稳定收益和真实法院语料成本仍需要测试与 Eval。
+**Gap：** 真实多版本材料的 readiness 规则、generation activation、跨 Store purge、权限撤销后的召回收敛、负面证据条件、事件 / 冲突 / Fact–Article 等专业结构的稳定语义、GraphRAG 按 query class 的稳定收益和真实法院语料成本仍需要测试与 Eval。
 
 工程 / Agent 精确参考与跨模块一致性规则见 [`reference.md`](reference.md)。
