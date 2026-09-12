@@ -38,6 +38,16 @@ red_configuration:
   primary_persona: Skeptical Hiring Manager
   cross_persona: Agent/RAG Engineer + Backend/System Design + Reliability/Security
   calibration: calibrated
+  project_source_policy: >-
+    Red may inspect the fixed Zuno base SHA as the current project build, but Current-specific
+    claims must be sourceable from that fixed base or an explicitly listed source. Conversation
+    memory, closed diagnostic branches, and unstated prior summaries are not admissible evidence.
+  project_sources:
+    - ProfessorZhi/Zuno@a7b35286eebd3ecf78dc372fba9fa021efd9637d:docs/project/
+    - ProfessorZhi/Zuno@a7b35286eebd3ecf78dc372fba9fa021efd9637d:docs/architecture/
+    - ProfessorZhi/Zuno@a7b35286eebd3ecf78dc372fba9fa021efd9637d:docs/modules/
+    - ProfessorZhi/Zuno@a7b35286eebd3ecf78dc372fba9fa021efd9637d:docs/evidence/
+    - ProfessorZhi/Zuno@a7b35286eebd3ecf78dc372fba9fa021efd9637d:docs/governance/project-fact-provenance.md
   calibration_sources:
     - ProfessorZhi/internship-work@14ba4eb79e6a6f2956cb62425f41e2299bfc696f:interview/02_则知科技_Agent开发实习/01_面试_QA整理.md
     - ProfessorZhi/internship-work@14ba4eb79e6a6f2956cb62425f41e2299bfc696f:interview/05_杭州泛讯信息科技_AI应用工程师/01_面试_QA整理.md
@@ -61,6 +71,9 @@ archive_live: true
 transcript_index: docs/red-blue/rounds/rb-2026-09-13-zuno-interview-batch-013/transcript.md
 transcript_shards:
   - docs/red-blue/rounds/rb-2026-09-13-zuno-interview-batch-013/transcript-batch-001.md
+  - docs/red-blue/rounds/rb-2026-09-13-zuno-interview-batch-013/transcript-batch-001-red.md
+  - docs/red-blue/rounds/rb-2026-09-13-zuno-interview-batch-013/transcript-batch-001-blue.md
+  - docs/red-blue/rounds/rb-2026-09-13-zuno-interview-batch-013/transcript-batch-001-verifier.md
 findings: docs/red-blue/rounds/rb-2026-09-13-zuno-interview-batch-013/findings.md
 
 claim_inventory:
@@ -103,6 +116,20 @@ claim_inventory:
 
 batch_status:
   batch-001:
+    red_generated: true
+    red_archived: true
+    blue_answered: true
+    blue_archived: true
+    verified: true
+    verifier_archived: true
+    question_count: 100
+    verdicts:
+      pass: 85
+      partial: 13
+      fail: 0
+      unsupported_claim: 2
+    next_focus: personal implementation evidence depth + project reality
+  batch-002:
     red_generated: false
     red_archived: false
     blue_answered: false
@@ -110,4 +137,4 @@ batch_status:
     verified: false
     verifier_archived: false
     question_count: 0
-    next_focus: none
+    next_focus: PF-032 / PF-029 / ownership / real-user outcomes / derived fundamentals
