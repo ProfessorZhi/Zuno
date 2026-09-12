@@ -23,7 +23,8 @@ RESEARCH_FILES = {
     "docs/research/research-to-engineering-traceability.md",
     "docs/research/agent-platform-baseline.md",
     "docs/research/documentation-narrative-blueprint.md",
-    "docs/research/legal-ai-pain-point-evidence.md",
+    "docs/research/legal-ai-domain-problem-evidence.md",
+    "docs/research/legal-agent-value-strategy-2026-09.md",
 }
 MODULE_NAMES = (
     "application",
