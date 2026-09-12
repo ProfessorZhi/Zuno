@@ -1,6 +1,6 @@
 # 04 Agent Runtime & Control（智能体运行与控制）
 
-<!-- status: design-baseline-v1; implementation: not-authorized; deepening: cross-module-consistency-v2; detail-design: candidate-v1 -->
+<!-- status: design-baseline-v1; implementation: not-authorized; deepening: cross-module-consistency-v2; detail_design: candidate-v1 -->
 
 ## Part A — Human Narrative
 
@@ -27,6 +27,18 @@ Target 因而让已经激活的计划保持不可变。需要改变未来执行�
 Zuno 因此把当前计划的激活、重规划和全局控制收敛给一个逻辑控制者，工程上称为 `Single Controller`。专业分析仍然可以由多个 Worker、模型和 Specialist 并行执行；这里的“单一”只约束控制事实的写入顺序。Lease、fencing 或队列可以让不同 Worker 接管这份控制责任，也不要求 Runtime 永远只有一个物理进程。只有控制吞吐真的形成瓶颈以后，才值得研究更复杂的分区写者方案。
 
 运行时内部仍可以分成稳定的外层任务生命周期、会随任务变化的计划，以及每个 Step 的稳定执行边界。这样 Replan 只改变真正需要变化的任务依赖，不必为了一个新证据重新发明整个运行框架。更精确的三层运行图和状态约束留在 Engineering Reference；第一次阅读只需要记住一件事：变化集中在计划，恢复仍然有稳定宿主和稳定执行边界。
+
+### Context 应按任务需要组装，不能把对话历史变成案件数据库
+
+长任务最容易形成另一种隐性状态：为了让模型“记得案件”，不断把对话、工具结果、旧总结和中间草稿追加到 Context。短任务里这很方便；运行数十轮以后，模型看到的是一份越来越长、来源和有效性混杂的临时记忆。新材料进入后，旧总结还留在前文；某个候选后来被专家拒绝，却仍可能因为出现在 Conversation History 里再次影响推理。
+
+Runtime 更适合把 Context 当作一次执行需要的临时工作集。当前 Step 需要材料时，从 03 按稳定引用和当前 Scope 读取；需要专业中间结构时读取当前 generation 的事件、冲突或证据候选；需要正式判断时读取 02 当前有效的 Domain facts。真正需要跨步骤保存的开放问题、计划进度和阶段性结果写到有明确 Owner 的外部状态，而不是寄希望于模型一直“记住”。
+
+Context compression、summary 和短期 memory 可以继续使用，但它们首先是成本和执行优化。它们不能成为材料、正式 Finding 或 HumanDecision 的唯一保存位置，也不能在恢复时压过更强的 Owner facts。模型 Context 丢失以后，系统应该能够从 Matter、Knowledge、Domain 和 Runtime 自己的耐久状态重新组装足够上下文。
+
+同样的原则决定了 Subagent 的位置。一个案件有三个相对独立的争议焦点时，Runtime 可以临时并行三个研究分支，让它们拥有各自较小的 Context；任务结束后把有价值的结构化候选写回 03 或交给后续专业复核即可。没有必要长期维护“证据 Agent”“法条 Agent”“法官 Agent”等永久角色身份。
+
+如果单 Agent 配合并行 Tool Call 已经能完成任务，增加 Subagent 只会提高 token、协调和恢复成本。多 Agent 因此是一种执行策略，是否启用由 Task Class 和 09 的 Eval 决定，不成为 Zuno 的长期产品对象或组织结构。
 
 ### Domain 已经提交而 Checkpoint 还没写时，恢复必须先相信业务事实
 
@@ -74,10 +86,10 @@ Native Runtime 也不是产品身份。如果 Generic Agent Host 加 Zuno Legal 
 
 ### Current / Target / Gap
 
-**Target：** 04 拥有 AgentRun、PlanVersion、StepRun、Checkpoint、ready / join、等待、Budget、取消和 Replan 等控制事实；它以 Single Controller 维持计划因果，并在恢复时优先消费 Domain、Effect、Security、Knowledge 等 Owner 已经成立的更强事实。
+**Target：** 04 拥有 AgentRun、PlanVersion、StepRun、Checkpoint、ready / join、等待、Budget、取消和 Replan 等控制事实；它以 Single Controller 维持计划因果，并在恢复时优先消费 Domain、Effect、Security、Knowledge 等 Owner 已经成立的更强事实。Context、summary、Subagent 和 Multi-Agent 都是可替换执行策略，不承担案件材料或正式业务事实的长期 Authority。
 
-**Current：** 完整三层运行图、不可变 PlanVersion、Replan Barrier、跨 Owner recovery、长期人工等待恢复和 Native Runtime 取舍属于 Target 设计。Current 代码中已有的 Agent、checkpoint、tool calling 或 runtime foundation 只能按 `docs/evidence/`、代码和测试实际证明的范围描述。
+**Current：** 完整三层运行图、不可变 PlanVersion、Replan Barrier、跨 Owner recovery、长期人工等待恢复、外部结构驱动的 Context Engineering 和 Native Runtime 取舍属于 Target 设计。Current 代码中已有的 Agent、checkpoint、tool calling 或 runtime foundation 只能按 `docs/evidence/`、代码和测试实际证明的范围描述。
 
-**Gap：** 仍需要长任务故障注入、Domain commit / Checkpoint crash-window、late-result acceptance、Controller 接管、真实等待恢复、预算收敛和 Generic Host 对照实验。没有这些证据时，不能把设计完整度写成恢复能力已经被生产验证。
+**Gap：** 仍需要长任务故障注入、Domain commit / Checkpoint crash-window、late-result acceptance、Controller 接管、真实等待恢复、预算收敛、Context rebuild / compaction 评测、Subagent 对照实验和 Generic Host 对照实验。没有这些证据时，不能把设计完整度写成恢复能力或 Agentic 质量已经被生产验证。
 
 工程 / Agent 精确参考与跨模块一致性规则见 [`reference.md`](reference.md)。
