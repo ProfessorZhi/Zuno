@@ -1,0 +1,161 @@
+round_id: rb-2026-09-13-zuno-interview-batch-013
+state: CLOSED
+mode: CHATGPT_AUTO
+created_at: 2026-09-13T03:21:00+08:00
+closed_at: 2026-09-13T04:05:00+08:00
+zuno_base_sha: a7b35286eebd3ecf78dc372fba9fa021efd9637d
+
+resume_snapshot:
+  repository: ProfessorZhi/internship-work
+  commit_sha: 6107321bdcaced8688c0e462d8b0a85b2744c4fe
+  path: resume/00_resume_versions/Zuno_v3+CodingAgent+SFTDPO_简历/Agent开发工程师／AI应用工程师+Zuno／CodingAgent／SFTDPO_ToolCalling层次澄清／可追问_简历草稿_v5.md
+  status: historical-verified-snapshot
+
+target_role: Agent 开发工程师 / AI 应用工程师
+company_or_persona: 大厂 Agent / AI 应用方向综合技术面
+interview_stage: project-deep-dive / system-design / hiring-manager cross pressure
+
+scenario_scope:
+  - Zuno project causality and product value
+  - personal ownership vs team / LIPLAB research ownership
+  - Agent / Tool Calling / MCP implementation claims
+  - Context / Memory implementation and boundaries
+  - RAG / GraphRAG / Knowledge readiness and evidence semantics
+  - Capability / Provider qualification and model routing
+  - long-running Runtime, crash recovery, late results and replanning
+  - external effects, idempotency, reconciliation and security
+  - Evaluation, measurement, baseline, ablation and production-evidence claims
+  - Build / Buy / Extend / Delete and simplification
+  - backend / distributed-systems fundamentals derived from project claims
+
+batch_size: 100
+max_batches: 5
+executed_batches: 2
+stop_condition: >-
+  Close when high-risk resume/project claims have either passed with source-supported answers,
+  produced stable findings, or exhausted the Blue allowlist; do not spend additional batches
+  on trivia or already-settled claims.
+stop_reason: >-
+  After 200 questions, the remaining gaps converged on unrecovered personal implementation /
+  project-reality evidence rather than new architecture contradictions. A third batch would
+  mostly repeat missing historical fields, requirements and Pilot-version mapping.
+
+red_configuration:
+  primary_persona: Skeptical Hiring Manager
+  cross_persona: Agent/RAG Engineer + Backend/System Design + Reliability/Security
+  calibration: calibrated
+  project_source_policy: >-
+    Red may inspect the fixed Zuno base SHA as the current project build, but Current-specific
+    claims must be sourceable from that fixed base or an explicitly listed source. Conversation
+    memory, closed diagnostic branches, and unstated prior summaries are not admissible evidence.
+  project_sources:
+    - ProfessorZhi/Zuno@a7b35286eebd3ecf78dc372fba9fa021efd9637d:docs/project/
+    - ProfessorZhi/Zuno@a7b35286eebd3ecf78dc372fba9fa021efd9637d:docs/architecture/
+    - ProfessorZhi/Zuno@a7b35286eebd3ecf78dc372fba9fa021efd9637d:docs/modules/
+    - ProfessorZhi/Zuno@a7b35286eebd3ecf78dc372fba9fa021efd9637d:docs/evidence/
+    - ProfessorZhi/Zuno@a7b35286eebd3ecf78dc372fba9fa021efd9637d:docs/governance/project-fact-provenance.md
+  calibration_sources:
+    - ProfessorZhi/internship-work@14ba4eb79e6a6f2956cb62425f41e2299bfc696f:interview/02_则知科技_Agent开发实习/01_面试_QA整理.md
+    - ProfessorZhi/internship-work@14ba4eb79e6a6f2956cb62425f41e2299bfc696f:interview/05_杭州泛讯信息科技_AI应用工程师/01_面试_QA整理.md
+    - ProfessorZhi/internship-work@14ba4eb79e6a6f2956cb62425f41e2299bfc696f:.agent/references/interview-red-team-workflow.md
+    - ProfessorZhi/interview-notes@main:Agent开发/Agent开发+B站+二面+001/正文.md
+    - ProfessorZhi/interview-notes@main:Agent开发/Agent开发+MiniMax+面试+001/正文.md
+  calibration_visibility: red-only
+
+blue_allowlist:
+  - exact resume snapshot above
+  - AGENTS.md
+  - docs/project/
+  - docs/architecture/
+  - docs/modules/
+  - docs/decisions/
+  - docs/evidence/
+  - selected docs/governance/ provenance facts
+
+transcript_policy: full-observable-role-io
+archive_live: true
+transcript_index: docs/red-blue/rounds/rb-2026-09-13-zuno-interview-batch-013/transcript.md
+transcript_shards:
+  - docs/red-blue/rounds/rb-2026-09-13-zuno-interview-batch-013/transcript-batch-001.md
+  - docs/red-blue/rounds/rb-2026-09-13-zuno-interview-batch-013/transcript-batch-001-red.md
+  - docs/red-blue/rounds/rb-2026-09-13-zuno-interview-batch-013/transcript-batch-001-blue.md
+  - docs/red-blue/rounds/rb-2026-09-13-zuno-interview-batch-013/transcript-batch-001-verifier.md
+  - docs/red-blue/rounds/rb-2026-09-13-zuno-interview-batch-013/transcript-batch-002.md
+  - docs/red-blue/rounds/rb-2026-09-13-zuno-interview-batch-013/transcript-batch-002-red.md
+  - docs/red-blue/rounds/rb-2026-09-13-zuno-interview-batch-013/transcript-batch-002-blue.md
+  - docs/red-blue/rounds/rb-2026-09-13-zuno-interview-batch-013/transcript-batch-002-verifier.md
+findings: docs/red-blue/rounds/rb-2026-09-13-zuno-interview-batch-013/findings.md
+
+claim_inventory:
+  - claim: Zuno is a legal intelligent Agent project with real smart-court / Pilot history
+    risk: high
+    priority: P0
+    initial_question_budget: 14
+  - claim: candidate personally contributed Agent / Tool Calling changes
+    risk: high
+    priority: P0
+    initial_question_budget: 14
+  - claim: candidate personally built Context / Memory foundation slice with focused tests
+    risk: high
+    priority: P0
+    initial_question_budget: 12
+  - claim: research lineage can become stable legal capabilities rather than demos
+    risk: medium-high
+    priority: P0
+    initial_question_budget: 10
+  - claim: RAG / GraphRAG / Knowledge architecture is justified and measurement-gated
+    risk: high
+    priority: P0
+    initial_question_budget: 12
+  - claim: long-running Runtime / recovery design is coherent and not over-engineered
+    risk: high
+    priority: P1
+    initial_question_budget: 12
+  - claim: Tool Effects / Security semantics close real failure windows
+    risk: high
+    priority: P1
+    initial_question_budget: 10
+  - claim: Evaluation can prove or delete complexity
+    risk: medium-high
+    priority: P1
+    initial_question_budget: 8
+  - claim: Build/Buy and scale claims are honest and defensible
+    risk: medium-high
+    priority: P1
+    initial_question_budget: 8
+
+batch_status:
+  batch-001:
+    red_generated: true
+    red_archived: true
+    blue_answered: true
+    blue_archived: true
+    verified: true
+    verifier_archived: true
+    question_count: 100
+    verdicts:
+      pass: 85
+      partial: 13
+      fail: 0
+      unsupported_claim: 2
+    next_focus: personal implementation evidence depth + project reality
+  batch-002:
+    red_generated: true
+    red_archived: true
+    blue_answered: true
+    blue_archived: true
+    verified: true
+    verifier_archived: true
+    question_count: 100
+    verdicts:
+      pass: 55
+      partial: 45
+      fail: 0
+      unsupported_claim: 0
+    next_focus: close-round; evidence recovery required before retest
+
+result: PASS_WITH_PERSONAL_EVIDENCE_CEILING
+architecture_verdict: PASS_NO_NEW_ARCHITECTURE_GAP
+resume_project_verdict: PASS_WITH_PERSONAL_EVIDENCE_CEILING
+finding_count: 7
+highest_severity: S2

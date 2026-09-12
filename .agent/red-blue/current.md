@@ -38,4 +38,4 @@ Round manifest 必须固定 Zuno base SHA、精确简历 snapshot、目标岗位
 
 `full-observable-role-io` 保存全部可观察 Red / Blue / Verifier / Controller / user I/O 与协议元数据；不要求也不得伪造模型私有 chain-of-thought。
 
-当前：没有 active Round。
+当前：没有 active Round。Round #013 已关闭并完整归档到 `docs/red-blue/rounds/rb-2026-09-13-zuno-interview-batch-013/`。
