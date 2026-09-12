@@ -1,10 +1,10 @@
 # Zuno 目标架构：一项法律任务如何从材料变成可交付结果
 
-Zuno 是一个面向法律工作的智能 Agent 平台。它要解决的不是“怎么让模型多说几句话”，而是把案件材料、检索与研究能力、模型、人工判断和外部业务系统接到同一条长期工作链里。
+Zuno 是一个面向法律工作的智能 Agent 平台。项目要解决的现实问题在 [`docs/project/README.md`](../project/README.md) 中展开：材料范围不完整、RAG 会漏检和错配、模型会产生不可靠结论、专业人员需要承担最终判断、任务会长期运行、外部系统又会把一次网络失败变成现实风险。
 
-对一个第一次接触 Zuno 的人，可以先把它理解成一个**会处理材料、组织分析、等待人工确认、保存正式结果，并在失败以后继续恢复的法律工作后端**。简单问题仍然可以走普通 RAG；只有任务真的变长、材料会变化、结果需要长期保存，或者系统要影响外部世界时，Zuno 才引入更强的状态与恢复机制。
+Architecture 负责回答下一步：**这些痛点为什么不能靠一个更大的 Prompt、一条固定 Workflow 或一个统一 `status` 解决，系统应该怎样分工才能在失败以后仍然说清发生了什么。**
 
-下面描述的是 Zuno 当前接受的 **Target Architecture**。它解释系统应该怎样分工，不代表这些能力已经全部在 Current 代码或真实法院环境中验证。Current 做到哪里，只看 [`docs/evidence/`](../evidence/README.md) 中的代码、数据库迁移、测试、运行追踪和评测证据。
+下面描述的是 Zuno 当前接受的 **Target Architecture**。它解释系统应该怎样分工，不代表这些能力已经全部在 Current 代码或真实法院环境中验证。Current 做到哪里，只看 [`docs/evidence/`](../evidence/README.md) 中的代码、数据库迁移、测试、运行追踪和评测证据。法律 AI / RAG 的外部痛点证据整理在 [`docs/research/legal-ai-pain-point-evidence.md`](../research/legal-ai-pain-point-evidence.md)。
 
 <!--
 status: normative-target
@@ -29,6 +29,23 @@ research_source: docs/research/
 -->
 
 ## Part A — Human Narrative（人类技术叙事）
+
+### 先把痛点和架构责任对上
+
+Zuno 的九个责任域不是从一张“完整架构图”倒推出来的。它们分别保护一类会在真实法律工作中出错、而普通 request / response 系统很难长期解释的事实。
+
+| 现实痛点 | 最简单的做法 | 简单做法在哪里失效 | Zuno 的架构责任 |
+| --- | --- | --- | --- |
+| 材料很多、版本会变，检索还可能漏或选错来源 | 文件上传后直接做 RAG | 上传成功不代表关键材料已可用；Top-K 命中也不能证明覆盖完整 | **Knowledge & Evidence** 保存材料版本、加工状态、任务级就绪、候选证据和稳定来源 |
+| 模型和检索结果可能很流畅但仍然错 | 把模型最终文本直接保存 | hallucination、错误引用、部分证据被写成确定事实；人类责任消失 | **Legal Domain & Work Product** 把机器候选和正式业务结果分开，并保存必要人审与历史版本 |
+| 多步骤任务会等待、新证据会进入、旧结果会晚到 | 一条固定 Workflow + Checkpoint | Checkpoint 只知道流程走到哪，不能判断旧结果现在还适不适用，也不能证明正式提交已经成功 | **Agent Runtime & Control** 管理 Plan、Replan、等待、取消和恢复，但不冒充业务事实 |
+| 研究模型、LLM 和 Provider 会替换、漂移或临时不可用 | 每个调用点直接写 model / Python class | 专业语义、fallback、质量和成本散落到 Workflow；换实现时上层一起漂 | **Capability & Skill** 固定专业承诺，**Model Gateway** 管理实际模型选择、调用和 Usage |
+| 权限、用途和数据外发条件会在长任务期间变化 | 入口鉴权一次 | 10:00 允许不代表 10:20 仍允许读取、外发或执行高风险动作 | **Security & Governance** 在新的受保护动作发生时消费当前安全条件 |
+| 外部 POST timeout 后，系统不知道现实世界有没有被改变 | timeout 就标 Failed 并 Retry | 远端可能已经成功，盲重试会制造第二次业务动作 | **Tool Runtime & Effects** 在发送前稳定动作身份，未知结果先 Reconcile，需要撤回时再做新补偿动作 |
+| 不同模块各有自己的 `success`，崩溃后容易互相覆盖 | 一张全局状态表 | Runtime complete、Domain committed、Delivery success、当前授权是不同事实；恢复方向也不同 | 每类事实有明确 Owner，跨边界通过版本、因果关联和完成证明收敛；**Application** 只把这些事实组合成产品状态 |
+| GraphRAG、Memory、Reflection、Specialist 等复杂机制容易“做出来就永远留下” | 默认开启更多能力 | 成本、时延和故障面增加，却不一定提高法律质量 | **Observability & Evaluation** 用可重复 Eval 和消融决定复杂度是否值得保留 |
+
+这张表就是总体架构的起点。后面的九个责任域只是这些问题长期存在以后形成的稳定分工；逻辑责任不等于九个微服务，也不意味着每个简单请求都要经过全部模块。
 
 ### 先看全貌：Zuno 在一项法律任务里做什么
 
