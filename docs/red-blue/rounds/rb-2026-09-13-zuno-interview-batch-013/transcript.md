@@ -72,18 +72,16 @@ This correction is recorded in `manifest.yaml`. It does not create a Zuno Knowle
 
 Four findings were retained:
 
-1. PF-032 Tool/MCP personal task evidence lacks enough root-cause / test-detail depth for the deepest implementation follow-ups.
-2. PF-029 Context/Memory slice is strong but exact scope / reviewer operation / provenance referents / injection isolation remain only partially recovered.
-3. OpenViking remains participation-confirmed with no recovered public implementation artifact.
-4. Q061/Q062 exposed a Round source-policy defect, not a Zuno Architecture defect.
-
-Full decision impact and retest conditions are in `findings.md`.
+1. PF-032 Tool/MCP personal task evidence depth;
+2. PF-029 Context/Memory exact scope/reviewer/provenance/security details;
+3. OpenViking participation-only evidence boundary;
+4. Red source-policy defect for Q061/Q062.
 
 ### EVT-008 — Controller transition to Batch 002
 
-Architecture explanation, Effects/Security semantics, research-to-Capability reasoning and Build/Buy simplification all receive lower attack weight after stable source-supported answers.
+Architecture explanation, Effects/Security semantics, research-to-Capability reasoning and Build/Buy simplification received lower attack weight after stable source-supported answers.
 
-Batch 002 priority becomes:
+Batch 002 priority became:
 
 - PF-032 exact implementation / alternative / regression evidence；
 - PF-029 exact scope / provenance / reviewer boundary；
@@ -91,11 +89,85 @@ Batch 002 priority becomes:
 - real user workflow / business outcome evidence；
 - backend and distributed-systems fundamentals derived from those personal claims。
 
+### EVT-009 — Batch 002 Red archived
+
+- Red generated and froze another 100 questions.
+- Broad nine-module questions were intentionally reduced.
+- The batch concentrated on call paths, middleware, config isolation, error semantics, exact Context/Memory data flow, tests, project causality and project-derived backend fundamentals.
+- The unsupported #212 premise from Batch 001 was not reused.
+
+### EVT-010 — Batch 002 Blue archived
+
+- Blue answered all 100 questions closed-book.
+- PF-032 proved stronger than Batch 001 initially exposed: canonical provenance retained `EmitEventAgentMiddleware`, `_canonical_mcp_target()` recursion behavior, `_extract_gaode_weather_city()`, exact historical commits and deterministic regression artifacts.
+- PF-029/PF-030 retained strong PR/commit/test chronology but not enough field-level scope/schema/reviewer/failure/security details for the deepest questions.
+- General Python/PostgreSQL/RabbitMQ/idempotency/network/cache/version/fencing/backpressure questions were answered as fundamentals only, never as historical implementation facts.
+
+### EVT-011 — Batch 002 Verifier archived
+
+Batch result:
+
+```text
+PASS: 55
+PARTIAL: 45
+FAIL: 0
+UNSUPPORTED_CLAIM: 0
+```
+
+The PARTIAL rate increased because Batch 002 deliberately moved to implementation and project-reality depth. No new Target Architecture contradiction was found.
+
+### EVT-012 — Findings refined after 200 questions
+
+Final deduplicated findings:
+
+1. Tool/MCP is the strongest personal implementation story, but surrounding concurrency/discovery/error/trace/project-causality evidence remains incomplete.
+2. Context/Memory has a strong PR/commit/test chain but exact scope/schema/reviewer/failure/token/relevance/security/stale-invalidation details remain incomplete.
+3. OpenViking remains participation-only without recovered public artifact.
+4. Batch 001 Red source-policy defect was corrected and did not recur.
+5. Neither strongest personal code slice is mapped to a recovered Court-side/Pilot version or user outcome.
+6. Resume title “法律智能 Agent 平台” may over-prime full-platform ownership expectations despite bounded body text.
+7. Database debugging evidence remains direction-level and should stay auxiliary.
+
+Full decision impact and retest conditions are in `findings.md`.
+
+### EVT-013 — Round close
+
+The stop condition is met after **200 questions**.
+
+Why no Batch 003:
+
+- broad architecture / Current-Target / Effects-Security / Build-Buy questions already converged;
+- implementation-level gaps repeated around the same unrecovered fields and project provenance;
+- a third 100-question batch would mostly generate trivia or restate missing evidence rather than alter an architecture/resume/evidence decision;
+- the protocol requires independent repair/evidence-recovery before retesting with different questions.
+
+Final result:
+
+```text
+PASS_WITH_PERSONAL_EVIDENCE_CEILING
+architecture_verdict: PASS_NO_NEW_ARCHITECTURE_GAP
+highest_severity: S2
+questions: 200
+PASS: 140
+PARTIAL: 58
+FAIL: 0
+UNSUPPORTED_CLAIM: 2
+```
+
 ## Transcript Shards
 
-1. [`transcript-batch-001.md`](./transcript-batch-001.md) — Batch 001 chronological phase index and verdict summary.
-2. [`transcript-batch-001-red.md`](./transcript-batch-001-red.md) — frozen 100-question Red batch.
-3. [`transcript-batch-001-blue.md`](./transcript-batch-001-blue.md) — 100 closed-book Blue answers with source traces.
-4. [`transcript-batch-001-verifier.md`](./transcript-batch-001-verifier.md) — per-question verifier results.
+### Batch 001
 
-Batch 002 artifacts will be appended after Red generates and freezes the next 100 questions.
+1. [`transcript-batch-001.md`](./transcript-batch-001.md)
+2. [`transcript-batch-001-red.md`](./transcript-batch-001-red.md)
+3. [`transcript-batch-001-blue.md`](./transcript-batch-001-blue.md)
+4. [`transcript-batch-001-verifier.md`](./transcript-batch-001-verifier.md)
+
+### Batch 002
+
+5. [`transcript-batch-002.md`](./transcript-batch-002.md)
+6. [`transcript-batch-002-red.md`](./transcript-batch-002-red.md)
+7. [`transcript-batch-002-blue.md`](./transcript-batch-002-blue.md)
+8. [`transcript-batch-002-verifier.md`](./transcript-batch-002-verifier.md)
+
+No observable Red/Blue/Verifier batch output was discarded. Private model chain-of-thought is not part of the archive contract.
