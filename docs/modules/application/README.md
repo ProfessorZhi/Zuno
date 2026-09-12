@@ -14,6 +14,18 @@ Application & Integration 负责把这些已经成立的内部事实翻译成稳
 
 简单问答没有必要承担这条完整生命周期。用户只问“合同第 8 条约定了什么”，访问范围明确、材料已经可用，也不需要长期正式成果时，一个普通应用服务调用检索和模型后就可以返回答案。Application 的复杂度从长任务、正式结果和跨系统交付出现以后才开始增加。
 
+### 聊天可以是入口，案件工作空间才承载长期专业工作
+
+如果产品界面只围绕 Conversation History 组织，前面的事件抽取、冲突识别、证据关系和事实—法条对应最终仍会被压回一段段聊天文本。模型升级或重新分析以后，用户只能翻对话寻找“上一次 Agent 说过什么”，很难持续维护一宗案件已经形成的专业结构。
+
+对多材料、需要反复复核的任务，更稳定的产品视图是 Matter / Case Workspace。专业人员进入案件后，应该能够看到当前材料范围与就绪状态、案件事件时间线、当事方陈述冲突、证据支持与反驳关系、事实—法律依据候选、尚未解决的问题、机器候选、人工判断、正式 WorkProduct 及其当前有效性。聊天框仍然可以用来提问、发起研究和修改任务，但它只是操作这些结构的一种入口。
+
+01 不因此拥有新的业务事实。材料状态和候选结构来自 03，专业能力来源和资格来自 05，运行中的研究进度来自 04，正式 HumanDecision / WorkProduct 来自 02，当前授权来自 08，现实交付结果来自 06。Application 只把这些 Owner facts 组合成用户可理解的 Workspace projection，并提供稳定导航、查询和操作入口。
+
+这也使 Agent Harness 可替换。今天用户可能通过对话触发“分析付款争议”，明天产品可能改成结构化任务面板或由外围 Host 直接调用 API；只要 Matter identity、候选结构、正式结果和状态语义不变，产品不需要因为换了一代 Agent UI 就迁移全部法律工作历史。
+
+Workspace 也不意味着所有候选都永久保存。临时 query rewrite、模型思维过程、一次 rerank 分数和无长期价值的中间文本仍然留在运行或观测层。Application 展示的是当前任务真正需要复核、继续操作或长期引用的结构，不把“Agent 产生过的一切”升级成产品对象。
+
 ### 入口先把一次人的动作变成稳定任务
 
 复杂请求常从一句“帮我分析这个案件”开始。对人来说已经足够，对一个可能运行几十分钟并在崩溃后恢复的系统却还缺少边界：分析哪个 Matter，使用哪些材料，目标是普通回答还是正式成果，谁发起请求，以及网络重试到来的第二个请求是不是同一次用户动作。
@@ -58,10 +70,10 @@ Adapter 负责协议转换、字段兼容和版本协商，产品状态仍然从
 
 ### Current / Target / Gap
 
-**Target：** 01 负责组合其他 Owner 已经成立的事实，形成稳定的请求受理、产品路径、普通答案发布、正式成果发布、Delivery、失效传播和外部 Contract 语义；Knowledge readiness、正式 Domain 状态、Authorization 和现实 Effect 仍由各自责任域决定。
+**Target：** 01 负责组合其他 Owner 已经成立的事实，形成稳定的 Matter / Case Workspace projection、请求受理、产品路径、普通答案发布、正式成果发布、Delivery、失效传播和外部 Contract 语义；Knowledge readiness、正式 Domain 状态、Authorization 和现实 Effect 仍由各自责任域决定。聊天、表单或 Host API 都只是访问这些语义的产品入口。
 
-**Current：** 上述多 Host 生命周期、完整 Invocation / Delivery identity、Push + Pull 失效传播和复杂交付恢复属于 Target 设计。现有 Application、API、Host 集成或运行代码实际实现到哪一步，只以 `docs/evidence/`、代码和测试证据为准。
+**Current：** 上述案件 Workspace、多 Host 生命周期、完整 Invocation / Delivery identity、Push + Pull 失效传播和复杂交付恢复属于 Target 设计。现有 Application、API、Host 集成或运行代码实际实现到哪一步，只以 `docs/evidence/`、代码和测试证据为准。
 
-**Gap：** 仍需要真实 Host Contract、重复请求与断线重试测试、正式成果失效传播演练、外部交付边界、背压行为以及是否值得独立部署的容量证据。没有这些证据时，不把 Target 写成已验证产品能力。
+**Gap：** 仍需要真实案件 Workspace 的用户研究与界面验证、Host Contract、重复请求与断线重试测试、正式成果失效传播演练、外部交付边界、背压行为以及是否值得独立部署的容量证据。没有这些证据时，不把 Target 写成已验证产品能力。
 
 工程 / Agent 精确参考与跨模块一致性规则见 [`reference.md`](reference.md)。
