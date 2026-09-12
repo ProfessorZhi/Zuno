@@ -22,6 +22,18 @@ Target 更稳定的输入是 Model Role。Planner 表达“我需要满足这类
 
 因此 API health 绿色只是最弱的一层信息。一个 Provider 技术上能调用，可能因为数据地域限制而当前不能用，也可能没有通过这个 Role 的质量基线。Fallback 也只能在仍然满足这些条件的集合里发生，不能因为主 Provider 503 就退到一个“能返回 JSON 但没验证过”的模型。
 
+### Model Role 和法律 Capability 解决的是两个不同层次的问题
+
+“Planner 需要什么模型”和“事件抽取这项法律能力由谁提供”看起来都涉及模型选择，但它们的稳定边界不同。
+
+Model Role 描述一次模型调用在执行层需要什么，例如规划、摘要、改写、结构化生成或开放式推理。07 可以根据上下文长度、结构化输出、延迟、价格、地区和 Role benchmark 选择模型。它回答的是：**在当前允许范围里，哪一个模型适合完成这次模型调用。**
+
+05 的 Capability Qualification 则回答更专业的问题：某个研究模型、LLM-based Provider 或规则实现，对哪类法律任务、材料条件和风险等级已经证明足够可靠。例如同一个基础模型可以胜任普通摘要，却没有资格直接作为“复杂多主体事件抽取”的 Provider；另一个专用模型可能只对特定案由和文本类型有效。
+
+当一个 Capability Provider 内部需要调用通用 LLM 时，05 先定义专业语义和任务资格，具体实现再向 07 请求合适 Model Role。Gateway 不能因为某个模型在通用榜单或全局法律 Benchmark 上分数更高，就自行扩大这个 Capability 的适用范围；同样，05 也不需要自己重复实现 Provider SDK、token 计量和通用 fallback。
+
+这使模型升级可以分层发生。一个更便宜的新模型通过 Planner Role 回归后，可以替换规划调用而不影响事件抽取资格；一个模型在 LawBench 某类任务上提高，也只形成新的评测证据，还要由 05 结合 Zuno 的 Task Class、真实失败分类和数据条件决定是否扩展专业 Eligibility。不存在“一次排行榜升级，全系统自动换模型”的隐式路径。
+
 ### 一次模型调用的结果，要和后续业务成功分开
 
 Provider 返回 200、JSON schema 也正确，只能证明这次模型调用在 transport 和基本格式上完成了。Capability 可能发现内容不符合专业语义，Runtime 可能因为输入已经 stale 而拒绝结果，Domain 也可能因为证据不足而不正式接纳。
@@ -70,10 +82,10 @@ Prompt Injection 更说明了为什么模型不能拥有更强权力。模型输
 
 ### Current / Target / Gap
 
-**Target：** 07 以 Model Role 接收上层需求，在当前安全允许、质量合格、预算和 deadline 可接受的候选中选择 Provider / Model，保存真实 Attempt、Usage、Retry / Fallback 与取消结算；Prompt 的业务语义、专业验收、正式 Domain 和安全政策仍由各自 Owner 管理。
+**Target：** 07 以 Model Role 接收上层执行需求，在当前安全允许、Role 质量合格、预算和 deadline 可接受的候选中选择 Provider / Model，保存真实 Attempt、Usage、Retry / Fallback 与取消结算；法律 Capability 的专业语义与 Task Class qualification 继续由 05 拥有，Prompt 的业务语义、正式 Domain 和安全政策也仍由各自 Owner 管理。
 
 **Current：** 完整 Role routing、资格集合、统一 Usage settlement、跨 Provider cancellation、行为漂移治理和多区域 egress routing 属于 Target 设计。当前已有的模型 SDK、调用封装、LangSmith 或相关基础代码实际证明到哪一步，只能按 `docs/evidence/`、代码、测试和可复现 Eval 描述。
 
-**Gap：** 仍需要 Role 级 benchmark、模型升级回归、fallback 资格测试、真实 Usage / cost 对账、取消边界、数据外发策略验证和是否需要独立部署的容量证据。没有这些证据时，不宣称 Gateway 已经完成生产级多模型路由治理。
+**Gap：** 仍需要 Role 级 benchmark、05 Capability qualification 与 07 Model Role 的联动测试、模型升级回归、fallback 资格测试、真实 Usage / cost 对账、取消边界、数据外发策略验证和是否需要独立部署的容量证据。没有这些证据时，不宣称 Gateway 已经完成生产级多模型路由治理。
 
 工程 / Agent 精确参考与跨模块一致性规则见 [`reference.md`](reference.md)。
