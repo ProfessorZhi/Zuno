@@ -32,7 +32,8 @@ Code / Test / Runtime Evidence
 
 ## 目录
 
-- [`legal-ai-pain-point-evidence.md`](./legal-ai-pain-point-evidence.md)：法律 AI / RAG 在检索可靠性、幻觉与引用、人工责任、时效与审计方面的外部研究证据；只支持 Problem Statement，不证明 Zuno 历史上已解决这些问题。
+- [`legal-ai-domain-problem-evidence.md`](./legal-ai-domain-problem-evidence.md)：法律 AI / RAG 在检索可靠性、模型专业可靠性、时效、人工责任与 Agent 评价方面的外部研究证据；用于约束领域 Problem Statement，不证明 Zuno 历史上已解决这些问题。
+- [`legal-agent-value-strategy-2026-09.md`](./legal-agent-value-strategy-2026-09.md)：葛季栋 / LIPLAB 研究资产与 2025–2026 Agent 技术的产品化推导，讨论 Research Capability、Provider Qualification、案件工作空间、评价体系和 Build / Buy / Extend / Defer。
 - [`deep-research-report-2026-08-27.md`](./deep-research-report-2026-08-27.md)：本轮“葛季栋/LIPLAB → Research Artifact → Engineering Capability → Zuno → 通用 Agent 平台边界 → Documentation”研究快照。
 - [`jidong-ge-liplab-lineage.md`](./jidong-ge-liplab-lineage.md)：导师/课题组研究谱系、身份消歧规则和 lineage 分类。
 - [`research-to-engineering-traceability.md`](./research-to-engineering-traceability.md)：Research Artifact 如何转化为 Engineering Capability，以及与 Zuno 责任域的关系。
