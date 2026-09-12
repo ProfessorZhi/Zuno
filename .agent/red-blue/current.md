@@ -1,15 +1,15 @@
 # Current Red / Blue Round
 
-state: `no-active`
-active_round: `none`
-mode: `none`
-resume_snapshot: `none`
-target_role: `none`
-interview_stage: `none`
-red_calibration: `none`
+state: `active-red-blue`
+active_round: `rb-2026-09-13-zuno-interview-batch-013`
+mode: `CHATGPT_AUTO`
+resume_snapshot: `ProfessorZhi/internship-work@6107321bdcaced8688c0e462d8b0a85b2744c4fe:resume/00_resume_versions/Zuno_v3+CodingAgent+SFTDPO_简历/Agent开发工程师／AI应用工程师+Zuno／CodingAgent／SFTDPO_ToolCalling层次澄清／可追问_简历草稿_v5.md`
+target_role: `Agent 开发工程师 / AI 应用工程师`
+interview_stage: `large-tech-project-deep-dive`
+red_calibration: `calibrated`
 blue_profile: `canonical-part-a-first`
 batch_size: `100`
-current_batch: `none`
+current_batch: `batch-001`
 transcript_policy: `full-observable-role-io`
 archive_live: `true`
 
@@ -38,4 +38,4 @@ Round manifest 必须固定 Zuno base SHA、精确简历 snapshot、目标岗位
 
 `full-observable-role-io` 保存全部可观察 Red / Blue / Verifier / Controller / user I/O 与协议元数据；不要求也不得伪造模型私有 chain-of-thought。
 
-当前：没有 active Round。
+当前：Round #013 active，执行 `batch-001`。
