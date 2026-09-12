@@ -1,10 +1,10 @@
 # Zuno 目标架构：一项法律任务如何从材料变成可交付结果
 
-Zuno 是一个面向法律工作的智能 Agent 平台。项目要解决的现实问题在 [`docs/project/README.md`](../project/README.md) 中展开：材料范围不完整、RAG 会漏检和错配、模型会产生不可靠结论、专业人员需要承担最终判断、任务会长期运行、外部系统又会把一次网络失败变成现实风险。
+Zuno 是一个面向法律工作的智能 Agent 平台。项目需要承担的业务约束在 [`docs/project/README.md`](../project/README.md) 中展开：材料范围可能不完整，RAG 会发生漏检和来源错配，模型可能生成不可靠结论，专业人员需要承担最终判断，任务可能长期运行，外部系统交互又会把一次网络异常转化为现实世界的不确定性。
 
-Architecture 负责回答下一步：**这些痛点为什么不能靠一个更大的 Prompt、一条固定 Workflow 或一个统一 `status` 解决，系统应该怎样分工才能在失败以后仍然说清发生了什么。**
+Architecture 负责回答下一步：**为什么这些领域问题不能仅靠更大的 Prompt、固定 Workflow 或一个统一 `status` 解决，系统又应怎样划分责任，才能在材料、权限、模型和现实状态持续变化时保持可解释、可恢复和可审计。**
 
-下面描述的是 Zuno 当前接受的 **Target Architecture**。它解释系统应该怎样分工，不代表这些能力已经全部在 Current 代码或真实法院环境中验证。Current 做到哪里，只看 [`docs/evidence/`](../evidence/README.md) 中的代码、数据库迁移、测试、运行追踪和评测证据。法律 AI / RAG 的外部痛点证据整理在 [`docs/research/legal-ai-pain-point-evidence.md`](../research/legal-ai-pain-point-evidence.md)。
+下面描述的是 Zuno 当前接受的 **Target Architecture**。它解释系统应该怎样分工，不代表这些能力已经全部在 Current 代码或真实法院环境中验证。Current 做到哪里，只看 [`docs/evidence/`](../evidence/README.md) 中的代码、数据库迁移、测试、运行追踪和评测证据。法律 AI / RAG 的外部领域问题证据整理在 [`docs/research/legal-ai-domain-problem-evidence.md`](../research/legal-ai-domain-problem-evidence.md)，研究资产与最新 Agent 技术的产品化推导见 [`docs/research/legal-agent-value-strategy-2026-09.md`](../research/legal-agent-value-strategy-2026-09.md)。
 
 <!--
 status: normative-target
@@ -30,22 +30,24 @@ research_source: docs/research/
 
 ## Part A — Human Narrative（人类技术叙事）
 
-### 先把痛点和架构责任对上
+### 从业务约束推导架构责任
 
-Zuno 的九个责任域不是从一张“完整架构图”倒推出来的。它们分别保护一类会在真实法律工作中出错、而普通 request / response 系统很难长期解释的事实。
+Zuno 的九个责任域不是为了得到一张完整的架构图而预先划分出来的。每一类责任都对应一种长期存在、且普通 request / response 系统无法稳定承担的专业事实或恢复要求。
 
-| 现实痛点 | 最简单的做法 | 简单做法在哪里失效 | Zuno 的架构责任 |
+| 业务约束 / 领域问题 | 最简单方案 | 简单方案的失效条件 | Zuno 的架构责任 |
 | --- | --- | --- | --- |
-| 材料很多、版本会变，检索还可能漏或选错来源 | 文件上传后直接做 RAG | 上传成功不代表关键材料已可用；Top-K 命中也不能证明覆盖完整 | **Knowledge & Evidence** 保存材料版本、加工状态、任务级就绪、候选证据和稳定来源 |
-| 模型和检索结果可能很流畅但仍然错 | 把模型最终文本直接保存 | hallucination、错误引用、部分证据被写成确定事实；人类责任消失 | **Legal Domain & Work Product** 把机器候选和正式业务结果分开，并保存必要人审与历史版本 |
-| 多步骤任务会等待、新证据会进入、旧结果会晚到 | 一条固定 Workflow + Checkpoint | Checkpoint 只知道流程走到哪，不能判断旧结果现在还适不适用，也不能证明正式提交已经成功 | **Agent Runtime & Control** 管理 Plan、Replan、等待、取消和恢复，但不冒充业务事实 |
-| 研究模型、LLM 和 Provider 会替换、漂移或临时不可用 | 每个调用点直接写 model / Python class | 专业语义、fallback、质量和成本散落到 Workflow；换实现时上层一起漂 | **Capability & Skill** 固定专业承诺，**Model Gateway** 管理实际模型选择、调用和 Usage |
-| 权限、用途和数据外发条件会在长任务期间变化 | 入口鉴权一次 | 10:00 允许不代表 10:20 仍允许读取、外发或执行高风险动作 | **Security & Governance** 在新的受保护动作发生时消费当前安全条件 |
-| 外部 POST timeout 后，系统不知道现实世界有没有被改变 | timeout 就标 Failed 并 Retry | 远端可能已经成功，盲重试会制造第二次业务动作 | **Tool Runtime & Effects** 在发送前稳定动作身份，未知结果先 Reconcile，需要撤回时再做新补偿动作 |
-| 不同模块各有自己的 `success`，崩溃后容易互相覆盖 | 一张全局状态表 | Runtime complete、Domain committed、Delivery success、当前授权是不同事实；恢复方向也不同 | 每类事实有明确 Owner，跨边界通过版本、因果关联和完成证明收敛；**Application** 只把这些事实组合成产品状态 |
-| GraphRAG、Memory、Reflection、Specialist 等复杂机制容易“做出来就永远留下” | 默认开启更多能力 | 成本、时延和故障面增加，却不一定提高法律质量 | **Observability & Evaluation** 用可重复 Eval 和消融决定复杂度是否值得保留 |
+| 材料很多、版本会变，检索还可能漏掉关键内容或选错来源 | 文件上传后直接做 RAG | 上传成功不代表关键材料已经可用；Top-K 命中也不能证明覆盖完整 | **Knowledge & Evidence** 保存材料版本、加工状态、任务级就绪、候选证据和稳定来源 |
+| 模型和检索结果可能表达流畅但专业结论仍然错误 | 把模型最终文本直接保存 | hallucination、错误引用、部分证据被写成确定事实，且最终责任无法归属 | **Legal Domain & Work Product** 把机器候选和正式业务结果分开，并保存必要人审与历史版本 |
+| 多步骤任务会等待，新证据会进入，旧结果会晚到 | 一条固定 Workflow + Checkpoint | Checkpoint 只知道流程走到哪里，不能判断旧结果是否仍然适用，也不能证明正式提交已经成功 | **Agent Runtime & Control** 管理 Plan、Replan、等待、取消和恢复，但不替代业务事实 |
+| 研究模型、LLM 和 Provider 会替换、漂移或临时不可用 | 每个调用点直接绑定 model / Python class | 专业语义、fallback、质量与成本散落在 Workflow 中；替换实现会迫使上层一起变化 | **Capability & Skill** 固定专业能力承诺，**Model Gateway** 管理实际模型选择、调用和 Usage |
+| 权限、用途和数据外发条件会在长任务期间变化 | 入口处鉴权一次 | 10:00 允许不代表 10:20 仍允许读取、外发或执行高风险动作 | **Security & Governance** 在新的受保护动作发生时消费当前安全条件 |
+| 外部 POST timeout 后，系统无法确认现实世界是否已经被改变 | timeout 就标 Failed 并 Retry | 远端可能已经成功，盲目重试会制造第二次业务动作 | **Tool Runtime & Effects** 在发送前稳定动作身份，未知结果先 Reconcile，需要撤回时再执行新的补偿动作 |
+| 不同环节各自存在“成功”，崩溃后容易被压成一个错误状态 | 一张全局状态表 | Runtime complete、Domain committed、Delivery success 和当前授权分别代表不同事实，恢复方向也不同 | 每类事实由明确 Owner 负责；跨边界通过版本、因果关联和完成证明收敛；**Application** 只把这些事实组合成产品状态 |
+| GraphRAG、Memory、Reflection、Specialist 等复杂机制可能长期保留却没有稳定收益 | 默认开启更多能力 | 成本、时延和故障面增加，却不一定改善法律质量或人工效率 | **Observability & Evaluation** 通过可重复 Eval、消融和退出条件决定复杂度是否值得保留 |
 
-这张表就是总体架构的起点。后面的九个责任域只是这些问题长期存在以后形成的稳定分工；逻辑责任不等于九个微服务，也不意味着每个简单请求都要经过全部模块。
+这张表构成总体架构的设计驱动因素。后面的九个责任域只是这些约束长期存在以后形成的稳定分工；逻辑责任不等于九个微服务，也不意味着每个简单请求都必须经过全部模块。
+
+一个同样重要的边界是：**通用 Agent Harness 本身不应成为 Zuno 的长期差异化来源。** 长会话、持久执行、沙箱、Subagent、MCP、Context Compression 和通用 Agent Eval 正在快速成为成熟平台能力。只要这些基础设施能够满足可靠性与数据安全要求，Zuno 应优先复用，并把长期自有责任集中在法律任务结构、Research Capability、Provider Qualification、材料与证据 Provenance、专业人员决定、正式 WorkProduct 和法律任务 Evaluation 上。通用 Harness 可以被替换，这些专业语义不能随框架一起漂移。
 
 ### 先看全貌：Zuno 在一项法律任务里做什么
 
