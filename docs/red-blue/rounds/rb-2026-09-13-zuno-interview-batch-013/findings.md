@@ -1,159 +1,234 @@
 # Round #013 Findings
 
 Round: `rb-2026-09-13-zuno-interview-batch-013`  
-Status: `ACTIVE_AFTER_BATCH_001`  
-Batch 001: `100 questions / 85 PASS / 13 PARTIAL / 0 FAIL / 2 UNSUPPORTED_CLAIM`
+Status: `CLOSED_AFTER_BATCH_002`  
+Highest severity: `S2`  
+Architecture verdict: `PASS_NO_NEW_ARCHITECTURE_GAP`  
+Resume/project verdict: `PASS_WITH_PERSONAL_EVIDENCE_CEILING`
 
-Findings are deduplicated from the full transcript. They do not own Project, Architecture, Evidence or Resume truth.
+Batch results:
 
-## F1 — Tool / MCP 个人任务已经可证明，但最深实现追问仍缺一份可直接引用的任务证据链
+```text
+Batch 001: 100 questions / 85 PASS / 13 PARTIAL / 0 FAIL / 2 UNSUPPORTED_CLAIM
+Batch 002: 100 questions / 55 PASS / 45 PARTIAL / 0 FAIL / 0 UNSUPPORTED_CLAIM
+Total:     200 questions / 140 PASS / 58 PARTIAL / 0 FAIL / 2 UNSUPPORTED_CLAIM
+```
+
+The second batch intentionally moved from broad architecture to function/data-path/project-reality depth, so the higher PARTIAL count is expected. Findings are deduplicated from the full transcript and do not own Project, Architecture, Evidence or Resume truth.
+
+## F1 — Tool / MCP 是当前最强的个人实现故事，但“核心 diff 可证明”和“完整运行语义可证明”必须分开
 
 - **severity:** S2
 - **gap_type:** `EVIDENCE_GAP / RESUME_CLAIM_RISK`
-- **trigger_questions:** Q016, Q018, Q019, Q020, Q021, Q022, Q024
+- **trigger_questions:** Batch 001 Q016/Q018–Q022/Q024; Batch 002 B2-Q003/B2-Q006–Q009/B2-Q013/B2-Q015/B2-Q017/B2-Q019–Q022/B2-Q024/B2-Q032
 
-PF-032 已经把简历第一条从“参与 Tool Calling”推进到两段具体历史工作：2026-04-15 `GeneralAgent` Tool/MCP strategy 收口，以及 2026-04-28 Workspace MCP direct-route / ReAct fallback 与 recursion / weather-parameter hardening。Blue 能守住 Ownership，也没有把后来的 PreparedAction / Approval / EffectReceipt / Reconcile 反写进 4 月历史。
-
-缺口出现在大厂面试继续向代码级追问时：当前 canonical interview-facing 资料没有同时保存以下因果链：
+Batch 002 证明 PF-032 比 Batch 001 最初判断更强。Canonical provenance 已经足以支持一条函数级主故事：
 
 ```text
-原需求 / 失败输入
-→ 旧调用链实际怎样失败
-→ 为什么选择当前改法而不是另一个 wrapper / route
-→ 具体改动位置
-→ regression test 的粒度与断言
-→ 改动后能证明的结果
+parent GeneralAgent
+  tool_invocation_model / available_tools / selector scaffolding
+  MCPAgent-as-Tool / SkillAgent-as-Tool
+→ 77346758...
+  actual MCP tools + Skill guidance tools bound directly to GeneralAgent
+  EmitEventAgentMiddleware injects user MCP config by tool→server mapping
+→ 0b5fb350...
+  WorkSpaceSimpleAgent route hardening
+  _canonical_mcp_target() custom-name self-recursion fix
+  _extract_gaode_weather_city()
+  deterministic regression artifacts
 ```
 
-因此 Blue 对 custom MCP recursion、weather 参数解析、user-level config 的精确绑定、direct-route 判定条件和 test granularity 只能诚实回答“canonical source 没有恢复到这一层”。这不会让当前简历 Claim 失真，但会让第一条最亮眼的个人经历在深挖时较早触顶。
+Custom MCP recursion 的触发条件、修复函数、天气自然句到 `maps_weather(city="南京")` 的 regression 都可以从 canonical PF-032 讲清。面试白板层面已经足够支撑“我确实做过这段代码”，而不只是方向级参与。
+
+真正的 evidence ceiling 在外围运行语义与项目因果：
+
+- per-user MCP config 的 request-local / async concurrency 隔离方式未恢复；
+- discovery / schema refresh / namespace collision 未恢复；
+- direct route 失败后是否进入 ReAct、是否可能导致 side-effect duplicate 未恢复；
+- MCP timeout / disconnect / schema-error propagation 未恢复；
+- route observability / trace 字段未恢复；
+- 原始 Issue、Review、任务分配和客户/业务需求未恢复；
+- regression artifact 能证明源码锁定了失败条件，但不能写成历史 CI / E2E / Pilot 已验证；
+- 没有 token、latency、success-rate 或客户收益测量。
 
 ### Decision impact
 
-不需要修改 Zuno Architecture。后续如果能从 PF-032 已指向的历史 commits/tests 恢复一份**bounded personal task evidence**，应优先补到项目事实/面试证据层，而不是增加 Target 对象。若恢复不到，简历继续维持当前 bounded wording，不新增性能、稳定性或业务收益 Claim。
+不改 Zuno Architecture，也不削弱当前 v5 简历的 bounded Tool Calling bullet。后续最有价值的工作是从 `77346758...`、`0b5fb350...` 及 test file 恢复一份**个人任务证据卡**：before/after call path、exact code location、repro input、test assertion、已知未覆盖运行语义。原始 requirement / Review 若找不到就保持 Unknown。
 
-### Evidence needed
-
-- 2026-04-15 / 04-28 exact diff；
-- 对应 test artifact 的关键断言；
-- 若存在，原始 Issue / requirement / bug reproduction；
-- 若不存在，明确标记 root-cause detail not recovered。
+不要把 later PreparedAction / Approval / Idempotency / EffectReceipt / Reconcile 反写成 4 月个人实现。
 
 ### Retest scenario
 
-换一种大厂实现深挖：从“为什么不用 MCPAgent-as-Tool”连续追到调用栈、错误输入、测试断言和 alternative，而不提示 PF-032 表述。
+大厂二/三面代码级白板：要求候选人从 MCPAgent-as-Tool 画到 GeneralAgent direct tools，再追 config concurrency、route failure、test boundary 和 alternative。通过标准是能明确区分“代码 diff 已证明”和“运行语义未恢复”。
 
 ---
 
-## F2 — Context / Memory 简历切片有较强 PR 证据，但 Scope、Reviewer 运行方式与安全隔离细节仍会被追穿
+## F2 — Context / Memory 有最完整的 PR/commit/test 演进链，但实现细节与真实运行闭环仍明显薄于 Tool/MCP
 
 - **severity:** S2
-- **gap_type:** `EVIDENCE_GAP`
-- **trigger_questions:** Q030, Q032, Q033, Q035
+- **gap_type:** `EVIDENCE_GAP / IMPLEMENTATION_GAP`
+- **trigger_questions:** Batch 001 Q030/Q032/Q033/Q035; Batch 002 B2-Q036–Q045/B2-Q047–Q050/B2-Q052/B2-Q053/B2-Q055/B2-Q057/B2-Q059–Q063/B2-Q069
 
-PF-029 / PF-030 已经是当前个人证据中最完整的一组：`GeneralAgent.prepare_context()`、同 scope task summary、仅 `APPROVED` structured memory、Context Pack policy、source-id trace、review / provenance gate，以及 focused tests 都有历史 PR/commit/test 佐证。Blue 也正确拒绝把 Coding Agent 项目里的 token compression、裁剪阈值等工作借给 Zuno。
+PF-030 → PF-029 已经形成可信的历史工程链：
 
-剩余缺口集中在四个实现/运行问题：
+```text
+Target plan
+→ typed Context contracts
+→ scoped Memory contracts
+→ minimal GeneralAgent pre/post-turn integration
+→ callable ContextOrchestrator
+→ PR #8 readback hardening
+   same-scope task summary
+   APPROVED structured memory only
+   Context Pack policy
+   source trace
+   review / provenance contract
+   focused tests: 32 passed
+   repo tests: 66 passed
+   legacy tests: 11 passed
+   contract eval profiles: status ok
+```
 
-1. `same scope` 的 exact key / boundary 没有在 canonical interview source 中冻结；
-2. Memory review 在真实产品里由谁处理、没有 reviewer 时如何运行，目前没有 Project Reality 证据；
-3. `source-id trace` 能追到的具体 referent chain 只记录了方向，没有面试级细节；
-4. PF-029 没有证明 tool/memory 内容的 prompt-injection / instruction-data isolation 已经实现。
+这足以支撑“我完成了一条 Context Builder / Memory foundation slice”，也能明确证明该工作不是 3 月从零引入整个 Memory——4 月公开根提交已经存在 Memory subsystem。
 
-这些缺口不能用今天 Target 的 Domain / Security / Memory 原则反写成历史 Current。
+但 closed-book 深挖仍无法回答：
+
+- `same-scope` 的 exact key / filtering predicate；
+- structured memory 完整 schema；
+- APPROVED filter 在 store 还是 Python 层；
+- task summary 的生成器 / failure semantics / freshness；
+- source-id trace 的实际 storage / cardinality；
+- Context Pack prompt ordering / dedupe / conflict handling；
+- memory-store failure 的 fail-open / fail-closed / degradation policy；
+- token overflow / relevance ranking；
+- write paths 是否都不能绕过 review；
+- exact cross-scope negative fixture；
+- prompt-injection / instruction-vs-data isolation；
+- DocumentVersion 更新后的 stale-memory invalidation；
+- Reviewer 在真实产品里由谁操作、没有 reviewer 时怎样运行；
+- 真实客户/法院需求、Bad Case 和质量收益。
 
 ### Decision impact
 
-不改 Runtime/Domain Authority。优先从 PF-029 对应 PR #8 / commits / focused tests 恢复 exact scope 与 provenance contract；Reviewer 运营和 prompt-injection isolation 若历史无证据，继续写 Unknown / not proven。
+不把这些缺口升级成新的 Domain/Memory 状态机。优先从 PR #8、PF-030 commits 和 focused test files 恢复字段级 contract 与代表性正反测试；恢复不到的继续写 Unknown。尤其不要借 Coding Agent 项目的 token compression / truncation / Subagent Memory 经验补 Zuno 历史。
 
-### Evidence needed
-
-- PR #8 exact diff/test names；
-- scope key / filtering predicate；
-- source-id trace data shape；
-- review gate 的实际 owner / storage / workflow（若存在）；
-- instruction/data isolation test（若存在）。
+若未来真实产品主要从 Matter / Knowledge / Domain 重建案件上下文，应继续让 Long-term Memory 缩回用户/工作偏好、开放问题和阶段性工作上下文，而不是重新争夺案件事实 Authority。
 
 ### Retest scenario
 
-让面试官只盯 `prepare_context()`：给两个 Matter、同一用户、冲突 APPROVED memory 与恶意 Tool output，要求候选人明确当前历史实现与今天 Target 各能做到哪里。
+只给面试官一个 `prepare_context()` 白板：两个 Matter、同一用户、冲突 APPROVED memory、超长 context、恶意 memory、Memory store timeout。要求逐项说明“历史代码证明 / 需要回源码 / 今天 Target”。
 
 ---
 
-## F3 — OpenViking 仍属于“确认参与、实现 artifact 未恢复”，不适合作为独立强 Claim
+## F3 — OpenViking 仍属于 participation-only Claim
 
 - **severity:** S1
 - **gap_type:** `EVIDENCE_GAP`
-- **trigger_questions:** Q038
+- **trigger_questions:** Batch 001 Q038; Batch 002 B2-Q064/B2-Q065
 
-PF-011 只能支持用户确认参与 OpenViking 在 Memory / Context 区域的接入；公开 Git 目前没有恢复对应 SDK / Adapter / 数据结构和生产使用方式。Blue 能正确停在“参与接入”，没有用后续 Context / Memory V2 或 PR #8 替代这段历史。
+PF-011 只能支持用户确认参与 OpenViking 在 Memory / Context 区域的接入；公开 Git 没有恢复对应 SDK / Adapter / 数据结构、Build/Buy 决策和运行方式。PF-029/PF-030 不能替代 OpenViking artifact。
 
 ### Decision impact
 
-当前 v5 简历没有把 OpenViking 单独放成主要 bullet，因此不要求立即修改简历。面试中若主动提到，只应作为补充背景；除非恢复 artifact，否则不要把它升级成“主导 OpenViking 集成 / 设计 Memory 架构 / 生产使用”。
-
-### Evidence needed
-
-历史代码、配置、提交、运行记录或私有工作材料。
-
-### Retest scenario
-
-面试官直接问“OpenViking 你改了什么代码，为什么用它而不是自己做 Memory？”观察是否仍能守住 participation-only 边界。
+当前 v5 简历没有把 OpenViking 单独作为主 bullet，因此不需要立即修改。面试中若主动提及，只说参与接入；除非恢复 artifact，不升级成“主导 OpenViking 集成”“设计整体 Memory 架构”或“生产使用”。
 
 ---
 
-## F4 — Batch 001 有两道 Red 问题违反固定来源策略：不能把对话记忆里的 #212 诊断事实当作 Round 已知事实
+## F4 — Batch 001 的 Red source-policy 违规已在 Batch 002 修正
 
-- **severity:** S2
+- **severity:** S2 at Batch 001; `RESOLVED_FOR_ROUND_PROCESS`
 - **gap_type:** `EVIDENCE_GAP`
 - **scope:** `ROUND_PROCESS`, not Zuno Architecture
-- **trigger_questions:** Q061, Q062
+- **trigger_questions:** Batch 001 Q061/Q062
 
-Red 在 Q061/Q062 使用了“#212 已证明 failed v2 replaces last-good manifest”这一具体 premise。但 Round manifest 固定的 Zuno base `a7b35286...` 的 canonical `docs/evidence/` / allowed Governance facts 中没有 #212，Red calibration sources 也没有这项内容。
+Batch 001 Red 使用了不在固定 Zuno base / manifest source set 内的 #212 diagnostic premise。Blue 正确拒绝，Verifier 判 `UNSUPPORTED_CLAIM`。Controller 随后将 Red project source policy 写回 manifest：Red 可以查看固定 Zuno base 作为“目前建立的项目”，但 Current-specific premise 必须能回到 fixed base 或显式 admitted source，不能使用聊天记忆、旧 summary 或 closed diagnostic branch。
 
-Blue 按 closed-book 规则正确拒绝确认这个 premise，只回答 Target 的 generation isolation / activation 尚未 implementation-proven。Verifier 因此将两题判为 `UNSUPPORTED_CLAIM`，不能据此产生 Knowledge implementation finding。
+Batch 002 没有再次出现 unsupported Current premise，说明本轮 process correction 生效。
 
 ### Decision impact
 
-从 Batch 002 起，Red 的“当前项目材料”必须显式绑定固定 Zuno base 的可访问 source set；不得使用当前聊天记忆、旧 summary、已关闭 diagnostic branch 或未列入 manifest 的事实生成 Current-specific 问题。若未来要攻击 #212，先把对应证据加入允许的 Round source 或 canonical Evidence。
-
-这是一条 Harness / Round source-policy 修正，不修改 Zuno Knowledge Architecture。
-
-### Retest scenario
-
-Batch 002 中换问法，只从当前 Knowledge Target + canonical Evidence 的 `not implementation-proven` 出发，不带 #212 premise，再观察 Blue 是否会自行制造该缺陷。
+这是 Harness 修正，不产生 Knowledge Architecture Finding。未来若要测试 #212，必须先把证据显式加入 Round source 或 canonical Evidence。
 
 ---
 
-## Batch 001 non-findings worth preserving
+## F5 — 两个最强个人实现都缺“进入哪次真实法院/Pilot版本”的版本映射，个人工程结果无法升级成用户结果
 
-以下区域被高压追问后没有形成新文档/架构 Finding：
+- **severity:** S2
+- **gap_type:** `PROJECT_REALITY_GAP / MEASUREMENT_GAP`
+- **trigger_questions:** Batch 002 B2-Q032/B2-Q069/B2-Q071–B2-Q073
 
-- History / Current / Target / Unknown 分层；
+PF-032 和 PF-029/030 都已经能证明真实 main-history 工程行为，但目前没有证据回答：
+
+```text
+这项改动由哪个真实需求 / Issue 驱动？
+→ 谁 Review / 验收？
+→ 进入了哪个 Demo / Court-side Testing / Pilot build？
+→ 对真实用户的哪项任务产生了什么结果？
+```
+
+因此“真实项目代码”是可证明的，“真实法院用户因此获得某个收益”仍不可证明。这个缺口比继续增加 Target 架构细节更影响面试项目可信度。
+
+### Decision impact
+
+后续项目取证优先级应从 Architecture 继续下钻到**版本—任务—用户结果**：寻找 release/build、Demo材料、任务/Issue、Review、真实 Bad Case、Pilot环境或运行记录。恢复不到时，简历继续把结果写成 code/test boundary，不写用户收益。
+
+---
+
+## F6 — 简历项目名“法律智能 Agent 平台”仍可能把面试官预期抬到完整平台 Ownership
+
+- **severity:** S1
+- **gap_type:** `RESUME_CLAIM_RISK`
+- **trigger_questions:** Batch 001 Q007; Batch 002 B2-Q082
+
+最新 Project/Architecture 已把长期产品中心从 Agent Chat 转为可验证 Case Workspace / Legal Backend，并把 Generic Agent Harness 降为可替换基础设施。v5 简历标题仍是“Zuno：法律智能 Agent 平台”。正文已经用“在已有系统基础上参与 Agent、Memory / Context、Tool Calling 与数据调试”限制个人 Claim，因此当前没有事实错误，但标题可能让大厂面试官先验地按“完整 Agent 平台 Owner”追问。
+
+### Decision impact
+
+不在本 Red Round 直接改简历。后续 Resume task 可比较两种策略：保留历史项目名但开场立刻限定个人范围；或将副标题改为“智慧司法 AI / 法律智能工作系统”以降低错误先验。任何修改必须保持项目真实名称/历史定位。
+
+---
+
+## F7 — 数据库调试 bullet 证据强度显著低于前两条，适合作为辅助而不是独立亮点
+
+- **severity:** S1
+- **gap_type:** `EVIDENCE_GAP / RESUME_CLAIM_RISK`
+- **trigger_questions:** Batch 002 B2-Q078
+
+PF-013 只支持“进入 PostgreSQL 查看或调试过实际数据”，未恢复具体表、SQL、故障、修复和结果。因此该 bullet 能说明候选人接触真实项目数据和状态排障，但无法经受与 PF-029/PF-032 同等深度的技术追问。
+
+### Decision impact
+
+后续若能恢复一个具体 DB debugging incident，再升级；否则保持辅助描述，不分配与 Tool/Context 相同的面试时间。
+
+---
+
+## Stable non-findings after 200 questions
+
+两批共 200 问后，没有发现新的总体 Architecture contradiction。以下主题在高压追问下能够由允许文档给出来源支持、同时保持事实层级：
+
+- History / Current / Target / Unknown；
 - Pilot != Production；
-- LIPLAB research != personal ownership；
+- LIPLAB research != personal implementation ownership；
 - Research Artifact → Capability → Provider → Qualification → Candidate → Formal Business Fact；
+- Case Workspace is projection, not a new Authority；
+- Conversation / Memory != case database；
 - retrieval miss != absence；
 - GraphRAG baseline / ablation / kill condition；
 - Checkpoint != Domain completion proof；
 - Retry / Replan / Reconcile；
-- external timeout → Unknown / Reconcile；
-- SecurityEpoch / Secret revoke 的 bounded Current evidence；
-- Mandatory Audit violation / Reconciliation convergence gap 的诚实 Current 表述；
+- irreversible Domain / external Effect history；
+- Effects/Security Slice C positive evidence and confirmed violations；
 - HumanDecision != automatic ground truth；
 - Release Eval != Production qualification；
-- Generic Agent Harness should be reused and Native Runtime remains measurement-gated；
-- logical responsibility != microservice deployment。
+- Generic Agent Harness / LangGraph primitives should be reused；
+- Native Runtime / persistent Multi-Agent / GraphRAG remain measurement-gated；
+- logical responsibility != microservice deployment；
+- project-derived Python/PostgreSQL/RabbitMQ/idempotency/network/cache/version/fencing/backpressure fundamentals。
 
-这些 PASS 只表示本批问题在允许文档中得到来源支持的回答，不表示对应 Target 已经实现或生产验证。
+A PASS here means “Blue can answer from allowed sources”, not “the Target is fully implemented”.
 
-## Next batch priority
+## Why the Round stops after two batches
 
-Batch 002 不再平均覆盖九模块。问题预算优先转向：
+The stop condition is met. Batch 001 established broad architecture and evidence boundaries. Batch 002 concentrated 100 additional questions on the remaining personal implementation risks and produced stable, repeated evidence ceilings. A third 100-question batch would mostly restate the same unrecovered fields / historical project facts rather than change a design or evidence decision.
 
-1. PF-032 Tool/MCP exact implementation / alternative / regression evidence；
-2. PF-029 Context/Memory exact scope / provenance / review boundary；
-3. personal ownership under code-level questioning；
-4. project reality / real user workflow / measurable business outcome；
-5. selected backend fundamentals naturally derived from these personal claims。
-
-已经稳定通过的 Target architecture explanation 降权，避免继续生成只会重复文档内容的题目。
+The next productive actions are independent Blue repair / evidence-recovery tasks, followed by a Red retest with different questions. The active Red Round must not repair its own findings.
