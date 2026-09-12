@@ -9,7 +9,7 @@ interview_stage: `large-tech-project-deep-dive`
 red_calibration: `calibrated`
 blue_profile: `canonical-part-a-first`
 batch_size: `100`
-current_batch: `batch-001`
+current_batch: `batch-002`
 transcript_policy: `full-observable-role-io`
 archive_live: `true`
 
@@ -38,4 +38,4 @@ Round manifest 必须固定 Zuno base SHA、精确简历 snapshot、目标岗位
 
 `full-observable-role-io` 保存全部可观察 Red / Blue / Verifier / Controller / user I/O 与协议元数据；不要求也不得伪造模型私有 chain-of-thought。
 
-当前：Round #013 active，执行 `batch-001`。
+当前：Round #013 active。Batch 001 已完整归档；Controller 已推进到 `batch-002`，等待 Red 根据 Batch 001 verifier reweighting 生成下一批 100 问。
