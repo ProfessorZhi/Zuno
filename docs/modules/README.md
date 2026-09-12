@@ -4,6 +4,28 @@ Zuno 当前的九个责任域是一张事实所有权地图。一次法律任务
 
 当前 Architecture 仍用 01–09 表示责任编号，便于与 ADR、历史审查和跨模块引用对应。目录使用语义名称；编号属于当前 Target decomposition，不属于永久文件系统 schema。
 
+## 研究成果进入真实案件，需要经过一条完整产品链
+
+九个责任域不只服务故障恢复，也共同决定一项研究成果能否从论文或 Demo 进入长期法律工作。
+
+一项事件抽取、冲突识别、法条推荐或事实—法条对应方法，最初只是 Research Artifact。05 先把它放到稳定的专业能力语义下面，说明输入、输出、适用范围、失败条件和版本；具体论文模型、规则、LLM 或外部服务只是 Provider。03 再把这些能力作用在明确的 DocumentVersion 和 KnowledgeGeneration 上，形成能够被案件研究复用的候选结构，例如事件时间线、当事方陈述关系、冲突线索、证据候选和事实—法律依据关系。它们仍然是机器产生的工作材料，不因为结构化就自动成为正式法律事实。
+
+04 Runtime 可以围绕这些结构组织长任务、动态检索、并行研究和人工等待。它负责“接下来做什么”，却不拥有专业结论。专业人员在 02 中修改、接受、拒绝或要求补证；需要长期承担责任的结果经过正式业务提交后成为 WorkProduct 和相应的长期业务事实。
+
+真实使用随后给 09 提供最有价值的评测信号：哪些候选经常被专家改动，哪些检索经常缺证，哪些 Task Class 容易要求补证，哪个 Provider 在复杂案件上退化，哪种 Agent 机制只增加成本却没有改善结果。09 把经过治理和标注的数据转成 Regression、baseline、ablation 和 release evidence，再反馈给 05 的 Qualification / Eligibility。新的 Provider 或研究方法只有重新获得足够证据，才应该进入下一轮真实任务。
+
+```text
+Research Artifact
+  → 05 Stable Capability / Provider Qualification
+  → 03 Case-level knowledge structures and candidates
+  → 04 Agent orchestration / research process
+  → 02 HumanDecision / Formal WorkProduct
+  → 09 Functional Eval / Regression / Ablation
+  → 05 re-qualification or retirement
+```
+
+这是一条产品化因果链，不是一条固定同步调用链。简单问答可能跳过大部分环节；Eval 也只能消费满足数据治理和标注条件的反馈，不能把每次人工修改自动当作金标准。它的意义在于让真实案件逐步形成任务定义、专业结构、失败样本和资格证据，而不是让每一代模型升级都重新从 Demo 开始。
+
 ## 三种任务，对应三种复杂度
 
 用户问“合同第 8 条写了什么”时，最短合理路径很短：明确 Scope，检查当前授权，确认材料已经就绪，检索稳定原文和引用，受控调用模型，再判断答案是否允许发布。受控 RAG 加普通应用服务能够承担这类任务；Native Runtime、Dynamic DAG、Multi-Agent、Long-term Memory 和 GraphRAG 都没有默认出现的理由。
