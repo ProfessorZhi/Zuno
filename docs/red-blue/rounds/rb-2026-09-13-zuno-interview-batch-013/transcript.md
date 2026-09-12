@@ -29,8 +29,73 @@ Archive policy: append-only / live GitHub preservation
 - Blue is closed-book and limited to the manifest allowlist.
 - Batch 001 target question count: 100.
 
+### EVT-003 — Batch 001 Red archived
+
+- Red generated 100 questions across project reality, personal ownership, research/product strategy, Knowledge/RAG, Runtime/recovery, Effects/Security, Evaluation and Build/Buy/Scale.
+- Questions and explicit attack metadata were frozen in `transcript-batch-001-red.md` before Blue answering began.
+- Any follow-up derived from Blue answers was deferred to Batch 002.
+
+### EVT-004 — Batch 001 Blue archived
+
+- Blue answered all 100 questions closed-book.
+- Each answer retained an independent source trace.
+- Blue used zero external interview calibration sources.
+- Blue explicitly refused unsupported implementation premises instead of filling them from model knowledge or conversation memory.
+
+### EVT-005 — Batch 001 Verifier archived
+
+Batch result:
+
+```text
+PASS: 85
+PARTIAL: 13
+FAIL: 0
+UNSUPPORTED_CLAIM: 2
+```
+
+The 13 PARTIAL answers concentrated around personal implementation evidence depth rather than the nine-domain architecture narrative.
+
+### EVT-006 — Source-policy correction after Q061 / Q062
+
+Verifier found that Red introduced a specific #212 Knowledge diagnostic premise not present in the fixed Zuno base or declared calibration sources. Blue correctly rejected the premise.
+
+Controller correction for Batch 002 and later:
+
+- Red may inspect the fixed Zuno base as “目前建立的项目”；
+- Current-specific premises must be sourceable from that base or an explicitly admitted manifest source；
+- conversation memory, old summaries, closed diagnostic branches or other unstated facts cannot become Red evidence；
+- #212 may only be attacked in a future batch if its evidence is explicitly admitted.
+
+This correction is recorded in `manifest.yaml`. It does not create a Zuno Knowledge finding.
+
+### EVT-007 — Batch 001 findings deduplicated
+
+Four findings were retained:
+
+1. PF-032 Tool/MCP personal task evidence lacks enough root-cause / test-detail depth for the deepest implementation follow-ups.
+2. PF-029 Context/Memory slice is strong but exact scope / reviewer operation / provenance referents / injection isolation remain only partially recovered.
+3. OpenViking remains participation-confirmed with no recovered public implementation artifact.
+4. Q061/Q062 exposed a Round source-policy defect, not a Zuno Architecture defect.
+
+Full decision impact and retest conditions are in `findings.md`.
+
+### EVT-008 — Controller transition to Batch 002
+
+Architecture explanation, Effects/Security semantics, research-to-Capability reasoning and Build/Buy simplification all receive lower attack weight after stable source-supported answers.
+
+Batch 002 priority becomes:
+
+- PF-032 exact implementation / alternative / regression evidence；
+- PF-029 exact scope / provenance / reviewer boundary；
+- code-level personal Ownership；
+- real user workflow / business outcome evidence；
+- backend and distributed-systems fundamentals derived from those personal claims。
+
 ## Transcript Shards
 
-1. [`transcript-batch-001.md`](./transcript-batch-001.md) — Red 100 questions, Blue 100 answers, per-question verifier results.
+1. [`transcript-batch-001.md`](./transcript-batch-001.md) — Batch 001 chronological phase index and verdict summary.
+2. [`transcript-batch-001-red.md`](./transcript-batch-001-red.md) — frozen 100-question Red batch.
+3. [`transcript-batch-001-blue.md`](./transcript-batch-001-blue.md) — 100 closed-book Blue answers with source traces.
+4. [`transcript-batch-001-verifier.md`](./transcript-batch-001-verifier.md) — per-question verifier results.
 
-Further batches will be appended here in chronological order.
+Batch 002 artifacts will be appended after Red generates and freezes the next 100 questions.
