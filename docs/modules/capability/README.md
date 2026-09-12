@@ -1,6 +1,6 @@
 # 05 Capability & Skill（专业能力与技能）
 
-<!-- status: design-baseline-v1; implementation: not-authorized; deepening: cross-module-consistency-v2; detail-design: candidate-v1 -->
+<!-- status: design-baseline-v1; implementation: not-authorized; deepening: cross-module-consistency-v2; detail_design: candidate-v1 -->
 
 ## Part A — Human Narrative
 
@@ -42,6 +42,20 @@ Fallback 也因此不是“谁还能返回 JSON 就用谁”。Provider A 故障
 
 每次实际调用还应留下自己用了哪份专业承诺、哪个实现、哪些材料版本和关键配置。这样一个 Runtime Step 多次尝试不同 Provider 时，不会把几次调用混成一个事实；Cache 也只能在真正影响专业结果的条件仍然相同时复用。缓存命中说明计算结果可以复用，不会自动把它升级成 Domain 的正式事实，也不会跳过当前 Security 判断。
 
+### 论文资产产品化，不是一篇论文对应一个 Agent
+
+课题组已经积累的事件抽取、事件对齐、冲突识别、法条推荐、事实—法条对应和法律模型评测，最容易被做成一组彼此孤立的 Demo：每篇论文包一个 Tool，再让一个“总 Agent”决定调用哪个。这样能快速展示，却会把长期价值绑在论文实现和 Prompt 上。
+
+更稳定的做法是先问专业人员长期需要什么结构。事件抽取和事件对齐可以共同支撑案件时间线；双方陈述的冲突识别可以支撑争议焦点研究；事实—法条对应与法条推荐可以共同形成候选法律依据及其事实解释。论文模型、LLM 和规则只是这些专业任务的不同 Provider，具体组合可以随证据变化。
+
+这也意味着一个 Research Artifact 未必等于一个 Capability。有些论文实现同时包含多个可独立评价的专业步骤；有些能力则需要组合多项研究成果和通用模型。切分边界应由稳定输入输出、专业语义和独立资格决定，而不是由论文目录决定。
+
+LawBench、LJPCheck、CMDL 一类研究资产的角色又不同。它们更适合作为 Qualification 和 Regression 的上游依据：LawBench 帮助拆分法律能力维度，LJPCheck 提醒团队不能只看 headline accuracy，CMDL 这类复杂多主体数据可以暴露简单 Task Class 看不到的退化。它们不因为是研究成果就自动成为 Provider，也不能直接替真实法院任务给出生产资格。
+
+因此 Research Artifact 进入 Zuno 的完整路径更接近：先提炼专业语义，再选择或实现 Provider，然后由 09 在明确 Task Class、DatasetVersion、配置和失败分类下产生资格证据。进入真实案件后，Provider 产生的仍然是 Candidate；专业人员最终修改、接受或拒绝什么，由 02 保存。真实使用中的稳定失败再回到 09，成为下一轮 qualification、研究问题或 Provider retirement 的输入。
+
+这条闭环保护了研究价值。模型更新不需要推翻上层产品结构，真实案件也不会只是一次性消费论文能力；任务定义、失败样本、专家修改和资格证据会逐步积累，使下一项研究成果更快知道“应该替换哪里、需要证明什么、什么情况下不能上线”。
+
 ### 研究成果进入产品，需要经过一条比“包装成 Tool”更长的路
 
 课题组的论文模型、实验脚本和规则资产首先是 Research Artifact。它们证明团队拥有方法、代码或实验结果，但并不会自动成为长期业务可以依赖的系统能力。
@@ -62,10 +76,10 @@ Fallback 也因此不是“谁还能返回 JSON 就用谁”。Provider A 故障
 
 ### Current / Target / Gap
 
-**Target：** 05 拥有 Capability 语义与版本、Provider binding、Conformance、Qualification / Eligibility 以及调用来源；它产生专业 Candidate / Proposal，不拥有 Formal Admission、模型 transport 或现实 Effect truth。
+**Target：** 05 拥有 Capability 语义与版本、Provider binding、Conformance、Qualification / Eligibility 以及调用来源；研究成果先转换成稳定专业承诺，再由不同 Provider 实现。它产生专业 Candidate / Proposal，不拥有 Formal Admission、模型 transport 或现实 Effect truth。
 
-**Current：** 历史代码已经存在 Skill / Tool、模型、研究算法和部分评测路径，但 Target 中统一 Capability lifecycle、Provider qualification 和任务级 Eligibility 不能从这些实现自动推断为已完成。
+**Current：** 历史代码已经存在 Skill / Tool、模型、研究算法和部分评测路径，但 Target 中统一 Capability lifecycle、Provider qualification、按 Task Class 的能力画像和研究—产品反馈闭环不能从这些实现自动推断为已完成。
 
-**Gap：** 需要进一步冻结 Capability / Provider 的字段级 Contract，建立按 task class 的资格证据、semantic drift 检测、Provider exit 测试，以及真实法律任务上 Build / Buy / LLM / 专用模型的可比评测。
+**Gap：** 需要进一步冻结 Capability / Provider 的字段级 Contract，建立按 task class 的资格证据、semantic drift 检测、Provider exit 测试，以及真实法律任务上 Build / Buy / LLM / 专用模型的可比评测。LawBench / LJPCheck / CMDL 等研究资产如何进入长期 Regression 与 qualification 也仍需要数据和实验设计。
 
 工程 / Agent 精确参考与跨模块一致性规则见 [`reference.md`](reference.md)。
