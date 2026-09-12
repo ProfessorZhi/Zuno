@@ -30,8 +30,23 @@ company_or_persona:
 interview_stage:
 jd_source:
 scenario_scope:
-max_turns:
+batch_size: 100
+max_batches:
 ```
+
+## Transcript Policy
+
+```text
+transcript_policy: full-observable-role-io
+archive_live: true
+transcript_index: docs/red-blue/rounds/<round-id>/transcript.md
+transcript_shards:
+  - docs/red-blue/rounds/<round-id>/transcript-batch-001.md
+```
+
+`full-observable-role-io` 要求保存 Red / Blue / Verifier / Controller / user intervention 的可观察输入输出与显式协议元数据。它不要求、也不得伪造模型私有 chain-of-thought。
+
+如果单个 `transcript.md` 足够，可以不创建 shard；一旦分片，manifest 必须完整列出全部 shard。
 
 ## Red Configuration
 
@@ -64,9 +79,9 @@ Red calibration 只用于 private pressure model，不进入 Blue context。
 
 优先从真实业务场景和简历高风险 Claim 进入，不从题库开始。
 
-| Scenario or Claim | Risk | Why It Matters | Expected Evidence | Priority |
-| --- | --- | --- | --- | --- |
-|  |  |  |  |  |
+| Scenario or Claim | Risk | Why It Matters | Expected Evidence | Priority | Initial Question Budget |
+| --- | --- | --- | --- | --- | ---: |
+|  |  |  |  |  |  |
 
 ## Attack Coverage
 
@@ -85,23 +100,41 @@ current_target:
 simplification:
 ```
 
-不要求平均覆盖；按业务和 Claim 风险选择。
+不要求平均覆盖；按业务和 Claim 风险分配 batch 问题预算。
+
+## Batch Lifecycle
+
+```text
+batch-001:
+  red_generated: false
+  red_archived: false
+  blue_answered: false
+  blue_archived: false
+  verified: false
+  verifier_archived: false
+  question_count: 0
+  next_focus: none
+```
+
+每个 batch 的问题在 Red 输出时冻结；基于 Blue 回答产生的新追问进入下一批。
 
 ## Stop Conditions
 
 ```text
-- max turns reached
+- max_batches reached
 - target scenario / claim sufficiently tested
 - stable high-severity finding found
 - information exhausted
-- next questions would only add trivia
+- next batch would only add trivia
 - user intervenes to close
 ```
 
 ## Outputs
 
 ```text
+manifest: docs/red-blue/rounds/<round-id>/manifest.yaml
 transcript: docs/red-blue/rounds/<round-id>/transcript.md
+transcript_shards: docs/red-blue/rounds/<round-id>/transcript-batch-*.md  # optional
 findings: docs/red-blue/rounds/<round-id>/findings.md
 archive_target: docs/red-blue/rounds/<round-id>/
 ```

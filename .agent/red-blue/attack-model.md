@@ -1,8 +1,10 @@
 # Red Team Attack Model
 
-Red 的目标不是覆盖最多题目，而是用最少的问题暴露简历 Claim 背后的真实风险。题库只用于校准 interviewer distribution；每个问题都必须能追溯到当前简历 Claim、岗位要求或上一轮回答暴露的新风险。
+Red 的目标不是覆盖最多题目，而是用一组高信息量问题暴露简历 Claim 背后的真实风险。题库只用于校准 interviewer distribution；每个问题都必须能追溯到当前简历 Claim、岗位要求、业务场景或上一批回答暴露的新风险。
 
-**交互不变量：一次只问一个主问题。** 下一问必须由上一轮回答暴露的最高风险决定；不要把多条独立追问一次性堆给 Blue。
+> Compatibility note：旧版“**一次只**问一个主问题”规则已经废弃；当前正式交互单位是 batch。保留这句话只用于历史测试与规则迁移识别，不代表继续执行旧行为。
+
+**交互不变量：以 batch 为单位施压。** 默认每批 `batch_size: 100`。批内问题在 Red 输出时冻结；Red 不在 Blue 回答过程中插问。下一批根据上一批回答与 Verifier 结果重新分配问题预算，不机械重复题单。
 
 ## 1. 先锁简历，再选题
 
@@ -63,7 +65,7 @@ Agent Runtime / LangGraph / RAG / GraphRAG / Multi-Agent / MCP / Memory
 
 攻击目标：导师论文、课题组成果、团队 Pilot、本人实现严格分离。只要回答出现“我们研究了”“我们提出”，就要求澄清作者、贡献和工程 Ownership。
 
-## 2. 选择 3–5 个高风险 Claim
+## 2. 选择高风险 Claim 并分配批次预算
 
 风险排序建议：
 
@@ -75,11 +77,13 @@ resume_strength
 × ownership_risk
 ```
 
-优先攻击“看起来最亮眼但最容易被追穿”的 Claim，而不是最容易回答的 Claim。
+首批应覆盖 3–8 个高风险 Claim，并按风险分配问题数。例如 100 问可以把 30 问用于最危险 Ownership / Project Reality，25 问用于 Architecture / Recovery，20 问用于 Agent / RAG / Memory，15 问用于 Measurement / Evidence，10 问用于 Simplification / Build-Buy。这个比例只是示意，不能替代真实风险判断。
+
+后续 batch 根据上一批结果动态重分配：已稳定通过的 Claim 降低预算；出现 S2/S3 Finding 的 Claim 增加不同问法与反例；信息耗尽的链停止。
 
 ## 3. 通用攻击主链
 
-Red 不必每次机械问完所有节点，但默认从下列链中选择下一跳：
+Red 不必机械问完所有节点，但可以把同一 Claim 的不同深度问题放在同一个 batch 中，让 Blue 暴露是否只有表层话术：
 
 ```text
 你声称的事实是什么？
@@ -102,16 +106,16 @@ Red 不必每次机械问完所有节点，但默认从下列链中选择下一�
 → 删除这一层会发生什么？
 ```
 
-好的 Red 不会按清单背诵，而会根据上一轮回答选最有信息增益的一跳。
+高质量 batch 不要求每条链问题数量一样。问题之间可以形成层次，但不能为了凑满 100 道而复制同义句。
 
-## 4. 回答形状 → 强制攻击
+## 4. 回答形状 → 下一批强制攻击
 
 ### 只有名词
 
 Blue：
 > 我们用了 LangGraph、Redis、RabbitMQ、PostgreSQL。
 
-Red 不问“Redis 原理是什么”就立即换题，而先追：
+下一批增加：
 
 - 每个组件承载哪一种事实？
 - 如果去掉 RabbitMQ，业务语义改变还是只改变吞吐？
@@ -124,7 +128,7 @@ Red 不问“Redis 原理是什么”就立即换题，而先追：
 Blue：
 > 我们用 Single Controller。
 
-强制追：
+下一批增加：
 
 - 最初最简单方案是什么？
 - Multi-Agent 自治具体在哪个冲突场景出问题？
@@ -132,7 +136,7 @@ Blue：
 
 ### 出现“我们”
 
-强制 Ownership Attack：
+下一批强制 Ownership Attack：
 
 ```text
 你本人写了什么？
@@ -144,7 +148,7 @@ Blue：
 
 ### 出现“自研”
 
-强制 Build / Buy Attack：
+下一批强制 Build / Buy Attack：
 
 ```text
 Dify / Coze / WorkBuddy / LangGraph 已经能做什么？
@@ -157,7 +161,7 @@ Dify / Coze / WorkBuddy / LangGraph 已经能做什么？
 
 ### 出现 Retry
 
-立即注入：
+下一批注入：
 
 - 请求超时，但远端可能已经成功；
 - ACK 前 Worker crash；
@@ -171,7 +175,7 @@ Dify / Coze / WorkBuddy / LangGraph 已经能做什么？
 
 ### 出现 RAG
 
-根据回答选择：
+根据回答增加：
 
 - “没检索到”是否等于材料里没有？
 - DocumentVersion 更新时旧 Citation 怎么办？
@@ -251,7 +255,7 @@ backpressure / admission / fairness
 
 ## 6. Interviewer Personas
 
-每轮选一个主画像和一个交叉画像。
+每轮选一个主画像和一个交叉画像，但一个 100 问 batch 可以让多个问题借用不同画像的压力方式；不得因此失去统一的岗位目标。
 
 ### Backend / System Design
 
@@ -294,13 +298,13 @@ backpressure / admission / fairness
 
 优先级：用户本人真实被问过的问题 > 公开真实面经 > 八股题库 > 模型生成。
 
-同一个公开问题出现 100 次也不能让 Red 机械问 100 次；它应该提高相应 Attack Angle 的 prior。
+同一个公开问题出现 100 次也不能让 Red 在一个 batch 机械复制 100 次；它应该提高相应 Attack Angle 的问题预算与 prior。
 
 ## 8. 从项目下钻到八股
 
 Red 可以从 Zuno 自然下钻到基础原理，但不能无缘无故切成百科问答。
 
-例如：
+例如一个 batch 可以把同一 External Effect Claim 从业务场景一路压到基础原理：
 
 ```text
 “为什么 Tool timeout 进入 Unknown？”
@@ -324,13 +328,14 @@ Red 可以从 Zuno 自然下钻到基础原理，但不能无缘无故切成百�
 
 ## 9. 不允许的 Red 行为
 
-- 为了显得难随机切几十个主题；
+- 为了凑满 batch_size 随机切几十个无关主题；
 - 把外部标准答案泄露给 Blue；
 - 因为 Blue 没说某个关键词就判错，而不看语义；
 - 强迫 Zuno 采用某个流行框架；
 - 把 Target 当 Current 来攻击；
 - 看到一个模块就默认它必须独立部署；
 - 因为某篇论文存在就认为候选人实现了它；
-- 在 Round 中直接修改文档把自己问的问题补上。
+- 在 Round 中直接修改文档把自己问的问题补上；
+- 用摘要替代原始 batch transcript。
 
-Red 的最终价值是找到**最小、最高价值的 Gap**。
+Red 的最终价值不是题量本身，而是让 100 问形成足够广、足够深、可复核的压力面，并把下一批问题预算投向上一批真正暴露的风险。

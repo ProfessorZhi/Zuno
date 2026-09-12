@@ -1,4 +1,4 @@
-version: "2026-09-10"
+version: "2026-09-13"
 system_identity: "Zuno Local Agent System"
 
 runtime_boundary:
@@ -51,6 +51,11 @@ program_rules:
   red_blue_requires_explicit_activation: true
   blue_closed_book: true
   red_blue_modes: ["CHATGPT_AUTO", "AGENT_AUTO"]
+  red_blue_batch_size_default: 100
+  red_blue_transcript_policy: "full-observable-role-io"
+  red_blue_archive_live: true
+  red_blue_transcript_must_preserve_all_batches: true
+  red_blue_private_chain_of_thought_not_required: true
   human_candidate_mode_removed: true
   preserve_uncommitted_user_files: true
   architecture_change_requires_owner_or_adr: true

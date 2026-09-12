@@ -65,21 +65,34 @@ def verify_red_blue_harness(root: Path) -> list[str]:
     active = "state: `active-red-blue`" in current and re.search(r"active_round: `(?!none`)[^`]+`", current) is not None
     if not (inactive or active):
         errors.append("red-blue current state is neither recognized inactive nor active-red-blue")
-    for marker in ("CHATGPT_AUTO", "AGENT_AUTO"):
+    for marker in ("CHATGPT_AUTO", "AGENT_AUTO", "batch_size", "full-observable-role-io", "archive_live"):
         if marker not in current:
-            errors.append(f"red-blue current contract missing mode: {marker}")
+            errors.append(f"red-blue current contract missing marker: {marker}")
     if "human-candidate" in current:
         errors.append("human-candidate must not remain an active red-blue mode")
 
     protocol = (red_blue_root / "protocol.md").read_text(encoding="utf-8")
-    for marker in ("Context Firewall", "CHATGPT_AUTO", "AGENT_AUTO", "closed-book", "Verifier"):
+    for marker in (
+        "Context Firewall", "CHATGPT_AUTO", "AGENT_AUTO", "closed-book", "Verifier",
+        "batch_size", "default 100", "append-only", "full-observable-role-io", "transcript-batch-",
+    ):
         if marker.lower() not in protocol.lower():
             errors.append(f"red-blue protocol missing required execution marker: {marker}")
 
     attack_model = (red_blue_root / "attack-model.md").read_text(encoding="utf-8")
-    for marker in ("Ownership Claim", "Build / Buy", "面经校准", "一次只"):
+    for marker in ("Ownership Claim", "Build / Buy", "面经校准", "batch_size", "100", "下一批"):
         if marker not in attack_model:
             errors.append(f"red-blue attack model missing required marker: {marker}")
+
+    round_template = (red_blue_root / "templates" / "round.md").read_text(encoding="utf-8")
+    for marker in ("batch_size: 100", "max_batches", "transcript_policy", "archive_live", "transcript_shards"):
+        if marker not in round_template:
+            errors.append(f"red-blue round template missing batch/archive marker: {marker}")
+
+    batch_template = (red_blue_root / "templates" / "turn.md").read_text(encoding="utf-8")
+    for marker in ("Red / Blue Batch Record", "question_count", "Red — Questions", "Blue — Closed-book Answers", "Verifier — Per-question Results", "Archive Invariant"):
+        if marker not in batch_template:
+            errors.append(f"red-blue batch template missing marker: {marker}")
 
     judge = (red_blue_root / "judge.md").read_text(encoding="utf-8")
     for marker in ("UNSUPPORTED_CLAIM", "NARRATIVE_GAP", "ARCHITECTURE_GAP", "OWNERSHIP_GAP"):
