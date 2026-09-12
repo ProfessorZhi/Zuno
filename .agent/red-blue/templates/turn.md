@@ -1,72 +1,103 @@
-# Red / Blue Turn
+# Red / Blue Batch Record
+
+> 文件名保留 `turn.md` 以兼容现有 Harness；正式运行单位已改为 batch。
 
 ## Identity
 
 ```text
 round_id:
-turn_id:
-claim_under_test:
+batch_id:
+question_count:
+created_at:
 ```
 
-## Red — Private
+## Controller — Observable Event Log
+
+按发生顺序追加，不覆盖：
+
+```text
+- event_id:
+  actor: controller | user
+  event:
+  payload_summary:
+```
+
+## Red — Batch Configuration
 
 ```text
 interviewer_persona:
-attack_angle:
-current_hypothesis:
-expected_evidence:
-counterexample_or_failure_injection:
-next_drill_if_weak:
-next_drill_if_strong:
+cross_persona:
+claim_budget:
+attack_reweighting_from_prior_batch:
 ```
 
-## Red — User-visible Question
+## Red — Questions
 
-> 一次只写一个主要问题，不附提示、关键词、评分点或参考答案。
+一批默认 100 问。每道题独立编号，不附给 Blue 的提示、评分点或参考答案。
 
 ```text
-question:
+- question_id: Q001
+  claim_under_test:
+  attack_angle:
+  red_question:
+  red_hidden_intent:        # 协议显式攻击元数据，不是模型私有 chain-of-thought
+  expected_evidence:
+  counterexample_or_failure_injection:
 ```
 
-## Blue — Closed-book Answer
+Red 输出后立即归档，随后才允许 Blue 开始回答。
+
+## Blue — Closed-book Answers
+
+逐题回答，不合并成一份总答复。
 
 ```text
-answer:
+- question_id: Q001
+  answer:
+  source_trace:
+    resume:
+    project_part_a:
+    architecture_part_a:
+    module_part_a:
+    engineering_reference:
+    adr:
+    evidence:
+    unknown_or_unsupported:
 ```
 
-### Blue Source Trace
+Blue 完成整批后立即归档，Verifier 才开始逐题判断。
 
-只记录实际使用的允许来源：
+## Verifier — Per-question Results
 
 ```text
-resume:
-project_part_a:
-architecture_part_a:
-module_part_a:
-engineering_reference:
-adr:
-evidence:
-unknown_or_unsupported:
+- question_id: Q001
+  verdict: PASS | PARTIAL | FAIL | UNSUPPORTED_CLAIM
+  severity: S0 | S1 | S2 | S3
+  gap_type:
+  reason:
+  source_support:
+  current_target_check:
+  ownership_check:
+  next_action: DECREASE_WEIGHT | CONTINUE_NEXT_BATCH | REFRAME_NEXT_BATCH | ESCALATE_FINDING | CLOSE_CHAIN
 ```
 
-## Judge — Private
+Verifier 不生成 Blue 的改进版标准答案。
+
+## Batch Transition
 
 ```text
-verdict: PASS | PARTIAL | FAIL | UNSUPPORTED_CLAIM
-severity: S0 | S1 | S2 | S3
-gap_type:
-reason:
-source_support:
-current_target_check:
-ownership_check:
-next_action: CONTINUE_SAME_CHAIN | REFRAME_SAME_RISK | NEXT_ATTACK_ANGLE | NEXT_CLAIM | CLOSE_ROUND
+passed_count:
+partial_count:
+failed_count:
+unsupported_count:
+new_findings:
+attack_reweighting:
+next_batch_focus:
+batch_status: archived | needs-archive
 ```
 
-## Round Transition
+## Archive Invariant
 
-```text
-next_turn_focus:
-claim_status: open | passed | failed | unsupported
-```
+`CHATGPT_AUTO` 与 `AGENT_AUTO` 都必须保存本 batch 的完整可观察 Red / Blue / Verifier 输出和 Controller / user intervention。允许因 GitHub 单文件大小限制将 batch 写入 `transcript-batch-NNN.md`，但不得只留下题单、摘要或 `findings.md`。
 
-不要在这里写 Blue 的改进版标准答案。修复建议只在 Round 结束后的 Judge Report 中形成，并由独立任务处理。
+这里的“完整”不包含模型私有 chain-of-thought；不得伪造或要求导出不可观察的内部推理。
