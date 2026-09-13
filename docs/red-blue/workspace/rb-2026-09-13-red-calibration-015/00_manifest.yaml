@@ -1,0 +1,82 @@
+round_id: rb-2026-09-13-red-calibration-015
+created_at: 2026-09-13T20:26:00+08:00
+mode: CHATGPT_AUTO
+zuno_base_sha: 0ccc1ee336c42d8ecad0bd6535a97f8fc4e6aca3
+state: ACTIVE
+
+github_runtime:
+  github_state_bus: REQUIRED
+  stage_handoff: COMMIT_THEN_REREAD
+  round_branch: red-blue/rb-2026-09-13-red-calibration-015
+  round_pr: pending
+  last_consumed_head_sha: 0ccc1ee336c42d8ecad0bd6535a97f8fc4e6aca3
+  firewall_strength: LOGICAL_GITHUB_MEDIATED
+  strict_blind_red_certification: false
+
+interview_target:
+  target_role: Agent 开发工程师 / AI 应用工程师
+  company_or_persona: 大厂 AI Agent / LLM 应用工程岗位
+  interview_stage: 项目深挖 / 技术一面
+  jd_source: prior resume target role + generic Agent engineering expectations
+  question_count: 100
+  primary_path_target: 30
+  reserve_target: 70
+  red_review_gate: REQUIRED
+
+simulated_resume_build:
+  resume_style_reference: ProfessorZhi/internship-work resume v5 style
+  resume_build_sources:
+    - docs/project/README.md@0ccc1ee336c42d8ecad0bd6535a97f8fc4e6aca3
+    - docs/project/reference.md@0ccc1ee336c42d8ecad0bd6535a97f8fc4e6aca3
+    - docs/architecture/architecture.md@0ccc1ee336c42d8ecad0bd6535a97f8fc4e6aca3
+    - docs/modules/@0ccc1ee336c42d8ecad0bd6535a97f8fc4e6aca3
+    - docs/evidence/README.md@0ccc1ee336c42d8ecad0bd6535a97f8fc4e6aca3
+    - docs/governance/project-fact-provenance.md@0ccc1ee336c42d8ecad0bd6535a97f8fc4e6aca3
+  simulated_resume_path: docs/red-blue/workspace/rb-2026-09-13-red-calibration-015/01_simulated_resume.md
+  resume_status: DRAFT
+
+red_input_allowlist:
+  - 01_simulated_resume.md
+  - target role / JD / interview stage from this manifest
+  - .agent/red-blue/attack-model.md
+  - model general knowledge
+red_input_denylist:
+  - docs/project/
+  - docs/architecture/
+  - docs/modules/
+  - docs/evidence/
+  - docs/decisions/
+  - docs/governance/
+  - Zuno source / PR / commit diff
+  - resume build notes / source trace
+  - prior Blue answers
+
+red_question_suite:
+  red_questions_status: NOT_STARTED
+  primary_path_count: 0
+  reserve_count: 0
+  kill_switches_present: false
+  user_red_review_status: PENDING
+
+interviewer_configuration:
+  primary_persona: Implementation Interviewer
+  cross_personas:
+    - Forensic Interviewer
+    - Open-source Skeptic
+    - Fundamentals Interviewer
+  attack_skill_version: 0ccc1ee336c42d8ecad0bd6535a97f8fc4e6aca3:.agent/red-blue/attack-model.md
+  question_budget_notes: primary path must feel like a real 45-60 minute interview; early ownership probes for named implementation claims; reserve is conditional, not a second script
+
+stage_state:
+  current_stage: BUILD_RESUME
+  resume_built: false
+  resume_frozen: false
+  red_questions_archived: false
+  red_questions_status: NOT_STARTED
+  user_red_review_status: PENDING
+  blue_answers_archived: false
+  red_evaluation_archived: false
+  blue_reflection_archived: false
+  workflow_retrospective_archived: false
+  user_feedback_archived: true
+  transcript_complete: false
