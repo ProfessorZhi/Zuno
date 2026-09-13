@@ -87,13 +87,14 @@ def test_live_red_is_answer_driven_not_static_primary_path() -> None:
 
     for marker in (
         "有状态对话",
-        "6-10 个 Seed Questions",
-        "Follow-up Policy",
         "一问一个主要意图",
-        "上一答",
         "Pressure Suite",
         "CLAIM_IMPLEMENTATION_NOT_ESTABLISHED",
         "避免 AI 面试官味",
+        "“人话”不等于浅",
+        "3–5 层",
+        "具体一点",
+        "字节式工程深挖",
     ):
         assert marker in attack
 
@@ -109,3 +110,17 @@ def test_live_red_is_answer_driven_not_static_primary_path() -> None:
 
     assert "PRIMARY_PATH: 30" not in attack
     assert "primary_path_count: 30" not in stage_template
+
+
+def test_interview_behavior_evidence_keeps_bytedance_depth_as_behavior_not_question_bank() -> None:
+    evidence = (ROOT / "docs/red-blue/interview-behavior-evidence-2026-09.md").read_text(encoding="utf-8")
+
+    for marker in (
+        "字节样本补充",
+        "连续追 3–5 层",
+        "共享屏幕看代码",
+        "线上 log",
+        "不是公司官方面试规范",
+        "不变成“字节原题库”",
+    ):
+        assert marker in evidence
