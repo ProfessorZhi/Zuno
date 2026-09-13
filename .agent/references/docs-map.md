@@ -9,7 +9,7 @@
 docs/project/                 project history / context / team & personal ownership
 docs/architecture/            overall Target Architecture
 docs/modules/                 Target responsibility decomposition
-docs/red-blue/                adversarial review method + archived rounds
+docs/red-blue/                resume-first interview review method + active workspace + archived rounds
 
 # Trust & Evolution
 docs/research/                upstream research / algorithms / court background / platform baseline
@@ -19,6 +19,16 @@ docs/governance/              provenance / owner / documentation / workflow / op
 ```
 
 `docs/red-blue/` 和 `docs/research/` 对自己的评审/研究材料是 canonical location，但不能覆盖 Project、Architecture、Modules 或 Evidence 的事实 Authority。
+
+Red / Blue 内部路由：
+
+```text
+docs/red-blue/README.md       human method
+docs/red-blue/workspace/      active resume-first Round
+docs/red-blue/rounds/         closed Round history
+docs/red-blue/archive/legacy/ retired methods
+.agent/red-blue/               machine protocol / current state / Red Skill
+```
 
 ## Human route
 
@@ -74,6 +84,21 @@ reference.md   Part B Engineering Reference + Part C Cross-Module Consistency
 
 Project fact / resume ownership 任务额外读取 `docs/project/reference.md` 与 `docs/governance/project-fact-provenance.md`。
 
+## Red / Blue route
+
+启动 Round 时先读：
+
+```text
+docs/red-blue/README.md
+→ docs/red-blue/workspace/README.md
+→ .agent/red-blue/current.md
+→ .agent/red-blue/protocol.md
+→ .agent/red-blue/attack-model.md
+→ .agent/red-blue/judge.md
+```
+
+Resume Builder 阶段可读 Zuno canonical docs / Evidence 来构建模拟简历；**Red 阶段不得继续沿 Implementation route 读取 Zuno docs**。Red 只使用冻结模拟简历、JD、Red Skill 与通用知识。
+
 ## Ownership map
 
 | Question | Owner / source |
@@ -81,7 +106,7 @@ Project fact / resume ownership 任务额外读取 `docs/project/reference.md` �
 | 项目为什么存在、怎样发展、团队与个人参与 | `docs/project/` |
 | 当前 Target 为什么这样设计 | `docs/architecture/architecture.md` + `docs/architecture/reference.md` |
 | Target 怎样分解为具体责任与局部 Contract | `docs/modules/` |
-| Red / Blue 方法、Transcript、Findings、旧 Round | `docs/red-blue/`，non-authoritative for system truth |
+| Red / Blue 方法、active Round、历史 Round | `docs/red-blue/`，non-authoritative for system truth |
 | 外部研究、算法、天津法院/LIPLAB 背景、平台 baseline | `docs/research/`，upstream only |
 | 为什么接受某个长期设计决定 | `docs/decisions/` |
 | 当前仓库和运行状态有什么证据 | `docs/evidence/` |
