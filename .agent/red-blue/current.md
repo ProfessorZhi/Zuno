@@ -18,8 +18,8 @@ one_question_one_intent: `true`
 red_review_gate: `REQUIRED`
 red_questions_status: `NOT_STARTED`
 round_branch: `red-blue/rb-2026-09-14-resume-human-017`
-round_pr: `pending`
-last_consumed_head_sha: `267e314e188e0a3b380c282b29b8e0548aa86a17`
+round_pr: `234`
+last_consumed_head_sha: `513c318de952e57576aade1558cefc34bec89f93`
 github_state_bus: `required`
 stage_handoff: `commit-then-reread`
 firewall_strength: `LOGICAL_GITHUB_MEDIATED`
