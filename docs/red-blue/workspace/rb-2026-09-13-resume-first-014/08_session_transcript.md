@@ -46,20 +46,22 @@ next_stage: BLUE_REFLECTION
 
 ## Event 007 — BLUE_REFLECTION
 actor: BlueReflection
-stage: BLUE_REFLECTION
 input_head_sha: 6e7ab920c41687177ab86c1fe38574b7ac868c17
+observable_output_summary: No Product Architecture revision. P0/P1 gaps are source-level Project documentation/provenance for GraphRAG, Tool/MCP and Context/Memory.
+output_commit_sha: b01398d7deaa0c8d4fda493ce5c6635094db37cc
+next_stage: WORKFLOW_RETROSPECTIVE
+
+## Event 008 — USER_FEEDBACK_NORMALIZATION
+actor: Controller
+stage: WORKFLOW_RETROSPECTIVE_PREP
+input_head_sha: b01398d7deaa0c8d4fda493ce5c6635094db37cc
 input_files:
-- all committed interview artifacts through 04_red_evaluation.md
-- docs/governance/project-fact-provenance.md@10869d9176d2ef34b46577478bba62d9e254158a
-- docs/project/reference.md@10869d9176d2ef34b46577478bba62d9e254158a
-- docs/evidence/README.md@10869d9176d2ef34b46577478bba62d9e254158a
-- docs/architecture/architecture.md@10869d9176d2ef34b46577478bba62d9e254158a
-observable_input_summary: Determine whether Red breakpoints are resume, documentation, historical evidence/ownership, fundamentals, or actual architecture defects.
-observable_output_summary: No Product Architecture revision is justified. Main gaps are source-level Project documentation / provenance for PF-031, PF-032 and PF-029/PF-030. GraphRAG is P0. Resume weakening is conditional on failed source recovery, not the first action.
+- observable user instructions that initiated Round #014
+- 07_user_feedback.md
+observable_input_summary: Detected that the initial feedback file captured the GitHub-state-bus constraint but omitted the user's equally important pre-round judgment that the previous Red was unqualified and that the new Red must use boutique/full-chain/build-buy/implementation/fundamentals attack skills.
+observable_output_summary: Added UF-002 before workflow retrospective so Red quality is judged against the complete user requirement rather than an incomplete feedback record.
 output_files:
-- 05_blue_architecture_reflection.md
-- 00_manifest.yaml
+- 07_user_feedback.md
 - 08_session_transcript.md
-- .agent/red-blue/current.md
 output_commit_sha: recover from Git history after commit
 next_stage: WORKFLOW_RETROSPECTIVE
