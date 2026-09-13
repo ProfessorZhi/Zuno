@@ -8,8 +8,8 @@ github_runtime:
   github_state_bus: REQUIRED
   stage_handoff: COMMIT_THEN_REREAD
   round_branch: red-blue/rb-2026-09-14-resume-human-017
-  round_pr: pending
-  last_consumed_head_sha: 267e314e188e0a3b380c282b29b8e0548aa86a17
+  round_pr: 234
+  last_consumed_head_sha: 513c318de952e57576aade1558cefc34bec89f93
   firewall_strength: LOGICAL_GITHUB_MEDIATED
   strict_blind_red_certification: false
 
