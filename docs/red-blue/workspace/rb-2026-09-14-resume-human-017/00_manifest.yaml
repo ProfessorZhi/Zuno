@@ -9,7 +9,7 @@ github_runtime:
   stage_handoff: COMMIT_THEN_REREAD
   round_branch: red-blue/rb-2026-09-14-resume-human-017
   round_pr: 234
-  last_consumed_head_sha: 513c318de952e57576aade1558cefc34bec89f93
+  last_consumed_head_sha: b6a3d3ad5d4f1b2ddb564d8230619e6af6bde50d
   firewall_strength: LOGICAL_GITHUB_MEDIATED
   strict_blind_red_certification: false
 
@@ -27,17 +27,18 @@ interview_target:
 
 simulated_resume_build:
   resume_style_reference: 用户 Library 简历.pdf v1（仅使用版式、句长、动词和信息密度，不继承旧事实）
-  public_style_reference: one-page AI/Agent resume examples; 3-5 focused project bullets
+  public_style_reference: one-page AI/Agent resume examples; focused project bullets
   resume_build_sources:
     - docs/project/README.md@267e314e188e0a3b380c282b29b8e0548aa86a17
     - docs/project/reference.md@267e314e188e0a3b380c282b29b8e0548aa86a17
     - docs/evidence/@267e314e188e0a3b380c282b29b8e0548aa86a17
     - docs/governance/project-fact-provenance.md@267e314e188e0a3b380c282b29b8e0548aa86a17
   simulated_resume_path: docs/red-blue/workspace/rb-2026-09-14-resume-human-017/01_simulated_resume.md
-  resume_status: DRAFT
+  resume_status: REVISION_REQUESTED
   resume_project_bullet_count: 4
-  resume_style_check: PENDING
-  user_resume_review_status: PENDING
+  resume_style_check: REVISION_REQUESTED
+  user_resume_review_status: REVISION_REQUESTED
+  revision_focus: restore participation breadth and stronger evidence-backed ownership verbs without returning to evidence-memo density
 
 red_input_allowlist:
   - frozen 01_simulated_resume.md only after USER_RESUME_REVIEW APPROVE
@@ -52,10 +53,10 @@ red_interview_plan:
   user_red_review_status: PENDING
 
 stage_state:
-  current_stage: USER_RESUME_REVIEW
+  current_stage: RESUME_REVISION
   resume_built: true
-  resume_status: DRAFT
-  user_resume_review_status: PENDING
+  resume_status: REVISION_REQUESTED
+  user_resume_review_status: REVISION_REQUESTED
   red_questions_archived: false
   red_questions_status: NOT_STARTED
   user_red_review_status: PENDING
