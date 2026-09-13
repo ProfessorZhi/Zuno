@@ -77,7 +77,10 @@ def verify_red_blue_harness(root: Path) -> list[str]:
 
     current = (red_blue_root / "current.md").read_text(encoding="utf-8")
     inactive = all(phrase in current for phrase in ("state: `no-active`", "active_round: `none`"))
-    active = "state: `active-red-blue`" in current and re.search(r"active_round: `(?!none`)[^`]+`", current) is not None
+    active = False if inactive else (
+        "state: `active-red-blue`" in current
+        and re.search(r"active_round: `(?!none`)[^`]+`", current) is not None
+    )
     if not (inactive or active):
         errors.append("red-blue current state is neither recognized inactive nor active-red-blue")
     for marker in (
@@ -105,7 +108,8 @@ def verify_red_blue_harness(root: Path) -> list[str]:
         "Context Firewall", "CHATGPT_AUTO", "AGENT_AUTO", "Resume Builder",
         "BUILD_SIMULATED_RESUME", "RED_QUESTIONS", "BLUE_ANSWERS", "RED_EVALUATION",
         "BLUE_ARCHITECTURE_REFLECTION", "WORKFLOW_RETROSPECTIVE",
-        "01_simulated_resume.md", "Red 不得读取 Zuno docs", "08_session_transcript.md",
+        "01_simulated_resume.md", "禁止输入", "docs/project/",
+        "Zuno 源码 / PR / commit diff", "08_session_transcript.md",
     ):
         if marker.lower() not in protocol.lower():
             errors.append(f"red-blue protocol missing required execution marker: {marker}")
