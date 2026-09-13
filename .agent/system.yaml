@@ -1,4 +1,4 @@
-version: "2026-09-13-github-state-bus"
+version: "2026-09-13-red-review-gate"
 system_identity: "Zuno Local Agent System"
 
 runtime_boundary:
@@ -58,6 +58,14 @@ program_rules:
   red_reads_only_simulated_resume_and_attack_skill: true
   simulated_resume_built_from_current_docs_before_red: true
   red_question_count_default: 100
+  red_question_primary_path_default: 30
+  red_question_reserve_default: 70
+  red_question_suite_requires_kill_switches: true
+  red_user_review_gate_supported: true
+  red_user_review_gate_default_for_calibration: true
+  red_questions_must_freeze_before_blue: true
+  round_init_must_capture_known_user_feedback: true
+  red_question_review_revision_preserves_git_history: true
   red_blue_one_round_one_question_batch: true
   red_blue_retest_requires_new_round: true
   red_blue_transcript_policy: "full-observable-role-io"
