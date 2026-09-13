@@ -9,7 +9,7 @@ github_runtime:
   stage_handoff: COMMIT_THEN_REREAD
   round_branch: red-blue/rb-2026-09-13-human-red-016
   round_pr: 231
-  last_consumed_head_sha: 8f3ff3dbdcaee2f49e905eb533f1dadaddc412fa
+  last_consumed_head_sha: bcd3f4e99d0c625b27d4b50ed7782871d93e3bda
   firewall_strength: LOGICAL_GITHUB_MEDIATED
   strict_blind_red_certification: false
 
@@ -55,14 +55,15 @@ red_input_denylist:
   - prior Blue answers
 
 red_interview_plan:
-  red_questions_status: DRAFT_REVIEW
+  red_questions_status: REVISION_REQUESTED
   seed_question_count: 8
   pressure_suite_count: 100
   live_followups: DYNAMIC
   one_question_one_intent: true
   branch_examples_present: true
   kill_switch_policy_present: true
-  user_red_review_status: PENDING
+  user_red_review_status: REVISION_REQUESTED
+  revision_focus: preserve human conversational form while allowing ByteDance-style 3-5 layer technical deep dives driven by the candidate's previous answer
 
 interviewer_configuration:
   primary_persona: Implementation Interviewer
@@ -75,12 +76,12 @@ interviewer_configuration:
   time_budget_minutes: 60
 
 stage_state:
-  current_stage: USER_RED_REVIEW
+  current_stage: RED_REVISION
   resume_built: true
   resume_frozen: true
   red_questions_archived: true
-  red_questions_status: DRAFT_REVIEW
-  user_red_review_status: PENDING
+  red_questions_status: REVISION_REQUESTED
+  user_red_review_status: REVISION_REQUESTED
   blue_answers_archived: false
   red_evaluation_archived: false
   blue_reflection_archived: false
