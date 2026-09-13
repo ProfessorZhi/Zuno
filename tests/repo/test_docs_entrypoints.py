@@ -102,7 +102,7 @@ def test_project_documentation_is_consolidated_and_canonical() -> None:
     assert "project-fact-provenance.md" in reference
 
 
-def test_red_blue_harness_is_dedicated_and_closed_book() -> None:
+def test_red_blue_harness_is_resume_first_and_archivable() -> None:
     root = REPO_ROOT / ".agent/red-blue"
     actual = {p.relative_to(root).as_posix() for p in root.rglob("*") if p.is_file()}
     assert actual == CANONICAL_RED_BLUE_FILES
@@ -111,25 +111,48 @@ def test_red_blue_harness_is_dedicated_and_closed_book() -> None:
     assert "state: `no-active`" in current
     assert "active_round: `none`" in current
     assert "CHATGPT_AUTO" in current and "AGENT_AUTO" in current
+    assert "workspace_path:" in current
+    assert "simulated_resume:" in current
+    assert "question_count: `100`" in current
 
     protocol = (root / "protocol.md").read_text(encoding="utf-8")
-    for marker in ("Context Firewall", "CHATGPT_AUTO", "AGENT_AUTO", "closed-book", "Verifier"):
+    for marker in (
+        "Context Firewall", "CHATGPT_AUTO", "AGENT_AUTO", "Resume Builder",
+        "BUILD_SIMULATED_RESUME", "RED_QUESTIONS", "BLUE_ANSWERS", "RED_EVALUATION",
+        "BLUE_ARCHITECTURE_REFLECTION", "WORKFLOW_RETROSPECTIVE",
+        "01_simulated_resume.md", "Red 不得读取 Zuno docs", "08_session_transcript.md",
+    ):
         assert marker.lower() in protocol.lower()
 
     attack = (root / "attack-model.md").read_text(encoding="utf-8")
-    for marker in ("Ownership Claim", "Build / Buy", "面经校准", "一次只"):
+    for marker in (
+        "精品思维", "全链路追踪", "不重复造轮子", "Ownership", "Build / Buy",
+        "100 问", "Red 自我质量检查", "Skill 也必须接受审判",
+    ):
         assert marker in attack
 
     judge = (root / "judge.md").read_text(encoding="utf-8")
-    for marker in ("UNSUPPORTED_CLAIM", "NARRATIVE_GAP", "ARCHITECTURE_GAP", "OWNERSHIP_GAP"):
+    for marker in (
+        "Red Evaluation", "Blue Architecture Reflection", "SIMULATED_RESUME_GAP",
+        "ARCHITECTURE_GAP", "FUNDAMENTAL_GAP", "Workflow Retrospective",
+    ):
         assert marker in judge
 
     workflow = (REPO_ROOT / "docs/red-blue/README.md").read_text(encoding="utf-8")
     for marker in (
-        "CHATGPT_AUTO", "AGENT_AUTO", "Scenario-first", "Source trace",
-        "Decision impact", "Independent acceptance", "Closed-book",
+        "Resume-first", "CHATGPT_AUTO", "AGENT_AUTO", "Red Interview Skill",
+        "Red Evaluation", "Blue Architecture Reflection", "Workflow Retrospective",
+        "01_simulated_resume.md", "06_workflow_retrospective.md",
     ):
         assert marker in workflow
+
+    workspace = (REPO_ROOT / "docs/red-blue/workspace/README.md").read_text(encoding="utf-8")
+    for marker in (
+        "Active Workspace", "01_simulated_resume.md", "02_red_questions.md",
+        "03_blue_answers.md", "04_red_evaluation.md", "05_blue_architecture_reflection.md",
+        "06_workflow_retrospective.md", "07_user_feedback.md", "08_session_transcript.md",
+    ):
+        assert marker in workspace
 
 
 def test_architecture_directories_only_contain_support_files() -> None:
