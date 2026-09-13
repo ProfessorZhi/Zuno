@@ -9,7 +9,7 @@ github_runtime:
   stage_handoff: COMMIT_THEN_REREAD
   round_branch: red-blue/rb-2026-09-13-red-calibration-015
   round_pr: 228
-  last_consumed_head_sha: 14044f520eaee5592d802e91e02288f23ad6fe95
+  last_consumed_head_sha: fa4fdbab8692cd4331de59b3999e2782c1020146
   firewall_strength: LOGICAL_GITHUB_MEDIATED
   strict_blind_red_certification: false
 
@@ -52,10 +52,10 @@ red_input_denylist:
   - prior Blue answers
 
 red_question_suite:
-  red_questions_status: NOT_STARTED
-  primary_path_count: 0
-  reserve_count: 0
-  kill_switches_present: false
+  red_questions_status: DRAFT_REVIEW
+  primary_path_count: 30
+  reserve_count: 70
+  kill_switches_present: true
   user_red_review_status: PENDING
 
 interviewer_configuration:
@@ -68,11 +68,11 @@ interviewer_configuration:
   question_budget_notes: primary path must feel like a real 45-60 minute interview; early ownership probes for named implementation claims; reserve is conditional, not a second script
 
 stage_state:
-  current_stage: RED_QUESTIONS
+  current_stage: USER_RED_REVIEW
   resume_built: true
   resume_frozen: true
-  red_questions_archived: false
-  red_questions_status: NOT_STARTED
+  red_questions_archived: true
+  red_questions_status: DRAFT_REVIEW
   user_red_review_status: PENDING
   blue_answers_archived: false
   red_evaluation_archived: false

@@ -49,5 +49,24 @@ output_files:
 - 00_manifest.yaml
 - .agent/red-blue/current.md
 - 08_session_transcript.md
-output_commit_sha: recover from Git history after commit
+output_commit_sha: fa4fdbab8692cd4331de59b3999e2782c1020146
 next_stage: RED_QUESTIONS
+
+## Event 004 — RED_QUESTIONS
+actor: Red
+stage: RED_QUESTIONS
+input_head_sha: fa4fdbab8692cd4331de59b3999e2782c1020146
+input_files:
+- 01_simulated_resume.md@fa4fdbab8692cd4331de59b3999e2782c1020146
+- target role / interview stage from 00_manifest.yaml@fa4fdbab8692cd4331de59b3999e2782c1020146
+- .agent/red-blue/attack-model.md@0ccc1ee336c42d8ecad0bd6535a97f8fc4e6aca3
+- model general knowledge
+observable_input_summary: Generate a realistic Implementation Interviewer first round from the frozen resume only. Use a 30-question Primary Path, 70 conditional Reserve Follow-ups, early implementation ownership probes, Build/Buy pressure, failure/fundamentals drilldown and Claim-level Kill Switches.
+observable_output_summary: Generated 100-question pressure suite with a 30-question Primary Path and 70 conditional Reserve questions. GraphRAG, Tool/MCP and Context/Memory each have early ownership/mechanism probes and Kill Switches. The output is DRAFT_REVIEW and no Blue execution is permitted.
+output_files:
+- 02_red_questions.md
+- 00_manifest.yaml
+- .agent/red-blue/current.md
+- 08_session_transcript.md
+output_commit_sha: recover from Git history after commit
+next_stage: USER_RED_REVIEW
