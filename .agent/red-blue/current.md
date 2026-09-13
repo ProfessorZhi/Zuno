@@ -15,8 +15,8 @@ one_question_one_intent: `true`
 red_review_gate: `REQUIRED`
 red_questions_status: `NOT_STARTED`
 round_branch: `red-blue/rb-2026-09-13-human-red-016`
-round_pr: `pending`
-last_consumed_head_sha: `e0e11b704c5653ef0363eda1b316264036b397a6`
+round_pr: `231`
+last_consumed_head_sha: `56c2d83842f606f6d78efd0115dadc9b5d17c23c`
 github_state_bus: `required`
 stage_handoff: `commit-then-reread`
 firewall_strength: `LOGICAL_GITHUB_MEDIATED`
