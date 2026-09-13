@@ -68,7 +68,7 @@ def test_simulated_resume_is_a_real_resume_surface() -> None:
         assert marker in protocol
 
     for marker in (
-        "真实一页求职材料",
+        "候选人真的会投出去的一页简历项目块",
         "4–5 条核心 bullet",
         "45–90 字符",
         "USER_RESUME_REVIEW",
@@ -84,7 +84,7 @@ def test_red_questions_require_user_review_before_blue_when_configured() -> None
     protocol = (ROOT / ".agent/red-blue/protocol.md").read_text(encoding="utf-8")
     template = (ROOT / ".agent/red-blue/templates/round.md").read_text(encoding="utf-8")
 
-    assert "RED_QUESTIONS commit" in protocol
+    assert "## USER_RED_REVIEW" in protocol
     assert "red_questions_status: NOT_STARTED | DRAFT_REVIEW | REVISION_REQUESTED | FROZEN | INVALIDATED_BY_RESUME_CHANGE" in template
     assert "resume_status: FROZEN` 且 `red_questions_status: FROZEN" in template
 
