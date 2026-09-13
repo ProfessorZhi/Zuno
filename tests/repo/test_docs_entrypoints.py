@@ -120,7 +120,8 @@ def test_red_blue_harness_is_resume_first_and_archivable() -> None:
         "Context Firewall", "CHATGPT_AUTO", "AGENT_AUTO", "Resume Builder",
         "BUILD_SIMULATED_RESUME", "RED_QUESTIONS", "BLUE_ANSWERS", "RED_EVALUATION",
         "BLUE_ARCHITECTURE_REFLECTION", "WORKFLOW_RETROSPECTIVE",
-        "01_simulated_resume.md", "Red 不得读取 Zuno docs", "08_session_transcript.md",
+        "01_simulated_resume.md", "禁止输入", "docs/project/",
+        "Zuno 源码 / PR / commit diff", "08_session_transcript.md",
     ):
         assert marker.lower() in protocol.lower()
 
