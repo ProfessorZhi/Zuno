@@ -1,4 +1,4 @@
-version: "2026-09-13-red-review-gate"
+version: "2026-09-13-human-interviewer-red"
 system_identity: "Zuno Local Agent System"
 
 runtime_boundary:
@@ -57,9 +57,12 @@ program_rules:
   red_reads_zuno_docs: false
   red_reads_only_simulated_resume_and_attack_skill: true
   simulated_resume_built_from_current_docs_before_red: true
-  red_question_count_default: 100
-  red_question_primary_path_default: 30
-  red_question_reserve_default: 70
+  red_pressure_suite_count_default: 100
+  red_live_seed_question_target_default: 8
+  red_live_followups_dynamic: true
+  red_live_one_question_one_intent: true
+  red_pressure_suite_separate_from_live_interview: true
+  red_live_static_primary_path_forbidden: true
   red_question_suite_requires_kill_switches: true
   red_user_review_gate_supported: true
   red_user_review_gate_default_for_calibration: true
@@ -171,6 +174,7 @@ skill_routes:
     read_first:
       - "docs/red-blue/README.md"
       - "docs/red-blue/workspace/README.md"
+      - "docs/red-blue/interview-behavior-evidence-2026-09.md"
       - ".agent/red-blue/README.md"
       - ".agent/red-blue/current.md"
       - ".agent/red-blue/protocol.md"
