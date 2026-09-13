@@ -4,7 +4,7 @@
 
 ## 目标
 
-正式 Round 先把当前 Zuno docs / Evidence 压缩成一份模拟简历，再让 Red 从简历出发模拟真实面试。Red / Blue 产生面试压力、回答、评价和改进建议，不拥有 Project、Architecture、Module 或 Current Truth。
+正式 Round 先把当前 Zuno docs / Evidence 压缩成一份**像真实候选人会投出去的模拟简历**，再让 Red 从简历出发模拟真实面试。Red / Blue 产生面试压力、回答、评价和改进建议，不拥有 Project、Architecture、Module 或 Current Truth。
 
 ## GitHub 是运行时状态总线
 
@@ -47,7 +47,10 @@ Round Init 必须把启动前已经知道、且会影响本轮的问题质量或
 ```text
 ROUND_INIT
 → BUILD_SIMULATED_RESUME
-→ FREEZE_RESUME
+→ USER_RESUME_REVIEW
+   ├─ APPROVE → FREEZE_RESUME → RED_QUESTIONS
+   ├─ REQUEST_REVISION → RESUME_REVISION → USER_RESUME_REVIEW
+   └─ ABORT → CLOSE / SUPERSEDE
 → RED_QUESTIONS
 → USER_RED_REVIEW
    ├─ APPROVE → FREEZE_RED_QUESTIONS → BLUE_ANSWERS
@@ -60,13 +63,83 @@ ROUND_INIT
 → CLOSE_AND_ARCHIVE
 ```
 
-`USER_RED_REVIEW` 在校准期默认 `REQUIRED`。只要 manifest 声明 REQUIRED，Blue 在 Red plan 被用户批准并冻结前不得执行。
+工作流校准期默认同时要求 `USER_RESUME_REVIEW` 与 `USER_RED_REVIEW`。模拟简历没过用户检查，Red 不得开始；Red plan 没过用户检查，Blue 不得开始。
+
+## Resume Builder：写简历，不写证据报告
+
+Resume Builder 从固定 `zuno_base_sha` 读取 Project、Architecture、Modules、Evidence、选定 provenance 和用户已有简历风格，生成并提交 `01_simulated_resume.md`。
+
+它必须先服从**真实简历的阅读节奏**，再服从证据完整性：证据边界要保留，但通过精准措辞压缩进简历，而不是把 Evidence memo 原样塞进 bullet。
+
+默认写法：
+
+```text
+项目名称 + 时间
+1 行项目简介
+1 行技术栈
+4–5 条核心 bullet
+```
+
+每条 bullet 只承载一个主要故事：
+
+```text
+问题 / 动作 / 关键技术 / 可证明结果
+```
+
+通常控制在目标模板中的 1–2 行。中文项目简历的软目标可参考约 45–90 个字符一条；英文术语、函数名较多时允许更长，但不能出现一条 bullet 像一段技术文档。
+
+### Resume style rules
+
+优先：
+
+- 使用候选人已有真实简历的版式、句长、动词和信息密度作为第一参考；
+- 项目开头一句讲场景，不先堆框架名；
+- bullet 用动词开头，说明自己做了什么；
+- 有真实数字时保留最有区分度的一两个数字；
+- 具体技术名只保留会影响筛选或能引出高质量面试的部分；
+- 对小样本、Pilot、参与范围等边界，用限定词本身表达，例如“5 条 HotpotQA smoke”“参与”“Pilot Validation”，而不是在 bullet 末尾追加一整句免责声明。
+
+避免：
+
+- `Current / Target / Evidence / Unknown` 这类文档标签进入简历；
+- 一条 bullet 同时解释背景、四个算法、三个指标、限制条件和下一步；
+- 把 PR 号、内部 Contract 名、对象名当作价值本身；
+- 中英文术语连续堆叠到读者必须逐词解码；
+- 为了“证据诚实”写出“不能证明……、不扩写为……”这种 Reviewer 语言；
+- 为了显得技术深而列出超过实际面试价值的内部实现清单。
+
+事实边界仍然强制：实现成果、Target 架构设计、团队研究背景与个人 Ownership 必须分开；Pilot 不写成 Production，没有测量不制造数字。
+
+## USER_RESUME_REVIEW
+
+当 `resume_review_gate=REQUIRED`，Resume Builder 第一次提交 `01_simulated_resume.md` 后进入用户审查。
+
+用户结果：
+
+```text
+APPROVE
+REQUEST_REVISION
+ABORT
+```
+
+人工 Review 重点检查：
+
+- 它像不像真正的一页求职简历，而不是证据摘要；
+- 项目简介和 bullet 能不能 10–20 秒扫懂；
+- 单条 bullet 有没有超过正常简历的信息负荷；
+- 技术关键词是否服务于贡献，而不是堆名词；
+- 量化是否真实、必要、可解释；
+- Personal Ownership / Pilot / small-sample 等边界是否被自然保留。
+
+`APPROVE` 后才把 `resume_status` 改成 `FROZEN`。Red 只能读取冻结版本。
+
+如果用户要求修改模拟简历，旧版本留在 Git history；修改后必须重新走 `USER_RESUME_REVIEW`。已经基于旧简历生成的 Red plan 自动失效，不得继续进入 Blue。
 
 ## Pressure Suite 与 Live Interview 必须分开
 
 默认保留 `100` 问 `PRESSURE_SUITE`，它用于离线覆盖和 retrospective，不是一场 45–60 分钟面试的脚本。
 
-Live Interview 改为：
+Live Interview：
 
 ```text
 LIVE_INTERVIEW_SEEDS: 6-10
@@ -75,17 +148,11 @@ ONE_QUESTION_ONE_INTENT: REQUIRED
 PRESSURE_SUITE: 100
 ```
 
-不再要求预写固定 30 问 `PRIMARY_PATH`。Red 先准备少量自然 Seed，让候选人自己暴露技术主线；后续问题必须在上一答出现以后，从候选人刚说出的技术、数字、困难、选择、Ownership 或 bad case 中选择信息增益最高的 handle。
+不预写固定 30 问 `PRIMARY_PATH`。Red 先准备少量自然 Seed，让候选人自己暴露技术主线；后续问题必须在上一答出现以后，从候选人刚说出的技术、数字、困难、选择、Ownership 或 bad case 中选择信息增益最高的 handle。
 
 `KILL_SWITCH` 属于 Controller policy：当某个 Claim 连续无法建立 Ownership / mechanism，停止在该线程继续堆无效追问并自然换题。它不作为面试官口头话术出现。
 
 一场面试可以深挖一个项目很久，也可以迅速换线程；不要求平均覆盖所有 Resume Claim。
-
-## Resume Builder
-
-Resume Builder 从固定 `zuno_base_sha` 读取 Project、Architecture、Modules、Evidence、选定 provenance 和已有简历风格，生成并提交 `01_simulated_resume.md`。
-
-它必须区分实现成果、Target 架构设计、团队研究背景与个人 Ownership；Pilot 不写成 Production，没有测量不制造数字。
 
 ## Red — Interviewer
 
@@ -117,8 +184,6 @@ prior Blue answers
 Red 开始前从 Round branch HEAD 重新读取允许输入。`02_red_questions.md` 不能消费 Resume Builder 未提交的聊天中间信息。
 
 Red 依照 `.agent/red-blue/attack-model.md` 建立 Interview Threads、Seed Questions、answer-driven Follow-up Policy 和 Pressure Suite。Claim 取证、Ownership、Build / Buy / Extend / Defer、实现、故障、Evidence、基础下钻和删除条件仍然重要，但它们是 interviewer mental map，不应被拼成每一道复合长问。
-
-真实面试官说给候选人的问题应短、单意图，并允许诸如“你刚才说这里做了 rerank，为什么当时要加这一层？”这样的上一答驱动追问。
 
 ## USER_RED_REVIEW
 
@@ -170,7 +235,7 @@ NO_ZUNO_CHANGE
 
 ## Workflow Retrospective
 
-`WORKFLOW_RETROSPECTIVE` 读取全轮已提交 artifact、Red Skill 和 `07_user_feedback.md`，专门审判 Red 与 Harness：面试是不是 answer-driven、有没有机器式 checklist、是否无意义原子化、是否自然进入 Ownership / implementation / Build-Buy / failure / evidence / fundamentals，以及用户为什么认为它像或不像真实面试。
+`WORKFLOW_RETROSPECTIVE` 读取全轮已提交 artifact、Red Skill 和 `07_user_feedback.md`，专门审判 Resume Builder、Red 与 Harness：模拟简历是否像真正求职材料，面试是不是 answer-driven，有没有机器式 checklist，是否无意义原子化，以及用户为什么认为它像或不像真实流程。
 
 ## Context Firewall
 

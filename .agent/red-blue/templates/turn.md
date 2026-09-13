@@ -16,26 +16,36 @@ output_commit_sha:
 
 ## `01_simulated_resume.md`
 
+这份文件必须像候选人真的会投出去的一页简历项目块，不是 Evidence 摘要或 Architecture 文档。
+
 ```text
 # 模拟简历 — <round-id>
 
 求职方向：<role>
 
 ## 项目经历
-### Zuno：<project title>
-项目简介：...
-技术栈：...
-1. ...
-2. ...
-3. ...
-4. ...
+### Zuno：<project title> <time>
+项目简介：<1 sentence>
+技术栈：<selected keywords>
+
+- <一条主要贡献，通常 1–2 行>
+- <一条主要贡献>
+- <一条主要贡献>
+- <一条主要贡献>
+- <可选第 5 条>
 ```
 
-Red 可见文件不得带 source trace、Current/Target 标签或答案提示。
+默认 4–5 条核心 bullet；项目简介 1 行、技术栈 1 行。每条只承载一个主要故事，优先使用“动作 + 关键机制 + 可证明结果”。中文软目标通常约 45–90 字符；函数名或英文术语较多时可以超过，但不得把整段 Evidence memo 塞进一条 bullet。
+
+Evidence boundary 应压缩为自然限定：例如 `5 条 HotpotQA smoke`、`Pilot Validation`、`参与`。不要在简历正文写“不能证明……”“不扩写为……”等 Reviewer 免责声明。
+
+Red 可见文件不得带 source trace、`Current / Target / Evidence / Unknown` 标签或答案提示。PR 编号、内部 Contract/Object 名只有在招聘价值明确时才保留。
+
+当 `resume_review_gate=REQUIRED`，第一次提交保持 `DRAFT`，进入 `USER_RESUME_REVIEW`。用户 APPROVE 后才冻结；正文一旦改动，旧 Red plan 自动失效。
 
 ## `02_red_questions.md`
 
-这个文件现在保存 **Red Interview Plan + Pressure Suite**，不再保存固定 30 问线性脚本。
+这个文件保存 **Red Interview Plan + Pressure Suite**，不保存固定 30 问线性脚本。
 
 ```text
 # Red Interview Plan — <round-id>
@@ -90,7 +100,7 @@ Controller Metadata 可以记录 thread、risk、Kill Switch 和触发条件，�
 
 ## `03_blue_answers.md`
 
-Blue 只能消费已经 `FROZEN` 的 Red plan 与实际 interview transcript。回答继续保留 Source trace，并可明确 Unknown / Target-only / not personally owned。
+Blue 只能消费已经 `FROZEN` 的模拟简历、Red plan 与实际 interview transcript。回答继续保留 Source trace，并可明确 Unknown / Target-only / not personally owned。
 
 ## `04_red_evaluation.md`
 
@@ -129,11 +139,11 @@ retest_needed:
 
 ## `06_workflow_retrospective.md`
 
-重点评价：Seed 是否自然、Follow-up 是否真的使用上一答、线程切换是否像真人、是否存在复合长问或无信息增益原子化，以及 Pressure Suite 有没有被误当成现场脚本。
+重点评价两层：Resume Builder 是否产出真实可投递、可扫读的攻击接口；Red 的 Seed 是否自然、Follow-up 是否真的使用上一答、线程切换是否像真人、是否存在复合长问或无信息增益原子化。
 
 ## `07_user_feedback.md`
 
-按时间追加用户评价。Round 启动前已知的校准要求也在 ROUND_INIT transaction 中记录。
+按时间追加用户评价。Round 启动前已知的 Resume / Red 校准要求也在 ROUND_INIT transaction 中记录。
 
 ## `08_session_transcript.md`
 

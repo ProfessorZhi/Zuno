@@ -1,4 +1,4 @@
-version: "2026-09-13-human-interviewer-red"
+version: "2026-09-14-human-resume-interface"
 system_identity: "Zuno Local Agent System"
 
 runtime_boundary:
@@ -57,6 +57,14 @@ program_rules:
   red_reads_zuno_docs: false
   red_reads_only_simulated_resume_and_attack_skill: true
   simulated_resume_built_from_current_docs_before_red: true
+  simulated_resume_must_match_real_resume_register: true
+  simulated_resume_one_page_style: true
+  simulated_resume_project_bullets_target: "4-5"
+  simulated_resume_one_bullet_one_story: true
+  simulated_resume_evidence_boundaries_are_compressed_not_explained: true
+  resume_user_review_gate_supported: true
+  resume_user_review_gate_default_for_calibration: true
+  resume_must_freeze_before_red: true
   red_pressure_suite_count_default: 100
   red_live_seed_question_target_default: 8
   red_live_followups_dynamic: true

@@ -33,6 +33,7 @@ target_role:
 company_or_persona:
 interview_stage:
 jd_source:
+resume_review_gate: REQUIRED | OPTIONAL | SKIP
 pressure_suite_count: 100
 seed_question_target: 8
 live_followups: DYNAMIC
@@ -40,11 +41,11 @@ one_question_one_intent: true
 red_review_gate: REQUIRED | OPTIONAL | SKIP
 ```
 
-工作流校准 Round 默认 `red_review_gate: REQUIRED`。
+工作流校准 Round 默认 `resume_review_gate: REQUIRED` 且 `red_review_gate: REQUIRED`。
 
 ## Simulated Resume Build
 
-Controller / Resume Builder 可以读取 `zuno_base_sha` 固定的 Zuno canonical docs 与已有简历风格，只用于生成本轮模拟简历。
+Controller / Resume Builder 可以读取 `zuno_base_sha` 固定的 Zuno canonical docs、Evidence、provenance 与用户已有简历风格，只用于生成本轮模拟简历。
 
 ```text
 resume_style_reference:
@@ -55,12 +56,29 @@ resume_build_sources:
   - docs/evidence/
   - selected docs/governance/ provenance
 simulated_resume_path: docs/red-blue/workspace/<round-id>/01_simulated_resume.md
-resume_status: DRAFT | FROZEN
+resume_status: DRAFT | REVISION_REQUESTED | FROZEN
+resume_project_bullet_count:
+resume_style_check: PENDING | APPROVED | REVISION_REQUESTED | NOT_REQUIRED
+user_resume_review_status: PENDING | APPROVED | REVISION_REQUESTED | ABORTED | NOT_REQUIRED
 ```
 
-`01_simulated_resume.md` 冻结并提交以后，Red 不得把上述 build sources 作为正式输入。
+模拟简历必须像真实一页求职材料：默认 1 行项目简介、1 行技术栈、4–5 条核心 bullet；一条只承载一个主要故事。证据边界通过精确动词、范围和限定词压缩，不写成 Reviewer 免责声明。
+
+当 `resume_review_gate: REQUIRED`：
+
+```text
+BUILD_SIMULATED_RESUME commit
+→ USER_RESUME_REVIEW
+→ APPROVE: resume_status=FROZEN → RED_QUESTIONS
+→ REQUEST_REVISION: feedback commit → RESUME_REVISION → USER_RESUME_REVIEW
+→ ABORT: close/supersede
+```
+
+如果冻结简历后来发生正文修改，已有 Red plan 自动失效；必须重新冻结简历并重新生成 Red plan。
 
 ## Red Input Allowlist
+
+只有 `resume_status: FROZEN` 才允许 Red：
 
 ```text
 - 01_simulated_resume.md
@@ -87,7 +105,7 @@ Explicit denylist:
 ## Red Interview Plan
 
 ```text
-red_questions_status: NOT_STARTED | DRAFT_REVIEW | REVISION_REQUESTED | FROZEN
+red_questions_status: NOT_STARTED | DRAFT_REVIEW | REVISION_REQUESTED | FROZEN | INVALIDATED_BY_RESUME_CHANGE
 seed_question_count:
 pressure_suite_count: 100
 live_followups: DYNAMIC
@@ -115,7 +133,7 @@ Red Revision 只能读取原 Red allowlist、当前 Red plan 和已提交的 Red
 
 ## Blue Input Allowlist
 
-只有 `red_questions_status: FROZEN` 才允许 Blue：
+只有 `resume_status: FROZEN` 且 `red_questions_status: FROZEN` 才允许 Blue：
 
 ```text
 - 01_simulated_resume.md
@@ -174,7 +192,7 @@ interview_behavior_evidence_version:
 time_budget_minutes:
 ```
 
-Raw external interview corpus is upstream Skill evidence, not a default per-round Red input.
+Raw external interview corpus is upstream Skill evidence, not a default per-round Red input。
 
 ## Fixed Round Artifacts
 
@@ -193,9 +211,10 @@ Raw external interview corpus is upstream Skill evidence, not a default per-roun
 ## Stage State
 
 ```text
-current_stage: ROUND_INIT | BUILD_RESUME | RED_QUESTIONS | USER_RED_REVIEW | RED_REVISION | BLUE_ANSWERS | RED_EVALUATION | BLUE_REFLECTION | WORKFLOW_RETROSPECTIVE | CLOSE
+current_stage: ROUND_INIT | BUILD_RESUME | USER_RESUME_REVIEW | RESUME_REVISION | RED_QUESTIONS | USER_RED_REVIEW | RED_REVISION | BLUE_ANSWERS | RED_EVALUATION | BLUE_REFLECTION | WORKFLOW_RETROSPECTIVE | CLOSE
 resume_built: false
-resume_frozen: false
+resume_status: DRAFT
+user_resume_review_status: PENDING
 red_questions_archived: false
 red_questions_status: NOT_STARTED
 user_red_review_status: PENDING
@@ -209,7 +228,7 @@ transcript_complete: false
 
 ## Round Init Feedback Rule
 
-Round 启动前已经知道的用户流程约束、Red 质量反馈和校准目标必须在第一笔 Round transaction 中进入 `07_user_feedback.md` 与 `08_session_transcript.md`。
+Round 启动前已经知道的用户流程约束、Resume / Red 质量反馈和校准目标必须在第一笔 Round transaction 中进入 `07_user_feedback.md` 与 `08_session_transcript.md`。
 
 ## Close Conditions
 
@@ -218,16 +237,17 @@ Round 启动前已经知道的用户流程约束、Red 质量反馈和校准目�
 ```text
 - round branch and Draft PR exist
 - every stage used commit-then-reread handoff
+- if resume_review_gate=REQUIRED, user approved the resume before freeze
 - simulated resume frozen before Red
 - Red formal inputs followed allowlist
 - if red_review_gate=REQUIRED, user approved frozen Red plan before Blue
 - Blue answered from allowed docs only
 - Red evaluation completed without Zuno docs as formal input
 - Blue architecture reflection completed
-- workflow retrospective evaluated Red quality
+- workflow retrospective evaluated Resume Builder and Red quality
 - user feedback file exists
 - observable session transcript is complete
 - workspace folder is archived into rounds/<round-id>/ before merge
 ```
 
-如果用户在 `USER_RED_REVIEW` 判定 Red Skill 本身需要结构性重写，可以把该 Round 标记 `SUPERSEDED`，保留失败的 Red artifact 和 feedback，再用新 Skill 开新 Round；不要强行在旧 Skill version 上继续 Blue。
+如果用户在 `USER_RESUME_REVIEW` 或 `USER_RED_REVIEW` 判定对应 Skill 本身需要结构性重写，可以把该 Round 标记 `SUPERSEDED`，保留失败 artifact 和 feedback，再用新 Skill 开新 Round。
