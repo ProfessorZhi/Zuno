@@ -9,7 +9,7 @@ github_runtime:
   stage_handoff: COMMIT_THEN_REREAD
   round_branch: red-blue/rb-2026-09-13-resume-first-014
   round_pr: 226
-  stage_head_sha: f9557c143fc0de333385ec3bf3ab56c5fd8f9b2b
+  stage_head_sha: 895c355f86002dcb96be86bd952f201f87ecbfaf
   stage_head_semantics: last GitHub HEAD consumed by the completed stage; live branch ref is authoritative for the next stage
   firewall_strength: LOGICAL_GITHUB_MEDIATED
   strict_blind_red_certification: false
@@ -22,41 +22,16 @@ interview_target:
   question_count: 100
 
 simulated_resume_build:
-  resume_style_reference: ProfessorZhi/internship-work@6107321bdcaced8688c0e462d8b0a85b2744c4fe:resume/00_resume_versions/Zuno_v3+CodingAgent+SFTDPO_简历/Agent开发工程师／AI应用工程师+Zuno／CodingAgent／SFTDPO_ToolCalling层次澄清／可追问_简历草稿_v5.md
   resume_status: FROZEN
   simulated_resume_path: docs/red-blue/workspace/rb-2026-09-13-resume-first-014/01_simulated_resume.md
 
-red_input_allowlist:
-  - 01_simulated_resume.md
-  - target role / JD / interview stage from this manifest
-  - .agent/red-blue/attack-model.md
-  - model general knowledge
-red_input_denylist:
-  - docs/project/
-  - docs/architecture/
-  - docs/modules/
-  - docs/evidence/
-  - docs/decisions/
-  - docs/governance/
-  - Zuno source / PR / commit diff
-  - resume build notes / source trace
-  - prior Blue answers
-
-interviewer_configuration:
-  primary_persona: Implementation Interviewer
-  cross_personas:
-    - Forensic Interviewer
-    - Open-source Skeptic
-    - Fundamentals Interviewer
-  attack_skill_version: 10869d9176d2ef34b46577478bba62d9e254158a:.agent/red-blue/attack-model.md
-
 stage_state:
-  current_stage: RED_EVALUATION
+  current_stage: BLUE_REFLECTION
   resume_built: true
   resume_frozen: true
   red_questions_archived: true
   blue_answers_archived: true
-  red_evaluation_archived: false
+  red_evaluation_archived: true
   blue_reflection_archived: false
   workflow_retrospective_archived: false
   user_feedback_archived: true
