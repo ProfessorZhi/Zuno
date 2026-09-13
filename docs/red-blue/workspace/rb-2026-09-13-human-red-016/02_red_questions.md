@@ -6,18 +6,51 @@ live_followups: DYNAMIC
 one_question_one_intent: true
 primary_persona: Implementation Interviewer
 cross_personas: Forensic Interviewer / Open-source Skeptic / Fundamentals Interviewer
-formal_input_head: 8f3ff3dbdcaee2f49e905eb533f1dadaddc412fa
+formal_input_head: ca31e3d5595a14e778d14d078a116bfb329c02a1
 red_questions_status: DRAFT_REVIEW
+revision: 2
 
-> `SPOKEN_SEEDS` 与运行时动态 follow-up 才是面试官真正说出口的问题。`PRESSURE_SUITE` 只是离线覆盖库，不按顺序朗读。
+> 真正说给候选人的，是 `SPOKEN_SEEDS` 和根据上一答临场长出来的 follow-up。下面的 100 问是备题库，不是一张要照着念完的卷子。
+
+## Red 心里怎么想
+
+先让候选人讲。听他自己暴露最值得追的东西：一个数字、一个技术选择、一个失败、一个“我们做了”、一个“后来优化了”。一次只抓一个。
+
+真正有东西的主线通常会这样往下走：
+
+```text
+发生了什么？
+→ 你怎么知道问题在这里？
+→ 最后具体改了什么？
+→ 为什么这么改，不是另一种？
+→ 边界条件下还成立吗？
+→ 结果怎么证明？
+```
+
+不要求固定六步。有时两三问就够；像字节这类偏工程深挖的一面，一条线追 3–5 层很正常，代码、参数、状态、异常和底层原理都可以继续问。关键是后一问来自前一答，而不是第一句把五层问题揉成一段。
+
+面试官可以直接说：
+
+```text
+具体一点。
+这个怎么实现的？
+为什么不用现成的？
+这个数怎么来的？
+你真遇到过吗？
+这里如果超时呢？
+那状态放哪？
+```
+
+短不等于浅。
 
 ## Interview threads
 
-- **T1 — Project reality / ownership** — 先判断候选人真正做过什么，以及 Pilot / 团队 / 个人贡献的边界。若候选人主动选出一块最深工作，优先跟他走，不平均扫四条 bullet。
-- **T2 — GraphRAG regression** — 简历有精确指标、四个算法名和明确前后变化，信息密度最高；如果候选人自己把它选为主线，就沿“怎么发现 → 怎么定位 → 改了什么 → 数怎么来的 → 能声称到哪”自然深入。
-- **T3 — Tool / MCP** — 重点听调用链、用户级配置、真实 bug 和回归测试。并发、timeout、幂等只在候选人把调用链讲起来后继续追。
-- **T4 — Context / Memory** — 重点听本人实际落地范围、scope / readback / approval / provenance；不默认把 Memory 讲成完整长期记忆系统。
-- **T5 — Reuse / simplification / fundamentals** — 适合中后段切换：哪些能力值得自建，哪些应该交给成熟 Host；也可自然切 Python async、网络、DB、检索指标等基础。
+- **T1 — Project / ownership**：先搞清楚候选人真正做过什么。候选人自己挑出最熟的一块后，就跟着那块走。
+- **T2 — GraphRAG**：从真实坏例子一路追到 ranking、评测、ablation 和是否值得保留 GraphRAG。
+- **T3 — Tool / MCP**：从调用链追到 concrete Tool、用户配置、并发隔离、真实 bug、timeout 和 retry。
+- **T4 — Context / Memory**：从本人落地范围追 scope、readback、approval、并发更新和 stale read。
+- **T5 — Code / system depth**：候选人愿意讲代码，就顺着 async、状态持久化、大结果、失败恢复、测试继续压。
+- **T6 — Evaluation / fundamentals**：精确数字追怎么测；项目线聊透以后可以自然切 Python、网络、DB、检索或算法基础。
 
 ## SPOKEN_SEEDS
 
@@ -39,250 +72,333 @@ S008. 我想确认个基础问题：你们这种异步 Tool 调用里，两个�
 
 ## FOLLOWUP_POLICY
 
-- **候选人自己选了主线**：顺着他选的 thread 连续追，不因为预写覆盖率中途跳去另一条 bullet。
-- **说出一个精确数字**：下一问优先是“这个数怎么测的？”；等他回答以后，再决定追 dataset、metric、baseline 还是 bad case。
-- **说“我们做了”**：自然问“这里你自己主要做哪一段？”；如果已经讲清本人边界，不重复查户口。
-- **说出具体失败 / bug**：先问“当时怎么定位到这里的？”；候选人讲清定位后再问“最后改了哪一层？”。
-- **说出一个算法 / 抽象名**：只向下一层追一个机制，不一次要求公式、输入、异常、测试、指标全讲。
-- **说到 framework / 自研层**：合适时问“这个为什么没直接用现成的？”；只有候选人给出 Delta 后再问维护 / 删除条件。
-- **说到 timeout / retry / remote call**：再进入 HTTP/TCP 不确定性、幂等或 cancellation；没有出现这条上下文时不硬塞故障题。
-- **说到 Pilot / 上线**：只在措辞开始模糊时追“这里 Pilot 具体证明了什么？”；候选人主动收紧边界则停止施压。
-- **一次回答暴露多个 handle**：只挑当前最有信息增益的一个，其他留在 interviewer state，不用“一口气四连问”。
-- **连续两轮仍无法建立 Ownership / mechanism**：Controller 触发 `KILL_SWITCH: CLAIM_IMPLEMENTATION_NOT_ESTABLISHED`，口头自然换 thread，不向候选人宣告 Kill Switch。
-- **候选人纠正面试官前提**：更新当前理解，再基于新前提继续；不坚持隐藏答案。
-- **thread 已经证明 / 否证且没有新信息**：pivot 到第二条项目线、岗位基础或场景题。
+- 候选人自己选了主线，就顺着这条线追；没新信息了再换。
+- 说出精确数字，先问“这个数怎么测的？”，再看要不要追 dataset、metric、baseline、bad case 或成本。
+- 说“我们做了”，Ownership 不清才问“这里你自己主要做哪一段？”。
+- 说出具体失败，先问怎么定位，再问改了哪里。定位过程很能看出是不是做过。
+- 抛出算法或抽象名，往下一层追一个机制；回答扎实再继续数据结构、参数、复杂度或边界。
+- 讲自研层，合适时问“为什么没直接用现成的？”。
+- 讲 async / timeout / retry / remote call，再进入并发、HTTP/TCP、cancellation、幂等和 unknown outcome。
+- 讲评测集或线上效果，可以继续追样本怎么来、怎么更新、线上 log 怎么沉淀成有限线下集。
+- 一次回答有四个可追点，只挑一个最值钱的。
+- 一条主线回答很好，可以连续追 3–5 层甚至更深。
+- 一条主线连续两轮只能讲空泛概念，Controller 记 `KILL_SWITCH: CLAIM_IMPLEMENTATION_NOT_ESTABLISHED`，口头自然换题。
+- 候选人纠正面试官前提，就用新前提继续。
+- 项目深挖一段后，可以直接切岗位基础题或算法题，不需要每题都编项目故事。
 
 ## BRANCH_EXAMPLES
 
-### Branch A — GraphRAG：从“指标掉了”自然追到实现
+### A. GraphRAG：从坏 query 追到 ranking 和评测
 
-**Seed**
 > 你简历里 GraphRAG 那次是指标先掉下去再拉回来的，最开始怎么发现它变差了？
 
-**候选人可能回答**
-> real_runtime smoke 跑出来 Recall@5 比 baseline 低。我去看返回结果，发现 graph 进来的文档把原来 baseline 里已经命中的文档挤出 Top-K 了。
+候选人：smoke 里 Recall@5 比 baseline 低，graph 文档把原本命中的文档挤出 Top-K。
 
-**下一问**
 > 哪条 query 当时最明显？
 
-**如果候选人讲出一个具体 bad case**
-> 你当时第一反应是图里没找到，还是排序把它排掉了？
+候选人讲出具体 query / Top-K。
 
-**如果候选人回答“目标文档其实还在候选池，主要是 fusion 排序”**
-> 那你先改的是哪一层？
+> 你怎么确认它是排序挤掉了，不是图这边根本没找到？
 
-**如果候选人回答“先改 fusion”**
-> 为什么不是简单把 graph 权重调低？
+候选人：目标文档还在更大的候选池。
 
-**等候选人把机制讲清以后**
-> 你简历最后这个 1.00 是怎么测出来的？
+> 那你第一刀为什么砍 fusion？
 
-这里的深度来自候选人的上一答。Red 不会在第一句就要求他同时讲 query、fusion、四个算法、测试和 ablation。
+候选人：普通 graph noise 不该轻易挤掉 baseline candidate。
 
-### Branch B — Tool / MCP：从“哪里别扭”走到并发基础
+> 具体怎么保？硬保 Top-K，还是排序里给 baseline 一个优先级？
 
-**Seed**
+候选人讲清 ranking rule。
+
+> 那 graph 真有很强证据的时候，还能不能把 baseline 顶下去？
+
+如果机制还能讲清，可以继续：
+
+> 为什么不是简单把 graph 权重统一调低？
+
+最后才追数字：
+
+> 你简历这个 Recall@5 1.00 是怎么测的？
+
+如果只是小 smoke：
+
+> 四个改动没逐项 ablation 的话，你现在敢说哪个贡献最大吗？
+
+### B. Tool / MCP：从调用链追到并发和 timeout
+
 > Tool Calling 那块，原来 MCPAgent-as-Tool 这条路到底哪里让你觉得该改？
 
-**候选人可能回答**
-> 原来多套了一层 Agent，Tool 的绑定和用户自己的 MCP 配置要绕一圈，调用链比较别扭。
+候选人：多套一层 Agent，Tool 绑定和用户 MCP 配置绕一圈。
 
-**下一问**
-> 改完以后调用链少了哪一跳？
+> 改完以后少了哪一跳？
 
-**如果候选人说 `GeneralAgent` 直接拿具体 Tool**
-> 那用户自己的 server 配置放哪儿？
+候选人：`GeneralAgent` 直接绑定具体 Tool。
 
-**如果候选人说“调用时再注入”**
-> 两个用户一起进来会不会串？
+> 那 Tool 怎么知道自己属于哪个 server？
 
-**如果候选人给出 request-local / context-local 方案**
-> 这个你当时真测过，还是现在回头看觉得应该这么做？
+候选人讲 tool → server mapping。
 
-只有走到这里，Red 才决定是否继续 asyncio / ContextVar / timeout；不会一开始把生命周期、同名 Tool、并发、side effect 全塞进一个问题。
+> 用户自己的 token、endpoint 这些配置什么时候进去？
 
-### Branch C — Memory：先确认“你到底做了哪一段”
+候选人：调用期注入。
 
-**Seed**
+> 两个用户一起调同一个 Tool，会不会串？
+
+如果候选人提 request-local/context-local：
+
+> 这个你当时真实现和测过，还是现在回头看觉得应该这么做？
+
+如果历史确实涉及 async context：
+
+> Python 里你会拿什么保证这类上下文跟着 coroutine 走？
+
+如果继续讲远端 Tool：
+
+> read timeout 了，你能确定远端没执行吗？
+
+回答不能确定以后：
+
+> 那有副作用的 Tool 你敢直接 retry 吗？
+
+再继续才问 idempotency key、unknown outcome 或 reconciliation。
+
+### C. Memory：从本人代码追到一致性
+
 > Memory 这块你自己真正落到代码里的部分是什么？
 
-**候选人可能回答**
-> 我主要做了 typed contracts、scope、`prepare_context()` 的 readback，以及一个比较薄的 orchestrator；不是完整长期记忆系统。
+候选人：contracts、scope、`prepare_context()` readback 和薄 orchestrator。
 
-**下一问**
-> 那一次 `prepare_context()` 进来的时候，你先拿到什么？
+> 一次 `prepare_context()` 进来的时候，最先拿到什么？
 
-**如果候选人开始讲 scope / summary / structured memory**
-> 为什么 structured memory 只让 `APPROVED` 的进来？
+候选人讲 request / scope。
 
-**如果候选人把 review boundary 讲清**
-> 那刚读完它就被撤掉，这个你怎么看？
+> 哪几个 scope 字段会直接决定一条 memory 能不能被读到？
 
-这里故障题由候选人先建立 read path 后才出现，而不是突然拿 stale-read race 审架构。
+讲清以后：
 
-### Branch D — Ownership：让候选人自己选择最熟的代码
+> structured memory 为什么只读 `APPROVED`？
 
-**Seed**
+如果回答涉及 review / provenance：
+
+> 那 context 刚组完，这条 memory 就被撤掉了呢？
+
+如果能区分历史实现和 Target：
+
+> 两个请求同时更新同一个 scope，你最怕哪类写冲突？
+
+最后再追测试：
+
+> `32 passed` 里面哪两个 negative test 最能说明这套 foundation 没乱读数据？
+
+### D. 共享代码式深挖：看“为什么这么写”
+
 > 这几块里，如果我现在打开一段你写的代码，你最想给我看哪段？
 
-**候选人可能回答**
-> 我会选 Tool Calling 那块。
+候选人选 Tool Calling。
 
-**下一问**
-> 行，那你接手它的时候原来是什么样？
+> 行，你从入口讲，这段代码进来以后第一步干什么？
 
-**如果候选人能说清 before state**
-> 你自己第一笔关键改动是什么？
+候选人讲到 async。
 
-**如果连续两轮仍然只说“团队做了重构、整体更清晰”**
-> 行，那我们换一块。GraphRAG 那次你自己参与得深吗？
+> 这里为什么要 async？同步写会出什么问题？
 
-Controller 此时记录 Ownership confidence 下降，但不会把“请列函数、Schema、test assertion”一次念给候选人。
+如果回答是并发 I/O：
 
-### Branch E — Build / Buy：从候选人的删复杂度判断成熟度
+> 那任务中途挂了，执行到哪一步这件事放哪？
 
-**Seed**
+候选人讲多轮 Tool 结果会回模型：
+
+> 如果一个 Tool 一次吐回来几十 MB，你真准备全塞上下文？
+
+如果回答“摘要/截断”：
+
+> 别先说摘要，具体在哪层截？原始结果还留不留？模型下一轮怎么引用？
+
+这类问题可以很深，但每一层都要等上一层回答完。
+
+### E. Evaluation：从一个数字追到评测集维护
+
+候选人主动讲指标提升。
+
+> 这个数怎么测的？
+
+讲清 runner / dataset 后：
+
+> 这批样本怎么来的？
+
+如果是人工挑的开发样本：
+
+> 怎么避免你刚好把看过的问题调到很好？
+
+如果讲 holdout / 新样本：
+
+> 真上线以后，海量 log 你怎么变成下一版有限的线下评测集？
+
+如果讲 failure mining / sampling：
+
+> 那怎么防止高频简单问题把少量严重 bad case 淹掉？
+
+### F. Build / Buy：允许候选人真的删复杂度
+
 > 你现在回头看，Zuno 里面哪一层最可能其实不用自己做？
 
-**候选人可能回答**
-> 通用 Agent Runtime / Host 这一层我会尽量复用，法律业务真正特殊的是上层状态和专业能力。
+候选人：通用 Agent Host 应尽量复用。
 
-**下一问**
-> 那你当时为什么还要保留自己的这一层？
+> 那你们当时自己留这层是缺什么？
 
-**如果候选人说“成熟方案当时缺某个 Delta”**
-> 现在框架把这个 Delta 补上了，你会删吗？
+给出具体 Delta 后：
 
-**如果候选人说“还要看效果”**
-> 你会看哪个指标再决定？
+> 这个 Delta 现在框架已经补了吗？
 
-这条 thread 不要求候选人为现有架构辩护；愿意删复杂度本身可以是好答案。
+如果已经补了：
+
+> 那你会删吗？
+
+候选人说看迁移收益：
+
+> 你会看什么再决定？
+
+最后：
+
+> 到什么线你会真删，而不是嘴上说 reuse-first？
+
+### G. 从项目自然切基础
+
+Tool thread 已经聊到 async、共享状态：
+
+> Python coroutine 之间上下文隔离你熟吗？
+
+答到 `ContextVar`：
+
+> 它和普通 thread-local 最大区别是什么？
+
+再答清楚以后可以换网络：
+
+> HTTP client 超时的时候，TCP 层面你到底知道了什么？
+
+项目线已经给了语境，所以基础题可以很直接。
 
 ## PRESSURE_SUITE
 
-> 离线覆盖库。每题仍尽量单意图，但不代表现场会按顺序问。
+> 100 条离线备题。现场不按编号走。
 
-### T1 — Project reality / Ownership
+### T1 Project / Ownership
+Q001 加入 Zuno 时系统已经有什么？
+Q002 最早自己完成的增量是什么？
+Q003 最有把握说“我实现了”的是哪条？
+Q004 哪些只能说“参与过”？
+Q005 团队怎么分工？
+Q006 谁 review 你这块代码？
+Q007 Pilot 具体指什么？
+Q008 Pilot 能证明什么？
+Q009 亲眼看到过的真实用户场景？
+Q010 客户侧常暴露什么问题？
+Q011 自己跟到底的 bad case？
+Q012 bad case 最后定位到哪层？
+Q013 实际做过什么数据库工作？
+Q014 最想给我看哪个 test？
+Q015 最想给我看哪个 commit？
+Q016 做过最错误的一次判断？
+Q017 哪块后来发现做复杂了？
+Q018 改动有没有真实使用结果？
+Q019 哪些效果没数据不会写简历？
+Q020 今天重来第一周先做什么？
 
-Q001. 你加入 Zuno 的时候，系统已经有什么了？
-Q002. 你最早自己完成的一块增量是什么？
-Q003. 这四条经历里你最有把握说“我实现了”的是哪条？
-Q004. 哪些内容你只会说“参与过”？
-Q005. 你所在团队大概怎么分工？
-Q006. 你这块代码平时是谁 review？
-Q007. Pilot 在这个项目里具体指什么？
-Q008. Pilot 能证明什么、不能证明什么？
-Q009. 你亲眼看到过的最真实用户场景是什么？
-Q010. 客户或法院侧最常暴露哪类问题？
-Q011. 你自己跟到底的一个 bad case 是什么？
-Q012. 那个 bad case 最后定位到哪一层？
-Q013. 你对数据库实际做过什么？
-Q014. 如果现在让我看一个 test，你会选哪个？
-Q015. 如果现在让我看一个 commit，你希望它证明什么？
-Q016. 这项目里你做过最错误的一次判断是什么？
-Q017. 哪一块工作你后来发现其实没必要做那么复杂？
-Q018. 你做的改动最后有没有真实使用结果？
-Q019. 哪些效果你现在没有数据，不会写进简历？
-Q020. 如果今天重新加入这个项目，你第一周会先做什么？
+### T2 GraphRAG / Retrieval
+Q021 regression 最先怎么发现？
+Q022 怎么排除 baseline 波动？
+Q023 最典型坏结果？
+Q024 是没召回还是排位掉了？
+Q025 baseline 是什么？
+Q026 `limit=5` 限制什么？
+Q027 `Recall@5` 怎么理解？
+Q028 为什么还要 `MRR@10`？
+Q029 `FullChainHit@5` 补什么？
+Q030 `fallback_count=1` 意味着什么？
+Q031 baseline-preserving fusion 解决什么？
+Q032 baseline 信息怎么参与排序？
+Q033 graph candidate 什么情况下能前提？
+Q034 为什么不统一降低 graph 权重？
+Q035 candidate-aware seed expansion 解决什么？
+Q036 会不会放大 baseline 偏差？
+Q037 alias normalization 处理什么 mismatch？
+Q038 最容易误合并什么？
+Q039 path-aware ranking 为什么有用？
+Q040 path ranking 最重要信号？
+Q041 四个改动怎么逐步出现的？
+Q042 有逐项 ablation 吗？
+Q043 没 ablation 敢说谁贡献最大吗？
+Q044 配置怎么保证可比？
+Q045 smoke 最容易 overfit 在哪？
+Q046 为什么 1.00 还不能算 benchmark？
+Q047 下一步扩什么样本？
+Q048 多出来的延迟主要在哪？
+Q049 Hybrid RAG 够好还留 GraphRAG 吗？
+Q050 什么指标触发删除 GraphRAG？
 
-### T2 — GraphRAG / Retrieval
+### T3 Tool / MCP
+Q051 原调用链什么样？
+Q052 direct concrete Tool 后少了什么？
+Q053 这层嵌套为什么真有问题？
+Q054 tool→server mapping 何时建立？
+Q055 用户配置何时注入？
+Q056 同名 Tool 怎么区分？
+Q057 两用户同时调用怎么隔离配置？
+Q058 async request-local state 怎么做？
+Q059 direct route 什么时候触发？
+Q060 哪类请求不能 direct？
+Q061 direct route 误判最坏怎样？
+Q062 ReAct fallback 在什么失败后发生？
+Q063 custom MCP 名称递归怎么触发？
+Q064 怎么定位不是 server 故障？
+Q065 天气参数解析错在哪？
+Q066 structured-result test 防什么？
+Q067 config-gate test 防什么？
+Q068 direct-route test 关键 assertion？
+Q069 哪些 test 只是 mock？
+Q070 schema 不匹配谁报错？
+Q071 read timeout 能证明远端没执行吗？
+Q072 timeout 后直接 retry 风险？
+Q073 有副作用 Tool 怎么幂等？
+Q074 asyncio cancel 后远端一定停吗？
+Q075 MCP SDK 补齐 Delta 后删哪层？
 
-Q021. 这次 GraphRAG regression 最先是谁发现的？
-Q022. 你怎么确认问题不是 baseline 自己波动？
-Q023. 你看到的最典型坏结果是什么样？
-Q024. 当时目标文档是根本没召回，还是排位掉了？
-Q025. 你们的 baseline 到底是什么？
-Q026. `limit=5` 在你这个 runner 里限制的是什么？
-Q027. `Recall@5` 这个指标你怎么理解？
-Q028. 为什么还需要 `MRR@10`？
-Q029. `FullChainHit@5` 想补什么信息？
-Q030. `fallback_count=1` 对你意味着什么？
-Q031. baseline-preserving fusion 解决的核心冲突是什么？
-Q032. fusion 里 baseline 信息怎么参与排序？
-Q033. 什么情况下 graph candidate 仍然值得往前提？
-Q034. 你为什么没有直接把 graph 权重降到很低？
-Q035. candidate-aware seed expansion 想解决什么？
-Q036. seed 从 baseline candidate 来会不会放大 baseline 偏差？
-Q037. entity alias normalization 主要处理哪类 mismatch？
-Q038. alias normalization 最容易误合并什么？
-Q039. path-aware ranking 为什么比普通 score 有用？
-Q040. path ranking 里什么信号最重要？
-Q041. 四个改动是一次设计出来的，还是边看 bad case 边加的？
-Q042. 你有逐项 ablation 吗？
-Q043. 没有 ablation 的话，你现在敢说哪个改动贡献最大吗？
-Q044. baseline 和 local GraphRAG 的配置怎么保证可比？
-Q045. 这组 smoke 最容易 overfit 在哪里？
-Q046. 为什么同日 rerun 到 1.00 还不能算 benchmark？
-Q047. 下一步你最想扩哪一类样本？
-Q048. GraphRAG 相比 baseline 多出来的主要延迟在哪？
-Q049. 如果 Hybrid RAG + rerank 已经够好，你还会留 GraphRAG 吗？
-Q050. 你会用什么指标决定删掉 GraphRAG？
+### T4 Context / Memory
+Q076 scope 至少有哪些维度？
+Q077 typed Context contract 防什么？
+Q078 typed Memory contract 和 dict 差别？
+Q079 `prepare_context()` 输入是什么？
+Q080 `ContextOrchestrator` 为什么存在？
+Q081 task summary 怎么进 context？
+Q082 structured memory 怎么筛？
+Q083 为什么只读 `APPROVED`？
+Q084 source-id trace 解决什么？
+Q085 policy 为什么进 Context Pack？
+Q086 post-turn write 失败怎样？
+Q087 post-turn retry 怎么防重复？
+Q088 同 scope 并发更新怎样？
+Q089 context 组完 memory 被撤销怎样？
+Q090 `32 passed` 最值钱的 negative test？
+Q091 这 32 个测试不能证明什么？
+Q092 怎么评估 Memory 真提高任务效果？
+Q093 一次性问答还要 Memory 吗？
+Q094 现成 memory framework 已能存取时自研 Delta？
+Q095 什么情况下简化 Memory？
 
-### T3 — Tool Calling / MCP
-
-Q051. MCPAgent-as-Tool 原来的调用链是什么样？
-Q052. 直接绑定 concrete MCP Tools 后少了什么？
-Q053. 为什么这一层嵌套会成为实际问题？
-Q054. tool 到 server 的映射是什么时候建立的？
-Q055. 用户级 MCP 配置是什么时候注入的？
-Q056. 两个 server 有同名 Tool 时你准备怎么区分？
-Q057. 两个用户同时调同一个 Tool，配置怎么隔离？
-Q058. Python async 场景里 request-local state 你会怎么做？
-Q059. direct route 的触发条件是什么？
-Q060. 哪类请求一定不能 direct route？
-Q061. direct route 误判时最坏会怎样？
-Q062. ReAct fallback 是在哪种失败后发生？
-Q063. custom MCP 名称递归当时怎么触发？
-Q064. 你怎么定位到是名称解析而不是 server 本身？
-Q065. 天气自然语言参数解析具体错在哪里？
-Q066. structured-result test 主要防什么？
-Q067. config-gate test 主要防什么？
-Q068. direct-route test 最关键的 assertion 是什么？
-Q069. 这些 regression test 里哪些只是 mock？
-Q070. Tool schema 不符合 server 参数时谁应该报错？
-Q071. MCP 调用 read timeout 能证明远端没执行吗？
-Q072. timeout 之后直接 retry 有什么风险？
-Q073. 有副作用的 Tool 怎么做幂等？
-Q074. asyncio task cancel 以后远端请求一定停了吗？
-Q075. 如果今天 MCP SDK 已经覆盖你的自研 Delta，你会删哪层？
-
-### T4 — Context / Memory
-
-Q076. 你这里说的 scope 最少包含哪些维度？
-Q077. typed Context contract 最想防什么错误？
-Q078. typed Memory contract 和普通 dict 最大区别是什么？
-Q079. `prepare_context()` 的输入是什么？
-Q080. `ContextOrchestrator` 为什么要单独存在？
-Q081. task summary 是怎么进入当前 context 的？
-Q082. structured memory 是怎么筛出来的？
-Q083. 为什么只读 `APPROVED`？
-Q084. `source-id trace` 解决的是什么追溯问题？
-Q085. policy 信息为什么要进 Context Pack？
-Q086. post-turn write 失败会影响已经返回的回答吗？
-Q087. post-turn 重试怎么避免重复写？
-Q088. 两个请求同时更新同一 scope 会发生什么？
-Q089. context 构建完以后 memory 被撤销怎么办？
-Q090. `32 passed` 里面你认为最值钱的是哪类 negative test？
-Q091. 这 32 个测试明确不能证明什么？
-Q092. 你怎么评估 Memory 真正提高了任务效果？
-Q093. 如果只做一次性问答，你还需要这套 Memory 吗？
-Q094. 现成 memory framework 已经能做存取时，你们自己的 Delta 是什么？
-Q095. 你会在什么情况下把这套 Memory 简化掉？
-
-### T5 — Architecture / Build-Buy / Fundamentals
-
-Q096. 一个简单合同条款问答为什么不需要完整 Agent Runtime？
-Q097. LangGraph / Agent SDK 已经能做持久执行时，你还会自建什么？
-Q098. checkpoint 写 completed 为什么不一定代表业务结果已经成立？
-Q099. 外部 POST timeout 后为什么不能简单标 failed？
-Q100. 你这份 Zuno 简历里，哪一句最容易被面试官怀疑夸大？
+### T5 Architecture / Build-Buy / Fundamentals
+Q096 简单条款问答为什么不用完整 Agent Runtime？
+Q097 Agent SDK 已能持久执行时还自建什么？
+Q098 checkpoint completed 为什么不代表业务结果成立？
+Q099 外部 POST timeout 为什么不能简单标 failed？
+Q100 这份简历哪句最容易被怀疑夸大？
 
 ## Red self-check
 
-- Seed 共 8 条，全部是单一主要意图；没有一题要求候选人一次讲完机制 + 测试 + 指标 + Trade-off。
-- 第一条 Seed 给候选人选择权；Red 不预设必须先 GraphRAG、Tool 或 Memory。
-- 五个 Branch Example 都明确展示“上一答 → 下一问”，并允许候选人的回答改变路径。
-- Ownership / Build-Buy / failure / evidence / fundamentals 保留在 interviewer mental map 和 Pressure Suite 中，没有被拼成候选人可见的 rubric。
-- Kill Switch 只存在于 Controller policy；口头行为是自然换 thread。
-- 100 问 Pressure Suite 与 Live Interview 明确分离。
-- 没有使用 Zuno canonical docs、源码、PR diff 或 prior Blue answers 作为 Red 正式输入。
+- Seed 仍然短、单意图；没有为了“深”退回长复合题。
+- Branch 展示了 3–5 层甚至更深的工程追问。
+- 深挖可以进入代码、数据结构、async、状态、参数、timeout、幂等、评测集、指标和底层原理。
+- 每一层依赖上一答；候选人答法变，下一问也必须变。
+- “具体一点”“这个怎么实现”“为什么不用 X”“这个数怎么来的”允许使用，但不能机械套模板。
+- Pressure Suite 与 Live Interview 分离。
+- Kill Switch / risk / rubric 只属于 Controller。
+- Blue 继续 BLOCKED；本修订重新进入 USER_RED_REVIEW。
