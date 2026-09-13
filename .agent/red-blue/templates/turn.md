@@ -41,25 +41,51 @@ Red 可见文件不得带 source trace、Current/Target 标签或答案提示。
 # Red Questions — <round-id>
 
 question_count: 100
+primary_path_count: 30
+reserve_count: 70
 primary_persona:
 cross_personas:
+formal_input_head:
+red_questions_status: DRAFT_REVIEW | FROZEN
 
-## Claim A — <resume claim>
-Q001. ...
-Q002. ...
-...
+## Claim map
+- A — <resume claim>; risk: HIGH; reason: ...
+- B — ...
+
+## PRIMARY_PATH
+### P001
+question: ...
+claim: A
+ask_if: ALWAYS
+kill_switch: none
+
+### P002
+question: ...
+claim: A
+ask_if: PREVIOUS_PASS
+kill_switch: CLAIM_IMPLEMENTATION_NOT_ESTABLISHED if candidate cannot name owned implementation object and mechanism
+
+## RESERVE_FOLLOWUP
+### R001
+question: ...
+claim: A
+trigger: candidate demonstrates implementation ownership and exposes concurrency risk
 ```
 
-可以在文件末尾保存 Red 自己的显式质量元数据：Claim coverage、Attack Angle coverage、duplicate check。不得保存或伪造模型私有 chain-of-thought。
+Primary Path 默认 25–40 问，代表真实 45–60 分钟一面；Reserve 补足总压力集但不机械执行。具体实现 Claim 必须尽早出现 Ownership / mechanism probe，失败时使用 Kill Switch，避免继续堆同义问题。
+
+题单末尾保存显式质量元数据：Claim coverage、Primary Path time realism、Kill Switch coverage、Attack Angle coverage、duplicate check。不得保存或伪造模型私有 chain-of-thought。
 
 问题正文不附答案提示、Zuno 内部对象名答案或 source trace。
 
+当 `red_review_gate=REQUIRED`，第一次提交的题单必须是 `DRAFT_REVIEW`。用户 `APPROVE` 后通过单独 Controller commit 冻结；用户 `REQUEST_REVISION` 时，先提交反馈，再让 Red 更新同一文件并重新进入审查。
+
 ## `03_blue_answers.md`
 
-每题独立回答：
+Blue 只能消费已经 `FROZEN` 的 Red questions。每题独立回答：
 
 ```text
-### Q001
+### P001 / Rxxx
 **Answer**
 ...
 
@@ -89,12 +115,10 @@ communication:
 
 strongest_answer:
 weakest_answer:
-why_interviewer_would_continue:
+kill_switch_triggered:
 resume_claim_risk:
 retest_recommendation:
 ```
-
-同时给出整轮最危险的 3–10 个面试断点。
 
 ## `05_blue_architecture_reflection.md`
 
@@ -114,43 +138,7 @@ retest_needed:
 
 ## `06_workflow_retrospective.md`
 
-这是对 Red / Harness 的复盘，不是第二份 Blue findings。
-
-```text
-# Workflow Retrospective
-
-## User feedback considered
-...
-
-## Red quality score
-Resume Grounding:
-Technical Depth:
-Full-chain Coverage:
-Non-duplication:
-Build/Buy Skepticism:
-Failure Pressure:
-Fundamentals Drilldown:
-Interview Realism:
-Information Gain:
-User Alignment:
-
-## Low-value questions
-- Q... why low value
-
-## Missing attack chains
-...
-
-## Skill defects
-...
-
-## Protocol defects
-...
-
-## Proposed next-round changes
-...
-```
-
-用户对问题质量的明确批评优先于模型自评分。
+重点评价：Primary Path 是否像真实面试、Reserve 是否真的条件化、Kill Switch 是否减少无信息增益追问，以及用户对第一轮 Red 的评价。
 
 ## `07_user_feedback.md`
 
@@ -166,11 +154,9 @@ input_head_sha:
 commit_sha:
 ```
 
-影响当前 Round 的 feedback 先提交，再进入后续 stage。即使用户没有追加评价，也保留文件并写 `no_additional_feedback`。
+Round 启动前已知的用户校准要求也必须在 ROUND_INIT transaction 中记录，不能后补。
 
 ## `08_session_transcript.md`
-
-保存可观察过程，并让阶段交接可以从 GitHub history 重放：
 
 ```text
 ### Event <n>
@@ -185,18 +171,6 @@ output_commit_sha:
 next_stage:
 ```
 
-至少记录：
+至少记录 Round/PR 初始化、用户反馈、Resume Builder、Red、USER_RED_REVIEW、Red Revision（如有）、Blue、Evaluation、Reflection、Retrospective、CI、Archive 与 Merge。
 
-```text
-Round branch / Draft PR initialization
-Controller / user events
-Resume Builder event
-Red input boundary + output event
-Blue input boundary + output event
-Red Evaluation event
-Blue Reflection event
-Workflow Retrospective event
-GitHub commit / CI / archive / merge events
-```
-
-CHATGPT_AUTO 与 AGENT_AUTO 使用同一格式。Transcript 保存的是可观察 I/O 和 GitHub state transition，不保存或伪造模型私有 chain-of-thought。
+CHATGPT_AUTO 与 AGENT_AUTO 使用同一格式。Transcript 保存可观察 I/O 和 GitHub state transition，不保存或伪造模型私有 chain-of-thought。
