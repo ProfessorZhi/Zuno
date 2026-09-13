@@ -42,13 +42,8 @@ next_stage: RED_QUESTIONS
 actor: Red
 stage: RED_QUESTIONS
 input_head_sha: 8f3ff3dbdcaee2f49e905eb533f1dadaddc412fa
-input_files:
-- 01_simulated_resume.md@8f3ff3dbdcaee2f49e905eb533f1dadaddc412fa
-- target role / interview stage from 00_manifest.yaml@8f3ff3dbdcaee2f49e905eb533f1dadaddc412fa
-- .agent/red-blue/attack-model.md@e0e11b704c5653ef0363eda1b316264036b397a6
-- model general knowledge
-observable_input_summary: Generate an answer-driven big-tech Agent/LLM application interview plan. Do not create a static 30-question live script. Use natural single-intent Seeds, listen-driven follow-up policy, branch examples and a separate offline 100-question pressure bank.
-observable_output_summary: Generated 8 SPOKEN_SEEDS, a dynamic FOLLOWUP_POLICY, 5 answer-driven BRANCH_EXAMPLES and a 100-question offline PRESSURE_SUITE. Candidate-facing questions are short and single-intent; Controller-only Kill Switch / rubric state is kept separate. Output is DRAFT_REVIEW and Blue remains blocked.
+observable_input_summary: Generate an answer-driven big-tech Agent/LLM application interview plan with natural Seed questions, dynamic follow-up branches and a separate offline 100-question pressure bank.
+observable_output_summary: Generated 8 SPOKEN_SEEDS, a dynamic FOLLOWUP_POLICY, 5 answer-driven BRANCH_EXAMPLES and a 100-question PRESSURE_SUITE. Candidate-facing questions are short and single-intent; Blue remains blocked.
 output_commit_sha: e60f80205534d74373b86438497d063781aa2382
 next_stage: USER_RED_REVIEW
 
@@ -56,9 +51,16 @@ next_stage: USER_RED_REVIEW
 actor: User / Controller
 stage: USER_RED_REVIEW
 input_head_sha: e60f80205534d74373b86438497d063781aa2382
-observable_input_summary: User approved the answer-driven direction, asked to see the simulated resume, and requested that the Red thinking framework be written in more natural language while preserving deeper technical questioning. The user specifically requested studying ByteDance interview experiences.
-observable_output_summary: Reviewed recent public ByteDance AI application / Agent / large-model interview reports. Repeated pattern: short surface questions with 3–5 layers of follow-up into concrete implementation, parameters, metrics, failure handling, code and fundamentals. Captured UF-004 and moved the Round to RED_REVISION. Blue remains blocked.
+observable_input_summary: User approved the answer-driven direction, asked to see the simulated resume, and requested deeper technical questioning modeled on ByteDance interview experiences while keeping the framework in natural language.
+observable_output_summary: Reviewed recent public ByteDance AI application / Agent / large-model interview reports. Repeated pattern: short questions followed by 3–5 layers of concrete implementation, parameters, metrics, failure handling, code and fundamentals. Captured UF-004 and moved the Round to RED_REVISION. Blue remained blocked.
 feedback_commit_sha: bcd3f4e99d0c625b27d4b50ed7782871d93e3bda
-manifest_transition_commit_sha: 4f4651e34b39a645a941b1fd708703b6a1fdb42d
-current_transition_commit_sha: e93624dcf18e75e4866774d68999a0ce163de86e
 next_stage: RED_REVISION
+
+## Event 007 — RED_REVISION
+actor: Red
+stage: RED_REVISION
+input_head_sha: ca31e3d5595a14e778d14d078a116bfb329c02a1
+observable_input_summary: Keep the human Seed / dynamic-followup structure, but deepen high-value threads like a strong ByteDance engineering interview: implementation, data structures, async/state, parameters, failures, evaluation-set construction and fundamentals. Do not merge these layers into one compound question.
+observable_output_summary: Revision 2 keeps the same 8 natural Seeds and expands the answer-driven branch examples into 3–5 layer or deeper technical conversations. Added explicit code-review, evaluation-maintenance and project-to-fundamentals branches while keeping the 100-question pressure bank offline. Returned to USER_RED_REVIEW; Blue remains blocked.
+output_commit_sha: 9fa7d69cd0d50c17a6bfcb1f1057e73de0825fde
+next_stage: USER_RED_REVIEW
