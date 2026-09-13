@@ -118,7 +118,7 @@ FROZEN Red Questions
 
 Blue 可以明确回答 Unknown。诚实边界本身是加分，但如果简历明确写“我实现某算法”，候选人却讲不出算法、字段、调用链或测试，Red 仍然可以判 implementation ownership 不成立。
 
-## 面试断点怎样路由
+## Blue Architecture Reflection：面试断点怎样路由
 
 Blue Reflection 把问题分成：
 
