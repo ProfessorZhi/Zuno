@@ -8,4 +8,13 @@ stage: BUILD_RESUME
 input_head_sha: 267e314e188e0a3b380c282b29b8e0548aa86a17
 observable_input_summary: Rebuild the Zuno simulated resume because Round #016 proved the Red interviewer behavior was acceptable but the simulated resume itself was too long and evidence-memo-like. Use the user's actual one-page resume as the style register only, public AI/Agent resume density as a secondary reference, and current Zuno canonical facts as the truth source.
 observable_output_summary: Built a recruiter-readable draft with one-line project intro, one-line tech stack and four focused contribution bullets. Small-sample, Pilot and participation boundaries are expressed through concise qualifiers rather than reviewer disclaimers. Red and Blue remain blocked until USER_RESUME_REVIEW APPROVE.
+output_commit_sha: 513c318de952e57576aade1558cefc34bec89f93
+next_stage: ROUND_PR_BIND
+
+## Event 002 — ROUND_PR_BIND
+actor: Controller
+stage: USER_RESUME_REVIEW
+input_head_sha: 513c318de952e57576aade1558cefc34bec89f93
+observable_input_summary: Bind the resume-calibration Round to its GitHub Draft PR while keeping Red blocked.
+observable_output_summary: Bound Draft PR #234. Resume remains DRAFT / PENDING user review; Red remains NOT_STARTED and Blue remains BLOCKED.
 next_stage: USER_RESUME_REVIEW
