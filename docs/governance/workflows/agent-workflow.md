@@ -30,6 +30,8 @@ AGENTS.md
 
 GitHub 是跨 Agent 的同步事实面。任何“已经完成”的结论最终都必须落到可读取的 Commit / PR / CI / main HEAD。
 
+Red / Blue 进一步把 GitHub 提升为**运行时状态总线**：阶段之间不能靠聊天记忆直接交接，只能消费已经提交到 Round branch 的 artifact。
+
 ## 标准 GitHub 修改闭环
 
 ```text
@@ -88,27 +90,60 @@ Red / Blue 有三块长期位置：
 docs/red-blue/             长期方法与说明
 docs/red-blue/workspace/   active Round，一轮一个文件夹
 docs/red-blue/rounds/      closed Round archive
-.agent/red-blue/            machine protocol + temporary active state
+.agent/red-blue/            machine protocol + active state contract
 ```
 
 正式执行只保留 `CHATGPT_AUTO` 和 `AGENT_AUTO`。用户可以中途 intervention，但没有第三个 human-candidate mode。
 
-当前正式协议是 **resume-first**：
+### GitHub-mediated lifecycle
+
+每一轮先从固定 `main` SHA 创建：
+
+```text
+red-blue/<round-id> branch
++ Draft PR to main
+```
+
+然后在该 branch 上建立 workspace。所有阶段遵循同一个 handoff：
+
+```text
+read Round branch HEAD
+→ read declared stage inputs
+→ produce one stage output
+→ update artifact + manifest + transcript
+→ commit
+→ next stage re-read the new HEAD
+```
+
+所以“ChatGPT 还记得上一个角色刚说了什么”不构成合法的阶段输入。GitHub commit 才是 write barrier。
+
+用户中途给出的正式评价也先写入 `07_user_feedback.md` / `08_session_transcript.md` 并提交，再继续 Round。
+
+### Resume-first sequence
 
 ```text
 current Zuno docs / Evidence + prior resume style
 → Resume Builder 生成本轮模拟简历
-→ 冻结模拟简历
-→ Red 只看模拟简历 + JD + Red Interview Skill + 模型通用知识
-→ Blue 才读取 Zuno docs 回答
+→ GitHub commit 冻结模拟简历
+→ Red 从新 HEAD 只消费模拟简历 + JD + Red Interview Skill + 通用知识
+→ GitHub commit 冻结问题
+→ Blue 读取题单 + 固定 Zuno docs 回答
+→ GitHub commit 冻结回答
 → Red 只根据简历与回答给 interviewer verdict
 → Blue 根据文档判断 Resume / Narrative / Architecture / Evidence / Ownership / Fundamental Gap
 → Workflow Retrospective 反过来审 Red 问题质量和 Harness
 → 用户反馈归档
-→ Round close
+→ workspace 移入 rounds/
+→ CI / merge / reread main
 ```
 
-Red 不得读取 `docs/project/`、`docs/architecture/`、`docs/modules/`、`docs/evidence/` 后再按答案出题。真实面试官通常只看到简历；让 Red 预读 Zuno docs 会把模拟变成 Architecture Review。
+Red 不得把 `docs/project/`、`docs/architecture/`、`docs/modules/`、`docs/evidence/` 当作正式出题输入。真实面试官通常只看到简历；让 Red 预读 Zuno docs 会把模拟变成 Architecture Review。
+
+### 两种模式的边界
+
+`CHATGPT_AUTO` 在同一个 ChatGPT 对话里工作。GitHub state bus 可以保证过程可恢复、阶段输入明确，但同一聊天无法证明模型已经物理遗忘早先读取过的 Zuno docs。因此它只拥有 `LOGICAL_GITHUB_MEDIATED` 隔离，不作为严格 blind Red 认证。
+
+`AGENT_AUTO` 为 Red 等角色建立独立 context，同时继续使用同一 GitHub stage transaction。只有真的建立独立 Red context 时，才允许把该轮视为严格 blind Red 验收。
 
 每轮默认可以批量生成 100 问，但一轮只产生这一批。修复或复测必须新建 Round，并重新生成与当时文档对应的模拟简历。
 

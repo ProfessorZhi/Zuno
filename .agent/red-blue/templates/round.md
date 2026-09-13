@@ -1,6 +1,6 @@
 # Red / Blue Round Manifest
 
-> 每一轮复制本模板到 `docs/red-blue/workspace/<round-id>/00_manifest.yaml`。Round 关闭后整个文件夹原样归档到 `docs/red-blue/rounds/<round-id>/`。
+> 每一轮复制本模板到 Round branch 的 `docs/red-blue/workspace/<round-id>/00_manifest.yaml`。Round 关闭前整个文件夹原样归档到 `docs/red-blue/rounds/<round-id>/`。
 
 ## Identity
 
@@ -11,6 +11,22 @@ mode: CHATGPT_AUTO | AGENT_AUTO
 zuno_base_sha:
 state: ACTIVE | CLOSED | SUPERSEDED
 ```
+
+## GitHub Runtime
+
+```text
+github_state_bus: REQUIRED
+stage_handoff: COMMIT_THEN_REREAD
+round_branch: red-blue/<round-id>
+round_pr:
+stage_head_sha:
+firewall_strength: LOGICAL_GITHUB_MEDIATED | PHYSICAL_CONTEXT_ISOLATION
+strict_blind_red_certification: false | true
+```
+
+`CHATGPT_AUTO` 使用 `LOGICAL_GITHUB_MEDIATED` 且不能声明严格 blind Red；`AGENT_AUTO` 只有在 Red 使用独立 context 时才使用 `PHYSICAL_CONTEXT_ISOLATION`。
+
+每个 stage 从 `stage_head_sha` 对应 GitHub HEAD 读取允许输入。本阶段 artifact、manifest state 和 `08_session_transcript.md` 提交后，才允许推进下一阶段。
 
 ## Interview Target
 
@@ -24,7 +40,7 @@ question_count: 100
 
 ## Simulated Resume Build
 
-Controller / Resume Builder 可以读取当前 Zuno canonical docs 与已有简历风格，只用于生成本轮模拟简历。
+Controller / Resume Builder 可以读取 `zuno_base_sha` 固定的 Zuno canonical docs 与已有简历风格，只用于生成本轮模拟简历。
 
 ```text
 resume_style_reference:
@@ -38,7 +54,7 @@ simulated_resume_path: docs/red-blue/workspace/<round-id>/01_simulated_resume.md
 resume_status: DRAFT | FROZEN
 ```
 
-`01_simulated_resume.md` 冻结以后，Red 不得读取上述 build sources。
+`01_simulated_resume.md` 冻结并提交以后，Red 不得把上述 build sources 作为正式出题输入。
 
 ## Red Input Allowlist
 
@@ -78,7 +94,7 @@ Explicit denylist:
 - selected docs/governance/ provenance facts
 ```
 
-Blue does not read `04_red_evaluation.md` before producing `03_blue_answers.md`.
+Blue 按 `zuno_base_sha` 读取 Zuno docs，并且在生成 `03_blue_answers.md` 前不读取 `04_red_evaluation.md`。
 
 ## Red Evaluation Input
 
@@ -89,7 +105,7 @@ Blue does not read `04_red_evaluation.md` before producing `03_blue_answers.md`.
 - .agent/red-blue/attack-model.md
 ```
 
-Red Evaluation still cannot read Zuno canonical docs.
+Red Evaluation still cannot read Zuno canonical docs as formal evaluation input.
 
 ## Blue Architecture Reflection Input
 
@@ -98,13 +114,13 @@ Red Evaluation still cannot read Zuno canonical docs.
 - 02_red_questions.md
 - 03_blue_answers.md
 - 04_red_evaluation.md
-- Zuno canonical docs / evidence allowlist
+- Zuno canonical docs / evidence allowlist @ zuno_base_sha
 ```
 
 ## Workflow Retrospective Input
 
 ```text
-- all observable round artifacts
+- all committed observable round artifacts
 - .agent/red-blue/attack-model.md
 - 07_user_feedback.md
 - prior workflow retrospectives when explicitly selected
@@ -155,14 +171,17 @@ transcript_complete: false
 Round 可以关闭的必要条件：
 
 ```text
+- round branch and Draft PR exist
+- every stage used commit-then-reread handoff
 - simulated resume frozen before Red questions
-- Red did not read Zuno docs
+- Red formal inputs followed the allowlist
 - Blue answered from allowed docs only
-- Red evaluation completed without Zuno docs
+- Red evaluation completed without Zuno docs as formal input
 - Blue architecture reflection completed
 - workflow retrospective evaluated Red quality
 - user feedback file exists, even if it says no additional feedback
 - observable session transcript is complete
+- workspace folder is archived into rounds/<round-id>/ before merge
 ```
 
 Retest 不在同一 Round 继续追加第二批问题；创建一个新的 round-id，并重新生成与当时 docs 对应的模拟简历。

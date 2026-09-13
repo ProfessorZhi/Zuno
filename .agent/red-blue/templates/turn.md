@@ -1,6 +1,20 @@
 # Red / Blue Stage Artifact Templates
 
-这个模板描述一轮中各文件应该保存什么。正式 Round 不再把“Turn”理解为 Red/Blue 单题往返；固定阶段产物直接写入同一个 Round 文件夹。
+这个模板描述一轮中各文件应该保存什么。固定阶段产物直接写入同一个 Round 文件夹；阶段 handoff 只通过 Round branch 上已提交的 artifact 完成。
+
+## 每个 Stage 的 GitHub 元数据
+
+每个 artifact 顶部或 manifest 中至少能恢复：
+
+```text
+stage:
+input_head_sha:
+input_files:
+output_file:
+output_commit_sha:
+```
+
+`output_commit_sha` 可以由 Git history / transcript 记录，不要求文件在同一次 commit 内自引用自身 SHA。
 
 ## `01_simulated_resume.md`
 
@@ -19,7 +33,7 @@
 4. ...
 ```
 
-Red 可见文件不得带 source trace、Current/Target 标签或“答案提示”。来源和构建边界只写入 manifest / session transcript。
+Red 可见文件不得带 source trace、Current/Target 标签或答案提示。来源和构建边界写入 manifest / session transcript。
 
 ## `02_red_questions.md`
 
@@ -36,7 +50,7 @@ Q002. ...
 ...
 ```
 
-可以在文件末尾保存 Red 自己的**显式质量元数据**：Claim coverage、Attack Angle coverage、duplicate check。不得保存或伪造模型私有 chain-of-thought。
+可以在文件末尾保存 Red 自己的显式质量元数据：Claim coverage、Attack Angle coverage、duplicate check。不得保存或伪造模型私有 chain-of-thought。
 
 问题正文不附答案提示、Zuno 内部对象名答案或 source trace。
 
@@ -59,7 +73,7 @@ Blue 可以明确说 Unknown / Target-only / not personally owned。
 
 ## `04_red_evaluation.md`
 
-Red 不读 Zuno docs，只按面试官视角评价：
+Red 不把 Zuno docs 作为评价输入，只按面试官视角评价：
 
 ```text
 ## Claim A
@@ -84,7 +98,7 @@ retest_recommendation:
 
 ## `05_blue_architecture_reflection.md`
 
-Blue 读取 Red evaluation + Zuno docs 后，把问题路由：
+Blue 读取已提交 Red evaluation + 固定 Zuno docs 后，把问题路由：
 
 ```text
 issue:
@@ -148,23 +162,41 @@ when:
 text:
 affected_stage:
 priority:
+input_head_sha:
+commit_sha:
 ```
 
-即使用户没有追加评价，也保留文件并写 `no_additional_feedback`。
+影响当前 Round 的 feedback 先提交，再进入后续 stage。即使用户没有追加评价，也保留文件并写 `no_additional_feedback`。
 
 ## `08_session_transcript.md`
 
-保存可观察过程：
+保存可观察过程，并让阶段交接可以从 GitHub history 重放：
 
 ```text
+### Event <n>
+actor: Controller | User | ResumeBuilder | Red | Blue | RedEvaluation | BlueReflection | WorkflowRetrospective
+stage:
+input_head_sha:
+input_files:
+observable_input_summary:
+observable_output_summary:
+output_files:
+output_commit_sha:
+next_stage:
+```
+
+至少记录：
+
+```text
+Round branch / Draft PR initialization
 Controller / user events
-Resume Builder observable output event
-Red observable input boundary + output event
-Blue observable input boundary + output event
+Resume Builder event
+Red input boundary + output event
+Blue input boundary + output event
 Red Evaluation event
 Blue Reflection event
 Workflow Retrospective event
-tool / GitHub archive events when relevant
+GitHub commit / CI / archive / merge events
 ```
 
-CHATGPT_AUTO 与 AGENT_AUTO 使用同一格式。禁止把模型私有 chain-of-thought 写入 transcript。
+CHATGPT_AUTO 与 AGENT_AUTO 使用同一格式。Transcript 保存的是可观察 I/O 和 GitHub state transition，不保存或伪造模型私有 chain-of-thought。

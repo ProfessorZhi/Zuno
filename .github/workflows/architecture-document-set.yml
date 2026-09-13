@@ -25,6 +25,7 @@ on:
       - "tests/repo/test_architecture_writing_standard.py"
       - "tests/repo/test_architecture_human_readability.py"
       - "tests/repo/test_docs_entrypoints.py"
+      - "tests/repo/test_red_blue_github_state_bus.py"
       - "AGENTS.md"
       - ".agent/system.yaml"
       - ".agent/references/**"
@@ -54,6 +55,7 @@ on:
       - "tests/repo/test_architecture_writing_standard.py"
       - "tests/repo/test_architecture_human_readability.py"
       - "tests/repo/test_docs_entrypoints.py"
+      - "tests/repo/test_red_blue_github_state_bus.py"
       - "AGENTS.md"
       - ".agent/system.yaml"
       - ".agent/references/**"
@@ -96,6 +98,7 @@ jobs:
             tests/repo/test_architecture_writing_standard.py \
             tests/repo/test_architecture_human_readability.py \
             tests/repo/test_docs_entrypoints.py \
+            tests/repo/test_red_blue_github_state_bus.py \
             2>&1 | tee architecture-validation-logs/compile.log
       - name: Verify canonical architecture document set
         run: set -o pipefail; python tools/scripts/verify_architecture_document_set.py 2>&1 | tee architecture-validation-logs/document-set.log
@@ -126,6 +129,7 @@ jobs:
             tests/repo/test_architecture_writing_standard.py \
             tests/repo/test_architecture_human_readability.py \
             tests/repo/test_docs_entrypoints.py \
+            tests/repo/test_red_blue_github_state_bus.py \
             -p no:cacheprovider \
             2>&1 | tee architecture-validation-logs/pytest.log
       - name: Upload architecture validation logs

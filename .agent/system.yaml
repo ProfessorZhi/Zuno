@@ -1,4 +1,4 @@
-version: "2026-09-13-resume-first"
+version: "2026-09-13-github-state-bus"
 system_identity: "Zuno Local Agent System"
 
 runtime_boundary:
@@ -65,6 +65,14 @@ program_rules:
   red_blue_user_feedback_required: true
   red_blue_workflow_retrospective_required: true
   red_blue_private_chain_of_thought_not_required: true
+  red_blue_github_state_bus: true
+  red_blue_stage_handoff: "commit_then_reread"
+  red_blue_round_branch_required: true
+  red_blue_draft_pr_required: true
+  chatgpt_auto_firewall_strength: "logical_github_mediated"
+  chatgpt_auto_strict_blind_red_certification: false
+  agent_auto_firewall_strength: "physical_context_isolation"
+  agent_auto_strict_blind_red_certification: true
   human_candidate_mode_removed: true
   preserve_uncommitted_user_files: true
   architecture_change_requires_owner_or_adr: true
@@ -178,4 +186,3 @@ verification:
   repo_structure: "python tools/scripts/verify_repo_structure.py"
   agent_system: "python .agent/scripts/verify_agent_system.py"
   doc_boundaries: "python .agent/scripts/verify_doc_boundaries.py"
-  architecture_set: "python tools/scripts/verify_architecture_document_set.py"
