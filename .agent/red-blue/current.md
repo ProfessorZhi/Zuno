@@ -14,8 +14,8 @@ reserve_target: `70`
 red_review_gate: `REQUIRED`
 red_questions_status: `NOT_STARTED`
 round_branch: `red-blue/rb-2026-09-13-red-calibration-015`
-round_pr: `pending`
-last_consumed_head_sha: `0ccc1ee336c42d8ecad0bd6535a97f8fc4e6aca3`
+round_pr: `228`
+last_consumed_head_sha: `c395d97e5baa84ca9e7250db2b14536992c1c531`
 github_state_bus: `required`
 stage_handoff: `commit-then-reread`
 firewall_strength: `LOGICAL_GITHUB_MEDIATED`

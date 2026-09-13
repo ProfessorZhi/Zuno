@@ -8,8 +8,8 @@ github_runtime:
   github_state_bus: REQUIRED
   stage_handoff: COMMIT_THEN_REREAD
   round_branch: red-blue/rb-2026-09-13-red-calibration-015
-  round_pr: pending
-  last_consumed_head_sha: 0ccc1ee336c42d8ecad0bd6535a97f8fc4e6aca3
+  round_pr: 228
+  last_consumed_head_sha: c395d97e5baa84ca9e7250db2b14536992c1c531
   firewall_strength: LOGICAL_GITHUB_MEDIATED
   strict_blind_red_certification: false
 

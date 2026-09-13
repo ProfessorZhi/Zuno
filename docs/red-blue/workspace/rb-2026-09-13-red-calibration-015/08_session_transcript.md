@@ -15,5 +15,21 @@ observable_output_summary: Initialized Round #015 with 100-question pressure-sui
 output_files:
 - .agent/red-blue/current.md
 - 00_manifest.yaml through 08_session_transcript.md
-output_commit_sha: recover from Git history after commit
+output_commit_sha: c395d97e5baa84ca9e7250db2b14536992c1c531
 next_stage: ROUND_PR_BIND
+
+## Event 002 — ROUND_PR_BIND
+actor: Controller
+stage: ROUND_PR_BIND
+input_head_sha: c395d97e5baa84ca9e7250db2b14536992c1c531
+input_files:
+- 00_manifest.yaml
+- .agent/red-blue/current.md
+observable_input_summary: Bind the active Round to its GitHub Draft PR.
+observable_output_summary: Bound Draft PR #228 and kept the next executable stage at BUILD_RESUME.
+output_files:
+- .agent/red-blue/current.md
+- 00_manifest.yaml
+- 08_session_transcript.md
+output_commit_sha: recover from Git history after commit
+next_stage: BUILD_RESUME
