@@ -30,7 +30,7 @@ AGENTS.md
 
 GitHub 是跨 Agent 的同步事实面。任何“已经完成”的结论最终都必须落到可读取的 Commit / PR / CI / main HEAD。
 
-Red / Blue 进一步把 GitHub 提升为**运行时状态总线**：阶段之间不能靠聊天记忆直接交接，只能消费已经提交到 Round branch 的 artifact。
+Red / Blue 进一步把 GitHub 作为**运行时状态总线**：阶段之间不能靠聊天记忆直接交接，只消费已经提交到 Round branch 的 artifact。
 
 ## 标准 GitHub 修改闭环
 
@@ -57,13 +57,13 @@ CI 失败时先判断是迁移遗漏、真实 Gap 还是 validator 仍绑定旧�
 ```text
 Research / interview / platform / paper
 → source verification
-→ docs/research/ 记录 lineage / baseline / hypothesis
-→ 判断 Writing Gap / Architecture Gap / Evidence Gap
-→ 成熟结论进入 project / architecture / modules / decisions
+→ docs/research/ 或对应 workflow evidence 记录 lineage / baseline / hypothesis
+→ 判断 Writing Gap / Architecture Gap / Evidence Gap / Workflow Gap
+→ 成熟结论进入对应 canonical owner
 → Current claim 仍需 evidence/
 ```
 
-研究关系至少区分 `DIRECT_LINEAGE`、`CAPABILITY_LINEAGE`、`CONCEPTUAL_LINEAGE`、`BACKGROUND_ONLY`、`UNVERIFIED`。平台 baseline 需要核验日期，因为 WorkBuddy、Dify、Coze、LangGraph 等能力会变化。
+面经研究属于 Red Skill 的上游行为证据，不是 Zuno Product Truth，也不直接进入每轮 Red 上下文。
 
 ## Architecture / Documentation Review
 
@@ -84,27 +84,20 @@ Part A 由因果连续性、场景、失败、替代方案和 Trade-off 判断�
 
 ## Red / Blue
 
-Red / Blue 有三块长期位置：
+长期位置：
 
 ```text
-docs/red-blue/             长期方法与说明
-docs/red-blue/workspace/   active Round，一轮一个文件夹
+docs/red-blue/             长期方法、行为证据与说明
+docs/red-blue/workspace/   active Round
 docs/red-blue/rounds/      closed Round archive
-.agent/red-blue/            machine protocol + active state contract
+.agent/red-blue/            machine protocol + active state + Red Skill
 ```
 
-正式执行只保留 `CHATGPT_AUTO` 和 `AGENT_AUTO`。用户可以中途 intervention，但没有第三个 human-candidate mode。
+正式执行只保留 `CHATGPT_AUTO` 和 `AGENT_AUTO`。
 
 ### GitHub-mediated lifecycle
 
-每一轮先从固定 `main` SHA 创建：
-
-```text
-red-blue/<round-id> branch
-+ Draft PR to main
-```
-
-然后在该 branch 上建立 workspace。所有阶段遵循同一个 handoff：
+每轮从固定 `main` SHA 创建 `red-blue/<round-id>` branch + Draft PR，所有阶段执行：
 
 ```text
 read Round branch HEAD
@@ -112,61 +105,76 @@ read Round branch HEAD
 → produce one stage output
 → update artifact + manifest + transcript
 → commit
-→ next stage re-read the new HEAD
+→ next stage re-read new HEAD
 ```
 
-所以“ChatGPT 还记得上一个角色刚说了什么”不构成合法的阶段输入。GitHub commit 才是 write barrier。
-
-用户中途给出的正式评价也先写入 `07_user_feedback.md` / `08_session_transcript.md` 并提交，再继续 Round。
+用户评价也先进入 `07_user_feedback.md` / `08_session_transcript.md` 并提交。
 
 ### Resume-first sequence
 
 ```text
 current Zuno docs / Evidence + prior resume style
-→ Resume Builder 生成本轮模拟简历
-→ GitHub commit 冻结模拟简历
-→ Red 从新 HEAD 只消费模拟简历 + JD + Red Interview Skill + 通用知识
-→ GitHub commit 冻结问题
-→ Blue 读取题单 + 固定 Zuno docs 回答
-→ GitHub commit 冻结回答
-→ Red 只根据简历与回答给 interviewer verdict
-→ Blue 根据文档判断 Resume / Narrative / Architecture / Evidence / Ownership / Fundamental Gap
-→ Workflow Retrospective 反过来审 Red 问题质量和 Harness
-→ 用户反馈归档
-→ workspace 移入 rounds/
-→ CI / merge / reread main
+→ Resume Builder 生成模拟简历
+→ commit 冻结模拟简历
+→ Red 只消费模拟简历 + JD + Red Skill + 通用知识
+→ Red 生成 Interview Plan + Pressure Suite
+→ USER_RED_REVIEW（校准期 REQUIRED）
+→ APPROVE 后冻结 Red plan
+→ Live answer-driven interview / Blue answers
+→ Red 根据实际问答给 interviewer verdict
+→ Blue 根据 docs 判断 Gap 类型
+→ Workflow Retrospective 审 Red / Harness
+→ archive / CI / merge / reread main
 ```
 
-Red 不得把 `docs/project/`、`docs/architecture/`、`docs/modules/`、`docs/evidence/` 当作正式出题输入。真实面试官通常只看到简历；让 Red 预读 Zuno docs 会把模拟变成 Architecture Review。
+Red 不得把 `docs/project/`、`docs/architecture/`、`docs/modules/`、`docs/evidence/` 当作正式出题输入。
+
+### Pressure Suite 不等于现场面试
+
+保留 100 问 Pressure Suite，用于离线压力覆盖和 retrospective；现场不再预写固定 30 问 Primary Path。
+
+Live Interview 使用少量 Seed + 动态追问：
+
+```text
+6–10 个 Seed
+→ 听候选人回答
+→ 抓刚出现的关键词 / 数字 / 选择 / 困难 / Ownership / bad case
+→ 只选一个高信息增益 handle
+→ 问一个主要意图
+→ 继续或换 thread
+```
+
+深度来自连续短问。一个有价值 thread 可以持续多轮；一个 Claim 很快失去可信度就自然切走。Kill Switch 属于 Controller state，不作为口头问题展示。
+
+真实面试也允许从项目直接切到网络、数据库、并发或算法基础，不需要把每一道基础题都强行包装成 Resume Claim 延伸。
+
+### USER_RED_REVIEW
+
+校准期用户主要检查：
+
+- Seed 是否像真人会问；
+- Branch Example 的下一问是否真的依赖上一答；
+- 是否仍把 Reviewer rubric 拼成复合长问；
+- 是否无信息增益地原子化；
+- 是否有合理的 thread 深挖和 pivot。
+
+用户可 `APPROVE / REQUEST_REVISION / ABORT`。只有 APPROVE 后 Blue 才能运行。
+
+如果用户判断 Red Skill 本身需要结构性修改，当前 Round 可以 `SUPERSEDED`，失败题单保留，再独立修 Skill、开新 Round。
 
 ### 两种模式的边界
 
-`CHATGPT_AUTO` 在同一个 ChatGPT 对话里工作。GitHub state bus 可以保证过程可恢复、阶段输入明确，但同一聊天无法证明模型已经物理遗忘早先读取过的 Zuno docs。因此它只拥有 `LOGICAL_GITHUB_MEDIATED` 隔离，不作为严格 blind Red 认证。
+`CHATGPT_AUTO` 只拥有 `LOGICAL_GITHUB_MEDIATED` 隔离；同一聊天无法证明模型物理遗忘。`AGENT_AUTO` 只有在 Red 使用独立 context 时才可声明 `PHYSICAL_CONTEXT_ISOLATION` / strict blind Red。
 
-`AGENT_AUTO` 为 Red 等角色建立独立 context，同时继续使用同一 GitHub stage transaction。只有真的建立独立 Red context 时，才允许把该轮视为严格 blind Red 验收。
-
-每轮默认可以批量生成 100 问，但一轮只产生这一批。修复或复测必须新建 Round，并重新生成与当时文档对应的模拟简历。
-
-Round 产生的是面试压力、回答、评价、Blue Reflection 和 Workflow Retrospective，不是自动修改授权。重大 Architecture / Evidence / Ownership Finding 必须另开 bounded task，进入对应 Canonical Owner，merge 后再开新 Round Retest。
-
-用户对 Red 题目质量的评价属于正式输入。用户明确认为“问题没含金量、太像 Reviewer、重复、没全链路”时，后续 `06_workflow_retrospective.md` 必须优先分析 Red Skill / Persona / question budget / context firewall，而不是只归因于 Blue。
-
-完整方法见 [`../../red-blue/README.md`](../../red-blue/README.md)，Active Workspace 见 [`../../red-blue/workspace/README.md`](../../red-blue/workspace/README.md)。旧手工 Round 只保留在 [`../../red-blue/archive/legacy/`](../../red-blue/archive/legacy/) 复盘，不作为当前标准答案。
+Round 产生的是面试压力、回答、评价、Blue Reflection 和 Workflow Retrospective，不是自动修改授权。Architecture / Evidence / Ownership Finding 必须另开 bounded task 进入对应 Canonical Owner。
 
 ## 可导出的 Skills
 
 稳定以后可以抽方法为 Skill，但 Skill 不携带与仓库竞争的 Zuno Truth。
 
-优先级：
+Red Skill 应沉淀的是 interviewer behavior：先听、再追；Claim 取证；Ownership；Build/Buy；故障反例；Evidence；基础下钻；Simplification；以及何时停止一个 thread。它不应该打包 Zuno 当前 Architecture 正文，也不应该把历史 Blue 答案变成隐藏题库。
 
-1. Resume-first Red Interview Skill；
-2. Research → Architecture Traceability；
-3. GitHub Architecture Review Closure；
-4. Human-first Architecture Documentation Review。
-
-Red Skill 应沉淀的是 interviewer behavior：Claim 取证、精品思维、全链路追踪、Ownership、Build/Buy、故障反例、Evidence、基础下钻和 Simplification。它不应该打包 Zuno 当前 Architecture 正文，也不应该把历史 Blue 答案变成出题模板。
-
-Skill 更新应作为独立任务，从用户真实面试、公开面经和 Round workflow retrospective 中提炼规律；更新完成后用新 Round 验证。
+Skill 更新作为独立任务，从用户真实面试、公开面经和 Round retrospective 中提炼规律；更新后必须新 Round 验证。
 
 ## Current / Target 铁律
 

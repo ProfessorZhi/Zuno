@@ -4,7 +4,7 @@
 
 ## 目标
 
-正式 Round 先把当前 Zuno docs / Evidence 压缩成一份模拟简历，再让 Red 从简历 Claim 出发提问。Red / Blue 产生面试压力、回答、评价和改进建议，不拥有 Project、Architecture、Module 或 Current Truth。
+正式 Round 先把当前 Zuno docs / Evidence 压缩成一份模拟简历，再让 Red 从简历出发模拟真实面试。Red / Blue 产生面试压力、回答、评价和改进建议，不拥有 Project、Architecture、Module 或 Current Truth。
 
 ## GitHub 是运行时状态总线
 
@@ -36,17 +36,11 @@ Round 期间所有阶段提交进入同一个 branch / Draft PR。关闭前把 w
 
 ### Stage transaction
 
-每阶段至少持久化：
+每阶段至少持久化本阶段 artifact、`00_manifest.yaml` state 与 `08_session_transcript.md` observable I/O / transition / GitHub refs。
 
-```text
-本阶段 artifact
-00_manifest.yaml 的 stage state
-08_session_transcript.md 的 observable I/O / transition / GitHub refs
-```
+manifest 使用 `last_consumed_head_sha` 表示最近完成阶段实际读取的输入 HEAD；当前 branch HEAD 从 GitHub live ref 获取。
 
-manifest 使用 `last_consumed_head_sha` 表示最近完成阶段实际读取的输入 HEAD；当前 branch HEAD 必须从 GitHub ref 实时读取，不再用容易误解的 `stage_head_sha` 同时表达输入与输出。
-
-Round Init 必须把启动前已经知道、且会影响本轮的问题质量或流程约束写进 `07_user_feedback.md`。Round 运行中新的用户反馈也必须先写入 `07_user_feedback.md` 与 transcript 并提交，再影响后续阶段。
+Round Init 必须把启动前已经知道、且会影响本轮的问题质量或流程约束写进 `07_user_feedback.md`。Round 中新的用户反馈也先提交，再影响后续阶段。
 
 ## 生命周期
 
@@ -66,27 +60,26 @@ ROUND_INIT
 → CLOSE_AND_ARCHIVE
 ```
 
-`USER_RED_REVIEW` 是可配置门。工作流校准期默认 `REQUIRED`；成熟自动回归可以显式设为 `OPTIONAL` 或 `SKIP`。只要本轮 manifest 声明 `REQUIRED`，Blue 在 Red questions 被用户批准并冻结前不得执行。
+`USER_RED_REVIEW` 在校准期默认 `REQUIRED`。只要 manifest 声明 REQUIRED，Blue 在 Red plan 被用户批准并冻结前不得执行。
 
-Red 修订不创建第二批题单。`02_red_questions.md` 在同一个 Round 内更新，旧版本由 Git commit history 保留；每次修订都必须重新提交并回到 `USER_RED_REVIEW`。
+## Pressure Suite 与 Live Interview 必须分开
 
-## Question Suite 与真实面试路径
+默认保留 `100` 问 `PRESSURE_SUITE`，它用于离线覆盖和 retrospective，不是一场 45–60 分钟面试的脚本。
 
-默认总压力集仍为 `100` 问，但不把 100 问伪装成一场 45–60 分钟面试会逐题问完。
-
-默认结构：
+Live Interview 改为：
 
 ```text
-question_count: 100
-primary_path_target: 30
-reserve_target: 70
+LIVE_INTERVIEW_SEEDS: 6-10
+DYNAMIC_FOLLOWUP: REQUIRED
+ONE_QUESTION_ONE_INTENT: REQUIRED
+PRESSURE_SUITE: 100
 ```
 
-- `PRIMARY_PATH`：默认 25–40 问，构成真实一面主路径。
-- `RESERVE_FOLLOWUP`：只有主路径答案触发时才进入。
-- `KILL_SWITCH`：当某个高风险 Claim 的 Ownership / mechanism 无法成立时，停止在该 Claim 上继续堆同义深挖，记录 credibility break 后切到下一条 Claim。
+不再要求预写固定 30 问 `PRIMARY_PATH`。Red 先准备少量自然 Seed，让候选人自己暴露技术主线；后续问题必须在上一答出现以后，从候选人刚说出的技术、数字、困难、选择、Ownership 或 bad case 中选择信息增益最高的 handle。
 
-真实执行优先走 Primary Path；Reserve 用于条件追问、复测和压力覆盖。
+`KILL_SWITCH` 属于 Controller policy：当某个 Claim 连续无法建立 Ownership / mechanism，停止在该线程继续堆无效追问并自然换题。它不作为面试官口头话术出现。
+
+一场面试可以深挖一个项目很久，也可以迅速换线程；不要求平均覆盖所有 Resume Claim。
 
 ## Resume Builder
 
@@ -121,17 +114,17 @@ resume build notes / source trace
 prior Blue answers
 ```
 
-Red 开始前必须从 Round branch HEAD 重新读取允许输入。`02_red_questions.md` 不能直接消费 Resume Builder 在聊天中形成但未提交的中间信息。
+Red 开始前从 Round branch HEAD 重新读取允许输入。`02_red_questions.md` 不能消费 Resume Builder 未提交的聊天中间信息。
 
-问题围绕最高风险的 3–6 条 Resume Claim 建立攻击链，并执行 `.agent/red-blue/attack-model.md` 中的 Claim 取证、Ownership、Build / Buy / Extend / Defer、实现细节、故障反例、Evidence、基础下钻和删除条件。
+Red 依照 `.agent/red-blue/attack-model.md` 建立 Interview Threads、Seed Questions、answer-driven Follow-up Policy 和 Pressure Suite。Claim 取证、Ownership、Build / Buy / Extend / Defer、实现、故障、Evidence、基础下钻和删除条件仍然重要，但它们是 interviewer mental map，不应被拼成每一道复合长问。
 
-对于简历中直接写出算法名、函数名、Schema、test artifact 或精确指标的 Claim，Primary Path 必须尽早安排 Ownership / mechanism probe，不能先花大量问题讨论宏观架构。
+真实面试官说给候选人的问题应短、单意图，并允许诸如“你刚才说这里做了 rerank，为什么当时要加这一层？”这样的上一答驱动追问。
 
 ## USER_RED_REVIEW
 
-Red 提交 `02_red_questions.md` 后，如果 `red_review_gate=REQUIRED`，Controller 必须进入等待用户审查状态，并把 Red 第一轮产物交给用户。
+Red 提交 `02_red_questions.md` 后，如果 `red_review_gate=REQUIRED`，Controller 进入用户审查状态。
 
-用户结果只允许：
+用户结果：
 
 ```text
 APPROVE
@@ -139,29 +132,23 @@ REQUEST_REVISION
 ABORT
 ```
 
-`REQUEST_REVISION` 时，把用户反馈先提交到 `07_user_feedback.md` / transcript。Red Revision 的正式输入只能是原 Red allowlist + 当前 `02_red_questions.md` + 与 Red 质量直接相关的已提交用户反馈；仍不得读取 Zuno docs。
+`REQUEST_REVISION` 时先提交用户反馈。Red Revision 可以读取原 Red allowlist、当前 Red plan 与 Red 质量反馈；仍不得读取 Zuno docs。
 
 只有 `APPROVE` 后，manifest 才把 `red_questions_status` 改成 `FROZEN`，Blue 才能开始。
 
+人工 Review 优先检查：Seed 是否自然；如果候选人按某种方式回答，下一问是否真的会跟着变；有没有把 rubric 写成问句；有没有无信息增益的原子化追问。
+
 ## Blue — Candidate / Documentation Reader
 
-`02_red_questions.md` 已冻结后，Blue 从新的 GitHub HEAD 读取：
-
-```text
-01_simulated_resume.md
-02_red_questions.md
-manifest 固定的 Zuno source refs / allowlist
-```
-
-再按 `zuno_base_sha` 读取允许的 canonical docs / Evidence。Blue 在生成 `03_blue_answers.md` 前不读取 Red Evaluation。
+`02_red_questions.md` 已冻结后，Blue 从新的 GitHub HEAD 读取冻结简历、冻结 Red plan 和 manifest 固定 Zuno source refs / allowlist，再按 `zuno_base_sha` 读取允许的 canonical docs / Evidence。Blue 在生成 `03_blue_answers.md` 前不读取 Red Evaluation。
 
 回答必须区分 History / Current / Target / Unknown / Personal Ownership / Team / Framework Capability。没有来源时明确说未证明。
 
 ## Red Evaluation
 
-`03_blue_answers.md` 提交后，Red Evaluation 从 GitHub HEAD 读取冻结简历、冻结题单、Blue answers 与 Attack Skill。它不把 Zuno docs 作为正式评价输入。
+`03_blue_answers.md` 提交后，Red Evaluation 从 GitHub HEAD 读取冻结简历、实际提问 / 回答记录与 Attack Skill，不把 Zuno docs 作为正式评价输入。
 
-它评价回答是否像真正做过、实现是否具体、Ownership 是否可信、替代方案 / 故障 / 基础是否经得住追问，以及简历 Claim 是否值得保留。输出 `04_red_evaluation.md`。
+它评价候选人是否像真正做过、是否能落到实现、Ownership 是否可信、替代方案 / 故障 / 基础是否经得住追问，以及简历 Claim 是否值得保留。
 
 ## Blue Architecture Reflection
 
@@ -183,11 +170,9 @@ NO_ZUNO_CHANGE
 
 ## Workflow Retrospective
 
-`WORKFLOW_RETROSPECTIVE` 读取全轮已提交 artifact、Red Skill 和 `07_user_feedback.md`，专门审判 Red 与 Harness：问题有没有技术含量、是否重复、Primary Path 是否像真实面试、Kill Switch 是否有效、是否攻击重复造轮子、是否自然下钻基础，以及用户为什么认为问题好或差。
+`WORKFLOW_RETROSPECTIVE` 读取全轮已提交 artifact、Red Skill 和 `07_user_feedback.md`，专门审判 Red 与 Harness：面试是不是 answer-driven、有没有机器式 checklist、是否无意义原子化、是否自然进入 Ownership / implementation / Build-Buy / failure / evidence / fundamentals，以及用户为什么认为它像或不像真实面试。
 
 ## Context Firewall
-
-两种模式都必须经过 GitHub `commit → re-read`，但保证不同。
 
 ### CHATGPT_AUTO
 

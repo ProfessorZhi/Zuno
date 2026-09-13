@@ -10,13 +10,7 @@
 red-blue/<round-id>
 ```
 
-并在 branch 上创建：
-
-```text
-docs/red-blue/workspace/<round-id>/
-```
-
-固定九个文件：
+并创建 `docs/red-blue/workspace/<round-id>/`。固定九个文件保持不变：
 
 ```text
 00_manifest.yaml
@@ -34,100 +28,72 @@ Draft PR 是活动 Round 的 GitHub 入口。`main` 不保存半完成 workspace
 
 ## GitHub 是阶段交接面
 
-每个阶段都执行：
-
 ```text
 读取 live Round branch HEAD
 → 核对 manifest stage / allowlist
 → 从该 HEAD 读取正式输入
-→ 生成本阶段 artifact
+→ 生成 artifact
 → 更新 manifest / transcript
 → commit
 → 下一阶段重新读取新的 HEAD
 ```
 
-未提交聊天摘要、上一角色临时文本和 Controller 草稿不能跨阶段成为输入。Transcript 为每个事件记录 `input_head_sha`；manifest 的 `last_consumed_head_sha` 只记录最近完成阶段真正消费的输入 HEAD，不冒充当前 branch HEAD。
-
-Round 启动前已经知道的用户约束必须在第一笔 Round transaction 中进入 `07_user_feedback.md` 与 transcript。中途新反馈也先提交，再影响后续阶段。
+Round 启动前已经知道的用户约束进入第一笔 Round transaction；中途新反馈也先提交，再影响后续阶段。
 
 ## Resume-first
 
-每轮先由 Resume Builder 从固定 `zuno_base_sha` 读取当前 Project / Architecture / Modules / Evidence 与已有简历风格，生成本轮模拟简历。
+`01_simulated_resume.md` 冻结后，Red 只能读取冻结模拟简历、岗位 / JD / 面试轮次、Red Interview Skill 和模型通用知识。它不读 Zuno canonical docs、源码、PR 或 Blue answer key。
 
-`01_simulated_resume.md` 冻结并提交后，Red 只能从新的 GitHub HEAD 读取：
+## `02_red_questions.md` 现在是 Interview Plan，不是固定问卷
 
-```text
-冻结模拟简历
-岗位 / JD / 面试轮次
-Red Interview Skill
-模型通用知识
-```
-
-Red 不读 Zuno canonical docs、源码、PR 或 Blue answer key。
-
-## Red 第一轮不是 100 问逐题脚本
-
-默认总压力集仍为 100 问，但题单拆成：
+默认保存：
 
 ```text
-PRIMARY_PATH: 默认 30，允许 25–40
-RESERVE_FOLLOWUP: 其余问题
+6–10 条 SPOKEN_SEEDS
+DYNAMIC FOLLOWUP_POLICY
+若干 BRANCH_EXAMPLES
+100 问 PRESSURE_SUITE
 ```
 
-Primary Path 模拟真实 45–60 分钟技术一面。Reserve 只在主路径回答触发、用户要求继续深挖或后续复测时使用。
+`SPOKEN_SEEDS` 是面试官最初真正可能说出口的问题，只负责打开话题。候选人回答以后，Red 必须从上一答中抽取技术、数字、选择、困难、Ownership 或 bad case，再决定下一问。
 
-具体实现 Claim 要尽早经过 Ownership / mechanism probe。如果候选人无法说明自己改的真实实现对象和最小机制，Red 触发 Kill Switch，记录该 Claim 的 credibility break 后切到下一条 Claim，不再用十几道同义问题继续追。
+Pressure Suite 负责离线覆盖，不在 45–60 分钟现场逐题朗读。
+
+### 一个问题只问一件主要事情
+
+旧版常把“机制、代码、测试、指标、Trade-off”塞在一个问题里。现在这些验证拆成连续对话。例如：
+
+```text
+你刚才说检索效果掉了，最开始怎么发现的？
+→ 具体是哪里排错了？
+→ 你最后改了哪一层？
+→ 那个 Recall 是怎么测的？
+```
+
+深度来自每一答触发下一问，而不是问题本身越来越长。
+
+### Kill Switch 是 Controller 元数据
+
+如果候选人连续无法建立某个 Claim 的 Ownership / mechanism，Red 记录 credibility break 并自然换 thread。Kill Switch 不作为面试官口头话术展示。
 
 ## USER_RED_REVIEW
 
-工作流校准 Round 默认：
+校准 Round 默认 `red_review_gate: REQUIRED`。Red 第一版 Interview Plan 提交后停止推进，用户检查：
 
-```text
-red_review_gate: REQUIRED
-```
+- Seed 是否像真人会问；
+- Branch Example 中下一问是否真的从上一答长出来；
+- 是否还有 Reviewer checklist 味；
+- 是否有复合长问；
+- 是否无信息增益地拆原子细节。
 
-Red 提交第一版 `02_red_questions.md` 后进入 `USER_RED_REVIEW`，此时停止自动推进，把 Primary Path 与完整题单交给用户检查。
+用户结果：`APPROVE / REQUEST_REVISION / ABORT`。只有 APPROVE 后 `red_questions_status` 才能 `FROZEN`，Blue 才能开始。
 
-用户只能给三类结果：
-
-```text
-APPROVE
-REQUEST_REVISION
-ABORT
-```
-
-`APPROVE` 后通过单独 Controller commit 把 `red_questions_status` 冻结为 `FROZEN`，Blue 才能开始。
-
-`REQUEST_REVISION` 时先把反馈写入 `07_user_feedback.md` / transcript 并提交；Red 再读取同一冻结简历、Attack Skill、当前题单和这条已提交质量反馈，修改同一个 `02_red_questions.md`，然后重新进入 `USER_RED_REVIEW`。旧版题单由 Git history 保留。
+如果用户认为是 Skill 结构问题，而不是局部措辞问题，可以把当前 Round `SUPERSEDED`，先更新 Skill，再用新 Skill 开新 Round。失败版本继续保留。
 
 ## 两种模式的隔离强度
 
-`CHATGPT_AUTO`：
-
-```text
-LOGICAL_GITHUB_MEDIATED
-strict_blind_red_certification: false
-```
-
-GitHub 可以约束 handoff，但单对话不能证明物理遗忘。
-
-`AGENT_AUTO` 在 Red 确实使用独立 context 时可声明：
-
-```text
-PHYSICAL_CONTEXT_ISOLATION
-strict_blind_red_certification: true
-```
-
-两种模式仍使用同一 GitHub state machine。
+`CHATGPT_AUTO` 使用 `LOGICAL_GITHUB_MEDIATED`，不能证明物理遗忘；`AGENT_AUTO` 在 Red 使用独立 context 时可声明 `PHYSICAL_CONTEXT_ISOLATION`。两种模式仍使用同一 GitHub state machine。
 
 ## 关闭一轮
 
-完成全部阶段以后，在 Round branch 上把 workspace 原样移动到：
-
-```text
-docs/red-blue/rounds/<round-id>/
-```
-
-随后 Draft PR 转 ready、required CI 通过、merge，并重新读取 exact `main` HEAD。
-
-坏问题、弱回答、用户批评和修订历史都保留。它们是后续改 Red Skill、Project documentation 和简历 Claim 的证据。
+完成 Round 后把 workspace 原样移动到 `docs/red-blue/rounds/<round-id>/`，Draft PR 转 ready，required CI 通过后 merge。坏问题、弱回答、用户批评和修订历史都保留。

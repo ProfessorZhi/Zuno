@@ -24,9 +24,7 @@ firewall_strength: LOGICAL_GITHUB_MEDIATED | PHYSICAL_CONTEXT_ISOLATION
 strict_blind_red_certification: false | true
 ```
 
-每个 stage 从 GitHub live branch HEAD 读取允许输入，并在 transcript 写 `input_head_sha`。`last_consumed_head_sha` 只记录最近完成 stage 真正读取的 HEAD，不作为 live ref 的替代品。
-
-`CHATGPT_AUTO` 使用 `LOGICAL_GITHUB_MEDIATED` 且不能声明严格 blind Red；`AGENT_AUTO` 只有在 Red 使用独立 context 时才使用 `PHYSICAL_CONTEXT_ISOLATION`。
+每个 stage 从 GitHub live branch HEAD 读取允许输入，并在 transcript 写 `input_head_sha`。`last_consumed_head_sha` 只记录最近完成 stage 真正读取的 HEAD。
 
 ## Interview Target
 
@@ -35,9 +33,10 @@ target_role:
 company_or_persona:
 interview_stage:
 jd_source:
-question_count: 100
-primary_path_target: 30
-reserve_target: 70
+pressure_suite_count: 100
+seed_question_target: 8
+live_followups: DYNAMIC
+one_question_one_intent: true
 red_review_gate: REQUIRED | OPTIONAL | SKIP
 ```
 
@@ -59,7 +58,7 @@ simulated_resume_path: docs/red-blue/workspace/<round-id>/01_simulated_resume.md
 resume_status: DRAFT | FROZEN
 ```
 
-`01_simulated_resume.md` 冻结并提交以后，Red 不得把上述 build sources 作为正式出题输入。
+`01_simulated_resume.md` 冻结并提交以后，Red 不得把上述 build sources 作为正式输入。
 
 ## Red Input Allowlist
 
@@ -85,17 +84,22 @@ Explicit denylist:
 - prior Blue answers used as a hidden answer key
 ```
 
-## Red Question Suite
+## Red Interview Plan
 
 ```text
 red_questions_status: NOT_STARTED | DRAFT_REVIEW | REVISION_REQUESTED | FROZEN
-primary_path_count:
-reserve_count:
-kill_switches_present: false | true
+seed_question_count:
+pressure_suite_count: 100
+live_followups: DYNAMIC
+one_question_one_intent: true
+branch_examples_present: false | true
+kill_switch_policy_present: false | true
 user_red_review_status: PENDING | APPROVED | REVISION_REQUESTED | ABORTED | NOT_REQUIRED
 ```
 
-`02_red_questions.md` 默认包含 25–40 条 `PRIMARY_PATH` 与其余 `RESERVE_FOLLOWUP`。总问题数默认 100，但真实面试执行不机械问完 100 题。
+`02_red_questions.md` 默认包含：Interview Threads、6–10 条 `SPOKEN_SEEDS`、answer-driven `FOLLOWUP_POLICY`、若干 `BRANCH_EXAMPLES` 和 100 问 `PRESSURE_SUITE`。
+
+Pressure Suite 用于离线覆盖，不是现场 45–60 分钟脚本。实际 Live Interview 后续问题必须根据上一答动态生成。
 
 当 `red_review_gate: REQUIRED`：
 
@@ -107,7 +111,7 @@ RED_QUESTIONS commit
 → ABORT: close/supersede
 ```
 
-Red Revision 只能读取原 Red allowlist、当前题单和已提交的 Red-quality user feedback；仍不得读取 Zuno docs。旧题单由 Git history 保留。
+Red Revision 只能读取原 Red allowlist、当前 Red plan 和已提交的 Red-quality user feedback；仍不得读取 Zuno docs。旧版本由 Git history 保留。
 
 ## Blue Input Allowlist
 
@@ -116,6 +120,7 @@ Red Revision 只能读取原 Red allowlist、当前题单和已提交的 Red-qua
 ```text
 - 01_simulated_resume.md
 - 02_red_questions.md
+- actual live interview transcript, if execution mode records it
 - AGENTS.md
 - docs/project/
 - docs/architecture/
@@ -132,6 +137,7 @@ Blue 按 `zuno_base_sha` 读取 Zuno docs，并且在生成 `03_blue_answers.md`
 ```text
 - 01_simulated_resume.md
 - frozen 02_red_questions.md
+- actual question/answer exchanges
 - 03_blue_answers.md
 - .agent/red-blue/attack-model.md
 ```
@@ -164,8 +170,11 @@ primary_persona:
 cross_personas:
   -
 attack_skill_version:
-question_budget_notes:
+interview_behavior_evidence_version:
+time_budget_minutes:
 ```
+
+Raw external interview corpus is upstream Skill evidence, not a default per-round Red input.
 
 ## Fixed Round Artifacts
 
@@ -200,18 +209,18 @@ transcript_complete: false
 
 ## Round Init Feedback Rule
 
-Round 启动前已经知道的用户流程约束、Red 质量反馈和校准目标必须在第一笔 Round transaction 中进入 `07_user_feedback.md` 与 `08_session_transcript.md`。不能等到 Workflow Retrospective 再补录。
+Round 启动前已经知道的用户流程约束、Red 质量反馈和校准目标必须在第一笔 Round transaction 中进入 `07_user_feedback.md` 与 `08_session_transcript.md`。
 
 ## Close Conditions
 
-Round 可以关闭的必要条件：
+正常完成 Round 的必要条件：
 
 ```text
 - round branch and Draft PR exist
 - every stage used commit-then-reread handoff
-- simulated resume frozen before Red questions
-- Red formal inputs followed the allowlist
-- if red_review_gate=REQUIRED, user approved frozen Red questions before Blue
+- simulated resume frozen before Red
+- Red formal inputs followed allowlist
+- if red_review_gate=REQUIRED, user approved frozen Red plan before Blue
 - Blue answered from allowed docs only
 - Red evaluation completed without Zuno docs as formal input
 - Blue architecture reflection completed
@@ -221,4 +230,4 @@ Round 可以关闭的必要条件：
 - workspace folder is archived into rounds/<round-id>/ before merge
 ```
 
-Retest 不在同一 Round 继续追加第二批问题；创建新的 round-id，并重新生成与当时 docs 对应的模拟简历。
+如果用户在 `USER_RED_REVIEW` 判定 Red Skill 本身需要结构性重写，可以把该 Round 标记 `SUPERSEDED`，保留失败的 Red artifact 和 feedback，再用新 Skill 开新 Round；不要强行在旧 Skill version 上继续 Blue。

@@ -113,7 +113,11 @@ def test_red_blue_harness_is_resume_first_and_archivable() -> None:
     assert "CHATGPT_AUTO" in current and "AGENT_AUTO" in current
     assert "workspace_path:" in current
     assert "simulated_resume:" in current
-    assert "question_count: `100`" in current
+    assert "pressure_suite_count: `100`" in current
+    assert "seed_question_target: `8`" in current
+    assert "live_followups: `DYNAMIC`" in current
+    assert "one_question_one_intent: `true`" in current
+    assert "primary_path_target" not in current
 
     protocol = (root / "protocol.md").read_text(encoding="utf-8")
     for marker in (
@@ -122,13 +126,15 @@ def test_red_blue_harness_is_resume_first_and_archivable() -> None:
         "BLUE_ARCHITECTURE_REFLECTION", "WORKFLOW_RETROSPECTIVE",
         "01_simulated_resume.md", "禁止输入", "docs/project/",
         "Zuno 源码 / PR / commit diff", "08_session_transcript.md",
+        "LIVE_INTERVIEW_SEEDS", "DYNAMIC_FOLLOWUP", "PRESSURE_SUITE",
     ):
         assert marker.lower() in protocol.lower()
 
     attack = (root / "attack-model.md").read_text(encoding="utf-8")
     for marker in (
         "精品思维", "全链路追踪", "不重复造轮子", "Ownership", "Build / Buy",
-        "100 问", "Red 自我质量检查", "Skill 也必须接受审判",
+        "100 问", "有状态对话", "一问一个主要意图", "Pressure Suite",
+        "Red 自我质量检查", "Skill 也必须接受审判",
     ):
         assert marker in attack
 
@@ -136,6 +142,7 @@ def test_red_blue_harness_is_resume_first_and_archivable() -> None:
     for marker in (
         "Red Evaluation", "Blue Architecture Reflection", "SIMULATED_RESUME_GAP",
         "ARCHITECTURE_GAP", "FUNDAMENTAL_GAP", "Workflow Retrospective",
+        "Listening / Adaptation", "One-intent Questions",
     ):
         assert marker in judge
 
@@ -143,7 +150,7 @@ def test_red_blue_harness_is_resume_first_and_archivable() -> None:
     for marker in (
         "Resume-first", "CHATGPT_AUTO", "AGENT_AUTO", "Red Interview Skill",
         "Red Evaluation", "Blue Architecture Reflection", "Workflow Retrospective",
-        "01_simulated_resume.md", "06_workflow_retrospective.md",
+        "01_simulated_resume.md", "06_workflow_retrospective.md", "Pressure Suite",
     ):
         assert marker in workflow
 
@@ -152,6 +159,7 @@ def test_red_blue_harness_is_resume_first_and_archivable() -> None:
         "Active Workspace", "01_simulated_resume.md", "02_red_questions.md",
         "03_blue_answers.md", "04_red_evaluation.md", "05_blue_architecture_reflection.md",
         "06_workflow_retrospective.md", "07_user_feedback.md", "08_session_transcript.md",
+        "SPOKEN_SEEDS", "DYNAMIC FOLLOWUP_POLICY", "PRESSURE_SUITE",
     ):
         assert marker in workspace
 

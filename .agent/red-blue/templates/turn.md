@@ -1,10 +1,8 @@
 # Red / Blue Stage Artifact Templates
 
-这个模板描述一轮中各文件应该保存什么。固定阶段产物直接写入同一个 Round 文件夹；阶段 handoff 只通过 Round branch 上已提交的 artifact 完成。
+这个模板描述一轮中各文件应该保存什么。阶段 handoff 只通过 Round branch 上已提交的 artifact 完成。
 
-## 每个 Stage 的 GitHub 元数据
-
-每个 artifact 顶部或 manifest 中至少能恢复：
+## Stage GitHub 元数据
 
 ```text
 stage:
@@ -24,7 +22,7 @@ output_commit_sha:
 求职方向：<role>
 
 ## 项目经历
-### Zuno：<本轮最合理的项目标题>
+### Zuno：<project title>
 项目简介：...
 技术栈：...
 1. ...
@@ -33,79 +31,75 @@ output_commit_sha:
 4. ...
 ```
 
-Red 可见文件不得带 source trace、Current/Target 标签或答案提示。来源和构建边界写入 manifest / session transcript。
+Red 可见文件不得带 source trace、Current/Target 标签或答案提示。
 
 ## `02_red_questions.md`
 
+这个文件现在保存 **Red Interview Plan + Pressure Suite**，不再保存固定 30 问线性脚本。
+
 ```text
-# Red Questions — <round-id>
+# Red Interview Plan — <round-id>
 
 question_count: 100
-primary_path_count: 30
-reserve_count: 70
+seed_question_count: 8
+live_followups: DYNAMIC
+one_question_one_intent: true
 primary_persona:
 cross_personas:
 formal_input_head:
 red_questions_status: DRAFT_REVIEW | FROZEN
 
-## Claim map
-- A — <resume claim>; risk: HIGH; reason: ...
+## Interview threads
+- A — <resume claim / thread>; risk: HIGH; initial suspicion: ...
 - B — ...
 
-## PRIMARY_PATH
-### P001
-question: ...
-claim: A
-ask_if: ALWAYS
-kill_switch: none
+## SPOKEN_SEEDS
+S001. <自然、单意图的开场问题>
+S002. ...
 
-### P002
-question: ...
-claim: A
-ask_if: PREVIOUS_PASS
-kill_switch: CLAIM_IMPLEMENTATION_NOT_ESTABLISHED if candidate cannot name owned implementation object and mechanism
+## FOLLOWUP_POLICY
+- candidate mentions a precise metric -> ask where the number came from; wait for answer before asking dataset/metric details
+- candidate says "我们做了" -> naturally clarify own contribution
+- candidate describes a real failure -> stay on that failure and trace diagnosis / fix / result
+- thread stops producing information -> pivot
 
-## RESERVE_FOLLOWUP
-### R001
+## BRANCH_EXAMPLES
+### Branch 1
+candidate_answer_summary: ...
+next_spoken_question: ...
+why_this_handle: <observable interviewer reason; not hidden chain-of-thought>
+
+## PRESSURE_SUITE
+### Q001
 question: ...
-claim: A
-trigger: candidate demonstrates implementation ownership and exposes concurrency risk
+thread: A
+trigger: ...
+...
+
+## Red self-check
+...
 ```
 
-Primary Path 默认 25–40 问，代表真实 45–60 分钟一面；Reserve 补足总压力集但不机械执行。具体实现 Claim 必须尽早出现 Ownership / mechanism probe，失败时使用 Kill Switch，避免继续堆同义问题。
+`SPOKEN_SEEDS` 是第一次用户校准时重点检查的表面问题。它默认 6–10 条，只负责启动对话。后续真正说给候选人的问题由上一答动态生成，不要求事先编号。
 
-题单末尾保存显式质量元数据：Claim coverage、Primary Path time realism、Kill Switch coverage、Attack Angle coverage、duplicate check。不得保存或伪造模型私有 chain-of-thought。
+`PRESSURE_SUITE` 默认保留 100 问，用于离线覆盖和 retrospective；它不是实际 45–60 分钟面试会逐题执行的脚本。
 
-问题正文不附答案提示、Zuno 内部对象名答案或 source trace。
+Controller Metadata 可以记录 thread、risk、Kill Switch 和触发条件，但面试官口头问题不附 Claim 标签、评分 rubric 或 Kill Switch。
 
-当 `red_review_gate=REQUIRED`，第一次提交的题单必须是 `DRAFT_REVIEW`。用户 `APPROVE` 后通过单独 Controller commit 冻结；用户 `REQUEST_REVISION` 时，先提交反馈，再让 Red 更新同一文件并重新进入审查。
+当 `red_review_gate=REQUIRED`，第一次提交必须是 `DRAFT_REVIEW`。用户 `APPROVE` 后单独冻结；`REQUEST_REVISION` 时先提交反馈，再更新同一文件。
 
 ## `03_blue_answers.md`
 
-Blue 只能消费已经 `FROZEN` 的 Red questions。每题独立回答：
-
-```text
-### P001 / Rxxx
-**Answer**
-...
-
-**Source trace**
-- docs/project/...
-- docs/modules/...
-- Unknown: ...
-```
-
-Blue 可以明确说 Unknown / Target-only / not personally owned。
+Blue 只能消费已经 `FROZEN` 的 Red plan 与实际 interview transcript。回答继续保留 Source trace，并可明确 Unknown / Target-only / not personally owned。
 
 ## `04_red_evaluation.md`
 
-Red 不把 Zuno docs 作为评价输入，只按面试官视角评价：
+Red Evaluation 应评价候选人在**实际对话分支**上的表现，而不是检查 100 问是否逐题答完：
 
 ```text
-## Claim A
+thread:
 verdict: STRONG_PASS | PASS | PARTIAL | FAIL
 ownership:
-business_causality:
 implementation_depth:
 build_buy:
 failure_recovery:
@@ -113,16 +107,13 @@ evidence:
 fundamentals:
 communication:
 
-strongest_answer:
-weakest_answer:
+strongest_exchange:
+weakest_exchange:
 kill_switch_triggered:
 resume_claim_risk:
-retest_recommendation:
 ```
 
 ## `05_blue_architecture_reflection.md`
-
-Blue 读取已提交 Red evaluation + 固定 Zuno docs 后，把问题路由：
 
 ```text
 issue:
@@ -134,27 +125,15 @@ recommended_owner:
 retest_needed:
 ```
 
-不得因为 Red 问到了一个冷门实现字段，就新增 Architecture Object。
+不得因为 Red 问到冷门实现字段，就新增 Architecture Object。
 
 ## `06_workflow_retrospective.md`
 
-重点评价：Primary Path 是否像真实面试、Reserve 是否真的条件化、Kill Switch 是否减少无信息增益追问，以及用户对第一轮 Red 的评价。
+重点评价：Seed 是否自然、Follow-up 是否真的使用上一答、线程切换是否像真人、是否存在复合长问或无信息增益原子化，以及 Pressure Suite 有没有被误当成现场脚本。
 
 ## `07_user_feedback.md`
 
-按时间追加用户对本轮的直接评价：
-
-```text
-feedback_id:
-when:
-text:
-affected_stage:
-priority:
-input_head_sha:
-commit_sha:
-```
-
-Round 启动前已知的用户校准要求也必须在 ROUND_INIT transaction 中记录，不能后补。
+按时间追加用户评价。Round 启动前已知的校准要求也在 ROUND_INIT transaction 中记录。
 
 ## `08_session_transcript.md`
 
@@ -171,6 +150,6 @@ output_commit_sha:
 next_stage:
 ```
 
-至少记录 Round/PR 初始化、用户反馈、Resume Builder、Red、USER_RED_REVIEW、Red Revision（如有）、Blue、Evaluation、Reflection、Retrospective、CI、Archive 与 Merge。
+如果实际执行 Live Interview，transcript 还应保存可观察的 interviewer question / candidate answer exchange，使后续 Red Evaluation 能依据真正发生的分支评价，而不是依据预写题库。
 
-CHATGPT_AUTO 与 AGENT_AUTO 使用同一格式。Transcript 保存可观察 I/O 和 GitHub state transition，不保存或伪造模型私有 chain-of-thought。
+CHATGPT_AUTO 与 AGENT_AUTO 使用同一格式。Transcript 不保存或伪造模型私有 chain-of-thought。

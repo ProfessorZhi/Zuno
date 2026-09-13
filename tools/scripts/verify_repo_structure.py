@@ -68,6 +68,7 @@ GOVERNANCE_REQUIRED = {
 }
 RED_BLUE_REQUIRED = {
     "docs/red-blue/README.md",
+    "docs/red-blue/interview-behavior-evidence-2026-09.md",
     "docs/red-blue/workspace/README.md",
     "docs/red-blue/rounds/README.md",
     "docs/red-blue/archive/legacy/README.md",
@@ -151,10 +152,14 @@ def main() -> int:
             errors.append("Red/Blue current state is neither recognized inactive nor active-red-blue")
         for marker in (
             "CHATGPT_AUTO", "AGENT_AUTO", "stage:", "workspace_path:",
-            "simulated_resume:", "question_count", "full-observable-role-io",
+            "simulated_resume:", "pressure_suite_count", "seed_question_target",
+            "live_followups", "one_question_one_intent", "full-observable-role-io",
         ):
             if marker not in red_blue_current:
                 errors.append(f"Red/Blue current contract missing marker: {marker}")
+        for obsolete_marker in ("primary_path_target", "reserve_target"):
+            if obsolete_marker in red_blue_current:
+                errors.append(f"Red/Blue current contract retains obsolete static interview marker: {obsolete_marker}")
 
     if errors:
         print("REPO_STRUCTURE_INVALID")
