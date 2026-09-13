@@ -18,3 +18,11 @@ input_head_sha: 513c318de952e57576aade1558cefc34bec89f93
 observable_input_summary: Bind the resume-calibration Round to its GitHub Draft PR while keeping Red blocked.
 observable_output_summary: Bound Draft PR #234. Resume remains DRAFT / PENDING user review; Red remains NOT_STARTED and Blue remains BLOCKED.
 next_stage: USER_RESUME_REVIEW
+
+## Event 003 — RESUME_DRAFT_TIGHTENING
+actor: ResumeBuilder
+stage: USER_RESUME_REVIEW
+observable_input_summary: Compare the draft against the user's actual resume register. The first #017 draft was already far shorter than Round #016 but still slightly denser than the user's typical Zuno bullet length.
+observable_output_summary: Tightened the four contribution bullets again while preserving the same facts. Approximate average bullet length moved to about 81 characters, versus about 65 in the user's old Zuno resume and about 326 in the superseded simulated resume. Resume remains DRAFT; Red and Blue remain blocked.
+output_commit_sha: 602f820fa80eebfb2acae2b0da7acf21671e9383
+next_stage: USER_RESUME_REVIEW
