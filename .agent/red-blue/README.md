@@ -1,8 +1,8 @@
 # Zuno Red / Blue Runtime
 
-`.agent/red-blue/` 是机器运行中心；长期方法、正式说明和归档入口在 `docs/red-blue/`。
+`.agent/red-blue/` 是机器运行中心；长期方法、工作区和归档入口在 `docs/red-blue/`。
 
-本目录只拥有：active Round state、机器 protocol、attack model、verifier rules 和运行模板。它不拥有 Project History、Target Architecture、Module Truth、Current Evidence 或简历正文。
+本目录只拥有 active Round state、执行协议、Red Interview Skill、评价规则和模板。它不拥有 Project History、Target Architecture、Module Truth、Current Evidence 或真实简历正文。
 
 ## 正式模式
 
@@ -13,15 +13,26 @@ CHATGPT_AUTO
 AGENT_AUTO
 ```
 
-用户中途参与属于 intervention，不是第三种 `human-candidate` 模式。
+两种模式使用完全相同的 Round 阶段和文件结构。
 
 ### CHATGPT_AUTO
 
-一个 ChatGPT 对话中程序性切换 Red / Blue / Verifier 视角。适合快速发现 Narrative、Architecture、Evidence、Ownership、Build/Buy 和 Simplification Gap。
+一个 ChatGPT 对话中程序性切换：
+
+```text
+Resume Builder
+→ Red
+→ Blue
+→ Red Evaluation
+→ Blue Architecture Reflection
+→ Workflow Retrospective
+```
+
+最重要的隔离规则是：**Resume Builder 可以读取 Zuno docs；模拟简历冻结后，Red 不再读取 Zuno docs。**
 
 ### AGENT_AUTO
 
-使用独立 Red、Blue、Verifier context。适合正式 Closed-book 验收以及高严重度 Finding 的复测。
+为上述各阶段建立独立 context。主要优势是更强的输入隔离；归档要求与 CHATGPT_AUTO 相同。
 
 ## 机器目录
 
@@ -30,8 +41,8 @@ AGENT_AUTO
 ├── README.md
 ├── current.md
 ├── protocol.md
-├── attack-model.md
-├── judge.md          # verifier/audit rules; not a third debating role
+├── attack-model.md   # Red Interview Skill
+├── judge.md          # Red Evaluation / Blue Reflection / workflow audit rules
 └── templates/
     ├── round.md
     └── turn.md
@@ -39,26 +50,73 @@ AGENT_AUTO
 
 ## Source boundary
 
-Red 可以读取精确简历、岗位/JD、攻击模型、批准的真实面经校准材料，以及 Build/Buy 问题所需的最新公开平台资料。
+### Resume Builder
 
-Blue 使用同一份简历快照，但只能读 manifest allowlist 内的 Zuno canonical docs；默认从 Project / Architecture / Module Part A 回答，追到精确 Contract / Recovery / Evidence 后再下钻 Part B / Part C / ADR / Evidence。
+可读取：Zuno canonical docs / Evidence + 用户已有简历风格。只负责产出本轮 `01_simulated_resume.md`。
 
-Verifier 只检查来源、事实层级、decision impact 和 Gap classification，不给 Blue 补答案。
+### Red
 
-## 运行边界
+只可读取：
 
-Round 不得自动修改 Architecture、简历或业务代码。输出只形成 Findings；正式变化通过独立任务进入对应 Owner。
+```text
+01_simulated_resume.md
+岗位 / JD / 轮次
+attack-model.md
+模型通用知识
+```
 
-新 Round 长期归档到：
+Red 默认不能读取 Project / Architecture / Modules / Evidence / Zuno source / prior Blue answer key。原始面经用于单独更新 Skill，不作为每轮默认 Red 输入。
+
+### Blue
+
+读取冻结模拟简历、Red Questions 和 manifest allowlist 内 Zuno canonical docs / Evidence。
+
+### Red Evaluation
+
+读取模拟简历、问题、Blue 答案和 Red Skill；仍然不能读取 Zuno docs。
+
+### Blue Reflection
+
+读取完整面试产物和 Zuno docs，判断面试断点真正属于 Resume / Narrative / Docs / Architecture / Implementation / Evidence / Ownership / Fundamentals 中哪一类。
+
+### Workflow Retrospective
+
+读取全轮 observable artifacts、Red Skill 和用户反馈，专门判断 Red 的问题质量与 Harness 设计。
+
+## Active Workspace
+
+Active Round 位于：
+
+```text
+docs/red-blue/workspace/<round-id>/
+```
+
+一轮固定产物：
+
+```text
+00_manifest.yaml
+01_simulated_resume.md
+02_red_questions.md
+03_blue_answers.md
+04_red_evaluation.md
+05_blue_architecture_reflection.md
+06_workflow_retrospective.md
+07_user_feedback.md
+08_session_transcript.md
+```
+
+Round 关闭后整个文件夹原样归档到：
 
 ```text
 docs/red-blue/rounds/<round-id>/
 ```
 
-旧手工/早期自动材料只在：
+Round 不在同一文件夹继续第二批问题。修复后 retest 创建新 Round、新模拟简历。
 
-```text
-docs/red-blue/archive/legacy/
-```
+## 运行边界
+
+Round 不自动修改 Architecture、简历、Red Skill 或业务代码。Blue Reflection / Workflow Retrospective 只提出独立后续任务。
+
+所有模式都保存可观察角色 I/O、Controller transition 和 user feedback；不保存或伪造模型私有 chain-of-thought。
 
 完整方法见 `docs/red-blue/README.md`；执行状态机见 `protocol.md`。
