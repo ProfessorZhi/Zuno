@@ -9,7 +9,7 @@ github_runtime:
   stage_handoff: COMMIT_THEN_REREAD
   round_branch: red-blue/rb-2026-09-13-resume-first-014
   round_pr: 226
-  stage_head_sha: 2ee974298f1322c0d4f88731da55cd3fe3ba4b31
+  stage_head_sha: 5861c7df860b538e49a7188b9c78493a52c30a54
   stage_head_semantics: last GitHub HEAD consumed by the completed stage; live branch ref is authoritative for the next stage
   firewall_strength: LOGICAL_GITHUB_MEDIATED
   strict_blind_red_certification: false
@@ -59,10 +59,10 @@ interviewer_configuration:
   question_budget_notes: prioritize implementation depth, Build/Buy skepticism, full-chain causality, failure paths, evidence and project-derived fundamentals; do not average questions across modules
 
 stage_state:
-  current_stage: RED_QUESTIONS
+  current_stage: BLUE_ANSWERS
   resume_built: true
   resume_frozen: true
-  red_questions_archived: false
+  red_questions_archived: true
   blue_answers_archived: false
   red_evaluation_archived: false
   blue_reflection_archived: false
