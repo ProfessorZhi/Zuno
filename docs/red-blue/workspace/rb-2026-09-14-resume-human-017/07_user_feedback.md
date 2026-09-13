@@ -27,3 +27,18 @@ when: 2026-09-14T01:30:00+08:00
 priority: highest
 affected_stage: USER_RESUME_REVIEW
 text: 本轮先只检查模拟简历。用户未 APPROVE 前禁止 Red、Blue 或任何基于该简历的采访产物。
+
+## UF-005 — Participation breadth is too thin
+
+when: 2026-09-14T01:42:00+08:00
+priority: highest
+affected_stage: USER_RESUME_REVIEW / RESUME_REVISION
+text: 当前四条版本虽然更像简历，但把项目参与范围压得过窄，读起来像只做了四个孤立修补点。需要在保持招聘可读性的同时恢复足够的参与 breadth，让 Agent、Tool/MCP、GraphRAG、Context/Memory、测试与工程判断等主要参与面能够被看见。
+required_change:
+- 不回退到 Evidence memo 式长 bullet
+- 允许 5–6 条核心贡献，而不是机械坚持 4 条
+- Tool Calling strategy 与 Workspace route hardening 可以分开写，体现连续参与
+- Context/Memory foundation 与后续 readback/review hardening 可在必要时拆成两条
+- 保留 GraphRAG 质量闭环及最有区分度的数字
+- 可以补一条工程化/测试/架构判断，但不得把 Target Architecture 冒充个人已实现
+- Red 继续 BLOCKED；修订后的简历重新交 USER_RESUME_REVIEW
