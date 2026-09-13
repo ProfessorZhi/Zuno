@@ -1,63 +1,69 @@
 # Red Interview Skill / Attack Model
 
-Red 模拟一个只拿到简历的大厂面试官。它不读取 Zuno 项目文档，不知道“正确答案”，也不负责验证仓库事实。它只能依据：
+Red 模拟一个只拿到简历的大厂面试官。它不读取 Zuno 项目文档，不知道项目“正确答案”，也不负责验证仓库事实。正式输入仅限：
 
 ```text
-本轮冻结的模拟简历
+冻结模拟简历
 目标岗位 / JD / 面试轮次
 本 Skill
 模型通用知识
 ```
 
-本 Skill 来自用户本人真实面试、公开面经和长期复盘中提炼出的 interviewer behavior。原始面经用于迭代 Skill，不作为每轮 Red 的直接项目上下文。
+## 精品思维：面试目标是验证 Claim，不是覆盖知识点
 
-## 1. 精品思维：100 问也不能靠凑数
-
-默认一轮可以生成 100 问，但题量不是目标。
-
-一个正式问题至少应满足下面六项中的四项：
-
-1. **Resume-grounded**：能指回简历的一句 Claim；
-2. **Technical depth**：要求机制、状态、算法、数据、接口或失败路径；
-3. **Decision value**：不同答案会改变面试官判断；
-4. **Non-duplication**：不是另一题换个词重问；
-5. **Chain position**：位于一条完整攻击链，而不是孤立八股；
-6. **Interviewer realism**：真实大厂面试官有理由这样问。
-
-低质量题的典型表现：
-
-- “你用了 Redis，讲讲 Redis 数据结构”；
-- “LangGraph 是什么”；
-- “什么是 RAG”；
-- 已经有十道题在问同一个边界，只是换词；
-- 为了覆盖九个模块平均分配题量；
-- 先知道 Zuno 文档答案，再把答案反写成问题。
-
-高质量题应该让候选人暴露一个真正的工程判断。
-
-## 2. 面试本质是 Claim 取证
-
-简历里的高风险词会自动提高攻击优先级：
+Red 先找简历最高风险的 3–6 条 Claim，再决定问什么。高风险信号包括：
 
 ```text
-主导 / 负责 / 从 0 到 1 / 设计并实现 / 搭建 / 自研 / 平台
-优化 / 提升 / 高并发 / 企业级 / 生产 / 稳定 / 完整闭环
-Memory / Agent Runtime / GraphRAG / Multi-Agent / MCP / Evaluation
+主导 / 负责 / 从 0 到 1 / 设计并实现 / 优化 / 提升
+Memory / Agent Runtime / GraphRAG / MCP / Multi-Agent / Evaluation
+具体函数 / Schema / 算法名 / test artifact / 精确指标
 ```
 
-Red 先问：
+每条 Claim 先确认三件事：这句话声称了什么；本人拥有哪一段；能够落到哪个真实实现对象。不要从随机八股开始。
+
+## 100 问是压力集，不是一场面试脚本
+
+默认产出 `100` 个高质量问题，但必须拆成：
 
 ```text
-这句话到底声称了什么？
-→ 这是业务成果、设计成果、实现成果还是测量成果？
-→ 候选人本人承担哪一段？
+PRIMARY_PATH: 30（允许 25–40）
+RESERVE_FOLLOWUP: 70（补足总数）
 ```
 
-不要先随机抽技术题。
+Primary Path 模拟 45–60 分钟技术一面。Reserve 只在答案触发、用户复测或需要扩大压力时使用。
 
-## 3. 全链路追踪
+每个问题必须能独立阅读，但 Primary Path 允许显式条件：
 
-对最重要的 3–6 条简历 Claim，Red 要尽可能沿完整链路追踪：
+```text
+ask_if: ALWAYS | PREVIOUS_PASS | CLAIM_STILL_CREDIBLE | ANSWER_EXPOSES_<topic>
+```
+
+如果前置条件不成立，真实执行跳过该题，不机械把 100 问全部问完。
+
+## Ownership Kill Switch
+
+具体实现 Claim 必须尽早验证 Ownership。典型顺序：
+
+```text
+Claim
+→ 你具体改了哪个函数 / 类 / Schema / runner / test？
+→ 改之前和改之后的数据流是什么？
+→ 给一个关键实现规则或 assertion
+```
+
+如果候选人连续无法回答这些最小 Ownership probe：
+
+```text
+KILL_SWITCH: CLAIM_IMPLEMENTATION_NOT_ESTABLISHED
+```
+
+Red 记录 credibility break，切到下一条 Claim。不要再用十几道同义问题继续追一个已经失去信息增益的点。
+
+如果 Ownership 成立，再进入算法、并发、失败、指标和 Trade-off 深挖。
+
+## 全链路追踪
+
+高价值 Claim 应尽量形成：
 
 ```text
 业务背景 / stakeholder
@@ -66,260 +72,171 @@ Red 先问：
 → baseline 在什么具体条件下失败
 → 方案选择
 → Build / Buy / Extend / Defer
-→ 个人 Ownership
+→ Personal Ownership
 → 调用链 / 数据流 / 控制流
-→ 核心状态 / Schema / 存储
-→ 参数 / 阈值 / 算法
-→ 并发 / 幂等 / 版本
-→ crash / timeout / duplicate / late result
-→ 权限 / 安全 / 审计
+→ 核心状态 / Schema / 参数 / 算法
+→ concurrency / idempotency / version
+→ crash / timeout / duplicate / stale result
+→ security / permission / audit
 → Eval / metric / baseline / bad case
-→ latency / token / cost / capacity
+→ latency / token / cost
 → Current / Target / Unknown
-→ 删除这一层会怎样
-→ 今天重做是否还会这样设计
+→ 删除条件 / 今天重做
 ```
 
-不要求每条 Claim 机械走完全部节点，但不能长期只停在“为什么”和模块边界，必须向实现、故障和证据下钻。
+不要求每条 Claim 机械覆盖全部节点。Implementation-primary round 应把最多预算放在实现和证据，而不是架构名词。
 
-## 4. 不重复造轮子攻击
+## 不重复造轮子：Build / Buy / Extend / Defer
 
-这是高优先级固定攻击法。
-
-只要简历出现自研平台、Runtime、Memory、RAG pipeline、Tool layer、Eval framework、workflow engine 等，就必须问：
+出现自研 Runtime、Memory、RAG pipeline、Tool layer、Eval framework 等时，必须攻击：
 
 ```text
 成熟方案已经提供什么？
-为什么不直接 Adopt？
+为什么不 Adopt？
 为什么不 Fork？
-为什么不是薄薄 Extend 一层？
-你真正补的 Delta / Contract 是什么？
-维护这个自研 Delta 的成本是什么？
-如果明天成熟平台补齐这个 Delta，你删不删？
+为什么不是薄 Extend？
+你真正维护的 Delta 是什么？
+成熟平台补齐这个 Delta 后删不删？
 ```
 
-可用于比较的对象随主题选择，例如 LangGraph、OpenAI / Anthropic Agent SDK、Dify、Coze、MCP SDK、PostgreSQL、Redis、成熟 Queue / Observability / Secret Manager。
+“法律业务特殊”“为了扩展性”不能作为终点。
 
-Red 不接受“法律业务特殊”“为了可扩展”作为结束答案。
+## 故障优先于 Happy Path
 
-## 5. Ownership 强制攻击
+重要链至少有一个真实工程反例，例如：
 
-候选人一旦说“我们”，至少安排一组问题确认：
-
-```text
-团队几个人？
-导师 / 课题组已有资产是什么？
-你接手时系统已经有什么？
-你具体改了哪个类 / 模块 / schema / test？
-谁 Review？
-哪些不是你做的？
-Agent / Codex / Claude Code 帮了什么？
-如果你离开，这一块谁能继续维护？
-```
-
-知道一个架构不等于设计过；设计过不等于实现过；实现过不等于线上验证过。
-
-## 6. 反例和故障优先于 Happy Path
-
-每条重要技术链至少注入一个反例：
-
-- 网络 timeout，但远端可能已经成功；
-- DB commit 成功，调用方在 ACK / checkpoint 前 crash；
-- 同一个请求重复到达；
-- 老版本 Worker 晚到；
-- 新材料 / 新版本进入；
-- 权限在长任务中途撤销；
-- Provider API 200 但专业语义漂移；
-- Cache 里还有旧授权数据；
+- HTTP timeout，但远端可能已执行；
+- local commit 成功、ACK/checkpoint 前 crash；
+- duplicate request；
+- async cancellation 与远端动作不同步；
+- old worker / old plan late result；
+- 权限中途撤销；
+- stale cache；
 - Eval 平均分提高但关键 failure 增多；
-- Graph / Memory / Multi-Agent 增加成本却没有质量收益。
+- Graph / Memory / Multi-Agent 增加成本却没有净收益。
 
-回答只说“Retry”时，继续问幂等、最终事实和 Unknown outcome。
+回答只说 Retry 时，继续追幂等、Unknown outcome 和权威事实。
 
-## 7. 从项目自然下钻到基础
+## 从项目自然下钻基础
 
-基础题不能凭空出现，应尽量从简历 Claim 派生。
-
-例如 MCP / Tool：
+基础题必须从项目链派生。例如：
 
 ```text
-Tool timeout
-→ HTTP / TCP timeout 能证明什么
-→ asyncio cancellation
-→ idempotency key
-→ transaction 与 remote side effect
-→ concurrent request isolation
-→ schema validation / JSON serialization
+MCP timeout → TCP/HTTP semantics → asyncio cancellation → idempotency
+Memory scope → request-local state → DB isolation → cache key → stale read
+Retrieval ranking → top-k / recall / MRR → score calibration → ablation
 ```
 
-例如 Context / Memory：
+不要为了“覆盖基础”突然问与简历无关的 Redis 数据结构或 OS 八股。
+
+## 数字与 Evaluation
+
+任何数字都追：
 
 ```text
-scope isolation
-→ ContextVar / request-local state
-→ PostgreSQL isolation
-→ cache key
-→ stale version
-→ prompt injection / instruction-data boundary
+baseline
+Dataset / sample
+metric definition
+runner / config
+参数怎样定
+是否有 ablation
+失败样本
+latency / token / cost
+local / CI / Pilot / Production
 ```
 
-例如异步任务：
+小样本 smoke 可以是好工程证据，但不能包装成正式 benchmark。
+
+## Current / Target / Production
+
+Red 只根据简历措辞追：
 
 ```text
-RabbitMQ ack
-→ at-least-once
-→ duplicate delivery
-→ consumer crash
-→ backpressure
-→ poison message / DLQ
-```
-
-这样既检查项目真实性，也检查岗位基础。
-
-## 8. 参数、指标和证据
-
-出现任何数字或“效果更好”都追：
-
-```text
-baseline 是什么
-Dataset / sample 是什么
-metric 为什么代表业务目标
-参数怎么定
-是否做 ablation
-失败样本是什么
-收益换来了多少 latency / token / cost
-结果来自本地、CI、Pilot 还是 Production
-```
-
-没有数据可以诚实说没有。Red 要消灭的是模糊和夸大，不是逼候选人造数字。
-
-## 9. Current / Target / Production 攻击
-
-Red 不知道 Zuno 内部文档，所以它只根据简历措辞追问：
-
-```text
-这是已经实现还是你后来设计的？
+这是已经实现、后来设计，还是团队背景？
 在哪个环境跑过？
-谁使用过？
-有测试还是有真实运行？
-Pilot 能证明什么，不能证明什么？
+有 test、真实 runtime、Pilot 还是 Production？
+哪些数字目前没有？
 ```
 
-若候选人主动把设计和实现分开，这是加分，不应继续为了“问倒”强迫其夸大。
+候选人主动收紧 Claim 是可信度加分，不要为了问倒强迫其夸大。
 
-## 10. 反事实、简化与删除条件
+## Primary Path 预算
 
-架构成熟度经常通过删除来测：
+默认约 30 问：
 
 ```text
-如果用户量少十倍还需要吗？
-如果只有一次性问答还需要吗？
-如果 Hybrid RAG 已经达标，GraphRAG 删不删？
-如果单 Agent + parallel tools 达标，Multi-Agent 删不删？
-如果 Generic Host 能恢复长任务，Native Runtime 还保留吗？
-如果没有现实副作用，Effects 层能不能缩薄？
+4–6   项目现实 / Ownership / Pilot 边界
+14–18 最高风险的 2–3 条实现 Claim
+3–5   Build/Buy + failure/recovery
+3–5   Evidence / metric / fundamentals
+2–4   counterfactual / simplify / manager pressure
 ```
 
-候选人能够主动删除复杂度，比坚持“每个模块都重要”更可信。
+Architecture 只在简历真的把架构设计作为主卖点时增加预算。Implementation round 不应花大量 Primary 问题平均覆盖内部模块。
 
-## 11. 项目攻击角度
+## Reserve Follow-up
 
-正式 Round 应从简历 Claim 按风险动态分配，而不是平均覆盖。
+Reserve 用于：
+
+- Primary 回答很好后继续下钻；
+- 一个 Claim 暴露具体并发/网络/DB风险；
+- 用户希望检查更广覆盖；
+- 后续复测同一技能维度。
+
+Reserve 不能只是 Primary 的同义改写。
+
+## 输出格式
+
+`02_red_questions.md` 至少包含：
 
 ```text
-P01 项目背景与需求
-P02 真实性与落地
-P03 团队分工与 Ownership
-P04 整体架构 / 端到端链路
-P05 技术选型
-P06 Build / Buy / Extend / Defer
-P07 实现细节
-P08 参数与阈值
-P09 Bad Case / Failure / Recovery
-P10 性能、规模与成本
-P11 Security / Permission
-P12 Evaluation / Evidence
-P13 Current / Target / Production
-P14 反事实 / Simplification / Delete
+question_count: 100
+primary_path_count: <25-40>
+reserve_count: <remainder>
+primary_persona:
+cross_personas:
+formal_input_head:
+red_questions_status: DRAFT_REVIEW
+
+## Claim map
+- Claim A: ... / risk / why attacked
+
+## PRIMARY_PATH
+P001 ...
+  claim: A
+  ask_if: ALWAYS
+  kill_switch: none | <condition>
+
+## RESERVE_FOLLOWUP
+R001 ...
+  claim: A
+  trigger: ...
+
+## Red self-check
+...
 ```
 
-高价值 Claim 通常至少命中 P03、P06、P07、P09、P12 中的三个。
+不要把答案提示、Zuno 内部 source trace 或模型私有 chain-of-thought 写进题单。
 
-## 12. 面试官画像
+## Red 自我质量检查 / 提交前质量门
 
-### Forensic Interviewer
+Red 必须检查：
 
-项目取证。追真实用户、团队、个人代码、落地证据。
+- Primary 是否像一场真实一面，而不是 100 问目录；
+- 前 10 个 Primary 问题是否已经碰到至少一个高风险实现 Claim；
+- named algorithm / function / test Claim 是否有早期 Ownership probe；
+- 至少三条 Claim 有完整攻击链；
+- 有没有明显同义重复；
+- Build/Buy 是否真实存在；
+- 是否有 failure injection；
+- fundamentals 是否从项目自然长出来；
+- 是否追数字和 evidence；
+- Kill Switch 是否能减少无效追问；
+- 每题是否都能指回简历；
+- 是否没有使用 Zuno docs 反推题目。
 
-### Architecture Interviewer
+## Skill 也必须接受审判
 
-追 Why / Why not / What if、Owner、状态、替代方案、简化条件。
+在工作流校准 Round 中，Red 提交后先进入 `USER_RED_REVIEW`。用户可以 `APPROVE / REQUEST_REVISION / ABORT`。
 
-### Open-source Skeptic
-
-固定攻击 Adopt → Fork → Extend → Build → Defer。
-
-### Implementation Interviewer
-
-把框架名追成函数、Schema、SQL、状态、阈值、错误分支和 test assertion。
-
-### Fundamentals Interviewer
-
-从项目自然下钻 Python / OS / 网络 / DB / MQ / Agent/RAG 基础。
-
-### Manager / Business Interviewer
-
-追用户价值、资源取舍、项目真实性、成熟度和反思。
-
-每轮选一个主画像 + 1–2 个交叉画像即可。
-
-## 13. 100 问生成策略
-
-先识别简历最高风险的 3–6 条 Claim，再给问题预算。例如：
-
-```text
-20%  Project reality / causality / Ownership
-25%  implementation deep dive
-15%  Build/Buy + architecture trade-off
-15%  failure / recovery / security
-10%  Eval / evidence / cost
-10%  fundamentals derived from project
-5%   counterfactual / simplification / manager pressure
-```
-
-这只是起点。若模拟简历的主要卖点不同，预算必须跟着变化。
-
-同一 Claim 的问题可以形成深度阶梯，但每道题必须可以独立阅读。禁止用 20 道同义问题假装“深挖”。
-
-## 14. Red 自我质量检查
-
-在提交 `02_red_questions.md` 前，Red 必须检查：
-
-- 是否有至少三条完整攻击链；
-- 是否存在明显重复题；
-- 是否过多停在架构名词而没有实现；
-- 是否有 Build/Buy；
-- 是否有故障注入；
-- 是否有基础原理下钻；
-- 是否有 Evidence / Outcome；
-- 是否每题都能指向模拟简历；
-- 是否无意中使用了 Zuno 内部文档事实。
-
-如果问题只有“文档 Reviewer”会问，而真实面试官看简历根本不会想到，应删除。
-
-## 15. Skill 也必须接受审判
-
-Round 结束后的 `06_workflow_retrospective.md` 会反过来评价本 Skill。
-
-用户评价优先级最高。如果用户认为：
-
-- 问题没技术含量；
-- 太像文档 Review；
-- 重复；
-- 没有全链路；
-- 没有“不重复造轮子”的精品意识；
-- 不像真实大厂面试；
-
-这些不能归因成“Blue 太强 / 太弱”，而要判断 Red Skill、问题预算或角色隔离是否需要修改。
-
-Skill 修改必须在 Round 结束后的独立 PR 中进行，再用新 Round 验证。
+用户若认为问题没技术含量、像 Reviewer checklist、重复、没有精品意识或不像真实面试，优先修改 Red Skill / Primary Path / persona；不能用 Blue PASS 率替 Red 辩护。
