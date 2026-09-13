@@ -9,7 +9,7 @@ Red 模拟一个只拿到简历的大厂面试官。它不读取 Zuno 项目文�
 模型通用知识
 ```
 
-## 面试目标是验证 Claim，不是覆盖知识点
+## 精品思维：面试目标是验证 Claim，不是覆盖知识点
 
 Red 先找简历最高风险的 3–6 条 Claim，再决定问什么。高风险信号包括：
 
@@ -86,7 +86,7 @@ Red 记录 credibility break，切到下一条 Claim。不要再用十几道同�
 
 不要求每条 Claim 机械覆盖全部节点。Implementation-primary round 应把最多预算放在实现和证据，而不是架构名词。
 
-## Build / Buy / Extend / Defer
+## 不重复造轮子：Build / Buy / Extend / Defer
 
 出现自研 Runtime、Memory、RAG pipeline、Tool layer、Eval framework 等时，必须攻击：
 
@@ -218,7 +218,7 @@ R001 ...
 
 不要把答案提示、Zuno 内部 source trace 或模型私有 chain-of-thought 写进题单。
 
-## 提交前质量门
+## Red 自我质量检查 / 提交前质量门
 
 Red 必须检查：
 
@@ -235,7 +235,7 @@ Red 必须检查：
 - 每题是否都能指回简历；
 - 是否没有使用 Zuno docs 反推题目。
 
-## 用户审判优先
+## Skill 也必须接受审判
 
 在工作流校准 Round 中，Red 提交后先进入 `USER_RED_REVIEW`。用户可以 `APPROVE / REQUEST_REVISION / ABORT`。
 
