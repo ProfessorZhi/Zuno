@@ -9,8 +9,8 @@ github_runtime:
   stage_handoff: COMMIT_THEN_REREAD
   round_branch: red-blue/rb-2026-09-13-resume-first-014
   round_pr: 226
-  stage_head_sha: df8f0a933cc9fd5c011473c7573d9641e04372e2
-  stage_head_semantics: last GitHub HEAD observed before the current Controller transition; live branch ref is authoritative
+  stage_head_sha: 2ee974298f1322c0d4f88731da55cd3fe3ba4b31
+  stage_head_semantics: last GitHub HEAD consumed by the completed stage; live branch ref is authoritative for the next stage
   firewall_strength: LOGICAL_GITHUB_MEDIATED
   strict_blind_red_certification: false
 
@@ -30,7 +30,7 @@ simulated_resume_build:
     - docs/evidence/README.md@10869d9176d2ef34b46577478bba62d9e254158a
     - docs/governance/project-fact-provenance.md@10869d9176d2ef34b46577478bba62d9e254158a
   simulated_resume_path: docs/red-blue/workspace/rb-2026-09-13-resume-first-014/01_simulated_resume.md
-  resume_status: DRAFT
+  resume_status: FROZEN
 
 red_input_allowlist:
   - 01_simulated_resume.md
@@ -59,9 +59,9 @@ interviewer_configuration:
   question_budget_notes: prioritize implementation depth, Build/Buy skepticism, full-chain causality, failure paths, evidence and project-derived fundamentals; do not average questions across modules
 
 stage_state:
-  current_stage: BUILD_RESUME
-  resume_built: false
-  resume_frozen: false
+  current_stage: RED_QUESTIONS
+  resume_built: true
+  resume_frozen: true
   red_questions_archived: false
   blue_answers_archived: false
   red_evaluation_archived: false

@@ -43,5 +43,27 @@ output_files:
 - 00_manifest.yaml
 - 08_session_transcript.md
 - .agent/red-blue/current.md
-output_commit_sha: recover from Git history after commit
+output_commit_sha: 2ee974298f1322c0d4f88731da55cd3fe3ba4b31
 next_stage: BUILD_RESUME
+
+## Event 003 — BUILD_RESUME
+
+actor: ResumeBuilder
+stage: BUILD_RESUME
+input_head_sha: 2ee974298f1322c0d4f88731da55cd3fe3ba4b31
+input_files:
+- 00_manifest.yaml
+- ProfessorZhi/internship-work@6107321bdcaced8688c0e462d8b0a85b2744c4fe: prior v5 resume style
+- docs/project/README.md@10869d9176d2ef34b46577478bba62d9e254158a
+- docs/architecture/architecture.md@10869d9176d2ef34b46577478bba62d9e254158a
+- docs/evidence/README.md@10869d9176d2ef34b46577478bba62d9e254158a
+- docs/governance/project-fact-provenance.md@10869d9176d2ef34b46577478bba62d9e254158a
+observable_input_summary: Build a competitive but evidence-bounded Zuno resume section. Preserve prior truthful Tool Calling and Context/Memory stories; add the recovered PF-031 GraphRAG regression/fix story without inflating a limit=5 development smoke into a benchmark; expose architecture design as design/review rather than implemented product runtime.
+observable_output_summary: Frozen resume contains four high-value claims: Tool/MCP implementation, GraphRAG retrieval regression and ranking fixes, Context/Memory readback hardening, and reuse-first/measurement-gated architecture design. It states project Pilot history without claiming Production.
+output_files:
+- 01_simulated_resume.md
+- 00_manifest.yaml
+- 08_session_transcript.md
+- .agent/red-blue/current.md
+output_commit_sha: recover from Git history after commit
+next_stage: RED_QUESTIONS
