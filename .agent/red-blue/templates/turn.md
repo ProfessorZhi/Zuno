@@ -1,103 +1,170 @@
-# Red / Blue Batch Record
+# Red / Blue Stage Artifact Templates
 
-> 文件名保留 `turn.md` 以兼容现有 Harness；正式运行单位已改为 batch。
+这个模板描述一轮中各文件应该保存什么。正式 Round 不再把“Turn”理解为 Red/Blue 单题往返；固定阶段产物直接写入同一个 Round 文件夹。
 
-## Identity
-
-```text
-round_id:
-batch_id:
-question_count:
-created_at:
-```
-
-## Controller — Observable Event Log
-
-按发生顺序追加，不覆盖：
+## `01_simulated_resume.md`
 
 ```text
-- event_id:
-  actor: controller | user
-  event:
-  payload_summary:
+# 模拟简历 — <round-id>
+
+求职方向：<role>
+
+## 项目经历
+### Zuno：<本轮最合理的项目标题>
+项目简介：...
+技术栈：...
+1. ...
+2. ...
+3. ...
+4. ...
 ```
 
-## Red — Batch Configuration
+Red 可见文件不得带 source trace、Current/Target 标签或“答案提示”。来源和构建边界只写入 manifest / session transcript。
+
+## `02_red_questions.md`
 
 ```text
-interviewer_persona:
-cross_persona:
-claim_budget:
-attack_reweighting_from_prior_batch:
+# Red Questions — <round-id>
+
+question_count: 100
+primary_persona:
+cross_personas:
+
+## Claim A — <resume claim>
+Q001. ...
+Q002. ...
+...
 ```
 
-## Red — Questions
+可以在文件末尾保存 Red 自己的**显式质量元数据**：Claim coverage、Attack Angle coverage、duplicate check。不得保存或伪造模型私有 chain-of-thought。
 
-一批默认 100 问。每道题独立编号，不附给 Blue 的提示、评分点或参考答案。
+问题正文不附答案提示、Zuno 内部对象名答案或 source trace。
+
+## `03_blue_answers.md`
+
+每题独立回答：
 
 ```text
-- question_id: Q001
-  claim_under_test:
-  attack_angle:
-  red_question:
-  red_hidden_intent:        # 协议显式攻击元数据，不是模型私有 chain-of-thought
-  expected_evidence:
-  counterexample_or_failure_injection:
+### Q001
+**Answer**
+...
+
+**Source trace**
+- docs/project/...
+- docs/modules/...
+- Unknown: ...
 ```
 
-Red 输出后立即归档，随后才允许 Blue 开始回答。
+Blue 可以明确说 Unknown / Target-only / not personally owned。
 
-## Blue — Closed-book Answers
+## `04_red_evaluation.md`
 
-逐题回答，不合并成一份总答复。
+Red 不读 Zuno docs，只按面试官视角评价：
 
 ```text
-- question_id: Q001
-  answer:
-  source_trace:
-    resume:
-    project_part_a:
-    architecture_part_a:
-    module_part_a:
-    engineering_reference:
-    adr:
-    evidence:
-    unknown_or_unsupported:
+## Claim A
+verdict: STRONG_PASS | PASS | PARTIAL | FAIL
+ownership:
+business_causality:
+implementation_depth:
+build_buy:
+failure_recovery:
+evidence:
+fundamentals:
+communication:
+
+strongest_answer:
+weakest_answer:
+why_interviewer_would_continue:
+resume_claim_risk:
+retest_recommendation:
 ```
 
-Blue 完成整批后立即归档，Verifier 才开始逐题判断。
+同时给出整轮最危险的 3–10 个面试断点。
 
-## Verifier — Per-question Results
+## `05_blue_architecture_reflection.md`
+
+Blue 读取 Red evaluation + Zuno docs 后，把问题路由：
 
 ```text
-- question_id: Q001
-  verdict: PASS | PARTIAL | FAIL | UNSUPPORTED_CLAIM
-  severity: S0 | S1 | S2 | S3
-  gap_type:
-  reason:
-  source_support:
-  current_target_check:
-  ownership_check:
-  next_action: DECREASE_WEIGHT | CONTINUE_NEXT_BATCH | REFRAME_NEXT_BATCH | ESCALATE_FINDING | CLOSE_CHAIN
+issue:
+red_signal:
+source_check:
+classification: SIMULATED_RESUME_GAP | NARRATIVE_GAP | DOC_GAP | ARCHITECTURE_GAP | IMPLEMENTATION_GAP | EVIDENCE_GAP | OWNERSHIP_GAP | FUNDAMENTAL_GAP | NO_ZUNO_CHANGE
+decision_impact:
+recommended_owner:
+retest_needed:
 ```
 
-Verifier 不生成 Blue 的改进版标准答案。
+不得因为 Red 问到了一个冷门实现字段，就新增 Architecture Object。
 
-## Batch Transition
+## `06_workflow_retrospective.md`
+
+这是对 Red / Harness 的复盘，不是第二份 Blue findings。
 
 ```text
-passed_count:
-partial_count:
-failed_count:
-unsupported_count:
-new_findings:
-attack_reweighting:
-next_batch_focus:
-batch_status: archived | needs-archive
+# Workflow Retrospective
+
+## User feedback considered
+...
+
+## Red quality score
+Resume Grounding:
+Technical Depth:
+Full-chain Coverage:
+Non-duplication:
+Build/Buy Skepticism:
+Failure Pressure:
+Fundamentals Drilldown:
+Interview Realism:
+Information Gain:
+User Alignment:
+
+## Low-value questions
+- Q... why low value
+
+## Missing attack chains
+...
+
+## Skill defects
+...
+
+## Protocol defects
+...
+
+## Proposed next-round changes
+...
 ```
 
-## Archive Invariant
+用户对问题质量的明确批评优先于模型自评分。
 
-`CHATGPT_AUTO` 与 `AGENT_AUTO` 都必须保存本 batch 的完整可观察 Red / Blue / Verifier 输出和 Controller / user intervention。允许因 GitHub 单文件大小限制将 batch 写入 `transcript-batch-NNN.md`，但不得只留下题单、摘要或 `findings.md`。
+## `07_user_feedback.md`
 
-这里的“完整”不包含模型私有 chain-of-thought；不得伪造或要求导出不可观察的内部推理。
+按时间追加用户对本轮的直接评价：
+
+```text
+feedback_id:
+when:
+text:
+affected_stage:
+priority:
+```
+
+即使用户没有追加评价，也保留文件并写 `no_additional_feedback`。
+
+## `08_session_transcript.md`
+
+保存可观察过程：
+
+```text
+Controller / user events
+Resume Builder observable output event
+Red observable input boundary + output event
+Blue observable input boundary + output event
+Red Evaluation event
+Blue Reflection event
+Workflow Retrospective event
+tool / GitHub archive events when relevant
+```
+
+CHATGPT_AUTO 与 AGENT_AUTO 使用同一格式。禁止把模型私有 chain-of-thought 写入 transcript。

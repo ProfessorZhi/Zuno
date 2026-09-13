@@ -4,7 +4,7 @@ state: `no-active`
 active_program: `none`
 queued_program: `none`
 
-当前没有 active implementation 或 architecture design program。项目故事由 `docs/project/` 维护，总体架构由 `docs/architecture/` 维护；Red / Blue Interview Harness 已独立到 `.agent/red-blue/`，其当前 Round 状态见 `.agent/red-blue/current.md`。
+当前没有 active implementation 或 architecture design program。项目故事由 `docs/project/` 维护，总体架构由 `docs/architecture/` 维护；Red / Blue Interview Harness 独立由 `.agent/red-blue/` 管理，active Round 工作区位于 `docs/red-blue/workspace/`，关闭后归档到 `docs/red-blue/rounds/`。
 
 ## 当前边界
 
@@ -12,6 +12,7 @@ queued_program: `none`
 - 不把历史 Round、Target 文档、Mock、测试或目录存在写成 Current、Measured 或 Production Ready。
 - 不修改业务 Runtime、数据库、Migration、UI、Dependencies 或 Production Infra，除非有独立明确任务。
 - 新架构设计 Program 必须由用户明确激活；Red / Blue Round 由 `.agent/red-blue/current.md` 独立管理。
+- 正式 Red / Blue 使用 resume-first source firewall：Resume Builder 生成模拟简历后，Red 不再读取 Zuno docs。
 
 ```text
 Project Story                      docs/project/                              CANONICAL
@@ -20,6 +21,7 @@ Research Reference                 docs/research/                             NO
 Implementation / Design Program    .agent/programs/                           ACTIVE ONLY WHEN EXPLICITLY STARTED
 Red / Blue Machine Harness         .agent/red-blue/                           SEPARATE RUNTIME
 Red / Blue Human Method            docs/red-blue/                             REVIEW PROCESS
+Red / Blue Active Workspace        docs/red-blue/workspace/                   ACTIVE ROUND / NON-CANONICAL
 Red / Blue Rounds                  docs/red-blue/rounds/                      REVIEW HISTORY / NON-CANONICAL
 Legacy Red / Blue                  docs/red-blue/archive/legacy/              HISTORY / NON-CANONICAL
 Current Evidence                   docs/evidence/                             CURRENT EVIDENCE

@@ -1,6 +1,6 @@
 # Red / Blue Round Manifest
 
-> 每一轮复制本模板到临时 active workspace；不要把运行状态写回模板。
+> 每一轮复制本模板到 `docs/red-blue/workspace/<round-id>/00_manifest.yaml`。Round 关闭后整个文件夹原样归档到 `docs/red-blue/rounds/<round-id>/`。
 
 ## Identity
 
@@ -9,61 +9,66 @@ round_id:
 created_at:
 mode: CHATGPT_AUTO | AGENT_AUTO
 zuno_base_sha:
+state: ACTIVE | CLOSED | SUPERSEDED
 ```
 
-## Candidate Input
-
-```text
-resume_repository:
-resume_commit_sha:
-resume_path:
-resume_status: verified-main | historical | user-selected
-```
-
-禁止自动选择标记为“待核验包装稿”的简历。
-
-## Interview / Review Target
+## Interview Target
 
 ```text
 target_role:
 company_or_persona:
 interview_stage:
 jd_source:
-scenario_scope:
-batch_size: 100
-max_batches:
+question_count: 100
 ```
 
-## Transcript Policy
+## Simulated Resume Build
+
+Controller / Resume Builder 可以读取当前 Zuno canonical docs 与已有简历风格，只用于生成本轮模拟简历。
 
 ```text
-transcript_policy: full-observable-role-io
-archive_live: true
-transcript_index: docs/red-blue/rounds/<round-id>/transcript.md
-transcript_shards:
-  - docs/red-blue/rounds/<round-id>/transcript-batch-001.md
+resume_style_reference:
+resume_build_sources:
+  - docs/project/
+  - docs/architecture/
+  - docs/modules/
+  - docs/evidence/
+  - selected docs/governance/ provenance
+simulated_resume_path: docs/red-blue/workspace/<round-id>/01_simulated_resume.md
+resume_status: DRAFT | FROZEN
 ```
 
-`full-observable-role-io` 要求保存 Red / Blue / Verifier / Controller / user intervention 的可观察输入输出与显式协议元数据。它不要求、也不得伪造模型私有 chain-of-thought。
+`01_simulated_resume.md` 冻结以后，Red 不得读取上述 build sources。
 
-如果单个 `transcript.md` 足够，可以不创建 shard；一旦分片，manifest 必须完整列出全部 shard。
-
-## Red Configuration
+## Red Input Allowlist
 
 ```text
-primary_persona:
-cross_persona:
-calibration: kernel-only | calibrated
-calibration_sources:
-  -
+- 01_simulated_resume.md
+- target role / JD / interview stage
+- .agent/red-blue/attack-model.md
+- model general knowledge
+- explicitly approved generic ecosystem facts, if any
 ```
 
-Red calibration 只用于 private pressure model，不进入 Blue context。
-
-## Blue Closed-book Allowlist
+Explicit denylist:
 
 ```text
-- exact resume snapshot
+- docs/project/
+- docs/architecture/
+- docs/modules/
+- docs/evidence/
+- docs/decisions/
+- docs/governance/
+- Zuno source / PR / commit diff
+- resume build notes / source trace
+- prior Blue answers used as a hidden answer key
+```
+
+## Blue Input Allowlist
+
+```text
+- 01_simulated_resume.md
+- 02_red_questions.md
 - AGENTS.md
 - docs/project/
 - docs/architecture/
@@ -73,70 +78,91 @@ Red calibration 只用于 private pressure model，不进入 Blue context。
 - selected docs/governance/ provenance facts
 ```
 
-运行中不得临时扩大 allowlist。
+Blue does not read `04_red_evaluation.md` before producing `03_blue_answers.md`.
 
-## Scenario / Claim Inventory
-
-优先从真实业务场景和简历高风险 Claim 进入，不从题库开始。
-
-| Scenario or Claim | Risk | Why It Matters | Expected Evidence | Priority | Initial Question Budget |
-| --- | --- | --- | --- | --- | ---: |
-|  |  |  |  |  |  |
-
-## Attack Coverage
+## Red Evaluation Input
 
 ```text
-business causality:
-baseline_and_replaceability:
-ownership:
-authority_and_state:
-failure_recovery:
-external_effect:
-continuous_authorization:
-build_buy_extend_delete:
-scale_performance_cost:
-evaluation_evidence:
-current_target:
-simplification:
+- 01_simulated_resume.md
+- 02_red_questions.md
+- 03_blue_answers.md
+- .agent/red-blue/attack-model.md
 ```
 
-不要求平均覆盖；按业务和 Claim 风险分配 batch 问题预算。
+Red Evaluation still cannot read Zuno canonical docs.
 
-## Batch Lifecycle
+## Blue Architecture Reflection Input
 
 ```text
-batch-001:
-  red_generated: false
-  red_archived: false
-  blue_answered: false
-  blue_archived: false
-  verified: false
-  verifier_archived: false
-  question_count: 0
-  next_focus: none
+- 01_simulated_resume.md
+- 02_red_questions.md
+- 03_blue_answers.md
+- 04_red_evaluation.md
+- Zuno canonical docs / evidence allowlist
 ```
 
-每个 batch 的问题在 Red 输出时冻结；基于 Blue 回答产生的新追问进入下一批。
-
-## Stop Conditions
+## Workflow Retrospective Input
 
 ```text
-- max_batches reached
-- target scenario / claim sufficiently tested
-- stable high-severity finding found
-- information exhausted
-- next batch would only add trivia
-- user intervenes to close
+- all observable round artifacts
+- .agent/red-blue/attack-model.md
+- 07_user_feedback.md
+- prior workflow retrospectives when explicitly selected
 ```
 
-## Outputs
+## Interviewer Configuration
 
 ```text
-manifest: docs/red-blue/rounds/<round-id>/manifest.yaml
-transcript: docs/red-blue/rounds/<round-id>/transcript.md
-transcript_shards: docs/red-blue/rounds/<round-id>/transcript-batch-*.md  # optional
-findings: docs/red-blue/rounds/<round-id>/findings.md
-archive_target: docs/red-blue/rounds/<round-id>/
+primary_persona:
+cross_personas:
+  -
+attack_skill_version:
+question_budget_notes:
 ```
 
-Round 完成后恢复 `.agent/red-blue/current.md` 为 `no-active`。
+Raw external interview corpus is not a default per-round Red input. It is used when refreshing the Attack Skill in a separate task.
+
+## Fixed Round Artifacts
+
+```text
+00_manifest.yaml
+01_simulated_resume.md
+02_red_questions.md
+03_blue_answers.md
+04_red_evaluation.md
+05_blue_architecture_reflection.md
+06_workflow_retrospective.md
+07_user_feedback.md
+08_session_transcript.md
+```
+
+## Stage State
+
+```text
+resume_built: false
+resume_frozen: false
+red_questions_archived: false
+blue_answers_archived: false
+red_evaluation_archived: false
+blue_reflection_archived: false
+workflow_retrospective_archived: false
+user_feedback_archived: false
+transcript_complete: false
+```
+
+## Close Conditions
+
+Round 可以关闭的必要条件：
+
+```text
+- simulated resume frozen before Red questions
+- Red did not read Zuno docs
+- Blue answered from allowed docs only
+- Red evaluation completed without Zuno docs
+- Blue architecture reflection completed
+- workflow retrospective evaluated Red quality
+- user feedback file exists, even if it says no additional feedback
+- observable session transcript is complete
+```
+
+Retest 不在同一 Round 继续追加第二批问题；创建一个新的 round-id，并重新生成与当时 docs 对应的模拟简历。

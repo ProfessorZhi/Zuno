@@ -12,7 +12,7 @@ System & Review
 project/        project history, context, team/personal participation
 architecture/   accepted Target cross-cutting architecture
 modules/        accepted Target responsibility decomposition
-red-blue/       adversarial review method and archived review rounds
+red-blue/       interview/adversarial review method, active workspace and archived rounds
 
 Trust & Evolution
 research/       upstream research, algorithms, court/project background, platform baselines
@@ -21,7 +21,16 @@ evidence/       Current code/test/trace/eval/runtime evidence
 governance/     provenance, ownership, documentation rules, routing, workflow, operations
 ```
 
-There is no `maintenance/` top-level domain. Agent/GitHub workflow and operational runbooks are governance responsibilities. Red / Blue has its own top-level review domain because it has an independent lifecycle, source policy and archive, while remaining non-authoritative for Project, Architecture and Current Evidence.
+There is no `maintenance/` top-level domain. Agent/GitHub workflow and operational runbooks are governance responsibilities. Red / Blue has its own top-level review domain because it has an independent lifecycle, source policy, active workspace and archive, while remaining non-authoritative for Project, Architecture and Current Evidence.
+
+Within `red-blue/`:
+
+```text
+README.md       human method
+workspace/      active resume-first round workspace
+rounds/         closed round archive
+archive/legacy/ retired manual / earlier automated methods
+```
 
 ## 2. Truth ownership
 
@@ -46,7 +55,7 @@ adversarial_review:
   authority_limit: findings_require_independent_acceptance
 ```
 
-Research and Red / Blue are canonical locations for their own artifacts but are not additional owners of system truth. A paper, external platform feature, Red concern, Blue proposal or archived Round cannot modify Target or Current by existing in the repository.
+Research and Red / Blue are canonical locations for their own artifacts but are not additional owners of system truth. A paper, external platform feature, Red concern, Blue proposal, simulated resume or archived Round cannot modify Target or Current by existing in the repository.
 
 ## 3. Human / Machine projection
 
@@ -89,7 +98,7 @@ docs/README.md
 → evidence/README.md
 ```
 
-Research is pulled in only when a claim needs its lineage or an external baseline. Red / Blue is intentionally excluded from first reading: the book must stand on its own before adversarial review begins.
+Research is pulled in only when a claim needs its lineage or an external baseline. Red / Blue is intentionally excluded from first reading: the book must stand on its own before interview/adversarial review begins.
 
 Agent implementation default:
 
@@ -132,19 +141,23 @@ Missing links stay `UNVERIFIED`. Research cannot manufacture implementation stat
 
 ## 7. Red / Blue boundary
 
-Red / Blue is a review system, not an architecture author.
+Red / Blue is a resume-first interview review system, not an architecture author and not a repository-aware Red reviewer.
 
 The normal sequence is:
 
 ```text
-Human Narrative reaches independent readable quality
-→ Red attacks concrete business scenarios, substitutes and failure windows
-→ Blue answers closed-book from accepted Human Narrative/reference/Evidence or concedes a gap
-→ Round produces findings
-→ findings are classified
-→ independent Writing / Architecture / Evidence / Ownership / Simplification work
-→ accepted change enters the corresponding owner
-→ retest with different wording/scenario
+current Project / Architecture / Modules / Evidence
+→ Resume Builder synthesizes one interview-grade simulated resume
+→ simulated resume is frozen
+→ Red sees only resume + JD + Red Interview Skill + general knowledge
+→ Blue answers Red questions from accepted Zuno docs / Evidence
+→ Red evaluates the answers without reading Zuno docs
+→ Blue reflects whether weaknesses are Resume / Narrative / Docs / Architecture / Implementation / Evidence / Ownership / Fundamentals
+→ Workflow Retrospective audits Red question quality and the Harness itself
+→ user feedback is preserved
+→ Round closes
+→ any accepted repair happens in an independent task
+→ a new Round generates a new simulated resume and retests
 ```
 
 Formal execution modes are only:
@@ -156,11 +169,66 @@ AGENT_AUTO
 
 A user may interrupt either mode, but human participation is not a third execution mode.
 
-Red should maximize information gain, not question count. A useful attack connects a stakeholder goal to a concrete stimulus, environment, expected response, unacceptable consequence, current design response, substitute and evidence requirement. It should prefer business failures such as stale evidence, provider mismatch, late results, ambiguous external effects, authorization changes, cost/complexity or unsupported ownership claims over internal terminology trivia.
+### Resume Builder is the only pre-Red bridge to Zuno docs
 
-Blue protects the project goal, not the current architecture. It may conclude that a generic platform is sufficient, a mechanism should be deleted, an Architecture Revision is needed, or available evidence is insufficient.
+The Builder may read current canonical docs, Current Evidence, provenance and a prior resume style. Its output is `01_simulated_resume.md`, which represents what the current documentation can responsibly claim in an interview artifact.
 
-LLM agreement is not evidence. Because Red and Blue may share model biases, high-severity findings require source traceability and, for formal acceptance, independent evidence or an isolated `AGENT_AUTO` retest where appropriate.
+The simulated resume is not a new Truth Owner and does not automatically replace the user's real resume.
+
+### Red source boundary
+
+After the simulated resume is frozen, Red must not read:
+
+```text
+docs/project/
+docs/architecture/
+docs/modules/
+docs/evidence/
+docs/decisions/
+docs/governance/
+Zuno source / PR / commit diff
+Blue source trace
+```
+
+Red instead uses the simulated resume, job/JD, the distilled Red Interview Skill and general technical knowledge. This prevents answer-aware question generation.
+
+The Red Skill may be improved from user interviews and public interview corpora in a separate maintenance task. Raw interview corpora are not the default context for each Round.
+
+### Blue source boundary
+
+Blue receives the frozen simulated resume, Red questions and an explicit Zuno canonical-doc allowlist. It may concede Unknown or Target-only facts; it must not use external interview material to invent Zuno history.
+
+### Red Evaluation and Blue Reflection remain distinct
+
+Red Evaluation asks whether a real interviewer would believe and accept the answers. It still does not read Zuno docs.
+
+Blue Architecture Reflection then uses the docs to determine whether the interview weakness actually warrants a Resume change, Narrative change, evidence recovery, implementation work, architecture revision, fundamental-study task, or no Zuno change.
+
+### Workflow Retrospective audits the attacker
+
+A formal Round must evaluate Red itself. It checks resume grounding, technical depth, full-chain coverage, non-duplication, Build/Buy skepticism, failure pressure, fundamentals drilldown, interviewer realism, information gain and user alignment.
+
+User feedback about Red quality has priority over self-reported PASS rates. If the user says the questions are low-value, Reviewer-like or repetitive, the workflow must investigate the Red Skill / context firewall / question budget rather than treating the Round as successful because Blue answered many questions.
+
+### Active workspace and archive
+
+Active Round:
+
+```text
+docs/red-blue/workspace/<round-id>/
+```
+
+Closed Round:
+
+```text
+docs/red-blue/rounds/<round-id>/
+```
+
+Each resume-first Round preserves the same nine artifacts from simulated resume through workflow retrospective, user feedback and session transcript. CHATGPT_AUTO and AGENT_AUTO share this archive contract.
+
+A Round produces one Red question batch, default 100 questions. Retest creates a new Round rather than mixing multiple documentation/resume versions in the same folder.
+
+Red / Blue outputs are non-authoritative. High-severity findings require independent source review, implementation evidence or accepted architecture/documentation changes before they affect canonical owners.
 
 ## 8. Architecture reasoning contract
 

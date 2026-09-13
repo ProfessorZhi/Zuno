@@ -68,6 +68,8 @@ GOVERNANCE_REQUIRED = {
 }
 RED_BLUE_REQUIRED = {
     "docs/red-blue/README.md",
+    "docs/red-blue/workspace/README.md",
+    "docs/red-blue/rounds/README.md",
     "docs/red-blue/archive/legacy/README.md",
     "docs/red-blue/archive/legacy/manual-round-01-overall-architecture.md",
     "docs/red-blue/archive/legacy/manual-round-02-overall-architecture-freeze-review.md",
@@ -147,9 +149,12 @@ def main() -> int:
         active = "state: `active-red-blue`" in red_blue_current
         if not (inactive or active):
             errors.append("Red/Blue current state is neither recognized inactive nor active-red-blue")
-        for marker in ("CHATGPT_AUTO", "AGENT_AUTO"):
+        for marker in (
+            "CHATGPT_AUTO", "AGENT_AUTO", "stage:", "workspace_path:",
+            "simulated_resume:", "question_count", "full-observable-role-io",
+        ):
             if marker not in red_blue_current:
-                errors.append(f"Red/Blue current contract missing mode: {marker}")
+                errors.append(f"Red/Blue current contract missing marker: {marker}")
 
     if errors:
         print("REPO_STRUCTURE_INVALID")

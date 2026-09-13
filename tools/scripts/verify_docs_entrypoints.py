@@ -90,6 +90,8 @@ def verify() -> list[str]:
         *MODULE_HUMAN_FILES,
         *MODULE_REFERENCE_FILES,
         "docs/red-blue/README.md",
+        "docs/red-blue/workspace/README.md",
+        "docs/red-blue/rounds/README.md",
         "docs/red-blue/archive/legacy/README.md",
         "docs/red-blue/archive/legacy/manual-round-01-overall-architecture.md",
         "docs/red-blue/archive/legacy/manual-round-02-overall-architecture-freeze-review.md",
@@ -171,11 +173,21 @@ def verify() -> list[str]:
 
     red_blue = (REPO_ROOT / "docs/red-blue/README.md").read_text(encoding="utf-8")
     for marker in (
-        "CHATGPT_AUTO", "AGENT_AUTO", "Scenario-first", "Source trace",
-        "Decision impact", "Independent acceptance", "SIMPLIFICATION_OPPORTUNITY",
+        "Resume-first", "CHATGPT_AUTO", "AGENT_AUTO", "Red Interview Skill",
+        "Red Evaluation", "Blue Architecture Reflection", "Workflow Retrospective",
+        "01_simulated_resume.md", "06_workflow_retrospective.md",
     ):
         if marker not in red_blue:
             errors.append(f"docs/red-blue/README.md missing review marker: {marker}")
+
+    workspace = (REPO_ROOT / "docs/red-blue/workspace/README.md").read_text(encoding="utf-8")
+    for marker in (
+        "Active Workspace", "01_simulated_resume.md", "02_red_questions.md",
+        "03_blue_answers.md", "04_red_evaluation.md", "05_blue_architecture_reflection.md",
+        "06_workflow_retrospective.md", "07_user_feedback.md", "08_session_transcript.md",
+    ):
+        if marker not in workspace:
+            errors.append(f"docs/red-blue/workspace/README.md missing workspace marker: {marker}")
 
     project_readme = (REPO_ROOT / "docs/project/README.md").read_text(encoding="utf-8")
     for marker in ("project-fact-provenance.md", "Pilot Validation", "Production", "Current", "Target", "Unknown"):
