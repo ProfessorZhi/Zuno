@@ -41,3 +41,20 @@ required_behavior:
 - 面试官可以直接说“具体一点”“这个怎么实现的”“为什么不用 X”“这个数怎么来的”，但不要每题都套模板
 - 字节式基础题 / 算法题可以在项目深挖后自然切入，不要求每题都伪装成项目问题
 - Blue 仍保持 BLOCKED，修改后的 Red plan 重新交给用户检查
+
+## UF-005 — Simulated resume itself is not recruiter-readable
+
+when: 2026-09-14T01:20:00+08:00
+priority: highest
+affected_stage: SIMULATED_RESUME / WORKFLOW
+text: 当前模拟简历不说人话。需要对照用户本人真实简历和公开优秀 AI / Agent 简历的字数、句长、版式与信息密度重新校准。模拟简历必须先像真实求职材料，再作为 Red 的攻击接口。
+findings:
+- 用户真实简历采用一页、项目简介一行、技术栈一行、短 bullet 的标准招聘阅读节奏
+- 当前模拟简历 4 条 bullet 平均长度约为用户真实 Zuno bullet 的 5 倍，整体更像 Evidence / provenance 摘要
+- 用户真实简历自身也偏满：Zuno 8 条、Astrid 10 条、技能 7 条，后续应取其句长与语感，而不是照搬 bullet 数量
+required_behavior:
+- 校准 Round 增加 USER_RESUME_REVIEW，在用户批准模拟简历前禁止 Red
+- 模拟项目默认 4–5 条核心 bullet，一条只讲一个主要贡献
+- 用范围限定词自然表达 small-sample / Pilot / participation 边界，不写 Reviewer 式免责声明
+- 若冻结简历正文改变，旧 Red plan 自动失效
+resolution: Round #016 的 Red behavior 校准有效，但该 Round 的 resume attack surface 判定无效；不得继续 Blue，应由新 Round 用新 Resume Builder 重建攻击面
