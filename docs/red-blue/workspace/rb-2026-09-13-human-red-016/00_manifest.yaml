@@ -1,0 +1,87 @@
+round_id: rb-2026-09-13-human-red-016
+created_at: 2026-09-13T22:14:00+08:00
+mode: CHATGPT_AUTO
+zuno_base_sha: e0e11b704c5653ef0363eda1b316264036b397a6
+state: ACTIVE
+
+github_runtime:
+  github_state_bus: REQUIRED
+  stage_handoff: COMMIT_THEN_REREAD
+  round_branch: red-blue/rb-2026-09-13-human-red-016
+  round_pr: pending
+  last_consumed_head_sha: e0e11b704c5653ef0363eda1b316264036b397a6
+  firewall_strength: LOGICAL_GITHUB_MEDIATED
+  strict_blind_red_certification: false
+
+interview_target:
+  target_role: Agent 开发工程师 / AI 应用工程师
+  company_or_persona: 大厂 AI Agent / LLM 应用工程岗位
+  interview_stage: 项目深挖 / 技术一面
+  jd_source: prior resume target role + generic Agent engineering expectations
+  pressure_suite_count: 100
+  seed_question_target: 8
+  live_followups: DYNAMIC
+  one_question_one_intent: true
+  red_review_gate: REQUIRED
+
+simulated_resume_build:
+  resume_style_reference: ProfessorZhi/internship-work resume v5 style
+  resume_build_sources:
+    - docs/project/README.md@e0e11b704c5653ef0363eda1b316264036b397a6
+    - docs/project/reference.md@e0e11b704c5653ef0363eda1b316264036b397a6
+    - docs/architecture/architecture.md@e0e11b704c5653ef0363eda1b316264036b397a6
+    - docs/modules/@e0e11b704c5653ef0363eda1b316264036b397a6
+    - docs/evidence/README.md@e0e11b704c5653ef0363eda1b316264036b397a6
+    - docs/governance/project-fact-provenance.md@e0e11b704c5653ef0363eda1b316264036b397a6
+  simulated_resume_path: docs/red-blue/workspace/rb-2026-09-13-human-red-016/01_simulated_resume.md
+  resume_status: DRAFT
+
+red_input_allowlist:
+  - 01_simulated_resume.md
+  - target role / JD / interview stage from this manifest
+  - .agent/red-blue/attack-model.md
+  - model general knowledge
+red_input_denylist:
+  - docs/project/
+  - docs/architecture/
+  - docs/modules/
+  - docs/evidence/
+  - docs/decisions/
+  - docs/governance/
+  - Zuno source / PR / commit diff
+  - resume build notes / source trace
+  - prior Blue answers
+
+red_interview_plan:
+  red_questions_status: NOT_STARTED
+  seed_question_count: 0
+  pressure_suite_count: 0
+  live_followups: DYNAMIC
+  one_question_one_intent: true
+  branch_examples_present: false
+  kill_switch_policy_present: false
+  user_red_review_status: PENDING
+
+interviewer_configuration:
+  primary_persona: Implementation Interviewer
+  cross_personas:
+    - Forensic Interviewer
+    - Open-source Skeptic
+    - Fundamentals Interviewer
+  attack_skill_version: e0e11b704c5653ef0363eda1b316264036b397a6:.agent/red-blue/attack-model.md
+  interview_behavior_evidence_version: e0e11b704c5653ef0363eda1b316264036b397a6:docs/red-blue/interview-behavior-evidence-2026-09.md
+  time_budget_minutes: 60
+
+stage_state:
+  current_stage: BUILD_RESUME
+  resume_built: false
+  resume_frozen: false
+  red_questions_archived: false
+  red_questions_status: NOT_STARTED
+  user_red_review_status: PENDING
+  blue_answers_archived: false
+  red_evaluation_archived: false
+  blue_reflection_archived: false
+  workflow_retrospective_archived: false
+  user_feedback_archived: true
+  transcript_complete: false
