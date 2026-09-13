@@ -16,7 +16,7 @@ red_review_gate: `REQUIRED`
 red_questions_status: `NOT_STARTED`
 round_branch: `red-blue/rb-2026-09-13-human-red-016`
 round_pr: `231`
-last_consumed_head_sha: `faff83d9ebfbd986224509b7a5fe7ef6a1ad9a57`
+last_consumed_head_sha: `73a270bbe9b92dc705f01af291ac2c41eb793c6c`
 github_state_bus: `required`
 stage_handoff: `commit-then-reread`
 firewall_strength: `LOGICAL_GITHUB_MEDIATED`
@@ -24,4 +24,4 @@ strict_blind_red_certification: `false`
 transcript_policy: `full-observable-role-io`
 archive_live: `true`
 
-模拟简历已冻结。Red 现在只能读取冻结简历、岗位信息、当前 attack-model.md 与模型通用知识。第一版 Red 提交后必须进入 USER_RED_REVIEW；未经 APPROVE 不得运行 Blue。
+模拟简历已冻结并修正为本轮 artifact identity。Red 现在只能读取冻结简历、岗位信息、当前 attack-model.md 与模型通用知识。第一版 Red 提交后必须进入 USER_RED_REVIEW；未经 APPROVE 不得运行 Blue。

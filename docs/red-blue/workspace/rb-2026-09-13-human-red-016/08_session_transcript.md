@@ -26,4 +26,13 @@ stage: BUILD_RESUME
 input_head_sha: faff83d9ebfbd986224509b7a5fe7ef6a1ad9a57
 observable_input_summary: Re-read the fixed Zuno Project / provenance / Evidence sources at `e0e11b704c5653ef0363eda1b316264036b397a6` and rebuild the simulated resume. Red Skill changed after Round #015, but Project truth did not.
 observable_output_summary: Froze a resume semantically identical to Round #015 so the calibration isolates interviewer behavior instead of changing the attack surface. The resume preserves Pilot/Production, team/personal, Current/Target and measurement boundaries.
+output_commit_sha: 73a270bbe9b92dc705f01af291ac2c41eb793c6c
+next_stage: RED_QUESTIONS
+
+## Event 004 — RESUME_ARTIFACT_ID_CORRECTION
+actor: Controller
+stage: RED_QUESTIONS_PRECHECK
+input_head_sha: 73a270bbe9b92dc705f01af291ac2c41eb793c6c
+observable_input_summary: Red input precheck found that the controlled-retest resume body was correct but its title still carried the prior Round #015 identifier.
+observable_output_summary: Corrected only the artifact title to Round #016. No resume Claim, fact, metric or attack surface changed. Red must start from the corrected new HEAD.
 next_stage: RED_QUESTIONS

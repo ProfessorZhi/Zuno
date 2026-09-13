@@ -9,7 +9,7 @@ github_runtime:
   stage_handoff: COMMIT_THEN_REREAD
   round_branch: red-blue/rb-2026-09-13-human-red-016
   round_pr: 231
-  last_consumed_head_sha: faff83d9ebfbd986224509b7a5fe7ef6a1ad9a57
+  last_consumed_head_sha: 73a270bbe9b92dc705f01af291ac2c41eb793c6c
   firewall_strength: LOGICAL_GITHUB_MEDIATED
   strict_blind_red_certification: false
 
@@ -36,6 +36,7 @@ simulated_resume_build:
   simulated_resume_path: docs/red-blue/workspace/rb-2026-09-13-human-red-016/01_simulated_resume.md
   resume_status: FROZEN
   controlled_retest_note: project truth did not change after round 015; resume text intentionally kept semantically identical so this round isolates Red behavior changes
+  artifact_identity_corrected: true
 
 red_input_allowlist:
   - 01_simulated_resume.md
