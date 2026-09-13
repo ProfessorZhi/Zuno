@@ -75,6 +75,10 @@ def verify_red_blue_harness(root: Path) -> list[str]:
     if not workspace_readme.exists():
         errors.append("missing docs/red-blue/workspace/README.md")
 
+    behavior_evidence = root / "docs" / "red-blue" / "interview-behavior-evidence-2026-09.md"
+    if not behavior_evidence.exists():
+        errors.append("missing docs/red-blue/interview-behavior-evidence-2026-09.md")
+
     current = (red_blue_root / "current.md").read_text(encoding="utf-8")
     inactive = all(phrase in current for phrase in ("state: `no-active`", "active_round: `none`"))
     active = False if inactive else (
@@ -85,10 +89,13 @@ def verify_red_blue_harness(root: Path) -> list[str]:
         errors.append("red-blue current state is neither recognized inactive nor active-red-blue")
     for marker in (
         "CHATGPT_AUTO", "AGENT_AUTO", "stage:", "workspace_path:", "simulated_resume:",
-        "question_count", "full-observable-role-io", "archive_live",
+        "pressure_suite_count", "seed_question_target", "live_followups", "one_question_one_intent",
+        "full-observable-role-io", "archive_live",
     ):
         if marker not in current:
             errors.append(f"red-blue current contract missing marker: {marker}")
+    if "primary_path_target" in current or "reserve_target" in current:
+        errors.append("red-blue current contract must not use static primary-path question quotas")
     if "human-candidate" in current:
         errors.append("human-candidate must not remain an active red-blue mode")
 
@@ -110,6 +117,7 @@ def verify_red_blue_harness(root: Path) -> list[str]:
         "BLUE_ARCHITECTURE_REFLECTION", "WORKFLOW_RETROSPECTIVE",
         "01_simulated_resume.md", "禁止输入", "docs/project/",
         "Zuno 源码 / PR / commit diff", "08_session_transcript.md",
+        "LIVE_INTERVIEW_SEEDS", "DYNAMIC_FOLLOWUP", "PRESSURE_SUITE",
     ):
         if marker.lower() not in protocol.lower():
             errors.append(f"red-blue protocol missing required execution marker: {marker}")
@@ -117,7 +125,8 @@ def verify_red_blue_harness(root: Path) -> list[str]:
     attack_model = (red_blue_root / "attack-model.md").read_text(encoding="utf-8")
     for marker in (
         "精品思维", "全链路追踪", "不重复造轮子", "Ownership", "Build / Buy",
-        "100 问", "Red 自我质量检查", "Skill 也必须接受审判",
+        "100 问", "有状态对话", "一问一个主要意图", "Pressure Suite",
+        "Red 自我质量检查", "Skill 也必须接受审判",
     ):
         if marker not in attack_model:
             errors.append(f"red-blue attack model missing required marker: {marker}")
@@ -126,6 +135,7 @@ def verify_red_blue_harness(root: Path) -> list[str]:
     for marker in (
         "Simulated Resume Build", "Red Input Allowlist", "Explicit denylist",
         "Red Evaluation Input", "Blue Architecture Reflection Input", "Workflow Retrospective Input",
+        "seed_question_target", "live_followups: DYNAMIC", "pressure_suite_count: 100",
         *sorted(ROUND_REQUIRED_FILES),
     ):
         if marker not in round_template:
@@ -136,6 +146,7 @@ def verify_red_blue_harness(root: Path) -> list[str]:
         "01_simulated_resume.md", "02_red_questions.md", "03_blue_answers.md",
         "04_red_evaluation.md", "05_blue_architecture_reflection.md",
         "06_workflow_retrospective.md", "07_user_feedback.md", "08_session_transcript.md",
+        "SPOKEN_SEEDS", "FOLLOWUP_POLICY", "BRANCH_EXAMPLES", "PRESSURE_SUITE",
     ):
         if marker not in stage_template:
             errors.append(f"red-blue stage template missing marker: {marker}")
@@ -190,7 +201,12 @@ def verify_system_yaml(root: Path) -> list[str]:
         "red_reads_zuno_docs: false",
         "red_reads_only_simulated_resume_and_attack_skill: true",
         "simulated_resume_built_from_current_docs_before_red: true",
-        "red_question_count_default: 100",
+        "red_pressure_suite_count_default: 100",
+        "red_live_seed_question_target_default: 8",
+        "red_live_followups_dynamic: true",
+        "red_live_one_question_one_intent: true",
+        "red_pressure_suite_separate_from_live_interview: true",
+        "red_live_static_primary_path_forbidden: true",
         "red_blue_one_round_one_question_batch: true",
         "red_blue_retest_requires_new_round: true",
         "red_blue_user_feedback_required: true",
@@ -221,6 +237,7 @@ def verify_system_yaml(root: Path) -> list[str]:
         "docs/red-blue/README.md",
         "docs/red-blue/workspace/README.md",
         "docs/red-blue/rounds/README.md",
+        "docs/red-blue/interview-behavior-evidence-2026-09.md",
         "docs/research/README.md",
         "docs/decisions/README.md",
         "docs/evidence/README.md",
