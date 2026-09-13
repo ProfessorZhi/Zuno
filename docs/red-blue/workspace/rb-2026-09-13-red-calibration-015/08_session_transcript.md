@@ -68,5 +68,22 @@ output_files:
 - 00_manifest.yaml
 - .agent/red-blue/current.md
 - 08_session_transcript.md
-output_commit_sha: recover from Git history after commit
+output_commit_sha: 8562123fe59eff2bf57c88e0ef61a80c9517a9a7
 next_stage: USER_RED_REVIEW
+
+## Event 005 — USER_RED_REVIEW
+actor: User
+stage: USER_RED_REVIEW
+input_head_sha: 8562123fe59eff2bf57c88e0ef61a80c9517a9a7
+input_files:
+- 01_simulated_resume.md
+- 02_red_questions.md
+observable_input_summary: User rejected the first Red output as insufficiently human and too checklist-like, and requested studying real interview experiences before revising the Red thinking framework.
+observable_output_summary: Captured UF-003 as highest-priority REQUEST_REVISION. Blue remains blocked. The next work item is Red Skill recalibration using public interview-experience evidence, not wording edits to the existing 30 questions.
+output_files:
+- 07_user_feedback.md
+- .agent/red-blue/current.md
+- 08_session_transcript.md
+feedback_commit_sha: 3f4fec34aadbbe5a681d2052fd2c72ffb426531b
+state_transition_commit_sha: 2eec28a49b9ed3226ead72087d2d3ad1b1fb3ee6
+next_stage: RED_SKILL_RECALIBRATION
