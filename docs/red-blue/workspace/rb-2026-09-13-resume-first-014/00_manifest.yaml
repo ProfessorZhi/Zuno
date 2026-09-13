@@ -8,8 +8,9 @@ github_runtime:
   github_state_bus: REQUIRED
   stage_handoff: COMMIT_THEN_REREAD
   round_branch: red-blue/rb-2026-09-13-resume-first-014
-  round_pr: pending
-  stage_head_sha: pending_after_init_commit
+  round_pr: 226
+  stage_head_sha: df8f0a933cc9fd5c011473c7573d9641e04372e2
+  stage_head_semantics: last GitHub HEAD observed before the current Controller transition; live branch ref is authoritative
   firewall_strength: LOGICAL_GITHUB_MEDIATED
   strict_blind_red_certification: false
 
