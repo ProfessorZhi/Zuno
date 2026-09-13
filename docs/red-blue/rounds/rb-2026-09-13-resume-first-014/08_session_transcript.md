@@ -60,18 +60,22 @@ next_stage: WORKFLOW_RETROSPECTIVE
 
 ## Event 009 — WORKFLOW_RETROSPECTIVE
 actor: WorkflowRetrospective
-stage: WORKFLOW_RETROSPECTIVE
 input_head_sha: 96330be334975a943c9b8d6c572499b914a68dcd
-input_files:
-- all committed Round #014 artifacts through 05_blue_architecture_reflection.md
-- 07_user_feedback.md@96330be334975a943c9b8d6c572499b914a68dcd
-- .agent/red-blue/attack-model.md@10869d9176d2ef34b46577478bba62d9e254158a
-observable_input_summary: Judge Red itself against the user's prior complaint: technical depth, full-chain coverage, no duplicate wheel-building, implementation/fundamentals pressure and GitHub process self-consistency.
-observable_output_summary: Red/Harness PASS_WITH_REVISIONS. Technical depth and information gain are strong. Main improvements: 100-question suite needs PRIMARY_PATH/reserve execution semantics; named algorithm claims need early ownership probes; architecture budget should shrink in Implementation-primary path; protocol should rename stage_head_sha and normalize all user feedback during Round Init.
-output_files:
-- 06_workflow_retrospective.md
-- 00_manifest.yaml
-- 08_session_transcript.md
-- .agent/red-blue/current.md
-output_commit_sha: recover from Git history after commit
+observable_output_summary: Red/Harness PASS_WITH_REVISIONS. Technical depth and information gain are strong; execution path and two protocol details still need cleanup.
+output_commit_sha: 95aea67ba7a69989d3393a04266609f9008dfb7a
 next_stage: CLOSE
+
+## Event 010 — CLOSE_AND_ARCHIVE
+actor: Controller
+stage: CLOSE
+input_head_sha: 95aea67ba7a69989d3393a04266609f9008dfb7a
+input_files:
+- complete workspace/rb-2026-09-13-resume-first-014/
+- .agent/red-blue/current.md
+observable_input_summary: All required stage artifacts and user feedback exist; transcript is complete through Workflow Retrospective.
+observable_output_summary: Archived the entire Round folder to docs/red-blue/rounds/rb-2026-09-13-resume-first-014/, restored no-active current state, marked manifest CLOSED, and prepared Draft PR #226 for CI / merge.
+output_files:
+- docs/red-blue/rounds/rb-2026-09-13-resume-first-014/*
+- .agent/red-blue/current.md
+output_commit_sha: recover from Git history after archive commit
+next_stage: CI_AND_MERGE
