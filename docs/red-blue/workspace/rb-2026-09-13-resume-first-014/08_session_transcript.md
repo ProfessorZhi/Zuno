@@ -53,15 +53,25 @@ next_stage: WORKFLOW_RETROSPECTIVE
 
 ## Event 008 — USER_FEEDBACK_NORMALIZATION
 actor: Controller
-stage: WORKFLOW_RETROSPECTIVE_PREP
 input_head_sha: b01398d7deaa0c8d4fda493ce5c6635094db37cc
-input_files:
-- observable user instructions that initiated Round #014
-- 07_user_feedback.md
-observable_input_summary: Detected that the initial feedback file captured the GitHub-state-bus constraint but omitted the user's equally important pre-round judgment that the previous Red was unqualified and that the new Red must use boutique/full-chain/build-buy/implementation/fundamentals attack skills.
-observable_output_summary: Added UF-002 before workflow retrospective so Red quality is judged against the complete user requirement rather than an incomplete feedback record.
-output_files:
-- 07_user_feedback.md
-- 08_session_transcript.md
-output_commit_sha: recover from Git history after commit
+observable_output_summary: Added omitted pre-round Red-quality feedback as UF-002 before retrospective.
+output_commit_sha: 96330be334975a943c9b8d6c572499b914a68dcd
 next_stage: WORKFLOW_RETROSPECTIVE
+
+## Event 009 — WORKFLOW_RETROSPECTIVE
+actor: WorkflowRetrospective
+stage: WORKFLOW_RETROSPECTIVE
+input_head_sha: 96330be334975a943c9b8d6c572499b914a68dcd
+input_files:
+- all committed Round #014 artifacts through 05_blue_architecture_reflection.md
+- 07_user_feedback.md@96330be334975a943c9b8d6c572499b914a68dcd
+- .agent/red-blue/attack-model.md@10869d9176d2ef34b46577478bba62d9e254158a
+observable_input_summary: Judge Red itself against the user's prior complaint: technical depth, full-chain coverage, no duplicate wheel-building, implementation/fundamentals pressure and GitHub process self-consistency.
+observable_output_summary: Red/Harness PASS_WITH_REVISIONS. Technical depth and information gain are strong. Main improvements: 100-question suite needs PRIMARY_PATH/reserve execution semantics; named algorithm claims need early ownership probes; architecture budget should shrink in Implementation-primary path; protocol should rename stage_head_sha and normalize all user feedback during Round Init.
+output_files:
+- 06_workflow_retrospective.md
+- 00_manifest.yaml
+- 08_session_transcript.md
+- .agent/red-blue/current.md
+output_commit_sha: recover from Git history after commit
+next_stage: CLOSE
