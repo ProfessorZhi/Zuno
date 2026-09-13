@@ -17,7 +17,7 @@ live_followups: `DYNAMIC`
 one_question_one_intent: `true`
 red_review_gate: `REQUIRED`
 red_questions_status: `NOT_STARTED`
-round_branch: `red-blue/rb-2026-09-14-resume-human-red-017`
+round_branch: `red-blue/rb-2026-09-14-resume-human-017`
 round_pr: `234`
 last_consumed_head_sha: `b6a3d3ad5d4f1b2ddb564d8230619e6af6bde50d`
 github_state_bus: `required`
