@@ -1,0 +1,67 @@
+round_id: rb-2026-09-14-resume-human-017
+created_at: 2026-09-14T01:30:00+08:00
+mode: CHATGPT_AUTO
+zuno_base_sha: 267e314e188e0a3b380c282b29b8e0548aa86a17
+state: ACTIVE
+
+github_runtime:
+  github_state_bus: REQUIRED
+  stage_handoff: COMMIT_THEN_REREAD
+  round_branch: red-blue/rb-2026-09-14-resume-human-017
+  round_pr: pending
+  last_consumed_head_sha: 267e314e188e0a3b380c282b29b8e0548aa86a17
+  firewall_strength: LOGICAL_GITHUB_MEDIATED
+  strict_blind_red_certification: false
+
+interview_target:
+  target_role: Agent 开发工程师 / AI 应用工程师
+  company_or_persona: 大厂 AI Agent / LLM 应用工程岗位
+  interview_stage: 项目深挖 / 技术一面
+  jd_source: prior target role + generic Agent engineering expectations
+  resume_review_gate: REQUIRED
+  pressure_suite_count: 100
+  seed_question_target: 8
+  live_followups: DYNAMIC
+  one_question_one_intent: true
+  red_review_gate: REQUIRED
+
+simulated_resume_build:
+  resume_style_reference: 用户 Library 简历.pdf v1（仅使用版式、句长、动词和信息密度，不继承旧事实）
+  public_style_reference: one-page AI/Agent resume examples; 3-5 focused project bullets
+  resume_build_sources:
+    - docs/project/README.md@267e314e188e0a3b380c282b29b8e0548aa86a17
+    - docs/project/reference.md@267e314e188e0a3b380c282b29b8e0548aa86a17
+    - docs/evidence/@267e314e188e0a3b380c282b29b8e0548aa86a17
+    - docs/governance/project-fact-provenance.md@267e314e188e0a3b380c282b29b8e0548aa86a17
+  simulated_resume_path: docs/red-blue/workspace/rb-2026-09-14-resume-human-017/01_simulated_resume.md
+  resume_status: DRAFT
+  resume_project_bullet_count: 4
+  resume_style_check: PENDING
+  user_resume_review_status: PENDING
+
+red_input_allowlist:
+  - frozen 01_simulated_resume.md only after USER_RESUME_REVIEW APPROVE
+  - target role / JD / interview stage
+  - .agent/red-blue/attack-model.md
+  - model general knowledge
+
+red_interview_plan:
+  red_questions_status: NOT_STARTED
+  seed_question_count: 0
+  pressure_suite_count: 0
+  user_red_review_status: PENDING
+
+stage_state:
+  current_stage: USER_RESUME_REVIEW
+  resume_built: true
+  resume_status: DRAFT
+  user_resume_review_status: PENDING
+  red_questions_archived: false
+  red_questions_status: NOT_STARTED
+  user_red_review_status: PENDING
+  blue_answers_archived: false
+  red_evaluation_archived: false
+  blue_reflection_archived: false
+  workflow_retrospective_archived: false
+  user_feedback_archived: true
+  transcript_complete: false
