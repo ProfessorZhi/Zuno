@@ -28,6 +28,17 @@ RED_BLUE_FILES = {
     ".agent/red-blue/templates/round.md",
     ".agent/red-blue/templates/turn.md",
 }
+ROUND_REQUIRED_FILES = {
+    "00_manifest.yaml",
+    "01_simulated_resume.md",
+    "02_red_questions.md",
+    "03_blue_answers.md",
+    "04_red_evaluation.md",
+    "05_blue_architecture_reflection.md",
+    "06_workflow_retrospective.md",
+    "07_user_feedback.md",
+    "08_session_transcript.md",
+}
 
 
 def _relative_files(root: Path, directory: Path) -> set[str]:
@@ -60,44 +71,78 @@ def verify_red_blue_harness(root: Path) -> list[str]:
         errors.append(f"red-blue harness mismatch: expected {sorted(RED_BLUE_FILES)}, got {sorted(actual_files)}")
         return errors
 
+    workspace_readme = root / "docs" / "red-blue" / "workspace" / "README.md"
+    if not workspace_readme.exists():
+        errors.append("missing docs/red-blue/workspace/README.md")
+
     current = (red_blue_root / "current.md").read_text(encoding="utf-8")
     inactive = all(phrase in current for phrase in ("state: `no-active`", "active_round: `none`"))
     active = "state: `active-red-blue`" in current and re.search(r"active_round: `(?!none`)[^`]+`", current) is not None
     if not (inactive or active):
         errors.append("red-blue current state is neither recognized inactive nor active-red-blue")
-    for marker in ("CHATGPT_AUTO", "AGENT_AUTO", "batch_size", "full-observable-role-io", "archive_live"):
+    for marker in (
+        "CHATGPT_AUTO", "AGENT_AUTO", "stage:", "workspace_path:", "simulated_resume:",
+        "question_count", "full-observable-role-io", "archive_live",
+    ):
         if marker not in current:
             errors.append(f"red-blue current contract missing marker: {marker}")
     if "human-candidate" in current:
         errors.append("human-candidate must not remain an active red-blue mode")
 
+    if active:
+        workspace_match = re.search(r"workspace_path: `([^`]+)`", current)
+        if workspace_match is None:
+            errors.append("active red-blue round missing workspace_path")
+        else:
+            workspace = root / workspace_match.group(1)
+            if not workspace.exists():
+                errors.append(f"active red-blue workspace missing: {workspace_match.group(1)}")
+            elif not (workspace / "00_manifest.yaml").exists():
+                errors.append("active red-blue workspace must start with 00_manifest.yaml")
+
     protocol = (red_blue_root / "protocol.md").read_text(encoding="utf-8")
     for marker in (
-        "Context Firewall", "CHATGPT_AUTO", "AGENT_AUTO", "closed-book", "Verifier",
-        "batch_size", "default 100", "append-only", "full-observable-role-io", "transcript-batch-",
+        "Context Firewall", "CHATGPT_AUTO", "AGENT_AUTO", "Resume Builder",
+        "BUILD_SIMULATED_RESUME", "RED_QUESTIONS", "BLUE_ANSWERS", "RED_EVALUATION",
+        "BLUE_ARCHITECTURE_REFLECTION", "WORKFLOW_RETROSPECTIVE",
+        "01_simulated_resume.md", "Red 不得读取 Zuno docs", "08_session_transcript.md",
     ):
         if marker.lower() not in protocol.lower():
             errors.append(f"red-blue protocol missing required execution marker: {marker}")
 
     attack_model = (red_blue_root / "attack-model.md").read_text(encoding="utf-8")
-    for marker in ("Ownership Claim", "Build / Buy", "面经校准", "batch_size", "100", "下一批"):
+    for marker in (
+        "精品思维", "全链路追踪", "不重复造轮子", "Ownership", "Build / Buy",
+        "100 问", "Red 自我质量检查", "Skill 也必须接受审判",
+    ):
         if marker not in attack_model:
             errors.append(f"red-blue attack model missing required marker: {marker}")
 
     round_template = (red_blue_root / "templates" / "round.md").read_text(encoding="utf-8")
-    for marker in ("batch_size: 100", "max_batches", "transcript_policy", "archive_live", "transcript_shards"):
+    for marker in (
+        "Simulated Resume Build", "Red Input Allowlist", "Explicit denylist",
+        "Red Evaluation Input", "Blue Architecture Reflection Input", "Workflow Retrospective Input",
+        *sorted(ROUND_REQUIRED_FILES),
+    ):
         if marker not in round_template:
-            errors.append(f"red-blue round template missing batch/archive marker: {marker}")
+            errors.append(f"red-blue round template missing resume-first marker: {marker}")
 
-    batch_template = (red_blue_root / "templates" / "turn.md").read_text(encoding="utf-8")
-    for marker in ("Red / Blue Batch Record", "question_count", "Red — Questions", "Blue — Closed-book Answers", "Verifier — Per-question Results", "Archive Invariant"):
-        if marker not in batch_template:
-            errors.append(f"red-blue batch template missing marker: {marker}")
+    stage_template = (red_blue_root / "templates" / "turn.md").read_text(encoding="utf-8")
+    for marker in (
+        "01_simulated_resume.md", "02_red_questions.md", "03_blue_answers.md",
+        "04_red_evaluation.md", "05_blue_architecture_reflection.md",
+        "06_workflow_retrospective.md", "07_user_feedback.md", "08_session_transcript.md",
+    ):
+        if marker not in stage_template:
+            errors.append(f"red-blue stage template missing marker: {marker}")
 
     judge = (red_blue_root / "judge.md").read_text(encoding="utf-8")
-    for marker in ("UNSUPPORTED_CLAIM", "NARRATIVE_GAP", "ARCHITECTURE_GAP", "OWNERSHIP_GAP"):
+    for marker in (
+        "Red Evaluation", "Blue Architecture Reflection", "SIMULATED_RESUME_GAP",
+        "ARCHITECTURE_GAP", "FUNDAMENTAL_GAP", "Workflow Retrospective",
+    ):
         if marker not in judge:
-            errors.append(f"red-blue verifier rules missing required marker: {marker}")
+            errors.append(f"red-blue evaluation rules missing required marker: {marker}")
 
     return errors
 
@@ -125,6 +170,8 @@ def verify_system_yaml(root: Path) -> list[str]:
         'architecture_root: "docs/architecture"',
         'modules_root: "docs/modules"',
         'red_blue_docs_root: "docs/red-blue"',
+        'red_blue_workspace_root: "docs/red-blue/workspace"',
+        'red_blue_rounds_root: "docs/red-blue/rounds"',
         'research_root: "docs/research"',
         'decisions_root: "docs/decisions"',
         'evidence_root: "docs/evidence"',
@@ -135,6 +182,15 @@ def verify_system_yaml(root: Path) -> list[str]:
         "red_blue_requires_explicit_activation: true",
         "blue_closed_book: true",
         'red_blue_modes: ["CHATGPT_AUTO", "AGENT_AUTO"]',
+        "red_blue_resume_first: true",
+        "red_reads_zuno_docs: false",
+        "red_reads_only_simulated_resume_and_attack_skill: true",
+        "simulated_resume_built_from_current_docs_before_red: true",
+        "red_question_count_default: 100",
+        "red_blue_one_round_one_question_batch: true",
+        "red_blue_retest_requires_new_round: true",
+        "red_blue_user_feedback_required: true",
+        "red_blue_workflow_retrospective_required: true",
         "human_candidate_mode_removed: true",
         "module_count_is_documentation_invariant: false",
         "research_is_upstream_only: true",
@@ -159,6 +215,8 @@ def verify_system_yaml(root: Path) -> list[str]:
         "docs/modules/README.md",
         "docs/modules/reference.md",
         "docs/red-blue/README.md",
+        "docs/red-blue/workspace/README.md",
+        "docs/red-blue/rounds/README.md",
         "docs/research/README.md",
         "docs/decisions/README.md",
         "docs/evidence/README.md",
