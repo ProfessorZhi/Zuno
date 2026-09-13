@@ -91,7 +91,7 @@ def test_live_red_is_answer_driven_not_static_primary_path() -> None:
         "Pressure Suite",
         "CLAIM_IMPLEMENTATION_NOT_ESTABLISHED",
         "避免 AI 面试官味",
-        "短不等于浅",
+        "“人话”不等于浅",
         "3–5 层",
         "具体一点",
         "字节式工程深挖",
