@@ -3,7 +3,7 @@
 state: `active-red-blue`
 active_round: `rb-2026-09-13-human-red-016`
 mode: `CHATGPT_AUTO`
-stage: `RED_QUESTIONS`
+stage: `USER_RED_REVIEW`
 workspace_path: `docs/red-blue/workspace/rb-2026-09-13-human-red-016/`
 simulated_resume: `docs/red-blue/workspace/rb-2026-09-13-human-red-016/01_simulated_resume.md`
 target_role: `Agent 开发工程师 / AI 应用工程师`
@@ -13,10 +13,10 @@ seed_question_target: `8`
 live_followups: `DYNAMIC`
 one_question_one_intent: `true`
 red_review_gate: `REQUIRED`
-red_questions_status: `NOT_STARTED`
+red_questions_status: `DRAFT_REVIEW`
 round_branch: `red-blue/rb-2026-09-13-human-red-016`
 round_pr: `231`
-last_consumed_head_sha: `73a270bbe9b92dc705f01af291ac2c41eb793c6c`
+last_consumed_head_sha: `8f3ff3dbdcaee2f49e905eb533f1dadaddc412fa`
 github_state_bus: `required`
 stage_handoff: `commit-then-reread`
 firewall_strength: `LOGICAL_GITHUB_MEDIATED`
@@ -24,4 +24,4 @@ strict_blind_red_certification: `false`
 transcript_policy: `full-observable-role-io`
 archive_live: `true`
 
-模拟简历已冻结并修正为本轮 artifact identity。Red 现在只能读取冻结简历、岗位信息、当前 attack-model.md 与模型通用知识。第一版 Red 提交后必须进入 USER_RED_REVIEW；未经 APPROVE 不得运行 Blue。
+新版 Red 第一轮已经提交：8 个自然 Spoken Seeds、动态 Follow-up Policy、5 个 answer-driven Branch Examples 与 100 问离线 Pressure Suite。当前必须停在 USER_RED_REVIEW；未经用户 APPROVE 不得运行 Blue。

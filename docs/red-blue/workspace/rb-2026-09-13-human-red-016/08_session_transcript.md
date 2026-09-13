@@ -34,5 +34,24 @@ actor: Controller
 stage: RED_QUESTIONS_PRECHECK
 input_head_sha: 73a270bbe9b92dc705f01af291ac2c41eb793c6c
 observable_input_summary: Red input precheck found that the controlled-retest resume body was correct but its title still carried the prior Round #015 identifier.
-observable_output_summary: Corrected only the artifact title to Round #016. No resume Claim, fact, metric or attack surface changed. Red must start from the corrected new HEAD.
+observable_output_summary: Corrected only the artifact title to Round #016. No resume Claim, fact, metric or attack surface changed. Red starts from the corrected new HEAD.
+output_commit_sha: 8f3ff3dbdcaee2f49e905eb533f1dadaddc412fa
 next_stage: RED_QUESTIONS
+
+## Event 005 — RED_QUESTIONS
+actor: Red
+stage: RED_QUESTIONS
+input_head_sha: 8f3ff3dbdcaee2f49e905eb533f1dadaddc412fa
+input_files:
+- 01_simulated_resume.md@8f3ff3dbdcaee2f49e905eb533f1dadaddc412fa
+- target role / interview stage from 00_manifest.yaml@8f3ff3dbdcaee2f49e905eb533f1dadaddc412fa
+- .agent/red-blue/attack-model.md@e0e11b704c5653ef0363eda1b316264036b397a6
+- model general knowledge
+observable_input_summary: Generate an answer-driven big-tech Agent/LLM application interview plan. Do not create a static 30-question live script. Use natural single-intent Seeds, listen-driven follow-up policy, branch examples and a separate offline 100-question pressure bank.
+observable_output_summary: Generated 8 SPOKEN_SEEDS, a dynamic FOLLOWUP_POLICY, 5 answer-driven BRANCH_EXAMPLES and a 100-question offline PRESSURE_SUITE. Candidate-facing questions are short and single-intent; Controller-only Kill Switch / rubric state is kept separate. Output is DRAFT_REVIEW and Blue remains blocked.
+output_files:
+- 02_red_questions.md
+- 00_manifest.yaml
+- .agent/red-blue/current.md
+- 08_session_transcript.md
+next_stage: USER_RED_REVIEW
