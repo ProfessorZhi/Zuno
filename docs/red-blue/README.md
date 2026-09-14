@@ -63,9 +63,9 @@ Red 问一个问题
 
 这种 commit-per-turn 设计同时解决两件事：Red 的 follow-up 真正依赖上一答；Blue 不可能提前知道下一问。
 
-## Red Skill 与 Blue Skill 分开
+## Red Interview Skill 与 Blue Skill 分开
 
-Red 由 `.agent/red-blue/attack-model.md` 约束。它负责：听回答、选攻击 handle、追 Ownership / implementation / failure / evidence / Build-Buy / fundamentals，并在信息增益下降时换 thread。
+Red Interview Skill 由 `.agent/red-blue/attack-model.md` 约束。它负责：听回答、选攻击 handle、追 Ownership / implementation / failure / evidence / Build-Buy / fundamentals，并在信息增益下降时换 thread。
 
 Blue 由 `.agent/red-blue/defense-model.md` 约束。它负责：先直接回答，再按追问展开；区分本人和团队；把技术名词落到机制；诚实处理 small-sample、Pilot、Unknown 和 Target-only；不把回答说成 README 或 Evidence memo。
 
