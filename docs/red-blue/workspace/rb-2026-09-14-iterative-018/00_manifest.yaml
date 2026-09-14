@@ -1,0 +1,89 @@
+round_id: rb-2026-09-14-iterative-018
+created_at: 2026-09-14T15:32:00+08:00
+mode: CHATGPT_AUTO
+iteration_index: 1
+zuno_base_sha: ad6e982f218e344100b2dc6b52e2fc939f3de208
+state: ACTIVE
+
+github_state_bus: REQUIRED
+stage_handoff: COMMIT_THEN_REREAD
+round_branch: red-blue/rb-2026-09-14-iterative-018
+round_pr: PENDING
+last_consumed_head_sha: ad6e982f218e344100b2dc6b52e2fc939f3de208
+firewall_strength: LOGICAL_GITHUB_MEDIATED
+strict_blind_red_certification: false
+
+target_role: Agent 开发工程师 / 大模型应用工程师 / AI 应用工程师
+company_or_persona: 大厂 Agent / AI 应用工程一面，偏工程深挖
+interview_stage: 一面 / 项目与技术深挖
+jd_source: generic calibration; no single company JD pinned
+time_budget_minutes: 55
+minimum_live_threads: 2
+resume_review_gate: REQUIRED
+red_review_gate: REQUIRED
+improvement_review_gate: REQUIRED
+pressure_suite_count: 100
+seed_question_target: 8
+live_followups: DYNAMIC
+one_question_one_intent: true
+
+attack_skill_version: 50429619b1ddff1649a811b6d9b9b1b43d99de1f:.agent/red-blue/attack-model.md
+defense_skill_version: f81b7e811590a2bf03a361d3a6ff5175aa34b992:.agent/red-blue/defense-model.md
+judge_version: 4789ea40b31c2af08861fb5871a1d2fcda77ee10:.agent/red-blue/judge.md
+protocol_version: e9d7c3b9c6027543c85a7f245e1a2619a207c644:.agent/red-blue/protocol.md
+
+resume_style_reference:
+  - Library 简历.pdf v1: primary register / pacing reference only
+  - Library 卡码简历.pdf v1: compact project-block reference only
+  - Library 大模型/RAG简历写法案例: problem-decision-result writing reference only
+resume_build_sources:
+  - docs/project/
+  - docs/architecture/
+  - docs/modules/
+  - docs/evidence/
+  - docs/governance/project-fact-provenance.md
+  - selected historical commit/test provenance
+previous_round_resume_candidate: rb-2026-09-14-resume-human-017 DRAFT; not frozen; superseded as full-round start
+simulated_resume_path: docs/red-blue/workspace/rb-2026-09-14-iterative-018/01_simulated_resume.md
+resume_status: DRAFT
+resume_project_bullet_count: 6
+resume_style_check: PENDING
+user_resume_review_status: PENDING
+
+red_questions_status: NOT_STARTED
+seed_question_count: 0
+branch_examples_present: false
+kill_switch_policy_present: false
+user_red_review_status: PENDING
+
+live_interview_status: NOT_STARTED
+live_turn_index: 0
+next_actor: NONE
+active_thread: none
+threads_completed: 0
+interview_started_at: null
+interview_stop_reason: null
+last_question_commit_sha: null
+last_answer_commit_sha: null
+
+red_evaluation_status: NOT_STARTED
+blue_reflection_status: NOT_STARTED
+workflow_retrospective_status: NOT_STARTED
+resume_builder_reviewed: false
+red_skill_reviewed: false
+blue_skill_reviewed: false
+harness_reviewed: false
+
+improvement_ledger_status: NOT_STARTED
+user_improvement_review_status: PENDING
+approved_change_count: 0
+deferred_change_count: 0
+post_improvement_head_sha: null
+
+next_resume_candidate_path: docs/red-blue/workspace/rb-2026-09-14-iterative-018/10_next_resume_candidate.md
+next_resume_candidate_status: NOT_STARTED
+next_resume_source_head_sha: null
+next_resume_blockers: []
+
+current_stage: USER_RESUME_REVIEW
+current_round_verdict_recomputed: false
