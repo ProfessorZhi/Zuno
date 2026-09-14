@@ -12,6 +12,29 @@ output_file:
 output_commit_sha:
 ```
 
+## `00_manifest.yaml`
+
+Manifest 是 Round Controller 的机器状态，不保存面试内容本身。至少持续记录：
+
+```text
+zuno_base_sha:
+pinned skill versions:
+current_stage:
+last_consumed_head_sha:
+resume_status:
+red_questions_status:
+live_interview_status:
+live_turn_index:
+next_actor: RED | BLUE | NONE
+red_evaluation_status:
+blue_reflection_status:
+workflow_retrospective_status:
+improvement_ledger_status:
+next_resume_candidate_status:
+```
+
+每个 stage / live turn 提交时同步更新；下一个 actor 必须从新的 manifest + branch HEAD 重新开始。
+
 ## `01_simulated_resume.md`
 
 必须像候选人真实会投递的简历项目块。默认结构：项目简介 1 行、技术栈 1 行、约 4–6 条高价值 bullet。
