@@ -80,6 +80,24 @@ output_files:
 - 00_manifest.yaml
 - .agent/red-blue/current.md
 - 07_user_feedback.md
+output_commit_sha: 4fbea3f76dd0e9ff863028e67c0a0fdcbaee92ba
 next_stage: RED_QUESTIONS
 
-No Red interview question has been executed yet.
+### Event 006
+actor: Red
+stage: RED_QUESTIONS
+input_head_sha: 4fbea3f76dd0e9ff863028e67c0a0fdcbaee92ba
+input_files:
+- 01_simulated_resume.md
+- 00_manifest.yaml target role / persona / stage only
+- pinned attack-model.md blob 50429619b1ddff1649a811b6d9b9b1b43d99de1f
+observable_input_summary: Blind Red reads only the frozen resume, target interview configuration and Attack Skill. It does not read Zuno docs, source, Evidence, user architecture feedback or Blue answer key.
+observable_output_summary: Generated an eight-seed answer-driven Interview Plan with Tool/MCP, routing, GraphRAG regression, multi-hop retrieval, Context/Memory, architecture evolution and ownership/evidence threads; added four branch examples and a 100-question offline Pressure Suite. Single-Agent vs alternative topology is treated as an open engineering question, not a hidden expected answer.
+output_files:
+- 02_red_questions.md
+- 00_manifest.yaml
+- .agent/red-blue/current.md
+- 08_session_transcript.md
+next_stage: USER_RED_REVIEW
+
+Blue has not executed. Live Interview has not started.

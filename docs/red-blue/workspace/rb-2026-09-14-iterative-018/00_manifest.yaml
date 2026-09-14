@@ -9,7 +9,7 @@ github_state_bus: REQUIRED
 stage_handoff: COMMIT_THEN_REREAD
 round_branch: red-blue/rb-2026-09-14-iterative-018
 round_pr: 236
-last_consumed_head_sha: 0f52fa4ac2e41705575fa07b5a3443e9f7ef0d29
+last_consumed_head_sha: 4fbea3f76dd0e9ff863028e67c0a0fdcbaee92ba
 firewall_strength: LOGICAL_GITHUB_MEDIATED
 strict_blind_red_certification: false
 
@@ -50,10 +50,10 @@ resume_project_bullet_count: 6
 resume_style_check: APPROVED
 user_resume_review_status: APPROVED
 
-red_questions_status: NOT_STARTED
-seed_question_count: 0
-branch_examples_present: false
-kill_switch_policy_present: false
+red_questions_status: DRAFT_REVIEW
+seed_question_count: 8
+branch_examples_present: true
+kill_switch_policy_present: true
 user_red_review_status: PENDING
 
 live_interview_status: NOT_STARTED
@@ -85,5 +85,5 @@ next_resume_candidate_status: NOT_STARTED
 next_resume_source_head_sha: null
 next_resume_blockers: []
 
-current_stage: RED_QUESTIONS
+current_stage: USER_RED_REVIEW
 current_round_verdict_recomputed: false
