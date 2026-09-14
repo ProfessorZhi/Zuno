@@ -103,7 +103,7 @@ Resume Builder 从固定 base SHA 读取 Project、Architecture、Modules、Evid
 
 当用户修改冻结 Resume 时，基于旧 Resume 的 Red Plan 自动 `INVALIDATED_BY_RESUME_CHANGE`。
 
-## Red Plan 与 Pressure Suite
+## Red Plan 与 PRESSURE_SUITE
 
 Red 正式输入只有：
 
@@ -116,7 +116,7 @@ model general knowledge
 
 Red 不读取 Zuno docs / source / Evidence / Blue hidden answer key。
 
-`02_red_questions.md` 保存 Interview Threads、6–10 个 Spoken Seeds、Follow-up Policy、Branch Examples 和 100-question Pressure Suite。Pressure Suite 只做离线覆盖，不是现场脚本。
+`02_red_questions.md` 保存 Interview Threads、6–10 个 Spoken Seeds、Follow-up Policy、Branch Examples 和 100-question `PRESSURE_SUITE`。Pressure Suite 只做离线覆盖，不是现场脚本。
 
 ## LIVE_INTERVIEW：真正 Red → Blue → Red → Blue
 
