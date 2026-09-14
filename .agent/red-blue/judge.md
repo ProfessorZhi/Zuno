@@ -181,7 +181,7 @@ NO_CHANGE
 
 只有用户批准的 ledger item 才能执行。
 
-轮末修改 `.agent/red-blue/attack-model.md`、`defense-model.md`、协议、文档或架构时，必须标记 `NEXT_ROUND_ONLY`。这些变更不能反向改变本轮 Red Evaluation / Blue Reflection。
+轮末修改 `.agent/red-blue/attack-model.md`、`defense-model.md`、协议、文档或架构时，必须标记 `NEXT_ROUND_ONLY`。这些变更不能反向改变本轮 Red Evaluation / Blue Reflection，不能回头重算当前轮 verdict。
 
 Architecture change 继续遵守 Owner / ADR；Implementation gap 不能靠改文档伪装解决；Evidence gap 不能靠改简历变成“已验证”。
 
