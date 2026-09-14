@@ -14,32 +14,33 @@ def test_red_blue_uses_github_as_stage_state_bus() -> None:
         'red_blue_stage_handoff: "commit_then_reread"',
         "red_blue_round_branch_required: true",
         "red_blue_draft_pr_required: true",
-        "resume_user_review_gate_supported: true",
         "resume_must_freeze_before_red: true",
-        "red_user_review_gate_supported: true",
         "red_questions_must_freeze_before_blue: true",
+        "red_blue_live_alternating_turns: true",
+        "red_turn_must_commit_before_blue_turn: true",
+        "blue_turn_must_commit_before_next_red_turn: true",
     ):
         assert marker in system
 
     for marker in (
         "GitHub 是运行时状态总线",
         "USER_RESUME_REVIEW",
-        "RESUME_REVISION",
         "USER_RED_REVIEW",
-        "RED_REVISION",
-        "DYNAMIC_FOLLOWUP",
-        "PRESSURE_SUITE",
-        "LOGICAL_GITHUB_MEDIATED",
-        "PHYSICAL_CONTEXT_ISOLATION",
+        "LIVE_INTERVIEW",
+        "RED_TURN",
+        "BLUE_TURN",
+        "IMPROVEMENT_SYNTHESIS",
+        "USER_IMPROVEMENT_REVIEW",
+        "BUILD_NEXT_RESUME_CANDIDATE",
     ):
         assert marker in protocol
 
     for marker in (
-        "round_branch:",
-        "round_pr:",
-        "last_consumed_head_sha:",
-        "red_review_gate:",
-        "red_questions_status:",
+        "live_interview_status:",
+        "next_actor:",
+        "improvement_ledger_status:",
+        "next_resume_candidate_status:",
+        "commit-then-reread",
     ):
         assert marker in current
 
@@ -48,51 +49,111 @@ def test_simulated_resume_is_a_real_resume_surface() -> None:
     system = (ROOT / ".agent/system.yaml").read_text(encoding="utf-8")
     protocol = (ROOT / ".agent/red-blue/protocol.md").read_text(encoding="utf-8")
     turn = (ROOT / ".agent/red-blue/templates/turn.md").read_text(encoding="utf-8")
-    round_template = (ROOT / ".agent/red-blue/templates/round.md").read_text(encoding="utf-8")
 
     for marker in (
         "simulated_resume_must_match_real_resume_register: true",
         "simulated_resume_one_page_style: true",
-        'simulated_resume_project_bullets_target: "4-5"',
+        'simulated_resume_project_bullets_target: "4-6"',
         "simulated_resume_one_bullet_one_story: true",
-        "resume_user_review_gate_default_for_calibration: true",
+    ):
+        assert marker in system
+
+    assert "真实问题" in protocol
+    assert "真实工程问题" in turn
+    assert "USER_RESUME_REVIEW" in protocol
+
+
+def test_live_interview_is_committed_red_blue_alternation() -> None:
+    protocol = (ROOT / ".agent/red-blue/protocol.md").read_text(encoding="utf-8")
+    round_template = (ROOT / ".agent/red-blue/templates/round.md").read_text(encoding="utf-8")
+    turn = (ROOT / ".agent/red-blue/templates/turn.md").read_text(encoding="utf-8")
+
+    for marker in (
+        "Red question commit 必须先于对应 Blue answer commit",
+        "Blue answer commit 必须先于下一 Red follow-up commit",
+        "next_actor: RED | BLUE | NONE",
+    ):
+        assert marker in round_template
+
+    assert "真正 Red → Blue → Red → Blue" in protocol
+    assert "Live Interview Exchange Ledger" in turn
+    assert "Red question committed" in turn
+    assert "Blue answer committed" in turn
+
+
+def test_blue_candidate_skill_is_pinned_and_reviewed() -> None:
+    system = (ROOT / ".agent/system.yaml").read_text(encoding="utf-8")
+    defense = (ROOT / ".agent/red-blue/defense-model.md").read_text(encoding="utf-8")
+    judge = (ROOT / ".agent/red-blue/judge.md").read_text(encoding="utf-8")
+    round_template = (ROOT / ".agent/red-blue/templates/round.md").read_text(encoding="utf-8")
+
+    for marker in (
+        "blue_candidate_skill_required: true",
+        'blue_candidate_skill_path: ".agent/red-blue/defense-model.md"',
+        "red_blue_skill_versions_pinned_per_round: true",
+        "red_blue_blue_skill_retrospective_required: true",
     ):
         assert marker in system
 
     for marker in (
-        "写简历，不写证据报告",
-        "4–5 条核心 bullet",
-        "45–90 个字符",
-        "USER_RESUME_REVIEW",
+        "Ownership",
+        "技术回答优先讲工程矛盾",
+        "Evidence",
+        "Unknown 与边界",
+        "Failure / Recovery",
+        "面试口语",
     ):
-        assert marker in protocol
+        assert marker in defense
+
+    assert "Blue Skill" in judge
+    assert "defense_skill_version" in round_template
+
+
+def test_round_has_improvement_ledger_and_next_resume_handoff() -> None:
+    system = (ROOT / ".agent/system.yaml").read_text(encoding="utf-8")
+    protocol = (ROOT / ".agent/red-blue/protocol.md").read_text(encoding="utf-8")
+    judge = (ROOT / ".agent/red-blue/judge.md").read_text(encoding="utf-8")
+    turn = (ROOT / ".agent/red-blue/templates/turn.md").read_text(encoding="utf-8")
 
     for marker in (
-        "候选人真的会投出去的一页简历项目块",
-        "4–5 条核心 bullet",
-        "45–90 字符",
-        "USER_RESUME_REVIEW",
+        "red_blue_round_improvement_ledger_required: true",
+        "red_blue_improvement_user_review_gate_supported: true",
+        "red_blue_post_round_changes_next_round_only: true",
+        "red_blue_next_resume_candidate_required: true",
+        "red_blue_next_round_revalidates_resume: true",
     ):
-        assert marker in turn
+        assert marker in system
 
-    assert "resume_review_gate: REQUIRED | OPTIONAL | SKIP" in round_template
-    assert "resume_status: DRAFT | REVISION_REQUESTED | FROZEN" in round_template
-    assert "INVALIDATED_BY_RESUME_CHANGE" in round_template
+    for marker in (
+        "RESUME_GAP",
+        "RED_SKILL_GAP",
+        "BLUE_SKILL_GAP",
+        "HARNESS_GAP",
+        "ARCHITECTURE_GAP",
+        "EVIDENCE_GAP",
+        "FUNDAMENTAL_GAP",
+    ):
+        assert marker in protocol
+        assert marker in judge
+
+    assert "09_improvement_ledger.md" in turn
+    assert "10_next_resume_candidate.md" in turn
+    assert "NEXT_ROUND_ONLY" in protocol
 
 
-def test_red_questions_require_user_review_before_blue_when_configured() -> None:
+def test_current_round_verdict_is_not_rewritten_after_skill_changes() -> None:
+    system = (ROOT / ".agent/system.yaml").read_text(encoding="utf-8")
     protocol = (ROOT / ".agent/red-blue/protocol.md").read_text(encoding="utf-8")
-    template = (ROOT / ".agent/red-blue/templates/round.md").read_text(encoding="utf-8")
+    judge = (ROOT / ".agent/red-blue/judge.md").read_text(encoding="utf-8")
 
-    assert "## USER_RED_REVIEW" in protocol
-    assert "red_questions_status: NOT_STARTED | DRAFT_REVIEW | REVISION_REQUESTED | FROZEN | INVALIDATED_BY_RESUME_CHANGE" in template
-    assert "resume_status: FROZEN` 且 `red_questions_status: FROZEN" in template
+    assert "red_blue_current_round_verdict_immutable_after_reflection: true" in system
+    assert "不得回头重新计算本轮 PASS/FAIL" in protocol
+    assert "不能回头重算当前轮 verdict" in judge
 
 
 def test_live_red_is_answer_driven_not_static_primary_path() -> None:
     system = (ROOT / ".agent/system.yaml").read_text(encoding="utf-8")
     attack = (ROOT / ".agent/red-blue/attack-model.md").read_text(encoding="utf-8")
-    turn = (ROOT / ".agent/red-blue/templates/turn.md").read_text(encoding="utf-8")
 
     for marker in (
         "red_pressure_suite_count_default: 100",
@@ -113,9 +174,6 @@ def test_live_red_is_answer_driven_not_static_primary_path() -> None:
         "字节式工程深挖",
     ):
         assert marker in attack
-
-    for marker in ("SPOKEN_SEEDS", "FOLLOWUP_POLICY", "BRANCH_EXAMPLES", "PRESSURE_SUITE"):
-        assert marker in turn
 
     assert "PRIMARY_PATH: 30" not in attack
 
