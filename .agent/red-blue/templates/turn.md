@@ -124,7 +124,7 @@ boundary: ...
 
 Blue Wave 2 只能回答已经提交的 Red Wave 2，不预读未来 Evaluation。
 
-### LIVE_INTERVIEW — Exchange Ledger
+### LIVE_INTERVIEW — Live Interview Exchange Ledger
 
 ```text
 # Live Interview — <round-id>
