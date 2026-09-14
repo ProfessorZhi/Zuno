@@ -65,7 +65,7 @@ def test_batch_duel_is_default_for_automated_rounds() -> None:
         "RED_WAVE_2",
         "BLUE_WAVE_2",
         "Wave 2 Red **必须在 Blue Wave 1 commit 以后生成**",
-        "Pressure Suite 仍是离线覆盖库",
+        "100-question `PRESSURE_SUITE` 继续做离线 coverage audit",
     ):
         assert marker in protocol
 
@@ -99,7 +99,7 @@ def test_live_interview_remains_optional_and_committed() -> None:
     ):
         assert marker in round_template
 
-    assert "LIVE_INTERVIEW — Exchange Ledger" in turn
+    assert "LIVE_INTERVIEW — Live Interview Exchange Ledger" in turn
     assert "Red question committed" in turn
     assert "Blue answer committed" in turn
 
