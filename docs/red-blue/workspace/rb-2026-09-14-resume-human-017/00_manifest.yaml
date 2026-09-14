@@ -9,7 +9,7 @@ github_runtime:
   stage_handoff: COMMIT_THEN_REREAD
   round_branch: red-blue/rb-2026-09-14-resume-human-017
   round_pr: 234
-  last_consumed_head_sha: b6a3d3ad5d4f1b2ddb564d8230619e6af6bde50d
+  last_consumed_head_sha: e6cc116145e287f59b21db0513080adf224bcbd7
   firewall_strength: LOGICAL_GITHUB_MEDIATED
   strict_blind_red_certification: false
 
@@ -38,8 +38,8 @@ simulated_resume_build:
   resume_project_bullet_count: 6
   resume_style_check: PENDING
   user_resume_review_status: PENDING
-  revision: 2
-  revision_focus: preserve recruiter readability while restoring participation breadth and evidence-backed ownership verbs
+  revision: 3
+  revision_focus: raise recruiter-facing writing quality and metric credibility; keep breadth; remove suspicious perfect-score framing
 
 red_input_allowlist:
   - frozen 01_simulated_resume.md only after USER_RESUME_REVIEW APPROVE
