@@ -2,101 +2,115 @@
 
 `.agent/red-blue/` 是机器运行中心；长期方法、行为证据、工作区和归档入口在 `docs/red-blue/`。
 
-本目录只拥有 active Round state、执行协议、Red Interview Skill、评价规则和模板。它不拥有 Project History、Target Architecture、Module Truth、Current Evidence 或真实简历正文。
+本目录拥有 active Round state、执行协议、Red Interview Skill、Blue Candidate Skill、评价规则和模板。它不拥有 Project History、Target Architecture、Module Truth、Current Evidence 或真实简历正文。
 
 ## GitHub-first
 
-正式 Round 中，GitHub 是阶段间唯一耐久交接面：
+正式 Round 中，GitHub 是阶段和 live turn 之间唯一耐久交接面：
 
 ```text
 Round branch HEAD
-→ read declared stage inputs
-→ run one stage
+→ read declared inputs
+→ run one stage / one turn
 → write artifact + manifest + transcript
 → commit
-→ next stage re-read new HEAD
+→ next actor re-read new HEAD
 ```
 
-聊天上下文、Agent 临时内存和未提交草稿不能直接跨 stage 成为正式输入。每轮使用独立 `red-blue/<round-id>` branch + Draft PR。
+聊天上下文和未提交草稿不能直接跨阶段成为正式输入。
 
-## 模式
+## 两个循环
 
-只允许：
+Red / Blue 运行分成两个闭环。
+
+### Interview Loop
 
 ```text
-CHATGPT_AUTO
-AGENT_AUTO
+Frozen Resume
+→ Frozen Red Plan
+→ Red asks one question
+→ commit
+→ Blue answers
+→ commit
+→ Red reads answer and follows up
+→ ...
+→ Red Evaluation
 ```
 
-`CHATGPT_AUTO` 使用同一 ChatGPT 对话并通过 GitHub handoff，只能声明：
+Pressure Suite 仍有 100 问，但只做离线 coverage；真实现场必须 answer-driven。
+
+### Improvement Loop
 
 ```text
-firewall_strength: LOGICAL_GITHUB_MEDIATED
-strict_blind_red_certification: false
+Red Evaluation
+→ Blue Architecture Reflection
+→ Resume Builder / Red Skill / Blue Skill / Harness Retrospective
+→ Improvement Ledger
+→ USER_IMPROVEMENT_REVIEW
+→ approved changes
+→ Next Resume Candidate
+→ next Round
 ```
 
-`AGENT_AUTO` 在 Red 等角色确实使用独立 context 时可以声明：
+一个 failure 必须先归因，再决定改哪一层。Red 问得差不能直接变成 Architecture Gap；Blue 有材料但讲不清，也不能直接删 Resume Claim。
 
-```text
-firewall_strength: PHYSICAL_CONTEXT_ISOLATION
-strict_blind_red_certification: true
-```
-
-## Source boundary
+## 角色边界
 
 ### Resume Builder
 
-可读取固定 Zuno base SHA 的 canonical docs / Evidence + 已有简历风格，输出 `01_simulated_resume.md`。
+读取固定 base SHA 的 canonical docs / Evidence + 简历风格，生成真实可投递的 `01_simulated_resume.md`。
 
 ### Red
 
-正式业务输入只有：
-
-```text
-01_simulated_resume.md
-00_manifest.yaml 中的岗位 / JD / 轮次
-attack-model.md
-模型通用知识
-```
-
-Red 默认不读取 Project / Architecture / Modules / Evidence / Zuno source / prior Blue answer key。
-
-### Red 的输出
-
-`02_red_questions.md` 现在是 **Interview Plan + Pressure Suite**：
-
-```text
-6–10 SPOKEN_SEEDS
-DYNAMIC FOLLOWUP_POLICY
-BRANCH_EXAMPLES
-100-question PRESSURE_SUITE
-```
-
-Pressure Suite 用于离线覆盖，不是现场脚本。现场问答必须由上一答驱动：面试官听候选人刚说出的技术、数字、选择、困难、Ownership 或 bad case，选一个高信息增益 handle，再问一个主要意图。
-
-Controller 可以维护 Claim risk、confidence、Kill Switch 等状态，但不把这些 rubric 念给候选人。
-
-### USER_RED_REVIEW
-
-校准 Round 默认在第一版 Red Interview Plan 提交后暂停。用户检查 Seed 是否自然、Branch 是否真的 answer-driven、问题是否仍像 Reviewer checklist。只有用户 `APPROVE` 并把 Red plan 冻结后 Blue 才能执行。
-
-如果用户判定 Skill 本身有结构缺陷，可以把 Round `SUPERSEDED`，独立修 Skill，再开新 Round。
+读取 Frozen Resume、岗位 / JD、pinned `attack-model.md`、已发生的 observable exchanges。Red 不读 Zuno docs / source / Evidence。
 
 ### Blue
 
-读取冻结模拟简历、冻结 Red plan、实际 interview exchange 和 manifest 固定 Zuno refs，再从允许的 canonical docs 回答。
+读取当前已经提交的 Red question、此前 exchanges、pinned `defense-model.md` 和固定 base SHA 的允许 Zuno canonical sources。
+
+Blue Skill 规定“怎么回答”；canonical sources 规定“什么可以说”。
 
 ### Red Evaluation
 
-依据实际发生的 question / answer threads 评价候选人，而不是要求 100 问逐题答完；仍不读取 Zuno docs。
+只依据 Frozen Resume、实际 Q/A 与 Attack Skill 判断面试表现，不拿 Zuno docs 当隐藏答案。
 
 ### Blue Reflection
 
-读取面试产物和固定 Zuno docs，判断断点属于 Resume / Narrative / Docs / Architecture / Implementation / Evidence / Ownership / Fundamentals 中哪一类。
+重新读取 canonical Zuno sources，判断问题到底在 Resume、Narrative、Docs、Architecture、Implementation、Evidence、Ownership、Fundamentals 还是根本不需要 Zuno Change。
 
 ### Workflow Retrospective
 
-专门评价 Red 是否听回答、是否自然追问、是否及时换 thread、是否存在复合长问或无信息增益原子化，并结合用户反馈更新 Harness。
+必须分别审：
+
+```text
+Resume Builder
+Red Skill
+Blue Skill
+Harness
+```
+
+### Improvement Synthesizer
+
+把所有 finding 收敛进 `09_improvement_ledger.md`，给出唯一 primary owner、拟议改动、风险和下一轮复测条件。
+
+## Skill pinning
+
+每轮开始时固定：
+
+```text
+attack-model.md version
+defense-model.md version
+judge.md version
+protocol.md version
+```
+
+轮末允许改 Skill，但只能 `NEXT_ROUND_ONLY`，不能回头重算当前轮 verdict。
+
+## 模式
+
+`CHATGPT_AUTO`：`LOGICAL_GITHUB_MEDIATED`，不能证明物理 blind。
+
+`AGENT_AUTO`：角色真正使用独立 context 时可声明 `PHYSICAL_CONTEXT_ISOLATION`。
 
 ## 机器目录
 
@@ -106,15 +120,14 @@ Controller 可以维护 Claim risk、confidence、Kill Switch 等状态，但不
 ├── current.md
 ├── protocol.md
 ├── attack-model.md
+├── defense-model.md
 ├── judge.md
 └── templates/
     ├── round.md
     └── turn.md
 ```
 
-## Active Workspace
-
-Round branch 的 workspace 位于 `docs/red-blue/workspace/<round-id>/`，固定九份 artifact：
+## Round Artifacts
 
 ```text
 00_manifest.yaml
@@ -126,10 +139,12 @@ Round branch 的 workspace 位于 `docs/red-blue/workspace/<round-id>/`，固定
 06_workflow_retrospective.md
 07_user_feedback.md
 08_session_transcript.md
+09_improvement_ledger.md
+10_next_resume_candidate.md
 ```
 
-影响当前 Round 的用户 intervention 先提交到 feedback / transcript，再推进状态。Round 关闭前整个 workspace 原样归档到 `docs/red-blue/rounds/<round-id>/`。
+`03_blue_answers.md` 是 Live Interview Exchange Ledger，不再是批量答案。
 
-Round 不自动修改 Architecture、简历、Red Skill 或业务代码。Blue Reflection / Workflow Retrospective 只提出独立后续任务。
+`10_next_resume_candidate.md` 是下一轮候选输入，不得覆盖本轮 Frozen Resume。下一轮从新 main HEAD 重新校验并再次经过 USER_RESUME_REVIEW。
 
-完整方法见 `docs/red-blue/README.md`；执行状态机见 `protocol.md`；公开面经提炼出的行为证据见 `docs/red-blue/interview-behavior-evidence-2026-09.md`。
+Round 关闭前整个 workspace 原样归档。完整状态机见 `protocol.md`，评价和归因规则见 `judge.md`。
