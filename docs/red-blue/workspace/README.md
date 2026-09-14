@@ -10,7 +10,7 @@
 red-blue/<round-id>
 ```
 
-并创建 `docs/red-blue/workspace/<round-id>/`。固定九个文件保持不变：
+并创建 `docs/red-blue/workspace/<round-id>/`。当前协议固定十一份 artifact：
 
 ```text
 00_manifest.yaml
@@ -22,78 +22,92 @@ red-blue/<round-id>
 06_workflow_retrospective.md
 07_user_feedback.md
 08_session_transcript.md
+09_improvement_ledger.md
+10_next_resume_candidate.md
 ```
 
 Draft PR 是活动 Round 的 GitHub 入口。`main` 不保存半完成 workspace。
 
-## GitHub 是阶段交接面
+## GitHub 是 stage 和 live turn 的交接面
 
 ```text
 读取 live Round branch HEAD
 → 核对 manifest stage / allowlist
-→ 从该 HEAD 读取正式输入
-→ 生成 artifact
-→ 更新 manifest / transcript
+→ 当前 actor 只执行一个 stage / turn
+→ 更新 artifact + manifest + transcript
 → commit
-→ 下一阶段重新读取新的 HEAD
+→ 下一个 actor 重新读取 HEAD
 ```
-
-Round 启动前已经知道的用户约束进入第一笔 Round transaction；中途新反馈也先提交，再影响后续阶段。
 
 ## Resume-first
 
-`01_simulated_resume.md` 冻结后，Red 只能读取冻结模拟简历、岗位 / JD / 面试轮次、Red Interview Skill 和模型通用知识。它不读 Zuno canonical docs、源码、PR 或 Blue answer key。
+`01_simulated_resume.md` 先由用户 review，再冻结。Red 只能读取 Frozen Resume、岗位 / JD、pinned Red Skill 和模型通用知识。
 
-## `02_red_questions.md` 现在是 Interview Plan，不是固定问卷
+Resume bullet 优先表达真实工程问题和技术决策，不以框架名、模块名或漂亮数字代替贡献。
 
-默认保存：
+## Red Plan 不是现场脚本
+
+`02_red_questions.md` 保存：
 
 ```text
 6–10 条 SPOKEN_SEEDS
 DYNAMIC FOLLOWUP_POLICY
-若干 BRANCH_EXAMPLES
+BRANCH_EXAMPLES
 100 问 PRESSURE_SUITE
 ```
 
-`SPOKEN_SEEDS` 是面试官最初真正可能说出口的问题，只负责打开话题。候选人回答以后，Red 必须从上一答中抽取技术、数字、选择、困难、Ownership 或 bad case，再决定下一问。
+Pressure Suite 只做离线覆盖。
 
-Pressure Suite 负责离线覆盖，不在 45–60 分钟现场逐题朗读。
+## Live Interview 真正 Red ↔ Blue 交替
 
-### 一个问题只问一件主要事情
-
-旧版常把“机制、代码、测试、指标、Trade-off”塞在一个问题里。现在这些验证拆成连续对话。例如：
+`03_blue_answers.md` 是实际 Q/A ledger：
 
 ```text
-你刚才说检索效果掉了，最开始怎么发现的？
-→ 具体是哪里排错了？
-→ 你最后改了哪一层？
-→ 那个 Recall 是怎么测的？
+Red 问一个问题
+→ commit
+→ Blue 回答
+→ commit
+→ Red 根据刚才回答追问
+→ commit
+→ Blue 回答
+→ ...
 ```
 
-深度来自每一答触发下一问，而不是问题本身越来越长。
+Red 不能一次把后续追问全部预生成；Blue 不能提前看到未来问题。
 
-### Kill Switch 是 Controller 元数据
+Blue 使用 pinned `.agent/red-blue/defense-model.md` 控制回答方式，并使用固定 `zuno_base_sha` 的 canonical sources 控制事实边界。
 
-如果候选人连续无法建立某个 Claim 的 Ownership / mechanism，Red 记录 credibility break 并自然换 thread。Kill Switch 不作为面试官口头话术展示。
+## Round 后半不是“写总结”，而是做归因
 
-## USER_RED_REVIEW
+面试完成后依次产生：
 
-校准 Round 默认 `red_review_gate: REQUIRED`。Red 第一版 Interview Plan 提交后停止推进，用户检查：
+```text
+04 Red Evaluation
+05 Blue Architecture Reflection
+06 Resume / Red Skill / Blue Skill / Harness Retrospective
+09 Improvement Ledger
+```
 
-- Seed 是否像真人会问；
-- Branch Example 中下一问是否真的从上一答长出来；
-- 是否还有 Reviewer checklist 味；
-- 是否有复合长问；
-- 是否无信息增益地拆原子细节。
+`09_improvement_ledger.md` 必须给每个问题一个 primary owner：Resume、Red Skill、Blue Skill、Harness、Narrative、Docs、Architecture、Implementation、Evidence、Ownership、Fundamentals 或 No Change。
 
-用户结果：`APPROVE / REQUEST_REVISION / ABORT`。只有 APPROVE 后 `red_questions_status` 才能 `FROZEN`，Blue 才能开始。
+用户批准前不能因为一次面试信号直接修改 canonical Zuno Truth。
 
-如果用户认为是 Skill 结构问题，而不是局部措辞问题，可以把当前 Round `SUPERSEDED`，先更新 Skill，再用新 Skill 开新 Round。失败版本继续保留。
+## NEXT_ROUND_ONLY
 
-## 两种模式的隔离强度
+批准的 Skill / Harness / Docs / Architecture 变更可以在 Round branch 后半段落地，但只对下一轮生效。本轮 Frozen Resume、pinned Skill 和 Evaluation 不回头改写。
 
-`CHATGPT_AUTO` 使用 `LOGICAL_GITHUB_MEDIATED`，不能证明物理遗忘；`AGENT_AUTO` 在 Red 使用独立 context 时可声明 `PHYSICAL_CONTEXT_ISOLATION`。两种模式仍使用同一 GitHub state machine。
+## 下一版简历
+
+完成批准的改进后，Resume Builder 生成 `10_next_resume_candidate.md`。它只是下一轮候选稿：Round merge 后，下一轮从新 main HEAD 重新校验，并再次进入 USER_RESUME_REVIEW。
+
+未解决的 Implementation / Evidence / Ownership gap 不能因为写进 candidate 就升级成事实。
+
+## 两种模式
+
+`CHATGPT_AUTO` 使用 `LOGICAL_GITHUB_MEDIATED`；`AGENT_AUTO` 在角色真正使用独立 context 时可以声明 `PHYSICAL_CONTEXT_ISOLATION`。
 
 ## 关闭一轮
 
-完成 Round 后把 workspace 原样移动到 `docs/red-blue/rounds/<round-id>/`，Draft PR 转 ready，required CI 通过后 merge。坏问题、弱回答、用户批评和修订历史都保留。
+完成 Improvement Gate、应用或明确 defer 改进、构建 Next Resume Candidate 后，才把 workspace 原样移动到 `docs/red-blue/rounds/<round-id>/`。Required CI 通过后 merge。
+
+坏问题、弱回答、用户批评、被拒绝的改进和未解决 blocker 都必须保留。
