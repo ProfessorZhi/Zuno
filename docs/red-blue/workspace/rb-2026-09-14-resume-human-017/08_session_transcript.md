@@ -39,3 +39,19 @@ observable_input_summary: Restore participation breadth while keeping recruiter-
 observable_output_summary: Expanded the Zuno block from four to six focused bullets covering Tool Calling strategy, Workspace MCP routing, GraphRAG, Context/Memory foundation, Context/Memory readback and regression/eval work. Resume returned to USER_RESUME_REVIEW. Red and Blue remain blocked.
 output_commit_sha: 02d86a144352a754076b5e64d2010ce71c4d60c4
 next_stage: USER_RESUME_REVIEW
+
+## Event 006 — USER_RESUME_REVIEW: REQUEST_REVISION
+actor: User
+stage: USER_RESUME_REVIEW
+observable_input_summary: User asked for higher resume quality and flagged the GraphRAG 0.80→1.00 presentation as looking artificially perfect given the five-query smoke.
+observable_output_summary: Recorded UF-006. Resume returned to RESUME_REVISION; Red and Blue remained blocked.
+output_commit_sha: e6cc116145e287f59b21db0513080adf224bcbd7
+next_stage: RESUME_REVISION
+
+## Event 007 — RESUME_REVISION 3
+actor: ResumeBuilder
+stage: RESUME_REVISION
+observable_input_summary: Keep six-bullet participation breadth, improve recruiter-facing prose, strengthen evidence-backed ownership verbs, and replace perfect-score framing with a credible engineering regression story.
+observable_output_summary: Rewrote all six bullets around contribution object → engineering action → relevant mechanism → credible result. GraphRAG now states that a five-query development smoke exposed graph candidates displacing baseline hits from Top-K and that the regression was repaired back to baseline level; no 1.00/100% headline remains. Resume returned to USER_RESUME_REVIEW. Red and Blue remain blocked.
+output_commit_sha: e89faab985e8b2a17a649b884f097b04429329c4
+next_stage: USER_RESUME_REVIEW
