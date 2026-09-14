@@ -14,6 +14,7 @@ observable_output_summary: Round #018 selected as iterative workflow Iteration 1
 output_files:
 - 00_manifest.yaml
 - 07_user_feedback.md
+output_commit_sha: b321eed940e2bae94b67817cc3bdb29efe789bbe
 next_stage: BUILD_RESUME
 
 ### Event 002
@@ -35,6 +36,21 @@ observable_output_summary: Built a six-bullet Zuno draft around Tool/MCP call-ch
 output_files:
 - 01_simulated_resume.md
 - 07_user_feedback.md
+output_commit_sha: b321eed940e2bae94b67817cc3bdb29efe789bbe
+next_stage: USER_RESUME_REVIEW
+
+### Event 003
+actor: Controller
+stage: USER_RESUME_REVIEW
+input_head_sha: b321eed940e2bae94b67817cc3bdb29efe789bbe
+input_files:
+- 00_manifest.yaml
+- 01_simulated_resume.md
+observable_input_summary: Create the Round Draft PR and publish the resume draft for user review.
+observable_output_summary: Draft PR #236 created. Resume remains DRAFT; Red is NOT_STARTED; Blue is blocked.
+output_files:
+- 00_manifest.yaml
+- .agent/red-blue/current.md
 next_stage: USER_RESUME_REVIEW
 
 No Red execution has occurred.

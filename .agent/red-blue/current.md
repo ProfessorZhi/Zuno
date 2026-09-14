@@ -21,7 +21,7 @@ next_actor: `NONE`
 improvement_ledger_status: `NOT_STARTED`
 next_resume_candidate_status: `NOT_STARTED`
 round_branch: `red-blue/rb-2026-09-14-iterative-018`
-round_pr: `PENDING`
+round_pr: `236`
 last_consumed_head_sha: `ad6e982f218e344100b2dc6b52e2fc939f3de208`
 github_state_bus: `required`
 stage_handoff: `commit-then-reread`
