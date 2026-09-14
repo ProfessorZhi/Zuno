@@ -1,0 +1,1 @@
+Automated execution should use batch Red and Blue stages written to GitHub. The user should not answer interview questions one by one in chat.
