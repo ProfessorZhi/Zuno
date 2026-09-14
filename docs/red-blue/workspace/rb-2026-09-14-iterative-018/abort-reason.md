@@ -1,1 +1,0 @@
-Round #018 is superseded before Blue execution. The resume and Red plan were useful calibration artifacts, but the execution harness was corrected: automated rounds should use batch Red/Blue waves written directly to GitHub rather than requiring the user to answer each question in chat.
