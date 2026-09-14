@@ -186,6 +186,26 @@ last_question_commit_sha:
 last_answer_commit_sha:
 ```
 
+### RED_TURN allowlist
+
+```text
+- frozen Resume
+- frozen Red Plan
+- observable live exchanges so far
+- pinned attack-model.md
+- target / JD / stage / time state
+```
+
+### BLUE_TURN allowlist
+
+```text
+- frozen Resume
+- current committed Red question
+- observable live exchanges so far
+- pinned defense-model.md
+- canonical docs / Evidence / selected provenance @ zuno_base_sha
+```
+
 Red question commit 必须先于对应 Blue answer commit；Blue answer commit 必须先于下一 Red follow-up commit。
 
 ## Red Evaluation
