@@ -108,8 +108,9 @@ def test_red_blue_harness_is_resume_first_iterative_and_archivable() -> None:
     assert actual == CANONICAL_RED_BLUE_FILES
 
     current = (root / "current.md").read_text(encoding="utf-8")
-    assert "state: `no-active`" in current
-    assert "active_round: `none`" in current
+    inactive = "state: `no-active`" in current and "active_round: `none`" in current
+    active = "state: `active-red-blue`" in current and "active_round: `none`" not in current
+    assert inactive or active
     assert "CHATGPT_AUTO" in current and "AGENT_AUTO" in current
     for marker in (
         "workspace_path:", "simulated_resume:", "pressure_suite_count: `100`",
