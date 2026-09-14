@@ -42,3 +42,17 @@ required_change:
 - 保留 GraphRAG 质量闭环及最有区分度的数字
 - 可以补一条工程化/测试/架构判断，但不得把 Target Architecture 冒充个人已实现
 - Red 继续 BLOCKED；修订后的简历重新交 USER_RESUME_REVIEW
+
+## UF-006 — Raise writing quality; avoid suspicious perfect metrics
+
+when: 2026-09-14T09:25:00+08:00
+priority: highest
+affected_stage: USER_RESUME_REVIEW / RESUME_REVISION
+text: 六条版本的方向比四条好，但整体简历质量还需要更高。GraphRAG 直接写 Recall@5 0.80→1.00 在只有 5 条 smoke 的背景下，一眼容易像人为挑样本或包装 100% 指标，即使数据真实也不适合作为简历 headline。
+required_change:
+- GraphRAG 不再把 1.00 / 100% 作为简历卖点；明确小样本研发 smoke，并改写为“定位并修复 regression，使样本恢复到 baseline 水平”
+- 每条 bullet 同时做到贡献对象清楚、动作有力度、技术信息有区分度、结果可信
+- 用工程结果和问题闭环替代术语堆叠
+- 有个人实现证据时使用主动动词，不机械写“参与”
+- 不增加无法证明的业务收益、性能数字或 Production Claim
+- Red / Blue 继续 BLOCKED，revision 3 重新交 USER_RESUME_REVIEW
