@@ -1,6 +1,8 @@
 round_id: rb-2026-09-14-iterative-018
 created_at: 2026-09-14T15:32:00+08:00
 mode: CHATGPT_AUTO
+execution_mode: BATCH_DUEL
+execution_mode_source: USER_OVERRIDE_BEFORE_BLUE
 iteration_index: 1
 zuno_base_sha: ad6e982f218e344100b2dc6b52e2fc939f3de208
 state: ACTIVE
@@ -9,7 +11,7 @@ github_state_bus: REQUIRED
 stage_handoff: COMMIT_THEN_REREAD
 round_branch: red-blue/rb-2026-09-14-iterative-018
 round_pr: 236
-last_consumed_head_sha: 4fbea3f76dd0e9ff863028e67c0a0fdcbaee92ba
+last_consumed_head_sha: 9f9a2fa354f67c52ec46addb2d2cd76b4e305a43
 firewall_strength: LOGICAL_GITHUB_MEDIATED
 strict_blind_red_certification: false
 
@@ -24,6 +26,8 @@ red_review_gate: REQUIRED
 improvement_review_gate: REQUIRED
 pressure_suite_count: 100
 seed_question_target: 8
+batch_wave1_question_target: compatibility-full-pressure-suite
+batch_wave2_question_target: 28
 live_followups: DYNAMIC
 one_question_one_intent: true
 
@@ -50,40 +54,52 @@ resume_project_bullet_count: 6
 resume_style_check: APPROVED
 user_resume_review_status: APPROVED
 
-red_questions_status: DRAFT_REVIEW
+red_questions_status: FROZEN
 seed_question_count: 8
 branch_examples_present: true
 kill_switch_policy_present: true
-user_red_review_status: PENDING
+user_red_review_status: APPROVED
 
-live_interview_status: NOT_STARTED
+batch_duel_status: COMPLETE
+batch_wave_index: 2
+next_actor: USER
+red_wave1_status: COMMITTED
+blue_wave1_status: COMMITTED
+red_wave2_status: COMMITTED
+blue_wave2_status: COMMITTED
+red_wave1_commit_sha: 9fe2d6cf5f309b888e0bb9c5697753457a34c474
+blue_wave1_commit_sha: 14faf4c3061e43bebbec788c7766fde0e7f33c15
+red_wave2_commit_sha: 889fb67deb6f8394bd81b7a8c2f0e8d3c862f312
+blue_wave2_commit_sha: a799a4546a64ede3a139cc623518d268cb33d21a
+
+live_interview_status: NOT_USED
 live_turn_index: 0
-next_actor: NONE
 active_thread: none
 threads_completed: 0
 interview_started_at: null
-interview_stop_reason: null
+interview_stop_reason: batch-duel-used
 last_question_commit_sha: null
 last_answer_commit_sha: null
 
-red_evaluation_status: NOT_STARTED
-blue_reflection_status: NOT_STARTED
-workflow_retrospective_status: NOT_STARTED
-resume_builder_reviewed: false
-red_skill_reviewed: false
-blue_skill_reviewed: false
-harness_reviewed: false
+red_evaluation_status: COMPLETE
+blue_reflection_status: COMPLETE
+workflow_retrospective_status: COMPLETE
+resume_builder_reviewed: true
+red_skill_reviewed: true
+blue_skill_reviewed: true
+harness_reviewed: true
 
-improvement_ledger_status: NOT_STARTED
+improvement_ledger_status: DRAFT_REVIEW
 user_improvement_review_status: PENDING
-approved_change_count: 0
-deferred_change_count: 0
-post_improvement_head_sha: null
+approved_change_count: 2
+deferred_change_count: 1
+post_improvement_head_sha: pending-ci-closure
 
 next_resume_candidate_path: docs/red-blue/workspace/rb-2026-09-14-iterative-018/10_next_resume_candidate.md
-next_resume_candidate_status: NOT_STARTED
+next_resume_candidate_status: BLOCKED
 next_resume_source_head_sha: null
-next_resume_blockers: []
+next_resume_blockers:
+  - pending USER_IMPROVEMENT_REVIEW for architecture/doc/skill findings
 
-current_stage: USER_RED_REVIEW
+current_stage: USER_IMPROVEMENT_REVIEW
 current_round_verdict_recomputed: false
