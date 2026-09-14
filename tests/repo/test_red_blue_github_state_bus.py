@@ -16,9 +16,6 @@ def test_red_blue_uses_github_as_stage_state_bus() -> None:
         "red_blue_draft_pr_required: true",
         "resume_must_freeze_before_red: true",
         "red_questions_must_freeze_before_blue: true",
-        "red_blue_live_alternating_turns: true",
-        "red_turn_must_commit_before_blue_turn: true",
-        "blue_turn_must_commit_before_next_red_turn: true",
     ):
         assert marker in system
 
@@ -26,9 +23,6 @@ def test_red_blue_uses_github_as_stage_state_bus() -> None:
         "GitHub 是运行时状态总线",
         "USER_RESUME_REVIEW",
         "USER_RED_REVIEW",
-        "LIVE_INTERVIEW",
-        "RED_TURN",
-        "BLUE_TURN",
         "IMPROVEMENT_SYNTHESIS",
         "USER_IMPROVEMENT_REVIEW",
         "BUILD_NEXT_RESUME_CANDIDATE",
@@ -43,6 +37,71 @@ def test_red_blue_uses_github_as_stage_state_bus() -> None:
         "commit-then-reread",
     ):
         assert marker in current
+
+
+def test_batch_duel_is_default_for_automated_rounds() -> None:
+    system = (ROOT / ".agent/system.yaml").read_text(encoding="utf-8")
+    protocol = (ROOT / ".agent/red-blue/protocol.md").read_text(encoding="utf-8")
+    round_template = (ROOT / ".agent/red-blue/templates/round.md").read_text(encoding="utf-8")
+    turn = (ROOT / ".agent/red-blue/templates/turn.md").read_text(encoding="utf-8")
+
+    for marker in (
+        'red_blue_execution_modes: ["BATCH_DUEL", "LIVE_INTERVIEW"]',
+        'red_blue_automated_default_execution_mode: "BATCH_DUEL"',
+        "red_blue_batch_duel_supported: true",
+        "red_blue_batch_wave_count_default: 2",
+        'red_blue_batch_wave1_question_target: "20-40"',
+        'red_blue_batch_wave2_question_target: "10-30"',
+        "red_blue_batch_wave2_requires_blue_wave1: true",
+        "red_blue_batch_wave_commit_barrier: true",
+        "red_blue_live_interview_optional: true",
+    ):
+        assert marker in system
+
+    for marker in (
+        "BATCH_DUEL — 自动 Round 默认",
+        "RED_WAVE_1",
+        "BLUE_WAVE_1",
+        "RED_WAVE_2",
+        "BLUE_WAVE_2",
+        "Wave 2 Red **必须在 Blue Wave 1 commit 以后生成**",
+        "Pressure Suite 仍是离线覆盖库",
+    ):
+        assert marker in protocol
+
+    assert "execution_mode: BATCH_DUEL | LIVE_INTERVIEW" in round_template
+    assert "Red Wave 2 必须明确从 Blue Wave 1 的 observable gaps 产生" in round_template
+    assert "BATCH_DUEL — Batch Answer Ledger" in turn
+    assert "PRESSURE_SUITE" in turn
+
+
+def test_live_interview_remains_optional_and_committed() -> None:
+    system = (ROOT / ".agent/system.yaml").read_text(encoding="utf-8")
+    protocol = (ROOT / ".agent/red-blue/protocol.md").read_text(encoding="utf-8")
+    round_template = (ROOT / ".agent/red-blue/templates/round.md").read_text(encoding="utf-8")
+    turn = (ROOT / ".agent/red-blue/templates/turn.md").read_text(encoding="utf-8")
+
+    for marker in (
+        "red_blue_live_interview_optional: true",
+        "red_blue_live_alternating_turns: true",
+        "red_turn_must_commit_before_blue_turn: true",
+        "blue_turn_must_commit_before_next_red_turn: true",
+    ):
+        assert marker in system
+
+    for marker in ("LIVE_INTERVIEW", "RED_TURN", "BLUE_TURN", "DYNAMIC_FOLLOWUP"):
+        assert marker in protocol
+
+    for marker in (
+        "Red question commit 必须先于对应 Blue answer commit",
+        "Blue answer commit 必须先于下一 Red follow-up commit",
+        "next_actor: RED | BLUE | NONE",
+    ):
+        assert marker in round_template
+
+    assert "LIVE_INTERVIEW — Exchange Ledger" in turn
+    assert "Red question committed" in turn
+    assert "Blue answer committed" in turn
 
 
 def test_simulated_resume_is_a_real_resume_surface() -> None:
@@ -61,24 +120,6 @@ def test_simulated_resume_is_a_real_resume_surface() -> None:
     assert "真实问题" in protocol
     assert "真实工程问题" in turn
     assert "USER_RESUME_REVIEW" in protocol
-
-
-def test_live_interview_is_committed_red_blue_alternation() -> None:
-    protocol = (ROOT / ".agent/red-blue/protocol.md").read_text(encoding="utf-8")
-    round_template = (ROOT / ".agent/red-blue/templates/round.md").read_text(encoding="utf-8")
-    turn = (ROOT / ".agent/red-blue/templates/turn.md").read_text(encoding="utf-8")
-
-    for marker in (
-        "Red question commit 必须先于对应 Blue answer commit",
-        "Blue answer commit 必须先于下一 Red follow-up commit",
-        "next_actor: RED | BLUE | NONE",
-    ):
-        assert marker in round_template
-
-    assert "真正 Red → Blue → Red → Blue" in protocol
-    assert "Live Interview Exchange Ledger" in turn
-    assert "Red question committed" in turn
-    assert "Blue answer committed" in turn
 
 
 def test_blue_candidate_skill_is_pinned_and_reviewed() -> None:
@@ -147,7 +188,7 @@ def test_current_round_verdict_is_not_rewritten_after_skill_changes() -> None:
     judge = (ROOT / ".agent/red-blue/judge.md").read_text(encoding="utf-8")
 
     assert "red_blue_current_round_verdict_immutable_after_reflection: true" in system
-    assert "不得回头重新计算本轮 PASS/FAIL" in protocol
+    assert "current_round_verdict_recomputed: false" in protocol
     assert "不能回头重算当前轮 verdict" in judge
 
 
