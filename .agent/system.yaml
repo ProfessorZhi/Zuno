@@ -1,4 +1,4 @@
-version: "2026-09-14-red-blue-iterative-loop"
+version: "2026-09-15-red-blue-batch-duel"
 system_identity: "Zuno Local Agent System"
 
 runtime_boundary:
@@ -53,6 +53,8 @@ program_rules:
   red_blue_requires_explicit_activation: true
   blue_closed_book: true
   red_blue_modes: ["CHATGPT_AUTO", "AGENT_AUTO"]
+  red_blue_execution_modes: ["BATCH_DUEL", "LIVE_INTERVIEW"]
+  red_blue_automated_default_execution_mode: "BATCH_DUEL"
   red_blue_resume_first: true
   red_reads_zuno_docs: false
   red_reads_only_simulated_resume_and_attack_skill: true
@@ -75,6 +77,14 @@ program_rules:
   red_user_review_gate_supported: true
   red_user_review_gate_default_for_calibration: true
   red_questions_must_freeze_before_blue: true
+  red_blue_batch_duel_supported: true
+  red_blue_batch_wave_count_default: 2
+  red_blue_batch_wave1_question_target: "20-40"
+  red_blue_batch_wave2_question_target: "10-30"
+  red_blue_batch_wave2_requires_blue_wave1: true
+  red_blue_batch_wave_commit_barrier: true
+  red_blue_batch_pressure_suite_not_live_script: true
+  red_blue_live_interview_optional: true
   red_blue_live_alternating_turns: true
   red_turn_must_commit_before_blue_turn: true
   blue_turn_must_commit_before_next_red_turn: true
@@ -94,7 +104,6 @@ program_rules:
   red_blue_next_round_revalidates_resume: true
   round_init_must_capture_known_user_feedback: true
   red_question_review_revision_preserves_git_history: true
-  red_blue_one_round_one_question_batch: false
   red_blue_retest_requires_new_round: true
   red_blue_transcript_policy: "full-observable-role-io"
   red_blue_archive_live: true
