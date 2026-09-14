@@ -81,6 +81,7 @@ RED_BLUE_RUNTIME_FILES = {
     ".agent/red-blue/current.md",
     ".agent/red-blue/protocol.md",
     ".agent/red-blue/attack-model.md",
+    ".agent/red-blue/defense-model.md",
     ".agent/red-blue/judge.md",
     ".agent/red-blue/templates/round.md",
     ".agent/red-blue/templates/turn.md",

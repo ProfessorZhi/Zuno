@@ -1,4 +1,4 @@
-version: "2026-09-14-human-resume-interface"
+version: "2026-09-14-red-blue-iterative-loop"
 system_identity: "Zuno Local Agent System"
 
 runtime_boundary:
@@ -59,7 +59,7 @@ program_rules:
   simulated_resume_built_from_current_docs_before_red: true
   simulated_resume_must_match_real_resume_register: true
   simulated_resume_one_page_style: true
-  simulated_resume_project_bullets_target: "4-5"
+  simulated_resume_project_bullets_target: "4-6"
   simulated_resume_one_bullet_one_story: true
   simulated_resume_evidence_boundaries_are_compressed_not_explained: true
   resume_user_review_gate_supported: true
@@ -75,9 +75,26 @@ program_rules:
   red_user_review_gate_supported: true
   red_user_review_gate_default_for_calibration: true
   red_questions_must_freeze_before_blue: true
+  red_blue_live_alternating_turns: true
+  red_turn_must_commit_before_blue_turn: true
+  blue_turn_must_commit_before_next_red_turn: true
+  blue_candidate_skill_required: true
+  blue_candidate_skill_path: ".agent/red-blue/defense-model.md"
+  red_blue_skill_versions_pinned_per_round: true
+  red_blue_current_round_verdict_immutable_after_reflection: true
+  red_blue_round_improvement_ledger_required: true
+  red_blue_resume_builder_retrospective_required: true
+  red_blue_red_skill_retrospective_required: true
+  red_blue_blue_skill_retrospective_required: true
+  red_blue_harness_retrospective_required: true
+  red_blue_improvement_user_review_gate_supported: true
+  red_blue_improvement_user_review_gate_default_for_calibration: true
+  red_blue_post_round_changes_next_round_only: true
+  red_blue_next_resume_candidate_required: true
+  red_blue_next_round_revalidates_resume: true
   round_init_must_capture_known_user_feedback: true
   red_question_review_revision_preserves_git_history: true
-  red_blue_one_round_one_question_batch: true
+  red_blue_one_round_one_question_batch: false
   red_blue_retest_requires_new_round: true
   red_blue_transcript_policy: "full-observable-role-io"
   red_blue_archive_live: true
@@ -187,6 +204,7 @@ skill_routes:
       - ".agent/red-blue/current.md"
       - ".agent/red-blue/protocol.md"
       - ".agent/red-blue/attack-model.md"
+      - ".agent/red-blue/defense-model.md"
       - ".agent/red-blue/judge.md"
   agent_workflow:
     read_first:
