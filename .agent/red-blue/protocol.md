@@ -4,43 +4,51 @@
 
 ## 目标
 
-正式 Round 先把当前 Zuno docs / Evidence 压缩成一份**像真实候选人会投出去的模拟简历**，再让 Red 从简历出发模拟真实面试。Red / Blue 产生面试压力、回答、评价和改进建议，不拥有 Project、Architecture、Module 或 Current Truth。
+Red / Blue 不再是一轮问完就归档的面试脚本，而是一条持续收敛的工程闭环：
+
+```text
+当前 Zuno Truth
+→ 模拟简历
+→ Red ↔ Blue 真实交替面试
+→ Red 判断候选人表现
+→ Blue 对照证据判断项目 / 文档 / 架构缺口
+→ 复盘 Red Skill / Blue Skill / Resume Builder / Harness
+→ Improvement Ledger 分类并决定改哪里
+→ 用户批准可执行改进
+→ 应用改进
+→ 生成下一轮 Resume Candidate
+→ merge
+→ 下一轮
+```
+
+Round 的目的不是让 Blue “答赢”，而是让 Resume、Red、Blue、文档、架构与证据在多轮压力下逐步变得更可信。
+
+Red / Blue 产物不拥有 Project History、Target Architecture、Module Truth、Current Evidence 或 Personal Ownership。正式事实始终回到 canonical owner。
 
 ## GitHub 是运行时状态总线
 
-GitHub 不是事后日志。阶段之间只通过已经提交的 Round artifact 交接：
+每个 stage / live turn 都遵守：
 
 ```text
 read Round branch HEAD
 → verify stage + allowlist
 → read declared inputs
-→ run one stage
+→ run one stage or one turn
 → write artifact + manifest + transcript
 → commit
-→ next stage re-read new HEAD
+→ next actor re-read new HEAD
 ```
 
-每个箭头都是 `commit barrier`。聊天摘要、角色临时文本和未提交草稿不能跨阶段成为正式输入。
+GitHub commit 是 commit barrier。聊天摘要、角色临时文本和未提交草稿不能跨阶段成为正式输入。
 
-### Round branch / PR
-
-正式 Round 从固定 `main@zuno_base_sha` 创建：
+正式 Round 从固定 `main@zuno_base_sha` 创建独立 branch + Draft PR：
 
 ```text
 red-blue/<round-id>
 docs/red-blue/workspace/<round-id>/
-Draft PR -> main
 ```
 
-Round 期间所有阶段提交进入同一个 branch / Draft PR。关闭前把 workspace 原样移入 `docs/red-blue/rounds/<round-id>/`，恢复 `.agent/red-blue/current.md` 为 no-active，CI 通过后 merge，再重新读取 exact `main` HEAD。
-
-### Stage transaction
-
-每阶段至少持久化本阶段 artifact、`00_manifest.yaml` state 与 `08_session_transcript.md` observable I/O / transition / GitHub refs。
-
-manifest 使用 `last_consumed_head_sha` 表示最近完成阶段实际读取的输入 HEAD；当前 branch HEAD 从 GitHub live ref 获取。
-
-Round Init 必须把启动前已经知道、且会影响本轮的问题质量或流程约束写进 `07_user_feedback.md`。Round 中新的用户反馈也先提交，再影响后续阶段。
+当前 Round 的评价只针对它冻结时的 Resume、Skill 与 `zuno_base_sha`。轮末即使修改 Skill / Docs，也不能回头重写本轮 verdict；这些改动只对下一轮生效。
 
 ## 生命周期
 
@@ -48,176 +56,135 @@ Round Init 必须把启动前已经知道、且会影响本轮的问题质量或
 ROUND_INIT
 → BUILD_SIMULATED_RESUME
 → USER_RESUME_REVIEW
-   ├─ APPROVE → FREEZE_RESUME → RED_QUESTIONS
+   ├─ APPROVE → FREEZE_RESUME
    ├─ REQUEST_REVISION → RESUME_REVISION → USER_RESUME_REVIEW
    └─ ABORT → CLOSE / SUPERSEDE
 → RED_QUESTIONS
 → USER_RED_REVIEW
-   ├─ APPROVE → FREEZE_RED_QUESTIONS → BLUE_ANSWERS
+   ├─ APPROVE → FREEZE_RED_QUESTIONS
    ├─ REQUEST_REVISION → RED_REVISION → USER_RED_REVIEW
    └─ ABORT → CLOSE / SUPERSEDE
+→ LIVE_INTERVIEW
+   ├─ RED_TURN → commit question
+   ├─ BLUE_TURN → commit answer
+   ├─ RED_TURN → commit follow-up
+   ├─ BLUE_TURN → commit answer
+   └─ ... until stop condition
 → RED_EVALUATION
 → BLUE_ARCHITECTURE_REFLECTION
 → WORKFLOW_RETROSPECTIVE
+→ IMPROVEMENT_SYNTHESIS
+→ USER_IMPROVEMENT_REVIEW
+   ├─ APPROVE / PARTIAL_APPROVE → APPLY_IMPROVEMENTS
+   ├─ REQUEST_REVISION → IMPROVEMENT_REVISION
+   └─ DEFER → record reason
+→ BUILD_NEXT_RESUME_CANDIDATE
 → USER_FEEDBACK_CAPTURE
 → CLOSE_AND_ARCHIVE
+→ merge Round PR
+→ next Round from new main HEAD
 ```
 
-工作流校准期默认同时要求 `USER_RESUME_REVIEW` 与 `USER_RED_REVIEW`。模拟简历没过用户检查，Red 不得开始；Red plan 没过用户检查，Blue 不得开始。
+默认校准 Round 要求三个用户 Gate：Resume、Red Plan、Improvement。后两个 Gate 解决不同问题：`USER_RED_REVIEW` 防止坏面试器攻击 Blue；`USER_IMPROVEMENT_REVIEW` 防止一次面试误判直接改坏 canonical docs / Skill。
 
-## Resume Builder：写简历，不写证据报告
+## Resume Builder
 
-Resume Builder 从固定 `zuno_base_sha` 读取 Project、Architecture、Modules、Evidence、选定 provenance 和用户已有简历风格，生成并提交 `01_simulated_resume.md`。
+Resume Builder 从固定 base SHA 读取 Project、Architecture、Modules、Evidence、selected provenance 和用户简历风格，生成 `01_simulated_resume.md`。
 
-它必须先服从**真实简历的阅读节奏**，再服从证据完整性：证据边界要保留，但通过精准措辞压缩进简历，而不是把 Evidence memo 原样塞进 bullet。
+模拟简历必须像真实投递材料，不像 Evidence memo。默认 1 行项目简介、1 行技术栈、约 4–6 条高价值贡献。数量不是硬目标；优先保留能表达真实工程矛盾、个人动作、技术决策和可信结果的 bullet。
 
-默认写法：
+一条高质量 bullet 更接近：
 
 ```text
-项目名称 + 时间
-1 行项目简介
-1 行技术栈
-4–5 条核心 bullet
+真实问题 → 本人动作 / 技术决策 → 机制 → 可验证结果
 ```
 
-每条 bullet 只承载一个主要故事：
+事实边界仍强制：Pilot ≠ Production；团队工作 ≠ Personal Ownership；Target ≠ Current；small smoke ≠ formal benchmark。
+
+当用户修改冻结 Resume 时，基于旧 Resume 的 Red Plan 自动 `INVALIDATED_BY_RESUME_CHANGE`。
+
+## Red Plan 与 Pressure Suite
+
+Red 正式输入只有：
 
 ```text
-问题 / 动作 / 关键技术 / 可证明结果
+frozen 01_simulated_resume.md
+target role / JD / stage
+pinned .agent/red-blue/attack-model.md
+model general knowledge
 ```
 
-通常控制在目标模板中的 1–2 行。中文项目简历的软目标可参考约 45–90 个字符一条；英文术语、函数名较多时允许更长，但不能出现一条 bullet 像一段技术文档。
+Red 不读取 Zuno docs / source / Evidence / Blue hidden answer key。
 
-### Resume style rules
+`02_red_questions.md` 保存 Interview Threads、6–10 个 Spoken Seeds、Follow-up Policy、Branch Examples 和 100-question Pressure Suite。Pressure Suite 只做离线覆盖，不是现场脚本。
 
-优先：
+## LIVE_INTERVIEW：真正 Red → Blue → Red → Blue
 
-- 使用候选人已有真实简历的版式、句长、动词和信息密度作为第一参考；
-- 项目开头一句讲场景，不先堆框架名；
-- bullet 用动词开头，说明自己做了什么；
-- 有真实数字时保留最有区分度的一两个数字；
-- 具体技术名只保留会影响筛选或能引出高质量面试的部分；
-- 对小样本、Pilot、参与范围等边界，用限定词本身表达，例如“5 条 HotpotQA smoke”“参与”“Pilot Validation”，而不是在 bullet 末尾追加一整句免责声明。
+现场面试禁止批量预生成后续问题。
 
-避免：
+### RED_TURN
 
-- `Current / Target / Evidence / Unknown` 这类文档标签进入简历；
-- 一条 bullet 同时解释背景、四个算法、三个指标、限制条件和下一步；
-- 把 PR 号、内部 Contract 名、对象名当作价值本身；
-- 中英文术语连续堆叠到读者必须逐词解码；
-- 为了“证据诚实”写出“不能证明……、不扩写为……”这种 Reviewer 语言；
-- 为了显得技术深而列出超过实际面试价值的内部实现清单。
-
-事实边界仍然强制：实现成果、Target 架构设计、团队研究背景与个人 Ownership 必须分开；Pilot 不写成 Production，没有测量不制造数字。
-
-## USER_RESUME_REVIEW
-
-当 `resume_review_gate=REQUIRED`，Resume Builder 第一次提交 `01_simulated_resume.md` 后进入用户审查。
-
-用户结果：
+Red 每个 turn 读取：
 
 ```text
-APPROVE
-REQUEST_REVISION
-ABORT
+frozen Resume
+frozen Red Plan
+pinned attack-model.md
+03_blue_answers.md 中已发生的 observable exchanges
+当前时间 / thread state
 ```
 
-人工 Review 重点检查：
+Red 不能读取 Zuno canonical docs。它根据 Blue 上一答里的一个高信息增益 handle，生成 **一个主要意图** 的下一个问题。
 
-- 它像不像真正的一页求职简历，而不是证据摘要；
-- 项目简介和 bullet 能不能 10–20 秒扫懂；
-- 单条 bullet 有没有超过正常简历的信息负荷；
-- 技术关键词是否服务于贡献，而不是堆名词；
-- 量化是否真实、必要、可解释；
-- Personal Ownership / Pilot / small-sample 等边界是否被自然保留。
+Red question 先提交，Blue 才允许回答。
 
-`APPROVE` 后才把 `resume_status` 改成 `FROZEN`。Red 只能读取冻结版本。
+### BLUE_TURN
 
-如果用户要求修改模拟简历，旧版本留在 Git history；修改后必须重新走 `USER_RESUME_REVIEW`。已经基于旧简历生成的 Red plan 自动失效，不得继续进入 Blue。
-
-## Pressure Suite 与 Live Interview 必须分开
-
-默认保留 `100` 问 `PRESSURE_SUITE`，它用于离线覆盖和 retrospective，不是一场 45–60 分钟面试的脚本。
-
-Live Interview：
+Blue 每个 turn 读取：
 
 ```text
-LIVE_INTERVIEW_SEEDS: 6-10
-DYNAMIC_FOLLOWUP: REQUIRED
-ONE_QUESTION_ONE_INTENT: REQUIRED
-PRESSURE_SUITE: 100
+frozen Resume
+当前已经提交的 interviewer question
+此前 observable exchanges
+pinned defense-model.md
+manifest 固定允许的 Zuno canonical docs / Evidence @ zuno_base_sha
 ```
 
-不预写固定 30 问 `PRIMARY_PATH`。Red 先准备少量自然 Seed，让候选人自己暴露技术主线；后续问题必须在上一答出现以后，从候选人刚说出的技术、数字、困难、选择、Ownership 或 bad case 中选择信息增益最高的 handle。
+Blue 不读取未来 Red question、Red Evaluation 或本轮尚未产生的 retrospective。
 
-`KILL_SWITCH` 属于 Controller policy：当某个 Claim 连续无法建立 Ownership / mechanism，停止在该线程继续堆无效追问并自然换题。它不作为面试官口头话术出现。
+Blue 回答提交以后，下一次 Red 必须重新读取新的 branch HEAD。
 
-一场面试可以深挖一个项目很久，也可以迅速换线程；不要求平均覆盖所有 Resume Claim。
+`03_blue_answers.md` 因此是 **Live Interview Exchange Ledger**，按顺序保存真正发生的 Q/A，而不是一次性批量作答文件。
 
-## Red — Interviewer
+### Stop condition
 
-Red 的正式输入：
+Red 可以在以下任一条件结束 Live Interview：
 
-```text
-01_simulated_resume.md
-00_manifest.yaml 中的目标岗位 / JD / 面试轮次
-.agent/red-blue/attack-model.md
-模型通用知识
-```
+- time budget 用尽；
+- 已获得足够 hire/no-hire signal；
+- 当前 thread 信息增益耗尽且剩余时间不足；
+- Kill Switch 已证明关键 Claim 无法建立；
+- 预设的最小有效 thread 数已经完成。
 
-### 禁止输入
+结束原因要写入 exchange ledger / transcript。
 
-Red 不把以下内容作为正式出题依据：
+## Blue Candidate Skill
 
-```text
-docs/project/
-docs/architecture/
-docs/modules/
-docs/evidence/
-docs/decisions/
-docs/governance/
-Zuno 源码 / PR / commit diff
-resume build notes / source trace
-prior Blue answers
-```
+Blue 回答行为由固定版本 `.agent/red-blue/defense-model.md` 约束。它负责“怎么像真实候选人回答”，canonical docs / Evidence 负责“什么事实可以说”。
 
-Red 开始前从 Round branch HEAD 重新读取允许输入。`02_red_questions.md` 不能消费 Resume Builder 未提交的聊天中间信息。
-
-Red 依照 `.agent/red-blue/attack-model.md` 建立 Interview Threads、Seed Questions、answer-driven Follow-up Policy 和 Pressure Suite。Claim 取证、Ownership、Build / Buy / Extend / Defer、实现、故障、Evidence、基础下钻和删除条件仍然重要，但它们是 interviewer mental map，不应被拼成每一道复合长问。
-
-## USER_RED_REVIEW
-
-Red 提交 `02_red_questions.md` 后，如果 `red_review_gate=REQUIRED`，Controller 进入用户审查状态。
-
-用户结果：
-
-```text
-APPROVE
-REQUEST_REVISION
-ABORT
-```
-
-`REQUEST_REVISION` 时先提交用户反馈。Red Revision 可以读取原 Red allowlist、当前 Red plan 与 Red 质量反馈；仍不得读取 Zuno docs。
-
-只有 `APPROVE` 后，manifest 才把 `red_questions_status` 改成 `FROZEN`，Blue 才能开始。
-
-人工 Review 优先检查：Seed 是否自然；如果候选人按某种方式回答，下一问是否真的会跟着变；有没有把 rubric 写成问句；有没有无信息增益的原子化追问。
-
-## Blue — Candidate / Documentation Reader
-
-`02_red_questions.md` 已冻结后，Blue 从新的 GitHub HEAD 读取冻结简历、冻结 Red plan 和 manifest 固定 Zuno source refs / allowlist，再按 `zuno_base_sha` 读取允许的 canonical docs / Evidence。Blue 在生成 `03_blue_answers.md` 前不读取 Red Evaluation。
-
-回答必须区分 History / Current / Target / Unknown / Personal Ownership / Team / Framework Capability。没有来源时明确说未证明。
+Blue Skill 与 Red Skill 一样必须在 Round Init pin version。本轮末修改 Skill，只影响下一轮。
 
 ## Red Evaluation
 
-`03_blue_answers.md` 提交后，Red Evaluation 从 GitHub HEAD 读取冻结简历、实际提问 / 回答记录与 Attack Skill，不把 Zuno docs 作为正式评价输入。
+Live Interview 结束后，Red Evaluation 读取冻结 Resume、Red Plan、实际 Q/A 和 pinned attack-model，不读取 Zuno docs。
 
-它评价候选人是否像真正做过、是否能落到实现、Ownership 是否可信、替代方案 / 故障 / 基础是否经得住追问，以及简历 Claim 是否值得保留。
+它判断：候选人是否可信、Ownership 是否成立、实现是否足够深、Failure / Build-Buy / Evidence / Fundamentals 是否经得住追问，以及哪些 Resume Claim 值得保留。
+
+Red Evaluation 可以说“作为面试官我不信”，不能宣布 Zuno Architecture Truth。
 
 ## Blue Architecture Reflection
 
-`04_red_evaluation.md` 提交后，Blue Reflection 重新结合固定 Zuno docs，把断点分类为：
+Blue Reflection 再把 Red 信号放回 canonical Zuno sources，区分：
 
 ```text
 SIMULATED_RESUME_GAP
@@ -231,11 +198,113 @@ FUNDAMENTAL_GAP
 NO_ZUNO_CHANGE
 ```
 
-只有设计因果、Owner、Authority、State、Recovery、Security、Contract 或 Build/Buy 本身不成立时，才建议 Architecture Revision。
+只有 Owner、Authority、State、Contract、Recovery、Security 或 Build/Buy 因果本身不成立时，才建议 Architecture Revision。
 
-## Workflow Retrospective
+## Workflow Retrospective：同时审 Red 和 Blue
 
-`WORKFLOW_RETROSPECTIVE` 读取全轮已提交 artifact、Red Skill 和 `07_user_feedback.md`，专门审判 Resume Builder、Red 与 Harness：模拟简历是否像真正求职材料，面试是不是 answer-driven，有没有机器式 checklist，是否无意义原子化，以及用户为什么认为它像或不像真实流程。
+`06_workflow_retrospective.md` 必须分别评价：
+
+### Resume Builder
+
+- 是否选到了真正有技术含量的问题，而不是功能清单；
+- 是否过度包装数字；
+- 是否把个人贡献压得过弱或写得过强。
+
+### Red Skill
+
+- Seed 是否自然；
+- Follow-up 是否真的从上一答产生；
+- 是否追到实现 / failure / evidence；
+- 是否过早使用隐藏答案视角；
+- 是否像 Reviewer checklist 或 AI 原子化提问。
+
+### Blue Skill
+
+- 是否先直接回答再展开；
+- Ownership 是否清楚；
+- 是否会把技术名词还原成工程问题与机制；
+- 是否会诚实处理 Unknown / small-sample / Target-only；
+- 是否回答太像文档、过度引用或过度防御；
+- 面试官继续追一层时，是否还有真实实现深度。
+
+### Harness
+
+- commit handoff 是否正确；
+- Red / Blue firewall 是否被破坏；
+- turn 粒度是否真实；
+- stage / gate 是否产生无意义摩擦；
+- Pressure Suite 是否被误当现场脚本。
+
+Workflow Retrospective 不能修改本轮答案或本轮 verdict。
+
+## Improvement Ledger：每个问题必须有 Owner
+
+`09_improvement_ledger.md` 汇总 Red Evaluation、Blue Reflection、Workflow Retrospective 和用户反馈。每条 finding 只能路由到一个 primary class，必要时附 secondary class：
+
+```text
+RESUME_GAP
+RED_SKILL_GAP
+BLUE_SKILL_GAP
+HARNESS_GAP
+NARRATIVE_GAP
+DOC_GAP
+ARCHITECTURE_GAP
+IMPLEMENTATION_GAP
+EVIDENCE_GAP
+OWNERSHIP_GAP
+FUNDAMENTAL_GAP
+NO_CHANGE
+```
+
+每条至少记录：
+
+```text
+signal
+root_cause
+primary_class
+owner
+proposed_change
+evidence_needed
+risk_if_changed
+status: APPLY | DEFER | REJECT | NEEDS_OWNER_DECISION
+next_round_retest
+```
+
+归因原则：
+
+- Red 问得差 → 优先 `RED_SKILL_GAP / HARNESS_GAP`，不能怪 Architecture；
+- Blue 明明有材料却讲不清 → `BLUE_SKILL_GAP / NARRATIVE_GAP`；
+- Resume 本身 claim 不好 → `RESUME_GAP`；
+- Docs 缺少已存在机制解释 → `DOC_GAP`；
+- Target 设计本身不成立 → `ARCHITECTURE_GAP`；
+- 没实现 → `IMPLEMENTATION_GAP`；
+- 有实现但没有 test / trace / benchmark → `EVIDENCE_GAP`；
+- 个人归属不清 → `OWNERSHIP_GAP`；
+- 纯基础薄弱 → `FUNDAMENTAL_GAP`。
+
+## USER_IMPROVEMENT_REVIEW 与 Apply
+
+Improvement Ledger 完成后，默认进入用户 Gate。只有用户批准的条目才能在 Round 后半段修改 Skill、Harness、Docs 或 Architecture。
+
+Architecture 修改仍必须满足 Architecture Owner / ADR 规则；Implementation 工作不能因为面试暴露而伪装成文档修复。
+
+应用阶段可以修改当前 Round branch，但有两个硬约束：
+
+1. 本轮 evaluation / reflection 永远引用原 `zuno_base_sha` 和 pinned Skill versions；
+2. post-round changes 标记 `NEXT_ROUND_ONLY`，不得回头重新计算本轮 PASS/FAIL。
+
+## 下一版简历与下一轮
+
+批准的改进应用后，Resume Builder 从 **post-improvement branch HEAD** 重新构建 `10_next_resume_candidate.md`。
+
+它只能使用已经成立的事实：
+
+- Resume wording fix 可以立即进入；
+- 已批准并落地的 Docs / Skill 改进可以影响下一轮表达 / 行为；
+- 未实现的 Architecture Target 不能写成 Current；
+- IMPLEMENTATION / EVIDENCE / OWNERSHIP 缺口未解决时，相关 Resume Claim 必须保持原边界或降级。
+
+Round merge 到 main 后，下一 Round 从新的 exact `main` HEAD 开始，并把 `10_next_resume_candidate.md` 作为 Resume Builder 的候选输入之一重新校验。下一 Round 仍需要 `USER_RESUME_REVIEW`；不能因为上一轮已经生成 candidate 就跳过事实复核。
 
 ## Context Firewall
 
@@ -246,7 +315,7 @@ firewall_strength: LOGICAL_GITHUB_MEDIATED
 strict_blind_red_certification: false
 ```
 
-同一个 ChatGPT 对话无法证明物理遗忘。如果某轮要把 **blind Red** 当作正式验收结论，必须用 `AGENT_AUTO` 重跑。
+同一 ChatGPT 对话不能证明物理遗忘。严格 blind Red 验收必须用 `AGENT_AUTO`。
 
 ### AGENT_AUTO
 
@@ -255,20 +324,20 @@ firewall_strength: PHYSICAL_CONTEXT_ISOLATION
 strict_blind_red_certification: true
 ```
 
-独立 context 负责信息隔离；GitHub state bus 负责过程边界。两者不能互相替代。
-
-## 固定 Round 文件
+## 固定 Round Artifacts
 
 ```text
 00_manifest.yaml
 01_simulated_resume.md
 02_red_questions.md
-03_blue_answers.md
+03_blue_answers.md              # live Q/A exchange ledger
 04_red_evaluation.md
 05_blue_architecture_reflection.md
-06_workflow_retrospective.md
+06_workflow_retrospective.md    # Resume + Red Skill + Blue Skill + Harness
 07_user_feedback.md
 08_session_transcript.md
+09_improvement_ledger.md
+10_next_resume_candidate.md
 ```
 
-所有模式只保存 observable role I/O、GitHub ref / commit、Controller transition 和 user intervention；不要求也不伪造模型私有 chain-of-thought。
+所有 artifact 只保存 observable role I/O、GitHub refs、classification、decision 和用户 intervention；不保存或伪造模型私有 chain-of-thought。
