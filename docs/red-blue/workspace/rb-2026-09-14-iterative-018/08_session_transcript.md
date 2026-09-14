@@ -51,6 +51,35 @@ observable_output_summary: Draft PR #236 created. Resume remains DRAFT; Red is N
 output_files:
 - 00_manifest.yaml
 - .agent/red-blue/current.md
+output_commit_sha: fef86a72e58173c4cb994c5bfb4f09aa8a446138
 next_stage: USER_RESUME_REVIEW
 
-No Red execution has occurred.
+### Event 004
+actor: User
+stage: USER_RESUME_REVIEW
+input_head_sha: 0f52fa4ac2e41705575fa07b5a3443e9f7ef0d29
+input_files:
+- 01_simulated_resume.md
+observable_input_summary: User asks to start Red attack from the current resume and clarifies that the overall purpose is architecture improvement, not defending the current design. Multi-Agent is explicitly allowed as one possible future architecture, alongside other changes.
+observable_output_summary: Current resume is treated as explicitly approved. The architecture-improvement objective is recorded for later Blue Reflection / Improvement Synthesis but is not added to the blind Red input.
+output_files:
+- 07_user_feedback.md
+next_stage: FREEZE_RESUME
+
+### Event 005
+actor: Controller
+stage: FREEZE_RESUME
+input_head_sha: 0f52fa4ac2e41705575fa07b5a3443e9f7ef0d29
+input_files:
+- 00_manifest.yaml
+- 01_simulated_resume.md
+- 07_user_feedback.md
+observable_input_summary: Apply explicit resume approval without changing resume text.
+observable_output_summary: Resume status set to FROZEN; style/user review set APPROVED; Red is now allowed to build the Interview Plan. Blue remains blocked behind USER_RED_REVIEW.
+output_files:
+- 00_manifest.yaml
+- .agent/red-blue/current.md
+- 07_user_feedback.md
+next_stage: RED_QUESTIONS
+
+No Red interview question has been executed yet.

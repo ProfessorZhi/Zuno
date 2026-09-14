@@ -9,7 +9,7 @@ github_state_bus: REQUIRED
 stage_handoff: COMMIT_THEN_REREAD
 round_branch: red-blue/rb-2026-09-14-iterative-018
 round_pr: 236
-last_consumed_head_sha: ad6e982f218e344100b2dc6b52e2fc939f3de208
+last_consumed_head_sha: 0f52fa4ac2e41705575fa07b5a3443e9f7ef0d29
 firewall_strength: LOGICAL_GITHUB_MEDIATED
 strict_blind_red_certification: false
 
@@ -45,10 +45,10 @@ resume_build_sources:
   - selected historical commit/test provenance
 previous_round_resume_candidate: rb-2026-09-14-resume-human-017 DRAFT; not frozen; superseded as full-round start
 simulated_resume_path: docs/red-blue/workspace/rb-2026-09-14-iterative-018/01_simulated_resume.md
-resume_status: DRAFT
+resume_status: FROZEN
 resume_project_bullet_count: 6
-resume_style_check: PENDING
-user_resume_review_status: PENDING
+resume_style_check: APPROVED
+user_resume_review_status: APPROVED
 
 red_questions_status: NOT_STARTED
 seed_question_count: 0
@@ -85,5 +85,5 @@ next_resume_candidate_status: NOT_STARTED
 next_resume_source_head_sha: null
 next_resume_blockers: []
 
-current_stage: USER_RESUME_REVIEW
+current_stage: RED_QUESTIONS
 current_round_verdict_recomputed: false

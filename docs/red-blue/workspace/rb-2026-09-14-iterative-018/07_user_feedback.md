@@ -34,3 +34,17 @@ when: 2026-09-14T15:32:00+08:00
 priority: highest
 affected_stage: ROUND_INIT / USER_RESUME_REVIEW
 text: 用户要求重新检查简历、完善后作为第一轮起点。本轮定义为新 closed-loop workflow 的 Iteration 1（仓库序号 #018）。Resume 先进入 USER_RESUME_REVIEW；未明确 APPROVE 前禁止启动 Red。
+
+## UF-006 — Resume approved; start Red
+
+when: 2026-09-14T16:18:00+08:00
+priority: highest
+affected_stage: USER_RESUME_REVIEW / RED_QUESTIONS
+text: 用户明确要求“然后开始红队进攻”，视为对当前 01_simulated_resume.md 的 APPROVE。冻结当前 Resume，进入 RED_QUESTIONS；仍保留 USER_RED_REVIEW，未审阅 Red Plan 前不运行 Blue。
+
+## UF-007 — Current architecture is a baseline, not a protected answer
+
+when: 2026-09-14T16:18:00+08:00
+priority: highest
+affected_stage: BLUE_REFLECTION / WORKFLOW_RETROSPECTIVE / IMPROVEMENT_SYNTHESIS
+text: 本轮最终目的不是证明当前架构正确，而是通过 Red/Blue 压力完善架构。允许在证据支持时修改现有架构，包括采用 Multi-Agent、Supervisor/Specialist、Subgraph、通用 Agent Host + Zuno Backend 或其他结构；Multi-Agent 只是候选方案，不预设为正确答案。简单方案满足约束时继续尊重简单方案，所有新增复杂度必须说明出现原因、收益、成本、退出条件与复测方式。
