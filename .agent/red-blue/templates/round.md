@@ -1,6 +1,6 @@
 # Red / Blue Round Manifest
 
-> 每一轮复制本模板到 Round branch 的 `docs/red-blue/workspace/<round-id>/00_manifest.yaml`。Round 关闭前整个文件夹原样归档到 `docs/red-blue/rounds/<round-id>/`。
+> 每一轮复制本模板到 Round branch 的 `docs/red-blue/workspace/<round-id>/00_manifest.yaml`。Round 关闭前整个文件夹归档到 `docs/red-blue/rounds/<round-id>/`。
 
 ## Identity
 
@@ -8,9 +8,12 @@
 round_id:
 created_at:
 mode: CHATGPT_AUTO | AGENT_AUTO
+execution_mode: BATCH_DUEL | LIVE_INTERVIEW
 zuno_base_sha:
 state: ACTIVE | CLOSED | SUPERSEDED
 ```
+
+自动校准 Round 默认 `execution_mode: BATCH_DUEL`。只有用户明确要求逐题真人模拟时才使用 `LIVE_INTERVIEW`。
 
 ## GitHub Runtime
 
@@ -38,6 +41,8 @@ red_review_gate: REQUIRED | OPTIONAL | SKIP
 improvement_review_gate: REQUIRED | OPTIONAL | SKIP
 pressure_suite_count: 100
 seed_question_target: 8
+batch_wave1_question_target: 20-40
+batch_wave2_question_target: 10-30
 live_followups: DYNAMIC
 one_question_one_intent: true
 ```
@@ -46,14 +51,14 @@ one_question_one_intent: true
 
 ## Pinned Skills
 
-Skill 在 Round Init 固定。本轮结束时可以改 Skill，但只对下一轮生效。
-
 ```text
 attack_skill_version: <sha>:.agent/red-blue/attack-model.md
 defense_skill_version: <sha>:.agent/red-blue/defense-model.md
 judge_version: <sha>:.agent/red-blue/judge.md
 protocol_version: <sha>:.agent/red-blue/protocol.md
 ```
+
+Skill 在 Round Init 固定。轮末可以修改，但只对下一轮生效。
 
 ## Simulated Resume
 
@@ -90,9 +95,84 @@ user_red_review_status: PENDING | APPROVED | REVISION_REQUESTED | ABORTED | NOT_
 
 Red 正式输入：Frozen Resume + target/JD/stage + pinned Attack Skill + general knowledge。禁止读取 Zuno docs / source / Evidence / prior Blue answer key。
 
+## Batch Duel State
+
+当 `execution_mode=BATCH_DUEL`：
+
+```text
+batch_duel_status: NOT_STARTED | RUNNING | COMPLETE | ABORTED
+batch_wave_index: 0
+next_actor: RED | BLUE | NONE
+red_wave1_status: NOT_STARTED | COMMITTED
+blue_wave1_status: NOT_STARTED | COMMITTED
+red_wave2_status: NOT_STARTED | COMMITTED
+blue_wave2_status: NOT_STARTED | COMMITTED
+red_wave1_commit_sha:
+blue_wave1_commit_sha:
+red_wave2_commit_sha:
+blue_wave2_commit_sha:
+```
+
+执行顺序固定：
+
+```text
+RED_WAVE_1
+→ commit
+→ BLUE_WAVE_1
+→ commit
+→ RED_WAVE_2
+→ commit
+→ BLUE_WAVE_2
+→ commit
+```
+
+### RED_WAVE_1 allowlist
+
+```text
+- frozen 01_simulated_resume.md
+- frozen 02_red_questions.md plan / Pressure Suite
+- pinned attack-model.md
+- target / JD / stage
+```
+
+### BLUE_WAVE_1 allowlist
+
+```text
+- frozen Resume
+- committed Red Wave 1
+- pinned defense-model.md
+- AGENTS.md
+- canonical docs / Evidence / selected provenance @ zuno_base_sha
+```
+
+### RED_WAVE_2 allowlist
+
+```text
+- frozen Resume
+- frozen Red Plan
+- Red Wave 1
+- committed Blue Wave 1 answers
+- pinned attack-model.md
+- target / JD / stage
+```
+
+Red Wave 2 必须明确从 Blue Wave 1 的 observable gaps 产生，不能在 Blue Wave 1 之前预写。
+
+### BLUE_WAVE_2 allowlist
+
+```text
+- frozen Resume
+- Red Wave 1 + Red Wave 2
+- Blue Wave 1
+- pinned defense-model.md
+- canonical docs / Evidence / selected provenance @ zuno_base_sha
+```
+
+Pressure Suite 仍是离线覆盖库，不要求 Blue 机械回答 100 题。
+
 ## Live Interview State
 
-现场必须 Red / Blue 逐 turn 交替，不能批量生成完整问答。
+当 `execution_mode=LIVE_INTERVIEW` 才使用：
 
 ```text
 live_interview_status: NOT_STARTED | RUNNING | COMPLETE | ABORTED
@@ -106,33 +186,7 @@ last_question_commit_sha:
 last_answer_commit_sha:
 ```
 
-### RED_TURN allowlist
-
-```text
-- frozen 01_simulated_resume.md
-- frozen 02_red_questions.md
-- 03_blue_answers.md observable exchanges so far
-- pinned attack-model.md
-- target / JD / stage / time state
-```
-
-### BLUE_TURN allowlist
-
-```text
-- frozen 01_simulated_resume.md
-- current committed Red question
-- 03_blue_answers.md observable exchanges so far
-- pinned defense-model.md
-- AGENTS.md
-- docs/project/ @ zuno_base_sha
-- docs/architecture/ @ zuno_base_sha
-- docs/modules/ @ zuno_base_sha
-- docs/decisions/ @ zuno_base_sha
-- docs/evidence/ @ zuno_base_sha
-- selected provenance @ zuno_base_sha
-```
-
-Red question commit 必须先于对应 Blue answer commit。Blue answer commit 必须先于下一 Red follow-up commit。
+Red question commit 必须先于对应 Blue answer commit；Blue answer commit 必须先于下一 Red follow-up commit。
 
 ## Red Evaluation
 
@@ -140,7 +194,7 @@ Red question commit 必须先于对应 Blue answer commit。Blue answer commit �
 red_evaluation_status: NOT_STARTED | COMPLETE
 ```
 
-Formal input: Frozen Resume + Frozen Red Plan + actual Q/A ledger + pinned Attack Skill。不得读 Zuno docs。
+Formal input: Frozen Resume + Frozen Red Plan + actual batch waves / live exchanges + pinned Attack Skill。不得读 Zuno docs。
 
 ## Blue Architecture Reflection
 
@@ -160,7 +214,7 @@ blue_skill_reviewed: false
 harness_reviewed: false
 ```
 
-必须分别审 Resume Builder、Red Skill、Blue Skill、Harness，不能只审 Red。
+必须分别审 Resume Builder、Red Skill、Blue Skill、Harness。
 
 ## Improvement Ledger
 
@@ -191,18 +245,16 @@ NO_CHANGE
 
 每条 finding 至少记录 signal、root cause、owner、proposed change、evidence needed、risk、status、next-round retest。
 
-用户批准前不能修改 canonical Docs / Architecture 或 pinned Skills。
+用户批准前不能修改 canonical Docs / Architecture 或 pinned Skills；用户已在当前对话明确批准的具体 workflow correction 可以标记为 approved。
 
 ## Post-round Apply
-
-批准的改进可以在 Round branch 后半段应用，但必须：
 
 ```text
 change_effective_scope: NEXT_ROUND_ONLY
 current_round_verdict_recomputed: false
 ```
 
-Architecture change 仍须 Owner / ADR；Implementation / Evidence / Ownership gap 不能通过改文档或改简历伪装解决。
+Architecture change 仍须 Owner / ADR；Implementation / Evidence / Ownership gap 不能通过改文档或简历伪装解决。
 
 ## Next Resume Candidate
 
@@ -231,12 +283,15 @@ next_resume_blockers:
 10_next_resume_candidate.md
 ```
 
+BATCH_DUEL 的两波 Red 收敛进 `02_red_questions.md`，两波 Blue 收敛进 `03_blue_answers.md`。迁移旧 Round 时可以临时有 `02b/03b` compatibility artifacts，但 close 前必须说明。
+
 ## Stage State
 
 ```text
-current_stage: ROUND_INIT | BUILD_RESUME | USER_RESUME_REVIEW | RESUME_REVISION | RED_QUESTIONS | USER_RED_REVIEW | RED_REVISION | LIVE_INTERVIEW | RED_TURN | BLUE_TURN | RED_EVALUATION | BLUE_REFLECTION | WORKFLOW_RETROSPECTIVE | IMPROVEMENT_SYNTHESIS | USER_IMPROVEMENT_REVIEW | IMPROVEMENT_REVISION | APPLY_IMPROVEMENTS | BUILD_NEXT_RESUME | USER_FEEDBACK | CLOSE
+current_stage: ROUND_INIT | BUILD_RESUME | USER_RESUME_REVIEW | RESUME_REVISION | RED_QUESTIONS | USER_RED_REVIEW | RED_REVISION | INTERVIEW_EXECUTION | RED_WAVE_1 | BLUE_WAVE_1 | RED_WAVE_2 | BLUE_WAVE_2 | LIVE_INTERVIEW | RED_TURN | BLUE_TURN | RED_EVALUATION | BLUE_REFLECTION | WORKFLOW_RETROSPECTIVE | IMPROVEMENT_SYNTHESIS | USER_IMPROVEMENT_REVIEW | IMPROVEMENT_REVISION | APPLY_IMPROVEMENTS | BUILD_NEXT_RESUME | USER_FEEDBACK | CLOSE
 resume_status: DRAFT | REVISION_REQUESTED | FROZEN
 red_questions_status: NOT_STARTED | DRAFT_REVIEW | REVISION_REQUESTED | FROZEN | INVALIDATED_BY_RESUME_CHANGE
+batch_duel_status: NOT_STARTED | RUNNING | COMPLETE | ABORTED
 live_interview_status: NOT_STARTED | RUNNING | COMPLETE | ABORTED
 red_evaluation_status: NOT_STARTED | COMPLETE
 blue_reflection_status: NOT_STARTED | COMPLETE
@@ -251,11 +306,12 @@ next_resume_candidate_status: NOT_STARTED | BUILT | BLOCKED
 
 ```text
 - branch + Draft PR exist
-- every stage / live turn used commit-then-reread
+- every stage / wave / turn used commit-then-reread
 - Resume frozen before Red
-- Red Plan frozen before live interview when gate required
-- live interview actually alternated Red and Blue turns
-- Red Evaluation used actual exchanges, not Pressure Suite completion
+- Red Plan frozen before interview execution when gate required
+- BATCH_DUEL: Wave 2 Red was generated only after committed Blue Wave 1
+- LIVE_INTERVIEW: actual Red/Blue turns alternated
+- Red Evaluation used actual executed answers, not Pressure Suite completion
 - Blue Architecture Reflection completed against pinned base SHA
 - Workflow Retrospective reviewed Resume Builder + Red Skill + Blue Skill + Harness
 - Improvement Ledger exists and user review decision recorded
