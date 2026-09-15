@@ -7,6 +7,7 @@ import json
 from typing import Any
 
 from zuno.platform.database.foundation import (
+    AuditCapacityError,
     FencingRejectedError,
     InfrastructureConflictError,
     InfrastructureUnitOfWork,
@@ -420,6 +421,38 @@ class ToolInvocationGateway:
                             payload=payload,
                         )
                         return None, ToolGatewayReceipt("blocked", prepared_id, attempt_id, receipt_id, sandbox_blocked_reason)
+                    try:
+                        mandatory_audit_id = self._persist_and_assert_mandatory_audit_before_effect(
+                            tenant_id=tenant_id,
+                            call_id=call_id,
+                            tool_name=tool_name,
+                            prepared_id=prepared_id,
+                            attempt_id=attempt_id,
+                            receipt_id=receipt_id,
+                            prepared_action_hash=prepared_action_hash,
+                            target_resource_set_ref=effect_policy.target_resource_set.resource_set_ref,
+                        )
+                    except (AuditCapacityError, FencingRejectedError, InfrastructureConflictError) as exc:
+                        payload["audit_blocked_reason"] = str(exc)
+                        self._record_terminal(
+                            tenant_id=tenant_id,
+                            prepared_id=prepared_id,
+                            attempt_id=attempt_id,
+                            receipt_id=receipt_id,
+                            status="FAILED",
+                            dispatch_certainty="NOT_DISPATCHED",
+                            effect_certainty="NO_EFFECT",
+                            adapter_kind=adapter_kind,
+                            payload=payload,
+                        )
+                        return None, ToolGatewayReceipt(
+                            "blocked",
+                            prepared_id,
+                            attempt_id,
+                            receipt_id,
+                            str(exc),
+                        )
+                    payload["mandatory_audit_id"] = mandatory_audit_id
                     try:
                         result = await executor()
                     except ToolEffectUnknownError as exc:
@@ -1104,6 +1137,44 @@ class ToolInvocationGateway:
                     receipt_payload=payload,
                 )
             )
+
+    def _persist_and_assert_mandatory_audit_before_effect(
+        self,
+        *,
+        tenant_id: str,
+        call_id: str,
+        tool_name: str,
+        prepared_id: str,
+        attempt_id: str,
+        receipt_id: str,
+        prepared_action_hash: str,
+        target_resource_set_ref: str,
+    ) -> str:
+        assert self._infrastructure_unit_of_work_factory is not None
+        owner_id = f"tool-runtime:{call_id}"
+        audit_requirement_id = f"audit-requirement:{call_id}:tool-execute"
+        with self._infrastructure_unit_of_work_factory(tenant_id) as repo:
+            durable = repo.record_mandatory_audit(
+                channel_id="audit-channel:tool-runtime:phase16",
+                effect_id=prepared_id,
+                owner_id=owner_id,
+                payload={
+                    "audit_requirement_id": audit_requirement_id,
+                    "prepared_tool_action_id": prepared_id,
+                    "attempt_id": attempt_id,
+                    "execution_receipt_id": receipt_id,
+                    "prepared_action_hash": prepared_action_hash,
+                    "tool_name": tool_name,
+                    "target_resource_set_ref": target_resource_set_ref,
+                    "gate": "MANDATORY_BEFORE_EFFECT",
+                },
+            )
+            verified = repo.assert_audit_durable_for_effect(
+                audit_id=durable.audit_id,
+                effect_id=prepared_id,
+                owner_id=owner_id,
+            )
+        return verified.audit_id
 
     def _issue_secret_lease(
         self,
