@@ -46,27 +46,41 @@ Stage 执行时必须在原路径原地更新，不为了新版本换文件名�
 
 ## Artifact index
 
-`00_artifact_links.md` 必须包含可点击的 GitHub 链接，至少分组：
-
-```text
-Resume
-Red
-Blue Candidate Answers
-Blue Sealed Architecture Review
-Controller / Improvement
-PR / Round branch
-```
+`00_artifact_links.md` 继续作为内部稳定导航页，包含本轮全部 artifact 的可点击 GitHub 链接。它不要求在每个聊天 checkpoint 都发送给用户。
 
 用户可以查看 sealed Blue notes；`SEALED_FROM_RED` 只约束 Red actor 的输入 allowlist，不约束项目 Owner 查看。
 
-## Chat checkpoint
+## Chat checkpoint：默认只发当前产物
 
-每个用户可见 checkpoint 回复至少提供：
+聊天输出保持简洁。每个用户可见 checkpoint 默认只提供**本阶段刚生成的正式 artifact 直链**，不同时铺开整轮所有链接，也不默认发送 PR、总入口、manifest 或未开始阶段的 placeholder。
 
-1. `00_artifact_links.md` 总入口的直接 GitHub 链接；
-2. 当前 stage artifact 的直接 GitHub 链接；
-3. 若当前阶段由多个用户可见 artifact 组成，分别提供直链；
-4. 需要查看整个 Round 时可以额外提供 Draft PR 链接。
+### Resume Gate
+
+模拟简历体量小且需要人工审核：
+
+```text
+完整贴出模拟简历正文
++
+01_simulated_resume.md 直接 GitHub 链接
+```
+
+### Red / Blue Batch
+
+100 题或 100 答体量较大：
+
+```text
+3–8 个最有代表性、信息量最高的精辟片段
++
+当前完整文档直接 GitHub 链接
+```
+
+Red checkpoint 摘出代表性攻击问题；Blue checkpoint 摘出代表性回答或关键暴露点。不得把 100 题 / 100 答全文重新贴进聊天。
+
+### Final / Reflection / Report
+
+默认给 3–8 条最关键结论或 finding，再给当前正式文档直链。
+
+只有用户显式要求“全部链接 / 总入口 / PR / sealed notes”时，才额外发送对应链接。
 
 不得只发送：
 
@@ -88,14 +102,12 @@ BATCH_CHECKPOINT_RED_1
 
 BATCH_CHECKPOINT_BLUE_1
 → 03_blue_answers.md
-→ optional: 03_blue_architecture_notes.md
 
 BATCH_CHECKPOINT_RED_2
 → 04_red_wave2_review_and_questions.md
 
 BATCH_CHECKPOINT_BLUE_2
 → 04_blue_wave2_answers.md
-→ optional: 04_blue_wave2_architecture_notes.md
 
 RED_EVALUATION
 → 04_red_evaluation.md
@@ -113,6 +125,8 @@ USER_IMPROVEMENT_REVIEW
 BUILD_NEXT_RESUME_CANDIDATE
 → 10_next_resume_candidate.md
 ```
+
+Sealed architecture notes 仍在 Round 中保存，但默认不作为 Candidate checkpoint 的聊天链接；用户要求查看时再提供。
 
 ## Firewall invariants remain unchanged
 
