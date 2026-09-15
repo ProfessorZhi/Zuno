@@ -116,6 +116,20 @@ Agent 仍然是重要入口。它可以接受“分析双方关于付款义务�
 
 GraphRAG、Reflection、Long-term Memory、Persistent Multi-Agent 和 Native Runtime 都属于 Measurement-gated Complexity。每一种机制都必须说明它解决哪个已观察 baseline failure、带来什么状态与成本、怎样测收益，以及什么结果出现时应该关闭、缩小或删除。已经实现不构成长期保留权。
 
+## 下一阶段要关闭的是证据闭环，而不是继续增加模块
+
+当前架构已经能够提出很多“应该如何”的答案，下一阶段最有价值的工作是把其中一部分变成可以复查的工程事实。没有这些闭环，继续增加 Agent 角色、Provider、状态对象或服务，只会让 Target 更完整，却不会让产品更可信。
+
+第一条闭环来自真实质量问题。客户侧曾反馈回答质量仍需提高，但根因和修复指标没有恢复。相比再增加一种 Retriever，更有价值的是恢复一到两个能够完整还原的 Bad Case：原始输入和材料范围是什么，错误表现是什么，根因最终落在 OCR、检索、引用、Prompt、模型还是任务 Scope，团队改了什么，怎样用同一 case 固定 Regression。只有这个链路存在，历史“回答质量需要提高”才开始转化成工程知识，而不是一句无法行动的项目评价。
+
+第二条闭环来自已经被 Current fault probe 证实的恢复缺陷。外部 Effect 的 UNKNOWN ledger 已经存在，但 restart replay 会把 unresolved Reconciliation 错误升级为 `completed`；Mandatory Audit requirement 也已经能够形成，却没有真正挡在现实 send boundary 前。这里不需要再画更复杂的 Target State Machine，应该先修复 certainty convergence 和 audit-before-effect gate，再用同一个故障窗口复测：重启以后 Unknown 必须继续保持 Unknown，缺 durable audit proof 时 executor 必须是 0。负向 Evidence 被修复并转成正向 Evidence，才算真正关闭问题。
+
+第三条闭环用来决定复杂机制的去留。GraphRAG 需要冻结语料、配置和预算，按单跳、多跳、实体歧义、跨文档等 query class 对比 Hybrid / reranker baseline、gated GraphRAG 和各项 heuristic ablation；如果 seed、alias 或 path ranking 没有稳定边际收益，就删除对应复杂度。Long-term Memory 需要做 on/off A/B，观察跨会话任务质量、错误记忆污染、token 成本和专业人员修正；没有稳定收益时只保留 Raw Event、task summary 和按需 Context。Native Runtime 需要和 Generic Host + Legal Backend 比较恢复正确性、质量、成本和开发维护面；Multi-Agent 则继续晚于 Tool、Subgraph 和 parallel worker。
+
+第四条闭环是个人与团队事实的可追溯性。对简历和项目复盘最有价值的不是继续扩大“参与过”的范围，而是把一两个个人任务恢复成完整链路：需求或问题从哪里来，接手前是什么状态，自己改了哪些代码或 Contract，测试怎样锁住 bad case，结果能证明到什么程度，哪些部分仍然属于团队或后续 Target。Tool/MCP、GraphRAG retrieval quality、Context/Memory V2 已经有公开提交基础，后续应优先补原始 Issue、Review、历史测试结果或真实运行材料，而不是把今天的总体架构 Ownership 倒推回 2026 年 3 月。
+
+这些证据闭环最终会反过来决定架构是否应该继续变复杂。真实 Bad Case 如果表明 Hybrid RAG 已经足够，Graph route 就缩小；Host + Legal Backend 如果已经满足恢复要求，Native Runtime 就保持薄；long-term Memory 没有收益就关闭；某个成熟 Provider 已经完整承担通用能力，自研适配层就删除。项目成熟度来自能够证实和删除复杂度，而不是来自架构图上对象越来越多。
+
 ## 项目真实走过的阶段
 
 今天的产品化战略和 Target Architecture 不能反写历史。根据目前能够恢复的材料，项目历史更接近：
