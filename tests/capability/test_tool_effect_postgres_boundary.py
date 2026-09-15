@@ -1,4 +1,4 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 import os
 from datetime import UTC, datetime, timedelta
@@ -30,6 +30,7 @@ from zuno.platform import settings as platform_settings
 
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
+AUDIT_CHANNEL_ID = "audit-channel:tool-runtime:phase16"
 
 
 def _migrated_database(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> tuple[Engine, Engine, str]:
@@ -90,6 +91,16 @@ def _drop_database(engine: Engine, admin_engine: Engine, database_name: str) -> 
         )
         connection.execute(text(f'DROP DATABASE IF EXISTS "{database_name}"'))
     admin_engine.dispose()
+
+
+def _configure_mandatory_audit_channel(engine: Engine) -> None:
+    with InfrastructureUnitOfWork(engine, tenant_id="tenant-effect") as repo:
+        repo.configure_audit_channel(
+            channel_id=AUDIT_CHANNEL_ID,
+            capacity_limit=16,
+            owner_id="audit-bootstrap:effect-postgres-test",
+            fail_mode="fail_closed",
+        )
 
 
 def _runtime(engine: Engine, calls: list[dict[str, object]]) -> ToolControlPlaneRuntime:
@@ -187,6 +198,7 @@ def test_unknown_external_effect_stays_reconcile_required_after_runtime_restart(
     execution_id = "effect-unknown-replay-1"
 
     try:
+        _configure_mandatory_audit_channel(engine)
         runtime = _runtime(engine, calls)
         pending = runtime.execute(
             ToolRuntimeRequest(
@@ -318,6 +330,7 @@ def test_conclusive_not_executed_reconciliation_never_becomes_completed_or_redis
     execution_id = "effect-confirmed-not-executed-1"
 
     try:
+        _configure_mandatory_audit_channel(engine)
         runtime = _runtime(engine, calls)
         pending = runtime.execute(
             ToolRuntimeRequest(
@@ -398,4 +411,3 @@ def test_conclusive_not_executed_reconciliation_never_becomes_completed_or_redis
         assert execution == {"status": "FAILED", "effect_certainty": "CONFIRMED_NO_EFFECT"}
     finally:
         _drop_database(engine, admin_engine, database_name)
-
