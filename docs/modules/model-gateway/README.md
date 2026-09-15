@@ -70,6 +70,12 @@ Credential 也不应该进入 Prompt、普通 Trace 或 Checkpoint。Gateway 获
 
 Prompt Injection 更说明了为什么模型不能拥有更强权力。模型输出可以建议下一步动作，但不能因为“模型自己认为合理”就修改正式 Domain、扩大权限或触发高风险 Effect。07 只负责模型调用；后面的专业验收、计划控制、授权和 Tool send boundary 继续由对应责任域保护。
 
+### 路由决定也要绑定实际配置版本，而不是只记 model name
+
+同一个 Provider / model name 在不同 system prompt、generation config、region 或 credential policy 下可能表现完全不同。07 保存真实 ModelAttempt 时，需要让调用方能追到影响行为的模型、Provider、generation config 与 credential-policy refs；04 / 05 则把真正依赖这些行为的计划或专业资格绑定到自己的版本集合。
+
+配置变化本身不自动导致 Replan。只有变化让原 Role qualification、结构化输出、预算、安全或 Capability contract 不再成立时，当前调用才失去资格。07 返回 typed routing / eligibility 结果，上层决定 fallback、re-resolve 或 Replan，而不是让 Gateway 悄悄把不兼容配置伪装成同一次调用。
+
 ### 供应商不变，模型行为也可能漂移
 
 一个 Provider 可以保持同一 API 和同一个 model name，却在后台升级权重、系统提示或推理策略。对上层来说，规划长度、工具选择、拒答倾向和结构化稳定性都可能变化，而编译和接口测试完全不会报错。
@@ -82,10 +88,10 @@ Prompt Injection 更说明了为什么模型不能拥有更强权力。模型输
 
 ### Current / Target / Gap
 
-**Target：** 07 以 Model Role 接收上层执行需求，在当前安全允许、Role 质量合格、预算和 deadline 可接受的候选中选择 Provider / Model，保存真实 Attempt、Usage、Retry / Fallback 与取消结算；法律 Capability 的专业语义与 Task Class qualification 继续由 05 拥有，Prompt 的业务语义、正式 Domain 和安全政策也仍由各自 Owner 管理。
+**Target：** 07 以 Model Role 接收上层执行需求，在当前安全允许、Role 质量合格、预算和 deadline 可接受的候选中选择 Provider / Model，保存真实 Attempt、Usage、Retry / Fallback 与取消结算；调用事实能够关联真正影响行为的 Provider / model / config / credential-policy refs。法律 Capability 的专业语义与 Task Class qualification 继续由 05 拥有。
 
-**Current：** 完整 Role routing、资格集合、统一 Usage settlement、跨 Provider cancellation、行为漂移治理和多区域 egress routing 属于 Target 设计。当前已有的模型 SDK、调用封装、LangSmith 或相关基础代码实际证明到哪一步，只能按 `docs/evidence/`、代码、测试和可复现 Eval 描述。
+**Current：** 仓库已经存在 ModelRoutingDecision、ModelCallAttempt、Quota / Usage / Cancellation 等 Contract / implementation surface，但完整 Role qualification、provider drift 管理、真实 Usage settlement 和正式 benchmark 仍不能从接口存在自动推出。
 
-**Gap：** 仍需要 Role 级 benchmark、05 Capability qualification 与 07 Model Role 的联动测试、模型升级回归、fallback 资格测试、真实 Usage / cost 对账、取消边界、数据外发策略验证和是否需要独立部署的容量证据。没有这些证据时，不宣称 Gateway 已经完成生产级多模型路由治理。
+**Gap：** 仍需要 Role 级 benchmark、05 Capability qualification 与 07 Model Role 联动、config / provider drift、fallback equivalence、真实 Usage / cost 对账、取消边界、数据外发策略验证和是否需要独立部署的容量证据。
 
 工程 / Agent 精确参考与跨模块一致性规则见 [`reference.md`](reference.md)。

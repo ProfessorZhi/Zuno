@@ -66,6 +66,12 @@ Target 在这些门点默认 fail closed 或进入人工复核。低风险诊断
 
 如果撤权发生在模型请求或 Tool send 之前，新的动作应被阻断；如果数据已经发出去或现实 Effect 已经发生，08 也不能改写历史。晚到模型结果以后能不能继续使用、发布或正式准入，要重新检查当前条件。持续授权保护未来使用，并不提供时间倒流。
 
+### Memory 的 Recall 与生命周期也是治理动作，不是相似度检索自己决定
+
+structured memory 如果启用，Provider 可以保存 record 和 provenance，但“当前请求能不能再看到它”仍然是安全与生命周期问题。一个 record 可能仍需保留用于审计，却已经不允许普通 Recall；也可能因为 Scope 变化、撤权、Retention 或 Purge 进入新的治理状态。
+
+08 因此拥有 Recall Eligibility / lifecycle policy，01 / 04 只消费当前被允许的 snapshot。相似度、MemoryScope equality 或 Provider 自己的 TTL 不能替代 Authorization。Memory 与正式 Domain 冲突时也不是由 Security 判断法律事实谁对谁错；08 只决定能否使用，02 仍拥有业务 truth。
+
 ### 安全 Authority 可以集中，执行门必须落在真正的 I/O 上
 
 Policy Decision 如果只存在于一个中心服务，而真正读取文件、发送模型请求、调用 Tool 的模块可以绕过它，安全仍然只是文档。反过来，让所有流量都穿过一个巨大代理，又会把吞吐、故障和业务上下文集中成新的单点。
@@ -78,10 +84,10 @@ Target 因而分开 Decision 和 Enforcement。08 负责产生可解释的 Autho
 
 ### Current / Target / Gap
 
-**Target：** 08 拥有持续授权、动作审批、模型外发、Secret 使用约束、强制审计前置和数据生命周期政策语义；实际 Enforcement 发生在读取、外发、正式准入和现实 Effect 的执行点。HumanDecision 继续属于 02，现实结果继续属于 06。
+**Target：** 08 拥有持续授权、动作审批、模型外发、Secret 使用约束、强制审计前置、Memory Recall Eligibility 和数据生命周期政策语义；实际 Enforcement 发生在读取、外发、正式准入和现实 Effect 的执行点。HumanDecision 继续属于 02，现实结果继续属于 06。
 
-**Current：** 完整 Continuous Authorization、SecurityEpoch、action-bound Approval、跨 Store lifecycle convergence、MANDATORY_BEFORE_EFFECT 和 fail-closed 恢复语义属于 Target 设计。现有认证、权限、Secret 或日志代码实际实现到哪里，只按 `docs/evidence/`、代码、配置和安全测试能够证明的范围描述。
+**Current：** Selected / diagnostic Evidence 已经证明两个窄但重要的 fail-closed 窗口：SecurityEpoch 在现实 send 前被撤销时 provider 不会 dispatch；SecretRef 在 lease validation 前被撤销时同样不会 dispatch。另一方面，`MANDATORY_BEFORE_EFFECT` 已有明确负向证据：Security 可以形成 AuditRequirement，但缺少 matching committed audit proof 时当前 Tool send path 仍可能越过现实边界。Continuous Authorization 的部分门禁已被证明，完整治理闭环仍未建立。
 
-**Gap：** 仍需要真实权限撤销竞态测试、长任务恢复后的重新授权、模型 egress policy 演练、Approval 失效、Secret rotation、Mandatory Audit 故障注入以及 Retention / Legal Hold / purge 的跨 Store 验证。没有这些证据时，不宣称安全治理已经通过生产级 qualification。
+**Gap：** P0 是把 `MANDATORY_BEFORE_EFFECT` 的 durable AuditPersistenceReceipt 真正接到 06 的 send gate，并用 fault test 证明缺 proof 时 executor=0。其余仍需要长任务 resume / retry 后重新授权、模型 egress、Approval invalidation、Secret rotation、Policy Engine outage、Prompt Injection、Memory Recall / No-Recall、Retention / Legal Hold / purge convergence 和生产环境 qualification。
 
 工程 / Agent 精确参考与跨模块一致性规则见 [`reference.md`](reference.md)。

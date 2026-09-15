@@ -68,12 +68,18 @@ Adapter 负责协议转换、字段兼容和版本协商，产品状态仍然从
 
 如果 Zuno 只作为单体应用里的内部库使用，没有多 Host、长任务、异步交付和失效传播，Application 可以缩成很薄的一层函数调用。即使这些能力存在，它默认仍只是逻辑责任；只有协议隔离、吞吐、网络边界或独立生命周期形成真实需求以后，Adapter、Outbox、Queue 或独立服务才值得增加。
 
+### Context 可以跨入口复用，但不能在 Application 里变成第二套案件事实
+
+产品可以把 recent history、task summary 或经过治理的 structured memory 作为用户体验的一部分，例如重新打开 Matter 时恢复上次未完成的问题。01 只负责把当前允许的内容组合成请求上下文或 Workspace projection，不拥有 memory record 的真实性，也不能因为某条记忆“曾经显示过”就覆盖 02 的正式结果。
+
+跨会话记忆如果存在，Recall Scope 与生命周期由 08 的当前治理条件约束；04 执行长任务时也重新消费当前 snapshot。没有稳定收益时，最简单的产品仍然是 Matter / Domain / Knowledge + task summary，不需要为了“连续对话”建立永久 Memory 子系统。
+
 ### Current / Target / Gap
 
-**Target：** 01 负责组合其他 Owner 已经成立的事实，形成稳定的 Matter / Case Workspace projection、请求受理、产品路径、普通答案发布、正式成果发布、Delivery、失效传播和外部 Contract 语义；Knowledge readiness、正式 Domain 状态、Authorization 和现实 Effect 仍由各自责任域决定。聊天、表单或 Host API 都只是访问这些语义的产品入口。
+**Target：** 01 负责组合其他 Owner 已经成立的事实，形成稳定的 Matter / Case Workspace projection、请求受理、产品路径、普通答案发布、正式成果发布、Delivery、失效传播和外部 Contract 语义；Knowledge readiness、正式 Domain 状态、Authorization 和现实 Effect 仍由各自责任域决定。聊天、表单或 Host API 都只是访问这些语义的产品入口。可选 Context / Memory 只作为当前请求的输入 projection，不形成新的业务 Authority。
 
 **Current：** 上述案件 Workspace、多 Host 生命周期、完整 Invocation / Delivery identity、Push + Pull 失效传播和复杂交付恢复属于 Target 设计。现有 Application、API、Host 集成或运行代码实际实现到哪一步，只以 `docs/evidence/`、代码和测试证据为准。
 
-**Gap：** 仍需要真实案件 Workspace 的用户研究与界面验证、Host Contract、重复请求与断线重试测试、正式成果失效传播演练、外部交付边界、背压行为以及是否值得独立部署的容量证据。没有这些证据时，不把 Target 写成已验证产品能力。
+**Gap：** 仍需要真实案件 Workspace 的用户研究与界面验证、Host Contract、重复请求与断线重试测试、正式成果失效传播演练、外部交付边界、背压行为，以及受治理 Context snapshot 的 scope / lifecycle 绑定和是否值得独立部署的容量证据。没有这些证据时，不把 Target 写成已验证产品能力。
 
 工程 / Agent 精确参考与跨模块一致性规则见 [`reference.md`](reference.md)。

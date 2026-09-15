@@ -32,7 +32,7 @@ Direction-level participation currently supportable:
 - Tool Calling Strategy related development;
 - database inspection / debugging against actual data.
 
-Do not upgrade these into claims that the user independently built the entire Agent Runtime, GraphRAG, RAG stack, backend, or whole Zuno system.
+Recovered public Git history additionally supports bounded personal slices in Tool/MCP, GraphRAG retrieval-quality work, and later Context/Memory V2. These do not upgrade into ownership of the whole runtime, retrieval stack, backend, or current architecture.
 
 ## Claim boundaries
 
@@ -43,7 +43,19 @@ team capability != personal implementation
 historical pilot != production
 current target architecture != historical architecture ownership
 research lineage != user implementation
+Target design != Current implementation
 ```
+
+## Current architecture caveats
+
+- Memory / Context is an optional non-authoritative provider boundary. Provider records do not replace Domain truth; recall/lifecycle policy belongs to Security/Governance, and consumers use only currently eligible snapshots.
+- Provenance / source ids establish lineage, not truth, authorization, or semantic-preservation guarantees.
+- Current Effect evidence proves durable UNKNOWN recording and observed duplicate-dispatch suppression, but not final Reconciliation convergence; restart replay has a known certainty-upgrade defect.
+- Current `MANDATORY_BEFORE_EFFECT` evidence is negative: an AuditRequirement can exist while provider dispatch still proceeds without matching durable audit proof.
+- GraphRAG tiny-smoke evidence supports a bounded regression-fix story, not general superiority.
+- Long-term Memory, Persistent Multi-Agent, Native Runtime and GraphRAG remain measurement-gated complexity.
+
+These caveats describe Current / Target boundaries, not historical-project claims.
 
 ## Current / Target / Unknown routing
 
@@ -51,4 +63,5 @@ research lineage != user implementation
 - Ideal design → `docs/architecture/`.
 - Module-level Target → `docs/modules/`.
 - Current implementation / tests / eval / runtime facts → `docs/evidence/`.
-- Exact personal task PR/interface/SQL/bug/test/result closure → still Unknown unless separately recovered and evidenced.
+- Current negative evidence is still Evidence; do not downgrade known blockers back to Unknown.
+- Exact personal task PR/interface/SQL/bug/test/result closure → Unknown unless separately recovered and evidenced.

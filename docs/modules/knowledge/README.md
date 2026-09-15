@@ -76,6 +76,12 @@ Worker 可以至少一次执行，重复项由稳定 item identity、CAS 或幂�
 
 数据删除或 Legal Hold 也会跨多个 Store。查询层可以先停止 recall，底层向量段、对象存储和 cache 再按治理流程清理；相反，Legal Hold 可能要求字节继续保留却禁止普通召回。03 消费 08 的生命周期决定，不能用“向量还在”或“查询不到了”替整个系统宣布物理删除完成。
 
+### 来源可追溯不等于内容已经正确或仍然有权使用
+
+03 能保存 DocumentVersion、稳定位置、generation、retrieval route 和 source ids，这使候选结果可以追到来源。但 lineage 只回答“它从哪里来、怎样被找到”，不回答来源陈述是否真实，也不回答当前调用者是否还有权读取，更不能证明一次 summary / extraction 没丢掉否定词、时间条件或主体限定。
+
+Truth 由正式材料与后续业务判断承担，Authorization 由 08 决定，semantic preservation 需要专门的 extraction / compression Eval。Knowledge 的 provenance 很重要，恰恰因为它让这些不同问题可以被分别检查，而不是把一个 `source_id` 当成万能可信标记。
+
 ### 什么时候知识架构应该缩小
 
 如果语料很小、都是干净文本、没有多版本、没有 OCR、没有复杂 Scope，也没有跨文档关系任务，一个版本化 lexical / dense index 已经足够。此时没有必要引入 graph store、复杂 generation orchestrator 和多路 Planner。
@@ -86,10 +92,10 @@ Worker 可以至少一次执行，重复项由稳定 item identity、CAS 或幂�
 
 ### Current / Target / Gap
 
-**Target：** 03 围绕 02 的稳定 DocumentVersion 建立可重建 KnowledgeGeneration，按任务形成 ReadinessDecision，检索和专业派生产生带来源的候选结构，并通过 generation activation 保护 serving 完整性。正式 Evidence / Finding / WorkProduct 仍由 02 负责。
+**Target：** 03 围绕 02 的稳定 DocumentVersion 建立可重建 KnowledgeGeneration，按任务形成 ReadinessDecision，检索和专业派生产生带来源的候选结构，并通过 generation activation 保护 serving 完整性。正式 Evidence / Finding / WorkProduct 仍由 02 负责；Provenance 只承担 lineage，不承担 truth、authorization 或 semantic-preservation authority。
 
-**Current：** 仓库历史已经有知识任务模型、RabbitMQ 异步流水线、Redis 进度、RAG / GraphRAG 路径和评测工作，但它们不能自动证明 Target 中完整的 generation lifecycle、task readiness、原子 serving switch、案件专业中间结构和跨 Store 生命周期治理已经落地。
+**Current：** 仓库已经存在部分 ingestion、Citation Provenance Guard、RAG / GraphRAG 和相关评测基础。历史 GraphRAG tiny smoke 能证明一次 ranking regression 被修复，但不能证明 GraphRAG 普遍优于更简单 baseline，也不能证明完整 generation lifecycle、task readiness、原子 serving switch 已经落地。
 
-**Gap：** 真实多版本材料的 readiness 规则、generation activation、跨 Store purge、权限撤销后的召回收敛、负面证据条件、事件 / 冲突 / Fact–Article 等专业结构的稳定语义、GraphRAG 按 query class 的稳定收益和真实法院语料成本仍需要测试与 Eval。
+**Gap：** 真实多版本材料 readiness、generation activation、跨 Store purge、权限撤销后的召回收敛、negative evidence 条件、专业中间结构语义、GraphRAG 按 query class 的 holdout / ablation，以及 extraction / compression 的 semantic-preservation Eval 仍需要验证。
 
 工程 / Agent 精确参考与跨模块一致性规则见 [`reference.md`](reference.md)。
