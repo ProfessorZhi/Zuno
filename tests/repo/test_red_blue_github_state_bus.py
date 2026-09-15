@@ -123,8 +123,8 @@ def test_red_final_remains_blind_to_canonical_truth_and_blue_notes() -> None:
 
     assert "red_final_cannot_read_blue_architecture_notes: true" in system
     assert "不读取任何 Blue architecture notes、Zuno docs、source 或 Evidence" in protocol
-    assert "canonical_docs_read: false" in judge
-    assert "blue_architecture_notes_read: false" in judge
+    assert "Red 不读 Zuno docs" in judge
+    assert "仍然不读取 canonical docs 或任何 Blue architecture notes" in judge
 
 
 def test_blue_internal_mode_distinguishes_history_current_target_open_design_and_fundamentals() -> None:
