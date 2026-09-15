@@ -2,7 +2,7 @@
 
 `.agent/red-blue/` 是机器运行中心；长期方法、行为证据、工作区和归档入口在 `docs/red-blue/`。
 
-本目录拥有 active Round state、执行协议、Red Interview Skill、Blue Candidate / Architecture Skill、评价规则、稳定 artifact link contract 和模板。它不拥有 Project History、Target Architecture、Module Truth、Current Evidence 或真实简历正文。
+本目录拥有 active Round state、执行协议、Red Interview Skill、Blue Candidate / Architecture Skill、评价规则和模板。它不拥有 Project History、Target Architecture、Module Truth、Current Evidence 或真实简历正文。
 
 ## GitHub-first
 
@@ -45,7 +45,7 @@ Frozen Resume
 
 ## Stable Artifact Links
 
-[`artifact-links.md`](artifact-links.md) 是用户可见 handoff 的规范契约。
+[`docs/red-blue/workspace/artifact-links-contract.md`](../../docs/red-blue/workspace/artifact-links-contract.md) 是用户可见 handoff 的规范契约，模板见 [`artifact-links-template.md`](../../docs/red-blue/workspace/artifact-links-template.md)。
 
 每个正式 Round Init 必须：
 
@@ -181,11 +181,9 @@ protocol.md version
 ├── attack-model.md
 ├── defense-model.md
 ├── judge.md
-├── artifact-links.md
 └── templates/
     ├── round.md
-    ├── turn.md
-    └── artifact-links.md
+    └── turn.md
 ```
 
 ## Core Round Artifacts
@@ -217,4 +215,4 @@ BATCH_DUEL additional artifacts:
 
 `10_next_resume_candidate.md` 是下一轮候选输入，不得覆盖本轮 Frozen Resume。下一轮从新 main HEAD 重新校验并再次经过 USER_RESUME_REVIEW。
 
-完整状态机见 `protocol.md`，稳定链接契约见 `artifact-links.md`，评价与归因规则见 `judge.md`。
+完整状态机见 `protocol.md`，稳定链接契约见 `docs/red-blue/workspace/artifact-links-contract.md`，评价与归因规则见 `judge.md`。
