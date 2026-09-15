@@ -45,7 +45,7 @@ Zuno 的额外复杂度只在这些简单假设失效以后有价值。
 | 各环节都有自己的“成功” | 一张全局 status 表 | Runtime complete、Domain committed、Effect confirmed、Publication delivered 是不同事实 | 01 Application 组合各 Owner facts |
 | GraphRAG、Memory、Reflection、Specialist 容易越做越多 | 默认开启复杂能力 | 成本和故障面增加，收益却可能没有稳定证据 | 09 Observability & Evaluation |
 
-九个责任域由这些长期责任自然形成。它们是逻辑 Authority，不是九个微服务。默认实现仍可以是模块化 Python Backend，加少量按照工作类型划分的 Worker 和成熟基础设施。
+九个责任域由这些长期责任自然形成。它们是逻辑 Authority，不是九个微服务。默认实现仍可以是**模块化 Python 后端**，加少量按照工作类型划分的 Worker 和成熟基础设施；逻辑模块不等于独立网络服务。
 
 通用 Agent Harness 也不是 Zuno 必须长期自研的差异化。Conversation、普通 Workflow、MCP、Checkpointer、Queue、Secret Manager、OpenTelemetry、模型 SDK 等能力成熟以后应优先 Buy / Reuse。Zuno 真正需要长期保护的是法律任务的材料与证据语义、正式业务事实、专业能力资格、现实副作用、安全治理和可复现 Eval。
 
@@ -168,7 +168,7 @@ Cache、UI projection 和大部分 Telemetry 处在更低权威层。它们可�
 
 ### 默认部署保持简单，复杂机制要有退出条件
 
-九个责任域默认不对应九个服务。合理起点是模块化 Python Backend + justified Workers + 成熟基础设施。OCR / ingestion、Knowledge rebuild、模型、外部 Tool、Eval 等工作只有在资源、吞吐、故障隔离、安全出口或发布节奏出现真实差异时才值得独立部署。
+九个责任域默认不对应九个服务。合理起点是**模块化 Python 后端 + justified Workers + 成熟基础设施**。OCR / ingestion、Knowledge rebuild、模型、外部 Tool、Eval 等工作只有在资源、吞吐、故障隔离、安全出口或发布节奏出现真实差异时才值得拆成**独立网络服务**。
 
 同样，GraphRAG、Reflection、Long-term Memory、Specialist / Multi-Agent、Native Runtime 都是 measurement-gated complexity。最简单方案能够满足业务约束时应继续使用。每个复杂机制都要回答：它解决了哪个已观察的 baseline failure；增加了什么状态、成本和故障面；怎样测收益；什么结果出现时应该关闭、缩小或删除。
 
