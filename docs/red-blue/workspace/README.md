@@ -31,31 +31,37 @@ Resume
 → Next Resume Candidate
 ```
 
-每个 Wave 完成以后，聊天必须直接返回当前 artifact 的 GitHub 链接，并同时给出本轮稳定 Artifact Links 总入口。
+每个 Wave 完成以后，聊天只需要给**当前阶段产物的 GitHub 直链**，再附少量代表性片段。不要一次铺开整轮全部链接。
 
 ## Stable Artifact Links
 
-每轮初始化时必须创建：
+每轮初始化时仍创建：
 
 ```text
 00_artifact_links.md
 ```
 
-这个文件是本轮的稳定导航页，直接链接 Resume、Red、Blue、Final、Reflection、Retrospective、Improvement、Next Resume 和 Draft PR。
+它作为本轮稳定导航页，直接链接 Resume、Red、Blue、Final、Reflection、Retrospective、Improvement、Next Resume 和 Draft PR。所有正式 stage artifact 也在 Round Init 预创建，未开始时只写 `status: NOT_STARTED` 等占位信息。
 
-为了保证链接从 Round Init 起就有效，所有正式 stage artifact 也必须在 Round Init 预创建。尚未执行的文件只包含 `status: NOT_STARTED` 等占位信息；不得提前生成未来问题、答案、评价或架构结论。
+阶段完成时在原路径**原地更新**，保证 URL 稳定。
 
-阶段完成时在原路径**原地更新**，不能为了“新版本”换正式文件名。这样用户保存的 URL 在整个 Round 生命周期中保持不变。
-
-每个用户 checkpoint 至少发送：
+用户可见 checkpoint 默认输出：
 
 ```text
-00_artifact_links.md 直链
-+
-当前 stage artifact 直链
+Resume Gate:
+完整模拟简历正文
++ 简历 GitHub 直链
+
+Red / Blue Batch:
+3–8 个最有代表性的精辟问题 / 回答 / 暴露点
++ 当前完整文档 GitHub 直链
+
+Final / Reflection / Report:
+3–8 条最关键结论
++ 当前正式文档 GitHub 直链
 ```
 
-不得只回复文件名、相对路径、commit SHA 或“已完成”。详细契约见 [`artifact-links-contract.md`](artifact-links-contract.md)，初始化模板见 [`artifact-links-template.md`](artifact-links-template.md)。
+只有用户显式要求“总入口 / 全部链接 / PR / sealed notes”时，才额外发送这些链接。详细契约见 [`artifact-links-contract.md`](artifact-links-contract.md)，初始化模板见 [`artifact-links-template.md`](artifact-links-template.md)。
 
 ## Core Artifacts
 
@@ -113,7 +119,7 @@ Resume bullet 优先表达真实工程问题和技术决策，不以框架名、
 
 `03_blue_answers.md` 对第一批 100 题逐题回答。
 
-同时生成 `03_blue_architecture_notes.md`，但这个文件对 Red 封存。它只给最终 Blue Architecture Reflection 使用。用户作为项目 Owner 可以通过 `00_artifact_links.md` 查看该文件；这不改变 Red allowlist。
+同时生成 `03_blue_architecture_notes.md`，但这个文件对 Red 封存。它只给最终 Blue Architecture Reflection 使用。用户作为项目 Owner 可以查看，但默认聊天 checkpoint 不额外铺出该链接，除非用户要求。
 
 ## Red Wave 2
 
