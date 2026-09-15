@@ -11,7 +11,7 @@ github_runtime:
   stage_handoff: COMMIT_THEN_REREAD
   round_branch: red-blue/rb-2026-09-15-formal-019
   round_pr: 239
-  last_consumed_head_sha: ff53c8653cd9bfdefd516656dbe7a7b94583f07b
+  last_consumed_head_sha: 7424bf907cff1e4d8ed69ad291e7459718416893
   firewall_strength: LOGICAL_GITHUB_MEDIATED
   strict_blind_red_certification: false
 
@@ -51,10 +51,10 @@ simulated_resume:
   user_resume_review_status: APPROVED
 
 red_wave_1:
-  red_wave_1_status: RUNNING
-  red_wave_1_question_count: 0
+  red_wave_1_status: COMPLETE
+  red_wave_1_question_count: 100
   red_wave_1_path: docs/red-blue/workspace/rb-2026-09-15-formal-019/02_red_questions.md
-  red_wave_1_commit_sha: none
+  red_wave_1_commit_sha: 837142053351a7cfb1c4338ec6955d09c07ba196
   red_wave_1_user_checkpoint: PENDING
 
 blue_wave_1:
@@ -109,5 +109,5 @@ next_resume:
   next_resume_source_head_sha: none
   next_resume_blockers: none
 
-current_stage: RED_WAVE_1
-next_actor: RED
+current_stage: BATCH_CHECKPOINT_RED_1
+next_actor: NONE
