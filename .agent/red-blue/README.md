@@ -2,16 +2,16 @@
 
 `.agent/red-blue/` 是机器运行中心；长期方法、行为证据、工作区和归档入口在 `docs/red-blue/`。
 
-本目录拥有 active Round state、执行协议、Red Interview Skill、Blue Candidate Skill、评价规则和模板。它不拥有 Project History、Target Architecture、Module Truth、Current Evidence 或真实简历正文。
+本目录拥有 active Round state、执行协议、Red Interview Skill、Blue Candidate / Architecture Skill、评价规则和模板。它不拥有 Project History、Target Architecture、Module Truth、Current Evidence 或真实简历正文。
 
 ## GitHub-first
 
-正式 Round 中，GitHub 是阶段和 live turn 之间唯一耐久交接面：
+正式 Round 中，GitHub 是阶段之间唯一耐久交接面：
 
 ```text
 Round branch HEAD
 → read declared inputs
-→ run one stage / one turn
+→ run one stage
 → write artifact + manifest + transcript
 → commit
 → next actor re-read new HEAD
@@ -19,40 +19,90 @@ Round branch HEAD
 
 聊天上下文和未提交草稿不能直接跨阶段成为正式输入。
 
-## 两个循环
+## 默认模式：BATCH_DUEL
 
-Red / Blue 运行分成两个闭环。
-
-### Interview Loop
+自动架构校准默认使用两波 100 题：
 
 ```text
 Frozen Resume
-→ Frozen Red Plan
-→ Red asks one question
-→ commit
-→ Blue answers
-→ commit
-→ Red reads answer and follows up
-→ ...
-→ Red Evaluation
-```
-
-Pressure Suite 仍有 100 问，但只做离线 coverage；真实现场必须 answer-driven。
-
-### Improvement Loop
-
-```text
-Red Evaluation
-→ Blue Architecture Reflection
-→ Resume Builder / Red Skill / Blue Skill / Harness Retrospective
-→ Improvement Ledger
+→ Red Wave 1：100 题
+→ Blue Wave 1：100 答 + 封存架构初诊
+→ Red Wave 2：先盲评 Blue 1，再给 100 个针对性追问
+→ Blue Wave 2：100 答 + 封存架构复诊
+→ Red Final Evaluation
+→ Blue Final Architecture Reflection
+→ Controller Workflow Retrospective
+→ Improvement Ledger + Round Report
 → USER_IMPROVEMENT_REVIEW
-→ approved changes
+→ approved architecture / docs / skill / implementation changes
 → Next Resume Candidate
 → next Round
 ```
 
-一个 failure 必须先归因，再决定改哪一层。Red 问得差不能直接变成 Architecture Gap；Blue 有材料但讲不清，也不能直接删 Resume Claim。
+每个 Batch Checkpoint 默认只把对应 GitHub 文档链接交给用户。用户不用逐题扮演候选人。
+
+`LIVE_INTERVIEW` 继续保留，但只有用户明确要求真人逐题模拟时才使用。
+
+## 为什么把 Blue 分成两个面
+
+Blue 同时扮演：
+
+- Candidate：回答 Red；
+- Architecture Reviewer：判断这些压力是否暴露系统缺陷。
+
+两者必须物理分 artifact。
+
+```text
+Candidate answers
+→ Red 可见
+
+Architecture notes
+→ Red 不可见
+→ 只供最终 Blue Architecture Reflection 使用
+```
+
+否则 Red 2 会看到 canonical 架构答案，盲测就失效。
+
+## Red 2 不是第二份题库
+
+Red Wave 2 必须先对 Blue Wave 1 做 blind evaluation：
+
+```text
+什么已经可信
+什么仍然薄弱
+哪些 Ownership / Evidence / Failure 有问题
+哪些第一波问题前提有误
+哪些回答产生了新的攻击 handle
+```
+
+然后根据这些 observable handles 生成新的 **100 个问题**。不能把第一波问题机械换词。
+
+## 两个闭环
+
+### Interview / Pressure Loop
+
+```text
+Resume
+→ Red 1
+→ Blue 1
+→ Red 2 evaluation + follow-ups
+→ Blue 2
+→ Red Final
+```
+
+### Engineering Improvement Loop
+
+```text
+Blue Final Architecture Reflection
+→ Resume / Red Thinking / Blue Candidate / Blue Architecture / Harness Retrospective
+→ Improvement Ledger
+→ Round Report
+→ User Improvement Gate
+→ approved changes
+→ Next Resume Candidate
+```
+
+当前架构只是 baseline。Multi-Agent、Subgraph、Generic Host、GraphRAG、Native Runtime 等都允许被采用、外置或删除。
 
 ## 角色边界
 
@@ -62,36 +112,29 @@ Red Evaluation
 
 ### Red
 
-读取 Frozen Resume、岗位 / JD、pinned `attack-model.md`、已发生的 observable exchanges。Red 不读 Zuno docs / source / Evidence。
+只读取 Frozen Resume、岗位 / JD、pinned `attack-model.md`，以及在 Wave 2 时读取 Blue 1 observable answers。Red 不读 Zuno docs / source / Evidence，也不读 Blue architecture notes。
 
-### Blue
+### Blue Candidate
 
-读取当前已经提交的 Red question、此前 exchanges、pinned `defense-model.md` 和固定 base SHA 的允许 Zuno canonical sources。
+读取当前 Red 批次、此前 observable answers、pinned `defense-model.md` 和固定 base SHA 的允许 canonical sources，逐题回答。
 
-Blue Skill 规定“怎么回答”；canonical sources 规定“什么可以说”。
+### Blue Architecture Reviewer
 
-### Red Evaluation
+每个 Blue Wave 回答完以后另外写封存 architecture notes。最终再对照 Red Final、canonical docs 和两次初诊做 `05_blue_architecture_reflection.md`。
 
-只依据 Frozen Resume、实际 Q/A 与 Attack Skill 判断面试表现，不拿 Zuno docs 当隐藏答案。
+### Controller
 
-### Blue Reflection
-
-重新读取 canonical Zuno sources，判断问题到底在 Resume、Narrative、Docs、Architecture、Implementation、Evidence、Ownership、Fundamentals 还是根本不需要 Zuno Change。
-
-### Workflow Retrospective
-
-必须分别审：
+轮末必须审：
 
 ```text
 Resume Builder
-Red Skill
-Blue Skill
+Red Thinking Framework
+Blue Candidate Framework
+Blue Architecture Framework
 Harness
 ```
 
-### Improvement Synthesizer
-
-把所有 finding 收敛进 `09_improvement_ledger.md`，给出唯一 primary owner、拟议改动、风险和下一轮复测条件。
+它负责发现模拟工作流本身是否有问题，而不是只审项目架构。
 
 ## Skill pinning
 
@@ -112,7 +155,7 @@ protocol.md version
 
 `AGENT_AUTO`：角色真正使用独立 context 时可声明 `PHYSICAL_CONTEXT_ISOLATION`。
 
-## 机器目录
+## Machine files
 
 ```text
 .agent/red-blue/
@@ -127,7 +170,7 @@ protocol.md version
     └── turn.md
 ```
 
-## Round Artifacts
+## Core Round Artifacts
 
 ```text
 00_manifest.yaml
@@ -143,8 +186,16 @@ protocol.md version
 10_next_resume_candidate.md
 ```
 
-`03_blue_answers.md` 是 Live Interview Exchange Ledger，不再是批量答案。
+BATCH_DUEL additional artifacts:
+
+```text
+03_blue_architecture_notes.md
+04_red_wave2_review_and_questions.md
+04_blue_wave2_answers.md
+04_blue_wave2_architecture_notes.md
+09_round_report.md
+```
 
 `10_next_resume_candidate.md` 是下一轮候选输入，不得覆盖本轮 Frozen Resume。下一轮从新 main HEAD 重新校验并再次经过 USER_RESUME_REVIEW。
 
-Round 关闭前整个 workspace 原样归档。完整状态机见 `protocol.md`，评价和归因规则见 `judge.md`。
+完整状态机见 `protocol.md`，评价与归因规则见 `judge.md`。
