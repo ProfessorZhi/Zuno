@@ -29,6 +29,8 @@ Part B 是总体架构的机器可消费索引。它压缩 Part A 已经解释�
 14. Cancellation 停止未来工作，不全局回滚已经成立的 Domain fact 或已经发生/可能发生的现实 Effect。
 15. 简单法律问答保持受控 RAG baseline；Native Runtime、GraphRAG、Reflection、Memory、Specialist、独立服务都必须由测量证明收益。
 16. Target 文档不证明 Current 实现；实现资格只来自 Code / Migration / Test / Trace / Eval / runtime Evidence。
+17. Context / Memory 是 optional non-authoritative provider boundary；Provider record 不是 Domain truth，Recall / Lifecycle policy 由 08 决定，01 / 04 只消费当前允许的 snapshot。
+18. `Provenance != Truth != Authorization != Semantic Preservation`；source id / lineage 不能替代对应 Owner fact、安全资格或压缩保真验证。
 
 ### B2. Authority / Ownership Matrix
 
@@ -41,9 +43,11 @@ Part B 是总体架构的机器可消费索引。它压缩 Part A 已经解释�
 | 05 Capability & Skill | Capability semantics/version、Provider conformance、task qualification | Model/Knowledge inputs、Domain admission result | [`capability`](../modules/capability/README.md) |
 | 06 Tool Runtime & Effects | ToolVersion effect semantics、PreparedAction、ToolAttempt、EffectReceipt、ReconciliationReceipt、RetrySafety | Authorization/Approval、Plan、Domain refs | [`effects`](../modules/effects/README.md) |
 | 07 Model Gateway | Model role resolution、Provider eligibility、ModelAttempt、usage/cost truth | Capability quality、Security egress decision、Domain result | [`model-gateway`](../modules/model-gateway/README.md) |
-| 08 Security & Governance | SecurityEpoch / PolicyVersion、AuthorizationDecision、ApprovalDecision、ModelEgressDecision、AuditRequirement、lifecycle policy decision | Domain HumanDecision、Effect truth、Store enforcement facts | [`security`](../modules/security/README.md) |
+| 08 Security & Governance | SecurityEpoch / PolicyVersion、AuthorizationDecision、ApprovalDecision、ModelEgressDecision、AuditRequirement、lifecycle / recall policy decision | Domain HumanDecision、Effect truth、Store enforcement facts | [`security`](../modules/security/README.md) |
 | 09 Observability & Evaluation | Telemetry、Eval run、experiment result、quality evidence | 所有业务 Authority refs | [`evaluation`](../modules/evaluation/README.md) |
 | Platform / Infrastructure | DB/Object Store/Queue/Checkpointer/CAS/Lease/Fencing/Clock/Backup/Network/Secret Delivery 的物理原语事实 | 所有业务语义 | shared infrastructure |
+
+Memory / Context 不增加第十个业务 Owner。Provider 可以保存 scoped summary / structured memory record 与 provenance；08 决定 recall eligibility、retention / no-recall / purge policy；01 / 04 为当前请求或 Step 组装可消费 snapshot；02 的 Canonical Domain State 在冲突时优先。structured long-term memory 是否保留由 09 的 A/B / kill test 决定。
 
 ### B3. Cross-boundary Contract Map
 
@@ -52,6 +56,7 @@ Part B 是总体架构的机器可消费索引。它压缩 Part A 已经解释�
 | DocumentVersion -> KnowledgeGeneration | 02 -> 03 | 03/04/01 | stable DocumentVersion refs + generation identity + processing spec |
 | KnowledgeGeneration -> ReadinessDecision | 03 | 01/04；必要时 02 admission eligibility | generation + task Scope + requirements + current security refs + coverage/missing requirements |
 | Retrieval -> EvidenceCandidate / CitationLineage | 03 | 04/05/02/01 direct QA | source DocumentVersion + stable location + generation/retrieval identity |
+| Context / Memory -> current model context | Provider record + 08 recall/lifecycle policy | 01/04/05/07 as applicable | provider/source refs + Scope + applicable security/lifecycle decision + snapshot/build policy |
 | Research -> Capability | 05 | 04/01 | CapabilityVersion + semantics + Provider qualification refs |
 | Capability/Runtime -> Model | 04/05 -> 07 | 04/05 | Model Role + policy/budget constraints -> ModelAttempt + usage refs |
 | Candidate -> Formal Admission | 04/05/03 -> 02 | 04/01 | candidate/source/version/security/human causation -> DomainVersion + AdmissionReceipt |
@@ -141,6 +146,7 @@ Authorization/Approval may ALLOW/GRANT and later EXPIRE/REVOKE/SUPERSEDE for fut
 | Runtime 是否可以推进 | valid active PlanVersion + Step/Join/Barrier state + required external Owner facts | Domain success alone、old Checkpoint alone |
 | 外部动作是否发生 | `EffectReceipt` or conclusive `ReconciliationReceipt` | HTTP timeout、transport success、ToolAttempt terminal state alone |
 | 新受保护动作是否允许 | current matching Authorization/Approval/Audit/egress/secret facts as required | old ALLOW、historical approval with changed action hash、system-internal caller identity |
+| 当前 Memory / Context 是否可消费 | current matching recall/lifecycle/security eligibility + snapshot provenance | similarity hit、same scope equality、old Context blob、source id alone |
 | 正式引用历史是否可解释 | `WorkProductCitationBinding` + stable DocumentVersion/location refs | current retriever rank、chunk/vector/graph node id alone |
 | 复杂机制是否值得保留 | reproducible Eval / Evidence against simpler baseline | framework feature existence、single demo、research popularity |
 
@@ -165,6 +171,8 @@ Authorization/Approval may ALLOW/GRANT and later EXPIRE/REVOKE/SUPERSEDE for fut
 | Checkpoint says step completed, AdmissionReceipt absent | declare business success | deny formal completion; query 02 causation and re-enter valid admission path |
 | external request timed out after possible send | map timeout to Failed and Blind Retry | PreparedAction + ToolAttempt + external correlation -> Reconcile |
 | new DocumentVersion arrives during long run | continue old Plan silently | 03 recomputes knowledge eligibility; 02 invalidates/reviews affected facts; 04 Replan if assumptions changed |
+| Capability/Provider/Tool/config version changes after planning | continue because function/schema name still exists | owning module re-checks compatibility/eligibility; 04 re-resolves or Replans when semantic assumptions changed |
+| old Context / Memory snapshot resumed after policy or Domain change | reuse serialized prompt/context | rebuild from current Owner facts + current 08 recall/lifecycle eligibility |
 | SecurityEpoch changes during wait/retry/resume | reuse old authorization | obtain new current decision before protected use |
 | old Plan branch returns late | merge because computation succeeded | compare PlanVersion/input refs; reject stale or require reevaluation |
 | cancellation after Domain/Effect success | roll back everything | stop future work; preserve existing Owner facts; compensate only through explicit new business action |
@@ -188,8 +196,10 @@ Idempotency namespace is boundary-specific. Domain admission identity、Runtime 
 | EvidenceCandidate | DocumentVersion + stable location + generation/retrieval refs | 03 |
 | WorkProductCitationBinding | formal WorkProduct/Domain version + stable DocumentVersion/location | 02 |
 | PlanVersion | AgentRun + planning causation; immutable after activation | 04 |
+| StepRun resolved dependency set | PlanVersion + input refs + KnowledgeGeneration + CapabilityVersion / ProviderBinding + Model/Tool/config refs + applicable security refs | each source Owner; 04 records/accepts current dependency set |
+| Context / Memory snapshot | provider record/source refs + Scope + applicable security/lifecycle decision + snapshot/build policy | 08 for recall/lifecycle eligibility; consumer revalidates before use |
 | Capability output | CapabilityVersion + Provider/qualification refs + input versions | 05 |
-| ModelAttempt | role/resolved Provider/model version + policy/budget refs | 07 |
+| ModelAttempt | role/resolved Provider/model/config version + policy/budget refs | 07 |
 | PreparedAction | ToolVersion + canonical action content/hash + target + run/plan/step causation | 06 |
 | ApprovalDecision | action identity/hash + ToolVersion + policy epoch + expiry | 08 |
 | AdmissionReceipt | normalized business input + expected DomainVersion + causation refs | 02 |
@@ -208,6 +218,7 @@ HumanDecision: 专业人员是否接受、修改或拒绝法律业务结论
 三者不能互相替代。
 
 - protected read / retrieval -> current 08 decision before use；
+- context / long-term memory recall -> current 08 recall/lifecycle/security eligibility before consumption；
 - model egress -> current ModelEgressDecision / provider eligibility；
 - Secret -> ref/lease only，Secret Material 不进入普通 Prompt/Checkpoint/Trace/Receipt；
 - high-risk Tool -> Authorization + action-bound Approval + required durable Audit before dangerous send；
@@ -218,11 +229,12 @@ HumanDecision: 专业人员是否接受、修改或拒绝法律业务结论
 
 | Store / boundary | Owns durable truth | Must not be promoted into |
 |---|---|---|
-| 02 Domain store | Canonical Domain + AdmissionReceipt + formal citation binding | Runtime checkpoint |
+| 02 Domain store | Canonical Domain + AdmissionReceipt + formal citation binding | Runtime checkpoint / Memory record |
 | 03 Knowledge store/index metadata | generation / manifest / serving / readiness / lineage facts | formal Domain fact |
+| optional Context / Memory provider store | scoped non-authoritative summary / memory records + provenance | Domain truth / Security authorization |
 | 04 Checkpointer/runtime store | control progress / plan / step / interrupt state | Domain or Effect truth |
 | 06 Effect store | PreparedAction / Attempt / Effect / Reconciliation facts | Security policy or Domain admission |
-| 08 security/audit boundary | policy/decision/approval/audit facts | HumanDecision or Effect truth |
+| 08 security/audit boundary | policy/decision/approval/audit/recall-lifecycle facts | HumanDecision or Effect truth |
 | 09 telemetry/eval store | observations and experiment evidence | any business Authority |
 | Platform primitives | physical durability / lease / fencing / queue / clock facts | business completion proof |
 
@@ -230,23 +242,23 @@ HumanDecision: 专业人员是否接受、修改或拒绝法律业务结论
 
 ### B12. Build / Buy / Extend / Delete Conditions
 
-**Prefer Buy / Reuse**：PostgreSQL、Object Store、Queue、Secret Manager、OpenTelemetry、Checkpointer、模型 SDK、身份系统、成熟 Policy Engine / Provider primitives。
+**Prefer Buy / Reuse**：PostgreSQL、Object Store、Queue、Secret Manager、OpenTelemetry、Checkpointer、模型 SDK、身份系统、成熟 Policy Engine / Provider primitives、通用 Context / Memory provider primitives。
 
-**Zuno Owns**：Formal Admission、Domain authority、task-level Readiness semantics、Capability professional semantics、Runtime control semantics、Effect confirmation/reconciliation semantics、Security business policy mapping、Eval criteria for Zuno task quality。
+**Zuno Owns**：Formal Admission、Domain authority、task-level Readiness semantics、Capability professional semantics、Runtime control semantics、Effect confirmation/reconciliation semantics、Security business policy / recall-lifecycle mapping、Eval criteria for Zuno task quality。
 
-**Extend only when measured constraints appear**：独立 Worker/Service、Native Runtime、GraphRAG、Reflection、Memory、Specialist、多模型路由、更强模型。
+**Extend only when measured constraints appear**：独立 Worker/Service、Native Runtime、GraphRAG、Reflection、structured long-term Memory、Specialist、多模型路由、更强模型。
 
-**Delete / simplify when**：复杂机制不能相对 baseline 提供可重复收益；独立服务没有独立扩缩容/隔离/故障半径/网络/生命周期需求；Generic Host 已经覆盖所需通用能力；简单 QA 不需要长期状态、Formal Admission 或现实 Effect。
+**Delete / simplify when**：复杂机制不能相对 baseline 提供可重复收益；独立服务没有独立扩缩容/隔离/故障半径/网络/生命周期需求；Generic Host 已经覆盖所需通用能力；简单 QA 不需要长期状态、Formal Admission 或现实 Effect；structured long-term Memory 在跨会话 A/B 中没有稳定收益。
 
 ### B13. Current / Target / Evidence / Unknown
 
 **Target**：本文 A/B 描述的跨模块 Authority、边界、恢复和复杂度治理语义。
 
-**Current**：只能由 [`docs/evidence/`](../evidence/README.md) 中与当前代码 SHA、Migration、Test、Trace、Eval、runtime evidence 对应的材料证明。总体架构文档本身不升级任何能力为 Current。
+**Current**：只能由 [`docs/evidence/`](../evidence/README.md) 中与当前代码 SHA、Migration、Test、Trace、Eval、runtime evidence 对应的材料证明。总体架构文档本身不升级任何能力为 Current。当前 Evidence 已确认两项必须保持显式可见的 blocker：unresolved Effect 在 restart replay 后会被错误升级成 `completed`，且完整 certainty-convergence resolver 尚未建立；`MANDATORY_BEFORE_EFFECT` 在缺少 matching committed audit proof 时尚不能可靠阻止 provider dispatch。
 
-**Evidence**：模块文档 B13 指向当前可用的具体证据；需要判断某个 Target 是否已经落地时，优先读取对应 Module B13，再读取 evidence 原文和代码。
+**Evidence**：模块文档 B13 指向当前可用的具体证据；正向通过与负向 fault probe 都是 Evidence。需要判断某个 Target 是否已经落地时，优先读取对应 Module B13，再读取 evidence 原文和代码。
 
-**Unknown / Measurement Needed**：Production Readiness、完整 fault-injection coverage、真实法院/业务环境收益、复杂机制 A/B baseline、性能与成本边界、部署拆分必要性，都不能从 Target Design 推导。
+**Unknown / Measurement Needed**：Production Readiness、完整 fault-injection coverage、真实法院/业务环境收益、GraphRAG / Memory / Native Runtime / Multi-Agent 的 A/B baseline、性能与成本边界、部署拆分必要性，都不能从 Target Design 推导。Effect replay certainty 与 Mandatory Audit gate 已有负向 Evidence，因此属于 Current implementation gap，不再归入 Unknown。
 
 `implementation_authorization: NO` 仍然成立；文档完整不等于允许按未冻结 Detail 直接实现。
 
