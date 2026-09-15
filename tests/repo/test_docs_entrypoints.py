@@ -102,7 +102,7 @@ def test_project_documentation_is_consolidated_and_canonical() -> None:
     assert "project-fact-provenance.md" in reference
 
 
-def test_red_blue_harness_is_resume_first_iterative_and_archivable() -> None:
+def test_red_blue_harness_is_resume_first_two_wave_batch_and_archivable() -> None:
     root = REPO_ROOT / ".agent/red-blue"
     actual = {p.relative_to(root).as_posix() for p in root.rglob("*") if p.is_file()}
     assert actual == CANONICAL_RED_BLUE_FILES
@@ -110,68 +110,85 @@ def test_red_blue_harness_is_resume_first_iterative_and_archivable() -> None:
     current = (root / "current.md").read_text(encoding="utf-8")
     assert "state: `no-active`" in current
     assert "active_round: `none`" in current
-    assert "CHATGPT_AUTO" in current and "AGENT_AUTO" in current
     for marker in (
-        "workspace_path:", "simulated_resume:", "pressure_suite_count: `100`",
-        "seed_question_target: `8`", "live_followups: `DYNAMIC`",
-        "one_question_one_intent: `true`", "live_interview_status:",
-        "next_actor:", "improvement_ledger_status:", "next_resume_candidate_status:",
+        "execution_mode: `BATCH_DUEL`",
+        "red_wave_1_question_target: `100`",
+        "blue_wave_1_answer_target: `100`",
+        "red_wave_2_question_target: `100`",
+        "blue_wave_2_answer_target: `100`",
+        "batch_checkpoint_policy: `LINK_ONLY_PAUSE`",
+        "red_wave_1_status:",
+        "blue_wave_1_status:",
+        "red_wave_2_status:",
+        "blue_wave_2_status:",
+        "improvement_ledger_status:",
+        "round_report_status:",
+        "next_resume_candidate_status:",
     ):
         assert marker in current
-    assert "primary_path_target" not in current
 
     protocol = (root / "protocol.md").read_text(encoding="utf-8")
     for marker in (
         "Context Firewall", "CHATGPT_AUTO", "AGENT_AUTO", "Resume Builder",
-        "BUILD_SIMULATED_RESUME", "RED_QUESTIONS", "LIVE_INTERVIEW", "RED_TURN", "BLUE_TURN",
+        "BUILD_SIMULATED_RESUME", "RED_WAVE_1", "BLUE_WAVE_1", "RED_WAVE_2", "BLUE_WAVE_2",
+        "BATCH_CHECKPOINT_RED_1", "BATCH_CHECKPOINT_BLUE_1", "BATCH_CHECKPOINT_RED_2", "BATCH_CHECKPOINT_BLUE_2",
         "RED_EVALUATION", "BLUE_ARCHITECTURE_REFLECTION", "WORKFLOW_RETROSPECTIVE",
-        "IMPROVEMENT_SYNTHESIS", "USER_IMPROVEMENT_REVIEW", "BUILD_NEXT_RESUME_CANDIDATE",
-        "01_simulated_resume.md", "03_blue_answers.md", "09_improvement_ledger.md",
-        "10_next_resume_candidate.md", "PRESSURE_SUITE", "NEXT_ROUND_ONLY",
+        "IMPROVEMENT_SYNTHESIS", "ROUND_REPORT", "USER_IMPROVEMENT_REVIEW", "BUILD_NEXT_RESUME_CANDIDATE",
+        "03_blue_architecture_notes.md", "04_red_wave2_review_and_questions.md",
+        "04_blue_wave2_answers.md", "04_blue_wave2_architecture_notes.md", "09_round_report.md",
+        "Exactly 100 Targeted Follow-ups", "NEXT_ROUND_ONLY", "LIVE_INTERVIEW",
     ):
         assert marker.lower() in protocol.lower()
 
     attack = (root / "attack-model.md").read_text(encoding="utf-8")
     for marker in (
-        "精品思维", "全链路追踪", "不重复造轮子", "Ownership", "Build / Buy",
-        "100 问", "有状态对话", "一问一个主要意图", "Pressure Suite",
-        "Red 自我质量检查", "Skill 也必须接受审判",
+        "精品思维", "全链路追踪", "Ownership", "Build / Buy",
+        "每一波固定 100 问", "一问一个主要意图", "Red Wave 2：评价 + 追杀",
+        "Answer-driven handles", "Multi-Agent 不是正确答案",
+        "Red Final Evaluation", "Red 自我质量检查", "Skill 也必须接受审判",
     ):
         assert marker in attack
 
     defense = (root / "defense-model.md").read_text(encoding="utf-8")
     for marker in (
-        "Ownership", "技术回答优先讲工程矛盾", "Evidence", "Unknown 与边界",
-        "Failure / Recovery", "面试口语", "Blue 自检",
+        "Candidate Mode", "Architecture Reviewer Mode", "HISTORICAL_OWNERSHIP",
+        "CURRENT_SYSTEM", "TARGET_DESIGN", "OPEN_DESIGN", "FUNDAMENTAL",
+        "Ownership", "Evidence", "Unknown 与边界", "Failure / Recovery",
+        "Build / Buy / Delete", "Multi-Agent 的回答框架", "Final Architecture Reflection",
     ):
         assert marker in defense
 
     judge = (root / "judge.md").read_text(encoding="utf-8")
     for marker in (
-        "Red Evaluation", "Blue Architecture Reflection", "Workflow Retrospective",
-        "Blue Skill", "Improvement Classification", "RED_SKILL_GAP", "BLUE_SKILL_GAP",
-        "HARNESS_GAP", "ARCHITECTURE_GAP", "FUNDAMENTAL_GAP", "NEXT_ROUND_ONLY",
+        "Red Wave 2 Blind Review", "Red Final Evaluation", "Blue Architecture Reflection",
+        "Workflow Retrospective", "Red Thinking Framework", "Blue Thinking Framework",
+        "Harness", "Improvement Classification", "Round Report",
+        "RED_SKILL_GAP", "BLUE_SKILL_GAP", "HARNESS_GAP", "ARCHITECTURE_GAP",
+        "FUNDAMENTAL_GAP", "NEXT_ROUND_ONLY",
     ):
         assert marker in judge
 
     workflow = (REPO_ROOT / "docs/red-blue/README.md").read_text(encoding="utf-8")
     for marker in (
-        "Resume-first", "CHATGPT_AUTO", "AGENT_AUTO", "Red Interview Skill",
+        "Resume-first", "Red Interview Skill", "Blue Wave 1", "Red Wave 2", "Blue Wave 2",
         "Red Evaluation", "Blue Architecture Reflection", "Workflow Retrospective",
-        "Improvement Ledger", "Next Resume Candidate", "03_blue_answers.md",
-        "09_improvement_ledger.md", "10_next_resume_candidate.md",
+        "Improvement Ledger", "Round Report", "10_next_resume_candidate.md",
     ):
         assert marker in workflow
 
     workspace = (REPO_ROOT / "docs/red-blue/workspace/README.md").read_text(encoding="utf-8")
     for marker in (
-        "Active Workspace", "01_simulated_resume.md", "02_red_questions.md",
-        "03_blue_answers.md", "04_red_evaluation.md", "05_blue_architecture_reflection.md",
-        "06_workflow_retrospective.md", "07_user_feedback.md", "08_session_transcript.md",
-        "09_improvement_ledger.md", "10_next_resume_candidate.md",
-        "SPOKEN_SEEDS", "DYNAMIC FOLLOWUP_POLICY", "PRESSURE_SUITE", "NEXT_ROUND_ONLY",
+        "Active Workspace", "BATCH_DUEL", "Red Wave 1", "Blue Wave 1", "Red Wave 2", "Blue Wave 2",
+        "03_blue_architecture_notes.md", "04_red_wave2_review_and_questions.md",
+        "04_blue_wave2_answers.md", "04_blue_wave2_architecture_notes.md",
+        "09_improvement_ledger.md", "09_round_report.md", "10_next_resume_candidate.md",
+        "NEXT_ROUND_ONLY",
     ):
         assert marker in workspace
+
+    rounds = (REPO_ROOT / "docs/red-blue/rounds/README.md").read_text(encoding="utf-8")
+    assert "INVALID / calibration Round" in rounds
+    assert "counts_as_formal_round: false" in rounds
 
 
 def test_architecture_directories_only_contain_support_files() -> None:
