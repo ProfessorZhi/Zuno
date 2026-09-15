@@ -11,7 +11,7 @@ github_runtime:
   stage_handoff: COMMIT_THEN_REREAD
   round_branch: red-blue/rb-2026-09-15-formal-019
   round_pr: 239
-  last_consumed_head_sha: 847f35e1ba7bafaa8ef5316317932293d2e1d150
+  last_consumed_head_sha: 09afa49e0b25735645ceb9cb111d90e913109229
   firewall_strength: LOGICAL_GITHUB_MEDIATED
   strict_blind_red_certification: false
 
@@ -36,14 +36,6 @@ pinned_skills:
   protocol_version: 7e47a3cbf8dcf0f2b57d8f6d1309bac5cc8e5c0a:.agent/red-blue/protocol.md
 
 simulated_resume:
-  resume_style_reference: user actual one-page Agent/AI application resume register; regenerated independently from canonical Zuno truth
-  resume_build_sources:
-    - docs/project/
-    - docs/architecture/
-    - docs/modules/
-    - docs/evidence/
-    - docs/governance/project-fact-provenance.md
-  previous_round_resume_candidate: none; invalid #018 artifacts are not formal inputs
   simulated_resume_path: docs/red-blue/workspace/rb-2026-09-15-formal-019/01_simulated_resume.md
   resume_status: FROZEN
   resume_project_bullet_count: 6
@@ -63,39 +55,43 @@ blue_wave_1:
   blue_wave_1_answers_path: docs/red-blue/workspace/rb-2026-09-15-formal-019/03_blue_answers.md
   blue_wave_1_architecture_notes_path: docs/red-blue/workspace/rb-2026-09-15-formal-019/03_blue_architecture_notes.md
   blue_wave_1_commit_sha: c14df8b0af963d2397d8509dc2e363a622792c8a
-  blue_wave_1_user_checkpoint: PENDING
+  blue_wave_1_user_checkpoint: CONTINUE
 
 red_wave_2:
-  red_wave_2_status: NOT_STARTED
-  blue_wave_1_blind_evaluation_present: false
-  red_wave_2_question_count: 0
+  red_wave_2_status: COMPLETE
+  blue_wave_1_blind_evaluation_present: true
+  red_wave_2_question_count: 100
   red_wave_2_path: docs/red-blue/workspace/rb-2026-09-15-formal-019/04_red_wave2_review_and_questions.md
-  red_wave_2_commit_sha: none
-  red_wave_2_user_checkpoint: PENDING
+  red_wave_2_commit_sha: cb1aa0c098642cb236035c676c53584044829fe0
+  red_wave_2_user_checkpoint: CONTINUE_BY_USER_FULL_RUN_OVERRIDE
 
 blue_wave_2:
-  blue_wave_2_status: NOT_STARTED
-  blue_wave_2_answer_count: 0
+  blue_wave_2_status: COMPLETE
+  blue_wave_2_answer_count: 100
   blue_wave_2_answers_path: docs/red-blue/workspace/rb-2026-09-15-formal-019/04_blue_wave2_answers.md
   blue_wave_2_architecture_notes_path: docs/red-blue/workspace/rb-2026-09-15-formal-019/04_blue_wave2_architecture_notes.md
-  blue_wave_2_commit_sha: none
-  blue_wave_2_user_checkpoint: PENDING
+  blue_wave_2_commit_sha: f44a1855190ab1a757d866c4277587cd05004a48
+  blue_wave_2_user_checkpoint: CONTINUE_BY_USER_FULL_RUN_OVERRIDE
 
-red_evaluation_status: NOT_STARTED
-blue_reflection_status: NOT_STARTED
+red_evaluation_status: COMPLETE
+red_evaluation_commit_sha: f9acb6d9ca74f1cd051928b55387d611da23cf5f
+blue_reflection_status: COMPLETE
+blue_reflection_commit_sha: 8aac7b9f7092fd3cd8b248b23bc3d129933b9496
 
 workflow_retrospective:
-  workflow_retrospective_status: NOT_STARTED
-  resume_builder_reviewed: false
-  red_thinking_framework_reviewed: false
-  blue_candidate_framework_reviewed: false
-  blue_architecture_framework_reviewed: false
-  harness_reviewed: false
+  workflow_retrospective_status: COMPLETE
+  resume_builder_reviewed: true
+  red_thinking_framework_reviewed: true
+  blue_candidate_framework_reviewed: true
+  blue_architecture_framework_reviewed: true
+  harness_reviewed: true
+  commit_sha: 871fba88dc48f659ce42158524add1a4af81172a
 
 improvement:
-  improvement_ledger_status: NOT_STARTED
-  round_report_status: NOT_STARTED
+  improvement_ledger_status: DRAFT_REVIEW
+  round_report_status: BUILT
   round_report_path: docs/red-blue/workspace/rb-2026-09-15-formal-019/09_round_report.md
+  improvement_ledger_path: docs/red-blue/workspace/rb-2026-09-15-formal-019/09_improvement_ledger.md
   user_improvement_review_status: PENDING
   approved_change_count: 0
   deferred_change_count: 0
@@ -107,7 +103,7 @@ next_resume:
   next_resume_candidate_path: docs/red-blue/workspace/rb-2026-09-15-formal-019/10_next_resume_candidate.md
   next_resume_candidate_status: NOT_STARTED
   next_resume_source_head_sha: none
-  next_resume_blockers: none
+  next_resume_blockers: USER_IMPROVEMENT_REVIEW_PENDING
 
-current_stage: BATCH_CHECKPOINT_BLUE_1
+current_stage: USER_IMPROVEMENT_REVIEW
 next_actor: NONE
