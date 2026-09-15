@@ -29,7 +29,7 @@ RED_BLUE_FILES = {
     ".agent/red-blue/templates/round.md",
     ".agent/red-blue/templates/turn.md",
 }
-ROUND_REQUIRED_FILES = {
+ROUND_CORE_FILES = {
     "00_manifest.yaml",
     "01_simulated_resume.md",
     "02_red_questions.md",
@@ -42,10 +42,21 @@ ROUND_REQUIRED_FILES = {
     "09_improvement_ledger.md",
     "10_next_resume_candidate.md",
 }
+ROUND_BATCH_FILES = {
+    "03_blue_architecture_notes.md",
+    "04_red_wave2_review_and_questions.md",
+    "04_blue_wave2_answers.md",
+    "04_blue_wave2_architecture_notes.md",
+    "09_round_report.md",
+}
 
 
 def _relative_files(root: Path, directory: Path) -> set[str]:
     return {path.relative_to(root).as_posix() for path in directory.rglob("*") if path.is_file()}
+
+
+def _require(content: str, markers: tuple[str, ...], prefix: str) -> list[str]:
+    return [f"{prefix} missing marker: {marker}" for marker in markers if marker not in content]
 
 
 def verify_programs_flat(root: Path) -> list[str]:
@@ -76,6 +87,7 @@ def verify_red_blue_harness(root: Path) -> list[str]:
 
     for required in (
         root / "docs" / "red-blue" / "workspace" / "README.md",
+        root / "docs" / "red-blue" / "rounds" / "README.md",
         root / "docs" / "red-blue" / "interview-behavior-evidence-2026-09.md",
     ):
         if not required.exists():
@@ -90,29 +102,25 @@ def verify_red_blue_harness(root: Path) -> list[str]:
     if not (inactive or active):
         errors.append("red-blue current state is neither recognized inactive nor active-red-blue")
 
-    for marker in (
-        "CHATGPT_AUTO",
-        "AGENT_AUTO",
-        "stage:",
-        "workspace_path:",
-        "simulated_resume:",
-        "pressure_suite_count",
-        "seed_question_target",
-        "live_followups",
-        "one_question_one_intent",
-        "live_interview_status:",
-        "next_actor:",
+    errors.extend(_require(current, (
+        "execution_mode: `BATCH_DUEL`",
+        "red_wave_1_question_target: `100`",
+        "blue_wave_1_answer_target: `100`",
+        "red_wave_2_question_target: `100`",
+        "blue_wave_2_answer_target: `100`",
+        "batch_checkpoint_policy: `LINK_ONLY_PAUSE`",
+        "red_wave_1_status:",
+        "blue_wave_1_status:",
+        "red_wave_2_status:",
+        "blue_wave_2_status:",
+        "red_evaluation_status:",
+        "blue_reflection_status:",
+        "workflow_retrospective_status:",
         "improvement_ledger_status:",
+        "round_report_status:",
         "next_resume_candidate_status:",
-        "full-observable-role-io",
-        "archive_live",
-    ):
-        if marker not in current:
-            errors.append(f"red-blue current contract missing marker: {marker}")
-    if "primary_path_target" in current or "reserve_target" in current:
-        errors.append("red-blue current contract must not use static primary-path question quotas")
-    if "human-candidate" in current:
-        errors.append("human-candidate must not remain an active red-blue mode")
+        "commit-then-reread",
+    ), "red-blue current contract"))
 
     if active:
         workspace_match = re.search(r"workspace_path: `([^`]+)`", current)
@@ -126,111 +134,143 @@ def verify_red_blue_harness(root: Path) -> list[str]:
                 errors.append("active red-blue workspace must start with 00_manifest.yaml")
 
     protocol = (red_blue_root / "protocol.md").read_text(encoding="utf-8")
-    for marker in (
-        "Context Firewall",
-        "CHATGPT_AUTO",
-        "AGENT_AUTO",
-        "Resume Builder",
+    errors.extend(_require(protocol, (
+        "GitHub 是运行时状态总线",
+        "BATCH_DUEL",
         "BUILD_SIMULATED_RESUME",
-        "RED_QUESTIONS",
-        "LIVE_INTERVIEW",
-        "RED_TURN",
-        "BLUE_TURN",
+        "USER_RESUME_REVIEW",
+        "RED_WAVE_1",
+        "BLUE_WAVE_1",
+        "RED_WAVE_2",
+        "BLUE_WAVE_2",
+        "BATCH_CHECKPOINT_RED_1",
+        "BATCH_CHECKPOINT_BLUE_1",
+        "BATCH_CHECKPOINT_RED_2",
+        "BATCH_CHECKPOINT_BLUE_2",
         "RED_EVALUATION",
         "BLUE_ARCHITECTURE_REFLECTION",
         "WORKFLOW_RETROSPECTIVE",
         "IMPROVEMENT_SYNTHESIS",
+        "ROUND_REPORT",
         "USER_IMPROVEMENT_REVIEW",
         "BUILD_NEXT_RESUME_CANDIDATE",
-        "01_simulated_resume.md",
-        "03_blue_answers.md",
-        "09_improvement_ledger.md",
-        "10_next_resume_candidate.md",
-        "PRESSURE_SUITE",
-    ):
-        if marker.lower() not in protocol.lower():
-            errors.append(f"red-blue protocol missing required execution marker: {marker}")
+        "03_blue_architecture_notes.md",
+        "04_red_wave2_review_and_questions.md",
+        "04_blue_wave2_answers.md",
+        "04_blue_wave2_architecture_notes.md",
+        "09_round_report.md",
+        "Exactly 100 Targeted Follow-ups",
+        "LINK_ONLY_PAUSE",
+        "LIVE_INTERVIEW",
+        "Context Firewall",
+    ), "red-blue protocol"))
 
-    attack_model = (red_blue_root / "attack-model.md").read_text(encoding="utf-8")
-    for marker in (
+    attack = (red_blue_root / "attack-model.md").read_text(encoding="utf-8")
+    errors.extend(_require(attack, (
         "精品思维",
-        "全链路追踪",
-        "不重复造轮子",
-        "Ownership",
-        "Build / Buy",
-        "100 问",
-        "有状态对话",
+        "BATCH_DUEL",
+        "每一波固定 100 问",
         "一问一个主要意图",
-        "Pressure Suite",
+        "Red Wave 2：评价 + 追杀",
+        "Answer-driven handles",
+        "KILL_SWITCH: CLAIM_IMPLEMENTATION_NOT_ESTABLISHED",
+        "全链路追踪",
+        "Build / Buy / Extend / Defer",
+        "Multi-Agent 不是正确答案",
+        "Red Final Evaluation",
         "Red 自我质量检查",
         "Skill 也必须接受审判",
-    ):
-        if marker not in attack_model:
-            errors.append(f"red-blue attack model missing required marker: {marker}")
+    ), "red-blue attack model"))
 
-    defense_model = (red_blue_root / "defense-model.md").read_text(encoding="utf-8")
-    for marker in (
+    defense = (red_blue_root / "defense-model.md").read_text(encoding="utf-8")
+    errors.extend(_require(defense, (
+        "Candidate Mode",
+        "Architecture Reviewer Mode",
+        "HISTORICAL_OWNERSHIP",
+        "CURRENT_SYSTEM",
+        "TARGET_DESIGN",
+        "OPEN_DESIGN",
+        "FUNDAMENTAL",
         "Ownership",
-        "技术回答优先讲工程矛盾",
         "Evidence",
         "Unknown 与边界",
         "Failure / Recovery",
-        "面试口语",
+        "Build / Buy / Delete",
+        "Multi-Agent 的回答框架",
+        "03_blue_answers.md",
+        "04_blue_wave2_answers.md",
+        "03_blue_architecture_notes.md",
+        "04_blue_wave2_architecture_notes.md",
+        "Architecture Gap 的高门槛",
+        "Final Architecture Reflection",
         "Blue 自检",
-    ):
-        if marker not in defense_model:
-            errors.append(f"red-blue defense model missing required marker: {marker}")
+        "Blue Skill 也必须接受审判",
+    ), "red-blue defense model"))
 
     round_template = (red_blue_root / "templates" / "round.md").read_text(encoding="utf-8")
-    for marker in (
-        "Pinned Skills",
-        "Simulated Resume",
-        "Red Plan",
-        "Live Interview State",
-        "RED_TURN allowlist",
-        "BLUE_TURN allowlist",
+    errors.extend(_require(round_template, (
+        "execution_mode: BATCH_DUEL | LIVE_INTERVIEW",
+        "red_wave_1_question_count: 0..100",
+        "blue_wave_1_answer_count: 0..100",
+        "red_wave_2_question_count: 0..100",
+        "blue_wave_2_answer_count: 0..100",
+        "Blue Wave 1",
+        "Red Wave 2",
+        "Blue Wave 2",
+        "blue_wave_1_blind_evaluation_present",
+        "RED_WAVE_2 allowlist",
         "Workflow Retrospective",
-        "Improvement Ledger",
-        "Post-round Apply",
-        "Next Resume Candidate",
-        "live_followups: DYNAMIC",
-        "pressure_suite_count: 100",
-        *sorted(ROUND_REQUIRED_FILES),
-    ):
-        if marker not in round_template:
-            errors.append(f"red-blue round template missing iterative marker: {marker}")
+        "Improvement Ledger / Round Report",
+        "BATCH_DUEL additional artifacts",
+        "Red Wave 1 == 100 questions",
+        "Blue Wave 1 == 100 answers",
+        "Red Wave 2 contains Blue-1 blind evaluation + exactly 100 new questions",
+        "Blue Wave 2 == 100 answers",
+        "LIVE_INTERVIEW State",
+        *sorted(ROUND_CORE_FILES),
+        *sorted(ROUND_BATCH_FILES),
+    ), "red-blue round template"))
 
-    stage_template = (red_blue_root / "templates" / "turn.md").read_text(encoding="utf-8")
-    for marker in (
-        *sorted(ROUND_REQUIRED_FILES),
-        "Live Interview Exchange Ledger",
-        "Red question committed",
-        "Blue answer committed",
-        "Resume Builder Reflection",
-        "Red Skill Reflection",
-        "Blue Skill Reflection",
+    turn = (red_blue_root / "templates" / "turn.md").read_text(encoding="utf-8")
+    errors.extend(_require(turn, (
+        "Red Wave 1",
+        "Blue Wave 1 Candidate Answers",
+        "Sealed Wave 1 Diagnosis",
+        "Red Wave 2",
+        "Blue Wave 2 Candidate Answers",
+        "Sealed Wave 2 Diagnosis",
+        "Final Blind Evaluation",
+        "Final Architecture Reflection",
+        "Red Thinking Framework Reflection",
+        "Blue Candidate Framework Reflection",
+        "Blue Architecture Framework Reflection",
         "Harness Reflection",
+        "BATCH_CHECKPOINT 用户输出",
+        "09_round_report.md",
         "NEXT_ROUND_ONLY",
-    ):
-        if marker not in stage_template:
-            errors.append(f"red-blue stage template missing marker: {marker}")
+        *sorted(ROUND_CORE_FILES),
+        *sorted(ROUND_BATCH_FILES),
+    ), "red-blue stage template"))
 
     judge = (red_blue_root / "judge.md").read_text(encoding="utf-8")
-    for marker in (
-        "Red Evaluation",
+    errors.extend(_require(judge, (
+        "Red Wave 2 Blind Review",
+        "Red Final Evaluation",
         "Blue Architecture Reflection",
+        "Architecture Revision 的评审框架",
         "Workflow Retrospective",
-        "Blue Skill",
+        "Red Thinking Framework",
+        "Blue Thinking Framework",
+        "Harness",
         "Improvement Classification",
+        "Round Report",
+        "NEXT_ROUND_ONLY",
         "RED_SKILL_GAP",
         "BLUE_SKILL_GAP",
         "HARNESS_GAP",
         "ARCHITECTURE_GAP",
         "FUNDAMENTAL_GAP",
-        "NEXT_ROUND_ONLY",
-    ):
-        if marker not in judge:
-            errors.append(f"red-blue evaluation rules missing required marker: {marker}")
+    ), "red-blue evaluation rules"))
 
     return errors
 
@@ -241,70 +281,59 @@ def verify_system_yaml(root: Path) -> list[str]:
     if not path.exists():
         return ["missing .agent/system.yaml"]
     content = path.read_text(encoding="utf-8")
-    for marker in (
+
+    required = (
         "version:",
         "system_identity:",
         "runtime_boundary:",
         "truth_rules:",
         "view_rules:",
-        'human_filename: "README.md"',
-        'engineering_filename: "reference.md"',
-        "human_and_engineering_must_preserve_same_authority_semantics: true",
         "program_rules:",
         "module_rules:",
         "complexity_rules:",
         "skill_routes:",
-        'project_root: "docs/project"',
-        'architecture_root: "docs/architecture"',
-        'modules_root: "docs/modules"',
-        'red_blue_docs_root: "docs/red-blue"',
-        'red_blue_workspace_root: "docs/red-blue/workspace"',
-        'red_blue_rounds_root: "docs/red-blue/rounds"',
-        'research_root: "docs/research"',
-        'decisions_root: "docs/decisions"',
-        'evidence_root: "docs/evidence"',
-        'governance_root: "docs/governance"',
-        'terminology: "docs/governance/terminology.md"',
-        'red_blue_runtime_root: ".agent/red-blue"',
-        'red_blue_current_owner: ".agent/red-blue/current.md"',
         "red_blue_requires_explicit_activation: true",
-        "blue_closed_book: true",
         'red_blue_modes: ["CHATGPT_AUTO", "AGENT_AUTO"]',
+        'red_blue_default_execution_mode: "BATCH_DUEL"',
+        'red_blue_optional_execution_mode: "LIVE_INTERVIEW"',
         "red_blue_resume_first: true",
         "red_reads_zuno_docs: false",
-        "red_reads_only_simulated_resume_and_attack_skill: true",
-        "simulated_resume_built_from_current_docs_before_red: true",
-        "red_pressure_suite_count_default: 100",
-        "red_live_seed_question_target_default: 8",
-        "red_live_followups_dynamic: true",
-        "red_live_one_question_one_intent: true",
-        "red_pressure_suite_separate_from_live_interview: true",
-        "red_live_static_primary_path_forbidden: true",
-        "red_blue_live_alternating_turns: true",
-        "red_turn_must_commit_before_blue_turn: true",
-        "blue_turn_must_commit_before_next_red_turn: true",
-        "blue_candidate_skill_required: true",
-        'blue_candidate_skill_path: ".agent/red-blue/defense-model.md"',
-        "red_blue_skill_versions_pinned_per_round: true",
-        "red_blue_current_round_verdict_immutable_after_reflection: true",
-        "red_blue_round_improvement_ledger_required: true",
-        "red_blue_red_skill_retrospective_required: true",
-        "red_blue_blue_skill_retrospective_required: true",
+        "resume_must_freeze_before_red: true",
+        "red_batch_wave_question_count: 100",
+        "blue_batch_wave_answer_count: 100",
+        "red_wave_1_exact_question_count_required: true",
+        "blue_wave_1_exact_answer_count_required: true",
+        "red_wave_2_exact_question_count_required: true",
+        "blue_wave_2_exact_answer_count_required: true",
+        "red_wave_2_requires_blue_1_blind_evaluation: true",
+        "red_wave_2_must_be_answer_driven: true",
+        "red_wave_2_cannot_read_blue_architecture_notes: true",
+        "red_final_cannot_read_blue_architecture_notes: true",
+        "blue_architecture_notes_sealed_from_red: true",
+        "blue_wave_2_candidate_cannot_read_wave_1_architecture_notes: true",
+        "blue_architecture_reflection_after_blue_2_required: true",
+        'red_blue_batch_checkpoint_policy: "link_only_pause"',
+        "red_blue_user_does_not_answer_batch_questions: true",
+        "red_blue_round_report_required: true",
+        "red_blue_red_thinking_framework_retrospective_required: true",
+        "red_blue_blue_candidate_framework_retrospective_required: true",
+        "red_blue_blue_architecture_framework_retrospective_required: true",
         "red_blue_harness_retrospective_required: true",
-        "red_blue_improvement_user_review_gate_supported: true",
+        "red_blue_architecture_can_be_revised_after_user_gate: true",
+        "red_blue_current_round_verdict_immutable_after_reflection: true",
         "red_blue_post_round_changes_next_round_only: true",
         "red_blue_next_resume_candidate_required: true",
         "red_blue_next_round_revalidates_resume: true",
-        "red_blue_retest_requires_new_round: true",
-        "red_blue_user_feedback_required: true",
-        "red_blue_workflow_retrospective_required: true",
+        "red_blue_github_state_bus: true",
+        'red_blue_stage_handoff: "commit_then_reread"',
+        "red_blue_round_branch_required: true",
+        "red_blue_draft_pr_required: true",
         "human_candidate_mode_removed: true",
         "module_count_is_documentation_invariant: false",
         "research_is_upstream_only: true",
         "red_blue_findings_are_non_authoritative: true",
-    ):
-        if marker not in content:
-            errors.append(f"system.yaml missing section/route: {marker}")
+    )
+    errors.extend(_require(content, required, "system.yaml"))
 
     for relative in (
         "AGENTS.md",
@@ -339,11 +368,9 @@ def verify_system_yaml(root: Path) -> list[str]:
             errors.append(f"system.yaml route target missing: {relative}")
 
     for name in MODULE_NAMES:
-        human = f'human: "docs/modules/{name}/README.md"'
-        engineering = f'engineering: "docs/modules/{name}/reference.md"'
-        if human not in content:
+        if f'human: "docs/modules/{name}/README.md"' not in content:
             errors.append(f"system.yaml missing human module route: {name}")
-        if engineering not in content:
+        if f'engineering: "docs/modules/{name}/reference.md"' not in content:
             errors.append(f"system.yaml missing engineering module route: {name}")
 
     for obsolete in ("docs/maintenance", "docs/terminology.md"):
@@ -362,8 +389,7 @@ def verify_skill_links(root: Path) -> list[str]:
             target = raw_target.strip().split("#", 1)[0]
             if not target or target.startswith(("http://", "https://", "mailto:", "<")):
                 continue
-            target_path = (path.parent / target).resolve()
-            if not target_path.exists():
+            if not (path.parent / target).resolve().exists():
                 errors.append(f"broken agent link: {path.relative_to(root)} -> {raw_target}")
     return errors
 
