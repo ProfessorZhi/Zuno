@@ -1,4 +1,4 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 import os
 from datetime import UTC, datetime, timedelta
@@ -75,7 +75,14 @@ def _migrated_database(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> tuple
         else:
             sys.modules["zuno.settings"] = previous_legacy_settings
 
-    return create_engine(database_url), admin_engine, database_name
+    engine = create_engine(database_url)
+    with InfrastructureUnitOfWork(engine, tenant_id="tenant-effect") as repo:
+        repo.configure_audit_channel(
+            channel_id="audit-channel:tool-runtime:phase16",
+            capacity_limit=100,
+            owner_id="security-governance:effect-test-bootstrap",
+        )
+    return engine, admin_engine, database_name
 
 
 def _drop_database(engine: Engine, admin_engine: Engine, database_name: str) -> None:

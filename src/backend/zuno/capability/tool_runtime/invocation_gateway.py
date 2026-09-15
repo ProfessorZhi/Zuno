@@ -391,6 +391,69 @@ class ToolInvocationGateway:
                             payload=payload,
                         )
                         return None, ToolGatewayReceipt("blocked", prepared_id, attempt_id, receipt_id, str(exc))
+                    try:
+                        audit_id = self._persist_mandatory_audit_before_effect(
+                            tenant_id=tenant_id,
+                            trace_id=trace_id,
+                            call_id=call_id,
+                            prepared_id=prepared_id,
+                            prepared_action_hash=prepared_action_hash,
+                        )
+                    except Exception as exc:
+                        payload["audit_blocked_reason"] = str(exc)
+                        self._abort_execute_prerequisites(
+                            tenant_id=tenant_id,
+                            owner=f"tool-runtime:{call_id}",
+                            prerequisites=execute_prerequisites,
+                        )
+                        self._record_terminal(
+                            tenant_id=tenant_id,
+                            prepared_id=prepared_id,
+                            attempt_id=attempt_id,
+                            receipt_id=receipt_id,
+                            status="FAILED",
+                            dispatch_certainty="NOT_DISPATCHED",
+                            effect_certainty="NO_EFFECT",
+                            adapter_kind=adapter_kind,
+                            payload=payload,
+                        )
+                        return None, ToolGatewayReceipt(
+                            "blocked", prepared_id, attempt_id, receipt_id, str(exc)
+                        )
+                    try:
+                        # Audit persistence is not a permanent authorization ticket.
+                        # Re-check current security after the durable proof and
+                        # immediately before any sandbox/provider dispatch.
+                        self._reauthorize_execute_epoch(
+                            tenant_id=tenant_id,
+                            call_id=call_id,
+                            prepared_action_hash=prepared_action_hash,
+                            approval_required=effect_policy.approval_required,
+                        )
+                    except SecurityPersistenceError as exc:
+                        payload["security_blocked_reason"] = str(exc)
+                        payload["audit_id"] = audit_id
+                        self._abort_execute_prerequisites(
+                            tenant_id=tenant_id,
+                            owner=f"tool-runtime:{call_id}",
+                            prerequisites=execute_prerequisites,
+                        )
+                        self._record_terminal(
+                            tenant_id=tenant_id,
+                            prepared_id=prepared_id,
+                            attempt_id=attempt_id,
+                            receipt_id=receipt_id,
+                            status="FAILED",
+                            dispatch_certainty="NOT_DISPATCHED",
+                            effect_certainty="NO_EFFECT",
+                            adapter_kind=adapter_kind,
+                            payload=payload,
+                        )
+                        return None, ToolGatewayReceipt(
+                            "blocked", prepared_id, attempt_id, receipt_id, str(exc)
+                        )
+                    payload["audit_id"] = audit_id
+
                     sandbox_blocked_reason = ""
                     sandbox_result: SandboxExecutionResult | None = None
                     if adapter_kind.upper() in _SANDBOXABLE_ADAPTER_KINDS:
@@ -1298,6 +1361,73 @@ class ToolInvocationGateway:
                 conclusion=conclusion,
                 resolution_payload=redact_sensitive_payload(resolution_payload),
             )
+
+    def _persist_mandatory_audit_before_effect(
+        self,
+        *,
+        tenant_id: str,
+        trace_id: str,
+        call_id: str,
+        prepared_id: str,
+        prepared_action_hash: str,
+    ) -> str:
+        assert self._infrastructure_unit_of_work_factory is not None
+        channel_id = "audit-channel:tool-runtime:phase16"
+        owner_id = f"tool-runtime:{call_id}"
+        audit_effect_hash = canonical_sha256(
+            {
+                "prepared_tool_action_id": prepared_id,
+                "prepared_action_hash": prepared_action_hash,
+            }
+        )
+        effect_id = f"tool-effect-audit:{audit_effect_hash}"
+        payload = {
+            "audit_requirement_id": f"audit-requirement:{call_id}:tool-execute",
+            "authorization_decision_id": f"authorization-decision:{call_id}",
+            "security_epoch_ref": f"security-epoch:{trace_id}",
+            "prepared_tool_action_id": prepared_id,
+            "prepared_action_hash": prepared_action_hash,
+            "action": "tool.execute",
+        }
+        with self._infrastructure_unit_of_work_factory(tenant_id) as repo:
+            receipt = repo.record_mandatory_audit(
+                channel_id=channel_id,
+                effect_id=effect_id,
+                owner_id=owner_id,
+                payload=payload,
+            )
+        # Re-open the UoW so the send gate consumes a committed proof rather
+        # than trusting the write transaction that created it.
+        with self._infrastructure_unit_of_work_factory(tenant_id) as repo:
+            committed = repo.assert_audit_durable_for_effect(
+                audit_id=receipt.audit_id,
+                effect_id=effect_id,
+                owner_id=owner_id,
+            )
+        if committed.payload_hash != receipt.payload_hash:
+            raise InfrastructureConflictError("mandatory audit proof changed after commit")
+        return committed.audit_id
+
+    def _abort_execute_prerequisites(
+        self,
+        *,
+        tenant_id: str,
+        owner: str,
+        prerequisites: _ExecutePrerequisiteResult,
+    ) -> None:
+        if not prerequisites.idempotency_scope or prerequisites.idempotency_generation <= 0:
+            return
+        assert self._infrastructure_unit_of_work_factory is not None
+        try:
+            with self._infrastructure_unit_of_work_factory(tenant_id) as repo:
+                repo.abort_idempotency(
+                    scope=prerequisites.idempotency_scope,
+                    key=prerequisites.idempotency_key,
+                    owner=owner,
+                    generation=prerequisites.idempotency_generation,
+                )
+        except FencingRejectedError:
+            pass
 
     def _complete_execute_prerequisites(
         self,
