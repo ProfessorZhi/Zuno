@@ -160,7 +160,7 @@ def verify_red_blue_harness(root: Path) -> list[str]:
         "04_blue_wave2_architecture_notes.md",
         "09_round_report.md",
         "Exactly 100 Targeted Follow-ups",
-        "LINK_ONLY_PAUSE",
+        "BATCH_CHECKPOINT_*",
         "LIVE_INTERVIEW",
         "Context Firewall",
     ), "red-blue protocol"))
@@ -221,7 +221,7 @@ def verify_red_blue_harness(root: Path) -> list[str]:
         "RED_WAVE_2 allowlist",
         "Workflow Retrospective",
         "Improvement Ledger / Round Report",
-        "BATCH_DUEL additional artifacts",
+        "BATCH_DUEL 额外要求",
         "Red Wave 1 == 100 questions",
         "Blue Wave 1 == 100 answers",
         "Red Wave 2 contains Blue-1 blind evaluation + exactly 100 new questions",
