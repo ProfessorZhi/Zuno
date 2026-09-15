@@ -1,0 +1,113 @@
+round_id: rb-2026-09-15-formal-019
+created_at: 2026-09-15
+mode: CHATGPT_AUTO
+execution_mode: BATCH_DUEL
+zuno_base_sha: a8b0e540d9c138071ba671733e88a4142bd77a60
+state: ACTIVE
+counts_as_formal_round: true
+
+github_runtime:
+  github_state_bus: REQUIRED
+  stage_handoff: COMMIT_THEN_REREAD
+  round_branch: red-blue/rb-2026-09-15-formal-019
+  round_pr: PENDING
+  last_consumed_head_sha: a8b0e540d9c138071ba671733e88a4142bd77a60
+  firewall_strength: LOGICAL_GITHUB_MEDIATED
+  strict_blind_red_certification: false
+
+interview_target:
+  target_role: Agent 开发工程师 / 大模型应用工程师 / AI 应用工程师
+  company_or_persona: 大厂资深工程师一面；项目真实性、工程深度、后端基础与系统设计混合
+  interview_stage: 技术一面 / 项目深挖
+  jd_source: generic target role calibrated by first-party interview records and public AI/Agent interview behavior evidence
+  resume_review_gate: REQUIRED
+  improvement_review_gate: REQUIRED
+  batch_checkpoint_policy: LINK_ONLY_PAUSE
+  red_wave_1_question_count: 100
+  blue_wave_1_answer_count: 100
+  red_wave_2_question_count: 100
+  blue_wave_2_answer_count: 100
+  one_question_one_intent: true
+
+pinned_skills:
+  attack_skill_version: d240b2734382c769eac8cbb84494e9ebdcd0c828:.agent/red-blue/attack-model.md
+  defense_skill_version: 20446e1509da953f40e1976119db2068f8a22fff:.agent/red-blue/defense-model.md
+  judge_version: 6211d2de0d7451ab7b439398920eec01c8e28b51:.agent/red-blue/judge.md
+  protocol_version: 7e47a3cbf8dcf0f2b57d8f6d1309bac5cc8e5c0a:.agent/red-blue/protocol.md
+
+simulated_resume:
+  resume_style_reference: user actual one-page Agent/AI application resume register; regenerated independently from canonical Zuno truth
+  resume_build_sources:
+    - docs/project/
+    - docs/architecture/
+    - docs/modules/
+    - docs/evidence/
+    - docs/governance/project-fact-provenance.md
+  previous_round_resume_candidate: none; invalid #018 artifacts are not formal inputs
+  simulated_resume_path: docs/red-blue/workspace/rb-2026-09-15-formal-019/01_simulated_resume.md
+  resume_status: DRAFT
+  resume_project_bullet_count: 6
+  resume_style_check: PENDING
+  user_resume_review_status: PENDING
+
+red_wave_1:
+  red_wave_1_status: NOT_STARTED
+  red_wave_1_question_count: 0
+  red_wave_1_path: docs/red-blue/workspace/rb-2026-09-15-formal-019/02_red_questions.md
+  red_wave_1_commit_sha: none
+  red_wave_1_user_checkpoint: PENDING
+
+blue_wave_1:
+  blue_wave_1_status: NOT_STARTED
+  blue_wave_1_answer_count: 0
+  blue_wave_1_answers_path: docs/red-blue/workspace/rb-2026-09-15-formal-019/03_blue_answers.md
+  blue_wave_1_architecture_notes_path: docs/red-blue/workspace/rb-2026-09-15-formal-019/03_blue_architecture_notes.md
+  blue_wave_1_commit_sha: none
+  blue_wave_1_user_checkpoint: PENDING
+
+red_wave_2:
+  red_wave_2_status: NOT_STARTED
+  blue_wave_1_blind_evaluation_present: false
+  red_wave_2_question_count: 0
+  red_wave_2_path: docs/red-blue/workspace/rb-2026-09-15-formal-019/04_red_wave2_review_and_questions.md
+  red_wave_2_commit_sha: none
+  red_wave_2_user_checkpoint: PENDING
+
+blue_wave_2:
+  blue_wave_2_status: NOT_STARTED
+  blue_wave_2_answer_count: 0
+  blue_wave_2_answers_path: docs/red-blue/workspace/rb-2026-09-15-formal-019/04_blue_wave2_answers.md
+  blue_wave_2_architecture_notes_path: docs/red-blue/workspace/rb-2026-09-15-formal-019/04_blue_wave2_architecture_notes.md
+  blue_wave_2_commit_sha: none
+  blue_wave_2_user_checkpoint: PENDING
+
+red_evaluation_status: NOT_STARTED
+blue_reflection_status: NOT_STARTED
+
+workflow_retrospective:
+  workflow_retrospective_status: NOT_STARTED
+  resume_builder_reviewed: false
+  red_thinking_framework_reviewed: false
+  blue_candidate_framework_reviewed: false
+  blue_architecture_framework_reviewed: false
+  harness_reviewed: false
+
+improvement:
+  improvement_ledger_status: NOT_STARTED
+  round_report_status: NOT_STARTED
+  round_report_path: docs/red-blue/workspace/rb-2026-09-15-formal-019/09_round_report.md
+  user_improvement_review_status: PENDING
+  approved_change_count: 0
+  deferred_change_count: 0
+  post_improvement_head_sha: none
+  change_effective_scope: NEXT_ROUND_ONLY
+  current_round_verdict_recomputed: false
+
+next_resume:
+  next_resume_candidate_path: docs/red-blue/workspace/rb-2026-09-15-formal-019/10_next_resume_candidate.md
+  next_resume_candidate_status: NOT_STARTED
+  next_resume_source_head_sha: none
+  next_resume_blockers: none
+
+current_stage: USER_RESUME_REVIEW
+next_actor: NONE
