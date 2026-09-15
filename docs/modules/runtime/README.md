@@ -40,6 +40,12 @@ Context compression、summary 和短期 memory 可以继续使用，但它们首
 
 如果单 Agent 配合并行 Tool Call 已经能完成任务，增加 Subagent 只会提高 token、协调和恢复成本。多 Agent 因此是一种执行策略，是否启用由 Task Class 和 09 的 Eval 决定，不成为 Zuno 的长期产品对象或组织结构。
 
+### Runtime 只消费 Context snapshot，不拥有长期 Memory truth
+
+一次 Step 开始时，04 可以读取 recent window、task summary 或经过治理的 structured memory，并把真正参与执行的来源、Scope 和 policy refs 记录进 Context trace。它拥有“这次执行看到了什么”的控制事实，不拥有这些内容在业务上是否为真。
+
+structured memory 的 record 可以由外部 Provider 保存，当前可 Recall 的范围由 08 决定；02 / 03 的正式事实与材料来源仍然优先。等待数小时后 resume 时，Runtime 不直接复用旧 Context blob，而应按当前 Domain、Knowledge、Security 和允许的 memory snapshot 重新组装。这样 Memory 可以被替换甚至关闭，而不会变成 Runtime 的第二套业务数据库。
+
 ### Domain 已经提交而 Checkpoint 还没写时，恢复必须先相信业务事实
 
 计划版本解决了“前提变化以后旧结果属于谁”，进程崩溃会继续暴露另一类时间差。
@@ -66,6 +72,12 @@ Replan 时，旧计划可能还有 Worker 在途。新计划形成以后，没�
 
 并行汇合也服从同样原则。几个 future 都返回，并不自动意味着后续 Step 可以开始：某个结果可能属于旧计划，某个已经被取消，另一个虽然格式正确却没有通过专业验收。Runtime 只把当前仍然有资格的结果计入后续依赖。并行提高吞吐，不会改变结果是否仍然适用。
 
+### Step 真正执行前，还要检查规划时依赖的版本是否仍然成立
+
+一个 Step 可能在计划阶段解析到 Capability C1、ProviderBinding P1、ToolVersion T1 和某个 credential / config；真正 dispatch 时这些版本已经变化。只要变化影响 schema、专业语义、effect class、关键参数解释或安全资格，旧 Step 的执行前提就已经失效。
+
+Runtime 因而记录 resolved input-version set，但不自己判断所有版本是否兼容。05 判断 Capability / Provider 是否仍等价，06 判断 Tool semantics 和 retry safety，07 判断模型路由资格，08 判断安全与 credential，03 判断 KnowledgeGeneration。仍满足原契约时可以继续；不满足时 re-resolve 或 Replan。版本控制服务于因果验收，不形成全局 Version God Service。
+
 ### 等待和取消只改变未来，不能冻结或回滚已经发生的世界
 
 法律任务可能等待人工数小时甚至数天。恢复后从暂停代码的下一行继续，看起来最简单，却假设等待期间什么都没有变化。现实里材料可能更新，Capability 或模型资格可能变化，SecurityEpoch 可能推进，原来的 Approval 也可能过期。
@@ -86,10 +98,10 @@ Native Runtime 也不是产品身份。如果 Generic Agent Host 加 Zuno Legal 
 
 ### Current / Target / Gap
 
-**Target：** 04 拥有 AgentRun、PlanVersion、StepRun、Checkpoint、ready / join、等待、Budget、取消和 Replan 等控制事实；它以 Single Controller 维持计划因果，并在恢复时优先消费 Domain、Effect、Security、Knowledge 等 Owner 已经成立的更强事实。Context、summary、Subagent 和 Multi-Agent 都是可替换执行策略，不承担案件材料或正式业务事实的长期 Authority。
+**Target：** 04 拥有 AgentRun、PlanVersion、StepRun、Checkpoint、ready / join、等待、Budget、取消和 Replan 等控制事实；它以 Single Controller 维持计划因果，并在恢复时优先消费 Domain、Effect、Security、Knowledge 等 Owner 已经成立的更强事实。Context、summary、Subagent 和 Multi-Agent 都是可替换执行策略，不承担案件材料或正式业务事实的长期 Authority；resolved input-version set 需要覆盖真正影响 Step 语义的 Knowledge / Capability / Provider / Model / Tool / config / security refs。
 
-**Current：** 完整三层运行图、不可变 PlanVersion、Replan Barrier、跨 Owner recovery、长期人工等待恢复、外部结构驱动的 Context Engineering 和 Native Runtime 取舍属于 Target 设计。Current 代码中已有的 Agent、checkpoint、tool calling 或 runtime foundation 只能按 `docs/evidence/`、代码和测试实际证明的范围描述。
+**Current：** 当前代码已经证明 checkpoint、interrupt、cancel/restart、duplicate claim，以及部分 unknown Effect 进入 `reconcile_required` 的行为。负向 fault evidence 同时证明：unresolved Effect 在 restart replay 后会被上层错误升级成 `completed`，所以“能记录 unknown”不能写成“恢复语义已闭环”。完整三层运行图、不可变 PlanVersion、Replan Barrier、跨 Owner recovery 等仍是 Target。
 
-**Gap：** 仍需要长任务故障注入、Domain commit / Checkpoint crash-window、late-result acceptance、Controller 接管、真实等待恢复、预算收敛、Context rebuild / compaction 评测、Subagent 对照实验和 Generic Host 对照实验。没有这些证据时，不能把设计完整度写成恢复能力或 Agentic 质量已经被生产验证。
+**Gap：** P0 是等待 Reconciliation 时保持 certainty 不被 replay 错误升级；其余还包括 dependency-version drift、复杂 DAG fault injection、late-result acceptance、Controller takeover、AdmissionReceipt recovery、长等待恢复、Context rebuild / compaction Eval、Subagent 对照和 Generic Host A/B/C。
 
 工程 / Agent 精确参考与跨模块一致性规则见 [`reference.md`](reference.md)。
