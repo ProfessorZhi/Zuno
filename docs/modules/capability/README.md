@@ -56,6 +56,12 @@ LawBench、LJPCheck、CMDL 一类研究资产的角色又不同。它们更适�
 
 这条闭环保护了研究价值。模型更新不需要推翻上层产品结构，真实案件也不会只是一次性消费论文能力；任务定义、失败样本、专家修改和资格证据会逐步积累，使下一项研究成果更快知道“应该替换哪里、需要证明什么、什么情况下不能上线”。
 
+### Provider config 改了但接口没变，也可能已经不再是原来的能力
+
+CapabilityVersion 固定专业语义，ProviderBinding 则把这份语义落到具体模型、规则、Skill composition 和影响行为的 config。Prompt、threshold、model snapshot 或解析规则如果改变了专业行为，不能因为 API 仍返回同样 JSON 就继续沿用旧资格。
+
+任务计划形成以后，04 会引用当时解析出的 CapabilityVersion / ProviderBinding。dispatch 前如果 Binding 或 config 已变化，05 先判断新实现是否仍满足同一 Contract 和当前 task requirement；真正等价才能继续或重新解析，否则返回 requirement unsatisfied 让 Runtime Replan。这样版本变化被限制在已有 Owner 边界里，不需要新增一台全局配置服务。
+
 ### 研究成果进入产品，需要经过一条比“包装成 Tool”更长的路
 
 课题组的论文模型、实验脚本和规则资产首先是 Research Artifact。它们证明团队拥有方法、代码或实验结果，但并不会自动成为长期业务可以依赖的系统能力。
@@ -76,10 +82,10 @@ LawBench、LJPCheck、CMDL 一类研究资产的角色又不同。它们更适�
 
 ### Current / Target / Gap
 
-**Target：** 05 拥有 Capability 语义与版本、Provider binding、Conformance、Qualification / Eligibility 以及调用来源；研究成果先转换成稳定专业承诺，再由不同 Provider 实现。它产生专业 Candidate / Proposal，不拥有 Formal Admission、模型 transport 或现实 Effect truth。
+**Target：** 05 拥有 Capability 语义与版本、ProviderBinding / semantic config、Conformance、Qualification / Eligibility 以及调用来源；研究成果先转换成稳定专业承诺，再由不同 Provider 实现。它产生专业 Candidate / Proposal，不拥有 Formal Admission、模型 transport 或现实 Effect truth。Provider 或 config 漂移如果改变专业语义，旧资格不静默继承。
 
-**Current：** 历史代码已经存在 Skill / Tool、模型、研究算法和部分评测路径，但 Target 中统一 Capability lifecycle、Provider qualification、按 Task Class 的能力画像和研究—产品反馈闭环不能从这些实现自动推断为已完成。
+**Current：** 历史代码已经存在 Skill / Tool、模型、研究算法和部分评测路径，也存在 capability / provider Contract 基础；Target 中统一 Registry、完整 Conformance / Eligibility、按 Task Class 的能力画像与 config-drift 治理不能从这些实现自动推断为已完成。
 
-**Gap：** 需要进一步冻结 Capability / Provider 的字段级 Contract，建立按 task class 的资格证据、semantic drift 检测、Provider exit 测试，以及真实法律任务上 Build / Buy / LLM / 专用模型的可比评测。LawBench / LJPCheck / CMDL 等研究资产如何进入长期 Regression 与 qualification 也仍需要数据和实验设计。
+**Gap：** 需要进一步冻结 Capability / Provider / config 的版本 Contract，建立 provider equivalence、semantic drift suspension、Planner re-resolution、按 task class 的资格证据、Provider exit 测试，以及真实法律任务上 Build / Buy / LLM / 专用模型的可比评测。
 
 工程 / Agent 精确参考与跨模块一致性规则见 [`reference.md`](reference.md)。
