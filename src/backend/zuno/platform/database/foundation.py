@@ -1623,6 +1623,38 @@ class InfrastructureRepository:
         if not owner_id.strip():
             raise ValueError("owner_id must not be empty")
         payload_hash = canonical_sha256(payload)
+        existing = self.connection.execute(
+            text(
+                """
+                SELECT audit_id, channel_id, effect_id, owner_id, payload_hash,
+                       generation, created_at
+                FROM infra_mandatory_audit_events
+                WHERE effect_id = :effect_id
+                  AND status IN ('durable', 'effect_observed')
+                """
+            ),
+            {"effect_id": effect_id},
+        ).first()
+        if existing is not None:
+            if (
+                str(existing.channel_id) != channel_id
+                or str(existing.owner_id) != owner_id
+                or str(existing.payload_hash) != payload_hash
+            ):
+                raise InfrastructureConflictError(
+                    "mandatory audit effect identity was reused with different proof content"
+                )
+            return AuditPersistenceReceipt(
+                audit_id=str(existing.audit_id),
+                channel_id=str(existing.channel_id),
+                effect_id=str(existing.effect_id),
+                owner_id=str(existing.owner_id),
+                payload_hash=str(existing.payload_hash),
+                generation=int(existing.generation),
+                remaining_capacity=0,
+                durable_at=existing.created_at,
+            )
+
         channel = self.connection.execute(
             text(
                 """
@@ -1708,7 +1740,7 @@ class InfrastructureRepository:
                 WHERE audit_id = :audit_id
                   AND effect_id = :effect_id
                   AND owner_id = :owner_id
-                  AND status = 'durable'
+                  AND status IN ('durable', 'effect_observed')
                 FOR UPDATE
                 """
             ),
