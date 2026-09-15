@@ -31,14 +31,39 @@ Resume
 → Next Resume Candidate
 ```
 
-每个 Wave 完成以后，聊天默认只返回该批 GitHub 文档链接。
+每个 Wave 完成以后，聊天必须直接返回当前 artifact 的 GitHub 链接，并同时给出本轮稳定 Artifact Links 总入口。
+
+## Stable Artifact Links
+
+每轮初始化时必须创建：
+
+```text
+00_artifact_links.md
+```
+
+这个文件是本轮的稳定导航页，直接链接 Resume、Red、Blue、Final、Reflection、Retrospective、Improvement、Next Resume 和 Draft PR。
+
+为了保证链接从 Round Init 起就有效，所有正式 stage artifact 也必须在 Round Init 预创建。尚未执行的文件只包含 `status: NOT_STARTED` 等占位信息；不得提前生成未来问题、答案、评价或架构结论。
+
+阶段完成时在原路径**原地更新**，不能为了“新版本”换正式文件名。这样用户保存的 URL 在整个 Round 生命周期中保持不变。
+
+每个用户 checkpoint 至少发送：
+
+```text
+00_artifact_links.md 直链
++
+当前 stage artifact 直链
+```
+
+不得只回复文件名、相对路径、commit SHA 或“已完成”。详细契约见 [`artifact-links-contract.md`](artifact-links-contract.md)，初始化模板见 [`artifact-links-template.md`](artifact-links-template.md)。
 
 ## Core Artifacts
 
-为了历史兼容，一轮继续保留十一份 core artifact：
+为了历史兼容，一轮保留 core artifact，并增加稳定导航页：
 
 ```text
 00_manifest.yaml
+00_artifact_links.md
 01_simulated_resume.md
 02_red_questions.md
 03_blue_answers.md
@@ -67,7 +92,7 @@ BATCH_DUEL 另外要求：
 读取 live Round branch HEAD
 → 核对 manifest stage / allowlist
 → 当前 actor 只执行一个 stage
-→ 更新 artifact + manifest + transcript
+→ 更新 artifact + manifest + transcript + artifact links status
 → commit
 → 下一个 actor 重新读取 HEAD
 ```
@@ -88,7 +113,7 @@ Resume bullet 优先表达真实工程问题和技术决策，不以框架名、
 
 `03_blue_answers.md` 对第一批 100 题逐题回答。
 
-同时生成 `03_blue_architecture_notes.md`，但这个文件对 Red 封存。它只给最终 Blue Architecture Reflection 使用。
+同时生成 `03_blue_architecture_notes.md`，但这个文件对 Red 封存。它只给最终 Blue Architecture Reflection 使用。用户作为项目 Owner 可以通过 `00_artifact_links.md` 查看该文件；这不改变 Red allowlist。
 
 ## Red Wave 2
 

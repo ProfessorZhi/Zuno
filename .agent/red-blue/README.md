@@ -39,9 +39,25 @@ Frozen Resume
 → next Round
 ```
 
-每个 Batch Checkpoint 默认只把对应 GitHub 文档链接交给用户。用户不用逐题扮演候选人。
+每个 Batch Checkpoint 必须把对应 GitHub 文档的**直接可点击链接**交给用户。用户不用逐题扮演候选人。
 
 `LIVE_INTERVIEW` 继续保留，但只有用户明确要求真人逐题模拟时才使用。
+
+## Stable Artifact Links
+
+[`docs/red-blue/workspace/artifact-links-contract.md`](../../docs/red-blue/workspace/artifact-links-contract.md) 是用户可见 handoff 的规范契约，模板见 [`artifact-links-template.md`](../../docs/red-blue/workspace/artifact-links-template.md)。
+
+每个正式 Round Init 必须：
+
+1. 创建 `00_artifact_links.md` 作为整轮稳定入口；
+2. 预创建 Resume、Red、Blue、Final、Reflection、Retrospective、Ledger、Report、Next Resume 等正式 artifact；
+3. 未开始的 artifact 只写 `status: NOT_STARTED` 等占位信息，不预生成未来内容；
+4. 阶段执行时在原路径原地更新，保持 GitHub URL 稳定；
+5. 每个 checkpoint 聊天回复至少发送 `00_artifact_links.md` 总入口 + 当前 artifact 直链。
+
+禁止只告诉用户文件名、相对路径、commit SHA 或“已完成”。
+
+稳定 URL 不改变 firewall。Red 即使知道 sealed Blue notes 的 URL，也不能把它们加入自己的读取 allowlist。
 
 ## 为什么把 Blue 分成两个面
 
@@ -174,6 +190,7 @@ protocol.md version
 
 ```text
 00_manifest.yaml
+00_artifact_links.md
 01_simulated_resume.md
 02_red_questions.md
 03_blue_answers.md
@@ -198,4 +215,4 @@ BATCH_DUEL additional artifacts:
 
 `10_next_resume_candidate.md` 是下一轮候选输入，不得覆盖本轮 Frozen Resume。下一轮从新 main HEAD 重新校验并再次经过 USER_RESUME_REVIEW。
 
-完整状态机见 `protocol.md`，评价与归因规则见 `judge.md`。
+完整状态机见 `protocol.md`，稳定链接契约见 `docs/red-blue/workspace/artifact-links-contract.md`，评价与归因规则见 `judge.md`。
