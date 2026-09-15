@@ -44,6 +44,12 @@ Target 会保留这种 `Outcome Unknown`。它不是“失败的另一种名字�
 
 同样，HTTP 200 也只是一个传输观察。远端可能返回“请求已接收”，真正业务处理仍在异步进行；也可能返回一个结构合法的响应，却没有形成 Zuno 期待的业务效果。06 保存 Attempt 和远端证据，只有满足当前操作语义的结果才升级成更强的 Effect truth。上层再基于这份事实决定 Delivery 或后续计划。
 
+### ToolVersion 或配置变化以后，旧 PreparedAction 不能默认继续发送
+
+模型在计划阶段可能根据 Tool schema v1 生成参数，真正执行时 Provider 已升级到 v2。字段名字相同也不代表 effect semantics、幂等能力、远端业务键或 retry safety 没变。06 在准备动作时绑定 ToolVersion / operation semantics；dispatch 延迟、恢复或 Replan 后必须重新确认这份版本仍然有资格执行。
+
+纯兼容升级可以通过明确的 compatibility / qualification 继续；只要 schema、目标解释、effect class、idempotency contract 或 reconciliation capability 发生变化，就需要重新准备 Action，必要时由 04 Replan，并重新取得与新 action hash 匹配的 Approval / Audit。
+
 ### 安全和审计必须在现实动作之前收敛
 
 一份 PreparedAction 可能在队列里等待十分钟。等待期间用户权限变化、Approval 过期、SecurityEpoch 更新，甚至 Secret 版本已经轮换。模型当时提出动作、Controller 当时接受计划，都不能替执行时的安全判断。
@@ -74,8 +80,8 @@ Target 会保留这种 `Outcome Unknown`。它不是“失败的另一种名字�
 
 **Target：** 06 拥有现实动作的 PreparedAction、实际 Attempt、结果确认、EffectReceipt 与 Reconciliation 事实；发送前固定逻辑意图并重新消费安全条件，发送后对 Outcome Unknown 先确认再决定是否继续。产品 Delivery、正式法律事实和授权策略仍由其他 Owner 管理。
 
-**Current：** 完整 Effect lifecycle、远端能力 qualification、跨 crash window 的 PreparedAction / Attempt 耐久化、自动与人工 Reconcile、补偿链和强制审计前置都属于 Target 设计。现有 Tool Calling、MCP、SDK 或调用层代码能证明的只是相应 Current 实现范围，必须以 `docs/evidence/`、代码、测试和真实 Trace 为准。
+**Current：** 当前实现已经能在部分路径耐久记录 UNKNOWN Effect，并在已诊断的 restart replay 中避免二次 provider dispatch；这证明 duplicate suppression 的一部分成立，但恢复语义尚未闭环。负向 Evidence 已确认 unresolved Reconciliation 在 restart replay 后会被上层错误升级成 `completed`，而 repo-wide source review 也没有找到完整 remote-query consumer、conclusive ReconciliationReceipt / RESOLVED writer 或人工 assessment → repaired Effect truth 的收敛链。因此“记录 unknown”是 Current，“最终 certainty convergence”仍是明确 Implementation Gap。
 
-**Gap：** 仍缺真实外围系统的幂等行为验证、send-boundary 故障注入、timeout 后远端查询证据、重复 Effect 检测、人工 Reconcile 演练以及高风险动作的恢复时间数据。没有这些证据时，不宣称外部副作用已经达到 production-grade exactly-once 或自动恢复能力。
+**Gap：** P0 是先修复 restart replay 的 certainty upgrade，并实现能够把 remote query / manual assessment 收敛成 durable Effect truth 的 resolver / receipt 路径。另一个已确认 blocker 是 `MANDATORY_BEFORE_EFFECT`：当前 fault probe 已证明 Security AuditRequirement 存在、durable audit proof 不存在时 provider dispatch 仍可能发生。其余仍包括真实外围系统幂等行为、send-boundary fault injection、timeout 后远端查询、补偿与恢复时间数据。没有这些闭环，不宣称 production-grade exactly-once 或自动恢复能力。
 
 工程 / Agent 精确参考与跨模块一致性规则见 [`reference.md`](reference.md)。
