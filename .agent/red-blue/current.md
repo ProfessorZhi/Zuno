@@ -36,7 +36,7 @@ improvement_ledger_status: `NOT_STARTED`
 round_report_status: `NOT_STARTED`
 next_resume_candidate_status: `NOT_STARTED`
 round_branch: `red-blue/rb-2026-09-15-formal-019`
-round_pr: `PENDING`
+round_pr: `239`
 last_consumed_head_sha: `a8b0e540d9c138071ba671733e88a4142bd77a60`
 github_state_bus: `required`
 stage_handoff: `commit-then-reread`
