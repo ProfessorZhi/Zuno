@@ -11,8 +11,8 @@ def _read(relative: str) -> str:
 def test_round_init_requires_stable_artifact_links_and_placeholders() -> None:
     runtime_readme = _read(".agent/red-blue/README.md")
     workspace_readme = _read("docs/red-blue/workspace/README.md")
-    contract = _read(".agent/red-blue/artifact-links.md")
-    template = _read(".agent/red-blue/templates/artifact-links.md")
+    contract = _read("docs/red-blue/workspace/artifact-links-contract.md")
+    template = _read("docs/red-blue/workspace/artifact-links-template.md")
 
     for text in (runtime_readme, workspace_readme, contract):
         assert "00_artifact_links.md" in text
@@ -41,7 +41,7 @@ def test_round_init_requires_stable_artifact_links_and_placeholders() -> None:
 def test_every_checkpoint_requires_direct_clickable_links() -> None:
     runtime_readme = _read(".agent/red-blue/README.md")
     workspace_readme = _read("docs/red-blue/workspace/README.md")
-    contract = _read(".agent/red-blue/artifact-links.md")
+    contract = _read("docs/red-blue/workspace/artifact-links-contract.md")
 
     assert "直接可点击链接" in runtime_readme
     assert "当前 stage artifact 直链" in workspace_readme
@@ -52,7 +52,7 @@ def test_every_checkpoint_requires_direct_clickable_links() -> None:
 
 
 def test_stable_links_do_not_weaken_red_blue_firewall() -> None:
-    contract = _read(".agent/red-blue/artifact-links.md")
+    contract = _read("docs/red-blue/workspace/artifact-links-contract.md")
     workspace_readme = _read("docs/red-blue/workspace/README.md")
 
     assert "稳定链接不能成为越权输入" in contract
