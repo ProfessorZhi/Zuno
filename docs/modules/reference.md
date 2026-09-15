@@ -63,9 +63,10 @@ If the task requires reconstructing why a boundary exists, read the correspondin
 | CapabilityVersion、Conformance、Eligibility、专业 Proposal | 05 | 04 调度；02 决定正式准入 |
 | PreparedAction、ToolAttempt、EffectReceipt、ReconciliationReceipt | 06 | 08 决定是否允许；远端拥有内部真相 |
 | ModelRole、RoutingDecision、ModelCallAttempt、Quota、Usage / Cost | 07 | 09 评测；08 决定外发 / Credential policy |
-| AuthorizationDecision、SecurityEpoch、ApprovalDecision、LifecycleDecision、AuditRequirement | 08 | 执行模块记录自己的 execution fact |
+| AuthorizationDecision、SecurityEpoch、ApprovalDecision、LifecycleDecision、AuditRequirement、Recall Eligibility | 08 | 执行模块记录自己的 execution fact |
 | Trace、Metric、Eval Dataset / Run / Result、Experiment、ReleaseEvidence | 09 | 只测量 / 投影，不接管业务 truth |
 | External Request、InvocationDecision、Publication、Delivery、InvalidationDelivery、Ack Observation | 01 | 外部 Host 拥有其最终 UI / adoption truth |
+| scoped summary / structured memory record | 可选 Provider 保存非权威 record；08 拥有 recall/lifecycle policy | 01 / 04 组装当前 snapshot；不得覆盖 02/03/06 Owner facts |
 
 ## 绝对不能再次混淆的边界
 
@@ -80,6 +81,10 @@ Formal Admission-required Step 必须有 matching AdmissionReceipt
 Capability Proposal != PreparedAction != ToolAttempt != EffectReceipt
 
 AuthorizationDecision != ApprovalDecision != HumanDecision
+
+Memory record != Domain truth
+MemoryScope equality != Authorization
+Provenance != Truth != Authorization != Semantic Preservation
 
 WorkProduct invalidated → 02
 Invalidation delivered  → 01
@@ -119,6 +124,8 @@ ExternalRequestIdentity / InvocationIdentity
 → Telemetry / Eval correlation refs
 ```
 
+Context / Memory snapshot 是这条主干的可选输入，而不是新的 Authority 节点。它至少绑定 provider/source refs、Scope、当前 08 recall/lifecycle/security eligibility 与 snapshot/build policy；恢复或长等待后重新构建，不把旧 Context blob 当成被冻结的业务世界。
+
 箭头只表示可追溯关联，不意味着每个任务必须经过全部节点，也不表示对象应放进同一数据库。
 
 ## 每个模块都必须明确“什么才算完成”
@@ -132,7 +139,7 @@ ExternalRequestIdentity / InvocationIdentity
 | 05 | Capability Contract + Conformance / Eligibility + typed output | Provider 2xx、Domain acceptance |
 | 06 | EffectReceipt / ReconciliationReceipt | HTTP 2xx、Attempt finished、Checkpoint |
 | 07 | Routing / Attempt / Usage / Settlement facts | Step acceptance、Capability quality、Domain admission |
-| 08 | Authorization / Approval / Policy decision | 实际读取、模型调用、Effect、purge completion |
+| 08 | Authorization / Approval / Policy / Recall-Lifecycle decision | 实际读取、模型调用、Effect、purge completion、Memory truth |
 | 09 | Telemetry projection；版本化 Eval / ReleaseEvidence | Owner truth、Production Readiness 本身 |
 
 任何模块都不得用自己最容易获得的 `success` 替代相邻 Owner 的更强完成证明。
@@ -145,9 +152,9 @@ ExternalRequestIdentity / InvocationIdentity
 
 ## Late Result（晚到结果）统一验收
 
-晚到结果既不自动丢弃，也不自动接受。消费者至少检查 causation、PlanVersion、input versions、DocumentVersion / KnowledgeGeneration、Capability / Tool / Model versions、SecurityEpoch、Domain expected version，以及现实 Effect 是否已经发生。
+晚到结果既不自动丢弃，也不自动接受。消费者至少检查 causation、PlanVersion、resolved input-version set、DocumentVersion / KnowledgeGeneration、CapabilityVersion / ProviderBinding、Model / Tool / config refs、SecurityEpoch / Credential qualification、Domain expected version，以及现实 Effect 是否已经发生。
 
-纯计算的关键假设过期时进入 reject / reevaluate / Review / Replan；现实 Effect 即使来自旧 Plan，也不能被 Runtime 通过“stale branch”否认。
+纯计算的关键假设过期时进入 reject / reevaluate / Review / re-resolution / Replan；现实 Effect 即使来自旧 Plan，也不能被 Runtime 通过“stale branch”否认。
 
 ## Idempotency（幂等）不是一个全局 key
 
@@ -172,8 +179,10 @@ eval run / experiment identity          → 09
 | --- | --- | --- |
 | Domain commit 后 Checkpoint 失败 | 02 matching AdmissionReceipt | 04 Runtime Control State |
 | Checkpoint complete 但 Receipt 缺失 | 02 causation query | 04 撤销 formal-complete 推断 |
-| POST timeout outcome unknown | 06 Action / Attempt / external correlation | Reconcile 后修复 04 / 01 |
+| POST timeout outcome unknown | 06 Action / Attempt / external correlation | Reconcile 后修复 04 / 01；certainty 未收敛前保持 Unknown |
 | Knowledge partial write | 03 generation / manifest / serving pointer | Retry / rebuild，不改 Domain |
+| old Context / Memory snapshot after policy or Domain change | current Owner facts + 08 recall/lifecycle eligibility | 01 / 04 rebuild context snapshot |
+| ProviderBinding / ToolVersion / config 在 dispatch 前变化 | 05/06/07/08 current qualification / semantics | 04 re-resolve 或 Replan；不以同名函数假定兼容 |
 | SecurityEpoch 在等待期变化 | 08 current decision | 下次受保护访问重新门禁 |
 | Consumer offline while WorkProduct stale | 02 invalidation truth | 01 Delivery retry；pull 仍 stale |
 | Telemetry provider outage | 各 Owner durable facts | 09 恢复诊断投影 |
@@ -192,10 +201,11 @@ eval run / experiment identity          → 09
 | 重复 HTTP、异步受理、交付重试 | 01 | request / invocation / delivery identity 分离；受理 != 完成 |
 | 正式领域并发、版本冲突 | 02 | Owner Store 内短事务、expected version、幂等 |
 | OCR / embedding / index 构建吞吐 | 03 + Platform | generation 内并行；validated generation 才 Serving |
-| DAG 并发、资源冲突、取消 | 04 | Ready 受 dependency/resource/effect/budget/quota/security gates |
+| DAG 并发、资源冲突、取消、dependency drift | 04 + owning modules | Ready 受 dependency/resource/effect/budget/quota/security gates；版本变化按 Owner compatibility 决定 re-resolve / Replan |
 | 专业 / 模型 Provider 容量 | 05 / 07 | eligibility + quota + quality + security 一起决定 fallback |
 | 外部系统限流、timeout、未知效果 | 06 | known-not-executed 才 Retry；unknown 先 Reconcile |
-| tenant / matter 隔离、外发、Secret | 08 | 每次新受保护访问消费当前安全事实 |
+| tenant / matter 隔离、外发、Secret、Memory recall | 08 | 每次新受保护访问/召回消费当前安全与 lifecycle facts |
+| Context / long-term Memory | optional Provider + 08 + 01/04 | provider record 非权威；A/B 不证明收益则关闭 structured long-term memory |
 | latency、throughput、cost、quality | 09 | 统一测量，不接管业务完成；容量需要真实 Evidence |
 | PostgreSQL、Object Store、Queue、Worker、Checkpoint、Backup | Platform / Infrastructure | 提供物理原语，不拥有逻辑成功语义 |
 
@@ -234,12 +244,14 @@ B14.8  Failure Injection / Freeze Evidence
 10. Native Runtime、Long-term Memory、Specialist / Multi-Agent、GraphRAG 均 measurement / evidence gated。
 11. 逻辑模块不等于微服务；默认 Modular Python Backend + justified Workers。
 12. Platform / Infrastructure 不是第十个业务模块，只提供 physical primitives。
-13. Memory / Context 是 Optional Provider Boundary，不覆盖 Domain / Security truth。
+13. Memory / Context 是 Optional Provider Boundary：record 不覆盖 Domain truth；08 拥有 recall/lifecycle policy；01 / 04 只消费当前允许 snapshot。
 14. Current / Target / Gap 分开；文档完整不证明实现。
 15. Cancellation 不是全局 rollback。
 16. Late result 必须重新验收。
 17. Idempotency namespace 分离。
 18. Correlation 不携带权威和敏感业务语义。
+19. `Provenance != Truth != Authorization != Semantic Preservation`。
+20. Step resolved dependency set 必须覆盖真正影响语义的 Knowledge / Capability / Provider / Model / Tool / config / credential / security refs；漂移后由对应 Owner 决定 continue / re-resolve / Replan。
 
 ## 九篇统一结构
 
@@ -299,11 +311,15 @@ quality_proven: NO
 production_readiness: NOT_ESTABLISHED
 ```
 
+当前 Evidence 还存在两条不应被 Candidate 完整度掩盖的 P0 blocker：unresolved Effect 在 restart replay 后会被错误升级成 `completed`，且最终 Reconciliation convergence 尚未闭环；`MANDATORY_BEFORE_EFFECT` 在缺少 matching durable audit proof 时当前 send path 仍可能 dispatch。它们需要实现修复与同一 fault window 的复测，不能通过文档冻结升级成 Current。
+
 ## Platform / Infrastructure 与 Optional Context
 
 Platform / Infrastructure 继续是责任层，不是第十模块。它提供 PostgreSQL、Object Store、Queue / Worker、Checkpointer Adapter、CAS、Lease、Fencing、Clock、Network、Secret Delivery、Backup / Restore 等原语；业务完成和恢复语义仍由各模块拥有。
 
-Memory / Context 继续是可选 Provider Boundary。Working / Session Context 可以由 Host / Runtime 管理；Long-term Memory 只有在消融评测证明收益后才启用。Memory Entry 不能替代 Matter / Evidence / Finding / WorkProduct。
+Memory / Context 继续是可选 Provider Boundary，不增加第十个业务 Authority。Working / Session Context 可以由 Host / Runtime 管理；Provider 可以保存 scoped summary / structured memory record 与 provenance；08 决定当前 recall eligibility、retention / no-recall / purge policy；01 / 04 在当前请求 / Step 中组装 snapshot。Memory Entry 不能替代 Matter / Evidence / Finding / WorkProduct，也不能把 scope equality 当成 Authorization。
+
+Long-term Memory 只有在消融或 A/B 证明跨会话收益后才启用；没有稳定收益时退回 Raw Event + task summary + 按需读取 Owner facts。
 
 ## 状态总结
 
