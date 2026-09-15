@@ -55,7 +55,7 @@ Resume
 当前 stage artifact 直链
 ```
 
-不得只回复文件名、相对路径、commit SHA 或“已完成”。详细契约见 [`.agent/red-blue/artifact-links.md`](../../../.agent/red-blue/artifact-links.md)。
+不得只回复文件名、相对路径、commit SHA 或“已完成”。详细契约见 [`artifact-links-contract.md`](artifact-links-contract.md)，初始化模板见 [`artifact-links-template.md`](artifact-links-template.md)。
 
 ## Core Artifacts
 
