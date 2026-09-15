@@ -139,6 +139,94 @@ Red 的怀疑必须满足三个约束：
 
 禁止“无论怎么答都算错”的陷阱式问题。
 
+## 四种高信息增益追问动作
+
+真实面试的深度通常不是来自“再问一道更难的架构题”，而是从候选人刚说出的工程细节继续收紧。Red 优先使用下面四种动作。
+
+### Subtraction Test — 先尝试删复杂度
+
+候选人一旦引入额外 Agent、Graph、Memory 层、Gateway、状态对象或独立服务，Red 先问最简单替代能不能工作。
+
+```text
+为什么不是修原来的配置传递？
+为什么降低 graph weight 不够？
+普通 where user_id + project_id 为什么不能解决？
+同一个 Agent 切不同 Context View 为什么不够？
+Subgraph / worker 为什么不够，为什么必须成为独立 Agent？
+```
+
+这个动作不是要求所有设计都简化，而是迫使候选人给出“上一层方案在哪个具体 failure 下已经失效”。如果没有这个 failure，复杂度暂时没有证明必要。
+
+### Ownership Interrupt — 在“我们”变多时打断归属漂移
+
+候选人从个人实现滑向团队整体时，Red 可以立即插入短问题，不必等一条技术线讲完。
+
+```text
+这个决定是谁定的？
+这里你自己写的是哪一段？
+GraphRAG 是你提的还是已有方向？
+这个指标是你亲自跑的吗？
+法院侧测试你本人参与到哪一层？
+如果我打开 commit，哪一个 diff 最能代表你的工作？
+```
+
+Ownership Interrupt 的目标是把 Team Fact、Personal Ownership、Framework Capability 和后来演进重新分开，不是要求实习生拥有整个系统。
+
+### Evidence Escalation — 结果越强，证据越具体
+
+Red 不满足于抽象的“有测试”“效果好了”。Claim 越强，证据要求越具体。
+
+```text
+你说 regression 修复了
+→ 哪条 query 原来失败？候选集里发生了什么？
+
+你说 Recall 提升
+→ sample 是什么？baseline 同条件吗？holdout 呢？
+
+你说线上稳定
+→ 什么日志、告警、故障或 Pilot 证据支持？
+
+你说这是你做的
+→ 哪个入口、函数、数据结构或 commit 能交叉验证？
+```
+
+Evidence Escalation 不要求候选人现场背 SHA。它要求证据粒度随着 Claim 强度同步上升。
+
+### Project → Fundamental Bridge — 从项目自然打到底层
+
+Red 不把基础题做成与项目无关的随机抽卡。优先从候选人已经暴露的机制建立桥，再下沉到 Python、数据库、网络、IR 或分布式系统。
+
+典型桥接：
+
+```text
+MCP / remote Tool timeout
+→ HTTP timeout 能否证明远端没执行
+→ retry / idempotency
+→ exactly-once 为什么难
+
+per-user config injection
+→ 并发请求会不会串
+→ request-local state
+→ ContextVar / coroutine context propagation
+
+GraphRAG parallel retrieval
+→ asyncio task / gather
+→ timeout / cancellation
+→ cancel 本地 coroutine 是否等于远端请求终止
+
+Memory concurrent write
+→ lost update
+→ READ COMMITTED
+→ optimistic version / SELECT FOR UPDATE / CAS
+→ 为什么不能拿着 DB lock 等模型调用
+
+Multi-Agent shared state
+→ stale result / duplicate effect
+→ versioning / idempotency / coordination authority
+```
+
+桥接不是硬性格式。真实面试也可以在项目讲到一定深度后直接切基础题。关键是基础知识必须能解释候选人自己声称做过的工程机制，而不是只背定义。
+
 ## BATCH_DUEL：每一波固定 100 问
 
 自动 Round 默认有两波 Red。
@@ -208,9 +296,12 @@ Claim 声称了什么
 → 哪个数字最值得质疑
 → 哪个成熟方案可能替代它
 → 这层复杂度的删除条件是什么
+→ 哪个项目细节最适合桥接到底层基础
 ```
 
 Red Wave 1 不允许读取 Zuno docs / source / Evidence、Blue architecture notes、隐藏 source trace。
+
+Wave 1 不按六条简历 bullet 平均配题，也不预先规定“多少题必须是架构题”。优先把最有信息量的 Claim 建成连续 Thread，在适当位置插入 Subtraction Test、Ownership Interrupt、Evidence Escalation 和 Project → Fundamental Bridge。
 
 ## Red Wave 2：评价 + 追杀
 
@@ -245,6 +336,8 @@ Red Wave 2 必须先完整评价 Blue Wave 1，再生成新的 100 题。
 - “优化了”“稳定了”“已经解决”；
 - 候选人提出的新架构；
 - Blue 1 与简历之间的表述差异。
+
+Wave 2 的问题应尽量表现为“上一答产生了新的 handle → 继续收紧”，而不是换一组预编排的系统设计题。一个回答如果暴露了 ownership、evidence 或底层基础薄弱，可以立刻改变后续题目分布。
 
 ## Ownership 与真实性 Kill Switch
 
@@ -287,6 +380,7 @@ Resume Claim
 → 调用链 / 数据流 / State / Authority
 → 代码 / 参数 / 算法
 → concurrency / timeout / crash / stale result
+→ Project → Fundamental Bridge
 → test / metric / bad case
 → cost / latency / operational burden
 → complexity burden of proof
@@ -371,6 +465,13 @@ RAG ranking → Recall / MRR / Top-K / ANN
 Multi-Agent state → distributed coordination / versioning
 ```
 
+基础题可以有两种合法来源：
+
+1. 从候选人项目机制桥接下沉；
+2. 项目追问已经足够后，按岗位要求直接切 Python / DB / network / distributed / IR。
+
+Red 不需要把所有八股都伪装成项目题，但项目中暴露出的关键基础必须优先验证。
+
 ## Red Final Evaluation
 
 最终盲评重点不是“答了多少”，而是两轮以后是否建立可信工程画像。
@@ -392,6 +493,10 @@ Multi-Agent state → distributed coordination / versioning
 - 是否恰好 100 题；
 - 是否真正质疑了简历 / 项目真实性，而不是默认相信；
 - 是否通过交叉问题验证 Ownership 和时间线；
+- 是否在候选人开始用“我们”覆盖个人贡献时做了 Ownership Interrupt；
+- 是否对重要复杂度做了 Subtraction Test；
+- 是否让 Evidence 要求随 Claim 强度升级，而不是停在“有测试吗”；
+- 是否至少把若干核心项目机制自然桥接到对应基础；
 - 是否每题一个主要意图；
 - 是否围绕高价值 Claim 形成深度；
 - Wave 2 是否真正使用 Blue 1 的回答；
@@ -410,6 +515,10 @@ Multi-Agent state → distributed coordination / versioning
 
 - 怀疑是否有依据，还是为了攻击而攻击；
 - Resume authenticity 是否真正做了交叉验证；
+- Subtraction Test 是否真正减少了无根据的架构复杂度；
+- Ownership Interrupt 是否区分了个人、团队、框架和后来演进；
+- Evidence Escalation 是否把强 Claim 逼到可复核粒度；
+- Project → Fundamental Bridge 是否自然，还是把随机八股硬包装成项目题；
 - Complexity burden 是否覆盖核心自研层；
 - Build/Buy/Delete 是否追到真实 Delta；
 - Red 2 是否根据证据更新信念；
