@@ -84,6 +84,12 @@ CMDL 一类复杂多主体数据集则适合扩展 Task Class 的边界。Provid
 
 Target 不预设具体改善数字，因为当前没有真实法院工作量和对照实验支持。09 的责任是把这些问题变成可测量设计，并把 `Measurement Needed` 与已经建立的 Evidence 分开。只有当真实专业流程显示稳定收益时，研究资产和 Agent 机制才从“技术可行”升级成“产品值得长期维护”。
 
+### Provenance、正确性、授权和压缩保真要分别评测
+
+Context / Memory 与 Knowledge 都会产生 source ids、lineage 和 trace。它们非常适合回答“这段内容从哪里来”，但 09 不能把 provenance coverage 当成 correctness。来源本身可能错误，当前主体可能已经失去权限，summary 也可能在压缩时丢掉否定条件、时间范围或主体归属。
+
+因此长期 Eval 应把四件事拆开：lineage completeness 测能否追源；factual / citation quality 测内容是否成立；Security fault test 测撤权后是否仍能被使用；compression / context preservation 测关键语义是否在摘要后保留。只有四类信号放在一起，Context trace 才不会被误读成“有来源所以可信”。
+
 ### Evaluation 还负责帮助删除复杂度
 
 一个功能做出来以后，团队天然倾向于寻找证明它有价值的案例。09 需要主动做相反的事：设计 baseline、ablation 和 kill test。
@@ -96,12 +102,18 @@ Evaluation 也不能单独宣布整个系统 Production Ready。一组 Dataset �
 
 Observability 也不应该无限收集。设计前先列最需要回答的问题：一次结果为什么被拒绝，哪个版本导致质量回退，现实 Effect 是否重复，哪个步骤放大了成本，撤权以后是否仍有访问。然后只记录足以回答这些问题的事件和属性。日志越多并不自动让系统更可解释。
 
+### 负向 Evidence 也能直接决定实现优先级
+
+Evaluation 的职责不只是给新功能打高分。当 fault probe 稳定证明一个 Target invariant 当前被违反，它就已经产生了可行动的工程证据。当前 Effect restart replay 的 certainty upgrade 和 Mandatory Audit send-gate 失败就属于这一类：它们不需要再等一轮“更多测试”才承认问题，而应进入实现 blocker 队列，修复后再用同一 fault window 关闭缺口。
+
+同样，GraphRAG tiny smoke 只支持 regression fix，不支持总体 superiority。正式 GraphRAG 决策应冻结 corpus / config，按 query class 做 Hybrid / reranker / gated GraphRAG 对照、holdout 与 ablation；如果 seed / alias / path heuristic 不能贡献稳定增益，就删除对应复杂度。
+
 ### Current / Target / Gap
 
-**Current：** 仓库已经有 RAG / GraphRAG eval、LLM judge、LangSmith trace verification 和 2026-06-20 的小样本 GraphRAG regression / rerun 证据。它们证明评测基础和局部研发迭代存在，不证明完整 Release Evaluation、真实 HumanDecision feedback loop、生产级 Observability 或法院级 benchmark 已经建立。
+**Current：** 仓库已经有 RAG / GraphRAG eval、LLM judge、LangSmith trace verification 和 2026-06-20 的小样本 GraphRAG regression / rerun 证据。Current fault probes 还已经产生可行动的负向 Evidence，例如 Effect restart replay certainty upgrade 与 Mandatory Audit send-gate failure。它们证明评测基础和局部研发/诊断能力存在，不证明完整 Release Evaluation、真实 HumanDecision feedback loop、生产级 Observability 或法院级 benchmark 已经建立。
 
-**Target：** 09 提供稳定 correlation、Telemetry / Eval 数据模型、Dataset / Judge / Config 版本和可比较实验；把经过治理的真实专业反馈转成 Task Class、Regression 与资格证据；让 05 的 Provider qualification 和架构复杂度可以由 baseline、ablation 与 kill test 决定。业务 Truth、Mandatory Audit 和正式发布资格仍由对应 Owner 和治理条件共同决定。
+**Target：** 09 提供稳定 correlation、Telemetry / Eval 数据模型、Dataset / Judge / Config 版本和可比较实验；把经过治理的真实专业反馈转成 Task Class、Regression 与资格证据；让 05 的 Provider qualification 和架构复杂度可以由 baseline、ablation 与 kill test 决定。并明确区分 provenance coverage、factual correctness、authorization safety 与 context/compression semantic preservation。
 
-**Gap：** 真实业务 task class 数据集、专家反馈治理、Judge 校准、critical failure 门槛、跨模块恢复 Eval、容量和成本基线、外部 Tool / Security 场景、真实法院人员评测、产品效率指标以及完整 Production qualification 仍需要证据。没有测量时继续写 Unknown / BLOCKED，不制造数字。
+**Gap：** 真实业务 task class 数据集、GraphRAG query-class holdout / ablation、Memory on/off、Context compression preservation、专家反馈治理、Judge 校准、critical failure 门槛、跨模块恢复 Eval、容量和成本基线、真实法院人员评测、产品效率指标以及完整 Production qualification 仍需要证据。没有测量时继续写 Unknown / BLOCKED，不制造数字。
 
 工程 / Agent 精确参考与跨模块一致性规则见 [`reference.md`](reference.md)。
