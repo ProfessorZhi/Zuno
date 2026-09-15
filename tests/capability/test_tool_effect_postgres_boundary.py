@@ -1,4 +1,4 @@
-from __future__ import annotations
+﻿from __future__ import annotations
 
 import os
 from datetime import UTC, datetime, timedelta
@@ -348,7 +348,7 @@ def test_conclusive_not_executed_reconciliation_never_becomes_completed_or_redis
             manual_assessment_id=f"tool-manual-effect-assessment:inconclusive:{execution_id}",
             reconciliation_id=reconciliation_id,
             provider_effect_id="provider-effect:mail:unknown:1",
-            conclusion="INCONCLUSIVE",
+            conclusion="UNRESOLVED",
             confidence=0.4,
             assessor_principal_id="workspace-user:manual-reviewer:effect",
             residual_uncertainty="provider logs are incomplete",
@@ -398,3 +398,4 @@ def test_conclusive_not_executed_reconciliation_never_becomes_completed_or_redis
         assert execution == {"status": "FAILED", "effect_certainty": "CONFIRMED_NO_EFFECT"}
     finally:
         _drop_database(engine, admin_engine, database_name)
+
