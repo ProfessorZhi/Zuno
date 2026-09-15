@@ -44,9 +44,9 @@ main@固定 SHA
 
 Resume Freeze 后，本轮所有攻击都针对同一版本。
 
-## Red Wave 1：100 题
+## Red Interview Skill：Wave 1 先用 100 题建立压力面
 
-第一波 Red 只看到简历、岗位和 Attack Skill。它不知道 Zuno 文档里的“标准答案”。
+第一波 Red 只看到简历、岗位和 `.agent/red-blue/attack-model.md`。它不知道 Zuno 文档里的“标准答案”。
 
 100 题不是为了覆盖 100 个知识点，而是为了对少数高价值 Claim 做纵深压力：Ownership、实现、状态、失败、Evidence、Build/Buy、Fundamentals 和架构替代方案。
 
@@ -105,9 +105,13 @@ Blue 2 读取 Red 2 的公开评价和追问，再逐题回答 100 题。
 
 完成后默认只把 `04_blue_wave2_answers.md` 链接发给用户。
 
-## Red Final 与 Blue Final 做不同的事
+## Red Evaluation：两轮以后仍然只做盲评
 
 Red Final 继续 blind。它只看简历和两轮可观察 Q/A，判断候选人是否可信、Blue 2 是真正解释还是话术补洞，以及哪些 Resume Claim 应保留、降级或删除。
+
+Red Evaluation 可以说“作为面试官我不信”，但不能利用隐藏 canonical sources 宣布 Zuno Architecture Truth。
+
+## Blue Architecture Reflection：最后才审系统本身
 
 Blue Final Architecture Reflection 才重新读取 canonical docs / Evidence 和两份架构初诊，判断：
 
