@@ -20,14 +20,14 @@ Slice C 的 fault evidence 如何影响 Freeze readiness、哪些测试已经停
 ## 当前边界
 
 ```text
-SELECTED CODE VERIFICATION: AVAILABLE @ c817bd345c9025524c6380ef208a131277d164bd
-SELECTED GITHUB RUN: 34499552197 / 193 passed
+SELECTED CODE VERIFICATION: AVAILABLE @ 18e4973365461ec939b95063c74f4a0457507e75
+SELECTED GITHUB RUN: 34949985244 / 195 passed, 2 warnings
 POSTGRESQL DOMAIN SELECTED PROBES: PASS
 WAVE-001 REVISION POSTGRESQL APPLY/DOWNGRADE/RE-APPLY: PASS
 TARGET ADMISSION RECEIPT: NOT IMPLEMENTATION-PROVEN
-UNKNOWN EFFECT RESTART REPLAY: TARGET VIOLATION CONFIRMED ON DIAGNOSTIC BRANCH
+UNKNOWN EFFECT RESTART REPLAY: SELECTED PASS / UNKNOWN PRESERVED / NO REDISPATCH
 REMOTE SUCCESS + LOCAL EFFECT RECEIPT FAILURE: FALLS BACK TO UNKNOWN / RECONCILE
-RECONCILIATION CONVERGENCE: NOT IMPLEMENTATION-PROVEN
+RECONCILIATION CONVERGENCE: MINIMAL MANUAL/DIRECT CONCLUSIVE WRITER SELECTED-PROVEN; PROVIDER REMOTE-QUERY CONSUMER NOT PROVEN
 CANCEL-IN-FLIGHT ORCHESTRATION: NOT IMPLEMENTATION-PROVEN
 PRE-EFFECT SECURITY EPOCH REVOCATION: PASS ON DIAGNOSTIC BRANCH
 PRE-LEASE SECRET REVOCATION: PASS ON DIAGNOSTIC BRANCH
@@ -39,15 +39,19 @@ FULL CI: NOT RUN / NOT ESTABLISHED
 COURT QA: UNKNOWN / NOT AVAILABLE
 ```
 
-Main 的正向 selected verification 说明一组明确列出的 Domain、Citation、Application、Runtime、Knowledge、Capability、Tool、Model Gateway、Security、Observability、Retrieval 与 Eval 行为在同一个 main SHA 的 GitHub runner 上通过。对应 run 还使用 PostgreSQL 16.15 service 验证了 Wave-001 Domain mutation/version 的基本事务、并发冲突、幂等重放，以及 revision `20260813_57` 自身的 `upgrade → downgrade → re-upgrade` DDL。
+Main 的 selected verification 现在绑定 `18e4973365461ec939b95063c74f4a0457507e75` / run `34949985244`。该 run 在 PostgreSQL 16.15 service 上执行 selected suite，结果为 `195 passed, 2 warnings in 12.15s`。它继续覆盖 Wave-001 Domain mutation/version 的事务、并发冲突、幂等重放和 revision `20260813_57` 的 `upgrade → downgrade → re-upgrade` DDL，并正式纳入两条 Effect PostgreSQL 回归。
 
-Slice C 已经有足够证据停止继续穷举同类 fault window。PR #201 / run `34559517466` 证明 unresolved Reconciliation 在 restart replay 时会被错误升级成 completed；PR #205 / run `34560692093` 证明缺少 durable mandatory-audit proof 时当前 send path 仍会 dispatch。Source review 还把最终 Reconciliation convergence 与 cancel-in-flight orchestration 收敛成 `NOT_IMPLEMENTATION_PROVEN`，这些问题需要实现而不是更多同层测试。
+Slice C 现在出现了一条完整的“负向诊断 → 实现修复 → selected regression”。历史 PR #201 / run `34559517466` 曾证明 unresolved Reconciliation 在 restart replay 时会被错误升级成 completed；AUTH-A / PR #242 把同一故障窗口收进 main selected suite。当前结果证明：第一次 Effect outcome unknown 会留下 `UNKNOWN_EFFECT + OPEN/RECONCILE`；销毁并重建 Runtime 后，用同一 action / idempotency identity replay，provider executor 不会再次调用，Runtime 仍返回 `reconcile_required / UNKNOWN_EFFECT`。
 
-正向边界同样已经明确：PR #203 / run `34560042535` 证明 pre-send SecurityEpoch revocation fail closed；PR #207 / run `34566365522` 证明 pre-lease Secret revoke fail closed；PR #210 / run `34567699688` 证明 provider 已返回成功、但本地 EffectReceipt persistence 失败时，当前 Gateway 会留下 `UNKNOWN_EFFECT + OPEN/RECONCILE`，而不是直接宣布 completed。故障形状与 Freeze 影响见 [`Effects ↔ Security Slice C Review`](../governance/effect-security-slice-c-review.md)。
+AUTH-A 同时建立了最小 conclusive convergence boundary。授权人工 assessment 只有在结论明确为 executed / not-executed 且没有 residual uncertainty 时才收敛；`UNRESOLVED` 且仍有 residual uncertainty 时继续保持 Unknown。显式 resolver 也只接受 conclusive conclusion。确认 executed 后形成 confirmed EffectReceipt，后续 replay 才能进入 completed；确认 not-executed 后形成 `NO_EFFECT / CONFIRMED_NO_EFFECT`，后续 replay 不会把它写成 completed，也不会偷偷再次 dispatch。resolver 在将 Reconciliation 标记为 `RESOLVED` 前会重新读取 exact EffectReceipt，防止唯一约束冲突被 `ON CONFLICT DO NOTHING` 吞掉以后伪造收敛。
 
-所有需要 fresh PostgreSQL migration chain 的 Slice C 诊断都依赖测试进程临时兼容 `zuno.settings → zuno.platform.settings`，因为正式 Alembic `env.py` 仍引用已退休的 `zuno.settings`。完整 fresh-database migration chain 能在这个 test-only alias 下运行，不等于正式 Alembic entrypoint 已经 clean pass。
+这个结果关闭的是历史 restart-certainty defect，以及“Current 完全没有 conclusive writer”这一缺口。它没有证明 provider-specific remote-query consumer、通用 polling/backoff scheduler、完整 Target `ReconciliationReceipt` object、cancel-in-flight orchestration或真实外围 Provider 的对账协议。PR #205 / run `34560692093` 的 Mandatory Audit 负向结果也仍然成立：缺少 durable mandatory-audit proof 时，当前 send path 仍会 dispatch。
 
-这个范围不能扩写成“Zuno PostgreSQL 集成已完成”“完整 Effect recovery 已完成”“Reconciliation 已闭环”“cancel-in-flight 已闭环”“Security 已验证完成”“Secret rotation 已验证完成”“Mandatory Audit 已接入”或“完整 Alembic deployment path 已验证”。Target `AdmissionReceipt`、02↔04 owner-first recovery、Effect replay correctness、Reconciliation convergence、Mandatory Audit durability gate、完整 Secret rotation/retry、其他 Approval / Policy drift、no-egress、其他平台 PostgreSQL 路径、Redis / RabbitMQ / Object Store、真实 Provider 和外部 Host仍各自需要证据。
+其他正向边界保持不变：PR #203 / run `34560042535` 证明 pre-send SecurityEpoch revocation fail closed；PR #207 / run `34566365522` 证明 pre-lease Secret revoke fail closed；PR #210 / run `34567699688` 证明 provider 已返回成功、但本地 EffectReceipt persistence 失败时，Gateway 会留下 `UNKNOWN_EFFECT + OPEN/RECONCILE`，而不是直接宣布 completed。故障形状与 Freeze 影响见 [`Effects ↔ Security Slice C Review`](../governance/effect-security-slice-c-review.md)。
+
+所有需要 fresh PostgreSQL migration chain 的 Slice C 测试仍依赖测试进程临时兼容 `zuno.settings → zuno.platform.settings`，因为正式 Alembic `env.py` 仍引用已退休的 `zuno.settings`。完整 fresh-database migration chain 能在这个 test-only alias 下运行，不等于正式 Alembic entrypoint 已经 clean pass。
+
+这个范围不能扩写成“Zuno PostgreSQL 集成已完成”“完整 Effect recovery 已完成”“自动 Reconciliation 已闭环”“cancel-in-flight 已闭环”“Security 已验证完成”“Secret rotation 已验证完成”“Mandatory Audit 已接入”或“完整 Alembic deployment path 已验证”。AUTH-A 只关闭 restart certainty defect并建立最小 conclusive convergence boundary；provider-specific remote-query consumer、Target `AdmissionReceipt`、02↔04 owner-first recovery、Mandatory Audit durability gate、完整 Secret rotation/retry、其他 Approval / Policy drift、no-egress、其他平台 PostgreSQL 路径、Redis / RabbitMQ / Object Store、真实 Provider 和外部 Host 仍各自需要证据。
 
 当前仓库可以证明有限实现和验证范围，也可以证明若干具体失败；不能证明完整历史技术栈、真实法院质量、生产部署、用户规模、SLA、QPS、HA、No-egress、Sandbox 资格或正式外部验收。历史 Pilot 不等于 Production。
 
@@ -60,9 +64,9 @@ Slice C 已经有足够证据停止继续穷举同类 fault window。PR #201 / r
 - 模块 Part B 写了 `AdmissionReceipt`，只能证明 Target 语义已经设计清楚；当前 PostgreSQL mutation probe 也不能把 mutation record 直接升级成最终 Receipt。
 - `Current code selected verification` 通过只能证明 workflow 列出的行为，不等于 Full Project CI 通过。
 - revision `20260813_57` 能真实 apply/downgrade/re-upgrade，只证明该 revision 自身 DDL 可逆，不证明真实数据 backfill 或零停机策略。
-- 诊断分支失败可以证明某条 Target invariant 当前不成立；诊断分支成功也只证明它实际注入并观察到的 fault window。
-- `Outcome Unknown` 的耐久记录存在，不等于 recovery 已正确闭环；当前已经观测到 restart replay 把 unresolved reconciliation 错误升级成 completed，并且 source review 尚未找到最终 Reconciliation convergence implementation。
-- provider success 后 local EffectReceipt 写失败能够退回 Unknown，只证明现有 exception/persistence-failure fallback，不证明真实 process-crash timing 或后续 Reconcile 已闭环。
+- 诊断分支失败可以证明某条 Target invariant 在对应 SHA 上不成立；后续 selected regression 可以证明同一故障窗口被修复。历史负向证据保留，不与新的 Current 状态混写。
+- `Outcome Unknown` 的耐久记录本身不等于完整 recovery。AUTH-A 已证明 unresolved reconciliation 跨 restart 保持 UNKNOWN，且存在最小 conclusive manual/direct writer；provider-specific remote-query consumer 仍未证明。
+- provider success 后 local EffectReceipt 写失败能够退回 Unknown，证明现有 exception/persistence-failure fallback；AUTH-A 又证明这个 Unknown 可以在 selected PostgreSQL replay 中保持 certainty 并通过 conclusive resolution 收敛。它仍不证明真实 process-crash timing 或通用 provider 自动对账。
 - pre-send SecurityEpoch revocation 与 pre-lease Secret revocation 已有正向 fault evidence，不代表完整 Secret rotation/retry、Approval hash drift、Policy Engine outage 或 no-egress 已经证明。
 - `security_audit_requirements` 存在，不代表 matching AuditPersistenceReceipt 已提交；#205 已证明当前 send path 会在 durable audit proof 缺失时继续 dispatch。
 - Cancellation receipt / async-job primitive 存在，不等于 Runtime 已经把用户取消、provider cancel、callback race 和最终 Effect truth 接成可恢复协议。
