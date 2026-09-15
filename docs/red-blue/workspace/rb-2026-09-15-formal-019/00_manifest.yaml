@@ -10,7 +10,7 @@ github_runtime:
   github_state_bus: REQUIRED
   stage_handoff: COMMIT_THEN_REREAD
   round_branch: red-blue/rb-2026-09-15-formal-019
-  round_pr: PENDING
+  round_pr: 239
   last_consumed_head_sha: a8b0e540d9c138071ba671733e88a4142bd77a60
   firewall_strength: LOGICAL_GITHUB_MEDIATED
   strict_blind_red_certification: false
