@@ -9,9 +9,12 @@
 - Each resume bullet should be independently interviewable and preserve personal ownership boundaries.
 - Current architecture is a baseline, not a protected answer. Single Agent, Multi-Agent, Supervisor/Specialist, Subgraph, Generic Host and Native Runtime are candidates that must earn their complexity.
 - User's first-party interview records take priority over public interview posts for Red behavior calibration.
+- Chat checkpoint should stay concise: give only the artifact produced by the current stage, not a full index of all round files.
+- Simulated Resume may be shown in full in chat.
+- Red / Blue 100-question or 100-answer batches should show only a small set of representative high-information excerpts in chat, with the complete batch available through one direct GitHub document link.
 
 ## Latest execution direction
 
-2026-09-15: user said `继续` after reviewing the interviewer-calibration analysis. Controller interpretation for this formal round: continue the workflow by incorporating the calibrated Red behavior into the pinned skill, initialize a new formal round, build a fresh simulated resume from canonical truth, then stop at the required Resume Review Gate.
+2026-09-15: user approved the simulated resume by replying `继续`. Resume is frozen for this round and Red Wave 1 may proceed.
 
-This does not approve any finding or improvement ledger from archived round #018. PR #236 is `INVALID_WORKFLOW_CALIBRATION` and its verdict/findings are not formal inputs.
+The archived PR #236 remains `INVALID_WORKFLOW_CALIBRATION`; its verdict/findings are not formal inputs.
