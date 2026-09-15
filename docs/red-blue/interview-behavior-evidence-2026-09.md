@@ -89,6 +89,71 @@ Tool 场景还会从大结果 / 上下文问题继续追具体工程处理，从
 
 这支持一个更自然的面试模型：项目聊到足够深以后，可以直接切岗位基础，不必强行把所有底层题包装成项目追问。
 
+## 用户本人真实面试记录：Ownership、减法与企业化追问
+
+2026-08 的 Shopee、水滴集团、杭州泛讯三场用户本人面试记录提供了比公开面经更高优先级的行为证据。这里仍然只抽取 interviewer behavior，不把其中理想回答或后来形成的 Zuno Target Architecture 当作当时项目事实。
+
+### Shopee：先问谁做的，再从 Tool 权限追到存储选择
+
+Shopee MP 后端片段先问项目人数、谁主导架构、候选人具体负责哪些模块；随后连续追 Tool 权限到底由谁分配、用户权限和工具权限按什么维度判断，再问为什么使用多个数据库、一个数据库是否足够。
+
+这说明真实 interviewer 很自然地使用下面的顺序：
+
+```text
+项目 Claim
+→ Ownership
+→ 具体机制
+→ 最简单替代是否足够
+```
+
+Red 不应等一条技术线讲完才校验 Ownership。候选人从“我”滑向“我们”时，可以直接插入“这个决定是谁定的”“你自己写哪一段”。
+
+### 水滴：Build / Buy 与方案来源本身就是真实性问题
+
+水滴 Agent 应用工程师面试从“从头搭还是基于开源”“为什么不用开源”开始，又追模型和团队分工、两名 Agent 同学如何拆分工作。进入 Memory 后继续追 Working / Session / Long-term 分层、OpenViking 是否调研、方案来自导师还是团队、企业使用时分布式部署和并发怎么办、知识库和 Memory 边界、错误/过期记忆如何删除和冲突处理。
+
+这里最稳定的 interviewer behavior 不是“喜欢问 Memory”，而是：
+
+```text
+自研 Claim
+→ 开源替代
+→ 方案来源
+→ 个人 Ownership
+→ 企业约束变化
+→ 并发 / 状态 / 恢复
+```
+
+因此 Red 对复杂机制应主动做 Subtraction Test：如果数据库条件查询、框架能力、固定 Workflow 或普通 Subgraph 已经够用，候选人需要说明额外抽象解决了哪个真实 failure。
+
+### 泛讯：项目机制可以自然桥接到运行时基础
+
+泛讯 AI 应用工程师面试围绕 Agent / Skill / Tool、权限、MCP Schema / Provider 变化、Memory 写入纠错、Context Pack、Hybrid / GraphRAG 与多数据库展开。其问题形态说明 Agent 项目并不会与传统后端基础隔离：权限变化会进入 TOCTOU，Provider timeout 会进入 retry / idempotency，Memory 并发会进入数据库隔离和冲突，GraphRAG 并行检索会进入 async / cancellation。
+
+这支持 Red 增加显式 `Project → Fundamental Bridge`：
+
+```text
+remote Tool timeout → HTTP 语义 → retry → idempotency
+per-user config → 并发隔离 → ContextVar / request-local state
+Graph retrieval → asyncio → timeout / cancellation
+Memory write → lost update → isolation / optimistic lock / CAS
+shared Agent state → stale result → versioning / coordination
+```
+
+桥接的目标是验证候选人的工程判断是否有底层知识支撑，不是把随机八股硬套进项目故事。
+
+### 强结果必须触发 Evidence Escalation
+
+三场本人记录也反复出现“到底谁做的、当前做到什么程度、一个数据库能否完成、企业并发是否真的处理”等问题。它们共同说明：Claim 越强，面试官越可能要求更具体的交叉验证。
+
+```text
+“优化了” → 给一个失败样本和 before/after
+“稳定” → 哪类运行证据支持
+“我做的” → 入口、函数、数据结构或 commit 在哪里
+“企业可用” → 并发、隔离、部署、审计做到什么程度
+```
+
+这类 Evidence Escalation 比机械追问“有测试吗”更接近真实面试。
+
 ## 对 Red Skill 的直接约束
 
 1. Live Interview 不使用固定 30 问线性脚本。
@@ -101,8 +166,19 @@ Tool 场景还会从大结果 / 上下文问题继续追具体工程处理，从
 8. Pressure Suite 可以保持 100 问，但必须与 Live Interview 分离。
 9. 人工 Review 既检查“像不像真人”，也检查“有没有真的追深”。
 10. 字节面经只提供行为校准，不变成“字节原题库”。
+11. 用户本人真实面试记录优先于公开社区样本，用于校准 Ownership Interrupt、Subtraction Test、Evidence Escalation 和 Project → Fundamental Bridge。
+12. Project → Fundamental Bridge 优先从候选人自己声称做过的机制下沉，但岗位基础题也允许在项目段结束后直接切换。
+13. Red 不预编排固定比例的“架构题”；题目分布跟随高价值 Claim、可信度变化和上一答暴露的新 handle。
 
 ## 本次抽样来源
+
+### 用户本人面试记录
+
+- `ProfessorZhi/internship-work`：2026-08-06 Shopee MP 后端开发 QA；项目人数 / 架构 Owner / 个人模块、Tool 权限、用户与工具权限、多数据库与检索/图谱。
+- `ProfessorZhi/internship-work`：2026-08-11 水滴集团 Agent 应用工程师 QA；Build/Buy、团队分工、Memory 分层、OpenViking、企业并发、知识库边界、冲突和删除。
+- `ProfessorZhi/internship-work`：2026-08-06 杭州泛讯 AI 应用工程师 QA；Agent/Skill/Tool、权限、MCP 变化、Memory、Context Pack、Hybrid/GraphRAG 与多数据库。
+
+### 公开定性样本
 
 - 牛客：字节跳动 AI 应用开发一面面经，2026-08；前段了解经历和项目，后段根据项目细节继续追问。
   https://www.nowcoder.com/feed/main/detail/15af3788a038477bba99f2f9d94b2cef
@@ -125,4 +201,4 @@ Tool 场景还会从大结果 / 上下文问题继续追具体工程处理，从
 
 ## Evidence boundary
 
-这是定性样本，不代表所有字节团队、所有面试官或所有 Agent 岗位。Skill 只采用跨来源重复出现、且与用户实际反馈一致的行为模式。后续如果用户提供本人新的真实面试记录，以用户实际经历优先更新。
+这是定性样本，不代表所有字节团队、所有面试官或所有 Agent 岗位。用户本人面试记录也只代表其当场经历，不代表这些公司所有团队的固定面试法。Skill 只采用跨来源重复出现、且与用户实际反馈一致的行为模式。后续如果用户提供本人新的真实面试记录，继续优先更新。
