@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 import sys
 from uuid import uuid4
@@ -260,17 +261,23 @@ def test_unknown_external_effect_stays_reconcile_required_after_runtime_restart(
             ).mappings().one()
         assert still_open == {"status": "OPEN", "next_action": "RECONCILE"}
 
-        resolved_ref = _gateway(engine).resolve_effect_reconciliation(
+        gateway = _gateway(engine)
+        assert gateway.escalate_due_reconciliations(
             tenant_id="tenant-effect",
+            now=datetime.now(tz=UTC) + timedelta(hours=2),
+        ) == 1
+        gateway.record_manual_effect_assessment(
+            tenant_id="tenant-effect",
+            manual_assessment_id=f"tool-manual-effect-assessment:{execution_id}",
             reconciliation_id=reconciliation_id,
+            provider_effect_id="provider-effect:mail:unknown:1",
             conclusion="CONFIRMED_EXECUTED",
-            resolution_payload={
-                "source": "REMOTE_QUERY",
-                "provider_status": "committed",
-                "provider_effect_id": "provider-effect:mail:unknown:1",
-            },
+            confidence=1.0,
+            assessor_principal_id="workspace-user:manual-reviewer:effect",
+            residual_uncertainty="",
+            evidence_payload={"source": "provider-console", "status": "committed"},
         )
-        assert resolved_ref == f"tool-effect-receipt:{execution_id}"
+        resolved_ref = f"tool-effect-receipt:{execution_id}"
 
         resolved_replay = _runtime(engine, calls).execute(approved_request)
         assert len(calls) == 1, "conclusive replay must still not redispatch the effect"
@@ -331,7 +338,28 @@ def test_conclusive_not_executed_reconciliation_never_becomes_completed_or_redis
         assert len(calls) == 1
 
         reconciliation_id = f"tool-effect-reconciliation:{execution_id}"
-        effect_receipt_id = _gateway(engine).resolve_effect_reconciliation(
+        gateway = _gateway(engine)
+        assert gateway.escalate_due_reconciliations(
+            tenant_id="tenant-effect",
+            now=datetime.now(tz=UTC) + timedelta(hours=2),
+        ) == 1
+        gateway.record_manual_effect_assessment(
+            tenant_id="tenant-effect",
+            manual_assessment_id=f"tool-manual-effect-assessment:inconclusive:{execution_id}",
+            reconciliation_id=reconciliation_id,
+            provider_effect_id="provider-effect:mail:unknown:1",
+            conclusion="INCONCLUSIVE",
+            confidence=0.4,
+            assessor_principal_id="workspace-user:manual-reviewer:effect",
+            residual_uncertainty="provider logs are incomplete",
+            evidence_payload={"source": "provider-console", "status": "incomplete"},
+        )
+        still_unknown = _runtime(engine, calls).execute(approved_request)
+        assert still_unknown.status == "reconcile_required"
+        assert still_unknown.effect_certainty == "UNKNOWN_EFFECT"
+        assert len(calls) == 1
+
+        effect_receipt_id = gateway.resolve_effect_reconciliation(
             tenant_id="tenant-effect",
             reconciliation_id=reconciliation_id,
             conclusion="CONFIRMED_NOT_EXECUTED",

@@ -1103,6 +1103,29 @@ class ToolRepository:
                 append_only_generation=1,
             )
         )
+        persisted_effect = self.connection.execute(
+            text(
+                """
+                SELECT effect_status, effect_certainty, prepared_tool_action_id, provider_effect_id
+                FROM tool_effect_receipts
+                WHERE tenant_id = :tenant_id AND effect_receipt_id = :effect_receipt_id
+                """
+            ),
+            {"tenant_id": tenant_id, "effect_receipt_id": effect_receipt_id},
+        ).mappings().first()
+        if persisted_effect is None:
+            raise ToolRuntimeConflict(
+                "reconciliation resolution could not persist the conclusive effect receipt"
+            )
+        if (
+            str(persisted_effect["effect_status"]) != effect_status
+            or str(persisted_effect["effect_certainty"]) != effect_certainty
+            or str(persisted_effect["prepared_tool_action_id"]) != str(row["prepared_tool_action_id"])
+            or str(persisted_effect["provider_effect_id"]) != str(row["provider_effect_id"])
+        ):
+            raise ToolRuntimeConflict(
+                "reconciliation resolution collided with a different effect receipt"
+            )
         self.connection.execute(
             text(
                 """
