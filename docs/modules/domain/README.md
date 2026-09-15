@@ -68,12 +68,18 @@
 
 完整 Domain Kernel 的成本是真实的：正式提交事务、版本冲突、历史保留、引用稳定和失效传播都需要实现与测试。只有结果真的要跨运行、跨人员和跨时间继续存在，这些机制才开始回报它们的复杂度。
 
+### Memory 可以提示过去，但不能参与正式事实的最终裁决
+
+专业人员过去接受过一项结论，可能被 summary 或 structured memory 再次召回；这只能帮助当前工作定位上下文。正式材料已经更新、旧 WorkProduct 已经 stale，或者新的 HumanDecision 取代旧判断时，02 的当前版本与失效关系拥有更高权威。
+
+因此 Domain 不从 Memory 推导 Canonical truth，也不要求把所有 Memory record 搬进领域库。只有某段内容经过正式业务接纳，才形成 DomainVersion / WorkProduct 历史；Memory 与 Domain 冲突时，消费者重新组装 Context，而不是修改 Domain 去迁就旧记忆。
+
 ### Current / Target / Gap
 
-**Target：** 02 拥有正式法律业务状态、DomainVersion、Formal Admission、AdmissionReceipt、WorkProduct 历史引用和正式失效关系；机器候选、Runtime 控制状态、知识派生和外部 Effect 仍由各自 Owner 管理。HumanDecision 可以为后续评测提供受治理的真实工作信号，但 Domain 不拥有 Eval dataset 或 Provider qualification。
+**Target：** 02 拥有正式法律业务状态、DomainVersion、Formal Admission、AdmissionReceipt、WorkProduct 历史引用和正式失效关系；机器候选、Runtime 控制状态、知识派生、Memory/Context 和外部 Effect 仍由各自边界管理。HumanDecision 可以为后续评测提供受治理的真实工作信号，但 Domain 不拥有 Eval dataset 或 Provider qualification。
 
-**Current：** 文档中的七对象 Kernel、完整 Admission transaction、版本冲突处理、失效传播和真实 HumanDecision → Eval 闭环属于 Target 设计，不能因为文档完整就视为已经实现。现有代码、Migration 和测试能证明到哪里，只以 `docs/evidence/` 和代码证据为准。
+**Current：** 文档中的七对象 Kernel、完整 Admission transaction、AdmissionReceipt、失效传播和真实 HumanDecision → Eval 闭环属于 Target 设计，不能因为文档完整就视为已经实现。当前 Evidence 已证明有限 Domain mutation、真实 PostgreSQL expected-version / idempotent replay / transaction failure protection和 revision-level DDL 可逆性；这些仍不等于 Target Formal Admission 已完成。
 
-**Gap：** 字段级冻结、真实并发冲突、Domain commit / Checkpoint crash-window 故障注入、Migration 方案、跨对象失效传播、真实法院工作流成本，以及专业人员修改如何经过治理进入长期 Eval，都仍需要独立验证。
+**Gap：** AdmissionReceipt 与 Domain mutation 同事务提交、Domain commit / Runtime checkpoint crash-window E2E、formal-complete denial、HumanDecision E2E、WorkProduct lifecycle、新证据 bounded re-evaluation、historical citation replacement 和跨运行 invalidation仍需要独立验证。
 
 工程 / Agent 精确参考与跨模块一致性规则见 [`reference.md`](reference.md)。
