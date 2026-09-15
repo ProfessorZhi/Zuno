@@ -336,19 +336,13 @@ class ToolInvocationGateway:
                     target_resource_set_ref=effect_policy.target_resource_set.resource_set_ref,
                 )
                 if execute_prerequisites.replay_result_ref:
-                    replay_payload = {
-                        "idempotency_replay": True,
-                        "result_ref": execute_prerequisites.replay_result_ref,
-                        "idempotency_scope": "tool-side-effect",
-                        "idempotency_key": call_id,
-                    }
-                    return replay_payload, ToolGatewayReceipt(
-                        "replayed",
-                        prepared_id,
-                        attempt_id,
-                        receipt_id,
-                        "IDEMPOTENT_SIDE_EFFECT_REPLAY",
-                        execute_prerequisites.replay_result_ref,
+                    return self._replay_existing_side_effect(
+                        tenant_id=tenant_id,
+                        call_id=call_id,
+                        prepared_id=prepared_id,
+                        attempt_id=attempt_id,
+                        receipt_id=receipt_id,
+                        result_ref=execute_prerequisites.replay_result_ref,
                     )
                 if execute_prerequisites.blocked_reason:
                     blocked_reason = execute_prerequisites.blocked_reason
@@ -1218,6 +1212,93 @@ class ToolInvocationGateway:
         with self._unit_of_work_factory() as repo:
             return repo.existing_side_effect_result_ref(tenant_id=tenant_id, call_id=call_id)
 
+    def _replay_existing_side_effect(
+        self,
+        *,
+        tenant_id: str,
+        call_id: str,
+        prepared_id: str,
+        attempt_id: str,
+        receipt_id: str,
+        result_ref: str,
+    ) -> tuple[Any | None, ToolGatewayReceipt]:
+        with self._unit_of_work_factory() as repo:
+            state = repo.describe_side_effect_result_ref(tenant_id=tenant_id, result_ref=result_ref)
+
+        kind = str(state.get("kind") or "UNKNOWN")
+        certainty = str(state.get("effect_certainty") or "UNKNOWN_EFFECT")
+        effective_ref = str(state.get("resolved_effect_ref") or state.get("result_ref") or result_ref)
+        replay_payload = {
+            "idempotency_replay": True,
+            "result_ref": effective_ref,
+            "source_result_ref": result_ref,
+            "result_kind": kind,
+            "effect_certainty": certainty,
+            "idempotency_scope": "tool-side-effect",
+            "idempotency_key": call_id,
+        }
+
+        if certainty == "CONFIRMED_EFFECT":
+            return replay_payload, ToolGatewayReceipt(
+                "replayed",
+                prepared_id,
+                attempt_id,
+                receipt_id,
+                "IDEMPOTENT_SIDE_EFFECT_REPLAY",
+                effective_ref,
+            )
+        if certainty == "CONFIRMED_NO_EFFECT":
+            return None, ToolGatewayReceipt(
+                "confirmed_not_executed",
+                prepared_id,
+                attempt_id,
+                receipt_id,
+                "RECONCILIATION_CONFIRMED_NOT_EXECUTED",
+                effective_ref,
+            )
+        if kind == "RECONCILIATION":
+            return None, ToolGatewayReceipt(
+                "reconcile_required",
+                prepared_id,
+                attempt_id,
+                receipt_id,
+                "UNKNOWN_EFFECT_RECONCILIATION_REQUIRED",
+                result_ref,
+            )
+        if kind == "ASYNC_JOB":
+            return None, ToolGatewayReceipt(
+                "async_waiting",
+                prepared_id,
+                attempt_id,
+                receipt_id,
+                "ASYNC_EFFECT_CONFIRMATION_REQUIRED",
+                result_ref,
+            )
+        return None, ToolGatewayReceipt(
+            "blocked",
+            prepared_id,
+            attempt_id,
+            receipt_id,
+            "UNRESOLVED_IDEMPOTENCY_RESULT_REF",
+            result_ref,
+        )
+
+    def resolve_effect_reconciliation(
+        self,
+        *,
+        tenant_id: str,
+        reconciliation_id: str,
+        conclusion: str,
+        resolution_payload: dict[str, Any],
+    ) -> str:
+        with self._unit_of_work_factory() as repo:
+            return repo.resolve_effect_reconciliation(
+                tenant_id=tenant_id,
+                reconciliation_id=reconciliation_id,
+                conclusion=conclusion,
+                resolution_payload=redact_sensitive_payload(resolution_payload),
+            )
+
     def _complete_execute_prerequisites(
         self,
         *,
@@ -1414,6 +1495,8 @@ class ToolInvocationGateway:
         residual_uncertainty: str,
         evidence_payload: dict[str, Any],
     ) -> None:
+        sanitized_evidence = redact_sensitive_payload(evidence_payload)
+        normalized_conclusion = str(conclusion).strip().upper()
         with self._unit_of_work_factory() as repo:
             repo.record_manual_effect_assessment(
                 ToolManualEffectAssessmentInput(
@@ -1421,13 +1504,29 @@ class ToolInvocationGateway:
                     tenant_id=tenant_id,
                     reconciliation_id=reconciliation_id,
                     provider_effect_id=provider_effect_id,
-                    conclusion=conclusion,
+                    conclusion=normalized_conclusion,
                     confidence=confidence,
                     assessor_principal_id=assessor_principal_id,
                     residual_uncertainty=residual_uncertainty,
-                    evidence_payload=evidence_payload,
+                    evidence_payload=sanitized_evidence,
                 )
             )
+            if (
+                not residual_uncertainty.strip()
+                and normalized_conclusion in {"CONFIRMED_EXECUTED", "CONFIRMED_NOT_EXECUTED"}
+            ):
+                repo.resolve_effect_reconciliation(
+                    tenant_id=tenant_id,
+                    reconciliation_id=reconciliation_id,
+                    conclusion=normalized_conclusion,
+                    resolution_payload={
+                        "source": "MANUAL_ASSESSMENT",
+                        "manual_assessment_id": manual_assessment_id,
+                        "confidence": confidence,
+                        "assessor_principal_id": assessor_principal_id,
+                        "evidence": sanitized_evidence,
+                    },
+                )
     def _record_terminal(
         self,
         *,

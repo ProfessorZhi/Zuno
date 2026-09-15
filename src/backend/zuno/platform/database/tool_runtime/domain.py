@@ -925,6 +925,251 @@ class ToolRepository:
         return "" if row is None else str(row.result_ref)
 
 
+    def describe_side_effect_result_ref(self, *, tenant_id: str, result_ref: str) -> dict[str, Any]:
+        effect = self.connection.execute(
+            text(
+                """
+                SELECT effect_receipt_id, effect_status, effect_certainty
+                FROM tool_effect_receipts
+                WHERE tenant_id = :tenant_id AND effect_receipt_id = :result_ref
+                """
+            ),
+            {"tenant_id": tenant_id, "result_ref": result_ref},
+        ).mappings().first()
+        if effect is not None:
+            return {
+                "kind": "EFFECT_RECEIPT",
+                "result_ref": str(effect["effect_receipt_id"]),
+                "status": str(effect["effect_status"]),
+                "effect_certainty": str(effect["effect_certainty"]),
+            }
+
+        reconciliation = self.connection.execute(
+            text(
+                """
+                SELECT reconciliation_id, prepared_tool_action_id, status, next_action,
+                       provider_effect_id, idempotency_scope, idempotency_key
+                FROM tool_effect_reconciliations
+                WHERE tenant_id = :tenant_id AND reconciliation_id = :result_ref
+                """
+            ),
+            {"tenant_id": tenant_id, "result_ref": result_ref},
+        ).mappings().first()
+        if reconciliation is not None:
+            resolved_effect = self.connection.execute(
+                text(
+                    """
+                    SELECT effect_receipt_id, effect_status, effect_certainty
+                    FROM tool_effect_receipts
+                    WHERE tenant_id = :tenant_id
+                      AND prepared_tool_action_id = :prepared_tool_action_id
+                    ORDER BY append_only_generation DESC, created_at DESC
+                    LIMIT 1
+                    """
+                ),
+                {
+                    "tenant_id": tenant_id,
+                    "prepared_tool_action_id": reconciliation["prepared_tool_action_id"],
+                },
+            ).mappings().first()
+            payload = {
+                "kind": "RECONCILIATION",
+                "result_ref": str(reconciliation["reconciliation_id"]),
+                "status": str(reconciliation["status"]),
+                "next_action": str(reconciliation["next_action"]),
+                "provider_effect_id": str(reconciliation["provider_effect_id"]),
+                "effect_certainty": "UNKNOWN_EFFECT",
+            }
+            if reconciliation["status"] == "RESOLVED" and resolved_effect is not None:
+                payload.update(
+                    {
+                        "resolved_effect_ref": str(resolved_effect["effect_receipt_id"]),
+                        "resolved_effect_status": str(resolved_effect["effect_status"]),
+                        "effect_certainty": str(resolved_effect["effect_certainty"]),
+                    }
+                )
+            return payload
+
+        async_job = self.connection.execute(
+            text(
+                """
+                SELECT async_job_id, status, provider_job_id
+                FROM tool_async_jobs
+                WHERE tenant_id = :tenant_id AND async_job_id = :result_ref
+                """
+            ),
+            {"tenant_id": tenant_id, "result_ref": result_ref},
+        ).mappings().first()
+        if async_job is not None:
+            return {
+                "kind": "ASYNC_JOB",
+                "result_ref": str(async_job["async_job_id"]),
+                "status": str(async_job["status"]),
+                "provider_job_id": str(async_job["provider_job_id"]),
+                "effect_certainty": "UNKNOWN_EFFECT",
+            }
+        return {"kind": "UNKNOWN", "result_ref": result_ref, "effect_certainty": "UNKNOWN_EFFECT"}
+
+    def resolve_effect_reconciliation(
+        self,
+        *,
+        tenant_id: str,
+        reconciliation_id: str,
+        conclusion: str,
+        resolution_payload: dict[str, Any],
+    ) -> str:
+        normalized = str(conclusion).strip().upper()
+        if normalized in {"CONFIRMED_EXECUTED", "CONFIRMED_EFFECT"}:
+            effect_status = "CONFIRMED"
+            effect_certainty = "CONFIRMED_EFFECT"
+            execution_status = "SUCCEEDED"
+        elif normalized in {"CONFIRMED_NOT_EXECUTED", "CONFIRMED_NO_EFFECT"}:
+            effect_status = "NO_EFFECT"
+            effect_certainty = "CONFIRMED_NO_EFFECT"
+            execution_status = "FAILED"
+        else:
+            raise ToolRuntimeConflict("reconciliation conclusion must be conclusive")
+
+        row = self.connection.execute(
+            text(
+                """
+                SELECT reconciliation_id, prepared_tool_action_id, attempt_id, execution_receipt_id,
+                       provider_effect_id, status, idempotency_scope, idempotency_key,
+                       idempotency_generation, fencing_resource_id, fencing_lease_id,
+                       fencing_epoch, secret_lease_id
+                FROM tool_effect_reconciliations
+                WHERE tenant_id = :tenant_id AND reconciliation_id = :reconciliation_id
+                FOR UPDATE
+                """
+            ),
+            {"tenant_id": tenant_id, "reconciliation_id": reconciliation_id},
+        ).mappings().first()
+        if row is None:
+            raise ToolRuntimeConflict("reconciliation resolution requires existing reconciliation")
+
+        effect_receipt_id = reconciliation_id.replace(
+            "tool-effect-reconciliation:", "tool-effect-receipt:", 1
+        )
+        existing = self.connection.execute(
+            text(
+                """
+                SELECT effect_status, effect_certainty
+                FROM tool_effect_receipts
+                WHERE tenant_id = :tenant_id AND effect_receipt_id = :effect_receipt_id
+                """
+            ),
+            {"tenant_id": tenant_id, "effect_receipt_id": effect_receipt_id},
+        ).mappings().first()
+        if existing is not None:
+            if (
+                str(existing["effect_status"]) != effect_status
+                or str(existing["effect_certainty"]) != effect_certainty
+            ):
+                raise ToolRuntimeConflict("reconciliation was already resolved with a different conclusion")
+            if str(row["status"]) != "RESOLVED":
+                raise ToolRuntimeConflict("effect receipt exists while reconciliation is not resolved")
+            return effect_receipt_id
+
+        if str(row["status"]) == "RESOLVED":
+            raise ToolRuntimeConflict("resolved reconciliation is missing its conclusive effect receipt")
+
+        effect_payload = {
+            "reconciliation_id": reconciliation_id,
+            "provider_effect_id": str(row["provider_effect_id"]),
+            "conclusion": normalized,
+            "effect_status": effect_status,
+            "effect_certainty": effect_certainty,
+            "resolution": resolution_payload,
+        }
+        self.record_effect_receipt(
+            ToolEffectReceiptInput(
+                effect_receipt_id=effect_receipt_id,
+                tenant_id=tenant_id,
+                prepared_tool_action_id=str(row["prepared_tool_action_id"]),
+                attempt_id=str(row["attempt_id"]),
+                execution_receipt_id=str(row["execution_receipt_id"]),
+                provider_effect_id=str(row["provider_effect_id"]),
+                effect_status=effect_status,
+                effect_certainty=effect_certainty,
+                idempotency_scope=str(row["idempotency_scope"]),
+                idempotency_key=str(row["idempotency_key"]),
+                idempotency_generation=int(row["idempotency_generation"]),
+                fencing_resource_id=str(row["fencing_resource_id"]),
+                fencing_lease_id=str(row["fencing_lease_id"]),
+                fencing_epoch=int(row["fencing_epoch"]),
+                secret_lease_id=None if row["secret_lease_id"] is None else str(row["secret_lease_id"]),
+                native_result={"reconciliation": resolution_payload},
+                effect_payload=effect_payload,
+                append_only_generation=1,
+            )
+        )
+        persisted_effect = self.connection.execute(
+            text(
+                """
+                SELECT effect_status, effect_certainty, prepared_tool_action_id, provider_effect_id
+                FROM tool_effect_receipts
+                WHERE tenant_id = :tenant_id AND effect_receipt_id = :effect_receipt_id
+                """
+            ),
+            {"tenant_id": tenant_id, "effect_receipt_id": effect_receipt_id},
+        ).mappings().first()
+        if persisted_effect is None:
+            raise ToolRuntimeConflict(
+                "reconciliation resolution could not persist the conclusive effect receipt"
+            )
+        if (
+            str(persisted_effect["effect_status"]) != effect_status
+            or str(persisted_effect["effect_certainty"]) != effect_certainty
+            or str(persisted_effect["prepared_tool_action_id"]) != str(row["prepared_tool_action_id"])
+            or str(persisted_effect["provider_effect_id"]) != str(row["provider_effect_id"])
+        ):
+            raise ToolRuntimeConflict(
+                "reconciliation resolution collided with a different effect receipt"
+            )
+        self.connection.execute(
+            text(
+                """
+                UPDATE tool_effect_reconciliations
+                SET status = 'RESOLVED',
+                    next_action = 'WAIT',
+                    manual_assessment_required = false,
+                    attempt_count = attempt_count + 1,
+                    last_error_code = '',
+                    reconciliation_payload_hash = :payload_hash,
+                    updated_at = now()
+                WHERE tenant_id = :tenant_id
+                  AND reconciliation_id = :reconciliation_id
+                """
+            ),
+            {
+                "tenant_id": tenant_id,
+                "reconciliation_id": reconciliation_id,
+                "payload_hash": canonical_sha256(effect_payload),
+            },
+        )
+        self.connection.execute(
+            text(
+                """
+                UPDATE tool_execution_receipts
+                SET status = :status,
+                    dispatch_certainty = 'DISPATCHED',
+                    effect_certainty = :effect_certainty,
+                    receipt_hash = :receipt_hash
+                WHERE tenant_id = :tenant_id
+                  AND receipt_id = :execution_receipt_id
+                """
+            ),
+            {
+                "tenant_id": tenant_id,
+                "execution_receipt_id": str(row["execution_receipt_id"]),
+                "status": execution_status,
+                "effect_certainty": effect_certainty,
+                "receipt_hash": canonical_sha256(effect_payload),
+            },
+        )
+        return effect_receipt_id
+
+
     def escalate_due_reconciliations(self, *, tenant_id: str, now: Any) -> int:
         result = self.connection.execute(
             text(
