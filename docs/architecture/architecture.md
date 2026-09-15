@@ -1,10 +1,8 @@
 # Zuno 目标架构：一项法律任务如何从材料变成可交付结果
 
-Zuno 是一个面向法律工作的智能 Agent 平台。项目需要承担的业务约束在 [`docs/project/README.md`](../project/README.md) 中展开：材料范围可能不完整，RAG 会发生漏检和来源错配，模型可能生成不可靠结论，专业人员需要承担最终判断，任务可能长期运行，外部系统交互又会把一次网络异常转化为现实世界的不确定性。
+Zuno 是一个面向法律工作的智能 Agent 平台。它面对的难点不只在“模型能不能回答”，而在一项任务从材料进入系统以后，如何长期保持来源、版本、专业判断、运行进度、权限和现实副作用之间的关系可解释、可恢复、可审计。
 
-Architecture 负责回答下一步：**为什么这些领域问题不能仅靠更大的 Prompt、固定 Workflow 或一个统一 `status` 解决，系统又应怎样划分责任，才能在材料、权限、模型和现实状态持续变化时保持可解释、可恢复和可审计。**
-
-下面描述的是 Zuno 当前接受的 **Target Architecture**。它解释系统应该怎样分工，不代表这些能力已经全部在 Current 代码或真实法院环境中验证。Current 做到哪里，只看 [`docs/evidence/`](../evidence/README.md) 中的代码、数据库迁移、测试、运行追踪和评测证据。法律 AI / RAG 的外部领域问题证据整理在 [`docs/research/legal-ai-domain-problem-evidence.md`](../research/legal-ai-domain-problem-evidence.md)，研究资产与最新 Agent 技术的产品化推导见 [`docs/research/legal-agent-value-strategy-2026-09.md`](../research/legal-agent-value-strategy-2026-09.md)。
+项目背景和历史事实由 [`docs/project/README.md`](../project/README.md) 负责。本文描述 Zuno 当前接受的 **Target Architecture**：它回答系统应该怎样分工，不表示这些能力已经全部在 Current 代码或法院环境中实现。Current 只由 [`docs/evidence/`](../evidence/README.md) 中与具体代码 SHA、Migration、Test、Trace、Eval 和运行结果绑定的材料证明。
 
 <!--
 status: normative-target
@@ -30,176 +28,172 @@ research_source: docs/research/
 
 ## Part A — Human Narrative（人类技术叙事）
 
-### 从业务约束推导架构责任
+### 复杂度从业务约束里长出来
 
-Zuno 的九个责任域不是为了得到一张完整的架构图而预先划分出来的。每一类责任都对应一种长期存在、且普通 request / response 系统无法稳定承担的专业事实或恢复要求。
+简单法律问答不需要九个责任域全部参与。用户只问“合同第 8 条写了什么”，材料范围明确、当前有权访问，也不需要长期正式成果时，受控 RAG、一次模型调用和普通应用服务已经可能足够。固定流程能稳定解决的问题也应继续用固定 Workflow。
 
-| 业务约束 / 领域问题 | 最简单方案 | 简单方案的失效条件 | Zuno 的架构责任 |
+Zuno 的额外复杂度只在这些简单假设失效以后有价值。
+
+| 现实约束 | 最简单方案 | 简单方案开始失效的地方 | 长期责任 |
 | --- | --- | --- | --- |
-| 材料很多、版本会变，检索还可能漏掉关键内容或选错来源 | 文件上传后直接做 RAG | 上传成功不代表关键材料已经可用；Top-K 命中也不能证明覆盖完整 | **Knowledge & Evidence** 保存材料版本、加工状态、任务级就绪、候选证据和稳定来源 |
-| 模型和检索结果可能表达流畅但专业结论仍然错误 | 把模型最终文本直接保存 | hallucination、错误引用、部分证据被写成确定事实，且最终责任无法归属 | **Legal Domain & Work Product** 把机器候选和正式业务结果分开，并保存必要人审与历史版本 |
-| 多步骤任务会等待，新证据会进入，旧结果会晚到 | 一条固定 Workflow + Checkpoint | Checkpoint 只知道流程走到哪里，不能判断旧结果是否仍然适用，也不能证明正式提交已经成功 | **Agent Runtime & Control** 管理 Plan、Replan、等待、取消和恢复，但不替代业务事实 |
-| 研究模型、LLM 和 Provider 会替换、漂移或临时不可用 | 每个调用点直接绑定 model / Python class | 专业语义、fallback、质量与成本散落在 Workflow 中；替换实现会迫使上层一起变化 | **Capability & Skill** 固定专业能力承诺，**Model Gateway** 管理实际模型选择、调用和 Usage |
-| 权限、用途和数据外发条件会在长任务期间变化 | 入口处鉴权一次 | 10:00 允许不代表 10:20 仍允许读取、外发或执行高风险动作 | **Security & Governance** 在新的受保护动作发生时消费当前安全条件 |
-| 外部 POST timeout 后，系统无法确认现实世界是否已经被改变 | timeout 就标 Failed 并 Retry | 远端可能已经成功，盲目重试会制造第二次业务动作 | **Tool Runtime & Effects** 在发送前稳定动作身份，未知结果先 Reconcile，需要撤回时再执行新的补偿动作 |
-| 不同环节各自存在“成功”，崩溃后容易被压成一个错误状态 | 一张全局状态表 | Runtime complete、Domain committed、Delivery success 和当前授权分别代表不同事实，恢复方向也不同 | 每类事实由明确 Owner 负责；跨边界通过版本、因果关联和完成证明收敛；**Application** 只把这些事实组合成产品状态 |
-| GraphRAG、Memory、Reflection、Specialist 等复杂机制可能长期保留却没有稳定收益 | 默认开启更多能力 | 成本、时延和故障面增加，却不一定改善法律质量或人工效率 | **Observability & Evaluation** 通过可重复 Eval、消融和退出条件决定复杂度是否值得保留 |
+| 材料很多、版本会变、OCR 和索引异步完成 | 上传后直接做 RAG | 上传成功不等于当前任务依赖的关键材料已经可用 | 03 Knowledge & Evidence |
+| 模型和检索会产生流畅但错误的候选 | 保存最后一次模型输出 | 机器成功不等于专业结论已经被长期采用 | 02 Legal Domain & Work Product |
+| 多步骤任务会等待，新材料会进入，旧结果会晚到 | 固定 Workflow + Checkpoint | 旧 Checkpoint 不能判断晚到结果是否仍适用，也不能证明业务提交已成功 | 04 Agent Runtime & Control |
+| 研究模型、LLM、规则和外部 Provider 会替换 | 调用点直接绑定 class / model name | 接口兼容不代表专业语义、质量和失败边界仍等价 | 05 Capability & Skill + 07 Model Gateway |
+| 权限、用途、Credential 会在长任务期间变化 | 入口鉴权一次 | 10:00 的 allow 不能替 10:20 的新读取、外发或 Tool send 做决定 | 08 Security & Governance |
+| 外部 POST timeout 后无法确认现实世界是否已改变 | timeout -> Failed -> Retry | 第一次请求可能已经成功，Blind Retry 会制造第二次业务动作 | 06 Tool Runtime & Effects |
+| 各环节都有自己的“成功” | 一张全局 status 表 | Runtime complete、Domain committed、Effect confirmed、Publication delivered 是不同事实 | 01 Application 组合各 Owner facts |
+| GraphRAG、Memory、Reflection、Specialist 容易越做越多 | 默认开启复杂能力 | 成本和故障面增加，收益却可能没有稳定证据 | 09 Observability & Evaluation |
 
-这张表构成总体架构的设计驱动因素。后面的九个责任域只是这些约束长期存在以后形成的稳定分工；逻辑责任不等于九个微服务，也不意味着每个简单请求都必须经过全部模块。
+九个责任域由这些长期责任自然形成。它们是逻辑 Authority，不是九个微服务。默认实现仍可以是模块化 Python Backend，加少量按照工作类型划分的 Worker 和成熟基础设施。
 
-一个同样重要的边界是：**通用 Agent Harness 本身不应成为 Zuno 的长期差异化来源。** 长会话、持久执行、沙箱、Subagent、MCP、Context Compression 和通用 Agent Eval 正在快速成为成熟平台能力。只要这些基础设施能够满足可靠性与数据安全要求，Zuno 应优先复用，并把长期自有责任集中在法律任务结构、Research Capability、Provider Qualification、材料与证据 Provenance、专业人员决定、正式 WorkProduct 和法律任务 Evaluation 上。通用 Harness 可以被替换，这些专业语义不能随框架一起漂移。
+通用 Agent Harness 也不是 Zuno 必须长期自研的差异化。Conversation、普通 Workflow、MCP、Checkpointer、Queue、Secret Manager、OpenTelemetry、模型 SDK 等能力成熟以后应优先 Buy / Reuse。Zuno 真正需要长期保护的是法律任务的材料与证据语义、正式业务事实、专业能力资格、现实副作用、安全治理和可复现 Eval。
 
-### 先看全貌：Zuno 在一项法律任务里做什么
+### 一宗合同争议怎样从材料走到正式结果
 
-假设用户要分析一宗合同争议。他上传合同、补充协议、聊天记录、扫描附件和后来补交的证据，希望系统整理付款义务、违约事实、证据引用和一份可供专业人员复核的分析结果。
-
-这项任务从进入系统到真正交付，大致经过五步：先确认谁在做什么、能看哪些材料；再把原始材料处理成可检索的知识；然后组织模型和专业能力完成分析；需要长期保留的结论经过人工与业务规则确认后形成正式工作成果；最后再发布给用户或送往外部系统。任何一步出错，恢复时都要知道应该相信哪一类记录，而不是从头猜一遍。
+假设专业人员上传合同、补充协议、聊天记录和扫描附件，希望系统整理付款义务、违约事实、证据引用，并形成一份可以复核和后续交付的分析成果。
 
 ```mermaid
 flowchart LR
-    U[用户 / 法院 Host] --> I[请求进入\n身份、任务范围、当前权限]
-    I --> K[材料准备\nOCR、解析、检索、证据候选]
-    K --> A[分析执行\n计划、专业能力、模型调用]
-    A --> H[专业人员复核\n修改、接受或拒绝]
-    H --> W[正式工作成果\n版本、引用、形成依据]
-    W --> P[发布与现实动作\n交付、外部系统调用]
-    P --> X[用户 / 法院 / 第三方系统]
+    U[用户 / 法院 Host] --> I[01 请求与 Scope]
+    I --> K[03 材料 / Readiness / Evidence Candidate]
+    K --> R[04 Runtime 组织分析]
+    R --> C[05 Capability]
+    R --> M[07 Model Gateway]
+    R --> H[专业人员复核]
+    H --> D[02 Formal Admission / WorkProduct]
+    D --> P[01 Publication / Delivery]
+    P --> E[06 外部 Effect]
+    E --> X[外围系统]
 
-    S[Security & Governance\n每次受保护动作重新判断] -.-> I
+    S[08 Security & Governance] -. current decision .-> I
     S -.-> K
-    S -.-> A
-    S -.-> P
-    O[Observability & Evaluation\n追踪、质量、成本、复杂度收益] -.-> A
-    O -.-> W
-    O -.-> P
+    S -.-> M
+    S -.-> E
+    O[09 Observability & Evaluation] -. evidence .-> K
+    O -.-> R
+    O -.-> C
+    O -.-> E
 ```
 
-这条主链背后由九个逻辑责任域协作。Application 负责入口和交付，Knowledge 负责材料与证据，Runtime 联合 Capability 和 Model Gateway 组织分析，Legal Domain 保存正式结果，Effects 处理真正改变外部世界的动作；Security 和 Evaluation 横跨整条链。九个责任域表示**谁长期负责什么**，不是九个微服务。
+请求先由 Application 建立稳定身份和任务范围。Security 判断当前主体能访问什么。Knowledge 围绕正式材料版本生成可重建知识，并针对当前任务判断材料是否足够。简单问答可以在这里走短路径，不进入 Native Runtime。
 
-默认实现可以是一个模块化 Python 后端，加少量按照工作类型划分的 Worker；只有吞吐、安全隔离、网络出口、故障半径或发布节奏真的要求时，某些部分才值得拆成独立网络服务。
+真正需要等待、并行、人工介入或崩溃后恢复的任务才交给 Runtime。Runtime 管理 Plan、Step、等待、预算和 Replan，但它拥有的是执行控制，不是法律业务事实。为了避免两套计划同时修改全局控制，Target 使用一个逻辑 `Single Controller` 激活和替换 PlanVersion；Worker、模型和专业分析仍然可以并行。
 
-### 一个合同争议任务怎样跑完
+Runtime 调用 Capability 和 Model Gateway。Capability 固定“事件抽取、冲突识别、类案检索”等专业能力承诺，具体论文模型、规则、LLM 或第三方服务只是 Provider。Model Gateway 负责真实模型路由、Attempt 和 Usage。Provider 能调用、Schema 合法、模型返回 200 都不自动证明专业结果可用。
 
-请求先进入 Application。这里负责稳定用户看到的任务身份、查询入口和交付方式，但它不会自己决定“法律结论已经正式成立”或者“外部系统已经执行成功”。这些结论要由真正负责那类事实的部分证明。
+机器分析结束后，结果仍然是 Candidate。需要长期保存、交付和追责的内容，由 Legal Domain & Work Product 在材料版本、专业规则、必要 HumanDecision 和当前资格满足以后正式接纳。工程上把这个边界称为 `Formal Admission`。WorkProduct 保存自己的版本、引用和形成依据，而不是只保存最后一段模型文本。
 
-Security 随后检查当前用户、Matter、材料范围和用途是否允许继续。这个检查不是只做一次。一个长任务可能在十分钟后重新读取材料、向模型外发内容、获取 Secret 或调用高风险工具；如果权限在等待期间发生变化，新的受保护动作必须重新按当前条件判断。
+结果离开 Zuno 时，Application 决定“应该把哪一版成果交付给谁”；Effects 负责“现实世界究竟发生了什么”。如果外部 POST timeout，Application 不能自己宣布失败并重发。06 必须先确认过去那次动作是否已经发生，结论仍然未知时保持 Unknown。
 
-材料进入 Knowledge 后，系统完成 OCR、解析、切分、Embedding、图结构或其他索引工作。这里最容易出现一个误解：**文件上传成功不代表当前问题已经可以回答。** 查询“合同第 8 条写了什么”只需要对应合同可用；分析全案违约金额时，一份还没 OCR 的补充协议可能会改变结论。所以 Zuno 既要知道材料处理到了哪一步，也要判断“对这个具体任务来说，现在是否已经够用”。
+### 四个故障窗口解释了为什么不能只有一个 status
 
-如果只是一个短问题，流程可以到这里直接检索、调用模型并返回答案，不必启动复杂 Agent。真正需要等待、多步骤分析、人工介入或后续恢复的任务才交给 Runtime。Runtime 负责当前计划、步骤依赖、等待、取消和重规划，但它管理的是**执行过程**，不是正式法律事实。为了避免两套计划同时被激活，Target 让当前计划只有一个逻辑写者负责激活和 Replan，工程上称为 `Single Controller`；这个“单一”只限制控制事实，不限制 Worker、模型和专业分析并行。
+**材料变化。** 任务已经运行二十分钟，新补充协议进入，旧 Plan 的一个 Worker 此时返回。结果即使计算正确，也可能基于旧材料。系统需要知道它依赖哪一版 DocumentVersion / KnowledgeGeneration 和哪一版 Plan，再决定接受、重新验收或重做。
 
-Runtime 调用两类可替换能力。Capability 表示“事件抽取、冲突识别、类案检索”这类专业任务对上层承诺什么；具体实现可以是研究模型、规则、LLM 或外部服务。Model Gateway 则负责实际模型调用：在安全、质量、预算和可用性允许的范围里选择 Provider / Model，并记录真实调用和 Usage。这样更换模型或研究实现时，不需要让整个业务流程重新学习一遍专业语义。
+**Domain 已提交、Checkpoint 还没写。** 专业人员已经确认结果，02 的事务成功，Runtime 在写下一份 Checkpoint 前崩溃。恢复时如果只相信旧 Checkpoint，就会再次提交正式事实。正确顺序是先查询 Domain 的耐久完成证明，再修 Runtime projection。
 
-机器完成分析以后，结果仍然只是候选。专业人员可能修改事实、接受一部分判断、拒绝另一部分。如果这些内容要成为长期保存、可以交付和以后追责的正式工作成果，它们会进入 Legal Domain & Work Product，由法律业务规则和必要人审决定哪些内容正式成立。工程上把“候选结果正式进入长期业务历史”的提交边界称为 `Formal Admission`。正式形成的 `WorkProduct` 会保留自己的版本、引用和形成依据，而不是只保存“最后一次模型输出”。
+**外部动作越过 send boundary 后响应丢失。** timeout 只说明本地没有得到确定响应，不能证明远端没执行。此时必须进入 Reconcile，不能把 transport failure 直接变成 Retry。
 
-结果需要离开 Zuno 时，Application 负责“该向谁发布哪一版”，Tool Runtime & Effects 负责“现实世界到底发生了什么”。这里把可能改变外部世界的动作及其结果统称为 `Effect`。例如向外围法院系统提交一条记录，HTTP timeout 只能说明 Zuno 没拿到确定响应；远端可能没执行，也可能已经成功。系统必须先确认现实结果，再决定是否重试、结束或补偿，不能把网络错误直接变成第二次业务提交。
+**权限和资格随时间变化。** 任务 10:00 启动时允许读取，10:20 权限被撤销；或者 Plan 形成时使用 Tool schema v1，真正 dispatch 时已经升级到 v2。过去成立的资格不能永久授权未来动作。
 
-Observability & Evaluation 横跨整条链路。它记录 Trace、时延、成本和质量指标，也负责比较 GraphRAG、Reflection、Memory、Specialist 或更贵模型到底有没有稳定收益。但 Trace 只是解释执行发生过什么，不能替 Domain 宣布法律结果已经成立，也不能替 Effects 宣布外部动作已经发生。
+这四种窗口分别需要 Knowledge / Domain / Runtime / Effects / Security 等 Owner 保存不同事实。把它们压成一个 `SUCCESS / FAILED` 状态，只会在恢复时丢掉最关键的信息。
 
-### 为什么普通 RAG 和固定 Workflow 会在长任务里失效
+### 九个责任域保护九类长期事实
 
-如果材料固定、请求很短、没有正式业务提交，也不调用会改变外部世界的工具，受控 RAG 或固定 workflow 已经足够。Zuno 的复杂度来自这些简单假设开始失效。
-
-第一种失效发生在**材料变化**。分析已经运行二十分钟，新证据突然进入；旧计划里的一个分支又在此时返回。这个结果可能计算得很好，却仍然基于旧材料。系统不能仅凭“模型成功”就继续采用，也不能因为“晚到了”就一律丢弃。它需要知道结果基于哪一版输入、当前计划是否已经改变，再决定继续使用、重新验收还是重做。
-
-第二种失效发生在**正式业务提交和运行进度不同步**。专业人员已经确认结果，正式 WorkProduct 已经写入数据库，但 Runtime 还没来得及保存新的 Checkpoint 就崩溃。重启后如果只相信旧 Checkpoint，系统会再次提交同一份正式结果。正确恢复顺序是先问拥有业务事实的一方：“这次提交已经发生了吗？”已经发生就修 Runtime 的进度，没有发生才重新进入提交路径。
-
-第三种失效发生在**外部副作用**。一个 POST 已经发出但响应丢失，本地看见 timeout。纯计算失败通常可以 Retry；现实动作已经可能发生时，第一步必须是 Reconcile——先查清过去发生了什么。只有确认远端没有执行，才有资格安全重试。
-
-第四种失效发生在**时间变化的权限和有效性**。任务 10:00 启动时允许读取附件，10:15 权限被撤销，10:20 Worker 又准备向外部模型发送正文。入口处那次鉴权已经不能替 10:20 的新动作做决定。同样，昨天正式成立的结论今天可以因为新证据变成 stale；历史仍然存在，但当前不应继续使用。
-
-这些故障解释了为什么 Zuno 不能只维护一个 `status = success`。计算完成、正式结果成立、外部动作完成、当前仍允许访问，是四件发生在不同时间、由不同事实证明的事情。
-
-### 九个责任域从这条业务链里自然分出来
-
-当这些问题同时出现以后，系统长期需要回答九类不同的问题。它们是责任边界，不是固定的部署边界。
-
-| 责任域 | 在主链里的位置 | 对陌生读者最直接的理解 |
+| 编号 | 责任域 | 长期保护的事实 |
 | --- | --- | --- |
-| **01 Application & Integration** | 请求进入、查询、发布、交付 | 接收外部请求，把多个内部事实组合成用户能理解的产品状态 |
-| **02 Legal Domain & Work Product** | 人审后的正式结果 | 保存正式法律业务事实、人工判断、WorkProduct 历史以及后续失效关系 |
-| **03 Knowledge & Evidence** | 材料准备与证据 | 把材料加工成可检索知识，判断当前任务是否准备好，产生证据候选与引用来源 |
-| **04 Agent Runtime & Control** | 长任务分析 | 管理计划、步骤、等待、取消、Replan 和恢复 |
-| **05 Capability & Skill** | 长任务分析 | 定义专业能力的稳定语义，并管理不同实现当前是否有资格提供它 |
-| **06 Tool Runtime & Effects** | 发布后的现实动作 | 管理可能改变现实世界的动作、尝试、结果未知和对账 |
-| **07 Model Gateway** | 长任务分析 | 在允许的模型中做路由，记录真实 Provider / Model 调用、失败和 Usage |
-| **08 Security & Governance** | 横跨整条主链 | 判断此刻能不能继续读取、外发、取 Secret、审批或执行受保护动作 |
-| **09 Observability & Evaluation** | 横跨整条主链 | 记录执行时间线，评价质量、成本和复杂机制是否值得保留 |
+| **01 Application & Integration** | 外部请求、Invocation、Publication、Delivery、失效传播和 Host Contract |
+| **02 Legal Domain & Work Product** | Matter / DocumentVersion identity、正式 Evidence / Finding、HumanDecision、WorkProduct、DomainVersion、AdmissionReceipt |
+| **03 Knowledge & Evidence** | KnowledgeGeneration、Serving、ReadinessDecision、EvidenceCandidate、RetrievalResult、CitationLineage |
+| **04 Agent Runtime & Control** | AgentRun、PlanVersion、StepRun、Checkpoint、Ready/Join、Budget、Retry/Replan/Reconcile 控制、RunOutcome |
+| **05 Capability & Skill** | CapabilityVersion、ProviderBinding、Conformance、Qualification / Eligibility、专业 Candidate / Proposal |
+| **06 Tool Runtime & Effects** | PreparedAction、ToolAttempt、EffectReceipt、ReconciliationReceipt、RetrySafety |
+| **07 Model Gateway** | Model Role resolution、Provider/Model Attempt、Usage / Cost、取消与 fallback 调用事实 |
+| **08 Security & Governance** | SecurityEpoch、Authorization、Approval、Model Egress、Secret / Credential policy、Lifecycle / Recall policy、AuditRequirement |
+| **09 Observability & Evaluation** | Telemetry、Eval Dataset / Run / Result、Experiment、Release Evidence、复杂度 kill test |
 
-Platform / Infrastructure 不作为第十个业务模块。PostgreSQL、Object Store、Queue、Checkpointer、Secret Manager、身份系统、OpenTelemetry 和模型 SDK 都是可复用的工程基础设施。它们提供事务、存储、队列、身份和观测能力，但不会替 Zuno 决定“哪份法律结论正式成立”或“一个外部动作究竟发生了没有”。
+Platform / Infrastructure 不作为第十个业务模块。PostgreSQL、Object Store、Queue、Checkpointer、CAS、Lease、Fencing、Clock、Backup、Network、Secret Delivery 和模型 SDK 提供物理原语，但不拥有法律业务成功语义。
+
+### Context 和 Memory 不形成第十个业务 Authority
+
+长任务需要 recent window、task summary 和临时 working context；某些跨会话场景也可能从 structured long-term memory 获益。最简单基线仍然是 Raw Event + task summary + 按需读取的 Owner facts。只有 A/B 证明跨会话复用稳定改善质量或效率时，structured memory 才值得增加。
+
+即使启用，Memory 也只是非权威 Context Provider。Provider 可以保存带来源、Scope 和生命周期信息的 record；08 决定当前主体能否 Recall、何时 No-Recall、何时 Retain / Purge；01 / 04 在请求或 Step 开始时消费当前允许的 snapshot。02 的正式材料、Evidence、Finding、HumanDecision 和 WorkProduct 始终拥有更高 Authority。
+
+旧 Memory 与当前 Domain 冲突时，系统重新组装 Context，不让“模型曾经记住的内容”覆盖正式事实。Runtime resume 也不应把旧 Context blob 当成被冻结的业务世界，而是重新读取当前 Domain、Knowledge、Security 和允许的 Memory snapshot。
+
+Context trace 同样只证明 lineage。`source_event_ids` 可以说明 summary 从哪里来，却不能单独证明来源真实、调用者仍有权读取，也不能证明压缩过程保留了所有关键法律限定。因此 Zuno 明确区分：
+
+```text
+Provenance != Truth != Authorization != Semantic Preservation
+```
+
+### 版本变化沿依赖链处理，不建立全局 Version God Service
+
+一次 Step 可能同时依赖 DocumentVersion / KnowledgeGeneration、CapabilityVersion / ProviderBinding、Model / generation config、ToolVersion、Credential 和 SecurityEpoch。计划形成以后，这些版本都可能变化。
+
+04 记录本次 Step 真正解析出的 input-version set，但不替相邻 Owner 猜兼容性。03 判断 KnowledgeGeneration 仍不仍适用；05 判断 ProviderBinding / config 是否仍满足同一 Capability；07 判断模型候选仍不仍合格；06 判断 Tool schema、effect class、幂等和 reconciliation semantics 是否变化；08 判断当前授权和 Credential 资格。
+
+纯实现替换如果已经证明与同一 Contract 等价，可以 re-resolve 后继续。只要专业语义、Schema、EffectClass、关键配置或安全条件改变，旧 Plan 的假设就失效，应 Reject、Review 或 Replan，而不是把不兼容变化包装成 Retry。
+
+这个设计不需要一台统一 Version Service。每个 Owner 继续维护自己的版本和资格；Runtime 只记录当前计划依赖了什么，并在 dispatch、late result、resume 和正式准入前重新验收。
 
 ### 系统里保存的不是一种“状态”
 
-Zuno 会同时保存几类恢复价值完全不同的数据。
+第一类是不能靠重算找回的业务历史：正式材料版本、HumanDecision、正式 Evidence / Finding、WorkProduct、AdmissionReceipt。模型升级、索引重建或服务重启不能覆盖它们。
 
-最重要的是不能靠重算找回的业务历史：正式材料版本、人工判断、经过业务接纳的 Evidence / Finding（正式证据与事实判断）、WorkProduct，以及证明一次正式提交已经发生的记录。这些内容构成长期业务历史，服务重启、索引重建或模型升级都不能把它们覆盖掉。
+第二类是可重建知识派生：OCR、chunk、Embedding、graph、index 和其他 Knowledge projection。它们可以重新生成，但新一代没有完整验证以前不能替换正在 Serving 的 generation。
 
-第二类是可以从原始材料重新生成的知识派生，例如 OCR 结果、chunk、Embedding、graph 和索引。它们可以随着算法升级而重建，但新的知识代次（generation）没有完整验证以前，不能把当前可服务版本替换成半成品。
+第三类是 Runtime 控制状态：Plan、Step、Checkpoint、Interrupt、Budget。它们使长任务可恢复，却不证明 Domain Commit 或外部 Effect。
 
-第三类是 Runtime 的控制状态：Plan、Step、等待、Checkpoint 等。它们让长任务可以恢复，但不是业务真相。如果 Runtime 的记录和更强的 Domain / Effect 事实冲突，恢复时先相信真正拥有事实的一方，再修 Runtime 投影。
+第四类是 Effect 与安全治理事实。外部世界一旦可能被改变，本地事务回滚不能让现实倒流；Authorization 可以随当前策略变化，但已发生的 Approval、Audit 和 Effect history 不能被普通日志覆盖。
 
-第四类是外部 Effect 与安全治理记录。外部系统一旦可能已经被改变，本地数据库回滚也不会让现实世界倒流；Security 的当前授权可以重新计算，但已经发生的审批、审计或外部动作历史不能被普通日志覆盖。
+Cache、UI projection 和大部分 Telemetry 处在更低权威层。它们可以丢失和重建，不能要求更强 Owner fact 跟随旧缓存回退。
 
-Cache、UI projection 和大部分可重建观测数据放在更低层。它们可以加速查询和展示，却不能因为“缓存里还是旧状态”就要求业务世界退回旧版本。
+### 一致性靠 Owner 内事务和跨 Owner 对账收敛
 
-### 一致性不靠一笔覆盖全世界的事务
+让 PostgreSQL、Object Store、Queue、Checkpoint、模型 Provider 和外围法院系统加入同一笔 2PC 不现实。Zuno 把强一致缩到真正拥有事实的局部边界：02 在自己的事务中保护 Domain mutation；03 只在 generation 完整以后切 Serving；04 串行化自己的控制事实；06 在危险 send 前固定 Action / Attempt identity；08 保存当前决策和必要治理事实。
 
-一次法律任务可能同时接触 PostgreSQL、Object Store、索引、Queue、Checkpoint、模型 Provider 和外围法院系统。让这些参与者加入一笔全局事务既不现实，也会把系统可用性绑在最慢的外部依赖上。
+跨边界以后依赖稳定 identity、版本、causation ref 和可查询的完成证明。没有 Owner proof 时，状态停在 Candidate、WAITING、UNKNOWN、REVIEW 或 REJECT，不为了推进 Workflow 猜一个 success。
 
-Zuno 的做法是把强一致缩到真正拥有事实的局部边界。Domain 在自己的事务里保证一次正式提交完整成立；Knowledge 只有在一代索引完整验证后才切换 serving；Runtime 只串行化自己的控制事实；Effects 在发送现实动作前固定动作身份；Security 保存当前授权和审批事实。
+恢复顺序也因此固定为：先判断哪类事实有疑问，再查询对应 Owner；比较 causation / version / freshness；新的受保护动作重新消费当前 Security；最后才修 Runtime、Cache、Projection 或 Delivery，并选择 Retry、Replan 或 Reconcile。
 
-跨这些边界以后，系统靠稳定身份、版本、因果关联（causation）和可查询的完成证明收敛。也就是说，一个结果要进入更强状态，必须拿出对应 Owner 能证明它成立的事实。没有证明，就停在候选、等待、未知或拒绝，而不是为了让流程继续而猜一个 `success`。
+### 有些事情发生以后只能向前修正
 
-正式结果还有更严格的一层要求：它依赖的材料、知识、专业能力、人审和安全条件必须组成一个业务上仍然成立的因果链。每个引用单独存在，并不代表它们拼在一起就是一个合法结果。新材料、专业语义或安全条件真的改变了结论前提时，需要拒绝、复核、重新验收或 Replan，而不是把互相不兼容的版本硬拼成新的 WorkProduct。
+正式业务接纳以后，后来的 Cancel 或 Replan 只能影响未来，不能把 WorkProduct 历史改成“从未发生”。新证据改变当前判断时，形成新版本、review-required / stale / superseded 关系，同时保留旧版本当时为什么成立。
 
-### 有些事情发生以后，系统只能向前修正
+外部 Effect 更明显。动作已经可能到达远端以后，旧 Plan 变成 stale 也不能否认现实世界。结果未知时 Reconcile；已经确认发生而业务需要撤回时，发起新的受控 Compensation。补偿有自己的授权、Attempt 和结果，不修改旧 EffectReceipt。
 
-在正式提交之前，很多计算都可以推倒重来。候选分析可以重新生成，失败的知识构建可以丢弃，旧计划可以被新 PlanVersion 取代。
+模型调用也属于真实历史。几年以后重新跑出同样文本不是审计前提；需要保存的是当时用了哪些材料、Capability / Provider / Model / config、机器返回什么、专业人员怎样修改、哪些条件下正式接纳，以及最终哪一版结果被交付。
 
-一旦完成正式业务接纳（Formal Admission），情况就不同。WorkProduct 已经正式成立，后来的 Cancel 或 Replan 只能影响未来工作，不能把历史改成“这件事从未发生”。如果新证据改变结论，系统形成新版本、失效或 supersession 关系，同时保留旧版本当时为什么成立。
+### 默认部署保持简单，复杂机制要有退出条件
 
-外部 Effect 更明显。一个动作一旦已经可能到达外围系统，后来的计划变化没有资格假装现实世界也一起回滚。结果未知时先 Reconcile；如果已经确认发生而业务又需要撤回，就发起一项新的受控动作或 Compensation。补偿本身也有新的授权、执行尝试和结果，它不是修改旧记录说“之前没发生”。
+九个责任域默认不对应九个服务。合理起点是模块化 Python Backend + justified Workers + 成熟基础设施。OCR / ingestion、Knowledge rebuild、模型、外部 Tool、Eval 等工作只有在资源、吞吐、故障隔离、安全出口或发布节奏出现真实差异时才值得独立部署。
 
-这也是 Zuno 区分**历史事实**和**当前资格**的原因。历史上发生过的提交、交付和外部动作通常只能继续追加新事实；“现在还能不能访问”“当前哪一版仍有效”“下一步是否允许执行”则可以随着新的证据或安全条件改变。
+同样，GraphRAG、Reflection、Long-term Memory、Specialist / Multi-Agent、Native Runtime 都是 measurement-gated complexity。最简单方案能够满足业务约束时应继续使用。每个复杂机制都要回答：它解决了哪个已观察的 baseline failure；增加了什么状态、成本和故障面；怎样测收益；什么结果出现时应该关闭、缩小或删除。
 
-### 模型可以变化，审计仍然要成立
+Multi-Agent 尤其不按角色数量体现架构深度。默认升级阶梯仍是：
 
-外部模型不是稳定的数学函数。同一个 model name 可能在 Provider 后台升级；即使模型完全不变，采样和服务端实现也可能让相同输入产生不同文本。因此 Zuno 不把“几年以后重新跑出同一段答案”当作法律工作可审计的前提。
+```text
+Tool
+→ Subgraph
+→ parallel worker
+→ Specialist Agent
+→ Persistent Multi-Agent
+```
 
-真正需要保存的是当时的决策依据：用了哪些材料和版本、哪一代知识与哪个专业能力参与了分析、实际调用了哪个 Provider / Model、模型当时返回了什么、专业人员修改和接受了什么、接纳时哪些条件成立，以及最终哪一版结果被正式保存和交付。
-
-如果某个 Provider 能提供不可变快照，并且执行足够确定，当然可以增加更强的 replay；没有这个条件时，后来的 rerun 只是新的计算，可用于回归评测或重新分析，不能覆盖历史上真实发生过的模型调用、人工判断和正式业务接纳。
-
-### 默认部署先保持简单，再按真实瓶颈拆
-
-九个责任域默认不对应九个服务。更合理的起点是**模块化 Python 后端 + 按工作类型划分的 Worker + 成熟基础设施**。
-
-Application、Domain、Runtime 控制和相邻业务逻辑可以先共处同一个后端进程。OCR / ingestion、Knowledge rebuild、模型调用、外部 Tool、Eval 等工作在资源特征或故障隔离需要出现后，再拆成独立 Worker。只有独立扩缩容、安全隔离、网络出口、Secret isolation、故障半径、合规或发布生命周期带来明确收益时，某个逻辑模块才值得继续拆成独立网络服务。
-
-扩容也按真正的瓶颈处理。OCR 堵塞就增加 ingestion Worker；索引重建吃满 CPU / GPU 就扩 Knowledge Worker；模型受 Provider quota 限制时，增加本地进程并不会增加远端配额，应该做 admission、quota、fallback 和预算控制；外围系统限流时，Effects 要限制并发并向上游传播 Backpressure，而不是让更多 Worker 一起重试。
-
-简单问答同样不应该承担长任务的全部成本。只要材料范围清楚、没有正式提交、没有现实副作用，Generic Host + 受控 RAG + Legal Backend 就可以继续是最小形态。GraphRAG、Reflection、长期 Memory、Specialist 和更完整的 Native Runtime 只有在可重复 Eval 中证明稳定收益时才应该保留。
-
-### 故障恢复时，先找真正发生过的事实
-
-恢复顺序可以用三个场景记住。
-
-如果 Domain 已经提交正式 WorkProduct，但 Runtime Checkpoint 还停在旧位置，先确认 Domain 的正式提交，再修 Runtime；不能因为 Checkpoint 旧就重复提交。
-
-如果外部 POST 超时，先确认远端 Effect 是否已经发生；没有确认之前保持 Unknown，不盲重试。
-
-如果新 Evidence 让旧 WorkProduct 失效，保留旧版本的历史，再形成新的 invalidation / review-required 事实，并让 Application 把当前有效版本传播给外部消费者。已经发生的历史交付不会因此从记录里消失。
-
-同一原则也适用于更大的故障。数据库 failover、Queue 重投递、索引损坏或整站恢复时，优先保护无法重算的 Domain、Effect、Security / Audit 和稳定身份；Runtime 控制状态随后修复；Knowledge 派生和 Cache 在源材料仍然存在时可以重建。真实 RPO / RTO、HA / DR、takeover / fencing 和 backup restore 只有形成对应测试与演练证据以后，才有资格写成 Current 能力。
+只有前一级在真实任务中出现可测失败，才进入下一层。
 
 ### Current / Target / Evidence / Unknown
 
-**Target：** Zuno 当前接受的总体设计是九个逻辑责任域。它们围绕材料与知识、长任务控制、正式业务事实、模型与专业能力、安全治理、现实副作用和质量评测协作。默认部署保持模块化，复杂度只在长期状态、故障恢复、安全或现实副作用真的出现时增加。
+**Target：** 本文描述的九个逻辑责任域及其 Authority、版本、恢复、安全和复杂度治理边界。Simple QA 继续允许走 Generic Host / controlled RAG 短路径；Generic Host + Zuno Legal Backend 仍是重要 baseline；Native Runtime 继续 measurement-gated。
 
-**Current：** 代码库已经包含部分 Agent、Knowledge、Model Gateway、Tool、评测和基础设施实现，也存在真实 PostgreSQL 与 selected GitHub verification 证据。某一项 Target 是否已经实现，不能从这篇设计文档反推，只能回到 [`docs/evidence/`](../evidence/README.md)、代码、Migration 和测试判断。
+**Current：** 当前代码库已经包含部分 Application、Domain mutation、Knowledge / Retrieval、Agent Runtime、Capability、Model Gateway、Tool/Security、Observability 和 PostgreSQL 实现，也存在 selected GitHub verification 与 fault probes。设计文档不能把 Target 自动升级成 Current。
 
-**Evidence：** 历史工作可以证明部分 PostgreSQL 迁移、知识流水线、GraphRAG 实验、Context / Memory、Tool Calling、模型调用和 Eval 基础能力。它们证明局部工程事实，不证明九个 Target 责任域已经全部落地，也不证明 Production Ready。
+当前 Evidence 已确认两条必须在总体架构层保持可见的 blocker。第一，外部 Effect 路径已经能耐久记录 UNKNOWN，并在已诊断的 restart replay 中没有再次 dispatch，但 unresolved Reconciliation 会被上层错误升级成 `completed`，而完整 remote-query / conclusive ReconciliationReceipt / repaired Effect truth 收敛链尚未建立。第二，`MANDATORY_BEFORE_EFFECT` 已有负向 fault evidence：Security AuditRequirement 可以存在，但没有 matching committed audit proof 时 provider dispatch 仍可能发生。
 
-**Unknown：** 正式 Domain Admission、跨 Owner 的完整 crash recovery、外部 Effect 最终对账、完整持续授权、真实容量、Backpressure / fairness、RPO / RTO、HA / DR 和法院侧完整生产结果仍需要对应 Evidence。
+**Evidence：** 正向测试证明某些行为成立；负向 fault probe 同样是架构 Evidence，它可以证明某个 Target invariant 当前没有成立。GraphRAG 的 5-query smoke 只支持一次 regression fix，不支持普遍 superiority；Memory 也没有 A/B 证明长期收益。
 
-单个责任域的连续说明见 [`docs/modules/`](../modules/README.md)；需要精确查看 Authority、Contract、状态、完成证明和恢复规则时，再进入 [`reference.md`](reference.md)。长期设计理由在 [`docs/decisions/`](../decisions/README.md)，研究候选在 [`docs/research/`](../research/README.md)。
+**Unknown / Gap：** Target AdmissionReceipt、完整跨 Owner crash recovery、Effect certainty convergence、Mandatory Audit send gate、完整持续授权、长期 Memory 的质量收益、GraphRAG holdout / ablation、真实容量、Backpressure / fairness、RPO / RTO、HA / DR 和法院侧生产结果仍需要对应实现或 Evidence。其中 Effect restart replay 与 Mandatory Audit send gate 已经不是 Unknown，而是有负向证据支持的 Current implementation gap。
+
+九个责任域的连续说明见 [`docs/modules/`](../modules/README.md)。需要精确查看 Contract、状态、Owner 和恢复规则时进入 [`reference.md`](reference.md)；长期设计理由由 [`docs/decisions/`](../decisions/README.md) 保存。
