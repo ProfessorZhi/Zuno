@@ -37,4 +37,17 @@ The generated resume is constrained by current canonical provenance:
 - The question set concentrates on six threads: project authenticity / ownership, Tool/MCP, direct routing, GraphRAG, Context/Memory, and Agent topology / fundamentals.
 - The batch deliberately uses subtraction tests, ownership interrupts, evidence escalation, and project-to-fundamental bridges instead of treating the resume bullets as equally weighted checklist items.
 - Red Wave 1 completed at commit `837142053351a7cfb1c4338ec6955d09c07ba196`.
-- Workflow stopped at `BATCH_CHECKPOINT_RED_1`; Blue Wave 1 has not started.
+- Workflow stopped at `BATCH_CHECKPOINT_RED_1`; Blue Wave 1 had not started.
+
+## 2026-09-15 — Blue Wave 1
+
+- User said `继续 蓝队`, consuming the Red Wave 1 checkpoint and authorizing exactly the next stage.
+- Blue Candidate reread the frozen resume, all 100 Red Wave 1 questions, pinned `defense-model.md`, and allowed canonical Project / Architecture / Evidence / provenance at the pinned Zuno base.
+- `03_blue_answers.md` now contains exactly 100 candidate-style answers in one-to-one order.
+- Blue explicitly preserved historical boundaries: April Tool/MCP work does not claim later Approval / Idempotency / Reconcile; GraphRAG remains a 5-query development smoke rather than formal benchmark; Context/Memory V2 remains a foundation slice rather than production-grade memory.
+- Open-design questions were still answered technically: timeout → outcome unknown / idempotency / reconcile, Memory concurrency → optimistic version/CAS and short transactions, stale Specialist results → version-gated proposal handling.
+- After Candidate answers were complete, Blue switched to Architecture Reviewer Mode and wrote `03_blue_architecture_notes.md` separately.
+- The sealed notes classify the strongest Wave 1 signals as Evidence / Implementation / Ownership gaps rather than automatically escalating them to Architecture gaps; Multi-Agent remains measurement-gated and no Wave 1 signal proves it is required.
+- `03_blue_architecture_notes.md` is SEALED_FROM_RED. Red Wave 2 and Red Final must not read it.
+- Blue Wave 1 candidate answers were committed at `8c1798e4ee31e1b234e47f6801bb3d6a2690d7e0`; sealed architecture notes were committed at `c14df8b0af963d2397d8509dc2e363a622792c8a`.
+- Workflow stops at `BATCH_CHECKPOINT_BLUE_1`; Red Wave 2 has not started.
