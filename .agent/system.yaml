@@ -1,4 +1,4 @@
-version: "2026-09-14-red-blue-iterative-loop"
+version: "2026-09-15-red-blue-two-wave-batch-architecture-loop"
 system_identity: "Zuno Local Agent System"
 
 runtime_boundary:
@@ -53,6 +53,8 @@ program_rules:
   red_blue_requires_explicit_activation: true
   blue_closed_book: true
   red_blue_modes: ["CHATGPT_AUTO", "AGENT_AUTO"]
+  red_blue_default_execution_mode: "BATCH_DUEL"
+  red_blue_optional_execution_mode: "LIVE_INTERVIEW"
   red_blue_resume_first: true
   red_reads_zuno_docs: false
   red_reads_only_simulated_resume_and_attack_skill: true
@@ -65,7 +67,24 @@ program_rules:
   resume_user_review_gate_supported: true
   resume_user_review_gate_default_for_calibration: true
   resume_must_freeze_before_red: true
+
   red_pressure_suite_count_default: 100
+  red_batch_wave_question_count: 100
+  blue_batch_wave_answer_count: 100
+  red_wave_1_exact_question_count_required: true
+  blue_wave_1_exact_answer_count_required: true
+  red_wave_2_exact_question_count_required: true
+  blue_wave_2_exact_answer_count_required: true
+  red_wave_2_requires_blue_1_blind_evaluation: true
+  red_wave_2_must_be_answer_driven: true
+  red_wave_2_cannot_read_blue_architecture_notes: true
+  red_final_cannot_read_blue_architecture_notes: true
+  blue_architecture_notes_sealed_from_red: true
+  blue_wave_2_candidate_cannot_read_wave_1_architecture_notes: true
+  blue_architecture_reflection_after_blue_2_required: true
+  red_blue_batch_checkpoint_policy: "link_only_pause"
+  red_blue_user_does_not_answer_batch_questions: true
+
   red_live_seed_question_target_default: 8
   red_live_followups_dynamic: true
   red_live_one_question_one_intent: true
@@ -73,22 +92,28 @@ program_rules:
   red_live_static_primary_path_forbidden: true
   red_question_suite_requires_kill_switches: true
   red_user_review_gate_supported: true
-  red_user_review_gate_default_for_calibration: true
+  red_user_review_gate_default_for_calibration: false
   red_questions_must_freeze_before_blue: true
   red_blue_live_alternating_turns: true
   red_turn_must_commit_before_blue_turn: true
   blue_turn_must_commit_before_next_red_turn: true
+
   blue_candidate_skill_required: true
   blue_candidate_skill_path: ".agent/red-blue/defense-model.md"
   red_blue_skill_versions_pinned_per_round: true
   red_blue_current_round_verdict_immutable_after_reflection: true
   red_blue_round_improvement_ledger_required: true
+  red_blue_round_report_required: true
   red_blue_resume_builder_retrospective_required: true
   red_blue_red_skill_retrospective_required: true
+  red_blue_red_thinking_framework_retrospective_required: true
   red_blue_blue_skill_retrospective_required: true
+  red_blue_blue_candidate_framework_retrospective_required: true
+  red_blue_blue_architecture_framework_retrospective_required: true
   red_blue_harness_retrospective_required: true
   red_blue_improvement_user_review_gate_supported: true
   red_blue_improvement_user_review_gate_default_for_calibration: true
+  red_blue_architecture_can_be_revised_after_user_gate: true
   red_blue_post_round_changes_next_round_only: true
   red_blue_next_resume_candidate_required: true
   red_blue_next_round_revalidates_resume: true
