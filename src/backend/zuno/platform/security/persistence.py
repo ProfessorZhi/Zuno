@@ -418,7 +418,7 @@ class SecurityRepository:
             ),
             {"epoch_ref": epoch_ref},
         ).mappings().one()
-        persisted = {
+        persisted_identity = {
             "epoch_ref": str(row["epoch_ref"]),
             "tenant_id": str(row["tenant_id"]),
             "policy_bundle_ref": str(row["policy_bundle_ref"]),
@@ -426,9 +426,9 @@ class SecurityRepository:
             "action_set_version": str(row["action_set_version"]),
             "principal_context_hash": str(row["principal_context_hash"]),
             "generation": int(row["generation"]),
-            "status": str(row["status"]),
         }
-        if persisted != values:
+        expected_identity = {key: value for key, value in values.items() if key != "status"}
+        if persisted_identity != expected_identity:
             raise SecurityPersistenceError(
                 "effective security epoch identity was reused with different content"
             )
