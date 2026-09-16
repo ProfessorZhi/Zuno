@@ -140,9 +140,7 @@ class PostgresSecurityDecisionResolver:
             "execution_mode": execution_mode,
             "gate_decision": gate.decision.value,
         }
-        principal_context_hash = canonical_sha256(
-            {**scope_payload, "trace_id": trace_id, "run_id": run_id}
-        )
+        principal_context_hash = canonical_sha256(scope_payload)
 
         with SecurityUnitOfWork(self._engine) as repo:
             repo.ensure_effective_epoch(
@@ -279,6 +277,7 @@ class PostgresSecurityDecisionResolver:
             resource=resource,
             decision=decision,
             security_epoch_ref=epoch_ref,
+            expires_at=expires_at,
         )
         return SecurityDecisionRef(
             decision_id=decision_id,

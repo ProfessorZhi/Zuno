@@ -3,6 +3,10 @@ server:
   port: 7860
   project_name: "Zuno"
   version: "2.4.0"
+  security:
+    # PSC-B: no implicit authorization lifetime. Set a positive value in
+    # deployment config to bind Product SecurityDecision issuance.
+    product_decision_ttl_seconds: null
 
 database:
   sync_endpoint: "postgresql+psycopg://postgres:postgres@localhost:5432/zuno"

@@ -36,6 +36,7 @@ class SecurityAuthorizationReceipt:
     tenant_id: str
     decision: str
     decision_hash: str
+    expires_at: datetime | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -94,6 +95,35 @@ class SecurityRedactionDecisionReceipt:
     tenant_id: str
     decision: str
     decision_hash: str
+
+
+def authorization_decision_hash(
+    *,
+    decision_id: str,
+    tenant_id: str,
+    principal_context_id: str,
+    epoch_ref: str,
+    resource_ref: str,
+    action: str,
+    decision: str,
+    reason_code: str,
+    prepared_action_hash: str | None,
+    expires_at: datetime | None = None,
+) -> str:
+    payload: dict[str, Any] = {
+        "decision_id": decision_id,
+        "tenant_id": tenant_id,
+        "principal_context_id": principal_context_id,
+        "epoch_ref": epoch_ref,
+        "resource_ref": resource_ref,
+        "action": action,
+        "decision": decision,
+        "reason_code": reason_code,
+        "prepared_action_hash": prepared_action_hash,
+    }
+    if expires_at is not None:
+        payload["expires_at"] = expires_at.isoformat()
+    return canonical_sha256(payload)
 
 
 class PostgresSecurityApprovalFactSink:
@@ -285,6 +315,7 @@ class SecurityRepository:
         tenant_id: str,
         user_principal_id: str,
         epoch_ref: str,
+        workspace_id: str | None = None,
         agent_principal_id: str | None = None,
         task_principal_id: str | None = None,
         session_principal_id: str | None = None,
@@ -301,23 +332,25 @@ class SecurityRepository:
             "run_id": run_id,
             "epoch_ref": epoch_ref,
         }
+        if workspace_id is not None:
+            payload["workspace_id"] = workspace_id
         context_hash = canonical_sha256(payload)
         self.connection.execute(
             text(
                 """
                 INSERT INTO security_principal_contexts(
-                    principal_context_id, tenant_id, user_principal_id,
+                    principal_context_id, tenant_id, user_principal_id, workspace_id,
                     agent_principal_id, task_principal_id, session_principal_id,
                     run_id, epoch_ref, context_hash, status
                 ) VALUES (
-                    :principal_context_id, :tenant_id, :user_principal_id,
+                    :principal_context_id, :tenant_id, :user_principal_id, :workspace_id,
                     :agent_principal_id, :task_principal_id, :session_principal_id,
                     :run_id, :epoch_ref, :context_hash, :status
                 )
                 ON CONFLICT (principal_context_id) DO NOTHING
                 """
             ),
-            {**payload, "context_hash": context_hash, "status": status},
+            {**payload, "workspace_id": workspace_id, "context_hash": context_hash, "status": status},
         )
         return SecurityPrincipalContextReceipt(
             principal_context_id=principal_context_id,
@@ -499,8 +532,9 @@ class SecurityRepository:
         decision: str,
         reason_code: str,
         prepared_action_hash: str | None = None,
+        expires_at: datetime | None = None,
     ) -> SecurityAuthorizationReceipt:
-        payload = {
+        payload: dict[str, Any] = {
             "decision_id": decision_id,
             "tenant_id": tenant_id,
             "principal_context_id": principal_context_id,
@@ -511,37 +545,51 @@ class SecurityRepository:
             "reason_code": reason_code,
             "prepared_action_hash": prepared_action_hash,
         }
-        decision_hash = canonical_sha256(payload)
+        if expires_at is not None:
+            payload["expires_at"] = expires_at.isoformat()
+        decision_hash = authorization_decision_hash(
+            decision_id=decision_id,
+            tenant_id=tenant_id,
+            principal_context_id=principal_context_id,
+            epoch_ref=epoch_ref,
+            resource_ref=resource_ref,
+            action=action,
+            decision=decision,
+            reason_code=reason_code,
+            prepared_action_hash=prepared_action_hash,
+            expires_at=expires_at,
+        )
         self.connection.execute(
             text(
                 """
                 INSERT INTO security_authorization_decisions(
                     decision_id, tenant_id, principal_context_id, epoch_ref,
                     resource_ref, action, decision, reason_code,
-                    prepared_action_hash, decision_hash
+                    prepared_action_hash, decision_hash, expires_at
                 ) VALUES (
                     :decision_id, :tenant_id, :principal_context_id, :epoch_ref,
                     :resource_ref, :action, :decision, :reason_code,
-                    :prepared_action_hash, :decision_hash
+                    :prepared_action_hash, :decision_hash, :expires_at
                 )
                 ON CONFLICT (decision_id) DO NOTHING
                 """
             ),
-            {**payload, "decision_hash": decision_hash},
+            {**{k: v for k, v in payload.items() if k != "expires_at"},
+             "decision_hash": decision_hash, "expires_at": expires_at},
         )
         row = self.connection.execute(
             text(
                 """
                 SELECT decision_id, tenant_id, principal_context_id, epoch_ref,
                        resource_ref, action, decision, reason_code,
-                       prepared_action_hash, decision_hash
+                       prepared_action_hash, decision_hash, expires_at
                 FROM security_authorization_decisions
                 WHERE decision_id = :decision_id
                 """
             ),
             {"decision_id": decision_id},
         ).mappings().one()
-        persisted = {
+        persisted: dict[str, Any] = {
             "decision_id": str(row["decision_id"]),
             "tenant_id": str(row["tenant_id"]),
             "principal_context_id": str(row["principal_context_id"]),
@@ -554,6 +602,8 @@ class SecurityRepository:
             if row["prepared_action_hash"] is None
             else str(row["prepared_action_hash"]),
         }
+        if row["expires_at"] is not None:
+            persisted["expires_at"] = row["expires_at"].isoformat()
         if persisted != payload or str(row["decision_hash"]) != decision_hash:
             raise SecurityPersistenceError(
                 "authorization decision identity was reused with different content"
@@ -563,6 +613,7 @@ class SecurityRepository:
             tenant_id=tenant_id,
             decision=decision,
             decision_hash=decision_hash,
+            expires_at=row["expires_at"],
         )
 
     def read_authorization_decision_fact(
@@ -584,8 +635,9 @@ class SecurityRepository:
                 """
                 SELECT d.decision_id, d.tenant_id, d.principal_context_id,
                        d.epoch_ref, d.resource_ref, d.action, d.decision,
-                       d.decision_hash, e.status AS epoch_status,
-                       p.user_principal_id
+                       d.reason_code, d.prepared_action_hash, d.decision_hash,
+                       d.created_at AS issued_at, d.expires_at,
+                       e.status AS epoch_status, p.user_principal_id, p.workspace_id
                 FROM security_authorization_decisions d
                 JOIN security_effective_epochs e
                      ON e.epoch_ref = d.epoch_ref AND e.tenant_id = d.tenant_id
