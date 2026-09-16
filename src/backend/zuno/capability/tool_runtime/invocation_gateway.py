@@ -204,7 +204,7 @@ def _tool_effect_security_epoch_ref(*, tenant_id: str, workspace_id: str, call_i
             "scope": "tool-effect",
         }
     )
-    return f"security-epoch:tool-effect:{scope_hash[:32]}"
+    return f"security-epoch:tool-effect:{scope_hash}"
 
 
 class ToolInvocationGateway:
@@ -230,7 +230,6 @@ class ToolInvocationGateway:
         args: dict[str, Any],
         tenant_id: str,
         workspace_id: str,
-        trace_id: str,
         call_id: str,
         adapter_kind: str,
         executor: Callable[[], Awaitable[Any]],
@@ -327,7 +326,6 @@ class ToolInvocationGateway:
                 security_prepare = self._record_security_prepare(
                     tenant_id=tenant_id,
                     workspace_id=workspace_id,
-                    trace_id=trace_id,
                     call_id=call_id,
                     tool_name=tool_name,
                     prepared_action_hash=prepared_action_hash,
