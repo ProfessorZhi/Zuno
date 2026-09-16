@@ -217,7 +217,16 @@ def test_product_runtime_resolves_security_owner_fact_before_budget_blocker(
                     side_effect_level=ToolSideEffectLevel.READ,
                     execution_mode=ToolExecutionMode.LOCAL_FUNCTION,
                     executor=lambda args: {"ok": True},
-                )
+                ),
+                WorkspaceToolBinding(
+                    tool_id="tool.unselected",
+                    display_name="Unselected Tool",
+                    description="Must not broaden the selected Security resource scope.",
+                    input_schema={"type": "object"},
+                    side_effect_level=ToolSideEffectLevel.READ,
+                    execution_mode=ToolExecutionMode.LOCAL_FUNCTION,
+                    executor=lambda args: {"ok": True},
+                ),
             ],
             tenant_id="tenant-psc-b",
             workspace_id="workspace-psc-b",

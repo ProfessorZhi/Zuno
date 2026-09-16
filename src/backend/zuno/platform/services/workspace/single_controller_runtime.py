@@ -777,7 +777,14 @@ class WorkspaceAgentRuntime:
                 security_epoch_ref=effective_security_epoch_ref,
             )
 
-        capability_ids = tool_ids if (plan_steps and request.plan_kind == "tool") else ()
+        capability_ids = (
+            (request.tool_id,)
+            if plan_steps and request.plan_kind == "tool" and request.tool_id
+            else ()
+        )
+        selected_approval_required = tuple(
+            tool_id for tool_id in approval_required if tool_id in capability_ids
+        )
         return RuntimeStartRequest(
             run_id=f"run:{request.task_id}",
             thread_id=request.thread_id,
@@ -795,7 +802,7 @@ class WorkspaceAgentRuntime:
             content_fingerprint=request.content_fingerprint,
             capability_ids=capability_ids,
             allowed_tools=capability_ids,
-            approval_required_tools=approval_required if (plan_steps and request.plan_kind == "tool") else (),
+            approval_required_tools=selected_approval_required,
             budget_limits=request.budget_limits,
             security_decision_ref=security_ref.to_dict() if security_ref else None,
             budget_decision_ref=budget_ref.to_dict() if budget_ref else None,
