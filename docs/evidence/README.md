@@ -9,12 +9,11 @@
 | Evidence | 保留理由 |
 | --- | --- |
 | [Current Runtime Baseline](current-runtime-baseline.md) | 当前 Runtime owner、状态和失败语义的证据入口 |
-| [Current Test Baseline](current-test-baseline.md) | 当前 GitHub selected code verification、PostgreSQL Domain / Wave-001 revision probes，以及 Slice C 已确认的正负边界 |
-| [PSC-A Production Composition](psc-a-production-composition.md) | production WorkspaceRuntimeComposition + PostgreSQL AgentRunStore 的 startup / recovery Current Evidence |
+| [Current Test Baseline](current-test-baseline.md) | 当前 GitHub selected code verification、PostgreSQL Domain / Wave-001 revision probes，以及 Slice C / PSC-A 已确认的边界 |
 | [Current Eval Baseline](current-eval-baseline.md) | 当前评测与 Measurement Blocked 状态 |
 | [Implementation Wave-001](implementation-wave-001.md) | TASK-001 / TASK-003 的有限代码、测试和窄验证证据；不是 Program closure |
 
-Slice C 的 fault evidence 如何影响 Freeze readiness、哪些测试已经停止继续扩张，由 [`Effects ↔ Security Slice C Review`](../governance/effect-security-slice-c-review.md) 收拢。Product Security Composition 的当前切片状态见 [`Product Security Composition Implementation Status`](../governance/product-security-composition-implementation-status.md)。底层 Current 事实仍由本目录的 Evidence 证明。
+Slice C 的 fault evidence 如何影响 Freeze readiness、哪些测试已经停止继续扩张，由 [`Effects ↔ Security Slice C Review`](../governance/effect-security-slice-c-review.md) 收拢。Product Security Composition 的当前切片状态与 PSC-A 证据边界见 [`Product Security Composition Implementation Status`](../governance/product-security-composition-implementation-status.md)。底层 Current 事实仍由本目录的固定 Evidence 集合证明。
 
 已删除的 `local-workspace-closure.md` 和 `repository-closure.md` 只是已完成 Program / 工作区收口材料，不是今天需要维护的运行证据；其提交和原始材料仍由 Git 历史保留。
 
@@ -50,7 +49,7 @@ COURT QA: UNKNOWN / NOT AVAILABLE
 
 Main 的正向 selected verification 说明一组明确列出的 Domain、Citation、Application、Runtime、Knowledge、Capability、Tool、Model Gateway、Security、Observability、Retrieval 与 Eval 行为在同一个 main SHA 的 GitHub runner 上通过。run `35071244101` 还在 PostgreSQL 16.15 service 上加入 PSC-A probes：fresh migration 后的 `PostgresAgentRunStore` 可以跨新的 Store instance 恢复 state/checkpoint/pending interrupt，正式 `zuno.main.init_config()` 会建立非空 `WorkspaceRuntimeComposition` 并注入 PostgreSQL Store 与现有 Tool/Security/Infrastructure UoW factories。
 
-PSC-A 保持一个重要的负向边界：SecurityDecision resolver、Budget resolver、approval flow 和 legacy Security approval sink 没有因为 startup composition 变成非空就被 synthetic 绑定。Product profile 的这些未完成依赖继续 fail closed。PSC-A 因此证明“server composition root 和 durable runtime store 已接上”，不能扩写成“Product Security/Budget admission 已完成”。详细 shape 见 [`psc-a-production-composition.md`](psc-a-production-composition.md)。
+PSC-A 保持一个重要的负向边界：SecurityDecision resolver、Budget resolver、approval flow 和 legacy Security approval sink 没有因为 startup composition 变成非空就被 synthetic 绑定。Product profile 的这些未完成依赖继续 fail closed。PSC-A 因此证明“server composition root 和 durable runtime store 已接上”，不能扩写成“Product Security/Budget admission 已完成”。详细 Current shape 由 [`current-test-baseline.md`](current-test-baseline.md) 与 [`Product Security Composition Implementation Status`](../governance/product-security-composition-implementation-status.md) 共同记录。
 
 Slice C 的旧负向证据继续保留，因为它解释了 RB019 的实现优先级：PR #201 / run `34559517466` 曾证明 unresolved Reconciliation 在 restart replay 时被错误升级成 completed；PR #205 / run `34560692093` 曾证明缺少 durable mandatory-audit proof 时 send path 仍会 dispatch。AUTH-A/B/C 以及后续 audit lifecycle、requirement binding、manual durable judgment 和 Effect Security identity 修复已经把这两条原始 violation 转成 main 上的正向 regression；cancel-in-flight、provider remote-query reconciliation、manual reviewer Authority 和更完整的 audit policy/lifecycle 仍未闭环。
 
