@@ -165,6 +165,248 @@ def test_security_audit_requirement_identity_rejects_conflicting_content(
     not os.environ.get("ZUNO_TEST_DATABASE_URL"),
     reason="ZUNO_TEST_DATABASE_URL is not configured; Mandatory Audit probe is BLOCKED",
 )
+def test_security_owner_ensure_facts_reject_identity_drift(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    engine, admin_engine, database_name = _migrated_database(tmp_path, monkeypatch)
+    tenant_id = "tenant-security-fact-identity"
+    epoch_ref = "security-epoch:test-owner-identity"
+    principal_context_id = "principal-context:test-owner-identity"
+    decision_id = "authorization-decision:test-owner-identity"
+    try:
+        epoch_kwargs = {
+            "epoch_ref": epoch_ref,
+            "tenant_id": tenant_id,
+            "policy_bundle_ref": "policy:test-owner-identity",
+            "policy_bundle": {"policy": "v1"},
+            "action_set_version": "test:v1",
+            "principal_context_hash": "a" * 64,
+            "generation": 1,
+        }
+        with SecurityUnitOfWork(engine) as repo:
+            first_epoch = repo.ensure_effective_epoch(**epoch_kwargs)
+        with SecurityUnitOfWork(engine) as repo:
+            assert repo.ensure_effective_epoch(**epoch_kwargs) == first_epoch
+        with pytest.raises(
+            SecurityPersistenceError,
+            match="effective security epoch identity was reused with different content",
+        ):
+            with SecurityUnitOfWork(engine) as repo:
+                repo.ensure_effective_epoch(
+                    **{**epoch_kwargs, "policy_bundle": {"policy": "v2"}}
+                )
+
+        context_kwargs = {
+            "principal_context_id": principal_context_id,
+            "tenant_id": tenant_id,
+            "user_principal_id": "workspace-user:test-owner-identity",
+            "epoch_ref": epoch_ref,
+            "agent_principal_id": "agent:test",
+            "task_principal_id": "task:test",
+            "session_principal_id": "session:test",
+            "run_id": "run:test",
+        }
+        with SecurityUnitOfWork(engine) as repo:
+            repo.ensure_principal_context(**context_kwargs)
+
+        decision_kwargs = {
+            "decision_id": decision_id,
+            "tenant_id": tenant_id,
+            "principal_context_id": principal_context_id,
+            "epoch_ref": epoch_ref,
+            "resource_ref": "resource:test-owner-identity",
+            "action": "tool.execute",
+            "decision": "USE_ONLY",
+            "reason_code": "test",
+            "prepared_action_hash": "b" * 64,
+        }
+        with SecurityUnitOfWork(engine) as repo:
+            first_decision = repo.ensure_authorization_decision(**decision_kwargs)
+        with SecurityUnitOfWork(engine) as repo:
+            assert repo.ensure_authorization_decision(**decision_kwargs) == first_decision
+        with pytest.raises(
+            SecurityPersistenceError,
+            match="authorization decision identity was reused with different content",
+        ):
+            with SecurityUnitOfWork(engine) as repo:
+                repo.ensure_authorization_decision(
+                    **{**decision_kwargs, "prepared_action_hash": "c" * 64}
+                )
+    finally:
+        _drop_database(engine, admin_engine, database_name)
+
+
+@pytest.mark.skipif(
+    not os.environ.get("ZUNO_TEST_DATABASE_URL"),
+    reason="ZUNO_TEST_DATABASE_URL is not configured; Mandatory Audit probe is BLOCKED",
+)
+def test_same_trace_distinct_tool_calls_get_distinct_security_epochs(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    engine, admin_engine, database_name = _migrated_database(tmp_path, monkeypatch)
+    tenant_id = "tenant-security-epoch-scope"
+    workspace_id = "workspace-security-epoch-scope"
+    trace_id = "trace-shared-across-tool-calls"
+    secret_ref = "secret-ref:mail:security-epoch-scope"
+    executor_calls: list[str] = []
+    try:
+        _configure_audit_channel(engine, tenant_id=tenant_id)
+        with SecurityUnitOfWork(engine) as repo:
+            repo.record_secret_ref(
+                secret_ref=secret_ref,
+                tenant_id=tenant_id,
+                credential_version_ref="credential-version:mail.send:security-epoch-scope",
+                audience="tool:mail.send",
+                owner_principal_id=f"workspace-user:{workspace_id}",
+                scope={"tool": "mail.send", "workspace_id": workspace_id},
+            )
+        gateway = ToolInvocationGateway(
+            unit_of_work_factory=lambda: ToolUnitOfWork(engine),
+            security_unit_of_work_factory=lambda: SecurityUnitOfWork(engine),
+            infrastructure_unit_of_work_factory=lambda requested_tenant: InfrastructureUnitOfWork(
+                engine, tenant_id=requested_tenant
+            ),
+        )
+
+        async def executor() -> dict[str, str]:
+            executor_calls.append("sent")
+            return {"message_id": f"remote-message:epoch-scope:{len(executor_calls)}"}
+
+        for sequence in (1, 2):
+            _, receipt = asyncio.run(
+                gateway.invoke_readonly(
+                    tool_name="mail.send",
+                    args={
+                        "to": f"reviewer-{sequence}@example.com",
+                        "body": f"same trace call {sequence}",
+                        "secret_ref": secret_ref,
+                    },
+                    tenant_id=tenant_id,
+                    workspace_id=workspace_id,
+                    trace_id=trace_id,
+                    call_id=f"effect-same-trace-{sequence}",
+                    adapter_kind="API",
+                    executor=executor,
+                    readonly=False,
+                    approval=ToolApprovalBinding(
+                        decision_ref=f"security-decision:same-trace-{sequence}",
+                        adapter_ref="test.approval",
+                        comment="approved",
+                    ),
+                )
+            )
+            assert receipt.status == "completed"
+
+        assert executor_calls == ["sent", "sent"]
+        with engine.connect() as connection:
+            prepared_epochs = connection.execute(
+                text(
+                    "SELECT security_epoch_ref FROM prepared_tool_actions "
+                    "WHERE tenant_id = :tenant_id "
+                    "AND prepared_tool_action_id LIKE 'prepared-tool-action:effect-same-trace-%' "
+                    "ORDER BY prepared_tool_action_id"
+                ),
+                {"tenant_id": tenant_id},
+            ).scalars().all()
+            epoch_rows = connection.execute(
+                text(
+                    "SELECT epoch_ref FROM security_effective_epochs "
+                    "WHERE tenant_id = :tenant_id ORDER BY epoch_ref"
+                ),
+                {"tenant_id": tenant_id},
+            ).scalars().all()
+        assert len(prepared_epochs) == 2
+        assert len(set(prepared_epochs)) == 2
+        assert set(prepared_epochs) == set(epoch_rows)
+        assert all(str(ref).startswith("security-epoch:tool-effect:") for ref in epoch_rows)
+    finally:
+        _drop_database(engine, admin_engine, database_name)
+
+
+@pytest.mark.skipif(
+    not os.environ.get("ZUNO_TEST_DATABASE_URL"),
+    reason="ZUNO_TEST_DATABASE_URL is not configured; Mandatory Audit probe is BLOCKED",
+)
+def test_same_effect_replay_does_not_depend_on_trace_identity(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    engine, admin_engine, database_name = _migrated_database(tmp_path, monkeypatch)
+    tenant_id = "tenant-security-epoch-replay"
+    workspace_id = "workspace-security-epoch-replay"
+    call_id = "effect-security-epoch-replay-1"
+    secret_ref = "secret-ref:mail:security-epoch-replay"
+    executor_calls: list[str] = []
+    try:
+        _configure_audit_channel(engine, tenant_id=tenant_id)
+        with SecurityUnitOfWork(engine) as repo:
+            repo.record_secret_ref(
+                secret_ref=secret_ref,
+                tenant_id=tenant_id,
+                credential_version_ref="credential-version:mail.send:security-epoch-replay",
+                audience="tool:mail.send",
+                owner_principal_id=f"workspace-user:{workspace_id}",
+                scope={"tool": "mail.send", "workspace_id": workspace_id},
+            )
+        gateway = ToolInvocationGateway(
+            unit_of_work_factory=lambda: ToolUnitOfWork(engine),
+            security_unit_of_work_factory=lambda: SecurityUnitOfWork(engine),
+            infrastructure_unit_of_work_factory=lambda requested_tenant: InfrastructureUnitOfWork(
+                engine, tenant_id=requested_tenant
+            ),
+        )
+
+        async def executor() -> dict[str, str]:
+            executor_calls.append("sent")
+            return {"message_id": "remote-message:epoch-replay:1"}
+
+        common = {
+            "tool_name": "mail.send",
+            "args": {
+                "to": "reviewer@example.com",
+                "body": "stable security action",
+                "secret_ref": secret_ref,
+            },
+            "tenant_id": tenant_id,
+            "workspace_id": workspace_id,
+            "call_id": call_id,
+            "adapter_kind": "API",
+            "executor": executor,
+            "readonly": False,
+            "approval": ToolApprovalBinding(
+                decision_ref="security-decision:epoch-replay",
+                adapter_ref="test.approval",
+                comment="approved",
+            ),
+        }
+        _, first = asyncio.run(gateway.invoke_readonly(trace_id="trace-before-response-loss", **common))
+        replay_payload, replay = asyncio.run(
+            gateway.invoke_readonly(trace_id="trace-after-response-loss", **common)
+        )
+
+        assert first.status == "completed"
+        assert replay.status == "replayed"
+        assert replay_payload is not None
+        assert executor_calls == ["sent"]
+        with engine.connect() as connection:
+            epoch_count = connection.execute(
+                text(
+                    "SELECT count(*) FROM security_effective_epochs "
+                    "WHERE tenant_id = :tenant_id"
+                ),
+                {"tenant_id": tenant_id},
+            ).scalar_one()
+        assert int(epoch_count) == 1
+    finally:
+        _drop_database(engine, admin_engine, database_name)
+
+
+@pytest.mark.skipif(
+    not os.environ.get("ZUNO_TEST_DATABASE_URL"),
+    reason="ZUNO_TEST_DATABASE_URL is not configured; Mandatory Audit probe is BLOCKED",
+)
 def test_external_effect_requires_durable_mandatory_audit_before_dispatch(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
@@ -348,10 +590,15 @@ def test_matching_durable_audit_allows_external_dispatch(
         assert result is not None
         assert executor_calls == ["sent"]
         with engine.connect() as connection:
-            action_hash = connection.execute(
-                text("SELECT prepared_action_hash FROM prepared_tool_actions WHERE prepared_tool_action_id = :id"),
+            prepared = connection.execute(
+                text(
+                    "SELECT prepared_action_hash, security_epoch_ref FROM prepared_tool_actions "
+                    "WHERE prepared_tool_action_id = :id"
+                ),
                 {"id": prepared_id},
-            ).scalar_one()
+            ).mappings().one()
+            action_hash = str(prepared["prepared_action_hash"])
+            security_epoch_ref = str(prepared["security_epoch_ref"])
             requirement = connection.execute(
                 text(
                     "SELECT tenant_id, decision_id, audit_channel_id, requirement_hash, status "
@@ -380,7 +627,7 @@ def test_matching_durable_audit_allows_external_dispatch(
         assert audit["payload"]["audit_requirement_hash"] == requirement["requirement_hash"]
         assert audit["payload"]["authorization_decision_id"] == requirement["decision_id"]
         assert audit["payload"]["prepared_action_hash"] == action_hash
-        assert audit["payload"]["security_epoch_ref"] == f"security-epoch:{trace_id}"
+        assert audit["payload"]["security_epoch_ref"] == security_epoch_ref
         assert requirement["tenant_id"] == tenant_id
         assert requirement["status"] == "required"
         assert int(effect_count) == 1
@@ -565,20 +812,22 @@ def test_changed_security_audit_requirement_blocks_provider_send(
 
 
 class _RevokingAfterAuditGateway(ToolInvocationGateway):
-    def __init__(self, *, engine: Engine, epoch_ref: str, **kwargs: object) -> None:
+    def __init__(self, *, engine: Engine, **kwargs: object) -> None:
         super().__init__(**kwargs)
         self._test_engine = engine
-        self._test_epoch_ref = epoch_ref
 
     def _persist_mandatory_audit_before_effect(self, **kwargs: object) -> object:
         binding = super()._persist_mandatory_audit_before_effect(**kwargs)
+        security_prepare = kwargs.get("security_prepare")
+        epoch_ref = str(getattr(security_prepare, "security_epoch_ref", ""))
+        assert epoch_ref
         with self._test_engine.begin() as connection:
             updated = connection.execute(
                 text(
                     "UPDATE security_effective_epochs SET status = 'revoked' "
                     "WHERE epoch_ref = :epoch_ref AND status = 'active'"
                 ),
-                {"epoch_ref": self._test_epoch_ref},
+                {"epoch_ref": epoch_ref},
             ).rowcount
         assert updated == 1, "fault seam must revoke exactly one active SecurityEpoch"
         return binding
@@ -596,7 +845,6 @@ def test_security_epoch_revoked_after_audit_still_blocks_provider_send(
     tenant_id = "tenant-audit-revoked"
     workspace_id = "workspace-audit-revoked"
     trace_id = "trace-audit-then-revoked"
-    epoch_ref = f"security-epoch:{trace_id}"
     call_id = "effect-audit-then-revoked-1"
     secret_ref = "secret-ref:mail:audit-then-revoked"
     executor_calls: list[str] = []
@@ -613,7 +861,6 @@ def test_security_epoch_revoked_after_audit_still_blocks_provider_send(
             )
         gateway = _RevokingAfterAuditGateway(
             engine=engine,
-            epoch_ref=epoch_ref,
             unit_of_work_factory=lambda: ToolUnitOfWork(engine),
             security_unit_of_work_factory=lambda: SecurityUnitOfWork(engine),
             infrastructure_unit_of_work_factory=lambda requested_tenant: InfrastructureUnitOfWork(
