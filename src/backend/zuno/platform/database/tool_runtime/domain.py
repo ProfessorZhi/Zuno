@@ -256,6 +256,21 @@ class ToolManualEffectAssessmentInput:
     assessor_principal_id: str
     residual_uncertainty: str
     evidence_payload: dict[str, Any]
+
+
+@dataclass(frozen=True, slots=True)
+class ToolManualEffectAssessmentReceipt:
+    manual_assessment_id: str
+    tenant_id: str
+    reconciliation_id: str
+    provider_effect_id: str
+    conclusion: str
+    confidence: float
+    assessor_principal_id: str
+    residual_uncertainty: str
+    evidence_payload_hash: str
+
+
 class ToolUnitOfWork:
     def __init__(self, engine: Engine) -> None:
         self.engine = engine
@@ -1469,16 +1484,20 @@ class ToolRepository:
             },
         )
 
-    def record_manual_effect_assessment(self, assessment: ToolManualEffectAssessmentInput) -> None:
+    def record_manual_effect_assessment(
+        self,
+        assessment: ToolManualEffectAssessmentInput,
+    ) -> ToolManualEffectAssessmentReceipt:
         if not assessment.assessor_principal_id.startswith("workspace-user:manual-reviewer"):
             raise ToolRuntimeConflict("manual effect assessment requires authorized manual reviewer")
-        row = self.connection.execute(
+        reconciliation = self.connection.execute(
             text(
                 """
-                SELECT manual_assessment_required
+                SELECT provider_effect_id, manual_assessment_required
                 FROM tool_effect_reconciliations
                 WHERE reconciliation_id = :reconciliation_id
                   AND tenant_id = :tenant_id
+                FOR UPDATE
                 """
             ),
             {
@@ -1486,37 +1505,95 @@ class ToolRepository:
                 "tenant_id": assessment.tenant_id,
             },
         ).mappings().first()
-        if row is None:
+        if reconciliation is None:
             raise ToolRuntimeConflict("manual effect assessment requires existing reconciliation")
-        if not bool(row["manual_assessment_required"]):
-            raise ToolRuntimeConflict("manual effect assessment requires escalated reconciliation")
-        self.connection.execute(
-            text(
-                """
-                INSERT INTO tool_manual_effect_assessments (
-                    manual_assessment_id, tenant_id, reconciliation_id, provider_effect_id,
-                    conclusion, confidence, assessor_principal_id, residual_uncertainty,
-                    evidence_payload_hash
+        if str(reconciliation["provider_effect_id"]) != assessment.provider_effect_id:
+            raise ToolRuntimeConflict(
+                "manual effect assessment provider effect does not match reconciliation"
+            )
+
+        evidence_payload_hash = canonical_sha256(assessment.evidence_payload)
+        normalized_confidence = round(float(assessment.confidence), 4)
+
+        def read_persisted() -> Any:
+            return self.connection.execute(
+                text(
+                    """
+                    SELECT manual_assessment_id, tenant_id, reconciliation_id, provider_effect_id,
+                           conclusion, confidence, assessor_principal_id, residual_uncertainty,
+                           evidence_payload_hash
+                    FROM tool_manual_effect_assessments
+                    WHERE tenant_id = :tenant_id
+                      AND reconciliation_id = :reconciliation_id
+                    """
+                ),
+                {
+                    "tenant_id": assessment.tenant_id,
+                    "reconciliation_id": assessment.reconciliation_id,
+                },
+            ).mappings().first()
+
+        persisted = read_persisted()
+        if persisted is None:
+            if not bool(reconciliation["manual_assessment_required"]):
+                raise ToolRuntimeConflict(
+                    "manual effect assessment requires escalated reconciliation"
                 )
-                VALUES (
-                    :manual_assessment_id, :tenant_id, :reconciliation_id, :provider_effect_id,
-                    :conclusion, :confidence, :assessor_principal_id, :residual_uncertainty,
-                    :evidence_payload_hash
-                )
-                ON CONFLICT DO NOTHING
-                """
-            ),
-            {
-                "manual_assessment_id": assessment.manual_assessment_id,
-                "tenant_id": assessment.tenant_id,
-                "reconciliation_id": assessment.reconciliation_id,
-                "provider_effect_id": assessment.provider_effect_id,
-                "conclusion": assessment.conclusion,
-                "confidence": assessment.confidence,
-                "assessor_principal_id": assessment.assessor_principal_id,
-                "residual_uncertainty": assessment.residual_uncertainty,
-                "evidence_payload_hash": canonical_sha256(assessment.evidence_payload),
-            },
+            self.connection.execute(
+                text(
+                    """
+                    INSERT INTO tool_manual_effect_assessments (
+                        manual_assessment_id, tenant_id, reconciliation_id, provider_effect_id,
+                        conclusion, confidence, assessor_principal_id, residual_uncertainty,
+                        evidence_payload_hash
+                    )
+                    VALUES (
+                        :manual_assessment_id, :tenant_id, :reconciliation_id, :provider_effect_id,
+                        :conclusion, :confidence, :assessor_principal_id, :residual_uncertainty,
+                        :evidence_payload_hash
+                    )
+                    ON CONFLICT DO NOTHING
+                    """
+                ),
+                {
+                    "manual_assessment_id": assessment.manual_assessment_id,
+                    "tenant_id": assessment.tenant_id,
+                    "reconciliation_id": assessment.reconciliation_id,
+                    "provider_effect_id": assessment.provider_effect_id,
+                    "conclusion": assessment.conclusion,
+                    "confidence": normalized_confidence,
+                    "assessor_principal_id": assessment.assessor_principal_id,
+                    "residual_uncertainty": assessment.residual_uncertainty,
+                    "evidence_payload_hash": evidence_payload_hash,
+                },
+            )
+            persisted = read_persisted()
+        if persisted is None:
+            raise ToolRuntimeConflict("manual effect assessment could not be persisted")
+
+        matches = (
+            str(persisted["manual_assessment_id"]) == assessment.manual_assessment_id
+            and str(persisted["provider_effect_id"]) == assessment.provider_effect_id
+            and str(persisted["conclusion"]) == assessment.conclusion
+            and float(persisted["confidence"]) == normalized_confidence
+            and str(persisted["assessor_principal_id"]) == assessment.assessor_principal_id
+            and str(persisted["residual_uncertainty"]) == assessment.residual_uncertainty
+            and str(persisted["evidence_payload_hash"]) == evidence_payload_hash
+        )
+        if not matches:
+            raise ToolRuntimeConflict(
+                "manual effect assessment already exists with different content"
+            )
+        return ToolManualEffectAssessmentReceipt(
+            manual_assessment_id=str(persisted["manual_assessment_id"]),
+            tenant_id=str(persisted["tenant_id"]),
+            reconciliation_id=str(persisted["reconciliation_id"]),
+            provider_effect_id=str(persisted["provider_effect_id"]),
+            conclusion=str(persisted["conclusion"]),
+            confidence=float(persisted["confidence"]),
+            assessor_principal_id=str(persisted["assessor_principal_id"]),
+            residual_uncertainty=str(persisted["residual_uncertainty"]),
+            evidence_payload_hash=str(persisted["evidence_payload_hash"]),
         )
     def record_bypass_guard(
         self,
