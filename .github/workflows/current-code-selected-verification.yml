@@ -121,6 +121,7 @@ jobs:
             tests/knowledge/test_citation_provenance.py \
             tests/repo/test_wave001_domain_mutation_migration.py \
             tests/repo/test_alembic_entrypoint_postgres.py \
+            tests/repo/test_workspace_product_composition_postgres.py \
             tests/architecture/test_p0_v4_execution.py \
             tests/api/test_product_application_boundaries.py \
             tests/agent/runtime/test_runtime_plan_execution.py \
