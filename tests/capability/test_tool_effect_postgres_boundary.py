@@ -308,17 +308,21 @@ def test_unknown_external_effect_stays_reconcile_required_after_runtime_restart(
             tenant_id="tenant-effect",
             now=datetime.now(tz=UTC) + timedelta(hours=2),
         ) == 1
-        gateway.record_manual_effect_assessment(
-            tenant_id="tenant-effect",
-            manual_assessment_id=f"tool-manual-effect-assessment:{execution_id}",
-            reconciliation_id=reconciliation_id,
-            provider_effect_id="provider-effect:mail:unknown:1",
-            conclusion="CONFIRMED_EXECUTED",
-            confidence=1.0,
-            assessor_principal_id="workspace-user:manual-reviewer:effect",
-            residual_uncertainty="",
-            evidence_payload={"source": "provider-console", "status": "committed"},
-        )
+        assessment_kwargs = {
+            "tenant_id": "tenant-effect",
+            "manual_assessment_id": f"tool-manual-effect-assessment:{execution_id}",
+            "reconciliation_id": reconciliation_id,
+            "provider_effect_id": "provider-effect:mail:unknown:1",
+            "conclusion": "CONFIRMED_EXECUTED",
+            "confidence": 1.0,
+            "assessor_principal_id": "workspace-user:manual-reviewer:effect",
+            "residual_uncertainty": "",
+            "evidence_payload": {"source": "provider-console", "status": "committed"},
+        }
+        gateway.record_manual_effect_assessment(**assessment_kwargs)
+        # Response loss after a conclusive write must make the exact same durable
+        # judgment replay idempotently even though reconciliation is now RESOLVED.
+        gateway.record_manual_effect_assessment(**assessment_kwargs)
         resolved_ref = f"tool-effect-receipt:{execution_id}"
 
         resolved_replay = _runtime(engine, calls).execute(approved_request)

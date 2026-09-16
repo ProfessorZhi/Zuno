@@ -1493,7 +1493,7 @@ class ToolRepository:
         reconciliation = self.connection.execute(
             text(
                 """
-                SELECT provider_effect_id, manual_assessment_required, status
+                SELECT provider_effect_id, manual_assessment_required
                 FROM tool_effect_reconciliations
                 WHERE reconciliation_id = :reconciliation_id
                   AND tenant_id = :tenant_id
@@ -1507,8 +1507,6 @@ class ToolRepository:
         ).mappings().first()
         if reconciliation is None:
             raise ToolRuntimeConflict("manual effect assessment requires existing reconciliation")
-        if not bool(reconciliation["manual_assessment_required"]):
-            raise ToolRuntimeConflict("manual effect assessment requires escalated reconciliation")
         if str(reconciliation["provider_effect_id"]) != assessment.provider_effect_id:
             raise ToolRuntimeConflict(
                 "manual effect assessment provider effect does not match reconciliation"
@@ -1516,50 +1514,60 @@ class ToolRepository:
 
         evidence_payload_hash = canonical_sha256(assessment.evidence_payload)
         normalized_confidence = round(float(assessment.confidence), 4)
-        self.connection.execute(
-            text(
-                """
-                INSERT INTO tool_manual_effect_assessments (
-                    manual_assessment_id, tenant_id, reconciliation_id, provider_effect_id,
-                    conclusion, confidence, assessor_principal_id, residual_uncertainty,
-                    evidence_payload_hash
+
+        def read_persisted() -> Any:
+            return self.connection.execute(
+                text(
+                    """
+                    SELECT manual_assessment_id, tenant_id, reconciliation_id, provider_effect_id,
+                           conclusion, confidence, assessor_principal_id, residual_uncertainty,
+                           evidence_payload_hash
+                    FROM tool_manual_effect_assessments
+                    WHERE tenant_id = :tenant_id
+                      AND reconciliation_id = :reconciliation_id
+                    """
+                ),
+                {
+                    "tenant_id": assessment.tenant_id,
+                    "reconciliation_id": assessment.reconciliation_id,
+                },
+            ).mappings().first()
+
+        persisted = read_persisted()
+        if persisted is None:
+            if not bool(reconciliation["manual_assessment_required"]):
+                raise ToolRuntimeConflict(
+                    "manual effect assessment requires escalated reconciliation"
                 )
-                VALUES (
-                    :manual_assessment_id, :tenant_id, :reconciliation_id, :provider_effect_id,
-                    :conclusion, :confidence, :assessor_principal_id, :residual_uncertainty,
-                    :evidence_payload_hash
-                )
-                ON CONFLICT DO NOTHING
-                """
-            ),
-            {
-                "manual_assessment_id": assessment.manual_assessment_id,
-                "tenant_id": assessment.tenant_id,
-                "reconciliation_id": assessment.reconciliation_id,
-                "provider_effect_id": assessment.provider_effect_id,
-                "conclusion": assessment.conclusion,
-                "confidence": normalized_confidence,
-                "assessor_principal_id": assessment.assessor_principal_id,
-                "residual_uncertainty": assessment.residual_uncertainty,
-                "evidence_payload_hash": evidence_payload_hash,
-            },
-        )
-        persisted = self.connection.execute(
-            text(
-                """
-                SELECT manual_assessment_id, tenant_id, reconciliation_id, provider_effect_id,
-                       conclusion, confidence, assessor_principal_id, residual_uncertainty,
-                       evidence_payload_hash
-                FROM tool_manual_effect_assessments
-                WHERE tenant_id = :tenant_id
-                  AND reconciliation_id = :reconciliation_id
-                """
-            ),
-            {
-                "tenant_id": assessment.tenant_id,
-                "reconciliation_id": assessment.reconciliation_id,
-            },
-        ).mappings().first()
+            self.connection.execute(
+                text(
+                    """
+                    INSERT INTO tool_manual_effect_assessments (
+                        manual_assessment_id, tenant_id, reconciliation_id, provider_effect_id,
+                        conclusion, confidence, assessor_principal_id, residual_uncertainty,
+                        evidence_payload_hash
+                    )
+                    VALUES (
+                        :manual_assessment_id, :tenant_id, :reconciliation_id, :provider_effect_id,
+                        :conclusion, :confidence, :assessor_principal_id, :residual_uncertainty,
+                        :evidence_payload_hash
+                    )
+                    ON CONFLICT DO NOTHING
+                    """
+                ),
+                {
+                    "manual_assessment_id": assessment.manual_assessment_id,
+                    "tenant_id": assessment.tenant_id,
+                    "reconciliation_id": assessment.reconciliation_id,
+                    "provider_effect_id": assessment.provider_effect_id,
+                    "conclusion": assessment.conclusion,
+                    "confidence": normalized_confidence,
+                    "assessor_principal_id": assessment.assessor_principal_id,
+                    "residual_uncertainty": assessment.residual_uncertainty,
+                    "evidence_payload_hash": evidence_payload_hash,
+                },
+            )
+            persisted = read_persisted()
         if persisted is None:
             raise ToolRuntimeConflict("manual effect assessment could not be persisted")
 
