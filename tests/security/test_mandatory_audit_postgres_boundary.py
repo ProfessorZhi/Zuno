@@ -17,7 +17,7 @@ from zuno.capability.tool_runtime import ToolApprovalBinding, ToolInvocationGate
 from zuno.platform import settings as platform_settings
 from zuno.platform.database.foundation import InfrastructureConflictError, InfrastructureUnitOfWork
 from zuno.platform.database.tool_runtime import ToolUnitOfWork
-from zuno.platform.security import SecurityUnitOfWork
+from zuno.platform.security import SecurityPersistenceError, SecurityUnitOfWork
 
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
@@ -82,6 +82,83 @@ def _configure_audit_channel(engine: Engine, *, tenant_id: str, capacity_limit: 
             capacity_limit=capacity_limit,
             owner_id="security-governance:test-bootstrap",
         )
+
+
+@pytest.mark.skipif(
+    not os.environ.get("ZUNO_TEST_DATABASE_URL"),
+    reason="ZUNO_TEST_DATABASE_URL is not configured; Mandatory Audit probe is BLOCKED",
+)
+def test_security_audit_requirement_identity_rejects_conflicting_content(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    engine, admin_engine, database_name = _migrated_database(tmp_path, monkeypatch)
+    tenant_id = "tenant-audit-requirement-binding"
+    epoch_ref = "security-epoch:audit-requirement-binding"
+    principal_context_id = "principal-context:audit-requirement-binding"
+    decision_id = "authorization-decision:audit-requirement-binding"
+    requirement_id = "audit-requirement:audit-requirement-binding:tool-execute"
+    try:
+        with SecurityUnitOfWork(engine) as repo:
+            repo.ensure_effective_epoch(
+                epoch_ref=epoch_ref,
+                tenant_id=tenant_id,
+                policy_bundle_ref="policy:audit-requirement-binding",
+                policy_bundle={"test": "audit-requirement-binding"},
+                action_set_version="test:v1",
+                principal_context_hash="a" * 64,
+                generation=1,
+            )
+            repo.ensure_principal_context(
+                principal_context_id=principal_context_id,
+                tenant_id=tenant_id,
+                user_principal_id="workspace-user:audit-requirement-binding",
+                epoch_ref=epoch_ref,
+            )
+            repo.ensure_authorization_decision(
+                decision_id=decision_id,
+                tenant_id=tenant_id,
+                principal_context_id=principal_context_id,
+                epoch_ref=epoch_ref,
+                resource_ref="resource:audit-requirement-binding",
+                action="tool.execute",
+                decision="USE_ONLY",
+                reason_code="test",
+                prepared_action_hash="b" * 64,
+            )
+            first = repo.ensure_audit_requirement(
+                audit_requirement_id=requirement_id,
+                tenant_id=tenant_id,
+                decision_id=decision_id,
+                audit_channel_id="audit-channel:tool-runtime:phase16",
+            )
+
+        with pytest.raises(
+            SecurityPersistenceError,
+            match="audit requirement identity was reused with different content",
+        ):
+            with SecurityUnitOfWork(engine) as repo:
+                repo.ensure_audit_requirement(
+                    audit_requirement_id=requirement_id,
+                    tenant_id=tenant_id,
+                    decision_id=decision_id,
+                    audit_channel_id="audit-channel:different",
+                )
+
+        with SecurityUnitOfWork(engine) as repo:
+            persisted = repo.read_audit_requirement(
+                audit_requirement_id=requirement_id,
+                tenant_id=tenant_id,
+            )
+        assert persisted == first
+        with pytest.raises(SecurityPersistenceError, match="belongs to another tenant"):
+            with SecurityUnitOfWork(engine) as repo:
+                repo.read_audit_requirement(
+                    audit_requirement_id=requirement_id,
+                    tenant_id="tenant-audit-requirement-other",
+                )
+    finally:
+        _drop_database(engine, admin_engine, database_name)
 
 
 @pytest.mark.skipif(
@@ -275,9 +352,17 @@ def test_matching_durable_audit_allows_external_dispatch(
                 text("SELECT prepared_action_hash FROM prepared_tool_actions WHERE prepared_tool_action_id = :id"),
                 {"id": prepared_id},
             ).scalar_one()
+            requirement = connection.execute(
+                text(
+                    "SELECT tenant_id, decision_id, audit_channel_id, requirement_hash, status "
+                    "FROM security_audit_requirements "
+                    "WHERE audit_requirement_id = :requirement_id"
+                ),
+                {"requirement_id": f"audit-requirement:{call_id}:tool-execute"},
+            ).mappings().one()
             audit = connection.execute(
                 text(
-                    "SELECT audit_id, effect_id, owner_id, status, payload "
+                    "SELECT audit_id, channel_id, effect_id, owner_id, status, payload "
                     "FROM infra_mandatory_audit_events "
                     "WHERE payload->>'prepared_tool_action_id' = :prepared_id"
                 ),
@@ -289,8 +374,15 @@ def test_matching_durable_audit_allows_external_dispatch(
             ).scalar_one()
         assert audit["status"] == "effect_observed"
         assert audit["owner_id"] == f"tool-runtime:{call_id}"
+        assert audit["channel_id"] == requirement["audit_channel_id"]
+        assert audit["payload"]["tenant_id"] == tenant_id
+        assert audit["payload"]["audit_requirement_id"] == f"audit-requirement:{call_id}:tool-execute"
+        assert audit["payload"]["audit_requirement_hash"] == requirement["requirement_hash"]
+        assert audit["payload"]["authorization_decision_id"] == requirement["decision_id"]
         assert audit["payload"]["prepared_action_hash"] == action_hash
         assert audit["payload"]["security_epoch_ref"] == f"security-epoch:{trace_id}"
+        assert requirement["tenant_id"] == tenant_id
+        assert requirement["status"] == "required"
         assert int(effect_count) == 1
     finally:
         _drop_database(engine, admin_engine, database_name)
@@ -362,14 +454,124 @@ def test_observed_effect_releases_mandatory_audit_capacity_for_next_send(
         _drop_database(engine, admin_engine, database_name)
 
 
+class _TamperingAuditRequirementGateway(ToolInvocationGateway):
+    def __init__(self, *, engine: Engine, **kwargs: object) -> None:
+        super().__init__(**kwargs)
+        self._test_engine = engine
+
+    def _persist_mandatory_audit_before_effect(self, **kwargs: object) -> object:
+        security_prepare = kwargs.get("security_prepare")
+        requirement_id = str(getattr(security_prepare, "audit_requirement_id", ""))
+        assert requirement_id
+        with self._test_engine.begin() as connection:
+            updated = connection.execute(
+                text(
+                    "UPDATE security_audit_requirements "
+                    "SET audit_channel_id = 'audit-channel:tampered' "
+                    "WHERE audit_requirement_id = :requirement_id"
+                ),
+                {"requirement_id": requirement_id},
+            ).rowcount
+        assert updated == 1, "fault seam must tamper exactly one audit requirement"
+        return super()._persist_mandatory_audit_before_effect(**kwargs)
+
+
+@pytest.mark.skipif(
+    not os.environ.get("ZUNO_TEST_DATABASE_URL"),
+    reason="ZUNO_TEST_DATABASE_URL is not configured; Mandatory Audit probe is BLOCKED",
+)
+def test_changed_security_audit_requirement_blocks_provider_send(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    engine, admin_engine, database_name = _migrated_database(tmp_path, monkeypatch)
+    tenant_id = "tenant-audit-requirement-tamper"
+    workspace_id = "workspace-audit-requirement-tamper"
+    trace_id = "trace-audit-requirement-tamper"
+    call_id = "effect-audit-requirement-tamper-1"
+    secret_ref = "secret-ref:mail:audit-requirement-tamper"
+    executor_calls: list[str] = []
+    try:
+        _configure_audit_channel(engine, tenant_id=tenant_id)
+        with SecurityUnitOfWork(engine) as repo:
+            repo.record_secret_ref(
+                secret_ref=secret_ref,
+                tenant_id=tenant_id,
+                credential_version_ref="credential-version:mail.send:audit-requirement-tamper",
+                audience="tool:mail.send",
+                owner_principal_id=f"workspace-user:{workspace_id}",
+                scope={"tool": "mail.send", "workspace_id": workspace_id},
+            )
+        gateway = _TamperingAuditRequirementGateway(
+            engine=engine,
+            unit_of_work_factory=lambda: ToolUnitOfWork(engine),
+            security_unit_of_work_factory=lambda: SecurityUnitOfWork(engine),
+            infrastructure_unit_of_work_factory=lambda requested_tenant: InfrastructureUnitOfWork(
+                engine, tenant_id=requested_tenant
+            ),
+        )
+
+        async def executor() -> dict[str, str]:
+            executor_calls.append("sent")
+            return {"message_id": "must-not-be-created"}
+
+        result, receipt = asyncio.run(
+            gateway.invoke_readonly(
+                tool_name="mail.send",
+                args={
+                    "to": "reviewer@example.com",
+                    "body": "tampered requirement must stop",
+                    "secret_ref": secret_ref,
+                },
+                tenant_id=tenant_id,
+                workspace_id=workspace_id,
+                trace_id=trace_id,
+                call_id=call_id,
+                adapter_kind="API",
+                executor=executor,
+                readonly=False,
+                approval=ToolApprovalBinding(
+                    decision_ref="security-decision:audit-requirement-tamper",
+                    adapter_ref="test.approval",
+                    comment="approved before requirement tamper",
+                ),
+            )
+        )
+
+        prepared_id = f"prepared-tool-action:{call_id}"
+        assert result is None
+        assert receipt.status == "blocked"
+        assert "audit requirement hash does not match persisted content" in receipt.blocked_reason
+        assert executor_calls == []
+        with engine.connect() as connection:
+            audit_count = connection.execute(
+                text(
+                    "SELECT count(*) FROM infra_mandatory_audit_events "
+                    "WHERE payload->>'prepared_tool_action_id' = :prepared_id"
+                ),
+                {"prepared_id": prepared_id},
+            ).scalar_one()
+            effect_count = connection.execute(
+                text(
+                    "SELECT count(*) FROM tool_effect_receipts "
+                    "WHERE prepared_tool_action_id = :prepared_id"
+                ),
+                {"prepared_id": prepared_id},
+            ).scalar_one()
+        assert int(audit_count) == 0
+        assert int(effect_count) == 0
+    finally:
+        _drop_database(engine, admin_engine, database_name)
+
+
 class _RevokingAfterAuditGateway(ToolInvocationGateway):
     def __init__(self, *, engine: Engine, epoch_ref: str, **kwargs: object) -> None:
         super().__init__(**kwargs)
         self._test_engine = engine
         self._test_epoch_ref = epoch_ref
 
-    def _persist_mandatory_audit_before_effect(self, **kwargs: object) -> str:
-        audit_id = super()._persist_mandatory_audit_before_effect(**kwargs)
+    def _persist_mandatory_audit_before_effect(self, **kwargs: object) -> object:
+        binding = super()._persist_mandatory_audit_before_effect(**kwargs)
         with self._test_engine.begin() as connection:
             updated = connection.execute(
                 text(
@@ -379,7 +581,7 @@ class _RevokingAfterAuditGateway(ToolInvocationGateway):
                 {"epoch_ref": self._test_epoch_ref},
             ).rowcount
         assert updated == 1, "fault seam must revoke exactly one active SecurityEpoch"
-        return audit_id
+        return binding
 
 
 @pytest.mark.skipif(

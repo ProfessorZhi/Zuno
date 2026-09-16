@@ -112,6 +112,20 @@ class ToolApprovalBinding:
 @dataclass(frozen=True, slots=True)
 class _SecurityPrepareResult:
     blocked_reason: str = ""
+    audit_requirement_id: str = ""
+    audit_requirement_hash: str = ""
+    audit_channel_id: str = ""
+    authorization_decision_id: str = ""
+    security_epoch_ref: str = ""
+
+
+@dataclass(frozen=True, slots=True)
+class _MandatoryAuditBinding:
+    audit_id: str
+    effect_id: str
+    owner_id: str
+    audit_requirement_id: str
+    audit_requirement_hash: str
 
 
 @dataclass(frozen=True, slots=True)
@@ -393,12 +407,12 @@ class ToolInvocationGateway:
                         )
                         return None, ToolGatewayReceipt("blocked", prepared_id, attempt_id, receipt_id, str(exc))
                     try:
-                        audit_id = self._persist_mandatory_audit_before_effect(
+                        audit_binding = self._persist_mandatory_audit_before_effect(
                             tenant_id=tenant_id,
-                            trace_id=trace_id,
                             call_id=call_id,
                             prepared_id=prepared_id,
                             prepared_action_hash=prepared_action_hash,
+                            security_prepare=security_prepare,
                         )
                     except Exception as exc:
                         payload["audit_blocked_reason"] = str(exc)
@@ -433,7 +447,7 @@ class ToolInvocationGateway:
                         )
                     except SecurityPersistenceError as exc:
                         payload["security_blocked_reason"] = str(exc)
-                        payload["audit_id"] = audit_id
+                        payload["audit_id"] = audit_binding.audit_id
                         self._abort_execute_prerequisites(
                             tenant_id=tenant_id,
                             owner=f"tool-runtime:{call_id}",
@@ -453,7 +467,7 @@ class ToolInvocationGateway:
                         return None, ToolGatewayReceipt(
                             "blocked", prepared_id, attempt_id, receipt_id, str(exc)
                         )
-                    payload["audit_id"] = audit_id
+                    payload["audit_id"] = audit_binding.audit_id
 
                     sandbox_blocked_reason = ""
                     sandbox_result: SandboxExecutionResult | None = None
@@ -487,7 +501,7 @@ class ToolInvocationGateway:
                     try:
                         result = await executor()
                     except ToolEffectUnknownError as exc:
-                        self._mark_mandatory_audit_effect_observed(tenant_id=tenant_id, call_id=call_id, prepared_id=prepared_id, prepared_action_hash=prepared_action_hash, audit_id=audit_id)
+                        self._mark_mandatory_audit_effect_observed(tenant_id=tenant_id, binding=audit_binding)
                         unknown_payload = _unknown_effect_payload(exc=exc, call_id=call_id)
                         self._record_terminal(
                             tenant_id=tenant_id,
@@ -539,7 +553,7 @@ class ToolInvocationGateway:
                             "UNKNOWN_EFFECT_RECONCILIATION_REQUIRED",
                         )
                     except Exception as exc:
-                        self._mark_mandatory_audit_effect_observed(tenant_id=tenant_id, call_id=call_id, prepared_id=prepared_id, prepared_action_hash=prepared_action_hash, audit_id=audit_id)
+                        self._mark_mandatory_audit_effect_observed(tenant_id=tenant_id, binding=audit_binding)
                         unknown_payload = _unknown_effect_payload_from_exception(exc=exc, call_id=call_id)
                         self._record_terminal(
                             tenant_id=tenant_id,
@@ -590,7 +604,7 @@ class ToolInvocationGateway:
                             receipt_id,
                             "UNKNOWN_EFFECT_RECONCILIATION_REQUIRED",
                         )
-                    self._mark_mandatory_audit_effect_observed(tenant_id=tenant_id, call_id=call_id, prepared_id=prepared_id, prepared_action_hash=prepared_action_hash, audit_id=audit_id)
+                    self._mark_mandatory_audit_effect_observed(tenant_id=tenant_id, binding=audit_binding)
                     if effect_policy.effect_class.value == "ASYNC_EXTERNAL":
                         async_payload = _async_job_payload_from_result(result=result, call_id=call_id)
                         provider_job_id = str(async_payload["provider_job_id"])
@@ -999,13 +1013,13 @@ class ToolInvocationGateway:
                         approver_principal_id=f"approval-binding:{approval.decision_ref}",
                         decision="approved",
                     )
-            repo.ensure_audit_requirement(
-                audit_requirement_id=f"audit-requirement:{call_id}:tool-execute",
-                tenant_id=tenant_id,
-                decision_id=decision_id,
-                audit_channel_id="audit-channel:tool-runtime:phase16",
-            )
             try:
+                audit_requirement = repo.ensure_audit_requirement(
+                    audit_requirement_id=f"audit-requirement:{call_id}:tool-execute",
+                    tenant_id=tenant_id,
+                    decision_id=decision_id,
+                    audit_channel_id="audit-channel:tool-runtime:phase16",
+                )
                 repo.validate_pre_effect_authorization(
                     decision_id=decision_id,
                     tenant_id=tenant_id,
@@ -1014,7 +1028,13 @@ class ToolInvocationGateway:
                 )
             except SecurityPersistenceError as exc:
                 return _SecurityPrepareResult(blocked_reason=str(exc))
-        return _SecurityPrepareResult()
+        return _SecurityPrepareResult(
+            audit_requirement_id=audit_requirement.audit_requirement_id,
+            audit_requirement_hash=audit_requirement.requirement_hash,
+            audit_channel_id=audit_requirement.audit_channel_id,
+            authorization_decision_id=decision_id,
+            security_epoch_ref=epoch_ref,
+        )
 
     def _prepare_sandbox_or_block(
         self,
@@ -1370,38 +1390,74 @@ class ToolInvocationGateway:
         self,
         *,
         tenant_id: str,
-        trace_id: str,
         call_id: str,
         prepared_id: str,
         prepared_action_hash: str,
-    ) -> str:
+        security_prepare: _SecurityPrepareResult,
+    ) -> _MandatoryAuditBinding:
         assert self._infrastructure_unit_of_work_factory is not None
-        channel_id = "audit-channel:tool-runtime:phase16"
+        assert self._security_unit_of_work_factory is not None
+        if (
+            not security_prepare.audit_requirement_id
+            or not security_prepare.audit_requirement_hash
+            or not security_prepare.audit_channel_id
+            or not security_prepare.authorization_decision_id
+            or not security_prepare.security_epoch_ref
+        ):
+            raise SecurityPersistenceError(
+                "mandatory audit requires a persisted Security audit requirement"
+            )
+
+        with self._security_unit_of_work_factory() as security_repo:
+            requirement = security_repo.read_audit_requirement(
+                audit_requirement_id=security_prepare.audit_requirement_id,
+                tenant_id=tenant_id,
+            )
+        if requirement is None:
+            raise SecurityPersistenceError("mandatory audit requirement is missing")
+        if (
+            requirement.requirement_hash != security_prepare.audit_requirement_hash
+            or requirement.audit_channel_id != security_prepare.audit_channel_id
+            or requirement.decision_id != security_prepare.authorization_decision_id
+            or requirement.status != "required"
+        ):
+            raise SecurityPersistenceError(
+                "mandatory audit requirement changed before effect"
+            )
+
         owner_id = f"tool-runtime:{call_id}"
         audit_effect_hash = canonical_sha256(
             {
+                "tenant_id": tenant_id,
                 "prepared_tool_action_id": prepared_id,
                 "prepared_action_hash": prepared_action_hash,
+                "audit_requirement_id": requirement.audit_requirement_id,
+                "audit_requirement_hash": requirement.requirement_hash,
+                "authorization_decision_id": requirement.decision_id,
+                "security_epoch_ref": security_prepare.security_epoch_ref,
             }
         )
         effect_id = f"tool-effect-audit:{audit_effect_hash}"
         payload = {
-            "audit_requirement_id": f"audit-requirement:{call_id}:tool-execute",
-            "authorization_decision_id": f"authorization-decision:{call_id}",
-            "security_epoch_ref": f"security-epoch:{trace_id}",
+            "tenant_id": tenant_id,
+            "audit_requirement_id": requirement.audit_requirement_id,
+            "audit_requirement_hash": requirement.requirement_hash,
+            "audit_channel_id": requirement.audit_channel_id,
+            "authorization_decision_id": requirement.decision_id,
+            "security_epoch_ref": security_prepare.security_epoch_ref,
             "prepared_tool_action_id": prepared_id,
             "prepared_action_hash": prepared_action_hash,
             "action": "tool.execute",
         }
         with self._infrastructure_unit_of_work_factory(tenant_id) as repo:
             receipt = repo.record_mandatory_audit(
-                channel_id=channel_id,
+                channel_id=requirement.audit_channel_id,
                 effect_id=effect_id,
                 owner_id=owner_id,
                 payload=payload,
             )
-        # Re-open the UoW so the send gate consumes a committed proof rather
-        # than trusting the write transaction that created it.
+        # Re-open both owners so the send gate consumes committed proof and a
+        # still-matching Security requirement rather than trusting write-time state.
         with self._infrastructure_unit_of_work_factory(tenant_id) as repo:
             committed = repo.assert_audit_durable_for_effect(
                 audit_id=receipt.audit_id,
@@ -1410,17 +1466,50 @@ class ToolInvocationGateway:
             )
         if committed.payload_hash != receipt.payload_hash:
             raise InfrastructureConflictError("mandatory audit proof changed after commit")
-        return committed.audit_id
+        with self._security_unit_of_work_factory() as security_repo:
+            current_requirement = security_repo.read_audit_requirement(
+                audit_requirement_id=requirement.audit_requirement_id,
+                tenant_id=tenant_id,
+            )
+        if (
+            current_requirement is None
+            or current_requirement.requirement_hash != requirement.requirement_hash
+            or current_requirement.audit_channel_id != requirement.audit_channel_id
+            or current_requirement.decision_id != requirement.decision_id
+            or current_requirement.status != "required"
+        ):
+            raise SecurityPersistenceError(
+                "mandatory audit requirement changed after proof commit"
+            )
+        return _MandatoryAuditBinding(
+            audit_id=committed.audit_id,
+            effect_id=effect_id,
+            owner_id=owner_id,
+            audit_requirement_id=requirement.audit_requirement_id,
+            audit_requirement_hash=requirement.requirement_hash,
+        )
 
-    def _mark_mandatory_audit_effect_observed(self, *, tenant_id: str, call_id: str, prepared_id: str, prepared_action_hash: str, audit_id: str) -> None:
-        if not audit_id or self._infrastructure_unit_of_work_factory is None:
+    def _mark_mandatory_audit_effect_observed(
+        self,
+        *,
+        tenant_id: str,
+        binding: _MandatoryAuditBinding,
+    ) -> None:
+        if not binding.audit_id or self._infrastructure_unit_of_work_factory is None:
             return
-        effect_id = f"tool-effect-audit:{canonical_sha256({'prepared_tool_action_id': prepared_id, 'prepared_action_hash': prepared_action_hash})}"
         try:
             with self._infrastructure_unit_of_work_factory(tenant_id) as repo:
-                repo.mark_audited_effect_observed(audit_id=audit_id, effect_id=effect_id, owner_id=f"tool-runtime:{call_id}")
+                repo.mark_audited_effect_observed(
+                    audit_id=binding.audit_id,
+                    effect_id=binding.effect_id,
+                    owner_id=binding.owner_id,
+                )
         except Exception as exc:
-            logging.getLogger(__name__).warning("mandatory audit lifecycle close failed for %s: %s", audit_id, exc)
+            logging.getLogger(__name__).warning(
+                "mandatory audit lifecycle close failed for %s: %s",
+                binding.audit_id,
+                exc,
+            )
 
     def _abort_execute_prerequisites(
         self,
