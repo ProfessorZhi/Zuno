@@ -335,7 +335,7 @@ def test_observed_effect_releases_mandatory_audit_capacity_for_next_send(
             _, receipt = asyncio.run(
                 gateway.invoke_readonly(
                     tool_name="mail.send",
-                    args={"to": "reviewer@example.com", "body": f"audited send {sequence}", "secret_ref": secret_ref},
+                    args={"to": f"reviewer-{sequence}@example.com", "body": f"audited send {sequence}", "secret_ref": secret_ref},
                     tenant_id=tenant_id,
                     workspace_id=workspace_id,
                     trace_id=f"trace-mandatory-audit-capacity-{sequence}",
