@@ -260,5 +260,10 @@ def test_product_runtime_resolves_security_owner_fact_before_budget_blocker(
         assert admitted.security_epoch_ref.startswith("security-epoch:product:")
         assert admitted.budget_verdict == {"allowed": False, "reason": "budget_owner_resolver_unbound"}
         assert admitted.capability_ids == ()
+
+        snapshot = runtime.start(request)
+        assert snapshot.security_summary["decision"] == "block"
+        assert snapshot.security_summary["reason"] == "budget_owner_resolver_unbound"
+        assert snapshot.budget_verdict == {"allowed": False, "reason": "budget_owner_resolver_unbound"}
     finally:
         _drop_database(engine, admin_engine, database_name)
