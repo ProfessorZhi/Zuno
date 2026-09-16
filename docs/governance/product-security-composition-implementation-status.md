@@ -1,10 +1,10 @@
 # Product Security Composition Implementation Status
 
 status: `PSC_A_IMPLEMENTED_SELECTED_VERIFIED / PSC_B_C_D_OPEN`
-current_main_evidence: `c3938ccb92c8234977ebd5e2956acec697981d24 / run 35071244101`
+current_main_evidence: `c3938ccb92c8234977ebd5e2956acec697981d24 / run 35071244101 / 210 passed, 18 warnings`
 production_readiness: `NOT_ESTABLISHED`
 source_freeze: [`product-security-composition-freeze-candidate.md`](product-security-composition-freeze-candidate.md)
-current_evidence: [`../evidence/psc-a-production-composition.md`](../evidence/psc-a-production-composition.md)
+current_evidence: [`../evidence/current-test-baseline.md`](../evidence/current-test-baseline.md)
 
 Product Security Composition freeze candidate 在 `main@c283d364...` 时冻结了四个独立问题。PSC-A 现在已经落地并进入 main selected verification；PSC-B、PSC-C、PSC-D 的 Authority / Contract 问题没有因为 composition root 可用而自动解决。
 
@@ -13,6 +13,8 @@ Product Security Composition freeze candidate 在 `main@c283d364...` 时冻结�
 **Current：IMPLEMENTED / SELECTED VERIFIED。**
 
 FastAPI `init_config()` 已经在数据库 bootstrap 后建立 server-owned `WorkspaceRuntimeComposition`。Composition 使用现有 PostgreSQL runtime schema 的 `PostgresAgentRunStore`，并注入 Tool、Security、Infrastructure UoW factories。fresh-PostgreSQL probe 证明 runtime state、checkpoint 与 pending interrupt 可以跨新的 Store instance 恢复，真实 startup probe 证明正式 `init_config()` 能建立 composition，reset 后 binding 会清除。
+
+Current evidence 绑定 `main@c3938ccb92c8234977ebd5e2956acec697981d24`、GitHub Actions run `35071244101`、PostgreSQL 16.15；selected suite 得到 `210 passed, 18 warnings in 32.79s`，artifact `10436282705`。这仍然是 selected verification，不是 Full CI 或 Production Qualification。
 
 PSC-A 还恢复了真实 startup path 上一个已有的调用错误：Package-A ingestion runtime 现在按其 keyword-only contract 传入。这个修复只是让正式启动链能够继续到 product composition，不改变 ingestion Owner。
 
