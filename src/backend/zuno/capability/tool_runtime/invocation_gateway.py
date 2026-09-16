@@ -4,6 +4,7 @@ from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 import json
+import logging
 from typing import Any
 
 from zuno.platform.database.foundation import (
@@ -486,6 +487,7 @@ class ToolInvocationGateway:
                     try:
                         result = await executor()
                     except ToolEffectUnknownError as exc:
+                        self._mark_mandatory_audit_effect_observed(tenant_id=tenant_id, call_id=call_id, prepared_id=prepared_id, prepared_action_hash=prepared_action_hash, audit_id=audit_id)
                         unknown_payload = _unknown_effect_payload(exc=exc, call_id=call_id)
                         self._record_terminal(
                             tenant_id=tenant_id,
@@ -537,6 +539,7 @@ class ToolInvocationGateway:
                             "UNKNOWN_EFFECT_RECONCILIATION_REQUIRED",
                         )
                     except Exception as exc:
+                        self._mark_mandatory_audit_effect_observed(tenant_id=tenant_id, call_id=call_id, prepared_id=prepared_id, prepared_action_hash=prepared_action_hash, audit_id=audit_id)
                         unknown_payload = _unknown_effect_payload_from_exception(exc=exc, call_id=call_id)
                         self._record_terminal(
                             tenant_id=tenant_id,
@@ -587,6 +590,7 @@ class ToolInvocationGateway:
                             receipt_id,
                             "UNKNOWN_EFFECT_RECONCILIATION_REQUIRED",
                         )
+                    self._mark_mandatory_audit_effect_observed(tenant_id=tenant_id, call_id=call_id, prepared_id=prepared_id, prepared_action_hash=prepared_action_hash, audit_id=audit_id)
                     if effect_policy.effect_class.value == "ASYNC_EXTERNAL":
                         async_payload = _async_job_payload_from_result(result=result, call_id=call_id)
                         provider_job_id = str(async_payload["provider_job_id"])
@@ -1407,6 +1411,16 @@ class ToolInvocationGateway:
         if committed.payload_hash != receipt.payload_hash:
             raise InfrastructureConflictError("mandatory audit proof changed after commit")
         return committed.audit_id
+
+    def _mark_mandatory_audit_effect_observed(self, *, tenant_id: str, call_id: str, prepared_id: str, prepared_action_hash: str, audit_id: str) -> None:
+        if not audit_id or self._infrastructure_unit_of_work_factory is None:
+            return
+        effect_id = f"tool-effect-audit:{canonical_sha256({'prepared_tool_action_id': prepared_id, 'prepared_action_hash': prepared_action_hash})}"
+        try:
+            with self._infrastructure_unit_of_work_factory(tenant_id) as repo:
+                repo.mark_audited_effect_observed(audit_id=audit_id, effect_id=effect_id, owner_id=f"tool-runtime:{call_id}")
+        except Exception as exc:
+            logging.getLogger(__name__).warning("mandatory audit lifecycle close failed for %s: %s", audit_id, exc)
 
     def _abort_execute_prerequisites(
         self,

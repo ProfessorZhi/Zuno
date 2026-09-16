@@ -75,11 +75,11 @@ def _drop_database(engine: Engine, admin_engine: Engine, database_name: str) -> 
     admin_engine.dispose()
 
 
-def _configure_audit_channel(engine: Engine, *, tenant_id: str) -> None:
+def _configure_audit_channel(engine: Engine, *, tenant_id: str, capacity_limit: int = 100) -> None:
     with InfrastructureUnitOfWork(engine, tenant_id=tenant_id) as repo:
         repo.configure_audit_channel(
             channel_id="audit-channel:tool-runtime:phase16",
-            capacity_limit=100,
+            capacity_limit=capacity_limit,
             owner_id="security-governance:test-bootstrap",
         )
 
@@ -287,11 +287,77 @@ def test_matching_durable_audit_allows_external_dispatch(
                 text("SELECT count(*) FROM tool_effect_receipts WHERE prepared_tool_action_id = :id"),
                 {"id": prepared_id},
             ).scalar_one()
-        assert audit["status"] == "durable"
+        assert audit["status"] == "effect_observed"
         assert audit["owner_id"] == f"tool-runtime:{call_id}"
         assert audit["payload"]["prepared_action_hash"] == action_hash
         assert audit["payload"]["security_epoch_ref"] == f"security-epoch:{trace_id}"
         assert int(effect_count) == 1
+    finally:
+        _drop_database(engine, admin_engine, database_name)
+
+
+@pytest.mark.skipif(
+    not os.environ.get("ZUNO_TEST_DATABASE_URL"),
+    reason="ZUNO_TEST_DATABASE_URL is not configured; Mandatory Audit probe is BLOCKED",
+)
+def test_observed_effect_releases_mandatory_audit_capacity_for_next_send(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    engine, admin_engine, database_name = _migrated_database(tmp_path, monkeypatch)
+    tenant_id = "tenant-audit-capacity"
+    workspace_id = "workspace-audit-capacity"
+    secret_ref = "secret-ref:mail:mandatory-audit-capacity"
+    executor_calls: list[str] = []
+    try:
+        _configure_audit_channel(engine, tenant_id=tenant_id, capacity_limit=1)
+        with SecurityUnitOfWork(engine) as repo:
+            repo.record_secret_ref(
+                secret_ref=secret_ref,
+                tenant_id=tenant_id,
+                credential_version_ref="credential-version:mail.send:audit-capacity",
+                audience="tool:mail.send",
+                owner_principal_id=f"workspace-user:{workspace_id}",
+                scope={"tool": "mail.send", "workspace_id": workspace_id},
+            )
+        gateway = ToolInvocationGateway(
+            unit_of_work_factory=lambda: ToolUnitOfWork(engine),
+            security_unit_of_work_factory=lambda: SecurityUnitOfWork(engine),
+            infrastructure_unit_of_work_factory=lambda requested_tenant: InfrastructureUnitOfWork(
+                engine, tenant_id=requested_tenant
+            ),
+        )
+
+        async def executor() -> dict[str, str]:
+            executor_calls.append("sent")
+            return {"message_id": f"remote-message:audit-capacity:{len(executor_calls)}"}
+
+        for sequence in (1, 2):
+            _, receipt = asyncio.run(
+                gateway.invoke_readonly(
+                    tool_name="mail.send",
+                    args={"to": f"reviewer-{sequence}@example.com", "body": f"audited send {sequence}", "secret_ref": secret_ref},
+                    tenant_id=tenant_id,
+                    workspace_id=workspace_id,
+                    trace_id=f"trace-mandatory-audit-capacity-{sequence}",
+                    call_id=f"effect-mandatory-audit-capacity-{sequence}",
+                    adapter_kind="API",
+                    executor=executor,
+                    readonly=False,
+                    approval=ToolApprovalBinding(
+                        decision_ref=f"security-decision:audit-capacity-{sequence}",
+                        adapter_ref="test.approval",
+                        comment="approved",
+                    ),
+                )
+            )
+            assert receipt.status == "completed"
+
+        assert executor_calls == ["sent", "sent"]
+        with engine.connect() as connection:
+            statuses = connection.execute(
+                text("SELECT status, count(*) AS count FROM infra_mandatory_audit_events GROUP BY status ORDER BY status")
+            ).mappings().all()
+        assert statuses == [{"status": "effect_observed", "count": 2}]
     finally:
         _drop_database(engine, admin_engine, database_name)
 
