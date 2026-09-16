@@ -91,6 +91,6 @@ production_readiness: NOT_ESTABLISHED
 
 9/9 Detail Design Candidate 只表示 Target Design 已达到冻结前可审查粒度。Current、实现、质量和生产资格继续由 `docs/evidence/` 证明；`DETAIL DESIGN CANDIDATE V1 AVAILABLE` 不等于 `Module Detail Freeze Review` 已通过。
 
-当前 Evidence 还存在两条 P0 负向事实：unresolved Effect 在 restart replay 后会被错误升级成 `completed`，且最终 Reconciliation convergence 尚未闭环；`MANDATORY_BEFORE_EFFECT` 在缺少 durable audit proof 时当前 send path 仍可能 dispatch。它们是实现 blocker，不因九模块设计已经完整而消失。
+RB019 的两条原始 P0 负向事实已经转成 main regression：unresolved Effect restart replay 保持 Unknown，最小 conclusive reconciliation 可以收敛 Effect truth；`MANDATORY_BEFORE_EFFECT` 缺 committed proof 时 executor 为 0，已发送 Effect 的 audit row 也会关闭 durable capacity。当前 blocker 已缩小到 remote-query / manual Authority 和更完整的 audit policy / binding / lifecycle，而不是继续把旧 #201/#205 当成今天仍失败。
 
 跨模块的事实 Ownership、Completion Proof、Cancellation、Late Result、Idempotency、Recovery、Detail Candidate 与 Freeze Review 记录在 [`reference.md`](reference.md)。各责任域的 Human Narrative 从上表对应的语义目录继续展开。

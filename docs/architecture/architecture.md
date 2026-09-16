@@ -190,10 +190,10 @@ Tool
 
 **Current：** 当前代码库已经包含部分 Application、Domain mutation、Knowledge / Retrieval、Agent Runtime、Capability、Model Gateway、Tool/Security、Observability 和 PostgreSQL 实现，也存在 selected GitHub verification 与 fault probes。设计文档不能把 Target 自动升级成 Current。
 
-当前 Evidence 已确认两条必须在总体架构层保持可见的 blocker。第一，外部 Effect 路径已经能耐久记录 UNKNOWN，并在已诊断的 restart replay 中没有再次 dispatch，但 unresolved Reconciliation 会被上层错误升级成 `completed`，而完整 remote-query / conclusive ReconciliationReceipt / repaired Effect truth 收敛链尚未建立。第二，`MANDATORY_BEFORE_EFFECT` 已有负向 fault evidence：Security AuditRequirement 可以存在，但没有 matching committed audit proof 时 provider dispatch 仍可能发生。
+当前 Evidence 已把 RB019 的三条原始 P0 violation 转成 main 上的 regression：restart replay 会按 typed certainty 保持 unresolved Effect 为 Unknown；最小 conclusive reconciliation 可以把 executed / not-executed 收敛为耐久 Effect truth；`MANDATORY_BEFORE_EFFECT` 缺 committed proof 时会在 provider dispatch 前 fail closed；正式 Alembic entrypoint 也能在 fresh PostgreSQL 直接到 head。`main@9b7891c6` 进一步证明已发送 Effect 的 mandatory-audit row 会进入 `effect_observed`，不会永久占用 durable capacity。
 
 **Evidence：** 正向测试证明某些行为成立；负向 fault probe 同样是架构 Evidence，它可以证明某个 Target invariant 当前没有成立。GraphRAG 的 5-query smoke 只支持一次 regression fix，不支持普遍 superiority；Memory 也没有 A/B 证明长期收益。
 
-**Unknown / Gap：** Target AdmissionReceipt、完整跨 Owner crash recovery、Effect certainty convergence、Mandatory Audit send gate、完整持续授权、长期 Memory 的质量收益、GraphRAG holdout / ablation、真实容量、Backpressure / fairness、RPO / RTO、HA / DR 和法院侧生产结果仍需要对应实现或 Evidence。其中 Effect restart replay 与 Mandatory Audit send gate 已经不是 Unknown，而是有负向证据支持的 Current implementation gap。
+**Unknown / Gap：** Target AdmissionReceipt、完整跨 Owner crash recovery、provider remote-query reconciliation、manual judgment Authority、audit-class / requirement-proof / tenant binding、mandatory-audit 在 pre-send abort 与 crash/restart 下的 lifecycle、完整持续授权、长期 Memory 的质量收益、GraphRAG holdout / ablation、真实容量、Backpressure / fairness、RPO / RTO、HA / DR 和法院侧生产结果仍需要对应实现或 Evidence。已经转绿的 RB019 fault window 不再作为 Current blocker，但其旧失败继续保留为 History。
 
 九个责任域的连续说明见 [`docs/modules/`](../modules/README.md)。需要精确查看 Contract、状态、Owner 和恢复规则时进入 [`reference.md`](reference.md)；长期设计理由由 [`docs/decisions/`](../decisions/README.md) 保存。

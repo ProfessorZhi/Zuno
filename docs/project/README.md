@@ -122,7 +122,7 @@ GraphRAG、Reflection、Long-term Memory、Persistent Multi-Agent 和 Native Run
 
 第一条闭环来自真实质量问题。客户侧曾反馈回答质量仍需提高，但根因和修复指标没有恢复。相比再增加一种 Retriever，更有价值的是恢复一到两个能够完整还原的 Bad Case：原始输入和材料范围是什么，错误表现是什么，根因最终落在 OCR、检索、引用、Prompt、模型还是任务 Scope，团队改了什么，怎样用同一 case 固定 Regression。只有这个链路存在，历史“回答质量需要提高”才开始转化成工程知识，而不是一句无法行动的项目评价。
 
-第二条闭环来自已经被 Current fault probe 证实的恢复缺陷。外部 Effect 的 UNKNOWN ledger 已经存在，但 restart replay 会把 unresolved Reconciliation 错误升级为 `completed`；Mandatory Audit requirement 也已经能够形成，却没有真正挡在现实 send boundary 前。这里不需要再画更复杂的 Target State Machine，应该先修复 certainty convergence 和 audit-before-effect gate，再用同一个故障窗口复测：重启以后 Unknown 必须继续保持 Unknown，缺 durable audit proof 时 executor 必须是 0。负向 Evidence 被修复并转成正向 Evidence，才算真正关闭问题。
+第二条闭环来自 fault probe 曾经暴露的恢复缺陷。#201 证明 restart replay 会把 unresolved Reconciliation 错误升级为 `completed`，#205 证明 Mandatory Audit requirement 没有真正挡在现实 send boundary 前。RB019 没有增加新的全局状态机，而是在现有 06/08/04 边界修复 certainty、conclusive reconciliation、audit-before-effect 和正式 migration entrypoint；`main@9b7891c6` 已用同一类 PostgreSQL fault window 转成正向 regression。剩余工作转向更窄的 Authority 与生命周期问题：remote query、manual judgment binding、audit class / proof matching、tenant isolation，以及 audit 在 pre-send abort 或 crash/restart 下怎样收敛。
 
 第三条闭环用来决定复杂机制的去留。GraphRAG 需要冻结语料、配置和预算，按单跳、多跳、实体歧义、跨文档等 query class 对比 Hybrid / reranker baseline、gated GraphRAG 和各项 heuristic ablation；如果 seed、alias 或 path ranking 没有稳定边际收益，就删除对应复杂度。Long-term Memory 需要做 on/off A/B，观察跨会话任务质量、错误记忆污染、token 成本和专业人员修正；没有稳定收益时只保留 Raw Event、task summary 和按需 Context。Native Runtime 需要和 Generic Host + Legal Backend 比较恢复正确性、质量、成本和开发维护面；Multi-Agent 则继续晚于 Tool、Subgraph 和 parallel worker。
 
@@ -169,7 +169,7 @@ GraphRAG、Reflection、Long-term Memory、Persistent Multi-Agent 和 Native Run
 
 **Current** 只表示今天 `main` 能由代码、Migration、Test、Trace、Eval 或真实运行证明的事实。目录和设计文档存在不等于九模块 Target 已实现，更不等于 Production Ready。Current 的具体边界必须回到 [`docs/evidence/`](../evidence/README.md)。
 
-Current Evidence 还包含明确的负向事实，不能因为 Target 设计完整而淡化。当前外部 Effect 路径已经可以耐久记录 UNKNOWN，并在已诊断 replay 中避免二次 dispatch，但 restart replay 会把 unresolved Reconciliation 错误升级成 `completed`，最终 certainty convergence 尚未闭环。`MANDATORY_BEFORE_EFFECT` 也已有负向 fault evidence：AuditRequirement 可以存在，但缺少 matching committed audit proof 时现有 send path 仍可能 dispatch。这两项属于 Current implementation blocker，而不是“以后再测”的 Unknown。
+Current Evidence 同时保留过去的负向 fault probe 和今天的修复结果。#201 / #205 仍是有效 History，因为它们证明过具体 Target violation；AUTH-A/B/C 与 `main@9b7891c6` 的 selected verification 已关闭通用 restart replay certainty upgrade、缺 durable audit proof 仍发送、以及 Alembic stale import，并证明 post-dispatch audit capacity 能回收。Current 仍没有证明完整 remote-query reconciliation、manual judgment Authority、audit-class / requirement-proof / tenant binding、pre-send-abort 与 crash/replay 的 audit lifecycle，也没有因此升级为 Production Ready。
 
 **Target** 表示今天接受的目标设计和产品方向，例如九个逻辑责任域、Knowledge Readiness、Capability Qualification、Single Controller、Formal Admission、Effect Recovery、Continuous Authorization，以及案件研究工作空间。Target 规定未来实现怎样收敛，不能被用来声称历史 Pilot 已经拥有同样机制。
 

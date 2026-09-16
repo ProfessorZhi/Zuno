@@ -50,8 +50,8 @@ Target design != Current implementation
 
 - Memory / Context is an optional non-authoritative provider boundary. Provider records do not replace Domain truth; recall/lifecycle policy belongs to Security/Governance, and consumers use only currently eligible snapshots.
 - Provenance / source ids establish lineage, not truth, authorization, or semantic-preservation guarantees.
-- Current Effect evidence proves durable UNKNOWN recording and observed duplicate-dispatch suppression, but not final Reconciliation convergence; restart replay has a known certainty-upgrade defect.
-- Current `MANDATORY_BEFORE_EFFECT` evidence is negative: an AuditRequirement can exist while provider dispatch still proceeds without matching durable audit proof.
+- Current Effect evidence proves durable UNKNOWN recording, duplicate-dispatch suppression, typed restart replay certainty, and a minimal conclusive reconciliation path. Provider remote-query integration and stronger manual-judgment authority binding remain unproven.
+- Current `MANDATORY_BEFORE_EFFECT` evidence proves the send gate consumes committed audit proof and fails closed before provider dispatch when proof is missing; post-dispatch rows also transition to `effect_observed` so durable capacity is released. Audit class, requirement-proof binding, tenant isolation, pre-send-abort, and crash/replay lifecycle remain unproven.
 - GraphRAG tiny-smoke evidence supports a bounded regression-fix story, not general superiority.
 - Long-term Memory, Persistent Multi-Agent, Native Runtime and GraphRAG remain measurement-gated complexity.
 
@@ -63,5 +63,5 @@ These caveats describe Current / Target boundaries, not historical-project claim
 - Ideal design → `docs/architecture/`.
 - Module-level Target → `docs/modules/`.
 - Current implementation / tests / eval / runtime facts → `docs/evidence/`.
-- Current negative evidence is still Evidence; do not downgrade known blockers back to Unknown.
+- Historical negative evidence remains Evidence after a fix; keep the failing run and the later closing SHA/run together instead of rewriting the failure as if it never happened.
 - Exact personal task PR/interface/SQL/bug/test/result closure → Unknown unless separately recovered and evidenced.

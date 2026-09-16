@@ -80,8 +80,8 @@ Target 会保留这种 `Outcome Unknown`。它不是“失败的另一种名字�
 
 **Target：** 06 拥有现实动作的 PreparedAction、实际 Attempt、结果确认、EffectReceipt 与 Reconciliation 事实；发送前固定逻辑意图并重新消费安全条件，发送后对 Outcome Unknown 先确认再决定是否继续。产品 Delivery、正式法律事实和授权策略仍由其他 Owner 管理。
 
-**Current：** 当前实现已经能在部分路径耐久记录 UNKNOWN Effect，并在已诊断的 restart replay 中避免二次 provider dispatch；这证明 duplicate suppression 的一部分成立，但恢复语义尚未闭环。负向 Evidence 已确认 unresolved Reconciliation 在 restart replay 后会被上层错误升级成 `completed`，而 repo-wide source review 也没有找到完整 remote-query consumer、conclusive ReconciliationReceipt / RESOLVED writer 或人工 assessment → repaired Effect truth 的收敛链。因此“记录 unknown”是 Current，“最终 certainty convergence”仍是明确 Implementation Gap。
+**Current：** 当前实现已经能耐久记录 UNKNOWN Effect，并在 restart replay 时根据 durable result 类型与 certainty 返回 `reconcile_required`、confirmed result 或 async waiting，而不是把任意 result_ref 当成 completed。最小 conclusive reconciliation writer 已能把 executed / not-executed 收敛为 EffectReceipt、ExecutionReceipt 与 `RESOLVED` reconciliation；mandatory audit 也已经接入 send boundary，并在 provider dispatch 后关闭 durable capacity。以上行为都进入 `main@9b7891c6` 的 PostgreSQL selected verification。
 
-**Gap：** P0 是先修复 restart replay 的 certainty upgrade，并实现能够把 remote query / manual assessment 收敛成 durable Effect truth 的 resolver / receipt 路径。另一个已确认 blocker 是 `MANDATORY_BEFORE_EFFECT`：当前 fault probe 已证明 Security AuditRequirement 存在、durable audit proof 不存在时 provider dispatch 仍可能发生。其余仍包括真实外围系统幂等行为、send-boundary fault injection、timeout 后远端查询、补偿与恢复时间数据。没有这些闭环，不宣称 production-grade exactly-once 或自动恢复能力。
+**Gap：** provider-facing remote query / business-key reconcile adapter 仍未建立 Current proof；manual assessment 还需要更强的 reviewer authority、provider-effect identity 与 conflict semantics；AuditRequirement 的 class、matching proof、tenant isolation，以及 audit 已提交但 send 前被阻断或 send 后 crash/restart 的 lifecycle 仍需收敛。真实外围系统幂等行为、补偿与恢复时间数据同样未完成，因此仍不宣称 production-grade exactly-once 或自动恢复能力。
 
 工程 / Agent 精确参考与跨模块一致性规则见 [`reference.md`](reference.md)。

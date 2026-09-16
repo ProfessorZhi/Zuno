@@ -86,8 +86,8 @@ Target 因而分开 Decision 和 Enforcement。08 负责产生可解释的 Autho
 
 **Target：** 08 拥有持续授权、动作审批、模型外发、Secret 使用约束、强制审计前置、Memory Recall Eligibility 和数据生命周期政策语义；实际 Enforcement 发生在读取、外发、正式准入和现实 Effect 的执行点。HumanDecision 继续属于 02，现实结果继续属于 06。
 
-**Current：** Selected / diagnostic Evidence 已经证明两个窄但重要的 fail-closed 窗口：SecurityEpoch 在现实 send 前被撤销时 provider 不会 dispatch；SecretRef 在 lease validation 前被撤销时同样不会 dispatch。另一方面，`MANDATORY_BEFORE_EFFECT` 已有明确负向证据：Security 可以形成 AuditRequirement，但缺少 matching committed audit proof 时当前 Tool send path 仍可能越过现实边界。Continuous Authorization 的部分门禁已被证明，完整治理闭环仍未建立。
+**Current：** Selected Evidence 已经证明几个窄但重要的 fail-closed 窗口：SecurityEpoch 在现实 send 前被撤销时 provider 不会 dispatch；SecretRef 在 lease validation 前被撤销时同样不会 dispatch；`MANDATORY_BEFORE_EFFECT` 缺少 committed audit proof 时 executor 为 0，audit commit 后 SecurityEpoch 再次失效也仍会阻止发送。已发送 Effect 的 mandatory-audit row 还会进入 `effect_observed`，避免永久占用 durable capacity。Continuous Authorization 的部分门禁已被证明，完整治理闭环仍未建立。
 
-**Gap：** P0 是把 `MANDATORY_BEFORE_EFFECT` 的 durable AuditPersistenceReceipt 真正接到 06 的 send gate，并用 fault test 证明缺 proof 时 executor=0。其余仍需要长任务 resume / retry 后重新授权、模型 egress、Approval invalidation、Secret rotation、Policy Engine outage、Prompt Injection、Memory Recall / No-Recall、Retention / Legal Hold / purge convergence 和生产环境 qualification。
+**Gap：** `MANDATORY_BEFORE_EFFECT` 的基本 durable send gate 已经闭合；剩余 Audit gap 是 08 是否耐久表达 `BEST_EFFORT / DURABLE / MANDATORY_BEFORE_EFFECT` class、06 是否消费 matching requirement/proof、跨 tenant identity isolation，以及 proof 已提交但 send 前被阻断或 send 后 crash/restart 时的 lifecycle。其余仍需要长任务 resume / retry 后重新授权、模型 egress、Approval invalidation、Secret rotation、Policy Engine outage、Prompt Injection、Memory Recall / No-Recall、Retention / Legal Hold / purge convergence 和生产环境 qualification。
 
 工程 / Agent 精确参考与跨模块一致性规则见 [`reference.md`](reference.md)。

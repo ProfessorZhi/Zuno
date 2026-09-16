@@ -100,8 +100,8 @@ Native Runtime 也不是产品身份。如果 Generic Agent Host 加 Zuno Legal 
 
 **Target：** 04 拥有 AgentRun、PlanVersion、StepRun、Checkpoint、ready / join、等待、Budget、取消和 Replan 等控制事实；它以 Single Controller 维持计划因果，并在恢复时优先消费 Domain、Effect、Security、Knowledge 等 Owner 已经成立的更强事实。Context、summary、Subagent 和 Multi-Agent 都是可替换执行策略，不承担案件材料或正式业务事实的长期 Authority；resolved input-version set 需要覆盖真正影响 Step 语义的 Knowledge / Capability / Provider / Model / Tool / config / security refs。
 
-**Current：** 当前代码已经证明 checkpoint、interrupt、cancel/restart、duplicate claim，以及部分 unknown Effect 进入 `reconcile_required` 的行为。负向 fault evidence 同时证明：unresolved Effect 在 restart replay 后会被上层错误升级成 `completed`，所以“能记录 unknown”不能写成“恢复语义已闭环”。完整三层运行图、不可变 PlanVersion、Replan Barrier、跨 Owner recovery 等仍是 Target。
+**Current：** 当前代码已经证明 checkpoint、interrupt、cancel/restart、duplicate claim，以及 unknown Effect 进入 `reconcile_required` 的行为。RB019 AUTH-A 后，restart replay 会继续消费 06 的 typed Effect certainty；OPEN reconciliation 不再被 Runtime 通用 replay 语义升级成 completed。完整三层运行图、不可变 PlanVersion、Replan Barrier、Domain matching Receipt recovery 和其他跨 Owner fault window仍是 Target / Gap。
 
-**Gap：** P0 是等待 Reconciliation 时保持 certainty 不被 replay 错误升级；其余还包括 dependency-version drift、复杂 DAG fault injection、late-result acceptance、Controller takeover、AdmissionReceipt recovery、长等待恢复、Context rebuild / compaction Eval、Subagent 对照和 Generic Host A/B/C。
+**Gap：** 仍包括 dependency-version drift、复杂 DAG fault injection、late-result acceptance、Controller takeover、AdmissionReceipt recovery、长等待恢复、Context rebuild / compaction Eval、Subagent 对照和 Generic Host A/B/C。Effect replay certainty 本身已由 RB019 regression 关闭；剩余恢复风险来自尚未覆盖的跨 Owner completion proof、版本漂移和更多 crash / late-result 窗口。
 
 工程 / Agent 精确参考与跨模块一致性规则见 [`reference.md`](reference.md)。
