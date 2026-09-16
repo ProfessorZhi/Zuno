@@ -41,6 +41,41 @@ def register_middleware(app: FastAPI):
     return app
 
 
+def configure_workspace_product_runtime(engine):
+    """Bind the server-owned product runtime infrastructure.
+
+    PSC-A only wires dependencies that have Current implementations. Security
+    and Budget owner resolvers, plus the product approval flow, remain unbound
+    and therefore fail closed until their independent PSC slices are completed.
+    """
+    from zuno.agent.runtime import PostgresAgentRunStore
+    from zuno.platform.database.foundation import InfrastructureUnitOfWork
+    from zuno.platform.database.tool_runtime import ToolUnitOfWork
+    from zuno.platform.security import SecurityUnitOfWork
+    from zuno.platform.services.workspace.single_controller_runtime import (
+        WorkspaceRuntimeComposition,
+        configure_workspace_product_composition,
+    )
+
+    composition = WorkspaceRuntimeComposition(
+        store=PostgresAgentRunStore(engine),
+        tool_unit_of_work_factory=lambda: ToolUnitOfWork(engine),
+        security_unit_of_work_factory=lambda: SecurityUnitOfWork(engine),
+        infrastructure_unit_of_work_factory=lambda tenant_id: InfrastructureUnitOfWork(
+            engine,
+            tenant_id=tenant_id,
+        ),
+        security_approval_sink=None,
+        security_epoch_ref="",
+        approval_flow="none",
+        security_decision_resolver=None,
+        budget_decision_resolver=None,
+        dynamic_dag_planner=None,
+    )
+    configure_workspace_product_composition(composition)
+    return composition
+
+
 async def init_config():
     await initialize_app_settings()
     configure_langsmith()
@@ -71,7 +106,7 @@ async def init_config():
     product_action_guard = PostgresSecurityProductActionGuard(engine)
     ProductService.configure_security_product_action_guard(product_action_guard)
     ProductIngestionService.configure_package_a_production_ingestion(
-        build_package_a_production_ingestion_runtime(
+        runtime=build_package_a_production_ingestion_runtime(
             engine=engine,
             settings=app_settings,
         ),
@@ -80,6 +115,8 @@ async def init_config():
     MCPService.configure_security_product_action_guard(product_action_guard)
     MCPServerService.configure_security_product_action_guard(product_action_guard)
     configure_security_admin_action_guard(product_action_guard)
+
+    configure_workspace_product_runtime(engine)
 
     await init_default_agent()
 
@@ -135,4 +172,12 @@ def create_app():
 app = create_app()
 
 
-__all__ = ["app", "create_app", "lifespan", "init_config", "register_router", "register_middleware"]
+__all__ = [
+    "app",
+    "configure_workspace_product_runtime",
+    "create_app",
+    "lifespan",
+    "init_config",
+    "register_router",
+    "register_middleware",
+]
