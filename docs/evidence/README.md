@@ -10,18 +10,19 @@
 | --- | --- |
 | [Current Runtime Baseline](current-runtime-baseline.md) | 当前 Runtime owner、状态和失败语义的证据入口 |
 | [Current Test Baseline](current-test-baseline.md) | 当前 GitHub selected code verification、PostgreSQL Domain / Wave-001 revision probes，以及 Slice C 已确认的正负边界 |
+| [PSC-A Production Composition](psc-a-production-composition.md) | production WorkspaceRuntimeComposition + PostgreSQL AgentRunStore 的 startup / recovery Current Evidence |
 | [Current Eval Baseline](current-eval-baseline.md) | 当前评测与 Measurement Blocked 状态 |
 | [Implementation Wave-001](implementation-wave-001.md) | TASK-001 / TASK-003 的有限代码、测试和窄验证证据；不是 Program closure |
 
-Slice C 的 fault evidence 如何影响 Freeze readiness、哪些测试已经停止继续扩张，由 [`Effects ↔ Security Slice C Review`](../governance/effect-security-slice-c-review.md) 收拢。该文件属于 Governance review；底层 Current 事实仍由本目录的固定 Evidence 集合证明。
+Slice C 的 fault evidence 如何影响 Freeze readiness、哪些测试已经停止继续扩张，由 [`Effects ↔ Security Slice C Review`](../governance/effect-security-slice-c-review.md) 收拢。Product Security Composition 的当前切片状态见 [`Product Security Composition Implementation Status`](../governance/product-security-composition-implementation-status.md)。底层 Current 事实仍由本目录的 Evidence 证明。
 
 已删除的 `local-workspace-closure.md` 和 `repository-closure.md` 只是已完成 Program / 工作区收口材料，不是今天需要维护的运行证据；其提交和原始材料仍由 Git 历史保留。
 
 ## 当前边界
 
 ```text
-SELECTED CODE VERIFICATION: AVAILABLE @ ff0f497e3eea862fa44b0a8d5979e9ad31ac5ad0
-SELECTED GITHUB RUN: 35056938670 / 208 passed, 16 warnings
+SELECTED CODE VERIFICATION: AVAILABLE @ c3938ccb92c8234977ebd5e2956acec697981d24
+SELECTED GITHUB RUN: 35071244101 / 210 passed, 18 warnings
 POSTGRESQL DOMAIN SELECTED PROBES: PASS
 WAVE-001 REVISION POSTGRESQL APPLY/DOWNGRADE/RE-APPLY: PASS
 TARGET ADMISSION RECEIPT: NOT IMPLEMENTATION-PROVEN
@@ -35,7 +36,11 @@ PRE-LEASE SECRET REVOCATION: PASS
 MANDATORY AUDIT BEFORE EFFECT: FIX VERIFIED / MISSING PROOF FAILS CLOSED
 MANDATORY AUDIT REQUIREMENT BINDING + POST-DISPATCH CAPACITY LIFECYCLE: PASS
 TOOL EFFECT SECURITY FACT IDENTITY: TRACE-INDEPENDENT ACTION SCOPE VERIFIED
-WORKSPACE PRODUCT SECURITY COMPOSITION: NOT IMPLEMENTATION-PROVEN
+WORKSPACE PRODUCT COMPOSITION ROOT: PSC-A SELECTED VERIFIED
+POSTGRESQL AGENT RUN STORE: PSC-A SELECTED VERIFIED
+PRODUCT SECURITY DECISION RESOLVER: PSC-B NOT IMPLEMENTATION-PROVEN
+FORMAL BUDGET OWNER FACT: PSC-C NOT IMPLEMENTATION-PROVEN
+PRODUCT APPROVAL FACT SINK OWNERSHIP: PSC-D NOT RESOLVED
 FORMAL ALEMBIC ENTRYPOINT: PASS ON FRESH POSTGRESQL
 PRODUCTION_READINESS: NOT_ESTABLISHED
 QUALITY: not_yet_proven
@@ -43,15 +48,17 @@ FULL CI: NOT RUN / NOT ESTABLISHED
 COURT QA: UNKNOWN / NOT AVAILABLE
 ```
 
-Main 的正向 selected verification 说明一组明确列出的 Domain、Citation、Application、Runtime、Knowledge、Capability、Tool、Model Gateway、Security、Observability、Retrieval 与 Eval 行为在同一个 main SHA 的 GitHub runner 上通过。对应 run 还使用 PostgreSQL 16.15 service 验证了 Wave-001 Domain mutation/version 的基本事务、并发冲突、幂等重放，以及 revision `20260813_57` 自身的 `upgrade → downgrade → re-upgrade` DDL。
+Main 的正向 selected verification 说明一组明确列出的 Domain、Citation、Application、Runtime、Knowledge、Capability、Tool、Model Gateway、Security、Observability、Retrieval 与 Eval 行为在同一个 main SHA 的 GitHub runner 上通过。run `35071244101` 还在 PostgreSQL 16.15 service 上加入 PSC-A probes：fresh migration 后的 `PostgresAgentRunStore` 可以跨新的 Store instance 恢复 state/checkpoint/pending interrupt，正式 `zuno.main.init_config()` 会建立非空 `WorkspaceRuntimeComposition` 并注入 PostgreSQL Store 与现有 Tool/Security/Infrastructure UoW factories。
 
-Slice C 的旧负向证据继续保留，因为它解释了 RB019 的实现优先级：PR #201 / run `34559517466` 曾证明 unresolved Reconciliation 在 restart replay 时被错误升级成 completed；PR #205 / run `34560692093` 曾证明缺少 durable mandatory-audit proof 时 send path 仍会 dispatch。AUTH-A/B/C 以及后续 audit lifecycle、requirement binding、manual durable judgment 和 Effect Security identity 修复已经把这两条原始 violation 转成 main 上的正向 regression；cancel-in-flight、provider remote-query reconciliation、manual reviewer Authority、完整 audit policy/lifecycle 与 production Workspace Security composition 仍未闭环。
+PSC-A 保持一个重要的负向边界：SecurityDecision resolver、Budget resolver、approval flow 和 legacy Security approval sink 没有因为 startup composition 变成非空就被 synthetic 绑定。Product profile 的这些未完成依赖继续 fail closed。PSC-A 因此证明“server composition root 和 durable runtime store 已接上”，不能扩写成“Product Security/Budget admission 已完成”。详细 shape 见 [`psc-a-production-composition.md`](psc-a-production-composition.md)。
+
+Slice C 的旧负向证据继续保留，因为它解释了 RB019 的实现优先级：PR #201 / run `34559517466` 曾证明 unresolved Reconciliation 在 restart replay 时被错误升级成 completed；PR #205 / run `34560692093` 曾证明缺少 durable mandatory-audit proof 时 send path 仍会 dispatch。AUTH-A/B/C 以及后续 audit lifecycle、requirement binding、manual durable judgment 和 Effect Security identity 修复已经把这两条原始 violation 转成 main 上的正向 regression；cancel-in-flight、provider remote-query reconciliation、manual reviewer Authority 和更完整的 audit policy/lifecycle 仍未闭环。
 
 正向边界同样已经明确：PR #203 / run `34560042535` 证明 pre-send SecurityEpoch revocation fail closed；PR #207 / run `34566365522` 证明 pre-lease Secret revoke fail closed；PR #210 / run `34567699688` 证明 provider 已返回成功、但本地 EffectReceipt persistence 失败时，当前 Gateway 会留下 `UNKNOWN_EFFECT + OPEN/RECONCILE`，而不是直接宣布 completed。故障形状与 Freeze 影响见 [`Effects ↔ Security Slice C Review`](../governance/effect-security-slice-c-review.md)。
 
 早期 Slice C 诊断依赖测试进程临时兼容 `zuno.settings → zuno.platform.settings`，因此那些诊断本身不构成 deployment evidence。AUTH-C 已修复正式 Alembic import；当前 selected main run 在 fresh PostgreSQL 上直接执行正式 `alembic upgrade head`，不再使用 legacy module alias。
 
-这个范围不能扩写成“Zuno PostgreSQL 集成已完成”“完整 Effect recovery 已完成”“Reconciliation 全自动闭环”“cancel-in-flight 已闭环”“Security 已验证完成”“Secret rotation 已验证完成”或“生产 migration 已资格化”。Current 已证明 Effect replay certainty、conclusive one-shot manual judgment、mandatory audit pre-send gate / persisted requirement binding / post-dispatch capacity lifecycle、Tool Effect action-scoped Security fact identity和正式 fresh Alembic entrypoint；Target `AdmissionReceipt`、02↔04 owner-first recovery、remote-query reconciliation、manual reviewer Authority、audit-class / DB-level tenant isolation、pre-send-abort / crash-replay audit lifecycle、Target composed SecurityEpoch、production Workspace Security composition、完整 Secret rotation/retry、其他 Approval / Policy drift、no-egress、其他平台 PostgreSQL 路径、Redis / RabbitMQ / Object Store、真实 Provider 和外部 Host仍各自需要证据。
+这个范围不能扩写成“Zuno PostgreSQL 集成已完成”“完整 Effect recovery 已完成”“Reconciliation 全自动闭环”“cancel-in-flight 已闭环”“Security 已验证完成”“Secret rotation 已验证完成”“Product Security/Budget admission 已完成”或“生产 migration 已资格化”。Current 已证明 Effect replay certainty、conclusive one-shot manual judgment、mandatory audit pre-send gate / persisted requirement binding / post-dispatch capacity lifecycle、Tool Effect action-scoped Security fact identity、production Workspace composition root、PostgreSQL AgentRunStore 和正式 fresh Alembic entrypoint；Target `AdmissionReceipt`、02↔04 owner-first recovery、remote-query reconciliation、manual reviewer Authority、audit-class / DB-level tenant isolation、pre-send-abort / crash-replay audit lifecycle、Target composed SecurityEpoch、PSC-B SecurityDecision owner fact、PSC-C Budget owner fact、PSC-D approval sink ownership、完整 Secret rotation/retry、其他 Approval / Policy drift、no-egress、其他平台 PostgreSQL 路径、Redis / RabbitMQ / Object Store、真实 Provider 和外部 Host仍各自需要证据。
 
 当前仓库可以证明有限实现和验证范围，也可以证明若干具体失败；不能证明完整历史技术栈、真实法院质量、生产部署、用户规模、SLA、QPS、HA、No-egress、Sandbox 资格或正式外部验收。历史 Pilot 不等于 Production。
 
@@ -63,6 +70,7 @@ Slice C 的旧负向证据继续保留，因为它解释了 RB019 的实现优�
 
 - 模块 Part B 写了 `AdmissionReceipt`，只能证明 Target 语义已经设计清楚；当前 PostgreSQL mutation probe 也不能把 mutation record 直接升级成最终 Receipt。
 - `Current code selected verification` 通过只能证明 workflow 列出的行为，不等于 Full Project CI 通过。
+- PSC-A 的 startup probe 证明 production composition root 能建立并绑定 durable Store/UoW，不证明 SecurityDecision、BudgetDecision 或 Approval flow 已可用。
 - revision `20260813_57` 能真实 apply/downgrade/re-upgrade，只证明该 revision 自身 DDL 可逆，不证明真实数据 backfill 或零停机策略。
 - 诊断分支失败可以证明某条 Target invariant 当前不成立；诊断分支成功也只证明它实际注入并观察到的 fault window。
 - `Outcome Unknown` 的耐久记录本身不等于 recovery 正确；#201 的旧 failure 已由 AUTH-A 修复并进入 main regression。Current one-shot durable judgment 已进一步验证 provider-effect identity、conflict 与 exact response-loss replay；仍不能扩写成 provider remote-query reconciliation、多次人工 assessment 或完整 reviewer Authority 已闭环。
