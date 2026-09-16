@@ -1,37 +1,41 @@
 # Current Test Baseline
 
-状态：`CURRENT / SELECTED_VERIFICATION_AVAILABLE / EFFECT_REPLAY_FIX_VERIFIED / CONCLUSIVE_RECONCILIATION_PATH_VERIFIED / SECURITY_REVOCATION_POSITIVE_EVIDENCE / SECRET_REVOCATION_POSITIVE_EVIDENCE / MANDATORY_AUDIT_GATE_VERIFIED / AUDIT_CAPACITY_LIFECYCLE_VERIFIED / QUALITY_NOT_ESTABLISHED`
+状态：`CURRENT / SELECTED_VERIFICATION_AVAILABLE / EFFECT_REPLAY_FIX_VERIFIED / DURABLE_RECONCILIATION_JUDGMENT_VERIFIED / MANDATORY_AUDIT_REQUIREMENT_BINDING_VERIFIED / SECURITY_EFFECT_IDENTITY_VERIFIED / SECURITY_REVOCATION_POSITIVE_EVIDENCE / SECRET_REVOCATION_POSITIVE_EVIDENCE / QUALITY_NOT_ESTABLISHED`
 
 ## 当前代码快照的 Selected Verification
 
-RB019 的 AUTH-A / AUTH-B / AUTH-C 已进入 `main`，随后补齐了 mandatory-audit 在 provider dispatch 后的 capacity lifecycle。当前 GitHub-native selected verification 直接绑定 `main@9b7891c63f007c8a0868d7dd262ceec5869bee4e`：
+RB019 的 AUTH-A / AUTH-B / AUTH-C 已进入 `main`，随后继续关闭了紧邻原边界的 durable judgment、AuditRequirement binding、audit capacity lifecycle 和 Tool Effect Security fact identity。当前 GitHub-native selected verification 直接绑定 `main@ff0f497e3eea862fa44b0a8d5979e9ad31ac5ad0`：
 
 ```text
-verified_code_snapshot: 9b7891c63f007c8a0868d7dd262ceec5869bee4e
+verified_code_snapshot: ff0f497e3eea862fa44b0a8d5979e9ad31ac5ad0
 workflow: Current code selected verification
-workflow_run: 35053215987
+workflow_run: 35056938670
 event: push / main
 runner: ubuntu-24.04
 python: 3.12
 dependency_source: poetry.lock
 postgresql_integration: configured
-selected_suite: 201 passed, 9 warnings in 17.73s
+selected_suite: 208 passed, 16 warnings in 28.28s
 compileall: PASS
 model_gateway_strict_boundary: PASS
 runtime_batch_contracts: PASS
 formal_alembic_entrypoint_fresh_postgres: PASS
 unknown_effect_restart_replay_preserves_unknown: PASS
 conclusive_reconciliation_paths: PASS
+manual_judgment_provider_identity_and_conflict: PASS
 mandatory_audit_before_effect: PASS
+mandatory_audit_requirement_binding: PASS
 mandatory_audit_capacity_recycle_after_dispatch: PASS
+security_effect_epoch_identity_not_trace_only: PASS
+security_epoch_authorization_identity_conflict: PASS
 full_ci: NOT_RUN / NOT_ESTABLISHED
 benchmark: BLOCKED_NOT_MEASURED
 quality: NOT_YET_PROVEN
 production_readiness: NOT_ESTABLISHED
-artifact_id: 10429123489
+artifact_id: 10431201132
 ```
 
-这条 run 证明的范围仍然是 selected suite，不是 Full CI 或 Production Qualification。AUTH-A 已关闭 #201 暴露的通用 replay certainty upgrade，并实现最小 conclusive reconciliation writer；AUTH-B 已把 committed audit proof 接到 send boundary，且 `main@9b7891c6` 证明 provider dispatch 后 audit row 会进入 `effect_observed`，不会永久占用唯一 durable capacity slot；AUTH-C 已恢复正式 Alembic entrypoint。remote-query provider integration、manual judgment 的更强 authority / identity binding、AuditRequirement 的 audit-class 表达与 proof matching、跨 tenant audit identity、audit 已提交但 send 前被阻断的 lifecycle，以及 crash/replay 对 audit lifecycle 的修复仍未由这条 run 证明。
+这条 run 证明的范围仍然是 selected suite，不是 Full CI 或 Production Qualification。Current 已关闭 #201 的 replay certainty upgrade，并把 conclusive manual path 收紧成 provider-effect identity matching、one-shot durable judgment、exact response-loss replay idempotency；mandatory audit proof 已绑定 Security-owned requirement id/hash、AuthorizationDecision、PreparedAction hash、SecurityEpoch 与 tenant context，provider dispatch 后会进入 `effect_observed`；Tool Effect 的 Current SecurityEpoch identity 也不再由 trace 单独决定，persisted Epoch / AuthorizationDecision identity conflict 会 fail closed。AUTH-C 的正式 Alembic entrypoint 继续保持绿色。仍未证明 provider remote-query adapter、authoritative reviewer role binding、audit class、audit table DB-level tenant isolation、pre-send-abort / crash-replay audit lifecycle、Target composed SecurityEpoch，以及 production WorkspaceRuntimeComposition binding。
 
 ### RB019 前历史 selected baseline
 
@@ -115,7 +119,7 @@ business_fix_applied: NO
 
 这里同时保留一个重要正向边界：**诊断中没有发生 duplicate dispatch。** 当时的问题是 Effect certainty / lifecycle 被错误升级，不是这次测试观察到的二次外部发送。
 
-**Current closure：** AUTH-A commit `18e4973365461ec939b95063c74f4a0457507e75` 把 replay result_ref 重新解释为 typed Effect / Reconciliation / Async state，并增加最小 conclusive reconciliation writer。当前 `main@9b7891c63f007c8a0868d7dd262ceec5869bee4e` 的 run `35053215987` 包含 restart PostgreSQL probe：OPEN reconciliation 在重启 replay 后继续返回 `reconcile_required / UNKNOWN_EFFECT`，executor 不会第二次 dispatch；conclusive executed 后才完成，confirmed-not-executed 也不会暗中重发。#201 因而保留为修复前 History，而不再描述今天 main 的失败。
+**Current closure：** AUTH-A commit `18e4973365461ec939b95063c74f4a0457507e75` 把 replay result_ref 重新解释为 typed Effect / Reconciliation / Async state，并增加最小 conclusive reconciliation writer。当前 `main@ff0f497e3eea862fa44b0a8d5979e9ad31ac5ad0` 的 run `35056938670` 包含 restart PostgreSQL probe：OPEN reconciliation 在重启 replay 后继续返回 `reconcile_required / UNKNOWN_EFFECT`，executor 不会第二次 dispatch；conclusive executed 后才完成，confirmed-not-executed 也不会暗中重发。#201 因而保留为修复前 History，而不再描述今天 main 的失败。
 
 ## History → Current：Reconciliation 从缺失 resolver 收敛到最小 conclusive path
 
@@ -132,7 +136,7 @@ business_fix_applied: NO
 
 搜索 `ReconciliationReceipt` 的 Current repo 命中集中在 Target / Architecture / Governance 文档；`WAITING_PROVIDER` 的实现命中集中在 schema 和 escalation 条件；`reconciliation_query` 的实现命中集中在创建/哈希保存，不形成查询执行链。
 
-这段 source review 是 AUTH-A 之前的实现事实。当前已经存在 `resolve_effect_reconciliation()` 和 conclusive manual-assessment → EffectReceipt / ExecutionReceipt / `RESOLVED` convergence，selected PostgreSQL probes 也覆盖 executed 与 not-executed 两种结论。仍未证明的是 provider-facing remote-query consumer，以及人工结论的更强 authority / identity binding；这些剩余边界不能被最小 resolver 的存在自动升级。
+这段 source review 是 AUTH-A 之前的实现事实。Current 已经存在 `resolve_effect_reconciliation()` 和 conclusive manual-assessment → EffectReceipt / ExecutionReceipt / `RESOLVED` convergence；后续 PostgreSQL probes 还证明 manual judgment 必须匹配 durable reconciliation 的 provider effect identity，同一 reconciliation 在当前 one-shot schema 下 exact replay 幂等、不同第二 judgment fail closed。仍未证明的是 provider-facing remote-query consumer，以及 reviewer role / tenant / approval policy 的 authoritative binding；这些剩余边界不能被 durable judgment 的存在自动升级。
 
 ## Slice C 正向证据：SecurityEpoch 在 send 前撤销会 fail closed
 
@@ -224,13 +228,13 @@ business_fix_applied: NO
 
 这里的失败与 #201 不同：#201 位于 Effect 已经 Unknown 之后；#205 位于 Effect 发送之前。它们共同解释了 RB019 为什么把 certainty replay 与 audit-before-effect 分成两个独立 slice。
 
-**Current closure：** AUTH-B commit `2f709ec9344b94bdc87289793d22bcac3ba2a10b` 已把 committed mandatory-audit proof 接到 provider send boundary，并在 audit commit 后重新检查当前 SecurityEpoch；`main@9b7891c63f007c8a0868d7dd262ceec5869bee4e` 又补上 provider dispatch 后 `effect_observed` lifecycle。run `35053215987` 的 PostgreSQL selected suite 证明：缺 proof 时 executor 为 0；matching proof 才能发送；audit 后撤销 SecurityEpoch 仍会阻止发送；相同 audit identity 不能绑定不同 action hash；capacity=1 的 channel 可以连续服务两个不同已发送 Effect。#205 继续保留为修复前负向 History。
+**Current closure：** AUTH-B commit `2f709ec9344b94bdc87289793d22bcac3ba2a10b` 已把 committed mandatory-audit proof 接到 provider send boundary，并在 audit commit 后重新检查当前 SecurityEpoch；`main@ff0f497e3eea862fa44b0a8d5979e9ad31ac5ad0` 保留 provider dispatch 后 `effect_observed` lifecycle，并进一步把 proof 绑定到 persisted Security AuditRequirement。run `35056938670` 的 PostgreSQL selected suite 证明：缺 proof 时 executor 为 0；matching proof 才能发送；audit 后撤销 SecurityEpoch 仍会阻止发送；相同 audit identity 不能绑定不同 action hash；capacity=1 的 channel 可以连续服务两个不同已发送 Effect。#205 继续保留为修复前负向 History。
 
 ## History — Alembic entrypoint 漂移
 
 PR #201 的第一次 run `34559357122` 还暴露出一个独立 Current 基础设施问题：`infra/db/alembic/env.py` 仍导入已经退休的 `zuno.settings`，而当前 settings module 位于 `zuno.platform.settings`。因此标准 `alembic upgrade head` 在进入 migration chain 前就因 `ModuleNotFoundError` 失败。
 
-PR #201 的第二次诊断、PR #203、PR #205 和 PR #207 当时都只在测试进程内部临时 alias 旧 module path，因此这些诊断本身仍不能证明正式部署入口。AUTH-C commit `7cd177a96200f57183ba117968ac4433cb6ebbff` 随后把正式 import 切到 `zuno.platform.settings`，并增加 fresh PostgreSQL `alembic upgrade head` probe；该 probe 已进入 `main@9b7891c6` 的绿色 selected run `35053215987`。stale-import blocker 已关闭，但这仍不等于真实业务数据 backfill、零停机 migration 或生产 rollback 已验证。
+PR #201 的第二次诊断、PR #203、PR #205 和 PR #207 当时都只在测试进程内部临时 alias 旧 module path，因此这些诊断本身仍不能证明正式部署入口。AUTH-C commit `7cd177a96200f57183ba117968ac4433cb6ebbff` 随后把正式 import 切到 `zuno.platform.settings`，并增加 fresh PostgreSQL `alembic upgrade head` probe；该 probe 已进入当前 `main@ff0f497e` 的绿色 selected run `35056938670`。stale-import blocker 已关闭，但这仍不等于真实业务数据 backfill、零停机 migration 或生产 rollback 已验证。
 
 ## PostgreSQL 证据的边界
 
@@ -243,10 +247,12 @@ GitHub service container 不等于系统级 PostgreSQL qualification。Actions �
 - Domain commit 后 Runtime Checkpoint 丢失时的 owner-first E2E recovery；
 - Checkpoint 已标完成但 matching Receipt 缺失时的 formal-complete denial；
 - provider-facing remote query / business-key reconciliation integration；
-- manual reconciliation 的 authoritative reviewer binding、provider effect identity matching，以及 assessment conflict semantics；
-- AuditRequirement 的 `BEST_EFFORT / DURABLE / MANDATORY_BEFORE_EFFECT` class 是否由 08 耐久表达并被 06 消费；matching Security requirement 与 AuditPersistenceReceipt 的强绑定；
+- manual reconciliation 的 authoritative reviewer role / tenant / approval-policy binding，以及 one-shot judgment 是否足够真实人工工作流；
+- AuditRequirement 的 `BEST_EFFORT / DURABLE / MANDATORY_BEFORE_EFFECT` class 是否由 08 耐久表达并被 06 消费；
 - mandatory audit proof 已提交、但 send 前再次被 Security 阻断时怎样释放 capacity 而不伪造 `effect_observed`；send 后 crash / restart 怎样修复遗漏的 audit lifecycle close；
-- audit proof 的跨 tenant identity / isolation fault probe；
+- `infra_mandatory_audit_events` 的数据库级 tenant isolation，以及 proof 已绑定 tenant context 后的 cross-tenant fault probe；
+- Target composed EffectiveSecurityEpoch 的 workspace / principal / resource scope persistence；Current 只证明 Tool Effect action-scoped identity 不再依赖 trace；
+- production `WorkspaceRuntimeComposition` / SecurityDecisionResolver binding；当前 repo-wide source review 尚未建立正式启动装配证据；
 - SecurityEpoch **pre-send revocation** 已由 #203 通过；SecretRef **pre-lease revocation** 已由 #207 通过；完整 Secret rotation/retry、Policy drift、no-egress 与其他治理 fault window 仍未证明；
 - Redis、RabbitMQ、Object Store、真实 Model / Tool Provider、外部 Host、HA / DR、负载和生产运维。
 
@@ -273,10 +279,10 @@ benchmark: BLOCKED_NOT_MEASURED
 production_readiness: NOT_ESTABLISHED
 ```
 
-`4736cf4409658e43af6e129e34dadbd97a5866ad` 的 run `34497460461` 恢复了 GitHub-native selected gate：`189 passed, 1 skipped`。`5b51627e43b6abcd940ac63100048171fd7f460c` 的 run `34498613045` 把真实 PostgreSQL Domain transaction / concurrency probes 接入后得到 `192 passed`。这些历史 baseline 继续保留；当前 main 正向判断优先使用本文顶部的 `9b7891c6...` / run `35053215987`。Slice C 的旧诊断 runs 只用于解释各自当时的正负结论和后续修复动机。
+`4736cf4409658e43af6e129e34dadbd97a5866ad` 的 run `34497460461` 恢复了 GitHub-native selected gate：`189 passed, 1 skipped`。`5b51627e43b6abcd940ac63100048171fd7f460c` 的 run `34498613045` 把真实 PostgreSQL Domain transaction / concurrency probes 接入后得到 `192 passed`。这些历史 baseline 继续保留；当前 main 正向判断优先使用本文顶部的 `ff0f497e...` / run `35056938670`。Slice C 的旧诊断 runs 只用于解释各自当时的正负结论和后续修复动机。
 
 ## 后续 Evidence Gate
 
 **Slice B — Domain ↔ Runtime crash authority** 在“不修改业务实现”的验证范围已经走到边界：当前 mutation transaction / concurrency / lost-response replay 与 Wave-001 revision-level PostgreSQL DDL 已有 GitHub evidence。剩余 Owner-first recovery 依赖 Target `AdmissionReceipt`、Formal Admission transaction 和 Runtime matching-Receipt consumer；这些当前没有实现证明。
 
-**Slice C — Effects ↔ Security send boundary** 的原始 RB019 P0 violation 已关闭：restart replay certainty、最小 conclusive reconciliation、mandatory-audit send gate 和 formal Alembic entrypoint 都已有 main selected evidence，post-dispatch audit capacity lifecycle 也已转绿。Slice C 仍不是完整 Freeze / Production proof；下一层缺口集中在 provider remote-query reconciliation、manual judgment Authority / identity conflict、audit-class 与 requirement-proof/tenant binding、pre-send-abort / crash-replay audit lifecycle，以及 cancel-in-flight orchestration。继续 fault test 应针对这些仍有 Current surface 的具体边界，而不是重复已经转绿的 #201/#205 failure shape。
+**Slice C — Effects ↔ Security send boundary** 的原始 RB019 P0 violation 已关闭：restart replay certainty、最小 conclusive reconciliation、mandatory-audit send gate 和 formal Alembic entrypoint 都已有 main selected evidence，post-dispatch audit capacity lifecycle 也已转绿。Slice C 仍不是完整 Freeze / Production proof；下一层缺口集中在 provider remote-query reconciliation、manual reviewer Authority、audit-class / DB-level tenant isolation、pre-send-abort / crash-replay audit lifecycle、Target composed SecurityEpoch、production Workspace Security composition，以及 cancel-in-flight orchestration。继续 fault test 应针对这些仍有 Current surface 的具体边界，而不是重复已经转绿的 #201/#205 failure shape。
