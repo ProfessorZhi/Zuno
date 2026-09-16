@@ -47,6 +47,7 @@ from zuno.agent.runtime.planning import (
     RuntimePlanner,
     RuntimeStrategySelector,
 )
+from zuno.agent.runtime.postgres_store import PostgresAgentRunStore
 from zuno.agent.runtime.routing import RuntimeNode, route_after_reflection, route_after_strategy
 from zuno.agent.runtime.service import (
     PROFILE_DEVELOPER_TEST,
@@ -89,6 +90,7 @@ __all__ = [
     "Phase08RunService",
     "Phase08SignalRecord",
     "Phase08StepService",
+    "PostgresAgentRunStore",
     "PostgresPhase08FinalGatePort",
     "PostgresPhase08OwnerPort",
     "RuntimeCounters",
