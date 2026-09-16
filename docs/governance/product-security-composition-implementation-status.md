@@ -1,12 +1,12 @@
 # Product Security Composition Implementation Status
 
-status: `PSC_A_IMPLEMENTED_SELECTED_VERIFIED / PSC_B_C_D_OPEN`
-current_main_evidence: `c3938ccb92c8234977ebd5e2956acec697981d24 / run 35071244101 / 210 passed, 18 warnings`
+status: `PSC_A_B_IMPLEMENTED_SELECTED_VERIFIED / PSC_C_D_OPEN`
+current_main_evidence: `a727bf8000bdda38614905d710c093e1fcc6807a / run 35121830478 / 213 passed, 21 warnings`
 production_readiness: `NOT_ESTABLISHED`
 source_freeze: [`product-security-composition-freeze-candidate.md`](product-security-composition-freeze-candidate.md)
 current_evidence: [`../evidence/current-test-baseline.md`](../evidence/current-test-baseline.md)
 
-Product Security Composition freeze candidate 在 `main@c283d364...` 时冻结了四个独立问题。PSC-A 现在已经落地并进入 main selected verification；PSC-B、PSC-C、PSC-D 的 Authority / Contract 问题没有因为 composition root 可用而自动解决。
+Product Security Composition freeze candidate 在 `main@c283d364...` 时冻结了四个独立问题。PSC-A 与 PSC-B 现在都已经落地并进入 main selected verification；PSC-C 的 Budget owner fact 与 PSC-D 的 Approval writer ownership 仍保持独立未闭环。
 
 ## PSC-A — Production composition root
 
@@ -22,25 +22,19 @@ PSC-A 的退出条件已经满足；后续不要继续在这一 slice 增加 res
 
 ## PSC-B — SecurityDecision owner fact
 
-**Current：OPEN / NOT IMPLEMENTED。**
+**Current：IMPLEMENTED / SELECTED VERIFIED / DEFAULT NOT ENABLED WITHOUT EXPLICIT TTL POLICY。**
 
-`PostgresSecurityDecisionResolver` 与 Current Security persistence 仍存在 contract gap。Target reference 要求 AuthorizationDecision 具备 issued / expiry / refresh 语义，而 Current `security_authorization_decisions` durable surface 没有完成这套字段与 resolver 的一致实现。
+PSC-B 复用 08 Security 的既有 Policy/Persistence boundary，没有新增 Security Service。`PostgresSecurityDecisionResolver` 现在同时承担 Product owner port 的发行与解析：当前 Tool policy 先由 `ToolSecurityGate` 评估，随后把 tenant / workspace / principal / action / selected resource、SecurityEpoch、issued/expiry 与 durable hash 写入 Security-owned PostgreSQL facts；Product Adapter 只得到 opaque `decision_id + security_epoch_ref`，Agent Runtime 再通过 owner resolver 读取并重新校验。
 
-PSC-A 明确留下：
+Migration `20260916_58` 只给现有 Security surface 增加 PSC-B 真正消费的字段：`security_principal_contexts.workspace_id` 与 `security_authorization_decisions.expires_at`。旧 row 保持 nullable，不伪造历史 expiry。`created_at` 作为 owner-issued `issued_at` 被 resolver 读取。Product SecurityDecision 的 durable hash 和 Agent owner-ref hash都覆盖时间边界；旧无时间字段 ref 保持原 hash 形状。
 
-```text
-security_epoch_ref = ""
-security_decision_resolver = None
-```
+授权寿命没有在代码中硬编码。只有 deployment config 显式设置正值 `server.security.product_decision_ttl_seconds` 时，startup 才绑定 Product decision issuance；缺失、`null` 或非正值继续 fail closed。仓库 example 默认仍是 `null`。因此 PSC-B 证明的是“受配置控制的正式 owner path 已实现”，不是“任意部署默认自动授权”。
 
-因此 Product tool-plan admission 仍不会因为 PSC-A 绿色而获得 synthetic Security allow。
+Current evidence 绑定 `main@a727bf8000bdda38614905d710c093e1fcc6807a`、GitHub Actions run `35121830478`、PostgreSQL 16.15；selected suite 得到 `213 passed, 21 warnings in 36.93s`，artifact `10458161042`。新 probes 已证明：matching owner fact 可以 issue→persist→resolve；foreign tenant / workspace、过期 fact、同 identity durable content tamper 均 fail closed；同 Product submission replay 不刷新授权寿命；真实 `WorkspaceAgentRuntime.start()` 可以消费 Security owner fact，并在 PSC-C 未绑定时准确停在独立 Budget blocker。
 
-PSC-B 实现前仍要先冻结：
+PSC-B 还把 Security resource scope 与 Agent `allowed_tools` 收窄到当前 plan 实际选择的 tool，避免 session 中其他已注册 Tool 扩大 owner decision 的资源范围。
 
-- AuthorizationDecision 的正式 durable expiry/no-expiry 语义；
-- workspace / principal / resource scope 从哪一个 Security-owned fact 得到；
-- Product admission epoch 与现实 Effect send 前 continuous authorization 的分工；
-- owner decision hash 覆盖哪些稳定字段。
+Product admission 的 Security allow 只证明“现在可以进入该计划动作”。现实副作用真正发送前仍由既有 08/06 pre-effect gate 重新检查当前 Security 条件；PSC-B 没有合并这两层 Authority。
 
 ## PSC-C — Budget owner fact
 
@@ -79,6 +73,6 @@ PSC-C  Budget owner fact BUILD-or-DEFER
 PSC-D  Approval fact sink ownership cleanup
 ```
 
-PSC-B 通过以后再判断 PSC-C；PSC-D 的删除或降级不能反过来当成 Product Security Admission 已完成。
+PSC-B 已通过 selected verification。下一步只判断 PSC-C 的 BUILD-or-DEFER；PSC-D 的删除或降级也不能反过来当成完整 Product Admission 已完成。
 
 任何后续实现都继续受原 freeze 的排除项约束：不引入新 Security microservice、全局 Epoch Service、跨 Store 2PC、GraphRAG / Memory / Multi-Agent 扩张，也不顺带处理 remote reconciliation 或 cancel orchestration。
