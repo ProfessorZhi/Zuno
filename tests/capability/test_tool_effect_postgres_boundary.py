@@ -24,7 +24,7 @@ from zuno.capability.control_plane import (
 from zuno.capability.runtime import ToolControlPlaneRuntime, ToolRuntimeRequest
 from zuno.capability.tool_runtime import ToolEffectUnknownError, ToolInvocationGateway
 from zuno.platform.database.foundation import InfrastructureUnitOfWork
-from zuno.platform.database.tool_runtime import ToolUnitOfWork
+from zuno.platform.database.tool_runtime import ToolRuntimeConflict, ToolUnitOfWork
 from zuno.platform.security import SecurityUnitOfWork
 from zuno.platform import settings as platform_settings
 
@@ -177,6 +177,41 @@ def _gateway(engine: Engine) -> ToolInvocationGateway:
             tenant_id=tenant_id,
         ),
     )
+
+
+def _escalated_unknown_effect(
+    *,
+    engine: Engine,
+    calls: list[dict[str, object]],
+    execution_id: str,
+) -> tuple[ToolInvocationGateway, ToolRuntimeRequest, str]:
+    runtime = _runtime(engine, calls)
+    pending = runtime.execute(
+        ToolRuntimeRequest(
+            tool_id="mail.send",
+            arguments={"to": "reviewer@example.com", "body": "status update"},
+            workspace_id="workspace-effect",
+            user_id="tenant-effect",
+            task_id="task-effect",
+            trace_id=f"trace-effect-{execution_id}",
+            model_intent="Send the approved status update.",
+            execution_id=execution_id,
+        )
+    )
+    assert pending.status == "approval_required"
+    approved_request = _approved_request(pending=pending, execution_id=execution_id)
+    first = runtime.execute(approved_request)
+    assert first.status == "reconcile_required"
+    assert first.effect_certainty == "UNKNOWN_EFFECT"
+    assert len(calls) == 1
+
+    reconciliation_id = f"tool-effect-reconciliation:{execution_id}"
+    gateway = _gateway(engine)
+    assert gateway.escalate_due_reconciliations(
+        tenant_id="tenant-effect",
+        now=datetime.now(tz=UTC) + timedelta(hours=2),
+    ) == 1
+    return gateway, approved_request, reconciliation_id
 
 
 @pytest.mark.skipif(
@@ -403,6 +438,164 @@ def test_conclusive_not_executed_reconciliation_never_becomes_completed_or_redis
         assert reconciliation == {"status": "RESOLVED", "next_action": "WAIT"}
         assert effect == {"effect_status": "NO_EFFECT", "effect_certainty": "CONFIRMED_NO_EFFECT"}
         assert execution == {"status": "FAILED", "effect_certainty": "CONFIRMED_NO_EFFECT"}
+    finally:
+        _drop_database(engine, admin_engine, database_name)
+
+@pytest.mark.skipif(
+    not os.environ.get("ZUNO_TEST_DATABASE_URL"),
+    reason="ZUNO_TEST_DATABASE_URL is not configured; Effect PostgreSQL probe is BLOCKED",
+)
+def test_manual_assessment_provider_identity_must_match_reconciliation(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    engine, admin_engine, database_name = _migrated_database(tmp_path, monkeypatch)
+    calls: list[dict[str, object]] = []
+    execution_id = "effect-manual-provider-mismatch-1"
+    try:
+        gateway, approved_request, reconciliation_id = _escalated_unknown_effect(
+            engine=engine, calls=calls, execution_id=execution_id
+        )
+        with pytest.raises(
+            ToolRuntimeConflict,
+            match="provider effect does not match reconciliation",
+        ):
+            gateway.record_manual_effect_assessment(
+                tenant_id="tenant-effect",
+                manual_assessment_id=f"tool-manual-effect-assessment:{execution_id}",
+                reconciliation_id=reconciliation_id,
+                provider_effect_id="provider-effect:mail:different",
+                conclusion="CONFIRMED_EXECUTED",
+                confidence=1.0,
+                assessor_principal_id="workspace-user:manual-reviewer:effect",
+                residual_uncertainty="",
+                evidence_payload={"source": "provider-console", "status": "committed"},
+            )
+
+        with engine.connect() as connection:
+            assessment_count = connection.execute(
+                text(
+                    "SELECT count(*) FROM tool_manual_effect_assessments "
+                    "WHERE reconciliation_id = :reconciliation_id"
+                ),
+                {"reconciliation_id": reconciliation_id},
+            ).scalar_one()
+            reconciliation = connection.execute(
+                text(
+                    "SELECT status, next_action, provider_effect_id "
+                    "FROM tool_effect_reconciliations "
+                    "WHERE reconciliation_id = :reconciliation_id"
+                ),
+                {"reconciliation_id": reconciliation_id},
+            ).mappings().one()
+            effect_count = connection.execute(
+                text(
+                    "SELECT count(*) FROM tool_effect_receipts "
+                    "WHERE prepared_tool_action_id = :prepared_id"
+                ),
+                {"prepared_id": f"prepared-tool-action:{execution_id}"},
+            ).scalar_one()
+        assert int(assessment_count) == 0
+        assert reconciliation == {
+            "status": "ESCALATED",
+            "next_action": "MANUAL_ASSESSMENT",
+            "provider_effect_id": "provider-effect:mail:unknown:1",
+        }
+        assert int(effect_count) == 0
+
+        replay = _runtime(engine, calls).execute(approved_request)
+        assert replay.status == "reconcile_required"
+        assert replay.effect_certainty == "UNKNOWN_EFFECT"
+        assert len(calls) == 1
+    finally:
+        _drop_database(engine, admin_engine, database_name)
+
+
+@pytest.mark.skipif(
+    not os.environ.get("ZUNO_TEST_DATABASE_URL"),
+    reason="ZUNO_TEST_DATABASE_URL is not configured; Effect PostgreSQL probe is BLOCKED",
+)
+def test_manual_assessment_conflict_cannot_resolve_from_unpersisted_second_judgment(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    engine, admin_engine, database_name = _migrated_database(tmp_path, monkeypatch)
+    calls: list[dict[str, object]] = []
+    execution_id = "effect-manual-assessment-conflict-1"
+    assessment_id = f"tool-manual-effect-assessment:{execution_id}"
+    try:
+        gateway, approved_request, reconciliation_id = _escalated_unknown_effect(
+            engine=engine, calls=calls, execution_id=execution_id
+        )
+        first_kwargs = {
+            "tenant_id": "tenant-effect",
+            "manual_assessment_id": assessment_id,
+            "reconciliation_id": reconciliation_id,
+            "provider_effect_id": "provider-effect:mail:unknown:1",
+            "conclusion": "UNRESOLVED",
+            "confidence": 0.4,
+            "assessor_principal_id": "workspace-user:manual-reviewer:effect",
+            "residual_uncertainty": "provider logs are incomplete",
+            "evidence_payload": {"source": "provider-console", "status": "incomplete"},
+        }
+        gateway.record_manual_effect_assessment(**first_kwargs)
+        gateway.record_manual_effect_assessment(**first_kwargs)
+
+        with pytest.raises(
+            ToolRuntimeConflict,
+            match="manual effect assessment already exists with different content",
+        ):
+            gateway.record_manual_effect_assessment(
+                tenant_id="tenant-effect",
+                manual_assessment_id=assessment_id,
+                reconciliation_id=reconciliation_id,
+                provider_effect_id="provider-effect:mail:unknown:1",
+                conclusion="CONFIRMED_EXECUTED",
+                confidence=1.0,
+                assessor_principal_id="workspace-user:manual-reviewer:effect",
+                residual_uncertainty="",
+                evidence_payload={"source": "provider-console", "status": "committed"},
+            )
+
+        with engine.connect() as connection:
+            assessment = connection.execute(
+                text(
+                    "SELECT manual_assessment_id, conclusion, residual_uncertainty, "
+                    "provider_effect_id FROM tool_manual_effect_assessments "
+                    "WHERE reconciliation_id = :reconciliation_id"
+                ),
+                {"reconciliation_id": reconciliation_id},
+            ).mappings().one()
+            reconciliation = connection.execute(
+                text(
+                    "SELECT status, next_action FROM tool_effect_reconciliations "
+                    "WHERE reconciliation_id = :reconciliation_id"
+                ),
+                {"reconciliation_id": reconciliation_id},
+            ).mappings().one()
+            effect_count = connection.execute(
+                text(
+                    "SELECT count(*) FROM tool_effect_receipts "
+                    "WHERE prepared_tool_action_id = :prepared_id"
+                ),
+                {"prepared_id": f"prepared-tool-action:{execution_id}"},
+            ).scalar_one()
+        assert assessment == {
+            "manual_assessment_id": assessment_id,
+            "conclusion": "UNRESOLVED",
+            "residual_uncertainty": "provider logs are incomplete",
+            "provider_effect_id": "provider-effect:mail:unknown:1",
+        }
+        assert reconciliation == {
+            "status": "ESCALATED",
+            "next_action": "MANUAL_ASSESSMENT",
+        }
+        assert int(effect_count) == 0
+
+        replay = _runtime(engine, calls).execute(approved_request)
+        assert replay.status == "reconcile_required"
+        assert replay.effect_certainty == "UNKNOWN_EFFECT"
+        assert len(calls) == 1
     finally:
         _drop_database(engine, admin_engine, database_name)
 

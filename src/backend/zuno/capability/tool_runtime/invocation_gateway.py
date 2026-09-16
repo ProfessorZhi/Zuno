@@ -1731,7 +1731,7 @@ class ToolInvocationGateway:
         sanitized_evidence = redact_sensitive_payload(evidence_payload)
         normalized_conclusion = str(conclusion).strip().upper()
         with self._unit_of_work_factory() as repo:
-            repo.record_manual_effect_assessment(
+            persisted = repo.record_manual_effect_assessment(
                 ToolManualEffectAssessmentInput(
                     manual_assessment_id=manual_assessment_id,
                     tenant_id=tenant_id,
@@ -1744,19 +1744,26 @@ class ToolInvocationGateway:
                     evidence_payload=sanitized_evidence,
                 )
             )
+            if persisted.evidence_payload_hash != canonical_sha256(sanitized_evidence):
+                raise RuntimeError(
+                    "persisted manual effect assessment does not match submitted evidence"
+                )
             if (
-                not residual_uncertainty.strip()
-                and normalized_conclusion in {"CONFIRMED_EXECUTED", "CONFIRMED_NOT_EXECUTED"}
+                not persisted.residual_uncertainty.strip()
+                and persisted.conclusion
+                in {"CONFIRMED_EXECUTED", "CONFIRMED_NOT_EXECUTED"}
             ):
                 repo.resolve_effect_reconciliation(
                     tenant_id=tenant_id,
-                    reconciliation_id=reconciliation_id,
-                    conclusion=normalized_conclusion,
+                    reconciliation_id=persisted.reconciliation_id,
+                    conclusion=persisted.conclusion,
                     resolution_payload={
                         "source": "MANUAL_ASSESSMENT",
-                        "manual_assessment_id": manual_assessment_id,
-                        "confidence": confidence,
-                        "assessor_principal_id": assessor_principal_id,
+                        "manual_assessment_id": persisted.manual_assessment_id,
+                        "provider_effect_id": persisted.provider_effect_id,
+                        "confidence": persisted.confidence,
+                        "assessor_principal_id": persisted.assessor_principal_id,
+                        "evidence_payload_hash": persisted.evidence_payload_hash,
                         "evidence": sanitized_evidence,
                     },
                 )
