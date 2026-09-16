@@ -106,7 +106,7 @@ async def init_config():
     product_action_guard = PostgresSecurityProductActionGuard(engine)
     ProductService.configure_security_product_action_guard(product_action_guard)
     ProductIngestionService.configure_package_a_production_ingestion(
-        build_package_a_production_ingestion_runtime(
+        runtime=build_package_a_production_ingestion_runtime(
             engine=engine,
             settings=app_settings,
         ),
