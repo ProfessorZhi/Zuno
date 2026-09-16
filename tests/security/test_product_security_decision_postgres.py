@@ -253,11 +253,19 @@ def test_product_runtime_resolves_security_owner_fact_before_budget_blocker(
             tool_id="tool.read",
             tool_arguments={"query": "status"},
             plan_kind="tool",
+            budget_limits={
+                "max_steps": 3,
+                "max_tokens": 2048,
+                "timeout_seconds": 60,
+                "cost_ceiling": 1.0,
+            },
         )
         admitted = runtime._to_runtime_request(request)
         assert admitted.security_decision_ref is not None
         assert admitted.security_decision_ref["resource"] == "tool.read"
         assert admitted.security_epoch_ref.startswith("security-epoch:product:")
+        assert admitted.budget_limits == request.budget_limits
+        assert admitted.budget_decision_ref is None
         assert admitted.budget_verdict == {"allowed": False, "reason": "budget_owner_resolver_unbound"}
         assert admitted.capability_ids == ()
 

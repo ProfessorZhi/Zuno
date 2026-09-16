@@ -1,23 +1,16 @@
 from __future__ import annotations
 
-"""Formal Security / Budget owner fact resolvers (PHASE22 product wiring).
+"""Formal Security owner fact resolver for Product wiring.
 
-The workspace product composition root binds these resolvers so Agent Core
-never trusts caller-supplied decision envelopes: the Product Adapter carries
-only opaque ``security_decision_id`` / ``budget_decision_id``; Agent Core
-resolves the formal owner fact through the injected port and re-verifies
-tenant / workspace / principal / action / resource / decision / epoch /
-expiry / hash before any tool step.
+The Product Adapter carries only an opaque ``security_decision_id``; Agent
+Core resolves the formal owner fact through this port and re-verifies tenant /
+workspace / principal / action / resource / decision / epoch / expiry / hash.
 
-- :class:`PostgresSecurityDecisionResolver` issues and reads the Security-owner
-  fact from ``security_authorization_decisions`` (+ effective epoch + principal
-  context). Product facts persist workspace scope explicitly; legacy Tool facts
-  may still recover it from the historical principal-context identity shape.
-- :class:`PostgresBudgetDecisionResolver` performs formal Budget Admission
-  from the request context (the runtime contract allows ``decision_id`` to be
-  empty when the resolver admits from the request context). Limits must be
-  present (request-declared or composition default); a run with no limits is
-  not admitted and fails closed.
+Formal Budget Admission is deliberately not implemented here. PSC-C deferred
+that owner surface because Current has caller-declared runtime limits but no
+durable Budget owner store or issuer. Product Budget admission therefore stays
+fail-closed through the generic ``BudgetDecisionResolver`` port until a real
+business owner contract is justified.
 """
 
 from datetime import UTC, datetime, timedelta
@@ -25,11 +18,8 @@ from typing import Any
 
 from sqlalchemy import Engine
 
-from zuno.agent.contracts import BudgetDecisionRef, SecurityDecisionRef
-from zuno.agent.runtime.owner_refs import (
-    budget_ref_hash,
-    security_ref_hash,
-)
+from zuno.agent.contracts import SecurityDecisionRef
+from zuno.agent.runtime.owner_refs import security_ref_hash
 from zuno.platform.contracts import canonical_sha256
 from zuno.platform.security.governance import SecurityDecision, ToolSecurityGate, ToolSecurityProfile
 from zuno.platform.security.persistence import (
@@ -38,7 +28,6 @@ from zuno.platform.security.persistence import (
 )
 
 PRINCIPAL_CONTEXT_PREFIX = "principal-context:"
-BUDGET_OWNER = "platform.budget.admission"
 
 
 def _workspace_from_principal_context_id(principal_context_id: str) -> str:
@@ -295,130 +284,6 @@ class PostgresSecurityDecisionResolver:
         ).to_dict()
 
 
-class PostgresBudgetDecisionResolver:
-    """Budget-owner resolver: formal Budget Admission from owner-bound fact.
-
-    PHASE22 final engineering closure (P0-6): this resolver MUST NOT
-    self-attest. The Product Adapter only carries an opaque
-    ``budget_decision_id``; Agent Core must resolve the formal
-    ``BudgetDecisionRef`` through a Server-owned budget owner fact store.
-    Request-declared ``budget_limits`` / composition ``default_limits``
-    are NOT a substitute for the formal owner fact — they are
-    application values only and can never directly produce
-    ``allowed=True``.
-
-    Fail-closed reasons (return ``None``):
-
-    - No ``budget_decision_id`` (the owner fact id is mandatory).
-    - Decision fact not found in the bound owner store.
-    - Decision ``allowed`` is ``False`` (denied / expired / forged).
-    - Foreign tenant / workspace / run scope.
-    - Request limits exceed admitted limits.
-    - Decision ``decision_hash`` is missing or malformed (the owner fact
-      is not Server-signed).
-    - ``expires_at`` missing or expired (no fabricated expiry).
-    """
-
-    def __init__(
-        self,
-        engine: Engine | None = None,
-        *,
-        default_limits: dict[str, Any] | None = None,
-    ) -> None:
-        # PHASE22 final engineering closure (P0-6): the composition
-        # default is recorded for diagnostics only; it NEVER admits a
-        # run. ``allowed=True`` requires a Server-owned budget owner
-        # fact resolved through ``resolve_owner_fact``.
-        self._engine = engine
-        self._default_limits = dict(default_limits or {})
-
-    def resolve(self, decision_id: str, context: dict[str, Any]) -> dict[str, Any] | None:
-        # PHASE22 final engineering closure (P0-6): the resolver never
-        # self-approves. Without a real Server-owned budget owner fact,
-        # the resolver returns ``None`` and the Product Profile fails
-        # closed as ``BUDGET_OWNER_NOT_BOUND``. Any caller that previously
-        # relied on request-declared ``budget_limits`` or the composition
-        # ``default_limits`` to auto-approve is now blocked at the
-        # resolver boundary.
-        if not decision_id:
-            return None
-        tenant_id = str(context.get("tenant_id") or "").strip()
-        workspace_id = str(context.get("workspace_id") or "").strip()
-        run_id = str(context.get("run_id") or "").strip()
-        principal_id = str(context.get("principal_id") or "").strip()
-        if not (tenant_id and workspace_id and run_id and principal_id):
-            return None
-        if tenant_id.startswith("user:") or tenant_id == "tenant:default":
-            return None
-        if self._engine is None:
-            return None
-        owner_fact = self.resolve_owner_fact(
-            decision_id=decision_id,
-            tenant_id=tenant_id,
-            workspace_id=workspace_id,
-        )
-        if owner_fact is None:
-            return None
-        if not bool(owner_fact.get("allowed")):
-            return None
-        if str(owner_fact.get("tenant_id") or "").strip() != tenant_id:
-            return None
-        if str(owner_fact.get("workspace_id") or "").strip() != workspace_id:
-            return None
-        # PHASE22 final engineering closure (P0-6): request limits can
-        # only NARROW, never WIDEN, the admitted limits. Any caller
-        # requesting more than admitted is rejected.
-        admitted_limits = dict(owner_fact.get("limits") or {})
-        if not admitted_limits:
-            return None
-        request_limits = dict(context.get("budget_limits") or {})
-        for key, value in request_limits.items():
-            admitted_value = admitted_limits.get(key)
-            if admitted_value is None:
-                return None
-            try:
-                if float(value) > float(admitted_value):
-                    return None
-            except (TypeError, ValueError):
-                return None
-        decision_hash = str(owner_fact.get("decision_hash") or "").strip()
-        if not decision_hash:
-            return None
-        ref = BudgetDecisionRef(
-            budget_decision_id=decision_id,
-            tenant_id=tenant_id,
-            workspace_id=workspace_id,
-            run_id=run_id,
-            allowed=True,
-            limits=admitted_limits,
-            owner=BUDGET_OWNER,
-            decision_hash=decision_hash,
-        )
-        return BudgetDecisionRef(
-            **{**ref.model_dump(), "decision_hash": budget_ref_hash(ref=ref)}
-        ).to_dict()
-
-    def resolve_owner_fact(
-        self,
-        *,
-        decision_id: str,
-        tenant_id: str,
-        workspace_id: str,
-    ) -> dict[str, Any] | None:
-        """Resolve the Server-owned budget owner fact.
-
-        Subclasses / production bindings override this with a PostgreSQL
-        lookup against the budget owner store. The default
-        ``resolve(...)`` entry point MUST be paired with a real
-        ``resolve_owner_fact`` implementation before any run can be
-        admitted; without it, the resolver returns ``None`` and the
-        Product Profile fails closed as ``BUDGET_OWNER_NOT_BOUND``.
-        """
-        return None
-
-
 __all__ = [
-    "BUDGET_OWNER",
-    "PostgresBudgetDecisionResolver",
     "PostgresSecurityDecisionResolver",
 ]
