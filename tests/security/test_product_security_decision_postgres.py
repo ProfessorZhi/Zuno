@@ -99,8 +99,23 @@ def test_product_security_owner_fact_is_scoped_expiring_and_tamper_evident(
         assert fact["workspace_id"] == context["workspace_id"]
         assert fact["principal_id"] == context["principal_id"]
         assert fact["resource"] == context["resource"]
+        assert fact["issued_at"]
         assert fact["expires_at"]
 
+        replay_handle = port.issue(context)
+        assert replay_handle == handle
+        replay_fact = port.resolve(
+            replay_handle["decision_id"],
+            {**context, "security_epoch_ref": replay_handle["security_epoch_ref"]},
+        )
+        assert replay_fact is not None
+        assert replay_fact["issued_at"] == fact["issued_at"]
+        assert replay_fact["expires_at"] == fact["expires_at"]
+
+        assert port.resolve(
+            handle["decision_id"],
+            {**context, "tenant_id": "tenant-foreign", "security_epoch_ref": handle["security_epoch_ref"]},
+        ) is None
         assert port.resolve(
             handle["decision_id"],
             {**context, "workspace_id": "workspace-foreign", "security_epoch_ref": handle["security_epoch_ref"]},

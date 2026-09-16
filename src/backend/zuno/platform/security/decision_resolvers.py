@@ -9,11 +9,10 @@ resolves the formal owner fact through the injected port and re-verifies
 tenant / workspace / principal / action / resource / decision / epoch /
 expiry / hash before any tool step.
 
-- :class:`PostgresSecurityDecisionResolver` reads the Security-owner fact
-  from ``security_authorization_decisions`` (+ effective epoch + principal
-  context). The workspace dimension comes from the owner-recorded principal
-  context id (``principal-context:{workspace_id}:{call_id}``); an owner fact
-  whose workspace cannot be recovered is not resolvable and fails closed.
+- :class:`PostgresSecurityDecisionResolver` issues and reads the Security-owner
+  fact from ``security_authorization_decisions`` (+ effective epoch + principal
+  context). Product facts persist workspace scope explicitly; legacy Tool facts
+  may still recover it from the historical principal-context identity shape.
 - :class:`PostgresBudgetDecisionResolver` performs formal Budget Admission
   from the request context (the runtime contract allows ``decision_id`` to be
   empty when the resolver admits from the request context). Limits must be
@@ -267,6 +266,7 @@ class PostgresSecurityDecisionResolver:
         if str(fact.get("decision_hash") or "") != persisted_hash:
             return None
 
+        issued_at = issued_dt.isoformat()
         expires_at = expires_dt.isoformat()
         decision_hash = security_ref_hash(
             decision_id=decision_id,
@@ -277,6 +277,7 @@ class PostgresSecurityDecisionResolver:
             resource=resource,
             decision=decision,
             security_epoch_ref=epoch_ref,
+            issued_at=issued_at,
             expires_at=expires_at,
         )
         return SecurityDecisionRef(
@@ -289,6 +290,7 @@ class PostgresSecurityDecisionResolver:
             decision=decision,
             security_epoch_ref=epoch_ref,
             decision_hash=decision_hash,
+            issued_at=issued_at,
             expires_at=expires_at,
         ).to_dict()
 
