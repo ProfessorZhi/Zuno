@@ -80,8 +80,8 @@ Target 会保留这种 `Outcome Unknown`。它不是“失败的另一种名字�
 
 **Target：** 06 拥有现实动作的 PreparedAction、实际 Attempt、结果确认、EffectReceipt 与 Reconciliation 事实；发送前固定逻辑意图并重新消费安全条件，发送后对 Outcome Unknown 先确认再决定是否继续。产品 Delivery、正式法律事实和授权策略仍由其他 Owner 管理。
 
-**Current：** 当前实现已经能耐久记录 UNKNOWN Effect，并在 restart replay 时根据 durable result 类型与 certainty 返回 `reconcile_required`、confirmed result 或 async waiting，而不是把任意 result_ref 当成 completed。最小 conclusive reconciliation writer 已能把 executed / not-executed 收敛为 EffectReceipt、ExecutionReceipt 与 `RESOLVED` reconciliation；mandatory audit 也已经接入 send boundary，并在 provider dispatch 后关闭 durable capacity。以上行为都进入 `main@9b7891c6` 的 PostgreSQL selected verification。
+**Current：** 当前实现已经能耐久记录 UNKNOWN Effect，并在 restart replay 时根据 durable result 类型与 certainty 返回 `reconcile_required`、confirmed result 或 async waiting，而不是把任意 result_ref 当成 completed。最小 conclusive reconciliation writer 已能把 executed / not-executed 收敛为 EffectReceipt、ExecutionReceipt 与 `RESOLVED` reconciliation；mandatory audit 也已经接入 send boundary，并在 provider dispatch 后关闭 durable capacity。后续 selected verification 又把 manual path 收紧为 provider-effect identity matching、one-shot durable judgment 与 exact response-loss replay idempotency；以上行为都进入 `main@ff0f497e` 的 PostgreSQL selected verification。
 
-**Gap：** provider-facing remote query / business-key reconcile adapter 仍未建立 Current proof；manual assessment 还需要更强的 reviewer authority、provider-effect identity 与 conflict semantics；AuditRequirement 的 class、matching proof、tenant isolation，以及 audit 已提交但 send 前被阻断或 send 后 crash/restart 的 lifecycle 仍需收敛。真实外围系统幂等行为、补偿与恢复时间数据同样未完成，因此仍不宣称 production-grade exactly-once 或自动恢复能力。
+**Gap：** provider-facing remote query / business-key reconcile adapter 仍未建立 Current proof；manual assessment 的 provider-effect identity 与 conflict semantics 已经闭合，但 reviewer role / tenant / approval-policy Authority 和是否需要多次 assessment 仍未证明；AuditRequirement 的 class、数据库级 tenant isolation，以及 audit 已提交但 send 前被阻断或 send 后 crash/restart 的 lifecycle 仍需收敛。真实外围系统幂等行为、补偿与恢复时间数据同样未完成，因此仍不宣称 production-grade exactly-once 或自动恢复能力。
 
 工程 / Agent 精确参考与跨模块一致性规则见 [`reference.md`](reference.md)。

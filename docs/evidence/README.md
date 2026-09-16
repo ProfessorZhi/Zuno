@@ -20,20 +20,22 @@ Slice C 的 fault evidence 如何影响 Freeze readiness、哪些测试已经停
 ## 当前边界
 
 ```text
-SELECTED CODE VERIFICATION: AVAILABLE @ 9b7891c63f007c8a0868d7dd262ceec5869bee4e
-SELECTED GITHUB RUN: 35053215987 / 201 passed, 9 warnings
+SELECTED CODE VERIFICATION: AVAILABLE @ ff0f497e3eea862fa44b0a8d5979e9ad31ac5ad0
+SELECTED GITHUB RUN: 35056938670 / 208 passed, 16 warnings
 POSTGRESQL DOMAIN SELECTED PROBES: PASS
 WAVE-001 REVISION POSTGRESQL APPLY/DOWNGRADE/RE-APPLY: PASS
 TARGET ADMISSION RECEIPT: NOT IMPLEMENTATION-PROVEN
 UNKNOWN EFFECT RESTART REPLAY: FIX VERIFIED / UNKNOWN PRESERVED
 REMOTE SUCCESS + LOCAL EFFECT RECEIPT FAILURE: FALLS BACK TO UNKNOWN / RECONCILE
-CONCLUSIVE RECONCILIATION WRITER + MANUAL PATH: SELECTED VERIFIED
+CONCLUSIVE RECONCILIATION + ONE-SHOT DURABLE MANUAL JUDGMENT: SELECTED VERIFIED
 REMOTE-QUERY RECONCILIATION ADAPTER: NOT IMPLEMENTATION-PROVEN
 CANCEL-IN-FLIGHT ORCHESTRATION: NOT IMPLEMENTATION-PROVEN
 PRE-EFFECT SECURITY EPOCH REVOCATION: PASS
 PRE-LEASE SECRET REVOCATION: PASS
 MANDATORY AUDIT BEFORE EFFECT: FIX VERIFIED / MISSING PROOF FAILS CLOSED
-MANDATORY AUDIT POST-DISPATCH CAPACITY LIFECYCLE: PASS
+MANDATORY AUDIT REQUIREMENT BINDING + POST-DISPATCH CAPACITY LIFECYCLE: PASS
+TOOL EFFECT SECURITY FACT IDENTITY: TRACE-INDEPENDENT ACTION SCOPE VERIFIED
+WORKSPACE PRODUCT SECURITY COMPOSITION: NOT IMPLEMENTATION-PROVEN
 FORMAL ALEMBIC ENTRYPOINT: PASS ON FRESH POSTGRESQL
 PRODUCTION_READINESS: NOT_ESTABLISHED
 QUALITY: not_yet_proven
@@ -43,13 +45,13 @@ COURT QA: UNKNOWN / NOT AVAILABLE
 
 Main 的正向 selected verification 说明一组明确列出的 Domain、Citation、Application、Runtime、Knowledge、Capability、Tool、Model Gateway、Security、Observability、Retrieval 与 Eval 行为在同一个 main SHA 的 GitHub runner 上通过。对应 run 还使用 PostgreSQL 16.15 service 验证了 Wave-001 Domain mutation/version 的基本事务、并发冲突、幂等重放，以及 revision `20260813_57` 自身的 `upgrade → downgrade → re-upgrade` DDL。
 
-Slice C 的旧负向证据继续保留，因为它解释了 RB019 的实现优先级：PR #201 / run `34559517466` 曾证明 unresolved Reconciliation 在 restart replay 时被错误升级成 completed；PR #205 / run `34560692093` 曾证明缺少 durable mandatory-audit proof 时 send path 仍会 dispatch。AUTH-A/B/C 以及后续 audit lifecycle 修复已经把这两条原始 violation 转成 main 上的正向 regression；cancel-in-flight、provider remote-query reconciliation、manual authority binding 和更完整的 audit policy/lifecycle 仍未闭环。
+Slice C 的旧负向证据继续保留，因为它解释了 RB019 的实现优先级：PR #201 / run `34559517466` 曾证明 unresolved Reconciliation 在 restart replay 时被错误升级成 completed；PR #205 / run `34560692093` 曾证明缺少 durable mandatory-audit proof 时 send path 仍会 dispatch。AUTH-A/B/C 以及后续 audit lifecycle、requirement binding、manual durable judgment 和 Effect Security identity 修复已经把这两条原始 violation 转成 main 上的正向 regression；cancel-in-flight、provider remote-query reconciliation、manual reviewer Authority、完整 audit policy/lifecycle 与 production Workspace Security composition 仍未闭环。
 
 正向边界同样已经明确：PR #203 / run `34560042535` 证明 pre-send SecurityEpoch revocation fail closed；PR #207 / run `34566365522` 证明 pre-lease Secret revoke fail closed；PR #210 / run `34567699688` 证明 provider 已返回成功、但本地 EffectReceipt persistence 失败时，当前 Gateway 会留下 `UNKNOWN_EFFECT + OPEN/RECONCILE`，而不是直接宣布 completed。故障形状与 Freeze 影响见 [`Effects ↔ Security Slice C Review`](../governance/effect-security-slice-c-review.md)。
 
 早期 Slice C 诊断依赖测试进程临时兼容 `zuno.settings → zuno.platform.settings`，因此那些诊断本身不构成 deployment evidence。AUTH-C 已修复正式 Alembic import；当前 selected main run 在 fresh PostgreSQL 上直接执行正式 `alembic upgrade head`，不再使用 legacy module alias。
 
-这个范围不能扩写成“Zuno PostgreSQL 集成已完成”“完整 Effect recovery 已完成”“Reconciliation 全自动闭环”“cancel-in-flight 已闭环”“Security 已验证完成”“Secret rotation 已验证完成”或“生产 migration 已资格化”。Current 已证明 Effect replay certainty、最小 conclusive reconciliation、mandatory audit pre-send gate、post-dispatch capacity lifecycle 和正式 fresh Alembic entrypoint；Target `AdmissionReceipt`、02↔04 owner-first recovery、remote-query reconciliation、manual authority binding、audit-class / proof matching / tenant isolation、完整 Secret rotation/retry、其他 Approval / Policy drift、no-egress、其他平台 PostgreSQL 路径、Redis / RabbitMQ / Object Store、真实 Provider 和外部 Host仍各自需要证据。
+这个范围不能扩写成“Zuno PostgreSQL 集成已完成”“完整 Effect recovery 已完成”“Reconciliation 全自动闭环”“cancel-in-flight 已闭环”“Security 已验证完成”“Secret rotation 已验证完成”或“生产 migration 已资格化”。Current 已证明 Effect replay certainty、conclusive one-shot manual judgment、mandatory audit pre-send gate / persisted requirement binding / post-dispatch capacity lifecycle、Tool Effect action-scoped Security fact identity和正式 fresh Alembic entrypoint；Target `AdmissionReceipt`、02↔04 owner-first recovery、remote-query reconciliation、manual reviewer Authority、audit-class / DB-level tenant isolation、pre-send-abort / crash-replay audit lifecycle、Target composed SecurityEpoch、production Workspace Security composition、完整 Secret rotation/retry、其他 Approval / Policy drift、no-egress、其他平台 PostgreSQL 路径、Redis / RabbitMQ / Object Store、真实 Provider 和外部 Host仍各自需要证据。
 
 当前仓库可以证明有限实现和验证范围，也可以证明若干具体失败；不能证明完整历史技术栈、真实法院质量、生产部署、用户规模、SLA、QPS、HA、No-egress、Sandbox 资格或正式外部验收。历史 Pilot 不等于 Production。
 
@@ -63,10 +65,10 @@ Slice C 的旧负向证据继续保留，因为它解释了 RB019 的实现优�
 - `Current code selected verification` 通过只能证明 workflow 列出的行为，不等于 Full Project CI 通过。
 - revision `20260813_57` 能真实 apply/downgrade/re-upgrade，只证明该 revision 自身 DDL 可逆，不证明真实数据 backfill 或零停机策略。
 - 诊断分支失败可以证明某条 Target invariant 当前不成立；诊断分支成功也只证明它实际注入并观察到的 fault window。
-- `Outcome Unknown` 的耐久记录本身不等于 recovery 正确；#201 的旧 failure 已由 AUTH-A 修复并进入 main regression。当前仍不能把最小 conclusive writer 扩写成 provider remote-query reconciliation 或完整人工 Authority 已闭环。
+- `Outcome Unknown` 的耐久记录本身不等于 recovery 正确；#201 的旧 failure 已由 AUTH-A 修复并进入 main regression。Current one-shot durable judgment 已进一步验证 provider-effect identity、conflict 与 exact response-loss replay；仍不能扩写成 provider remote-query reconciliation、多次人工 assessment 或完整 reviewer Authority 已闭环。
 - provider success 后 local EffectReceipt 写失败能够退回 Unknown，只证明现有 exception/persistence-failure fallback，不证明真实 process-crash timing 或后续 Reconcile 已闭环。
 - pre-send SecurityEpoch revocation 与 pre-lease Secret revocation 已有正向 fault evidence，不代表完整 Secret rotation/retry、Approval hash drift、Policy Engine outage 或 no-egress 已经证明。
-- `security_audit_requirements` 存在仍不等于 matching AuditPersistenceReceipt 已提交；区别在于当前 send gate 已经会验证 committed proof 并 fail closed。Audit class、requirement-proof 强绑定、tenant isolation 与 pre-send-abort/crash lifecycle 仍需自己的证据。
+- `security_audit_requirements` 存在仍不等于 matching AuditPersistenceReceipt 已提交；区别在于当前 send gate 已经会验证 committed proof 并 fail closed。Current 已证明 persisted Security requirement 与 proof 的 id/hash 绑定；Audit class、数据库级 tenant isolation 与 pre-send-abort/crash lifecycle 仍需自己的证据。
 - Cancellation receipt / async-job primitive 存在，不等于 Runtime 已经把用户取消、provider cancel、callback race 和最终 Effect truth 接成可恢复协议。
 - 正式 Alembic entrypoint 已由 AUTH-C 的 fresh PostgreSQL probe 验证到 head；这仍不证明生产 backfill、在线迁移、锁影响或 rollback qualification。
 - `ModelCallAttempt` 或 Tool contract 有单元测试，不等于真实 Provider / 真实外围法院系统已经完成 E2E。
