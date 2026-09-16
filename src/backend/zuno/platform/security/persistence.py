@@ -66,6 +66,8 @@ class SecurityAuditRequirementReceipt:
     audit_requirement_id: str
     tenant_id: str
     decision_id: str
+    audit_channel_id: str
+    status: str
     requirement_hash: str
 
 
@@ -759,11 +761,63 @@ class SecurityRepository:
             ),
             {**payload, "requirement_hash": requirement_hash},
         )
-        return SecurityAuditRequirementReceipt(
+        persisted = self.read_audit_requirement(
             audit_requirement_id=audit_requirement_id,
             tenant_id=tenant_id,
-            decision_id=decision_id,
-            requirement_hash=requirement_hash,
+        )
+        if persisted is None:
+            raise SecurityPersistenceError("audit requirement could not be persisted")
+        if (
+            persisted.decision_id != decision_id
+            or persisted.audit_channel_id != audit_channel_id
+            or persisted.status != status
+            or persisted.requirement_hash != requirement_hash
+        ):
+            raise SecurityPersistenceError(
+                "audit requirement identity was reused with different content"
+            )
+        return persisted
+
+    def read_audit_requirement(
+        self,
+        *,
+        audit_requirement_id: str,
+        tenant_id: str,
+    ) -> SecurityAuditRequirementReceipt | None:
+        row = self.connection.execute(
+            text(
+                """
+                SELECT audit_requirement_id, tenant_id, decision_id, audit_channel_id,
+                       requirement_hash, status
+                FROM security_audit_requirements
+                WHERE audit_requirement_id = :audit_requirement_id
+                """
+            ),
+            {"audit_requirement_id": audit_requirement_id},
+        ).mappings().first()
+        if row is None:
+            return None
+        if str(row["tenant_id"]) != tenant_id:
+            raise SecurityPersistenceError("audit requirement belongs to another tenant")
+        persisted_payload = {
+            "audit_requirement_id": str(row["audit_requirement_id"]),
+            "tenant_id": str(row["tenant_id"]),
+            "decision_id": str(row["decision_id"]),
+            "audit_channel_id": str(row["audit_channel_id"]),
+            "status": str(row["status"]),
+        }
+        expected_hash = canonical_sha256(persisted_payload)
+        if str(row["requirement_hash"]) != expected_hash:
+            raise SecurityPersistenceError(
+                "audit requirement hash does not match persisted content"
+            )
+        return SecurityAuditRequirementReceipt(
+            audit_requirement_id=persisted_payload["audit_requirement_id"],
+            tenant_id=persisted_payload["tenant_id"],
+            decision_id=persisted_payload["decision_id"],
+            audit_channel_id=persisted_payload["audit_channel_id"],
+            status=persisted_payload["status"],
+            requirement_hash=expected_hash,
         )
 
     def record_secret_ref(
