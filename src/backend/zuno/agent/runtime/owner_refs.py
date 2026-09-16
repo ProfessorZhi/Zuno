@@ -69,20 +69,30 @@ def security_ref_hash(
     resource: str,
     decision: str,
     security_epoch_ref: str,
+    issued_at: str | None = None,
+    expires_at: str | None = None,
 ) -> str:
-    """Deterministic decision hash over the owner-issued fact fields."""
-    return canonical_sha256(
-        {
-            "decision_id": decision_id,
-            "tenant_id": tenant_id,
-            "workspace_id": workspace_id,
-            "principal_id": principal_id,
-            "action": action,
-            "resource": resource,
-            "decision": decision,
-            "security_epoch_ref": security_epoch_ref,
-        }
-    )
+    """Deterministic decision hash over the owner-issued fact fields.
+
+    ``expires_at`` joins the hash when present. Legacy test refs without an
+    expiry keep their existing hash shape; Product owner facts always carry
+    expiry and therefore make it tamper-evident.
+    """
+    payload: dict[str, Any] = {
+        "decision_id": decision_id,
+        "tenant_id": tenant_id,
+        "workspace_id": workspace_id,
+        "principal_id": principal_id,
+        "action": action,
+        "resource": resource,
+        "decision": decision,
+        "security_epoch_ref": security_epoch_ref,
+    }
+    if issued_at:
+        payload["issued_at"] = issued_at
+    if expires_at:
+        payload["expires_at"] = expires_at
+    return canonical_sha256(payload)
 
 
 def validate_security_decision_ref(
@@ -124,6 +134,8 @@ def validate_security_decision_ref(
         resource=ref.resource,
         decision=ref.decision,
         security_epoch_ref=ref.security_epoch_ref,
+        issued_at=ref.issued_at,
+        expires_at=ref.expires_at,
     )
     if ref.decision_hash != expected_hash:
         return OwnerRefVerification(False, "security_ref_hash_mismatch")

@@ -167,6 +167,19 @@ def test_fastapi_init_config_binds_real_workspace_product_composition(
         ProductRuntimeMechanics.reset_runtime_state_for_tests()
         assert get_workspace_product_composition() is None
 
+        # Missing TTL keeps PSC-B fail-closed even though PSC-A composition is bound.
+        monkeypatch.setattr(app_main.app_settings, "server", {})
+        unbound_security = app_main.configure_workspace_product_runtime(engine)
+        assert unbound_security.security_decision_resolver is None
+        ProductRuntimeMechanics.reset_runtime_state_for_tests()
+
+        # An explicit server policy TTL enables the Security owner port on the
+        # same production startup path; Budget/Approval remain separate slices.
+        monkeypatch.setattr(
+            app_main.app_settings,
+            "server",
+            {"security": {"product_decision_ttl_seconds": 300}},
+        )
         asyncio.run(app_main.init_config())
 
         composition = get_workspace_product_composition()
@@ -176,7 +189,8 @@ def test_fastapi_init_config_binds_real_workspace_product_composition(
         assert composition.security_unit_of_work_factory is not None
         assert composition.infrastructure_unit_of_work_factory is not None
         assert composition.security_approval_sink is None
-        assert composition.security_decision_resolver is None
+        from zuno.platform.security.decision_resolvers import PostgresSecurityDecisionResolver
+        assert isinstance(composition.security_decision_resolver, PostgresSecurityDecisionResolver)
         assert composition.budget_decision_resolver is None
         assert composition.approval_flow == "none"
 

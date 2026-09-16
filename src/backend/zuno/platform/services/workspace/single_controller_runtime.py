@@ -703,16 +703,17 @@ class WorkspaceAgentRuntime:
         # carries only opaque decision ids; the owner resolvers produce the
         # formal facts. Caller-supplied full refs are never trusted in the
         # product profile (a resolver must produce the fact).
-        security_ref, security_error = self._resolve_security_ref(request)
+        security_ref, security_error, resolved_security_epoch_ref = self._resolve_security_ref(request)
         budget_ref, budget_error = self._resolve_budget_ref(request)
+        effective_security_epoch_ref = resolved_security_epoch_ref or self._security_epoch_ref
         security_verdict = validate_security_decision_ref(
             security_ref,
             tenant_id=request.tenant_id,
             workspace_id=request.workspace_id,
             principal_id=request.principal_id or request.user_id,
             action="tool.execute",
-            resource=",".join(tool_ids if request.plan_kind == "tool" else ()),
-            bound_security_epoch_ref=self._security_epoch_ref,
+            resource=request.tool_id or "",
+            bound_security_epoch_ref=effective_security_epoch_ref,
             required=(
                 self._profile == PROFILE_PRODUCT
                 and bool(request.plan_kind == "tool")
@@ -733,8 +734,8 @@ class WorkspaceAgentRuntime:
         admission_reason = ""
         if (
             request.security_epoch_ref
-            and self._security_epoch_ref
-            and request.security_epoch_ref != self._security_epoch_ref
+            and effective_security_epoch_ref
+            and request.security_epoch_ref != effective_security_epoch_ref
         ):
             # Security epoch fail-closed: a stale caller-supplied epoch blocks
             # the plan at planning admission, before any tool execution.
@@ -773,9 +774,17 @@ class WorkspaceAgentRuntime:
                 reason=admission_reason,
                 security_ref=security_ref,
                 budget_ref=budget_ref,
+                security_epoch_ref=effective_security_epoch_ref,
             )
 
-        capability_ids = tool_ids if (plan_steps and request.plan_kind == "tool") else ()
+        capability_ids = (
+            (request.tool_id,)
+            if plan_steps and request.plan_kind == "tool" and request.tool_id
+            else ()
+        )
+        selected_approval_required = tuple(
+            tool_id for tool_id in approval_required if tool_id in capability_ids
+        )
         return RuntimeStartRequest(
             run_id=f"run:{request.task_id}",
             thread_id=request.thread_id,
@@ -793,11 +802,11 @@ class WorkspaceAgentRuntime:
             content_fingerprint=request.content_fingerprint,
             capability_ids=capability_ids,
             allowed_tools=capability_ids,
-            approval_required_tools=approval_required if (plan_steps and request.plan_kind == "tool") else (),
+            approval_required_tools=selected_approval_required,
             budget_limits=request.budget_limits,
             security_decision_ref=security_ref.to_dict() if security_ref else None,
             budget_decision_ref=budget_ref.to_dict() if budget_ref else None,
-            security_epoch_ref=self._security_epoch_ref,
+            security_epoch_ref=effective_security_epoch_ref,
             profile=self._profile,
             strategy_mode=_strategy_mode_for(request),
             plan_steps=tuple(step.model_dump(mode="json") for step in plan_steps) if plan_steps else (),
@@ -812,6 +821,7 @@ class WorkspaceAgentRuntime:
         reason: str,
         security_ref: SecurityDecisionRef | None = None,
         budget_ref: BudgetDecisionRef | None = None,
+        security_epoch_ref: str = "",
     ) -> RuntimeStartRequest:
         """Fail-closed RuntimeStartRequest: no plan, no tools, reason visible."""
         return RuntimeStartRequest(
@@ -835,7 +845,7 @@ class WorkspaceAgentRuntime:
             budget_limits=request.budget_limits,
             security_decision_ref=security_ref.to_dict() if security_ref else None,
             budget_decision_ref=budget_ref.to_dict() if budget_ref else None,
-            security_epoch_ref=self._security_epoch_ref,
+            security_epoch_ref=security_epoch_ref or self._security_epoch_ref,
             profile=self._profile,
             strategy_mode=None,
             plan_steps=(),
@@ -884,67 +894,82 @@ class WorkspaceAgentRuntime:
     def _resolve_security_ref(
         self,
         request: WorkspaceRunRequest,
-    ) -> tuple[SecurityDecisionRef | None, str | None]:
-        """Resolve the Security-owner fact from an opaque decision id.
+    ) -> tuple[SecurityDecisionRef | None, str | None, str]:
+        """Resolve or issue the Security-owner fact for Product admission.
 
-        Product profile: the caller-supplied full ref is never trusted — only
-        ``decision_id`` locates the owner fact through the injected resolver;
-        an unbound resolver or a missing owner fact fails closed. Developer
-        test profile: caller-supplied refs are explicitly accepted (test-only,
-        still hash / scope / expiry-validated by Agent Core).
+        Product callers still carry only an opaque id. When no id exists, the
+        bound Security owner port may issue a durable decision from current
+        request/tool policy context and returns only ``decision_id`` + epoch;
+        the formal fact is then read back through ``resolve()``.
         """
         decision_id = str(request.security_decision_id or "").strip()
         envelope = dict(request.security_decision_ref or {})
         if not decision_id and envelope.get("decision_id"):
             decision_id = str(envelope["decision_id"]).strip()
         resolver = self._security_decision_resolver
+        owner_context = self._security_owner_context(request)
+        resolved_epoch = str(request.security_epoch_ref or self._security_epoch_ref or "").strip()
         if self._profile == PROFILE_PRODUCT:
-            if not decision_id:
-                # No owner fact requested; whether one is *required* is
-                # decided by validation (tool plans in the product profile).
-                return None, None
             if resolver is None:
-                return None, "security_owner_resolver_unbound"
-            fact = resolver.resolve(
-                decision_id,
-                self._security_owner_context(request),
-            )
+                if decision_id or request.plan_kind == "tool":
+                    return None, "security_owner_resolver_unbound", resolved_epoch
+                return None, None, resolved_epoch
+            if not decision_id and request.plan_kind == "tool" and request.tool_id:
+                issuer = getattr(resolver, "issue", None)
+                if not callable(issuer):
+                    return None, "security_owner_issuer_unbound", resolved_epoch
+                handle = issuer(owner_context)
+                if not handle:
+                    return None, "security_owner_fact_not_issued", resolved_epoch
+                decision_id = str(handle.get("decision_id") or "").strip()
+                resolved_epoch = str(handle.get("security_epoch_ref") or "").strip()
+                if not decision_id or not resolved_epoch:
+                    return None, "security_owner_fact_not_issued", resolved_epoch
+                owner_context = {**owner_context, "security_epoch_ref": resolved_epoch}
+            if not decision_id:
+                return None, None, resolved_epoch
+            if not str(owner_context.get("security_epoch_ref") or "").strip():
+                owner_context = {**owner_context, "security_epoch_ref": resolved_epoch}
+            fact = resolver.resolve(decision_id, owner_context)
             if not fact:
-                return None, "security_owner_fact_not_found"
-            return SecurityDecisionRef(**fact), None
-        # Developer test profile: caller-supplied refs are trusted (test
-        # profile only — never product evidence).
+                return None, "security_owner_fact_not_found", resolved_epoch
+            return SecurityDecisionRef(**fact), None, resolved_epoch
         if request.security_decision_ref:
             try:
-                return SecurityDecisionRef(**request.security_decision_ref), None
+                ref = SecurityDecisionRef(**request.security_decision_ref)
+                return ref, None, ref.security_epoch_ref or resolved_epoch
             except Exception:
-                return None, "security_ref_invalid"
+                return None, "security_ref_invalid", resolved_epoch
         if decision_id and resolver is not None:
-            fact = resolver.resolve(
-                decision_id,
-                self._security_owner_context(request),
-            )
+            fact = resolver.resolve(decision_id, owner_context)
             if fact:
-                return SecurityDecisionRef(**fact), None
-        return None, None
+                ref = SecurityDecisionRef(**fact)
+                return ref, None, ref.security_epoch_ref or resolved_epoch
+        return None, None, resolved_epoch
 
     def _security_owner_context(self, request: WorkspaceRunRequest) -> dict[str, Any]:
+        binding = next(
+            (binding for binding in self.bindings if binding.tool_id == request.tool_id),
+            None,
+        )
         return {
             "tenant_id": request.tenant_id,
             "workspace_id": request.workspace_id,
             "principal_id": request.principal_id or request.user_id,
             "action": "tool.execute",
-            "resource": ",".join(
-                binding.tool_id
-                for binding in self.bindings
-                if binding.tool_id == request.tool_id
-            )
-            or request.tool_id
-            or "",
+            "resource": request.tool_id or "",
             "security_epoch_ref": request.security_epoch_ref or self._security_epoch_ref,
             "run_id": f"run:{request.task_id}",
             "task_id": request.task_id,
             "trace_id": request.trace_id,
+            "model_intent": request.goal,
+            "proposed_args": dict(request.tool_arguments or {}),
+            "side_effect_level": (
+                binding.side_effect_level.value if binding is not None else "unknown"
+            ),
+            "execution_mode": (
+                binding.execution_mode.value if binding is not None else ""
+            ),
         }
 
     def _resolve_budget_ref(

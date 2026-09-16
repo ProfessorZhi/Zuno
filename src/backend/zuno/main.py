@@ -44,17 +44,30 @@ def register_middleware(app: FastAPI):
 def configure_workspace_product_runtime(engine):
     """Bind the server-owned product runtime infrastructure.
 
-    PSC-A only wires dependencies that have Current implementations. Security
-    and Budget owner resolvers, plus the product approval flow, remain unbound
-    and therefore fail closed until their independent PSC slices are completed.
+    PSC-A wires durable runtime dependencies. PSC-B additionally binds the
+    Security owner decision port only when an explicit positive server TTL is
+    configured. Budget and product approval remain independent fail-closed
+    slices.
     """
     from zuno.agent.runtime import PostgresAgentRunStore
     from zuno.platform.database.foundation import InfrastructureUnitOfWork
     from zuno.platform.database.tool_runtime import ToolUnitOfWork
     from zuno.platform.security import SecurityUnitOfWork
+    from zuno.platform.security.decision_resolvers import PostgresSecurityDecisionResolver
     from zuno.platform.services.workspace.single_controller_runtime import (
         WorkspaceRuntimeComposition,
         configure_workspace_product_composition,
+    )
+
+    security_settings = dict((app_settings.server or {}).get("security") or {})
+    security_ttl_seconds = int(security_settings.get("product_decision_ttl_seconds") or 0)
+    security_owner_port = (
+        PostgresSecurityDecisionResolver(
+            engine,
+            decision_ttl_seconds=security_ttl_seconds,
+        )
+        if security_ttl_seconds > 0
+        else None
     )
 
     composition = WorkspaceRuntimeComposition(
@@ -68,7 +81,7 @@ def configure_workspace_product_runtime(engine):
         security_approval_sink=None,
         security_epoch_ref="",
         approval_flow="none",
-        security_decision_resolver=None,
+        security_decision_resolver=security_owner_port,
         budget_decision_resolver=None,
         dynamic_dag_planner=None,
     )

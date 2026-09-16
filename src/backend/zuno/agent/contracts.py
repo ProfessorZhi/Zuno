@@ -410,6 +410,7 @@ class SecurityDecisionRef(BaseModel):
     decision: str
     security_epoch_ref: str
     decision_hash: str
+    issued_at: str | None = None
     expires_at: str | None = None
 
     def to_dict(self) -> dict[str, Any]:
