@@ -122,7 +122,7 @@ def test_security_audit_requirement_identity_rejects_conflicting_content(
                 epoch_ref=epoch_ref,
                 resource_ref="resource:audit-requirement-binding",
                 action="tool.execute",
-                decision="ALLOW",
+                decision="USE_ONLY",
                 reason_code="test",
                 prepared_action_hash="b" * 64,
             )
