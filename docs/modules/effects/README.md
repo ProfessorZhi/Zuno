@@ -1,6 +1,6 @@
 # 06 Tool Runtime & Effects（工具运行与外部效果）
 
-<!-- status: design-baseline-v1; implementation: scoped-current-partial; deepening: cross-module-consistency-v2; detail_design: candidate-v1 -->
+<!-- status: design-baseline-v1; implementation: not-authorized; deepening: cross-module-consistency-v2; detail_design: candidate-v1 -->
 
 ## Part A — Human Narrative
 
