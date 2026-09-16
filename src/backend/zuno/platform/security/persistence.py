@@ -382,6 +382,16 @@ class SecurityRepository:
         status: str = "active",
     ) -> SecurityEpochReceipt:
         policy_bundle_hash = canonical_sha256(policy_bundle)
+        values = {
+            "epoch_ref": epoch_ref,
+            "tenant_id": tenant_id,
+            "policy_bundle_ref": policy_bundle_ref,
+            "policy_bundle_hash": policy_bundle_hash,
+            "action_set_version": action_set_version,
+            "principal_context_hash": principal_context_hash,
+            "generation": generation,
+            "status": status,
+        }
         self.connection.execute(
             text(
                 """
@@ -395,17 +405,33 @@ class SecurityRepository:
                 ON CONFLICT (epoch_ref) DO NOTHING
                 """
             ),
-            {
-                "epoch_ref": epoch_ref,
-                "tenant_id": tenant_id,
-                "policy_bundle_ref": policy_bundle_ref,
-                "policy_bundle_hash": policy_bundle_hash,
-                "action_set_version": action_set_version,
-                "principal_context_hash": principal_context_hash,
-                "generation": generation,
-                "status": status,
-            },
+            values,
         )
+        row = self.connection.execute(
+            text(
+                """
+                SELECT epoch_ref, tenant_id, policy_bundle_ref, policy_bundle_hash,
+                       action_set_version, principal_context_hash, generation, status
+                FROM security_effective_epochs
+                WHERE epoch_ref = :epoch_ref
+                """
+            ),
+            {"epoch_ref": epoch_ref},
+        ).mappings().one()
+        persisted = {
+            "epoch_ref": str(row["epoch_ref"]),
+            "tenant_id": str(row["tenant_id"]),
+            "policy_bundle_ref": str(row["policy_bundle_ref"]),
+            "policy_bundle_hash": str(row["policy_bundle_hash"]),
+            "action_set_version": str(row["action_set_version"]),
+            "principal_context_hash": str(row["principal_context_hash"]),
+            "generation": int(row["generation"]),
+            "status": str(row["status"]),
+        }
+        if persisted != values:
+            raise SecurityPersistenceError(
+                "effective security epoch identity was reused with different content"
+            )
         return SecurityEpochReceipt(
             epoch_ref=epoch_ref,
             tenant_id=tenant_id,
@@ -503,6 +529,35 @@ class SecurityRepository:
             ),
             {**payload, "decision_hash": decision_hash},
         )
+        row = self.connection.execute(
+            text(
+                """
+                SELECT decision_id, tenant_id, principal_context_id, epoch_ref,
+                       resource_ref, action, decision, reason_code,
+                       prepared_action_hash, decision_hash
+                FROM security_authorization_decisions
+                WHERE decision_id = :decision_id
+                """
+            ),
+            {"decision_id": decision_id},
+        ).mappings().one()
+        persisted = {
+            "decision_id": str(row["decision_id"]),
+            "tenant_id": str(row["tenant_id"]),
+            "principal_context_id": str(row["principal_context_id"]),
+            "epoch_ref": str(row["epoch_ref"]),
+            "resource_ref": str(row["resource_ref"]),
+            "action": str(row["action"]),
+            "decision": str(row["decision"]),
+            "reason_code": str(row["reason_code"]),
+            "prepared_action_hash": None
+            if row["prepared_action_hash"] is None
+            else str(row["prepared_action_hash"]),
+        }
+        if persisted != payload or str(row["decision_hash"]) != decision_hash:
+            raise SecurityPersistenceError(
+                "authorization decision identity was reused with different content"
+            )
         return SecurityAuthorizationReceipt(
             decision_id=decision_id,
             tenant_id=tenant_id,

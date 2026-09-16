@@ -195,6 +195,18 @@ class _ToolRuntimeSandboxSessionStore(SandboxSessionStore):
         )
 
 
+def _tool_effect_security_epoch_ref(*, tenant_id: str, workspace_id: str, call_id: str) -> str:
+    scope_hash = canonical_sha256(
+        {
+            "tenant_id": tenant_id,
+            "workspace_id": workspace_id,
+            "call_id": call_id,
+            "scope": "tool-effect",
+        }
+    )
+    return f"security-epoch:tool-effect:{scope_hash[:32]}"
+
+
 class ToolInvocationGateway:
     def __init__(
         self,
@@ -236,6 +248,11 @@ class ToolInvocationGateway:
             args=args,
             readonly=readonly,
             adapter_kind=adapter_kind,
+        )
+        security_epoch_ref = _tool_effect_security_epoch_ref(
+            tenant_id=tenant_id,
+            workspace_id=workspace_id,
+            call_id=call_id,
         )
 
         with self._unit_of_work_factory() as repo:
@@ -295,7 +312,7 @@ class ToolInvocationGateway:
                     effect_level=effect_policy.effect_level,
                     approval_required=effect_policy.approval_required,
                     idempotency_key=call_id,
-                    security_epoch_ref=f"security-epoch:{trace_id}",
+                    security_epoch_ref=security_epoch_ref,
                     effect_policy_version=effect_policy.policy_version,
                     effect_policy_hash=effect_policy.policy_hash,
                     target_resource_set_ref=effect_policy.target_resource_set.resource_set_ref,
@@ -306,17 +323,21 @@ class ToolInvocationGateway:
             )
         security_prepare = _SecurityPrepareResult()
         if self._security_unit_of_work_factory is not None:
-            security_prepare = self._record_security_prepare(
-                tenant_id=tenant_id,
-                workspace_id=workspace_id,
-                trace_id=trace_id,
-                call_id=call_id,
-                tool_name=tool_name,
-                prepared_action_hash=prepared_action_hash,
-                approval_required=effect_policy.approval_required,
-                target_resource_set_ref=effect_policy.target_resource_set.resource_set_ref,
-                approval=approval,
-            )
+            try:
+                security_prepare = self._record_security_prepare(
+                    tenant_id=tenant_id,
+                    workspace_id=workspace_id,
+                    trace_id=trace_id,
+                    call_id=call_id,
+                    tool_name=tool_name,
+                    prepared_action_hash=prepared_action_hash,
+                    approval_required=effect_policy.approval_required,
+                    target_resource_set_ref=effect_policy.target_resource_set.resource_set_ref,
+                    security_epoch_ref=security_epoch_ref,
+                    approval=approval,
+                )
+            except SecurityPersistenceError as exc:
+                security_prepare = _SecurityPrepareResult(blocked_reason=str(exc))
 
         if not effect_policy.provider_dispatch_allowed:
             blocked_reason = effect_policy.blocked_reason or "TOOL_EFFECT_POLICY_REQUIRED"
@@ -949,9 +970,10 @@ class ToolInvocationGateway:
         prepared_action_hash: str,
         approval_required: bool,
         target_resource_set_ref: str,
+        security_epoch_ref: str,
         approval: ToolApprovalBinding | None,
     ) -> _SecurityPrepareResult:
-        epoch_ref = f"security-epoch:{trace_id}"
+        epoch_ref = security_epoch_ref
         principal_context_id = f"principal-context:{workspace_id}:{call_id}"
         decision_id = f"authorization-decision:{call_id}"
         policy_bundle = {
@@ -971,7 +993,11 @@ class ToolInvocationGateway:
                 policy_bundle=policy_bundle,
                 action_set_version="tool-side-effect-actions:v1.phase16",
                 principal_context_hash=canonical_sha256(
-                    {"workspace_id": workspace_id, "trace_id": trace_id, "call_id": call_id}
+                    {
+                        "tenant_id": tenant_id,
+                        "workspace_id": workspace_id,
+                        "call_id": call_id,
+                    }
                 ),
                 generation=1,
             )
@@ -981,7 +1007,7 @@ class ToolInvocationGateway:
                 user_principal_id=f"workspace-user:{workspace_id}",
                 agent_principal_id="agent:zuno-tool-runtime",
                 task_principal_id=f"tool-call:{call_id}",
-                session_principal_id=f"trace:{trace_id}",
+                session_principal_id=f"tool-call-session:{call_id}",
                 run_id=call_id,
                 epoch_ref=epoch_ref,
             )
