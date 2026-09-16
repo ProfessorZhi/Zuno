@@ -104,13 +104,13 @@ Observability 也不应该无限收集。设计前先列最需要回答的问题
 
 ### 负向 Evidence 也能直接决定实现优先级
 
-Evaluation 的职责不只是给新功能打高分。当 fault probe 稳定证明一个 Target invariant 当前被违反，它就已经产生了可行动的工程证据。当前 Effect restart replay 的 certainty upgrade 和 Mandatory Audit send-gate 失败就属于这一类：它们不需要再等一轮“更多测试”才承认问题，而应进入实现 blocker 队列，修复后再用同一 fault window 关闭缺口。
+Evaluation 的职责不只是给新功能打高分。当 fault probe 稳定证明一个 Target invariant 当前被违反，它就已经产生了可行动的工程证据。#201 的 Effect replay certainty 与 #205 的 Mandatory Audit send-gate 曾经属于这一类；RB019 修复后，同类 PostgreSQL probes 已进入 main selected verification并转绿。旧失败继续解释为什么修，当前绿色 regression 说明哪一段已经关闭，两者都属于 Evidence。
 
 同样，GraphRAG tiny smoke 只支持 regression fix，不支持总体 superiority。正式 GraphRAG 决策应冻结 corpus / config，按 query class 做 Hybrid / reranker / gated GraphRAG 对照、holdout 与 ablation；如果 seed / alias / path heuristic 不能贡献稳定增益，就删除对应复杂度。
 
 ### Current / Target / Gap
 
-**Current：** 仓库已经有 RAG / GraphRAG eval、LLM judge、LangSmith trace verification 和 2026-06-20 的小样本 GraphRAG regression / rerun 证据。Current fault probes 还已经产生可行动的负向 Evidence，例如 Effect restart replay certainty upgrade 与 Mandatory Audit send-gate failure。它们证明评测基础和局部研发/诊断能力存在，不证明完整 Release Evaluation、真实 HumanDecision feedback loop、生产级 Observability 或法院级 benchmark 已经建立。
+**Current：** 仓库已经有 RAG / GraphRAG eval、LLM judge、LangSmith trace verification 和 2026-06-20 的小样本 GraphRAG regression / rerun 证据。Effect / Mandatory Audit fault probes 现在同时保留历史负向结果与修复后的 main regression，证明评测能够从失败推动实现并验证 closure；这仍不证明完整 Release Evaluation、真实 HumanDecision feedback loop、生产级 Observability 或法院级 benchmark 已经建立。
 
 **Target：** 09 提供稳定 correlation、Telemetry / Eval 数据模型、Dataset / Judge / Config 版本和可比较实验；把经过治理的真实专业反馈转成 Task Class、Regression 与资格证据；让 05 的 Provider qualification 和架构复杂度可以由 baseline、ablation 与 kill test 决定。并明确区分 provenance coverage、factual correctness、authorization safety 与 context/compression semantic preservation。
 

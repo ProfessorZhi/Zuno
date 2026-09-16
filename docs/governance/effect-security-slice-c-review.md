@@ -1,7 +1,8 @@
 # Effects ↔ Security Slice C Review
 
-status: `CURRENT_REVIEW / TEST_ONLY_EXPLORATION_COMPLETE / IMPLEMENTATION_BLOCKED / NO_MODULE_FROZEN`  
+status: `HISTORICAL_REVIEW / TEST_ONLY_EXPLORATION_COMPLETE / SUPERSEDED_BY_RB019_IMPLEMENTATION_EVIDENCE / NO_MODULE_FROZEN`
 module_detail_freeze: `NOT_YET`  
+superseded_current_evidence: `main@9b7891c63f007c8a0868d7dd262ceec5869bee4e / run 35053215987`
 implementation_authorization: `NO`
 
 这份 Review 收拢 06 Tool Runtime & Effects、08 Security & Governance 以及相邻 04 Runtime / 09 Audit persistence 在现实副作用 send boundary 上已经得到的 Current 证据，并据此决定 Freeze readiness 和下一步验证方向。它不替代 Target Architecture，也不把诊断分支当成 main 的绿色 selected baseline；底层 Current 证明仍以 [`docs/evidence/current-test-baseline.md`](../evidence/current-test-baseline.md) 为准。

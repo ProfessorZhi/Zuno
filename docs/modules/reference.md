@@ -311,7 +311,7 @@ quality_proven: NO
 production_readiness: NOT_ESTABLISHED
 ```
 
-当前 Evidence 还存在两条不应被 Candidate 完整度掩盖的 P0 blocker：unresolved Effect 在 restart replay 后会被错误升级成 `completed`，且最终 Reconciliation convergence 尚未闭环；`MANDATORY_BEFORE_EFFECT` 在缺少 matching durable audit proof 时当前 send path 仍可能 dispatch。它们需要实现修复与同一 fault window 的复测，不能通过文档冻结升级成 Current。
+RB019 的原始 P0 blocker 已按同类 PostgreSQL fault window 转成正向 Current evidence：restart replay 不再升级 unresolved certainty，最小 conclusive reconciliation 已有 writer / tests，mandatory audit 缺 proof 时不再 dispatch，formal Alembic entrypoint 已恢复。仍未证明的 remote-query、manual judgment Authority、audit-class / requirement-proof / tenant binding 与 pre-send-abort / crash-replay lifecycle 继续保持 Gap；文档冻结不能替代这些 Evidence。
 
 ## Platform / Infrastructure 与 Optional Context
 

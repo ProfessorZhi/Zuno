@@ -1,9 +1,10 @@
 # Module Detail Freeze Readiness Review
 
-status: `REVIEW_COMPLETE / SLICE_A_VERIFIED / SLICE_B_PARTIAL_VERIFICATION_LIMIT / SLICE_C_BLOCKED_BY_IMPLEMENTATION_DEFECT / NO_MODULE_FROZEN`  
+status: `HISTORICAL_REVIEW / SLICE_A_VERIFIED / SLICE_B_PARTIAL_VERIFICATION_LIMIT / SLICE_C_PRE_RB019_BLOCKED / NO_MODULE_FROZEN`
 review_snapshot: `eca4a7ebcadbc1c964f174e3b2ce620f9ecbdf5e`  
 selected_verification_snapshot: `c817bd345c9025524c6380ef208a131277d164bd`  
 module_detail_freeze: `NOT_YET`  
+superseded_current_evidence: `main@9b7891c63f007c8a0868d7dd262ceec5869bee4e / run 35053215987`
 implementation_authorization: `NO`
 
 本文记录九个 Target 责任域进入 **Module Detail Freeze Review** 之前的 readiness 审查。它属于 Governance review，不拥有 Target Architecture，也不自动升级 Current Evidence。模块语义继续以 [`docs/modules/`](../modules/README.md) 及各模块 `reference.md` 为准；实现事实继续以 [`docs/evidence/`](../evidence/README.md) 为准。

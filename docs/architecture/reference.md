@@ -254,13 +254,13 @@ HumanDecision: 专业人员是否接受、修改或拒绝法律业务结论
 
 **Target**：本文 A/B 描述的跨模块 Authority、边界、恢复和复杂度治理语义。
 
-**Current**：只能由 [`docs/evidence/`](../evidence/README.md) 中与当前代码 SHA、Migration、Test、Trace、Eval、runtime evidence 对应的材料证明。总体架构文档本身不升级任何能力为 Current。当前 Evidence 已确认两项必须保持显式可见的 blocker：unresolved Effect 在 restart replay 后会被错误升级成 `completed`，且完整 certainty-convergence resolver 尚未建立；`MANDATORY_BEFORE_EFFECT` 在缺少 matching committed audit proof 时尚不能可靠阻止 provider dispatch。
+**Current**：只能由 [`docs/evidence/`](../evidence/README.md) 中与当前代码 SHA、Migration、Test、Trace、Eval、runtime evidence 对应的材料证明。总体架构文档本身不升级任何能力为 Current。RB019 的 restart replay certainty、最小 conclusive reconciliation、mandatory audit send gate 与 formal Alembic entrypoint 已有 main selected evidence；`main@9b7891c6` 还证明 post-dispatch audit capacity lifecycle。剩余 Effect/Security gap 集中在 provider remote query、manual judgment Authority、audit class / requirement-proof / tenant binding，以及 pre-send-abort / crash-replay audit lifecycle。
 
 **Evidence**：模块文档 B13 指向当前可用的具体证据；正向通过与负向 fault probe 都是 Evidence。需要判断某个 Target 是否已经落地时，优先读取对应 Module B13，再读取 evidence 原文和代码。
 
-**Unknown / Measurement Needed**：Production Readiness、完整 fault-injection coverage、真实法院/业务环境收益、GraphRAG / Memory / Native Runtime / Multi-Agent 的 A/B baseline、性能与成本边界、部署拆分必要性，都不能从 Target Design 推导。Effect replay certainty 与 Mandatory Audit gate 已有负向 Evidence，因此属于 Current implementation gap，不再归入 Unknown。
+**Unknown / Measurement Needed**：Production Readiness、完整 fault-injection coverage、真实法院/业务环境收益、GraphRAG / Memory / Native Runtime / Multi-Agent 的 A/B baseline、性能与成本边界、部署拆分必要性，都不能从 Target Design 推导。RB019 已转绿的 fault window属于 Current positive regression；未覆盖的 remote-query、manual Authority 与 audit policy/lifecycle 仍保持 Gap / Measurement Needed。
 
-`implementation_authorization: NO` 仍然成立；文档完整不等于允许按未冻结 Detail 直接实现。
+`implementation_authorization` 只在明确 scoped slice 内成立：RB019 AUTH-A/B/C 已实施；其他未授权 Target 仍不能因为文档完整而直接实现。
 
 ### B14. Machine Navigation / Source Precedence
 
