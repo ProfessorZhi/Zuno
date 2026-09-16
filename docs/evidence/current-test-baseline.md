@@ -234,7 +234,7 @@ PR #201 的第二次诊断、PR #203、PR #205 和 PR #207 当时都只在测试
 
 ## PostgreSQL 证据的边界
 
-GitHub service container 不等于系统级 PostgreSQL qualification。Actions 日志仍能看到部分其他 selected tests / import-time platform components 尝试默认 `postgres` 用户并被数据库拒绝；这些路径没有被 Domain probes 声称为成功。Current 可采用的正向结论是 **显式 Domain PostgreSQL probes、Wave-001 revision probe、#203 的 pre-effect SecurityEpoch revocation，以及 #207 的 pre-lease Secret revocation**；Current 负向结论包括 #201 的 Effect recovery defect 与 #205 的 Mandatory Audit gate defect；source review 还确认 Reconciliation convergence implementation 尚未建立证明。不能概括为“Zuno 全部 PostgreSQL 集成通过”。
+GitHub service container 不等于系统级 PostgreSQL qualification。Actions 日志仍能看到部分其他 selected tests / import-time platform components 尝试默认 `postgres` 用户并被数据库拒绝；这些路径没有被 Domain probes 声称为成功。Current 可采用的正向结论包括显式 Domain PostgreSQL probes、Wave-001 revision probe、#203 的 pre-effect SecurityEpoch revocation、#207 的 pre-lease Secret revocation，以及 RB019 后进入 main selected suite 的 Effect replay certainty、最小 conclusive reconciliation、mandatory-audit send gate / post-dispatch capacity lifecycle 和 formal Alembic entrypoint。#201 与 #205 保留为修复前负向 History，不再描述今天 main 的失败。不能概括为“Zuno 全部 PostgreSQL 集成通过”。
 
 当前仍未证明或仍需继续收敛的内容包括：
 
@@ -273,10 +273,10 @@ benchmark: BLOCKED_NOT_MEASURED
 production_readiness: NOT_ESTABLISHED
 ```
 
-`4736cf4409658e43af6e129e34dadbd97a5866ad` 的 run `34497460461` 恢复了 GitHub-native selected gate：`189 passed, 1 skipped`。`5b51627e43b6abcd940ac63100048171fd7f460c` 的 run `34498613045` 把真实 PostgreSQL Domain transaction / concurrency probes 接入后得到 `192 passed`。当前 main 正向判断优先使用上面的 `c817bd3...` / run `34499552197`；Slice C 的诊断 runs 只用于各自明确的正负结论。
+`4736cf4409658e43af6e129e34dadbd97a5866ad` 的 run `34497460461` 恢复了 GitHub-native selected gate：`189 passed, 1 skipped`。`5b51627e43b6abcd940ac63100048171fd7f460c` 的 run `34498613045` 把真实 PostgreSQL Domain transaction / concurrency probes 接入后得到 `192 passed`。这些历史 baseline 继续保留；当前 main 正向判断优先使用本文顶部的 `9b7891c6...` / run `35053215987`。Slice C 的旧诊断 runs 只用于解释各自当时的正负结论和后续修复动机。
 
 ## 后续 Evidence Gate
 
 **Slice B — Domain ↔ Runtime crash authority** 在“不修改业务实现”的验证范围已经走到边界：当前 mutation transaction / concurrency / lost-response replay 与 Wave-001 revision-level PostgreSQL DDL 已有 GitHub evidence。剩余 Owner-first recovery 依赖 Target `AdmissionReceipt`、Formal Admission transaction 和 Runtime matching-Receipt consumer；这些当前没有实现证明。
 
-**Slice C — Effects ↔ Security send boundary** 仍是 `BLOCKED_BY_IMPLEMENTATION_DEFECT`。当前已经收敛出三类实施阻塞：#201 的 unresolved Reconciliation replay certainty escalation；#205 的 Mandatory Audit durability gate 缺失；以及 source review 确认的 Reconciliation 最终收敛实现缺口。正向 fault evidence 覆盖 #203 的 pre-send SecurityEpoch revocation 与 #207 的 pre-lease Secret revocation。继续 test-only 更适合验证 no-egress、remote-success/local-crash、cancel-in-flight、完整 Secret rotation/retry 等已存在 Current surface；它不能替代尚不存在的 reconciliation resolver，也不能绕过前述 blocker。
+**Slice C — Effects ↔ Security send boundary** 的原始 RB019 P0 violation 已关闭：restart replay certainty、最小 conclusive reconciliation、mandatory-audit send gate 和 formal Alembic entrypoint 都已有 main selected evidence，post-dispatch audit capacity lifecycle 也已转绿。Slice C 仍不是完整 Freeze / Production proof；下一层缺口集中在 provider remote-query reconciliation、manual judgment Authority / identity conflict、audit-class 与 requirement-proof/tenant binding、pre-send-abort / crash-replay audit lifecycle，以及 cancel-in-flight orchestration。继续 fault test 应针对这些仍有 Current surface 的具体边界，而不是重复已经转绿的 #201/#205 failure shape。
