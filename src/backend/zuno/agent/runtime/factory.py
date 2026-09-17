@@ -119,10 +119,10 @@ class RuntimeDependencyFactory:
             return None
         from zuno.capability.runtime import build_default_tool_control_plane_runtime
         from zuno.platform.database import engine
-        from zuno.platform.security import PostgresSecurityApprovalFactSink
+        from zuno.platform.security import PostgresSecurityApprovalEventSink
 
         return build_default_tool_control_plane_runtime(
-            security_approval_sink=PostgresSecurityApprovalFactSink(engine)
+            security_approval_sink=PostgresSecurityApprovalEventSink(engine)
         )
 
 

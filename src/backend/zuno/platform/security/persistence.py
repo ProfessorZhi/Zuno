@@ -126,109 +126,60 @@ def authorization_decision_hash(
     return canonical_sha256(payload)
 
 
-class PostgresSecurityApprovalFactSink:
+class PostgresSecurityApprovalEventSink:
+    """Durable approval-event projection.
+
+    This sink records tool approval lifecycle events for audit/observability.
+    It does not create SecurityEpoch, AuthorizationDecision, ApprovalDecision,
+    or AuditRequirement authority facts; those remain owned by the canonical
+    Security / Tool Gateway paths.
+    """
+
     def __init__(self, engine: Engine) -> None:
         self.engine = engine
 
     def record_tool_approval_fact(self, fact: dict[str, Any]) -> None:
-        tenant_id = str(fact.get("workspace_id") or fact.get("tenant_id") or "")
+        tenant_id = str(fact.get("tenant_id") or "").strip()
         if not tenant_id:
-            raise SecurityPersistenceError("security approval fact missing tenant boundary")
-        approval_id = str(fact.get("approval_id") or "")
+            raise SecurityPersistenceError("security approval event missing tenant boundary")
+        workspace_id = str(fact.get("workspace_id") or "").strip()
+        if not workspace_id:
+            raise SecurityPersistenceError("security approval event missing workspace boundary")
+        approval_id = str(fact.get("approval_id") or "").strip()
         if not approval_id:
-            raise SecurityPersistenceError("security approval fact missing approval_id")
-        status = str(fact.get("status") or "")
-        prepared_action_hash = str(fact.get("prepared_action_hash") or "")
+            raise SecurityPersistenceError("security approval event missing approval_id")
+        status = str(fact.get("status") or "").strip()
+        if not status:
+            raise SecurityPersistenceError("security approval event missing status")
+        prepared_action_hash = str(fact.get("prepared_action_hash") or "").strip()
         if len(prepared_action_hash) != 64:
-            raise SecurityPersistenceError("security approval fact missing prepared_action_hash")
+            raise SecurityPersistenceError("security approval event missing prepared_action_hash")
 
-        epoch_ref = f"security-epoch:{tenant_id}:{fact.get('task_id') or 'task'}"
-        principal_context_id = f"principal-context:{tenant_id}:{fact.get('task_id') or 'task'}"
-        decision_id = f"authorization-decision:{approval_id}"
-        approval_request_id = f"approval-request:{approval_id}"
-        outbox_event_id = f"security-event:{approval_id}:{status}"
-
+        event_id = f"security-approval-event:{approval_id}:{status}"
+        aggregate_id = f"tool-approval:{approval_id}"
+        payload = {
+            "approval_id": approval_id,
+            "tool_request_id": str(fact.get("tool_request_id") or ""),
+            "tool_id": str(fact.get("tool_id") or ""),
+            "workspace_id": workspace_id,
+            "user_id": str(fact.get("user_id") or ""),
+            "task_id": str(fact.get("task_id") or ""),
+            "trace_id": str(fact.get("trace_id") or ""),
+            "approval_decision_ref": str(fact.get("approval_decision_ref") or ""),
+            "approval_adapter_ref": str(fact.get("approval_adapter_ref") or ""),
+            "required_approval": str(fact.get("required_approval") or ""),
+            "prepared_action_hash": prepared_action_hash,
+            "status": status,
+            "security_decision": str(fact.get("security_decision") or ""),
+            "audit_ref": str(fact.get("audit_ref") or ""),
+        }
         with SecurityUnitOfWork(self.engine) as repo:
-            repo.ensure_effective_epoch(
-                epoch_ref=epoch_ref,
-                tenant_id=tenant_id,
-                policy_bundle_ref="policy:tool-runtime",
-                policy_bundle={
-                    "security_decision": fact.get("security_decision"),
-                    "required_approval": fact.get("required_approval"),
-                },
-                action_set_version="tool-runtime:v1",
-                principal_context_hash=canonical_sha256(
-                    {
-                        "workspace_id": fact.get("workspace_id"),
-                        "user_id": fact.get("user_id"),
-                        "task_id": fact.get("task_id"),
-                    }
-                ),
-                generation=1,
-            )
-            repo.ensure_principal_context(
-                principal_context_id=principal_context_id,
-                tenant_id=tenant_id,
-                user_principal_id=str(fact.get("user_id") or "unknown-user"),
-                agent_principal_id="tool-runtime",
-                task_principal_id=str(fact.get("task_id") or "unknown-task"),
-                session_principal_id=str(fact.get("trace_id") or "unknown-trace"),
-                run_id=str(fact.get("tool_request_id") or approval_id),
-                epoch_ref=epoch_ref,
-            )
-            security_decision = (
-                "DENY" if status == "failed_closed_before_effect" else "REQUIRES_APPROVAL"
-            )
-            repo.ensure_authorization_decision(
-                decision_id=decision_id,
-                tenant_id=tenant_id,
-                principal_context_id=principal_context_id,
-                epoch_ref=epoch_ref,
-                resource_ref=str(fact.get("tool_id") or "tool"),
-                action=str(fact.get("required_approval") or "tool"),
-                decision=security_decision,
-                reason_code=str(fact.get("security_decision") or "approval_required"),
-                prepared_action_hash=prepared_action_hash,
-            )
-            repo.ensure_audit_requirement(
-                audit_requirement_id=f"audit-requirement:{approval_id}:{status}",
-                tenant_id=tenant_id,
-                decision_id=decision_id,
-                audit_channel_id="security-audit:tool-runtime",
-                status="failed_closed" if status == "failed_closed_before_effect" else "required",
-            )
-            if status != "failed_closed_before_effect":
-                repo.ensure_approval_request(
-                    approval_request_id=approval_request_id,
-                    tenant_id=tenant_id,
-                    decision_id=decision_id,
-                    prepared_action_hash=prepared_action_hash,
-                    requested_by_principal_id=str(fact.get("user_id") or "unknown-user"),
-                    required_approver_policy_ref="approval-policy:tool-runtime",
-                )
-            if status == "approved_before_effect":
-                repo.ensure_approval_decision(
-                    approval_decision_id=f"approval-decision:{approval_id}",
-                    tenant_id=tenant_id,
-                    approval_request_id=approval_request_id,
-                    approver_principal_id=str(fact.get("user_id") or "unknown-user"),
-                    decision="approved",
-                )
             repo.ensure_security_event(
-                event_id=outbox_event_id,
+                event_id=event_id,
                 tenant_id=tenant_id,
-                aggregate_id=decision_id,
+                aggregate_id=aggregate_id,
                 topic=f"security.tool_approval.{status}",
-                payload={
-                    "approval_id": approval_id,
-                    "approval_request_id": approval_request_id,
-                    "prepared_action_hash": prepared_action_hash,
-                    "status": status,
-                    "audit_ref": fact.get("audit_ref"),
-                    "credential_refs": fact.get("credential_refs") or [],
-                    "sandbox": fact.get("sandbox") or {},
-                },
+                payload=payload,
                 idempotency_key=f"security-approval:{approval_id}:{status}",
             )
 
@@ -1209,7 +1160,30 @@ class SecurityRepository:
                 "idempotency_key": idempotency_key,
             },
         )
-        return SecurityOutboxReceipt(event_id=event_id, tenant_id=tenant_id, payload_hash=payload_hash)
+        persisted = self.connection.execute(
+            text(
+                """
+                SELECT event_id, aggregate_id, topic, payload_hash
+                FROM security_outbox_events
+                WHERE tenant_id = :tenant_id AND idempotency_key = :idempotency_key
+                """
+            ),
+            {"tenant_id": tenant_id, "idempotency_key": idempotency_key},
+        ).mappings().one()
+        if (
+            str(persisted["event_id"]) != event_id
+            or str(persisted["aggregate_id"]) != aggregate_id
+            or str(persisted["topic"]) != topic
+            or str(persisted["payload_hash"]) != payload_hash
+        ):
+            raise SecurityPersistenceError(
+                "security event idempotency key was reused with different content"
+            )
+        return SecurityOutboxReceipt(
+            event_id=str(persisted["event_id"]),
+            tenant_id=tenant_id,
+            payload_hash=str(persisted["payload_hash"]),
+        )
 
     def _reject_secret_material(self, payload: Any) -> None:
         forbidden_keys = {"secret", "secret_material", "plaintext", "material", "value"}
@@ -1232,7 +1206,7 @@ __all__ = [
     "SecurityOutboxReceipt",
     "SecurityPersistenceError",
     "SecurityPrincipalContextReceipt",
-    "PostgresSecurityApprovalFactSink",
+    "PostgresSecurityApprovalEventSink",
     "SecurityRedactionDecisionReceipt",
     "SecurityRepository",
     "SecuritySecretLeaseReceipt",

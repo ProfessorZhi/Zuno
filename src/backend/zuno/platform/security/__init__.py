@@ -36,7 +36,7 @@ from zuno.platform.security.runtime_batch import (
     TrustLabel,
 )
 from zuno.platform.security.persistence import (
-    PostgresSecurityApprovalFactSink,
+    PostgresSecurityApprovalEventSink,
     SecurityApprovalDecisionReceipt,
     SecurityApprovalRequestReceipt,
     SecurityAuditRequirementReceipt,
@@ -68,7 +68,7 @@ __all__ = [
     "GateResult",
     "InputSecurityGate",
     "OutputSecurityGate",
-    "PostgresSecurityApprovalFactSink",
+    "PostgresSecurityApprovalEventSink",
     "PostgresSecurityProductActionGuard",
     "RetrievalCandidate",
     "RetrievalGateResult",

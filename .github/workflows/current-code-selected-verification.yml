@@ -138,6 +138,7 @@ jobs:
             tests/security/test_security_runtime_batch.py \
             tests/security/test_mandatory_audit_postgres_boundary.py \
             tests/security/test_product_security_decision_postgres.py \
+            tests/security/test_product_approval_projection_postgres.py \
             tests/platform/test_observability_runtime_batch.py \
             tests/retrieval/test_standard_retrieval_composition.py \
             tests/retrieval/test_enhanced_retrieval_composition.py \
