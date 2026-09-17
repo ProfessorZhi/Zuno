@@ -1344,6 +1344,7 @@ class ToolControlPlaneRuntime:
             "approval_id": request.approval_id,
             "approval_decision_ref": _approval_decision_ref(request),
             "approval_adapter_ref": _approval_adapter_ref(request),
+            "tenant_id": request.tenant_id,
             "workspace_id": request.workspace_id,
             "user_id": request.user_id,
             "task_id": request.task_id,

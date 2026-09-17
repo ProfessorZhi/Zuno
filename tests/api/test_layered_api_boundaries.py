@@ -791,7 +791,7 @@ def test_agent_runtime_factory_uses_canonical_imports() -> None:
 
     assert "from zuno.platform.database import engine" in content
     assert "from zuno.capability.runtime import build_default_tool_control_plane_runtime" in content
-    assert "from zuno.platform.security import PostgresSecurityApprovalFactSink" in content
+    assert "from zuno.platform.security import PostgresSecurityApprovalEventSink" in content
     assert "from zuno.database import engine" not in content
     assert "from zuno.services." not in content
     assert "from zuno.schema." not in content
