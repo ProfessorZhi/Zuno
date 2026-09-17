@@ -9,19 +9,19 @@
 | Evidence | 保留理由 |
 | --- | --- |
 | [Current Runtime Baseline](current-runtime-baseline.md) | 当前 Runtime owner、状态和失败语义的证据入口 |
-| [Current Test Baseline](current-test-baseline.md) | 当前 GitHub selected code verification、PostgreSQL Domain / Wave-001 revision probes，以及 Slice C / PSC-A / PSC-B 已确认的边界 |
+| [Current Test Baseline](current-test-baseline.md) | 当前 GitHub selected code verification、PostgreSQL Domain / Wave-001 revision probes，以及 Slice C / PSC-A–D 已确认的边界 |
 | [Current Eval Baseline](current-eval-baseline.md) | 当前评测与 Measurement Blocked 状态 |
 | [Implementation Wave-001](implementation-wave-001.md) | TASK-001 / TASK-003 的有限代码、测试和窄验证证据；不是 Program closure |
 
-Slice C 的 fault evidence 如何影响 Freeze readiness、哪些测试已经停止继续扩张，由 [`Effects ↔ Security Slice C Review`](../governance/effect-security-slice-c-review.md) 收拢。Product Security Composition 的当前切片状态与 PSC-A/PSC-B 证据边界见 [`Product Security Composition Implementation Status`](../governance/product-security-composition-implementation-status.md)。底层 Current 事实仍由本目录的固定 Evidence 集合证明。
+Slice C 的 fault evidence 如何影响 Freeze readiness、哪些测试已经停止继续扩张，由 [`Effects ↔ Security Slice C Review`](../governance/effect-security-slice-c-review.md) 收拢。Product Security Composition 的当前切片状态与 PSC-A–D 证据边界见 [`Product Security Composition Implementation Status`](../governance/product-security-composition-implementation-status.md)。底层 Current 事实仍由本目录的固定 Evidence 集合证明。
 
 已删除的 `local-workspace-closure.md` 和 `repository-closure.md` 只是已完成 Program / 工作区收口材料，不是今天需要维护的运行证据；其提交和原始材料仍由 Git 历史保留。
 
 ## 当前边界
 
 ```text
-SELECTED CODE VERIFICATION: AVAILABLE @ a727bf8000bdda38614905d710c093e1fcc6807a
-SELECTED GITHUB RUN: 35121830478 / 213 passed, 21 warnings
+SELECTED CODE VERIFICATION: AVAILABLE @ 293fa144f70be0467d1363eb3662d1b39a874cf8
+SELECTED GITHUB RUN: 35202465804 / 214 passed, 22 warnings
 POSTGRESQL DOMAIN SELECTED PROBES: PASS
 WAVE-001 REVISION POSTGRESQL APPLY/DOWNGRADE/RE-APPLY: PASS
 TARGET ADMISSION RECEIPT: NOT IMPLEMENTATION-PROVEN
@@ -38,8 +38,9 @@ TOOL EFFECT SECURITY FACT IDENTITY: TRACE-INDEPENDENT ACTION SCOPE VERIFIED
 WORKSPACE PRODUCT COMPOSITION ROOT: PSC-A SELECTED VERIFIED
 POSTGRESQL AGENT RUN STORE: PSC-A SELECTED VERIFIED
 PRODUCT SECURITY DECISION OWNER FACT: PSC-B SELECTED VERIFIED / ISSUANCE REQUIRES EXPLICIT POSITIVE TTL CONFIG
-FORMAL BUDGET OWNER FACT: PSC-C NOT IMPLEMENTATION-PROVEN
-PRODUCT APPROVAL FACT SINK OWNERSHIP: PSC-D NOT RESOLVED
+FORMAL BUDGET OWNER FACT: PSC-C DEFERRED_BY_SCOPE / OWNER PORT UNBOUND / CALLER LIMITS DO NOT SELF-APPROVE
+PRODUCT APPROVAL SINK OWNERSHIP: PSC-D RESOLVED / EVENT PROJECTION ONLY / AUTHORITY TABLES UNTOUCHED
+PRODUCT APPROVAL FLOW: NOT IMPLEMENTED / approval_flow=none
 FORMAL ALEMBIC ENTRYPOINT: PASS ON FRESH POSTGRESQL
 PRODUCTION_READINESS: NOT_ESTABLISHED
 QUALITY: not_yet_proven
@@ -47,9 +48,9 @@ FULL CI: NOT RUN / NOT ESTABLISHED
 COURT QA: UNKNOWN / NOT AVAILABLE
 ```
 
-Main 的正向 selected verification 说明一组明确列出的 Domain、Citation、Application、Runtime、Knowledge、Capability、Tool、Model Gateway、Security、Observability、Retrieval 与 Eval 行为在同一个 main SHA 的 GitHub runner 上通过。PSC-A 的 run `35071244101` 在 PostgreSQL 16.15 service 上证明 production composition root 与 `PostgresAgentRunStore`；PSC-B 的 run `35121830478` 在同类 PostgreSQL service 上进一步证明 Product Security owner fact 的 issue→persist→resolve、scope/expiry/hash fail-closed、replay 不刷新授权寿命，以及真实 Agent admission 在 Security 通过后进入独立 Budget blocker。
+Main 的正向 selected verification 说明一组明确列出的 Domain、Citation、Application、Runtime、Knowledge、Capability、Tool、Model Gateway、Security、Observability、Retrieval 与 Eval 行为在同一个 main SHA 的 GitHub runner 上通过。PSC-A 的 run `35071244101` 证明 production composition root 与 `PostgresAgentRunStore`；PSC-B 的 run `35121830478` 证明 Product Security owner fact；PSC-C 在 main 上进一步证明 caller budget limits 不会自批准 formal Budget Admission；当前 run `35202465804` 又证明 PSC-D approval projection 不再写 Security authority tables。
 
-PSC-B 没有把测试 TTL 变成产品默认政策。仓库 example 的 `server.security.product_decision_ttl_seconds` 仍是 `null`；只有部署显式给出正值时 startup 才绑定 Security decision issuance。Budget resolver、approval flow 和 legacy Security approval sink 仍未因为 PSC-B 绿色而 synthetic 绑定。当前可以说“PSC-A composition + PSC-B Security owner path 已实现并 selected-verified”，不能扩写成“Product Security/Budget/Approval admission 已完整可用”。详细 Current shape 由 [`current-test-baseline.md`](current-test-baseline.md) 与 [`Product Security Composition Implementation Status`](../governance/product-security-composition-implementation-status.md) 共同记录。
+PSC-B 没有把测试 TTL 变成产品默认政策，仓库 example 的 `server.security.product_decision_ttl_seconds` 仍是 `null`。PSC-C 的 Defer 也不是 Budget 能力完成：production `budget_decision_resolver` 继续不绑定，直到出现真实 Budget owner/policy source。PSC-D 解决的是 writer ownership，`PostgresSecurityApprovalEventSink` 只保留 durable approval event projection；新的 Product Approval flow 仍未实现。当前可以说“PSC-A/B 已实现并 selected-verified，PSC-C 已按 scope 明确 Defer，PSC-D writer ownership 已收敛”，不能扩写成“Product Security/Budget/Approval admission 已完整可用”。详细 Current shape 由 [`current-test-baseline.md`](current-test-baseline.md) 与 [`Product Security Composition Implementation Status`](../governance/product-security-composition-implementation-status.md) 共同记录。
 
 Slice C 的旧负向证据继续保留，因为它解释了 RB019 的实现优先级：PR #201 / run `34559517466` 曾证明 unresolved Reconciliation 在 restart replay 时被错误升级成 completed；PR #205 / run `34560692093` 曾证明缺少 durable mandatory-audit proof 时 send path 仍会 dispatch。AUTH-A/B/C 以及后续 audit lifecycle、requirement binding、manual durable judgment 和 Effect Security identity 修复已经把这两条原始 violation 转成 main 上的正向 regression；cancel-in-flight、provider remote-query reconciliation、manual reviewer Authority 和更完整的 audit policy/lifecycle 仍未闭环。
 
@@ -57,7 +58,7 @@ Slice C 的旧负向证据继续保留，因为它解释了 RB019 的实现优�
 
 早期 Slice C 诊断依赖测试进程临时兼容 `zuno.settings → zuno.platform.settings`，因此那些诊断本身不构成 deployment evidence。AUTH-C 已修复正式 Alembic import；当前 selected main run 在 fresh PostgreSQL 上直接执行正式 `alembic upgrade head`，不再使用 legacy module alias。
 
-这个范围不能扩写成“Zuno PostgreSQL 集成已完成”“完整 Effect recovery 已完成”“Reconciliation 全自动闭环”“cancel-in-flight 已闭环”“Security 已验证完成”“Secret rotation 已验证完成”“Product Security/Budget admission 已完成”或“生产 migration 已资格化”。Current 已证明 Effect replay certainty、conclusive one-shot manual judgment、mandatory audit pre-send gate / persisted requirement binding / post-dispatch capacity lifecycle、Tool Effect action-scoped Security fact identity、production Workspace composition root、PostgreSQL AgentRunStore 和正式 fresh Alembic entrypoint；Target `AdmissionReceipt`、02↔04 owner-first recovery、remote-query reconciliation、manual reviewer Authority、audit-class / DB-level tenant isolation、pre-send-abort / crash-replay audit lifecycle、Target composed SecurityEpoch、PSC-C Budget owner fact、PSC-D approval sink ownership、完整 Secret rotation/retry、其他 Approval / Policy drift、no-egress、其他平台 PostgreSQL 路径、Redis / RabbitMQ / Object Store、真实 Provider 和外部 Host仍各自需要证据。
+这个范围不能扩写成“Zuno PostgreSQL 集成已完成”“完整 Effect recovery 已完成”“Reconciliation 全自动闭环”“cancel-in-flight 已闭环”“Security 已验证完成”“Secret rotation 已验证完成”“Product Security/Budget admission 已完成”或“生产 migration 已资格化”。Current 已证明 Effect replay certainty、conclusive one-shot manual judgment、mandatory audit pre-send gate / persisted requirement binding / post-dispatch capacity lifecycle、Tool Effect action-scoped Security fact identity、production Workspace composition root、PostgreSQL AgentRunStore 和正式 fresh Alembic entrypoint；Target `AdmissionReceipt`、02↔04 owner-first recovery、remote-query reconciliation、manual reviewer Authority、audit-class / DB-level tenant isolation、pre-send-abort / crash-replay audit lifecycle、Target composed SecurityEpoch、formal Budget owner admission（当前 PSC-C Defer）、Product Approval flow、完整 Secret rotation/retry、其他 Approval / Policy drift、no-egress、其他平台 PostgreSQL 路径、Redis / RabbitMQ / Object Store、真实 Provider 和外部 Host仍各自需要证据。
 
 当前仓库可以证明有限实现和验证范围，也可以证明若干具体失败；不能证明完整历史技术栈、真实法院质量、生产部署、用户规模、SLA、QPS、HA、No-egress、Sandbox 资格或正式外部验收。历史 Pilot 不等于 Production。
 
@@ -69,7 +70,7 @@ Slice C 的旧负向证据继续保留，因为它解释了 RB019 的实现优�
 
 - 模块 Part B 写了 `AdmissionReceipt`，只能证明 Target 语义已经设计清楚；当前 PostgreSQL mutation probe 也不能把 mutation record 直接升级成最终 Receipt。
 - `Current code selected verification` 通过只能证明 workflow 列出的行为，不等于 Full Project CI 通过。
-- PSC-A 的 startup probe 证明 production composition root 能建立并绑定 durable Store/UoW；PSC-B 进一步证明 SecurityDecision owner path，但 BudgetDecision 与 Approval flow 仍未可用。
+- PSC-A 的 startup probe 证明 production composition root 能建立并绑定 durable Store/UoW；PSC-B 进一步证明 SecurityDecision owner path；PSC-C 明确保持 formal Budget owner admission Defer/fail-closed；PSC-D 只收敛 approval projection ownership，新的 Product Approval flow 仍未可用。
 - PSC-B 的 SecurityDecision issuance 只有在 deployment 显式配置正的 `server.security.product_decision_ttl_seconds` 时才绑定；selected probe 注入的 TTL 是验证条件，不是仓库默认政策。
 - revision `20260813_57` 能真实 apply/downgrade/re-upgrade，只证明该 revision 自身 DDL 可逆，不证明真实数据 backfill 或零停机策略。
 - 诊断分支失败可以证明某条 Target invariant 当前不成立；诊断分支成功也只证明它实际注入并观察到的 fault window。
