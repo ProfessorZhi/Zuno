@@ -1602,8 +1602,22 @@ class ToolInvocationGateway:
         provided_binding_ref: str,
     ) -> None:
         with self._unit_of_work_factory() as repo:
-            latest_order = repo.latest_async_callback_order(async_job_id=async_job_id)
-            if expected_binding_ref != provided_binding_ref:
+            job_identity = repo.get_async_job_callback_identity(
+                tenant_id=tenant_id,
+                async_job_id=async_job_id,
+            )
+            if job_identity is None:
+                raise ToolRuntimeConflict("async callback requires existing tenant-scoped job")
+            latest_order = repo.latest_async_callback_order(
+                tenant_id=tenant_id,
+                async_job_id=async_job_id,
+            )
+            durable_binding_ref = job_identity["callback_binding_ref"]
+            if (
+                job_identity["provider_job_id"] != provider_job_id
+                or expected_binding_ref != durable_binding_ref
+                or provided_binding_ref != durable_binding_ref
+            ):
                 authenticity_status = "FORGED"
             elif callback_order <= latest_order:
                 authenticity_status = "REPLAY"
@@ -1627,7 +1641,10 @@ class ToolInvocationGateway:
             if accepted:
                 state = str(callback_payload.get("state") or callback_payload.get("status") or "").lower()
                 repo.advance_async_job_after_callback(
+                    tenant_id=tenant_id,
                     async_job_id=async_job_id,
+                    provider_job_id=provider_job_id,
+                    callback_binding_ref=provided_binding_ref,
                     callback_order=callback_order,
                     completed=state in {"done", "completed", "succeeded", "success"},
                 )

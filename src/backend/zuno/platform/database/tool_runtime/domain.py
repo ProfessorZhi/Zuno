@@ -1263,17 +1263,42 @@ class ToolRepository:
         )
 
 
-    def latest_async_callback_order(self, *, async_job_id: str) -> int:
+    def get_async_job_callback_identity(
+        self,
+        *,
+        tenant_id: str,
+        async_job_id: str,
+    ) -> dict[str, str] | None:
+        row = self.connection.execute(
+            text(
+                """
+                SELECT provider_job_id, callback_binding_ref, status
+                FROM tool_async_jobs
+                WHERE tenant_id = :tenant_id AND async_job_id = :async_job_id
+                """
+            ),
+            {"tenant_id": tenant_id, "async_job_id": async_job_id},
+        ).mappings().first()
+        if row is None:
+            return None
+        return {
+            "provider_job_id": str(row["provider_job_id"]),
+            "callback_binding_ref": str(row["callback_binding_ref"]),
+            "status": str(row["status"]),
+        }
+
+    def latest_async_callback_order(self, *, tenant_id: str, async_job_id: str) -> int:
         value = self.connection.execute(
             text(
                 """
                 SELECT COALESCE(MAX(callback_order), 0)
                 FROM tool_async_callbacks
-                WHERE async_job_id = :async_job_id
+                WHERE tenant_id = :tenant_id
+                  AND async_job_id = :async_job_id
                   AND accepted = true
                 """
             ),
-            {"async_job_id": async_job_id},
+            {"tenant_id": tenant_id, "async_job_id": async_job_id},
         ).scalar_one()
         return int(value or 0)
     def record_async_callback(self, callback: ToolAsyncCallbackInput) -> bool:
@@ -1326,7 +1351,10 @@ class ToolRepository:
     def advance_async_job_after_callback(
         self,
         *,
+        tenant_id: str,
         async_job_id: str,
+        provider_job_id: str,
+        callback_binding_ref: str,
         callback_order: int,
         completed: bool,
     ) -> None:
@@ -1337,19 +1365,50 @@ class ToolRepository:
                 SET callback_order = :callback_order,
                     status = CASE WHEN :completed THEN 'COMPLETED' ELSE status END,
                     updated_at = now()
-                WHERE async_job_id = :async_job_id
-                  AND status = 'WAITING_CALLBACK'
+                WHERE tenant_id = :tenant_id
+                  AND async_job_id = :async_job_id
+                  AND provider_job_id = :provider_job_id
+                  AND callback_binding_ref = :callback_binding_ref
+                  AND status IN ('WAITING_CALLBACK', 'CANCEL_REQUESTED')
                   AND callback_order < :callback_order
                 """
             ),
             {
+                "tenant_id": tenant_id,
                 "async_job_id": async_job_id,
+                "provider_job_id": provider_job_id,
+                "callback_binding_ref": callback_binding_ref,
                 "callback_order": callback_order,
                 "completed": completed,
             },
         )
 
     def record_cancellation_receipt(self, cancellation: ToolCancellationReceiptInput) -> None:
+        payload_hash = canonical_sha256(cancellation.cancellation_payload)
+        if cancellation.async_job_id:
+            job = self.connection.execute(
+                text(
+                    """
+                    SELECT prepared_tool_action_id, attempt_id, provider_job_id, status
+                    FROM tool_async_jobs
+                    WHERE tenant_id = :tenant_id AND async_job_id = :async_job_id
+                    FOR UPDATE
+                    """
+                ),
+                {
+                    "tenant_id": cancellation.tenant_id,
+                    "async_job_id": cancellation.async_job_id,
+                },
+            ).mappings().first()
+            if job is None:
+                raise ToolRuntimeConflict("cancellation requires existing async job")
+            if (
+                str(job["prepared_tool_action_id"]) != cancellation.prepared_tool_action_id
+                or str(job["attempt_id"]) != cancellation.attempt_id
+                or str(job["provider_job_id"]) != cancellation.provider_job_id
+            ):
+                raise ToolRuntimeConflict("cancellation identity does not match async job")
+
         self.connection.execute(
             text(
                 """
@@ -1363,7 +1422,7 @@ class ToolRepository:
                     :async_job_id, :provider_job_id, :status, :external_effect_revoked,
                     :requested_by_principal_id, :audit_requirement_id, :cancellation_payload_hash
                 )
-                ON CONFLICT DO NOTHING
+                ON CONFLICT (cancellation_receipt_id) DO NOTHING
                 """
             ),
             {
@@ -1377,9 +1436,36 @@ class ToolRepository:
                 "external_effect_revoked": cancellation.external_effect_revoked,
                 "requested_by_principal_id": cancellation.requested_by_principal_id,
                 "audit_requirement_id": cancellation.audit_requirement_id,
-                "cancellation_payload_hash": canonical_sha256(cancellation.cancellation_payload),
+                "cancellation_payload_hash": payload_hash,
             },
         )
+        persisted = self.connection.execute(
+            text(
+                """
+                SELECT tenant_id, prepared_tool_action_id, attempt_id, async_job_id,
+                       provider_job_id, status, external_effect_revoked,
+                       requested_by_principal_id, audit_requirement_id, cancellation_payload_hash
+                FROM tool_cancellation_receipts
+                WHERE cancellation_receipt_id = :cancellation_receipt_id
+                """
+            ),
+            {"cancellation_receipt_id": cancellation.cancellation_receipt_id},
+        ).mappings().one()
+        if (
+            str(persisted["tenant_id"]) != cancellation.tenant_id
+            or str(persisted["prepared_tool_action_id"]) != cancellation.prepared_tool_action_id
+            or str(persisted["attempt_id"]) != cancellation.attempt_id
+            or (None if persisted["async_job_id"] is None else str(persisted["async_job_id"]))
+            != cancellation.async_job_id
+            or str(persisted["provider_job_id"]) != cancellation.provider_job_id
+            or str(persisted["status"]) != cancellation.status
+            or bool(persisted["external_effect_revoked"]) != cancellation.external_effect_revoked
+            or str(persisted["requested_by_principal_id"]) != cancellation.requested_by_principal_id
+            or str(persisted["audit_requirement_id"]) != cancellation.audit_requirement_id
+            or str(persisted["cancellation_payload_hash"]) != payload_hash
+        ):
+            raise ToolRuntimeConflict("cancellation receipt identity was reused with different content")
+
         if cancellation.async_job_id:
             self.connection.execute(
                 text(
@@ -1387,11 +1473,15 @@ class ToolRepository:
                     UPDATE tool_async_jobs
                     SET status = 'CANCEL_REQUESTED',
                         updated_at = now()
-                    WHERE async_job_id = :async_job_id
+                    WHERE tenant_id = :tenant_id
+                      AND async_job_id = :async_job_id
                       AND status = 'WAITING_CALLBACK'
                     """
                 ),
-                {"async_job_id": cancellation.async_job_id},
+                {
+                    "tenant_id": cancellation.tenant_id,
+                    "async_job_id": cancellation.async_job_id,
+                },
             )
 
     def record_compensation_definition(self, definition: ToolCompensationDefinitionInput) -> None:
