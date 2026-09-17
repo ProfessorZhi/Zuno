@@ -703,6 +703,50 @@ def test_cancel_requested_async_job_still_accepts_late_completed_callback(
         assert job == {"status": "CANCEL_REQUESTED", "callback_order": 0}
         assert int(cancellation_count) == 1
 
+        with pytest.raises(
+            ToolRuntimeConflict,
+            match="cancellation receipt identity was reused with different content",
+        ):
+            gateway.record_cancellation_request(
+                tenant_id=tenant_id,
+                prepared_id=prepared_id,
+                attempt_id=attempt_id,
+                async_job_id=async_job_id,
+                provider_job_id=provider_job_id,
+                requested_by_principal_id="workspace-user:different-reviewer",
+                audit_requirement_id=audit_requirement_id,
+            )
+
+        # Caller-supplied expected/provided refs are not authority. A binding that
+        # agrees with itself but not with the durable AsyncJob must remain forged.
+        gateway.record_async_callback(
+            tenant_id=tenant_id,
+            async_job_id=async_job_id,
+            provider_job_id=provider_job_id,
+            callback_order=1,
+            callback_payload={"state": "completed", "provider_job_id": provider_job_id},
+            expected_binding_ref="callback-binding:attacker",
+            provided_binding_ref="callback-binding:attacker",
+        )
+        with engine.connect() as connection:
+            after_forged = connection.execute(
+                text(
+                    "SELECT status, callback_order FROM tool_async_jobs "
+                    "WHERE tenant_id = :tenant_id AND async_job_id = :async_job_id"
+                ),
+                {"tenant_id": tenant_id, "async_job_id": async_job_id},
+            ).mappings().one()
+            forged_callback = connection.execute(
+                text(
+                    "SELECT accepted, authenticity_status FROM tool_async_callbacks "
+                    "WHERE tenant_id = :tenant_id AND async_job_id = :async_job_id "
+                    "AND callback_order = 1"
+                ),
+                {"tenant_id": tenant_id, "async_job_id": async_job_id},
+            ).mappings().one()
+        assert after_forged == {"status": "CANCEL_REQUESTED", "callback_order": 0}
+        assert forged_callback == {"accepted": False, "authenticity_status": "FORGED"}
+
         gateway.record_async_callback(
             tenant_id=tenant_id,
             async_job_id=async_job_id,

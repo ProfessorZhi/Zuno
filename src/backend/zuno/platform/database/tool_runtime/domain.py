@@ -1263,17 +1263,42 @@ class ToolRepository:
         )
 
 
-    def latest_async_callback_order(self, *, async_job_id: str) -> int:
+    def get_async_job_callback_identity(
+        self,
+        *,
+        tenant_id: str,
+        async_job_id: str,
+    ) -> dict[str, str] | None:
+        row = self.connection.execute(
+            text(
+                """
+                SELECT provider_job_id, callback_binding_ref, status
+                FROM tool_async_jobs
+                WHERE tenant_id = :tenant_id AND async_job_id = :async_job_id
+                """
+            ),
+            {"tenant_id": tenant_id, "async_job_id": async_job_id},
+        ).mappings().first()
+        if row is None:
+            return None
+        return {
+            "provider_job_id": str(row["provider_job_id"]),
+            "callback_binding_ref": str(row["callback_binding_ref"]),
+            "status": str(row["status"]),
+        }
+
+    def latest_async_callback_order(self, *, tenant_id: str, async_job_id: str) -> int:
         value = self.connection.execute(
             text(
                 """
                 SELECT COALESCE(MAX(callback_order), 0)
                 FROM tool_async_callbacks
-                WHERE async_job_id = :async_job_id
+                WHERE tenant_id = :tenant_id
+                  AND async_job_id = :async_job_id
                   AND accepted = true
                 """
             ),
-            {"async_job_id": async_job_id},
+            {"tenant_id": tenant_id, "async_job_id": async_job_id},
         ).scalar_one()
         return int(value or 0)
     def record_async_callback(self, callback: ToolAsyncCallbackInput) -> bool:
@@ -1326,7 +1351,10 @@ class ToolRepository:
     def advance_async_job_after_callback(
         self,
         *,
+        tenant_id: str,
         async_job_id: str,
+        provider_job_id: str,
+        callback_binding_ref: str,
         callback_order: int,
         completed: bool,
     ) -> None:
@@ -1337,13 +1365,19 @@ class ToolRepository:
                 SET callback_order = :callback_order,
                     status = CASE WHEN :completed THEN 'COMPLETED' ELSE status END,
                     updated_at = now()
-                WHERE async_job_id = :async_job_id
+                WHERE tenant_id = :tenant_id
+                  AND async_job_id = :async_job_id
+                  AND provider_job_id = :provider_job_id
+                  AND callback_binding_ref = :callback_binding_ref
                   AND status IN ('WAITING_CALLBACK', 'CANCEL_REQUESTED')
                   AND callback_order < :callback_order
                 """
             ),
             {
+                "tenant_id": tenant_id,
                 "async_job_id": async_job_id,
+                "provider_job_id": provider_job_id,
+                "callback_binding_ref": callback_binding_ref,
                 "callback_order": callback_order,
                 "completed": completed,
             },
