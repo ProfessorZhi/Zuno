@@ -1,21 +1,21 @@
 # Current Test Baseline
 
-状态：`CURRENT / SELECTED_VERIFICATION_AVAILABLE / PSC_A_COMPOSITION_VERIFIED / PSC_B_SECURITY_OWNER_FACT_VERIFIED / EFFECT_REPLAY_FIX_VERIFIED / DURABLE_RECONCILIATION_JUDGMENT_VERIFIED / MANDATORY_AUDIT_REQUIREMENT_BINDING_VERIFIED / SECURITY_EFFECT_IDENTITY_VERIFIED / SECURITY_REVOCATION_POSITIVE_EVIDENCE / SECRET_REVOCATION_POSITIVE_EVIDENCE / QUALITY_NOT_ESTABLISHED`
+状态：`CURRENT / SELECTED_VERIFICATION_AVAILABLE / PSC_A_COMPOSITION_VERIFIED / PSC_B_SECURITY_OWNER_FACT_VERIFIED / PSC_C_BUDGET_DEFERRED_BY_SCOPE / PSC_D_APPROVAL_PROJECTION_VERIFIED / EFFECT_REPLAY_FIX_VERIFIED / DURABLE_RECONCILIATION_JUDGMENT_VERIFIED / MANDATORY_AUDIT_REQUIREMENT_BINDING_VERIFIED / SECURITY_EFFECT_IDENTITY_VERIFIED / SECURITY_REVOCATION_POSITIVE_EVIDENCE / SECRET_REVOCATION_POSITIVE_EVIDENCE / QUALITY_NOT_ESTABLISHED`
 
 ## 当前代码快照的 Selected Verification
 
-RB019 的 Effect/Audit 修复、PSC-A production composition root 与 PSC-B Product SecurityDecision owner fact 已进入 `main`。当前 GitHub-native selected verification 直接绑定 `main@a727bf8000bdda38614905d710c093e1fcc6807a`：
+RB019 的 Effect/Audit 修复与 Product Security Composition PSC-A–D 的当前决策都已经进入 `main`。PSC-A/B 是实现并验证的 owner/composition path，PSC-C 是有证据约束的 Defer，PSC-D 是 authority-writer cleanup。当前 GitHub-native selected verification 直接绑定 `main@293fa144f70be0467d1363eb3662d1b39a874cf8`：
 
 ```text
-verified_code_snapshot: a727bf8000bdda38614905d710c093e1fcc6807a
+verified_code_snapshot: 293fa144f70be0467d1363eb3662d1b39a874cf8
 workflow: Current code selected verification
-workflow_run: 35121830478
+workflow_run: 35202465804
 event: push / main
 runner: ubuntu-24.04
 python: 3.12.14
 dependency_source: poetry.lock
 postgresql_service: PostgreSQL 16.15 / healthy
-selected_suite: 213 passed, 21 warnings in 36.93s
+selected_suite: 214 passed, 22 warnings in 39.74s
 compileall: PASS
 model_gateway_strict_boundary: PASS
 runtime_batch_contracts: PASS
@@ -26,6 +26,11 @@ product_security_owner_fact_issue_resolve: PSC-B PASS
 product_security_foreign_scope_expiry_tamper: PSC-B FAIL-CLOSED VERIFIED
 product_security_replay_does_not_refresh_expiry: PSC-B PASS
 product_security_agent_admission_reaches_budget_blocker: PSC-B PASS
+caller_budget_limits_do_not_self_approve: PSC-C PASS / BUDGET OWNER UNBOUND
+formal_budget_owner_service: PSC-C DEFERRED_BY_SCOPE
+product_approval_projection_only: PSC-D PASS
+product_approval_projection_authority_tables_untouched: PSC-D PASS
+product_approval_projection_tenant_scope_and_conflict: PSC-D PASS
 unknown_effect_restart_replay_preserves_unknown: PASS
 conclusive_reconciliation_paths: PASS
 mandatory_audit_before_effect: PASS
@@ -35,17 +40,19 @@ full_ci: NOT_RUN / NOT_ESTABLISHED
 benchmark: BLOCKED_NOT_MEASURED
 quality: NOT_YET_PROVEN
 production_readiness: NOT_ESTABLISHED
-artifact_id: 10458161042
-artifact_sha256: 041ba54786345a6d542f553db55032c0b95e73f4b65923113195ed099c2331e4
+artifact_id: 10488681251
+artifact_sha256: bce09b936c349eba13b0b57327d27a3abfdab42544159356d9b5a3f1ac20b7f9
 ```
 
-这条 run 证明的范围仍然是 selected suite，不是 Full CI 或 Production Qualification。PSC-A 证明正式 FastAPI startup 可以建立 `WorkspaceRuntimeComposition` 并使用 PostgreSQL-backed `AgentRunStore`；PSC-B 则证明 08 Security owner path 可以用既有 `ToolSecurityGate + SecurityUnitOfWork` 发行并解析 Product SecurityDecision，显式持久化 workspace scope、issued/expiry 与 immutable hash。foreign tenant/workspace、真正过期 fact、同 identity durable content tamper 都 fail closed；同一 Product submission replay 不会自动延长授权寿命。
+这条 run 证明的范围仍然是 selected suite，不是 Full CI 或 Production Qualification。PSC-A 证明正式 FastAPI startup 可以建立 `WorkspaceRuntimeComposition` 并使用 PostgreSQL-backed `AgentRunStore`；PSC-B 证明 08 Security owner path 可以发行并解析 Product SecurityDecision，显式持久化 workspace scope、issued/expiry 与 immutable hash，foreign scope / expiry / durable-content tamper 均 fail closed，同一 Product submission replay不刷新授权寿命。
 
-PSC-B 的发行能力受 server policy config 控制：只有显式正值 `server.security.product_decision_ttl_seconds` 才会在 startup 绑定 issuer，仓库 example 默认保持 `null`。selected test 使用正 TTL 只证明该受控路径可工作，不构成默认授权政策。Product Security allow 也只证明当时可以进入计划；现实副作用发送前仍由既有 08/06 pre-effect gate 重新检查当前 Security 条件。
+PSC-B 的 issuance 只有在 deployment 显式配置正的 `server.security.product_decision_ttl_seconds` 时才绑定，仓库 example 默认保持 `null`。这仍是部署策略边界，不是测试里 300 秒 TTL 对产品默认值的宣称。现实副作用发送前依旧由既有 08/06 pre-effect gate 检查 current Security 条件。
 
-PSC-B 没有实现 Budget 或 Approval。真实 `WorkspaceAgentRuntime.start()` probe 在 Security owner fact 已通过以后准确停在 `budget_owner_resolver_unbound`，且模型没有被调用。这条负向边界是 PSC-B 独立验收的一部分：它证明 Security wiring 已前进到下一 Owner，而不是用 request `budget_limits` 或 synthetic resolver 偷开 PSC-C。
+PSC-C 没有新建 Budget store/service。Current Product API 里的 `budget_limits` 是 caller-declared Runtime limits；删除了没有 owner store 的伪 `PostgresBudgetDecisionResolver` 后，通用 Budget owner port 仍保留但 production resolver继续不绑定。真实 runtime probe 即使携带 `max_steps / max_tokens / timeout_seconds / cost_ceiling`，Security 通过后仍停在 `budget_owner_resolver_unbound`，没有 `BudgetDecisionRef`，也没有模型调用。因此 PSC-C 的 Current 状态是 `DEFERRED_BY_SCOPE`，不是“Budget owner admission 已实现”。
 
-仍未证明 provider remote-query adapter、authoritative reviewer role binding、完整 audit class / DB-level tenant isolation、pre-send-abort / crash-replay audit lifecycle、Target composed SecurityEpoch、PSC-C Budget owner fact、PSC-D Approval sink ownership、Full CI 或 Production Readiness。
+PSC-D 已解决旧 approval sink 的 Owner 冲突。`PostgresSecurityApprovalEventSink` 只写 `security_outbox_events` 作为 durable approval lifecycle projection；不再写 SecurityEpoch、PrincipalContext、AuthorizationDecision、Approval 或 AuditRequirement authority rows。projection 使用真实 request tenant；exact replay 幂等，same idempotency identity + changed content 明确 conflict。新 probe 在 fresh PostgreSQL 上同时验证 1 条 projection event 与 6 类 authority table 全部 0。
+
+PSC-D 也没有创建新的 Product Approval flow。`approval_flow="none"` 仍是当前 Product composition 边界；formal Budget owner admission同样保持 Defer/fail-closed。仍未证明 provider remote-query adapter、authoritative reviewer role binding、完整 audit class / DB-level tenant isolation、pre-send-abort / crash-replay audit lifecycle、Target composed SecurityEpoch、真实 Provider E2E、Full CI 或 Production Readiness。
 
 ### RB019 前历史 selected baseline
 

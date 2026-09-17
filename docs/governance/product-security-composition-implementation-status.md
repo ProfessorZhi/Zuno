@@ -1,12 +1,12 @@
 # Product Security Composition Implementation Status
 
-status: `PSC_A_B_IMPLEMENTED_SELECTED_VERIFIED / PSC_C_D_OPEN`
-current_main_evidence: `a727bf8000bdda38614905d710c093e1fcc6807a / run 35121830478 / 213 passed, 21 warnings`
+status: `PSC_A_B_IMPLEMENTED_SELECTED_VERIFIED / PSC_C_DEFERRED_BY_SCOPE / PSC_D_OWNERSHIP_RESOLVED_SELECTED_VERIFIED`
+current_main_evidence: `293fa144f70be0467d1363eb3662d1b39a874cf8 / run 35202465804 / 214 passed, 22 warnings`
 production_readiness: `NOT_ESTABLISHED`
 source_freeze: [`product-security-composition-freeze-candidate.md`](product-security-composition-freeze-candidate.md)
 current_evidence: [`../evidence/current-test-baseline.md`](../evidence/current-test-baseline.md)
 
-Product Security Composition freeze candidate 在 `main@c283d364...` 时冻结了四个独立问题。PSC-A 与 PSC-B 现在都已经落地并进入 main selected verification；PSC-C 的 Budget owner fact 与 PSC-D 的 Approval writer ownership 仍保持独立未闭环。
+Product Security Composition freeze candidate 在 `main@c283d364...` 时冻结了四个独立问题。PSC-A 与 PSC-B 已实现并进入 main selected verification；PSC-C 按 freeze 的 Build / Defer gate 选择 `DEFERRED_BY_SCOPE`，没有为了架构对称性新建 Budget owner service；PSC-D 已把重复 Security authority writer 收敛成 approval event projection。四个 slice 都已有明确 Current 决策，但这不等于 Product Runtime 已完整可执行或 Production Ready。
 
 ## PSC-A — Production composition root
 
@@ -38,41 +38,45 @@ Product admission 的 Security allow 只证明“现在可以进入该计划动�
 
 ## PSC-C — Budget owner fact
 
-**Current：OPEN / NOT IMPLEMENTED。**
+**Current：DEFERRED_BY_SCOPE / FORMAL OWNER ADMISSION REMAINS FAIL-CLOSED。**
 
-`PostgresBudgetDecisionResolver.resolve_owner_fact()` 默认仍没有 production owner store。PSC-A 保持：
+Current Workspace API / Web surface 暴露的 `WorkspaceTaskBudget` 只有 `max_steps / max_tokens / timeout_seconds / cost_ceiling`。这些值来自调用方，用于约束 Runtime mechanics；repo-wide source review 没有发现 durable BudgetDecision owner store、issuer、admin/billing policy flow，或其他能够回答“谁批准这次正式预算”的当前业务 Authority。
+
+因此本 slice 选择 freeze 明确允许的 Defer 方向，而不是为了接口对称性创建新表或 Budget Service。production composition 继续保持：
 
 ```text
 budget_decision_resolver = None
 ```
 
-不允许 request-declared budget limits 或 composition default 直接升级为 formal Budget Admission。
+此前名为 `PostgresBudgetDecisionResolver` 的类没有 PostgreSQL owner store、没有 production instantiation，默认 `resolve_owner_fact()` 只能返回 `None`。PSC-C 已删除这个误导 surface，保留通用 `BudgetDecisionResolver` owner port 作为未来真实业务需要出现后的扩展点。
 
-下一步仍需做显式 Build / Defer 决策。若没有当前 Product requirement 证明 formal Budget Admission 是上线前置条件，应继续优先 Defer，而不是为了对称性新建预算服务。
+PostgreSQL regression probe 会给真实 `WorkspaceAgentRuntime` 显式传入 caller-declared budget limits；Security owner fact 通过以后，Runtime 仍然得到 `budget_owner_resolver_unbound`，不生成 `BudgetDecisionRef`，也不会调用模型。这证明 request limits 可以限制运行参数，但不能自批准 formal Budget Admission。
+
+PSC-C 的重新 Build 条件不是“架构图缺一个模块”。只有出现明确 Product requirement，并能指出真实 Budget owner / policy source，例如组织或 workspace quota、billing policy、管理员批准的 run envelope 或等价 durable Authority，才重新评估最小 owner store。
 
 ## PSC-D — Approval fact sink ownership
 
-**Current：OPEN / OWNERSHIP NOT RESOLVED。**
+**Current：OWNERSHIP RESOLVED / PROJECTION ONLY / SELECTED VERIFIED。**
 
-PSC-A 没有绑定 `PostgresSecurityApprovalFactSink`：
+Source review 发现旧 `PostgresSecurityApprovalFactSink` 在 Tool approval 生命周期里会再次写 `SecurityEpoch`、PrincipalContext、AuthorizationDecision、Approval rows 与 AuditRequirement，而同一 Tool send path 已经通过正式 `SecurityUnitOfWork` / Gateway 写入并消费自己的 Security authority facts。两套 writer 使用不同 identity / tenant 口径，继续并存会让同一现实动作出现两个可被误认为 Authority 的 Security 事实来源。
+
+PSC-D 没有增加新 Approval Service。具体 sink 已降级并改名为 `PostgresSecurityApprovalEventSink`：它只把 `approval_waiting / approved_before_effect` 等生命周期事件写入既有 `security_outbox_events`，用于 durable ledger / projection；它不再写任何 Security authority table。Tool Runtime 直接把真实 `request.tenant_id` 传入 projection，不再用 workspace 代替 tenant。
+
+`ensure_security_event()` 同时收紧幂等语义：同 `(tenant_id, idempotency_key)` 的 exact replay 返回同一持久化事件；如果 aggregate、topic 或 payload/hash 改变则 fail closed，不能静默吞掉 identity collision。
+
+Current evidence 绑定 `main@293fa144f70be0467d1363eb3662d1b39a874cf8`、GitHub Actions run `35202465804`、PostgreSQL 16.15；selected suite 得到 `214 passed, 22 warnings in 39.74s`，artifact `10488681251`。PSC-D probe 证明同一 approval event exact replay 只留下 1 条 `security_outbox_events`；tenant / workspace / PreparedAction hash 保持真实绑定；同时 `security_effective_epochs`、`security_principal_contexts`、`security_authorization_decisions`、`security_approval_requests`、`security_approval_decisions`、`security_audit_requirements` 在该 projection path 上全部保持 0。changed-content replay 会明确 conflict。
+
+这项 ownership cleanup 不等于新增 Product Approval workflow。`WorkspaceRuntimeComposition.approval_flow` 仍然是 `"none"`；需要人工 Approval 的现实 Effect 继续由现有 Tool/Security send-boundary lifecycle 管理。PSC-D 只消除了第二套 Authority writer。
+
+## PSC 收口后的边界
 
 ```text
-security_approval_sink = None
-approval_flow = "none"
+PSC-A  production composition root                     IMPLEMENTED / SELECTED VERIFIED
+PSC-B  Product SecurityDecision owner fact             IMPLEMENTED / SELECTED VERIFIED
+PSC-C  formal Budget owner admission                    DEFERRED_BY_SCOPE / FAIL-CLOSED
+PSC-D  approval sink ownership                          PROJECTION_ONLY / SELECTED VERIFIED
 ```
 
-这是有意的 fail-closed 边界。当前 sink 与 Effect send-gate Security writer 使用不同 identity / tenant 口径，而且发生在 Tool approval 生命周期内部；在明确它是 authoritative writer、ledger/projection 还是 legacy duplicate path 之前，不把它塞进新的 production composition。
+这组结果说明 Product → Agent 的 composition 与 Security owner path 已有 Current implementation，Budget formal admission 被有意拿出当前可运行范围，旧 approval side-writer 已降级为 projection。它仍不能扩写成“完整 Product Admission 已实现”：当前没有 formal Budget owner fact，也没有新的 Product Approval flow；真实 Provider、完整业务 E2E、Full CI 和 Production Qualification 仍需要各自证据。
 
-## 下一实施顺序
-
-建议继续保持独立验收：
-
-```text
-PSC-B  SecurityDecision owner fact / resolver contract
-PSC-C  Budget owner fact BUILD-or-DEFER
-PSC-D  Approval fact sink ownership cleanup
-```
-
-PSC-B 已通过 selected verification。下一步只判断 PSC-C 的 BUILD-or-DEFER；PSC-D 的删除或降级也不能反过来当成完整 Product Admission 已完成。
-
-任何后续实现都继续受原 freeze 的排除项约束：不引入新 Security microservice、全局 Epoch Service、跨 Store 2PC、GraphRAG / Memory / Multi-Agent 扩张，也不顺带处理 remote reconciliation 或 cancel orchestration。
+后续工作继续受原 freeze 排除项约束：不因 PSC 收口而引入新 Security/Budget microservice、全局 Epoch Service、跨 Store 2PC、GraphRAG / Memory / Multi-Agent 扩张，也不顺带处理 remote reconciliation 或 cancel orchestration。
