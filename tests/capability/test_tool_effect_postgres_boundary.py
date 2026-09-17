@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 import os
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
@@ -22,7 +23,7 @@ from zuno.capability.control_plane import (
     ToolTrustTier,
 )
 from zuno.capability.runtime import ToolControlPlaneRuntime, ToolRuntimeRequest
-from zuno.capability.tool_runtime import ToolEffectUnknownError, ToolInvocationGateway
+from zuno.capability.tool_runtime import ToolApprovalBinding, ToolEffectUnknownError, ToolInvocationGateway
 from zuno.platform.database.foundation import InfrastructureUnitOfWork
 from zuno.platform.database.tool_runtime import ToolRuntimeConflict, ToolUnitOfWork
 from zuno.platform.security import SecurityUnitOfWork
@@ -603,3 +604,152 @@ def test_manual_assessment_conflict_cannot_resolve_from_unpersisted_second_judgm
     finally:
         _drop_database(engine, admin_engine, database_name)
 
+
+
+@pytest.mark.skipif(
+    not os.environ.get("ZUNO_TEST_DATABASE_URL"),
+    reason="ZUNO_TEST_DATABASE_URL is not configured; Effect PostgreSQL probe is BLOCKED",
+)
+def test_cancel_requested_async_job_still_accepts_late_completed_callback(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    engine, admin_engine, database_name = _migrated_database(tmp_path, monkeypatch)
+    tenant_id = "tenant-effect"
+    workspace_id = "workspace-effect"
+    call_id = "effect-cancel-late-callback-1"
+    provider_job_id = "provider-job:cancel-late:1"
+    secret_ref = "secret-ref:async-cancel-late"
+    try:
+        with SecurityUnitOfWork(engine) as repo:
+            repo.record_secret_ref(
+                secret_ref=secret_ref,
+                tenant_id=tenant_id,
+                credential_version_ref="credential-version:async-cancel-late",
+                audience="tool:mail.send",
+                owner_principal_id=f"workspace-user:{workspace_id}",
+                scope={"tool": "mail.send", "workspace_id": workspace_id},
+            )
+
+        gateway = _gateway(engine)
+
+        async def executor() -> dict[str, str]:
+            return {"provider_job_id": provider_job_id}
+
+        result, receipt = asyncio.run(
+            gateway.invoke_readonly(
+                tool_name="mail.send",
+                args={
+                    "to": "reviewer@example.com",
+                    "body": "async status update",
+                    "secret_ref": secret_ref,
+                },
+                tenant_id=tenant_id,
+                workspace_id=workspace_id,
+                trace_id="trace-cancel-late",
+                call_id=call_id,
+                adapter_kind="ASYNC_JOB",
+                executor=executor,
+                readonly=False,
+                approval=ToolApprovalBinding(
+                    decision_ref="security-decision:cancel-late-approved",
+                    adapter_ref="test.approval",
+                    comment="approved",
+                ),
+            )
+        )
+        assert result == {"provider_job_id": provider_job_id}
+        assert receipt.status == "async_waiting"
+
+        prepared_id = f"prepared-tool-action:{call_id}"
+        attempt_id = f"tool-attempt:{call_id}"
+        async_job_id = f"tool-async-job:{call_id}"
+        audit_requirement_id = f"audit-requirement:{call_id}:tool-execute"
+
+        gateway.record_cancellation_request(
+            tenant_id=tenant_id,
+            prepared_id=prepared_id,
+            attempt_id=attempt_id,
+            async_job_id=async_job_id,
+            provider_job_id=provider_job_id,
+            requested_by_principal_id=f"workspace-user:{workspace_id}",
+            audit_requirement_id=audit_requirement_id,
+        )
+        gateway.record_cancellation_request(
+            tenant_id=tenant_id,
+            prepared_id=prepared_id,
+            attempt_id=attempt_id,
+            async_job_id=async_job_id,
+            provider_job_id=provider_job_id,
+            requested_by_principal_id=f"workspace-user:{workspace_id}",
+            audit_requirement_id=audit_requirement_id,
+        )
+
+        with engine.connect() as connection:
+            job = connection.execute(
+                text(
+                    "SELECT status, callback_order FROM tool_async_jobs "
+                    "WHERE tenant_id = :tenant_id AND async_job_id = :async_job_id"
+                ),
+                {"tenant_id": tenant_id, "async_job_id": async_job_id},
+            ).mappings().one()
+            cancellation_count = connection.execute(
+                text(
+                    "SELECT count(*) FROM tool_cancellation_receipts "
+                    "WHERE tenant_id = :tenant_id AND async_job_id = :async_job_id"
+                ),
+                {"tenant_id": tenant_id, "async_job_id": async_job_id},
+            ).scalar_one()
+        assert job == {"status": "CANCEL_REQUESTED", "callback_order": 0}
+        assert int(cancellation_count) == 1
+
+        gateway.record_async_callback(
+            tenant_id=tenant_id,
+            async_job_id=async_job_id,
+            provider_job_id=provider_job_id,
+            callback_order=1,
+            callback_payload={"state": "completed", "provider_job_id": provider_job_id},
+            expected_binding_ref=f"callback-binding:{call_id}",
+            provided_binding_ref=f"callback-binding:{call_id}",
+        )
+
+        with engine.connect() as connection:
+            final_job = connection.execute(
+                text(
+                    "SELECT status, callback_order FROM tool_async_jobs "
+                    "WHERE tenant_id = :tenant_id AND async_job_id = :async_job_id"
+                ),
+                {"tenant_id": tenant_id, "async_job_id": async_job_id},
+            ).mappings().one()
+            callback = connection.execute(
+                text(
+                    "SELECT accepted, authenticity_status FROM tool_async_callbacks "
+                    "WHERE tenant_id = :tenant_id AND async_job_id = :async_job_id "
+                    "AND callback_order = 1"
+                ),
+                {"tenant_id": tenant_id, "async_job_id": async_job_id},
+            ).mappings().one()
+            cancellation = connection.execute(
+                text(
+                    "SELECT status, external_effect_revoked FROM tool_cancellation_receipts "
+                    "WHERE tenant_id = :tenant_id AND async_job_id = :async_job_id"
+                ),
+                {"tenant_id": tenant_id, "async_job_id": async_job_id},
+            ).mappings().one()
+
+        assert final_job == {"status": "COMPLETED", "callback_order": 1}
+        assert callback == {"accepted": True, "authenticity_status": "VERIFIED"}
+        assert cancellation == {"status": "NOT_GUARANTEED", "external_effect_revoked": False}
+
+        with pytest.raises(ToolRuntimeConflict, match="cancellation identity does not match async job"):
+            gateway.record_cancellation_request(
+                tenant_id=tenant_id,
+                prepared_id=prepared_id,
+                attempt_id=attempt_id,
+                async_job_id=async_job_id,
+                provider_job_id="provider-job:different",
+                requested_by_principal_id=f"workspace-user:{workspace_id}",
+                audit_requirement_id=audit_requirement_id,
+            )
+    finally:
+        _drop_database(engine, admin_engine, database_name)
