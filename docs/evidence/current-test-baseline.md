@@ -1,21 +1,21 @@
 # Current Test Baseline
 
-状态：`CURRENT / SELECTED_VERIFICATION_AVAILABLE / PSC_A_COMPOSITION_VERIFIED / PSC_B_SECURITY_OWNER_FACT_VERIFIED / PSC_C_BUDGET_DEFERRED_BY_SCOPE / PSC_D_APPROVAL_PROJECTION_VERIFIED / EFFECT_REPLAY_FIX_VERIFIED / DURABLE_RECONCILIATION_JUDGMENT_VERIFIED / MANDATORY_AUDIT_REQUIREMENT_BINDING_VERIFIED / SECURITY_EFFECT_IDENTITY_VERIFIED / SECURITY_REVOCATION_POSITIVE_EVIDENCE / SECRET_REVOCATION_POSITIVE_EVIDENCE / CXL_A_LATE_CALLBACK_TRUTH_VERIFIED / QUALITY_NOT_ESTABLISHED`
+状态：`CURRENT / SELECTED_VERIFICATION_AVAILABLE / PSC_A_COMPOSITION_VERIFIED / PSC_B_SECURITY_OWNER_FACT_VERIFIED / PSC_C_BUDGET_DEFERRED_BY_SCOPE / PSC_D_APPROVAL_PROJECTION_VERIFIED / EFFECT_REPLAY_FIX_VERIFIED / DURABLE_RECONCILIATION_JUDGMENT_VERIFIED / MANDATORY_AUDIT_REQUIREMENT_BINDING_VERIFIED / MANDATORY_AUDIT_TENANT_ISOLATION_VERIFIED / SECURITY_EFFECT_IDENTITY_VERIFIED / SECURITY_REVOCATION_POSITIVE_EVIDENCE / SECRET_REVOCATION_POSITIVE_EVIDENCE / CXL_A_LATE_CALLBACK_TRUTH_VERIFIED / QUALITY_NOT_ESTABLISHED`
 
 ## 当前代码快照的 Selected Verification
 
-RB019 的 Effect/Audit 修复、Product Security Composition PSC-A–D 当前决策与 CXL-A late-callback truth 修复都已经进入 `main`。PSC-A/B 是实现并验证的 owner/composition path，PSC-C 是有证据约束的 Defer，PSC-D 是 authority-writer cleanup；CXL-A 只关闭 cancel intent 后 late callback truth，不升级完整 cancel orchestration。当前 GitHub-native selected verification 直接绑定 `main@a1c6a4dd09d988b89ae8801e26933e49b3095af5`：
+RB019 的 Effect/Audit 修复、Product Security Composition PSC-A–D 当前决策与 CXL-A late-callback truth 修复都已经进入 `main`。PSC-A/B 是实现并验证的 owner/composition path，PSC-C 是有证据约束的 Defer，PSC-D 是 authority-writer cleanup；CXL-A 只关闭 cancel intent 后 late callback truth，不升级完整 cancel orchestration。当前 GitHub-native selected verification 直接绑定 `main@d3096ca00ede6a4fb602e94493dea6536b91e878`：
 
 ```text
-verified_code_snapshot: a1c6a4dd09d988b89ae8801e26933e49b3095af5
+verified_code_snapshot: d3096ca00ede6a4fb602e94493dea6536b91e878
 workflow: Current code selected verification
-workflow_run: 35232820229
+workflow_run: 35300034978
 event: push / main
 runner: ubuntu-24.04
 python: 3.12.14
 dependency_source: poetry.lock
 postgresql_service: PostgreSQL 16.15 / healthy
-selected_suite: 215 passed, 23 warnings in 29.87s
+selected_suite: 216 passed, 24 warnings in 43.12s
 compileall: PASS
 model_gateway_strict_boundary: PASS
 runtime_batch_contracts: PASS
@@ -35,6 +35,10 @@ unknown_effect_restart_replay_preserves_unknown: PASS
 conclusive_reconciliation_paths: PASS
 mandatory_audit_before_effect: PASS
 mandatory_audit_requirement_binding: PASS
+mandatory_audit_tenant_scoped_storage: PASS
+mandatory_audit_cross_tenant_proof_access: FAIL-CLOSED VERIFIED
+remote_query_reconciliation: DEFERRED_BY_PROVIDER_CAPABILITY
+cxl_b_cancel_orchestration: BLOCKED_BY_UPSTREAM_PRODUCT_RUNTIME_DISPATCH
 security_effect_epoch_identity_not_trace_only: PASS
 cxl_a_cancel_requested_late_callback_truth: PASS
 cxl_a_durable_callback_binding_forgery_rejected: PASS
@@ -44,8 +48,8 @@ full_ci: NOT_RUN / NOT_ESTABLISHED
 benchmark: BLOCKED_NOT_MEASURED
 quality: NOT_YET_PROVEN
 production_readiness: NOT_ESTABLISHED
-artifact_id: 10501833162
-artifact_sha256: f9298b9a6959b322d5aba120150f407abdfe714b987fdeee4212d1111b4c34e5
+artifact_id: 10529232388
+artifact_sha256: 69c9c598c7e8abe41b7fe5fa920773f5d3aa68e8781ca21f5b7eb6a033a849ec
 ```
 
 这条 run 证明的范围仍然是 selected suite，不是 Full CI 或 Production Qualification。PSC-A 证明正式 FastAPI startup 可以建立 `WorkspaceRuntimeComposition` 并使用 PostgreSQL-backed `AgentRunStore`；PSC-B 证明 08 Security owner path 可以发行并解析 Product SecurityDecision，显式持久化 workspace scope、issued/expiry 与 immutable hash，foreign scope / expiry / durable-content tamper 均 fail closed，同一 Product submission replay不刷新授权寿命。
@@ -56,7 +60,11 @@ PSC-C 没有新建 Budget store/service。Current Product API 里的 `budget_lim
 
 PSC-D 已解决旧 approval sink 的 Owner 冲突。`PostgresSecurityApprovalEventSink` 只写 `security_outbox_events` 作为 durable approval lifecycle projection；不再写 SecurityEpoch、PrincipalContext、AuthorizationDecision、Approval 或 AuditRequirement authority rows。projection 使用真实 request tenant；exact replay 幂等，same idempotency identity + changed content 明确 conflict。新 probe 在 fresh PostgreSQL 上同时验证 1 条 projection event 与 6 类 authority table 全部 0。
 
-PSC-D 也没有创建新的 Product Approval flow。`approval_flow="none"` 仍是当前 Product composition 边界；formal Budget owner admission同样保持 Defer/fail-closed。CXL-A 则把已有 cancellation/async callback primitive 接成一个更窄的 truth loop：job 已进入 `CANCEL_REQUESTED` 后，durable provider job / callback binding 匹配的 late completed callback 仍会推进 `COMPLETED`；调用方自报的错误 binding 会记录为 `FORGED` 且不能推进 job，CancellationReceipt exact replay 保持同一事实、changed content fail closed。当前仍没有 production user/plan cancel entrypoint 或 provider cancel port，所以完整 cancel-in-flight orchestration继续属于 CXL-B。仍未证明 provider remote-query adapter、authoritative reviewer role binding、完整 audit class / DB-level tenant isolation、pre-send-abort / crash-replay audit lifecycle、Target composed SecurityEpoch、真实 Provider E2E、Full CI 或 Production Readiness。
+
+
+Mandatory Audit storage 的 tenant boundary 现在也进入 Current：revision `20260918_59` 为 `infra_audit_channels` 与 `infra_mandatory_audit_events` 增加显式 `tenant_id`，repository 的 configure / record / assert / observe 都消费 Infrastructure UoW tenant；Tool Runtime audit channel identity 也按 tenant namespace。fresh PostgreSQL probe 证明 foreign tenant 不能重配置另一个 tenant 的 channel，不能 assert 或 mark 其 audit proof，同时两个 tenant 各自的 capacity slot 不互相消耗。这个证据只覆盖 Mandatory Audit storage path，不扩写成全库 RLS 或所有 Infrastructure 表都完成 tenant isolation。
+
+PSC-D 也没有创建新的 Product Approval flow。`approval_flow="none"` 仍是当前 Product composition 边界；formal Budget owner admission同样保持 Defer/fail-closed。CXL-A 则把已有 cancellation/async callback primitive 接成一个更窄的 truth loop：job 已进入 `CANCEL_REQUESTED` 后，durable provider job / callback binding 匹配的 late completed callback 仍会推进 `COMPLETED`；调用方自报的错误 binding 会记录为 `FORGED` 且不能推进 job，CancellationReceipt exact replay 保持同一事实、changed content fail closed。当前 CXL-B production cancel orchestration 已进一步确认被上游 Product runtime request → canonical Agent execution binding 阻塞；provider cancel port 也尚未开始。provider remote-query 当前按 Provider capability 明确 Defer；CXL-B 仍被上游 Product runtime dispatch/canonical execution binding 阻塞。仍未证明 authoritative reviewer role binding、完整 audit class、pre-send-abort / crash-replay audit lifecycle、Target composed SecurityEpoch、真实 Provider E2E、Full CI 或 Production Readiness。
 
 ### RB019 前历史 selected baseline
 
@@ -271,7 +279,6 @@ GitHub service container 不等于系统级 PostgreSQL qualification。Actions �
 - manual reconciliation 的 authoritative reviewer role / tenant / approval-policy binding，以及 one-shot judgment 是否足够真实人工工作流；
 - AuditRequirement 的 `BEST_EFFORT / DURABLE / MANDATORY_BEFORE_EFFECT` class 是否由 08 耐久表达并被 06 消费；
 - mandatory audit proof 已提交、但 send 前再次被 Security 阻断时怎样释放 capacity 而不伪造 `effect_observed`；send 后 crash / restart 怎样修复遗漏的 audit lifecycle close；
-- `infra_mandatory_audit_events` 的数据库级 tenant isolation，以及 proof 已绑定 tenant context 后的 cross-tenant fault probe；
 - Target composed EffectiveSecurityEpoch 的 workspace / principal / resource scope persistence；Current 只证明 Tool Effect action-scoped identity 不再依赖 trace；
 - production `WorkspaceRuntimeComposition` / SecurityDecisionResolver binding；当前 repo-wide source review 尚未建立正式启动装配证据；
 - SecurityEpoch **pre-send revocation** 已由 #203 通过；SecretRef **pre-lease revocation** 已由 #207 通过；完整 Secret rotation/retry、Policy drift、no-egress 与其他治理 fault window 仍未证明；
@@ -306,4 +313,4 @@ production_readiness: NOT_ESTABLISHED
 
 **Slice B — Domain ↔ Runtime crash authority** 在“不修改业务实现”的验证范围已经走到边界：当前 mutation transaction / concurrency / lost-response replay 与 Wave-001 revision-level PostgreSQL DDL 已有 GitHub evidence。剩余 Owner-first recovery 依赖 Target `AdmissionReceipt`、Formal Admission transaction 和 Runtime matching-Receipt consumer；这些当前没有实现证明。
 
-**Slice C — Effects ↔ Security send boundary** 的原始 RB019 P0 violation 已关闭：restart replay certainty、最小 conclusive reconciliation、mandatory-audit send gate 和 formal Alembic entrypoint 都已有 main selected evidence，post-dispatch audit capacity lifecycle 也已转绿。Slice C 仍不是完整 Freeze / Production proof；下一层缺口集中在 provider remote-query reconciliation、manual reviewer Authority、audit-class / DB-level tenant isolation、pre-send-abort / crash-replay audit lifecycle、Target composed SecurityEpoch、production Workspace Security composition，以及 CXL-B production cancel entrypoint / provider cancel capability。CXL-A 已把 cancel intent 后 late callback truth 与 durable callback binding 转成 main regression；继续 fault test 应针对这些仍有 Current surface 的具体边界，而不是重复已经转绿的 #201/#205 failure shape。
+**Slice C — Effects ↔ Security send boundary** 的原始 RB019 P0 violation 已关闭：restart replay certainty、最小 conclusive reconciliation、mandatory-audit send gate 和 formal Alembic entrypoint 都已有 main selected evidence，post-dispatch audit capacity lifecycle 也已转绿。Slice C 仍不是完整 Freeze / Production proof；下一层缺口集中在 provider remote-query reconciliation（当前按 Provider capability Defer）、manual reviewer Authority、audit-class、pre-send-abort / crash-replay audit lifecycle、Target composed SecurityEpoch，以及被上游 Product runtime dispatch/canonical execution binding 阻塞的 CXL-B production cancel entrypoint / provider cancel capability。CXL-A 已把 cancel intent 后 late callback truth 与 durable callback binding 转成 main regression；继续 fault test 应针对这些仍有 Current surface 的具体边界，而不是重复已经转绿的 #201/#205 failure shape。
