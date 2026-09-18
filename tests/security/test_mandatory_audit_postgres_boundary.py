@@ -15,7 +15,11 @@ from sqlalchemy.engine import Engine, make_url
 
 from zuno.capability.tool_runtime import ToolApprovalBinding, ToolInvocationGateway
 from zuno.platform import settings as platform_settings
-from zuno.platform.database.foundation import (\n    FencingRejectedError,\n    InfrastructureConflictError,\n    InfrastructureUnitOfWork,\n)
+from zuno.platform.database.foundation import (
+    FencingRejectedError,
+    InfrastructureConflictError,
+    InfrastructureUnitOfWork,
+)
 from zuno.platform.database.tool_runtime import ToolUnitOfWork
 from zuno.platform.security import SecurityPersistenceError, SecurityUnitOfWork
 
@@ -75,7 +79,11 @@ def _drop_database(engine: Engine, admin_engine: Engine, database_name: str) -> 
     admin_engine.dispose()
 
 
-def _audit_channel_id(tenant_id: str) -> str:\n    return f"audit-channel:tool-runtime:{tenant_id}"\n\n\ndef _configure_audit_channel(engine: Engine, *, tenant_id: str, capacity_limit: int = 100) -> None:
+def _audit_channel_id(tenant_id: str) -> str:
+    return f"audit-channel:tool-runtime:{tenant_id}"
+
+
+def _configure_audit_channel(engine: Engine, *, tenant_id: str, capacity_limit: int = 100) -> None:
     with InfrastructureUnitOfWork(engine, tenant_id=tenant_id) as repo:
         repo.configure_audit_channel(
             channel_id=_audit_channel_id(tenant_id),
