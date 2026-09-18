@@ -1042,7 +1042,7 @@ class ToolInvocationGateway:
                     audit_requirement_id=f"audit-requirement:{call_id}:tool-execute",
                     tenant_id=tenant_id,
                     decision_id=decision_id,
-                    audit_channel_id="audit-channel:tool-runtime:phase16",
+                    audit_channel_id=f"audit-channel:tool-runtime:{tenant_id}",
                 )
                 repo.validate_pre_effect_authorization(
                     decision_id=decision_id,

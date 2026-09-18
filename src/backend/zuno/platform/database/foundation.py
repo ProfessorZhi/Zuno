@@ -1572,6 +1572,9 @@ class InfrastructureRepository:
         fail_mode: str = "fail_closed",
         drained: bool = False,
     ) -> int:
+        tenant_id = self.current_tenant_id().strip()
+        if not tenant_id:
+            raise InfrastructureConflictError("mandatory audit channel requires tenant scope")
         if not channel_id.strip():
             raise ValueError("channel_id must not be empty")
         if capacity_limit < 1:
@@ -1584,9 +1587,9 @@ class InfrastructureRepository:
             text(
                 """
                 INSERT INTO infra_audit_channels(
-                    channel_id, capacity_limit, fail_mode, drained, generation, updated_by
+                    channel_id, tenant_id, capacity_limit, fail_mode, drained, generation, updated_by
                 ) VALUES (
-                    :channel_id, :capacity_limit, :fail_mode, :drained, 1, :owner_id
+                    :channel_id, :tenant_id, :capacity_limit, :fail_mode, :drained, 1, :owner_id
                 )
                 ON CONFLICT (channel_id) DO UPDATE
                 SET capacity_limit = EXCLUDED.capacity_limit,
@@ -1595,17 +1598,21 @@ class InfrastructureRepository:
                     generation = infra_audit_channels.generation + 1,
                     updated_by = EXCLUDED.updated_by,
                     updated_at = now()
+                WHERE infra_audit_channels.tenant_id = EXCLUDED.tenant_id
                 RETURNING generation
                 """
             ),
             {
                 "channel_id": channel_id,
+                "tenant_id": tenant_id,
                 "capacity_limit": capacity_limit,
                 "fail_mode": fail_mode,
                 "drained": drained,
                 "owner_id": owner_id,
             },
-        ).one()
+        ).first()
+        if row is None:
+            raise InfrastructureConflictError("mandatory audit channel belongs to another tenant")
         return int(row.generation)
 
     def record_mandatory_audit(
@@ -1616,12 +1623,19 @@ class InfrastructureRepository:
         owner_id: str,
         payload: dict[str, Any],
     ) -> AuditPersistenceReceipt:
+        tenant_id = self.current_tenant_id().strip()
+        if not tenant_id:
+            raise InfrastructureConflictError("mandatory audit requires tenant scope")
         if not channel_id.strip():
             raise ValueError("channel_id must not be empty")
         if not effect_id.strip():
             raise ValueError("effect_id must not be empty")
         if not owner_id.strip():
             raise ValueError("owner_id must not be empty")
+        if str(payload.get("tenant_id") or "").strip() != tenant_id:
+            raise InfrastructureConflictError(
+                "mandatory audit payload tenant does not match current tenant"
+            )
         payload_hash = canonical_sha256(payload)
         existing = self.connection.execute(
             text(
@@ -1629,11 +1643,12 @@ class InfrastructureRepository:
                 SELECT audit_id, channel_id, effect_id, owner_id, payload_hash,
                        generation, created_at
                 FROM infra_mandatory_audit_events
-                WHERE effect_id = :effect_id
+                WHERE tenant_id = :tenant_id
+                  AND effect_id = :effect_id
                   AND status IN ('durable', 'effect_observed')
                 """
             ),
-            {"effect_id": effect_id},
+            {"tenant_id": tenant_id, "effect_id": effect_id},
         ).first()
         if existing is not None:
             if (
@@ -1660,11 +1675,12 @@ class InfrastructureRepository:
                 """
                 SELECT channel_id, capacity_limit, fail_mode, drained, generation
                 FROM infra_audit_channels
-                WHERE channel_id = :channel_id
+                WHERE tenant_id = :tenant_id
+                  AND channel_id = :channel_id
                 FOR UPDATE
                 """
             ),
-            {"channel_id": channel_id},
+            {"tenant_id": tenant_id, "channel_id": channel_id},
         ).first()
         if channel is None or bool(channel.drained):
             raise AuditCapacityError("mandatory audit channel is missing or drained")
@@ -1675,11 +1691,12 @@ class InfrastructureRepository:
                     """
                     SELECT COALESCE(COUNT(*), 0)::integer
                     FROM infra_mandatory_audit_events
-                    WHERE channel_id = :channel_id
+                    WHERE tenant_id = :tenant_id
+                      AND channel_id = :channel_id
                       AND status = 'durable'
                     """
                 ),
-                {"channel_id": channel_id},
+                {"tenant_id": tenant_id, "channel_id": channel_id},
             ).scalar_one()
         )
         remaining_capacity = int(channel.capacity_limit) - in_flight - 1
@@ -1691,10 +1708,10 @@ class InfrastructureRepository:
             text(
                 """
                 INSERT INTO infra_mandatory_audit_events(
-                    audit_id, channel_id, effect_id, owner_id, payload_hash,
+                    audit_id, tenant_id, channel_id, effect_id, owner_id, payload_hash,
                     payload, status, generation
                 ) VALUES (
-                    :audit_id, :channel_id, :effect_id, :owner_id, :payload_hash,
+                    :audit_id, :tenant_id, :channel_id, :effect_id, :owner_id, :payload_hash,
                     CAST(:payload AS jsonb), 'durable', :generation
                 )
                 RETURNING audit_id, channel_id, effect_id, owner_id, payload_hash,
@@ -1703,6 +1720,7 @@ class InfrastructureRepository:
             ),
             {
                 "audit_id": audit_id,
+                "tenant_id": tenant_id,
                 "channel_id": channel_id,
                 "effect_id": effect_id,
                 "owner_id": owner_id,
@@ -1729,6 +1747,9 @@ class InfrastructureRepository:
         effect_id: str,
         owner_id: str,
     ) -> AuditPersistenceReceipt:
+        tenant_id = self.current_tenant_id().strip()
+        if not tenant_id:
+            raise InfrastructureConflictError("mandatory audit assertion requires tenant scope")
         if not audit_id.strip() or not effect_id.strip() or not owner_id.strip():
             raise ValueError("audit_id, effect_id and owner_id must not be empty")
         row = self.connection.execute(
@@ -1737,17 +1758,23 @@ class InfrastructureRepository:
                 SELECT audit_id, channel_id, effect_id, owner_id, payload_hash,
                        generation, created_at
                 FROM infra_mandatory_audit_events
-                WHERE audit_id = :audit_id
+                WHERE tenant_id = :tenant_id
+                  AND audit_id = :audit_id
                   AND effect_id = :effect_id
                   AND owner_id = :owner_id
                   AND status IN ('durable', 'effect_observed')
                 FOR UPDATE
                 """
             ),
-            {"audit_id": audit_id, "effect_id": effect_id, "owner_id": owner_id},
+            {
+                "tenant_id": tenant_id,
+                "audit_id": audit_id,
+                "effect_id": effect_id,
+                "owner_id": owner_id,
+            },
         ).first()
         if row is None:
-            raise FencingRejectedError("effect cannot run before durable mandatory audit")
+            raise FencingRejectedError("effect cannot run before tenant-scoped durable mandatory audit")
         return AuditPersistenceReceipt(
             audit_id=str(row.audit_id),
             channel_id=str(row.channel_id),
@@ -1766,6 +1793,9 @@ class InfrastructureRepository:
         effect_id: str,
         owner_id: str,
     ) -> None:
+        tenant_id = self.current_tenant_id().strip()
+        if not tenant_id:
+            raise InfrastructureConflictError("mandatory audit observation requires tenant scope")
         if not audit_id.strip() or not effect_id.strip() or not owner_id.strip():
             raise ValueError("audit_id, effect_id and owner_id must not be empty")
         result = self.connection.execute(
@@ -1774,16 +1804,22 @@ class InfrastructureRepository:
                 UPDATE infra_mandatory_audit_events
                 SET status = 'effect_observed',
                     effect_observed_at = now()
-                WHERE audit_id = :audit_id
+                WHERE tenant_id = :tenant_id
+                  AND audit_id = :audit_id
                   AND effect_id = :effect_id
                   AND owner_id = :owner_id
                   AND status = 'durable'
                 """
             ),
-            {"audit_id": audit_id, "effect_id": effect_id, "owner_id": owner_id},
+            {
+                "tenant_id": tenant_id,
+                "audit_id": audit_id,
+                "effect_id": effect_id,
+                "owner_id": owner_id,
+            },
         )
         if result.rowcount != 1:
-            raise FencingRejectedError("audited effect cannot be observed by this owner")
+            raise FencingRejectedError("tenant-scoped audited effect cannot be observed by this owner")
 
     def configure_cutover_target(
         self,
