@@ -946,6 +946,7 @@ def test_mandatory_audit_identity_cannot_be_reused_for_different_action_hash(
                 effect_id=effect_id,
                 owner_id=owner_id,
                 payload={
+                    "tenant_id": tenant_id,
                     "prepared_tool_action_id": "prepared-tool-action:binding-test",
                     "prepared_action_hash": "a" * 64,
                 },
@@ -960,6 +961,7 @@ def test_mandatory_audit_identity_cannot_be_reused_for_different_action_hash(
                     effect_id=effect_id,
                     owner_id=owner_id,
                     payload={
+                        "tenant_id": tenant_id,
                         "prepared_tool_action_id": "prepared-tool-action:binding-test",
                         "prepared_action_hash": "b" * 64,
                     },
