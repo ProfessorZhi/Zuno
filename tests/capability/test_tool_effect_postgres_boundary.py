@@ -79,7 +79,7 @@ def _migrated_database(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> tuple
     engine = create_engine(database_url)
     with InfrastructureUnitOfWork(engine, tenant_id="tenant-effect") as repo:
         repo.configure_audit_channel(
-            channel_id="audit-channel:tool-runtime:phase16",
+            channel_id="audit-channel:tool-runtime:tenant-effect",
             capacity_limit=100,
             owner_id="security-governance:effect-test-bootstrap",
         )

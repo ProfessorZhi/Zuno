@@ -15,7 +15,7 @@ from sqlalchemy.engine import Engine, make_url
 
 from zuno.capability.tool_runtime import ToolApprovalBinding, ToolInvocationGateway
 from zuno.platform import settings as platform_settings
-from zuno.platform.database.foundation import InfrastructureConflictError, InfrastructureUnitOfWork
+from zuno.platform.database.foundation import (\n    FencingRejectedError,\n    InfrastructureConflictError,\n    InfrastructureUnitOfWork,\n)
 from zuno.platform.database.tool_runtime import ToolUnitOfWork
 from zuno.platform.security import SecurityPersistenceError, SecurityUnitOfWork
 
@@ -75,10 +75,10 @@ def _drop_database(engine: Engine, admin_engine: Engine, database_name: str) -> 
     admin_engine.dispose()
 
 
-def _configure_audit_channel(engine: Engine, *, tenant_id: str, capacity_limit: int = 100) -> None:
+def _audit_channel_id(tenant_id: str) -> str:\n    return f"audit-channel:tool-runtime:{tenant_id}"\n\n\ndef _configure_audit_channel(engine: Engine, *, tenant_id: str, capacity_limit: int = 100) -> None:
     with InfrastructureUnitOfWork(engine, tenant_id=tenant_id) as repo:
         repo.configure_audit_channel(
-            channel_id="audit-channel:tool-runtime:phase16",
+            channel_id=_audit_channel_id(tenant_id),
             capacity_limit=capacity_limit,
             owner_id="security-governance:test-bootstrap",
         )
@@ -130,7 +130,7 @@ def test_security_audit_requirement_identity_rejects_conflicting_content(
                 audit_requirement_id=requirement_id,
                 tenant_id=tenant_id,
                 decision_id=decision_id,
-                audit_channel_id="audit-channel:tool-runtime:phase16",
+                audit_channel_id=_audit_channel_id(tenant_id),
             )
 
         with pytest.raises(
@@ -934,7 +934,7 @@ def test_mandatory_audit_identity_cannot_be_reused_for_different_action_hash(
         owner_id = "tool-runtime:binding-test"
         with InfrastructureUnitOfWork(engine, tenant_id=tenant_id) as repo:
             first = repo.record_mandatory_audit(
-                channel_id="audit-channel:tool-runtime:phase16",
+                channel_id=_audit_channel_id(tenant_id),
                 effect_id=effect_id,
                 owner_id=owner_id,
                 payload={
@@ -948,7 +948,7 @@ def test_mandatory_audit_identity_cannot_be_reused_for_different_action_hash(
         ):
             with InfrastructureUnitOfWork(engine, tenant_id=tenant_id) as repo:
                 repo.record_mandatory_audit(
-                    channel_id="audit-channel:tool-runtime:phase16",
+                    channel_id=_audit_channel_id(tenant_id),
                     effect_id=effect_id,
                     owner_id=owner_id,
                     payload={
@@ -961,5 +961,101 @@ def test_mandatory_audit_identity_cannot_be_reused_for_different_action_hash(
                 audit_id=first.audit_id, effect_id=effect_id, owner_id=owner_id
             )
         assert committed.payload_hash == first.payload_hash
+    finally:
+        _drop_database(engine, admin_engine, database_name)
+
+
+@pytest.mark.skipif(
+    not os.environ.get("ZUNO_TEST_DATABASE_URL"),
+    reason="ZUNO_TEST_DATABASE_URL is not configured; Mandatory Audit probe is BLOCKED",
+)
+def test_mandatory_audit_storage_is_tenant_scoped(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    engine, admin_engine, database_name = _migrated_database(tmp_path, monkeypatch)
+    tenant_a = "tenant-audit-isolation-a"
+    tenant_b = "tenant-audit-isolation-b"
+    channel_a = _audit_channel_id(tenant_a)
+    channel_b = _audit_channel_id(tenant_b)
+    try:
+        _configure_audit_channel(engine, tenant_id=tenant_a, capacity_limit=1)
+        with pytest.raises(
+            InfrastructureConflictError,
+            match="mandatory audit channel belongs to another tenant",
+        ):
+            with InfrastructureUnitOfWork(engine, tenant_id=tenant_b) as repo:
+                repo.configure_audit_channel(
+                    channel_id=channel_a,
+                    capacity_limit=1,
+                    owner_id="security-governance:cross-tenant-probe",
+                )
+
+        _configure_audit_channel(engine, tenant_id=tenant_b, capacity_limit=1)
+
+        with InfrastructureUnitOfWork(engine, tenant_id=tenant_a) as repo:
+            audit_a = repo.record_mandatory_audit(
+                channel_id=channel_a,
+                effect_id="tool-effect-audit:tenant-a",
+                owner_id="tool-runtime:tenant-a",
+                payload={
+                    "tenant_id": tenant_a,
+                    "prepared_tool_action_id": "prepared-tool-action:tenant-a",
+                    "prepared_action_hash": "a" * 64,
+                },
+            )
+        with InfrastructureUnitOfWork(engine, tenant_id=tenant_b) as repo:
+            audit_b = repo.record_mandatory_audit(
+                channel_id=channel_b,
+                effect_id="tool-effect-audit:tenant-b",
+                owner_id="tool-runtime:tenant-b",
+                payload={
+                    "tenant_id": tenant_b,
+                    "prepared_tool_action_id": "prepared-tool-action:tenant-b",
+                    "prepared_action_hash": "b" * 64,
+                },
+            )
+        assert audit_a.remaining_capacity == 0
+        assert audit_b.remaining_capacity == 0
+
+        with pytest.raises(FencingRejectedError, match="tenant-scoped durable mandatory audit"):
+            with InfrastructureUnitOfWork(engine, tenant_id=tenant_b) as repo:
+                repo.assert_audit_durable_for_effect(
+                    audit_id=audit_a.audit_id,
+                    effect_id=audit_a.effect_id,
+                    owner_id=audit_a.owner_id,
+                )
+
+        with pytest.raises(FencingRejectedError, match="tenant-scoped audited effect"):
+            with InfrastructureUnitOfWork(engine, tenant_id=tenant_b) as repo:
+                repo.mark_audited_effect_observed(
+                    audit_id=audit_a.audit_id,
+                    effect_id=audit_a.effect_id,
+                    owner_id=audit_a.owner_id,
+                )
+
+        with engine.connect() as connection:
+            channel_rows = connection.execute(
+                text(
+                    "SELECT tenant_id, channel_id FROM infra_audit_channels "
+                    "WHERE tenant_id IN (:tenant_a, :tenant_b) ORDER BY tenant_id"
+                ),
+                {"tenant_a": tenant_a, "tenant_b": tenant_b},
+            ).mappings().all()
+            event_rows = connection.execute(
+                text(
+                    "SELECT tenant_id, effect_id FROM infra_mandatory_audit_events "
+                    "WHERE tenant_id IN (:tenant_a, :tenant_b) ORDER BY tenant_id"
+                ),
+                {"tenant_a": tenant_a, "tenant_b": tenant_b},
+            ).mappings().all()
+        assert channel_rows == [
+            {"tenant_id": tenant_a, "channel_id": channel_a},
+            {"tenant_id": tenant_b, "channel_id": channel_b},
+        ]
+        assert event_rows == [
+            {"tenant_id": tenant_a, "effect_id": "tool-effect-audit:tenant-a"},
+            {"tenant_id": tenant_b, "effect_id": "tool-effect-audit:tenant-b"},
+        ]
     finally:
         _drop_database(engine, admin_engine, database_name)
