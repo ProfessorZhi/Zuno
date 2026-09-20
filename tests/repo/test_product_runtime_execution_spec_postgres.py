@@ -670,7 +670,7 @@ def test_owner_commit_response_loss_retries_same_canonical_task(
         monkeypatch.setattr(
             ProductService,
             "_start_or_recover_canonical_runtime",
-            original,
+            staticmethod(original),
         )
         second = ProductService.consume_runtime_request_dispatch(
             event_id=event_id,
