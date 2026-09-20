@@ -311,7 +311,7 @@ quality_proven: NO
 production_readiness: NOT_ESTABLISHED
 ```
 
-RB019 的原始 P0 blocker 已按同类 PostgreSQL fault window 转成正向 Current evidence：restart replay 不再升级 unresolved certainty，最小 conclusive reconciliation 已有 writer / tests，mandatory audit 缺 proof 时不再 dispatch，formal Alembic entrypoint 已恢复。仍未证明的 remote-query、manual judgment Authority、audit-class / requirement-proof / tenant binding 与 pre-send-abort / crash-replay lifecycle 继续保持 Gap；文档冻结不能替代这些 Evidence。
+RB019 的原始 P0 blocker 已按同类 PostgreSQL fault window 转成正向 Current evidence：restart replay 不再升级 unresolved certainty，最小 conclusive reconciliation 已有 writer / tests，mandatory audit 缺 proof 时不再 dispatch，formal Alembic entrypoint 已恢复。后续 revision 59 与 AUD-L1 又分别证明 mandatory-audit tenant scope 与 deterministic pre-send abort lifecycle。仍未证明的 manual judgment Authority、audit class、AUD-L2 crash/restart lifecycle 与 Target composed SecurityEpoch继续保持 Gap；remote-query reconciliation 当前按 Provider capability Defer。文档冻结不能替代这些 Evidence。
 
 ## Platform / Infrastructure 与 Optional Context
 

@@ -254,11 +254,11 @@ HumanDecision: 专业人员是否接受、修改或拒绝法律业务结论
 
 **Target**：本文 A/B 描述的跨模块 Authority、边界、恢复和复杂度治理语义。
 
-**Current**：只能由 [`docs/evidence/`](../evidence/README.md) 中与当前代码 SHA、Migration、Test、Trace、Eval、runtime evidence 对应的材料证明。总体架构文档本身不升级任何能力为 Current。RB019 的 restart replay certainty、最小 conclusive reconciliation、mandatory audit send gate 与 formal Alembic entrypoint 已有 main selected evidence；`main@9b7891c6` 还证明 post-dispatch audit capacity lifecycle。剩余 Effect/Security gap 集中在 provider remote query、manual judgment Authority、audit class / requirement-proof / tenant binding，以及 pre-send-abort / crash-replay audit lifecycle。
+**Current**：只能由 [`docs/evidence/`](../evidence/README.md) 中与当前代码 SHA、Migration、Test、Trace、Eval、runtime evidence 对应的材料证明。总体架构文档本身不升级任何能力为 Current。RB019 的 restart replay certainty、最小 conclusive reconciliation、mandatory audit send gate 与 formal Alembic entrypoint 已有 main selected evidence；后续 main evidence 又证明 post-dispatch audit capacity lifecycle、数据库级 tenant scope 与 AUD-L1 deterministic pre-send abort。剩余 Effect/Security gap 集中在 manual judgment Authority、audit class、AUD-L2 crash/restart audit lifecycle 与 Target composed SecurityEpoch；provider remote query 当前按真实 capability inventory保持 Defer。
 
 **Evidence**：模块文档 B13 指向当前可用的具体证据；正向通过与负向 fault probe 都是 Evidence。需要判断某个 Target 是否已经落地时，优先读取对应 Module B13，再读取 evidence 原文和代码。
 
-**Unknown / Measurement Needed**：Production Readiness、完整 fault-injection coverage、真实法院/业务环境收益、GraphRAG / Memory / Native Runtime / Multi-Agent 的 A/B baseline、性能与成本边界、部署拆分必要性，都不能从 Target Design 推导。RB019 已转绿的 fault window属于 Current positive regression；未覆盖的 remote-query、manual Authority 与 audit policy/lifecycle 仍保持 Gap / Measurement Needed。
+**Unknown / Measurement Needed**：Production Readiness、完整 fault-injection coverage、真实法院/业务环境收益、GraphRAG / Memory / Native Runtime / Multi-Agent 的 A/B baseline、性能与成本边界、部署拆分必要性，都不能从 Target Design 推导。RB019、tenant-scope 与 AUD-L1 已转绿的 fault window属于 Current positive regression；manual Authority、audit class 与 AUD-L2 crash/restart lifecycle仍保持 Gap / Measurement Needed，remote-query 则保持 Provider-capability-gated Defer。
 
 `implementation_authorization` 只在明确 scoped slice 内成立：RB019 AUTH-A/B/C 已实施；其他未授权 Target 仍不能因为文档完整而直接实现。
 
