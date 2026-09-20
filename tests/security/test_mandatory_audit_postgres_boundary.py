@@ -1069,3 +1069,361 @@ def test_mandatory_audit_storage_is_tenant_scoped(
         ]
     finally:
         _drop_database(engine, admin_engine, database_name)
+
+
+class _BlockingSandboxAfterAuditGateway(ToolInvocationGateway):
+    def _prepare_sandbox_or_block(self, **kwargs: object) -> tuple[str, None]:
+        return "sandbox policy blocked after mandatory audit commit", None
+
+
+@pytest.mark.skipif(
+    not os.environ.get("ZUNO_TEST_DATABASE_URL"),
+    reason="ZUNO_TEST_DATABASE_URL is not configured; Mandatory Audit probe is BLOCKED",
+)
+def test_post_audit_security_abort_releases_capacity_without_observed_effect(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    engine, admin_engine, database_name = _migrated_database(tmp_path, monkeypatch)
+    tenant_id = "tenant-audit-dispatch-abort"
+    workspace_id = "workspace-audit-dispatch-abort"
+    secret_ref = "secret-ref:mail:audit-dispatch-abort"
+    executor_calls: list[str] = []
+    try:
+        _configure_audit_channel(engine, tenant_id=tenant_id, capacity_limit=1)
+        with SecurityUnitOfWork(engine) as repo:
+            repo.record_secret_ref(
+                secret_ref=secret_ref,
+                tenant_id=tenant_id,
+                credential_version_ref="credential-version:mail.send:audit-dispatch-abort",
+                audience="tool:mail.send",
+                owner_principal_id=f"workspace-user:{workspace_id}",
+                scope={"tool": "mail.send", "workspace_id": workspace_id},
+            )
+
+        async def executor() -> dict[str, str]:
+            executor_calls.append("sent")
+            return {"message_id": f"remote-message:dispatch-abort:{len(executor_calls)}"}
+
+        blocked_call_id = "effect-audit-dispatch-abort-1"
+        blocking_gateway = _RevokingAfterAuditGateway(
+            engine=engine,
+            unit_of_work_factory=lambda: ToolUnitOfWork(engine),
+            security_unit_of_work_factory=lambda: SecurityUnitOfWork(engine),
+            infrastructure_unit_of_work_factory=lambda requested_tenant: InfrastructureUnitOfWork(
+                engine, tenant_id=requested_tenant
+            ),
+        )
+        result, blocked = asyncio.run(
+            blocking_gateway.invoke_readonly(
+                tool_name="mail.send",
+                args={
+                    "to": "blocked-reviewer@example.com",
+                    "body": "must stop before send",
+                    "secret_ref": secret_ref,
+                },
+                tenant_id=tenant_id,
+                workspace_id=workspace_id,
+                trace_id="trace-audit-dispatch-abort-1",
+                call_id=blocked_call_id,
+                adapter_kind="API",
+                executor=executor,
+                readonly=False,
+                approval=ToolApprovalBinding(
+                    decision_ref="security-decision:audit-dispatch-abort-1",
+                    adapter_ref="test.approval",
+                    comment="approved before post-audit revocation",
+                ),
+            )
+        )
+        assert result is None
+        assert blocked.status == "blocked"
+        assert executor_calls == []
+
+        with engine.connect() as connection:
+            aborted = connection.execute(
+                text(
+                    "SELECT status, effect_observed_at, dispatch_aborted_at "
+                    "FROM infra_mandatory_audit_events "
+                    "WHERE tenant_id = :tenant_id "
+                    "AND payload->>'prepared_tool_action_id' = :prepared_id"
+                ),
+                {
+                    "tenant_id": tenant_id,
+                    "prepared_id": f"prepared-tool-action:{blocked_call_id}",
+                },
+            ).mappings().one()
+            attempt = connection.execute(
+                text(
+                    "SELECT status, dispatch_certainty FROM tool_attempts "
+                    "WHERE tenant_id = :tenant_id AND attempt_id = :attempt_id"
+                ),
+                {
+                    "tenant_id": tenant_id,
+                    "attempt_id": f"tool-attempt:{blocked_call_id}",
+                },
+            ).mappings().one()
+        assert aborted["status"] == "dispatch_aborted"
+        assert aborted["effect_observed_at"] is None
+        assert aborted["dispatch_aborted_at"] is not None
+        assert attempt == {"status": "FAILED", "dispatch_certainty": "NOT_DISPATCHED"}
+
+        normal_gateway = ToolInvocationGateway(
+            unit_of_work_factory=lambda: ToolUnitOfWork(engine),
+            security_unit_of_work_factory=lambda: SecurityUnitOfWork(engine),
+            infrastructure_unit_of_work_factory=lambda requested_tenant: InfrastructureUnitOfWork(
+                engine, tenant_id=requested_tenant
+            ),
+        )
+        _, completed = asyncio.run(
+            normal_gateway.invoke_readonly(
+                tool_name="mail.send",
+                args={
+                    "to": "allowed-reviewer@example.com",
+                    "body": "capacity was released",
+                    "secret_ref": secret_ref,
+                },
+                tenant_id=tenant_id,
+                workspace_id=workspace_id,
+                trace_id="trace-audit-dispatch-abort-2",
+                call_id="effect-audit-dispatch-abort-2",
+                adapter_kind="API",
+                executor=executor,
+                readonly=False,
+                approval=ToolApprovalBinding(
+                    decision_ref="security-decision:audit-dispatch-abort-2",
+                    adapter_ref="test.approval",
+                    comment="approved",
+                ),
+            )
+        )
+        assert completed.status == "completed"
+        assert executor_calls == ["sent"]
+        with engine.connect() as connection:
+            statuses = connection.execute(
+                text(
+                    "SELECT status, count(*) AS count "
+                    "FROM infra_mandatory_audit_events "
+                    "WHERE tenant_id = :tenant_id GROUP BY status ORDER BY status"
+                ),
+                {"tenant_id": tenant_id},
+            ).mappings().all()
+        assert statuses == [
+            {"status": "dispatch_aborted", "count": 1},
+            {"status": "effect_observed", "count": 1},
+        ]
+    finally:
+        _drop_database(engine, admin_engine, database_name)
+
+
+@pytest.mark.skipif(
+    not os.environ.get("ZUNO_TEST_DATABASE_URL"),
+    reason="ZUNO_TEST_DATABASE_URL is not configured; Mandatory Audit probe is BLOCKED",
+)
+def test_sandbox_block_after_audit_commit_marks_dispatch_aborted(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    engine, admin_engine, database_name = _migrated_database(tmp_path, monkeypatch)
+    tenant_id = "tenant-audit-sandbox-abort"
+    workspace_id = "workspace-audit-sandbox-abort"
+    call_id = "effect-audit-sandbox-abort-1"
+    secret_ref = "secret-ref:mail:audit-sandbox-abort"
+    executor_calls: list[str] = []
+    try:
+        _configure_audit_channel(engine, tenant_id=tenant_id)
+        with SecurityUnitOfWork(engine) as repo:
+            repo.record_secret_ref(
+                secret_ref=secret_ref,
+                tenant_id=tenant_id,
+                credential_version_ref="credential-version:mail.send:audit-sandbox-abort",
+                audience="tool:mail.send",
+                owner_principal_id=f"workspace-user:{workspace_id}",
+                scope={"tool": "mail.send", "workspace_id": workspace_id},
+            )
+        gateway = _BlockingSandboxAfterAuditGateway(
+            unit_of_work_factory=lambda: ToolUnitOfWork(engine),
+            security_unit_of_work_factory=lambda: SecurityUnitOfWork(engine),
+            infrastructure_unit_of_work_factory=lambda requested_tenant: InfrastructureUnitOfWork(
+                engine, tenant_id=requested_tenant
+            ),
+        )
+
+        async def executor() -> dict[str, str]:
+            executor_calls.append("sent")
+            return {"message_id": "must-not-be-created"}
+
+        result, receipt = asyncio.run(
+            gateway.invoke_readonly(
+                tool_name="mail.send",
+                args={
+                    "to": "reviewer@example.com",
+                    "body": "sandbox must stop before send",
+                    "secret_ref": secret_ref,
+                },
+                tenant_id=tenant_id,
+                workspace_id=workspace_id,
+                trace_id="trace-audit-sandbox-abort",
+                call_id=call_id,
+                adapter_kind="OPENAPI",
+                executor=executor,
+                readonly=False,
+                approval=ToolApprovalBinding(
+                    decision_ref="security-decision:audit-sandbox-abort",
+                    adapter_ref="test.approval",
+                    comment="approved",
+                ),
+            )
+        )
+        assert result is None
+        assert receipt.status == "blocked"
+        assert "sandbox policy blocked" in receipt.blocked_reason
+        assert executor_calls == []
+        with engine.connect() as connection:
+            audit = connection.execute(
+                text(
+                    "SELECT status, effect_observed_at, dispatch_aborted_at "
+                    "FROM infra_mandatory_audit_events "
+                    "WHERE tenant_id = :tenant_id "
+                    "AND payload->>'prepared_tool_action_id' = :prepared_id"
+                ),
+                {
+                    "tenant_id": tenant_id,
+                    "prepared_id": f"prepared-tool-action:{call_id}",
+                },
+            ).mappings().one()
+            effect_count = connection.execute(
+                text(
+                    "SELECT count(*) FROM tool_effect_receipts "
+                    "WHERE tenant_id = :tenant_id AND prepared_tool_action_id = :prepared_id"
+                ),
+                {
+                    "tenant_id": tenant_id,
+                    "prepared_id": f"prepared-tool-action:{call_id}",
+                },
+            ).scalar_one()
+            reconciliation_count = connection.execute(
+                text(
+                    "SELECT count(*) FROM tool_effect_reconciliations "
+                    "WHERE tenant_id = :tenant_id AND prepared_tool_action_id = :prepared_id"
+                ),
+                {
+                    "tenant_id": tenant_id,
+                    "prepared_id": f"prepared-tool-action:{call_id}",
+                },
+            ).scalar_one()
+        assert audit["status"] == "dispatch_aborted"
+        assert audit["effect_observed_at"] is None
+        assert audit["dispatch_aborted_at"] is not None
+        assert int(effect_count) == 0
+        assert int(reconciliation_count) == 0
+    finally:
+        _drop_database(engine, admin_engine, database_name)
+
+
+@pytest.mark.skipif(
+    not os.environ.get("ZUNO_TEST_DATABASE_URL"),
+    reason="ZUNO_TEST_DATABASE_URL is not configured; Mandatory Audit probe is BLOCKED",
+)
+def test_dispatch_aborted_audit_terminal_is_idempotent_and_identity_bound(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    engine, admin_engine, database_name = _migrated_database(tmp_path, monkeypatch)
+    tenant_id = "tenant-audit-abort-terminal"
+    other_tenant_id = "tenant-audit-abort-terminal-other"
+    channel_id = "audit-channel:tool-runtime:tenant-audit-abort-terminal:phase16"
+    try:
+        with InfrastructureUnitOfWork(engine, tenant_id=tenant_id) as repo:
+            repo.configure_audit_channel(
+                channel_id=channel_id,
+                capacity_limit=1,
+                owner_id="security-governance:test-aud-l1",
+            )
+            aborted = repo.record_mandatory_audit(
+                channel_id=channel_id,
+                effect_id="tool-effect-audit:aud-l1-aborted",
+                owner_id="tool-runtime:aud-l1-aborted",
+                payload={
+                    "tenant_id": tenant_id,
+                    "prepared_tool_action_id": "prepared-tool-action:aud-l1-aborted",
+                    "prepared_action_hash": "a" * 64,
+                },
+            )
+            repo.mark_audited_effect_dispatch_aborted(
+                audit_id=aborted.audit_id,
+                effect_id=aborted.effect_id,
+                owner_id=aborted.owner_id,
+            )
+            repo.mark_audited_effect_dispatch_aborted(
+                audit_id=aborted.audit_id,
+                effect_id=aborted.effect_id,
+                owner_id=aborted.owner_id,
+            )
+            observed = repo.record_mandatory_audit(
+                channel_id=channel_id,
+                effect_id="tool-effect-audit:aud-l1-observed",
+                owner_id="tool-runtime:aud-l1-observed",
+                payload={
+                    "tenant_id": tenant_id,
+                    "prepared_tool_action_id": "prepared-tool-action:aud-l1-observed",
+                    "prepared_action_hash": "b" * 64,
+                },
+            )
+            repo.mark_audited_effect_observed(
+                audit_id=observed.audit_id,
+                effect_id=observed.effect_id,
+                owner_id=observed.owner_id,
+            )
+
+        with pytest.raises(FencingRejectedError, match="observed audited effect"):
+            with InfrastructureUnitOfWork(engine, tenant_id=tenant_id) as repo:
+                repo.mark_audited_effect_dispatch_aborted(
+                    audit_id=observed.audit_id,
+                    effect_id=observed.effect_id,
+                    owner_id=observed.owner_id,
+                )
+        with pytest.raises(FencingRejectedError):
+            with InfrastructureUnitOfWork(engine, tenant_id=tenant_id) as repo:
+                repo.mark_audited_effect_dispatch_aborted(
+                    audit_id=aborted.audit_id,
+                    effect_id=aborted.effect_id,
+                    owner_id="tool-runtime:wrong-owner",
+                )
+        with pytest.raises(FencingRejectedError):
+            with InfrastructureUnitOfWork(engine, tenant_id=other_tenant_id) as repo:
+                repo.mark_audited_effect_dispatch_aborted(
+                    audit_id=aborted.audit_id,
+                    effect_id=aborted.effect_id,
+                    owner_id=aborted.owner_id,
+                )
+        with pytest.raises(FencingRejectedError, match="dispatch-aborted"):
+            with InfrastructureUnitOfWork(engine, tenant_id=tenant_id) as repo:
+                repo.record_mandatory_audit(
+                    channel_id=channel_id,
+                    effect_id="tool-effect-audit:aud-l1-aborted",
+                    owner_id="tool-runtime:aud-l1-aborted",
+                    payload={
+                        "tenant_id": tenant_id,
+                        "prepared_tool_action_id": "prepared-tool-action:aud-l1-aborted",
+                        "prepared_action_hash": "a" * 64,
+                    },
+                )
+
+        with engine.connect() as connection:
+            terminal = connection.execute(
+                text(
+                    "SELECT status, effect_observed_at, dispatch_aborted_at "
+                    "FROM infra_mandatory_audit_events "
+                    "WHERE tenant_id = :tenant_id ORDER BY effect_id"
+                ),
+                {"tenant_id": tenant_id},
+            ).mappings().all()
+        assert terminal[0]["status"] == "dispatch_aborted"
+        assert terminal[0]["effect_observed_at"] is None
+        assert terminal[0]["dispatch_aborted_at"] is not None
+        assert terminal[1]["status"] == "effect_observed"
+        assert terminal[1]["effect_observed_at"] is not None
+        assert terminal[1]["dispatch_aborted_at"] is None
+    finally:
+        _drop_database(engine, admin_engine, database_name)
