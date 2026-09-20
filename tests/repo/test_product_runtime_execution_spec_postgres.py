@@ -14,6 +14,7 @@ from sqlalchemy.engine import Engine, make_url
 
 import zuno.platform.database as database_module
 from zuno.api.services.completion import CompletionService
+from zuno.platform.contracts import canonical_sha256
 from zuno.api.services.product.command_service import ProductService
 from zuno.platform.database.product import (
     ProductPersistenceConflict,
