@@ -39,6 +39,8 @@ def upgrade() -> None:
         sa.Column("plan_kind", sa.String(length=80), nullable=False),
         sa.Column("knowledge_space_refs", sa.JSON(), nullable=False),
         sa.Column("budget_limits", sa.JSON(), nullable=False),
+        sa.Column("tool_id", sa.String(length=240), nullable=True),
+        sa.Column("tool_arguments", sa.JSON(), nullable=True),
         sa.Column("data_classification", sa.String(length=40), nullable=False),
         sa.Column("retention_scope", sa.String(length=40), nullable=False),
         sa.Column("content_fingerprint", sa.String(length=64), nullable=False),
