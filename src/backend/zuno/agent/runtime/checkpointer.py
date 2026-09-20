@@ -116,6 +116,7 @@ def _controller_state_from_runtime_state(state: AgentRuntimeState) -> Controller
         task_id=state.task_id,
         trace_id=state.trace_id,
         goal=state.goal,
+        run_id=state.run_id,
         context_pack=state.to_snapshot().model_dump(mode="json"),
         current_step=state.current_node,
         observations=[obs.model_dump(mode="json") for obs in state.observations],
