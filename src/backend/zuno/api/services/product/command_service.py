@@ -331,7 +331,16 @@ class ProductService:
         bootstrap_runtime_agent: bool = False,
         runtime_surface: str = "product",
     ) -> ProductRuntimeRequestResult:
-        submission_id = f"submission:{client_request_id}"
+        durable_identity = canonical_sha256(
+            {
+                "tenant_id": tenant_id,
+                "workspace_id": workspace_id,
+                "client_request_id": client_request_id,
+            }
+        )[:32]
+        submission_id = f"submission:{durable_identity}"
+        command_id = f"command:{durable_identity}"
+        outbox_message_id = f"outbox:{durable_identity}"
         runtime_execution_spec = _build_runtime_execution_spec(
             tenant_id=tenant_id,
             workspace_id=workspace_id,
@@ -353,13 +362,13 @@ class ProductService:
             submission_id=submission_id,
             client_request_id=client_request_id,
             raw_intent_ref=raw_intent_ref,
-            command_id=f"command:{client_request_id}",
+            command_id=command_id,
             command_kind=PRODUCT_RUNTIME_COMMAND_KIND,
             owner_module="Agent Core",
             runtime_request_ref=runtime_request_ref,
             payload=payload,
             journal_sequence_no=1,
-            outbox_message_id=f"outbox:{client_request_id}",
+            outbox_message_id=outbox_message_id,
             runtime_execution_spec=runtime_execution_spec,
         )
         from zuno.platform.database import engine
