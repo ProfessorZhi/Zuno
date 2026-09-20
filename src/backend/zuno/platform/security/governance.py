@@ -70,11 +70,11 @@ def contains_secret_material(payload: Any) -> bool:
     if isinstance(payload, (list, tuple)):
         return any(contains_secret_material(item) for item in payload)
     if isinstance(payload, str):
-        if re.search(r"\\bsk-[A-Za-z0-9_-]+\\b", payload):
+        if re.search(r"\bsk-[A-Za-z0-9_-]+\b", payload):
             return True
         return (
             re.search(
-                r"\\b(api[_ -]?key|token|password|secret)\\s*[:=]\\s*[A-Za-z0-9._@:/+-]+\\b",
+                r"\b(api[_ -]?key|token|password|secret)\s*[:=]\s*[A-Za-z0-9._@:/+-]+\b",
                 payload,
                 re.I,
             )
