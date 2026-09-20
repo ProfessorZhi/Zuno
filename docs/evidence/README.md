@@ -9,7 +9,7 @@
 | Evidence | 保留理由 |
 | --- | --- |
 | [Current Runtime Baseline](current-runtime-baseline.md) | 当前 Runtime owner、状态和失败语义的证据入口 |
-| [Current Test Baseline](current-test-baseline.md) | 当前 GitHub selected code verification、PostgreSQL Domain / Wave-001 revision probes，以及 Slice C / PSC-A–D 已确认的边界 |
+| [Current Test Baseline](current-test-baseline.md) | 当前 GitHub selected code verification、PostgreSQL Domain / Wave-001 revision probes，以及 Slice C / PSC-A–D / PRD-A1 已确认的边界 |
 | [Current Eval Baseline](current-eval-baseline.md) | 当前评测与 Measurement Blocked 状态 |
 | [Implementation Wave-001](implementation-wave-001.md) | TASK-001 / TASK-003 的有限代码、测试和窄验证证据；不是 Program closure |
 
@@ -20,8 +20,8 @@ Slice C 的 fault evidence 如何影响 Freeze readiness、哪些测试已经停
 ## 当前边界
 
 ```text
-SELECTED CODE VERIFICATION: AVAILABLE @ 4d0dc6bc194fe31d257e4b6c2e441f5d82201ab9
-SELECTED GITHUB RUN: 35482378509 / 219 passed, 27 warnings
+SELECTED CODE VERIFICATION: AVAILABLE @ cf31e67e1bbadbd63c6a5fac9e6cb408f19e01b3
+SELECTED GITHUB RUN: 35502213125 / 221 passed, 29 warnings
 POSTGRESQL DOMAIN SELECTED PROBES: PASS
 WAVE-001 REVISION POSTGRESQL APPLY/DOWNGRADE/RE-APPLY: PASS
 TARGET ADMISSION RECEIPT: NOT IMPLEMENTATION-PROVEN
@@ -29,7 +29,7 @@ UNKNOWN EFFECT RESTART REPLAY: FIX VERIFIED / UNKNOWN PRESERVED
 REMOTE SUCCESS + LOCAL EFFECT RECEIPT FAILURE: FALLS BACK TO UNKNOWN / RECONCILE
 CONCLUSIVE RECONCILIATION + ONE-SHOT DURABLE MANUAL JUDGMENT: SELECTED VERIFIED
 REMOTE-QUERY RECONCILIATION: DEFERRED_BY_PROVIDER_CAPABILITY / MANUAL CONCLUSIVE FALLBACK CURRENT
-CXL-A LATE CALLBACK TRUTH: SELECTED VERIFIED / CXL-B BLOCKED_BY_UPSTREAM_PRODUCT_RUNTIME_DISPATCH
+CXL-A LATE CALLBACK TRUTH: SELECTED VERIFIED / CXL-B BLOCKED_BY_PRD_A2_CANONICAL_EXECUTION
 PRE-EFFECT SECURITY EPOCH REVOCATION: PASS
 PRE-LEASE SECRET REVOCATION: PASS
 MANDATORY AUDIT BEFORE EFFECT: FIX VERIFIED / MISSING PROOF FAILS CLOSED
@@ -44,6 +44,8 @@ PRODUCT SECURITY DECISION OWNER FACT: PSC-B SELECTED VERIFIED / ISSUANCE REQUIRE
 FORMAL BUDGET OWNER FACT: PSC-C DEFERRED_BY_SCOPE / OWNER PORT UNBOUND / CALLER LIMITS DO NOT SELF-APPROVE
 PRODUCT APPROVAL SINK OWNERSHIP: PSC-D RESOLVED / EVENT PROJECTION ONLY / AUTHORITY TABLES UNTOUCHED
 PRODUCT APPROVAL FLOW: NOT IMPLEMENTED / approval_flow=none
+PRODUCT RUNTIME EXECUTION SPEC: PRD-A1 SELECTED VERIFIED / REVISION 20260920_61
+PRODUCT RUNTIME CANONICAL START + STABLE TASK/RUN IDENTITY: PRD-A2 NOT IMPLEMENTATION-PROVEN
 FORMAL ALEMBIC ENTRYPOINT: PASS ON FRESH POSTGRESQL
 PRODUCTION_READINESS: NOT_ESTABLISHED
 QUALITY: not_yet_proven
@@ -51,17 +53,17 @@ FULL CI: NOT RUN / NOT ESTABLISHED
 COURT QA: UNKNOWN / NOT AVAILABLE
 ```
 
-Main 的正向 selected verification 说明一组明确列出的 Domain、Citation、Application、Runtime、Knowledge、Capability、Tool、Model Gateway、Security、Observability、Retrieval 与 Eval 行为在同一个 main SHA 的 GitHub runner 上通过。PSC-A 的 run `35071244101` 证明 production composition root 与 `PostgresAgentRunStore`；PSC-B 的 run `35121830478` 证明 Product Security owner fact；PSC-C 在 main 上进一步证明 caller budget limits 不会自批准 formal Budget Admission；当前 run `35202465804` 又证明 PSC-D approval projection 不再写 Security authority tables。
+Main 的正向 selected verification 说明一组明确列出的 Domain、Citation、Application、Runtime、Knowledge、Capability、Tool、Model Gateway、Security、Observability、Retrieval 与 Eval 行为在同一个 main SHA 的 GitHub runner 上通过。PSC-A 的 run `35071244101` 证明 production composition root 与 `PostgresAgentRunStore`；PSC-B 的 run `35121830478` 证明 Product Security owner fact；PSC-C 在 main 上进一步证明 caller budget limits 不会自批准 formal Budget Admission；PSC-D run `35202465804` 证明 approval projection 不再写 Security authority tables；最新 main run `35502213125` 又把 PRD-A1 的 Product-owned `RuntimeExecutionSpec`、Completion goal material、restart-safe spec read、secret rejection、tenant/envelope binding 与 tamper fail-closed 纳入 selected PostgreSQL regression。
 
 PSC-B 没有把测试 TTL 变成产品默认政策，仓库 example 的 `server.security.product_decision_ttl_seconds` 仍是 `null`。PSC-C 的 Defer 也不是 Budget 能力完成：production `budget_decision_resolver` 继续不绑定，直到出现真实 Budget owner/policy source。PSC-D 解决的是 writer ownership，`PostgresSecurityApprovalEventSink` 只保留 durable approval event projection；新的 Product Approval flow 仍未实现。当前可以说“PSC-A/B 已实现并 selected-verified，PSC-C 已按 scope 明确 Defer，PSC-D writer ownership 已收敛”，不能扩写成“Product Security/Budget/Approval admission 已完整可用”。详细 Current shape 由 [`current-test-baseline.md`](current-test-baseline.md) 与 [`Product Security Composition Implementation Status`](../governance/product-security-composition-implementation-status.md) 共同记录。
 
-Slice C 的旧负向证据继续保留，因为它解释了 RB019 的实现优先级：PR #201 / run `34559517466` 曾证明 unresolved Reconciliation 在 restart replay 时被错误升级成 completed；PR #205 / run `34560692093` 曾证明缺少 durable mandatory-audit proof 时 send path 仍会 dispatch。AUTH-A/B/C 以及后续 audit lifecycle、requirement binding、manual durable judgment、Effect Security identity、CXL-A、mandatory-audit tenant scope 与 AUD-L1 修复已经把对应 failure shape 转成 main 上的正向 regression。CXL-A 已证明 local cancel intent 不会吞掉之后到达的真实 provider completion；revision 59 与 AUD-L1 已分别关闭 audit cross-tenant storage 和 deterministic pre-send capacity leak。production cancel entrypoint / provider cancel capability仍被上游 Product runtime dispatch blocker挡住；remote-query reconciliation 已按真实 Provider capability Defer；manual reviewer Authority、audit class 与 AUD-L2 crash/restart lifecycle 仍未闭环。
+Slice C 的旧负向证据继续保留，因为它解释了 RB019 的实现优先级：PR #201 / run `34559517466` 曾证明 unresolved Reconciliation 在 restart replay 时被错误升级成 completed；PR #205 / run `34560692093` 曾证明缺少 durable mandatory-audit proof 时 send path 仍会 dispatch。AUTH-A/B/C 以及后续 audit lifecycle、requirement binding、manual durable judgment、Effect Security identity、CXL-A、mandatory-audit tenant scope 与 AUD-L1 修复已经把对应 failure shape 转成 main 上的正向 regression。CXL-A 已证明 local cancel intent 不会吞掉之后到达的真实 provider completion；revision 59 与 AUD-L1 已分别关闭 audit cross-tenant storage 和 deterministic pre-send capacity leak。PRD-A1 已关闭 Product execution material 不耐久的问题；production cancel entrypoint / provider cancel capability仍被 PRD-A2 canonical runtime start / stable task-run identity blocker挡住。Remote-query reconciliation 已按真实 Provider capability Defer；manual reviewer Authority、audit class 与 AUD-L2 crash/restart lifecycle 仍未闭环。
 
 正向边界同样已经明确：PR #203 / run `34560042535` 证明 pre-send SecurityEpoch revocation fail closed；PR #207 / run `34566365522` 证明 pre-lease Secret revoke fail closed；PR #210 / run `34567699688` 证明 provider 已返回成功、但本地 EffectReceipt persistence 失败时，当前 Gateway 会留下 `UNKNOWN_EFFECT + OPEN/RECONCILE`，而不是直接宣布 completed。故障形状与 Freeze 影响见 [`Effects ↔ Security Slice C Review`](../governance/effect-security-slice-c-review.md)。
 
 早期 Slice C 诊断依赖测试进程临时兼容 `zuno.settings → zuno.platform.settings`，因此那些诊断本身不构成 deployment evidence。AUTH-C 已修复正式 Alembic import；当前 selected main run 在 fresh PostgreSQL 上直接执行正式 `alembic upgrade head`，不再使用 legacy module alias。
 
-这个范围不能扩写成“Zuno PostgreSQL 集成已完成”“完整 Effect recovery 已完成”“Reconciliation 全自动闭环”“cancel-in-flight 已闭环”“Security 已验证完成”“Secret rotation 已验证完成”“Product Security/Budget admission 已完成”或“生产 migration 已资格化”。Current 已证明 Effect replay certainty、conclusive one-shot manual judgment、mandatory audit pre-send gate / persisted requirement binding / post-dispatch capacity lifecycle / tenant scope / deterministic pre-send abort、Tool Effect action-scoped Security fact identity、CXL-A cancel-intent 后 late callback truth、production Workspace composition root、PostgreSQL AgentRunStore 和正式 fresh Alembic entrypoint；Target `AdmissionReceipt`、02↔04 owner-first recovery、manual reviewer Authority、audit class、AUD-L2 crash/restart audit lifecycle、Target composed SecurityEpoch、formal Budget owner admission（当前 PSC-C Defer）、Product Approval flow、完整 Secret rotation/retry、其他 Approval / Policy drift、no-egress、其他平台 PostgreSQL 路径、Redis / RabbitMQ / Object Store、真实 Provider 和外部 Host仍各自需要证据。Remote-query reconciliation 当前是 Provider-capability-gated Defer，而不是已实现能力。
+这个范围不能扩写成“Zuno PostgreSQL 集成已完成”“完整 Effect recovery 已完成”“Reconciliation 全自动闭环”“cancel-in-flight 已闭环”“Security 已验证完成”“Secret rotation 已验证完成”“Product Security/Budget admission 已完成”或“生产 migration 已资格化”。Current 已证明 Effect replay certainty、conclusive one-shot manual judgment、mandatory audit pre-send gate / persisted requirement binding / post-dispatch capacity lifecycle / tenant scope / deterministic pre-send abort、Tool Effect action-scoped Security fact identity、CXL-A cancel-intent 后 late callback truth、production Workspace composition root、PostgreSQL AgentRunStore、PRD-A1 restart-safe Product `RuntimeExecutionSpec` 和正式 fresh Alembic entrypoint；PRD-A2 canonical runtime start / stable task-run identity、Target `AdmissionReceipt`、02↔04 owner-first recovery、manual reviewer Authority、audit class、AUD-L2 crash/restart audit lifecycle、Target composed SecurityEpoch、formal Budget owner admission（当前 PSC-C Defer）、Product Approval flow、完整 Secret rotation/retry、其他 Approval / Policy drift、no-egress、其他平台 PostgreSQL 路径、Redis / RabbitMQ / Object Store、真实 Provider 和外部 Host仍各自需要证据。Remote-query reconciliation 当前是 Provider-capability-gated Defer，而不是已实现能力。
 
 当前仓库可以证明有限实现和验证范围，也可以证明若干具体失败；不能证明完整历史技术栈、真实法院质量、生产部署、用户规模、SLA、QPS、HA、No-egress、Sandbox 资格或正式外部验收。历史 Pilot 不等于 Production。
 

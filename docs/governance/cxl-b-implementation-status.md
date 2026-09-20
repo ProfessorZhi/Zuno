@@ -1,13 +1,13 @@
 # CXL-B Cancel Orchestration Implementation Status
 
-status: `BLOCKED_BY_UPSTREAM_PRODUCT_RUNTIME_DISPATCH / IMPLEMENTATION_NOT_STARTED`
+status: `BLOCKED_BY_PRD_A2_CANONICAL_EXECUTION / IMPLEMENTATION_NOT_STARTED`
 base_main: `0222269a34648774dc60197bcfd6beb6a8e09349`
 source_freeze: [`cxl-b-cancel-orchestration-freeze-candidate.md`](cxl-b-cancel-orchestration-freeze-candidate.md)
 production_readiness: `NOT_ESTABLISHED`
 
-CXL-B freeze 已经把取消语义压缩到一个小边界：04 持久化 run / plan / step cancellation intent，06 持有 Tool AsyncJob / CancellationReceipt / final Effect truth，Provider cancel 只是 optional capability。进入实现前对当前 Product 调用链做 repo-wide review 后，发现 B1 还有一个更上游的前置条件没有成立：今天的 Product runtime command path尚未证明会启动同一条 canonical AgentRun execution。
+CXL-B freeze 已经把取消语义压缩到一个小边界：04 持久化 run / plan / step cancellation intent，06 持有 Tool AsyncJob / CancellationReceipt / final Effect truth，Provider cancel 只是 optional capability。进入实现前对当前 Product 调用链做 repo-wide review 后，发现 B1 还有一个更上游的前置条件没有成立：PRD-A1 已证明 Product RuntimeRequest execution material 可以作为 typed `RuntimeExecutionSpec` 耐久保存、跨 restart读取并由 dispatch consumer校验；当前仍未证明同一请求会启动同一条 canonical AgentRun execution。
 
-这不是取消协议内部的缺口。若忽略它直接写 cancellation API，会得到一条“可以提交 cancel command，却没有对应 production AgentRun / Tool execution可以取消”的假闭环。
+这不是取消协议内部的缺口。PRD-A1 只解决“worker拿到什么”，没有解决“worker如何以 stable task/run identity启动 canonical runtime”。若忽略 PRD-A2 直接写 cancellation API，仍会得到一条“可以提交 cancel command，却没有对应 production canonical AgentRun / Tool execution可以取消”的假闭环。
 
 ## Current source evidence
 
@@ -37,9 +37,9 @@ target_ref = runtime_request_ref
 
 这层已经提供了 Product cancel 命令的安全、幂等外壳，不需要再设计第二套 HTTP token 或取消 idempotency namespace。
 
-### RuntimeRequest dispatch consumer 没有 production call site
+### PRD-A1 已建立 durable dispatch input；production canonical start仍缺失
 
-`ProductService.consume_runtime_request_dispatch()` 能消费 `product.runtime_request.dispatch` outbox event，并在 Agent Core owner transaction 中创建 GoalVersion、TaskContract 和 AgentRun owner fact。它还会把：
+PRD-A1 后，`ProductService.submit_runtime_request()` 会在同一 Product UoW中写 typed/versioned `RuntimeExecutionSpec`，outbox只携带 matching spec ref/hash；`consume_runtime_request_dispatch()` 会按 tenant/ref/hash重新读取并校验 scope，再在 Agent Core owner transaction 中创建 GoalVersion、TaskContract 和 AgentRun owner fact。它还会把：
 
 ```text
 runtime_request_ref
@@ -49,12 +49,13 @@ task_contract_ref
 
 写入 Product owner receipt。
 
-但 repo-wide call-site review 没有找到 production Worker / startup / queue consumer 调用 `consume_runtime_request_dispatch()`。Current 只有方法定义和测试/文档引用。
+Current PostgreSQL evidence已经证明 dispatch consumer可从 durable spec恢复 owner input，但 repo-wide call-site review仍没有建立 production Worker / startup / queue consumer调用它并继续进入 canonical runtime。PRD-A1 没有因此升级成 PRD-A2。
 
 因此：
 
 ```text
-PRODUCT_RUNTIME_DISPATCH_CONSUMER = NOT_IMPLEMENTATION_PROVEN
+PRODUCT_RUNTIME_EXECUTION_SPEC = CURRENT / SELECTED VERIFIED
+PRODUCT_RUNTIME_DISPATCH_TO_CANONICAL_START = NOT IMPLEMENTATION-PROVEN
 ```
 
 ### 当前 dispatch consumer 也没有启动 canonical AgentRuntimeService
@@ -81,6 +82,7 @@ CXL-B1 暂不进入代码实现。
 PRODUCT_CANCEL_COMMAND_TOKEN = CURRENT / IMPLEMENTED
 RUNTIME_CANCELLATION_PRIMITIVE = CURRENT / IMPLEMENTED
 TOOL_CANCELLATION_PRIMITIVE = CURRENT / IMPLEMENTED
+PRODUCT_RUNTIME_EXECUTION_SPEC = CURRENT / SELECTED VERIFIED
 PRODUCT_RUNTIME_REQUEST -> CANONICAL AGENT EXECUTION = NOT IMPLEMENTATION-PROVEN
 PRODUCTION CANCEL -> SAME AGENT RUN -> IN-FLIGHT TOOL = BLOCKED_UPSTREAM
 ```
@@ -95,14 +97,13 @@ PRODUCTION CANCEL -> SAME AGENT RUN -> IN-FLIGHT TOOL = BLOCKED_UPSTREAM
 
 ## Upstream exit condition
 
-重新打开 CXL-B1 前至少需要证明一条正式生产链：
+重新打开 CXL-B1 前，PRD-A1 已满足 durable execution input；还需要 PRD-A2 证明后半条正式生产链：
 
 ```text
-Product RuntimeRequest
-→ durable Product command / outbox
+durable Product RuntimeExecutionSpec
 → Agent Core owner receipt
-→ canonical AgentRuntimeService / AgentRunStore execution
-→ stable runtime_request_ref ↔ canonical run/task identity
+→ stable runtime_request_ref ↔ canonical task/run identity
+→ canonical AgentRuntimeService / AgentRunStore start-or-recover
 ```
 
 证据可以来自最小 integration implementation + PostgreSQL probe，不要求引入新服务。
