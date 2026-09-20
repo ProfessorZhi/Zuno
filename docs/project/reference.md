@@ -51,7 +51,7 @@ Target design != Current implementation
 - Memory / Context is an optional non-authoritative provider boundary. Provider records do not replace Domain truth; recall/lifecycle policy belongs to Security/Governance, and consumers use only currently eligible snapshots.
 - Provenance / source ids establish lineage, not truth, authorization, or semantic-preservation guarantees.
 - Current Effect evidence proves durable UNKNOWN recording, duplicate-dispatch suppression, typed restart replay certainty, and a minimal conclusive reconciliation path. Provider remote-query integration and stronger manual-judgment authority binding remain unproven.
-- Current `MANDATORY_BEFORE_EFFECT` evidence proves the send gate consumes committed audit proof and fails closed before provider dispatch when proof is missing; post-dispatch rows also transition to `effect_observed` so durable capacity is released. Audit class, requirement-proof binding, tenant isolation, pre-send-abort, and crash/replay lifecycle remain unproven.
+- Current `MANDATORY_BEFORE_EFFECT` evidence proves the send gate consumes committed audit proof, fails closed when proof is missing, scopes audit storage by tenant, closes sent rows as `effect_observed`, and closes deterministic pre-send `NOT_DISPATCHED / NO_EFFECT` rows as `dispatch_aborted` so capacity is released without falsifying an observed effect. Audit class and crash/restart lifecycle repair remain unproven.
 - GraphRAG tiny-smoke evidence supports a bounded regression-fix story, not general superiority.
 - Long-term Memory, Persistent Multi-Agent, Native Runtime and GraphRAG remain measurement-gated complexity.
 
