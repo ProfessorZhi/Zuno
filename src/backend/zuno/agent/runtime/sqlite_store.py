@@ -55,7 +55,7 @@ class SQLiteAgentRunStore:
                 """,
                 (
                     state.task_id,
-                    state.task_id,
+                    state.run_id or state.task_id,
                     state.trace_id,
                     state.thread_id,
                     state.workspace_id,

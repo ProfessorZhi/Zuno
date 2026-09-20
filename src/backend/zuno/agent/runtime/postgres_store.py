@@ -51,7 +51,7 @@ class PostgresAgentRunStore:
                 ),
                 {
                     "task_id": state.task_id,
-                    "run_id": state.task_id,
+                    "run_id": state.run_id or state.task_id,
                     "trace_id": state.trace_id,
                     "thread_id": state.thread_id,
                     "workspace_id": state.workspace_id,

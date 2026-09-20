@@ -112,6 +112,22 @@ class ProductRuntimeExecutionSpecView:
 
 
 @dataclass(frozen=True, slots=True)
+class ProductRuntimeExecutionBindingView:
+    binding_ref: str
+    tenant_id: str
+    workspace_id: str
+    runtime_request_ref: str
+    runtime_execution_spec_ref: str
+    runtime_execution_spec_hash: str
+    agent_run_ref: str
+    canonical_task_id: str
+    canonical_run_id: str
+    status: str
+    runtime_final_state: str | None
+    created_at: datetime
+    updated_at: datetime
+
+@dataclass(frozen=True, slots=True)
 class ProductCommandSubmission:
     tenant_id: str
     workspace_id: str
@@ -977,6 +993,149 @@ class ProductRepository:
         if expected_spec_hash is not None and view.spec_hash != expected_spec_hash:
             raise ProductPersistenceConflict("RuntimeExecutionSpec hash does not match durable fact")
         return view
+
+    def ensure_runtime_execution_binding(
+        self,
+        *,
+        binding_ref: str,
+        tenant_id: str,
+        workspace_id: str,
+        runtime_request_ref: str,
+        runtime_execution_spec_ref: str,
+        runtime_execution_spec_hash: str,
+        agent_run_ref: str,
+        canonical_task_id: str,
+        canonical_run_id: str,
+    ) -> ProductRuntimeExecutionBindingView:
+        self.connection.execute(
+            text(
+                """
+                INSERT INTO product_runtime_execution_bindings(
+                    binding_ref, tenant_id, workspace_id, runtime_request_ref,
+                    runtime_execution_spec_ref, runtime_execution_spec_hash,
+                    agent_run_ref, canonical_task_id, canonical_run_id,
+                    status, runtime_final_state
+                ) VALUES (
+                    :binding_ref, :tenant_id, :workspace_id, :runtime_request_ref,
+                    :runtime_execution_spec_ref, :runtime_execution_spec_hash,
+                    :agent_run_ref, :canonical_task_id, :canonical_run_id,
+                    'OWNER_ADMITTED', NULL
+                )
+                ON CONFLICT (tenant_id, runtime_request_ref) DO NOTHING
+                """
+            ),
+            {
+                "binding_ref": binding_ref,
+                "tenant_id": tenant_id,
+                "workspace_id": workspace_id,
+                "runtime_request_ref": runtime_request_ref,
+                "runtime_execution_spec_ref": runtime_execution_spec_ref,
+                "runtime_execution_spec_hash": runtime_execution_spec_hash,
+                "agent_run_ref": agent_run_ref,
+                "canonical_task_id": canonical_task_id,
+                "canonical_run_id": canonical_run_id,
+            },
+        )
+        return self.get_runtime_execution_binding(
+            tenant_id=tenant_id,
+            runtime_request_ref=runtime_request_ref,
+            expected={
+                "binding_ref": binding_ref,
+                "workspace_id": workspace_id,
+                "runtime_execution_spec_ref": runtime_execution_spec_ref,
+                "runtime_execution_spec_hash": runtime_execution_spec_hash,
+                "agent_run_ref": agent_run_ref,
+                "canonical_task_id": canonical_task_id,
+                "canonical_run_id": canonical_run_id,
+            },
+        )
+
+    def get_runtime_execution_binding(
+        self,
+        *,
+        tenant_id: str,
+        runtime_request_ref: str,
+        expected: dict[str, str] | None = None,
+    ) -> ProductRuntimeExecutionBindingView:
+        row = self.connection.execute(
+            text(
+                """
+                SELECT binding_ref, tenant_id, workspace_id, runtime_request_ref,
+                       runtime_execution_spec_ref, runtime_execution_spec_hash,
+                       agent_run_ref, canonical_task_id, canonical_run_id,
+                       status, runtime_final_state, created_at, updated_at
+                FROM product_runtime_execution_bindings
+                WHERE tenant_id = :tenant_id
+                  AND runtime_request_ref = :runtime_request_ref
+                """
+            ),
+            {"tenant_id": tenant_id, "runtime_request_ref": runtime_request_ref},
+        ).mappings().first()
+        if row is None:
+            raise ProductPersistenceConflict("Product runtime execution binding not found")
+        if expected:
+            for key, value in expected.items():
+                if str(row[key]) != str(value):
+                    raise ProductPersistenceConflict(
+                        "Product runtime execution binding identity was reused with different content"
+                    )
+        return ProductRuntimeExecutionBindingView(
+            binding_ref=str(row["binding_ref"]),
+            tenant_id=str(row["tenant_id"]),
+            workspace_id=str(row["workspace_id"]),
+            runtime_request_ref=str(row["runtime_request_ref"]),
+            runtime_execution_spec_ref=str(row["runtime_execution_spec_ref"]),
+            runtime_execution_spec_hash=str(row["runtime_execution_spec_hash"]),
+            agent_run_ref=str(row["agent_run_ref"]),
+            canonical_task_id=str(row["canonical_task_id"]),
+            canonical_run_id=str(row["canonical_run_id"]),
+            status=str(row["status"]),
+            runtime_final_state=(
+                None if row["runtime_final_state"] is None else str(row["runtime_final_state"])
+            ),
+            created_at=row["created_at"],
+            updated_at=row["updated_at"],
+        )
+
+    def mark_runtime_execution_observed(
+        self,
+        *,
+        tenant_id: str,
+        runtime_request_ref: str,
+        canonical_task_id: str,
+        canonical_run_id: str,
+        runtime_final_state: str,
+    ) -> ProductRuntimeExecutionBindingView:
+        row = self.connection.execute(
+            text(
+                """
+                UPDATE product_runtime_execution_bindings
+                SET status = 'RUNTIME_OBSERVED',
+                    runtime_final_state = :runtime_final_state,
+                    updated_at = now()
+                WHERE tenant_id = :tenant_id
+                  AND runtime_request_ref = :runtime_request_ref
+                  AND canonical_task_id = :canonical_task_id
+                  AND canonical_run_id = :canonical_run_id
+                RETURNING binding_ref
+                """
+            ),
+            {
+                "tenant_id": tenant_id,
+                "runtime_request_ref": runtime_request_ref,
+                "canonical_task_id": canonical_task_id,
+                "canonical_run_id": canonical_run_id,
+                "runtime_final_state": runtime_final_state,
+            },
+        ).first()
+        if row is None:
+            raise ProductPersistenceConflict(
+                "Product runtime execution observation does not match durable binding"
+            )
+        return self.get_runtime_execution_binding(
+            tenant_id=tenant_id,
+            runtime_request_ref=runtime_request_ref,
+        )
 
     def submit_command(self, command: ProductCommandSubmission) -> ProductCommandReceiptRef:
         self._ensure_conversation(command)

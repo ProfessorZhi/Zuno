@@ -443,6 +443,7 @@ class WorkspaceRunRequest:
     tool_id: str | None = None
     tool_arguments: dict[str, Any] | None = None
     plan_kind: str = "auto"
+    knowledge_space_ids: tuple[str, ...] = ()
     budget_limits: dict[str, Any] | None = None
     security_epoch_ref: str = ""
     # Opaque owner fact references (PHASE22 repair): the Product Adapter
@@ -800,6 +801,7 @@ class WorkspaceAgentRuntime:
             conversation_id=request.conversation_id,
             agent_version=request.agent_version,
             content_fingerprint=request.content_fingerprint,
+            knowledge_space_ids=tuple(request.knowledge_space_ids),
             capability_ids=capability_ids,
             allowed_tools=capability_ids,
             approval_required_tools=selected_approval_required,
@@ -839,6 +841,7 @@ class WorkspaceAgentRuntime:
             conversation_id=request.conversation_id,
             agent_version=request.agent_version,
             content_fingerprint=request.content_fingerprint,
+            knowledge_space_ids=tuple(request.knowledge_space_ids),
             capability_ids=(),
             allowed_tools=(),
             approval_required_tools=(),
