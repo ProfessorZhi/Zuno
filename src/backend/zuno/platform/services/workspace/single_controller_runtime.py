@@ -380,6 +380,10 @@ class WorkspaceRuntimeComposition:
     # the corresponding admission fail closed (never caller self-attestation).
     security_decision_resolver: "SecurityDecisionResolver | None" = None
     budget_decision_resolver: "BudgetDecisionResolver | None" = None
+    # Canonical dependencies for Product dispatch workers. The factory is
+    # server-owned so Product orchestration does not mint a second Runtime
+    # dependency graph or fall back to developer/test stores.
+    runtime_dependencies_factory: Callable[[], RuntimeDependencies] | None = None
     # Formal Dynamic DAG planner binding; unbound -> complex tasks fail
     # closed with DYNAMIC_PLAN_RUNTIME_NOT_BOUND.
     dynamic_dag_planner: Callable[[Any], list[PlanStep]] | None = None
@@ -456,6 +460,55 @@ class WorkspaceRunRequest:
     security_decision_ref: dict[str, Any] | None = None
     budget_decision_ref: dict[str, Any] | None = None
     idempotency_key: str = ""
+
+
+def build_workspace_plan_steps(
+    request: WorkspaceRunRequest,
+    *,
+    dynamic_dag_planner: Callable[[Any], list[PlanStep]] | None = None,
+) -> list[PlanStep] | None:
+    """Build the deterministic Product plan without constructing a runtime.
+
+    PRD-A2 uses the same plan contract when a durable Product dispatch reaches
+    the canonical AgentRuntimeService, so queue workers do not duplicate
+    planning policy or invent a second execution topology.
+    """
+    if request.plan_kind == "tool" and request.tool_id:
+        return [
+            PlanStep(
+                step_id="step_1",
+                goal=f"Execute {request.tool_id} and return its governed result.",
+                action_type="tool_call",
+                allowed_capabilities=[request.tool_id],
+                tool_id=request.tool_id,
+                tool_arguments=dict(request.tool_arguments or {}),
+                expected_output="tool result observation",
+                acceptance_criteria=["step status completed"],
+            ),
+            PlanStep(
+                step_id="step_2",
+                goal="Answer the user from the tool observation only.",
+                action_type="answer_with_evidence",
+                model_role="synthesis",
+                expected_output="grounded answer",
+                acceptance_criteria=["step status completed"],
+            ),
+        ]
+    if request.plan_kind == "complex":
+        if dynamic_dag_planner is None:
+            return None
+        steps = dynamic_dag_planner(request)
+        return steps or None
+    return [
+        PlanStep(
+            step_id="step_1",
+            goal="Answer the user from current context.",
+            action_type="answer_from_context",
+            model_role="synthesis",
+            expected_output="grounded answer",
+            acceptance_criteria=["step status completed"],
+        )
+    ]
 
 
 class WorkspaceAgentRuntime:
@@ -1033,50 +1086,10 @@ class WorkspaceAgentRuntime:
         return None, None
 
     def _plan_steps(self, request: WorkspaceRunRequest) -> list[PlanStep] | None:
-        # PHASE22 repair (B5): every task has a formal plan. Simple tasks get
-        # an explicit deterministic single-step plan (no direct-answer
-        # bypass); tool tasks bind real tool id + arguments in the plan.
-        if request.plan_kind == "tool" and request.tool_id:
-            return [
-                PlanStep(
-                    step_id="step_1",
-                    goal=f"Execute {request.tool_id} and return its governed result.",
-                    action_type="tool_call",
-                    allowed_capabilities=[request.tool_id],
-                    tool_id=request.tool_id,
-                    tool_arguments=dict(request.tool_arguments or {}),
-                    expected_output="tool result observation",
-                    acceptance_criteria=["step status completed"],
-                ),
-                PlanStep(
-                    step_id="step_2",
-                    goal="Answer the user from the tool observation only.",
-                    action_type="answer_with_evidence",
-                    model_role="synthesis",
-                    expected_output="grounded answer",
-                    acceptance_criteria=["step status completed"],
-                ),
-            ]
-        if request.plan_kind == "complex":
-            # The formal Dynamic DAG planner binding owns complex plans.
-            # ``_to_runtime_request`` fails closed before reaching here when
-            # the planner is not bound (DYNAMIC_PLAN_RUNTIME_NOT_BOUND).
-            if self._dynamic_dag_planner is None:
-                return None
-            steps = self._dynamic_dag_planner(request)
-            if not steps:
-                return None
-            return steps
-        return [
-            PlanStep(
-                step_id="step_1",
-                goal="Answer the user from current context.",
-                action_type="answer_from_context",
-                model_role="synthesis",
-                expected_output="grounded answer",
-                acceptance_criteria=["step status completed"],
-            ),
-        ]
+        return build_workspace_plan_steps(
+            request,
+            dynamic_dag_planner=self._dynamic_dag_planner,
+        )
 
     # -- final state classification ----------------------------------------
 
@@ -1151,6 +1164,7 @@ __all__ = [
     "WorkspaceRunRequest",
     "WorkspaceRuntimeComposition",
     "WorkspaceToolBinding",
+    "build_workspace_plan_steps",
     "build_workspace_tool_control_plane",
     "configure_workspace_product_composition",
     "declared_policy_from_metadata",

@@ -33,7 +33,13 @@ class PostgresAgentRunStore:
     def __init__(self, engine: Engine) -> None:
         self.engine = engine
 
-    def create_task(self, state: ControllerRuntimeState, *, status: str = "running") -> None:
+    def create_task(
+        self,
+        state: ControllerRuntimeState,
+        *,
+        status: str = "running",
+        run_id: str | None = None,
+    ) -> None:
         with self.engine.begin() as connection:
             connection.execute(
                 text(
@@ -51,7 +57,7 @@ class PostgresAgentRunStore:
                 ),
                 {
                     "task_id": state.task_id,
-                    "run_id": state.task_id,
+                    "run_id": run_id or state.task_id,
                     "trace_id": state.trace_id,
                     "thread_id": state.thread_id,
                     "workspace_id": state.workspace_id,

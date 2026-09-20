@@ -43,7 +43,13 @@ class SQLiteAgentRunStore:
         self.db_path.parent.mkdir(parents=True, exist_ok=True)
         self._init_schema()
 
-    def create_task(self, state: ControllerRuntimeState, *, status: str = "running") -> None:
+    def create_task(
+        self,
+        state: ControllerRuntimeState,
+        *,
+        status: str = "running",
+        run_id: str | None = None,
+    ) -> None:
         with self._connect() as conn:
             conn.execute(
                 """
@@ -55,7 +61,7 @@ class SQLiteAgentRunStore:
                 """,
                 (
                     state.task_id,
-                    state.task_id,
+                    run_id or state.task_id,
                     state.trace_id,
                     state.thread_id,
                     state.workspace_id,

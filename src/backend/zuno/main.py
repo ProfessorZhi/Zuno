@@ -49,10 +49,13 @@ def configure_workspace_product_runtime(engine):
     configured. Budget and product approval remain independent fail-closed
     slices.
     """
-    from zuno.agent.runtime import PostgresAgentRunStore
+    from zuno.agent.runtime import PostgresAgentRunStore, RuntimeDependencyFactory
+    from zuno.agent.runtime.configuration import RuntimeFactoryConfig
+    from zuno.agent.runtime.dependencies import RuntimeDependencies
+    from zuno.capability.runtime import build_default_tool_control_plane_runtime
     from zuno.platform.database.foundation import InfrastructureUnitOfWork
     from zuno.platform.database.tool_runtime import ToolUnitOfWork
-    from zuno.platform.security import SecurityUnitOfWork
+    from zuno.platform.security import PostgresSecurityApprovalEventSink, SecurityUnitOfWork
     from zuno.platform.security.decision_resolvers import PostgresSecurityDecisionResolver
     from zuno.platform.services.workspace.single_controller_runtime import (
         WorkspaceRuntimeComposition,
@@ -70,6 +73,29 @@ def configure_workspace_product_runtime(engine):
         else None
     )
 
+    def runtime_dependencies_factory() -> RuntimeDependencies:
+        defaults = RuntimeDependencyFactory(
+            RuntimeFactoryConfig(enable_local_tool_runtime=False)
+        ).dependencies()
+        tool_runtime = build_default_tool_control_plane_runtime(
+            security_approval_sink=PostgresSecurityApprovalEventSink(engine),
+            persist_facts=True,
+            tool_unit_of_work_factory=lambda: ToolUnitOfWork(engine),
+            security_unit_of_work_factory=lambda: SecurityUnitOfWork(engine),
+            infrastructure_unit_of_work_factory=lambda tenant_id: InfrastructureUnitOfWork(
+                engine,
+                tenant_id=tenant_id,
+            ),
+        )
+        return RuntimeDependencies(
+            model_gateway=defaults.model_gateway,
+            memory_engine=defaults.memory_engine,
+            knowledge_runtime=defaults.knowledge_runtime,
+            capability_runtime=defaults.capability_runtime,
+            tool_control_plane=tool_runtime,
+            trace_sink=defaults.trace_sink,
+        )
+
     composition = WorkspaceRuntimeComposition(
         store=PostgresAgentRunStore(engine),
         tool_unit_of_work_factory=lambda: ToolUnitOfWork(engine),
@@ -83,6 +109,7 @@ def configure_workspace_product_runtime(engine):
         approval_flow="none",
         security_decision_resolver=security_owner_port,
         budget_decision_resolver=None,
+        runtime_dependencies_factory=runtime_dependencies_factory,
         dynamic_dag_planner=None,
     )
     configure_workspace_product_composition(composition)

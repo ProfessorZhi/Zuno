@@ -1170,6 +1170,11 @@ class ProductRepository:
         status: str,
         owner_receipt_ref: str,
         payload: dict[str, Any],
+        runtime_request_ref: str | None = None,
+        canonical_task_id: str | None = None,
+        canonical_run_id: str | None = None,
+        runtime_execution_spec_ref: str | None = None,
+        runtime_execution_spec_hash: str | None = None,
     ) -> str:
         if payload.get("domain_success_ref"):
             raise ProductPersistenceConflict("Product receipt cannot claim owner domain success")
@@ -1188,7 +1193,48 @@ class ProductRepository:
             status,
             payload,
             owner_receipt_ref=owner_receipt_ref,
+            runtime_request_ref=runtime_request_ref,
+            canonical_task_id=canonical_task_id,
+            canonical_run_id=canonical_run_id,
+            runtime_execution_spec_ref=runtime_execution_spec_ref,
+            runtime_execution_spec_hash=runtime_execution_spec_hash,
         )
+
+    def get_runtime_owner_binding(
+        self,
+        *,
+        tenant_id: str,
+        command_id: str,
+    ) -> dict[str, str]:
+        row = self.connection.execute(
+            text(
+                """
+                SELECT owner_receipt_ref, runtime_request_ref, canonical_task_id,
+                       canonical_run_id, runtime_execution_spec_ref,
+                       runtime_execution_spec_hash
+                FROM product_command_receipts
+                WHERE tenant_id = :tenant_id
+                  AND command_id = :command_id
+                  AND owner_receipt_ref IS NOT NULL
+                ORDER BY receipt_version
+                LIMIT 1
+                """
+            ),
+            {"tenant_id": tenant_id, "command_id": command_id},
+        ).mappings().first()
+        if row is None:
+            raise ProductPersistenceConflict("Product runtime owner binding is missing")
+        values = {
+            "owner_receipt_ref": row["owner_receipt_ref"],
+            "runtime_request_ref": row["runtime_request_ref"],
+            "canonical_task_id": row["canonical_task_id"],
+            "canonical_run_id": row["canonical_run_id"],
+            "runtime_execution_spec_ref": row["runtime_execution_spec_ref"],
+            "runtime_execution_spec_hash": row["runtime_execution_spec_hash"],
+        }
+        if any(value is None or not str(value).strip() for value in values.values()):
+            raise ProductPersistenceConflict("Product runtime owner binding is incomplete")
+        return {key: str(value) for key, value in values.items()}
 
     def record_projection_event(
         self,
@@ -1823,6 +1869,11 @@ class ProductRepository:
         payload: dict[str, Any],
         *,
         owner_receipt_ref: str | None = None,
+        runtime_request_ref: str | None = None,
+        canonical_task_id: str | None = None,
+        canonical_run_id: str | None = None,
+        runtime_execution_spec_ref: str | None = None,
+        runtime_execution_spec_hash: str | None = None,
     ) -> str:
         command_exists = self.connection.execute(
             text(
@@ -1854,11 +1905,15 @@ class ProductRepository:
                 """
                 INSERT INTO product_command_receipts (
                     receipt_id, tenant_id, command_id, receipt_version, status,
-                    owner_receipt_ref, receipt_hash, domain_success_ref
+                    owner_receipt_ref, receipt_hash, domain_success_ref,
+                    runtime_request_ref, canonical_task_id, canonical_run_id,
+                    runtime_execution_spec_ref, runtime_execution_spec_hash
                 )
                 VALUES (
                     :receipt_id, :tenant_id, :command_id, :receipt_version, :status,
-                    :owner_receipt_ref, :receipt_hash, null
+                    :owner_receipt_ref, :receipt_hash, null,
+                    :runtime_request_ref, :canonical_task_id, :canonical_run_id,
+                    :runtime_execution_spec_ref, :runtime_execution_spec_hash
                 )
                 """
             ),
@@ -1870,6 +1925,11 @@ class ProductRepository:
                 "status": status,
                 "owner_receipt_ref": owner_receipt_ref,
                 "receipt_hash": canonical_sha256(payload),
+                "runtime_request_ref": runtime_request_ref,
+                "canonical_task_id": canonical_task_id,
+                "canonical_run_id": canonical_run_id,
+                "runtime_execution_spec_ref": runtime_execution_spec_ref,
+                "runtime_execution_spec_hash": runtime_execution_spec_hash,
             },
         )
         return receipt_id

@@ -5,6 +5,7 @@ from datetime import datetime, timedelta, timezone
 from typing import Any
 
 from zuno.agent.domain import AgentRun, GoalInputClassification, GoalVersion, TaskContract
+from zuno.agent.runtime import AgentRuntimeService, PROFILE_PRODUCT, RuntimeStartRequest
 from zuno.platform.contracts import canonical_sha256
 from zuno.platform.database.agent import AgentDomainRepository
 from zuno.platform.database.foundation import InfrastructureRepository
@@ -17,6 +18,11 @@ from zuno.platform.database.product import (
 )
 from zuno.platform.security import contains_secret_material
 from zuno.api.services.product.artifact_service import ProductArtifactService
+from zuno.platform.services.workspace.single_controller_runtime import (
+    WorkspaceRunRequest,
+    build_workspace_plan_steps,
+    get_workspace_product_composition,
+)
 
 
 PRODUCT_DEFAULT_SECURITY_EPOCH_REF = "security-epoch:product:default"
@@ -25,6 +31,93 @@ PRODUCT_RUNTIME_DISPATCH_CONSUMER = "agent-core-product-runtime-dispatch"
 PRODUCT_PROJECTION_REBUILD_TOPIC = "product.projection.rebuild.requested"
 PRODUCT_PROJECTION_REBUILD_CONSUMER = "product-projection-rebuild-worker"
 PRODUCT_RUNTIME_COMMAND_KIND = "SUBMIT_USER_GOAL"
+
+
+def _canonical_product_runtime_identity(
+    *,
+    tenant_id: str,
+    workspace_id: str,
+    runtime_request_ref: str,
+) -> tuple[str, str]:
+    identity_hash = canonical_sha256(
+        {
+            "tenant_id": tenant_id,
+            "workspace_id": workspace_id,
+            "runtime_request_ref": runtime_request_ref,
+        }
+    )[:32]
+    task_id = f"product-runtime-task:{identity_hash}"
+    return task_id, f"run:{task_id}"
+
+
+def _runtime_start_request_from_spec(
+    *,
+    runtime_execution_spec,
+    canonical_task_id: str,
+    canonical_run_id: str,
+    composition,
+) -> RuntimeStartRequest:
+    workspace_request = WorkspaceRunRequest(
+        task_id=canonical_task_id,
+        thread_id=f"thread:{canonical_task_id}",
+        tenant_id=runtime_execution_spec.tenant_id,
+        workspace_id=runtime_execution_spec.workspace_id,
+        principal_id=runtime_execution_spec.principal_id,
+        submission_id=runtime_execution_spec.submission_id,
+        client_request_id=runtime_execution_spec.client_request_id,
+        user_id=runtime_execution_spec.principal_id,
+        trace_id=f"trace:{canonical_task_id}",
+        goal=runtime_execution_spec.goal_text,
+        conversation_id=runtime_execution_spec.conversation_id,
+        agent_version=runtime_execution_spec.active_agent_version_id,
+        content_fingerprint=runtime_execution_spec.content_fingerprint,
+        tool_id=runtime_execution_spec.tool_id,
+        tool_arguments=runtime_execution_spec.tool_arguments,
+        plan_kind=runtime_execution_spec.plan_kind,
+        budget_limits=runtime_execution_spec.budget_limits,
+        security_epoch_ref=composition.security_epoch_ref,
+        idempotency_key=runtime_execution_spec.client_request_id,
+    )
+    plan_steps = build_workspace_plan_steps(
+        workspace_request,
+        dynamic_dag_planner=composition.dynamic_dag_planner,
+    )
+    capability_ids = (
+        (runtime_execution_spec.tool_id,)
+        if runtime_execution_spec.plan_kind == "tool"
+        and runtime_execution_spec.tool_id
+        and plan_steps
+        else ()
+    )
+    return RuntimeStartRequest(
+        run_id=canonical_run_id,
+        thread_id=workspace_request.thread_id,
+        tenant_id=workspace_request.tenant_id,
+        workspace_id=workspace_request.workspace_id,
+        principal_id=workspace_request.principal_id,
+        user_id=workspace_request.user_id,
+        task_id=canonical_task_id,
+        trace_id=workspace_request.trace_id,
+        goal=workspace_request.goal,
+        submission_id=workspace_request.submission_id,
+        client_request_id=workspace_request.client_request_id,
+        conversation_id=workspace_request.conversation_id,
+        agent_version=workspace_request.agent_version,
+        content_fingerprint=workspace_request.content_fingerprint,
+        profile=PROFILE_PRODUCT,
+        knowledge_space_ids=tuple(runtime_execution_spec.knowledge_space_refs),
+        capability_ids=capability_ids,
+        allowed_tools=capability_ids,
+        approval_required_tools=(),
+        budget_limits=dict(runtime_execution_spec.budget_limits or {}),
+        security_decision_ref=None,
+        budget_decision_ref=None,
+        security_epoch_ref=composition.security_epoch_ref,
+        plan_steps=tuple(
+            step.model_dump(mode="json")
+            for step in (plan_steps or ())
+        ),
+    )
 
 
 def _build_runtime_execution_spec(
@@ -829,6 +922,56 @@ class ProductService:
         )
 
     @staticmethod
+    def _start_or_recover_canonical_runtime(
+        *,
+        runtime_execution_spec,
+        canonical_task_id: str,
+        canonical_run_id: str,
+    ):
+        composition = get_workspace_product_composition()
+        if composition is None or composition.store is None:
+            raise ProductPersistenceConflict(
+                "Product canonical runtime composition/store is not bound"
+            )
+        if composition.runtime_dependencies_factory is None:
+            raise ProductPersistenceConflict(
+                "Product canonical runtime dependencies are not bound"
+            )
+        service = AgentRuntimeService(
+            store=composition.store,
+            dependencies=composition.runtime_dependencies_factory(),
+        )
+        if composition.store.has_task(canonical_task_id):
+            snapshot = service.get_snapshot(
+                canonical_task_id,
+                tenant_id=runtime_execution_spec.tenant_id,
+                workspace_id=runtime_execution_spec.workspace_id,
+            )
+            if snapshot is None:
+                raise ProductPersistenceConflict(
+                    "existing canonical runtime task is outside Product owner scope"
+                )
+        else:
+            snapshot = service.start(
+                _runtime_start_request_from_spec(
+                    runtime_execution_spec=runtime_execution_spec,
+                    canonical_task_id=canonical_task_id,
+                    canonical_run_id=canonical_run_id,
+                    composition=composition,
+                )
+            )
+        if (
+            snapshot.task_id != canonical_task_id
+            or snapshot.run_id != canonical_run_id
+            or snapshot.tenant_id != runtime_execution_spec.tenant_id
+            or snapshot.workspace_id != runtime_execution_spec.workspace_id
+        ):
+            raise ProductPersistenceConflict(
+                "canonical runtime snapshot does not match Product owner binding"
+            )
+        return snapshot
+
+    @staticmethod
     def consume_runtime_request_dispatch(
         *,
         event_id: str,
@@ -840,6 +983,8 @@ class ProductService:
 
             engine = default_engine
 
+        # Phase 1: claim the Product delivery, validate the durable A1 spec and
+        # commit Agent Core owner facts + the canonical execution binding.
         with engine.begin() as conn:
             infra_repo = InfrastructureRepository(conn)
             if not infra_repo.claim_outbox_event(event_id=event_id, worker_id=worker_id):
@@ -907,13 +1052,17 @@ class ProductService:
                 raise ProductPersistenceConflict(
                     "Product RuntimeRequest dispatch does not match durable RuntimeExecutionSpec scope"
                 )
+            canonical_task_id, canonical_run_id = _canonical_product_runtime_identity(
+                tenant_id=tenant_id,
+                workspace_id=workspace_id,
+                runtime_request_ref=runtime_request_ref,
+            )
             owner_context = ProductService.build_runtime_owner_context(
                 active_agent_version_id=str(payload.get("active_agent_version_id") or ""),
                 command_id=command_id,
                 command_kind=PRODUCT_RUNTIME_COMMAND_KIND,
                 payload=payload,
             )
-            agent_run_id = f"agent-run:{runtime_request_ref}"
             owner_receipt_ref: str | None = None
             agent_run_status = "duplicate"
             inbox_first_seen = False
@@ -932,8 +1081,8 @@ class ProductService:
                     if receipt.first_seen:
                         agent_repo = AgentDomainRepository(conn)
                         now = datetime.now(timezone.utc)
-                        task_contract_id = f"task-contract:{runtime_request_ref}"
-                        goal_version_id = f"goal:{runtime_request_ref}"
+                        task_contract_id = f"task-contract:{canonical_task_id}"
+                        goal_version_id = f"goal:{canonical_task_id}"
                         agent_repo.record_goal_version(
                             GoalVersion(
                                 goal_version_id=goal_version_id,
@@ -943,7 +1092,7 @@ class ProductService:
                                 goal_sequence=int(record.ordering_sequence or 1),
                                 input_classification=GoalInputClassification.NEW_TASK,
                                 objective_hash=runtime_execution_spec.content_fingerprint,
-                                output_contract_ref=f"output-contract:{runtime_request_ref}",
+                                output_contract_ref=f"output-contract:{canonical_task_id}",
                                 constraints_hash=owner_context["constraints_hash"],
                             )
                         )
@@ -955,24 +1104,24 @@ class ProductService:
                                 principal_id=principal_id,
                                 goal_version_id=goal_version_id,
                                 idempotency_key=record.idempotency_key,
-                                security_context_ref=f"security-context:{runtime_request_ref}",
+                                security_context_ref=f"security-context:{canonical_task_id}",
                                 security_epoch_ref=PRODUCT_DEFAULT_SECURITY_EPOCH_REF,
                                 deadline_at=now + timedelta(hours=1),
-                                budget_ref=f"budget:{runtime_request_ref}",
+                                budget_ref=f"budget:{canonical_task_id}",
                             )
                         )
                         run_receipt = agent_repo.record_agent_run(
                             AgentRun(
-                                run_id=agent_run_id,
+                                run_id=canonical_run_id,
                                 tenant_id=tenant_id,
                                 workspace_id=workspace_id,
                                 principal_id=principal_id,
                                 task_contract_id=task_contract_id,
-                                trace_id=f"trace:{runtime_request_ref}",
+                                trace_id=f"trace:{canonical_task_id}",
                             )
                         )
                         owner_receipt_ref = f"owner-receipt:{record.event_id}:agent-run-created"
-                        ProductRepository(conn).append_owner_receipt(
+                        product_repo.append_owner_receipt(
                             tenant_id=tenant_id,
                             command_id=command_id,
                             status="ACCEPTED",
@@ -981,12 +1130,19 @@ class ProductService:
                                 "runtime_request_ref": runtime_request_ref,
                                 "agent_run_ref": run_receipt.ref,
                                 "task_contract_ref": task_contract_id,
+                                "canonical_task_id": canonical_task_id,
+                                "canonical_run_id": canonical_run_id,
                                 "runtime_execution_spec_ref": runtime_execution_spec.runtime_execution_spec_ref,
                                 "runtime_execution_spec_hash": runtime_execution_spec.spec_hash,
                                 "outbox_event_id": record.event_id,
                                 "command_kind": owner_context["command_kind"],
                                 "constraints_hash": owner_context["constraints_hash"],
                             },
+                            runtime_request_ref=runtime_request_ref,
+                            canonical_task_id=canonical_task_id,
+                            canonical_run_id=canonical_run_id,
+                            runtime_execution_spec_ref=runtime_execution_spec.runtime_execution_spec_ref,
+                            runtime_execution_spec_hash=runtime_execution_spec.spec_hash,
                         )
                         infra_repo.mark_inbox_processed(
                             tenant_id=tenant_id,
@@ -994,6 +1150,26 @@ class ProductService:
                             message_id=record.event_id,
                         )
                         agent_run_status = run_receipt.status
+                    else:
+                        binding = product_repo.get_runtime_owner_binding(
+                            tenant_id=tenant_id,
+                            command_id=command_id,
+                        )
+                        expected_binding = {
+                            "runtime_request_ref": runtime_request_ref,
+                            "canonical_task_id": canonical_task_id,
+                            "canonical_run_id": canonical_run_id,
+                            "runtime_execution_spec_ref": runtime_execution_spec.runtime_execution_spec_ref,
+                            "runtime_execution_spec_hash": runtime_execution_spec.spec_hash,
+                        }
+                        if any(
+                            binding[key] != value
+                            for key, value in expected_binding.items()
+                        ):
+                            raise ProductPersistenceConflict(
+                                "Product runtime owner binding does not match durable dispatch identity"
+                            )
+                        owner_receipt_ref = binding["owner_receipt_ref"]
                     owner_tx.commit()
                 except Exception:
                     owner_tx.rollback()
@@ -1010,17 +1186,55 @@ class ProductService:
                 return ProductRuntimeDispatchConsumeResult(
                     event_id=event_id,
                     command_id=command_id,
-                    agent_run_id=agent_run_id,
+                    agent_run_id=canonical_run_id,
                     agent_run_status="owner_unavailable",
                     owner_receipt_ref=None,
                     inbox_first_seen=False,
                     outbox_status=failure.status,
                 )
-            infra_repo.complete_outbox(event_id=record.event_id, worker_id=worker_id)
+
+        # Phase 2: the owner transaction is committed. Start or recover the
+        # server-owned canonical runtime without holding Product/Agent locks.
+        try:
+            snapshot = ProductService._start_or_recover_canonical_runtime(
+                runtime_execution_spec=runtime_execution_spec,
+                canonical_task_id=canonical_task_id,
+                canonical_run_id=canonical_run_id,
+            )
+            agent_run_status = str(snapshot.finalization_status)
+        except Exception as exc:
+            with engine.begin() as conn:
+                failure = InfrastructureRepository(conn).record_outbox_publish_failure(
+                    event_id=event_id,
+                    worker_id=worker_id,
+                    error_code=f"CanonicalRuntimeUnavailable:{type(exc).__name__}",
+                    max_attempts=3,
+                    base_backoff_seconds=0,
+                    max_backoff_seconds=0,
+                )
+            return ProductRuntimeDispatchConsumeResult(
+                event_id=event_id,
+                command_id=command_id,
+                agent_run_id=canonical_run_id,
+                agent_run_status="runtime_unavailable",
+                owner_receipt_ref=owner_receipt_ref,
+                inbox_first_seen=inbox_first_seen,
+                outbox_status=failure.status,
+            )
+
+        # Phase 3: runtime truth is durable. Only now acknowledge the Product
+        # outbox delivery. A failure here leaves a claimed event that can be
+        # reclaimed; the next worker reads the same owner binding and runtime
+        # task rather than starting a second canonical run.
+        with engine.begin() as conn:
+            InfrastructureRepository(conn).complete_outbox(
+                event_id=event_id,
+                worker_id=worker_id,
+            )
         return ProductRuntimeDispatchConsumeResult(
             event_id=event_id,
             command_id=command_id,
-            agent_run_id=agent_run_id,
+            agent_run_id=canonical_run_id,
             agent_run_status=agent_run_status,
             owner_receipt_ref=owner_receipt_ref,
             inbox_first_seen=inbox_first_seen,
