@@ -861,6 +861,19 @@ class ProductService:
             principal_id = str(payload["principal_id"])
             command_id = str(payload["command_id"])
             runtime_request_ref = str(payload["runtime_request_ref"])
+            conversation_id = str(payload["conversation_id"])
+            if record.tenant_id != tenant_id:
+                raise ProductPersistenceConflict(
+                    "Product RuntimeRequest outbox tenant does not match payload"
+                )
+            if record.aggregate_id != command_id:
+                raise ProductPersistenceConflict(
+                    "Product RuntimeRequest outbox aggregate does not match command"
+                )
+            if record.ordering_key is not None and record.ordering_key != conversation_id:
+                raise ProductPersistenceConflict(
+                    "Product RuntimeRequest outbox ordering key does not match conversation"
+                )
             runtime_execution_spec_ref = str(
                 payload.get("runtime_execution_spec_ref") or ""
             ).strip()
@@ -880,8 +893,9 @@ class ProductService:
             if (
                 runtime_execution_spec.runtime_request_ref != runtime_request_ref
                 or runtime_execution_spec.workspace_id != workspace_id
-                or runtime_execution_spec.conversation_id != str(payload["conversation_id"])
+                or runtime_execution_spec.conversation_id != conversation_id
                 or runtime_execution_spec.principal_id != principal_id
+                or runtime_execution_spec.client_request_id != record.idempotency_key
                 or runtime_execution_spec.submission_id != str(payload["submission_id"])
                 or runtime_execution_spec.active_agent_version_id
                 != str(payload.get("active_agent_version_id") or "")
