@@ -18,7 +18,11 @@ class RuntimeGraphCheckpointer:
 
     def ensure_run(self, state: AgentRuntimeState, *, status: str = "running") -> None:
         if not self.store.has_task(state.task_id):
-            self.store.create_task(_controller_state_from_runtime_state(state), status=status)
+            self.store.create_task(
+                _controller_state_from_runtime_state(state),
+                status=status,
+                run_id=state.run_id,
+            )
 
     def persist_node(self, state: AgentRuntimeState, *, node: str, status: str = "completed") -> AgentRuntimeState:
         checkpoint = RuntimeCheckpoint(
