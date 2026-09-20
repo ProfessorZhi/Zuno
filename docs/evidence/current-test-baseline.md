@@ -1,21 +1,21 @@
 # Current Test Baseline
 
-状态：`CURRENT / SELECTED_VERIFICATION_AVAILABLE / PSC_A_COMPOSITION_VERIFIED / PSC_B_SECURITY_OWNER_FACT_VERIFIED / PSC_C_BUDGET_DEFERRED_BY_SCOPE / PSC_D_APPROVAL_PROJECTION_VERIFIED / EFFECT_REPLAY_FIX_VERIFIED / DURABLE_RECONCILIATION_JUDGMENT_VERIFIED / MANDATORY_AUDIT_REQUIREMENT_BINDING_VERIFIED / SECURITY_EFFECT_IDENTITY_VERIFIED / SECURITY_REVOCATION_POSITIVE_EVIDENCE / SECRET_REVOCATION_POSITIVE_EVIDENCE / CXL_A_LATE_CALLBACK_TRUTH_VERIFIED / QUALITY_NOT_ESTABLISHED`
+状态：`CURRENT / SELECTED_VERIFICATION_AVAILABLE / PSC_A_COMPOSITION_VERIFIED / PSC_B_SECURITY_OWNER_FACT_VERIFIED / PSC_C_BUDGET_DEFERRED_BY_SCOPE / PSC_D_APPROVAL_PROJECTION_VERIFIED / EFFECT_REPLAY_FIX_VERIFIED / DURABLE_RECONCILIATION_JUDGMENT_VERIFIED / MANDATORY_AUDIT_REQUIREMENT_BINDING_VERIFIED / MANDATORY_AUDIT_TENANT_SCOPE_VERIFIED / AUD_L1_PRE_SEND_ABORT_VERIFIED / SECURITY_EFFECT_IDENTITY_VERIFIED / SECURITY_REVOCATION_POSITIVE_EVIDENCE / SECRET_REVOCATION_POSITIVE_EVIDENCE / CXL_A_LATE_CALLBACK_TRUTH_VERIFIED / QUALITY_NOT_ESTABLISHED`
 
 ## 当前代码快照的 Selected Verification
 
-RB019 的 Effect/Audit 修复、Product Security Composition PSC-A–D 当前决策与 CXL-A late-callback truth 修复都已经进入 `main`。PSC-A/B 是实现并验证的 owner/composition path，PSC-C 是有证据约束的 Defer，PSC-D 是 authority-writer cleanup；CXL-A 只关闭 cancel intent 后 late callback truth，不升级完整 cancel orchestration。当前 GitHub-native selected verification 直接绑定 `main@a1c6a4dd09d988b89ae8801e26933e49b3095af5`：
+RB019 的 Effect/Audit 修复、Product Security Composition PSC-A–D、CXL-A late-callback truth、mandatory-audit tenant scope 与 AUD-L1 deterministic pre-send abort 都已经进入 `main`。PSC-A/B 是实现并验证的 owner/composition path，PSC-C 是有证据约束的 Defer，PSC-D 是 authority-writer cleanup；CXL-A 只关闭 cancel intent 后 late callback truth，AUD-L1 只关闭能够明确证明 `NOT_DISPATCHED / NO_EFFECT` 的 pre-send lifecycle，不升级完整 cancel 或 crash-recovery orchestration。当前 GitHub-native selected verification 直接绑定 `main@4d0dc6bc194fe31d257e4b6c2e441f5d82201ab9`：
 
 ```text
-verified_code_snapshot: a1c6a4dd09d988b89ae8801e26933e49b3095af5
+verified_code_snapshot: 4d0dc6bc194fe31d257e4b6c2e441f5d82201ab9
 workflow: Current code selected verification
-workflow_run: 35232820229
+workflow_run: 35482378509
 event: push / main
 runner: ubuntu-24.04
 python: 3.12.14
 dependency_source: poetry.lock
 postgresql_service: PostgreSQL 16.15 / healthy
-selected_suite: 215 passed, 23 warnings in 29.87s
+selected_suite: 219 passed, 27 warnings in 38.12s
 compileall: PASS
 model_gateway_strict_boundary: PASS
 runtime_batch_contracts: PASS
@@ -35,6 +35,11 @@ unknown_effect_restart_replay_preserves_unknown: PASS
 conclusive_reconciliation_paths: PASS
 mandatory_audit_before_effect: PASS
 mandatory_audit_requirement_binding: PASS
+mandatory_audit_tenant_scope: PASS / REVISION 20260918_59
+mandatory_audit_pre_send_dispatch_abort: AUD-L1 PASS / REVISION 20260920_60
+mandatory_audit_dispatch_aborted_capacity_reuse: PASS
+mandatory_audit_observed_cannot_abort: PASS
+aud_l2_crash_restart_audit_lifecycle: NOT IMPLEMENTATION-PROVEN
 security_effect_epoch_identity_not_trace_only: PASS
 cxl_a_cancel_requested_late_callback_truth: PASS
 cxl_a_durable_callback_binding_forgery_rejected: PASS
@@ -44,8 +49,8 @@ full_ci: NOT_RUN / NOT_ESTABLISHED
 benchmark: BLOCKED_NOT_MEASURED
 quality: NOT_YET_PROVEN
 production_readiness: NOT_ESTABLISHED
-artifact_id: 10501833162
-artifact_sha256: f9298b9a6959b322d5aba120150f407abdfe714b987fdeee4212d1111b4c34e5
+artifact_id: 10595624959
+artifact_sha256: bd1f34e77b0f41763401252a6a46056b7e9594bbf79379c9eb924b73d3b4a3fe
 ```
 
 这条 run 证明的范围仍然是 selected suite，不是 Full CI 或 Production Qualification。PSC-A 证明正式 FastAPI startup 可以建立 `WorkspaceRuntimeComposition` 并使用 PostgreSQL-backed `AgentRunStore`；PSC-B 证明 08 Security owner path 可以发行并解析 Product SecurityDecision，显式持久化 workspace scope、issued/expiry 与 immutable hash，foreign scope / expiry / durable-content tamper 均 fail closed，同一 Product submission replay不刷新授权寿命。
@@ -56,7 +61,7 @@ PSC-C 没有新建 Budget store/service。Current Product API 里的 `budget_lim
 
 PSC-D 已解决旧 approval sink 的 Owner 冲突。`PostgresSecurityApprovalEventSink` 只写 `security_outbox_events` 作为 durable approval lifecycle projection；不再写 SecurityEpoch、PrincipalContext、AuthorizationDecision、Approval 或 AuditRequirement authority rows。projection 使用真实 request tenant；exact replay 幂等，same idempotency identity + changed content 明确 conflict。新 probe 在 fresh PostgreSQL 上同时验证 1 条 projection event 与 6 类 authority table 全部 0。
 
-PSC-D 也没有创建新的 Product Approval flow。`approval_flow="none"` 仍是当前 Product composition 边界；formal Budget owner admission同样保持 Defer/fail-closed。CXL-A 则把已有 cancellation/async callback primitive 接成一个更窄的 truth loop：job 已进入 `CANCEL_REQUESTED` 后，durable provider job / callback binding 匹配的 late completed callback 仍会推进 `COMPLETED`；调用方自报的错误 binding 会记录为 `FORGED` 且不能推进 job，CancellationReceipt exact replay 保持同一事实、changed content fail closed。当前仍没有 production user/plan cancel entrypoint 或 provider cancel port，所以完整 cancel-in-flight orchestration继续属于 CXL-B。仍未证明 provider remote-query adapter、authoritative reviewer role binding、完整 audit class / DB-level tenant isolation、pre-send-abort / crash-replay audit lifecycle、Target composed SecurityEpoch、真实 Provider E2E、Full CI 或 Production Readiness。
+PSC-D 也没有创建新的 Product Approval flow。`approval_flow="none"` 仍是当前 Product composition 边界；formal Budget owner admission同样保持 Defer/fail-closed。CXL-A 则把已有 cancellation/async callback primitive 接成一个更窄的 truth loop：job 已进入 `CANCEL_REQUESTED` 后，durable provider job / callback binding 匹配的 late completed callback 仍会推进 `COMPLETED`；调用方自报的错误 binding 会记录为 `FORGED` 且不能推进 job，CancellationReceipt exact replay 保持同一事实、changed content fail closed。当前仍没有 production user/plan cancel entrypoint 或 provider cancel port，所以完整 cancel-in-flight orchestration继续属于 CXL-B。Mandatory Audit 的数据库级 tenant scope 已由 revision `20260918_59` 和 cross-tenant PostgreSQL probe建立；AUD-L1 又证明 proof 已提交但 Security / Sandbox 在 send 前明确阻断时，Tool 先留下 `NOT_DISPATCHED / NO_EFFECT`，audit row 再进入 `dispatch_aborted` 并释放 capacity，而不会伪装成 `effect_observed`。仍未证明 provider remote-query adapter、authoritative reviewer role binding、完整 audit class、AUD-L2 crash/restart audit lifecycle、Target composed SecurityEpoch、真实 Provider E2E、Full CI 或 Production Readiness。
 
 ### RB019 前历史 selected baseline
 
@@ -306,4 +311,4 @@ production_readiness: NOT_ESTABLISHED
 
 **Slice B — Domain ↔ Runtime crash authority** 在“不修改业务实现”的验证范围已经走到边界：当前 mutation transaction / concurrency / lost-response replay 与 Wave-001 revision-level PostgreSQL DDL 已有 GitHub evidence。剩余 Owner-first recovery 依赖 Target `AdmissionReceipt`、Formal Admission transaction 和 Runtime matching-Receipt consumer；这些当前没有实现证明。
 
-**Slice C — Effects ↔ Security send boundary** 的原始 RB019 P0 violation 已关闭：restart replay certainty、最小 conclusive reconciliation、mandatory-audit send gate 和 formal Alembic entrypoint 都已有 main selected evidence，post-dispatch audit capacity lifecycle 也已转绿。Slice C 仍不是完整 Freeze / Production proof；下一层缺口集中在 provider remote-query reconciliation、manual reviewer Authority、audit-class / DB-level tenant isolation、pre-send-abort / crash-replay audit lifecycle、Target composed SecurityEpoch、production Workspace Security composition，以及 CXL-B production cancel entrypoint / provider cancel capability。CXL-A 已把 cancel intent 后 late callback truth 与 durable callback binding 转成 main regression；继续 fault test 应针对这些仍有 Current surface 的具体边界，而不是重复已经转绿的 #201/#205 failure shape。
+**Slice C — Effects ↔ Security send boundary** 的原始 RB019 P0 violation 已关闭：restart replay certainty、最小 conclusive reconciliation、mandatory-audit send gate 和 formal Alembic entrypoint 都已有 main selected evidence，post-dispatch audit capacity lifecycle、数据库级 tenant scope 与 AUD-L1 deterministic pre-send abort 也已转绿。Slice C 仍不是完整 Freeze / Production proof；下一层缺口集中在 manual reviewer Authority、audit class、AUD-L2 crash/restart audit lifecycle、Target composed SecurityEpoch，以及 CXL-B 上游 Product runtime dispatch blocker / provider cancel capability。Remote-query reconciliation 已按 Provider capability inventory 明确 Defer。CXL-A 已把 cancel intent 后 late callback truth 与 durable callback binding 转成 main regression；继续 fault test 应针对这些仍有 Current surface 的具体边界，而不是重复已经转绿的 #201/#205 failure shape。
