@@ -169,7 +169,7 @@ GraphRAG、Reflection、Long-term Memory、Persistent Multi-Agent 和 Native Run
 
 **Current** 只表示今天 `main` 能由代码、Migration、Test、Trace、Eval 或真实运行证明的事实。目录和设计文档存在不等于九模块 Target 已实现，更不等于 Production Ready。Current 的具体边界必须回到 [`docs/evidence/`](../evidence/README.md)。
 
-Current Evidence 同时保留过去的负向 fault probe 和今天的修复结果。#201 / #205 仍是有效 History，因为它们证明过具体 Target violation；AUTH-A/B/C 与 `main@9b7891c6` 的 selected verification 已关闭通用 restart replay certainty upgrade、缺 durable audit proof 仍发送、以及 Alembic stale import，并证明 post-dispatch audit capacity 能回收。Current 仍没有证明完整 remote-query reconciliation、manual judgment Authority、audit-class / requirement-proof / tenant binding、pre-send-abort 与 crash/replay 的 audit lifecycle，也没有因此升级为 Production Ready。
+Current Evidence 同时保留过去的负向 fault probe 和今天的修复结果。#201 / #205 仍是有效 History，因为它们证明过具体 Target violation；AUTH-A/B/C 已关闭通用 restart replay certainty upgrade、缺 durable audit proof 仍发送和 Alembic stale import，后续 main evidence 又证明 post-dispatch capacity、mandatory-audit tenant scope 与 AUD-L1 deterministic pre-send abort。Remote-query reconciliation 当前按真实 Provider capability明确 Defer。Current 仍没有证明 manual reviewer Authority、AuditRequirement class、AUD-L2 crash/restart audit lifecycle 或 Target composed SecurityEpoch，也没有因此升级为 Production Ready。
 
 **Target** 表示今天接受的目标设计和产品方向，例如九个逻辑责任域、Knowledge Readiness、Capability Qualification、Single Controller、Formal Admission、Effect Recovery、Continuous Authorization，以及案件研究工作空间。Target 规定未来实现怎样收敛，不能被用来声称历史 Pilot 已经拥有同样机制。
 
