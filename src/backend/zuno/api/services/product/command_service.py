@@ -856,6 +856,10 @@ class ProductService:
             payload = dict(record.payload)
             if record.topic != PRODUCT_RUNTIME_DISPATCH_TOPIC or payload.get("consumer_module") != "Agent Core":
                 raise ValueError("outbox event is not a Product RuntimeRequest dispatch for Agent Core")
+            if str(payload.get("command_kind") or "") != PRODUCT_RUNTIME_COMMAND_KIND:
+                raise ProductPersistenceConflict(
+                    "Product RuntimeRequest dispatch consumer only accepts SUBMIT_USER_GOAL"
+                )
             tenant_id = str(payload["tenant_id"])
             workspace_id = str(payload["workspace_id"])
             principal_id = str(payload["principal_id"])
