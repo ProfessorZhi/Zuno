@@ -364,5 +364,50 @@ def test_completion_goal_is_restart_safe_and_dispatch_rejects_spec_hash_tamper(
             ).scalar_one()
         assert int(agent_run_count) == 0
         assert outbox_status == "pending"
+
+        with engine.begin() as connection:
+            restored_payload = connection.execute(
+                text(
+                    "UPDATE infra_outbox_events "
+                    "SET payload = jsonb_set("
+                    "jsonb_set(payload, '{runtime_execution_spec_hash}', "
+                    "to_jsonb(CAST(:spec_hash AS text)), true), "
+                    "'{tenant_id}', to_jsonb(CAST(:foreign_tenant AS text)), true"
+                    ") WHERE event_id = :event_id "
+                    "RETURNING payload"
+                ),
+                {
+                    "spec_hash": str(spec["spec_hash"]),
+                    "foreign_tenant": "tenant-prd-a1-foreign",
+                    "event_id": outbox["event_id"],
+                },
+            ).scalar_one()
+            connection.execute(
+                text(
+                    "UPDATE infra_outbox_events "
+                    "SET payload_hash = :payload_hash "
+                    "WHERE event_id = :event_id"
+                ),
+                {
+                    "payload_hash": canonical_sha256(dict(restored_payload)),
+                    "event_id": outbox["event_id"],
+                },
+            )
+
+        with pytest.raises(
+            ProductPersistenceConflict,
+            match="outbox tenant does not match payload",
+        ):
+            ProductService.consume_runtime_request_dispatch(
+                event_id=str(outbox["event_id"]),
+                worker_id="worker-prd-a1-foreign-tenant",
+                engine=engine,
+            )
+        with engine.connect() as connection:
+            assert int(
+                connection.execute(
+                    text("SELECT count(*) FROM agent_domain_runs")
+                ).scalar_one()
+            ) == 0
     finally:
         _drop_database(engine, admin_engine, database_name)
