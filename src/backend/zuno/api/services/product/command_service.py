@@ -52,9 +52,14 @@ def _build_runtime_execution_spec(
             "under payload.goal/query/user_input"
         )
 
-    raw_knowledge_refs = payload.get("knowledge_space_refs") or ()
+    raw_knowledge_refs = (
+        payload.get("knowledge_space_refs")
+        or payload.get("knowledge_space_ids")
+        or payload.get("knowledge_ids")
+        or ()
+    )
     if not isinstance(raw_knowledge_refs, (list, tuple)):
-        raise ValueError("knowledge_space_refs must be a list or tuple")
+        raise ValueError("knowledge space refs must be a list or tuple")
     knowledge_space_refs = tuple(
         dict.fromkeys(
             str(item).strip()
@@ -63,16 +68,28 @@ def _build_runtime_execution_spec(
         )
     )
 
-    raw_budget_limits = payload.get("budget_limits") or {}
+    raw_budget_limits = payload.get("budget_limits") or payload.get("budget") or {}
     if not isinstance(raw_budget_limits, dict):
-        raise ValueError("budget_limits must be an object")
+        raise ValueError("budget limits must be an object")
     budget_limits = dict(raw_budget_limits)
 
-    plan_kind = str(payload.get("plan_kind") or "default").strip() or "default"
+    plan_kind = str(payload.get("plan_kind") or "auto").strip().lower() or "auto"
+    if plan_kind not in {"auto", "simple", "tool", "complex"}:
+        raise ValueError("plan_kind must be one of auto/simple/tool/complex")
+
+    tool_id = str(payload.get("tool_id") or "").strip() or None
+    raw_tool_arguments = payload.get("tool_arguments")
+    if raw_tool_arguments is not None and not isinstance(raw_tool_arguments, dict):
+        raise ValueError("tool_arguments must be an object")
+    tool_arguments = None if raw_tool_arguments is None else dict(raw_tool_arguments)
+    if tool_arguments is not None and tool_id is None:
+        raise ValueError("tool_arguments require tool_id")
+
     secret_candidate = {
         "goal_text": goal_text,
         "knowledge_space_refs": list(knowledge_space_refs),
         "budget_limits": budget_limits,
+        "tool_arguments": tool_arguments,
     }
     if contains_secret_material(secret_candidate):
         raise ValueError("RuntimeExecutionSpec must not persist secret material")
@@ -108,6 +125,8 @@ def _build_runtime_execution_spec(
         plan_kind=plan_kind,
         knowledge_space_refs=knowledge_space_refs,
         budget_limits=budget_limits,
+        tool_id=tool_id,
+        tool_arguments=tool_arguments,
         data_classification="internal",
         retention_scope="CONVERSATION",
     )
