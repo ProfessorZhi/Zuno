@@ -47,6 +47,7 @@ class ControllerRuntimeState:
     task_id: str
     trace_id: str
     goal: str
+    run_id: str = ""
     context_pack: dict[str, Any] = field(default_factory=dict)
     plan: tuple[str, ...] = ()
     current_step: str = ""
@@ -67,6 +68,7 @@ class ControllerRuntimeState:
             "task_id": self.task_id,
             "trace_id": self.trace_id,
             "goal": self.goal,
+            "run_id": self.run_id or f"run:{self.task_id}",
             "context_pack": deepcopy(self.context_pack),
             "plan": list(self.plan),
             "current_step": self.current_step,
@@ -89,6 +91,7 @@ class ControllerRuntimeState:
             task_id=str(payload.get("task_id") or ""),
             trace_id=str(payload.get("trace_id") or ""),
             goal=str(payload.get("goal") or ""),
+            run_id=str(payload.get("run_id") or f"run:{payload.get('task_id') or ''}"),
             context_pack=deepcopy(dict(payload.get("context_pack") or {})),
             plan=tuple(str(item) for item in payload.get("plan") or ()),
             current_step=str(payload.get("current_step") or ""),
