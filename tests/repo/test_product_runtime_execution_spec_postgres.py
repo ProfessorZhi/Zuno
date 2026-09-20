@@ -650,7 +650,18 @@ def test_prd_a2_response_loss_replays_same_canonical_task(
                 ),
                 {"task_id": lost.canonical_task_id},
             ).scalar_one()
-        assert int(before_count) == 1
+            last_error_code = connection.execute(
+                text(
+                    "SELECT last_error_code FROM infra_outbox_events "
+                    "WHERE event_id = :event_id"
+                ),
+                {"event_id": event2},
+            ).scalar_one()
+        assert int(before_count) == 1, {
+            "runtime_task_count": int(before_count),
+            "outbox_last_error_code": str(last_error_code),
+            "agent_run_status": lost.agent_run_status,
+        }
 
         recovered2 = ProductService.consume_runtime_request_dispatch(
             event_id=event2,
