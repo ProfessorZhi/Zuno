@@ -36,6 +36,8 @@ class ProductRuntimeExecutionSpecInput:
     plan_kind: str
     knowledge_space_refs: tuple[str, ...]
     budget_limits: dict[str, Any]
+    tool_id: str | None = None
+    tool_arguments: dict[str, Any] | None = None
     data_classification: str = "internal"
     retention_scope: str = "CONVERSATION"
     spec_version: str = "runtime-execution-spec-v1"
@@ -49,6 +51,8 @@ class ProductRuntimeExecutionSpecInput:
                 "plan_kind": self.plan_kind,
                 "knowledge_space_refs": list(self.knowledge_space_refs),
                 "budget_limits": self.budget_limits,
+                "tool_id": self.tool_id,
+                "tool_arguments": self.tool_arguments,
             }
         )
 
@@ -71,6 +75,8 @@ class ProductRuntimeExecutionSpecInput:
                 "plan_kind": self.plan_kind,
                 "knowledge_space_refs": list(self.knowledge_space_refs),
                 "budget_limits": self.budget_limits,
+                "tool_id": self.tool_id,
+                "tool_arguments": self.tool_arguments,
                 "data_classification": self.data_classification,
                 "retention_scope": self.retention_scope,
                 "spec_version": self.spec_version,
@@ -95,6 +101,8 @@ class ProductRuntimeExecutionSpecView:
     plan_kind: str
     knowledge_space_refs: tuple[str, ...]
     budget_limits: dict[str, Any]
+    tool_id: str | None
+    tool_arguments: dict[str, Any] | None
     data_classification: str
     retention_scope: str
     content_fingerprint: str
@@ -824,6 +832,8 @@ class ProductRepository:
             plan_kind=str(row["plan_kind"]),
             knowledge_space_refs=tuple(str(item) for item in (row["knowledge_space_refs"] or [])),
             budget_limits=dict(row["budget_limits"] or {}),
+            tool_id=None if row["tool_id"] is None else str(row["tool_id"]),
+            tool_arguments=None if row["tool_arguments"] is None else dict(row["tool_arguments"]),
             data_classification=str(row["data_classification"]),
             retention_scope=str(row["retention_scope"]),
             content_fingerprint=str(row["content_fingerprint"]),
@@ -844,8 +854,9 @@ class ProductRepository:
                 SELECT runtime_execution_spec_ref, runtime_request_ref, tenant_id, workspace_id,
                        conversation_id, principal_id, submission_id, client_request_id,
                        active_agent_version_id, goal_material_ref, goal_text, runtime_surface,
-                       plan_kind, knowledge_space_refs, budget_limits, data_classification,
-                       retention_scope, content_fingerprint, spec_version, spec_hash, created_at
+                       plan_kind, knowledge_space_refs, budget_limits, tool_id, tool_arguments,
+                       data_classification, retention_scope, content_fingerprint,
+                       spec_version, spec_hash, created_at
                 FROM product_runtime_execution_specs
                 WHERE tenant_id = :tenant_id
                   AND (
@@ -885,14 +896,15 @@ class ProductRepository:
                     runtime_execution_spec_ref, runtime_request_ref, tenant_id, workspace_id,
                     conversation_id, principal_id, submission_id, client_request_id,
                     active_agent_version_id, goal_material_ref, goal_text, runtime_surface,
-                    plan_kind, knowledge_space_refs, budget_limits, data_classification,
-                    retention_scope, content_fingerprint, spec_version, spec_hash
+                    plan_kind, knowledge_space_refs, budget_limits, tool_id, tool_arguments,
+                    data_classification, retention_scope, content_fingerprint, spec_version, spec_hash
                 )
                 VALUES (
                     :runtime_execution_spec_ref, :runtime_request_ref, :tenant_id, :workspace_id,
                     :conversation_id, :principal_id, :submission_id, :client_request_id,
                     :active_agent_version_id, :goal_material_ref, :goal_text, :runtime_surface,
                     :plan_kind, CAST(:knowledge_space_refs AS jsonb), CAST(:budget_limits AS jsonb),
+                    :tool_id, CAST(:tool_arguments AS jsonb),
                     :data_classification, :retention_scope, :content_fingerprint,
                     :spec_version, :spec_hash
                 )
@@ -914,6 +926,12 @@ class ProductRepository:
                 "plan_kind": spec.plan_kind,
                 "knowledge_space_refs": json.dumps(list(spec.knowledge_space_refs), ensure_ascii=False),
                 "budget_limits": json.dumps(spec.budget_limits, ensure_ascii=False, sort_keys=True),
+                "tool_id": spec.tool_id,
+                "tool_arguments": (
+                    None
+                    if spec.tool_arguments is None
+                    else json.dumps(spec.tool_arguments, ensure_ascii=False, sort_keys=True)
+                ),
                 "data_classification": spec.data_classification,
                 "retention_scope": spec.retention_scope,
                 "content_fingerprint": spec.content_fingerprint,
@@ -940,8 +958,9 @@ class ProductRepository:
                 SELECT runtime_execution_spec_ref, runtime_request_ref, tenant_id, workspace_id,
                        conversation_id, principal_id, submission_id, client_request_id,
                        active_agent_version_id, goal_material_ref, goal_text, runtime_surface,
-                       plan_kind, knowledge_space_refs, budget_limits, data_classification,
-                       retention_scope, content_fingerprint, spec_version, spec_hash, created_at
+                       plan_kind, knowledge_space_refs, budget_limits, tool_id, tool_arguments,
+                       data_classification, retention_scope, content_fingerprint,
+                       spec_version, spec_hash, created_at
                 FROM product_runtime_execution_specs
                 WHERE tenant_id = :tenant_id
                   AND runtime_execution_spec_ref = :runtime_execution_spec_ref
