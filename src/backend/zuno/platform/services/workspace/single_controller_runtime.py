@@ -380,6 +380,10 @@ class WorkspaceRuntimeComposition:
     # the corresponding admission fail closed (never caller self-attestation).
     security_decision_resolver: "SecurityDecisionResolver | None" = None
     budget_decision_resolver: "BudgetDecisionResolver | None" = None
+    # Canonical dependencies for Product dispatch workers. The factory is
+    # server-owned so Product orchestration does not mint a second Runtime
+    # dependency graph or fall back to developer/test stores.
+    runtime_dependencies_factory: Callable[[], RuntimeDependencies] | None = None
     # Formal Dynamic DAG planner binding; unbound -> complex tasks fail
     # closed with DYNAMIC_PLAN_RUNTIME_NOT_BOUND.
     dynamic_dag_planner: Callable[[Any], list[PlanStep]] | None = None
