@@ -15,6 +15,13 @@ from sqlalchemy.engine import Engine, make_url
 import zuno.platform.database as database_module
 from zuno.api.services.completion import CompletionService
 from zuno.platform.contracts import canonical_sha256
+from zuno.agent.runtime.dependencies import RuntimeDependencies
+from zuno.agent.runtime.postgres_store import PostgresAgentRunStore
+from zuno.platform.database.foundation import InfrastructureRepository
+from zuno.platform.services.workspace.single_controller_runtime import (
+    WorkspaceRuntimeComposition,
+    configure_workspace_product_composition,
+)
 from zuno.api.services.product.command_service import ProductService
 from zuno.platform.database.product import (
     ProductPersistenceConflict,
@@ -411,4 +418,400 @@ def test_completion_goal_is_restart_safe_and_dispatch_rejects_spec_hash_tamper(
                 ).scalar_one()
             ) == 0
     finally:
+        _drop_database(engine, admin_engine, database_name)
+
+
+def _configure_prd_a2_runtime(engine: Engine) -> PostgresAgentRunStore:
+    store = PostgresAgentRunStore(engine)
+    configure_workspace_product_composition(
+        WorkspaceRuntimeComposition(
+            store=store,
+            runtime_dependencies_factory=lambda: RuntimeDependencies(),
+        )
+    )
+    return store
+
+
+def _submit_simple_prd_a2_request(
+    *,
+    tenant_id: str,
+    workspace_id: str,
+    client_request_id: str,
+    runtime_request_ref: str,
+):
+    agent_version_id = ProductService.runtime_agent_version_id(
+        surface="product",
+        tenant_id=tenant_id,
+        workspace_id=workspace_id,
+    )
+    result = ProductService.submit_runtime_request(
+        tenant_id=tenant_id,
+        workspace_id=workspace_id,
+        conversation_id=f"conversation:{client_request_id}",
+        principal_id=f"user:{client_request_id}",
+        active_agent_version_id=agent_version_id,
+        client_request_id=client_request_id,
+        runtime_request_ref=runtime_request_ref,
+        raw_intent_ref=f"intent:{client_request_id}",
+        payload={
+            "goal": "Summarize the current record using the canonical runtime.",
+            "plan_kind": "simple",
+            "budget_limits": {
+                "max_steps": 4,
+                "max_tokens": 2048,
+                "timeout_seconds": 60,
+            },
+        },
+        bootstrap_runtime_agent=True,
+        runtime_surface="product",
+    )
+    return result
+
+
+def _runtime_dispatch_event_id(engine: Engine, *, tenant_id: str, command_id: str) -> str:
+    with engine.connect() as connection:
+        return str(
+            connection.execute(
+                text(
+                    "SELECT event_id FROM infra_outbox_events "
+                    "WHERE tenant_id = :tenant_id "
+                    "AND aggregate_id = :command_id "
+                    "AND topic = 'product.runtime_request.dispatch'"
+                ),
+                {"tenant_id": tenant_id, "command_id": command_id},
+            ).scalar_one()
+        )
+
+
+@pytest.mark.skipif(
+    not os.environ.get("ZUNO_TEST_DATABASE_URL"),
+    reason="ZUNO_TEST_DATABASE_URL is not configured; PRD-A2 PostgreSQL probe is BLOCKED",
+)
+def test_product_dispatch_starts_one_canonical_runtime_with_stable_binding(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    engine, admin_engine, database_name = _migrated_database(tmp_path, monkeypatch)
+    tenant_id = "tenant-prd-a2"
+    workspace_id = "workspace-prd-a2"
+    try:
+        store = _configure_prd_a2_runtime(engine)
+        submitted = _submit_simple_prd_a2_request(
+            tenant_id=tenant_id,
+            workspace_id=workspace_id,
+            client_request_id="prd-a2-client-1",
+            runtime_request_ref="runtime-request:prd-a2:1",
+        )
+        event_id = _runtime_dispatch_event_id(
+            engine,
+            tenant_id=tenant_id,
+            command_id=submitted.command_id,
+        )
+
+        consumed = ProductService.consume_runtime_request_dispatch(
+            event_id=event_id,
+            worker_id="worker-prd-a2-1",
+            engine=engine,
+        )
+        assert consumed.outbox_status == "published"
+        assert consumed.inbox_first_seen is True
+        assert consumed.agent_run_id is not None
+        assert consumed.agent_run_id.startswith("run:product-runtime-task:")
+
+        with engine.connect() as connection:
+            binding = connection.execute(
+                text(
+                    "SELECT runtime_request_ref, canonical_task_id, canonical_run_id, "
+                    "runtime_execution_spec_ref, runtime_execution_spec_hash "
+                    "FROM product_command_receipts "
+                    "WHERE tenant_id = :tenant_id AND command_id = :command_id "
+                    "AND owner_receipt_ref IS NOT NULL"
+                ),
+                {"tenant_id": tenant_id, "command_id": submitted.command_id},
+            ).mappings().one()
+            owner_run = connection.execute(
+                text(
+                    "SELECT run_id, tenant_id, workspace_id "
+                    "FROM agent_domain_runs WHERE run_id = :run_id"
+                ),
+                {"run_id": binding["canonical_run_id"]},
+            ).mappings().one()
+            runtime_row = connection.execute(
+                text(
+                    "SELECT task_id, run_id, workspace_id, user_id, status "
+                    "FROM agent_runtime_runs WHERE task_id = :task_id"
+                ),
+                {"task_id": binding["canonical_task_id"]},
+            ).mappings().one()
+            outbox_status = connection.execute(
+                text("SELECT status FROM infra_outbox_events WHERE event_id = :event_id"),
+                {"event_id": event_id},
+            ).scalar_one()
+
+        assert binding["runtime_request_ref"] == "runtime-request:prd-a2:1"
+        assert binding["canonical_run_id"] == f"run:{binding['canonical_task_id']}"
+        assert consumed.agent_run_id == binding["canonical_run_id"]
+        assert owner_run == {
+            "run_id": binding["canonical_run_id"],
+            "tenant_id": tenant_id,
+            "workspace_id": workspace_id,
+        }
+        assert runtime_row["task_id"] == binding["canonical_task_id"]
+        assert runtime_row["run_id"] == binding["canonical_run_id"]
+        assert runtime_row["workspace_id"] == workspace_id
+        assert outbox_status == "published"
+
+        snapshot = store.snapshot(str(binding["canonical_task_id"]))
+        context = dict(snapshot.state.context_pack or {})
+        assert context["run_id"] == binding["canonical_run_id"]
+        assert context["tenant_id"] == tenant_id
+        assert context["workspace_id"] == workspace_id
+        assert context["plan_state"]["status"] == "blocked"
+        assert context["budget_verdict"]["allowed"] is False
+        runtime_started = [
+            event for event in store.events(str(binding["canonical_task_id"]))
+            if event.type == "runtime_started"
+        ]
+        assert len(runtime_started) == 1
+
+        duplicate = ProductService.consume_runtime_request_dispatch(
+            event_id=event_id,
+            worker_id="worker-prd-a2-duplicate",
+            engine=engine,
+        )
+        assert duplicate.outbox_status == "not_claimed"
+        with engine.connect() as connection:
+            assert int(
+                connection.execute(
+                    text(
+                        "SELECT count(*) FROM agent_runtime_runs "
+                        "WHERE task_id = :task_id"
+                    ),
+                    {"task_id": binding["canonical_task_id"]},
+                ).scalar_one()
+            ) == 1
+    finally:
+        configure_workspace_product_composition(None)
+        _drop_database(engine, admin_engine, database_name)
+
+
+@pytest.mark.skipif(
+    not os.environ.get("ZUNO_TEST_DATABASE_URL"),
+    reason="ZUNO_TEST_DATABASE_URL is not configured; PRD-A2 PostgreSQL probe is BLOCKED",
+)
+def test_owner_commit_response_loss_retries_same_canonical_task(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    engine, admin_engine, database_name = _migrated_database(tmp_path, monkeypatch)
+    tenant_id = "tenant-prd-a2-owner-loss"
+    workspace_id = "workspace-prd-a2-owner-loss"
+    try:
+        _configure_prd_a2_runtime(engine)
+        submitted = _submit_simple_prd_a2_request(
+            tenant_id=tenant_id,
+            workspace_id=workspace_id,
+            client_request_id="prd-a2-owner-loss",
+            runtime_request_ref="runtime-request:prd-a2:owner-loss",
+        )
+        event_id = _runtime_dispatch_event_id(
+            engine,
+            tenant_id=tenant_id,
+            command_id=submitted.command_id,
+        )
+
+        original = ProductService._start_or_recover_canonical_runtime
+
+        def _lost_after_owner_commit(**kwargs):
+            raise RuntimeError("fault: response lost after owner commit")
+
+        monkeypatch.setattr(
+            ProductService,
+            "_start_or_recover_canonical_runtime",
+            staticmethod(_lost_after_owner_commit),
+        )
+        first = ProductService.consume_runtime_request_dispatch(
+            event_id=event_id,
+            worker_id="worker-prd-a2-owner-loss-1",
+            engine=engine,
+        )
+        assert first.agent_run_status == "runtime_unavailable"
+        assert first.outbox_status == "pending"
+
+        with engine.connect() as connection:
+            binding = connection.execute(
+                text(
+                    "SELECT canonical_task_id, canonical_run_id "
+                    "FROM product_command_receipts "
+                    "WHERE tenant_id = :tenant_id AND command_id = :command_id "
+                    "AND owner_receipt_ref IS NOT NULL"
+                ),
+                {"tenant_id": tenant_id, "command_id": submitted.command_id},
+            ).mappings().one()
+            assert int(
+                connection.execute(
+                    text(
+                        "SELECT count(*) FROM agent_domain_runs "
+                        "WHERE run_id = :run_id"
+                    ),
+                    {"run_id": binding["canonical_run_id"]},
+                ).scalar_one()
+            ) == 1
+            assert int(
+                connection.execute(
+                    text(
+                        "SELECT count(*) FROM agent_runtime_runs "
+                        "WHERE task_id = :task_id"
+                    ),
+                    {"task_id": binding["canonical_task_id"]},
+                ).scalar_one()
+            ) == 0
+
+        monkeypatch.setattr(
+            ProductService,
+            "_start_or_recover_canonical_runtime",
+            original,
+        )
+        second = ProductService.consume_runtime_request_dispatch(
+            event_id=event_id,
+            worker_id="worker-prd-a2-owner-loss-2",
+            engine=engine,
+        )
+        assert second.outbox_status == "published"
+        assert second.inbox_first_seen is False
+        assert second.agent_run_id == binding["canonical_run_id"]
+        with engine.connect() as connection:
+            assert int(
+                connection.execute(
+                    text(
+                        "SELECT count(*) FROM product_command_receipts "
+                        "WHERE tenant_id = :tenant_id AND command_id = :command_id "
+                        "AND owner_receipt_ref IS NOT NULL"
+                    ),
+                    {"tenant_id": tenant_id, "command_id": submitted.command_id},
+                ).scalar_one()
+            ) == 1
+            assert int(
+                connection.execute(
+                    text(
+                        "SELECT count(*) FROM agent_runtime_runs "
+                        "WHERE task_id = :task_id"
+                    ),
+                    {"task_id": binding["canonical_task_id"]},
+                ).scalar_one()
+            ) == 1
+    finally:
+        configure_workspace_product_composition(None)
+        _drop_database(engine, admin_engine, database_name)
+
+
+@pytest.mark.skipif(
+    not os.environ.get("ZUNO_TEST_DATABASE_URL"),
+    reason="ZUNO_TEST_DATABASE_URL is not configured; PRD-A2 PostgreSQL probe is BLOCKED",
+)
+def test_runtime_start_response_loss_redelivery_does_not_duplicate_runtime(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    engine, admin_engine, database_name = _migrated_database(tmp_path, monkeypatch)
+    tenant_id = "tenant-prd-a2-runtime-loss"
+    workspace_id = "workspace-prd-a2-runtime-loss"
+    try:
+        store = _configure_prd_a2_runtime(engine)
+        submitted = _submit_simple_prd_a2_request(
+            tenant_id=tenant_id,
+            workspace_id=workspace_id,
+            client_request_id="prd-a2-runtime-loss",
+            runtime_request_ref="runtime-request:prd-a2:runtime-loss",
+        )
+        event_id = _runtime_dispatch_event_id(
+            engine,
+            tenant_id=tenant_id,
+            command_id=submitted.command_id,
+        )
+
+        original_complete = InfrastructureRepository.complete_outbox
+        fault = {"raised": False}
+
+        def _complete_with_response_loss(self, *, event_id: str, worker_id: str):
+            if not fault["raised"]:
+                fault["raised"] = True
+                raise RuntimeError("fault: response lost before outbox completion")
+            return original_complete(self, event_id=event_id, worker_id=worker_id)
+
+        monkeypatch.setattr(
+            InfrastructureRepository,
+            "complete_outbox",
+            _complete_with_response_loss,
+        )
+        with pytest.raises(RuntimeError, match="response lost before outbox completion"):
+            ProductService.consume_runtime_request_dispatch(
+                event_id=event_id,
+                worker_id="worker-prd-a2-runtime-loss-1",
+                engine=engine,
+            )
+
+        with engine.connect() as connection:
+            binding = connection.execute(
+                text(
+                    "SELECT canonical_task_id, canonical_run_id "
+                    "FROM product_command_receipts "
+                    "WHERE tenant_id = :tenant_id AND command_id = :command_id "
+                    "AND owner_receipt_ref IS NOT NULL"
+                ),
+                {"tenant_id": tenant_id, "command_id": submitted.command_id},
+            ).mappings().one()
+            assert int(
+                connection.execute(
+                    text(
+                        "SELECT count(*) FROM agent_runtime_runs "
+                        "WHERE task_id = :task_id"
+                    ),
+                    {"task_id": binding["canonical_task_id"]},
+                ).scalar_one()
+            ) == 1
+
+        runtime_started_before = [
+            event for event in store.events(str(binding["canonical_task_id"]))
+            if event.type == "runtime_started"
+        ]
+        assert len(runtime_started_before) == 1
+
+        monkeypatch.setattr(
+            InfrastructureRepository,
+            "complete_outbox",
+            original_complete,
+        )
+        with engine.begin() as connection:
+            reclaimed = InfrastructureRepository(connection).reclaim_stale_outbox_event(
+                event_id=event_id,
+                older_than_seconds=0,
+            )
+        assert reclaimed is True
+
+        replay = ProductService.consume_runtime_request_dispatch(
+            event_id=event_id,
+            worker_id="worker-prd-a2-runtime-loss-2",
+            engine=engine,
+        )
+        assert replay.outbox_status == "published"
+        assert replay.inbox_first_seen is False
+        assert replay.agent_run_id == binding["canonical_run_id"]
+        runtime_started_after = [
+            event for event in store.events(str(binding["canonical_task_id"]))
+            if event.type == "runtime_started"
+        ]
+        assert len(runtime_started_after) == 1
+        with engine.connect() as connection:
+            assert int(
+                connection.execute(
+                    text(
+                        "SELECT count(*) FROM agent_runtime_runs "
+                        "WHERE task_id = :task_id"
+                    ),
+                    {"task_id": binding["canonical_task_id"]},
+                ).scalar_one()
+            ) == 1
+    finally:
+        configure_workspace_product_composition(None)
         _drop_database(engine, admin_engine, database_name)
