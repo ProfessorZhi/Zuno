@@ -46,6 +46,22 @@ UNTRUSTED_INSTRUCTION_PATTERN = re.compile(
 )
 
 
+def contains_secret_material(payload: Any) -> bool:
+    if isinstance(payload, dict):
+        for key, value in payload.items():
+            key_text = str(key).lower()
+            if any(marker in key_text for marker in ("password", "secret", "token", "api_key", "apikey")):
+                return True
+            if contains_secret_material(value):
+                return True
+        return False
+    if isinstance(payload, (list, tuple)):
+        return any(contains_secret_material(item) for item in payload)
+    if isinstance(payload, str):
+        return any(pattern.search(payload) is not None for pattern in SECRET_PATTERNS)
+    return False
+
+
 def redact_sensitive_text(value: str) -> str:
     redacted = value
     for pattern in SECRET_PATTERNS:
