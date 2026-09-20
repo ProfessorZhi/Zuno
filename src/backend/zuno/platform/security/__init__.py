@@ -25,6 +25,7 @@ from zuno.platform.security.governance import (
     ToolSecurityGate,
     ToolSecurityProfile,
     build_security_trace_summary,
+    contains_secret_material,
     redact_sensitive_payload,
     redact_sensitive_text,
 )
@@ -102,6 +103,7 @@ __all__ = [
     "ToolSecurityProfile",
     "build_security_trace_summary",
     "build_product_action_hash",
+    "contains_secret_material",
     "normalize_access_scope",
     "normalize_execution_mode",
     "redact_sensitive_payload",
