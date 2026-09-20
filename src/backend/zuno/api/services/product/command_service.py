@@ -2,12 +2,12 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
-from typing import Any
+from typing import Any, Callable
 
 from zuno.agent.domain import AgentRun, GoalInputClassification, GoalVersion, TaskContract
 from zuno.platform.contracts import canonical_sha256
 from zuno.platform.database.agent import AgentDomainRepository
-from zuno.platform.database.foundation import InfrastructureRepository
+from zuno.platform.database.foundation import FencingRejectedError, InfrastructureRepository
 from zuno.platform.database.product import (
     ProductCommandSubmission,
     ProductPersistenceConflict,
@@ -25,6 +25,141 @@ PRODUCT_RUNTIME_DISPATCH_CONSUMER = "agent-core-product-runtime-dispatch"
 PRODUCT_PROJECTION_REBUILD_TOPIC = "product.projection.rebuild.requested"
 PRODUCT_PROJECTION_REBUILD_CONSUMER = "product-projection-rebuild-worker"
 PRODUCT_RUNTIME_COMMAND_KIND = "SUBMIT_USER_GOAL"
+
+
+def _canonical_product_runtime_identity(
+    *,
+    tenant_id: str,
+    workspace_id: str,
+    runtime_request_ref: str,
+) -> tuple[str, str]:
+    digest = canonical_sha256(
+        {
+            "tenant_id": tenant_id,
+            "workspace_id": workspace_id,
+            "runtime_request_ref": runtime_request_ref,
+        }
+    )
+    task_id = f"product-runtime-task:{digest[:32]}"
+    return task_id, f"run:{task_id}"
+
+
+def _runtime_execution_binding_ref(
+    *,
+    tenant_id: str,
+    workspace_id: str,
+    runtime_request_ref: str,
+) -> str:
+    digest = canonical_sha256(
+        {
+            "tenant_id": tenant_id,
+            "workspace_id": workspace_id,
+            "runtime_request_ref": runtime_request_ref,
+            "binding": "product-runtime-execution",
+        }
+    )
+    return f"product-runtime-binding:{digest[:32]}"
+
+
+def _normalized_runtime_plan_kind(plan_kind: str, tool_id: str | None) -> str:
+    normalized = str(plan_kind or "auto").strip().lower()
+    if normalized == "auto":
+        return "tool" if tool_id else "simple"
+    return normalized
+
+
+class _ProductDispatchModelSentinel:
+    async def ainvoke(self, prompt: Any) -> Any:
+        raise RuntimeError(
+            "Product dispatch model sentinel reached; canonical owner gates must fail closed "
+            "until executable model composition is durably recoverable"
+        )
+
+
+def _start_canonical_product_runtime(
+    *,
+    spec: Any,
+    canonical_task_id: str,
+    canonical_run_id: str,
+) -> tuple[str, Any]:
+    from zuno.agent.runtime import PROFILE_PRODUCT
+    from zuno.platform.services.workspace.single_controller_runtime import (
+        BlockedConfiguration,
+        WorkspaceAgentRuntime,
+        WorkspaceRunRequest,
+        get_workspace_product_composition,
+    )
+
+    composition = get_workspace_product_composition()
+    if composition is None or composition.store is None:
+        raise BlockedConfiguration(
+            "BLOCKED_CONFIGURATION: Product runtime dispatch requires server WorkspaceRuntimeComposition"
+        )
+    runtime = WorkspaceAgentRuntime(
+        model=_ProductDispatchModelSentinel(),
+        bindings=[],
+        tenant_id=spec.tenant_id,
+        workspace_id=spec.workspace_id,
+        principal_id=spec.principal_id,
+        profile=PROFILE_PRODUCT,
+        store=composition.store,
+        tool_unit_of_work_factory=composition.tool_unit_of_work_factory,
+        security_unit_of_work_factory=composition.security_unit_of_work_factory,
+        infrastructure_unit_of_work_factory=composition.infrastructure_unit_of_work_factory,
+        security_approval_sink=composition.security_approval_sink,
+        security_epoch_ref=composition.security_epoch_ref,
+        approval_flow=composition.approval_flow,
+        security_decision_resolver=composition.security_decision_resolver,
+        budget_decision_resolver=composition.budget_decision_resolver,
+        dynamic_dag_planner=composition.dynamic_dag_planner,
+    )
+    request = WorkspaceRunRequest(
+        task_id=canonical_task_id,
+        thread_id=f"thread:{canonical_task_id}",
+        tenant_id=spec.tenant_id,
+        workspace_id=spec.workspace_id,
+        principal_id=spec.principal_id,
+        submission_id=spec.submission_id,
+        client_request_id=spec.client_request_id,
+        user_id=spec.principal_id,
+        trace_id=f"trace:{canonical_task_id}",
+        goal=spec.goal_text,
+        conversation_id=spec.conversation_id,
+        agent_version=spec.active_agent_version_id,
+        content_fingerprint=spec.content_fingerprint,
+        tool_id=spec.tool_id,
+        tool_arguments=spec.tool_arguments,
+        plan_kind=_normalized_runtime_plan_kind(spec.plan_kind, spec.tool_id),
+        knowledge_space_ids=tuple(spec.knowledge_space_refs),
+        budget_limits=dict(spec.budget_limits),
+        security_epoch_ref=composition.security_epoch_ref,
+        idempotency_key=spec.client_request_id,
+    )
+    snapshot = runtime.start_with_replay(request)
+    if snapshot.task_id != canonical_task_id or snapshot.run_id != canonical_run_id:
+        raise ProductPersistenceConflict(
+            "canonical runtime identity does not match Product durable binding"
+        )
+    return runtime.classify_final_state(snapshot), snapshot
+
+
+def _record_runtime_dispatch_failure(
+    *,
+    engine: Any,
+    event_id: str,
+    worker_id: str,
+    error_code: str,
+) -> str:
+    with engine.begin() as conn:
+        failure = InfrastructureRepository(conn).record_outbox_publish_failure(
+            event_id=event_id,
+            worker_id=worker_id,
+            error_code=error_code,
+            max_attempts=3,
+            base_backoff_seconds=0,
+            max_backoff_seconds=0,
+        )
+        return failure.status
 
 
 def _build_runtime_execution_spec(
@@ -179,6 +314,9 @@ class ProductRuntimeDispatchConsumeResult:
     owner_receipt_ref: str | None
     inbox_first_seen: bool
     outbox_status: str
+    canonical_task_id: str | None = None
+    canonical_run_id: str | None = None
+    runtime_final_state: str | None = None
 
 
 @dataclass(frozen=True, slots=True)
