@@ -8,7 +8,14 @@ from zuno.agent.domain import AgentRun, GoalInputClassification, GoalVersion, Ta
 from zuno.platform.contracts import canonical_sha256
 from zuno.platform.database.agent import AgentDomainRepository
 from zuno.platform.database.foundation import InfrastructureRepository
-from zuno.platform.database.product import ProductCommandSubmission, ProductRepository, ProductUnitOfWork
+from zuno.platform.database.product import (
+    ProductCommandSubmission,
+    ProductPersistenceConflict,
+    ProductRepository,
+    ProductRuntimeExecutionSpecInput,
+    ProductUnitOfWork,
+)
+from zuno.platform.security import contains_secret_material
 from zuno.api.services.product.artifact_service import ProductArtifactService
 
 
@@ -18,6 +25,92 @@ PRODUCT_RUNTIME_DISPATCH_CONSUMER = "agent-core-product-runtime-dispatch"
 PRODUCT_PROJECTION_REBUILD_TOPIC = "product.projection.rebuild.requested"
 PRODUCT_PROJECTION_REBUILD_CONSUMER = "product-projection-rebuild-worker"
 PRODUCT_RUNTIME_COMMAND_KIND = "SUBMIT_USER_GOAL"
+
+
+def _build_runtime_execution_spec(
+    *,
+    tenant_id: str,
+    workspace_id: str,
+    conversation_id: str,
+    principal_id: str,
+    active_agent_version_id: str,
+    submission_id: str,
+    client_request_id: str,
+    runtime_request_ref: str,
+    runtime_surface: str,
+    payload: dict[str, Any],
+) -> ProductRuntimeExecutionSpecInput:
+    goal_candidate = payload.get("goal")
+    if goal_candidate is None:
+        goal_candidate = payload.get("query")
+    if goal_candidate is None:
+        goal_candidate = payload.get("user_input")
+    goal_text = str(goal_candidate or "").strip()
+    if not goal_text:
+        raise ValueError(
+            "Product RuntimeRequest requires restart-safe goal material "
+            "under payload.goal/query/user_input"
+        )
+
+    raw_knowledge_refs = payload.get("knowledge_space_refs") or ()
+    if not isinstance(raw_knowledge_refs, (list, tuple)):
+        raise ValueError("knowledge_space_refs must be a list or tuple")
+    knowledge_space_refs = tuple(
+        dict.fromkeys(
+            str(item).strip()
+            for item in raw_knowledge_refs
+            if str(item).strip()
+        )
+    )
+
+    raw_budget_limits = payload.get("budget_limits") or {}
+    if not isinstance(raw_budget_limits, dict):
+        raise ValueError("budget_limits must be an object")
+    budget_limits = dict(raw_budget_limits)
+
+    plan_kind = str(payload.get("plan_kind") or "default").strip() or "default"
+    secret_candidate = {
+        "goal_text": goal_text,
+        "knowledge_space_refs": list(knowledge_space_refs),
+        "budget_limits": budget_limits,
+    }
+    if contains_secret_material(secret_candidate):
+        raise ValueError("RuntimeExecutionSpec must not persist secret material")
+
+    spec_identity_hash = canonical_sha256(
+        {
+            "tenant_id": tenant_id,
+            "workspace_id": workspace_id,
+            "runtime_request_ref": runtime_request_ref,
+        }
+    )[:32]
+    goal_identity_hash = canonical_sha256(
+        {
+            "tenant_id": tenant_id,
+            "workspace_id": workspace_id,
+            "runtime_request_ref": runtime_request_ref,
+            "goal_text": goal_text,
+        }
+    )[:32]
+    return ProductRuntimeExecutionSpecInput(
+        runtime_execution_spec_ref=f"runtime-execution-spec:{spec_identity_hash}",
+        runtime_request_ref=runtime_request_ref,
+        tenant_id=tenant_id,
+        workspace_id=workspace_id,
+        conversation_id=conversation_id,
+        principal_id=principal_id,
+        submission_id=submission_id,
+        client_request_id=client_request_id,
+        active_agent_version_id=active_agent_version_id,
+        goal_material_ref=f"product-goal-material:{goal_identity_hash}",
+        goal_text=goal_text,
+        runtime_surface=runtime_surface,
+        plan_kind=plan_kind,
+        knowledge_space_refs=knowledge_space_refs,
+        budget_limits=budget_limits,
+        data_classification="internal",
+        retention_scope="CONVERSATION",
+    )
 
 
 @dataclass(frozen=True, slots=True)
@@ -238,13 +331,26 @@ class ProductService:
         bootstrap_runtime_agent: bool = False,
         runtime_surface: str = "product",
     ) -> ProductRuntimeRequestResult:
+        submission_id = f"submission:{client_request_id}"
+        runtime_execution_spec = _build_runtime_execution_spec(
+            tenant_id=tenant_id,
+            workspace_id=workspace_id,
+            conversation_id=conversation_id,
+            principal_id=principal_id,
+            active_agent_version_id=active_agent_version_id,
+            submission_id=submission_id,
+            client_request_id=client_request_id,
+            runtime_request_ref=runtime_request_ref,
+            runtime_surface=runtime_surface,
+            payload=payload,
+        )
         submission = ProductCommandSubmission(
             tenant_id=tenant_id,
             workspace_id=workspace_id,
             conversation_id=conversation_id,
             principal_id=principal_id,
             active_agent_version_id=active_agent_version_id,
-            submission_id=f"submission:{client_request_id}",
+            submission_id=submission_id,
             client_request_id=client_request_id,
             raw_intent_ref=raw_intent_ref,
             command_id=f"command:{client_request_id}",
@@ -254,6 +360,7 @@ class ProductService:
             payload=payload,
             journal_sequence_no=1,
             outbox_message_id=f"outbox:{client_request_id}",
+            runtime_execution_spec=runtime_execution_spec,
         )
         from zuno.platform.database import engine
 
@@ -286,6 +393,8 @@ class ProductService:
                     "receipt_id": receipt.receipt_id,
                     "status": receipt.status,
                     "runtime_request_ref": runtime_request_ref,
+                    "runtime_execution_spec_ref": runtime_execution_spec.runtime_execution_spec_ref,
+                    "runtime_execution_spec_hash": runtime_execution_spec.spec_hash,
                 },
                 redaction_decision_ref=f"redaction:{receipt.command_id}:server",
             )
@@ -724,6 +833,34 @@ class ProductService:
             principal_id = str(payload["principal_id"])
             command_id = str(payload["command_id"])
             runtime_request_ref = str(payload["runtime_request_ref"])
+            runtime_execution_spec_ref = str(
+                payload.get("runtime_execution_spec_ref") or ""
+            ).strip()
+            runtime_execution_spec_hash = str(
+                payload.get("runtime_execution_spec_hash") or ""
+            ).strip()
+            if not runtime_execution_spec_ref or not runtime_execution_spec_hash:
+                raise ProductPersistenceConflict(
+                    "Product RuntimeRequest dispatch is missing RuntimeExecutionSpec identity"
+                )
+            product_repo = ProductRepository(conn)
+            runtime_execution_spec = product_repo.get_runtime_execution_spec(
+                tenant_id=tenant_id,
+                runtime_execution_spec_ref=runtime_execution_spec_ref,
+                expected_spec_hash=runtime_execution_spec_hash,
+            )
+            if (
+                runtime_execution_spec.runtime_request_ref != runtime_request_ref
+                or runtime_execution_spec.workspace_id != workspace_id
+                or runtime_execution_spec.conversation_id != str(payload["conversation_id"])
+                or runtime_execution_spec.principal_id != principal_id
+                or runtime_execution_spec.submission_id != str(payload["submission_id"])
+                or runtime_execution_spec.active_agent_version_id
+                != str(payload.get("active_agent_version_id") or "")
+            ):
+                raise ProductPersistenceConflict(
+                    "Product RuntimeRequest dispatch does not match durable RuntimeExecutionSpec scope"
+                )
             owner_context = ProductService.build_runtime_owner_context(
                 active_agent_version_id=str(payload.get("active_agent_version_id") or ""),
                 command_id=command_id,
@@ -759,7 +896,7 @@ class ProductService:
                                 principal_id=principal_id,
                                 goal_sequence=int(record.ordering_sequence or 1),
                                 input_classification=GoalInputClassification.NEW_TASK,
-                                objective_hash=str(payload["payload_hash"]),
+                                objective_hash=runtime_execution_spec.content_fingerprint,
                                 output_contract_ref=f"output-contract:{runtime_request_ref}",
                                 constraints_hash=owner_context["constraints_hash"],
                             )
@@ -798,6 +935,8 @@ class ProductService:
                                 "runtime_request_ref": runtime_request_ref,
                                 "agent_run_ref": run_receipt.ref,
                                 "task_contract_ref": task_contract_id,
+                                "runtime_execution_spec_ref": runtime_execution_spec.runtime_execution_spec_ref,
+                                "runtime_execution_spec_hash": runtime_execution_spec.spec_hash,
                                 "outbox_event_id": record.event_id,
                                 "command_kind": owner_context["command_kind"],
                                 "constraints_hash": owner_context["constraints_hash"],
