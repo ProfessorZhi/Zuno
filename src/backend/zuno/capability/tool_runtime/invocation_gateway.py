@@ -484,6 +484,10 @@ class ToolInvocationGateway:
                             adapter_kind=adapter_kind,
                             payload=payload,
                         )
+                        self._mark_mandatory_audit_dispatch_aborted(
+                            tenant_id=tenant_id,
+                            binding=audit_binding,
+                        )
                         return None, ToolGatewayReceipt(
                             "blocked", prepared_id, attempt_id, receipt_id, str(exc)
                         )
@@ -506,6 +510,11 @@ class ToolInvocationGateway:
                         )
                     if sandbox_blocked_reason:
                         payload["sandbox_blocked_reason"] = sandbox_blocked_reason
+                        self._abort_execute_prerequisites(
+                            tenant_id=tenant_id,
+                            owner=f"tool-runtime:{call_id}",
+                            prerequisites=execute_prerequisites,
+                        )
                         self._record_terminal(
                             tenant_id=tenant_id,
                             prepared_id=prepared_id,
@@ -516,6 +525,10 @@ class ToolInvocationGateway:
                             effect_certainty="NO_EFFECT",
                             adapter_kind=adapter_kind,
                             payload=payload,
+                        )
+                        self._mark_mandatory_audit_dispatch_aborted(
+                            tenant_id=tenant_id,
+                            binding=audit_binding,
                         )
                         return None, ToolGatewayReceipt("blocked", prepared_id, attempt_id, receipt_id, sandbox_blocked_reason)
                     try:
@@ -1533,6 +1546,21 @@ class ToolInvocationGateway:
                 "mandatory audit lifecycle close failed for %s: %s",
                 binding.audit_id,
                 exc,
+            )
+
+    def _mark_mandatory_audit_dispatch_aborted(
+        self,
+        *,
+        tenant_id: str,
+        binding: _MandatoryAuditBinding,
+    ) -> None:
+        if not binding.audit_id or self._infrastructure_unit_of_work_factory is None:
+            return
+        with self._infrastructure_unit_of_work_factory(tenant_id) as repo:
+            repo.mark_audited_effect_dispatch_aborted(
+                audit_id=binding.audit_id,
+                effect_id=binding.effect_id,
+                owner_id=binding.owner_id,
             )
 
     def _abort_execute_prerequisites(
