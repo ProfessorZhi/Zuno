@@ -220,7 +220,7 @@ def test_runtime_execution_spec_is_durable_replay_safe_and_tenant_scoped(
                 ),
                 {"runtime_request_ref": runtime_request_ref},
             ).mappings().all()
-        assert [row["tenant_id"] for row in cross_tenant] == [other_tenant, tenant_id]
+        assert {row["tenant_id"] for row in cross_tenant} == {tenant_id, other_tenant}
         assert len({row["runtime_execution_spec_ref"] for row in cross_tenant}) == 2
 
         with pytest.raises(ValueError, match="must not persist secret material"):
