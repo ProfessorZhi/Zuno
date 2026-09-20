@@ -312,15 +312,30 @@ def test_completion_goal_is_restart_safe_and_dispatch_rejects_spec_hash_tamper(
         assert "user_input" not in outbox["payload"]
 
         with engine.begin() as connection:
-            connection.execute(
+            tampered_payload = connection.execute(
                 text(
                     "UPDATE infra_outbox_events "
                     "SET payload = jsonb_set("
                     "payload, '{runtime_execution_spec_hash}', "
                     "to_jsonb(CAST(:bad_hash AS text)), true"
-                    ") WHERE event_id = :event_id"
+                    ") WHERE event_id = :event_id "
+                    "RETURNING payload"
                 ),
                 {"bad_hash": "0" * 64, "event_id": outbox["event_id"]},
+            ).scalar_one()
+            # Keep the Infrastructure outbox envelope internally consistent so
+            # this probe reaches the Product-owned spec ref/hash validation
+            # rather than failing earlier on generic payload-integrity checks.
+            connection.execute(
+                text(
+                    "UPDATE infra_outbox_events "
+                    "SET payload_hash = :payload_hash "
+                    "WHERE event_id = :event_id"
+                ),
+                {
+                    "payload_hash": canonical_sha256(dict(tampered_payload)),
+                    "event_id": outbox["event_id"],
+                },
             )
 
         with pytest.raises(
