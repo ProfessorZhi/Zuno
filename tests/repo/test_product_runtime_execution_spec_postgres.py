@@ -85,13 +85,14 @@ def test_runtime_execution_spec_is_durable_replay_safe_and_tenant_scoped(
     runtime_request_ref = "runtime-request:prd-a1:shared"
     payload = {
         "goal": "Find the controlling authorities for the filing deadline.",
-        "plan_kind": "default",
-        "knowledge_space_refs": ["knowledge-space:case-law"],
-        "budget_limits": {
+        "knowledge_space_ids": ["knowledge-space:case-law"],
+        "budget": {
             "max_steps": 8,
             "max_tokens": 4096,
             "timeout_seconds": 120,
         },
+        "tool_id": "research.search",
+        "tool_arguments": {"jurisdiction": "SG"},
     }
     try:
         agent_version_id = ProductService.runtime_agent_version_id(
@@ -122,7 +123,7 @@ def test_runtime_execution_spec_is_durable_replay_safe_and_tenant_scoped(
                 text(
                     "SELECT runtime_execution_spec_ref, spec_hash, content_fingerprint, "
                     "goal_text, runtime_surface, plan_kind, knowledge_space_refs, budget_limits, "
-                    "data_classification, retention_scope "
+                    "tool_id, tool_arguments, data_classification, retention_scope "
                     "FROM product_runtime_execution_specs "
                     "WHERE tenant_id = :tenant_id AND runtime_request_ref = :runtime_request_ref"
                 ),
@@ -148,15 +149,19 @@ def test_runtime_execution_spec_is_durable_replay_safe_and_tenant_scoped(
         assert int(spec_count) == 1
         assert durable["goal_text"] == payload["goal"]
         assert durable["runtime_surface"] == "product"
-        assert durable["plan_kind"] == "default"
+        assert durable["plan_kind"] == "auto"
         assert list(durable["knowledge_space_refs"]) == ["knowledge-space:case-law"]
         assert dict(durable["budget_limits"])["max_tokens"] == 4096
+        assert durable["tool_id"] == "research.search"
+        assert dict(durable["tool_arguments"]) == {"jurisdiction": "SG"}
         assert durable["data_classification"] == "internal"
         assert durable["retention_scope"] == "CONVERSATION"
         assert outbox["payload"]["runtime_execution_spec_ref"] == durable["runtime_execution_spec_ref"]
         assert outbox["payload"]["runtime_execution_spec_hash"] == durable["spec_hash"]
         assert "goal" not in outbox["payload"]
         assert "budget_limits" not in outbox["payload"]
+        assert "budget" not in outbox["payload"]
+        assert "tool_arguments" not in outbox["payload"]
 
         with ProductUnitOfWork(engine) as repo:
             loaded = repo.get_runtime_execution_spec(
@@ -183,6 +188,8 @@ def test_runtime_execution_spec_is_durable_replay_safe_and_tenant_scoped(
             plan_kind=loaded.plan_kind,
             knowledge_space_refs=loaded.knowledge_space_refs,
             budget_limits=loaded.budget_limits,
+            tool_id=loaded.tool_id,
+            tool_arguments=loaded.tool_arguments,
             data_classification=loaded.data_classification,
             retention_scope=loaded.retention_scope,
             spec_version=loaded.spec_version,
