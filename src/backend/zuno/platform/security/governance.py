@@ -48,9 +48,21 @@ UNTRUSTED_INSTRUCTION_PATTERN = re.compile(
 
 def contains_secret_material(payload: Any) -> bool:
     if isinstance(payload, dict):
+        forbidden_keys = {
+            "password",
+            "secret",
+            "secret_material",
+            "plaintext_secret",
+            "token",
+            "access_token",
+            "refresh_token",
+            "api_key",
+            "apikey",
+            "credential",
+            "credentials",
+        }
         for key, value in payload.items():
-            key_text = str(key).lower()
-            if any(marker in key_text for marker in ("password", "secret", "token", "api_key", "apikey")):
+            if str(key).lower() in forbidden_keys:
                 return True
             if contains_secret_material(value):
                 return True
