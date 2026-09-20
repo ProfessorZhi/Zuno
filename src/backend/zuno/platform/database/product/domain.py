@@ -20,6 +20,98 @@ def _json_payload(payload: dict[str, Any]) -> str:
 
 
 @dataclass(frozen=True, slots=True)
+class ProductRuntimeExecutionSpecInput:
+    runtime_execution_spec_ref: str
+    runtime_request_ref: str
+    tenant_id: str
+    workspace_id: str
+    conversation_id: str
+    principal_id: str
+    submission_id: str
+    client_request_id: str
+    active_agent_version_id: str
+    goal_material_ref: str
+    goal_text: str
+    runtime_surface: str
+    plan_kind: str
+    knowledge_space_refs: tuple[str, ...]
+    budget_limits: dict[str, Any]
+    tool_id: str | None = None
+    tool_arguments: dict[str, Any] | None = None
+    data_classification: str = "internal"
+    retention_scope: str = "CONVERSATION"
+    spec_version: str = "runtime-execution-spec-v1"
+
+    @property
+    def content_fingerprint(self) -> str:
+        return canonical_sha256(
+            {
+                "goal_text": self.goal_text,
+                "runtime_surface": self.runtime_surface,
+                "plan_kind": self.plan_kind,
+                "knowledge_space_refs": list(self.knowledge_space_refs),
+                "budget_limits": self.budget_limits,
+                "tool_id": self.tool_id,
+                "tool_arguments": self.tool_arguments,
+            }
+        )
+
+    @property
+    def spec_hash(self) -> str:
+        return canonical_sha256(
+            {
+                "runtime_execution_spec_ref": self.runtime_execution_spec_ref,
+                "runtime_request_ref": self.runtime_request_ref,
+                "tenant_id": self.tenant_id,
+                "workspace_id": self.workspace_id,
+                "conversation_id": self.conversation_id,
+                "principal_id": self.principal_id,
+                "submission_id": self.submission_id,
+                "client_request_id": self.client_request_id,
+                "active_agent_version_id": self.active_agent_version_id,
+                "goal_material_ref": self.goal_material_ref,
+                "content_fingerprint": self.content_fingerprint,
+                "runtime_surface": self.runtime_surface,
+                "plan_kind": self.plan_kind,
+                "knowledge_space_refs": list(self.knowledge_space_refs),
+                "budget_limits": self.budget_limits,
+                "tool_id": self.tool_id,
+                "tool_arguments": self.tool_arguments,
+                "data_classification": self.data_classification,
+                "retention_scope": self.retention_scope,
+                "spec_version": self.spec_version,
+            }
+        )
+
+
+@dataclass(frozen=True, slots=True)
+class ProductRuntimeExecutionSpecView:
+    runtime_execution_spec_ref: str
+    runtime_request_ref: str
+    tenant_id: str
+    workspace_id: str
+    conversation_id: str
+    principal_id: str
+    submission_id: str
+    client_request_id: str
+    active_agent_version_id: str
+    goal_material_ref: str
+    goal_text: str
+    runtime_surface: str
+    plan_kind: str
+    knowledge_space_refs: tuple[str, ...]
+    budget_limits: dict[str, Any]
+    tool_id: str | None
+    tool_arguments: dict[str, Any] | None
+    data_classification: str
+    retention_scope: str
+    content_fingerprint: str
+    spec_version: str
+    spec_hash: str
+    created_at: datetime
+
+
+@dataclass(frozen=True, slots=True)
 class ProductCommandSubmission:
     tenant_id: str
     workspace_id: str
@@ -37,6 +129,7 @@ class ProductCommandSubmission:
     journal_sequence_no: int
     outbox_message_id: str
     message_id: str | None = None
+    runtime_execution_spec: ProductRuntimeExecutionSpecInput | None = None
 
     @property
     def request_hash(self) -> str:
@@ -721,6 +814,170 @@ class ProductRepository:
             created_at=row["created_at"],
         )
 
+    @staticmethod
+    def _runtime_execution_spec_view(row: Any) -> ProductRuntimeExecutionSpecView:
+        return ProductRuntimeExecutionSpecView(
+            runtime_execution_spec_ref=str(row["runtime_execution_spec_ref"]),
+            runtime_request_ref=str(row["runtime_request_ref"]),
+            tenant_id=str(row["tenant_id"]),
+            workspace_id=str(row["workspace_id"]),
+            conversation_id=str(row["conversation_id"]),
+            principal_id=str(row["principal_id"]),
+            submission_id=str(row["submission_id"]),
+            client_request_id=str(row["client_request_id"]),
+            active_agent_version_id=str(row["active_agent_version_id"]),
+            goal_material_ref=str(row["goal_material_ref"]),
+            goal_text=str(row["goal_text"]),
+            runtime_surface=str(row["runtime_surface"]),
+            plan_kind=str(row["plan_kind"]),
+            knowledge_space_refs=tuple(str(item) for item in (row["knowledge_space_refs"] or [])),
+            budget_limits=dict(row["budget_limits"] or {}),
+            tool_id=None if row["tool_id"] is None else str(row["tool_id"]),
+            tool_arguments=None if row["tool_arguments"] is None else dict(row["tool_arguments"]),
+            data_classification=str(row["data_classification"]),
+            retention_scope=str(row["retention_scope"]),
+            content_fingerprint=str(row["content_fingerprint"]),
+            spec_version=str(row["spec_version"]),
+            spec_hash=str(row["spec_hash"]),
+            created_at=row["created_at"],
+        )
+
+    def ensure_runtime_execution_spec(
+        self,
+        spec: ProductRuntimeExecutionSpecInput,
+    ) -> ProductRuntimeExecutionSpecView:
+        if not spec.goal_text.strip():
+            raise ProductPersistenceConflict("RuntimeExecutionSpec requires non-empty goal material")
+        rows = self.connection.execute(
+            text(
+                """
+                SELECT runtime_execution_spec_ref, runtime_request_ref, tenant_id, workspace_id,
+                       conversation_id, principal_id, submission_id, client_request_id,
+                       active_agent_version_id, goal_material_ref, goal_text, runtime_surface,
+                       plan_kind, knowledge_space_refs, budget_limits, tool_id, tool_arguments,
+                       data_classification, retention_scope, content_fingerprint,
+                       spec_version, spec_hash, created_at
+                FROM product_runtime_execution_specs
+                WHERE tenant_id = :tenant_id
+                  AND (
+                      runtime_request_ref = :runtime_request_ref
+                      OR (workspace_id = :workspace_id AND client_request_id = :client_request_id)
+                  )
+                FOR UPDATE
+                """
+            ),
+            {
+                "tenant_id": spec.tenant_id,
+                "runtime_request_ref": spec.runtime_request_ref,
+                "workspace_id": spec.workspace_id,
+                "client_request_id": spec.client_request_id,
+            },
+        ).mappings().all()
+        if len(rows) > 1:
+            raise ProductPersistenceConflict(
+                "RuntimeExecutionSpec identity resolves to multiple durable facts"
+            )
+        if rows:
+            existing = self._runtime_execution_spec_view(rows[0])
+            if (
+                existing.runtime_execution_spec_ref != spec.runtime_execution_spec_ref
+                or existing.spec_hash != spec.spec_hash
+                or existing.content_fingerprint != spec.content_fingerprint
+            ):
+                raise ProductPersistenceConflict(
+                    "RuntimeExecutionSpec identity was reused with different content"
+                )
+            return existing
+
+        self.connection.execute(
+            text(
+                """
+                INSERT INTO product_runtime_execution_specs (
+                    runtime_execution_spec_ref, runtime_request_ref, tenant_id, workspace_id,
+                    conversation_id, principal_id, submission_id, client_request_id,
+                    active_agent_version_id, goal_material_ref, goal_text, runtime_surface,
+                    plan_kind, knowledge_space_refs, budget_limits, tool_id, tool_arguments,
+                    data_classification, retention_scope, content_fingerprint, spec_version, spec_hash
+                )
+                VALUES (
+                    :runtime_execution_spec_ref, :runtime_request_ref, :tenant_id, :workspace_id,
+                    :conversation_id, :principal_id, :submission_id, :client_request_id,
+                    :active_agent_version_id, :goal_material_ref, :goal_text, :runtime_surface,
+                    :plan_kind, CAST(:knowledge_space_refs AS jsonb), CAST(:budget_limits AS jsonb),
+                    :tool_id, CAST(:tool_arguments AS jsonb),
+                    :data_classification, :retention_scope, :content_fingerprint,
+                    :spec_version, :spec_hash
+                )
+                """
+            ),
+            {
+                "runtime_execution_spec_ref": spec.runtime_execution_spec_ref,
+                "runtime_request_ref": spec.runtime_request_ref,
+                "tenant_id": spec.tenant_id,
+                "workspace_id": spec.workspace_id,
+                "conversation_id": spec.conversation_id,
+                "principal_id": spec.principal_id,
+                "submission_id": spec.submission_id,
+                "client_request_id": spec.client_request_id,
+                "active_agent_version_id": spec.active_agent_version_id,
+                "goal_material_ref": spec.goal_material_ref,
+                "goal_text": spec.goal_text,
+                "runtime_surface": spec.runtime_surface,
+                "plan_kind": spec.plan_kind,
+                "knowledge_space_refs": json.dumps(list(spec.knowledge_space_refs), ensure_ascii=False),
+                "budget_limits": json.dumps(spec.budget_limits, ensure_ascii=False, sort_keys=True),
+                "tool_id": spec.tool_id,
+                "tool_arguments": (
+                    None
+                    if spec.tool_arguments is None
+                    else json.dumps(spec.tool_arguments, ensure_ascii=False, sort_keys=True)
+                ),
+                "data_classification": spec.data_classification,
+                "retention_scope": spec.retention_scope,
+                "content_fingerprint": spec.content_fingerprint,
+                "spec_version": spec.spec_version,
+                "spec_hash": spec.spec_hash,
+            },
+        )
+        return self.get_runtime_execution_spec(
+            tenant_id=spec.tenant_id,
+            runtime_execution_spec_ref=spec.runtime_execution_spec_ref,
+            expected_spec_hash=spec.spec_hash,
+        )
+
+    def get_runtime_execution_spec(
+        self,
+        *,
+        tenant_id: str,
+        runtime_execution_spec_ref: str,
+        expected_spec_hash: str | None = None,
+    ) -> ProductRuntimeExecutionSpecView:
+        row = self.connection.execute(
+            text(
+                """
+                SELECT runtime_execution_spec_ref, runtime_request_ref, tenant_id, workspace_id,
+                       conversation_id, principal_id, submission_id, client_request_id,
+                       active_agent_version_id, goal_material_ref, goal_text, runtime_surface,
+                       plan_kind, knowledge_space_refs, budget_limits, tool_id, tool_arguments,
+                       data_classification, retention_scope, content_fingerprint,
+                       spec_version, spec_hash, created_at
+                FROM product_runtime_execution_specs
+                WHERE tenant_id = :tenant_id
+                  AND runtime_execution_spec_ref = :runtime_execution_spec_ref
+                """
+            ),
+            {
+                "tenant_id": tenant_id,
+                "runtime_execution_spec_ref": runtime_execution_spec_ref,
+            },
+        ).mappings().first()
+        if row is None:
+            raise ProductPersistenceConflict("RuntimeExecutionSpec not found for tenant")
+        view = self._runtime_execution_spec_view(row)
+        if expected_spec_hash is not None and view.spec_hash != expected_spec_hash:
+            raise ProductPersistenceConflict("RuntimeExecutionSpec hash does not match durable fact")
+        return view
+
     def submit_command(self, command: ProductCommandSubmission) -> ProductCommandReceiptRef:
         self._ensure_conversation(command)
         existing = self.connection.execute(
@@ -745,6 +1002,8 @@ class ProductRepository:
         if existing is not None:
             if existing["request_hash"] != command.request_hash:
                 raise ProductPersistenceConflict("same client_request_id with different request_hash")
+            if command.runtime_execution_spec is not None:
+                self.ensure_runtime_execution_spec(command.runtime_execution_spec)
             receipt = self._append_receipt(
                 str(existing["command_id"]),
                 command.tenant_id,
@@ -777,6 +1036,12 @@ class ProductRepository:
                 "raw_intent_ref": command.raw_intent_ref,
             },
         )
+        runtime_execution_spec = (
+            self.ensure_runtime_execution_spec(command.runtime_execution_spec)
+            if command.runtime_execution_spec is not None
+            else None
+        )
+
         message_sequence_no = int(
             self.connection.execute(
                 text(
@@ -865,6 +1130,27 @@ class ProductRepository:
             "ACCEPTED",
             {"runtime_request_ref": command.runtime_request_ref},
         )
+        dispatch_payload = {
+            "contract_name": "RuntimeRequest",
+            "producer_module": "Product Surface",
+            "consumer_module": "Agent Core",
+            "tenant_id": command.tenant_id,
+            "workspace_id": command.workspace_id,
+            "conversation_id": command.conversation_id,
+            "submission_id": command.submission_id,
+            "message_id": message_id,
+            "command_id": command.command_id,
+            "command_kind": command.command_kind,
+            "runtime_request_ref": command.runtime_request_ref,
+            "active_agent_version_id": command.active_agent_version_id,
+            "principal_id": command.principal_id,
+            "payload_hash": command.request_hash,
+        }
+        if runtime_execution_spec is not None:
+            dispatch_payload["runtime_execution_spec_ref"] = (
+                runtime_execution_spec.runtime_execution_spec_ref
+            )
+            dispatch_payload["runtime_execution_spec_hash"] = runtime_execution_spec.spec_hash
         InfrastructureRepository(self.connection).enqueue_outbox(
             event_id=command.outbox_message_id,
             tenant_id=command.tenant_id,
@@ -872,22 +1158,7 @@ class ProductRepository:
             topic="product.runtime_request.dispatch",
             idempotency_key=command.client_request_id,
             ordering_key=command.conversation_id,
-            payload={
-                "contract_name": "RuntimeRequest",
-                "producer_module": "Product Surface",
-                "consumer_module": "Agent Core",
-                "tenant_id": command.tenant_id,
-                "workspace_id": command.workspace_id,
-                "conversation_id": command.conversation_id,
-                "submission_id": command.submission_id,
-                "message_id": message_id,
-                "command_id": command.command_id,
-                "command_kind": command.command_kind,
-                "runtime_request_ref": command.runtime_request_ref,
-                "active_agent_version_id": command.active_agent_version_id,
-                "principal_id": command.principal_id,
-                "payload_hash": command.request_hash,
-            },
+            payload=dispatch_payload,
         )
         return ProductCommandReceiptRef(command.command_id, receipt, "ACCEPTED")
 
