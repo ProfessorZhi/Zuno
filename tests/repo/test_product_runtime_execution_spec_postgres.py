@@ -137,10 +137,12 @@ def test_runtime_execution_spec_is_durable_replay_safe_and_tenant_scoped(
             ).scalar_one()
             outbox = connection.execute(
                 text(
-                    "SELECT payload FROM infra_outbox_events "
-                    "WHERE tenant_id = :tenant_id AND event_id = :event_id"
+                    "SELECT event_id, payload FROM infra_outbox_events "
+                    "WHERE tenant_id = :tenant_id "
+                    "AND aggregate_id = :command_id "
+                    "AND topic = 'product.runtime_request.dispatch'"
                 ),
-                {"tenant_id": tenant_id, "event_id": f"outbox:{client_request_id}"},
+                {"tenant_id": tenant_id, "command_id": first.command_id},
             ).mappings().one()
 
         assert int(spec_count) == 1
