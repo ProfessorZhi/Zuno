@@ -972,25 +972,49 @@ class ProductService:
         event_id: str,
         worker_id: str,
         engine: Any | None = None,
+        fault_hook: Callable[[str], None] | None = None,
     ) -> ProductRuntimeDispatchConsumeResult:
         if engine is None:
             from zuno.platform.database import engine as default_engine
 
             engine = default_engine
 
+        command_id = ""
+        agent_run_id: str | None = None
+        owner_receipt_ref: str | None = None
+        inbox_first_seen = False
+        agent_run_status = "duplicate"
+        canonical_task_id: str | None = None
+        canonical_run_id: str | None = None
+        runtime_final_state: str | None = None
+        runtime_execution_spec = None
+
+        # Phase 1: durable Product/Agent owner facts + canonical identity only.
+        # The graph/model/tool runtime is deliberately outside this transaction.
         with engine.begin() as conn:
             infra_repo = InfrastructureRepository(conn)
             if not infra_repo.claim_outbox_event(event_id=event_id, worker_id=worker_id):
-                return ProductRuntimeDispatchConsumeResult(
+                try:
+                    record = infra_repo.load_claimed_outbox_event(
+                        event_id=event_id,
+                        worker_id=worker_id,
+                    )
+                except FencingRejectedError:
+                    return ProductRuntimeDispatchConsumeResult(
+                        event_id=event_id,
+                        command_id="",
+                        agent_run_id=None,
+                        agent_run_status="not_pending",
+                        owner_receipt_ref=None,
+                        inbox_first_seen=False,
+                        outbox_status="not_claimed",
+                    )
+            else:
+                record = infra_repo.load_claimed_outbox_event(
                     event_id=event_id,
-                    command_id="",
-                    agent_run_id=None,
-                    agent_run_status="not_pending",
-                    owner_receipt_ref=None,
-                    inbox_first_seen=False,
-                    outbox_status="not_claimed",
+                    worker_id=worker_id,
                 )
-            record = infra_repo.load_claimed_outbox_event(event_id=event_id, worker_id=worker_id)
+
             payload = dict(record.payload)
             if record.topic != PRODUCT_RUNTIME_DISPATCH_TOPIC or payload.get("consumer_module") != "Agent Core":
                 raise ValueError("outbox event is not a Product RuntimeRequest dispatch for Agent Core")
@@ -1016,16 +1040,13 @@ class ProductService:
                 raise ProductPersistenceConflict(
                     "Product RuntimeRequest outbox ordering key does not match conversation"
                 )
-            runtime_execution_spec_ref = str(
-                payload.get("runtime_execution_spec_ref") or ""
-            ).strip()
-            runtime_execution_spec_hash = str(
-                payload.get("runtime_execution_spec_hash") or ""
-            ).strip()
+            runtime_execution_spec_ref = str(payload.get("runtime_execution_spec_ref") or "").strip()
+            runtime_execution_spec_hash = str(payload.get("runtime_execution_spec_hash") or "").strip()
             if not runtime_execution_spec_ref or not runtime_execution_spec_hash:
                 raise ProductPersistenceConflict(
                     "Product RuntimeRequest dispatch is missing RuntimeExecutionSpec identity"
                 )
+
             product_repo = ProductRepository(conn)
             runtime_execution_spec = product_repo.get_runtime_execution_spec(
                 tenant_id=tenant_id,
@@ -1045,6 +1066,17 @@ class ProductService:
                 raise ProductPersistenceConflict(
                     "Product RuntimeRequest dispatch does not match durable RuntimeExecutionSpec scope"
                 )
+
+            canonical_task_id, canonical_run_id = _canonical_product_runtime_identity(
+                tenant_id=tenant_id,
+                workspace_id=workspace_id,
+                runtime_request_ref=runtime_request_ref,
+            )
+            binding_ref = _runtime_execution_binding_ref(
+                tenant_id=tenant_id,
+                workspace_id=workspace_id,
+                runtime_request_ref=runtime_request_ref,
+            )
             owner_context = ProductService.build_runtime_owner_context(
                 active_agent_version_id=str(payload.get("active_agent_version_id") or ""),
                 command_id=command_id,
@@ -1052,9 +1084,8 @@ class ProductService:
                 payload=payload,
             )
             agent_run_id = f"agent-run:{runtime_request_ref}"
-            owner_receipt_ref: str | None = None
-            agent_run_status = "duplicate"
-            inbox_first_seen = False
+            owner_receipt_ref = f"owner-receipt:{record.event_id}:agent-run-created"
+
             try:
                 owner_tx = conn.begin_nested()
                 try:
@@ -1109,8 +1140,7 @@ class ProductService:
                                 trace_id=f"trace:{runtime_request_ref}",
                             )
                         )
-                        owner_receipt_ref = f"owner-receipt:{record.event_id}:agent-run-created"
-                        ProductRepository(conn).append_owner_receipt(
+                        product_repo.append_owner_receipt(
                             tenant_id=tenant_id,
                             command_id=command_id,
                             status="ACCEPTED",
@@ -1121,10 +1151,23 @@ class ProductService:
                                 "task_contract_ref": task_contract_id,
                                 "runtime_execution_spec_ref": runtime_execution_spec.runtime_execution_spec_ref,
                                 "runtime_execution_spec_hash": runtime_execution_spec.spec_hash,
+                                "canonical_task_id": canonical_task_id,
+                                "canonical_run_id": canonical_run_id,
                                 "outbox_event_id": record.event_id,
                                 "command_kind": owner_context["command_kind"],
                                 "constraints_hash": owner_context["constraints_hash"],
                             },
+                        )
+                        product_repo.ensure_runtime_execution_binding(
+                            binding_ref=binding_ref,
+                            tenant_id=tenant_id,
+                            workspace_id=workspace_id,
+                            runtime_request_ref=runtime_request_ref,
+                            runtime_execution_spec_ref=runtime_execution_spec.runtime_execution_spec_ref,
+                            runtime_execution_spec_hash=runtime_execution_spec.spec_hash,
+                            agent_run_ref=run_receipt.ref,
+                            canonical_task_id=canonical_task_id,
+                            canonical_run_id=canonical_run_id,
                         )
                         infra_repo.mark_inbox_processed(
                             tenant_id=tenant_id,
@@ -1132,6 +1175,20 @@ class ProductService:
                             message_id=record.event_id,
                         )
                         agent_run_status = run_receipt.status
+                    else:
+                        product_repo.get_runtime_execution_binding(
+                            tenant_id=tenant_id,
+                            runtime_request_ref=runtime_request_ref,
+                            expected={
+                                "binding_ref": binding_ref,
+                                "workspace_id": workspace_id,
+                                "runtime_execution_spec_ref": runtime_execution_spec.runtime_execution_spec_ref,
+                                "runtime_execution_spec_hash": runtime_execution_spec.spec_hash,
+                                "agent_run_ref": agent_run_id,
+                                "canonical_task_id": canonical_task_id,
+                                "canonical_run_id": canonical_run_id,
+                            },
+                        )
                     owner_tx.commit()
                 except Exception:
                     owner_tx.rollback()
@@ -1153,8 +1210,76 @@ class ProductService:
                     owner_receipt_ref=None,
                     inbox_first_seen=False,
                     outbox_status=failure.status,
+                    canonical_task_id=canonical_task_id,
+                    canonical_run_id=canonical_run_id,
                 )
-            infra_repo.complete_outbox(event_id=record.event_id, worker_id=worker_id)
+
+        # Phase 2: canonical graph start/recovery after owner transaction commit.
+        try:
+            if fault_hook is not None:
+                fault_hook("after_owner_commit")
+            assert runtime_execution_spec is not None
+            assert canonical_task_id is not None and canonical_run_id is not None
+            runtime_final_state, _snapshot = _start_canonical_product_runtime(
+                spec=runtime_execution_spec,
+                canonical_task_id=canonical_task_id,
+                canonical_run_id=canonical_run_id,
+            )
+            if fault_hook is not None:
+                fault_hook("after_runtime_start")
+        except Exception as exc:
+            outbox_status = _record_runtime_dispatch_failure(
+                engine=engine,
+                event_id=event_id,
+                worker_id=worker_id,
+                error_code=f"CanonicalRuntimeUnavailable:{type(exc).__name__}",
+            )
+            return ProductRuntimeDispatchConsumeResult(
+                event_id=event_id,
+                command_id=command_id,
+                agent_run_id=agent_run_id,
+                agent_run_status="runtime_unavailable",
+                owner_receipt_ref=owner_receipt_ref,
+                inbox_first_seen=inbox_first_seen,
+                outbox_status=outbox_status,
+                canonical_task_id=canonical_task_id,
+                canonical_run_id=canonical_run_id,
+            )
+
+        # Phase 3: persist Product observation, then publish the dispatch event.
+        try:
+            with engine.begin() as conn:
+                ProductRepository(conn).mark_runtime_execution_observed(
+                    tenant_id=runtime_execution_spec.tenant_id,
+                    runtime_request_ref=runtime_execution_spec.runtime_request_ref,
+                    canonical_task_id=canonical_task_id,
+                    canonical_run_id=canonical_run_id,
+                    runtime_final_state=runtime_final_state,
+                )
+                InfrastructureRepository(conn).complete_outbox(
+                    event_id=event_id,
+                    worker_id=worker_id,
+                )
+        except Exception as exc:
+            outbox_status = _record_runtime_dispatch_failure(
+                engine=engine,
+                event_id=event_id,
+                worker_id=worker_id,
+                error_code=f"ProductRuntimeObservationUnavailable:{type(exc).__name__}",
+            )
+            return ProductRuntimeDispatchConsumeResult(
+                event_id=event_id,
+                command_id=command_id,
+                agent_run_id=agent_run_id,
+                agent_run_status="runtime_observation_unavailable",
+                owner_receipt_ref=owner_receipt_ref,
+                inbox_first_seen=inbox_first_seen,
+                outbox_status=outbox_status,
+                canonical_task_id=canonical_task_id,
+                canonical_run_id=canonical_run_id,
+                runtime_final_state=runtime_final_state,
+            )
+
         return ProductRuntimeDispatchConsumeResult(
             event_id=event_id,
             command_id=command_id,
@@ -1163,6 +1288,9 @@ class ProductService:
             owner_receipt_ref=owner_receipt_ref,
             inbox_first_seen=inbox_first_seen,
             outbox_status="published",
+            canonical_task_id=canonical_task_id,
+            canonical_run_id=canonical_run_id,
+            runtime_final_state=runtime_final_state,
         )
 
     @staticmethod
