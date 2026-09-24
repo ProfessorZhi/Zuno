@@ -4,7 +4,7 @@
 
 ## Part A — Human Narrative
 
-### 新证据进入以后，一个成功返回的旧分支仍然可能不能直接使用
+### 晚到结果让运行时必须认识“旧世界”
 
 简单 Agent 最自然的实现，是把当前上下文交给模型，让模型决定下一步调用哪个 Tool，再把结果放回上下文，直到得到最终答案。任务只有几秒钟、没有现实副作用、失败后从头再跑也没有代价时，这种 ReAct 式循环已经足够。固定 workflow 能解决的任务也应继续使用固定 workflow，没有理由先造复杂运行时。
 
@@ -14,13 +14,13 @@
 
 04 的职责从这个时间差里出现。它控制一项长任务现在按什么前提继续，哪些工作已经派发，哪些返回结果仍有资格进入当前计划，什么时候只是重试同一件事，什么时候必须改变后续计划，以及什么时候应该停下来等待 Domain、Effects、Security 或 Knowledge 给出更强的事实。
 
-### 计划一旦发出去，旧计划就必须留下可以识别的身份
+
 
 长任务需要显式计划，但显式不等于每一步都让 LLM 重新规划。稳定任务可以一次形成依赖关系，再由确定性调度执行；只有材料、权限、能力资格或其他关键前提发生变化时，才值得重新组织后续工作。
 
 真正麻烦的是已经派发出去的工作。一个 Worker 开始分析时，已经使用了当时的材料、输入和依赖。如果 Controller 直接在原来的 Plan 对象上改写内容，旧 Worker 回来以后就很难回答“你到底是按改动前还是改动后的世界算的”。
 
-Target 因而让已经激活的计划保持不可变。需要改变未来执行时创建新的 `PlanVersion`，旧任务继续带着原来的版本身份。结果回来以后，Runtime 再根据当前材料和计划前提判断它可以继续使用、需要重新验收，还是应该重做。版本在这里保护的是运行因果，不是为了给每次小调整增加形式化成本。
+Target 因而让已经激活的计划保持不可变。需要改变未来执行时创建新的 `PlanVersion`，旧任务继续带着原来的版本身份。结果回来以后，Runtime 再根据当前材料和计划前提判断它可以继续使用、需要重新验收，还是应该重做。版本在这里保护运行因果；对不改变依赖前提的小调整无需额外形式化。
 
 计划切换还需要一个明确的逻辑写者。假设两个自治 Controller 同时看到新证据：一个准备取消旧分支，另一个却继续激活新的后续 Step；如果两边都能独立改全局计划，重启以后很难还原哪次决定先发生、哪个结果属于哪套计划。
 
@@ -28,7 +28,7 @@ Zuno 因此把当前计划的激活、重规划和全局控制收敛给一个逻
 
 运行时内部仍可以分成稳定的外层任务生命周期、会随任务变化的计划，以及每个 Step 的稳定执行边界。这样 Replan 只改变真正需要变化的任务依赖，不必为了一个新证据重新发明整个运行框架。更精确的三层运行图和状态约束留在 Engineering Reference；第一次阅读只需要记住一件事：变化集中在计划，恢复仍然有稳定宿主和稳定执行边界。
 
-### Context 应按任务需要组装，不能把对话历史变成案件数据库
+### Context 为当前执行组装，长期事实留在各自 Owner
 
 长任务最容易形成另一种隐性状态：为了让模型“记得案件”，不断把对话、工具结果、旧总结和中间草稿追加到 Context。短任务里这很方便；运行数十轮以后，模型看到的是一份越来越长、来源和有效性混杂的临时记忆。新材料进入后，旧总结还留在前文；某个候选后来被专家拒绝，却仍可能因为出现在 Conversation History 里再次影响推理。
 
@@ -40,13 +40,13 @@ Context compression、summary 和短期 memory 可以继续使用，但它们首
 
 如果单 Agent 配合并行 Tool Call 已经能完成任务，增加 Subagent 只会提高 token、协调和恢复成本。多 Agent 因此是一种执行策略，是否启用由 Task Class 和 09 的 Eval 决定，不成为 Zuno 的长期产品对象或组织结构。
 
-### Runtime 只消费 Context snapshot，不拥有长期 Memory truth
+
 
 一次 Step 开始时，04 可以读取 recent window、task summary 或经过治理的 structured memory，并把真正参与执行的来源、Scope 和 policy refs 记录进 Context trace。它拥有“这次执行看到了什么”的控制事实，不拥有这些内容在业务上是否为真。
 
 structured memory 的 record 可以由外部 Provider 保存，当前可 Recall 的范围由 08 决定；02 / 03 的正式事实与材料来源仍然优先。等待数小时后 resume 时，Runtime 不直接复用旧 Context blob，而应按当前 Domain、Knowledge、Security 和允许的 memory snapshot 重新组装。这样 Memory 可以被替换甚至关闭，而不会变成 Runtime 的第二套业务数据库。
 
-### Domain 已经提交而 Checkpoint 还没写时，恢复必须先相信业务事实
+### 恢复先查权威事实，再修 Runtime 进度
 
 计划版本解决了“前提变化以后旧结果属于谁”，进程崩溃会继续暴露另一类时间差。
 
@@ -58,7 +58,7 @@ Checkpoint 仍然很重要。它保存 Run、Plan、Step、等待和预算等控
 
 同样，Lease 或 fencing 可以防止两个 Controller 同时修改运行控制，却不能证明某个远端 POST 没有发生，也不能证明 Domain transaction 没提交。基础设施原语保护自己的并发边界；跨责任域恢复仍然要回到拥有结果的地方确认事实。
 
-### 三种失败会把系统推向三个不同方向
+
 
 模型 Provider 临时返回 503 时，任务目标、输入和专业含义都没有变化。有限地重新做同一个调用通常合理，这类动作就是 Retry。
 
@@ -72,13 +72,13 @@ Replan 时，旧计划可能还有 Worker 在途。新计划形成以后，没�
 
 并行汇合也服从同样原则。几个 future 都返回，并不自动意味着后续 Step 可以开始：某个结果可能属于旧计划，某个已经被取消，另一个虽然格式正确却没有通过专业验收。Runtime 只把当前仍然有资格的结果计入后续依赖。并行提高吞吐，不会改变结果是否仍然适用。
 
-### Step 真正执行前，还要检查规划时依赖的版本是否仍然成立
+### 版本变化、等待和取消只改变未来执行
 
 一个 Step 可能在计划阶段解析到 Capability C1、ProviderBinding P1、ToolVersion T1 和某个 credential / config；真正 dispatch 时这些版本已经变化。只要变化影响 schema、专业语义、effect class、关键参数解释或安全资格，旧 Step 的执行前提就已经失效。
 
 Runtime 因而记录 resolved input-version set，但不自己判断所有版本是否兼容。05 判断 Capability / Provider 是否仍等价，06 判断 Tool semantics 和 retry safety，07 判断模型路由资格，08 判断安全与 credential，03 判断 KnowledgeGeneration。仍满足原契约时可以继续；不满足时 re-resolve 或 Replan。版本控制服务于因果验收，不形成全局 Version God Service。
 
-### 等待和取消只改变未来，不能冻结或回滚已经发生的世界
+
 
 法律任务可能等待人工数小时甚至数天。恢复后从暂停代码的下一行继续，看起来最简单，却假设等待期间什么都没有变化。现实里材料可能更新，Capability 或模型资格可能变化，SecurityEpoch 可能推进，原来的 Approval 也可能过期。
 
@@ -88,15 +88,15 @@ Runtime 因而记录 resolved input-version set，但不自己判断所有版本
 
 取消也只控制还没有不可逆发生的未来工作。Controller 可以停止新的 Step 派发、请求 Worker 停止并忽略已经失去资格的晚到计算；已经正式提交的 Domain 事实、已经确认的外部 Effect 和已经产生的模型费用仍然是历史。把 Run 标成 CANCELLED 不会提供时间倒流能力。
 
-### 当成熟框架已经够用时，Runtime 应该尽量薄
+
 
 LangGraph 一类框架已经提供图执行、Checkpoint、interrupt 和并发调度等通用机制。Zuno 没有理由重写这些基础设施。04 只需要拥有通用框架不会替法律业务决定的控制语义：当前计划基于什么前提，计划变化以后旧结果如何重新判断，Domain 已提交但 Checkpoint 较旧时怎样恢复，Effect unknown 时为什么要停下来对账，以及权限或材料变化后什么时候必须重规划。
 
 Native Runtime 也不是产品身份。如果 Generic Agent Host 加 Zuno Legal Backend 已经可以满足长期状态、恢复正确性和控制可解释性，自研 Runtime 应保持很薄，甚至退出主路径。只有真实任务证明通用 Host 在这些约束上不足，并且额外 Runtime 的收益超过维护成本，才值得继续扩大。
 
-动态规划、Specialist 并行和复杂汇合也按同一原则处理。大量任务使用固定 workflow 就能稳定完成时，应继续使用固定 workflow。Agentic 控制真正有价值的地方，是任务前提在运行过程中发生变化，而系统需要有根据地改变未来，而不是让每一步都重新问模型下一步做什么。
+动态规划、Specialist 并行和复杂汇合也按同一原则处理。大量任务使用固定 workflow 就能稳定完成时，应继续使用固定 workflow。Agentic 控制的价值出现在任务前提在运行过程中变化、系统必须有根据地调整未来执行的场景；固定流程足够时无需让每一步重新询问模型。
 
-### Current / Target / Gap
+### 设计边界与当前证明
 
 **Target：** 04 拥有 AgentRun、PlanVersion、StepRun、Checkpoint、ready / join、等待、Budget、取消和 Replan 等控制事实；它以 Single Controller 维持计划因果，并在恢复时优先消费 Domain、Effect、Security、Knowledge 等 Owner 已经成立的更强事实。Context、summary、Subagent 和 Multi-Agent 都是可替换执行策略，不承担案件材料或正式业务事实的长期 Authority；resolved input-version set 需要覆盖真正影响 Step 语义的 Knowledge / Capability / Provider / Model / Tool / config / security refs。
 

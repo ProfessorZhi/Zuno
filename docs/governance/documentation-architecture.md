@@ -57,6 +57,26 @@ adversarial_review:
 
 Research and Red / Blue are canonical locations for their own artifacts but are not additional owners of system truth. A paper, external platform feature, Red concern, Blue proposal, simulated resume or archived Round cannot modify Target or Current by existing in the repository.
 
+### Target 与 Current 的时间关系
+
+Zuno 的 Target Architecture 允许并且通常应该领先于代码。它从业务约束、失败场景和长期责任推导系统应当怎样工作；实现按 scoped slice 向 Target 收敛。Current Evidence 则向后证明今天的代码、Migration、Test、Trace、Eval 或真实运行已经走到哪里。
+
+```text
+Business constraints / failure scenarios
+→ accepted Target Architecture / Module semantics / ADR
+→ scoped implementation plan
+→ Code / Migration / Test
+→ Current Evidence
+```
+
+这条关系不使用“代码永远比文档新”或“文档永远比代码权威”这样的全局优先级。
+
+- 讨论 **Target 语义、Owner、Authority、Recovery 和长期 Contract** 时，`docs/architecture/`、`docs/modules/` 与 accepted ADR 拥有权威。Current 代码缺少某个 Target 机制，只表示 implementation gap，不会自动否定 Target。
+- 讨论 **今天是否已经实现、验证或可运行** 时，`docs/evidence/` 负责 Current 结论，底层来源是具体 code SHA、Migration、Test、Trace、Eval 与 runtime result。Target 文档不能把设计直接升级成 Current。
+- Current 实现如果偏离 Target，先记录为 `Target / Current divergence`。只有 Architecture Revision 或 accepted ADR 可以改变 Target；代码不能通过“已经这样实现了”静默反写架构。
+- Architecture / Module Human Narrative 只保留理解设计所需的 Current anchor，不长期复制 run id、commit SHA、短期 blocker 和 implementation-wave 状态。快速变化的状态回到 Evidence 或 scoped governance status。
+- Evidence 是对一个具体代码快照的证明。新的 main 提交触及已声明的实现边界后，旧 Evidence 可以继续作为 History，但不能继续冒充最新 Current；应推进 snapshot 或明确标记 freshness gap。
+
 ## 3. Human / Machine projection
 
 Project、Architecture 和 Module 都区分 Human Narrative 与 Engineering Reference，但总体架构额外保留一个显式的正文文件名：

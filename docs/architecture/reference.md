@@ -29,8 +29,9 @@ Part B 是总体架构的机器可消费索引。它压缩 Part A 已经解释�
 14. Cancellation 停止未来工作，不全局回滚已经成立的 Domain fact 或已经发生/可能发生的现实 Effect。
 15. 简单法律问答保持受控 RAG baseline；Native Runtime、GraphRAG、Reflection、Memory、Specialist、独立服务都必须由测量证明收益。
 16. Target 文档不证明 Current 实现；实现资格只来自 Code / Migration / Test / Trace / Eval / runtime Evidence。
-17. Context / Memory 是 optional non-authoritative provider boundary；Provider record 不是 Domain truth，Recall / Lifecycle policy 由 08 决定，01 / 04 只消费当前允许的 snapshot。
-18. `Provenance != Truth != Authorization != Semantic Preservation`；source id / lineage 不能替代对应 Owner fact、安全资格或压缩保真验证。
+17. Current 实现也不自动重定义 Target；实现与 Target 不一致时先记录 divergence，只有 accepted Architecture Revision / ADR 可以改变 Target。
+18. Context / Memory 是 optional non-authoritative provider boundary；Provider record 不是 Domain truth，Recall / Lifecycle policy 由 08 决定，01 / 04 只消费当前允许的 snapshot。
+19. `Provenance != Truth != Authorization != Semantic Preservation`；source id / lineage 不能替代对应 Owner fact、安全资格或压缩保真验证。
 
 ### B2. Authority / Ownership Matrix
 
@@ -252,28 +253,38 @@ HumanDecision: 专业人员是否接受、修改或拒绝法律业务结论
 
 ### B13. Current / Target / Evidence / Unknown
 
-**Target**：本文 A/B 描述的跨模块 Authority、边界、恢复和复杂度治理语义。
+**Target**：本文 A/B 描述的跨模块 Authority、边界、恢复和复杂度治理语义。Target 可以领先于实现；代码暂时缺失某个机制表示 implementation gap，不会自动改变 Target。
 
-**Current**：只能由 [`docs/evidence/`](../evidence/README.md) 中与当前代码 SHA、Migration、Test、Trace、Eval、runtime evidence 对应的材料证明。总体架构文档本身不升级任何能力为 Current。RB019 的 restart replay certainty、最小 conclusive reconciliation、mandatory audit send gate 与 formal Alembic entrypoint 已有 main selected evidence；后续 main evidence 又证明 post-dispatch audit capacity lifecycle、数据库级 tenant scope 与 AUD-L1 deterministic pre-send abort。剩余 Effect/Security gap 集中在 manual judgment Authority、audit class、AUD-L2 crash/restart audit lifecycle 与 Target composed SecurityEpoch；provider remote query 当前按真实 capability inventory保持 Defer。
+**Current**：只能由 [`docs/evidence/`](../evidence/README.md) 中与具体代码 SHA、Migration、Test、Trace、Eval 或 runtime result 绑定的材料证明。总体架构 Reference 不复制每个 implementation wave、run id、短期 blocker 或转绿状态，避免把快速变化的 Current 固化成第二份事实。
 
-**Evidence**：模块文档 B13 指向当前可用的具体证据；正向通过与负向 fault probe 都是 Evidence。需要判断某个 Target 是否已经落地时，优先读取对应 Module B13，再读取 evidence 原文和代码。
+**Evidence**：正向通过与负向 fault probe 都可以成为 Evidence，但只提升实际覆盖的窄范围。需要判断某个 Target 是否已经落地时，读取 Evidence 原文和对应实现；若 main 已变化而 Evidence 尚未推进，报告 freshness gap。
 
-**Unknown / Measurement Needed**：Production Readiness、完整 fault-injection coverage、真实法院/业务环境收益、GraphRAG / Memory / Native Runtime / Multi-Agent 的 A/B baseline、性能与成本边界、部署拆分必要性，都不能从 Target Design 推导。RB019、tenant-scope 与 AUD-L1 已转绿的 fault window属于 Current positive regression；manual Authority、audit class 与 AUD-L2 crash/restart lifecycle仍保持 Gap / Measurement Needed，remote-query 则保持 Provider-capability-gated Defer。
+**Unknown / Measurement Needed**：Production Readiness、完整 fault-injection coverage、真实法院/业务环境收益、GraphRAG / Memory / Native Runtime / Multi-Agent 的 A/B baseline、性能与成本边界、部署拆分必要性，都不能从 Target Design 推导。未获得实现或测量证明的机制继续保持 Gap。
 
-`implementation_authorization` 只在明确 scoped slice 内成立：RB019 AUTH-A/B/C 已实施；其他未授权 Target 仍不能因为文档完整而直接实现。
+`implementation_authorization` 只在明确 scoped slice 内成立。实现状态和授权由对应 governance status / Evidence 记录；Reference 的完整度不会自动授权实现，也不会把 Target 升级成 Current。
 
 ### B14. Machine Navigation / Source Precedence
 
-机器或 Agent 回答架构问题时按以下优先级读取：
+机器或 Agent 不使用一个跨事实层的全局 source precedence。先判断问题属于 Target、Current 还是 History，再进入对应 Truth Owner。
 
 ```text
-Current Code / Test / Runtime Evidence
-> canonical docs/architecture + docs/modules
-> accepted ADR
-> historical Red/Blue archive
-> docs/research and external research
-> speculation
+Target semantics / Owner / Authority / Recovery
+→ docs/architecture + docs/modules
+→ accepted ADR
+→ research inputs when lineage is needed
+
+Current implementation / verification
+→ docs/evidence
+→ code / migration / test / trace / eval / runtime result
+→ Target docs only to判断 expected behavior and gaps
+
+History / project facts / personal ownership
+→ docs/project + governance provenance
+→ historical Git / project artifacts
+→ public background only as corroboration
 ```
+
+代码没有实现某个 Target 机制时，结论是 implementation gap；代码已经采用不同语义时，结论是 Target / Current divergence。两种情况都不能让 Current implementation 静默覆盖 Target。只有 accepted Architecture Revision / ADR 可以修改 Target；Evidence 只负责证明 Current。
 
 定位规则：
 

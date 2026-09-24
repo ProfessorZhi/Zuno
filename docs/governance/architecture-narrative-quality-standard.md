@@ -241,6 +241,8 @@ Human-first 不等于每一层重复完整解释同一件事。
 
 同一不变量可以在多处简短出现，但完整推导应该有主要 Owner 文档。其他文档只保留当前上下文所需解释并指向主要位置，避免整段复制。
 
+跨域机制默认由 Overall Architecture 承担“深度 Owner”。例如 Memory / Context 的 Authority、Owner-first recovery、版本漂移、跨 Owner consistency 与 measurement-gated complexity，Project 只说明它们怎样改变产品边界，`docs/modules/README.md` 只说明它们怎样影响责任地图，单模块 Part A 只深入本模块真正拥有的那一段。这样同一个原则可以被读者在不同入口遇到，但不会连续读三遍完整推导。
+
 ---
 
 ## 9. 机器校验只负责防退化，不负责给内容质量打分

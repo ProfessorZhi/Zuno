@@ -183,8 +183,9 @@ def verify() -> list[str]:
         "Domain commit + matching `AdmissionReceipt`",
         "`EffectReceipt` or conclusive `ReconciliationReceipt`",
         "current matching Authorization/Approval/Audit/egress/secret facts",
-        "Current Code / Test / Runtime Evidence",
-        "> canonical docs/architecture + docs/modules",
+        "Target semantics / Owner / Authority / Recovery",
+        "Current implementation / verification",
+        "代码没有实现某个 Target 机制时，结论是 implementation gap",
     ):
         if marker not in architecture_reference:
             errors.append(f"overall architecture Part B missing cross-module reference invariant: {marker}")
