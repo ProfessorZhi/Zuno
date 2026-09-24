@@ -4,7 +4,7 @@
 
 ## Part A — Human Narrative
 
-### 一百份材料上传成功，任务仍可能不能开始
+### 从材料到可用知识，要经过两次判断
 
 用户把一百份案件材料上传到系统。九十八份很快完成解析，两份扫描附件仍在 OCR。此时页面上每个上传请求都返回成功，向量库里也已经有大量 chunk。
 
@@ -14,7 +14,7 @@
 
 单文件 Demo 可以上传后立即切分、Embedding、写向量库，然后开始查询。复杂材料处理只有在 OCR、版本更新、异步 Worker、重建和不同任务需求真正出现以后，才需要更明确的知识生命周期。
 
-### 从正式材料到可查询知识，需要两个不同的判断
+
 
 合同 v3 先由 02 作为正式 `DocumentVersion（材料版本）` 保存。03 不再创造另一套“真正文件 id”，而是引用这个稳定身份进行 OCR、解析、切分、Embedding、实体抽取、图构建和索引。
 
@@ -24,9 +24,9 @@
 
 所以在真正执行任务前，还会针对 task class、Scope、所需能力和当前安全条件形成 `ReadinessDecision（知识就绪判断）`。它可以告诉上层当前范围已经足够、只覆盖部分材料，或者缺少关键输入而应该阻断。
 
-这样做不会把系统变成“所有东西都等到最慢组件完成”。简单任务可以在需要的最小知识已经准备好时继续；复杂任务则明确知道自己还缺什么。Readiness 是面向任务的判断，不是整个平台只有一个绿色灯。
+这样做不会把系统变成“所有东西都等到最慢组件完成”。简单任务可以在需要的最小知识已经准备好时继续；复杂任务则明确知道自己还缺什么。Readiness 面向具体任务、Scope 和材料要求；平台不存在一个可以替代这些判断的全局绿色灯。
 
-### 检索负责找到候选，不负责把“没找到”写成事实
+### 检索产生候选，案件研究结构从候选继续生长
 
 知识准备好以后，03 才开始回答检索问题。
 
@@ -38,7 +38,7 @@
 
 同理，今天的 CitationLineage 解释这次候选如何被找到；正式 WorkProduct 当时真正采用的材料和位置，由 02 在准入时保存成长期引用绑定。03 可以重建索引，不能让历史 WorkProduct 的引用跟着新索引漂移。
 
-### 知识层不仅服务搜索，也形成案件研究的专业中间结构
+
 
 如果 03 最终只输出 chunk 和 Top-K，葛季栋 / LIPLAB 已有的事件抽取、冲突识别、事实—法条关系等研究能力仍然只是检索插件。它们更有价值的用法，是把非结构化材料逐步转换成专业人员能够持续复核的案件结构。
 
@@ -56,13 +56,13 @@
 
 精确条款定位可能适合 lexical / BM25；语义相似问题适合 dense retrieval；已知 Matter、文件类型或时间范围时，metadata / source scoped retrieval 往往更直接。跨文档实体关系和多跳事件链才可能真正从 graph route 获益。
 
-因此更合理的起点是 Hybrid Retrieval，再根据 QueryClass 和已知证据缺口加入额外 route，最后做融合和 rerank。不是“能走多少 route”决定系统先进程度，而是新的 route 是否稳定找到 baseline 漏掉、且任务真正需要的证据。
+因此更合理的起点是 Hybrid Retrieval，再根据 QueryClass 和已知证据缺口加入额外 route，最后做融合和 rerank。新 route 是否值得保留，取决于它能否稳定找到 baseline 漏掉且任务确实需要的证据，而不是 route 数量。
 
 Agentic Retrieval 也需要停下来。模型可以不断改写 query、扩图、再 rerank，但“再搜一次也许会更好”不是停止策略。继续检索应该能够指出一个尚未满足的证据缺口，并观察新一轮是否真的带来新的有效材料；当新增证据已经很少、任务所需范围已经满足，继续搜索只会增加 token、延迟和故障面。
 
 GraphRAG 的位置因此是按需的候选机制，而不是 Knowledge 的默认身份。它带来图抽取误差、存储、新鲜度和查询成本，应该和更简单 Hybrid baseline 在同语料、同模型和可比预算下评测。某类 query 没有稳定收益时，图路径就应该关闭或只保留在少数任务中。
 
-### 索引可以重建，正在服务的知识版本不能是半成品
+### 可重建知识也需要稳定的 Serving 边界
 
 后台直接在正在查询的索引上原地改写，最容易产生一个难以解释的状态：新 chunk 写进去一半，旧图还没替换，某个 Worker 又失败了；用户这时发起检索，没有人能说清这次查询使用的是哪一套完整知识。
 
@@ -76,13 +76,13 @@ Worker 可以至少一次执行，重复项由稳定 item identity、CAS 或幂�
 
 数据删除或 Legal Hold 也会跨多个 Store。查询层可以先停止 recall，底层向量段、对象存储和 cache 再按治理流程清理；相反，Legal Hold 可能要求字节继续保留却禁止普通召回。03 消费 08 的生命周期决定，不能用“向量还在”或“查询不到了”替整个系统宣布物理删除完成。
 
-### 来源可追溯不等于内容已经正确或仍然有权使用
+
 
 03 能保存 DocumentVersion、稳定位置、generation、retrieval route 和 source ids，这使候选结果可以追到来源。但 lineage 只回答“它从哪里来、怎样被找到”，不回答来源陈述是否真实，也不回答当前调用者是否还有权读取，更不能证明一次 summary / extraction 没丢掉否定词、时间条件或主体限定。
 
 Truth 由正式材料与后续业务判断承担，Authorization 由 08 决定，semantic preservation 需要专门的 extraction / compression Eval。Knowledge 的 provenance 很重要，恰恰因为它让这些不同问题可以被分别检查，而不是把一个 `source_id` 当成万能可信标记。
 
-### 什么时候知识架构应该缩小
+
 
 如果语料很小、都是干净文本、没有多版本、没有 OCR、没有复杂 Scope，也没有跨文档关系任务，一个版本化 lexical / dense index 已经足够。此时没有必要引入 graph store、复杂 generation orchestrator 和多路 Planner。
 
@@ -90,7 +90,7 @@ Truth 由正式材料与后续业务判断承担，Authorization 由 08 决定�
 
 这条退出条件同样适用于 Worker 和服务拆分：没有独立吞吐、资源或故障隔离需求时，逻辑阶段可以共进程；只有真实资源约束出现后再拆部署。
 
-### Current / Target / Gap
+### 设计边界与当前证明
 
 **Target：** 03 围绕 02 的稳定 DocumentVersion 建立可重建 KnowledgeGeneration，按任务形成 ReadinessDecision，检索和专业派生产生带来源的候选结构，并通过 generation activation 保护 serving 完整性。正式 Evidence / Finding / WorkProduct 仍由 02 负责；Provenance 只承担 lineage，不承担 truth、authorization 或 semantic-preservation authority。
 
