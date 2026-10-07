@@ -126,9 +126,9 @@ blue_wave_2:
   blue_wave_2_commit_sha: none
   blue_wave_2_user_checkpoint: none
 
-red_evaluation_status: NOT_STARTED
+red_evaluation_status: COMPLETE
 red_evaluation_commit_sha: none
-blue_reflection_status: NOT_STARTED
+blue_reflection_status: COMPLETE
 blue_reflection_commit_sha: none
 
 workflow_retrospective:
@@ -156,5 +156,5 @@ next_resume:
   next_resume_source_head_sha: none
   next_resume_blockers: ROUND_NOT_COMPLETE
 
-current_stage: RED_EVALUATION
-next_actor: RED
+current_stage: WORKFLOW_RETROSPECTIVE
+next_actor: CONTROLLER
