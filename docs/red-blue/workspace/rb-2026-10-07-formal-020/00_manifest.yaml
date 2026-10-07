@@ -119,7 +119,7 @@ red_wave_2:
   red_wave_2_user_checkpoint: none
 
 blue_wave_2:
-  blue_wave_2_status: NOT_STARTED
+  blue_wave_2_status: COMPLETE
   blue_wave_2_answer_count: 100
   blue_wave_2_answers_path: docs/red-blue/workspace/rb-2026-10-07-formal-020/04_blue_wave2_answers.md
   blue_wave_2_architecture_notes_path: docs/red-blue/workspace/rb-2026-10-07-formal-020/04_blue_wave2_architecture_notes.md
@@ -156,5 +156,5 @@ next_resume:
   next_resume_source_head_sha: none
   next_resume_blockers: ROUND_NOT_COMPLETE
 
-current_stage: BLUE_WAVE_2
-next_actor: BLUE
+current_stage: RED_EVALUATION
+next_actor: RED
