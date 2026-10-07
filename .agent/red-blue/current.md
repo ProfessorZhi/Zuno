@@ -1,16 +1,16 @@
 # Current Red / Blue Round
 
-state: `no-active`
-active_round: `none`
-mode: `none`
+state: `active-red-blue`
+active_round: `rb-2026-10-07-formal-020`
+mode: `AGENT_AUTO`
 execution_mode: `BATCH_DUEL`
-stage: `none`
-workspace_path: `none`
-simulated_resume: `none`
-target_role: `none`
-interview_stage: `none`
+stage: `BUILD_SIMULATED_RESUME`
+workspace_path: `docs/red-blue/workspace/rb-2026-10-07-formal-020/`
+simulated_resume: `docs/red-blue/workspace/rb-2026-10-07-formal-020/01_simulated_resume.md`
+target_role: `Agent 开发工程师 / 大模型应用工程师 / AI 应用工程师`
+interview_stage: `技术一面 / 项目深挖`
 pressure_suite_count: `100`
-seed_question_target: `8`
+seed_question_target: `10`
 live_followups: `DYNAMIC`
 one_question_one_intent: `true`
 red_wave_1_question_target: `100`
@@ -18,32 +18,33 @@ blue_wave_1_answer_target: `100`
 red_wave_2_question_target: `100`
 blue_wave_2_answer_target: `100`
 batch_checkpoint_policy: `LINK_ONLY_PAUSE`
-resume_review_gate: `none`
+resume_review_gate: `DELEGATED`
 red_review_gate: `optional-compatibility`
-improvement_review_gate: `none`
-red_questions_status: `none`
-red_wave_1_status: `none`
-blue_wave_1_status: `none`
-red_wave_2_status: `none`
-blue_wave_2_status: `none`
+improvement_review_gate: `REQUIRED`
+red_questions_status: `NOT_STARTED`
+red_wave_1_status: `NOT_STARTED`
+blue_wave_1_status: `NOT_STARTED`
+red_wave_2_status: `NOT_STARTED`
+blue_wave_2_status: `NOT_STARTED`
 live_interview_status: `NOT_STARTED`
 live_turn_index: `0`
-next_actor: `NONE`
-red_evaluation_status: `none`
-blue_reflection_status: `none`
-workflow_retrospective_status: `none`
-improvement_ledger_status: `none`
-round_report_status: `none`
-next_resume_candidate_status: `none`
-round_branch: `none`
-round_pr: `none`
+next_actor: `RED`
+red_evaluation_status: `NOT_STARTED`
+blue_reflection_status: `NOT_STARTED`
+workflow_retrospective_status: `NOT_STARTED`
+improvement_ledger_status: `NOT_STARTED`
+round_report_status: `NOT_STARTED`
+next_resume_candidate_status: `NOT_STARTED`
+round_branch: `red-blue/rb-2026-10-07-formal-020`
+round_pr: `pending`
 last_consumed_head_sha: `none`
 github_state_bus: `required`
 stage_handoff: `commit-then-reread`
-firewall_strength: `none`
-strict_blind_red_certification: `false`
+firewall_strength: `PHYSICAL_CONTEXT_ISOLATION`
+strict_blind_red_certification: `true`
 transcript_policy: `full-observable-role-io`
 archive_live: `true`
+
 
 正式 Round 在独立 GitHub branch 和 Draft PR 上执行：
 
