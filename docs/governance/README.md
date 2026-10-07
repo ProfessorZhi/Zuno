@@ -38,6 +38,7 @@ operations / operational runbooks and recovery profiles
 - [`repo-ownership-matrix.md`](repo-ownership-matrix.md) — 仓库责任边界；
 - [`human-first-documentation-standard.md`](human-first-documentation-standard.md) — Part A 人类技术写作要求；
 - [`architecture-narrative-quality-standard.md`](architecture-narrative-quality-standard.md) — Architecture Narrative 质量标准与 Narrative Acceptance Gate；
+- [`interview-acceptance-standard.md`](interview-acceptance-standard.md) — 项目作为面试材料的验收标准；Red / Blue 自主治理主指令；
 - [`module-detail-freeze-readiness-review.md`](module-detail-freeze-readiness-review.md) — 九模块 Detail Freeze 前的证据 readiness 审查；不拥有 Target 或 Current；
 - [`wave1-cross-module-contract-registry.md`](wave1-cross-module-contract-registry.md) — 跨模块 Contract registry；
 - [`terminology.md`](terminology.md) — 跨文档术语；
