@@ -10,7 +10,7 @@ github_runtime:
   github_state_bus: REQUIRED
   stage_handoff: COMMIT_THEN_REREAD
   round_branch: red-blue/rb-2026-10-07-formal-020
-  round_pr: pending
+  round_pr: 280
   last_consumed_head_sha: none
   firewall_strength: PHYSICAL_CONTEXT_ISOLATION
   strict_blind_red_certification: true
@@ -96,7 +96,7 @@ simulated_resume:
     未新增任何 Target 外事实。用户仍可要求 RESUME_REVISION 并重跑本波。
 
 red_wave_1:
-  red_wave_1_status: NOT_STARTED
+  red_wave_1_status: COMPLETE
   red_wave_1_question_count: 100
   red_wave_1_path: docs/red-blue/workspace/rb-2026-10-07-formal-020/02_red_questions.md
   red_wave_1_commit_sha: none
@@ -156,5 +156,5 @@ next_resume:
   next_resume_source_head_sha: none
   next_resume_blockers: ROUND_NOT_COMPLETE
 
-current_stage: BUILD_SIMULATED_RESUME
-next_actor: RED
+current_stage: BLUE_WAVE_1
+next_actor: BLUE
