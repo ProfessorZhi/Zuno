@@ -53,3 +53,15 @@
 1. `09_improvement_ledger.md` 15 条提案的批准 / 拒绝 / 延后。
 2. `10_next_resume_candidate.md` 是否作为下一轮 frozen resume。
 3. 是否把 `IMP-020-10`（Ownership 不可考古）写进 `docs/project/README.md` 的已知边界。
+
+## 2026-10-07 — 用户对 improvement ledger 的决定
+
+| 问题 | 用户选择 |
+| --- | --- |
+| A 组三条 P0 安全项（知识就绪 fail-open / MCP 配置 IDOR / 出站工具关 TLS 且带凭据） | **三条全修** —— 下一轮作为最高优先级处理（`APPROVED_FOR_NEXT_ROUND`） |
+| `IMP-020-10` Ownership 不可考古 | **写进 `docs/project/README.md` 已知边界** —— 本轮即应用 |
+| 下一轮 frozen resume | **采用 `10_next_resume_candidate.md`** |
+
+已应用的改动：`IMP-020-10` → [`docs/project/README.md`](../../../project/README.md) 的「团队与个人参与的边界」新增小节「Commit 历史不能单独证明个人 Ownership」。
+
+其余条目维持 `NEXT_ROUND_ONLY`。**A 组三条虽然批准，但本轮不修** —— 按用户在提问中确认的「下一轮最高优先级」执行。本轮 verdict 保持不变。

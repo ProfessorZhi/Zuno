@@ -1,13 +1,18 @@
 # Improvement Ledger — rb-2026-10-07-formal-020
 
 ```text
-improvement_ledger_status: PENDING_USER_REVIEW
+improvement_ledger_status: APPROVED
 change_effective_scope: NEXT_ROUND_ONLY
 current_round_verdict_recomputed: false
 base_sha: 7d3081f2ccaa20c7eeb0bfff75206d08584a6e51
+user_decision_2026_10_07:
+  A组(IMP-020-01/02/03): APPROVED_FOR_NEXT_ROUND — 三条 P0 安全项下一轮作为最高优先级处理
+  IMP-020-10: APPROVED_APPLIED — 已知边界已写入 docs/project/README.md（本轮应用）
+  下一轮 frozen resume: 采用 10_next_resume_candidate.md
+applied_this_round: IMP-020-10 → docs/project/README.md「Commit 历史不能单独证明个人 Ownership」
 ```
 
-**本文件是提案。未获用户批准不得应用。** 本轮 verdict 不因本文件而改变。
+**本文件曾为提案，现已获用户批准（2026-10-07）。** 除 `IMP-020-10` 外，其余条目一律 `NEXT_ROUND_ONLY`；本轮 verdict 不因本文件而改变。
 
 **判定纪律（贯穿全表）：**
 
@@ -293,6 +298,13 @@ priority: P1
 | D 表达 / 简历 | 2 | P0 ×2（`proposed_change: none`） |
 | E 流程 / 方法论 | 5 | P0 ×4, P1 ×3 |
 
-**需要用户决定的：** 全部 15 条均为 `NEXT_ROUND_ONLY` 提案。其中 D 组两条（IMP-020-09 / IMP-020-10）**不允许**转为架构改动；A 组三条安全项与 C 组删除清单**不**由本轮自动应用。
+**用户决定（2026-10-07）：**
+
+- **A 组三条 P0（IMP-020-01 / 02 / 03）→ `APPROVED_FOR_NEXT_ROUND`。** 三条在下一轮作为最高优先级处理。**本轮不应用**（`NEXT_ROUND_ONLY`）。
+- **IMP-020-10 → `APPROVED_APPLIED`。** 已知边界已写入 [`docs/project/README.md`](../../../project/README.md) 的「团队与个人参与的边界」节。这是本轮唯一被应用的一条。
+- **下一轮 frozen resume → 采用 [`10_next_resume_candidate.md`](10_next_resume_candidate.md)。**
+- **B / C / D（IMP-020-09）/ E 组：** 用户未逐条表态，维持 `NEXT_ROUND_ONLY` 提案状态，留待下一轮 Resume Gate 前处理。
+
+其中 D 组两条（IMP-020-09 / IMP-020-10）**不允许**转为架构改动 —— 这条纪律不因批准而改变；`IMP-020-10` 的应用方式是**写边界**，不是新增机制。
 
 **本轮没有产生任何收益数字，也没有制造任何 Personal Ownership。**
