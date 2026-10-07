@@ -103,7 +103,7 @@ red_wave_1:
   red_wave_1_user_checkpoint: none
 
 blue_wave_1:
-  blue_wave_1_status: NOT_STARTED
+  blue_wave_1_status: COMPLETE
   blue_wave_1_answer_count: 100
   blue_wave_1_answers_path: docs/red-blue/workspace/rb-2026-10-07-formal-020/03_blue_answers.md
   blue_wave_1_architecture_notes_path: docs/red-blue/workspace/rb-2026-10-07-formal-020/03_blue_architecture_notes.md
@@ -156,5 +156,5 @@ next_resume:
   next_resume_source_head_sha: none
   next_resume_blockers: ROUND_NOT_COMPLETE
 
-current_stage: BLUE_WAVE_1
-next_actor: BLUE
+current_stage: RED_WAVE_2
+next_actor: RED
