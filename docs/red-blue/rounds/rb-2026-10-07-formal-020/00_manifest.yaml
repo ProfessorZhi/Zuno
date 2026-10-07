@@ -1,0 +1,165 @@
+round_id: rb-2026-10-07-formal-020
+created_at: 2026-10-07
+mode: AGENT_AUTO
+execution_mode: BATCH_DUEL
+zuno_base_sha: 7d3081f2ccaa20c7eeb0bfff75206d08584a6e51
+state: ARCHIVED
+counts_as_formal_round: true
+
+github_runtime:
+  github_state_bus: REQUIRED
+  stage_handoff: COMMIT_THEN_REREAD
+  round_branch: red-blue/rb-2026-10-07-formal-020
+  round_pr: 280
+  last_consumed_head_sha: none
+  firewall_strength: PHYSICAL_CONTEXT_ISOLATION
+  strict_blind_red_certification: true
+
+interview_target:
+  target_role: Agent 开发工程师 / 大模型应用工程师 / AI 应用工程师
+  company_or_persona: 大厂资深工程师一面；项目真实性、工程深度、后端基础与系统设计混合
+  interview_stage: 技术一面 / 项目深挖（连续 30–60 分钟）
+  jd_source: generic target role calibrated by first-party interview records and public AI/Agent interview behavior evidence
+  resume_review_gate: REQUIRED
+  improvement_review_gate: REQUIRED
+  batch_checkpoint_policy: LINK_ONLY_PAUSE
+  red_wave_1_question_count: 100
+  blue_wave_1_answer_count: 100
+  red_wave_2_question_count: 100
+  blue_wave_2_answer_count: 100
+  one_question_one_intent: true
+
+# 本轮第一个实质方法变更：不再生成 100 个独立知识点，而是 10 条 Interview Thread。
+# 100 题规模不变，但内部按 Thread 组织，Red 必须跨题保持状态并回钩。
+thread_taxonomy:
+  source: docs/governance/interview-acceptance-standard.md §3
+  thread_count: 10
+  threads:
+    - id: T01
+      name: Tool / MCP
+      spine: 本人做了什么 → config injection → 并发隔离 → timeout → idempotency → remote effect → 为什么不直接买现成 Host
+    - id: T02
+      name: GraphRAG
+      spine: 原 bad case → fusion 修复 → threshold → 5-query smoke → holdout/ablation → latency/cost → kill condition
+    - id: T03
+      name: Memory / Context
+      spine: 为什么需要 → record owner → recall authority → revocation → stale memory → Domain conflict → A/B → 什么条件下删除
+    - id: T04
+      name: Runtime
+      spine: 为什么 fixed workflow 不够 → PlanVersion → late result → Domain commit / stale checkpoint → recovery authority → 为什么不用纯 LangGraph
+    - id: T05
+      name: Security / Effect
+      spine: authorization freshness → audit-before-effect → crash window → unknown effect → reconciliation → external reality
+    - id: T06
+      name: Project History
+      spine: 加入时已有多少 → 本人第一笔改动 → 哪些是团队做的 → 哪些是今天 Target 而非当年实现
+    - id: T07
+      name: Pilot / 法院
+      spine: 到底发生过什么 → 什么没证据 → 为什么不能叫 Production
+    - id: T08
+      name: 系统简化
+      spine: 如果今天重做，哪些模块 / 机制可以删
+    - id: T09
+      name: Knowledge / Retrieval fundamentals
+      spine: DocumentVersion → KnowledgeGeneration → Readiness → Citation → 「全案没有」怎样证明
+    - id: T10
+      name: Engineering fundamentals
+      spine: Python / PostgreSQL / 并发 / 网络 / IR / Agent 基础，把「会不会写代码」打穿
+
+pinned_skills:
+  attack_skill_version: d240b2734382c769eac8cbb84494e9ebdcd0c828:.agent/red-blue/attack-model.md
+  defense_skill_version: 20446e1509da953f40e1976119db2068f8a22fff:.agent/red-blue/defense-model.md
+  judge_version: 6211d2de0d7451ab7b439398920eec01c8e28b51:.agent/red-blue/judge.md
+  protocol_version: 7e47a3cbf8dcf0f2b57d8f6d1309bac5cc8e5c0a:.agent/red-blue/protocol.md
+  interview_acceptance_standard: 062c7e98314111b7994d685d573c4e11571e6ab4:docs/governance/interview-acceptance-standard.md
+
+base_alignment:
+  previous_round: rb-2026-09-15-formal-019
+  previous_round_archive: docs/red-blue/rounds/rb-2026-09-15-formal-019/
+  previous_round_closed_at: 7d3081f2
+  base_sha_is_current_main: true
+  notes: >
+    019 的 base 是 a8b0e540，落后 main 很远，导致 Red 重新发现了已经落地的架构改动。
+    本轮 base 钉在当前 main 7d3081f2，并在开工前对 019 ledger 做了 base-alignment：
+    IMP-019-01 / 02 / 06 已在 main 实现，IMP-019-03 / 04 已在 main 修复，
+    IMP-019-05 的冻结协议已并入 main（测量 blocked），IMP-019-08 / 09 为本轮启用的 Skill 变更。
+
+simulated_resume:
+  simulated_resume_path: docs/red-blue/rounds/rb-2026-10-07-formal-020/01_simulated_resume.md
+  resume_status: FROZEN
+  resume_project_bullet_count: 5
+  resume_style_check: APPROVED
+  user_resume_review_status: DELEGATED
+  user_resume_review_notes: >
+    用户 2026-10-07 指示「你来进行一轮红蓝队对攻迭代」，Resume Gate 由 Controller 在委托下代行；
+    简历内容来自 docs/red-blue/rounds/rb-2026-09-15-formal-019/10_next_resume_candidate.md，
+    未新增任何 Target 外事实。用户仍可要求 RESUME_REVISION 并重跑本波。
+
+red_wave_1:
+  red_wave_1_status: COMPLETE
+  red_wave_1_question_count: 100
+  red_wave_1_path: docs/red-blue/rounds/rb-2026-10-07-formal-020/02_red_questions.md
+  red_wave_1_commit_sha: none
+  red_wave_1_user_checkpoint: none
+
+blue_wave_1:
+  blue_wave_1_status: COMPLETE
+  blue_wave_1_answer_count: 100
+  blue_wave_1_answers_path: docs/red-blue/rounds/rb-2026-10-07-formal-020/03_blue_answers.md
+  blue_wave_1_architecture_notes_path: docs/red-blue/rounds/rb-2026-10-07-formal-020/03_blue_architecture_notes.md
+  blue_wave_1_commit_sha: none
+  blue_wave_1_user_checkpoint: none
+
+red_wave_2:
+  red_wave_2_status: COMPLETE
+  blue_wave_1_blind_evaluation_present: true
+  red_wave_2_question_count: 100
+  red_wave_2_path: docs/red-blue/rounds/rb-2026-10-07-formal-020/04_red_wave2_review_and_questions.md
+  red_wave_2_commit_sha: none
+  red_wave_2_user_checkpoint: none
+
+blue_wave_2:
+  blue_wave_2_status: COMPLETE
+  blue_wave_2_answer_count: 100
+  blue_wave_2_answers_path: docs/red-blue/rounds/rb-2026-10-07-formal-020/04_blue_wave2_answers.md
+  blue_wave_2_architecture_notes_path: docs/red-blue/rounds/rb-2026-10-07-formal-020/04_blue_wave2_architecture_notes.md
+  blue_wave_2_commit_sha: none
+  blue_wave_2_user_checkpoint: none
+
+red_evaluation_status: COMPLETE
+red_evaluation_commit_sha: none
+blue_reflection_status: COMPLETE
+blue_reflection_commit_sha: none
+
+workflow_retrospective:
+  workflow_retrospective_status: COMPLETE
+  resume_builder_reviewed: true
+  red_thinking_framework_reviewed: true
+  blue_candidate_framework_reviewed: true
+  blue_architecture_framework_reviewed: true
+  harness_reviewed: true
+  commit_sha: none
+
+improvement:
+  improvement_ledger_status: APPROVED
+  round_report_status: BUILT
+  round_report_path: docs/red-blue/rounds/rb-2026-10-07-formal-020/09_round_report.md
+  improvement_ledger_path: docs/red-blue/rounds/rb-2026-10-07-formal-020/09_improvement_ledger.md
+  user_improvement_review_status: APPROVED
+  approved_change_count: 4
+  proposed_change_count: 15
+  change_effective_scope: NEXT_ROUND_ONLY
+  applied_change_ids: IMP-020-10
+  applied_change_evidence: docs/project/README.md（本轮应用）
+  next_round_approved_ids: IMP-020-01, IMP-020-02, IMP-020-03
+  next_round_change_ids: IMP-020-01, IMP-020-02, IMP-020-03, IMP-020-04, IMP-020-05, IMP-020-06, IMP-020-07, IMP-020-08, IMP-020-09, IMP-020-11, IMP-020-12, IMP-020-13, IMP-020-14, IMP-020-15
+  current_round_verdict_recomputed: false
+
+next_resume:
+  next_resume_candidate_path: docs/red-blue/rounds/rb-2026-10-07-formal-020/10_next_resume_candidate.md
+  next_resume_candidate_status: APPROVED_FOR_NEXT_ROUND
+  next_resume_source_head_sha: 0c9e2d82
+  next_resume_blockers: NONE
+
+current_stage: CLOSED
+next_actor: NONE
