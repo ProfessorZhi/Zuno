@@ -94,14 +94,18 @@ improvement:
   improvement_ledger_path: docs/red-blue/workspace/rb-2026-09-15-formal-019/09_improvement_ledger.md
   user_improvement_review_status: APPROVED
   approved_change_count: 4
-  actionable_change_count: 1
+  actionable_change_count: 0
   deferred_change_count: 3
   approved_change_ids: IMP-019-01, IMP-019-02, IMP-019-05, IMP-019-06
   already_implemented_ids: IMP-019-01, IMP-019-02, IMP-019-06
   actionable_change_ids: IMP-019-05
+  applied_change_ids: IMP-019-05
+  applied_change_evidence: docs/governance/rb019-graphrag-ablation-protocol.md @ main@da321b1a (PR #277)
+  blocked_change_ids: IMP-019-05
+  blocked_change_reason: MEASUREMENT_BLOCKED_PENDING_DATA
   deferred_change_ids: IMP-019-07, IMP-019-08, IMP-019-09
   resolved_on_main_ids: IMP-019-03, IMP-019-04
-  post_improvement_head_sha: none
+  post_improvement_head_sha: da321b1ae7964b7a0114afef9017f4e5b46893ea
   change_effective_scope: NEXT_ROUND_ONLY
   current_round_verdict_recomputed: false
 
@@ -109,7 +113,8 @@ next_resume:
   next_resume_candidate_path: docs/red-blue/workspace/rb-2026-09-15-formal-019/10_next_resume_candidate.md
   next_resume_candidate_status: NOT_STARTED
   next_resume_source_head_sha: none
-  next_resume_blockers: APPROVED_CHANGES_NOT_APPLIED
+  next_resume_blockers: IMP_019_05_MEASUREMENT_BLOCKED_PENDING_DATA
+  next_resume_notes: IMP-019-05 只落地了冻结协议，未产生任何 holdout 结果；下一轮简历不得声称 GraphRAG ablation 收益，也不得把该协议当作已证实的有效性。
 
-current_stage: APPLY_APPROVED_CHANGES
-next_actor: IMPLEMENTATION
+current_stage: BUILD_NEXT_RESUME_CANDIDATE
+next_actor: NEXT_RESUME_CANDIDATE
