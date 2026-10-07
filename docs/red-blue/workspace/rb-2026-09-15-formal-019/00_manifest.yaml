@@ -88,13 +88,16 @@ workflow_retrospective:
   commit_sha: 871fba88dc48f659ce42158524add1a4af81172a
 
 improvement:
-  improvement_ledger_status: DRAFT_REVIEW
+  improvement_ledger_status: APPROVED
   round_report_status: BUILT
   round_report_path: docs/red-blue/workspace/rb-2026-09-15-formal-019/09_round_report.md
   improvement_ledger_path: docs/red-blue/workspace/rb-2026-09-15-formal-019/09_improvement_ledger.md
-  user_improvement_review_status: PENDING
-  approved_change_count: 0
-  deferred_change_count: 0
+  user_improvement_review_status: APPROVED
+  approved_change_count: 4
+  deferred_change_count: 3
+  approved_change_ids: IMP-019-01, IMP-019-02, IMP-019-05, IMP-019-06
+  deferred_change_ids: IMP-019-07, IMP-019-08, IMP-019-09
+  resolved_on_main_ids: IMP-019-03, IMP-019-04
   post_improvement_head_sha: none
   change_effective_scope: NEXT_ROUND_ONLY
   current_round_verdict_recomputed: false
@@ -103,7 +106,7 @@ next_resume:
   next_resume_candidate_path: docs/red-blue/workspace/rb-2026-09-15-formal-019/10_next_resume_candidate.md
   next_resume_candidate_status: NOT_STARTED
   next_resume_source_head_sha: none
-  next_resume_blockers: USER_IMPROVEMENT_REVIEW_PENDING
+  next_resume_blockers: APPROVED_CHANGES_NOT_APPLIED
 
-current_stage: USER_IMPROVEMENT_REVIEW
-next_actor: NONE
+current_stage: APPLY_APPROVED_CHANGES
+next_actor: IMPLEMENTATION
