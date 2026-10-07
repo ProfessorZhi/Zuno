@@ -132,29 +132,30 @@ blue_reflection_status: COMPLETE
 blue_reflection_commit_sha: none
 
 workflow_retrospective:
-  workflow_retrospective_status: NOT_STARTED
-  resume_builder_reviewed: false
-  red_thinking_framework_reviewed: false
-  blue_candidate_framework_reviewed: false
-  blue_architecture_framework_reviewed: false
-  harness_reviewed: false
+  workflow_retrospective_status: COMPLETE
+  resume_builder_reviewed: true
+  red_thinking_framework_reviewed: true
+  blue_candidate_framework_reviewed: true
+  blue_architecture_framework_reviewed: true
+  harness_reviewed: true
   commit_sha: none
 
 improvement:
-  improvement_ledger_status: NOT_STARTED
-  round_report_status: NOT_STARTED
+  improvement_ledger_status: PENDING_USER_REVIEW
+  round_report_status: BUILT
   round_report_path: docs/red-blue/workspace/rb-2026-10-07-formal-020/09_round_report.md
   improvement_ledger_path: docs/red-blue/workspace/rb-2026-10-07-formal-020/09_improvement_ledger.md
-  user_improvement_review_status: NOT_STARTED
+  user_improvement_review_status: PENDING
   approved_change_count: 0
+  proposed_change_count: 15
   change_effective_scope: NEXT_ROUND_ONLY
   current_round_verdict_recomputed: false
 
 next_resume:
   next_resume_candidate_path: docs/red-blue/workspace/rb-2026-10-07-formal-020/10_next_resume_candidate.md
-  next_resume_candidate_status: NOT_STARTED
-  next_resume_source_head_sha: none
-  next_resume_blockers: ROUND_NOT_COMPLETE
+  next_resume_candidate_status: BUILT
+  next_resume_source_head_sha: 0c9e2d82
+  next_resume_blockers: PENDING_USER_RESUME_REVIEW
 
-current_stage: WORKFLOW_RETROSPECTIVE
-next_actor: CONTROLLER
+current_stage: USER_IMPROVEMENT_REVIEW
+next_actor: USER
