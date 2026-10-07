@@ -94,8 +94,11 @@ improvement:
   improvement_ledger_path: docs/red-blue/workspace/rb-2026-09-15-formal-019/09_improvement_ledger.md
   user_improvement_review_status: APPROVED
   approved_change_count: 4
+  actionable_change_count: 1
   deferred_change_count: 3
   approved_change_ids: IMP-019-01, IMP-019-02, IMP-019-05, IMP-019-06
+  already_implemented_ids: IMP-019-01, IMP-019-02, IMP-019-06
+  actionable_change_ids: IMP-019-05
   deferred_change_ids: IMP-019-07, IMP-019-08, IMP-019-09
   resolved_on_main_ids: IMP-019-03, IMP-019-04
   post_improvement_head_sha: none
