@@ -4,7 +4,7 @@ state: `active-red-blue`
 active_round: `rb-2026-10-07-formal-020`
 mode: `AGENT_AUTO`
 execution_mode: `BATCH_DUEL`
-stage: `RED_WAVE_2`
+stage: `BLUE_WAVE_2`
 workspace_path: `docs/red-blue/workspace/rb-2026-10-07-formal-020/`
 simulated_resume: `docs/red-blue/workspace/rb-2026-10-07-formal-020/01_simulated_resume.md`
 target_role: `Agent 开发工程师 / 大模型应用工程师 / AI 应用工程师`
@@ -24,7 +24,7 @@ improvement_review_gate: `REQUIRED`
 red_questions_status: `COMPLETE`
 red_wave_1_status: `COMPLETE`
 blue_wave_1_status: `COMPLETE`
-red_wave_2_status: `NOT_STARTED`
+red_wave_2_status: `COMPLETE`
 blue_wave_2_status: `NOT_STARTED`
 live_interview_status: `NOT_STARTED`
 live_turn_index: `0`

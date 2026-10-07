@@ -111,8 +111,8 @@ blue_wave_1:
   blue_wave_1_user_checkpoint: none
 
 red_wave_2:
-  red_wave_2_status: NOT_STARTED
-  blue_wave_1_blind_evaluation_present: false
+  red_wave_2_status: COMPLETE
+  blue_wave_1_blind_evaluation_present: true
   red_wave_2_question_count: 100
   red_wave_2_path: docs/red-blue/workspace/rb-2026-10-07-formal-020/04_red_wave2_review_and_questions.md
   red_wave_2_commit_sha: none
@@ -156,5 +156,5 @@ next_resume:
   next_resume_source_head_sha: none
   next_resume_blockers: ROUND_NOT_COMPLETE
 
-current_stage: RED_WAVE_2
-next_actor: RED
+current_stage: BLUE_WAVE_2
+next_actor: BLUE
