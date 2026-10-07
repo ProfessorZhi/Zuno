@@ -4,7 +4,7 @@
 
 ## Part A — Human Narrative
 
-### timeout 之后，最重要的问题是远端到底做了什么
+### timeout 之后先确认现实到底发生了什么
 
 设想 Zuno 已经完成一份正式工作成果，现在要把它写入外围法院系统。请求从本地发出，远端在处理过程中创建了记录，但响应返回之前连接断开。Zuno 只看到一个 timeout。
 
@@ -14,7 +14,7 @@
 
 如果所有 Tool 都是只读 API、纯函数或远端已经提供强幂等和可靠查询能力，这一层完全可以很薄。普通 SDK、timeout 和 retry policy 已经足够。只有创建记录、提交材料、发送通知、触发流程等现实副作用出现以后，Effect 控制才值得承担额外状态。
 
-### 发送之前先固定“这次究竟想让世界发生什么”
+### 发送前固定动作身份，发送后保留不确定性
 
 模型或 Capability 可能先提出“把这份成果提交给系统 A”。这个 Proposal 还不能直接变成 SDK 调用，因为真正执行前至少要确定目标、关键参数、Tool 版本、动作类别、当前授权、必要 Approval、审计要求以及恢复能力。
 
@@ -24,17 +24,17 @@ Target 在发送前把这些条件整理成一个稳定动作。工程参考把�
 
 真正的风险边界是 send boundary。请求交给远端以前，本地仍能确认现实动作尚未发生；越过这一点以后，即使下一条本地日志都没写出来，远端也可能已经执行。因此高风险动作在发送前必须先耐久保存足够的 action / attempt identity，并完成当时所要求的授权、审批和强制审计条件。这样 Worker 即使在发送后一瞬间崩溃，恢复时也知道应该去确认哪一个动作，而不是猜测要不要新建一次调用。
 
-### 结果未知是一种需要保留的事实
+
 
 回到开头的 timeout。此时把状态写成 Failed 很诱人，因为状态机看起来能够继续往下走。但这会丢失最关键的信息：Zuno 当前没有足够证据判断远端成功还是失败。
 
-Target 会保留这种 `Outcome Unknown`。它不是“失败的另一种名字”，而是自动化必须停下来的证据边界。只要过去的现实效果仍然未知，系统就不应该为了让流程变绿而创建一个新的同类副作用。
+Target 会保留这种 `Outcome Unknown`。`Unknown` 表示系统尚无足够证据继续自动化，必须先确认现实结果。只要过去的现实效果仍然未知，系统就不应该为了让流程变绿而创建一个新的同类副作用。
 
-接下来的动作是 Reconcile，而不是重做。06 优先利用远端 idempotency key、业务唯一键、查询 API、回执号或 correlation 去查过去那次操作；如果远端没有可靠机器接口，就转入人工对账。确认已经执行后，系统形成能够证明现实效果的 `EffectReceipt`；确认根本没有执行，才可能在当前权限和计划仍然允许的前提下重新发送；长期无法确认时，就保持 unresolved 并升级人工。
+接下来进入 Reconcile；只有获得足够结果证明后，系统才决定后续动作。06 优先利用远端 idempotency key、业务唯一键、查询 API、回执号或 correlation 去查过去那次操作；如果远端没有可靠机器接口，就转入人工对账。确认已经执行后，系统形成能够证明现实效果的 `EffectReceipt`；确认根本没有执行，才可能在当前权限和计划仍然允许的前提下重新发送；长期无法确认时，就保持 unresolved 并升级人工。
 
 这个区别也解释了为什么 Runtime 里的 Retry、Replan 和这里的 Reconcile不能合并。模型 503 时可以重试同一计算；计划前提变化时需要重规划；请求已经越过现实 send boundary 却没有结果时，必须回头确认过去。把三种动作都写成统一 retry loop，会把网络不确定性放大成业务重复。
 
-### 能不能自动重试，取决于 Tool 自己的现实语义
+### Retry、版本和安全共同决定动作还能不能继续
 
 一个 GET 查询、一个可安全覆盖的 PUT、一个带远端幂等键的创建、一个可以查询结果的支付式动作，以及一个不可查询的高风险 POST，不能共享同一套“失败最多重试三次”规则。
 
@@ -44,13 +44,13 @@ Target 会保留这种 `Outcome Unknown`。它不是“失败的另一种名字�
 
 同样，HTTP 200 也只是一个传输观察。远端可能返回“请求已接收”，真正业务处理仍在异步进行；也可能返回一个结构合法的响应，却没有形成 Zuno 期待的业务效果。06 保存 Attempt 和远端证据，只有满足当前操作语义的结果才升级成更强的 Effect truth。上层再基于这份事实决定 Delivery 或后续计划。
 
-### ToolVersion 或配置变化以后，旧 PreparedAction 不能默认继续发送
+
 
 模型在计划阶段可能根据 Tool schema v1 生成参数，真正执行时 Provider 已升级到 v2。字段名字相同也不代表 effect semantics、幂等能力、远端业务键或 retry safety 没变。06 在准备动作时绑定 ToolVersion / operation semantics；dispatch 延迟、恢复或 Replan 后必须重新确认这份版本仍然有资格执行。
 
 纯兼容升级可以通过明确的 compatibility / qualification 继续；只要 schema、目标解释、effect class、idempotency contract 或 reconciliation capability 发生变化，就需要重新准备 Action，必要时由 04 Replan，并重新取得与新 action hash 匹配的 Approval / Audit。
 
-### 安全和审计必须在现实动作之前收敛
+
 
 一份 PreparedAction 可能在队列里等待十分钟。等待期间用户权限变化、Approval 过期、SecurityEpoch 更新，甚至 Secret 版本已经轮换。模型当时提出动作、Controller 当时接受计划，都不能替执行时的安全判断。
 
@@ -58,7 +58,7 @@ Target 会保留这种 `Outcome Unknown`。它不是“失败的另一种名字�
 
 这条边界也防止模型输出直接变成现实权限。模型可以提出动作，Capability 可以整理参数，Runtime 可以决定计划需要它，但目标是否合法、数据能否外发、审批是否有效、审计是否完成，仍然通过确定性门检查。Prompt Injection 即使诱导模型生成一个危险 Tool call，也不能绕过这些执行前条件。
 
-### 补偿不会抹掉已经发生的历史
+### 已经发生的现实只能向前修正
 
 有些外部动作可以撤销。比如系统创建了一条记录，后来业务判断需要撤回。最简单的想法是把原 Effect 标成 cancelled，好像它从未存在过；这会破坏真实时间线，也让审计无法解释为什么外围系统曾经短暂看到那条记录。
 
@@ -68,7 +68,7 @@ Target 会保留这种 `Outcome Unknown`。它不是“失败的另一种名字�
 
 对账本身也不能无限轮询。Target 会给自动 Reconcile 明确的 deadline、退避和升级路径。系统可以接受“这件事暂时无法自动确认”，但不能为了状态机完成度凭猜测写成成功或失败。人工对账也需要形成结构化结果和责任记录，才能让后续恢复继续使用。
 
-### Application 决定应该交付什么，Effects 证明现实世界发生了什么
+
 
 01 可能维护一项 Delivery：应该把 WorkProduct V5 送给某个外围 Host。06 不拥有这项产品承诺，它只执行其中真正会改变现实的动作，并返回当前 Effect truth。
 
@@ -76,7 +76,7 @@ Target 会保留这种 `Outcome Unknown`。它不是“失败的另一种名字�
 
 逻辑边界也不意味着每个 Tool 都必须经过独立网络服务。Effect Control 可以先作为同一 backend 或 worker 中的模块存在。只有 Secret isolation、不同故障半径、独立吞吐、网络出口或合规边界出现真实证据以后，再考虑物理拆分。
 
-### Current / Target / Gap
+### 设计边界与当前证明
 
 **Target：** 06 拥有现实动作的 PreparedAction、实际 Attempt、结果确认、EffectReceipt 与 Reconciliation 事实；发送前固定逻辑意图并重新消费安全条件，发送后对 Outcome Unknown 先确认再决定是否继续。产品 Delivery、正式法律事实和授权策略仍由其他 Owner 管理。
 

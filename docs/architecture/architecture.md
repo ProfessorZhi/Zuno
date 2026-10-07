@@ -188,12 +188,10 @@ Tool
 
 **Target：** 本文描述的九个逻辑责任域及其 Authority、版本、恢复、安全和复杂度治理边界。Simple QA 继续允许走 Generic Host / controlled RAG 短路径；Generic Host + Zuno Legal Backend 仍是重要 baseline；Native Runtime 继续 measurement-gated。
 
-**Current：** 当前代码库已经包含部分 Application、Domain mutation、Knowledge / Retrieval、Agent Runtime、Capability、Model Gateway、Tool/Security、Observability 和 PostgreSQL 实现，也存在 selected GitHub verification 与 fault probes。设计文档不能把 Target 自动升级成 Current。
+**Current：** 实现按 scoped slice 向 Target 收敛。当前仓库已经存在覆盖多个责任域的代码、Migration、selected verification 和 fault probes，但本文不维护每个 implementation wave 的 SHA、run、临时 blocker 或转绿状态。判断“今天做到哪里”时，以 [`docs/evidence/`](../evidence/README.md) 绑定的具体代码快照和验证结果为准。
 
-当前 Evidence 已把 RB019 的三条原始 P0 violation 转成 main 上的 regression：restart replay 会按 typed certainty 保持 unresolved Effect 为 Unknown；最小 conclusive reconciliation 可以把 executed / not-executed 收敛为耐久 Effect truth；`MANDATORY_BEFORE_EFFECT` 缺 committed proof 时会在 provider dispatch 前 fail closed；正式 Alembic entrypoint 也能在 fresh PostgreSQL 直接到 head。后续 main evidence 又证明 mandatory-audit channel/event 已具备数据库级 tenant scope；已发送 Effect 进入 `effect_observed`，而 AUD-L1 对 send 前明确 `NOT_DISPATCHED / NO_EFFECT` 的动作写入 `dispatch_aborted`，两类 terminal fact 都不会永久占用 durable capacity。
+**Evidence：** 正向测试可以证明某个窄行为成立，负向 fault probe 也可以证明某个 Target invariant 尚未成立。Evidence 只提升它实际覆盖的 Current 范围；它不会修改 Target，也不会把 selected suite、smoke 或局部 PostgreSQL probe 扩写成 Full CI、正式 benchmark 或 Production Qualification。main 继续变化而 Evidence 尚未推进时，这属于 freshness gap，不表示 Target 回退。
 
-**Evidence：** 正向测试证明某些行为成立；负向 fault probe 同样是架构 Evidence，它可以证明某个 Target invariant 当前没有成立。GraphRAG 的 5-query smoke 只支持一次 regression fix，不支持普遍 superiority；Memory 也没有 A/B 证明长期收益。
-
-**Unknown / Gap：** Target AdmissionReceipt、完整跨 Owner crash recovery、manual judgment Authority、audit class、mandatory-audit 的 AUD-L2 crash/restart lifecycle、Target composed SecurityEpoch、完整持续授权、长期 Memory 的质量收益、GraphRAG holdout / ablation、真实容量、Backpressure / fairness、RPO / RTO、HA / DR 和法院侧生产结果仍需要对应实现或 Evidence。Provider remote-query reconciliation 当前因缺少真实 authoritative query capability而 Defer；tenant scope 与 deterministic pre-send abort 已转成 Current positive regression。已经转绿的旧 fault window 继续保留为 History。
+**Unknown / Gap：** 尚未得到实现或测量证明的 Target 机制继续保持 Gap；真实法院质量、容量、Backpressure / fairness、RPO / RTO、HA / DR，以及 GraphRAG、Memory、Native Runtime、Multi-Agent 等复杂机制的增量收益继续依赖独立 Evidence。某个 gap 被实现后，只应在 Evidence 中升级对应 Current 结论，不需要反复改写本文的架构因果链。
 
 九个责任域的连续说明见 [`docs/modules/`](../modules/README.md)。需要精确查看 Contract、状态、Owner 和恢复规则时进入 [`reference.md`](reference.md)；长期设计理由由 [`docs/decisions/`](../decisions/README.md) 保存。

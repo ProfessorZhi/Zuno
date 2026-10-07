@@ -60,25 +60,11 @@ Research Problem
 
 ## Agent 技术负责组织执行，不负责成为法律 Authority
 
-Agentic Retrieval 可以根据争议焦点继续检索、扩大 route、检查证据缺口；Context Engineering 可以让一次模型调用只看到当前最小充分上下文；Subagent 可以在真正独立的争议焦点上并行工作。这些机制都属于执行策略，不自动获得法律业务 Authority。
+Agentic Retrieval、Context Engineering、Subagent、Memory 和 Multi-Agent 都服务于“这次任务怎样执行得更好”。案件材料、专业候选、HumanDecision、正式 WorkProduct 和现实 Effect 继续保存在各自 Owner 边界中，模型上下文只在当前任务需要时组装。这样 Agent Harness、模型和并行策略可以替换，而不会把长期法律事实绑在某一代运行框架上。
 
-Context Window 也不应成为案件数据库。原始材料、事件结构、Evidence Candidate、HumanDecision、正式 WorkProduct 和运行进度保存在各自 Owner 边界中，模型每次按需读取。
+这些机制也不因为已经实现就获得长期保留权。简单 Workflow 或 Generic Host 已经满足任务时继续复用；只有真实任务暴露了稳定缺口，而且 Evaluation 能证明新增机制带来足够收益时，才扩大 Context / Memory / Specialist / Native Runtime 等复杂度。具体的 Memory Authority、版本漂移、恢复顺序和复杂度退出条件由 [Overall Architecture](../architecture/architecture.md) 统一解释，这里只保留它们对产品定位的影响。
 
-长期 Memory 同样服从这条原则。最小基线是 Raw Event、task summary 和按需读取的权威事实。只有跨会话复用在 A/B 中稳定改善质量或效率时，structured long-term memory 才值得增加。即使存在，它也只是非权威 Context Provider：Provider 保存带来源的 record，08 Security & Governance 决定当前 Scope、Recall Eligibility、Retention / No-Recall / Purge，01 / 04 只消费当前允许的 snapshot，02 的正式 Domain fact 始终拥有更高 Authority。
-
-Provenance 也不能被写成 correctness 的同义词。source id、trace 和 lineage 可以回答内容来自哪里、经过什么转换；它们不能单独证明来源为真、当前调用者仍有权读取，也不能证明 summary / compression 没有丢掉否定词、时间限制或主体限定。真实性、授权和语义保真需要各自的 Owner 与 Eval。
-
-Multi-Agent 的使用应更加克制。并行 Agent 对可拆分研究可能有价值，但强依赖共享状态的工作不适合直接拆成常驻角色。默认复杂度阶梯应保持：
-
-```text
-Tool
-→ Subgraph
-→ parallel worker
-→ Specialist Agent
-→ Persistent Multi-Agent
-```
-
-只有前一级在真实任务里出现可测失败，才进入下一层。
+这个边界还决定了 Zuno 的产品身份。用户长期维护的是 Matter、材料、候选结构、专业判断和正式成果，不是某一次 Agent 对话或某一代 Harness 的内部状态。聊天可以换成任务面板，Generic Host 可以换成 Native Runtime，模型和 Retriever 也可以更新；只要这些长期对象和业务语义保持稳定，产品就不需要随着执行框架迁移全部案件历史。
 
 ## 更有价值的产品形态是可验证的案件研究工作空间
 
@@ -104,6 +90,10 @@ Agent 仍然是重要入口。它可以接受“分析双方关于付款义务�
 
 这个闭环比拥有某一个“最强模型”更难复制。基础模型、通用 RAG、Agent Framework 和 MCP 都可以买到；长期积累的法律任务定义、专业结构、专家修正、功能测试、失败数据和资格标准更接近项目真正的工程资产。
 
+这些材料只有被组织成可复查的问题定义以后才会形成资产。一个 Bad Case 至少需要知道任务类别、材料范围、当时输出、专业人员为什么修改或拒绝，以及后来用什么条件判断修复是否成立；否则“用户不满意”“这个模型更好”仍然只是难以复用的经验。Reviewer protocol、Task Class 和 failure taxonomy 的价值正在于把零散反馈变成下一次研究和工程都能使用的共同语言。
+
+这也给研究与产品一个更稳定的分工。研究可以探索新的模型、检索或数据方法，产品侧提供真实约束、失败类别和可接受条件；候选方法只有在同一任务定义下证明收益，才进入 Qualification 或 Controlled Release。产品失败再回到研究问题，而不是让论文指标直接变成产品能力宣称。
+
 产品价值也应回到专业工作结果：关键材料是否更容易被找到，严重遗漏和错误引用是否减少，候选被直接接受、局部修改、完全拒绝或要求补证的比例怎样变化，形成一份 review-ready WorkProduct 需要多少人工步骤，以及这些收益是否覆盖新增 token、latency 和运维复杂度。当前没有足够数据时保持 `Measurement Needed`，不制造漂亮数字。
 
 ## 任务复杂度决定需要多少 Zuno
@@ -112,23 +102,27 @@ Agent 仍然是重要入口。它可以接受“分析双方关于付款义务�
 
 **通用宿主 + Zuno Legal Backend** 适合材料版本、正式工作成果、Provider Qualification、Effect / Security 业务语义已经成为产品要求，但长周期 Agent Runtime 仍可由成熟平台承载的场景。这很可能是长期最经济的主形态之一。
 
-**Zuno Native Runtime + 一等领域状态** 只在动态计划、长等待、复杂恢复、持续授权或领域级并发控制真的成为约束时才值得建设。随着通用 Agent Harness 成熟，这一层尤其需要持续接受 Build / Buy 复核。
+**Zuno Native Runtime + 一等领域状态** 只在动态计划、长等待、复杂恢复、持续授权或领域级并发控制真的成为约束时才值得建设。GraphRAG、Reflection、Long-term Memory、Persistent Multi-Agent 和 Native Runtime 的具体 Build / Buy / Delete 规则由总体架构与 09 Evaluation 负责；Project 只保留这个产品原则：复杂度必须由真实任务和测量结果证明。
 
-GraphRAG、Reflection、Long-term Memory、Persistent Multi-Agent 和 Native Runtime 都属于 Measurement-gated Complexity。每一种机制都必须说明它解决哪个已观察 baseline failure、带来什么状态与成本、怎样测收益，以及什么结果出现时应该关闭、缩小或删除。已经实现不构成长期保留权。
+这三种形态不是三个互斥产品，也不要求整个部署只能选择其中一种。同一套 Zuno Legal Backend 可以让简单请求走短路径，让复杂案件进入更强的运行控制；外围法院系统也可以继续作为 Host。产品成熟度体现在能根据任务约束选择最小充分路径，而不是把所有请求都强迫进入最复杂的 Agent Runtime。
 
 ## 下一阶段要关闭的是证据闭环，而不是继续增加模块
 
 当前架构已经能够提出很多“应该如何”的答案，下一阶段最有价值的工作是把其中一部分变成可以复查的工程事实。没有这些闭环，继续增加 Agent 角色、Provider、状态对象或服务，只会让 Target 更完整，却不会让产品更可信。
 
-第一条闭环来自真实质量问题。客户侧曾反馈回答质量仍需提高，但根因和修复指标没有恢复。相比再增加一种 Retriever，更有价值的是恢复一到两个能够完整还原的 Bad Case：原始输入和材料范围是什么，错误表现是什么，根因最终落在 OCR、检索、引用、Prompt、模型还是任务 Scope，团队改了什么，怎样用同一 case 固定 Regression。只有这个链路存在，历史“回答质量需要提高”才开始转化成工程知识，而不是一句无法行动的项目评价。
+第一条闭环来自真实质量问题。客户侧曾反馈回答质量仍需提高，但根因和修复指标没有恢复。相比继续增加 Retriever 或模型机制，更有价值的是恢复一两个完整 Bad Case：原始输入与材料范围、错误表现、根因、修复、同 case Regression，以及修复以后能够证明到什么程度。
 
-第二条闭环来自 fault probe 曾经暴露的恢复缺陷。#201 证明 restart replay 会把 unresolved Reconciliation 错误升级为 `completed`，#205 证明 Mandatory Audit requirement 没有真正挡在现实 send boundary 前。RB019 没有增加新的全局状态机，而是在现有 06/08/04 边界修复 certainty、conclusive reconciliation、audit-before-effect 和正式 migration entrypoint；`main@9b7891c6` 已用同一类 PostgreSQL fault window 转成正向 regression。后续工作继续收窄：remote query 已因缺真实 Provider capability 明确 Defer；mandatory-audit tenant scope 与 deterministic pre-send abort 已由 revision 59 / AUD-L1 转成 main regression。仍需要独立 Evidence 的是 manual reviewer Authority、audit class、AUD-L2 crash/restart lifecycle 与 Target composed SecurityEpoch。
+第二条闭环来自系统故障和恢复。负向 fault probe 只有在后续修复被同类 regression 锁住以后，才真正转化成长期工程知识。具体哪些 failure shape 已经关闭、哪些仍是 Gap，由 [Current Evidence](../evidence/README.md) 维护；Project 只保留“失败 → 修复 → regression → 可复查证据”这条演进方式，不复制 implementation wave。
 
-第三条闭环用来决定复杂机制的去留。GraphRAG 需要冻结语料、配置和预算，按单跳、多跳、实体歧义、跨文档等 query class 对比 Hybrid / reranker baseline、gated GraphRAG 和各项 heuristic ablation；如果 seed、alias 或 path ranking 没有稳定边际收益，就删除对应复杂度。Long-term Memory 需要做 on/off A/B，观察跨会话任务质量、错误记忆污染、token 成本和专业人员修正；没有稳定收益时只保留 Raw Event、task summary 和按需 Context。Native Runtime 需要和 Generic Host + Legal Backend 比较恢复正确性、质量、成本和开发维护面；Multi-Agent 则继续晚于 Tool、Subgraph 和 parallel worker。
+一个完整闭环还要让后来的人能够重新判断结论：当时输入和环境是什么，失败会造成什么业务后果，哪个 Owner 修复了什么，哪条 regression 锁住了同一窗口，以及这份证据明确没有证明什么。只有这样，项目经验才不会退化成“曾经修过一个 bug”或“某次 CI 绿过”。这也是 Project、Evidence 与 Architecture 分层的实际价值。
 
-第四条闭环是个人与团队事实的可追溯性。对简历和项目复盘最有价值的不是继续扩大“参与过”的范围，而是把一两个个人任务恢复成完整链路：需求或问题从哪里来，接手前是什么状态，自己改了哪些代码或 Contract，测试怎样锁住 bad case，结果能证明到什么程度，哪些部分仍然属于团队或后续 Target。Tool/MCP、GraphRAG retrieval quality、Context/Memory V2 已经有公开提交基础，后续应优先补原始 Issue、Review、历史测试结果或真实运行材料，而不是把今天的总体架构 Ownership 倒推回 2026 年 3 月。
+第三条闭环决定复杂机制的去留。GraphRAG、Memory、Native Runtime 或 Multi-Agent 应在固定任务、语料、预算和 baseline 下比较收益与新增状态面；没有稳定边际收益就缩小或删除。具体实验设计属于 09 Evaluation，项目层只记录这种复杂度治理会反过来决定产品边界。
 
-这些证据闭环最终会反过来决定架构是否应该继续变复杂。真实 Bad Case 如果表明 Hybrid RAG 已经足够，Graph route 就缩小；Host + Legal Backend 如果已经满足恢复要求，Native Runtime 就保持薄；long-term Memory 没有收益就关闭；某个成熟 Provider 已经完整承担通用能力，自研适配层就删除。项目成熟度来自能够证实和删除复杂度，而不是来自架构图上对象越来越多。
+第四条闭环是个人与团队事实的可追溯性。对简历和项目复盘最有价值的不是继续扩大“参与过”的范围，而是把一两个个人任务恢复成完整链路：需求从哪里来，接手前是什么状态，自己改了哪些代码或 Contract，测试怎样锁住 bad case，结果能证明到什么程度，哪些部分仍然属于团队或后续 Target。Tool/MCP、GraphRAG retrieval quality、Context/Memory V2 已经有公开提交基础，后续应优先补原始 Issue、Review、历史测试结果或真实运行材料，而不是把今天的总体架构 Ownership 倒推回 2026 年 3 月。
+
+法院侧测试和 Pilot 也需要同样的恢复方法。比“有过 Pilot”更有工程价值的信息，是当时处理什么 Task Class、由什么角色使用、材料和环境怎样准备、失败时谁兜底、结果怎样被复核、什么条件才算可接受。当前缺少这些原始材料，就继续保持 Unknown；以后如果能够恢复，再把它们写回 History，而不是用今天的 benchmark 或架构设计替代。
+
+按这个标准，项目成熟度不由模块数量或 Agent 数量决定，而由团队能否回答三个问题决定：为什么增加这层复杂度，什么证据证明它解决了原问题，以及什么条件出现时应该缩小或删除它。能够保留必要复杂度，也能够有依据地删掉无收益机制，才说明研究原型开始变成可持续产品。
 
 ## 项目真实走过的阶段
 
@@ -169,11 +163,11 @@ GraphRAG、Reflection、Long-term Memory、Persistent Multi-Agent 和 Native Run
 
 **Current** 只表示今天 `main` 能由代码、Migration、Test、Trace、Eval 或真实运行证明的事实。目录和设计文档存在不等于九模块 Target 已实现，更不等于 Production Ready。Current 的具体边界必须回到 [`docs/evidence/`](../evidence/README.md)。
 
-Current Evidence 同时保留过去的负向 fault probe 和今天的修复结果。#201 / #205 仍是有效 History，因为它们证明过具体 Target violation；AUTH-A/B/C 已关闭通用 restart replay certainty upgrade、缺 durable audit proof 仍发送和 Alembic stale import，后续 main evidence 又证明 post-dispatch capacity、mandatory-audit tenant scope 与 AUD-L1 deterministic pre-send abort。Remote-query reconciliation 当前按真实 Provider capability明确 Defer。Current 仍没有证明 manual reviewer Authority、AuditRequirement class、AUD-L2 crash/restart audit lifecycle 或 Target composed SecurityEpoch，也没有因此升级为 Production Ready。
+Current Evidence 同时保存正向通过和负向故障，但每条结论都必须绑定具体代码快照、测试形状和适用范围。负向 probe 可以证明某个 Target invariant 当时没有成立；后续同类 regression 转绿，只能关闭被覆盖的故障窗口。main 继续变化以后，旧 baseline 进入 History，最新 Current 由 Evidence 重新推进。Project 不复制每个修复波次，避免项目叙事随着实现节奏不断腐烂。
 
 **Target** 表示今天接受的目标设计和产品方向，例如九个逻辑责任域、Knowledge Readiness、Capability Qualification、Single Controller、Formal Admission、Effect Recovery、Continuous Authorization，以及案件研究工作空间。Target 规定未来实现怎样收敛，不能被用来声称历史 Pilot 已经拥有同样机制。
 
-**Evidence** 可以是正向也可以是负向。通过测试证明某个故障窗口已经被正确处理，是 Evidence；稳定失败的 fault probe 证明 Target invariant 当前没有成立，同样是 Evidence。GraphRAG 的 5-query smoke 只支持一次 regression fix，不支持普遍 superiority；Long-term Memory 也没有 A/B 证明稳定收益。
+**Evidence** 回答“这句话凭什么现在可以说”。实现存在、一次测试通过、一个 smoke 结果或一次 Pilot 经历都只能支持各自覆盖的结论；它们不能自动升级成整体质量、普遍收益或 Production Qualification。架构机制是否值得长期保留，还需要 09 Evaluation 在可比较任务、数据和成本条件下建立测量证据。
 
 **Unknown / Measurement Needed** 包括历史第一版正式产品名称、完整法院名单、客户质量问题根因和修复指标、Pilot 真实用户量与运行数据、历史 QPS / Latency / Cost / HA / DR、完整 Production Qualification，以及多数复杂机制在真实法律任务上的增量价值。不知道的事情保持不知道，是项目叙事可信度的一部分。
 
