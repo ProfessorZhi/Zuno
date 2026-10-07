@@ -20,7 +20,7 @@ judgement_target: 系统本身（Owner / Authority / State / Contract / Recovery
 并在本文件先前版本里把「该文件缺失」记为 F-20。
 
 **在我完成主体作业后、收尾复核时，`04_red_evaluation.md` 作为未跟踪文件出现了**
-（`git status` 显示 `?? docs/red-blue/workspace/rb-2026-10-07-formal-020/04_red_evaluation.md`）——
+（`git status` 显示 `?? docs/red-blue/rounds/rb-2026-10-07-formal-020/04_red_evaluation.md`）——
 即 Red 终评与我的作业是**并行**完成的。我**完整读完了它**（315 行），并**据此重写了第 9.3 节**：
 Red 判错清单从「Part A 的 6 条」改为「Red Final 的 4 条」，并把 F-20 从「文件缺失」改写为
 「并行完成，已纳入」。**这一处过程披露是必须的**——如果我不说，读者会以为我一直拿的是

@@ -1053,9 +1053,9 @@ memory 侧是 **CAS，不是普通覆盖写**——但要说清 CAS 在哪一层
 以下是我本轮（Wave 2）实际用 Read / Grep / Bash 打开或检索过的路径，按用途分组。
 
 **冻结输入与评审**
-- `D:\projects\zuno\docs\red-blue\workspace\rb-2026-10-07-formal-020\01_simulated_resume.md`
-- `D:\projects\zuno\docs\red-blue\workspace\rb-2026-10-07-formal-020\03_blue_answers.md`
-- `D:\projects\zuno\docs\red-blue\workspace\rb-2026-10-07-formal-020\04_red_wave2_review_and_questions.md`
+- `D:\projects\zuno\docs\red-blue\rounds\rb-2026-10-07-formal-020\01_simulated_resume.md`
+- `D:\projects\zuno\docs\red-blue\rounds\rb-2026-10-07-formal-020\03_blue_answers.md`
+- `D:\projects\zuno\docs\red-blue\rounds\rb-2026-10-07-formal-020\04_red_wave2_review_and_questions.md`
 - `D:\projects\zuno\.agent\red-blue\defense-model.md`
 
 **canonical truth / 治理文档**

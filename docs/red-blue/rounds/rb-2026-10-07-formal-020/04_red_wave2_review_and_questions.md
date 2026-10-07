@@ -455,9 +455,9 @@ Blue 的 100 答有一个非常统一的形态：**第一层口语 → 第二层
 
 ## 附录：本次实际打开的文件
 
-- `D:\projects\zuno\docs\red-blue\workspace\rb-2026-10-07-formal-020\01_simulated_resume.md`
-- `D:\projects\zuno\docs\red-blue\workspace\rb-2026-10-07-formal-020\02_red_questions.md`
-- `D:\projects\zuno\docs\red-blue\workspace\rb-2026-10-07-formal-020\03_blue_answers.md`（分三次读完：1–773、774–1168、1169–1425）
+- `D:\projects\zuno\docs\red-blue\rounds\rb-2026-10-07-formal-020\01_simulated_resume.md`
+- `D:\projects\zuno\docs\red-blue\rounds\rb-2026-10-07-formal-020\02_red_questions.md`
+- `D:\projects\zuno\docs\red-blue\rounds\rb-2026-10-07-formal-020\03_blue_answers.md`（分三次读完：1–773、774–1168、1169–1425）
 - `D:\projects\zuno\.agent\red-blue\attack-model.md`
 
 未打开：`03_blue_architecture_notes.md`、`docs/red-blue/` 下任何其他文件、Zuno 的 `src/` / `tests/` / `Evidence` / canonical docs / `docs/governance/` 下任何被候选人引用到的文件（均为盲态，未核实）。

@@ -3,7 +3,7 @@ created_at: 2026-10-07
 mode: AGENT_AUTO
 execution_mode: BATCH_DUEL
 zuno_base_sha: 7d3081f2ccaa20c7eeb0bfff75206d08584a6e51
-state: ACTIVE
+state: ARCHIVED
 counts_as_formal_round: true
 
 github_runtime:
@@ -85,7 +85,7 @@ base_alignment:
     IMP-019-05 的冻结协议已并入 main（测量 blocked），IMP-019-08 / 09 为本轮启用的 Skill 变更。
 
 simulated_resume:
-  simulated_resume_path: docs/red-blue/workspace/rb-2026-10-07-formal-020/01_simulated_resume.md
+  simulated_resume_path: docs/red-blue/rounds/rb-2026-10-07-formal-020/01_simulated_resume.md
   resume_status: FROZEN
   resume_project_bullet_count: 5
   resume_style_check: APPROVED
@@ -98,15 +98,15 @@ simulated_resume:
 red_wave_1:
   red_wave_1_status: COMPLETE
   red_wave_1_question_count: 100
-  red_wave_1_path: docs/red-blue/workspace/rb-2026-10-07-formal-020/02_red_questions.md
+  red_wave_1_path: docs/red-blue/rounds/rb-2026-10-07-formal-020/02_red_questions.md
   red_wave_1_commit_sha: none
   red_wave_1_user_checkpoint: none
 
 blue_wave_1:
   blue_wave_1_status: COMPLETE
   blue_wave_1_answer_count: 100
-  blue_wave_1_answers_path: docs/red-blue/workspace/rb-2026-10-07-formal-020/03_blue_answers.md
-  blue_wave_1_architecture_notes_path: docs/red-blue/workspace/rb-2026-10-07-formal-020/03_blue_architecture_notes.md
+  blue_wave_1_answers_path: docs/red-blue/rounds/rb-2026-10-07-formal-020/03_blue_answers.md
+  blue_wave_1_architecture_notes_path: docs/red-blue/rounds/rb-2026-10-07-formal-020/03_blue_architecture_notes.md
   blue_wave_1_commit_sha: none
   blue_wave_1_user_checkpoint: none
 
@@ -114,15 +114,15 @@ red_wave_2:
   red_wave_2_status: COMPLETE
   blue_wave_1_blind_evaluation_present: true
   red_wave_2_question_count: 100
-  red_wave_2_path: docs/red-blue/workspace/rb-2026-10-07-formal-020/04_red_wave2_review_and_questions.md
+  red_wave_2_path: docs/red-blue/rounds/rb-2026-10-07-formal-020/04_red_wave2_review_and_questions.md
   red_wave_2_commit_sha: none
   red_wave_2_user_checkpoint: none
 
 blue_wave_2:
   blue_wave_2_status: COMPLETE
   blue_wave_2_answer_count: 100
-  blue_wave_2_answers_path: docs/red-blue/workspace/rb-2026-10-07-formal-020/04_blue_wave2_answers.md
-  blue_wave_2_architecture_notes_path: docs/red-blue/workspace/rb-2026-10-07-formal-020/04_blue_wave2_architecture_notes.md
+  blue_wave_2_answers_path: docs/red-blue/rounds/rb-2026-10-07-formal-020/04_blue_wave2_answers.md
+  blue_wave_2_architecture_notes_path: docs/red-blue/rounds/rb-2026-10-07-formal-020/04_blue_wave2_architecture_notes.md
   blue_wave_2_commit_sha: none
   blue_wave_2_user_checkpoint: none
 
@@ -141,21 +141,25 @@ workflow_retrospective:
   commit_sha: none
 
 improvement:
-  improvement_ledger_status: PENDING_USER_REVIEW
+  improvement_ledger_status: APPROVED
   round_report_status: BUILT
-  round_report_path: docs/red-blue/workspace/rb-2026-10-07-formal-020/09_round_report.md
-  improvement_ledger_path: docs/red-blue/workspace/rb-2026-10-07-formal-020/09_improvement_ledger.md
-  user_improvement_review_status: PENDING
-  approved_change_count: 0
+  round_report_path: docs/red-blue/rounds/rb-2026-10-07-formal-020/09_round_report.md
+  improvement_ledger_path: docs/red-blue/rounds/rb-2026-10-07-formal-020/09_improvement_ledger.md
+  user_improvement_review_status: APPROVED
+  approved_change_count: 4
   proposed_change_count: 15
   change_effective_scope: NEXT_ROUND_ONLY
+  applied_change_ids: IMP-020-10
+  applied_change_evidence: docs/project/README.md（本轮应用）
+  next_round_approved_ids: IMP-020-01, IMP-020-02, IMP-020-03
+  next_round_change_ids: IMP-020-01, IMP-020-02, IMP-020-03, IMP-020-04, IMP-020-05, IMP-020-06, IMP-020-07, IMP-020-08, IMP-020-09, IMP-020-11, IMP-020-12, IMP-020-13, IMP-020-14, IMP-020-15
   current_round_verdict_recomputed: false
 
 next_resume:
-  next_resume_candidate_path: docs/red-blue/workspace/rb-2026-10-07-formal-020/10_next_resume_candidate.md
-  next_resume_candidate_status: BUILT
+  next_resume_candidate_path: docs/red-blue/rounds/rb-2026-10-07-formal-020/10_next_resume_candidate.md
+  next_resume_candidate_status: APPROVED_FOR_NEXT_ROUND
   next_resume_source_head_sha: 0c9e2d82
-  next_resume_blockers: PENDING_USER_RESUME_REVIEW
+  next_resume_blockers: NONE
 
-current_stage: USER_IMPROVEMENT_REVIEW
-next_actor: USER
+current_stage: CLOSED
+next_actor: NONE

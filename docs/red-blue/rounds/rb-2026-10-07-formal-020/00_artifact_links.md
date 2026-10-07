@@ -1,9 +1,11 @@
 # Round 020 Artifact Links
 
 Round: `rb-2026-10-07-formal-020`
-State: `ACTIVE` — 全部角色阶段已完成，停在 `USER_IMPROVEMENT_REVIEW`
+State: `ARCHIVED` — 本轮已关闭并归档到 `docs/red-blue/rounds/`
 Base: `7d3081f2ccaa20c7eeb0bfff75206d08584a6e51`
 Branch: `red-blue/rb-2026-10-07-formal-020` · PR [#280](https://github.com/ProfessorZhi/Zuno/pull/280)
+
+> **收口方式**：active round 分支的 Draft PR 无法通过 `tests/repo/test_docs_entrypoints.py`，因为该测试要求 `.agent/red-blue/current.md` 为 `state: no-active`，而 active round 必然是 `active-red-blue`。因此本轮与 019 一样以「归档分支」收口：workspace 从 `docs/red-blue/workspace/` 移入 `docs/red-blue/rounds/`，`.agent/red-blue/current.md` 恢复为非激活。归档后 48 项 CI 测试全部通过。
 
 | 项 | 值 |
 | --- | --- |

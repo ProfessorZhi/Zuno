@@ -10,9 +10,9 @@ base_sha: 7d3081f2ccaa20c7eeb0bfff75206d08584a6e51
 head_observed: 4d9bf767 (仅新增本轮 red-blue 文件，src/tests/infra 无漂移)
 
 inputs:
-  - docs/red-blue/workspace/rb-2026-10-07-formal-020/01_simulated_resume.md
-  - docs/red-blue/workspace/rb-2026-10-07-formal-020/02_red_questions.md
-  - docs/red-blue/workspace/rb-2026-10-07-formal-020/00_manifest.yaml
+  - docs/red-blue/rounds/rb-2026-10-07-formal-020/01_simulated_resume.md
+  - docs/red-blue/rounds/rb-2026-10-07-formal-020/02_red_questions.md
+  - docs/red-blue/rounds/rb-2026-10-07-formal-020/00_manifest.yaml
   - .agent/red-blue/defense-model.md
   - AGENTS.md
   - docs/README.md / docs/project/ / docs/architecture/ / docs/modules/ / docs/decisions/ / docs/evidence/ / docs/governance/
@@ -509,7 +509,7 @@ source_check:
     Current-Target-Unknown routing；「精确个人闭环 → Unknown unless separately recovered」）
   - docs/governance/project-fact-provenance.md PF-007…PF-032（含 PF-029 Memory readback、PF-031 GraphRAG、
     PF-032 子 Agent 转发移除）
-  - docs/red-blue/workspace/rb-2026-10-07-formal-020/02_red_questions.md Q51–Q60
+  - docs/red-blue/rounds/rb-2026-10-07-formal-020/02_red_questions.md Q51–Q60
 fact_layer: Historical
 gap_type: ANSWER_GAP
 proposed_change: none
@@ -530,7 +530,7 @@ source_check:
   - docs/project/reference.md:23（Pilot Validation does not establish Production）、:56（measurement-gated）
   - docs/evidence/README.md:22-54（PRODUCTION_READINESS: NOT_ESTABLISHED、COURT QA: UNKNOWN、
     QUALITY: not_yet_proven、FULL CI: NOT RUN）、:53,68,88
-  - docs/red-blue/workspace/rb-2026-10-07-formal-020/01_simulated_resume.md（bullet 表述限于内部 Demo /
+  - docs/red-blue/rounds/rb-2026-10-07-formal-020/01_simulated_resume.md（bullet 表述限于内部 Demo /
     法院侧测试 / Pilot Validation）
   - src/backend/zuno/**（「法院 / court」在 Python 源码中零命中，仅出现在文档）
 fact_layer: Historical

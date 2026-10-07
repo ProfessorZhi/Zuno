@@ -298,12 +298,12 @@ A111（adapter 同时是准入闸门）、A125（`graph_available` 是每轮重�
 
 按会话顺序，如实列出：
 
-1. `D:\projects\zuno\docs\red-blue\workspace\rb-2026-10-07-formal-020\01_simulated_resume.md`（全文，26 行）
+1. `D:\projects\zuno\docs\red-blue\rounds\rb-2026-10-07-formal-020\01_simulated_resume.md`（全文，26 行）
 2. `D:\projects\zuno\.agent\red-blue\attack-model.md`（全文，528 行）
-3. `D:\projects\zuno\docs\red-blue\workspace\rb-2026-10-07-formal-020\02_red_questions.md`（全文，332 行）
-4. `D:\projects\zuno\docs\red-blue\workspace\rb-2026-10-07-formal-020\04_red_wave2_review_and_questions.md`（全文，463 行）
-5. `D:\projects\zuno\docs\red-blue\workspace\rb-2026-10-07-formal-020\03_blue_answers.md`（分三次读完：1–500、500–999、1000–1424）
-6. `D:\projects\zuno\docs\red-blue\workspace\rb-2026-10-07-formal-020\04_blue_wave2_answers.md`（分两次读完：1–580、580–1148）
+3. `D:\projects\zuno\docs\red-blue\rounds\rb-2026-10-07-formal-020\02_red_questions.md`（全文，332 行）
+4. `D:\projects\zuno\docs\red-blue\rounds\rb-2026-10-07-formal-020\04_red_wave2_review_and_questions.md`（全文，463 行）
+5. `D:\projects\zuno\docs\red-blue\rounds\rb-2026-10-07-formal-020\03_blue_answers.md`（分三次读完：1–500、500–999、1000–1424）
+6. `D:\projects\zuno\docs\red-blue\rounds\rb-2026-10-07-formal-020\04_blue_wave2_answers.md`（分两次读完：1–580、580–1148）
 
 **另有一次目录列举（需要如实披露）**：我对 workspace 目录跑过一次 `ls -la` + `wc -l`（用于确认六份输入的存在与体量）。该命令**回显了目录下所有文件的文件名、字节数与行数**，其中包括两份封存件的名字与大小（`03_blue_architecture_notes.md` 44196 字节 / 593 行；`04_blue_wave2_architecture_notes.md` 26721 字节 / 303 行）。**我没有打开、没有读取、没有检索这两份文件的任何内容**，也没有据此对任何结论做推断。列举中还出现了 `00_artifact_links.md` / `00_manifest.yaml` / `02_red_questions.part1.md` / `02_red_questions.part2.md` 四个文件名，同样未打开。
 
