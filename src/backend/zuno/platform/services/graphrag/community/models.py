@@ -32,7 +32,9 @@ class GraphCommunity:
             relations=list(payload.get("relations") or []),
             report=str(payload.get("report") or ""),
             community_version=str(payload.get("community_version") or "v0"),
-            status=str(payload.get("status") or "ready"),
+            # 读回侧 fail-closed：存储行没有 status 时不假定该社区报告可用。
+            # 构造侧（dataclass 默认 / detector）不受影响——那是"刚构建完"的声明。
+            status=str(payload.get("status") or "unavailable"),
         )
 
 

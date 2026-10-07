@@ -22,7 +22,14 @@ def test_auto_mode_prefers_graphrag_for_relation_question():
     planner = RetrievalPlanner(enable_keyword_recall=True)
 
     plan = planner.build_plan(
-        RetrievalRequest(query="Zuno 与 Neo4j 是什么关系？", knowledge_ids=["kb_1"], mode="auto"),
+        # 图索引健康必须显式声明：planner 的默认是 fail-closed（缺失即未就绪），
+        # 本用例测的是"图索引健康时的路由"，所以把前提写出来而不是依赖默认值。
+        RetrievalRequest(
+            query="Zuno 与 Neo4j 是什么关系？",
+            knowledge_ids=["kb_1"],
+            mode="auto",
+            index_health={"graph": "ready"},
+        ),
         _processed("Zuno 与 Neo4j 是什么关系？", relation=True),
         knowledge_capability="rag_graph",
     )
@@ -147,12 +154,24 @@ def test_public_query_methods_route_without_old_names_as_public_methods():
     planner = RetrievalPlanner(enable_keyword_recall=True)
 
     local = planner.build_plan(
-        RetrievalRequest(query="contract relation", knowledge_ids=["kb_1"], mode="rag_graph_deep", query_method="local"),
+        RetrievalRequest(
+            query="contract relation",
+            knowledge_ids=["kb_1"],
+            mode="rag_graph_deep",
+            query_method="local",
+            index_health={"graph": "ready"},
+        ),
         _processed("contract relation", relation=True),
         knowledge_capability="rag_graph",
     )
     global_plan = planner.build_plan(
-        RetrievalRequest(query="overall risk", knowledge_ids=["kb_1"], mode="rag_graph_deep", query_method="global"),
+        RetrievalRequest(
+            query="overall risk",
+            knowledge_ids=["kb_1"],
+            mode="rag_graph_deep",
+            query_method="global",
+            index_health={"graph": "ready"},
+        ),
         ProcessedQuery(
             original_query="overall risk",
             normalized_query="overall risk",
@@ -163,7 +182,13 @@ def test_public_query_methods_route_without_old_names_as_public_methods():
         rerank_available=True,
     )
     drift = planner.build_plan(
-        RetrievalRequest(query="summary with evidence", knowledge_ids=["kb_1"], mode="rag_graph_deep", query_method="drift"),
+        RetrievalRequest(
+            query="summary with evidence",
+            knowledge_ids=["kb_1"],
+            mode="rag_graph_deep",
+            query_method="drift",
+            index_health={"graph": "ready"},
+        ),
         ProcessedQuery(
             original_query="summary with evidence",
             normalized_query="summary with evidence",
@@ -246,7 +271,7 @@ def test_product_enhanced_explicit_global_method_falls_back_with_trace():
             mode="rag_graph_deep",
             product_mode="enhanced",
             query_method="global",
-            index_health={"community": "not_built"},
+            index_health={"graph": "ready", "community": "not_built"},
         ),
         _processed("总结所有合同风险", global_question=True),
         knowledge_capability="rag_graph",

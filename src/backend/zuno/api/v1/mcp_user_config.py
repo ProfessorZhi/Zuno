@@ -53,7 +53,10 @@ async def get_mcp_user_config_by_id(
     login_user: UserPayload = Depends(get_login_user),
 ):
     try:
-        results = await MCPUserConfigService.get_mcp_user_config_from_id(config_id=config_id)
+        results = await MCPUserConfigService.get_mcp_user_config_from_id(
+            config_id=config_id,
+            user_id=login_user.user_id,
+        )
         return resp_200(data=results)
     except Exception as err:
         logger.error(err)
@@ -84,7 +87,10 @@ async def delete_mcp_user_config(
     login_user: UserPayload = Depends(get_login_user),
 ):
     try:
-        await MCPUserConfigService.delete_mcp_user_config(config_id=config_id)
+        await MCPUserConfigService.delete_mcp_user_config(
+            config_id=config_id,
+            user_id=login_user.user_id,
+        )
         return resp_200()
     except Exception as err:
         logger.error(err)

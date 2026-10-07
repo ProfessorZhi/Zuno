@@ -152,8 +152,9 @@ class KnowledgeQueryService:
                 "query_prompt": str(query_prompt_version),
             },
             index_health={
-                "vector": str(index_settings.get("health_status") or "ready"),
-                "graph": str(graph_settings.get("health_status") or "ready"),
+                # 缺失即未就绪（fail-closed）：读不到 health 记录时不能假定索引可用。
+                "vector": str(index_settings.get("health_status") or "unavailable"),
+                "graph": str(graph_settings.get("health_status") or "unavailable"),
                 "community": str(community_status),
             },
             knowledge_capability=str(config.get("index_capability") or "rag"),

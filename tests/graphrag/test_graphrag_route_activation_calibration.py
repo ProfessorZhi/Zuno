@@ -74,7 +74,14 @@ def test_rag_graph_deep_comparison_does_not_stay_standard_rag():
 
     planner = RetrievalPlanner(enable_keyword_recall=True)
     plan = planner.build_plan(
-        RetrievalRequest(query="Were Scott Derrickson and Ed Wood of the same nationality?", knowledge_ids=["kb_1"], mode="rag_graph_deep"),
+        # 图索引健康显式声明：planner 默认 fail-closed，本用例测的是
+        # "图索引健康时不得静默退回 standard_rag"，所以把前提写出来。
+        RetrievalRequest(
+            query="Were Scott Derrickson and Ed Wood of the same nationality?",
+            knowledge_ids=["kb_1"],
+            mode="rag_graph_deep",
+            index_health={"graph": "ready"},
+        ),
         ProcessedQuery(
             original_query="Were Scott Derrickson and Ed Wood of the same nationality?",
             normalized_query="Were Scott Derrickson and Ed Wood of the same nationality?",
@@ -95,7 +102,12 @@ def test_rag_graph_deep_bridge_relation_does_not_stay_standard_rag():
 
     planner = RetrievalPlanner(enable_keyword_recall=True)
     plan = planner.build_plan(
-        RetrievalRequest(query="Who is the mother of the director of film X?", knowledge_ids=["kb_1"], mode="rag_graph_deep"),
+        RetrievalRequest(
+            query="Who is the mother of the director of film X?",
+            knowledge_ids=["kb_1"],
+            mode="rag_graph_deep",
+            index_health={"graph": "ready"},
+        ),
         ProcessedQuery(
             original_query="Who is the mother of the director of film X?",
             normalized_query="Who is the mother of the director of film X?",

@@ -43,9 +43,10 @@ def _get_delivery(delivery_number: str, company_type: str = ""):
 
     try:
         request = urllib.request.Request(url, headers=headers)
+        # 保持默认校验（hostname + 证书链）。本请求会携带 APPCODE 授权头，
+        # 关闭校验等于把凭据暴露给任意中间人，因此这里不允许被"为兼容自签名
+        # 环境"式的改动放宽；自签名场景应把 CA 装进系统信任库。
         ctx = ssl.create_default_context()
-        ctx.check_hostname = False
-        ctx.verify_mode = ssl.CERT_NONE
 
         with urllib.request.urlopen(request, context=ctx, timeout=10) as response:
             payload = json.loads(response.read().decode("utf-8"))

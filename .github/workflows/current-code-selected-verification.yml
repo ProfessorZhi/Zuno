@@ -125,6 +125,7 @@ jobs:
             tests/repo/test_product_runtime_execution_spec_postgres.py \
             tests/architecture/test_p0_v4_execution.py \
             tests/api/test_product_application_boundaries.py \
+            tests/api/test_mcp_user_config_ownership.py \
             tests/agent/runtime/test_runtime_plan_execution.py \
             tests/agent/runtime/test_runtime_interrupt_resume.py \
             tests/agent/runtime/test_runtime_restart_persistence.py \
@@ -144,6 +145,7 @@ jobs:
             tests/retrieval/test_standard_retrieval_composition.py \
             tests/retrieval/test_enhanced_retrieval_composition.py \
             tests/retrieval/test_retrieval_mode_semantics.py \
+            tests/retrieval/test_readiness_fail_closed.py \
             tests/evals/test_model_gateway_cost_latency.py \
             tests/evals/test_multihop_eval_metrics.py \
             tests/evals/test_multihop_eval_route_policy.py \

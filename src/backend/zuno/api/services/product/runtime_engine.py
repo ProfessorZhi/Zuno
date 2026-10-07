@@ -2859,9 +2859,33 @@ class ProductRuntimeMechanics:
                 ),
                 available_capability_ids=tuple(simple_task.plugins),
                 user_roles=cls._user_roles(login_user),
-                graph_available=True,
+                graph_available=cls._graph_index_available(simple_task),
             )
         )
+
+    @classmethod
+    def _graph_index_available(cls, simple_task: WorkSpaceSimpleTask | None) -> bool:
+        """图索引是否真的可用。
+
+        此前这里是无条件 ``graph_available=True``，DEEP 请求因此永远保留
+        ``graph_expand``，即使工作区的图索引根本不存在。改为以索引运行时的
+        ``retrievers_used`` 为准——它与 ``to_retrieval_payload`` 同一判定
+        （target_status == "ready" 且 adapter 契约当前且可见性回执为 visible）。
+        取不到即视为不可用；planner 会走有记录的 ``DEEP_WITHOUT_GRAPH`` 降级。
+        """
+        if simple_task is None or not simple_task.knowledge_space_ids:
+            return False
+        for knowledge_space_id in simple_task.knowledge_space_ids:
+            try:
+                payload = cls._knowledge_index_runtime.to_retrieval_payload(
+                    knowledge_space_id,
+                    "__health__",
+                )
+            except KeyError:
+                continue
+            if "graph" in (payload.get("retrievers_used") or []):
+                return True
+        return False
 
     @classmethod
     def _workspace_capability_plan(
