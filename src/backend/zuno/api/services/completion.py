@@ -98,6 +98,7 @@ class CompletionService:
                 payload={
                     "runtime_surface": "completion",
                     "dialog_id": req.dialog_id,
+                    "goal": req.user_input,
                     "user_input_hash": canonical_sha256({"user_input": req.user_input}),
                     "product_mode": req.product_mode,
                     "query_method": req.query_method,

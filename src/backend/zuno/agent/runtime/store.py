@@ -6,7 +6,13 @@ from zuno.agent.harness import ControllerRuntimeState, RuntimeCheckpoint, Runtim
 
 
 class AgentRunStore(Protocol):
-    def create_task(self, state: ControllerRuntimeState, *, status: str = "running") -> None:
+    def create_task(
+        self,
+        state: ControllerRuntimeState,
+        *,
+        status: str = "running",
+        run_id: str | None = None,
+    ) -> None:
         ...
 
     def has_task(self, task_id: str) -> bool:

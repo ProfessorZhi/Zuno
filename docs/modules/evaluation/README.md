@@ -14,7 +14,7 @@ Zuno 的历史里已经出现过一个很小但很说明问题的例子。2026-0
 
 这正是 09 的出发点：Observability 帮助工程师解释一次执行发生了什么；Evaluation 判断结果是否足够好，以及多出来的复杂度是否值得留下。两个问题都需要数据，但它们服务的决策不同。
 
-### 先回答发生了什么，再回答结果好不好
+### 先还原发生了什么，再建立可比评测
 
 假设用户报告“系统把同一份材料提交了两次”。
 
@@ -28,7 +28,7 @@ OpenTelemetry / OTLP-compatible contract 是合适的通用边界，LangSmith �
 
 敏感数据也不能为了“方便排障”进入所有 span。Baggage 和普通日志优先传播 opaque ref；材料正文、PII、Secret 和完整授权内容只有在策略允许且确有诊断价值时进入受控观测路径。尤其 Secret 不因为 trace 很方便就获得例外。
 
-### 一次分数没有可比上下文，就不能支持架构决策
+
 
 Evaluation 需要把实验输入也当成版本化事实。
 
@@ -42,7 +42,7 @@ Evaluation 需要把实验输入也当成版本化事实。
 
 当 Judge 不可用、样本不足、凭证缺失或 baseline 根本不可比时，评测没有资格给出 Pass 或 Fail。Target 用 BLOCKED / `MEASUREMENT_BLOCKED` 表达这种“还不能判断”，防止流水线为了有一个绿色数字而把未知写成成功。
 
-### 真实专业工作应该反哺评测，但不能把每次人工修改直接当成标签
+### 真实专业工作和研究资产一起进入资格体系
 
 离线 Benchmark 很重要，却很难提前覆盖真实案件中的所有失败。系统进入专业人员工作以后，会自然产生另一类信号：某个候选经常被改日期，某类检索总要人工补找证据，某个模型在多主体案件里经常混淆行为人，某种 Agentic Retrieval 经常多跑几轮却没有找到新材料。这些现象比“模型在某个公开集合上又提高两分”更直接地告诉团队产品还在哪里需要改进。
 
@@ -50,9 +50,9 @@ Evaluation 需要把实验输入也当成版本化事实。
 
 一个专家把模型生成的句子重写得更简洁，适合分析表达偏好，不一定能证明原答案法律错误；一个 Finding 因新补充协议而失效，说明世界变了，也不能直接把旧模型标成错。相反，如果多个独立案件里同一 Provider 持续漏掉同类事件，而且专业人员在相同材料条件下反复补正，这才更可能形成稳定的 failure class 和 Regression case。
 
-这样形成的闭环不是“线上数据自动训练模型”，而是：真实工作发现稳定失败 → 人工和规则把失败归类 → 形成受治理 Task Class / Regression case → 研究或工程提出修改 → 新 Provider / Prompt / Retriever / Agent Harness 在同一组条件下重测 → 通过以后再进入受控发布。历史 HumanDecision 保持原样，新 Eval 只判断新的实现有没有改善。
+这条闭环从真实工作中的稳定失败开始，经人工和规则归类形成受治理 Task Class / Regression case，再让研究或工程修改在同一组条件下重测，通过以后进入受控发布。历史 HumanDecision 保持原样，新 Eval 只判断新的实现有没有改善。
 
-### 研究资产要转成资格体系，而不是只留下论文分数
+
 
 葛季栋 / LIPLAB 已有的 Benchmark 与测试研究可以成为这套体系的上游，而不是停留在论文附录。
 
@@ -64,7 +64,7 @@ CMDL 一类复杂多主体数据集则适合扩展 Task Class 的边界。Provid
 
 这些研究资产只能提供方法、数据和问题结构。最终 release evidence 仍要绑定 Zuno 当前 DatasetVersion、材料治理条件、ProviderVersion、配置和真实任务范围。公开 Benchmark PASS 不等于法院场景 Production qualification。
 
-### Release 需要看关键失败，不只看平均分
+### Release 同时看关键失败和专业工作结果
 
 法律系统里的某些错误不能被高平均准确率抵消。
 
@@ -74,9 +74,9 @@ CMDL 一类复杂多主体数据集则适合扩展 Task Class 的边界。Provid
 
 复杂机制还会在准确率以外付出代价。Reflection 可能增加 token 和 P95；Multi-Agent 可能增加协调失败；GraphRAG 增加构建与查询成本；强模型可能提高费用并受地域策略限制；Native Runtime 增加状态和恢复面。
 
-所以同一实验要尽量一起看 evidence sufficiency、citation correctness、unsupported claim、reviewer acceptance、recovery correctness、duplicate effect、latency、token、cost、Replan / reconcile 频率和人工介入。不是所有项目都需要同一套指标，但架构选择必须把主要收益和主要成本放在同一个可比上下文里。
+所以同一实验要尽量一起看 evidence sufficiency、citation correctness、unsupported claim、reviewer acceptance、recovery correctness、duplicate effect、latency、token、cost、Replan / reconcile 频率和人工介入。不同项目可以使用不同指标，但每个架构选择都必须把主要收益和主要成本放在同一可比上下文里。
 
-### 产品价值还要看“专业人员更快形成可验证成果”
+
 
 模型 Benchmark 只能说明局部能力。Zuno 如果最终定位为案件研究与审理辅助工作空间，长期价值还需要回到专业工作本身。
 
@@ -84,31 +84,31 @@ CMDL 一类复杂多主体数据集则适合扩展 Task Class 的边界。Provid
 
 Target 不预设具体改善数字，因为当前没有真实法院工作量和对照实验支持。09 的责任是把这些问题变成可测量设计，并把 `Measurement Needed` 与已经建立的 Evidence 分开。只有当真实专业流程显示稳定收益时，研究资产和 Agent 机制才从“技术可行”升级成“产品值得长期维护”。
 
-### Provenance、正确性、授权和压缩保真要分别评测
+
 
 Context / Memory 与 Knowledge 都会产生 source ids、lineage 和 trace。它们非常适合回答“这段内容从哪里来”，但 09 不能把 provenance coverage 当成 correctness。来源本身可能错误，当前主体可能已经失去权限，summary 也可能在压缩时丢掉否定条件、时间范围或主体归属。
 
 因此长期 Eval 应把四件事拆开：lineage completeness 测能否追源；factual / citation quality 测内容是否成立；Security fault test 测撤权后是否仍能被使用；compression / context preservation 测关键语义是否在摘要后保留。只有四类信号放在一起，Context trace 才不会被误读成“有来源所以可信”。
 
-### Evaluation 还负责帮助删除复杂度
+### Evaluation 还负责决定什么时候删除复杂度
 
 一个功能做出来以后，团队天然倾向于寻找证明它有价值的案例。09 需要主动做相反的事：设计 baseline、ablation 和 kill test。
 
 GraphRAG 对比 Hybrid Retrieval；Memory on/off；Reflection on/off；更贵模型对比满足最低要求的便宜模型；Generic Host + Legal Backend 对比 Native Runtime。尽量固定语料、task class、模型和预算，只改变需要验证的机制，才能解释边际收益来自哪里。
 
-如果某个机制长期没有稳定收益，正确动作不是继续寻找更漂亮的 Dashboard，而是关闭它、缩小使用范围或回到 baseline。已经实现不构成架构永久保留权。
+某个机制长期没有稳定收益时，应关闭、缩小使用范围或回到 baseline，而不是继续靠 Dashboard 解释它的存在。已经实现不构成架构永久保留权。
 
 Evaluation 也不能单独宣布整个系统 Production Ready。一组 Dataset 上的 PASS 只证明这组数据、配置、commit 和 profile 达到定义门槛。容量、HA / DR、安全 qualification、真实外部系统、故障恢复、运维和法院侧结果仍需要各自 Evidence。
 
 Observability 也不应该无限收集。设计前先列最需要回答的问题：一次结果为什么被拒绝，哪个版本导致质量回退，现实 Effect 是否重复，哪个步骤放大了成本，撤权以后是否仍有访问。然后只记录足以回答这些问题的事件和属性。日志越多并不自动让系统更可解释。
 
-### 负向 Evidence 也能直接决定实现优先级
+
 
 Evaluation 的职责不只是给新功能打高分。当 fault probe 稳定证明一个 Target invariant 当前被违反，它就已经产生了可行动的工程证据。#201 的 Effect replay certainty 与 #205 的 Mandatory Audit send-gate 曾经属于这一类；RB019 修复后，同类 PostgreSQL probes 已进入 main selected verification并转绿。旧失败继续解释为什么修，当前绿色 regression 说明哪一段已经关闭，两者都属于 Evidence。
 
 同样，GraphRAG tiny smoke 只支持 regression fix，不支持总体 superiority。正式 GraphRAG 决策应冻结 corpus / config，按 query class 做 Hybrid / reranker / gated GraphRAG 对照、holdout 与 ablation；如果 seed / alias / path heuristic 不能贡献稳定增益，就删除对应复杂度。
 
-### Current / Target / Gap
+### 设计边界与当前证明
 
 **Current：** 仓库已经有 RAG / GraphRAG eval、LLM judge、LangSmith trace verification 和 2026-06-20 的小样本 GraphRAG regression / rerun 证据。Effect / Mandatory Audit fault probes 现在同时保留历史负向结果与修复后的 main regression，证明评测能够从失败推动实现并验证 closure；这仍不证明完整 Release Evaluation、真实 HumanDecision feedback loop、生产级 Observability 或法院级 benchmark 已经建立。
 

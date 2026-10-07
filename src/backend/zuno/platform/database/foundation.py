@@ -1641,11 +1641,11 @@ class InfrastructureRepository:
             text(
                 """
                 SELECT audit_id, channel_id, effect_id, owner_id, payload_hash,
-                       generation, created_at
+                       generation, created_at, status
                 FROM infra_mandatory_audit_events
                 WHERE tenant_id = :tenant_id
                   AND effect_id = :effect_id
-                  AND status IN ('durable', 'effect_observed')
+                  AND status IN ('durable', 'effect_observed', 'dispatch_aborted')
                 """
             ),
             {"tenant_id": tenant_id, "effect_id": effect_id},
@@ -1658,6 +1658,10 @@ class InfrastructureRepository:
             ):
                 raise InfrastructureConflictError(
                     "mandatory audit effect identity was reused with different proof content"
+                )
+            if str(existing.status) == "dispatch_aborted":
+                raise FencingRejectedError(
+                    "dispatch-aborted mandatory audit proof cannot authorize a later effect"
                 )
             return AuditPersistenceReceipt(
                 audit_id=str(existing.audit_id),
@@ -1820,6 +1824,77 @@ class InfrastructureRepository:
         )
         if result.rowcount != 1:
             raise FencingRejectedError("tenant-scoped audited effect cannot be observed by this owner")
+
+    def mark_audited_effect_dispatch_aborted(
+        self,
+        *,
+        audit_id: str,
+        effect_id: str,
+        owner_id: str,
+    ) -> None:
+        tenant_id = self.current_tenant_id().strip()
+        if not tenant_id:
+            raise InfrastructureConflictError("mandatory audit abort requires tenant scope")
+        if not audit_id.strip() or not effect_id.strip() or not owner_id.strip():
+            raise ValueError("audit_id, effect_id and owner_id must not be empty")
+        row = self.connection.execute(
+            text(
+                """
+                SELECT status
+                FROM infra_mandatory_audit_events
+                WHERE tenant_id = :tenant_id
+                  AND audit_id = :audit_id
+                  AND effect_id = :effect_id
+                  AND owner_id = :owner_id
+                FOR UPDATE
+                """
+            ),
+            {
+                "tenant_id": tenant_id,
+                "audit_id": audit_id,
+                "effect_id": effect_id,
+                "owner_id": owner_id,
+            },
+        ).first()
+        if row is None:
+            raise FencingRejectedError(
+                "tenant-scoped mandatory audit cannot be dispatch-aborted by this owner"
+            )
+        status = str(row.status)
+        if status == "dispatch_aborted":
+            return
+        if status == "effect_observed":
+            raise FencingRejectedError(
+                "observed audited effect cannot be rewritten as dispatch-aborted"
+            )
+        if status != "durable":
+            raise FencingRejectedError(
+                "mandatory audit must be durable before dispatch-aborted transition"
+            )
+        result = self.connection.execute(
+            text(
+                """
+                UPDATE infra_mandatory_audit_events
+                SET status = 'dispatch_aborted',
+                    dispatch_aborted_at = now()
+                WHERE tenant_id = :tenant_id
+                  AND audit_id = :audit_id
+                  AND effect_id = :effect_id
+                  AND owner_id = :owner_id
+                  AND status = 'durable'
+                """
+            ),
+            {
+                "tenant_id": tenant_id,
+                "audit_id": audit_id,
+                "effect_id": effect_id,
+                "owner_id": owner_id,
+            },
+        )
+        if result.rowcount != 1:
+            raise FencingRejectedError(
+                "mandatory audit dispatch-aborted transition lost its durable owner"
+            )
 
     def configure_cutover_target(
         self,

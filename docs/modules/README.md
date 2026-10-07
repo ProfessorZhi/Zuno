@@ -48,31 +48,11 @@ Research Artifact
 
 这些责任域按事实 Ownership 切分，不按技术栈或调用方向切分。默认可以共处模块化 Python 后端。吞吐、安全隔离、故障半径或部署生命周期真正形成证据以后，才需要把逻辑责任进一步拆成独立 Worker、进程或网络服务。
 
-## Memory / Context 不新增第十个业务模块
+## 跨模块规则由总体架构统一解释
 
-Context 负责让一次模型调用看到“现在需要什么”，不负责创造新的长期事实。最小实现只需要 recent window、task summary 和按需读取的 Owner facts。跨会话 structured memory 只有在真实任务 A/B 中稳定有收益时才开启。
+责任地图只回答“谁拥有哪类事实”。Memory / Context 是否形成权威、恢复时为什么先查 Owner fact、版本漂移怎样沿依赖链重新验收，都属于跨模块机制；完整推导保留在 [Overall Architecture](../architecture/architecture.md)，精确不变量和恢复顺序保留在 [Architecture Engineering Reference](../architecture/reference.md)。
 
-启用以后，Provider 只保存带来源和 Scope 的非权威 record；08 决定当前主体是否可以 Recall、记录是否应 No-Recall / Retain / Purge；01 / 04 为请求或 Step 组装当前 snapshot。02 的正式 Domain fact、03 的材料与知识来源、06 的 Effect truth 不被 Memory 覆盖。
-
-`source_event_id`、CitationLineage 或其他 provenance 只说明 lineage，不证明 truth、authorization 或 summary 没丢关键限定。跨模块必须持续保持：
-
-```text
-Provenance != Truth != Authorization != Semantic Preservation
-```
-
-## 跨模块设计先看谁拥有事实
-
-A 调用 B 并不会把 B 的结果变成 A 的事实。04 可以请求 02 完成 Formal Admission，完成证明仍来自 02；01 可以读取 06 的 Effect 结果，不能因为自己发起 Delivery 就拥有远端现实；09 可以观察全部模块，也不会因为信息最全就升级成业务 Authority。函数调用、Queue、Event 和缓存只是传播方式，Owner fact 才决定恢复时先相信谁。
-
-一个典型故障是 Domain transaction 已经成功，而 Runtime 还没写新的 Checkpoint 就崩溃。重启后如果只相信 Checkpoint，系统可能重复正式提交；正确顺序是先读取 Domain 的耐久完成事实，再修 Runtime projection。外部 POST timeout 也不能靠调用方的 `failed` 状态裁决：远端可能已经执行，06 必须保留逻辑动作身份并 Reconcile，确认效果以后上层才能收敛。
-
-## 版本漂移沿依赖链处理，不建立统一 Version God Service
-
-一次 Step 可能同时依赖 DocumentVersion / KnowledgeGeneration、CapabilityVersion / ProviderBinding、Model version / config、ToolVersion、Credential 和 SecurityEpoch。计划形成以后任何一项都可能变化。
-
-04 记录本次 Step 实际解析出的版本集合；03、05、06、07、08 分别判断自己拥有的 generation、semantic binding、Tool semantics、model eligibility 和 security/credential 是否仍满足当前任务。等价实现切换可以在 Contract 证明下继续；专业语义、schema、effect class、关键 config 或安全条件变化则使旧计划前提失效，进入 re-resolution / Replan / Review。
-
-系统不需要一个万能 version 字段，也不让 Runtime 猜所有模块的兼容性。
+这里保留三个导航结论：Context / Memory 不增加新的业务 Authority；跨模块恢复先读取真正拥有结果的耐久事实，再修 Runtime 或 Projection；各责任域判断自己拥有的版本和资格是否仍兼容，Runtime 记录依赖关系但不成为统一 Version Service。具体到某个责任域时，再进入对应 Module Human Narrative。
 
 ## 当前设计状态
 
@@ -91,6 +71,6 @@ production_readiness: NOT_ESTABLISHED
 
 9/9 Detail Design Candidate 只表示 Target Design 已达到冻结前可审查粒度。Current、实现、质量和生产资格继续由 `docs/evidence/` 证明；`DETAIL DESIGN CANDIDATE V1 AVAILABLE` 不等于 `Module Detail Freeze Review` 已通过。
 
-RB019 的两条原始 P0 负向事实已经转成 main regression：unresolved Effect restart replay 保持 Unknown，最小 conclusive reconciliation 可以收敛 Effect truth；`MANDATORY_BEFORE_EFFECT` 缺 committed proof 时 executor 为 0，已发送 Effect 的 audit row 也会关闭 durable capacity。当前 blocker 已缩小到 remote-query / manual Authority 和更完整的 audit policy / binding / lifecycle，而不是继续把旧 #201/#205 当成今天仍失败。
+模块入口只维护 Target decomposition 和设计成熟度，不复制快速变化的 implementation-wave 状态。某个责任域今天已经实现到哪一层、哪些 fault window 已经转绿、哪些 blocker 仍存在，由 [`docs/evidence/`](../evidence/README.md) 与对应 scoped governance status 绑定具体 SHA / run 证明。旧负向 probe 在修复后继续作为 History 保留，但不会在这里继续描述为当前失败。
 
 跨模块的事实 Ownership、Completion Proof、Cancellation、Late Result、Idempotency、Recovery、Detail Candidate 与 Freeze Review 记录在 [`reference.md`](reference.md)。各责任域的 Human Narrative 从上表对应的语义目录继续展开。

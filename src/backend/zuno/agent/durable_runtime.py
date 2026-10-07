@@ -106,7 +106,14 @@ class InMemoryDurableRuntimeStore:
         self._interrupts: dict[str, RuntimeInterrupt] = {}
         self._events: dict[str, list[DurableRuntimeEvent]] = {}
 
-    def create_task(self, state: ControllerRuntimeState, *, status: str = "running") -> None:
+    def create_task(
+        self,
+        state: ControllerRuntimeState,
+        *,
+        status: str = "running",
+        run_id: str | None = None,
+    ) -> None:
+        _ = run_id
         self._records[state.task_id] = _DurableRuntimeRecord(state=state, status=status)
         self._events[state.task_id] = []
 

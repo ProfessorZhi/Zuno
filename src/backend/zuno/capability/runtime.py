@@ -1373,17 +1373,31 @@ def build_default_tool_control_plane_runtime(
     *,
     security_approval_sink: SecurityApprovalFactSink | None = None,
     persist_facts: bool = True,
+    tool_unit_of_work_factory: Callable[[], Any] | None = None,
+    security_unit_of_work_factory: Callable[[], Any] | None = None,
+    infrastructure_unit_of_work_factory: Callable[[str], Any] | None = None,
 ) -> ToolControlPlaneRuntime:
-    if persist_facts:
+    if persist_facts and (
+        tool_unit_of_work_factory is None
+        or security_unit_of_work_factory is None
+        or infrastructure_unit_of_work_factory is None
+    ):
         from zuno.platform.database import engine
         from zuno.platform.database.foundation import InfrastructureUnitOfWork
         from zuno.platform.database.tool_runtime import ToolUnitOfWork
         from zuno.platform.security import SecurityUnitOfWork
 
-        tool_unit_of_work_factory = lambda: ToolUnitOfWork(engine)
-        security_unit_of_work_factory = lambda: SecurityUnitOfWork(engine)
-        infrastructure_unit_of_work_factory = lambda tenant: InfrastructureUnitOfWork(engine, tenant_id=tenant)
-    else:
+        tool_unit_of_work_factory = (
+            tool_unit_of_work_factory or (lambda: ToolUnitOfWork(engine))
+        )
+        security_unit_of_work_factory = (
+            security_unit_of_work_factory or (lambda: SecurityUnitOfWork(engine))
+        )
+        infrastructure_unit_of_work_factory = (
+            infrastructure_unit_of_work_factory
+            or (lambda tenant: InfrastructureUnitOfWork(engine, tenant_id=tenant))
+        )
+    elif not persist_facts:
         tool_unit_of_work_factory = None
         security_unit_of_work_factory = None
         infrastructure_unit_of_work_factory = None

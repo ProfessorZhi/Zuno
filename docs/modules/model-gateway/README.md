@@ -12,7 +12,7 @@ Zuno 的问题出现在同一项法律任务开始同时使用多种模型角色
 
 07 的作用是把模型变成一项受控依赖。上层说明这次调用需要什么能力、结构化约束和 deadline，Gateway 在当前允许且合格的候选中选择实际 Provider / Model，记录真实调用和 Usage，再把结果交还调用方。Planner 的业务 Prompt 仍属于 Runtime，专业抽取语义仍属于 Capability；Gateway 不因为掌握模型 SDK 就拥有这些业务含义。
 
-### 先描述需要的能力，再决定今天用哪一个模型
+### 先定义调用角色，再选择今天的模型
 
 设想 Runtime 需要生成下一版任务计划。如果代码直接写 `model="某厂商-x-large"`，产品很快会把“规划”这项需求和今天某个 SKU 绑死。模型升级、供应商停服、私有部署上线或者数据外发政策变化时，调用方都要跟着改。
 
@@ -22,7 +22,7 @@ Target 更稳定的输入是 Model Role。Planner 表达“我需要满足这类
 
 因此 API health 绿色只是最弱的一层信息。一个 Provider 技术上能调用，可能因为数据地域限制而当前不能用，也可能没有通过这个 Role 的质量基线。Fallback 也只能在仍然满足这些条件的集合里发生，不能因为主 Provider 503 就退到一个“能返回 JSON 但没验证过”的模型。
 
-### Model Role 和法律 Capability 解决的是两个不同层次的问题
+
 
 “Planner 需要什么模型”和“事件抽取这项法律能力由谁提供”看起来都涉及模型选择，但它们的稳定边界不同。
 
@@ -34,7 +34,7 @@ Model Role 描述一次模型调用在执行层需要什么，例如规划、摘
 
 这使模型升级可以分层发生。一个更便宜的新模型通过 Planner Role 回归后，可以替换规划调用而不影响事件抽取资格；一个模型在 LawBench 某类任务上提高，也只形成新的评测证据，还要由 05 结合 Zuno 的 Task Class、真实失败分类和数据条件决定是否扩展专业 Eligibility。不存在“一次排行榜升级，全系统自动换模型”的隐式路径。
 
-### 一次模型调用的结果，要和后续业务成功分开
+### 模型调用成功不等于业务完成
 
 Provider 返回 200、JSON schema 也正确，只能证明这次模型调用在 transport 和基本格式上完成了。Capability 可能发现内容不符合专业语义，Runtime 可能因为输入已经 stale 而拒绝结果，Domain 也可能因为证据不足而不正式接纳。
 
@@ -44,15 +44,15 @@ Provider 返回 200、JSON schema 也正确，只能证明这次模型调用在 
 
 取消也是类似的。调用方发出 cancel request 时，远端模型可能已经完成，也可能正在生成，还可能根本不支持可靠取消。07 不能根据本地取消标记推断费用为零。它需要继续区分 provider-confirmed cancellation、completed-before-cancel 和 billing / outcome still unknown，并把真实 Usage 结算给上层预算。
 
-### Retry 和 fallback 受同一个预算与资格边界约束
+
 
 模型 503、网络抖动或偶发格式错误可以做有限 Retry；某个 Provider 持续不可用时，可以切到另一个当前合格的候选。问题在于每一次“再试一次”都在真实消耗时间、token 和费用。
 
 如果每个调用点自行 retry，再由 SDK 自动 retry，外层 Runtime 又做一次 fallback，一次坏请求可能悄悄放大成许多真实模型调用。07 因而需要让每个 Attempt 和 Usage 可见，04 再从 Run 级 Budget 决定继续、降级、Replan 或停止。没有合格 fallback 时，正确行为可以是返回上层等待、人工复核或 abstain，而不是无限降低质量要求。
 
-路由也不应该退化成“永远用最强模型”或“永远用最便宜模型”。复杂规划在某些 task class 上可能确实值得更强推理，简单改写则可能没有收益。只有冻结任务和可比较配置后的 Eval 才能告诉团队升级的边际价值。价格、延迟、质量和安全是共同约束，不是单一排名指标。
+路由也不应该退化成“永远用最强模型”或“永远用最便宜模型”。复杂规划在某些 task class 上可能确实值得更强推理，简单改写则可能没有收益。只有冻结任务和可比较配置后的 Eval 才能告诉团队升级的边际价值。价格、延迟、质量和安全共同约束路由，任何单一排名都不足以代表最终选择。
 
-### Gateway 统一 transport，不收编所有 Prompt 和专业语义
+### Gateway 统一调用边界，路由仍受业务与安全约束
 
 集中模型调用很容易继续膨胀：既然所有请求都经过 07，就把 Prompt registry、业务模板、专业 schema、数据政策和 Eval 也全部放进 Gateway。这样很快会形成另一个 God Module。
 
@@ -62,7 +62,7 @@ Provider 返回 200、JSON schema 也正确，只能证明这次模型调用在 
 
 缓存则需要更谨慎。模型输出并不天然可复现，相同 prompt 在模型版本、temperature 或 Provider backend 变化后可能不同。只有调用方明确允许复用时，才适合建立 cache / duplicate suppression；身份要绑定真正影响结果的 Role、模型版本、输入、generation config、schema 和必要 Scope。缓存命中节省的是一次计算，不会制造新的授权或正式业务事实。
 
-### 数据外发和 Secret 让模型路由受到安全约束
+
 
 同一份案件材料可能允许发给私有部署，却不允许发到某个公共区域。Gateway 即使知道另一个 Provider 更快，也不能把 fallback 变成绕过数据政策的捷径。08 给出当前 egress decision，07 只在允许集合里选择实际模型。
 
@@ -70,13 +70,13 @@ Credential 也不应该进入 Prompt、普通 Trace 或 Checkpoint。Gateway 获
 
 Prompt Injection 更说明了为什么模型不能拥有更强权力。模型输出可以建议下一步动作，但不能因为“模型自己认为合理”就修改正式 Domain、扩大权限或触发高风险 Effect。07 只负责模型调用；后面的专业验收、计划控制、授权和 Tool send boundary 继续由对应责任域保护。
 
-### 路由决定也要绑定实际配置版本，而不是只记 model name
+
 
 同一个 Provider / model name 在不同 system prompt、generation config、region 或 credential policy 下可能表现完全不同。07 保存真实 ModelAttempt 时，需要让调用方能追到影响行为的模型、Provider、generation config 与 credential-policy refs；04 / 05 则把真正依赖这些行为的计划或专业资格绑定到自己的版本集合。
 
-配置变化本身不自动导致 Replan。只有变化让原 Role qualification、结构化输出、预算、安全或 Capability contract 不再成立时，当前调用才失去资格。07 返回 typed routing / eligibility 结果，上层决定 fallback、re-resolve 或 Replan，而不是让 Gateway 悄悄把不兼容配置伪装成同一次调用。
+配置变化本身不自动导致 Replan。只有变化让原 Role qualification、结构化输出、预算、安全或 Capability contract 不再成立时，当前调用才失去资格。07 返回 typed routing / eligibility 结果，上层据此选择 fallback、re-resolve 或 Replan；Gateway 不隐式吞掉不兼容变化。
 
-### 供应商不变，模型行为也可能漂移
+
 
 一个 Provider 可以保持同一 API 和同一个 model name，却在后台升级权重、系统提示或推理策略。对上层来说，规划长度、工具选择、拒答倾向和结构化稳定性都可能变化，而编译和接口测试完全不会报错。
 
@@ -86,7 +86,7 @@ Prompt Injection 更说明了为什么模型不能拥有更强权力。模型输
 
 如果系统最终只稳定使用一个受控模型，没有多 Provider、复杂数据外发、独立预算和 Role 差异，Gateway 可以继续缩薄成统一 adapter。抽象层的存在必须由替换性和控制需求证明，不能因为“多模型架构听起来完整”而长期扩大。
 
-### Current / Target / Gap
+### 设计边界与当前证明
 
 **Target：** 07 以 Model Role 接收上层执行需求，在当前安全允许、Role 质量合格、预算和 deadline 可接受的候选中选择 Provider / Model，保存真实 Attempt、Usage、Retry / Fallback 与取消结算；调用事实能够关联真正影响行为的 Provider / model / config / credential-policy refs。法律 Capability 的专业语义与 Task Class qualification 继续由 05 拥有。
 
