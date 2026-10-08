@@ -204,12 +204,31 @@ blue_wave_1:
     这就是 round 020 记录的泄漏向量（IMP-020-14）在本轮的复现 —— 本轮同样带这个风险，不当作已解决。
 
 red_wave_2:
-  red_wave_2_status: NOT_STARTED
-  blue_wave_1_blind_evaluation_present: false
-  red_wave_2_question_count: 0
+  red_wave_2_status: COMPLETE
+  blue_wave_1_blind_evaluation_present: true
+  red_wave_2_question_count: 100
   red_wave_2_path: docs/red-blue/workspace/rb-2026-10-08-formal-021/04_red_wave2_review_and_questions.md
   red_wave_2_commit_sha: none
-  red_wave_2_user_checkpoint: PENDING
+  red_wave_2_commit_ref: git log --grep "^rb-021: red wave 2" --format=%H -1
+  red_wave_2_user_checkpoint: LINK_SENT
+  red_wave_2_shape:
+    part_a: 7 节盲评 + 显式 Credibility Update
+    part_b: Q101–Q200（T01 11 · T02 15 · T03 11 · T04 8 · T05 7 · T06 9 · T07 7 · T08 10 · T09 11 · T10 11）
+    verification: 题号 101–200 连续唯一；头 `not_seen` 与附录审计均声明未开封存笔记与 canonical 源
+    controller_edit: 把 Part A / Part B 由 h1 规范为 h2 以对齐 round 020 的产物形态（未改任何文字内容）
+  red_wave_2_overall_judgement: >
+    候选人诚实、边界感强，但对自己的复杂度几乎没有测量能力；最强的证据（06/08 控制面）落在最不归他的模块上，
+    而他 ownership 内的三条（Tool/MCP、GraphRAG、Context/Memory）恰是收益未证明、部分已无 consumer 的三条。
+    另指出 `事实层/证据/边界` 三段式在 100 题上过度均匀，可能是策略化模板而非临场自削，因此不为强 claim 加分。
+  red_wave_2_found_contradictions:
+    - A97/A98 的 guardrail 硬替换 vs A17 的 baseline-preserving 不变量
+    - A28 的 `GeneralAgent.prepare_context` vs A55/A71 的 `core.py build_context_pack`
+    - A20/A85「样本波动」vs A19/A84「跨轮换了模型」
+    - A38 同题内 `ACTIVATED` vs `ACTIVE`
+  red_wave_2_resume_vs_answer_check:
+    complex_route: CONFIRMED_MUTUALLY_EXCLUSIVE（简历「复杂请求进入 ReAct 路径」vs A8/A56 的 fail-closed）
+    three_disclosed_absences: Blue 未把它们说成「有」；唯一口径移动是 A21 把「未执行」改写成「跑不了 / BLOCKED_PENDING_DATA」
+  red_wave_2_top_followups: [Q113, Q117, Q107]
 
 blue_wave_2:
   blue_wave_2_status: NOT_STARTED
@@ -250,5 +269,5 @@ next_resume:
   next_resume_source_head_sha: none
   next_resume_blockers: none
 
-current_stage: BATCH_CHECKPOINT_BLUE_1
-next_actor: RED
+current_stage: BATCH_CHECKPOINT_RED_2
+next_actor: BLUE
