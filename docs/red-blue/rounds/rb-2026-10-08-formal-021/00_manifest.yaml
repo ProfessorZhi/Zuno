@@ -1,0 +1,444 @@
+round_id: rb-2026-10-08-formal-021
+created_at: 2026-10-08
+mode: AGENT_AUTO
+execution_mode: BATCH_DUEL
+zuno_base_sha: cdd2063b341e6919fafaa1395d1f3bdc837329f6
+state: CLOSED
+counts_as_formal_round: true
+
+github_runtime:
+  github_state_bus: REQUIRED
+  stage_handoff: COMMIT_THEN_REREAD
+  round_branch: red-blue/rb-2026-10-08-formal-021
+  round_pr: 282
+  last_consumed_head_sha: none
+  firewall_strength: PHYSICAL_CONTEXT_ISOLATION
+  strict_blind_red_certification: true
+
+interview_target:
+  target_role: Agent 开发工程师 / 大模型应用工程师 / AI 应用工程师
+  company_or_persona: 大厂资深工程师一面；项目真实性、工程深度、后端基础与系统设计混合
+  interview_stage: 技术一面 / 项目深挖（连续 30–60 分钟）
+  jd_source: generic target role calibrated by first-party interview records and public AI/Agent interview behavior evidence
+  resume_review_gate: REQUIRED
+  improvement_review_gate: REQUIRED
+  batch_checkpoint_policy: LINK_ONLY_PAUSE
+  red_wave_1_question_count: 100
+  blue_wave_1_answer_count: 100
+  red_wave_2_question_count: 100
+  blue_wave_2_answer_count: 100
+  one_question_one_intent: true
+
+# 沿用 round 020 的 10 条 Interview Thread，未改。
+# 依据：docs/governance/interview-acceptance-standard.md §3，本轮 pin 的 blob 与 020 逐字节相同。
+thread_taxonomy:
+  source: docs/governance/interview-acceptance-standard.md §3
+  thread_count: 10
+  threads:
+    - id: T01
+      name: Tool / MCP
+      spine: 本人做了什么 → config injection → 并发隔离 → timeout → idempotency → remote effect → 为什么不直接买现成 Host
+    - id: T02
+      name: GraphRAG
+      spine: 原 bad case → fusion 修复 → threshold → 5-query smoke → holdout/ablation → latency/cost → kill condition
+    - id: T03
+      name: Memory / Context
+      spine: 为什么需要 → record owner → recall authority → revocation → stale memory → Domain conflict → A/B → 什么条件下删除
+    - id: T04
+      name: Runtime
+      spine: 为什么 fixed workflow 不够 → PlanVersion → late result → Domain commit / stale checkpoint → recovery authority → 为什么不用纯 LangGraph
+    - id: T05
+      name: Security / Effect
+      spine: authorization freshness → audit-before-effect → crash window → unknown effect → reconciliation → external reality
+    - id: T06
+      name: Project History
+      spine: 加入时已有多少 → 本人第一笔改动 → 哪些是团队做的 → 哪些是今天 Target 而非当年实现
+    - id: T07
+      name: Pilot / 法院
+      spine: 到底发生过什么 → 什么没证据 → 为什么不能叫 Production
+    - id: T08
+      name: 系统简化
+      spine: 如果今天重做，哪些模块 / 机制可以删
+    - id: T09
+      name: Knowledge / Retrieval fundamentals
+      spine: DocumentVersion → KnowledgeGeneration → Readiness → Citation → 「全案没有」怎样证明
+    - id: T10
+      name: Engineering fundamentals
+      spine: Python / PostgreSQL / 并发 / 网络 / IR / Agent 基础，把「会不会写代码」打穿
+
+pinned_skills:
+  attack_skill_version: d240b2734382c769eac8cbb84494e9ebdcd0c828:.agent/red-blue/attack-model.md
+  defense_skill_version: 20446e1509da953f40e1976119db2068f8a22fff:.agent/red-blue/defense-model.md
+  judge_version: 6211d2de0d7451ab7b439398920eec01c8e28b51:.agent/red-blue/judge.md
+  protocol_version: 7e47a3cbf8dcf0f2b57d8f6d1309bac5cc8e5c0a:.agent/red-blue/protocol.md
+  interview_acceptance_standard: 062c7e98314111b7994d685d573c4e11571e6ab4:docs/governance/interview-acceptance-standard.md
+  pinned_at_base: cdd2063b341e6919fafaa1395d1f3bdc837329f6
+  unchanged_from_previous_round: true
+
+base_alignment:
+  previous_round: rb-2026-10-07-formal-020
+  previous_round_archive: docs/red-blue/rounds/rb-2026-10-07-formal-020/
+  previous_round_closed_at: 907a1453
+  base_sha_is_current_main: true
+  main_head_advanced_by: "PR #281（fix/rb020-p0-security）→ merge commit cdd2063b"
+  resolved_since_previous_round:
+    - id: IMP-020-01
+      status: IMPLEMENTED_IN_BASE
+      evidence: src/backend/zuno/platform/services/retrieval/planner.py, retrieval/orchestrator.py, rag/handler.py, application/knowledge/query_service.py, graphrag/community/models.py, api/services/product/runtime_engine.py
+      note: 读取侧 fail-open 改为 fail-closed；降级留痕（route_trace.fallback_reason / fallback_policy.graph_degraded）。
+    - id: IMP-020-02
+      status: IMPLEMENTED_IN_BASE
+      evidence: platform/database/dao/mcp_user_config.py + api/services/mcp_user_config.py + api/v1/mcp_user_config.py
+      note: GET/DELETE 按 user_id 收紧；「不存在」与「属于他人」返回同一错误。
+    - id: IMP-020-03
+      status: IMPLEMENTED_IN_BASE
+      evidence: src/backend/zuno/capability/tools/delivery/action.py
+      note: 删除 check_hostname=False / verify_mode=CERT_NONE，恢复默认校验。
+  resolution_record: docs/governance/rb020-p0-implementation-status.md
+  resolution_verification: >
+    三条的实现由 Controller 本人完成并验证：新增 14 条测试（本地全绿，且已证明修复前为红）；
+    CI run 37591240936 的 junit 报告核对到 14 条用例确实执行，238 passed / 0 failed。
+    该 run 的 Postgres-backed 用例覆盖了本机无 PostgreSQL 而无法验证的部分。
+  still_open_from_previous_round:
+    ids: IMP-020-04, IMP-020-05, IMP-020-06, IMP-020-07, IMP-020-08, IMP-020-11, IMP-020-12, IMP-020-13, IMP-020-14, IMP-020-15
+    count: 10
+    consumed_this_round:
+      - id: IMP-020-09
+        consumed_at: RESUME_GATE
+        how: >
+          本轮 frozen resume 直接采用 round 020 的 10_next_resume_candidate.md 正文（4 条降级改写 + 1 条保留附硬上限），
+          并经独立 subagent 逐条取证核验后才冻结；核验另发现并修掉 4 处措辞，其中 1 处是 candidate 自身携带的
+          NOT_SUPPORTED（「参数不完整回落 ReAct」）。
+    status: NEXT_ROUND_ONLY 提案，用户未逐条表态
+    notes: >
+      IMP-020-11/12/13/15 提议修改 Red / Blue Skill 与 Harness；
+      本轮 pin 的 Skill blob 与 020 逐字节相同 —— 即这些提案**尚未**生效，本轮仍按原 Skill 运行。
+      IMP-020-04/05/06/07/08 是 B/C 组工程提案，本轮只做 base-alignment，不在本轮内应用。
+
+simulated_resume:
+  resume_style_reference: docs/red-blue/rounds/rb-2026-10-07-formal-020/01_simulated_resume.md
+  resume_build_sources:
+    - docs/project/
+    - docs/architecture/
+    - docs/modules/
+    - docs/evidence/
+    - selected docs/governance/ provenance
+  previous_round_resume_candidate: docs/red-blue/rounds/rb-2026-10-07-formal-020/10_next_resume_candidate.md
+  simulated_resume_path: docs/red-blue/rounds/rb-2026-10-08-formal-021/01_simulated_resume.md
+  resume_status: FROZEN
+  resume_project_bullet_count: 5
+  resume_style_check: PASS
+  resume_frozen_against_main: cdd2063b341e6919fafaa1395d1f3bdc837329f6
+  resume_fact_check:
+    performer: isolated_subagent
+    method: 逐条回溯到 docs/governance/project-fact-provenance.md / src/backend/** / tests/**
+    verdicts:
+      bullet_1_tool_mcp_route: SUPPORTED_WITH_2_WORDING_FIXES
+      bullet_2_graphrag_fusion: SUPPORTED
+      bullet_3_multihop_retrieval: PARTIALLY_SUPPORTED_WITH_1_WORDING_FIX
+      bullet_4_context_memory_v2: SUPPORTED_WITH_1_WORDING_FIX
+      bullet_5_memory_readback: SUPPORTED
+      boundary_A_eval_blocked: SUPPORTED_WITH_SCOPE_NARROWING
+      boundary_B_mrr_provenance: SUPPORTED_PATH_CORRECTED
+      boundary_C_project_teamsection: SUPPORTED
+    wording_fixes_applied: 4
+    recorded_at: docs/red-blue/rounds/rb-2026-10-08-formal-021/00_artifact_links.md
+  user_resume_review_status: DELEGATED_APPROVED
+  user_resume_review_delegation: >
+    用户 2026-10-08 指示「再来一轮」，并在被问及 Resume Gate 时选择「照 020 一样委托给我」。
+    Resume Gate 由 Controller 在委托下代行，已批准冻结；用户仍可要求 RESUME_REVISION 并重跑本波。
+
+red_wave_1:
+  red_wave_1_status: COMPLETE
+  red_wave_1_question_count: 100
+  red_wave_1_path: docs/red-blue/rounds/rb-2026-10-08-formal-021/02_red_questions.md
+  # 自指 SHA 无法在本提交内填写；改用可复现的 git 选择器而非留 `none`。
+  red_wave_1_commit_sha: none
+  red_wave_1_commit_ref: 'git log --grep "^rb-021: red wave 1" --format=%H -1'
+  red_wave_1_user_checkpoint: LINK_SENT
+  red_wave_1_isolation:
+    instances: 2
+    blind: true
+    read_allowlist: 01_simulated_resume.md + .agent/red-blue/attack-model.md
+    self_reported_extra_files_opened: none
+    audit_note: >
+      两个实例均自我申报「额外打开：无」。这是自我申报，不是沙箱验证 —— 文件系统共享。
+      round 020 实测过的三个泄漏向量（IMP-020-14）本轮仍未修复，因此本轮带同样的风险。
+  red_wave_1_shape:
+    per_thread: T01 14 · T02 12 · T03 10 · T04 7 · T05 7 · T06 9 · T07 8 · T08 9 · T09 12 · T10 12
+    depth: L1 10 · L2 35 · L3 55
+    verification: 题号 1–100 连续唯一；全部 callback 落在同一半批内；无空题干；无同义句灌水（人工抽查 T01–T10）
+  red_wave_1_red_self_reported_handles:
+    - GraphRAG「同日 rerun 不再低于 baseline」被判为最高真实性风险（样本 5 条、metric 未写明）
+    - Ownership 漂移风险集中在 T01 与 T03（简历用「重构/构建/继续完善」这类团队视角动词）
+    - T01 remote effect 与 T04 recovery authority 各仅 1 题，为配额让位；若 Wave 2 发现答得虚需扩线
+
+blue_wave_1:
+  blue_wave_1_status: COMPLETE
+  blue_wave_1_answer_count: 100
+  blue_wave_1_answers_path: docs/red-blue/rounds/rb-2026-10-08-formal-021/03_blue_answers.md
+  blue_wave_1_architecture_notes_path: docs/red-blue/rounds/rb-2026-10-08-formal-021/03_blue_architecture_notes.md
+  blue_wave_1_architecture_notes_status: COMPLETE_SEALED_FROM_RED
+  blue_wave_1_commit_sha: none
+  blue_wave_1_commit_ref: 'git log --grep "^rb-021: blue wave 1" --format=%H -1'
+  blue_wave_1_user_checkpoint: LINK_SENT
+  blue_wave_1_shape:
+    instances: 2（A1–A50 / A51–A100，同 Skill、同 register、同 Ownership 规则；后半批可读前半批成品以对齐口径）
+    register: 第一层 20–60 秒口语 + 第二层展开 + `事实层`/`证据`/`边界`
+    verification: 答案 A1–A100 连续唯一；100 条 `事实层` 与 100 段 `第二层` 一一对应；A1–A50 结构未变（A15 逐字复核）
+  blue_wave_1_findings:
+    architecture_gap_confirmed: F-01
+    architecture_gap_conditional: F-06
+    implementation_gap: [F-02, F-03, F-08, F-13]
+    evidence_gap: [F-05, F-07]
+    answer_quality_or_docs: [F-07, F-09]
+    semantics_gap: [F-10]
+    contract_pending: [F-04]
+    owner_question: [F-12]
+    not_a_gap: [F-11, F-14, F-15]
+    total: 15
+  blue_wave_1_firewall_disclosure: >
+    Arch 实例自报一次「取证越界」：为定位 ContextOrchestrator / direct-route / ReAct 在 canonical 文档中的落点，
+    对 docs/ 做了一次跨目录 grep，输出顺带带回 docs/red-blue/rounds/** 与本轮 workspace 内其他文件的片段。
+    它声明这些片段未被用作任何 finding 的证据，且文件头已写明该声明。**这是自我申报，非沙箱验证。**
+    这就是 round 020 记录的泄漏向量（IMP-020-14）在本轮的复现 —— 本轮同样带这个风险，不当作已解决。
+
+red_wave_2:
+  red_wave_2_status: COMPLETE
+  blue_wave_1_blind_evaluation_present: true
+  red_wave_2_question_count: 100
+  red_wave_2_path: docs/red-blue/rounds/rb-2026-10-08-formal-021/04_red_wave2_review_and_questions.md
+  red_wave_2_commit_sha: none
+  red_wave_2_commit_ref: 'git log --grep "^rb-021: red wave 2" --format=%H -1'
+  red_wave_2_user_checkpoint: LINK_SENT
+  red_wave_2_shape:
+    part_a: 7 节盲评 + 显式 Credibility Update
+    part_b: Q101–Q200（T01 11 · T02 15 · T03 11 · T04 8 · T05 7 · T06 9 · T07 7 · T08 10 · T09 11 · T10 11）
+    verification: 题号 101–200 连续唯一；头 `not_seen` 与附录审计均声明未开封存笔记与 canonical 源
+    controller_edit: 把 Part A / Part B 由 h1 规范为 h2 以对齐 round 020 的产物形态（未改任何文字内容）
+  red_wave_2_overall_judgement: >
+    候选人诚实、边界感强，但对自己的复杂度几乎没有测量能力；最强的证据（06/08 控制面）落在最不归他的模块上，
+    而他 ownership 内的三条（Tool/MCP、GraphRAG、Context/Memory）恰是收益未证明、部分已无 consumer 的三条。
+    另指出 `事实层/证据/边界` 三段式在 100 题上过度均匀，可能是策略化模板而非临场自削，因此不为强 claim 加分。
+  red_wave_2_found_contradictions:
+    - A97/A98 的 guardrail 硬替换 vs A17 的 baseline-preserving 不变量
+    - A28 的 `GeneralAgent.prepare_context` vs A55/A71 的 `core.py build_context_pack`
+    - A20/A85「样本波动」vs A19/A84「跨轮换了模型」
+    - A38 同题内 `ACTIVATED` vs `ACTIVE`
+  red_wave_2_resume_vs_answer_check:
+    complex_route: CONFIRMED_MUTUALLY_EXCLUSIVE（简历「复杂请求进入 ReAct 路径」vs A8/A56 的 fail-closed）
+    three_disclosed_absences: Blue 未把它们说成「有」；唯一口径移动是 A21 把「未执行」改写成「跑不了 / BLOCKED_PENDING_DATA」
+  red_wave_2_top_followups: [Q113, Q117, Q107]
+
+blue_wave_2:
+  blue_wave_2_status: COMPLETE
+  blue_wave_2_answer_count: 100
+  blue_wave_2_answers_path: docs/red-blue/rounds/rb-2026-10-08-formal-021/04_blue_wave2_answers.md
+  blue_wave_2_architecture_notes_path: docs/red-blue/rounds/rb-2026-10-08-formal-021/04_blue_wave2_architecture_notes.md
+  blue_wave_2_architecture_notes_status: COMPLETE_SEALED_FROM_RED
+  # 自指 SHA 同 Wave 1，改用可复现选择器。
+  blue_wave_2_commit_sha: none
+  blue_wave_2_commit_ref: 'git log --grep "^rb-021: blue wave 2" --format=%H -1'
+  blue_wave_2_user_checkpoint: LINK_SENT
+  blue_wave_2_differential_findings:
+    maintained: [F-01, F-02, F-03, F-05, F-07, F-08, F-10, F-11, F-12, F-13, F-14, F-15]
+    downgraded:
+      - F-06: conditional ARCHITECTURE_GAP → EVIDENCE/GOVERNANCE（耦合被证实，但 gate 存在且解在「整层 on/off + 修协议消融单位」，§13 门槛不满足）
+      - F-04: salt 契约撤回，残余换成「key 含 run_id/step_run_id 的跨 run 身份语义」+ uuid4 角色仍未判
+    upgraded:
+      - F-09 -> N-01: 孤儿组件是模式，非孤例
+    added: [N-01 孤儿组件模式, N-02 Target 词<->代码符号漂移, N-03 仓内已有 RRF 未用于知识检索路径, N-04 冻结协议消融单位缺陷, N-05 delta 塌缩后收敛到「准入」]
+    architecture_gap_after_wave_2: [F-01]
+    conditional_architecture_gap_after_wave_2: []
+  blue_wave_2_f01_sharpening:
+    verdict: 维持并强化；条件性项已清零，F-01 仍是本轮唯一 ARCHITECTURE_GAP
+    new_fact: >
+      准入拦截**不是异常、也不是拒收**，而是返回一个正常的 RuntimeStartRequest：
+      `plan_steps=()`、`capability_ids=()`、`allowed_tools=()`、`strategy_mode=None`、
+      `security_summary={"decision":"block","recommended_action":"refuse","reason":...}`。
+      即被拦下的 complex 请求形成一条**「空 plan 的 run」**——B1 #3 要求「entrant 必有 Plan」，
+      而这正是一个无 Plan 的 entrant，冲突比 Wave 1 的「被挡在门外」更字面。
+    controller_verification: >
+      Controller 独立复核成立：`single_controller_runtime.py:870-911` `_blocked_request`
+      （docstring 明写 "Fail-closed RuntimeStartRequest: no plan, no tools, reason visible"）
+      返回上述字段；`:497-499` `build_workspace_plan_steps` 对 complex+planner=None 是 `return None`、
+      **不抛**；常量 `DYNAMIC_PLAN_RUNTIME_NOT_BOUND` 在 `:103`。
+    owner_and_adr: >
+      token 表作者 A105 自认 Unknown；`docs/decisions/` 无对应 ADR（A159）。
+      ⇒ Wave 1 的 Owner 缺口被 Wave 2 正面确认，不是被抹掉。
+  blue_wave_2_firewall_disclosure: >
+    Arch-2 实例自报一次取证越界：为定位 `KnowledgeGeneration`/`ServingPointer` 对 `docs/` 做了一次跨目录 grep，
+    输出顺带带回归档轮次 `docs/red-blue/rounds/rb-2026-09-13-.../transcript-batch-001-{blue,red}.md`
+    的**两个路径名**（未打开、未读内容）及本轮 `00_manifest.yaml` 路径名；均未用作任何 finding 的证据。
+    这与 Wave 1 Arch 的越界同源，是 IMP-020-14 泄漏向量在本轮的**第二次复现**。**自我申报，非沙箱验证。**
+  blue_wave_2_shape:
+    instances: 2（A101–A150 / A151–A200，同 Skill、同 register、同 Ownership 规则；后半批可读前半批以对齐口径）
+    answers_to: 04_red_wave2_review_and_questions.md（Q101–Q200）
+    coaching_boundary: 两个实例均可读 Red 2 的公开盲评（Part A）；未读 03_blue_architecture_notes.md
+    verification: >
+      A101–A200 连续唯一（missing = []）；100 条 `事实层` 与 100 段 `第二层` 一一对应；
+      前缀（header + A101–A150）sha256 = e492de40…78853d03，追加前后逐字节不变；
+      全文件 LF 无 BOM。A150→A151 无缝，未插入分隔符 / 总结段。
+  blue_wave_2_retractions:
+    note: >
+      后半批（A151–A200）对前半批与 Wave 1 做了 18 处撤回 / 修正；Controller 抽验了其中会改动本轮结论的几条（见下），
+      并复核「是否撤回过头」——未发现前半批被过度撤回。
+    examples:
+      - A169/A68 — 澄清 fusion 与 graph 路由同生共死（fusion 是 graph 层的 guardrail），而非「fusion 无效可删」
+      - A170/A69 — 纠正：H1「weight-0」臂是冻结协议定义，从未执行（`BLOCKED_PENDING_DATA`）
+      - A172/A73+A74 — 纠正：alias 归一化与 seed expansion 是一个耦合机制，分开陈述自相矛盾
+      - A179/A78 — 撤回：`KnowledgeGeneration` 不在 frozen resume 内（Target 词，`src/` 0 字面命中）
+      - A180/A77 — 纠正：`ServingPointer` 在 `src/` 0 命中 ⇒ atomic serving switch 是 Target
+      - A183/A79 — 纠正：不是「只触发 step 1」而是 **0 step**，`DeleteRestoreRuntime` 无生产调用点（仅测试）
+      - A190/A5+A89 — 纠正：**根本没有 cache**，所以隔离天然成立，代价是每次工具调用一次 DB 读
+      - A187/A99 — 澄清：可归因的只有**方向**（两条被挤出），**幅度**不可分离（baseline MRR@10 同日自漂 0.90→1.00）
+      - A199/A97 — 维持 A97 撤回：RRF 确实存在于仓库（`agentic_graphrag.py:876` k=60），只是不在知识检索路径上
+  blue_wave_2_controller_verification:
+    - claim: A183（`DeleteRestoreRuntime` 无生产调用点）
+      verdict: CONFIRMED
+      how: >
+        `grep -rn DeleteRestoreRuntime src/` 仅命中类定义、`PersistentDeleteRestoreCoordinator` 的 field default
+        与 `__init__` re-export；而 `PersistentDeleteRestoreCoordinator` 在 `src/` 内零构造点。调用者只有测试。
+    - claim: A190（`api/services/mcp_user_config.py` 无缓存，每次调用直查）
+      verdict: CONFIRMED
+      how: >
+        全文件无 cache 关键字；service `:141` → DAO `:63` 的 `with session_getter() as session` 后直查 `select(...)`，逐次读库。
+    - claim: Q113（audit 是 qwen-plus、rerun 是 deepseek ⇒ 换模型污染归因）
+      verdict: PREMISE_REFUTED
+      how: >
+        `a25c95a2`（2026-06-20 15:12 "Align multihop eval profile with DeepSeek default"）把受版本管理 profile 的
+        `conversation_model` 由 `qwen-plus` 改为 `deepseek-v4-flash`，且它是 audit `7928df50`、rerun `3da5d742`
+        与输入 `c3d06da3` 的**共同祖先** ⇒ audit 与 rerun 同模型，换模型发生在更早的 smoke。
+        Blue-2a 的撤回成立；且它诚实拒绝把恢复归因给 fusion 修复（baseline 自身数字同日漂移），
+        与本轮边界声明「local 与 baseline 打平」一致。
+    - claim: A169/A68（fusion 是图层护栏，删图路由则 fusion 同去；baseline-preserving 不是全局不变量）
+      verdict: CONFIRMED
+      how: >
+        `platform/services/retrieval/fusion.py:922` `selected[weakest_index] = candidate`；
+        `:943` `floor_preserved = promoted_candidate is None`（地板在被晋升时被允许不保留）；
+        `_rank_key` 返回 `(candidate_group, baseline_rank, …)`，baseline_rank 为主序分量。
+        同处确认 A198：`fusion_score` 只写 metadata、不进返回元组 ⇒ trace-only, decision-free。
+    - claim: A172/A73+A74（alias 归一化与 seed expansion 是同一机制两半）+ A168（fuzzy 分支是 no-op）
+      verdict: CONFIRMED
+      how: >
+        `platform/services/graphrag/entity_alias.py:25-32` `normalize_entity_name`、`:35-61` `resolve_alias`；
+        归一化结果即 seed 站点用的名字 ⇒ 别名层是 seed 命中率的前置条件。
+        fuzzy 分支（`allow_fuzzy` 循环）只做 `normalized_candidate == normalized_known` 精确比较，
+        而该相等已在上面 `if normalized_candidate in normalized_map` 处返回 ⇒ **死分支，永不命中新项**。
+  blue_wave_2_top_followups_resolution:
+    - Q113: PREMISE_REFUTED（见上）; 结论不归因给 fusion 修复
+    - Q117: 未推翻 baseline-preserving；A117/A118 维持「不是全局不变量」（`fusion.py:922` genealogy guardrail 故意驱逐 baseline 项）
+    - Q107: >
+        PREMISE_REFUTED（salt 是确定的）；A107 指出真实幂等边界在 key 的 `run_id`/`step_run_id` 分量上。
+        同 step run 内会过度收敛撞同一 key；跨 run 重跑则 `run_id` 变化 ⇒ 不命中旧 receipt。
+        「跨 run 重发时谁去查旧 receipt」那半段 A107 自标未证明（未审计，未造测试）。
+
+red_evaluation:
+  red_evaluation_status: COMPLETE
+  red_evaluation_path: docs/red-blue/rounds/rb-2026-10-08-formal-021/04_red_evaluation.md
+  red_evaluation_commit_sha: none
+  red_evaluation_commit_ref: 'git log --grep "^rb-021: red final evaluation" --format=%H -1'
+  blind: true
+  overall_verdict: PARTIAL
+  layer_verdicts:
+    resume_authenticity: 可信（受限）
+    ownership: 仅建立到「受限提交切片」
+    implementation: 机制级 PASS / 产物级 PARTIAL
+    complexity_justification: 未建立
+    failure_evidence: 机制级成立 / 收益级不成立
+    fundamentals: 异步与 DB 强、IR 与评测弱
+  findings_count: 15
+  top_followups_final:
+    - Q113: 半关闭 —— A112 用 commit 图重建证明 audit 与 rerun 同模型（排除换模型）；A113 拒绝把恢复归因给 fusion（不可分离）。两条都对候选人不利。
+    - Q117: 承认 A17/A117 是真矛盾 —— baseline-preserving 只在排序阶段成立，guardrail 故意覆盖下限。真解释。
+    - Q107: 攻方前提被证伪（salt 是确定性的）；候选人交出新 handle（key 含 run_id，跨 run 不命中旧 receipt）。是反击，不是补洞。
+  wave_2_effect_on_part_a: >
+    Part A 三处判断被实质更新（最高价值缺口关半、guardrail 矛盾被承认为真、攻方 salt 假设被证伪）；
+    主结论「诚实、边界感强、对复杂度是否值得几乎没有测量能力」未被推翻。
+  independent_convergence_with_sealed_notes: >
+    Red Final 未读封存件，却独立收敛到复诊的若干同结论（fusion guardrail 覆盖 baseline 下限、
+    命名组件无生产调用方、仓内已有 RRF 未用于知识检索路径、准入规则无 ADR）。
+    两个隔离实例独立同结论 —— 记为交叉验证信号，不记为泄漏（其自查声明未越界）。
+  firewall_disclosure: >
+    Red Final 自报无越界；唯一相邻情形是**允许文件正文里**字面列出了封存件的**文件名**
+    （`04_red_wave2_review_and_questions.md` 附录与 `03_blue_answers.md` 的 not_seen 陈述），无内容片段，未据此打开或引用。
+  honesty_statement: >
+    报告自述：对 `file:line` / SHA / run id / 测试名 / 常数的全部判断都是**结构判断**、非核实；
+    不能宣布任何 claim 在真实历史中为假。「不成立 / 收回 / 矛盾」一律指候选人自述层面的成立状态。
+
+blue_reflection_status: COMPLETE
+blue_reflection_path: docs/red-blue/rounds/rb-2026-10-08-formal-021/05_blue_architecture_reflection.md
+blue_reflection_commit_sha: none
+blue_reflection_commit_ref: 'git log --grep "^rb-021: blue architecture reflection" --format=%H -1'
+blue_reflection_result:
+  architecture_gap_final: [F-01]
+  architecture_gap_conditional_final: []
+  f01_contract_anchor: docs/modules/reference.md:237（Native Runtime entrant 一定有 Plan；空 plan 的 run 违反此条）
+  f06_downgrade_upheld: true
+  f04_salt_contract_retracted: true
+  multi_agent_worth_it_today: false
+  red_final_over_strong_statements: [RF-01, RF-02]
+  red_final_unknowns_closed: 2
+  controller_convergence: RF-02 与 Controller 在 00_artifact_links.md 的独立结论一致
+  firewall_disclosure: Reflection 自报无越界（未读 docs/red-blue/rounds/**，grep 限定 src//tests//docs/decisions|architecture|modules）
+
+workflow_retrospective:
+  workflow_retrospective_status: COMPLETE
+  workflow_retrospective_path: docs/red-blue/rounds/rb-2026-10-08-formal-021/06_workflow_retrospective.md
+  resume_builder_reviewed: true
+  red_thinking_framework_reviewed: true
+  blue_candidate_framework_reviewed: true
+  blue_architecture_framework_reviewed: true
+  harness_reviewed: true
+  commit_sha: none
+  commit_ref: 'git log --grep "^rb-021: blue architecture reflection" --format=%H -1'
+  controller_self_reported_defects:
+    - Controller 在 Resume Gate 把第 1 条改成「复杂请求进入 ReAct 路径」，方向错（shipped composition 下是准入 fail closed）
+    - manifest 自 red_wave_1 起为非法 YAML，跨多个 stage commit 无人校验
+    - 等待循环以「文件存在」为条件，命中 336/341 字节占位 blob
+  observed_leak_vectors_this_round: 3（Wave1 Arch 跨目录 grep；Wave2 Arch 跨目录 grep；允许文件正文里字面列出封存件文件名）
+  not_reproduced_from_020: Red Final 与 Blue Reflection 并行完成的时序缺陷本轮未复现（顺序被强制）
+  proposals_count: 10
+  proposals_applied: 0
+  proposals_applied_note: 本轮 findings / verdict 层未应用任何一条；Skill / Harness 提案经批准写入 .agent/red-blue/，下一轮生效
+
+improvement:
+  improvement_ledger_status: APPROVED_FOR_NEXT_ROUND
+  round_report_status: COMPLETE
+  round_report_path: docs/red-blue/rounds/rb-2026-10-08-formal-021/09_round_report.md
+  improvement_ledger_path: docs/red-blue/rounds/rb-2026-10-08-formal-021/09_improvement_ledger.md
+  user_improvement_review_status: PASSED
+  user_improvement_review_path: docs/red-blue/rounds/rb-2026-10-08-formal-021/07_user_feedback.md
+  reviewed_at: 2026-10-08
+  approved_change_count: 20
+  proposed_change_count: 20
+  applied_this_round: none
+  skill_harness_written_this_round: IMP-021-11..IMP-021-19
+  change_effective_scope: NEXT_ROUND_ONLY
+  current_round_verdict_recomputed: false
+  user_decisions:
+    IMP-021-01: approved_minimal_next_round（owner + 最小 decision record；不新增模块或状态机）
+    IMP-021-08: approved_full_table_next_round（G-01..G-06, G-08 落入 next resume candidate）
+    IMP-021-11..IMP-021-19: approved_authorize_edit_agent_red_blue（本次写入，下一轮生效）
+    round_close: archive_then_merge_after_ci_green
+  groups:
+    architecture: [IMP-021-01]
+    implementation: [IMP-021-02, IMP-021-03, IMP-021-04]
+    subtraction: [IMP-021-05]
+    evidence: [IMP-021-06, IMP-021-07]
+    narrative_resume: [IMP-021-08, IMP-021-09, IMP-021-10, IMP-021-20]
+    process_skill_harness: [IMP-021-11, IMP-021-12, IMP-021-13, IMP-021-14, IMP-021-15, IMP-021-16, IMP-021-17, IMP-021-18, IMP-021-19]
+  carried_over_from_020:
+    ids: [IMP-020-04, IMP-020-05, IMP-020-06, IMP-020-07, IMP-020-08, IMP-020-11, IMP-020-12, IMP-020-13, IMP-020-14, IMP-020-15]
+    count: 10
+    status: NEXT_ROUND_ONLY
+
+next_resume:
+  next_resume_candidate_path: docs/red-blue/rounds/rb-2026-10-08-formal-021/10_next_resume_candidate.md
+  next_resume_candidate_status: BUILT_PENDING_USER_RESUME_REVIEW
+  next_resume_source_head_sha: 002ab09a
+  next_resume_blockers: none
+  applied_findings: [G-01, G-02, G-03, G-04, G-05, G-06, G-08]
+
+current_stage: CLOSE
+next_actor: NONE

@@ -165,6 +165,18 @@ protocol.md version
 
 轮末允许改 Skill，但只能 `NEXT_ROUND_ONLY`，不能回头重算当前轮 verdict。
 
+轮末改 Skill 时必须落到对应文件，不要只写在 ledger 里：
+
+```text
+Red 行为 / 攻击规则     → attack-model.md
+Blue 候选 / 架构诊断规则 → defense-model.md
+判据 / 归因 / 审查项     → judge.md
+机械检查 / 协议流程      → protocol.md + templates/round.md
+```
+
+「机械检查」指不需要判断力的检查（YAML 可解析、题号连续、等待条件带阈值、subagent 的 `git -C`），
+统一记在 `templates/round.md` 的 **Stage Commit 强制自检**，由 `protocol.md` 引用。
+
 ## 模式
 
 `CHATGPT_AUTO`：`LOGICAL_GITHUB_MEDIATED`，不能证明物理 blind。

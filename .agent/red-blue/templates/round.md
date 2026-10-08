@@ -275,6 +275,54 @@ improvement_ledger_status: NOT_STARTED | DRAFT_REVIEW | REVISION_REQUESTED | APP
 next_resume_candidate_status: NOT_STARTED | BUILT | BLOCKED
 ```
 
+## Stage Commit 强制自检（Harness）
+
+每个 stage 在 commit 前必须通过下列机械检查；任一项失败即**不得提交**。
+这些检查是**机械的**，不依赖判断力 —— round 021 观测到的三类 Harness 失效，全部属于「检查根本没做」。
+
+```text
+1. manifest YAML 合法
+   yaml.safe_load(00_manifest.yaml) 必须成功，且必需键存在：
+   round_id / zuno_base_sha / current_stage / next_actor。
+   状态总线是非法 YAML 时，后续每个 stage 读到的都是坏状态，且没人会知道。
+
+2. 产物形态匹配
+   新 artifact 必须匹配其类型的最小形态（见下表）。
+   只有占位 header、缺必需章节的 blob 不算产物。
+
+3. 等待条件带阈值
+   禁止用「文件存在」判断 subagent 产出完成 —— 占位文件在 stage 开始前就已存在。
+   等待条件必须包含**尺寸阈值**与/或 **mtime**。
+
+4. subagent 的 git 调用
+   派发带 git 的 subagent 必须给出**绝对仓库路径**，并要求使用 `git -C <repo>`。
+   subagent 不得假设自己的 cwd 是仓库。
+```
+
+### 产物形态清单
+
+| artifact | 必需形态 |
+| --- | --- |
+| `00_manifest.yaml` | 合法 YAML + Identity / Stage State 键齐全 |
+| `01_simulated_resume.md` | `status: FROZEN` 头 + 1 行项目简介 + 1 行技术栈 + 4–6 条 bullet |
+| `02_red_questions.md` | 恰好 100 个题号，连续无缺号无重复 |
+| `03_blue_answers.md` | 恰好 100 个题号，与 Red 一一对应 |
+| `03_blue_architecture_notes.md` | `SEALED_FROM_RED` 头 + 每条 finding 的分类字段齐全 |
+| `04_red_wave2_review_and_questions.md` | Part A blind evaluation + 恰好 100 个新题号 |
+| `04_blue_wave2_answers.md` | 恰好 100 个题号，连续无缺号 |
+| `04_red_evaluation.md` | 盲评头（`blind: true` + seen / not_seen allowlist）+ verdict + findings |
+| `05_blue_architecture_reflection.md` | 分类表 + `ARCHITECTURE_GAP` 判定与依据 |
+| `06_workflow_retrospective.md` | 五项审查（Resume / Red / Blue candidate / Blue architecture / Harness）各一节 |
+| `07_user_feedback.md` | 用户决定记录 + Gate 结果 |
+| `08_session_transcript.md` | 阶段序列 + 执行者实例 + 隔离状态 + 阶段依赖违规 |
+| `09_improvement_ledger.md` | 每条 finding 的 owner / primary_class / status / change_effective_scope |
+| `09_round_report.md` | 面向用户的连续叙述，不是 finding 表的副本 |
+| `10_next_resume_candidate.md` | 变更摘要表 + 简历正文 + 边界声明 + Gate |
+
+**为什么写进模板：** round 021 的 `00_manifest.yaml` 自 `red_wave_1` 起就是**非法 YAML**，
+却跨多个 stage commit 未被发现；一个等待循环把 336 / 341 字节的**占位 blob** 误判为 subagent 产物。
+这两者都不是判断错误，而是**机械检查缺失**。
+
 ## LIVE_INTERVIEW State（可选模式）
 
 若显式使用 `LIVE_INTERVIEW`：

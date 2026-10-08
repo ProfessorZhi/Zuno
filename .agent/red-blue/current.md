@@ -160,8 +160,8 @@ BATCH_DUEL additional artifacts:
 最近两轮正式 Round 均已归档到 `docs/red-blue/rounds/`：
 
 ```text
-rb-2026-09-15-formal-019   CHATGPT_AUTO / LOGICAL_GITHUB_MEDIATED
 rb-2026-10-07-formal-020   AGENT_AUTO   / PHYSICAL_CONTEXT_ISOLATION
+rb-2026-10-08-formal-021   AGENT_AUTO   / PHYSICAL_CONTEXT_ISOLATION
 ```
 
 #018 已归档为 invalid workflow calibration，不计正式 Round。
