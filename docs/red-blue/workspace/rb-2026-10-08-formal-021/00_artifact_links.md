@@ -3,7 +3,7 @@
 Round: `rb-2026-10-08-formal-021`
 State: `ACTIVE` — 本轮进行中
 Base: `cdd2063b341e6919fafaa1395d1f3bdc837329f6`
-Branch: `red-blue/rb-2026-10-08-formal-021` · PR: 开轮后填入
+Branch: `red-blue/rb-2026-10-08-formal-021` · PR [#282](https://github.com/ProfessorZhi/Zuno/pull/282)
 
 > **本轮 base 的由来**：round 020 只批准了 A 组三条 P0（`IMP-020-01/02/03`）。这三条已在 `PR #281`
 > 落地（merge commit `cdd2063b`），`main` 因此前进到本轮的 `zuno_base_sha`。也就是说本轮跑在
