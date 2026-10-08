@@ -34,7 +34,7 @@ Branch: `red-blue/rb-2026-10-08-formal-021` · PR [#282](https://github.com/Prof
 ## Blue — Candidate Answers
 
 - [03_blue_answers.md](03_blue_answers.md) — `COMPLETE`（A1–A100）
-- [04_blue_wave2_answers.md](04_blue_wave2_answers.md) — `NOT_STARTED`
+- [04_blue_wave2_answers.md](04_blue_wave2_answers.md) — `ANSWERS_COMPLETE`（A101–A200，两实例拼接；18 处撤回 / 修正）
 
 ## Blue — Sealed Architecture Review
 

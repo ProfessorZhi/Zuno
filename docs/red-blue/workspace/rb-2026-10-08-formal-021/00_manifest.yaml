@@ -231,12 +231,60 @@ red_wave_2:
   red_wave_2_top_followups: [Q113, Q117, Q107]
 
 blue_wave_2:
-  blue_wave_2_status: NOT_STARTED
-  blue_wave_2_answer_count: 0
+  blue_wave_2_status: ANSWERS_COMPLETE
+  blue_wave_2_answer_count: 100
   blue_wave_2_answers_path: docs/red-blue/workspace/rb-2026-10-08-formal-021/04_blue_wave2_answers.md
   blue_wave_2_architecture_notes_path: docs/red-blue/workspace/rb-2026-10-08-formal-021/04_blue_wave2_architecture_notes.md
+  blue_wave_2_architecture_notes_status: NOT_STARTED
+  # 自指 SHA 同 Wave 1，改用可复现选择器。
   blue_wave_2_commit_sha: none
+  blue_wave_2_commit_ref: git log --grep "^rb-021: blue wave 2" --format=%H -1
   blue_wave_2_user_checkpoint: PENDING
+  blue_wave_2_shape:
+    instances: 2（A101–A150 / A151–A200，同 Skill、同 register、同 Ownership 规则；后半批可读前半批以对齐口径）
+    answers_to: 04_red_wave2_review_and_questions.md（Q101–Q200）
+    coaching_boundary: 两个实例均可读 Red 2 的公开盲评（Part A）；未读 03_blue_architecture_notes.md
+    verification: >
+      A101–A200 连续唯一（missing = []）；100 条 `事实层` 与 100 段 `第二层` 一一对应；
+      前缀（header + A101–A150）sha256 = e492de40…78853d03，追加前后逐字节不变；
+      全文件 LF 无 BOM。A150→A151 无缝，未插入分隔符 / 总结段。
+  blue_wave_2_retractions:
+    note: >
+      后半批（A151–A200）对前半批与 Wave 1 做了 18 处撤回 / 修正；Controller 抽验了其中会改动本轮结论的几条（见下），
+      并复核「是否撤回过头」——未发现前半批被过度撤回。
+    examples:
+      - A169/A68 — 澄清 fusion 与 graph 路由同生共死（fusion 是 graph 层的 guardrail），而非「fusion 无效可删」
+      - A170/A69 — 纠正：H1「weight-0」臂是冻结协议定义，从未执行（`BLOCKED_PENDING_DATA`）
+      - A172/A73+A74 — 纠正：alias 归一化与 seed expansion 是一个耦合机制，分开陈述自相矛盾
+      - A179/A78 — 撤回：`KnowledgeGeneration` 不在 frozen resume 内（Target 词，`src/` 0 字面命中）
+      - A180/A77 — 纠正：`ServingPointer` 在 `src/` 0 命中 ⇒ atomic serving switch 是 Target
+      - A183/A79 — 纠正：不是「只触发 step 1」而是 **0 step**，`DeleteRestoreRuntime` 无生产调用点（仅测试）
+      - A190/A5+A89 — 纠正：**根本没有 cache**，所以隔离天然成立，代价是每次工具调用一次 DB 读
+      - A187/A99 — 澄清：可归因的只有**方向**（两条被挤出），**幅度**不可分离（baseline MRR@10 同日自漂 0.90→1.00）
+      - A199/A97 — 维持 A97 撤回：RRF 确实存在于仓库（`agentic_graphrag.py:876` k=60），只是不在知识检索路径上
+  blue_wave_2_controller_verification:
+    - claim: A183（`DeleteRestoreRuntime` 无生产调用点）
+      verdict: CONFIRMED
+      how: >
+        `grep -rn DeleteRestoreRuntime src/` 仅命中类定义、`PersistentDeleteRestoreCoordinator` 的 field default
+        与 `__init__` re-export；而 `PersistentDeleteRestoreCoordinator` 在 `src/` 内零构造点。调用者只有测试。
+    - claim: A190（`api/services/mcp_user_config.py` 无缓存，每次调用直查）
+      verdict: CONFIRMED
+      how: 全文件无 cache 关键字；service `:141` → DAO `:63` `with session_getter() as session: select(...)`，逐次读库。
+    - claim: Q113（audit 是 qwen-plus、rerun 是 deepseek ⇒ 换模型污染归因）
+      verdict: PREMISE_REFUTED
+      how: >
+        `a25c95a2`（2026-06-20 15:12 "Align multihop eval profile with DeepSeek default"）把受版本管理 profile 的
+        `conversation_model` 由 `qwen-plus` 改为 `deepseek-v4-flash`，且它是 audit `7928df50`、rerun `3da5d742`
+        与输入 `c3d06da3` 的**共同祖先** ⇒ audit 与 rerun 同模型，换模型发生在更早的 smoke。
+        Blue-2a 的撤回成立；且它诚实拒绝把恢复归因给 fusion 修复（baseline 自身数字同日漂移），
+        与本轮边界声明「local 与 baseline 打平」一致。
+  blue_wave_2_top_followups_resolution:
+    - Q113: PREMISE_REFUTED（见上）; 结论不归因给 fusion 修复
+    - Q117: 未推翻 baseline-preserving；A117/A118 维持「不是全局不变量」（`fusion.py:922` genealogy guardrail 故意驱逐 baseline 项）
+    - Q107: PREMISE_REFUTED（salt 是确定的）；A107 指出真实幂等边界在 key 的 `run_id`/`step_run_id` 分量上
+      —— 同 step run 内会过度收敛撞同一 key，跨 run 重跑则 `run_id` 变化 ⇒ 不命中旧 receipt；
+      「跨 run 重发时谁去查旧 receipt」那半段 A107 自标未证明（未审计，未造测试）
 
 red_evaluation_status: NOT_STARTED
 red_evaluation_commit_sha: none
@@ -269,5 +317,5 @@ next_resume:
   next_resume_source_head_sha: none
   next_resume_blockers: none
 
-current_stage: BATCH_CHECKPOINT_RED_2
+current_stage: BLUE_WAVE_2
 next_actor: BLUE
