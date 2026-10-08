@@ -29,7 +29,7 @@ Branch: `red-blue/rb-2026-10-08-formal-021` · PR [#282](https://github.com/Prof
 
 - [02_red_questions.md](02_red_questions.md) — `COMPLETE`（100 题，两个互不可见实例拼接）
 - [04_red_wave2_review_and_questions.md](04_red_wave2_review_and_questions.md) — `COMPLETE`（Part A 盲评 7 节 + Q101–Q200）
-- [04_red_evaluation.md](04_red_evaluation.md) — `NOT_STARTED`
+- [04_red_evaluation.md](04_red_evaluation.md) — `COMPLETE`（盲评总判 PARTIAL；15 findings）
 
 ## Blue — Candidate Answers
 

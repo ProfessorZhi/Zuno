@@ -333,8 +333,39 @@ blue_wave_2:
         同 step run 内会过度收敛撞同一 key；跨 run 重跑则 `run_id` 变化 ⇒ 不命中旧 receipt。
         「跨 run 重发时谁去查旧 receipt」那半段 A107 自标未证明（未审计，未造测试）。
 
-red_evaluation_status: NOT_STARTED
-red_evaluation_commit_sha: none
+red_evaluation:
+  red_evaluation_status: COMPLETE
+  red_evaluation_path: docs/red-blue/workspace/rb-2026-10-08-formal-021/04_red_evaluation.md
+  red_evaluation_commit_sha: none
+  red_evaluation_commit_ref: 'git log --grep "^rb-021: red final evaluation" --format=%H -1'
+  blind: true
+  overall_verdict: PARTIAL
+  layer_verdicts:
+    resume_authenticity: 可信（受限）
+    ownership: 仅建立到「受限提交切片」
+    implementation: 机制级 PASS / 产物级 PARTIAL
+    complexity_justification: 未建立
+    failure_evidence: 机制级成立 / 收益级不成立
+    fundamentals: 异步与 DB 强、IR 与评测弱
+  findings_count: 15
+  top_followups_final:
+    - Q113: 半关闭 —— A112 用 commit 图重建证明 audit 与 rerun 同模型（排除换模型）；A113 拒绝把恢复归因给 fusion（不可分离）。两条都对候选人不利。
+    - Q117: 承认 A17/A117 是真矛盾 —— baseline-preserving 只在排序阶段成立，guardrail 故意覆盖下限。真解释。
+    - Q107: 攻方前提被证伪（salt 是确定性的）；候选人交出新 handle（key 含 run_id，跨 run 不命中旧 receipt）。是反击，不是补洞。
+  wave_2_effect_on_part_a: >
+    Part A 三处判断被实质更新（最高价值缺口关半、guardrail 矛盾被承认为真、攻方 salt 假设被证伪）；
+    主结论「诚实、边界感强、对复杂度是否值得几乎没有测量能力」未被推翻。
+  independent_convergence_with_sealed_notes: >
+    Red Final 未读封存件，却独立收敛到复诊的若干同结论（fusion guardrail 覆盖 baseline 下限、
+    命名组件无生产调用方、仓内已有 RRF 未用于知识检索路径、准入规则无 ADR）。
+    两个隔离实例独立同结论 —— 记为交叉验证信号，不记为泄漏（其自查声明未越界）。
+  firewall_disclosure: >
+    Red Final 自报无越界；唯一相邻情形是**允许文件正文里**字面列出了封存件的**文件名**
+    （`04_red_wave2_review_and_questions.md` 附录与 `03_blue_answers.md` 的 not_seen 陈述），无内容片段，未据此打开或引用。
+  honesty_statement: >
+    报告自述：对 `file:line` / SHA / run id / 测试名 / 常数的全部判断都是**结构判断**、非核实；
+    不能宣布任何 claim 在真实历史中为假。「不成立 / 收回 / 矛盾」一律指候选人自述层面的成立状态。
+
 blue_reflection_status: NOT_STARTED
 blue_reflection_commit_sha: none
 
@@ -364,5 +395,5 @@ next_resume:
   next_resume_source_head_sha: none
   next_resume_blockers: none
 
-current_stage: BATCH_CHECKPOINT_BLUE_2
-next_actor: NONE
+current_stage: BLUE_ARCHITECTURE_REFLECTION
+next_actor: BLUE
