@@ -154,7 +154,7 @@ red_wave_1:
   red_wave_1_path: docs/red-blue/workspace/rb-2026-10-08-formal-021/02_red_questions.md
   # 自指 SHA 无法在本提交内填写；改用可复现的 git 选择器而非留 `none`。
   red_wave_1_commit_sha: none
-  red_wave_1_commit_ref: git log --grep "^rb-021: red wave 1" --format=%H -1
+  red_wave_1_commit_ref: 'git log --grep "^rb-021: red wave 1" --format=%H -1'
   red_wave_1_user_checkpoint: LINK_SENT
   red_wave_1_isolation:
     instances: 2
@@ -180,7 +180,7 @@ blue_wave_1:
   blue_wave_1_architecture_notes_path: docs/red-blue/workspace/rb-2026-10-08-formal-021/03_blue_architecture_notes.md
   blue_wave_1_architecture_notes_status: COMPLETE_SEALED_FROM_RED
   blue_wave_1_commit_sha: none
-  blue_wave_1_commit_ref: git log --grep "^rb-021: blue wave 1" --format=%H -1
+  blue_wave_1_commit_ref: 'git log --grep "^rb-021: blue wave 1" --format=%H -1'
   blue_wave_1_user_checkpoint: LINK_SENT
   blue_wave_1_shape:
     instances: 2（A1–A50 / A51–A100，同 Skill、同 register、同 Ownership 规则；后半批可读前半批成品以对齐口径）
@@ -209,7 +209,7 @@ red_wave_2:
   red_wave_2_question_count: 100
   red_wave_2_path: docs/red-blue/workspace/rb-2026-10-08-formal-021/04_red_wave2_review_and_questions.md
   red_wave_2_commit_sha: none
-  red_wave_2_commit_ref: git log --grep "^rb-021: red wave 2" --format=%H -1
+  red_wave_2_commit_ref: 'git log --grep "^rb-021: red wave 2" --format=%H -1'
   red_wave_2_user_checkpoint: LINK_SENT
   red_wave_2_shape:
     part_a: 7 节盲评 + 显式 Credibility Update
@@ -238,7 +238,7 @@ blue_wave_2:
   blue_wave_2_architecture_notes_status: NOT_STARTED
   # 自指 SHA 同 Wave 1，改用可复现选择器。
   blue_wave_2_commit_sha: none
-  blue_wave_2_commit_ref: git log --grep "^rb-021: blue wave 2" --format=%H -1
+  blue_wave_2_commit_ref: 'git log --grep "^rb-021: blue wave 2" --format=%H -1'
   blue_wave_2_user_checkpoint: PENDING
   blue_wave_2_shape:
     instances: 2（A101–A150 / A151–A200，同 Skill、同 register、同 Ownership 规则；后半批可读前半批以对齐口径）
@@ -270,7 +270,8 @@ blue_wave_2:
         与 `__init__` re-export；而 `PersistentDeleteRestoreCoordinator` 在 `src/` 内零构造点。调用者只有测试。
     - claim: A190（`api/services/mcp_user_config.py` 无缓存，每次调用直查）
       verdict: CONFIRMED
-      how: 全文件无 cache 关键字；service `:141` → DAO `:63` `with session_getter() as session: select(...)`，逐次读库。
+      how: >
+        全文件无 cache 关键字；service `:141` → DAO `:63` 的 `with session_getter() as session` 后直查 `select(...)`，逐次读库。
     - claim: Q113（audit 是 qwen-plus、rerun 是 deepseek ⇒ 换模型污染归因）
       verdict: PREMISE_REFUTED
       how: >
@@ -279,12 +280,27 @@ blue_wave_2:
         与输入 `c3d06da3` 的**共同祖先** ⇒ audit 与 rerun 同模型，换模型发生在更早的 smoke。
         Blue-2a 的撤回成立；且它诚实拒绝把恢复归因给 fusion 修复（baseline 自身数字同日漂移），
         与本轮边界声明「local 与 baseline 打平」一致。
+    - claim: A169/A68（fusion 是图层护栏，删图路由则 fusion 同去；baseline-preserving 不是全局不变量）
+      verdict: CONFIRMED
+      how: >
+        `platform/services/retrieval/fusion.py:922` `selected[weakest_index] = candidate`；
+        `:943` `floor_preserved = promoted_candidate is None`（地板在被晋升时被允许不保留）；
+        `_rank_key` 返回 `(candidate_group, baseline_rank, …)`，baseline_rank 为主序分量。
+        同处确认 A198：`fusion_score` 只写 metadata、不进返回元组 ⇒ trace-only, decision-free。
+    - claim: A172/A73+A74（alias 归一化与 seed expansion 是同一机制两半）+ A168（fuzzy 分支是 no-op）
+      verdict: CONFIRMED
+      how: >
+        `platform/services/graphrag/entity_alias.py:25-32` `normalize_entity_name`、`:35-61` `resolve_alias`；
+        归一化结果即 seed 站点用的名字 ⇒ 别名层是 seed 命中率的前置条件。
+        fuzzy 分支（`allow_fuzzy` 循环）只做 `normalized_candidate == normalized_known` 精确比较，
+        而该相等已在上面 `if normalized_candidate in normalized_map` 处返回 ⇒ **死分支，永不命中新项**。
   blue_wave_2_top_followups_resolution:
     - Q113: PREMISE_REFUTED（见上）; 结论不归因给 fusion 修复
     - Q117: 未推翻 baseline-preserving；A117/A118 维持「不是全局不变量」（`fusion.py:922` genealogy guardrail 故意驱逐 baseline 项）
-    - Q107: PREMISE_REFUTED（salt 是确定的）；A107 指出真实幂等边界在 key 的 `run_id`/`step_run_id` 分量上
-      —— 同 step run 内会过度收敛撞同一 key，跨 run 重跑则 `run_id` 变化 ⇒ 不命中旧 receipt；
-      「跨 run 重发时谁去查旧 receipt」那半段 A107 自标未证明（未审计，未造测试）
+    - Q107: >
+        PREMISE_REFUTED（salt 是确定的）；A107 指出真实幂等边界在 key 的 `run_id`/`step_run_id` 分量上。
+        同 step run 内会过度收敛撞同一 key；跨 run 重跑则 `run_id` 变化 ⇒ 不命中旧 receipt。
+        「跨 run 重发时谁去查旧 receipt」那半段 A107 自标未证明（未审计，未造测试）。
 
 red_evaluation_status: NOT_STARTED
 red_evaluation_commit_sha: none
