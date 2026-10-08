@@ -1,0 +1,95 @@
+# Round 021 Artifact Links
+
+Round: `rb-2026-10-08-formal-021`
+State: `ACTIVE` — 本轮进行中
+Base: `cdd2063b341e6919fafaa1395d1f3bdc837329f6`
+Branch: `red-blue/rb-2026-10-08-formal-021` · PR: 开轮后填入
+
+> **本轮 base 的由来**：round 020 只批准了 A 组三条 P0（`IMP-020-01/02/03`）。这三条已在 `PR #281`
+> 落地（merge commit `cdd2063b`），`main` 因此前进到本轮的 `zuno_base_sha`。也就是说本轮跑在
+> **已经修掉那三条缺陷的树**上 —— 这是 round 020 刻意避免「base 落后 main ⇒ Red 重新发现已落地改动」
+> 那个失败模式的做法。
+
+| 项 | 值 |
+| --- | --- |
+| `mode` | `AGENT_AUTO` |
+| `firewall_strength` | `PHYSICAL_CONTEXT_ISOLATION` |
+| `strict_blind_red_certification` | `true` |
+| Interview Threads | 10（与 020 相同，taxonomy 未改） |
+| Wave 规模 | 100 问 / 100 答 × 2 波（共 400 条） |
+| `resume_review_gate` | `DELEGATED`（用户 2026-10-08 委托 Controller 代行） |
+| `improvement_review_gate` | `REQUIRED`（未过） |
+
+## Resume
+
+- [01_simulated_resume.md](01_simulated_resume.md) — `NOT_STARTED`
+- [10_next_resume_candidate.md](10_next_resume_candidate.md) — `NOT_STARTED`
+
+## Red
+
+- [02_red_questions.md](02_red_questions.md) — `NOT_STARTED`
+- [04_red_wave2_review_and_questions.md](04_red_wave2_review_and_questions.md) — `NOT_STARTED`
+- [04_red_evaluation.md](04_red_evaluation.md) — `NOT_STARTED`
+
+## Blue — Candidate Answers
+
+- [03_blue_answers.md](03_blue_answers.md) — `NOT_STARTED`
+- [04_blue_wave2_answers.md](04_blue_wave2_answers.md) — `NOT_STARTED`
+
+## Blue — Sealed Architecture Review
+
+- [03_blue_architecture_notes.md](03_blue_architecture_notes.md) — `NOT_STARTED / SEALED_FROM_RED`
+- [04_blue_wave2_architecture_notes.md](04_blue_wave2_architecture_notes.md) — `NOT_STARTED / SEALED_FROM_RED`
+- [05_blue_architecture_reflection.md](05_blue_architecture_reflection.md) — `NOT_STARTED`
+
+## Controller
+
+- [06_workflow_retrospective.md](06_workflow_retrospective.md) — `NOT_STARTED`
+- [07_user_feedback.md](07_user_feedback.md) — `NOT_STARTED`
+- [08_session_transcript.md](08_session_transcript.md) — `NOT_STARTED`
+- [09_improvement_ledger.md](09_improvement_ledger.md) — `NOT_STARTED`
+- [09_round_report.md](09_round_report.md) — `NOT_STARTED`
+- [00_manifest.yaml](00_manifest.yaml) — `ACTIVE`
+
+---
+
+## Controller notes（Red 不可读）
+
+### Resume boundary declaration
+
+约束继承自 round 020 的 improvement ledger 与 `docs/governance/interview-acceptance-standard.md §3`。
+**Red Wave 1 只读 `01_simulated_resume.md`，不得读本页。**
+
+**明确不写：**
+
+- **不写 GraphRAG「效果提升 / 多跳检索更准」。** 独立 holdout 与 leave-one-out ablation 尚未执行
+  （`docs/evidence/current-eval-baseline.md` 为 `MEASUREMENT_BLOCKED`）；已记录的只是 regression 修复与 baseline 保持。
+  冻结协议见 `docs/governance/rb019-graphrag-ablation-protocol.md`。
+- **不写任何 run-to-run 百分比。** `project-fact-provenance.md:96` 明确写着 baseline 的 `MRR@10` 在同日 rerun 中也从
+  `0.90` 变为 `1.00`，因此「修复前后」框架在本样本上不成立。正确说法是 local 与 baseline **打平**。
+- **不写 Production、规模、QPS、Latency、Cost、法院数量、用户量、准确率或任何收益数字。** 全部为 Unknown / Measurement Needed。
+- **不写「我设计了整个 Agent Runtime / 整个 GraphRAG / 全部后端」。** 加入项目时系统已存在（约 2026.03，非 Greenfield）。
+- **不写任何无法取证的 Personal Ownership。** 见 `docs/project/README.md`「团队与个人参与的边界」（由 `IMP-020-10` 写入）。
+
+**可以写，且经得起追问：** Tool/MCP binding、config injection、route boundary、GraphRAG baseline-preserving fusion、
+seed expansion / alias / path ranking、Context/Memory V2 与 readback 收紧，都有公开提交链支撑。
+
+### Gate 说明
+
+- `resume_review_gate: DELEGATED` —— 用户 2026-10-08 在「再来一轮」后选择「照 020 一样委托给我」，
+  Resume Gate 由 Controller 在委托下代行；用户仍可要求 `RESUME_REVISION` 并重跑本波。
+- `improvement_review_gate: REQUIRED（未过）` —— 本轮 improvement ledger **不自动应用**。
+
+### 已知结构性冲突
+
+active round 分支的 Draft PR **无法**通过 `tests/repo/test_docs_entrypoints.py`：该测试要求
+`.agent/red-blue/current.md` 为 `state: no-active`，而 active round 必然是 `state: active-red-blue`。
+这是刻意设计的结构性冲突，不是本轮回归。019 / 020 都用「归档分支收口」处理，本轮沿用同一方式：
+workspace 移入 `docs/red-blue/rounds/`、`current.md` 复位为非激活后，CI 才应转绿。
+
+### 隔离的诚实边界
+
+subagent 的**上下文隔离是物理的**（独立 context、无共享记忆）；**文件系统是共享的**，
+允许读哪些文件靠指令约束 + 事后审计，不是沙箱。round 020 已实测出三个泄漏向量
+（见其 `06_workflow_retrospective.md §4.2`）并在 ledger 的 `IMP-020-14` 里给出修法；
+该条尚未生效（Skill / Harness blob 与 020 相同），因此**本轮仍带同样的泄漏向量**。

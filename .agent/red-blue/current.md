@@ -1,14 +1,14 @@
 # Current Red / Blue Round
 
-state: `no-active`
-active_round: `none`
-mode: `none`
+state: `active-red-blue`
+active_round: `rb-2026-10-08-formal-021`
+mode: `AGENT_AUTO`
 execution_mode: `BATCH_DUEL`
-stage: `none`
-workspace_path: `none`
-simulated_resume: `none`
-target_role: `none`
-interview_stage: `none`
+stage: `ROUND_INIT`
+workspace_path: `docs/red-blue/workspace/rb-2026-10-08-formal-021/`
+simulated_resume: `docs/red-blue/workspace/rb-2026-10-08-formal-021/01_simulated_resume.md`
+target_role: `Agent 开发工程师 / 大模型应用工程师 / AI 应用工程师`
+interview_stage: `技术一面 / 项目深挖`
 pressure_suite_count: `100`
 seed_question_target: `8`
 live_followups: `DYNAMIC`
@@ -18,30 +18,30 @@ blue_wave_1_answer_target: `100`
 red_wave_2_question_target: `100`
 blue_wave_2_answer_target: `100`
 batch_checkpoint_policy: `LINK_ONLY_PAUSE`
-resume_review_gate: `none`
+resume_review_gate: `REQUIRED`
 red_review_gate: `optional-compatibility`
-improvement_review_gate: `none`
-red_questions_status: `none`
-red_wave_1_status: `none`
-blue_wave_1_status: `none`
-red_wave_2_status: `none`
-blue_wave_2_status: `none`
+improvement_review_gate: `REQUIRED`
+red_questions_status: `NOT_STARTED`
+red_wave_1_status: `NOT_STARTED`
+blue_wave_1_status: `NOT_STARTED`
+red_wave_2_status: `NOT_STARTED`
+blue_wave_2_status: `NOT_STARTED`
 live_interview_status: `NOT_STARTED`
 live_turn_index: `0`
-next_actor: `NONE`
-red_evaluation_status: `none`
-blue_reflection_status: `none`
-workflow_retrospective_status: `none`
-improvement_ledger_status: `none`
-round_report_status: `none`
-next_resume_candidate_status: `none`
-round_branch: `none`
-round_pr: `none`
-last_consumed_head_sha: `none`
+next_actor: `CONTROLLER`
+red_evaluation_status: `NOT_STARTED`
+blue_reflection_status: `NOT_STARTED`
+workflow_retrospective_status: `NOT_STARTED`
+improvement_ledger_status: `NOT_STARTED`
+round_report_status: `NOT_STARTED`
+next_resume_candidate_status: `NOT_STARTED`
+round_branch: `red-blue/rb-2026-10-08-formal-021`
+round_pr: `PENDING`
+last_consumed_head_sha: `cdd2063b341e6919fafaa1395d1f3bdc837329f6`
 github_state_bus: `required`
 stage_handoff: `commit-then-reread`
-firewall_strength: `none`
-strict_blind_red_certification: `false`
+firewall_strength: `PHYSICAL_CONTEXT_ISOLATION`
+strict_blind_red_certification: `true`
 transcript_policy: `full-observable-role-io`
 archive_live: `true`
 
