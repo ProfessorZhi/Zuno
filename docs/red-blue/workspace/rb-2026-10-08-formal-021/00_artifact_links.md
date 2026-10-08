@@ -46,7 +46,7 @@ Branch: `red-blue/rb-2026-10-08-formal-021` · PR [#282](https://github.com/Prof
 
 - [06_workflow_retrospective.md](06_workflow_retrospective.md) — `COMPLETE`（5 项审查，10 提案）
 - [07_user_feedback.md](07_user_feedback.md) — `NOT_STARTED`
-- [08_session_transcript.md](08_session_transcript.md) — `NOT_STARTED`
+- [08_session_transcript.md](08_session_transcript.md) — `COMPLETE`（阶段序列 + 隔离状态 + Controller 违规登记）
 - [09_improvement_ledger.md](09_improvement_ledger.md) — `DRAFT_REVIEW`（20 条提案，未应用）
 - [09_round_report.md](09_round_report.md) — `COMPLETE`
 - [00_manifest.yaml](00_manifest.yaml) — `ACTIVE`
