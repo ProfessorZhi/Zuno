@@ -88,7 +88,9 @@ class RetrievalPlanner:
         index_version = dict(request.index_version or {})
         index_health = dict(request.index_health or {})
         scope_status = str(scope_policy.get("status") or "active").strip().lower()
-        graph_health = str(index_health.get("graph") or index_health.get("graph_status") or "ready").strip().lower()
+        # 缺失即未就绪（fail-closed）：没有 health 记录时不能假定 graph 可用。
+        # 下面的 graph_available=False 会走有记录的降级路径，而不是静默用图作答。
+        graph_health = str(index_health.get("graph") or index_health.get("graph_status") or "unavailable").strip().lower()
         community_health = str(
             index_health.get("community")
             or index_health.get("community_status")

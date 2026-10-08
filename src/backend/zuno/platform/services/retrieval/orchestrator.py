@@ -858,7 +858,7 @@ class RetrievalOrchestrator:
         community_available = str((retrieval_options.get("index_health") or {}).get("community") or "").strip().lower() in {"ready", "active"}
         graph_available = (
             retrieval_options.get("knowledge_capability") == "rag_graph"
-            and str((retrieval_options.get("index_health") or {}).get("graph") or "ready").strip().lower()
+            and str((retrieval_options.get("index_health") or {}).get("graph") or "unavailable").strip().lower()
             not in {"unavailable", "failed", "stale"}
         )
         graph_route_attempted = internal_route in {"local_graphrag", "drift_like"}

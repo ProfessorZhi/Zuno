@@ -15,15 +15,25 @@ class MCPUserConfigDao:
             session.flush()
 
     @classmethod
-    async def get_mcp_user_config_from_id(cls, config_id: str):
+    async def get_mcp_user_config_from_id(cls, config_id: str, user_id: str):
         with session_getter() as session:
-            sql = select(MCPUserConfigTable).where(MCPUserConfigTable.id == config_id)
+            sql = select(MCPUserConfigTable).where(
+                and_(
+                    MCPUserConfigTable.id == config_id,
+                    MCPUserConfigTable.user_id == user_id,
+                )
+            )
             return session.exec(sql).first()
 
     @classmethod
-    async def delete_mcp_user_config(cls, config_id: str):
+    async def delete_mcp_user_config(cls, config_id: str, user_id: str):
         with session_getter() as session:
-            sql = delete(MCPUserConfigTable).where(MCPUserConfigTable.id == config_id)
+            sql = delete(MCPUserConfigTable).where(
+                and_(
+                    MCPUserConfigTable.id == config_id,
+                    MCPUserConfigTable.user_id == user_id,
+                )
+            )
             session.exec(sql)
             session.flush()
 

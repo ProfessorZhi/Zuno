@@ -483,10 +483,10 @@ class RagHandler:
                 "graph": str(knowledge_config.get("graph_index_settings", {}).get("index_version") or "v1"),
             },
             "index_health": {
-                "vector": str(knowledge_config.get("index_settings", {}).get("health_status") or "ready"),
+                # 缺失即未就绪（fail-closed）：读不到 health 记录时不能假定索引可用。
+                "vector": str(knowledge_config.get("index_settings", {}).get("health_status") or "unavailable"),
                 "graph": str(
-                    knowledge_config.get("graph_index_settings", {}).get("health_status")
-                    or ("ready" if knowledge_config.get("index_capability") == "rag_graph" else "unavailable")
+                    knowledge_config.get("graph_index_settings", {}).get("health_status") or "unavailable"
                 ),
                 "community": str(
                     knowledge_config.get("graph_index_settings", {}).get("community_report_status")

@@ -71,12 +71,17 @@ class MCPUserConfigService:
             raise ValueError(f"Create MCP User Config Error: {err}")
 
     @classmethod
-    async def get_mcp_user_config_from_id(cls, config_id: str):
+    async def get_mcp_user_config_from_id(cls, config_id: str, user_id: str):
         try:
-            results = await MCPUserConfigDao.get_mcp_user_config_from_id(config_id)
-            return results.to_dict()
+            results = await MCPUserConfigDao.get_mcp_user_config_from_id(config_id, user_id)
         except Exception as err:
             raise ValueError(f"Get MCP User Config From ID Error: {err}")
+
+        if not results:
+            # 不区分「不存在」与「属于他人」：两种情况返回同一错误，避免用 config_id 探测他人记录是否存在。
+            raise ValueError("No permission to access this MCP user config.")
+
+        return results.to_dict()
 
     @classmethod
     async def update_mcp_user_config(cls, mcp_server_id: str, user_id: str, config: Optional[List[dict]] = None):
@@ -118,9 +123,17 @@ class MCPUserConfigService:
             await MCPUserConfigDao.update_mcp_user_config(mcp_server_id, user_id, merged_config)
 
     @classmethod
-    async def delete_mcp_user_config(cls, config_id: str):
+    async def delete_mcp_user_config(cls, config_id: str, user_id: str):
         try:
-            return await MCPUserConfigDao.delete_mcp_user_config(config_id)
+            record = await MCPUserConfigDao.get_mcp_user_config_from_id(config_id, user_id)
+        except Exception as err:
+            raise ValueError(f"Delete MCP User Config Error: {err}")
+
+        if not record:
+            raise ValueError("No permission to access this MCP user config.")
+
+        try:
+            return await MCPUserConfigDao.delete_mcp_user_config(config_id, user_id)
         except Exception as err:
             raise ValueError(f"Delete MCP User Config Error: {err}")
 
