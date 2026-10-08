@@ -174,12 +174,34 @@ red_wave_1:
     - T01 remote effect 与 T04 recovery authority 各仅 1 题，为配额让位；若 Wave 2 发现答得虚需扩线
 
 blue_wave_1:
-  blue_wave_1_status: NOT_STARTED
-  blue_wave_1_answer_count: 0
+  blue_wave_1_status: COMPLETE
+  blue_wave_1_answer_count: 100
   blue_wave_1_answers_path: docs/red-blue/workspace/rb-2026-10-08-formal-021/03_blue_answers.md
   blue_wave_1_architecture_notes_path: docs/red-blue/workspace/rb-2026-10-08-formal-021/03_blue_architecture_notes.md
+  blue_wave_1_architecture_notes_status: COMPLETE_SEALED_FROM_RED
   blue_wave_1_commit_sha: none
-  blue_wave_1_user_checkpoint: PENDING
+  blue_wave_1_commit_ref: git log --grep "^rb-021: blue wave 1" --format=%H -1
+  blue_wave_1_user_checkpoint: LINK_SENT
+  blue_wave_1_shape:
+    instances: 2（A1–A50 / A51–A100，同 Skill、同 register、同 Ownership 规则；后半批可读前半批成品以对齐口径）
+    register: 第一层 20–60 秒口语 + 第二层展开 + `事实层`/`证据`/`边界`
+    verification: 答案 A1–A100 连续唯一；100 条 `事实层` 与 100 段 `第二层` 一一对应；A1–A50 结构未变（A15 逐字复核）
+  blue_wave_1_findings:
+    architecture_gap_confirmed: F-01
+    architecture_gap_conditional: F-06
+    implementation_gap: [F-02, F-03, F-08, F-13]
+    evidence_gap: [F-05, F-07]
+    answer_quality_or_docs: [F-07, F-09]
+    semantics_gap: [F-10]
+    contract_pending: [F-04]
+    owner_question: [F-12]
+    not_a_gap: [F-11, F-14, F-15]
+    total: 15
+  blue_wave_1_firewall_disclosure: >
+    Arch 实例自报一次「取证越界」：为定位 ContextOrchestrator / direct-route / ReAct 在 canonical 文档中的落点，
+    对 docs/ 做了一次跨目录 grep，输出顺带带回 docs/red-blue/rounds/** 与本轮 workspace 内其他文件的片段。
+    它声明这些片段未被用作任何 finding 的证据，且文件头已写明该声明。**这是自我申报，非沙箱验证。**
+    这就是 round 020 记录的泄漏向量（IMP-020-14）在本轮的复现 —— 本轮同样带这个风险，不当作已解决。
 
 red_wave_2:
   red_wave_2_status: NOT_STARTED
@@ -228,5 +250,5 @@ next_resume:
   next_resume_source_head_sha: none
   next_resume_blockers: none
 
-current_stage: BATCH_CHECKPOINT_RED_1
-next_actor: BLUE
+current_stage: BATCH_CHECKPOINT_BLUE_1
+next_actor: RED

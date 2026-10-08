@@ -33,12 +33,12 @@ Branch: `red-blue/rb-2026-10-08-formal-021` · PR [#282](https://github.com/Prof
 
 ## Blue — Candidate Answers
 
-- [03_blue_answers.md](03_blue_answers.md) — `NOT_STARTED`
+- [03_blue_answers.md](03_blue_answers.md) — `COMPLETE`（A1–A100）
 - [04_blue_wave2_answers.md](04_blue_wave2_answers.md) — `NOT_STARTED`
 
 ## Blue — Sealed Architecture Review
 
-- [03_blue_architecture_notes.md](03_blue_architecture_notes.md) — `NOT_STARTED / SEALED_FROM_RED`
+- [03_blue_architecture_notes.md](03_blue_architecture_notes.md) — `COMPLETE / SEALED_FROM_RED`（15 findings）
 - [04_blue_wave2_architecture_notes.md](04_blue_wave2_architecture_notes.md) — `NOT_STARTED / SEALED_FROM_RED`
 - [05_blue_architecture_reflection.md](05_blue_architecture_reflection.md) — `NOT_STARTED`
 
@@ -113,6 +113,53 @@ Resume 冻结前，由**一个隔离 subagent** 在 base `cdd2063b` 上对候选
 `git rev-parse` 返回 unknown revision」。Controller 复核：`git cat-file -t cdd2063b341e…` → `commit`，
 且它同时等于 `origin/main` 与本 round 分支的 merge-base。**该 base 有效，manifest 无需修改。**
 subagent 的 git 命令是在非仓库 cwd 下执行的 —— 这是 Harness 侧的 cwd 传递缺陷，不是仓库状态问题。
+
+### ⚠️ Resume Gate 自身引入的一处错误（本轮发现，NEXT_ROUND_ONLY，不回写 frozen resume）
+
+**这条要记在 Resume Builder 头上 —— 是 Controller 自己在 Resume Gate 改出来的。**
+
+Blue Wave 1 的 **A56** 指出：`complex` 分支需要一个注入的 DAG planner。Controller 独立复核确认：
+
+- `src/backend/zuno/main.py:113` —— 产品装配处 `dynamic_dag_planner=None`。
+- `src/backend/zuno/platform/services/workspace/single_controller_runtime.py:818` —— `elif complex_unbound:`
+  → `admission_reason = DYNAMIC_PLAN_RUNTIME_NOT_BOUND`，紧邻注释明确写着 unbound 组合
+  **「must never fake a fixed three-step DAG or fall back to a direct answer」**。
+
+⇒ 在该产品组合下，**复杂请求是在规划准入处 fail closed 被拦下，而不是「进入 ReAct 路径」**。
+
+而 `01_simulated_resume.md` 第 1 条现在写的正是「复杂请求进入 ReAct 路径」——
+这是本 Controller 在 Resume Gate 把 round 020 的「复杂或参数不完整任务回落 ReAct」改写后的结果。
+**改错了方向**：我依据的核验只证到 `_plan_kind_for` 会返回 `simple`/`complex` 这个**分类**存在，
+没有继续查这个分类在**产品装配下**被谁消费。核验停在了「机制存在」而不是「机制被这样使用」。
+
+**处置：不回写 frozen resume。** 本轮 frozen resume 与已完成的 Red/Blue 产物保持不动（verdict immutable）。
+该条进入 `09_improvement_ledger.md`，并必须在 `10_next_resume_candidate.md` 里改成可复核措辞，例如
+「复杂请求需要绑定动态规划器，未绑定时在准入处 fail closed」——具体措辞由下一轮 Resume Gate 连同核验一起定。
+
+**这是一次「自我发现」而非外部发现**：A56 是 Blue 自己答出来的，Controller 只是把它追到了代码。因此它同时是
+**Resume Builder 缺陷**与**取证深度缺陷**（Resume Gate 的核验清单缺一项：「这个机制在产品装配下真的被这样用了吗」）。
+
+**Arch 初诊把它判成 `F-01`，并给出了更硬的一条证据 —— Controller 已独立复核，逐条成立：**
+
+- `src/backend/zuno/platform/services/workspace/simple_agent.py:2150-2156` —— `_plan_kind_for()` 命中 token 表
+  `("compare", "across", "conflict", "multi-hop", "multihop", "analyze", "synthesize", "报告")`
+  中**任意一个**就返回 `"complex"`。**中文「报告」就在表里。**
+- `single_controller_runtime.py:737-739` —— `complex_unbound = (plan_kind == "complex" and self._dynamic_dag_planner is None)`。
+- `main.py:113` —— 产品装配 `dynamic_dag_planner=None`。
+- `single_controller_runtime.py:814-818` —— `elif complex_unbound:` → `admission_reason = DYNAMIC_PLAN_RUNTIME_NOT_BOUND`。
+
+⇒ 在 shipped composition 下，**任何含「报告」（或 compare / analyze / multi-hop…）的普通 workspace 请求都会被准入拦下**，
+且注释明确禁止回落。这不只是「简历措辞错」，而是**简历 / 架构描述 / 代码三方互斥**的架构缺口（Arch 判为 F-01，
+本轮唯一确认的 `ARCHITECTURE_GAP`）。
+
+**Blue 自身两处引用错误（Arch §14 指出，供 Wave 2 使用）：** `A8` / `A56` 把
+`single_controller_runtime.py` 写成在 `agent/runtime/execution/` 下（实际在 `platform/services/workspace/`），
+且把 `:497-501` 说成「抛」异常（实际是 `return None`；真正的 fail-closed 在 `:737-738` + `:814-818`）。
+**结论对，位置与动作都错。**
+
+**本轮复现的泄漏向量：** Arch 实例自报对 `docs/` 做过一次跨目录 grep，输出顺带带回了
+`docs/red-blue/rounds/**` 与本轮 workspace 其他文件的片段（声明未用作证据）。这是 `IMP-020-14` 记录的
+泄漏向量在本轮的**再次复现** —— 记为观测事实，不当作已解决。
 
 ### Gate 说明
 
