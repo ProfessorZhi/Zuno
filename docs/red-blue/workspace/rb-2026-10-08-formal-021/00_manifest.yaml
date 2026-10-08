@@ -402,15 +402,27 @@ workflow_retrospective:
   proposals_applied: 0（improvement_review_gate 仍为 REQUIRED，未过）
 
 improvement:
-  improvement_ledger_status: NOT_STARTED
-  round_report_status: NOT_STARTED
+  improvement_ledger_status: DRAFT_REVIEW
+  round_report_status: COMPLETE
   round_report_path: docs/red-blue/workspace/rb-2026-10-08-formal-021/09_round_report.md
   improvement_ledger_path: docs/red-blue/workspace/rb-2026-10-08-formal-021/09_improvement_ledger.md
   user_improvement_review_status: PENDING
   approved_change_count: 0
-  proposed_change_count: 0
+  proposed_change_count: 20
+  applied_this_round: none
   change_effective_scope: NEXT_ROUND_ONLY
   current_round_verdict_recomputed: false
+  groups:
+    architecture: [IMP-021-01]
+    implementation: [IMP-021-02, IMP-021-03, IMP-021-04]
+    subtraction: [IMP-021-05]
+    evidence: [IMP-021-06, IMP-021-07]
+    narrative_resume: [IMP-021-08, IMP-021-09, IMP-021-10, IMP-021-20]
+    process_skill_harness: [IMP-021-11, IMP-021-12, IMP-021-13, IMP-021-14, IMP-021-15, IMP-021-16, IMP-021-17, IMP-021-18, IMP-021-19]
+  carried_over_from_020:
+    ids: [IMP-020-04, IMP-020-05, IMP-020-06, IMP-020-07, IMP-020-08, IMP-020-11, IMP-020-12, IMP-020-13, IMP-020-14, IMP-020-15]
+    count: 10
+    status: NEXT_ROUND_ONLY
 
 next_resume:
   next_resume_candidate_path: docs/red-blue/workspace/rb-2026-10-08-formal-021/10_next_resume_candidate.md
@@ -418,5 +430,5 @@ next_resume:
   next_resume_source_head_sha: none
   next_resume_blockers: none
 
-current_stage: IMPROVEMENT_SYNTHESIS
+current_stage: USER_IMPROVEMENT_REVIEW
 next_actor: NONE

@@ -40,15 +40,15 @@ Branch: `red-blue/rb-2026-10-08-formal-021` · PR [#282](https://github.com/Prof
 
 - [03_blue_architecture_notes.md](03_blue_architecture_notes.md) — `COMPLETE / SEALED_FROM_RED`（15 findings）
 - [04_blue_wave2_architecture_notes.md](04_blue_wave2_architecture_notes.md) — `COMPLETE / SEALED_FROM_RED`（复诊差分：维持 12 / 降级 2 / 升级 1 / 新增 5）
-- [05_blue_architecture_reflection.md](05_blue_architecture_reflection.md) — `NOT_STARTED`
+- [05_blue_architecture_reflection.md](05_blue_architecture_reflection.md) — `COMPLETE`（ARCHITECTURE_GAP = 1，仅 F-01）
 
 ## Controller
 
-- [06_workflow_retrospective.md](06_workflow_retrospective.md) — `NOT_STARTED`
+- [06_workflow_retrospective.md](06_workflow_retrospective.md) — `COMPLETE`（5 项审查，10 提案）
 - [07_user_feedback.md](07_user_feedback.md) — `NOT_STARTED`
 - [08_session_transcript.md](08_session_transcript.md) — `NOT_STARTED`
-- [09_improvement_ledger.md](09_improvement_ledger.md) — `NOT_STARTED`
-- [09_round_report.md](09_round_report.md) — `NOT_STARTED`
+- [09_improvement_ledger.md](09_improvement_ledger.md) — `DRAFT_REVIEW`（20 条提案，未应用）
+- [09_round_report.md](09_round_report.md) — `COMPLETE`
 - [00_manifest.yaml](00_manifest.yaml) — `ACTIVE`
 
 ---

@@ -4,7 +4,7 @@ state: `active-red-blue`
 active_round: `rb-2026-10-08-formal-021`
 mode: `AGENT_AUTO`
 execution_mode: `BATCH_DUEL`
-stage: `IMPROVEMENT_SYNTHESIS`
+stage: `USER_IMPROVEMENT_REVIEW`
 workspace_path: `docs/red-blue/workspace/rb-2026-10-08-formal-021/`
 simulated_resume: `docs/red-blue/workspace/rb-2026-10-08-formal-021/01_simulated_resume.md`
 target_role: `Agent 开发工程师 / 大模型应用工程师 / AI 应用工程师`
@@ -32,8 +32,8 @@ next_actor: `NONE`
 red_evaluation_status: `COMPLETE`
 blue_reflection_status: `COMPLETE`
 workflow_retrospective_status: `COMPLETE`
-improvement_ledger_status: `NOT_STARTED`
-round_report_status: `NOT_STARTED`
+improvement_ledger_status: `DRAFT_REVIEW`
+round_report_status: `COMPLETE`
 next_resume_candidate_status: `NOT_STARTED`
 round_branch: `red-blue/rb-2026-10-08-formal-021`
 round_pr: `282`
