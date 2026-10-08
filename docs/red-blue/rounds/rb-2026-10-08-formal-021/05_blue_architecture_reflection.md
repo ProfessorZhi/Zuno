@@ -4,15 +4,15 @@
 base_sha: cdd2063b341e6919fafaa1395d1f3bdc837329f6
 inputs:
   # 本轮产物
-  - docs/red-blue/workspace/rb-2026-10-08-formal-021/00_artifact_links.md
-  - docs/red-blue/workspace/rb-2026-10-08-formal-021/01_simulated_resume.md
-  - docs/red-blue/workspace/rb-2026-10-08-formal-021/02_red_questions.md
-  - docs/red-blue/workspace/rb-2026-10-08-formal-021/03_blue_architecture_notes.md      (Wave 1 初诊，复诊对象)
-  - docs/red-blue/workspace/rb-2026-10-08-formal-021/04_red_wave2_review_and_questions.md
-  - docs/red-blue/workspace/rb-2026-10-08-formal-021/04_blue_wave2_architecture_notes.md (Wave 2 复诊)
-  - docs/red-blue/workspace/rb-2026-10-08-formal-021/04_red_evaluation.md                 (Red Final 盲评)
-  - docs/red-blue/workspace/rb-2026-10-08-formal-021/03_blue_answers.md                   (抽样：A8/A15/A17/A56/A97/A98)
-  - docs/red-blue/workspace/rb-2026-10-08-formal-021/04_blue_wave2_answers.md             (抽样：A101/A117/A118/A199 等)
+  - docs/red-blue/rounds/rb-2026-10-08-formal-021/00_artifact_links.md
+  - docs/red-blue/rounds/rb-2026-10-08-formal-021/01_simulated_resume.md
+  - docs/red-blue/rounds/rb-2026-10-08-formal-021/02_red_questions.md
+  - docs/red-blue/rounds/rb-2026-10-08-formal-021/03_blue_architecture_notes.md      (Wave 1 初诊，复诊对象)
+  - docs/red-blue/rounds/rb-2026-10-08-formal-021/04_red_wave2_review_and_questions.md
+  - docs/red-blue/rounds/rb-2026-10-08-formal-021/04_blue_wave2_architecture_notes.md (Wave 2 复诊)
+  - docs/red-blue/rounds/rb-2026-10-08-formal-021/04_red_evaluation.md                 (Red Final 盲评)
+  - docs/red-blue/rounds/rb-2026-10-08-formal-021/03_blue_answers.md                   (抽样：A8/A15/A17/A56/A97/A98)
+  - docs/red-blue/rounds/rb-2026-10-08-formal-021/04_blue_wave2_answers.md             (抽样：A101/A117/A118/A199 等)
   - .agent/red-blue/defense-model.md
   - .agent/red-blue/protocol.md
   # canonical — src（本轮亲自打开 / grep / sed 取行）

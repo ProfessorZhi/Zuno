@@ -1,14 +1,14 @@
 # Current Red / Blue Round
 
-state: `active-red-blue`
-active_round: `rb-2026-10-08-formal-021`
-mode: `AGENT_AUTO`
+state: `no-active`
+active_round: `none`
+mode: `none`
 execution_mode: `BATCH_DUEL`
-stage: `USER_IMPROVEMENT_REVIEW`
-workspace_path: `docs/red-blue/workspace/rb-2026-10-08-formal-021/`
-simulated_resume: `docs/red-blue/workspace/rb-2026-10-08-formal-021/01_simulated_resume.md`
-target_role: `Agent 开发工程师 / 大模型应用工程师 / AI 应用工程师`
-interview_stage: `技术一面 / 项目深挖`
+stage: `none`
+workspace_path: `none`
+simulated_resume: `none`
+target_role: `none`
+interview_stage: `none`
 pressure_suite_count: `100`
 seed_question_target: `8`
 live_followups: `DYNAMIC`
@@ -18,30 +18,30 @@ blue_wave_1_answer_target: `100`
 red_wave_2_question_target: `100`
 blue_wave_2_answer_target: `100`
 batch_checkpoint_policy: `LINK_ONLY_PAUSE`
-resume_review_gate: `REQUIRED`
+resume_review_gate: `none`
 red_review_gate: `optional-compatibility`
-improvement_review_gate: `REQUIRED`
-red_questions_status: `COMPLETE`
-red_wave_1_status: `COMPLETE`
-blue_wave_1_status: `COMPLETE`
-red_wave_2_status: `COMPLETE`
-blue_wave_2_status: `COMPLETE`
+improvement_review_gate: `none`
+red_questions_status: `none`
+red_wave_1_status: `none`
+blue_wave_1_status: `none`
+red_wave_2_status: `none`
+blue_wave_2_status: `none`
 live_interview_status: `NOT_STARTED`
 live_turn_index: `0`
 next_actor: `NONE`
-red_evaluation_status: `COMPLETE`
-blue_reflection_status: `COMPLETE`
-workflow_retrospective_status: `COMPLETE`
-improvement_ledger_status: `DRAFT_REVIEW`
-round_report_status: `COMPLETE`
-next_resume_candidate_status: `NOT_STARTED`
-round_branch: `red-blue/rb-2026-10-08-formal-021`
-round_pr: `282`
-last_consumed_head_sha: `cdd2063b341e6919fafaa1395d1f3bdc837329f6`
+red_evaluation_status: `none`
+blue_reflection_status: `none`
+workflow_retrospective_status: `none`
+improvement_ledger_status: `none`
+round_report_status: `none`
+next_resume_candidate_status: `none`
+round_branch: `none`
+round_pr: `none`
+last_consumed_head_sha: `none`
 github_state_bus: `required`
 stage_handoff: `commit-then-reread`
-firewall_strength: `PHYSICAL_CONTEXT_ISOLATION`
-strict_blind_red_certification: `true`
+firewall_strength: `none`
+strict_blind_red_certification: `false`
 transcript_policy: `full-observable-role-io`
 archive_live: `true`
 
@@ -160,8 +160,8 @@ BATCH_DUEL additional artifacts:
 最近两轮正式 Round 均已归档到 `docs/red-blue/rounds/`：
 
 ```text
-rb-2026-09-15-formal-019   CHATGPT_AUTO / LOGICAL_GITHUB_MEDIATED
 rb-2026-10-07-formal-020   AGENT_AUTO   / PHYSICAL_CONTEXT_ISOLATION
+rb-2026-10-08-formal-021   AGENT_AUTO   / PHYSICAL_CONTEXT_ISOLATION
 ```
 
 #018 已归档为 invalid workflow calibration，不计正式 Round。

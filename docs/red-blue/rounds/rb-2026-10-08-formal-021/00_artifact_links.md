@@ -1,9 +1,14 @@
 # Round 021 Artifact Links
 
 Round: `rb-2026-10-08-formal-021`
-State: `ACTIVE` — 本轮进行中
+State: `ARCHIVED` — 本轮已关闭并归档到 `docs/red-blue/rounds/`
 Base: `cdd2063b341e6919fafaa1395d1f3bdc837329f6`
 Branch: `red-blue/rb-2026-10-08-formal-021` · PR [#282](https://github.com/ProfessorZhi/Zuno/pull/282)
+
+> **收口方式**：active round 分支的 Draft PR 无法通过 `tests/repo/test_docs_entrypoints.py`，
+> 因为该测试要求 `.agent/red-blue/current.md` 为 `state: no-active`，而 active round 必然是
+> `state: active-red-blue`。因此本轮与 019 / 020 一样以「归档分支」收口：workspace 从
+> `docs/red-blue/workspace/` 移入 `docs/red-blue/rounds/`，`.agent/red-blue/current.md` 恢复为非激活。
 
 > **本轮 base 的由来**：round 020 只批准了 A 组三条 P0（`IMP-020-01/02/03`）。这三条已在 `PR #281`
 > 落地（merge commit `cdd2063b`），`main` 因此前进到本轮的 `zuno_base_sha`。也就是说本轮跑在

@@ -9,11 +9,11 @@ head_observed: 957e8114
 
 inputs:
   # 本轮成品与对手材料
-  - docs/red-blue/workspace/rb-2026-10-08-formal-021/04_blue_wave2_answers.md   (A101–A200)
-  - docs/red-blue/workspace/rb-2026-10-08-formal-021/03_blue_architecture_notes.md  (Wave 1 初诊，复诊对象)
-  - docs/red-blue/workspace/rb-2026-10-08-formal-021/04_red_wave2_review_and_questions.md
-  - docs/red-blue/workspace/rb-2026-10-08-formal-021/01_simulated_resume.md
-  - docs/red-blue/workspace/rb-2026-10-08-formal-021/04_blue_wave2_architecture_notes.md  (预创建的 NOT_STARTED 占位)
+  - docs/red-blue/rounds/rb-2026-10-08-formal-021/04_blue_wave2_answers.md   (A101–A200)
+  - docs/red-blue/rounds/rb-2026-10-08-formal-021/03_blue_architecture_notes.md  (Wave 1 初诊，复诊对象)
+  - docs/red-blue/rounds/rb-2026-10-08-formal-021/04_red_wave2_review_and_questions.md
+  - docs/red-blue/rounds/rb-2026-10-08-formal-021/01_simulated_resume.md
+  - docs/red-blue/rounds/rb-2026-10-08-formal-021/04_blue_wave2_architecture_notes.md  (预创建的 NOT_STARTED 占位)
   - .agent/red-blue/defense-model.md  (§12–§14 为重诊口径)
   # canonical — src（本轮亲自打开/实跑）
   - src/backend/zuno/main.py
