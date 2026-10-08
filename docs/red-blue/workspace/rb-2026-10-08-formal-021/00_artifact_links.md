@@ -39,7 +39,7 @@ Branch: `red-blue/rb-2026-10-08-formal-021` · PR [#282](https://github.com/Prof
 ## Blue — Sealed Architecture Review
 
 - [03_blue_architecture_notes.md](03_blue_architecture_notes.md) — `COMPLETE / SEALED_FROM_RED`（15 findings）
-- [04_blue_wave2_architecture_notes.md](04_blue_wave2_architecture_notes.md) — `NOT_STARTED / SEALED_FROM_RED`
+- [04_blue_wave2_architecture_notes.md](04_blue_wave2_architecture_notes.md) — `COMPLETE / SEALED_FROM_RED`（复诊差分：维持 12 / 降级 2 / 升级 1 / 新增 5）
 - [05_blue_architecture_reflection.md](05_blue_architecture_reflection.md) — `NOT_STARTED`
 
 ## Controller
