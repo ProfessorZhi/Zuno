@@ -22,7 +22,7 @@ Branch: `red-blue/rb-2026-10-08-formal-021` · PR [#282](https://github.com/Prof
 
 ## Resume
 
-- [01_simulated_resume.md](01_simulated_resume.md) — `NOT_STARTED`
+- [01_simulated_resume.md](01_simulated_resume.md) — `FROZEN`（against `cdd2063b`，Resume Gate 委托下批准）
 - [10_next_resume_candidate.md](10_next_resume_candidate.md) — `NOT_STARTED`
 
 ## Red
@@ -62,10 +62,11 @@ Branch: `red-blue/rb-2026-10-08-formal-021` · PR [#282](https://github.com/Prof
 
 **明确不写：**
 
-- **不写 GraphRAG「效果提升 / 多跳检索更准」。** 独立 holdout 与 leave-one-out ablation 尚未执行
-  （`docs/evidence/current-eval-baseline.md` 为 `MEASUREMENT_BLOCKED`）；已记录的只是 regression 修复与 baseline 保持。
-  冻结协议见 `docs/governance/rb019-graphrag-ablation-protocol.md`。
-- **不写任何 run-to-run 百分比。** `project-fact-provenance.md:96` 明确写着 baseline 的 `MRR@10` 在同日 rerun 中也从
+- **不写 GraphRAG「效果提升 / 多跳检索更准」。** 独立 holdout 与 leave-one-out ablation 尚未执行，
+  冻结协议见 `docs/governance/rb019-graphrag-ablation-protocol.md`（状态 `BLOCKED_PENDING_DATA`）。
+  注意：`docs/evidence/current-eval-baseline.md` 的 `MEASUREMENT_BLOCKED` 是**整个 eval 层**的状态（成因是缺外部
+  benchmark 数据），不是 GraphRAG 专属；不要把全局状态收窄成 GraphRAG 结论。已记录的只是 regression 修复与 baseline 保持。
+- **不写任何 run-to-run 百分比。** `docs/governance/project-fact-provenance.md:96` 明确写着 baseline 的 `MRR@10` 在同日 rerun 中也从
   `0.90` 变为 `1.00`，因此「修复前后」框架在本样本上不成立。正确说法是 local 与 baseline **打平**。
 - **不写 Production、规模、QPS、Latency、Cost、法院数量、用户量、准确率或任何收益数字。** 全部为 Unknown / Measurement Needed。
 - **不写「我设计了整个 Agent Runtime / 整个 GraphRAG / 全部后端」。** 加入项目时系统已存在（约 2026.03，非 Greenfield）。
@@ -73,6 +74,45 @@ Branch: `red-blue/rb-2026-10-08-formal-021` · PR [#282](https://github.com/Prof
 
 **可以写，且经得起追问：** Tool/MCP binding、config injection、route boundary、GraphRAG baseline-preserving fusion、
 seed expansion / alias / path ranking、Context/Memory V2 与 readback 收紧，都有公开提交链支撑。
+
+### IMP-020-09 处置记录（Resume Gate 委托下的代行决定）
+
+本轮 frozen resume 直接采用 round 020 的 `10_next_resume_candidate.md` 正文，逐字未改。五条处置：
+**保留 1 条**（第 2 条，附两条硬上限：不得声称「效果提升」、不得制造 run-to-run 百分比）、
+**降级改写 4 条**（第 1/3/4/5 条，漂的是动词强度不是事实）、**删除 0 条**。
+
+`IMP-020-09` 因此在本轮 Resume Gate 处**已消费**，不再计入 `still_open`。
+
+**本段不进入 `01_simulated_resume.md`**：告诉 Red「这些 bullet 是刻意弱化过的」等于给 Red 发路标，
+会污染 Wave 1 的 blind baseline。Resume 文件必须是一份干净的简历。
+
+### Resume Gate 前的独立取证核验（Controller 记录）
+
+Resume 冻结前，由**一个隔离 subagent** 在 base `cdd2063b` 上对候选简历的 5 条 bullet 与 3 条边界主张
+逐条回溯到 canonical 源（`docs/governance/project-fact-provenance.md`、`src/backend/**`、`tests/**`），
+并对每条给出 `SUPPORTED / PARTIALLY_SUPPORTED / NOT_SUPPORTED`。结论：**5 条 bullet 全部有 commit / 测试 / 台账支撑，
+但 3 处措辞证不到**，已当场改掉：
+
+| # | 原措辞 | 核验结果 | 改后 |
+| --- | --- | --- | --- |
+| B1 | 「复杂或**参数不完整**任务回落 ReAct」 | `NOT_SUPPORTED` —— 参数不全的工具体走产品侧 `_plan_tool_creation_flow` 的 `mode="ask"` 补参流程，不是回落 ReAct；能证的只有 `_plan_kind_for` 返回 `simple`/`complex` | 删掉「参数不完整」，改为「复杂请求进入 ReAct 路径」 |
+| B1 | 「ReAct **回落**侧暂无回归断言」 | `SUPPORTED`（全量 grep 无任何断言 workspace 请求回落 ReAct 的测试） | 「回落」→「一侧」，与上一条解耦 |
+| B3 | 「上述改动**在 5-query smoke 上验证**」 | `PARTIALLY_SUPPORTED` —— 每个机制另有单元测试（`tests/graphrag/*`），原句反向地过窄 | 补「每个机制有单元测试，但质量收益目前只在 5-query smoke 上观察到」 |
+| B4 | 「接入……和**一个轻量 ContextOrchestrator**」 | `SUPPORTED`，但 `ContextOrchestrator.prepare` 在 `src/` 内**无生产调用点**（只有 re-export）；真实生产路径是 `build_context` 节点 → `build_context_pack(scope=…)` | 把 ContextOrchestrator 降为 **typed contract 层**，不再暗示它是运行时装配器 |
+
+**核验确认但仍留在简历里的既有缺口（不是错误陈述，是已知不足）：**
+
+- `ContextOrchestrator.prepare` 无生产调用点（同上）。
+- Memory 的「同 scope」保护**没有跨 scope 泄漏的负向测试**；focused tests 覆盖的是过滤逻辑，不是泄漏隔离（与 round 020
+  `04_red_evaluation.md` 的 A130 一致）。
+- GraphRAG 的具体点名与 rerun 数字全部来自 `project-fact-provenance.md` 台账转述，**仓库内没有可复核的 raw runtime
+  report**（该路径 gitignored）。
+- `docs/project/README.md:150`「团队与个人参与的边界」确认存在，`IMP-020-10` 的取证缺口（commit 作者字段区分不出「我」与「团队」）依然成立。
+
+**核验 subagent 的一处自身错误（留给 `06_workflow_retrospective.md`）：** 它报告「base `cdd2063b` 在本仓库不存在、
+`git rev-parse` 返回 unknown revision」。Controller 复核：`git cat-file -t cdd2063b341e…` → `commit`，
+且它同时等于 `origin/main` 与本 round 分支的 merge-base。**该 base 有效，manifest 无需修改。**
+subagent 的 git 命令是在非仓库 cwd 下执行的 —— 这是 Harness 侧的 cwd 传递缺陷，不是仓库状态问题。
 
 ### Gate 说明
 

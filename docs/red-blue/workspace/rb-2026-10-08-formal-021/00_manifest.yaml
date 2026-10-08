@@ -100,13 +100,17 @@ base_alignment:
     CI run 37591240936 的 junit 报告核对到 14 条用例确实执行，238 passed / 0 failed。
     该 run 的 Postgres-backed 用例覆盖了本机无 PostgreSQL 而无法验证的部分。
   still_open_from_previous_round:
-    ids: IMP-020-04, IMP-020-05, IMP-020-06, IMP-020-07, IMP-020-08, IMP-020-09, IMP-020-11, IMP-020-12, IMP-020-13, IMP-020-14, IMP-020-15
-    count: 11
+    ids: IMP-020-04, IMP-020-05, IMP-020-06, IMP-020-07, IMP-020-08, IMP-020-11, IMP-020-12, IMP-020-13, IMP-020-14, IMP-020-15
+    count: 10
+    consumed_this_round:
+      - id: IMP-020-09
+        consumed_at: RESUME_GATE
+        how: >
+          本轮 frozen resume 直接采用 round 020 的 10_next_resume_candidate.md 正文（4 条降级改写 + 1 条保留附硬上限），
+          并经独立 subagent 逐条取证核验后才冻结；核验另发现并修掉 4 处措辞，其中 1 处是 candidate 自身携带的
+          NOT_SUPPORTED（「参数不完整回落 ReAct」）。
     status: NEXT_ROUND_ONLY 提案，用户未逐条表态
     notes: >
-      IMP-020-09（简历五条处置）在 ledger 中标为「下一轮 Resume Gate 前必须处理」；
-      本轮通过采用 10_next_resume_candidate.md 作为 frozen resume 输入来满足它，
-      简历正文已含该条的 4 条降级改写 + 1 条保留（附硬上限）。
       IMP-020-11/12/13/15 提议修改 Red / Blue Skill 与 Harness；
       本轮 pin 的 Skill blob 与 020 逐字节相同 —— 即这些提案**尚未**生效，本轮仍按原 Skill 运行。
       IMP-020-04/05/06/07/08 是 B/C 组工程提案，本轮只做 base-alignment，不在本轮内应用。
@@ -121,13 +125,28 @@ simulated_resume:
     - selected docs/governance/ provenance
   previous_round_resume_candidate: docs/red-blue/rounds/rb-2026-10-07-formal-020/10_next_resume_candidate.md
   simulated_resume_path: docs/red-blue/workspace/rb-2026-10-08-formal-021/01_simulated_resume.md
-  resume_status: NOT_STARTED
-  resume_project_bullet_count: 0
-  resume_style_check: PENDING
-  user_resume_review_status: DELEGATED
+  resume_status: FROZEN
+  resume_project_bullet_count: 5
+  resume_style_check: PASS
+  resume_frozen_against_main: cdd2063b341e6919fafaa1395d1f3bdc837329f6
+  resume_fact_check:
+    performer: isolated_subagent
+    method: 逐条回溯到 docs/governance/project-fact-provenance.md / src/backend/** / tests/**
+    verdicts:
+      bullet_1_tool_mcp_route: SUPPORTED_WITH_2_WORDING_FIXES
+      bullet_2_graphrag_fusion: SUPPORTED
+      bullet_3_multihop_retrieval: PARTIALLY_SUPPORTED_WITH_1_WORDING_FIX
+      bullet_4_context_memory_v2: SUPPORTED_WITH_1_WORDING_FIX
+      bullet_5_memory_readback: SUPPORTED
+      boundary_A_eval_blocked: SUPPORTED_WITH_SCOPE_NARROWING
+      boundary_B_mrr_provenance: SUPPORTED_PATH_CORRECTED
+      boundary_C_project_teamsection: SUPPORTED
+    wording_fixes_applied: 4
+    recorded_at: docs/red-blue/workspace/rb-2026-10-08-formal-021/00_artifact_links.md
+  user_resume_review_status: DELEGATED_APPROVED
   user_resume_review_delegation: >
     用户 2026-10-08 指示「再来一轮」，并在被问及 Resume Gate 时选择「照 020 一样委托给我」。
-    Resume Gate 由 Controller 在委托下代行；用户仍可要求 RESUME_REVISION 并重跑本波。
+    Resume Gate 由 Controller 在委托下代行，已批准冻结；用户仍可要求 RESUME_REVISION 并重跑本波。
 
 red_wave_1:
   red_wave_1_status: NOT_STARTED
@@ -191,5 +210,5 @@ next_resume:
   next_resume_source_head_sha: none
   next_resume_blockers: none
 
-current_stage: ROUND_INIT
-next_actor: CONTROLLER
+current_stage: USER_RESUME_REVIEW
+next_actor: RED
