@@ -149,11 +149,29 @@ simulated_resume:
     Resume Gate 由 Controller 在委托下代行，已批准冻结；用户仍可要求 RESUME_REVISION 并重跑本波。
 
 red_wave_1:
-  red_wave_1_status: NOT_STARTED
-  red_wave_1_question_count: 0
+  red_wave_1_status: COMPLETE
+  red_wave_1_question_count: 100
   red_wave_1_path: docs/red-blue/workspace/rb-2026-10-08-formal-021/02_red_questions.md
+  # 自指 SHA 无法在本提交内填写；改用可复现的 git 选择器而非留 `none`。
   red_wave_1_commit_sha: none
-  red_wave_1_user_checkpoint: PENDING
+  red_wave_1_commit_ref: git log --grep "^rb-021: red wave 1" --format=%H -1
+  red_wave_1_user_checkpoint: LINK_SENT
+  red_wave_1_isolation:
+    instances: 2
+    blind: true
+    read_allowlist: 01_simulated_resume.md + .agent/red-blue/attack-model.md
+    self_reported_extra_files_opened: none
+    audit_note: >
+      两个实例均自我申报「额外打开：无」。这是自我申报，不是沙箱验证 —— 文件系统共享。
+      round 020 实测过的三个泄漏向量（IMP-020-14）本轮仍未修复，因此本轮带同样的风险。
+  red_wave_1_shape:
+    per_thread: T01 14 · T02 12 · T03 10 · T04 7 · T05 7 · T06 9 · T07 8 · T08 9 · T09 12 · T10 12
+    depth: L1 10 · L2 35 · L3 55
+    verification: 题号 1–100 连续唯一；全部 callback 落在同一半批内；无空题干；无同义句灌水（人工抽查 T01–T10）
+  red_wave_1_red_self_reported_handles:
+    - GraphRAG「同日 rerun 不再低于 baseline」被判为最高真实性风险（样本 5 条、metric 未写明）
+    - Ownership 漂移风险集中在 T01 与 T03（简历用「重构/构建/继续完善」这类团队视角动词）
+    - T01 remote effect 与 T04 recovery authority 各仅 1 题，为配额让位；若 Wave 2 发现答得虚需扩线
 
 blue_wave_1:
   blue_wave_1_status: NOT_STARTED
@@ -210,5 +228,5 @@ next_resume:
   next_resume_source_head_sha: none
   next_resume_blockers: none
 
-current_stage: USER_RESUME_REVIEW
-next_actor: RED
+current_stage: BATCH_CHECKPOINT_RED_1
+next_actor: BLUE
