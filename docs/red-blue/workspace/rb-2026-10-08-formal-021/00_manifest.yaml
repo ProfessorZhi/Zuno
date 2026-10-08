@@ -231,15 +231,46 @@ red_wave_2:
   red_wave_2_top_followups: [Q113, Q117, Q107]
 
 blue_wave_2:
-  blue_wave_2_status: ANSWERS_COMPLETE
+  blue_wave_2_status: COMPLETE
   blue_wave_2_answer_count: 100
   blue_wave_2_answers_path: docs/red-blue/workspace/rb-2026-10-08-formal-021/04_blue_wave2_answers.md
   blue_wave_2_architecture_notes_path: docs/red-blue/workspace/rb-2026-10-08-formal-021/04_blue_wave2_architecture_notes.md
-  blue_wave_2_architecture_notes_status: NOT_STARTED
+  blue_wave_2_architecture_notes_status: COMPLETE_SEALED_FROM_RED
   # 自指 SHA 同 Wave 1，改用可复现选择器。
   blue_wave_2_commit_sha: none
   blue_wave_2_commit_ref: 'git log --grep "^rb-021: blue wave 2" --format=%H -1'
-  blue_wave_2_user_checkpoint: PENDING
+  blue_wave_2_user_checkpoint: LINK_SENT
+  blue_wave_2_differential_findings:
+    maintained: [F-01, F-02, F-03, F-05, F-07, F-08, F-10, F-11, F-12, F-13, F-14, F-15]
+    downgraded:
+      - F-06: conditional ARCHITECTURE_GAP → EVIDENCE/GOVERNANCE（耦合被证实，但 gate 存在且解在「整层 on/off + 修协议消融单位」，§13 门槛不满足）
+      - F-04: salt 契约撤回，残余换成「key 含 run_id/step_run_id 的跨 run 身份语义」+ uuid4 角色仍未判
+    upgraded:
+      - F-09 -> N-01: 孤儿组件是模式，非孤例
+    added: [N-01 孤儿组件模式, N-02 Target 词<->代码符号漂移, N-03 仓内已有 RRF 未用于知识检索路径, N-04 冻结协议消融单位缺陷, N-05 delta 塌缩后收敛到「准入」]
+    architecture_gap_after_wave_2: [F-01]
+    conditional_architecture_gap_after_wave_2: []
+  blue_wave_2_f01_sharpening:
+    verdict: 维持并强化；条件性项已清零，F-01 仍是本轮唯一 ARCHITECTURE_GAP
+    new_fact: >
+      准入拦截**不是异常、也不是拒收**，而是返回一个正常的 RuntimeStartRequest：
+      `plan_steps=()`、`capability_ids=()`、`allowed_tools=()`、`strategy_mode=None`、
+      `security_summary={"decision":"block","recommended_action":"refuse","reason":...}`。
+      即被拦下的 complex 请求形成一条**「空 plan 的 run」**——B1 #3 要求「entrant 必有 Plan」，
+      而这正是一个无 Plan 的 entrant，冲突比 Wave 1 的「被挡在门外」更字面。
+    controller_verification: >
+      Controller 独立复核成立：`single_controller_runtime.py:870-911` `_blocked_request`
+      （docstring 明写 "Fail-closed RuntimeStartRequest: no plan, no tools, reason visible"）
+      返回上述字段；`:497-499` `build_workspace_plan_steps` 对 complex+planner=None 是 `return None`、
+      **不抛**；常量 `DYNAMIC_PLAN_RUNTIME_NOT_BOUND` 在 `:103`。
+    owner_and_adr: >
+      token 表作者 A105 自认 Unknown；`docs/decisions/` 无对应 ADR（A159）。
+      ⇒ Wave 1 的 Owner 缺口被 Wave 2 正面确认，不是被抹掉。
+  blue_wave_2_firewall_disclosure: >
+    Arch-2 实例自报一次取证越界：为定位 `KnowledgeGeneration`/`ServingPointer` 对 `docs/` 做了一次跨目录 grep，
+    输出顺带带回归档轮次 `docs/red-blue/rounds/rb-2026-09-13-.../transcript-batch-001-{blue,red}.md`
+    的**两个路径名**（未打开、未读内容）及本轮 `00_manifest.yaml` 路径名；均未用作任何 finding 的证据。
+    这与 Wave 1 Arch 的越界同源，是 IMP-020-14 泄漏向量在本轮的**第二次复现**。**自我申报，非沙箱验证。**
   blue_wave_2_shape:
     instances: 2（A101–A150 / A151–A200，同 Skill、同 register、同 Ownership 规则；后半批可读前半批以对齐口径）
     answers_to: 04_red_wave2_review_and_questions.md（Q101–Q200）
@@ -333,5 +364,5 @@ next_resume:
   next_resume_source_head_sha: none
   next_resume_blockers: none
 
-current_stage: BLUE_WAVE_2
-next_actor: BLUE
+current_stage: BATCH_CHECKPOINT_BLUE_2
+next_actor: NONE
