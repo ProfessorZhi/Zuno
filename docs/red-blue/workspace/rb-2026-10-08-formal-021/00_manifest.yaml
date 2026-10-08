@@ -366,17 +366,40 @@ red_evaluation:
     报告自述：对 `file:line` / SHA / run id / 测试名 / 常数的全部判断都是**结构判断**、非核实；
     不能宣布任何 claim 在真实历史中为假。「不成立 / 收回 / 矛盾」一律指候选人自述层面的成立状态。
 
-blue_reflection_status: NOT_STARTED
+blue_reflection_status: COMPLETE
+blue_reflection_path: docs/red-blue/workspace/rb-2026-10-08-formal-021/05_blue_architecture_reflection.md
 blue_reflection_commit_sha: none
+blue_reflection_commit_ref: 'git log --grep "^rb-021: blue architecture reflection" --format=%H -1'
+blue_reflection_result:
+  architecture_gap_final: [F-01]
+  architecture_gap_conditional_final: []
+  f01_contract_anchor: docs/modules/reference.md:237（Native Runtime entrant 一定有 Plan；空 plan 的 run 违反此条）
+  f06_downgrade_upheld: true
+  f04_salt_contract_retracted: true
+  multi_agent_worth_it_today: false
+  red_final_over_strong_statements: [RF-01, RF-02]
+  red_final_unknowns_closed: 2
+  controller_convergence: RF-02 与 Controller 在 00_artifact_links.md 的独立结论一致
+  firewall_disclosure: Reflection 自报无越界（未读 docs/red-blue/rounds/**，grep 限定 src//tests//docs/decisions|architecture|modules）
 
 workflow_retrospective:
-  workflow_retrospective_status: NOT_STARTED
-  resume_builder_reviewed: false
-  red_thinking_framework_reviewed: false
-  blue_candidate_framework_reviewed: false
-  blue_architecture_framework_reviewed: false
-  harness_reviewed: false
+  workflow_retrospective_status: COMPLETE
+  workflow_retrospective_path: docs/red-blue/workspace/rb-2026-10-08-formal-021/06_workflow_retrospective.md
+  resume_builder_reviewed: true
+  red_thinking_framework_reviewed: true
+  blue_candidate_framework_reviewed: true
+  blue_architecture_framework_reviewed: true
+  harness_reviewed: true
   commit_sha: none
+  commit_ref: 'git log --grep "^rb-021: blue architecture reflection" --format=%H -1'
+  controller_self_reported_defects:
+    - Controller 在 Resume Gate 把第 1 条改成「复杂请求进入 ReAct 路径」，方向错（shipped composition 下是准入 fail closed）
+    - manifest 自 red_wave_1 起为非法 YAML，跨多个 stage commit 无人校验
+    - 等待循环以「文件存在」为条件，命中 336/341 字节占位 blob
+  observed_leak_vectors_this_round: 3（Wave1 Arch 跨目录 grep；Wave2 Arch 跨目录 grep；允许文件正文里字面列出封存件文件名）
+  not_reproduced_from_020: Red Final 与 Blue Reflection 并行完成的时序缺陷本轮未复现（顺序被强制）
+  proposals_count: 10
+  proposals_applied: 0（improvement_review_gate 仍为 REQUIRED，未过）
 
 improvement:
   improvement_ledger_status: NOT_STARTED
@@ -395,5 +418,5 @@ next_resume:
   next_resume_source_head_sha: none
   next_resume_blockers: none
 
-current_stage: BLUE_ARCHITECTURE_REFLECTION
-next_actor: BLUE
+current_stage: IMPROVEMENT_SYNTHESIS
+next_actor: NONE
