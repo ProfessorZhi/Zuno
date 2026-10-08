@@ -1,17 +1,33 @@
 # Improvement Ledger — rb-2026-10-08-formal-021
 
 ```text
-improvement_ledger_status: DRAFT_REVIEW
+improvement_ledger_status: APPROVED_FOR_NEXT_ROUND
 change_effective_scope: NEXT_ROUND_ONLY
 current_round_verdict_recomputed: false
 base_sha: cdd2063b341e6919fafaa1395d1f3bdc837329f6
 head_observed: 8fce286e
-improvement_review_gate: REQUIRED（未过）
-applied_this_round: none
+improvement_review_gate: PASSED（2026-10-08）
+applied_this_round: none（findings / verdict 层 —— 本轮结论未因本文件改变）
+skill_harness_written_this_round: IMP-021-11..IMP-021-19 → .agent/red-blue/（下一轮生效）
 ```
 
-**本文件是提案，尚未获得用户批准。** `improvement_review_gate: REQUIRED` 未过，**本轮 verdict 不因本文件而改变**，
-且下表中**没有一条**在本轮被应用。
+**本文件已获用户批准（`USER_IMPROVEMENT_REVIEW`，2026-10-08，见 `07_user_feedback.md`）。**
+批准**不改变本轮 verdict**，也不把任何 finding 的等级上调：`IMP-021-01` 仍是本轮唯一确认的 `ARCHITECTURE_GAP`，
+只是状态由 `proposed` 变为 `approved`；`IMP-021-02`..`IMP-021-10`、`IMP-021-20` 维持原判等待下一轮处理。
+
+**批准后各组的实际去向：**
+
+| 组 | 条目 | 去向 |
+| --- | --- | --- |
+| A 架构 | `IMP-021-01` | 批准，**下一轮**写 owner + 最小 decision record（本文件已记录复测口径） |
+| B 实现 | `IMP-021-02/03/04` | 批准，下一轮处理 |
+| C 减法 | `IMP-021-05` | 批准（仅清单化，不新增删除动作） |
+| D Evidence | `IMP-021-06/07` | 批准，`MEASUREMENT_NEEDED` 不变，**不新增收益数字** |
+| E 表达 / 简历 | `IMP-021-08/09/10/20` | 批准；`G-01`..`G-06`/`G-08` 落入 `10_next_resume_candidate.md` |
+| F 流程 | `IMP-021-11`..`IMP-021-19` | 批准，**本次写入 `.agent/red-blue/`**，下一轮生效 |
+
+**时序边界（必须保留）：** 本轮 400 条记录是用**旧 Skill** 产出的。Skill 修改是**跨轮生效**，
+不是对本轮的事后修补，也不回溯改判本轮的 findings、round report 或 verdict。
 
 **判定纪律（沿用 round 020，未改）：**
 
@@ -249,8 +265,10 @@ verification: CONTROLLER_VERIFIED
 其中 `IMP-020-11`..`IMP-020-15` 提议修改 Red / Blue Skill 与 Harness —— 本轮 pin 的 Skill blob 与 020
 **逐字节相同**，即这些提案**尚未生效**，本轮仍按原 Skill 运行。
 
-**需要用户决定的三件事**：
+**用户已决定的三件事（2026-10-08，`USER_IMPROVEMENT_REVIEW`）**：
 
-1. `IMP-021-01`（唯一架构缺口）是否批准进 `docs/architecture/` + ADR。
-2. `IMP-021-08` 的简历措辞处置是否按上表落地（尤其 `G-01` / `G-08` 的下一轮改法）。
-3. `IMP-021-11`..`IMP-021-19` 这 9 条 Skill / Harness 提案是否授权修改 `.agent/red-blue/`。
+1. `IMP-021-01` —— **批准，最小方案**：下一轮写 owner + 最小 decision record，把「planner 未绑定时的复杂请求」定义为受控拒绝，**不新增模块或状态机**。
+2. `IMP-021-08` —— **按上表全表落地**（`G-01`..`G-06`、`G-08`），由 `10_next_resume_candidate.md` 承载。
+3. `IMP-021-11`..`IMP-021-19` —— **全部授权**修改 `.agent/red-blue/`，本次写入、下一轮生效。
+
+原始提问与逐字选项文本见 `07_user_feedback.md`。

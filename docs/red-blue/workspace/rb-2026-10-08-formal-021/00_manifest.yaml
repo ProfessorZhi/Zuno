@@ -399,19 +399,28 @@ workflow_retrospective:
   observed_leak_vectors_this_round: 3（Wave1 Arch 跨目录 grep；Wave2 Arch 跨目录 grep；允许文件正文里字面列出封存件文件名）
   not_reproduced_from_020: Red Final 与 Blue Reflection 并行完成的时序缺陷本轮未复现（顺序被强制）
   proposals_count: 10
-  proposals_applied: 0（improvement_review_gate 仍为 REQUIRED，未过）
+  proposals_applied: 0
+  proposals_applied_note: 本轮 findings / verdict 层未应用任何一条；Skill / Harness 提案经批准写入 .agent/red-blue/，下一轮生效
 
 improvement:
-  improvement_ledger_status: DRAFT_REVIEW
+  improvement_ledger_status: APPROVED_FOR_NEXT_ROUND
   round_report_status: COMPLETE
   round_report_path: docs/red-blue/workspace/rb-2026-10-08-formal-021/09_round_report.md
   improvement_ledger_path: docs/red-blue/workspace/rb-2026-10-08-formal-021/09_improvement_ledger.md
-  user_improvement_review_status: PENDING
-  approved_change_count: 0
+  user_improvement_review_status: PASSED
+  user_improvement_review_path: docs/red-blue/workspace/rb-2026-10-08-formal-021/07_user_feedback.md
+  reviewed_at: 2026-10-08
+  approved_change_count: 20
   proposed_change_count: 20
   applied_this_round: none
+  skill_harness_written_this_round: IMP-021-11..IMP-021-19
   change_effective_scope: NEXT_ROUND_ONLY
   current_round_verdict_recomputed: false
+  user_decisions:
+    IMP-021-01: approved_minimal_next_round（owner + 最小 decision record；不新增模块或状态机）
+    IMP-021-08: approved_full_table_next_round（G-01..G-06, G-08 落入 next resume candidate）
+    IMP-021-11..IMP-021-19: approved_authorize_edit_agent_red_blue（本次写入，下一轮生效）
+    round_close: archive_then_merge_after_ci_green
   groups:
     architecture: [IMP-021-01]
     implementation: [IMP-021-02, IMP-021-03, IMP-021-04]
@@ -426,9 +435,10 @@ improvement:
 
 next_resume:
   next_resume_candidate_path: docs/red-blue/workspace/rb-2026-10-08-formal-021/10_next_resume_candidate.md
-  next_resume_candidate_status: NOT_STARTED
-  next_resume_source_head_sha: none
+  next_resume_candidate_status: BUILT_PENDING_USER_RESUME_REVIEW
+  next_resume_source_head_sha: 002ab09a
   next_resume_blockers: none
+  applied_findings: [G-01, G-02, G-03, G-04, G-05, G-06, G-08]
 
-current_stage: USER_IMPROVEMENT_REVIEW
-next_actor: NONE
+current_stage: CLOSE
+next_actor: Controller

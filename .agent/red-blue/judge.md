@@ -194,7 +194,8 @@ unknown
 - 是否挑到了最值得连续追问的技术决策；
 - 是否用漂亮数字掩盖小样本；
 - Ownership 动词是否太弱或太强；
-- 简历是否给两轮 100 题留下真实深度。
+- 简历是否给两轮 100 题留下真实深度；
+- 每条**运行行为 claim** 是否做了**装配侧确认**（追到组装点，而不是停在类定义 / 单测 / 函数存在性）。
 
 ### Red Thinking Framework
 
@@ -226,7 +227,9 @@ unknown
 - Evidence Discipline；
 - Boundary Honesty；
 - Failure Reasoning；
-- Follow-up Resilience。
+- Follow-up Resilience；
+- 是否把**自我修正**当作可信度加分（自我修正同为一条 claim，必须回源码核）；
+- 是否把三段式**格式完整**当作证据（格式是表达规范，不是证明力）。
 
 #### Architecture Diagnosis Framework
 
@@ -250,7 +253,10 @@ unknown
 - Blue 2 是否没有用 Wave 1 architecture notes 给 Candidate answer coaching；
 - 每个 stage 是否 commit-then-reread；
 - Batch Checkpoint 是否只给用户链接，不要求用户逐题作答；
-- 用户 Gate 是否只放在真正的决策点。
+- 用户 Gate 是否只放在真正的决策点；
+- `00_manifest.yaml` 是否每个 stage 都可解析（状态总线损坏必须当场发现，不能跨 stage 带病运行）；
+- 是否用**尺寸阈值 / mtime** 判断 subagent 产出完成，而不是「文件存在」（占位 blob 会假命中）；
+- Red Final 的 `file:line` 断言是否做了**回源码核对**（盲审的结构判断不得直接当事实写进 ledger）。
 
 Workflow Retrospective 不能修改本轮答案或本轮 verdict。
 

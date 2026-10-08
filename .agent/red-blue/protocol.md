@@ -43,6 +43,20 @@ read Round branch HEAD
 
 GitHub commit 是 commit barrier。聊天摘要、角色临时文本和未提交草稿不能跨阶段成为正式输入。
 
+每个 stage 在 commit 前必须通过 `templates/round.md` 的 **Stage Commit 强制自检**：
+
+```text
+manifest YAML 可解析且必需键齐全
+产物形态匹配其类型（非占位 blob）
+等待条件带尺寸阈值 / mtime，不以「文件存在」为判据
+subagent 的 git 调用带绝对仓库路径（git -C <repo>）
+```
+
+这四项是**机械检查**，不是判断项。缺了它们，状态总线会静默损坏而无人发现：
+round 021 的 `00_manifest.yaml` 自 `red_wave_1` 起就是非法 YAML，跨多个 stage commit 无人校验；
+一个等待循环把 336 / 341 字节的占位 blob 误判为产物；一个带 git 的 subagent 在非仓库 cwd 下执行，
+报告了「base SHA 不存在」的**假缺陷**。三次都不是判断错误，是检查缺失。
+
 正式 Round 从固定 `main@zuno_base_sha` 创建独立 branch + Draft PR：
 
 ```text
@@ -101,6 +115,27 @@ Resume Builder 从固定 base SHA 读取 Project、Architecture、Modules、Evid
 ```
 
 事实边界强制：Pilot ≠ Production；团队工作 ≠ Personal Ownership；Target ≠ Current；small smoke ≠ formal benchmark。
+
+### 核验必须走到「装配侧」
+
+Resume Gate 的独立核验清单必须包含一项 **装配侧确认**：
+任何关于**运行行为**的 claim（「复杂请求会走 X 路径」「这个组件被调用」），
+必须追到**组装点**（`main.py` / composition root / DI 装配），
+**不得**停在类定义、单测或函数存在性。
+
+```text
+claim 是一个运行行为
+→ 找到消费它的组装点（谁把它接到运行时）
+→ 找不到组装点 ⇒ 该 claim 只能写成「机制存在」，不能写成「运行时行为」
+```
+
+**触发这条规则的真实缺陷（round 021）：** Resume Gate 把一条 bullet 改成「复杂请求进入 ReAct 路径」。
+核验证到的只是 `_plan_kind_for` 会返回 `simple` / `complex` 这个**分类存在**，
+没有继续查这个分类在**产品装配下**被谁消费。实际产品装配为 `dynamic_dag_planner=None`，
+复杂请求在**准入层 fail closed**。⇒ 核验停在「机制存在」，没走到「机制被这样使用」。
+
+这是 **Resume Builder 缺陷 + 取证深度缺陷**，且**不会由外部攻方发现** ——
+round 021 中它是 Blue 在正常答题时顺手答出来的，不是 Red 攻出来的。
 
 冻结 Resume 后，本轮所有 Red Evaluation 都针对同一版本。Resume 改动必须新建 Round 或显式 invalidate 后续产物。
 
@@ -310,6 +345,28 @@ NO_ZUNO_CHANGE
 
 只有 Owner、Authority、State、Contract、Recovery、Security 或 Build/Buy 因果本身不成立时，才进入 `ARCHITECTURE_GAP`。
 
+### Red Final 之后必须有回源码核对（强制）
+
+Red Final Evaluation 是**盲**的：它拿不到 canonical source，因此它给出的 `file:line` 级判断
+**一律是结构判断，不是核实**。
+
+因此 Red Final 落盘后，必须有一次**回源码核对**，由持有 canonical 权限的一方承担
+（默认即本阶段的 Blue Architecture Reflection）。该核对必须：
+
+```text
+逐条复核 Red Final 的 file:line 断言
+→ 用 canonical source 确认 / 推翻
+→ 把「过度精确」与「凭空错误」分开记账
+→ 闭合或保留 Red 自己标出的 Unknown
+```
+
+**这一步不可省。** round 021 中，Red Final 的 2 处过强表述（`RF-01` / `RF-02`）
+与它主动保留的 2 个未知（salt 是否确定、`final_top5_floor_preserved` 是否存在），
+全部**只有回源码才能判**。若把盲审的 `file:line` 断言直接当事实写进 ledger 或 round report，
+缺陷会以**元层**形态传播 —— 「关于错误的描述」本身是错的。
+
+对照方向是**双向**的：核对既可能推翻 Red Final（过度精确），也可能推翻 Blue 自己的判断。
+
 ## WORKFLOW_RETROSPECTIVE：Controller 审整个过程
 
 `06_workflow_retrospective.md` 由 Controller 完成。它不是 Blue Architecture Reflection 的附录，而是对**模拟系统本身**做元审查。
@@ -439,6 +496,21 @@ strict_blind_red_certification: false
 firewall_strength: PHYSICAL_CONTEXT_ISOLATION
 strict_blind_red_certification: true
 ```
+
+### 封存件不得进入 Red 可见正文
+
+封存规则不只约束「Red 不得读封存件」，还约束「封存件的**文件名**不得逐字出现在 Red 可见文件的正文里」。
+
+round 021 观测到一种**新泄漏形态**：允许 Red 读取的文件正文里**字面列出了封存架构笔记的文件名**，
+等于把「有哪几份封存件、各自叫什么」告知 Red，破坏 blind baseline。
+
+```text
+Red 可见的 artifact 正文中，不得逐字出现 sealed artifact 的文件名。
+需要指代时用中性描述（例如「封存评审记录」），不写文件名。
+```
+
+**诚实边界：** 该规则靠**事后自报审计**执行，不是沙箱。观测到泄漏向量即如实记录，
+但**不得**据此宣布本轮 blind 已破坏、也不得重算本轮 verdict。
 
 ## LIVE_INTERVIEW：可选模式，不是自动 Round 默认
 

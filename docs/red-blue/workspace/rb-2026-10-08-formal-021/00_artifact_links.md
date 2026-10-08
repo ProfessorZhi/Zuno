@@ -18,12 +18,12 @@ Branch: `red-blue/rb-2026-10-08-formal-021` · PR [#282](https://github.com/Prof
 | Interview Threads | 10（与 020 相同，taxonomy 未改） |
 | Wave 规模 | 100 问 / 100 答 × 2 波（共 400 条） |
 | `resume_review_gate` | `DELEGATED`（用户 2026-10-08 委托 Controller 代行） |
-| `improvement_review_gate` | `REQUIRED`（未过） |
+| `improvement_review_gate` | `PASSED`（2026-10-08，四项决定见 `07_user_feedback.md`） |
 
 ## Resume
 
 - [01_simulated_resume.md](01_simulated_resume.md) — `FROZEN`（against `cdd2063b`，Resume Gate 委托下批准）
-- [10_next_resume_candidate.md](10_next_resume_candidate.md) — `NOT_STARTED`
+- [10_next_resume_candidate.md](10_next_resume_candidate.md) — `BUILT_PENDING_USER_RESUME_REVIEW`（应用 `G-01`..`G-06`、`G-08`）
 
 ## Red
 
@@ -45,11 +45,11 @@ Branch: `red-blue/rb-2026-10-08-formal-021` · PR [#282](https://github.com/Prof
 ## Controller
 
 - [06_workflow_retrospective.md](06_workflow_retrospective.md) — `COMPLETE`（5 项审查，10 提案）
-- [07_user_feedback.md](07_user_feedback.md) — `NOT_STARTED`
+- [07_user_feedback.md](07_user_feedback.md) — `COMPLETE`（四项决定；`improvement_review_gate` 通过）
 - [08_session_transcript.md](08_session_transcript.md) — `COMPLETE`（阶段序列 + 隔离状态 + Controller 违规登记）
-- [09_improvement_ledger.md](09_improvement_ledger.md) — `DRAFT_REVIEW`（20 条提案，未应用）
+- [09_improvement_ledger.md](09_improvement_ledger.md) — `APPROVED_FOR_NEXT_ROUND`（20 条全部批准，`applied_this_round: none`）
 - [09_round_report.md](09_round_report.md) — `COMPLETE`
-- [00_manifest.yaml](00_manifest.yaml) — `ACTIVE`
+- [00_manifest.yaml](00_manifest.yaml) — `CLOSED`（见归档）
 
 ---
 
@@ -174,7 +174,8 @@ Blue Wave 1 的 **A56** 指出：`complex` 分支需要一个注入的 DAG plann
 
 - `resume_review_gate: DELEGATED` —— 用户 2026-10-08 在「再来一轮」后选择「照 020 一样委托给我」，
   Resume Gate 由 Controller 在委托下代行；用户仍可要求 `RESUME_REVISION` 并重跑本波。
-- `improvement_review_gate: REQUIRED（未过）` —— 本轮 improvement ledger **不自动应用**。
+- `improvement_review_gate: PASSED（2026-10-08）` —— 用户四项决定见 `07_user_feedback.md`。
+  本轮 verdict **不因** ledger 而重算；`IMP-021-11`..`IMP-021-19` 写入 `.agent/red-blue/` 属**跨轮生效**。
 
 ### 已知结构性冲突
 
