@@ -152,10 +152,19 @@ Blue Wave 1 的 **A56** 指出：`complex` 分支需要一个注入的 DAG plann
 且注释明确禁止回落。这不只是「简历措辞错」，而是**简历 / 架构描述 / 代码三方互斥**的架构缺口（Arch 判为 F-01，
 本轮唯一确认的 `ARCHITECTURE_GAP`）。
 
-**Blue 自身两处引用错误（Arch §14 指出，供 Wave 2 使用）：** `A8` / `A56` 把
-`single_controller_runtime.py` 写成在 `agent/runtime/execution/` 下（实际在 `platform/services/workspace/`），
-且把 `:497-501` 说成「抛」异常（实际是 `return None`；真正的 fail-closed 在 `:737-738` + `:814-818`）。
-**结论对，位置与动作都错。**
+**Blue 自身两处引用问题（Controller 复核后的精确版，与 Arch §14 的转述有出入）：**
+
+- **动作错（成立）**：`A8` / `A56` 把 `single_controller_runtime.py:497-501` 说成「抛」`DYNAMIC_PLAN_RUNTIME_NOT_BOUND`。
+  实际该处是 `build_workspace_plan_steps` 的 **`return None`**；全文件**不存在** `raise DYNAMIC_PLAN_RUNTIME_NOT_BOUND`，
+  真正的 fail-closed 是 `:737-739` 判 `complex_unbound` → `:814-818` 置常量 → `:825` `_blocked_request`。
+- **目录错（不成立，是 Blue-2 记错自己的错）**：Arch §14 说 A8/A56 把该文件「写成在 `agent/runtime/execution/` 下」。
+  Controller 逐行核对：`03_blue_answers.md` 的 A8（`:121`/`:125`）与 A56（`:798`）**根本没写目录**，只写了
+  `single_controller_runtime.py:497-501` —— 属**欠指定**，不是写错目录。`agent/runtime/execution/` 在该文件里
+  只出现在 `:122`，指的是另一个文件 `react_runner.py`。「写成在 agent/runtime/execution/ 下」这个说法
+  出处是 **Blue-2a 自述**（`04_blue_wave2_answers.md:21`），即它**误述了自己 Wave 1 的错误**。
+
+⇒ 结论对（complex 在 shipped composition 下不可达），但「位置与动作都错」这句只有一半成立：**动作错，目录只是欠指定**。
+这条「关于错误的错误」进 `06_workflow_retrospective.md`。
 
 **本轮复现的泄漏向量：** Arch 实例自报对 `docs/` 做过一次跨目录 grep，输出顺带带回了
 `docs/red-blue/rounds/**` 与本轮 workspace 其他文件的片段（声明未用作证据）。这是 `IMP-020-14` 记录的
